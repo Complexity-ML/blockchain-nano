@@ -8,7 +8,7 @@ Json tx_json(const SignedTransaction& tx,const Block* block=nullptr,size_t index
 Json block_json(const Block& b,bool full){auto result=b.to_json(full);if(full)for(size_t i=0;i<b.transactions.size();++i)result["transactions"][i]=tx_json(b.transactions[i],&b,i);return result;}
 ExecutionResult simulate(const State& state,const Header& header,const Int& chain_id,const Json& call,uint64_t gas,const ChainStore& store,EvmRevision revision){
  auto copy=state;Transaction tx=Transaction::from_json(call);auto sender=address(call.value("from",std::string("0x0000000000000000000000000000000000000000")));
- Int intrinsic=tx.intrinsic_gas();if(Int(std::to_string(gas))<intrinsic){ExecutionResult out;out.error="intrinsic gas exceeds limit";return out;}
+ Int intrinsic=transaction_intrinsic_gas(tx,revision);if(Int(std::to_string(gas))<intrinsic){ExecutionResult out;out.error="intrinsic gas exceeds limit";return out;}
  auto destination=tx.to?address(*tx.to):create_address(sender,state.get(sender).nonce);
  if(!tx.to&&(state.get(destination).nonce!=0||!state.get(destination).code.empty()||(revision!=EvmRevision::NanoExperimental&&!state.get(destination).storage.empty()))){
   ExecutionResult out;out.error="contract address collision";out.gas_used=gas;return out;
@@ -17,7 +17,7 @@ ExecutionResult simulate(const State& state,const Header& header,const Int& chai
  ExecutionContext ctx;ctx.revision=revision;ctx.access_list=tx.access_list;ctx.origin=sender;ctx.caller=sender;ctx.address=destination;ctx.value=tx.value;ctx.gas=gas-u64(intrinsic);ctx.chain_id=chain_id;ctx.gas_price=tx.effective_gas_price(header.base_fee.value_or(Int(0)));ctx.coinbase=header.coinbase;ctx.timestamp=header.timestamp;ctx.number=header.number;ctx.prevrandao=header.difficulty;ctx.gas_limit=header.gas_limit;ctx.base_fee=header.base_fee.value_or(Int(0));ctx.block_hash=[&store](const Int& number){auto b=store.block_by_number(number);if(!b)throw std::runtime_error("missing ancestor block");return b->header.hash();};
  if(tx.to){ctx.data=tx.data;ctx.code=copy.get(destination).code;}else{ctx.code=tx.data;copy.get(destination).nonce=1;}
  EVM evm(copy);auto result=evm.execute(ctx);
- if(result.success&&!tx.to){uint64_t deposit=result.return_data.size()*200;if(result.return_data.size()>24576||deposit>ctx.gas-result.gas_used||(revision==EvmRevision::Paris&&!result.return_data.empty()&&result.return_data[0]==0xef)){result.success=false;result.error="contract code deposit out of gas";}else result.gas_used+=deposit;}
+ if(result.success&&!tx.to){uint64_t deposit=result.return_data.size()*200;if(result.return_data.size()>24576||deposit>ctx.gas-result.gas_used||((revision==EvmRevision::Paris||revision==EvmRevision::Shanghai)&&!result.return_data.empty()&&result.return_data[0]==0xef)){result.success=false;result.error="contract code deposit out of gas";}else result.gas_used+=deposit;}
  result.gas_used+=u64(intrinsic);return result;
 }
 }
@@ -173,7 +173,7 @@ Json Rpc::dispatch(const std::string& method,const Json& p){
   Int limit=std::min(b->header.gas_limit,quantity(p[0].value("gas",Json(quantity(b->header.gas_limit)))));uint64_t high=u64(limit);auto result=simulate(*state,b->header,chain_.genesis().chain_id,p[0],high,chain_.store(),chain_.genesis().evm_revision);
   if(!result.success)throw RpcError(3,"Execution failed: "+result.error,hex(result.return_data));
   if(method=="eth_call")return hex(result.return_data);
-  uint64_t low=u64(Transaction::from_json(p[0]).intrinsic_gas())-1;
+  uint64_t low=u64(transaction_intrinsic_gas(Transaction::from_json(p[0]),chain_.genesis().evm_revision))-1;
   while(high-low>1){auto mid=low+(high-low)/2;auto trial=simulate(*state,b->header,chain_.genesis().chain_id,p[0],mid,chain_.store(),chain_.genesis().evm_revision);if(trial.success)high=mid;else low=mid;}
   return quantity(Int(std::to_string(high)));
  }

@@ -1,0 +1,204 @@
+{
+    "tests/shanghai/eip3860_initcode/test_initcode.py::test_create2_oversized_initcode_with_insufficient_balance[fork_Shanghai-state_test-initcode_oversize]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07"
+        },
+        "pre": {
+            "0x73e6e61f60c30759da6d97853205c8b684fd2272": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x60006201800060006342f17fb3f5506001600155",
+                "storage": {}
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0x73e6e61f60c30759da6d97853205c8b684fd2272",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Shanghai": [
+                {
+                    "hash": "0xe4e477ab59f4760626296d6ef8d0bd8e97e712e93f988bfc22391a73e17d526b",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0x6f072a1ebe07dab4088f28579edbdff20856b30c03ce4f1d956293b95132c238",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0x07270e00",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": false,
+                        "rlp": "0xf9010a808407270e00b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf861800a8407270e009473e6e61f60c30759da6d97853205c8b684fd2272808025a00be0f0d7a274c1784e0e5b70bc11dc76def051b686e7633199ffd26b2308c77ca06b7fea2e18e44d0c9c1736518fe4645258483593e1b4c9d6aa8b7c6503915264",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x73e6e61f60c30759da6d97853205c8b684fd2272": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x60006201800060006342f17fb3f5506001600155",
+                            "storage": {}
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ca0797400",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x15752a00",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x36491ee415efb96a671e7d4085348dd9f31e27863dc145e27b1036115d1b905b",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test CREATE2 with oversized initcode and insufficient balance.\n\nRegression test for\nhttps://github.com/ethereum/execution-specs/issues/914\n\nCREATE2 is called with an endowment of 1123123123 (exceeds the\ncontract's zero balance). The initcode size check must take\npriority over the balance check:\n\n- Initcode too large: consumes all gas, exits scope, SSTORE(1, 1)\n  is never reached, so storage slot 1 remains 0.\n- Initcode within limit: insufficient balance pushes 0, execution\n  continues, SSTORE(1, 1) executes, so storage slot 1 becomes 1.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/shanghai/eip3860_initcode/test_initcode.py#L574",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-3860.md",
+            "reference-spec-version": "9ee005834d488e381455cf86a56c741a2e854a17"
+        }
+    },
+    "tests/shanghai/eip3860_initcode/test_initcode.py::test_create2_oversized_initcode_with_insufficient_balance[fork_Shanghai-state_test-initcode_within_limit]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07"
+        },
+        "pre": {
+            "0x49da25c24b6023fb00f5ea6118c1ffced61cb1ec": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x600061010060006342f17fb3f5506001600155",
+                "storage": {}
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0x49da25c24b6023fb00f5ea6118c1ffced61cb1ec",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Shanghai": [
+                {
+                    "hash": "0xdee0e061d8f5622c273bff34687624acbd81b3bad808caa12697a10a22aaad6d",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0x539331944f7efdad3104aea8c7ce95c3640d87bde1fa555a24a37c606ba4068d",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0x0125c8",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf9010901830125c8b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf861800a8407270e009449da25c24b6023fb00f5ea6118c1ffced61cb1ec808026a00e0518bc34cda81e247e0c7ee11d8511c27572d7f55b2a57133daaaba89487c6a02dc4b8e5c6bed25ce659e8e7448a0c243ab3703ec0055c656f67a7ace2c763f6",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x49da25c24b6023fb00f5ea6118c1ffced61cb1ec": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x600061010060006342f17fb3f5506001600155",
+                            "storage": {
+                                "0x01": "0x01"
+                            }
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ce7f48630",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x037158",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x9e23f970bfbbbdfc8beb181f0849fccf262ebf5d995857e32e27adb4ec17b3c3",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test CREATE2 with oversized initcode and insufficient balance.\n\nRegression test for\nhttps://github.com/ethereum/execution-specs/issues/914\n\nCREATE2 is called with an endowment of 1123123123 (exceeds the\ncontract's zero balance). The initcode size check must take\npriority over the balance check:\n\n- Initcode too large: consumes all gas, exits scope, SSTORE(1, 1)\n  is never reached, so storage slot 1 remains 0.\n- Initcode within limit: insufficient balance pushes 0, execution\n  continues, SSTORE(1, 1) executes, so storage slot 1 becomes 1.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/shanghai/eip3860_initcode/test_initcode.py#L574",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-3860.md",
+            "reference-spec-version": "9ee005834d488e381455cf86a56c741a2e854a17"
+        }
+    }
+}

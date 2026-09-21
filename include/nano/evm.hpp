@@ -4,7 +4,8 @@
 #include <set>
 #include <functional>
 namespace nano {
-enum class EvmRevision { NanoExperimental, Berlin, Paris };
+enum class EvmRevision { NanoExperimental, Berlin, Paris, Shanghai };
+Int transaction_intrinsic_gas(const Transaction& tx,EvmRevision revision);
 struct ExecutionContext {
  EvmRevision revision=EvmRevision::NanoExperimental;
  std::string origin="0x0000000000000000000000000000000000000000",caller=origin,address=origin,coinbase=origin;

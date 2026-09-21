@@ -19,7 +19,7 @@ struct Frame {
 Bytes slice(const Bytes& input,const Int& start,size_t size){Bytes out(size);if(start>=Int(input.size()))return out;size_t off=start.get_ui();std::copy_n(input.begin()+off,std::min(size,input.size()-off),out.begin());return out;}
 std::string evm_address(const Int& value){return hex(bytes(Int(value&((Int(1)<<160)-1)),20));}
 }
-ExecutionResult EVM::execute(const ExecutionContext& ctx){warm_addresses_={address(ctx.origin),address(ctx.caller),address(ctx.address)};for(unsigned i=1;i<=9;++i)warm_addresses_.insert(evm_address(Int(i)));warm_slots_.clear();original_storage_.clear();pending_deletions_.clear();for(const auto& access:ctx.access_list){auto account=address(access.address);warm_addresses_.insert(account);for(const auto& key:access.keys){if(key.size()!=32)throw std::invalid_argument("access-list storage key must be 32 bytes");warm_slots_.insert({account,integer(key)});}}auto result=run(ctx);if(result.success){result.deleted_accounts=pending_deletions_;for(const auto& account:pending_deletions_)state_.erase(account);}return result;}
+ExecutionResult EVM::execute(const ExecutionContext& ctx){warm_addresses_={address(ctx.origin),address(ctx.caller),address(ctx.address)};for(unsigned i=1;i<=9;++i)warm_addresses_.insert(evm_address(Int(i)));if(ctx.revision==EvmRevision::Shanghai)warm_addresses_.insert(address(ctx.coinbase));warm_slots_.clear();original_storage_.clear();pending_deletions_.clear();for(const auto& access:ctx.access_list){auto account=address(access.address);warm_addresses_.insert(account);for(const auto& key:access.keys){if(key.size()!=32)throw std::invalid_argument("access-list storage key must be 32 bytes");warm_slots_.insert({account,integer(key)});}}auto result=run(ctx);if(result.success){result.deleted_accounts=pending_deletions_;for(const auto& account:pending_deletions_)state_.erase(account);}return result;}
 ExecutionResult EVM::run(const ExecutionContext& ctx, unsigned depth){
  Int target=integer(unhex(ctx.code_address.value_or(ctx.address)));if(target>=1&&target<=(ctx.revision==EvmRevision::NanoExperimental?10:9))return precompile(unsigned(target.get_ui()),ctx.data,ctx.gas);
  Frame f(ctx.gas);ExecutionResult result;Bytes last_return;size_t snap=state_.snapshot();
@@ -28,7 +28,7 @@ ExecutionResult EVM::run(const ExecutionContext& ctx, unsigned depth){
  auto warm=[&](const std::string& a){if(warm_addresses_.insert(a).second)f.charge(2500);};
  bool done=false;
  for(size_t pc=0;pc<ctx.code.size()&&!done;++pc){uint8_t op=ctx.code[pc];
- if((ctx.revision!=EvmRevision::NanoExperimental&&op==0x5f)||(ctx.revision==EvmRevision::Berlin&&op==0x48))throw std::runtime_error("Opcode unavailable in selected EVM revision");
+ if(((ctx.revision==EvmRevision::Berlin||ctx.revision==EvmRevision::Paris)&&op==0x5f)||(ctx.revision==EvmRevision::Berlin&&op==0x48))throw std::runtime_error("Opcode unavailable in selected EVM revision");
  f.charge(opcode_gas(op));
  if(op>=0x60&&op<=0x7f){size_t n=op-0x5f;f.push(integer(slice(ctx.code,Int(pc+1),n)));pc+=n;continue;}
  if(op>=0x80&&op<=0x8f){size_t depth=op-0x7f;if(f.stack.size()<depth)throw std::runtime_error("Stack underflow");Int value=f.stack[f.stack.size()-depth];f.push(value);continue;}
@@ -154,7 +154,8 @@ ExecutionResult EVM::run(const ExecutionContext& ctx, unsigned depth){
  case NanoOpCodes::CREATE:
  case NanoOpCodes::CREATE2:{
   if(ctx.is_static)throw std::runtime_error("CREATE in static context");
-  Int value=f.pop(),off=f.pop(),size=f.pop();Int salt=op==0xf5?f.pop():Int(0);auto init=f.read(off,size);last_return.clear();
+  Int value=f.pop(),off=f.pop(),size=f.pop();Int salt=op==0xf5?f.pop():Int(0);if(ctx.revision==EvmRevision::Shanghai&&size>49152)throw std::runtime_error("initcode size exceeds limit");auto init=f.read(off,size);last_return.clear();
+  if(ctx.revision==EvmRevision::Shanghai)f.charge(2*((init.size()+31)/32));
   if(op==0xf5)f.charge(6*((init.size()+31)/32));
   if(depth>=1023||state_.get(ctx.address).balance<value||state_.get(ctx.address).nonce>=Int("18446744073709551615")){f.push(Int(0));break;}
   auto nonce=state_.get(ctx.address).nonce;
@@ -167,7 +168,7 @@ ExecutionResult EVM::run(const ExecutionContext& ctx, unsigned depth){
   ExecutionContext child=ctx;child.address=target;child.caller=ctx.address;child.value=value;child.data.clear();child.code=init;child.code_address=target;child.gas=f.gas-f.gas/64;
   warm_addresses_.insert(target);auto output=run(child,depth+1);f.charge(output.gas_used);last_return=output.return_data;
   uint64_t deposit=output.return_data.size()*200;
-  if(output.success&&(output.return_data.size()>24576||deposit>child.gas-output.gas_used||(ctx.revision==EvmRevision::Paris&&!output.return_data.empty()&&output.return_data[0]==0xef))){
+  if(output.success&&(output.return_data.size()>24576||deposit>child.gas-output.gas_used||((ctx.revision==EvmRevision::Paris||ctx.revision==EvmRevision::Shanghai)&&!output.return_data.empty()&&output.return_data[0]==0xef))){
    // Code deposit belongs to the child budget; preserve the parent's 1/64 reserve.
    f.charge(child.gas-output.gas_used);output.success=false;last_return.clear();
   }

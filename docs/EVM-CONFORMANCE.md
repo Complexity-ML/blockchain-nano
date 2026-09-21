@@ -6,6 +6,38 @@
 | --- | ---: | ---: | ---: | --- |
 | for_berlin | 127 | 1 963 / 1 963 | 150 | 0 / 0 / 0 |
 | for_paris | 129 | 2 250 / 2 250 | 280 | 0 / 0 / 0 |
+| for_shanghai | 146 | 2 441 / 2 441 | 290 | 0 / 0 / 0 |
+
+Shanghai est désormais sélectionnable avec `config.evmFork: "Shanghai"`.
+La limite et le coût intrinsèque de l'initcode sont partagés entre moteur,
+mempool, eth_call et eth_estimateGas. Le genesis engage ces règles avec un
+domaine distinct de Paris ; les genesis livrés ne sont pas modifiés. Le test
+`chain` vérifie la limite exacte, le rejet à un octet au-delà, PUSH0, l'égalité
+estimation/reçu, le replay par un pair et la réouverture avec audit.
+
+Après raccordement, six suites CTest (core, chain, rpc, staking, staking_paris,
+ethereum_official_regressions) passent. Le parcours Hardhat `publish.ts` passe
+aussi sur un nœud temporaire Shanghai : déploiement ERC20, offre de 1 000 000,
+transfert de 125, refus d'un transfert non autorisé et blocs certifiés.
+Ce contrat reste compilé avec la cible Paris ; le test natif de création PUSH0
+couvre séparément l'instruction introduite par Shanghai.
+
+Le diagnostic initial Shanghai avait 1 940 cas concordants et 501 divergences.
+Les corrections ajoutent PUSH0, le bénéficiaire du bloc aux adresses chaudes,
+et EIP-3860 : plafond de 49 152 octets pour l'initcode, deux unités de gas par
+mot de 32 octets pour les transactions de création et CREATE/CREATE2. Un initcode
+trop grand invalide la transaction de création avant mutation de l'état, ou
+provoque un échec exceptionnel dans CREATE/CREATE2. Les règles Paris de frais,
+de refus des expéditeurs contenant du code et de préfixe 0xEF sont conservées.
+Références : [EIP-3855](https://eips.ethereum.org/EIPS/eip-3855),
+[EIP-3651](https://eips.ethereum.org/EIPS/eip-3651),
+[EIP-3860](https://eips.ethereum.org/EIPS/eip-3860).
+
+Les huit fichiers officiels spécifiques à ces trois EIP sont intégrés sans
+filtrage dans la régression CTest. Berlin et Paris ont été rejoués après ces
+changements : les 1 963 et 2 250 cas restent concordants. La comparaison porte
+sur les groupes de tests d'état sélectionnés ; les formats de blocs et les
+transitions temporelles de règles ne sont pas couverts par ce résultat.
 
 Ces groupes sont exécutés intégralement, sans filtres de cas, avec le pilote C++.
 Les rejets comparent le motif exact mappé, l'état intégral inchangé, sa racine

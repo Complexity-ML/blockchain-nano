@@ -901,3 +901,20 @@ Ce test passe en 16,78 secondes lors de l'exécution observée. Il s'ajoute aux
 40 tests précédents ; la suite complète de 41 tests n'a pas été relancée à cette
 étape. Le retrait, la réinscription et les changements d'effectif sous partition
 restent à qualifier.
+
+## Retrait et réinscription avec le même journal
+
+Le scénario natif de `consensus_round` prolonge l'inscription jusqu'à la hauteur
+100 avec des blocs certifiés et exécutés, sans modifier les règles de verrouillage
+du contrat. Le retrait signé est exécuté à la hauteur 101, après les 100 blocs
+requis depuis l'inscription. Le même réacteur devient observateur et cesse de
+diffuser des votes. Une signature du membre retiré est rejetée au bloc suivant,
+qu'elle annonce l'ancien hash d'ensemble ou celui des membres actuels.
+
+Une réinscription signée est ensuite certifiée à la hauteur 102. Sans recréer le
+réacteur, son journal reprend l'historique certifié et autorise un prevote pour
+la proposition courante à la hauteur 103. La base et le journal sont enfin
+fermés puis rouverts : la signature réservée doit être réémise à l'identique et
+l'audit de la chaîne doit réussir. Les blocs intermédiaires sont importés avec
+des certificats construits par le banc ; ce test ne constitue pas encore un
+essai réseau du retrait ou d'une réinscription pendant une partition.

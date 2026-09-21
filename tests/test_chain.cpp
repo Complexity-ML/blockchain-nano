@@ -1,5 +1,6 @@
 #include "nano/chain.hpp"
 #include "nano/staking.hpp"
+#include "nano/rpc.hpp"
 #include <iostream>
 #include <unistd.h>
 using namespace nano;
@@ -12,9 +13,35 @@ int main(){try{
  auto genesis=Genesis::from_json(data);
  auto paris_data=data;paris_data["config"]["evmFork"]="Paris";auto paris_genesis=Genesis::from_json(paris_data);
  check(paris_genesis.evm_revision==EvmRevision::Paris&&paris_genesis.block.header.hash()!=genesis.block.header.hash(),"explicit Paris rules bound to genesis identity");
- for(Json invalid:{Json("Berlin"),Json("Shanghai"),Json(1),Json(nullptr)}){auto bad=data;bad["config"]["evmFork"]=invalid;rejects([&]{Genesis::from_json(bad);},"unsupported chain execution fork rejected");}
+ for(Json invalid:{Json("Berlin"),Json("Cancun"),Json(1),Json(nullptr)}){auto bad=data;bad["config"]["evmFork"]=invalid;rejects([&]{Genesis::from_json(bad);},"unsupported chain execution fork rejected");}
 
  auto path=std::filesystem::temp_directory_path()/("nano-chain-"+std::to_string(getpid()));auto peer=path.string()+"-peer";
+ {
+  auto shanghai_data=data;shanghai_data["config"]["evmFork"]="Shanghai";auto rules=Genesis::from_json(shanghai_data);
+  check(rules.evm_revision==EvmRevision::Shanghai&&rules.block.header.hash()!=paris_genesis.block.header.hash()&&rules.block.header.hash()!=genesis.block.header.hash(),"Shanghai has distinct genesis identity");
+  auto location=path.string()+"-shanghai";auto replica=path.string()+"-shanghai-peer";
+  struct Cleanup{std::string a,b;~Cleanup(){std::filesystem::remove_all(a);std::filesystem::remove_all(b);}} cleanup{location,replica};
+  {Blockchain chain(location,rules),follower(replica,rules);Rpc rpc(chain);
+   auto invoke=[&](const std::string& method,const Json& call){return rpc.handle({{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",Json::array({call})}});};
+   Transaction tx;tx.chain_id=1337;tx.gas_price=2000000000;tx.gas=1000000;tx.data=Bytes(49153,0);
+   auto call=Json{{"from",sender},{"data",hex(tx.data)},{"gas",quantity(tx.gas)}};auto before=chain.state().root();
+   rejects([&]{chain.submit(SignedTransaction::sign(tx,key));},"oversized initcode rejected by Shanghai mempool");
+   check(invoke("eth_call",call).contains("error")&&invoke("eth_estimateGas",call).contains("error"),"oversized initcode rejected by both simulation RPCs");
+   check(chain.pending_count()==0&&chain.state().root()==before,"oversized creation leaves state and pool unchanged");
+   tx.data.resize(49152);auto intrinsic=transaction_intrinsic_gas(tx,EvmRevision::Shanghai);call["data"]=hex(tx.data);
+   auto estimate=invoke("eth_estimateGas",call);check(estimate.contains("result")&&quantity(estimate["result"])==intrinsic,"maximum initcode estimate includes exact word charge");
+   tx.gas=intrinsic-1;rejects([&]{chain.submit(SignedTransaction::sign(tx,key));},"mempool includes Shanghai initcode charge");
+   tx.gas=intrinsic;auto signed_tx=SignedTransaction::sign(tx,key);check(chain.submit(signed_tx),"maximum initcode accepted at exact gas budget");
+   auto block=chain.mine(receiver,12);follower.import_block(block,12);auto receipt=chain.store().receipt(signed_tx.hash());
+   check(receipt&&receipt->success&&receipt->gas_used==intrinsic&&chain.state().root()==follower.state().root(),"maximum initcode executes with estimated gas and matching peer state");
+   tx.nonce=1;tx.data=unhex("5f5ff3");tx.gas=100000;call["data"]=hex(tx.data);
+   estimate=invoke("eth_estimateGas",call);check(quantity(estimate.at("result"))==transaction_intrinsic_gas(tx,EvmRevision::Shanghai)+4,"RPC executes PUSH0 creation with Shanghai gas");
+   signed_tx=SignedTransaction::sign(tx,key);check(chain.submit(signed_tx),"PUSH0 creation submitted");block=chain.mine(receiver,24);follower.import_block(block,24);receipt=chain.store().receipt(signed_tx.hash());
+   check(receipt&&receipt->success&&receipt->gas_used==quantity(estimate.at("result"))&&chain.state().root()==follower.state().root(),"PUSH0 receipt agrees with estimation and peer execution");
+  }
+  rejects([&]{Blockchain wrong(location,paris_genesis);},"Shanghai database cannot reopen as Paris");
+  {Blockchain reopened(location,rules);check(reopened.tip().header.number==2&&reopened.audit().at("verified")==true,"Shanghai history survives reopen and audit");}
+ }
  Block mined;Bytes root;
  {Blockchain a(path,genesis),b(peer,genesis);
   check(a.tip().header.number==0&&a.state().root()==genesis.state.root(),"genesis initialization");

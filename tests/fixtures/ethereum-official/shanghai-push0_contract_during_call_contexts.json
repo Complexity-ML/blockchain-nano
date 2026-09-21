@@ -1,0 +1,462 @@
+{
+    "tests/shanghai/eip3855_push0/test_push0.py::TestPush0CallContext::test_push0_contract_during_call_contexts[fork_Shanghai-state_test-call]@bigmem": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07"
+        },
+        "pre": {
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            },
+            "0xd39602eaf5e9bee3629b2cd83ee4fb67c9c3155d": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x60ff5f5360015ff3",
+                "storage": {}
+            },
+            "0x520a79de82f45c70aa92f46cc9e8f1ec20450f17": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x6000600060006000600073d39602eaf5e9bee3629b2cd83ee4fb67c9c3155d620186a0f1600055600160005560016000601f3e600051600155",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0x520a79de82f45c70aa92f46cc9e8f1ec20450f17",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Shanghai": [
+                {
+                    "hash": "0x21208d0086491c4bf76bcdd1d2b05cdf576211db3613ec1a2f283261e710e158",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0x639bddab4423e4a3885a51180428ec4118f0ca1bf3cb6cd0ee318d1cec30a932",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0x010985",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf901090183010985b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf861800a8407270e0094520a79de82f45c70aa92f46cc9e8f1ec20450f17808025a0a3d2c63b79b1d3a860207f4bfda772c5fb86a7a2afd11ac8ce29a9c7c40508d9a06d34a79b9c53e78cb68a7bb2cb6e9fd1629faac6692f40360305ffcbeb28d998",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ce7f5a0ce",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0xd39602eaf5e9bee3629b2cd83ee4fb67c9c3155d": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x60ff5f5360015ff3",
+                            "storage": {}
+                        },
+                        "0x520a79de82f45c70aa92f46cc9e8f1ec20450f17": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x6000600060006000600073d39602eaf5e9bee3629b2cd83ee4fb67c9c3155d620186a0f1600055600160005560016000601f3e600051600155",
+                            "storage": {
+                                "0x00": "0x01",
+                                "0x01": "0xff"
+                            }
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x031c8f",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x92c2a2ab7321a07111cb0330b6f87e2f3b04e870834dd039e69d51c0bb77e301",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test class documentation:\n\nTest the PUSH0 operation in various contract call contexts.\n\nTest PUSH0 in the following contract call contexts:\n\n- CALL,\n- CALLCODE,\n- DELEGATECALL,\n- STATICCALL.\n\n\nTest PUSH0 during various call contexts.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/shanghai/eip3855_push0/test_push0.py#L137",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-3855.md",
+            "reference-spec-version": "6f85bd73336de4aacfad7ac3bb3a7e1ba2d68f51"
+        }
+    },
+    "tests/shanghai/eip3855_push0/test_push0.py::TestPush0CallContext::test_push0_contract_during_call_contexts[fork_Shanghai-state_test-callcode]@bigmem": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07"
+        },
+        "pre": {
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            },
+            "0xd39602eaf5e9bee3629b2cd83ee4fb67c9c3155d": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x60ff5f5360015ff3",
+                "storage": {}
+            },
+            "0xcefa1ac21f44088445ad0e427e5967a83dfd6a46": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x6000600060006000600073d39602eaf5e9bee3629b2cd83ee4fb67c9c3155d620186a0f2600055600160005560016000601f3e600051600155",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0xcefa1ac21f44088445ad0e427e5967a83dfd6a46",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Shanghai": [
+                {
+                    "hash": "0x4bab1d3cab429b83ab20ae10d44d96eb36d711447266d6b79d23c3d07d532d2f",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0x0f0ae286c494e3bac5a83c2674657364a18b85ff408e8f3a036fd76239ee3a30",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0x010985",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf901090183010985b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf861800a8407270e0094cefa1ac21f44088445ad0e427e5967a83dfd6a46808025a08ed960a612ab4ba9e5045ec0c0e8ad59240f1f658d738881dd8afb5fdc01b976a0754d8ea03ff7d17f1f6d246223c8e891411d0d922cd9916e4e48a2e1abb4c423",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ce7f5a0ce",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0xd39602eaf5e9bee3629b2cd83ee4fb67c9c3155d": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x60ff5f5360015ff3",
+                            "storage": {}
+                        },
+                        "0xcefa1ac21f44088445ad0e427e5967a83dfd6a46": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x6000600060006000600073d39602eaf5e9bee3629b2cd83ee4fb67c9c3155d620186a0f2600055600160005560016000601f3e600051600155",
+                            "storage": {
+                                "0x00": "0x01",
+                                "0x01": "0xff"
+                            }
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x031c8f",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x75e51f3ac37b1c122b86ae97bfe0eac1c095ee88920a0fe9422d0dbd6e94ffe6",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test class documentation:\n\nTest the PUSH0 operation in various contract call contexts.\n\nTest PUSH0 in the following contract call contexts:\n\n- CALL,\n- CALLCODE,\n- DELEGATECALL,\n- STATICCALL.\n\n\nTest PUSH0 during various call contexts.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/shanghai/eip3855_push0/test_push0.py#L137",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-3855.md",
+            "reference-spec-version": "6f85bd73336de4aacfad7ac3bb3a7e1ba2d68f51"
+        }
+    },
+    "tests/shanghai/eip3855_push0/test_push0.py::TestPush0CallContext::test_push0_contract_during_call_contexts[fork_Shanghai-state_test-delegatecall]@bigmem": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07"
+        },
+        "pre": {
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            },
+            "0xd39602eaf5e9bee3629b2cd83ee4fb67c9c3155d": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x60ff5f5360015ff3",
+                "storage": {}
+            },
+            "0x3832c7fcdc74ea6308a83d8632eaf32a5db14f26": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x600060006000600073d39602eaf5e9bee3629b2cd83ee4fb67c9c3155d620186a0f4600055600160005560016000601f3e600051600155",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0x3832c7fcdc74ea6308a83d8632eaf32a5db14f26",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Shanghai": [
+                {
+                    "hash": "0x5778388841375f2dc14b5ba431b7a56bc49e98ca938af7bd383290918a71e9fe",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0xfdab277a6bd15a97e2741047ce4981e3eefe12211e1ec66dcbdc291acfe51ff9",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0x010982",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf901090183010982b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf861800a8407270e00943832c7fcdc74ea6308a83d8632eaf32a5db14f26808025a02e8b2279ab8ce1c1e05086677a59ed990ccd34e1ad207cd47012eb661cfcfdd9a070280c4b8353cc92c7e6b920c73a8d53e25e08b29ba1cbaecb60770473145680",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ce7f5a0ec",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0xd39602eaf5e9bee3629b2cd83ee4fb67c9c3155d": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x60ff5f5360015ff3",
+                            "storage": {}
+                        },
+                        "0x3832c7fcdc74ea6308a83d8632eaf32a5db14f26": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x600060006000600073d39602eaf5e9bee3629b2cd83ee4fb67c9c3155d620186a0f4600055600160005560016000601f3e600051600155",
+                            "storage": {
+                                "0x00": "0x01",
+                                "0x01": "0xff"
+                            }
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x031c86",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x567d0d384b9b88b6d2b84b27dcfa2ca9d262a5e87b30b0be064f2ce3d5bf7b37",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test class documentation:\n\nTest the PUSH0 operation in various contract call contexts.\n\nTest PUSH0 in the following contract call contexts:\n\n- CALL,\n- CALLCODE,\n- DELEGATECALL,\n- STATICCALL.\n\n\nTest PUSH0 during various call contexts.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/shanghai/eip3855_push0/test_push0.py#L137",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-3855.md",
+            "reference-spec-version": "6f85bd73336de4aacfad7ac3bb3a7e1ba2d68f51"
+        }
+    },
+    "tests/shanghai/eip3855_push0/test_push0.py::TestPush0CallContext::test_push0_contract_during_call_contexts[fork_Shanghai-state_test-staticcall]@bigmem": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07"
+        },
+        "pre": {
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            },
+            "0xd39602eaf5e9bee3629b2cd83ee4fb67c9c3155d": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x60ff5f5360015ff3",
+                "storage": {}
+            },
+            "0x2737b04e10c5878e3e37b58394a86fbda5a3fde7": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x600060006000600073d39602eaf5e9bee3629b2cd83ee4fb67c9c3155d620186a0fa600055600160005560016000601f3e600051600155",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0x2737b04e10c5878e3e37b58394a86fbda5a3fde7",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Shanghai": [
+                {
+                    "hash": "0x8c1572b15616aa213f2e6cd96aae0d91fe2a7deac5b77b6852ff3f92cd55799d",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0xd782c49570745b3eeebb9a67c52517f0c53f52f71801135581cf32399b29afa3",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0x010982",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf901090183010982b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf861800a8407270e00942737b04e10c5878e3e37b58394a86fbda5a3fde7808025a0c8db1dd6daf7ef6c7e3b9a3d97de55d93768f03e02e659c3594ae48d8540e775a0284da12b4855d969347f3d932ee42c21052d49ef613a15ea9b31dd768bd34b65",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ce7f5a0ec",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0xd39602eaf5e9bee3629b2cd83ee4fb67c9c3155d": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x60ff5f5360015ff3",
+                            "storage": {}
+                        },
+                        "0x2737b04e10c5878e3e37b58394a86fbda5a3fde7": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x600060006000600073d39602eaf5e9bee3629b2cd83ee4fb67c9c3155d620186a0fa600055600160005560016000601f3e600051600155",
+                            "storage": {
+                                "0x00": "0x01",
+                                "0x01": "0xff"
+                            }
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x031c86",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x6d3f613f37c288ed3bbed3f1cf3dbdfeebfaf54f84edf551efa82788fe05b0b7",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test class documentation:\n\nTest the PUSH0 operation in various contract call contexts.\n\nTest PUSH0 in the following contract call contexts:\n\n- CALL,\n- CALLCODE,\n- DELEGATECALL,\n- STATICCALL.\n\n\nTest PUSH0 during various call contexts.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/shanghai/eip3855_push0/test_push0.py#L137",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-3855.md",
+            "reference-spec-version": "6f85bd73336de4aacfad7ac3bb3a7e1ba2d68f51"
+        }
+    }
+}

@@ -174,3 +174,16 @@ Les correctifs ultérieurs d'accès aux comptes, de coût des appels, de restitu
 du stipend sur refus et de préchauffage des listes d'accès ont le même impact sur
 les reçus et engagements historiques. Le pilote officiel reste diagnostique tant
 que la sélection des règles par fork et leur activation ne sont pas établies.
+
+## Sélection explicite de Shanghai
+
+`config.evmFork: "Shanghai"` active les règles EVM Shanghai au bloc genesis.
+Le domaine `Nano/EVM/Shanghai/v1` est engagé dans le hash du genesis. Une base
+Shanghai ne peut pas être rouverte avec un genesis Paris, et réciproquement.
+Les fichiers mainnet/testnet livrés restent inchangés ; modifier cette option
+ne constitue pas une migration d'une chaîne déjà existante. Aucun calendrier
+de changement de règles en cours de chaîne n'est encore implémenté.
+
+La limite d'initcode de 49 152 octets et son coût par mot sont appliqués dans
+le moteur, l'admission des transactions et les RPC de simulation. Les règles
+de signature liées au chain ID restent obligatoires sur le réseau Nano.

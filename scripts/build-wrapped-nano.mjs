@@ -1,0 +1,20 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import {createRequire} from 'node:module';
+import {fileURLToPath} from 'node:url';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const require=createRequire(path.join(root,'tests/hardhat/package.json'));
+const solc=require('solc');
+const oz=require('@openzeppelin/contracts/package.json');
+if(!solc.version().startsWith('0.8.28+')||oz.version!=='5.0.2')throw Error('Expected solc 0.8.28 and OpenZeppelin 5.0.2');
+const source=fs.readFileSync(path.join(root,'contracts/WrappedNano.sol'),'utf8');
+const settings={evmVersion:'shanghai',optimizer:{enabled:true,runs:200},metadata:{bytecodeHash:'none'},outputSelection:{'*':{'*':['abi','evm.bytecode.object','evm.deployedBytecode.object']}}};
+const dependencies={};
+const output=JSON.parse(solc.compile(JSON.stringify({language:'Solidity',sources:{'WrappedNano.sol':{content:source}},settings}),{import(name){
+ if(!name.startsWith('@openzeppelin/contracts/'))return {error:'Unsupported import'};
+ const content=fs.readFileSync(require.resolve(name),'utf8');dependencies[name]=crypto.createHash('sha256').update(content).digest('hex');return {contents:content};
+}}));
+for(const error of output.errors??[])if(error.severity==='error')throw Error(error.formattedMessage);
+const c=output.contracts['WrappedNano.sol'].WrappedNano;
+fs.writeFileSync(path.join(root,'contracts/WrappedNano.json'),JSON.stringify({compiler:solc.version(),openzeppelin:oz.version,sourceSha256:crypto.createHash('sha256').update(source).digest('hex'),dependencies,settings,abi:c.abi,bytecode:'0x'+c.evm.bytecode.object,deployedBytecode:'0x'+c.evm.deployedBytecode.object},null,2)+'\n');

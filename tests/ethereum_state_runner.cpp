@@ -6,6 +6,7 @@ using namespace nano;
 namespace fs=std::filesystem;
 // Exact mappings only: an unrelated exception must never satisfy a rejection test.
 std::string validation_exception(const std::string& message){
+ if(message=="initcode size exceeds limit")return "TransactionException.INITCODE_SIZE_EXCEEDED";
  if(message=="intrinsic gas exceeds limit")return "TransactionException.INTRINSIC_GAS_TOO_LOW";
  if(message=="transaction chain id mismatch"||message=="chain id mismatch")return "TransactionException.INVALID_CHAINID";
  if(message=="transaction type unavailable in Berlin")return "TransactionException.TYPE_2_TX_PRE_FORK";
@@ -38,7 +39,7 @@ int main(int argc,char** argv){
         header.base_fee=quantity(env.value("currentBaseFee",Json("0x0")));header.difficulty=quantity(env.value("currentRandom",env.value("currentDifficulty",Json("0x0"))));
         Int chain_id=quantity(test.value("config",Json::object()).value("chainid",Json(1)));
         EvmRevision revision=EvmRevision::NanoExperimental;
-        if(fork=="Berlin")revision=EvmRevision::Berlin;else if(fork=="Paris")revision=EvmRevision::Paris;
+        if(fork=="Berlin")revision=EvmRevision::Berlin;else if(fork=="Paris")revision=EvmRevision::Paris;else if(fork=="Shanghai")revision=EvmRevision::Shanghai;
         else{++unsupported;report["status"]="unsupported-fork";std::cout<<report.dump()<<'\n';continue;}
         report["engine"]="Nano explicit "+fork+" rules (partial implementation)";
         report["replayPolicy"]="Ethereum historical signatures allowed; Nano network policy unchanged";

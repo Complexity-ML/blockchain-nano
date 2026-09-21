@@ -45,3 +45,13 @@ Paris fixtures (renamed only, unchanged contents):
 - `paris-eip1559_tx_validity.json`: `fixtures/state_tests/for_paris/london/eip1559_fee_market_change/tx_type/eip1559_tx_validity.json`
 - `paris-invalid_chain_id.json`: `fixtures/state_tests/for_paris/london/eip1559_fee_market_change/tx_type/invalid_chain_id.json`
 - `paris-coverage.json`: `fixtures/state_tests/for_paris/homestead/coverage/coverage/coverage.json`
+
+Shanghai fixtures (complete original files, unchanged contents):
+- `shanghai-warm_coinbase_call_out_of_gas.json`: `fixtures/state_tests/for_shanghai/shanghai/eip3651_warm_coinbase/warm_coinbase/warm_coinbase_call_out_of_gas.json`
+- `shanghai-warm_coinbase_gas_usage.json`: `fixtures/state_tests/for_shanghai/shanghai/eip3651_warm_coinbase/warm_coinbase/warm_coinbase_gas_usage.json`
+- `shanghai-push0_contract_during_call_contexts.json`: `fixtures/state_tests/for_shanghai/shanghai/eip3855_push0/push0/push0_contract_during_call_contexts.json`
+- `shanghai-push0_contracts.json`: `fixtures/state_tests/for_shanghai/shanghai/eip3855_push0/push0/push0_contracts.json`
+- `shanghai-contract_creating_tx.json`: `fixtures/state_tests/for_shanghai/shanghai/eip3860_initcode/initcode/contract_creating_tx.json`
+- `shanghai-create2_oversized_initcode_with_insufficient_balance.json`: `fixtures/state_tests/for_shanghai/shanghai/eip3860_initcode/initcode/create2_oversized_initcode_with_insufficient_balance.json`
+- `shanghai-create_opcode_initcode.json`: `fixtures/state_tests/for_shanghai/shanghai/eip3860_initcode/initcode/create_opcode_initcode.json`
+- `shanghai-gas_usage.json`: `fixtures/state_tests/for_shanghai/shanghai/eip3860_initcode/initcode/gas_usage.json`

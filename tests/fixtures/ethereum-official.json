@@ -76,7 +76,15 @@
     "bad_v_r_s.json": "802c07cf60062ce890a00552d35a17e62c09d4ebe7360ad936ab41fbd1343207",
     "paris-eip1559_tx_validity.json": "dde0d9ddd4fd52ea110a6d9289b56679928b76f2843c33a8a7492f78c90ee52d",
     "paris-invalid_chain_id.json": "43f6c129e96d27b2fbb4e12fc08dbfdc124ce0bc6e5ccdfe09f57f38bd17c3f8",
-    "paris-coverage.json": "3813d3ef1c7b4f063f67cd8cc05fff445199c8c1669f74283e45e5ef7784f86f"
+    "paris-coverage.json": "3813d3ef1c7b4f063f67cd8cc05fff445199c8c1669f74283e45e5ef7784f86f",
+    "shanghai-warm_coinbase_call_out_of_gas.json": "1c1c8f1061b17e3afc9127666bcf6c730e90b53b278ba516fc3004594f618b3f",
+    "shanghai-warm_coinbase_gas_usage.json": "8f9b371ae28cc1014bf1ae1645564a2348cda1041ac0471e95580088f5cc7019",
+    "shanghai-push0_contract_during_call_contexts.json": "4c62b8151588170d76c77c663f9d725f38011bdc716a72b658fadfe7db068928",
+    "shanghai-push0_contracts.json": "d43251afa827672be2b4e30734f8fa39945c24e1eb48f4e17da4b70ccc05e30b",
+    "shanghai-contract_creating_tx.json": "be508ebfb5a5acf1effd36413e0ed0d765081fe28bb0d57d72286f10d01e618c",
+    "shanghai-create2_oversized_initcode_with_insufficient_balance.json": "f1031b48d2b01fefa047610794e970d2f22668af6e9b86c7130cd8e7d53de06a",
+    "shanghai-create_opcode_initcode.json": "2c568ffad7800179962161bf2b26947401966034294e244c84ccf3528b968a50",
+    "shanghai-gas_usage.json": "e03b08f88149011811983261c261c5b6a0f0c14a56fef56174767b89cacb1c5f"
   },
   "parisResults": {
     "group": "for_paris",
@@ -90,5 +98,18 @@
     "executionOrAdapterErrors": 0,
     "validationMatched": 280,
     "forkConformanceProven": false
+  },
+  "shanghaiResults": {
+    "group": "for_shanghai",
+    "engine": "Nano explicit Shanghai rules",
+    "files": 146,
+    "cases": 2441,
+    "matched": 2441,
+    "mismatched": 0,
+    "errors": 0,
+    "unsupported": 0,
+    "validationMatched": 290,
+    "forkConformanceProven": false,
+    "networkConfigurable": true
   }
 }

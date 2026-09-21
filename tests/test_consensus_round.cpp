@@ -155,6 +155,35 @@ int main(){try{
    for(unsigned i=0;i<5;++i)if(i!=absent&&nodes[i]->tip().header.number==1)for(const auto& message:messages)reactors[i]->receive(message,now,24);
   }
   for(unsigned i=0;i<5;++i)if(i!=absent){check(nodes[i]->tip().header.number==2&&nodes[i]->tip().header.hash()==nodes[4]->tip().header.hash(),"newcomer participates in next-height finality");auto cert=nodes[i]->store().certificate_at(2);bool found=false;for(const auto& v:cert->votes)if(address(v.validator)==address(newcomer))found=true;check(found&&cert->votes.size()==4,"newcomer supplies required fourth signature");}
+  // Keep this same reactor/journal through withdrawal and re-registration.
+  // Advance real certified blocks to satisfy the contract's 100-block lock.
+  auto& chain=*nodes[4];auto domain=joining_genesis.block.header.hash();
+  auto next_proposal=[&](){auto selected=chain.next_validator();auto signer=std::find_if(all_keys.begin(),all_keys.end(),[&](const auto& key){return address(public_address(public_key(key)))==address(*selected);});check(signer!=all_keys.end(),"known lifecycle proposer");auto block=chain.block_template(*selected,Int(chain.tip().header.timestamp+12),0);sign_block(block,*signer,1337,domain);return block;};
+  auto certify=[&](const Block& candidate){auto members=chain.voting_set();std::vector<FinalityVote> votes;
+   for(const auto& key:all_keys){auto signer=public_address(public_key(key));if(std::none_of(members.begin(),members.end(),[&](const auto& member){return address(member.first)==address(signer);}))continue;
+    FinalityVote v;v.height=u64(candidate.header.number);v.step=VoteStep::precommit;v.validator=signer;v.validator_set_hash=voting_set_hash(members);v.block_hash=candidate.header.hash();sign_vote(v,key,1337,domain);votes.push_back(v);
+   }chain.import_certified_block(candidate,0,votes,candidate.header.timestamp);
+  };
+  while(chain.tip().header.number<100)certify(next_proposal());
+  Transaction withdrawal;withdrawal.chain_id=1337;withdrawal.nonce=chain.state().get(newcomer).nonce;withdrawal.to=registry;withdrawal.gas=500000;withdrawal.gas_price=2000000000;withdrawal.data=unhex(staking.at("methodIdentifiers").at("withdrawStake()"));
+  auto signed_withdrawal=SignedTransaction::sign(withdrawal,newcomer_key);check(chain.submit(signed_withdrawal),"validator withdrawal submitted after lock period");
+  auto old_members=chain.voting_set();auto departing=next_proposal();certify(departing);
+  check(chain.tip().header.number==101&&chain.store().receipt(signed_withdrawal.hash())->success&&chain.stake(newcomer)==0&&chain.voting_set().size()==4,"certified withdrawal removes voting rights");
+  reactors[4]->tick(start+std::chrono::seconds(100),1224);check(reactors[4]->snapshot().is_null(),"removed validator stops gossip and signing without restart");
+  auto candidate=next_proposal();FinalityVote unauthorized;unauthorized.height=102;unauthorized.step=VoteStep::prevote;unauthorized.validator=newcomer;unauthorized.block_hash=candidate.header.hash();
+  for(const auto& set:{old_members,chain.voting_set()}){unauthorized.validator_set_hash=voting_set_hash(set);sign_vote(unauthorized,newcomer_key,1337,domain);bool refused=false;
+   try{decode_vote_message(encode_vote_message(unauthorized,1337,domain),chain.voting_set(),1337,domain,102,0);}catch(const std::exception&){refused=true;}check(refused,"removed key rejected with either old or current set hash");
+  }
+  tx.nonce=chain.state().get(newcomer).nonce;auto registration_again=SignedTransaction::sign(tx,newcomer_key);check(chain.submit(registration_again),"withdrawn account can submit a new signed registration");
+  auto rejoining=next_proposal();certify(rejoining);check(chain.store().receipt(registration_again.hash())->success&&chain.voting_set().size()==5,"re-registration derives renewed membership");
+  auto fresh=next_proposal();Json message={{"version",1},{"height","0x67"},{"round","0x0"},{"previous",nullptr},{"proposal",fresh.to_json(true)},{"votes",Json::array()}};
+  reactors[4]->receive(message,start+std::chrono::seconds(101),fresh.header.timestamp);reactors[4]->tick(start+std::chrono::seconds(101),fresh.header.timestamp);
+  auto resumed=reactors[4]->snapshot();bool voted=false;for(const auto& encoded:resumed.at("votes")){auto vote=decode_vote_message(encoded.get<std::string>(),chain.voting_set(),1337,domain,103,0);if(address(vote.validator)==address(newcomer)){check(vote.step==VoteStep::prevote&&vote.block_hash==fresh.header.hash(),"returning validator votes only for current proposal");voted=true;}}
+  check(voted&&chain.audit().at("verified")==true,"same reactor resumes current-height voting after certified re-registration");
+  auto reserved=resumed.at("votes");reactors[4].reset();nodes[4].reset();
+  nodes[4]=std::make_unique<Blockchain>(root/"joining-node-4",joining_genesis);reactors[4]=std::make_unique<BftReactor>(*nodes[4],root/"joining-journal-4",newcomer_key);
+  reactors[4]->tick(start+std::chrono::seconds(102),fresh.header.timestamp);
+  check(reactors[4]->snapshot().at("votes")==reserved&&nodes[4]->audit().at("verified")==true,"post-re-registration vote survives chain and journal restart exactly");
  }
  // Execute a weight change, then attack the parent-set boundary with correctly
  // signed certificates. Head count and the former weights cannot authorize it.

@@ -7,7 +7,7 @@ namespace nano {
 Genesis Genesis::from_json(const Json& data){
  Genesis g;auto config=data.value("config",Json::object());
  g.chain_id=quantity(config.value("chainId",Json(1337)));bytes(g.chain_id,32);
- if(config.contains("evmFork")){if(config.at("evmFork")!="Paris")throw std::invalid_argument("unsupported chain evmFork; only Paris is currently configurable");g.evm_revision=EvmRevision::Paris;}
+ if(config.contains("evmFork")){if(config.at("evmFork")=="Paris")g.evm_revision=EvmRevision::Paris;else if(config.at("evmFork")=="Shanghai")g.evm_revision=EvmRevision::Shanghai;else throw std::invalid_argument("unsupported chain evmFork; expected Paris or Shanghai");}
  g.consensus=config.value("consensus",std::string("pow"));
  if(g.consensus!="pow"&&g.consensus!="pos")throw std::invalid_argument("unknown consensus");
  g.staking_contract=config.value("stakingContract",std::string());if(!g.staking_contract.empty()){g.staking_contract=address(g.staking_contract);if(g.consensus!="pos")throw std::invalid_argument("staking contract requires PoS");}
@@ -55,7 +55,7 @@ Genesis Genesis::from_json(const Json& data){
  if(g.pos_signature_version){const std::string domain="Nano/PoS/Genesis";h.extra_data=keccak(Rlp(std::vector<Rlp>{Rlp(Bytes(domain.begin(),domain.end())),Rlp(Int(g.pos_signature_version)),Rlp(g.chain_id),Rlp(unhex(g.bootstrap_validator)),Rlp(g.staking_contract.empty()?Bytes():unhex(g.staking_contract)),Rlp(h.extra_data)}).encode());}
  if(g.consensus_rules_version){const std::string domain="Nano/Consensus/Rules";h.extra_data=keccak(Rlp(std::vector<Rlp>{Rlp(Bytes(domain.begin(),domain.end())),Rlp(Int(1)),Rlp(g.minimum_block_interval),Rlp(g.maximum_future_drift),Rlp(g.minimum_gas_limit),Rlp(h.extra_data)}).encode());}
  if(g.bft_version){const std::string domain="Nano/BFT/Rules";h.extra_data=keccak(Rlp(std::vector<Rlp>{Rlp(Bytes(domain.begin(),domain.end())),Rlp(Int(g.bft_version)),Rlp(h.extra_data)}).encode());}
- if(g.evm_revision==EvmRevision::Paris){const std::string domain="Nano/EVM/Paris/v1";h.extra_data=keccak(Rlp(std::vector<Rlp>{Rlp(Bytes(domain.begin(),domain.end())),Rlp(h.extra_data)}).encode());}
+ if(g.evm_revision==EvmRevision::Paris||g.evm_revision==EvmRevision::Shanghai){const std::string domain=g.evm_revision==EvmRevision::Paris?"Nano/EVM/Paris/v1":"Nano/EVM/Shanghai/v1";h.extra_data=keccak(Rlp(std::vector<Rlp>{Rlp(Bytes(domain.begin(),domain.end())),Rlp(h.extra_data)}).encode());}
  h.encode();return g;
 }
 Blockchain::Blockchain(const std::filesystem::path& database,Genesis genesis)
@@ -99,10 +99,10 @@ bool Blockchain::submit(const SignedTransaction& tx){
  std::lock_guard lock(mutex_);const auto& t=tx.tx;auto sender=tx.sender();
  if(t.chain_id!=genesis_.chain_id)throw std::invalid_argument("wrong chain ID");
  const auto& account=static_cast<const State&>(state_).get(sender);
- if(genesis_.evm_revision==EvmRevision::Paris&&!account.code.empty())throw std::invalid_argument("transaction sender has deployed code");
+ if((genesis_.evm_revision==EvmRevision::Paris||genesis_.evm_revision==EvmRevision::Shanghai)&&!account.code.empty())throw std::invalid_argument("transaction sender has deployed code");
  if(t.nonce<account.nonce)throw std::invalid_argument("transaction nonce already mined");
  Int price=t.type==2?t.max_fee:t.gas_price;
- if(t.gas<t.intrinsic_gas()||t.gas>tip_.header.gas_limit||t.value<0||price<0||account.balance<t.value+t.gas*price)throw std::invalid_argument("transaction exceeds funds or gas limits");
+ if(t.gas<transaction_intrinsic_gas(t,genesis_.evm_revision)||t.gas>tip_.header.gas_limit||t.value<0||price<0||account.balance<t.value+t.gas*price)throw std::invalid_argument("transaction exceeds funds or gas limits");
  if(t.type==2&&(t.priority_fee<0||t.priority_fee>t.max_fee))throw std::invalid_argument("invalid priority fee");
  if(store_.transaction(tx.hash()))return false;
  if(!pool_.add(tx))return false;emit("pending",hex(tx.hash()));return true;
