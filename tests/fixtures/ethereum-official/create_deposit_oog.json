@@ -1,0 +1,446 @@
+{
+    "tests/frontier/create/test_create_deposit_oog.py::test_create_deposit_oog[fork_Berlin-create_opcode_CREATE-state_test-enough_gas_False]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentDifficulty": "0x020000"
+        },
+        "pre": {
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            },
+            "0x3e3bb0fb25369d0ffa8fd3dd527ddcbf192720cb": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x7f000000000000000000000000000000000000000000006000601f5360206000f3600052600a60166000f000",
+                "storage": {}
+            },
+            "0x50ebeab14b5fd8486db8d0c125e9dd899fb760cf": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x60206000600060006000733e3bb0fb25369d0ffa8fd3dd527ddcbf192720cb61968bf100",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x989680"
+            ],
+            "to": "0x50ebeab14b5fd8486db8d0c125e9dd899fb760cf",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Berlin": [
+                {
+                    "hash": "0xdd12c06c2593d1c769490b290fb85b2cab94f04313aadf9300bd5e5d173d35c4",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0x6c50ada04900d4f28e081694889e20db482d21d7bf82d0dcf720b4878f997aa3",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0xf26e",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf901080182f26eb9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf860800a839896809450ebeab14b5fd8486db8d0c125e9dd899fb760cf808026a0214c17ce95087cab5fc4e3324791f5726275ac17931522217e0dacfdea0aed11a06019d58360d1f5691caff34ed55f10cbc08a8e88e5ae6a6b7c8f5b667a97c449",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ce7f687b4",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x3e3bb0fb25369d0ffa8fd3dd527ddcbf192720cb": {
+                            "nonce": "0x02",
+                            "balance": "0x00",
+                            "code": "0x7f000000000000000000000000000000000000000000006000601f5360206000f3600052600a60166000f000",
+                            "storage": {}
+                        },
+                        "0x50ebeab14b5fd8486db8d0c125e9dd899fb760cf": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x60206000600060006000733e3bb0fb25369d0ffa8fd3dd527ddcbf192720cb61968bf100",
+                            "storage": {}
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x09784c",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0xd5157a6444d18ed771e620ad09ea4f73303d87a744a74ad7eaf1dc1227d134a6",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Run create deploys with a lot of deposited code.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/frontier/create/test_create_deposit_oog.py#L21",
+            "metadata": {
+                "opcode_count": {}
+            }
+        }
+    },
+    "tests/frontier/create/test_create_deposit_oog.py::test_create_deposit_oog[fork_Berlin-create_opcode_CREATE-state_test-enough_gas_True]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentDifficulty": "0x020000"
+        },
+        "pre": {
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            },
+            "0x3e3bb0fb25369d0ffa8fd3dd527ddcbf192720cb": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x7f000000000000000000000000000000000000000000006000601f5360206000f3600052600a60166000f000",
+                "storage": {}
+            },
+            "0x019e977fe1f80bb45139e81a183df2a2fd86129a": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x60206000600060006000733e3bb0fb25369d0ffa8fd3dd527ddcbf192720cb61968cf100",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x989680"
+            ],
+            "to": "0x019e977fe1f80bb45139e81a183df2a2fd86129a",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Berlin": [
+                {
+                    "hash": "0x1ae27beb983a201e53a96cc3ce1954eb1611c54e9e474b72a314351187dea31a",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0x2e548138508ea9238ca2d2cbb2acd73d699152c911e6019b4d7b4fad47f88c14",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0xf26f",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf901080182f26fb9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf860800a8398968094019e977fe1f80bb45139e81a183df2a2fd86129a808025a0ec6a59e7e01f07ec84cdf6d840e23fe789ae3a22c6f0dee39ce3928e2bf71538a0326637a8beedb0fb57aa7862570c455f05aacac91023eb80fa5b2346837b3311",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ce7f687aa",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x3e3bb0fb25369d0ffa8fd3dd527ddcbf192720cb": {
+                            "nonce": "0x02",
+                            "balance": "0x00",
+                            "code": "0x7f000000000000000000000000000000000000000000006000601f5360206000f3600052600a60166000f000",
+                            "storage": {}
+                        },
+                        "0x019e977fe1f80bb45139e81a183df2a2fd86129a": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x60206000600060006000733e3bb0fb25369d0ffa8fd3dd527ddcbf192720cb61968cf100",
+                            "storage": {}
+                        },
+                        "0xe8e5ae0d7dbd099578363e66f5ec738f0808b98f": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                            "storage": {}
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x097856",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x5808151e2e2629424f28f4acf041120c0fd9ca27bf21f5eb9dba3a110fe0cdcc",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Run create deploys with a lot of deposited code.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/frontier/create/test_create_deposit_oog.py#L21",
+            "metadata": {
+                "opcode_count": {}
+            }
+        }
+    },
+    "tests/frontier/create/test_create_deposit_oog.py::test_create_deposit_oog[fork_Berlin-create_opcode_CREATE2-state_test-enough_gas_False]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentDifficulty": "0x020000"
+        },
+        "pre": {
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            },
+            "0x1ec2cdaf3802ead0c0dd311d06da205bc0653749": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x7f000000000000000000000000000000000000000000006000601f5360206000f36000526000600a60166000f500",
+                "storage": {}
+            },
+            "0x34f6cd4271258721a45c1de156d07c8265541fc9": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x60206000600060006000731ec2cdaf3802ead0c0dd311d06da205bc0653749619694f100",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x989680"
+            ],
+            "to": "0x34f6cd4271258721a45c1de156d07c8265541fc9",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Berlin": [
+                {
+                    "hash": "0x674398bb5f075032e74b5d6b21ac5f6c0b4e79b68458cf6856d242e3e43a3dae",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0x5e93ead44e956583a6535f218d6cbf326f0d1ab8fded261e22aed53f2d55dce0",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0xf277",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf901080182f277b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf860800a839896809434f6cd4271258721a45c1de156d07c8265541fc9808025a0ec648540199c532e3fdabf9dc5feebfc982577a084b08c43688663c9f1ffd9f9a02c7bd506c10d546a6ac24fe693ee3c2554c81a562dd17f3d5790f03c12aff080",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ce7f6875a",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x1ec2cdaf3802ead0c0dd311d06da205bc0653749": {
+                            "nonce": "0x02",
+                            "balance": "0x00",
+                            "code": "0x7f000000000000000000000000000000000000000000006000601f5360206000f36000526000600a60166000f500",
+                            "storage": {}
+                        },
+                        "0x34f6cd4271258721a45c1de156d07c8265541fc9": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x60206000600060006000731ec2cdaf3802ead0c0dd311d06da205bc0653749619694f100",
+                            "storage": {}
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x0978a6",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x93bffef3ffaea7494009d40b23b5279ef0e72ec6f84f132f2b2bf571f7ea1d78",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Run create deploys with a lot of deposited code.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/frontier/create/test_create_deposit_oog.py#L21",
+            "metadata": {
+                "opcode_count": {}
+            }
+        }
+    },
+    "tests/frontier/create/test_create_deposit_oog.py::test_create_deposit_oog[fork_Berlin-create_opcode_CREATE2-state_test-enough_gas_True]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentDifficulty": "0x020000"
+        },
+        "pre": {
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            },
+            "0x1ec2cdaf3802ead0c0dd311d06da205bc0653749": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x7f000000000000000000000000000000000000000000006000601f5360206000f36000526000600a60166000f500",
+                "storage": {}
+            },
+            "0xbf11345334833a4072bcaf7b38e68c1105217ae7": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x60206000600060006000731ec2cdaf3802ead0c0dd311d06da205bc0653749619695f100",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x989680"
+            ],
+            "to": "0xbf11345334833a4072bcaf7b38e68c1105217ae7",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Berlin": [
+                {
+                    "hash": "0xfb7f0c9fb4858547eb8ad102703139a0adfa09f78a6e955ca897b7f6f9421c2e",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0xd3e4c5d600eac0b1413b662d6901c7134def06d737f77421e3af5e95b228427e",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0xf278",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf901080182f278b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf860800a8398968094bf11345334833a4072bcaf7b38e68c1105217ae7808026a08f762604ac95fdf6b44aea33c8b24068c7033b9a5ad064da7bb021e87fc1dfcea03ba40e0583422c51edf1981511af967b004786162f225ae381b1c50c35163e59",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ce7f68750",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x1ec2cdaf3802ead0c0dd311d06da205bc0653749": {
+                            "nonce": "0x02",
+                            "balance": "0x00",
+                            "code": "0x7f000000000000000000000000000000000000000000006000601f5360206000f36000526000600a60166000f500",
+                            "storage": {}
+                        },
+                        "0xbf11345334833a4072bcaf7b38e68c1105217ae7": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x60206000600060006000731ec2cdaf3802ead0c0dd311d06da205bc0653749619695f100",
+                            "storage": {}
+                        },
+                        "0x82b8381f239c76aa1d99d1c751918aa4bf5650be": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                            "storage": {}
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x0978b0",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0xcad592c1b6d659981c287c511dd4a07183516b5c1f9690c1973ebd1354a35146",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Run create deploys with a lot of deposited code.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/frontier/create/test_create_deposit_oog.py#L21",
+            "metadata": {
+                "opcode_count": {}
+            }
+        }
+    }
+}

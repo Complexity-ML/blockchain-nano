@@ -1,0 +1,168 @@
+GCC_VER=$(shell $(PRE)$(CC) -dumpversion)
+UNAME_S?=$(shell uname -s)
+ARCH?=$(shell uname -m)
+NASM_ELF_OPT=-felf64
+ifeq ($(UNAME_S),Linux)
+  OS=Linux
+endif
+ifeq ($(findstring MINGW64,$(UNAME_S)),MINGW64)
+  OS=mingw64
+  CFLAGS+=-D__USE_MINGW_ANSI_STDIO=1
+  NASM_ELF_OPT=-fwin64
+endif
+ifeq ($(findstring CYGWIN,$(UNAME_S)),CYGWIN)
+  OS=cygwin
+endif
+ifeq ($(UNAME_S),Darwin)
+  ifeq ($(ARCH),x86_64)
+    OS=mac
+  else
+    OS=mac-m1
+  endif
+  LIB_SUF=dylib
+  NASM_ELF_OPT=-fmacho64
+else
+  LIB_SUF=so
+endif
+ifeq ($(UNAME_S),OpenBSD)
+  OS=openbsd
+  CXX?=clang++
+  CFLAGS+=-I/usr/local/include
+  LDFLAGS+=-L/usr/local/lib
+endif
+ifeq ($(UNAME_S),FreeBSD)
+  OS=freebsd
+  CXX?=clang++
+  CFLAGS+=-I/usr/local/include
+  LDFLAGS+=-L/usr/local/lib
+endif
+
+ifneq ($(findstring $(ARCH),x86_64/amd64),)
+  CPU=x86-64
+  INTEL=1
+  ifeq ($(findstring $(OS),mingw64/cygwin),)
+    GCC_EXT=1
+  endif
+  BIT=64
+  BIT_OPT=-m64
+  #LOW_ASM_SRC=src/asm/low_x86-64.asm
+  #ASM=nasm -felf64
+endif
+ifneq ($(findstring $(ARCH),x86/i386/i686),)
+  CPU=x86
+  INTEL=1
+  BIT=32
+  BIT_OPT=-m32
+  #LOW_ASM_SRC=src/asm/low_x86.asm
+endif
+ifneq ($(findstring $(ARCH),armv7l/armv6l),)
+  CPU=arm
+  BIT=32
+  #LOW_ASM_SRC=src/asm/low_arm.s
+endif
+#ifeq ($(ARCH),aarch64)
+ifneq ($(findstring $(ARCH),aarch64/arm64),)
+  CPU=aarch64
+  BIT=64
+endif
+ifeq ($(findstring $(OS),mac/mac-m1/mingw64/openbsd),)
+  LDFLAGS+=-lrt
+endif
+ifeq ($(ARCH),s390x)
+  CPU=systemz
+  BIT=64
+endif
+
+AR?=ar
+ARFLAGS?=r
+CP=cp -f
+MKDIR=mkdir -p
+RM=rm -rf
+
+DEBUG?=0
+ifeq ($(DEBUG),1)
+  ifeq ($(GCC_EXT),1)
+    SANITIZE_OPT?=-fsanitize=address
+  endif
+endif
+ifeq ($(DEBUG),2)
+  ifeq ($(GCC_EXT),1)
+    # with MCL_BINT_ASM=0 MCL_USE_LLVM=0 MCL_USE_XBYAK=0 MCL_MSM=0
+    MSAN_DIR?=../llvm-20-src/build-msan
+    SANITIZE_OPT?=-fsanitize=memory -fsanitize-memory-track-origins -nostdinc++ -isystem $(MSAN_DIR)/include/c++/v1 -g -fno-omit-frame-pointer
+    SANITIZE_LDFLAGS=-stdlib=libc++ -L $(MSAN_DIR)/lib -Wl,-rpath,$(MSAN_DIR)/lib
+    # asm is not available
+  endif
+endif
+ifeq ($(DEBUG),3)
+  # no option
+endif
+ifeq ($(DEBUG),4)
+  ifeq ($(GCC_EXT),1)
+    SANITIZE_OPT?=-fsanitize=address,undefined -fno-sanitize-recover
+  endif
+endif
+CFLAGS+=$(SANITIZE_OPT)
+LDFLAGS+=$(SANITIZE_OPT) $(SANITIZE_LDFLAGS)
+ifeq ($(DEBUG),0)
+  CFLAGS_OPT+=-fomit-frame-pointer -DNDEBUG -fno-stack-protector
+  CFLAGS_OPT+=-O3
+  ifeq ($(INTEL),1)
+    CFLAGS_OPT+=-mbmi2 -madx
+  endif
+  ifeq ($(MARCH),)
+  else
+    CFLAGS_OPT+=$(MARCH)
+  endif
+endif
+CFLAGS_WARN=-Wall -Wextra -Wformat=2 -Wcast-qual -Wcast-align -Wwrite-strings -Wfloat-equal -Wpointer-arith -Wundef
+CFLAGS+=-g3
+INC_OPT=-I include -I test
+CFLAGS+=$(CFLAGS_WARN) $(BIT_OPT) $(INC_OPT)
+DEBUG=0
+CFLAGS_OPT_USER?=$(CFLAGS_OPT)
+ifeq ($(DEBUG),0)
+CFLAGS+=$(CFLAGS_OPT_USER)
+endif
+CFLAGS+=$(CFLAGS_USER)
+ifneq ($(MCL_SIZEOF_UNIT),)
+  CFLAGS+=-DMCL_SIZEOF_UNIT=$(MCL_SIZEOF_UNIT)
+endif
+MCL_USE_GMP?=0
+ifeq ($(MCL_USE_GMP),1)
+  CFLAGS+=-DMCL_USE_GMP=1
+  MCL_USE_GMP_LIB=1
+endif
+MCL_USE_GMP_LIB?=1
+ifeq ($(MCL_USE_GMP_LIB),1)
+  GMP_LIB=-lgmp -lgmpxx
+  ifeq ($(UNAME_S),Darwin)
+    GMP_DIR?=/opt/homebrew/
+  endif
+  ifneq ($(GMP_DIR),)
+    CFLAGS+=-I$(GMP_DIR)/include
+    LDFLAGS+=-L$(GMP_DIR)/lib
+  endif
+endif
+ifeq ($(MCL_STATIC_CODE),1)
+  MCL_USE_XBYAK=0
+  MCL_FP_BIT=384
+  CFLAGS+=-DMCL_STATIC_CODE
+  CFLAGS+=-fno-exceptions -fno-rtti -DCYBOZU_DONT_USE_STRING -DCYBOZU_DONT_USE_EXCEPTION
+endif
+ifeq ($(MCL_USE_OMP),1)
+  CFLAGS+=-DMCL_USE_OMP
+  ifneq ($(findstring $(OS),mac/mac-m1),)
+    CFLAGS+=-Xpreprocessor -fopenmp
+    LDFLAGS+=-lomp -L/opt/homebrew/opt/libomp/lib
+  else
+    CFLAGS+=-fopenmp
+    LDFLAGS+=-fopenmp
+  endif
+endif
+LDFLAGS+=$(GMP_LIB) $(BIT_OPT) $(LDFLAGS_USER)
+
+# -fpic is better than -fPIC in exchange for restriction of a size of GOT
+# https://tldp.org/HOWTO/Program-Library-HOWTO/shared-libraries.html
+CFLAGS+=-fpic
+

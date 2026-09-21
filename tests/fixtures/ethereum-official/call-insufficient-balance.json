@@ -1,0 +1,114 @@
+{
+    "tests/berlin/eip2929_gas_cost_increases/test_call.py::test_call_insufficient_balance[fork_Berlin-state_test]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentDifficulty": "0x020000"
+        },
+        "pre": {
+            "0xf36afef4dcb45e52f80cb039335952f77cec8960": {
+                "nonce": "0x00",
+                "balance": "0x01",
+                "code": "0x",
+                "storage": {}
+            },
+            "0x5cacb0cd1bea69d7453cab8dfe870a90f5fff30b": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x6000600060006000600173f36afef4dcb45e52f80cb039335952f77cec89605af16000555a73f36afef4dcb45e52f80cb039335952f77cec8960315a9050900360005a5a9003019003600155",
+                "storage": {}
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0x5cacb0cd1bea69d7453cab8dfe870a90f5fff30b",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Berlin": [
+                {
+                    "hash": "0x949c443b5122a45105a01f06a6e015cff18d21e0bb4c32b7323a2019961b6ffe",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0x8d2e4fa292b46a6ae5cc2a0481c6b1447176b84613cb88f9e76c3b8a55ed4213",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0xd5ee",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf901080182d5eeb9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf861800a8407270e00945cacb0cd1bea69d7453cab8dfe870a90f5fff30b808025a0d80f21c7c1f860ff80b3ad5306ca0aef738658ec1467da66436f3c69a881fa4aa02ecc62e0418b0ad1521a9de4ff3cc8bc2a892ab70bd87aa9d2d8dfa45071d0c4",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xf36afef4dcb45e52f80cb039335952f77cec8960": {
+                            "nonce": "0x00",
+                            "balance": "0x01",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x5cacb0cd1bea69d7453cab8dfe870a90f5fff30b": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x6000600060006000600173f36afef4dcb45e52f80cb039335952f77cec89605af16000555a73f36afef4dcb45e52f80cb039335952f77cec8960315a9050900360005a5a9003019003600155",
+                            "storage": {
+                                "0x01": "0x67"
+                            }
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ce7f7a4b4",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x085b4c",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x82097d7add892ba608b040c3f212f236105df0f4bf488e1a235dcdf94751fe89",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test a regular CALL to see if it warms the destination with insufficient\nbalance.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/berlin/eip2929_gas_cost_increases/test_call.py#L19",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-2929.md",
+            "reference-spec-version": "0e11417265a623adb680c527b15d0cb6701b870b"
+        }
+    }
+}

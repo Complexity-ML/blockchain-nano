@@ -1,0 +1,7 @@
+#include "support/process.hpp"
+using namespace test;
+int main(int argc,char** argv){try{check(argc==2,"fixture required");Temp root;
+ auto interrupted=[&](const std::string& phase){Process child({argv[1],phase,root.path.string()});auto value=Json::parse(child.line([](const std::string& s){return !s.empty()&&s[0]=='{';},15));check(value["phase"]==phase&&child.running(),"phase acknowledgement missing");child.signal(SIGKILL);check(child.wait(10).code==-SIGKILL,"fixture was not killed abruptly");return value;};
+ auto reserved=interrupted("reserve");check(reserved["height"]=="0x0"&&reserved["votingHeight"]==1,"reserve boundary");auto committed=interrupted("commit");check(committed["height"]=="0x1"&&committed["votingHeight"]==1,"commit boundary");check(committed["signature"]==reserved["signature"]&&committed["recoveredSignature"]==reserved["signature"]&&committed["blockHash"]==reserved["blockHash"],"recovered signature or block differs");
+ auto recovered=interrupted("recover");check(recovered["height"]=="0x1"&&recovered["votingHeight"]==2,"recovery boundary");auto result=success(run({argv[1],"verify",root.path.string()}));check(result["height"]=="0x2"&&result["votingHeight"]==3&&result["audit"]["verified"].get<bool>()&&result["audit"]["certifiedBlocks"]=="0x2","post-crash state or certificate mismatch");std::cout<<"Three SIGKILL boundaries passed in native C++\n";
+}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

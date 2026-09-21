@@ -1,0 +1,267 @@
+{
+    "tests/london/eip1559_fee_market_change/test_tx_type.py::test_invalid_chain_id[fork_Paris-tx_type_0-state_test]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07"
+        },
+        "pre": {
+            "0xf89a03b42ea1412874da2cf1ae48956f73d06039": {
+                "nonce": "0x00",
+                "balance": "0xdeadbeee",
+                "code": "0x",
+                "storage": {}
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0xf89a03b42ea1412874da2cf1ae48956f73d06039",
+            "value": [
+                "0x01"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Paris": [
+                {
+                    "hash": "0x94f17be47be2e27f90e110c9c2d405b7c70a9910f766f0af7c8c2ffc521c4667",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "txbytes": "0xf861800a8407270e0094f89a03b42ea1412874da2cf1ae48956f73d06039018027a038ecbecf82110ee2b77a2e7f3835bfbdde90fdce6142c094791889e15ca6777aa051ead7c0fb2de9300069c4c39c7e07216a821725a8212ba039e3c4477f474684",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xf89a03b42ea1412874da2cf1ae48956f73d06039": {
+                            "nonce": "0x00",
+                            "balance": "0xdeadbeee",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x00",
+                            "balance": "0x033b2e3c9fd0803ce8000000",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    },
+                    "expectException": "TransactionException.INVALID_CHAINID"
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x534f13c8671a071d1d0220bc26f28931dd89339023c8f34670303df417e3a1fb",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test that a transaction with a different chain id is not valid.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/london/eip1559_fee_market_change/test_tx_type.py#L77",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1559.md",
+            "reference-spec-version": "ba6c342c23164072adb500c3136e3ae6eabff306"
+        }
+    },
+    "tests/london/eip1559_fee_market_change/test_tx_type.py::test_invalid_chain_id[fork_Paris-tx_type_1-state_test]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07"
+        },
+        "pre": {
+            "0xf89a03b42ea1412874da2cf1ae48956f73d06039": {
+                "nonce": "0x00",
+                "balance": "0xdeadbeee",
+                "code": "0x",
+                "storage": {}
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0xf89a03b42ea1412874da2cf1ae48956f73d06039",
+            "value": [
+                "0x01"
+            ],
+            "data": [
+                "0x"
+            ],
+            "accessLists": [
+                []
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Paris": [
+                {
+                    "hash": "0x94f17be47be2e27f90e110c9c2d405b7c70a9910f766f0af7c8c2ffc521c4667",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "txbytes": "0x01f86302800a8407270e0094f89a03b42ea1412874da2cf1ae48956f73d060390180c080a0a0ed656dc787e9e0eca25f5269b1d10ff53adcc22b447ce3bc1b63059b85a271a0144b86fb7b0e309282a2531df03d8e6f9b02c00b5fd68d97ff945f4f1ae98e12",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xf89a03b42ea1412874da2cf1ae48956f73d06039": {
+                            "nonce": "0x00",
+                            "balance": "0xdeadbeee",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x00",
+                            "balance": "0x033b2e3c9fd0803ce8000000",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    },
+                    "expectException": "TransactionException.INVALID_CHAINID"
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0xcf680fcb388d9691cdc8b8f2239aa25c173a86b372455b7ba08d2218693cd888",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test that a transaction with a different chain id is not valid.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/london/eip1559_fee_market_change/test_tx_type.py#L77",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1559.md",
+            "reference-spec-version": "ba6c342c23164072adb500c3136e3ae6eabff306"
+        }
+    },
+    "tests/london/eip1559_fee_market_change/test_tx_type.py::test_invalid_chain_id[fork_Paris-tx_type_2-state_test]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07"
+        },
+        "pre": {
+            "0xf89a03b42ea1412874da2cf1ae48956f73d06039": {
+                "nonce": "0x00",
+                "balance": "0xdeadbeee",
+                "code": "0x",
+                "storage": {}
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "maxPriorityFeePerGas": "0x00",
+            "maxFeePerGas": "0x07",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0xf89a03b42ea1412874da2cf1ae48956f73d06039",
+            "value": [
+                "0x01"
+            ],
+            "data": [
+                "0x"
+            ],
+            "accessLists": [
+                []
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Paris": [
+                {
+                    "hash": "0x94f17be47be2e27f90e110c9c2d405b7c70a9910f766f0af7c8c2ffc521c4667",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "txbytes": "0x02f864028080078407270e0094f89a03b42ea1412874da2cf1ae48956f73d060390180c001a05834430c183559624071975b591f9994fff06e98c1a2dd21e165da0f6f1c587ba05e4bdb3e7d2d8a0af903a8684b9a02757420e792597bca7b0d16f6e59d234702",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xf89a03b42ea1412874da2cf1ae48956f73d06039": {
+                            "nonce": "0x00",
+                            "balance": "0xdeadbeee",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x00",
+                            "balance": "0x033b2e3c9fd0803ce8000000",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    },
+                    "expectException": "TransactionException.INVALID_CHAINID"
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0xf60bdb3a12241e6281ad10253ef4fb51580f6448a50eeb13c3bae4a5fe14d883",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test that a transaction with a different chain id is not valid.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/london/eip1559_fee_market_change/test_tx_type.py#L77",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1559.md",
+            "reference-spec-version": "ba6c342c23164072adb500c3136e3ae6eabff306"
+        }
+    }
+}

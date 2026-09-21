@@ -1,0 +1,94 @@
+{
+    "tests/london/eip1559_fee_market_change/test_tx_type.py::test_eip1559_tx_validity[fork_Berlin-invalid-state_test]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentDifficulty": "0x020000"
+        },
+        "pre": {
+            "0x67eb8fcbef83a0662b030f8bc89a10070c167a66": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x6001600055",
+                "storage": {
+                    "0x00": "0xdeadbeef"
+                }
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "maxPriorityFeePerGas": "0x01",
+            "maxFeePerGas": "0x07",
+            "gasLimit": [
+                "0x0186a0"
+            ],
+            "to": "0x67eb8fcbef83a0662b030f8bc89a10070c167a66",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "accessLists": [
+                []
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Berlin": [
+                {
+                    "hash": "0xeca5da5ee1c48f6a1914043f101693ca5fd212cd7bdb3b49ee233e73f12ae64b",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "txbytes": "0x02f86301800107830186a09467eb8fcbef83a0662b030f8bc89a10070c167a668080c080a01ef3fc8724e6fdf14f3f47702db5fbb0f1321b6aaafbd5a8d81254dab045d96da0638c3b2014fd18306db4035664959d2c19af6d9ced79f52392c62744f1e63d3f",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x67eb8fcbef83a0662b030f8bc89a10070c167a66": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x6001600055",
+                            "storage": {
+                                "0x00": "0xdeadbeef"
+                            }
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x00",
+                            "balance": "0x033b2e3c9fd0803ce8000000",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    },
+                    "expectException": "TransactionException.TYPE_2_TX_PRE_FORK"
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0xb1a31dd2d97e07fee45f7ac25e35fe3de8ceb914cd2834077b498729fb189aa3",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Tests that an EIP-1559 tx has no effect before London.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/london/eip1559_fee_market_change/test_tx_type.py#L39",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1559.md",
+            "reference-spec-version": "ba6c342c23164072adb500c3136e3ae6eabff306"
+        }
+    }
+}

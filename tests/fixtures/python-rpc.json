@@ -1,0 +1,517 @@
+{
+  "source": {
+    "nanopy/node/node.py": "6c1c78a71bd207278eca9d0bdede5a381103bc5a40618a22957d9c76498b63ea",
+    "nanopy/network/http_rpc.py": "ec9d1dfb2fbf2cde08ad1725a40dafb025caca478b06f1bc929e691869553f56",
+    "nanopy/network/txpool.py": "f5d899c95414e96a1841a479ac5c601f4fc5b8871436940c9d59bef1486fb438"
+  },
+  "genesis": {
+    "config": {
+      "chainId": 1337
+    },
+    "alloc": {
+      "0xabababababababababababababababababababab": {
+        "balance": "0x3039",
+        "nonce": "0x7",
+        "code": "0x602a60005260206000f3",
+        "storage": {
+          "0x0": "0x9"
+        }
+      }
+    }
+  },
+  "vectors": [
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 0,
+        "method": "eth_chainId",
+        "params": []
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 0,
+        "result": "0x539"
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "net_version",
+        "params": []
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": "1337"
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "method": "eth_protocolVersion",
+        "params": []
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": "0x41"
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "method": "eth_syncing",
+        "params": []
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "result": false
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 4,
+        "method": "eth_coinbase",
+        "params": []
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 4,
+        "result": "0x0000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 5,
+        "method": "eth_mining",
+        "params": []
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 5,
+        "result": false
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 6,
+        "method": "eth_hashrate",
+        "params": []
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 6,
+        "result": "0x0"
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 7,
+        "method": "eth_accounts",
+        "params": []
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 7,
+        "result": []
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 8,
+        "method": "eth_blockNumber",
+        "params": []
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 8,
+        "result": "0x0"
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 9,
+        "method": "net_peerCount",
+        "params": []
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 9,
+        "result": "0x0"
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 10,
+        "method": "txpool_status",
+        "params": []
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 10,
+        "result": {
+          "pending": 0,
+          "queued": 0
+        }
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 11,
+        "method": "txpool_content",
+        "params": []
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 11,
+        "result": {
+          "pending": {},
+          "queued": {}
+        }
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 12,
+        "method": "eth_getBalance",
+        "params": [
+          "0xabababababababababababababababababababab",
+          "latest"
+        ]
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 12,
+        "result": "0x3039"
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 13,
+        "method": "eth_getCode",
+        "params": [
+          "0xabababababababababababababababababababab",
+          "latest"
+        ]
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 13,
+        "result": "0x602a60005260206000f3"
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 14,
+        "method": "eth_getTransactionCount",
+        "params": [
+          "0xabababababababababababababababababababab",
+          "latest"
+        ]
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 14,
+        "result": "0x7"
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 15,
+        "method": "eth_getStorageAt",
+        "params": [
+          "0xabababababababababababababababababababab",
+          "0x0",
+          "latest"
+        ]
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 15,
+        "result": "0x0000000000000000000000000000000000000000000000000000000000000009"
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 16,
+        "method": "eth_getStorageAt",
+        "params": [
+          "0xabababababababababababababababababababab",
+          "0x1",
+          "latest"
+        ]
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 16,
+        "result": "0x0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 17,
+        "method": "eth_getBalance",
+        "params": [
+          "0xcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+          "latest"
+        ]
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 17,
+        "result": "0x0"
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 18,
+        "method": "eth_getCode",
+        "params": [
+          "0xcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+          "latest"
+        ]
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 18,
+        "result": "0x"
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 19,
+        "method": "eth_getTransactionCount",
+        "params": [
+          "0xcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+          "latest"
+        ]
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 19,
+        "result": "0x0"
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 20,
+        "method": "eth_getStorageAt",
+        "params": [
+          "0xcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+          "0x0",
+          "latest"
+        ]
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 20,
+        "result": "0x0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 21,
+        "method": "eth_getStorageAt",
+        "params": [
+          "0xcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+          "0x1",
+          "latest"
+        ]
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 21,
+        "result": "0x0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 22,
+        "method": "eth_getBlockByHash",
+        "params": [
+          "0x0000000000000000000000000000000000000000000000000000000000000000"
+        ]
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 22,
+        "result": null
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 23,
+        "method": "eth_getBlockTransactionCountByHash",
+        "params": [
+          "0x0000000000000000000000000000000000000000000000000000000000000000"
+        ]
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 23,
+        "result": null
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 24,
+        "method": "eth_getTransactionByHash",
+        "params": [
+          "0x0000000000000000000000000000000000000000000000000000000000000000"
+        ]
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 24,
+        "result": null
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 25,
+        "method": "eth_getTransactionReceipt",
+        "params": [
+          "0x0000000000000000000000000000000000000000000000000000000000000000"
+        ]
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 25,
+        "result": null
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 26,
+        "method": "eth_getBlockByNumber",
+        "params": [
+          "0x99"
+        ]
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 26,
+        "result": null
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 27,
+        "method": "eth_getBlockTransactionCountByNumber",
+        "params": [
+          "0x99"
+        ]
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 27,
+        "result": null
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 28,
+        "method": "eth_getBlockTransactionCountByNumber",
+        "params": [
+          "latest"
+        ]
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 28,
+        "result": "0x0"
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 29,
+        "method": "eth_getTransactionByBlockNumberAndIndex",
+        "params": [
+          "latest",
+          "0x0"
+        ]
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 29,
+        "result": null
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 30,
+        "method": "eth_getTransactionByBlockHashAndIndex",
+        "params": [
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "0x0"
+        ]
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 30,
+        "result": null
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 31,
+        "method": "web3_sha3",
+        "params": [
+          "0x"
+        ]
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 31,
+        "result": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
+      }
+    },
+    {
+      "request": {
+        "jsonrpc": "2.0",
+        "id": 32,
+        "method": "web3_sha3",
+        "params": [
+          "0x010203"
+        ]
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 32,
+        "result": "0xf1885eda54b7a053318cd41e2093220dab15d65381b1157a3633a83bfd5c9239"
+      }
+    }
+  ]
+}

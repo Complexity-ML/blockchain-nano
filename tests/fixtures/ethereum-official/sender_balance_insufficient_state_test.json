@@ -1,0 +1,72 @@
+{
+    "tests/frontier/validation/test_transaction.py::test_sender_balance_insufficient_state_test[fork_Berlin-state_test]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentDifficulty": "0x020000"
+        },
+        "pre": {
+            "0x43e6f595ac8e8c6e584c7a2d9949a6bfae8c4287": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x600160005500",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x0186a0"
+            ],
+            "to": "0x43e6f595ac8e8c6e584c7a2d9949a6bfae8c4287",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0xc0f6dc9e5836f54caadbf59cc69346c508e1992b",
+            "secretKey": "0x4a2ffc8867fd8d1773481cf13f36e44f033133c579520d2745e46c3bbbf21e6a"
+        },
+        "post": {
+            "Berlin": [
+                {
+                    "hash": "0x7d2b9aab793f618eeb1773120fd525386b788a3947bd47ec6a7cfea9e51d1b6d",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "txbytes": "0xf860800a830186a09443e6f595ac8e8c6e584c7a2d9949a6bfae8c428780801ba02dda4459c3a9ad10958d14dfb46995f67a72daf0dae7a59ec01282848b13c969a059d5c99684510838ebaea7f337bc9599364414b12acbde5223ed0d265896fa48",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x43e6f595ac8e8c6e584c7a2d9949a6bfae8c4287": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x600160005500",
+                            "storage": {}
+                        }
+                    },
+                    "expectException": "TransactionException.INSUFFICIENT_ACCOUNT_FUNDS"
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0xbcfada71662b05da2b13e4e8111f36a69262b29488e3998307ce60dba0064939",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "A legacy transaction from a sender that cannot afford `gas * gasPrice`\nmust be rejected, exercised through the state-test code path.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/frontier/validation/test_transaction.py#L161",
+            "metadata": {
+                "opcode_count": {}
+            }
+        }
+    }
+}

@@ -1,0 +1,26 @@
+import { network, artifacts } from "hardhat";
+import { BrowserProvider, Wallet, ContractFactory, Contract } from "ethers";
+import assert from "node:assert/strict";
+const connection = await network.create("nano");
+const provider = new BrowserProvider(connection.provider);
+provider.pollingInterval = 100;
+// Public deterministic keys only, funded in a temporary local genesis.
+const developer = new Wallet("0x" + "1".padStart(64, "0"), provider);
+const recipient = new Wallet("0x" + "2".padStart(64, "0"), provider);
+assert.match(await provider.send("web3_clientVersion", []), /^Nano\//);
+const artifact = await artifacts.readArtifact("DeveloperToken");
+const token = await new ContractFactory(artifact.abi, artifact.bytecode, developer).deploy();
+await token.waitForDeployment();
+assert.equal(await token.totalSupply(), 1000000n);
+assert.equal(await token.balanceOf(developer.address), 1000000n);
+const receipt = await (await token.transfer(recipient.address, 125)).wait();
+assert.equal(receipt.status, 1);
+assert.equal(await token.balanceOf(recipient.address), 125n);
+assert.equal(receipt.logs.length, 1);
+const hostile = new Contract(await token.getAddress(), artifact.abi, recipient);
+await assert.rejects(hostile.transferFrom(developer.address, recipient.address, 1));
+assert.equal(await token.balanceOf(recipient.address), 125n);
+const blocks = await provider.send("nano_networkBlocks", ["0x0"]);
+assert(blocks.blocks.some((block: any) => block.bftCertificate?.votes.length > 0));
+console.log(JSON.stringify({ tool: "Hardhat", client: await provider.send("web3_clientVersion", []), contract: await token.getAddress(), supply: "1000000", transferred: "125", unauthorizedTransferRejected: true, certifiedBlocks: true }));
+await connection.close();

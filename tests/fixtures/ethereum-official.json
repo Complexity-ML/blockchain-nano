@@ -1,0 +1,94 @@
+{
+  "repository": "https://github.com/ethereum/execution-specs",
+  "release": "tests@v20.0.0",
+  "publishedAt": "2026-07-02T15:04:12Z",
+  "archive": "https://github.com/ethereum/execution-specs/releases/download/tests%40v20.0.0/fixtures.tar.gz",
+  "archiveBytes": 399656884,
+  "archiveSha256": "b183702a5b447b465873865357ced9eb342315922e52e31b714e2de115dd0bb4",
+  "executionStatus": "partial-diagnostic-run",
+  "requirements": [
+    "Inventory every fixture and fork, including unsupported cases",
+    "Native C++ execution adapter with explicit fork rules",
+    "Compare expected state roots, logs, execution and validation errors",
+    "Account for all skips and unsupported cases as incomplete coverage",
+    "Keep Nano BFT qualification separate from Ethereum execution compatibility"
+  ],
+  "inventory": {
+    "jsonFiles": 36400,
+    "formats": {
+      "other": 5,
+      "blockchain_tests": 8577,
+      "blockchain_tests_engine": 7842,
+      "blockchain_tests_engine_x": 11835,
+      "state_tests": 8117,
+      "transaction_tests": 24
+    },
+    "sample": {
+      "path": "fixtures/state_tests/for_berlin/berlin/eip2929_gas_cost_increases/call/call_insufficient_balance.json",
+      "keys": [
+        "env",
+        "pre",
+        "transaction",
+        "post",
+        "config",
+        "_info"
+      ],
+      "forks": [
+        "Berlin"
+      ]
+    },
+    "executionStatus": "partial-diagnostic-run"
+  },
+  "diagnosticResults": {
+    "group": "for_berlin",
+    "engine": "Nano explicit Berlin rules (partial implementation)",
+    "files": 127,
+    "cases": 1963,
+    "matched": 1963,
+    "mismatched": 0,
+    "unsupportedValidationCases": 0,
+    "executionOrAdapterErrors": 0,
+    "forkConformanceProven": false,
+    "validationMatched": 150,
+    "replayPolicy": "Ethereum historical signatures allowed explicitly in test runner"
+  },
+  "bundledRegressionFiles": {
+    "call-insufficient-balance.json": "9123cb7d0df5edcdc6685d6ca36b591b5d5f389a6fa5de79c7d249e0bab2a5b8",
+    "repeated_address_acl.json": "5f62d5319064e578c5826827563b4ea432c7b49eb9582a362c80b1d86641c502",
+    "account_storage_warm_cold_state.json": "612e47dc37e96acdad6d3fdc67410215c3063bd12bfb130199407ae41602e391",
+    "create_deposit_oog.json": "4575a8358ec27c0c3fedfad0daaf971d60e030b75790f95f28fe56ac5c29cfbf",
+    "create_one_byte.json": "8b4b7fe254810e79f9fc52bab78faf6f679141df8b4f4bd638b611ffbe66544e",
+    "extcodehash_in_init_code.json": "eba111637ba462eadc827d4052d765b2f29a3d66dc8bc0450af8a2f2e4e15389",
+    "extcodehash_self_in_init.json": "6a66409bdb68edef8c9a65a4e320399d2e9e813684f347f8acc908487924b511",
+    "modexp.json": "df847d8d7f0ecd1302faee98b7001556522fa1d9ec0d01ee7f522c4ac9f29213",
+    "modexp_variable_gas_cost.json": "0faac5f8b1c77d5ef3206a85de26338091d4c12687902b8da611c82333bcdbe1",
+    "identity_return_buffer_modify.json": "5cd2776228cb3fb3b30879c779e1f94cbc328e604c4a009efd04d7b4d30f2d89",
+    "codecopy_zero_in_create2.json": "0abb824ad4895200764a4e58e09a01fcebf3720beda8a32a8655f2bc311f107b",
+    "extcodehash_subcall_selfdestruct.json": "607c94861e9f8798c23363f27d2add0db6939adbd4b58ff1dd54de50836d5c84",
+    "create_suicide_during_transaction_create.json": "043cf47491d9e2ed98523b74307ad51f9b4ad4d001068be9727b8f042b7cdcab",
+    "init_collision_create_tx.json": "0e1076a27dde9bc61b55e4a7ab2dd6cd335189909be00a7a5e7029323ee04efa",
+    "blockhash_zero_in_window_control.json": "6ca46e134e88bed60ddf9bedda741238a6e1ffa283899238d4170fbf95326c59",
+    "tx_intrinsic_gas.json": "3adf292ec340470690ca9abd745bc3cb75b0e1168763b95b2bf01f32d845eabe",
+    "transaction_intrinsic_gas_cost.json": "1e396ea8297fcd3d8212b58dcf6cc313f4e3e2d0c6e86d06c4df3a3be9fbf735",
+    "invalid_chain_id.json": "f532200d31706e712da90af176f55e982fbad32a195a1a6f165b9d12a491d888",
+    "eip1559_tx_validity.json": "b6a9c090fb60459a54d2fc09e775c95f7ffc8043c90b264330534ce1415bd713",
+    "sender_balance_insufficient_state_test.json": "b56975126ea1f06b38f94b1009b0bdea4281f8e034da491ced17fdf5eb4f0dd3",
+    "bad_v_r_s.json": "802c07cf60062ce890a00552d35a17e62c09d4ebe7360ad936ab41fbd1343207",
+    "paris-eip1559_tx_validity.json": "dde0d9ddd4fd52ea110a6d9289b56679928b76f2843c33a8a7492f78c90ee52d",
+    "paris-invalid_chain_id.json": "43f6c129e96d27b2fbb4e12fc08dbfdc124ce0bc6e5ccdfe09f57f38bd17c3f8",
+    "paris-coverage.json": "3813d3ef1c7b4f063f67cd8cc05fff445199c8c1669f74283e45e5ef7784f86f"
+  },
+  "parisResults": {
+    "group": "for_paris",
+    "engine": "Nano explicit Paris rules (partial implementation)",
+    "replayPolicy": "Ethereum historical signatures allowed explicitly in test runner",
+    "files": 129,
+    "cases": 2250,
+    "matched": 2250,
+    "mismatched": 0,
+    "unsupportedValidationCases": 0,
+    "executionOrAdapterErrors": 0,
+    "validationMatched": 280,
+    "forkConformanceProven": false
+  }
+}

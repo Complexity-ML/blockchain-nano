@@ -1,0 +1,308 @@
+{
+    "tests/constantinople/eip1052_extcodehash/test_extcodehash.py::test_extcodehash_self_in_init[fork_Berlin-state_test-create_opcode_CREATE2]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentDifficulty": "0x020000"
+        },
+        "pre": {
+            "0xe7e37c39a88e5712fab3ebb273c4c2f90cc64a61": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x36600060003760003660006000f500",
+                "storage": {}
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0xe7e37c39a88e5712fab3ebb273c4c2f90cc64a61",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x303f600055303b60015560006000f3"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Berlin": [
+                {
+                    "hash": "0x2fb8dbb0351d94856a7ac821492edb4d062b66e2d9a8906d4f5e9ebe95ff10f9",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0x2f23d4afb9cc53e4cbcd9f359c5d0a31aa0c4c59882e48f96922f42a6fc8c63b",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0x012fba",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf901090183012fbab9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf870800a8407270e0094e7e37c39a88e5712fab3ebb273c4c2f90cc64a61808f303f600055303b60015560006000f326a01d991418f71687952433fa477c78e26a796d8a78b0506f4b20ee9517012aea27a05d3da42ef2d4dcf730a7a3ec6e4e32383ac9089f047becbfae2448fa8fd3048e",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xe7e37c39a88e5712fab3ebb273c4c2f90cc64a61": {
+                            "nonce": "0x02",
+                            "balance": "0x00",
+                            "code": "0x36600060003760003660006000f500",
+                            "storage": {}
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ce7f422bc",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x91349fa62e9c21deb9cf1382628ac909d3ff75f0": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x",
+                            "storage": {
+                                "0x00": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
+                            }
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x0bdd44",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x16b1188714148c8100e74f5e4095e378e6319e58905db15f4f10677687592251",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test EXTCODEHASH/EXTCODESIZE of self during init code.\n\nDuring init code execution the account exists but has no code yet,\nso EXTCODEHASH(ADDRESS) returns keccak256(\"\") and\nEXTCODESIZE(ADDRESS) returns 0.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/constantinople/eip1052_extcodehash/test_extcodehash.py#L996",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1052.md",
+            "reference-spec-version": "2dcbc7ce1563e9624e137e9d447374600af876fa"
+        }
+    },
+    "tests/constantinople/eip1052_extcodehash/test_extcodehash.py::test_extcodehash_self_in_init[fork_Berlin-state_test-create_opcode_CREATE]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentDifficulty": "0x020000"
+        },
+        "pre": {
+            "0x920b80d1e41446e87a14a2fe0f6b503cd91afe93": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x3660006000373660006000f000",
+                "storage": {}
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0x920b80d1e41446e87a14a2fe0f6b503cd91afe93",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x303f600055303b60015560006000f3"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Berlin": [
+                {
+                    "hash": "0xf1482ed40789c0e2a7e622520632e4b9d1d411d02db0d032db6a26928506438e",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0x52a189f3beb0912504648e7021f980246b6ad74cadea66c8f314b38e1ffee4ab",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0x012fb1",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf901090183012fb1b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf870800a8407270e0094920b80d1e41446e87a14a2fe0f6b503cd91afe93808f303f600055303b60015560006000f326a0220ad3f13fcd48c1404ae8543c8c679197a644f45fccb370be522441abd0efdca05db7c9ecb72914d6d0a77063733fcdb1551998deccdae0d7190c578c10c69e2e",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x920b80d1e41446e87a14a2fe0f6b503cd91afe93": {
+                            "nonce": "0x02",
+                            "balance": "0x00",
+                            "code": "0x3660006000373660006000f000",
+                            "storage": {}
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ce7f42316",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0xe62af3f0b87739c4995bbcbac9c7f769a084ae92": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x",
+                            "storage": {
+                                "0x00": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
+                            }
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x0bdcea",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0xa9b4dda3d00c53d7e358623682c149702b9190f99ebba65dcf8003b5aa43e358",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test EXTCODEHASH/EXTCODESIZE of self during init code.\n\nDuring init code execution the account exists but has no code yet,\nso EXTCODEHASH(ADDRESS) returns keccak256(\"\") and\nEXTCODESIZE(ADDRESS) returns 0.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/constantinople/eip1052_extcodehash/test_extcodehash.py#L996",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1052.md",
+            "reference-spec-version": "2dcbc7ce1563e9624e137e9d447374600af876fa"
+        }
+    },
+    "tests/constantinople/eip1052_extcodehash/test_extcodehash.py::test_extcodehash_self_in_init[fork_Berlin-state_test-create_tx]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentDifficulty": "0x020000"
+        },
+        "pre": {
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x303f600055303b60015560006000f3"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92",
+            "to": ""
+        },
+        "post": {
+            "Berlin": [
+                {
+                    "hash": "0xf00f7a2ac79fc922734b4d6f508f4a2e3aa0f003650b6319ca83b388c56d7aee",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0xe7e7a41f93c27fbf4f20f35bccd8430949c1ea5ec353cd552b9be205218f6fa8",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0x012f98",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf901090183012f98b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf85c800a8407270e0080808f303f600055303b60015560006000f325a0b072b5ce35b1ebf6e9070de6c6c5346332ed98c86ec92edcd66ad138e080b870a039f2a12652e87d1275e6ce7450f20bde322bd222fe10b8410d753eebd5500796",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ce7f42410",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x081f85bbb63f960f83724898686620b3e01a5542": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x",
+                            "storage": {
+                                "0x00": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
+                            }
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x0bdbf0",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0xae4b6618262242d0b0848cbc18d10c77d046f700dd04e1631634a5590d693919",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test EXTCODEHASH/EXTCODESIZE of self during init code.\n\nDuring init code execution the account exists but has no code yet,\nso EXTCODEHASH(ADDRESS) returns keccak256(\"\") and\nEXTCODESIZE(ADDRESS) returns 0.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/constantinople/eip1052_extcodehash/test_extcodehash.py#L996",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1052.md",
+            "reference-spec-version": "2dcbc7ce1563e9624e137e9d447374600af876fa"
+        }
+    }
+}

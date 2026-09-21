@@ -1,0 +1,59 @@
+#include "nano/node.hpp"
+#include "nano/http.hpp"
+#include <spawn.h>
+#include <sys/wait.h>
+#include <signal.h>
+#include <unistd.h>
+#include <atomic>
+#include <cerrno>
+#include <cstring>
+#include <iostream>
+#include <thread>
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
+extern char** environ;
+namespace nano {
+namespace {
+std::filesystem::path executable_directory(const std::filesystem::path& argument){
+#ifdef __APPLE__
+ uint32_t size=0;_NSGetExecutablePath(nullptr,&size);std::vector<char> path(size);
+ if(_NSGetExecutablePath(path.data(),&size)==0)return std::filesystem::canonical(path.data()).parent_path();
+#elif defined(__linux__)
+ std::error_code error;auto path=std::filesystem::canonical("/proc/self/exe",error);if(!error)return path.parent_path();
+#endif
+ return std::filesystem::canonical(argument).parent_path();
+}
+class Child {
+ pid_t pid_=-1;
+public:
+ Child(const std::filesystem::path& executable,const std::vector<std::string>& arguments,const std::string& token,const std::vector<std::string>& excluded){
+  std::vector<std::string> args{executable.string()};args.insert(args.end(),arguments.begin(),arguments.end());std::vector<char*> argv;for(auto& arg:args)argv.push_back(arg.data());argv.push_back(nullptr);
+  std::vector<std::string> environment;for(char** item=environ;*item;++item){std::string_view value(*item);bool omit=value.starts_with("VALIDATOR_KEY=")||value.starts_with("NANO_NETWORK_TOKEN=")||value.starts_with("NANO_PRIVATE_KEY=")||value.starts_with("NANO_MNEMONIC=")||value.starts_with("NANO_HD_PASSPHRASE=")||value.starts_with("NANO_WALLET_PASSWORD=");for(const auto& name:excluded)if(value.starts_with(name+"="))omit=true;if(!omit)environment.emplace_back(*item);}environment.push_back("NANO_NETWORK_TOKEN="+token);std::vector<char*> env;for(auto& value:environment)env.push_back(value.data());env.push_back(nullptr);
+  posix_spawnattr_t attributes;posix_spawnattr_init(&attributes);sigset_t mask,defaults;sigemptyset(&mask);sigemptyset(&defaults);sigaddset(&defaults,SIGINT);sigaddset(&defaults,SIGTERM);posix_spawnattr_setsigmask(&attributes,&mask);posix_spawnattr_setsigdefault(&attributes,&defaults);posix_spawnattr_setflags(&attributes,POSIX_SPAWN_SETSIGMASK|POSIX_SPAWN_SETSIGDEF);
+  int error=posix_spawn(&pid_,executable.c_str(),nullptr,&attributes,argv.data(),env.data());posix_spawnattr_destroy(&attributes);if(error){pid_=-1;throw std::runtime_error("Cannot start nano-p2p: "+std::string(std::strerror(error)));}
+ }
+ ~Child(){stop();}
+ bool exited(){if(pid_<0)return true;int status=0;auto result=waitpid(pid_,&status,WNOHANG);if(result==pid_||(result<0&&errno==ECHILD)){pid_=-1;return true;}return false;}
+ void stop(){if(pid_<0)return;kill(pid_,SIGTERM);for(int i=0;i<50;++i){if(exited())return;std::this_thread::sleep_for(std::chrono::milliseconds(100));}kill(pid_,SIGKILL);while(waitpid(pid_,nullptr,0)<0&&errno==EINTR){}pid_=-1;}
+ pid_t pid()const{return pid_;}
+};
+}
+int run_node(Blockchain& chain,const std::filesystem::path& database,const std::filesystem::path& executable,const Json& config){
+ if(config.value("dev_mode",false))throw std::invalid_argument("Development snapshots require nano serve without P2P");
+ auto port=u64(quantity(config.value("rpc_port",Json(8545))));auto p2p_port=u64(quantity(config.value("p2p_port",Json(30303))));if(port>65535||p2p_port>65535)throw std::invalid_argument("Invalid node port");
+ auto host=config.value("rpc_host",std::string("127.0.0.1"));if(host!="127.0.0.1"&&host!="0.0.0.0")throw std::invalid_argument("Managed P2P requires RPC bound to 127.0.0.1 or 0.0.0.0");
+ auto directory=executable_directory(executable);auto binary=directory/"nano-p2p";if(!std::filesystem::exists(binary))binary=directory.parent_path()/"build-network/nano-p2p";
+ binary=config.value("p2p_binary",binary.string());
+ auto identity=config.value("p2p_identity",database.string()+".peerkey");auto listen=config.value("listen_addr",std::string("/ip4/")+config.value("p2p_host",std::string("0.0.0.0"))+"/tcp/"+std::to_string(p2p_port));
+ auto token=hex(generate_private_key());Rpc rpc(chain,token);rpc.load_wallets(config,host);HttpServer server(rpc,host,uint16_t(port));
+ std::vector<std::string> args{std::to_string(server.port()),identity,listen};auto peers=config.value("bootnodes",std::vector<std::string>{});args.insert(args.end(),peers.begin(),peers.end());std::vector<std::string> excluded;for(const auto& entry:config.value("wallets",Json::array()))excluded.push_back(entry.at("password_env"));if(config.contains("bft"))excluded.push_back(config.at("bft").at("key_env").get<std::string>());Child child(binary,args,token,excluded);
+ auto child_pid=child.pid();
+ std::atomic<bool> stopping=false,failed=false;
+ std::thread monitor([&]{while(!stopping){if(child.exited()){failed=true;server.stop();return;}std::this_thread::sleep_for(std::chrono::milliseconds(100));}});
+ std::cout<<"Nano JSON-RPC listening on "<<host<<":"<<server.port()<<std::endl;
+ std::cout<<Json{{"event","p2p-process"},{"pid",child_pid}}.dump()<<std::endl;
+ try{server.run();}catch(...){stopping=true;monitor.join();throw;}
+ stopping=true;monitor.join();child.stop();if(failed){std::cerr<<"Nano P2P process exited; node stopped\n";return 1;}return 0;
+}
+}

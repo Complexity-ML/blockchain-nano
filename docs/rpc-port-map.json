@@ -1,0 +1,899 @@
+{
+  "source": "nanopy/network/http_rpc.py",
+  "source_sha256": "ec9d1dfb2fbf2cde08ad1725a40dafb025caca478b06f1bc929e691869553f56",
+  "note": "Literal dispatch mapping only; presence does not establish behavioral parity. WebSocket subscriptions are separate.",
+  "routes": [
+    {
+      "method": "web3_clientVersion",
+      "python_handler": "web3_client_version",
+      "python_line": 71,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 80
+        },
+        {
+          "file": "src/cli_client.cpp",
+          "line": 22
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "web3_sha3",
+      "python_handler": "web3_sha3",
+      "python_line": 72,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 81
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "net_version",
+      "python_handler": "net_version",
+      "python_line": 75,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 82
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "net_listening",
+      "python_handler": "net_listening",
+      "python_line": 76,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 85
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "net_peerCount",
+      "python_handler": "net_peer_count",
+      "python_line": 77,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 88
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_chainId",
+      "python_handler": "eth_chain_id",
+      "python_line": 80,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 82
+        },
+        {
+          "file": "src/cli_client.cpp",
+          "line": 22
+        },
+        {
+          "file": "src/cli_client.cpp",
+          "line": 31
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_protocolVersion",
+      "python_handler": "eth_protocol_version",
+      "python_line": 81,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 89
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_syncing",
+      "python_handler": "eth_syncing",
+      "python_line": 82,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 86
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_coinbase",
+      "python_handler": "eth_coinbase",
+      "python_line": 83,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 92
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_mining",
+      "python_handler": "eth_mining",
+      "python_line": 84,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 84
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_hashrate",
+      "python_handler": "eth_hashrate",
+      "python_line": 85,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 87
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_gasPrice",
+      "python_handler": "eth_gas_price",
+      "python_line": 86,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 93
+        },
+        {
+          "file": "src/cli_client.cpp",
+          "line": 22
+        },
+        {
+          "file": "src/cli_client.cpp",
+          "line": 31
+        },
+        {
+          "file": "src/rpc_accounts.cpp",
+          "line": 47
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_accounts",
+      "python_handler": "eth_accounts",
+      "python_line": 87,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 91
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_blockNumber",
+      "python_handler": "eth_block_number",
+      "python_line": 88,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 83
+        },
+        {
+          "file": "src/cli_client.cpp",
+          "line": 22
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_getBalance",
+      "python_handler": "eth_get_balance",
+      "python_line": 89,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 94
+        },
+        {
+          "file": "src/rpc.cpp",
+          "line": 101
+        },
+        {
+          "file": "src/cli_client.cpp",
+          "line": 26
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_getStorageAt",
+      "python_handler": "eth_get_storage_at",
+      "python_line": 90,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 94
+        },
+        {
+          "file": "src/rpc.cpp",
+          "line": 95
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_getTransactionCount",
+      "python_handler": "eth_get_transaction_count",
+      "python_line": 91,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 94
+        },
+        {
+          "file": "src/rpc.cpp",
+          "line": 96
+        },
+        {
+          "file": "src/cli_client.cpp",
+          "line": 31
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_getBlockTransactionCountByHash",
+      "python_handler": "eth_get_block_tx_count_by_hash",
+      "python_line": 92,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 103
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_getBlockTransactionCountByNumber",
+      "python_handler": "eth_get_block_tx_count_by_number",
+      "python_line": 93,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 103
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_getCode",
+      "python_handler": "eth_get_code",
+      "python_line": 94,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 94
+        },
+        {
+          "file": "src/rpc.cpp",
+          "line": 100
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_sign",
+      "python_handler": "eth_sign",
+      "python_line": 95,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 117
+        },
+        {
+          "file": "src/rpc_accounts.cpp",
+          "line": 27
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_sendTransaction",
+      "python_handler": "eth_send_transaction",
+      "python_line": 96,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 117
+        },
+        {
+          "file": "src/rpc.cpp",
+          "line": 143
+        },
+        {
+          "file": "src/rpc_accounts.cpp",
+          "line": 21
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_sendRawTransaction",
+      "python_handler": "eth_send_raw_transaction",
+      "python_line": 97,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 118
+        },
+        {
+          "file": "src/cli_client.cpp",
+          "line": 47
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_call",
+      "python_handler": "eth_call",
+      "python_line": 98,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 147
+        },
+        {
+          "file": "src/rpc.cpp",
+          "line": 151
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_estimateGas",
+      "python_handler": "eth_estimate_gas",
+      "python_line": 99,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 141
+        },
+        {
+          "file": "src/rpc.cpp",
+          "line": 147
+        },
+        {
+          "file": "src/cli_client.cpp",
+          "line": 45
+        },
+        {
+          "file": "src/rpc_accounts.cpp",
+          "line": 49
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_getBlockByHash",
+      "python_handler": "eth_get_block_by_hash",
+      "python_line": 100,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 103
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_getBlockByNumber",
+      "python_handler": "eth_get_block_by_number",
+      "python_line": 101,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 103
+        },
+        {
+          "file": "src/cli_client.cpp",
+          "line": 46
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_getTransactionByHash",
+      "python_handler": "eth_get_transaction_by_hash",
+      "python_line": 102,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 110
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_getTransactionByBlockHashAndIndex",
+      "python_handler": "eth_get_tx_by_block_hash_and_index",
+      "python_line": 103,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 103
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_getTransactionByBlockNumberAndIndex",
+      "python_handler": "eth_get_tx_by_block_number_and_index",
+      "python_line": 104,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 103
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_getTransactionReceipt",
+      "python_handler": "eth_get_transaction_receipt",
+      "python_line": 105,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 111
+        },
+        {
+          "file": "src/cli_client.cpp",
+          "line": 29
+        },
+        {
+          "file": "src/cli_client.cpp",
+          "line": 53
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_newFilter",
+      "python_handler": "eth_new_filter",
+      "python_line": 106,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 157
+        },
+        {
+          "file": "src/rpc.cpp",
+          "line": 158
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_newBlockFilter",
+      "python_handler": "eth_new_block_filter",
+      "python_line": 107,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 157
+        },
+        {
+          "file": "src/rpc.cpp",
+          "line": 159
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_newPendingTransactionFilter",
+      "python_handler": "eth_new_pending_tx_filter",
+      "python_line": 108,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 157
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_uninstallFilter",
+      "python_handler": "eth_uninstall_filter",
+      "python_line": 109,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 161
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_getFilterChanges",
+      "python_handler": "eth_get_filter_changes",
+      "python_line": 110,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 162
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_getFilterLogs",
+      "python_handler": "eth_get_filter_logs",
+      "python_line": 111,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 162
+        },
+        {
+          "file": "src/rpc.cpp",
+          "line": 164
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_getLogs",
+      "python_handler": "eth_get_logs",
+      "python_line": 112,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 156
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_maxPriorityFeePerGas",
+      "python_handler": "eth_max_priority_fee_per_gas",
+      "python_line": 113,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 93
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "eth_feeHistory",
+      "python_handler": "eth_fee_history",
+      "python_line": 114,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 90
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "txpool_content",
+      "python_handler": "txpool_content",
+      "python_line": 117,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 119
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "txpool_status",
+      "python_handler": "txpool_status",
+      "python_line": 118,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 119
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "evm_mine",
+      "python_handler": "evm_mine",
+      "python_line": 121,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 56
+        },
+        {
+          "file": "src/cli_client.cpp",
+          "line": 20
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "evm_increaseTime",
+      "python_handler": "evm_increase_time",
+      "python_line": 122,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 56
+        },
+        {
+          "file": "src/rpc.cpp",
+          "line": 58
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "evm_setNextBlockTimestamp",
+      "python_handler": "evm_set_next_block_timestamp",
+      "python_line": 123,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 56
+        },
+        {
+          "file": "src/rpc.cpp",
+          "line": 61
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "evm_snapshot",
+      "python_handler": "evm_snapshot",
+      "python_line": 124,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 69
+        },
+        {
+          "file": "src/rpc.cpp",
+          "line": 71
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "evm_revert",
+      "python_handler": "evm_revert",
+      "python_line": 125,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 69
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "nno_getValidators",
+      "python_handler": "nno_get_validators",
+      "python_line": 128,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 146
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "nno_getStake",
+      "python_handler": "nno_get_stake",
+      "python_line": 129,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 145
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "nno_registerValidator",
+      "python_handler": "nno_register_validator",
+      "python_line": 130,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 132
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "nno_addStake",
+      "python_handler": "nno_add_stake",
+      "python_line": 131,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 132
+        },
+        {
+          "file": "src/rpc.cpp",
+          "line": 136
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "nno_withdrawStake",
+      "python_handler": "nno_withdraw_stake",
+      "python_line": 132,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 132
+        },
+        {
+          "file": "src/rpc.cpp",
+          "line": 133
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "nno_startValidating",
+      "python_handler": "nno_start_validating",
+      "python_line": 133,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 120
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "nno_stopValidating",
+      "python_handler": "nno_stop_validating",
+      "python_line": 134,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 120
+        },
+        {
+          "file": "src/rpc.cpp",
+          "line": 123
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "validator_getBlockTemplate",
+      "python_handler": "validator_get_block_template",
+      "python_line": 137,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 198
+        },
+        {
+          "file": "src/client.cpp",
+          "line": 56
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "validator_submitBlock",
+      "python_handler": "validator_submit_block",
+      "python_line": 138,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 203
+        },
+        {
+          "file": "src/client.cpp",
+          "line": 56
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "validator_isSelected",
+      "python_handler": "validator_is_selected",
+      "python_line": 139,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 216
+        },
+        {
+          "file": "src/client.cpp",
+          "line": 55
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "validator_getPendingTransactions",
+      "python_handler": "validator_get_pending_transactions",
+      "python_line": 140,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 219
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "validator_getSyncStatus",
+      "python_handler": "validator_get_sync_status",
+      "python_line": 141,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 222
+        },
+        {
+          "file": "src/client.cpp",
+          "line": 54
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "nno_getNodes",
+      "python_handler": "nno_get_nodes",
+      "python_line": 144,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 174
+        },
+        {
+          "file": "src/cli_client.cpp",
+          "line": 24
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    },
+    {
+      "method": "nno_getNetworkInfo",
+      "python_handler": "nno_get_network_info",
+      "python_line": 145,
+      "native_locations": [
+        {
+          "file": "src/rpc.cpp",
+          "line": 177
+        },
+        {
+          "file": "src/cli_client.cpp",
+          "line": 24
+        }
+      ],
+      "status": "route_present_behavior_audit_incomplete"
+    }
+  ]
+}

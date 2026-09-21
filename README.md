@@ -1,10 +1,10 @@
 # Nano — blockchain-nano
 
-Portage C++20 de NanoPy en cours, depuis `blockchain-python`, commit
-`77f2664390db135171608e7bbb613f4ea6468312`. Le projet Python original est conservé.
-Le code porté fonctionne sans interpréteur Python. La préparation à un réseau
-public reste en cours ; voir `docs/PRODUCTION-GOAL.md`. Les genesis livrés
-activent désormais les signatures et changent l’identité des chaînes existantes
+Nano est une blockchain C++20 avec EVM native, stockage RocksDB et réseau
+cpp-libp2p. Le cœur et les tests d’intégration s’exécutent sans interpréteur
+Python. Le prototype historique ne constitue plus une cible de compatibilité.
+La préparation à un réseau public reste en cours ; voir `docs/PRODUCTION-GOAL.md`.
+Les genesis livrés activent les signatures de producteur
 (voir `docs/GENESIS-VERSIONS.md`).
 
 ## Compiler et tester
@@ -53,10 +53,11 @@ pour empêcher deux processus de l'ouvrir simultanément.
 
 ## Travail restant
 
-Le portage complet reste en développement : l’audit comportemental des API et la compatibilité avec les historiques Python
-divergents restent à traiter. Les comparaisons EVM restent partielles. cpp-libp2p v0.1.37 est raccordé par le
-processus séparé `nano-p2p` décrit plus bas. L'EVM est native, sans evmone.
-Voir `docs/MIGRATION.md` pour les étapes et écarts avec le Python.
+La finalité BFT et sa machine de tours restent à intégrer au réseau. La conformité
+à un fork EVM précis, les essais prolongés sous charge et partitions, la revue
+indépendante et le bridge d’entrée/sortie restent ouverts. Les primitives et
+scénarios déjà vérifiés sont décrits dans `docs/FINALITY.md` et
+`docs/NETWORK-ROBUSTNESS.md`. L’EVM est native, sans evmone.
 
 ## Chaîne locale et CLI
 
@@ -214,16 +215,15 @@ ne sont donc plus admis.
 La synchronisation demande au plus 50 blocs par lot et le cœur rejoue chaque
 bloc reçu. Les transactions signées et nouveaux blocs sont diffusés aux pairs.
 
-Test reproductible (Python sert uniquement à piloter les processus de test) :
+Tests d’intégration C++ (CMake configuré avec `NANO_NETWORK_EXECUTABLE`) :
 
 ```sh
-python3 tests/test_network.py ./build/nano ./build-network/nano-p2p
+ctest --test-dir build-cmake --output-on-failure -R '^(network|signed_network)$'
 ```
 
 Ce test utilise deux nœuds locaux, synchronise des blocs historiques, propage
 une transaction puis un bloc, compare état/reçus et vérifie l'identité après
 redémarrage. Il vérifie aussi le refus d'un chain ID ou genesis incompatible.
-Le test ne prouve pas encore l'interopérabilité avec un nœud Python public.
 
 Restent notamment la découverte automatique des pairs et la gestion des
 branches/réorganisations. Le réseau utilise actuellement les pairs fournis
@@ -257,7 +257,7 @@ autres variables et les droits système de l’utilisateur qui le lance.
 `nno_getNodes` et `nno_getNetworkInfo` reflètent alors l'état observé. Le validateur
 attend si un pair annonce une chaîne plus haute que la chaîne locale.
 
-Le test `tests/test_supervisor.py` lance deux nœuds complets, vérifie leurs pairs
+Le test `tests/test_supervisor.cpp` lance deux nœuds complets, vérifie leurs pairs
 et leur synchronisation, l'arrêt coordonné, le retrait d'un pair et la reprise
 des données après une panne provoquée du processus P2P.
 
@@ -383,8 +383,8 @@ serveur lié à l'interface locale. Le statut est exposé dans
 
 Le démarrage est explicite après chaque lancement ou rechargement des
 portefeuilles. Le validateur automatique utilise l'heure réelle ; les réglages
-`evm_*` de l'horloge restent réservés à `evm_mine`. Comme dans le protocole
-Python actuel, les blocs PoS ne portent pas de signature du producteur.
+`evm_*` de l’horloge restent réservés à `evm_mine`. Sur les genesis signés,
+les producteurs et validateurs doivent fournir une signature de bloc valide.
 
 ### Import de l'historique Python
 
@@ -431,22 +431,14 @@ réutilisations repose sur les blocs RocksDB et survit donc à un redémarrage.
 Les blocs PoS continuent de refuser les oncles. La sélection automatique
 d'oncles lors du minage n'est pas implémentée.
 
-### Interopérabilité avec le transport Python original
+### Tests natifs
 
-Un test optionnel relie le vrai `nanolib`/`LibP2PNetwork` du dépôt Python à
-cpp-libp2p, dans les deux sens de connexion. Il vérifie la négociation, les
-échanges de statut, le transfert de blocs et transactions incluses dans les
-blocs, les reçus reconstruits et les annonces de blocs C++ vers Python.
-Le transport Python est exécuté sans modification, derrière un adaptateur
-vers un moteur Nano C++ ; ce test ne prouve pas la compatibilité des règles
-de consensus de l'ancien nœud Python. Son gossip de transactions est un stub
-et n'est donc pas déclaré interopérable.
-
-Pour activer ce test, installez `tests/interop-requirements.txt` dans un venv
-Python 3.13 et configurez CMake avec `NANO_REFERENCE_SOURCE` (dépôt Python
-original), `NANO_REFERENCE_PYTHON` (interpréteur du venv) et
-`NANO_NETWORK_EXECUTABLE` (exécutable `nano-p2p`). Le produit Nano n'a pas besoin
-de cet environnement Python pour fonctionner.
+Les tests CLI, réseau, installation, superviseur et reprise SIGKILL sont des
+exécutables C++ pilotés par CTest. Le test d’interopérabilité avec le prototype
+et les générateurs dépendant de son environnement ont été retirés. Les fixtures
+JSON figées restent des données de test ; elles ne lancent pas le prototype.
+MCL conserve ses outils amont optionnels, dont des scripts Python ; la compilation
+Nano utilise ses sources natives pré-générées, sans invoquer ces scripts.
 
 ### Installer les exécutables
 

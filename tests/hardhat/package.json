@@ -1,0 +1,15 @@
+{
+  "name": "nano-hardhat-integration",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:nano": "hardhat run --no-compile scripts/publish.ts --network nano",
+    "test:local": "node run-local.mjs"
+  },
+  "devDependencies": {
+    "@openzeppelin/contracts": "5.0.2",
+    "ethers": "6.16.0",
+    "hardhat": "3.17.0",
+    "solc": "0.8.28"
+  }
+}

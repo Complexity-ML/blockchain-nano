@@ -1,0 +1,125 @@
+{
+    "tests/constantinople/eip1052_extcodehash/test_extcodehash.py::test_codecopy_zero_in_create2[fork_Berlin-state_test]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentDifficulty": "0x020000"
+        },
+        "pre": {
+            "0x9cf3238346203f6b7fc82bc23d258afbe057980a": {
+                "nonce": "0x01",
+                "balance": "0x0de0b6b3a7640000",
+                "code": "0x7f60206000600039600051605055303b605155303f60525560006000600060006060005260205162ffffff167f003061c350f23b605355602060006000303c60005160545560006000f3000000176020526000603d60006000f560005260206000f3",
+                "storage": {}
+            },
+            "0xa028a67cf93b1fd3bbde947895e66bd05107abef": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x60206000600060006000739cf3238346203f6b7fc82bc23d258afbe057980a62086470f1600051600055",
+                "storage": {
+                    "0x00": "0xba5e"
+                }
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0xa028a67cf93b1fd3bbde947895e66bd05107abef",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Berlin": [
+                {
+                    "hash": "0xf4c871e9e778a756a157dfd6d7baa80ba9ebd2ddfe7ca6ef33851488db3610a8",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0x62bc28075b6000d2d929b97aa008711e18b4634a843a9fb486d6996dedb19e2d",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0x01b5e1",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf90109018301b5e1b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf861800a8407270e0094a028a67cf93b1fd3bbde947895e66bd05107abef808026a054104ff5ec82aec82bac715d9a113bf9e4e90640a81d886c9e51e94457b321e8a0154916d54e2ea51e8b1249f7ef5e1b07a9db1e3c813c64b8c1892c5b44706715",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x9cf3238346203f6b7fc82bc23d258afbe057980a": {
+                            "nonce": "0x02",
+                            "balance": "0x0de0b6b3a7640000",
+                            "code": "0x7f60206000600039600051605055303b605155303f60525560006000600060006060005260205162ffffff167f003061c350f23b605355602060006000303c60005160545560006000f3000000176020526000603d60006000f560005260206000f3",
+                            "storage": {}
+                        },
+                        "0xa028a67cf93b1fd3bbde947895e66bd05107abef": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x60206000600060006000739cf3238346203f6b7fc82bc23d258afbe057980a62086470f1600051600055",
+                            "storage": {
+                                "0x00": "0x3c1c33408c35e7f932480912451c3e473a5ed9e5"
+                            }
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ce7eee536",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x3c1c33408c35e7f932480912451c3e473a5ed9e5": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x",
+                            "storage": {
+                                "0x50": "0x60206000600039600051605055303b605155303f605255600060006000600060",
+                                "0x52": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
+                            }
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x111aca",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x072218d7b220641f41746ebded8d61904a4abc26a709bbda8367c981e63b0525",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test CODECOPY inside CREATE2 initcode that deploys empty code.\n\nThe initcode does CODECOPY(0,0,32) which copies the first 32 bytes\nof the initcode itself (not the deployed code). It then checks\nEXTCODESIZE(ADDRESS) and EXTCODEHASH(ADDRESS) of self during init,\nwhich see the account as having empty code. The deployed contract\nretains the storage set during init.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/constantinople/eip1052_extcodehash/test_extcodehash.py#L1723",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1052.md",
+            "reference-spec-version": "2dcbc7ce1563e9624e137e9d447374600af876fa"
+        }
+    }
+}

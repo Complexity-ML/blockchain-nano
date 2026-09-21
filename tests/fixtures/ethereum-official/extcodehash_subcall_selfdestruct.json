@@ -1,0 +1,508 @@
+{
+    "tests/constantinople/eip1052_extcodehash/test_extcodehash.py::test_extcodehash_subcall_selfdestruct[fork_Berlin-state_test-dynamic-callcode]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentDifficulty": "0x020000"
+        },
+        "pre": {
+            "0x6193e03a6a148eca29a060ab8e3bd2d4625948c0": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x73c0f6dc9e5836f54caadbf59cc69346c508e1992bff",
+                "storage": {}
+            },
+            "0xc3dc242f6fe7c998de5b5a3cce2d85635dd8727d": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x7f610021600081600b8239f360206000600060006000736193e03a6a148eca29a060005260205173ffffffffffffffffffffffffffffffffffffffff167f60ab8e3bd2d4625948c05af2000000000000000000000000000000000000000017602052602c60006000f06000556000543f6001556000543b6002556020600060006000543c600051600355600060006000600060006000545af16004556000543f6005556000543b6006556020600060006000543c600051600755600060006000600060006000545af1600855",
+                "storage": {
+                    "0x00": "0xba5e"
+                }
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0xc3dc242f6fe7c998de5b5a3cce2d85635dd8727d",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Berlin": [
+                {
+                    "hash": "0xf946f2418efaa63d3cee23384e1dea7744a65b314a99742037d5e938bac6263f",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0xf49c533eb3a59c7d647f594f2cf5ff8bedbe3f3524e216884417194c93b26f55",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0x039437",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf901090183039437b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf861800a8407270e0094c3dc242f6fe7c998de5b5a3cce2d85635dd8727d808026a0d0aedbd20ac090f19cf525a1e4acea645479d956d8ad265b0e286b979234f760a04934307144c47f5b0dadd873d91c5a14db6fae83831e3f6825f858353fde03e0",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x6193e03a6a148eca29a060ab8e3bd2d4625948c0": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x73c0f6dc9e5836f54caadbf59cc69346c508e1992bff",
+                            "storage": {}
+                        },
+                        "0xc3dc242f6fe7c998de5b5a3cce2d85635dd8727d": {
+                            "nonce": "0x02",
+                            "balance": "0x00",
+                            "code": "0x7f610021600081600b8239f360206000600060006000736193e03a6a148eca29a060005260205173ffffffffffffffffffffffffffffffffffffffff167f60ab8e3bd2d4625948c05af2000000000000000000000000000000000000000017602052602c60006000f06000556000543f6001556000543b6002556020600060006000543c600051600355600060006000600060006000545af16004556000543f6005556000543b6006556020600060006000543c600051600755600060006000600060006000545af1600855",
+                            "storage": {
+                                "0x00": "0x2866e096f0889bef4e7be1479a330f1ae29618b1",
+                                "0x01": "0xa6645ed83148b4beb48115dec9986814c3c5a36adc1a86731c29b43639be52fa",
+                                "0x02": "0x21",
+                                "0x03": "0x60206000600060006000736193e03a6a148eca29a060ab8e3bd2d4625948c05a",
+                                "0x04": "0x01",
+                                "0x05": "0xa6645ed83148b4beb48115dec9986814c3c5a36adc1a86731c29b43639be52fa",
+                                "0x06": "0x21",
+                                "0x07": "0x60206000600060006000736193e03a6a148eca29a060ab8e3bd2d4625948c05a",
+                                "0x08": "0x01"
+                            }
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ce7dc35da",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x23ca26",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x14e730af2a6ee1feb31bbb3cfe9c3fe9387fa16719c3080e60df848452af2a64",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test EXTCODEHASH after subcall with CALLCODE/DELEGATECALL to SELFDESTRUCT.\n\nB calls A, which uses CALLCODE or DELEGATECALL to invoke a contract C\ncontaining SELFDESTRUCT, executing it in A's context. B checks\nEXTCODEHASH, EXTCODESIZE, and EXTCODECOPY of A before and after.\nWithin the transaction, A's code properties are unchanged. Pre-Cancun,\nA is deleted at end of transaction. In Cancun, A survives only if\npre-existing; a dynamically created A is still deleted (EIP-6780).",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/constantinople/eip1052_extcodehash/test_extcodehash.py#L1441",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1052.md",
+            "reference-spec-version": "2dcbc7ce1563e9624e137e9d447374600af876fa"
+        }
+    },
+    "tests/constantinople/eip1052_extcodehash/test_extcodehash.py::test_extcodehash_subcall_selfdestruct[fork_Berlin-state_test-dynamic-delegatecall]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentDifficulty": "0x020000"
+        },
+        "pre": {
+            "0x6193e03a6a148eca29a060ab8e3bd2d4625948c0": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x73c0f6dc9e5836f54caadbf59cc69346c508e1992bff",
+                "storage": {}
+            },
+            "0x50ef08e26e551bf64ee4e707dbe9f81e01b0e04c": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x7f61001f600081600b8239f36020600060006000736193e03a6a148eca29a060ab60005260205175ffffffffffffffffffffffffffffffffffffffffffff167f8e3bd2d4625948c05af40000000000000000000000000000000000000000000017602052602a60006000f06000556000543f6001556000543b6002556020600060006000543c600051600355600060006000600060006000545af16004556000543f6005556000543b6006556020600060006000543c600051600755600060006000600060006000545af1600855",
+                "storage": {
+                    "0x00": "0xba5e"
+                }
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0x50ef08e26e551bf64ee4e707dbe9f81e01b0e04c",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Berlin": [
+                {
+                    "hash": "0x101775d6b0aa4fbb897b9021548dd143b6d09ff81f2cd13ca37599ef15db75e3",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0xa51804e2d4cf5a8af2c24f985fa6d0c49b63f638cdaed76fc48e3acbcb952e95",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0x03929b",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf90109018303929bb9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf861800a8407270e009450ef08e26e551bf64ee4e707dbe9f81e01b0e04c808026a015299150d8d0a1da81c99cc72178afc393b505e3b186452ad51306bcbeff7db5a0591a95fc6d73c468699ea43eefa95ecef846f1d7509620ff586c664f9de6d1b8",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x6193e03a6a148eca29a060ab8e3bd2d4625948c0": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x73c0f6dc9e5836f54caadbf59cc69346c508e1992bff",
+                            "storage": {}
+                        },
+                        "0x50ef08e26e551bf64ee4e707dbe9f81e01b0e04c": {
+                            "nonce": "0x02",
+                            "balance": "0x00",
+                            "code": "0x7f61001f600081600b8239f36020600060006000736193e03a6a148eca29a060ab60005260205175ffffffffffffffffffffffffffffffffffffffffffff167f8e3bd2d4625948c05af40000000000000000000000000000000000000000000017602052602a60006000f06000556000543f6001556000543b6002556020600060006000543c600051600355600060006000600060006000545af16004556000543f6005556000543b6006556020600060006000543c600051600755600060006000600060006000545af1600855",
+                            "storage": {
+                                "0x00": "0xea63a1f166140a2ee7f7baed949bc968a4c96ae2",
+                                "0x01": "0x46925208fcd5531bef9ab7684c895ad7c6d7cd3d0fc4c0634f3b2a80ef7d9a30",
+                                "0x02": "0x1f",
+                                "0x03": "0x6020600060006000736193e03a6a148eca29a060ab8e3bd2d4625948c05af400",
+                                "0x04": "0x01",
+                                "0x05": "0x46925208fcd5531bef9ab7684c895ad7c6d7cd3d0fc4c0634f3b2a80ef7d9a30",
+                                "0x06": "0x1f",
+                                "0x07": "0x6020600060006000736193e03a6a148eca29a060ab8e3bd2d4625948c05af400",
+                                "0x08": "0x01"
+                            }
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ce7dc45f2",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x23ba0e",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x8953852aead9f1928d2532a93490751e4af5d1db89514a6f8f9cd9d3b4383250",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test EXTCODEHASH after subcall with CALLCODE/DELEGATECALL to SELFDESTRUCT.\n\nB calls A, which uses CALLCODE or DELEGATECALL to invoke a contract C\ncontaining SELFDESTRUCT, executing it in A's context. B checks\nEXTCODEHASH, EXTCODESIZE, and EXTCODECOPY of A before and after.\nWithin the transaction, A's code properties are unchanged. Pre-Cancun,\nA is deleted at end of transaction. In Cancun, A survives only if\npre-existing; a dynamically created A is still deleted (EIP-6780).",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/constantinople/eip1052_extcodehash/test_extcodehash.py#L1441",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1052.md",
+            "reference-spec-version": "2dcbc7ce1563e9624e137e9d447374600af876fa"
+        }
+    },
+    "tests/constantinople/eip1052_extcodehash/test_extcodehash.py::test_extcodehash_subcall_selfdestruct[fork_Berlin-state_test-pre_existing-callcode]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentDifficulty": "0x020000"
+        },
+        "pre": {
+            "0x6193e03a6a148eca29a060ab8e3bd2d4625948c0": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x73c0f6dc9e5836f54caadbf59cc69346c508e1992bff",
+                "storage": {}
+            },
+            "0xb08462b65a2e1fdfc5b085721080441acdcd18e3": {
+                "nonce": "0x01",
+                "balance": "0x01",
+                "code": "0x60206000600060006000736193e03a6a148eca29a060ab8e3bd2d4625948c05af2",
+                "storage": {}
+            },
+            "0x3bc662d356424c8b1d820ea7682ead94b790bdc1": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x73b08462b65a2e1fdfc5b085721080441acdcd18e33f60005573b08462b65a2e1fdfc5b085721080441acdcd18e33b60015560206000600073b08462b65a2e1fdfc5b085721080441acdcd18e33c6000516002556000600060006000600073b08462b65a2e1fdfc5b085721080441acdcd18e35af160035573b08462b65a2e1fdfc5b085721080441acdcd18e33f60045573b08462b65a2e1fdfc5b085721080441acdcd18e33b60055560206000600073b08462b65a2e1fdfc5b085721080441acdcd18e33c6000516006556000600060006000600073b08462b65a2e1fdfc5b085721080441acdcd18e35af1600755",
+                "storage": {}
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0x3bc662d356424c8b1d820ea7682ead94b790bdc1",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Berlin": [
+                {
+                    "hash": "0xf5953bd8b98125345f43f37d9d9f3405bb0ef8d817ae6bc81ad30a2e2a83d7e1",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0x7a911aea95d7facefdd1972d0cfbafa2783154fb54eb4e269989fb6eda62bae1",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0x0351e5",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf9010901830351e5b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf861800a8407270e00943bc662d356424c8b1d820ea7682ead94b790bdc1808026a0b861c4b4b7c713ee18a53b29f1fdb18a51306575acbf11336ef1dd7c9a4f1622a014762d01eb2a43809d06468a9dc6e53534c06c123a0fad5f0252d535a98745a0",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x6193e03a6a148eca29a060ab8e3bd2d4625948c0": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x73c0f6dc9e5836f54caadbf59cc69346c508e1992bff",
+                            "storage": {}
+                        },
+                        "0x3bc662d356424c8b1d820ea7682ead94b790bdc1": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x73b08462b65a2e1fdfc5b085721080441acdcd18e33f60005573b08462b65a2e1fdfc5b085721080441acdcd18e33b60015560206000600073b08462b65a2e1fdfc5b085721080441acdcd18e33c6000516002556000600060006000600073b08462b65a2e1fdfc5b085721080441acdcd18e35af160035573b08462b65a2e1fdfc5b085721080441acdcd18e33f60045573b08462b65a2e1fdfc5b085721080441acdcd18e33b60055560206000600073b08462b65a2e1fdfc5b085721080441acdcd18e33c6000516006556000600060006000600073b08462b65a2e1fdfc5b085721080441acdcd18e35af1600755",
+                            "storage": {
+                                "0x00": "0xa6645ed83148b4beb48115dec9986814c3c5a36adc1a86731c29b43639be52fa",
+                                "0x01": "0x21",
+                                "0x02": "0x60206000600060006000736193e03a6a148eca29a060ab8e3bd2d4625948c05a",
+                                "0x03": "0x01",
+                                "0x04": "0xa6645ed83148b4beb48115dec9986814c3c5a36adc1a86731c29b43639be52fa",
+                                "0x05": "0x21",
+                                "0x06": "0x60206000600060006000736193e03a6a148eca29a060ab8e3bd2d4625948c05a",
+                                "0x07": "0x01"
+                            }
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ce7decd0e",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0xc0f6dc9e5836f54caadbf59cc69346c508e1992b": {
+                            "nonce": "0x00",
+                            "balance": "0x01",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x2132f2",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x2205ced94258dc820d442f8681db5d0aad8fdc6030e1e6740694eb87fa7ffc9a",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test EXTCODEHASH after subcall with CALLCODE/DELEGATECALL to SELFDESTRUCT.\n\nB calls A, which uses CALLCODE or DELEGATECALL to invoke a contract C\ncontaining SELFDESTRUCT, executing it in A's context. B checks\nEXTCODEHASH, EXTCODESIZE, and EXTCODECOPY of A before and after.\nWithin the transaction, A's code properties are unchanged. Pre-Cancun,\nA is deleted at end of transaction. In Cancun, A survives only if\npre-existing; a dynamically created A is still deleted (EIP-6780).",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/constantinople/eip1052_extcodehash/test_extcodehash.py#L1441",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1052.md",
+            "reference-spec-version": "2dcbc7ce1563e9624e137e9d447374600af876fa"
+        }
+    },
+    "tests/constantinople/eip1052_extcodehash/test_extcodehash.py::test_extcodehash_subcall_selfdestruct[fork_Berlin-state_test-pre_existing-delegatecall]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentDifficulty": "0x020000"
+        },
+        "pre": {
+            "0x6193e03a6a148eca29a060ab8e3bd2d4625948c0": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x73c0f6dc9e5836f54caadbf59cc69346c508e1992bff",
+                "storage": {}
+            },
+            "0x6c76e100116183f67e240940df6e2abc11569dcc": {
+                "nonce": "0x01",
+                "balance": "0x01",
+                "code": "0x6020600060006000736193e03a6a148eca29a060ab8e3bd2d4625948c05af4",
+                "storage": {}
+            },
+            "0x935b5c877b9484e41762ff85e5d5c4e7b8a6d655": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x736c76e100116183f67e240940df6e2abc11569dcc3f600055736c76e100116183f67e240940df6e2abc11569dcc3b600155602060006000736c76e100116183f67e240940df6e2abc11569dcc3c60005160025560006000600060006000736c76e100116183f67e240940df6e2abc11569dcc5af1600355736c76e100116183f67e240940df6e2abc11569dcc3f600455736c76e100116183f67e240940df6e2abc11569dcc3b600555602060006000736c76e100116183f67e240940df6e2abc11569dcc3c60005160065560006000600060006000736c76e100116183f67e240940df6e2abc11569dcc5af1600755",
+                "storage": {}
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0x935b5c877b9484e41762ff85e5d5c4e7b8a6d655",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Berlin": [
+                {
+                    "hash": "0x4ce38930e7a603e90cf2c1ad27f851788b121d3a723d7041d904ec8dc6af9ae3",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0x8a84c0b745ff338641ac3474b7aa2465e82f7d859ac5898ede505517c5812f7d",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0x0351df",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf9010901830351dfb9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf861800a8407270e0094935b5c877b9484e41762ff85e5d5c4e7b8a6d655808026a0cad8b5c6fb521574ae33be75b8d1aad94e38193f33bd2c595b9e969d9d5cecb1a05432c1b9718391dfe78d3d53568a1ea42bc40b5815250f24481e731d1cb194f1",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x6193e03a6a148eca29a060ab8e3bd2d4625948c0": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x73c0f6dc9e5836f54caadbf59cc69346c508e1992bff",
+                            "storage": {}
+                        },
+                        "0x935b5c877b9484e41762ff85e5d5c4e7b8a6d655": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x736c76e100116183f67e240940df6e2abc11569dcc3f600055736c76e100116183f67e240940df6e2abc11569dcc3b600155602060006000736c76e100116183f67e240940df6e2abc11569dcc3c60005160025560006000600060006000736c76e100116183f67e240940df6e2abc11569dcc5af1600355736c76e100116183f67e240940df6e2abc11569dcc3f600455736c76e100116183f67e240940df6e2abc11569dcc3b600555602060006000736c76e100116183f67e240940df6e2abc11569dcc3c60005160065560006000600060006000736c76e100116183f67e240940df6e2abc11569dcc5af1600755",
+                            "storage": {
+                                "0x00": "0x46925208fcd5531bef9ab7684c895ad7c6d7cd3d0fc4c0634f3b2a80ef7d9a30",
+                                "0x01": "0x1f",
+                                "0x02": "0x6020600060006000736193e03a6a148eca29a060ab8e3bd2d4625948c05af400",
+                                "0x03": "0x01",
+                                "0x04": "0x46925208fcd5531bef9ab7684c895ad7c6d7cd3d0fc4c0634f3b2a80ef7d9a30",
+                                "0x05": "0x1f",
+                                "0x06": "0x6020600060006000736193e03a6a148eca29a060ab8e3bd2d4625948c05af400",
+                                "0x07": "0x01"
+                            }
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ce7decd4a",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0xc0f6dc9e5836f54caadbf59cc69346c508e1992b": {
+                            "nonce": "0x00",
+                            "balance": "0x01",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x2132b6",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x452944890067e4d285722bd48f46e3ca3996e24839601242c6e0ee7e34b2c1ef",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test EXTCODEHASH after subcall with CALLCODE/DELEGATECALL to SELFDESTRUCT.\n\nB calls A, which uses CALLCODE or DELEGATECALL to invoke a contract C\ncontaining SELFDESTRUCT, executing it in A's context. B checks\nEXTCODEHASH, EXTCODESIZE, and EXTCODECOPY of A before and after.\nWithin the transaction, A's code properties are unchanged. Pre-Cancun,\nA is deleted at end of transaction. In Cancun, A survives only if\npre-existing; a dynamically created A is still deleted (EIP-6780).",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/constantinople/eip1052_extcodehash/test_extcodehash.py#L1441",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1052.md",
+            "reference-spec-version": "2dcbc7ce1563e9624e137e9d447374600af876fa"
+        }
+    }
+}

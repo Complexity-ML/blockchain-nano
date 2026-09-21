@@ -1,0 +1,298 @@
+{
+  "source": "eth-account 0.13.7; fixture signing key 1",
+  "vectors": [
+    {
+      "name": "official Mail",
+      "data": {
+        "types": {
+          "EIP712Domain": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "version",
+              "type": "string"
+            },
+            {
+              "name": "chainId",
+              "type": "uint256"
+            },
+            {
+              "name": "verifyingContract",
+              "type": "address"
+            }
+          ],
+          "Person": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "wallet",
+              "type": "address"
+            }
+          ],
+          "Mail": [
+            {
+              "name": "from",
+              "type": "Person"
+            },
+            {
+              "name": "to",
+              "type": "Person"
+            },
+            {
+              "name": "contents",
+              "type": "string"
+            }
+          ]
+        },
+        "primaryType": "Mail",
+        "domain": {
+          "name": "Ether Mail",
+          "version": "1",
+          "chainId": 1,
+          "verifyingContract": "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC"
+        },
+        "message": {
+          "from": {
+            "name": "Cow",
+            "wallet": "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826"
+          },
+          "to": {
+            "name": "Bob",
+            "wallet": "0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB"
+          },
+          "contents": "Hello, Bob!"
+        }
+      },
+      "hash": "0xbe609aee343fb3c4b28e1df9e632fca64fcfaede20f02e86244efddf30957bd2",
+      "signature": "0x25ee9afa55806b99c9709a93ab967e487ad3a7cfdc421612e68cef7a737355246000f332e3f5e9ca5942275745c8b04523e17b57ef576e8362c74458fc62a6231c"
+    },
+    {
+      "name": "integer bounds",
+      "data": {
+        "types": {
+          "EIP712Domain": [],
+          "Bounds": [
+            {
+              "name": "low",
+              "type": "int256"
+            },
+            {
+              "name": "high",
+              "type": "uint256"
+            },
+            {
+              "name": "small",
+              "type": "int8"
+            },
+            {
+              "name": "unsigned",
+              "type": "uint64"
+            }
+          ]
+        },
+        "primaryType": "Bounds",
+        "domain": {},
+        "message": {
+          "low": "-57896044618658097711785492504343953926634992332820282019728792003956564819968",
+          "high": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+          "small": -128,
+          "unsigned": 18446744073709551615
+        }
+      },
+      "hash": "0xe4bf4ff53894502e059977432d756d123a85a4df2163e3a6aecba0b631af5b85",
+      "signature": "0xeff3912b7c95664f1877565db1ed0059bcf84c7bf6353f1cd778b2fdfe9a99a805c88cff566fae9a41ea168d0852372356e600c3911f0892bdd2c90541858d121b"
+    },
+    {
+      "name": "dynamic and fixed bytes",
+      "data": {
+        "types": {
+          "EIP712Domain": [],
+          "Payload": [
+            {
+              "name": "blob",
+              "type": "bytes"
+            },
+            {
+              "name": "tag",
+              "type": "bytes4"
+            },
+            {
+              "name": "text",
+              "type": "string"
+            },
+            {
+              "name": "yes",
+              "type": "bool"
+            },
+            {
+              "name": "no",
+              "type": "bool"
+            }
+          ]
+        },
+        "primaryType": "Payload",
+        "domain": {},
+        "message": {
+          "blob": "0x0012ff",
+          "tag": "0x01020304",
+          "text": "\u00e9t\u00e9 \ud83d\ude80",
+          "yes": true,
+          "no": false
+        }
+      },
+      "hash": "0xa2aa5f5c563644261d248a362baaf6752406ac636a8320dab9695d615f636c23",
+      "signature": "0x6dbad545573ae420d1250b1d07d77ed21c7db31e487c37fa91a18805e7a66d536cc35f1cd3115c471751f5d7a20862f83e51a21855a9526c95c9dbf4046ba7a41c"
+    },
+    {
+      "name": "nested arrays",
+      "data": {
+        "types": {
+          "EIP712Domain": [],
+          "Grid": [
+            {
+              "name": "grid",
+              "type": "uint16[2][]"
+            },
+            {
+              "name": "names",
+              "type": "string[]"
+            },
+            {
+              "name": "empty",
+              "type": "bytes[]"
+            }
+          ]
+        },
+        "primaryType": "Grid",
+        "domain": {},
+        "message": {
+          "grid": [
+            [
+              1,
+              2
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          "names": [
+            "a",
+            "\u00e9"
+          ],
+          "empty": []
+        }
+      },
+      "hash": "0x92fd664418f6e3c0acc4f49a922aa4d517eb043b53f790fc2cceb77ec515c508",
+      "signature": "0xc16c9d9968f90a8b3d5593ff8f6e44826b5a8373073904a1ced29e49b3369ccb4a7f483f8ffe2d85ee02d0d401e059e4e80bc4c8c57686a4f9d65610acc6d5031b"
+    },
+    {
+      "name": "array of structs",
+      "data": {
+        "types": {
+          "EIP712Domain": [],
+          "Person": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "wallet",
+              "type": "address"
+            }
+          ],
+          "Group": [
+            {
+              "name": "people",
+              "type": "Person[]"
+            }
+          ]
+        },
+        "primaryType": "Group",
+        "domain": {},
+        "message": {
+          "people": [
+            {
+              "name": "A",
+              "wallet": "0x1111111111111111111111111111111111111111"
+            },
+            {
+              "name": "B",
+              "wallet": "0x2222222222222222222222222222222222222222"
+            }
+          ]
+        }
+      },
+      "hash": "0x99f6df10853846331be9b0411255c5ca903218c7b14ccd26f49813236e977295",
+      "signature": "0x16e5a6083d45f1de3547cf61cc91570e350464cf328abd56e9f4d332c918fe921f76591212104aaecf4f89b8ed23b25d14e1fd1c005ad2ea422472ea4c2ff90c1c"
+    },
+    {
+      "name": "recursive struct",
+      "data": {
+        "types": {
+          "EIP712Domain": [],
+          "Node": [
+            {
+              "name": "value",
+              "type": "uint8"
+            },
+            {
+              "name": "children",
+              "type": "Node[]"
+            }
+          ]
+        },
+        "primaryType": "Node",
+        "domain": {},
+        "message": {
+          "value": 1,
+          "children": [
+            {
+              "value": 2,
+              "children": []
+            }
+          ]
+        }
+      },
+      "hash": "0x16fbf263293842bb11048c07baab5af005cf520d876034282c55e86ed49a9734",
+      "signature": "0x81be7883df95d6ee08d47f4de55b7544d2ea21a0f77c1a18157c493c601116f32b43a48531518f849d5d1a86ab529a0e9beff71b5ee6f1a93d5c3de8628fd9ad1b"
+    },
+    {
+      "name": "salt domain",
+      "data": {
+        "types": {
+          "EIP712Domain": [
+            {
+              "name": "chainId",
+              "type": "uint256"
+            },
+            {
+              "name": "salt",
+              "type": "bytes32"
+            }
+          ],
+          "Data": [
+            {
+              "name": "count",
+              "type": "uint8"
+            }
+          ]
+        },
+        "primaryType": "Data",
+        "domain": {
+          "salt": "0x1212121212121212121212121212121212121212121212121212121212121212",
+          "chainId": 1337
+        },
+        "message": {
+          "count": 5
+        }
+      },
+      "hash": "0x2af6a243aa69f50646488c735aac36d2ac880f5503bb053b51579e3fc2efd44e",
+      "signature": "0x6f6b10a5a3e3b9fee4fe99b7ff47760468324d785fbd848be5638292d03f1eb71ba3f964f3dd3867a06ca644a27a6f14081aad624bd847027ce0cff069ce9a0e1b"
+    }
+  ]
+}

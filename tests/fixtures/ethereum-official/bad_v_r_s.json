@@ -1,0 +1,662 @@
+{
+    "tests/frontier/validation/test_transaction.py::test_bad_v_r_s[fork_Berlin-tx_type_0-state_test-s=SECP256K1N//2+1]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentDifficulty": "0x020000"
+        },
+        "pre": {
+            "0xf89a03b42ea1412874da2cf1ae48956f73d06039": {
+                "nonce": "0x00",
+                "balance": "0xdeadbeee",
+                "code": "0x",
+                "storage": {}
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0xf89a03b42ea1412874da2cf1ae48956f73d06039",
+            "value": [
+                "0x01"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff"
+        },
+        "post": {
+            "Berlin": [
+                {
+                    "hash": "0x94f17be47be2e27f90e110c9c2d405b7c70a9910f766f0af7c8c2ffc521c4667",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "txbytes": "0xf841800a8407270e0094f89a03b42ea1412874da2cf1ae48956f73d0603901801b01a07fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a1",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xf89a03b42ea1412874da2cf1ae48956f73d06039": {
+                            "nonce": "0x00",
+                            "balance": "0xdeadbeee",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x00",
+                            "balance": "0x033b2e3c9fd0803ce8000000",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    },
+                    "expectException": "TransactionException.INVALID_SIGNATURE_VRS"
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x6a4bf6080fe9799371bc038937fa82fd6c92e11c200afc839b747d451c0b96a5",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "The v/y_parity component of a signature must be 35 or greater (if it isn't\n27/28).",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/frontier/validation/test_transaction.py#L205",
+            "metadata": {
+                "opcode_count": {}
+            }
+        }
+    },
+    "tests/frontier/validation/test_transaction.py::test_bad_v_r_s[fork_Berlin-tx_type_0-state_test-s=SECP256K1N]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentDifficulty": "0x020000"
+        },
+        "pre": {
+            "0xf89a03b42ea1412874da2cf1ae48956f73d06039": {
+                "nonce": "0x00",
+                "balance": "0xdeadbeee",
+                "code": "0x",
+                "storage": {}
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0xf89a03b42ea1412874da2cf1ae48956f73d06039",
+            "value": [
+                "0x01"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff"
+        },
+        "post": {
+            "Berlin": [
+                {
+                    "hash": "0x94f17be47be2e27f90e110c9c2d405b7c70a9910f766f0af7c8c2ffc521c4667",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "txbytes": "0xf841800a8407270e0094f89a03b42ea1412874da2cf1ae48956f73d0603901801b01a0fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xf89a03b42ea1412874da2cf1ae48956f73d06039": {
+                            "nonce": "0x00",
+                            "balance": "0xdeadbeee",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x00",
+                            "balance": "0x033b2e3c9fd0803ce8000000",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    },
+                    "expectException": "TransactionException.INVALID_SIGNATURE_VRS"
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x2be524a757ead9f2e2ce36160f9bf9c6136b5ce01553f48c3ce10fc7095130d3",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "The v/y_parity component of a signature must be 35 or greater (if it isn't\n27/28).",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/frontier/validation/test_transaction.py#L205",
+            "metadata": {
+                "opcode_count": {}
+            }
+        }
+    },
+    "tests/frontier/validation/test_transaction.py::test_bad_v_r_s[fork_Berlin-tx_type_0-state_test-v_27-r_115792089237316195423570985008687907852837564279074904382605163141518161494337-s_1]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentDifficulty": "0x020000"
+        },
+        "pre": {
+            "0xf89a03b42ea1412874da2cf1ae48956f73d06039": {
+                "nonce": "0x00",
+                "balance": "0xdeadbeee",
+                "code": "0x",
+                "storage": {}
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0xf89a03b42ea1412874da2cf1ae48956f73d06039",
+            "value": [
+                "0x01"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff"
+        },
+        "post": {
+            "Berlin": [
+                {
+                    "hash": "0x94f17be47be2e27f90e110c9c2d405b7c70a9910f766f0af7c8c2ffc521c4667",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "txbytes": "0xf841800a8407270e0094f89a03b42ea1412874da2cf1ae48956f73d0603901801ba0fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414101",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xf89a03b42ea1412874da2cf1ae48956f73d06039": {
+                            "nonce": "0x00",
+                            "balance": "0xdeadbeee",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x00",
+                            "balance": "0x033b2e3c9fd0803ce8000000",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    },
+                    "expectException": "TransactionException.INVALID_SIGNATURE_VRS"
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x55a7fcdbc7f4e534f79e829f1ded373f5464c6db78a74e988120ffaa7779749a",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "The v/y_parity component of a signature must be 35 or greater (if it isn't\n27/28).",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/frontier/validation/test_transaction.py#L205",
+            "metadata": {
+                "opcode_count": {}
+            }
+        }
+    },
+    "tests/frontier/validation/test_transaction.py::test_bad_v_r_s[fork_Berlin-tx_type_0-state_test-v_34-r_1-s_1]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentDifficulty": "0x020000"
+        },
+        "pre": {
+            "0xf89a03b42ea1412874da2cf1ae48956f73d06039": {
+                "nonce": "0x00",
+                "balance": "0xdeadbeee",
+                "code": "0x",
+                "storage": {}
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0xf89a03b42ea1412874da2cf1ae48956f73d06039",
+            "value": [
+                "0x01"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff"
+        },
+        "post": {
+            "Berlin": [
+                {
+                    "hash": "0x94f17be47be2e27f90e110c9c2d405b7c70a9910f766f0af7c8c2ffc521c4667",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "txbytes": "0xe1800a8407270e0094f89a03b42ea1412874da2cf1ae48956f73d060390180220101",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xf89a03b42ea1412874da2cf1ae48956f73d06039": {
+                            "nonce": "0x00",
+                            "balance": "0xdeadbeee",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x00",
+                            "balance": "0x033b2e3c9fd0803ce8000000",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    },
+                    "expectException": "TransactionException.INVALID_SIGNATURE_VRS"
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0xa9f9f5f55eb868933b220d5d0a883ce016204aad09cc9866f31d63f5d9c03350",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "The v/y_parity component of a signature must be 35 or greater (if it isn't\n27/28).",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/frontier/validation/test_transaction.py#L205",
+            "metadata": {
+                "opcode_count": {}
+            }
+        }
+    },
+    "tests/frontier/validation/test_transaction.py::test_bad_v_r_s[fork_Berlin-tx_type_1-state_test-s=SECP256K1N//2+1]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentDifficulty": "0x020000"
+        },
+        "pre": {
+            "0xf89a03b42ea1412874da2cf1ae48956f73d06039": {
+                "nonce": "0x00",
+                "balance": "0xdeadbeee",
+                "code": "0x",
+                "storage": {}
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0xf89a03b42ea1412874da2cf1ae48956f73d06039",
+            "value": [
+                "0x01"
+            ],
+            "data": [
+                "0x"
+            ],
+            "accessLists": [
+                []
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff"
+        },
+        "post": {
+            "Berlin": [
+                {
+                    "hash": "0x94f17be47be2e27f90e110c9c2d405b7c70a9910f766f0af7c8c2ffc521c4667",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "txbytes": "0x01f84301800a8407270e0094f89a03b42ea1412874da2cf1ae48956f73d060390180c01b01a07fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a1",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xf89a03b42ea1412874da2cf1ae48956f73d06039": {
+                            "nonce": "0x00",
+                            "balance": "0xdeadbeee",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x00",
+                            "balance": "0x033b2e3c9fd0803ce8000000",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    },
+                    "expectException": "TransactionException.INVALID_SIGNATURE_VRS"
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x4466a7a2bb45e666ef4060697a10da695cc048dd7271fdfadf17dd7d2f4a30eb",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "The v/y_parity component of a signature must be 35 or greater (if it isn't\n27/28).",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/frontier/validation/test_transaction.py#L205",
+            "metadata": {
+                "opcode_count": {}
+            }
+        }
+    },
+    "tests/frontier/validation/test_transaction.py::test_bad_v_r_s[fork_Berlin-tx_type_1-state_test-s=SECP256K1N]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentDifficulty": "0x020000"
+        },
+        "pre": {
+            "0xf89a03b42ea1412874da2cf1ae48956f73d06039": {
+                "nonce": "0x00",
+                "balance": "0xdeadbeee",
+                "code": "0x",
+                "storage": {}
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0xf89a03b42ea1412874da2cf1ae48956f73d06039",
+            "value": [
+                "0x01"
+            ],
+            "data": [
+                "0x"
+            ],
+            "accessLists": [
+                []
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff"
+        },
+        "post": {
+            "Berlin": [
+                {
+                    "hash": "0x94f17be47be2e27f90e110c9c2d405b7c70a9910f766f0af7c8c2ffc521c4667",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "txbytes": "0x01f84301800a8407270e0094f89a03b42ea1412874da2cf1ae48956f73d060390180c01b01a0fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xf89a03b42ea1412874da2cf1ae48956f73d06039": {
+                            "nonce": "0x00",
+                            "balance": "0xdeadbeee",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x00",
+                            "balance": "0x033b2e3c9fd0803ce8000000",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    },
+                    "expectException": "TransactionException.INVALID_SIGNATURE_VRS"
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0xaf7af6524bb9fb1b5f3d6e2c14b75d2eafc7d18d02c70acfa02afbb3cdb8fec6",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "The v/y_parity component of a signature must be 35 or greater (if it isn't\n27/28).",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/frontier/validation/test_transaction.py#L205",
+            "metadata": {
+                "opcode_count": {}
+            }
+        }
+    },
+    "tests/frontier/validation/test_transaction.py::test_bad_v_r_s[fork_Berlin-tx_type_1-state_test-v_27-r_115792089237316195423570985008687907852837564279074904382605163141518161494337-s_1]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentDifficulty": "0x020000"
+        },
+        "pre": {
+            "0xf89a03b42ea1412874da2cf1ae48956f73d06039": {
+                "nonce": "0x00",
+                "balance": "0xdeadbeee",
+                "code": "0x",
+                "storage": {}
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0xf89a03b42ea1412874da2cf1ae48956f73d06039",
+            "value": [
+                "0x01"
+            ],
+            "data": [
+                "0x"
+            ],
+            "accessLists": [
+                []
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff"
+        },
+        "post": {
+            "Berlin": [
+                {
+                    "hash": "0x94f17be47be2e27f90e110c9c2d405b7c70a9910f766f0af7c8c2ffc521c4667",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "txbytes": "0x01f84301800a8407270e0094f89a03b42ea1412874da2cf1ae48956f73d060390180c01ba0fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414101",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xf89a03b42ea1412874da2cf1ae48956f73d06039": {
+                            "nonce": "0x00",
+                            "balance": "0xdeadbeee",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x00",
+                            "balance": "0x033b2e3c9fd0803ce8000000",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    },
+                    "expectException": "TransactionException.INVALID_SIGNATURE_VRS"
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0xfb5165b37ea11a6a30a40e733b6a42ab2683da970071e5fa97249a63ec5a58ce",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "The v/y_parity component of a signature must be 35 or greater (if it isn't\n27/28).",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/frontier/validation/test_transaction.py#L205",
+            "metadata": {
+                "opcode_count": {}
+            }
+        }
+    },
+    "tests/frontier/validation/test_transaction.py::test_bad_v_r_s[fork_Berlin-tx_type_1-state_test-v_34-r_1-s_1]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentDifficulty": "0x020000"
+        },
+        "pre": {
+            "0xf89a03b42ea1412874da2cf1ae48956f73d06039": {
+                "nonce": "0x00",
+                "balance": "0xdeadbeee",
+                "code": "0x",
+                "storage": {}
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0xf89a03b42ea1412874da2cf1ae48956f73d06039",
+            "value": [
+                "0x01"
+            ],
+            "data": [
+                "0x"
+            ],
+            "accessLists": [
+                []
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff"
+        },
+        "post": {
+            "Berlin": [
+                {
+                    "hash": "0x94f17be47be2e27f90e110c9c2d405b7c70a9910f766f0af7c8c2ffc521c4667",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "txbytes": "0x01e301800a8407270e0094f89a03b42ea1412874da2cf1ae48956f73d060390180c0220101",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xf89a03b42ea1412874da2cf1ae48956f73d06039": {
+                            "nonce": "0x00",
+                            "balance": "0xdeadbeee",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x00",
+                            "balance": "0x033b2e3c9fd0803ce8000000",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    },
+                    "expectException": "TransactionException.INVALID_SIGNATURE_VRS"
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x9234552e4415bea8e781e47130abbfd10b18e08e9de356f5a38eb5e84d12cdfd",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "The v/y_parity component of a signature must be 35 or greater (if it isn't\n27/28).",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/frontier/validation/test_transaction.py#L205",
+            "metadata": {
+                "opcode_count": {}
+            }
+        }
+    }
+}

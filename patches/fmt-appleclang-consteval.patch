@@ -1,0 +1,13 @@
+--- a/include/fmt/core.h
++++ b/include/fmt/core.h
+@@ -216,6 +216,10 @@
+ #  define FMT_UNICODE !FMT_MSC_VERSION
+ #endif
+ 
++#if defined(__apple_build_version__) && !defined(FMT_CONSTEVAL)
++// AppleClang rejects compile-time pointer subtraction in this fmt release.
++#  define FMT_CONSTEVAL
++#endif
+ #ifndef FMT_CONSTEVAL
+ #  if ((FMT_GCC_VERSION >= 1000 || FMT_CLANG_VERSION >= 1101) && \
+        (!defined(__apple_build_version__) ||                     \
