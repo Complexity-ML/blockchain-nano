@@ -668,3 +668,37 @@ commit durable ne sont fournis par cette fonction. Les deux séquences multi-ép
 précédemment différées restent ouvertes. Profil Phase0 : pas de consolidation
 EIP-7251, de churn en solde Electra ni d'activation sur le réseau Nano.
 Source : https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#registry-updates
+
+## Justification et finalisation Phase0 — 25 septembre 2026
+
+`prepare_phase0_justification_finalization` calcule les checkpoints justifiés et
+finalisés et les quatre bits de justification depuis l'état authentifié. Il
+reconstruit les comités des époques précédente/courante depuis le registre actif,
+les mixes RANDAO et les paramètres de shuffle ; les bitlists désignent les
+participants dans ces comités. Les cibles ne correspondant pas à l'historique sont
+ignorées, les participants répétés réunis sans compter deux fois leur poids et
+les validateurs sanctionnés exclus du poids attestant. Le dénominateur utilise
+les validateurs actifs de l'époque courante, y compris les sanctionnés, comme
+Phase0 ; les attestations de l'époque précédente peuvent inclure des sortants.
+Les poids utilisent des entiers larges et le seuil exact 3 × participation ≥
+2 × solde actif. Les quatre règles de finalisation et les deux époques initiales
+sont traitées ; aucun candidat ne modifie ses snapshots d'entrée.
+
+`phase0FfgQualification` couvre les dix scénarios officiels du corpus épinglé :
+173 attestations en attente, checkpoints et bits conformes dans tous les cas,
+y compris soutien insuffisant, mauvaise cible et validateurs sortants. Contrôles
+supplémentaires : dix duplications, dix exclusions des sanctionnés, dix mutations
+de cibles, quatre contrôles de seuil/genesis (dont sommes au-delà de uint64),
+dix-sept contextes invalides et 226 annulations sans mutation. Sept suites passent
+avec les composants de shuffle, RANDAO, sélection du proposant et registre d'époque.
+
+Frontière de confiance : les attestations en attente proviennent de l'état déjà
+authentifié ; elles ne portent plus de signatures et ne sont pas une entrée réseau.
+La validation BLS, source et inclusion des attestations dans les blocs reste à
+raccorder avant ce composant. Finalité réseau, LMD-GHOST, transition d'époque
+complète, state_root, garde de rejeu et commit durable ne sont pas démontrés.
+Le composant ne remplace pas le BFT actif. Les parcours/shuffles n'ont pas fait
+l'objet d'une mesure de finalité à un million de validateurs dans cette campagne.
+Clôture : intégrer l'admission authentifiée, l'ordre d'époque et la persistance,
+puis confronter des séquences complètes et des partitions/reprises réseau.
+Source : https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#justification-and-finalization

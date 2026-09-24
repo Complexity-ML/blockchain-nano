@@ -344,3 +344,10 @@ Les quinze cas officiels de registry_updates sont couverts (14 conformes, 1 reje
 attendu), ainsi que deux registres synthétiques locaux de 100 000/1 000 000 entrées.
 Neuf suites passent. Cette sous-transition ne clôt pas le traitement d'époque,
 la finalité ou les EIP de staking modernes ; aucun statut réseau n'est promu.
+
+Finalité de composant : `phase0FfgQualification` calcule justification/finalisation
+Phase0 depuis comités, bitlists et soldes de l'état authentifié. Dix scénarios
+officiels et sept suites conformes ; seuil exact de deux tiers testé au-delà de
+uint64, doublons/sanctionnés/cibles incorrectes contrôlés. L'admission des
+attestations, l'ordre d'époque complet, le choix de branche et le commit/réseau
+restent ouverts ; aucun EIP réseau ni objectif de production n'est déclaré clos.

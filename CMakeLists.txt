@@ -860,3 +860,9 @@ add_executable(nano-registry-epoch-scale-tests tests/test_registry_epoch_scale.c
 target_link_libraries(nano-registry-epoch-scale-tests PRIVATE nano_core)
 add_test(NAME consensus_registry_epoch_scale COMMAND nano-registry-epoch-scale-tests)
 set_tests_properties(consensus_registry_epoch_scale PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_scale")
+
+add_executable(nano-ffg-official-tests tests/test_ffg_official.cpp)
+target_link_libraries(nano-ffg-official-tests PRIVATE nano_core)
+target_compile_definitions(nano-ffg-official-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+add_test(NAME ethereum_official_phase0_ffg COMMAND nano-ffg-official-tests)
+set_tests_properties(ethereum_official_phase0_ffg PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")
