@@ -1155,3 +1155,10 @@ les empreintes des fixtures ; supprimer un cas fait échouer la vérification.
 Ce résultat concerne le corpus versionné dans le dépôt, pas les 44 244 cas
 historiquement exécutés dans d'autres sélections, ni les tests de blocs ou
 l'activation d'un fork réseau. Ces vérifications plus larges restent à rafraîchir.
+
+Le même rafraîchissement couvre les 2 412 cas des 170 fichiers de blocs
+versionnés : tous correspondent, sans unsupported ni erreur. Identités et
+empreintes vérifiées par `verify-readonly-blocks.mjs`, contrôle négatif par
+suppression d'un cas. Référence : `readonlyEvmBlockCorpusQualification`.
+Il s'agit des engagements d'exécution couverts par le runner, et non d'une
+validation complète des en-têtes, de la finalité ou du consensus réseau.
