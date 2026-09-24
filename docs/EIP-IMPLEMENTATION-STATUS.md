@@ -280,3 +280,11 @@ racines et 33 rejets de signatures/contextes. Cinq suites passent. La racine du
 corps est fournie par la fixture officielle, sans calcul complet du corps ni
 transition d'état ; intégration au réacteur et commit atomique restent ouverts.
 Les statuts réseau/EIP ne changent pas.
+
+Corps des blocs : `beaconBodyQualification` calcule le corps SSZ Phase0 complet
+sur cinq fixtures officielles couvrant toutes ses opérations. Six suites
+passent, ainsi qu'une campagne ciblée ASan/UBSan. Les trois signatures de blocs
+utilisent maintenant ce corps recalculé, levant la dépendance à une racine de
+fixture de la campagne précédente. La validité des opérations, la transition
+complète, les schémas des forks suivants et l'intégration réseau restent ouverts.
+Aucun statut d'EIP ni de production n'est promu par ce seul calcul SSZ.

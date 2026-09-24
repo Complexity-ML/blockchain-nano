@@ -1,5 +1,6 @@
 #include "support/phase0_minimal_ssz.hpp"
 #include "nano/consensus_beacon_header.hpp"
+#include "nano/consensus_beacon_body.hpp"
 using namespace test;
 using namespace test::phase0_minimal;
 ConsensusRoot root(const Json& v){auto b=unhex(v.get<std::string>());check(b.size()==32,"root width");ConsensusRoot r{};std::copy(b.begin(),b.end(),r.begin());return r;}
@@ -24,8 +25,9 @@ int main(int argc,char** argv){try{
   ConsensusBeaconHeader h;h.slot=little(b,100,8);h.proposer_index=little(b,108,8);
   check(little(post,64,8)==h.slot&&little(post,72,8)==h.proposer_index,"post header identity");
   std::copy_n(b.begin()+116,32,h.parent_root.begin());std::copy_n(b.begin()+148,32,h.state_root.begin());
-  // Trusted official post-state commitment; this test does NOT hash the full body.
-  std::copy_n(post.begin()+144,32,h.body_root.begin());
+  // Hash the received body independently, then compare to the official commitment.
+  h.body_root=phase0_beacon_body_root(std::span<const uint8_t>(b).subspan(184),{16,2,128,16,16,2048});
+  check(std::equal(h.body_root.begin(),h.body_root.end(),post.begin()+144),"official body commitment mismatch");
   ConsensusRoot genesis{};std::copy_n(pre.begin()+8,32,genesis.begin());
   ConsensusBytes4 version{};std::copy_n(pre.begin()+(h.slot/8<little(pre,56,8)?48:52),4,version.begin());
   const auto& key=registry.validators.at(h.proposer_index).public_key;const Bytes signature(b.begin()+4,b.begin()+100);
@@ -39,5 +41,5 @@ int main(int argc,char** argv){try{
   refuse(h,version,genesis,key,Bytes(b.begin()+184,b.begin()+280)); // RANDAO domain signature cannot sign a block.
  }
  check(roots==5&&signatures==3&&rejected==33,"corpus totals");
- std::cout<<Json{{"scenario","beacon-header-signature"},{"officialRoots",roots},{"fieldMutations",mutations},{"officialSignatures",signatures},{"rejected",rejected},{"fullBodyRootComputed",false},{"activeInConsensus",false}}.dump()<<std::endl;return 0;
+ std::cout<<Json{{"scenario","beacon-header-signature"},{"officialRoots",roots},{"fieldMutations",mutations},{"officialSignatures",signatures},{"rejected",rejected},{"fullBodyRootComputed",true},{"activeInConsensus",false}}.dump()<<std::endl;return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<std::endl;return 1;}}

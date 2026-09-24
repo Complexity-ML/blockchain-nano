@@ -1,0 +1,13 @@
+import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import assert from 'node:assert/strict';
+const text=readFileSync(resolve(process.argv[2],'tests-full.log'),'utf8');
+assert.equal((text.match(/Test Passed\./g)||[]).length,6);
+for(const name of ['ethereum_consensus_beacon_body','ethereum_consensus_beacon_header','ethereum_consensus_signing_roots','ethereum_consensus_bls_verify','consensus_selected_randao','ethereum_official_randao_projection'])assert(text.includes(`Testing: ${name}\n`));
+const rows=text.split('\n').filter(l=>l.startsWith('{')).map(l=>JSON.parse(l));
+const r=rows.find(r=>r.scenario==='phase0-beacon-body');assert(r);
+for(const [key,value] of Object.entries({officialRoots:5,fixedFieldMutations:25,malformedRejected:261,boundaries:13,byteMutations:320,operationSemanticsValidated:false,activeInConsensus:false}))assert.equal(r[key],value);
+assert.deepEqual(r.operationCounts,[20,6,24,14,21]);
+const header=rows.find(r=>r.scenario==='beacon-header-signature');assert.equal(header.fullBodyRootComputed,true);assert.equal(header.officialSignatures,3);assert.equal(header.rejected,33);
+const sanitized=readFileSync(resolve(process.argv[2],'sanitized.log'),'utf8');assert.deepEqual(JSON.parse(sanitized.trim()),r);
+console.log(JSON.stringify({verified:true,...r,header},null,2));

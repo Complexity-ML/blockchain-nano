@@ -381,3 +381,34 @@ signé, sans prouver cette transition. Calcul du corps, vérification du parent,
 transition complète, jonction atomique avec RANDAO et intégration au réacteur
 restent nécessaires. Aucune activation ni qualification complète d'EIP.
 Référence : https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#verify_block_signature
+
+## Calcul complet du corps SSZ Phase0 — 24 septembre 2026
+
+`phase0_beacon_body_root` décode strictement le corps SSZ et calcule son
+engagement : révélation RANDAO, Eth1Data, graffiti, proposer/attester slashings,
+attestations avec bitlists, dépôts avec preuves et sorties signées. Offsets
+canoniques, tailles fixes, bornes de listes et délimiteurs de bitlist sont
+contrôlés. Les bornes sont fournies par le preset appelant ; elles ne limitent
+pas la population totale des validateurs. Le merkle padding n'alloue pas la
+capacité maximale configurée. Le transport devra toujours borner les messages
+avant ce calcul ; ce composant ne remplace pas les quotas réseau.
+
+`beaconBodyQualification` conserve cinq racines de corps officiels aléatoires
+(20 proposer slashings, 6 attester slashings, 24 attestations, 14 dépôts,
+21 sorties), 25 mutations de champs fixes, 320 mutations d'octets, 261 rejets de
+structures invalides et 13 cas aux limites. Six suites passent. Le décodeur et
+le hachage SSZ nouvellement ajoutés sont aussi compilés avec AddressSanitizer
+et UndefinedBehaviorSanitizer : même campagne, aucune erreur détectée. Cela
+ne constitue pas une qualification de l'ensemble du binaire sous sanitizers.
+
+Les trois signatures de blocs du corpus RANDAO utilisent désormais une racine
+de corps calculée depuis les octets reçus, puis comparée au post-état officiel.
+Cela lève la limite de la campagne historique `beaconHeaderQualification`,
+conservée sans modification. Les cinq fixtures sont épinglées à la même révision
+`bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908` du corpus officiel.
+
+Périmètre : schéma Phase0 uniquement, pas les corps Altair/Bellatrix et suivants.
+Une opération SSZ bien formée n'est pas nécessairement autorisée : signatures
+internes, appartenance, preuves de dépôt, compteurs, transition d'état, parent,
+jonction atomique avec RANDAO et activation du réacteur restent à vérifier.
+Référence : https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#beaconblockbody
