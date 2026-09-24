@@ -397,3 +397,9 @@ BeaconState officiels du preset minimal et les 21 champs. Le hash complet
 n'est pas encore raccordé au traitement des slots ou à la validation des blocs ;
 les invariants d'admission du consensus restent distincts du schéma SSZ. Aucun
 EIP/fork moderne ni état réseau n'est déclaré complet par cette preuve.
+
+Slots Phase0 : `fullSlotsQualification` compare désormais les états SSZ complets
+sur les sept scénarios officiels (100 slots), incluant `historical_accumulator`.
+La nouvelle preuve dépasse les projections de `orderedEpochQualification` sans
+les réécrire. Les blocs signés complets, la persistance/reprise et le consensus
+réseau restent ouverts ; aucun fork post-Phase0 n'est activé par cette étape.

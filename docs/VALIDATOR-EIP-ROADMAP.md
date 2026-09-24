@@ -922,3 +922,34 @@ au codec d'état modifiable et à la vérification des blocs/époques. La séque
 Le preset mainnet, les états post-Phase0, la persistance et le réacteur réseau
 ne sont pas couverts par cette campagne.
 Source : https://github.com/ethereum/consensus-specs/blob/fcdcf42024f33c498bff74936eabea2d96049fc2/specs/phase0/beacon-chain.md#beacon-state
+
+### Transitions de slots avec état SSZ complet
+
+`prepare_phase0_slots` relie désormais le hash BeaconState au cache des racines
+par slot, au remplissage de la racine de l'en-tête précédent et à la composition
+des époques. Le codec natif reconstruit les champs consommés par l'époque et
+réencode ses listes/offsets, en conservant les autres champs. Il contrôle la
+cohérence des longueurs validateurs/soldes. L'entrée reste un état authentifié,
+pas un mécanisme d'admission d'un genesis ou snapshot arbitraire.
+
+`fullSlotsQualification` : les sept scénarios officiels du preset minimal,
+100 slots, concordent **octet par octet sur les états complets** (107 223 octets
+comparés), racines comprises. `historical_accumulator`, précédemment différé,
+est maintenant qualifié dans cette nouvelle campagne. Les anciennes preuves de
+projection restent inchangées. Sept contrôles comparent exécution groupée et
+slot par slot avec le même marqueur ; sept rejets de retraitement de cible,
+sept points d'annulation, dix entrées invalides et une rotation de records
+non vides sont vérifiés. Six suites passent. Une racine historique attendue
+altérée est détectée malgré un hash de fixture recalculé.
+
+La limite de travail `maximum_slots` est un budget explicite du demandeur, pas
+une limite du protocole : le rattrapage peut se faire par lots, avec les mêmes
+états finaux. Les octets et `last_processed_epoch` restent des candidats privés
+à persister atomiquement. Le marqueur n'appartient pas au schéma SSZ Ethereum.
+
+Cette qualification ne couvre pas encore les blocs signés complets, les votes
+Eth1/dépôts composés avec eux, l'authentification des snapshots, leur commit et
+reprise durable ou le réseau actif. Les historiques sont recalculés depuis les
+états complets ; aucune performance de nœud à un million de validateurs n'est
+déduite de ces sept scénarios. Les profils post-Phase0 restent distincts.
+Source : https://github.com/ethereum/consensus-specs/blob/fcdcf42024f33c498bff74936eabea2d96049fc2/specs/phase0/beacon-chain.md#beacon-chain-state-transition-function
