@@ -775,3 +775,8 @@ target_link_libraries(nano-randao-official-tests PRIVATE nano_core)
 target_compile_definitions(nano-randao-official-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
 add_test(NAME ethereum_official_randao_projection COMMAND nano-randao-official-tests)
 set_tests_properties(ethereum_official_randao_projection PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")
+
+add_executable(nano-consensus-proposer-tests tests/test_consensus_proposer.cpp)
+target_link_libraries(nano-consensus-proposer-tests PRIVATE nano_core)
+add_test(NAME consensus_phase0_proposer COMMAND nano-consensus-proposer-tests)
+set_tests_properties(consensus_phase0_proposer PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")

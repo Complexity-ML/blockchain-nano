@@ -14,6 +14,7 @@ int main(){try{
  auto fixture=load(std::string(NANO_TEST_SOURCE)+"/tests/fixtures/consensus-shuffling.json");unsigned cases=0,checks=0;
  for(const auto& item:fixture.at("cases")){auto raw=unhex(item.at("seed"));check(raw.size()==32,"fixture seed length");std::array<uint8_t,32> seed{};std::copy(raw.begin(),raw.end(),seed.begin());auto count=item.at("count").get<uint64_t>();
   auto actual=shuffled_validator_indices(count,seed,fixture.at("rounds").get<unsigned>());check(Json(actual)==item.at("mapping"),"official Ethereum permutation mismatch");++cases;
+  for(uint64_t i=0;i<count;++i)check(shuffled_validator_index(i,count,seed,fixture.at("rounds").get<unsigned>())==actual[i],"scalar official shuffle mismatch");
   for(auto committees:{1u,3u,32u,128u}){std::vector<uint64_t> joined;for(unsigned i=0;i<committees;++i){auto c=partition_committee(actual,i,committees);joined.insert(joined.end(),c.begin(),c.end());}check(joined==actual,"partition loses or duplicates indices");++checks;}
  }
  for(uint64_t count:{255ull,256ull,257ull,1001ull,100000ull,1000000ull}){

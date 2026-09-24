@@ -5,6 +5,19 @@
 #include <stdexcept>
 #include <limits>
 namespace nano {
+uint64_t shuffled_validator_index(uint64_t index,uint64_t count,const std::array<uint8_t,32>& seed,uint16_t rounds){
+ if(!count||index>=count||count>(uint64_t(1)<<40)||!rounds||rounds>256)throw std::invalid_argument("invalid scalar shuffle parameters");
+ std::array<uint8_t,37> input{};std::copy(seed.begin(),seed.end(),input.begin());
+ for(uint16_t round=0;round<rounds;++round){
+  input[32]=static_cast<uint8_t>(round);std::array<uint8_t,32> digest{};SHA256(input.data(),33,digest.data());
+  uint64_t pivot=0;for(unsigned b=0;b<8;++b)pivot|=uint64_t(digest[b])<<(8*b);pivot%=count;
+  auto flip=(pivot+count-index)%count,position=std::max(index,flip);
+  for(unsigned b=0;b<4;++b)input[33+b]=uint8_t((position/256)>>(8*b));
+  SHA256(input.data(),input.size(),digest.data());
+  if((digest[(position%256)/8]>>(position%8))&1)index=flip;
+ }
+ return index;
+}
 std::vector<uint64_t> shuffled_validator_indices(uint64_t count,const std::array<uint8_t,32>& seed,uint16_t rounds){
  // The hash input encodes bucket numbers in four bytes, 256 indices per bucket.
  if(count>(uint64_t(1)<<40)||count>std::numeric_limits<size_t>::max()||rounds==0||rounds>256)throw std::invalid_argument("invalid shuffle domain or rounds");

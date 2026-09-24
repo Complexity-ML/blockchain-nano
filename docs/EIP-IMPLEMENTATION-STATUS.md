@@ -259,3 +259,10 @@ RANDAO officiel : `officialRandaoQualification` valide 3 révélations BLS et
 15 rejets locaux. Les indices des proposants viennent des fixtures : sélection,
 validation complète des blocs et intégration réseau ne sont pas qualifiées.
 Trois suites passent et les contrôles négatifs sont archivés.
+
+
+Proposants : `proposerQualification` recalcule les 3 indices officiels du corpus
+RANDAO et teste 98 comparaisons pondérées, 10 rejets et l'annulation. Les accès
+scalaires au shuffle concordent avec 240 permutations officielles. Les mesures
+100 000/1 000 000 concernent des registres locaux à poids maximaux égaux, sans
+réseau. Profil Phase0 seulement ; Electra/EIP-8045 et activation restent ouverts.

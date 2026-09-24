@@ -296,3 +296,34 @@ blocs ou des époques. Les trois suites RANDAO local/officiel et slashing offici
 passent. Un mix post attendu altéré avec empreinte mise à jour est rejeté par
 le binaire ; un rapport annonçant 191 mixes au lieu de 192 est aussi rejeté.
 La sélection des proposants, la persistance et le consensus actif restent ouverts.
+
+## Sélection pondérée du proposant Phase0 — 24 septembre 2026
+
+`phase0_proposer_index` filtre les validateurs actifs à l'époque demandée,
+dérive la graine du slot depuis le RANDAO et applique l'échantillonnage pondéré
+Phase0. `shuffled_validator_index` calcule un index sans construire une permutation
+complète à chaque essai. La comparaison des poids utilise un intermédiaire
+128 bits ; les paramètres du profil sont explicites. Référence :
+[compute_proposer_index](https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#compute_proposer_index).
+
+`proposerQualification` recalcule les trois indices des proposants officiels
+utilisés par la qualification RANDAO, au lieu de les accepter comme donnée.
+Il vérifie 98 comparaisons locales pondérées, 10 rejets, l'annulation et la
+correspondance scalaire avec les 240 permutations officielles. Un index de
+proposant falsifié dans une fixture est rejeté même après mise à jour de son
+empreinte. Les trois suites passent.
+
+La sélection locale sur registres de 100 000 et 1 000 000 entrées, toutes au poids
+maximal, a pris respectivement environ 0,53 ms et 3,92 ms sur ce Mac. La mesure
+inclut le filtrage du registre, exclut sa construction, la communication réseau,
+la validation des signatures et les commits disque. Ce n'est ni un million de
+nœuds, ni une preuve de latence sous poids hétérogènes/charge. Le parcours initial
+reste O(N) et alloue une liste des actifs ; un registre d'époque authentifié
+mis en cache reste à intégrer. Le callback d'annulation interrompt le travail,
+mais une interruption ne doit pas devenir un verdict de bloc invalide.
+
+Ce profil Phase0 ne retire pas silencieusement les validateurs slashed du tirage :
+la validation du bloc doit encore rejeter un proposant sanctionné selon ce fork.
+Les changements Electra et EIP-8045 ne sont pas revendiqués. Le registre fourni
+doit être financé et authentifié ; persistance, horloge et réacteur actif ne
+sont pas encore raccordés à cette sélection.

@@ -13,7 +13,9 @@ applies epoch rotation, and compares every final RANDAO mix, epoch and last
 block slot with the official post-state projection. There are three reveals,
 192 mixes, and 15 locally generated invalid/replayed reveal cases.
 
-It does not independently select the proposer, verify the block signature,
+The current test also recomputes the Phase0 weighted proposer from the active
+pre-state registry and delayed RANDAO seed, matching all three block indices.
+It does not verify the block signature,
 execute other block operations or compare complete state roots. These three
 valid official scenarios must not be presented as official invalid-RANDAO tests
 or full block/epoch conformance. Locally mutated signatures, fork/genesis,

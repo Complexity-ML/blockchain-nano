@@ -1,5 +1,6 @@
 #include "support/phase0_minimal_ssz.hpp"
 #include "nano/consensus_randao.hpp"
+#include "nano/consensus_proposer.hpp"
 using namespace test;
 using namespace test::phase0_minimal;
 namespace {
@@ -34,6 +35,9 @@ int main(int argc,char** argv){try{
    const auto slot=little(b,message,8),proposer=little(b,message+8,8);
    check(slot/8>=state.epoch&&slot/8-state.epoch<=64,"fixture epoch gap outside bounded test");
    while(state.epoch<slot/8)advance_consensus_randao_epoch(state,rules,state.epoch);
+   std::vector<Phase0ProposerValidator> candidates;
+   for(const auto& [index,v]:registry.validators)candidates.push_back({index,v.effective_balance,v.activation_epoch,v.exit_epoch});
+   check(phase0_proposer_index(candidates,state,rules,slot,32000000000ULL,10)==proposer,"official proposer selection mismatch: "+name);
    const auto version=state.epoch<fork_epoch?previous:current;
    const auto& key=registry.validators.at(proposer).public_key;
    const Bytes reveal(b.begin()+184,b.begin()+280);
@@ -48,5 +52,5 @@ int main(int argc,char** argv){try{
   check(state==expected,"official RANDAO post-state mismatch: "+name);mixes+=state.mixes.size();++cases;
  }
  check(names==std::set<std::string>{"empty_block_transition","empty_epoch_transition","skipped_slots"},"fixture selection mismatch");
- std::cout<<Json{{"scenario","official-randao-projection"},{"cases",cases},{"revealsVerified",reveals},{"mixesCompared",mixes},{"localMutationsRejected",rejected},{"fullBlockValidation",false},{"activeInConsensus",false}}.dump()<<std::endl;return 0;
+ std::cout<<Json{{"scenario","official-randao-projection"},{"cases",cases},{"revealsVerified",reveals},{"proposersMatched",reveals},{"mixesCompared",mixes},{"localMutationsRejected",rejected},{"fullBlockValidation",false},{"activeInConsensus",false}}.dump()<<std::endl;return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<std::endl;return 1;}}
