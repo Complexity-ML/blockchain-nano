@@ -1,0 +1,11 @@
+import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import assert from 'node:assert/strict';
+const text=readFileSync(resolve(process.argv[2],'tests-full.log'),'utf8');
+assert.equal((text.match(/Test Passed\./g)||[]).length,6);
+for(const name of ['consensus_block_proposer_operations','ethereum_official_block_proposer_operations','ethereum_official_proposer_slashing','consensus_phase0_block_authentication','consensus_slashing_transition','consensus_slashing_recovery'])assert(text.includes(`Testing: ${name}\n`));
+const rows=text.split('\n').filter(l=>l.startsWith('{')).map(l=>JSON.parse(l));const local=rows.find(r=>r.scenario==='block-proposer-operations');assert(local);
+for(const [key,value] of Object.entries({positive:4,rejected:7,cancellations:12,lateOverflowRejections:1,canonicalInputsUnchanged:true,fullStateTransition:false,activeInConsensus:false}))assert.equal(local[key],value);
+const official=rows.find(r=>r.scenario==='official-block-proposer-operations');assert(official);
+for(const [key,value] of Object.entries({valid:3,invalid:2,operationsApplied:5,balancesCompared:192,canonicalInputsUnchanged:true,fullStateTransition:false,activeInConsensus:false}))assert.equal(official[key],value);
+console.log(JSON.stringify({verified:true,local,official},null,2));

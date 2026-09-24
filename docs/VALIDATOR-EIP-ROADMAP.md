@@ -474,3 +474,34 @@ est une régression séparée. Le traitement des opérations dans le bloc, la
 validation de l'état complet et l'activation réseau restent ouverts. Économie
 Phase0 uniquement, pas conformité Electra/EIP-7251.
 Référence : https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#proposer-slashings
+
+## Sanctions raccordées au bloc signé — 24 septembre 2026
+
+`prepare_phase0_proposer_operations` authentifie le bloc et traite ses proposer
+slashings, dans leur ordre, sur des candidats privés de registre/RANDAO. Le
+bénéficiaire des récompenses vient du proposant authentifié. Le fork d'état
+(previous/current/epoch) sélectionne le domaine des preuves historiques ; le
+contexte de signature du bloc doit concorder. Le résultat expose explicitement
+les nombres d'attester slashings, attestations, dépôts et sorties non traités.
+Il ne doit jamais être publié comme état canonique à ce stade.
+
+`blockOperationsQualification` couvre quatre succès locaux, sept rejets,
+douze annulations et un débordement après une première sanction valide.
+Un second slashing invalide ou répété invalide le candidat entier, sans publier
+la première sanction ni le mix. Le test inclut une ancienne version de fork,
+la sanction du proposant du bloc lui-même et une sortie non validée signalée
+par le résultat. Les entrées restent inchangées même après succès.
+
+Cinq scénarios officiels de blocs Phase0 minimal épinglés complètent ces tests :
+trois succès (cinq sanctions, 192 soldes et RANDAO conformes aux post-états) et
+deux rejets de preuves répétées. Ces deux blocs passent d'abord l'authentification
+SSZ/BLS et échouent bien au traitement des opérations. Les métadonnées confirment
+un seul bloc par scénario. Six suites passent ; les contrôles négatifs du rapport
+et du post-état attendu sont archivés.
+
+Limites : ce composant ne traite pas le vote Eth1, les autres opérations,
+slots/époques ni la racine d'état complète. Les parents des cas valides sont
+comparés aux block_roots officiels ; les cas invalides fournissent le parent du
+bloc comme contexte pour isoler le rejet tardif. Le commit durable, les autres
+forks et le réacteur restent ouverts. Les copies/scans du registre par preuve
+ne constituent pas une qualification de débit à un million de validateurs.

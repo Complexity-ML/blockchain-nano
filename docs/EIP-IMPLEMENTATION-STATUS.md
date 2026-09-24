@@ -302,3 +302,10 @@ La transition économique partagée avec les attestations reproduit les registre
 et 192 soldes attendus. Rejeu, snapshot et débordement sont contrôlés ; sept
 suites passent. Le traitement dans les blocs et l'activation réseau restent
 ouverts ; ce profil Phase0 ne promeut aucun EIP Electra ni statut production.
+
+Traitement des sanctions dans le bloc : `blockOperationsQualification` relie
+l'authentification signée au RANDAO et aux proposer slashings ordonnés. Trois
+blocs officiels reproduisent les projections attendues, deux blocs authentifiés
+à preuves répétées sont rejetés sans mutation. Six suites passent, avec échec
+tardif et annulation. Les autres opérations restent explicitement non traitées ;
+état complet, commit et activation réseau ne sont pas qualifiés.
