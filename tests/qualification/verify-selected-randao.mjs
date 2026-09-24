@@ -1,0 +1,12 @@
+import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import assert from 'node:assert/strict';
+const text=readFileSync(resolve(process.argv[2],'tests-full.log'),'utf8');
+assert.equal((text.match(/Test Passed\./g)||[]).length,4);
+for(const name of ['consensus_authenticated_randao','ethereum_official_randao_projection','consensus_phase0_proposer','consensus_selected_randao'])assert(text.includes(`Testing: ${name}\n`));
+const rows=text.split('\n').filter(l=>l.startsWith('{')).map(l=>JSON.parse(l));assert.equal(rows.length,6);
+const r=rows.find(r=>r.scenario==='selected-proposer-randao');assert(r);assert.equal(r.checks,3);assert.equal(r.rejected,12);assert.equal(r.validNonProposerSignatureRejected,true);assert.equal(r.activeInConsensus,false);
+const official=rows.find(r=>r.scenario==='official-randao-projection');assert.equal(official.proposersMatched,3);assert.equal(official.selectedProposerRejections,6);assert.equal(official.mixesCompared,192);assert.equal(official.fullBlockValidation,false);
+assert.equal(rows.find(r=>r.scenario==='phase0-proposer-selection').referenceComparisons,98);
+assert.equal(rows.find(r=>r.scenario==='authenticated-randao').rejected,19);
+console.log(JSON.stringify({verified:true,...r,official},null,2));

@@ -327,3 +327,29 @@ la validation du bloc doit encore rejeter un proposant sanctionné selon ce fork
 Les changements Electra et EIP-8045 ne sont pas revendiqués. Le registre fourni
 doit être financé et authentifié ; persistance, horloge et réacteur actif ne
 sont pas encore raccordés à cette sélection.
+
+## Contrôle commun proposant/RANDAO — 24 septembre 2026
+
+`process_phase0_selected_randao` relie le registre de validateurs, la sélection
+pondérée et la révélation BLS. Le registre et le RANDAO doivent désigner la même
+époque. La clé publique n'est pas fournie séparément : elle est résolue depuis
+l'index sélectionné dans le registre. Le candidat doit être actif et non slashed,
+son index doit correspondre au tirage, et la révélation doit passer la vérification
+BLS. Le slot rejoué, l'absence de validateur et les révélations malformées sont
+rejetés avant mutation. Un proposant sanctionné n'entraîne pas un nouveau tirage.
+
+`selectedRandaoQualification` couvre trois contrôles positifs et douze rejets
+locaux. Le cas déterminant utilise une signature d'époque valide d'un autre
+validateur inscrit : la primitive BLS/RANDAO seule l'accepte avec sa clé, tandis
+que le contrôle commun la refuse pour ce slot. Les erreurs et l'annulation
+laissent le mix intact. Les trois projections officielles passent par ce même
+contrôle, avec six rejets supplémentaires (mauvais index et proposant slashed).
+Les quatre suites passent ; 192 mixes officiels restent identiques.
+
+Pour la fixture qui franchit une époque, les champs du registre utilisés par
+le proposant sont vérifiés identiques entre pré/post-états ; le test aligne
+ensuite l'époque de la projection. Il ne prétend pas exécuter le cycle complet
+de cette époque. Le registre financé/authentifié, l'en-tête, la signature de
+bloc, le corps et les engagements d'état restent à valider, puis à committer
+avec le mix. Le réacteur actif n'appelle pas encore ce contrôle. Cette jonction
+ne vaut donc ni qualification d'un bloc complet, ni activation réseau.

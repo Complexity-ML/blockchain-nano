@@ -780,3 +780,8 @@ add_executable(nano-consensus-proposer-tests tests/test_consensus_proposer.cpp)
 target_link_libraries(nano-consensus-proposer-tests PRIVATE nano_core)
 add_test(NAME consensus_phase0_proposer COMMAND nano-consensus-proposer-tests)
 set_tests_properties(consensus_phase0_proposer PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")
+
+add_executable(nano-selected-randao-tests tests/test_selected_randao.cpp)
+target_link_libraries(nano-selected-randao-tests PRIVATE nano_core nano_ckzg)
+add_test(NAME consensus_selected_randao COMMAND nano-selected-randao-tests)
+set_tests_properties(consensus_selected_randao PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")

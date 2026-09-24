@@ -16,7 +16,7 @@ int main(int argc,char** argv){try{
  const fs::path root=argc==2?argv[1]:fs::path(NANO_TEST_SOURCE)/"tests/fixtures/consensus-randao-official";
  const auto manifest=load(root/"manifest.json");check(manifest.at("commit")=="bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908","fixture revision mismatch");
  const ConsensusRandaoRules rules{8,1}; // Official minimal preset (same SSZ schema).
- size_t cases=0,reveals=0,rejected=0,mixes=0;std::set<std::string> names;
+ size_t cases=0,reveals=0,rejected=0,mixes=0,selected_rejections=0;std::set<std::string> names;
  for(const auto& entry:manifest.at("cases")){
   const auto name=entry.at("name").get<std::string>();check(names.insert(name).second,"duplicate fixture");
   for(const auto& [path,info]:entry.at("files").items()){
@@ -46,11 +46,19 @@ int main(int argc,char** argv){try{
    auto wrong_fork=version;wrong_fork[0]^=1;refuse(reveal,wrong_fork,genesis,key);
    auto wrong_genesis=genesis;wrong_genesis[0]^=1;refuse(reveal,version,wrong_genesis,key);
    const auto& other_key=registry.validators.at((proposer+1)%registry.validators.size()).public_key;refuse(reveal,version,genesis,other_key);
-   check(process_consensus_randao(state,rules,slot,version,genesis,key,reveal),"official reveal rejected: "+name);++reveals;
+   auto duty_registry=registry;duty_registry.epoch=state.epoch;
+   // These selected empty-block fixtures preserve every proposer-relevant field.
+   const auto post_registry=decode(post);
+   for(const auto& [index,v]:registry.validators){const auto& w=post_registry.validators.at(index);check(v.public_key==w.public_key&&v.effective_balance==w.effective_balance&&v.activation_epoch==w.activation_epoch&&v.exit_epoch==w.exit_epoch&&v.slashed==w.slashed,"fixture changed proposer registry across epoch");}
+   auto candidate=state;
+   check(!process_phase0_selected_randao(candidate,duty_registry,rules,slot,(proposer+1)%registry.validators.size(),32000000000ULL,10,version,genesis,reveal)&&candidate==state,"wrong selected proposer accepted");++selected_rejections;
+   auto slashed=duty_registry;slashed.validators.at(proposer).slashed=true;
+   check(!process_phase0_selected_randao(candidate,slashed,rules,slot,proposer,32000000000ULL,10,version,genesis,reveal)&&candidate==state,"slashed selected proposer accepted");++selected_rejections;
+   check(process_phase0_selected_randao(state,duty_registry,rules,slot,proposer,32000000000ULL,10,version,genesis,reveal),"official reveal rejected: "+name);++reveals;
    auto saved=state;check(!process_consensus_randao(state,rules,slot,version,genesis,key,reveal)&&state==saved,"official block slot replay accepted");++rejected;
   }
   check(state==expected,"official RANDAO post-state mismatch: "+name);mixes+=state.mixes.size();++cases;
  }
  check(names==std::set<std::string>{"empty_block_transition","empty_epoch_transition","skipped_slots"},"fixture selection mismatch");
- std::cout<<Json{{"scenario","official-randao-projection"},{"cases",cases},{"revealsVerified",reveals},{"proposersMatched",reveals},{"mixesCompared",mixes},{"localMutationsRejected",rejected},{"fullBlockValidation",false},{"activeInConsensus",false}}.dump()<<std::endl;return 0;
+ std::cout<<Json{{"scenario","official-randao-projection"},{"cases",cases},{"revealsVerified",reveals},{"proposersMatched",reveals},{"selectedProposerRejections",selected_rejections},{"mixesCompared",mixes},{"localMutationsRejected",rejected},{"fullBlockValidation",false},{"activeInConsensus",false}}.dump()<<std::endl;return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<std::endl;return 1;}}

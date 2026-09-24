@@ -30,4 +30,28 @@ uint64_t phase0_proposer_index(std::span<const Phase0ProposerValidator> registry
   if(i==UINT64_MAX)throw std::overflow_error("proposer sampling counter exhausted");
  }
 }
+
+bool process_phase0_selected_randao(ConsensusRandaoState& randao,
+ const ConsensusSlashingState& registry,const ConsensusRandaoRules& rules,
+ uint64_t slot,uint64_t claimed_proposer,uint64_t maximum_effective_balance,uint16_t shuffle_rounds,
+ const ConsensusBytes4& fork_version,const ConsensusRoot& genesis_root,
+ std::span<const uint8_t> reveal,const std::function<void()>& checkpoint){
+ if(registry.epoch!=randao.epoch)throw std::invalid_argument("proposer registry/RANDAO epoch mismatch");
+ if(!rules.slots_per_epoch)throw std::invalid_argument("zero slots per epoch");
+ if(slot/rules.slots_per_epoch!=randao.epoch||reveal.size()!=96||
+    (randao.last_reveal_slot&&slot<=*randao.last_reveal_slot))return false;
+ const auto found=registry.validators.find(claimed_proposer);
+ if(found==registry.validators.end()||found->second.slashed)return false;
+ const auto& v=found->second;
+ if(v.activation_epoch>randao.epoch||randao.epoch>=v.exit_epoch)return false;
+ std::vector<Phase0ProposerValidator> candidates;candidates.reserve(registry.validators.size());
+ size_t visited=0;
+ for(const auto& [index,record]:registry.validators){
+  if(checkpoint&&visited++%1024==0)checkpoint();
+  candidates.push_back({index,record.effective_balance,record.activation_epoch,record.exit_epoch});
+ }
+ if(phase0_proposer_index(candidates,randao,rules,slot,maximum_effective_balance,shuffle_rounds,checkpoint)!=claimed_proposer)return false;
+ if(checkpoint)checkpoint();
+ return process_consensus_randao(randao,rules,slot,fork_version,genesis_root,v.public_key,reveal);
+}
 }

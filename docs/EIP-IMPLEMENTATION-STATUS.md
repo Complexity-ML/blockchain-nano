@@ -266,3 +266,10 @@ RANDAO et teste 98 comparaisons pondérées, 10 rejets et l'annulation. Les acc�
 scalaires au shuffle concordent avec 240 permutations officielles. Les mesures
 100 000/1 000 000 concernent des registres locaux à poids maximaux égaux, sans
 réseau. Profil Phase0 seulement ; Electra/EIP-8045 et activation restent ouverts.
+
+
+Jonction proposant/RANDAO : `selectedRandaoQualification` relie la sélection,
+l'éligibilité et la clé du registre à la révélation BLS. Trois contrôles positifs,
+12 rejets locaux et 6 rejets ajoutés aux 3 projections officielles passent dans
+quatre suites. Le registre authentifié, le bloc complet, le commit durable et
+le raccordement au réacteur restent ouverts ; aucun statut d'EIP n'est promu.
