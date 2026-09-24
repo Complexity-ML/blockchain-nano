@@ -753,3 +753,8 @@ add_executable(nano-slashing-recovery-tests tests/test_slashing_recovery.cpp)
 target_link_libraries(nano-slashing-recovery-tests PRIVATE nano_core nano_ckzg)
 add_test(NAME consensus_slashing_recovery COMMAND nano-slashing-recovery-tests)
 set_tests_properties(consensus_slashing_recovery PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")
+
+add_executable(nano-slashing-epoch-tests tests/test_slashing_epoch.cpp)
+target_link_libraries(nano-slashing-epoch-tests PRIVATE nano_core nano_ckzg)
+add_test(NAME consensus_slashing_epoch COMMAND nano-slashing-epoch-tests)
+set_tests_properties(consensus_slashing_epoch PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")

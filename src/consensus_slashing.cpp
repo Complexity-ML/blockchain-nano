@@ -34,6 +34,7 @@ std::optional<std::vector<uint64_t>> process_phase0_attester_slashing(
  uint64_t proposer_index,uint64_t whistleblower_index){
  if(!rules.minimum_churn_limit||!rules.churn_limit_quotient||!rules.epochs_per_slashings_vector||
     !rules.minimum_penalty_quotient||!rules.whistleblower_reward_quotient||!rules.proposer_reward_quotient||
+    !rules.effective_balance_increment||!rules.proportional_slashing_multiplier||
     state.slashings.size()!=rules.epochs_per_slashings_vector)
   throw std::invalid_argument("invalid Phase0 slashing configuration");
  if(!state.validators.contains(proposer_index)||!state.validators.contains(whistleblower_index))
@@ -94,11 +95,13 @@ std::optional<std::vector<uint64_t>> process_phase0_attester_slashing(
 namespace {
 Json slashing_rules_json(const Phase0SlashingRules& r){
  if(!r.minimum_churn_limit||!r.churn_limit_quotient||!r.epochs_per_slashings_vector||
-    !r.minimum_penalty_quotient||!r.whistleblower_reward_quotient||!r.proposer_reward_quotient)
+    !r.minimum_penalty_quotient||!r.whistleblower_reward_quotient||!r.proposer_reward_quotient||
+    !r.effective_balance_increment||!r.proportional_slashing_multiplier)
   throw std::invalid_argument("invalid Phase0 snapshot rules");
  Json values=Json::array();
  for(auto n:{r.minimum_churn_limit,r.churn_limit_quotient,r.max_seed_lookahead,r.minimum_withdrawability_delay,
-             r.epochs_per_slashings_vector,r.minimum_penalty_quotient,r.whistleblower_reward_quotient,r.proposer_reward_quotient})
+             r.epochs_per_slashings_vector,r.minimum_penalty_quotient,r.whistleblower_reward_quotient,r.proposer_reward_quotient,
+             r.effective_balance_increment,r.proportional_slashing_multiplier})
   values.push_back(quantity(Int(std::to_string(n))));
  return values;
 }
@@ -123,10 +126,10 @@ Json phase0_slashing_snapshot(const ConsensusSlashingState& state,const Phase0Sl
    {"exitEpoch",q(v.exit_epoch)},{"withdrawableEpoch",q(v.withdrawable_epoch)},{"slashed",v.slashed}});
  }
  for(auto amount:state.slashings)slashings.push_back(q(amount));
- return {{"format","nano-phase0-slashing-v1"},{"rules",encoded_rules},{"epoch",q(state.epoch)},{"validators",entries},{"slashings",slashings}};
+ return {{"format","nano-phase0-slashing-v2"},{"rules",encoded_rules},{"epoch",q(state.epoch)},{"validators",entries},{"slashings",slashings}};
 }
 ConsensusSlashingState phase0_slashing_from_snapshot(const Json& snapshot,const Phase0SlashingRules& expected_rules){
- if(!snapshot.is_object()||snapshot.size()!=5||snapshot.at("format")!="nano-phase0-slashing-v1"||
+ if(!snapshot.is_object()||snapshot.size()!=5||snapshot.at("format")!="nano-phase0-slashing-v2"||
     snapshot.at("rules")!=slashing_rules_json(expected_rules)||!snapshot.at("validators").is_array()||
     !snapshot.at("slashings").is_array()||snapshot.at("slashings").size()!=expected_rules.epochs_per_slashings_vector)
   throw std::invalid_argument("invalid Phase0 slashing snapshot envelope");
@@ -149,5 +152,42 @@ ConsensusSlashingState phase0_slashing_from_snapshot(const Json& snapshot,const 
  // Reuse encoder validation and require the exact canonical representation.
  if(phase0_slashing_snapshot(state,expected_rules)!=snapshot)throw std::invalid_argument("noncanonical slashing snapshot");
  return state;
+}
+
+std::map<uint64_t,uint64_t> advance_phase0_slashing_epoch(
+ ConsensusSlashingState& state,const Phase0SlashingRules& rules,uint64_t expected_epoch){
+ // Small rules tuple validation does not serialize/copy the entire registry.
+ slashing_rules_json(rules);
+ if(state.epoch!=expected_epoch||state.slashings.size()!=rules.epochs_per_slashings_vector)
+  throw std::invalid_argument("slashing epoch sequence or vector mismatch");
+ const auto next_epoch=checked_epoch_add(state.epoch,1);
+ const auto penalty_epoch=checked_epoch_add(state.epoch,rules.epochs_per_slashings_vector/2);
+ Int total_active=0,total_slashed=0;
+ std::set<std::array<uint8_t,48>> keys;
+ for(const auto& [index,v]:state.validators){
+  if(!keys.insert(v.public_key).second||v.activation_epoch>v.exit_epoch||v.exit_epoch>v.withdrawable_epoch)
+   throw std::invalid_argument("invalid epoch slashing registry");
+  if(v.activation_epoch<=state.epoch&&state.epoch<v.exit_epoch)total_active+=Int(std::to_string(v.effective_balance));
+ }
+ const Int increment(std::to_string(rules.effective_balance_increment));
+ if(total_active<increment)total_active=increment;
+ for(auto amount:state.slashings)total_slashed+=Int(std::to_string(amount));
+ Int adjusted=total_slashed*Int(std::to_string(rules.proportional_slashing_multiplier));
+ if(adjusted>total_active)adjusted=total_active;
+ auto next=state;std::map<uint64_t,uint64_t> debits;
+ for(auto& [index,v]:next.validators){
+  if(!v.slashed||v.withdrawable_epoch!=penalty_epoch)continue;
+  // Preserve the specification's division order; large aggregate weights use
+  // GMP rather than overflowing a uint64 intermediate.
+  const Int units=Int(std::to_string(v.effective_balance))/increment;
+  const Int penalty=(units*adjusted/total_active)*increment;
+  const auto debit=std::min(v.balance,u64(penalty));
+  v.balance-=debit;debits.emplace(index,debit);
+ }
+ next.slashings[next_epoch%rules.epochs_per_slashings_vector]=0;
+ next.epoch=next_epoch;
+ static_assert(std::is_nothrow_swappable_v<ConsensusSlashingState>);
+ using std::swap;swap(state,next);
+ return debits;
 }
 }

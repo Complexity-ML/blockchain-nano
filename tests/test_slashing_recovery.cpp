@@ -35,7 +35,7 @@ int main(int argc,char** argv){try{
  auto other=vote;other.beacon_block_root[0]^=1;
 
  auto first=signed_vote(vote,{10,20},domain),second=signed_vote(other,{20,30},domain);
- Phase0SlashingRules rules{1,65536,1,2,8,32,512,8};
+ Phase0SlashingRules rules{1,65536,1,2,8,32,512,8,1000,1};
  ConsensusSlashingState initial;initial.epoch=3;initial.slashings.resize(8);
  for(const auto& member:members){ConsensusSlashingValidator v;v.public_key=member.possession_message.public_key;v.balance=v.effective_balance=32000;v.activation_epoch=0;initial.validators.emplace(member.validator_index,v);}
 
@@ -58,7 +58,7 @@ int main(int argc,char** argv){try{
  auto maximum=initial;maximum.epoch=UINT64_MAX;maximum.validators.at(10).balance=UINT64_MAX;maximum.validators.at(10).effective_balance=UINT64_MAX;maximum.slashings[0]=UINT64_MAX;
  check(phase0_slashing_from_snapshot(phase0_slashing_snapshot(maximum,rules),rules)==maximum,"uint64 maximum roundtrip");++checks;
  auto reject=[&](Json bad){bool failed=false;try{phase0_slashing_from_snapshot(bad,rules);}catch(const std::exception&){failed=true;}check(failed,"malformed snapshot accepted");++rejected;};
- auto bad=after;bad["format"]="nano-phase0-slashing-v2";reject(bad);
+ auto bad=after;bad["format"]="nano-phase0-slashing-v1";reject(bad);
  bad=after;bad["extra"]=1;reject(bad);
  bad=after;bad.erase("epoch");reject(bad);
  bad=after;bad["rules"][0]="0x2";reject(bad);

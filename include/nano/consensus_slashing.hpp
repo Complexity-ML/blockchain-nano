@@ -21,6 +21,7 @@ struct Phase0SlashingRules {
  uint64_t minimum_churn_limit, churn_limit_quotient, max_seed_lookahead;
  uint64_t minimum_withdrawability_delay, epochs_per_slashings_vector;
  uint64_t minimum_penalty_quotient, whistleblower_reward_quotient, proposer_reward_quotient;
+ uint64_t effective_balance_increment, proportional_slashing_multiplier;
 };
 struct ConsensusSlashingValidator {
  std::array<uint8_t,48> public_key{};
@@ -40,7 +41,7 @@ struct ConsensusSlashingState {
 // nullopt means invalid proof or no slashable signer; bad configuration/state or
 // arithmetic overflow throws, always leaving state unchanged. Caller owns locking,
 // authenticated historical contexts, epoch processing and durable block commit.
-// Does not perform later correlation penalties or activate any network rules.
+// Correlation penalties are handled separately at the epoch boundary.
 std::optional<std::vector<uint64_t>> process_phase0_attester_slashing(
  ConsensusSlashingState& state,const Phase0SlashingRules& rules,
  const IndexedConsensusAttestation& first,const ConsensusCommittee& first_context,
@@ -52,4 +53,11 @@ std::optional<std::vector<uint64_t>> process_phase0_attester_slashing(
 // configuration mismatch. ChainStore binding supplies the chain identity.
 Json phase0_slashing_snapshot(const ConsensusSlashingState& state,const Phase0SlashingRules& rules);
 ConsensusSlashingState phase0_slashing_from_snapshot(const Json& snapshot,const Phase0SlashingRules& expected_rules);
+
+// Slashing sub-transition only: apply the delayed correlation penalty before
+// resetting the next epoch bucket, then advance this ledger by exactly one epoch.
+// expected_epoch rejects replay/skips; caller must persist the result with its
+// other epoch transitions. Does not implement the complete beacon epoch process.
+std::map<uint64_t,uint64_t> advance_phase0_slashing_epoch(
+ ConsensusSlashingState& state,const Phase0SlashingRules& rules,uint64_t expected_epoch);
 }

@@ -78,7 +78,7 @@ reste à compléter. Le genesis réseau autorise actuellement Paris/Shanghai.
 | BLS de consensus / agrégation | Partiel : vérification individuelle (29 cas), agrégée (12 cas) et mutations ; registre/consensus non intégrés | Preuves de possession, domaines, signataires, pondération et doubles comptages |
 | Domaines et racines SSZ de signature | Primitive vérifiée : 10 vecteurs officiels ForkData/SigningData et mutations de contexte | Intégrer racine authentifiée du registre genesis, versions par epoch et domaines des votes ; pas encore actif |
 | Casper FFG / LMD-GHOST | Non commencé ; BFT natif existant | État consensus, justification/finalité, choix de branche et partitions |
-| Registre beacon / RANDAO / slashing | Partiel : transition de slashing Phase0 en mémoire, 26 cas locaux ; non activée | Registre authentifié, persistance, epochs/RANDAO, pénalités différées et intégration réseau |
+| Registre beacon / RANDAO / slashing | Partiel : sanctions Phase0, snapshots/reprise et comptabilité par époque testés localement ; non activés | Registre authentifié, persistance, epochs/RANDAO, pénalités différées et intégration réseau |
 | ERC-20/721/1155 | Contrats et scénarios ciblés existants | Étendre les scénarios ; pas de revendication « tout OpenZeppelin testé » |
 | ERC-1271/165/2612 et EIP-712 | Audit de couverture nécessaire | Répertorier contrats et cas exacts ; éviter d’assimiler compilation et comportement |
 
@@ -230,3 +230,10 @@ strict et une réouverture RocksDB après sortie abrupte du processus écrivain.
 sanction. Cette qualification du stockage n'active pas le registre dans le BFT
 et ne prouve pas l'engagement du consensus dans les blocs ni la reprise après
 coupure électrique. Les EIP gardent leur statut actuel.
+
+
+Slashing par époque : `slashingEpochQualification` ajoute pénalité corrélée,
+rotation du bucket et contrôle de séquence, avec 11 contrôles et 8 rejets.
+Les quatre suites passent. Le format snapshot v2 inclut les paramètres ajoutés
+et rejette v1. Le cycle complet des époques et le consensus réseau restent
+ouverts ; aucun statut d'EIP n'est promu sur cette sous-transition.

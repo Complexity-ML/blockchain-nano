@@ -34,7 +34,7 @@ int main(){try{
  auto other=vote;other.beacon_block_root[0]^=1;
 
  auto first=signed_vote(vote,{10,20},domain),second=signed_vote(other,{20,30},domain);
- Phase0SlashingRules rules{1,65536,1,2,8,32,512,8};
+ Phase0SlashingRules rules{1,65536,1,2,8,32,512,8,1000,1};
  ConsensusSlashingState initial;initial.epoch=3;initial.slashings.resize(8);
  for(const auto& member:members){ConsensusSlashingValidator v;v.public_key=member.possession_message.public_key;v.balance=v.effective_balance=32000;v.activation_epoch=0;initial.validators.emplace(member.validator_index,v);}
  unsigned checked=0;

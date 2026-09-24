@@ -187,3 +187,34 @@ ni interruption au milieu d'une écriture, ni panne électrique, ni engagement
 cryptographique du registre dans l'en-tête, ni rejeu réseau de ses transitions.
 Ces points restent requis avant de revendiquer la persistance du nouveau
 consensus actif. Les trois suites preuve/transition/reprise passent.
+
+## Comptabilité du slashing par époque — 24 septembre 2026
+
+`advance_phase0_slashing_epoch` applique la pénalité corrélée différée puis
+remet à zéro le bucket de l'époque suivante et avance ce registre d'une seule
+époque. L'époque attendue doit correspondre exactement à l'état fourni : le
+rejeu et les sauts sont rejetés sans mutation. Les agrégats sont calculés en
+entiers GMP ; l'ordre des divisions entières et le plancher du total actif
+suivent [process_slashings](https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#slashings).
+La pénalité précède l'effacement du bucket, conformément au traitement
+[process_slashings_reset](https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#slashings-balances-updates).
+
+Le snapshot local est désormais **`nano-phase0-slashing-v2`** : il ajoute aux
+règles l'incrément du solde effectif et le multiplicateur proportionnel. La v1
+historique est rejetée, sans migration implicite. Aucun registre de ce format
+n'est activé sur le réseau ou dans l'image VPS ; les preuves v1 précédentes
+restent des archives de leur révision. Les paramètres ne sont pas des défauts
+réseau et doivent provenir de la configuration authentifiée.
+
+`slashingEpochQualification` archive 11 contrôles et 8 rejets atomiques :
+parcours depuis une preuve signée jusqu'à la pénalité différée, restauration
+snapshot sans répétition, arrondis, montant nul/plafonné, absence de stake actif,
+sommes dépassant uint64 et configurations invalides. Les quatre suites
+preuve/transition/reprise/époque passent. Il s'agit de cas locaux, pas d'une
+qualification complète des vecteurs officiels BeaconState.
+
+Cette fonction traite seulement le registre de slashing. Elle ne remplace pas
+le traitement complet des époques : récompenses, hystérésis des soldes effectifs,
+entrées/sorties complètes, RANDAO, justification/finalité restent requis.
+L'appelant doit ordonner ces étapes selon le fork et persister leur résultat
+avec le bloc ; l'horloge de slots et le réacteur actif ne l'appellent pas encore.
