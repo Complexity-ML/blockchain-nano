@@ -1,4 +1,5 @@
 #include "nano/consensus_slots.hpp"
+#include "nano/consensus_transition.hpp"
 #include "nano/consensus_beacon_header.hpp"
 #include <bit>
 #include <stdexcept>
@@ -87,4 +88,53 @@ Phase0SlotState prepare_phase0_slots(const Phase0SlotState& input,const Phase0Ep
  }
  phase0_beacon_state_root(out.ssz,limits,checkpoint);if(checkpoint)checkpoint();return out;
 }
+std::optional<Phase0SlotState> prepare_phase0_state_transition(const Phase0SlotState& input,
+ std::span<const uint8_t> signed_block,const Phase0TransitionRules& rules,uint64_t maximum_slots,
+ const std::function<void()>& checkpoint){
+ const auto& duties=rules.epoch.rewards.duties;
+ require(rules.maximum_block_bytes>=404&&duties.slots_per_epoch&&
+  rules.deposit.validator_registry_limit==rules.state.validator_registry_limit&&
+  rules.deposit.maximum_effective_balance==duties.maximum_effective_balance&&
+  rules.deposit.effective_balance_increment==duties.effective_balance_increment&&
+  rules.body.validators_per_committee==rules.state.validators_per_committee&&
+  rules.body.attestations&&duties.slots_per_epoch<=UINT64_MAX/rules.body.attestations&&
+  rules.epoch.maximum_pending_attestations==duties.slots_per_epoch*rules.body.attestations);
+ if(signed_block.size()<404||signed_block.size()>rules.maximum_block_bytes)return std::nullopt;
+ const Bytes block(signed_block.begin(),signed_block.end());
+ if(number(block,0,4)!=100||number(block,180,4)!=84)return std::nullopt;
+ try{phase0_beacon_body_root(signed_block.subspan(184),rules.body);}catch(const std::invalid_argument&){return std::nullopt;}
+ const auto slot=number(block,100);
+ if(slot<=number(input.ssz,40))return std::nullopt;
+ auto out=prepare_phase0_slots(input,rules.epoch,rules.state,slot,maximum_slots,checkpoint);
+ const Layout l(rules.state);auto state=decode_epoch(out,l,rules.epoch);
+ const ConsensusBeaconHeader previous{number(out.ssz,64),number(out.ssz,72),array<32>(out.ssz,80),array<32>(out.ssz,112),array<32>(out.ssz,144)};
+ const Phase0StateFork fork{array<4>(out.ssz,48),array<4>(out.ssz,52),number(out.ssz,56)};
+ const Phase0BlockContext context{slot,consensus_beacon_header_root(previous),state.registry.epoch<fork.epoch?fork.previous_version:fork.current_version,array<32>(out.ssz,8),duties.maximum_effective_balance,duties.shuffle_rounds,rules.maximum_block_bytes};
+ const ConsensusRandaoRules randao_rules{duties.slots_per_epoch,duties.min_seed_lookahead};
+ const auto auth=authenticate_phase0_block(signed_block,context,rules.body,randao_rules,state.registry,state.randao,checkpoint);
+ if(!auth)return std::nullopt;
+ // Eth1Data includes all three fields. A strict majority of the complete voting
+ // period is required, not a majority of the votes seen so far.
+ const Phase0Eth1Data vote{array<32>(block,280),number(block,312),array<32>(block,320)};
+ if(state.eth1_votes.size()>=rules.state.eth1_votes_limit)return std::nullopt;
+ state.eth1_votes.push_back(vote);uint64_t tally=0;
+ for(const auto& v:state.eth1_votes){if(checkpoint)checkpoint();if(v==vote)++tally;}
+ Phase0Eth1Data eth1{array<32>(out.ssz,l.eth1),number(out.ssz,l.eth1+32),array<32>(out.ssz,l.eth1+40)};
+ if(tally>rules.state.eth1_votes_limit/2)eth1=vote;
+ const Phase0DepositState deposits{state.registry,eth1.deposit_root,eth1.deposit_count,number(out.ssz,l.deposit)};
+ if(deposits.next_deposit_index>deposits.deposit_count||deposits.deposit_count>(uint64_t(1)<<32))return std::nullopt;
+ const Phase0AttestationInclusionRules inclusion{duties,rules.minimum_attestation_inclusion_delay,rules.epoch.maximum_pending_attestations};
+ const Phase0AttestationStage stage{state.ffg,inclusion};
+ const auto operations=prepare_phase0_registry_operations(signed_block,context,rules.body,randao_rules,rules.epoch.slashing,rules.deposit,rules.exit,fork,deposits,state.randao,checkpoint,&stage);
+ if(!std::holds_alternative<Phase0RegistryOperationsCandidate>(operations))return std::nullopt;
+ const auto& result=std::get<Phase0RegistryOperationsCandidate>(operations);
+ state.registry=result.deposits_after.registry;state.randao=result.authenticated.randao_after;state.ffg=*result.attestations_after;
+ put(out.ssz,l.eth1,eth1.deposit_root);put(out.ssz,l.eth1+32,eth1.deposit_count);put(out.ssz,l.eth1+40,eth1.block_hash);put(out.ssz,l.deposit,result.deposits_after.next_deposit_index);
+ const auto& header=result.authenticated.header;
+ put(out.ssz,64,header.slot);put(out.ssz,72,header.proposer_index);put(out.ssz,80,header.parent_root);put(out.ssz,112,ConsensusRoot{});put(out.ssz,144,header.body_root);
+ out.ssz=encode_epoch(out.ssz,state,l);
+ if(phase0_beacon_state_root(out.ssz,rules.state,checkpoint)!=header.state_root)return std::nullopt;
+ if(checkpoint)checkpoint();return out;
+}
+
 }

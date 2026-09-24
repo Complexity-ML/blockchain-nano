@@ -403,3 +403,10 @@ sur les sept scénarios officiels (100 slots), incluant `historical_accumulator`
 La nouvelle preuve dépasse les projections de `orderedEpochQualification` sans
 les réécrire. Les blocs signés complets, la persistance/reprise et le consensus
 réseau restent ouverts ; aucun fork post-Phase0 n'est activé par cette étape.
+
+Blocs signés Phase0 : `fullBlocksQualification` couvre les 45 scénarios officiels
+`sanity/blocks` minimal (29 états complets conformes, 16 rejets), en composant
+slots/époques, votes Eth1, opérations et vérification du state_root. Les anciennes
+séquences différées sont couvertes ici sans réécriture des campagnes historiques.
+Le stockage durable, l'admission des états, le fork choice et l'intégration au
+réseau restent ouverts. Il ne s'agit pas d'une activation des forks modernes.

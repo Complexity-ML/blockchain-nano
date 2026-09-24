@@ -953,3 +953,36 @@ reprise durable ou le réseau actif. Les historiques sont recalculés depuis les
 états complets ; aucune performance de nœud à un million de validateurs n'est
 déduite de ces sept scénarios. Les profils post-Phase0 restent distincts.
 Source : https://github.com/ethereum/consensus-specs/blob/fcdcf42024f33c498bff74936eabea2d96049fc2/specs/phase0/beacon-chain.md#beacon-chain-state-transition-function
+
+### Transition complète des blocs signés Phase0
+
+`prepare_phase0_state_transition` relie slots/époques, parent dérivé de l'état,
+proposant/signature, RANDAO, votes Eth1, les cinq types d'opérations et la
+vérification finale du `state_root` annoncé. Il n'existe pas d'option pour sauter
+la vérification de racine. Les votes Eth1 comparent les trois champs et exigent
+une majorité stricte sur la période entière ; les opérations consomment ensuite
+le nombre de dépôts déterminé par cette décision. Les données de parent et
+registre ne viennent pas du bloc à valider. L'authentification est actuellement
+répétée par le composant d'opérations ; aucune mesure de débit réseau n'est
+inférée de cette implémentation.
+
+`fullBlocksQualification` : tous les 45 scénarios officiels `sanity/blocks`
+Phase0 minimal sont importés, avec leurs blocs et métadonnées. Les 29 séquences
+valides concordent octet par octet sur les états complets (530 412 octets) ; les
+16 invalides sont rejetées. Les séquences exécutent 97 transitions acceptées,
+avec attestations, dépôts, sorties, sanctions, votes Eth1, sauts d'époques et
+historiques. Les séquences multi-époques auparavant différées sont couvertes dans
+cette nouvelle campagne ; leurs anciennes preuves restent inchangées.
+
+Le bloc officiel à racine erronée est rejeté malgré une authentification de
+signature/RANDAO réussie. Sept points d'annulation, huit mutations/troncatures,
+quatre erreurs de configuration/budget et une altération d'état attendu avec
+hash recalculé complètent les contrôles. Cinq suites de régression passent.
+
+L'état de départ doit être authentifié. Le résultat demeure un candidat privé :
+ni commit durable atomique octets/marqueur, ni récupération après panne, ni
+fork choice ou finalité réseau ne sont fournis par cette API. Les 45 scénarios
+ne prouvent pas à eux seuls toute la conformité Phase0, les profils modernes,
+l'interopérabilité de réseau ou une capacité en charge. Cette étape ne bascule
+pas le consensus actif et ne clôt aucun objectif de production.
+Source : https://github.com/ethereum/consensus-specs/blob/fcdcf42024f33c498bff74936eabea2d96049fc2/specs/phase0/beacon-chain.md#beacon-chain-state-transition-function
