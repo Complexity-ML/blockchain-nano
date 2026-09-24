@@ -10,6 +10,7 @@ inline std::vector<Phase0PendingAttestation> pending(const Bytes& b,size_t begin
  const auto first=little(b,begin,4);check(first>=4&&first%4==0&&first<=end-begin,"pending list offset");std::vector<Phase0PendingAttestation> result;
  for(size_t i=0;i<first/4;++i){const auto start=begin+little(b,begin+4*i,4),stop=i+1==first/4?end:begin+little(b,begin+4*(i+1),4);check(start<=stop&&stop<=end&&stop-start>=149,"pending record bounds");check(little(b,start,4)==148&&b[stop-1]!=0,"pending bitlist encoding");
   Phase0PendingAttestation vote;auto& d=vote.data;d.slot=little(b,start+4,8);d.index=little(b,start+12,8);d.beacon_block_root=root_at(b,start+20);d.source=checkpoint_at(b,start+52);d.target=checkpoint_at(b,start+92);
+  vote.inclusion_delay=little(b,start+132,8);vote.proposer_index=little(b,start+140,8);
   const auto bits=(stop-start-149)*8+std::bit_width(unsigned(b[stop-1]))-1;check(bits<=2048,"minimal pending committee limit");for(size_t k=0;k<bits;++k)vote.aggregation_bits.push_back(bool((b[start+148+k/8]>>(k%8))&1));result.push_back(std::move(vote));
  }return result;
 }

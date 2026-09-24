@@ -3,21 +3,29 @@
 #include "nano/consensus_deposit_transition.hpp"
 #include "nano/consensus_exit.hpp"
 #include <variant>
+#include "nano/consensus_attestation_inclusion.hpp"
 namespace nano {
 struct InvalidPhase0RegistryBlock {};
 struct UnsupportedPhase0RegistryOperations {
  size_t attester_slashings,attestations;
 };
+struct Phase0AttestationStage {
+ const Phase0FfgState& state;
+ const Phase0AttestationInclusionRules& rules;
+};
 struct Phase0RegistryOperationsCandidate {
  AuthenticatedPhase0Block authenticated;
  Phase0DepositState deposits_after;
  size_t proposer_slashings_processed,deposits_processed,exits_processed;
+ std::optional<Phase0FfgState> attestations_after;
+ size_t attestations_processed=0;
 };
 using Phase0RegistryOperationsResult=std::variant<InvalidPhase0RegistryBlock,
  UnsupportedPhase0RegistryOperations,Phase0RegistryOperationsCandidate>;
 // Partial Phase0 block pipeline: authentication, proposer slashings, deposits,
-// then voluntary exits, all on private state. Attester slashings/attestations
-// return Unsupported (never a successful candidate). Checks the mandatory
+// then voluntary exits, all on private state. With attestation_stage, validates
+// and stages attestations before deposits. Without it, nonempty attestations are
+// Unsupported. Attester slashings remain Unsupported. Checks the mandatory
 // number of deposits against authenticated root/count after Eth1 voting.
 // Caller supplies immutable, epoch-advanced state and authenticated Eth1 data.
 // Does NOT implement Eth1 voting, slots/epochs, state_root or durable commit;
@@ -28,5 +36,6 @@ Phase0RegistryOperationsResult prepare_phase0_registry_operations(
  const Phase0SlashingRules& slashing_rules,const Phase0DepositRules& deposit_rules,
  const Phase0ExitRules& exit_rules,const Phase0StateFork& fork,
  const Phase0DepositState& state,const ConsensusRandaoState& randao,
- const std::function<void()>& checkpoint={});
+ const std::function<void()>& checkpoint={},
+ const Phase0AttestationStage* attestation_stage=nullptr);
 }

@@ -351,3 +351,11 @@ officiels et sept suites conformes ; seuil exact de deux tiers testé au-delà d
 uint64, doublons/sanctionnés/cibles incorrectes contrôlés. L'admission des
 attestations, l'ordre d'époque complet, le choix de branche et le commit/réseau
 restent ouverts ; aucun EIP réseau ni objectif de production n'est déclaré clos.
+
+Admission Phase0 : `attestationInclusionQualification` ajoute la validation des
+attestations (comité, fenêtre, source, BLS/fork/genesis), les métadonnées d'inclusion
+et leur composition atomique dans les blocs signés avant dépôts/sorties. Les 41
+cas officiels donnent 17 états conformes/24 rejets attendus ; sept suites passent.
+Deux séquences officielles multi-époques supplémentaires sont différées. Les
+sanctions d'attestateurs, opérations d'époque complètes et commit/réacteur réseau
+restent ouverts ; EIP-7045/7549 et forks modernes ne sont pas promus par ce travail.

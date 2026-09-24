@@ -6,6 +6,7 @@ namespace nano {
 struct Phase0PendingAttestation {
  ConsensusAttestationData data;
  std::vector<bool> aggregation_bits;
+ uint64_t inclusion_delay=0,proposer_index=0;
  bool operator==(const Phase0PendingAttestation&)const=default;
 };
 struct Phase0FfgCheckpoints {
@@ -25,6 +26,14 @@ struct Phase0FfgRules {
  uint64_t effective_balance_increment,maximum_effective_balance;
  uint16_t shuffle_rounds;
 };
+struct Phase0AttestationDuties {
+ uint64_t committees_per_slot;
+ std::vector<uint64_t> shuffled;
+};
+// Current/previous-epoch committee layout from authenticated registry/RANDAO.
+Phase0AttestationDuties phase0_attestation_duties(
+ const ConsensusSlashingState& registry,const ConsensusRandaoState& randao,
+ const Phase0FfgRules& rules,uint64_t epoch,const std::function<void()>& checkpoint={});
 struct Phase0FfgCandidate {
  Phase0FfgCheckpoints checkpoints;
  Int total_active_balance,previous_target_balance,current_target_balance;

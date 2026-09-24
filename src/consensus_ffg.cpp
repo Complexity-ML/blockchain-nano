@@ -15,16 +15,9 @@ ConsensusRoot target_root(const Phase0FfgState& state,uint64_t epoch,uint64_t sl
 Int target_balance(const Phase0FfgState& state,const ConsensusSlashingState& registry,
  const ConsensusRandaoState& randao,const Phase0FfgRules& rules,uint64_t epoch,
  const std::vector<Phase0PendingAttestation>& votes,const std::function<void()>& checkpoint){
- std::vector<uint64_t> active;
- for(const auto& [index,v]:registry.validators){if(checkpoint)checkpoint();if(v.activation_epoch<=epoch&&epoch<v.exit_epoch)active.push_back(index);}
- const auto per_slot=std::max(uint64_t(1),std::min(rules.max_committees_per_slot,uint64_t(active.size())/rules.slots_per_epoch/rules.target_committee_size));
- const auto count=per_slot*rules.slots_per_epoch;
- const uint64_t n=randao.mixes.size(),position=epoch%n,back=rules.min_seed_lookahead+1;
- const auto mix=position>=back?position-back:n-(back-position);
- Bytes seed_bytes{1,0,0,0};for(unsigned i=0;i<8;++i)seed_bytes.push_back(uint8_t(epoch>>(i*8)));
- seed_bytes.insert(seed_bytes.end(),randao.mixes[mix].begin(),randao.mixes[mix].end());const auto hash=sha256(seed_bytes);ConsensusRoot seed{};std::copy(hash.begin(),hash.end(),seed.begin());
- auto shuffled=shuffled_validator_indices(active.size(),seed,rules.shuffle_rounds);for(auto& i:shuffled)i=active[i];
- if(checkpoint)checkpoint();
+ const auto duties=phase0_attestation_duties(registry,randao,rules,epoch,checkpoint);
+ const auto per_slot=duties.committees_per_slot,count=per_slot*rules.slots_per_epoch;
+ const auto& shuffled=duties.shuffled;
  std::set<uint64_t> participants;
  for(const auto& vote:votes){
   if(checkpoint)checkpoint();
@@ -38,6 +31,30 @@ Int target_balance(const Phase0FfgState& state,const ConsensusSlashingState& reg
  Int balance=0;for(auto index:participants)balance+=amount(registry.validators.at(index).effective_balance);
  return std::max(amount(rules.effective_balance_increment),balance);
 }
+}
+Phase0AttestationDuties phase0_attestation_duties(
+ const ConsensusSlashingState& registry,const ConsensusRandaoState& randao,
+ const Phase0FfgRules& rules,uint64_t epoch,const std::function<void()>& checkpoint){
+ if(!rules.slots_per_epoch||!rules.target_committee_size||!rules.max_committees_per_slot||
+    rules.max_committees_per_slot>UINT64_MAX/rules.slots_per_epoch||!rules.shuffle_rounds||rules.shuffle_rounds>256||
+    randao.mixes.size()<3||rules.min_seed_lookahead>=randao.mixes.size()-2||randao.epoch!=registry.epoch||
+    (epoch!=registry.epoch&&(registry.epoch==0||epoch!=registry.epoch-1)))
+  throw std::invalid_argument("invalid attestation duty context");
+ std::vector<uint64_t> active;
+ uint64_t expected=0;std::set<std::array<uint8_t,48>> keys;
+ for(const auto& [index,v]:registry.validators){if(checkpoint)checkpoint();
+  if(index!=expected++||!keys.insert(v.public_key).second||v.activation_epoch>v.exit_epoch||v.exit_epoch>v.withdrawable_epoch)
+   throw std::invalid_argument("invalid attestation duty registry");
+  if(v.activation_epoch<=epoch&&epoch<v.exit_epoch)active.push_back(index);
+ }
+ const auto per_slot=std::max(uint64_t(1),std::min(rules.max_committees_per_slot,uint64_t(active.size())/rules.slots_per_epoch/rules.target_committee_size));
+ const uint64_t n=randao.mixes.size(),position=epoch%n,back=rules.min_seed_lookahead+1;
+ const auto mix=position>=back?position-back:n-(back-position);
+ Bytes seed_bytes{1,0,0,0};for(unsigned i=0;i<8;++i)seed_bytes.push_back(uint8_t(epoch>>(i*8)));
+ seed_bytes.insert(seed_bytes.end(),randao.mixes[mix].begin(),randao.mixes[mix].end());const auto hash=sha256(seed_bytes);ConsensusRoot seed{};std::copy(hash.begin(),hash.end(),seed.begin());
+ auto shuffled=shuffled_validator_indices(active.size(),seed,rules.shuffle_rounds);for(auto& i:shuffled)i=active[i];
+ if(checkpoint)checkpoint();
+ return {per_slot,std::move(shuffled)};
 }
 Phase0FfgCandidate prepare_phase0_justification_finalization(
  const Phase0FfgState& state,const ConsensusSlashingState& registry,

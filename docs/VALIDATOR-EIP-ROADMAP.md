@@ -702,3 +702,44 @@ l'objet d'une mesure de finalité à un million de validateurs dans cette campag
 Clôture : intégrer l'admission authentifiée, l'ordre d'époque et la persistance,
 puis confronter des séquences complètes et des partitions/reprises réseau.
 Source : https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#justification-and-finalization
+
+## Admission des attestations et composition des blocs — 25 septembre 2026
+
+`process_phase0_attestation` vérifie époque/slot, délai d'inclusion Phase0,
+checkpoint source, index/bitlist du comité, présence de participants et signature
+BLS agrégée dans le domaine du fork de l'époque cible et du genesis. Les clés
+viennent du registre authentifié, dont financement et PoP (y compris genesis)
+doivent avoir été établis lors de l'admission. `phase0_attestation_duties` est
+partagé avec FFG : registre contigu, clés uniques, comités dérivés de RANDAO.
+L'attestation n'apporte ni sa liste de validateurs ni leurs poids.
+
+Seule une admission réussie ajoute à la liste précédente/courante ; le délai et
+l'index du proposant sélectionné sont conservés pour les récompenses d'époque.
+Les participants sanctionnés peuvent signer une inclusion valide, mais FFG exclut
+leur poids. Une mauvaise cible/tête reste admissible si signée : c'est le filtrage
+FFG qui écarte les cibles non concordantes. Les doublons sont admissibles dans la
+liste, sans compter deux fois leur poids dans FFG. Limite de liste issue du preset.
+
+`prepare_phase0_registry_operations` accepte maintenant un `Phase0AttestationStage` :
+après authentification/RANDAO et sanctions des proposants, les attestations sont
+vérifiées sur des candidats privés avant dépôts et sorties. Une signature invalide
+ou une sortie invalide tardive ne publie ni attestation ni modification du registre.
+Sans ce contexte, les attestations restent explicitement non prises en charge ;
+les sanctions d'attestateurs restent non prises en charge dans tous les cas.
+
+`attestationInclusionQualification` : 41 scénarios officiels, 17 états conformes et
+24 rejets attendus ; 85 mutations rejetées, 17 répétitions d'inclusion conformes,
+17 limites de listes, 70 annulations et 8 contextes invalides. Un bloc signé local
+combine sanction/attestation/dépôts/sorties, avec deux échecs, 29 annulations et
+deux configurations invalides (y compris bloc vide). Sept suites passent, dont
+les dix cas officiels FFG après partage du code de comités et ajout des métadonnées.
+
+Les séquences officielles `attestation` et `duplicate_attestation_same_block`
+(slots 9 et 17) sont conservées entièrement mais explicitement différées : elles
+traversent une époque et ne comptent pas comme blocs conformes. Restent les
+sanctions d'attestateurs, votes Eth1, récompenses/autres opérations d'époque,
+state_root et commit/reprise du bloc complet, puis raccordement au réacteur.
+La reconstruction des comités/proposants par attestation n'est pas encore optimisée
+par un cache d'époque ni qualifiée à un million de validateurs. Profil Phase0,
+aucune activation Deneb/Electra ou finalité réseau n'est annoncée.
+Source : https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#attestations
