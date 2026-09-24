@@ -218,3 +218,29 @@ le traitement complet des époques : récompenses, hystérésis des soldes effec
 entrées/sorties complètes, RANDAO, justification/finalité restent requis.
 L'appelant doit ordonner ces étapes selon le fork et persister leur résultat
 avec le bloc ; l'horloge de slots et le réacteur actif ne l'appellent pas encore.
+
+## Vecteurs officiels de pénalités Phase0 — 24 septembre 2026
+
+Les cinq cas du groupe `minimal/phase0/epoch_processing/slashings/pyspec_tests`
+de [consensus-spec-tests](https://github.com/ethereum/consensus-spec-tests/tree/bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908/tests/minimal/phase0/epoch_processing/slashings/pyspec_tests)
+sont importés avec fichiers Snappy originaux, SSZ bruts, licence et empreintes.
+Le lecteur C++ du schéma minimal compare les 320 soldes attendus, dont 90
+modifiés, et tous les champs de la projection du registre : aucun écart.
+Les paramètres minimal proviennent de fichiers consensus-specs eux-mêmes
+épinglés et hachés dans le manifeste local.
+
+Le premier essai via la transition complète rejetait ces fixtures : certains
+pré-états ont une date de retrait finie et une date de sortie FAR_FUTURE_EPOCH.
+Ces états isolent le composant `process_slashings`. Le calcul pur est maintenant
+exposé par `phase0_slashing_penalties`, utilisé aussi par la transition validée.
+Les attentes officielles ne sont pas réécrites et les contrôles de cohérence
+du registre restent dans `advance_phase0_slashing_epoch`. Les pré/post-états
+complets d'époque (`pre_epoch`, `post_epoch`) ne sont pas inclus dans cette preuve.
+
+`officialSlashingQualification` conserve le premier rejet, les cinq suites
+passantes et les contrôles négatifs : solde attendu altéré avec empreinte mise
+à jour, puis rapport avec un solde comparé manquant. Le premier est rejeté par
+le binaire C++, le second par le vérificateur de rapport. Le lecteur SSZ est
+spécifique au test ; il ne constitue pas le décodeur réseau d'un BeaconState.
+La qualification ne couvre pas encore le consensus actif ni un cycle d'époque
+complet. Le registre ouvert, RANDAO, finalité et activation restent à intégrer.

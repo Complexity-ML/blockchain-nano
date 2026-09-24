@@ -54,6 +54,12 @@ std::optional<std::vector<uint64_t>> process_phase0_attester_slashing(
 Json phase0_slashing_snapshot(const ConsensusSlashingState& state,const Phase0SlashingRules& rules);
 ConsensusSlashingState phase0_slashing_from_snapshot(const Json& snapshot,const Phase0SlashingRules& expected_rules);
 
+// Pure Phase0 process_slashings accounting over a component state. Returns
+// capped balance debits; does NOT establish registry lifecycle validity. Used
+// by the validated epoch transition and official isolated component fixtures.
+std::map<uint64_t,uint64_t> phase0_slashing_penalties(
+ const ConsensusSlashingState& state,const Phase0SlashingRules& rules);
+
 // Slashing sub-transition only: apply the delayed correlation penalty before
 // resetting the next epoch bucket, then advance this ledger by exactly one epoch.
 // expected_epoch rejects replay/skips; caller must persist the result with its

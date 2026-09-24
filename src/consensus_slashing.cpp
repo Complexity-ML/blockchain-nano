@@ -154,36 +154,41 @@ ConsensusSlashingState phase0_slashing_from_snapshot(const Json& snapshot,const 
  return state;
 }
 
-std::map<uint64_t,uint64_t> advance_phase0_slashing_epoch(
- ConsensusSlashingState& state,const Phase0SlashingRules& rules,uint64_t expected_epoch){
- // Small rules tuple validation does not serialize/copy the entire registry.
+std::map<uint64_t,uint64_t> phase0_slashing_penalties(
+ const ConsensusSlashingState& state,const Phase0SlashingRules& rules){
  slashing_rules_json(rules);
- if(state.epoch!=expected_epoch||state.slashings.size()!=rules.epochs_per_slashings_vector)
-  throw std::invalid_argument("slashing epoch sequence or vector mismatch");
- const auto next_epoch=checked_epoch_add(state.epoch,1);
+ if(state.slashings.size()!=rules.epochs_per_slashings_vector)
+  throw std::invalid_argument("slashing vector mismatch");
  const auto penalty_epoch=checked_epoch_add(state.epoch,rules.epochs_per_slashings_vector/2);
  Int total_active=0,total_slashed=0;
- std::set<std::array<uint8_t,48>> keys;
- for(const auto& [index,v]:state.validators){
-  if(!keys.insert(v.public_key).second||v.activation_epoch>v.exit_epoch||v.exit_epoch>v.withdrawable_epoch)
-   throw std::invalid_argument("invalid epoch slashing registry");
+ for(const auto& [index,v]:state.validators)
   if(v.activation_epoch<=state.epoch&&state.epoch<v.exit_epoch)total_active+=Int(std::to_string(v.effective_balance));
- }
  const Int increment(std::to_string(rules.effective_balance_increment));
  if(total_active<increment)total_active=increment;
  for(auto amount:state.slashings)total_slashed+=Int(std::to_string(amount));
  Int adjusted=total_slashed*Int(std::to_string(rules.proportional_slashing_multiplier));
  if(adjusted>total_active)adjusted=total_active;
- auto next=state;std::map<uint64_t,uint64_t> debits;
- for(auto& [index,v]:next.validators){
+ std::map<uint64_t,uint64_t> debits;
+ for(const auto& [index,v]:state.validators){
   if(!v.slashed||v.withdrawable_epoch!=penalty_epoch)continue;
-  // Preserve the specification's division order; large aggregate weights use
-  // GMP rather than overflowing a uint64 intermediate.
+  // Keep the prescribed division order; aggregate arithmetic must not wrap.
   const Int units=Int(std::to_string(v.effective_balance))/increment;
   const Int penalty=(units*adjusted/total_active)*increment;
-  const auto debit=std::min(v.balance,u64(penalty));
-  v.balance-=debit;debits.emplace(index,debit);
+  debits.emplace(index,std::min(v.balance,u64(penalty)));
  }
+ return debits;
+}
+std::map<uint64_t,uint64_t> advance_phase0_slashing_epoch(
+ ConsensusSlashingState& state,const Phase0SlashingRules& rules,uint64_t expected_epoch){
+ if(state.epoch!=expected_epoch)throw std::invalid_argument("slashing epoch sequence mismatch");
+ const auto next_epoch=checked_epoch_add(state.epoch,1);
+ std::set<std::array<uint8_t,48>> keys;
+ for(const auto& [index,v]:state.validators)
+  if(!keys.insert(v.public_key).second||v.activation_epoch>v.exit_epoch||v.exit_epoch>v.withdrawable_epoch)
+   throw std::invalid_argument("invalid epoch slashing registry");
+ auto debits=phase0_slashing_penalties(state,rules);
+ auto next=state;
+ for(const auto& [index,debit]:debits)next.validators.at(index).balance-=debit;
  next.slashings[next_epoch%rules.epochs_per_slashings_vector]=0;
  next.epoch=next_epoch;
  static_assert(std::is_nothrow_swappable_v<ConsensusSlashingState>);

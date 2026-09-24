@@ -1,0 +1,132 @@
+{
+  "repository": "ethereum/consensus-spec-tests",
+  "commit": "bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908",
+  "selection": "All five minimal/phase0/epoch_processing/slashings/pyspec_tests cases at the pinned revision; pre and post only. No claim for post_epoch or full BeaconState processing.",
+  "sszSchema": "Phase0 BeaconState minimal preset: fixed section 7057 bytes; validator records 121 bytes. Raw Snappy decompression by libsnappy 1.2.2, original compressed inputs retained.",
+  "referenceFiles": {
+    "minimal-phase0.yaml": {
+      "url": "https://raw.githubusercontent.com/ethereum/consensus-specs/fcdcf42024f33c498bff74936eabea2d96049fc2/presets/minimal/phase0.yaml",
+      "sha256": "e5adcabf45a9c7d5cbaecd42893dcaff7ada826f3e55c176bccc5aa7418710cc"
+    },
+    "minimal-config.yaml": {
+      "url": "https://raw.githubusercontent.com/ethereum/consensus-specs/fcdcf42024f33c498bff74936eabea2d96049fc2/configs/minimal.yaml",
+      "sha256": "91074cbc6d3faf0d3edb528c1b01dd214c42912a151bbf09065a0eec2c250d4c"
+    },
+    "LICENSE": {
+      "url": "https://raw.githubusercontent.com/ethereum/consensus-spec-tests/bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908/LICENSE",
+      "sha256": "feb87a2e0c305de3464cc44077da5393c52d8ca6362d37427157d04ec6f4510d"
+    }
+  },
+  "cases": [
+    {
+      "name": "low_penalty",
+      "upstreamPath": "tests/minimal/phase0/epoch_processing/slashings/pyspec_tests/low_penalty",
+      "files": {
+        "low_penalty/pre.ssz_snappy": {
+          "sha256": "331edb37c472e7fdc2e8f8ca035fd430545a07ae917967f136102446c6673e00",
+          "bytes": 6247
+        },
+        "low_penalty/pre.ssz": {
+          "sha256": "1d8c2ec07b77d0ccaa4990624cbe2d76dfe3cfebbde3eab6d1f13ed999696266",
+          "bytes": 15313
+        },
+        "low_penalty/post.ssz_snappy": {
+          "sha256": "e5ec384febbd643e45e9444e95e3ba6b6baa3c7e38f720f8a887ec660ba1b0e0",
+          "bytes": 6254
+        },
+        "low_penalty/post.ssz": {
+          "sha256": "94278c847c4d4921bc8375d6f6715f00f8657e27ce20e3843599f7bf4fed189b",
+          "bytes": 15313
+        }
+      }
+    },
+    {
+      "name": "max_penalties",
+      "upstreamPath": "tests/minimal/phase0/epoch_processing/slashings/pyspec_tests/max_penalties",
+      "files": {
+        "max_penalties/pre.ssz_snappy": {
+          "sha256": "708c910c609827649e80aa29cdec779b9eae5a7a4b1373bd2858622bba66553f",
+          "bytes": 6248
+        },
+        "max_penalties/pre.ssz": {
+          "sha256": "f3795de7e140ef6e0005f21ab93ea6ce44578c16b38fea98135ab944af2c5c4f",
+          "bytes": 15313
+        },
+        "max_penalties/post.ssz_snappy": {
+          "sha256": "6d840c3aaf4122c34f2c63bd0217adad45339dbf48fe74cbdfbc9ab7f09d98ac",
+          "bytes": 6249
+        },
+        "max_penalties/post.ssz": {
+          "sha256": "37b0ea9f9beda1b06480476b6abca3fda45b589bcd785e4039c7eac5e98420e8",
+          "bytes": 15313
+        }
+      }
+    },
+    {
+      "name": "minimal_penalty",
+      "upstreamPath": "tests/minimal/phase0/epoch_processing/slashings/pyspec_tests/minimal_penalty",
+      "files": {
+        "minimal_penalty/pre.ssz_snappy": {
+          "sha256": "6a88253c88b0651dad074950496075b46dcdb997d01eb1796a6042c72ada5099",
+          "bytes": 6252
+        },
+        "minimal_penalty/pre.ssz": {
+          "sha256": "7ea4a013ab6e6cd80286f8978eeac39248e3d6bd2805e5df758dd4c7d1250973",
+          "bytes": 15313
+        },
+        "minimal_penalty/post.ssz_snappy": {
+          "sha256": "6a88253c88b0651dad074950496075b46dcdb997d01eb1796a6042c72ada5099",
+          "bytes": 6252
+        },
+        "minimal_penalty/post.ssz": {
+          "sha256": "7ea4a013ab6e6cd80286f8978eeac39248e3d6bd2805e5df758dd4c7d1250973",
+          "bytes": 15313
+        }
+      }
+    },
+    {
+      "name": "scaled_penalties",
+      "upstreamPath": "tests/minimal/phase0/epoch_processing/slashings/pyspec_tests/scaled_penalties",
+      "files": {
+        "scaled_penalties/pre.ssz_snappy": {
+          "sha256": "25fa1441f89d154e5a690a051e80eb2274e614e7e2c78b10e6eb7bd9852e69ba",
+          "bytes": 6651
+        },
+        "scaled_penalties/pre.ssz": {
+          "sha256": "27614606e1740793bbd663648b6bbffe25f0fec24789b190b13f33446c90d0df",
+          "bytes": 15313
+        },
+        "scaled_penalties/post.ssz_snappy": {
+          "sha256": "251b20521c4ab0c8ad4f181c242cf7581cf25bbd1d444f7e2dc695b1a1838f5a",
+          "bytes": 6650
+        },
+        "scaled_penalties/post.ssz": {
+          "sha256": "63b08f10ef9908a857772d7568eb91b498392366ff364a8f58a854db1cefeb86",
+          "bytes": 15313
+        }
+      }
+    },
+    {
+      "name": "slashings_with_random_state",
+      "upstreamPath": "tests/minimal/phase0/epoch_processing/slashings/pyspec_tests/slashings_with_random_state",
+      "files": {
+        "slashings_with_random_state/pre.ssz_snappy": {
+          "sha256": "d9eab2060c5310ecbc35aa96975b3880b7e398346fd9d5b14037b186574c0a0b",
+          "bytes": 8771
+        },
+        "slashings_with_random_state/pre.ssz": {
+          "sha256": "0e33bb2739540ce7c34951396cb1226698133fc386d3804482404216b945cffe",
+          "bytes": 16537
+        },
+        "slashings_with_random_state/post.ssz_snappy": {
+          "sha256": "676744361eca68eae5a7da30da55df2294af8f2078f60bee28eb055045913b9c",
+          "bytes": 8774
+        },
+        "slashings_with_random_state/post.ssz": {
+          "sha256": "92dbf1de5cee01e9561708147ade54d9f97909722ff8272ecf3cb82ab41ed919",
+          "bytes": 16537
+        }
+      }
+    }
+  ]
+}

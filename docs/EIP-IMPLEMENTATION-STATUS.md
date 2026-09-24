@@ -237,3 +237,11 @@ rotation du bucket et contrôle de séquence, avec 11 contrôles et 8 rejets.
 Les quatre suites passent. Le format snapshot v2 inclut les paramètres ajoutés
 et rejette v1. Le cycle complet des époques et le consensus réseau restent
 ouverts ; aucun statut d'EIP n'est promu sur cette sous-transition.
+
+
+Preuve officielle de slashing : `officialSlashingQualification` compare sans
+écart 320 soldes (90 modifiés) dans les cinq fixtures Phase0 minimal du composant
+`process_slashings`, épinglées à une révision Ethereum. Le calcul pur est testé
+sur leurs états isolés ; la transition complète conserve ses contrôles de
+cohérence. Cinq suites passent. Ce périmètre ne clôture ni le cycle complet des
+époques ni une EIP de consensus ; l'intégration réseau reste ouverte.
