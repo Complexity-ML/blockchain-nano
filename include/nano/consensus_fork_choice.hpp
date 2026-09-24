@@ -7,7 +7,7 @@ struct Phase0ForkNode {
  ConsensusRoot parent;
  uint64_t realized_justified_epoch,unrealized_justified_epoch;
 };
-struct Phase0LatestMessage {uint64_t epoch;ConsensusRoot root;};
+struct Phase0LatestMessage {uint64_t epoch;ConsensusRoot root;bool operator==(const Phase0LatestMessage&)const=default;};
 struct Phase0ForkChoiceView {
  ConsensusRoot anchor;
  ConsensusCheckpoint justified,finalized;

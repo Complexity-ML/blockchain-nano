@@ -429,3 +429,9 @@ avec tests locaux de pondération/bonus/viabilité et cent arbres générés. Vo
 Les handlers d'événements, leur authentification, la persistance du Store et
 l'intégration réseau demeurent ouverts ; aucun EIP/fork réseau n'est activé
 par cette primitive.
+
+Admission fork choice : contrôle temporel/cible, comité dérivé, BLS et derniers
+messages implémentés sur contexte cible authentifié fourni par l'appelant.
+Tests locaux : 11 rejets, 70 annulations et effet sur la tête ; aucune activation
+réseau ni qualification du Store complet. La dérivation SSZ du contexte, les
+autres événements et la persistance restent à réaliser.

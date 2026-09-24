@@ -1080,3 +1080,36 @@ Clôture encore requise : importer/rejouer les événements officiels, implémen
 les handlers et leur état temporel, authentifier les snapshots d'entrée, lier
 Store, exécution et commit certifié, puis qualifier partitions/reprises sur le
 réseau actif. Ce composant ne constitue pas une activation du nouveau consensus.
+
+### Admission des votes de fork choice — 25 septembre 2026
+
+`process_phase0_fork_vote` ajoute les vérifications `validate_on_attestation`,
+l'authentification BLS et la mise à jour des derniers messages. Les comités et
+clés sont dérivés du registre/RANDAO au checkpoint cible fourni par l'appelant.
+La cible doit être un ancêtre connu à la frontière d'epoch du bloc voté ; le vote
+ne peut agir qu'à partir du slot suivant. Le gossip est limité à l'epoch courante
+ou précédente. L'exception pour les votes inclus dans un bloc nécessite un bloc
+déjà authentifié par l'appelant. Un doublon ou conflit dans la même epoch conserve
+le premier message ; seuls des votes d'epoch strictement supérieure le remplacent.
+Les indices déjà marqués équivoques ne sont pas mis à jour. La signature est
+vérifiée même si aucun message ne doit changer. L'admission ne marque pas à elle
+seule une équivoque et n'exécute pas de sanction.
+
+Référence identique au commit Phase0 indiqué ci-dessus, sections `on_attestation`
+et `update_latest_messages`. Les règles d'inclusion d'une attestation dans un bloc
+ne sont pas substituées aux règles de fork choice : notamment, cette admission
+ne compare pas la source au checkpoint justifié courant du Store.
+
+Le test local `consensus_phase0_fork_vote` utilise des clés BLS générées, vérifie
+le changement de tête après admission, les répétitions/conflits, exclusions,
+remplacement par epoch, 11 rejets et 70 points d'annulation sans mutation publiée.
+Les suites de choix de tête et d'inclusion des attestations officielles passent
+également. Journaux : `build-cmake/qualification/fork-vote-local-20260925/`.
+Ce test n'est pas un replay des événements officiels de fork choice.
+
+Il reste à dériver/authentifier le contexte cible depuis le SSZ stocké (avec les
+slots sautés), traiter les preuves d'équivoque, les événements blocs et horloge,
+les files de votes différés et le Store persistant, puis raccorder le réseau.
+L'appelant doit garantir les preuves de possession des clés du registre, la liaison
+entre contexte et racine cible, et l'accès exclusif à la vue. Aucun vote réseau
+brut ne doit pouvoir fournir lui-même ce contexte ou le drapeau de bloc vérifié.

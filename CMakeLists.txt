@@ -945,3 +945,8 @@ add_executable(nano-fork-choice-tests tests/test_fork_choice.cpp)
 target_link_libraries(nano-fork-choice-tests PRIVATE nano_core)
 add_test(NAME consensus_phase0_fork_choice COMMAND nano-fork-choice-tests)
 set_tests_properties(consensus_phase0_fork_choice PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_local")
+
+add_executable(nano-fork-vote-tests tests/test_fork_vote.cpp)
+target_link_libraries(nano-fork-vote-tests PRIVATE nano_core nano_ckzg)
+add_test(NAME consensus_phase0_fork_vote COMMAND nano-fork-vote-tests)
+set_tests_properties(consensus_phase0_fork_vote PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_local")
