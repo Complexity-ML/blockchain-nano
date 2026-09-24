@@ -309,3 +309,9 @@ blocs officiels reproduisent les projections attendues, deux blocs authentifiés
 à preuves répétées sont rejetés sans mutation. Six suites passent, avec échec
 tardif et annulation. Les autres opérations restent explicitement non traitées ;
 état complet, commit et activation réseau ne sont pas qualifiés.
+
+Cycle de sortie : `voluntaryExitQualification` couvre les dix cas officiels
+Phase0, avec 320 enregistrements conformes, quatre rejeux et des rejets de
+signature/domaine/débordement sans mutation. La file de sortie est mutualisée
+avec les sanctions ; sept suites passent. Le raccordement aux blocs/réseau,
+les paiements et les règles modernes EIP-7044/7002 restent ouverts.

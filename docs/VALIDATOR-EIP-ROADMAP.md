@@ -505,3 +505,28 @@ comparés aux block_roots officiels ; les cas invalides fournissent le parent du
 bloc comme contexte pour isoler le rejet tardif. Le commit durable, les autres
 forks et le réacteur restent ouverts. Les copies/scans du registre par preuve
 ne constituent pas une qualification de débit à un million de validateurs.
+
+## Sorties volontaires Phase0 — 24 septembre 2026
+
+`process_phase0_voluntary_exit` vérifie le message SSZ signé (époque/index),
+DOMAIN_VOLUNTARY_EXIT, la clé du registre, l'activité, l'ancienneté minimale,
+l'époque demandée et l'absence de sortie antérieure. Le fork du domaine doit
+correspondre à l'époque signée et provenir du contexte fiable. La file de sortie
+est partagée avec les sanctions : capacité par époque calculée depuis la
+population active, délai d'activation de sortie et retrait différé. La transition
+est préparée sur copie puis publiée en mémoire, sans débit ni paiement.
+
+`voluntaryExitQualification` conserve les dix cas officiels épinglés Phase0
+minimal : quatre succès, six rejets. Les 320 enregistrements de validateurs et
+les buckets concordent avec les post-états officiels ; les soldes restent
+inchangés. Les cas valides couvrent la sortie simple, une sortie ultérieure,
+le churn minimum et le churn calculé selon le nombre d'actifs. Quatre rejeux,
+24 mauvaises signatures/domaines/requêtes et quatre débordements d'époque
+sont refusés sans mutation. Sept suites passent, y compris les sanctions et
+leurs traitements dans des blocs officiels, après mutualisation de la file.
+
+Ce composant ne réalise ni versement des fonds ni transition complète de bloc.
+Intégration aux opérations signées, epoch processing et commit réseau restent
+à terminer. Il n'implémente pas encore EIP-7044 (domaine Capella durable) ou
+EIP-7002 (demande par clé de retrait) et ne change pas leur statut dans la matrice.
+Référence : https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#voluntary-exits

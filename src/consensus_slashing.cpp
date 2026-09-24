@@ -1,4 +1,6 @@
 #include "nano/consensus_slashing.hpp"
+#include "nano/consensus_exit.hpp"
+#include "nano/consensus_bls.hpp"
 #include <set>
 #include <type_traits>
 namespace nano {
@@ -26,6 +28,31 @@ uint64_t checked_epoch_add(uint64_t a,uint64_t b){
  if(b>UINT64_MAX-a)throw std::overflow_error("consensus slashing uint64 overflow");
  return a+b;
 }
+struct ExitQueue {
+ uint64_t active=0,latest_exit=0;
+ std::map<uint64_t,uint64_t> counts;
+};
+ExitQueue inspect_exit_registry(const ConsensusSlashingState& state){
+ ExitQueue queue;std::set<std::array<uint8_t,48>> keys;
+ for(const auto& [index,v]:state.validators){
+  if(!keys.insert(v.public_key).second||v.activation_epoch>v.exit_epoch||v.exit_epoch>v.withdrawable_epoch)
+   throw std::invalid_argument("invalid slashing registry");
+  if(v.activation_epoch<=state.epoch&&state.epoch<v.exit_epoch)++queue.active;
+  if(v.exit_epoch!=UINT64_MAX){queue.latest_exit=std::max(queue.latest_exit,v.exit_epoch);++queue.counts[v.exit_epoch];}
+ }
+ return queue;
+}
+template<class Rules>
+void schedule_exit(ConsensusSlashingValidator& v,uint64_t epoch,const Rules& rules,ExitQueue& queue){
+ if(v.exit_epoch!=UINT64_MAX)return;
+ const auto churn=std::max(rules.minimum_churn_limit,queue.active/rules.churn_limit_quotient);
+ auto exit_epoch=std::max(checked_epoch_add(checked_epoch_add(epoch,1),rules.max_seed_lookahead),queue.latest_exit);
+ if(queue.counts[exit_epoch]>=churn)exit_epoch=checked_epoch_add(exit_epoch,1);
+ if(exit_epoch==UINT64_MAX)throw std::overflow_error("slashing exit epoch sentinel");
+ queue.latest_exit=exit_epoch;++queue.counts[exit_epoch];
+ v.exit_epoch=exit_epoch;
+ v.withdrawable_epoch=checked_epoch_add(exit_epoch,rules.minimum_withdrawability_delay);
+}
 template<class Verify>
 std::optional<std::vector<uint64_t>> process_verified_slashing(
  ConsensusSlashingState& state,const Phase0SlashingRules& rules,
@@ -37,15 +64,7 @@ std::optional<std::vector<uint64_t>> process_verified_slashing(
   throw std::invalid_argument("invalid Phase0 slashing configuration");
  if(!state.validators.contains(proposer_index)||!state.validators.contains(whistleblower_index))
   throw std::invalid_argument("missing slashing reward recipient");
- std::set<std::array<uint8_t,48>> keys;
- uint64_t active=0,latest_exit=0;
- std::map<uint64_t,uint64_t> exit_counts;
- for(const auto& [index,v]:state.validators){
-  if(!keys.insert(v.public_key).second||v.activation_epoch>v.exit_epoch||v.exit_epoch>v.withdrawable_epoch)
-   throw std::invalid_argument("invalid slashing registry");
-  if(v.activation_epoch<=state.epoch&&state.epoch<v.exit_epoch)++active;
-  if(v.exit_epoch!=UINT64_MAX){latest_exit=std::max(latest_exit,v.exit_epoch);++exit_counts[v.exit_epoch];}
- }
+ auto exit_queue=inspect_exit_registry(state);
  auto common=verify();
  if(!common)return std::nullopt;
  std::vector<uint64_t> eligible;
@@ -59,19 +78,9 @@ std::optional<std::vector<uint64_t>> process_verified_slashing(
  // Stage all changes, including credits, before publishing. Overflow or allocation
  // failure cannot partially punish a subset of the authenticated participants.
  auto next=state;
- const auto churn=std::max(rules.minimum_churn_limit,active/rules.churn_limit_quotient);
  for(auto index:eligible){
   auto& v=next.validators.at(index);
-  if(v.exit_epoch==UINT64_MAX){
-   uint64_t queue=checked_epoch_add(checked_epoch_add(state.epoch,1),rules.max_seed_lookahead);
-   queue=std::max(queue,latest_exit);
-   if(exit_counts[queue]>=churn)queue=checked_epoch_add(queue,1);
-   // UINT64_MAX is the unset sentinel, never a scheduled exit.
-   if(queue==UINT64_MAX)throw std::overflow_error("slashing exit epoch sentinel");
-   latest_exit=queue;++exit_counts[queue];
-   v.exit_epoch=queue;
-   v.withdrawable_epoch=checked_epoch_add(queue,rules.minimum_withdrawability_delay);
-  }
+  schedule_exit(v,state.epoch,rules,exit_queue);
   v.slashed=true;
   v.withdrawable_epoch=std::max(v.withdrawable_epoch,checked_epoch_add(state.epoch,rules.epochs_per_slashings_vector));
   auto& bucket=next.slashings.at(state.epoch%rules.epochs_per_slashings_vector);
@@ -118,6 +127,28 @@ std::optional<std::vector<uint64_t>> process_phase0_proposer_slashing(
   if(found==state.validators.end()||!verify_proposer_slashing(first,second,found->second.public_key,version,genesis))return std::nullopt;
   return std::vector<uint64_t>{first.message.proposer_index};
  });
+}
+
+ConsensusRoot consensus_voluntary_exit_root(uint64_t epoch,uint64_t index){
+ ConsensusRoot epoch_root{},index_root{};
+ for(unsigned i=0;i<8;++i){epoch_root[i]=uint8_t(epoch>>(8*i));index_root[i]=uint8_t(index>>(8*i));}
+ return consensus_signing_root(epoch_root,index_root);
+}
+bool process_phase0_voluntary_exit(ConsensusSlashingState& state,const Phase0ExitRules& rules,
+ const SignedConsensusVoluntaryExit& exit,const ConsensusBytes4& version,const ConsensusRoot& genesis){
+ if(!rules.minimum_churn_limit||!rules.churn_limit_quotient||!rules.shard_committee_period)
+  throw std::invalid_argument("invalid Phase0 voluntary exit configuration");
+ auto queue=inspect_exit_registry(state);
+ const auto found=state.validators.find(exit.validator_index);
+ if(found==state.validators.end())return false;
+ const auto& validator=found->second;
+ if(validator.activation_epoch>state.epoch||state.epoch>=validator.exit_epoch||validator.exit_epoch!=UINT64_MAX||
+    exit.epoch>state.epoch||state.epoch-validator.activation_epoch<rules.shard_committee_period)return false;
+ const auto signing_root=consensus_signing_root(consensus_voluntary_exit_root(exit.epoch,exit.validator_index),consensus_domain({4,0,0,0},version,genesis));
+ if(!verify_consensus_bls(validator.public_key,signing_root,exit.signature))return false;
+ auto next=state;schedule_exit(next.validators.at(exit.validator_index),state.epoch,rules,queue);
+ static_assert(std::is_nothrow_swappable_v<ConsensusSlashingState>);
+ using std::swap;swap(state,next);return true;
 }
 
 namespace {
