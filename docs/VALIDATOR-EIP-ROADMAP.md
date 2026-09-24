@@ -244,3 +244,34 @@ le binaire C++, le second par le vérificateur de rapport. Le lecteur SSZ est
 spécifique au test ; il ne constitue pas le décodeur réseau d'un BeaconState.
 La qualification ne couvre pas encore le consensus actif ni un cycle d'époque
 complet. Le registre ouvert, RANDAO, finalité et activation restent à intégrer.
+
+## RANDAO authentifié et graines — 24 septembre 2026
+
+`ConsensusRandaoState` conserve l'époque, le ring de mixes et le dernier slot
+ayant apporté une révélation. `process_consensus_randao` vérifie une signature
+BLS sur la racine SSZ de l'époque, avec DOMAIN_RANDAO et le fork/genesis fournis,
+puis applique SHA-256 de la révélation par XOR au mix courant. Les slots répétés,
+antérieurs ou hors époque sont rejetés sans mutation. Une signature d'époque
+peut être réutilisée à un autre slot si son proposant est autorisé : il ne faut
+pas dédupliquer les signatures indépendamment des blocs. Référence :
+[process_randao](https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#randao).
+
+La rotation copie le mix courant vers l'époque suivante, avec contrôle de
+séquence. `consensus_randao_seed` dérive les graines des devoirs actuels/suivants
+à partir du mix retardé, du type de devoir et de l'époque encodée little-endian,
+selon [get_seed](https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#get_seed).
+Des devoirs historiques demandent leur snapshot historique ; cette API refuse
+d'utiliser silencieusement un ring devenu trop récent. Les longueurs de ring,
+slots par époque et lookahead doivent provenir du profil authentifié.
+
+`randaoQualification` archive 13 contrôles et 19 rejets, dont quatre valeurs de
+graine SHA-256 calculées indépendamment, les bornes uint64, la rotation,
+l'isolation des devoirs immédiats et une permutation utilisant la graine obtenue.
+Les régressions BLS (29 vecteurs officiels) et racines de signature passent.
+Les scénarios RANDAO sont locaux, pas le corpus officiel d'opérations RANDAO.
+
+L'appelant doit encore authentifier le proposant sélectionné et son éligibilité,
+le fork et le genesis, valider le bloc, puis persister mix et watermark avec
+l'état consensus. Ces fonctions ne sont pas appelées par le réacteur actif et
+ne modifient pas `PREVRANDAO` sur le réseau. La persistance du ring, l'horloge des
+slots, le registre ouvert et le rattachement aux comités/finalité restent ouverts.

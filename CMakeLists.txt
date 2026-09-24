@@ -764,3 +764,8 @@ target_link_libraries(nano-slashing-official-tests PRIVATE nano_core)
 target_compile_definitions(nano-slashing-official-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
 add_test(NAME ethereum_official_slashings COMMAND nano-slashing-official-tests)
 set_tests_properties(ethereum_official_slashings PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")
+
+add_executable(nano-consensus-randao-tests tests/test_consensus_randao.cpp)
+target_link_libraries(nano-consensus-randao-tests PRIVATE nano_core nano_ckzg)
+add_test(NAME consensus_authenticated_randao COMMAND nano-consensus-randao-tests)
+set_tests_properties(consensus_authenticated_randao PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")

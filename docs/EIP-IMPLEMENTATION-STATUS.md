@@ -74,7 +74,7 @@ reste à compléter. Le genesis réseau autorise actuellement Paris/Shanghai.
 | --- | --- | --- |
 | Admission au-delà de 1 000 | Implémentée et testée localement à 1 001 par transactions signées, RPC et réouverture | Lecture du staking et transport encore bornés ; ne pas promettre capacité réseau illimitée |
 | Votes individuels à grande échelle | 100 000 et 1 million validés localement, certificats complets | Intégrer comités/agrégats et qualifier le réseau ; pas assimiler à autant de nœuds |
-| Permutation des comités Ethereum | Primitive vérifiée : 240 vecteurs officiels, invariants de partition jusqu’à 1 million ; non activée | Intégration au registre, génération sûre du seed, epochs et activation |
+| Permutation des comités Ethereum | Primitive vérifiée : 240 vecteurs officiels, invariants de partition jusqu’à 1 million ; RANDAO et graines testés localement ; non activée | Authentification du proposant/registre, persistance du RANDAO, slots/epochs et activation |
 | BLS de consensus / agrégation | Partiel : vérification individuelle (29 cas), agrégée (12 cas) et mutations ; registre/consensus non intégrés | Preuves de possession, domaines, signataires, pondération et doubles comptages |
 | Domaines et racines SSZ de signature | Primitive vérifiée : 10 vecteurs officiels ForkData/SigningData et mutations de contexte | Intégrer racine authentifiée du registre genesis, versions par epoch et domaines des votes ; pas encore actif |
 | Casper FFG / LMD-GHOST | Non commencé ; BFT natif existant | État consensus, justification/finalité, choix de branche et partitions |
@@ -245,3 +245,10 @@ Preuve officielle de slashing : `officialSlashingQualification` compare sans
 sur leurs états isolés ; la transition complète conserve ses contrôles de
 cohérence. Cinq suites passent. Ce périmètre ne clôture ni le cycle complet des
 époques ni une EIP de consensus ; l'intégration réseau reste ouverte.
+
+
+RANDAO : `randaoQualification` vérifie les révélations BLS liées à l'époque,
+au fork et au genesis, les rejets de slots rejoués, la rotation et les graines
+retardées. 13 contrôles et 19 rejets locaux passent avec les régressions BLS/SSZ.
+L'éligibilité du proposant, la persistance et le raccordement au consensus actif
+restent requis ; aucune activation réseau n'est revendiquée.

@@ -1,0 +1,11 @@
+import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import assert from 'node:assert/strict';
+const text=readFileSync(resolve(process.argv[2],'tests-full.log'),'utf8');
+assert.equal((text.match(/Test Passed\./g)||[]).length,3);
+for(const name of ['ethereum_consensus_bls_verify','ethereum_consensus_signing_roots','consensus_authenticated_randao'])assert(text.includes(`Testing: ${name}\n`));
+const rows=text.split('\n').filter(l=>l.startsWith('{')).map(l=>JSON.parse(l));assert.equal(rows.length,3);
+const r=rows.find(r=>r.scenario==='authenticated-randao');assert(r);assert.equal(r.checks,13);assert.equal(r.rejected,19);assert.equal(r.activeInConsensus,false);
+assert.equal(rows.find(r=>r.scenario==='ethereum-consensus-bls-verify').officialCases,29);
+assert.equal(rows.find(r=>r.scenario==='consensus-signing-roots').signingDataCases,5);
+console.log(JSON.stringify({verified:true,...r},null,2));
