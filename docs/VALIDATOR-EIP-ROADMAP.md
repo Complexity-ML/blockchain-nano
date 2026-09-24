@@ -986,3 +986,39 @@ ne prouvent pas à eux seuls toute la conformité Phase0, les profils modernes,
 l'interopérabilité de réseau ou une capacité en charge. Cette étape ne bascule
 pas le consensus actif et ne clôt aucun objectif de production.
 Source : https://github.com/ethereum/consensus-specs/blob/fcdcf42024f33c498bff74936eabea2d96049fc2/specs/phase0/beacon-chain.md#beacon-chain-state-transition-function
+
+### Enveloppe de persistance SSZ et reprise locale
+
+`phase0_slot_snapshot` / `phase0_slot_from_snapshot` définissent l'enveloppe
+canonique `nano-phase0-slot-v1`, contenant SSZ, racine, profil complet de règles
+et marqueur d'époque. Après l'époque zéro, le marqueur doit être présent et
+correspondre à l'époque précédente. Aucun historique n'est inventé à la lecture.
+La restauration exige une racine attendue obtenue d'un checkpoint authentifié,
+et une limite d'allocation SSZ ; l'appelant doit aussi borner le JSON avant de
+le parser. Le profil inclut les limites opérationnelles : leur modification
+nécessitera une migration explicite de l'enveloppe.
+
+`slotSnapshotQualification` vérifie douze propriétés et rejette 25 enveloppes
+altérées/non canoniques, dont profils divergents, marqueurs absents, état modifié,
+racine recalculée par l'altération, dépassement de taille et mauvais checkpoint.
+Un processus enfant enregistre le checkpoint et le premier bloc d'une séquence
+Ethereum, puis appelle `_exit` après les commits synchrones RocksDB. Après
+réouverture, SSZ et marqueur concordent ; le bloc suivant traverse une époque
+et reproduit exactement l'état officiel. Le retraitement des blocs est rejeté.
+Une seconde réouverture conserve cet état et l'absence d'un commit rejeté.
+Quatre suites passent avec les régressions de slots/blocs et de sanctions.
+
+**Portée exacte** : le test utilise l'emplacement consensus du lot atomique
+existant `ChainStore`, associé à des blocs d'exécution synthétiques de support.
+Il ne prouve pas encore la liaison sémantique entre état Beacon et état EVM,
+ni un commit certifié du nouveau consensus. La racine de référence provient des
+blocs officiels déjà authentifiés, pas de l'enveloppe stockée. Le checkpoint
+initial du test est au slot 8 ; son marqueur est explicitement importé depuis
+cette référence de confiance. L'enveloppe ne constitue pas un protocole
+d'authentification de snapshots reçus du réseau.
+
+L'arrêt testé survient **après** le commit, sans destructeur RocksDB. Il qualifie
+cette reprise WAL locale, pas une coupure physique ni un arrêt au milieu de
+l'écriture. Les fautes pendant le commit, le raccordement au fork choice et au
+réacteur et les migrations de profils restent ouverts. Aucun état réel du VPS
+ni fonds n'a été modifié.

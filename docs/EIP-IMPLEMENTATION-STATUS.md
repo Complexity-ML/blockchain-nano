@@ -410,3 +410,9 @@ slots/époques, votes Eth1, opérations et vérification du state_root. Les anci
 séquences différées sont couvertes ici sans réécriture des campagnes historiques.
 Le stockage durable, l'admission des états, le fork choice et l'intégration au
 réseau restent ouverts. Il ne s'agit pas d'une activation des forks modernes.
+
+Persistance Phase0 : `slotSnapshotQualification` trace une enveloppe SSZ/profil/
+marqueur canonique et une reprise après `_exit` post-commit RocksDB. La poursuite
+de la séquence reproduit l'état officiel, avec 25 enveloppes invalides rejetées.
+Cette preuve locale ne clôt pas les fautes pendant écriture, la liaison EVM /
+consensus, les snapshots réseau ou le commit certifié du nouveau consensus.
