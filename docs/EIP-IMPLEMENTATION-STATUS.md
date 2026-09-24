@@ -295,3 +295,10 @@ mutation canonique. Trois blocs officiels, 54 rejets, 404 troncatures, 21
 annulations, quatre contrôles locaux et sept erreurs de configuration sont
 qualifiés dans six suites. Le candidat n'est pas un post-état validé ; opérations,
 transition complète, commit durable et activation restent ouverts.
+
+Sanction des proposants : `proposerSlashingQualification` couvre les quinze
+scénarios officiels Phase0 (3 succès, 12 rejets, dont un registre amont incohérent).
+La transition économique partagée avec les attestations reproduit les registres
+et 192 soldes attendus. Rejeu, snapshot et débordement sont contrôlés ; sept
+suites passent. Le traitement dans les blocs et l'activation réseau restent
+ouverts ; ce profil Phase0 ne promeut aucun EIP Electra ni statut production.

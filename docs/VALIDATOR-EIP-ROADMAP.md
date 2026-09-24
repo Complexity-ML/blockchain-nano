@@ -441,3 +441,36 @@ Ce résultat est une authentification provisoire, pas un bloc valide : signature
 et sémantique des opérations, état résultant, transition de slots/époques,
 persistance atomique et raccordement au réacteur restent à intégrer. Le schéma
 est Phase0 uniquement. Aucune activation réseau ni finalité nouvelle.
+
+## Double proposition signée et sanction — 24 septembre 2026
+
+`verify_proposer_slashing` authentifie deux en-têtes différents, signés avec la
+même clé de registre pour le même slot et le même index. Le fork historique
+pour l'époque de la preuve et le genesis sont fournis par le contexte fiable.
+`process_phase0_proposer_slashing` vérifie l'éligibilité actuelle et applique
+la même transition économique atomique que les preuves d'attestation : pénalité,
+file de sortie, retrait différé, bucket et récompenses. Le code économique est
+mutualisé ; les régressions d'attestation, reprise et pénalité différée passent.
+
+`proposerSlashingQualification` couvre les quinze cas officiels Phase0 minimal,
+révision `bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908` : trois succès et douze
+rejets. Pour les succès, la projection complète des registres/buckets et 192
+soldes concordent avec les post-états officiels. Le proposant sanctionné peut
+être lui-même bénéficiaire de la récompense, conformément à la fixture.
+Une paire d'en-têtes d'un slot futur peut être sanctionnable : le test officiel
+le demande ; cette vérification n'ajoute pas d'interdiction temporelle arbitraire.
+
+Un des douze rejets concerne un pré-état volontairement incohérent : retrait à
+l'époque zéro avec sortie à FAR_FUTURE. Le premier passage du runner échouait
+sur `invalid slashing registry` ; le contrôle de production n'a pas été affaibli.
+Le test reconnaît explicitement ce cas amont et le compte séparément comme
+rejet de registre, pas comme échec cryptographique.
+
+Six rejeux (immédiats et après aller-retour du snapshot) sont refusés sans
+nouveau prélèvement ; douze mutations locales de domaine/preuve sont refusées ;
+trois débordements de bucket laissent le registre intact. Sept suites passent.
+Le snapshot testé ici est un aller-retour du codec ; la reprise RocksDB existante
+est une régression séparée. Le traitement des opérations dans le bloc, la
+validation de l'état complet et l'activation réseau restent ouverts. Économie
+Phase0 uniquement, pas conformité Electra/EIP-7251.
+Référence : https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#proposer-slashings

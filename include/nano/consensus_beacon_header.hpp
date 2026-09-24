@@ -6,6 +6,7 @@ namespace nano {
 struct ConsensusBeaconHeader {
  uint64_t slot{},proposer_index{};
  ConsensusRoot parent_root{},state_root{},body_root{};
+ bool operator==(const ConsensusBeaconHeader&)const=default;
 };
 ConsensusRoot consensus_beacon_header_root(const ConsensusBeaconHeader& header);
 // Signature only: caller authenticates registry key, fork and genesis, computes

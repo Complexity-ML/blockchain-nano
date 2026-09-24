@@ -26,12 +26,10 @@ uint64_t checked_epoch_add(uint64_t a,uint64_t b){
  if(b>UINT64_MAX-a)throw std::overflow_error("consensus slashing uint64 overflow");
  return a+b;
 }
-}
-std::optional<std::vector<uint64_t>> process_phase0_attester_slashing(
+template<class Verify>
+std::optional<std::vector<uint64_t>> process_verified_slashing(
  ConsensusSlashingState& state,const Phase0SlashingRules& rules,
- const IndexedConsensusAttestation& first,const ConsensusCommittee& first_context,
- const IndexedConsensusAttestation& second,const ConsensusCommittee& second_context,
- uint64_t proposer_index,uint64_t whistleblower_index){
+ uint64_t proposer_index,uint64_t whistleblower_index,Verify verify){
  if(!rules.minimum_churn_limit||!rules.churn_limit_quotient||!rules.epochs_per_slashings_vector||
     !rules.minimum_penalty_quotient||!rules.whistleblower_reward_quotient||!rules.proposer_reward_quotient||
     !rules.effective_balance_increment||!rules.proportional_slashing_multiplier||
@@ -48,13 +46,12 @@ std::optional<std::vector<uint64_t>> process_phase0_attester_slashing(
   if(v.activation_epoch<=state.epoch&&state.epoch<v.exit_epoch)++active;
   if(v.exit_epoch!=UINT64_MAX){latest_exit=std::max(latest_exit,v.exit_epoch);++exit_counts[v.exit_epoch];}
  }
- auto common=verify_attester_slashing(first,first_context,second,second_context);
+ auto common=verify();
  if(!common)return std::nullopt;
  std::vector<uint64_t> eligible;
  for(auto index:*common){
   auto found=state.validators.find(index);
-  if(found==state.validators.end()||!first_context.matches_validator_key(index,found->second.public_key))
-   return std::nullopt;
+  if(found==state.validators.end())return std::nullopt;
   const auto& v=found->second;
   if(!v.slashed&&v.activation_epoch<=state.epoch&&state.epoch<v.withdrawable_epoch)eligible.push_back(index);
  }
@@ -90,6 +87,37 @@ std::optional<std::vector<uint64_t>> process_phase0_attester_slashing(
  static_assert(std::is_nothrow_swappable_v<ConsensusSlashingState>);
  using std::swap;swap(state,next);
  return eligible;
+}
+
+} // namespace
+std::optional<std::vector<uint64_t>> process_phase0_attester_slashing(
+ ConsensusSlashingState& state,const Phase0SlashingRules& rules,
+ const IndexedConsensusAttestation& first,const ConsensusCommittee& first_context,
+ const IndexedConsensusAttestation& second,const ConsensusCommittee& second_context,
+ uint64_t proposer_index,uint64_t whistleblower_index){
+ return process_verified_slashing(state,rules,proposer_index,whistleblower_index,[&]()->std::optional<std::vector<uint64_t>>{
+  auto common=verify_attester_slashing(first,first_context,second,second_context);
+  if(!common)return std::nullopt;
+  for(auto index:*common){auto found=state.validators.find(index);if(found==state.validators.end()||!first_context.matches_validator_key(index,found->second.public_key))return std::nullopt;}
+  return common;
+ });
+}
+bool verify_proposer_slashing(const SignedConsensusBeaconHeader& first,
+ const SignedConsensusBeaconHeader& second,std::span<const uint8_t> key,
+ const ConsensusBytes4& version,const ConsensusRoot& genesis){
+ if(first.message.slot!=second.message.slot||first.message.proposer_index!=second.message.proposer_index||first.message==second.message)return false;
+ return verify_consensus_beacon_header(first.message,version,genesis,key,first.signature)&&verify_consensus_beacon_header(second.message,version,genesis,key,second.signature);
+}
+std::optional<std::vector<uint64_t>> process_phase0_proposer_slashing(
+ ConsensusSlashingState& state,const Phase0SlashingRules& rules,
+ const SignedConsensusBeaconHeader& first,const SignedConsensusBeaconHeader& second,
+ const ConsensusBytes4& version,const ConsensusRoot& genesis,
+ uint64_t proposer_index,uint64_t whistleblower_index){
+ return process_verified_slashing(state,rules,proposer_index,whistleblower_index,[&]()->std::optional<std::vector<uint64_t>>{
+  const auto found=state.validators.find(first.message.proposer_index);
+  if(found==state.validators.end()||!verify_proposer_slashing(first,second,found->second.public_key,version,genesis))return std::nullopt;
+  return std::vector<uint64_t>{first.message.proposer_index};
+ });
 }
 
 namespace {

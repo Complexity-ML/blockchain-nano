@@ -1,6 +1,7 @@
 #pragma once
 #include "nano/consensus_attestation.hpp"
 #include "nano/consensus_committee.hpp"
+#include "nano/consensus_beacon_header.hpp"
 namespace nano {
 struct IndexedConsensusAttestation {
  ConsensusAttestationData data;
@@ -46,6 +47,26 @@ std::optional<std::vector<uint64_t>> process_phase0_attester_slashing(
  ConsensusSlashingState& state,const Phase0SlashingRules& rules,
  const IndexedConsensusAttestation& first,const ConsensusCommittee& first_context,
  const IndexedConsensusAttestation& second,const ConsensusCommittee& second_context,
+ uint64_t proposer_index,uint64_t whistleblower_index);
+
+struct SignedConsensusBeaconHeader {
+ ConsensusBeaconHeader message;
+ Bytes signature;
+};
+// Both conflicting headers must name the same slot/index and authenticate under
+// the trusted key and fork version for that slot's epoch. No duty proof required
+// by Phase0 proposer slashing; future header slots are not rejected solely by age.
+bool verify_proposer_slashing(const SignedConsensusBeaconHeader& first,
+ const SignedConsensusBeaconHeader& second,std::span<const uint8_t> public_key,
+ const ConsensusBytes4& historical_fork_version,const ConsensusRoot& genesis_root);
+// Same atomic Phase0 economics as attester slashing, with the registry key.
+// Replay/already slashed/ineligible/invalid proof returns nullopt unchanged.
+// Caller authenticates the historical fork for the evidence slot and persists
+// the result only as part of a fully validated block transition.
+std::optional<std::vector<uint64_t>> process_phase0_proposer_slashing(
+ ConsensusSlashingState& state,const Phase0SlashingRules& rules,
+ const SignedConsensusBeaconHeader& first,const SignedConsensusBeaconHeader& second,
+ const ConsensusBytes4& historical_fork_version,const ConsensusRoot& genesis_root,
  uint64_t proposer_index,uint64_t whistleblower_index);
 
 // Versioned local persistence envelope, not an Ethereum SSZ BeaconState.

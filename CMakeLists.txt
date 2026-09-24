@@ -803,3 +803,9 @@ target_link_libraries(nano-consensus-block-auth-tests PRIVATE nano_core nano_ckz
 target_compile_definitions(nano-consensus-block-auth-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
 add_test(NAME consensus_phase0_block_authentication COMMAND nano-consensus-block-auth-tests)
 set_tests_properties(consensus_phase0_block_authentication PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")
+
+add_executable(nano-proposer-slashing-official-tests tests/test_proposer_slashing_official.cpp)
+target_link_libraries(nano-proposer-slashing-official-tests PRIVATE nano_core)
+target_compile_definitions(nano-proposer-slashing-official-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+add_test(NAME ethereum_official_proposer_slashing COMMAND nano-proposer-slashing-official-tests)
+set_tests_properties(ethereum_official_proposer_slashing PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")
