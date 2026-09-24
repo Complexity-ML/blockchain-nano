@@ -15,7 +15,8 @@ int main(int argc,char** argv){try{
   const auto pre=binary(root/name/"pre.ssz"),operation=binary(root/name/"voluntary_exit.ssz");check(operation.size()==112,"exit SSZ width");
   const SignedConsensusVoluntaryExit exit{little(operation,0,8),little(operation,8,8),Bytes(operation.begin()+16,operation.end())};
   auto state=decode(pre);const auto initial=state;ConsensusRoot genesis{};std::copy_n(pre.begin()+8,32,genesis.begin());ConsensusBytes4 version{};std::copy_n(pre.begin()+(exit.epoch<little(pre,56,8)?48:52),4,version.begin());
-  const bool accepted=process_phase0_voluntary_exit(state,rules,exit,version,genesis);
+  VoluntaryExitDomainContext context{};context.profile=VoluntaryExitProfile::Phase0;context.fork_epoch=little(pre,56,8);context.genesis_root=genesis;std::copy_n(pre.begin()+48,4,context.previous_version.begin());std::copy_n(pre.begin()+52,4,context.current_version.begin());
+  const bool accepted=process_consensus_voluntary_exit(state,rules,exit,context);
   if(row.at("valid").get<bool>()){
    check(accepted,"valid exit rejected: "+name);const auto expected=decode(binary(root/name/"post.ssz"));check(state==expected,"official exit state mismatch: "+name);validators+=state.validators.size();++valid;
    for(const auto& [index,v]:state.validators)check(v.balance==initial.validators.at(index).balance,"exit debited balance");

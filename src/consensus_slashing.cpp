@@ -151,6 +151,18 @@ bool process_phase0_voluntary_exit(ConsensusSlashingState& state,const Phase0Exi
  using std::swap;swap(state,next);return true;
 }
 
+bool process_consensus_voluntary_exit(ConsensusSlashingState& state,const Phase0ExitRules& rules,
+ const SignedConsensusVoluntaryExit& exit,const VoluntaryExitDomainContext& context){
+ if(context.fork_epoch>state.epoch)throw std::invalid_argument("exit fork state is in the future");
+ ConsensusBytes4 version{};
+ switch(context.profile){
+  case VoluntaryExitProfile::Phase0:version=exit.epoch<context.fork_epoch?context.previous_version:context.current_version;break;
+  case VoluntaryExitProfile::Deneb:version=context.capella_version;break;
+  default:throw std::invalid_argument("unsupported voluntary exit profile");
+ }
+ return process_phase0_voluntary_exit(state,rules,exit,version,context.genesis_root);
+}
+
 namespace {
 Json slashing_rules_json(const Phase0SlashingRules& r){
  if(!r.minimum_churn_limit||!r.churn_limit_quotient||!r.epochs_per_slashings_vector||

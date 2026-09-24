@@ -1,0 +1,421 @@
+{
+  "commit": "bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908",
+  "cases": [
+    {
+      "name": "basic",
+      "path": "tests/minimal/deneb/operations/voluntary_exit/pyspec_tests/basic",
+      "valid": true,
+      "files": {
+        "basic/pre.ssz_snappy": {
+          "bytes": 6630,
+          "sha256": "7172bd97cc8bd2b148f44f741dc3f144f6632183afc81910a7822406fa5d6ece"
+        },
+        "basic/pre.ssz": {
+          "bytes": 19733,
+          "sha256": "f7971cd492db7f0878d51d716f9e514ae357ed812ec5c6f92e838f14a467e6f4"
+        },
+        "basic/voluntary_exit.ssz_snappy": {
+          "bytes": 105,
+          "sha256": "401ef739fa3d0ad9bc50782a9dc02aace6e59db54b69557021143dd4813a4fed"
+        },
+        "basic/voluntary_exit.ssz": {
+          "bytes": 112,
+          "sha256": "a0e0ed44aa0f8138e5dbb2bec87fe113b4fef236673f6c47d18bbea72c76148e"
+        },
+        "basic/post.ssz_snappy": {
+          "bytes": 6647,
+          "sha256": "105560dcffde51bca1b3fbe6209670e0e53b34e7d4685ea60566bae7c4986e3d"
+        },
+        "basic/post.ssz": {
+          "bytes": 19733,
+          "sha256": "9b3f20f47287330d65ca12eda65432a9b743e26c6966d4458294506a13032270"
+        }
+      }
+    },
+    {
+      "name": "default_exit_epoch_subsequent_exit",
+      "path": "tests/minimal/deneb/operations/voluntary_exit/pyspec_tests/default_exit_epoch_subsequent_exit",
+      "valid": true,
+      "files": {
+        "default_exit_epoch_subsequent_exit/pre.ssz_snappy": {
+          "bytes": 6638,
+          "sha256": "e2570dea6c6c1c0f8ab2f1faaf973aa8ed240870fde3c65e9f8ddb5435d07136"
+        },
+        "default_exit_epoch_subsequent_exit/pre.ssz": {
+          "bytes": 19733,
+          "sha256": "0d01e3c4994d1648ba2278429ee6f658b9926b1c9d96c230825d8e422afd8f06"
+        },
+        "default_exit_epoch_subsequent_exit/voluntary_exit.ssz_snappy": {
+          "bytes": 105,
+          "sha256": "401ef739fa3d0ad9bc50782a9dc02aace6e59db54b69557021143dd4813a4fed"
+        },
+        "default_exit_epoch_subsequent_exit/voluntary_exit.ssz": {
+          "bytes": 112,
+          "sha256": "a0e0ed44aa0f8138e5dbb2bec87fe113b4fef236673f6c47d18bbea72c76148e"
+        },
+        "default_exit_epoch_subsequent_exit/post.ssz_snappy": {
+          "bytes": 6655,
+          "sha256": "e126fa9f5ae96ec120c4d56000c0095ed505dee82d406367366fc9c9fea51b20"
+        },
+        "default_exit_epoch_subsequent_exit/post.ssz": {
+          "bytes": 19733,
+          "sha256": "2754387ad437a6642cbc469de87cff529f47aff1936b8be05767499945a46f3f"
+        }
+      }
+    },
+    {
+      "name": "invalid_incorrect_signature",
+      "path": "tests/minimal/deneb/operations/voluntary_exit/pyspec_tests/invalid_incorrect_signature",
+      "valid": false,
+      "files": {
+        "invalid_incorrect_signature/pre.ssz_snappy": {
+          "bytes": 6630,
+          "sha256": "7172bd97cc8bd2b148f44f741dc3f144f6632183afc81910a7822406fa5d6ece"
+        },
+        "invalid_incorrect_signature/pre.ssz": {
+          "bytes": 19733,
+          "sha256": "f7971cd492db7f0878d51d716f9e514ae357ed812ec5c6f92e838f14a467e6f4"
+        },
+        "invalid_incorrect_signature/voluntary_exit.ssz_snappy": {
+          "bytes": 105,
+          "sha256": "0af8c122ad6c180e5775e32c2299d4128a2e60e34d07a34b1237c5f13d203616"
+        },
+        "invalid_incorrect_signature/voluntary_exit.ssz": {
+          "bytes": 112,
+          "sha256": "ebc1be48fc532587ad5552f152b883bb35dfe90b70d80d804ca955bf9319a27d"
+        }
+      }
+    },
+    {
+      "name": "invalid_validator_already_exited",
+      "path": "tests/minimal/deneb/operations/voluntary_exit/pyspec_tests/invalid_validator_already_exited",
+      "valid": false,
+      "files": {
+        "invalid_validator_already_exited/pre.ssz_snappy": {
+          "bytes": 6642,
+          "sha256": "f64ca66b2e1448d5a46c92bcb2f2058ecf34917d2ed11ad272bc05f6785f52fe"
+        },
+        "invalid_validator_already_exited/pre.ssz": {
+          "bytes": 19733,
+          "sha256": "35e4ccdf16d060bde579260c25036a92841e8b8968bd391da1c1914ac798e91e"
+        },
+        "invalid_validator_already_exited/voluntary_exit.ssz_snappy": {
+          "bytes": 105,
+          "sha256": "401ef739fa3d0ad9bc50782a9dc02aace6e59db54b69557021143dd4813a4fed"
+        },
+        "invalid_validator_already_exited/voluntary_exit.ssz": {
+          "bytes": 112,
+          "sha256": "a0e0ed44aa0f8138e5dbb2bec87fe113b4fef236673f6c47d18bbea72c76148e"
+        }
+      }
+    },
+    {
+      "name": "invalid_validator_exit_in_future",
+      "path": "tests/minimal/deneb/operations/voluntary_exit/pyspec_tests/invalid_validator_exit_in_future",
+      "valid": false,
+      "files": {
+        "invalid_validator_exit_in_future/pre.ssz_snappy": {
+          "bytes": 6630,
+          "sha256": "7172bd97cc8bd2b148f44f741dc3f144f6632183afc81910a7822406fa5d6ece"
+        },
+        "invalid_validator_exit_in_future/pre.ssz": {
+          "bytes": 19733,
+          "sha256": "f7971cd492db7f0878d51d716f9e514ae357ed812ec5c6f92e838f14a467e6f4"
+        },
+        "invalid_validator_exit_in_future/voluntary_exit.ssz_snappy": {
+          "bytes": 105,
+          "sha256": "0f689296f3c6f984f60470b8c4bd72c0342e61ae005d98505f1f795ecb40fff0"
+        },
+        "invalid_validator_exit_in_future/voluntary_exit.ssz": {
+          "bytes": 112,
+          "sha256": "137981301edd66fc69b604d09b7181fc2829da8fbda373c47dcd555fefc26449"
+        }
+      }
+    },
+    {
+      "name": "invalid_validator_incorrect_validator_index",
+      "path": "tests/minimal/deneb/operations/voluntary_exit/pyspec_tests/invalid_validator_incorrect_validator_index",
+      "valid": false,
+      "files": {
+        "invalid_validator_incorrect_validator_index/pre.ssz_snappy": {
+          "bytes": 6630,
+          "sha256": "7172bd97cc8bd2b148f44f741dc3f144f6632183afc81910a7822406fa5d6ece"
+        },
+        "invalid_validator_incorrect_validator_index/pre.ssz": {
+          "bytes": 19733,
+          "sha256": "f7971cd492db7f0878d51d716f9e514ae357ed812ec5c6f92e838f14a467e6f4"
+        },
+        "invalid_validator_incorrect_validator_index/voluntary_exit.ssz_snappy": {
+          "bytes": 106,
+          "sha256": "511e9e3c40e61a317bb0ac699d86fbbbedddf083eae352b092d97378ce8955fc"
+        },
+        "invalid_validator_incorrect_validator_index/voluntary_exit.ssz": {
+          "bytes": 112,
+          "sha256": "56f158adac8e86dbdf080be73b21d0578208273b4d6ff5a0e137f3864e96ed24"
+        }
+      }
+    },
+    {
+      "name": "invalid_validator_not_active",
+      "path": "tests/minimal/deneb/operations/voluntary_exit/pyspec_tests/invalid_validator_not_active",
+      "valid": false,
+      "files": {
+        "invalid_validator_not_active/pre.ssz_snappy": {
+          "bytes": 6636,
+          "sha256": "d3cdfb2813e5a48acd85a2672d1c9ccf986c09d1144bdee491a2422e5597f5ea"
+        },
+        "invalid_validator_not_active/pre.ssz": {
+          "bytes": 19733,
+          "sha256": "d3f74d616eba5710f9587dfdd48d7e954bb97564e71d4888c2ee6ea11304f296"
+        },
+        "invalid_validator_not_active/voluntary_exit.ssz_snappy": {
+          "bytes": 104,
+          "sha256": "fc0fb316729f1a893cc98b968ad48efb4a5bdc831105d49100454c05a61806d3"
+        },
+        "invalid_validator_not_active/voluntary_exit.ssz": {
+          "bytes": 112,
+          "sha256": "c5237bb9d4867f842e7b0feb68b732fa5e95c93d2d72b35e9f4ec1dfd76689d6"
+        }
+      }
+    },
+    {
+      "name": "invalid_validator_not_active_long_enough",
+      "path": "tests/minimal/deneb/operations/voluntary_exit/pyspec_tests/invalid_validator_not_active_long_enough",
+      "valid": false,
+      "files": {
+        "invalid_validator_not_active_long_enough/pre.ssz_snappy": {
+          "bytes": 6628,
+          "sha256": "32b41a82c5393d9c01f4806a2c43c1eab6219ff5a820171814172c5bd69c5e2d"
+        },
+        "invalid_validator_not_active_long_enough/pre.ssz": {
+          "bytes": 19733,
+          "sha256": "81ff3c01bf590938e965cc8d3f4a128bb3ad76241538378e81645748760ac965"
+        },
+        "invalid_validator_not_active_long_enough/voluntary_exit.ssz_snappy": {
+          "bytes": 104,
+          "sha256": "fc0fb316729f1a893cc98b968ad48efb4a5bdc831105d49100454c05a61806d3"
+        },
+        "invalid_validator_not_active_long_enough/voluntary_exit.ssz": {
+          "bytes": 112,
+          "sha256": "c5237bb9d4867f842e7b0feb68b732fa5e95c93d2d72b35e9f4ec1dfd76689d6"
+        }
+      }
+    },
+    {
+      "name": "invalid_voluntary_exit_with_current_fork_version_is_before_fork_epoch",
+      "path": "tests/minimal/deneb/operations/voluntary_exit/pyspec_tests/invalid_voluntary_exit_with_current_fork_version_is_before_fork_epoch",
+      "valid": false,
+      "files": {
+        "invalid_voluntary_exit_with_current_fork_version_is_before_fork_epoch/pre.ssz_snappy": {
+          "bytes": 6928,
+          "sha256": "dfc613a623536a963675e624f193455f6b348e53cc93bb37ff9befc1b77b59ce"
+        },
+        "invalid_voluntary_exit_with_current_fork_version_is_before_fork_epoch/pre.ssz": {
+          "bytes": 19733,
+          "sha256": "7c61dda4da9de55c18ab2fb359da710d172cf62a33c83d4db1472df0e3ee6e07"
+        },
+        "invalid_voluntary_exit_with_current_fork_version_is_before_fork_epoch/voluntary_exit.ssz_snappy": {
+          "bytes": 104,
+          "sha256": "4981cb7554d5073a4ebcd8ae33985f3d505188cdaa32c1c3dc0b25673d70ff5c"
+        },
+        "invalid_voluntary_exit_with_current_fork_version_is_before_fork_epoch/voluntary_exit.ssz": {
+          "bytes": 112,
+          "sha256": "cdbcee14bb97fbdf7c5ef7360d4729899fdcc00aa90321187e45cc5c4e96ab9d"
+        }
+      }
+    },
+    {
+      "name": "invalid_voluntary_exit_with_current_fork_version_not_is_before_fork_epoch",
+      "path": "tests/minimal/deneb/operations/voluntary_exit/pyspec_tests/invalid_voluntary_exit_with_current_fork_version_not_is_before_fork_epoch",
+      "valid": false,
+      "files": {
+        "invalid_voluntary_exit_with_current_fork_version_not_is_before_fork_epoch/pre.ssz_snappy": {
+          "bytes": 6928,
+          "sha256": "dfc613a623536a963675e624f193455f6b348e53cc93bb37ff9befc1b77b59ce"
+        },
+        "invalid_voluntary_exit_with_current_fork_version_not_is_before_fork_epoch/pre.ssz": {
+          "bytes": 19733,
+          "sha256": "7c61dda4da9de55c18ab2fb359da710d172cf62a33c83d4db1472df0e3ee6e07"
+        },
+        "invalid_voluntary_exit_with_current_fork_version_not_is_before_fork_epoch/voluntary_exit.ssz_snappy": {
+          "bytes": 105,
+          "sha256": "2af8cfac8350a7fab8b769cf92b658784d3e58cead211a77439c48392245b5ba"
+        },
+        "invalid_voluntary_exit_with_current_fork_version_not_is_before_fork_epoch/voluntary_exit.ssz": {
+          "bytes": 112,
+          "sha256": "ceb8b2d620fdb897c657cf27a6f222b38f3136cb67a654796a419193207c3fd7"
+        }
+      }
+    },
+    {
+      "name": "invalid_voluntary_exit_with_genesis_fork_version_is_before_fork_epoch",
+      "path": "tests/minimal/deneb/operations/voluntary_exit/pyspec_tests/invalid_voluntary_exit_with_genesis_fork_version_is_before_fork_epoch",
+      "valid": false,
+      "files": {
+        "invalid_voluntary_exit_with_genesis_fork_version_is_before_fork_epoch/pre.ssz_snappy": {
+          "bytes": 6928,
+          "sha256": "dfc613a623536a963675e624f193455f6b348e53cc93bb37ff9befc1b77b59ce"
+        },
+        "invalid_voluntary_exit_with_genesis_fork_version_is_before_fork_epoch/pre.ssz": {
+          "bytes": 19733,
+          "sha256": "7c61dda4da9de55c18ab2fb359da710d172cf62a33c83d4db1472df0e3ee6e07"
+        },
+        "invalid_voluntary_exit_with_genesis_fork_version_is_before_fork_epoch/voluntary_exit.ssz_snappy": {
+          "bytes": 104,
+          "sha256": "9784f8fd25fb49e7207c9371c31f283f1fbb6707ee26ab6924a9998945b72857"
+        },
+        "invalid_voluntary_exit_with_genesis_fork_version_is_before_fork_epoch/voluntary_exit.ssz": {
+          "bytes": 112,
+          "sha256": "f6bfabeaf42a37e451260bc49410eb5bff37b0d1d7fbe42a94e58fa18105cbfb"
+        }
+      }
+    },
+    {
+      "name": "invalid_voluntary_exit_with_genesis_fork_version_not_is_before_fork_epoch",
+      "path": "tests/minimal/deneb/operations/voluntary_exit/pyspec_tests/invalid_voluntary_exit_with_genesis_fork_version_not_is_before_fork_epoch",
+      "valid": false,
+      "files": {
+        "invalid_voluntary_exit_with_genesis_fork_version_not_is_before_fork_epoch/pre.ssz_snappy": {
+          "bytes": 6928,
+          "sha256": "dfc613a623536a963675e624f193455f6b348e53cc93bb37ff9befc1b77b59ce"
+        },
+        "invalid_voluntary_exit_with_genesis_fork_version_not_is_before_fork_epoch/pre.ssz": {
+          "bytes": 19733,
+          "sha256": "7c61dda4da9de55c18ab2fb359da710d172cf62a33c83d4db1472df0e3ee6e07"
+        },
+        "invalid_voluntary_exit_with_genesis_fork_version_not_is_before_fork_epoch/voluntary_exit.ssz_snappy": {
+          "bytes": 105,
+          "sha256": "15bc6d46ff3d6d72fc3db94f1aea794ce724d17113bcb252e99c2f5dcc4df5fb"
+        },
+        "invalid_voluntary_exit_with_genesis_fork_version_not_is_before_fork_epoch/voluntary_exit.ssz": {
+          "bytes": 112,
+          "sha256": "d6f340112ea738f105bc40a431bff352237ac671e82653b8cedae4b452c7a392"
+        }
+      }
+    },
+    {
+      "name": "success_exit_queue__min_churn",
+      "path": "tests/minimal/deneb/operations/voluntary_exit/pyspec_tests/success_exit_queue__min_churn",
+      "valid": true,
+      "files": {
+        "success_exit_queue__min_churn/pre.ssz_snappy": {
+          "bytes": 6650,
+          "sha256": "0330cb2d7451e9be8563cf84dbbf32d7ee71fa88beb25903d68cf7b84dda5b4e"
+        },
+        "success_exit_queue__min_churn/pre.ssz": {
+          "bytes": 19733,
+          "sha256": "b3a07d79dfab7a87df26a03fd5b744a0df66383b40f9f2256b8f2462c80adc15"
+        },
+        "success_exit_queue__min_churn/voluntary_exit.ssz_snappy": {
+          "bytes": 109,
+          "sha256": "682ca162cc865a56cbfa581db8a79d7f6dec791cddb366075e5781f102798c21"
+        },
+        "success_exit_queue__min_churn/voluntary_exit.ssz": {
+          "bytes": 112,
+          "sha256": "f756b5812a95ee3c319c82078d1d1b059578b9f1554803a37de33a64f602ed71"
+        },
+        "success_exit_queue__min_churn/post.ssz_snappy": {
+          "bytes": 6659,
+          "sha256": "16d196daa9c1d42eb9bf98307c3e1ca348d7deb8e3b21e54f42450a70232c864"
+        },
+        "success_exit_queue__min_churn/post.ssz": {
+          "bytes": 19733,
+          "sha256": "d5a703ff457418a0c7ebb26e8bffac03bb03be5e50bd2d3a1c4abc1e225f39a1"
+        }
+      }
+    },
+    {
+      "name": "success_exit_queue__scaled_churn",
+      "path": "tests/minimal/deneb/operations/voluntary_exit/pyspec_tests/success_exit_queue__scaled_churn",
+      "valid": true,
+      "files": {
+        "success_exit_queue__scaled_churn/pre.ssz_snappy": {
+          "bytes": 12212,
+          "sha256": "f94de76ddcc3fff6539073e0eabdfd25526ec201ec2a98877679fc7e0cf21556"
+        },
+        "success_exit_queue__scaled_churn/pre.ssz": {
+          "bytes": 28629,
+          "sha256": "92a69b08e924ca77eb949b2002407c205b968494ca874813f7f94bae491a8f65"
+        },
+        "success_exit_queue__scaled_churn/voluntary_exit.ssz_snappy": {
+          "bytes": 109,
+          "sha256": "385a467b574fbf4750be9f644cab27447185ce5bc4fd6aa94337ff06c35e023a"
+        },
+        "success_exit_queue__scaled_churn/voluntary_exit.ssz": {
+          "bytes": 112,
+          "sha256": "40c27534723cc61cb407aa5c15a4e2600f14f0ff1f1ac2ec0b66ec7ad4f29289"
+        },
+        "success_exit_queue__scaled_churn/post.ssz_snappy": {
+          "bytes": 12221,
+          "sha256": "942f137e8aa687157f0c61e8eda18a43fb2e53e0b65ae062fcaed47a22651714"
+        },
+        "success_exit_queue__scaled_churn/post.ssz": {
+          "bytes": 28629,
+          "sha256": "f849d46d63922d0cb6308cdab09c0ceee6b84712d43fa15b4933609099a8d412"
+        }
+      }
+    },
+    {
+      "name": "voluntary_exit_with_previous_fork_version_is_before_fork_epoch",
+      "path": "tests/minimal/deneb/operations/voluntary_exit/pyspec_tests/voluntary_exit_with_previous_fork_version_is_before_fork_epoch",
+      "valid": true,
+      "files": {
+        "voluntary_exit_with_previous_fork_version_is_before_fork_epoch/pre.ssz_snappy": {
+          "bytes": 6928,
+          "sha256": "dfc613a623536a963675e624f193455f6b348e53cc93bb37ff9befc1b77b59ce"
+        },
+        "voluntary_exit_with_previous_fork_version_is_before_fork_epoch/pre.ssz": {
+          "bytes": 19733,
+          "sha256": "7c61dda4da9de55c18ab2fb359da710d172cf62a33c83d4db1472df0e3ee6e07"
+        },
+        "voluntary_exit_with_previous_fork_version_is_before_fork_epoch/voluntary_exit.ssz_snappy": {
+          "bytes": 104,
+          "sha256": "fc0fb316729f1a893cc98b968ad48efb4a5bdc831105d49100454c05a61806d3"
+        },
+        "voluntary_exit_with_previous_fork_version_is_before_fork_epoch/voluntary_exit.ssz": {
+          "bytes": 112,
+          "sha256": "c5237bb9d4867f842e7b0feb68b732fa5e95c93d2d72b35e9f4ec1dfd76689d6"
+        },
+        "voluntary_exit_with_previous_fork_version_is_before_fork_epoch/post.ssz_snappy": {
+          "bytes": 6945,
+          "sha256": "c4f23d4698dd8a3f6d37dc29b94de02dc77cf12117ba32cdca0011860010b12a"
+        },
+        "voluntary_exit_with_previous_fork_version_is_before_fork_epoch/post.ssz": {
+          "bytes": 19733,
+          "sha256": "03ca3c636b558a17d1e8e39b999c0d2696e927b102ea64212d156dfa6365d7ce"
+        }
+      }
+    },
+    {
+      "name": "voluntary_exit_with_previous_fork_version_not_is_before_fork_epoch",
+      "path": "tests/minimal/deneb/operations/voluntary_exit/pyspec_tests/voluntary_exit_with_previous_fork_version_not_is_before_fork_epoch",
+      "valid": true,
+      "files": {
+        "voluntary_exit_with_previous_fork_version_not_is_before_fork_epoch/pre.ssz_snappy": {
+          "bytes": 6928,
+          "sha256": "dfc613a623536a963675e624f193455f6b348e53cc93bb37ff9befc1b77b59ce"
+        },
+        "voluntary_exit_with_previous_fork_version_not_is_before_fork_epoch/pre.ssz": {
+          "bytes": 19733,
+          "sha256": "7c61dda4da9de55c18ab2fb359da710d172cf62a33c83d4db1472df0e3ee6e07"
+        },
+        "voluntary_exit_with_previous_fork_version_not_is_before_fork_epoch/voluntary_exit.ssz_snappy": {
+          "bytes": 105,
+          "sha256": "e1a6406b4f06f4196f7419a2fc374c91938f044a06121da00daa763f4b15724c"
+        },
+        "voluntary_exit_with_previous_fork_version_not_is_before_fork_epoch/voluntary_exit.ssz": {
+          "bytes": 112,
+          "sha256": "6c14b4717e0e7d62f25b3b94b691215a92559dc531b9e47754e2c10d4a57d477"
+        },
+        "voluntary_exit_with_previous_fork_version_not_is_before_fork_epoch/post.ssz_snappy": {
+          "bytes": 6945,
+          "sha256": "c4f23d4698dd8a3f6d37dc29b94de02dc77cf12117ba32cdca0011860010b12a"
+        },
+        "voluntary_exit_with_previous_fork_version_not_is_before_fork_epoch/post.ssz": {
+          "bytes": 19733,
+          "sha256": "03ca3c636b558a17d1e8e39b999c0d2696e927b102ea64212d156dfa6365d7ce"
+        }
+      }
+    }
+  ]
+}

@@ -19,4 +19,20 @@ ConsensusRoot consensus_voluntary_exit_root(uint64_t epoch,uint64_t validator_in
 // arithmetic overflow throws unchanged. Caller owns full block/durable commit.
 bool process_phase0_voluntary_exit(ConsensusSlashingState& state,const Phase0ExitRules& rules,
  const SignedConsensusVoluntaryExit& exit,const ConsensusBytes4& fork_version,const ConsensusRoot& genesis_root);
+// Fork selection is a consensus rule, not a caller-selected transaction field.
+// Deneb implements EIP-7044: always use the configured Capella fork version.
+enum class VoluntaryExitProfile { Phase0, Deneb };
+struct VoluntaryExitDomainContext {
+ VoluntaryExitProfile profile;
+ ConsensusBytes4 previous_version,current_version;
+ uint64_t fork_epoch;
+ ConsensusBytes4 capella_version;
+ ConsensusRoot genesis_root;
+};
+// Consensus-facing dispatcher. Context must come from authenticated state/config.
+// Later lifecycle changes (e.g. Electra balance-based churn) are not implemented
+// by this Phase0/Deneb transition even though EIP-7044's domain remains durable.
+bool process_consensus_voluntary_exit(ConsensusSlashingState& state,const Phase0ExitRules& rules,
+ const SignedConsensusVoluntaryExit& exit,const VoluntaryExitDomainContext& context);
+
 }

@@ -530,3 +530,30 @@ Intégration aux opérations signées, epoch processing et commit réseau resten
 à terminer. Il n'implémente pas encore EIP-7044 (domaine Capella durable) ou
 EIP-7002 (demande par clé de retrait) et ne change pas leur statut dans la matrice.
 Référence : https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#voluntary-exits
+
+## EIP-7044 : domaine Capella durable — 24 septembre 2026
+
+`process_consensus_voluntary_exit` sélectionne explicitement le profil depuis
+un contexte d'état/configuration fiable. Phase0 garde le domaine correspondant
+à l'époque signée. Deneb fixe la version à `capella_version` configurée, sans
+utiliser les versions previous/current pour signer les sorties. Genesis reste
+dans le domaine. Aucun changement du moteur EVM n'est requis par cet EIP.
+
+`denebExitQualification` couvre les seize scénarios officiels Deneb minimal
+épinglés : six succès, dix rejets et 448 enregistrements conformes aux post-états.
+Deux cas officiels distinguent les profils : une signature Capella reste valide
+là où l'ancienne règle sélectionnerait Deneb, tandis qu'une signature Deneb
+acceptée par l'ancienne règle doit être refusée. Six changements locaux des deux
+versions de fork conservent la validité du domaine Capella. Ils ne simulent pas
+une transition complète de fork. Six rejeux, douze mauvais domaines/genesis et
+douze contextes inconnus/futurs sont refusés sans mutation. Six suites passent,
+y compris les dix fixtures Phase0 via le même sélecteur de profil.
+
+La matrice passe EIP-7044 de non commencé à partiel. Il reste à raccorder ce
+sélecteur au traitement des blocs et au gossip, puis à qualifier l'activation
+réseau. Le lecteur SSZ Deneb ajouté est uniquement un outil de test des champs
+consommés, pas un client Deneb complet. La file actuelle ne prétend pas appliquer
+les changements économiques Electra. Sur deux branches partageant genesis et
+version Capella, la réutilisation d'une sortie signée reste possible par
+conception de l'EIP ; ce n'est pas un transfert des fonds.
+Source : https://eips.ethereum.org/EIPS/eip-7044
