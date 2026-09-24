@@ -1,0 +1,10 @@
+import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import assert from 'node:assert/strict';
+const text=readFileSync(resolve(process.argv[2],'tests-full.log'),'utf8');
+assert.equal((text.match(/Test Passed\./g)||[]).length,5);
+for(const name of ['ethereum_consensus_beacon_header','ethereum_consensus_signing_roots','ethereum_consensus_bls_verify','consensus_selected_randao','ethereum_official_randao_projection'])assert(text.includes(`Testing: ${name}\n`));
+const rows=text.split('\n').filter(l=>l.startsWith('{')).map(l=>JSON.parse(l));
+const r=rows.find(r=>r.scenario==='beacon-header-signature');assert(r);
+for(const [key,value] of Object.entries({officialRoots:5,fieldMutations:25,officialSignatures:3,rejected:33,fullBodyRootComputed:false,activeInConsensus:false}))assert.equal(r[key],value);
+console.log(JSON.stringify({verified:true,...r},null,2));

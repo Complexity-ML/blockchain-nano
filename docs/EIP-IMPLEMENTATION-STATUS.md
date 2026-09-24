@@ -273,3 +273,10 @@ l'éligibilité et la clé du registre à la révélation BLS. Trois contrôles 
 12 rejets locaux et 6 rejets ajoutés aux 3 projections officielles passent dans
 quatre suites. Le registre authentifié, le bloc complet, le commit durable et
 le raccordement au réacteur restent ouverts ; aucun statut d'EIP n'est promu.
+
+Signature des blocs : `beaconHeaderQualification` vérifie cinq racines SSZ
+BeaconBlockHeader et trois signatures de blocs officiels, avec 25 mutations de
+racines et 33 rejets de signatures/contextes. Cinq suites passent. La racine du
+corps est fournie par la fixture officielle, sans calcul complet du corps ni
+transition d'état ; intégration au réacteur et commit atomique restent ouverts.
+Les statuts réseau/EIP ne changent pas.

@@ -353,3 +353,31 @@ de cette époque. Le registre financé/authentifié, l'en-tête, la signature de
 bloc, le corps et les engagements d'état restent à valider, puis à committer
 avec le mix. Le réacteur actif n'appelle pas encore ce contrôle. Cette jonction
 ne vaut donc ni qualification d'un bloc complet, ni activation réseau.
+
+## Engagement SSZ et signature du bloc — 24 septembre 2026
+
+`consensus_beacon_header_root` calcule la racine SSZ du conteneur BeaconBlockHeader
+(slot, index du proposant, parent, état, corps), distinct de l'en-tête RLP
+exécution de Nano. `verify_consensus_beacon_header` vérifie la signature BLS
+avec DOMAIN_BEACON_PROPOSER, version de fork et racine genesis fournis.
+La clé doit provenir d'un registre authentifié ; cette primitive ne valide pas
+à elle seule le devoir du proposant, le parent ou la transition d'état.
+
+`beaconHeaderQualification` conserve cinq racines officielles et 25 mutations
+de champs, trois signatures de blocs officiels et 33 rejets (champs, fork,
+genesis, clé, signature altérée/tronquée et substitution par une révélation
+RANDAO). Les cinq suites liées passent. Le rapport falsifié et une racine
+attendue volontairement incorrecte sont rejetés. Les fixtures proviennent de
+`ethereum/consensus-spec-tests` à la révision
+`bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908` ; les cinq cas statiques sont
+`mainnet/phase0/ssz_static/BeaconBlockHeader/ssz_random/case_0..4`.
+Les valeurs importées gardent les chemins et SHA-256 des YAML sources ; la
+licence MIT amont est conservée dans `tests/fixtures/consensus-randao-official/LICENSE`.
+
+Limite explicite : pour les trois signatures, la racine du corps provient du
+latest_block_header du post-état officiel d'un scénario à un seul bloc. Le test
+ne recalcule pas le corps SSZ complet. Il prend la racine d'état dans le message
+signé, sans prouver cette transition. Calcul du corps, vérification du parent,
+transition complète, jonction atomique avec RANDAO et intégration au réacteur
+restent nécessaires. Aucune activation ni qualification complète d'EIP.
+Référence : https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#verify_block_signature
