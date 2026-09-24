@@ -1,0 +1,10 @@
+import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import assert from 'node:assert/strict';
+const text=readFileSync(resolve(process.argv[2],'tests-full.log'),'utf8');
+assert.equal((text.match(/Test Passed\./g)||[]).length,5);
+for(const name of ['ethereum_official_epoch_maintenance','ethereum_official_effective_balance_updates','consensus_authenticated_randao','consensus_slashing_epoch','ethereum_official_phase0_ffg'])assert(text.includes(`Testing: ${name}\n`));
+const rows=text.split('\n').filter(l=>l.startsWith('{')).map(l=>JSON.parse(l)).filter(r=>r.scenario==='official-phase0-epoch-maintenance');
+assert.equal(rows.length,1);
+for(const [key,value] of Object.entries({cases:6,components:5,boundaries:7,rejections:12,cancellations:128,fullEpochTransition:false,activeInConsensus:false}))assert.equal(rows[0][key],value);
+console.log(JSON.stringify({verified:true,...rows[0],productionQualified:false},null,2));

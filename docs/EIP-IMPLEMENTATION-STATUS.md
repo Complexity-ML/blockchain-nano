@@ -372,3 +372,9 @@ composant d'hystérésis sur l'unique scénario officiel (64 entrées, 8 changem
 et les frontières/annulations locales. Détail dans `VALIDATOR-EIP-ROADMAP.md`.
 Le traitement complet des époques et son intégration réseau restent ouverts ;
 cette preuve ne clôt ni EIP-7251 ni la production.
+
+Fin d'époque du socle Phase0 : `epochMaintenanceQualification` couvre les resets
+Eth1/sanctions/RANDAO, les HistoricalBatch SSZ et la rotation des attestations,
+avec six scénarios officiels. Voir `VALIDATOR-EIP-ROADMAP.md` pour les frontières
+et critères restants. Ces composants ne clôturent pas le traitement complet des
+époques, EIP-6110 ou l'intégration réseau.

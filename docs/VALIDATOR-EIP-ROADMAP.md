@@ -808,3 +808,28 @@ des historiques et de la rotation des attestations reste à intégrer, puis à
 qualifier avec state_root, persistance et réseau. Aucun EIP-7251/Electra ni
 consensus actif n'est déclaré complet.
 Source épinglée : https://github.com/ethereum/consensus-specs/blob/fcdcf42024f33c498bff74936eabea2d96049fc2/specs/phase0/beacon-chain.md#effective-balances-updates
+
+### Fin d'époque Phase0 — historiques et rotation
+
+`consensus_epoch_maintenance` couvre cinq composants : reset périodique des votes
+Eth1, remise à zéro de la prochaine case de sanctions, copie du mix RANDAO vers
+la prochaine case, accumulation de `HistoricalBatch` SSZ (racines des blocs et
+états), et rotation des attestations courantes vers les précédentes. Les entrées
+sont des états authentifiés ; ces fonctions ne valident pas des votes réseau.
+Les paramètres viennent du preset. Les vecteurs d'historiques utilisent sa taille
+puissance de deux ; la limite de liste est vérifiée avant tout ajout.
+
+`epochMaintenanceQualification` couvre les six scénarios officiels des cinq
+composants, sept contrôles de frontières/retour circulaire, douze rejets et 128
+annulations pendant la construction des historiques. Cinq suites passent avec
+les régressions RANDAO, sanctions différées, FFG et soldes effectifs. Les cinq
+altérations des états attendus (hashs recalculés) sont rejetées par les tests.
+
+Les candidats conservent le slot et l'époque : l'orchestrateur doit appliquer
+chaque étape une seule fois, après les calculs qui consomment les anciens votes,
+sanctions et soldes effectifs, puis avancer le slot. Aucun marqueur de rejeu ni
+commit durable n'est créé ici. Les récompenses, l'orchestration complète, le
+hash de BeaconState et l'intégration au réseau restent ouverts. Le reset Eth1
+ne remplace pas l'authentification des dépôts ou le traitement des votes Eth1.
+Cette étape ne constitue pas EIP-6110, Capella/Electra, ni la finalité réseau.
+Source épinglée : https://github.com/ethereum/consensus-specs/blob/fcdcf42024f33c498bff74936eabea2d96049fc2/specs/phase0/beacon-chain.md#epoch-processing
