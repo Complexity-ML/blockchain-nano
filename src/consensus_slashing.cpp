@@ -90,4 +90,64 @@ std::optional<std::vector<uint64_t>> process_phase0_attester_slashing(
  using std::swap;swap(state,next);
  return eligible;
 }
+
+namespace {
+Json slashing_rules_json(const Phase0SlashingRules& r){
+ if(!r.minimum_churn_limit||!r.churn_limit_quotient||!r.epochs_per_slashings_vector||
+    !r.minimum_penalty_quotient||!r.whistleblower_reward_quotient||!r.proposer_reward_quotient)
+  throw std::invalid_argument("invalid Phase0 snapshot rules");
+ Json values=Json::array();
+ for(auto n:{r.minimum_churn_limit,r.churn_limit_quotient,r.max_seed_lookahead,r.minimum_withdrawability_delay,
+             r.epochs_per_slashings_vector,r.minimum_penalty_quotient,r.whistleblower_reward_quotient,r.proposer_reward_quotient})
+  values.push_back(quantity(Int(std::to_string(n))));
+ return values;
+}
+uint64_t snapshot_uint64(const Json& value){
+ if(!value.is_string())throw std::invalid_argument("snapshot quantity must be a string");
+ const auto n=quantity(value);
+ const auto result=u64(n);
+ if(quantity(n)!=value.get<std::string>())throw std::invalid_argument("noncanonical snapshot quantity");
+ return result;
+}
+}
+Json phase0_slashing_snapshot(const ConsensusSlashingState& state,const Phase0SlashingRules& rules){
+ const auto encoded_rules=slashing_rules_json(rules);
+ if(state.slashings.size()!=rules.epochs_per_slashings_vector)throw std::invalid_argument("snapshot slashing vector length");
+ Json entries=Json::array(),slashings=Json::array();std::set<std::array<uint8_t,48>> keys;
+ auto q=[](uint64_t n){return quantity(Int(std::to_string(n)));};
+ for(const auto& [index,v]:state.validators){
+  if(!keys.insert(v.public_key).second||v.activation_epoch>v.exit_epoch||v.exit_epoch>v.withdrawable_epoch)
+   throw std::invalid_argument("invalid snapshot validator");
+  entries.push_back({{"index",q(index)},{"publicKey",hex(Bytes(v.public_key.begin(),v.public_key.end()))},
+   {"balance",q(v.balance)},{"effectiveBalance",q(v.effective_balance)},{"activationEpoch",q(v.activation_epoch)},
+   {"exitEpoch",q(v.exit_epoch)},{"withdrawableEpoch",q(v.withdrawable_epoch)},{"slashed",v.slashed}});
+ }
+ for(auto amount:state.slashings)slashings.push_back(q(amount));
+ return {{"format","nano-phase0-slashing-v1"},{"rules",encoded_rules},{"epoch",q(state.epoch)},{"validators",entries},{"slashings",slashings}};
+}
+ConsensusSlashingState phase0_slashing_from_snapshot(const Json& snapshot,const Phase0SlashingRules& expected_rules){
+ if(!snapshot.is_object()||snapshot.size()!=5||snapshot.at("format")!="nano-phase0-slashing-v1"||
+    snapshot.at("rules")!=slashing_rules_json(expected_rules)||!snapshot.at("validators").is_array()||
+    !snapshot.at("slashings").is_array()||snapshot.at("slashings").size()!=expected_rules.epochs_per_slashings_vector)
+  throw std::invalid_argument("invalid Phase0 slashing snapshot envelope");
+ ConsensusSlashingState state;state.epoch=snapshot_uint64(snapshot.at("epoch"));
+ std::optional<uint64_t> previous;
+ for(const auto& entry:snapshot.at("validators")){
+  if(!entry.is_object()||entry.size()!=8||!entry.at("publicKey").is_string()||!entry.at("slashed").is_boolean())
+   throw std::invalid_argument("invalid snapshot validator fields");
+  auto index=snapshot_uint64(entry.at("index"));
+  if(previous&&index<=*previous)throw std::invalid_argument("unordered snapshot validator indices");
+  previous=index;const auto key=unhex(entry.at("publicKey"));
+  if(key.size()!=48||hex(key)!=entry.at("publicKey").get<std::string>())throw std::invalid_argument("invalid snapshot public key");
+  ConsensusSlashingValidator v;std::copy(key.begin(),key.end(),v.public_key.begin());
+  v.balance=snapshot_uint64(entry.at("balance"));v.effective_balance=snapshot_uint64(entry.at("effectiveBalance"));
+  v.activation_epoch=snapshot_uint64(entry.at("activationEpoch"));v.exit_epoch=snapshot_uint64(entry.at("exitEpoch"));
+  v.withdrawable_epoch=snapshot_uint64(entry.at("withdrawableEpoch"));v.slashed=entry.at("slashed").get<bool>();
+  state.validators.emplace(index,v);
+ }
+ for(const auto& value:snapshot.at("slashings"))state.slashings.push_back(snapshot_uint64(value));
+ // Reuse encoder validation and require the exact canonical representation.
+ if(phase0_slashing_snapshot(state,expected_rules)!=snapshot)throw std::invalid_argument("noncanonical slashing snapshot");
+ return state;
+}
 }

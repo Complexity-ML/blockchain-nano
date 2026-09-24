@@ -222,3 +222,11 @@ BLS et comités. Les sorties différées, récompenses et rejets atomiques sont 
 en mémoire. Ce résultat ne clôture aucune EIP : persistance par bloc, cycle
 d'époques et raccordement réseau restent ouverts. Voir la feuille de route
 validateurs pour le profil exact et les limites.
+
+
+Reprise du registre : `slashingRecoveryQualification` ajoute un snapshot local
+strict et une réouverture RocksDB après sortie abrupte du processus écrivain.
+11 contrôles et 19 rejets de snapshots passent ; le rejeu ne double pas la
+sanction. Cette qualification du stockage n'active pas le registre dans le BFT
+et ne prouve pas l'engagement du consensus dans les blocs ni la reprise après
+coupure électrique. Les EIP gardent leur statut actuel.

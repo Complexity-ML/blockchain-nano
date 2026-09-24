@@ -162,3 +162,28 @@ persistance atomique avec le bloc, rotation des buckets à chaque époque,
 pénalités corrélées différées, cycle complet entrées/sorties, profil de fork
 choisi et intégration au réacteur. La transition est actuellement en mémoire ;
 elle n'est pas raccordée à `NanoStaking.sol` ni au BFT actif.
+
+## Snapshot et reprise du slashing — 24 septembre 2026
+
+Le format local `nano-phase0-slashing-v1` conserve les règles Phase0 attendues,
+l'époque, les clés/indices, soldes, dates de sortie/retrait, marqueurs de sanction
+et buckets de slashing. Le décodeur vérifie les quantités hexadécimales canoniques
+uint64, l'ordre strict des indices, l'unicité des clés, les types et les dates.
+Les règles de configuration doivent correspondre exactement à celles fournies
+par l'appelant. Ce format JSON local n'est pas une racine SSZ de BeaconState.
+
+`slashingRecoveryQualification` couvre 11 contrôles de roundtrip/reprise et
+19 snapshots invalides. Un processus enfant écrit genesis puis un bloc et son
+registre sanctionné avec `ChainStore::commit`, puis appelle `_exit(0)` sans fermer
+RocksDB. Le parent récupère le tip, l'état EVM et les snapshots historiques,
+vérifie les sanctions/récompenses et rejoue la preuve sans double prélèvement.
+Un bloc rejeté ne crée pas de snapshot et ce résultat subsiste après réouverture.
+L'identité de chaîne incompatible est également rejetée par le stockage.
+
+Le commit utilise le WriteBatch synchrone existant, inchangé. Le test est un
+harness de stockage avec des blocs construits localement, sans validation du
+consensus PoW/BFT ; il n'active pas le registre dans `Blockchain`. Il ne couvre
+ni interruption au milieu d'une écriture, ni panne électrique, ni engagement
+cryptographique du registre dans l'en-tête, ni rejeu réseau de ses transitions.
+Ces points restent requis avant de revendiquer la persistance du nouveau
+consensus actif. Les trois suites preuve/transition/reprise passent.

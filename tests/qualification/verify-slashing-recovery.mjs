@@ -1,0 +1,12 @@
+import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import assert from 'node:assert/strict';
+const text=readFileSync(resolve(process.argv[2],'tests-full.log'),'utf8');
+assert.equal((text.match(/Test Passed\./g)||[]).length,3);
+for(const name of ['consensus_authenticated_slashing','consensus_slashing_transition','consensus_slashing_recovery'])assert(text.includes(`Testing: ${name}\n`));
+const rows=text.split('\n').filter(l=>l.startsWith('{')).map(l=>JSON.parse(l));assert.equal(rows.length,3);
+const r=rows.find(r=>r.scenario==='slashing-snapshot-recovery');assert(r);
+assert.equal(r.checks,11);assert.equal(r.rejectedSnapshots,19);assert.equal(r.abruptWriterExit,true);assert.equal(r.activeInConsensus,false);
+assert.equal(rows.find(r=>r.scenario==='phase0-attester-slashing-transition').cases,26);
+assert.equal(rows.find(r=>r.scenario==='authenticated-attester-slashing').rejected,10);
+console.log(JSON.stringify({verified:true,...r},null,2));

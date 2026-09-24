@@ -46,4 +46,10 @@ std::optional<std::vector<uint64_t>> process_phase0_attester_slashing(
  const IndexedConsensusAttestation& first,const ConsensusCommittee& first_context,
  const IndexedConsensusAttestation& second,const ConsensusCommittee& second_context,
  uint64_t proposer_index,uint64_t whistleblower_index);
+
+// Versioned local persistence envelope, not an Ethereum SSZ BeaconState.
+// Decoder rejects noncanonical quantities, duplicate/reordered indices and
+// configuration mismatch. ChainStore binding supplies the chain identity.
+Json phase0_slashing_snapshot(const ConsensusSlashingState& state,const Phase0SlashingRules& rules);
+ConsensusSlashingState phase0_slashing_from_snapshot(const Json& snapshot,const Phase0SlashingRules& expected_rules);
 }
