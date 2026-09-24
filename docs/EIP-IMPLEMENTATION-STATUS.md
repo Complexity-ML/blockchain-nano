@@ -391,3 +391,9 @@ fixtures de slots concordent ; un scénario d'historiques reste différé. Cette
 preuve ne couvre ni `process_slot`, ni la racine BeaconState, ni la persistance
 ou le consensus réseau. Voir `VALIDATOR-EIP-ROADMAP.md` avant toute conclusion de
 conformité complète ou d'activation d'un EIP.
+
+Racine SSZ Phase0 : `beaconStateRootQualification` couvre les 123 vecteurs
+BeaconState officiels du preset minimal et les 21 champs. Le hash complet
+n'est pas encore raccordé au traitement des slots ou à la validation des blocs ;
+les invariants d'admission du consensus restent distincts du schéma SSZ. Aucun
+EIP/fork moderne ni état réseau n'est déclaré complet par cette preuve.

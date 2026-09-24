@@ -892,3 +892,33 @@ et le raccordement au consensus réseau. Les anciennes limites des composants
 isolés restent dans leurs campagnes historiques ; aucune activation moderne ou
 qualification de production n'est déduite de cette composition.
 Source : https://github.com/ethereum/consensus-specs/blob/fcdcf42024f33c498bff74936eabea2d96049fc2/specs/phase0/beacon-chain.md#epoch-processing
+
+### Racine SSZ du BeaconState Phase0
+
+`phase0_beacon_state_root` calcule `hash_tree_root` sur les 21 champs de l'état
+SSZ complet : parties fixes, offsets/listes, validateurs et soldes, historiques,
+RANDAO, sanctions, attestations en attente et checkpoints. Les limites du preset
+font partie du calcul ; les branches nulles sont complétées sans allouer la
+capacité maximale des listes (notamment le registre à 2^40). Les encodages non
+canoniques des offsets, booléens et bitlists sont rejetés.
+
+`beaconStateRootQualification` : les 123 vecteurs officiels du preset minimal
+sont conformes, dans les sept groupes `ssz_lengthy`, `ssz_max`, `ssz_nil`,
+`ssz_one`, `ssz_random`, `ssz_random_chaos`, `ssz_zero` (1 194 781 octets décodés).
+Vingt et une mutations vérifient la contribution des champs ; 33 encodages ou
+configurations invalides et 585 annulations sont vérifiés. Trois suites passent,
+avec les régressions d'époque/historiques. Une racine attendue altérée est rejetée
+même avec son hash de fichier recalculé.
+
+La validité SSZ est distincte de la validité consensus : les vecteurs aléatoires
+peuvent avoir des dates incohérentes ou des listes validateurs/soldes de tailles
+différentes. Cette fonction valide leur schéma et leur racine ; l'admission de
+l'état doit vérifier leurs invariants, clés et origine. Aucun état aléatoire
+n'est admis par cette qualification dans le registre ou le réseau.
+
+Le hash complet est désormais disponible mais reste à relier à `process_slot`,
+au codec d'état modifiable et à la vérification des blocs/époques. La séquence
+`historical_accumulator` précédemment différée n'est pas encore qualifiée.
+Le preset mainnet, les états post-Phase0, la persistance et le réacteur réseau
+ne sont pas couverts par cette campagne.
+Source : https://github.com/ethereum/consensus-specs/blob/fcdcf42024f33c498bff74936eabea2d96049fc2/specs/phase0/beacon-chain.md#beacon-state
