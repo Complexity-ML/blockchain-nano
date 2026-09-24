@@ -738,3 +738,8 @@ add_executable(nano-attestation-conflict-tests tests/test_attestation_conflicts.
 target_link_libraries(nano-attestation-conflict-tests PRIVATE nano_core)
 add_test(NAME consensus_attestation_conflicts COMMAND nano-attestation-conflict-tests)
 set_tests_properties(consensus_attestation_conflicts PROPERTIES TIMEOUT 30 LABELS "qualification_consensus_ethereum")
+
+add_executable(nano-consensus-slashing-tests tests/test_consensus_slashing.cpp)
+target_link_libraries(nano-consensus-slashing-tests PRIVATE nano_core nano_ckzg)
+add_test(NAME consensus_authenticated_slashing COMMAND nano-consensus-slashing-tests)
+set_tests_properties(consensus_authenticated_slashing PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")

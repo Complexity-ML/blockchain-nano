@@ -1,0 +1,10 @@
+import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import assert from 'node:assert/strict';
+const text=readFileSync(resolve(process.argv[2],'tests-full.log'),'utf8');
+assert.equal((text.match(/Test Passed\./g)||[]).length,2);
+for(const name of ['consensus_committee_participation','consensus_authenticated_slashing'])assert(text.includes(`Testing: ${name}\n`));
+const rows=text.split('\n').filter(l=>l.startsWith('{')).map(l=>JSON.parse(l));assert.equal(rows.length,2);
+const r=rows.find(r=>r.scenario==='authenticated-attester-slashing');assert(r);assert.equal(r.validProofs,3);assert.equal(r.rejected,10);assert.equal(r.penaltiesApplied,false);assert.equal(r.activeInConsensus,false);
+assert.equal(rows.find(r=>r.scenario==='consensus-committee-participation').rejected,27);
+console.log(JSON.stringify({verified:true,...r},null,2));

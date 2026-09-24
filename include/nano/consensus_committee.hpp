@@ -28,6 +28,8 @@ class ConsensusCommittee {
 public:
  ConsensusCommittee(std::span<const ConsensusCommitteeMember> members,
                     const ConsensusBytes4& deposit_version,const ConsensusRoot& duty_domain);
+ // Historical snapshots must map a validator index to the same public key.
+ bool same_validator_key(uint64_t index,const ConsensusCommittee& other)const;
  std::optional<ConsensusParticipation> verify(std::span<const uint64_t> indices,
                     const ConsensusRoot& object_root,std::span<const uint8_t> signature)const;
 };

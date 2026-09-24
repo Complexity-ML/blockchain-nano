@@ -115,3 +115,19 @@ Cela n'applique aucune pénalité : les deux signatures, l'intersection des indi
 l'éligibilité à la sanction, sa comptabilité et sa persistance restent requis.
 Les cas de test sont construits localement ; aucune conformité au corpus complet
 d'opérations de slashing n'est revendiquée.
+
+## Preuves de slashing authentifiées — 24 septembre 2026
+
+`verify_attester_slashing` relie le prédicat de contradiction aux deux signatures
+BLS, avec les snapshots/domaines historiques fournis par l'appelant. Les indices
+sont vérifiés, leur intersection est calculée et chaque index commun doit garder
+la même clé publique entre les deux contextes. Une intersection vide, une clé
+réaffectée, une signature invalide ou des votes non contradictoires sont rejetés.
+Trois preuves positives et dix rejets adversariaux passent, avec la régression
+comité, dans `authenticatedSlashingQualification`.
+
+L'appelant doit encore fournir les contextes issus d'un état consensus authentifié.
+Le résultat identifie des signataires contradictoires ; il ne prouve pas leur
+éligibilité actuelle à une sanction et ne modifie aucun solde. Le traitement
+exactement une fois, le retrait différé, les règles économiques, la persistance
+atomique et l'intégration au réacteur demeurent requis.

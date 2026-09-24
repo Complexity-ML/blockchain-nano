@@ -209,3 +209,8 @@ Slashing : le prédicat de double vote / vote englobant d'attestations est test�
 sur 24 cas locaux (`attestationConflictQualification`). Il ne sanctionne pas
 encore les validateurs : validation complète des preuves et mutation persistante
 du registre restent ouvertes.
+
+Slashing authentifié : `verify_attester_slashing` vérifie maintenant les deux
+signatures et l'intersection des signataires avec cohérence des clés historiques
+(`authenticatedSlashingQualification` : 3 preuves positives, 10 rejets).
+L'application des pénalités et son intégration persistante restent ouvertes.
