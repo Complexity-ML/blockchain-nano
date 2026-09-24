@@ -252,3 +252,10 @@ au fork et au genesis, les rejets de slots rejoués, la rotation et les graines
 retardées. 13 contrôles et 19 rejets locaux passent avec les régressions BLS/SSZ.
 L'éligibilité du proposant, la persistance et le raccordement au consensus actif
 restent requis ; aucune activation réseau n'est revendiquée.
+
+
+RANDAO officiel : `officialRandaoQualification` valide 3 révélations BLS et
+192 mixes à partir de trois scénarios de blocs Phase0 minimal épinglés, avec
+15 rejets locaux. Les indices des proposants viennent des fixtures : sélection,
+validation complète des blocs et intégration réseau ne sont pas qualifiées.
+Trois suites passent et les contrôles négatifs sont archivés.

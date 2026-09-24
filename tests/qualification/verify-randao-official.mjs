@@ -1,0 +1,12 @@
+import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import assert from 'node:assert/strict';
+const text=readFileSync(resolve(process.argv[2],'tests-full.log'),'utf8');
+assert.equal((text.match(/Test Passed\./g)||[]).length,3);
+for(const name of ['ethereum_official_slashings','consensus_authenticated_randao','ethereum_official_randao_projection'])assert(text.includes(`Testing: ${name}\n`));
+const rows=text.split('\n').filter(l=>l.startsWith('{')).map(l=>JSON.parse(l));assert.equal(rows.length,3);
+const r=rows.find(r=>r.scenario==='official-randao-projection');assert(r);
+assert.equal(r.cases,3);assert.equal(r.revealsVerified,3);assert.equal(r.mixesCompared,192);assert.equal(r.localMutationsRejected,15);assert.equal(r.fullBlockValidation,false);assert.equal(r.activeInConsensus,false);
+assert.equal(rows.find(r=>r.scenario==='authenticated-randao').rejected,19);
+assert.equal(rows.find(r=>r.scenario==='official-phase0-slashings').balancesCompared,320);
+console.log(JSON.stringify({verified:true,...r},null,2));

@@ -275,3 +275,24 @@ le fork et le genesis, valider le bloc, puis persister mix et watermark avec
 l'état consensus. Ces fonctions ne sont pas appelées par le réacteur actif et
 ne modifient pas `PREVRANDAO` sur le réseau. La persistance du ring, l'horloge des
 slots, le registre ouvert et le rattachement aux comités/finalité restent ouverts.
+
+## RANDAO des blocs officiels Phase0 — 24 septembre 2026
+
+`officialRandaoQualification` utilise les scénarios `empty_block_transition`,
+`empty_epoch_transition` et `skipped_slots` du corpus
+[consensus-spec-tests](https://github.com/ethereum/consensus-spec-tests/tree/bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908/tests/minimal/phase0/sanity/blocks/pyspec_tests)
+minimal Phase0. Les trois révélations BLS passent ; les 192 mixes finaux,
+l'époque et le dernier slot correspondent aux états post officiels. Quinze
+mutations locales de signature, fork/genesis, clé ou répétition de slot sont
+rejetées. Les fichiers Snappy originaux et SSZ bruts sont hachés et conservés.
+Le lecteur SSZ minimal de test est partagé avec la qualification du slashing.
+
+Les indices des proposants sont lus dans les blocs officiels et leurs clés
+dans le pré-état. Leur sélection n'est pas recalculée. Le test n'exécute ni les
+autres opérations des blocs, ni leur signature/en-tête, ni la racine complète
+du BeaconState. Les cas officiels sont positifs ; les rejets malveillants sont
+locaux. La preuve ne doit pas être présentée comme conformité complète des
+blocs ou des époques. Les trois suites RANDAO local/officiel et slashing officiel
+passent. Un mix post attendu altéré avec empreinte mise à jour est rejeté par
+le binaire ; un rapport annonçant 191 mixes au lieu de 192 est aussi rejeté.
+La sélection des proposants, la persistance et le consensus actif restent ouverts.
