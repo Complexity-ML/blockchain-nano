@@ -131,3 +131,34 @@ Le résultat identifie des signataires contradictoires ; il ne prouve pas leur
 éligibilité actuelle à une sanction et ne modifie aucun solde. Le traitement
 exactement une fois, le retrait différé, les règles économiques, la persistance
 atomique et l'intégration au réacteur demeurent requis.
+
+## Transition de slashing Phase0 — 24 septembre 2026
+
+`process_phase0_attester_slashing` consomme la preuve authentifiée et un registre
+courant fourni par l'appelant. Il vérifie la continuité des clés, filtre les
+validateurs non encore sanctionnés entre activation et retrait, programme leur
+sortie selon la file et le churn, prolonge le délai de retrait, enregistre le
+solde effectif dans le bucket de slashing, puis applique pénalité et récompenses.
+Les paramètres économiques sont explicites ; aucun profil réseau n'est activé.
+La transition utilise les règles
+[Phase0](https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#slash_validator),
+pas les règles économiques Electra/Pectra.
+
+Les modifications sont préparées dans une copie puis échangées sans exception.
+Preuve invalide, rejeu sans nouveau signataire sanctionnable, état incohérent ou
+dépassement uint64 ne doivent pas laisser de modifications partielles. Les
+indices de sortie sont regroupés une fois pour éviter de rescanner le registre
+pour chaque sanction ; la validation et la copie restent proportionnelles au
+registre (avec tri des clés), sans qualification à un million pour ce chemin.
+
+26 scénarios locaux et les régressions preuve/comité passent dans
+`slashingTransitionQualification`. Les tests couvrent les limites d'éligibilité,
+les récompenses au validateur sanctionné lui-même, plusieurs sorties, les
+paramètres alternatifs et le rollback après une première modification préparée.
+Ce ne sont pas des vecteurs officiels complets de transition BeaconState.
+
+Restent requis : registre financé et contextes historiques authentifiés,
+persistance atomique avec le bloc, rotation des buckets à chaque époque,
+pénalités corrélées différées, cycle complet entrées/sorties, profil de fork
+choisi et intégration au réacteur. La transition est actuellement en mémoire ;
+elle n'est pas raccordée à `NanoStaking.sol` ni au BFT actif.

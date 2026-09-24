@@ -743,3 +743,8 @@ add_executable(nano-consensus-slashing-tests tests/test_consensus_slashing.cpp)
 target_link_libraries(nano-consensus-slashing-tests PRIVATE nano_core nano_ckzg)
 add_test(NAME consensus_authenticated_slashing COMMAND nano-consensus-slashing-tests)
 set_tests_properties(consensus_authenticated_slashing PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")
+
+add_executable(nano-slashing-transition-tests tests/test_slashing_transition.cpp)
+target_link_libraries(nano-slashing-transition-tests PRIVATE nano_core nano_ckzg)
+add_test(NAME consensus_slashing_transition COMMAND nano-slashing-transition-tests)
+set_tests_properties(consensus_slashing_transition PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")

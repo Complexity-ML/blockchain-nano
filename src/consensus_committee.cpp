@@ -21,6 +21,10 @@ bool ConsensusCommittee::same_validator_key(uint64_t index,const ConsensusCommit
  auto a=members_.find(index),b=other.members_.find(index);
  return a!=members_.end()&&b!=other.members_.end()&&a->second.public_key==b->second.public_key;
 }
+bool ConsensusCommittee::matches_validator_key(uint64_t index,std::span<const uint8_t> key)const{
+ auto found=members_.find(index);
+ return found!=members_.end()&&std::ranges::equal(found->second.public_key,key);
+}
 std::optional<ConsensusParticipation> ConsensusCommittee::verify(std::span<const uint64_t> indices,
  const ConsensusRoot& object_root,std::span<const uint8_t> signature)const{
  if(indices.empty()||indices.size()>members_.size()||signature.size()!=96)return std::nullopt;

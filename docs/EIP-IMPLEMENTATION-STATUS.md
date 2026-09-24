@@ -78,7 +78,7 @@ reste à compléter. Le genesis réseau autorise actuellement Paris/Shanghai.
 | BLS de consensus / agrégation | Partiel : vérification individuelle (29 cas), agrégée (12 cas) et mutations ; registre/consensus non intégrés | Preuves de possession, domaines, signataires, pondération et doubles comptages |
 | Domaines et racines SSZ de signature | Primitive vérifiée : 10 vecteurs officiels ForkData/SigningData et mutations de contexte | Intégrer racine authentifiée du registre genesis, versions par epoch et domaines des votes ; pas encore actif |
 | Casper FFG / LMD-GHOST | Non commencé ; BFT natif existant | État consensus, justification/finalité, choix de branche et partitions |
-| Registre beacon / RANDAO / slashing | Non terminé | Cycle complet, protections clés, sortie différée et synchronisation sûre |
+| Registre beacon / RANDAO / slashing | Partiel : transition de slashing Phase0 en mémoire, 26 cas locaux ; non activée | Registre authentifié, persistance, epochs/RANDAO, pénalités différées et intégration réseau |
 | ERC-20/721/1155 | Contrats et scénarios ciblés existants | Étendre les scénarios ; pas de revendication « tout OpenZeppelin testé » |
 | ERC-1271/165/2612 et EIP-712 | Audit de couverture nécessaire | Répertorier contrats et cas exacts ; éviter d’assimiler compilation et comportement |
 
@@ -214,3 +214,11 @@ Slashing authentifié : `verify_attester_slashing` vérifie maintenant les deux
 signatures et l'intersection des signataires avec cohérence des clés historiques
 (`authenticatedSlashingQualification` : 3 preuves positives, 10 rejets).
 L'application des pénalités et son intégration persistante restent ouvertes.
+
+
+Transition de sanctions : `slashingTransitionQualification` archive 26 scénarios
+locaux de comptabilité et d'éligibilité Phase0, plus les régressions des preuves
+BLS et comités. Les sorties différées, récompenses et rejets atomiques sont testés
+en mémoire. Ce résultat ne clôture aucune EIP : persistance par bloc, cycle
+d'époques et raccordement réseau restent ouverts. Voir la feuille de route
+validateurs pour le profil exact et les limites.
