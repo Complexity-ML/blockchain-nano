@@ -204,3 +204,8 @@ Attestations : la racine SSZ typée (slot, index, bloc, checkpoints source/cible
 est vérifiée contre cinq vecteurs officiels et reliée au test d'agrégat du comité.
 `consensusAttestationQualification` conserve les preuves ; fenêtre d'inclusion,
 règles de fork et finalité restent ouvertes, notamment pour 7045/7549.
+
+Slashing : le prédicat de double vote / vote englobant d'attestations est testé
+sur 24 cas locaux (`attestationConflictQualification`). Il ne sanctionne pas
+encore les validateurs : validation complète des preuves et mutation persistante
+du registre restent ouvertes.

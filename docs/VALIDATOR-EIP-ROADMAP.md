@@ -100,3 +100,18 @@ Le calcul SSZ n'impose pas la fenêtre de slots, la justification/ascendance des
 checkpoints ni la règle d'index spécifique au fork (notamment EIP-7549).
 Ces contrôles et l'application à la finalité restent à intégrer avec l'état
 consensus authentifié ; l'ancien réacteur BFT n'est pas changé par cette brique.
+
+## Contradiction d'attestations — 24 septembre 2026
+
+`is_slashable_attestation_data` reprend le prédicat Ethereum : données distinctes
+avec la même époque cible, ou première attestation entourant strictement la
+seconde (`source1 < source2` et `target2 < target1`). Le second cas est orienté ;
+le traitement des preuves doit respecter cet ordre. Une répétition identique
+ne constitue pas un double vote. 24 cas locaux, dont les bornes uint64, passent
+avec les régressions SSZ/comité dans `attestationConflictQualification`.
+Référence : [is_slashable_attestation_data](https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#is_slashable_attestation_data).
+
+Cela n'applique aucune pénalité : les deux signatures, l'intersection des indices,
+l'éligibilité à la sanction, sa comptabilité et sa persistance restent requis.
+Les cas de test sont construits localement ; aucune conformité au corpus complet
+d'opérations de slashing n'est revendiquée.

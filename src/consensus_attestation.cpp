@@ -3,6 +3,10 @@ namespace nano {
 namespace {
 ConsensusRoot uint64_root(uint64_t value){ConsensusRoot result{};for(unsigned i=0;i<8;++i)result[i]=static_cast<uint8_t>(value>>(8*i));return result;}
 }
+bool is_slashable_attestation_data(const ConsensusAttestationData& first,const ConsensusAttestationData& second){
+ return (first!=second&&first.target.epoch==second.target.epoch)||
+        (first.source.epoch<second.source.epoch&&second.target.epoch<first.target.epoch);
+}
 ConsensusRoot consensus_checkpoint_root(const ConsensusCheckpoint& checkpoint){
  return consensus_signing_root(uint64_root(checkpoint.epoch),checkpoint.root);
 }
