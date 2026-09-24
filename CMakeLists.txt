@@ -722,3 +722,8 @@ add_executable(nano-static-state-tests tests/test_static_state.cpp)
 target_link_libraries(nano-static-state-tests PRIVATE nano_core)
 add_test(NAME evm_readonly_state COMMAND nano-static-state-tests)
 set_tests_properties(evm_readonly_state PROPERTIES TIMEOUT 60)
+
+add_executable(nano-consensus-committee-tests tests/test_consensus_committee.cpp)
+target_link_libraries(nano-consensus-committee-tests PRIVATE nano_core nano_ckzg)
+add_test(NAME consensus_committee_participation COMMAND nano-consensus-committee-tests)
+set_tests_properties(consensus_committee_participation PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")

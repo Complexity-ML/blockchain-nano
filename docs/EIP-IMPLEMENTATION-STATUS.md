@@ -193,3 +193,9 @@ sur les 317 fichiers de fixtures d'état actuellement versionnés, dont 505 reje
 Identités et empreintes contrôlées ; zéro mismatch/unsupported/error. Ce périmètre
 ne remplace pas les corpus historiques plus larges ni les scénarios de blocs et
 réseau. Aucun changement de statut de production n'en découle.
+
+Consensus : `ConsensusCommittee` relie désormais PoP, appartenance unique,
+agrégats BLS et poids sans débordement. Trois vérifications positives et vingt
+rejets adversariaux sont archivés dans `committeeParticipationQualification`.
+L'état autorisant ces membres/poids/domaines, le traitement des époques et
+l'intégration réseau restent requis ; aucun statut d'EIP complet n'est ajouté.

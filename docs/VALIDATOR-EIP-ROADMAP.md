@@ -60,3 +60,26 @@ extensions économiques expérimentales. Sources officielles consultées le
 La consolidation 7251 ne réduit pas nécessairement le nombre de machines :
 un même opérateur peut déjà héberger plusieurs clés de validation par nœud.
 La liste production/exécution est distincte : [EVM-PRODUCTION-EIP-ROADMAP.md](EVM-PRODUCTION-EIP-ROADMAP.md).
+
+## Vérification des participations d'un comité — 24 septembre 2026
+
+`ConsensusCommittee` relie les primitives de dépôt/PoP, domaines de signature
+et agrégats BLS. Son constructeur copie un ensemble de membres, rejette indices
+et clés dupliqués, poids nuls et preuves de possession invalides. `verify`
+exige des indices triés, uniques et présents dans cet ensemble, vérifie la
+signature sur la racine avec son domaine fixé puis retourne le poids signé et
+le poids total en précision arbitraire. Aucun seuil de finalité n'est déduit.
+Référence conceptuelle : [indexed attestations](https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#is_valid_indexed_attestation).
+
+La source d'autorité demeure une précondition : le registre, l'éligibilité,
+les poids effectifs, le domaine et le comité du slot doivent provenir de l'état
+consensus authentifié. Une preuve de dépôt ne prouve pas les fonds et la racine
+d'objet doit engager toutes les données du vote. Cette brique n'est pas encore
+appelée par le réacteur BFT et ne remplace pas le cycle d'époques ou la finalité.
+Les PoP sont actuellement vérifiées à la construction du snapshot ; l'admission
+persistante devra éviter ce travail à chaque comité sans perdre sa garantie.
+
+`committeeParticipationQualification` archive trois vérifications valides,
+vingt rejets adversariaux, un total de poids supérieur à uint64 et l'indépendance
+du snapshot vis-à-vis des mutations du tableau d'origine. Il s'agit de tests
+locaux construits, pas d'une qualification Ethereum complète ou multi-hôte.
