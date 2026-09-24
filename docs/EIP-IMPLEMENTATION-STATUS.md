@@ -416,3 +416,9 @@ marqueur canonique et une reprise après `_exit` post-commit RocksDB. La poursui
 de la séquence reproduit l'état officiel, avec 25 enveloppes invalides rejetées.
 Cette preuve locale ne clôt pas les fautes pendant écriture, la liaison EVM /
 consensus, les snapshots réseau ou le commit certifié du nouveau consensus.
+
+Fautes de persistance : `snapshotSyncQualification` couvre une erreur fsync et
+trois dispositions de suffixe WAL (conservé/perdu/tronqué), avec reprise cohérente
+SSZ/marqueur et continuation officielle. Portée locale macOS, stockage d'exécution
+synthétique de support ; pas de preuve de coupure physique, de Linux ou de liaison
+EVM/Beacon active. Les critères réseau/durabilité restants demeurent ouverts.

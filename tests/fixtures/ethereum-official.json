@@ -35070,5 +35070,16 @@
         "sha256": "3d4b90060bd1965903021cd837221aeb3d0d59b88e62094fa87d6068b6f03c3c"
       }
     ]
+  },
+  "snapshotSyncQualification": {
+    "complete": false,
+    "productionQualified": false,
+    "scope": "macOS test-only fsync EIO during WAL commit of Phase0 snapshot. Three observed suffix dispositions retained/lost/half-torn: coherent new/old/old recovered commits, matching SSZ/epoch marker, continuation to official final state and second reopen. Five suites pass including existing Shanghai sync/retry regressions. Simulated post-exit suffix losses, not physical power loss or exhaustive torn writes; synthetic execution carriers, no live EVM/Beacon binding or Linux VPS qualification.",
+    "artifactIndices": [
+      {
+        "path": "build-cmake/qualification/snapshot-sync-20260925/index.json",
+        "sha256": "357b3a655e30895be99818da3cee219ffd31b4f9ee5a06c59a7f6ab96fc9c2b0"
+      }
+    ]
   }
 }

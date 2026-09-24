@@ -1022,3 +1022,29 @@ cette reprise WAL locale, pas une coupure physique ni un arrêt au milieu de
 l'écriture. Les fautes pendant le commit, le raccordement au fork choice et au
 réacteur et les migrations de profils restent ouverts. Aucun état réel du VPS
 ni fonds n'a été modifié.
+
+### Erreur de synchronisation WAL et récupération des snapshots
+
+`snapshotSyncQualification` utilise l'interposition macOS de test existante,
+absente du binaire Nano, pour faire échouer `fsync` sur le WAL temporaire choisi.
+L'erreur est observée après son append et avant le succès du commit ; les lectures
+du magasin encore ouvert restent au commit précédent. Le processus sort sans
+fermer RocksDB. Le parent teste trois dispositions du seul suffixe non synchronisé :
+conservé, entièrement retiré, ou tronqué à sa moitié. Les tailles observées sont
+consignées et vérifiées. Les octets plus anciens ne sont pas modifiés.
+
+Dans le cas conservé, la réouverture retrouve le nouveau commit entier ; dans
+les deux cas de perte, elle retrouve l'ancien entier. Bloc, état d'exécution de
+support, SSZ et marqueur restent cohérents. La reprise effectue les transitions
+manquantes une seule fois, reproduit l'état officiel et le conserve après une
+seconde réouverture. Cinq suites passent, incluant les régressions existantes
+Shanghai d'erreur de synchronisation et de nouvelle tentative.
+
+Cette preuve couvre une erreur de synchronisation et trois dispositions de fin
+de WAL sur ce Mac. Elle ne simule pas toutes les positions de déchirure, les
+pertes du contrôleur/disque, ni une coupure physique. Le retrait/tronquage du
+suffixe intervient uniquement après sortie du processus dans ses répertoires
+de test. Comme dans `slotSnapshotQualification`, les blocs d'exécution restent
+des supports synthétiques : la liaison sémantique EVM/Beacon et le commit
+certifié du nouveau consensus réseau ne sont pas qualifiés. Le test est limité
+à macOS et n'est pas une qualification Linux du VPS.
