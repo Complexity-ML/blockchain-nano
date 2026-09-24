@@ -359,3 +359,10 @@ cas officiels donnent 17 états conformes/24 rejets attendus ; sept suites passe
 Deux séquences officielles multi-époques supplémentaires sont différées. Les
 sanctions d'attestateurs, opérations d'époque complètes et commit/réacteur réseau
 restent ouverts ; EIP-7045/7549 et forks modernes ne sont pas promus par ce travail.
+
+Sanctions d'attestateurs : `attesterSlashingQualification` authentifie les preuves
+indexées et les intègre avant attestations/dépôts/sorties. Trente cas officiels
+isolés, quatre blocs officiels et onze suites sont qualifiés ; un état synthétique
+à chronologie incohérente concorde sur le composant mais reste rejeté par le chemin
+contrôlé des blocs. Les cinq types d'opérations Phase0 sont composables ; Eth1,
+époques, state_root, commit et réseau restent ouverts. Aucun EIP moderne n'est clos.

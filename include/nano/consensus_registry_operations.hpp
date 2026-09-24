@@ -19,13 +19,15 @@ struct Phase0RegistryOperationsCandidate {
  size_t proposer_slashings_processed,deposits_processed,exits_processed;
  std::optional<Phase0FfgState> attestations_after;
  size_t attestations_processed=0;
+ size_t attester_slashings_processed=0;
 };
 using Phase0RegistryOperationsResult=std::variant<InvalidPhase0RegistryBlock,
  UnsupportedPhase0RegistryOperations,Phase0RegistryOperationsCandidate>;
-// Partial Phase0 block pipeline: authentication, proposer slashings, deposits,
+// Partial Phase0 block pipeline: authentication, proposer/attester slashings, deposits,
 // then voluntary exits, all on private state. With attestation_stage, validates
 // and stages attestations before deposits. Without it, nonempty attestations are
-// Unsupported. Attester slashings remain Unsupported. Checks the mandatory
+// Unsupported. All supplied slashing evidence is verified against registry keys.
+// Checks the mandatory
 // number of deposits against authenticated root/count after Eth1 voting.
 // Caller supplies immutable, epoch-advanced state and authenticated Eth1 data.
 // Does NOT implement Eth1 voting, slots/epochs, state_root or durable commit;

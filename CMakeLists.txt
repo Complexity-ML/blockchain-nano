@@ -872,3 +872,15 @@ target_link_libraries(nano-attestation-inclusion-official-tests PRIVATE nano_cor
 target_compile_definitions(nano-attestation-inclusion-official-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
 add_test(NAME ethereum_official_attestation_inclusion COMMAND nano-attestation-inclusion-official-tests)
 set_tests_properties(ethereum_official_attestation_inclusion PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")
+
+add_executable(nano-attester-slashing-official-tests tests/test_attester_slashing_official.cpp)
+target_link_libraries(nano-attester-slashing-official-tests PRIVATE nano_core)
+target_compile_definitions(nano-attester-slashing-official-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+add_test(NAME ethereum_official_attester_slashing COMMAND nano-attester-slashing-official-tests)
+set_tests_properties(ethereum_official_attester_slashing PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")
+
+add_executable(nano-attester-blocks-official-tests tests/test_attester_blocks_official.cpp)
+target_link_libraries(nano-attester-blocks-official-tests PRIVATE nano_core)
+target_compile_definitions(nano-attester-blocks-official-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+add_test(NAME ethereum_official_attester_block_operations COMMAND nano-attester-blocks-official-tests)
+set_tests_properties(ethereum_official_attester_block_operations PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")

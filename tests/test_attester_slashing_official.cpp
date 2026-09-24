@@ -1,0 +1,33 @@
+#include "support/phase0_indexed_ssz.hpp"
+#include "nano/consensus_proposer.hpp"
+using namespace test;
+using namespace test::phase0_minimal;
+int main(int argc,char** argv){try{
+ const fs::path fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures";const fs::path root=argc==2?fs::path(argv[1]):fixtures/"consensus-attester-slashing-official";
+ const auto manifest=load(root/"manifest.json");check(manifest.at("commit")=="bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908","fixture revision");const auto refs=fixtures/"consensus-slashing-official";const auto reference=load(refs/"manifest.json");for(const auto& [name,info]:reference.at("referenceFiles").items())check(hex(sha256(binary(refs/name))).substr(2)==info.at("sha256").get<std::string>(),"config digest");const auto preset=read(refs/"minimal-phase0.yaml"),config=read(refs/"minimal-config.yaml");auto p=[&](const char* key){return parameter(preset,key);};auto c=[&](const char* key){return parameter(config,key);};
+ const Phase0SlashingRules rules{c("MIN_PER_EPOCH_CHURN_LIMIT"),c("CHURN_LIMIT_QUOTIENT"),p("MAX_SEED_LOOKAHEAD"),c("MIN_VALIDATOR_WITHDRAWABILITY_DELAY"),p("EPOCHS_PER_SLASHINGS_VECTOR"),p("MIN_SLASHING_PENALTY_QUOTIENT"),p("WHISTLEBLOWER_REWARD_QUOTIENT"),p("PROPOSER_REWARD_QUOTIENT"),p("EFFECTIVE_BALANCE_INCREMENT"),p("PROPORTIONAL_SLASHING_MULTIPLIER")};
+ unsigned valid=0,invalid=0,replays=0,mutations=0,overflows=0,cancelled=0,synthetic_lifecycle=0;size_t records=0,slashed=0;std::set<std::string> names;
+ for(const auto& row:manifest.at("cases")){
+  const auto name=row.at("name").get<std::string>();check(names.insert(name).second,"duplicate case");for(const auto& [path,info]:row.at("files").items()){auto b=binary(root/path);check(b.size()==info.at("bytes")&&hex(sha256(b)).substr(2)==info.at("sha256").get<std::string>(),"fixture digest");}
+  const auto pre=binary(root/name/"pre.ssz");auto state=decode(pre);const auto initial=state;const auto randao=ffg_randao(pre);const auto [first,second]=attester_slashing(binary(root/name/"attester_slashing.ssz"));
+  std::vector<Phase0ProposerValidator> members;for(const auto& [i,v]:state.validators)members.push_back({i,v.effective_balance,v.activation_epoch,v.exit_epoch});const auto proposer=phase0_proposer_index(members,randao,{p("SLOTS_PER_EPOCH"),p("MIN_SEED_LOOKAHEAD")},little(pre,40,8),p("MAX_EFFECTIVE_BALANCE"),p("SHUFFLE_ROUND_COUNT"));
+  auto version=[&](uint64_t epoch){ConsensusBytes4 v{};std::copy_n(pre.begin()+(epoch<little(pre,56,8)?48:52),4,v.begin());return v;};const auto genesis=root_at(pre,8);const auto v1=version(first.data.target.epoch),v2=version(second.data.target.epoch);
+  auto run=[&](ConsensusSlashingState& s,const IndexedConsensusAttestation& a,const IndexedConsensusAttestation& b,const ConsensusBytes4& av,const ConsensusBytes4& bv,const ConsensusRoot& g,const std::function<void()>& cp={}){return process_phase0_registry_attester_slashing(s,rules,a,b,p("MAX_VALIDATORS_PER_COMMITTEE"),av,bv,g,proposer,proposer,cp);};
+  const auto component=phase0_attester_slashing_component(state,rules,first,second,p("MAX_VALIDATORS_PER_COMMITTEE"),v1,v2,genesis,proposer,proposer);
+  if(name=="already_exited_long_ago"){
+   check(component&&component->registry_after==decode(binary(root/name/"post.ssz")),"synthetic component mismatch");bool rejected=false;try{run(state,first,second,v1,v2,genesis);}catch(const std::invalid_argument& e){rejected=std::string(e.what())=="invalid slashing registry";}check(rejected&&state==initial,"synthetic chronology admitted through checked path");++synthetic_lifecycle;++valid;records+=state.validators.size();slashed+=component->slashed_indices.size();continue;
+  }
+  const auto result=run(state,first,second,v1,v2,genesis);check(bool(result)==bool(component),"component/checked validity mismatch");if(result)check(state==component->registry_after&&*result==component->slashed_indices,"component/checked state mismatch");
+  if(row.at("valid").get<bool>()){
+   check(bool(result),"valid official attester proof rejected: "+name);const auto expected=decode(binary(root/name/"post.ssz"));check(state==expected,"official attester slashing state mismatch: "+name);records+=state.validators.size();slashed+=result->size();++valid;
+   std::vector<uint64_t> changed;for(const auto& [i,v]:state.validators)if(v.slashed&&!initial.validators.at(i).slashed)changed.push_back(i);check(*result==changed,"slashed intersection/order mismatch");const auto after=state;check(!run(state,first,second,v1,v2,genesis)&&state==after,"replayed proof charged twice");++replays;auto restored=phase0_slashing_from_snapshot(phase0_slashing_snapshot(state,rules),rules);check(!run(restored,first,second,v1,v2,genesis)&&restored==after,"snapshot replay charged twice");++replays;
+   auto refuse=[&](const auto& a,const auto& b,const auto& av,const auto& bv,const auto& g){auto s=initial;check(!run(s,a,b,av,bv,g)&&s==initial,"bad proof changed registry");++mutations;};auto bad=first;bad.signature[0]^=1;refuse(bad,second,v1,v2,genesis);bad=second;bad.signature[0]^=1;refuse(first,bad,v1,v2,genesis);auto wrong=v1;wrong[0]^=1;refuse(first,second,wrong,v2,genesis);wrong=v2;wrong[0]^=1;refuse(first,second,v1,wrong,genesis);auto g=genesis;g[0]^=1;refuse(first,second,v1,v2,g);refuse(first,first,v1,v1,genesis);
+   auto s=initial;s.slashings.at(s.epoch%rules.epochs_per_slashings_vector)=UINT64_MAX;const auto before=s;bool threw=false;try{run(s,first,second,v1,v2,genesis);}catch(const std::overflow_error&){threw=true;}check(threw&&s==before,"overflow partially punished intersection");++overflows;
+   if(name=="basic_double"){
+    size_t total=0;s=initial;check(bool(run(s,first,second,v1,v2,genesis,[&]{++total;})),"cancellation control");for(size_t stop=1;stop<=total;++stop){s=initial;size_t calls=0;threw=false;try{run(s,first,second,v1,v2,genesis,[&]{if(++calls==stop)throw std::runtime_error("cancelled");});}catch(const std::runtime_error& e){threw=std::string(e.what())=="cancelled";}check(threw&&s==initial,"cancelled partial slashing");++cancelled;}
+   }
+  }else{check(!result&&state==initial,"invalid official attester proof accepted: "+name);++invalid;}
+ }
+ check(names.size()==30&&valid==9&&invalid==21,"attester official coverage");
+ std::cout<<Json{{"scenario","official-phase0-attester-slashing"},{"valid",valid},{"invalid",invalid},{"validatorsCompared",records},{"validatorsSlashed",slashed},{"replayRejections",replays},{"mutationRejections",mutations},{"atomicOverflowRejections",overflows},{"cancellations",cancelled},{"syntheticLifecycleCases",synthetic_lifecycle},{"activeInConsensus",false}}.dump()<<std::endl;return 0;
+}catch(const std::exception& e){std::cerr<<e.what()<<std::endl;return 1;}}

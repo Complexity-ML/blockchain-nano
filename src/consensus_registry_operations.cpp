@@ -4,6 +4,9 @@
 namespace nano {
 namespace {
 uint64_t little(std::span<const uint8_t> b,size_t at,size_t width){uint64_t v=0;for(size_t i=0;i<width;++i)v|=uint64_t(b[at+i])<<(8*i);return v;}
+IndexedConsensusAttestation decode_indexed(std::span<const uint8_t> b){
+ IndexedConsensusAttestation a;auto& d=a.data;d.slot=little(b,4,8);d.index=little(b,12,8);std::copy_n(b.begin()+20,32,d.beacon_block_root.begin());d.source.epoch=little(b,52,8);std::copy_n(b.begin()+60,32,d.source.root.begin());d.target.epoch=little(b,92,8);std::copy_n(b.begin()+100,32,d.target.root.begin());a.signature=Bytes(b.begin()+132,b.begin()+228);for(size_t i=228;i<b.size();i+=8)a.indices.push_back(little(b,i,8));return a;
+}
 Phase0SignedAttestation decode_attestation(std::span<const uint8_t> b){
  Phase0SignedAttestation a;auto& d=a.data;d.slot=little(b,4,8);d.index=little(b,12,8);
  std::copy_n(b.begin()+20,32,d.beacon_block_root.begin());d.source.epoch=little(b,52,8);std::copy_n(b.begin()+60,32,d.source.root.begin());d.target.epoch=little(b,92,8);std::copy_n(b.begin()+100,32,d.target.root.begin());a.signature=Bytes(b.begin()+132,b.begin()+228);
@@ -48,11 +51,23 @@ Phase0RegistryOperationsResult prepare_phase0_registry_operations(
  auto prepared=prepare_phase0_proposer_operations(bytes,context,limits,randao_rules,slashing_rules,fork,state.registry,randao,checkpoint);
  if(!prepared)return InvalidPhase0RegistryBlock{};
  const auto& pending=prepared->unprocessed_operations;
- if(pending[0]||(pending[1]&&!attestation_stage))return UnsupportedPhase0RegistryOperations{pending[0],pending[1]};
+ if(pending[1]&&!attestation_stage)return UnsupportedPhase0RegistryOperations{0,pending[1]};
  if(pending[2]!=std::min<uint64_t>(limits.deposits,state.deposit_count-state.next_deposit_index))return InvalidPhase0RegistryBlock{};
  Phase0DepositState next{std::move(prepared->registry_after_proposer_slashings),state.deposit_root,state.deposit_count,state.next_deposit_index};
  // Offsets/list sizes were validated while authenticating these immutable bytes.
  const auto body=bytes.subspan(184);const size_t deposits_begin=little(body,212,4),exits_begin=little(body,216,4);
+ const size_t slashings_begin=little(body,204,4),attestations_begin=little(body,208,4);
+ const auto slashings=body.subspan(slashings_begin,attestations_begin-slashings_begin);
+ for(size_t i=0;i<pending[0];++i){
+  if(checkpoint)checkpoint();
+  const size_t start=little(slashings,4*i,4),end=i+1==pending[0]?slashings.size():little(slashings,4*(i+1),4);
+  const auto proof=slashings.subspan(start,end-start);const auto second_start=little(proof,4,4);
+  const auto first=decode_indexed(proof.subspan(8,second_start-8)),second=decode_indexed(proof.subspan(second_start));
+  const auto first_version=first.data.target.epoch<fork.epoch?fork.previous_version:fork.current_version;
+  const auto second_version=second.data.target.epoch<fork.epoch?fork.previous_version:fork.current_version;
+  const auto proposer=prepared->authenticated.header.proposer_index;
+  if(!process_phase0_registry_attester_slashing(next.registry,slashing_rules,first,second,limits.validators_per_committee,first_version,second_version,context.genesis_root,proposer,proposer,checkpoint))return InvalidPhase0RegistryBlock{};
+ }
  std::optional<Phase0FfgState> attestations_after;
  if(attestation_stage){
   attestations_after=attestation_stage->state;
@@ -77,6 +92,6 @@ Phase0RegistryOperationsResult prepare_phase0_registry_operations(
   if(checkpoint)checkpoint();
  }
  if(checkpoint)checkpoint();
- return Phase0RegistryOperationsCandidate{std::move(prepared->authenticated),std::move(next),prepared->proposer_slashings_processed,pending[2],pending[3],std::move(attestations_after),pending[1]};
+ return Phase0RegistryOperationsCandidate{std::move(prepared->authenticated),std::move(next),prepared->proposer_slashings_processed,pending[2],pending[3],std::move(attestations_after),pending[1],pending[0]};
 }
 }

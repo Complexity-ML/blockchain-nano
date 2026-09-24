@@ -743,3 +743,47 @@ La reconstruction des comités/proposants par attestation n'est pas encore optim
 par un cache d'époque ni qualifiée à un million de validateurs. Profil Phase0,
 aucune activation Deneb/Electra ou finalité réseau n'est annoncée.
 Source : https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#attestations
+
+## Sanctions d'attestateurs et cinq types d'opérations — 25 septembre 2026
+
+`process_phase0_registry_attester_slashing` authentifie les deux attestations
+indexées depuis les clés du registre financé/PoP préalablement validé. Les indices
+sont non vides, triés, uniques, présents et bornés par le preset SSZ ; chaque
+signature utilise le fork de son époque cible. Les fenêtres d'inclusion et
+l'appartenance au comité courant ne sont pas des conditions de cette preuve de
+faute. Les preuves anciennes/futures restent traitées selon Phase0. Seuls les
+signataires communs encore sanctionnables sont punis, dans l'ordre des indices,
+avec file de sortie, pénalité, récompenses et registre des sanctions partagés.
+Annulation, débordement et erreur ne publient aucune sanction partielle.
+
+Une distinction explicite conserve la validation de l'état :
+`phase0_attester_slashing_component` calcule la transition isolée sans valider la
+chronologie globale. Le scénario officiel valide `already_exited_long_ago`
+utilise des retraits à l'époque 2 et des sorties aux époques 5/6. Son résultat
+isolé concorde, tandis que le chemin contrôlé le rejette. Le traitement des blocs
+appelle exclusivement le chemin contrôlé ; aucune option de relâchement n'y est
+exposée. Les contrôles de chronologie des snapshots/autres sanctions sont conservés.
+
+`attesterSlashingQualification` : trente cas officiels isolés (neuf états conformes,
+21 preuves invalides), 576 entrées comparées et 37 validateurs sanctionnés. Huit
+cas valides concordent aussi sur le chemin contrôlé ; le neuvième est le cas
+synthétique rejeté décrit ci-dessus. Seize rejets de rejeu avant/après snapshot,
+48 mutations, huit débordements et vingt annulations sont vérifiés.
+
+Dans les blocs, les sanctions d'attestateurs sont exécutées après les sanctions
+de proposants et avant les attestations/dépôts/sorties. Quatre blocs officiels
+sont qualifiés : trois projections conformes (192 entrées, cinq preuves), un
+doublon rejeté après authentification. Les recouvrements partiels ne débitent pas
+deux fois les mêmes participants. Un bloc local compose les cinq types d'opérations,
+avec deux rejets, 36 annulations et un débordement tardif sans mutation des sources.
+Onze suites de régression passent. Les compteurs de l'ancien scénario local de
+registre deviennent 11 rejets/2 non-pris-en-charge : les preuves indexées vides
+sont désormais rejetées ; seules les attestations sans contexte demeurent non
+prises en charge. Les anciennes campagnes restent archivées sans réécriture.
+
+Cela complète les types d'opérations Phase0 dans le pipeline partiel, pas la
+validation du bloc entier : votes Eth1, slots/époques complètes, state_root,
+commit/reprise durable et réacteur réseau restent ouverts. Les séquences
+multi-époques précédemment différées ne sont pas promues. Aucun fork moderne ni
+EIP-7549/Electra n'est déclaré activé par cette étape.
+Source : https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#attester-slashings

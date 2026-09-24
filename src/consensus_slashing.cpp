@@ -34,10 +34,10 @@ struct ExitQueue {
  uint64_t active=0,latest_exit=0;
  std::map<uint64_t,uint64_t> counts;
 };
-ExitQueue inspect_exit_registry(const ConsensusSlashingState& state){
+ExitQueue inspect_exit_registry(const ConsensusSlashingState& state,bool check_lifecycle=true){
  ExitQueue queue;std::set<std::array<uint8_t,48>> keys;
  for(const auto& [index,v]:state.validators){
-  if(!keys.insert(v.public_key).second||v.activation_epoch>v.exit_epoch||v.exit_epoch>v.withdrawable_epoch)
+  if(!keys.insert(v.public_key).second||(check_lifecycle&&(v.activation_epoch>v.exit_epoch||v.exit_epoch>v.withdrawable_epoch)))
    throw std::invalid_argument("invalid slashing registry");
   if(v.activation_epoch<=state.epoch&&state.epoch<v.exit_epoch)++queue.active;
   if(v.exit_epoch!=UINT64_MAX){queue.latest_exit=std::max(queue.latest_exit,v.exit_epoch);++queue.counts[v.exit_epoch];}
@@ -58,7 +58,7 @@ void schedule_exit(ConsensusSlashingValidator& v,uint64_t epoch,const Rules& rul
 template<class Verify>
 std::optional<std::vector<uint64_t>> process_verified_slashing(
  ConsensusSlashingState& state,const Phase0SlashingRules& rules,
- uint64_t proposer_index,uint64_t whistleblower_index,Verify verify){
+ uint64_t proposer_index,uint64_t whistleblower_index,Verify verify,const std::function<void()>& checkpoint={},bool check_lifecycle=true){
  if(!rules.minimum_churn_limit||!rules.churn_limit_quotient||!rules.epochs_per_slashings_vector||
     !rules.minimum_penalty_quotient||!rules.whistleblower_reward_quotient||!rules.proposer_reward_quotient||
     !rules.effective_balance_increment||!rules.proportional_slashing_multiplier||
@@ -66,11 +66,13 @@ std::optional<std::vector<uint64_t>> process_verified_slashing(
   throw std::invalid_argument("invalid Phase0 slashing configuration");
  if(!state.validators.contains(proposer_index)||!state.validators.contains(whistleblower_index))
   throw std::invalid_argument("missing slashing reward recipient");
- auto exit_queue=inspect_exit_registry(state);
+ if(checkpoint)checkpoint();
+ auto exit_queue=inspect_exit_registry(state,check_lifecycle);
  auto common=verify();
  if(!common)return std::nullopt;
  std::vector<uint64_t> eligible;
  for(auto index:*common){
+  if(checkpoint)checkpoint();
   auto found=state.validators.find(index);
   if(found==state.validators.end())return std::nullopt;
   const auto& v=found->second;
@@ -81,6 +83,7 @@ std::optional<std::vector<uint64_t>> process_verified_slashing(
  // failure cannot partially punish a subset of the authenticated participants.
  auto next=state;
  for(auto index:eligible){
+  if(checkpoint)checkpoint();
   auto& v=next.validators.at(index);
   schedule_exit(v,state.epoch,rules,exit_queue);
   v.slashed=true;
@@ -95,6 +98,7 @@ std::optional<std::vector<uint64_t>> process_verified_slashing(
   auto& whistleblower=next.validators.at(whistleblower_index).balance;
   whistleblower=checked_epoch_add(whistleblower,reward-proposer_reward);
  }
+ if(checkpoint)checkpoint();
  static_assert(std::is_nothrow_swappable_v<ConsensusSlashingState>);
  using std::swap;swap(state,next);
  return eligible;
@@ -153,6 +157,44 @@ std::optional<std::vector<uint64_t>> process_phase0_attester_slashing(
   for(auto index:*common){auto found=state.validators.find(index);if(found==state.validators.end()||!first_context.matches_validator_key(index,found->second.public_key))return std::nullopt;}
   return common;
  });
+}
+namespace {
+std::optional<std::vector<uint64_t>> registry_attester_slashing_impl(
+ ConsensusSlashingState& state,const Phase0SlashingRules& rules,
+ const IndexedConsensusAttestation& first,const IndexedConsensusAttestation& second,
+ uint64_t maximum_indices,const ConsensusBytes4& first_version,const ConsensusBytes4& second_version,
+ const ConsensusRoot& genesis,uint64_t proposer_index,uint64_t whistleblower_index,
+ const std::function<void()>& checkpoint,bool check_lifecycle){
+ if(!maximum_indices)throw std::invalid_argument("invalid indexed attestation limit");
+ return process_verified_slashing(state,rules,proposer_index,whistleblower_index,[&]()->std::optional<std::vector<uint64_t>>{
+  if(!is_slashable_attestation_data(first.data,second.data))return std::nullopt;
+  auto verify=[&](const IndexedConsensusAttestation& vote,const ConsensusBytes4& version){
+   if(vote.indices.empty()||vote.indices.size()>maximum_indices||!std::is_sorted(vote.indices.begin(),vote.indices.end())||std::adjacent_find(vote.indices.begin(),vote.indices.end())!=vote.indices.end())return false;
+   std::vector<Bytes> keys;keys.reserve(vote.indices.size());
+   for(auto index:vote.indices){if(checkpoint)checkpoint();const auto found=state.validators.find(index);if(found==state.validators.end())return false;const auto& key=found->second.public_key;keys.emplace_back(key.begin(),key.end());}
+   const auto root=consensus_signing_root(consensus_attestation_root(vote.data),consensus_domain({1,0,0,0},version,genesis));
+   if(checkpoint)checkpoint();
+   return verify_consensus_bls_fast_aggregate(keys,root,vote.signature);
+  };
+  if(!verify(first,first_version)||!verify(second,second_version))return std::nullopt;
+  std::vector<uint64_t> common;std::set_intersection(first.indices.begin(),first.indices.end(),second.indices.begin(),second.indices.end(),std::back_inserter(common));return common;
+ },checkpoint,check_lifecycle);
+}
+} // namespace
+std::optional<std::vector<uint64_t>> process_phase0_registry_attester_slashing(
+ ConsensusSlashingState& state,const Phase0SlashingRules& rules,
+ const IndexedConsensusAttestation& first,const IndexedConsensusAttestation& second,
+ uint64_t maximum_indices,const ConsensusBytes4& first_version,const ConsensusBytes4& second_version,
+ const ConsensusRoot& genesis,uint64_t proposer_index,uint64_t whistleblower_index,const std::function<void()>& checkpoint){
+ return registry_attester_slashing_impl(state,rules,first,second,maximum_indices,first_version,second_version,genesis,proposer_index,whistleblower_index,checkpoint,true);
+}
+std::optional<Phase0AttesterSlashingCandidate> phase0_attester_slashing_component(
+ const ConsensusSlashingState& state,const Phase0SlashingRules& rules,
+ const IndexedConsensusAttestation& first,const IndexedConsensusAttestation& second,
+ uint64_t maximum_indices,const ConsensusBytes4& first_version,const ConsensusBytes4& second_version,
+ const ConsensusRoot& genesis,uint64_t proposer_index,uint64_t whistleblower_index){
+ auto next=state;auto indices=registry_attester_slashing_impl(next,rules,first,second,maximum_indices,first_version,second_version,genesis,proposer_index,whistleblower_index,{},false);
+ if(!indices)return std::nullopt;return Phase0AttesterSlashingCandidate{std::move(next),std::move(*indices)};
 }
 bool verify_proposer_slashing(const SignedConsensusBeaconHeader& first,
  const SignedConsensusBeaconHeader& second,std::span<const uint8_t> key,

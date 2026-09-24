@@ -2,6 +2,7 @@
 #include "nano/consensus_attestation.hpp"
 #include "nano/consensus_committee.hpp"
 #include "nano/consensus_beacon_header.hpp"
+#include <functional>
 namespace nano {
 struct IndexedConsensusAttestation {
  ConsensusAttestationData data;
@@ -50,6 +51,35 @@ std::optional<std::vector<uint64_t>> process_phase0_attester_slashing(
  const IndexedConsensusAttestation& first,const ConsensusCommittee& first_context,
  const IndexedConsensusAttestation& second,const ConsensusCommittee& second_context,
  uint64_t proposer_index,uint64_t whistleblower_index);
+
+// Phase0 indexed-attestation slashing against the authenticated funded registry.
+// Admission MUST have established PoP for every key, including genesis keys.
+// Unlike ordinary attestation inclusion, slashing evidence does not require a
+// current committee/slot window: authenticate sorted unique in-range indices
+// and both signatures, then slash eligible intersection members in index order.
+// Fork versions come from authenticated state for EACH proof's target epoch.
+// maximum_indices is the fork's SSZ limit, not a network validator-count cap.
+std::optional<std::vector<uint64_t>> process_phase0_registry_attester_slashing(
+ ConsensusSlashingState& state,const Phase0SlashingRules& rules,
+ const IndexedConsensusAttestation& first,const IndexedConsensusAttestation& second,
+ uint64_t maximum_indices,const ConsensusBytes4& first_version,
+ const ConsensusBytes4& second_version,const ConsensusRoot& genesis_root,
+ uint64_t proposer_index,uint64_t whistleblower_index,
+ const std::function<void()>& checkpoint={});
+
+struct Phase0AttesterSlashingCandidate {
+ ConsensusSlashingState registry_after;
+ std::vector<uint64_t> slashed_indices;
+};
+// Isolated Ethereum operation semantics, including synthetic official states.
+// Verifies signatures/indices/keys and economics, but DOES NOT validate the
+// global activation/exit/withdrawal chronology. Never use as block admission;
+// process_phase0_registry_attester_slashing is the checked application boundary.
+std::optional<Phase0AttesterSlashingCandidate> phase0_attester_slashing_component(
+ const ConsensusSlashingState& state,const Phase0SlashingRules& rules,
+ const IndexedConsensusAttestation& first,const IndexedConsensusAttestation& second,
+ uint64_t maximum_indices,const ConsensusBytes4& first_version,const ConsensusBytes4& second_version,
+ const ConsensusRoot& genesis_root,uint64_t proposer_index,uint64_t whistleblower_index);
 
 struct SignedConsensusBeaconHeader {
  ConsensusBeaconHeader message;
