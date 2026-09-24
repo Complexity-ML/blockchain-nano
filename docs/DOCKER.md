@@ -82,9 +82,31 @@ Construction Ubuntu 24.04 / Clang réussie sur Linux ARM64. Image locale vérifi
 Le test `scripts/test-docker.sh` passe : RPC, utilisateur 10001, relais P2P,
 arrêt avec code 0 et identité identique après redémarrage. Le test natif `chain`
 passe également après l'adaptation des deux interfaces RocksDB (8.9 Ubuntu,
-11.8.1 macOS). La construction Linux AMD64 reste à qualifier séparément.
+11.8.1 macOS). La construction Linux AMD64 a ensuite été qualifiée sur le VPS (voir ci-dessous).
 
 La construction utilise Clang pour éviter l'échec de BoringSSL avec les
 avertissements GCC 13 traités en erreurs. La détection Boost tient compte du
 suffixe d'architecture des archives Hunter. Le répertoire `blst/build` contient
 des sources assembleur indispensables et est conservé dans le contexte Docker.
+
+## Qualification Linux AMD64 sur VPS
+
+Le 24 septembre 2026, la révision `1d6723c` a été construite sur Ubuntu 24.04
+AMD64, puis `scripts/test-docker.sh blockchain-nano:1d6723c` a terminé avec code 0.
+Image : `sha256:e710657fa7d7abdf134589c18ce043f536773d83ca18608c3a251fb49b8b0f70`
+(235 469 800 octets). Les contrôles couvrent RPC, UID 10001, relais P2P,
+arrêt propre et conservation de l'identité après redémarrage. Le conteneur
+était isolé sans port publié ; aucune finalité ni synchronisation distribuée
+n'est qualifiée par ce résultat. Les ajouts à `main` après cette révision
+ne sont pas inclus dans cette image.
+
+Les journaux, le manifeste des sources transférées et les empreintes des preuves
+sont archivés localement dans `build-cmake/qualification/docker-amd64-20260924/`.
+Après nettoyage : une image, aucun conteneur ou volume de test, zéro cache de
+build. Aucun service Nano permanent n'a été lancé par cette qualification.
+
+Sur ce VPS, conserver un seul conteneur Nano et une seule image de déploiement.
+Exécuter un seul build à la fois. Après qualification, `docker builder prune
+--all --force` supprime le cache de compilation ; cela rallonge le prochain
+build à froid. Aux mises à jour, retirer explicitement l'ancienne image après
+vérification du remplacement, sans supprimer le volume de la chaîne.
