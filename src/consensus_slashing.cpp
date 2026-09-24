@@ -1,5 +1,7 @@
 #include "nano/consensus_slashing.hpp"
 #include "nano/consensus_exit.hpp"
+#include "nano/consensus_registry_epoch.hpp"
+#include <algorithm>
 #include "nano/consensus_bls.hpp"
 #include <set>
 #include <type_traits>
@@ -99,6 +101,47 @@ std::optional<std::vector<uint64_t>> process_verified_slashing(
 }
 
 } // namespace
+Phase0RegistryUpdateCandidate prepare_phase0_registry_updates(
+ const ConsensusSlashingState& state,const Phase0RegistryUpdateRules& rules,
+ uint64_t finalized_epoch,const std::function<void()>& checkpoint){
+ if(!rules.minimum_churn_limit||!rules.churn_limit_quotient||!rules.maximum_effective_balance||
+    rules.ejection_balance>rules.maximum_effective_balance||finalized_epoch>state.epoch||state.epoch==UINT64_MAX)
+  throw std::invalid_argument("invalid Phase0 registry update context");
+ if(checkpoint)checkpoint();
+ auto queue=inspect_exit_registry(state);
+ Phase0RegistryUpdateCandidate out{state,{},{},{}};
+ std::vector<std::pair<uint64_t,uint64_t>> activation_queue;
+ uint64_t expected_index=0;
+ for(auto& [index,v]:out.registry_after.validators){
+  if(checkpoint)checkpoint();
+  if(index!=expected_index++||v.effective_balance>rules.maximum_effective_balance)
+   throw std::invalid_argument("invalid Phase0 registry update validator");
+  if(v.activation_eligibility_epoch==UINT64_MAX&&v.effective_balance==rules.maximum_effective_balance){
+   const auto epoch=checked_epoch_add(state.epoch,1);
+   if(epoch==UINT64_MAX)throw std::overflow_error("activation eligibility epoch sentinel");
+   v.activation_eligibility_epoch=epoch;out.newly_eligible.push_back(index);
+  }
+  if(v.activation_epoch<=state.epoch&&state.epoch<v.exit_epoch&&v.effective_balance<=rules.ejection_balance&&v.exit_epoch==UINT64_MAX){
+   schedule_exit(v,state.epoch,rules,queue);out.ejected.push_back(index);
+  }
+  if(v.activation_eligibility_epoch<=finalized_epoch&&v.activation_epoch==UINT64_MAX)
+   activation_queue.emplace_back(v.activation_eligibility_epoch,index);
+ }
+ const auto churn=std::max(rules.minimum_churn_limit,queue.active/rules.churn_limit_quotient);
+ const size_t count=std::min<uint64_t>(activation_queue.size(),churn);
+ // Only the first churn entries need sorting; no arbitrary validator cap.
+ std::partial_sort(activation_queue.begin(),activation_queue.begin()+count,activation_queue.end());
+ if(checkpoint)checkpoint();
+ for(size_t i=0;i<count;++i){
+  if(checkpoint)checkpoint();
+  const auto epoch=checked_epoch_add(checked_epoch_add(state.epoch,1),rules.max_seed_lookahead);
+  if(epoch==UINT64_MAX)throw std::overflow_error("activation epoch sentinel");
+  const auto index=activation_queue[i].second;
+  out.registry_after.validators.at(index).activation_epoch=epoch;out.activated.push_back(index);
+ }
+ if(checkpoint)checkpoint();
+ return out;
+}
 std::optional<std::vector<uint64_t>> process_phase0_attester_slashing(
  ConsensusSlashingState& state,const Phase0SlashingRules& rules,
  const IndexedConsensusAttestation& first,const ConsensusCommittee& first_context,

@@ -337,3 +337,10 @@ deux séquences traversant une époque restent différées et non comptées comm
 Attestations non prises en charge signalées distinctement des blocs invalides.
 Ce progrès ne clôt ni EIP-6110 ni EIP-7044 réseau : Eth1, époques, état complet et
 commit/réacteur restent à intégrer. Les statuts EIP de la matrice restent inchangés.
+
+Cycle de vie Phase0 : `registryEpochQualification` ajoute la programmation des
+activations après finalité et des éjections, avec file partagée et churn paramétré.
+Les quinze cas officiels de registry_updates sont couverts (14 conformes, 1 rejet
+attendu), ainsi que deux registres synthétiques locaux de 100 000/1 000 000 entrées.
+Neuf suites passent. Cette sous-transition ne clôt pas le traitement d'époque,
+la finalité ou les EIP de staking modernes ; aucun statut réseau n'est promu.

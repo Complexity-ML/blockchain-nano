@@ -633,3 +633,38 @@ séparément. Les copies et parcours par opération ne qualifient pas le débit 
 registre à un million de validateurs. Clôture : compléter ces étapes, débloquer les
 deux séquences d'époque et qualifier le commit/rejeu réseau de l'état complet.
 Source : https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#operations
+
+## Registre à la frontière d'époque — 25 septembre 2026
+
+`prepare_phase0_registry_updates` implémente le composant Phase0 de mise à jour
+du registre : éligibilité à l'époque suivante pour un solde effectif maximal,
+éjection des validateurs actifs au seuil configuré, activation différée des
+entrées dont l'éligibilité est finalisée, tri par époque d'éligibilité puis index
+et churn dérivé des paramètres et du nombre de validateurs actifs. Le tri partiel
+sélectionne les premiers candidats sans plafond arbitraire de taille du registre.
+La file de sortie est la même que pour les sanctions et sorties volontaires.
+Le composant ne modifie ni les fonds ni le solde effectif.
+
+`registryEpochQualification` : tous les quinze cas officiels Phase0 sont couverts,
+quatorze états conformes (1 152 entrées comparées) et un débordement attendu rejeté.
+Dix-neuf éligibilités, dix-neuf activations et trente-sept éjections programmées,
+quatorze snapshots conformes, soixante-huit annulations sans mutation de la source
+et dix rejets locaux de configurations/états/débordements. Neuf suites passent.
+
+Mesure locale bornée du composant sur ce Mac, build Release : 100 000 entrées en
+17 078 µs, 1 000 000 en 120 190 µs ; pics RSS du processus respectivement 56 033 280
+et 491 880 448 octets. Entrées synthétiques avec clés uniques supposées authentifiées,
+moitié actives/moitié en attente ; limites de churn et ordre contrôlés sur toutes
+les entrées. Le temps mesure la transition, pas la construction/vérification du
+jeu de données. RSS = maximum du processus, pas allocation incrémentale. Une seule
+mesure par taille, sans validation BLS ni réseau : zéro nœud distribué, aucun débit
+réseau ou capacité de consensus à un million de validateurs n'est démontré.
+
+Le résultat reste un candidat privé à intégrer exactement une fois dans la
+transition d'époque complète. L'époque finalisée doit être authentifiée par le
+consensus ; elle n'est pas calculée ici. Ni incrément d'époque, marqueur de rejeu,
+récompenses/pénalités complètes, mise à jour des soldes effectifs, state_root ni
+commit durable ne sont fournis par cette fonction. Les deux séquences multi-époques
+précédemment différées restent ouvertes. Profil Phase0 : pas de consolidation
+EIP-7251, de churn en solde Electra ni d'activation sur le réseau Nano.
+Source : https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#registry-updates
