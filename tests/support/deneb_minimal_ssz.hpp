@@ -19,7 +19,7 @@ inline nano::ConsensusSlashingState decode(const nano::Bytes& b){
  for(size_t i=0;i<64;++i)state.slashings.push_back(little(b,6416+i*8,8));
  for(size_t i=0;i<count;++i){auto at=offsets[2]+i*validator_size;nano::ConsensusSlashingValidator v;
   std::copy_n(b.begin()+at,48,v.public_key.begin());v.effective_balance=little(b,at+80,8);check(b[at+88]<=1,"invalid Deneb slashed boolean");v.slashed=b[at+88]!=0;
-  v.activation_epoch=little(b,at+97,8);v.exit_epoch=little(b,at+105,8);v.withdrawable_epoch=little(b,at+113,8);v.balance=little(b,offsets[3]+8*i,8);state.validators.emplace(i,v);
+  std::copy_n(b.begin()+at+48,32,v.withdrawal_credentials.begin());v.activation_eligibility_epoch=little(b,at+89,8);v.activation_epoch=little(b,at+97,8);v.exit_epoch=little(b,at+105,8);v.withdrawable_epoch=little(b,at+113,8);v.balance=little(b,offsets[3]+8*i,8);state.validators.emplace(i,v);
  }
  return state;
 }

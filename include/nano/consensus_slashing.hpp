@@ -29,6 +29,8 @@ struct ConsensusSlashingValidator {
  uint64_t balance=0, effective_balance=0;
  uint64_t activation_epoch=UINT64_MAX, exit_epoch=UINT64_MAX, withdrawable_epoch=UINT64_MAX;
  bool slashed=false;
+ ConsensusRoot withdrawal_credentials{};
+ uint64_t activation_eligibility_epoch=UINT64_MAX;
  bool operator==(const ConsensusSlashingValidator&)const=default;
 };
 struct ConsensusSlashingState {

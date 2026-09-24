@@ -59,6 +59,9 @@ int main(int argc,char** argv){try{
  check(phase0_slashing_from_snapshot(phase0_slashing_snapshot(maximum,rules),rules)==maximum,"uint64 maximum roundtrip");++checks;
  auto reject=[&](Json bad){bool failed=false;try{phase0_slashing_from_snapshot(bad,rules);}catch(const std::exception&){failed=true;}check(failed,"malformed snapshot accepted");++rejected;};
  auto bad=after;bad["format"]="nano-phase0-slashing-v1";reject(bad);
+ bad=after;bad["format"]="nano-phase0-slashing-v2";reject(bad);
+ bad=after;bad["validators"][0]["withdrawalCredentials"]="0x01";reject(bad);
+ bad=after;bad["validators"][0]["activationEligibilityEpoch"]="0x01";reject(bad);
  bad=after;bad["extra"]=1;reject(bad);
  bad=after;bad.erase("epoch");reject(bad);
  bad=after;bad["rules"][0]="0x2";reject(bad);

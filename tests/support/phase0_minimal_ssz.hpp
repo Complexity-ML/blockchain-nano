@@ -32,7 +32,7 @@ inline ConsensusSlashingState decode(const Bytes& b){
   auto at=offsets[2]+i*validator_size;ConsensusSlashingValidator v;
   std::copy_n(b.begin()+at,48,v.public_key.begin());v.effective_balance=little(b,at+80,8);
   check(b[at+88]<=1,"invalid SSZ boolean");v.slashed=b[at+88]!=0;
-  v.activation_epoch=little(b,at+97,8);v.exit_epoch=little(b,at+105,8);v.withdrawable_epoch=little(b,at+113,8);
+  std::copy_n(b.begin()+at+48,32,v.withdrawal_credentials.begin());v.activation_eligibility_epoch=little(b,at+89,8);v.activation_epoch=little(b,at+97,8);v.exit_epoch=little(b,at+105,8);v.withdrawable_epoch=little(b,at+113,8);
   v.balance=little(b,offsets[3]+i*8,8);state.validators.emplace(i,v);
  }
  return state;

@@ -557,3 +557,41 @@ les changements économiques Electra. Sur deux branches partageant genesis et
 version Capella, la réutilisation d'une sortie signée reste possible par
 conception de l'EIP ; ce n'est pas un transfert des fonds.
 Source : https://eips.ethereum.org/EIPS/eip-7044
+
+## Admission par dépôt prouvé — 24 septembre 2026
+
+`process_phase0_deposit` vérifie la racine SSZ DepositData, les 33 niveaux de
+preuve Merkle et la position attendue avant admission. La racine/count Eth1
+et le registre doivent être authentifiés par l'appelant. Une fausse preuve
+est rejetée avant parcours ou copie du registre. Une nouvelle clé exige une
+preuve de possession BLS dans le domaine genesis ; un dépôt valide ajoute une
+entrée inactive avec solde effectif arrondi/plafonné selon les règles explicites.
+La limite de registre vient du preset SSZ, pas d'un plafond de 1 000 validateurs.
+
+Une recharge d'une clé déjà admise modifie seulement son solde : ni les nouveaux
+credentials ni une signature de recharge invalide ne remplacent l'identité
+existante. Pour une nouvelle clé à signature invalide mais preuve de dépôt
+valide, la position est consommée sans créer d'entrée, conformément à Phase0.
+Les erreurs de preuve ne consomment rien ; les débordements ne publient aucune
+modification. Une admission ne déclenche pas immédiatement l'activation.
+
+`depositTransitionQualification` couvre les dix-sept scénarios officiels épinglés :
+six admissions, cinq recharges, quatre signatures ignorées et deux preuves
+rejetées. Les 966 enregistrements comparés incluent credentials et époque
+d'éligibilité ; root/count/cursor concordent aussi. Quinze snapshots et rejets
+de position déjà consommée, 45 mutations de branches/données, onze débordements
+et douze snapshots invalides sont vérifiés. Onze suites de régression passent.
+
+Le registre conserve désormais withdrawal_credentials et activation_eligibility_epoch.
+Son snapshot local passe à `nano-phase0-slashing-v3` ; v1/v2 sont rejetés, sans
+migration automatique ni modification des archives historiques. Les appels à
+ce codec ne sont pas raccordés au réacteur actif. `nano-phase0-deposit-v1`
+conserve ensemble registre, racine, nombre et compteur de dépôts, avec les règles
+liées au snapshot. La régression de reprise RocksDB du registre v3 passe ; les
+nouveaux snapshots de dépôt sont qualifiés par aller-retour du codec, pas encore
+par une campagne de panne au milieu d'un bloc avec dépôt.
+
+Restent : authentification/évolution de la racine Eth1, traitement des dépôts dans
+les blocs, activation/éjection par époque, état complet et commit réseau. Le
+mécanisme est Phase0 ; EIP-6110 et les files de dépôts Electra ne sont pas promus.
+Source : https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#deposits

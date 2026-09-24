@@ -321,3 +321,11 @@ transitions de sortie sur seize cas officiels Deneb, avec 448 enregistrements
 conformes et deux différences explicites par rapport à Phase0. Six suites
 passent. Statut désormais partiel : bloc/gossip, activation et profil réseau
 complet restent requis ; aucune activation Deneb n'est annoncée.
+
+Admission des validateurs : `depositTransitionQualification` valide les dix-sept
+scénarios officiels de dépôts Phase0, avec preuve Merkle ordonnée, PoP des nouvelles
+clés, recharges et 966 enregistrements conformes. Les credentials/éligibilité
+sont conservés dans le registre v3 ; le snapshot de dépôt conserve root/count/cursor.
+Onze suites passent. La racine financée doit encore être fournie par le consensus,
+l'activation et le traitement complet des blocs restent ouverts. Ce travail ne
+vaut pas implémentation d'EIP-6110 ni ouverture effective du registre réseau.
