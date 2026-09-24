@@ -787,3 +787,24 @@ commit/reprise durable et réacteur réseau restent ouverts. Les séquences
 multi-époques précédemment différées ne sont pas promues. Aucun fork moderne ni
 EIP-7549/Electra n'est déclaré activé par cette étape.
 Source : https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#attester-slashings
+
+### Soldes effectifs Phase0 — composant d'époque qualifié
+
+`prepare_phase0_effective_balances` applique les seuils d'hystérésis du preset
+épinglé, l'arrondi par incrément et le maximum effectif Phase0. Les comparaisons
+par différence évitent les débordements des additions solde/seuil. Les règles
+sont explicites ; ce maximum individuel n'est pas un plafond de validateurs.
+Le candidat conserve les soldes réels, le registre et ses métadonnées ; une
+annulation ou une configuration invalide ne modifie pas la source.
+
+`effectiveBalanceQualification` : le scénario officiel complet compare 64
+validateurs (8 changements), avec 8 cas locaux de seuils/cap/solde maximal,
+66 annulations et 8 rejets. Quatre suites passent, dont les régressions du registre,
+de FFG et des opérations de blocs. Les preuves incluent une altération de l'état
+attendu rejetée malgré un hash de fixture recalculé.
+
+Ce composant n'avance pas l'époque : l'orchestration des récompenses, des resets,
+des historiques et de la rotation des attestations reste à intégrer, puis à
+qualifier avec state_root, persistance et réseau. Aucun EIP-7251/Electra ni
+consensus actif n'est déclaré complet.
+Source épinglée : https://github.com/ethereum/consensus-specs/blob/fcdcf42024f33c498bff74936eabea2d96049fc2/specs/phase0/beacon-chain.md#effective-balances-updates

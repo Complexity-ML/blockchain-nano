@@ -366,3 +366,9 @@ isolés, quatre blocs officiels et onze suites sont qualifiés ; un état synth�
 à chronologie incohérente concorde sur le composant mais reste rejeté par le chemin
 contrôlé des blocs. Les cinq types d'opérations Phase0 sont composables ; Eth1,
 époques, state_root, commit et réseau restent ouverts. Aucun EIP moderne n'est clos.
+
+Soldes effectifs du socle Phase0 : `effectiveBalanceQualification` qualifie le
+composant d'hystérésis sur l'unique scénario officiel (64 entrées, 8 changements)
+et les frontières/annulations locales. Détail dans `VALIDATOR-EIP-ROADMAP.md`.
+Le traitement complet des époques et son intégration réseau restent ouverts ;
+cette preuve ne clôt ni EIP-7251 ni la production.
