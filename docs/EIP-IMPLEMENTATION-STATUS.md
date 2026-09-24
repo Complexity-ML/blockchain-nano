@@ -199,3 +199,8 @@ agrégats BLS et poids sans débordement. Trois vérifications positives et ving
 rejets adversariaux sont archivés dans `committeeParticipationQualification`.
 L'état autorisant ces membres/poids/domaines, le traitement des époques et
 l'intégration réseau restent requis ; aucun statut d'EIP complet n'est ajouté.
+
+Attestations : la racine SSZ typée (slot, index, bloc, checkpoints source/cible)
+est vérifiée contre cinq vecteurs officiels et reliée au test d'agrégat du comité.
+`consensusAttestationQualification` conserve les preuves ; fenêtre d'inclusion,
+règles de fork et finalité restent ouvertes, notamment pour 7045/7549.

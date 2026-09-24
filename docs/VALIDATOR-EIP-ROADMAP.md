@@ -83,3 +83,20 @@ persistante devra éviter ce travail à chaque comité sans perdre sa garantie.
 vingt rejets adversariaux, un total de poids supérieur à uint64 et l'indépendance
 du snapshot vis-à-vis des mutations du tableau d'origine. Il s'agit de tests
 locaux construits, pas d'une qualification Ethereum complète ou multi-hôte.
+
+## Données d'attestation SSZ — 24 septembre 2026
+
+`ConsensusAttestationData` engage le slot, l'index du comité, la racine du bloc,
+les époques et racines des checkpoints source/cible. Sa racine SSZ correspond
+aux cinq vecteurs `AttestationData/ssz_random/case_0..4` de la révision
+`bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908` de consensus-spec-tests.
+Les 35 mutations de champs changent les racines ; le test de comité signe
+maintenant cette racine typée et rejette également les sept substitutions.
+La nouvelle campagne `consensusAttestationQualification` conserve 27 rejets
+BLS/admission en complément des vecteurs SSZ. La campagne précédente à 20
+rejets est conservée sans modification.
+
+Le calcul SSZ n'impose pas la fenêtre de slots, la justification/ascendance des
+checkpoints ni la règle d'index spécifique au fork (notamment EIP-7549).
+Ces contrôles et l'application à la finalité restent à intégrer avec l'état
+consensus authentifié ; l'ancien réacteur BFT n'est pas changé par cette brique.

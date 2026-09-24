@@ -1,0 +1,11 @@
+import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import assert from 'node:assert/strict';
+const text=readFileSync(resolve(process.argv[2],'tests-full.log'),'utf8');
+assert.equal((text.match(/Test Passed\./g)||[]).length,2);
+for(const name of ['consensus_committee_participation','ethereum_consensus_attestation_root'])assert(text.includes(`Testing: ${name}\n`));
+const rows=text.split('\n').filter(l=>l.startsWith('{')).map(l=>JSON.parse(l));assert.equal(rows.length,2);
+const roots=rows.find(r=>r.scenario==='consensus-attestation-root');assert(roots);assert.equal(roots.officialCases,5);assert.equal(roots.fieldMutations,35);
+const votes=rows.find(r=>r.scenario==='consensus-committee-participation');assert(votes);assert.equal(votes.validAggregates,3);assert.equal(votes.rejected,27);assert.equal(votes.wideWeight,true);assert.equal(votes.snapshotOwned,true);
+for(const r of rows)assert.equal(r.activeInConsensus,false);
+console.log(JSON.stringify({verified:true,roots,votes},null,2));

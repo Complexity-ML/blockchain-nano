@@ -1,5 +1,6 @@
 #include "support/process.hpp"
 #include "nano/consensus_committee.hpp"
+#include "nano/consensus_attestation.hpp"
 #include "blst.h"
 using namespace test;
 namespace {
@@ -15,7 +16,7 @@ Bytes aggregate(const std::vector<Bytes>& signatures){
 }
 }
 int main(){try{
- ConsensusBytes4 version{1,0,0,0};ConsensusRoot genesis{},object{};genesis[0]=7;object[0]=42;
+ ConsensusBytes4 version{1,0,0,0};ConsensusRoot genesis{},object{};genesis[0]=7;ConsensusAttestationData vote;vote.slot=64;vote.index=1;vote.beacon_block_root[0]=42;vote.source.epoch=1;vote.target.epoch=2;object=consensus_attestation_root(vote);
  auto domain=consensus_domain({1,0,0,0},version,genesis);
  std::vector<ConsensusCommitteeMember> members;std::vector<blst_scalar> secrets(3);
  for(size_t i=0;i<3;++i){
@@ -33,6 +34,7 @@ int main(){try{
  refuse({},object,full);refuse({10,10,30},object,full);refuse({30,20,10},object,full);refuse({10,20,99},object,full);refuse(pair,object,full);
  auto changed=object;changed[0]^=1;refuse(all,changed,full);auto bad=full;bad[0]^=1;refuse(all,object,bad);
  for(size_t n:{0u,95u,97u}){bad=full;bad.resize(n);refuse(all,object,bad);}
+ for(unsigned field=0;field<7;++field){auto altered=vote;switch(field){case 0:altered.slot^=1;break;case 1:altered.index^=1;break;case 2:altered.beacon_block_root[0]^=1;break;case 3:altered.source.epoch^=1;break;case 4:altered.source.root[0]^=1;break;case 5:altered.target.epoch^=1;break;case 6:altered.target.root[0]^=1;break;}refuse(all,consensus_attestation_root(altered),full);}
  auto invalidRoster=[&](std::vector<ConsensusCommitteeMember> roster,ConsensusBytes4 fork){bool failed=false;try{ConsensusCommittee c(roster,fork,domain);}catch(const std::invalid_argument&){failed=true;}check(failed,"invalid roster accepted");++rejected;};
  invalidRoster({},version);auto roster=members;roster[1].validator_index=10;invalidRoster(roster,version);
  roster=members;roster[1].possession_message=roster[0].possession_message;roster[1].possession_signature=roster[0].possession_signature;invalidRoster(roster,version);

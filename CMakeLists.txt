@@ -727,3 +727,9 @@ add_executable(nano-consensus-committee-tests tests/test_consensus_committee.cpp
 target_link_libraries(nano-consensus-committee-tests PRIVATE nano_core nano_ckzg)
 add_test(NAME consensus_committee_participation COMMAND nano-consensus-committee-tests)
 set_tests_properties(consensus_committee_participation PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")
+
+add_executable(nano-consensus-attestation-tests tests/test_consensus_attestation.cpp)
+target_link_libraries(nano-consensus-attestation-tests PRIVATE nano_core)
+target_compile_definitions(nano-consensus-attestation-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+add_test(NAME ethereum_consensus_attestation_root COMMAND nano-consensus-attestation-tests)
+set_tests_properties(ethereum_consensus_attestation_root PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")
