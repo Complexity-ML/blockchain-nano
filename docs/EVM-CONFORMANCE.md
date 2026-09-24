@@ -1142,3 +1142,16 @@ Un nouvel écart reste enregistré pour le déploiement Paris sur Anvil 1.8.3 : 
 ### Cycle Governor OpenZeppelin qualifié localement — 2026-09-24
 
 `oz-governor-lifecycle-20260924` passe sur Paris/Shanghai avec GovernorVotes, GovernorCountingSimple et GovernorTimelockControl 5.0.2. Deux propositions par profil vérifient le cycle réussi jusqu’à l’exécution et un échec faute de quorum. Transférer les jetons après le snapshot n’augmente pas le poids historique du destinataire. Douze transactions malveillantes échouent avec reçus persistés ; les appels réussis utilisent le gaz estimé automatiquement. Les rôles du timelock appartiennent au Governor, l’administrateur de test renonce à ses droits, et la cible finale vaut 73. Pas de modification du moteur ; cette composition locale ne représente pas toute la gamme Governor ni un déploiement de gouvernance en production.
+
+### Rafraîchissement après vue EVM constante — 24 septembre 2026
+
+Le runner Release recompilé après le changement des appels statiques et de
+l'ouverture RocksDB passe les 5 387 cas présents dans les 317 fichiers de
+`tests/fixtures/ethereum-official`, dont 505 validations de rejet. Aucun mismatch,
+unsupported ou adapter error sur cette sélection. Le vérificateur
+`verify-readonly-corpus.mjs` contrôle les identifiants exacts, les résultats et
+les empreintes des fixtures ; supprimer un cas fait échouer la vérification.
+`readonlyEvmCorpusQualification` référence les artefacts de cette campagne.
+Ce résultat concerne le corpus versionné dans le dépôt, pas les 44 244 cas
+historiquement exécutés dans d'autres sélections, ni les tests de blocs ou
+l'activation d'un fork réseau. Ces vérifications plus larges restent à rafraîchir.

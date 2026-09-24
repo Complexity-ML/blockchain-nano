@@ -187,3 +187,9 @@ statiques lisent désormais l'état sans le copier ni créer de snapshots de com
 dont 20 cas statiques, annulation, rollback du parent et régressions staking/RPC.
 Cela réduit le coût des getters paginés mais ne clôture ni EIP-214 sur le corpus
 officiel complet après modification, ni le passage réseau à 100 000 validateurs.
+
+Rafraîchissement EVM : `readonlyEvmCorpusQualification` vérifie 5 387/5 387 cas
+sur les 317 fichiers de fixtures d'état actuellement versionnés, dont 505 rejets.
+Identités et empreintes contrôlées ; zéro mismatch/unsupported/error. Ce périmètre
+ne remplace pas les corpus historiques plus larges ni les scénarios de blocs et
+réseau. Aucun changement de statut de production n'en découle.
