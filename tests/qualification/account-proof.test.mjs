@@ -1,0 +1,13 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {createRequire} from 'node:module';import {verifyAccountProof} from './account-proof.mjs';
+const require=createRequire(new URL('../hardhat/package.json',import.meta.url));const {keccak256,encodeRlp}=require('ethers');
+const address='0x'+'11'.repeat(20),path=keccak256(address).slice(2),empty=keccak256('0x80');
+const account=['0x','0x',empty,keccak256('0x')],leaf=encodeRlp(['0x20'+path,encodeRlp(account)]),root=keccak256(leaf);
+test('included empty leaf is present',()=>assert.deepEqual(verifyAccountProof(root,address,[leaf]),{exists:true,account}));
+test('different authenticated leaf proves absence',()=>assert.equal(verifyAccountProof(root,'0x'+'22'.repeat(20),[leaf]).exists,false));
+test('empty trie proves absence',()=>assert.equal(verifyAccountProof(empty,address,[]).exists,false));
+test('empty branch proves absence',()=>{const b=Array(17).fill('0x');b[(parseInt(path[0],16)+1)%16]=root;const raw=encodeRlp(b);assert.equal(verifyAccountProof(keccak256(raw),address,[raw]).reason,'empty-branch');});
+test('extension and branch lead to included leaf',()=>{const l=encodeRlp(['0x20'+path.slice(2),encodeRlp(account)]),b=Array(17).fill('0x');b[parseInt(path[1],16)]=keccak256(l);const br=encodeRlp(b),ext=encodeRlp(['0x1'+path[0],keccak256(br)]);assert.equal(verifyAccountProof(keccak256(ext),address,[ext,br,l]).exists,true);});
+test('modified root rejected',()=>assert.throws(()=>verifyAccountProof('0x'+'11'.repeat(32),address,[leaf]),/hash mismatch/));
+test('truncated proof rejected',()=>assert.throws(()=>verifyAccountProof(root,address,[]),/truncated/));
+test('extra proof node rejected',()=>assert.throws(()=>verifyAccountProof(root,address,[leaf,leaf]),/unused/));
+test('noncanonical padding rejected',()=>{const raw=encodeRlp(['0x21'+path,encodeRlp(account)]);assert.throws(()=>verifyAccountProof(keccak256(raw),address,[raw]),/padding/);});

@@ -1,0 +1,78 @@
+import {network,artifacts} from 'hardhat';
+import {BrowserProvider,Wallet,ContractFactory,Signature,ZeroHash,id} from 'ethers';
+import assert from 'node:assert/strict';
+import {failedReceipt} from './helpers/failed-receipt.ts';
+const connection=await network.create('nano');
+try {
+ const provider=new BrowserProvider(connection.provider,undefined,{cacheTimeout:-1});provider.pollingInterval=100;
+ const owner=new Wallet('0x'+'1'.padStart(64,'0'),provider),other=new Wallet('0x'+'2'.padStart(64,'0'),provider);
+ const deploy=async(name:string,...args:any[])=>{const a=await artifacts.readArtifact(name);const c=await new ContractFactory(a.abi,a.bytecode,owner).deploy(...args);await c.waitForDeployment();return c as any;};
+ const quotes:any[]=[];
+ const voted=async(contract:any,name:string,args:any[])=>{
+  const tx=await contract[name].populateTransaction(...args),from=await contract.runner.getAddress();
+  const request={from,to:tx.to,data:tx.data};
+  const latest=await provider.send('eth_estimateGas',[request,'latest']),pending=await provider.send('eth_estimateGas',[request,'pending']);
+  const tag=process.env.NANO_GOVERNANCE_GAS_TAG??'pending';assert(['default','latest','pending'].includes(tag));
+  const sent=tag==='default'?await contract[name](...args):await contract[name](...args,{gasLimit:BigInt(tag==='pending'?pending:latest)});
+  console.log(JSON.stringify({phase:name,hash:sent.hash,latest,pending,selectedTag:tag,gasLimit:sent.gasLimit.toString()}));
+  const receipt=await sent.wait();
+  quotes.push({name,hash:sent.hash,latest,pending,selectedTag:tag,gasUsed:receipt.gasUsed.toString(),gasLimit:sent.gasLimit.toString(),blockNumber:receipt.blockNumber});
+  return receipt;
+ };
+ const votes=await deploy('DeveloperVotes'),relayed=votes.connect(other) as any;
+ const failures:any[]=[],gas={gasLimit:400000};
+ assert.equal(await votes.totalSupply(),1000000n);assert.equal(await votes.getVotes(owner.address),0n);
+ const delegated=await voted(votes,'delegate',[owner.address]);const snapshot=BigInt(delegated.blockNumber);
+ assert.equal(await votes.getVotes(owner.address),1000000n);
+ await voted(votes,'transfer',[other.address,250000]);
+ assert.equal(await votes.getPastVotes(owner.address,snapshot),1000000n);
+ assert.equal(await votes.getPastTotalSupply(snapshot),1000000n);
+ assert.equal(await votes.getVotes(owner.address),750000n);assert.equal(await votes.getVotes(other.address),0n);
+ const head=await provider.send('eth_getBlockByNumber',['latest',false]);
+ const domain={name:'Nano Votes Test',version:'1',chainId:1337,verifyingContract:await votes.getAddress()};
+ const types={Delegation:[{name:'delegatee',type:'address'},{name:'nonce',type:'uint256'},{name:'expiry',type:'uint256'}]};
+ const message={delegatee:other.address,nonce:0n,expiry:BigInt(head.timestamp)+3600n};
+ const sig=Signature.from(await owner.signTypedData(domain,types,message));
+ await voted(relayed,'delegateBySig',[message.delegatee,message.nonce,message.expiry,sig.v,sig.r,sig.s]);
+ assert.equal(await votes.nonces(owner.address),1n);assert.equal(await votes.delegates(owner.address),other.address);
+ assert.equal(await votes.getVotes(owner.address),0n);assert.equal(await votes.getVotes(other.address),750000n);
+ failures.push(await failedReceipt(provider,'delegation-replay',()=>relayed.delegateBySig(message.delegatee,message.nonce,message.expiry,sig.v,sig.r,sig.s,gas)));
+ const expired={...message,nonce:1n,expiry:0n},es=Signature.from(await owner.signTypedData(domain,types,expired));
+ failures.push(await failedReceipt(provider,'delegation-expired',()=>relayed.delegateBySig(expired.delegatee,expired.nonce,expired.expiry,es.v,es.r,es.s,gas)));
+ assert.equal(await votes.nonces(owner.address),1n);assert.equal(await votes.getVotes(other.address),750000n);
+ await voted(relayed,'delegate',[other.address]);assert.equal(await votes.getVotes(other.address),1000000n);
+ await voted(relayed,'transfer',[owner.address,100000]);
+ assert.equal(await votes.getVotes(other.address),1000000n,'both balances delegate to same address');
+ assert.equal(await votes.getPastVotes(owner.address,snapshot),1000000n,'historical checkpoint immutable');
+ assert.equal(await votes.balanceOf(owner.address),850000n);assert.equal(await votes.balanceOf(other.address),150000n);
+ const timelock=await deploy('DeveloperTimelock',owner.address),target=await deploy('DeveloperGovernedTarget',await timelock.getAddress());
+ const outsider=timelock.connect(other) as any,targetAddress=await target.getAddress();
+ const data=target.interface.encodeFunctionData('setValue',[42]),salt=id('nano-local-timelock-1');
+ const operation=await timelock.hashOperation(targetAddress,0,data,ZeroHash,salt);
+ failures.push(await failedReceipt(provider,'unauthorized-schedule',()=>outsider.schedule(targetAddress,0,data,ZeroHash,salt,1,gas)));
+ assert.equal(await timelock.isOperation(operation),false);
+ const scheduled=await voted(timelock,'schedule',[targetAddress,0,data,ZeroHash,salt,1]);
+ // Pin the scheduling block: the early probe must not race the live validator clock.
+ await assert.rejects(()=>timelock.execute.staticCall(targetAddress,0,data,ZeroHash,salt,{blockTag:scheduled.blockNumber}));
+ assert.equal(await timelock.isOperationDone(operation),false);assert.equal(await target.value(),0n);
+ failures.push(await failedReceipt(provider,'unauthorized-execute',()=>outsider.execute(targetAddress,0,data,ZeroHash,salt,gas)));
+ failures.push(await failedReceipt(provider,'direct-target-write',()=>target.setValue(99,gas)));
+ const altered=target.interface.encodeFunctionData('setValue',[99]);
+ failures.push(await failedReceipt(provider,'tampered-operation',()=>timelock.execute(targetAddress,0,altered,ZeroHash,salt,gas)));
+ assert.equal(await target.value(),0n);assert.equal(await timelock.isOperationDone(operation),false);
+ const readyAt=await timelock.getTimestamp(operation);
+ for(let n=0;BigInt((await provider.send('eth_getBlockByNumber',['latest',false])).timestamp)<readyAt;n++){
+  assert(n<10,'timelock failed to become ready');await new Promise(r=>setTimeout(r,1000));await (await owner.sendTransaction({to:owner.address,value:0})).wait();
+ }
+ const executed=await voted(timelock,'execute',[targetAddress,0,data,ZeroHash,salt]);
+ assert.equal(executed.status,1);assert.equal(await target.value(),42n);assert.equal(await timelock.isOperationDone(operation),true);
+ assert(executed.logs.some((l:any)=>{try{return timelock.interface.parseLog(l)?.name==='CallExecuted';}catch{return false;}}));
+ failures.push(await failedReceipt(provider,'execute-replay',()=>timelock.execute(targetAddress,0,data,ZeroHash,salt,gas)));
+ const cancelledSalt=id('nano-local-cancel'),cancelled=await timelock.hashOperation(targetAddress,0,altered,ZeroHash,cancelledSalt);
+ await voted(timelock,'schedule',[targetAddress,0,altered,ZeroHash,cancelledSalt,1]);await voted(timelock,'cancel',[cancelled]);
+ assert.equal(await timelock.isOperation(cancelled),false);
+ failures.push(await failedReceipt(provider,'cancelled-execute',()=>timelock.execute(targetAddress,0,altered,ZeroHash,cancelledSalt,gas)));
+ assert.equal(await target.value(),42n);assert.equal(await votes.getPastVotes(owner.address,snapshot),1000000n);
+ const blocks=await provider.send('nano_networkBlocks',['0x0']);assert(blocks.blocks.length>0&&blocks.blocks.every((b:any)=>b.bftCertificate?.votes.length>0));
+ console.log(JSON.stringify({scenario:'hardhat-governance-primitives',fork:process.env.NANO_TEST_EVM_FORK,openzeppelin:'5.0.2',signedDelegation:true,historicalVotes:true,sharedDelegateTransfer:true,earlyExecutionCallRejected:true,delayedExecution:true,cancelledOperation:true,failedReceipts:failures,gasQuotes:quotes,finalTargetValue:'42',certifiedBlocks:true,scope:'ERC20Votes and TimelockController primitives, not Governor proposal/voting lifecycle or production governance configuration'}));
+} finally {await connection.close();}

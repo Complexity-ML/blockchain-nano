@@ -15,6 +15,16 @@ LIBSOURCES := $(filter-out src/main.cpp,$(SOURCES))
 OBJECTS := $(patsubst src/%.cpp,build/%.o,$(LIBSOURCES))
 MCL_ARCHIVE := build-mcl/lib/libmcl.a
 OBJECTS += $(MCL_ARCHIVE)
+CKZG_ARCHIVE := build-ckzg/libnano_ckzg.a
+BLST_ARCHIVE := build-ckzg/libnano_blst.a
+CPPFLAGS += -Ithird_party/ckzg/src -Ithird_party/ckzg/blst/bindings -Ibuild-ckzg/include
+OBJECTS += $(CKZG_ARCHIVE) $(BLST_ARCHIVE)
+$(CKZG_ARCHIVE): third_party/ckzg/CMakeLists.txt third_party/ckzg/src/trusted_setup.txt
+	$(CMAKE) -S third_party/ckzg -B build-ckzg -DCMAKE_BUILD_TYPE=Release
+	$(CMAKE) --build build-ckzg --target nano_ckzg -j 4
+$(BLST_ARCHIVE): $(CKZG_ARCHIVE)
+	test -f $@
+build/kzg.o: $(CKZG_ARCHIVE)
 CMAKE ?= cmake
 $(MCL_ARCHIVE):
 	$(CMAKE) -S third_party/mcl -B build-mcl -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_NO_PACKAGE_REGISTRY=ON -DMCL_BUILD_TESTING=OFF -DMCL_BUILD_SAMPLE=OFF

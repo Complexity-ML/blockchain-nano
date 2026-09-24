@@ -24,7 +24,7 @@ public:
   Clock::duration proposal_timeout,Clock::duration prevote_timeout,Clock::duration precommit_timeout);
  void propose(const Block& block,const Int& wall_time);
  VoteReception receive(const std::string& wire,Clock::time_point now);
- void begin_next_round(Clock::time_point now);
+ void begin_next_round(Clock::time_point now,std::optional<Clock::duration> proposal_timeout=std::nullopt);
  const std::optional<Block>& proposal() const {return proposal_;}
  uint64_t round() const {return round_;}
  Progress advance(Clock::time_point now,const Int& wall_time);

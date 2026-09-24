@@ -1,6 +1,7 @@
 #pragma once
 #include "core.hpp"
 #include <map>
+#include <array>
 #include <chrono>
 namespace nano {
 class ChainStore;
@@ -45,11 +46,12 @@ enum class VoteReception { added, duplicate, equivocation };
 class RoundVoteCollector {
  VotingSet validators_;
  Int chain_id_,total_power_=0;
- Bytes genesis_hash_;
+ Bytes genesis_hash_,validator_set_hash_;
  uint64_t height_,round_;
  std::map<std::string,Int> powers_;
  using Slot=std::pair<unsigned,std::string>;
  std::map<Slot,FinalityVote> votes_,conflicts_;
+ std::array<Int,2> participation_{};
 public:
  RoundVoteCollector(VotingSet validators,Int chain_id,Bytes genesis_hash,uint64_t height,uint64_t round);
  VoteReception receive(const std::string& message);

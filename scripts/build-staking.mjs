@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 import {createRequire} from 'node:module';
 const require = createRequire(import.meta.url);
-const solc = require('../.deps/solc/node_modules/solc');
+const solc = require(process.env.NANO_SOLC_MODULE || '../.deps/solc/node_modules/solc');
 if (!solc.version().startsWith('0.8.28+')) throw new Error('Expected solc 0.8.28');
 const source = fs.readFileSync('contracts/NanoStaking.sol','utf8');
 const settings = {evmVersion:'paris',optimizer:{enabled:true,runs:200},

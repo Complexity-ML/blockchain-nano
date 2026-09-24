@@ -32,7 +32,7 @@ dans `PRODUCTION-GOAL.md` ; le choix de règles corrigées est acté.
 | Portefeuilles | Keystore V3, BIP39/32/44, EIP712, CLI et comptes RPC ; fixtures eth-account, tests core et wallet_cli |
 | EVM | Instructions exécutées par le Python, appels imbriqués, CREATE/CREATE2, rollback et précompilés 1–9 ; tests core |
 | Comparaisons EVM | 451 exécutions Python capturées : 400 arithmétiques, 24 mémoire/stockage/logs/erreurs, 15 appels imbriqués et 12 contextes de bloc ; provenance et divergence RETURN dans `tests/fixtures/python-evm.md` |
-| Comparaisons précompilés | 111 appels Python capturés pour les adresses 1–7, dont 107 comparaisons exactes résultat/gaz et 4 rejets natifs de courbes invalides ; `tests/fixtures/python-precompiles.md` |
+| Comparaisons précompilés | 111 vecteurs dérivés du prototype pour les adresses 1–7, avec attentes Ethereum corrigées pour ECRECOVER et MODEXP, et 4 rejets de courbes invalides ; `tests/fixtures/precompiles.md` |
 | PoW | Preuve Nano à 64 tours Keccak, difficulté, production et rejeu ; fixtures Python et tests chain/uncles |
 | PoS | Sélection MT19937 comparée au Python, stake/verrouillage/récompenses/slashing dans le module ; registre de contrat synchronisé et persisté, validation automatique et distante testées |
 | Mempool | Doublons, remplacement, limites, ordre des nonces, budget gas, soumission et inclusion ; tests core/chain/rpc |

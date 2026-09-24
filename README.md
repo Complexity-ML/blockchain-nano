@@ -9,7 +9,7 @@ Les genesis livrés activent les signatures de producteur
 
 ## Compiler et tester
 
-Dépendances : compilateur C++20, GNU Make ou CMake 3.20+, GMP, OpenSSL et
+Dépendances : compilateurs C et C++20, GNU Make ou CMake 3.20+, GMP, OpenSSL et
 RocksDB (version locale validée : 11.8.1) et Boost.Beast (Boost 1.92.0). JSON nlohmann 3.12.0 est fourni
 avec sa licence dans `third_party/json.hpp`.
 
@@ -104,14 +104,65 @@ transactions par hash/numéro/index, reçus, balances, code, stockage, nonces,
 l'estimation cherche une limite de gas exécutable. Les lectures historiques
 utilisent les snapshots RocksDB. Le nonce pending compte les nonces contigus.
 
-Les tags safe/finalized et la simulation de l'état pending ne sont pas encore
-disponibles et renvoient une erreur explicite. Le serveur n'héberge pas de clés :
+`eth_call` et `eth_estimateGas` acceptent le tag explicite `pending` : ils
+simulent un bloc candidat et les transactions admissibles de la mempool sur
+une copie de l'état. Le tag `latest` et le paramètre omis décrivent le bloc
+courant. Les autres lectures de blocs/état `pending`, ainsi que les tags
+`safe`/`finalized`, restent indisponibles et renvoient une erreur explicite.
+
+L'estimation renvoie une limite vérifiée par simulation. Si le gas mesuré ne
+suffit pas aux appels imbriqués, la recherche peut s'arrêter lorsque son
+intervalle représente au plus 1,5 % de la limite proposée : elle ne promet
+pas le minimum exact. Le plafond du demandeur et son budget restent respectés.
+Un changement d'état avant inclusion peut modifier le résultat. Aucune clé
+n'est chargée par défaut :
 `eth_accounts` expose les comptes explicitement chargés ; il est vide par défaut.
 `nano serve` démarre uniquement le RPC ; `nano run` raccorde aussi les pairs.
 Les 61 noms de routes Python sont présents ; leur audit comportemental reste partiel.
 
-Validation RPC : 22 contrôles fonctionnels et 6 contrôles HTTP sur socket locale,
-en complément des 415 contrôles du cœur et de la chaîne.
+Les simulations HTTP et WebSocket partagent deux workers dédiés et une capacité de
+huit simulations par nœud, en cours ou réservées. Chaque appel d'un lot compte,
+notifications comprises ; un lot doit réserver toute sa capacité avant de
+commencer. Le surplus reçoit HTTP 503 ou une erreur JSON-RPC `-32005` sur
+WebSocket, sans exécution partielle du lot refusé à l'admission. Une tâche qui
+attend plus de quatre secondes avant de démarrer expire : HTTP 503 ou
+JSON-RPC `-32005` avec `RPC simulation queue wait exceeded`. Le worker vérifie
+aussi cette échéance avant toute exécution. La réservation reste comptée jusqu'au
+retrait effectif de la tâche expirée. Sur WebSocket, les éléments non exécutés
+restants du lot sont abandonnés ; les éléments déjà terminés ne sont pas annulés.
+Les notifications ne produisent pas de réponse JSON-RPC. Le calcul utilise une copie
+de l'état, du bloc et de ses hash d'ancêtres et libère le verrou RPC pendant
+l'exécution EVM. Les abonnements WebSocket restent traités dans la boucle réseau.
+La capture de l’état, des transactions et des ancêtres du candidat `pending`
+reste synchronisée ; sa sélection et son exécution utilisent ensuite une copie
+autonome hors des verrous RPC et chaîne pour les appels directs à `eth_call`
+et `eth_estimateGas`. Les estimations internes du portefeuille et des commandes
+staking libèrent aussi le verrou RPC pendant le calcul. Les commandes de signature,
+d'envoi et de staking passent par la même file bornée, même si le gas est fourni.
+Après une estimation, le compte doit toujours être déverrouillé ; le nonce implicite
+est choisi sous verrou juste avant la signature et l'admission. Cette capacité ne
+constitue pas un budget cumulé de gas ni un délai maximal d'exécution. Les
+simulations disposent d'un délai coopératif de cinq secondes dès la préparation
+de l'état, partagé par la construction du candidat `pending`, ses transactions
+et tous les essais d'estimation. Son expiration renvoie `-32002` et restaure les
+écritures de la simulation. L'attente en file et l'acquisition initiale du verrou
+RPC restent hors de ce délai. Une copie d'état, un accès disque ou une routine
+native déjà lancée ne sont contrôlés qu'au prochain point de contrôle ; le délai
+n'est donc pas une borne stricte. La production et la validation de consensus
+n'activent pas cette limite locale. L'arrêt du serveur annule également les simulations coopératives et empêche le démarrage des éléments encore en attente. Il ne préempte pas une routine native déjà en cours. Une déconnexion
+WebSocket annule aussi le travail associé et libère sa réservation. La lecture
+WebSocket reste active pendant les simulations : les réponses à des requêtes
+distinctes peuvent arriver dans un ordre différent, avec leurs identifiants
+JSON-RPC respectifs. Une erreur de socket HTTP explicite annule également le calcul surveillé. Une
+simple fin du canal d'envoi reste compatible avec l'attente de la réponse.
+La surveillance ne consomme pas les données d'une requête suivante ; si celles-ci
+sont déjà disponibles, une rupture ultérieure peut attendre la prochaine
+lecture ou écriture pour être détectée.
+
+La suite native RPC comporte 931 contrôles lors de la qualification de
+l’estimation des appels imbriqués. Des suites distinctes couvrent HTTP, le cœur
+et la chaîne ; les résultats et limites sont conservés dans
+[QUALIFICATION-FAILURES.md](docs/QUALIFICATION-FAILURES.md).
 
 ## Logs, filtres et WebSocket
 
@@ -129,8 +180,15 @@ bloc et de la transaction. Les blocs sont annoncés après leur commit RocksDB.
 Les filtres et abonnements sont volatils. Le journal garde 10000 événements ; un
 lecteur trop ancien doit recréer son filtre. Une recherche de logs est limitée à
 10000 blocs et 10000 résultats. Limites : 1024 filtres HTTP, 64 abonnements par
-WebSocket et 256 messages en attente par connexion. Les événements sont relevés
-toutes les 100 ms ; un client trop lent est déconnecté. Les réorganisations de
+WebSocket et 256 messages en attente par connexion. Les réponses WebSocket
+sérialisées sont limitées à 8 Mio par connexion et 64 Mio partagés par serveur,
+en incluant le message en cours d'écriture. La sérialisation s'arrête si le
+budget disponible est dépassé ; la connexion est fermée. Cette fermeture
+n'annule pas une transaction déjà soumise. Les tampons réseau du système,
+les objets JSON avant sérialisation et la capacité des allocations ne sont pas
+comptés dans ces plafonds de charge utile ; ils ne constituent donc pas un
+plafond de mémoire totale du processus.
+Les événements sont relevés toutes les 100 ms ; un client trop lent est déconnecté. Les réorganisations de
 chaîne et les notifications `removed=true` restent à développer.
 
 25 tests supplémentaires vérifient les filtres et les abonnements sur de vraies
@@ -349,6 +407,32 @@ et lié statiquement. CMake compile cette dépendance automatiquement. La compil
 avec Make utilise également CMake pour mcl (`make CMAKE=/chemin/vers/cmake`).
 Les résultats sont vérifiés avec les 14 vecteurs de pairing de go-ethereum.
 
+Le précompile KZG (`0x0a`) du moteur de qualification Cancun utilise c-kzg-4844
+v2.1.8 et blst, épinglés dans `third_party/ckzg/UPSTREAM.json` et liés
+statiquement. Les paramètres publics Ethereum sont vérifiés par SHA-256 puis
+intégrés au binaire. Les 180 cas officiels KZG et les 10 777 cas du corpus
+d'état Cancun épinglé concordent. Cela ne prouve pas une conformité complète :
+Cancun reste désactivé côté réseau, et le transport/stockage des blobs n'est
+pas encore implémenté.
+Le profil de qualification Prague ajoute les sept précompiles BLS12-381
+EIP-2537 avec le même blst et les autorisations EIP-7702 de type 4.
+Les 13 074 cas d'état Prague épinglés concordent ; Prague est indisponible
+comme configuration réseau. Les résultats de blocs et transitions sont détaillés
+dans le registre de qualification, avec leurs limites de validation du consensus.
+Le profil de qualification Osaka ajoute CLZ, les règles MODEXP, les plafonds
+de gas/blobs par transaction et le précompile P-256. Les 13 739 cas d’état
+Osaka épinglés concordent ; Osaka reste indisponible comme configuration réseau.
+Ce résultat ne qualifie pas PeerDAS ni la disponibilité des blobs.
+Le rejeu Release courant des six corpus d'état Berlin, Paris, Shanghai, Cancun,
+Prague et Osaka donne 44 244 cas concordants, sans erreur ni exclusion. Les
+7 603 fichiers utilisés correspondent à l'archive officielle épinglée. Ce résultat
+ne prouve pas la conformité Ethereum complète ni la préparation production.
+La comparaison RPC Shanghai garde un désaccord explicite avec Anvil sur
+l'admission des créations dont l'initcode dépasse 49 152 octets.
+Voir [la qualification EVM](docs/EVM-CONFORMANCE.md),
+[le registre des échecs et corrections](docs/QUALIFICATION-FAILURES.md) et
+[les dépendances KZG](third_party/ckzg/README.nano.md).
+
 ## Snapshots de développement
 
 Sur un serveur local sans P2P, activer `{"dev_mode": true}` dans le fichier de
@@ -496,3 +580,10 @@ et `VALIDATOR_BLOCK_TIME` (1 à 3600 secondes) lorsque `nodes` ou `block_time`
 ne sont pas définis dans son fichier JSON. Les valeurs explicites du fichier
 priment. `VALIDATOR_KEY` reste disponible pour fournir la clé hors du fichier.
 Les URL vides ou invalides sont refusées avant tout appel réseau.
+
+### Docker
+
+Le [déploiement Docker](docs/DOCKER.md) compile `nano` et `nano-p2p` dans une
+image Ubuntu 24.04. Le fichier `compose.yaml` fournit un nœud sans clé de
+validation, un volume persistant et un RPC publié sur `127.0.0.1:8545`.
+Consulter la documentation pour choisir le genesis et configurer les pairs.

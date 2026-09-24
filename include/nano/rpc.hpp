@@ -1,16 +1,27 @@
 #pragma once
 #include "chain.hpp"
+#include "admission_budget.hpp"
+#include <functional>
 #include "wallet.hpp"
 #include "bft_reactor.hpp"
+#include "block_import.hpp"
 namespace nano {
 class RpcError : public std::runtime_error {
 public:
  int code;Json data;
  RpcError(int code,std::string message,Json data=nullptr):std::runtime_error(std::move(message)),code(code),data(std::move(data)){}
 };
+struct RpcSimulationLimits {
+ std::chrono::milliseconds timeout{5000};
+ std::function<std::chrono::steady_clock::time_point()> now=std::chrono::steady_clock::now;
+};
 struct RpcStream { std::string id,type;Json criteria;uint64_t cursor; };
 class Rpc {
  Blockchain& chain_;
+ RpcSimulationLimits simulation_limits_;
+ std::function<AdmissionBudget::Clock::time_point()> admission_now_;
+ AdmissionBudget admission_budget_;
+ void charge_transactions(size_t count){if(!admission_budget_.consume(count,admission_now_()))throw RpcError(-32005,"Transaction admission rate limit exceeded");}
  std::unique_ptr<BftReactor> bft_;
  KeyStore wallets_;
  bool dev_mode_=false;
@@ -26,22 +37,25 @@ class Rpc {
  struct DevSnapshot {Int number;Bytes hash;Int time_offset;std::optional<Int> next_timestamp;};
  uint64_t next_snapshot_=0;
  std::map<uint64_t,DevSnapshot> snapshots_;
- Json account_request(const std::string& method,const Json& params);
+ using Estimate = std::function<Json(const Json&)>;
+ Json account_request(const std::string& method,const Json& params,const Estimate& estimate={});
+ BlockImports block_imports_;
  std::string network_token_;
  Json network_report_=Json::object();
  std::chrono::steady_clock::time_point network_seen_{};
  Json network_status() const;
- Json network_block(const Block& block) const;
+ Json network_block(const Block& block,bool full=true) const;
  Json fee_history(const Json& params) const;
  std::recursive_mutex mutex_;
  uint64_t next_filter_=0;
  std::map<std::string,RpcStream> filters_;
  Json logs(const Json& criteria,const std::optional<Int>& only=std::nullopt) const;
  std::optional<Block> block(const Json& tag) const;
- Json dispatch(const std::string& method,const Json& params);
- Json one(const Json& request);
+ std::function<Json()> prepare_simulation(const std::string& method,const Json& params,const std::function<void()>& cancelled={});
+ Json dispatch(const std::string& method,const Json& params,const Estimate& estimate={});
+ Json one(const Json& request,const std::function<void()>& cancelled);
 public:
- explicit Rpc(Blockchain& chain,std::string network_token={}):chain_(chain),network_token_(std::move(network_token)){}
+ explicit Rpc(Blockchain& chain,std::string network_token={},std::function<AdmissionBudget::Clock::time_point()> now=AdmissionBudget::Clock::now,RpcSimulationLimits simulation_limits={}):chain_(chain),simulation_limits_(std::move(simulation_limits)),admission_now_(std::move(now)),admission_budget_(admission_now_()),network_token_(std::move(network_token)){}
  bool local_only(){std::lock_guard lock(mutex_);return dev_mode_||!wallets_.addresses().empty();}
  bool has_wallets(){std::lock_guard lock(mutex_);return !wallets_.addresses().empty();}
  void validator_tick();
@@ -49,7 +63,7 @@ public:
  RpcStream stream(const std::string& type,const Json& criteria=Json::object());
  Json poll(RpcStream& stream);
  // Null means notification: no JSON-RPC response should be sent.
- Json handle(const Json& request);
+ Json handle(const Json& request,const std::function<void()>& cancelled={});
  Json parse(const std::string& request);
 };
 }

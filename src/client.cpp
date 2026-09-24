@@ -22,7 +22,7 @@ Endpoint endpoint(const std::string& url){
  if(e.host.empty()||e.port.empty()||e.port.find_first_not_of("0123456789")!=std::string::npos||quantity(Json(e.port))>65535||quantity(Json(e.port))==0)throw std::invalid_argument("Invalid RPC host or port");return e;
 }
 template<class Stream>Json exchange(asio::io_context& context,Stream& stream,const Endpoint& endpoint,const Json& body,std::chrono::milliseconds timeout){
- tcp::resolver resolver(context);asio::steady_timer timer(context);beast::flat_buffer buffer;http::response_parser<http::string_body> parser;parser.body_limit(8*1024*1024);
+ tcp::resolver resolver(context);asio::steady_timer timer(context);beast::flat_buffer buffer;http::response_parser<http::string_body> parser;parser.body_limit(16*1024*1024);
  http::request<http::string_body> request(http::verb::post,endpoint.path,11);request.set(http::field::host,endpoint.authority);request.set(http::field::content_type,"application/json");request.body()=body.dump();request.prepare_payload();
  beast::error_code failure;bool timed_out=false;
  auto finish=[&](beast::error_code ec){failure=ec;timer.cancel();beast::error_code ignored;beast::get_lowest_layer(stream).socket().close(ignored);};

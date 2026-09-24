@@ -6,7 +6,7 @@
 namespace nano {
 namespace {
 std::map<std::string,Int> normalized(const VotingSet& validators){
- if(validators.empty()||validators.size()>1000)throw std::invalid_argument("invalid voting set size");
+ if(validators.empty())throw std::invalid_argument("invalid voting set size");
  std::map<std::string,Int> result;
  for(const auto& [raw,power]:validators){auto signer=address(raw);
   if(signer==address("0x0000000000000000000000000000000000000000")||power<=0||power>=(Int(1)<<256)||!result.emplace(signer,power).second)throw std::invalid_argument("invalid or duplicate voting member");
@@ -60,7 +60,8 @@ std::string encode_vote_message(const FinalityVote& vote,const Int& chain_id,con
  {"blockHash",vote.block_hash?Json(hex(*vote.block_hash)):Json(nullptr)},{"validator",address(vote.validator)},{"signature",hex(vote.signature)}};
  return message.dump();
 }
-FinalityVote decode_vote_message(const std::string& message,const VotingSet& validators,const Int& chain_id,const Bytes& genesis_hash,uint64_t height,uint64_t round){
+template<class ValidateSet>
+static FinalityVote decode_vote_message_checked(const std::string& message,const Int& chain_id,const Bytes& genesis_hash,uint64_t height,uint64_t round,ValidateSet&& validate_set){
  if(message.empty()||message.size()>2048)throw std::invalid_argument("vote message exceeds size bound");
  std::set<std::string> keys;
  auto flat=[&](int depth,Json::parse_event_t event,Json& value){
@@ -68,16 +69,16 @@ FinalityVote decode_vote_message(const std::string& message,const VotingSet& val
   if(event==Json::parse_event_t::key&&!keys.insert(value.get<std::string>()).second)throw std::invalid_argument("duplicate vote field");
   return true;
  };
- auto encoded=Json::parse(message,flat);
+ Json encoded=Json::parse(message,flat);
  const std::set<std::string> expected{"type","version","chainId","genesisHash","height","round","step","validatorSetHash","blockHash","validator","signature"};
  if(!encoded.is_object()||keys!=expected||encoded.at("type")!="nano/bft/vote"||!encoded.at("version").is_number_integer()||encoded.at("version")!=1)throw std::invalid_argument("unsupported vote envelope");
  auto integer_field=[&](const char* name,size_t width){
-  const auto& field=encoded.at(name);if(!field.is_string())throw std::invalid_argument("vote quantity must be hex string");
+  const Json& field=encoded.at(name);if(!field.is_string())throw std::invalid_argument("vote quantity must be hex string");
   const auto text=field.get<std::string>();if(text.size()>2+width*2)throw std::invalid_argument("vote quantity exceeds width");
   auto value=quantity(field);if(value<0||quantity(value)!=text)throw std::invalid_argument("noncanonical vote quantity");return value;
  };
  auto byte_field=[&](const char* name,size_t width){
-  const auto& field=encoded.at(name);if(!field.is_string())throw std::invalid_argument("vote bytes must be hex string");
+  const Json& field=encoded.at(name);if(!field.is_string())throw std::invalid_argument("vote bytes must be hex string");
   const auto text=field.get<std::string>();if(text.size()!=2+width*2)throw std::invalid_argument("invalid vote byte width");
   auto value=unhex(text);if(hex(value)!=text)throw std::invalid_argument("noncanonical vote hex");return value;
  };
@@ -88,10 +89,14 @@ FinalityVote decode_vote_message(const std::string& message,const VotingSet& val
  vote.validator_set_hash=byte_field("validatorSetHash",32);
  if(!encoded.at("blockHash").is_null())vote.block_hash=byte_field("blockHash",32);
  vote.validator=hex(byte_field("validator",20));vote.signature=byte_field("signature",65);
- auto members=normalized(validators);
- if(vote.validator_set_hash!=voting_set_hash(validators)||!members.contains(address(vote.validator)))throw std::invalid_argument("vote outside verified validator set");
+ if(!validate_set(vote))throw std::invalid_argument("vote outside verified validator set");
  if(!verify_vote(vote,chain_id,genesis_hash))throw std::invalid_argument("invalid wire vote signature");
  return vote;
+}
+FinalityVote decode_vote_message(const std::string& message,const VotingSet& validators,const Int& chain_id,const Bytes& genesis_hash,uint64_t height,uint64_t round){
+ return decode_vote_message_checked(message,chain_id,genesis_hash,height,round,[&](const FinalityVote& vote){
+  auto members=normalized(validators);return vote.validator_set_hash==voting_set_hash(validators)&&members.contains(address(vote.validator));
+ });
 }
 static bool verify_quorum(const std::vector<FinalityVote>& votes,const VotingSet& validators,
  uint64_t height,uint64_t round,VoteStep step,const std::optional<Bytes>& block_hash,const Int& chain_id,const Bytes& genesis_hash){
@@ -119,15 +124,26 @@ bool verify_prevote_certificate(const std::vector<FinalityVote>& votes,const Vot
  return verify_quorum(votes,validators,height,round,VoteStep::prevote,block_hash,chain_id,genesis_hash);
 }
 RoundVoteCollector::RoundVoteCollector(VotingSet validators,Int chain_id,Bytes genesis_hash,uint64_t height,uint64_t round)
- :validators_(std::move(validators)),chain_id_(std::move(chain_id)),genesis_hash_(std::move(genesis_hash)),height_(height),round_(round),powers_(normalized(validators_)){
+ :validators_(std::move(validators)),chain_id_(std::move(chain_id)),genesis_hash_(std::move(genesis_hash)),validator_set_hash_(voting_set_hash(validators_)),height_(height),round_(round),powers_(normalized(validators_)){
  if(height_==0||chain_id_<=0||chain_id_>=(Int(1)<<256)||genesis_hash_.size()!=32)throw std::invalid_argument("invalid vote collector domain");
  for(const auto& [_,power]:powers_)total_power_+=power;
 }
 VoteReception RoundVoteCollector::receive(const std::string& message){
- auto vote=decode_vote_message(message,validators_,chain_id_,genesis_hash_,height_,round_);
+ // Membership is immutable for this collector's height/round. Keep signature
+ // verification on every message, including duplicate and conflicting votes.
+ auto vote=decode_vote_message_checked(message,chain_id_,genesis_hash_,height_,round_,[&](const FinalityVote& vote){
+  return vote.validator_set_hash==validator_set_hash_&&powers_.contains(address(vote.validator));
+ });
  Slot slot{static_cast<unsigned>(vote.step),address(vote.validator)};
  auto original=votes_.find(slot);
- if(original==votes_.end()){votes_.emplace(slot,std::move(vote));return VoteReception::added;}
+ if(original==votes_.end()){
+  auto& participation=participation_[static_cast<unsigned>(vote.step)-1];
+  Int updated=participation+powers_.at(slot.second);
+  // Prepare the sum before insertion; a failed allocation must not count a
+  // missing vote. Swapping GMP values after successful insertion cannot throw.
+  votes_.emplace(slot,std::move(vote));mpz_swap(participation.get_mpz_t(),updated.get_mpz_t());
+  return VoteReception::added;
+ }
  if(original->second.block_hash==vote.block_hash)return VoteReception::duplicate;
  // Keep the first verified vote counted. Conflicting relays never add weight
  // and cannot replace the original or allocate unlimited evidence.
@@ -135,8 +151,7 @@ VoteReception RoundVoteCollector::receive(const std::string& message){
 }
 bool RoundVoteCollector::has_participation_quorum(VoteStep step)const{
  if(step!=VoteStep::prevote&&step!=VoteStep::precommit)throw std::invalid_argument("invalid vote collection step");
- Int power=0;for(const auto& [slot,vote]:votes_)if(slot.first==static_cast<unsigned>(step))power+=powers_.at(slot.second);
- return power*3>total_power_*2;
+ return participation_[static_cast<unsigned>(step)-1]*3>total_power_*2;
 }
 std::optional<VoteQuorum> RoundVoteCollector::quorum(VoteStep step)const{
  if(step!=VoteStep::prevote&&step!=VoteStep::precommit)throw std::invalid_argument("invalid quorum step");

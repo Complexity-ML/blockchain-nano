@@ -32,6 +32,11 @@ int main(){try{
   ConsensusRound resumed(chain,journal,key,0,start+second,second,second,second);auto recovered=resumed.advance(start+second,12);check(recovered.broadcast.size()==1&&recovered.broadcast[0].signature==timeout.broadcast[1].signature&&recovered.next_round&&!recovered.committed,"same-round nil precommit resumes exact signature");
   resumed.begin_next_round(start+second);check(resumed.round()==1,"nil quorum advances round explicitly");auto proposal=chain.block_template(signer,12);sign_block(proposal,key,1337,genesis.block.header.hash());resumed.propose(proposal,12);auto committed=resumed.advance(start+second,12);check(committed.committed&&committed.broadcast.size()==2&&committed.broadcast[0].round==1&&chain.store().certificate_at(1)->round==1,"new round commits with new vote domain");
  }
+ {Blockchain chain(root/"backoff",genesis);ChainStore journal(root/"backoff-journal");ConsensusRound round(chain,journal,key,0,start,second,second,second);
+  check(round.advance(start+second,12).next_round,"initial timeout permits retry");
+  bool rejected=false;try{round.begin_next_round(start+second,Clock::duration::zero());}catch(const std::invalid_argument&){rejected=true;}check(rejected&&round.round()==0,"invalid retry duration leaves round unchanged");
+  round.begin_next_round(start+second,10*second);check(round.advance(start+10*second,12).broadcast.empty(),"retry does not vote nil at old shorter timeout");auto retry=round.advance(start+11*second,12);check(retry.next_round&&retry.broadcast.size()==2&&!retry.committed,"retry timeout emits nil votes without a block commit");
+ }
  // Derive four real equal-weight validators from executed staking transactions.
  Json staking;std::ifstream("contracts/NanoStaking.json")>>staking;
  std::vector<Bytes> keys;std::vector<std::string> addresses;Json allocations=Json::object();
@@ -185,11 +190,15 @@ int main(){try{
   reactors[4]->tick(start+std::chrono::seconds(102),fresh.header.timestamp);
   check(reactors[4]->snapshot().at("votes")==reserved&&nodes[4]->audit().at("verified")==true,"post-re-registration vote survives chain and journal restart exactly");
  }
+ FinalityVote lagged_vote;
  // Execute a weight change, then attack the parent-set boundary with correctly
  // signed certificates. Head count and the former weights cannot authorize it.
  {
   Blockchain producer(root/"weight-producer",multi),peer(root/"weight-peer",multi);
   auto original=producer.voting_set();
+  {ChainStore journal(root/"weight-journal");ConsensusRound pending(peer,journal,keys[3],0,start,second,second,second);
+   auto progress=pending.advance(start+second,12);check(progress.broadcast.size()==1&&!progress.broadcast[0].block_hash,"reserve a nil prevote before certified imports");lagged_vote=progress.broadcast[0];}
+
   auto certificate=[&](const Block& block,const VotingSet& members,const std::vector<unsigned>& signers){
    std::vector<FinalityVote> result;
    for(auto i:signers){FinalityVote v;v.height=u64(block.header.number);v.round=0;v.step=VoteStep::precommit;v.block_hash=block.header.hash();v.validator_set_hash=voting_set_hash(members);v.validator=addresses[i];sign_vote(v,keys[i],1337,multi.block.header.hash());result.push_back(v);}
@@ -215,7 +224,29 @@ int main(){try{
   producer.import_certified_block(second_block,0,weighted_proof,24);peer.import_certified_block(second_block,0,weighted_proof,24);
   check(peer.tip().header.hash()==producer.tip().header.hash()&&peer.state().root()==producer.state().root()&&peer.audit().at("verified")==true,"five sevenths of current weight certifies matching audited state");
  }
- {Blockchain reopened(root/"weight-peer",multi);check(reopened.tip().header.number==2&&reopened.stake(addresses[0])==minimum*4&&reopened.audit().at("verified")==true,"weighted transition and certified history survive reopen");}
+ {Blockchain reopened(root/"weight-peer",multi);ChainStore journal(root/"weight-journal");auto domain=multi.block.header.hash();
+  check(reopened.tip().header.number==2&&reopened.stake(addresses[0])==minimum*4&&reopened.audit().at("verified")==true,"weighted transition and certified history survive reopen");
+  auto before=journal.voting_position(addresses[3],1337,domain);
+  check(before&&before->height==1&&before->validator_set_hash==lagged_vote.validator_set_hash,"certified import followed by close leaves journal at old height and weights");
+  ConsensusRound recovered(reopened,journal,keys[3],0,start,second,second,second);
+  auto after=journal.voting_position(addresses[3],1337,domain);
+  check(after&&after->height==3&&after->validator_set_hash==voting_set_hash(reopened.voting_set()),"round construction recovers both imported certificates before voting");
+  auto saved=journal.latest_consensus_vote(addresses[3],1337,domain);check(saved&&vote_signing_hash(*saved,1337,domain)==vote_signing_hash(lagged_vote,1337,domain),"recovery preserves old vote reservation");
+  auto conflict=lagged_vote;auto block=*reopened.store().block_by_number(1);conflict.block_hash=block.header.hash();
+  bool refused=false;try{journal.reserve_consensus_vote(conflict,reopened.store().certificate_at(1)->validators,{},1337,domain,&block);}catch(const std::exception&){refused=true;}
+  check(refused,"recovery cannot replace old nil vote with conflicting valid proposal");
+  auto next=recovered.advance(start+second,36);check(next.broadcast.size()==1&&next.broadcast[0].height==3&&next.broadcast[0].validator_set_hash==after->validator_set_hash,"only recovered current-height vote may be released");
+  lagged_vote=next.broadcast[0];
+  std::cout<<Json{{"scenario","certified-import-journal-lag"},{"importedTip",2},{"journalBefore",before->height},{"journalAfter",after->height},{"conflictingOldVoteRefused",true},{"newVoteHeight",lagged_vote.height}}.dump()<<std::endl;
+ }
+ {Blockchain reopened(root/"weight-peer",multi);ChainStore journal(root/"weight-journal");ConsensusRound resumed(reopened,journal,keys[3],0,start,second,second,second);auto result=resumed.advance(start,36);
+  check(result.broadcast.size()==1&&result.broadcast[0].signature==lagged_vote.signature,"recovered-height vote resumes exact signature on second reopen");}
+
+ {Blockchain rolled_back(root/"weight-rolled-back",multi);ChainStore journal(root/"weight-journal");auto domain=multi.block.header.hash();
+  bool refused=false;try{rolled_back.recover_voting_progress(journal,addresses[3]);}catch(const std::runtime_error& error){refused=std::string(error.what())=="voting journal is ahead of canonical chain";}
+  auto active=journal.voting_position(addresses[3],1337,domain);auto saved=journal.latest_consensus_vote(addresses[3],1337,domain);
+  check(refused&&active&&active->height==3&&saved&&vote_signing_hash(*saved,1337,domain)==vote_signing_hash(lagged_vote,1337,domain),"rollback cannot reset an ahead journal or erase reserved votes");
+ }
  // A Byzantine proposer splits the honest prevotes across two valid blocks.
  // Their gossip must still carry votes, so they can time out into a new round.
  {

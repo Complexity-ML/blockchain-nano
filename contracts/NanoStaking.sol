@@ -6,7 +6,6 @@ pragma solidity 0.8.28;
 contract NanoStaking {
     uint256 public constant MIN_STAKE = 10_000 ether;
     uint256 public constant LOCK_BLOCKS = 100;
-    uint256 public constant MAX_VALIDATORS = 1000;
     struct Deposit { uint256 amount; uint256 lockedUntil; }
     mapping(address => Deposit) private deposits;
     address[] private validators;
@@ -32,7 +31,6 @@ contract NanoStaking {
     function _register(address account, uint256 amount) private {
         require(amount >= MIN_STAKE, "stake below minimum");
         require(positions[account] == 0, "already registered");
-        require(validators.length < MAX_VALIDATORS, "registry full");
         uint256 until = block.number + LOCK_BLOCKS;
         deposits[account] = Deposit(amount, until);
         validators.push(account);
@@ -65,6 +63,19 @@ contract NanoStaking {
         (bool ok,) = payable(msg.sender).call{value: deposit.amount}("");
         require(ok, "withdrawal transfer failed");
         emit Withdrawn(msg.sender, deposit.amount);
+    }
+
+    struct ValidatorEntry { address validator; uint256 stake; bool active; }
+    function getValidatorCount() external view returns (uint256) { return validators.length; }
+    function getValidatorEntries(uint256 start, uint256 limit) external view returns (ValidatorEntry[] memory entries) {
+        require(start <= validators.length, "page start out of range");
+        uint256 count = validators.length - start;
+        if (limit < count) count = limit;
+        entries = new ValidatorEntry[](count);
+        for (uint256 i = 0; i < count; ++i) {
+            address account = validators[start + i];
+            entries[i] = ValidatorEntry(account, deposits[account].amount, positions[account] != 0);
+        }
     }
 
     function getValidators() external view returns (address[] memory) { return validators; }

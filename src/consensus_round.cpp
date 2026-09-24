@@ -24,7 +24,7 @@ void ConsensusRound::propose(const Block& block,const Int& wall_time){
  proposal_=block;
 }
 VoteReception ConsensusRound::receive(const std::string& wire,Clock::time_point now){check_parent();return wait_.receive(wire,now);}
-void ConsensusRound::begin_next_round(Clock::time_point now){
+void ConsensusRound::begin_next_round(Clock::time_point now,std::optional<Clock::duration> proposal_timeout){
  check_parent();if(committed_||resume_pending_||!wait_.next_round_ready(now))throw std::runtime_error("round transition lacks precommit participation or recovery");
  if(round_==std::numeric_limits<uint64_t>::max())throw std::overflow_error("consensus round exhausted");
  auto locked=journal_.voting_lock(signer_,chain_.genesis().chain_id,chain_.genesis().block.header.hash());
@@ -32,8 +32,9 @@ void ConsensusRound::begin_next_round(Clock::time_point now){
  std::optional<Block> retained;
  if(locked&&locked->block_hash){retained=journal_.voting_proposal(signer_,height_,*locked->block_hash,chain_.genesis().chain_id,chain_.genesis().block.header.hash());if(!retained)throw std::runtime_error("locked proposal unavailable for next round");}
  auto proof=wait_.prevote_quorum();std::vector<FinalityVote> justification=proof?proof->votes:std::vector<FinalityVote>{};
- RoundWait next(chain_.voting_set(),chain_.genesis().chain_id,chain_.genesis().block.header.hash(),height_,round_+1,now,proposal_timeout_,prevote_timeout_,precommit_timeout_);
- wait_=std::move(next);++round_;proposal_=std::move(retained);justification_=std::move(justification);prevoted_=false;precommitted_=false;
+ auto next_timeout=proposal_timeout.value_or(proposal_timeout_);
+ RoundWait next(chain_.voting_set(),chain_.genesis().chain_id,chain_.genesis().block.header.hash(),height_,round_+1,now,next_timeout,prevote_timeout_,precommit_timeout_);
+ wait_=std::move(next);proposal_timeout_=next_timeout;++round_;proposal_=std::move(retained);justification_=std::move(justification);prevoted_=false;precommitted_=false;
 }
 ConsensusRound::Progress ConsensusRound::advance(Clock::time_point now,const Int& wall_time){
  Progress result;if(committed_){result.committed=true;return result;}check_parent();

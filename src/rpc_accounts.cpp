@@ -24,7 +24,7 @@ void Rpc::load_wallets(const Json& config,const std::string& bind){
  validating_=false;validator_error_.clear();block_time_=interval;
  wallets_=std::move(candidate);dev_mode_=dev;coinbase_=coinbase;if(!dev_mode_){snapshots_.clear();time_offset_=0;next_timestamp_.reset();}
 }
-Json Rpc::account_request(const std::string& method,const Json& params){
+Json Rpc::account_request(const std::string& method,const Json& params,const Estimate& estimate){
  bool transaction=method=="eth_sendTransaction"||method=="eth_signTransaction";
  if(params.size()!=(transaction?1:2))throw RpcError(-32602,"Invalid parameter count");
  std::string sender;
@@ -37,10 +37,10 @@ Json Rpc::account_request(const std::string& method,const Json& params){
   if(data.at("domain").contains("chainId")&&quantity(data["domain"]["chainId"])!=chain_.genesis().chain_id)throw RpcError(-32602,"Typed data chain ID mismatch");
   return hex(wallet->sign_typed_data(data));
  }
+ if(method=="eth_sendTransaction")charge_transactions(1);
  Json data=params[0];
  if(data.contains("chainId")&&quantity(data["chainId"])!=chain_.genesis().chain_id)throw RpcError(-32602,"Transaction chain ID mismatch");
  data["chainId"]=quantity(chain_.genesis().chain_id);
- if(!data.contains("nonce"))data["nonce"]=quantity(chain_.pending_nonce(sender));
  if(data.contains("data")&&data.contains("input")&&unhex(data["data"].get<std::string>())!=unhex(data["input"].get<std::string>()))throw RpcError(-32602,"Conflicting transaction data and input");
  auto type=u64(quantity(data.value("type",Json(data.contains("maxFeePerGas")||data.contains("maxPriorityFeePerGas")?2:data.contains("accessList")?1:0))));
  if(type>2)throw RpcError(-32602,"Unsupported transaction type");data["type"]=quantity(Int(std::to_string(type)));
@@ -53,7 +53,11 @@ Json Rpc::account_request(const std::string& method,const Json& params){
   if(data.contains("maxFeePerGas")||data.contains("maxPriorityFeePerGas"))throw RpcError(-32602,"Dynamic fees require type 2");
   if(!data.contains("gasPrice"))data["gasPrice"]=dispatch("eth_gasPrice",Json::array());
  }
- if(!data.contains("gas"))data["gas"]=dispatch("eth_estimateGas",Json::array({data}));
+ if(!data.contains("gas"))data["gas"]=estimate?estimate(data):dispatch("eth_estimateGas",Json::array({data}));
+ // Estimation may release the RPC lock. Recheck signing authority and choose
+ // the implicit nonce only after reacquiring it, immediately before submission.
+ wallet=wallets_.get_wallet(sender);if(!wallet)throw RpcError(-32000,"Account is not unlocked");
+ if(!data.contains("nonce"))data["nonce"]=quantity(chain_.pending_nonce(sender));
  auto signed_tx=wallet->sign_transaction(Transaction::from_json(data));
  if(method=="eth_signTransaction")return Json{{"raw",hex(signed_tx.raw())},{"tx",signed_tx.to_json()}};
  if(!chain_.submit(signed_tx))throw RpcError(-32000,"Transaction rejected by pool");return hex(signed_tx.hash());

@@ -3,12 +3,25 @@
 #include "rlp.hpp"
 namespace nano {
 struct Access { std::string address; std::vector<Bytes> keys; };
+struct Authorization {
+ Int chain_id=0,nonce=0,y_parity=0,r=0,s=0;
+ std::string target="0x0000000000000000000000000000000000000000";
+ Rlp payload() const;
+ Bytes signing_hash() const;
+ std::string authority() const;
+ Json to_json() const;
+ static Authorization from_json(const Json& j);
+};
+std::optional<std::string> delegation_target(const Bytes& code);
 struct Transaction {
  unsigned type=0;
  Int nonce=0,value=0,chain_id=1337,gas=21000,gas_price=1000000000,max_fee=0,priority_fee=0;
  std::optional<std::string> to;
  Bytes data;
  std::vector<Access> access_list;
+ std::vector<Authorization> authorization_list;
+ Int max_fee_per_blob_gas=0;
+ std::vector<Bytes> blob_versioned_hashes;
  Rlp payload() const;
  Bytes signing_hash(bool protected_legacy=true) const;
  Int intrinsic_gas() const;
@@ -62,6 +75,8 @@ struct Log {
  Json to_json() const;
 };
 Bytes logs_bloom(const std::vector<Log>& logs);
+Bytes deposit_requests(const std::vector<Log>& logs);
+Bytes execution_requests_hash(const std::vector<Bytes>& requests);
 struct Header {
  Bytes parent_hash=Bytes(32),uncle_hash=keccak(Rlp(std::vector<Rlp>{}).encode());
  std::string coinbase="0x0000000000000000000000000000000000000000";
@@ -69,7 +84,8 @@ struct Header {
  Int difficulty=1,number=0,gas_limit=30000000,gas_used=0,timestamp=0;
  Bytes extra_data,mix_hash=Bytes(32),nonce=Bytes(8);
  std::optional<Int> base_fee=Int(1000000000);
- std::optional<Bytes> withdrawals_root;
+ std::optional<Bytes> withdrawals_root,parent_beacon_block_root,requests_hash;
+ std::optional<Int> blob_gas_used,excess_blob_gas;
  Bytes encode() const;
  Bytes hash() const {return keccak(encode());}
  Json to_json() const;
@@ -82,8 +98,14 @@ struct Block {
  std::vector<Header> uncles;
  Json withdrawals=Json::array();
  Json to_json(bool full=false) const;
+ Json to_transport_json() const;
  static Block from_json(const Json& j);
 };
+size_t execution_rlp_size(const Block& block);
 Bytes transactions_root(const std::vector<SignedTransaction>& txs);
+Rlp withdrawal_payload(const Json& withdrawal);
+Bytes withdrawals_root(const Json& withdrawals);
 Int next_base_fee(const Header& parent);
+// Same-fork execution fields only; consensus seals and fork activation are separate.
+void validate_execution_header(const Header& header,const Header& parent,const Int& minimum_gas_limit=Int(5000));
 }

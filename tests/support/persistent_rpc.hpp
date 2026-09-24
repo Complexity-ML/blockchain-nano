@@ -4,6 +4,11 @@
 #include <boost/beast.hpp>
 // Local load/test client. One connection per worker, asynchronous deadlines,
 // no retry that could mask lost writes. Reconnect only after advertised close.
+class PersistentRpcError:public std::runtime_error {
+public:
+ int code;
+ explicit PersistentRpcError(const nano::Json& error):std::runtime_error(error.at("message").get<std::string>()),code(error.at("code").get<int>()){}
+};
 class PersistentRpc {
  boost::asio::io_context context_;
  boost::beast::tcp_stream stream_{context_};
@@ -22,9 +27,9 @@ public:
   http::async_write(stream_,request,[&](boost::beast::error_code ec,size_t){if(ec){failure=ec;return;}http::async_read(stream_,buffer_,parser,[&](boost::beast::error_code read_ec,size_t){failure=read_ec;});});
   context_.run();if(failure)throw std::runtime_error("persistent RPC transport: "+failure.message());
   auto response=parser.release();if(!response.keep_alive()){boost::beast::error_code ignored;stream_.socket().close(ignored);}
-  if(response.result()!=http::status::ok)throw std::runtime_error("persistent RPC HTTP failure");
+  if(response.result()!=http::status::ok)throw std::runtime_error("persistent RPC HTTP failure ("+std::to_string(response.result_int())+"): "+response.body());
   auto decoded=nano::Json::parse(response.body());if(decoded.value("jsonrpc",nano::Json())!="2.0"||decoded.value("id",nano::Json())!=id_)throw std::runtime_error("persistent RPC envelope mismatch");
-  if(decoded.contains("error"))throw std::runtime_error(decoded.at("error").at("message").get<std::string>());
+  if(decoded.contains("error"))throw PersistentRpcError(decoded.at("error"));
   return decoded.at("result");
  }
 };

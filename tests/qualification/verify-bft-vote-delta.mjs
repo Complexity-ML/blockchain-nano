@@ -1,0 +1,11 @@
+import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import assert from 'node:assert/strict';
+import {spawnSync} from 'node:child_process';
+const base=process.argv[2];const text=readFileSync(resolve(base,'network-full.log'),'utf8');
+const validation=spawnSync(process.execPath,['tests/qualification/verify-bft-managed-large.mjs',resolve(base,'network-full.log')],{encoding:'utf8'});assert.equal(validation.status,0,validation.stderr);assert.equal(JSON.parse(validation.stdout).verified,true);
+const rows=t=>t.split('\n').filter(l=>l.startsWith('{')).map(l=>JSON.parse(l));
+const unit=rows(readFileSync(resolve(base,'unit-full.log'),'utf8')).filter(r=>r.scenario==='bft-vote-knowledge');assert.equal(unit.length,1);assert.equal(unit[0].verified,true);assert.equal(unit[0].maxFingerprintsPerPeer,4000);assert.equal(unit[0].fullRefreshSeconds,5);assert.equal(unit[0].consensusValidationBypassed,false);assert(unit[0].fullBytes>1000000);assert(unit[0].deltaBytes<1000);
+const finals=rows(text).filter(r=>r.scenario==='bft-managed-large-crash');const results=[];
+for(const r of finals){assert(r.voteDeltaMessages>0);assert(r.votesSuppressed>0);const begin=text.indexOf(`Testing: bft_managed_large_crash_${r.fork.toLowerCase()}\n`);const next=text.indexOf('Testing: ',begin+9);const events=rows(text.slice(begin,next<0?text.length:next)).filter(x=>x.event==='test-bft-vote-delta');assert.equal(events.length,r.voteDeltaMessages);assert.equal(events.reduce((n,x)=>{assert(x.votesBefore>x.votesSent);return n+x.votesBefore-x.votesSent;},0),r.votesSuppressed);results.push({fork:r.fork,observedDeltaMessages:r.voteDeltaMessages,observedVotesSuppressed:r.votesSuppressed});}
+console.log(JSON.stringify({verified:true,syntheticUnitBytes:{full:unit[0].fullBytes,delta:unit[0].deltaBytes},managedNetworks:results,scope:'Bounded peer knowledge and same-context request acknowledgments, five-second full resend. Trace counts are sampled per relay, not total network bandwidth. Managed large-proposal/crash recovery passes locally on two four-validator networks. Does not establish network complexity O(N), 1000-validator capacity, mixed-version deployment or Byzantine liveness in all schedules.'},null,2));

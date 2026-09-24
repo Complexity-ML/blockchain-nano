@@ -150,22 +150,14 @@ int main(){try{
   check(result.success&&integer(result.return_data)==words*32,"MSIZE rounds byte-write expansion to whole words");
   check(result.gas_used==23+3*words,"word-rounded memory expansion charged once");
  }
- {std::ifstream file("tests/fixtures/python-precompiles.json");Json fixture;file>>fixture;
+ {std::ifstream file("tests/fixtures/precompiles.json");Json fixture;file>>fixture;
   for(const auto& vector:fixture.at("vectors")){
    auto input=unhex(vector.at("input"));auto number=vector.at("address").get<unsigned>();auto gas=vector.at("gas").get<uint64_t>();
    auto label=vector.at("name").get<std::string>();
-   // Preserve prototype outputs, but validate MODEXP against Berlin pricing.
-   if(number==5){gas=200;
-    if(label=="modexp-128-255")gas=597;
-    if(label=="modexp-1024-0"||label=="modexp-1024-1")gas=5461;
-    if(label=="modexp-1024-255")gas=38229;
-    if(label=="modexp-1025-0"||label=="modexp-1025-1")gas=5547;
-    if(label=="modexp-1025-255")gas=38829;
-   }
    auto result=precompile(number,input,gas);
    if(vector.contains("divergence")){check(!result.success&&result.return_data.empty(),(label+" native rejects invalid curve coordinates").c_str());continue;}
-   check(result.success&&!vector.at("output").is_null(),(label+" Python precompile success").c_str());
-   check(result.gas_used==gas&&hex(result.return_data)==vector.at("output").get<std::string>(),(label+" Python gas and output").c_str());
+   check(result.success&&!vector.at("output").is_null(),(label+" precompile success").c_str());
+   check(result.gas_used==gas&&hex(result.return_data)==vector.at("output").get<std::string>(),(label+" gas and output").c_str());
    auto exhausted=precompile(number,input,gas-1);
    check(!exhausted.success&&exhausted.gas_used==gas-1&&exhausted.return_data.empty(),(label+" below exact gas fails").c_str());
   }
@@ -373,6 +365,16 @@ int main(){try{
  for(const auto& fixture:vectors["tries"]){std::map<Bytes,Bytes> entries;for(const auto& [k,v]:fixture["entries"].items())entries[unhex(k)]=unhex(v);check(hex(trie_root(entries))==fixture["root"].get<std::string>(),"Python MPT differential");}
  for(const auto& fixture:vectors["states"]){auto state=State::from_json(fixture["alloc"]);check(hex(state.root())==fixture["root"].get<std::string>(),"Python state differential");check(State::from_json(state.to_json()).root()==state.root(),"state roundtrip");}
  for(const auto& fixture:vectors["transactions"]){auto tx=Transaction::from_json(fixture["tx"]);check(hex(tx.signing_hash())==fixture["signingHash"].get<std::string>(),"Python signing hash");auto st=SignedTransaction::sign(tx,key);check(hex(st.raw())==fixture["raw"].get<std::string>(),"Python signed raw bytes");auto decoded=SignedTransaction::decode(unhex(fixture["raw"]));check(hex(decoded.hash())==fixture["hash"].get<std::string>(),"Python transaction hash");check(decoded.sender()==fixture["sender"].get<std::string>(),"Python sender recovery");check(decoded.raw()==st.raw(),"transaction decode roundtrip");}
+ {
+  Header parent,child;parent.gas_limit=10240000;parent.gas_used=parent.gas_limit/2;parent.base_fee=100;child=parent;
+  for(int delta:{-9999,0,9999}){child.gas_limit=parent.gas_limit+delta;validate_execution_header(child,parent);}
+  for(int delta:{-10000,10000}){child.gas_limit=parent.gas_limit+delta;rejects([&]{validate_execution_header(child,parent);},"gas limit boundary must be strict");}
+  child=parent;child.base_fee=99;rejects([&]{validate_execution_header(child,parent);},"parent base fee mismatch rejected");
+  child=parent;child.base_fee.reset();rejects([&]{validate_execution_header(child,parent);},"missing active base fee rejected");
+  parent.base_fee.reset();child=parent;validate_execution_header(child,parent);child.base_fee=0;rejects([&]{validate_execution_header(child,parent);},"base fee before activation rejected");
+  parent.gas_limit=5000;parent.gas_used=0;child=parent;validate_execution_header(child,parent);child.gas_limit=4999;rejects([&]{validate_execution_header(child,parent);},"minimum gas limit rejected");
+  child=parent;child.gas_used=5001;rejects([&]{validate_execution_header(child,parent);},"gas used above limit rejected");
+ }
  Header genesis;std::string extra="NanoPy Genesis";genesis.extra_data=Bytes(extra.begin(),extra.end());check(genesis.to_json()==Header::from_json(vectors["genesis"]).to_json(),"Python genesis header");
  State state;std::string alice="0x"+std::string(40,'a'),bob="0x"+std::string(40,'b');state.get(alice).balance=100;auto initial=state.root();auto snap=state.snapshot();check(state.transfer(alice,bob,30),"transfer");state.set_storage(bob,0,123);state.revert(snap);check(state.root()==initial&&state.get(bob).balance==0,"snapshot restores all state");check(!state.transfer(alice,bob,101),"insufficient balance");rejects([&]{state.transfer(alice,bob,-1);},"negative transfer");
  check(create2_address("0x"+std::string(40,'0'),Bytes(32),keccak(Bytes{0}))=="0x4d1a2e2bb4f88f0250f26ffff098b0b30b26bf38","EIP1014 vector");

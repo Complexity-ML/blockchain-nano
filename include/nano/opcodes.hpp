@@ -183,6 +183,12 @@ inline constexpr unsigned opcode_count = 169;
 // NanoPy historical gas schedule retained during migration, independently of enum coverage.
 inline unsigned opcode_gas(uint8_t op) {
     switch(op) {
+    case 0x1e: return 5;
+    case 0x49: return 3;
+    case 0x4a: return 2;
+    case 0x5c: return 100;
+    case 0x5d: return 100;
+    case 0x5e: return 3;
     case 0x00: return 0;
     case 0xf3: return 0;
     case 0xfd: return 0;

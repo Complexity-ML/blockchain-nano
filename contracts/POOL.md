@@ -59,3 +59,34 @@ avec limites de prix/échéance restent à construire. Les essais de manipulatio
 de prix, de flash swaps, de jetons hostiles et de réorganisation réseau doivent
 être complétés avant toute conclusion générale. Un ratio instantané d'AMM n'est
 pas un oracle robuste pour des prêts ou un bridge.
+
+Le parcours `pool-router.ts` peut aussi être lancé avec
+`NANO_TEST_EVM_FORK=Paris`. Le banc compile alors WNANO pour Paris sans
+modifier l'artefact Shanghai livré. Les bytecodes du routeur et de la paire
+restent ceux des paquets Uniswap épinglés. Cette sélection ne s'applique
+pas au script historique `pool.ts`, qui charge directement l'artefact Shanghai.
+
+## Qualification V3 demandée
+
+Les scripts actuels `pool-router.ts` et `flash-swap.ts` exercent Uniswap V2.
+Les tests V2 ne choisissent pas la version du DEX de lancement. Uniswap V3
+doit être qualifié séparément : déploiement factory/pool, prix initial, ticks,
+liquidité concentrée, routeur, NFT de positions, frais et retrait des positions.
+Le premier cycle V3 est maintenant vérifié par `scripts/pool-v3.ts` sous
+Paris et Shanghai : position concentrée, swap, transfert du NFT, retrait,
+collecte et burn. Les franchissements de ticks et scénarios adversariaux
+V3 restent à qualifier. Référence officielle :
+https://developers.uniswap.org/docs/protocols/v3/overview.
+
+Commande du banc V3 local (remplacer Shanghai par Paris pour l'autre profil) :
+
+```sh
+NANO_TEST_EVM_FORK=Shanghai NANO_BINARY="$PWD/build-release/nano" \
+  node tests/hardhat/run-local.mjs scripts/pool-v3.ts
+```
+
+### V3 overlapping-position qualification
+
+`tests/hardhat/scripts/crossing-v3.ts` exercises two overlapping ranges, three swaps crossing their boundaries in both directions, slippage rollback and complete withdrawal. Paris and Shanghai pass with explicit bounded gas for swaps/decrease/collect. Automatic estimation caused earlier transaction failures and remains open; see `hardhatV3CrossingQualification` and `docs/QUALIFICATION-FAILURES.md`. These synthetic-asset local results do not establish a production USDC pool.
+
+The crossing scenario now uses `eth_estimateGas` with the explicit `pending` tag for swaps, decreases and collects. Both Paris and Shanghai pass with these calculated limits. The node simulates a candidate block and pool state without committing it. `latest` still describes the current block; neither estimate guarantees future execution if state changes before inclusion. Evidence: `rpcPendingEstimationQualification`.

@@ -1,5 +1,6 @@
 #pragma once
 #include "consensus.hpp"
+#include "staking_rules.hpp"
 #include "engine.hpp"
 #include "storage.hpp"
 #include "txpool.hpp"
@@ -14,6 +15,8 @@ struct Genesis {
  unsigned pos_signature_version=0;
  unsigned consensus_rules_version=0;
  unsigned bft_version=0;
+ unsigned staking_query_version=0;
+ StakingQueryLimits staking_query_limits;
  Int minimum_block_interval=1,maximum_future_drift=15,minimum_gas_limit=5000;
  std::string bootstrap_validator;
  State state;
@@ -23,6 +26,8 @@ struct Genesis {
 // Owns canonical state; durable commit precedes publication to readers.
 class Blockchain {
  mutable std::mutex mutex_;
+ // Process-local proof: unknown on reopen; extended only by verified durable certificates.
+ mutable std::optional<Bytes> audited_certified_tip_;
  Json audit_locked() const;
  BlockCertificate import_certified_locked(const Block& block,uint64_t round,const std::vector<FinalityVote>& certificate,const Int& now);
  Genesis genesis_;
@@ -33,6 +38,7 @@ class Blockchain {
  TxPool pool_;
  ProofOfStake pos_;
  uint64_t event_sequence_=0;
+ std::string event_epoch_;
  std::deque<ChainEvent> events_;
  ProofOfStake sync_consensus(const State& state,const Header& header,const ProofOfStake& previous) const;
  VotingSet voting_set(const ProofOfStake& registry) const;
@@ -41,12 +47,17 @@ class Blockchain {
  void emit(const std::string& type,Json value);
  struct Prepared {Block block;State state;std::vector<Receipt> receipts;};
  Prepared verify_contents(const Block& block,const Int& now) const;
- Prepared prepare(const std::string& coinbase,const Int& timestamp,uint64_t round=0) const;
+ Header prepare_header(const std::string& coinbase,const Int& timestamp,uint64_t round) const;
+ static Prepared execute_candidate(Block block,const State& initial,std::vector<TxPool::Candidate> pending,const ExecutionEngine& engine,const std::function<void()>& checkpoint);
+ Prepared prepare(const std::string& coinbase,const Int& timestamp,uint64_t round=0,const std::function<void()>& checkpoint={}) const;
  Block produce(const std::string& coinbase,const Int& timestamp,bool pow,std::chrono::milliseconds timeout);
 public:
  Blockchain(const std::filesystem::path& database,Genesis genesis);
  uint64_t event_cursor() const;
+ std::string event_epoch() const{return event_epoch_;}
+ Json gossip_page(uint64_t cursor,const std::string& epoch,const std::string& after,bool snapshot) const;
  std::vector<ChainEvent> events_since(uint64_t cursor) const;
+ Json block_reference_page(uint64_t cursor,const std::string& epoch) const;
  bool restore(const Int& number,const Bytes& expected_hash);
  Block tip() const;
  Json audit() const;
@@ -74,6 +85,10 @@ public:
  Json validators() const;
  Int stake(const std::string& addr) const;
  std::optional<std::string> next_validator(uint64_t round=0) const;
+ // Read-only candidate after executing eligible pool transactions; not a finality promise.
+ struct PendingSnapshot {Header header;std::map<Int,Bytes> ancestors;std::function<std::pair<Header,State>()> execute;};
+ PendingSnapshot pending_snapshot(const std::string& coinbase,const Int& now,const std::function<void()>& checkpoint={}) const;
+ std::pair<Header,State> pending_execution(const std::string& coinbase,const Int& now,const std::function<void()>& checkpoint={}) const;
  Block block_template(const std::string& coinbase,const Int& timestamp,uint64_t round=0) const;
  std::vector<SignedTransaction> pending_transactions(const Int& gas_limit) const;
  Block validate(const std::string& coinbase,const Int& timestamp);

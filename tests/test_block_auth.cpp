@@ -30,6 +30,10 @@ int main(){try{
   auto template_block=producer.block_template(public_address(public_key(key)),12);auto initial=peer.state().root();
   auto reject=[&](const Block& candidate){bool failed=false;try{peer.import_block(candidate,12);}catch(const std::exception&){failed=true;}check(failed&&peer.state().root()==initial&&peer.tip().header.number==0&&peer.store().count()==1,"bad proof cannot mutate canonical storage");};
   peer.verify_proposal(template_block,12);
+  auto unauthorized_withdrawal=template_block;unauthorized_withdrawal.withdrawals=Json::array({{{"index","0x0"},{"validatorIndex","0x0"},{"address",block.header.coinbase},{"amount","0x1"}}});
+  unauthorized_withdrawal.header.withdrawals_root=withdrawals_root(unauthorized_withdrawal.withdrawals);
+  bool withdrawal_rejected=false;try{peer.verify_proposal(unauthorized_withdrawal,12);}catch(const std::invalid_argument& e){withdrawal_rejected=std::string(e.what())=="withdrawals not authorized by Nano consensus";}
+  check(withdrawal_rejected&&peer.state().root()==initial&&peer.store().count()==1,"Nano proposal must not authorize Ethereum withdrawal credits");
   check(peer.state().root()==initial&&peer.tip().header.number==0,"proposal check does not publish state");
   auto invalid_proposal=template_block;invalid_proposal.header.state_root[0]^=1;
   bool proposal_rejected=false;try{peer.reserve_signature(invalid_proposal,block.header.coinbase);}catch(const std::exception&){proposal_rejected=true;}
@@ -108,17 +112,17 @@ int main(){try{
    auto candidate=bounds.block_template(block.header.coinbase,12);
    candidate.header.gas_limit=parent_limit+direction*(delta+offset);
    bool refused=false;try{bounds.verify_proposal(candidate,12);}catch(const std::invalid_argument& e){
-    if(std::string(e.what())!="invalid PoS gas limits")throw;refused=true;}
+    if(std::string(e.what())!="invalid block gas limits")throw;refused=true;}
    check(refused==(offset>=0),"PoS gas adjustment strictly excludes both EIP-1559 boundaries");
    sign_block(candidate,key,1337,rules_genesis.block.header.hash());
    if(offset>=0){bool rejected=false;try{bounds.import_block(candidate,12);}catch(const std::invalid_argument& e){
-    if(std::string(e.what())!="invalid PoS gas limits")throw;rejected=true;}
+    if(std::string(e.what())!="invalid block gas limits")throw;rejected=true;}
     check(rejected&&bounds.tip().header.number==0,"signed boundary block rejected without canonical mutation");}
   }
  }
  auto gas_genesis=Genesis::from_json({{"config",rules_config},{"gasLimit",10000}});
  {Blockchain gas_chain(root/"gas-rules",gas_genesis);auto candidate=gas_chain.block_template(block.header.coinbase,12);candidate.header.gas_limit=9999;bool refused=false;
-  try{gas_chain.verify_proposal(candidate,12);}catch(const std::exception& e){refused=std::string(e.what()).find("invalid PoS gas limits")!=std::string::npos;}
+  try{gas_chain.verify_proposal(candidate,12);}catch(const std::exception& e){refused=std::string(e.what()).find("invalid block gas limits")!=std::string::npos;}
   check(refused,"genesis minimum gas limit enforced even within parent gas adjustment bound");}
  {Blockchain constrained(root/"rules",rules_genesis);bool refused=false;try{constrained.block_template(block.header.coinbase,11);}catch(const std::exception&){refused=true;}check(refused,"minimum interval enforced during production");
   auto valid=constrained.block_template(block.header.coinbase,12);constrained.verify_proposal(valid,9);

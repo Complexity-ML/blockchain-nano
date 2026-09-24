@@ -35,9 +35,17 @@ retraits, absence de retrait au-delà du solde, remboursement refusé dans une
 transaction effectivement exécutée, tentative de réentrance effectivement
 déclenchée, restitution intégrale et certificats BFT. Ces scénarios ne sont
 pas une preuve exhaustive. Le contrat n'est déployé sur aucun réseau public
-par cette procédure et son intégration à une pool reste à réaliser.
+par cette procédure. Son intégration locale au routeur Uniswap V2 est testée
+dans `scripts/pool-router.ts` ; voir [POOL.md](POOL.md).
 
 Exécution vérifiée : le parcours Hardhat WNANO passe sur Nano Shanghai, ainsi
 que les 41 tests CTest après reconstruction (148,17 secondes). Le parcours
 Hardhat est distinct de ces 41 tests. Deux compilations successives de WNANO
 dans le même environnement produisent le même SHA-256 d'artefact.
+
+Le banc Hardhat prend également en charge `NANO_TEST_EVM_FORK=Paris` :
+`helpers/wrapped-artifact.ts` compile le même source avec le compilateur
+épinglé et `evmVersion: paris`. L'artefact publié `WrappedNano.json` reste
+Shanghai. Le bytecode Shanghai n'est pas utilisable sur Paris ; ses deux
+échecs initiaux de déploiement restent dans la campagne
+`currentSolidityDeveloperPaths` du registre de qualification.

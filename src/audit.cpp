@@ -1,7 +1,11 @@
 #include "nano/chain.hpp"
 #include <unistd.h>
 namespace nano {
-Json Blockchain::audit()const{std::lock_guard lock(mutex_);return audit_locked();}
+Json Blockchain::audit()const{
+ std::lock_guard lock(mutex_);audited_certified_tip_.reset();auto result=audit_locked();
+ if(quantity(result.at("certifiedBlocks"))==tip_.header.number)audited_certified_tip_=tip_.header.hash();
+ return result;
+}
 Json Blockchain::audit_locked()const{
  std::string pattern=(std::filesystem::temp_directory_path()/"nano-audit-XXXXXX").string();
  std::vector<char> name(pattern.begin(),pattern.end());name.push_back(0);

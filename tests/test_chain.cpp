@@ -13,8 +13,51 @@ int main(){try{
  auto genesis=Genesis::from_json(data);
  auto paris_data=data;paris_data["config"]["evmFork"]="Paris";auto paris_genesis=Genesis::from_json(paris_data);
  check(paris_genesis.evm_revision==EvmRevision::Paris&&paris_genesis.block.header.hash()!=genesis.block.header.hash(),"explicit Paris rules bound to genesis identity");
- for(Json invalid:{Json("Berlin"),Json("Cancun"),Json(1),Json(nullptr)}){auto bad=data;bad["config"]["evmFork"]=invalid;rejects([&]{Genesis::from_json(bad);},"unsupported chain execution fork rejected");}
+ for(Json invalid:{Json("Berlin"),Json("Cancun"),Json("Prague"),Json("Osaka"),Json(1),Json(nullptr)}){auto bad=data;bad["config"]["evmFork"]=invalid;rejects([&]{Genesis::from_json(bad);},"unsupported chain execution fork rejected");}
 
+ for(const auto* fork:{"Paris","Shanghai"}){
+  auto spec=data;spec["config"]["evmFork"]=fork;auto location=std::filesystem::temp_directory_path()/("nano-nonce-gap-"+std::to_string(getpid())+fork);
+  struct Cleanup{std::filesystem::path p;~Cleanup(){std::filesystem::remove_all(p);}} cleanup{location};
+  Blockchain gap(location,Genesis::from_json(spec));
+  auto make=[&](unsigned n){Transaction t;t.chain_id=1337;t.to=receiver;t.gas_price=2000000000;t.nonce=n;return SignedTransaction::sign(t,key);};
+  auto expect=[&](unsigned pending,unsigned queued){auto status=gap.pool_info(false);check(status==Json{{"pending",pending},{"queued",queued}},"nonce gap pool classification");auto content=gap.pool_info(true);size_t pcount=0,qcount=0;for(const auto& group:content["pending"])pcount+=group.size();for(const auto& group:content["queued"])qcount+=group.size();check(pcount==pending&&qcount==queued,"content and status agree on nonce gaps");};
+  check(gap.submit(make(2)),"admit future nonce");expect(0,1);check(gap.pending_nonce(sender)==0,"gap does not advance pending nonce");
+  check(gap.submit(make(0)),"admit first nonce");expect(1,1);check(gap.pending_nonce(sender)==1,"pending nonce stops at missing nonce");
+  auto first=gap.mine(sender,24);check(first.transactions.size()==1&&first.transactions[0].tx.nonce==0,"future nonce not mined through gap");expect(0,1);
+  check(gap.submit(make(1)),"fill nonce gap");expect(2,0);check(gap.pending_nonce(sender)==3,"filled gap promotes contiguous suffix");
+  auto second=gap.mine(sender,48);check(second.transactions.size()==2&&second.transactions[0].tx.nonce==1&&second.transactions[1].tx.nonce==2,"promoted suffix executes in nonce order");expect(0,0);check(gap.audit()["verified"]==true,"nonce gap history audit");
+ }
+ for(const auto* fork:{"Paris","Shanghai"}){
+  auto spec=data;spec["config"]["evmFork"]=fork;auto location=std::filesystem::temp_directory_path()/("nano-pool-conflict-"+std::to_string(getpid())+fork);
+  struct Cleanup{std::filesystem::path p;~Cleanup(){std::filesystem::remove_all(p);}} cleanup{location};
+  Blockchain local(location/"local",Genesis::from_json(spec)),remote(location/"remote",Genesis::from_json(spec));
+  Transaction t;t.chain_id=1337;t.to=receiver;t.gas_price=2000000000;auto original=SignedTransaction::sign(t,key);t.value=2;auto alternative=SignedTransaction::sign(t,key);t.nonce=1;auto next=SignedTransaction::sign(t,key);
+  check(local.submit(original)&&local.submit(next)&&remote.submit(alternative),"conflicting nonce fixture admission");auto block=remote.mine(sender,24);
+  auto invalid=block;invalid.header.state_root=Bytes(32,0);rejects([&]{local.import_block(invalid,24);},"invalid conflicting block rejected");check(local.pending_count()==2&&local.pending_transaction(original.hash()),"rejected block does not evict pool alternatives");
+  local.import_block(block,24);check(!local.pending_transaction(original.hash())&&local.pending_count()==1&&local.pending_transaction(next.hash()),"canonical nonce removes stale alternative and preserves next transaction");
+  rejects([&]{local.submit(original);},"stale alternative cannot reenter after canonical nonce change");check(local.pending_nonce(sender)==2,"pending nonce follows remaining suffix");
+  auto mined=local.mine(sender,48);check(mined.transactions.size()==1&&mined.transactions[0].hash()==next.hash(),"remaining nonce executes after conflict");check(local.pending_count()==0&&local.audit()["verified"]==true,"conflict cleanup history audit");
+ }
+ {
+  auto location=std::filesystem::temp_directory_path()/("nano-pool-reservation-"+std::to_string(getpid()));struct Cleanup{std::filesystem::path p;~Cleanup(){std::filesystem::remove_all(p);}} cleanup{location};Blockchain chain(location,paris_genesis);Int balance=chain.state().get(sender).balance;
+  auto make=[&](unsigned nonce,unsigned fraction,unsigned fee){Transaction t;t.chain_id=1337;t.nonce=nonce;t.to=receiver;t.value=balance*fraction/100;t.gas_price=fee;return SignedTransaction::sign(t,key);};
+  auto first=make(0,60,2000000000),next=make(1,30,2000000000);check(chain.submit(first),"reserve first transaction cost");rejects([&]{chain.submit(make(1,60,2000000000));},"cumulative unaffordable transaction rejected");check(chain.pending_count()==1&&chain.pending_transaction(first.hash()),"reservation rejection preserves original");check(chain.submit(next),"affordable successor admitted");
+  auto replacement=make(0,50,2200000000);check(chain.submit(replacement)&&chain.pending_count()==2,"replacement subtracts original reservation");rejects([&]{chain.submit(make(0,80,2420000000));},"growing replacement respects remaining funds");check(chain.pending_transaction(replacement.hash())&&chain.pending_transaction(next.hash())&&chain.state().get(sender).balance==balance,"failed growing replacement preserves pool and canonical balance");
+ }
+ {
+  auto location=std::filesystem::temp_directory_path()/("nano-future-reservation-"+std::to_string(getpid()));struct Cleanup{std::filesystem::path p;~Cleanup(){std::filesystem::remove_all(p);}} cleanup{location};Blockchain chain(location,paris_genesis);Int balance=chain.state().get(sender).balance;
+  auto make=[&](unsigned nonce,unsigned fraction){Transaction t;t.chain_id=1337;t.nonce=nonce;t.to=receiver;t.value=balance*fraction/100;t.gas_price=2000000000;return SignedTransaction::sign(t,key);};
+  check(chain.submit(make(10,60))&&chain.submit(make(20,60)),"future entries do not reserve contiguous pending budget");check(chain.submit(make(0,20)),"future costs do not block missing first nonce");check(chain.pool_info(false)==Json{{"pending",1},{"queued",2}},"future admission preserves gap classification");
+ }
+ for(const auto* fork:{"Paris","Shanghai"})for(unsigned type:{0u,1u,2u}){
+  auto spec=data;spec["config"]["evmFork"]=fork;spec["config"]["consensus"]="pos";spec["config"]["posSignatureVersion"]=1;spec["config"]["bootstrapValidator"]=sender;spec["alloc"][sender]["balance"]=quantity(Int("1000000000000000000000000"));
+  auto location=std::filesystem::temp_directory_path()/("nano-pool-balance-refresh-"+std::to_string(getpid())+fork+std::to_string(type));struct Cleanup{std::filesystem::path p;~Cleanup(){std::filesystem::remove_all(p);}} cleanup{location};Blockchain chain(location,Genesis::from_json(spec));Int balance=chain.state().get(sender).balance;
+  auto make=[&](unsigned nonce,unsigned fraction){Transaction t;t.type=type;t.chain_id=1337;t.nonce=nonce;t.to=receiver;t.value=balance*fraction/100;t.gas_price=2000000000;t.max_fee=2000000000;t.priority_fee=1000000000;return SignedTransaction::sign(t,key);};
+  auto first=make(0,60),expensive=make(1,60),suffix=make(2,5);check(chain.submit(expensive)&&chain.submit(suffix)&&chain.submit(first),"admit gap then overcommitted promotion");
+  auto block=chain.validate_signed(key,24);check(block.transactions.size()==1&&block.transactions[0].hash()==first.hash()&&chain.state().get(receiver).balance==balance*60/100&&!chain.store().receipt(expensive.hash()),"execution excludes unfunded suffix without spending funds");
+  check(!chain.pending_transaction(expensive.hash())&&chain.pending_transaction(suffix.hash())&&chain.pending_count()==1,"post-block balance refresh removes unaffordable entry and retains affordable future nonce");check(chain.pool_info(false)==Json{{"pending",0},{"queued",1}},"remaining suffix queued behind removed nonce");
+  auto affordable=make(1,5);check(chain.submit(affordable),"cheaper nonce admitted after obsolete entry removed");auto resumed=chain.validate_signed(key,48);check(resumed.transactions.size()==2&&resumed.transactions[0].hash()==affordable.hash()&&resumed.transactions[1].hash()==suffix.hash(),"affordable gap fill resumes suffix in order");check(chain.state().get(receiver).balance==balance*70/100&&chain.pending_count()==0&&chain.audit()["verified"]==true,"post-refresh balances and history audit");
+ }
  auto path=std::filesystem::temp_directory_path()/("nano-chain-"+std::to_string(getpid()));auto peer=path.string()+"-peer";
  {
   auto shanghai_data=data;shanghai_data["config"]["evmFork"]="Shanghai";auto rules=Genesis::from_json(shanghai_data);
@@ -22,6 +65,13 @@ int main(){try{
   auto location=path.string()+"-shanghai";auto replica=path.string()+"-shanghai-peer";
   struct Cleanup{std::string a,b;~Cleanup(){std::filesystem::remove_all(a);std::filesystem::remove_all(b);}} cleanup{location,replica};
   {Blockchain chain(location,rules),follower(replica,rules);Rpc rpc(chain);
+   Transaction large;large.chain_id=1337;large.to=receiver;large.gas_price=2000000000;large.data=Bytes(1024*1024,0);large.gas=large.intrinsic_gas();
+   auto encoded=SignedTransaction::sign(large,key).raw();
+   auto decoded=SignedTransaction::decode(encoded);check(decoded.raw()==encoded,"large valid envelope must decode independently of pool policy");
+   bool pool_limit=false;try{chain.submit(decoded);}catch(const std::invalid_argument& e){pool_limit=std::string(e.what())=="transaction exceeds Nano pool byte limit";}
+   check(pool_limit&&chain.pending_count()==0&&chain.pending_nonce(sender)==0,"large pool admission rejection preserves pending state");
+   auto large_rpc=rpc.handle({{"jsonrpc","2.0"},{"id",1},{"method","eth_sendRawTransaction"},{"params",Json::array({hex(encoded)})}});
+   check(large_rpc.contains("error")&&large_rpc.at("error").at("message")=="transaction exceeds Nano pool byte limit","RPC retains early pool-size rejection");
    auto invoke=[&](const std::string& method,const Json& call){return rpc.handle({{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",Json::array({call})}});};
    Transaction tx;tx.chain_id=1337;tx.gas_price=2000000000;tx.gas=1000000;tx.data=Bytes(49153,0);
    auto call=Json{{"from",sender},{"data",hex(tx.data)},{"gas",quantity(tx.gas)}};auto before=chain.state().root();

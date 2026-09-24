@@ -1,11 +1,36 @@
-# Finalité : primitives et intégration restante
+# Finalité BFT : intégration et qualification
 
-## État actuel
+## État actuel au 23 septembre 2026
 
-`finality.hpp` et `finality.cpp` fournissent des votes signés et un vérificateur
-de certificat pondéré. Ils ne sont pas appelés par le consensus actif et ne
-modifient ni le format des blocs ni les genesis. Le stockage de blocs certifiés est disponible pour les essais locaux décrits
-ci-dessous, sans activation du protocole réseau ; les tags RPC `safe` et `finalized` restent indisponibles.
+Le mode `bftVersion: 1` est intégré au cœur Nano. La configuration de nœud
+`bft` instancie `BftReactor` avec une clé et un journal persistants.
+L’import vérifie le certificat contre l’ensemble issu du parent, exécute le
+bloc, puis stocke atomiquement le bloc, l’état, les reçus et le certificat.
+La progression du journal suit le commit durable ; une panne entre ces étapes
+exige la réconciliation du journal avant de nouveaux votes.
+Un import certifié reçu du réseau peut donc laisser temporairement le journal
+en retard, notamment si le nœud s'arrête avant de construire son prochain tour.
+À la création du tour, `recover_voting_progress` vérifie l'historique certifié et
+rejoue sa progression dans le journal avant tout nouveau vote. Il conserve les
+réservations existantes et refuse un journal en avance sur la chaîne ; il ne
+réinitialise pas arbitrairement sa hauteur. Une vérification après arrêt doit
+contrôler cette récupération, et pas seulement comparer les hauteurs brutes.
+
+Les scénarios locaux couvrent notamment les quorums pondérés, les changements
+de stake, les partitions et les reprises propres ou par SIGKILL. Leurs preuves
+et limites sont conservées dans `QUALIFICATION-FAILURES.md` et le manifeste de
+qualification. Ils ne valent pas qualification complète multi-hôtes ni
+approbation d’un lancement public. Les tags RPC `safe` et `finalized` restent
+indisponibles ; une pénalité automatique de slashing n’est pas implémentée.
+
+Ce document conserve ci-dessous les étapes historiques du développement.
+Les formulations « reste à intégrer » de ces étapes décrivent leur état à
+l’époque, et doivent être lues avec les sections d’intégration ultérieures.
+
+## Étape historique : primitives avant intégration
+
+`finality.hpp` et `finality.cpp` ont d’abord fourni les votes signés et le
+vérificateur de certificat pondéré, avant leur intégration au réacteur actif.
 
 La base de travail est la [spécification de consensus CometBFT v0.38.17](https://github.com/cometbft/cometbft/blob/v0.38.17/spec/consensus/consensus.md).
 Elle utilise des tours avec proposition, prévote et préengagement, des verrous
@@ -46,7 +71,7 @@ exacts : `3 * poids_signé > 2 * poids_total`. Un poids exactement égal à deux
 tiers échoue. Les pouvoirs annoncés par les votes ne sont jamais utilisés :
 ils proviennent uniquement de l’ensemble fourni au vérificateur.
 
-## Intégration requise avant activation
+## Liste historique d’intégration avant activation
 
 - Fixer l’ensemble de votes à partir de l’état parent vérifié, avec une règle
   versionnée d’entrée/sortie et de conservation des dépôts.
@@ -918,3 +943,768 @@ fermés puis rouverts : la signature réservée doit être réémise à l'identi
 l'audit de la chaîne doit réussir. Les blocs intermédiaires sont importés avec
 des certificats construits par le banc ; ce test ne constitue pas encore un
 essai réseau du retrait ou d'une réinscription pendant une partition.
+
+## Reprise après SIGKILL avec Paris et Shanghai
+
+Les suites finality_crash_paris et finality_crash_shanghai reprennent les trois
+frontières d'arrêt brutal avec evmFork explicite et bftVersion=1. Avec la suite
+historique, neuf SIGKILL sont vérifiés. Chaque scénario récupère la signature
+exacte, progresse jusqu'à deux blocs certifiés et réussit l'audit canonique.
+
+Après réouverture, le test construit aussi une proposition alternative valide
+et tente un préengagement au même tour via sign_consensus_vote. Il exige
+le refus exact « conflicting vote refused at height/round/step », une signature
+encore vide et le vote durable initial inchangé. Le premier test ajouté utilisait
+à tort sign_vote_durable en mode brut : son refus de mode ne constituait pas
+une preuve de double-vote. Les résultats intermédiaires et l'échec du contrôle
+plus strict sont conservés sous localBftCrashRecovery.
+
+Périmètre : un validateur d'amorçage local, frontières applicatives durables.
+Cela ne qualifie pas encore un réseau distribué, une coupure électrique ou
+une interruption interne d'écriture RocksDB.
+
+## Reprise distribuée locale sur Paris et Shanghai
+
+La configuration Release actuelle raccorde explicitement nano-p2p via
+NANO_NETWORK_EXECUTABLE ; son absence excluait les suites réseau de cette
+configuration. Les quatre nouvelles suites qualification_bft_network_local
+couvrent Paris et Shanghai, chacune en fonctionnement normal puis reprise.
+Les quatre validateurs utilisent un registre obtenu par exécution du contrat
+de staking ; les échanges passent par quatre relais cpp-libp2p locaux.
+
+Pour chaque profil, la coupure en deux groupes de deux dure douze secondes
+sans finalité. Les quatre cœurs sont ensuite tués par SIGKILL, puis relancés
+sur les mêmes bases et journaux. Le test exige la reproduction exacte des
+votes réservés, reconnecte les relais et compare le hash/racine d'état du
+premier bloc certifié sur les quatre nœuds, avec au moins trois votes.
+Résultat actuel : 4/4 suites réussies, sans flood. Les résumés structurés,
+commandes sélectionnées et empreintes figurent sous localDistributedBftRecovery.
+
+Ce périmètre reste local, à quatre validateurs et ensemble initial fixe. Il
+ne qualifie pas les longues durées, le réseau WAN, les pannes internes de
+stockage, les grandes variations d'effectif ou toute la préparation production.
+
+## Rattrapage et nouveau membre sur Paris/Shanghai
+
+Les quatre suites qualification_bft_membership_local passent : rattrapage et
+adhésion sur chacun des deux profils. Un validateur isolé reste à hauteur zéro
+pendant que les trois autres certifient quatre blocs et un transfert. Après
+SIGKILL, il reproduit son ancien vote, importe les quatre mêmes hashes/racines
+et le reçu, puis fournit une signature nécessaire à une nouvelle finalité après
+déconnexion d'un autre signataire. Le solde destinataire vérifie l'application
+unique des deux transferts.
+
+L'adhésion démarre avec trois validateurs et un observateur. L'inscription
+signée via NanoStaking est certifiée uniquement par les trois anciens membres ;
+le nouveau membre ne certifie pas sa propre inscription. Une fois un ancien
+membre déconnecté, le nouveau signe le certificat du transfert suivant, sans
+redémarrage des processus. Les pairs actifs concordent sur reçu et solde.
+
+Preuves : localBftMembershipRecovery (4/4, 93,11 secondes). Périmètre local à
+quatre nœuds et stakes égaux ; départs, poids inégaux, WAN et longue durée ne
+sont pas qualifiés par ces scénarios. Aucun flood exécuté.
+
+## Quorum réseau avec stakes inégaux
+
+Les scénarios bft_weighted_paris_network et bft_weighted_shanghai_network
+créent quatre validateurs de poids relatifs 4:1:1:1 par exécution du staking,
+puis vérifient ces poids dans l'ensemble de vote réel. Le validateur à 4/7
+isolé et les trois autres réunis à 3/7 restent sans finalité douze secondes.
+Après changement des connexions, le groupe de deux à 5/7 finalise, tandis
+que le groupe de deux à 2/7 reste à hauteur zéro.
+
+Le certificat contient exactement deux signatures, vérifiées contre l'ensemble
+pondéré complet par verify_commit_certificate. Aucun signataire du groupe
+isolé n'y apparaît. La reconnexion des quatre nœuds converge vers le même
+hash et la même racine d'état. Résultat : 2/2 en 60,11 secondes, sans flood.
+Preuves : localWeightedBftQuorum. La frontière exacte de deux tiers, les
+changements de poids en direct et les conditions WAN restent à qualifier.
+
+## Frontière stricte de deux tiers sur le réseau local
+
+Les tests bft_two_thirds_paris_network et bft_two_thirds_shanghai_network
+utilisent les poids 3:1:1:1. Les groupes initiaux restent sans finalité, puis
+les deux signataires connectés à 4/6 restent à hauteur zéro pendant douze
+secondes. Le test vérifie leur handshake cpp-libp2p et leur participation au
+vote. Le groupe élargi à 5/6 finalise avec trois signatures vérifiées contre
+l’ensemble pondéré. Après reconnexion, les quatre nœuds concordent sur le
+hash et la racine d’état du bloc 1. Résultat : 2/2, 79,54 secondes.
+
+Référence : localBftStrictTwoThirds. Cela complète la frontière laissée ouverte
+par localWeightedBftQuorum, sans qualifier les changements de poids, les
+départs, les conditions WAN ou la tenue prolongée sous charge.
+
+## Ajout de stake en direct
+
+Les scénarios bft_stake_change_paris_network et
+bft_stake_change_shanghai_network passent (2/2, 56,04 secondes). Une
+transaction signée addStake transforme les poids 1:1:1:1 en 4:1:1:1. Chaque
+pair vérifie le certificat du bloc d’activation avec les anciens poids.
+Le signataire à 4/7 isolé ne finalise pas un nouveau transfert pendant douze
+secondes. Après connexion à un second validateur, le groupe à 5/7 finalise
+ce transfert avec exactement deux signatures vérifiées sous les nouveaux
+poids, et le destinataire est crédité une seule fois sur les deux pairs.
+Aucun cœur ni journal n’est redémarré pendant cette transition.
+
+Référence : localBftLiveStakeChange. Le test ne prouve pas à lui seul
+l’absence de progression du groupe à 3/7, ni les départs, les changements
+concurrents ou successifs de poids, ou la qualification WAN/charge.
+
+## Départ d’un validateur : résultat intermédiaire Paris
+
+Le scénario bft_departing_paris_network passe en 260,11 secondes : retrait
+anticipé exécuté en échec, maintien du rôle de vote, attente du véritable
+délai de 100 blocs (déverrouillage 104), retrait réussi certifié par l’ancien
+ensemble, puis arrêt des votes sans redémarrage. Les trois membres restants
+certifient une transaction ordinaire signée par l’ancien validateur ; les
+certificats sont vérifiés contre le nouvel ensemble et le transfert appliqué
+une seule fois. Le scénario Shanghai est encore en cours à ce point de
+contrôle ; ce résultat partiel ne qualifie pas les deux profils.
+Référence : localBftDepartureCheckpoint.
+
+## Départ : campagne Paris et Shanghai terminée
+
+La campagne localBftLiveDeparture complète le point de contrôle précédent :
+2/2 passent en 524,49 secondes. Les deux profils attendent le déverrouillage
+104, certifient le retrait au bloc 106 sous l’ancien ensemble et le transfert
+ordinaire de l’ancien validateur au bloc 108 sous les trois membres restants.
+Le processus sortant cesse de voter sans redémarrage. Le résultat intermédiaire
+Paris reste conservé ; réinscription, messages malveillants d’anciennes clés et
+conditions WAN/charge restent à qualifier en réseau.
+
+## Écriture RocksDB refusée par le système
+
+localStorageWriteFailure couvre Paris et Shanghai (2/2, quatre frontières de
+panne, 2,64 secondes). RLIMIT_FSIZE=0 dans un processus de test provoque une
+erreur EFBIG réelle lors de l’ajout au WAL : journal de vote ou base canonique.
+La réservation échouée ne produit aucune signature ; l’écriture canonique
+échouée n’avance ni état en mémoire ni indices après réouverture. Le processus
+sort sans destructeurs, limite toujours active. Une nouvelle exécution reprend
+la même signature précommit durable, réessaie le bloc et vérifie par audit
+l’application unique du transfert et l’avancement correct du journal.
+
+Les premiers résultats sont conservés, puis les assertions renforcées vérifient
+la base exacte concernée et l’égalité de signature entre processus. Cela ne
+couvre pas ENOSPC, l’écriture partielle, les erreurs fsync, une coupure physique
+ni la disponibilité d’un réseau pendant la panne. Aucun hook de panne ajouté
+au moteur de production.
+
+## Écritures partielles du WAL
+
+localStoragePartialWrite étend les erreurs d’écriture précédentes : 2/2 profils
+passent en 11,67 secondes, soit 28 interruptions réelles d’ajout au WAL.
+Pour chaque frontière (réservation et bloc canonique), une exécution témoin
+mesure la taille complète ; les interruptions surviennent après 0, 1, 6, 7,
+32 octets, la moitié ou juste avant le dernier octet. La taille physique du
+fichier confirme exactement le préfixe écrit avant EFBIG.
+
+Après sortie sans destructeurs, limite toujours installée, un autre processus
+vérifie l’absence de bloc/reçu/certificat partiel et réexécute avec audit.
+Une réservation incomplète ne libère pas de signature ; le précommit déjà
+durable survit à un échec canonique avec la même signature. Le premier
+essai limité à 32 octets est conservé avec la campagne élargie.
+Cela qualifie ces troncatures de fin de journal, pas ENOSPC, fsync, une
+corruption arbitraire de secteurs ou une coupure physique d’alimentation.
+
+## Erreur de synchronisation après écriture complète
+
+localStorageSyncFailure passe sur Paris et Shanghai (2/2, quatre frontières,
+2,12 secondes). Une bibliothèque liée uniquement au test macOS injecte EIO
+sur fcntl(F_FULLFSYNC) pour le WAL choisi ; le compteur et l’erreur RocksDB
+confirment que le chemin a été exercé après ajout des données.
+
+La réservation ne libère aucune signature après l’erreur. Si elle subsiste
+à la réouverture, un vote contradictoire est refusé. L’échec de synchronisation
+canonique laisse l’état en mémoire à zéro, mais le bloc entièrement écrit
+subsiste ici à la réouverture : Nano reprend le journal et vérifie le bloc,
+le reçu et l’application unique du transfert, avec le même précommit.
+Une erreur de synchronisation ne signifie donc pas forcément absence du bloc
+après redémarrage. Le test couvre le chemin où le WAL subsiste, pas la perte
+physique des octets non synchronisés. Linux, ENOSPC et disponibilité réseau
+pendant la panne restent hors de ce périmètre.
+
+## Perte simulée de la fin non synchronisée et rattrapage du journal
+
+localStorageSyncLossRecovery passe sur Paris et Shanghai : 2/2 profils,
+12 cas de panne, 5,15 secondes. Chaque échec F_FULLFSYNC concerne soit
+la réservation, soit le bloc canonique, soit l’avancement du journal après
+écriture canonique durable. Le suffixe ajouté reste présent ou est supprimé
+par le superviseur, après sortie du processus, dans le seul WAL temporaire
+ciblé. La taille précédente est contrôlée ; les autres données sont préservées.
+
+À la réouverture, bloc, signature, audit et transfert unique concordent.
+Pour l’avancement du journal, le bloc canonique demeure présent et le journal
+repart de hauteur 1 si le suffixe est perdu, ou 2 s’il est conservé ; le
+rattrapage aboutit à 2 dans les deux cas. Les campagnes intermédiaires et
+les assertions renforcées sont conservées. C’est une simulation logicielle
+de perte du suffixe non synchronisé, pas une qualification de coupure
+électrique physique, de panne du périphérique ou de disponibilité réseau.
+
+## Charge RPC contrôlée par profil
+
+localRpcProfileLoad passe sur Paris et Shanghai (2/2, 8,02 secondes). Chaque
+profil reçoit 400 transferts type 2 via huit clients HTTP concurrents, refuse
+400 transactions de chaîne étrangère et répond à 400 lectures d’identité.
+Le flood est désactivé. Après admission, les transactions sont exécutées
+sur au moins quatre blocs de 2,1 millions de gas et importées directement
+dans un second moteur. Reçus, racines d’état, solde destinataire exact,
+audits des deux historiques et réouverture de la base productrice sont vérifiés.
+
+Les débits/latences consignés mesurent l’admission locale de cette campagne.
+La production des blocs suit l’admission ; ce scénario ne qualifie pas
+la finalité BFT distribuée, le P2P, la concurrence admission/consensus,
+une charge prolongée ou une capacité de production garantie.
+
+## Charge pendant la finalisation BFT via cpp-libp2p
+
+localBftConcurrentLoad termine les scénarios Paris et Shanghai à 240
+transactions chacun : 2/2 en 215,12 secondes. Quatre clients attendent
+250 ms après chaque séquence envoi/lectures ; des confirmations sont
+observées pendant les envois. Les reçus des 240 transactions concordent
+sur les quatre pairs, les certificats des blocs concernés sont vérifiés
+et le solde destinataire exclut pertes/doublons. Le même bloc/racine final
+est retrouvé après réouverture et audit des quatre bases. Aucun flood.
+
+Limite importante : les premiers scénarios, limités à 80 transactions,
+échouaient faute de confirmation observée pendant la fenêtre d’envoi.
+Allonger la campagne au même rythme permet de vérifier la correction
+fonctionnelle mais ne résout pas ce problème de latence. Les durées de
+109,23 s (Paris) et 97,60 s (Shanghai) incluent vérifications et réouvertures,
+et ne mesurent pas uniquement le temps de finalisation.
+
+Un échantillon CPU d’une seconde sur Shanghai montre la chaîne d’appels
+BftReactor::ensure_round → ConsensusRound → recover_voting_progress →
+audit_locked. Le code réaudite l’historique entier à chaque récupération
+de progression. Ce coût est une piste de correction prioritaire, sans
+supprimer les garanties de vérification au redémarrage.
+
+## Réutilisation en mémoire du préfixe certifié vérifié
+
+La reprise ne réexécute plus tout l’historique à chaque ronde si le préfixe
+a déjà été intégralement vérifié dans ce processus puis uniquement étendu
+par des blocs certifiés, exécutés et écrits durablement. Le repère est inconnu
+après réouverture, invalidé avant écriture incertaine/restauration/import non
+certifié, et renouvelé par audit explicite. La séquence complète des certificats
+du journal est toujours vérifiée : ce coût reste linéaire par reprise.
+
+Preuves bftCertifiedAuditReuse : 15 tests de sécurité/reprise et 19 tests EVM
+passent. Les nouvelles régressions refusent un reçu historique corrompu après
+réouverture, y compris après extension valide d’un préfixe encore non vérifié,
+sans avancer le journal neuf. Les reprises SIGKILL et erreurs d’écriture ou
+de synchronisation passent également.
+
+Les deux charges prolongées passent encore, mais les deux essais courts
+échouent toujours faute de confirmation observée pendant les envois.
+Sur cette exécution Paris passe de 109,23 à 67,42 secondes (vérifications
+incluses) ; cela reste une observation ponctuelle, pas un débit garanti.
+Le problème de latence courte n’est pas résolu par cette optimisation.
+
+## Réponse BFT immédiate et effet de l’instrumentation
+
+Après acceptation complète d’un échange, le RPC fait désormais avancer
+le consensus avant de retourner le snapshot. Les votes localement permis
+peuvent ainsi accompagner la réponse sans attendre le prochain tick.
+La validation du message précède cet avancement ; les règles de quorum
+et de signature durable sont conservées. Cinq régressions natives passent.
+
+Les traces montrent la sensibilité du test court au calendrier : Paris
+finalise d’abord un bloc vide, tandis que Shanghai peut inclure un transfert
+plus tôt. Quatre répétitions instrumentées passent après la modification,
+mais les DEUX essais sans lectures diagnostiques échouent encore. Les
+lectures supplémentaires modifient la fenêtre/ordonnancement ; ces passages
+ne résolvent donc pas le critère original. Le diagnostic est désormais
+optionnel via NANO_TEST_BFT_TRACE et désactivé par défaut.
+Référence : bftImmediateReplyDiagnostics. La cadence périodique du relais
+reste à examiner ; aucune latence de production n’est qualifiée ici.
+
+## Cadence BFT indépendante du cycle général du relais
+
+Le relais échange désormais les snapshots BFT via un cycle de 500 ms
+distinct du cycle d’une seconde de découverte/synchronisation/gossip.
+Le cycle suivant attend la réponse locale ; chaque pair conserve au plus
+un échange BFT en cours, jusqu’au traitement local de sa réponse. Les
+limites entrantes sont inchangées.
+
+Preuves bftRelayIndependentCadence : les quatre répétitions courtes, sans
+NANO_TEST_BFT_TRACE et sans lectures de diagnostic, passent (deux par
+profil Paris/Shanghai, 79,65 secondes au total). Les 80 transactions par
+exécution restent espacées de 250 ms par client ; confirmations pendant
+les envois, reçus/certificats/état et réouverture des quatre pairs sont vérifiés.
+Les six tests du relais et les quatre scénarios quorum strict/reprise passent
+également ; exactement deux tiers ne finalisent toujours pas.
+
+Le critère auparavant en échec est satisfait dans ces quatre exécutions.
+Les échecs historiques restent conservés. Cela ne garantit pas une borne
+de latence générale : réseaux plus grands, budgets partagés sous charge
+prolongée, panne pendant les envois et conditions WAN restent à qualifier.
+
+### Réserve du budget entrant pour consensus et synchronisation
+
+Le relais applique aux transactions, annonces et handshakes un sous-budget :
+4 requêtes/s par pair (rafale 8, concurrence 2) et 32 requêtes/s globales
+(rafale 64, concurrence 8). Ces requêtes consomment également le budget
+commun original : 8/s par pair, rafale 16, concurrence 4 ; 64/s globales,
+rafale 128, concurrence 16. Les échanges BFT, chainsync et blocksync restent
+soumis à ce budget commun. La limite de 256 identités reste inchangée.
+
+Ainsi, le trafic de transactions seul ne peut plus épuiser la capacité
+réservée aux échanges de contrôle. Cela ne garantit pas la disponibilité
+face à un pair qui sature lui-même les protocoles de contrôle, ni la
+livraison des transactions : la diffusion sans reprise reste à qualifier.
+Les vérifications cryptographiques et les seuils de quorum sont inchangés.
+
+### Diffusion avec accusé de traitement (version 2)
+
+Le relais émet les transactions via `/nano/txgossip/2.0.0`. Il conserve un
+curseur du journal d'événements par pair et ne l'avance qu'après un accusé
+contenant le curseur et le nombre d'éléments attendus. Une réponse perdue,
+une fermeture ou un délai expiré laisse ce curseur inchangé. Il réessaie
+au cycle suivant ; au plus quatre opérations sont actives globalement,
+une par pair, avec sélection circulaire entre les pairs. Chaque lot comporte
+au plus 50 transactions et 8 Mio de données hexadécimales. Les annonces de
+blocs et leur synchronisation conservent leurs chemins existants.
+
+Le RPC `nano_receiveTransactions` vérifie les limites avant toute admission,
+reconnaît les transactions déjà connues (pool ou historique) et renvoie un
+résultat par élément. Une répétition connue n'émet pas de nouvel événement.
+Un accusé signifie « traité », pas nécessairement « accepté » : les rejets
+d'admission sont indiqués dans `accepted`. Le protocole v1 reste reçu, mais
+l'émission v2 nécessite des pairs compatibles ; un parc mixte n'est pas qualifié.
+
+Cette reprise couvre les pertes de transport et d'accusé. Elle ne garantit
+pas encore la récupération après expiration des 10 000 événements en mémoire,
+redémarrage du cœur, ni après un rejet temporaire d'admission chez le pair.
+La régulation du coût de vérification par transaction au sein des lots et
+les gros ensembles de pairs restent à qualifier. Le mécanisme de perte
+`NANO_TEST_DROP_GOSSIP_REPLY_ONCE` est un outil de test désactivé par défaut.
+
+### Budget des transactions transmises au cœur
+
+Les protocoles de diffusion v1 et v2 partagent un budget supplémentaire,
+consommé après lecture de la requête et avant appel au cœur : 8 transactions/s
+par pair (rafale 64) et 64/s globalement (rafale 128). Chaque élément compte,
+y compris un doublon ou une donnée invalide. Le débit de requêtes, les octets
+et la concurrence restent soumis à leurs limites distinctes. Un refus de
+budget ferme le flux sans accusé ; le curseur v2 reste donc à réessayer.
+
+Le budget utilise l'horloge monotone et la table d'identités existante,
+limitée à 256 entrées. Une nouvelle connexion ne réinitialise pas les jetons
+consommés. Cette protection borne les éléments transmis par le relais,
+pas le temps CPU absolu ni les appels HTTP directs au cœur. Les requêtes
+directes et les données de grande taille nécessitent leur propre qualification.
+
+### Budget commun d'admission RPC
+
+Le cœur applique un budget commun de 64 transactions/s (rafale 128) à
+`eth_sendRawTransaction`, `nano_receiveTransactions` et l'envoi via compte
+local `eth_sendTransaction`. Chaque élément d'un lot consomme une unité.
+Le budget est partagé par les connexions HTTP et WebSocket utilisant le
+même objet RPC du serveur, sous son verrou existant. Ouvrir une connexion
+ou utiliser un tableau JSON-RPC ne le réinitialise pas.
+
+Un dépassement renvoie le code JSON-RPC `-32005` avant décodage/admission
+(envoi brut) ou avant signature (compte local). Pour un lot de diffusion,
+le budget est vérifié avant toute admission du lot. Les clients peuvent
+réessayer après attente sur ce refus explicite ; une erreur de transport
+ne prouve pas l'absence d'admission. Les lectures et les règles de consensus
+ne sont pas soumises à ce budget. Il ne remplace pas les protections de
+parsing HTTP, de calcul EVM ou de répartition équitable entre clients.
+
+### Récupération par inventaire après perte du journal
+
+`nano_gossipPage` remplace la lecture du seul journal dans la diffusion v2.
+Une première connexion, un curseur expiré ou une nouvelle session du cœur
+commence par un inventaire du pool, ordonné par hash et paginé (50 éléments,
+8 Mio maximum). Le curseur d'événements du début de l'inventaire est conservé
+jusqu'à sa dernière page. La diffusion reprend ensuite les événements depuis
+ce curseur : les insertions derrière le hash déjà parcouru ne sont pas perdues.
+La position de pagination n'avance qu'après l'accusé de traitement.
+
+Un identifiant aléatoire de session est recréé à l'ouverture du cœur ; il
+n'entre ni dans le genesis ni dans les signatures ou les règles de consensus.
+Il invalide les anciens curseurs locaux, y compris un hash de pagination
+provenant d'une session précédente. Le pool reste en mémoire : cette reprise
+n'assure pas sa persistance, ni la notification d'un redémarrage distant à
+un relais qui garde la même identité P2P. Ces scénarios restent à qualifier.
+Un journal qui expire de nouveau pendant un long inventaire provoque un
+nouvel inventaire à la reprise du flux d'événements ; sa progression sous
+saturation continue reste à mesurer.
+
+### Historique de déduplication du pool
+
+Les hashes actifs sont ceux des entrées du pool. Les hashes de transactions
+minées récemment sont conservés dans un cache FIFO borné à la capacité du
+pool (10 000 par défaut). Une répétition d'un hash déjà miné ne renouvelle
+pas sa position dans ce cache. L'historique ne croît donc plus avec la durée
+de vie du nœud. Une éviction ou un retrait d'une transaction non minée ne
+la marque plus comme définitivement connue : elle peut être admise à nouveau
+si les règles courantes le permettent.
+
+Un pool plein refuse une transaction moins rémunératrice que sa moins bonne
+entrée ; à frais égaux, l'ordre d'arrivée continue de départager les entrées.
+Le contrôle de remplacement de même nonce reste inchangé. Le cache des
+transactions minées est une optimisation : les nonces et transactions
+canoniques persistants empêchent leur replay même après oubli du cache.
+Cette borne porte sur l'historique de hashes. La borne des transactions
+en attente est décrite ci-dessous.
+
+### Budget des transactions en attente
+
+Le pool impose aussi 64 Mio maximum de transactions sérialisées par défaut,
+configurables par le quatrième argument de son constructeur. Les limites
+en nombre et par compte restent applicables. Une admission peut nécessiter
+plusieurs évictions, par frais croissants puis ancienneté à frais égaux.
+Toutes sont préparées avant mutation : si un candidat ne paie pas assez
+pour une éviction nécessaire, aucune entrée existante n'est supprimée.
+Les remplacements, retraits, inclusions et remises à zéro ajustent le compteur.
+
+Le test natif vérifie la limite avec 65 transactions proches de 1 Mio, puis
+recalcule les octets depuis l'inventaire. Les cas de remplacement et refus
+vérifient aussi la conservation des entrées. Cette borne ne couvre pas
+l'ensemble du tas, les copies temporaires, le RSS ni le coût CPU sous charge.
+Preuves : `boundedPoolBytes` dans le manifeste de qualification.
+
+### Redémarrage du cœur distant
+
+Le statut réseau transmet aussi `gossip_epoch`. Un changement observé par
+handshake ou chainsync remplace la progression de diffusion du pair et
+redémarre son inventaire, même si son identité P2P est conservée. Les réponses
+en vol ne modifient que l'ancienne progression. La détection dépend du
+rafraîchissement du statut ; les anciens pairs sans ce champ ne la permettent
+pas. Les tests natifs passent, mais le scénario complet entre processus
+reste à qualifier (`gossipRemoteSessionDetection`).
+
+Le scénario local `gossip_remote_restart` vérifie désormais une transaction
+en attente retransmise après SIGKILL du cœur destinataire, avec les mêmes
+processus relais et identité P2P. Les relais sont suspendus uniquement
+pendant le redémarrage pour observer le pool vide avant retransmission.
+Cette preuve ne couvre pas encore les courses sans pause ni plusieurs pages
+d'inventaire (`gossipRemoteRestartIntegration`).
+
+Le scénario `gossip_remote_restart_live_pages` complète cette preuve avec
+75 transactions et aucune suspension des relais. Chaque hash revient en
+attente après le crash, avec la même identité P2P et le nouvel epoch distant.
+Ce passage couvre plusieurs lots de 50 maximum, mais pas toutes les positions
+possibles du crash parmi les requêtes en vol (`gossipRemoteRestartLivePages`).
+
+### Présentation des nonces à trous
+
+Les réponses du pool classent comme pending la suite de nonces contigus
+depuis le nonce canonique de chaque compte. Les transactions après un trou
+sont queued et sont reclassées lorsque le trou est comblé. Ce classement
+par nonce n'est pas une garantie d'inclusion : la sélection de bloc vérifie
+aussi le gas, les fonds et les autres règles d'exécution. Le total interne
+des transactions conservées inclut les deux catégories.
+
+Après l'enregistrement d'un bloc accepté, le pool retire aussi toute
+alternative dont le nonce est désormais inférieur au nonce canonique.
+Le retrait conserve les successeurs et libère leur budget d'octets sans
+confondre ces alternatives avec les transactions effectivement minées.
+Un bloc refusé ne déclenche pas ce nettoyage (`txpoolStaleNonceCleanup`).
+
+### Réconciliation périodique du pool
+
+Chaque pair reçoit un nouvel inventaire au plus tôt 60 secondes après
+la fin du précédent. Les limites de pagination et d'admission restent
+applicables ; une page en cours ou en échec conserve sa position. Ce passage
+permet de reproposer les transactions toujours présentes à la source,
+y compris après un accusé de traitement avec refus. La validation complète
+d'un refus temporaire suivi d'une admission reste ouverte
+(`gossipPeriodicInventory`).
+
+Le test local `gossip_temporary_rejection` démontre une reprise après le délai
+réel de 60 secondes : une transaction refusée selon la règle de remplacement
+est reproposée et admise après retrait contrôlé de sa concurrente. Les cœurs
+conservent leur session et aucun nouvel envoi source n'est effectué. Ce cas
+ne couvre pas toutes les causes de refus temporaire.
+
+Le test `gossip_capacity_recovery` démontre aussi une résolution naturelle :
+un bloc signé libère le quota de 100 transactions d'un compte, puis le
+gossip périodique repropose le nonce suivant initialement refusé. Un second
+bloc l'exécute et les deux historiques concordent. Cette preuve utilise
+un validateur bootstrap, pas un quorum BFT distribué.
+
+L'admission tient compte du coût maximal cumulé de la suite de transactions
+pending contiguës d'un compte (valeur et gas au plafond de frais). Les
+transactions derrière un trou de nonce ne réservent pas ce budget. Un remplacement exclut
+le coût de l'ancienne entrée au même nonce. Cette réservation est une règle
+locale du pool ; le solde canonique n'est modifié que par l'exécution.
+
+La fermeture d'un trou peut promouvoir plusieurs transactions déjà admises
+dont le coût cumulé dépasse le solde. Ce comportement concorde avec Geth
+sur le scénario testé (`txpoolGapPromotionGeth`) : pending ne garantit pas
+l'exécution de toute la suite, et les contrôles d'exécution restent décisifs.
+
+Après un bloc accepté, le nettoyage retire également les entrées devenues
+individuellement non finançables selon le nouveau solde canonique. Les
+transactions futures encore finançables restent disponibles ; leur classement
+dépend des trous de nonce laissés par ces retraits. Le budget d'octets est
+libéré sans modifier les soldes ni créer de reçu pour une transaction retirée.
+
+
+## Réessai après erreur de synchronisation du stockage
+
+Les tests `storage_sync_retry_paris` et `storage_sync_retry_shanghai` désactivent
+l'injection EIO après l'échec initial puis réessaient dans le même processus.
+Dans ces cas, RocksDB conserve l'erreur et refuse les nouvelles écritures ; aucun
+vote contradictoire n'est signé. Il faut corriger la cause de l'erreur puis
+rouvrir le nœud avec les mêmes bases et le même journal de vote. Ne supprimez pas
+le journal pour contourner l'erreur : un bloc peut déjà être durable alors que
+l'avancement du journal a échoué. La reprise réconcilie ces deux positions.
+Cette preuve concerne les trois frontières testées sous macOS, pas toutes les
+erreurs matérielles ou tous les systèmes de fichiers.
+
+### Transport BFT par tour (2026-09-24)
+
+Le relais utilise désormais `nano_bftExchangePage` pour transmettre séparément
+le tour courant et le tour précédent. Les deux pages conservent leurs votes
+signés et leur proposition complète ; elles ne modifient ni les seuils de
+quorum ni les verrous persistants. L'alternance est suivie pour chaque pair.
+Le diagnostic historique `nano_bftExchange` reste agrégé et peut dépasser la
+limite de transport. Voir [BLOCK-TRANSPORT.md](BLOCK-TRANSPORT.md) pour le
+format, les preuves, et la limite encore ouverte d'une proposition seule
+dépassant l'enveloppe de 16 Mio.
+
+
+### Attente des propositions après changement de tour
+
+Le réacteur utilise désormais une attente de proposition de 5, 10, 20, 40,
+80 puis 160 secondes selon le numéro de tour, plafonnée à 300 secondes.
+Un redémarrage dérive la même attente du tour enregistré. Les attentes de
+prevote/precommit restent à cinq secondes ; les règles de quorum, de
+signature et de verrouillage ne changent pas. Une durée invalide est rejetée
+avant le remplacement de l'état du coordinateur.
+
+Cette adaptation répond à un échec observé de transfert libp2p : les tours
+fixes trop courts interrompaient l'arrivée d'une proposition de 18 Mo.
+Les deux profils locaux Paris/Shanghai finalisent ensuite au tour 2 avec
+reconstruction complète chez au moins deux validateurs distincts.
+La preuve couvre quatre cœurs dans un processus et quatre relais séparés,
+pas encore quatre processus de cœur indépendants ou plusieurs machines.
+Voir `bftFragmentNetworkQualification` et `docs/BLOCK-TRANSPORT.md` pour les
+échecs conservés et les limites, notamment les cycles prolongés de proposeurs.
+
+
+### Régression reproduite : retour du proposant après quatre tours
+
+Les nouveaux tests `bft_proposer_cycle_paris` et `bft_proposer_cycle_shanghai` reproduisent un blocage au tour 4 après quatre quorums nil signés. La reprise de proposition utilise une réservation par hauteur et recharge celle du tour 0 ; le coordinateur la refuse correctement. Aucun bloc contradictoire n'est validé dans ce scénario. La vivacité après rotation complète des proposants n'est donc pas qualifiée. Cette reproduction historique est corrigée par les réservations par tour décrites ci-dessous ; elle reste conservée avec ses résultats initiaux. Voir `docs/QUALIFICATION-FAILURES.md` et la campagne `bft-proposer-cycle-20260924`.
+
+
+### Réservations des propositions BFT par tour
+
+En BFT, le journal de production distingue maintenant `(chainId, genesis, producteur, hauteur, tour)`. Le tour est lu dans la proposition et contrôlé avant réservation. La réservation d'un autre bloc dans le même emplacement est refusée ; la reprise recharge les octets exacts. Les votes, leurs domaines de signature et les verrous de consensus sont inchangés. Hors BFT, le domaine reste limité à la hauteur.
+
+Un ancien enregistrement par hauteur est vérifié par son empreinte et son bloc conservé. Il ne sert de proposition de reprise que pour son tour d'origine et continue d'interdire une proposition contradictoire dans ce tour. Une ancienne empreinte sans bloc conservé bloque la migration, car son tour ne peut pas être établi. Les nouveaux tours utilisent le sous-espace `/round/v1/`. Pour une hauteur sans réservation ancienne, un marqueur `nano/bft-round-signing/v1` est écrit dans l'emplacement historique, dans le même WriteBatch synchrone que la nouvelle réservation. Le chemin historique refuse ainsi de signer après une réservation par tour. Il ne faut pas supprimer ce marqueur pour effectuer un downgrade. La compatibilité d'un déploiement avec versions mélangées n'est pas qualifiée par ces tests.
+
+La lecture et la réutilisation refusent une réservation dont le bloc, l'empreinte ou le marqueur de hauteur manque, ainsi qu'un bloc ne correspondant pas à son empreinte. Le correctif concerne le blocage reproduit au retour du proposant ; il ne prouve pas la vivacité sous toutes les partitions ou tous les scénarios byzantins.
+
+Les neuf suites finales passent en 218,49 secondes. Chaque profil Paris/Shanghai vérifie le retour au tour 4, la reprise exacte du journal après réouverture, un commit sous quorum signé et un audit après réouverture complète. Dix-sept refus sont contrôlés par profil, dont la lecture et la réutilisation de cinq variantes corrompues. Les essais de gros blocs avec quatre processus cœur indépendants passent également. Les résultats initiaux en échec restent archivés séparément. La campagne ne qualifie pas encore les pannes d'alimentation pendant l'écriture de ce nouveau format, les versions mélangées ni toutes les conditions de vivacité.
+
+
+### Erreur de synchronisation du journal de propositions
+
+La campagne `bft-signing-sync-20260924` ajoute huit scénarios Paris/Shanghai avec erreur EIO réelle de `fsync`/`F_FULLFSYNC` sur le WAL temporaire. Les réservations nouvelles et les journaux hérités sont testés avec conservation puis perte contrôlée des seuls octets non synchronisés. Aucune signature n'est produite après l'erreur ; les tentatives suivantes dans le processus fautif restent refusées. Après réouverture, le bloc et son empreinte sont présents ensemble ou absents ensemble, avec le marqueur requis pour le nouveau format. Les anciennes réservations restent intactes. La nouvelle réservation durable peut ensuite être signée et relue après une seconde réouverture. Six suites passent en 14,63 secondes avec les régressions existantes. Ces preuves portent sur macOS et une perte de suffixe WAL simulée ; elles ne remplacent pas un essai de coupure électrique physique.
+
+### Estimation RPC par défaut sous charge bornée (2026-09-24)
+
+Les deux nouveaux scénarios `bft_rpc_default_overload_*_network` passent sur Paris et Shanghai, successivement, avec quatre validateurs locaux et 48 clients sur douze tours chacun. Ils testent explicitement les estimations sans bloc demandé, désormais exécutées sur le candidat pending. Les seules erreurs admises sont les refus précis de capacité et d’expiration d’attente ; les erreurs d’exécution, de transport ou de contrôle font échouer le test.
+
+Sur 2533 requêtes, les 1152 lectures d’identité réussissent. Les blocs continuent à être finalisés pendant la charge ; les certificats des transferts témoins sont vérifiés cryptographiquement, les effets appliqués une seule fois et les huit bases rouvertes auditées. Les 24 paires estimation/appel de récupération passent, ainsi que les devis dont la vérification avait dû attendre la fin de la charge. Preuves : `bft-default-estimate-load-20260924`. Ce résultat local et fini ne vaut pas endurance multi-hôte ni validation générale de production.
+
+### Partitions, arrêts forcés et poids de vote : reprise actuelle (2026-09-24)
+
+`bft-recovery-refresh-20260924` vérifie huit scénarios Paris/Shanghai avec les binaires actuels. Les votes réservés sont reproduits exactement après SIGKILL, les partitions se rejoignent sur un bloc commun, et exactement deux tiers du poids ne finalisent pas pendant la phase observée. Les deux essais de panne sous charge retrouvent leurs 720 transferts au total.
+
+Après changement de poids via le contrat de staking, arrêt forcé des quatre cœurs et redémarrage, les nouveaux poids restent actifs. Huit journaux de vote sont remis à la hauteur certifiée suivante sans mutation de la chaîne ; seize historiques de pairs sont rouverts et audités dans les scénarios charge/changement de poids. La trace de l’interruption initiale reste conservée et le test alors incomplet n’est pas compté comme réussi. Cette qualification locale bornée n’établit ni coupure électrique réelle, ni endurance multi-hôte, ni couverture exhaustive des entrelacements BFT.
+
+### SIGKILL pendant assemblage local d'une grande proposition (2026-09-24)
+
+Les tests `bft_assembly_crash_paris` et `bft_assembly_crash_shanghai` couvrent
+chacun trois arrêts forcés après accusé de réception de 1, 20 et 40 fragments
+sur 40, avant `nano_finishBftImport`. Un processus C++ séparé utilise le vrai
+RPC et RocksDB, signale le point atteint, s'arrête par SIGSTOP, puis le parent
+vérifie sa terminaison SIGKILL. Aucun hook de panne n'est ajouté au runtime.
+
+Après réouverture, le genesis et son état passent l'audit, aucun vote/proposition
+fantôme n'est visible et les anciens identifiants de session sont refusés.
+Un nouvel assemblage complet ne suffit pas à commettre : la proposition est
+validée, puis les quorums signés de prevote/precommit permettent le commit.
+Une seconde réouverture vérifie le bloc certifié, les dix reçus réussis et le
+solde exact de dix unités du destinataire. Six cas et deux régressions d'import
+passent ; manifeste `bftAssemblyCrashQualification` et preuves immuables dans
+`build-cmake/qualification/bft-assembly-crash-20260924`.
+
+Ce test appelle le dispatch RPC dans un processus fixture ; il ne qualifie pas
+le transport libp2p interrompu pendant assemblage, le superviseur `nano run`,
+une coupure électrique ni les courses multi-hôtes. Les sessions en mémoire
+sont perdues à l'arrêt : la reprise exige un nouvel assemblage complet.
+
+### Téléchargement BFT libp2p interrompu : reprise locale (2026-09-24)
+
+`bft_fragment_download_crash_paris` et `bft_fragment_download_crash_shanghai`
+réussissent respectivement en 82,12 et 89,72 secondes. Chaque réseau comporte
+quatre cœurs fixture dans des processus distincts et quatre vrais relais
+cpp-libp2p. Le relais destinataire signale l'accusé de réception du premier
+fragment de proposition ; le test le suspend, vérifie que son cœur n'a pas
+validé de proposition et reste au genesis, puis observe les terminaisons
+SIGKILL du cœur et du relais. La base rouverte reste au genesis et passe l'audit.
+
+Le redémarrage réutilise la base, le journal de vote et l'identité libp2p.
+L'ancien identifiant d'assemblage est refusé avec l'erreur précise de session
+inconnue/expirée. Après reconnexion, les quatre pairs s'accordent sur le bloc
+contenant les dix transactions, tous leurs reçus et le solde de dix unités.
+Au moins deux destinataires distincts téléchargent les 40 fragments de la
+proposition finalement retenue. Les huit historiques finaux passent leur
+audit après réouverture. Un bloc finalement accepté peut différer de la
+proposition interrompue, selon le round : le test n'impose pas une finalisation
+du premier proposant au détriment de la vivacité.
+
+La seule addition au relais est une trace de progression aux fragments 1 et 20
+sous `NANO_TEST_NETWORK_TRACE`. Aucun mécanisme de consensus n'est changé.
+Manifeste `bftDownloadCrashQualification`, preuves dans
+`build-cmake/qualification/bft-download-crash-20260924`. Cette campagne couvre
+l'interruption après le premier fragment sur un seul hôte. Elle ne qualifie
+pas tous les points d'interruption, le superviseur `nano run`, les coupures
+électriques, l'endurance ni les réseaux multi-hôtes.
+
+### Arrêt du relais après mort du superviseur (2026-09-24)
+
+Un nouveau test `supervisor_parent_crash` reproduit un défaut de cycle de vie :
+après SIGKILL du cœur `nano run`, son relais restait actif au-delà de six
+secondes. Le destructeur du superviseur ne peut pas nettoyer un enfant quand
+le processus parent reçoit SIGKILL.
+
+Le superviseur transmet maintenant son PID direct via `NANO_SUPERVISOR_PID`,
+en remplaçant toute valeur héritée. Le relais vérifie ce parent avant d'ouvrir
+ses écouteurs, puis toutes les 250 ms sur sa boucle d'événements. Quand il est
+réattribué à un autre parent après la mort du superviseur, il arrête l'hôte
+libp2p et la boucle. La détection ne dépend pas de la disponibilité du RPC.
+La cadence n'est pas une garantie de latence en cas de boucle bloquée. Les
+relais lancés indépendamment sans ce paramètre gardent leur cycle de vie.
+
+Quatre suites réussissent : contrôle des secrets et du PID transmis, arrêt
+normal et propagation d'une panne du relais, mort forcée du parent avec
+réouverture de la même base et identité, puis transferts de blocs certifiés
+fragmentés avec perte d'un fragment/accusé de réception sur Paris et Shanghai.
+Le test de parent périmé échoue avant ouverture des écouteurs. Preuves dans
+`supervisorParentCrashQualification` et
+`build-cmake/qualification/supervisor-parent-crash-20260924`.
+
+Cette correction POSIX a été vérifiée sur cet hôte macOS. Elle ne qualifie pas
+encore le crash d'une proposition BFT distribuée sous `nano run`, ni les pertes
+d'alimentation, les réseaux multi-hôtes ou l'endurance.
+
+### Grande proposition et panne sous nano run (2026-09-24)
+
+`bft_managed_large_crash_paris` et `bft_managed_large_crash_shanghai` passent en
+111,74 et 111,06 secondes. Chaque réseau lance quatre vrais `nano run` et leurs
+relais cpp-libp2p. Les dix transactions signées de 900 000 octets de calldata
+sont admises par HTTP RPC ; les nonces futurs sont envoyés avant le premier
+nonce pour rendre l'ensemble éligible au même bloc. Les 40 soumissions par
+réseau sont vérifiées (une duplication éventuelle par gossip doit correspondre
+au hash exact déjà présent).
+
+Après réception du premier fragment de proposition, un cœur reçoit SIGKILL.
+Son relais orphelin s'arrête automatiquement. Sa base rouverte correspond au
+dernier bloc observé, passe l'audit et ne contient aucun reçu des transactions
+cibles. Le redémarrage réutilise base, journal de vote et identité réseau, sans
+réinjecter manuellement la mempool perdue. Les quatre pairs retrouvent ensuite
+le même bloc certifié de 18 003 850 octets, les dix reçus réussis et le solde
+exact de dix unités. Au moins deux destinataires distincts ont reçu les 40
+fragments de la proposition finale. Les huit bases finales rouvertes passent
+l'audit. Les échecs de téléchargements intermédiaires restent dans les logs.
+
+Manifeste `bftManagedLargeCrashQualification`, preuves dans
+`build-cmake/qualification/bft-managed-large-crash-20260924`. Aucun changement
+runtime dans cette campagne, qui utilise la correction du relais orphelin.
+Le scénario sous superviseur est désormais couvert à ce point d'interruption
+sur cet hôte ; les autres points, réseaux multi-hôtes, endurance et coupures
+électriques restent ouverts.
+
+### Coût du collecteur et ensemble votant immuable (2026-09-24)
+
+`RoundVoteCollector` conserve maintenant l'empreinte de son ensemble votant et
+réutilise sa table normalisée existante. Auparavant, chaque réception
+reconstruisait cette table et recalculait l'empreinte de tous les membres.
+Le parseur commun reste strict (taille, champs canoniques, domaine, hauteur,
+round, appartenance) et chaque signature est toujours vérifiée, y compris
+pour les doublons et conflits. Un nouveau collecteur reçoit un nouvel ensemble
+lors du changement de contexte ; il n'y a pas de cache global partagé entre
+hauteurs ou ensembles.
+
+La campagne `vote-scaling-20260924` mesure 4, 16, 64, 256 et 1 000 validateurs.
+À 1 000, recevoir les votes et contrôler la participation après chacun passe
+localement de 1 691,85 à 270,79 ms ; recevoir à nouveau les mêmes votes passe
+de 1 660,56 à 255,56 ms. La construction devient légèrement plus coûteuse
+(0,59 à 1,59 ms). Ce sont des observations uniques avant/après sur cet hôte,
+pas des garanties de débit. Le rapport conserve toutes les tailles, dont les
+petites où le gain n'est pas établi. Les 1 000 messages pèsent 558 000 octets
+avant comme après : le trafic n'est pas optimisé par ce changement.
+
+Les tests vérifient le seuil strict à chaque préfixe de votes, les doublons,
+les signatures invalides, membres étrangers, ensembles modifiés, mauvais
+rounds, preuves d'équivoque bornées et acceptation du nouvel ensemble par un
+nouveau collecteur. Les suites finality/consensus_round et les réseaux locaux
+Paris/Shanghai avec changement de poids et SIGKILL passent également.
+
+Manifeste `voteCollectorScalingQualification`. Le plafond 1 000 reste inchangé.
+Les parcours de participation/certificat, le décodage externe du réacteur et
+la rediffusion de listes de votes restent à optimiser/mesurer : aucune
+complexité linéaire globale ni capacité réseau à 1 000 votants n'est démontrée.
+
+### Contrôle de participation sans rescanner les votes (2026-09-24)
+
+Le collecteur maintient deux poids de participation, prévote et précommit.
+Seul le premier vote validé d'un signataire à cette étape augmente le poids ;
+les doublons, signatures invalides et équivoques n'ajoutent rien. La somme est
+préparée avant insertion dans la table de votes, puis publiée par échange GMP
+sans allocation après insertion réussie. Les poids restent des entiers exacts.
+`has_participation_quorum` compare ce poids au seuil strict, sans parcourir les
+votes. Il ne certifie pas un bloc : les votes nil participent aux délais de
+round, mais les contrôles de quorum de bloc restent distincts et inchangés.
+
+Le test `vote_participation_model` compare ce résultat à un recalcul indépendant
+à chaque étape. Avant et après modification, 776 comparaisons passent, avec
+96 signatures invalides rejetées, 96 conflits, ordres direct/inverse, votes nil
+et poids jusqu'à 2^200. Le benchmark conserve 4/16/64/256/1 000 membres. À 1 000,
+5 000 paires de contrôles (10 000 appels) passent localement de 183,82 à 0,33 ms.
+C'est une mesure unique d'une méthode ciblée, pas un gain de débit global.
+
+Six suites finales passent : modèle, benchmark, finality, consensus_round et
+les réseaux Paris/Shanghai qui empêchent la finalisation à exactement deux
+tiers puis permettent le quorum pondéré suffisant. Le manifeste
+`voteParticipationQualification` conserve les preuves. Le plafond, le trafic,
+les recherches de certificats et les contrôles externes du réacteur restent
+inchangés ; une capacité réseau à 1 000 votants n'est toujours pas démontrée.
+
+### Diffusion des votes connus par pair (2026-09-24)
+
+Le relais géré BFT v2 peut maintenant omettre les votes dont un pair connaît
+les octets exacts : vote déjà reçu de ce pair, ou vote envoyé dans une requête
+ayant obtenu une réponse réussie de même hauteur/round. Un envoi seul, une
+réponse perdue ou un contexte différent ne valent pas accusé de réception.
+Cette connaissance de transport ne donne aucun poids de vote et ne dispense
+pas le cœur de ses contrôles. Une déclaration mensongère d'un pair peut modifier
+ce qui lui est renvoyé, pas les votes que le cœur compte.
+
+Le suivi stocke des empreintes SHA256, au maximum deux contextes de 2 000
+empreintes par pair. Il remplace l'objet de suivi quand l'époque distante
+change ; un callback d'une ancienne session ne peut pas alimenter le nouvel
+objet. Une page complète est retransmise après cinq secondes même si tous ses
+votes paraissent connus, pour réparer une perte de mémoire distante ou une
+détection tardive de redémarrage. Les propositions et autres champs restent
+transmis ; seul le tableau des votes est filtré. Le format v2 ne change pas.
+
+Trois suites de transport et les deux réseaux gérés de grandes propositions
+avec SIGKILL Paris/Shanghai passent. Les traces échantillonnées constatent
+128 et 148 votes omis sur 80 messages différentiels par profil. Ce ne sont pas
+les économies totales du réseau. Un cas unitaire synthétique de 2 000 entrées
+connues passe de 1 112 999 à 110 octets de JSON entre deux réémissions complètes ;
+il ne représente pas un réseau de 1 000 validateurs. Manifest
+`bftVoteDeltaQualification`, preuves dans `bft-vote-delta-20260924`.
+
+Le décodage/vérification du cœur, la construction des snapshots et les autres
+parcours de votes restent distincts. Cette campagne ne prouve pas une complexité
+globale O(N), la capacité à 1 000 validateurs, un déploiement mixte d'anciennes
+versions ou la vivacité dans tous les scénarios byzantins. Le plafond reste
+inchangé.

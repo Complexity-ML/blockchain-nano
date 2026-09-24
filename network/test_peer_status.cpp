@@ -11,6 +11,19 @@ int main(){try{
  remote=local;remote["chain_id"]=uint64_t(1338);check(!valid_peer_status(remote,local),"foreign chain ID");
  remote=local;remote["genesis_hash"]="0x"+std::string(64,'b');check(!valid_peer_status(remote,local),"same chain ID foreign genesis");
  for(const auto& value:std::vector<Json>{nullptr,0,"0x",std::string(66,'g'),"0x"+std::string(64,'A')}){remote=local;remote["genesis_hash"]=value;check(!valid_peer_status(remote,local),"malformed genesis hash");}
+ // The gossip session is optional for legacy peers, but malformed supplied
+ // sessions must not reach cursor-reset handling or throw on JSON conversion.
+ remote=local;remote["gossip_epoch"]="0x"+std::string(32,'a');
+ check(valid_peer_status(remote,local)&&valid_peer_status(local,remote),"legacy and session-aware peers interoperate");
+ auto session_local=remote;remote["gossip_epoch"]="0x"+std::string(32,'b');
+ check(valid_peer_status(remote,session_local),"different process epochs are valid on the same chain");
+ unsigned rejected_epochs=0;
+ for(const auto& value:std::vector<Json>{nullptr,true,0,1.5,Json::array(),Json::object(),"","0x","0x"+std::string(31,'a'),"0x"+std::string(33,'a'),"0X"+std::string(32,'a'),"0x"+std::string(32,'A'),"0x"+std::string(31,'a')+"g","0x"+std::string(31,'a')+std::string(1,'\0')}){
+  remote=local;remote["gossip_epoch"]=value;
+  check(!valid_peer_status(remote,session_local)&&!valid_peer_status(session_local,remote),"malformed local or remote gossip epoch rejected");
+  ++rejected_epochs;
+ }
+ std::cout<<rejected_epochs<<" malformed gossip epoch cases rejected on both sides\n";
  check(!valid_peer_status(Json::object(),Json::object()),"two absent identities do not match");
  std::cout<<"Strict peer chain and genesis identity passed\n";
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

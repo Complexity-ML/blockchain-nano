@@ -10,19 +10,44 @@ namespace nano {
 namespace {
 std::string height_key(const Int& number){return hex(bytes(number,8));}
 void require_ok(const rocksdb::Status& status){if(!status.ok())throw std::runtime_error("RocksDB: "+status.ToString());}
+// Detect the API, rather than guessing the release where DB** was removed.
+template<class Database=rocksdb::DB>
+std::unique_ptr<Database> open_database(const rocksdb::Options& options,const std::string& path){
+ std::unique_ptr<Database> opened;
+ if constexpr(requires { Database::Open(options,path,&opened); }){
+  require_ok(Database::Open(options,path,&opened));
+ }else{
+  Database* raw=nullptr;
+  auto status=Database::Open(options,path,&raw);
+  opened.reset(raw);
+  require_ok(status);
+ }
+ return opened;
+}
 std::string vote_slot(const FinalityVote& vote){return height_key(Int(std::to_string(vote.height)))+"/"+height_key(Int(std::to_string(vote.round)))+"/"+hex(bytes(Int(static_cast<unsigned>(vote.step)),1));}
 Json vote_fields(const FinalityVote& vote){return {{"height",quantity(Int(std::to_string(vote.height)))},{"round",quantity(Int(std::to_string(vote.round)))},
  {"step",static_cast<unsigned>(vote.step)},{"validatorSetHash",hex(vote.validator_set_hash)},
  {"blockHash",vote.block_hash?Json(hex(*vote.block_hash)):Json(nullptr)},{"validator",address(vote.validator)}};}
 Json encode_members(const VotingSet& members){Json result=Json::array();for(const auto& [member,power]:members)result.push_back({{"validator",address(member)},{"power",quantity(power)}});return result;}
 VotingSet decode_members(const Json& members){
- if(!members.is_array()||members.empty()||members.size()>1000)throw std::runtime_error("invalid persisted voting set");
+ if(!members.is_array()||members.empty())throw std::runtime_error("invalid persisted voting set");
  VotingSet result;for(const auto& member:members)result.emplace_back(address(member.at("validator").get<std::string>()),quantity(member.at("power")));voting_set_hash(result);return result;
 }
 Json encode_certificate(const Block& block,const BlockCertificate& certificate){
  Json votes=Json::array();for(const auto& vote:certificate.votes)votes.push_back({{"validator",address(vote.validator)},{"signature",hex(vote.signature)}});
  return {{"height",quantity(block.header.number)},{"blockHash",hex(block.header.hash())},{"round",quantity(Int(std::to_string(certificate.round)))},
  {"validators",encode_members(certificate.validators)},{"nextValidators",encode_members(certificate.next_validators)},{"precommits",votes}};
+}
+constexpr size_t proposal_inline_limit=16*1024*1024;
+constexpr size_t proposal_chunk_size=1024*1024;
+const std::string proposal_chunk_tag="nano/proposal/chunks-v1\n";
+std::string proposal_chunk_key(const std::string& key,size_t index){return key+"/chunks/"+std::to_string(index);}
+std::string proposal_digest(const std::string& data){return hex(keccak(Bytes(data.begin(),data.end())));}
+void put_proposal(rocksdb::WriteBatch& batch,const std::string& key,const std::string& data){
+ if(data.size()<=proposal_inline_limit){batch.Put(key,data);return;}
+ const size_t count=(data.size()-1)/proposal_chunk_size+1;
+ for(size_t i=0;i<count;++i){const size_t offset=i*proposal_chunk_size;batch.Put(proposal_chunk_key(key,i),rocksdb::Slice(data.data()+offset,std::min(proposal_chunk_size,data.size()-offset)));}
+ batch.Put(key,proposal_chunk_tag+Json{{"bytes",data.size()},{"chunks",count},{"keccak",proposal_digest(data)}}.dump());
 }
 rocksdb::WriteOptions durable_write(){rocksdb::WriteOptions options;options.sync=true;return options;}
 }
@@ -31,11 +56,28 @@ std::optional<std::string> ChainStore::get(const std::string& key)const{
  if(status.IsNotFound())return std::nullopt;require_ok(status);return value;
 }
 std::optional<Json> ChainStore::read(const std::string& key)const{auto value=get(key);return value?std::optional<Json>(Json::parse(*value)):std::nullopt;}
+std::optional<std::string> ChainStore::proposal_data_impl(const std::string& key)const{
+ auto encoded=get(key);if(!encoded)return std::nullopt;
+ if(!encoded->starts_with(proposal_chunk_tag)){
+  if(encoded->starts_with("nano/proposal/"))throw std::runtime_error("unknown voting proposal storage version");
+  if(encoded->size()>proposal_inline_limit)throw std::runtime_error("stored inline voting proposal exceeds limit");return encoded;
+ }
+ if(encoded->size()>1024)throw std::runtime_error("voting proposal manifest exceeds limit");
+ auto manifest=Json::parse(encoded->substr(proposal_chunk_tag.size()));
+ if(!manifest.is_object()||manifest.size()!=3||!manifest.at("bytes").is_number_unsigned()||!manifest.at("chunks").is_number_unsigned()||!manifest.at("keccak").is_string())throw std::runtime_error("invalid voting proposal manifest");
+ const auto total=manifest.at("bytes").get<uint64_t>(),count=manifest.at("chunks").get<uint64_t>();
+ const auto digest=manifest.at("keccak").get<std::string>();
+ if(total<=proposal_inline_limit||total>std::string{}.max_size()||count!=(total-1)/proposal_chunk_size+1||digest.size()!=66||hex(unhex(digest))!=digest||unhex(digest).size()!=32)throw std::runtime_error("invalid voting proposal manifest bounds");
+ // Do not allocate from untrusted metadata. Grow only from actual bounded
+ // chunks, and verify all bytes before parsing JSON or resuming a vote.
+ std::string result;
+ for(uint64_t i=0;i<count;++i){auto chunk=get(proposal_chunk_key(key,static_cast<size_t>(i)));const auto expected=std::min<uint64_t>(proposal_chunk_size,total-i*proposal_chunk_size);if(!chunk||chunk->size()!=expected)throw std::runtime_error("missing or truncated voting proposal chunk");result.append(*chunk);}
+ if(result.size()!=total||proposal_digest(result)!=digest)throw std::runtime_error("voting proposal chunk digest mismatch");return result;
+}
 ChainStore::ChainStore(const std::filesystem::path& path){
  if(path.has_parent_path())std::filesystem::create_directories(path.parent_path());
  rocksdb::Options options;options.create_if_missing=true;options.paranoid_checks=true;
- std::unique_ptr<rocksdb::DB> opened;
- require_ok(rocksdb::DB::Open(options,path.string(),&opened));db_=opened.release();
+ db_=open_database(options,path.string()).release();
  try{
   auto schema=get("meta/schema");
   if(schema&&*schema!="nano/1")throw std::runtime_error("unsupported Nano database schema");
@@ -85,14 +127,19 @@ void ChainStore::reserve_vote_impl(const FinalityVote& vote,const Int& chain_id,
  auto digest=hex(vote_signing_hash(vote,chain_id,genesis_hash));
  auto prefix="voting/v1/"+hex(bytes(chain_id,32))+"/"+hex(genesis_hash)+"/"+address(vote.validator)+"/";
  auto slot=vote_slot(vote);
- std::optional<std::string> proposal_data;std::string proposal_key;
+ std::optional<std::string> proposal_data;std::string proposal_key;bool proposal_exists=false;
  if(proposal){
   if(!validators||!vote.block_hash||proposal->header.number!=Int(std::to_string(vote.height))||proposal->header.hash()!=*vote.block_hash||!proposal->uncles.empty()||!verify_block_signature(*proposal,chain_id,genesis_hash))throw std::invalid_argument("proposal does not match authenticated vote target");
-  proposal_data=proposal->to_json(true).dump();if(proposal_data->size()>16*1024*1024)throw std::invalid_argument("voting proposal exceeds storage limit");
+  proposal_data=proposal->to_transport_json().dump();
   proposal_key=prefix+"proposal/"+height_key(Int(std::to_string(vote.height)))+"/"+hex(*vote.block_hash);
  }
  std::lock_guard guard(mutex_);
- if(proposal_data){auto saved=get(proposal_key);if(saved&&*saved!=*proposal_data)throw std::runtime_error("conflicting stored voting proposal");}
+ if(proposal_data){auto saved=proposal_data_impl(proposal_key);if(saved){
+  // Old journals contain the expanded representation. Accept only the exact
+  // legacy serialization of this same block, and retain its original bytes.
+  if(*saved!=*proposal_data&&*saved!=proposal->to_json(true).dump())throw std::runtime_error("conflicting stored voting proposal");
+  proposal_exists=true;
+ }}
  auto watermark=voting_watermark_impl(prefix);auto previous=get(prefix+slot);
  const std::string mode=validators?"locked":"raw";
  auto stored_mode=get(prefix+"mode");
@@ -111,7 +158,7 @@ void ChainStore::reserve_vote_impl(const FinalityVote& vote,const Int& chain_id,
  }
  if(previous){if(*previous!=digest)throw std::runtime_error("conflicting vote refused at height/round/step");
   auto fields=read(prefix+"reserved/"+slot);if(fields&&*fields!=vote_fields(vote))throw std::runtime_error("corrupt reserved vote fields");
-  if(proposal_data&&!get(proposal_key))require_ok(db_->Put(durable_write(),proposal_key,*proposal_data));return;}
+  if(proposal_data&&!proposal_exists){rocksdb::WriteBatch repair;put_proposal(repair,proposal_key,*proposal_data);require_ok(db_->Write(durable_write(),&repair));}return;}
  if(watermark&&slot<=watermark->at("slot").get<std::string>())throw std::runtime_error("new vote would regress voting watermark");
  auto active=validators?read(prefix+"active"):std::nullopt;
  if(validators){
@@ -120,7 +167,7 @@ void ChainStore::reserve_vote_impl(const FinalityVote& vote,const Int& chain_id,
   lock=advance_vote_lock(lock,vote,justification,*validators,chain_id,genesis_hash);
  }
 
- rocksdb::WriteBatch batch;if(proposal_data)batch.Put(proposal_key,*proposal_data);batch.Put(prefix+slot,digest);batch.Put(prefix+"mode",mode);
+ rocksdb::WriteBatch batch;if(proposal_data&&!proposal_exists)put_proposal(batch,proposal_key,*proposal_data);batch.Put(prefix+slot,digest);batch.Put(prefix+"mode",mode);
  if(validators)batch.Put(prefix+"reserved/"+slot,vote_fields(vote).dump());
  if(validators&&!active)batch.Put(prefix+"active",Json{{"height","0x1"},{"validatorSetHash",hex(vote.validator_set_hash)}}.dump());
  if(validators)batch.Put(lock_key,Json{{"validatorSetHash",hex(lock.validator_set_hash)},
@@ -132,8 +179,8 @@ void ChainStore::reserve_vote_impl(const FinalityVote& vote,const Int& chain_id,
 std::optional<Block> ChainStore::voting_proposal(const std::string& validator,uint64_t height,const Bytes& block_hash,const Int& chain_id,const Bytes& genesis_hash)const{
  if(!height||block_hash.size()!=32||chain_id<=0||chain_id>=(Int(1)<<256)||genesis_hash.size()!=32)throw std::invalid_argument("invalid voting proposal domain");
  auto prefix="voting/v1/"+hex(bytes(chain_id,32))+"/"+hex(genesis_hash)+"/"+address(validator)+"/";
- std::lock_guard lock(mutex_);voting_watermark_impl(prefix);auto encoded=get(prefix+"proposal/"+height_key(Int(std::to_string(height)))+"/"+hex(block_hash));if(!encoded)return std::nullopt;
- if(encoded->size()>16*1024*1024)throw std::runtime_error("stored voting proposal exceeds limit");auto block=Block::from_json(Json::parse(*encoded));
+ std::lock_guard lock(mutex_);voting_watermark_impl(prefix);auto encoded=proposal_data_impl(prefix+"proposal/"+height_key(Int(std::to_string(height)))+"/"+hex(block_hash));if(!encoded)return std::nullopt;
+ auto block=Block::from_json(Json::parse(*encoded));
  if(block.header.number!=Int(std::to_string(height))||block.header.hash()!=block_hash||!block.uncles.empty()||!verify_block_signature(block,chain_id,genesis_hash))throw std::runtime_error("corrupt stored voting proposal");return block;
 }
 std::optional<FinalityVote> ChainStore::latest_consensus_vote(const std::string& validator,const Int& chain_id,const Bytes& genesis_hash)const{
@@ -201,22 +248,46 @@ void ChainStore::advance_voting_height(const std::string& validator,uint64_t hei
  batch.Put(prefix+"active",Json{{"height",quantity(Int(std::to_string(height+1)))},{"validatorSetHash",next_hash}}.dump());
  require_ok(db_->Write(durable_write(),&batch));
 }
-void ChainStore::reserve_signature(const Int& chain_id,const Bytes& genesis_hash,const std::string& producer,const Int& height,const Bytes& digest,const std::optional<Block>& proposal){
- if(chain_id<=0||genesis_hash.size()!=32||digest.size()!=32||height<=0)throw std::invalid_argument("invalid signing reservation");
- auto key="signing/v1/"+hex(bytes(chain_id,32))+"/"+hex(genesis_hash)+"/"+address(producer)+"/"+height_key(height);
- if(proposal&&(proposal->header.number!=height||address(proposal->header.coinbase)!=address(producer)||block_signing_hash(*proposal,chain_id,genesis_hash)!=digest))throw std::invalid_argument("proposal differs from signing reservation");
- std::lock_guard lock(mutex_);auto previous=get(key);auto encoded=hex(digest);
- if(previous){if(*previous!=encoded)throw std::runtime_error("conflicting block signature refused: producer already reserved this height");return;}
- // Persist before releasing any signature; failed signing may conservatively reserve a height.
- rocksdb::WriteBatch batch;batch.Put(key,encoded);if(proposal)batch.Put(key+"/proposal",proposal->to_json(true).dump());
- require_ok(db_->Write(durable_write(),&batch));
-}
-std::optional<Block> ChainStore::signing_proposal(const Int& chain_id,const Bytes& genesis_hash,const std::string& producer,const Int& height)const{
- auto key="signing/v1/"+hex(bytes(chain_id,32))+"/"+hex(genesis_hash)+"/"+address(producer)+"/"+height_key(height);
- std::lock_guard lock(mutex_);auto encoded=read(key+"/proposal");if(!encoded)return std::nullopt;
- auto digest=get(key);auto block=Block::from_json(*encoded);
+std::optional<Block> ChainStore::signing_proposal_impl(const std::string& key,const Int& chain_id,const Bytes& genesis_hash,const std::string& producer,const Int& height,bool required)const{
+ auto encoded=read(key+"/proposal");auto digest=get(key);
+ if(!encoded){if(required)throw std::runtime_error("reserved signing proposal unavailable");return std::nullopt;}
+ auto block=Block::from_json(*encoded);
  if(!digest||block.header.number!=height||address(block.header.coinbase)!=address(producer)||hex(block_signing_hash(block,chain_id,genesis_hash))!=*digest)throw std::runtime_error("corrupt signing proposal");
  return block;
+}
+void ChainStore::reserve_signature(const Int& chain_id,const Bytes& genesis_hash,const std::string& producer,const Int& height,const Bytes& digest,const std::optional<Block>& proposal,std::optional<uint64_t> round){
+ if(chain_id<=0||genesis_hash.size()!=32||digest.size()!=32||height<=0)throw std::invalid_argument("invalid signing reservation");
+ const auto base="signing/v1/"+hex(bytes(chain_id,32))+"/"+hex(genesis_hash)+"/"+address(producer)+"/"+height_key(height);auto key=base;
+ if(proposal&&(proposal->header.number!=height||address(proposal->header.coinbase)!=address(producer)||block_signing_hash(*proposal,chain_id,genesis_hash)!=digest))throw std::invalid_argument("proposal differs from signing reservation");
+ if(round&&(!proposal||bft_proposal_round(*proposal)!=*round))throw std::invalid_argument("proposal differs from signing round");
+ std::lock_guard lock(mutex_);auto legacy=get(base);const auto encoded=hex(digest);constexpr auto guard="nano/bft-round-signing/v1";
+ if(round){
+  if(legacy&&*legacy!=guard){auto old=signing_proposal_impl(base,chain_id,genesis_hash,producer,height,true);if(bft_proposal_round(*old)==*round&&*legacy!=encoded)throw std::runtime_error("conflicting legacy BFT signature refused");}
+  key+="/round/v1/"+height_key(Int(std::to_string(*round)));
+ }
+ auto previous=get(key);
+ if(previous){
+  if(*previous!=encoded)throw std::runtime_error("conflicting block signature refused: producer already reserved this slot");
+  if(round){auto saved=signing_proposal_impl(key,chain_id,genesis_hash,producer,height,true);if(!legacy||bft_proposal_round(*saved)!=*round)throw std::runtime_error("corrupt BFT signing slot");}
+  return;
+ }
+ if(round&&get(key+"/proposal"))throw std::runtime_error("orphaned BFT signing proposal");
+ // Guard and round reservation are durable together. An older height-only
+ // writer cannot bypass a round reservation after a software downgrade.
+ rocksdb::WriteBatch batch;if(round&&!legacy)batch.Put(base,guard);batch.Put(key,encoded);if(proposal)batch.Put(key+"/proposal",proposal->to_json(true).dump());
+ require_ok(db_->Write(durable_write(),&batch));
+}
+std::optional<Block> ChainStore::signing_proposal(const Int& chain_id,const Bytes& genesis_hash,const std::string& producer,const Int& height,std::optional<uint64_t> round)const{
+ const auto base="signing/v1/"+hex(bytes(chain_id,32))+"/"+hex(genesis_hash)+"/"+address(producer)+"/"+height_key(height);
+ std::lock_guard lock(mutex_);
+ if(!round){if(get(base)==std::optional<std::string>("nano/bft-round-signing/v1"))throw std::runtime_error("round-aware signer required");return signing_proposal_impl(base,chain_id,genesis_hash,producer,height,false);}
+ auto legacy=get(base);std::optional<Block> fallback;
+ if(legacy&&*legacy!="nano/bft-round-signing/v1"){
+  auto old=signing_proposal_impl(base,chain_id,genesis_hash,producer,height,true);if(bft_proposal_round(*old)==*round)fallback=std::move(old);
+ }
+ const auto slot=base+"/round/v1/"+height_key(Int(std::to_string(*round)));auto stored=signing_proposal_impl(slot,chain_id,genesis_hash,producer,height,get(slot).has_value());
+ if(stored&&(!legacy||bft_proposal_round(*stored)!=*round||(fallback&&block_signing_hash(*fallback,chain_id,genesis_hash)!=block_signing_hash(*stored,chain_id,genesis_hash))))throw std::runtime_error("corrupt BFT signing slot");
+ return stored?stored:fallback;
 }
 std::optional<std::string> ChainStore::certified_tip_impl()const{
  auto certified=get("meta/certified-tip");auto tip=get("meta/tip");
