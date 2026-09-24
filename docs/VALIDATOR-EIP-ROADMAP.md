@@ -412,3 +412,32 @@ Une opération SSZ bien formée n'est pas nécessairement autorisée : signature
 internes, appartenance, preuves de dépôt, compteurs, transition d'état, parent,
 jonction atomique avec RANDAO et activation du réacteur restent à vérifier.
 Référence : https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#beaconblockbody
+
+## Préparation authentifiée d'un bloc Phase0 — 24 septembre 2026
+
+`authenticate_phase0_block` relie l'enveloppe SSZ signée, le corps recalculé,
+le parent/slot attendus, la signature du proposant issu du registre, son devoir
+pondéré et sa révélation RANDAO. Une limite d'octets fournie par la configuration
+est vérifiée avant le calcul du corps. Les entrées sont constantes ; un succès
+retourne `AuthenticatedPhase0Block` avec un mix candidat, jamais un commit.
+Les données malformées ou non autorisées retournent `nullopt`. Les erreurs de
+configuration et l'annulation restent des exceptions distinctes.
+
+`blockAuthenticationQualification` : trois blocs officiels épinglés passent,
+54 cas invalides et 404 enveloppes tronquées sont rejetés. Quatre contrôles
+locaux couvrent le succès, un bloc réellement signé par un autre validateur,
+un bloc réellement signé avec révélation invalide et le dépassement de taille.
+Sept erreurs de configuration sont détectées. Les 21 points d'annulation
+observés sont chacun déclenchés, jusqu'après le calcul du candidat, sans changer
+le registre ou le RANDAO source. Six suites passent, dont `block_auth` existante.
+
+Dans les fixtures officielles, le parent attendu vient du tableau block_roots
+du post-état après traitement des slots ; ce test ne reconstruit pas encore ce
+traitement. Pour le saut d'époque, les champs du registre nécessaires au tirage
+sont vérifiés inchangés et la rotation RANDAO est effectuée séparément.
+Le contexte, le registre financé, le fork et les limites doivent être fiables.
+
+Ce résultat est une authentification provisoire, pas un bloc valide : signatures
+et sémantique des opérations, état résultant, transition de slots/époques,
+persistance atomique et raccordement au réacteur restent à intégrer. Le schéma
+est Phase0 uniquement. Aucune activation réseau ni finalité nouvelle.

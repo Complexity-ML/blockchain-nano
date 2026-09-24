@@ -1,0 +1,10 @@
+import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import assert from 'node:assert/strict';
+const text=readFileSync(resolve(process.argv[2],'tests-full.log'),'utf8');
+assert.equal((text.match(/Test Passed\./g)||[]).length,6);
+for(const name of ['block_auth','consensus_phase0_block_authentication','consensus_selected_randao','ethereum_official_randao_projection','ethereum_consensus_beacon_header','ethereum_consensus_beacon_body'])assert(text.includes(`Testing: ${name}\n`));
+const rows=text.split('\n').filter(l=>l.startsWith('{')).map(l=>JSON.parse(l));const r=rows.find(r=>r.scenario==='phase0-block-authentication');assert(r);
+for(const [key,value] of Object.entries({officialBlocks:3,rejected:54,cancellations:21,localControls:4,configurationErrors:7,truncatedRejected:404,canonicalInputsUnchanged:true,fullStateTransition:false,activeInConsensus:false}))assert.equal(r[key],value);
+assert.equal(rows.find(r=>r.scenario==='beacon-header-signature').fullBodyRootComputed,true);
+console.log(JSON.stringify({verified:true,...r},null,2));

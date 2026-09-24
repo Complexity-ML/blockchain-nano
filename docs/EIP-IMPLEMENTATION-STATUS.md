@@ -288,3 +288,10 @@ utilisent maintenant ce corps recalculé, levant la dépendance à une racine de
 fixture de la campagne précédente. La validité des opérations, la transition
 complète, les schémas des forks suivants et l'intégration réseau restent ouverts.
 Aucun statut d'EIP ni de production n'est promu par ce seul calcul SSZ.
+
+Authentification commune : `blockAuthenticationQualification` relie corps SSZ,
+signature, parent/slot attendus, proposant et RANDAO dans une préparation sans
+mutation canonique. Trois blocs officiels, 54 rejets, 404 troncatures, 21
+annulations, quatre contrôles locaux et sept erreurs de configuration sont
+qualifiés dans six suites. Le candidat n'est pas un post-état validé ; opérations,
+transition complète, commit durable et activation restent ouverts.
