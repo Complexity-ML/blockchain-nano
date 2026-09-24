@@ -329,3 +329,11 @@ sont conservés dans le registre v3 ; le snapshot de dépôt conserve root/count
 Onze suites passent. La racine financée doit encore être fournie par le consensus,
 l'activation et le traitement complet des blocs restent ouverts. Ce travail ne
 vaut pas implémentation d'EIP-6110 ni ouverture effective du registre réseau.
+
+Intégration du registre dans les blocs : `registryBlockOperationsQualification`
+compose sanctions de proposants, dépôts et sorties Phase0 sur état privé. Huit
+suites passent ; six scénarios officiels sont exécutés (trois valides/trois invalides),
+deux séquences traversant une époque restent différées et non comptées comme succès.
+Attestations non prises en charge signalées distinctement des blocs invalides.
+Ce progrès ne clôt ni EIP-6110 ni EIP-7044 réseau : Eth1, époques, état complet et
+commit/réacteur restent à intégrer. Les statuts EIP de la matrice restent inchangés.

@@ -595,3 +595,41 @@ Restent : authentification/évolution de la racine Eth1, traitement des dépôts
 les blocs, activation/éjection par époque, état complet et commit réseau. Le
 mécanisme est Phase0 ; EIP-6110 et les files de dépôts Electra ne sont pas promus.
 Source : https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#deposits
+
+## Intégration des opérations du registre dans les blocs — 25 septembre 2026
+
+`prepare_phase0_registry_operations` compose l'authentification du bloc/RANDAO,
+les sanctions de proposants, les dépôts ordonnés puis les sorties volontaires.
+Un candidat privé contient le registre, la racine/count/cursor des dépôts et le
+RANDAO préparé. Aucun état d'entrée n'est modifié, y compris lors d'un échec tardif,
+d'un débordement ou d'une annulation. Le nombre de dépôts obligatoire est vérifié ;
+les paramètres de la file de sortie doivent être communs aux sanctions et sorties.
+Les domaines de sortie Phase0 dépendent de l'époque signée, non du bloc courant.
+
+Le résultat distingue candidat, bloc invalide et opérations non prises en charge.
+La présence de sanctions d'attestateurs ou d'attestations empêche de produire un
+candidat : leurs effets ne peuvent pas être sautés avant dépôts/sorties. Ce statut
+ne signifie pas que le bloc est invalide selon Ethereum.
+
+`registryBlockOperationsQualification` : huit suites passent. Les tests composés
+locaux couvrent trois cas positifs, dix rejets, trois combinaisons non prises en
+charge, dix-neuf annulations, trois configurations invalides et un débordement
+atomique. Un bloc combine sanction, recharge, admission et deux sorties : la file
+partagée respecte le churn et l'admission reste inactive. Un dépôt prouvé à PoP
+invalide consomme sa position sans admettre de clé et permet les sorties suivantes.
+
+Six scénarios de blocs officiels sont exécutés : trois valides (193 entrées du
+registre comparées, RANDAO et compteur de dépôt conformes), trois invalides qui
+passent l'authentification puis échouent aux opérations. Deux séquences officielles
+supplémentaires sont conservées mais différées explicitement car leur second bloc
+traverse une époque : `voluntary_exit`, `multiple_different_validator_exits_same_block`.
+Elles ne comptent pas comme réussies.
+
+Limites : racine/count après vote Eth1 fournis par l'appelant, votes Eth1 non traités,
+attestations et sanctions d'attestateurs non intégrées, transition d'époque et
+state_root complets absents, pas de commit durable du bloc ni raccordement au
+réacteur actif. Le pipeline est Phase0, pas Deneb/Electra ; EIP-7044 reste qualifié
+séparément. Les copies et parcours par opération ne qualifient pas le débit d'un
+registre à un million de validateurs. Clôture : compléter ces étapes, débloquer les
+deux séquences d'époque et qualifier le commit/rejeu réseau de l'état complet.
+Source : https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#operations
