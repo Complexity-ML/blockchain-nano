@@ -1,0 +1,106 @@
+{
+    "tests/ported_static/stPreCompiledContracts2/test_call_ecrecover_check_length_wrong_v.py::test_call_ecrecover_check_length_wrong_v[fork_Cancun-state_test]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x989680",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000020000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x0a",
+            "currentExcessBlobGas": "0x00"
+        },
+        "pre": {
+            "0xebaf50debf10e08302fe4280c32df010463ca297": {
+                "nonce": "0x00",
+                "balance": "0x0de0b6b3a7640000",
+                "code": "0x",
+                "storage": {}
+            },
+            "0x5cc93303c292c9573fa7de40ff6281b18dbf491e": {
+                "nonce": "0x00",
+                "balance": "0x01312d00",
+                "code": "0x7f11223344556677889900112233445566778899001122334455667788990011226080527f18c547e4f7b0f325ad1e56f57e26c745b09a3e503d86e00e5255ff7f715d3d1c600052601d6020527f73b1693892219d736caba55bdb67216e485557ea6b6af75f37096c9aa6a5a75f6040527feeb940b1d03b21e36b0e47e79769f095fe2ab855bd91e3a38756b7d75a9c4549606052602060806080600060006001620493e0f16002556080516000555960015500",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x37ba90"
+            ],
+            "to": "0x5cc93303c292c9573fa7de40ff6281b18dbf491e",
+            "value": [
+                "0x0186a0"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0xebaf50debf10e08302fe4280c32df010463ca297",
+            "secretKey": "0xe04d1ac7ddda0c98397d56a0b501e960d4cd325a39286919ac23c1a07009a869"
+        },
+        "post": {
+            "Cancun": [
+                {
+                    "hash": "0xca2e55ea24d0894d93ffeeded0f6dfd00dec2e8038023504fd241a03e27e6ca3",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0x4196569105ad514bb0905e6112663481424505dfc83f77d0f2d89d942826a155",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0x016182",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf901090183016182b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf863800a8337ba90945cc93303c292c9573fa7de40ff6281b18dbf491e830186a08025a08f6b443887bef8aa844faf965ebd9355ba16ca35384acc778a4f750d66817290a025d5050351a23865841db88e05455cd8c12396ee0e6d5095611e2833100f585c",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xebaf50debf10e08302fe4280c32df010463ca297": {
+                            "nonce": "0x01",
+                            "balance": "0x0de0b6b3a754aa4c",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x5cc93303c292c9573fa7de40ff6281b18dbf491e": {
+                            "nonce": "0x00",
+                            "balance": "0x0132b3a0",
+                            "code": "0x7f11223344556677889900112233445566778899001122334455667788990011226080527f18c547e4f7b0f325ad1e56f57e26c745b09a3e503d86e00e5255ff7f715d3d1c600052601d6020527f73b1693892219d736caba55bdb67216e485557ea6b6af75f37096c9aa6a5a75f6040527feeb940b1d03b21e36b0e47e79769f095fe2ab855bd91e3a38756b7d75a9c4549606052602060806080600060006001620493e0f16002556080516000555960015500",
+                            "storage": {
+                                "0x02": "0x01",
+                                "0x00": "0x1122334455667788990011223344556677889900112233445566778899001122",
+                                "0x01": "0xa0"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "blobSchedule": {
+                "Cancun": {
+                    "target": "0x03",
+                    "max": "0x06",
+                    "baseFeeUpdateFraction": "0x32f0ed"
+                }
+            },
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0xd25789f44bf5c06c711025dba990f510e4e9dafccfcb005c5a1826c267e0e1b4",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test_call_ecrecover_check_length_wrong_v.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/ported_static/stPreCompiledContracts2/test_call_ecrecover_check_length_wrong_v.py#L25",
+            "metadata": {
+                "opcode_count": {}
+            }
+        }
+    }
+}

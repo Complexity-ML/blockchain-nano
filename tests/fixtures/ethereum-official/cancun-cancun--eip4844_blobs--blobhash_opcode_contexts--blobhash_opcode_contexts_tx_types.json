@@ -1,0 +1,327 @@
+{
+    "tests/cancun/eip4844_blobs/test_blobhash_opcode_contexts.py::test_blobhash_opcode_contexts_tx_types[fork_Cancun-tx_type_0-state_test]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07",
+            "currentExcessBlobGas": "0x140000"
+        },
+        "pre": {
+            "0xd9e8fa8f6fcf8b025a1123af59bf946116a25de3": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x60004960005500",
+                "storage": {}
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07a120"
+            ],
+            "to": "0xd9e8fa8f6fcf8b025a1123af59bf946116a25de3",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Cancun": [
+                {
+                    "hash": "0x677213aece034c1cd1850686ecc957da61e206031c8c9e0d4d26c18f4bd43508",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0x83dd49d7223333fabe52b6f820aeec5927bc2a329301777b978ddc0fab9bf3c7",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0x5aa9",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf9010801825aa9b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf860800a8307a12094d9e8fa8f6fcf8b025a1123af59bf946116a25de3808026a08b93a4e0bd730260e885aee6a7da3c99fe74f49cae3f009017820d4686a06d43a06b79bc0a8470516dd0118aabf55399ad83012be1a661b2417906d725731c68f0",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xd9e8fa8f6fcf8b025a1123af59bf946116a25de3": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x60004960005500",
+                            "storage": {}
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ce7fc7566",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x010ffb",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "blobSchedule": {
+                "Cancun": {
+                    "target": "0x03",
+                    "max": "0x06",
+                    "baseFeeUpdateFraction": "0x32f0ed"
+                }
+            },
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0xba74f368360e95d6d7456566a6120bfed1f64591beb565af7c9bad9b8dd448a0",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Tests that the `BLOBHASH` opcode functions correctly when called in\ndifferent contexts.\n\n- `BLOBHASH` opcode on the top level of the call stack.\n- `BLOBHASH` opcode on the max value.\n- `BLOBHASH` opcode on `CALL`, `DELEGATECALL`, `STATICCALL`, and\n    `CALLCODE`.\n- `BLOBHASH` opcode on Initcode.\n- `BLOBHASH` opcode on `CREATE` and `CREATE2`.\n- `BLOBHASH` opcode on transaction types 0, 1 and 2.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/cancun/eip4844_blobs/test_blobhash_opcode_contexts.py#L328",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4844.md",
+            "reference-spec-version": "de2e4a46ad93fc04e6fe3174dc6e90a3307bdb5f"
+        }
+    },
+    "tests/cancun/eip4844_blobs/test_blobhash_opcode_contexts.py::test_blobhash_opcode_contexts_tx_types[fork_Cancun-tx_type_1-state_test]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07",
+            "currentExcessBlobGas": "0x140000"
+        },
+        "pre": {
+            "0xd9e8fa8f6fcf8b025a1123af59bf946116a25de3": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x60004960005500",
+                "storage": {}
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07a120"
+            ],
+            "to": "0xd9e8fa8f6fcf8b025a1123af59bf946116a25de3",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "accessLists": [
+                []
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Cancun": [
+                {
+                    "hash": "0x677213aece034c1cd1850686ecc957da61e206031c8c9e0d4d26c18f4bd43508",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0xf9d75f6b072fd94c61679fdbd07d1619525d11dd88c9b072eea40b4de42e9513",
+                        "type": "0x01",
+                        "cumulativeGasUsed": "0x5aa9",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0x01f9010801825aa9b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0x01f86201800a8307a12094d9e8fa8f6fcf8b025a1123af59bf946116a25de38080c001a006b924a0b8d8d14f8101964ffdd1b59c9739ffb18edcea4c2bc9f18a9258c979a069a9539101d982901f1b8c057926909798c5eeb5225fe712288e91a9682cb050",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xd9e8fa8f6fcf8b025a1123af59bf946116a25de3": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x60004960005500",
+                            "storage": {}
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ce7fc7566",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x010ffb",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "blobSchedule": {
+                "Cancun": {
+                    "target": "0x03",
+                    "max": "0x06",
+                    "baseFeeUpdateFraction": "0x32f0ed"
+                }
+            },
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0xe883af62cc791224848bd78686191c27cdc8e6335f2243d82a7ca8dc9e499fa7",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Tests that the `BLOBHASH` opcode functions correctly when called in\ndifferent contexts.\n\n- `BLOBHASH` opcode on the top level of the call stack.\n- `BLOBHASH` opcode on the max value.\n- `BLOBHASH` opcode on `CALL`, `DELEGATECALL`, `STATICCALL`, and\n    `CALLCODE`.\n- `BLOBHASH` opcode on Initcode.\n- `BLOBHASH` opcode on `CREATE` and `CREATE2`.\n- `BLOBHASH` opcode on transaction types 0, 1 and 2.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/cancun/eip4844_blobs/test_blobhash_opcode_contexts.py#L328",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4844.md",
+            "reference-spec-version": "de2e4a46ad93fc04e6fe3174dc6e90a3307bdb5f"
+        }
+    },
+    "tests/cancun/eip4844_blobs/test_blobhash_opcode_contexts.py::test_blobhash_opcode_contexts_tx_types[fork_Cancun-tx_type_2-state_test]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07",
+            "currentExcessBlobGas": "0x140000"
+        },
+        "pre": {
+            "0xd9e8fa8f6fcf8b025a1123af59bf946116a25de3": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x60004960005500",
+                "storage": {}
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "maxPriorityFeePerGas": "0x00",
+            "maxFeePerGas": "0x07",
+            "gasLimit": [
+                "0x07a120"
+            ],
+            "to": "0xd9e8fa8f6fcf8b025a1123af59bf946116a25de3",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "accessLists": [
+                []
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Cancun": [
+                {
+                    "hash": "0xed88bf4dfc1a8569795f9f86b218ffc04110522f0264821306ac69ed7c31d95c",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0xeab7a7499384a727f8ee6270bfa1d08eea8319f6c8ac25db4dc6c751a13cf9e5",
+                        "type": "0x02",
+                        "cumulativeGasUsed": "0x5aa9",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0x02f9010801825aa9b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0x02f863018080078307a12094d9e8fa8f6fcf8b025a1123af59bf946116a25de38080c001a06aae054d0c4d7007c9ede591ee66d051a93cac20d2d814b3218f5ad2f64932f5a04fdee7d5e77f508044f62cb86aa76e6296dcca54e4b0bc71e4896ac0040b8c4c",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xd9e8fa8f6fcf8b025a1123af59bf946116a25de3": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x60004960005500",
+                            "storage": {}
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ce7fd8561",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "blobSchedule": {
+                "Cancun": {
+                    "target": "0x03",
+                    "max": "0x06",
+                    "baseFeeUpdateFraction": "0x32f0ed"
+                }
+            },
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x480168cdba1bbf5857bc8f4e116f84537828d7a780d0524db127ed3ae163a033",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Tests that the `BLOBHASH` opcode functions correctly when called in\ndifferent contexts.\n\n- `BLOBHASH` opcode on the top level of the call stack.\n- `BLOBHASH` opcode on the max value.\n- `BLOBHASH` opcode on `CALL`, `DELEGATECALL`, `STATICCALL`, and\n    `CALLCODE`.\n- `BLOBHASH` opcode on Initcode.\n- `BLOBHASH` opcode on `CREATE` and `CREATE2`.\n- `BLOBHASH` opcode on transaction types 0, 1 and 2.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/cancun/eip4844_blobs/test_blobhash_opcode_contexts.py#L328",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4844.md",
+            "reference-spec-version": "de2e4a46ad93fc04e6fe3174dc6e90a3307bdb5f"
+        }
+    }
+}

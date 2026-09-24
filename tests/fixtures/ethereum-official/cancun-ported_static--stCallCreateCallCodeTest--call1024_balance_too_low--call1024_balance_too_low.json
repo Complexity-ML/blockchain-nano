@@ -1,0 +1,117 @@
+{
+    "tests/ported_static/stCallCreateCallCodeTest/test_call1024_balance_too_low.py::test_call1024_balance_too_low[fork_Cancun-state_test]": {
+        "env": {
+            "currentCoinbase": "0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b",
+            "currentGasLimit": "0x7fffffffffffffff",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000020000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x0a",
+            "currentExcessBlobGas": "0x00"
+        },
+        "pre": {
+            "0x2c854741c819493b3a940ebc70c2ced66e29473d": {
+                "nonce": "0x00",
+                "balance": "0xffffffffffffffffffffffffffffffff",
+                "code": "0x",
+                "storage": {}
+            },
+            "0x8b9fd541d0178978dd230ad3e047ecc019d60d03": {
+                "nonce": "0x00",
+                "balance": "0x1b58",
+                "code": "0x",
+                "storage": {}
+            },
+            "0x2aaa3ab47a59b4ad0ba3f72ad0b5bc35388333b4": {
+                "nonce": "0x00",
+                "balance": "0x0400",
+                "code": "0x6001600054016000556000600060006000600054732aaa3ab47a59b4ad0ba3f72ad0b5bc35388333b4650ffffffffffff160015500",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x10000000d788"
+            ],
+            "to": "0x2aaa3ab47a59b4ad0ba3f72ad0b5bc35388333b4",
+            "value": [
+                "0x0a"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0x2c854741c819493b3a940ebc70c2ced66e29473d",
+            "secretKey": "0xf717378777b5fa92b86a0205f76e1e90c4ee74c1926174b77a6cd1f190cbb152"
+        },
+        "post": {
+            "Cancun": [
+                {
+                    "hash": "0x0a2f3ed5ced279662ed93397bcee6877b69110a53aff5c6c77127728f7f80b2a",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0xe33b7f8ca11ef903ce2031609329a6d5618d7fb4c1ea2096be898f0e51cbabfc",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0x7229c8",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf9010901837229c8b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf863800a8610000000d788942aaa3ab47a59b4ad0ba3f72ad0b5bc35388333b40a8025a090bc224fdc5c8bc5a2f496f21311234ff755ddbe1d5ae9ce01c89e5e0bd589cda023a9851764044f1cbf06982001df1708b201c94fca163962fdc4c384d90d1ced",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x2c854741c819493b3a940ebc70c2ced66e29473d": {
+                            "nonce": "0x01",
+                            "balance": "0xfffffffffffffffffffffffffb8a5e25",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x8b9fd541d0178978dd230ad3e047ecc019d60d03": {
+                            "nonce": "0x00",
+                            "balance": "0x1b58",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x2aaa3ab47a59b4ad0ba3f72ad0b5bc35388333b4": {
+                            "nonce": "0x00",
+                            "balance": "0x040a",
+                            "code": "0x6001600054016000556000600060006000600054732aaa3ab47a59b4ad0ba3f72ad0b5bc35388333b4650ffffffffffff160015500",
+                            "storage": {
+                                "0x00": "0x0401",
+                                "0x01": "0x01"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "blobSchedule": {
+                "Cancun": {
+                    "target": "0x03",
+                    "max": "0x06",
+                    "baseFeeUpdateFraction": "0x32f0ed"
+                }
+            },
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x3255bdcf56a96fb7ec2055e18bb2a269eaafb62ae214b6e3d60ff49fc03a4a89",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Calldepth with balance too low.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/ported_static/stCallCreateCallCodeTest/test_call1024_balance_too_low.py#L24",
+            "metadata": {
+                "opcode_count": {}
+            }
+        }
+    }
+}

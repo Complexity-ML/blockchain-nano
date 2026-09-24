@@ -1,0 +1,246 @@
+{
+    "tests/cancun/eip1153_tstore/test_tstorage_create_contexts.py::test_tstore_rollback_on_failed_create[fork_Cancun-state_test-create_opcode_CREATE2]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07",
+            "currentExcessBlobGas": "0x00"
+        },
+        "pre": {
+            "0x3c515be0d803ca09c07bf8abf3a7e85de8669e7e": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x6000516dffffffffffffffffffffffffffff167f60015c630000600a0361600060015d6000f30000000000000000000000000000176000526000601260006000f56000556000601260006000f5600155",
+                "storage": {
+                    "0x00": "0x01",
+                    "0x01": "0x01"
+                }
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0x3c515be0d803ca09c07bf8abf3a7e85de8669e7e",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "accessLists": [
+                [
+                    {
+                        "address": "0x3c515be0d803ca09c07bf8abf3a7e85de8669e7e",
+                        "storageKeys": [
+                            "0x0000000000000000000000000000000000000000000000000000000000000000",
+                            "0x0000000000000000000000000000000000000000000000000000000000000001"
+                        ]
+                    }
+                ]
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Cancun": [
+                {
+                    "hash": "0xcb32f2369fbe7703089cc7a97157150eeb574f88944477e665ad5af884a11c30",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0x8c4c37abc11211459c9180a216599cc52780373bb49cfdf72f445c1d43c205ba",
+                        "type": "0x01",
+                        "cumulativeGasUsed": "0x07268397",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0x01f9010a018407268397b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0x01f8bf01800a8407270e00943c515be0d803ca09c07bf8abf3a7e85de8669e7e8080f85bf859943c515be0d803ca09c07bf8abf3a7e85de8669e7ef842a00000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000180a0a83cc53a651eeafce549c747a0d984e646a1cce2cf91e9225b5705bf513bcdeda037865646a0c6216c49b5cac30eba6416ad614375afbaae1c8961f1bfb9c58f01",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x3c515be0d803ca09c07bf8abf3a7e85de8669e7e": {
+                            "nonce": "0x03",
+                            "balance": "0x00",
+                            "code": "0x6000516dffffffffffffffffffffffffffff167f60015c630000600a0361600060015d6000f30000000000000000000000000000176000526000601260006000f56000556000601260006000f5600155",
+                            "storage": {}
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ca07edc1a",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x15738ac5",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "blobSchedule": {
+                "Cancun": {
+                    "target": "0x03",
+                    "max": "0x06",
+                    "baseFeeUpdateFraction": "0x32f0ed"
+                }
+            },
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x56de664c7e270039eab72bc43156ab9fb98c8bd69bf9b292d371da1b2a5fd0ad",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test TSTORE is rolled back after failed CREATE/CREATE2 initcode.\n\nRegression test for\nhttps://github.com/ethereum/execution-specs/issues/917\n\nInitcode does TLOAD(1) to compute a return size, then does\nTSTORE(1, 0x6000), then returns data of the computed size.\nWhen TLOAD(1) is 0, the return size is 0x600a (exceeds max code\nsize 0x6000), so creation fails.\n\nThe caller invokes CREATE/CREATE2 twice with the same initcode.\nIf TSTORE from the first (failed) creation is properly rolled\nback, the second creation also sees TLOAD(1)==0 and fails the\nsame way. If not rolled back, TLOAD(1)==0x6000 and the second\ncreation succeeds.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/cancun/eip1153_tstore/test_tstorage_create_contexts.py#L264",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1153.md",
+            "reference-spec-version": "1eb863b534a5a3e19e9c196ab2a7f3db4bb9da17"
+        }
+    },
+    "tests/cancun/eip1153_tstore/test_tstorage_create_contexts.py::test_tstore_rollback_on_failed_create[fork_Cancun-state_test-create_opcode_CREATE]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07",
+            "currentExcessBlobGas": "0x00"
+        },
+        "pre": {
+            "0x7716fe49774368efe0e3364faacbcce3be16c115": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x6000516dffffffffffffffffffffffffffff167f60015c630000600a0361600060015d6000f3000000000000000000000000000017600052601260006000f0600055601260006000f0600155",
+                "storage": {
+                    "0x00": "0x01",
+                    "0x01": "0x01"
+                }
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0x7716fe49774368efe0e3364faacbcce3be16c115",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "accessLists": [
+                [
+                    {
+                        "address": "0x7716fe49774368efe0e3364faacbcce3be16c115",
+                        "storageKeys": [
+                            "0x0000000000000000000000000000000000000000000000000000000000000000",
+                            "0x0000000000000000000000000000000000000000000000000000000000000001"
+                        ]
+                    }
+                ]
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Cancun": [
+                {
+                    "hash": "0xf360a5d9a93eaa6103b1a2955c6ba27eca6362c0181898518dd23acbae89c783",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0x9058484e157a7500268c95c188ae69162d32e9ca57c6c187bae62f0fc065a515",
+                        "type": "0x01",
+                        "cumulativeGasUsed": "0x07268397",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0x01f9010a018407268397b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0x01f8bf01800a8407270e00947716fe49774368efe0e3364faacbcce3be16c1158080f85bf859947716fe49774368efe0e3364faacbcce3be16c115f842a00000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000180a036820ab431a9cfd4ed10101121c10093d1abe1dee75ca471e60478ab98a53507a00ee0e993f255a0096bed7d41c90d0880b5f6a37fe35cd7666ba6737d84151be5",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x7716fe49774368efe0e3364faacbcce3be16c115": {
+                            "nonce": "0x03",
+                            "balance": "0x00",
+                            "code": "0x6000516dffffffffffffffffffffffffffff167f60015c630000600a0361600060015d6000f3000000000000000000000000000017600052601260006000f0600055601260006000f0600155",
+                            "storage": {}
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ca07edc1a",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x15738ac5",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "blobSchedule": {
+                "Cancun": {
+                    "target": "0x03",
+                    "max": "0x06",
+                    "baseFeeUpdateFraction": "0x32f0ed"
+                }
+            },
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0xce961d2faafb3f22f75b5ad0ac825a921926c64e8f72887c43805dd4d44b37e9",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test TSTORE is rolled back after failed CREATE/CREATE2 initcode.\n\nRegression test for\nhttps://github.com/ethereum/execution-specs/issues/917\n\nInitcode does TLOAD(1) to compute a return size, then does\nTSTORE(1, 0x6000), then returns data of the computed size.\nWhen TLOAD(1) is 0, the return size is 0x600a (exceeds max code\nsize 0x6000), so creation fails.\n\nThe caller invokes CREATE/CREATE2 twice with the same initcode.\nIf TSTORE from the first (failed) creation is properly rolled\nback, the second creation also sees TLOAD(1)==0 and fails the\nsame way. If not rolled back, TLOAD(1)==0x6000 and the second\ncreation succeeds.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/cancun/eip1153_tstore/test_tstorage_create_contexts.py#L264",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1153.md",
+            "reference-spec-version": "1eb863b534a5a3e19e9c196ab2a7f3db4bb9da17"
+        }
+    }
+}

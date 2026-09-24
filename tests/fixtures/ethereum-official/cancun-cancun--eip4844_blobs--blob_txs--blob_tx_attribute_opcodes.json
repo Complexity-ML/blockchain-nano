@@ -1,0 +1,226 @@
+{
+    "tests/cancun/eip4844_blobs/test_blob_txs.py::test_blob_tx_attribute_opcodes[fork_Cancun-state_test-tx_gas_500000-opcode_CALLER]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07",
+            "currentExcessBlobGas": "0x0e0000"
+        },
+        "pre": {
+            "0x3c46d5c06670a481eeec6cef6aa78f2b33b0b345": {
+                "nonce": "0x00",
+                "balance": "0x3767e1",
+                "code": "0x",
+                "storage": {}
+            },
+            "0x5ed74cb7f247ecfca06cc47e02f335f039104d84": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x33600055",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "maxPriorityFeePerGas": "0x00",
+            "maxFeePerGas": "0x07",
+            "gasLimit": [
+                "0x07a120"
+            ],
+            "to": "0x5ed74cb7f247ecfca06cc47e02f335f039104d84",
+            "value": [
+                "0x01"
+            ],
+            "data": [
+                "0x"
+            ],
+            "accessLists": [
+                []
+            ],
+            "maxFeePerBlobGas": "0x01",
+            "blobVersionedHashes": [
+                "0x0100000000000000000000000000000000000000000000000000000000000000"
+            ],
+            "sender": "0x3c46d5c06670a481eeec6cef6aa78f2b33b0b345",
+            "secretKey": "0xee612969c2575a958b9ae5ee8a95d257d4ac98b68d9a4bbbfb6e5b3a0b66dee4"
+        },
+        "post": {
+            "Cancun": [
+                {
+                    "hash": "0x35485312ee4e307d2cb21f74fcf821c1156362b2f3aa8a1d941560ba876d09da",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0x617676bdb474413bcfed226380ba38cfb75af2fb028c9025b2459cbd09682b2e",
+                        "type": "0x03",
+                        "cumulativeGasUsed": "0xa861",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0x03f901080182a861b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0x03f885018080078307a120945ed74cb7f247ecfca06cc47e02f335f039104d840180c001e1a00100000000000000000000000000000000000000000000000000000000000000809ff1f25b4da45aadadc2d0c8a7387bc2627ca00f7cae88bd169fe4f21f437651a00ec4b494afd18d0301f356d41a72b2bd4631502fdc70535b46d699adaebf3411",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x3c46d5c06670a481eeec6cef6aa78f2b33b0b345": {
+                            "nonce": "0x01",
+                            "balance": "0x30cd39",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x5ed74cb7f247ecfca06cc47e02f335f039104d84": {
+                            "nonce": "0x01",
+                            "balance": "0x01",
+                            "code": "0x33600055",
+                            "storage": {
+                                "0x00": "0x3c46d5c06670a481eeec6cef6aa78f2b33b0b345"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "blobSchedule": {
+                "Cancun": {
+                    "target": "0x03",
+                    "max": "0x06",
+                    "baseFeeUpdateFraction": "0x32f0ed"
+                }
+            },
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x55e828b0fb1a99e339894f6c8a88891ce4e9c4a3f2d9533e109535c2eb6b4ff6",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test opcodes that read transaction attributes work properly for blob type\ntransactions.\n\n- ORIGIN\n- CALLER",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/cancun/eip4844_blobs/test_blob_txs.py#L1193",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4844.md",
+            "reference-spec-version": "de2e4a46ad93fc04e6fe3174dc6e90a3307bdb5f"
+        }
+    },
+    "tests/cancun/eip4844_blobs/test_blob_txs.py::test_blob_tx_attribute_opcodes[fork_Cancun-state_test-tx_gas_500000-opcode_ORIGIN]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07",
+            "currentExcessBlobGas": "0x0e0000"
+        },
+        "pre": {
+            "0x3c46d5c06670a481eeec6cef6aa78f2b33b0b345": {
+                "nonce": "0x00",
+                "balance": "0x3767e1",
+                "code": "0x",
+                "storage": {}
+            },
+            "0x9ed20f9f6042b36b2c2043c946c2d5cf678d9eec": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x32600055",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "maxPriorityFeePerGas": "0x00",
+            "maxFeePerGas": "0x07",
+            "gasLimit": [
+                "0x07a120"
+            ],
+            "to": "0x9ed20f9f6042b36b2c2043c946c2d5cf678d9eec",
+            "value": [
+                "0x01"
+            ],
+            "data": [
+                "0x"
+            ],
+            "accessLists": [
+                []
+            ],
+            "maxFeePerBlobGas": "0x01",
+            "blobVersionedHashes": [
+                "0x0100000000000000000000000000000000000000000000000000000000000000"
+            ],
+            "sender": "0x3c46d5c06670a481eeec6cef6aa78f2b33b0b345",
+            "secretKey": "0xee612969c2575a958b9ae5ee8a95d257d4ac98b68d9a4bbbfb6e5b3a0b66dee4"
+        },
+        "post": {
+            "Cancun": [
+                {
+                    "hash": "0xb2e35f1ebee028c414ce1a5b9ad6a85d5559308d19412476bc327cf2d8aad0ea",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0x3a6b5b78c04538b6db00b37a2ee30f2882ac253d9eb1b170cab7aacc4938ae98",
+                        "type": "0x03",
+                        "cumulativeGasUsed": "0xa861",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0x03f901080182a861b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0x03f886018080078307a120949ed20f9f6042b36b2c2043c946c2d5cf678d9eec0180c001e1a0010000000000000000000000000000000000000000000000000000000000000001a07de0eb0402f4221007f1c719f8780464379a1c59ba9b8d11b5797070cadc0b21a00f4448eaf83e585b5749e94ce506fb2e74d8929d4b1ee82d08261d6da222081a",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x3c46d5c06670a481eeec6cef6aa78f2b33b0b345": {
+                            "nonce": "0x01",
+                            "balance": "0x30cd39",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x9ed20f9f6042b36b2c2043c946c2d5cf678d9eec": {
+                            "nonce": "0x01",
+                            "balance": "0x01",
+                            "code": "0x32600055",
+                            "storage": {
+                                "0x00": "0x3c46d5c06670a481eeec6cef6aa78f2b33b0b345"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "blobSchedule": {
+                "Cancun": {
+                    "target": "0x03",
+                    "max": "0x06",
+                    "baseFeeUpdateFraction": "0x32f0ed"
+                }
+            },
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x615d4a980fb6f5f9287c160803c5e3c72801ff843fa043ac4468237ac0137d74",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test opcodes that read transaction attributes work properly for blob type\ntransactions.\n\n- ORIGIN\n- CALLER",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/cancun/eip4844_blobs/test_blob_txs.py#L1193",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4844.md",
+            "reference-spec-version": "de2e4a46ad93fc04e6fe3174dc6e90a3307bdb5f"
+        }
+    }
+}

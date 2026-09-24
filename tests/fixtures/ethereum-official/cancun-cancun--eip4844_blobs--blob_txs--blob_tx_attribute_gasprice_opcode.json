@@ -1,0 +1,462 @@
+{
+    "tests/cancun/eip4844_blobs/test_blob_txs.py::test_blob_tx_attribute_gasprice_opcode[fork_Cancun-state_test-tx_gas_500000-opcode_GASPRICE-tx_max_fee_per_gas_100-tx_max_fee_per_blob_gas_delta_0-tx_max_priority_fee_per_gas_0]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07",
+            "currentExcessBlobGas": "0x0e0000"
+        },
+        "pre": {
+            "0x7fb36c9ad43ef1ab919151341f57e21a14922009": {
+                "nonce": "0x00",
+                "balance": "0x02fcf081",
+                "code": "0x",
+                "storage": {}
+            },
+            "0x1b14336313fff416b53abf7386f80899311a80f4": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x3a600055",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "maxPriorityFeePerGas": "0x00",
+            "maxFeePerGas": "0x64",
+            "gasLimit": [
+                "0x07a120"
+            ],
+            "to": "0x1b14336313fff416b53abf7386f80899311a80f4",
+            "value": [
+                "0x01"
+            ],
+            "data": [
+                "0x"
+            ],
+            "accessLists": [
+                []
+            ],
+            "maxFeePerBlobGas": "0x01",
+            "blobVersionedHashes": [
+                "0x0100000000000000000000000000000000000000000000000000000000000000"
+            ],
+            "sender": "0x7fb36c9ad43ef1ab919151341f57e21a14922009",
+            "secretKey": "0x10c63ab3c6760ba7d69ea192ab7aa95209dfb838b7c57b41e948106889b7d705"
+        },
+        "post": {
+            "Cancun": [
+                {
+                    "hash": "0x64d54f1bb06bd01f038b14b9731cd13a10ab3630743c1086c45e64ea6128519c",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0xda68e277883d0c86dbcb85ac525d7c6579138fb9a4494474689f6daf85f38327",
+                        "type": "0x03",
+                        "cumulativeGasUsed": "0xa861",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0x03f901080182a861b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0x03f886018080648307a120941b14336313fff416b53abf7386f80899311a80f40180c001e1a0010000000000000000000000000000000000000000000000000000000000000080a006e6bfd5a5da7393065b01f22536a329dc607c82310ad2a3867d06ac2fe316f8a05b5be719b9bc9d14abacb74ee85cc37256a1959d3d67629b8d6a17500d029f51",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x7fb36c9ad43ef1ab919151341f57e21a14922009": {
+                            "nonce": "0x01",
+                            "balance": "0x02f655d9",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x1b14336313fff416b53abf7386f80899311a80f4": {
+                            "nonce": "0x01",
+                            "balance": "0x01",
+                            "code": "0x3a600055",
+                            "storage": {
+                                "0x00": "0x07"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "blobSchedule": {
+                "Cancun": {
+                    "target": "0x03",
+                    "max": "0x06",
+                    "baseFeeUpdateFraction": "0x32f0ed"
+                }
+            },
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x446482957576c5463d14356b913156f9b5617aaae33fff4b3ecfdaf324020fef",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test GASPRICE opcode to sanity check that the blob gas fee does not affect\nits calculation.\n\n- No priority fee\n- Priority fee below data fee\n- Priority fee above data fee",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/cancun/eip4844_blobs/test_blob_txs.py#L1373",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4844.md",
+            "reference-spec-version": "de2e4a46ad93fc04e6fe3174dc6e90a3307bdb5f"
+        }
+    },
+    "tests/cancun/eip4844_blobs/test_blob_txs.py::test_blob_tx_attribute_gasprice_opcode[fork_Cancun-state_test-tx_gas_500000-opcode_GASPRICE-tx_max_fee_per_gas_100-tx_max_fee_per_blob_gas_delta_0-tx_max_priority_fee_per_gas_2]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07",
+            "currentExcessBlobGas": "0x0e0000"
+        },
+        "pre": {
+            "0x7fb36c9ad43ef1ab919151341f57e21a14922009": {
+                "nonce": "0x00",
+                "balance": "0x02fcf081",
+                "code": "0x",
+                "storage": {}
+            },
+            "0x1b14336313fff416b53abf7386f80899311a80f4": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x3a600055",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "maxPriorityFeePerGas": "0x02",
+            "maxFeePerGas": "0x64",
+            "gasLimit": [
+                "0x07a120"
+            ],
+            "to": "0x1b14336313fff416b53abf7386f80899311a80f4",
+            "value": [
+                "0x01"
+            ],
+            "data": [
+                "0x"
+            ],
+            "accessLists": [
+                []
+            ],
+            "maxFeePerBlobGas": "0x01",
+            "blobVersionedHashes": [
+                "0x0100000000000000000000000000000000000000000000000000000000000000"
+            ],
+            "sender": "0x7fb36c9ad43ef1ab919151341f57e21a14922009",
+            "secretKey": "0x10c63ab3c6760ba7d69ea192ab7aa95209dfb838b7c57b41e948106889b7d705"
+        },
+        "post": {
+            "Cancun": [
+                {
+                    "hash": "0xc2116a56eb92845d510801a4edfc62b484cb015646083f8e5dd05675af6d5b5a",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0x8a31741f08171cdc7acf19f28f71d85c14f96571f51a193047b77e503cf1aa5e",
+                        "type": "0x03",
+                        "cumulativeGasUsed": "0xa861",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0x03f901080182a861b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0x03f886018002648307a120941b14336313fff416b53abf7386f80899311a80f40180c001e1a0010000000000000000000000000000000000000000000000000000000000000001a0924361d0fd43a69ef9697a32b246648b3b27369dad0672770d9a99039d2e0483a02a0ad6f60382b983bffd6422886bcc6a4f57f95d258282d35284977f0d57f691",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x7fb36c9ad43ef1ab919151341f57e21a14922009": {
+                            "nonce": "0x01",
+                            "balance": "0x02f50517",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x1b14336313fff416b53abf7386f80899311a80f4": {
+                            "nonce": "0x01",
+                            "balance": "0x01",
+                            "code": "0x3a600055",
+                            "storage": {
+                                "0x00": "0x09"
+                            }
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x0150c2",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "blobSchedule": {
+                "Cancun": {
+                    "target": "0x03",
+                    "max": "0x06",
+                    "baseFeeUpdateFraction": "0x32f0ed"
+                }
+            },
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0xfba29da80f70adfee8bd7117bf4dc5cf45701290323a110edf5c03bdbae73428",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test GASPRICE opcode to sanity check that the blob gas fee does not affect\nits calculation.\n\n- No priority fee\n- Priority fee below data fee\n- Priority fee above data fee",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/cancun/eip4844_blobs/test_blob_txs.py#L1373",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4844.md",
+            "reference-spec-version": "de2e4a46ad93fc04e6fe3174dc6e90a3307bdb5f"
+        }
+    },
+    "tests/cancun/eip4844_blobs/test_blob_txs.py::test_blob_tx_attribute_gasprice_opcode[fork_Cancun-state_test-tx_gas_500000-opcode_GASPRICE-tx_max_fee_per_gas_100-tx_max_fee_per_blob_gas_delta_1-tx_max_priority_fee_per_gas_0]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07",
+            "currentExcessBlobGas": "0x0e0000"
+        },
+        "pre": {
+            "0x44b7897e0debef929158a92c322d1e457ed691b8": {
+                "nonce": "0x00",
+                "balance": "0x02fef081",
+                "code": "0x",
+                "storage": {}
+            },
+            "0x1b14336313fff416b53abf7386f80899311a80f4": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x3a600055",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "maxPriorityFeePerGas": "0x00",
+            "maxFeePerGas": "0x64",
+            "gasLimit": [
+                "0x07a120"
+            ],
+            "to": "0x1b14336313fff416b53abf7386f80899311a80f4",
+            "value": [
+                "0x01"
+            ],
+            "data": [
+                "0x"
+            ],
+            "accessLists": [
+                []
+            ],
+            "maxFeePerBlobGas": "0x02",
+            "blobVersionedHashes": [
+                "0x0100000000000000000000000000000000000000000000000000000000000000"
+            ],
+            "sender": "0x44b7897e0debef929158a92c322d1e457ed691b8",
+            "secretKey": "0x0228daa542a3a5233ed68e58f38f864ee768644886e312470dd0d0b4bcbf1261"
+        },
+        "post": {
+            "Cancun": [
+                {
+                    "hash": "0xfb2a7f50d246ffe537d095e840d09080c515c2e65cac84578865b2e84e19e787",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0xdd8db22e6614912799ee7bf4dee3f768bf14d0e13888d52be33775628d952f97",
+                        "type": "0x03",
+                        "cumulativeGasUsed": "0xa861",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0x03f901080182a861b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0x03f886018080648307a120941b14336313fff416b53abf7386f80899311a80f40180c002e1a0010000000000000000000000000000000000000000000000000000000000000080a0680f212a6c1ad8414b5aaa2f10104eb1a27e535a9e9d05b22228cdd347e94c65a04971373c24c1845ceb5d5c77c78aab156199cc325bf2e585a30aa01de6d99027",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x44b7897e0debef929158a92c322d1e457ed691b8": {
+                            "nonce": "0x01",
+                            "balance": "0x02f855d9",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x1b14336313fff416b53abf7386f80899311a80f4": {
+                            "nonce": "0x01",
+                            "balance": "0x01",
+                            "code": "0x3a600055",
+                            "storage": {
+                                "0x00": "0x07"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "blobSchedule": {
+                "Cancun": {
+                    "target": "0x03",
+                    "max": "0x06",
+                    "baseFeeUpdateFraction": "0x32f0ed"
+                }
+            },
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x7e7aa7bd98d77bfac7129574dd26bf9ee24692a359b9a391a2ece79c52716ba8",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test GASPRICE opcode to sanity check that the blob gas fee does not affect\nits calculation.\n\n- No priority fee\n- Priority fee below data fee\n- Priority fee above data fee",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/cancun/eip4844_blobs/test_blob_txs.py#L1373",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4844.md",
+            "reference-spec-version": "de2e4a46ad93fc04e6fe3174dc6e90a3307bdb5f"
+        }
+    },
+    "tests/cancun/eip4844_blobs/test_blob_txs.py::test_blob_tx_attribute_gasprice_opcode[fork_Cancun-state_test-tx_gas_500000-opcode_GASPRICE-tx_max_fee_per_gas_100-tx_max_fee_per_blob_gas_delta_1-tx_max_priority_fee_per_gas_2]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07",
+            "currentExcessBlobGas": "0x0e0000"
+        },
+        "pre": {
+            "0x44b7897e0debef929158a92c322d1e457ed691b8": {
+                "nonce": "0x00",
+                "balance": "0x02fef081",
+                "code": "0x",
+                "storage": {}
+            },
+            "0x1b14336313fff416b53abf7386f80899311a80f4": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x3a600055",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "maxPriorityFeePerGas": "0x02",
+            "maxFeePerGas": "0x64",
+            "gasLimit": [
+                "0x07a120"
+            ],
+            "to": "0x1b14336313fff416b53abf7386f80899311a80f4",
+            "value": [
+                "0x01"
+            ],
+            "data": [
+                "0x"
+            ],
+            "accessLists": [
+                []
+            ],
+            "maxFeePerBlobGas": "0x02",
+            "blobVersionedHashes": [
+                "0x0100000000000000000000000000000000000000000000000000000000000000"
+            ],
+            "sender": "0x44b7897e0debef929158a92c322d1e457ed691b8",
+            "secretKey": "0x0228daa542a3a5233ed68e58f38f864ee768644886e312470dd0d0b4bcbf1261"
+        },
+        "post": {
+            "Cancun": [
+                {
+                    "hash": "0xea045e4b8014f6648fe15b9b0ccade6f331fe2ade3d1fcfe1180b479c3cd7578",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0xb2c42e7854b03e76d86209e8ed64c26073917cb2ee3d4fd9241ee4740ed53c7b",
+                        "type": "0x03",
+                        "cumulativeGasUsed": "0xa861",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0x03f901080182a861b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0x03f886018002648307a120941b14336313fff416b53abf7386f80899311a80f40180c002e1a0010000000000000000000000000000000000000000000000000000000000000080a064258241d183607d3e562eb7e1fd33962947e173d41360047bae8d4647a6dd87a00dfe5c873b4f57f167e8c2ca8852752a6f47d36a916a99587f1a65d3803f5ef8",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x44b7897e0debef929158a92c322d1e457ed691b8": {
+                            "nonce": "0x01",
+                            "balance": "0x02f70517",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x1b14336313fff416b53abf7386f80899311a80f4": {
+                            "nonce": "0x01",
+                            "balance": "0x01",
+                            "code": "0x3a600055",
+                            "storage": {
+                                "0x00": "0x09"
+                            }
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x0150c2",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "blobSchedule": {
+                "Cancun": {
+                    "target": "0x03",
+                    "max": "0x06",
+                    "baseFeeUpdateFraction": "0x32f0ed"
+                }
+            },
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0xdfeb796175e6a1b81f190f58f4d99674d8346b69567e19fb771a6d20ed3c0b07",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test GASPRICE opcode to sanity check that the blob gas fee does not affect\nits calculation.\n\n- No priority fee\n- Priority fee below data fee\n- Priority fee above data fee",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/cancun/eip4844_blobs/test_blob_txs.py#L1373",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4844.md",
+            "reference-spec-version": "de2e4a46ad93fc04e6fe3174dc6e90a3307bdb5f"
+        }
+    }
+}

@@ -1,0 +1,92 @@
+{
+    "tests/cancun/eip4844_blobs/test_blob_txs.py::test_invalid_normal_gas[fork_Cancun-state_test-insufficient_max_fee_per_gas]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07",
+            "currentExcessBlobGas": "0x0e0000"
+        },
+        "pre": {
+            "0x88b92f57d3544ad9aa32d4d42ab3a9dc0528ed73": {
+                "nonce": "0x00",
+                "balance": "0x03ec31",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "maxPriorityFeePerGas": "0x00",
+            "maxFeePerGas": "0x06",
+            "gasLimit": [
+                "0x5208"
+            ],
+            "to": "0xc0f6dc9e5836f54caadbf59cc69346c508e1992b",
+            "value": [
+                "0x01"
+            ],
+            "data": [
+                "0x"
+            ],
+            "accessLists": [
+                []
+            ],
+            "maxFeePerBlobGas": "0x01",
+            "blobVersionedHashes": [
+                "0x0100000000000000000000000000000000000000000000000000000000000000"
+            ],
+            "sender": "0x88b92f57d3544ad9aa32d4d42ab3a9dc0528ed73",
+            "secretKey": "0x564d848594ff52ea1dd5f6f4bd78e1178e385497b3057d07d29eb626e9468395"
+        },
+        "post": {
+            "Cancun": [
+                {
+                    "hash": "0x11cce02bf1c60fa889750a78b6f264e72741c59ff9a52eca34366db404b9c3d1",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "txbytes": "0x03f8850180800682520894c0f6dc9e5836f54caadbf59cc69346c508e1992b0180c001e1a0010000000000000000000000000000000000000000000000000000000000000001a02849f67a7be76cfc58fe96213ecec8fc8ed7c9ce65e18c2088b308b683d7853ca01efbe981cb678d6863fa20db6b892d8a52cc5d2be2f70cf22f1effef1118e36a",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x88b92f57d3544ad9aa32d4d42ab3a9dc0528ed73": {
+                            "nonce": "0x00",
+                            "balance": "0x03ec31",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    },
+                    "expectException": "TransactionException.INSUFFICIENT_MAX_FEE_PER_GAS"
+                }
+            ]
+        },
+        "config": {
+            "blobSchedule": {
+                "Cancun": {
+                    "target": "0x03",
+                    "max": "0x06",
+                    "baseFeeUpdateFraction": "0x32f0ed"
+                }
+            },
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0xbaa079a6f273b8fb042787e18a2592ac4499204738553de6d120012814cacfe6",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Reject an invalid blob transaction.\n\n- Sufficient max fee per blob gas, but insufficient max fee per gas",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/cancun/eip4844_blobs/test_blob_txs.py#L557",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4844.md",
+            "reference-spec-version": "de2e4a46ad93fc04e6fe3174dc6e90a3307bdb5f"
+        }
+    }
+}

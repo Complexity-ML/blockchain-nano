@@ -1,0 +1,117 @@
+{
+    "tests/prague/eip7702_set_code_tx/test_set_code_txs_2.py::test_eoa_init_as_pointer[fork_Prague-state_test]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07",
+            "currentExcessBlobGas": "0x00"
+        },
+        "pre": {
+            "0xe4492b6021e10a7b66a358972a0a67e0668817ef": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x6001600055",
+                "storage": {}
+            },
+            "0x65b2c45332f32e2757790fc90b9dbf3f323c1049": {
+                "nonce": "0x01",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0xef0100e4492b6021e10a7b66a358972a0a67e0668817ef",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x01",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0x65b2c45332f32e2757790fc90b9dbf3f323c1049",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0x65b2c45332f32e2757790fc90b9dbf3f323c1049",
+            "secretKey": "0x1cf228b583686a5c181cbbd6c51b5d790b4dd0a24a59a6228e2f1531029ca1f7"
+        },
+        "post": {
+            "Prague": [
+                {
+                    "hash": "0x829eb5504e8bf16fc673c57022951d1e9a2619f4756ed89008224259423727e3",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0x3923b8df2dd0521a8744bb8f53cf2dc1d52f8d9969c7fad662106127a0cf4d94",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0xa862",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf901080182a862b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf861010a8407270e009465b2c45332f32e2757790fc90b9dbf3f323c1049808026a0ea0fd2a734e9b861f263599101fa56d41d55a49bd2507c3b09a5287206b42caaa02aafb8c482ab824cb927548df49a606673378a2c981172d2ba710a3e26daa730",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xe4492b6021e10a7b66a358972a0a67e0668817ef": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x6001600055",
+                            "storage": {}
+                        },
+                        "0x65b2c45332f32e2757790fc90b9dbf3f323c1049": {
+                            "nonce": "0x02",
+                            "balance": "0x033b2e3c9fd0803ce7f96c2c",
+                            "code": "0xef0100e4492b6021e10a7b66a358972a0a67e0668817ef",
+                            "storage": {
+                                "0x00": "0x01"
+                            }
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x01f926",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "blobSchedule": {
+                "Cancun": {
+                    "target": "0x03",
+                    "max": "0x06",
+                    "baseFeeUpdateFraction": "0x32f0ed"
+                },
+                "Prague": {
+                    "target": "0x06",
+                    "max": "0x09",
+                    "baseFeeUpdateFraction": "0x4c6964"
+                }
+            },
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x7a152669ceb0b0ee55baf359e0a99ab93fe3ad5edf579189653438e9515b4c91",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "It was agreed before that senders don't have code.\n\nAnd there were issues with tests sending transactions from account's\nwith code With EIP7702 it is again possible,\nlet's check the test runners are ok.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/prague/eip7702_set_code_tx/test_set_code_txs_2.py#L1464",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-7702.md",
+            "reference-spec-version": "99f1be49f37c034bdd5c082946f5968710dbfc87"
+        }
+    }
+}

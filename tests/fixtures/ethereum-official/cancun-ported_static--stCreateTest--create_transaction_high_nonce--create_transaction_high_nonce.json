@@ -1,0 +1,162 @@
+{
+    "tests/ported_static/stCreateTest/test_create_transaction_high_nonce.py::test_create_transaction_high_nonce[fork_Cancun-state_test--v0]": {
+        "env": {
+            "currentCoinbase": "0x24f962e9fa1cc84819c2760cda9326272e0196ed",
+            "currentGasLimit": "0x0f4240",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000020000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x0a",
+            "currentExcessBlobGas": "0x00"
+        },
+        "pre": {
+            "0x24f962e9fa1cc84819c2760cda9326272e0196ed": {
+                "nonce": "0xffffffffffffffff",
+                "balance": "0x5af3107a4000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0xffffffffffffffff",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x015f90"
+            ],
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x60016000f3"
+            ],
+            "sender": "0x24f962e9fa1cc84819c2760cda9326272e0196ed",
+            "secretKey": "0xef61292547cf6a11beb76a0741fe98264bbce55f6a291ebcfac70e446a7ed4be",
+            "to": ""
+        },
+        "post": {
+            "Cancun": [
+                {
+                    "hash": "0x1d48735621715535503c00c1be1428c94d1391dcc23b26177101ddd9e192324f",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "txbytes": "0xf85988ffffffffffffffff0a83015f9080808560016000f325a0d93c62a4815388fbf197834fe9dd032371cce59f034bfbf95e75af6fb78567f6a009a1a32a16a003ba82b0c39df48ef2f5f616d708d66ba8a1ee0ad1a32ede6d19",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x24f962e9fa1cc84819c2760cda9326272e0196ed": {
+                            "nonce": "0xffffffffffffffff",
+                            "balance": "0x5af3107a4000",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    },
+                    "expectException": "TransactionException.NONCE_IS_MAX"
+                }
+            ]
+        },
+        "config": {
+            "blobSchedule": {
+                "Cancun": {
+                    "target": "0x03",
+                    "max": "0x06",
+                    "baseFeeUpdateFraction": "0x32f0ed"
+                }
+            },
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x186bf635d3ed023726a78ffe27a485cc46609099d58f68b5b3f59c56b4c5426b",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "The test check if the create transaction is reject if the origin's...",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/ported_static/stCreateTest/test_create_transaction_high_nonce.py#L34",
+            "metadata": {
+                "opcode_count": {}
+            }
+        }
+    },
+    "tests/ported_static/stCreateTest/test_create_transaction_high_nonce.py::test_create_transaction_high_nonce[fork_Cancun-state_test--v1]": {
+        "env": {
+            "currentCoinbase": "0x24f962e9fa1cc84819c2760cda9326272e0196ed",
+            "currentGasLimit": "0x0f4240",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000020000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x0a",
+            "currentExcessBlobGas": "0x00"
+        },
+        "pre": {
+            "0x24f962e9fa1cc84819c2760cda9326272e0196ed": {
+                "nonce": "0xffffffffffffffff",
+                "balance": "0x5af3107a4000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0xffffffffffffffff",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x015f90"
+            ],
+            "value": [
+                "0x01"
+            ],
+            "data": [
+                "0x60016000f3"
+            ],
+            "sender": "0x24f962e9fa1cc84819c2760cda9326272e0196ed",
+            "secretKey": "0xef61292547cf6a11beb76a0741fe98264bbce55f6a291ebcfac70e446a7ed4be",
+            "to": ""
+        },
+        "post": {
+            "Cancun": [
+                {
+                    "hash": "0x1d48735621715535503c00c1be1428c94d1391dcc23b26177101ddd9e192324f",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "txbytes": "0xf85988ffffffffffffffff0a83015f9080018560016000f325a06a0cb88b3312ba7a3c9588d0157b7c01ad14722b7336dbcebe790f21b88233daa0219974ebd509ec1c0ef3ffb23e9664568ee8ac796781a39d51c5b7dff1cf12ee",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x24f962e9fa1cc84819c2760cda9326272e0196ed": {
+                            "nonce": "0xffffffffffffffff",
+                            "balance": "0x5af3107a4000",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    },
+                    "expectException": "TransactionException.NONCE_IS_MAX"
+                }
+            ]
+        },
+        "config": {
+            "blobSchedule": {
+                "Cancun": {
+                    "target": "0x03",
+                    "max": "0x06",
+                    "baseFeeUpdateFraction": "0x32f0ed"
+                }
+            },
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0xc080e579e634f0a69e1febbe71b1095c48536f4a27e84d4b88f7ab1f6f158f2c",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "The test check if the create transaction is reject if the origin's...",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/ported_static/stCreateTest/test_create_transaction_high_nonce.py#L34",
+            "metadata": {
+                "opcode_count": {}
+            }
+        }
+    }
+}

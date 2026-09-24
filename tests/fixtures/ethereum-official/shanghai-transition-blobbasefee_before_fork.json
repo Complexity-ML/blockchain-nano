@@ -1,0 +1,114 @@
+{
+    "tests/cancun/eip7516_blobgasfee/test_blobgasfee_opcode.py::test_blobbasefee_before_fork[fork_Shanghai-state_test-]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x1d4c",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07"
+        },
+        "pre": {
+            "0xb4b4d7a80c7e626eecfa20d58c053914881b1447": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x4a00",
+                "storage": {}
+            },
+            "0x9d1ca6907b6ff05990adb9b2582ff3387077d0b9": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x6000600060006000600073b4b4d7a80c7e626eecfa20d58c053914881b144761fffff14755",
+                "storage": {}
+            },
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0x9d1ca6907b6ff05990adb9b2582ff3387077d0b9",
+            "value": [
+                "0x01"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Shanghai": [
+                {
+                    "hash": "0xfe86471e6d35f4e0d4433c9ab6a16ee3731735e11e1976a5b75a57333df0f6b0",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0x0cd5a25cbbe89e83c301737bec532395766cc56c3f5a9a7cfc8f8140df0862da",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0x0164e1",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf9010901830164e1b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf861800a8407270e00949d1ca6907b6ff05990adb9b2582ff3387077d0b9018026a05986caab0827bbfe3d1f3e9480555ac362e6826c16d33ca6418b6625830845bea02ca332c363a4ce2b197fb4803ed52d4b690b5eb377276eb9b36b6ded2a3b08e1",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xb4b4d7a80c7e626eecfa20d58c053914881b1447": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x4a00",
+                            "storage": {}
+                        },
+                        "0x9d1ca6907b6ff05990adb9b2582ff3387077d0b9": {
+                            "nonce": "0x01",
+                            "balance": "0x01",
+                            "code": "0x6000600060006000600073b4b4d7a80c7e626eecfa20d58c053914881b144761fffff14755",
+                            "storage": {}
+                        },
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ce7f20f35",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x042ea3",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x6c0b40a8f08f7f1a39cf1d2f1166753d7dfa34b3f2e1fd7d24d4b45f6a3652fb",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Tests that the BLOBBASEFEE opcode results on exception when called before\nthe fork.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/cancun/eip7516_blobgasfee/test_blobgasfee_opcode.py#L170",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-7516.md",
+            "reference-spec-version": "dcd2f4ede58a6ed908acd3cc2c198e9f605cbf3b"
+        }
+    }
+}

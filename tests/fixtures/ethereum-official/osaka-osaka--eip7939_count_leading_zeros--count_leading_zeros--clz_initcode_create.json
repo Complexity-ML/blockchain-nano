@@ -1,0 +1,260 @@
+{
+    "tests/osaka/eip7939_count_leading_zeros/test_count_leading_zeros.py::test_clz_initcode_create[fork_Osaka-state_test-opcode_CREATE2]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07",
+            "currentExcessBlobGas": "0x00"
+        },
+        "pre": {
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            },
+            "0x00ce6a1e6d725d9615dc114dcf70f7c725f5a319": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x605560006000376000605560006000f500",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x01000000"
+            ],
+            "to": "0x00ce6a1e6d725d9615dc114dcf70f7c725f5a319",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x60011e60005560021e600155680100000000000000001e6002557001000000000000000000000000000000001e6003557f80000000000000000000000000000000000000000000000000000000000000001e600455"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Osaka": [
+                {
+                    "hash": "0x0aa4e3c8efb5f2552722f138e7c1581610119f0858ef1ea6eb3ff83719c7155d",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0x18dff3c7ae2b342c57611aacdaba6c0094529e95b8cef42c55886d9b71ee8754",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0x023419",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf901090183023419b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf8b7800a84010000009400ce6a1e6d725d9615dc114dcf70f7c725f5a31980b85560011e60005560021e600155680100000000000000001e6002557001000000000000000000000000000000001e6003557f80000000000000000000000000000000000000000000000000000000000000001e60045526a0cc3a05e6b8784df78ef566a26b09c3bfff8763694f96c68f7b93dde6d7167969a06857c93f77f441b301529a2132ec235dab91d8188cda14790b37502dffd352ff",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ce7e9f706",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x00ce6a1e6d725d9615dc114dcf70f7c725f5a319": {
+                            "nonce": "0x02",
+                            "balance": "0x00",
+                            "code": "0x605560006000376000605560006000f500",
+                            "storage": {}
+                        },
+                        "0xf170488b2fefc302a9eea9c96fef62a94d04203f": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x",
+                            "storage": {
+                                "0x00": "0xff",
+                                "0x01": "0xfe",
+                                "0x02": "0xbf",
+                                "0x03": "0x7f"
+                            }
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x069c4b",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "blobSchedule": {
+                "Cancun": {
+                    "target": "0x03",
+                    "max": "0x06",
+                    "baseFeeUpdateFraction": "0x32f0ed"
+                },
+                "Prague": {
+                    "target": "0x06",
+                    "max": "0x09",
+                    "baseFeeUpdateFraction": "0x4c6964"
+                },
+                "Osaka": {
+                    "target": "0x06",
+                    "max": "0x09",
+                    "baseFeeUpdateFraction": "0x4c6964"
+                }
+            },
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0xb23289e0d7d6e8d7436eeff2a8fee503e1a7d5adb0343c8549613cb9854e15e2",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test CLZ opcode behavior in initcode executed via CREATE/CREATE2.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/osaka/eip7939_count_leading_zeros/test_count_leading_zeros.py#L594",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-7939.md",
+            "reference-spec-version": "c8321494fdfbfda52ad46c3515a7ca5dc86b857c"
+        }
+    },
+    "tests/osaka/eip7939_count_leading_zeros/test_count_leading_zeros.py::test_clz_initcode_create[fork_Osaka-state_test-opcode_CREATE]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07",
+            "currentExcessBlobGas": "0x00"
+        },
+        "pre": {
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            },
+            "0x0e126e367a73d524192a5cc6394e942247f4db3d": {
+                "nonce": "0x01",
+                "balance": "0x00",
+                "code": "0x60556000600037605560006000f000",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x01000000"
+            ],
+            "to": "0x0e126e367a73d524192a5cc6394e942247f4db3d",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x60011e60005560021e600155680100000000000000001e6002557001000000000000000000000000000000001e6003557f80000000000000000000000000000000000000000000000000000000000000001e600455"
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Osaka": [
+                {
+                    "hash": "0x3d6494090bfbc7d1dc2f6e22b575099be06a362cf5bcaed5976706e7e2216cfc",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0x3b6f17b6ce4c668694ee49181fe2cc27203d2b6ee72c7e31b8d54f425391bbe7",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0x023404",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf901090183023404b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf8b7800a8401000000940e126e367a73d524192a5cc6394e942247f4db3d80b85560011e60005560021e600155680100000000000000001e6002557001000000000000000000000000000000001e6003557f80000000000000000000000000000000000000000000000000000000000000001e60045526a08ce38b30e12329ab450b8e4368bf47c7185b36d41dfcc2decb71329dbc1159bca035d23a6be306b79275ad45d536f91fe24db01fdd6ac064d96ac7b43d074cbbd5",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803ce7e9f7d8",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x0e126e367a73d524192a5cc6394e942247f4db3d": {
+                            "nonce": "0x02",
+                            "balance": "0x00",
+                            "code": "0x60556000600037605560006000f000",
+                            "storage": {}
+                        },
+                        "0x3b7d7cb359fb333ce4d83aa2764afd3cf2f7cc9b": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0x",
+                            "storage": {
+                                "0x00": "0xff",
+                                "0x01": "0xfe",
+                                "0x02": "0xbf",
+                                "0x03": "0x7f"
+                            }
+                        },
+                        "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba": {
+                            "nonce": "0x00",
+                            "balance": "0x069c0c",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "blobSchedule": {
+                "Cancun": {
+                    "target": "0x03",
+                    "max": "0x06",
+                    "baseFeeUpdateFraction": "0x32f0ed"
+                },
+                "Prague": {
+                    "target": "0x06",
+                    "max": "0x09",
+                    "baseFeeUpdateFraction": "0x4c6964"
+                },
+                "Osaka": {
+                    "target": "0x06",
+                    "max": "0x09",
+                    "baseFeeUpdateFraction": "0x4c6964"
+                }
+            },
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x08104d50f0cb9f5973dd588f9c58cf84ebfc922be1461f54550a2ad15f853890",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test CLZ opcode behavior in initcode executed via CREATE/CREATE2.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/osaka/eip7939_count_leading_zeros/test_count_leading_zeros.py#L594",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-7939.md",
+            "reference-spec-version": "c8321494fdfbfda52ad46c3515a7ca5dc86b857c"
+        }
+    }
+}

@@ -1,0 +1,104 @@
+{
+    "tests/ported_static/stReturnDataTest/test_call_ecrec_success_empty_then_returndatasize.py::test_call_ecrec_success_empty_then_returndatasize[fork_Cancun-state_test]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x1a00000000",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000020000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x0a",
+            "currentExcessBlobGas": "0x00"
+        },
+        "pre": {
+            "0x1b206bdc60ea797a25bd4a6cd5503d78b9027ba4": {
+                "nonce": "0x00",
+                "balance": "0x6400000000",
+                "code": "0x",
+                "storage": {}
+            },
+            "0x2483a6ca2c7658b6b02e91f424134dbd715a72d2": {
+                "nonce": "0x00",
+                "balance": "0x00",
+                "code": "0x60aa60006000600060006001619000f1503d60005500",
+                "storage": {
+                    "0x00": "0x60a7"
+                }
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "gasPrice": "0x0a",
+            "gasLimit": [
+                "0x0186a0"
+            ],
+            "to": "0x2483a6ca2c7658b6b02e91f424134dbd715a72d2",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "sender": "0x1b206bdc60ea797a25bd4a6cd5503d78b9027ba4",
+            "secretKey": "0x712537c0b28fb0959e62f748b5797d9ebb8a709444e1f4d7c7d562c87965883b"
+        },
+        "post": {
+            "Cancun": [
+                {
+                    "hash": "0xd3c45afd9dc8c585de02030c0f5f9408db8f95e4798d3a4558e0c5cfc10cad90",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0xea70a8040573594cf6417ef5fb2754f69750172d4c5a4cc49648f0750f05a8ac",
+                        "type": "0x00",
+                        "cumulativeGasUsed": "0x5f1a",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": true,
+                        "rlp": "0xf9010801825f1ab9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0xf860800a830186a0942483a6ca2c7658b6b02e91f424134dbd715a72d2808025a026eadebd3cce2c6278087da63c3cb539e96fa7e9d5746a888b010b5d970e36b7a066c9940a4e52bc8015fc017eca82392792411ad88acd11ccd7dce3768e65f81b",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x1b206bdc60ea797a25bd4a6cd5503d78b9027ba4": {
+                            "nonce": "0x01",
+                            "balance": "0x63fffc48fc",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0x2483a6ca2c7658b6b02e91f424134dbd715a72d2": {
+                            "nonce": "0x00",
+                            "balance": "0x00",
+                            "code": "0x60aa60006000600060006001619000f1503d60005500",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "blobSchedule": {
+                "Cancun": {
+                    "target": "0x03",
+                    "max": "0x06",
+                    "baseFeeUpdateFraction": "0x32f0ed"
+                }
+            },
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0xb4142ba37321c32b99c2aec18751ba67c409db0c5bd51e105b2ece3395f2c925",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test_call_ecrec_success_empty_then_returndatasize.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/ported_static/stReturnDataTest/test_call_ecrec_success_empty_then_returndatasize.py#L24",
+            "metadata": {
+                "opcode_count": {}
+            }
+        }
+    }
+}

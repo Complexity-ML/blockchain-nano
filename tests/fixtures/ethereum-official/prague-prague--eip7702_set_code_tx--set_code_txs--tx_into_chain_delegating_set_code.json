@@ -1,0 +1,135 @@
+{
+    "tests/prague/eip7702_set_code_tx/test_set_code_txs.py::test_tx_into_chain_delegating_set_code[fork_Prague-state_test]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07",
+            "currentExcessBlobGas": "0x00"
+        },
+        "pre": {
+            "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                "nonce": "0x00",
+                "balance": "0x033b2e3c9fd0803ce8000000",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "maxPriorityFeePerGas": "0x00",
+            "maxFeePerGas": "0x07",
+            "gasLimit": [
+                "0x07270e00"
+            ],
+            "to": "0xc0f6dc9e5836f54caadbf59cc69346c508e1992b",
+            "value": [
+                "0x00"
+            ],
+            "data": [
+                "0x"
+            ],
+            "accessLists": [
+                []
+            ],
+            "authorizationList": [
+                {
+                    "chainId": "0x00",
+                    "address": "0x95d1be958d22adf294428c13cc71d89ff320bfd3",
+                    "nonce": "0x00",
+                    "v": "0x00",
+                    "r": "0xd23f505a17ce45d5dda5a34b563fb3b0121b4aae9312be288393a65f3b1ed9ef",
+                    "s": "0x50a821a4a8b4d9338c71f60f9e5698a6b6a43bf823675c4a2bc79d900107b555",
+                    "signer": "0xc0f6dc9e5836f54caadbf59cc69346c508e1992b",
+                    "yParity": "0x00"
+                },
+                {
+                    "chainId": "0x00",
+                    "address": "0xc0f6dc9e5836f54caadbf59cc69346c508e1992b",
+                    "nonce": "0x00",
+                    "v": "0x00",
+                    "r": "0xd5b0c1fda165e0059703f235d291085019c96a94ad54929e7827ad8b711758ce",
+                    "s": "0x1e3970e5451819379706db39a05f311842c06507777c378b8a8a3609743490b7",
+                    "signer": "0x95d1be958d22adf294428c13cc71d89ff320bfd3",
+                    "yParity": "0x00"
+                }
+            ],
+            "sender": "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff",
+            "secretKey": "0x1ad604b3d94e06ec50b27732ec677f3d857c4d588f082f0016317697dd3a2d92"
+        },
+        "post": {
+            "Prague": [
+                {
+                    "hash": "0x766666449441d2e4e87d22e640dcbb8595afbbcbf5a92c24b6ca77d6b1aafd90",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "receipt": {
+                        "transactionHash": "0x171d65075b4414d2cfde8da9676556d7db5ea12d3ffe80b43c7563161afc56d5",
+                        "type": "0x04",
+                        "cumulativeGasUsed": "0x07270e00",
+                        "bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "logs": [],
+                        "status": false,
+                        "rlp": "0x04f9010a808407270e00b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+                    },
+                    "txbytes": "0x04f9011e018080078407270e0094c0f6dc9e5836f54caadbf59cc69346c508e1992b8080c0f8b8f85a809495d1be958d22adf294428c13cc71d89ff320bfd38080a0d23f505a17ce45d5dda5a34b563fb3b0121b4aae9312be288393a65f3b1ed9efa050a821a4a8b4d9338c71f60f9e5698a6b6a43bf823675c4a2bc79d900107b555f85a8094c0f6dc9e5836f54caadbf59cc69346c508e1992b8080a0d5b0c1fda165e0059703f235d291085019c96a94ad54929e7827ad8b711758cea01e3970e5451819379706db39a05f311842c06507777c378b8a8a3609743490b780a0795f2b94ba42692718929b528246d83510839921c036a20083ea4f3f692ac620a026b2ab55f438747ebe7949f03759fd532d00aea794ab5c4da5fb02dc04c67f5b",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0xf6c3a9edc1afa0ad5b720e4d42e1437c43d3b3ff": {
+                            "nonce": "0x01",
+                            "balance": "0x033b2e3c9fd0803cb5ee9e00",
+                            "code": "0x",
+                            "storage": {}
+                        },
+                        "0xc0f6dc9e5836f54caadbf59cc69346c508e1992b": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0xef010095d1be958d22adf294428c13cc71d89ff320bfd3",
+                            "storage": {}
+                        },
+                        "0x95d1be958d22adf294428c13cc71d89ff320bfd3": {
+                            "nonce": "0x01",
+                            "balance": "0x00",
+                            "code": "0xef0100c0f6dc9e5836f54caadbf59cc69346c508e1992b",
+                            "storage": {}
+                        }
+                    }
+                }
+            ]
+        },
+        "config": {
+            "blobSchedule": {
+                "Cancun": {
+                    "target": "0x03",
+                    "max": "0x06",
+                    "baseFeeUpdateFraction": "0x32f0ed"
+                },
+                "Prague": {
+                    "target": "0x06",
+                    "max": "0x09",
+                    "baseFeeUpdateFraction": "0x4c6964"
+                }
+            },
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x54483742abb55072dd10a3cc43855c26053e293b0a01ef277a99e756684f4bb1",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Test a transaction that has entry-point into a set-code account that\ndelegates to another set-code account.",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/prague/eip7702_set_code_tx/test_set_code_txs.py#L1074",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-7702.md",
+            "reference-spec-version": "99f1be49f37c034bdd5c082946f5968710dbfc87"
+        }
+    }
+}

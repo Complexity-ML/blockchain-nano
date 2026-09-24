@@ -1,0 +1,365 @@
+{
+    "tests/cancun/eip4844_blobs/test_blob_txs.py::test_invalid_blob_hash_versioning_single_tx[fork_Cancun-state_test--multiple_blobs]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07",
+            "currentExcessBlobGas": "0x0e0000"
+        },
+        "pre": {
+            "0x243f81056ebb0815a4f2bdd8da99e9b113f0e369": {
+                "nonce": "0x00",
+                "balance": "0x063e39",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "maxPriorityFeePerGas": "0x00",
+            "maxFeePerGas": "0x07",
+            "gasLimit": [
+                "0x5208"
+            ],
+            "to": "0xc0f6dc9e5836f54caadbf59cc69346c508e1992b",
+            "value": [
+                "0x01"
+            ],
+            "data": [
+                "0x"
+            ],
+            "accessLists": [
+                []
+            ],
+            "maxFeePerBlobGas": "0x01",
+            "blobVersionedHashes": [
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000001"
+            ],
+            "sender": "0x243f81056ebb0815a4f2bdd8da99e9b113f0e369",
+            "secretKey": "0x62590667cea785281dd1b26f3e3f6f3b4e96713fcc895826249e5bb495e5197d"
+        },
+        "post": {
+            "Cancun": [
+                {
+                    "hash": "0xff1b484a94021cf41c01a6af96378611950013818d27630a8f6139cd187b45ac",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "txbytes": "0x03f8a70180800782520894c0f6dc9e5836f54caadbf59cc69346c508e1992b0180c001f842a00000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000180a0d076d083b77ff8a5addaf197cd8904557b1aafc30b51360a8725336df274e15ba01371abd06a4a357fa27edb0f451e487f07022199c764a6d318baf5c98bbafb8a",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x243f81056ebb0815a4f2bdd8da99e9b113f0e369": {
+                            "nonce": "0x00",
+                            "balance": "0x063e39",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    },
+                    "expectException": "TransactionException.TYPE_3_TX_INVALID_BLOB_VERSIONED_HASH"
+                }
+            ]
+        },
+        "config": {
+            "blobSchedule": {
+                "Cancun": {
+                    "target": "0x03",
+                    "max": "0x06",
+                    "baseFeeUpdateFraction": "0x32f0ed"
+                }
+            },
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0xb759942f7af63a94b74e5755751113b3651b0b91ee2b00a55188fd43be3f9ca8",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Reject blob transactions with invalid blob hash version.\n\n- Transaction with single blob with invalid version\n- Transaction with multiple blobs all with invalid version\n- Transaction with multiple blobs either with invalid version",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/cancun/eip4844_blobs/test_blob_txs.py#L969",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4844.md",
+            "reference-spec-version": "de2e4a46ad93fc04e6fe3174dc6e90a3307bdb5f"
+        }
+    },
+    "tests/cancun/eip4844_blobs/test_blob_txs.py::test_invalid_blob_hash_versioning_single_tx[fork_Cancun-state_test--multiple_blobs_single_bad_hash_1]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07",
+            "currentExcessBlobGas": "0x0e0000"
+        },
+        "pre": {
+            "0x243f81056ebb0815a4f2bdd8da99e9b113f0e369": {
+                "nonce": "0x00",
+                "balance": "0x063e39",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "maxPriorityFeePerGas": "0x00",
+            "maxFeePerGas": "0x07",
+            "gasLimit": [
+                "0x5208"
+            ],
+            "to": "0xc0f6dc9e5836f54caadbf59cc69346c508e1992b",
+            "value": [
+                "0x01"
+            ],
+            "data": [
+                "0x"
+            ],
+            "accessLists": [
+                []
+            ],
+            "maxFeePerBlobGas": "0x01",
+            "blobVersionedHashes": [
+                "0x0100000000000000000000000000000000000000000000000000000000000001",
+                "0x0000000000000000000000000000000000000000000000000000000000000002"
+            ],
+            "sender": "0x243f81056ebb0815a4f2bdd8da99e9b113f0e369",
+            "secretKey": "0x62590667cea785281dd1b26f3e3f6f3b4e96713fcc895826249e5bb495e5197d"
+        },
+        "post": {
+            "Cancun": [
+                {
+                    "hash": "0xff1b484a94021cf41c01a6af96378611950013818d27630a8f6139cd187b45ac",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "txbytes": "0x03f8a70180800782520894c0f6dc9e5836f54caadbf59cc69346c508e1992b0180c001f842a00100000000000000000000000000000000000000000000000000000000000001a0000000000000000000000000000000000000000000000000000000000000000280a01c2967dcebba043b0a7c7833c3843b4fa888691f0eb4f30d89450be7e6c75258a051703d84ec0c48625294acaffac398899a768b9abc32bfc0117ca99f228c8142",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x243f81056ebb0815a4f2bdd8da99e9b113f0e369": {
+                            "nonce": "0x00",
+                            "balance": "0x063e39",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    },
+                    "expectException": "TransactionException.TYPE_3_TX_INVALID_BLOB_VERSIONED_HASH"
+                }
+            ]
+        },
+        "config": {
+            "blobSchedule": {
+                "Cancun": {
+                    "target": "0x03",
+                    "max": "0x06",
+                    "baseFeeUpdateFraction": "0x32f0ed"
+                }
+            },
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0xbe840d73cf5105dc9926b2bc52200e4afff283263ac0c3bec2b345bab11b92c7",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Reject blob transactions with invalid blob hash version.\n\n- Transaction with single blob with invalid version\n- Transaction with multiple blobs all with invalid version\n- Transaction with multiple blobs either with invalid version",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/cancun/eip4844_blobs/test_blob_txs.py#L969",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4844.md",
+            "reference-spec-version": "de2e4a46ad93fc04e6fe3174dc6e90a3307bdb5f"
+        }
+    },
+    "tests/cancun/eip4844_blobs/test_blob_txs.py::test_invalid_blob_hash_versioning_single_tx[fork_Cancun-state_test--multiple_blobs_single_bad_hash_2]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07",
+            "currentExcessBlobGas": "0x0e0000"
+        },
+        "pre": {
+            "0x243f81056ebb0815a4f2bdd8da99e9b113f0e369": {
+                "nonce": "0x00",
+                "balance": "0x063e39",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "maxPriorityFeePerGas": "0x00",
+            "maxFeePerGas": "0x07",
+            "gasLimit": [
+                "0x5208"
+            ],
+            "to": "0xc0f6dc9e5836f54caadbf59cc69346c508e1992b",
+            "value": [
+                "0x01"
+            ],
+            "data": [
+                "0x"
+            ],
+            "accessLists": [
+                []
+            ],
+            "maxFeePerBlobGas": "0x01",
+            "blobVersionedHashes": [
+                "0x0000000000000000000000000000000000000000000000000000000000000001",
+                "0x0100000000000000000000000000000000000000000000000000000000000002"
+            ],
+            "sender": "0x243f81056ebb0815a4f2bdd8da99e9b113f0e369",
+            "secretKey": "0x62590667cea785281dd1b26f3e3f6f3b4e96713fcc895826249e5bb495e5197d"
+        },
+        "post": {
+            "Cancun": [
+                {
+                    "hash": "0xff1b484a94021cf41c01a6af96378611950013818d27630a8f6139cd187b45ac",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "txbytes": "0x03f8a60180800782520894c0f6dc9e5836f54caadbf59cc69346c508e1992b0180c001f842a00000000000000000000000000000000000000000000000000000000000000001a0010000000000000000000000000000000000000000000000000000000000000201a013d4d17a2739ecce20d8c51e666b062f40539db84744c55464b562cbb160b3ea9f9053a50dc2323a01836fd79a263896a2b2a9ea16e3176394071d60563d484c",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x243f81056ebb0815a4f2bdd8da99e9b113f0e369": {
+                            "nonce": "0x00",
+                            "balance": "0x063e39",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    },
+                    "expectException": "TransactionException.TYPE_3_TX_INVALID_BLOB_VERSIONED_HASH"
+                }
+            ]
+        },
+        "config": {
+            "blobSchedule": {
+                "Cancun": {
+                    "target": "0x03",
+                    "max": "0x06",
+                    "baseFeeUpdateFraction": "0x32f0ed"
+                }
+            },
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x78285c7925642ce99114ea99f8e3939c885fd22616d784753e458acf9c980f48",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Reject blob transactions with invalid blob hash version.\n\n- Transaction with single blob with invalid version\n- Transaction with multiple blobs all with invalid version\n- Transaction with multiple blobs either with invalid version",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/cancun/eip4844_blobs/test_blob_txs.py#L969",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4844.md",
+            "reference-spec-version": "de2e4a46ad93fc04e6fe3174dc6e90a3307bdb5f"
+        }
+    },
+    "tests/cancun/eip4844_blobs/test_blob_txs.py::test_invalid_blob_hash_versioning_single_tx[fork_Cancun-state_test--single_blob]": {
+        "env": {
+            "currentCoinbase": "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentGasLimit": "0x07270e00",
+            "currentNumber": "0x01",
+            "currentTimestamp": "0x03e8",
+            "currentRandom": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "currentDifficulty": "0x00",
+            "currentBaseFee": "0x07",
+            "currentExcessBlobGas": "0x0e0000"
+        },
+        "pre": {
+            "0x7463e5d05012f4a5ad39ccfc9d91b8783f99ce0a": {
+                "nonce": "0x00",
+                "balance": "0x043e39",
+                "code": "0x",
+                "storage": {}
+            }
+        },
+        "transaction": {
+            "nonce": "0x00",
+            "maxPriorityFeePerGas": "0x00",
+            "maxFeePerGas": "0x07",
+            "gasLimit": [
+                "0x5208"
+            ],
+            "to": "0xc0f6dc9e5836f54caadbf59cc69346c508e1992b",
+            "value": [
+                "0x01"
+            ],
+            "data": [
+                "0x"
+            ],
+            "accessLists": [
+                []
+            ],
+            "maxFeePerBlobGas": "0x01",
+            "blobVersionedHashes": [
+                "0x0000000000000000000000000000000000000000000000000000000000000001"
+            ],
+            "sender": "0x7463e5d05012f4a5ad39ccfc9d91b8783f99ce0a",
+            "secretKey": "0x6838d812ff57ac057738bd415eb067ae363d381bfc805727baafbe1f781facd4"
+        },
+        "post": {
+            "Cancun": [
+                {
+                    "hash": "0x58fe3a6177b357dd0aea5a9c2cddd619823d0e647fec17d6e08a9a2cf3de228a",
+                    "logs": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                    "txbytes": "0x03f8850180800782520894c0f6dc9e5836f54caadbf59cc69346c508e1992b0180c001e1a0000000000000000000000000000000000000000000000000000000000000000180a01067ad67a512049c42752ab2a91203185a490d02dd78bcdd61895d78c09095bea0735a3f6199e1e3b2ae401d10d23d6744046030d3eeb5eda6adeab58ca7713601",
+                    "indexes": {
+                        "data": 0,
+                        "gas": 0,
+                        "value": 0
+                    },
+                    "state": {
+                        "0x7463e5d05012f4a5ad39ccfc9d91b8783f99ce0a": {
+                            "nonce": "0x00",
+                            "balance": "0x043e39",
+                            "code": "0x",
+                            "storage": {}
+                        }
+                    },
+                    "expectException": "TransactionException.TYPE_3_TX_INVALID_BLOB_VERSIONED_HASH"
+                }
+            ]
+        },
+        "config": {
+            "blobSchedule": {
+                "Cancun": {
+                    "target": "0x03",
+                    "max": "0x06",
+                    "baseFeeUpdateFraction": "0x32f0ed"
+                }
+            },
+            "chainid": "0x01"
+        },
+        "_info": {
+            "hash": "0x76e5ecf8cbf4e4f76ac76c9db81413e19bcbb3e8100fafcec9dfe851488c22fc",
+            "fixture-format": "state_test",
+            "comment": "`execution-specs` generated test",
+            "filling-transition-tool": "2.19.0",
+            "description": "Reject blob transactions with invalid blob hash version.\n\n- Transaction with single blob with invalid version\n- Transaction with multiple blobs all with invalid version\n- Transaction with multiple blobs either with invalid version",
+            "url": "https://github.com/ethereum/execution-specs/blob/b6956dbe42a64d143569d5e9b20a0e7f7b9d0ac9/tests/cancun/eip4844_blobs/test_blob_txs.py#L969",
+            "metadata": {
+                "opcode_count": {}
+            },
+            "reference-spec": "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4844.md",
+            "reference-spec-version": "de2e4a46ad93fc04e6fe3174dc6e90a3307bdb5f"
+        }
+    }
+}
