@@ -940,3 +940,8 @@ if(APPLE)
  add_test(NAME consensus_phase0_snapshot_sync_failure COMMAND nano-snapshot-sync-failure-tests)
  set_tests_properties(consensus_phase0_snapshot_sync_failure PROPERTIES TIMEOUT 120 LABELS "qualification_storage_sync_local")
 endif()
+
+add_executable(nano-fork-choice-tests tests/test_fork_choice.cpp)
+target_link_libraries(nano-fork-choice-tests PRIVATE nano_core)
+add_test(NAME consensus_phase0_fork_choice COMMAND nano-fork-choice-tests)
+set_tests_properties(consensus_phase0_fork_choice PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_local")

@@ -1048,3 +1048,35 @@ de test. Comme dans `slotSnapshotQualification`, les blocs d'exécution restent
 des supports synthétiques : la liaison sémantique EVM/Beacon et le commit
 certifié du nouveau consensus réseau ne sont pas qualifiés. Le test est limité
 à macOS et n'est pas une qualification Linux du VPS.
+
+### Choix de tête Phase0 sur snapshot authentifié — 25 septembre 2026
+
+`phase0_fork_choice_head` implémente le calcul LMD-GHOST sur une vue fournie
+par l'appelant : poids des derniers votes du registre au checkpoint justifié,
+exclusion des membres inactifs/slashés/équivoques, propagation aux ancêtres,
+bonus temporaire du proposant, filtrage des feuilles par justification/finalité,
+et départage lexicographique des racines. Les membres ajoutés après le checkpoint
+ne contribuent pas. Le dénominateur du bonus conserve les membres actifs slashés
+et le plancher d'un incrément. La racine nulle désactive le bonus.
+
+Référence : [Phase0 fork-choice au commit fcdcf420](https://github.com/ethereum/consensus-specs/blob/fcdcf42024f33c498bff74936eabea2d96049fc2/specs/phase0/fork-choice.md).
+Les sommes utilisent des entiers larges et le parcours est itératif. La vue doit
+être authentifiée : cette API ne valide ni signatures ni transitions de blocs,
+ne traite pas `on_attestation`, `on_block`, `on_tick` ou les preuves d'équivoque,
+et ne persiste pas le Store. Les checkpoints réalisés/non réalisés, le registre
+historique et l'éligibilité temporelle du bonus restent à fournir par ces handlers.
+
+`consensus_phase0_fork_choice` couvre égalités, descendance, exclusions, registre
+post-checkpoint, bonus et plancher, dépassement uint64, sources réalisées/non
+réalisées, limite des deux epochs, parents invalides, annulation et une branche
+locale de 20 000 blocs. Cent arbres générés déterministes comparent 10 000 poids
+avec une définition directe par recherche d'ancêtres, puis la tête résultante.
+Ce sont des tests locaux, pas des vecteurs officiels de fork choice ni un réseau
+à 20 000 nœuds. Les suites de blocs officiels et de récupération de snapshots
+passent aussi après recompilation. Journaux et empreintes locaux :
+`build-cmake/qualification/fork-choice-snapshot-20260925/`.
+
+Clôture encore requise : importer/rejouer les événements officiels, implémenter
+les handlers et leur état temporel, authentifier les snapshots d'entrée, lier
+Store, exécution et commit certifié, puis qualifier partitions/reprises sur le
+réseau actif. Ce composant ne constitue pas une activation du nouveau consensus.

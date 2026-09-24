@@ -422,3 +422,10 @@ trois dispositions de suffixe WAL (conservé/perdu/tronqué), avec reprise cohé
 SSZ/marqueur et continuation officielle. Portée locale macOS, stockage d'exécution
 synthétique de support ; pas de preuve de coupure physique, de Linux ou de liaison
 EVM/Beacon active. Les critères réseau/durabilité restants demeurent ouverts.
+
+Choix de branche Phase0 : calcul de tête sur snapshot authentifié ajouté,
+avec tests locaux de pondération/bonus/viabilité et cent arbres générés. Voir
+`docs/VALIDATOR-EIP-ROADMAP.md`, section du 25 septembre sur le choix de tête.
+Les handlers d'événements, leur authentification, la persistance du Store et
+l'intégration réseau demeurent ouverts ; aucun EIP/fork réseau n'est activé
+par cette primitive.
