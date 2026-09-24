@@ -860,3 +860,35 @@ transition complète, son state_root, sa persistance et l'intégration réseau
 restent ouvertes. Ces règles Phase0 ne sont pas les récompenses Altair/Electra,
 ni les propositions EIP-8068/8363.
 Source épinglée : https://github.com/ethereum/consensus-specs/blob/fcdcf42024f33c498bff74936eabea2d96049fc2/specs/phase0/beacon-chain.md#rewards-and-penalties-1
+
+### Composition ordonnée de l'époque Phase0
+
+`prepare_phase0_epoch` compose FFG, récompenses, registre, sanctions corrélées,
+reset Eth1, soldes effectifs, resets sanctions/RANDAO, historiques et rotation
+des attestations. Les paramètres communs sont contrôlés entre composants. Un
+slot de fin d'époque et un état authentifié après `process_slot` sont requis.
+Le candidat privé conserve slot/époque et renseigne `last_processed_epoch` : le
+retraitement est rejeté. Ce marqueur doit être persisté avec l'état complet ;
+son absence est réservée à l'import d'un état déjà authentifié.
+
+`orderedEpochQualification` : six **projections** des scénarios officiels de slots
+comparent registre, RANDAO, checkpoints, attestations et votes Eth1 (384 entrées,
+cinq transitions d'époque). Les entrées `slots.yaml` sont conservées et hachées.
+Les racines mises en cache à chaque slot ne sont pas calculées dans ces projections.
+Le septième scénario `historical_accumulator` est différé, pas réussi. Aucune
+racine de l'état attendu n'est utilisée comme entrée du calcul.
+
+Les contrôles locaux vérifient cinq rejets de retraitement, l'ordre sanction /
+poids effectif / reset, une composition FFG-récompenses-rotation avec votes,
+594 annulations et treize rejets, dont un dépassement de capacité tardif de
+l'historique sans mutation partielle. Sept suites passent. Un solde attendu
+altéré est rejeté même avec un hash recalculé ; le vérificateur refuse de masquer
+le scénario différé.
+
+L'ordre complet des composants est implémenté, mais **la transition de slots et
+la racine BeaconState ne sont pas qualifiées**. Restent `process_slot`, le hash
+SSZ complet, la reprise durable du marqueur, les séquences signées multi-époques
+et le raccordement au consensus réseau. Les anciennes limites des composants
+isolés restent dans leurs campagnes historiques ; aucune activation moderne ou
+qualification de production n'est déduite de cette composition.
+Source : https://github.com/ethereum/consensus-specs/blob/fcdcf42024f33c498bff74936eabea2d96049fc2/specs/phase0/beacon-chain.md#epoch-processing

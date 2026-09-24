@@ -384,3 +384,10 @@ sur le calcul isolé après FFG (1 216 entrées comparées), y compris inactivit
 doublons et genesis. Les contrôles d'annulation et de débordement sont détaillés
 dans `VALIDATOR-EIP-ROADMAP.md`. Ce socle ne clôt pas les récompenses modernes,
 EIP-8068/8363 ou l'intégration du consensus au réseau.
+
+Époque Phase0 composée : `orderedEpochQualification` trace l'ordre des dix étapes,
+la cohérence des paramètres et le marqueur de retraitement. Six projections de
+fixtures de slots concordent ; un scénario d'historiques reste différé. Cette
+preuve ne couvre ni `process_slot`, ni la racine BeaconState, ni la persistance
+ou le consensus réseau. Voir `VALIDATOR-EIP-ROADMAP.md` avant toute conclusion de
+conformité complète ou d'activation d'un EIP.
