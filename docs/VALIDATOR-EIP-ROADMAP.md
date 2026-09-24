@@ -833,3 +833,30 @@ hash de BeaconState et l'intégration au réseau restent ouverts. Le reset Eth1
 ne remplace pas l'authentification des dépôts ou le traitement des votes Eth1.
 Cette étape ne constitue pas EIP-6110, Capella/Electra, ni la finalité réseau.
 Source épinglée : https://github.com/ethereum/consensus-specs/blob/fcdcf42024f33c498bff74936eabea2d96049fc2/specs/phase0/beacon-chain.md#epoch-processing
+
+### Récompenses et pénalités Phase0
+
+`prepare_phase0_rewards` reconstruit les comités de l'époque précédente, compte
+une seule fois chaque participant non sanctionné pour source/cible/tête, et
+choisit la première attestation au délai d'inclusion minimal pour rémunérer le
+proposant. Le calcul utilise le solde actif de l'époque courante et la finalité
+après FFG. Les pénalités d'inactivité suivent le seuil strict du preset. Les
+produits/sommes intermédiaires et la racine carrée entière utilisent GMP ; les
+montants finaux et additions de soldes sont contrôlés en uint64, les débits
+saturent à zéro. Le candidat privé ne change aucun solde source en cas d'échec.
+
+`rewardsQualification` : les 19 scénarios officiels concordent (1 216 entrées,
+946 soldes changés, quatre scénarios de fuite d'inactivité, deux au genesis).
+Dix-neuf contrôles de duplication, 275 annulations, onze entrées/configurations
+rejetées, un débordement tardif atomique et 64 débits saturés sont vérifiés.
+Six suites de régression passent ; une altération de solde attendu est rejetée
+malgré le recalcul de son hash de fixture.
+
+Les attestations de l'état doivent avoir été authentifiées à l'inclusion ; ce
+calcul n'est pas une API de réception de votes réseau. Il ne modifie ni époque,
+ni poids effectif, ni registre d'activation. L'orchestration doit l'appeler une
+seule fois, après FFG et avant les mises à jour du registre et des poids. La
+transition complète, son state_root, sa persistance et l'intégration réseau
+restent ouvertes. Ces règles Phase0 ne sont pas les récompenses Altair/Electra,
+ni les propositions EIP-8068/8363.
+Source épinglée : https://github.com/ethereum/consensus-specs/blob/fcdcf42024f33c498bff74936eabea2d96049fc2/specs/phase0/beacon-chain.md#rewards-and-penalties-1

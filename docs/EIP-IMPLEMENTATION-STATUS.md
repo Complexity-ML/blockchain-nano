@@ -378,3 +378,9 @@ Eth1/sanctions/RANDAO, les HistoricalBatch SSZ et la rotation des attestations,
 avec six scénarios officiels. Voir `VALIDATOR-EIP-ROADMAP.md` pour les frontières
 et critères restants. Ces composants ne clôturent pas le traitement complet des
 époques, EIP-6110 ou l'intégration réseau.
+
+Récompenses Phase0 : `rewardsQualification` qualifie les 19 scénarios officiels
+sur le calcul isolé après FFG (1 216 entrées comparées), y compris inactivité,
+doublons et genesis. Les contrôles d'annulation et de débordement sont détaillés
+dans `VALIDATOR-EIP-ROADMAP.md`. Ce socle ne clôt pas les récompenses modernes,
+EIP-8068/8363 ou l'intégration du consensus au réseau.
