@@ -2111,3 +2111,31 @@ fonction ne choisit pas le checkpoint, ne prouve ni sa fraîcheur ni sa finalit�
 et ne revalide pas les preuves de possession historiques. L'admission de snapshots
 de pairs, la politique de bootstrap/reprise et la composition dans `run_node`
 restent à terminer. Aucune activation réseau ou liaison EVM n'est revendiquée.
+
+### Composition dans `nano run`, 25 septembre 2026
+
+`start_altair_runtime` compose profil, ancre, Store durable et service RPC avec
+une configuration exacte, sans defaults de consensus. Les identités de chaîne
+proviennent du genesis d'exécution ; le fork digest dérive de l'ancre. Les budgets
+worker/transport sont vérifiés pour pouvoir transporter les messages du profil.
+Les handles du service et du réacteur retiennent un propriétaire commun, qui
+draine le worker avant de fermer la base.
+
+`nano run` peut injecter ce runtime via le champ `altair`, uniquement en RPC
+loopback, sans signataire BFT historique configuré et avec une base distincte.
+Le mode initial refuse tout checkpoint déjà présent. La reprise exige un token
+exact et vérifie aussi profil et ancre, sans retour implicite à un Store neuf.
+Le journal `altair-runtime-ready` expose le token initial et précise explicitement
+l'absence de protocole réseau Altair actif et de liaison EVM.
+
+Les tests couvrent les configurations refusées, le maintien des durées de vie par
+le handle RPC, l'initialisation et la reprise aux séquences 1 puis 2, et le refus
+d'un token devenu ancien. Le cas géré lance les vrais exécutables `nano` et
+`nano-p2p`, vérifie le RPC authentifié, arrête puis relance avec le token attendu.
+Ce sont des processus locaux, pas un réseau de validateurs Altair.
+
+Configuration et limites : `docs/ALTAIR-RUNTIME.md`. Restent le pilotage local de
+l'horloge, l'appel/négociation depuis le daemon, le suivi des engagements après
+commit, la récupération des acquittements perdus et la liaison EVM. Aucun fichier
+de déploiement n'active ce runtime par défaut. Preuves :
+`build-cmake/qualification/altair-managed-runtime-20260925/`.

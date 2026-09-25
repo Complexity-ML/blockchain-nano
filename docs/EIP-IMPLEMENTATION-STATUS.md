@@ -652,3 +652,12 @@ publication durable explicite. Ce chargeur ne fournit pas la politique de confia
 de fraîcheur ou de finalité ; son intégration à `run_node` reste ouverte. Aucun
 fork activé. Détails dans « Import local d'une ancre vérifiée » de la feuille
 validateurs.
+
+Complément runtime Altair (25 septembre 2026) : `nano run` peut maintenant
+composer explicitement profil/ancre/Store/service RPC, avec initialisation et
+reprise strictement séparées. Le démarrage géré est testé avec les vrais processus
+Nano et nano-p2p, mais le protocole Altair n'est pas encore appelé par le daemon,
+son horloge n'est pas pilotée et ses décisions ne sont pas liées à l'EVM. Aucun
+statut EIP de production n'est clos par cette intégration. Voir
+`docs/ALTAIR-RUNTIME.md` et la section « Composition dans nano run » de la feuille
+validateurs.

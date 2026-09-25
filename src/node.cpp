@@ -1,5 +1,6 @@
 #include "nano/node.hpp"
 #include "nano/http.hpp"
+#include "nano/consensus_altair_runtime.hpp"
 #include <spawn.h>
 #include <sys/wait.h>
 #include <signal.h>
@@ -46,7 +47,16 @@ int run_node(Blockchain& chain,const std::filesystem::path& database,const std::
  auto directory=executable_directory(executable);auto binary=directory/"nano-p2p";if(!std::filesystem::exists(binary))binary=directory.parent_path()/"build-network/nano-p2p";
  binary=config.value("p2p_binary",binary.string());
  auto identity=config.value("p2p_identity",database.string()+".peerkey");auto listen=config.value("listen_addr",std::string("/ip4/")+config.value("p2p_host",std::string("0.0.0.0"))+"/tcp/"+std::to_string(p2p_port));
- auto token=hex(generate_private_key());Rpc rpc(chain,token);rpc.load_wallets(config,host);HttpServer server(rpc,host,uint16_t(port));
+ AltairRuntime altair;
+ if(config.contains("altair")){
+  if(host!="127.0.0.1"||config.contains("bft"))throw std::invalid_argument("Altair service requires local RPC and no legacy BFT signer");
+  const auto path=config.at("altair").at("database").get<std::string>();
+  if(std::filesystem::weakly_canonical(path)==std::filesystem::weakly_canonical(database))throw std::invalid_argument("Altair Store requires a separate database until execution binding is implemented");
+  altair=start_altair_runtime(config.at("altair"),chain.genesis().chain_id,chain.genesis().block.header.hash());
+  const auto state=altair.reactor->current();
+  std::cout<<Json{{"event","altair-runtime-ready"},{"sequence",quantity(Int(std::to_string(state.token.sequence)))},{"digest",hex(state.token.digest)},{"executionBound",false},{"networkProtocolActive",false}}.dump()<<std::endl;
+ }
+ auto token=hex(generate_private_key());Rpc rpc(chain,token,AdmissionBudget::Clock::now,RpcSimulationLimits{},altair.rpc);rpc.load_wallets(config,host);HttpServer server(rpc,host,uint16_t(port));
  std::vector<std::string> args{std::to_string(server.port()),identity,listen};auto peers=config.value("bootnodes",std::vector<std::string>{});args.insert(args.end(),peers.begin(),peers.end());std::vector<std::string> excluded;for(const auto& entry:config.value("wallets",Json::array()))excluded.push_back(entry.at("password_env"));if(config.contains("bft"))excluded.push_back(config.at("bft").at("key_env").get<std::string>());Child child(binary,args,token,excluded);
  auto child_pid=child.pid();
  std::atomic<bool> stopping=false,failed=false;
