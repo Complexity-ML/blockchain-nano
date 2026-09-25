@@ -1139,3 +1139,28 @@ suites locales passent. Artefacts :
 Cette étape ne qualifie pas la réception P2P, le replay officiel d'événements,
 la dérivation du block state justifié, ni la conservation durable de l'ensemble.
 Elle ne déclenche aucune activation réseau du nouveau consensus.
+
+### Contextes de fork choice dérivés du SSZ — 25 septembre 2026
+
+`prepare_phase0_fork_state_contexts` relie le post-state immédiat d'un bloc
+**déjà authentifié** à son en-tête : racine SSZ annoncée, slot, dernier en-tête
+avec state_root nul, racine du bloc du checkpoint et marqueur d'epoch. Il extrait
+le contexte du block state pour les preuves d'équivoque et avance les slots
+sautés jusqu'au début de l'epoch cible pour le contexte des votes. Registre,
+RANDAO, fork et racine de genesis proviennent du SSZ ; les deux registres ne sont
+pas confondus. Un budget de slots limite le travail demandé par l'appelant.
+
+`consensus_phase0_fork_state` rejoue les 29 séquences valides du corpus officiel
+de blocs Phase0 et compare leurs états finaux aux fichiers officiels. Il dérive
+ensuite les contextes, dont 24 nécessitent des slots sautés. Les projections sont
+comparées au décodeur indépendant des tests ; l'avancement est comparé à
+`prepare_phase0_slots`, déjà qualifié séparément par les vecteurs officiels.
+Neuf rejets (racines, marqueur, en-tête, overflow, budget) et sept annulations
+sont vérifiés. Les quatre suites blocs/slots officiels, votes et contextes passent.
+Artefacts locaux : `build-cmake/qualification/fork-state-context-20260925/`.
+
+Cette API ne peut pas transformer un en-tête arbitraire en ancre de confiance :
+l'appelant doit avoir validé le bloc et son ascendance, ou disposer d'une ancre
+initiale authentifiée. Les preuves de possession du registre initial restent
+requises. La récupération du Store, l'horloge, l'admission des blocs dans le
+choix de branche et son raccordement au consensus réseau restent ouverts.

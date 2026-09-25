@@ -1,6 +1,7 @@
 #include "nano/consensus_slots.hpp"
 #include "nano/consensus_transition.hpp"
 #include "nano/consensus_beacon_header.hpp"
+#include "nano/consensus_fork_state.hpp"
 #include <bit>
 #include <stdexcept>
 namespace nano {
@@ -65,9 +66,14 @@ Bytes encode_epoch(const Bytes& original,const Phase0EpochState& state,const Lay
  const auto offsets=l.offsets();for(size_t i=0;i<lists.size();++i){put(b,offsets[i],b.size(),4);append(b,lists[i]);}return b;
 }
 }
+namespace {
+void validate_slot_rules(const Phase0EpochRules& rules,const Phase0StateLimits& limits){
+ require(rules.history.slots_per_epoch&&limits.slots_per_historical_root==rules.history.slots_per_historical_root&&limits.epochs_per_historical_vector==rules.epochs_per_randao_vector&&limits.epochs_per_slashings_vector==rules.slashing.epochs_per_slashings_vector&&limits.historical_roots_limit==rules.history.historical_roots_limit&&limits.pending_attestations_limit==rules.maximum_pending_attestations&&rules.epochs_per_eth1_voting_period<=UINT64_MAX/rules.history.slots_per_epoch&&limits.eth1_votes_limit==rules.epochs_per_eth1_voting_period*rules.history.slots_per_epoch);
+}
+}
 Phase0SlotState prepare_phase0_slots(const Phase0SlotState& input,const Phase0EpochRules& rules,
  const Phase0StateLimits& limits,uint64_t target,uint64_t maximum_slots,const std::function<void()>& checkpoint){
- require(rules.history.slots_per_epoch&&limits.slots_per_historical_root==rules.history.slots_per_historical_root&&limits.epochs_per_historical_vector==rules.epochs_per_randao_vector&&limits.epochs_per_slashings_vector==rules.slashing.epochs_per_slashings_vector&&limits.historical_roots_limit==rules.history.historical_roots_limit&&limits.pending_attestations_limit==rules.maximum_pending_attestations&&rules.epochs_per_eth1_voting_period<=UINT64_MAX/rules.history.slots_per_epoch&&limits.eth1_votes_limit==rules.epochs_per_eth1_voting_period*rules.history.slots_per_epoch);
+ validate_slot_rules(rules,limits);
  const Layout l(limits);auto root=phase0_beacon_state_root(input.ssz,limits,checkpoint);const auto start=number(input.ssz,40),epoch=start/rules.history.slots_per_epoch;
  require(target>start&&number(input.ssz,64)<=start&&(!input.last_processed_epoch||(epoch>0&&*input.last_processed_epoch==epoch-1)));
  if(target-start>maximum_slots)throw std::length_error("Phase0 slot work budget exceeded");
@@ -87,6 +93,32 @@ Phase0SlotState prepare_phase0_slots(const Phase0SlotState& input,const Phase0Ep
   put(out.ssz,40,slot+1);
  }
  phase0_beacon_state_root(out.ssz,limits,checkpoint);if(checkpoint)checkpoint();return out;
+}
+Phase0ForkStateContexts prepare_phase0_fork_state_contexts(const Phase0SlotState& input,
+ const ConsensusBeaconHeader& header,const ConsensusCheckpoint& target,
+ const Phase0EpochRules& rules,const Phase0StateLimits& limits,uint64_t maximum_slots,
+ const std::function<void()>& checkpoint){
+ validate_slot_rules(rules,limits);
+ require(target.epoch<=UINT64_MAX/rules.history.slots_per_epoch);
+ const auto target_slot=target.epoch*rules.history.slots_per_epoch;
+ require(header.slot<=target_slot&&consensus_beacon_header_root(header)==target.root);
+ require(phase0_beacon_state_root(input.ssz,limits,checkpoint)==header.state_root);
+ require(number(input.ssz,40)==header.slot);
+ const auto epoch=header.slot/rules.history.slots_per_epoch;
+ require(epoch?input.last_processed_epoch&&*input.last_processed_epoch==epoch-1:!input.last_processed_epoch);
+ // process_block leaves latest_block_header.state_root zero in its post-state.
+ const ConsensusBeaconHeader stored{number(input.ssz,64),number(input.ssz,72),array<32>(input.ssz,80),header.state_root,array<32>(input.ssz,144)};
+ require(array<32>(input.ssz,112)==ConsensusRoot{}&&stored==header);
+ const Layout layout(limits);const auto block=decode_epoch(input,layout,rules);
+ const Phase0StateFork fork{array<4>(input.ssz,48),array<4>(input.ssz,52),number(input.ssz,56)};
+ require(fork.epoch<=epoch);
+ const auto genesis=array<32>(input.ssz,8);
+ auto advanced=header.slot==target_slot?input:prepare_phase0_slots(input,rules,limits,target_slot,maximum_slots,checkpoint);
+ if(checkpoint)checkpoint();const auto projected=decode_epoch(advanced,layout,rules);
+ require(projected.registry.epoch==target.epoch);
+ Phase0ForkStateContexts out{{target.root,block.registry,fork,genesis},
+  {target,projected.registry,projected.randao,fork,genesis},std::move(advanced)};
+ if(checkpoint)checkpoint();return out;
 }
 std::optional<Phase0SlotState> prepare_phase0_state_transition(const Phase0SlotState& input,
  std::span<const uint8_t> signed_block,const Phase0TransitionRules& rules,uint64_t maximum_slots,

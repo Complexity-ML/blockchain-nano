@@ -440,3 +440,8 @@ autres événements et la persistance restent à réaliser.
 signataires implémentées ; les tests locaux vérifient l'exclusion du poids et
 le changement de tête. La persistance de cet ensemble et le traitement réseau
 restent ouverts. Aucune pénalité financière hors transition de bloc n'est ajoutée.
+
+Contextes du fork choice : extraction depuis le post-state SSZ lié à l'en-tête
+authentifié et avancement des slots sautés ajoutés. Qualification locale sur
+29 séquences de blocs officielles (24 contextes avancés), neuf rejets et sept
+annulations. Ce n'est ni une admission d'ancre non fiable ni une activation réseau.
