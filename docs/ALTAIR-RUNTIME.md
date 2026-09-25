@@ -344,3 +344,29 @@ des validateurs et la qualification de finalité distribuée restent ouverts.
 
 Preuves locales : `build-cmake/qualification/altair-block-propagation-20260925/`,
 14/14 tests réseau et 3/3 tests cœur (ingress libp2p, archive et propagation).
+
+
+### Reprise du cœur après arrêt brutal, 25 septembre 2026
+
+`consensus_altair_restart_libp2p` exécute le cœur récepteur dans un processus
+séparé avec RocksDB et son vrai serveur HTTP ; les deux daemons utilisent
+libp2p. Après acquittement du premier bloc officiel, le test arrête le daemon
+récepteur, conserve à l'extérieur du cœur son engagement séquence/digest, puis
+tue le cœur par `SIGKILL`. Le daemon émetteur reste actif et son cœur ajoute le
+second bloc pendant l'indisponibilité du récepteur.
+
+Le nouveau processus récepteur rouvre les mêmes bases avec cet engagement
+attendu. Le test vérifie le premier bloc, sa tête, sa séquence et son digest,
+ainsi qu'une nouvelle session de gossip. Le daemon récepteur redémarre avec la
+même clé P2P et retrouve l'émetteur par bootstrap. Le bloc manqué arrive sans
+injection directe dans le cœur récepteur ; les SSZ exportés sont comparés aux
+octets signés source. Un second `SIGKILL` suivi d'une réouverture vérifie les deux
+blocs persistés et la tête attendue par la fixture officielle.
+
+Preuve : `build-cmake/qualification/altair-core-crash-catchup-20260925/verified.log`
+(1/1 test, deux réouvertures après `SIGKILL`). L'horloge est celle de la fixture.
+Le daemon est arrêté avant chaque capture de l'engagement de redémarrage : cet
+essai ne couvre pas une interruption au milieu d'un commit ni la récupération
+automatique d'un engagement externe devenu obsolète. Une panne de processus
+n'est pas une coupure électrique du stockage. Finalité distribuée, durabilité
+Linux et liaison atomique EVM/consensus restent à qualifier.

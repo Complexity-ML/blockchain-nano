@@ -2347,3 +2347,16 @@ Voir `docs/ALTAIR-RUNTIME.md` pour le périmètre exact et les limites.
 Aucun statut EIP ou profil réseau n'est promu : finalité distribuée, tâches et
 signatures de validateurs, gossip des votes, réconciliation après rejet permanent
 et liaison atomique EVM/consensus restent à terminer.
+
+
+### Rattrapage après panne du cœur Altair — 25 septembre 2026
+
+`consensus_altair_restart_libp2p` passe avec un vrai processus cœur récepteur,
+deux daemons libp2p, deux `SIGKILL` suivis de réouvertures de RocksDB et un
+émetteur laissé actif. Le récepteur retrouve son engagement séquence/digest,
+change de session de gossip, récupère le bloc officiel manqué et conserve les
+SSZ ainsi que la tête attendue après la seconde réouverture. Preuve locale :
+`build-cmake/qualification/altair-core-crash-catchup-20260925/verified.log`.
+Le test utilise une horloge de fixture et un engagement externe connu ; il
+n'interrompt pas un commit en cours et ne simule pas de coupure électrique.
+Aucun EIP, profil réseau ou statut de production n'est promu par cet essai.
