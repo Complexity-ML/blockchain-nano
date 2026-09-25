@@ -1,0 +1,47 @@
+#include "nano/consensus_execution_payload.hpp"
+#include <algorithm>
+#include <stdexcept>
+namespace nano {namespace {
+using View=std::span<const uint8_t>;using Root=ConsensusRoot;
+void config(const ExecutionPayloadLimits& l){if(!l.extra_data_bytes||!l.transaction_bytes||!l.transactions||l.transactions>UINT32_MAX/4)throw std::invalid_argument("Invalid execution payload SSZ limits");}
+uint64_t number(View b,size_t at,size_t width){uint64_t n=0;for(size_t i=0;i<width;++i)n|=uint64_t(b[at+i])<<(8*i);return n;}
+template<size_t N>std::array<uint8_t,N> array(View b,size_t at){std::array<uint8_t,N> out{};std::copy_n(b.begin()+at,N,out.begin());return out;}
+Root scalar(View b){Root r{};std::copy(b.begin(),b.end(),r.begin());return r;}
+Root integer_root(uint64_t n){Root r{};for(unsigned i=0;i<8;++i)r[i]=uint8_t(n>>(8*i));return r;}
+Root merkle(std::vector<Root> nodes,uint64_t limit,const std::function<void()>& check){
+ if(nodes.size()>limit||!limit)throw std::invalid_argument("Execution SSZ tree limit");
+ Root zero{};uint64_t width=1;if(nodes.empty())nodes.push_back(zero);
+ while(nodes.size()>1){if(nodes.size()%2)nodes.push_back(zero);for(size_t i=0;i<nodes.size()/2;++i){if(check)check();nodes[i]=consensus_signing_root(nodes[2*i],nodes[2*i+1]);}nodes.resize(nodes.size()/2);zero=consensus_signing_root(zero,zero);width*=2;}
+ while(width<limit){if(check)check();nodes[0]=consensus_signing_root(nodes[0],zero);zero=consensus_signing_root(zero,zero);width*=2;}return nodes[0];
+}
+Root packed(View b,uint64_t limit,const std::function<void()>& check){std::vector<Root> chunks;for(size_t i=0;i<b.size();i+=32){if(check)check();chunks.push_back(scalar(b.subspan(i,std::min(size_t(32),b.size()-i))));}return merkle(std::move(chunks),(limit+31)/32,check);}
+size_t size(const BellatrixExecutionPayload& p,const ExecutionPayloadLimits& l,const std::function<void()>& check){
+ config(l);if(p.extra_data.size()>l.extra_data_bytes||p.transactions.size()>l.transactions)throw std::invalid_argument("Execution payload list limit");
+ uint64_t n=508+uint64_t(p.extra_data.size())+4*uint64_t(p.transactions.size());
+ for(const auto& tx:p.transactions){if(check)check();if(tx.size()>l.transaction_bytes)throw std::invalid_argument("Execution transaction byte limit");n+=tx.size();if(n>UINT32_MAX)throw std::invalid_argument("Execution payload SSZ offset overflow");}
+ if(n>UINT32_MAX)throw std::invalid_argument("Execution payload SSZ offset overflow");return size_t(n);
+}
+}
+std::optional<BellatrixExecutionPayload> decode_bellatrix_execution_payload(View b,const ExecutionPayloadLimits& l,size_t maximum_bytes,const std::function<void()>& check){
+ config(l);if(check)check();if(b.size()<508||b.size()>maximum_bytes||b.size()>UINT32_MAX||number(b,436,4)!=508)return std::nullopt;
+ const size_t transactions=number(b,504,4);if(transactions<508||transactions>b.size()||transactions-508>l.extra_data_bytes)return std::nullopt;
+ const auto list=b.subspan(transactions);size_t count=0;
+ if(!list.empty()){if(list.size()<4)return std::nullopt;const auto first=number(list,0,4);if(first<4||first%4||first>list.size()||first/4>l.transactions)return std::nullopt;count=first/4;
+  size_t start=first;for(size_t i=0;i<count;++i){if(check)check();const size_t end=i+1==count?list.size():number(list,4*(i+1),4);if(start>end||end>list.size()||end-start>l.transaction_bytes)return std::nullopt;start=end;}}
+ BellatrixExecutionPayload p;p.parent_hash=array<32>(b,0);p.fee_recipient=array<20>(b,32);p.state_root=array<32>(b,52);p.receipts_root=array<32>(b,84);p.logs_bloom=array<256>(b,116);p.prev_randao=array<32>(b,372);
+ p.block_number=number(b,404,8);p.gas_limit=number(b,412,8);p.gas_used=number(b,420,8);p.timestamp=number(b,428,8);p.base_fee_per_gas=array<32>(b,440);p.block_hash=array<32>(b,472);p.extra_data.assign(b.begin()+508,b.begin()+transactions);
+ p.transactions.reserve(count);for(size_t i=0;i<count;++i){if(check)check();const size_t start=number(list,4*i,4),end=i+1==count?list.size():number(list,4*(i+1),4);p.transactions.emplace_back(list.begin()+start,list.begin()+end);}return p;
+}
+Bytes encode_bellatrix_execution_payload(const BellatrixExecutionPayload& p,const ExecutionPayloadLimits& l,size_t maximum_bytes,const std::function<void()>& check){
+ if(check)check();const auto n=size(p,l,check);if(n>maximum_bytes)throw std::invalid_argument("Execution payload transport budget");Bytes out;out.reserve(n);
+ auto append=[&](const auto& bytes){out.insert(out.end(),bytes.begin(),bytes.end());};auto num=[&](uint64_t value,unsigned width){for(unsigned i=0;i<width;++i)out.push_back(uint8_t(value>>(8*i)));};
+ append(p.parent_hash);append(p.fee_recipient);append(p.state_root);append(p.receipts_root);append(p.logs_bloom);append(p.prev_randao);num(p.block_number,8);num(p.gas_limit,8);num(p.gas_used,8);num(p.timestamp,8);num(508,4);append(p.base_fee_per_gas);append(p.block_hash);num(508+p.extra_data.size(),4);append(p.extra_data);
+ size_t offset=4*p.transactions.size();for(const auto& tx:p.transactions){if(check)check();num(offset,4);offset+=tx.size();}for(const auto& tx:p.transactions){if(check)check();append(tx);}return out;
+}
+ConsensusRoot bellatrix_execution_payload_root(const BellatrixExecutionPayload& p,const ExecutionPayloadLimits& l,const std::function<void()>& check){
+ size(p,l,check);if(check)check();std::vector<Root> transactions;transactions.reserve(p.transactions.size());
+ for(const auto& tx:p.transactions){if(check)check();transactions.push_back(consensus_signing_root(packed(tx,l.transaction_bytes,check),integer_root(tx.size())));}
+ const auto tx_root=consensus_signing_root(merkle(std::move(transactions),l.transactions,check),integer_root(p.transactions.size()));
+ return merkle({p.parent_hash,scalar(p.fee_recipient),p.state_root,p.receipts_root,packed(p.logs_bloom,256,check),p.prev_randao,integer_root(p.block_number),integer_root(p.gas_limit),integer_root(p.gas_used),integer_root(p.timestamp),consensus_signing_root(packed(p.extra_data,l.extra_data_bytes,check),integer_root(p.extra_data.size())),p.base_fee_per_gas,p.block_hash,tx_root},14,check);
+}
+}

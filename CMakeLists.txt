@@ -1253,3 +1253,9 @@ endif()
 
 add_test(NAME consensus_altair_adversarial_finality COMMAND nano-altair-local-finality-tests adversarial-finality)
 set_tests_properties(consensus_altair_adversarial_finality PROPERTIES TIMEOUT 300 LABELS "qualification_consensus_ethereum")
+
+add_executable(nano-execution-payload-tests tests/test_execution_payload.cpp)
+target_link_libraries(nano-execution-payload-tests PRIVATE nano_core)
+target_compile_definitions(nano-execution-payload-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+add_test(NAME ethereum_official_bellatrix_execution_payload COMMAND nano-execution-payload-tests)
+set_tests_properties(ethereum_official_bellatrix_execution_payload PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")

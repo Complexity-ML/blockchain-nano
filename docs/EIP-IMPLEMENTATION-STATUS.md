@@ -996,3 +996,14 @@ mutation ; un bloc normal est ensuite admis avec état attendu et finalité inta
 Preuve : `build-cmake/qualification/altair-generated-slashing-20260925/final-tests.log` ;
 [limites](ALTAIR-LOCAL-FINALITY.md). Sanctions corrélées, retrait final, preuves
 acheminées automatiquement et profil Electra restent hors de ce scénario Altair.
+
+### 2026-09-25 — socle Bellatrix pour le payload d'exécution
+
+Le conteneur `ExecutionPayload` dispose d'un codec SSZ canonique et d'une racine
+SSZ qualifiés sur huit vecteurs officiels épinglés : octets/racines exacts,
+offsets et budgets contrôlés, uint256 conservé et annulation. Sources, limites et
+critères suivants : [payload Bellatrix](BELLATRIX-EXECUTION-PAYLOAD.md). Preuves dans
+`build-cmake/qualification/bellatrix-execution-payload-20260925/`.
+État : composant de format implémenté, intégration consensus–EVM non commencée
+pour ce schéma. Aucune validation d'exécution, commit atomique, activation réseau
+Bellatrix ou conformité de fork complète n'est revendiquée.
