@@ -24,4 +24,9 @@ struct AltairRewardRules {
 // Same admission and replay preconditions as the inactivity component above.
 Bytes prepare_altair_rewards(std::span<const uint8_t>,const AltairStateLimits&,
  const AltairRewardRules&,const std::function<void()>& checkpoint={});
+struct AltairFfgRules {uint64_t slots_per_epoch,effective_balance_increment;};
+// Isolated Altair justification/finalization from authenticated participation
+// flags. Changes only justification bits/checkpoints; not gossip admission.
+Bytes prepare_altair_justification_finalization(std::span<const uint8_t>,const AltairStateLimits&,
+ const AltairFfgRules&,const std::function<void()>& checkpoint={});
 }

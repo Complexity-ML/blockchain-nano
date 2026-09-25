@@ -1332,3 +1332,28 @@ le double traitement, commit ni réseau. Les pondérations 14/26/14 et le
 dénominateur 64 sont les constantes du profil Altair, fournis explicitement dans
 les règles. La composition d'epoch, les autres opérations Altair et le replay
 fork_choice demeurent ouverts.
+
+### Justification et finalisation Altair — 25 septembre 2026
+
+`prepare_altair_justification_finalization` calcule les poids cibles à partir
+des indicateurs de participation et du registre SSZ. Les participants doivent
+être actifs dans l'epoch concernée et non slashés. Le dénominateur retient tous
+les membres actifs de l'epoch courante. Les deux premières epochs restent
+inchangées ; ensuite sont appliqués le décalage des bits, les seuils inclusifs
+de deux tiers et les quatre règles de finalisation. Les racines sont extraites
+de l'historique au slot du checkpoint, avec contrôle de la fenêtre disponible.
+Les comparaisons de poids utilisent des entiers larges.
+
+Les dix post-states officiels complets correspondent. Trois tests locaux
+vérifient le seuil exact, un poids synthétique à un wei en dessous et l'exclusion
+d'un participant slashé. Le cas à un wei est un test arithmétique synthétique,
+pas une preuve d'admission d'un solde effectif hors incrément. Quatre rejets et
+sept points d'annulation sont vérifiés. Trois suites passent : finalité,
+récompenses et inactivité Altair.
+
+Corpus : `tests/fixtures/consensus-altair-ffg-official/`.
+Journaux : `build-cmake/qualification/altair-ffg-20260925/`.
+La signature et l'authenticité des indicateurs doivent être établies en amont.
+Cette opération ne qualifie pas la finalité réseau : composition d'epoch,
+comités de synchronisation, transitions de blocs et replay fork_choice Altair
+restent à compléter avant le raccordement au réseau.

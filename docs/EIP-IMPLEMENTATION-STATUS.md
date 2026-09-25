@@ -475,3 +475,7 @@ pas l'admission d'état ; composition d'epoch et exécution réseau encore ouver
 Altair : récompenses/pénalités isolées ajoutées, 15 post-states officiels
 concordants et saturation par catégorie vérifiée. Ne clôt ni l'époque complète,
 ni l'admission des états, ni la qualification réseau.
+
+Altair : justification/finalisation isolée ajoutée, dix post-states officiels
+concordants et seuils pondérés testés. Les indicateurs de participation restent
+soumis à authentification en amont ; ce résultat ne prouve pas la finalité réseau.
