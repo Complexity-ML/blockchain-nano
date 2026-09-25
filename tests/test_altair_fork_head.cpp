@@ -11,7 +11,7 @@ Phase0SignedAttestation decode_vote(const Bytes& b){check(b.size()>=229&&little(
 int main(int argc,char** argv){try{
  if(argc==4&&std::string(argv[1])=="--persist-store"){
   const auto genesis=Genesis::from_json(Json{{"config",{{"chainId",1337},{"consensus","pow"}}},{"alloc",Json::object()}});
-  ChainStore disk(argv[2]);disk.bind_chain(genesis.chain_id,genesis.block.header.hash(),"pow");disk.commit(genesis.block,genesis.state,{},Json{{"store",read(argv[3])}});_exit(0);
+  ChainStore disk(argv[2]);disk.bind_chain(genesis.chain_id,genesis.block.header.hash(),"pow");disk.commit_fork_checkpoint(genesis.chain_id,genesis.block.header.hash(),std::nullopt,read(argv[3]),256*1024*1024);_exit(0);
  }
  const bool restore_stores=std::getenv("NANO_TEST_STORE_SNAPSHOTS")!=nullptr;
  const AltairStoreSnapshotLimits snapshot_limits{256*1024*1024,4096,1000000,1000000,16*1024*1024,128*1024*1024,4096,100000};
@@ -65,7 +65,7 @@ int main(int argc,char** argv){try{
     Temp directory;const auto disk_path=directory/"store",file=directory/"checkpoint.json";
     {std::ofstream stream(file);stream<<encoded;check(bool(stream),"write checkpoint test input");}
     Process child({argv[0],"--persist-store",disk_path.string(),file.string()});const auto status=child.wait(30);check(status.code==0,"Store writer failed: "+status.err);
-    std::string persisted;{ChainStore disk(disk_path);check(disk.count()==1,"Store checkpoint commit absent");persisted=disk.consensus_at(0)->at("store").get<std::string>();}
+    std::string persisted;{ChainStore disk(disk_path);const auto genesis=Genesis::from_json(Json{{"config",{{"chainId",1337},{"consensus","pow"}}},{"alloc",Json::object()}});const auto record=disk.fork_checkpoint(genesis.chain_id,genesis.block.header.hash(),snapshot_limits.envelope_bytes,ForkCheckpointToken{1,digest});check(record&&disk.count()==0,"checkpoint unexpectedly created execution block");persisted=record->snapshot;}
     check(persisted==encoded,"persisted Store bytes differ");
     auto restored=altair_store_from_snapshot(persisted,digest,rules,snapshot_limits);
     const auto after=phase0_fork_choice_head(restored.timed.view,{slots,transition.attestation.duties.effective_balance_increment,rules.proposer_score_boost});

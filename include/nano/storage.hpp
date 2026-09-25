@@ -5,9 +5,13 @@
 #include <mutex>
 namespace rocksdb { class DB; }
 namespace nano {
+struct ForkCheckpointToken {uint64_t sequence;Bytes digest;bool operator==(const ForkCheckpointToken&)const=default;};
+struct ForkCheckpointRecord {ForkCheckpointToken token;std::string snapshot;};
 class ChainStore {
  rocksdb::DB* db_=nullptr;
  mutable std::mutex mutex_;
+ bool fork_checkpoint_write_uncertain_=false;
+ std::optional<ForkCheckpointRecord> fork_checkpoint_impl(const Int&,const Bytes&,size_t) const;
  std::optional<std::string> get(const std::string& key) const;
  std::optional<Json> read(const std::string& key) const;
  std::optional<std::string> proposal_data_impl(const std::string& key) const;
@@ -24,6 +28,16 @@ public:
  ChainStore(const ChainStore&)=delete;
  ChainStore& operator=(const ChainStore&)=delete;
  void bind_chain(const Int& chain_id,const Bytes& genesis_hash,const std::string& consensus,const std::string& staking_contract="");
+ // Opaque checkpoint transport: caller validates the full consensus candidate
+ // before committing. Synchronous atomic payload/token replacement with CAS.
+ // A failed/uncertain disk write requires reopen and inspection before signing.
+ // Separate from execution-block commit; no EVM/consensus atomic binding yet.
+ ForkCheckpointToken commit_fork_checkpoint(const Int& chain_id,const Bytes& genesis_hash,
+  const std::optional<ForkCheckpointToken>& expected,std::string_view snapshot,size_t maximum_bytes);
+ // expected, when supplied, is an independently retained exact commitment. It
+ // detects a restored old DB. Without it, local disk rollback is not detectable.
+ std::optional<ForkCheckpointRecord> fork_checkpoint(const Int& chain_id,const Bytes& genesis_hash,
+  size_t maximum_bytes,const std::optional<ForkCheckpointToken>& expected=std::nullopt) const;
  void rewind(const Int& number);
  // Returns unsigned fields already reserved durably; never authorizes a new vote.
  std::optional<FinalityVote> latest_consensus_vote(const std::string& validator,const Int& chain_id,const Bytes& genesis_hash) const;

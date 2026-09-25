@@ -388,3 +388,40 @@ std::optional<Json> ChainStore::consensus_at(const Int& number)const{std::lock_g
 Int ChainStore::total_difficulty()const{std::lock_guard lock(mutex_);auto value=get("meta/difficulty");return value?Int(*value):Int(0);}
 size_t ChainStore::count()const{std::lock_guard lock(mutex_);auto value=get("meta/count");return value?size_t(std::stoull(*value)):0;}
 }
+
+namespace nano {
+std::optional<ForkCheckpointRecord> ChainStore::fork_checkpoint_impl(const Int& chain_id,const Bytes& genesis_hash,size_t maximum_bytes)const{
+ if(fork_checkpoint_write_uncertain_)throw std::runtime_error("fork checkpoint write uncertain; reopen required");
+ const auto identity=read("meta/identity");
+ if(genesis_hash.size()!=32||!identity||identity->at("chainId")!=quantity(chain_id)||identity->at("genesisHash")!=hex(genesis_hash))throw std::invalid_argument("fork checkpoint chain binding mismatch");
+ const auto manifest=get("fork-checkpoint/v1/token"),payload=get("fork-checkpoint/v1/payload");
+ if(!manifest&&!payload)return std::nullopt;
+ if(!manifest||!payload||manifest->size()>256||payload->empty()||payload->size()>maximum_bytes)throw std::runtime_error("incomplete or oversized fork checkpoint");
+ const auto j=Json::parse(*manifest);
+ if(!j.is_object()||j.size()!=2||!j.at("sequence").is_string()||!j.at("digest").is_string())throw std::runtime_error("invalid fork checkpoint token");
+ const auto seq=u64(quantity(j.at("sequence")));const auto& encoded=j.at("digest").get_ref<const std::string&>();
+ if(!seq||quantity(Int(std::to_string(seq)))!=j.at("sequence").get<std::string>()||encoded.size()!=66)throw std::runtime_error("noncanonical fork checkpoint token");
+ const auto digest=sha256(Bytes(payload->begin(),payload->end()));
+ if(hex(digest)!=encoded)throw std::runtime_error("fork checkpoint payload digest mismatch");
+ return ForkCheckpointRecord{{seq,digest},*payload};
+}
+std::optional<ForkCheckpointRecord> ChainStore::fork_checkpoint(const Int& chain_id,const Bytes& genesis_hash,
+ size_t maximum_bytes,const std::optional<ForkCheckpointToken>& expected)const{
+ std::lock_guard lock(mutex_);auto record=fork_checkpoint_impl(chain_id,genesis_hash,maximum_bytes);
+ if(expected&&(!record||record->token!=*expected))throw std::runtime_error("fork checkpoint differs from external commitment");
+ return record;
+}
+ForkCheckpointToken ChainStore::commit_fork_checkpoint(const Int& chain_id,const Bytes& genesis_hash,
+ const std::optional<ForkCheckpointToken>& expected,std::string_view snapshot,size_t maximum_bytes){
+ if(snapshot.empty()||snapshot.size()>maximum_bytes)throw std::invalid_argument("fork checkpoint size limit");
+ const auto digest=sha256(Bytes(snapshot.begin(),snapshot.end()));
+ std::lock_guard lock(mutex_);const auto previous=fork_checkpoint_impl(chain_id,genesis_hash,maximum_bytes);
+ if(bool(previous)!=bool(expected)||(previous&&previous->token!=*expected))throw std::invalid_argument("stale fork checkpoint writer");
+ if(previous&&previous->token.sequence==UINT64_MAX)throw std::overflow_error("fork checkpoint sequence exhausted");
+ const ForkCheckpointToken token{previous?previous->token.sequence+1:1,digest};
+ const Json encoded{{"sequence",quantity(Int(std::to_string(token.sequence)))},{"digest",hex(token.digest)}};
+ rocksdb::WriteBatch batch;batch.Put("fork-checkpoint/v1/payload",rocksdb::Slice(snapshot.data(),snapshot.size()));batch.Put("fork-checkpoint/v1/token",encoded.dump());
+ const auto status=db_->Write(durable_write(),&batch);if(!status.ok())fork_checkpoint_write_uncertain_=true;
+ require_ok(status);return token;
+}
+}

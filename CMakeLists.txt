@@ -1066,3 +1066,15 @@ set_tests_properties(consensus_altair_snapshot_recovery PROPERTIES TIMEOUT 180 L
 add_test(NAME consensus_altair_store_snapshot_head COMMAND ${CMAKE_COMMAND} -E env NANO_TEST_STORE_SNAPSHOTS=1 $<TARGET_FILE:nano-altair-fork-head-tests>)
 add_test(NAME consensus_altair_store_snapshot_reorg COMMAND ${CMAKE_COMMAND} -E env NANO_TEST_STORE_SNAPSHOTS=1 $<TARGET_FILE:nano-altair-fork-head-tests> "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/consensus-altair-fork-reorg-official" 8)
 set_tests_properties(consensus_altair_store_snapshot_head consensus_altair_store_snapshot_reorg PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_ethereum")
+
+add_executable(nano-fork-checkpoint-tests tests/test_fork_checkpoint.cpp)
+target_link_libraries(nano-fork-checkpoint-tests PRIVATE nano_core)
+add_test(NAME consensus_fork_checkpoint_commit COMMAND nano-fork-checkpoint-tests)
+set_tests_properties(consensus_fork_checkpoint_commit PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_ethereum")
+
+if(APPLE)
+ add_executable(nano-fork-checkpoint-sync-tests tests/test_fork_checkpoint_sync.cpp)
+ target_link_libraries(nano-fork-checkpoint-sync-tests PRIVATE nano_core nano-test-sync-fault)
+ add_test(NAME consensus_fork_checkpoint_sync_failure COMMAND nano-fork-checkpoint-sync-tests)
+ set_tests_properties(consensus_fork_checkpoint_sync_failure PROPERTIES TIMEOUT 90 LABELS "qualification_storage_sync_local")
+endif()

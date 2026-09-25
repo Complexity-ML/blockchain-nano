@@ -575,3 +575,12 @@ continuation conservés. Un écart de registre lors d'un checkpoint avançant d'
 sans changer de racine a été corrigé, échec conservé. Huit suites vertes ; campagne
 `altair-store-snapshot-20260925`. Interruptions pendant commit, anti-rollback,
 ancrage réseau, élagage et intégration EVM/P2P restent ouverts. Pas d'activation.
+
+Persistance du Store : commit ChainStore dédié, séquence + digest, remplacement
+atomique synchronisé et rejet des écrivains périmés. Erreur d'écriture : handle
+bloqué jusqu'à réouverture. Tests de concurrence, six SIGKILL, restauration d'une
+ancienne base détectée avec engagement extérieur, EIO de synchronisation macOS
+avec suffixe WAL conservé/perdu et poursuite après réouverture. Les 35 reprises
+Altair utilisent désormais cette API sans blocs d'exécution artificiels.
+Campagne `fork-checkpoint-commit-20260925` ; intégration au réacteur/EVM, Linux,
+ancrage opérationnel et perte électrique restent non qualifiés.

@@ -1773,3 +1773,42 @@ Les blocs d'exécution du transport de test restent synthétiques. Ce résultat
 qualifie le format et la reprise après commit réussi, pas la liaison sémantique
 EVM/consensus, les interruptions pendant commit, la panne électrique, la politique
 d'ancrage en production, l'élagage, ou le raccordement au réacteur/P2P actif.
+
+### Commit séquencé du Store — concurrence et erreurs disque, 25 septembre 2026
+
+ChainStore dispose d'un emplacement dédié `fork-checkpoint/v1`, indépendant des
+blocs d'exécution. `commit_fork_checkpoint` remplace atomiquement contenu et token
+(séquence uint64 + SHA-256) dans un WriteBatch synchronisé. Il exige l'identité
+chainId/genesis déjà liée et le token exact de la version précédente ; deux
+écrivains calculant depuis la même version ne peuvent pas tous deux réussir.
+Seule la version courante est conservée, sans accumulation de snapshots complets.
+Le transport reste opaque : l'appelant doit préparer/valider le candidat de
+consensus avant de le soumettre. Ce commit n'est pas encore atomique avec l'EVM.
+
+Une erreur d'écriture rend l'instance de checkpoint inutilisable : lectures et
+nouveaux commits de checkpoint échouent jusqu'à fermeture et réouverture.
+L'appelant doit alors inspecter le résultat récupéré avant toute signature ou
+publication. Cette règle traite l'issue incertaine d'une synchronisation échouée.
+La lecture accepte aussi un engagement exact conservé extérieurement : une copie
+ancienne de la base est rejetée si cet engagement correspond à la version récente.
+Sans cet engagement extérieur, la restauration de tout le disque reste indétectable.
+Ce mécanisme ne remplace pas une politique d'ancrage et de protection des clés.
+
+Qualification : un seul gagnant pour deux écrivains concurrents, rejets des
+versions périmées/digests faux/identités étrangères/tailles interdites ; six SIGKILL
+pendant une campagne bornée de remplacements de 4 Mio, avec récupération d'un
+checkpoint complet et conservation des séquences acquittées. Cela ne prouve pas
+que chaque signal tombe à l'intérieur de l'appel d'écriture. Une injection macOS
+fsync/F_FULLFSYNC EIO cible en plus exactement le WAL du commit : suffixe conservé
+puis suffixe non synchronisé retiré dans une base temporaire. Les deux résultats
+récupèrent respectivement le nouveau ou l'ancien couple contenu/token, puis
+permettent un nouveau commit après réouverture. Le handle incertain est bien bloqué.
+
+Les 35 reprises des 18 scénarios Altair get_head/reorg utilisent cette API dédiée,
+sans blocs d'exécution synthétiques. Huit suites ciblées couvrent aussi les reprises
+d'état Phase0/Altair et les injections disque historiques Paris/Shanghai.
+Campagne : `build-cmake/qualification/fork-checkpoint-commit-20260925/`.
+Tests ajoutés : `consensus_fork_checkpoint_commit` et, sur macOS,
+`consensus_fork_checkpoint_sync_failure`. Restent les interruptions/erreurs Linux,
+la coupure électrique physique, l'intégration événementielle au réacteur,
+la liaison atomique EVM, l'ancrage et l'élagage. Aucun profil réseau activé.
