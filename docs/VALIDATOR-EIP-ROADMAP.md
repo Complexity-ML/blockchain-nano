@@ -1255,3 +1255,27 @@ Artefacts locaux, listings consultés et journaux :
 `build-cmake/qualification/fork-store-adapters-20260925/`.
 Durabilité, admission des ancres, mémoire bornée, ordonnancement des votes différés
 et raccordement EVM/P2P restent ouverts.
+
+### État SSZ Altair — 25 septembre 2026
+
+`altair_beacon_state_root` implémente le schéma complet à 24 champs : les deux
+listes de participation remplacent les attestations pendantes Phase0 ; scores
+d'inactivité, comité de synchronisation courant et suivant sont ajoutés. Chaque
+clé de 48 octets est hachée comme un vecteur SSZ, puis les clés et la clé agrégée
+forment le conteneur SyncCommittee. Le format Altair est sélectionné explicitement.
+Le code partage la mécanique Merkle avec Phase0 sans réinterpréter ses états.
+
+Référence : [Altair beacon-chain au commit épinglé](https://github.com/ethereum/consensus-specs/blob/fcdcf42024f33c498bff74936eabea2d96049fc2/specs/altair/beacon-chain.md).
+Tous les 123 vecteurs BeaconState du preset minimal épinglé correspondent aux
+racines officielles (sept groupes, 1 401 532 octets SSZ décodés). Sept mutations
+des nouveaux champs affectent la racine, 25 encodages/configurations invalides
+sont rejetés, sept points d'annulation sont vérifiés. Les 123 racines Phase0 et
+les transitions complètes de blocs Phase0 restent conformes à leurs tests.
+
+Corpus : `tests/fixtures/consensus-altair-state-roots-official/`, manifeste,
+Snappy originaux, SSZ décodés, racines et preset avec empreintes conservés.
+Journaux : `build-cmake/qualification/altair-state-root-20260925/`.
+Cette qualification est **SSZ seulement** : les octets de participation et les
+clés sont des valeurs de schéma, pas une preuve de validité de consensus/BLS.
+Les transitions Altair, le calcul des récompenses/participation/inactivité,
+les sync committees et le replay officiel fork_choice restent ouverts.

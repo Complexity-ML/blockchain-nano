@@ -7,7 +7,7 @@
 namespace nano {
 namespace {
 using View=std::span<const uint8_t>;using Root=ConsensusRoot;
-void require(bool ok){if(!ok)throw std::invalid_argument("invalid Phase0 BeaconState SSZ");}
+void require(bool ok){if(!ok)throw std::invalid_argument("invalid BeaconState SSZ");}
 View part(View b,size_t at,size_t n){require(at<=b.size()&&n<=b.size()-at);return b.subspan(at,n);}
 uint64_t little(View b){require(b.size()<=8);uint64_t x=0;for(size_t i=0;i<b.size();++i)x|=uint64_t(b[i])<<(8*i);return x;}
 Root scalar(View b){require(b.size()<=32);Root r{};std::copy(b.begin(),b.end(),r.begin());return r;}
@@ -64,12 +64,14 @@ struct Hasher {
  }
 };
 }
-ConsensusRoot phase0_beacon_state_root(View b,const Phase0StateLimits& limits,const std::function<void()>& checkpoint){
+namespace {
+ConsensusRoot beacon_state_root(View b,const Phase0StateLimits& limits,uint64_t sync_size,const std::function<void()>& checkpoint){
  require(b.size()<=UINT32_MAX&&limits.slots_per_historical_root&&limits.epochs_per_historical_vector&&limits.epochs_per_slashings_vector&&limits.historical_roots_limit&&limits.eth1_votes_limit&&limits.validator_registry_limit&&limits.pending_attestations_limit&&limits.validators_per_committee);
  Hasher h{checkpoint};h.tick();size_t cursor=0;
  auto take=[&](size_t n){auto v=part(b,cursor,n);cursor+=n;return v;};
  auto vector_size=[&](uint64_t count,size_t width){require(count<=UINT32_MAX/width);return size_t(count)*width;};
- std::vector<Root> fields(21);std::vector<std::pair<size_t,size_t>> variable;
+ const size_t field_count=sync_size?24:21;
+ std::vector<Root> fields(field_count);std::vector<std::pair<size_t,size_t>> variable;
  auto offset=[&](size_t field){variable.emplace_back(field,little(take(4)));};
  fields[0]=scalar(take(8));fields[1]=scalar(take(32));fields[2]=scalar(take(8));
  const auto fork=take(16);fields[3]=h.container({scalar(fork.first(4)),scalar(fork.subspan(4,4)),scalar(fork.subspan(8,8))});
@@ -81,16 +83,35 @@ ConsensusRoot phase0_beacon_state_root(View b,const Phase0StateLimits& limits,co
  fields[14]=h.packed(take(vector_size(limits.epochs_per_slashings_vector,8)),(limits.epochs_per_slashings_vector-1)/4+1);
  offset(15);offset(16);const auto bits=take(1);require(bits[0]<=15);fields[17]=scalar(bits);
  for(size_t i=18;i<21;++i)fields[i]=h.checkpoint(take(40));
+ if(sync_size){
+  offset(21);
+  for(size_t i=22;i<24;++i){
+   const auto keys=take(vector_size(sync_size,48));std::vector<Root> roots;roots.reserve(sync_size);
+   for(size_t at=0;at<keys.size();at+=48){h.tick();roots.push_back(h.packed(keys.subspan(at,48),2));}
+   fields[i]=h.container({h.merkle(std::move(roots),sync_size),h.packed(take(48),2)});
+  }
+ }
  require(variable.front().second==cursor);
  for(size_t i=0;i<variable.size();++i){h.tick();const auto [field,start]=variable[i];const auto end=i+1==variable.size()?b.size():variable[i+1].second;require(start<=end&&end<=b.size());const auto value=b.subspan(start,end-start);
   switch(field){
    case 7:require(value.size()%32==0&&value.size()/32<=limits.historical_roots_limit);fields[field]=h.mix(h.packed(value,limits.historical_roots_limit),value.size()/32);break;
    case 9:fields[field]=h.fixed_list(value,72,limits.eth1_votes_limit,[&](View v){return h.eth1(v);});break;
    case 11:fields[field]=h.fixed_list(value,121,limits.validator_registry_limit,[&](View v){return h.validator(v);});break;
-   case 12:require(value.size()%8==0&&value.size()/8<=limits.validator_registry_limit);fields[field]=h.mix(h.packed(value,(limits.validator_registry_limit-1)/4+1),value.size()/8);break;
-   default:fields[field]=h.pending_list(value,limits.pending_attestations_limit,limits.validators_per_committee);break;
+   case 12:case 21:require(value.size()%8==0&&value.size()/8<=limits.validator_registry_limit);fields[field]=h.mix(h.packed(value,(limits.validator_registry_limit-1)/4+1),value.size()/8);break;
+   default:
+    if(sync_size){require(value.size()<=limits.validator_registry_limit);fields[field]=h.mix(h.packed(value,(limits.validator_registry_limit-1)/32+1),value.size());}
+    else fields[field]=h.pending_list(value,limits.pending_attestations_limit,limits.validators_per_committee);
+    break;
   }
  }
- const auto result=h.merkle(std::move(fields),21);h.tick();return result;
+ const auto result=h.merkle(std::move(fields),field_count);h.tick();return result;
+}
+}
+ConsensusRoot phase0_beacon_state_root(View b,const Phase0StateLimits& limits,const std::function<void()>& checkpoint){
+ return beacon_state_root(b,limits,0,checkpoint);
+}
+ConsensusRoot altair_beacon_state_root(View b,const AltairStateLimits& l,const std::function<void()>& checkpoint){
+ require(l.sync_committee_size);
+ return beacon_state_root(b,{l.slots_per_historical_root,l.epochs_per_historical_vector,l.epochs_per_slashings_vector,l.historical_roots_limit,l.eth1_votes_limit,l.validator_registry_limit,1,1},l.sync_committee_size,checkpoint);
 }
 }

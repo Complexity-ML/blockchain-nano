@@ -16,4 +16,12 @@ struct Phase0StateLimits {
 // No slot transition, epoch replay metadata, persistence or network activation.
 ConsensusRoot phase0_beacon_state_root(std::span<const uint8_t>,const Phase0StateLimits&,
  const std::function<void()>& checkpoint={});
+struct AltairStateLimits {
+ uint64_t slots_per_historical_root,epochs_per_historical_vector,epochs_per_slashings_vector;
+ uint64_t historical_roots_limit,eth1_votes_limit,validator_registry_limit,sync_committee_size;
+};
+// Full Altair 24-field SSZ schema: participation byte lists, inactivity scores,
+// and both sync committees. Same schema-only trust boundary as Phase0 above.
+ConsensusRoot altair_beacon_state_root(std::span<const uint8_t>,const AltairStateLimits&,
+ const std::function<void()>& checkpoint={});
 }

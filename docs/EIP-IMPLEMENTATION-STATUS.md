@@ -462,3 +462,8 @@ contextes SSZ des blocs conservés. Cinq suites passent. Écart de qualification
 confirmé : les fixtures fork_choice du commit épinglé commencent avec Altair ;
 leur replay fidèle nécessite les transitions/structures Altair, encore absentes
 de ce pipeline Phase0. Ne pas assimiler les tests locaux au corpus officiel.
+
+Prérequis Altair : schéma BeaconState à 24 champs et hash_tree_root implémentés,
+123 vecteurs officiels minimaux concordants. Le support reste structurel :
+transitions Altair et replay fork_choice non implémentés dans ce pipeline.
+Aucun fork réseau activé par cet ajout.
