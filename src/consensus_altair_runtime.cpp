@@ -17,6 +17,25 @@ std::string profile_file(const std::filesystem::path& file,size_t maximum){
 }
 struct Owner {std::unique_ptr<ChainStore> disk;std::unique_ptr<AltairDurableReactor> reactor;std::unique_ptr<AltairLocalClock> clock;std::unique_ptr<AltairRpcService> rpc;};
 }
+Bytes altair_consensus_identity(const AltairForkBlockRules& rules,const AltairAnchorCommitment& anchor,const Int& chain_id,const Bytes& genesis){
+ if(chain_id<0||genesis.size()!=32)throw std::invalid_argument("Invalid Altair identity chain");
+ std::string boost;
+ switch(rules.boost_profile){
+  case AltairProposerBoostProfile::Release160Beta0:boost="release-1.6.0-beta.0";break;
+  case AltairProposerBoostProfile::ShufflingDependent:boost="shuffling-dependent";break;
+  default:throw std::invalid_argument("Unknown Altair identity boost profile");
+ }
+ auto q=[](uint64_t n){return quantity(Int(std::to_string(n)));};
+ auto h=[](const auto& value){return hex(Bytes(value.begin(),value.end()));};
+ const auto manifest=Json{{"format","nano-altair-consensus-identity-v1"},
+  {"chainId",quantity(chain_id)},{"executionGenesis",hex(genesis)},
+  {"transition",altair_transition_profile(rules.transition)},
+  {"forkChoice",{{"slotDurationMs",q(rules.slot_duration_ms)},{"attestationDueMs",q(rules.attestation_due_ms)},
+   {"proposerScoreBoost",q(rules.proposer_score_boost)},{"boostProfile",boost}}},
+  {"anchor",{{"blockRoot",h(anchor.block_root)},{"stateRoot",h(anchor.state_root)},
+   {"genesisValidatorsRoot",h(anchor.genesis_validators_root)},{"forkVersion",h(anchor.fork_version)}}}}.dump();
+ return sha256(Bytes(manifest.begin(),manifest.end()));
+}
 AltairRuntime start_altair_runtime(const Json& config,const Int& chain_id,const Bytes& genesis,const std::function<void()>& checkpoint,std::function<uint64_t()> local_clock){
  if(checkpoint)checkpoint();if(chain_id<0||genesis.size()!=32)throw std::invalid_argument("Invalid Altair runtime chain identity");
  shape(config,{"profile","forkChoice","anchor","database","limits","wire","worker","restart","clock"});
@@ -67,7 +86,7 @@ AltairRuntime start_altair_runtime(const Json& config,const Int& chain_id,const 
   owner->clock=std::make_unique<AltairLocalClock>(*owner->reactor,maximum_step,std::move(local_clock));owner->clock->poll(checkpoint);
   before_message=[local=owner->clock.get()](const auto& check){local->poll(check);};clock_healthy=[local=owner->clock.get()]{return local->healthy();};
  }
- owner->rpc=std::make_unique<AltairRpcService>(*owner->reactor,wire,jobs,payload,std::chrono::milliseconds(timeout),std::move(before_message),std::move(clock_healthy));
+ owner->rpc=std::make_unique<AltairRpcService>(*owner->reactor,wire,jobs,payload,std::chrono::milliseconds(timeout),std::move(before_message),std::move(clock_healthy),hex(altair_consensus_identity(rules,anchor,chain_id,genesis)));
  if(owner->clock)owner->clock->start(std::chrono::milliseconds(interval));
  return {std::shared_ptr<AltairRpcService>(owner,owner->rpc.get()),std::shared_ptr<AltairDurableReactor>(owner,owner->reactor.get())};
 }

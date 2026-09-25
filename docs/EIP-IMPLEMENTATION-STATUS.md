@@ -684,3 +684,9 @@ de l'admission quand le résultat est incertain. Onze suites réseau et deux tes
 HTTP d'intégration passent. `Core::call` est exercé avec un commit unique des blocs
 officiels ; l'instanciation dans le daemon et la négociation P2P restent ouvertes.
 Aucun fork ni statut production activé ; détails dans `docs/ALTAIR-RUNTIME.md`.
+
+Complément identité Altair (25 septembre 2026) : le statut RPC privé expose une
+empreinte du profil complet, du choix de branche, de l'ancre et de la chaîne,
+ainsi que les limites wire. Treize scénarios d'identité et quatre suites ciblées
+passent ; la négociation par le daemon reste à intégrer. Aucun état EIP ni fork
+activé ne change. Voir `docs/ALTAIR-RUNTIME.md` et la feuille validateurs.

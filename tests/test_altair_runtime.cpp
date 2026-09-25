@@ -20,12 +20,28 @@ int main(int argc,char** argv){try{
  {"limits",{{"envelopeBytes",q(32*1024*1024)},{"blocks","0x64"},{"messages","0x2710"},{"equivocations","0x2710"},{"stateBytes",q(1024*1024)},{"totalStateBytes",q(16*1024*1024)},{"replaySlots","0x1000"},{"syncTrials","0x186a0"}}},
  {"wire",{{"frameBytes",q(2*transition.maximum_block_bytes+1024)},{"blockBytes",q(transition.maximum_block_bytes)},{"attestationBytes","0x200"},{"slashingBytes","0x9c40"}}},
  {"worker",{{"jobs","0x4"},{"payloadBytes",q(transition.maximum_block_bytes)},{"timeoutMs","0x2710"}}},{"restart",nullptr},{"clock",{{"enabled",false},{"intervalMs","0x64"},{"maximumForwardStepMs","0xea60"}}}};
+ const AltairAnchorCommitment commitment{anchor.timed.view.anchor,altair_beacon_state_root(state,transition.state),root_at(state,8),{}};
+ auto identity_anchor=commitment;std::copy_n(state.begin()+52,4,identity_anchor.fork_version.begin());
+ const auto identity=altair_consensus_identity(rules,identity_anchor,1337,genesis_hash);
+ unsigned identity_checks=0;
+ auto different=[&](const AltairForkBlockRules& changed,const AltairAnchorCommitment& changed_anchor,const Int& chain,const Bytes& hash){check(altair_consensus_identity(changed,changed_anchor,chain,hash)!=identity,"different consensus profile shared an identity");++identity_checks;};
+ auto changed_rules=rules;++changed_rules.slot_duration_ms;different(changed_rules,identity_anchor,1337,genesis_hash);
+ changed_rules=rules;++changed_rules.attestation_due_ms;different(changed_rules,identity_anchor,1337,genesis_hash);
+ changed_rules=rules;++changed_rules.proposer_score_boost;different(changed_rules,identity_anchor,1337,genesis_hash);
+ changed_rules=rules;changed_rules.boost_profile=AltairProposerBoostProfile::ShufflingDependent;different(changed_rules,identity_anchor,1337,genesis_hash);
+ changed_rules=rules;++changed_rules.transition.maximum_block_bytes;different(changed_rules,identity_anchor,1337,genesis_hash);
+ changed_rules=rules;++changed_rules.transition.epoch.registry.minimum_churn_limit;different(changed_rules,identity_anchor,1337,genesis_hash);
+ for(auto member:{&AltairAnchorCommitment::block_root,&AltairAnchorCommitment::state_root,&AltairAnchorCommitment::genesis_validators_root}){auto changed=identity_anchor;(changed.*member)[0]^=1;different(rules,changed,1337,genesis_hash);}
+ auto changed_anchor=identity_anchor;changed_anchor.fork_version[0]^=1;different(rules,changed_anchor,1337,genesis_hash);
+ different(rules,identity_anchor,1338,genesis_hash);auto changed_genesis=genesis_hash;changed_genesis[0]^=1;different(rules,identity_anchor,1337,changed_genesis);
  unsigned refused=0;
  auto refuse=[&](const Json& input){bool failed=false;try{start_altair_runtime(input,1337,genesis_hash);}catch(const std::exception&){failed=true;}check(failed,"invalid runtime startup accepted");++refused;};
  auto bad=config;bad["worker"]["jobs"]="0x0";refuse(bad);check(!fs::exists(temp/"consensus"),"invalid config opened database");
  bad=config;bad["restart"]={{"sequence","0x1"},{"digest",hex(Bytes(32,0))}};refuse(bad);check(!fs::exists(temp/"consensus"),"missing restart initialized a database");
  ForkCheckpointToken token;
  {auto runtime=start_altair_runtime(config,1337,genesis_hash);token=runtime.reactor->current().token;check(token.sequence==1,"fresh startup sequence");
+  const auto advertised=runtime.rpc->status();check(advertised.at("consensusIdentity")==hex(identity),"runtime consensus identity mismatch");
+  check(advertised.at("wire").at("blockBytes")==transition.maximum_block_bytes,"runtime wire limits absent");
   auto service=runtime.rpc;runtime={};
   ConsensusBytes4 version{};std::copy_n(state.begin()+52,4,version.begin());const auto fork=consensus_fork_data_root(version,root_at(state,8));
   const auto frame=Json{{"chainId","0x539"},{"genesisHash",hex(genesis_hash)},{"forkDigest",hex(Bytes(fork.begin(),fork.begin()+4))},{"kind","attestation"},{"ssz","0x0001"}}.dump();
@@ -38,7 +54,12 @@ int main(int argc,char** argv){try{
  bad=config;bad["worker"]["payloadBytes"]="0x1";refuse(bad);
  {auto runtime=start_altair_runtime(config,1337,genesis_hash);check(runtime.reactor->current().token==token,"restart changed checkpoint");runtime.reactor->tick(anchor.timed.clock.time_ms+1);token=runtime.reactor->current().token;}
  refuse(config);config["restart"]={{"sequence",q(token.sequence)},{"digest",hex(token.digest)}};
- {auto runtime=start_altair_runtime(config,1337,genesis_hash);check(runtime.reactor->current().token==token,"latest restart failed");}
+ {auto runtime=start_altair_runtime(config,1337,genesis_hash);check(runtime.reactor->current().token==token,"latest restart failed");check(runtime.rpc->status().at("consensusIdentity")==hex(identity),"restart changed consensus identity");}
+ // Serialization formatting and local budgets must not split compatible peers.
+ auto local_config=config;local_config["database"]=(temp/"other-local-policy").string();local_config["restart"]=nullptr;local_config["worker"]["jobs"]="0x8";
+ {std::ofstream output(temp/"formatted-profile.json");output<<profile.dump(4);}
+ local_config["profile"]={{"file",(temp/"formatted-profile.json").string()},{"sha256",hex(sha256(binary(temp/"formatted-profile.json")))},{"maximumBytes",q(binary(temp/"formatted-profile.json").size())}};
+ {auto runtime=start_altair_runtime(local_config,1337,genesis_hash);check(runtime.rpc->status().at("consensusIdentity")==hex(identity),"local policy or profile whitespace changed identity");++identity_checks;}
  unsigned clock_guards=0;
  {auto manual=config;manual["database"]=(temp/"manual-clock").string();manual["restart"]=nullptr;
   auto runtime=start_altair_runtime(manual,1337,genesis_hash);auto now=anchor.timed.clock.time_ms;
@@ -76,5 +97,5 @@ int main(int argc,char** argv){try{
   Process resumed({argv[1],"run",(temp/"genesis.json").string(),(temp/"execution").string(),(temp/"node.json").string()});
   check(resumed.event("altair-runtime-ready").at("digest")==ready.at("digest"),"managed restart changed checkpoint");resumed.event("ready");check(resumed.stop().code==0,"managed restart shutdown failed");managed=true;
  }
- std::cout<<Json{{"clockGuards",clock_guards},{"scenario","altair-runtime-start-restart"},{"refused",refused},{"latestSequence",token.sequence},{"ownedLifetime",true},{"managedProcesses",managed},{"networkAltairActive",false},{"executionBound",false}}.dump()<<'\n';
+ std::cout<<Json{{"identityChecks",identity_checks},{"clockGuards",clock_guards},{"scenario","altair-runtime-start-restart"},{"refused",refused},{"latestSequence",token.sequence},{"ownedLifetime",true},{"managedProcesses",managed},{"networkAltairActive",false},{"executionBound",false}}.dump()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

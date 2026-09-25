@@ -161,3 +161,21 @@ HTTP loopback. Il n'est pas encore instancié dans `network/main.cpp`. La décou
 du profil, la récupération initiale des tickets, le handler libp2p et la politique
 de reprise après blocage restent à raccorder. Les tests ne qualifient pas le débit
 d'un réseau distribué ; un seul aller-retour IPC est actif à la fois.
+
+## Identité de consensus exposée au daemon
+
+Le runtime fournit `consensusIdentity` dans le statut RPC privé : SHA-256 du JSON
+compact canonique (clés ordonnées, quantités hexadécimales) de format
+`nano-altair-consensus-identity-v1`. Il engage le chain ID, le genesis d'exécution,
+le profil de transition complet, les quatre paramètres de choix de branche et
+les quatre engagements d'ancre. Le fork digest seul ne distingue pas ces règles.
+Les chemins, la présentation du fichier de profil, les budgets locaux, la session
+IPC et la séquence de checkpoint ne modifient pas cette identité. L'identité
+reste conservatrice : deux ancres différentes exigent une réconciliation explicite,
+même si elles pourraient appartenir à la même chaîne.
+
+`wire` expose aussi les quatre limites d'enveloppe/payload effectivement utilisées
+par le cœur. Un service de test construit sans identité annonce `null`, jamais
+une identité déduite du seul fork digest. Ce statut est préparatoire : le daemon
+ne le négocie pas encore avec les pairs. Il ne prouve ni leur honnêteté, ni la
+finalité de l'ancre, ni la liaison atomique avec l'exécution EVM.

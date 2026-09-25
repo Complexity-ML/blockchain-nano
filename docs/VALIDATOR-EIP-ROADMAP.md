@@ -2221,3 +2221,19 @@ Preuves : `build-cmake/qualification/altair-core-dispatch-20260925/`.
 Ce composant n'est pas encore instancié par le daemon. Restent découverte et
 vérification du profil, récupération des tickets initiaux, handler P2P et essais
 entre plusieurs nœuds. Aucun protocole Altair réseau n'est activé par cette étape.
+
+### Identité sémantique du runtime, 25 septembre 2026
+
+Le statut privé expose une empreinte SHA-256 de l'identité de chaîne, du profil
+complet de transition, du choix de branche et des engagements d'ancre, ainsi que
+les limites wire du cœur. Douze modifications de règles/identité/ancre changent
+l'empreinte ; un treizième scénario vérifie sa stabilité avec un autre chemin,
+d'autres budgets de worker et un fichier de profil reformatté. Le redémarrage
+avec un checkpoint plus récent conserve aussi l'empreinte.
+
+Quatre suites passent : runtime, HTTP privé, client IPC réel et démarrage/reprise
+des processus Nano/P2P. Preuves :
+`build-cmake/qualification/altair-consensus-identity-20260925/`.
+La découverte par le daemon, la négociation P2P, la récupération initiale des
+tickets et l'intégration du handler restent ouvertes. Aucun fork ni réseau public
+activé ; aucune clôture de conformité EIP revendiquée.

@@ -9,6 +9,7 @@
 class AltairRpcService {
  nano::AltairDurableReactor& reactor_;
  const AltairWireProfile profile_;
+ const std::string consensus_identity_;
  std::function<bool()> clock_healthy_;
  InboundBudget decoder_budget_; // decoder only; peer accounting stays in daemon
  AltairMessageIngress decoder_;
@@ -17,8 +18,8 @@ class AltairRpcService {
  AltairReceipts receipts_;
 public:
  AltairRpcService(nano::AltairDurableReactor& reactor,AltairWireProfile profile,
-                  size_t jobs,size_t bytes,std::chrono::milliseconds timeout=std::chrono::seconds(10),std::function<void(const std::function<void()>&)> before_message={},std::function<bool()> clock_healthy={}):
- reactor_(reactor),profile_(std::move(profile)),clock_healthy_(std::move(clock_healthy)),decoder_(profile_,decoder_budget_),service_(reactor,jobs,bytes,std::move(before_message)),timeout_(timeout),receipts_(jobs){
+                  size_t jobs,size_t bytes,std::chrono::milliseconds timeout=std::chrono::seconds(10),std::function<void(const std::function<void()>&)> before_message={},std::function<bool()> clock_healthy={},std::string consensus_identity={}):
+ reactor_(reactor),profile_(std::move(profile)),consensus_identity_(std::move(consensus_identity)),clock_healthy_(std::move(clock_healthy)),decoder_(profile_,decoder_budget_),service_(reactor,jobs,bytes,std::move(before_message)),timeout_(timeout),receipts_(jobs){
   if(timeout_<=std::chrono::milliseconds::zero())throw std::invalid_argument("invalid Altair RPC timeout");
  }
  nano::Json status(){
@@ -26,6 +27,8 @@ public:
   return nano::Json{{"sequence",nano::quantity(nano::Int(std::to_string(current.token.sequence)))},{"digest",nano::hex(current.token.digest)},
    {"timeMs",nano::quantity(nano::Int(std::to_string(current.state->timed.clock.time_ms)))},
    {"admissionSession",receipts_.session()},{"chainId",profile_.chain_id},{"genesisHash",profile_.genesis_hash},{"forkDigest",profile_.fork_digest},
+   {"consensusIdentity",consensus_identity_.empty()?nano::Json(nullptr):nano::Json(consensus_identity_)},
+   {"wire",{{"frameBytes",profile_.frame_bytes},{"blockBytes",profile_.block_bytes},{"attestationBytes",profile_.attestation_bytes},{"slashingBytes",profile_.slashing_bytes}}},
    {"clockHealthy",clock_healthy_?nano::Json(clock_healthy_()):nano::Json(nullptr)},{"executionBound",false},{"networkProtocolActive",false}};
  }
  nano::Json receive(std::string_view frame,const std::function<void()>& cancelled={}){
