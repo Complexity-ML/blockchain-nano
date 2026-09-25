@@ -1056,3 +1056,9 @@ set_tests_properties(ethereum_official_altair_fork_withholding ethereum_official
 
 add_test(NAME ethereum_official_altair_fork_proposer COMMAND nano-altair-fork-head-tests "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/consensus-altair-fork-proposer-official" 2)
 set_tests_properties(ethereum_official_altair_fork_proposer PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_ethereum")
+
+add_executable(nano-altair-snapshot-tests tests/test_altair_snapshot.cpp)
+target_link_libraries(nano-altair-snapshot-tests PRIVATE nano_core)
+target_compile_definitions(nano-altair-snapshot-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+add_test(NAME consensus_altair_snapshot_recovery COMMAND nano-altair-snapshot-tests)
+set_tests_properties(consensus_altair_snapshot_recovery PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_ethereum")

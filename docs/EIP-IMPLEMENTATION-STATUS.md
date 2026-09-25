@@ -559,3 +559,11 @@ passent ensemble (48 scénarios, 11222 champs). Campagne
 `altair-fork-proposer-20260925`. Cela ne clôt pas les tests mainnet, l'admission
 de snapshots, la persistance/reprise ni le raccordement EVM/P2P ; aucun nouveau
 profil de consensus n'est activé.
+
+Altair : enveloppe locale versionnée de sauvegarde d'état SSZ et marqueur d'époque,
+liée au profil complet et à une racine authentifiée extérieure. Reprise après
+_exit suivant un commit RocksDB, continuation identique au post-state officiel,
+12 contrôles et 105 rejets de snapshots ; régressions Phase0/blocs Altair vertes.
+Campagne `altair-snapshot-recovery-20260925`. Ne sauvegarde pas encore le Store
+fork_choice complet ; coupure électrique, liaison EVM/consensus et réseau restent
+non qualifiés. Aucun statut d'EIP ou profil réseau activé n'est promu.

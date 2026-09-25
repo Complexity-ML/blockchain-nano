@@ -1700,3 +1700,36 @@ La qualification des groupes minimal ne termine pas l'intégration : admission
 d'ancre/snapshots, persistance et reprise atomique, bornage et élagage du Store,
 liaison EVM/P2P et finalité distribuée restent ouverts. Aucune activation réseau
 ni changement du statut production.
+
+### Altair — sauvegarde locale et reprise de transition, 25 septembre 2026
+
+`altair_slot_snapshot` / `altair_slot_from_snapshot` ajoutent une enveloppe
+canonique versionnée pour l'état SSZ vérifié et son marqueur de dernière époque.
+Le profil contient tous les paramètres de transition Altair (époques, récompenses,
+comités, sanctions, limites SSZ/corps, dépôts, sorties, attestations et sync).
+La lecture exige une racine fournie par un checkpoint authentifié extérieur à
+l'enveloppe. Modifier l'état et son hash interne ne suffit pas à être accepté.
+La taille SSZ est bornée avant décodage ; le lecteur JSON doit aussi borner son
+entrée. Ce format local n'est pas une admission de snapshots fournis par des pairs.
+
+Le test utilise deux blocs successifs de la séquence officielle Altair attestation.
+Après le premier bloc, un processus enfant écrit dans ChainStore/RocksDB avec
+le commit synchronisé existant puis appelle _exit sans destructeurs. Le parent
+rouvre la base, récupère les mêmes octets et marqueur, rejette le rejeu du bloc,
+puis applique le suivant : résultat identique à l'exécution sans interruption
+et au post-state officiel. Une seconde réouverture conserve ce résultat. Un
+commit d'exécution invalide n'enregistre ni bloc ni snapshot ; une liaison à une
+autre chaîne est rejetée.
+
+Douze contrôles de reprise et 105 rejets de snapshots (chaque paramètre numérique
+du profil, format, champs, marqueur, corruption, racine étrangère, limites) passent.
+Les tests Phase0 existants et les 52 séquences de blocs Altair restent verts :
+3/3 suites. Preuves : `build-cmake/qualification/altair-snapshot-recovery-20260925/`.
+
+Limites : les blocs d'exécution de ce test sont synthétiques et servent uniquement
+au transport atomique déjà disponible dans ChainStore. La liaison sémantique
+EVM/consensus n'est pas qualifiée. L'arrêt survient après le commit réussi,
+pas pendant une coupure électrique. Le Store de choix de branche (votes,
+équivocations, branches, horloge, timeliness et checkpoints non réalisés) n'est
+pas encore sauvegardé/restauré par cette enveloppe. Sa reprise complète reste
+le prochain chantier ; aucune activation réseau ni validation production.
