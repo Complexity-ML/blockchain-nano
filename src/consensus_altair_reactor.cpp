@@ -139,6 +139,52 @@ std::optional<Phase0SignedAttestation> AltairDurableReactor::sign_attestation(ui
  if(!timely())throw std::runtime_error("Attestation duty expired after verification");
  return std::move(duty->attestation);
 }
+std::optional<Bytes> AltairDurableReactor::sign_proposal(uint64_t index,uint64_t slot,
+ std::span<const uint8_t> body,const std::function<uint64_t()>& local_clock,
+ const ForkCheckpointToken& expected,BeaconSigningJournal& journal,
+ const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint){
+ std::lock_guard lock(mutex_);require_available();
+ if(expected!=*token_)throw std::invalid_argument("Stale proposal duty request");
+ disk_.fork_checkpoint(chain_id_,genesis_,limits_.envelope_bytes,token_);
+ if(!local_clock||!signer)throw std::invalid_argument("Missing proposal clock or signing provider");
+ const auto& clock=state_->timed.clock;const auto& t=rules_.transition;
+ validate_altair_transition_rules(t);
+ if(!rules_.slot_duration_ms||clock.time_ms<clock.genesis_time_ms)throw std::invalid_argument("Invalid proposal clock");
+ if((clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms!=slot||state_->timed.view.current_epoch!=slot/t.epoch.ffg.slots_per_epoch||state_->timed.view.equivocating_indices.contains(index))return std::nullopt;
+ uint64_t last_time=clock.time_ms;
+ auto timely=[&]{const auto time=local_clock();if(time<last_time||time<clock.genesis_time_ms||(time-clock.genesis_time_ms)/rules_.slot_duration_ms!=slot)return false;last_time=time;return true;};
+ if(!timely())return std::nullopt;
+ const auto head=phase0_fork_choice_head(state_->timed.view,{t.epoch.ffg.slots_per_epoch,t.attestation.duties.effective_balance_increment,rules_.proposer_score_boost},checkpoint).head;
+ const auto& parent=state_->blocks.at(head);
+ if(parent.header.slot>=slot)return std::nullopt;
+ const auto parent_context=altair_fork_block_context(parent.state,parent.header,t.epoch,t.state,checkpoint);
+ if(parent_context.block_root!=head)throw std::invalid_argument("Proposal parent binding mismatch");
+ auto candidate=prepare_altair_unsigned_block(parent.state,slot,index,head,body,t,limits_.replay_slots,limits_.sync_trials,checkpoint);
+ if(!candidate)return std::nullopt;
+ const auto& message=candidate->message_ssz;
+ const ConsensusBeaconHeader header{slot,index,head,archive_array<32>(message,48),altair_beacon_body_root(std::span<const uint8_t>(message).subspan(84),t.body,t.state.sync_committee_size)};
+ // The post-state is derived locally by the complete operation transition;
+ // this checks its header binding and resolves the key/domain from that state.
+ const auto context=altair_fork_block_context(candidate->post_state,header,t.epoch,t.state,checkpoint);
+ const auto member=context.registry.validators.find(index);
+ if(member==context.registry.validators.end())throw std::invalid_argument("Missing derived proposer identity");
+ const Bytes key(member->second.public_key.begin(),member->second.public_key.end());
+ if(journal.chain_!=chain_id_||journal.execution_genesis_!=genesis_||journal.validators_genesis_!=context.genesis_root||journal.public_key_!=key||journal.slots_per_epoch_!=t.epoch.ffg.slots_per_epoch||&journal.disk_==&disk_)
+  throw std::invalid_argument("Signing journal does not match authenticated proposal");
+ const auto epoch=slot/t.epoch.ffg.slots_per_epoch;const auto version=epoch<context.fork.epoch?context.fork.previous_version:context.fork.current_version;
+ // Allocate the result before reserving/signing, with only the signature empty.
+ Bytes wire(100,0);wire[0]=100;wire.insert(wire.end(),message.begin(),message.end());
+ if(checkpoint)checkpoint();if(!timely())return std::nullopt;
+ const auto signature=journal.sign_proposal(header,version,[&](const ConsensusRoot& root){
+  if(!timely())throw std::runtime_error("Proposal expired before provider");
+  auto result=signer(root);
+  if(!timely())throw std::runtime_error("Proposal expired during provider");
+  return result;
+ });
+ std::copy(signature.begin(),signature.end(),wire.begin()+4);
+ if(checkpoint)checkpoint();if(!timely())throw std::runtime_error("Proposal expired after verification");
+ return wire;
+}
 void AltairDurableReactor::tick(uint64_t ms,const std::function<void()>& checkpoint){
  std::lock_guard lock(mutex_);require_available();publish(prepare_altair_store_tick(*state_,ms,rules_,limits_.replay_slots,limits_.sync_trials,checkpoint),signed_blocks_,signed_votes_,checkpoint);
 }

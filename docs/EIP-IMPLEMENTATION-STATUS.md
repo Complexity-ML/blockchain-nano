@@ -908,3 +908,17 @@ invalides et trois enveloppes incorrectes dont seul le corps est reconstructible
 `build-cmake/qualification/altair-unsigned-block-20260925/final-tests.log`.
 Ce jalon prépare les tâches de proposition ; il ne clôt pas le consensus autonome,
 le binding EVM, la finalité distribuée ou une EIP de fork ultérieur.
+
+
+### 2026-09-25 — signature des propositions liée au Store
+
+Le coordinateur durable construit maintenant une proposition sur la tête choisie,
+contrôle créneau, clé/domaine et journal, puis réserve avant signature BLS. Le
+résultat reste soumis à l'admission normale. Qualification composée : bloc
+identique au vecteur officiel, admission par un second coordinateur, archive et
+restauration, onze refus avant fournisseur et expiration finale conservant la
+réservation. Voir [construction et signature](ALTAIR-BLOCK-CONSTRUCTION.md) et
+`build-cmake/qualification/altair-proposer-signing-20260925/final-tests.log`.
+RANDAO fourni par le corps de test, opérations en attente, automatisation,
+diffusion persistante et binding EVM restent ouverts ; aucune activation réseau
+ni clôture d'EIP supplémentaire n'est revendiquée.

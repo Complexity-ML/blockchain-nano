@@ -42,6 +42,13 @@ public:
   uint64_t expected_slot,const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected_store,
   BeaconSigningJournal&,const BeaconSigningJournal::Signer&,
   const std::function<void()>& checkpoint={});
+ // Construct against the current fork-choice head and sign only after full
+ // body validation. Candidate body includes an already signed RANDAO reveal.
+ // No automatic publication: returned wire block must use normal admission.
+ std::optional<Bytes> sign_proposal(uint64_t validator_index,uint64_t expected_slot,
+  std::span<const uint8_t> body,const std::function<uint64_t()>& local_clock,
+  const ForkCheckpointToken& expected_store,BeaconSigningJournal&,
+  const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={});
  void tick(uint64_t time_ms,const std::function<void()>& checkpoint={});
  bool block(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
  // Wire admission uses the configured fork schema/committee limit. There is

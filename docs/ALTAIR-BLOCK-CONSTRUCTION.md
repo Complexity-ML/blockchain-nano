@@ -41,11 +41,48 @@ Campagne `build-cmake/qualification/altair-unsigned-block-20260925/` :
 - Régressions du choix de branche, réorganisations, snapshots, publication durable
   et tâche d'attestation dans `final-tests.log`.
 
+## Signature liée au coordinateur durable
+
+`AltairDurableReactor::sign_proposal` choisit la tête via le fork choice et exige
+un créneau courant postérieur à cette tête. Il authentifie le parent, construit
+le bloc et résout clé publique, domaine et genesis depuis l'état dérivé. Le
+proposant fourni par l'appelant est vérifié par la sélection RANDAO du moteur ;
+un index arbitraire ne suffit pas à obtenir une signature.
+
+L'engagement attendu doit correspondre au coordinateur et au checkpoint disque.
+Le journal doit correspondre à la chaîne, aux genesis, à la clé et aux paramètres
+d'époque, et utiliser une base dédiée. Le verrou partagé du Store reste tenu
+pendant la construction et la signature. Les callbacks doivent être bornés et
+ne pas réentrer dans les coordinateurs.
+
+Le journal réserve avant l'appel du fournisseur BLS. L'heure indépendante est
+vérifiée avant/après construction, autour du fournisseur et après vérification
+cryptographique ; un recul pendant la tentative, une expiration ou une annulation
+finale retient la signature sans supprimer une réservation déjà écrite.
+La politique globale des grands sauts d'horloge/redémarrages reste ouverte.
+
+La méthode retourne un bloc signé, sans publier son état ni son archive. Il doit
+passer l'admission normale. Un arrêt entre signature et admission garde la
+protection anti-slashing mais n'offre pas encore de reprise automatique de la
+diffusion ; la file persistante de sortie reste à implémenter.
+
+Campagne `build-cmake/qualification/altair-proposer-signing-20260925/final-tests.log` :
+le test `consensus_altair_attester_duty` comprend maintenant une proposition
+construite avec le corps officiel du premier bloc du cas
+`shorter_chain_but_heavier_weight`. La clé de test du proposant est dérivée et
+comparée au registre ; les octets signés sont identiques au bloc officiel.
+Un second coordinateur l'admet, l'archive et restaure les mêmes octets depuis le
+checkpoint. Onze refus avant fournisseur couvrent engagement, créneau, heure,
+index, RANDAO invalide, annulation, identité du journal, recul d'horloge, conflit
+après réouverture, tête au créneau courant et coordinateur périmé. Le conflit
+utilise un graffiti différent dont la construction est indépendamment valide,
+puis exige le refus précis du journal. Une expiration au contrôle final retient
+le bloc signé et conserve sa réservation.
+
 ## Intégration encore nécessaire
 
-L'appelant fournit encore le corps et l'état parent authentifié. Le coordinateur
-doit choisir sa tête, dériver la tâche du proposant, vérifier l'heure et le
-journal dédié, réserver avant signature, puis admettre et diffuser le bloc signé.
-La production des révélations RANDAO, la sélection des opérations en attente,
-le planificateur et la liaison atomique avec l'exécution EVM restent à intégrer.
-Ce composant ne crée pas un réseau autonome ni un profil Altair-EVM activable.
+L'appelant fournit toujours le corps, dont une révélation RANDAO déjà signée.
+La production locale de cette révélation, la sélection des opérations en attente,
+le planificateur, la file de diffusion et la liaison atomique avec l'exécution
+EVM restent à intégrer. La méthode de signature n'est pas exposée en RPC public.
+Ces tests ne créent pas un réseau autonome ni un profil Altair-EVM activable.

@@ -86,6 +86,55 @@ int main(){try{
  // A valid late block changes the head; anti-slashing still forbids a second
  // vote for a different head in this epoch, before calling the provider.
  Bytes late_block;for(const auto& step:load(dir/"steps.json"))if(step.contains("block")){late_block=binary(dir/(step.at("block").get<std::string>()+".ssz"));break;}
+ // Produce the official block locally from its body using the selected key,
+ // and force it through independent signed-block admission afterwards.
+ unsigned proposal_refusals=0;
+ {
+  const auto proposer=little(late_block,108,8);uint64_t pwords[4]{proposer+1,0,0,0};blst_scalar psecret;blst_scalar_from_uint64(&psecret,pwords);blst_p1 pp;blst_sk_to_pk_in_g1(&pp,&psecret);Bytes pkey(48);blst_p1_compress(pkey.data(),&pp);
+  check(std::equal(pkey.begin(),pkey.end(),initial.timed.view.justified_registry.validators.at(proposer).public_key.begin()),"proposer fixture key mismatch");
+  unsigned provider_calls=0;
+  auto provider=[&](const ConsensusRoot& root){++provider_calls;static constexpr char dst[]="BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_POP_";blst_p2 h,s;blst_hash_to_g2(&h,root.data(),root.size(),reinterpret_cast<const uint8_t*>(dst),sizeof(dst)-1,nullptr,0);blst_sign_pk_in_g1(&s,&h,&psecret);Bytes signature(96);blst_p2_compress(signature.data(),&s);return signature;};
+  ChainStore pdisk(temp/"proposer");BeaconSigningJournal pj(pdisk,1337,genesis,duty->genesis_root,pkey,transition.epoch.ffg.slots_per_epoch);
+  const Bytes body(late_block.begin()+184,late_block.end());
+  auto deny=[&](auto action){const auto token=pj.commitment();const auto before=provider_calls;bool refused=false;try{refused=!action().has_value();}catch(const std::exception&){refused=true;}check(refused&&provider_calls==before&&pj.commitment()==token,"refused proposal reached provider or changed journal");++proposal_refusals;};
+  deny([&]{return reactor.sign_proposal(proposer,1,body,[&]{return now;},first_token,pj,provider);});
+  deny([&]{return reactor.sign_proposal(proposer,2,body,[&]{return now;},current.token,pj,provider);});
+  deny([&]{return reactor.sign_proposal(proposer,1,body,[&]{return now+duration;},current.token,pj,provider);});
+  deny([&]{return reactor.sign_proposal(UINT64_MAX,1,body,[&]{return now;},current.token,pj,provider);});
+  auto invalid=body;invalid[0]^=1;
+  deny([&]{return reactor.sign_proposal(proposer,1,invalid,[&]{return now;},current.token,pj,provider);});
+  deny([&]{return reactor.sign_proposal(proposer,1,body,[&]{return now;},current.token,pj,provider,[]{throw std::runtime_error("cancel proposal");});});
+  {ChainStore wrong_disk(temp/"wrong-proposer-journal");auto wrong_genesis=duty->genesis_root;wrong_genesis[0]^=1;BeaconSigningJournal wrong(wrong_disk,1337,genesis,wrong_genesis,pkey,transition.epoch.ffg.slots_per_epoch);const auto before=wrong.commitment();
+   deny([&]{return reactor.sign_proposal(proposer,1,body,[&]{return now;},current.token,wrong,provider);});check(wrong.commitment()==before,"wrong proposer identity journal changed");}
+  unsigned proposal_clock_reads=0;
+  deny([&]{return reactor.sign_proposal(proposer,1,body,[&]{return ++proposal_clock_reads==1?now+2:now+1;},current.token,pj,provider);});
+  auto produced=reactor.sign_proposal(proposer,1,body,[&]{return now;},current.token,pj,provider);
+  check(produced&&*produced==late_block&&provider_calls==1&&reactor.current().token==current.token&&reactor.current().signed_blocks->empty(),"local proposal differs from official block or published before admission");
+  // Graffiti is valid arbitrary data, so only anti-slashing may reject this
+  // different otherwise valid block at the same slot.
+  auto different=body;different[168]^=1;
+  check(prepare_altair_unsigned_block(initial.blocks.at(initial.timed.view.anchor).state,1,proposer,initial.timed.view.anchor,different,transition,limits.replay_slots,limits.sync_trials).has_value(),"conflicting proposal not independently valid");
+  const auto committed=pj.commitment();BeaconSigningJournal reopened(pdisk,1337,genesis,duty->genesis_root,pkey,transition.epoch.ffg.slots_per_epoch,committed);
+  bool conflict=false;const auto before_conflict=provider_calls;
+  try{reactor.sign_proposal(proposer,1,different,[&]{return now;},current.token,reopened,provider);}catch(const std::runtime_error& e){conflict=std::string(e.what())=="Conflicting or old beacon proposal refused";}
+  check(conflict&&provider_calls==before_conflict&&reopened.commitment()==committed,"conflicting proposal signed after journal reopen");++proposal_refusals;
+  {ChainStore expiry_disk(temp/"expired-proposal");BeaconSigningJournal expiry(expiry_disk,1337,genesis,duty->genesis_root,pkey,transition.epoch.ffg.slots_per_epoch);const auto before=expiry.commitment();unsigned reads=0;bool withheld=false;
+   try{reactor.sign_proposal(proposer,1,body,[&]{return ++reads<5?now:now+duration;},current.token,expiry,provider);}catch(const std::runtime_error&){withheld=true;}
+   check(withheld&&reads==5&&expiry.commitment().sequence==before.sequence+1,"expired proposal escaped or lost reservation");}
+  // Independent reactor initialized from the same anchor admits only the
+  // complete signed output, and publishes it into its durable archive.
+  ChainStore receiver_disk(temp/"proposal-receiver");receiver_disk.bind_chain(1337,genesis,"altair-qualification");AltairDurableReactor receiver(receiver_disk,1337,genesis,rules,limits,initial);receiver.tick(now);
+  check(receiver.block(*produced)&&receiver.current().signed_blocks->size()==1,"locally signed proposal failed independent admission");
+  const auto received=receiver.current();const auto before_reject=provider_calls;
+  check(!receiver.sign_proposal(proposer,1,body,[&]{return now;},received.token,reopened,provider),"proposed on head already at current slot");++proposal_refusals;
+  AltairDurableReactor stale_receiver(receiver_disk,1337,genesis,rules,limits,received.token);
+  receiver.tick(initial.timed.clock.genesis_time_ms+2*duration);bool stale_denied=false;
+  try{stale_receiver.sign_proposal(proposer,1,body,[&]{return now;},received.token,reopened,provider);}catch(const std::exception&){stale_denied=true;}
+  check(stale_denied&&provider_calls==before_reject&&reopened.commitment()==committed,"stale proposal coordinator reached provider");++proposal_refusals;
+  const auto recovered_token=receiver.current().token;AltairDurableReactor recovered(receiver_disk,1337,genesis,rules,limits,recovered_token);
+  check(recovered.current().signed_blocks->size()==1&&*recovered.current().signed_blocks->begin()->second==*produced,"signed proposal archive differs after recovery");
+
+ }
  check(reactor.block(late_block),"official slot-one block rejected");const auto changed=reactor.current();
  auto boundary_delay=rules;boundary_delay.attestation_due_ms=duration;
  check(prepare_altair_attestation_duty(*changed.state,boundary_delay,index,1,limits.replay_slots,limits.sync_trials).has_value(),"current block did not permit attesting before fallback delay");
@@ -95,5 +144,5 @@ int main(){try{
  AltairDurableReactor stale(disk,1337,genesis,rules,limits,changed.token);
  reactor.tick(initial.timed.clock.genesis_time_ms+2*duration);refuse([&]{return stale.sign_attestation(index,1,[&]{return now;},changed.token,journal,signer);});
  check(reactor.vote(*signed_vote)&&reactor.current().signed_votes->size()==1,"locally produced vote rejected by independent admission");
- std::cout<<Json{{"scenario","altair-attester-duty"},{"validatorIndex",index},{"signedVotes",1},{"expiredProviderResultsWithheld",1},{"additionalTemporalResultsWithheld",temporal_withheld},{"syntheticEligibilityVariants",2},{"rejectedBeforeProvider",rejected},{"independentAdmission",true},{"staleCoordinatorRefused",true},{"source","official Altair anchor and synthetic scheduled duty"},{"executionBound",false},{"autonomousValidator",false}}.dump()<<'\n';
+ std::cout<<Json{{"scenario","altair-attester-duty"},{"validatorIndex",index},{"signedVotes",1},{"signedOfficialProposals",1},{"proposalRefusalsBeforeProvider",proposal_refusals},{"expiredProviderResultsWithheld",1},{"additionalTemporalResultsWithheld",temporal_withheld},{"syntheticEligibilityVariants",2},{"rejectedBeforeProvider",rejected},{"independentAdmission",true},{"staleCoordinatorRefused",true},{"source","official Altair anchor and synthetic scheduled duty"},{"executionBound",false},{"autonomousValidator",false}}.dump()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
