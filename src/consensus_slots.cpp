@@ -101,14 +101,10 @@ Phase0ForkCheckpoints phase0_fork_checkpoints(const Phase0SlotState& input,
  const auto pulled=prepare_phase0_justification_finalization(state.ffg,state.registry,state.randao,rules.rewards.duties,checkpoint);
  return {state.ffg.checkpoints,pulled.checkpoints};
 }
-Phase0ForkStateContexts prepare_phase0_fork_state_contexts(const Phase0SlotState& input,
- const ConsensusBeaconHeader& header,const ConsensusCheckpoint& target,
- const Phase0EpochRules& rules,const Phase0StateLimits& limits,uint64_t maximum_slots,
+Phase0ForkSlashingContext phase0_fork_block_context(const Phase0SlotState& input,
+ const ConsensusBeaconHeader& header,const Phase0EpochRules& rules,const Phase0StateLimits& limits,
  const std::function<void()>& checkpoint){
  validate_slot_rules(rules,limits);
- require(target.epoch<=UINT64_MAX/rules.history.slots_per_epoch);
- const auto target_slot=target.epoch*rules.history.slots_per_epoch;
- require(header.slot<=target_slot&&consensus_beacon_header_root(header)==target.root);
  require(phase0_beacon_state_root(input.ssz,limits,checkpoint)==header.state_root);
  require(number(input.ssz,40)==header.slot);
  const auto epoch=header.slot/rules.history.slots_per_epoch;
@@ -120,11 +116,22 @@ Phase0ForkStateContexts prepare_phase0_fork_state_contexts(const Phase0SlotState
  const Phase0StateFork fork{array<4>(input.ssz,48),array<4>(input.ssz,52),number(input.ssz,56)};
  require(fork.epoch<=epoch);
  const auto genesis=array<32>(input.ssz,8);
+ if(checkpoint)checkpoint();return {consensus_beacon_header_root(header),block.registry,fork,genesis};
+}
+Phase0ForkStateContexts prepare_phase0_fork_state_contexts(const Phase0SlotState& input,
+ const ConsensusBeaconHeader& header,const ConsensusCheckpoint& target,
+ const Phase0EpochRules& rules,const Phase0StateLimits& limits,uint64_t maximum_slots,
+ const std::function<void()>& checkpoint){
+ validate_slot_rules(rules,limits);
+ require(target.epoch<=UINT64_MAX/rules.history.slots_per_epoch);
+ const auto target_slot=target.epoch*rules.history.slots_per_epoch;
+ require(header.slot<=target_slot&&consensus_beacon_header_root(header)==target.root);
+ const auto block=phase0_fork_block_context(input,header,rules,limits,checkpoint);
  auto advanced=header.slot==target_slot?input:prepare_phase0_slots(input,rules,limits,target_slot,maximum_slots,checkpoint);
- if(checkpoint)checkpoint();const auto projected=decode_epoch(advanced,layout,rules);
+ if(checkpoint)checkpoint();const auto projected=decode_epoch(advanced,Layout(limits),rules);
  require(projected.registry.epoch==target.epoch);
- Phase0ForkStateContexts out{{target.root,block.registry,fork,genesis},
-  {target,projected.registry,projected.randao,fork,genesis},std::move(advanced)};
+ Phase0ForkStateContexts out{block,
+  {target,projected.registry,projected.randao,block.fork,block.genesis_root},std::move(advanced)};
  if(checkpoint)checkpoint();return out;
 }
 std::optional<Phase0SlotState> prepare_phase0_state_transition(const Phase0SlotState& input,

@@ -54,3 +54,44 @@ std::optional<Phase0ForkStore> prepare_phase0_fork_block(const Phase0ForkStore& 
  if(checkpoint)checkpoint();return out;
 }
 }
+
+namespace nano {
+std::optional<Phase0ForkStore> prepare_phase0_store_vote(const Phase0ForkStore& input,
+ const Phase0SignedAttestation& vote,const Phase0ForkBlockRules& rules,uint64_t maximum_slots,
+ const std::function<void()>& checkpoint){
+ const auto& c=input.timed.clock;const auto slots=rules.transition.epoch.history.slots_per_epoch;
+ if(!slots||!rules.slot_duration_ms||c.time_ms<c.genesis_time_ms)throw std::invalid_argument("invalid store vote clock");
+ const auto slot=(c.time_ms-c.genesis_time_ms)/rules.slot_duration_ms,epoch=slot/slots;
+ const auto& d=vote.data;
+ if(d.slot>=slot||d.target.epoch!=d.slot/slots||(d.target.epoch!=epoch&&d.target.epoch!=(epoch?epoch-1:0))||
+    !input.blocks.contains(d.target.root)||!input.timed.view.nodes.contains(d.beacon_block_root))return std::nullopt;
+ const auto& block=input.blocks.at(d.target.root);
+ if(block.header.slot>d.target.epoch*slots)return std::nullopt;
+ const auto ctx=prepare_phase0_fork_state_contexts(block.state,block.header,d.target,rules.transition.epoch,rules.transition.state,maximum_slots,checkpoint);
+ auto out=input;
+ if(!process_phase0_fork_vote(out.timed.view,slot,ctx.target,rules.transition.epoch.rewards.duties,vote,false,checkpoint))return std::nullopt;
+ return out;
+}
+std::optional<Phase0ForkStore> prepare_phase0_store_slashing(const Phase0ForkStore& input,
+ const IndexedConsensusAttestation& first,const IndexedConsensusAttestation& second,
+ const Phase0ForkBlockRules& rules,const std::function<void()>& checkpoint){
+ const auto& block=input.blocks.at(input.timed.view.justified.root);
+ const auto ctx=phase0_fork_block_context(block.state,block.header,rules.transition.epoch,rules.transition.state,checkpoint);
+ auto out=input;
+ if(!process_phase0_fork_slashing(out.timed.view,ctx,first,second,rules.transition.body.validators_per_committee,checkpoint))return std::nullopt;
+ return out;
+}
+Phase0ForkStore prepare_phase0_store_tick(const Phase0ForkStore& input,uint64_t time_ms,
+ const Phase0ForkBlockRules& rules,uint64_t maximum_slots,const std::function<void()>& checkpoint){
+ const auto& c=input.timed.clock;const auto slots=rules.transition.epoch.history.slots_per_epoch;
+ if(!slots||!rules.slot_duration_ms||time_ms<c.time_ms||c.time_ms<c.genesis_time_ms)throw std::invalid_argument("invalid store tick clock");
+ const auto epoch=((time_ms-c.genesis_time_ms)/rules.slot_duration_ms)/slots;
+ std::optional<Phase0ForkStateContexts> ctx;
+ if(epoch>input.timed.view.current_epoch&&c.unrealized_justified.epoch>input.timed.view.justified.epoch){
+  const auto& block=input.blocks.at(c.unrealized_justified.root);
+  ctx=prepare_phase0_fork_state_contexts(block.state,block.header,c.unrealized_justified,rules.transition.epoch,rules.transition.state,maximum_slots,checkpoint);
+ }
+ auto timed=prepare_phase0_fork_tick(input.timed,time_ms,rules.slot_duration_ms,slots,ctx?&ctx->target:nullptr,checkpoint);
+ auto out=input;out.timed=std::move(timed);if(checkpoint)checkpoint();return out;
+}
+}

@@ -3,6 +3,11 @@
 #include "nano/consensus_fork_vote.hpp"
 namespace nano {
 struct Phase0ForkCheckpoints {Phase0FfgCheckpoints realized,unrealized;};
+// Context for slashing from the immediate authenticated block post-state;
+// unlike the target-state helper, never advances slots.
+Phase0ForkSlashingContext phase0_fork_block_context(const Phase0SlotState&,
+ const ConsensusBeaconHeader&,const Phase0EpochRules&,const Phase0StateLimits&,
+ const std::function<void()>& checkpoint={});
 // Pull-up FFG on a validated post-state; does not advance/mutate its SSZ.
 Phase0ForkCheckpoints phase0_fork_checkpoints(const Phase0SlotState&,
  const Phase0EpochRules&,const Phase0StateLimits&,

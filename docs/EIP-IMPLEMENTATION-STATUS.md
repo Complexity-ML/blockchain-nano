@@ -456,3 +456,9 @@ au bonus et aux checkpoints FFG. Sous-ensemble genesis : 15 séquences officiell
 valides et 12 invalides, 16 blocs acceptés ; 18 fixtures intermédiaires explicitement
 exclues de ce test de Store. Replay officiel fork_choice, durabilité, import
 opérationnel d'ancre et réseau encore ouverts.
+
+Adaptateurs Store : votes gossip, preuves et horloge utilisent désormais les
+contextes SSZ des blocs conservés. Cinq suites passent. Écart de qualification
+confirmé : les fixtures fork_choice du commit épinglé commencent avec Altair ;
+leur replay fidèle nécessite les transitions/structures Altair, encore absentes
+de ce pipeline Phase0. Ne pas assimiler les tests locaux au corpus officiel.

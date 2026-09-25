@@ -1223,3 +1223,35 @@ et ne démontre ni une consommation mémoire bornée en fonctionnement prolongé
 ni la durabilité. Restent l'import d'ancre opérationnel, les adaptateurs votes/
 équivoques/horloge sur ce Store, son format durable et sa reprise, puis le
 raccordement EVM/P2P. Aucune activation réseau ou qualification production.
+
+### Événements liés au Store et périmètre officiel — 25 septembre 2026
+
+Les adaptateurs `prepare_phase0_store_vote`, `prepare_phase0_store_slashing` et
+`prepare_phase0_store_tick` dérivent leurs contextes depuis les blocs SSZ du
+Store. L'API de vote gossip n'expose ni contexte fourni par l'émetteur ni drapeau
+permettant de contourner la fenêtre temporelle. Les preuves utilisent le contexte
+du block state justifié sans avancer ses slots. L'horloge récupère le checkpoint
+nécessaire à la promotion et avance son état privé si des slots ont été sautés.
+Les opérations retournent des candidats complets ; leur commit reste à raccorder.
+
+Cinq suites passent. Les séquences genesis passent désormais par l'adaptateur
+horloge. Un genesis synthétique avec clés BLS générées vérifie vote accepté,
+signature invalide, vote prématuré, preuve contradictoire, conservation des
+équivoques après vote répété/changement de slot. Une promotion sur métadonnées de
+checkpoint **synthétiques** vérifie l'extraction automatique du registre ; elle
+ne prétend pas que des slots vides produisent une justification.
+
+La consultation du dépôt épinglé `consensus-spec-tests` a confirmé l'absence du
+répertoire `fork_choice` sous [minimal/phase0](https://github.com/ethereum/consensus-spec-tests/tree/bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908/tests/minimal/phase0)
+et mainnet/phase0. Le corpus existe sous
+[minimal/altair/fork_choice](https://github.com/ethereum/consensus-spec-tests/tree/bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908/tests/minimal/altair/fork_choice).
+Il ne faut pas décoder ces états comme du Phase0 ou retirer leurs champs pour
+annoncer une conformité. Le replay fidèle de ce corpus ajoute un prérequis ouvert :
+SSZ et transitions Altair (participation, inactivity scores et sync committees),
+ou des vecteurs Phase0 générés avec une provenance et un périmètre explicitement
+distincts. Aucun de ces replays n'est actuellement qualifié.
+
+Artefacts locaux, listings consultés et journaux :
+`build-cmake/qualification/fork-store-adapters-20260925/`.
+Durabilité, admission des ancres, mémoire bornée, ordonnancement des votes différés
+et raccordement EVM/P2P restent ouverts.

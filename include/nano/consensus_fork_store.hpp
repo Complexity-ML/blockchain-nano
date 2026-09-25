@@ -24,4 +24,15 @@ struct Phase0ForkBlockRules {
 std::optional<Phase0ForkStore> prepare_phase0_fork_block(const Phase0ForkStore&,
  std::span<const uint8_t> signed_block,const Phase0ForkBlockRules&,uint64_t maximum_slots,
  const std::function<void()>& checkpoint={});
+// Store-bound gossip admission; the sender cannot supply committee/context or
+// bypass the gossip time window with an "already included" flag.
+std::optional<Phase0ForkStore> prepare_phase0_store_vote(const Phase0ForkStore&,
+ const Phase0SignedAttestation&,const Phase0ForkBlockRules&,uint64_t maximum_slots,
+ const std::function<void()>& checkpoint={});
+std::optional<Phase0ForkStore> prepare_phase0_store_slashing(const Phase0ForkStore&,
+ const IndexedConsensusAttestation&,const IndexedConsensusAttestation&,
+ const Phase0ForkBlockRules&,const std::function<void()>& checkpoint={});
+Phase0ForkStore prepare_phase0_store_tick(const Phase0ForkStore&,uint64_t time_ms,
+ const Phase0ForkBlockRules&,uint64_t maximum_slots,
+ const std::function<void()>& checkpoint={});
 }
