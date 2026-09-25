@@ -40,6 +40,7 @@ void check_rules(const AltairTransitionRules& r){
   throw std::invalid_argument("inconsistent Altair block rules");
 }
 }
+void validate_altair_transition_rules(const AltairTransitionRules& r){check_rules(r);validate_altair_epoch_rules(r.epoch,r.state);}
 std::optional<AltairSlotState> prepare_altair_state_transition(const AltairSlotState& input,
  View block,const AltairTransitionRules& r,uint64_t maximum_slots,uint64_t maximum_sync_trials,const std::function<void()>& checkpoint){
  check_rules(r);const auto& d=r.attestation.duties;const auto sync_bytes=(r.state.sync_committee_size+7)/8+96;

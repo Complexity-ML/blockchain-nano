@@ -2,7 +2,8 @@
 namespace nano {
 namespace {
 Json numbers(std::initializer_list<uint64_t> values){Json a=Json::array();for(auto n:values)a.push_back(quantity(Int(std::to_string(n))));return a;}
-Json profile(const AltairTransitionRules& r){
+}
+Json altair_transition_profile(const AltairTransitionRules& r){
  const auto& e=r.epoch;const auto& d=r.attestation.duties;const auto& q=e.registry;const auto& s=e.slashing;const auto& h=e.history;const auto& l=r.state;const auto& b=r.body;
  return Json{
   {"ffg",numbers({e.ffg.slots_per_epoch,e.ffg.effective_balance_increment})},
@@ -24,18 +25,17 @@ Json profile(const AltairTransitionRules& r){
   {"exit",numbers({r.exit.minimum_churn_limit,r.exit.churn_limit_quotient,r.exit.max_seed_lookahead,r.exit.minimum_withdrawability_delay,r.exit.shard_committee_period})},
   {"executionLimits",numbers({r.maximum_block_bytes})}};
 }
-}
 Json altair_slot_snapshot(const AltairSlotState& state,const AltairTransitionRules& rules){
  if(!rules.epoch.history.slots_per_epoch||state.ssz.size()<48)throw std::invalid_argument("invalid snapshot slot context");
  const auto root=altair_beacon_state_root(state.ssz,rules.state);uint64_t slot=0;for(unsigned i=0;i<8;++i)slot|=uint64_t(state.ssz[40+i])<<(8*i);
  const auto epoch=slot/rules.epoch.history.slots_per_epoch;
  if((epoch==0&&state.last_processed_epoch)||(epoch>0&&(!state.last_processed_epoch||*state.last_processed_epoch!=epoch-1)))throw std::invalid_argument("snapshot epoch marker mismatch");
- return Json{{"format","nano-altair-slot-v1"},{"profile",profile(rules)},{"stateRoot",hex(Bytes(root.begin(),root.end()))},{"ssz",hex(state.ssz)},
+ return Json{{"format","nano-altair-slot-v1"},{"profile",altair_transition_profile(rules)},{"stateRoot",hex(Bytes(root.begin(),root.end()))},{"ssz",hex(state.ssz)},
   {"lastProcessedEpoch",state.last_processed_epoch?Json(quantity(Int(std::to_string(*state.last_processed_epoch)))):Json(nullptr)}};
 }
 AltairSlotState altair_slot_from_snapshot(const Json& snapshot,const AltairTransitionRules& rules,
  const ConsensusRoot& expected_root,size_t maximum_state_bytes){
- if(!snapshot.is_object()||snapshot.size()!=5||snapshot.at("format")!="nano-altair-slot-v1"||snapshot.at("profile")!=profile(rules)||snapshot.at("stateRoot")!=hex(Bytes(expected_root.begin(),expected_root.end()))||!snapshot.at("ssz").is_string())throw std::invalid_argument("snapshot identity/profile mismatch");
+ if(!snapshot.is_object()||snapshot.size()!=5||snapshot.at("format")!="nano-altair-slot-v1"||snapshot.at("profile")!=altair_transition_profile(rules)||snapshot.at("stateRoot")!=hex(Bytes(expected_root.begin(),expected_root.end()))||!snapshot.at("ssz").is_string())throw std::invalid_argument("snapshot identity/profile mismatch");
  const auto& encoded=snapshot.at("ssz").get_ref<const std::string&>();
  if(encoded.size()<2||encoded.size()%2||!encoded.starts_with("0x")||(encoded.size()-2)/2>maximum_state_bytes)throw std::invalid_argument("snapshot state size/encoding");
  AltairSlotState state{unhex(encoded),std::nullopt};

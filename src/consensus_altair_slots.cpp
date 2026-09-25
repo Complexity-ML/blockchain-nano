@@ -17,6 +17,7 @@ void config(const AltairEpochRules& r,const AltairStateLimits& l){
 }
 void coherent(const Bytes& b,const Layout& l){const auto v=number(b,l.fields[2],4),bal=number(b,l.fields[3],4),prev=number(b,l.fields[4],4),curr=number(b,l.fields[5],4),scores=number(b,l.fields[6],4),n=(bal-v)/121;require((prev-bal)/8==n&&curr-prev==n&&scores-curr==n&&(b.size()-scores)/8==n);}
 }
+void validate_altair_epoch_rules(const AltairEpochRules& r,const AltairStateLimits& l){config(r,l);}
 AltairSlotState prepare_altair_epoch(const AltairSlotState& input,const AltairEpochRules& r,
  const AltairStateLimits& l,uint64_t expected,uint64_t trials,const std::function<void()>& checkpoint){
  config(r,l);altair_beacon_state_root(input.ssz,l,checkpoint);const Layout layout(l);coherent(input.ssz,layout);

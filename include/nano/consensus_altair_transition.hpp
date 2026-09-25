@@ -17,6 +17,8 @@ struct AltairTransitionRules {
  AltairSyncAggregateRules sync;
  size_t maximum_block_bytes;
 };
+// Cross-component consistency checks, also used when loading local profiles.
+void validate_altair_transition_rules(const AltairTransitionRules&);
 // Full Altair signed block transition on an authenticated starting state:
 // slots/epochs, block signature, proposer/parent, RANDAO, Eth1 vote, ordered
 // operations, SyncAggregate, final state root. No skip-validation option.

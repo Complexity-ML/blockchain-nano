@@ -636,3 +636,11 @@ blocs officiels ; RPC/HTTP existants passent. L'instanciation dans le runtime,
 l'appel du daemon et la récupération des acquittements perdus restent ouverts.
 Aucune activation EIP/consensus ; détails dans la section « Entrée RPC privée
 Altair » de `docs/VALIDATOR-EIP-ROADMAP.md`.
+
+Complément configuration Altair (25 septembre 2026) : le cœur peut recharger
+explicitement le profil complet déjà sérialisé dans les snapshots (91 quantités,
+sans défaut implicite), avec contrôle de taille/digest avant parsing. Deux blocs
+officiels et la reprise des snapshots passent, avec 502 profils invalides refusés.
+La composition au démarrage avec une ancre authentifiée reste ouverte ; ce
+chargeur n'active aucun fork ni EIP. Voir « Chargement explicite du profil Altair »
+dans `docs/VALIDATOR-EIP-ROADMAP.md`.

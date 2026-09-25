@@ -14,6 +14,7 @@ struct AltairEpochRules {
  uint64_t epochs_per_eth1_voting_period;
 };
 struct AltairSlotState {Bytes ssz;std::optional<uint64_t> last_processed_epoch;bool operator==(const AltairSlotState&)const=default;};
+void validate_altair_epoch_rules(const AltairEpochRules&,const AltairStateLimits&);
 // Complete ordered Altair process_epoch on an authenticated end-of-epoch state
 // whose current-slot roots have already been cached by process_slot.
 // Leaves slot unchanged; sets the marker. Caller commits bytes/marker together.

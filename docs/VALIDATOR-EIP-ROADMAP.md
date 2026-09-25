@@ -2051,3 +2051,34 @@ Restent la construction du service depuis une configuration/ancre authentifiée
 au démarrage de Nano, son appel depuis `nano-p2p`, la négociation de profil et
 la gestion des réponses perdues, puis le runtime multi-nœuds et la liaison EVM.
 La configuration courante n'injecte aucun service : pas d'activation implicite.
+
+### Chargement explicite du profil Altair, 25 septembre 2026
+
+Le runtime ne pouvait pas encore reconstruire les règles complètes sans les
+helpers de fixtures. Le cœur expose maintenant `altair_transition_profile` et
+`altair_transition_from_profile` : les 91 paramètres numériques et la version
+initiale de fork sont lus sans défaut implicite, depuis le même format déjà lié
+aux snapshots. Les tableaux ont une longueur exacte, chaque quantité est une
+chaîne hexadécimale canonique, et toute conversion vérifie la largeur réelle du
+champ cible (notamment les compteurs de rounds). Champs inconnus/manquants et
+versions de fork non canoniques sont refusés. Les contrôles existants de cohérence
+entre règles de bloc et d'epoch sont réutilisés ; cela ne prétend pas certifier
+toutes les combinaisons économiques ou tous les paramètres opérationnels.
+
+`load_altair_transition_profile` borne les octets, compare leur SHA-256 à un
+digest fourni indépendamment, puis parse le JSON en refusant les clés dupliquées.
+Le digest attendu doit provenir d'une configuration de confiance : le calculer
+à partir du fichier reçu ne l'authentifierait pas. La sélection d'un profil
+réseau et l'authentification de l'ancre restent des responsabilités distinctes.
+
+`consensus_altair_explicit_profile` passe avec 502 refus de configurations
+malformées/incohérentes et deux blocs officiels qui reproduisent exactement
+l'état final attendu avec les règles rechargées. Les octets des snapshots restent
+identiques. `consensus_altair_snapshot_recovery` passe également (105 snapshots
+rejetés, reprise après sortie abrupte et résultat officiel identique).
+Preuves : `build-cmake/qualification/altair-explicit-profile-20260925/`.
+
+Il reste à composer ce chargeur avec les fichiers d'ancre vérifiés et les limites
+du Store dans le démarrage de Nano, à gérer la reprise, puis à raccorder le daemon.
+Aucun preset minimal n'est installé comme profil de production ; aucun consensus
+réseau ni paramètre de genesis existant n'est activé/modifié.

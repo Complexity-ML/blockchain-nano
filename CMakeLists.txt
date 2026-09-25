@@ -1112,3 +1112,9 @@ set_tests_properties(consensus_altair_durable_worker_head consensus_altair_durab
 
 add_test(NAME consensus_altair_private_http COMMAND ${CMAKE_COMMAND} -E env NANO_TEST_ALTAIR_HTTP=1 $<TARGET_FILE:nano-altair-wire-tests>)
 set_tests_properties(consensus_altair_private_http PROPERTIES TIMEOUT 90 LABELS "qualification_consensus_ethereum")
+
+add_executable(nano-altair-profile-tests tests/test_altair_profile.cpp)
+target_link_libraries(nano-altair-profile-tests PRIVATE nano_core)
+target_compile_definitions(nano-altair-profile-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+add_test(NAME consensus_altair_explicit_profile COMMAND nano-altair-profile-tests)
+set_tests_properties(consensus_altair_explicit_profile PROPERTIES TIMEOUT 90 LABELS "qualification_consensus_ethereum")
