@@ -88,14 +88,14 @@ int main(){try{
  Bytes late_block;for(const auto& step:load(dir/"steps.json"))if(step.contains("block")){late_block=binary(dir/(step.at("block").get<std::string>()+".ssz"));break;}
  // Produce the official block locally from its body using the selected key,
  // and force it through independent signed-block admission afterwards.
- unsigned proposal_refusals=0;
+ unsigned proposal_refusals=0,randao_refusals=0;
  {
   const auto proposer=little(late_block,108,8);uint64_t pwords[4]{proposer+1,0,0,0};blst_scalar psecret;blst_scalar_from_uint64(&psecret,pwords);blst_p1 pp;blst_sk_to_pk_in_g1(&pp,&psecret);Bytes pkey(48);blst_p1_compress(pkey.data(),&pp);
   check(std::equal(pkey.begin(),pkey.end(),initial.timed.view.justified_registry.validators.at(proposer).public_key.begin()),"proposer fixture key mismatch");
   unsigned provider_calls=0;
   auto provider=[&](const ConsensusRoot& root){++provider_calls;static constexpr char dst[]="BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_POP_";blst_p2 h,s;blst_hash_to_g2(&h,root.data(),root.size(),reinterpret_cast<const uint8_t*>(dst),sizeof(dst)-1,nullptr,0);blst_sign_pk_in_g1(&s,&h,&psecret);Bytes signature(96);blst_p2_compress(signature.data(),&s);return signature;};
   ChainStore pdisk(temp/"proposer");BeaconSigningJournal pj(pdisk,1337,genesis,duty->genesis_root,pkey,transition.epoch.ffg.slots_per_epoch);
-  const Bytes body(late_block.begin()+184,late_block.end());
+  Bytes body(late_block.begin()+184,late_block.end());
   auto deny=[&](auto action){const auto token=pj.commitment();const auto before=provider_calls;bool refused=false;try{refused=!action().has_value();}catch(const std::exception&){refused=true;}check(refused&&provider_calls==before&&pj.commitment()==token,"refused proposal reached provider or changed journal");++proposal_refusals;};
   deny([&]{return reactor.sign_proposal(proposer,1,body,[&]{return now;},first_token,pj,provider);});
   deny([&]{return reactor.sign_proposal(proposer,2,body,[&]{return now;},current.token,pj,provider);});
@@ -108,8 +108,38 @@ int main(){try{
    deny([&]{return reactor.sign_proposal(proposer,1,body,[&]{return now;},current.token,wrong,provider);});check(wrong.commitment()==before,"wrong proposer identity journal changed");}
   unsigned proposal_clock_reads=0;
   deny([&]{return reactor.sign_proposal(proposer,1,body,[&]{return ++proposal_clock_reads==1?now+2:now+1;},current.token,pj,provider);});
+  auto randao_deny=[&](auto action){const auto before=pj.commitment();const auto calls_before=provider_calls;bool denied=false;try{denied=!action().has_value();}catch(const std::exception&){denied=true;}check(denied&&calls_before==provider_calls&&pj.commitment()==before,"invalid RANDAO reached provider or changed guards");++randao_refusals;};
+  randao_deny([&]{return reactor.sign_randao(UINT64_MAX,1,[&]{return now;},current.token,pj,provider);});
+  randao_deny([&]{return reactor.sign_randao(proposer,1,[&]{return now;},first_token,pj,provider);});
+  randao_deny([&]{return reactor.sign_randao(proposer,2,[&]{return now;},current.token,pj,provider);});
+  randao_deny([&]{return reactor.sign_randao(proposer,1,[&]{return now+duration;},current.token,pj,provider);});
+  randao_deny([&]{return reactor.sign_randao(proposer,1,[&]{return now;},current.token,pj,provider,[]{throw std::runtime_error("cancel RANDAO");});});
+  {ChainStore retired_disk(temp/"retired-randao");BeaconSigningJournal retired(retired_disk,1337,genesis,duty->genesis_root,pkey,transition.epoch.ffg.slots_per_epoch);retired.retire_and_export_interchange();
+   randao_deny([&]{return reactor.sign_randao(proposer,1,[&]{return now;},current.token,retired,provider);});}
+  {ChainStore wrong_disk(temp/"wrong-randao");auto g=duty->genesis_root;g[0]^=1;BeaconSigningJournal wrong(wrong_disk,1337,genesis,g,pkey,transition.epoch.ffg.slots_per_epoch);
+   randao_deny([&]{return reactor.sign_randao(proposer,1,[&]{return now;},current.token,wrong,provider);});}
+  const auto before_randao=pj.commitment();
+  const auto reveal=reactor.sign_randao(proposer,1,[&]{return now;},current.token,pj,provider);
+  check(reveal&&reveal->size()==96&&std::equal(reveal->begin(),reveal->end(),body.begin())&&pj.commitment()==before_randao&&reactor.current().token==current.token,"local RANDAO differs from official or changed guards/Store");
+  std::copy(reveal->begin(),reveal->end(),body.begin());
+  {bool bad=false;try{reactor.sign_randao(proposer,1,[&]{return now;},current.token,pj,[](const ConsensusRoot&){return Bytes(96,0);});}catch(const std::runtime_error&){bad=true;}check(bad&&pj.commitment()==before_randao,"invalid RANDAO provider accepted");}
+  {unsigned reads=0;bool withheld=false;try{reactor.sign_randao(proposer,1,[&]{return ++reads<5?now:now+duration;},current.token,pj,provider);}catch(const std::runtime_error&){withheld=true;}check(withheld&&reads==5&&pj.commitment()==before_randao,"expired RANDAO released or changed guards");}
+  // Exercise an epoch advance from the authenticated anchor. The epoch-one
+  // reveal must verify against epoch one, not the epoch-zero fixture domain.
+  {
+   const auto next_slot=transition.epoch.ffg.slots_per_epoch+1;
+   const auto& anchor=initial.blocks.at(initial.timed.view.anchor);
+   const auto selected=prepare_altair_proposer_identity(anchor.state,anchor.header,next_slot,transition.epoch,transition.state,transition.attestation.duties,limits.replay_slots,limits.sync_trials);
+   check(selected.has_value(),"missing next-epoch proposer");uint64_t nwords[4]{selected->index+1,0,0,0};blst_scalar ns;blst_scalar_from_uint64(&ns,nwords);blst_p1 np;blst_sk_to_pk_in_g1(&np,&ns);Bytes nk(48);blst_p1_compress(nk.data(),&np);check(nk==selected->public_key,"next-epoch proposer key mismatch");
+   ChainStore ndisk(temp/"next-epoch-core");ndisk.bind_chain(1337,genesis,"altair-qualification");AltairDurableReactor next(ndisk,1337,genesis,rules,limits,initial);const auto next_time=initial.timed.clock.genesis_time_ms+next_slot*duration;next.tick(next_time);
+   ChainStore njdisk(temp/"next-epoch-key");BeaconSigningJournal nj(njdisk,1337,genesis,selected->genesis_root,nk,transition.epoch.ffg.slots_per_epoch);
+   auto nprovider=[&](const ConsensusRoot& root){static constexpr char dst[]="BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_POP_";blst_p2 h,s;blst_hash_to_g2(&h,root.data(),root.size(),reinterpret_cast<const uint8_t*>(dst),sizeof(dst)-1,nullptr,0);blst_sign_pk_in_g1(&s,&h,&ns);Bytes sig(96);blst_p2_compress(sig.data(),&s);return sig;};
+   const auto nreveal=next.sign_randao(selected->index,next_slot,[&]{return next_time;},next.current().token,nj,nprovider);check(nreveal.has_value(),"next-epoch RANDAO missing");ConsensusRoot one{};one[0]=1;const auto domain=consensus_domain({2,0,0,0},selected->fork_version,selected->genesis_root);
+   check(verify_consensus_bls(nk,consensus_signing_root(one,domain),*nreveal)&&!verify_consensus_bls(nk,consensus_signing_root(ConsensusRoot{},domain),*nreveal),"RANDAO epoch domain not advanced");
+  }
+  const auto before_proposal_calls=provider_calls;
   auto produced=reactor.sign_proposal(proposer,1,body,[&]{return now;},current.token,pj,provider);
-  check(produced&&*produced==late_block&&provider_calls==1&&reactor.current().token==current.token&&reactor.current().signed_blocks->empty(),"local proposal differs from official block or published before admission");
+  check(produced&&*produced==late_block&&provider_calls==before_proposal_calls+1&&reactor.current().token==current.token&&reactor.current().signed_blocks->empty(),"local proposal differs from official block or published before admission");
   // Graffiti is valid arbitrary data, so only anti-slashing may reject this
   // different otherwise valid block at the same slot.
   auto different=body;different[168]^=1;
@@ -144,5 +174,5 @@ int main(){try{
  AltairDurableReactor stale(disk,1337,genesis,rules,limits,changed.token);
  reactor.tick(initial.timed.clock.genesis_time_ms+2*duration);refuse([&]{return stale.sign_attestation(index,1,[&]{return now;},changed.token,journal,signer);});
  check(reactor.vote(*signed_vote)&&reactor.current().signed_votes->size()==1,"locally produced vote rejected by independent admission");
- std::cout<<Json{{"scenario","altair-attester-duty"},{"validatorIndex",index},{"signedVotes",1},{"signedOfficialProposals",1},{"proposalRefusalsBeforeProvider",proposal_refusals},{"expiredProviderResultsWithheld",1},{"additionalTemporalResultsWithheld",temporal_withheld},{"syntheticEligibilityVariants",2},{"rejectedBeforeProvider",rejected},{"independentAdmission",true},{"staleCoordinatorRefused",true},{"source","official Altair anchor and synthetic scheduled duty"},{"executionBound",false},{"autonomousValidator",false}}.dump()<<'\n';
+ std::cout<<Json{{"scenario","altair-attester-duty"},{"validatorIndex",index},{"signedVotes",1},{"signedOfficialProposals",1},{"officialRandaoReproduced",true},{"nextEpochRandaoVerified",true},{"randaoRefusalsBeforeProvider",randao_refusals},{"proposalRefusalsBeforeProvider",proposal_refusals},{"expiredProviderResultsWithheld",1},{"additionalTemporalResultsWithheld",temporal_withheld},{"syntheticEligibilityVariants",2},{"rejectedBeforeProvider",rejected},{"independentAdmission",true},{"staleCoordinatorRefused",true},{"source","official Altair anchor and synthetic scheduled duty"},{"executionBound",false},{"autonomousValidator",false}}.dump()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

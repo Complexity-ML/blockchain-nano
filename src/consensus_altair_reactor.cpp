@@ -185,6 +185,43 @@ std::optional<Bytes> AltairDurableReactor::sign_proposal(uint64_t index,uint64_t
  if(checkpoint)checkpoint();if(!timely())throw std::runtime_error("Proposal expired after verification");
  return wire;
 }
+std::optional<Bytes> AltairDurableReactor::sign_randao(uint64_t index,uint64_t slot,
+ const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected,
+ BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint){
+ std::lock_guard lock(mutex_);require_available();
+ if(expected!=*token_)throw std::invalid_argument("Stale RANDAO duty request");
+ disk_.fork_checkpoint(chain_id_,genesis_,limits_.envelope_bytes,token_);
+ if(!local_clock||!signer)throw std::invalid_argument("Missing RANDAO clock or signing provider");
+ const auto& clock=state_->timed.clock;const auto& t=rules_.transition;validate_altair_transition_rules(t);
+ if(!rules_.slot_duration_ms||clock.time_ms<clock.genesis_time_ms)throw std::invalid_argument("Invalid RANDAO clock");
+ if((clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms!=slot||state_->timed.view.current_epoch!=slot/t.epoch.ffg.slots_per_epoch||state_->timed.view.equivocating_indices.contains(index))return std::nullopt;
+ uint64_t last_time=clock.time_ms;
+ auto timely=[&]{const auto time=local_clock();if(time<last_time||time<clock.genesis_time_ms||(time-clock.genesis_time_ms)/rules_.slot_duration_ms!=slot)return false;last_time=time;return true;};
+ if(!timely())return std::nullopt;
+ const auto head=phase0_fork_choice_head(state_->timed.view,{t.epoch.ffg.slots_per_epoch,t.attestation.duties.effective_balance_increment,rules_.proposer_score_boost},checkpoint).head;
+ const auto& parent=state_->blocks.at(head);
+ if(consensus_beacon_header_root(parent.header)!=head)throw std::invalid_argument("RANDAO parent binding mismatch");
+ const auto identity=prepare_altair_proposer_identity(parent.state,parent.header,slot,t.epoch,t.state,t.attestation.duties,limits_.replay_slots,limits_.sync_trials,checkpoint);
+ if(!identity||identity->index!=index)return std::nullopt;
+ if(journal.chain_!=chain_id_||journal.execution_genesis_!=genesis_||journal.validators_genesis_!=identity->genesis_root||journal.public_key_!=identity->public_key||journal.slots_per_epoch_!=t.epoch.ffg.slots_per_epoch||&journal.disk_==&disk_)
+  throw std::invalid_argument("Signing journal does not match authenticated RANDAO duty");
+ ConsensusRoot epoch_root{};const auto epoch=slot/t.epoch.ffg.slots_per_epoch;
+ for(unsigned i=0;i<8;++i)epoch_root[i]=uint8_t(epoch>>(8*i));
+ const auto root=consensus_signing_root(epoch_root,consensus_domain({2,0,0,0},identity->fork_version,identity->genesis_root));
+ if(checkpoint)checkpoint();if(!timely())return std::nullopt;
+ // Serialize with retirement/import/signing on this key, without fabricating
+ // a proposal reservation for an epoch-only RANDAO signature.
+ std::lock_guard signing_lock(journal.mutex_);journal.ready();
+ if(journal.retired_)throw std::runtime_error("Beacon signing journal permanently retired");
+ if(!timely())return std::nullopt;
+ auto signature=journal.sign(root,[&](const ConsensusRoot& signing_root){
+  auto result=signer(signing_root);
+  if(!timely())throw std::runtime_error("RANDAO expired during provider");
+  return result;
+ });
+ if(checkpoint)checkpoint();if(!timely())throw std::runtime_error("RANDAO expired after verification");
+ return signature;
+}
 void AltairDurableReactor::tick(uint64_t ms,const std::function<void()>& checkpoint){
  std::lock_guard lock(mutex_);require_available();publish(prepare_altair_store_tick(*state_,ms,rules_,limits_.replay_slots,limits_.sync_trials,checkpoint),signed_blocks_,signed_votes_,checkpoint);
 }

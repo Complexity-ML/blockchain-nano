@@ -1,5 +1,6 @@
 #include "nano/consensus_altair_fork_state.hpp"
 #include <algorithm>
+#include "nano/consensus_proposer.hpp"
 namespace nano {
 namespace {
 void require(bool ok){if(!ok)throw std::invalid_argument("invalid Altair fork state binding");}
@@ -35,4 +36,22 @@ AltairForkStateContexts prepare_altair_fork_state_contexts(const AltairSlotState
  auto block=altair_fork_block_context(input,h,r,l,checkpoint);auto state=h.slot==slot?input:prepare_altair_slots(input,r,l,slot,maximum_slots,maximum_sync_trials,checkpoint);auto p=project(state.ssz,r,l,checkpoint);require(p.registry.epoch==target.epoch);
  Phase0ForkVoteContext vote{target,std::move(p.registry),std::move(p.randao),block.fork,block.genesis_root};if(checkpoint)checkpoint();return {std::move(block),std::move(vote),std::move(state)};
 }
+std::optional<AltairProposerIdentity> prepare_altair_proposer_identity(
+ const AltairSlotState& input,const ConsensusBeaconHeader& h,uint64_t slot,
+ const AltairEpochRules& r,const AltairStateLimits& l,const Phase0FfgRules& d,
+ uint64_t maximum_slots,uint64_t maximum_sync_trials,const std::function<void()>& checkpoint){
+ require(d.slots_per_epoch==r.ffg.slots_per_epoch);
+ const auto parent=altair_fork_block_context(input,h,r,l,checkpoint);
+ if(slot<=h.slot)return std::nullopt;
+ const auto advanced=prepare_altair_slots(input,r,l,slot,maximum_slots,maximum_sync_trials,checkpoint);
+ const auto p=project(advanced.ssz,r,l,checkpoint);
+ std::vector<Phase0ProposerValidator> candidates;candidates.reserve(p.registry.validators.size());
+ for(const auto& [index,v]:p.registry.validators){if(checkpoint)checkpoint();candidates.push_back({index,v.effective_balance,v.activation_epoch,v.exit_epoch});}
+ const auto index=phase0_proposer_index(candidates,p.randao,{d.slots_per_epoch,d.min_seed_lookahead},slot,d.maximum_effective_balance,d.shuffle_rounds,checkpoint);
+ const auto& selected=p.registry.validators.at(index);if(selected.slashed)return std::nullopt;
+ const auto epoch=slot/d.slots_per_epoch;const auto version=array<4>(advanced.ssz,epoch<number(advanced.ssz,56)?48:52);
+ if(checkpoint)checkpoint();
+ return AltairProposerIdentity{index,version,parent.genesis_root,Bytes(selected.public_key.begin(),selected.public_key.end())};
+}
+
 }

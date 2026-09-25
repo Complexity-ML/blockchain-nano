@@ -922,3 +922,17 @@ réservation. Voir [construction et signature](ALTAIR-BLOCK-CONSTRUCTION.md) et
 RANDAO fourni par le corps de test, opérations en attente, automatisation,
 diffusion persistante et binding EVM restent ouverts ; aucune activation réseau
 ni clôture d'EIP supplémentaire n'est revendiquée.
+
+
+### 2026-09-25 — RANDAO local du proposant
+
+`sign_randao` dérive le proposant depuis le parent authentifié avancé au slot,
+lie clé/époque/fork/genesis et signe uniquement le domaine RANDAO. Le journal
+sérialise avec son retrait et vérifie son checkpoint sans modifier les réservations
+anti-slashing de blocs/votes. La révélation officielle est reproduite puis utilisée
+dans le bloc signé/admis. Sept refus avant fournisseur, signature invalide,
+expiration et passage synthétique à l'époque 1 sont couverts par
+`build-cmake/qualification/altair-local-randao-20260925/final-tests.log`.
+Voir [construction et RANDAO](ALTAIR-BLOCK-CONSTRUCTION.md). Restent la sélection
+d'opérations, la planification, la diffusion persistante et la liaison EVM ; ce
+jalon n'active aucun réseau et ne clôt pas le consensus de production.

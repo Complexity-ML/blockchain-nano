@@ -81,8 +81,37 @@ le bloc signé et conserve sa réservation.
 
 ## Intégration encore nécessaire
 
-L'appelant fournit toujours le corps, dont une révélation RANDAO déjà signée.
-La production locale de cette révélation, la sélection des opérations en attente,
+L'appelant fournit toujours le corps, dont la révélation peut maintenant être
+obtenue via `sign_randao` ci-dessous. La sélection des opérations en attente,
 le planificateur, la file de diffusion et la liaison atomique avec l'exécution
 EVM restent à intégrer. La méthode de signature n'est pas exposée en RPC public.
 Ces tests ne créent pas un réseau autonome ni un profil Altair-EVM activable.
+
+## Révélation RANDAO locale
+
+`AltairDurableReactor::sign_randao` dérive le proposant depuis la tête authentifiée
+avancée au slot demandé. La sélection utilise le registre et les mixes RANDAO
+de cet état avancé ; un proposant sanctionné est refusé sans nouveau tirage.
+L'époque, le domaine RANDAO `0x02000000`, la version du fork et le genesis sont
+déduits localement. L'appelant ne fournit pas de racine arbitraire à signer.
+
+Le journal dédié vérifie son checkpoint et son statut de retrait sous son verrou,
+puis vérifie la signature retournée par le fournisseur BLS. Ce message d'époque
+n'est ni une proposition de bloc ni une attestation slashable : il ne modifie
+pas leurs réservations et ne crée aucun faux créneau de proposition. La méthode
+n'expose pas un nouveau mode de signature générique du journal.
+
+Les contrôles de Store, clé, temps, recul d'horloge, expiration et annulation
+restent applicables. Un backend qui divulgue lui-même une signature ou une clé
+volée utilisée hors du logiciel ne peut pas être neutralisé par ces contrôles.
+La révélation n'est ni publiée ni ajoutée à une file persistante automatiquement.
+
+Campagne `build-cmake/qualification/altair-local-randao-20260925/final-tests.log` :
+révélation de 96 octets identique au corpus, réinjectée dans le corps du bloc,
+signature de proposition puis admission indépendante ; journal et Store inchangés
+par la seule révélation. Sept refus avant fournisseur couvrent index, engagement,
+créneau, heure, annulation, journal retiré et mauvaise identité de genesis.
+Un fournisseur renvoyant une signature zéro est refusé ; une expiration finale
+retient le résultat. Un scénario synthétique depuis l'ancre officielle avance
+jusqu'à l'époque 1 : la signature vérifie pour cette époque et échoue pour
+l'époque 0. Ces tâches locales ne constituent pas encore un validateur autonome.
