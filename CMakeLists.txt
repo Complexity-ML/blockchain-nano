@@ -1109,3 +1109,6 @@ set_tests_properties(consensus_altair_wire_admission PROPERTIES TIMEOUT 90 LABEL
 add_test(NAME consensus_altair_durable_worker_head COMMAND ${CMAKE_COMMAND} -E env NANO_TEST_DURABLE_WORKER=1 $<TARGET_FILE:nano-altair-fork-head-tests>)
 add_test(NAME consensus_altair_durable_worker_reorg COMMAND ${CMAKE_COMMAND} -E env NANO_TEST_DURABLE_WORKER=1 $<TARGET_FILE:nano-altair-fork-head-tests> "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/consensus-altair-fork-reorg-official" 8)
 set_tests_properties(consensus_altair_durable_worker_head consensus_altair_durable_worker_reorg PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_ethereum")
+
+add_test(NAME consensus_altair_private_http COMMAND ${CMAKE_COMMAND} -E env NANO_TEST_ALTAIR_HTTP=1 $<TARGET_FILE:nano-altair-wire-tests>)
+set_tests_properties(consensus_altair_private_http PROPERTIES TIMEOUT 90 LABELS "qualification_consensus_ethereum")

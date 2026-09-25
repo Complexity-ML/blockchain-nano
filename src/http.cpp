@@ -92,7 +92,7 @@ struct HttpServer::Impl {
  std::shared_ptr<bool> drop_import_ack=std::make_shared<bool>(false);
  Impl(Rpc& rpc,const std::string& host,uint16_t port,std::chrono::milliseconds maximum_queue_wait):acceptor(context),signals(context,SIGINT,SIGTERM),validator_timer(context),rpc(rpc),simulations(maximum_queue_wait){
   *drop_import_ack=host=="127.0.0.1"&&std::getenv("NANO_TEST_DROP_BLOCK_IMPORT_ACK_ONCE")!=nullptr;
-  tcp::endpoint endpoint(asio::ip::make_address(host),port);acceptor.open(endpoint.protocol());acceptor.set_option(asio::socket_base::reuse_address(true));acceptor.bind(endpoint);acceptor.listen(128);
+  tcp::endpoint endpoint(asio::ip::make_address(host),port);if(rpc.requires_private_bind()&&!endpoint.address().is_loopback())throw std::invalid_argument("Altair internal RPC requires a loopback bind");acceptor.open(endpoint.protocol());acceptor.set_option(asio::socket_base::reuse_address(true));acceptor.bind(endpoint);acceptor.listen(128);
   signals.async_wait([this](beast::error_code ec,int){if(!ec){simulations.stopping.store(true);context.stop();}});accept();tick();
  }
  ~Impl(){simulations.stopping.store(true);simulations.workers.join();}

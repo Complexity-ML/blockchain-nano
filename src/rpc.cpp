@@ -1,5 +1,6 @@
 #include "nano/rpc_timing.hpp"
 #include "nano/rpc.hpp"
+#include "../network/altair_rpc_service.hpp"
 namespace nano {
 namespace {
 Json error_response(const Json& id,int code,const std::string& message,const Json& data=nullptr){Json error={{"code",code},{"message",message}};if(!data.is_null())error["data"]=data;return {{"jsonrpc","2.0"},{"id",id},{"error",error}};}
@@ -459,7 +460,14 @@ Json Rpc::one(const Json& request,const std::function<void()>& cancelled){
  try{auto params=request.value("params",Json::array());if(!params.is_array())throw RpcError(-32602,"Expected positional parameters");
   if(cancelled)cancelled();
   auto lock_started=rpc_timing::Clock::now();std::unique_lock lock(mutex_);rpc_timing::record("rpc_lock",lock_started,rpc_timing::request);auto method=request["method"].get<std::string>();Json result;
-  if(method=="eth_call"||method=="eth_estimateGas"){
+  if(method=="nano_altairReceive"){
+   if(!altair_)throw RpcError(-32601,"Method not found");
+   arity(params,2,2);
+   if(network_token_.empty()||!params[0].is_string()||params[0].get<std::string>()!=network_token_)throw RpcError(-32001,"Unauthorized Altair request");
+   if(!params[1].is_string())throw RpcError(-32602,"Expected encoded Altair envelope");
+   auto service=altair_;lock.unlock();result=service->receive(params[1].get_ref<const std::string&>(),cancelled);
+  }
+  else if(method=="eth_call"||method=="eth_estimateGas"){
    std::function<Json()> simulation;{rpc_timing::Span preparation("prepare");simulation=prepare_simulation(method,params,cancelled);}
    lock.unlock();rpc_timing::Span execution(method=="eth_call"?"call_execute":"estimate_execute");result=simulation();
   }

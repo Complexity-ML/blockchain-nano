@@ -5,6 +5,7 @@
 #include "wallet.hpp"
 #include "bft_reactor.hpp"
 #include "block_import.hpp"
+class AltairRpcService;
 namespace nano {
 class RpcError : public std::runtime_error {
 public:
@@ -18,6 +19,7 @@ struct RpcSimulationLimits {
 struct RpcStream { std::string id,type;Json criteria;uint64_t cursor; };
 class Rpc {
  Blockchain& chain_;
+ std::shared_ptr<::AltairRpcService> altair_;
  RpcSimulationLimits simulation_limits_;
  std::function<AdmissionBudget::Clock::time_point()> admission_now_;
  AdmissionBudget admission_budget_;
@@ -55,8 +57,9 @@ class Rpc {
  Json dispatch(const std::string& method,const Json& params,const Estimate& estimate={});
  Json one(const Json& request,const std::function<void()>& cancelled);
 public:
- explicit Rpc(Blockchain& chain,std::string network_token={},std::function<AdmissionBudget::Clock::time_point()> now=AdmissionBudget::Clock::now,RpcSimulationLimits simulation_limits={}):chain_(chain),simulation_limits_(std::move(simulation_limits)),admission_now_(std::move(now)),admission_budget_(admission_now_()),network_token_(std::move(network_token)){}
- bool local_only(){std::lock_guard lock(mutex_);return dev_mode_||!wallets_.addresses().empty();}
+ explicit Rpc(Blockchain& chain,std::string network_token={},std::function<AdmissionBudget::Clock::time_point()> now=AdmissionBudget::Clock::now,RpcSimulationLimits simulation_limits={},std::shared_ptr<::AltairRpcService> altair={}):chain_(chain),altair_(std::move(altair)),simulation_limits_(std::move(simulation_limits)),admission_now_(std::move(now)),admission_budget_(admission_now_()),network_token_(std::move(network_token)){}
+ bool requires_private_bind()const{return bool(altair_);}
+ bool local_only(){std::lock_guard lock(mutex_);return bool(altair_)||dev_mode_||!wallets_.addresses().empty();}
  bool has_wallets(){std::lock_guard lock(mutex_);return !wallets_.addresses().empty();}
  void validator_tick();
  void load_wallets(const Json& config,const std::string& bind_address);

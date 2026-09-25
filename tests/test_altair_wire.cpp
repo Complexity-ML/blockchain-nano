@@ -2,8 +2,14 @@
 #include "nano/consensus_altair_reactor.hpp"
 #include "../network/altair_consensus_service.hpp"
 #include <future>
+#include "../network/altair_rpc_service.hpp"
+#include "nano/http.hpp"
+#include "nano/simulation_queue.hpp"
+#include "support/persistent_rpc.hpp"
 using namespace test;using namespace test::phase0_minimal;
+struct RunningAltairHttp {HttpServer& server;std::thread thread;explicit RunningAltairHttp(HttpServer& s):server(s),thread([&s]{s.run();}){}~RunningAltairHttp(){server.stop();thread.join();}};
 int main(){try{
+ const bool http_mode=std::getenv("NANO_TEST_ALTAIR_HTTP")!=nullptr;
  const fs::path fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",corpus=fixtures/"consensus-altair-fork-head-official",dir=corpus/"chain_no_attestations";
  const auto manifest=load(corpus/"manifest.json");for(const auto& row:manifest.at("cases"))if(row.at("name")=="chain_no_attestations")for(const auto& [path,info]:row.at("files").items())check(hex(sha256(binary(corpus/path))).substr(2)==info.at("sha256").get<std::string>(),"fixture digest");
  const auto transition=altair_transition_rules(fixtures);const auto config=read(corpus/"minimal-config-v1.6.0-beta.0.yaml");const auto duration=parameter(config,"SECONDS_PER_SLOT")*1000;
@@ -13,9 +19,31 @@ int main(){try{
  const Bytes genesis(32,9);Temp directory;ChainStore disk(directory/"db");disk.bind_chain(1337,genesis,"altair-qualification");AltairDurableReactor reactor(disk,1337,genesis,rules,limits,initial);
  const auto& anchor=initial.blocks.at(initial.timed.view.anchor).state.ssz;ConsensusBytes4 version{};std::copy_n(anchor.begin()+52,4,version.begin());const auto fork_root=consensus_fork_data_root(version,root_at(anchor,8));
  const AltairWireProfile profile{"0x539",hex(genesis),hex(Bytes(fork_root.begin(),fork_root.begin()+4)),1024*1024,400000,512,40000};
+ Temp execution_directory;Blockchain execution(execution_directory/"execution",Genesis::from_json(Json{{"alloc",Json::object()}}));
+ std::shared_ptr<AltairRpcService> endpoint;std::unique_ptr<Rpc> rpc;std::unique_ptr<HttpServer> server;std::unique_ptr<RunningAltairHttp> running;std::unique_ptr<PersistentRpc> client;
+ if(http_mode){
+  endpoint=std::make_shared<AltairRpcService>(reactor,profile,4,2*1024*1024);
+  rpc=std::make_unique<Rpc>(execution,"qualification-only-token",AdmissionBudget::Clock::now,RpcSimulationLimits{},endpoint);
+  bool public_rejected=false;try{HttpServer unsafe(*rpc,"0.0.0.0",0);}catch(const std::invalid_argument&){public_rejected=true;}check(public_rejected,"private endpoint publicly bindable");
+  server=std::make_unique<HttpServer>(*rpc,"127.0.0.1",0);running=std::make_unique<RunningAltairHttp>(*server);client=std::make_unique<PersistentRpc>(server->port());
+  const auto token=reactor.current().token;
+  bool unauthorized=false;try{client->call("nano_altairReceive",Json::array({"wrong","{}"}));}catch(const PersistentRpcError& e){unauthorized=e.code==-32001;}
+  check(unauthorized&&reactor.current().token==token,"unauthorized request changed consensus");
+  bool invalid=false;try{client->call("nano_altairReceive",Json::array({"qualification-only-token","{}"}));}catch(const PersistentRpcError& e){invalid=e.code==-32602;}
+  check(invalid&&client->call("eth_chainId")=="0x539","invalid envelope or normal RPC regression");
+  Rpc disabled(execution);auto response=disabled.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method","nano_altairReceive"},{"params",Json::array({"qualification-only-token","{}"})}});
+  check(response.at("error").at("code")==-32601,"Altair RPC enabled by default");
+  check(simulation_count(Json{{"method","nano_altairReceive"}})==1,"Altair bypasses bounded HTTP worker queue");
+ }
  auto now=InboundBudget::Clock::time_point{};InboundBudget shared_budget(now);AltairMessageIngress ingress(profile,shared_budget);size_t forwarded=0;
  AltairConsensusService service(reactor,4,2*1024*1024);auto dispatch=service.dispatcher();
  auto deliver=[&](const AltairWireMessage& m){
+  if(client){
+   const auto kind=m.kind==AltairWireKind::block?"block":m.kind==AltairWireKind::attestation?"attestation":"attester_slashing";
+   const auto encoded=Json{{"chainId",profile.chain_id},{"genesisHash",profile.genesis_hash},{"forkDigest",profile.fork_digest},{"kind",kind},{"ssz",hex(m.ssz)}}.dump();
+   try{return client->call("nano_altairReceive",Json::array({"qualification-only-token",encoded})).at("accepted").get<bool>()?AltairWork::Decision::accepted:AltairWork::Decision::rejected;}
+   catch(const PersistentRpcError& e){if(e.code==-32603)return AltairWork::Decision::local_failure;throw;}
+  }
   auto reply=std::make_shared<std::promise<AltairWork::Decision>>();auto future=reply->get_future();
   check(dispatch(m,std::make_shared<std::atomic<bool>>(false),[reply](auto decision){reply->set_value(decision);}),"service queue refused bounded fixture");
   check(future.wait_for(20s)==std::future_status::ready,"durable worker did not complete");return future.get();
@@ -24,6 +52,15 @@ int main(){try{
  auto frame=[&](const std::string& kind,const Bytes& bytes){return Json{{"chainId",profile.chain_id},{"genesisHash",profile.genesis_hash},{"forkDigest",profile.fork_digest},{"kind",kind},{"ssz",hex(bytes)}};};
  unsigned rejected=0;auto refuse=[&](const std::string& encoded,bool reaches_core=false){now+=10s;const auto before=reactor.current().token;const auto count=forwarded;check(ingress.receive("peer-a",encoded,handler,now)==AltairMessageIngress::Result::rejected,"wire message accepted");check(reactor.current().token==before&&ingress.active()==0&&forwarded==count+(reaches_core?1:0),"bad wire message changed state or leaked lease");++rejected;};
  const auto base=frame("attestation",Bytes{0,1});
+ if(client){
+  auto wrong=base;wrong["chainId"]="0x1";auto extra=base;extra["tick"]=1;
+  for(const auto& encoded:std::vector<std::string>{wrong.dump(),extra.dump(),std::string("{\"chainId\":\"0x539\",")+base.dump().substr(1)}){
+   const auto before=reactor.current().token;bool rejected=false;
+   try{client->call("nano_altairReceive",Json::array({"qualification-only-token",encoded}));}catch(const PersistentRpcError& e){rejected=e.code==-32602;}
+   check(rejected&&reactor.current().token==before,"core HTTP envelope validation bypassed");
+  }
+ }
+
  refuse(std::string("{\"chainId\":\"0x539\",")+base.dump().substr(1));
  for(const std::string field:{"chainId","genesisHash","forkDigest","kind"}){auto j=base;j[field]="wrong";refuse(j.dump());}
  auto j=base;j["fromBlock"]=true;refuse(j.dump());j=base;j["kind"]="tick";refuse(j.dump());j=base;j["ssz"]="0x0";refuse(j.dump());j=base;j["ssz"]="0xFF";refuse(j.dump());j=base;j["ssz"]=hex(Bytes(513,0));refuse(j.dump());refuse(base.dump()+"{}");refuse(std::string(profile.frame_bytes+1,' '));refuse(base.dump(),true);refuse(frame("attester_slashing",Bytes{0,1}).dump(),true);
@@ -46,5 +83,10 @@ int main(){try{
  AltairConsensusService resumed(restored,1,1024);std::promise<AltairWork::Decision> reply;auto result=reply.get_future();
  check(resumed.dispatcher()({AltairWireKind::attestation,Bytes{0,1}},std::make_shared<std::atomic<bool>>(false),[&](auto d){reply.set_value(d);}),"restarted service admission");
  check(result.wait_for(20s)==std::future_status::ready&&result.get()==AltairWork::Decision::rejected,"restarted service failed validation");resumed.stop();resumed.join();
- std::cout<<Json{{"durableWorker",true},{"unavailableReactorNotAcknowledged",true},{"scenario","altair-wire-admission"},{"rejected",rejected},{"officialBlocksCommitted",accepted},{"limited",limited},{"realLibp2pNetwork",false},{"networkActive",false}}.dump()<<'\n';
+ if(endpoint){
+  endpoint->stop();endpoint->join();bool unavailable=false;
+  try{client->call("nano_altairReceive",Json::array({"qualification-only-token",base.dump()}));}catch(const PersistentRpcError& e){unavailable=e.code==-32005;}
+  check(unavailable&&client->call("eth_chainId")=="0x539","stopped Altair service blocks ordinary RPC");
+ }
+ std::cout<<Json{{"httpTransport",http_mode},{"durableWorker",true},{"unavailableReactorNotAcknowledged",true},{"scenario","altair-wire-admission"},{"rejected",rejected},{"officialBlocksCommitted",accepted},{"limited",limited},{"realLibp2pNetwork",false},{"networkActive",false}}.dump()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

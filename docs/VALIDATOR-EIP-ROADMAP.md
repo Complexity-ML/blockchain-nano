@@ -2015,3 +2015,39 @@ entre processus ni un réseau distribué Altair. Restent le point d'entrée priv
 côté cœur, le transfert depuis le daemon, la négociation du protocole, le pilotage
 de l'horloge et l'arrêt du runtime complet, puis la liaison EVM et les essais
 multi-nœuds. Aucun changement d'activation réseau ni de statut production.
+
+### Entrée RPC privée Altair, 25 septembre 2026
+
+`nano_altairReceive(token, encodedEnvelope)` est maintenant traité par `Rpc`
+uniquement lorsqu'un `AltairRpcService` a été explicitement injecté à sa
+construction. Sans service, la méthode renvoie `-32601`. Avec service, le jeton
+réseau est obligatoire (`-32001` sinon), `HttpServer` refuse une adresse d'écoute
+non loopback et les requêtes navigateur avec Origin sont refusées. Ce contrôle
+ne remplace pas la sécurité du compte hôte ni une authentification de snapshot.
+
+Le cœur valide à nouveau l'enveloppe brute (profil, champs, doublons et tailles)
+avant la file de consensus. La méthode compte dans le budget partagé des tâches
+RPC coûteuses, pour HTTP et WebSocket, y compris dans les batches/notifications.
+Elle libère le verrou RPC avant d'attendre le worker. Le worker Altair garde son
+propre budget jusqu'à la fin réelle du travail. La réponse `accepted` suit le
+commit durable ; les erreurs locales sont distinctes des rejets de consensus.
+Saturation/arrêt renvoient `-32005`, erreur locale `-32603`, enveloppe invalide
+`-32602`. Une échéance dépassée renvoie `-32002` et signale l'annulation au worker.
+Une échéance ou une déconnexion n'est **pas une preuve d'absence de commit** ;
+la stratégie de récupération après perte d'acquittement reste à raccorder au
+transport du daemon. Aucun tick ne peut être transmis par cette méthode.
+
+Les suites `rpc`, `http`, `consensus_altair_wire_admission` et
+`consensus_altair_private_http` passent. Le nouveau cas utilise de vraies
+connexions HTTP loopback, un worker réel et RocksDB ; deux blocs officiels sont
+persistés, et le choix de tête correspond au corpus. Il teste le mauvais jeton,
+la désactivation par défaut, le bind public refusé, les enveloppes incohérentes
+ou dupliquées, le coordinateur indisponible et le service arrêté ; les RPC
+ordinaires restent disponibles. Client et serveur sont dans le même processus
+pour cette qualification : ce n'est pas encore un test daemon/cœur séparés.
+Preuves : `build-cmake/qualification/altair-private-http-20260925/`.
+
+Restent la construction du service depuis une configuration/ancre authentifiée
+au démarrage de Nano, son appel depuis `nano-p2p`, la négociation de profil et
+la gestion des réponses perdues, puis le runtime multi-nœuds et la liaison EVM.
+La configuration courante n'injecte aucun service : pas d'activation implicite.

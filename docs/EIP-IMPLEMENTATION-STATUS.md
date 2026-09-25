@@ -628,3 +628,11 @@ par ce chemin (3 721 checks, 17 reprises). Ce service cœur n'est pas encore exp
 au daemon séparé ; aucun réseau Altair ni nouveau profil EIP n'est activé.
 Détails et limites dans « Service worker–consensus durable » de la feuille
 validateurs ; preuves `build-cmake/qualification/altair-durable-worker-20260925/`.
+
+Complément IPC Altair (25 septembre 2026) : entrée `nano_altairReceive` désactivée
+par défaut, authentifiée par le jeton réseau et limitée à une écoute loopback
+lorsqu'un service est injecté. Le trajet HTTP–worker–RocksDB est testé sur deux
+blocs officiels ; RPC/HTTP existants passent. L'instanciation dans le runtime,
+l'appel du daemon et la récupération des acquittements perdus restent ouverts.
+Aucune activation EIP/consensus ; détails dans la section « Entrée RPC privée
+Altair » de `docs/VALIDATOR-EIP-ROADMAP.md`.
