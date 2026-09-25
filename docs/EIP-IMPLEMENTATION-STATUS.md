@@ -599,3 +599,10 @@ ou hors limites rejetées ; cinq suites vertes, reprises événementielles conse
 Campagne `consensus-message-ssz-20260925`. La validation de signature/consensus
 reste distincte du codec. Transport P2P, cadrage/décompression/quotas et schéma
 Electra EIP-7549 restent à intégrer ; aucune activation réseau.
+
+Transport Altair : adaptateur d'enveloppe Nano JSON/hex préparé, identité/profil
+et tailles vérifiés, clés dupliquées rejetées, budget partagé InboundBudget et
+framing JsonFrame réutilisés. Test local : deux blocs officiels committés avant
+acceptation, 14 rejets de messages, 24 refus par quota ; trois suites vertes.
+Campagne `altair-wire-admission-20260925`. Pas encore de flux libp2p réel ni de
+handler enregistré ; négociation/runtime/files et essais distribués restent ouverts.

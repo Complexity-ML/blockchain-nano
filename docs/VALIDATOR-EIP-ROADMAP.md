@@ -1879,3 +1879,41 @@ Reste l'intégration du transport P2P : cadrage, décompression bornée, négoci
 de profil, files/budgets d'admission, récupération des dépendances, service réseau
 et qualification distribuée. Le codec n'implémente pas le nouveau schéma Electra
 (EIP-7549) et ne constitue aucune activation de fork ni de réseau.
+
+### Enveloppe d'admission Altair préparée, 25 septembre 2026
+
+L'examen de `network/main.cpp` confirme que le daemon actuel échange avec le BFT
+actif via RPC. Il n'a pas encore de service d'événements Altair. L'adaptateur
+`network/altair_message.hpp` prépare cette frontière sans enregistrer de nouveau
+handler dans le daemon ni mélanger les profils actifs.
+
+L'enveloppe JSON/hex non compressée contient exactement chainId, genesisHash,
+forkDigest, kind et ssz. C'est un format Nano, pas le framing gossipsub Ethereum.
+Le profil local fournit les identités et tailles maximales par type. Identités
+incompatibles, champs supplémentaires, clés dupliquées, types inconnus (dont tick),
+hex non canonique et dépassements sont rejetés avant décodage binaire. La limite
+de frame passe par JsonFrame avant parsing ; un lecteur de flux devra appliquer
+la même limite dès la réception fragmentée, pas seulement sur le buffer complet.
+Le digest de fork est un filtre de compatibilité, pas une preuve d'authenticité.
+
+L'admission reçoit une référence au budget partagé du daemon et utilise ses
+leases bulk jusqu'à la fin du handler. Un message invalide consomme aussi son
+budget ; une autre instance d'adaptateur ne crée pas une nouvelle réserve.
+L'identité de pair doit venir du stream libp2p authentifié, jamais du JSON.
+Le handler est synchrone et doit terminer son commit avant de répondre ; les
+erreurs locales de consensus/disque/annulation remontent sans être converties
+en verdict d'invalidité du pair. L'adaptateur ne doit pas être ré-entrant.
+
+Test local vers le coordinateur durable : deux blocs du scénario officiel
+chain_no_attestations committés avant acceptation, tête conforme aux attentes,
+14 messages rejetés, 24 refus par quota sur une rafale bornée de 32 tentatives,
+isolation des parts de pairs, partage du budget entre instances et libération
+de lease après exception. Le framing est vérifié avec fragments de 1, 7 octets
+et frame entière. Trois suites passent (wire, codec SSZ, publication durable).
+Preuves : `build-cmake/qualification/altair-wire-admission-20260925/`.
+
+Ce test n'ouvre aucun réseau libp2p. Restent l'enregistrement/negociation du
+protocole, le service RPC/runtime Altair explicite, le travail hors boucle I/O
+avec files bornées, la propagation/récupération des dépendances et la qualification
+multi-nœuds. Pas de Snappy ni de fallback vers un autre profil acceptés ici.
+Aucune activation réseau ou conformité wire Ethereum n'est revendiquée.
