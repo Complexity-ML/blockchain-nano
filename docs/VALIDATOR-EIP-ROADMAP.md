@@ -1952,3 +1952,37 @@ Restent l'enregistrement/négociation du protocole Altair dans le daemon, le
 service runtime/RPC explicite, la file worker bornée réelle et son arrêt coordonné,
 la récupération des dépendances et les essais distribués Altair. L'adaptateur
 n'est pas encore enregistré dans `network/main.cpp`. Pas d'activation réseau.
+
+### File worker Altair bornée, 25 septembre 2026
+
+`network/altair_worker.hpp` fournit désormais une file réelle, à un thread,
+compatible avec le dispatcher de `AltairStreamRequest`. L'ordre FIFO sérialise
+les traitements de consensus ; le nombre de travaux et la capacité allouée des
+payloads SSZ sont bornés en comptant les travaux en attente **et** celui en cours.
+Ces paramètres sont une politique locale de ressources, pas une limite du
+registre des validateurs. Les callbacks et autres métadonnées sont bornés en
+nombre, pas mesurés dans le budget des payloads.
+
+`stop()` refuse toute nouvelle admission et signale l'annulation au travail actif
+et aux travaux en attente. Ces derniers sont terminés sans entrer dans le handler.
+Le handler actif doit coopérer aux checkpoints d'annulation et finir tout commit
+avant son retour ; une décision déjà commitée n'est pas réécrite en rejet à cause
+d'une annulation tardive. Les exceptions du handler produisent une erreur locale.
+La callback de fin est appelée une fois après le traitement ; elle ne doit pas
+lever d'exception. `join()` appartient au thread propriétaire, hors boucle I/O,
+après `stop()`. L'exécuteur I/O reste vivant jusqu'au drainage des fins postées.
+Un handler bloqué qui ignore l'annulation peut encore retarder l'arrêt : pas de
+prétention de préemption forcée ou de délai d'arrêt garanti.
+
+Les dix suites du module réseau passent, dont `altair_worker` (budgets cumulés,
+capacité mémoire excédentaire, FIFO, exception, annulation et refus après arrêt).
+`altair_stream` passe maintenant douze cas : deux supplémentaires utilisent le
+vrai worker et vérifient la rétention de l'admission jusqu'à sa fin, la réponse
+normale et l'absence de réponse après annulation. Les streams restent contrôlés,
+sans connexions entre pairs. Preuves :
+`build-cmake/qualification/altair-bounded-worker-20260925/`.
+
+La file est disponible mais **pas instanciée dans le daemon**. Restent son
+raccordement au service de consensus durable, l'enregistrement/négociation du
+protocole, l'arrêt coordonné du runtime, la liaison atomique EVM et les essais
+Altair distribués. Aucune activation réseau ni qualification production.

@@ -1,4 +1,5 @@
-#include "altair_stream.hpp"
+#include "altair_worker.hpp"
+#include <future>
 #include <iostream>
 #include <thread>
 class TestStream:public libp2p::connection::Stream {
@@ -49,6 +50,24 @@ int main(){try{
   auto request=std::make_shared<Request>(io,stream,ingress,[&](auto,auto,auto done){++calls;if(mode==3)return false;done(Decision::local_failure);return true;});
   request->start(mode==0?std::chrono::milliseconds(2):std::chrono::seconds(2));io.run();check(budget.active()==0&&stream->written.empty()&&stream->resets>0,"failed request retained capacity or replied");
   check(calls==((mode==3||mode==4)?1U:0U),"invalid frame reached dispatch");++cases;
+ }
+ for(bool expire:{false,true}){
+  asio::io_context io;InboundBudget budget;
+  auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);
+  auto stream=std::make_shared<TestStream>(io,packet);
+  std::promise<void> entered,release;auto gate=release.get_future().share();
+  AltairWorker worker(1,256,[&](const auto& message,const auto&){check(message.ssz.size()==2,"worker payload");entered.set_value();gate.wait();return Decision::accepted;});
+  auto request=std::make_shared<Request>(io,stream,ingress,worker.dispatcher());
+  request->start(std::chrono::seconds(2));io.poll();entered.get_future().wait();
+  check(budget.active()==1&&stream->written.empty(),"real worker acknowledged before completion");
+  if(expire){request->cancel();worker.stop();check(budget.active()==1,"cancellation released running worker lease");}
+  release.set_value();
+  if(expire)worker.join();
+  io.restart();io.run();worker.stop();worker.join();
+  check(budget.active()==0,"real worker completion leaked admission");
+  if(expire)check(stream->written.empty(),"real worker acknowledged cancelled stream");
+  else check(Json::parse(stream->written)==Json{{"accepted",true}},"real worker failed acknowledgement");
+  ++cases;
  }
  std::cout<<Json{{"scenario","altair-async-stream"},{"cases",cases},{"workerThreadCompletion",true},{"expiredWorkerLeaseRetained",true},{"realPeerConnections",false}}.dump()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

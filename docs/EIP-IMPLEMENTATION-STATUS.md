@@ -613,3 +613,10 @@ et réponse unique). Dix cas contrôlés ; neuf suites réseau et deux régressi
 libp2p/BFT locales vertes. Campagne `altair-async-stream-20260925`.
 Ces connexions réelles concernent le transport existant : Altair attend encore
 handler/négociation, runtime et file worker bornée. Aucun nouveau profil actif.
+
+Complément transport Altair (25 septembre 2026) : file worker séquentielle réelle
+avec budgets cumulés de messages/payloads, annulation coopérative et drainage.
+Dix suites réseau passent ; douze cas de stream incluent le vrai worker derrière
+un stream contrôlé. La file n'est pas encore instanciée dans le daemon ni reliée
+au coordinateur durable. Cela ne change aucun statut d'activation EIP/consensus.
+Voir `docs/VALIDATOR-EIP-ROADMAP.md`, section « File worker Altair bornée ».
