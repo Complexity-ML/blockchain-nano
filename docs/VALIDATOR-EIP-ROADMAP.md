@@ -1510,3 +1510,31 @@ Preuves : `build-cmake/qualification/altair-deposit-20260925/`.
 L'Eth1 deposit root/count doit être authentifié par le traitement du bloc. Cette
 opération privée ne prouve ni ce lien à la couche d'exécution, ni la persistance,
 ni la finalité réseau. Slashings Altair et composition complète restent ouverts.
+
+### Slashings Altair — 25 septembre 2026
+
+`prepare_altair_proposer_slashing` et `prepare_altair_attester_slashing` dérivent
+le proposant depuis l'état et vérifient les preuves avec les domaines de fork
+correspondant à chaque signature. Le moteur commun de sorties et de sanctions
+est réutilisé avec les paramètres Altair : pénalité minimale du preset Altair,
+récompense du proposant 8/64 (exactement division par huit), et multiplicateur
+de corrélation Altair. Les sorties, soldes et accumulateurs de slashings sont
+reportés dans un candidat SSZ privé ; les autres champs restent inchangés.
+
+Les 45 cas officiels minimal sont couverts : trois états de proposer slashing
+et huit états de attester slashing correspondent intégralement au post-state ;
+33 opérations invalides sont rejetées. Le neuvième cas valide d'attester slashing,
+`already_exited_long_ago`, utilise une chronologie de registre synthétique
+incohérente : son post-state SSZ est reproduit par le composant isolé, mais le
+chemin strict rejette cet état. Ce cas n'est pas compté comme transition stricte
+réussie. Le cas invalide `invalid_proposer_is_withdrawn` est lui aussi rejeté
+pour incohérence du registre. Aucun contrôle d'admission n'est affaibli.
+
+Onze rejeux ne peuvent appliquer une seconde sanction ; 22 mutations de preuves
+ou genesis, onze débordements et quatorze annulations sont vérifiés. Les clés du
+registre restent soumises à établissement préalable des PoPs. Cette étape ne
+constitue ni une transition complète de bloc ni une activation du consensus.
+
+Corpus : `tests/fixtures/consensus-altair-{proposer,attester}-slashing-official/`.
+Preuves : `build-cmake/qualification/altair-slashing-20260925/`.
+La composition des blocs Altair et leur replay fork_choice restent ouverts.

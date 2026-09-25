@@ -514,3 +514,10 @@ minimal officielles passent (17 états exacts, deux rejets), ainsi que rejeu,
 preuves modifiées, débordements et annulations. Cela ne constitue pas EIP-6110
 ni l'authentification réseau de la source des dépôts. Campagne
 `altair-deposit-20260925`, détails dans la feuille de route validateurs.
+
+Altair : sanctions de proposants et d'attestateurs adaptées à l'état SSZ complet,
+avec paramètres économiques Altair. Sur 45 fixtures officielles : 11 transitions
+strictes exactes, 33 rejets et un calcul synthétique exact dont l'état incohérent
+reste rejeté par l'admission stricte. Rejeu, mutations, débordements et annulations
+sont testés. Aucun passage du consensus actif à Altair ; composition complète
+et fork_choice restent ouverts. Campagne `altair-slashing-20260925`.

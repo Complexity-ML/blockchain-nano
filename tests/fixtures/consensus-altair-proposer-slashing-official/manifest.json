@@ -1,0 +1,374 @@
+{
+  "commit": "bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908",
+  "cases": [
+    {
+      "name": "basic",
+      "path": "tests/minimal/altair/operations/proposer_slashing/pyspec_tests/basic",
+      "valid": true,
+      "files": {
+        "basic/pre.ssz_snappy": {
+          "bytes": 6518,
+          "sha256": "0e6a1424a86c9b8976c65bed746dbf4f2d6670bdce604fffd8408c3c00ad79b3"
+        },
+        "basic/pre.ssz": {
+          "bytes": 19125,
+          "sha256": "5053e66192d7f85dcdfcf46c51fb558c7167a1bd7dcb1e4daf9a26314f3424d5"
+        },
+        "basic/post.ssz_snappy": {
+          "bytes": 6544,
+          "sha256": "0a1f07e9564baa05cc0c7cc8a5de8021e91aee9432573d2fd285c27965840ca6"
+        },
+        "basic/post.ssz": {
+          "bytes": 19125,
+          "sha256": "b9d2f8f9d83b13cff50821c517acf5f9ab10b69928db73ac6d2e316ca3dc302f"
+        },
+        "basic/proposer_slashing.ssz_snappy": {
+          "bytes": 238,
+          "sha256": "94b130d7303c60bb438a25e0be5f6bac9d2a3ace3f64dec08b35c66f8c55c9e0"
+        },
+        "basic/proposer_slashing.ssz": {
+          "bytes": 416,
+          "sha256": "80cfe7bdc151c886c35c01c3b8c04ce382d6fe8b7b1015a6f9fdc595b619927d"
+        }
+      }
+    },
+    {
+      "name": "block_header_from_future",
+      "path": "tests/minimal/altair/operations/proposer_slashing/pyspec_tests/block_header_from_future",
+      "valid": true,
+      "files": {
+        "block_header_from_future/pre.ssz_snappy": {
+          "bytes": 6518,
+          "sha256": "0e6a1424a86c9b8976c65bed746dbf4f2d6670bdce604fffd8408c3c00ad79b3"
+        },
+        "block_header_from_future/pre.ssz": {
+          "bytes": 19125,
+          "sha256": "5053e66192d7f85dcdfcf46c51fb558c7167a1bd7dcb1e4daf9a26314f3424d5"
+        },
+        "block_header_from_future/post.ssz_snappy": {
+          "bytes": 6544,
+          "sha256": "0a1f07e9564baa05cc0c7cc8a5de8021e91aee9432573d2fd285c27965840ca6"
+        },
+        "block_header_from_future/post.ssz": {
+          "bytes": 19125,
+          "sha256": "b9d2f8f9d83b13cff50821c517acf5f9ab10b69928db73ac6d2e316ca3dc302f"
+        },
+        "block_header_from_future/proposer_slashing.ssz_snappy": {
+          "bytes": 240,
+          "sha256": "0acee895b02ff970a041b5924130df3b2c0341f831c215a9e9f12108fa7ebfb6"
+        },
+        "block_header_from_future/proposer_slashing.ssz": {
+          "bytes": 416,
+          "sha256": "0817fc18d1469e903459a515090735a916573e02a7ad0242e2cea024729ab862"
+        }
+      }
+    },
+    {
+      "name": "invalid_different_proposer_indices",
+      "path": "tests/minimal/altair/operations/proposer_slashing/pyspec_tests/invalid_different_proposer_indices",
+      "valid": false,
+      "files": {
+        "invalid_different_proposer_indices/pre.ssz_snappy": {
+          "bytes": 6518,
+          "sha256": "0e6a1424a86c9b8976c65bed746dbf4f2d6670bdce604fffd8408c3c00ad79b3"
+        },
+        "invalid_different_proposer_indices/pre.ssz": {
+          "bytes": 19125,
+          "sha256": "5053e66192d7f85dcdfcf46c51fb558c7167a1bd7dcb1e4daf9a26314f3424d5"
+        },
+        "invalid_different_proposer_indices/proposer_slashing.ssz_snappy": {
+          "bytes": 238,
+          "sha256": "e44b2d3c28db6c7b72bf8a683a8a0344404a4452797c0aec4614f3a0fa87cea8"
+        },
+        "invalid_different_proposer_indices/proposer_slashing.ssz": {
+          "bytes": 416,
+          "sha256": "59bdd4b8694d4aa8b33f26d94f1ae057432ad8d2d7957dae290ad19c12f0afed"
+        }
+      }
+    },
+    {
+      "name": "invalid_headers_are_same_sigs_are_different",
+      "path": "tests/minimal/altair/operations/proposer_slashing/pyspec_tests/invalid_headers_are_same_sigs_are_different",
+      "valid": false,
+      "files": {
+        "invalid_headers_are_same_sigs_are_different/pre.ssz_snappy": {
+          "bytes": 6518,
+          "sha256": "0e6a1424a86c9b8976c65bed746dbf4f2d6670bdce604fffd8408c3c00ad79b3"
+        },
+        "invalid_headers_are_same_sigs_are_different/pre.ssz": {
+          "bytes": 19125,
+          "sha256": "5053e66192d7f85dcdfcf46c51fb558c7167a1bd7dcb1e4daf9a26314f3424d5"
+        },
+        "invalid_headers_are_same_sigs_are_different/proposer_slashing.ssz_snappy": {
+          "bytes": 140,
+          "sha256": "7230afa1847656170694a3a0fb65c5ccc19956976e8302f90706e0ca76fbce5f"
+        },
+        "invalid_headers_are_same_sigs_are_different/proposer_slashing.ssz": {
+          "bytes": 416,
+          "sha256": "49d727a907dcd1c11011896a55a94f026f83b6b1d616677a52e04e27d76f73fa"
+        }
+      }
+    },
+    {
+      "name": "invalid_headers_are_same_sigs_are_same",
+      "path": "tests/minimal/altair/operations/proposer_slashing/pyspec_tests/invalid_headers_are_same_sigs_are_same",
+      "valid": false,
+      "files": {
+        "invalid_headers_are_same_sigs_are_same/pre.ssz_snappy": {
+          "bytes": 6518,
+          "sha256": "0e6a1424a86c9b8976c65bed746dbf4f2d6670bdce604fffd8408c3c00ad79b3"
+        },
+        "invalid_headers_are_same_sigs_are_same/pre.ssz": {
+          "bytes": 19125,
+          "sha256": "5053e66192d7f85dcdfcf46c51fb558c7167a1bd7dcb1e4daf9a26314f3424d5"
+        },
+        "invalid_headers_are_same_sigs_are_same/proposer_slashing.ssz_snappy": {
+          "bytes": 138,
+          "sha256": "951e6a9c5e8ae8257971659c27dd27a753e8babf89130a228b41c158f83a3161"
+        },
+        "invalid_headers_are_same_sigs_are_same/proposer_slashing.ssz": {
+          "bytes": 416,
+          "sha256": "3c6844645f628274acde3f0d24d12267971d040985c0daa62ed902e2ee9b2e3e"
+        }
+      }
+    },
+    {
+      "name": "invalid_incorrect_proposer_index",
+      "path": "tests/minimal/altair/operations/proposer_slashing/pyspec_tests/invalid_incorrect_proposer_index",
+      "valid": false,
+      "files": {
+        "invalid_incorrect_proposer_index/pre.ssz_snappy": {
+          "bytes": 6518,
+          "sha256": "0e6a1424a86c9b8976c65bed746dbf4f2d6670bdce604fffd8408c3c00ad79b3"
+        },
+        "invalid_incorrect_proposer_index/pre.ssz": {
+          "bytes": 19125,
+          "sha256": "5053e66192d7f85dcdfcf46c51fb558c7167a1bd7dcb1e4daf9a26314f3424d5"
+        },
+        "invalid_incorrect_proposer_index/proposer_slashing.ssz_snappy": {
+          "bytes": 238,
+          "sha256": "a9992635586826f6a678ee7696c9845dc56869e2c05063e80a0c645d145036d7"
+        },
+        "invalid_incorrect_proposer_index/proposer_slashing.ssz": {
+          "bytes": 416,
+          "sha256": "9d2a13b8baaac3dad6e524d3d117db31ea701bc66c54184d34935a7b73020aac"
+        }
+      }
+    },
+    {
+      "name": "invalid_incorrect_sig_1",
+      "path": "tests/minimal/altair/operations/proposer_slashing/pyspec_tests/invalid_incorrect_sig_1",
+      "valid": false,
+      "files": {
+        "invalid_incorrect_sig_1/pre.ssz_snappy": {
+          "bytes": 6518,
+          "sha256": "0e6a1424a86c9b8976c65bed746dbf4f2d6670bdce604fffd8408c3c00ad79b3"
+        },
+        "invalid_incorrect_sig_1/pre.ssz": {
+          "bytes": 19125,
+          "sha256": "5053e66192d7f85dcdfcf46c51fb558c7167a1bd7dcb1e4daf9a26314f3424d5"
+        },
+        "invalid_incorrect_sig_1/proposer_slashing.ssz_snappy": {
+          "bytes": 144,
+          "sha256": "f6c80ca9b29d1e6a3ec05f52b0d29c007e9c8be3d3c6362b1baa1b448be19b02"
+        },
+        "invalid_incorrect_sig_1/proposer_slashing.ssz": {
+          "bytes": 416,
+          "sha256": "51c6f83e76e212e2f71edec395f81d140360871de44da167953136e7d82c6a40"
+        }
+      }
+    },
+    {
+      "name": "invalid_incorrect_sig_1_and_2",
+      "path": "tests/minimal/altair/operations/proposer_slashing/pyspec_tests/invalid_incorrect_sig_1_and_2",
+      "valid": false,
+      "files": {
+        "invalid_incorrect_sig_1_and_2/pre.ssz_snappy": {
+          "bytes": 6518,
+          "sha256": "0e6a1424a86c9b8976c65bed746dbf4f2d6670bdce604fffd8408c3c00ad79b3"
+        },
+        "invalid_incorrect_sig_1_and_2/pre.ssz": {
+          "bytes": 19125,
+          "sha256": "5053e66192d7f85dcdfcf46c51fb558c7167a1bd7dcb1e4daf9a26314f3424d5"
+        },
+        "invalid_incorrect_sig_1_and_2/proposer_slashing.ssz_snappy": {
+          "bytes": 51,
+          "sha256": "adedd13fd7fce5ac6c40c6f26e87fbef0d9b28d24373a57de5698de3d9ea8ff7"
+        },
+        "invalid_incorrect_sig_1_and_2/proposer_slashing.ssz": {
+          "bytes": 416,
+          "sha256": "912313970809634dd385070681053e346e4acc2ca50ec09a8ccee14c9bb097e0"
+        }
+      }
+    },
+    {
+      "name": "invalid_incorrect_sig_1_and_2_swap",
+      "path": "tests/minimal/altair/operations/proposer_slashing/pyspec_tests/invalid_incorrect_sig_1_and_2_swap",
+      "valid": false,
+      "files": {
+        "invalid_incorrect_sig_1_and_2_swap/pre.ssz_snappy": {
+          "bytes": 6518,
+          "sha256": "0e6a1424a86c9b8976c65bed746dbf4f2d6670bdce604fffd8408c3c00ad79b3"
+        },
+        "invalid_incorrect_sig_1_and_2_swap/pre.ssz": {
+          "bytes": 19125,
+          "sha256": "5053e66192d7f85dcdfcf46c51fb558c7167a1bd7dcb1e4daf9a26314f3424d5"
+        },
+        "invalid_incorrect_sig_1_and_2_swap/proposer_slashing.ssz_snappy": {
+          "bytes": 238,
+          "sha256": "0982be48d44d680ac4cad69056642f30249dce6b2692eb31b224814076199da0"
+        },
+        "invalid_incorrect_sig_1_and_2_swap/proposer_slashing.ssz": {
+          "bytes": 416,
+          "sha256": "21e8832e3fe60b578b08331c176d5e7f685b0c847b728a26f816dd8de68b31f8"
+        }
+      }
+    },
+    {
+      "name": "invalid_incorrect_sig_2",
+      "path": "tests/minimal/altair/operations/proposer_slashing/pyspec_tests/invalid_incorrect_sig_2",
+      "valid": false,
+      "files": {
+        "invalid_incorrect_sig_2/pre.ssz_snappy": {
+          "bytes": 6518,
+          "sha256": "0e6a1424a86c9b8976c65bed746dbf4f2d6670bdce604fffd8408c3c00ad79b3"
+        },
+        "invalid_incorrect_sig_2/pre.ssz": {
+          "bytes": 19125,
+          "sha256": "5053e66192d7f85dcdfcf46c51fb558c7167a1bd7dcb1e4daf9a26314f3424d5"
+        },
+        "invalid_incorrect_sig_2/proposer_slashing.ssz_snappy": {
+          "bytes": 148,
+          "sha256": "bcfcc4d352525f21ec42fec1083a0d1fb142f7516e9f1c055ac86fdff33ff5a1"
+        },
+        "invalid_incorrect_sig_2/proposer_slashing.ssz": {
+          "bytes": 416,
+          "sha256": "421021209cf71e24fdbbc50c3f361a2f8d11dcec24fa38d8d2470c38a7a90664"
+        }
+      }
+    },
+    {
+      "name": "invalid_proposer_is_not_activated",
+      "path": "tests/minimal/altair/operations/proposer_slashing/pyspec_tests/invalid_proposer_is_not_activated",
+      "valid": false,
+      "files": {
+        "invalid_proposer_is_not_activated/pre.ssz_snappy": {
+          "bytes": 6526,
+          "sha256": "c04754ff58ecb6d4d3c4161350c255a8df67ff5e5a804499df8498e6554302bf"
+        },
+        "invalid_proposer_is_not_activated/pre.ssz": {
+          "bytes": 19125,
+          "sha256": "09ebdb94d10908f62a054da5ad9d6f9f5773dea557719256e74d54f9cec53f39"
+        },
+        "invalid_proposer_is_not_activated/proposer_slashing.ssz_snappy": {
+          "bytes": 238,
+          "sha256": "94b130d7303c60bb438a25e0be5f6bac9d2a3ace3f64dec08b35c66f8c55c9e0"
+        },
+        "invalid_proposer_is_not_activated/proposer_slashing.ssz": {
+          "bytes": 416,
+          "sha256": "80cfe7bdc151c886c35c01c3b8c04ce382d6fe8b7b1015a6f9fdc595b619927d"
+        }
+      }
+    },
+    {
+      "name": "invalid_proposer_is_slashed",
+      "path": "tests/minimal/altair/operations/proposer_slashing/pyspec_tests/invalid_proposer_is_slashed",
+      "valid": false,
+      "files": {
+        "invalid_proposer_is_slashed/pre.ssz_snappy": {
+          "bytes": 6522,
+          "sha256": "d4b7c4a3935e3ca33bbe2ad7f9d7cf98d55bd39d063f3cf9701dd6bd48b4f526"
+        },
+        "invalid_proposer_is_slashed/pre.ssz": {
+          "bytes": 19125,
+          "sha256": "c6d747d8d15b58c05f2af7020f3b8abeef655ba20359bb9e676d5c020bcfb409"
+        },
+        "invalid_proposer_is_slashed/proposer_slashing.ssz_snappy": {
+          "bytes": 238,
+          "sha256": "94b130d7303c60bb438a25e0be5f6bac9d2a3ace3f64dec08b35c66f8c55c9e0"
+        },
+        "invalid_proposer_is_slashed/proposer_slashing.ssz": {
+          "bytes": 416,
+          "sha256": "80cfe7bdc151c886c35c01c3b8c04ce382d6fe8b7b1015a6f9fdc595b619927d"
+        }
+      }
+    },
+    {
+      "name": "invalid_proposer_is_withdrawn",
+      "path": "tests/minimal/altair/operations/proposer_slashing/pyspec_tests/invalid_proposer_is_withdrawn",
+      "valid": false,
+      "files": {
+        "invalid_proposer_is_withdrawn/pre.ssz_snappy": {
+          "bytes": 6818,
+          "sha256": "cc1a2e7b12667452441bbff8e3e9fb5331f2f6459c856871617fb0d44216709e"
+        },
+        "invalid_proposer_is_withdrawn/pre.ssz": {
+          "bytes": 19125,
+          "sha256": "9aa887a3702b7eb80fda42abc40ac3d84eaa46bba11a35678d1f9f1d4725487b"
+        },
+        "invalid_proposer_is_withdrawn/proposer_slashing.ssz_snappy": {
+          "bytes": 238,
+          "sha256": "94b130d7303c60bb438a25e0be5f6bac9d2a3ace3f64dec08b35c66f8c55c9e0"
+        },
+        "invalid_proposer_is_withdrawn/proposer_slashing.ssz": {
+          "bytes": 416,
+          "sha256": "80cfe7bdc151c886c35c01c3b8c04ce382d6fe8b7b1015a6f9fdc595b619927d"
+        }
+      }
+    },
+    {
+      "name": "invalid_slots_of_different_epochs",
+      "path": "tests/minimal/altair/operations/proposer_slashing/pyspec_tests/invalid_slots_of_different_epochs",
+      "valid": false,
+      "files": {
+        "invalid_slots_of_different_epochs/pre.ssz_snappy": {
+          "bytes": 6518,
+          "sha256": "0e6a1424a86c9b8976c65bed746dbf4f2d6670bdce604fffd8408c3c00ad79b3"
+        },
+        "invalid_slots_of_different_epochs/pre.ssz": {
+          "bytes": 19125,
+          "sha256": "5053e66192d7f85dcdfcf46c51fb558c7167a1bd7dcb1e4daf9a26314f3424d5"
+        },
+        "invalid_slots_of_different_epochs/proposer_slashing.ssz_snappy": {
+          "bytes": 238,
+          "sha256": "9b486d8060489b92616af7c315d5d290f35ec22a77926efe2d2a64d84dbe3428"
+        },
+        "invalid_slots_of_different_epochs/proposer_slashing.ssz": {
+          "bytes": 416,
+          "sha256": "97724557a7c5b50c355e695bf8ae3707211e05b4b17613c2b40185e98bc7bd98"
+        }
+      }
+    },
+    {
+      "name": "slashed_and_proposer_index_the_same",
+      "path": "tests/minimal/altair/operations/proposer_slashing/pyspec_tests/slashed_and_proposer_index_the_same",
+      "valid": true,
+      "files": {
+        "slashed_and_proposer_index_the_same/pre.ssz_snappy": {
+          "bytes": 6518,
+          "sha256": "0e6a1424a86c9b8976c65bed746dbf4f2d6670bdce604fffd8408c3c00ad79b3"
+        },
+        "slashed_and_proposer_index_the_same/pre.ssz": {
+          "bytes": 19125,
+          "sha256": "5053e66192d7f85dcdfcf46c51fb558c7167a1bd7dcb1e4daf9a26314f3424d5"
+        },
+        "slashed_and_proposer_index_the_same/post.ssz_snappy": {
+          "bytes": 6544,
+          "sha256": "0a1f07e9564baa05cc0c7cc8a5de8021e91aee9432573d2fd285c27965840ca6"
+        },
+        "slashed_and_proposer_index_the_same/post.ssz": {
+          "bytes": 19125,
+          "sha256": "b9d2f8f9d83b13cff50821c517acf5f9ab10b69928db73ac6d2e316ca3dc302f"
+        },
+        "slashed_and_proposer_index_the_same/proposer_slashing.ssz_snappy": {
+          "bytes": 238,
+          "sha256": "94b130d7303c60bb438a25e0be5f6bac9d2a3ace3f64dec08b35c66f8c55c9e0"
+        },
+        "slashed_and_proposer_index_the_same/proposer_slashing.ssz": {
+          "bytes": 416,
+          "sha256": "80cfe7bdc151c886c35c01c3b8c04ce382d6fe8b7b1015a6f9fdc595b619927d"
+        }
+      }
+    }
+  ]
+}
