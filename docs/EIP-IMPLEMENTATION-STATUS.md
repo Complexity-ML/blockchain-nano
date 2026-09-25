@@ -19,6 +19,7 @@ reste à compléter. Le genesis réseau autorise actuellement Paris/Shanghai.
 
 | EIP | État actuel | Périmètre réel | Code / preuves à consulter | Reste à faire / critère de clôture | Priorité |
 | --- | --- | --- | --- | --- | --- |
+| [3076](https://eips.ethereum.org/EIPS/eip-3076) | Non commencé (import/export) | Journal local anti-slashing disponible ; format d'échange non exposé | src/consensus_beacon_signer.cpp ; docs/BEACON-SIGNING-JOURNAL.md | Import/export v5, racines absentes, fusion des historiques et intégration aux tâches réelles ; aucun statut production | Validateurs |
 | [2](https://eips.ethereum.org/EIPS/eip-2) | Implémenté | Transactions et signatures | src/transaction.cpp ; tests/fixtures/ethereum-official.json | Conserver les régressions du profil activé et relier les cas exacts à chaque EIP | Socle |
 | [155](https://eips.ethereum.org/EIPS/eip-155) | Implémenté | Transactions et signatures | src/transaction.cpp ; tests/fixtures/ethereum-official.json | Conserver les régressions du profil activé et relier les cas exacts à chaque EIP | Socle |
 | [2718](https://eips.ethereum.org/EIPS/eip-2718) | Implémenté | Transactions et signatures | src/transaction.cpp ; tests/fixtures/ethereum-official.json | Conserver les régressions du profil activé et relier les cas exacts à chaque EIP | Socle |
@@ -787,3 +788,16 @@ Pas de génération autonome de votes, de finalité multi-epoch distribuée ni d
 preuve de débit à grande échelle. Les tâches/signatures des validateurs,
 slashings P2P, réconciliation et liaison atomique EVM restent ouverts. Aucun
 profil réseau ni statut EIP n'est promu par ces tests.
+
+
+### Protection des signatures Beacon — 25 septembre 2026
+
+`BeaconSigningJournal` réserve durablement avant le callback de signature BLS.
+Propositions monotones, sources non décroissantes et cibles croissantes protègent
+contre les doubles signatures/votes qui s'entourent, avec répétition exacte du
+dernier message autorisée. Base dédiée par clé, engagement externe à la reprise,
+refus d'une instance périmée et vérification de la signature retournée.
+La campagne `build-cmake/qualification/beacon-signing-journal-20260925/` passe le
+journal (18 refus avant signature, concurrence, faute de synchronisation et crash)
+et les deux suites cryptographiques officielles. Aucun devoir de validateur
+n'est activé. L'import/export EIP-3076 est ajouté à la matrice comme non commencé.

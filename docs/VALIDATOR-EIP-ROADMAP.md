@@ -2389,3 +2389,20 @@ Pas de génération autonome de votes, de finalité multi-epoch distribuée ni d
 preuve de débit à grande échelle. Les tâches/signatures des validateurs,
 slashings P2P, réconciliation et liaison atomique EVM restent ouverts. Aucun
 profil réseau ni statut EIP n'est promu par ces tests.
+
+
+### Journal anti-slashing avant émission de signatures — 25 septembre 2026
+
+Le nouveau composant `BeaconSigningJournal` est distinct du journal BFT
+hauteur/tour. Il conserve atomiquement les dernières réservations par clé avant
+signature BLS ; les conflicts, retours arrière et instances périmées sont refusés.
+La qualification couvre 18 refus avant callback, signatures concurrentes,
+réouverture, panne de synchronisation et crash avant retour de signature.
+Voir `docs/BEACON-SIGNING-JOURNAL.md` et la campagne
+`build-cmake/qualification/beacon-signing-journal-20260925/`.
+
+Reste à raccorder les tâches authentifiées du validateur et la gestion des clés.
+Ajouter l'import/export EIP-3076 v5 à la clôture de production : racines absentes,
+fusion d'historiques et protection des zones sans historique. Ce format n'est
+pas encore implémenté. Le journal local ne protège pas une clé utilisée ailleurs
+ou un quorum de bridge compromis ; aucune finalité réseau n'est activée.
