@@ -551,3 +551,11 @@ Ethereum officiel, BLS actif, zéro écart. Campagne
 `altair-fork-withholding-ex-ante-20260925`. Les deux scénarios ex_ante mainnet
 ne sont pas couverts ; get_proposer_head, stockage durable et intégration réseau
 restent ouverts. Aucun changement du profil réseau actif ou du statut des EIP.
+
+Altair : optimisation optionnelle get_proposer_head implémentée avec règles
+explicites et poids authentifiés. Deux scénarios officiels (312 champs) confirmés
+par l'oracle Ethereum ; dix gardes locales. Les six groupes fork_choice minimal
+passent ensemble (48 scénarios, 11222 champs). Campagne
+`altair-fork-proposer-20260925`. Cela ne clôt pas les tests mainnet, l'admission
+de snapshots, la persistance/reprise ni le raccordement EVM/P2P ; aucun nouveau
+profil de consensus n'est activé.

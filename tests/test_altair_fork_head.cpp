@@ -1,18 +1,38 @@
 #include "support/altair_transition_rules.hpp"
 #include "support/phase0_indexed_ssz.hpp"
 #include "nano/consensus_altair_fork_store.hpp"
+#include "nano/consensus_altair_proposer.hpp"
 using namespace test;using namespace test::phase0_minimal;
 ConsensusRoot parse_root(const Json& j){const auto b=unhex(j.get<std::string>());check(b.size()==32,"root width");ConsensusRoot out{};std::copy(b.begin(),b.end(),out.begin());return out;}
 Phase0SignedAttestation decode_vote(const Bytes& b){check(b.size()>=229&&little(b,0,4)==228&&b.back(),"vote SSZ");const auto a=indexed_attestation(Bytes(b.begin(),b.begin()+228),0,228);Phase0SignedAttestation v{a.data,{},a.signature};const auto count=(b.size()-229)*8+std::bit_width(unsigned(b.back()))-1;for(size_t i=0;i<count;++i)v.aggregation_bits.push_back((b[228+i/8]>>(i%8))&1);return v;}
 int main(int argc,char** argv){try{
  check(argc==1||argc==3,"usage: runner [fixture-directory expected-count]");const size_t expected_cases=argc==3?std::stoull(argv[2]):10;const fs::path fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-altair-fork-head-official",root=argc==3?fs::path(argv[1]):refs;const auto transition=altair_transition_rules(fixtures);const auto config=read(refs/"minimal-config-v1.6.0-beta.0.yaml");const auto duration=parameter(config,"SECONDS_PER_SLOT")*1000;const AltairForkBlockRules rules{transition,duration,duration/3,parameter(config,"PROPOSER_SCORE_BOOST"),AltairProposerBoostProfile::Release160Beta0};const auto slots=transition.epoch.ffg.slots_per_epoch;
- const auto manifest=load(root/"manifest.json");check(manifest.at("commit")=="bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908"&&manifest.at("cases").size()==expected_cases,"head corpus");const auto references=load(refs/"manifest.json");for(const auto& [path,info]:references.at("referenceFiles").items()){const auto b=binary(refs/path);check(b.size()==info.at("bytes")&&hex(sha256(b)).substr(2)==info.at("sha256").get<std::string>(),"reference digest");}size_t ticks=0,blocks=0,votes=0,slashings=0,checks=0,rejections=0;std::optional<AltairForkStore> example;Bytes example_block;Phase0SignedAttestation example_vote;
+ const auto manifest=load(root/"manifest.json");check(manifest.at("commit")=="bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908"&&manifest.at("cases").size()==expected_cases,"head corpus");const auto references=load(refs/"manifest.json");for(const auto& [path,info]:references.at("referenceFiles").items()){const auto b=binary(refs/path);check(b.size()==info.at("bytes")&&hex(sha256(b)).substr(2)==info.at("sha256").get<std::string>(),"reference digest");}size_t ticks=0,blocks=0,votes=0,slashings=0,checks=0,rejections=0,proposer_guards=0;std::optional<AltairForkStore> example;Bytes example_block;Phase0SignedAttestation example_vote;
  for(const auto& row:manifest.at("cases")){const auto name=row.at("name").get<std::string>();for(const auto& [path,info]:row.at("files").items()){const auto b=binary(root/path);check(b.size()==info.at("bytes")&&hex(sha256(b)).substr(2)==info.at("sha256").get<std::string>(),"fixture digest");}
   const auto dir=root/name;AltairSlotState anchor{binary(dir/"anchor_state.ssz"),std::nullopt};const auto epoch=little(anchor.ssz,40,8)/slots;if(epoch)anchor.last_processed_epoch=epoch-1;auto store=initialize_altair_fork_store(anchor,binary(dir/"anchor_block.ssz"),rules);const auto steps=load(dir/"steps.json");size_t step_index=0;
   for(const auto& step:steps){try{
    if(step.contains("tick")){store=prepare_altair_store_tick(store,step.at("tick").get<uint64_t>()*1000,rules,4096,100000);++ticks;}
    else if(step.contains("checks")){const auto& c=step.at("checks");const auto& v=store.timed.view;for(const auto& [key,value]:c.items()){
     if(key=="head"){const auto head=phase0_fork_choice_head(v,{slots,transition.attestation.duties.effective_balance_increment,rules.proposer_score_boost}).head;if(head!=parse_root(value.at("root"))){const auto& n=v.nodes.at(head);std::cerr<<"actual="<<hex(Bytes(head.begin(),head.end()))<<" slot="<<n.slot<<" realized="<<n.realized_justified_epoch<<" unrealized="<<n.unrealized_justified_epoch<<" current="<<v.current_epoch<<" justified="<<v.justified.epoch<<" latestMessages="<<v.latest_messages.size()<<" boostMatchesHead="<<(v.proposer_boost==head)<<" expected="<<value.dump()<<"\n";}check(head==parse_root(value.at("root"))&&v.nodes.at(head).slot==value.at("slot").get<uint64_t>(),"head mismatch");}
+    else if(key=="get_proposer_head"){
+     const auto head=phase0_fork_choice_head(v,{slots,transition.attestation.duties.effective_balance_increment,rules.proposer_score_boost}).head;
+     const auto slot=(store.timed.clock.time_ms-store.timed.clock.genesis_time_ms)/duration;
+     const AltairProposerRules policy{parameter(config,"PROPOSER_REORG_CUTOFF_BPS")*duration/10000,parameter(config,"REORG_HEAD_WEIGHT_THRESHOLD"),parameter(config,"REORG_PARENT_WEIGHT_THRESHOLD"),parameter(config,"REORG_MAX_EPOCHS_SINCE_FINALIZATION")};
+     const auto selected=altair_proposer_head(store,head,slot,rules,policy);check(selected==parse_root(value),"proposer head mismatch");
+     if(selected!=head){
+      auto late=store;late.timed.clock.time_ms=late.timed.clock.genesis_time_ms+slot*duration+policy.reorg_cutoff_ms;
+      check(altair_proposer_head(late,head,slot,rules,policy)==selected,"cutoff inclusive boundary");
+      ++late.timed.clock.time_ms;check(altair_proposer_head(late,head,slot,rules,policy)==head,"late proposer reorg");
+      auto timely=store;timely.timely.at(head)=true;check(altair_proposer_head(timely,head,slot,rules,policy)==head,"timely head reorg");
+      auto boosted=store;boosted.timed.view.proposer_boost=head;bool rejected=false;try{altair_proposer_head(boosted,head,slot,rules,policy);}catch(const std::invalid_argument&){rejected=true;}check(rejected,"boosted head admitted");
+      auto weak=policy;weak.head_weight_threshold=0;check(altair_proposer_head(store,head,slot,rules,weak)==head,"strict head threshold");
+      auto strong=policy;strong.parent_weight_threshold=UINT64_MAX;check(altair_proposer_head(store,head,slot,rules,strong)==head,"parent threshold overflow");
+      auto ffg=store;ffg.unrealized_justifications.at(head).root[0]^=1;check(altair_proposer_head(ffg,head,slot,rules,policy)==head,"noncompetitive FFG reorg");
+      check(altair_proposer_head(store,head,slot+1,rules,policy)==head,"multi-slot reorg");
+      check(altair_proposer_head(store,head,(slot/slots+1)*slots,rules,policy)==head,"epoch boundary reorg");
+      bool cancelled=false;try{altair_proposer_head(store,head,slot,rules,policy,[]{throw std::runtime_error("cancelled");});}catch(const std::runtime_error& e){cancelled=std::string(e.what())=="cancelled";}check(cancelled,"proposer cancellation lost");proposer_guards+=10;
+     }
+    }
     else if(key=="time")check(store.timed.clock.time_ms==value.get<uint64_t>()*1000,"time mismatch");
     else if(key=="genesis_time")check(store.timed.clock.genesis_time_ms==value.get<uint64_t>()*1000,"genesis time mismatch");
     else if(key=="proposer_boost_root")check(v.proposer_boost.value_or(ConsensusRoot{})==parse_root(value),"boost mismatch");
@@ -39,5 +59,5 @@ int main(int argc,char** argv){try{
  size_t calls=0;prepare_altair_received_block(*example,example_block,rules,4096,100000,[&]{++calls;});std::set<size_t> stops{1,2,calls/4,calls/2,3*calls/4,calls-1,calls};const auto messages=example->timed.view.latest_messages;const auto block_count=example->blocks.size();
  for(auto stop:stops){size_t n=0;bool cancelled=false;try{prepare_altair_received_block(*example,example_block,rules,4096,100000,[&]{if(++n==stop)throw std::runtime_error("cancelled");});}catch(const std::runtime_error& e){cancelled=std::string(e.what())=="cancelled";}check(cancelled&&example->blocks.size()==block_count&&example->timed.view.latest_messages==messages,"cancelled reception published data");}
  cancellation_count=stops.size();}
- std::cout<<Json{{"scenario",root.filename().string()},{"cases",expected_cases},{"ticks",ticks},{"blocks",blocks},{"votes",votes},{"slashings",slashings},{"checks",checks},{"rejections",rejections},{"localGuardsRun",argc==1},{"cancellations",cancellation_count},{"durable",false},{"networkActive",false}}.dump()<<'\n';
+ std::cout<<Json{{"scenario",root.filename().string()},{"cases",expected_cases},{"ticks",ticks},{"blocks",blocks},{"votes",votes},{"slashings",slashings},{"checks",checks},{"rejections",rejections},{"localGuardsRun",argc==1},{"proposerGuards",proposer_guards},{"cancellations",cancellation_count},{"durable",false},{"networkActive",false}}.dump()<<'\n';
  }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

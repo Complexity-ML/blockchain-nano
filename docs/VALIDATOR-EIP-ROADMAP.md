@@ -1669,3 +1669,34 @@ Preuves : `build-cmake/qualification/altair-fork-withholding-ex-ante-20260925/`
 Ces replays ne sont pas des attaques distribuées ni des mesures de charge.
 Get_proposer_head reste à implémenter/qualifier ; snapshots, persistance/reprise,
 ressources et raccordement au réseau restent ouverts. Aucune activation réseau.
+
+### Altair — choix de branche du proposant, 25 septembre 2026
+
+`altair_proposer_head` implémente l'optimisation optionnelle get_proposer_head
+sur le Store authentifié. Les seuils de poids, délai et distance à la finalité
+sont fournis explicitement. Les poids sont dérivés du registre justifié et des
+votes admis, avec exclusion des votes sanctionnés/équivoques par le moteur
+commun. Le solde actif utilisé pour les seuils inclut les validateurs sanctionnés,
+comme la référence. Les calculs de poids utilisent des entiers sans débordement.
+
+Choisir le parent exige simultanément : tête tardive, slot hors frontière
+d'époque, checkpoints FFG compétitifs, finalité assez récente, proposant à
+l'heure, réorganisation d'un seul slot, poids de tête strictement inférieur au
+seuil et poids du parent strictement supérieur au sien. Un boost encore actif
+sur la tête est une erreur de contexte ; le délai limite est inclusif.
+La fonction ne modifie pas le Store, ne sélectionne aucun validateur et ne signe
+aucun bloc. Elle suppose un état authentifié, sans admission de snapshot réseau.
+
+Les deux scénarios officiels minimal get_proposer_head passent (312 champs),
+confirmés indépendamment par le code Ethereum de release avec BLS actif.
+Dix gardes natives supplémentaires couvrent délai inclusif/dépassé, tête ponctuelle,
+boost résiduel, seuil de tête nul, seuil de parent UINT64_MAX, checkpoints FFG
+incompatibles, plusieurs slots, frontière d'époque et annulation.
+Les six groupes fork_choice minimal passent : 6/6 suites, 48 scénarios,
+11222 champs officiels. Cela ne couvre pas les deux scénarios ex_ante mainnet.
+Preuves : `build-cmake/qualification/altair-fork-proposer-20260925/`.
+
+La qualification des groupes minimal ne termine pas l'intégration : admission
+d'ancre/snapshots, persistance et reprise atomique, bornage et élagage du Store,
+liaison EVM/P2P et finalité distribuée restent ouverts. Aucune activation réseau
+ni changement du statut production.

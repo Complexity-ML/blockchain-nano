@@ -1053,3 +1053,6 @@ set_tests_properties(ethereum_official_altair_fork_block ethereum_official_altai
 add_test(NAME ethereum_official_altair_fork_withholding COMMAND nano-altair-fork-head-tests "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/consensus-altair-fork-withholding-official" 2)
 add_test(NAME ethereum_official_altair_fork_ex_ante COMMAND nano-altair-fork-head-tests "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/consensus-altair-fork-ex_ante-official" 3)
 set_tests_properties(ethereum_official_altair_fork_withholding ethereum_official_altair_fork_ex_ante PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_ethereum")
+
+add_test(NAME ethereum_official_altair_fork_proposer COMMAND nano-altair-fork-head-tests "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/consensus-altair-fork-proposer-official" 2)
+set_tests_properties(ethereum_official_altair_fork_proposer PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_ethereum")
