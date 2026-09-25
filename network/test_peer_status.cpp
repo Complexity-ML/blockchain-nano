@@ -1,4 +1,5 @@
 #include "peer_status.hpp"
+#include "altair_peer.hpp"
 #include <iostream>
 using Json=nlohmann::json;
 void check(bool ok,const char* message){if(!ok)throw std::runtime_error(message);}
@@ -25,5 +26,11 @@ int main(){try{
  }
  std::cout<<rejected_epochs<<" malformed gossip epoch cases rejected on both sides\n";
  check(!valid_peer_status(Json::object(),Json::object()),"two absent identities do not match");
+ auto advertised=local;advertised["altair"]={{"protocol",altair_protocol},{"consensusIdentity","0x"+std::string(64,'c')},{"forkDigest","0x01020304"}};
+ check(compatible_altair_peer(advertised,advertised),"matching Altair profile refused");
+ check(!compatible_altair_peer(local,advertised)&&!compatible_altair_peer(advertised,local),"absent Altair profile accepted");
+ for(const auto& key:{"protocol","consensusIdentity","forkDigest"}){auto different=advertised;different["altair"][key]="wrong";check(!compatible_altair_peer(different,advertised)&&!compatible_altair_peer(advertised,different),"incompatible Altair profile accepted");}
+ auto other=advertised;other["altair"]["consensusIdentity"]="0x"+std::string(64,'d');check(!compatible_altair_peer(other,advertised),"same fork digest hid different consensus rules");
+ other=advertised;other["altair"]["extra"]=true;check(!compatible_altair_peer(other,advertised),"ambiguous Altair advertisement accepted");
  std::cout<<"Strict peer chain and genesis identity passed\n";
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

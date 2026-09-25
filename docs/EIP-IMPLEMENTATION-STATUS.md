@@ -705,3 +705,12 @@ Douze suites réseau et cinq suites cœur/intégration passent, dont seize scén
 de récupération contrôlée et le démarrage/reprise des processus réels. Le handler
 Altair P2P, la propagation et la liaison atomique EVM restent ouverts. Aucun fork
 ni statut EIP de conformité n'est promu. Voir `docs/ALTAIR-RUNTIME.md`.
+
+Complément admission réseau Altair (25 septembre 2026) : handler libp2p optionnel
+avec handshake de profil complet, passage par les tickets et conservation de la
+capacité jusqu'au résultat durable. Treize suites réseau et six suites cœur passent ;
+le trajet réel reçoit deux blocs officiels et le payload maximal de 8 Mio. L'IPC
+compact corrige le dépassement dû à l'hex sans réduire le profil ni élargir HTTP.
+L'horloge de qualification est injectée ; ni propagation automatique, ni finalité
+distribuée, ni liaison EVM ne sont closes. Aucun statut EIP/fork de production
+n'est promu. Voir `docs/ALTAIR-RUNTIME.md` et la feuille validateurs.

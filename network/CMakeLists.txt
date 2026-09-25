@@ -106,3 +106,13 @@ target_compile_definitions(nano-altair-core-recovery-tests PRIVATE FMT_CONSTEVAL
 target_link_libraries(nano-altair-core-recovery-tests PRIVATE p2p::p2p)
 add_test(NAME altair_core_recovery COMMAND nano-altair-core-recovery-tests)
 set_tests_properties(altair_core_recovery PROPERTIES TIMEOUT 20)
+
+add_executable(nano-altair-probe altair_probe.cpp)
+target_include_directories(nano-altair-probe PRIVATE ../third_party)
+target_compile_definitions(nano-altair-probe PRIVATE FMT_CONSTEVAL=)
+target_link_libraries(nano-altair-probe PRIVATE p2p::p2p)
+
+add_executable(nano-altair-base64-tests test_altair_base64.cpp)
+target_include_directories(nano-altair-base64-tests PRIVATE ../third_party)
+add_test(NAME altair_base64 COMMAND nano-altair-base64-tests)
+set_tests_properties(altair_base64 PROPERTIES TIMEOUT 20)

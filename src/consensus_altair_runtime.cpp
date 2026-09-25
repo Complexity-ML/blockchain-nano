@@ -38,9 +38,12 @@ Bytes altair_consensus_identity(const AltairForkBlockRules& rules,const AltairAn
 }
 AltairRuntime start_altair_runtime(const Json& config,const Int& chain_id,const Bytes& genesis,const std::function<void()>& checkpoint,std::function<uint64_t()> local_clock){
  if(checkpoint)checkpoint();if(chain_id<0||genesis.size()!=32)throw std::invalid_argument("Invalid Altair runtime chain identity");
- shape(config,{"profile","forkChoice","anchor","database","limits","wire","worker","restart","clock"});
+ auto fields=config;const auto network_value=fields.contains("networkAdmission")?fields.at("networkAdmission"):Json(false);
+ if(!network_value.is_boolean())throw std::invalid_argument("Altair network admission must be boolean");const bool network_admission=network_value.get<bool>();fields.erase("networkAdmission");
+ shape(fields,{"profile","forkChoice","anchor","database","limits","wire","worker","restart","clock"});
  const auto& clock=config.at("clock");shape(clock,{"enabled","intervalMs","maximumForwardStepMs"});
  if(!clock.at("enabled").is_boolean())throw std::invalid_argument("Altair clock enabled must be boolean");
+ if(network_admission&&!clock.at("enabled").get<bool>())throw std::invalid_argument("Altair network admission requires local clock");
  const auto interval=num(clock.at("intervalMs")),maximum_step=num(clock.at("maximumForwardStepMs"));
  if(interval>uint64_t(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::duration::max()/2).count()))throw std::invalid_argument("Altair clock interval range");
  const auto& p=config.at("profile");shape(p,{"file","sha256","maximumBytes"});const auto profile_limit=num(p.at("maximumBytes"));
@@ -66,6 +69,11 @@ AltairRuntime start_altair_runtime(const Json& config,const Int& chain_id,const 
  const auto largest=std::max({wire.block_bytes,wire.attestation_bytes,wire.slashing_bytes});
  const auto envelope=Json{{"chainId",wire.chain_id},{"genesisHash",wire.genesis_hash},{"forkDigest",wire.fork_digest},{"kind","attester_slashing"},{"ssz","0x"}}.dump().size();
  if(payload<largest||largest>(SIZE_MAX-envelope)/2||wire.frame_bytes<envelope+2*largest||wire.block_bytes<transition.maximum_block_bytes||limits.total_state_bytes<limits.state_bytes)throw std::invalid_argument("Inconsistent Altair runtime resource bounds");
+ if(network_admission){
+  const auto empty_frame=Json{{"chainId",wire.chain_id},{"genesisHash",wire.genesis_hash},{"forkDigest",wire.fork_digest},{"kind","attester_slashing"},{"sszBase64",""}};
+  const auto ipc_overhead=Json{{"jsonrpc","2.0"},{"id",1},{"method","nano_altairSubmit"},{"params",Json::array({std::string(66,'a'),std::string(66,'b'),"0xffffffffffffffff",empty_frame})}}.dump().size();
+  if(ipc_overhead>16*1024*1024||largest/3+(largest%3!=0)>(16*1024*1024-ipc_overhead)/4)throw std::invalid_argument("Altair payload exceeds core IPC envelope capacity");
+ }
  const std::filesystem::path database=config.at("database").get<std::string>();if(database.empty())throw std::invalid_argument("Empty Altair database path");
  std::optional<AltairForkStore> initial;
  if(!restart)initial=load_altair_anchor(state_file,block_file,anchor,rules,limits.state_bytes,checkpoint);
@@ -86,7 +94,7 @@ AltairRuntime start_altair_runtime(const Json& config,const Int& chain_id,const 
   owner->clock=std::make_unique<AltairLocalClock>(*owner->reactor,maximum_step,std::move(local_clock));owner->clock->poll(checkpoint);
   before_message=[local=owner->clock.get()](const auto& check){local->poll(check);};clock_healthy=[local=owner->clock.get()]{return local->healthy();};
  }
- owner->rpc=std::make_unique<AltairRpcService>(*owner->reactor,wire,jobs,payload,std::chrono::milliseconds(timeout),std::move(before_message),std::move(clock_healthy),hex(altair_consensus_identity(rules,anchor,chain_id,genesis)));
+ owner->rpc=std::make_unique<AltairRpcService>(*owner->reactor,wire,jobs,payload,std::chrono::milliseconds(timeout),std::move(before_message),std::move(clock_healthy),hex(altair_consensus_identity(rules,anchor,chain_id,genesis)),network_admission);
  if(owner->clock)owner->clock->start(std::chrono::milliseconds(interval));
  return {std::shared_ptr<AltairRpcService>(owner,owner->rpc.get()),std::shared_ptr<AltairDurableReactor>(owner,owner->reactor.get())};
 }

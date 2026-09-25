@@ -1,5 +1,6 @@
 #pragma once
 #include "json_frame.hpp"
+#include "altair_base64.hpp"
 #include "inbound_budget.hpp"
 #include "json.hpp"
 #include <optional>
@@ -57,6 +58,19 @@ public:
   AltairWireMessage message{kind,{}};message.ssz.reserve((encoded.size()-2)/2);
   for(size_t i=2;i<encoded.size();i+=2)message.ssz.push_back(uint8_t((nibble(encoded[i])<<4)|nibble(encoded[i+1])));
   return message;
+ }
+ // Compact, authenticated local IPC; never used by the peer frame decoder.
+ std::optional<AltairWireMessage> decode_compact(const nlohmann::json& j)const{
+  if(!j.is_object()||j.size()!=5||!j.contains("chainId")||!j.contains("genesisHash")||!j.contains("forkDigest")||!j.contains("kind")||!j.contains("sszBase64")||!j.at("sszBase64").is_string()||j.at("chainId")!=profile_.chain_id||j.at("genesisHash")!=profile_.genesis_hash||j.at("forkDigest")!=profile_.fork_digest)return std::nullopt;
+  AltairWireKind kind;size_t maximum;
+  if(j.at("kind")=="block"){kind=AltairWireKind::block;maximum=profile_.block_bytes;}
+  else if(j.at("kind")=="attestation"){kind=AltairWireKind::attestation;maximum=profile_.attestation_bytes;}
+  else if(j.at("kind")=="attester_slashing"){kind=AltairWireKind::attester_slashing;maximum=profile_.slashing_bytes;}
+  else return std::nullopt;
+  const auto overhead=nlohmann::json{{"chainId",profile_.chain_id},{"genesisHash",profile_.genesis_hash},{"forkDigest",profile_.fork_digest},{"kind",j.at("kind")},{"ssz","0x"}}.dump().size();
+  if(overhead>profile_.frame_bytes)return std::nullopt;maximum=std::min(maximum,(profile_.frame_bytes-overhead)/2);
+  auto bytes=altair_unbase64(j.at("sszBase64").get_ref<const std::string&>(),maximum);if(!bytes)return std::nullopt;
+  return AltairWireMessage{kind,std::move(*bytes)};
  }
  Result receive(const std::string& authenticated_peer,std::string_view frame,const Handler& handler,
   InboundBudget::Clock::time_point now=InboundBudget::Clock::now()){

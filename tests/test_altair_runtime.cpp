@@ -38,6 +38,11 @@ int main(int argc,char** argv){try{
  auto refuse=[&](const Json& input){bool failed=false;try{start_altair_runtime(input,1337,genesis_hash);}catch(const std::exception&){failed=true;}check(failed,"invalid runtime startup accepted");++refused;};
  auto bad=config;bad["worker"]["jobs"]="0x0";refuse(bad);check(!fs::exists(temp/"consensus"),"invalid config opened database");
  bad=config;bad["restart"]={{"sequence","0x1"},{"digest",hex(Bytes(32,0))}};refuse(bad);check(!fs::exists(temp/"consensus"),"missing restart initialized a database");
+ bad=config;bad["networkAdmission"]=true;refuse(bad);check(!fs::exists(temp/"consensus"),"network mode without clock touched storage");
+ bad=config;bad["networkAdmission"]=true;bad["clock"]["enabled"]=true;bad["wire"]["blockBytes"]=q(16*1024*1024);bad["wire"]["frameBytes"]=q(32*1024*1024+1024);bad["worker"]["payloadBytes"]=q(16*1024*1024);refuse(bad);check(!fs::exists(temp/"consensus"),"oversized IPC payload touched storage");
+ {auto network=config;network["networkAdmission"]=true;network["clock"]["enabled"]=true;network["database"]=(temp/"network-config").string();auto runtime=start_altair_runtime(network,1337,genesis_hash,{},[&]{return anchor.timed.clock.time_ms;});
+  check(runtime.rpc->status().at("networkAdmissionEnabled")==true,"explicit admission mode lost");bool synchronous=false;try{runtime.rpc->receive("{}");}catch(const RpcError& e){synchronous=e.code==-32601;}check(synchronous,"network mode allowed unfenced synchronous admission");
+ }
  ForkCheckpointToken token;
  {auto runtime=start_altair_runtime(config,1337,genesis_hash);token=runtime.reactor->current().token;check(token.sequence==1,"fresh startup sequence");
   const auto advertised=runtime.rpc->status();check(advertised.at("consensusIdentity")==hex(identity),"runtime consensus identity mismatch");

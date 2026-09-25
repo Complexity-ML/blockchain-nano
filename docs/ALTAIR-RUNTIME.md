@@ -1,19 +1,22 @@
 # Runtime Altair expérimental
 
 Le champ optionnel `altair` de la configuration de `nano run` initialise un
-service de réception Altair durable. Il n'active pas le consensus Altair dans le
-réseau P2P et ne lie pas ses décisions aux blocs EVM. Le protocole P2P existant
-reste celui de la chaîne d'exécution. Aucun validateur Altair ne signe ici.
+service de réception Altair durable. L'admission P2P Altair reste désactivée par
+défaut ; `altair.networkAdmission: true` l'autorise explicitement après récupération
+IPC. Elle ne lie pas les décisions Altair aux blocs EVM et ne démarre aucun
+signataire ni propagation automatique de messages Altair.
 
 Le service exige `rpc_host: "127.0.0.1"`, l'absence de configuration de signataire
 `bft`, et un répertoire RocksDB distinct de la base EVM. Sans champ `altair`, le
 comportement existant est conservé. Aucun fichier de déploiement ne l'active par
-défaut. La méthode `nano_altairReceive` reste protégée par le jeton éphémère du
-daemon ; ce jeton n'est pas écrit dans le journal de démarrage.
+défaut. Les méthodes IPC sont protégées par le jeton éphémère du daemon ; ce jeton
+n'est pas écrit dans le journal de démarrage. `nano_altairReceive` est interdit
+lorsque l'admission réseau est autorisée : seuls les tickets sont alors utilisables.
 
 ## Configuration exacte
 
-Chaque objet ci-dessous refuse les champs supplémentaires ou manquants. Les
+Chaque objet ci-dessous refuse les champs inconnus ou requis manquants.
+`networkAdmission` est le seul champ optionnel interne présenté ici (défaut `false`). Les
 quantités numériques sont des chaînes hexadécimales canoniques (`"0x1"`, jamais
 `1` ou `"0x01"`). Les tailles et budgets sont positifs ; `attestationDueMs` et
 `proposerScoreBoost` peuvent être nuls. Les chemins sont résolus relativement au
@@ -30,6 +33,7 @@ répertoire de travail du processus ; des chemins absolus évitent l'ambiguïté
 | `worker` | `jobs`, `payloadBytes`, `timeoutMs` |
 | `restart` | `null`, ou objet `sequence`, `digest` |
 | `clock` | `enabled` (booléen), `intervalMs`, `maximumForwardStepMs` |
+| `networkAdmission` | Booléen optionnel ; exige `clock.enabled: true` |
 
 `profile.file` contient le profil complet décrit par
 `altair_transition_profile`, sans choix de preset implicite. Son digest doit
@@ -157,8 +161,8 @@ le highWater observés. Il doit aussi fournir les échéances/annulations des re
 
 Le client est qualifié avec réponses contrôlées et avec le vrai `Core::call` sur
 HTTP loopback. Il est instancié dans `network/main.cpp` après récupération réussie
-des tickets. Le handler libp2p et la reprise après blocage du client restent à
-raccorder. Les tests ne qualifient pas le débit d'un réseau distribué ; un seul
+des tickets. Le handler libp2p est enregistré uniquement en mode réseau explicite ;
+la reprise après blocage du client reste à raccorder. Les tests ne qualifient pas le débit d'un réseau distribué ; un seul
 aller-retour IPC est actif à la fois.
 
 ## Identité de consensus exposée au daemon
@@ -175,8 +179,8 @@ même si elles pourraient appartenir à la même chaîne.
 
 `wire` expose aussi les quatre limites d'enveloppe/payload effectivement utilisées
 par le cœur. Un service de test construit sans identité annonce `null`, jamais
-une identité déduite du seul fork digest. Ce statut est préparatoire : le daemon
-ne le négocie pas encore avec les pairs. Il ne prouve ni leur honnêteté, ni la
+une identité déduite du seul fork digest. En mode réseau, le daemon compare cette
+identité à celle annoncée par le pair. Elle ne prouve ni son honnêteté, ni la
 finalité de l'ancre, ni la liaison atomique avec l'exécution EVM.
 
 ## Clôture d'une ancienne session d'admission
@@ -197,10 +201,9 @@ que les anciens travaux ont été rejetés, ni les rejouer automatiquement.
 
 Cette primitive ne coordonne pas plusieurs daemons autorisés concurrents. Elle
 porte sur le chemin à tickets ; l'ancien appel synchrone `nano_altairReceive`
-n'est pas couvert par cette clôture. Avant activation réseau, le superviseur doit
-assurer un propriétaire unique et l'admission réseau doit utiliser exclusivement
-les tickets. La récupération au démarrage est décrite ci-dessous ; le handler P2P
-reste à raccorder.
+n'est pas couvert par cette clôture et est interdit en mode réseau. Le superviseur
+doit assurer un propriétaire unique. La récupération au démarrage est décrite
+ci-dessous ; le handler P2P utilise exclusivement les tickets.
 
 ## Récupération réellement exécutée au démarrage du daemon
 
@@ -221,8 +224,48 @@ reste actif. Le daemon utilise actuellement trois erreurs de transport maximum,
 pas des limites de validateurs. Leur configuration opérateur reste à exposer.
 
 Le journal `altair-ipc-ready` indique que le client IPC a été construit après cette
-récupération. Il conserve `networkProtocolActive: false` : aucun handler Altair
-libp2p, signature de validateur, propagation ou liaison EVM n'est activé ici.
+récupération. `networkProtocolActive` y indique l'enregistrement du handler
+d'admission, pas une finalité distribuée. Le statut RPC du cœur renvoie `null`
+pour ce champ lorsque l'admission est autorisée, car seul le daemon connaît son
+enregistrement effectif. Aucune signature, propagation automatique ou liaison EVM
+n'est activée ici.
 `altair-ipc-recovery-failed` ne signifie jamais que les anciens workers sont finis.
 Il n'y a pas de boucle de reprise automatique après cet échec ; le diagnostic et
 la politique de supervision restent à compléter avant activation réseau.
+
+## Admission libp2p explicite et qualification
+
+Après récupération, le daemon enregistre `/nano/altair/1.0.0` si le cœur autorise
+l'admission réseau et annonce une horloge saine. Le champ `altair` du handshake
+contient exactement `protocol`, `consensusIdentity` et `forkDigest`. Un pair doit
+être connu par son identité libp2p authentifiée, appartenir à la même chaîne et
+annoncer le même profil. L'absence ou la différence de profil interdit seulement
+son accès au handler Altair, sans prétendre que cette annonce prouve sa loyauté.
+Le cœur vérifie toujours SSZ, signatures et transitions.
+
+Le handler partage le budget du daemon et conserve sa réservation jusqu'à la fin
+du worker et du ticket. Une expiration ou une panne locale ferme le stream sans
+acquittement de consensus. Un dispatcher bloqué retire l'annonce Altair lors de
+la mise à jour du statut et refuse immédiatement les nouvelles admissions.
+
+Sur le trajet privé `nano_altairSubmit`, le quatrième paramètre peut être un objet
+`chainId`, `genesisHash`, `forkDigest`, `kind`, `sszBase64`. Le daemon utilise ce
+format compact à base64 canonique ; l'ancien paramètre chaîne/enveloppe hex reste
+lisible pour les tests et appelants privés. Les deux encodages d'un même payload
+produisent le même digest de ticket. Le format réseau reste exclusivement hex :
+`sszBase64` n'y est pas accepté. Les alphabets, padding, bits inutilisés et bornes
+sont vérifiés avant allocation du payload décodé.
+
+Le runtime refuse avant ouverture du Store un profil dont le plus grand payload
+ne tient pas dans une requête IPC compacte de 16 Mio. Le profil de qualification
+à 8 Mio tient sans réduction de taille et sans augmenter la limite HTTP. Les
+profils dépassant cette capacité nécessitent encore un transport fragmenté ; leur
+activation n'est pas silencieusement tronquée.
+
+`consensus_altair_libp2p` lance un vrai daemon et des pairs Noise/libp2p distincts
+contre le cœur HTTP durable. Il vérifie les refus de pairs/profils/enveloppes,
+transporte 8 Mio de SSZ volontairement invalide jusqu'au rejet par le cœur et
+importe deux blocs officiels avec contrôle du checkpoint et du head attendu.
+L'horloge suit les fixtures : ce n'est ni un réseau de validateurs contemporains,
+ni une preuve de finalité distribuée, ni un test de charge soutenue. Le binaire
+`nano-altair-probe` sert uniquement à cette qualification et n'est pas installé.

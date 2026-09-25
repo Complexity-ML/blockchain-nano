@@ -471,7 +471,7 @@ Json Rpc::one(const Json& request,const std::function<void()>& cancelled){
    else if(method=="nano_altairJobs")result=service->jobs();
    else if(method=="nano_altairRotateSession")result=service->rotate(params[1].get<std::string>());
    else if(method=="nano_altairReceive")result=service->receive(params[1].get_ref<const std::string&>(),cancelled);
-   else if(method=="nano_altairSubmit")result=service->submit(params[1].get<std::string>(),sequence,params[3].get_ref<const std::string&>());
+   else if(method=="nano_altairSubmit")result=service->submit(params[1].get<std::string>(),sequence,params[3]);
    else result=service->job(params[1].get<std::string>(),sequence,method=="nano_altairCancel",method=="nano_altairForget");
   }
   else if(method=="eth_call"||method=="eth_estimateGas"){

@@ -2642,3 +2642,19 @@ couvrent notamment réponse perdue, contexte différent, votes différents,
 éviction d'un contexte, remplacement de session et limites de mémoire.
 Les signatures et quorums restent vérifiés dans le cœur. Les métriques sont
 échantillonnées et les limites de FINALITY.md restent ouvertes.
+
+### Enveloppe IPC Altair à la limite de bloc (2026-09-25)
+
+Échec observé dans `consensus_altair_runtime` et `consensus_altair_managed_runtime`
+pendant l'activation explicite de l'admission P2P : un payload de 8 Mio devenait
+une requête JSON-RPC supérieure à 16 Mio avec hex et enveloppes. Le refus avant
+ouverture du Store était correct ; le transport IPC ne couvrait pas le profil.
+
+Correction : objet IPC avec `sszBase64` canonique, validation de longueur/padding/
+bits inutilisés avant allocation, identité de ticket commune aux encodages hex
+et compact. Le format P2P reste hex. Le profil de 8 Mio et la limite HTTP de 16 Mio
+restent inchangés. Les deux suites passent maintenant, ainsi que le transfert réel
+de 8 Mio via libp2p/HTTP (SSZ invalide rejeté par le cœur) et les blocs officiels.
+Les profils plus grands restent conditionnés à la capacité IPC ; fragmentation
+encore ouverte. Preuves initiales et finales dans
+`build-cmake/qualification/altair-libp2p-ingress-20260925/`.

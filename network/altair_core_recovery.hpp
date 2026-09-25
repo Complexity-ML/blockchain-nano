@@ -23,10 +23,11 @@ class AltairCoreRecovery:public std::enable_shared_from_this<AltairCoreRecovery>
  static size_t bound(const Json& j){if(!j.is_number_unsigned()||!j.get<uint64_t>()||j.get<uint64_t>()>SIZE_MAX)throw std::invalid_argument("resource bound");return j.get<size_t>();}
  Json metadata(const Json& value){
   if(value.at("chainId")!=chain_||value.at("genesisHash")!=genesis_||!hash(value.at("consensusIdentity"))||!hash(value.at("admissionSession")))throw std::invalid_argument("core identity mismatch");
+  if(!value.at("networkAdmissionEnabled").is_boolean()||(value.at("networkAdmissionEnabled")==true&&value.at("clockHealthy")!=true))throw std::invalid_argument("network admission clock unavailable");
   const auto& w=value.at("wire");
   AltairWireProfile profile{chain_,genesis_,value.at("forkDigest").get<std::string>(),bound(w.at("frameBytes")),bound(w.at("blockBytes")),bound(w.at("attestationBytes")),bound(w.at("slashingBytes"))};
   InboundBudget budget;AltairMessageIngress validate(profile,budget);bound(value.at("workerJobs"));
-  return Json{{"chainId",chain_},{"genesisHash",genesis_},{"forkDigest",profile.fork_digest},{"consensusIdentity",value.at("consensusIdentity")},{"wire",w},{"workerJobs",value.at("workerJobs")}};
+  return Json{{"chainId",chain_},{"genesisHash",genesis_},{"forkDigest",profile.fork_digest},{"consensusIdentity",value.at("consensusIdentity")},{"wire",w},{"workerJobs",value.at("workerJobs")},{"networkAdmissionEnabled",value.at("networkAdmissionEnabled")}};
  }
  void finish(Json result){if(finished_)return;finished_=true;retry_timer_.cancel();deadline_.cancel();auto done=std::move(done_);done(std::move(result));}
  void schedule(){retry_timer_.expires_after(retry_);retry_timer_.async_wait([self=shared_from_this()](auto error){if(!error&&!self->finished_)self->request();});}

@@ -13,7 +13,7 @@ int main(){try{
    ++calls;check(args[0]=="token"&&args[1]=="session"&&args[2]=="0x1","ticket identity changed");
    if(mode==4){reply(nullptr);return;} // inaccessible core must retain capacity
    if(method=="nano_altairSubmit"){
-    ++submits;submitted.push_back(args.at(3).get<std::string>());
+    ++submits;submitted.push_back(args.at(3).dump());check(args.at(3).at("sszBase64")=="AQI=","compact IPC payload changed");
     if(mode==0||mode==1){if(submits==1){reply(nullptr);return;}}
     if(mode==2){flag->store(true);reply(nullptr);return;}
     if(mode==5){reply(Json{{"state","pending"},{"sequence","0x2"}});return;}

@@ -53,7 +53,7 @@ int main(){try{
    recovery->start();core_io.run();check(recovered.is_object()&&dropped_rotation&&recovered.at("highWater")==1&&endpoint->jobs().at("jobs").empty(),"real core recovery did not drain old receipt");
    admission_session=recovered.at("session").get<std::string>();
    core_dispatch=std::make_shared<AltairCoreDispatch>(core_io,[&](const std::string& method,Json params,Reply cb){
-    const bool drop=method=="nano_altairSubmit"&&!core_reply_dropped&&Json::parse(params.at(3).get<std::string>()).at("kind")=="block";
+    const bool drop=method=="nano_altairSubmit"&&!core_reply_dropped&&params.at(3).at("kind")=="block";
     core->call(method,std::move(params),[&,drop,cb=std::move(cb)](Json result){if(drop){core_reply_dropped=true;cb(nullptr);}else cb(std::move(result));});
    },profile,"qualification-only-token",admission_session,recovered.at("highWater").get<uint64_t>(),4,3,std::chrono::milliseconds(1));
   }
@@ -96,6 +96,8 @@ int main(){try{
     boost::beast::error_code ignored;socket.socket().close(ignored);dropped_reply=true;
    }
    const auto submitted=client->call("nano_altairSubmit",args);check(submitted.at("state")!="limited"&&submitted.at("state")!="retired","HTTP ticket admission failed");
+   auto compact_args=args;compact_args[3]=Json{{"chainId",profile.chain_id},{"genesisHash",profile.genesis_hash},{"forkDigest",profile.fork_digest},{"kind",kind},{"sszBase64",altair_base64(m.ssz)}};
+   check(client->call("nano_altairSubmit",compact_args).at("payloadDigest")==submitted.at("payloadDigest"),"compact retry redispatched or changed payload digest");
    const auto retry=client->call("nano_altairSubmit",args);check(retry.at("payloadDigest")==submitted.at("payloadDigest"),"retry changed ticket identity");
    Json receipt;until([&]{receipt=client->call("nano_altairJob",Json::array({"qualification-only-token",admission_session,sequence}));return receipt.at("state")=="completed";},"Altair ticket completed");
    client->call("nano_altairForget",Json::array({"qualification-only-token",admission_session,sequence}));

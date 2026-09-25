@@ -1142,3 +1142,12 @@ set_tests_properties(consensus_altair_receipts PROPERTIES TIMEOUT 30 LABELS "qua
 
 add_test(NAME consensus_altair_core_client COMMAND ${CMAKE_COMMAND} -E env NANO_TEST_ALTAIR_CORE_CLIENT=1 $<TARGET_FILE:nano-altair-wire-tests>)
 set_tests_properties(consensus_altair_core_client PROPERTIES TIMEOUT 90 LABELS "qualification_consensus_ethereum")
+
+add_executable(nano-altair-p2p-tests tests/test_altair_p2p.cpp)
+target_link_libraries(nano-altair-p2p-tests PRIVATE nano_core)
+target_compile_definitions(nano-altair-p2p-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+if(NANO_NETWORK_EXECUTABLE)
+ get_filename_component(NANO_NETWORK_BINARY_DIR "${NANO_NETWORK_EXECUTABLE}" DIRECTORY)
+ add_test(NAME consensus_altair_libp2p COMMAND nano-altair-p2p-tests ${NANO_NETWORK_EXECUTABLE} ${NANO_NETWORK_BINARY_DIR}/nano-altair-probe)
+ set_tests_properties(consensus_altair_libp2p PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_ethereum")
+endif()

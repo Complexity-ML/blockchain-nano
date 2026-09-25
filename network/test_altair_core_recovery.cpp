@@ -4,7 +4,7 @@ using namespace std::chrono_literals;
 void check(bool ok,const char* message){if(!ok)throw std::runtime_error(message);}
 struct Fake {
  std::string session="0x"+std::string(64,'a');unsigned rotations=0,status_calls=0,cancels=0,forgets=0;bool job=true,completed=false;std::string mode;
- Json status(){return Json{{"chainId","0x539"},{"genesisHash","0x"+std::string(64,'9')},{"consensusIdentity","0x"+std::string(64,'d')},{"forkDigest","0x01020304"},{"admissionSession",session},{"workerJobs",size_t(4)},{"wire",{{"frameBytes",size_t(4096)},{"blockBytes",size_t(1024)},{"attestationBytes",size_t(512)},{"slashingBytes",size_t(1024)}}}};}
+ Json status(){return Json{{"networkAdmissionEnabled",false},{"clockHealthy",nullptr},{"chainId","0x539"},{"genesisHash","0x"+std::string(64,'9')},{"consensusIdentity","0x"+std::string(64,'d')},{"forkDigest","0x01020304"},{"admissionSession",session},{"workerJobs",size_t(4)},{"wire",{{"frameBytes",size_t(4096)},{"blockBytes",size_t(1024)},{"attestationBytes",size_t(512)},{"slashingBytes",size_t(1024)}}}};}
  Json receipt(){Json j{{"state",completed?"completed":"pending"},{"sequence","0x1"}};if(completed)j["decision"]="accepted";return j;}
  void call(const std::string& method,const Json& p,Reply done){
   check(p.at(0)=="token","missing auth");if(mode=="unavailable"){done(nullptr);return;}if(mode=="silent")return;

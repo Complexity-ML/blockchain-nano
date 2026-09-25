@@ -14,7 +14,7 @@ public:
  using Call=std::function<void(const std::string&,Json,Reply)>;
 private:
  enum class Operation {submit,query,cancel,forget};
- struct Job {std::string frame;AltairWork::Cancellation cancelled;AltairWork::Done done;uint64_t sequence=0;bool admitted=false,uncertain=false;std::optional<AltairWork::Decision> result;};
+ struct Job {Json frame;AltairWork::Cancellation cancelled;AltairWork::Done done;uint64_t sequence=0;bool admitted=false,uncertain=false;std::optional<AltairWork::Decision> result;};
  asio::io_context& io_;asio::steady_timer timer_;Call call_;
  const AltairWireProfile profile_;const std::string token_,session_;
  const size_t maximum_;const unsigned failure_limit_;const std::chrono::milliseconds retry_;
@@ -75,9 +75,9 @@ public:
   const auto bound=message.kind==AltairWireKind::block?profile_.block_bytes:message.kind==AltairWireKind::attestation?profile_.attestation_bytes:profile_.slashing_bytes;
   if(message.ssz.size()>bound||message.ssz.size()>profile_.frame_bytes/2)return false;
   const auto kind=message.kind==AltairWireKind::block?"block":message.kind==AltairWireKind::attestation?"attestation":"attester_slashing";
-  std::string encoded="0x";const char* hex="0123456789abcdef";for(auto b:message.ssz){encoded.push_back(hex[b>>4]);encoded.push_back(hex[b&15]);}
-  auto frame=Json{{"chainId",profile_.chain_id},{"genesisHash",profile_.genesis_hash},{"forkDigest",profile_.fork_digest},{"kind",kind},{"ssz",encoded}}.dump();
-  if(frame.size()>profile_.frame_bytes)return false;
+  const auto overhead=Json{{"chainId",profile_.chain_id},{"genesisHash",profile_.genesis_hash},{"forkDigest",profile_.fork_digest},{"kind",kind},{"ssz","0x"}}.dump().size();
+  if(overhead>profile_.frame_bytes||message.ssz.size()>(profile_.frame_bytes-overhead)/2)return false;
+  auto frame=Json{{"chainId",profile_.chain_id},{"genesisHash",profile_.genesis_hash},{"forkDigest",profile_.fork_digest},{"kind",kind},{"sszBase64",altair_base64(message.ssz)}};
   jobs_.push_back(Job{std::move(frame),std::move(cancel),std::move(done)});
   try{schedule(std::chrono::milliseconds(0));}catch(...){scheduled_=false;blocked_=true;jobs_.pop_back();throw;}return true;
  }

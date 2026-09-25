@@ -2277,3 +2277,33 @@ blocs et ne lie pas le consensus à l'EVM. Le propriétaire unique du daemon, la
 supervision après échec et la configuration opérateur des budgets de récupération
 restent à finaliser avant activation. Le chemin synchrone Receive reste hors de
 la clôture des tickets ; aucune admission réseau ne doit l'utiliser.
+
+### Admission Altair sur libp2p, 25 septembre 2026
+
+Le mode explicite `altair.networkAdmission: true` exige l'horloge locale, ferme
+l'ancien chemin synchrone Receive et permet au daemon d'enregistrer le handler
+`/nano/altair/1.0.0` après récupération IPC. Le pair doit avoir effectué le handshake
+sur sa véritable identité libp2p et annoncer le même profil complet. Les messages
+passent ensuite par le worker et le Store durable ; le profil annoncé ne remplace
+aucune validation SSZ/BLS. Le budget partagé n'est acquis qu'une fois et n'est
+libéré qu'après fin effective du traitement.
+
+Treize suites réseau et six suites cœur/intégration passent. Le nouveau trajet
+réel Noise/libp2p → daemon → HTTP → réacteur transporte le payload maximal de
+8 Mio (invalide, rejeté par le cœur), importe deux blocs officiels et contrôle leurs
+checkpoints/heads. Neuf identités de pairs distinctes couvrent refus sans handshake,
+absence/différence de profil, enveloppes invalides, rejets du cœur et panne locale.
+L'horloge est celle des fixtures ; aucune finalité distribuée n'est revendiquée.
+
+Le profil de 8 Mio révélait un dépassement du JSON-RPC de 16 Mio avec l'encodage
+hex. L'IPC du dispatcher utilise désormais une enveloppe objet base64 canonique,
+sans modifier le format réseau, le profil ni la limite HTTP. Un retry hex/base64
+du même payload conserve le même ticket. La capacité totale est vérifiée avant
+ouverture de la base ; les profils plus grands nécessitant des fragments restent
+refusés explicitement et à implémenter.
+
+Preuves : `build-cmake/qualification/altair-libp2p-ingress-20260925/`, y compris
+l'échec initial et les réussites après correction. Aucun déploiement n'active le
+mode par défaut. Restent propagation sortante, récupération des dépendances,
+duties/signatures de validateurs, supervision multi-processus et liaison atomique
+avec les blocs EVM, puis qualification distribuée des pannes/finalité/charge.
