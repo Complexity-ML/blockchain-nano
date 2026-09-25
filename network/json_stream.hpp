@@ -36,11 +36,11 @@ inline void read_json_frame(asio::io_context& io,Stream stream,size_t limit,RawJ
 }
 inline void read_json(asio::io_context& io,Stream stream,Reply reply){std::make_shared<JsonRead>(io,std::move(stream),std::move(reply))->start();}
 class JsonWrite:public std::enable_shared_from_this<JsonWrite>{
- Stream stream_;asio::steady_timer timer_;std::string data_;std::function<void(bool)> done_;
+ Stream stream_;asio::steady_timer timer_;std::string data_;std::function<void(bool)> done_;size_t maximum_;
  void finish(bool ok){timer_.cancel();auto done=std::exchange(done_,std::function<void(bool)>{});if(done)done(ok);}
 public:
- JsonWrite(asio::io_context& io,Stream stream,const Json& value,std::function<void(bool)> done):stream_(std::move(stream)),timer_(io),data_(value.dump()),done_(std::move(done)){}
- void start(std::chrono::steady_clock::duration timeout=std::chrono::seconds(10)){if(data_.size()>JsonFrame::maximum_size){stream_->reset();finish(false);return;}timer_.expires_after(timeout);timer_.async_wait([self=shared_from_this()](auto ec){if(!ec){self->stream_->reset();self->finish(false);}});libp2p::write(stream_,libp2p::BytesIn(reinterpret_cast<const uint8_t*>(data_.data()),data_.size()),[self=shared_from_this()](auto result){self->finish(bool(result));});}
+ JsonWrite(asio::io_context& io,Stream stream,const Json& value,std::function<void(bool)> done,size_t maximum=JsonFrame::maximum_size):stream_(std::move(stream)),timer_(io),data_(value.dump()),done_(std::move(done)),maximum_(maximum){}
+ void start(std::chrono::steady_clock::duration timeout=std::chrono::seconds(10)){if(data_.size()>maximum_){stream_->reset();finish(false);return;}timer_.expires_after(timeout);timer_.async_wait([self=shared_from_this()](auto ec){if(!ec){self->stream_->reset();self->finish(false);}});libp2p::write(stream_,libp2p::BytesIn(reinterpret_cast<const uint8_t*>(data_.data()),data_.size()),[self=shared_from_this()](auto result){self->finish(bool(result));});}
 };
 inline void write_json(asio::io_context& io,Stream stream,const Json& json,std::function<void(bool)> done){std::make_shared<JsonWrite>(io,std::move(stream),json,std::move(done))->start();}
 inline void close_stream(Stream stream){stream->close([stream](auto){});}

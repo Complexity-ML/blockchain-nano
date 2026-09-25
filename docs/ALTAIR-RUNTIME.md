@@ -293,21 +293,54 @@ racines déjà connues ; une réhydratation historique authentifiée reste à pr
 Après écriture du format v2, un ancien binaire ne comprenant que v1 ne peut pas
 reprendre ce checkpoint.
 
-Deux lectures privées préparent la propagation :
+Deux lectures privées alimentent la propagation :
 
 - `nano_altairInventory(token, afterRoot, limit)` : `afterRoot` vaut `"0x"` au
   début, puis le curseur `next`. La limite est une quantité hex positive. Les
-  racines archivées sont paginées en ordre lexicographique, avec parent et slot.
+  racines archivées portent parent et slot. Le catalogue initial est trié par
+  slot puis racine (parents avant enfants) ; les nouveaux blocs sont ajoutés
+  à la fin, sans déplacer les curseurs existants. Un tick seul conserve le catalogue.
   Le budget de réponse réduit la taille d'une page, jamais le nombre total de
   blocs. `missingSignedBlocks` signale les états connus sans payload signé,
-  hors ancre. Les pages portent séquence et digest : si le checkpoint change,
-  recommencer le parcours pour ne pas manquer une insertion avant le curseur.
+  hors ancre. Les pages portent séquence, digest et `catalogEpoch`. Un changement
+  d'époque du catalogue impose de reprendre depuis `"0x"`. Le dernier root reçu
+  reste utilisable pour découvrir des ajouts après une page dont `next` est null.
 - `nano_altairBlock(token, root)` : retourne les octets archivés dans l'enveloppe
   IPC compacte. Un payload absent renvoie `available: false`, avec distinction
   bloc connu/ancre. Un payload trop grand pour l'export échoue explicitement.
 
 Ces lectures utilisent les références d'un même état publié et la file RPC
-bornée, en dehors du verrou global RPC. Le daemon ne diffuse pas encore cet
-inventaire automatiquement. Les archives restent incluses dans les snapshots
+bornée, en dehors du verrou global RPC. Le daemon diffuse automatiquement les
+blocs aux pairs dont l'identité de consensus est compatible, uniquement lorsque
+l'admission Altair est explicitement activée. Les archives restent incluses dans les snapshots
 complets, soumises à `limits.envelopeBytes` et à la taille de bloc du profil :
 stockage incrémental, élagage et débit d'écriture restent à qualifier.
+
+
+### Diffusion automatique des blocs, 25 septembre 2026
+
+Le daemon choisit les pairs à tour de rôle, avec une seule tentative active et
+un bloc par tentative. À chaque tick réseau, il lit une page privée, exporte le
+SSZ durable, puis l'envoie sur `/nano/altair/1.0.0`. Le curseur propre au pair
+avance uniquement après un acquittement exact `{"accepted":true}`. Une perte,
+un rejet ou un délai expiré conserve le curseur. Un redémarrage du daemon
+reprend le catalogue ; une nouvelle session du cœur distant remet son curseur
+à zéro. La progression est volatile ; les octets source sont durables.
+
+La qualification `consensus_altair_propagation` utilise deux vrais daemons et
+deux serveurs HTTP de cœur sur loopback, avec horloge de fixture. Deux blocs
+signés officiels sont diffusés automatiquement, le premier acquittement est
+supprimé après traitement, puis le daemon émetteur est arrêté et relancé avant
+la diffusion du second bloc. Les octets reçus et la tête finale sont vérifiés,
+ainsi que la stabilité du curseur après un tick et un ajout. Ce test ne redémarre
+pas les cœurs et ne démontre pas de finalité distribuée.
+
+Limites restantes : un rejet permanent bloque la progression vers ce pair ;
+la réconciliation des branches/finalités et la récupération des dépendances
+restent à réaliser. Les attestations et slashings ne sont pas diffusés par ce
+relais. Il n'y a pas encore de comparaison d'inventaires distants ni de mesure
+de débit à grande échelle. Le lien atomique EVM/consensus, les devoirs et signatures
+des validateurs et la qualification de finalité distribuée restent ouverts.
+
+Preuves locales : `build-cmake/qualification/altair-block-propagation-20260925/`,
+14/14 tests réseau et 3/3 tests cœur (ingress libp2p, archive et propagation).

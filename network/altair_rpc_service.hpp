@@ -18,6 +18,19 @@ class AltairRpcService {
  AltairConsensusService service_;
  const std::chrono::milliseconds timeout_;
  AltairReceipts receipts_;
+ struct CatalogEntry {nano::ConsensusRoot root,parent;uint64_t slot;};
+ struct Catalog {std::weak_ptr<const nano::AltairSignedBlockArchive> archive;std::vector<CatalogEntry> entries;std::map<nano::ConsensusRoot,size_t> positions;std::string epoch;};
+ std::mutex catalog_mutex_;std::shared_ptr<const Catalog> catalog_;
+ std::shared_ptr<const Catalog> catalog(const nano::AltairPublishedStore& current){
+  std::lock_guard lock(catalog_mutex_);if(catalog_&&catalog_->archive.lock()==current.signed_blocks)return catalog_;
+  auto next=std::make_shared<Catalog>();bool append=bool(catalog_);
+  if(append)for(const auto& [id,_]:catalog_->positions)if(!current.signed_blocks->contains(id)){append=false;break;}
+  if(append)*next=*catalog_;else{nano::Bytes nonce(32);if(RAND_bytes(nonce.data(),nonce.size())!=1)throw std::runtime_error("Altair inventory randomness unavailable");next->epoch=nano::hex(nonce);}
+  std::vector<CatalogEntry> added;for(const auto& [id,_]:*current.signed_blocks)if(!next->positions.contains(id)){const auto& h=current.state->blocks.at(id).header;added.push_back({id,h.parent_root,h.slot});}
+  std::sort(added.begin(),added.end(),[](const auto& a,const auto& b){return a.slot!=b.slot?a.slot<b.slot:a.root<b.root;});
+  for(const auto& entry:added){next->positions.emplace(entry.root,next->entries.size());next->entries.push_back(entry);}
+  next->archive=current.signed_blocks;catalog_=next;return next;
+ }
  static nano::ConsensusRoot block_root(const std::string& encoded){
   if(encoded.size()!=66)throw nano::RpcError(-32602,"Invalid Altair block root");const auto bytes=nano::unhex(encoded);
   if(bytes.size()!=32||nano::hex(bytes)!=encoded)throw nano::RpcError(-32602,"Invalid Altair block root");nano::ConsensusRoot result{};std::copy(bytes.begin(),bytes.end(),result.begin());return result;
@@ -70,12 +83,13 @@ public:
  }
  nano::Json inventory(const std::string& cursor,uint64_t requested){
   if(!requested)throw nano::RpcError(-32602,"Positive Altair page limit required");const auto current=reactor_.current();
-  auto it=cursor=="0x"?current.signed_blocks->begin():current.signed_blocks->upper_bound(block_root(cursor));
+  const auto index=catalog(current);size_t offset=0;
+  if(cursor!="0x"){const auto found=index->positions.find(block_root(cursor));if(found==index->positions.end())throw nano::RpcError(-32602,"Unknown Altair inventory cursor");offset=found->second+1;}
   const auto budget=std::min(profile_.frame_bytes,size_t(16*1024*1024));if(budget<=512)throw nano::RpcError(-32005,"Altair inventory capacity unavailable");
   const auto maximum=std::min<uint64_t>(requested,(budget-512)/256);if(!maximum)throw nano::RpcError(-32005,"Altair inventory capacity unavailable");
   nano::Json entries=nano::Json::array();std::string last;
-  for(size_t n=0;n<maximum&&it!=current.signed_blocks->end();++n,++it){const auto& [id,_]=*it;const auto& header=current.state->blocks.at(id).header;last=nano::hex(nano::Bytes(id.begin(),id.end()));entries.push_back({{"root",last},{"parentRoot",nano::hex(nano::Bytes(header.parent_root.begin(),header.parent_root.end()))},{"slot",nano::quantity(nano::Int(std::to_string(header.slot)))}});}
-  return nano::Json{{"sequence",nano::quantity(nano::Int(std::to_string(current.token.sequence)))},{"digest",nano::hex(current.token.digest)},{"blocks",entries},{"next",it==current.signed_blocks->end()?nano::Json(nullptr):nano::Json(last)},{"missingSignedBlocks",current.state->blocks.size()-1-current.signed_blocks->size()}};
+  for(size_t n=0;n<maximum&&offset<index->entries.size();++n,++offset){const auto& entry=index->entries[offset];last=nano::hex(nano::Bytes(entry.root.begin(),entry.root.end()));entries.push_back({{"root",last},{"parentRoot",nano::hex(nano::Bytes(entry.parent.begin(),entry.parent.end()))},{"slot",nano::quantity(nano::Int(std::to_string(entry.slot)))}});}
+  return nano::Json{{"sequence",nano::quantity(nano::Int(std::to_string(current.token.sequence)))},{"digest",nano::hex(current.token.digest)},{"catalogEpoch",index->epoch},{"blocks",entries},{"next",offset==index->entries.size()?nano::Json(nullptr):nano::Json(last)},{"missingSignedBlocks",current.state->blocks.size()-1-current.signed_blocks->size()}};
  }
  nano::Json job(const std::string& session,uint64_t sequence,bool cancel=false,bool retire=false){return receipts_.get(session,sequence,cancel,retire);}
  nano::Json rotate(const std::string& expected){return receipts_.rotate(expected);}

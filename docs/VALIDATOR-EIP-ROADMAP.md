@@ -2333,3 +2333,17 @@ Preuves : `build-cmake/qualification/altair-signed-archive-20260925/`.
 La diffusion automatique reste à raccorder. Les archives font encore partie des
 snapshots complets : stockage incrémental, pruning, réhydratation authentifiée des
 anciens blocs manquants et débit durable restent ouverts, ainsi que la liaison EVM.
+
+
+### Propagation Altair automatique qualifiée localement — 25 septembre 2026
+
+Le relais de blocs utilise l'archive signée durable et des curseurs par pair,
+avancés uniquement après acquittement positif. Catalogue stable sur tick/ajout,
+réinitialisation lors d'un changement de session ou d'époque du catalogue.
+La campagne `build-cmake/qualification/altair-block-propagation-20260925/`
+passe 14 tests réseau et 3 tests cœur, dont deux vrais daemons/deux cœurs HTTP,
+perte d'acquittement et redémarrage du daemon source avec deux blocs officiels.
+Voir `docs/ALTAIR-RUNTIME.md` pour le périmètre exact et les limites.
+Aucun statut EIP ou profil réseau n'est promu : finalité distribuée, tâches et
+signatures de validateurs, gossip des votes, réconciliation après rejet permanent
+et liaison atomique EVM/consensus restent à terminer.

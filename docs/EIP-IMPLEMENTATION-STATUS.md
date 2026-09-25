@@ -722,3 +722,17 @@ head/reorg, corruption d'archives, erreur WAL injectée, annulation avant commit
 lecture des anciens checkpoints sans invention de signatures. Aucune conformité
 EIP/fork n'est promue : diffusion automatique, pruning, stockage incrémental et
 liaison consensus–EVM restent ouverts. Voir `docs/ALTAIR-RUNTIME.md`.
+
+
+### Propagation Altair automatique qualifiée localement — 25 septembre 2026
+
+Le relais de blocs utilise l'archive signée durable et des curseurs par pair,
+avancés uniquement après acquittement positif. Catalogue stable sur tick/ajout,
+réinitialisation lors d'un changement de session ou d'époque du catalogue.
+La campagne `build-cmake/qualification/altair-block-propagation-20260925/`
+passe 14 tests réseau et 3 tests cœur, dont deux vrais daemons/deux cœurs HTTP,
+perte d'acquittement et redémarrage du daemon source avec deux blocs officiels.
+Voir `docs/ALTAIR-RUNTIME.md` pour le périmètre exact et les limites.
+Aucun statut EIP ou profil réseau n'est promu : finalité distribuée, tâches et
+signatures de validateurs, gossip des votes, réconciliation après rejet permanent
+et liaison atomique EVM/consensus restent à terminer.
