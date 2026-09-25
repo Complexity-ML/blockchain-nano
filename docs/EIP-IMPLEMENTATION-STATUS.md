@@ -949,3 +949,14 @@ fermées/rouvertes au milieu de chaque scénario. Preuves :
 [Portée et limites](ALTAIR-LOCAL-FINALITY.md) : test local piloté, sans SyncCommittee
 participant, sans réseau distribué ni binding EVM. Le critère de finalité/reprise
 réseau du goal reste ouvert ; cette campagne qualifie l'assemblage local.
+
+### 2026-09-25 — rattrapage P2P d'une chaîne produite localement
+
+`consensus_altair_generated_chain_libp2p` connecte deux vrais démons libp2p aux
+coordinateurs source/récepteur et exige la réception de 33 blocs générés par les
+64 clés de fixture. Vérifications : octets archivés, état SSZ de tête, justification,
+checkpoint finalisé et restauration de celui-ci depuis le disque destinataire.
+Preuve : `build-cmake/qualification/altair-generated-p2p-20260925/final-tests.log`.
+Voir [périmètre réseau](ALTAIR-LOCAL-FINALITY.md). Ce test qualifie un rattrapage
+réseau à horloge pilotée ; la finalisation collaborative, les partitions, la
+planification autonome et le binding EVM restent ouverts.

@@ -53,3 +53,40 @@ opérateurs, la résistance aux partitions, le débit à grande échelle, un
 planificateur opérationnel ou une liaison à l'exécution EVM. Les opérations sont
 limitées aux attestations et au vote Eth1 fixe de l'ancre ; aucun dépôt ni retrait
 réel n'est engagé. Le scénario minoritaire ne simule pas des doubles signatures.
+
+## Rattrapage par de vrais démons libp2p
+
+`consensus_altair_generated_chain_libp2p` réutilise la chaîne générée avec les
+64 clés, puis initialise un second coordinateur depuis l'ancre. Les deux
+coordinateurs ont des bases distinctes et deux services HTTP privés. Deux
+processus `nano-p2p` échangent sur loopback via le protocole Altair existant :
+le test ne copie pas les blocs dans le Store destinataire et n'appelle pas
+son admission directement.
+
+Le récepteur doit obtenir les 33 blocs signés et retrouver le même checkpoint
+finalisé, la même justification, la même tête et exactement le même état SSZ
+à cette tête. Tous les octets de blocs archivés sont comparés à la source.
+Après arrêt des démons et drainage des services, un nouveau coordinateur restaure
+le checkpoint disque du destinataire et doit conserver sa finalité et son archive.
+Cette restauration réutilise l'instance de base ouverte ; la fermeture/réouverture
+complète de la base source reste couverte par le scénario de génération.
+
+Campagne : `build-cmake/qualification/altair-generated-p2p-20260925/final-tests.log`.
+Le test n'est inscrit par CMake que si `NANO_NETWORK_EXECUTABLE` est fourni.
+Une build qui ne fournit pas ce binaire n'a pas qualifié ce scénario réseau.
+
+Portée précise : finalité distante reconstituée par rattrapage d'une chaîne
+produite localement, et non finalisation collaborative en temps réel par deux
+groupes de validateurs. Les horloges sont pilotées et le récepteur est placé au
+slot final avant le rattrapage. Les opérations et attestations incluses dans les
+blocs sont validées normalement ; la convergence exacte de toutes les dernières
+attestations gossip n'est pas exigée ici. Les deux cœurs HTTP résident dans le
+processus de test, les démons réseau dans deux processus séparés. Aucune partition,
+perte réseau ou panne brutale n'est injectée dans cette campagne.
+
+Le premier passage (`tests.log`) a reçu 33 blocs et restauré l'époque finalisée 2
+en 87,37 secondes, génération locale incluse. La version finale du harness draine
+les sorties des deux processus pendant l'attente et journalise la progression
+du nombre de blocs reçus ; `final-tests.log` qualifie cette version. Ce temps
+est celui du scénario borné et du relais séquentiel actuel, pas une mesure du
+débit maximal ou une garantie de synchronisation en production.

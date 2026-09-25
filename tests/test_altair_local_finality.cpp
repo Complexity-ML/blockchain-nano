@@ -3,8 +3,12 @@
 #include "nano/consensus_altair_duty.hpp"
 #include "nano/consensus_message_ssz.hpp"
 #include "blst.h"
+#include "nano/consensus_altair_runtime.hpp"
+#include "../network/altair_rpc_service.hpp"
+#include "nano/http.hpp"
 using namespace test;using namespace test::phase0_minimal;
 namespace {
+struct RunningHttp {HttpServer& server;std::thread thread;explicit RunningHttp(HttpServer& s):server(s),thread([&s]{s.run();}){}~RunningHttp(){server.stop();thread.join();}};
 void put32(Bytes& b,size_t at,uint32_t n){for(unsigned i=0;i<4;++i)b.at(at+i)=uint8_t(n>>(8*i));}
 Bytes body_with_votes(const Bytes& base,const std::vector<Phase0SignedAttestation>& votes,const AltairTransitionRules& r){
  const auto fixed=220+(r.state.sync_committee_size+7)/8+96;
@@ -21,7 +25,7 @@ struct Key {
 };
 }
 int main(int argc,char** argv){try{
- const bool no_votes=argc==2&&std::string(argv[1])=="without-votes",minority=argc==2&&std::string(argv[1])=="minority-votes";check(argc==1||no_votes||minority,"unexpected scenario argument");
+ const bool no_votes=argc==2&&std::string(argv[1])=="without-votes",minority=argc==2&&std::string(argv[1])=="minority-votes";const bool p2p=argc==3&&std::string(argv[1])=="p2p";check(argc==1||no_votes||minority||p2p,"unexpected scenario argument");
  const fs::path fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",corpus=fixtures/"consensus-altair-fork-head-official",dir=corpus/"shorter_chain_but_heavier_weight";
  const auto manifest=load(corpus/"manifest.json");
  for(const auto& row:manifest.at("cases"))if(row.at("name")=="shorter_chain_but_heavier_weight")for(const auto& [path,info]:row.at("files").items())check(hex(sha256(binary(corpus/path))).substr(2)==info.at("sha256").get<std::string>(),"fixture digest");
@@ -31,7 +35,7 @@ int main(int argc,char** argv){try{
  const auto initial=initialize_altair_fork_store({binary(dir/"anchor_state.ssz"),std::nullopt},binary(dir/"anchor_block.ssz"),rules);
  Bytes base;for(const auto& step:load(dir/"steps.json"))if(step.contains("block")){auto b=binary(dir/(step.at("block").get<std::string>()+".ssz"));base=Bytes(b.begin()+184,b.end());break;}
  const auto context=altair_fork_block_context(initial.blocks.at(initial.timed.view.anchor).state,initial.blocks.at(initial.timed.view.anchor).header,t.epoch,t.state);
- Temp temp;const Bytes genesis(32,9);auto disk=std::make_unique<ChainStore>(temp/"core");disk->bind_chain(1337,genesis,"altair-qualification");auto reactor=std::make_unique<AltairDurableReactor>(*disk,1337,genesis,rules,limits,initial);
+ Temp temp;const auto execution_genesis=Genesis::from_json(Json{{"alloc",Json::object()}});const Bytes genesis=execution_genesis.block.header.hash();auto disk=std::make_unique<ChainStore>(temp/"core");disk->bind_chain(1337,genesis,"altair-qualification");auto reactor=std::make_unique<AltairDurableReactor>(*disk,1337,genesis,rules,limits,initial);
  std::map<uint64_t,std::unique_ptr<Key>> keys;
  for(const auto& [index,v]:context.registry.validators){auto key=std::make_unique<Key>();uint64_t words[4]{index+1,0,0,0};blst_scalar_from_uint64(&key->secret,words);blst_p1 p;blst_sk_to_pk_in_g1(&p,&key->secret);key->public_key.resize(48);blst_p1_compress(key->public_key.data(),&p);check(std::equal(key->public_key.begin(),key->public_key.end(),v.public_key.begin()),"fixture key mapping");key->disk=std::make_unique<ChainStore>(temp/("key-"+std::to_string(index)));key->journal=std::make_unique<BeaconSigningJournal>(*key->disk,1337,genesis,context.genesis_root,key->public_key,slots);keys.emplace(index,std::move(key));}
  check(keys.size()==64,"qualification expects 64 fixture validators");
@@ -57,5 +61,36 @@ int main(int argc,char** argv){try{
  // fork-choice Store is anchored to the actual genesis block root.
  if(realized.finalized.epoch==0)check(realized.finalized.root==ConsensusRoot{}&&final.state->timed.view.finalized==ConsensusCheckpoint{0,initial.timed.view.anchor},"genesis finality binding changed");
  else check(realized.finalized==final.state->timed.view.finalized,"Store finality differs from realized block state");check(final.signed_blocks->size()==blocks,"generated block archive mismatch");
+ if(p2p){
+  const auto& anchor=initial.blocks.at(initial.timed.view.anchor);const auto fork=consensus_fork_data_root(context.fork.current_version,context.genesis_root);
+  const auto identity=hex(altair_consensus_identity(rules,{initial.timed.view.anchor,anchor.header.state_root,context.genesis_root,context.fork.current_version},1337,genesis));
+  const AltairWireProfile profile{"0x539",hex(genesis),hex(Bytes(fork.begin(),fork.begin()+4)),2*t.maximum_block_bytes+1024,t.maximum_block_bytes,512,40000};
+  ChainStore remote_disk(temp/"remote-consensus");remote_disk.bind_chain(1337,genesis,"altair-qualification");AltairDurableReactor remote(remote_disk,1337,genesis,rules,limits,initial);remote.tick(final.state->timed.clock.time_ms);
+  auto endpoint=[&](auto& r){return std::make_shared<AltairRpcService>(r,profile,4,2*t.maximum_block_bytes,10s,[](const auto& check){if(check)check();},[]{return true;},identity,true);};
+  auto source_service=endpoint(*reactor),remote_service=endpoint(remote);
+  Blockchain source_execution(temp/"source-execution",execution_genesis),remote_execution(temp/"remote-execution",execution_genesis);
+  Rpc source_rpc(source_execution,"fixture-token",AdmissionBudget::Clock::now,RpcSimulationLimits{},source_service),remote_rpc(remote_execution,"fixture-token",AdmissionBudget::Clock::now,RpcSimulationLimits{},remote_service);
+  HttpServer source_http(source_rpc,"127.0.0.1",0),remote_http(remote_rpc,"127.0.0.1",0);RunningHttp source_running(source_http),remote_running(remote_http);
+  Process receiver({argv[2],std::to_string(remote_http.port()),(temp/"receiver-key").string(),"/ip4/127.0.0.1/tcp/0"},{{"NANO_NETWORK_TOKEN","fixture-token"},{"NANO_TEST_NETWORK_TRACE","1"}});
+  const auto address=receiver.event("listen").at("address").get<std::string>();receiver.event("altair-ingress-ready");
+  Process sender({argv[2],std::to_string(source_http.port()),(temp/"sender-key").string(),"/ip4/127.0.0.1/tcp/0",address},{{"NANO_NETWORK_TOKEN","fixture-token"},{"NANO_TEST_NETWORK_TRACE","1"}});sender.event("altair-ingress-ready");
+  size_t observed_blocks=0;
+  until([&]{
+   sender.pump(0);receiver.pump(0);check(sender.running()&&receiver.running(),"P2P daemon exited during catchup");
+   const auto state=remote.current();
+   if(state.signed_blocks->size()!=observed_blocks){observed_blocks=state.signed_blocks->size();std::cout<<Json{{"remoteBlocks",observed_blocks},{"remoteFinalizedEpoch",state.state->timed.view.finalized.epoch}}.dump()<<std::endl;}
+   return state.signed_blocks->size()==blocks&&state.state->timed.view.finalized==final.state->timed.view.finalized;
+  },"remote received generated blocks and finality",160);
+  const auto received=remote.current();const auto remote_head=phase0_fork_choice_head(received.state->timed.view,{slots,t.attestation.duties.effective_balance_increment,rules.proposer_score_boost}).head;
+  check(remote_head==final_head&&received.state->timed.view.justified==final.state->timed.view.justified,"remote generated-chain head/justification mismatch");
+  for(const auto& [root,bytes]:*final.signed_blocks)check(*received.signed_blocks->at(root)==*bytes,"P2P generated block bytes differ");
+  check(received.state->blocks.at(remote_head).state==final.state->blocks.at(final_head).state,"remote finalized chain state differs");
+  check(sender.stop().code==0&&receiver.stop().code==0,"generated-chain daemon shutdown failed");
+  source_service->stop();remote_service->stop();source_service->join();remote_service->join();
+  const auto stopped=remote.current();
+  AltairDurableReactor restored(remote_disk,1337,genesis,rules,limits,stopped.token);
+  check(restored.current().state->timed.view.finalized==final.state->timed.view.finalized&&restored.current().signed_blocks->size()==blocks,"remote checkpoint recovery lost finality");
+  std::cout<<Json{{"scenario","generated-chain-libp2p-catchup"},{"realDaemons",2},{"remoteBlocks",blocks},{"remoteFinalizedEpoch",received.state->timed.view.finalized.epoch},{"exactBlockBytes",true},{"exactHeadState",true},{"remoteCheckpointRestored",true},{"fixtureClock",true},{"autonomousDistributedValidators",false},{"executionBound",false}}.dump()<<std::endl;
+ }
  std::cout<<Json{{"scenario","locally-generated-altair-finality"},{"withoutAttestations",no_votes},{"minorityAttesters",minority},{"attestingKeys",no_votes?size_t(0):minority?keys.size()/3:keys.size()},{"validators",keys.size()},{"blocks",blocks},{"signedVotes",signed_votes},{"admittedVotes",admitted_votes},{"restarts",restarts},{"finalizedEpoch",final.state->timed.view.finalized.epoch},{"justifiedEpoch",final.state->timed.view.justified.epoch},{"distributedNetwork",false},{"executionBound",false},{"syncCommitteeParticipation",false}}.dump()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
