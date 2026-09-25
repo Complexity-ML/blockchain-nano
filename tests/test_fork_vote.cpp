@@ -30,5 +30,31 @@ int main(){try{
  size_t total=0;auto control=initial;check(process_phase0_fork_vote(control,18,ctx,rules,a,false,[&]{++total;}),"cancel control");
  for(size_t stop=1;stop<=total;++stop){auto copy=initial;size_t calls=0;bool cancelled=false;try{process_phase0_fork_vote(copy,18,ctx,rules,a,false,[&]{if(++calls==stop)throw std::runtime_error("cancel");});}catch(const std::runtime_error& e){cancelled=std::string(e.what())=="cancel";}check(cancelled&&copy.latest_messages.empty(),"cancellation atomicity");}
  ctx.checkpoint={3,root(5)};ctx.registry.epoch=ctx.randao.epoch=3;view.current_epoch=3;view.nodes[root(5)]={24,root(3),0,0};auto [new_vote,new_index]=make(24,root(5));view.latest_messages[new_index]={2,root(3)};check(process_phase0_fork_vote(view,25,ctx,rules,new_vote)&&view.latest_messages.at(new_index)==Phase0LatestMessage{3,root(5)},"new epoch replaces older message");
- std::cout<<Json{{"scenario","phase0-fork-vote-local"},{"rejections",rejected},{"cancellations",total},{"officialEventReplay",false},{"activeInConsensus",false}}.dump()<<'\n';
+ // Independent slashing event: economic state is deliberately untouched.
+ auto slashed_view=initial;slashed_view.justified={2,root(2)};
+ Phase0ForkSlashingContext sc{root(2),ctx.registry,ctx.fork,ctx.genesis_root};sc.registry.epoch=2;
+ slashed_view.justified_registry=sc.registry;slashed_view.latest_messages[index]={2,root(3)};
+ const auto registry_before=sc.registry;
+ IndexedConsensusAttestation first{a.data,{index},a.signature},second{conflict.data,{index},conflict.signature};
+ check(phase0_fork_choice_head(slashed_view,{8,1000000000,40}).head==root(3),"pre-evidence weight");
+ const auto unmarked=slashed_view;
+ check(process_phase0_fork_slashing(slashed_view,sc,first,second,2048),"double vote evidence");
+ check(slashed_view.equivocating_indices==std::set<uint64_t>{index}&&sc.registry==registry_before,"only equivocator set updated");
+ check(phase0_fork_choice_head(slashed_view,{8,1000000000,40}).head==root(4),"evidence removes weight");
+ check(process_phase0_fork_slashing(slashed_view,sc,first,second,2048)&&slashed_view.equivocating_indices.size()==1,"repeat evidence idempotent");
+ unsigned proof_rejections=0;
+ auto reject_proof=[&](const IndexedConsensusAttestation& f,const IndexedConsensusAttestation& s){auto copy=unmarked;check(!process_phase0_fork_slashing(copy,sc,f,s,2048)&&copy.equivocating_indices.empty(),"invalid evidence changed set");++proof_rejections;};
+ reject_proof(first,first);auto corrupt=first;corrupt.signature[0]^=1;reject_proof(corrupt,second);corrupt=second;corrupt.signature[0]^=1;reject_proof(first,corrupt);
+ corrupt=first;corrupt.indices.clear();reject_proof(corrupt,second);corrupt=first;corrupt.indices.push_back(index);reject_proof(corrupt,second);corrupt=first;corrupt.indices={999};reject_proof(corrupt,second);corrupt=first;corrupt.indices={2,1};reject_proof(corrupt,second);
+ auto resign=[&](IndexedConsensusAttestation& vote){const auto version=vote.data.target.epoch<sc.fork.epoch?sc.fork.previous_version:sc.fork.current_version;vote.signature=sign(secrets[vote.indices[0]],consensus_signing_root(consensus_attestation_root(vote.data),consensus_domain({1,0,0,0},version,sc.genesis_root)));};
+ auto disjoint=second;disjoint.indices={(index+1)%64};resign(disjoint);auto no_common=unmarked;check(process_phase0_fork_slashing(no_common,sc,first,disjoint,2048)&&no_common.equivocating_indices.empty(),"valid disjoint proof no effect");
+ auto aggregate=[&](IndexedConsensusAttestation& vote){blst_p2 sum;bool first_key=true;for(auto i:vote.indices){auto single=vote;single.indices={i};resign(single);blst_p2_affine point;check(blst_p2_uncompress(&point,single.signature.data())==BLST_SUCCESS,"aggregate test signature");if(first_key){blst_p2_from_affine(&sum,&point);first_key=false;}else blst_p2_add_or_double_affine(&sum,&sum,&point);}vote.signature.resize(96);blst_p2_compress(vote.signature.data(),&sum);};
+ auto group_first=first,group_second=second;group_first.indices={0,1};group_second.indices={1,2};aggregate(group_first);aggregate(group_second);auto partial=unmarked;check(process_phase0_fork_slashing(partial,sc,group_first,group_second,2048)&&partial.equivocating_indices==std::set<uint64_t>{1},"only aggregate intersection excluded");
+ auto capped=unmarked;check(!process_phase0_fork_slashing(capped,sc,group_first,group_second,1)&&capped.equivocating_indices.empty(),"configured indexed list bound");
+ auto outer=first,inner=second;outer.data.source.epoch=0;outer.data.target.epoch=3;inner.data.source.epoch=1;inner.data.target.epoch=2;resign(outer);resign(inner);auto surround=unmarked;check(process_phase0_fork_slashing(surround,sc,outer,inner,2048)&&surround.equivocating_indices.contains(index),"surround evidence");reject_proof(inner,outer);
+ // Exercise previous/current fork domains across target epochs.
+ auto old_first=first,old_second=second;old_first.data.target.epoch=old_second.data.target.epoch=1;resign(old_first);resign(old_second);auto old_proof=unmarked;check(process_phase0_fork_slashing(old_proof,sc,old_first,old_second,2048),"historical fork domain");
+ size_t proof_calls=0;auto measured=unmarked;check(process_phase0_fork_slashing(measured,sc,first,second,2048,[&]{++proof_calls;}),"proof cancellation control");
+ for(size_t stop=1;stop<=proof_calls;++stop){auto copy=unmarked;size_t calls=0;bool cancelled=false;try{process_phase0_fork_slashing(copy,sc,first,second,2048,[&]{if(++calls==stop)throw std::runtime_error("cancel");});}catch(const std::runtime_error& e){cancelled=std::string(e.what())=="cancel";}check(cancelled&&copy.equivocating_indices.empty(),"proof cancellation atomicity");}
+ std::cout<<Json{{"scenario","phase0-fork-vote-local"},{"rejections",rejected},{"cancellations",total},{"proofRejections",proof_rejections},{"proofCancellations",proof_calls},{"officialEventReplay",false},{"activeInConsensus",false}}.dump()<<'\n';
  }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

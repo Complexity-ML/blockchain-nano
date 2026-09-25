@@ -1,6 +1,7 @@
 #include "nano/consensus_fork_vote.hpp"
 #include "nano/consensus_bls.hpp"
 #include "nano/committee.hpp"
+#include <algorithm>
 namespace nano {
 bool process_phase0_fork_vote(Phase0ForkChoiceView& view,uint64_t current_slot,
  const Phase0ForkVoteContext& ctx,const Phase0FfgRules& rules,
@@ -48,5 +49,38 @@ bool process_phase0_fork_vote(Phase0ForkChoiceView& view,uint64_t current_slot,
   if(old==candidate.end()||d.target.epoch>old->second.epoch)candidate[index]={d.target.epoch,d.beacon_block_root};
  }
  if(checkpoint)checkpoint();view.latest_messages.swap(candidate);return true;
+}
+bool process_phase0_fork_slashing(Phase0ForkChoiceView& view,
+ const Phase0ForkSlashingContext& ctx,const IndexedConsensusAttestation& first,
+ const IndexedConsensusAttestation& second,uint64_t maximum_indices,
+ const std::function<void()>& checkpoint){
+ if(!maximum_indices||ctx.block_root!=view.justified.root||ctx.fork.epoch>ctx.registry.epoch)
+  throw std::invalid_argument("invalid fork slashing context");
+ if(checkpoint)checkpoint();
+ if(!is_slashable_attestation_data(first.data,second.data))return false;
+ auto valid=[&](const IndexedConsensusAttestation& vote){
+  if(vote.indices.empty()||vote.indices.size()>maximum_indices||
+     !std::is_sorted(vote.indices.begin(),vote.indices.end())||
+     std::adjacent_find(vote.indices.begin(),vote.indices.end())!=vote.indices.end())return false;
+  std::vector<Bytes> keys;keys.reserve(vote.indices.size());
+  for(auto index:vote.indices){
+   if(checkpoint)checkpoint();const auto found=ctx.registry.validators.find(index);
+   if(found==ctx.registry.validators.end())return false;
+   const auto& key=found->second.public_key;keys.emplace_back(key.begin(),key.end());
+  }
+  const auto version=vote.data.target.epoch<ctx.fork.epoch?ctx.fork.previous_version:ctx.fork.current_version;
+  const auto r=consensus_signing_root(consensus_attestation_root(vote.data),consensus_domain({1,0,0,0},version,ctx.genesis_root));
+  if(checkpoint)checkpoint();return verify_consensus_bls_fast_aggregate(keys,r,vote.signature);
+ };
+ if(!valid(first)||!valid(second))return false;
+ auto candidate=view.equivocating_indices;
+ size_t i=0,j=0;
+ while(i<first.indices.size()&&j<second.indices.size()){
+  if(checkpoint)checkpoint();
+  if(first.indices[i]<second.indices[j])++i;
+  else if(second.indices[j]<first.indices[i])++j;
+  else{candidate.insert(first.indices[i]);++i;++j;}
+ }
+ if(checkpoint)checkpoint();view.equivocating_indices.swap(candidate);return true;
 }
 }

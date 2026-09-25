@@ -435,3 +435,8 @@ messages implémentés sur contexte cible authentifié fourni par l'appelant.
 Tests locaux : 11 rejets, 70 annulations et effet sur la tête ; aucune activation
 réseau ni qualification du Store complet. La dérivation SSZ du contexte, les
 autres événements et la persistance restent à réaliser.
+
+Équivoques du fork choice : double authentification BLS et intersection des
+signataires implémentées ; les tests locaux vérifient l'exclusion du poids et
+le changement de tête. La persistance de cet ensemble et le traitement réseau
+restent ouverts. Aucune pénalité financière hors transition de bloc n'est ajoutée.

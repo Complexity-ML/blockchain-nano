@@ -1113,3 +1113,29 @@ les files de votes différés et le Store persistant, puis raccorder le réseau.
 L'appelant doit garantir les preuves de possession des clés du registre, la liaison
 entre contexte et racine cible, et l'accès exclusif à la vue. Aucun vote réseau
 brut ne doit pouvoir fournir lui-même ce contexte ou le drapeau de bloc vérifié.
+
+### Preuves d'équivoque dans le choix de branche — 25 septembre 2026
+
+`process_phase0_fork_slashing` implémente la mutation de l'ensemble des
+équivoques décrite par `on_attester_slashing` dans la référence Phase0 épinglée.
+Les deux attestations indexées doivent être contradictoires (double vote ou
+surround dans le sens prescrit), leurs indices non vides, triés, uniques et dans
+la limite configurée. Les deux signatures agrégées sont vérifiées avec le domaine
+de chaque epoch cible et les clés du **block state justifié**, fourni authentifié
+par l'appelant. Ce contexte diffère du checkpoint state avancé utilisé pour les
+votes. Seule l'intersection des signataires rejoint l'ensemble des équivoques.
+Une preuve valide sans intersection ou déjà traitée est sans effet. Le registre,
+les soldes et les derniers messages ne sont pas mutés : les pénalités financières
+restent du ressort des opérations de bloc. L'ensemble doit être conservé au moins
+depuis le dernier checkpoint finalisé, y compris pendant la synchronisation.
+
+Les tests locaux vérifient deux signatures BLS, intersection partielle de groupes
+agrégés, absence d'intersection, double vote/surround, ancien domaine de fork,
+doublons, indices invalides, borne configurée et annulation à sept points. Une
+preuve acceptée retire le poids du signataire et change la tête attendue. Deux
+suites locales passent. Artefacts :
+`build-cmake/qualification/fork-slashing-local-20260925/`.
+
+Cette étape ne qualifie pas la réception P2P, le replay officiel d'événements,
+la dérivation du block state justifié, ni la conservation durable de l'ensemble.
+Elle ne déclenche aucune activation réseau du nouveau consensus.

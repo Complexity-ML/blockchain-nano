@@ -20,4 +20,20 @@ struct Phase0ForkVoteContext {
 bool process_phase0_fork_vote(Phase0ForkChoiceView& view,uint64_t current_slot,
  const Phase0ForkVoteContext&,const Phase0FfgRules&,const Phase0SignedAttestation&,
  bool from_verified_block=false,const std::function<void()>& checkpoint={});
+// Authenticated BLOCK state at view.justified.root, not the advanced target
+// checkpoint state used by vote admission. Registry keys require established PoP.
+struct Phase0ForkSlashingContext {
+ ConsensusRoot block_root;
+ ConsensusSlashingState registry;
+ Phase0StateFork fork;
+ ConsensusRoot genesis_root;
+};
+// Phase0 on_attester_slashing: validate both indexed signatures and union their
+// common indices into equivocating_indices. No balance mutation or exit/slashing
+// economics. Persist this set at least since the latest finalized checkpoint.
+// True may have no effect (empty intersection or repeated evidence).
+bool process_phase0_fork_slashing(Phase0ForkChoiceView&,
+ const Phase0ForkSlashingContext&,const IndexedConsensusAttestation&,
+ const IndexedConsensusAttestation&,uint64_t maximum_indices,
+ const std::function<void()>& checkpoint={});
 }
