@@ -12,4 +12,16 @@ struct AltairInactivityRules {
 // slots, execute other epoch components, provide replay protection or persist.
 Bytes prepare_altair_inactivity_updates(std::span<const uint8_t>,const AltairStateLimits&,
  const AltairInactivityRules&,const std::function<void()>& checkpoint={});
+struct AltairRewardRules {
+ uint64_t slots_per_epoch,effective_balance_increment,base_reward_factor;
+ uint64_t score_bias,inactivity_penalty_quotient,minimum_epochs_to_inactivity_penalty;
+ std::array<uint64_t,3> participation_weights;
+ uint64_t weight_denominator;
+};
+// Isolated process_rewards_and_penalties, on the state AFTER inactivity updates
+// in a full epoch pipeline. Source/target/head deltas are applied in that order,
+// then inactivity deltas. Saturation is per delta, not after a net sum.
+// Same admission and replay preconditions as the inactivity component above.
+Bytes prepare_altair_rewards(std::span<const uint8_t>,const AltairStateLimits&,
+ const AltairRewardRules&,const std::function<void()>& checkpoint={});
 }

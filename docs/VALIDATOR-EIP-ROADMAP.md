@@ -1304,3 +1304,31 @@ sans revalider tout le cycle de vie. Ces fixtures **ne prouvent pas l'admission*
 de tels états. Les contrôles d'admission/authentification Altair restent à
 implémenter avant tout raccordement réseau. La composition d'epoch, les autres
 récompenses, les sync committees et le replay fork_choice demeurent ouverts.
+
+### Récompenses et pénalités Altair — 25 septembre 2026
+
+`prepare_altair_rewards` implémente `process_rewards_and_penalties` sur SSZ :
+récompense de base par incrément, participation source/cible/tête pondérée,
+absence de récompense de participation pendant une fuite d'inactivité et pénalité
+d'inactivité basée sur le score. Le dénominateur utilise les soldes effectifs
+actifs de l'epoch courante ; les participants éligibles sont ceux de l'epoch
+précédente, hors slashés pour les crédits. Les calculs intermédiaires utilisent
+des entiers larges, les additions de soldes sont contrôlées en uint64.
+
+Les catégories sont appliquées dans l'ordre source, cible, tête, inactivité :
+chaque débit est saturé à zéro **avant** les catégories suivantes. Ce n'est pas
+une unique soustraction de la somme des deltas. Le test d'un solde nul qui reçoit
+ensuite une récompense de tête vérifie ce point. L'appel doit suivre la mise à
+jour d'inactivité dans une future composition d'epoch ; il ne la refait pas.
+
+Les 15 post-states officiels complets correspondent. Six entrées/configurations
+invalides (dont overflow de crédit), sept points d'annulation et l'ordre de
+saturation sont vérifiés. Deux suites passent : récompenses et inactivité Altair.
+Corpus : `tests/fixtures/consensus-altair-rewards-official/`.
+Journaux : `build-cmake/qualification/altair-rewards-20260925/`.
+
+La fonction reste une opération isolée, sans admission d'état, protection contre
+le double traitement, commit ni réseau. Les pondérations 14/26/14 et le
+dénominateur 64 sont les constantes du profil Altair, fournis explicitement dans
+les règles. La composition d'epoch, les autres opérations Altair et le replay
+fork_choice demeurent ouverts.

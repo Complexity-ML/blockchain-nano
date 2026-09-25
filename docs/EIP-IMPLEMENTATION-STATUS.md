@@ -471,3 +471,7 @@ Aucun fork réseau activé par cet ajout.
 Altair : opération isolée de mise à jour des scores d'inactivité implémentée,
 21 post-states officiels concordants. Les fixtures synthétiques ne qualifient
 pas l'admission d'état ; composition d'epoch et exécution réseau encore ouvertes.
+
+Altair : récompenses/pénalités isolées ajoutées, 15 post-states officiels
+concordants et saturation par catégorie vérifiée. Ne clôt ni l'époque complète,
+ni l'admission des états, ni la qualification réseau.
