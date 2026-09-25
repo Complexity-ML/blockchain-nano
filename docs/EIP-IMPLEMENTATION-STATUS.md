@@ -19,7 +19,7 @@ reste à compléter. Le genesis réseau autorise actuellement Paris/Shanghai.
 
 | EIP | État actuel | Périmètre réel | Code / preuves à consulter | Reste à faire / critère de clôture | Priorité |
 | --- | --- | --- | --- | --- | --- |
-| [3076](https://eips.ethereum.org/EIPS/eip-3076) | Partiel (export v5) | Journal local anti-slashing ; export C++ avec arrêt durable, import absent | src/consensus_beacon_signer.cpp ; docs/BEACON-SIGNING-JOURNAL.md | Import/export v5, racines absentes, fusion des historiques et intégration aux tâches réelles ; aucun statut production | Validateurs |
+| [3076](https://eips.ethereum.org/EIPS/eip-3076) | Partiel (API locale v5) | Journal anti-slashing ; import/fusion et export C++ avec arrêt durable, corpus inter-clients qualifié dans ce périmètre | src/consensus_beacon_signer.cpp ; docs/BEACON-SIGNING-JOURNAL.md | Migration opérationnelle multi-clés, CLI, tâches réelles et gestion des engagements externes ; aucun statut production | Validateurs |
 | [2](https://eips.ethereum.org/EIPS/eip-2) | Implémenté | Transactions et signatures | src/transaction.cpp ; tests/fixtures/ethereum-official.json | Conserver les régressions du profil activé et relier les cas exacts à chaque EIP | Socle |
 | [155](https://eips.ethereum.org/EIPS/eip-155) | Implémenté | Transactions et signatures | src/transaction.cpp ; tests/fixtures/ethereum-official.json | Conserver les régressions du profil activé et relier les cas exacts à chaque EIP | Socle |
 | [2718](https://eips.ethereum.org/EIPS/eip-2718) | Implémenté | Transactions et signatures | src/transaction.cpp ; tests/fixtures/ethereum-official.json | Conserver les régressions du profil activé et relier les cas exacts à chaque EIP | Socle |
@@ -813,3 +813,28 @@ et l'échec de synchronisation injecté. Le journal actif v1 reste lisible.
 L'import/fusion et les vecteurs officiels inter-clients restent à qualifier.
 L'arrêt de tous les utilisateurs externes de la clé est une précondition ; aucune
 protection contre une clé volée ni activation réseau n'est revendiquée.
+
+
+### EIP-3076 : import et corpus inter-clients (25 septembre 2026)
+
+La campagne `build-cmake/qualification/beacon-signing-import-20260925/final-tests.log`
+passe les deux suites locales. L'import par clé fusionne les maxima sans les
+réduire, conserve les racines inconnues, refuse les documents invalides sans
+mutation partielle et ne réactive pas une base retirée. Les snapshots v1/v2 sont
+conservés ; v3 représente les protections sans racine connue.
+
+Le corpus épinglé `bb7900688eecd287d8723154faac6addb5e63336` contient 38 cas :
+65 imports par clé, 146 tentatives de réservation, 211 rechargements. Quatre cas
+avec données invalides sont rejetés à l'import selon l'option upstream ; deux
+répétitions exactes sont acceptées au-delà de la stratégie minimale stricte, sans
+mutation. Le runner contrôle les racines officielles via le vrai journal, sans
+signer. Voir `docs/BEACON-SIGNING-JOURNAL.md` pour l'oracle et la reproduction.
+Le chemin du corpus externe est requis explicitement ; son absence n'est pas
+une qualification. Le parcours multi-clés et les tâches de validateur restent
+ouverts, tout comme les critères globaux de production.
+
+Le verrou de signature est désormais partagé par les journaux associés au même
+`ChainStore`, y compris pendant les callbacks. Le test natif bloque un backend,
+demande un export depuis un second objet et vérifie l'attente puis les refus des
+deux objets. Cela ferme la course lecture/signature entre instances locales ;
+les copies indépendantes de clé/base restent hors de cette protection.

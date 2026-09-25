@@ -3,6 +3,7 @@
 #include "nano/consensus_bls.hpp"
 #include "blst.h"
 #include <atomic>
+#include <future>
 #ifdef NANO_TEST_SYNC_FAULT
 extern "C" void nano_test_arm_sync_fault(const char*);
 extern "C" unsigned nano_test_sync_failures();
@@ -87,5 +88,62 @@ int main(int argc,char** argv){try{
  fs::path fault_wal;for(const auto& entry:fs::directory_iterator(fault_path))if(entry.path().extension()==".log"&&(fault_wal.empty()||entry.path().filename()>fault_wal.filename()))fault_wal=entry.path();check(!fault_wal.empty(),"missing export WAL");
  nano_test_arm_sync_fault(fault_wal.c_str());refuse([&]{fault.retire_and_export_interchange();});check(nano_test_sync_failures()>0,"export sync failure not reached");nano_test_disarm_sync_fault();refuse([&]{fault.sign_proposal(header,version,sign);});refuse([&]{fault.retire_and_export_interchange();});}
 #endif
- std::cout<<Json{{"scenario","beacon-signing-journal"},{"rejectedBeforeProvider",rejected},{"concurrentConflictRefused",true},{"crashAfterReservation",true},{"syncFailureTested",sync_tested},{"validatorDutiesActive",false},{"eip3076ExportRetiresDurably",true},{"eip3076Import",false}}.dump()<<'\n';
+ // Import an actual export, then preserve protections across unknown roots.
+ const auto import_path=temp/"import";auto import_disk=std::make_unique<ChainStore>(import_path);
+ auto imported=std::make_unique<BeaconSigningJournal>(*import_disk,1337,genesis,validators,key,8);
+ check(imported->import_interchange(exported,exported.size())==1,"export did not import");
+ const auto imported_token=imported->commitment();check(imported->import_interchange(exported,exported.size())==1&&imported_token==imported->commitment(),"repeat import wrote or weakened guards");
+ header.slot=u64(quantity(local.at("proposal").at("slot")));header.body_root[0]=1;
+ imported->sign_proposal(header,version,sign); // exact known root survives migration
+ auto unknown=interchange;unknown["data"][0]["signed_blocks"][0].erase("signing_root");unknown["data"][0]["signed_attestations"][0].erase("signing_root");
+ const auto unknown_text=unknown.dump();imported->import_interchange(unknown_text,unknown_text.size());
+ refuse([&]{imported->sign_proposal(header,version,sign);});
+ data.slot=56;data.target.epoch=7;data.source.epoch=4;refuse([&]{imported->sign_attestation(data,version,sign);});
+ // Known roots cannot erase an unknown reservation at the same watermarks.
+ const auto unknown_token=imported->commitment();imported->import_interchange(exported,exported.size());check(unknown_token==imported->commitment(),"known reimport erased uncertainty");
+ imported.reset();import_disk.reset();import_disk=std::make_unique<ChainStore>(import_path);
+ imported=std::make_unique<BeaconSigningJournal>(*import_disk,1337,genesis,validators,key,8,unknown_token);
+ refuse([&]{imported->sign_proposal(header,version,sign);});
+ // Validate all entries before committing, including entries for other keys.
+ auto reject_import=[&](const std::string& text,size_t bound){const auto before=imported->commitment();refuse([&]{imported->import_interchange(text,bound);});check(before==imported->commitment(),"invalid import mutated journal");};
+ reject_import(exported,exported.size()-1);
+ auto invalid=interchange;invalid["metadata"]["interchange_format_version"]="4";reject_import(invalid.dump(),100000);
+ invalid=interchange;invalid["metadata"]["genesis_validators_root"]=hex(Bytes(32,7));reject_import(invalid.dump(),100000);
+ for(const Json& value:std::vector<Json>{Json(12),Json("-1"),Json("18446744073709551616"),Json(" 12"),Json("0xc"),Json("")}){invalid=interchange;invalid["data"][0]["signed_blocks"][0]["slot"]=value;reject_import(invalid.dump(),100000);}
+ invalid=interchange;invalid["data"][0]["signed_blocks"][0]["signing_root"]=nullptr;reject_import(invalid.dump(),100000);
+ invalid=interchange;invalid["data"][0]["signed_blocks"][0]["slot"]="1000";auto foreign=invalid["data"][0];foreign["pubkey"]=hex(Bytes(48,1));foreign["signed_attestations"][0]["target_epoch"]="bad";invalid["data"].push_back(foreign);reject_import(invalid.dump(),100000);
+ invalid=interchange;Json nested=0;for(unsigned i=0;i<20;++i)nested=Json::array({nested});invalid["extension"]=nested;reject_import(invalid.dump(),100000);
+ auto duplicate_json=exported;duplicate_json.insert(1,"\"metadata\":{},");reject_import(duplicate_json,100000);
+ // Ignore valid other-key entries explicitly; do not pretend to import them.
+ invalid=interchange;invalid["data"][0]["pubkey"]=hex(Bytes(48,1));const auto unmatched=imported->commitment();check(imported->import_interchange(invalid.dump(),100000)==0&&unmatched==imported->commitment(),"foreign key affected journal");
+ // Different messages supply maxima: combined (source=9,target=12) has no root.
+ auto merge=interchange;merge["data"][0]["signed_blocks"]=Json::array();
+ merge["data"][0]["signed_attestations"]=Json::array({Json{{"source_epoch","9"},{"target_epoch","10"},{"signing_root",hex(Bytes(32,1))}}});
+ auto second_entry=merge["data"][0];second_entry["signed_attestations"]=Json::array({Json{{"source_epoch","8"},{"target_epoch","12"},{"signing_root",hex(Bytes(32,2))}}});merge["data"].push_back(second_entry);
+ check(imported->import_interchange(merge.dump(),100000)==2,"duplicate key entries not merged");
+ data.source.epoch=8;data.target.epoch=13;data.slot=104;refuse([&]{imported->sign_attestation(data,version,sign);});
+ data.source.epoch=9;data.target.epoch=12;data.slot=96;refuse([&]{imported->sign_attestation(data,version,sign);});
+ const auto merged_export=Json::parse(imported->retire_and_export_interchange());const auto& merged_vote=merged_export.at("data").at(0).at("signed_attestations").at(0);
+ check(merged_vote.at("source_epoch")=="9"&&merged_vote.at("target_epoch")=="12"&&!merged_vote.contains("signing_root"),"synthetic watermark acquired signing root");
+ check(!merged_export.at("data").at(0).at("signed_blocks").at(0).contains("signing_root"),"unknown block root fabricated");
+ refuse([&]{imported->import_interchange(exported,100000);});
+ // Round trip the synthetic guard and progress only beyond both maxima.
+ ChainStore roundtrip_disk(temp/"import-roundtrip");BeaconSigningJournal roundtrip(roundtrip_disk,1337,genesis,validators,key,8);
+ roundtrip.import_interchange(merged_export.dump(),100000);refuse([&]{roundtrip.sign_attestation(data,version,sign);});data.target.epoch=13;data.slot=104;roundtrip.sign_attestation(data,version,sign);
+ header.slot=100;roundtrip.sign_proposal(header,version,sign);
+#ifdef NANO_TEST_SYNC_FAULT
+ {const auto fault_path=temp/"import-fault";ChainStore fault_disk(fault_path);BeaconSigningJournal fault(fault_disk,1337,genesis,validators,key,8);
+ fs::path fault_wal;for(const auto& entry:fs::directory_iterator(fault_path))if(entry.path().extension()==".log"&&(fault_wal.empty()||entry.path().filename()>fault_wal.filename()))fault_wal=entry.path();check(!fault_wal.empty(),"missing import WAL");
+ nano_test_arm_sync_fault(fault_wal.c_str());refuse([&]{fault.import_interchange(exported,100000);});check(nano_test_sync_failures()>0,"import sync failure not reached");nano_test_disarm_sync_fault();refuse([&]{fault.sign_proposal(header,version,sign);});}
+#endif
+ // Another object sharing the database must wait for an exact-repeat provider
+ // before export. A token check alone cannot close this read/sign race.
+ {ChainStore gate_disk(temp/"shared-signing-gate");BeaconSigningJournal first(gate_disk,1337,genesis,validators,key,8);
+ first.sign_proposal(header,version,sign);BeaconSigningJournal second(gate_disk,1337,genesis,validators,key,8,first.commitment());
+ std::promise<void> entered,release,export_started;auto released=release.get_future();
+ auto signing=std::async(std::launch::async,[&]{return first.sign_proposal(header,version,[&](const auto& root){entered.set_value();released.wait();return sign(root);});});
+ entered.get_future().get();auto exporting=std::async(std::launch::async,[&]{export_started.set_value();return second.retire_and_export_interchange();});
+ export_started.get_future().get();const auto state=exporting.wait_for(std::chrono::milliseconds(50));release.set_value();signing.get();exporting.get();check(state==std::future_status::timeout,"export crossed another instance's signing callback");
+ refuse([&]{first.sign_proposal(header,version,sign);});refuse([&]{second.sign_proposal(header,version,sign);});}
+ std::cout<<Json{{"scenario","beacon-signing-journal"},{"rejectedBeforeProvider",rejected},{"concurrentConflictRefused",true},{"crashAfterReservation",true},{"syncFailureTested",sync_tested},{"validatorDutiesActive",false},{"eip3076ExportRetiresDurably",true},{"eip3076Import",true},{"sharedInstanceExportWaitsForSigner",true},{"officialInterchangeCorpusInThisTest",false}}.dump()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

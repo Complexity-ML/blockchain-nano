@@ -8,6 +8,10 @@ namespace nano {
 struct ForkCheckpointToken {uint64_t sequence;Bytes digest;bool operator==(const ForkCheckpointToken&)const=default;};
 struct ForkCheckpointRecord {ForkCheckpointToken token;std::string snapshot;};
 class ChainStore {
+ friend class BeaconSigningJournal;
+ // Dedicated signing databases serialize all journal users through this gate,
+ // including callbacks, independently of the short RocksDB operation mutex.
+ mutable std::mutex beacon_signing_mutex_;
  rocksdb::DB* db_=nullptr;
  mutable std::mutex mutex_;
  bool fork_checkpoint_write_uncertain_=false;
