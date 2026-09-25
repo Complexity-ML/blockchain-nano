@@ -1164,3 +1164,31 @@ l'appelant doit avoir validé le bloc et son ascendance, ou disposer d'une ancre
 initiale authentifiée. Les preuves de possession du registre initial restent
 requises. La récupération du Store, l'horloge, l'admission des blocs dans le
 choix de branche et son raccordement au consensus réseau restent ouverts.
+
+### Horloge du choix de branche — 25 septembre 2026
+
+`prepare_phase0_fork_tick` fournit une transition privée horloge/vue : expiration
+du bonus au premier nouveau slot, mise à jour de l'epoch courante et promotion
+des checkpoints non réalisés à la traversée d'une frontière d'epoch. La promotion
+de justification nécessite le contexte authentifié du checkpoint et remplace
+également le registre utilisé pour les poids. Les checkpoints de même epoch ne
+sont pas remplacés. L'ensemble des équivoques et les derniers votes sont conservés.
+
+Référence : `on_tick`, `on_tick_per_slot` et `update_checkpoints` dans la
+spécification Phase0 épinglée ci-dessus. Comme aucun événement ne s'intercale
+pendant l'appel, les checkpoints non réalisés sont constants : les frontières
+suivantes n'ont aucun effet supplémentaire. Le rattrapage utilise donc un calcul
+constant en nombre de slots manqués (la copie de la vue reste proportionnelle à
+sa taille). Un temps local antérieur à celui du Store est rejeté par l'API.
+
+`consensus_phase0_fork_clock` compare mille rattrapages déterministes à une
+référence locale slot par slot, vérifie le seuil exact, le cas sans changement de
+slot, le rejeu temporel, le remplacement du registre, huit rejets, deux points
+d'annulation et un rattrapage jusqu'à UINT64_MAX. Les quatre suites du fork choice
+passent après recompilation. Artefacts locaux :
+`build-cmake/qualification/fork-clock-local-20260925/`.
+
+Restent à fournir la source d'horloge opérationnelle, le calcul/authentification
+des checkpoints non réalisés lors des blocs, la publication durable conjointe de
+l'horloge et de la vue, puis le replay officiel et l'intégration réseau. Cette
+transition ne fait pas tourner un nœud et ne qualifie pas sa synchronisation.

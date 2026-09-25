@@ -445,3 +445,8 @@ Contextes du fork choice : extraction depuis le post-state SSZ lié à l'en-têt
 authentifié et avancement des slots sautés ajoutés. Qualification locale sur
 29 séquences de blocs officielles (24 contextes avancés), neuf rejets et sept
 annulations. Ce n'est ni une admission d'ancre non fiable ni une activation réseau.
+
+Horloge du fork choice : expiration du bonus et promotion des checkpoints/du
+registre ajoutées, avec mille comparaisons locales de rattrapage. Source d'horloge,
+événements blocs, calcul des checkpoints non réalisés et persistance restent à
+raccorder ; aucune activation réseau supplémentaire.

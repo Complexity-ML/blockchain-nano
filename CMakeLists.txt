@@ -956,3 +956,8 @@ target_link_libraries(nano-fork-state-tests PRIVATE nano_core)
 target_compile_definitions(nano-fork-state-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
 add_test(NAME consensus_phase0_fork_state COMMAND nano-fork-state-tests)
 set_tests_properties(consensus_phase0_fork_state PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_local")
+
+add_executable(nano-fork-clock-tests tests/test_fork_clock.cpp)
+target_link_libraries(nano-fork-clock-tests PRIVATE nano_core)
+add_test(NAME consensus_phase0_fork_clock COMMAND nano-fork-clock-tests)
+set_tests_properties(consensus_phase0_fork_clock PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_local")
