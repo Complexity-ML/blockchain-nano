@@ -25,7 +25,7 @@ struct Key {
 };
 }
 int main(int argc,char** argv){try{
- const bool no_votes=argc==2&&std::string(argv[1])=="without-votes",minority=argc==2&&std::string(argv[1])=="minority-votes";const bool p2p=argc==3&&std::string(argv[1])=="p2p";check(argc==1||no_votes||minority||p2p,"unexpected scenario argument");
+ const bool no_votes=argc==2&&std::string(argv[1])=="without-votes",minority=argc==2&&std::string(argv[1])=="minority-votes";const bool p2p_restart=argc==3&&std::string(argv[1])=="p2p-restart";const bool p2p=argc==3&&(std::string(argv[1])=="p2p"||p2p_restart);check(argc==1||no_votes||minority||p2p,"unexpected scenario argument");
  const fs::path fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",corpus=fixtures/"consensus-altair-fork-head-official",dir=corpus/"shorter_chain_but_heavier_weight";
  const auto manifest=load(corpus/"manifest.json");
  for(const auto& row:manifest.at("cases"))if(row.at("name")=="shorter_chain_but_heavier_weight")for(const auto& [path,info]:row.at("files").items())check(hex(sha256(binary(corpus/path))).substr(2)==info.at("sha256").get<std::string>(),"fixture digest");
@@ -71,12 +71,29 @@ int main(int argc,char** argv){try{
   Blockchain source_execution(temp/"source-execution",execution_genesis),remote_execution(temp/"remote-execution",execution_genesis);
   Rpc source_rpc(source_execution,"fixture-token",AdmissionBudget::Clock::now,RpcSimulationLimits{},source_service),remote_rpc(remote_execution,"fixture-token",AdmissionBudget::Clock::now,RpcSimulationLimits{},remote_service);
   HttpServer source_http(source_rpc,"127.0.0.1",0),remote_http(remote_rpc,"127.0.0.1",0);RunningHttp source_running(source_http),remote_running(remote_http);
-  Process receiver({argv[2],std::to_string(remote_http.port()),(temp/"receiver-key").string(),"/ip4/127.0.0.1/tcp/0"},{{"NANO_NETWORK_TOKEN","fixture-token"},{"NANO_TEST_NETWORK_TRACE","1"}});
-  const auto address=receiver.event("listen").at("address").get<std::string>();receiver.event("altair-ingress-ready");
-  Process sender({argv[2],std::to_string(source_http.port()),(temp/"sender-key").string(),"/ip4/127.0.0.1/tcp/0",address},{{"NANO_NETWORK_TOKEN","fixture-token"},{"NANO_TEST_NETWORK_TRACE","1"}});sender.event("altair-ingress-ready");
+  std::unique_ptr<Process> sender,receiver;
+  auto connect=[&](bool drop_reply){
+   Env env{{"NANO_NETWORK_TOKEN","fixture-token"},{"NANO_TEST_NETWORK_TRACE","1"}};if(drop_reply)env["NANO_TEST_DROP_ALTAIR_REPLY_ONCE"]="1";
+   receiver=std::make_unique<Process>(std::vector<std::string>{argv[2],std::to_string(remote_http.port()),(temp/"receiver-key").string(),"/ip4/127.0.0.1/tcp/0"},env);
+   const auto address=receiver->event("listen").at("address").get<std::string>();receiver->event("altair-ingress-ready");
+   sender=std::make_unique<Process>(std::vector<std::string>{argv[2],std::to_string(source_http.port()),(temp/"sender-key").string(),"/ip4/127.0.0.1/tcp/0",address},Env{{"NANO_NETWORK_TOKEN","fixture-token"},{"NANO_TEST_NETWORK_TRACE","1"}});sender->event("altair-ingress-ready");
+  };
+  connect(p2p_restart);size_t blocks_before_restart=0;
+  if(p2p_restart){
+   until([&]{sender->pump(0);receiver->pump(0);check(sender->running()&&receiver->running(),"daemon exited before injected failure");return remote.current().signed_blocks->size()>=8;},"receiver persisted prefix before SIGKILL",50);
+   receiver->event("test-altair-reply-dropped");
+   receiver->signal(SIGKILL);check(receiver->wait(10).code==-SIGKILL,"receiver did not terminate by SIGKILL");check(sender->stop().code==0,"sender shutdown for reconnect failed");
+   receiver.reset();sender.reset();const auto persisted=remote.current();blocks_before_restart=persisted.signed_blocks->size();check(blocks_before_restart>=8&&blocks_before_restart<blocks,"failure did not interrupt partial catchup");
+   std::this_thread::sleep_for(500ms);check(remote.current().token==persisted.token,"core changed after transport shutdown");
+   // Transport replay starts with fresh cursors and the same P2P identities.
+   // Existing durable blocks must survive and duplicate delivery must be safe.
+   connect(false);const auto resumed=remote.current();check(resumed.signed_blocks->size()>=blocks_before_restart,"transport restart lost persisted blocks");
+   for(const auto& [root,bytes]:*persisted.signed_blocks)check(*resumed.signed_blocks->at(root)==*bytes,"transport restart changed persisted prefix");
+   std::cout<<Json{{"transportRestarted",true},{"killedReceiver",true},{"lostReplyObserved",true},{"persistedPrefix",blocks_before_restart}}.dump()<<std::endl;
+  }
   size_t observed_blocks=0;
   until([&]{
-   sender.pump(0);receiver.pump(0);check(sender.running()&&receiver.running(),"P2P daemon exited during catchup");
+   sender->pump(0);receiver->pump(0);check(sender->running()&&receiver->running(),"P2P daemon exited during catchup");
    const auto state=remote.current();
    if(state.signed_blocks->size()!=observed_blocks){observed_blocks=state.signed_blocks->size();std::cout<<Json{{"remoteBlocks",observed_blocks},{"remoteFinalizedEpoch",state.state->timed.view.finalized.epoch}}.dump()<<std::endl;}
    return state.signed_blocks->size()==blocks&&state.state->timed.view.finalized==final.state->timed.view.finalized;
@@ -85,12 +102,12 @@ int main(int argc,char** argv){try{
   check(remote_head==final_head&&received.state->timed.view.justified==final.state->timed.view.justified,"remote generated-chain head/justification mismatch");
   for(const auto& [root,bytes]:*final.signed_blocks)check(*received.signed_blocks->at(root)==*bytes,"P2P generated block bytes differ");
   check(received.state->blocks.at(remote_head).state==final.state->blocks.at(final_head).state,"remote finalized chain state differs");
-  check(sender.stop().code==0&&receiver.stop().code==0,"generated-chain daemon shutdown failed");
+  check(sender->stop().code==0&&receiver->stop().code==0,"generated-chain daemon shutdown failed");
   source_service->stop();remote_service->stop();source_service->join();remote_service->join();
   const auto stopped=remote.current();
   AltairDurableReactor restored(remote_disk,1337,genesis,rules,limits,stopped.token);
   check(restored.current().state->timed.view.finalized==final.state->timed.view.finalized&&restored.current().signed_blocks->size()==blocks,"remote checkpoint recovery lost finality");
-  std::cout<<Json{{"scenario","generated-chain-libp2p-catchup"},{"realDaemons",2},{"remoteBlocks",blocks},{"remoteFinalizedEpoch",received.state->timed.view.finalized.epoch},{"exactBlockBytes",true},{"exactHeadState",true},{"remoteCheckpointRestored",true},{"fixtureClock",true},{"autonomousDistributedValidators",false},{"executionBound",false}}.dump()<<std::endl;
+  std::cout<<Json{{"scenario","generated-chain-libp2p-catchup"},{"realDaemons",2},{"transportRestarted",p2p_restart},{"persistedPrefixBeforeKill",blocks_before_restart},{"remoteBlocks",blocks},{"remoteFinalizedEpoch",received.state->timed.view.finalized.epoch},{"exactBlockBytes",true},{"exactHeadState",true},{"remoteCheckpointRestored",true},{"fixtureClock",true},{"autonomousDistributedValidators",false},{"executionBound",false}}.dump()<<std::endl;
  }
  std::cout<<Json{{"scenario","locally-generated-altair-finality"},{"withoutAttestations",no_votes},{"minorityAttesters",minority},{"attestingKeys",no_votes?size_t(0):minority?keys.size()/3:keys.size()},{"validators",keys.size()},{"blocks",blocks},{"signedVotes",signed_votes},{"admittedVotes",admitted_votes},{"restarts",restarts},{"finalizedEpoch",final.state->timed.view.finalized.epoch},{"justifiedEpoch",final.state->timed.view.justified.epoch},{"distributedNetwork",false},{"executionBound",false},{"syncCommitteeParticipation",false}}.dump()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

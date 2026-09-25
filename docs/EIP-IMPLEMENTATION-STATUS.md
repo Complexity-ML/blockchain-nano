@@ -960,3 +960,14 @@ Preuve : `build-cmake/qualification/altair-generated-p2p-20260925/final-tests.lo
 Voir [périmètre réseau](ALTAIR-LOCAL-FINALITY.md). Ce test qualifie un rattrapage
 réseau à horloge pilotée ; la finalisation collaborative, les partitions, la
 planification autonome et le binding EVM restent ouverts.
+
+### 2026-09-25 — rattrapage après perte d'ACK et panne du démon P2P
+
+Le scénario `consensus_altair_generated_chain_libp2p_restart` exige la perte d'un
+ACK observée, un récepteur tué par SIGKILL après persistance d'un préfixe et une
+reconnexion des deux démons avec leurs identités conservées. Le rejeu doit préserver
+ce préfixe et rejoindre exactement les 33 blocs et la finalité de la source.
+Preuve : `build-cmake/qualification/altair-generated-p2p-restart-20260925/tests.log` ;
+[périmètre précis](ALTAIR-LOCAL-FINALITY.md). Le cœur reste vivant pendant la panne
+P2P. Les partitions de consensus, la redécouverte automatique, le crash du cœur
+et la liaison à l'exécution ne sont pas clos par ce test.

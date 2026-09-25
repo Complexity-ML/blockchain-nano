@@ -1245,3 +1245,8 @@ if(NANO_NETWORK_EXECUTABLE)
  add_test(NAME consensus_altair_generated_chain_libp2p COMMAND nano-altair-local-finality-tests p2p ${NANO_NETWORK_EXECUTABLE})
  set_tests_properties(consensus_altair_generated_chain_libp2p PROPERTIES TIMEOUT 240 LABELS "qualification_consensus_ethereum")
 endif()
+
+if(NANO_NETWORK_EXECUTABLE)
+ add_test(NAME consensus_altair_generated_chain_libp2p_restart COMMAND nano-altair-local-finality-tests p2p-restart ${NANO_NETWORK_EXECUTABLE})
+ set_tests_properties(consensus_altair_generated_chain_libp2p_restart PROPERTIES TIMEOUT 300 LABELS "qualification_consensus_ethereum")
+endif()

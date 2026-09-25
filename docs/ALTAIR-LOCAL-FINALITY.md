@@ -90,3 +90,26 @@ les sorties des deux processus pendant l'attente et journalise la progression
 du nombre de blocs reçus ; `final-tests.log` qualifie cette version. Ce temps
 est celui du scénario borné et du relais séquentiel actuel, pas une mesure du
 débit maximal ou une garantie de synchronisation en production.
+
+## Interruption du transport pendant le rattrapage
+
+`consensus_altair_generated_chain_libp2p_restart` ajoute une perte d'ACK après
+admission puis tue le démon récepteur par `SIGKILL` après au moins huit blocs
+persistés, avant la fin du rattrapage. Le test exige l'événement confirmant la
+perte d'ACK et le code de terminaison par signal. Il arrête ensuite proprement
+l'émetteur, observe un Store stable pendant l'interruption et relance les deux
+démons avec leurs clés P2P existantes et de nouveaux curseurs de relais.
+
+Tous les blocs du préfixe doivent être conservés à l'identique. La retransmission
+depuis le début doit rejoindre les 33 blocs sans doublon d'archive, puis retrouver
+la même tête, le même état et le même checkpoint finalisé que la source. Les
+assertions finales et la restauration du checkpoint destinataire sont identiques
+au scénario sans interruption. Campagne :
+`build-cmake/qualification/altair-generated-p2p-restart-20260925/tests.log`.
+
+La panne concerne le processus P2P récepteur, pas le cœur de consensus ni sa base.
+Le cœur HTTP reste actif pendant la reconnexion. Le test ne simule pas une panne
+disque, une partition entre groupes de validateurs autonomes ou un consensus
+qui continue à produire pendant la coupure. L'émetteur est relancé explicitement
+avec la nouvelle adresse du récepteur ; la redécouverte automatique d'adresse
+n'est pas qualifiée par ce scénario.
