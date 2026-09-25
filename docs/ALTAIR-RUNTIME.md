@@ -269,3 +269,45 @@ importe deux blocs officiels avec contrôle du checkpoint et du head attendu.
 L'horloge suit les fixtures : ce n'est ni un réseau de validateurs contemporains,
 ni une preuve de finalité distribuée, ni un test de charge soutenue. Le binaire
 `nano-altair-probe` sert uniquement à cette qualification et n'est pas installé.
+
+## Blocs signés conservés avec le checkpoint
+
+Le réacteur conserve maintenant les octets SSZ originaux des nouveaux blocs
+validés. L'état et cette archive sont écrits dans le même checkpoint RocksDB,
+avant publication de leurs références immuables. Les votes et ticks conservent
+ces références ; un doublon de racine ne remplace jamais la signature archivée.
+Cette précaution compte car le choix de branche peut accepter une racine déjà
+connue sans revérifier la signature du doublon.
+
+Un checkpoint sans archive conserve exactement le format `nano-altair-store-v1`.
+Dès qu'un nouveau bloc est archivé, le format `nano-altair-durable-v2` enveloppe le
+Store et `signedBlocks`. La restauration vérifie d'abord le digest externe, puis
+les limites, le corps SSZ, l'en-tête, la racine et la signature BLS de chaque bloc
+par rapport à son état authentifié. Ce chemin reste un chargement de checkpoint
+local de confiance, pas une admission de snapshots provenant de pairs.
+
+Les anciens checkpoints restent lisibles avec une archive vide. L'ancre est un
+bloc non signé de confiance et n'est pas exportée comme un bloc signé. Les octets
+absents d'un ancien checkpoint ne sont pas reconstitués par le raccourci des
+racines déjà connues ; une réhydratation historique authentifiée reste à prévoir.
+Après écriture du format v2, un ancien binaire ne comprenant que v1 ne peut pas
+reprendre ce checkpoint.
+
+Deux lectures privées préparent la propagation :
+
+- `nano_altairInventory(token, afterRoot, limit)` : `afterRoot` vaut `"0x"` au
+  début, puis le curseur `next`. La limite est une quantité hex positive. Les
+  racines archivées sont paginées en ordre lexicographique, avec parent et slot.
+  Le budget de réponse réduit la taille d'une page, jamais le nombre total de
+  blocs. `missingSignedBlocks` signale les états connus sans payload signé,
+  hors ancre. Les pages portent séquence et digest : si le checkpoint change,
+  recommencer le parcours pour ne pas manquer une insertion avant le curseur.
+- `nano_altairBlock(token, root)` : retourne les octets archivés dans l'enveloppe
+  IPC compacte. Un payload absent renvoie `available: false`, avec distinction
+  bloc connu/ancre. Un payload trop grand pour l'export échoue explicitement.
+
+Ces lectures utilisent les références d'un même état publié et la file RPC
+bornée, en dehors du verrou global RPC. Le daemon ne diffuse pas encore cet
+inventaire automatiquement. Les archives restent incluses dans les snapshots
+complets, soumises à `limits.envelopeBytes` et à la taille de bloc du profil :
+stockage incrémental, élagage et débit d'écriture restent à qualifier.

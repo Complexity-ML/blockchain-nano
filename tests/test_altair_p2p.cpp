@@ -53,6 +53,12 @@ int main(int argc,char** argv){try{
    check(hex(Bytes(head.begin(),head.end()))==step.at("checks").at("head").at("root").get<std::string>(),"P2P head differs from official expected head");
   }
  }
+ const auto archived=reactor.current();std::set<std::string> exported;std::string cursor="0x";
+ do{const auto page=rpc(server.port(),"nano_altairInventory",Json::array({"fixture-token",cursor,"0x1"}));check(page.at("blocks").size()==1&&page.at("missingSignedBlocks")==0,"invalid inventory page");const auto id=page.at("blocks")[0].at("root").get<std::string>();check(exported.insert(id).second,"duplicate inventory page");
+  const auto payload=rpc(server.port(),"nano_altairBlock",Json::array({"fixture-token",id}));check(payload.at("available")==true,"durable block unavailable over RPC");ConsensusRoot key{};const auto decoded=unhex(id);std::copy(decoded.begin(),decoded.end(),key.begin());check(altair_unbase64(payload.at("envelope").at("sszBase64").get<std::string>(),transition.maximum_block_bytes)==*archived.signed_blocks->at(key),"export changed signed block bytes");
+  if(page.at("next").is_null())break;cursor=page.at("next").get<std::string>();
+ }while(true);check(exported.size()==blocks,"inventory omitted archived block");
+ for(const auto* method:{"nano_altairInventory","nano_altairBlock"}){bool denied=false;try{auto p=Json::array({"wrong",method==std::string("nano_altairBlock")?*exported.begin():"0x"});if(method==std::string("nano_altairInventory"))p.push_back("0x1");rpc(server.port(),method,p);}catch(const RpcError& e){denied=e.code==-32001;}check(denied,"archive read bypassed authentication");}
  healthy=false;const auto stable=reactor.current().token;check(probe(status,{invalid})==Json::array({nullptr})&&reactor.current().token==stable,"local failure returned consensus acceptance/rejection");
  check(endpoint->jobs().at("jobs").empty(),"daemon did not retire finished tickets");
  check(rpc(server.port(),"eth_chainId")=="0x539","EVM RPC unavailable after P2P tests");

@@ -18,6 +18,10 @@ class AltairRpcService {
  AltairConsensusService service_;
  const std::chrono::milliseconds timeout_;
  AltairReceipts receipts_;
+ static nano::ConsensusRoot block_root(const std::string& encoded){
+  if(encoded.size()!=66)throw nano::RpcError(-32602,"Invalid Altair block root");const auto bytes=nano::unhex(encoded);
+  if(bytes.size()!=32||nano::hex(bytes)!=encoded)throw nano::RpcError(-32602,"Invalid Altair block root");nano::ConsensusRoot result{};std::copy(bytes.begin(),bytes.end(),result.begin());return result;
+ }
 public:
  AltairRpcService(nano::AltairDurableReactor& reactor,AltairWireProfile profile,
                   size_t jobs,size_t bytes,std::chrono::milliseconds timeout=std::chrono::seconds(10),std::function<void(const std::function<void()>&)> before_message={},std::function<bool()> clock_healthy={},std::string consensus_identity={},bool network_admission=false):
@@ -56,6 +60,22 @@ public:
  nano::Json submit(const std::string& session,uint64_t sequence,const nano::Json& frame){
   auto message=frame.is_string()?decoder_.decode(frame.get_ref<const std::string&>()):decoder_.decode_compact(frame);if(!message)throw nano::RpcError(-32602,"Invalid Altair envelope");
   return receipts_.submit(session,sequence,std::move(*message),service_.dispatcher());
+ }
+ nano::Json block(const std::string& root){
+  const auto id=block_root(root);const auto current=reactor_.current();const auto found=current.signed_blocks->find(id);
+  if(found==current.signed_blocks->end())return nano::Json{{"available",false},{"known",current.state->blocks.contains(id)},{"anchor",id==current.state->timed.view.anchor}};
+  const auto& bytes=*found->second;if(bytes.size()>profile_.block_bytes||bytes.size()/3+(bytes.size()%3!=0)>(16*1024*1024-1024)/4)throw nano::RpcError(-32005,"Altair block exceeds IPC export capacity");
+  return nano::Json{{"available",true},{"root",root},{"sequence",nano::quantity(nano::Int(std::to_string(current.token.sequence)))},{"digest",nano::hex(current.token.digest)},
+   {"envelope",{{"chainId",profile_.chain_id},{"genesisHash",profile_.genesis_hash},{"forkDigest",profile_.fork_digest},{"kind","block"},{"sszBase64",altair_base64(bytes)}}}};
+ }
+ nano::Json inventory(const std::string& cursor,uint64_t requested){
+  if(!requested)throw nano::RpcError(-32602,"Positive Altair page limit required");const auto current=reactor_.current();
+  auto it=cursor=="0x"?current.signed_blocks->begin():current.signed_blocks->upper_bound(block_root(cursor));
+  const auto budget=std::min(profile_.frame_bytes,size_t(16*1024*1024));if(budget<=512)throw nano::RpcError(-32005,"Altair inventory capacity unavailable");
+  const auto maximum=std::min<uint64_t>(requested,(budget-512)/256);if(!maximum)throw nano::RpcError(-32005,"Altair inventory capacity unavailable");
+  nano::Json entries=nano::Json::array();std::string last;
+  for(size_t n=0;n<maximum&&it!=current.signed_blocks->end();++n,++it){const auto& [id,_]=*it;const auto& header=current.state->blocks.at(id).header;last=nano::hex(nano::Bytes(id.begin(),id.end()));entries.push_back({{"root",last},{"parentRoot",nano::hex(nano::Bytes(header.parent_root.begin(),header.parent_root.end()))},{"slot",nano::quantity(nano::Int(std::to_string(header.slot)))}});}
+  return nano::Json{{"sequence",nano::quantity(nano::Int(std::to_string(current.token.sequence)))},{"digest",nano::hex(current.token.digest)},{"blocks",entries},{"next",it==current.signed_blocks->end()?nano::Json(nullptr):nano::Json(last)},{"missingSignedBlocks",current.state->blocks.size()-1-current.signed_blocks->size()}};
  }
  nano::Json job(const std::string& session,uint64_t sequence,bool cancel=false,bool retire=false){return receipts_.get(session,sequence,cancel,retire);}
  nano::Json rotate(const std::string& expected){return receipts_.rotate(expected);}

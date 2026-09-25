@@ -47,7 +47,7 @@ struct SimulationQueue {
  void release(size_t count){pending-=count;}
 };
 inline bool simulation_item(const Json& value){
- if(!value.is_object())return false;auto method=value.value("method",Json());return method=="nano_altairReceive"||method=="nano_altairStatus"||method=="nano_altairSubmit"||method=="nano_altairJob"||method=="nano_altairCancel"||method=="nano_altairForget"||method=="nano_altairRotateSession"||method=="nano_altairJobs"||method=="eth_call"||method=="eth_estimateGas"||method=="eth_signTransaction"||method=="eth_sendTransaction"||
+ if(!value.is_object())return false;auto method=value.value("method",Json());return method=="nano_altairReceive"||method=="nano_altairStatus"||method=="nano_altairSubmit"||method=="nano_altairJob"||method=="nano_altairCancel"||method=="nano_altairForget"||method=="nano_altairBlock"||method=="nano_altairInventory"||method=="nano_altairRotateSession"||method=="nano_altairJobs"||method=="eth_call"||method=="eth_estimateGas"||method=="eth_signTransaction"||method=="eth_sendTransaction"||
   method=="nno_registerValidator"||method=="nno_addStake"||method=="nno_withdrawStake";
 }
 inline size_t simulation_count(const Json& value){

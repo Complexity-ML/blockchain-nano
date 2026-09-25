@@ -714,3 +714,11 @@ compact corrige le dépassement dû à l'hex sans réduire le profil ni élargir
 L'horloge de qualification est injectée ; ni propagation automatique, ni finalité
 distribuée, ni liaison EVM ne sont closes. Aucun statut EIP/fork de production
 n'est promu. Voir `docs/ALTAIR-RUNTIME.md` et la feuille validateurs.
+
+Complément persistance Altair (25 septembre 2026) : blocs signés conservés dans
+le même checkpoint que l'état, lecture RPC privée paginée, vérification des octets
+et signatures à la reprise. Huit suites passent, incluant parcours officiels
+head/reorg, corruption d'archives, erreur WAL injectée, annulation avant commit et
+lecture des anciens checkpoints sans invention de signatures. Aucune conformité
+EIP/fork n'est promue : diffusion automatique, pruning, stockage incrémental et
+liaison consensus–EVM restent ouverts. Voir `docs/ALTAIR-RUNTIME.md`.

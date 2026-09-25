@@ -2307,3 +2307,29 @@ l'échec initial et les réussites après correction. Aucun déploiement n'activ
 mode par défaut. Restent propagation sortante, récupération des dépendances,
 duties/signatures de validateurs, supervision multi-processus et liaison atomique
 avec les blocs EVM, puis qualification distribuée des pannes/finalité/charge.
+
+### Archive signée atomique pour la propagation, 25 septembre 2026
+
+Le réacteur persiste désormais les octets SSZ signés des nouveaux blocs dans le
+même commit que le Store. Les archives immuables ne sont publiées qu'après succès
+de l'écriture synchronisée. Le format durable v2 enveloppe le Store et les blocs ;
+les checkpoints v1 sans octets signés restent lisibles sans données inventées.
+Une racine déjà connue ne remplace pas une signature archivée et ne remplit pas
+une lacune historique par le raccourci des doublons.
+
+Deux RPC privés, `nano_altairInventory` et `nano_altairBlock`, fournissent une
+pagination bornée et les payloads compacts à partir de la même vue publiée.
+Le test libp2p exporte les deux blocs réellement reçus et compare leurs octets.
+La restauration vérifie digest, SSZ, en-tête, racine et signature ; cinq archives
+altérées sont refusées même après recalcul du digest externe dans le test.
+
+Huit suites passent. Les parcours officiels head/reorg couvrent 18 scénarios,
+366 admissions de blocs et 17 reprises. Le test d'archive ajoute annulation juste
+avant commit, erreur de synchronisation WAL injectée, absence de publication sur
+échec, reprise sans séparation état/archive, réouverture et lecture v1. Ce n'est
+pas une qualification de coupure électrique sur stockage de production.
+
+Preuves : `build-cmake/qualification/altair-signed-archive-20260925/`.
+La diffusion automatique reste à raccorder. Les archives font encore partie des
+snapshots complets : stockage incrémental, pruning, réhydratation authentifiée des
+anciens blocs manquants et débit durable restent ouverts, ainsi que la liaison EVM.
