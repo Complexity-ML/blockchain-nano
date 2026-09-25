@@ -7,6 +7,8 @@
 #include "gossip_progress.hpp"
 #include "bft_vote_knowledge.hpp"
 #include "timed_reply.hpp"
+#include "altair_core_recovery.hpp"
+#include <sstream>
 #include <libp2p/network/impl/dnsaddr_resolver_impl.hpp>
 #include <libp2p/injector/host_injector.hpp>
 #include <libp2p/log/configurator.hpp>
@@ -36,6 +38,25 @@ libp2p::crypto::KeyPair identity(const std::filesystem::path& path){
 }
 class Network {
  asio::io_context& io_;Host host_;Core core_;asio::steady_timer timer_,bft_timer_;
+ std::shared_ptr<AltairCoreRecovery> altair_recovery_;std::shared_ptr<AltairCoreDispatch> altair_dispatch_;
+ bool altair_started_=false;
+ void recover_altair(){
+  if(altair_started_||status_.value("altairIpc",Json())!=true)return;altair_started_=true;
+  if(report_token_.empty()){std::cerr<<"Altair IPC recovery requires the supervisor token\n";return;}
+  std::ostringstream chain;chain<<"0x"<<std::hex<<status_.at("chain_id").get<uint64_t>();
+  auto call=[this](const std::string& method,Json params,Reply reply){core_.call(method,std::move(params),std::move(reply));};
+  // Local IPC recovery budgets, independent of validator registry size. No
+  // network Altair admission is registered by this startup preparation.
+  altair_recovery_=std::make_shared<AltairCoreRecovery>(io_,call,report_token_,chain.str(),status_.at("genesis_hash").get<std::string>(),3,std::chrono::milliseconds(100),std::chrono::seconds(30),[this,call](Json result){
+   altair_recovery_.reset();
+   if(result.is_null()){std::cerr<<Json{{"event","altair-ipc-recovery-failed"},{"networkProtocolActive",false}}.dump()<<std::endl;return;}
+   try{
+    const auto& w=result.at("wire");AltairWireProfile profile{result.at("chainId").get<std::string>(),result.at("genesisHash").get<std::string>(),result.at("forkDigest").get<std::string>(),w.at("frameBytes").get<size_t>(),w.at("blockBytes").get<size_t>(),w.at("attestationBytes").get<size_t>(),w.at("slashingBytes").get<size_t>()};
+    altair_dispatch_=std::make_shared<AltairCoreDispatch>(io_,call,profile,report_token_,result.at("session").get<std::string>(),result.at("highWater").get<uint64_t>(),result.at("workerJobs").get<size_t>(),3,std::chrono::milliseconds(100));
+    std::cout<<Json{{"event","altair-ipc-ready"},{"consensusIdentity",result.at("consensusIdentity")},{"networkProtocolActive",false}}.dump()<<std::endl;
+   }catch(const std::exception&){std::cerr<<Json{{"event","altair-ipc-recovery-failed"},{"networkProtocolActive",false}}.dump()<<std::endl;}
+  });altair_recovery_->start();
+ }
  Json status_;uint64_t cursor_=0;bool initialized_=false;bool previous_bft_page_=false;bool download_busy_=false,bft_download_busy_=false;
  std::string report_token_,event_epoch_;bool event_polling_=false;unsigned reference_trace_count_=0;InboundBudget inbound_budget_;
  bool drop_block_fragment_=std::getenv("NANO_TEST_DROP_BLOCK_FRAGMENT_ONCE")!=nullptr;
@@ -242,6 +263,7 @@ class Network {
  }
  void schedule(){timer_.expires_after(std::chrono::seconds(1));timer_.async_wait([this](auto ec){if(!ec)tick();});}
  void tick(){core_.call("nano_networkStatus",Json::array(),[this](Json local){if(!valid_peer_status(local,local)){schedule();return;}status_=std::move(local);if(!initialized_){cursor_=status_.value("cursor",uint64_t(0));event_epoch_=status_.value("gossip_epoch",std::string{});initialized_=true;std::cout<<Json{{"event","ready"},{"chainId",status_["chain_id"]}}.dump()<<std::endl;}
+  recover_altair();
   refresh_bootstrap();
   for(const auto& seed:seeds_){if(connecting_.size()>=4||peers_.size()+connecting_.size()>=50)break;auto id=seed.id.toBase58();if(id==host_->getPeerInfo().id.toBase58()||peers_.contains(id)||connecting_.contains(id))continue;auto now=std::chrono::steady_clock::now();if(retry_after_.contains(id)&&now<retry_after_[id])continue;retry_after_[id]=now+std::chrono::seconds(5);connecting_.insert(id);exchange(seed,handshake,status_,[this,seed,id](Json remote){connecting_.erase(id);add(seed,remote);});}
   std::vector<PeerInfo> known;for(const auto& [id,peer]:peers_)known.push_back(peer.info);

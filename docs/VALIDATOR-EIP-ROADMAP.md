@@ -2253,3 +2253,27 @@ Cela prépare la récupération du daemon ; ni son orchestration, ni un réseau 
 actif ne sont démontrés. La clôture porte sur les tickets, pas sur l'ancien appel
 synchrone Receive. Le propriétaire unique et le passage exclusif de l'admission
 réseau par les tickets restent des exigences d'intégration.
+
+### Récupération IPC raccordée au daemon, 25 septembre 2026
+
+`network/main.cpp` découvre désormais le service Altair du cœur et exécute
+`AltairCoreRecovery` avant de construire son client à tickets. Cette récupération
+vérifie chaîne/profil/limites, confirme une rotation de session, attend et retire
+les anciens tickets, puis revérifie identité et session. Un résultat prêt exige
+un inventaire vide. Une rotation dont la réponse est perdue doit être confirmée
+à nouveau après lecture du statut. Les erreurs sont bornées par une échéance
+globale et un budget de transport ; aucune expiration ne vaut fin de worker.
+
+Les douze suites réseau passent, avec seize scénarios de récupération contrôlée.
+Quatre suites Altair passent sur le cœur : runtime, HTTP privé, client IPC et
+processus gérés. Le client réel récupère un ticket antérieur malgré une réponse
+de rotation supprimée à sa callback ; Nano et son vrai daemon annoncent
+`altair-ipc-ready` au démarrage et après reprise du checkpoint. Le test réseau
+historique passe également avec les nouveaux binaires.
+
+Preuves : `build-cmake/qualification/altair-daemon-recovery-20260925/`.
+Cette préparation IPC n'enregistre pas le handler libp2p Altair, ne signe pas de
+blocs et ne lie pas le consensus à l'EVM. Le propriétaire unique du daemon, la
+supervision après échec et la configuration opérateur des budgets de récupération
+restent à finaliser avant activation. Le chemin synchrone Receive reste hors de
+la clôture des tickets ; aucune admission réseau ne doit l'utiliser.

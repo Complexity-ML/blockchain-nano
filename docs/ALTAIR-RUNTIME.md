@@ -93,13 +93,13 @@ Chaque tick effectif conserve encore un snapshot complet du Store. La cadence
 `intervalMs` et les performances sous charge ne sont pas qualifiées pour la
 production ; l'absence de backlog de timers n'élimine pas cette amplification
 d'écriture. L'arrêt attend la fin du travail courant, sans garantie de délai face
-à un stockage bloqué. Les messages du daemon, la récupération après perte
-d'acquittement et les essais distribués restent ouverts. Ne pas utiliser ce
+à un stockage bloqué. La propagation des messages entre daemons et les essais
+distribués restent ouverts ; les reprises IPC qualifiées sont décrites ci-dessous. Ne pas utiliser ce
 runtime comme preuve de finalité de fonds EVM.
 
 ## Tickets de traitement et réponses perdues
 
-Le daemon pourra utiliser les méthodes privées suivantes, toutes protégées par
+Le daemon utilise le protocole privé suivant, toutes protégées par
 le même jeton. `session` provient de `nano_altairStatus` (`admissionSession`) ou
 `nano_altairJobs`, et `sequence` est une quantité positive canonique.
 
@@ -134,9 +134,8 @@ anciens tickets sont refusés et leur résultat doit être rapproché de l'état
 consensus durable. Ne pas interpréter un changement de session comme un rejet,
 et ne pas rejouer aveuglément les anciens messages sous de nouveaux numéros.
 
-Le ledger et son trajet HTTP sont qualifiés, mais le daemon n'utilise pas encore
-ces appels. La politique de récupération après changement de session et la
-propagation P2P restent à intégrer.
+Le ledger et son trajet HTTP sont qualifiés. Le daemon utilise ces appels pour
+récupérer les tickets au démarrage ; la propagation P2P reste à intégrer.
 
 ## Client IPC destiné au daemon
 
@@ -157,10 +156,10 @@ reconcilier les tickets avant de reconstruire ce client, et fournir la session e
 le highWater observés. Il doit aussi fournir les échéances/annulations des requêtes.
 
 Le client est qualifié avec réponses contrôlées et avec le vrai `Core::call` sur
-HTTP loopback. Il n'est pas encore instancié dans `network/main.cpp`. La découverte
-du profil, la récupération initiale des tickets, le handler libp2p et la politique
-de reprise après blocage restent à raccorder. Les tests ne qualifient pas le débit
-d'un réseau distribué ; un seul aller-retour IPC est actif à la fois.
+HTTP loopback. Il est instancié dans `network/main.cpp` après récupération réussie
+des tickets. Le handler libp2p et la reprise après blocage du client restent à
+raccorder. Les tests ne qualifient pas le débit d'un réseau distribué ; un seul
+aller-retour IPC est actif à la fois.
 
 ## Identité de consensus exposée au daemon
 
@@ -200,4 +199,30 @@ Cette primitive ne coordonne pas plusieurs daemons autorisés concurrents. Elle
 porte sur le chemin à tickets ; l'ancien appel synchrone `nano_altairReceive`
 n'est pas couvert par cette clôture. Avant activation réseau, le superviseur doit
 assurer un propriétaire unique et l'admission réseau doit utiliser exclusivement
-les tickets. L'orchestration de récupération et le handler P2P restent à raccorder.
+les tickets. La récupération au démarrage est décrite ci-dessous ; le handler P2P
+reste à raccorder.
+
+## Récupération réellement exécutée au démarrage du daemon
+
+Lorsque le cœur annonce `altairIpc: true`, `network/main.cpp` démarre une seule
+récupération authentifiée. `AltairCoreRecovery` vérifie l'identité de chaîne,
+l'empreinte du consensus, les limites wire et la capacité de tickets du cœur.
+Il confirme une rotation, consulte les anciens tickets, demande l'annulation des
+actifs et retire les terminés. Il ne produit un résultat prêt qu'après inventaire
+vide et nouvelle vérification de l'identité et de la session.
+
+Une réponse de rotation perdue entraîne une nouvelle lecture du statut puis une
+nouvelle rotation confirmée. Une réponse Forget perdue est récupérée en répétant
+le retrait. Les réponses incohérentes, changements de profil/session, compteurs
+qui reculent ou sont épuisés bloquent la récupération. Une échéance totale borne
+l'attente même si le transport ne rappelle jamais sa callback ou si un worker
+reste actif. Le daemon utilise actuellement trois erreurs de transport maximum,
+100 ms entre échanges et 30 secondes au total : ce sont des budgets IPC locaux,
+pas des limites de validateurs. Leur configuration opérateur reste à exposer.
+
+Le journal `altair-ipc-ready` indique que le client IPC a été construit après cette
+récupération. Il conserve `networkProtocolActive: false` : aucun handler Altair
+libp2p, signature de validateur, propagation ou liaison EVM n'est activé ici.
+`altair-ipc-recovery-failed` ne signifie jamais que les anciens workers sont finis.
+Il n'y a pas de boucle de reprise automatique après cet échec ; le diagnostic et
+la politique de supervision restent à compléter avant activation réseau.

@@ -90,12 +90,12 @@ int main(int argc,char** argv){try{
   Json node{{"rpc_host","127.0.0.1"},{"rpc_port",0},{"p2p_binary",argv[2]},{"listen_addr","/ip4/127.0.0.1/tcp/0"},{"bootnodes",Json::array()},{"altair",managed_config}};save(temp/"node.json",node);
   Process child({argv[1],"run",(temp/"genesis.json").string(),(temp/"execution").string(),(temp/"node.json").string()});
   const auto ready=child.event("altair-runtime-ready");check(ready.at("sequence")=="0x1"&&ready.at("executionBound")==false&&ready.at("networkProtocolActive")==false,"managed status misreports activation");
-  const auto port=child.port();child.event("ready");check(rpc(port,"eth_chainId")=="0x539","managed RPC unavailable");
+  const auto port=child.port();child.event("ready");check(child.event("altair-ipc-ready").at("consensusIdentity")==hex(identity),"managed daemon did not verify/drain Altair IPC");check(rpc(port,"eth_chainId")=="0x539","managed RPC unavailable");
   bool unauthorized=false;try{rpc(port,"nano_altairReceive",Json::array({"wrong","{}"}));}catch(const std::exception& e){unauthorized=std::string(e.what()).find("Unauthorized Altair")!=std::string::npos;}check(unauthorized,"managed Altair endpoint not present/authenticated");
   check(child.stop().code==0,"managed shutdown failed");
   node["altair"]["restart"]={{"sequence",ready.at("sequence")},{"digest",ready.at("digest")}};save(temp/"node.json",node);
   Process resumed({argv[1],"run",(temp/"genesis.json").string(),(temp/"execution").string(),(temp/"node.json").string()});
-  check(resumed.event("altair-runtime-ready").at("digest")==ready.at("digest"),"managed restart changed checkpoint");resumed.event("ready");check(resumed.stop().code==0,"managed restart shutdown failed");managed=true;
+  check(resumed.event("altair-runtime-ready").at("digest")==ready.at("digest"),"managed restart changed checkpoint");resumed.event("ready");check(resumed.event("altair-ipc-ready").at("consensusIdentity")==hex(identity),"resumed daemon did not recover Altair IPC");check(resumed.stop().code==0,"managed restart shutdown failed");managed=true;
  }
  std::cout<<Json{{"identityChecks",identity_checks},{"clockGuards",clock_guards},{"scenario","altair-runtime-start-restart"},{"refused",refused},{"latestSequence",token.sequence},{"ownedLifetime",true},{"managedProcesses",managed},{"networkAltairActive",false},{"executionBound",false}}.dump()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

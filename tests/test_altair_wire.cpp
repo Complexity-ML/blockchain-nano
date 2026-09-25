@@ -3,6 +3,7 @@
 #include "../network/altair_consensus_service.hpp"
 #include <future>
 #include "../network/altair_core_dispatch.hpp"
+#include "../network/altair_core_recovery.hpp"
 #include "../network/altair_rpc_service.hpp"
 #include "nano/http.hpp"
 #include "nano/simulation_queue.hpp"
@@ -25,7 +26,7 @@ int main(){try{
  Temp execution_directory;Blockchain execution(execution_directory/"execution",Genesis::from_json(Json{{"alloc",Json::object()}}));
  std::shared_ptr<AltairRpcService> endpoint;std::unique_ptr<Rpc> rpc;std::unique_ptr<HttpServer> server;std::unique_ptr<RunningAltairHttp> running;std::unique_ptr<PersistentRpc> client;
  if(http_mode){
-  endpoint=std::make_shared<AltairRpcService>(reactor,profile,4,2*1024*1024);
+  endpoint=std::make_shared<AltairRpcService>(reactor,profile,4,2*1024*1024,std::chrono::seconds(10),std::function<void(const std::function<void()>&)>{},std::function<bool()>{},"0x"+std::string(64,'d'));
   rpc=std::make_unique<Rpc>(execution,"qualification-only-token",AdmissionBudget::Clock::now,RpcSimulationLimits{},endpoint);
   bool public_rejected=false;try{HttpServer unsafe(*rpc,"0.0.0.0",0);}catch(const std::invalid_argument&){public_rejected=true;}check(public_rejected,"private endpoint publicly bindable");
   server=std::make_unique<HttpServer>(*rpc,"127.0.0.1",0);running=std::make_unique<RunningAltairHttp>(*server);client=std::make_unique<PersistentRpc>(server->port());
@@ -45,10 +46,16 @@ int main(){try{
   check(rotate_unauthorized&&simulation_count(Json{{"method","nano_altairRotateSession"}})==1,"rotation bypasses authentication or bounded queue");
   if(core_client_mode){
    core=std::make_unique<Core>(core_io,server->port());
+   // Leave an admitted receipt behind, as a previous daemon could do.
+   endpoint->submit(admission_session,1,delayed_frame);
+   Json recovered;bool dropped_rotation=false;
+   auto recovery=std::make_shared<AltairCoreRecovery>(core_io,[&](const std::string& method,Json params,Reply cb){core->call(method,std::move(params),[&,method,cb](Json result){if(method=="nano_altairRotateSession"&&!dropped_rotation){dropped_rotation=true;cb(nullptr);}else cb(std::move(result));});},"qualification-only-token",profile.chain_id,profile.genesis_hash,3,std::chrono::milliseconds(1),std::chrono::seconds(5),[&](Json result){recovered=std::move(result);});
+   recovery->start();core_io.run();check(recovered.is_object()&&dropped_rotation&&recovered.at("highWater")==1&&endpoint->jobs().at("jobs").empty(),"real core recovery did not drain old receipt");
+   admission_session=recovered.at("session").get<std::string>();
    core_dispatch=std::make_shared<AltairCoreDispatch>(core_io,[&](const std::string& method,Json params,Reply cb){
     const bool drop=method=="nano_altairSubmit"&&!core_reply_dropped&&Json::parse(params.at(3).get<std::string>()).at("kind")=="block";
     core->call(method,std::move(params),[&,drop,cb=std::move(cb)](Json result){if(drop){core_reply_dropped=true;cb(nullptr);}else cb(std::move(result));});
-   },profile,"qualification-only-token",admission_session,0,4,3,std::chrono::milliseconds(1));
+   },profile,"qualification-only-token",admission_session,recovered.at("highWater").get<uint64_t>(),4,3,std::chrono::milliseconds(1));
   }
 
   check(status.at("digest")==hex(token.digest)&&status.at("clockHealthy").is_null(),"private status differs from checkpoint");

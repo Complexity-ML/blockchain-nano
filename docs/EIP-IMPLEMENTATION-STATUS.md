@@ -697,3 +697,11 @@ workers encore actifs ni réécrire les décisions commitées. Cinq suites cibl�
 passent, dont 64 courses admission/rotation. L'orchestration du daemon reste à
 raccorder ; aucun statut EIP, fork ou production n'est promu par ce test.
 Voir `docs/ALTAIR-RUNTIME.md` pour le périmètre et les limites de récupération.
+
+Complément intégration daemon Altair (25 septembre 2026) : récupération IPC
+réellement appelée par `nano-p2p` avant construction de son client à tickets,
+avec contrôle du profil, rotation confirmée et attente d'un inventaire vide.
+Douze suites réseau et cinq suites cœur/intégration passent, dont seize scénarios
+de récupération contrôlée et le démarrage/reprise des processus réels. Le handler
+Altair P2P, la propagation et la liaison atomique EVM restent ouverts. Aucun fork
+ni statut EIP de conformité n'est promu. Voir `docs/ALTAIR-RUNTIME.md`.
