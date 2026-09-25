@@ -1,5 +1,6 @@
 #include "support/altair_transition_rules.hpp"
 #include "nano/consensus_altair_runtime.hpp"
+#include "nano/consensus_altair_clock.hpp"
 #include "../network/altair_rpc_service.hpp"
 using namespace test;using namespace test::phase0_minimal;
 int main(int argc,char** argv){try{
@@ -18,7 +19,7 @@ int main(int argc,char** argv){try{
  {"database",(temp/"consensus").string()},
  {"limits",{{"envelopeBytes",q(32*1024*1024)},{"blocks","0x64"},{"messages","0x2710"},{"equivocations","0x2710"},{"stateBytes",q(1024*1024)},{"totalStateBytes",q(16*1024*1024)},{"replaySlots","0x1000"},{"syncTrials","0x186a0"}}},
  {"wire",{{"frameBytes",q(2*transition.maximum_block_bytes+1024)},{"blockBytes",q(transition.maximum_block_bytes)},{"attestationBytes","0x200"},{"slashingBytes","0x9c40"}}},
- {"worker",{{"jobs","0x4"},{"payloadBytes",q(transition.maximum_block_bytes)},{"timeoutMs","0x2710"}}},{"restart",nullptr}};
+ {"worker",{{"jobs","0x4"},{"payloadBytes",q(transition.maximum_block_bytes)},{"timeoutMs","0x2710"}}},{"restart",nullptr},{"clock",{{"enabled",false},{"intervalMs","0x64"},{"maximumForwardStepMs","0xea60"}}}};
  unsigned refused=0;
  auto refuse=[&](const Json& input){bool failed=false;try{start_altair_runtime(input,1337,genesis_hash);}catch(const std::exception&){failed=true;}check(failed,"invalid runtime startup accepted");++refused;};
  auto bad=config;bad["worker"]["jobs"]="0x0";refuse(bad);check(!fs::exists(temp/"consensus"),"invalid config opened database");
@@ -38,6 +39,29 @@ int main(int argc,char** argv){try{
  {auto runtime=start_altair_runtime(config,1337,genesis_hash);check(runtime.reactor->current().token==token,"restart changed checkpoint");runtime.reactor->tick(anchor.timed.clock.time_ms+1);token=runtime.reactor->current().token;}
  refuse(config);config["restart"]={{"sequence",q(token.sequence)},{"digest",hex(token.digest)}};
  {auto runtime=start_altair_runtime(config,1337,genesis_hash);check(runtime.reactor->current().token==token,"latest restart failed");}
+ unsigned clock_guards=0;
+ {auto manual=config;manual["database"]=(temp/"manual-clock").string();manual["restart"]=nullptr;
+  auto runtime=start_altair_runtime(manual,1337,genesis_hash);auto now=anchor.timed.clock.time_ms;
+  AltairLocalClock clock(*runtime.reactor,10,[&]{return now;});
+  const auto before=runtime.reactor->current().token;check(!clock.poll()&&runtime.reactor->current().token==before,"duplicate clock tick committed");++clock_guards;
+  ++now;bool cancelled=false;try{clock.poll([]{throw std::runtime_error("cancelled");});}catch(const std::runtime_error& e){cancelled=std::string(e.what())=="cancelled";}
+  check(cancelled&&clock.healthy()&&runtime.reactor->current().token==before,"clock cancellation poisoned runtime");++clock_guards;
+  check(clock.poll()&&runtime.reactor->current().state->timed.clock.time_ms==now,"clock did not advance");++clock_guards;
+  --now;bool backwards=false;try{clock.poll();}catch(const std::runtime_error&){backwards=true;}
+  check(backwards&&!clock.healthy(),"backwards clock accepted");++clock_guards;
+  now+=2;bool latched=false;try{clock.poll();}catch(const std::runtime_error&){latched=true;}check(latched,"clock error not latched");++clock_guards;
+ }
+ {auto automatic=config;automatic["database"]=(temp/"automatic-clock").string();automatic["restart"]=nullptr;
+  automatic["clock"]={{"enabled",true},{"intervalMs","0x1"},{"maximumForwardStepMs","0xa"}};
+  std::atomic<uint64_t> now{anchor.timed.clock.time_ms};auto runtime=start_altair_runtime(automatic,1337,genesis_hash,{},[&]{return now.load();});
+  now.fetch_add(1);until([&]{return runtime.reactor->current().token.sequence==2;},"periodic Altair clock advanced");++clock_guards;
+  const auto status=runtime.rpc->status();check(status.at("clockHealthy")==true&&status.at("sequence")=="0x2","clock status mismatch");
+  ConsensusBytes4 version{};std::copy_n(state.begin()+52,4,version.begin());const auto fork=consensus_fork_data_root(version,root_at(state,8));
+  const auto frame=Json{{"chainId","0x539"},{"genesisHash",hex(genesis_hash)},{"forkDigest",hex(Bytes(fork.begin(),fork.begin()+4))},{"kind","attestation"},{"ssz","0x0001"}}.dump();
+  now.fetch_add(1);check(runtime.rpc->receive(frame)==Json{{"accepted",false}}&&runtime.reactor->current().token.sequence==3,"message processed with stale local time");++clock_guards;
+  now.fetch_add(11);bool failed=false;try{runtime.rpc->receive(frame);}catch(const RpcError& e){failed=e.code==-32603;}
+  check(failed&&runtime.rpc->status().at("clockHealthy")==false&&runtime.reactor->current().token.sequence==3,"forward jump admitted work or changed clock");++clock_guards;
+ }
  bool managed=false;
  if(argc==3){
   save(temp/"genesis.json",genesis_json);
@@ -52,5 +76,5 @@ int main(int argc,char** argv){try{
   Process resumed({argv[1],"run",(temp/"genesis.json").string(),(temp/"execution").string(),(temp/"node.json").string()});
   check(resumed.event("altair-runtime-ready").at("digest")==ready.at("digest"),"managed restart changed checkpoint");resumed.event("ready");check(resumed.stop().code==0,"managed restart shutdown failed");managed=true;
  }
- std::cout<<Json{{"scenario","altair-runtime-start-restart"},{"refused",refused},{"latestSequence",token.sequence},{"ownedLifetime",true},{"managedProcesses",managed},{"networkAltairActive",false},{"executionBound",false}}.dump()<<'\n';
+ std::cout<<Json{{"clockGuards",clock_guards},{"scenario","altair-runtime-start-restart"},{"refused",refused},{"latestSequence",token.sequence},{"ownedLifetime",true},{"managedProcesses",managed},{"networkAltairActive",false},{"executionBound",false}}.dump()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

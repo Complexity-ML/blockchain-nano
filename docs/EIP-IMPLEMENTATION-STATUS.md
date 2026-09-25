@@ -661,3 +661,11 @@ son horloge n'est pas pilotée et ses décisions ne sont pas liées à l'EVM. Au
 statut EIP de production n'est clos par cette intégration. Voir
 `docs/ALTAIR-RUNTIME.md` et la section « Composition dans nano run » de la feuille
 validateurs.
+
+Complément horloge Altair (25 septembre 2026) : runtime à heure locale configurable,
+ticks périodiques et avant traitement, déduplication des instants, blocage sur
+recul/saut excessif. Statut courant accessible par RPC privé authentifié. Cinq
+suites passent, dont huit gardes temporelles déterministes. Les écritures restent
+des snapshots complets ; ni la tenue en charge ni la synchronisation d'horloges
+multi-hôtes ne sont qualifiées. Aucun protocole P2P Altair ni liaison EVM activés.
+Voir `docs/ALTAIR-RUNTIME.md` et la feuille validateurs.

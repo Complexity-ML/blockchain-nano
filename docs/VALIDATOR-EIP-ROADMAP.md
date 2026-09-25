@@ -2139,3 +2139,32 @@ l'horloge, l'appel/négociation depuis le daemon, le suivi des engagements aprè
 commit, la récupération des acquittements perdus et la liaison EVM. Aucun fichier
 de déploiement n'active ce runtime par défaut. Preuves :
 `build-cmake/qualification/altair-managed-runtime-20260925/`.
+
+### Horloge locale et statut du checkpoint, 25 septembre 2026
+
+`AltairLocalClock` est désormais composable dans le runtime via une section
+`clock` explicite. Activée, elle échantillonne l'heure système UTC, effectue les
+ticks périodiques sans accumuler de timers et actualise l'heure avant le traitement
+des messages. Un instant inchangé ne crée pas de checkpoint supplémentaire. Les
+reculs, sauts au-delà de la borne locale ou erreurs de traitement verrouillent
+l'horloge en erreur jusqu'au redémarrage ; les messages suivants ne sont plus
+traités. Une annulation de requête seule ne verrouille pas l'horloge.
+
+Le statut privé `nano_altairStatus(token)` expose séquence, digest, heure du Store,
+identité du profil wire et état de santé de l'horloge. Il est désactivé sans service,
+authentifié comme la réception et exécuté hors verrou RPC dans la file bornée.
+Cela permet de lire un engagement après commit, sans prétendre conserver cet
+engagement sur un support indépendant ni détecter seul un rollback du disque.
+
+Les cinq suites RPC, HTTP, HTTP Altair privé, runtime et runtime géré passent.
+Huit gardes d'horloge utilisent une source temporelle déterministe injectée :
+déduplication, annulation, progression, recul, erreur persistante, thread périodique,
+actualisation avant message et grand saut refusé sans nouveau commit. Le runtime
+géré conserve une horloge désactivée pour son replay déterministe ; son test ne
+qualifie donc pas la dérive des horloges de plusieurs hôtes. Le contrôle d'accès au
+statut est aussi testé sur HTTP loopback.
+
+Preuves : `build-cmake/qualification/altair-local-clock-20260925/`. Chaque tick
+réel persiste encore le Store complet : cadence, amplification d'écriture et
+performances sous charge restent ouverts. Les messages P2P Altair, les pertes
+d'acquittement et la liaison EVM restent à raccorder ; aucune activation réseau.

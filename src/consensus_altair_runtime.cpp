@@ -1,5 +1,6 @@
 #include "nano/consensus_altair_runtime.hpp"
 #include "nano/consensus_altair_anchor.hpp"
+#include "nano/consensus_altair_clock.hpp"
 #include "../network/altair_rpc_service.hpp"
 #include <fstream>
 namespace nano {
@@ -14,11 +15,15 @@ std::string profile_file(const std::filesystem::path& file,size_t maximum){
  while(stream){stream.read(part.data(),part.size());const auto n=static_cast<size_t>(stream.gcount());if(n>maximum-out.size())throw std::length_error("Altair profile grew beyond bound");out.append(part.data(),n);}
  if(!stream.eof()||stream.bad())throw std::runtime_error("Cannot read Altair profile");return out;
 }
-struct Owner {std::unique_ptr<ChainStore> disk;std::unique_ptr<AltairDurableReactor> reactor;std::unique_ptr<AltairRpcService> rpc;};
+struct Owner {std::unique_ptr<ChainStore> disk;std::unique_ptr<AltairDurableReactor> reactor;std::unique_ptr<AltairLocalClock> clock;std::unique_ptr<AltairRpcService> rpc;};
 }
-AltairRuntime start_altair_runtime(const Json& config,const Int& chain_id,const Bytes& genesis,const std::function<void()>& checkpoint){
+AltairRuntime start_altair_runtime(const Json& config,const Int& chain_id,const Bytes& genesis,const std::function<void()>& checkpoint,std::function<uint64_t()> local_clock){
  if(checkpoint)checkpoint();if(chain_id<0||genesis.size()!=32)throw std::invalid_argument("Invalid Altair runtime chain identity");
- shape(config,{"profile","forkChoice","anchor","database","limits","wire","worker","restart"});
+ shape(config,{"profile","forkChoice","anchor","database","limits","wire","worker","restart","clock"});
+ const auto& clock=config.at("clock");shape(clock,{"enabled","intervalMs","maximumForwardStepMs"});
+ if(!clock.at("enabled").is_boolean())throw std::invalid_argument("Altair clock enabled must be boolean");
+ const auto interval=num(clock.at("intervalMs")),maximum_step=num(clock.at("maximumForwardStepMs"));
+ if(interval>uint64_t(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::duration::max()/2).count()))throw std::invalid_argument("Altair clock interval range");
  const auto& p=config.at("profile");shape(p,{"file","sha256","maximumBytes"});const auto profile_limit=num(p.at("maximumBytes"));
  const auto transition=load_altair_transition_profile(profile_file(p.at("file").get<std::string>(),profile_limit),fixed(p.at("sha256"),32),profile_limit);
  const auto& f=config.at("forkChoice");shape(f,{"slotDurationMs","attestationDueMs","proposerScoreBoost","boostProfile"});
@@ -57,7 +62,13 @@ AltairRuntime start_altair_runtime(const Json& config,const Int& chain_id,const 
   if(owner->disk->fork_checkpoint(chain_id,genesis,limits.envelope_bytes))throw std::invalid_argument("Existing Altair checkpoint requires explicit restart token");
   owner->reactor=std::make_unique<AltairDurableReactor>(*owner->disk,chain_id,genesis,rules,limits,std::move(*initial),checkpoint);
  }
- owner->rpc=std::make_unique<AltairRpcService>(*owner->reactor,wire,jobs,payload,std::chrono::milliseconds(timeout));
+ std::function<void(const std::function<void()>&)> before_message;std::function<bool()> clock_healthy;
+ if(clock.at("enabled").get<bool>()){
+  owner->clock=std::make_unique<AltairLocalClock>(*owner->reactor,maximum_step,std::move(local_clock));owner->clock->poll(checkpoint);
+  before_message=[local=owner->clock.get()](const auto& check){local->poll(check);};clock_healthy=[local=owner->clock.get()]{return local->healthy();};
+ }
+ owner->rpc=std::make_unique<AltairRpcService>(*owner->reactor,wire,jobs,payload,std::chrono::milliseconds(timeout),std::move(before_message),std::move(clock_healthy));
+ if(owner->clock)owner->clock->start(std::chrono::milliseconds(interval));
  return {std::shared_ptr<AltairRpcService>(owner,owner->rpc.get()),std::shared_ptr<AltairDurableReactor>(owner,owner->reactor.get())};
 }
 }

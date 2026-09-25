@@ -10,10 +10,10 @@
 class AltairConsensusService {
  AltairWorker worker_;
 public:
- AltairConsensusService(nano::AltairDurableReactor& reactor,size_t max_jobs,size_t max_bytes):
- worker_(max_jobs,max_bytes,[&reactor](const AltairWireMessage& message,const AltairWork::Cancellation& cancelled){
+ AltairConsensusService(nano::AltairDurableReactor& reactor,size_t max_jobs,size_t max_bytes,std::function<void(const std::function<void()>&)> before_message={}):
+ worker_(max_jobs,max_bytes,[&reactor,before_message=std::move(before_message)](const AltairWireMessage& message,const AltairWork::Cancellation& cancelled){
   const auto checkpoint=[&]{if(cancelled->load())throw std::runtime_error("Altair request cancelled");};
-  checkpoint();bool accepted=false;
+  checkpoint();if(before_message)before_message(checkpoint);bool accepted=false;
   switch(message.kind){
    case AltairWireKind::block:accepted=reactor.block(message.ssz,checkpoint);break;
    case AltairWireKind::attestation:accepted=reactor.vote_ssz(message.ssz,checkpoint);break;

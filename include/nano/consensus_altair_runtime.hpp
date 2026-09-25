@@ -12,5 +12,5 @@ struct AltairRuntime {
 // ONLY; a non-null token must match the existing checkpoint exactly. No fallback
 // to a fresh Store, automatic checkpoint trust, signing or execution binding.
 AltairRuntime start_altair_runtime(const Json&,const Int& chain_id,const Bytes& execution_genesis,
- const std::function<void()>& checkpoint={});
+ const std::function<void()>& checkpoint={},std::function<uint64_t()> local_clock={});
 }

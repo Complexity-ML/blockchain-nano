@@ -27,6 +27,10 @@ int main(){try{
   bool public_rejected=false;try{HttpServer unsafe(*rpc,"0.0.0.0",0);}catch(const std::invalid_argument&){public_rejected=true;}check(public_rejected,"private endpoint publicly bindable");
   server=std::make_unique<HttpServer>(*rpc,"127.0.0.1",0);running=std::make_unique<RunningAltairHttp>(*server);client=std::make_unique<PersistentRpc>(server->port());
   const auto token=reactor.current().token;
+  const auto status=client->call("nano_altairStatus",Json::array({"qualification-only-token"}));
+  check(status.at("digest")==hex(token.digest)&&status.at("clockHealthy").is_null(),"private status differs from checkpoint");
+  bool status_unauthorized=false;try{client->call("nano_altairStatus",Json::array({"wrong"}));}catch(const PersistentRpcError& e){status_unauthorized=e.code==-32001;}check(status_unauthorized,"status bypasses authentication");
+
   bool unauthorized=false;try{client->call("nano_altairReceive",Json::array({"wrong","{}"}));}catch(const PersistentRpcError& e){unauthorized=e.code==-32001;}
   check(unauthorized&&reactor.current().token==token,"unauthorized request changed consensus");
   bool invalid=false;try{client->call("nano_altairReceive",Json::array({"qualification-only-token","{}"}));}catch(const PersistentRpcError& e){invalid=e.code==-32602;}

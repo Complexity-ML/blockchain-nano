@@ -29,6 +29,7 @@ répertoire de travail du processus ; des chemins absolus évitent l'ambiguïté
 | `wire` | `frameBytes`, `blockBytes`, `attestationBytes`, `slashingBytes` |
 | `worker` | `jobs`, `payloadBytes`, `timeoutMs` |
 | `restart` | `null`, ou objet `sequence`, `digest` |
+| `clock` | `enabled` (booléen), `intervalMs`, `maximumForwardStepMs` |
 
 `profile.file` contient le profil complet décrit par
 `altair_transition_profile`, sans choix de preset implicite. Son digest doit
@@ -60,13 +61,38 @@ budgets locaux, pas un plafond de validateurs dans les règles du consensus.
 
 `altair-runtime-ready` indique la séquence et le digest au démarrage ainsi que
 `executionBound: false` et `networkProtocolActive: false`. Ce journal est un état
-initial, pas un export continu des engagements après chaque commit. La conservation
-externe des tokens et leur export opérationnel restent à intégrer. Sans engagement
+initial, pas un export continu des engagements après chaque commit. La méthode
+privée `nano_altairStatus(token)` permet de lire le token actuellement publié,
+l’heure du Store et `clockHealthy` (`null` si désactivée). Elle exige le même jeton
+que la réception et passe par la file RPC bornée. La conservation externe durable
+des tokens reste à intégrer. Sans engagement
 conservé indépendamment, un rollback complet du disque n'est pas détectable.
 
 Le service, son worker, le réacteur et la base partagent un propriétaire : les
 handles RPC gardent ces ressources vivantes, et le worker est drainé avant la
-destruction du stockage. L'horloge reste au checkpoint importé/restauré : le
-pilotage local des ticks, les messages du daemon, la récupération après perte
-d'acquittement et les essais distribués sont les prochaines étapes. Ne pas
-utiliser ce runtime comme preuve de finalité de fonds EVM.
+destruction du stockage.
+
+## Horloge locale
+
+Avec `clock.enabled: false`, l'heure reste au checkpoint importé/restauré (mode
+utile aux replays déterministes). Avec `true`, le runtime lit l'heure système UTC
+en millisecondes, effectue un premier tick puis lance un thread périodique. Il
+actualise aussi l'heure juste avant chaque message traité par le worker. Un même
+instant n'est pas commité deux fois. L'heure distante ne peut pas être injectée
+par RPC ou par l'enveloppe d'un pair.
+
+Un recul par rapport à l'heure persistée, un écart supérieur à
+`maximumForwardStepMs` ou une erreur locale bloque l'horloge jusqu'au redémarrage.
+Le worker refuse alors les traitements Altair avec une erreur locale ; le RPC de
+statut expose `clockHealthy: false` tant que le réacteur reste lisible. Une simple
+annulation de requête n'invalide pas l'horloge. Il faut résoudre l'horloge/le
+checkpoint avant de reprendre : augmenter aveuglément la borne ne constitue pas
+une vérification de fraîcheur de l'ancre.
+
+Chaque tick effectif conserve encore un snapshot complet du Store. La cadence
+`intervalMs` et les performances sous charge ne sont pas qualifiées pour la
+production ; l'absence de backlog de timers n'élimine pas cette amplification
+d'écriture. L'arrêt attend la fin du travail courant, sans garantie de délai face
+à un stockage bloqué. Les messages du daemon, la récupération après perte
+d'acquittement et les essais distribués restent ouverts. Ne pas utiliser ce
+runtime comme preuve de finalité de fonds EVM.

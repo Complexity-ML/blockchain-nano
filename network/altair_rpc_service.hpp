@@ -6,15 +6,25 @@
 // Explicitly injected core endpoint; does not activate any network profile.
 // Aggregate worker limits apply independently of the daemon's peer budget.
 class AltairRpcService {
+ nano::AltairDurableReactor& reactor_;
+ const AltairWireProfile profile_;
+ std::function<bool()> clock_healthy_;
  InboundBudget decoder_budget_; // decoder only; peer accounting stays in daemon
  AltairMessageIngress decoder_;
  AltairConsensusService service_;
  const std::chrono::milliseconds timeout_;
 public:
  AltairRpcService(nano::AltairDurableReactor& reactor,AltairWireProfile profile,
-                  size_t jobs,size_t bytes,std::chrono::milliseconds timeout=std::chrono::seconds(10)):
- decoder_(std::move(profile),decoder_budget_),service_(reactor,jobs,bytes),timeout_(timeout){
+                  size_t jobs,size_t bytes,std::chrono::milliseconds timeout=std::chrono::seconds(10),std::function<void(const std::function<void()>&)> before_message={},std::function<bool()> clock_healthy={}):
+ reactor_(reactor),profile_(std::move(profile)),clock_healthy_(std::move(clock_healthy)),decoder_(profile_,decoder_budget_),service_(reactor,jobs,bytes,std::move(before_message)),timeout_(timeout){
   if(timeout_<=std::chrono::milliseconds::zero())throw std::invalid_argument("invalid Altair RPC timeout");
+ }
+ nano::Json status(){
+  const auto current=reactor_.current();
+  return nano::Json{{"sequence",nano::quantity(nano::Int(std::to_string(current.token.sequence)))},{"digest",nano::hex(current.token.digest)},
+   {"timeMs",nano::quantity(nano::Int(std::to_string(current.state->timed.clock.time_ms)))},
+   {"chainId",profile_.chain_id},{"genesisHash",profile_.genesis_hash},{"forkDigest",profile_.fork_digest},
+   {"clockHealthy",clock_healthy_?nano::Json(clock_healthy_()):nano::Json(nullptr)},{"executionBound",false},{"networkProtocolActive",false}};
  }
  nano::Json receive(std::string_view frame,const std::function<void()>& cancelled={}){
   if(cancelled)cancelled();
