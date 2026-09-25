@@ -1432,3 +1432,31 @@ Cette qualification couvre les séquences minimal fournies, pas l'ensemble des
 combinaisons adverses d'epoch ou un réseau distribué. Le traitement des blocs
 signés Altair (notamment SyncAggregate), le replay officiel fork_choice et la
 persistance/reprise du nouveau Store restent ouverts. Aucune activation réseau.
+
+### SyncAggregate Altair — 25 septembre 2026
+
+`prepare_altair_sync_aggregate` vérifie le bitvector et la signature BLS sur la
+racine du bloc au slot précédent, avec le domaine sync committee et la version
+de fork correspondant à ce slot. Le cas sans participant exige la signature
+infinie canonique. Les clés répétées gardent leur multiplicité. Le proposant est
+dérivé du registre et du RANDAO ; récompenses et débits saturés sont appliqués
+dans l'ordre des positions, y compris lorsque le proposant est aussi membre.
+Les additions vérifient le débordement et seul un candidat SSZ privé est retourné.
+
+Les 24 cas officiels minimal du commit épinglé passent : 16 post-states identiques
+octet pour octet et huit signatures invalides rejetées. Ils couvrent notamment
+la participation vide/partielle/complète, les membres sortis ou retirables, le
+proposant dans le comité et les signatures de mauvais domaine/bloc/comité.
+Quatre mutations locales vérifient longueur, corruption et autre genesis ; cinq
+contextes invalides ou débordements et sept annulations sont aussi rejetés.
+
+L'opération suppose un état admis : clés avec preuve de possession, comité
+et sa clé agrégée cohérents et authentifiés. Le calcul direct sur les participants
+est équivalent au raccourci par clé agrégée de la spécification sous cette
+précondition. Cette opération isolée n'authentifie pas le bloc enveloppant et
+n'empêche pas sa réapplication : le pipeline complet doit assurer l'unicité.
+Transition complète de bloc Altair, replay fork_choice, persistance et réseau
+restent à terminer. Aucun changement du consensus actif.
+
+Corpus : `tests/fixtures/consensus-altair-sync-aggregate-official/`.
+Preuves : `build-cmake/qualification/altair-sync-aggregate-20260925/`.

@@ -493,3 +493,10 @@ Altair : époque complète ordonnée et process_slots ajoutés, sept séquences
 minimales officielles (100 slots) concordantes. Marqueur anti-rejeu et échec tardif
 sans publication partielle vérifiés. Transition de blocs Altair, replay fork_choice,
 durabilité et réseau encore ouverts.
+
+Altair : opération SyncAggregate implémentée et qualifiée sur les 24 cas officiels
+minimal (16 états exacts, huit signatures rejetées), avec tests de corruption,
+autre genesis, débordement et annulation. Cette étape complète la vérification
+isolée des sync aggregates, pas la transition complète des blocs ni le consensus
+réseau. L'admission doit authentifier le comité, sa clé agrégée et les PoPs.
+Voir la campagne `altair-sync-aggregate-20260925` et la feuille de route validateurs.
