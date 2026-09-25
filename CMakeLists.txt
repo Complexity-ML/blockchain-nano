@@ -1259,3 +1259,8 @@ target_link_libraries(nano-execution-payload-tests PRIVATE nano_core)
 target_compile_definitions(nano-execution-payload-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
 add_test(NAME ethereum_official_bellatrix_execution_payload COMMAND nano-execution-payload-tests)
 set_tests_properties(ethereum_official_bellatrix_execution_payload PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")
+
+add_executable(nano-execution-bridge-tests tests/test_execution_bridge.cpp)
+target_link_libraries(nano-execution-bridge-tests PRIVATE nano_core)
+add_test(NAME consensus_bellatrix_execution_candidate COMMAND nano-execution-bridge-tests)
+set_tests_properties(consensus_bellatrix_execution_candidate PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")

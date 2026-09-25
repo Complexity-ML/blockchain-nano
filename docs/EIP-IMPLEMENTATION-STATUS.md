@@ -1007,3 +1007,19 @@ critères suivants : [payload Bellatrix](BELLATRIX-EXECUTION-PAYLOAD.md). Preuve
 État : composant de format implémenté, intégration consensus–EVM non commencée
 pour ce schéma. Aucune validation d'exécution, commit atomique, activation réseau
 Bellatrix ou conformité de fork complète n'est revendiquée.
+
+### 2026-09-25 — candidat Bellatrix vérifié par l'EVM Paris
+
+L'adaptateur `prepare_bellatrix_execution` lie le payload au contexte fourni
+(parent, numéro, timestamp, RANDAO), reconstruit son hash RLP et rejoue les
+transactions signées sur une copie de l'état parent authentifié. Les engagements
+d'exécution faux sont refusés, y compris avec un hash annoncé cohérent. Les
+annulations EVM sont propagées sans publication d'état partiel. Quatre
+transactions synthétiques (types 0/1/2, stockage, REVERT), 16 payloads invalides,
+41 points d'annulation et les huit vecteurs SSZ officiels passent les deux tests
+ciblés. [Portée et preuves](BELLATRIX-EXECUTION-PAYLOAD.md).
+
+État : intégration consensus–EVM commencée au niveau du candidat isolé.
+L'appel depuis une transition Beacon Bellatrix authentifiée, la persistance
+atomique des deux états et leur reprise restent à implémenter/qualifier.
+Aucune activation réseau, clôture de fork ou aptitude production n'en découle.

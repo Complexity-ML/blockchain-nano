@@ -39,12 +39,43 @@ points d'annulation. Les artefacts se trouvent dans
 `build-cmake/qualification/bellatrix-execution-payload-20260925/`.
 Ces huit cas ne représentent pas l'ensemble du corpus SSZ Bellatrix.
 
+## Candidat d'exécution (2026-09-25)
+
+`prepare_bellatrix_execution` décode un payload sous budget et construit un bloc
+Paris. Le demandeur doit fournir un parent et son état authentifiés, le timestamp
+de slot, le RANDAO, le chain ID, une politique de rejeu et l'historique canonique
+pour `BLOCKHASH`. La fonction vérifie le lien au parent, le numéro, le temps,
+le RANDAO, le hash RLP reconstruit et les règles de frais/gaz avant le rejeu EVM.
+La racine de l'état fourni doit correspondre au parent. Les enveloppes signées
+canoniques de types 0/1/2 sont admises ; types ultérieurs et enveloppes vides sont
+refusés. Le uint256 de base fee est converti depuis son encodage little-endian.
+
+Le rejeu compare les engagements d'état, transactions, reçus, bloom et gaz. Il
+n'attribue pas de subvention PoW et travaille sur une copie de l'état parent.
+Un REVERT de contrat reste une transaction valide avec reçu d'échec ; il ne
+doit pas invalider à lui seul le bloc. Les exceptions d'annulation sont conservées
+et propagées même lorsqu'un chemin EVM les traduit en échec d'appel.
+
+`consensus_bellatrix_execution_candidate` utilise quatre transactions signées
+synthétiques couvrant les types 0/1/2, PREVRANDAO, BLOCKHASH, stockage et REVERT.
+Il vérifie les pourboires sans subvention PoW, 16 payloads invalides (dont des
+engagements faux avec hash cohérent), l'état parent incorrect, le budget et 41
+points d'annulation. Le parent reste inchangé. Ce test partage le moteur EVM avec
+son générateur : il ne constitue pas une comparaison avec un client indépendant.
+Les huit vecteurs officiels SSZ restent vérifiés séparément.
+
+Preuve : `build-cmake/qualification/bellatrix-execution-bridge-20260925/final-tests.log`.
+Le premier `tests.log` conserve l'échec d'annulation, corrigé par propagation
+persistante de l'exception dans l'adaptateur. Le binaire `nano` a été reconstruit.
+
 ## Étapes restantes
 
 Intégrer les conteneurs BeaconBlockBody/BeaconState Bellatrix, leur transition et
-les paramètres économiques correspondants ; convertir et vérifier le payload
-contre le moteur EVM ; lier parent, timestamp et RANDAO à l'état de consensus ;
+les paramètres économiques correspondants ; appeler le candidat d'exécution
+avec parent, timestamp et RANDAO issus de l'état de consensus authentifié ;
 publier puis restaurer ensemble les deux états avec preuve d'atomicité. Les
 extensions Capella/Deneb et les forks ultérieurs exigent des schémas distincts.
 Le profil Altair existant n'est pas modifié et le réseau n'accepte pas encore de
 blocs Bellatrix du fait de ce seul codec.
+L'adaptateur accepte uniquement une continuation Bellatrix après Merge ; il ne
+valide pas le bloc terminal PoW, n'active aucun fork et n'écrit aucune base.
