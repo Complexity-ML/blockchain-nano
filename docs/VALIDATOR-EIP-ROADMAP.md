@@ -1279,3 +1279,28 @@ Cette qualification est **SSZ seulement** : les octets de participation et les
 clés sont des valeurs de schéma, pas une preuve de validité de consensus/BLS.
 Les transitions Altair, le calcul des récompenses/participation/inactivité,
 les sync committees et le replay officiel fork_choice restent ouverts.
+
+### Scores d'inactivité Altair — 25 septembre 2026
+
+`prepare_altair_inactivity_updates` implémente l'opération isolée
+`process_inactivity_updates` sur les octets SSZ : epoch genesis inchangée,
+éligibilité de l'epoch précédente, participation cible à temps des membres
+non slashés, incrément du biais en cas d'absence, décrément saturé et récupération
+hors fuite d'inactivité. L'addition uint64 est contrôlée avant récupération.
+Les paramètres proviennent du preset/configuration, sans valeur réseau par défaut.
+Seuls les scores changent dans le candidat ; aucune epoch/slot n'est avancée.
+
+Les 21 états post officiels de l'opération correspondent intégralement, y compris
+les octets hors scores. Trois suites passent (inactivité, SSZ Altair, récompenses
+Phase0). Six entrées/configurations invalides, dont overflow de score et compte
+incohérent, et sept points d'annulation sont vérifiés. Corpus et empreintes :
+`tests/fixtures/consensus-altair-inactivity-official/`. Journaux :
+`build-cmake/qualification/altair-inactivity-20260925/`.
+
+Deux fixtures (`randomized_state`, `randomized_state_leaking`) contiennent cinq
+validateurs dont l'activation est UINT64_MAX mais la sortie finie. Comme dans la
+spécification de cette opération, le calcul applique les prédicats d'éligibilité
+sans revalider tout le cycle de vie. Ces fixtures **ne prouvent pas l'admission**
+de tels états. Les contrôles d'admission/authentification Altair restent à
+implémenter avant tout raccordement réseau. La composition d'epoch, les autres
+récompenses, les sync committees et le replay fork_choice demeurent ouverts.

@@ -467,3 +467,7 @@ Prérequis Altair : schéma BeaconState à 24 champs et hash_tree_root implémen
 123 vecteurs officiels minimaux concordants. Le support reste structurel :
 transitions Altair et replay fork_choice non implémentés dans ce pipeline.
 Aucun fork réseau activé par cet ajout.
+
+Altair : opération isolée de mise à jour des scores d'inactivité implémentée,
+21 post-states officiels concordants. Les fixtures synthétiques ne qualifient
+pas l'admission d'état ; composition d'epoch et exécution réseau encore ouvertes.
