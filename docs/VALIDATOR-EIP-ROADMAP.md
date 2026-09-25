@@ -2168,3 +2168,32 @@ Preuves : `build-cmake/qualification/altair-local-clock-20260925/`. Chaque tick
 réel persiste encore le Store complet : cadence, amplification d'écriture et
 performances sous charge restent ouverts. Les messages P2P Altair, les pertes
 d'acquittement et la liaison EVM restent à raccorder ; aucune activation réseau.
+
+### Tickets bornés et perte de réponse HTTP, 25 septembre 2026
+
+Le service Altair expose un ledger de tickets par session de processus, borné par
+le nombre de jobs configuré. Une reprise du même numéro/payload retrouve la
+réponse sans redispatch. Un numéro réutilisé avec un autre contenu est refusé.
+Les résultats restent présents jusqu'à retrait explicite et aucun travail actif
+n'est évincé. Un watermark interdit la réadmission des numéros retirés/anciens.
+L'annulation d'un numéro pas encore admis le réserve aussi contre un Submit HTTP
+retardé. Pour les travaux actifs, la décision de fin reste distincte de la demande
+d'annulation, et un commit déjà fait n'est jamais converti en rejet.
+
+Les endpoints privés Submit/Job/Cancel/Forget/Jobs complètent Status. Le callback
+de fin publie atomiquement le résultat, y compris avec une fin synchrone ou un
+callback doublé. Un résultat local_failure n'est pas présenté comme un rejet
+consensus. Le ledger ne prétend pas persister les reçus : une nouvelle session
+après redémarrage implique un résultat inconnu à rapprocher du Store durable.
+
+Les suites RPC, HTTP, admission wire, HTTP Altair privé et ledger passent. Le test
+HTTP envoie un bloc, vérifie son admission depuis une autre connexion, ferme la
+première sans lire sa réponse, puis resoumet le même ticket et récupère son
+résultat. Le contrôle de séquence du checkpoint prouve un seul commit de ce bloc.
+Les contrôles d'accès des cinq nouveaux endpoints sont vérifiés. Le test natif
+couvre saturation, refus d'effacement actif, retry, conflit de contenu, annulation,
+callback doublé, nouvelle session et admission retardée après Cancel.
+
+Preuves : `build-cmake/qualification/altair-receipt-recovery-20260925/`.
+Le daemon n'appelle pas encore ce protocole IPC. La récupération après changement
+de session, l'admission P2P complète et la liaison EVM restent ouvertes.

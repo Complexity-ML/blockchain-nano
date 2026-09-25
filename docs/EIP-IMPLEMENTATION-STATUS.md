@@ -669,3 +669,11 @@ suites passent, dont huit gardes temporelles déterministes. Les écritures rest
 des snapshots complets ; ni la tenue en charge ni la synchronisation d'horloges
 multi-hôtes ne sont qualifiées. Aucun protocole P2P Altair ni liaison EVM activés.
 Voir `docs/ALTAIR-RUNTIME.md` et la feuille validateurs.
+
+Complément IPC Altair (25 septembre 2026) : tickets bornés par session, retry sans
+redispatch, consultation/annulation/retrait authentifiés et protection contre un
+Submit retardé après annulation. La perte d'une réponse HTTP après admission est
+testée avec un seul commit du bloc officiel. Les tickets ne persistent pas après
+redémarrage ; leur rapprochement avec l'état durable et leur usage par le daemon
+restent ouverts. Aucun changement d'activation EIP/réseau. Voir la section tickets
+de `docs/ALTAIR-RUNTIME.md`.

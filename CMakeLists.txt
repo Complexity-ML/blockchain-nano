@@ -1134,3 +1134,8 @@ if(NANO_NETWORK_EXECUTABLE)
  add_test(NAME consensus_altair_managed_runtime COMMAND nano-altair-runtime-tests $<TARGET_FILE:nano> ${NANO_NETWORK_EXECUTABLE})
  set_tests_properties(consensus_altair_managed_runtime PROPERTIES TIMEOUT 90 LABELS "qualification_consensus_ethereum")
 endif()
+
+add_executable(nano-altair-receipts-tests tests/test_altair_receipts.cpp)
+target_link_libraries(nano-altair-receipts-tests PRIVATE nano_core)
+add_test(NAME consensus_altair_receipts COMMAND nano-altair-receipts-tests)
+set_tests_properties(consensus_altair_receipts PROPERTIES TIMEOUT 30 LABELS "qualification_consensus_ethereum")

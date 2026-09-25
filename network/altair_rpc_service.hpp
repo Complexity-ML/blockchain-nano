@@ -1,5 +1,6 @@
 #pragma once
 #include "altair_consensus_service.hpp"
+#include "altair_receipts.hpp"
 #include "nano/rpc.hpp"
 #include <future>
 
@@ -13,17 +14,18 @@ class AltairRpcService {
  AltairMessageIngress decoder_;
  AltairConsensusService service_;
  const std::chrono::milliseconds timeout_;
+ AltairReceipts receipts_;
 public:
  AltairRpcService(nano::AltairDurableReactor& reactor,AltairWireProfile profile,
                   size_t jobs,size_t bytes,std::chrono::milliseconds timeout=std::chrono::seconds(10),std::function<void(const std::function<void()>&)> before_message={},std::function<bool()> clock_healthy={}):
- reactor_(reactor),profile_(std::move(profile)),clock_healthy_(std::move(clock_healthy)),decoder_(profile_,decoder_budget_),service_(reactor,jobs,bytes,std::move(before_message)),timeout_(timeout){
+ reactor_(reactor),profile_(std::move(profile)),clock_healthy_(std::move(clock_healthy)),decoder_(profile_,decoder_budget_),service_(reactor,jobs,bytes,std::move(before_message)),timeout_(timeout),receipts_(jobs){
   if(timeout_<=std::chrono::milliseconds::zero())throw std::invalid_argument("invalid Altair RPC timeout");
  }
  nano::Json status(){
   const auto current=reactor_.current();
   return nano::Json{{"sequence",nano::quantity(nano::Int(std::to_string(current.token.sequence)))},{"digest",nano::hex(current.token.digest)},
    {"timeMs",nano::quantity(nano::Int(std::to_string(current.state->timed.clock.time_ms)))},
-   {"chainId",profile_.chain_id},{"genesisHash",profile_.genesis_hash},{"forkDigest",profile_.fork_digest},
+   {"admissionSession",receipts_.session()},{"chainId",profile_.chain_id},{"genesisHash",profile_.genesis_hash},{"forkDigest",profile_.fork_digest},
    {"clockHealthy",clock_healthy_?nano::Json(clock_healthy_()):nano::Json(nullptr)},{"executionBound",false},{"networkProtocolActive",false}};
  }
  nano::Json receive(std::string_view frame,const std::function<void()>& cancelled={}){
@@ -44,6 +46,12 @@ public:
   if(decision==AltairWork::Decision::local_failure)throw nano::RpcError(-32603,"Altair local processing failed");
   return nano::Json{{"accepted",decision==AltairWork::Decision::accepted}};
  }
+ nano::Json submit(const std::string& session,uint64_t sequence,std::string_view frame){
+  auto message=decoder_.decode(frame);if(!message)throw nano::RpcError(-32602,"Invalid Altair envelope");
+  return receipts_.submit(session,sequence,std::move(*message),service_.dispatcher());
+ }
+ nano::Json job(const std::string& session,uint64_t sequence,bool cancel=false,bool retire=false){return receipts_.get(session,sequence,cancel,retire);}
+ nano::Json jobs(){return receipts_.list();}
  void stop(){service_.stop();}
  void join(){service_.join();}
 };

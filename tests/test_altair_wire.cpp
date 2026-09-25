@@ -9,7 +9,7 @@
 using namespace test;using namespace test::phase0_minimal;
 struct RunningAltairHttp {HttpServer& server;std::thread thread;explicit RunningAltairHttp(HttpServer& s):server(s),thread([&s]{s.run();}){}~RunningAltairHttp(){server.stop();thread.join();}};
 int main(){try{
- const bool http_mode=std::getenv("NANO_TEST_ALTAIR_HTTP")!=nullptr;
+ const bool http_mode=std::getenv("NANO_TEST_ALTAIR_HTTP")!=nullptr;uint64_t ticket_sequence=0;std::string admission_session;bool dropped_reply=false;
  const fs::path fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",corpus=fixtures/"consensus-altair-fork-head-official",dir=corpus/"chain_no_attestations";
  const auto manifest=load(corpus/"manifest.json");for(const auto& row:manifest.at("cases"))if(row.at("name")=="chain_no_attestations")for(const auto& [path,info]:row.at("files").items())check(hex(sha256(binary(corpus/path))).substr(2)==info.at("sha256").get<std::string>(),"fixture digest");
  const auto transition=altair_transition_rules(fixtures);const auto config=read(corpus/"minimal-config-v1.6.0-beta.0.yaml");const auto duration=parameter(config,"SECONDS_PER_SLOT")*1000;
@@ -28,7 +28,12 @@ int main(){try{
   server=std::make_unique<HttpServer>(*rpc,"127.0.0.1",0);running=std::make_unique<RunningAltairHttp>(*server);client=std::make_unique<PersistentRpc>(server->port());
   const auto token=reactor.current().token;
   const auto status=client->call("nano_altairStatus",Json::array({"qualification-only-token"}));
+  admission_session=status.at("admissionSession").get<std::string>();
   check(status.at("digest")==hex(token.digest)&&status.at("clockHealthy").is_null(),"private status differs from checkpoint");
+  for(const auto* method:{"nano_altairSubmit","nano_altairJob","nano_altairCancel","nano_altairForget","nano_altairJobs"}){
+   auto params=Json::array({"wrong"});if(std::string(method)!="nano_altairJobs"){params.push_back(admission_session);params.push_back("0x1");}if(std::string(method)=="nano_altairSubmit")params.push_back("{}");
+   bool refused=false;try{client->call(method,params);}catch(const PersistentRpcError& e){refused=e.code==-32001;}check(refused,"ticket method bypasses authentication");
+  }
   bool status_unauthorized=false;try{client->call("nano_altairStatus",Json::array({"wrong"}));}catch(const PersistentRpcError& e){status_unauthorized=e.code==-32001;}check(status_unauthorized,"status bypasses authentication");
 
   bool unauthorized=false;try{client->call("nano_altairReceive",Json::array({"wrong","{}"}));}catch(const PersistentRpcError& e){unauthorized=e.code==-32001;}
@@ -45,8 +50,23 @@ int main(){try{
   if(client){
    const auto kind=m.kind==AltairWireKind::block?"block":m.kind==AltairWireKind::attestation?"attestation":"attester_slashing";
    const auto encoded=Json{{"chainId",profile.chain_id},{"genesisHash",profile.genesis_hash},{"forkDigest",profile.fork_digest},{"kind",kind},{"ssz",hex(m.ssz)}}.dump();
-   try{return client->call("nano_altairReceive",Json::array({"qualification-only-token",encoded})).at("accepted").get<bool>()?AltairWork::Decision::accepted:AltairWork::Decision::rejected;}
-   catch(const PersistentRpcError& e){if(e.code==-32603)return AltairWork::Decision::local_failure;throw;}
+   const auto sequence=quantity(Int(std::to_string(++ticket_sequence)));
+   const auto args=Json::array({"qualification-only-token",admission_session,sequence,encoded});
+   if(m.kind==AltairWireKind::block&&!dropped_reply){
+    // Send once, establish admission independently, then discard the unread reply.
+    namespace http=boost::beast::http;boost::asio::io_context io;boost::beast::tcp_stream socket(io);
+    socket.connect({boost::asio::ip::make_address("127.0.0.1"),server->port()});
+    http::request<http::string_body> request(http::verb::post,"/",11);request.set(http::field::host,"127.0.0.1");
+    request.body()=Json{{"jsonrpc","2.0"},{"id",1},{"method","nano_altairSubmit"},{"params",args}}.dump();request.prepare_payload();http::write(socket,request);
+    until([&]{return client->call("nano_altairJob",Json::array({"qualification-only-token",admission_session,sequence})).at("state")!="unknown";},"Altair admitted before discarded reply");
+    boost::beast::error_code ignored;socket.socket().close(ignored);dropped_reply=true;
+   }
+   const auto submitted=client->call("nano_altairSubmit",args);check(submitted.at("state")!="limited"&&submitted.at("state")!="retired","HTTP ticket admission failed");
+   const auto retry=client->call("nano_altairSubmit",args);check(retry.at("payloadDigest")==submitted.at("payloadDigest"),"retry changed ticket identity");
+   Json receipt;until([&]{receipt=client->call("nano_altairJob",Json::array({"qualification-only-token",admission_session,sequence}));return receipt.at("state")=="completed";},"Altair ticket completed");
+   client->call("nano_altairForget",Json::array({"qualification-only-token",admission_session,sequence}));
+   check(client->call("nano_altairSubmit",args).at("state")=="retired","retired HTTP ticket replayed");
+   const auto decision=receipt.at("decision");return decision=="accepted"?AltairWork::Decision::accepted:decision=="rejected"?AltairWork::Decision::rejected:AltairWork::Decision::local_failure;
   }
   auto reply=std::make_shared<std::promise<AltairWork::Decision>>();auto future=reply->get_future();
   check(dispatch(m,std::make_shared<std::atomic<bool>>(false),[reply](auto decision){reply->set_value(decision);}),"service queue refused bounded fixture");
@@ -92,5 +112,5 @@ int main(){try{
   try{client->call("nano_altairReceive",Json::array({"qualification-only-token",base.dump()}));}catch(const PersistentRpcError& e){unavailable=e.code==-32005;}
   check(unavailable&&client->call("eth_chainId")=="0x539","stopped Altair service blocks ordinary RPC");
  }
- std::cout<<Json{{"httpTransport",http_mode},{"durableWorker",true},{"unavailableReactorNotAcknowledged",true},{"scenario","altair-wire-admission"},{"rejected",rejected},{"officialBlocksCommitted",accepted},{"limited",limited},{"realLibp2pNetwork",false},{"networkActive",false}}.dump()<<'\n';
+ std::cout<<Json{{"discardedAdmissionReply",dropped_reply},{"httpTransport",http_mode},{"durableWorker",true},{"unavailableReactorNotAcknowledged",true},{"scenario","altair-wire-admission"},{"rejected",rejected},{"officialBlocksCommitted",accepted},{"limited",limited},{"realLibp2pNetwork",false},{"networkActive",false}}.dump()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

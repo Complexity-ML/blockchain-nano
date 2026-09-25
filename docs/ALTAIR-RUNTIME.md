@@ -96,3 +96,44 @@ d'écriture. L'arrêt attend la fin du travail courant, sans garantie de délai 
 à un stockage bloqué. Les messages du daemon, la récupération après perte
 d'acquittement et les essais distribués restent ouverts. Ne pas utiliser ce
 runtime comme preuve de finalité de fonds EVM.
+
+## Tickets de traitement et réponses perdues
+
+Le daemon pourra utiliser les méthodes privées suivantes, toutes protégées par
+le même jeton. `session` provient de `nano_altairStatus` (`admissionSession`) ou
+`nano_altairJobs`, et `sequence` est une quantité positive canonique.
+
+| Méthode | Paramètres après le token | Effet |
+| --- | --- | --- |
+| `nano_altairSubmit` | session, sequence, enveloppe encodée | Admet un travail ou retrouve son ticket existant |
+| `nano_altairJob` | session, sequence | Lit le résultat sans relancer le travail |
+| `nano_altairCancel` | session, sequence | Signale l'annulation ou interdit une admission encore retardée |
+| `nano_altairForget` | session, sequence | Retire uniquement un résultat terminé |
+| `nano_altairJobs` | aucun | Liste bornée des tickets et numéro le plus élevé réservé |
+
+Les admissions utilisent des numéros croissants. Réutiliser un numéro existant
+avec le même payload retrouve son résultat ; un contenu différent est refusé.
+L'appelant doit ordonner ses admissions : un numéro ancien absent de la table
+ne peut pas démarrer après un numéro plus élevé. Les états sont `pending`,
+`completed`, `limited`, `unknown` ou `retired`. Un ticket terminé distingue
+`accepted`, `rejected` et `local_failure`. `retired` signifie que ce numéro ne
+peut plus être admis, **pas** que son effet historique est connu.
+
+La table est bornée par `worker.jobs`. Les tickets terminés continuent à compter
+jusqu'à leur retrait explicite ; les tickets actifs ne sont jamais évincés. Un
+retrait perdu peut être réitéré. Un Cancel sur un numéro encore inconnu empêche
+un Submit HTTP retardé de démarrer ce numéro après l'annulation. Pour un travail
+déjà actif, Cancel n'est pas une preuve de fin : il faut attendre `completed`.
+Une annulation après commit ne réécrit pas une acceptation en rejet.
+
+La connexion Submit peut disparaître sans annuler le travail admis. Rechercher
+ou resoumettre **le même ticket**, au lieu d'inventer un nouveau numéro, permet
+de récupérer la décision après perte de réponse. Les tickets sont locaux au
+processus et ne sont pas persistés. Après redémarrage, la session change ; les
+anciens tickets sont refusés et leur résultat doit être rapproché de l'état
+consensus durable. Ne pas interpréter un changement de session comme un rejet,
+et ne pas rejouer aveuglément les anciens messages sous de nouveaux numéros.
+
+Le ledger et son trajet HTTP sont qualifiés, mais le daemon n'utilise pas encore
+ces appels. La politique de récupération après changement de session et la
+propagation P2P restent à intégrer.
