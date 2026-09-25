@@ -484,3 +484,7 @@ Altair : sélection/rotation des sync committees ajoutée, cinq post-states offi
 concordants. Répétitions de membres conservées ; budget local d'échantillonnage
 explicite. Le traitement SyncAggregate des blocs et la composition d'epoch restent
 ouverts, sans activation réseau.
+
+Altair : rotation de participation isolée implémentée, douze post-states officiels
+concordants. Opération non idempotente : application unique et persistance doivent
+être assurées par la composition d'epoch, encore ouverte.

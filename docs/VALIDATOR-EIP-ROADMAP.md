@@ -1383,3 +1383,22 @@ Journaux : `build-cmake/qualification/altair-sync-20260925/`.
 Cette étape ne traite pas encore `SyncAggregate` dans les blocs. Rotation de
 participation, composition d'epoch, transition Altair complète, replay officiel
 fork_choice et réseau restent à compléter.
+
+### Rotation de participation Altair — 25 septembre 2026
+
+`prepare_altair_participation_updates` copie les indicateurs courants vers la
+participation précédente puis remet les indicateurs courants à zéro, après
+validation SSZ et cohérence des tailles avec le registre. L'état source reste
+inchangé ; seul le candidat contient la rotation.
+
+Les douze post-states officiels correspondent intégralement, couvrant listes
+nulles, remplies, aléatoires et registres plus grands. Trois rejets et sept points
+d'annulation sont vérifiés ; les suites de récompenses et finalité passent aussi.
+Un test confirme explicitement que la rotation répétée n'est pas idempotente :
+le second appel effacerait la participation précédente. La composition d'epoch
+et son marqueur devront garantir l'application unique avant raccordement réseau.
+
+Corpus : `tests/fixtures/consensus-altair-participation-official/`.
+Journaux : `build-cmake/qualification/altair-participation-20260925/`.
+Cette opération ne ferme ni l'assemblage de l'epoch ni les contrôles d'admission,
+la transition de bloc Altair, le replay fork_choice ou la durabilité.

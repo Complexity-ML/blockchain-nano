@@ -108,3 +108,17 @@ Bytes prepare_altair_justification_finalization(std::span<const uint8_t> b,const
  out[previous_at+8]=bits;if(checkpoint)checkpoint();return out;
 }
 }
+
+namespace nano {
+Bytes prepare_altair_participation_updates(std::span<const uint8_t> b,const AltairStateLimits& l,
+ const std::function<void()>& checkpoint){
+ altair_beacon_state_root(b,l,checkpoint);
+ auto number=[&](size_t at){uint64_t n=0;for(size_t j=0;j<4;++j)n|=uint64_t(b[at+j])<<(8*j);return n;};
+ const size_t historical=176+64*l.slots_per_historical_root,previous_at=historical+96+32*l.epochs_per_historical_vector+8*l.epochs_per_slashings_vector;
+ const auto validators=number(historical+88),balances=number(historical+92),previous=number(previous_at),current=number(previous_at+4),scores=number(previous_at+129),count=(balances-validators)/121;
+ if((previous-balances)/8!=count||current-previous!=count||scores-current!=count||(b.size()-scores)/8!=count)throw std::invalid_argument("incoherent Altair participation lengths");
+ Bytes out(b.begin(),b.end());
+ for(size_t i=0;i<count;++i){if(checkpoint)checkpoint();out[previous+i]=b[current+i];out[current+i]=0;}
+ if(checkpoint)checkpoint();return out;
+}
+}

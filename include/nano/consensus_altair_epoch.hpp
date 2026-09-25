@@ -37,4 +37,8 @@ struct AltairSyncRules {
 // limit, not a consensus validator cap. Keeps repeated selected public keys.
 Bytes prepare_altair_sync_updates(std::span<const uint8_t>,const AltairStateLimits&,
  const AltairSyncRules&,uint64_t maximum_trials,const std::function<void()>& checkpoint={});
+// Isolated participation rotation on a coherent authenticated state. Call once
+// at the prescribed point of epoch processing; no replay guard is supplied here.
+Bytes prepare_altair_participation_updates(std::span<const uint8_t>,const AltairStateLimits&,
+ const std::function<void()>& checkpoint={});
 }
