@@ -45,10 +45,11 @@ Preuves : `build-cmake/qualification/bellatrix-reactor-20260925/`.
 
 ## Périmètre restant
 
-Ce coordinateur n'est pas encore un service P2P, n'émet pas de signatures locales
-et n'active aucun fork réseau. Restent les duties et le journal anti-slashing du
-signataire Bellatrix, le transport/rattrapage, la qualification des pannes et des
-partitions avec plusieurs processus. Les snapshots complets à chaque événement
+Ce coordinateur n'est pas encore un service P2P et n'active aucun fork réseau.
+Les signatures locales et leurs duties sont raccordées au journal anti-slashing :
+voir [BELLATRIX-LOCAL-SIGNING.md](BELLATRIX-LOCAL-SIGNING.md). Restent la boucle
+autonome, le transport/rattrapage et la qualification des pannes/partitions avec
+plusieurs processus. Les snapshots complets à chaque événement
 et la conservation des blocs sont un socle fonctionnel, sans qualification de
 capacité ni pruning des branches. Les preuves d'attester slashing reçues mettent
 à jour l'état mais ne disposent pas encore d'une archive dédiée à leur rediffusion.

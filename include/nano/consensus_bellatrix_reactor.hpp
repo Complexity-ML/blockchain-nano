@@ -2,6 +2,7 @@
 #include "nano/consensus_bellatrix_store_snapshot.hpp"
 #include "nano/storage.hpp"
 #include <memory>
+#include "nano/consensus_beacon_signer.hpp"
 namespace nano {
 using BellatrixSignedBlockArchive=std::map<ConsensusRoot,std::shared_ptr<const Bytes>>;
 using BellatrixSignedVoteArchive=std::map<ConsensusRoot,std::shared_ptr<const Bytes>>;
@@ -31,6 +32,30 @@ public:
  BellatrixDurableReactor(const BellatrixDurableReactor&)=delete;
  BellatrixDurableReactor& operator=(const BellatrixDurableReactor&)=delete;
  BellatrixPublishedStore current() const;
+ // Current-slot local duty; no caller-supplied vote fields or fork domain.
+ // local_clock must come from the validator service's independent local clock,
+ // never a peer. Holds Store/journal gates through the bounded signing callback.
+ // Samples must not regress within an attempt; time and cancellation are
+ // checked again after journal verification, before returning a signature.
+ // Callback must not re-enter either coordinator. No autonomous duty or outbox.
+ std::optional<Phase0SignedAttestation> sign_attestation(uint64_t validator_index,
+  uint64_t expected_slot,const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected_store,
+  BeaconSigningJournal&,const BeaconSigningJournal::Signer&,
+  const std::function<void()>& checkpoint={});
+ // Construct against the current fork-choice head and sign only after full
+ // body validation. Candidate body includes an already signed RANDAO reveal.
+ // No automatic publication: returned wire block must use normal admission.
+ std::optional<Bytes> sign_proposal(uint64_t validator_index,uint64_t expected_slot,
+  std::span<const uint8_t> body,const std::function<uint64_t()>& local_clock,
+  const ForkCheckpointToken& expected_store,BeaconSigningJournal&,
+  const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={});
+ // Epoch RANDAO reveal for the selected current-slot proposer only. Domain
+ // and key derived locally. Uses the journal gate/retirement check; RANDAO is
+ // not a slashable proposal/vote and does not advance those reservations.
+ std::optional<Bytes> sign_randao(uint64_t validator_index,uint64_t expected_slot,
+  const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected_store,
+  BeaconSigningJournal&,const BeaconSigningJournal::Signer&,
+  const std::function<void()>& checkpoint={});
  void tick(uint64_t time_ms,const std::function<void()>& checkpoint={});
  bool block(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
  // Wire admission uses the configured fork schema/committee limit. There is

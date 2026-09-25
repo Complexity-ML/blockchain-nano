@@ -6,6 +6,7 @@
 #include "nano/consensus_bellatrix_store_snapshot.hpp"
 #include "nano/storage.hpp"
 #include "nano/consensus_bellatrix_reactor.hpp"
+#include "nano/consensus_bellatrix_duty.hpp"
 #include "blst.h"
 #ifdef __APPLE__
 extern "C" void nano_test_arm_sync_fault(const char*);
@@ -51,6 +52,9 @@ int main(){try{
  const Block execution_genesis=parent;const State genesis_state=state;std::vector<BellatrixForkStore> reorg_stores;
  const BellatrixStoreSnapshotLimits reactor_limits{32*1024*1024,32,128,128,4*1024*1024,8*1024*1024,64,100000};
  Temp reactor_location;auto reactor_disk=std::make_unique<ChainStore>(reactor_location/"chain");reactor_disk->bind_chain(1337,execution_genesis.header.hash(),"bellatrix-reactor-test");reactor_disk->commit(execution_genesis,genesis_state,{});std::unique_ptr<BellatrixDurableReactor> reactor;
+ std::map<uint64_t,std::unique_ptr<ChainStore>> signer_disks;std::map<uint64_t,std::unique_ptr<BeaconSigningJournal>> signers;
+ auto local_journal=[&](uint64_t index)->BeaconSigningJournal&{if(!signers.contains(index)){signer_disks[index]=std::make_unique<ChainStore>(reactor_location/("key-"+std::to_string(index)));signers[index]=std::make_unique<BeaconSigningJournal>(*signer_disks[index],1337,execution_genesis.header.hash(),genesis_root,Key(index).public_key,slots);}return *signers.at(index);};
+ size_t local_proposals=0,local_attestations=0,signature_refusals=0;
  std::optional<BellatrixForkStore> store;size_t reorgs=0,store_cancellations=0;
  size_t blocks=0,refusals=0,cancellations=0;Bytes first_proof;uint64_t offender=0;
  for(uint64_t slot=1;slot<=slots+1;++slot){
@@ -76,6 +80,23 @@ int main(){try{
   const auto built=prepare_bellatrix_unsigned_block(beacon,slot,proposer,parent_root,contents,r,parent.header,state,history,64,100000);check(built.has_value(),"Bellatrix construction rejected");
   auto sign_message=[&](Bytes message,uint64_t index=UINT64_MAX){const auto owner=index==UINT64_MAX?proposer:index;Key k(owner);const auto bytes=std::span<const uint8_t>(message);const ConsensusBeaconHeader h{little(message,0,8),little(message,8,8),root_at(message,16),root_at(message,48),bellatrix_beacon_body_root(bytes.subspan(84),r.consensus.body,l.sync_committee_size,r.execution,r.consensus.maximum_block_bytes)};const auto sig=k.sign(consensus_signing_root(consensus_beacon_header_root(h),consensus_domain({0,0,0,0},version,genesis_root)));Bytes wire(100,0);put(wire,0,100,4);std::copy(sig.begin(),sig.end(),wire.begin()+4);wire.insert(wire.end(),message.begin(),message.end());return wire;};
   auto wire=sign_message(built->message_ssz);size_t calls=0;
+  if(slot>1){
+   const auto now=(genesis_time+slot*seconds)*1000;reactor->tick(now);const auto commitment=reactor->current().token;auto& journal=local_journal(proposer);size_t signature_calls=0;
+   auto signer=[&](const ConsensusRoot& root){++signature_calls;return signing.sign(root);};
+   const auto randao_signature=reactor->sign_randao(proposer,slot,[&]{return now;},commitment,journal,signer);check(randao_signature&&*randao_signature==reveal,"local RANDAO differs");
+   const auto local=reactor->sign_proposal(proposer,slot,contents,[&]{return now;},commitment,journal,signer);check(local&&*local==wire,"local signed Bellatrix block differs");++local_proposals;
+   if(slot==2){
+    auto refuse=[&](auto action){const auto before=signature_calls;bool rejected=false;try{rejected=!action().has_value();}catch(const std::exception&){rejected=true;}check(rejected&&signature_calls==before,"unsafe local signature emitted");++signature_refusals;};
+    auto stale=commitment;++stale.sequence;refuse([&]{return reactor->sign_proposal(proposer,slot,contents,[&]{return now;},stale,journal,signer);});
+    refuse([&]{return reactor->sign_proposal(proposer,slot,contents,[&]{return now+seconds*1000;},commitment,journal,signer);});
+    auto conflicting=contents;conflicting[168]^=1;refuse([&]{return reactor->sign_proposal(proposer,slot,conflicting,[&]{return now;},commitment,journal,signer);});
+    const auto saved=journal.commitment();signers.erase(proposer);signer_disks.erase(proposer);signer_disks[proposer]=std::make_unique<ChainStore>(reactor_location/("key-"+std::to_string(proposer)));signers[proposer]=std::make_unique<BeaconSigningJournal>(*signer_disks[proposer],1337,execution_genesis.header.hash(),genesis_root,signing.public_key,slots,saved);
+    refuse([&]{return reactor->sign_proposal(proposer,slot,conflicting,[&]{return now;},commitment,*signers.at(proposer),signer);});
+    uint64_t live_clock=now;bool expired=false;try{reactor->sign_proposal(proposer,slot,contents,[&]{return live_clock;},commitment,*signers.at(proposer),[&](const ConsensusRoot& root){auto signature=signing.sign(root);live_clock+=seconds*1000;return signature;});}catch(const std::runtime_error&){expired=true;}check(expired,"proposal escaped after signing provider crossed slot boundary");++signature_refusals;
+
+   }
+  }
+
   const auto received=prepare_bellatrix_state_transition(beacon,wire,r,parent.header,state,history,64,100000,[&]{++calls;});
   check(received&&received->consensus==built->post.consensus&&received->execution.state.root()==expected.root(),"Bellatrix signed transition differs");
   check(received->execution.state.get_storage(target,0)==Int(blocks+1)&&received->execution.receipts[0].success,"EVM write missing");
@@ -118,6 +139,10 @@ int main(){try{
    bool slots_budget=false;try{prepare_bellatrix_state_transition(beacon,wire,r,parent.header,state,history,0,100000);}catch(const std::length_error&){slots_budget=true;}check(slots_budget,"signed transition slots budget ignored");
   }
   if(slot==slots+1){
+
+   const auto current=reactor->current();bool assigned=false;
+   for(uint64_t index=0;index<64;++index){const auto duty=prepare_bellatrix_attestation_duty(*current.state,fork_rules,index,slot,64,100000);if(!duty)continue;assigned=true;Key voter(index);auto& journal=local_journal(index);const auto vote=reactor->sign_attestation(index,slot,[&]{return (genesis_time+slot*seconds)*1000;},current.token,journal,[&](const ConsensusRoot& root){return voter.sign(root);});check(vote&&vote->data==duty->attestation.data&&vote->signature==voter.sign(consensus_signing_root(consensus_attestation_root(vote->data),consensus_domain({1,0,0,0},duty->fork_version,duty->genesis_root))),"local attestation mismatch");++local_attestations;break;}
+   check(assigned,"no local attester assignment");
    const auto control=prepare_bellatrix_unsigned_block(beacon,slot,proposer,parent_root,body({}),r,parent.header,state,history,64,100000);check(control.has_value(),"slashing control failed");
    // A second signed block has a different EVM transfer and no slashing proof.
    auto side_execution=execution;side_execution.transactions.clear();auto side_tx=tx;side_tx.value=7;side_execution.transactions.push_back(SignedTransaction::sign(side_tx,key));State side_state=state;ExecutionEngine(r.chain_id,history,EvmRevision::Paris,r.replay_policy).execute_block(side_state,side_execution,false);
@@ -179,5 +204,5 @@ int main(){try{
   {ChainStore disk(database);const auto persisted=disk.fork_checkpoint(1337,execution_genesis.header.hash(),limits.envelope_bytes,token);check(persisted.has_value(),"Bellatrix checkpoint lost");const auto restored=bellatrix_store_from_snapshot(persisted->snapshot,persisted->token.digest,fork_rules,limits);const auto& selected=bellatrix_fork_head(restored,fork_rules);disk_tip=selected.execution_block.header.hash();check(disk.latest()->header.hash()==disk_tip&&disk.state_at(selected.execution_block.header.number)->root()==selected.execution_state.root(),"Bellatrix recovery split Beacon/EVM");check(disk.receipt(selected.execution_block.transactions[0].hash())->block_hash==disk_tip,"Bellatrix recovery receipt mismatch");}
  }
 
- std::cout<<Json{{"scenario","signed-bellatrix-evm-chain"},{"blocks",blocks},{"validators",64},{"invalidSignedBlocks",refusals},{"cancellations",cancellations},{"doubleProposalSlashed",true},{"pairedExecutionReorgs",reorgs},{"storeCancellations",store_cancellations},{"forkBlocks",store->blocks.size()},{"durableCommit",true},{"durableReactor",true},{"reactorSyncErrorTested",reactor_sync_error},{"reactorCancellations",reactor_cancellations},{"snapshotRefusals",snapshot_refusals},{"pairedCheckpointReopens",reorg_stores.size()},{"networkActive",false}}.dump()<<'\n';
+ std::cout<<Json{{"scenario","signed-bellatrix-evm-chain"},{"blocks",blocks},{"validators",64},{"invalidSignedBlocks",refusals},{"cancellations",cancellations},{"doubleProposalSlashed",true},{"pairedExecutionReorgs",reorgs},{"storeCancellations",store_cancellations},{"forkBlocks",store->blocks.size()},{"durableCommit",true},{"durableReactor",true},{"localProposals",local_proposals},{"localAttestations",local_attestations},{"localSignatureRefusals",signature_refusals},{"reactorSyncErrorTested",reactor_sync_error},{"reactorCancellations",reactor_cancellations},{"snapshotRefusals",snapshot_refusals},{"pairedCheckpointReopens",reorg_stores.size()},{"networkActive",false}}.dump()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

@@ -16,6 +16,7 @@ private:
  // Qualification harness supplies upstream signing roots without a private key.
  friend struct BeaconSigningJournalFixtureAccess;
  friend class AltairDurableReactor;
+ friend class BellatrixDurableReactor;
  void reserve_proposal(uint64_t,const ConsensusRoot&); // mutex held
  void reserve_attestation(uint64_t,uint64_t,const ConsensusRoot&); // mutex held
  struct Proposal {uint64_t slot;std::optional<ConsensusRoot> root;bool operator==(const Proposal&)const=default;};

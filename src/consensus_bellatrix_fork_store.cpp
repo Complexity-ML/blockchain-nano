@@ -203,3 +203,7 @@ const BellatrixForkBlock& bellatrix_fork_head(const BellatrixForkStore& store,co
 namespace nano {
 void validate_bellatrix_execution_record(const BellatrixForkBlock& b,const BellatrixForkBlockRules& r,const std::function<void()>& c){validate_rules(r);bellatrix_fork_block_context(b.state,b.header,epoch_rules(r),r.transition.consensus.state,c);validate_execution(b,r,c);}
 }
+
+namespace nano {
+Bytes bellatrix_execution_history(const BellatrixForkStore& s,const ConsensusRoot& p,const Int& h,const std::function<void()>& c){return branch_hash(s,p,h,c);}
+}

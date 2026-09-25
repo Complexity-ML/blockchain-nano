@@ -72,3 +72,9 @@ namespace nano {
 void validate_bellatrix_execution_record(const BellatrixForkBlock&,const BellatrixForkBlockRules&,
  const std::function<void()>& checkpoint={});
 }
+
+namespace nano {
+// Branch-bound history for local execution; Store and parent must be authenticated.
+Bytes bellatrix_execution_history(const BellatrixForkStore&,const ConsensusRoot& parent,
+ const Int& height,const std::function<void()>& checkpoint={});
+}

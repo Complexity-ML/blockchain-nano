@@ -1115,3 +1115,12 @@ annulations avant écriture, auteur obsolète et erreur de sync sur macOS.
 Voir [BELLATRIX-DURABLE-REACTOR.md](BELLATRIX-DURABLE-REACTOR.md). La signature locale,
 le transport Bellatrix et la qualification distribuée restent ouverts. Aucun
 fork réseau n'est activé et la production n'est pas déclarée qualifiée.
+
+### 2026-09-25 — Signature locale Bellatrix liée au Store
+
+Le coordinateur dérive les duties, construit/exécute les propositions et utilise
+le journal anti-slashing durable avant signature. Qualification locale : huit
+propositions/reveals, une attestation et cinq refus, dont une double proposition
+après réouverture du journal et une expiration pendant la signature. Voir
+[BELLATRIX-LOCAL-SIGNING.md](BELLATRIX-LOCAL-SIGNING.md). La boucle autonome et le
+transport réseau Bellatrix restent à raccorder ; pas d'activation de production.
