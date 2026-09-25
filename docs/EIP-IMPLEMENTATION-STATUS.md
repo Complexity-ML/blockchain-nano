@@ -1054,3 +1054,22 @@ rollover historique. [Sources, preuves et limites](BELLATRIX-SLOTS.md).
 État : avancement slots/epochs implémenté et qualifié sur ce corpus ; traitement
 signé du bloc Bellatrix, admission dans le choix de branche et persistance
 Beacon–EVM conjointe toujours à terminer. Aucune aptitude production déduite.
+
+### 2026-09-25 — bloc Bellatrix signé avec transactions EVM
+
+`prepare_bellatrix_state_transition` raccorde maintenant slots/epochs, signature
+BLS et proposant, exécution EVM avant la mise à jour du mix RANDAO, opérations de
+bloc et racine finale. Les opérations communes réutilisent le parcours Altair
+avec une projection privée réversible ; les engagements restent Bellatrix.
+La construction locale est distincte de l'admission et ne signe pas de bloc.
+
+Une chaîne synthétique de neuf blocs signés parmi 64 clés de fixture traverse
+une epoch, exécute neuf transactions et inclut une double proposition sanctionnée
+avec comparaison de toutes les balances. Sept blocs invalides, sept points
+d'annulation et trois budgets sont couverts. Les six suites ciblées passent.
+[Sources, preuves et limites](BELLATRIX-TRANSITION.md).
+
+État : transition post-Merge complète implémentée en mémoire, qualification
+encore partielle et non différentielle pour Bellatrix. Choix de branche,
+signature locale durable et persistance/reprise Beacon–EVM ne sont pas encore
+raccordés à ce parcours. Aucun EIP ou profil réseau n'est clôturé par ce test.

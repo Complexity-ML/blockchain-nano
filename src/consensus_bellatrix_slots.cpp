@@ -1,4 +1,5 @@
 #include "nano/consensus_bellatrix_slots.hpp"
+#include "consensus_bellatrix_projection.hpp"
 namespace nano {namespace {
 void require(bool ok){if(!ok)throw std::invalid_argument("incoherent Bellatrix epoch/slot state");}
 uint64_t number(const Bytes& b,size_t at,size_t width=8){require(at<=b.size()&&width<=b.size()-at);uint64_t n=0;for(size_t i=0;i<width;++i)n|=uint64_t(b[at+i])<<(8*i);return n;}
@@ -30,21 +31,11 @@ ConsensusRoot validate(const BellatrixSlotState& state,const BellatrixEpochRules
 }
 BellatrixSlotState prepare_bellatrix_epoch(const BellatrixSlotState& input,const BellatrixEpochRules& r,
  const AltairStateLimits& l,uint64_t expected,uint64_t trials,const std::function<void()>& check){
- validate(input,r,l,check);const Layout layout(l);const auto& original=input.ssz;
- const size_t execution_start=number(original,layout.execution,4);
- // A private lossless projection reuses epoch operations that do not calculate
- // slot state roots. Never feed this projection into Altair process_slots.
- AltairSlotState projected{Bytes(original.begin(),original.begin()+layout.execution),input.last_processed_epoch};
- projected.ssz.insert(projected.ssz.end(),original.begin()+layout.execution+4,original.begin()+execution_start);
- for(auto at:layout.lists)put(projected.ssz,at,number(original,at,4)-4,4);
- auto updated=prepare_altair_epoch(projected,r.operations,l,expected,trials,check);
- const size_t header_bytes=original.size()-execution_start;
- const size_t total=updated.ssz.size()+4+header_bytes;
- if(total>r.maximum_state_bytes||total>UINT32_MAX)throw std::length_error("Bellatrix epoch state budget exceeded");
- Bytes post(updated.ssz.begin(),updated.ssz.begin()+layout.execution);post.resize(post.size()+4);
- post.insert(post.end(),updated.ssz.begin()+layout.execution,updated.ssz.end());
- for(auto at:layout.lists)put(post,at,number(updated.ssz,at,4)+4,4);
- put(post,layout.execution,post.size(),4);post.insert(post.end(),original.begin()+execution_start,original.end());
+ validate(input,r,l,check);
+ const auto projection=bellatrix_detail::project(input.ssz,l,r.execution,r.maximum_state_bytes,check);
+ // Common epoch operations do not calculate slot state roots.
+ auto updated=prepare_altair_epoch({projection.common,input.last_processed_epoch},r.operations,l,expected,trials,check);
+ auto post=bellatrix_detail::restore(updated.ssz,projection.execution_header,l,r.execution,r.maximum_state_bytes,check);
  BellatrixSlotState out{std::move(post),updated.last_processed_epoch};validate(out,r,l,check);if(check)check();return out;
 }
 BellatrixSlotState prepare_bellatrix_slots(const BellatrixSlotState& input,const BellatrixEpochRules& r,

@@ -1,4 +1,7 @@
 #include "nano/consensus_altair_transition.hpp"
+#include "nano/consensus_bellatrix_transition.hpp"
+#include "consensus_bellatrix_projection.hpp"
+#include <exception>
 #include "nano/consensus_proposer.hpp"
 #include <algorithm>
 #include <bit>
@@ -44,16 +47,37 @@ void validate_altair_transition_rules(const AltairTransitionRules& r){check_rule
 namespace {
 // Private construction mode cannot be selected by network admission callers.
 enum class BlockPurpose { Receive, Construct };
+struct BellatrixContext {
+ const BellatrixTransitionRules& rules;
+ const Header& parent;
+ const State& state;
+ const std::function<Bytes(const Int&)>& history;
+};
 std::optional<AltairSlotState> transition(const AltairSlotState& input,
- View block,const AltairTransitionRules& r,uint64_t maximum_slots,uint64_t maximum_sync_trials,const std::function<void()>& checkpoint,BlockPurpose purpose,ConsensusRoot& computed_root){
+ View block,const AltairTransitionRules& r,uint64_t maximum_slots,uint64_t maximum_sync_trials,const std::function<void()>& checkpoint,BlockPurpose purpose,ConsensusRoot& computed_root,const BellatrixContext* bellatrix=nullptr,BellatrixExecutionCandidate* execution_result=nullptr){
  check_rules(r);const auto& d=r.attestation.duties;const auto sync_bytes=(r.state.sync_committee_size+7)/8+96;
- if(block.size()<404+sync_bytes||block.size()>r.maximum_block_bytes)return std::nullopt;
+ if(bellatrix){const auto& br=bellatrix->rules;if(!br.seconds_per_slot||br.chain_id<0||!br.execution.extra_data_bytes||!br.execution.transaction_bytes||!br.execution.transactions||br.execution.transactions>UINT32_MAX/4)throw std::invalid_argument("invalid Bellatrix execution rules");}
+ if(block.size()<404+sync_bytes+(bellatrix?512:0)||block.size()>r.maximum_block_bytes)return std::nullopt;
  if(number(block,0,4)!=100||number(block,180,4)!=84)return std::nullopt;
  ConsensusRoot body_root;const auto body=block.subspan(184);
- try{body_root=altair_beacon_body_root(body,r.body,r.state.sync_committee_size);}catch(const std::invalid_argument&){return std::nullopt;}
- altair_beacon_state_root(input.ssz,r.state,checkpoint);
- const auto slot=number(block,100);if(slot<=number(input.ssz,40))return std::nullopt;
- auto out=prepare_altair_slots(input,r.epoch,r.state,slot,maximum_slots,maximum_sync_trials,checkpoint);const Layout l(r.state);
+ std::exception_ptr body_interrupted;
+ auto body_checkpoint=[&]{try{if(checkpoint)checkpoint();}catch(...){body_interrupted=std::current_exception();throw;}};
+ try{body_root=bellatrix?bellatrix_beacon_body_root(body,r.body,r.state.sync_committee_size,bellatrix->rules.execution,r.maximum_block_bytes,body_checkpoint):altair_beacon_body_root(body,r.body,r.state.sync_committee_size);}
+ catch(const std::invalid_argument&){if(body_interrupted)std::rethrow_exception(body_interrupted);return std::nullopt;}
+ AltairSlotState out;Bytes execution_header;std::optional<BellatrixExecutionCandidate> execution;
+ const auto slot=number(block,100);const Layout l(r.state);
+ if(bellatrix){
+  const auto& br=bellatrix->rules;
+  bellatrix_beacon_state_root(input.ssz,r.state,br.execution,br.maximum_state_bytes,checkpoint);
+  if(slot<=number(input.ssz,40))return std::nullopt;
+  auto advanced=prepare_bellatrix_slots({input.ssz,input.last_processed_epoch},{r.epoch,br.execution,br.maximum_state_bytes},r.state,slot,maximum_slots,maximum_sync_trials,checkpoint);
+  auto projection=bellatrix_detail::project(advanced.ssz,r.state,br.execution,br.maximum_state_bytes,checkpoint);
+  out={std::move(projection.common),advanced.last_processed_epoch};execution_header=std::move(projection.execution_header);
+ }else{
+  altair_beacon_state_root(input.ssz,r.state,checkpoint);
+  if(slot<=number(input.ssz,40))return std::nullopt;
+  out=prepare_altair_slots(input,r.epoch,r.state,slot,maximum_slots,maximum_sync_trials,checkpoint);
+ }
  auto reg=registry(out.ssz,l,d.slots_per_epoch,checkpoint);ConsensusRandaoState randao;randao.epoch=reg.epoch;randao.last_reveal_slot=number(out.ssz,64);for(size_t at=l.randao;at<l.slashings;at+=32)randao.mixes.push_back(array<32>(out.ssz,at));
  const ConsensusBeaconHeader previous{number(out.ssz,64),number(out.ssz,72),array<32>(out.ssz,80),array<32>(out.ssz,112),array<32>(out.ssz,144)};
  const ConsensusBeaconHeader h{slot,number(block,108),array<32>(block,116),array<32>(block,148),body_root};
@@ -62,15 +86,25 @@ std::optional<AltairSlotState> transition(const AltairSlotState& input,
  const auto fork_epoch=number(out.ssz,56);auto version=[&](uint64_t epoch){return array<4>(out.ssz,epoch<fork_epoch?48:52);};const auto genesis=array<32>(out.ssz,8);
  if(purpose==BlockPurpose::Receive&&!verify_consensus_beacon_header(h,version(reg.epoch),genesis,proposer->second.public_key,block.subspan(4,96)))return std::nullopt;
  if(!process_phase0_selected_randao(randao,reg,{d.slots_per_epoch,d.min_seed_lookahead},slot,h.proposer_index,d.maximum_effective_balance,d.shuffle_rounds,version(reg.epoch),genesis,body.first(96),checkpoint))return std::nullopt;
- for(size_t i=0;i<randao.mixes.size();++i)put(out.ssz,l.randao+32*i,randao.mixes[i]);
  put(out.ssz,64,h.slot);put(out.ssz,72,h.proposer_index);put(out.ssz,80,h.parent_root);put(out.ssz,112,ConsensusRoot{});put(out.ssz,144,h.body_root);
+ // RANDAO was verified on a private candidate above, but its update is applied
+ // only after execution has used the previous mix from the authenticated state.
+ if(bellatrix){
+  const auto& br=bellatrix->rules;
+  auto before_execution=bellatrix_detail::restore(out.ssz,execution_header,r.state,br.execution,br.maximum_state_bytes,checkpoint);
+  const auto authenticated=bellatrix_beacon_state_root(before_execution,r.state,br.execution,br.maximum_state_bytes,checkpoint);
+  auto paired=prepare_bellatrix_payload_state(before_execution,authenticated,r.state,br.execution,br.maximum_state_bytes,d.slots_per_epoch,br.seconds_per_slot,body.subspan(number(body,220+sync_bytes,4)),r.maximum_block_bytes,bellatrix->parent,bellatrix->state,br.chain_id,br.replay_policy,bellatrix->history,checkpoint);
+  execution_header=bellatrix_detail::project(paired.consensus_state,r.state,br.execution,br.maximum_state_bytes,checkpoint).execution_header;
+  execution=std::move(paired.execution);
+ }
+ for(size_t i=0;i<randao.mixes.size();++i)put(out.ssz,l.randao+32*i,randao.mixes[i]);
  // Append Eth1 vote, then update the canonical root only on a full-period
  // strict majority. Rebuild offsets before passing state to any operation.
  std::array<Bytes,7> lists;for(size_t i=0;i<7;++i){const auto start=number(out.ssz,l.fields[i],4),end=i==6?out.ssz.size():number(out.ssz,l.fields[i+1],4);lists[i]=Bytes(out.ssz.begin()+start,out.ssz.begin()+end);}
  if(lists[1].size()/72>=r.state.eth1_votes_limit)return std::nullopt;const auto vote=body.subspan(96,72);lists[1].insert(lists[1].end(),vote.begin(),vote.end());size_t tally=0;for(size_t at=0;at<lists[1].size();at+=72){if(checkpoint)checkpoint();if(std::equal(vote.begin(),vote.end(),lists[1].begin()+at))++tally;}
  if(tally>r.state.eth1_votes_limit/2)std::copy(vote.begin(),vote.end(),out.ssz.begin()+l.historical+4);
  out.ssz.resize(number(out.ssz,l.fields[0],4));for(size_t i=0;i<7;++i){if(out.ssz.size()>UINT32_MAX||lists[i].size()>UINT32_MAX-out.ssz.size())throw std::overflow_error("Altair block SSZ offset overflow");put(out.ssz,l.fields[i],out.ssz.size(),4);out.ssz.insert(out.ssz.end(),lists[i].begin(),lists[i].end());}
- std::array<View,5> ops;for(size_t i=0;i<5;++i){const auto start=number(body,200+4*i,4),end=i==4?body.size():number(body,204+4*i,4);ops[i]=body.subspan(start,end-start);}
+ std::array<View,5> ops;for(size_t i=0;i<5;++i){const auto start=number(body,200+4*i,4),end=i==4?(bellatrix?number(body,220+sync_bytes,4):body.size()):number(body,204+4*i,4);ops[i]=body.subspan(start,end-start);}
  const auto count=number(out.ssz,l.historical+36),next=number(out.ssz,l.historical+80);
  if(count>(uint64_t(1)<<32)||next>count||ops[3].size()/1240!=std::min<uint64_t>(r.body.deposits,count-next))return std::nullopt;
  const AltairSlashingRules slashing{d,r.epoch.slashing,r.body.validators_per_committee};
@@ -84,8 +118,10 @@ std::optional<AltairSlotState> transition(const AltairSlotState& input,
   const auto start=number(out.ssz,l.fields[2],4);for(const auto& [i,v]:exits.validators){put(out.ssz,start+121*i+105,v.exit_epoch);put(out.ssz,start+121*i+113,v.withdrawable_epoch);}
  }
  auto sync=prepare_altair_sync_aggregate(out.ssz,body.subspan(220,sync_bytes),r.state,r.sync,checkpoint);if(!sync)return std::nullopt;out.ssz=std::move(*sync);
- computed_root=altair_beacon_state_root(out.ssz,r.state,checkpoint);
- if(purpose==BlockPurpose::Receive&&computed_root!=h.state_root)return std::nullopt;if(checkpoint)checkpoint();return out;
+ if(bellatrix){const auto& br=bellatrix->rules;out.ssz=bellatrix_detail::restore(out.ssz,execution_header,r.state,br.execution,br.maximum_state_bytes,checkpoint);computed_root=bellatrix_beacon_state_root(out.ssz,r.state,br.execution,br.maximum_state_bytes,checkpoint);}
+ else computed_root=altair_beacon_state_root(out.ssz,r.state,checkpoint);
+ if(purpose==BlockPurpose::Receive&&computed_root!=h.state_root)return std::nullopt;
+ if(checkpoint)checkpoint();if(bellatrix)*execution_result=std::move(*execution);return out;
 }
 } // anonymous namespace
 std::optional<AltairSlotState> prepare_altair_state_transition(const AltairSlotState& input,
@@ -109,4 +145,29 @@ std::optional<AltairUnsignedBlockCandidate> prepare_altair_unsigned_block(const 
  if(checkpoint)checkpoint();
  return AltairUnsignedBlockCandidate{std::move(message),std::move(*state)};
 }
+std::optional<BellatrixBlockCandidate> prepare_bellatrix_state_transition(
+ const BellatrixSlotState& input,View block,const BellatrixTransitionRules& r,
+ const Header& parent,const State& state,const std::function<Bytes(const Int&)>& history,
+ uint64_t maximum_slots,uint64_t trials,const std::function<void()>& checkpoint){
+ if(block.size()<184||block.size()>r.consensus.maximum_block_bytes)return std::nullopt;
+ if(input.ssz.size()>r.maximum_state_bytes)throw std::length_error("Bellatrix state budget exceeded");
+ const BellatrixContext context{r,parent,state,history};ConsensusRoot computed{};BellatrixExecutionCandidate execution;
+ auto out=transition({input.ssz,input.last_processed_epoch},block,r.consensus,maximum_slots,trials,checkpoint,BlockPurpose::Receive,computed,&context,&execution);
+ if(!out)return std::nullopt;
+ return BellatrixBlockCandidate{{std::move(out->ssz),out->last_processed_epoch},std::move(execution)};
+}
+std::optional<BellatrixUnsignedBlockCandidate> prepare_bellatrix_unsigned_block(
+ const BellatrixSlotState& input,uint64_t slot,uint64_t proposer,const ConsensusRoot& parent_root,View body,
+ const BellatrixTransitionRules& r,const Header& parent,const State& state,
+ const std::function<Bytes(const Int&)>& history,uint64_t maximum_slots,uint64_t trials,const std::function<void()>& checkpoint){
+ check_rules(r.consensus);
+ if(input.ssz.size()>r.maximum_state_bytes)throw std::length_error("Bellatrix state budget exceeded");
+ if(r.consensus.maximum_block_bytes<184||body.size()>r.consensus.maximum_block_bytes-184)return std::nullopt;
+ if(checkpoint)checkpoint();Bytes envelope(184,0);put(envelope,0,100,4);put(envelope,100,slot);put(envelope,108,proposer);put(envelope,116,parent_root);put(envelope,180,84,4);envelope.insert(envelope.end(),body.begin(),body.end());
+ const BellatrixContext context{r,parent,state,history};ConsensusRoot computed{};BellatrixExecutionCandidate execution;
+ auto out=transition({input.ssz,input.last_processed_epoch},envelope,r.consensus,maximum_slots,trials,checkpoint,BlockPurpose::Construct,computed,&context,&execution);
+ if(!out)return std::nullopt;put(envelope,148,computed);
+ return BellatrixUnsignedBlockCandidate{Bytes(envelope.begin()+100,envelope.end()),{{std::move(out->ssz),out->last_processed_epoch},std::move(execution)}};
+}
+
 }

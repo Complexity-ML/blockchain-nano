@@ -51,8 +51,8 @@ Bellatrix, des changements de registre ou des scénarios adversariaux.
 
 ## Reste à fermer
 
-Ce composant ne vérifie pas un bloc signé complet, n'applique pas les opérations
-de bloc et n'active pas le réseau. Il doit être raccordé au traitement Bellatrix
-du header, de l'exécution, du RANDAO et des autres opérations, puis au choix de
-branche et à la persistance atomique Beacon–EVM. Le passage Altair → Bellatrix
+Ce composant ne vérifie pas à lui seul un bloc signé complet et n'active pas le
+réseau. Le [parcours de bloc Bellatrix signé](BELLATRIX-TRANSITION.md) le raccorde
+désormais au header, à l'exécution, au RANDAO et aux autres opérations. Restent
+le choix de branche et la persistance atomique Beacon–EVM. Le passage Altair → Bellatrix
 et le bloc terminal PoW restent distincts de l'avancement d'un état déjà Bellatrix.

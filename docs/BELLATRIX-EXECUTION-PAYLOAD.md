@@ -70,9 +70,9 @@ persistante de l'exception dans l'adaptateur. Le binaire `nano` a été reconstr
 
 ## Étapes restantes
 
-Intégrer la transition complète BeaconBlockBody/BeaconState Bellatrix et les
-paramètres économiques correspondants ; appeler l'opération d'exécution depuis
-cette transition signée, après avancement des slots et avant mise à jour RANDAO ;
+Le [parcours de bloc signé Bellatrix](BELLATRIX-TRANSITION.md) raccorde maintenant
+les slots, l'exécution et les opérations de consensus en mémoire. Il reste à
+qualifier plus largement ce parcours, à l'intégrer au choix de branche et à
 publier puis restaurer ensemble les deux états avec preuve d'atomicité. Les
 extensions Capella/Deneb et les forks ultérieurs exigent des schémas distincts.
 Le profil Altair existant n'est pas modifié et le réseau n'accepte pas encore de
@@ -121,6 +121,7 @@ Qualification dans `build-cmake/qualification/bellatrix-state-binding-20260925/f
 Les essais de liaison utilisent une enveloppe d'état SSZ synthétique, dérivée
 d'un vecteur de format : ils ne prouvent ni son cycle de vie validateur, ni une
 transition Bellatrix signée complète. Les [slots/epochs Bellatrix](BELLATRIX-SLOTS.md)
-ont depuis une implémentation qualifiée sur sept cas officiels. Les opérations
-de bloc Beacon, la qualification exhaustive des pénalités, le choix de branche, le commit atomique
+ont depuis une implémentation qualifiée sur sept cas officiels. Le parcours
+signé intègre aussi les opérations de bloc ; leur qualification Bellatrix
+exhaustive, le choix de branche, le commit atomique
 et la reprise des deux états restent à intégrer. Aucun fork réseau n'est activé.
