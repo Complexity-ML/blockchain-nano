@@ -2,10 +2,20 @@
 #include "support/phase0_indexed_ssz.hpp"
 #include "nano/consensus_altair_fork_store.hpp"
 #include "nano/consensus_altair_proposer.hpp"
+#include "nano/consensus_altair_store_snapshot.hpp"
+#include "nano/chain.hpp"
+#include <fstream>
 using namespace test;using namespace test::phase0_minimal;
 ConsensusRoot parse_root(const Json& j){const auto b=unhex(j.get<std::string>());check(b.size()==32,"root width");ConsensusRoot out{};std::copy(b.begin(),b.end(),out.begin());return out;}
 Phase0SignedAttestation decode_vote(const Bytes& b){check(b.size()>=229&&little(b,0,4)==228&&b.back(),"vote SSZ");const auto a=indexed_attestation(Bytes(b.begin(),b.begin()+228),0,228);Phase0SignedAttestation v{a.data,{},a.signature};const auto count=(b.size()-229)*8+std::bit_width(unsigned(b.back()))-1;for(size_t i=0;i<count;++i)v.aggregation_bits.push_back((b[228+i/8]>>(i%8))&1);return v;}
 int main(int argc,char** argv){try{
+ if(argc==4&&std::string(argv[1])=="--persist-store"){
+  const auto genesis=Genesis::from_json(Json{{"config",{{"chainId",1337},{"consensus","pow"}}},{"alloc",Json::object()}});
+  ChainStore disk(argv[2]);disk.bind_chain(genesis.chain_id,genesis.block.header.hash(),"pow");disk.commit(genesis.block,genesis.state,{},Json{{"store",read(argv[3])}});_exit(0);
+ }
+ const bool restore_stores=std::getenv("NANO_TEST_STORE_SNAPSHOTS")!=nullptr;
+ const AltairStoreSnapshotLimits snapshot_limits{256*1024*1024,4096,1000000,1000000,16*1024*1024,128*1024*1024,4096,100000};
+ size_t restorations=0,snapshot_rejections=0;
  check(argc==1||argc==3,"usage: runner [fixture-directory expected-count]");const size_t expected_cases=argc==3?std::stoull(argv[2]):10;const fs::path fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-altair-fork-head-official",root=argc==3?fs::path(argv[1]):refs;const auto transition=altair_transition_rules(fixtures);const auto config=read(refs/"minimal-config-v1.6.0-beta.0.yaml");const auto duration=parameter(config,"SECONDS_PER_SLOT")*1000;const AltairForkBlockRules rules{transition,duration,duration/3,parameter(config,"PROPOSER_SCORE_BOOST"),AltairProposerBoostProfile::Release160Beta0};const auto slots=transition.epoch.ffg.slots_per_epoch;
  const auto manifest=load(root/"manifest.json");check(manifest.at("commit")=="bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908"&&manifest.at("cases").size()==expected_cases,"head corpus");const auto references=load(refs/"manifest.json");for(const auto& [path,info]:references.at("referenceFiles").items()){const auto b=binary(refs/path);check(b.size()==info.at("bytes")&&hex(sha256(b)).substr(2)==info.at("sha256").get<std::string>(),"reference digest");}size_t ticks=0,blocks=0,votes=0,slashings=0,checks=0,rejections=0,proposer_guards=0;std::optional<AltairForkStore> example;Bytes example_block;Phase0SignedAttestation example_vote;
  for(const auto& row:manifest.at("cases")){const auto name=row.at("name").get<std::string>();for(const auto& [path,info]:row.at("files").items()){const auto b=binary(root/path);check(b.size()==info.at("bytes")&&hex(sha256(b)).substr(2)==info.at("sha256").get<std::string>(),"fixture digest");}
@@ -47,7 +57,32 @@ int main(int argc,char** argv){try{
     else if(step.contains("attester_slashing")){const auto [a,b]=attester_slashing(binary(dir/(step.at("attester_slashing").get<std::string>()+".ssz")));result=prepare_altair_store_slashing(store,a,b,rules);++slashings;}
     else throw std::runtime_error("unknown event");check(bool(result)==step.value("valid",true),"event validity mismatch");if(result)store=std::move(*result);else ++rejections;
    }
-  }catch(const std::exception& e){throw std::runtime_error(name+" step "+std::to_string(step_index)+": "+e.what());}++step_index;}
+  }catch(const std::exception& e){throw std::runtime_error(name+" step "+std::to_string(step_index)+": "+e.what());}++step_index;
+   if(restore_stores&&(step_index==steps.size()/2||step_index==steps.size())){
+
+    const auto encoded=altair_store_snapshot(store,rules,snapshot_limits);const auto digest=sha256(Bytes(encoded.begin(),encoded.end()));
+    const auto before=phase0_fork_choice_head(store.timed.view,{slots,transition.attestation.duties.effective_balance_increment,rules.proposer_score_boost});
+    Temp directory;const auto disk_path=directory/"store",file=directory/"checkpoint.json";
+    {std::ofstream stream(file);stream<<encoded;check(bool(stream),"write checkpoint test input");}
+    Process child({argv[0],"--persist-store",disk_path.string(),file.string()});const auto status=child.wait(30);check(status.code==0,"Store writer failed: "+status.err);
+    std::string persisted;{ChainStore disk(disk_path);check(disk.count()==1,"Store checkpoint commit absent");persisted=disk.consensus_at(0)->at("store").get<std::string>();}
+    check(persisted==encoded,"persisted Store bytes differ");
+    auto restored=altair_store_from_snapshot(persisted,digest,rules,snapshot_limits);
+    const auto after=phase0_fork_choice_head(restored.timed.view,{slots,transition.attestation.duties.effective_balance_increment,rules.proposer_score_boost});
+    check(before.head==after.head&&before.weights==after.weights&&before.viable==after.viable,"restored fork choice mismatch");
+    if(restorations==0){
+     auto refuse=[&](const std::string& bytes,const Bytes& hash,const AltairStoreSnapshotLimits& limits){bool rejected=false;try{altair_store_from_snapshot(bytes,hash,rules,limits);}catch(const std::exception&){rejected=true;}check(rejected,"bad Store snapshot accepted");++snapshot_rejections;};
+     auto corrupt=encoded;corrupt[0]^=1;refuse(corrupt,digest,snapshot_limits);
+     auto altered=Json::parse(encoded);altered["extra"]=1;auto bytes=altered.dump();refuse(bytes,sha256(Bytes(bytes.begin(),bytes.end())),snapshot_limits);
+     auto bounded=snapshot_limits;bounded.envelope_bytes=encoded.size()-1;refuse(encoded,digest,bounded);
+     bounded=snapshot_limits;bounded.blocks=0;refuse(encoded,digest,bounded);
+     bounded=snapshot_limits;bounded.total_state_bytes=0;refuse(encoded,digest,bounded);
+     auto changed=rules;++changed.proposer_score_boost;bool rejected=false;try{altair_store_from_snapshot(encoded,digest,changed,snapshot_limits);}catch(const std::exception&){rejected=true;}check(rejected,"changed Store profile accepted");++snapshot_rejections;
+     bool cancelled=false;try{altair_store_from_snapshot(encoded,digest,rules,snapshot_limits,[]{throw std::runtime_error("cancelled");});}catch(const std::runtime_error& e){cancelled=std::string(e.what())=="cancelled";}check(cancelled,"Store restore cancellation lost");
+    }
+    store=std::move(restored);++restorations;
+   }
+  }
  }
  size_t cancellation_count=0;if(argc==1){check(bool(example),"no embedded-vote example");
  const auto delayed_time=example->timed.clock.genesis_time_ms+(example->timed.view.current_epoch+3)*slots*rules.slot_duration_ms;
@@ -59,5 +94,5 @@ int main(int argc,char** argv){try{
  size_t calls=0;prepare_altair_received_block(*example,example_block,rules,4096,100000,[&]{++calls;});std::set<size_t> stops{1,2,calls/4,calls/2,3*calls/4,calls-1,calls};const auto messages=example->timed.view.latest_messages;const auto block_count=example->blocks.size();
  for(auto stop:stops){size_t n=0;bool cancelled=false;try{prepare_altair_received_block(*example,example_block,rules,4096,100000,[&]{if(++n==stop)throw std::runtime_error("cancelled");});}catch(const std::runtime_error& e){cancelled=std::string(e.what())=="cancelled";}check(cancelled&&example->blocks.size()==block_count&&example->timed.view.latest_messages==messages,"cancelled reception published data");}
  cancellation_count=stops.size();}
- std::cout<<Json{{"scenario",root.filename().string()},{"cases",expected_cases},{"ticks",ticks},{"blocks",blocks},{"votes",votes},{"slashings",slashings},{"checks",checks},{"rejections",rejections},{"localGuardsRun",argc==1},{"proposerGuards",proposer_guards},{"cancellations",cancellation_count},{"durable",false},{"networkActive",false}}.dump()<<'\n';
+ std::cout<<Json{{"scenario",root.filename().string()},{"cases",expected_cases},{"ticks",ticks},{"blocks",blocks},{"votes",votes},{"slashings",slashings},{"checks",checks},{"rejections",rejections},{"localGuardsRun",argc==1},{"proposerGuards",proposer_guards},{"storeRestorations",restorations},{"snapshotRejections",snapshot_rejections},{"storeAbruptReopens",restorations},{"powerLossQualified",false},{"cancellations",cancellation_count},{"durable",false},{"networkActive",false}}.dump()<<'\n';
  }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

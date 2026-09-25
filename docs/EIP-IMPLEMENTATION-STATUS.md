@@ -567,3 +567,11 @@ _exit suivant un commit RocksDB, continuation identique au post-state officiel,
 Campagne `altair-snapshot-recovery-20260925`. Ne sauvegarde pas encore le Store
 fork_choice complet ; coupure électrique, liaison EVM/consensus et réseau restent
 non qualifiés. Aucun statut d'EIP ou profil réseau activé n'est promu.
+
+Altair : sauvegarde canonique du Store complet et reconstruction du registre
+justifié, avec digest externe et budgets explicites. Les 18 scénarios get_head/reorg
+passent après 35 commits RocksDB, arrêts _exit et réouvertures ; tête, poids et
+continuation conservés. Un écart de registre lors d'un checkpoint avançant d'époque
+sans changer de racine a été corrigé, échec conservé. Huit suites vertes ; campagne
+`altair-store-snapshot-20260925`. Interruptions pendant commit, anti-rollback,
+ancrage réseau, élagage et intégration EVM/P2P restent ouverts. Pas d'activation.

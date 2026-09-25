@@ -1062,3 +1062,7 @@ target_link_libraries(nano-altair-snapshot-tests PRIVATE nano_core)
 target_compile_definitions(nano-altair-snapshot-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
 add_test(NAME consensus_altair_snapshot_recovery COMMAND nano-altair-snapshot-tests)
 set_tests_properties(consensus_altair_snapshot_recovery PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_ethereum")
+
+add_test(NAME consensus_altair_store_snapshot_head COMMAND ${CMAKE_COMMAND} -E env NANO_TEST_STORE_SNAPSHOTS=1 $<TARGET_FILE:nano-altair-fork-head-tests>)
+add_test(NAME consensus_altair_store_snapshot_reorg COMMAND ${CMAKE_COMMAND} -E env NANO_TEST_STORE_SNAPSHOTS=1 $<TARGET_FILE:nano-altair-fork-head-tests> "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/consensus-altair-fork-reorg-official" 8)
+set_tests_properties(consensus_altair_store_snapshot_head consensus_altair_store_snapshot_reorg PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_ethereum")

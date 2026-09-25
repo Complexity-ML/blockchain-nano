@@ -1733,3 +1733,43 @@ pas pendant une coupure électrique. Le Store de choix de branche (votes,
 équivocations, branches, horloge, timeliness et checkpoints non réalisés) n'est
 pas encore sauvegardé/restauré par cette enveloppe. Sa reprise complète reste
 le prochain chantier ; aucune activation réseau ni validation production.
+
+### Altair — sauvegarde du Store et reprise événementielle, 25 septembre 2026
+
+`altair_store_snapshot` / `altair_store_from_snapshot` encodent désormais toutes
+les branches/états, votes les plus récents, équivocations, horloge, checkpoints
+réalisés/non réalisés, timeliness et proposer boost. Le registre pondéré du
+checkpoint justifié est reconstruit depuis les états SSZ authentifiés ; les poids
+ne sont pas acceptés comme une seconde copie arbitraire. L'enveloppe canonique
+lie les règles de transition et le profil de boost/délais. Les tailles JSON,
+SSZ individuelle/cumulée et nombres d'entrées sont bornés par des budgets locaux
+explicites, sans nouveau plafond de validateurs dans les règles du réseau.
+
+La lecture exige un digest externe de confiance, vérifié avant parsing JSON.
+Un digest fourni par le même pair que le snapshot ne constitue pas cette confiance.
+L'appelant doit conserver atomiquement cet engagement, sa séquence et sa liaison
+à la chaîne. L'API n'assure pas seule l'anti-rollback du disque ni l'admission de
+snapshots réseau ; ses limites d'allocation ne remplacent pas l'élagage du Store.
+
+Échec initial conservé : filtered_block_tree avançait l'époque du checkpoint
+justifié tout en conservant la racine de l'ancre après des slots vides. Le premier
+restaurateur reprenait à tort le registre de l'époque initiale. Il reconstruit
+maintenant l'état au début de la nouvelle époque. Aucune attente officielle ni
+règle de vote n'a été modifiée pour corriger cet écart.
+
+Les dix scénarios get_head et huit reorg sauvegardent leur Store à mi-parcours
+puis à la fin (un scénario très court ne permet que la fin) : 35 écritures synchronisées dans ChainStore/RocksDB, suivies de
+_exit du processus écrivain, réouverture et restauration. Le digest attendu est
+conservé séparément par le parent. Tête, poids et branches viables sont identiques,
+et les événements suivants continuent à satisfaire les attentes officielles.
+Douze rejets au total couvrent corruption, champ ajouté, limites JSON/blocs/SSZ
+et profil changé ; l'annulation est vérifiée dans chaque groupe. Les six suites
+fork_choice ordinaires restent vertes : 8/8 suites au total.
+Preuves : `build-cmake/qualification/altair-store-snapshot-20260925/`, échec initial
+inclus. Tests : `consensus_altair_store_snapshot_head` et
+`consensus_altair_store_snapshot_reorg`.
+
+Les blocs d'exécution du transport de test restent synthétiques. Ce résultat
+qualifie le format et la reprise après commit réussi, pas la liaison sémantique
+EVM/consensus, les interruptions pendant commit, la panne électrique, la politique
+d'ancrage en production, l'élagage, ou le raccordement au réacteur/P2P actif.
