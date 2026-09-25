@@ -4,6 +4,7 @@
 #include "nano/consensus_altair_proposer.hpp"
 #include "nano/consensus_altair_store_snapshot.hpp"
 #include "nano/consensus_altair_reactor.hpp"
+#include "nano/consensus_message_ssz.hpp"
 #include "nano/chain.hpp"
 #include <fstream>
 using namespace test;using namespace test::phase0_minimal;
@@ -59,8 +60,8 @@ int main(int argc,char** argv){try{
     if(step.contains("block")){const auto packet=binary(dir/(step.at("block").get<std::string>()+".ssz"));if(reactor){if(reactor->block(packet))result=*reactor->current().state;}else result=prepare_altair_received_block(store,packet,rules,4096,100000);++blocks;
      if(!example&&result&&result->timed.view.latest_messages!=store.timed.view.latest_messages){const auto start=184+little(packet,184+208,4),end=184+little(packet,184+212,4);if(end>start){const auto first=little(packet,start,4),stop=first==4?end-start:little(packet,start+4,4);example_vote=decode_vote(Bytes(packet.begin()+start+first,packet.begin()+start+stop));example=store;example_block=packet;}}
     }
-    else if(step.contains("attestation")){const auto vote=decode_vote(binary(dir/(step.at("attestation").get<std::string>()+".ssz")));if(reactor){if(reactor->vote(vote))result=*reactor->current().state;}else result=prepare_altair_store_vote(store,vote,rules,4096,100000);++votes;}
-    else if(step.contains("attester_slashing")){const auto [a,b]=attester_slashing(binary(dir/(step.at("attester_slashing").get<std::string>()+".ssz")));if(reactor){if(reactor->slashing(a,b))result=*reactor->current().state;}else result=prepare_altair_store_slashing(store,a,b,rules);++slashings;}
+    else if(step.contains("attestation")){const auto packet=binary(dir/(step.at("attestation").get<std::string>()+".ssz"));if(reactor){if(reactor->vote_ssz(packet))result=*reactor->current().state;}else if(const auto vote=decode_consensus_attestation_ssz(packet,transition.body.validators_per_committee))result=prepare_altair_store_vote(store,*vote,rules,4096,100000);++votes;}
+    else if(step.contains("attester_slashing")){const auto packet=binary(dir/(step.at("attester_slashing").get<std::string>()+".ssz"));if(reactor){if(reactor->slashing_ssz(packet))result=*reactor->current().state;}else if(const auto proof=decode_consensus_attester_slashing_ssz(packet,transition.body.validators_per_committee))result=prepare_altair_store_slashing(store,proof->first,proof->second,rules);++slashings;}
     else throw std::runtime_error("unknown event");check(bool(result)==step.value("valid",true),"event validity mismatch");if(result){store=std::move(*result);if(reactor)++durable_commits;}else ++rejections;
    }
   }catch(const std::exception& e){throw std::runtime_error(name+" step "+std::to_string(step_index)+": "+e.what());}++step_index;

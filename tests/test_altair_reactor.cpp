@@ -16,7 +16,7 @@ int main(){try{
  const Int chain_id=1337;const Bytes genesis(32,9);Temp directory;const auto path=directory/"db";
  auto disk=std::make_unique<ChainStore>(path);disk->bind_chain(chain_id,genesis,"altair-qualification");
  auto reactor=std::make_unique<AltairDurableReactor>(*disk,chain_id,genesis,rules,limits,initial);
- const auto before=reactor->current();check(!reactor->block(Bytes{0,1})&&reactor->current().token==before.token,"invalid block published");
+ const auto before=reactor->current();check(!reactor->vote_ssz(Bytes{0,1})&&!reactor->slashing_ssz(Bytes{0,1})&&reactor->current().token==before.token,"malformed wire message committed");check(!reactor->block(Bytes{0,1})&&reactor->current().token==before.token,"invalid block published");
  size_t callbacks=0;auto candidate=prepare_altair_store_tick(initial,1,rules,limits.replay_slots,limits.sync_trials,[&]{++callbacks;});altair_store_snapshot(candidate,rules,limits,[&]{++callbacks;});++callbacks;
  const std::set<size_t> stops{1,2,callbacks/2,callbacks-1,callbacks};
  for(auto stop:stops){size_t calls=0;bool cancelled=false;try{reactor->tick(1,[&]{if(++calls==stop)throw std::runtime_error("cancelled");});}catch(const std::runtime_error& e){cancelled=std::string(e.what())=="cancelled";}check(cancelled&&reactor->current().token==before.token&&reactor->current().state==before.state,"cancelled publication");check(disk->fork_checkpoint(chain_id,genesis,limits.envelope_bytes,before.token).has_value(),"cancelled disk change");}

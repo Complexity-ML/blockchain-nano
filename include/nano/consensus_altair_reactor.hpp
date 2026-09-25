@@ -27,6 +27,10 @@ public:
  AltairPublishedStore current() const;
  void tick(uint64_t time_ms,const std::function<void()>& checkpoint={});
  bool block(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
+ // Wire admission uses the configured fork schema/committee limit. There is
+ // no sender-controlled "already included in a block" or time-window bypass.
+ bool vote_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
+ bool slashing_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
  bool vote(const Phase0SignedAttestation&,const std::function<void()>& checkpoint={});
  bool slashing(const IndexedConsensusAttestation&,const IndexedConsensusAttestation&,
   const std::function<void()>& checkpoint={});

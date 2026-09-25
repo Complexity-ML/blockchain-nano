@@ -1846,3 +1846,36 @@ P2P ni le remplacement du BFT actif. Il écrit un snapshot complet par événeme
 base de correction fonctionnelle, sans qualification de débit ou d'amplification
 d'écriture. Les commits incrémentaux, élagage, transport/admission, lien atomique
 avec l'EVM, politique d'ancrage/signature et qualification réseau restent ouverts.
+
+### Entrée SSZ des votes et preuves — Altair, 25 septembre 2026
+
+Les décodeurs `decode_consensus_attestation_ssz` et
+`decode_consensus_attester_slashing_ssz` sont désormais dans le code de production.
+Ils traitent le schéma d'attestation antérieur à Electra, avec limite de comité
+fournie par le profil. Offsets canoniques, longueurs fixes/variables, terminaison
+du bitlist et nombre d'indices/bits sont contrôlés avant allocation de listes.
+L'allocation dépend du message réel, jamais de la taille maximale configurée.
+Un message mal formé/hors limite retourne nullopt ; configuration nulle et
+annulation restent des erreurs distinctes. Les indices dupliqués/non triés,
+signatures et devoirs appartiennent à la validation sémantique ultérieure.
+
+`AltairDurableReactor::vote_ssz` et `slashing_ssz` composent ce décodage avec
+l'admission cryptographique et le commit durable. Aucun champ fourni par le pair
+ne permet de contourner la fenêtre gossip ou de se déclarer inclus dans un bloc.
+Les messages mal formés ne modifient pas le token durable. Les replays officiels
+get_head/reorg utilisent maintenant ces entrées en mode durable ; leur décodeur
+historique de support n'est plus la porte d'entrée des messages séparés.
+
+Qualification : 41 encodages d'attestations et 30 encodages de preuves du corpus
+Altair officiel sont décodés avec conservation de tous les champs. Cela inclut
+les opérations sémantiquement invalides du corpus : validité SSZ ne signifie pas
+validité de signature ou de consensus. 768 troncatures, offsets altérés,
+terminaisons et dépassements sont rejetés ; erreurs de configuration et annulations
+propagent correctement. Cinq suites passent, incluant les 18 scénarios durables,
+787 commits, 17 reprises et les gardes de publication/erreur disque.
+Campagne : `build-cmake/qualification/consensus-message-ssz-20260925/`.
+
+Reste l'intégration du transport P2P : cadrage, décompression bornée, négociation
+de profil, files/budgets d'admission, récupération des dépendances, service réseau
+et qualification distribuée. Le codec n'implémente pas le nouveau schéma Electra
+(EIP-7549) et ne constitue aucune activation de fork ni de réseau.

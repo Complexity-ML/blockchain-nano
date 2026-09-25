@@ -1,5 +1,6 @@
 #include "nano/consensus_altair_reactor.hpp"
 #include <type_traits>
+#include "nano/consensus_message_ssz.hpp"
 namespace nano {
 static_assert(std::is_nothrow_move_assignable_v<std::optional<ForkCheckpointToken>>);
 static_assert(std::is_nothrow_move_assignable_v<std::shared_ptr<const AltairForkStore>>);
@@ -39,5 +40,18 @@ bool AltairDurableReactor::vote(const Phase0SignedAttestation& vote,const std::f
 }
 bool AltairDurableReactor::slashing(const IndexedConsensusAttestation& a,const IndexedConsensusAttestation& b,const std::function<void()>& checkpoint){
  std::lock_guard lock(mutex_);require_available();auto next=prepare_altair_store_slashing(*state_,a,b,rules_,checkpoint);if(!next)return false;publish(std::move(*next),checkpoint);return true;
+}
+}
+
+namespace nano {
+bool AltairDurableReactor::vote_ssz(std::span<const uint8_t> bytes,const std::function<void()>& checkpoint){
+ auto decoded=decode_consensus_attestation_ssz(bytes,rules_.transition.body.validators_per_committee,checkpoint);
+ if(!decoded){std::lock_guard lock(mutex_);require_available();return false;}
+ return vote(*decoded,checkpoint);
+}
+bool AltairDurableReactor::slashing_ssz(std::span<const uint8_t> bytes,const std::function<void()>& checkpoint){
+ auto decoded=decode_consensus_attester_slashing_ssz(bytes,rules_.transition.body.validators_per_committee,checkpoint);
+ if(!decoded){std::lock_guard lock(mutex_);require_available();return false;}
+ return slashing(decoded->first,decoded->second,checkpoint);
 }
 }

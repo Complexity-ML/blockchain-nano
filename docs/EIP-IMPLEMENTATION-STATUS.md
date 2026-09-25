@@ -592,3 +592,10 @@ annulation/refus laisse l'état inchangé. Get_head/reorg : 787 commits (18 init
 fsync EIO macOS vérifiées. Campagne `altair-durable-reactor-20260925`.
 Snapshots complets par événement : débit non qualifié. Aucun raccordement P2P,
 activation réseau ou lien atomique EVM n'est déduit de cette intégration locale.
+
+Altair : décodeurs SSZ bornés de votes et preuves raccordés aux entrées du
+coordinateur durable. 71 encodages officiels pré-Electra, 768 entrées mal formées
+ou hors limites rejetées ; cinq suites vertes, reprises événementielles conservées.
+Campagne `consensus-message-ssz-20260925`. La validation de signature/consensus
+reste distincte du codec. Transport P2P, cadrage/décompression/quotas et schéma
+Electra EIP-7549 restent à intégrer ; aucune activation réseau.
