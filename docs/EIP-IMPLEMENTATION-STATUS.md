@@ -500,3 +500,10 @@ autre genesis, débordement et annulation. Cette étape complète la vérificati
 isolée des sync aggregates, pas la transition complète des blocs ni le consensus
 réseau. L'admission doit authentifier le comité, sa clé agrégée et les PoPs.
 Voir la campagne `altair-sync-aggregate-20260925` et la feuille de route validateurs.
+
+Altair : attestations et récompenses de proposant implémentées, 41 opérations
+officielles minimal qualifiées (17 états exacts, 24 rejets). Les répétitions ne
+paient pas deux fois les mêmes indicateurs de participation. Contrôles BLS,
+fenêtre d'inclusion et comités sont dérivés de l'état admis. La transition complète
+des blocs reste ouverte ; aucune activation réseau. Campagne
+`altair-attestation-20260925`, détails dans la feuille de route validateurs.

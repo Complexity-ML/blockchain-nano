@@ -1460,3 +1460,30 @@ restent à terminer. Aucun changement du consensus actif.
 
 Corpus : `tests/fixtures/consensus-altair-sync-aggregate-official/`.
 Preuves : `build-cmake/qualification/altair-sync-aggregate-20260925/`.
+
+### Attestations Altair — 25 septembre 2026
+
+`prepare_altair_attestation` applique les indicateurs de participation et les
+récompenses de proposant Altair. Le comité, le proposant et le domaine de
+signature sont dérivés du registre, du RANDAO et du fork de l'état. Les contrôles
+communs Phase0 (source, fenêtre d'inclusion, comité et signature BLS) sont
+réutilisés sur un contexte privé ; aucune liste d'attestations en attente ni
+limite Phase0 n'est ajoutée à l'état Altair.
+
+Les indicateurs source/target/head dépendent des racines historiques et du délai
+d'inclusion. Seuls les indicateurs nouvellement acquis contribuent à la récompense
+avec les poids Altair 14/26/14, 8/64. Une inclusion répétée reste valide sans
+paiement supplémentaire. Les états candidats restent privés jusqu'au succès,
+avec vérification des cardinalités et du débordement de solde.
+
+Les 41 opérations officielles minimal passent : 17 post-states identiques en
+SSZ et 24 attestations invalides rejetées. Les 17 répétitions sont sans effet ;
+85 mutations supplémentaires (signature, source, longueur de bits, participation
+vide, autre genesis), cinq contextes invalides/débordements et sept annulations
+sont vérifiés. Les clés doivent avoir établi leurs PoPs lors de l'admission de
+l'état ; cette opération ne qualifie pas la transition complète du bloc.
+
+Corpus : `tests/fixtures/consensus-altair-attestation-official/`.
+Preuves : `build-cmake/qualification/altair-attestation-20260925/`.
+Restent notamment les différences de dépôts/slashings et leur composition dans
+le bloc Altair, puis le replay fork_choice et l'intégration réseau persistante.
