@@ -1487,3 +1487,26 @@ Corpus : `tests/fixtures/consensus-altair-attestation-official/`.
 Preuves : `build-cmake/qualification/altair-attestation-20260925/`.
 Restent notamment les différences de dépôts/slashings et leur composition dans
 le bloc Altair, puis le replay fork_choice et l'intégration réseau persistante.
+
+### Dépôts Altair — 25 septembre 2026
+
+`prepare_altair_deposit` réutilise les preuves Merkle, l'ordre des dépôts et les
+signatures de possession du composant existant, puis reconstruit l'état SSZ Altair.
+Les nouveaux validateurs reçoivent leurs deux indicateurs de participation et
+leur score d'inactivité à zéro. Un complément de dépôt conserve ces champs et
+les credentials existants. Une signature invalide d'une nouvelle clé consomme
+l'index prouvé sans ajouter de validateur, conformément à la spécification.
+Les sept listes variables sont réencodées avec leurs offsets canoniques ; les
+cardinalités et la limite de représentation SSZ sont contrôlées.
+
+Les 19 cas officiels minimal passent : 17 états complets identiques octet pour
+octet (sept admissions, cinq compléments, cinq signatures ignorées) et deux
+opérations invalides rejetées. Les 17 positions consommées ne sont pas rejouables ;
+51 mutations de preuves/montants, cinq débordements et sept annulations sont
+rejetés. Les racines SSZ des résultats restent calculables avec le schéma Altair.
+
+Corpus : `tests/fixtures/consensus-altair-deposit-official/`.
+Preuves : `build-cmake/qualification/altair-deposit-20260925/`.
+L'Eth1 deposit root/count doit être authentifié par le traitement du bloc. Cette
+opération privée ne prouve ni ce lien à la couche d'exécution, ni la persistance,
+ni la finalité réseau. Slashings Altair et composition complète restent ouverts.

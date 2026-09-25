@@ -507,3 +507,10 @@ paient pas deux fois les mêmes indicateurs de participation. Contrôles BLS,
 fenêtre d'inclusion et comités sont dérivés de l'état admis. La transition complète
 des blocs reste ouverte ; aucune activation réseau. Campagne
 `altair-attestation-20260925`, détails dans la feuille de route validateurs.
+
+Altair : dépôts hérités de Phase0 adaptés à l'état Altair, avec initialisation
+à zéro des nouvelles listes de participation/inactivité. Les 19 opérations
+minimal officielles passent (17 états exacts, deux rejets), ainsi que rejeu,
+preuves modifiées, débordements et annulations. Cela ne constitue pas EIP-6110
+ni l'authentification réseau de la source des dépôts. Campagne
+`altair-deposit-20260925`, détails dans la feuille de route validateurs.
