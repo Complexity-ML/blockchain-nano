@@ -983,3 +983,16 @@ Un bloc concurrent descendant du checkpoint finalisé reste admissible. Preuve :
 [périmètre et limites](ALTAIR-LOCAL-FINALITY.md). Les checkpoints hostiles au bootstrap,
 les attaques de quorum, les partitions et les sanctions économiques restent hors
 de cette qualification locale.
+
+
+### 2026-09-25 — preuve de double proposition incluse et sanction persistante
+
+Le scénario adversarial inclut maintenant les deux headers concurrents dans un
+bloc produit/signé/admis normalement. Il compare toutes les balances avec une
+transition témoin sans preuve, vérifie pénalité/récompense configurées, sortie,
+échéance de retrait et vecteur de slashings, puis rouvre la base. Signature de
+preuve altérée, doublon et rejeu ultérieur sont refusés avant signature sans
+mutation ; un bloc normal est ensuite admis avec état attendu et finalité intacte.
+Preuve : `build-cmake/qualification/altair-generated-slashing-20260925/final-tests.log` ;
+[limites](ALTAIR-LOCAL-FINALITY.md). Sanctions corrélées, retrait final, preuves
+acheminées automatiquement et profil Electra restent hors de ce scénario Altair.

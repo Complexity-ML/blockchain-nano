@@ -144,5 +144,42 @@ ni perte du bloc concurrent admissible. Campagne réussie :
 Cette preuve est locale et porte sur un checkpoint déjà authentifié et persisté.
 Elle ne démontre pas une résistance à un quorum de validateurs compromis avant
 finalisation, à un bootstrap utilisant une ancre hostile, aux attaques de longue
-portée ou à une partition distribuée. Elle ne qualifie pas non plus l'inclusion
-d'une preuve de slashing ou sa sanction économique pour les clés du scénario.
+portée ou à une partition distribuée. L'inclusion de la preuve et sa sanction immédiate sont qualifiées par l'extension
+ci-dessous ; les sanctions corrélées aux époques ultérieures restent distinctes.
+
+## Inclusion et persistance de la sanction pour double proposition
+
+L'extension de `consensus_altair_adversarial_finality` encode les deux headers
+réellement signés au même slot en preuve de proposer slashing, puis les soumet
+au constructeur et au signataire de bloc. Le bloc est admis par le coordinateur
+normal, sans application directe d'une mutation de solde au registre.
+
+Un bloc témoin construit sur le même parent, avec le même RANDAO et sans preuve,
+permet de comparer les balances : chaque validateur conserve le solde témoin,
+excepté l'auteur de la double signature qui paie la pénalité configurée et le
+proposant qui reçoit la récompense configurée. Cela isole la sanction des effets
+ordinaires du bloc, notamment les pénalités de SyncCommittee sans participation.
+Le vecteur de slashings doit enregistrer le solde effectif sanctionné, la sortie
+est programmée et l'échéance de retrait est repoussée.
+
+La campagne vérifie aussi :
+
+- preuve à signature altérée et preuve dupliquée dans le même corps refusées
+  avant tout appel du signataire de bloc, sans changement de journal ou de Store ;
+- réouverture réelle de la base, puis égalité de tous les champs du validateur
+  sanctionné avec l'état avant fermeture ;
+- rejeu de la preuve dans un bloc ultérieur refusé avant signature et sans mutation ;
+- admission d'un bloc normal après ce refus, dont l'état correspond exactement à
+  la transition témoin, avec checkpoint finalisé conservé.
+
+Preuves : `build-cmake/qualification/altair-generated-slashing-20260925/final-tests.log`.
+Le cas utilise le validateur de fixture 50 comme auteur et le proposant 8 comme
+rapporteur : pénalité immédiate de 500000000 et récompense de 62500000 dans les
+unités du preset de consensus. Ce ne sont pas des montants de fonds réels.
+`build.log` conserve une erreur initiale de compilation du test (conversion GMP
+ambiguë de uint64_t) ; le calcul de comparaison utilise ensuite un entier signé
+128 bits, sans changement du moteur ni des règles économiques.
+
+Cette preuve ne couvre pas le retrait effectif ultérieur, la sanction corrélée
+sur toute la fenêtre de slashings, l'acheminement autonome des preuves par P2P,
+les doubles attestations ou les règles économiques Electra/Pectra.
