@@ -521,3 +521,11 @@ strictes exactes, 33 rejets et un calcul synthétique exact dont l'état incohé
 reste rejeté par l'admission stricte. Rejeu, mutations, débordements et annulations
 sont testés. Aucun passage du consensus actif à Altair ; composition complète
 et fork_choice restent ouverts. Campagne `altair-slashing-20260925`.
+
+Altair : transition complète des blocs signés composée avec hash du corps SSZ,
+slots/époques, signatures/RANDAO, votes Eth1 et toutes les opérations jusqu'au
+SyncAggregate et à la racine finale. Les 52 séquences officielles minimal passent
+(37 post-states exacts, 15 rejets ; 105 blocs acceptés avec racine vérifiée).
+Cette composition ne vaut ni fork_choice Altair, ni admission/migration de fork,
+ni persistance/raccordement au réseau actif. Campagne
+`altair-full-blocks-20260925`, détails dans la feuille de route validateurs.

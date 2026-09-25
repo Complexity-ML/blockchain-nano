@@ -11,4 +11,7 @@ struct Phase0BodyLimits {
 // Throws std::invalid_argument on malformed data or invalid type bounds.
 // Does not verify operation signatures, eligibility or state transitions.
 ConsensusRoot phase0_beacon_body_root(std::span<const uint8_t> bytes,const Phase0BodyLimits& limits);
+// Altair appends a fixed SyncAggregate to the body; operation SSZ types remain
+// unchanged. sync_committee_size comes from the authenticated Altair preset.
+ConsensusRoot altair_beacon_body_root(std::span<const uint8_t> bytes,const Phase0BodyLimits& limits,uint64_t sync_committee_size);
 }

@@ -1538,3 +1538,36 @@ constitue ni une transition complète de bloc ni une activation du consensus.
 Corpus : `tests/fixtures/consensus-altair-{proposer,attester}-slashing-official/`.
 Preuves : `build-cmake/qualification/altair-slashing-20260925/`.
 La composition des blocs Altair et leur replay fork_choice restent ouverts.
+
+### Transition complète de blocs Altair — 25 septembre 2026
+
+`prepare_altair_state_transition` compose maintenant les slots/époques Altair,
+l'authentification du bloc et de son proposant, le parent, le RANDAO, les votes
+Eth1, les sanctions de proposants puis d'attestateurs, les attestations, les
+dépôts, les sorties et le SyncAggregate. Le corps SSZ Altair inclut le neuvième
+champ SyncAggregate dans son hash_tree_root ; offsets et tailles des opérations
+sont validés avant décodage. La racine d'état finale annoncée est obligatoire.
+Aucun mode de saut des signatures ou du contrôle de racine n'est exposé.
+
+L'état et le marqueur d'époque restent privés jusqu'à la réussite complète.
+Les votes Eth1 sont comptés contre une majorité stricte de la période entière,
+et le nombre de dépôts doit être exactement celui exigé par le curseur et le
+compte authentifié. Les paramètres partagés des époques, sanctions, sorties,
+récompenses, registres et comités sont contrôlés pour éviter les profils mixtes.
+
+Les 52 séquences officielles minimal passent : 37 états finaux reproduits
+intégralement, 15 séquences invalides rejetées, 105 blocs intermédiaires acceptés
+avec contrôle de racine, 772164 octets de post-states comparés. Sont inclus les
+opérations mixtes aléatoires, chevauchements de sanctions, auto-sanction du
+proposant, doublons, votes Eth1, transitions d'époque, inactivité, historique et
+sync committees vides/partiels/complets. Onze mutations/troncatures, cinq erreurs
+de règles/budget et sept annulations sont testées. Un bloc à racine finale
+incorrecte mais à signature d'enveloppe valide est rejeté ; un rejeu au même
+slot l'est également.
+
+Corpus : `tests/fixtures/consensus-altair-full-blocks-official/`.
+Preuves : `build-cmake/qualification/altair-full-blocks-20260925/`.
+Ce jalon compose les blocs Altair sur un état initial admis, sans implémenter
+l'admission de snapshots, la migration Phase0→Altair, le fork_choice Altair,
+la persistance du nouveau Store ou son raccordement EVM/P2P. Aucun changement
+du consensus actif ni qualification de production distribuée.
