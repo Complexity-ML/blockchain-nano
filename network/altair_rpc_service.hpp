@@ -54,6 +54,7 @@ public:
   return receipts_.submit(session,sequence,std::move(*message),service_.dispatcher());
  }
  nano::Json job(const std::string& session,uint64_t sequence,bool cancel=false,bool retire=false){return receipts_.get(session,sequence,cancel,retire);}
+ nano::Json rotate(const std::string& expected){return receipts_.rotate(expected);}
  nano::Json jobs(){return receipts_.list();}
  void stop(){service_.stop();}
  void join(){service_.join();}

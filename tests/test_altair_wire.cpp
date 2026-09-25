@@ -32,6 +32,17 @@ int main(){try{
   const auto token=reactor.current().token;
   const auto status=client->call("nano_altairStatus",Json::array({"qualification-only-token"}));
   admission_session=status.at("admissionSession").get<std::string>();
+  const auto old_session=admission_session;
+  const auto rotated=client->call("nano_altairRotateSession",Json::array({"qualification-only-token",old_session}));
+  admission_session=rotated.at("session").get<std::string>();
+  check(admission_session!=old_session&&client->call("nano_altairJobs",Json::array({"qualification-only-token"})).at("session")==admission_session,"HTTP rotation/status mismatch");
+  bool stale_rotation=false;try{client->call("nano_altairRotateSession",Json::array({"qualification-only-token",old_session}));}catch(const PersistentRpcError&){stale_rotation=true;}
+  check(stale_rotation&&client->call("nano_altairStatus",Json::array({"qualification-only-token"})).at("admissionSession")==admission_session,"stale HTTP rotation mutated session");
+  const auto delayed_frame=Json{{"chainId",profile.chain_id},{"genesisHash",profile.genesis_hash},{"forkDigest",profile.fork_digest},{"kind","attestation"},{"ssz","0x0001"}}.dump();
+  bool delayed_refused=false;try{client->call("nano_altairSubmit",Json::array({"qualification-only-token",old_session,"0xffffffffffffffff",delayed_frame}));}catch(const PersistentRpcError&){delayed_refused=true;}
+  check(delayed_refused&&client->call("nano_altairJobs",Json::array({"qualification-only-token"})).at("jobs").empty(),"delayed HTTP submit escaped rotation");
+  bool rotate_unauthorized=false;try{client->call("nano_altairRotateSession",Json::array({"wrong",admission_session}));}catch(const PersistentRpcError& e){rotate_unauthorized=e.code==-32001;}
+  check(rotate_unauthorized&&simulation_count(Json{{"method","nano_altairRotateSession"}})==1,"rotation bypasses authentication or bounded queue");
   if(core_client_mode){
    core=std::make_unique<Core>(core_io,server->port());
    core_dispatch=std::make_shared<AltairCoreDispatch>(core_io,[&](const std::string& method,Json params,Reply cb){

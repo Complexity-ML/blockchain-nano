@@ -2237,3 +2237,19 @@ des processus Nano/P2P. Preuves :
 La découverte par le daemon, la négociation P2P, la récupération initiale des
 tickets et l'intégration du handler restent ouvertes. Aucun fork ni réseau public
 activé ; aucune clôture de conformité EIP revendiquée.
+
+### Clôture des sessions IPC avant reprise, 25 septembre 2026
+
+Le RPC privé `nano_altairRotateSession` change la session attendue sous le même
+verrou que Submit. Les anciennes requêtes retardées sont refusées ; les tickets
+actifs restent visibles, annulables et non effaçables avant leur fin. Les décisions
+commitées et le watermark sont conservés. Une répétition avec l'ancienne session
+échoue sans autre rotation.
+
+Cinq suites passent (ledger, HTTP privé, client IPC, runtime et processus gérés),
+avec 64 courses Submit/rotation et des requêtes d'ancienne session sur HTTP réel.
+Preuves : `build-cmake/qualification/altair-session-fence-20260925/`.
+Cela prépare la récupération du daemon ; ni son orchestration, ni un réseau Altair
+actif ne sont démontrés. La clôture porte sur les tickets, pas sur l'ancien appel
+synchrone Receive. Le propriétaire unique et le passage exclusif de l'admission
+réseau par les tickets restent des exigences d'intégration.

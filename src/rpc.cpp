@@ -460,15 +460,16 @@ Json Rpc::one(const Json& request,const std::function<void()>& cancelled){
  try{auto params=request.value("params",Json::array());if(!params.is_array())throw RpcError(-32602,"Expected positional parameters");
   if(cancelled)cancelled();
   auto lock_started=rpc_timing::Clock::now();std::unique_lock lock(mutex_);rpc_timing::record("rpc_lock",lock_started,rpc_timing::request);auto method=request["method"].get<std::string>();Json result;
-  if(method=="nano_altairReceive"||method=="nano_altairStatus"||method=="nano_altairSubmit"||method=="nano_altairJob"||method=="nano_altairCancel"||method=="nano_altairForget"||method=="nano_altairJobs"){
+  if(method=="nano_altairReceive"||method=="nano_altairStatus"||method=="nano_altairSubmit"||method=="nano_altairJob"||method=="nano_altairCancel"||method=="nano_altairForget"||method=="nano_altairJobs"||method=="nano_altairRotateSession"){
    if(!altair_)throw RpcError(-32601,"Method not found");
-   const auto count=method=="nano_altairStatus"||method=="nano_altairJobs"?1:method=="nano_altairReceive"?2:method=="nano_altairSubmit"?4:3;arity(params,count,count);
+   const auto count=method=="nano_altairStatus"||method=="nano_altairJobs"?1:method=="nano_altairReceive"||method=="nano_altairRotateSession"?2:method=="nano_altairSubmit"?4:3;arity(params,count,count);
    if(network_token_.empty()||!params[0].is_string()||params[0].get<std::string>()!=network_token_)throw RpcError(-32001,"Unauthorized Altair request");
    uint64_t sequence=0;
    if(count>=3){if(!params[1].is_string()||!params[2].is_string())throw RpcError(-32602,"Expected session and sequence");sequence=u64(quantity(params[2]));if(!sequence||quantity(Int(std::to_string(sequence)))!=params[2].get<std::string>())throw RpcError(-32602,"Invalid admission sequence");}
    auto service=altair_;lock.unlock();
    if(method=="nano_altairStatus")result=service->status();
    else if(method=="nano_altairJobs")result=service->jobs();
+   else if(method=="nano_altairRotateSession")result=service->rotate(params[1].get<std::string>());
    else if(method=="nano_altairReceive")result=service->receive(params[1].get_ref<const std::string&>(),cancelled);
    else if(method=="nano_altairSubmit")result=service->submit(params[1].get<std::string>(),sequence,params[3].get_ref<const std::string&>());
    else result=service->job(params[1].get<std::string>(),sequence,method=="nano_altairCancel",method=="nano_altairForget");

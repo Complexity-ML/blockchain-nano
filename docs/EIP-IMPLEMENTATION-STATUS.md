@@ -690,3 +690,10 @@ empreinte du profil complet, du choix de branche, de l'ancre et de la chaîne,
 ainsi que les limites wire. Treize scénarios d'identité et quatre suites ciblées
 passent ; la négociation par le daemon reste à intégrer. Aucun état EIP ni fork
 activé ne change. Voir `docs/ALTAIR-RUNTIME.md` et la feuille validateurs.
+
+Complément reprise IPC Altair (25 septembre 2026) : rotation atomique des sessions
+à tickets pour refuser les anciennes admissions retardées, sans effacer les
+workers encore actifs ni réécrire les décisions commitées. Cinq suites ciblées
+passent, dont 64 courses admission/rotation. L'orchestration du daemon reste à
+raccorder ; aucun statut EIP, fork ou production n'est promu par ce test.
+Voir `docs/ALTAIR-RUNTIME.md` pour le périmètre et les limites de récupération.

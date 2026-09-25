@@ -179,3 +179,25 @@ par le cœur. Un service de test construit sans identité annonce `null`, jamais
 une identité déduite du seul fork digest. Ce statut est préparatoire : le daemon
 ne le négocie pas encore avec les pairs. Il ne prouve ni leur honnêteté, ni la
 finalité de l'ancre, ni la liaison atomique avec l'exécution EVM.
+
+## Clôture d'une ancienne session d'admission
+
+`nano_altairRotateSession(token, expectedSession)` remplace atomiquement la
+session des tickets et renvoie `session` et `highWater`. La validation de session
+et l'admission Submit partagent le même mutex : une requête retardée de l'ancienne
+session ne peut plus démarrer, quel que soit son numéro. Les tickets existants
+et leur watermark restent conservés ; leurs annulations sont signalées.
+Les anciennes requêtes Job/Cancel/Forget sont également refusées.
+
+La rotation ne prouve pas la fin des workers. Sous la nouvelle session, le daemon
+doit encore consulter les tickets, attendre `completed`, récupérer la décision,
+puis retirer chaque résultat. Une acceptation déjà commitée reste une acceptation.
+Une seconde rotation avec l'ancienne session attendue échoue sans mutation. Si sa
+réponse a été perdue, relire le statut avant toute décision ; ne jamais déduire
+que les anciens travaux ont été rejetés, ni les rejouer automatiquement.
+
+Cette primitive ne coordonne pas plusieurs daemons autorisés concurrents. Elle
+porte sur le chemin à tickets ; l'ancien appel synchrone `nano_altairReceive`
+n'est pas couvert par cette clôture. Avant activation réseau, le superviseur doit
+assurer un propriétaire unique et l'admission réseau doit utiliser exclusivement
+les tickets. L'orchestration de récupération et le handler P2P restent à raccorder.
