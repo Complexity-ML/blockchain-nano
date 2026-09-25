@@ -1295,3 +1295,7 @@ if(APPLE)
  add_test(NAME storage_execution_checkpoint_sync COMMAND nano-execution-checkpoint-sync-tests)
  set_tests_properties(storage_execution_checkpoint_sync PROPERTIES TIMEOUT 90 LABELS "qualification_storage_sync_local")
 endif()
+
+if(APPLE)
+ target_link_libraries(nano-bellatrix-transition-tests PRIVATE nano-test-sync-fault)
+endif()

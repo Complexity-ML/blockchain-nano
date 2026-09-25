@@ -1105,3 +1105,13 @@ sont refusés. Voir [BELLATRIX-STORE-RECOVERY.md](BELLATRIX-STORE-RECOVERY.md).
 Ce sont des checkpoints locaux authentifiés, pas une synchronisation depuis un
 pair. Le coordinateur durable Bellatrix, ses archives signées et le réseau restent
 à raccorder ; la production et la finalité distribuée ne sont pas déclarées closes.
+
+### 2026-09-25 — Coordinateur durable Bellatrix
+
+Les événements blocs/votes/horloge/slashing sont raccordés au checkpoint atomique
+via `BellatrixDurableReactor`. Qualification locale : équivalence au Store pur,
+deux bascules de tête, redémarrage avec neuf blocs signés et six votes archivés,
+annulations avant écriture, auteur obsolète et erreur de sync sur macOS.
+Voir [BELLATRIX-DURABLE-REACTOR.md](BELLATRIX-DURABLE-REACTOR.md). La signature locale,
+le transport Bellatrix et la qualification distribuée restent ouverts. Aucun
+fork réseau n'est activé et la production n'est pas déclarée qualifiée.

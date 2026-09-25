@@ -5,7 +5,13 @@
 #include "nano/committee.hpp"
 #include "nano/consensus_bellatrix_store_snapshot.hpp"
 #include "nano/storage.hpp"
+#include "nano/consensus_bellatrix_reactor.hpp"
 #include "blst.h"
+#ifdef __APPLE__
+extern "C" void nano_test_arm_sync_fault(const char*);
+extern "C" unsigned nano_test_sync_failures();
+extern "C" void nano_test_disarm_sync_fault();
+#endif
 using namespace test;using namespace test::phase0_minimal;
 namespace {
 void put(Bytes& b,size_t at,uint64_t n,size_t width=8){for(size_t i=0;i<width;++i)b.at(at+i)=uint8_t(n>>(8*i));}
@@ -43,6 +49,8 @@ int main(){try{
  std::map<Int,Bytes> hashes{{0,parent.header.hash()}};std::function<Bytes(const Int&)> history=[&](const Int& n){return hashes.at(n);};
  BellatrixForkBlockRules fork_rules{r,seconds*1000,seconds*1000/3,40};
  const Block execution_genesis=parent;const State genesis_state=state;std::vector<BellatrixForkStore> reorg_stores;
+ const BellatrixStoreSnapshotLimits reactor_limits{32*1024*1024,32,128,128,4*1024*1024,8*1024*1024,64,100000};
+ Temp reactor_location;auto reactor_disk=std::make_unique<ChainStore>(reactor_location/"chain");reactor_disk->bind_chain(1337,execution_genesis.header.hash(),"bellatrix-reactor-test");reactor_disk->commit(execution_genesis,genesis_state,{});std::unique_ptr<BellatrixDurableReactor> reactor;
  std::optional<BellatrixForkStore> store;size_t reorgs=0,store_cancellations=0;
  size_t blocks=0,refusals=0,cancellations=0;Bytes first_proof;uint64_t offender=0;
  for(uint64_t slot=1;slot<=slots+1;++slot){
@@ -74,11 +82,12 @@ int main(){try{
   check(received->execution.state.get_storage(target,1)==integer(parent.header.hash()),"BLOCKHASH did not use parent branch");
   if(slot==1){
    store=initialize_bellatrix_fork_store(received->consensus,built->message_ssz,received->execution.block,received->execution.state,received->execution.receipts,{parent.header},fork_rules);
+   reactor=std::make_unique<BellatrixDurableReactor>(*reactor_disk,1337,execution_genesis.header.hash(),fork_rules,reactor_limits,*store);
    auto reject_anchor=[&](const State& candidate,const std::vector<Header>& ancestors){bool rejected=false;try{initialize_bellatrix_fork_store(received->consensus,built->message_ssz,received->execution.block,candidate,received->execution.receipts,ancestors,fork_rules);}catch(const std::invalid_argument&){rejected=true;}check(rejected,"inconsistent execution anchor accepted");};
    reject_anchor(received->execution.state,{});auto corrupt=received->execution.state;corrupt.get(target).balance+=1;reject_anchor(corrupt,{parent.header});
   }else{
    check(!prepare_bellatrix_received_block(*store,wire,fork_rules,64,100000),"future block accepted");
-   store=prepare_bellatrix_store_tick(*store,(genesis_time+slot*seconds)*1000,fork_rules,64,100000);
+   store=prepare_bellatrix_store_tick(*store,(genesis_time+slot*seconds)*1000,fork_rules,64,100000);reactor->tick((genesis_time+slot*seconds)*1000);
    auto bad=wire;bad[4]^=1;check(!prepare_bellatrix_received_block(*store,bad,fork_rules,64,100000),"invalid block signature accepted by Store");
    const auto before=store->blocks.size();size_t store_calls=0;auto next=prepare_bellatrix_received_block(*store,wire,fork_rules,64,100000,[&]{++store_calls;});
    if(slot==2){
@@ -87,6 +96,7 @@ int main(){try{
     auto unknown=wire;unknown[116]^=1;check(!prepare_bellatrix_received_block(*store,unknown,fork_rules,64,100000),"unknown Beacon parent accepted");
    }
    check(next&&next->blocks.size()==before+1&&store->blocks.size()==before,"Store publication not private");store=std::move(*next);
+   check(reactor->block(wire),"durable reactor rejected block");
    check(prepare_bellatrix_received_block(*store,wire,fork_rules,64,100000)->blocks.size()==store->blocks.size(),"duplicate block replaced Store");
   }
   check(bellatrix_fork_head(*store,fork_rules).execution_state.root()==expected.root(),"fork head EVM mismatch");
@@ -113,16 +123,16 @@ int main(){try{
    auto side_execution=execution;side_execution.transactions.clear();auto side_tx=tx;side_tx.value=7;side_execution.transactions.push_back(SignedTransaction::sign(side_tx,key));State side_state=state;ExecutionEngine(r.chain_id,history,EvmRevision::Paris,r.replay_policy).execute_block(side_state,side_execution,false);
    auto side_body=body({});side_body.resize(fixed);const auto side_payload=encode_bellatrix_execution_payload(payload(side_execution),r.execution,r.consensus.maximum_block_bytes);side_body.insert(side_body.end(),side_payload.begin(),side_payload.end());
    const auto side=prepare_bellatrix_unsigned_block(beacon,slot,proposer,parent_root,side_body,r,parent.header,state,history,64,100000);check(side.has_value(),"competing block construction failed");
-   auto branch=prepare_bellatrix_received_block(*store,sign_message(side->message_ssz),fork_rules,64,100000);check(branch&&branch->blocks.size()==store->blocks.size()+1,"competing branch rejected");store=std::move(*branch);
+   auto branch=prepare_bellatrix_received_block(*store,sign_message(side->message_ssz),fork_rules,64,100000);check(branch&&branch->blocks.size()==store->blocks.size()+1,"competing branch rejected");store=std::move(*branch);check(reactor->block(sign_message(side->message_ssz)),"durable reactor rejected competing block");
    const auto canonical=consensus_beacon_header_root(bellatrix_fork_head(*store,fork_rules).header);
    ConsensusRoot alternate{};for(const auto& [id,record]:store->blocks)if(record.execution_block.header.hash()==side_execution.header.hash())alternate=id;
    check(alternate!=ConsensusRoot{}&&canonical!=alternate,"competing execution not distinguished");
-   store=prepare_bellatrix_store_tick(*store,(genesis_time+(slot+1)*seconds)*1000,fork_rules,64,100000);
+   store=prepare_bellatrix_store_tick(*store,(genesis_time+(slot+1)*seconds)*1000,fork_rules,64,100000);reactor->tick((genesis_time+(slot+1)*seconds)*1000);
    const auto& target_record=store->blocks.at(parent_root);const BellatrixEpochRules er{r.consensus.epoch,r.execution,r.maximum_state_bytes};const ConsensusCheckpoint target_checkpoint{epoch,parent_root};
    const auto context=prepare_bellatrix_fork_state_contexts(target_record.state,target_record.header,target_checkpoint,er,l,64,100000);
    const auto assignment=phase0_attestation_duties(context.target.registry,context.target.randao,duties,epoch);
    const auto committee=partition_committee(assignment.shuffled,(slot%slots)*assignment.committees_per_slot,assignment.committees_per_slot*slots);check(committee.size()*assignment.committees_per_slot>=6,"slot committees too small for reorg scenario");
-   auto vote_for=[&](size_t position,const ConsensusRoot& head){const auto index=position/committee.size();const auto members=partition_committee(assignment.shuffled,(slot%slots)*assignment.committees_per_slot+index,assignment.committees_per_slot*slots);position%=committee.size();Phase0SignedAttestation vote{{slot,index,head,{},target_checkpoint},std::vector<bool>(members.size()),{}};vote.aggregation_bits[position]=true;Key signer(members[position]);vote.signature=signer.sign(consensus_signing_root(consensus_attestation_root(vote.data),consensus_domain({1,0,0,0},context.target.fork.current_version,context.target.genesis_root)));auto result=prepare_bellatrix_store_vote(*store,vote,fork_rules,64,100000);check(result.has_value(),"valid branch vote rejected");store=std::move(*result);};
+   auto vote_for=[&](size_t position,const ConsensusRoot& head){const auto index=position/committee.size();const auto members=partition_committee(assignment.shuffled,(slot%slots)*assignment.committees_per_slot+index,assignment.committees_per_slot*slots);position%=committee.size();Phase0SignedAttestation vote{{slot,index,head,{},target_checkpoint},std::vector<bool>(members.size()),{}};vote.aggregation_bits[position]=true;Key signer(members[position]);vote.signature=signer.sign(consensus_signing_root(consensus_attestation_root(vote.data),consensus_domain({1,0,0,0},context.target.fork.current_version,context.target.genesis_root)));auto result=prepare_bellatrix_store_vote(*store,vote,fork_rules,64,100000);check(result.has_value(),"valid branch vote rejected");store=std::move(*result);check(reactor->vote(vote),"durable reactor rejected BLS vote");check(bellatrix_store_snapshot(*reactor->current().state,fork_rules,reactor_limits)==bellatrix_store_snapshot(*store,fork_rules,reactor_limits),"reactor vote changed Store semantics");};
    vote_for(0,canonical);check(bellatrix_fork_head(*store,fork_rules).execution_state.root()==expected.root(),"canonical vote lost paired EVM state");
    vote_for(1,alternate);vote_for(2,alternate);check(bellatrix_fork_head(*store,fork_rules).execution_state.root()==side_state.root(),"vote reorg did not switch EVM state");++reorgs;reorg_stores.push_back(*store);
    vote_for(3,canonical);vote_for(4,canonical);vote_for(5,canonical);check(bellatrix_fork_head(*store,fork_rules).execution_state.root()==expected.root(),"return reorg did not restore EVM state");++reorgs;reorg_stores.push_back(*store);
@@ -134,6 +144,18 @@ int main(){try{
   check(beacon==old_beacon&&state.root()==old_state,"successful preparation changed parents");beacon=received->consensus;state=received->execution.state;parent=received->execution.block;hashes[parent.header.number]=parent.header.hash();++blocks;
  }
  check(beacon.last_processed_epoch==0,"epoch boundary not processed");
+ check(bellatrix_store_snapshot(*reactor->current().state,fork_rules,reactor_limits)==bellatrix_store_snapshot(*store,fork_rules,reactor_limits),"reactor state differs from in-memory admission");
+ const auto published=reactor->current();check(published.signed_blocks->size()==9&&published.signed_votes->size()==6,"durable signed archives incomplete");
+ reactor.reset();reactor_disk.reset();reactor_disk=std::make_unique<ChainStore>(reactor_location/"chain");reactor=std::make_unique<BellatrixDurableReactor>(*reactor_disk,1337,execution_genesis.header.hash(),fork_rules,reactor_limits,published.token);
+ check(reactor->current().token==published.token&&reactor->current().signed_blocks->size()==9&&reactor->current().signed_votes->size()==6,"reactor restart lost checkpoint/archives");
+ const auto clock_ms=reactor->current().state->timed.clock.time_ms;size_t calls_before_write=0;reactor->tick(clock_ms,[&]{++calls_before_write;});const auto before_cancel=reactor->current().token;
+ size_t reactor_cancellations=0;for(size_t stop:std::set<size_t>{1,calls_before_write/2,calls_before_write}){size_t seen=0;bool stopped=false;try{reactor->tick(clock_ms,[&]{if(++seen==stop)throw std::runtime_error("cancel reactor");});}catch(const std::runtime_error& e){stopped=std::string(e.what())=="cancel reactor";}check(stopped&&reactor->current().token==before_cancel&&reactor_disk->fork_checkpoint(1337,execution_genesis.header.hash(),reactor_limits.envelope_bytes)->token==before_cancel,"reactor cancellation published candidate");++reactor_cancellations;}
+ BellatrixDurableReactor competing(*reactor_disk,1337,execution_genesis.header.hash(),fork_rules,reactor_limits,before_cancel);competing.tick(clock_ms);bool stale=false;try{reactor->tick(clock_ms);}catch(const std::invalid_argument&){stale=true;}check(stale,"stale reactor overwrote checkpoint");bool unavailable=false;try{reactor->current();}catch(const std::runtime_error&){unavailable=true;}check(unavailable,"stale reactor remained publishable");
+
+ bool reactor_sync_error=false;
+#ifdef __APPLE__
+ const auto stable=competing.current();fs::path wal;for(const auto& entry:fs::directory_iterator(reactor_location/"chain"))if(entry.path().extension()==".log"&&(wal.empty()||entry.path().filename()>wal.filename()))wal=entry.path();check(!wal.empty(),"reactor WAL missing");nano_test_arm_sync_fault(wal.c_str());bool failed=false;try{competing.tick(clock_ms+1);}catch(const std::runtime_error&){failed=true;}bool closed=false;try{competing.current();}catch(const std::runtime_error&){closed=true;}nano_test_disarm_sync_fault();check(failed&&closed&&nano_test_sync_failures()>0&&stable.state->timed.clock.time_ms==clock_ms,"uncertain reactor published new state");reactor_sync_error=true;
+#endif
  const BellatrixStoreSnapshotLimits limits{16*1024*1024,32,128,128,4*1024*1024,8*1024*1024,64,100000};
  size_t snapshot_calls=0;const auto encoded=bellatrix_store_snapshot(*store,fork_rules,limits,[&]{++snapshot_calls;});
  const auto digest=sha256(Bytes(encoded.begin(),encoded.end()));const auto decoded=bellatrix_store_from_snapshot(encoded,digest,fork_rules,limits);
@@ -157,5 +179,5 @@ int main(){try{
   {ChainStore disk(database);const auto persisted=disk.fork_checkpoint(1337,execution_genesis.header.hash(),limits.envelope_bytes,token);check(persisted.has_value(),"Bellatrix checkpoint lost");const auto restored=bellatrix_store_from_snapshot(persisted->snapshot,persisted->token.digest,fork_rules,limits);const auto& selected=bellatrix_fork_head(restored,fork_rules);disk_tip=selected.execution_block.header.hash();check(disk.latest()->header.hash()==disk_tip&&disk.state_at(selected.execution_block.header.number)->root()==selected.execution_state.root(),"Bellatrix recovery split Beacon/EVM");check(disk.receipt(selected.execution_block.transactions[0].hash())->block_hash==disk_tip,"Bellatrix recovery receipt mismatch");}
  }
 
- std::cout<<Json{{"scenario","signed-bellatrix-evm-chain"},{"blocks",blocks},{"validators",64},{"invalidSignedBlocks",refusals},{"cancellations",cancellations},{"doubleProposalSlashed",true},{"pairedExecutionReorgs",reorgs},{"storeCancellations",store_cancellations},{"forkBlocks",store->blocks.size()},{"durableCommit",true},{"snapshotRefusals",snapshot_refusals},{"pairedCheckpointReopens",reorg_stores.size()},{"networkActive",false}}.dump()<<'\n';
+ std::cout<<Json{{"scenario","signed-bellatrix-evm-chain"},{"blocks",blocks},{"validators",64},{"invalidSignedBlocks",refusals},{"cancellations",cancellations},{"doubleProposalSlashed",true},{"pairedExecutionReorgs",reorgs},{"storeCancellations",store_cancellations},{"forkBlocks",store->blocks.size()},{"durableCommit",true},{"durableReactor",true},{"reactorSyncErrorTested",reactor_sync_error},{"reactorCancellations",reactor_cancellations},{"snapshotRefusals",snapshot_refusals},{"pairedCheckpointReopens",reorg_stores.size()},{"networkActive",false}}.dump()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

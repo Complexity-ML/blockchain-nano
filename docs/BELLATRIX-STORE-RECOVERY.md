@@ -45,11 +45,13 @@ Les essais de SIGKILL et d'erreur de sync restent ceux de la primitive de stocka
 (`storage_execution_checkpoint*`) ; le scénario Bellatrix ferme proprement la base.
 Aucune coupure électrique physique ni partition réseau n'est démontrée ici.
 
-## Reste à intégrer
+## Coordinateur et périmètre restant
 
-Un coordinateur Bellatrix durable doit sérialiser les événements, conserver les
-enveloppes signées nécessaires au réseau, calculer le suffixe canonique et empêcher
-les réorganisations sous la finalité avant l'appel au stockage. Le présent test
-compose explicitement ces APIs ; ce n'est pas encore le service réseau autonome.
-La signature locale avec journal anti-slashing, les pannes du coordinateur complet,
-le pruning, les performances et la qualification distribuée restent ouverts.
+Le coordinateur local sérialise désormais les événements, conserve les enveloppes
+signées admises, calcule le suffixe canonique et protège la finalité avant l'appel
+au stockage : voir [BELLATRIX-DURABLE-REACTOR.md](BELLATRIX-DURABLE-REACTOR.md).
+Le test direct des snapshots ci-dessus reste distinct de ce parcours événementiel.
+
+La signature locale avec journal anti-slashing, le transport, la qualification
+complète des pannes du service, le pruning, les performances et la qualification
+distribuée restent ouverts.
