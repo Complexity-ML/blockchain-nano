@@ -61,5 +61,31 @@ int main(int argc,char** argv){try{
  Process child({argv[0],"--crash",(temp/"crash-journal").string()});const auto saved=child.event("reserved-before-crash");check(child.wait().code==-SIGKILL,"child did not crash before signature");
  ChainStore crash_disk(temp/"crash-journal");const ForkCheckpointToken retained{saved.at("sequence").get<uint64_t>(),unhex(saved.at("digest").get<std::string>())};BeaconSigningJournal resumed(crash_disk,1337,genesis,validators,key,8,retained);
  header.slot=10;conflicting=header;conflicting.body_root[0]^=1;refuse([&]{resumed.sign_proposal(conflicting,version,sign);});resumed.sign_proposal(header,version,sign);
- std::cout<<Json{{"scenario","beacon-signing-journal"},{"rejectedBeforeProvider",rejected},{"concurrentConflictRefused",true},{"crashAfterReservation",true},{"syncFailureTested",sync_tested},{"validatorDutiesActive",false},{"eip3076ImportExport",false}}.dump()<<'\n';
+ // Export retires the source durably and fences other in-process instances.
+ const auto before_export=journal->commitment();
+ BeaconSigningJournal export_stale(*disk,1337,genesis,validators,key,8,before_export);
+ const auto local=Json::parse(disk->fork_checkpoint(1337,genesis,4096,before_export)->snapshot);
+ const auto exported=journal->retire_and_export_interchange();const auto interchange=Json::parse(exported);
+ check(interchange.at("metadata").at("interchange_format_version")=="5"&&interchange.at("metadata").at("genesis_validators_root")==hex(Bytes(validators.begin(),validators.end())),"export metadata incorrect");
+ const auto& entry=interchange.at("data").at(0);
+ check(entry.at("pubkey")==hex(key)&&entry.at("signed_blocks").size()==1&&entry.at("signed_attestations").size()==1,"export missing reservations");
+ check(entry.at("signed_blocks").at(0).at("slot")==std::to_string(u64(quantity(local.at("proposal").at("slot"))))&&entry.at("signed_blocks").at(0).at("signing_root")==local.at("proposal").at("root"),"export lost block guard");
+ const auto& att=entry.at("signed_attestations").at(0);
+ check(att.at("source_epoch")==std::to_string(u64(quantity(local.at("attestation").at("source"))))&&att.at("target_epoch")==std::to_string(u64(quantity(local.at("attestation").at("target"))))&&att.at("signing_root")==local.at("attestation").at("root"),"export lost vote guard");
+ const auto retired_token=journal->commitment();check(retired_token.sequence==before_export.sequence+1,"retirement not committed");
+ header.slot=100;data.slot=800;data.source.epoch=99;data.target.epoch=100;
+ refuse([&]{journal->sign_proposal(header,version,sign);});refuse([&]{journal->sign_attestation(data,version,sign);});refuse([&]{export_stale.sign_proposal(header,version,sign);});
+ check(exported==journal->retire_and_export_interchange()&&retired_token==journal->commitment(),"repeat export changed retired state");
+ journal.reset();disk.reset();disk=std::make_unique<ChainStore>(path);
+ journal=std::make_unique<BeaconSigningJournal>(*disk,1337,genesis,validators,key,8,retired_token);
+ refuse([&]{journal->sign_proposal(header,version,sign);});refuse([&]{journal->sign_attestation(data,version,sign);});
+ check(exported==journal->retire_and_export_interchange(),"reopened retirement lost export");
+ {ChainStore empty_disk(temp/"empty-export");BeaconSigningJournal empty(empty_disk,1337,genesis,validators,key,8);
+ const auto doc=Json::parse(empty.retire_and_export_interchange());check(doc.at("data").at(0).at("signed_blocks").empty()&&doc.at("data").at(0).at("signed_attestations").empty(),"empty history invented signatures");refuse([&]{empty.sign_proposal(header,version,sign);});}
+#ifdef NANO_TEST_SYNC_FAULT
+ {const auto fault_path=temp/"export-fault";ChainStore fault_disk(fault_path);BeaconSigningJournal fault(fault_disk,1337,genesis,validators,key,8);
+ fs::path fault_wal;for(const auto& entry:fs::directory_iterator(fault_path))if(entry.path().extension()==".log"&&(fault_wal.empty()||entry.path().filename()>fault_wal.filename()))fault_wal=entry.path();check(!fault_wal.empty(),"missing export WAL");
+ nano_test_arm_sync_fault(fault_wal.c_str());refuse([&]{fault.retire_and_export_interchange();});check(nano_test_sync_failures()>0,"export sync failure not reached");nano_test_disarm_sync_fault();refuse([&]{fault.sign_proposal(header,version,sign);});refuse([&]{fault.retire_and_export_interchange();});}
+#endif
+ std::cout<<Json{{"scenario","beacon-signing-journal"},{"rejectedBeforeProvider",rejected},{"concurrentConflictRefused",true},{"crashAfterReservation",true},{"syncFailureTested",sync_tested},{"validatorDutiesActive",false},{"eip3076ExportRetiresDurably",true},{"eip3076Import",false}}.dump()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

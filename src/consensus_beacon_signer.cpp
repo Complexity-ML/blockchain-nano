@@ -12,17 +12,19 @@ ConsensusRoot parse_root(const Json& value){require(value.is_string());const aut
 std::string number(uint64_t n){return quantity(Int(std::to_string(n)));}
 uint64_t parse_number(const Json& value){const auto n=u64(quantity(value));require(value==number(n));return n;}
 }
-std::string BeaconSigningJournal::encode(const std::optional<Proposal>& proposal,const std::optional<Vote>& vote)const{
- return Json{{"format","nano-beacon-signing-v1"},{"publicKey",hex(public_key_)},{"genesisValidatorsRoot",root_text(validators_genesis_)},{"slotsPerEpoch",number(slots_per_epoch_)},
+std::string BeaconSigningJournal::encode(const std::optional<Proposal>& proposal,const std::optional<Vote>& vote,bool retired)const{
+ auto doc=Json{{"format",retired?"nano-beacon-signing-v2":"nano-beacon-signing-v1"},{"publicKey",hex(public_key_)},{"genesisValidatorsRoot",root_text(validators_genesis_)},{"slotsPerEpoch",number(slots_per_epoch_)},
   {"proposal",proposal?Json{{"slot",number(proposal->slot)},{"root",root_text(proposal->root)}}:Json(nullptr)},
-  {"attestation",vote?Json{{"source",number(vote->source)},{"target",number(vote->target)},{"root",root_text(vote->root)}}:Json(nullptr)}}.dump();
+  {"attestation",vote?Json{{"source",number(vote->source)},{"target",number(vote->target)},{"root",root_text(vote->root)}}:Json(nullptr)}};
+ if(retired)doc["retired"]=true;
+ return doc.dump();
 }
-void BeaconSigningJournal::commit(const std::optional<Proposal>& proposal,const std::optional<Vote>& vote){
+void BeaconSigningJournal::commit(const std::optional<Proposal>& proposal,const std::optional<Vote>& vote,bool retired){
  if(unavailable_)throw std::runtime_error("Beacon signer unavailable; reopen required");
- const auto encoded=encode(proposal,vote);ForkCheckpointToken next;
+ const auto encoded=encode(proposal,vote,retired);ForkCheckpointToken next;
  try{next=disk_.commit_fork_checkpoint(chain_,execution_genesis_,token_,encoded,journal_bytes);}catch(...){unavailable_=true;throw;}
  // All publication after the synchronous write is non-throwing.
- token_=std::move(next);proposal_=proposal;vote_=vote;
+ token_=std::move(next);proposal_=proposal;vote_=vote;retired_=retired;
 }
 void BeaconSigningJournal::ready()const{
  if(unavailable_||!token_)throw std::runtime_error("Beacon signer unavailable; reopen required");
@@ -37,12 +39,25 @@ BeaconSigningJournal::BeaconSigningJournal(ChainStore& disk,Int chain,Bytes exec
  const auto saved=disk_.fork_checkpoint(chain_,execution_genesis_,journal_bytes,expected);
  if(!saved){require(!expected);commit(std::nullopt,std::nullopt);return;}
  require(expected.has_value());const auto doc=Json::parse(saved->snapshot);
- require(doc.is_object()&&doc.size()==6&&doc.at("format")=="nano-beacon-signing-v1"&&doc.at("publicKey")==hex(public_key_)&&parse_root(doc.at("genesisValidatorsRoot"))==validators_genesis_&&parse_number(doc.at("slotsPerEpoch"))==slots_per_epoch_);
+ require(doc.is_object());
+ retired_=doc.at("format")=="nano-beacon-signing-v2";
+ require((retired_?(doc.size()==7&&doc.at("retired")==true):(doc.size()==6&&doc.at("format")=="nano-beacon-signing-v1"))&&doc.at("publicKey")==hex(public_key_)&&parse_root(doc.at("genesisValidatorsRoot"))==validators_genesis_&&parse_number(doc.at("slotsPerEpoch"))==slots_per_epoch_);
  const auto& p=doc.at("proposal");if(!p.is_null()){require(p.is_object()&&p.size()==2);proposal_=Proposal{parse_number(p.at("slot")),parse_root(p.at("root"))};}
  const auto& v=doc.at("attestation");if(!v.is_null()){require(v.is_object()&&v.size()==3);vote_=Vote{parse_number(v.at("source")),parse_number(v.at("target")),parse_root(v.at("root"))};require(vote_->source<=vote_->target);}
- require(encode(proposal_,vote_)==saved->snapshot);token_=saved->token;
+ require(encode(proposal_,vote_,retired_)==saved->snapshot);token_=saved->token;
 }
 ForkCheckpointToken BeaconSigningJournal::commitment()const{std::lock_guard lock(mutex_);ready();return *token_;}
+std::string BeaconSigningJournal::retire_and_export_interchange(){
+ std::lock_guard lock(mutex_);ready();
+ Json blocks=Json::array(),attestations=Json::array();
+ if(proposal_)blocks.push_back(Json{{"slot",std::to_string(proposal_->slot)},{"signing_root",root_text(proposal_->root)}});
+ if(vote_)attestations.push_back(Json{{"source_epoch",std::to_string(vote_->source)},{"target_epoch",std::to_string(vote_->target)},{"signing_root",root_text(vote_->root)}});
+ // Allocate the export before retiring; no export escapes until the durable CAS.
+ auto output=Json{{"metadata",{{"interchange_format_version","5"},{"genesis_validators_root",root_text(validators_genesis_)}}},
+  {"data",Json::array({Json{{"pubkey",hex(public_key_)},{"signed_blocks",blocks},{"signed_attestations",attestations}}})}}.dump();
+ if(!retired_)commit(proposal_,vote_,true);
+ return output;
+}
 Bytes BeaconSigningJournal::sign(const ConsensusRoot& root,const Signer& provider)const{
  const auto signature=provider(root);if(!verify_consensus_bls(public_key_,root,signature))throw std::runtime_error("Beacon signing provider returned an invalid signature");return signature;
 }
@@ -50,6 +65,7 @@ Bytes BeaconSigningJournal::sign_proposal(const ConsensusBeaconHeader& header,co
  if(!provider)throw std::invalid_argument("Missing beacon signing provider");
  const auto root=consensus_signing_root(consensus_beacon_header_root(header),consensus_domain({0,0,0,0},version,validators_genesis_));
  std::lock_guard lock(mutex_);ready();
+ if(retired_)throw std::runtime_error("Beacon signing journal permanently retired");
  if(proposal_){if(header.slot<proposal_->slot||(header.slot==proposal_->slot&&root!=proposal_->root))throw std::runtime_error("Conflicting or old beacon proposal refused");if(header.slot==proposal_->slot)return sign(root,provider);}
  commit(Proposal{header.slot,root},vote_);return sign(root,provider);
 }
@@ -57,6 +73,7 @@ Bytes BeaconSigningJournal::sign_attestation(const ConsensusAttestationData& dat
  if(!provider||data.source.epoch>data.target.epoch||data.target.epoch!=data.slot/slots_per_epoch_)throw std::invalid_argument("Invalid beacon attestation signing request");
  const auto root=consensus_signing_root(consensus_attestation_root(data),consensus_domain({1,0,0,0},version,validators_genesis_));
  std::lock_guard lock(mutex_);ready();
+ if(retired_)throw std::runtime_error("Beacon signing journal permanently retired");
  if(vote_){
   if(data.source.epoch<vote_->source||data.target.epoch<vote_->target||(data.target.epoch==vote_->target&&(data.source.epoch!=vote_->source||root!=vote_->root)))throw std::runtime_error("Conflicting or old beacon attestation refused");
   if(data.target.epoch==vote_->target)return sign(root,provider);

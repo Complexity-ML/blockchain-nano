@@ -77,9 +77,39 @@ ne démontrent ni une finalité distribuée ni l'autorisation d'une tâche de va
 ## Interopérabilité à terminer
 
 L'[EIP-3076](https://eips.ethereum.org/EIPS/eip-3076) définit l'échange d'historique
-anti-slashing entre clients (format version 5). Son import/export n'est pas
-implémenté ici. Il faut notamment qualifier les racines absentes, la fusion des
+anti-slashing entre clients (format version 5). L'export version 5 est disponible via
+`retire_and_export_interchange()` ; l'import n'est pas encore implémenté. Il faut notamment qualifier les racines absentes, la fusion des
 historiques, les bornes de refus et l'interdiction de signer dans des zones dont
 l'historique est inconnu. Le format local du journal n'est pas un fichier EIP-3076.
 Les règles de slashing sont définies par la
 [spécification Beacon](https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/).
+
+## Export avec arrêt durable du journal
+
+L'API C++ exporte une seule clé, les deux dernières réservations et leurs racines,
+avec des slots/époques sous forme de chaînes décimales. Une réservation dont le
+backend n'a pas retourné de signature reste incluse par précaution. Un historique
+vide produit les deux tableaux vides. Aucun secret n'est exporté.
+
+Avant de retourner le JSON, la méthode écrit et synchronise un checkpoint local
+v2 marqué `retired`. Cette base ne peut plus signer, même après réouverture avec
+son nouvel engagement externe. Les exports suivants restent possibles et ne
+créent pas de nouveau checkpoint. Les journaux actifs v1 restent lisibles ; un
+ancien binaire ne comprend pas v2 et refuse de le charger. Aucune reprise de
+signature depuis une base retirée n'est proposée.
+
+L'appelant doit arrêter les autres utilisateurs de la clé avant la migration.
+Le mutex attend les callbacks en cours **sur la même instance** ; il ne peut pas
+rappeler une requête déjà autorisée sur une autre instance, un backend externe ou
+une copie indépendante de la clé. Le contrôle du checkpoint refuse les appels
+ultérieurs d'une instance périmée, mais ne remplace pas cet arrêt opérationnel.
+Le JSON retourné et le nouvel engagement doivent être conservés par l'appelant.
+Une erreur d'écriture ne retourne aucun export et rend l'instance indisponible.
+Une erreur de sauvegarde du JSON après retour permet de réexporter la base retirée.
+
+Campagne `build-cmake/qualification/beacon-signing-export-20260925/` :
+`journal-tests.log` vérifie le contenu des réservations, l'historique vide,
+l'idempotence, les refus après export/réouverture, une instance périmée et un
+échec de synchronisation WAL à l'export, en plus des régressions du journal.
+Cela ne valide pas encore le corpus inter-clients, l'import/fusion, une migration
+opérationnelle complète ni l'activation des tâches de validateur.

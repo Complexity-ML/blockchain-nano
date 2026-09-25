@@ -18,9 +18,9 @@ private:
  ChainStore& disk_;const Int chain_;const Bytes execution_genesis_,public_key_;
  const ConsensusRoot validators_genesis_;const uint64_t slots_per_epoch_;
  mutable std::mutex mutex_;std::optional<Proposal> proposal_;std::optional<Vote> vote_;
- std::optional<ForkCheckpointToken> token_;bool unavailable_=false;
- std::string encode(const std::optional<Proposal>&,const std::optional<Vote>&)const;
- void commit(const std::optional<Proposal>&,const std::optional<Vote>&);
+ std::optional<ForkCheckpointToken> token_;bool unavailable_=false,retired_=false;
+ std::string encode(const std::optional<Proposal>&,const std::optional<Vote>&,bool retired)const;
+ void commit(const std::optional<Proposal>&,const std::optional<Vote>&,bool retired=false);
  void ready()const;
  Bytes sign(const ConsensusRoot&,const Signer&)const;
 public:
@@ -30,6 +30,12 @@ public:
   ConsensusRoot genesis_validators_root,Bytes public_key,uint64_t slots_per_epoch,
   const std::optional<ForkCheckpointToken>& expected=std::nullopt);
  ForkCheckpointToken commitment()const;
+ // Caller must first stop all OTHER users of this key (including other
+ // journal instances). This instance serializes export with its callbacks.
+ // Permanently retire this database before returning EIP-3076 v5 JSON.
+ // Repeated exports are allowed; signing cannot resume from this database.
+ // Caller persists the returned JSON and independently retains commitment().
+ std::string retire_and_export_interchange();
  Bytes sign_proposal(const ConsensusBeaconHeader&,const ConsensusBytes4& fork_version,const Signer&);
  Bytes sign_attestation(const ConsensusAttestationData&,const ConsensusBytes4& fork_version,const Signer&);
 };

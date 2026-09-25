@@ -19,7 +19,7 @@ reste à compléter. Le genesis réseau autorise actuellement Paris/Shanghai.
 
 | EIP | État actuel | Périmètre réel | Code / preuves à consulter | Reste à faire / critère de clôture | Priorité |
 | --- | --- | --- | --- | --- | --- |
-| [3076](https://eips.ethereum.org/EIPS/eip-3076) | Non commencé (import/export) | Journal local anti-slashing disponible ; format d'échange non exposé | src/consensus_beacon_signer.cpp ; docs/BEACON-SIGNING-JOURNAL.md | Import/export v5, racines absentes, fusion des historiques et intégration aux tâches réelles ; aucun statut production | Validateurs |
+| [3076](https://eips.ethereum.org/EIPS/eip-3076) | Partiel (export v5) | Journal local anti-slashing ; export C++ avec arrêt durable, import absent | src/consensus_beacon_signer.cpp ; docs/BEACON-SIGNING-JOURNAL.md | Import/export v5, racines absentes, fusion des historiques et intégration aux tâches réelles ; aucun statut production | Validateurs |
 | [2](https://eips.ethereum.org/EIPS/eip-2) | Implémenté | Transactions et signatures | src/transaction.cpp ; tests/fixtures/ethereum-official.json | Conserver les régressions du profil activé et relier les cas exacts à chaque EIP | Socle |
 | [155](https://eips.ethereum.org/EIPS/eip-155) | Implémenté | Transactions et signatures | src/transaction.cpp ; tests/fixtures/ethereum-official.json | Conserver les régressions du profil activé et relier les cas exacts à chaque EIP | Socle |
 | [2718](https://eips.ethereum.org/EIPS/eip-2718) | Implémenté | Transactions et signatures | src/transaction.cpp ; tests/fixtures/ethereum-official.json | Conserver les régressions du profil activé et relier les cas exacts à chaque EIP | Socle |
@@ -801,3 +801,15 @@ La campagne `build-cmake/qualification/beacon-signing-journal-20260925/` passe l
 journal (18 refus avant signature, concurrence, faute de synchronisation et crash)
 et les deux suites cryptographiques officielles. Aucun devoir de validateur
 n'est activé. L'import/export EIP-3076 est ajouté à la matrice comme non commencé.
+
+
+### EIP-3076 : export et arrêt durable (25 septembre 2026)
+
+`retire_and_export_interchange()` produit le format v5 après synchronisation du
+retrait permanent du journal source. La campagne
+`build-cmake/qualification/beacon-signing-export-20260925/journal-tests.log`
+valide les réservations exportées, l'idempotence, les refus après réouverture
+et l'échec de synchronisation injecté. Le journal actif v1 reste lisible.
+L'import/fusion et les vecteurs officiels inter-clients restent à qualifier.
+L'arrêt de tous les utilisateurs externes de la clé est une précondition ; aucune
+protection contre une clé volée ni activation réseau n'est revendiquée.
