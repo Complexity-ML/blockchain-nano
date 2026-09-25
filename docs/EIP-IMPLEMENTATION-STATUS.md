@@ -858,3 +858,28 @@ La base et les reçus externes ne sont pas une transaction atomique commune.
 Une panne entre leur écriture peut demander une récupération explicite ; aucun
 contournement automatique du contrôle d'engagement n'est ajouté. La coordination
 multi-clés, cette récupération et les tâches réelles restent ouvertes.
+
+
+### Tâches locales d'attestation Altair (25 septembre 2026)
+
+`prepare_altair_attestation_duty` dérive le vote depuis le choix de branche,
+l'état avancé, le registre et le RANDAO authentifiés. Le coordinateur durable
+relie cette préparation au journal anti-slashing avec identité complète,
+engagement courant et horloge locale contrôlés. Il n'accepte aucun champ de vote
+fourni par le demandeur et n'active pas de boucle de validation dans `nano run`.
+
+La campagne `build-cmake/qualification/altair-attester-duty-20260925/tests.log`
+passe quatre suites ciblées : publication du coordinateur, journal, CLI et
+nouvelle tâche. Le scénario composé sur ancre officielle signe une attestation
+BLS ensuite admise et archivée par le chemin normal ; il vérifie 14 refus avant
+fournisseur, deux variantes d'inéligibilité, une expiration pendant signature
+et le refus d'un coordinateur périmé. La proposition de blocs, les autres tâches,
+la planification/diffusion, la gestion des clés et l'exécution atomique restent
+ouvertes. Périmètre et sources : `docs/ALTAIR-ATTESTER-DUTIES.md`.
+
+La préparation sur un bloc déjà au créneau cible a été corrigée après un test
+positif supplémentaire (`current-slot-failure.log` puis `duty-final.log`). Le
+refus d'une seconde tête est maintenant vérifié comme refus anti-slashing exact.
+`p2p-regression.log` confirme aussi la propagation existante de votes officiels
+entre deux démons réels ; cette preuve ne vaut pas planification/diffusion
+automatique de la nouvelle tâche locale.

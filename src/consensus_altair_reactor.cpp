@@ -1,6 +1,7 @@
 #include "nano/consensus_altair_reactor.hpp"
 #include <type_traits>
 #include "nano/consensus_message_ssz.hpp"
+#include "nano/consensus_altair_duty.hpp"
 namespace nano {
 namespace {
 void archive_require(bool ok){if(!ok)throw std::invalid_argument("Invalid Altair durable archive");}
@@ -93,16 +94,39 @@ void AltairDurableReactor::publish(AltairForkStore candidate,std::shared_ptr<con
 }
 AltairDurableReactor::AltairDurableReactor(ChainStore& disk,Int chain,Bytes genesis,AltairForkBlockRules rules,
  AltairStoreSnapshotLimits limits,AltairForkStore initial,const std::function<void()>& checkpoint):
- disk_(disk),chain_id_(std::move(chain)),genesis_(std::move(genesis)),rules_(std::move(rules)),limits_(limits){publish(std::move(initial),signed_blocks_,signed_votes_,checkpoint);}
+ disk_(disk),chain_id_(std::move(chain)),genesis_(std::move(genesis)),rules_(std::move(rules)),limits_(limits),mutex_(disk.altair_reactor_mutex_){std::lock_guard lock(mutex_);publish(std::move(initial),signed_blocks_,signed_votes_,checkpoint);}
 AltairDurableReactor::AltairDurableReactor(ChainStore& disk,Int chain,Bytes genesis,AltairForkBlockRules rules,
  AltairStoreSnapshotLimits limits,const ForkCheckpointToken& expected,const std::function<void()>& checkpoint):
- disk_(disk),chain_id_(std::move(chain)),genesis_(std::move(genesis)),rules_(std::move(rules)),limits_(limits){
+ disk_(disk),chain_id_(std::move(chain)),genesis_(std::move(genesis)),rules_(std::move(rules)),limits_(limits),mutex_(disk.altair_reactor_mutex_){std::lock_guard lock(mutex_);
  const auto record=disk_.fork_checkpoint(chain_id_,genesis_,limits_.envelope_bytes,expected);
  if(!record)throw std::runtime_error("missing Altair restart checkpoint");
  auto restored=restore_durable_snapshot(record->snapshot,expected.digest,rules_,limits_,checkpoint);
  state_=std::make_shared<const AltairForkStore>(std::move(restored.store));signed_blocks_=std::move(restored.blocks);signed_votes_=std::move(restored.votes);token_=expected;
 }
 AltairPublishedStore AltairDurableReactor::current()const{std::lock_guard lock(mutex_);require_available();return {state_,*token_,signed_blocks_,signed_votes_};}
+std::optional<Phase0SignedAttestation> AltairDurableReactor::sign_attestation(uint64_t index,
+ uint64_t slot,const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected,BeaconSigningJournal& journal,
+ const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint){
+ std::lock_guard lock(mutex_);require_available();
+ if(expected!=*token_)throw std::invalid_argument("Stale attestation duty request");
+ disk_.fork_checkpoint(chain_id_,genesis_,limits_.envelope_bytes,token_);
+ if(!local_clock||!signer)throw std::invalid_argument("Missing duty clock or signing provider");
+ const auto& clock=state_->timed.clock;
+ auto timely=[&]{const auto time=local_clock();return rules_.slot_duration_ms&&time>=clock.time_ms&&time>=clock.genesis_time_ms&&(time-clock.genesis_time_ms)/rules_.slot_duration_ms==slot;};
+ if(!timely())return std::nullopt;
+ auto duty=prepare_altair_attestation_duty(*state_,rules_,index,slot,limits_.replay_slots,limits_.sync_trials,checkpoint);if(!duty)return std::nullopt;
+ if(journal.chain_!=chain_id_||journal.execution_genesis_!=genesis_||journal.validators_genesis_!=duty->genesis_root||journal.public_key_!=duty->public_key||journal.slots_per_epoch_!=rules_.transition.epoch.ffg.slots_per_epoch||&journal.disk_==&disk_)
+  throw std::invalid_argument("Signing journal does not match authenticated duty");
+ if(checkpoint)checkpoint();
+ if(!timely())return std::nullopt;
+ duty->attestation.signature=journal.sign_attestation(duty->attestation.data,duty->fork_version,[&](const ConsensusRoot& root){
+  if(!timely())throw std::runtime_error("Attestation duty expired before provider");
+  auto signature=signer(root);
+  if(!timely())throw std::runtime_error("Attestation duty expired during provider");
+  return signature;
+ });
+ return std::move(duty->attestation);
+}
 void AltairDurableReactor::tick(uint64_t ms,const std::function<void()>& checkpoint){
  std::lock_guard lock(mutex_);require_available();publish(prepare_altair_store_tick(*state_,ms,rules_,limits_.replay_slots,limits_.sync_trials,checkpoint),signed_blocks_,signed_votes_,checkpoint);
 }

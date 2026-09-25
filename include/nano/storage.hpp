@@ -9,6 +9,8 @@ struct ForkCheckpointToken {uint64_t sequence;Bytes digest;bool operator==(const
 struct ForkCheckpointRecord {ForkCheckpointToken token;std::string snapshot;};
 class ChainStore {
  friend class BeaconSigningJournal;
+ friend class AltairDurableReactor;
+ mutable std::mutex altair_reactor_mutex_;
  // Dedicated signing databases serialize all journal users through this gate,
  // including callbacks, independently of the short RocksDB operation mutex.
  mutable std::mutex beacon_signing_mutex_;

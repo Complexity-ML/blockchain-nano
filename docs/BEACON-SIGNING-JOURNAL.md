@@ -195,3 +195,11 @@ preuves avec les commandes locales, la migration entre deux bases, les refus de
 chemins/engagements invalides et les pannes d'écriture des reçus. Les commits de
 la base et des reçus externes ne sont pas atomiques ensemble ; voir le guide CLI
 pour cette limite et les conditions de récupération.
+
+
+Le [contrôle local des tâches Altair](ALTAIR-ATTESTER-DUTIES.md) relie désormais
+le coordinateur durable à ce journal pour les attestations : données dérivées
+de l'état, identité complète et engagement vérifiés, créneau contrôlé avant et
+après le fournisseur. Les méthodes de bas niveau du journal restent distinctes ;
+elles ne doivent pas être exposées comme service de signature sans ces contrôles.
+Aucun validateur autonome ni binding EVM n'est activé par cette intégration.

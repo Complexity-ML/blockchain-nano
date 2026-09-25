@@ -1,6 +1,7 @@
 #pragma once
 #include "nano/consensus_altair_store_snapshot.hpp"
 #include "nano/storage.hpp"
+#include "nano/consensus_beacon_signer.hpp"
 #include <memory>
 namespace nano {
 using AltairSignedBlockArchive=std::map<ConsensusRoot,std::shared_ptr<const Bytes>>;
@@ -15,7 +16,7 @@ class AltairDurableReactor {
  ChainStore& disk_;
  const Int chain_id_;const Bytes genesis_;
  const AltairForkBlockRules rules_;const AltairStoreSnapshotLimits limits_;
- mutable std::mutex mutex_;
+ std::mutex& mutex_;
  std::shared_ptr<const AltairForkStore> state_;
  std::optional<ForkCheckpointToken> token_;
  std::shared_ptr<const AltairSignedBlockArchive> signed_blocks_=std::make_shared<const AltairSignedBlockArchive>();
@@ -28,7 +29,17 @@ public:
   AltairForkStore trusted_initial,const std::function<void()>& checkpoint={});
  AltairDurableReactor(ChainStore&,Int,Bytes,AltairForkBlockRules,AltairStoreSnapshotLimits,
   const ForkCheckpointToken& expected,const std::function<void()>& checkpoint={});
+ AltairDurableReactor(const AltairDurableReactor&)=delete;
+ AltairDurableReactor& operator=(const AltairDurableReactor&)=delete;
  AltairPublishedStore current() const;
+ // Current-slot local duty; no caller-supplied vote fields or fork domain.
+ // local_clock must come from the validator service's independent local clock,
+ // never a peer. Holds Store/journal gates through the bounded signing callback.
+ // Callback must not re-enter either coordinator. No autonomous duty or outbox.
+ std::optional<Phase0SignedAttestation> sign_attestation(uint64_t validator_index,
+  uint64_t expected_slot,const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected_store,
+  BeaconSigningJournal&,const BeaconSigningJournal::Signer&,
+  const std::function<void()>& checkpoint={});
  void tick(uint64_t time_ms,const std::function<void()>& checkpoint={});
  bool block(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
  // Wire admission uses the configured fork schema/committee limit. There is

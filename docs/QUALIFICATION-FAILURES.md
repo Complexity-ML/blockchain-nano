@@ -2658,3 +2658,22 @@ de 8 Mio via libp2p/HTTP (SSZ invalide rejeté par le cœur) et les blocs offici
 Les profils plus grands restent conditionnés à la capacité IPC ; fragmentation
 encore ouverte. Preuves initiales et finales dans
 `build-cmake/qualification/altair-libp2p-ingress-20260925/`.
+
+### Tâche attester sur bloc du créneau courant (2026-09-25)
+
+Pendant la nouvelle intégration locale des tâches Altair, le test positif sur
+un bloc reçu au slot d'attestation a échoué avec `incoherent Altair epoch/slot
+state`. Le préparateur appelait `prepare_altair_slots` avec un état déjà au slot
+cible, alors que cette primitive exige une avancée strictement positive.
+
+Correction : réutiliser l'état authentifié lorsque le bloc est déjà au slot
+cible, avancer uniquement les créneaux manquants. Le test construit maintenant
+explicitement une tâche valide pour la nouvelle tête, y compris avant le délai
+de secours lorsqu'un bloc courant est présent. Il exige ensuite que le refus
+de signer une seconde tête provienne précisément du journal anti-slashing ; une
+erreur générique de préparation ne peut plus faire réussir ce contrôle.
+
+Preuves : `build-cmake/qualification/altair-attester-duty-20260925/current-slot-failure.log`
+pour l'échec, `duty-final.log` pour le scénario corrigé. Le reste du périmètre
+(planification autonome, propositions, binding d'exécution et finalité réseau)
+reste ouvert.
