@@ -1812,3 +1812,37 @@ Tests ajoutés : `consensus_fork_checkpoint_commit` et, sur macOS,
 `consensus_fork_checkpoint_sync_failure`. Restent les interruptions/erreurs Linux,
 la coupure électrique physique, l'intégration événementielle au réacteur,
 la liaison atomique EVM, l'ancrage et l'élagage. Aucun profil réseau activé.
+
+### Coordinateur événementiel Altair durable, 25 septembre 2026
+
+`AltairDurableReactor` relie tick, réception de bloc (messages embarqués inclus),
+vote gossip et preuve de slashing au checkpoint séquencé. Chaque événement est
+préparé sur un candidat privé, sérialisé, puis écrit avec CAS synchronisé avant
+publication d'un pointeur d'état immuable et de son token. La publication après
+succès n'appelle aucun callback et utilise des déplacements vérifiés noexcept.
+Les méthodes sont sérialisées ; les callbacks d'annulation ne doivent pas entrer
+à nouveau dans le coordinateur. Un bloc/vote/preuve refusé ne crée pas de commit.
+
+Un conflit de version ou une erreur de commit rend le coordinateur indisponible,
+y compris pour lire l'état courant. Les pointeurs précédemment publiés restent
+immuables et inchangés. Une annulation pendant préparation/sérialisation ne modifie
+ni mémoire publiée ni disque et n'interdit pas une nouvelle tentative. Le démarrage
+exige soit un Store initial déjà authentifié pour une base vierge, soit un token
+exact conservé extérieurement pour restaurer le checkpoint. L'identité de chaîne
+et le profil sont vérifiés par les composants de stockage/restauration.
+
+Les 18 scénarios officiels get_head/reorg passent via le coordinateur : 787 commits
+synchronisés, dont 18 initialisations ; 17 réouvertures à mi-parcours, un scénario
+ne contenant pas assez d'événements pour cette coupure. Les 3721 champs officiels
+restent conformes après reprise. Une suite ciblée vérifie le bloc invalide,
+cinq positions d'annulation, la conservation des anciens pointeurs, le conflit
+avec un écrivain concurrent et, sur macOS, fsync EIO avant publication. Après
+résolution de l'issue disque et réouverture, le traitement reprend. Quatre suites
+passent, dont la régression get_head sans mode durable.
+Preuves : `build-cmake/qualification/altair-durable-reactor-20260925/`.
+
+Ce coordinateur est une brique intégrée de consensus/stockage, pas encore un service
+P2P ni le remplacement du BFT actif. Il écrit un snapshot complet par événement :
+base de correction fonctionnelle, sans qualification de débit ou d'amplification
+d'écriture. Les commits incrémentaux, élagage, transport/admission, lien atomique
+avec l'EVM, politique d'ancrage/signature et qualification réseau restent ouverts.

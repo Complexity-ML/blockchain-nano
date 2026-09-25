@@ -584,3 +584,11 @@ avec suffixe WAL conservé/perdu et poursuite après réouverture. Les 35 repris
 Altair utilisent désormais cette API sans blocs d'exécution artificiels.
 Campagne `fork-checkpoint-commit-20260925` ; intégration au réacteur/EVM, Linux,
 ancrage opérationnel et perte électrique restent non qualifiés.
+
+Altair : coordinateur événementiel durable ajouté. Tick/bloc/vote/slashing sont
+préparés puis committés avant publication ; conflit/erreur disque bloque l'instance,
+annulation/refus laisse l'état inchangé. Get_head/reorg : 787 commits (18 init),
+17 reprises, 3721 champs officiels conformes ; gardes d'annulation/publication et
+fsync EIO macOS vérifiées. Campagne `altair-durable-reactor-20260925`.
+Snapshots complets par événement : débit non qualifié. Aucun raccordement P2P,
+activation réseau ou lien atomique EVM n'est déduit de cette intégration locale.
