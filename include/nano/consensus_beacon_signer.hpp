@@ -36,6 +36,7 @@ public:
  BeaconSigningJournal(const BeaconSigningJournal&)=delete;
  BeaconSigningJournal& operator=(const BeaconSigningJournal&)=delete;
  ForkCheckpointToken commitment()const;
+ bool is_retired()const;
  // Caller must first stop all OTHER users of this key (including copies using
  // independent databases). All instances sharing this ChainStore serialize
  // export/import and callbacks.

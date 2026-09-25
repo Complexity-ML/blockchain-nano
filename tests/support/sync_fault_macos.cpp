@@ -13,6 +13,12 @@ static std::atomic<unsigned> failures{0};
 extern "C" void nano_test_arm_sync_fault(const char* path){
  if(!realpath(path,target_path))abort();failures=0;armed.store(true,std::memory_order_release);
 }
+// Test-owned artifact paths may not exist until the operation starts. The caller
+// supplies an absolute path with its existing ancestors already canonicalized.
+extern "C" void nano_test_arm_future_sync_fault(const char* path){
+ if(!path||path[0]!='/'||std::strlen(path)>=sizeof(target_path))abort();
+ std::strcpy(target_path,path);failures=0;armed.store(true,std::memory_order_release);
+}
 extern "C" void nano_test_disarm_sync_fault(){armed.store(false,std::memory_order_release);}
 extern "C" unsigned nano_test_sync_failures(){return failures.load();}
 static int failing_fsync(int fd){

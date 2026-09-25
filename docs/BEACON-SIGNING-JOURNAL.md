@@ -79,8 +79,8 @@ ne démontrent ni une finalité distribuée ni l'autorisation d'une tâche de va
 L'[EIP-3076](https://eips.ethereum.org/EIPS/eip-3076) définit l'échange d'historique
 anti-slashing entre clients (format version 5). Les API C++
 `retire_and_export_interchange()` et `import_interchange()` utilisent la version 5.
-Le parcours opérationnel multi-clés, la CLI et l'intégration aux tâches réelles
-de validateur restent à réaliser. Le format local du journal n'est pas un fichier EIP-3076.
+La [CLI hors ligne mono-validateur](BEACON-JOURNAL-CLI.md) utilise ces API.
+La coordination multi-clés et l'intégration aux tâches réelles restent à réaliser. Le format local du journal n'est pas un fichier EIP-3076.
 Les règles de slashing sont définies par la
 [spécification Beacon](https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/).
 
@@ -188,3 +188,10 @@ Campagne `build-cmake/qualification/beacon-signing-import-20260925/final-tests.l
 
 Ces preuves ne constituent pas une migration entre deux logiciels en exploitation,
 une validation de réseau distribué ou une autorisation de fonds réels.
+
+
+La campagne `build-cmake/qualification/beacon-journal-cli-20260925/` complète ces
+preuves avec les commandes locales, la migration entre deux bases, les refus de
+chemins/engagements invalides et les pannes d'écriture des reçus. Les commits de
+la base et des reçus externes ne sont pas atomiques ensemble ; voir le guide CLI
+pour cette limite et les conditions de récupération.

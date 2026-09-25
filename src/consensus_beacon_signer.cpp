@@ -55,6 +55,7 @@ BeaconSigningJournal::BeaconSigningJournal(ChainStore& disk,Int chain,Bytes exec
  require(encode(proposal_,vote_,retired_)==saved->snapshot);token_=saved->token;
 }
 ForkCheckpointToken BeaconSigningJournal::commitment()const{std::lock_guard lock(mutex_);ready();return *token_;}
+bool BeaconSigningJournal::is_retired()const{std::lock_guard lock(mutex_);ready();return retired_;}
 std::string BeaconSigningJournal::retire_and_export_interchange(){
  std::lock_guard lock(mutex_);ready();
  Json blocks=Json::array(),attestations=Json::array();

@@ -19,7 +19,7 @@ reste à compléter. Le genesis réseau autorise actuellement Paris/Shanghai.
 
 | EIP | État actuel | Périmètre réel | Code / preuves à consulter | Reste à faire / critère de clôture | Priorité |
 | --- | --- | --- | --- | --- | --- |
-| [3076](https://eips.ethereum.org/EIPS/eip-3076) | Partiel (API locale v5) | Journal anti-slashing ; import/fusion et export C++ avec arrêt durable, corpus inter-clients qualifié dans ce périmètre | src/consensus_beacon_signer.cpp ; docs/BEACON-SIGNING-JOURNAL.md | Migration opérationnelle multi-clés, CLI, tâches réelles et gestion des engagements externes ; aucun statut production | Validateurs |
+| [3076](https://eips.ethereum.org/EIPS/eip-3076) | Partiel (API/CLI locale v5) | Journal anti-slashing ; import/fusion, export avec arrêt durable et CLI hors ligne mono-validateur ; corpus inter-clients qualifié dans ce périmètre | src/consensus_beacon_signer.cpp ; docs/BEACON-SIGNING-JOURNAL.md | Coordination multi-clés, tâches réelles et récupération des engagements externes après panne ; aucun statut production | Validateurs |
 | [2](https://eips.ethereum.org/EIPS/eip-2) | Implémenté | Transactions et signatures | src/transaction.cpp ; tests/fixtures/ethereum-official.json | Conserver les régressions du profil activé et relier les cas exacts à chaque EIP | Socle |
 | [155](https://eips.ethereum.org/EIPS/eip-155) | Implémenté | Transactions et signatures | src/transaction.cpp ; tests/fixtures/ethereum-official.json | Conserver les régressions du profil activé et relier les cas exacts à chaque EIP | Socle |
 | [2718](https://eips.ethereum.org/EIPS/eip-2718) | Implémenté | Transactions et signatures | src/transaction.cpp ; tests/fixtures/ethereum-official.json | Conserver les régressions du profil activé et relier les cas exacts à chaque EIP | Socle |
@@ -838,3 +838,23 @@ Le verrou de signature est désormais partagé par les journaux associés au mê
 demande un export depuis un second objet et vérifie l'attente puis les refus des
 deux objets. Cela ferme la course lecture/signature entre instances locales ;
 les copies indépendantes de clé/base restent hors de cette protection.
+
+
+### EIP-3076 : parcours CLI hors ligne (25 septembre 2026)
+
+`nano beacon-journal init/status/import/export` exige une identité explicite et,
+pour toute base existante, un engagement externe exact. Les résultats sont écrits
+dans un dossier neuf hors de la base, avec permissions privées et synchronisation.
+L'import/export ne charge aucune clé privée et n'active aucune tâche de validateur.
+
+La campagne `build-cmake/qualification/beacon-journal-cli-20260925/tests.log`
+couvre le parcours avec le vrai binaire, la migration entre deux bases, les refus
+d'écrasement, de base manquante/verrouillée, d'identité/engagement incorrects et
+les protections après retrait/import. Les deux pannes d'artefact injectées sur
+macOS vérifient l'échec explicite sans reprise de signature. Le journal et le
+corpus officiel font partie des régressions. Voir `docs/BEACON-JOURNAL-CLI.md`.
+
+La base et les reçus externes ne sont pas une transaction atomique commune.
+Une panne entre leur écriture peut demander une récupération explicite ; aucun
+contournement automatique du contrôle d'engagement n'est ajouté. La coordination
+multi-clés, cette récupération et les tâches réelles restent ouvertes.
