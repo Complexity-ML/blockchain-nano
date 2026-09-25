@@ -1986,3 +1986,32 @@ La file est disponible mais **pas instanciée dans le daemon**. Restent son
 raccordement au service de consensus durable, l'enregistrement/négociation du
 protocole, l'arrêt coordonné du runtime, la liaison atomique EVM et les essais
 Altair distribués. Aucune activation réseau ni qualification production.
+
+### Service worker–consensus durable, 25 septembre 2026
+
+`network/altair_consensus_service.hpp` raccorde la file séquentielle au
+`AltairDurableReactor` : blocs, attestations et preuves de slashing SSZ passent
+par les validateurs et checkpoints d'annulation du cœur, puis par son commit
+synchrone avant la callback d'acceptation. Le contrat de dispatch partagé
+`altair_work.hpp` rend cette composition indépendante de libp2p : le service
+est destiné au processus cœur, le daemon réseau restant séparé. Une exception
+locale devient `local_failure`, sans acquittement positif. Une annulation après
+commit ne réécrit pas la décision publiée. L'horloge reste contrôlée localement ;
+il n'existe aucun type de message distant `tick`.
+
+Qualification locale : les 18 scénarios officiels minimal `get_head` et `reorg`
+passent avec `NANO_TEST_DURABLE_WORKER=1` : 366 blocs, 27 attestations, une preuve
+de slashing, 375 ticks locaux et 3 721 checks. Les 787 commits incluent les
+18 initialisations ; 17 reprises arrêtent/joinent le service avant fermeture de
+la base, rouvrent le checkpoint exact puis poursuivent les événements. Aucun
+résultat attendu du corpus n'a été changé. Le test d'admission wire passe aussi
+par ce service et vérifie qu'un coordinateur indisponible après conflit de
+checkpoint ne renvoie pas d'acceptation, puis qu'une instance restaurée traite
+à nouveau les messages. Les dix suites du module réseau passent toujours.
+Preuves : `build-cmake/qualification/altair-durable-worker-20260925/`.
+
+Cette qualification utilise un vrai thread et RocksDB, mais pas une liaison
+entre processus ni un réseau distribué Altair. Restent le point d'entrée privé
+côté cœur, le transfert depuis le daemon, la négociation du protocole, le pilotage
+de l'horloge et l'arrêt du runtime complet, puis la liaison EVM et les essais
+multi-nœuds. Aucun changement d'activation réseau ni de statut production.

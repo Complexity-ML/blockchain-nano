@@ -1,5 +1,5 @@
 #pragma once
-#include "altair_stream.hpp"
+#include "altair_work.hpp"
 #include <condition_variable>
 #include <deque>
 #include <mutex>
@@ -11,9 +11,9 @@
 // committed decision. Handler and completion must not destroy/join this queue.
 class AltairWorker {
 public:
- using Decision=AltairStreamRequest::Decision;
- using Cancellation=AltairStreamRequest::Cancellation;
- using Done=AltairStreamRequest::Done;
+ using Decision=AltairWork::Decision;
+ using Cancellation=AltairWork::Cancellation;
+ using Done=AltairWork::Done;
  using Handler=std::function<Decision(const AltairWireMessage&,const Cancellation&)>;
 private:
  struct Job {AltairWireMessage message;Cancellation cancelled;Done done;size_t bytes;};
@@ -66,7 +66,7 @@ public:
   pending_.push_back(Job{std::move(message),std::move(cancelled),std::move(done),bytes});
   ++jobs_;bytes_+=bytes;ready_.notify_one();return true;
  }
- AltairStreamRequest::Dispatch dispatcher(){
+ AltairWork::Dispatch dispatcher(){
   return [this](AltairWireMessage message,Cancellation cancelled,Done done){return submit(std::move(message),std::move(cancelled),std::move(done));};
  }
  // Safe from I/O thread. No new work admitted; pending tasks complete as local

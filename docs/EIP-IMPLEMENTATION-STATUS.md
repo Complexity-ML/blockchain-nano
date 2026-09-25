@@ -620,3 +620,11 @@ Dix suites réseau passent ; douze cas de stream incluent le vrai worker derriè
 un stream contrôlé. La file n'est pas encore instanciée dans le daemon ni reliée
 au coordinateur durable. Cela ne change aucun statut d'activation EIP/consensus.
 Voir `docs/VALIDATOR-EIP-ROADMAP.md`, section « File worker Altair bornée ».
+
+Complément service Altair (25 septembre 2026) : la file worker est raccordée au
+coordinateur durable pour blocs/votes/slashings, avec annulation aux checkpoints
+et décision après commit. Les 18 scénarios officiels minimal head/reorg passent
+par ce chemin (3 721 checks, 17 reprises). Ce service cœur n'est pas encore exposé
+au daemon séparé ; aucun réseau Altair ni nouveau profil EIP n'est activé.
+Détails et limites dans « Service worker–consensus durable » de la feuille
+validateurs ; preuves `build-cmake/qualification/altair-durable-worker-20260925/`.

@@ -7,6 +7,8 @@
 #include "nano/consensus_message_ssz.hpp"
 #include "nano/chain.hpp"
 #include <fstream>
+#include <future>
+#include "../network/altair_consensus_service.hpp"
 using namespace test;using namespace test::phase0_minimal;
 ConsensusRoot parse_root(const Json& j){const auto b=unhex(j.get<std::string>());check(b.size()==32,"root width");ConsensusRoot out{};std::copy(b.begin(),b.end(),out.begin());return out;}
 Phase0SignedAttestation decode_vote(const Bytes& b){check(b.size()>=229&&little(b,0,4)==228&&b.back(),"vote SSZ");const auto a=indexed_attestation(Bytes(b.begin(),b.begin()+228),0,228);Phase0SignedAttestation v{a.data,{},a.signature};const auto count=(b.size()-229)*8+std::bit_width(unsigned(b.back()))-1;for(size_t i=0;i<count;++i)v.aggregation_bits.push_back((b[228+i/8]>>(i%8))&1);return v;}
@@ -15,7 +17,8 @@ int main(int argc,char** argv){try{
   const auto genesis=Genesis::from_json(Json{{"config",{{"chainId",1337},{"consensus","pow"}}},{"alloc",Json::object()}});
   ChainStore disk(argv[2]);disk.bind_chain(genesis.chain_id,genesis.block.header.hash(),"pow");disk.commit_fork_checkpoint(genesis.chain_id,genesis.block.header.hash(),std::nullopt,read(argv[3]),256*1024*1024);_exit(0);
  }
- const bool durable_events=std::getenv("NANO_TEST_DURABLE_REACTOR")!=nullptr;size_t durable_commits=0,reactor_restarts=0;
+ const bool durable_worker=std::getenv("NANO_TEST_DURABLE_WORKER")!=nullptr;
+ const bool durable_events=durable_worker||std::getenv("NANO_TEST_DURABLE_REACTOR")!=nullptr;size_t durable_commits=0,reactor_restarts=0;
  const bool restore_stores=std::getenv("NANO_TEST_STORE_SNAPSHOTS")!=nullptr;
  const AltairStoreSnapshotLimits snapshot_limits{256*1024*1024,4096,1000000,1000000,16*1024*1024,128*1024*1024,4096,100000};
  size_t restorations=0,snapshot_rejections=0;
@@ -23,9 +26,19 @@ int main(int argc,char** argv){try{
  const auto manifest=load(root/"manifest.json");check(manifest.at("commit")=="bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908"&&manifest.at("cases").size()==expected_cases,"head corpus");const auto references=load(refs/"manifest.json");for(const auto& [path,info]:references.at("referenceFiles").items()){const auto b=binary(refs/path);check(b.size()==info.at("bytes")&&hex(sha256(b)).substr(2)==info.at("sha256").get<std::string>(),"reference digest");}size_t ticks=0,blocks=0,votes=0,slashings=0,checks=0,rejections=0,proposer_guards=0;std::optional<AltairForkStore> example;Bytes example_block;Phase0SignedAttestation example_vote;
  for(const auto& row:manifest.at("cases")){const auto name=row.at("name").get<std::string>();for(const auto& [path,info]:row.at("files").items()){const auto b=binary(root/path);check(b.size()==info.at("bytes")&&hex(sha256(b)).substr(2)==info.at("sha256").get<std::string>(),"fixture digest");}
   const auto dir=root/name;AltairSlotState anchor{binary(dir/"anchor_state.ssz"),std::nullopt};const auto epoch=little(anchor.ssz,40,8)/slots;if(epoch)anchor.last_processed_epoch=epoch-1;auto store=initialize_altair_fork_store(anchor,binary(dir/"anchor_block.ssz"),rules);const auto steps=load(dir/"steps.json");size_t step_index=0;
-  Temp durable_directory;std::unique_ptr<ChainStore> durable_disk;std::unique_ptr<AltairDurableReactor> reactor;
+  Temp durable_directory;std::unique_ptr<ChainStore> durable_disk;std::unique_ptr<AltairDurableReactor> reactor;std::unique_ptr<AltairConsensusService> service;
   const Int durable_chain=1337;const Bytes durable_genesis(32,9);
   if(durable_events){durable_disk=std::make_unique<ChainStore>(durable_directory/"db");durable_disk->bind_chain(durable_chain,durable_genesis,"altair-qualification");reactor=std::make_unique<AltairDurableReactor>(*durable_disk,durable_chain,durable_genesis,rules,snapshot_limits,store);++durable_commits;}
+  if(durable_worker)service=std::make_unique<AltairConsensusService>(*reactor,4,32*1024*1024);
+  auto deliver=[&](AltairWireKind kind,const Bytes& packet){
+   if(service){
+    auto reply=std::make_shared<std::promise<AltairWork::Decision>>();auto future=reply->get_future();
+    check(service->dispatcher()({kind,packet},std::make_shared<std::atomic<bool>>(false),[reply](auto d){reply->set_value(d);}),"worker refused fixture");
+    check(future.wait_for(20s)==std::future_status::ready,"worker timeout");const auto decision=future.get();
+    check(decision!=AltairWork::Decision::local_failure,"worker local failure");return decision==AltairWork::Decision::accepted;
+   }
+   switch(kind){case AltairWireKind::block:return reactor->block(packet);case AltairWireKind::attestation:return reactor->vote_ssz(packet);case AltairWireKind::attester_slashing:return reactor->slashing_ssz(packet);}return false;
+  };
 
   for(const auto& step:steps){try{
    if(step.contains("tick")){if(reactor){reactor->tick(step.at("tick").get<uint64_t>()*1000);store=*reactor->current().state;++durable_commits;}else store=prepare_altair_store_tick(store,step.at("tick").get<uint64_t>()*1000,rules,4096,100000);++ticks;}
@@ -57,19 +70,20 @@ int main(int argc,char** argv){try{
     else throw std::runtime_error("unknown expected field: "+key);++checks;
    }}else{
     std::optional<AltairForkStore> result;
-    if(step.contains("block")){const auto packet=binary(dir/(step.at("block").get<std::string>()+".ssz"));if(reactor){if(reactor->block(packet))result=*reactor->current().state;}else result=prepare_altair_received_block(store,packet,rules,4096,100000);++blocks;
+    if(step.contains("block")){const auto packet=binary(dir/(step.at("block").get<std::string>()+".ssz"));if(reactor){if(deliver(AltairWireKind::block,packet))result=*reactor->current().state;}else result=prepare_altair_received_block(store,packet,rules,4096,100000);++blocks;
      if(!example&&result&&result->timed.view.latest_messages!=store.timed.view.latest_messages){const auto start=184+little(packet,184+208,4),end=184+little(packet,184+212,4);if(end>start){const auto first=little(packet,start,4),stop=first==4?end-start:little(packet,start+4,4);example_vote=decode_vote(Bytes(packet.begin()+start+first,packet.begin()+start+stop));example=store;example_block=packet;}}
     }
-    else if(step.contains("attestation")){const auto packet=binary(dir/(step.at("attestation").get<std::string>()+".ssz"));if(reactor){if(reactor->vote_ssz(packet))result=*reactor->current().state;}else if(const auto vote=decode_consensus_attestation_ssz(packet,transition.body.validators_per_committee))result=prepare_altair_store_vote(store,*vote,rules,4096,100000);++votes;}
-    else if(step.contains("attester_slashing")){const auto packet=binary(dir/(step.at("attester_slashing").get<std::string>()+".ssz"));if(reactor){if(reactor->slashing_ssz(packet))result=*reactor->current().state;}else if(const auto proof=decode_consensus_attester_slashing_ssz(packet,transition.body.validators_per_committee))result=prepare_altair_store_slashing(store,proof->first,proof->second,rules);++slashings;}
+    else if(step.contains("attestation")){const auto packet=binary(dir/(step.at("attestation").get<std::string>()+".ssz"));if(reactor){if(deliver(AltairWireKind::attestation,packet))result=*reactor->current().state;}else if(const auto vote=decode_consensus_attestation_ssz(packet,transition.body.validators_per_committee))result=prepare_altair_store_vote(store,*vote,rules,4096,100000);++votes;}
+    else if(step.contains("attester_slashing")){const auto packet=binary(dir/(step.at("attester_slashing").get<std::string>()+".ssz"));if(reactor){if(deliver(AltairWireKind::attester_slashing,packet))result=*reactor->current().state;}else if(const auto proof=decode_consensus_attester_slashing_ssz(packet,transition.body.validators_per_committee))result=prepare_altair_store_slashing(store,proof->first,proof->second,rules);++slashings;}
     else throw std::runtime_error("unknown event");check(bool(result)==step.value("valid",true),"event validity mismatch");if(result){store=std::move(*result);if(reactor)++durable_commits;}else ++rejections;
    }
   }catch(const std::exception& e){throw std::runtime_error(name+" step "+std::to_string(step_index)+": "+e.what());}++step_index;
    if(reactor&&step_index==steps.size()/2){
     const auto before=reactor->current();bool cancelled=false;try{reactor->tick(before.state->timed.clock.time_ms,[]{throw std::runtime_error("cancelled");});}catch(const std::runtime_error& e){cancelled=std::string(e.what())=="cancelled";}check(cancelled&&reactor->current().token==before.token,"cancelled event published");
     check(durable_disk->fork_checkpoint(durable_chain,durable_genesis,snapshot_limits.envelope_bytes,before.token).has_value(),"published state not durable");
-    reactor.reset();durable_disk.reset();durable_disk=std::make_unique<ChainStore>(durable_directory/"db");
+    service.reset();reactor.reset();durable_disk.reset();durable_disk=std::make_unique<ChainStore>(durable_directory/"db");
     reactor=std::make_unique<AltairDurableReactor>(*durable_disk,durable_chain,durable_genesis,rules,snapshot_limits,before.token);
+    if(durable_worker)service=std::make_unique<AltairConsensusService>(*reactor,4,32*1024*1024);
     check(altair_store_snapshot(*reactor->current().state,rules,snapshot_limits)==altair_store_snapshot(store,rules,snapshot_limits),"reactor restart state differs");++reactor_restarts;
    }
    if(restore_stores&&(step_index==steps.size()/2||step_index==steps.size())){
@@ -108,5 +122,5 @@ int main(int argc,char** argv){try{
  size_t calls=0;prepare_altair_received_block(*example,example_block,rules,4096,100000,[&]{++calls;});std::set<size_t> stops{1,2,calls/4,calls/2,3*calls/4,calls-1,calls};const auto messages=example->timed.view.latest_messages;const auto block_count=example->blocks.size();
  for(auto stop:stops){size_t n=0;bool cancelled=false;try{prepare_altair_received_block(*example,example_block,rules,4096,100000,[&]{if(++n==stop)throw std::runtime_error("cancelled");});}catch(const std::runtime_error& e){cancelled=std::string(e.what())=="cancelled";}check(cancelled&&example->blocks.size()==block_count&&example->timed.view.latest_messages==messages,"cancelled reception published data");}
  cancellation_count=stops.size();}
- std::cout<<Json{{"scenario",root.filename().string()},{"cases",expected_cases},{"ticks",ticks},{"blocks",blocks},{"votes",votes},{"slashings",slashings},{"checks",checks},{"rejections",rejections},{"localGuardsRun",argc==1},{"proposerGuards",proposer_guards},{"storeRestorations",restorations},{"snapshotRejections",snapshot_rejections},{"storeAbruptReopens",restorations},{"durableEventCommits",durable_commits},{"reactorRestarts",reactor_restarts},{"powerLossQualified",false},{"cancellations",cancellation_count},{"durableEventMode",durable_events},{"networkActive",false}}.dump()<<'\n';
+ std::cout<<Json{{"scenario",root.filename().string()},{"cases",expected_cases},{"ticks",ticks},{"blocks",blocks},{"votes",votes},{"slashings",slashings},{"checks",checks},{"rejections",rejections},{"localGuardsRun",argc==1},{"proposerGuards",proposer_guards},{"storeRestorations",restorations},{"snapshotRejections",snapshot_rejections},{"storeAbruptReopens",restorations},{"durableEventCommits",durable_commits},{"reactorRestarts",reactor_restarts},{"powerLossQualified",false},{"cancellations",cancellation_count},{"durableWorkerMode",durable_worker},{"durableEventMode",durable_events},{"networkActive",false}}.dump()<<'\n';
  }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

@@ -1,5 +1,5 @@
 #pragma once
-#include "altair_message.hpp"
+#include "altair_work.hpp"
 #include "json_stream.hpp"
 #include <atomic>
 
@@ -8,13 +8,13 @@
 // must outlive pending requests. No consensus work runs here on the I/O thread.
 class AltairStreamRequest:public std::enable_shared_from_this<AltairStreamRequest>{
 public:
- enum class Decision {accepted,rejected,local_failure};
- using Cancellation=std::shared_ptr<std::atomic<bool>>;
- using Done=std::function<void(Decision)>;
+ using Decision=AltairWork::Decision;
+ using Cancellation=AltairWork::Cancellation;
+ using Done=AltairWork::Done;
  // Return true only after enqueueing; false/throw means no worker was started.
  // Done must mean all work (including durable commit) has ended. It may run on
  // any thread; exactly-once completion is enforced on the I/O executor.
- using Dispatch=std::function<bool(AltairWireMessage,Cancellation,Done)>;
+ using Dispatch=AltairWork::Dispatch;
 private:
  asio::io_context& io_;Stream stream_;std::shared_ptr<AltairMessageIngress> ingress_;Dispatch dispatch_;
  asio::steady_timer timer_;std::shared_ptr<InboundBudget::Lease> lease_;

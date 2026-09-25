@@ -1,6 +1,7 @@
 #include "support/altair_transition_rules.hpp"
 #include "nano/consensus_altair_reactor.hpp"
-#include "../network/altair_message.hpp"
+#include "../network/altair_consensus_service.hpp"
+#include <future>
 using namespace test;using namespace test::phase0_minimal;
 int main(){try{
  const fs::path fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",corpus=fixtures/"consensus-altair-fork-head-official",dir=corpus/"chain_no_attestations";
@@ -13,7 +14,13 @@ int main(){try{
  const auto& anchor=initial.blocks.at(initial.timed.view.anchor).state.ssz;ConsensusBytes4 version{};std::copy_n(anchor.begin()+52,4,version.begin());const auto fork_root=consensus_fork_data_root(version,root_at(anchor,8));
  const AltairWireProfile profile{"0x539",hex(genesis),hex(Bytes(fork_root.begin(),fork_root.begin()+4)),1024*1024,400000,512,40000};
  auto now=InboundBudget::Clock::time_point{};InboundBudget shared_budget(now);AltairMessageIngress ingress(profile,shared_budget);size_t forwarded=0;
- auto handler=[&](const AltairWireMessage& m){++forwarded;switch(m.kind){case AltairWireKind::block:return reactor.block(m.ssz);case AltairWireKind::attestation:return reactor.vote_ssz(m.ssz);case AltairWireKind::attester_slashing:return reactor.slashing_ssz(m.ssz);}return false;};
+ AltairConsensusService service(reactor,4,2*1024*1024);auto dispatch=service.dispatcher();
+ auto deliver=[&](const AltairWireMessage& m){
+  auto reply=std::make_shared<std::promise<AltairWork::Decision>>();auto future=reply->get_future();
+  check(dispatch(m,std::make_shared<std::atomic<bool>>(false),[reply](auto decision){reply->set_value(decision);}),"service queue refused bounded fixture");
+  check(future.wait_for(20s)==std::future_status::ready,"durable worker did not complete");return future.get();
+ };
+ auto handler=[&](const AltairWireMessage& m){++forwarded;return deliver(m)==AltairWork::Decision::accepted;};
  auto frame=[&](const std::string& kind,const Bytes& bytes){return Json{{"chainId",profile.chain_id},{"genesisHash",profile.genesis_hash},{"forkDigest",profile.fork_digest},{"kind",kind},{"ssz",hex(bytes)}};};
  unsigned rejected=0;auto refuse=[&](const std::string& encoded,bool reaches_core=false){now+=10s;const auto before=reactor.current().token;const auto count=forwarded;check(ingress.receive("peer-a",encoded,handler,now)==AltairMessageIngress::Result::rejected,"wire message accepted");check(reactor.current().token==before&&ingress.active()==0&&forwarded==count+(reaches_core?1:0),"bad wire message changed state or leaked lease");++rejected;};
  const auto base=frame("attestation",Bytes{0,1});
@@ -28,5 +35,16 @@ int main(){try{
  check(limited>0&&ingress.receive("peer-b","{}",handler,now)==AltairMessageIngress::Result::rejected,"peer admission isolation lost");
  AltairMessageIngress another(profile,shared_budget);check(another.receive("peer-a","{}",handler,now)==AltairMessageIngress::Result::limited,"another protocol instance reset shared budget");
  now+=10s;bool propagated=false;try{ingress.receive("peer-a",base.dump(),[](const auto&)->bool{throw std::runtime_error("disk unavailable");},now);}catch(const std::runtime_error& e){propagated=std::string(e.what())=="disk unavailable";}check(propagated&&ingress.active()==0,"local failure misclassified or leaked lease");
- std::cout<<Json{{"scenario","altair-wire-admission"},{"rejected",rejected},{"officialBlocksCommitted",accepted},{"limited",limited},{"realLibp2pNetwork",false},{"networkActive",false}}.dump()<<'\n';
+ // Core-side service errors remain local failures, never peer acceptance.
+ const auto stable=reactor.current();const auto record=disk.fork_checkpoint(1337,genesis,limits.envelope_bytes,stable.token);
+ const auto competing=disk.commit_fork_checkpoint(1337,genesis,stable.token,record->snapshot,limits.envelope_bytes);
+ bool stale=false;try{reactor.tick(stable.state->timed.clock.time_ms+1);}catch(const std::exception&){stale=true;}
+ check(stale&&deliver({AltairWireKind::attestation,Bytes{0,1}})==AltairWork::Decision::local_failure,"unavailable reactor acknowledged message");
+ service.stop();service.join();
+ check(!dispatch({AltairWireKind::attestation,Bytes{0,1}},std::make_shared<std::atomic<bool>>(false),[](auto){}),"stopped service admits work");
+ AltairDurableReactor restored(disk,1337,genesis,rules,limits,competing);
+ AltairConsensusService resumed(restored,1,1024);std::promise<AltairWork::Decision> reply;auto result=reply.get_future();
+ check(resumed.dispatcher()({AltairWireKind::attestation,Bytes{0,1}},std::make_shared<std::atomic<bool>>(false),[&](auto d){reply.set_value(d);}),"restarted service admission");
+ check(result.wait_for(20s)==std::future_status::ready&&result.get()==AltairWork::Decision::rejected,"restarted service failed validation");resumed.stop();resumed.join();
+ std::cout<<Json{{"durableWorker",true},{"unavailableReactorNotAcknowledged",true},{"scenario","altair-wire-admission"},{"rejected",rejected},{"officialBlocksCommitted",accepted},{"limited",limited},{"realLibp2pNetwork",false},{"networkActive",false}}.dump()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

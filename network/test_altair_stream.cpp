@@ -1,4 +1,5 @@
 #include "altair_worker.hpp"
+#include "altair_stream.hpp"
 #include <future>
 #include <iostream>
 #include <thread>
