@@ -763,3 +763,27 @@ Qualification : `build-cmake/qualification/altair-signed-votes-20260925/` ; voir
 à la diffusion P2P reste ouvert, ainsi que les devoirs/signatures des validateurs,
 la finalité distribuée et la liaison atomique EVM/consensus. Aucun statut EIP
 ni profil réseau n'est promu.
+
+
+### Bridge : compromission de quorum (scénario Ronin)
+
+La clôture de production inclut désormais explicitement la matrice
+`docs/BRIDGE-SECURITY-REQUIREMENTS.md` : quorum et clés administratives compromis,
+révocation, preuve de finalité, rejouabilité et réconciliation des réserves.
+Tous ces essais de bridge restent non commencés. Le consensus et les EIP ne
+constituent pas une preuve de sécurité des retraits inter-chaînes.
+
+
+### Diffusion P2P des attestations qualifiée localement — 25 septembre 2026
+
+L'archive signée des votes est exposée par deux lectures privées authentifiées
+et diffusée avec des curseurs distincts de ceux des blocs. Alternance par pair,
+ACK obligatoire, reprise de catalogue après expiration et contrôle de profil.
+La campagne `build-cmake/qualification/altair-vote-propagation-20260925/` passe
+14 tests réseau et 3 tests P2P. Le scénario officiel à branche courte plus lourde
+vérifie qu'une attestation reçue via deux vrais daemons change la tête distante ;
+la perte d'ACK et l'expiration sont également vérifiées.
+Pas de génération autonome de votes, de finalité multi-epoch distribuée ni de
+preuve de débit à grande échelle. Les tâches/signatures des validateurs,
+slashings P2P, réconciliation et liaison atomique EVM restent ouverts. Aucun
+profil réseau ni statut EIP n'est promu par ces tests.

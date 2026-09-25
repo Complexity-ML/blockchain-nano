@@ -337,8 +337,8 @@ pas les cœurs et ne démontre pas de finalité distribuée.
 
 Limites restantes : un rejet permanent bloque la progression vers ce pair ;
 la réconciliation des branches/finalités et la récupération des dépendances
-restent à réaliser. Les attestations et slashings ne sont pas diffusés par ce
-relais. Il n'y a pas encore de comparaison d'inventaires distants ni de mesure
+restent à réaliser. Les preuves de slashing ne sont pas encore diffusées par ce
+relais ; les attestations sont traitées par l’extension décrite plus bas. Il n'y a pas encore de comparaison d'inventaires distants ni de mesure
 de débit à grande échelle. Le lien atomique EVM/consensus, les devoirs et signatures
 des validateurs et la qualification de finalité distribuée restent ouverts.
 
@@ -407,6 +407,46 @@ l'absence de publication lors d'un échec de synchronisation disque injecté.
 Les suites officielles durables de choix de branche/réorganisation et les
 scénarios P2P de propagation/reprise sont également relancés.
 
-La diffusion automatique des attestations et des preuves de slashing reste
-à raccorder au daemon. Le nouveau format local n'active aucun profil réseau
+Le raccordement des attestations au daemon est décrit ci-dessous ; celui des
+preuves de slashing reste à réaliser. Le nouveau format local n'active aucun profil réseau
 ni aucune finalité distribuée ; le stockage utilise encore des snapshots complets.
+
+
+### Diffusion des attestations, 25 septembre 2026
+
+Deux RPC privés authentifiés alimentent le relais :
+
+- `nano_altairVoteInventory(token, afterRoot, limit)` : catalogue paginé `votes`,
+  chaque entrée portant le hash SHA-256 des octets signés (`root`), le slot et
+  `beaconBlockRoot`. Les curseurs sont stables lors des ajouts. Une expiration
+  reconstruit le catalogue avec un nouveau `catalogEpoch` ; un ancien curseur
+  absent est refusé. Le champ partagé `missingSignedBlocks` vaut zéro pour ce
+  catalogue ; il ne garantit pas la disponibilité de votes historiques absents.
+- `nano_altairVote(token, root)` : export compact du SSZ signé, soumis au budget
+  de l'attestation du profil et au plafond IPC. Une attestation expirée retourne
+  `available: false`. Un hash de vote n'est pas un identifiant de transaction EVM.
+
+`AltairArchiveRelay` traite blocs et attestations avec le même contrôle de
+profil et d'acquittement. Chaque pair dispose de deux curseurs indépendants.
+L'ordonnanceur alterne leurs tentatives, à tour de rôle entre pairs, avec une
+seule tentative globale active. Un vote refusé (par exemple bloc inconnu ou
+horloge distante en retard) conserve son curseur sans bloquer le tour des blocs.
+La modification de session distante réinitialise les deux curseurs. Une époque
+ou un curseur de catalogue devenu invalide entraîne une reprise depuis le début.
+
+La campagne `build-cmake/qualification/altair-vote-propagation-20260925/` passe
+14 tests réseau (dont 18 cas bloc/vote du relais) et 3 tests P2P réels. Le nouveau
+scénario utilise la fixture officielle `shorter_chain_but_heavier_weight` :
+quatre blocs arrivent au second cœur sans votes ; sa tête est différente du
+résultat final. Une attestation est ensuite injectée uniquement dans le cœur
+source. Sa diffusion P2P fait changer la tête distante et les derniers votes
+vers les résultats attendus. La perte du premier ACK est retentée ; les octets
+reçus sont identiques et l'archive reste à une entrée. Les lectures non autorisées,
+la disparition des payloads expirés et l'invalidation du curseur sont vérifiées.
+
+Ce test utilise deux daemons et deux cœurs HTTP sur loopback, avec horloge de
+fixture. Il ne produit pas de nouveaux votes avec des clés de validateurs, ne
+finalise pas plusieurs epochs distribués et ne mesure pas le débit d'un grand
+réseau. La réconciliation des branches et les rejets permanents restent ouverts,
+ainsi que les devoirs/signatures des validateurs, le gossip des slashings et la
+liaison atomique EVM/consensus.

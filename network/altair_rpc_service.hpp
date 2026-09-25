@@ -2,6 +2,7 @@
 #include "altair_consensus_service.hpp"
 #include "altair_receipts.hpp"
 #include "nano/rpc.hpp"
+#include "nano/consensus_message_ssz.hpp"
 #include <future>
 
 // Explicitly injected core endpoint; does not activate any network profile.
@@ -20,16 +21,20 @@ class AltairRpcService {
  AltairReceipts receipts_;
  struct CatalogEntry {nano::ConsensusRoot root,parent;uint64_t slot;};
  struct Catalog {std::weak_ptr<const nano::AltairSignedBlockArchive> archive;std::vector<CatalogEntry> entries;std::map<nano::ConsensusRoot,size_t> positions;std::string epoch;};
- std::mutex catalog_mutex_;std::shared_ptr<const Catalog> catalog_;
- std::shared_ptr<const Catalog> catalog(const nano::AltairPublishedStore& current){
-  std::lock_guard lock(catalog_mutex_);if(catalog_&&catalog_->archive.lock()==current.signed_blocks)return catalog_;
-  auto next=std::make_shared<Catalog>();bool append=bool(catalog_);
-  if(append)for(const auto& [id,_]:catalog_->positions)if(!current.signed_blocks->contains(id)){append=false;break;}
-  if(append)*next=*catalog_;else{nano::Bytes nonce(32);if(RAND_bytes(nonce.data(),nonce.size())!=1)throw std::runtime_error("Altair inventory randomness unavailable");next->epoch=nano::hex(nonce);}
-  std::vector<CatalogEntry> added;for(const auto& [id,_]:*current.signed_blocks)if(!next->positions.contains(id)){const auto& h=current.state->blocks.at(id).header;added.push_back({id,h.parent_root,h.slot});}
+ std::mutex catalog_mutex_;std::shared_ptr<const Catalog> catalog_,vote_catalog_;
+ std::shared_ptr<const Catalog> catalog(const nano::AltairPublishedStore& current,bool votes=false){
+  std::lock_guard lock(catalog_mutex_);auto& cached=votes?vote_catalog_:catalog_;const auto archive=votes?current.signed_votes:current.signed_blocks;
+  if(cached&&cached->archive.lock()==archive)return cached;
+  auto next=std::make_shared<Catalog>();bool append=bool(cached);
+  if(append)for(const auto& [id,_]:cached->positions)if(!archive->contains(id)){append=false;break;}
+  if(append)*next=*cached;else{nano::Bytes nonce(32);if(RAND_bytes(nonce.data(),nonce.size())!=1)throw std::runtime_error("Altair inventory randomness unavailable");next->epoch=nano::hex(nonce);}
+  std::vector<CatalogEntry> added;for(const auto& [id,payload]:*archive)if(!next->positions.contains(id)){
+   if(votes){const auto vote=nano::decode_consensus_attestation_ssz(*payload,UINT32_MAX);if(!vote)throw std::runtime_error("Invalid archived attestation");added.push_back({id,vote->data.beacon_block_root,vote->data.slot});}
+   else{const auto& h=current.state->blocks.at(id).header;added.push_back({id,h.parent_root,h.slot});}
+  }
   std::sort(added.begin(),added.end(),[](const auto& a,const auto& b){return a.slot!=b.slot?a.slot<b.slot:a.root<b.root;});
   for(const auto& entry:added){next->positions.emplace(entry.root,next->entries.size());next->entries.push_back(entry);}
-  next->archive=current.signed_blocks;catalog_=next;return next;
+  next->archive=archive;cached=next;return next;
  }
  static nano::ConsensusRoot block_root(const std::string& encoded){
   if(encoded.size()!=66)throw nano::RpcError(-32602,"Invalid Altair block root");const auto bytes=nano::unhex(encoded);
@@ -74,22 +79,22 @@ public:
   auto message=frame.is_string()?decoder_.decode(frame.get_ref<const std::string&>()):decoder_.decode_compact(frame);if(!message)throw nano::RpcError(-32602,"Invalid Altair envelope");
   return receipts_.submit(session,sequence,std::move(*message),service_.dispatcher());
  }
- nano::Json block(const std::string& root){
-  const auto id=block_root(root);const auto current=reactor_.current();const auto found=current.signed_blocks->find(id);
-  if(found==current.signed_blocks->end())return nano::Json{{"available",false},{"known",current.state->blocks.contains(id)},{"anchor",id==current.state->timed.view.anchor}};
-  const auto& bytes=*found->second;if(bytes.size()>profile_.block_bytes||bytes.size()/3+(bytes.size()%3!=0)>(16*1024*1024-1024)/4)throw nano::RpcError(-32005,"Altair block exceeds IPC export capacity");
+ nano::Json block(const std::string& root,bool vote=false){
+  const auto id=block_root(root);const auto current=reactor_.current();const auto archive=vote?current.signed_votes:current.signed_blocks;const auto found=archive->find(id);
+  if(found==archive->end())return nano::Json{{"available",false},{"known",!vote&&current.state->blocks.contains(id)},{"anchor",!vote&&id==current.state->timed.view.anchor}};
+  const auto& bytes=*found->second;if(bytes.size()>(vote?profile_.attestation_bytes:profile_.block_bytes)||bytes.size()/3+(bytes.size()%3!=0)>(16*1024*1024-1024)/4)throw nano::RpcError(-32005,"Altair block exceeds IPC export capacity");
   return nano::Json{{"available",true},{"root",root},{"sequence",nano::quantity(nano::Int(std::to_string(current.token.sequence)))},{"digest",nano::hex(current.token.digest)},
-   {"envelope",{{"chainId",profile_.chain_id},{"genesisHash",profile_.genesis_hash},{"forkDigest",profile_.fork_digest},{"kind","block"},{"sszBase64",altair_base64(bytes)}}}};
+   {"envelope",{{"chainId",profile_.chain_id},{"genesisHash",profile_.genesis_hash},{"forkDigest",profile_.fork_digest},{"kind",vote?"attestation":"block"},{"sszBase64",altair_base64(bytes)}}}};
  }
- nano::Json inventory(const std::string& cursor,uint64_t requested){
+ nano::Json inventory(const std::string& cursor,uint64_t requested,bool votes=false){
   if(!requested)throw nano::RpcError(-32602,"Positive Altair page limit required");const auto current=reactor_.current();
-  const auto index=catalog(current);size_t offset=0;
+  const auto index=catalog(current,votes);size_t offset=0;
   if(cursor!="0x"){const auto found=index->positions.find(block_root(cursor));if(found==index->positions.end())throw nano::RpcError(-32602,"Unknown Altair inventory cursor");offset=found->second+1;}
   const auto budget=std::min(profile_.frame_bytes,size_t(16*1024*1024));if(budget<=512)throw nano::RpcError(-32005,"Altair inventory capacity unavailable");
   const auto maximum=std::min<uint64_t>(requested,(budget-512)/256);if(!maximum)throw nano::RpcError(-32005,"Altair inventory capacity unavailable");
   nano::Json entries=nano::Json::array();std::string last;
-  for(size_t n=0;n<maximum&&offset<index->entries.size();++n,++offset){const auto& entry=index->entries[offset];last=nano::hex(nano::Bytes(entry.root.begin(),entry.root.end()));entries.push_back({{"root",last},{"parentRoot",nano::hex(nano::Bytes(entry.parent.begin(),entry.parent.end()))},{"slot",nano::quantity(nano::Int(std::to_string(entry.slot)))}});}
-  return nano::Json{{"sequence",nano::quantity(nano::Int(std::to_string(current.token.sequence)))},{"digest",nano::hex(current.token.digest)},{"catalogEpoch",index->epoch},{"blocks",entries},{"next",offset==index->entries.size()?nano::Json(nullptr):nano::Json(last)},{"missingSignedBlocks",current.state->blocks.size()-1-current.signed_blocks->size()}};
+  for(size_t n=0;n<maximum&&offset<index->entries.size();++n,++offset){const auto& entry=index->entries[offset];last=nano::hex(nano::Bytes(entry.root.begin(),entry.root.end()));entries.push_back({{"root",last},{votes?"beaconBlockRoot":"parentRoot",nano::hex(nano::Bytes(entry.parent.begin(),entry.parent.end()))},{"slot",nano::quantity(nano::Int(std::to_string(entry.slot)))}});}
+  return nano::Json{{"sequence",nano::quantity(nano::Int(std::to_string(current.token.sequence)))},{"digest",nano::hex(current.token.digest)},{"catalogEpoch",index->epoch},{votes?"votes":"blocks",entries},{"next",offset==index->entries.size()?nano::Json(nullptr):nano::Json(last)},{"missingSignedBlocks",votes?0:current.state->blocks.size()-1-current.signed_blocks->size()}};
  }
  nano::Json job(const std::string& session,uint64_t sequence,bool cancel=false,bool retire=false){return receipts_.get(session,sequence,cancel,retire);}
  nano::Json rotate(const std::string& expected){return receipts_.rotate(expected);}
