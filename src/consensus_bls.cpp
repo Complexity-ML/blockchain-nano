@@ -1,6 +1,15 @@
 #include "nano/consensus_bls.hpp"
 #include "blst.h"
 namespace nano {
+std::optional<std::vector<uint8_t>> aggregate_consensus_bls_keys(std::span<const std::vector<uint8_t>> keys){
+ if(keys.empty())return std::nullopt;blst_p1 sum{};bool first=true;
+ for(const auto& bytes:keys){
+  if(bytes.size()!=48)return std::nullopt;blst_p1_affine key;
+  if(blst_p1_uncompress(&key,bytes.data())!=BLST_SUCCESS||blst_p1_affine_is_inf(&key)||!blst_p1_affine_in_g1(&key))return std::nullopt;
+  if(first){blst_p1_from_affine(&sum,&key);first=false;}else blst_p1_add_or_double_affine(&sum,&sum,&key);
+ }
+ std::vector<uint8_t> result(48);blst_p1_compress(result.data(),&sum);return result;
+}
 bool verify_consensus_bls(std::span<const uint8_t> public_key,std::span<const uint8_t> message,std::span<const uint8_t> signature){
  if(public_key.size()!=48||signature.size()!=96)return false;
  blst_p1_affine key;blst_p2_affine sig;

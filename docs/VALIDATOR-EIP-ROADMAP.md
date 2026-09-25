@@ -1357,3 +1357,29 @@ La signature et l'authenticité des indicateurs doivent être établies en amont
 Cette opération ne qualifie pas la finalité réseau : composition d'epoch,
 comités de synchronisation, transitions de blocs et replay fork_choice Altair
 restent à compléter avant le raccordement au réseau.
+
+### Rotation des sync committees Altair — 25 septembre 2026
+
+`prepare_altair_sync_updates` réalise la rotation à la frontière configurée :
+l'ancien comité suivant devient courant, puis le nouveau suivant est sélectionné
+par mélange RANDAO/domaine sync et échantillonnage pondéré par solde effectif.
+Les indices répétés sont conservés. Les clés sélectionnées sont agrégées en G1
+avec vérification d'encodage/sous-groupe ; cela ne remplace pas les preuves de
+possession et l'admission du registre en amont. Le SSZ hors comités reste inchangé.
+
+La taille du comité, la période, le lookahead et les tours de mélange viennent du
+preset. Le nombre maximal d'essais est un budget local fourni par l'appelant :
+son dépassement lève une erreur, sans repondération ni résultat partiel. Il n'est
+pas un plafond de validateurs. Le parcours du registre reste proportionnel à son
+nombre de membres ; aucun résultat de débit distribué n'est déduit de ce test.
+
+Les cinq post-states officiels correspondent : quatre rotations et un cas hors
+frontière. Un cas local avec un seul membre actif conserve ses 32 occurrences
+pour le preset minimal. Sept rejets, sept points d'annulation, clés invalides et
+agrégat vide sont vérifiés. Trois suites passent : rotation, BLS et FFG Altair.
+Corpus : `tests/fixtures/consensus-altair-sync-official/`.
+Journaux : `build-cmake/qualification/altair-sync-20260925/`.
+
+Cette étape ne traite pas encore `SyncAggregate` dans les blocs. Rotation de
+participation, composition d'epoch, transition Altair complète, replay officiel
+fork_choice et réseau restent à compléter.

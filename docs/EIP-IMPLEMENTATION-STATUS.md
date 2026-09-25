@@ -479,3 +479,8 @@ ni l'admission des états, ni la qualification réseau.
 Altair : justification/finalisation isolée ajoutée, dix post-states officiels
 concordants et seuils pondérés testés. Les indicateurs de participation restent
 soumis à authentification en amont ; ce résultat ne prouve pas la finalité réseau.
+
+Altair : sélection/rotation des sync committees ajoutée, cinq post-states officiels
+concordants. Répétitions de membres conservées ; budget local d'échantillonnage
+explicite. Le traitement SyncAggregate des blocs et la composition d'epoch restent
+ouverts, sans activation réseau.

@@ -29,4 +29,12 @@ struct AltairFfgRules {uint64_t slots_per_epoch,effective_balance_increment;};
 // flags. Changes only justification bits/checkpoints; not gossip admission.
 Bytes prepare_altair_justification_finalization(std::span<const uint8_t>,const AltairStateLimits&,
  const AltairFfgRules&,const std::function<void()>& checkpoint={});
+struct AltairSyncRules {
+ uint64_t slots_per_epoch,epochs_per_sync_committee_period,min_seed_lookahead,maximum_effective_balance;
+ uint16_t shuffle_rounds;
+};
+// Isolated sync committee rotation. Rejection-sampling budget is a local work
+// limit, not a consensus validator cap. Keeps repeated selected public keys.
+Bytes prepare_altair_sync_updates(std::span<const uint8_t>,const AltairStateLimits&,
+ const AltairSyncRules&,uint64_t maximum_trials,const std::function<void()>& checkpoint={});
 }
