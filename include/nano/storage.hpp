@@ -6,6 +6,7 @@
 namespace rocksdb { class DB; }
 namespace nano {
 struct ForkCheckpointToken {uint64_t sequence;Bytes digest;bool operator==(const ForkCheckpointToken&)const=default;};
+struct ExecutionCheckpointBlock {Block block;State state;std::vector<Receipt> receipts;};
 struct ForkCheckpointRecord {ForkCheckpointToken token;std::string snapshot;};
 class ChainStore {
  friend class BeaconSigningJournal;
@@ -44,6 +45,16 @@ public:
  // detects a restored old DB. Without it, local disk rollback is not detectable.
  std::optional<ForkCheckpointRecord> fork_checkpoint(const Int& chain_id,const Bytes& genesis_hash,
   size_t maximum_bytes,const std::optional<ForkCheckpointToken>& expected=std::nullopt) const;
+ // Trusted candidate only: caller validates consensus/finality and snapshot.
+ // Replace the canonical suffix after common_height and checkpoint in one sync
+ // batch. Empty suffix permits votes/ticks or rewind to the common ancestor.
+ // Both old token and old execution tip are CAS guards. Genesis must exist.
+ // Once coupled, ordinary commit/rewind/checkpoint writers are rejected.
+ ForkCheckpointToken commit_execution_checkpoint(const Int& chain_id,const Bytes& genesis_hash,
+  const std::optional<ForkCheckpointToken>& expected,const Bytes& expected_tip,
+  const Int& common_height,const Bytes& common_hash,
+  const std::vector<ExecutionCheckpointBlock>& suffix,std::string_view snapshot,
+  size_t maximum_bytes,size_t maximum_blocks);
  void rewind(const Int& number);
  // Returns unsigned fields already reserved durably; never authorizes a new vote.
  std::optional<FinalityVote> latest_consensus_vote(const std::string& validator,const Int& chain_id,const Bytes& genesis_hash) const;

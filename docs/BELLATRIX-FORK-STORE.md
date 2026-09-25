@@ -53,3 +53,7 @@ Le raccordement suivant est une publication durable indivisible du choix de
 branche, de l'exécution canonique et des reçus, avec reprise après interruption,
 puis le raccordement réseau et les scénarios de partitions/pannes. Aucun fork
 réseau, déploiement VPS ou fonds réel n'est activé par ce changement.
+
+La primitive RocksDB couplée est désormais disponible : voir
+[EXECUTION-CHECKPOINT.md](EXECUTION-CHECKPOINT.md). Son raccordement à la
+sérialisation et au chargement du Store décrit ici reste à réaliser.

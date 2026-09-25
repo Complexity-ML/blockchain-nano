@@ -1083,3 +1083,14 @@ les lectures du hash parent et le refus des liaisons d'exécution incohérentes.
 Voir [BELLATRIX-FORK-STORE.md](BELLATRIX-FORK-STORE.md) pour la portée et les
 limites : pas de commit atomique RocksDB, de reprise ni d'activation réseau
 Bellatrix à ce stade. Cette étape ne clôture aucune qualification de production.
+
+### 2026-09-25 — Primitive de commit atomique consensus/exécution
+
+`commit_execution_checkpoint` regroupe snapshot, branche EVM, états, reçus et
+index dans un batch RocksDB synchronisé, avec CAS du jeton et de la tête. Il
+supporte les réorganisations, y compris vers une branche plus courte. Tests
+locaux de concurrence, SIGKILL, refus de candidats incohérents et erreur de sync
+avec conservation/perte du suffixe WAL : voir
+[EXECUTION-CHECKPOINT.md](EXECUTION-CHECKPOINT.md). La sérialisation authentifiée
+et la reprise du Store Bellatrix ainsi que son reactor réseau restent ouvertes ;
+la primitive opaque ne clôture pas à elle seule la persistance du consensus.

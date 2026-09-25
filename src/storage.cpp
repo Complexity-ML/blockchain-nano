@@ -52,6 +52,7 @@ void put_proposal(rocksdb::WriteBatch& batch,const std::string& key,const std::s
 rocksdb::WriteOptions durable_write(){rocksdb::WriteOptions options;options.sync=true;return options;}
 }
 std::optional<std::string> ChainStore::get(const std::string& key)const{
+ if(fork_checkpoint_write_uncertain_)throw std::runtime_error("checkpoint write uncertain; reopen required");
  std::string value;auto status=db_->Get(rocksdb::ReadOptions(),key,&value);
  if(status.IsNotFound())return std::nullopt;require_ok(status);return value;
 }
@@ -319,7 +320,7 @@ std::optional<BlockCertificate> ChainStore::certificate_at(const Int& height)con
  if(certified&&height>0&&height<=integer(unhex(*certified))&&!result)throw std::runtime_error("missing canonical block certificate");return result;
 }
 void ChainStore::rewind(const Int& number){
- std::lock_guard lock(mutex_);auto tip=get("meta/tip"),difficulty=get("meta/difficulty"),count=get("meta/count");
+ std::lock_guard lock(mutex_);if(get("execution-checkpoint/v1"))throw std::invalid_argument("coupled execution requires atomic checkpoint");auto tip=get("meta/tip"),difficulty=get("meta/difficulty"),count=get("meta/count");
  if(!tip||!difficulty||!count)throw std::runtime_error("missing chain metadata");
  auto certified=certified_tip_impl();if(certified&&number<integer(unhex(*certified)))throw std::invalid_argument("cannot rewind certified block");
  Int height=integer(unhex(*tip));if(number<0||number>height)throw std::invalid_argument("invalid rewind height");
@@ -344,6 +345,7 @@ void ChainStore::commit_impl(const Block& block,const State& state,const std::ve
  if(cumulative!=block.header.gas_used||logs_bloom(logs)!=block.header.logs_bloom)throw std::invalid_argument("stored gas/bloom mismatch");
  auto number=height_key(block.header.number);auto block_json=block.to_json(true);block_json["uncleHeaders"]=Json::array();for(const auto& uncle:block.uncles)block_json["uncleHeaders"].push_back(uncle.to_json());auto body=block_json.dump(),state_data=state.to_json().dump();
  std::lock_guard lock(mutex_);
+ if(get("execution-checkpoint/v1"))throw std::invalid_argument("coupled execution requires atomic checkpoint");
  auto certified=certified_tip_impl();
  if(certified&&!certificate)throw std::invalid_argument("certified chain requires block certificate");
  if(certificate){
@@ -403,6 +405,10 @@ std::optional<ForkCheckpointRecord> ChainStore::fork_checkpoint_impl(const Int& 
  if(!seq||quantity(Int(std::to_string(seq)))!=j.at("sequence").get<std::string>()||encoded.size()!=66)throw std::runtime_error("noncanonical fork checkpoint token");
  const auto digest=sha256(Bytes(payload->begin(),payload->end()));
  if(hex(digest)!=encoded)throw std::runtime_error("fork checkpoint payload digest mismatch");
+ if(const auto linked=read("execution-checkpoint/v1")){
+  const auto tip=get("meta/tip");const auto block=tip?read("block/"+*tip):std::nullopt;
+  if(!linked->is_object()||linked->size()!=2||!block||linked->at("digest")!=encoded||linked->at("tip")!=block->at("hash")||hex(Block::from_json(*block).header.hash())!=linked->at("tip").get<std::string>())throw std::runtime_error("fork checkpoint execution binding mismatch");
+ }
  return ForkCheckpointRecord{{seq,digest},*payload};
 }
 std::optional<ForkCheckpointRecord> ChainStore::fork_checkpoint(const Int& chain_id,const Bytes& genesis_hash,
@@ -415,7 +421,7 @@ ForkCheckpointToken ChainStore::commit_fork_checkpoint(const Int& chain_id,const
  const std::optional<ForkCheckpointToken>& expected,std::string_view snapshot,size_t maximum_bytes){
  if(snapshot.empty()||snapshot.size()>maximum_bytes)throw std::invalid_argument("fork checkpoint size limit");
  const auto digest=sha256(Bytes(snapshot.begin(),snapshot.end()));
- std::lock_guard lock(mutex_);const auto previous=fork_checkpoint_impl(chain_id,genesis_hash,maximum_bytes);
+ std::lock_guard lock(mutex_);if(get("execution-checkpoint/v1"))throw std::invalid_argument("coupled checkpoint requires execution binding");const auto previous=fork_checkpoint_impl(chain_id,genesis_hash,maximum_bytes);
  if(bool(previous)!=bool(expected)||(previous&&previous->token!=*expected))throw std::invalid_argument("stale fork checkpoint writer");
  if(previous&&previous->token.sequence==UINT64_MAX)throw std::overflow_error("fork checkpoint sequence exhausted");
  const ForkCheckpointToken token{previous?previous->token.sequence+1:1,digest};
@@ -423,5 +429,54 @@ ForkCheckpointToken ChainStore::commit_fork_checkpoint(const Int& chain_id,const
  rocksdb::WriteBatch batch;batch.Put("fork-checkpoint/v1/payload",rocksdb::Slice(snapshot.data(),snapshot.size()));batch.Put("fork-checkpoint/v1/token",encoded.dump());
  const auto status=db_->Write(durable_write(),&batch);if(!status.ok())fork_checkpoint_write_uncertain_=true;
  require_ok(status);return token;
+}
+}
+
+namespace nano {
+ForkCheckpointToken ChainStore::commit_execution_checkpoint(const Int& chain_id,const Bytes& genesis_hash,
+ const std::optional<ForkCheckpointToken>& expected,const Bytes& expected_tip,
+ const Int& common_height,const Bytes& common_hash,const std::vector<ExecutionCheckpointBlock>& suffix,
+ std::string_view snapshot,size_t maximum_bytes,size_t maximum_blocks){
+ if(snapshot.empty()||snapshot.size()>maximum_bytes||suffix.size()>maximum_blocks||common_height<0||common_height>Int("18446744073709551615")||expected_tip.size()!=32||common_hash.size()!=32)
+  throw std::invalid_argument("execution checkpoint bounds");
+ const auto digest=sha256(Bytes(snapshot.begin(),snapshot.end()));
+ std::lock_guard lock(mutex_);const auto previous=fork_checkpoint_impl(chain_id,genesis_hash,maximum_bytes);
+ if(bool(previous)!=bool(expected)||(previous&&previous->token!=*expected))throw std::invalid_argument("stale execution checkpoint writer");
+ if(previous&&previous->token.sequence==UINT64_MAX)throw std::overflow_error("checkpoint sequence exhausted");
+ if(certified_tip_impl())throw std::invalid_argument("cannot replace certified consensus with fork checkpoint");
+ const auto tip_key=get("meta/tip"),total_data=get("meta/difficulty"),count_data=get("meta/count");
+ if(!tip_key||!total_data||!count_data)throw std::runtime_error("execution checkpoint requires canonical genesis");
+ const auto tip=read("block/"+*tip_key),common=read("block/"+height_key(common_height)),genesis=read("block/"+height_key(0));
+ if(!tip||!common||!genesis||tip->at("hash")!=hex(expected_tip)||common->at("hash")!=hex(common_hash)||genesis->at("hash")!=hex(genesis_hash))throw std::invalid_argument("execution checkpoint chain CAS mismatch");
+ if(Block::from_json(*tip).header.hash()!=expected_tip||Block::from_json(*common).header.hash()!=common_hash||Block::from_json(*genesis).header.hash()!=genesis_hash)throw std::runtime_error("execution checkpoint stored header corrupt");
+ const auto height=quantity(tip->at("number"));
+ if(height_key(height)!=*tip_key||common_height>height||height-common_height>Int(std::to_string(maximum_blocks)))throw std::invalid_argument("execution checkpoint reorg bounds");
+ if(const auto linked=read("execution-checkpoint/v1")){if(!previous||linked->at("digest")!=hex(previous->token.digest)||linked->at("tip")!=hex(expected_tip))throw std::runtime_error("execution checkpoint binding corrupt");}
+ const auto common_state=read("state/"+height_key(common_height));if(!common_state||State::from_json(*common_state).root()!=unhex(common->at("stateRoot")))throw std::runtime_error("execution checkpoint ancestor state corrupt");
+ Int total(*total_data),count(*count_data);if(count!=height+1)throw std::runtime_error("execution checkpoint count corrupt");
+ rocksdb::WriteBatch batch;std::set<std::string> removed,inserted;
+ auto bounded=[&]{if(batch.GetDataSize()>maximum_bytes)throw std::length_error("execution checkpoint batch budget");};
+ for(Int at=height;at>common_height;--at){
+  const auto key=height_key(at);const auto old=read("block/"+key);if(!old||quantity(old->at("number"))!=at)throw std::runtime_error("missing execution checkpoint suffix");
+  for(const auto& tx:old->at("transactions")){const auto hash=tx.at("hash").get<std::string>();removed.insert(hash);batch.Delete("tx/"+hash);batch.Delete("receipt/"+hash);}
+  batch.Delete("hash/"+old->at("hash").get<std::string>());batch.Delete("block/"+key);batch.Delete("state/"+key);batch.Delete("consensus/"+key);total-=quantity(old->at("difficulty"));--count;bounded();
+ }
+ auto parent=Block::from_json(*common).header;
+ for(const auto& record:suffix){
+  const auto& block=record.block;const auto& h=block.header;const auto& receipts=record.receipts;const auto hash=h.hash();
+  if(h.number<0||h.number>Int("18446744073709551615")||h.number!=parent.number+1||h.parent_hash!=parent.hash()||record.state.root()!=h.state_root||receipts.size()!=block.transactions.size()||transactions_root(block.transactions)!=h.transactions_root||receipts_root(receipts)!=h.receipts_root)throw std::invalid_argument("execution checkpoint candidate binding");
+  Int cumulative=0;std::vector<Log> logs;
+  for(size_t i=0;i<receipts.size();++i){const auto& receipt=receipts[i];cumulative+=receipt.gas_used;logs.insert(logs.end(),receipt.logs.begin(),receipt.logs.end());if(receipt.gas_used<0||receipt.transaction_hash!=block.transactions[i].hash()||receipt.block_hash!=hash||receipt.block_number!=h.number||receipt.index!=Int(i)||receipt.cumulative_gas_used!=cumulative)throw std::invalid_argument("execution checkpoint receipt binding");}
+  if(cumulative!=h.gas_used||logs_bloom(logs)!=h.logs_bloom)throw std::invalid_argument("execution checkpoint gas/bloom binding");
+  const auto key=height_key(h.number);auto body=block.to_json(true);body["uncleHeaders"]=Json::array();for(const auto& uncle:block.uncles)body["uncleHeaders"].push_back(uncle.to_json());
+  batch.Put("block/"+key,body.dump());batch.Put("state/"+key,record.state.to_json().dump());batch.Put("hash/"+hex(hash),key);
+  for(size_t i=0;i<receipts.size();++i){const auto txhash=hex(block.transactions[i].hash());if(!inserted.insert(txhash).second||(get("tx/"+txhash)&&!removed.contains(txhash)))throw std::invalid_argument("execution checkpoint duplicate transaction");auto tx=block.transactions[i].to_json();tx["blockHash"]=hex(hash);tx["blockNumber"]=quantity(h.number);tx["transactionIndex"]=quantity(Int(i));batch.Put("tx/"+txhash,tx.dump());batch.Put("receipt/"+txhash,receipts[i].to_json().dump());}
+  total+=h.difficulty;++count;parent=h;bounded();
+ }
+ const ForkCheckpointToken token{previous?previous->token.sequence+1:1,digest};
+ batch.Put("meta/tip",height_key(parent.number));batch.Put("meta/difficulty",total.get_str());batch.Put("meta/count",count.get_str());
+ batch.Put("fork-checkpoint/v1/payload",rocksdb::Slice(snapshot.data(),snapshot.size()));batch.Put("fork-checkpoint/v1/token",Json{{"sequence",quantity(Int(std::to_string(token.sequence)))},{"digest",hex(digest)}}.dump());
+ batch.Put("execution-checkpoint/v1",Json{{"digest",hex(digest)},{"tip",hex(parent.hash())}}.dump());bounded();
+ const auto status=db_->Write(durable_write(),&batch);if(!status.ok())fork_checkpoint_write_uncertain_=true;require_ok(status);return token;
 }
 }
