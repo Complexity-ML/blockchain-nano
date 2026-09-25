@@ -488,3 +488,8 @@ ouverts, sans activation réseau.
 Altair : rotation de participation isolée implémentée, douze post-states officiels
 concordants. Opération non idempotente : application unique et persistance doivent
 être assurées par la composition d'epoch, encore ouverte.
+
+Altair : époque complète ordonnée et process_slots ajoutés, sept séquences
+minimales officielles (100 slots) concordantes. Marqueur anti-rejeu et échec tardif
+sans publication partielle vérifiés. Transition de blocs Altair, replay fork_choice,
+durabilité et réseau encore ouverts.

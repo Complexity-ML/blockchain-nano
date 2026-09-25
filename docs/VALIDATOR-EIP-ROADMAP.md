@@ -1402,3 +1402,33 @@ Corpus : `tests/fixtures/consensus-altair-participation-official/`.
 Journaux : `build-cmake/qualification/altair-participation-20260925/`.
 Cette opération ne ferme ni l'assemblage de l'epoch ni les contrôles d'admission,
 la transition de bloc Altair, le replay fork_choice ou la durabilité.
+
+### Époque et slots Altair composés — 25 septembre 2026
+
+`prepare_altair_epoch` applique les douze opérations dans l'ordre prescrit :
+FFG, inactivité, récompenses, registre, pénalités corrélées, Eth1, soldes effectifs,
+slashings, RANDAO, historique, participation et sync committees. Les opérations
+communes réutilisent les composants existants avec les paramètres Altair, dont
+le multiplicateur de slashing. La reconstruction SSZ conserve les listes et les
+offsets canoniques après remise à zéro des votes Eth1 ou extension de l'historique.
+Le slot reste inchangé et le candidat porte le marqueur de l'epoch traitée.
+
+`prepare_altair_slots` calcule les racines de l'état/en-tête pour chaque slot,
+met à jour l'historique, appelle l'epoch à la frontière, puis incrémente le slot.
+L'appel direct de l'epoch exige que les racines du slot aient déjà été mises en
+cache, comme dans la spécification. L'état initial reste soumis à admission
+externe ; octets et marqueur doivent être publiés et persistés ensemble.
+
+Les sept séquences officielles Altair de slots correspondent intégralement,
+soit 100 slots. Les sept comparaisons entre traitement groupé et slot par slot
+reproduisent aussi les marqueurs. Sont vérifiés : rejeu d'epoch, mauvaise epoch,
+appel hors frontière, règles incohérentes, budget de slots et sept annulations.
+Un épuisement du budget de sélection au dernier composant sync ne publie aucun
+changement ; la nouvelle tentative réussit. Sept suites de régression passent.
+
+Corpus : `tests/fixtures/consensus-altair-slots-official/`.
+Journaux : `build-cmake/qualification/altair-full-slots-20260925/`.
+Cette qualification couvre les séquences minimal fournies, pas l'ensemble des
+combinaisons adverses d'epoch ou un réseau distribué. Le traitement des blocs
+signés Altair (notamment SyncAggregate), le replay officiel fork_choice et la
+persistance/reprise du nouveau Store restent ouverts. Aucune activation réseau.
