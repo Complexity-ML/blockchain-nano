@@ -896,3 +896,15 @@ reproduction avant correction conservée dans `before-fix.log` et contrôles de
 refus conflictuel après réouverture. Voir [le périmètre des tâches](ALTAIR-ATTESTER-DUTIES.md).
 Ce jalon ne clôt aucune EIP ni l'activation réseau : horloge opérationnelle,
 planification, propositions, diffusion et binding EVM restent ouverts.
+
+### 2026-09-25 — construction locale des blocs Altair
+
+`prepare_altair_unsigned_block` partage les contrôles de transition avec le
+chemin reçu et calcule la racine d'état avant signature. L'admission reçue conserve
+ses vérifications BLS et de racine, sans option de contournement publique.
+Le corpus officiel fournit 105 reconstructions exactes, 12 refus de candidats
+invalides et trois enveloppes incorrectes dont seul le corps est reconstructible.
+[Construction et limites](ALTAIR-BLOCK-CONSTRUCTION.md) ; preuves dans
+`build-cmake/qualification/altair-unsigned-block-20260925/final-tests.log`.
+Ce jalon prépare les tâches de proposition ; il ne clôt pas le consensus autonome,
+le binding EVM, la finalité distribuée ou une EIP de fork ultérieur.

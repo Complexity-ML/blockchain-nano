@@ -41,8 +41,11 @@ void check_rules(const AltairTransitionRules& r){
 }
 }
 void validate_altair_transition_rules(const AltairTransitionRules& r){check_rules(r);validate_altair_epoch_rules(r.epoch,r.state);}
-std::optional<AltairSlotState> prepare_altair_state_transition(const AltairSlotState& input,
- View block,const AltairTransitionRules& r,uint64_t maximum_slots,uint64_t maximum_sync_trials,const std::function<void()>& checkpoint){
+namespace {
+// Private construction mode cannot be selected by network admission callers.
+enum class BlockPurpose { Receive, Construct };
+std::optional<AltairSlotState> transition(const AltairSlotState& input,
+ View block,const AltairTransitionRules& r,uint64_t maximum_slots,uint64_t maximum_sync_trials,const std::function<void()>& checkpoint,BlockPurpose purpose,ConsensusRoot& computed_root){
  check_rules(r);const auto& d=r.attestation.duties;const auto sync_bytes=(r.state.sync_committee_size+7)/8+96;
  if(block.size()<404+sync_bytes||block.size()>r.maximum_block_bytes)return std::nullopt;
  if(number(block,0,4)!=100||number(block,180,4)!=84)return std::nullopt;
@@ -57,7 +60,7 @@ std::optional<AltairSlotState> prepare_altair_state_transition(const AltairSlotS
  if(h.parent_root!=consensus_beacon_header_root(previous)||slot<=previous.slot)return std::nullopt;
  const auto proposer=reg.validators.find(h.proposer_index);if(proposer==reg.validators.end()||proposer->second.slashed)return std::nullopt;
  const auto fork_epoch=number(out.ssz,56);auto version=[&](uint64_t epoch){return array<4>(out.ssz,epoch<fork_epoch?48:52);};const auto genesis=array<32>(out.ssz,8);
- if(!verify_consensus_beacon_header(h,version(reg.epoch),genesis,proposer->second.public_key,block.subspan(4,96)))return std::nullopt;
+ if(purpose==BlockPurpose::Receive&&!verify_consensus_beacon_header(h,version(reg.epoch),genesis,proposer->second.public_key,block.subspan(4,96)))return std::nullopt;
  if(!process_phase0_selected_randao(randao,reg,{d.slots_per_epoch,d.min_seed_lookahead},slot,h.proposer_index,d.maximum_effective_balance,d.shuffle_rounds,version(reg.epoch),genesis,body.first(96),checkpoint))return std::nullopt;
  for(size_t i=0;i<randao.mixes.size();++i)put(out.ssz,l.randao+32*i,randao.mixes[i]);
  put(out.ssz,64,h.slot);put(out.ssz,72,h.proposer_index);put(out.ssz,80,h.parent_root);put(out.ssz,112,ConsensusRoot{});put(out.ssz,144,h.body_root);
@@ -81,6 +84,29 @@ std::optional<AltairSlotState> prepare_altair_state_transition(const AltairSlotS
   const auto start=number(out.ssz,l.fields[2],4);for(const auto& [i,v]:exits.validators){put(out.ssz,start+121*i+105,v.exit_epoch);put(out.ssz,start+121*i+113,v.withdrawable_epoch);}
  }
  auto sync=prepare_altair_sync_aggregate(out.ssz,body.subspan(220,sync_bytes),r.state,r.sync,checkpoint);if(!sync)return std::nullopt;out.ssz=std::move(*sync);
- if(altair_beacon_state_root(out.ssz,r.state,checkpoint)!=h.state_root)return std::nullopt;if(checkpoint)checkpoint();return out;
+ computed_root=altair_beacon_state_root(out.ssz,r.state,checkpoint);
+ if(purpose==BlockPurpose::Receive&&computed_root!=h.state_root)return std::nullopt;if(checkpoint)checkpoint();return out;
+}
+} // anonymous namespace
+std::optional<AltairSlotState> prepare_altair_state_transition(const AltairSlotState& input,
+ View block,const AltairTransitionRules& r,uint64_t maximum_slots,uint64_t maximum_sync_trials,const std::function<void()>& checkpoint){
+ ConsensusRoot computed{};
+ return transition(input,block,r,maximum_slots,maximum_sync_trials,checkpoint,BlockPurpose::Receive,computed);
+}
+std::optional<AltairUnsignedBlockCandidate> prepare_altair_unsigned_block(const AltairSlotState& input,
+ uint64_t slot,uint64_t proposer,const ConsensusRoot& parent,View body,
+ const AltairTransitionRules& r,uint64_t maximum_slots,uint64_t maximum_sync_trials,const std::function<void()>& checkpoint){
+ check_rules(r);
+ // Bound before allocating/copying a caller's candidate body.
+ if(r.maximum_block_bytes<184||body.size()>r.maximum_block_bytes-184)return std::nullopt;
+ if(checkpoint)checkpoint();
+ Bytes envelope(184,0);put(envelope,0,100,4);put(envelope,100,slot);put(envelope,108,proposer);put(envelope,116,parent);put(envelope,180,84,4);
+ envelope.insert(envelope.end(),body.begin(),body.end());ConsensusRoot computed{};
+ auto state=transition(input,envelope,r,maximum_slots,maximum_sync_trials,checkpoint,BlockPurpose::Construct,computed);
+ if(!state)return std::nullopt;
+ put(envelope,148,computed);
+ Bytes message(envelope.begin()+100,envelope.end());
+ if(checkpoint)checkpoint();
+ return AltairUnsignedBlockCandidate{std::move(message),std::move(*state)};
 }
 }

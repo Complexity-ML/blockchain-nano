@@ -29,4 +29,19 @@ std::optional<AltairSlotState> prepare_altair_state_transition(const AltairSlotS
  std::span<const uint8_t> signed_block,const AltairTransitionRules&,
  uint64_t maximum_slots,uint64_t maximum_sync_trials,
  const std::function<void()>& checkpoint={});
+struct AltairUnsignedBlockCandidate {
+ Bytes message_ssz; // canonical BeaconBlock, without SignedBeaconBlock envelope
+ AltairSlotState post_state;
+};
+// Local construction only, from an authenticated parent state. Validate the
+// selected proposer, parent, RANDAO and every body operation, and derive the
+// post-state root. Does not accept a caller-supplied state root or signature.
+// The returned candidate is NOT an admitted block or authorization to sign:
+// the reactor must bind head/time/duty and the durable anti-slashing journal.
+std::optional<AltairUnsignedBlockCandidate> prepare_altair_unsigned_block(
+ const AltairSlotState&,uint64_t slot,uint64_t proposer_index,
+ const ConsensusRoot& parent_root,std::span<const uint8_t> body,
+ const AltairTransitionRules&,uint64_t maximum_slots,uint64_t maximum_sync_trials,
+ const std::function<void()>& checkpoint={});
+
 }
