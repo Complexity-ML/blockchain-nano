@@ -606,3 +606,10 @@ framing JsonFrame réutilisés. Test local : deux blocs officiels committés ava
 acceptation, 14 rejets de messages, 24 refus par quota ; trois suites vertes.
 Campagne `altair-wire-admission-20260925`. Pas encore de flux libp2p réel ni de
 handler enregistré ; négociation/runtime/files et essais distribués restent ouverts.
+
+Altair : adaptateur asynchrone de streams ajouté (lecture fragmentée bornée,
+PeerId du transport, réservation maintenue jusqu'à fin réelle du worker, annulation
+et réponse unique). Dix cas contrôlés ; neuf suites réseau et deux régressions
+libp2p/BFT locales vertes. Campagne `altair-async-stream-20260925`.
+Ces connexions réelles concernent le transport existant : Altair attend encore
+handler/négociation, runtime et file worker bornée. Aucun nouveau profil actif.

@@ -34,28 +34,35 @@ public:
  // Shares the daemon budget; caller must keep it alive and not acquire twice.
  // Serial io_context use, as InboundBudget. Lease spans validation and handler;
  // handler must finish its durable commit before returning and not re-enter.
- Result receive(const std::string& authenticated_peer,std::string_view frame,const Handler& handler,
-  InboundBudget::Clock::time_point now=InboundBudget::Clock::now()){
-  auto lease=budget_.acquire(authenticated_peer,now,InboundBudget::Traffic::bulk);if(!lease)return Result::limited;
+ size_t frame_limit()const{return profile_.frame_bytes;}
+ std::shared_ptr<InboundBudget::Lease> acquire(const std::string& peer,InboundBudget::Clock::time_point now=InboundBudget::Clock::now()){
+  return budget_.acquire(peer,now,InboundBudget::Traffic::bulk);
+ }
+ // Decode only. Async callers must already hold acquire() until processing ends.
+ std::optional<AltairWireMessage> decode(std::string_view frame)const{
   nlohmann::json j;std::set<std::string> keys;bool duplicate=false;
-  try{JsonFrame bounds(profile_.frame_bytes);if(!bounds.feed(frame))return Result::rejected;j=nlohmann::json::parse(frame,[&](int depth,nlohmann::json::parse_event_t event,nlohmann::json& value){if(depth==1&&event==nlohmann::json::parse_event_t::key&&!keys.insert(value.get<std::string>()).second)duplicate=true;return true;},false);}
-  catch(const std::invalid_argument&){return Result::rejected;}
-  if(duplicate||!j.is_object()||j.size()!=5||!j.contains("chainId")||!j.contains("genesisHash")||!j.contains("forkDigest")||!j.contains("kind")||!j.contains("ssz"))return Result::rejected;
-  if(j.at("chainId")!=profile_.chain_id||j.at("genesisHash")!=profile_.genesis_hash||j.at("forkDigest")!=profile_.fork_digest||!j.at("kind").is_string()||!j.at("ssz").is_string())return Result::rejected;
+  try{JsonFrame bounds(profile_.frame_bytes);if(!bounds.feed(frame))return std::nullopt;j=nlohmann::json::parse(frame,[&](int depth,nlohmann::json::parse_event_t event,nlohmann::json& value){if(depth==1&&event==nlohmann::json::parse_event_t::key&&!keys.insert(value.get<std::string>()).second)duplicate=true;return true;},false);}
+  catch(const std::invalid_argument&){return std::nullopt;}
+  if(duplicate||!j.is_object()||j.size()!=5||!j.contains("chainId")||!j.contains("genesisHash")||!j.contains("forkDigest")||!j.contains("kind")||!j.contains("ssz"))return std::nullopt;
+  if(j.at("chainId")!=profile_.chain_id||j.at("genesisHash")!=profile_.genesis_hash||j.at("forkDigest")!=profile_.fork_digest||!j.at("kind").is_string()||!j.at("ssz").is_string())return std::nullopt;
   AltairWireKind kind;size_t maximum;
   if(j.at("kind")=="block"){kind=AltairWireKind::block;maximum=profile_.block_bytes;}
   else if(j.at("kind")=="attestation"){kind=AltairWireKind::attestation;maximum=profile_.attestation_bytes;}
   else if(j.at("kind")=="attester_slashing"){kind=AltairWireKind::attester_slashing;maximum=profile_.slashing_bytes;}
-  else return Result::rejected;
+  else return std::nullopt;
   const auto& encoded=j.at("ssz").get_ref<const std::string&>();
-  if(encoded.size()<2||!encoded.starts_with("0x")||encoded.size()%2||(encoded.size()-2)/2>maximum)return Result::rejected;
+  if(encoded.size()<2||!encoded.starts_with("0x")||encoded.size()%2||(encoded.size()-2)/2>maximum)return std::nullopt;
   // Validate the entire alphabet before allocating binary payload memory.
-  if(!std::all_of(encoded.begin()+2,encoded.end(),[](char c){return nibble(c)>=0;}))return Result::rejected;
+  if(!std::all_of(encoded.begin()+2,encoded.end(),[](char c){return nibble(c)>=0;}))return std::nullopt;
   AltairWireMessage message{kind,{}};message.ssz.reserve((encoded.size()-2)/2);
   for(size_t i=2;i<encoded.size();i+=2)message.ssz.push_back(uint8_t((nibble(encoded[i])<<4)|nibble(encoded[i+1])));
-  // Exceptions from consensus/disk/cancellation propagate: never misreport a
-  // local failure as an invalid peer packet or acknowledge an uncertain commit.
-  return handler(message)?Result::accepted:Result::rejected;
+  return message;
+ }
+ Result receive(const std::string& authenticated_peer,std::string_view frame,const Handler& handler,
+  InboundBudget::Clock::time_point now=InboundBudget::Clock::now()){
+  auto lease=acquire(authenticated_peer,now);if(!lease)return Result::limited;
+  const auto message=decode(frame);if(!message)return Result::rejected;
+  return handler(*message)?Result::accepted:Result::rejected;
  }
  size_t active()const{return budget_.active();}
  size_t tracked_peers()const{return budget_.tracked_peers();}

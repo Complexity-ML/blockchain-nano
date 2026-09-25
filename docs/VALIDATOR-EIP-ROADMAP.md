@@ -1917,3 +1917,38 @@ protocole, le service RPC/runtime Altair explicite, le travail hors boucle I/O
 avec files bornées, la propagation/récupération des dépendances et la qualification
 multi-nœuds. Pas de Snappy ni de fallback vers un autre profil acceptés ici.
 Aucune activation réseau ou conformité wire Ethereum n'est revendiquée.
+
+### Adaptateur asynchrone Stream libp2p, 25 septembre 2026
+
+`AltairStreamRequest` raccorde l'enveloppe d'admission à l'interface Stream de
+cpp-libp2p. Le PeerId vient du stream, la lease du budget partagé est acquise
+avant lecture, et la limite de frame est appliquée à chaque fragment avant ajout
+au buffer. JsonRead expose une lecture brute bornée pour préserver les clés JSON
+dupliquées jusqu'au validateur d'enveloppe ; les interfaces JSON existantes restent
+disponibles. La poursuite des lectures passe par l'exécuteur I/O, sans récursion
+synchrone sur les fragments. Les erreurs du callback applicatif ne sont plus
+avalées comme des erreurs de framing.
+
+Le dispatcher externe reçoit message, drapeau d'annulation et callback de fin.
+Il doit fournir une vraie file bornée et retourner false/lever seulement si aucun
+travail n'a démarré. Il signale accepted uniquement après validation et commit
+durable. Les callbacks de fin peuvent venir d'un worker ; leur traitement est
+reposté sur l'exécuteur I/O et reste unique. Expiration ou arrêt explicite ferme
+le stream et signale l'annulation. Si le worker tourne encore, la lease reste
+occupée jusqu'à sa fin effective : les délais ne permettent pas de multiplier
+les travaux cachés. Une fin tardive ne répond pas au stream expiré. Une erreur
+locale ne produit aucun acquittement d'acceptation.
+
+Dix cas sur streams contrôlés implémentant l'interface libp2p couvrent fragments,
+fin depuis un thread worker, double callback, expiration pendant travail, arrêt
+explicite, pair sans identité, lecture bloquée, dépassement, JSON invalide/dupliqué,
+file refusée et erreur locale. Les neuf suites du module réseau passent. Les deux
+régressions network/bft_network avec vrais processus et connexions libp2p locaux
+passent aussi : elles qualifient le lecteur partagé et le transport existant,
+**pas un réseau Altair actif**. Le test local enveloppe/coordinateur reste vert.
+Preuves : `build-cmake/qualification/altair-async-stream-20260925/`.
+
+Restent l'enregistrement/négociation du protocole Altair dans le daemon, le
+service runtime/RPC explicite, la file worker bornée réelle et son arrêt coordonné,
+la récupération des dépendances et les essais distribués Altair. L'adaptateur
+n'est pas encore enregistré dans `network/main.cpp`. Pas d'activation réseau.

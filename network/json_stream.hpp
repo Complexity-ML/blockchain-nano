@@ -1,29 +1,39 @@
 #pragma once
 #include "core.hpp"
 #include "json_frame.hpp"
+#include <optional>
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/basic/write.hpp>
 using Stream=std::shared_ptr<libp2p::connection::Stream>;
+using RawJsonReply=std::function<void(std::optional<std::string>)>;
 class JsonRead:public std::enable_shared_from_this<JsonRead>{
- Stream stream_;asio::steady_timer timer_;std::array<uint8_t,65536> buffer_;std::string data_;Reply reply_;JsonFrame frame_;
+ Stream stream_;asio::steady_timer timer_;std::array<uint8_t,65536> buffer_;std::string data_;Reply reply_;RawJsonReply raw_reply_;JsonFrame frame_;
+ bool active()const{return bool(reply_)||bool(raw_reply_);}
  void finish(Json value){timer_.cancel();auto reply=std::exchange(reply_,Reply{});if(reply)reply(std::move(value));}
+ void finish_raw(std::optional<std::string> value){timer_.cancel();auto reply=std::exchange(raw_reply_,RawJsonReply{});if(reply)reply(std::move(value));}
+ void fail(){if(raw_reply_)finish_raw(std::nullopt);else finish(nullptr);}
  void next(){stream_->readSome(buffer_,buffer_.size(),[self=shared_from_this()](auto result){
-  if(!self->reply_)return;
-  if(!result||result.value()==0){self->finish(nullptr);return;}
+  if(!self->active())return;
+  if(!result||result.value()==0){self->fail();return;}
+  if(result.value()>self->buffer_.size()){self->stream_->reset();self->fail();return;}
+  Json json;
   try{
    std::string_view chunk(reinterpret_cast<const char*>(self->buffer_.data()),result.value());
-   bool complete=self->frame_.feed(chunk);self->data_.append(chunk);
-   if(!complete){self->next();return;}
-   auto json=Json::parse(self->data_,nullptr,false);
-   if(json.is_discarded()){self->stream_->reset();self->finish(nullptr);return;}
-   self->finish(std::move(json));
-  }catch(const std::exception&){self->stream_->reset();self->finish(nullptr);}
+   const bool complete=self->frame_.feed(chunk);self->data_.append(chunk);
+   if(!complete){asio::post(self->timer_.get_executor(),[self]{if(self->active())self->next();});return;}
+   if(!self->raw_reply_){json=Json::parse(self->data_,nullptr,false);if(json.is_discarded()){self->stream_->reset();self->fail();return;}}
+  }catch(const std::exception&){self->stream_->reset();self->fail();return;}
+  // Do not swallow application callback failures as frame/parser errors.
+  if(self->raw_reply_)self->finish_raw(std::move(self->data_));else self->finish(std::move(json));
  });}
-
 public:
  JsonRead(asio::io_context& io,Stream stream,Reply reply):stream_(std::move(stream)),timer_(io),reply_(std::move(reply)){}
- void start(std::chrono::steady_clock::duration timeout=std::chrono::seconds(10)){timer_.expires_after(timeout);timer_.async_wait([self=shared_from_this()](auto ec){if(!ec){self->stream_->reset();self->finish(nullptr);}});next();}
+ JsonRead(asio::io_context& io,Stream stream,RawJsonReply reply,size_t frame_limit):stream_(std::move(stream)),timer_(io),raw_reply_(std::move(reply)),frame_(frame_limit){}
+ void start(std::chrono::steady_clock::duration timeout=std::chrono::seconds(10)){timer_.expires_after(timeout);timer_.async_wait([self=shared_from_this()](auto ec){if(!ec){self->stream_->reset();self->fail();}});next();}
 };
+inline void read_json_frame(asio::io_context& io,Stream stream,size_t limit,RawJsonReply reply,std::chrono::steady_clock::duration timeout=std::chrono::seconds(10)){
+ std::make_shared<JsonRead>(io,std::move(stream),std::move(reply),limit)->start(timeout);
+}
 inline void read_json(asio::io_context& io,Stream stream,Reply reply){std::make_shared<JsonRead>(io,std::move(stream),std::move(reply))->start();}
 class JsonWrite:public std::enable_shared_from_this<JsonWrite>{
  Stream stream_;asio::steady_timer timer_;std::string data_;std::function<void(bool)> done_;
