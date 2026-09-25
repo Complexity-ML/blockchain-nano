@@ -65,12 +65,12 @@ struct Hasher {
 };
 }
 namespace {
-ConsensusRoot beacon_state_root(View b,const Phase0StateLimits& limits,uint64_t sync_size,const std::function<void()>& checkpoint){
+ConsensusRoot beacon_state_root(View b,const Phase0StateLimits& limits,uint64_t sync_size,const std::function<void()>& checkpoint,const ExecutionPayloadLimits* execution=nullptr){
  require(b.size()<=UINT32_MAX&&limits.slots_per_historical_root&&limits.epochs_per_historical_vector&&limits.epochs_per_slashings_vector&&limits.historical_roots_limit&&limits.eth1_votes_limit&&limits.validator_registry_limit&&limits.pending_attestations_limit&&limits.validators_per_committee);
  Hasher h{checkpoint};h.tick();size_t cursor=0;
  auto take=[&](size_t n){auto v=part(b,cursor,n);cursor+=n;return v;};
  auto vector_size=[&](uint64_t count,size_t width){require(count<=UINT32_MAX/width);return size_t(count)*width;};
- const size_t field_count=sync_size?24:21;
+ const size_t field_count=execution?25:sync_size?24:21;
  std::vector<Root> fields(field_count);std::vector<std::pair<size_t,size_t>> variable;
  auto offset=[&](size_t field){variable.emplace_back(field,little(take(4)));};
  fields[0]=scalar(take(8));fields[1]=scalar(take(32));fields[2]=scalar(take(8));
@@ -91,6 +91,7 @@ ConsensusRoot beacon_state_root(View b,const Phase0StateLimits& limits,uint64_t 
    fields[i]=h.container({h.merkle(std::move(roots),sync_size),h.packed(take(48),2)});
   }
  }
+ if(execution){require(sync_size);offset(24);}
  require(variable.front().second==cursor);
  for(size_t i=0;i<variable.size();++i){h.tick();const auto [field,start]=variable[i];const auto end=i+1==variable.size()?b.size():variable[i+1].second;require(start<=end&&end<=b.size());const auto value=b.subspan(start,end-start);
   switch(field){
@@ -98,6 +99,7 @@ ConsensusRoot beacon_state_root(View b,const Phase0StateLimits& limits,uint64_t 
    case 9:fields[field]=h.fixed_list(value,72,limits.eth1_votes_limit,[&](View v){return h.eth1(v);});break;
    case 11:fields[field]=h.fixed_list(value,121,limits.validator_registry_limit,[&](View v){return h.validator(v);});break;
    case 12:case 21:require(value.size()%8==0&&value.size()/8<=limits.validator_registry_limit);fields[field]=h.mix(h.packed(value,(limits.validator_registry_limit-1)/4+1),value.size()/8);break;
+   case 24:{const auto header=decode_bellatrix_execution_header(value,execution->extra_data_bytes,value.size(),checkpoint);require(header.has_value());fields[field]=bellatrix_execution_header_root(*header,execution->extra_data_bytes,checkpoint);break;}
    default:
     if(sync_size){require(value.size()<=limits.validator_registry_limit);fields[field]=h.mix(h.packed(value,(limits.validator_registry_limit-1)/32+1),value.size());}
     else fields[field]=h.pending_list(value,limits.pending_attestations_limit,limits.validators_per_committee);
@@ -113,5 +115,9 @@ ConsensusRoot phase0_beacon_state_root(View b,const Phase0StateLimits& limits,co
 ConsensusRoot altair_beacon_state_root(View b,const AltairStateLimits& l,const std::function<void()>& checkpoint){
  require(l.sync_committee_size);
  return beacon_state_root(b,{l.slots_per_historical_root,l.epochs_per_historical_vector,l.epochs_per_slashings_vector,l.historical_roots_limit,l.eth1_votes_limit,l.validator_registry_limit,1,1},l.sync_committee_size,checkpoint);
+}
+ConsensusRoot bellatrix_beacon_state_root(View b,const AltairStateLimits& l,const ExecutionPayloadLimits& e,size_t maximum_bytes,const std::function<void()>& checkpoint){
+ require(l.sync_committee_size&&b.size()<=maximum_bytes);
+ return beacon_state_root(b,{l.slots_per_historical_root,l.epochs_per_historical_vector,l.epochs_per_slashings_vector,l.historical_roots_limit,l.eth1_votes_limit,l.validator_registry_limit,1,1},l.sync_committee_size,checkpoint,&e);
 }
 }

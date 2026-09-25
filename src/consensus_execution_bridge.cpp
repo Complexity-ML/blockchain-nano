@@ -45,14 +45,19 @@ BellatrixExecutionCandidate prepare_bellatrix_execution(
  if(check)check();
  if(state.root()!=parent.state_root)throw std::invalid_argument("execution parent state mismatch");
  BellatrixExecutionCandidate candidate{std::move(block),state,{}};
- // Some EVM failure paths translate host exceptions into failed calls. Keep
- // cancellation sticky and preserve its original exception across that boundary.
+ // Some EVM failure paths translate host exceptions into failed calls. Neither
+ // cancellation nor unavailable/corrupt history may become a valid EVM REVERT.
  std::exception_ptr interrupted;
  auto execution_checkpoint=[&]{
   if(interrupted)std::rethrow_exception(interrupted);
   try{if(check)check();}catch(...){interrupted=std::current_exception();throw;}
  };
- auto engine=ExecutionEngine(chain_id,history,EvmRevision::Paris,replay_policy).with_checkpoint(execution_checkpoint);
+ auto execution_history=[&](const Int& number){
+  if(interrupted)std::rethrow_exception(interrupted);
+  try{auto hash=history(number);if(hash.size()!=32)throw std::invalid_argument("execution history hash width");return hash;}
+  catch(...){interrupted=std::current_exception();throw;}
+ };
+ auto engine=ExecutionEngine(chain_id,execution_history,EvmRevision::Paris,replay_policy).with_checkpoint(execution_checkpoint);
  try{candidate.receipts=engine.verify_block(candidate.state,candidate.block,parent,false);}
  catch(...){if(interrupted)std::rethrow_exception(interrupted);throw;}
  if(interrupted)std::rethrow_exception(interrupted);

@@ -70,12 +70,56 @@ persistante de l'exception dans l'adaptateur. Le binaire `nano` a été reconstr
 
 ## Étapes restantes
 
-Intégrer les conteneurs BeaconBlockBody/BeaconState Bellatrix, leur transition et
-les paramètres économiques correspondants ; appeler le candidat d'exécution
-avec parent, timestamp et RANDAO issus de l'état de consensus authentifié ;
+Intégrer la transition complète BeaconBlockBody/BeaconState Bellatrix et les
+paramètres économiques correspondants ; appeler l'opération d'exécution depuis
+cette transition signée, après avancement des slots et avant mise à jour RANDAO ;
 publier puis restaurer ensemble les deux états avec preuve d'atomicité. Les
 extensions Capella/Deneb et les forks ultérieurs exigent des schémas distincts.
 Le profil Altair existant n'est pas modifié et le réseau n'accepte pas encore de
 blocs Bellatrix du fait de ce seul codec.
 L'adaptateur accepte uniquement une continuation Bellatrix après Merge ; il ne
 valide pas le bloc terminal PoW, n'active aucun fork et n'écrit aucune base.
+
+## Conteneurs et liaison à l'état Beacon (2026-09-25)
+
+`BellatrixExecutionPayloadHeader` conserve la racine SSZ de la liste des
+transactions, distincte de la racine MPT de l'en-tête d'exécution. Son codec
+canonique vérifie offset, largeur et budget. Le calcul des racines d'état prend
+désormais en charge les 25 champs Bellatrix ; celui du corps inclut le dixième
+champ `execution_payload`. Les wrappers Phase0 et Altair gardent leur schéma.
+
+`prepare_bellatrix_payload_state` réalise l'opération isolée d'exécution sur un
+état Beacon dont la racine est authentifiée par le demandeur. Il lie l'en-tête
+d'exécution parent à `latest_execution_payload_header`, dérive le timestamp de
+`genesis_time + slot * seconds_per_slot` avec contrôle de dépassement, et prend
+le mix RANDAO de l'epoch courante dans l'état. L'ordre attendu est celui de
+[Bellatrix process_block](https://ethereum.github.io/consensus-specs/specs/bellatrix/beacon-chain/#block-processing) :
+après les slots et le header, avant le nouveau reveal RANDAO.
+
+Après vérification EVM, seule la fin de l'état contenant l'en-tête d'exécution
+est remplacée. La fonction retourne deux candidats privés, Beacon et EVM, sans
+écrire dans RocksDB. Une erreur ou annulation ne modifie aucun des parents.
+L'historique `BLOCKHASH` doit être canonique et disponible : exception du
+fournisseur ou hash de largeur incorrecte provoque un refus, même si un payload
+présente des engagements correspondant à l'erreur hôte traduite en échec EVM.
+Un hash de 32 octets n'est pas authentifié par sa seule largeur ; la provenance
+canonique de l'historique reste à la charge de l'appelant.
+
+Qualification dans `build-cmake/qualification/bellatrix-state-binding-20260925/final-tests.log` :
+
+- 24 vecteurs SSZ officiels supplémentaires (8 en-têtes, 8 états, 8 corps),
+  commit `bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908`, 218565 octets décompressés ;
+  presets, fichiers Snappy, octets et racines vérifiés par manifeste.
+- 20 conteneurs malformés ou hors budget refusés, deux modifications d'engagement
+  imbriqué détectées, neuf points d'annulation des calculs de racines.
+- Six refus de liaison à l'état (racine, parent, RANDAO, slot/temps, dépassement
+  arithmétique, budget du nouvel état), quatre points d'annulation, deux erreurs
+  d'historique qui ne peuvent pas devenir une exécution valide.
+- Sept tests ciblés passent, dont les suites historiques de racines Phase0 et
+  Altair et de transitions complètes Altair ; `nano` reconstruit.
+
+Les essais de liaison utilisent une enveloppe d'état SSZ synthétique, dérivée
+d'un vecteur de format : ils ne prouvent ni son cycle de vie validateur, ni une
+transition Bellatrix signée complète. Les opérations Beacon, les slots/epochs
+Bellatrix, les paramètres de pénalité, le choix de branche, le commit atomique
+et la reprise des deux états restent à intégrer. Aucun fork réseau n'est activé.

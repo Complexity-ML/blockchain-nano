@@ -38,10 +38,32 @@ Bytes encode_bellatrix_execution_payload(const BellatrixExecutionPayload& p,cons
  append(p.parent_hash);append(p.fee_recipient);append(p.state_root);append(p.receipts_root);append(p.logs_bloom);append(p.prev_randao);num(p.block_number,8);num(p.gas_limit,8);num(p.gas_used,8);num(p.timestamp,8);num(508,4);append(p.base_fee_per_gas);append(p.block_hash);num(508+p.extra_data.size(),4);append(p.extra_data);
  size_t offset=4*p.transactions.size();for(const auto& tx:p.transactions){if(check)check();num(offset,4);offset+=tx.size();}for(const auto& tx:p.transactions){if(check)check();append(tx);}return out;
 }
-ConsensusRoot bellatrix_execution_payload_root(const BellatrixExecutionPayload& p,const ExecutionPayloadLimits& l,const std::function<void()>& check){
+BellatrixExecutionPayloadHeader bellatrix_execution_payload_header(const BellatrixExecutionPayload& p,const ExecutionPayloadLimits& l,const std::function<void()>& check){
  size(p,l,check);if(check)check();std::vector<Root> transactions;transactions.reserve(p.transactions.size());
  for(const auto& tx:p.transactions){if(check)check();transactions.push_back(consensus_signing_root(packed(tx,l.transaction_bytes,check),integer_root(tx.size())));}
- const auto tx_root=consensus_signing_root(merkle(std::move(transactions),l.transactions,check),integer_root(p.transactions.size()));
- return merkle({p.parent_hash,scalar(p.fee_recipient),p.state_root,p.receipts_root,packed(p.logs_bloom,256,check),p.prev_randao,integer_root(p.block_number),integer_root(p.gas_limit),integer_root(p.gas_used),integer_root(p.timestamp),consensus_signing_root(packed(p.extra_data,l.extra_data_bytes,check),integer_root(p.extra_data.size())),p.base_fee_per_gas,p.block_hash,tx_root},14,check);
+ BellatrixExecutionPayloadHeader h;static_cast<BellatrixExecutionFields&>(h)=p;
+ h.transactions_root=consensus_signing_root(merkle(std::move(transactions),l.transactions,check),integer_root(p.transactions.size()));return h;
+}
+ConsensusRoot bellatrix_execution_header_root(const BellatrixExecutionPayloadHeader& p,uint32_t extra_limit,const std::function<void()>& check){
+ if(!extra_limit||p.extra_data.size()>extra_limit)throw std::invalid_argument("Execution header extra data limit");
+ if(check)check();
+ return merkle({p.parent_hash,scalar(p.fee_recipient),p.state_root,p.receipts_root,packed(p.logs_bloom,256,check),p.prev_randao,integer_root(p.block_number),integer_root(p.gas_limit),integer_root(p.gas_used),integer_root(p.timestamp),consensus_signing_root(packed(p.extra_data,extra_limit,check),integer_root(p.extra_data.size())),p.base_fee_per_gas,p.block_hash,p.transactions_root},14,check);
+}
+ConsensusRoot bellatrix_execution_payload_root(const BellatrixExecutionPayload& p,const ExecutionPayloadLimits& l,const std::function<void()>& check){
+ return bellatrix_execution_header_root(bellatrix_execution_payload_header(p,l,check),l.extra_data_bytes,check);
+}
+std::optional<BellatrixExecutionPayloadHeader> decode_bellatrix_execution_header(View b,uint32_t extra_limit,size_t budget,const std::function<void()>& check){
+ if(!extra_limit)throw std::invalid_argument("Execution header extra data limit");
+ if(check)check();
+ if(b.size()<536||b.size()>budget||b.size()>UINT32_MAX||number(b,436,4)!=536||b.size()-536>extra_limit)return std::nullopt;
+ BellatrixExecutionPayloadHeader p;p.parent_hash=array<32>(b,0);p.fee_recipient=array<20>(b,32);p.state_root=array<32>(b,52);p.receipts_root=array<32>(b,84);p.logs_bloom=array<256>(b,116);p.prev_randao=array<32>(b,372);
+ p.block_number=number(b,404,8);p.gas_limit=number(b,412,8);p.gas_used=number(b,420,8);p.timestamp=number(b,428,8);p.base_fee_per_gas=array<32>(b,440);p.block_hash=array<32>(b,472);p.transactions_root=array<32>(b,504);p.extra_data.assign(b.begin()+536,b.end());return p;
+}
+Bytes encode_bellatrix_execution_header(const BellatrixExecutionPayloadHeader& p,uint32_t extra_limit,size_t budget,const std::function<void()>& check){
+ if(check)check();
+ if(!extra_limit||p.extra_data.size()>extra_limit||p.extra_data.size()>UINT32_MAX-536||budget<536||p.extra_data.size()>budget-536)throw std::invalid_argument("Execution header size or budget");
+ Bytes out;out.reserve(536+p.extra_data.size());
+ auto append=[&](const auto& b){out.insert(out.end(),b.begin(),b.end());};auto num=[&](uint64_t value,unsigned width){for(unsigned i=0;i<width;++i)out.push_back(uint8_t(value>>(8*i)));};
+ append(p.parent_hash);append(p.fee_recipient);append(p.state_root);append(p.receipts_root);append(p.logs_bloom);append(p.prev_randao);num(p.block_number,8);num(p.gas_limit,8);num(p.gas_used,8);num(p.timestamp,8);num(536,4);append(p.base_fee_per_gas);append(p.block_hash);append(p.transactions_root);append(p.extra_data);return out;
 }
 }

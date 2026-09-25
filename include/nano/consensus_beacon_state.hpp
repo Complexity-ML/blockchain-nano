@@ -1,5 +1,6 @@
 #pragma once
 #include "nano/consensus_signing.hpp"
+#include "nano/consensus_execution_payload.hpp"
 #include <functional>
 #include <span>
 namespace nano {
@@ -24,4 +25,8 @@ struct AltairStateLimits {
 // and both sync committees. Same schema-only trust boundary as Phase0 above.
 ConsensusRoot altair_beacon_state_root(std::span<const uint8_t>,const AltairStateLimits&,
  const std::function<void()>& checkpoint={});
+// Bellatrix appends a variable ExecutionPayloadHeader (25 fields). Format/root
+// validation only; no lifecycle or execution acceptance is implied.
+ConsensusRoot bellatrix_beacon_state_root(std::span<const uint8_t>,const AltairStateLimits&,
+ const ExecutionPayloadLimits&,size_t maximum_bytes,const std::function<void()>& checkpoint={});
 }

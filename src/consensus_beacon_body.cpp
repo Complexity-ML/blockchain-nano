@@ -79,17 +79,26 @@ ConsensusRoot phase0_beacon_body_root(View b,const Phase0BodyLimits& limits){
   variable_list(fields[2],limits.attestations,[&](View v){return attestation(v,limits.validators_per_committee);}),
   fixed_list(fields[3],1240,limits.deposits,deposit),fixed_list(fields[4],112,limits.voluntary_exits,exit)});
 }
-ConsensusRoot altair_beacon_body_root(View b,const Phase0BodyLimits& limits,uint64_t sync_size){
+namespace {
+ConsensusRoot sync_beacon_body_root(View b,const Phase0BodyLimits& limits,uint64_t sync_size,const ExecutionPayloadLimits* execution,const std::function<void()>& check){
+ if(check)check();
  require(limits.proposer_slashings&&limits.attester_slashings&&limits.attestations&&limits.deposits&&limits.voluntary_exits&&limits.validators_per_committee);
  require(sync_size&&sync_size<=UINT32_MAX&&b.size()<=UINT32_MAX);
- const size_t width=(sync_size+7)/8,fixed=316+width;
- auto fields=variable_fields(b,fixed,{200,204,208,212,216});
+ const size_t width=(sync_size+7)/8,fixed=316+width+(execution?4:0);
+ auto fields=execution?variable_fields(b,fixed,{200,204,208,212,216,fixed-4}):variable_fields(b,fixed,{200,204,208,212,216});
  const auto bits=b.subspan(220,width);require(sync_size%8==0||(bits.back()>>(sync_size%8))==0);
  const auto sync=container({packed(bits,(sync_size+255)/256),vector_bytes(b.subspan(220+width,96),96)});
- return container({vector_bytes(b.first(96),96),container({scalar(b.subspan(96,32)),scalar(b.subspan(128,8)),scalar(b.subspan(136,32))}),scalar(b.subspan(168,32)),
-  fixed_list(fields[0],416,limits.proposer_slashings,proposer_slashing),
-  variable_list(fields[1],limits.attester_slashings,[&](View v){return attester_slashing(v,limits.validators_per_committee);}),
-  variable_list(fields[2],limits.attestations,[&](View v){return attestation(v,limits.validators_per_committee);}),
-  fixed_list(fields[3],1240,limits.deposits,deposit),fixed_list(fields[4],112,limits.voluntary_exits,exit),sync});
+ std::vector<Root> roots{vector_bytes(b.first(96),96),container({scalar(b.subspan(96,32)),scalar(b.subspan(128,8)),scalar(b.subspan(136,32))}),scalar(b.subspan(168,32)),
+  fixed_list(fields[0],416,limits.proposer_slashings,[&](View v){if(check)check();return proposer_slashing(v);}),
+  variable_list(fields[1],limits.attester_slashings,[&](View v){if(check)check();return attester_slashing(v,limits.validators_per_committee);}),
+  variable_list(fields[2],limits.attestations,[&](View v){if(check)check();return attestation(v,limits.validators_per_committee);}),
+  fixed_list(fields[3],1240,limits.deposits,[&](View v){if(check)check();return deposit(v);}),fixed_list(fields[4],112,limits.voluntary_exits,[&](View v){if(check)check();return exit(v);}),sync};
+ if(execution){auto payload=decode_bellatrix_execution_payload(fields[5],*execution,fields[5].size(),check);require(payload.has_value());roots.push_back(bellatrix_execution_payload_root(*payload,*execution,check));}
+ const auto root=merkle(std::move(roots),execution?10:9);if(check)check();return root;
+}
+}
+ConsensusRoot altair_beacon_body_root(View b,const Phase0BodyLimits& l,uint64_t sync){return sync_beacon_body_root(b,l,sync,nullptr,{});}
+ConsensusRoot bellatrix_beacon_body_root(View b,const Phase0BodyLimits& l,uint64_t sync,const ExecutionPayloadLimits& e,size_t maximum_bytes,const std::function<void()>& check){
+ require(b.size()<=maximum_bytes);return sync_beacon_body_root(b,l,sync,&e,check);
 }
 }

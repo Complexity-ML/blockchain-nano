@@ -1,4 +1,6 @@
 #include "nano/consensus_execution_bridge.hpp"
+#include "nano/consensus_bellatrix_execution.hpp"
+#include "support/phase0_minimal_ssz.hpp"
 #include <iostream>
 using namespace nano;
 static void require(bool ok,const char* message){if(!ok)throw std::runtime_error(message);}
@@ -63,5 +65,49 @@ int main(){try{
  auto wire=encode_bellatrix_execution_payload(p,limits,budget);
  bool wrong_state=false;try{State unrelated;prepare_bellatrix_execution(wire,limits,budget,parent,unrelated,112,p.prev_randao,1337,ReplayPolicy::RequireChainId,history);}catch(const std::invalid_argument& e){wrong_state=std::string(e.what()).find("parent state")!=std::string::npos;}require(wrong_state,"unauthenticated parent state accepted");
  bool oversize=false;try{prepare_bellatrix_execution(wire,limits,wire.size()-1,parent,state,112,p.prev_randao,1337,ReplayPolicy::RequireChainId,history);}catch(const std::invalid_argument& e){oversize=std::string(e.what()).find("budget")!=std::string::npos;}require(oversize,"transport budget ignored");
- std::cout<<Json{{"scenario","bellatrix-execution-candidate"},{"signedTransactions",4},{"invalidPayloads",rejected},{"cancellationPoints",checkpoints},{"contractRevertAccepted",true},{"parentUnchanged",state.root()==before},{"networkActivated",false}}.dump()<<'\n';
+ // A producer can construct commitments matching an EVM that swallowed a host
+ // history error. The adapter must still refuse, not accept a false REVERT/zero.
+ for(bool missing:{false,true}){
+  std::function<Bytes(const Int&)> broken_history=[&](const Int&)->Bytes{if(missing)return {};throw std::runtime_error("history unavailable");};
+  auto false_block=block;State false_state=state;
+  ExecutionEngine(1337,broken_history,EvmRevision::Paris,ReplayPolicy::RequireChainId).execute_block(false_state,false_block,false);
+  bool failed=false;try{prepare_bellatrix_execution(encode_bellatrix_execution_payload(payload(false_block),limits,budget),limits,budget,parent,state,112,p.prev_randao,1337,ReplayPolicy::RequireChainId,broken_history);}catch(const std::exception& ex){failed=std::string(ex.what())==(missing?"execution history hash width":"history unavailable");}
+  require(failed&&state.root()==before,"host history failure became valid execution");
+ }
+ // Isolated process_execution_payload operation: the static SSZ fixture is a
+ // schema shell, not a lifecycle-valid or signed Beacon block transition.
+ const auto folder=test::fs::path(NANO_TEST_SOURCE)/"tests/fixtures/consensus-bellatrix-containers-official";
+ const auto preset=test::read(folder/"minimal-phase0.yaml");auto param=[&](const char* name){return test::phase0_minimal::parameter(preset,name);};
+ const AltairStateLimits sl{param("SLOTS_PER_HISTORICAL_ROOT"),param("EPOCHS_PER_HISTORICAL_VECTOR"),param("EPOCHS_PER_SLASHINGS_VECTOR"),param("HISTORICAL_ROOTS_LIMIT"),param("EPOCHS_PER_ETH1_VOTING_PERIOD")*param("SLOTS_PER_EPOCH"),param("VALIDATOR_REGISTRY_LIMIT"),test::phase0_minimal::parameter(test::read(folder/"minimal-altair.yaml"),"SYNC_COMMITTEE_SIZE")};
+ auto beacon=test::phase0_minimal::binary(folder/"BeaconState/case_0/serialized.ssz");
+ const size_t randao_at=272+64*sl.slots_per_historical_root,header_field=randao_at+32*sl.epochs_per_historical_vector+8*sl.epochs_per_slashings_vector+229+96*sl.sync_committee_size;
+ const size_t header_at=test::phase0_minimal::little(beacon,header_field,4);
+ auto put64=[](Bytes& out,size_t at,uint64_t n){for(unsigned i=0;i<8;++i)out.at(at+i)=uint8_t(n>>(8*i));};
+ put64(beacon,0,100);put64(beacon,40,1);std::copy(p.prev_randao.begin(),p.prev_randao.end(),beacon.begin()+randao_at);
+ Block parent_block;parent_block.header=parent;
+ const auto previous_header=encode_bellatrix_execution_header(bellatrix_execution_payload_header(payload(parent_block),limits),limits.extra_data_bytes,budget);
+ beacon.resize(header_at);beacon.insert(beacon.end(),previous_header.begin(),previous_header.end());
+ const auto authenticated=bellatrix_beacon_state_root(beacon,sl,limits,budget);
+ auto paired=[&](const Bytes& input,const ConsensusRoot& root,const Bytes& value,size_t maximum,const std::function<void()>& cp={}){
+  return prepare_bellatrix_payload_state(input,root,sl,limits,maximum,param("SLOTS_PER_EPOCH"),12,value,budget,parent,state,1337,ReplayPolicy::RequireChainId,history,cp);
+ };
+ size_t paired_calls=0;const auto bound=paired(beacon,authenticated,wire,budget,[&]{++paired_calls;});
+ require(bound.execution.state.root()==expected.root(),"state-bound execution mismatch");
+ require(std::equal(beacon.begin(),beacon.begin()+header_at,bound.consensus_state.begin()),"payload operation modified unrelated Beacon fields");
+ const auto latest=decode_bellatrix_execution_header(std::span<const uint8_t>(bound.consensus_state).subspan(header_at),limits.extra_data_bytes,budget);
+ require(latest==bellatrix_execution_payload_header(p,limits),"latest execution header not updated");
+ require(bound.consensus_root==bellatrix_beacon_state_root(bound.consensus_state,sl,limits,budget)&&bound.consensus_root!=authenticated,"post Beacon root mismatch");
+ size_t binding_rejections=0;
+ auto deny_binding=[&](const Bytes& input,const ConsensusRoot& root,const Bytes& value,size_t maximum,const char* reason){bool refused=false;try{paired(input,root,value,maximum);}catch(const std::invalid_argument& ex){refused=std::string(ex.what()).find(reason)!=std::string::npos;}require(refused,"state binding accepted invalid input or wrong reason");++binding_rejections;};
+ auto changed_root=authenticated;changed_root[0]^=1;deny_binding(beacon,changed_root,wire,budget,"authentication");
+ auto changed_beacon=beacon;changed_beacon[header_at+472]^=1;deny_binding(changed_beacon,bellatrix_beacon_state_root(changed_beacon,sl,limits,budget),wire,budget,"execution parent");
+ changed_beacon=beacon;changed_beacon[randao_at]^=1;deny_binding(changed_beacon,bellatrix_beacon_state_root(changed_beacon,sl,limits,budget),wire,budget,"RANDAO");
+ changed_beacon=beacon;put64(changed_beacon,40,2);deny_binding(changed_beacon,bellatrix_beacon_state_root(changed_beacon,sl,limits,budget),wire,budget,"timestamp");
+ changed_beacon=beacon;put64(changed_beacon,40,UINT64_MAX);deny_binding(changed_beacon,bellatrix_beacon_state_root(changed_beacon,sl,limits,budget),wire,budget,"overflow");
+ auto longer=block;longer.header.extra_data=Bytes(32,7);const auto longer_wire=encode_bellatrix_execution_payload(payload(longer),limits,budget);
+ deny_binding(beacon,authenticated,longer_wire,beacon.size(),"post-state budget");
+ const std::set<size_t> paired_stops{1,paired_calls/2,paired_calls-1,paired_calls};
+ for(size_t stop:paired_stops){size_t seen=0;bool aborted=false;try{paired(beacon,authenticated,wire,budget,[&]{if(++seen==stop)throw std::runtime_error("cancel paired");});}catch(const std::runtime_error& ex){aborted=std::string(ex.what())=="cancel paired";}require(aborted,"state-bound cancellation lost");}
+ require(bellatrix_beacon_state_root(beacon,sl,limits,budget)==authenticated&&state.root()==before,"paired operation mutated parent states");
+ std::cout<<Json{{"scenario","bellatrix-execution-candidate"},{"signedTransactions",4},{"invalidPayloads",rejected},{"cancellationPoints",checkpoints},{"beaconBindingRefusals",binding_rejections},{"pairedCancellationPoints",paired_stops.size()},{"contractRevertAccepted",true},{"parentUnchanged",state.root()==before},{"networkActivated",false}}.dump()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

@@ -1023,3 +1023,19 @@ ciblés. [Portée et preuves](BELLATRIX-EXECUTION-PAYLOAD.md).
 L'appel depuis une transition Beacon Bellatrix authentifiée, la persistance
 atomique des deux états et leur reprise restent à implémenter/qualifier.
 Aucune activation réseau, clôture de fork ou aptitude production n'en découle.
+
+### 2026-09-25 — liaison du payload à l'état Beacon Bellatrix
+
+Les schémas SSZ du header d'exécution, de l'état Beacon (25 champs) et du corps
+(10 champs) sont qualifiés par 24 vecteurs officiels épinglés. L'opération
+`prepare_bellatrix_payload_state` authentifie la racine de départ, lie le parent
+d'exécution au header mémorisé et dérive timestamp/RANDAO de l'état, puis prépare
+les deux résultats sans mutation des parents. Les erreurs de disponibilité ou
+de format de l'historique `BLOCKHASH` sont fatales, même si leurs effets EVM
+seraient compatibles avec les engagements annoncés. Sept tests ciblés passent,
+dont les régressions de schémas Phase0/Altair et des blocs Altair complets.
+[Preuves, sources et limites](BELLATRIX-EXECUTION-PAYLOAD.md).
+
+État : opération isolée implémentée/testée, transition signée Bellatrix complète
+et durabilité conjointe toujours non terminées. Les essais de liaison utilisent
+un état synthétique de format ; ils ne ferment aucun EIP ni le profil réseau.
