@@ -1644,3 +1644,28 @@ Restent withholding, ex_ante et get_proposer_head, puis admission de snapshots,
 persistance/reprise atomique, bornage des ressources et raccordement EVM/P2P.
 Les scénarios utilisent le preset minimal et un Store en mémoire ; ils ne sont
 ni un réseau distribué, ni une activation de consensus, ni une preuve de production.
+
+### Fork choice Altair — withholding et ex_ante minimal, 25 septembre 2026
+
+Les deux scénarios minimal de rétention de blocs (`withholding_attack` et
+`withholding_attack_unviable_honest_chain`) et les trois scénarios minimal
+ex_ante (vanilla et sandwich avec/sans attestation honnête) passent dans le
+runner événementiel commun, sans modification du moteur ni des attentes.
+Même corpus épinglé bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908 et profil
+historique v1.6.0-beta.0 ; YAML/Snappy originaux conservés et empreintes vérifiées.
+
+Withholding : 66 événements blocs, 86 ticks et 760 champs vérifiés.
+Ex_ante : 11 événements blocs, 11 ticks, deux votes séparés et 110 champs
+vérifiés. Aucun rejet attendu. Le replay indépendant avec l'implémentation
+Ethereum officielle de release et BLS actif confirme les cinq scénarios et
+870 champs sans écart. Les deux scénarios ex_ante réservés au preset mainnet
+(`attestations_is_greater_than_proposer_boost_with_boost` et
+`sandwich_with_boost_not_sufficient`) ne sont pas inclus dans cette campagne.
+
+CTest : `ethereum_official_altair_fork_withholding` et
+`ethereum_official_altair_fork_ex_ante`, 2/2 suites.
+Preuves : `build-cmake/qualification/altair-fork-withholding-ex-ante-20260925/`
+(journal natif, rapports indépendants, empreintes et scripts oracle temporaires).
+Ces replays ne sont pas des attaques distribuées ni des mesures de charge.
+Get_proposer_head reste à implémenter/qualifier ; snapshots, persistance/reprise,
+ressources et raccordement au réseau restent ouverts. Aucune activation réseau.

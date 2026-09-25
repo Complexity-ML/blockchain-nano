@@ -544,3 +544,10 @@ sans changement des attentes ni du moteur. Avec get_head, les trois suites passe
 Campagne `altair-fork-block-reorg-20260925`. Le Store reste en mémoire ;
 withholding/ex_ante/get_proposer_head, persistance/reprise et raccordement EVM/P2P
 restent ouverts. Aucun EIP supplémentaire n'est déclaré intégralement activé.
+
+Fork choice Altair : les cinq scénarios minimal withholding/ex_ante passent
+(77 événements blocs, 870 champs), avec confirmation indépendante par l'oracle
+Ethereum officiel, BLS actif, zéro écart. Campagne
+`altair-fork-withholding-ex-ante-20260925`. Les deux scénarios ex_ante mainnet
+ne sont pas couverts ; get_proposer_head, stockage durable et intégration réseau
+restent ouverts. Aucun changement du profil réseau actif ou du statut des EIP.

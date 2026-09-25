@@ -1049,3 +1049,7 @@ set_tests_properties(ethereum_official_altair_fork_head PROPERTIES TIMEOUT 180 L
 add_test(NAME ethereum_official_altair_fork_block COMMAND nano-altair-fork-head-tests "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/consensus-altair-fork-block-official" 23)
 add_test(NAME ethereum_official_altair_fork_reorg COMMAND nano-altair-fork-head-tests "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/consensus-altair-fork-reorg-official" 8)
 set_tests_properties(ethereum_official_altair_fork_block ethereum_official_altair_fork_reorg PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_ethereum")
+
+add_test(NAME ethereum_official_altair_fork_withholding COMMAND nano-altair-fork-head-tests "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/consensus-altair-fork-withholding-official" 2)
+add_test(NAME ethereum_official_altair_fork_ex_ante COMMAND nano-altair-fork-head-tests "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/consensus-altair-fork-ex_ante-official" 3)
+set_tests_properties(ethereum_official_altair_fork_withholding ethereum_official_altair_fork_ex_ante PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_ethereum")
