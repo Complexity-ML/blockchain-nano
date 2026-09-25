@@ -2082,3 +2082,32 @@ Il reste à composer ce chargeur avec les fichiers d'ancre vérifiés et les lim
 du Store dans le démarrage de Nano, à gérer la reprise, puis à raccorder le daemon.
 Aucun preset minimal n'est installé comme profil de production ; aucun consensus
 réseau ni paramètre de genesis existant n'est activé/modifié.
+
+### Import local d'une ancre vérifiée, 25 septembre 2026
+
+`load_altair_anchor` compose maintenant les règles explicites avec deux fichiers
+locaux bornés : état SSZ et bloc Beacon non signé. Les engagements attendus
+(racines du bloc et de l'état, genesis_validators_root et version du fork) sont
+fournis séparément par l'appelant. Le chargeur vérifie le format SSZ, le domaine
+de fork, la liaison bloc/état et ces racines avant de rendre un Store candidat.
+Il reconstitue le marqueur d'epoch à partir du slot authentifié et conserve
+l'horloge du slot d'ancrage. Il ne touche pas au stockage.
+
+La lecture refuse les fichiers absents/non réguliers et les tailles excessives ;
+la taille est aussi surveillée pendant la lecture. Les checkpoints d'annulation
+couvrent lecture, validation et retour du candidat. Les contrôles de cohérence
+existants des règles de bloc/epoch sont réutilisés, avec validation explicite des
+paramètres de timing et du profil de proposer boost.
+
+`consensus_altair_trusted_anchor` passe : ancre de départ et ancre officielle au
+slot 17 donnent exactement les Stores attendus ; onze altérations de racine,
+domaine, données, taille, chemin ou règles sont refusées. Quatre annulations à
+différentes étapes ne créent aucun checkpoint. Le candidat accepté peut ensuite
+être publié par le coordinateur durable au numéro de séquence 1.
+Preuves : `build-cmake/qualification/altair-trusted-anchor-20260925/`.
+
+Les engagements doivent provenir d'une source indépendante de confiance. Cette
+fonction ne choisit pas le checkpoint, ne prouve ni sa fraîcheur ni sa finalité
+et ne revalide pas les preuves de possession historiques. L'admission de snapshots
+de pairs, la politique de bootstrap/reprise et la composition dans `run_node`
+restent à terminer. Aucune activation réseau ou liaison EVM n'est revendiquée.

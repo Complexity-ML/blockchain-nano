@@ -644,3 +644,11 @@ officiels et la reprise des snapshots passent, avec 502 profils invalides refus�
 La composition au démarrage avec une ancre authentifiée reste ouverte ; ce
 chargeur n'active aucun fork ni EIP. Voir « Chargement explicite du profil Altair »
 dans `docs/VALIDATOR-EIP-ROADMAP.md`.
+
+Complément bootstrap Altair (25 septembre 2026) : import local borné des fichiers
+état/bloc avec engagements externes de racines et domaine de fork. Deux ancres
+officielles (dont une au slot 17), onze refus et quatre annulations passent avant
+publication durable explicite. Ce chargeur ne fournit pas la politique de confiance,
+de fraîcheur ou de finalité ; son intégration à `run_node` reste ouverte. Aucun
+fork activé. Détails dans « Import local d'une ancre vérifiée » de la feuille
+validateurs.
