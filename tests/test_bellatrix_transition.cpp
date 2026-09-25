@@ -3,6 +3,8 @@
 #include "nano/consensus_proposer.hpp"
 #include "nano/consensus_bellatrix_fork_store.hpp"
 #include "nano/committee.hpp"
+#include "nano/consensus_bellatrix_store_snapshot.hpp"
+#include "nano/storage.hpp"
 #include "blst.h"
 using namespace test;using namespace test::phase0_minimal;
 namespace {
@@ -40,6 +42,7 @@ int main(){try{
  beacon.ssz.resize(little(beacon.ssz,execution_field,4));beacon.ssz.insert(beacon.ssz.end(),initial_header.begin(),initial_header.end());
  std::map<Int,Bytes> hashes{{0,parent.header.hash()}};std::function<Bytes(const Int&)> history=[&](const Int& n){return hashes.at(n);};
  BellatrixForkBlockRules fork_rules{r,seconds*1000,seconds*1000/3,40};
+ const Block execution_genesis=parent;const State genesis_state=state;std::vector<BellatrixForkStore> reorg_stores;
  std::optional<BellatrixForkStore> store;size_t reorgs=0,store_cancellations=0;
  size_t blocks=0,refusals=0,cancellations=0;Bytes first_proof;uint64_t offender=0;
  for(uint64_t slot=1;slot<=slots+1;++slot){
@@ -121,8 +124,8 @@ int main(){try{
    const auto committee=partition_committee(assignment.shuffled,(slot%slots)*assignment.committees_per_slot,assignment.committees_per_slot*slots);check(committee.size()*assignment.committees_per_slot>=6,"slot committees too small for reorg scenario");
    auto vote_for=[&](size_t position,const ConsensusRoot& head){const auto index=position/committee.size();const auto members=partition_committee(assignment.shuffled,(slot%slots)*assignment.committees_per_slot+index,assignment.committees_per_slot*slots);position%=committee.size();Phase0SignedAttestation vote{{slot,index,head,{},target_checkpoint},std::vector<bool>(members.size()),{}};vote.aggregation_bits[position]=true;Key signer(members[position]);vote.signature=signer.sign(consensus_signing_root(consensus_attestation_root(vote.data),consensus_domain({1,0,0,0},context.target.fork.current_version,context.target.genesis_root)));auto result=prepare_bellatrix_store_vote(*store,vote,fork_rules,64,100000);check(result.has_value(),"valid branch vote rejected");store=std::move(*result);};
    vote_for(0,canonical);check(bellatrix_fork_head(*store,fork_rules).execution_state.root()==expected.root(),"canonical vote lost paired EVM state");
-   vote_for(1,alternate);vote_for(2,alternate);check(bellatrix_fork_head(*store,fork_rules).execution_state.root()==side_state.root(),"vote reorg did not switch EVM state");++reorgs;
-   vote_for(3,canonical);vote_for(4,canonical);vote_for(5,canonical);check(bellatrix_fork_head(*store,fork_rules).execution_state.root()==expected.root(),"return reorg did not restore EVM state");++reorgs;
+   vote_for(1,alternate);vote_for(2,alternate);check(bellatrix_fork_head(*store,fork_rules).execution_state.root()==side_state.root(),"vote reorg did not switch EVM state");++reorgs;reorg_stores.push_back(*store);
+   vote_for(3,canonical);vote_for(4,canonical);vote_for(5,canonical);check(bellatrix_fork_head(*store,fork_rules).execution_state.root()==expected.root(),"return reorg did not restore EVM state");++reorgs;reorg_stores.push_back(*store);
    const auto start=little(received->consensus.ssz,hist+88,4),balance_start=little(received->consensus.ssz,hist+92,4),control_balances=little(control->post.consensus.ssz,hist+92,4);
    check(received->consensus.ssz[start+121*offender+88]==1,"double proposal not slashed");
    const auto effective=little(advanced.ssz,validators+121*offender+80,8),penalty=effective/r.consensus.epoch.slashing.minimum_penalty_quotient,reward=effective/r.consensus.epoch.slashing.whistleblower_reward_quotient;
@@ -131,5 +134,28 @@ int main(){try{
   check(beacon==old_beacon&&state.root()==old_state,"successful preparation changed parents");beacon=received->consensus;state=received->execution.state;parent=received->execution.block;hashes[parent.header.number]=parent.header.hash();++blocks;
  }
  check(beacon.last_processed_epoch==0,"epoch boundary not processed");
- std::cout<<Json{{"scenario","signed-bellatrix-evm-chain"},{"blocks",blocks},{"validators",64},{"invalidSignedBlocks",refusals},{"cancellations",cancellations},{"doubleProposalSlashed",true},{"pairedExecutionReorgs",reorgs},{"storeCancellations",store_cancellations},{"forkBlocks",store->blocks.size()},{"durableCommit",false},{"networkActive",false}}.dump()<<'\n';
+ const BellatrixStoreSnapshotLimits limits{16*1024*1024,32,128,128,4*1024*1024,8*1024*1024,64,100000};
+ size_t snapshot_calls=0;const auto encoded=bellatrix_store_snapshot(*store,fork_rules,limits,[&]{++snapshot_calls;});
+ const auto digest=sha256(Bytes(encoded.begin(),encoded.end()));const auto decoded=bellatrix_store_from_snapshot(encoded,digest,fork_rules,limits);
+ check(bellatrix_store_snapshot(decoded,fork_rules,limits)==encoded&&bellatrix_fork_head(decoded,fork_rules).execution_state.root()==state.root(),"full Bellatrix Store roundtrip");
+ unsigned snapshot_refusals=0;auto reject_snapshot=[&](const std::string& bytes,const Bytes& commitment,const BellatrixForkBlockRules& rules){bool rejected=false;try{bellatrix_store_from_snapshot(bytes,commitment,rules,limits);}catch(const std::exception&){rejected=true;}check(rejected,"invalid Bellatrix snapshot accepted");++snapshot_refusals;};
+ auto wrong_digest=digest;wrong_digest[0]^=1;reject_snapshot(encoded,wrong_digest,fork_rules);
+ auto other_rules=fork_rules;other_rules.transition.chain_id+=1;reject_snapshot(encoded,digest,other_rules);
+ auto damaged=Json::parse(encoded);damaged["blocks"][0][5][1]=State{}.to_json();auto damaged_bytes=damaged.dump();reject_snapshot(damaged_bytes,sha256(Bytes(damaged_bytes.begin(),damaged_bytes.end())),fork_rules);
+ damaged=Json::parse(encoded);damaged["ancestors"]=Json::array();damaged_bytes=damaged.dump();reject_snapshot(damaged_bytes,sha256(Bytes(damaged_bytes.begin(),damaged_bytes.end())),fork_rules);
+ damaged=Json::parse(encoded);damaged["blocks"].push_back(damaged["blocks"][0]);damaged_bytes=damaged.dump();reject_snapshot(damaged_bytes,sha256(Bytes(damaged_bytes.begin(),damaged_bytes.end())),fork_rules);
+ damaged=Json::parse(encoded);damaged["blocks"][0][5][2][0]["blockHash"]=hex(Bytes(32,1));damaged_bytes=damaged.dump();reject_snapshot(damaged_bytes,sha256(Bytes(damaged_bytes.begin(),damaged_bytes.end())),fork_rules);
+ auto too_small=limits;too_small.envelope_bytes=encoded.size()-1;bool bounded=false;try{bellatrix_store_from_snapshot(encoded,digest,fork_rules,too_small);}catch(const std::invalid_argument&){bounded=true;}check(bounded,"snapshot envelope budget ignored");
+ for(size_t stop:std::set<size_t>{1,snapshot_calls/2,snapshot_calls}){size_t seen=0;bool stopped=false;try{bellatrix_store_snapshot(*store,fork_rules,limits,[&]{if(++seen==stop)throw std::runtime_error("cancel snapshot");});}catch(const std::runtime_error& e){stopped=std::string(e.what())=="cancel snapshot";}check(stopped,"snapshot cancellation lost");}
+ Temp location;const auto database=location/"bellatrix";std::optional<ForkCheckpointToken> token;Bytes disk_tip=execution_genesis.header.hash();
+ // Persist both competing heads, with a close/reopen and full revalidation each time.
+ reorg_stores.insert(reorg_stores.begin(),*store);
+ for(size_t event=0;event<reorg_stores.size();++event){const auto& candidate=reorg_stores[event];const auto& head=bellatrix_fork_head(candidate,fork_rules);const auto snapshot=bellatrix_store_snapshot(candidate,fork_rules,limits);std::vector<ExecutionCheckpointBlock> suffix;
+  auto id=consensus_beacon_header_root(head.header);const Int common_height=event?Int(std::to_string(slots)):Int(0);Bytes common_hash=execution_genesis.header.hash();
+  for(;;){const auto& record=candidate.blocks.at(id);if(record.execution_block.header.number==common_height){common_hash=record.execution_block.header.hash();break;}suffix.push_back({record.execution_block,record.execution_state,record.receipts});if(id==candidate.timed.view.anchor)break;id=record.header.parent_root;}std::reverse(suffix.begin(),suffix.end());
+  {ChainStore disk(database);if(!event){disk.bind_chain(1337,execution_genesis.header.hash(),"bellatrix-checkpoint-test");disk.commit(execution_genesis,genesis_state,{});}token=disk.commit_execution_checkpoint(1337,execution_genesis.header.hash(),token,disk_tip,common_height,common_hash,suffix,snapshot,32*1024*1024,32);}
+  {ChainStore disk(database);const auto persisted=disk.fork_checkpoint(1337,execution_genesis.header.hash(),limits.envelope_bytes,token);check(persisted.has_value(),"Bellatrix checkpoint lost");const auto restored=bellatrix_store_from_snapshot(persisted->snapshot,persisted->token.digest,fork_rules,limits);const auto& selected=bellatrix_fork_head(restored,fork_rules);disk_tip=selected.execution_block.header.hash();check(disk.latest()->header.hash()==disk_tip&&disk.state_at(selected.execution_block.header.number)->root()==selected.execution_state.root(),"Bellatrix recovery split Beacon/EVM");check(disk.receipt(selected.execution_block.transactions[0].hash())->block_hash==disk_tip,"Bellatrix recovery receipt mismatch");}
+ }
+
+ std::cout<<Json{{"scenario","signed-bellatrix-evm-chain"},{"blocks",blocks},{"validators",64},{"invalidSignedBlocks",refusals},{"cancellations",cancellations},{"doubleProposalSlashed",true},{"pairedExecutionReorgs",reorgs},{"storeCancellations",store_cancellations},{"forkBlocks",store->blocks.size()},{"durableCommit",true},{"snapshotRefusals",snapshot_refusals},{"pairedCheckpointReopens",reorg_stores.size()},{"networkActive",false}}.dump()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

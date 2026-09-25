@@ -1094,3 +1094,14 @@ avec conservation/perte du suffixe WAL : voir
 [EXECUTION-CHECKPOINT.md](EXECUTION-CHECKPOINT.md). La sérialisation authentifiée
 et la reprise du Store Bellatrix ainsi que son reactor réseau restent ouvertes ;
 la primitive opaque ne clôture pas à elle seule la persistance du consensus.
+
+### 2026-09-25 — Snapshot et reprise des branches Bellatrix/EVM
+
+Le Store Bellatrix dispose d'une enveloppe canonique liée au profil attendu et
+à un digest indépendant. La qualification compose cette sauvegarde avec le commit
+atomique RocksDB : trois réouvertures, dont deux changements de branche, retrouvent
+la même tête Beacon/EVM, le même état et les mêmes reçus. Six corruptions/écarts
+sont refusés. Voir [BELLATRIX-STORE-RECOVERY.md](BELLATRIX-STORE-RECOVERY.md).
+Ce sont des checkpoints locaux authentifiés, pas une synchronisation depuis un
+pair. Le coordinateur durable Bellatrix, ses archives signées et le réseau restent
+à raccorder ; la production et la finalité distribuée ne sont pas déclarées closes.

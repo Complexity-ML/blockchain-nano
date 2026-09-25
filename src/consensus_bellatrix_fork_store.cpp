@@ -199,3 +199,7 @@ const BellatrixForkBlock& bellatrix_fork_head(const BellatrixForkStore& store,co
  const auto& record=store.blocks.at(id);if(consensus_beacon_header_root(record.header)!=id)throw std::invalid_argument("Bellatrix fork head root mismatch");bellatrix_fork_block_context(record.state,record.header,epoch_rules(r),t.state,check);validate_execution(record,r,check);return record;
 }
 }
+
+namespace nano {
+void validate_bellatrix_execution_record(const BellatrixForkBlock& b,const BellatrixForkBlockRules& r,const std::function<void()>& c){validate_rules(r);bellatrix_fork_block_context(b.state,b.header,epoch_rules(r),r.transition.consensus.state,c);validate_execution(b,r,c);}
+}

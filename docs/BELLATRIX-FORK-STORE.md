@@ -55,5 +55,6 @@ puis le raccordement réseau et les scénarios de partitions/pannes. Aucun fork
 réseau, déploiement VPS ou fonds réel n'est activé par ce changement.
 
 La primitive RocksDB couplée est désormais disponible : voir
-[EXECUTION-CHECKPOINT.md](EXECUTION-CHECKPOINT.md). Son raccordement à la
-sérialisation et au chargement du Store décrit ici reste à réaliser.
+[EXECUTION-CHECKPOINT.md](EXECUTION-CHECKPOINT.md). La sérialisation et le chargement du Store sont maintenant qualifiés dans
+[BELLATRIX-STORE-RECOVERY.md](BELLATRIX-STORE-RECOVERY.md) ; le coordinateur
+durable autonome reste à raccorder.

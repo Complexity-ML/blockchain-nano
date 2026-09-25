@@ -65,3 +65,10 @@ namespace nano {
 const BellatrixForkBlock& bellatrix_fork_head(const BellatrixForkStore&,
  const BellatrixForkBlockRules&,const std::function<void()>& checkpoint={});
 }
+
+namespace nano {
+// Validate a trusted record's Beacon/native execution roots and receipt binding.
+// Does not authenticate its source or replay its state transition.
+void validate_bellatrix_execution_record(const BellatrixForkBlock&,const BellatrixForkBlockRules&,
+ const std::function<void()>& checkpoint={});
+}

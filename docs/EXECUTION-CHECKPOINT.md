@@ -54,8 +54,9 @@ sous le checkpoint finalisé et conserver les enveloppes nécessaires à la repr
 Les lectures successives par plusieurs getters ne sont pas un snapshot transactionnel
 pour les lecteurs concurrents ; le reactor doit sérialiser leur publication.
 
-La sérialisation/revalidation du Store Bellatrix complet, son reactor durable et
-son raccordement réseau restent à intégrer. Cette étape ferme la séparation des
+La sérialisation/revalidation du Store Bellatrix complet est qualifiée dans
+[BELLATRIX-STORE-RECOVERY.md](BELLATRIX-STORE-RECOVERY.md). Son reactor durable
+et son raccordement réseau restent à intégrer. Cette étape ferme la séparation des
 écritures au niveau de la primitive de stockage, pas la qualification de production.
 Le journal anti-slashing de signature reste distinct et doit être synchronisé avant
 émission. Détecter une restauration ancienne de l'ensemble du disque nécessite un
