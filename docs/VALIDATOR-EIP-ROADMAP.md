@@ -1571,3 +1571,44 @@ Ce jalon compose les blocs Altair sur un état initial admis, sans implémenter
 l'admission de snapshots, la migration Phase0→Altair, le fork_choice Altair,
 la persistance du nouveau Store ou son raccordement EVM/P2P. Aucun changement
 du consensus actif ni qualification de production distribuée.
+
+### Fork choice Altair — get_head qualifié, 25 septembre 2026
+
+Adaptateurs Altair ajoutés pour Store en mémoire, ancre de confiance externe,
+contextes de votes/sanctions, horloge et réception de blocs complets. La réception
+utilise la transition Altair et dérive les contextes depuis les états liés aux
+blocs. Le proposant, les signataires et leurs poids ne viennent pas de messages
+non authentifiés. L'ancre doit être approuvée extérieurement ; le constructeur
+contrôle son lien bloc/état mais n'établit ni sa confiance ni les PoPs du registre.
+
+Deux politiques de proposer boost sont explicites : la release v1.6.0-beta.0
+sans filtre de dépendance du shuffling, et la référence plus récente avec ce
+filtre (politique par défaut). Les dix scénarios officiels get_head sont rejoués
+avec la politique historique et sa configuration temporelle exacte. Il ne s'agit
+pas d'un changement du consensus actif de Nano.
+
+**Échec initial conservé et résolu.** À l'événement 135 de
+`voting_source_within_two_epoch`, le replay sélectionnait le bloc 41 au lieu du
+bloc 40. Il omettait les attestations embarquées, alors qu'un événement bloc du
+format officiel implique aussi leur réception. Ce n'était pas une erreur dans
+les attentes de la fixture. `prepare_altair_received_block` compose désormais
+on_block puis les attestations et preuves de double vote incluses. L'exception
+de fenêtre temporelle des votes n'est accessible qu'après validation du bloc,
+jamais via un paramètre fourni par un émetteur gossip. Un vote embarqué dont le
+contexte ou l'ascendance ne permet pas l'admission au fork choice n'invalide pas
+le bloc valide ; aucune file de récupération/différé n'est encore fournie.
+
+Les dix scénarios passent : 109 événements blocs, 104 ticks, 19 votes séparés,
+une preuve de double vote séparée et 1081 champs vérifiés (tête, temps,
+checkpoints, bonus). Le code Python officiel, compilé dans un environnement
+externe temporaire depuis le commit de release avec BLS actif, rejoue lui aussi
+ces dix scénarios sans aucun écart. Les attentes publiées ne sont pas modifiées.
+Un vote ancien reçu seul est rejeté ; le même vote embarqué dans un bloc validé
+reste pris en compte. Signature de bloc altérée et sept annulations ne publient
+aucune modification du Store d'entrée.
+
+Échec historique : `build-cmake/qualification/altair-fork-head-20260925/failing-LastTest.log`.
+Preuves corrigées : `build-cmake/qualification/altair-fork-head-fixed-20260925/`.
+Restent les autres groupes officiels (on_block, reorg, withholding, ex_ante,
+get_proposer_head), l'admission de snapshots, la persistance/reprise, la gestion
+des ressources et le raccordement réseau. Aucun statut production n'en découle.

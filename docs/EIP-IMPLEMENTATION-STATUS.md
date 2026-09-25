@@ -529,3 +529,11 @@ SyncAggregate et à la racine finale. Les 52 séquences officielles minimal pass
 Cette composition ne vaut ni fork_choice Altair, ni admission/migration de fork,
 ni persistance/raccordement au réseau actif. Campagne
 `altair-full-blocks-20260925`, détails dans la feuille de route validateurs.
+
+Fork choice Altair : Store événementiel en mémoire ajouté, dix scénarios officiels
+get_head qualifiés (109 blocs, 104 ticks, 19 votes, une preuve séparée, 1081 champs
+vérifiés). L'écart initial venait des attestations embarquées omises par le replay ;
+la réception les traite après validation du bloc. Les attentes restent inchangées,
+et l'oracle Ethereum officiel confirme zéro écart. Les profils de proposer boost
+restent explicites. Autres groupes fork_choice, persistance et réseau encore
+ouverts ; campagne `altair-fork-head-fixed-20260925` et feuille de route validateurs.
