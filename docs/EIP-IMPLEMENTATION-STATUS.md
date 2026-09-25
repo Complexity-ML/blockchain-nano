@@ -971,3 +971,15 @@ Preuve : `build-cmake/qualification/altair-generated-p2p-restart-20260925/tests.
 [périmètre précis](ALTAIR-LOCAL-FINALITY.md). Le cœur reste vivant pendant la panne
 P2P. Les partitions de consensus, la redécouverte automatique, le crash du cœur
 et la liaison à l'exécution ne sont pas clos par ce test.
+
+### 2026-09-25 — refus d'une réécriture finalisée malgré des signatures valides
+
+`consensus_altair_adversarial_finality` construit deux transitions complètes signées
+en contournant volontairement le journal local des clés de fixture. La branche
+qui évite le checkpoint finalisé est acceptée par un Store témoin au genesis,
+mais refusée par le Store finalisé, avant et après fermeture/réouverture de sa base.
+Un bloc concurrent descendant du checkpoint finalisé reste admissible. Preuve :
+`build-cmake/qualification/altair-adversarial-finality-20260925/tests.log` ;
+[périmètre et limites](ALTAIR-LOCAL-FINALITY.md). Les checkpoints hostiles au bootstrap,
+les attaques de quorum, les partitions et les sanctions économiques restent hors
+de cette qualification locale.

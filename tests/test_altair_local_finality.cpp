@@ -25,7 +25,7 @@ struct Key {
 };
 }
 int main(int argc,char** argv){try{
- const bool no_votes=argc==2&&std::string(argv[1])=="without-votes",minority=argc==2&&std::string(argv[1])=="minority-votes";const bool p2p_restart=argc==3&&std::string(argv[1])=="p2p-restart";const bool p2p=argc==3&&(std::string(argv[1])=="p2p"||p2p_restart);check(argc==1||no_votes||minority||p2p,"unexpected scenario argument");
+ const bool no_votes=argc==2&&std::string(argv[1])=="without-votes",minority=argc==2&&std::string(argv[1])=="minority-votes";const bool adversarial=argc==2&&std::string(argv[1])=="adversarial-finality";const bool p2p_restart=argc==3&&std::string(argv[1])=="p2p-restart";const bool p2p=argc==3&&(std::string(argv[1])=="p2p"||p2p_restart);check(argc==1||no_votes||minority||p2p||adversarial,"unexpected scenario argument");
  const fs::path fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",corpus=fixtures/"consensus-altair-fork-head-official",dir=corpus/"shorter_chain_but_heavier_weight";
  const auto manifest=load(corpus/"manifest.json");
  for(const auto& row:manifest.at("cases"))if(row.at("name")=="shorter_chain_but_heavier_weight")for(const auto& [path,info]:row.at("files").items())check(hex(sha256(binary(corpus/path))).substr(2)==info.at("sha256").get<std::string>(),"fixture digest");
@@ -61,6 +61,37 @@ int main(int argc,char** argv){try{
  // fork-choice Store is anchored to the actual genesis block root.
  if(realized.finalized.epoch==0)check(realized.finalized.root==ConsensusRoot{}&&final.state->timed.view.finalized==ConsensusCheckpoint{0,initial.timed.view.anchor},"genesis finality binding changed");
  else check(realized.finalized==final.state->timed.view.finalized,"Store finality differs from realized block state");check(final.signed_blocks->size()==blocks,"generated block archive mismatch");
+ if(adversarial){
+  // Model a signing key used outside the local anti-slashing journal. These
+  // are valid BLS signatures and complete valid transitions, not malformed
+  // packets that could be refused before the finalized-ancestry check.
+  auto forge=[&](const AltairForkBlock& parent,uint64_t slot,uint8_t graffiti){
+   const auto selected=prepare_altair_proposer_identity(parent.state,parent.header,slot,t.epoch,t.state,t.attestation.duties,limits.replay_slots,limits.sync_trials);check(selected.has_value(),"adversarial proposer selection failed");auto& key=*keys.at(selected->index);
+   ConsensusRoot epoch_root{};const auto epoch=slot/slots;for(unsigned i=0;i<8;++i)epoch_root[i]=uint8_t(epoch>>(8*i));
+   const auto reveal=key.sign(consensus_signing_root(epoch_root,consensus_domain({2,0,0,0},selected->fork_version,selected->genesis_root)));
+   auto body=body_with_votes(base,{},t);std::copy(reveal.begin(),reveal.end(),body.begin());body[168]^=graffiti;
+   const auto parent_root=consensus_beacon_header_root(parent.header);
+   const auto built=prepare_altair_unsigned_block(parent.state,slot,selected->index,parent_root,body,t,limits.replay_slots,limits.sync_trials);check(built.has_value(),"adversarial construction invalid");
+   const ConsensusBeaconHeader header{slot,selected->index,parent_root,root_at(built->message_ssz,48),altair_beacon_body_root(body,t.body,t.state.sync_committee_size)};
+   const auto signature=key.sign(consensus_signing_root(consensus_beacon_header_root(header),consensus_domain({0,0,0,0},selected->fork_version,selected->genesis_root)));
+   Bytes wire(100,0);wire[0]=100;std::copy(signature.begin(),signature.end(),wire.begin()+4);wire.insert(wire.end(),built->message_ssz.begin(),built->message_ssz.end());
+   const auto validated=prepare_altair_state_transition(parent.state,wire,t,limits.replay_slots,limits.sync_trials);check(validated&&*validated==built->post_state,"adversarial signature or transition invalid");return wire;
+  };
+  const auto slot=final.state->blocks.at(final_head).header.slot;
+  const auto conflicting=forge(final.state->blocks.at(initial.timed.view.anchor),slot,0x55);
+  auto unfinalized=prepare_altair_store_tick(initial,final.state->timed.clock.time_ms,rules,limits.replay_slots,limits.sync_trials);
+  check(prepare_altair_received_block(unfinalized,conflicting,rules,limits.replay_slots,limits.sync_trials).has_value(),"conflicting branch rejected even without finalized checkpoint");
+  const auto before=reactor->current();
+  check(!reactor->block(conflicting)&&reactor->current().token==before.token&&reactor->current().signed_blocks==before.signed_blocks,"valid incompatible branch rewrote finalized history");
+  // A competing block descending from the finalized checkpoint must remain
+  // admissible: finality must not disable ordinary unfinalized fork handling.
+  const auto& tip=final.state->blocks.at(final_head);const auto& parent=final.state->blocks.at(tip.header.parent_root);
+  const auto competing=forge(parent,slot,0xaa);check(reactor->block(competing),"valid unfinalized competing block prohibited");
+  const auto accepted=reactor->current();check(accepted.signed_blocks->size()==before.signed_blocks->size()+1&&accepted.state->timed.view.finalized==before.state->timed.view.finalized,"competing tip changed finalized checkpoint");
+  reactor.reset();disk.reset();disk=std::make_unique<ChainStore>(temp/"core");disk->bind_chain(1337,genesis,"altair-qualification");reactor=std::make_unique<AltairDurableReactor>(*disk,1337,genesis,rules,limits,accepted.token);
+  check(!reactor->block(conflicting)&&reactor->current().token==accepted.token&&reactor->current().signed_blocks->size()==accepted.signed_blocks->size(),"reopened coordinator accepted finalized-history rewrite");
+  std::cout<<Json{{"scenario","signed-branch-finality-attack"},{"independentlyValidTransitions",2},{"incompatibleBranchAcceptedWithoutFinality",true},{"finalizedRewriteRefused",true},{"refusalAfterDatabaseReopen",true},{"unfinalizedCompetingBlockAccepted",true},{"attackerBypassedLocalSigningJournal",true},{"finalizedEpoch",accepted.state->timed.view.finalized.epoch}}.dump()<<std::endl;
+ }
  if(p2p){
   const auto& anchor=initial.blocks.at(initial.timed.view.anchor);const auto fork=consensus_fork_data_root(context.fork.current_version,context.genesis_root);
   const auto identity=hex(altair_consensus_identity(rules,{initial.timed.view.anchor,anchor.header.state_root,context.genesis_root,context.fork.current_version},1337,genesis));

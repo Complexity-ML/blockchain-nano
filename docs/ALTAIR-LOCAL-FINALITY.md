@@ -113,3 +113,36 @@ disque, une partition entre groupes de validateurs autonomes ou un consensus
 qui continue à produire pendant la coupure. L'émetteur est relancé explicitement
 avec la nouvelle adresse du récepteur ; la redécouverte automatique d'adresse
 n'est pas qualifiée par ce scénario.
+
+## Branche concurrente correctement signée après finalisation
+
+`consensus_altair_adversarial_finality` produit d'abord les 33 blocs et leurs votes,
+puis utilise volontairement les clés de test hors du journal anti-slashing pour
+construire deux blocs concurrents. Chaque candidat est soumis séparément à la
+transition complète signée : proposant sélectionné, RANDAO, signatures BLS,
+corps et racine d'état doivent être valides avant le test de choix de branche.
+
+Le premier candidat est au slot courant et descend directement de l'ancre,
+contournant donc le checkpoint finalisé de l'époque 2. Il est accepté par un
+Store témoin encore ancré au genesis, mais refusé par le coordinateur ayant
+finalisé l'époque 2. Le token durable et l'archive restent inchangés. Le parent
+est connu et le slot n'est pas futur : le scénario ne se contente pas de vérifier
+le rejet d'un paquet malformé ou d'une dépendance absente.
+
+Le second candidat descend du parent de la tête, après le checkpoint finalisé.
+Il diffère du bloc déjà produit au même slot et est également signé hors journal.
+Son admission doit réussir et ajouter exactement un bloc concurrent à l'archive,
+sans modifier le checkpoint finalisé. Le consensus conserve ainsi le traitement
+normal des branches non finalisées ; la prévention locale des doubles signatures
+n'est pas utilisée comme substitut à la validation des blocs reçus.
+
+Le test ferme puis rouvre la base du coordinateur avec son engagement attendu.
+La branche incompatible doit encore être refusée, sans changement de checkpoint
+ni perte du bloc concurrent admissible. Campagne réussie :
+`build-cmake/qualification/altair-adversarial-finality-20260925/tests.log`.
+
+Cette preuve est locale et porte sur un checkpoint déjà authentifié et persisté.
+Elle ne démontre pas une résistance à un quorum de validateurs compromis avant
+finalisation, à un bootstrap utilisant une ancre hostile, aux attaques de longue
+portée ou à une partition distribuée. Elle ne qualifie pas non plus l'inclusion
+d'une preuve de slashing ou sa sanction économique pour les clés du scénario.
