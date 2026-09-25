@@ -40,7 +40,10 @@ réservation ou appel du fournisseur de signature.
 L'horloge locale est un callback indépendant fourni par le service de validation,
 jamais une date fournie par un pair. Elle doit rester dans le créneau demandé et
 ne pas être antérieure à l'horloge du Store. Elle est consultée avant et après
-la préparation, avant le fournisseur puis à son retour. Une expiration pendant
+la préparation, avant le fournisseur, à son retour et après la vérification BLS
+par le journal. Les observations ne doivent pas reculer pendant une tentative,
+même si elles restent dans le même créneau. Le callback d’annulation est aussi
+consulté après cette vérification. Une expiration pendant
 le fournisseur conserve la réservation anti-slashing, mais ne retourne pas la
 signature au demandeur. Le composant ne peut pas empêcher un backend malveillant
 de diffuser lui-même une signature.
@@ -101,3 +104,22 @@ officiels entre deux vrais démons libp2p, avec ACK perdu/reprise et changement 
 tête distant. Il s'agit d'une régression du transport et du coordinateur ; ce
 test ne diffuse pas automatiquement la nouvelle tâche locale et ne prouve pas
 une finalité distribuée.
+
+## Qualification des contrôles temporels de sortie
+
+Campagne `build-cmake/qualification/altair-duty-time-20260925/` :
+`before-fix.log` reproduit le recul d'horloge dans le même slot qui atteignait le
+fournisseur. `tests.log` passe quatre suites (tâche, publication du coordinateur,
+journal et CLI). Le scénario contient maintenant 15 refus avant fournisseur et
+quatre résultats supplémentaires retenus : recul pendant le fournisseur,
+expiration après vérification, annulation après fournisseur et horloge devenue
+indisponible au contrôle final. Pour chacun de ces quatre cas, la réservation
+reste sur disque et un nouveau journal ouvert avec son engagement refuse une
+attestation conflictuelle avant tout appel de signature.
+
+Cette monotonie est locale à une tentative. Elle ne constitue pas une horloge
+monotone persistante entre redémarrages, une détection globale des sauts vers le
+futur ou une garantie de diffusion avant échéance. Le service de planification
+et de diffusion devra appliquer ses propres contrôles temporels. La dernière
+lecture réduit la fenêtre après vérification ; elle ne peut pas empêcher une
+suspension du processus juste après cette lecture.

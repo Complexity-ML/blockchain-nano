@@ -883,3 +883,16 @@ refus d'une seconde tête est maintenant vérifié comme refus anti-slashing exa
 `p2p-regression.log` confirme aussi la propagation existante de votes officiels
 entre deux démons réels ; cette preuve ne vaut pas planification/diffusion
 automatique de la nouvelle tâche locale.
+
+
+### 2026-09-25 — borne temporelle de sortie des attestations locales
+
+Le contrôle de tâche Altair refuse maintenant un recul d'horloge entre lectures
+pendant la même tentative, y compris dans le même slot, et revérifie délai et
+annulation après la vérification BLS. Les échecs après réservation ne rendent
+pas la signature et ne suppriment pas la protection anti-slashing. Quatre suites
+passent dans `build-cmake/qualification/altair-duty-time-20260925/tests.log`, avec
+reproduction avant correction conservée dans `before-fix.log` et contrôles de
+refus conflictuel après réouverture. Voir [le périmètre des tâches](ALTAIR-ATTESTER-DUTIES.md).
+Ce jalon ne clôt aucune EIP ni l'activation réseau : horloge opérationnelle,
+planification, propositions, diffusion et binding EVM restent ouverts.

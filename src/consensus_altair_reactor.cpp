@@ -112,7 +112,14 @@ std::optional<Phase0SignedAttestation> AltairDurableReactor::sign_attestation(ui
  disk_.fork_checkpoint(chain_id_,genesis_,limits_.envelope_bytes,token_);
  if(!local_clock||!signer)throw std::invalid_argument("Missing duty clock or signing provider");
  const auto& clock=state_->timed.clock;
- auto timely=[&]{const auto time=local_clock();return rules_.slot_duration_ms&&time>=clock.time_ms&&time>=clock.genesis_time_ms&&(time-clock.genesis_time_ms)/rules_.slot_duration_ms==slot;};
+ // Per-attempt monotonic observations: remaining in the same slot is not
+ // sufficient if the independent wall clock moves backwards during signing.
+ uint64_t last_time=clock.time_ms;
+ auto timely=[&]{
+  const auto time=local_clock();
+  if(!rules_.slot_duration_ms||time<last_time||time<clock.genesis_time_ms||(time-clock.genesis_time_ms)/rules_.slot_duration_ms!=slot)return false;
+  last_time=time;return true;
+ };
  if(!timely())return std::nullopt;
  auto duty=prepare_altair_attestation_duty(*state_,rules_,index,slot,limits_.replay_slots,limits_.sync_trials,checkpoint);if(!duty)return std::nullopt;
  if(journal.chain_!=chain_id_||journal.execution_genesis_!=genesis_||journal.validators_genesis_!=duty->genesis_root||journal.public_key_!=duty->public_key||journal.slots_per_epoch_!=rules_.transition.epoch.ffg.slots_per_epoch||&journal.disk_==&disk_)
@@ -125,6 +132,11 @@ std::optional<Phase0SignedAttestation> AltairDurableReactor::sign_attestation(ui
   if(!timely())throw std::runtime_error("Attestation duty expired during provider");
   return signature;
  });
+ // The journal verifies BLS after the provider returns. Verification and
+ // cancellation handling can outlive the duty too; keep its reservation but
+ // never return an already expired or cancelled result.
+ if(checkpoint)checkpoint();
+ if(!timely())throw std::runtime_error("Attestation duty expired after verification");
  return std::move(duty->attestation);
 }
 void AltairDurableReactor::tick(uint64_t ms,const std::function<void()>& checkpoint){

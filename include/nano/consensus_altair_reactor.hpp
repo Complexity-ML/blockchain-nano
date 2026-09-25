@@ -35,6 +35,8 @@ public:
  // Current-slot local duty; no caller-supplied vote fields or fork domain.
  // local_clock must come from the validator service's independent local clock,
  // never a peer. Holds Store/journal gates through the bounded signing callback.
+ // Samples must not regress within an attempt; time and cancellation are
+ // checked again after journal verification, before returning a signature.
  // Callback must not re-enter either coordinator. No autonomous duty or outbox.
  std::optional<Phase0SignedAttestation> sign_attestation(uint64_t validator_index,
   uint64_t expected_slot,const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected_store,

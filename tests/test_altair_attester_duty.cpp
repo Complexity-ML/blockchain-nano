@@ -51,7 +51,31 @@ int main(){try{
  }
  unsigned clock_reads=0;
  refuse([&]{return reactor.sign_attestation(index,1,[&]{return ++clock_reads==1?now:now+duration;},current.token,journal,signer);});
- const auto signed_vote=reactor.sign_attestation(index,1,[&]{return now;},current.token,journal,signer);check(signed_vote.has_value()&&calls==1,"authenticated duty did not sign");
+ // A clock can move backwards without crossing a slot boundary or the Store
+ // timestamp. Refuse it before reservation, rather than hiding the regression.
+ clock_reads=0;
+ refuse([&]{return reactor.sign_attestation(index,1,[&]{return ++clock_reads==1?now+2:now+1;},current.token,journal,signer);});
+ // Every post-reservation failure must withhold the result while preserving
+ // the durable guard, including failures after BLS verification has completed.
+ unsigned temporal_withheld=0;
+ for(unsigned variant=0;variant<4;++variant){
+  ChainStore temporal_disk(temp/("temporal-"+std::to_string(variant)));
+  BeaconSigningJournal temporal(temporal_disk,1337,genesis,duty->genesis_root,key,transition.epoch.ffg.slots_per_epoch);
+  const auto before=temporal.commitment();const auto prior_calls=calls;unsigned reads=0;bool provider_done=false,failed=false;
+  auto time=[&]{++reads;if(variant==0&&reads>=4)return now+1;if(variant==1&&reads>=5)return now+duration;return now+2;};
+  auto provider=[&](const ConsensusRoot& root){auto signature=signer(root);provider_done=true;return signature;};
+  auto cancel=[&]{if(variant==2&&provider_done)throw std::runtime_error("cancel after provider");};
+  auto clock=[&]{if(variant==3&&reads==4)throw std::runtime_error("clock unavailable after verification");return time();};
+  try{reactor.sign_attestation(index,1,clock,current.token,temporal,provider,cancel);}catch(const std::runtime_error&){failed=true;}
+  check(failed&&calls==prior_calls+1&&temporal.commitment().sequence==before.sequence+1,"temporal failure returned signature or lost reservation");
+  const auto committed=temporal.commitment();
+  BeaconSigningJournal reopened(temporal_disk,1337,genesis,duty->genesis_root,key,transition.epoch.ffg.slots_per_epoch,committed);
+  auto conflict=duty->attestation.data;conflict.beacon_block_root[0]^=1;const auto prior_retry=calls;bool refused=false;
+  try{reopened.sign_attestation(conflict,duty->fork_version,signer);}catch(const std::runtime_error&){refused=true;}
+  check(refused&&calls==prior_retry&&reopened.commitment()==committed,"temporal failure guard lost on reopen");++temporal_withheld;
+ }
+ const auto before_valid_calls=calls;
+ const auto signed_vote=reactor.sign_attestation(index,1,[&]{return now;},current.token,journal,signer);check(signed_vote.has_value()&&calls==before_valid_calls+1,"authenticated duty did not sign");
  check(signed_vote->data==duty->attestation.data&&signed_vote->data.slot==1&&signed_vote->data.beacon_block_root==initial.timed.view.anchor&&signed_vote->data.target==ConsensusCheckpoint{0,initial.timed.view.anchor}&&std::count(signed_vote->aggregation_bits.begin(),signed_vote->aggregation_bits.end(),true)==1,"duty construction changed");
  check(verify_consensus_bls(key,consensus_signing_root(consensus_attestation_root(signed_vote->data),consensus_domain({1,0,0,0},duty->fork_version,duty->genesis_root)),signed_vote->signature),"duty signature domain");
  check(reactor.current().token==current.token&&reactor.current().signed_votes->empty(),"signing published an unadmitted vote");
@@ -71,5 +95,5 @@ int main(){try{
  AltairDurableReactor stale(disk,1337,genesis,rules,limits,changed.token);
  reactor.tick(initial.timed.clock.genesis_time_ms+2*duration);refuse([&]{return stale.sign_attestation(index,1,[&]{return now;},changed.token,journal,signer);});
  check(reactor.vote(*signed_vote)&&reactor.current().signed_votes->size()==1,"locally produced vote rejected by independent admission");
- std::cout<<Json{{"scenario","altair-attester-duty"},{"validatorIndex",index},{"signedVotes",1},{"expiredProviderResultsWithheld",1},{"syntheticEligibilityVariants",2},{"rejectedBeforeProvider",rejected},{"independentAdmission",true},{"staleCoordinatorRefused",true},{"source","official Altair anchor and synthetic scheduled duty"},{"executionBound",false},{"autonomousValidator",false}}.dump()<<'\n';
+ std::cout<<Json{{"scenario","altair-attester-duty"},{"validatorIndex",index},{"signedVotes",1},{"expiredProviderResultsWithheld",1},{"additionalTemporalResultsWithheld",temporal_withheld},{"syntheticEligibilityVariants",2},{"rejectedBeforeProvider",rejected},{"independentAdmission",true},{"staleCoordinatorRefused",true},{"source","official Altair anchor and synthetic scheduled duty"},{"executionBound",false},{"autonomousValidator",false}}.dump()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

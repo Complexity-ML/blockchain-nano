@@ -2677,3 +2677,19 @@ Preuves : `build-cmake/qualification/altair-attester-duty-20260925/current-slot-
 pour l'échec, `duty-final.log` pour le scénario corrigé. Le reste du périmètre
 (planification autonome, propositions, binding d'exécution et finalité réseau)
 reste ouvert.
+
+
+## 2026-09-25 — recul d'horloge pendant une tâche d'attestation
+
+Le contrôle vérifiait le créneau et la borne basse du Store, sans comparer les
+lectures successives. Le test `altair-duty-time-20260925/before-fix.log` échoue
+avec `rejected duty reached signer or mutated journal` : une horloge qui recule
+de 1 ms dans le même slot peut encore atteindre le fournisseur.
+
+Correction : observations non décroissantes pendant une tentative et contrôle
+final après la vérification BLS du journal, avec annulation. La réservation est
+conservée si le résultat doit être retenu après sa création. La campagne
+`build-cmake/qualification/altair-duty-time-20260925/tests.log` passe 4/4 suites,
+dont quatre injections après réservation avec réouverture du journal et refus
+d'un vote conflictuel. La politique d'horloge entre opérations et après longue
+absence reste à implémenter avec le planificateur autonome.
