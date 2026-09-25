@@ -1039,3 +1039,18 @@ dont les régressions de schémas Phase0/Altair et des blocs Altair complets.
 État : opération isolée implémentée/testée, transition signée Bellatrix complète
 et durabilité conjointe toujours non terminées. Les essais de liaison utilisent
 un état synthétique de format ; ils ne ferment aucun EIP ni le profil réseau.
+
+### 2026-09-25 — slots/epochs Bellatrix et racines historiques
+
+`prepare_bellatrix_slots` et `prepare_bellatrix_epoch` avancent désormais un état
+déjà Bellatrix avec budgets locaux et marqueur de traitement. Les racines de
+slots utilisent les 25 champs, en-tête d'exécution inclus ; les opérations
+d'epoch communes sont réutilisées avec paramètres Bellatrix sans substituer une
+racine Altair. Sept cas officiels, 100 slots et les sept comparaisons de parcours
+groupé/fractionné produisent les post-états exacts. Des essais supplémentaires
+couvrent annulation, double epoch, budgets et conservation du header lors d'un
+rollover historique. [Sources, preuves et limites](BELLATRIX-SLOTS.md).
+
+État : avancement slots/epochs implémenté et qualifié sur ce corpus ; traitement
+signé du bloc Bellatrix, admission dans le choix de branche et persistance
+Beacon–EVM conjointe toujours à terminer. Aucune aptitude production déduite.

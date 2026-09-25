@@ -120,6 +120,7 @@ Qualification dans `build-cmake/qualification/bellatrix-state-binding-20260925/f
 
 Les essais de liaison utilisent une enveloppe d'état SSZ synthétique, dérivée
 d'un vecteur de format : ils ne prouvent ni son cycle de vie validateur, ni une
-transition Bellatrix signée complète. Les opérations Beacon, les slots/epochs
-Bellatrix, les paramètres de pénalité, le choix de branche, le commit atomique
+transition Bellatrix signée complète. Les [slots/epochs Bellatrix](BELLATRIX-SLOTS.md)
+ont depuis une implémentation qualifiée sur sept cas officiels. Les opérations
+de bloc Beacon, la qualification exhaustive des pénalités, le choix de branche, le commit atomique
 et la reprise des deux états restent à intégrer. Aucun fork réseau n'est activé.
