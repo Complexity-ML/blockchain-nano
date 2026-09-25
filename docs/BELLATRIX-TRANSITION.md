@@ -72,7 +72,8 @@ toutes exercées dans cette chaîne synthétique. La présence de 64 clés ne si
 pas que 64 processus réseau ont participé ; aucune finalité distribuée n'est
 revendiquée pour ce scénario.
 
-Restent l'admission Bellatrix dans le choix de branche, la signature locale
-durable, le commit atomique et la reprise Beacon–EVM, puis leur qualification
+L'admission Bellatrix dans le choix de branche est maintenant raccordée en
+mémoire (voir [BELLATRIX-FORK-STORE.md](BELLATRIX-FORK-STORE.md)). Restent la
+signature locale durable, le commit atomique et la reprise Beacon–EVM, puis leur qualification
 sur plusieurs nœuds et sous pannes. Le parcours en mémoire ne prouve pas encore
 une aptitude à la production et n'active aucun fork du réseau existant.

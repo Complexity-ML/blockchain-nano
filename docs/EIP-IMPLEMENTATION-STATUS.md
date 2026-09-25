@@ -1073,3 +1073,13 @@ d'annulation et trois budgets sont couverts. Les six suites ciblées passent.
 encore partielle et non différentielle pour Bellatrix. Choix de branche,
 signature locale durable et persistance/reprise Beacon–EVM ne sont pas encore
 raccordés à ce parcours. Aucun EIP ou profil réseau n'est clôturé par ce test.
+
+### 2026-09-25 — Store Bellatrix lié aux branches EVM
+
+Le parcours signé Bellatrix alimente désormais un Store privé qui conserve
+ensemble les états Beacon/EVM et les reçus par branche. La qualification locale
+couvre dix blocs conservés, deux bascules de tête pilotées par six votes BLS,
+les lectures du hash parent et le refus des liaisons d'exécution incohérentes.
+Voir [BELLATRIX-FORK-STORE.md](BELLATRIX-FORK-STORE.md) pour la portée et les
+limites : pas de commit atomique RocksDB, de reprise ni d'activation réseau
+Bellatrix à ce stade. Cette étape ne clôture aucune qualification de production.
