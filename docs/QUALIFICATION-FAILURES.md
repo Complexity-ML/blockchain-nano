@@ -2693,3 +2693,15 @@ conservée si le résultat doit être retenu après sa création. La campagne
 dont quatre injections après réservation avec réouverture du journal et refus
 d'un vote conflictuel. La politique d'horloge entre opérations et après longue
 absence reste à implémenter avec le planificateur autonome.
+
+## 2026-09-25 — assertion de racine au genesis dans le test de finalité locale
+
+Le premier contrôle sans attestations conserve bien justification/finalité à zéro,
+mais échoue sur `Store finality differs from realized block state`. L'assertion
+comparait la racine nulle du checkpoint genesis dans le BeaconState à la racine
+du bloc d'ancrage utilisée par `initialize_altair_fork_store`. Correction du test :
+vérifier explicitement les deux représentations au genesis ; conserver l'égalité
+exacte des checkpoints après finalisation d'une époque ultérieure. Aucun changement
+de logique de consensus. Échec conservé dans
+`build-cmake/qualification/altair-local-finality-20260925/genesis-assertion-failure.log` ;
+scénarios corrigés dans `final-tests.log`.

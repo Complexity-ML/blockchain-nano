@@ -1228,3 +1228,15 @@ target_link_libraries(nano-altair-attester-duty-tests PRIVATE nano_core nano_ckz
 target_compile_definitions(nano-altair-attester-duty-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
 add_test(NAME consensus_altair_attester_duty COMMAND nano-altair-attester-duty-tests)
 set_tests_properties(consensus_altair_attester_duty PROPERTIES TIMEOUT 90 LABELS "qualification_consensus_ethereum")
+
+add_executable(nano-altair-local-finality-tests tests/test_altair_local_finality.cpp)
+target_link_libraries(nano-altair-local-finality-tests PRIVATE nano_core nano_ckzg)
+target_compile_definitions(nano-altair-local-finality-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+add_test(NAME consensus_altair_local_generated_finality COMMAND nano-altair-local-finality-tests)
+set_tests_properties(consensus_altair_local_generated_finality PROPERTIES TIMEOUT 300 LABELS "qualification_consensus_ethereum")
+
+add_test(NAME consensus_altair_local_without_votes COMMAND nano-altair-local-finality-tests without-votes)
+set_tests_properties(consensus_altair_local_without_votes PROPERTIES TIMEOUT 300 LABELS "qualification_consensus_ethereum")
+
+add_test(NAME consensus_altair_local_minority_votes COMMAND nano-altair-local-finality-tests minority-votes)
+set_tests_properties(consensus_altair_local_minority_votes PROPERTIES TIMEOUT 300 LABELS "qualification_consensus_ethereum")

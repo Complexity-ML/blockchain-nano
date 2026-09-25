@@ -936,3 +936,16 @@ expiration et passage synthétique à l'époque 1 sont couverts par
 Voir [construction et RANDAO](ALTAIR-BLOCK-CONSTRUCTION.md). Restent la sélection
 d'opérations, la planification, la diffusion persistante et la liaison EVM ; ce
 jalon n'active aucun réseau et ne clôt pas le consensus de production.
+
+### 2026-09-25 — finalité obtenue avec des blocs et votes générés localement
+
+La qualification `tests/test_altair_local_finality.cpp` enchaîne sélection du
+proposant, RANDAO local, construction/signature de blocs, tâches d'attestation,
+admission et transitions de finalité. Trois scénarios de 33 blocs / 64 clés de
+fixture exigent : finalité avec participation complète, absence de finalité sans
+votes ou avec 21 clés votantes. Les bases du coordinateur et des 64 journaux sont
+fermées/rouvertes au milieu de chaque scénario. Preuves :
+`build-cmake/qualification/altair-local-finality-20260925/final-tests.log`.
+[Portée et limites](ALTAIR-LOCAL-FINALITY.md) : test local piloté, sans SyncCommittee
+participant, sans réseau distribué ni binding EVM. Le critère de finalité/reprise
+réseau du goal reste ouvert ; cette campagne qualifie l'assemblage local.
