@@ -1192,3 +1192,34 @@ Restent à fournir la source d'horloge opérationnelle, le calcul/authentificati
 des checkpoints non réalisés lors des blocs, la publication durable conjointe de
 l'horloge et de la vue, puis le replay officiel et l'intégration réseau. Cette
 transition ne fait pas tourner un nœud et ne qualifie pas sa synchronisation.
+
+### Admission des blocs dans le Store en mémoire — 25 septembre 2026
+
+`Phase0ForkStore` rassemble la vue/horloge, les blocs et leurs états SSZ,
+les indicateurs de ponctualité et les justifications non réalisées.
+`prepare_phase0_fork_block` relie le traitement `on_block` Phase0 : parent connu,
+slot non futur, descendance du checkpoint finalisé, transition complète et
+state_root, tête antérieure, insertion privée, bonus du premier bloc ponctuel
+avec même racine dépendante du mélange, puis checkpoints réalisés/non réalisés.
+Le calcul FFG anticipé est dérivé du SSZ sans mutation du post-state. Un bloc
+reçu dans une epoch ultérieure applique également ses checkpoints anticipés.
+Une promotion de justification dérive son registre depuis le bloc du checkpoint.
+Le candidat entier doit être publié/commité ensemble par l'appelant.
+
+La qualification locale utilise les 27 fixtures officielles de blocs qui démarrent
+au slot zéro : 15 séquences valides, 12 invalides, 16 blocs acceptés. L'horloge est
+avancée avant chaque admission ; les états finaux valides égalent les post-states
+officiels. Les 18 fixtures démarrant sur un état intermédiaire sont exclues de ce
+test de Store, sans être retirées de la qualification complète de transition de
+blocs. Sont aussi testés les doublons, le bloc futur, le parent inconnu, la
+signature corrompue, le seuil exact de ponctualité et sept points d'annulation.
+Les six suites de régression passent. Artefacts :
+`build-cmake/qualification/fork-store-blocks-20260925/`.
+
+Il ne s'agit pas encore d'un replay des fixtures officielles **fork_choice** :
+les arbres concurrents, changements de justification/finalité au cours d'un tel
+replay et les arrivées adverses restent à qualifier. Le Store est copié en mémoire
+et ne démontre ni une consommation mémoire bornée en fonctionnement prolongé,
+ni la durabilité. Restent l'import d'ancre opérationnel, les adaptateurs votes/
+équivoques/horloge sur ce Store, son format durable et sa reprise, puis le
+raccordement EVM/P2P. Aucune activation réseau ou qualification production.

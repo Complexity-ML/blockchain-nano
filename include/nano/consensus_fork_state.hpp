@@ -2,6 +2,11 @@
 #include "nano/consensus_slots.hpp"
 #include "nano/consensus_fork_vote.hpp"
 namespace nano {
+struct Phase0ForkCheckpoints {Phase0FfgCheckpoints realized,unrealized;};
+// Pull-up FFG on a validated post-state; does not advance/mutate its SSZ.
+Phase0ForkCheckpoints phase0_fork_checkpoints(const Phase0SlotState&,
+ const Phase0EpochRules&,const Phase0StateLimits&,
+ const std::function<void()>& checkpoint={});
 struct Phase0ForkStateContexts {
  Phase0ForkSlashingContext block;
  Phase0ForkVoteContext target;

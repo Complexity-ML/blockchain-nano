@@ -450,3 +450,9 @@ Horloge du fork choice : expiration du bonus et promotion des checkpoints/du
 registre ajoutées, avec mille comparaisons locales de rattrapage. Source d'horloge,
 événements blocs, calcul des checkpoints non réalisés et persistance restent à
 raccorder ; aucune activation réseau supplémentaire.
+
+Store de fork choice en mémoire : admission de blocs reliée à la transition SSZ,
+au bonus et aux checkpoints FFG. Sous-ensemble genesis : 15 séquences officielles
+valides et 12 invalides, 16 blocs acceptés ; 18 fixtures intermédiaires explicitement
+exclues de ce test de Store. Replay officiel fork_choice, durabilité, import
+opérationnel d'ancre et réseau encore ouverts.

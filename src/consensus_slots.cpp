@@ -94,6 +94,13 @@ Phase0SlotState prepare_phase0_slots(const Phase0SlotState& input,const Phase0Ep
  }
  phase0_beacon_state_root(out.ssz,limits,checkpoint);if(checkpoint)checkpoint();return out;
 }
+Phase0ForkCheckpoints phase0_fork_checkpoints(const Phase0SlotState& input,
+ const Phase0EpochRules& rules,const Phase0StateLimits& limits,const std::function<void()>& checkpoint){
+ validate_slot_rules(rules,limits);phase0_beacon_state_root(input.ssz,limits,checkpoint);
+ const auto state=decode_epoch(input,Layout(limits),rules);
+ const auto pulled=prepare_phase0_justification_finalization(state.ffg,state.registry,state.randao,rules.rewards.duties,checkpoint);
+ return {state.ffg.checkpoints,pulled.checkpoints};
+}
 Phase0ForkStateContexts prepare_phase0_fork_state_contexts(const Phase0SlotState& input,
  const ConsensusBeaconHeader& header,const ConsensusCheckpoint& target,
  const Phase0EpochRules& rules,const Phase0StateLimits& limits,uint64_t maximum_slots,
