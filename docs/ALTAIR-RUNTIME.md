@@ -370,3 +370,43 @@ essai ne couvre pas une interruption au milieu d'un commit ni la récupération
 automatique d'un engagement externe devenu obsolète. Une panne de processus
 n'est pas une coupure électrique du stockage. Finalité distribuée, durabilité
 Linux et liaison atomique EVM/consensus restent à qualifier.
+
+
+### Conservation des attestations signées, 25 septembre 2026
+
+Le réacteur conserve désormais les attestations de gossip qui modifient
+`latest_messages`, dans le même checkpoint que leur effet sur le choix de
+branche. La structure publiée contient `signed_votes` : hash SHA-256 du SSZ
+canonique vers octets immuables. Les entrées directes et SSZ passent toutes par
+la validation de comité, d'ascendance, de fenêtre temporelle et de signature.
+Un doublon reste vérifié, mais n'ajoute pas de copie ; un vote sans nouvel effet
+n'alimente pas cette archive. Les attestations incluses dans un bloc restent
+transportées par les octets signés de ce bloc.
+
+Le format local `nano-altair-durable-v3` ajoute `signedVotes` au format v2.
+Les formats v1/v2 restent lisibles sans inventer les signatures absentes. Si
+l'archive des votes est vide, le checkpoint conserve le format précédent
+approprié. Lors de la restauration, le digest externe est vérifié avant parsing,
+puis chaque vote est décodé et sa signature, son ascendance et sa fenêtre sont
+revérifiées contre l'état authentifié. Cette vérification ne réapplique pas le
+vote au Store restauré.
+
+Le nombre d'entrées est borné par `limits.messages` et leurs octets partagent
+`limits.envelopeBytes` avec le Store et les blocs. Un dépassement échoue avant
+commit, sans publier le candidat. À chaque publication, les payloads dont
+l'époque cible précède l'époque courante moins un sont retirés dans le même
+commit ; les derniers votes du choix de branche ne sont pas supprimés.
+C'est une archive de retransmission temporaire, pas un historique complet.
+Les votes sans effet sur un ancien checkpoint ne servent pas à reconstituer
+rétroactivement les signatures manquantes.
+
+La campagne `build-cmake/qualification/altair-signed-votes-20260925/` vérifie
+l'encodage octet pour octet de 41 attestations officielles, la réouverture,
+les doublons, l'expiration, les archives corrompues avec digest recalculé et
+l'absence de publication lors d'un échec de synchronisation disque injecté.
+Les suites officielles durables de choix de branche/réorganisation et les
+scénarios P2P de propagation/reprise sont également relancés.
+
+La diffusion automatique des attestations et des preuves de slashing reste
+à raccorder au daemon. Le nouveau format local n'active aucun profil réseau
+ni aucune finalité distribuée ; le stockage utilise encore des snapshots complets.

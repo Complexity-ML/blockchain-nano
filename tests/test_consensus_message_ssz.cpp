@@ -10,7 +10,7 @@ int main(){try{
    const auto b=binary(dir/path);check(b.size()==info.at("bytes")&&hex(sha256(b)).substr(2)==info.at("sha256").get<std::string>(),"fixture digest");
    if(fs::path(path).filename()=="attestation.ssz"){
     const auto a=decode_consensus_attestation_ssz(b,limit);check(bool(a),"official vote encoding rejected");const auto reference=indexed_attestation(Bytes(b.begin(),b.begin()+228),0,228);
-    check(a->data==reference.data&&a->signature==reference.signature,"vote fields changed");const size_t bits=(b.size()-229)*8+std::bit_width(unsigned(b.back()))-1;
+    check(a->data==reference.data&&a->signature==reference.signature,"vote fields changed");check(encode_consensus_attestation_ssz(*a,limit)==b,"canonical encoder changed official bytes");const size_t bits=(b.size()-229)*8+std::bit_width(unsigned(b.back()))-1;
     check(a->aggregation_bits.size()==bits,"bit count changed");for(size_t i=0;i<bits;++i)check(a->aggregation_bits[i]==bool((b[228+i/8]>>(i%8))&1),"bit changed");
     ++votes;if(example_vote.empty()&&bits>1)example_vote=b;
    }else{
@@ -31,5 +31,10 @@ int main(){try{
  no_proof(example_proof,1);b=example_proof;b.push_back(0);no_proof(b);
  for(uint32_t offset:{0U,7U,235U,uint32_t(example_proof.size()-227),uint32_t(example_proof.size()+1),UINT32_MAX}){b=example_proof;for(unsigned i=0;i<4;++i)b[4+i]=uint8_t(offset>>(8*i));no_proof(b);}
  for(bool proof:{false,true}){bool bad_config=false,cancelled=false;try{if(proof)decode_consensus_attester_slashing_ssz(example_proof,0);else decode_consensus_attestation_ssz(example_vote,0);}catch(const std::invalid_argument&){bad_config=true;}try{auto cancel=[]{throw std::runtime_error("cancelled");};if(proof)decode_consensus_attester_slashing_ssz(example_proof,limit,cancel);else decode_consensus_attestation_ssz(example_vote,limit,cancel);}catch(const std::runtime_error& e){cancelled=std::string(e.what())=="cancelled";}check(bad_config&&cancelled,"codec swallowed configuration/cancellation");}
+
+ for(size_t bits:{size_t(0),size_t(1),size_t(7),size_t(8),size_t(9),size_t(limit)}){
+  auto a=*decode_consensus_attestation_ssz(example_vote,limit);a.aggregation_bits.assign(bits,true);const auto encoded=encode_consensus_attestation_ssz(a,limit);const auto decoded=decode_consensus_attestation_ssz(encoded,limit);check(decoded&&decoded->aggregation_bits==a.aggregation_bits&&decoded->data==a.data&&decoded->signature==a.signature,"encoder bitlist boundary");
+ }
+ for(int mode:{0,1,2,3}){auto a=*decode_consensus_attestation_ssz(example_vote,limit);bool refused=false;if(mode==1)a.aggregation_bits.resize(limit+1);if(mode==2)a.signature.pop_back();try{encode_consensus_attestation_ssz(a,mode==0?0:limit,mode==3?std::function<void()>([]{throw std::runtime_error("cancelled");}):std::function<void()>());}catch(const std::exception&){refused=true;}check(refused,"encoder accepted invalid bounds or ignored cancellation");}
  std::cout<<Json{{"scenario","consensus-message-ssz"},{"officialVotes",votes},{"officialProofs",proofs},{"malformedOrOversizeRejected",rejected},{"networkActive",false}}.dump()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

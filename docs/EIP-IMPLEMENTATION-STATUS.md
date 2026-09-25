@@ -749,3 +749,17 @@ SSZ ainsi que la tête attendue après la seconde réouverture. Preuve locale :
 Le test utilise une horloge de fixture et un engagement externe connu ; il
 n'interrompt pas un commit en cours et ne simule pas de coupure électrique.
 Aucun EIP, profil réseau ou statut de production n'est promu par cet essai.
+
+
+### Attestations signées durables — 25 septembre 2026
+
+Le réacteur archive les SSZ canoniques des attestations qui modifient les
+derniers votes, atomiquement avec l'état de consensus (`nano-altair-durable-v3`).
+Les doublons n'amplifient pas l'archive ; la fenêtre courant/précédent borne sa
+rétention, avec limites de ressources explicites et restauration revalidant
+les signatures. Les formats v1/v2 restent acceptés sans backfill implicite.
+Qualification : `build-cmake/qualification/altair-signed-votes-20260925/` ; voir
+`docs/ALTAIR-RUNTIME.md` pour les tests et limites. Le raccordement de ces votes
+à la diffusion P2P reste ouvert, ainsi que les devoirs/signatures des validateurs,
+la finalité distribuée et la liaison atomique EVM/consensus. Aucun statut EIP
+ni profil réseau n'est promu.

@@ -4,7 +4,8 @@
 #include <memory>
 namespace nano {
 using AltairSignedBlockArchive=std::map<ConsensusRoot,std::shared_ptr<const Bytes>>;
-struct AltairPublishedStore {std::shared_ptr<const AltairForkStore> state;ForkCheckpointToken token;std::shared_ptr<const AltairSignedBlockArchive> signed_blocks;};
+using AltairSignedVoteArchive=std::map<ConsensusRoot,std::shared_ptr<const Bytes>>;
+struct AltairPublishedStore {std::shared_ptr<const AltairForkStore> state;ForkCheckpointToken token;std::shared_ptr<const AltairSignedBlockArchive> signed_blocks;std::shared_ptr<const AltairSignedVoteArchive> signed_votes;};
 // Serialized durable event coordinator, NOT a P2P service or EVM activation.
 // The caller owns ChainStore for this object's lifetime and binds its chain.
 // Initial Store / restart commitment must be independently authenticated.
@@ -18,9 +19,10 @@ class AltairDurableReactor {
  std::shared_ptr<const AltairForkStore> state_;
  std::optional<ForkCheckpointToken> token_;
  std::shared_ptr<const AltairSignedBlockArchive> signed_blocks_=std::make_shared<const AltairSignedBlockArchive>();
+ std::shared_ptr<const AltairSignedVoteArchive> signed_votes_=std::make_shared<const AltairSignedVoteArchive>();
  bool unavailable_=false;
  void require_available() const;
- void publish(AltairForkStore,std::shared_ptr<const AltairSignedBlockArchive>,const std::function<void()>&);
+ void publish(AltairForkStore,std::shared_ptr<const AltairSignedBlockArchive>,std::shared_ptr<const AltairSignedVoteArchive>,const std::function<void()>&);
 public:
  AltairDurableReactor(ChainStore&,Int,Bytes,AltairForkBlockRules,AltairStoreSnapshotLimits,
   AltairForkStore trusted_initial,const std::function<void()>& checkpoint={});
