@@ -1612,3 +1612,35 @@ Preuves corrigées : `build-cmake/qualification/altair-fork-head-fixed-20260925/
 Restent les autres groupes officiels (on_block, reorg, withholding, ex_ante,
 get_proposer_head), l'admission de snapshots, la persistance/reprise, la gestion
 des ressources et le raccordement réseau. Aucun statut production n'en découle.
+
+### Fork choice Altair — on_block et reorg qualifiés, 25 septembre 2026
+
+Le runner événementiel commun rejoue désormais les 23 scénarios officiels
+minimal `on_block` et les huit scénarios `reorg`, au même commit de corpus
+bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908 et avec le profil historique
+v1.6.0-beta.0. Aucun changement des attentes ni du moteur n'a été nécessaire.
+Les fichiers originaux YAML/Snappy, leurs décodages et leurs empreintes sont
+conservés ; les références partagées du groupe get_head sont aussi vérifiées.
+
+Résultats : on_block traite 629 événements blocs et 638 ticks, vérifie 6319
+champs et rejette les quatre événements invalides attendus (parent incorrect,
+bloc futur, bloc antérieur à la finalité, branche incompatible avec le checkpoint
+finalisé malgré des slots sautés). Reorg traite 257 événements blocs, 271 ticks
+et huit votes séparés, vérifie 2640 champs, sans rejet attendu. Ces cas couvrent
+les justifications retardées, les votes FFG suffisants/insuffisants et les branches
+concurrentes. Les dix scénarios get_head restent verts avec leurs sept contrôles
+d'annulation et gardes de réception ; ces gardes locales ne sont pas recomptées
+pour chacun des deux nouveaux groupes.
+
+CTest : `ethereum_official_altair_fork_head`,
+`ethereum_official_altair_fork_block`, `ethereum_official_altair_fork_reorg` :
+3/3 suites, 41 scénarios, 10040 champs vérifiés au total.
+Preuves : `build-cmake/qualification/altair-fork-block-reorg-20260925/`
+(journal CTest, compilation, résultats structurés et empreintes des sources).
+Cette campagne native n'inclut pas un nouveau rejeu Python indépendant des deux
+nouveaux groupes ; l'oracle antérieur concernait uniquement get_head.
+
+Restent withholding, ex_ante et get_proposer_head, puis admission de snapshots,
+persistance/reprise atomique, bornage des ressources et raccordement EVM/P2P.
+Les scénarios utilisent le preset minimal et un Store en mémoire ; ils ne sont
+ni un réseau distribué, ni une activation de consensus, ni une preuve de production.

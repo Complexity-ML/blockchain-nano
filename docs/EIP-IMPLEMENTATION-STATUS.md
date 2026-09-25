@@ -537,3 +537,10 @@ la réception les traite après validation du bloc. Les attentes restent inchang
 et l'oracle Ethereum officiel confirme zéro écart. Les profils de proposer boost
 restent explicites. Autres groupes fork_choice, persistance et réseau encore
 ouverts ; campagne `altair-fork-head-fixed-20260925` et feuille de route validateurs.
+
+Fork choice Altair : extension aux 23 scénarios officiels on_block et huit reorg,
+sans changement des attentes ni du moteur. Avec get_head, les trois suites passent
+(41 scénarios, 10040 champs ; quatre blocs invalides attendus rejetés).
+Campagne `altair-fork-block-reorg-20260925`. Le Store reste en mémoire ;
+withholding/ex_ante/get_proposer_head, persistance/reprise et raccordement EVM/P2P
+restent ouverts. Aucun EIP supplémentaire n'est déclaré intégralement activé.
