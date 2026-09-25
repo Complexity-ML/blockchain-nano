@@ -137,3 +137,27 @@ et ne pas rejouer aveuglément les anciens messages sous de nouveaux numéros.
 Le ledger et son trajet HTTP sont qualifiés, mais le daemon n'utilise pas encore
 ces appels. La politique de récupération après changement de session et la
 propagation P2P restent à intégrer.
+
+## Client IPC destiné au daemon
+
+`AltairCoreDispatch` utilise `Core::call` pour Submit/Job/Cancel/Forget. Sa file
+locale est bornée, ses numéros sont croissants et ses échanges sont sérialisés.
+Une réponse Submit perdue conduit à rechercher le même ticket. Si le cœur indique
+qu'il est encore inconnu, seul ce numéro/payload peut être resoumis. Une réponse
+Forget perdue est récupérée par répétition du retrait ; `retired` confirme alors
+le retrait du résultat déjà observé.
+
+La callback de fin n'est délivrée qu'après confirmation de fin et nettoyage du
+ticket, ou confirmation que le numéro ne peut plus être admis. Les requêtes en
+attente locale annulées avant envoi sont terminées sans contacter le cœur. En
+cas d'épuisement des tentatives de transport ou de réponse incohérente, le client
+bloque les nouvelles admissions et conserve les callbacks/capacités réservées :
+il ne prétend pas qu'un worker éventuellement actif s'est terminé. L'appelant doit
+reconcilier les tickets avant de reconstruire ce client, et fournir la session et
+le highWater observés. Il doit aussi fournir les échéances/annulations des requêtes.
+
+Le client est qualifié avec réponses contrôlées et avec le vrai `Core::call` sur
+HTTP loopback. Il n'est pas encore instancié dans `network/main.cpp`. La découverte
+du profil, la récupération initiale des tickets, le handler libp2p et la politique
+de reprise après blocage restent à raccorder. Les tests ne qualifient pas le débit
+d'un réseau distribué ; un seul aller-retour IPC est actif à la fois.

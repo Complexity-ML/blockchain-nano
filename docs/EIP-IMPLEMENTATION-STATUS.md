@@ -677,3 +677,10 @@ testée avec un seul commit du bloc officiel. Les tickets ne persistent pas apr�
 redémarrage ; leur rapprochement avec l'état durable et leur usage par le daemon
 restent ouverts. Aucun changement d'activation EIP/réseau. Voir la section tickets
 de `docs/ALTAIR-RUNTIME.md`.
+
+Complément client IPC Altair (25 septembre 2026) : dispatcher asynchrone borné
+Submit/Job/Cancel/Forget, avec récupération de réponses perdues et conservation
+de l'admission quand le résultat est incertain. Onze suites réseau et deux tests
+HTTP d'intégration passent. `Core::call` est exercé avec un commit unique des blocs
+officiels ; l'instanciation dans le daemon et la négociation P2P restent ouvertes.
+Aucun fork ni statut production activé ; détails dans `docs/ALTAIR-RUNTIME.md`.

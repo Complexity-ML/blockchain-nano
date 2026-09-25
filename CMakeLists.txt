@@ -1139,3 +1139,6 @@ add_executable(nano-altair-receipts-tests tests/test_altair_receipts.cpp)
 target_link_libraries(nano-altair-receipts-tests PRIVATE nano_core)
 add_test(NAME consensus_altair_receipts COMMAND nano-altair-receipts-tests)
 set_tests_properties(consensus_altair_receipts PROPERTIES TIMEOUT 30 LABELS "qualification_consensus_ethereum")
+
+add_test(NAME consensus_altair_core_client COMMAND ${CMAKE_COMMAND} -E env NANO_TEST_ALTAIR_CORE_CLIENT=1 $<TARGET_FILE:nano-altair-wire-tests>)
+set_tests_properties(consensus_altair_core_client PROPERTIES TIMEOUT 90 LABELS "qualification_consensus_ethereum")

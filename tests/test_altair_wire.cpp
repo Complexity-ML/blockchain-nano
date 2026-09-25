@@ -2,6 +2,7 @@
 #include "nano/consensus_altair_reactor.hpp"
 #include "../network/altair_consensus_service.hpp"
 #include <future>
+#include "../network/altair_core_dispatch.hpp"
 #include "../network/altair_rpc_service.hpp"
 #include "nano/http.hpp"
 #include "nano/simulation_queue.hpp"
@@ -9,7 +10,8 @@
 using namespace test;using namespace test::phase0_minimal;
 struct RunningAltairHttp {HttpServer& server;std::thread thread;explicit RunningAltairHttp(HttpServer& s):server(s),thread([&s]{s.run();}){}~RunningAltairHttp(){server.stop();thread.join();}};
 int main(){try{
- const bool http_mode=std::getenv("NANO_TEST_ALTAIR_HTTP")!=nullptr;uint64_t ticket_sequence=0;std::string admission_session;bool dropped_reply=false;
+ const bool core_client_mode=std::getenv("NANO_TEST_ALTAIR_CORE_CLIENT")!=nullptr;
+ const bool http_mode=core_client_mode||std::getenv("NANO_TEST_ALTAIR_HTTP")!=nullptr;uint64_t ticket_sequence=0;std::string admission_session;bool dropped_reply=false;
  const fs::path fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",corpus=fixtures/"consensus-altair-fork-head-official",dir=corpus/"chain_no_attestations";
  const auto manifest=load(corpus/"manifest.json");for(const auto& row:manifest.at("cases"))if(row.at("name")=="chain_no_attestations")for(const auto& [path,info]:row.at("files").items())check(hex(sha256(binary(corpus/path))).substr(2)==info.at("sha256").get<std::string>(),"fixture digest");
  const auto transition=altair_transition_rules(fixtures);const auto config=read(corpus/"minimal-config-v1.6.0-beta.0.yaml");const auto duration=parameter(config,"SECONDS_PER_SLOT")*1000;
@@ -19,6 +21,7 @@ int main(){try{
  const Bytes genesis(32,9);Temp directory;ChainStore disk(directory/"db");disk.bind_chain(1337,genesis,"altair-qualification");AltairDurableReactor reactor(disk,1337,genesis,rules,limits,initial);
  const auto& anchor=initial.blocks.at(initial.timed.view.anchor).state.ssz;ConsensusBytes4 version{};std::copy_n(anchor.begin()+52,4,version.begin());const auto fork_root=consensus_fork_data_root(version,root_at(anchor,8));
  const AltairWireProfile profile{"0x539",hex(genesis),hex(Bytes(fork_root.begin(),fork_root.begin()+4)),1024*1024,400000,512,40000};
+ asio::io_context core_io;std::unique_ptr<Core> core;std::shared_ptr<AltairCoreDispatch> core_dispatch;bool core_reply_dropped=false;
  Temp execution_directory;Blockchain execution(execution_directory/"execution",Genesis::from_json(Json{{"alloc",Json::object()}}));
  std::shared_ptr<AltairRpcService> endpoint;std::unique_ptr<Rpc> rpc;std::unique_ptr<HttpServer> server;std::unique_ptr<RunningAltairHttp> running;std::unique_ptr<PersistentRpc> client;
  if(http_mode){
@@ -29,6 +32,14 @@ int main(){try{
   const auto token=reactor.current().token;
   const auto status=client->call("nano_altairStatus",Json::array({"qualification-only-token"}));
   admission_session=status.at("admissionSession").get<std::string>();
+  if(core_client_mode){
+   core=std::make_unique<Core>(core_io,server->port());
+   core_dispatch=std::make_shared<AltairCoreDispatch>(core_io,[&](const std::string& method,Json params,Reply cb){
+    const bool drop=method=="nano_altairSubmit"&&!core_reply_dropped&&Json::parse(params.at(3).get<std::string>()).at("kind")=="block";
+    core->call(method,std::move(params),[&,drop,cb=std::move(cb)](Json result){if(drop){core_reply_dropped=true;cb(nullptr);}else cb(std::move(result));});
+   },profile,"qualification-only-token",admission_session,0,4,3,std::chrono::milliseconds(1));
+  }
+
   check(status.at("digest")==hex(token.digest)&&status.at("clockHealthy").is_null(),"private status differs from checkpoint");
   for(const auto* method:{"nano_altairSubmit","nano_altairJob","nano_altairCancel","nano_altairForget","nano_altairJobs"}){
    auto params=Json::array({"wrong"});if(std::string(method)!="nano_altairJobs"){params.push_back(admission_session);params.push_back("0x1");}if(std::string(method)=="nano_altairSubmit")params.push_back("{}");
@@ -47,6 +58,11 @@ int main(){try{
  auto now=InboundBudget::Clock::time_point{};InboundBudget shared_budget(now);AltairMessageIngress ingress(profile,shared_budget);size_t forwarded=0;
  AltairConsensusService service(reactor,4,2*1024*1024);auto dispatch=service.dispatcher();
  auto deliver=[&](const AltairWireMessage& m){
+  if(core_dispatch){
+   bool completed=false;auto decision=AltairWork::Decision::local_failure;core_io.restart();
+   check(core_dispatch->enqueue(m,std::make_shared<std::atomic<bool>>(false),[&](auto d){check(!completed,"core client completed twice");completed=true;decision=d;}),"core client admission refused");
+   core_io.run();check(completed&&!core_dispatch->blocked()&&core_dispatch->pending()==0,"core client failed to resolve ticket");return decision;
+  }
   if(client){
    const auto kind=m.kind==AltairWireKind::block?"block":m.kind==AltairWireKind::attestation?"attestation":"attester_slashing";
    const auto encoded=Json{{"chainId",profile.chain_id},{"genesisHash",profile.genesis_hash},{"forkDigest",profile.fork_digest},{"kind",kind},{"ssz",hex(m.ssz)}}.dump();
@@ -112,5 +128,5 @@ int main(){try{
   try{client->call("nano_altairReceive",Json::array({"qualification-only-token",base.dump()}));}catch(const PersistentRpcError& e){unavailable=e.code==-32005;}
   check(unavailable&&client->call("eth_chainId")=="0x539","stopped Altair service blocks ordinary RPC");
  }
- std::cout<<Json{{"discardedAdmissionReply",dropped_reply},{"httpTransport",http_mode},{"durableWorker",true},{"unavailableReactorNotAcknowledged",true},{"scenario","altair-wire-admission"},{"rejected",rejected},{"officialBlocksCommitted",accepted},{"limited",limited},{"realLibp2pNetwork",false},{"networkActive",false}}.dump()<<'\n';
+ std::cout<<Json{{"coreClient",core_client_mode},{"coreClientReplyDropped",core_reply_dropped},{"discardedAdmissionReply",dropped_reply},{"httpTransport",http_mode},{"durableWorker",true},{"unavailableReactorNotAcknowledged",true},{"scenario","altair-wire-admission"},{"rejected",rejected},{"officialBlocksCommitted",accepted},{"limited",limited},{"realLibp2pNetwork",false},{"networkActive",false}}.dump()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

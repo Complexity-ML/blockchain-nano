@@ -2197,3 +2197,27 @@ callback doublé, nouvelle session et admission retardée après Cancel.
 Preuves : `build-cmake/qualification/altair-receipt-recovery-20260925/`.
 Le daemon n'appelle pas encore ce protocole IPC. La récupération après changement
 de session, l'admission P2P complète et la liaison EVM restent ouvertes.
+
+### Client IPC avec tickets côté daemon, 25 septembre 2026
+
+`network/altair_core_dispatch.hpp` fournit maintenant un dispatcher asynchrone
+compatible avec le Stream Altair et `Core::call`. Les messages admis localement
+restent bornés, les admissions sont ordonnées et une réponse Submit perdue est
+résolue par recherche du même ticket. Une réponse Forget perdue ne perd pas la
+décision déjà confirmée. Les doubles callbacks sont ignorés. Une réponse de
+mauvaise séquence ou une indisponibilité dépassant le budget de tentatives bloque
+le client en conservant ses admissions ; aucune fausse fin de worker n'est émise.
+
+Les onze suites du module réseau passent. Les huit scénarios du dispatcher
+couvrent pertes Submit/Forget, ticket inconnu puis retry identique, annulation avec
+admission incertaine, saturation, cœur indisponible, réponse incohérente et arrêt
+avec requête locale en attente. Le test `consensus_altair_core_client` utilise le
+vrai client HTTP `Core::call` contre le serveur et le service durable : deux blocs
+officiels sont commités une fois chacun, malgré une réponse d'admission supprimée
+à la frontière du callback client. Le test distinct HTTP privé ferme réellement
+une connexion sans lire sa réponse et reste vert.
+
+Preuves : `build-cmake/qualification/altair-core-dispatch-20260925/`.
+Ce composant n'est pas encore instancié par le daemon. Restent découverte et
+vérification du profil, récupération des tickets initiaux, handler P2P et essais
+entre plusieurs nœuds. Aucun protocole Altair réseau n'est activé par cette étape.
