@@ -1,4 +1,4 @@
-#include "nano/consensus_execution_deposit.hpp"
+#include "nano/consensus_deposit_history.hpp"
 #include <fstream>
 #include <iostream>
 using namespace nano;
@@ -18,7 +18,8 @@ int main(){try{
   const auto code_hash=keccak(pre.get(ethereum_deposit_contract).code);
   ExecutionEngine engine(1,[&](const Int& n){return n==parent.number?parent.hash():Bytes(32);},EvmRevision::Prague,ReplayPolicy::AllowLegacyUnprotected,ConsensusInputPolicy::EthereumValidated);
   const auto before=pre.root();const auto expected_hash=unhex(input.at("blockHeader").at("hash"));
-  const auto batch=replay_execution_deposits(engine,pre,parent,block,expected_hash,code_hash,0,1000);
+  const ExecutionDepositHistory initial_history(parent.hash());
+  const auto [history,batch]=initial_history.extend(engine,pre,parent,block,expected_hash,code_hash,1000);
   check(pre.root()==before,"replay mutated parent state");
   check(batch.state.root()==State::from_json(test.at("postState")).root(),"official post-state mismatch");
   const auto count=call(batch.state,"get_deposit_count()");check(count.size()==96,"contract count ABI");uint64_t n=0;for(unsigned i=0;i<8;++i)n|=uint64_t(count[64+i])<<(8*i);
@@ -28,6 +29,8 @@ int main(){try{
   ConsensusRoot zero{};if(layer.empty())layer.push_back(zero);
   for(unsigned depth=0;depth<32;++depth){if(layer.size()%2)layer.push_back(zero);std::vector<ConsensusRoot> next;for(size_t i=0;i<layer.size();i+=2)next.push_back(consensus_signing_root(layer[i],layer[i+1]));layer=std::move(next);zero=consensus_signing_root(zero,zero);}
   ConsensusRoot length{};for(unsigned i=0;i<8;++i)length[i]=uint8_t(n>>(8*i));const auto root=consensus_signing_root(layer.at(0),length);
+  check(history.root()==root,"history tree differs from independent reconstruction");
+  for(uint64_t i=0;i<n;++i){const auto proof=history.proof(i);auto proven=consensus_deposit_data_root(proof);for(unsigned depth=0;depth<33;++depth)proven=(i>>depth)&1?consensus_signing_root(proof.proof[depth],proven):consensus_signing_root(proven,proof.proof[depth]);check(proven==root,"official deposit Merkle proof differs");}
   check(call(batch.state,"get_deposit_root()")==Bytes(root.begin(),root.end()),"executed deposit tree differs");
   check(batch.state.get(ethereum_deposit_contract).balance-pre.get(ethereum_deposit_contract).balance==amount,"deposit amount not backed by executed balance");
   if(!n)++empty;deposits+=n;++cases;
@@ -43,5 +46,5 @@ int main(){try{
   }
  }
  check(cases==35&&empty>0&&deposits>200,"incomplete deposit fixture coverage");
- std::cout<<Json{{"scenario","execution-deposit-source"},{"officialCases",cases},{"deposits",deposits},{"zeroDepositCases",empty},{"beaconAdmission",false}}.dump()<<'\n';return 0;
+ std::cout<<Json{{"scenario","execution-deposit-source"},{"officialCases",cases},{"deposits",deposits},{"zeroDepositCases",empty},{"allMerkleProofsVerified",true},{"beaconAdmission",false}}.dump()<<'\n';return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

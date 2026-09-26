@@ -1,0 +1,39 @@
+{
+  "result": "passed",
+  "tests": {
+    "consensus_execution_deposit_source": 0.79,
+    "consensus_execution_deposit_history": 0.34
+  },
+  "totalSeconds": 1.13,
+  "officialCases": 35,
+  "officialDepositProofs": 680,
+  "scope": [
+    "Immutable branch histories with shared subtrees and logarithmic path copying",
+    "Every official deposit proof checked against independently reconstructed tree and executed Solidity root",
+    "Paris EVM funded BLS deposit through actual deposit contract to Phase0 registry admission",
+    "Topup preserves withdrawal credentials; invalid new-key PoP consumes index without admission",
+    "Competing execution branches retain separate histories; foreign proofs and duplicate credit refused",
+    "Snapshot JSON roundtrip authenticated against trusted execution state and contract views",
+    "Tampered/reordered snapshots, wrong anchor and restore capacity refused",
+    "Earlier trees remain unchanged and usable; empty block advances execution anchor; proof cancellation"
+  ],
+  "limits": [
+    "No runtime Bellatrix integration or automatic Eth1 voting yet",
+    "Snapshot serialization and authenticated reconstruction, not RocksDB crash recovery",
+    "No activation, withdrawal payout or consensus fork upgrade",
+    "Fixed Ethereum deposit address and Paris contract-view interpreter",
+    "Proof cases do not constitute scale or distributed-network qualification"
+  ],
+  "sources": [
+    "https://ethereum.github.io/consensus-specs/specs/phase0/deposit-contract/"
+  ],
+  "sha256": {
+    "include/nano/consensus_deposit_history.hpp": "a32b8352ac75362b7ac8f1fc5497619423f0393a11ff38be57a8729968f9d7fa",
+    "src/consensus_deposit_history.cpp": "62321276bd2434b1eedf162b298977f34800359162c82df5ad65ee15acbf3246",
+    "tests/test_deposit_history.cpp": "508f556dfa5a687f09470aab05219a972aa8b6589e9efaa6925f116a830af14c",
+    "tests/test_execution_deposit.cpp": "ad0187afc31148615c6245bacf4a3d8bf3f33f719857378e50dafea5a9e93e87",
+    "build-release/nano-deposit-history-tests": "ed2914a5e000eda5b1f57abedfccd48471a3713abaece0c9ddf10b8d6b6e44f2",
+    "build-release/nano-execution-deposit-tests": "fc0acd9908bb7310ee30cf4ca01f6409ed445098da6d7ffb212c8a83d44bac84",
+    "build-cmake/qualification/execution-deposit-history-20260926/test.log": "1c7f2ff17263ae3a378ef9f3903b01f0228142d5920b034aa5fff8f374f0fe32"
+  }
+}

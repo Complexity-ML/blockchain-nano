@@ -1377,3 +1377,8 @@ add_executable(nano-execution-deposit-tests tests/test_execution_deposit.cpp)
 target_link_libraries(nano-execution-deposit-tests PRIVATE nano_core)
 target_compile_definitions(nano-execution-deposit-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
 add_test(NAME consensus_execution_deposit_source COMMAND nano-execution-deposit-tests)
+
+add_executable(nano-deposit-history-tests tests/test_deposit_history.cpp)
+target_link_libraries(nano-deposit-history-tests PRIVATE nano_core nano_ckzg)
+target_compile_definitions(nano-deposit-history-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+add_test(NAME consensus_execution_deposit_history COMMAND nano-deposit-history-tests)
