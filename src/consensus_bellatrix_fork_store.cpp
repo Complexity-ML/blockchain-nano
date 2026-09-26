@@ -1,5 +1,6 @@
 #include "nano/consensus_bellatrix_fork_store.hpp"
 #include "consensus_bellatrix_projection.hpp"
+#include "nano/consensus_bellatrix_deposits.hpp"
 #include <exception>
 namespace nano {
 namespace {
@@ -8,6 +9,7 @@ ConsensusRoot root(std::span<const uint8_t> b,size_t at){ConsensusRoot r{};std::
 BellatrixEpochRules epoch_rules(const BellatrixForkBlockRules& r){return {r.transition.consensus.epoch,r.transition.execution,r.transition.maximum_state_bytes};}
 void validate_rules(const BellatrixForkBlockRules& r){
  validate_altair_transition_rules(r.transition.consensus);
+ if(r.native_deposit_votes&&r.deposit_contract_code_hash.empty())throw std::invalid_argument("native deposit voting requires contract identity");
  if(!r.deposit_contract_code_hash.empty()&&r.deposit_contract_code_hash.size()!=32)throw std::invalid_argument("Bellatrix deposit code hash width");
  if(!r.transition.seconds_per_slot||r.transition.seconds_per_slot>UINT64_MAX/1000||r.slot_duration_ms!=r.transition.seconds_per_slot*1000||r.attestation_due_ms>r.slot_duration_ms)
   throw std::invalid_argument("inconsistent Bellatrix fork clock rules");
@@ -60,6 +62,7 @@ std::optional<BellatrixForkStore> prepare_bellatrix_fork_block(const BellatrixFo
  if(input.blocks.contains(id))return input;
  if(!input.blocks.contains(h.parent_root)||!view.nodes.contains(h.parent_root)||h.slot>current_slot||h.slot<=view.finalized.epoch*slots)return std::nullopt;
  if(ancestor(view,h.parent_root,view.finalized.epoch*slots,checkpoint)!=view.finalized.root)return std::nullopt;
+ if(rules.native_deposit_votes&&!bellatrix_native_deposit_vote_known(input,h.parent_root,bytes.subspan(184+96,72),checkpoint))return std::nullopt;
  const auto& parent=input.blocks.at(h.parent_root);
  if(consensus_beacon_header_root(parent.header)!=h.parent_root||bellatrix_beacon_state_root(parent.state.ssz,t.state,rules.transition.execution,rules.transition.maximum_state_bytes,checkpoint)!=parent.header.state_root)
   throw std::invalid_argument("fork parent state binding mismatch");

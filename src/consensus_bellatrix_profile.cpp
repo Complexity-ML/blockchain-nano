@@ -6,7 +6,7 @@ BellatrixForkBlockRules load_bellatrix_fork_profile(std::string_view bytes,const
   throw std::invalid_argument("Bellatrix profile size or commitment mismatch");
  const auto j=Json::parse(bytes);
  // Canonical equality also rejects duplicate object keys and alternate encodings.
- if(!j.is_array()||(j.size()!=12&&j.size()!=13)||j.dump()!=bytes)throw std::invalid_argument("Bellatrix profile must be canonical");
+ if(!j.is_array()||(j.size()!=12&&j.size()!=13&&j.size()!=14)||j.dump()!=bytes)throw std::invalid_argument("Bellatrix profile must be canonical");
  auto number=[&](size_t i){const auto& value=j.at(i);if(!value.is_string())throw std::invalid_argument("Bellatrix profile quantity required");const auto n=quantity(value);if(quantity(n)!=value.get<std::string>())throw std::invalid_argument("Bellatrix profile noncanonical quantity");return u64(n);};
  BellatrixForkBlockRules r{};
  r.transition.consensus=altair_transition_from_profile(j.at(0));
@@ -23,7 +23,8 @@ BellatrixForkBlockRules load_bellatrix_fork_profile(std::string_view bytes,const
  r.transition.execution.extra_data_bytes=width(9);r.transition.execution.transaction_bytes=width(10);r.transition.execution.transactions=width(11);
  if(!r.transition.seconds_per_slot||r.transition.seconds_per_slot>UINT64_MAX/1000||r.slot_duration_ms!=r.transition.seconds_per_slot*1000||r.attestation_due_ms>r.slot_duration_ms||!r.transition.maximum_state_bytes||!r.transition.execution.transaction_bytes||!r.transition.execution.transactions)
   throw std::invalid_argument("Bellatrix profile clock or execution bounds");
- if(j.size()==13){if(!j[12].is_string())throw std::invalid_argument("Bellatrix deposit profile code hash");r.deposit_contract_code_hash=unhex(j[12].get<std::string>());if(r.deposit_contract_code_hash.size()!=32||hex(r.deposit_contract_code_hash)!=j[12].get<std::string>())throw std::invalid_argument("Bellatrix deposit profile code hash");}
+ if(j.size()>=13){if(!j[12].is_string())throw std::invalid_argument("Bellatrix deposit profile code hash");r.deposit_contract_code_hash=unhex(j[12].get<std::string>());if(r.deposit_contract_code_hash.size()!=32||hex(r.deposit_contract_code_hash)!=j[12].get<std::string>())throw std::invalid_argument("Bellatrix deposit profile code hash");}
+ if(j.size()==14){if(j[13]!="nano-native-eth1-v1")throw std::invalid_argument("unknown native deposit voting policy");r.native_deposit_votes=true;}
  if(bellatrix_fork_profile(r)!=j)throw std::invalid_argument("Bellatrix profile round trip mismatch");
  return r;
 }

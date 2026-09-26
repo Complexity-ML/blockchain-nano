@@ -8,6 +8,7 @@
 #include "nano/consensus_bellatrix_reactor.hpp"
 #include "nano/consensus_bellatrix_duty.hpp"
 #include "nano/consensus_bellatrix_validator.hpp"
+#include "nano/consensus_bellatrix_deposits.hpp"
 #include "nano/consensus_bellatrix_runtime.hpp"
 #include "support/bellatrix_runtime_scenario.hpp"
 #include "nano/http.hpp"
@@ -31,6 +32,12 @@ struct Key {
  explicit Key(uint64_t index){uint64_t words[4]{index+1,0,0,0};blst_scalar_from_uint64(&secret,words);blst_p1 p;blst_sk_to_pk_in_g1(&p,&secret);public_key.resize(48);blst_p1_compress(public_key.data(),&p);}
  Bytes sign(const ConsensusRoot& root)const{static constexpr char dst[]="BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_POP_";blst_p2 h,s;blst_hash_to_g2(&h,root.data(),32,reinterpret_cast<const uint8_t*>(dst),sizeof(dst)-1,nullptr,0);blst_sign_pk_in_g1(&s,&h,&secret);Bytes out(96);blst_p2_compress(out.data(),&s);return out;}
 };
+Bytes staking_calldata(uint64_t index,const ConsensusBytes4& fork){
+ Key validator(index);Phase0Deposit d{};copy_to(d.message.public_key,validator.public_key);d.message.withdrawal_credentials[0]=1;d.message.amount_gwei=32000000000;
+ copy_to(d.signature,validator.sign(consensus_signing_root(consensus_deposit_root(d.message),consensus_domain({3,0,0,0},fork,{}))));
+ const std::string signature="deposit(bytes,bytes,bytes,bytes32)";auto data=keccak(Bytes(signature.begin(),signature.end()));data.resize(4);Bytes args(416);
+ auto word=[&](size_t at,size_t value){const auto encoded=bytes(Int(value),32);std::copy(encoded.begin(),encoded.end(),args.begin()+at);};word(0,128);word(32,224);word(64,288);const auto root=consensus_deposit_data_root(d);std::copy(root.begin(),root.end(),args.begin()+96);word(128,48);std::copy(d.message.public_key.begin(),d.message.public_key.end(),args.begin()+160);word(224,32);std::copy(d.message.withdrawal_credentials.begin(),d.message.withdrawal_credentials.end(),args.begin()+256);word(288,96);std::copy(d.signature.begin(),d.signature.end(),args.begin()+320);data.insert(data.end(),args.begin(),args.end());return data;
+}
 struct RunningBellatrixHttp {
  HttpServer& server;std::thread thread;
  explicit RunningBellatrixHttp(HttpServer& s):server(s),thread([&s]{s.run();}){}
@@ -84,6 +91,7 @@ void check_finalized_rpc(Blockchain& chain,const BellatrixDurableReactor& reacto
 Bytes signed_header(const ConsensusBeaconHeader& h,const Bytes& signature){Bytes out(208);put(out,0,h.slot);put(out,8,h.proposer_index);std::copy(h.parent_root.begin(),h.parent_root.end(),out.begin()+16);std::copy(h.state_root.begin(),h.state_root.end(),out.begin()+48);std::copy(h.body_root.begin(),h.body_root.end(),out.begin()+80);std::copy(signature.begin(),signature.end(),out.begin()+112);return out;}
 }
 int main(int argc,char** argv){try{
+ const bool deposit_loop=argc==2&&std::string(argv[1])=="--deposit-loop";
  const bool deposit_store=argc==2&&std::string(argv[1])=="--deposit-store";
  const bool partition=argc==4&&std::string(argv[1])=="--partition-recovery";
  const bool distributed=partition||(argc==4&&std::string(argv[1])=="--distributed-finality");
@@ -99,7 +107,7 @@ int main(int argc,char** argv){try{
  const bool recovery=argc==2&&std::string(argv[1])=="--runtime-recovery";
  const bool operations=argc==2&&std::string(argv[1])=="--runtime-slashing";
  const bool runtime_only=operations||recovery||(argc==2&&std::string(argv[1])=="--runtime");
- const bool validator_only=exits_only||network||(argc==2&&std::string(argv[1])=="--validator-loop");
+ const bool validator_only=deposit_loop||exits_only||network||(argc==2&&std::string(argv[1])=="--validator-loop");
  check(argc==1||deposit_store||validator_only||runtime_only||managed,"unknown Bellatrix qualification arguments");
  const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-bellatrix-containers-official",source=fixtures/"consensus-bellatrix-slots-official";
  const auto manifest=load(source/"manifest.json");check(manifest.at("commit")=="bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908","initial state revision");
@@ -113,6 +121,7 @@ int main(int argc,char** argv){try{
  const auto seconds=parameter(read(clock_file),"SECONDS_PER_SLOT");
  // Explicit synthetic lifecycle profile: one epoch of tenure for this scenario.
  if(exits_only)common.exit.shard_committee_period=1;
+ if(deposit_loop){common.epoch.epochs_per_eth1_voting_period=1;common.state.eth1_votes_limit=common.epoch.ffg.slots_per_epoch;}
  const BellatrixTransitionRules r{common,{uint32_t(p("MAX_EXTRA_DATA_BYTES")),uint32_t(p("MAX_BYTES_PER_TRANSACTION")),uint32_t(p("MAX_TRANSACTIONS_PER_PAYLOAD"))},4*1024*1024,seconds,1337,ReplayPolicy::RequireChainId};
  const auto& l=r.consensus.state;const auto& duties=r.consensus.attestation.duties;const uint64_t slots=duties.slots_per_epoch;
  const size_t hist=176+64*l.slots_per_historical_root,randao=hist+96,execution_field=randao+32*l.epochs_per_historical_vector+8*l.epochs_per_slashings_vector+229+96*l.sync_committee_size;
@@ -123,7 +132,7 @@ int main(int argc,char** argv){try{
  Transaction tx;tx.type=2;tx.to=target;tx.gas=100000;tx.max_fee=2000000000;tx.priority_fee=100000000;
  const auto sender=SignedTransaction::sign(tx,key).sender();State state;state.get(sender).balance=Int("1000000000000000000");state.get(target).code=unhex("600054600101600055600143034060015500");
  const auto deposit_secret=bytes(Int(778),32);Transaction deposit_tx;deposit_tx.chain_id=1337;deposit_tx.to=ethereum_deposit_contract;deposit_tx.gas=1000000;deposit_tx.gas_price=2000000000;
- if(deposit_store){
+ if(deposit_store||deposit_loop){
   const auto fixture=load(fixtures/"ethereum-blocks/for_prague--prague--eip6110_deposits--deposits--deposit.json");state.get(ethereum_deposit_contract)=State::from_json(fixture.begin().value().at("pre")).get(ethereum_deposit_contract);
   state.get(SignedTransaction::sign(deposit_tx,deposit_secret).sender()).balance=Int("1000000000000000000000");
   const auto empty_root=ExecutionDepositHistory(Bytes(32)).root();std::copy(empty_root.begin(),empty_root.end(),beacon.ssz.begin()+hist+4);put(beacon.ssz,hist+36,0);put(beacon.ssz,hist+80,0);
@@ -135,7 +144,7 @@ int main(int argc,char** argv){try{
  beacon.ssz.resize(little(beacon.ssz,execution_field,4));beacon.ssz.insert(beacon.ssz.end(),initial_header.begin(),initial_header.end());
  std::map<Int,Bytes> hashes{{0,parent.header.hash()}};std::function<Bytes(const Int&)> history=[&](const Int& n){return hashes.at(n);};
  BellatrixForkBlockRules fork_rules{r,seconds*1000,seconds*1000/3,40};
- if(deposit_store){fork_rules.deposit_contract_code_hash=keccak(state.get(ethereum_deposit_contract).code);const auto encoded=bellatrix_fork_profile(fork_rules).dump();check(load_bellatrix_fork_profile(encoded,sha256(Bytes(encoded.begin(),encoded.end())),encoded.size()).deposit_contract_code_hash==fork_rules.deposit_contract_code_hash,"deposit profile roundtrip");}
+ if(deposit_store||deposit_loop){fork_rules.native_deposit_votes=deposit_loop;fork_rules.deposit_contract_code_hash=keccak(state.get(ethereum_deposit_contract).code);const auto encoded=bellatrix_fork_profile(fork_rules).dump();check(load_bellatrix_fork_profile(encoded,sha256(Bytes(encoded.begin(),encoded.end())),encoded.size()).deposit_contract_code_hash==fork_rules.deposit_contract_code_hash,"deposit profile roundtrip");}
  const Block execution_genesis=parent;const State genesis_state=state;std::vector<BellatrixForkStore> reorg_stores;
  const BellatrixStoreSnapshotLimits reactor_limits{32*1024*1024,32,128,128,4*1024*1024,8*1024*1024,64,100000};
  Temp reactor_location;Genesis deposit_genesis;std::unique_ptr<Blockchain> deposit_chain;auto reactor_disk=std::make_unique<ChainStore>(reactor_location/"chain");reactor_disk->bind_chain(1337,execution_genesis.header.hash(),"bellatrix-reactor-test");reactor_disk->commit(execution_genesis,genesis_state,{});std::unique_ptr<BellatrixDurableReactor> reactor;
@@ -164,10 +173,7 @@ int main(int argc,char** argv){try{
   Block execution;execution.header.parent_hash=parent.header.hash();execution.header.number=parent.header.number+1;execution.header.timestamp=Int(std::to_string(genesis_time+slot*seconds));execution.header.difficulty=0;execution.header.base_fee=next_base_fee(parent.header);execution.header.mix_hash=Bytes(randomness.mixes[epoch%l.epochs_per_historical_vector].begin(),randomness.mixes[epoch%l.epochs_per_historical_vector].end());
   tx.nonce=Int(blocks);execution.transactions.push_back(SignedTransaction::sign(tx,key));
   if(deposit_store&&slot>1){
-   Key validator(64+slot);Phase0Deposit d{};copy_to(d.message.public_key,validator.public_key);d.message.withdrawal_credentials[0]=1;d.message.amount_gwei=32000000000;
-   copy_to(d.signature,validator.sign(consensus_signing_root(consensus_deposit_root(d.message),consensus_domain({3,0,0,0},r.consensus.deposit.genesis_fork_version,{}))));
-   const std::string signature="deposit(bytes,bytes,bytes,bytes32)";deposit_tx.data=keccak(Bytes(signature.begin(),signature.end()));deposit_tx.data.resize(4);Bytes args(416);
-   auto word=[&](size_t at,size_t value){const auto encoded=bytes(Int(value),32);std::copy(encoded.begin(),encoded.end(),args.begin()+at);};word(0,128);word(32,224);word(64,288);const auto root=consensus_deposit_data_root(d);std::copy(root.begin(),root.end(),args.begin()+96);word(128,48);std::copy(d.message.public_key.begin(),d.message.public_key.end(),args.begin()+160);word(224,32);std::copy(d.message.withdrawal_credentials.begin(),d.message.withdrawal_credentials.end(),args.begin()+256);word(288,96);std::copy(d.signature.begin(),d.signature.end(),args.begin()+320);deposit_tx.data.insert(deposit_tx.data.end(),args.begin(),args.end());deposit_tx.value=Int("32000000000000000000");deposit_tx.nonce=Int(std::to_string(slot-2));execution.transactions.push_back(SignedTransaction::sign(deposit_tx,deposit_secret));
+   deposit_tx.data=staking_calldata(64+slot,r.consensus.deposit.genesis_fork_version);deposit_tx.value=Int("32000000000000000000");deposit_tx.nonce=Int(std::to_string(slot-2));execution.transactions.push_back(SignedTransaction::sign(deposit_tx,deposit_secret));
   }
   State expected=state;ExecutionEngine(r.chain_id,history,EvmRevision::Paris,r.replay_policy).execute_block(expected,execution,false);
   const auto encoded=encode_bellatrix_execution_payload(payload(execution),r.execution,r.consensus.maximum_block_bytes);
@@ -224,6 +230,38 @@ int main(int argc,char** argv){try{
      BellatrixValidatorLoop loop(bound,clock,seconds*1000,slots,128,std::move(keys),[&]{return wall.load();});
      std::unique_ptr<BellatrixNetworkPair> peers;
      if(network)peers=std::make_unique<BellatrixNetworkPair>(live.path,argv[2],g,fork_rules,reactor_limits,*store,chain,bound,clock,wall);
+     if(deposit_loop){
+      deposit_tx.nonce=0;deposit_tx.value=Int("32000000000000000000");deposit_tx.data=staking_calldata(64,r.consensus.deposit.genesis_fork_version);const auto funded=SignedTransaction::sign(deposit_tx,deposit_secret);check(chain.submit(funded),"staking transaction not admitted");
+      uint64_t admitted_slot=0;bool malicious_refused=false;
+      for(uint64_t next_slot=2;next_slot<=2*slots;++next_slot){
+       wall=(genesis_time+next_slot*seconds)*1000;
+       if(next_slot==3){
+        bound.tick(wall);const auto current=bound.current();const auto proposer=bound.current_proposer(next_slot);check(proposer.has_value(),"deposit test proposer missing");Key signer(*proposer);const auto& head=bellatrix_fork_head(*current.state,fork_rules);const auto context=bellatrix_fork_block_context(head.state,head.header,{r.consensus.epoch,r.execution,r.maximum_state_bytes},l);const uint64_t epoch=next_slot/slots;const auto version=epoch<context.fork.epoch?context.fork.previous_version:context.fork.current_version;ConsensusRoot epoch_root{};for(unsigned i=0;i<8;++i)epoch_root[i]=uint8_t(epoch>>(8*i));const auto reveal=signer.sign(consensus_signing_root(epoch_root,consensus_domain({2,0,0,0},version,genesis_root)));
+        auto body=bound.prepare_local_body(*proposer,next_slot,reveal,sender,current.token,128);check(body.has_value(),"native deposit proposal failed");(*body)[96]^=1;
+        ChainStore rejected_disk(live/"reject-signer");BeaconSigningJournal rejected_journal(rejected_disk,1337,execution_genesis.header.hash(),genesis_root,signer.public_key,slots);size_t signatures=0;
+        check(!bound.sign_proposal(*proposer,next_slot,*body,[&]{return wall.load();},current.token,rejected_journal,[&](const ConsensusRoot& root){++signatures;return signer.sign(root);})&&signatures==0,"unbacked deposit vote reached signer");
+        const auto fabricated=prepare_bellatrix_unsigned_block(head.state,next_slot,*proposer,consensus_beacon_header_root(head.header),*body,r,head.execution_block.header,head.execution_state,[&](const Int& height){return bellatrix_execution_history(*current.state,consensus_beacon_header_root(head.header),height);},64,100000);check(fabricated.has_value(),"malicious vote must be structurally valid for admission test");
+        const ConsensusBeaconHeader h{next_slot,*proposer,consensus_beacon_header_root(head.header),root_at(fabricated->message_ssz,48),bellatrix_beacon_body_root(std::span<const uint8_t>(fabricated->message_ssz).subspan(84),r.consensus.body,l.sync_committee_size,r.execution,r.consensus.maximum_block_bytes)};const auto signature=signer.sign(consensus_signing_root(consensus_beacon_header_root(h),consensus_domain({0,0,0,0},version,genesis_root)));Bytes wire(100);put(wire,0,100,4);std::copy(signature.begin(),signature.end(),wire.begin()+4);wire.insert(wire.end(),fabricated->message_ssz.begin(),fabricated->message_ssz.end());check(!bound.block(wire)&&bound.current().token==current.token,"unbacked signed deposit vote published");malicious_refused=true;
+       }
+       if(next_slot==slots+slots/2){
+        bound.tick(wall);const auto current=bound.current();const auto proposer=bound.current_proposer(next_slot);check(proposer.has_value(),"mandatory deposit proposer missing");Key signer(*proposer);const auto& head=bellatrix_fork_head(*current.state,fork_rules);const auto context=bellatrix_fork_block_context(head.state,head.header,{r.consensus.epoch,r.execution,r.maximum_state_bytes},l);const uint64_t epoch=next_slot/slots;const auto version=epoch<context.fork.epoch?context.fork.previous_version:context.fork.current_version;ConsensusRoot epoch_root{};for(unsigned i=0;i<8;++i)epoch_root[i]=uint8_t(epoch>>(8*i));const auto reveal=signer.sign(consensus_signing_root(epoch_root,consensus_domain({2,0,0,0},version,genesis_root)));
+        auto body=bound.prepare_local_body(*proposer,next_slot,reveal,sender,current.token,128);check(body.has_value()&&little(*body,216,4)-little(*body,212,4)==1240,"majority proposal lacks mandatory deposit proof");(*body)[little(*body,212,4)]^=1;
+        ChainStore rejected_disk(live/"reject-deposit-proof");BeaconSigningJournal rejected_journal(rejected_disk,1337,execution_genesis.header.hash(),genesis_root,signer.public_key,slots);size_t signatures=0;check(!bound.sign_proposal(*proposer,next_slot,*body,[&]{return wall.load();},current.token,rejected_journal,[&](const ConsensusRoot& root){++signatures;return signer.sign(root);})&&signatures==0&&bound.current().token==current.token,"forged mandatory deposit proof reached signer");
+       }
+       loop.poll();check(chain.tip().header.number==Int(std::to_string(next_slot)),"deposit validator loop stalled");
+       const auto current=bound.current();const auto& head=bellatrix_fork_head(*current.state,fork_rules);const auto registry=bellatrix_fork_block_context(head.state,head.header,{r.consensus.epoch,r.execution,r.maximum_state_bytes},l).registry;
+       if(registry.validators.size()==65&&!admitted_slot)admitted_slot=next_slot;
+       if(next_slot<=slots+slots/2-1)check(registry.validators.size()==64,"deposit admitted before strict voting majority");
+       if(next_slot==2*slots){
+        check(registry.validators.size()==65&&admitted_slot==slots+slots/2&&malicious_refused,"native deposit admission timing");const auto& member=registry.validators.at(64);check(Bytes(member.public_key.begin(),member.public_key.end())==Key(64).public_key&&member.balance==32000000000&&member.activation_eligibility_epoch!=UINT64_MAX&&member.activation_epoch==UINT64_MAX,"new validator state/activation queue mismatch");
+        check(little(head.state.ssz,hist+80,8)==1&&head.deposit_history->count()==1&&chain.store().receipt(funded.hash()).has_value()&&chain.store().receipt(funded.hash())->success,"staking deposit missing from execution or Beacon cursor");
+        const auto before=current.token;auto included=std::find_if(current.signed_blocks->begin(),current.signed_blocks->end(),[&](const auto& entry){return little(*entry.second,100,8)==admitted_slot;});check(included!=current.signed_blocks->end(),"missing signed admission block");const auto& wire=*included->second;check(bound.block(wire)&&bound.current().token==before,"duplicate staking block changed checkpoint");
+        saved=current.token;final_hash=chain.tip().header.hash();final_state=chain.state().root();
+       }
+      }
+      loop.stop();
+      std::cout<<Json{{"scenario","bellatrix-native-deposit-admission"},{"admissionSlot",admitted_slot},{"validators",65},{"activationEligible",true},{"activated",false},{"unbackedVoteRejected",malicious_refused}}.dump()<<'\n';
+     }else
      if(exits_only){
       Key exiting(0);SignedConsensusVoluntaryExit request{0,0,{}};
       auto sign_exit=[&](SignedConsensusVoluntaryExit& exit){const auto view=bound.current();const auto& h=bellatrix_fork_head(*view.state,fork_rules);const auto& t=fork_rules.transition.consensus;const auto ctx=bellatrix_fork_block_context(h.state,h.header,{t.epoch,fork_rules.transition.execution,fork_rules.transition.maximum_state_bytes},t.state);const auto version=exit.epoch<ctx.fork.epoch?ctx.fork.previous_version:ctx.fork.current_version;exit.signature=Key(exit.validator_index).sign(consensus_signing_root(consensus_voluntary_exit_root(exit.epoch,exit.validator_index),consensus_domain({4,0,0,0},version,ctx.genesis_root)));};
@@ -376,6 +414,7 @@ int main(int argc,char** argv){try{
       }
       std::cout<<Json{{"scenario","bellatrix-slashing-network"},{"realP2pDaemons",2},{"cores",2},{"independentCoreProcesses",false},{"syntheticClock",true},{"proofReceivedBeforeBlock",true},{"offender",offender},{"slashed",true},{"balanceBefore",balance},{"balanceAfter",member.balance},{"exitEpoch",member.exit_epoch},{"executionStateMatched",true}}.dump()<<'\n';return 0;
      }
+     if(!deposit_loop){
      if(peers)check(rpc(peers->sa->port(),"eth_sendRawTransaction",Json::array({hex(pending.raw())}))==hex(pending.hash()),"wallet RPC transaction admission");
      else check(chain.submit(pending),"validator scenario wallet transaction admitted");
      for(uint64_t next_slot=2;next_slot<=4*slots;++next_slot){
@@ -413,13 +452,16 @@ int main(int argc,char** argv){try{
      check(chain.finalized_block()->header.number<chain.tip().header.number&&current.state->blocks.at(current.state->timed.view.finalized.root).execution_state.get_storage(target,0)==2,"finalized view includes a later transaction");
      saved=current.token;final_hash=chain.tip().header.hash();final_state=chain.state().root();loop_status=loop.status();
      if(peers){check(peers->observer->state().root()==final_state&&peers->reactor->current().state->timed.view.finalized.epoch==finalized,"observer finality/state mismatch");check(peers->observer->store().receipt(pending.hash()).has_value(),"observer missing wallet receipt");peers->stop();}
+     }
     }
     {
      Blockchain reopened(live/"chain",g);bool gated=false;try{Rpc rpc(reopened);}catch(const std::exception&){gated=true;}check(gated,"reopened Beacon RPC escaped checkpoint gate");
      BellatrixDurableReactor restored(reopened,fork_rules,reactor_limits,saved);Rpc rpc(reopened);
-     check_finalized_rpc(reopened,restored,sender,target);
-     check(reopened.tip().header.hash()==final_hash&&reopened.state().root()==final_state&&restored.current().state->timed.view.finalized.epoch==finalized,"validator finality/execution lost after reopen");
+     if(!deposit_loop)check_finalized_rpc(reopened,restored,sender,target);
+     check(reopened.tip().header.hash()==final_hash&&reopened.state().root()==final_state&&(deposit_loop||restored.current().state->timed.view.finalized.epoch==finalized),"validator finality/execution lost after reopen");
+     if(deposit_loop){const auto& head=bellatrix_fork_head(*restored.current().state,fork_rules);const auto context=bellatrix_fork_block_context(head.state,head.header,{r.consensus.epoch,r.execution,r.maximum_state_bytes},l);check(context.registry.validators.size()==65&&Bytes(context.registry.validators.at(64).public_key.begin(),context.registry.validators.at(64).public_key.end())==Key(64).public_key&&little(head.state.ssz,hist+80,8)==1,"reopen lost admitted validator or deposit cursor");}
     }
+    if(deposit_loop){std::cout<<Json{{"scenario","bellatrix-native-deposit-reopen"},{"reopened",true}}.dump()<<'\n';return 0;}
     std::cout<<Json{{"scenario","bellatrix-local-validator-loop"},{"localKeys",64},{"syntheticClock",true},{"realP2pDaemons",network?2:0},{"independentCoreProcesses",false},{"validatorHosts",1},{"walletTransactionExecuted",true},{"finalizedEpoch",finalized},{"reopened",true},{"loop",loop_status}}.dump()<<'\n';return 0;
    }
 

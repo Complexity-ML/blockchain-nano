@@ -81,8 +81,8 @@ public:
  bool execution_bound() const{return execution_!=nullptr;}
  // Build on the authenticated head using its state/history and a pool snapshot.
  // Candidate votes are individually inclusion-validated, bounded by local work
- // policy. No signature is issued here. Pending deposits require an operation
- // provider; construction fails rather than bypassing mandatory deposits.
+ // policy. No signature is issued here. The native deposit profile supplies
+ // votes and mandatory proofs; other profiles fail if operations are missing.
  std::optional<Bytes> prepare_local_body(uint64_t validator_index,uint64_t slot,
   const Bytes& randao_reveal,const std::string& fee_recipient,
   const ForkCheckpointToken& expected,size_t maximum_vote_trials,

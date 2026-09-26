@@ -1,6 +1,7 @@
 #include "nano/consensus_bellatrix_reactor.hpp"
 #include "nano/chain.hpp"
 #include "nano/consensus_message_ssz.hpp"
+#include "nano/consensus_bellatrix_deposits.hpp"
 namespace nano {
 namespace {
 uint64_t number(const Bytes& b,size_t at){uint64_t n=0;for(size_t i=0;i<8;++i)n|=uint64_t(b.at(at+i))<<(8*i);return n;}
@@ -33,6 +34,8 @@ std::optional<Bytes> BellatrixDurableReactor::prepare_local_body_locked(uint64_t
  auto advanced=prepare_bellatrix_slots(parent.state,epoch,t.state,slot,limits_.replay_slots,limits_.sync_trials,check);
  // The complete Bellatrix SSZ layout was validated by prepare_bellatrix_slots.
  const size_t historical=176+64*t.state.slots_per_historical_root,randao=historical+96;
+ Bytes deposit_vote(advanced.ssz.begin()+historical+4,advanced.ssz.begin()+historical+76),selected_deposits;
+ if(rules_.native_deposit_votes){deposit_vote=bellatrix_native_deposit_vote(*state_,head,slot,rules_,check);selected_deposits=bellatrix_native_deposit_operations(*state_,head,advanced.ssz,deposit_vote,rules_,check);}
  const uint64_t genesis=number(advanced.ssz,0),seconds=rules_.transition.seconds_per_slot;
  if(!seconds||slot>(UINT64_MAX-genesis)/seconds)throw std::overflow_error("Bellatrix proposal timestamp");
  Block block;auto& h=block.header;h.parent_hash=parent.execution_block.header.hash();h.number=parent.execution_block.header.number+1;h.difficulty=0;
@@ -52,6 +55,8 @@ std::optional<Bytes> BellatrixDurableReactor::prepare_local_body_locked(uint64_t
  reserved+=uint64_t(t.body.attester_slashings)*proof_bytes;
  if(uint64_t(t.body.voluntary_exits)>(UINT64_MAX-reserved)/112)throw std::length_error("Bellatrix exit reserve overflow");
  reserved+=uint64_t(t.body.voluntary_exits)*112;
+ if(selected_deposits.size()>UINT64_MAX-reserved)throw std::length_error("Bellatrix deposit reserve overflow");
+ reserved+=selected_deposits.size();
  if(reserved>=t.maximum_block_bytes)throw std::length_error("Bellatrix block capacity cannot hold configured attestation reserve");
  size_t remaining=t.maximum_block_bytes-reserved;
  std::erase_if(pending,[&](const auto& c){const auto n=c.transaction.raw().size();if(n>e.transaction_bytes||remaining<4||n>remaining-4)return true;remaining-=n+4;return false;});
@@ -68,13 +73,14 @@ std::optional<Bytes> BellatrixDurableReactor::prepare_local_body_locked(uint64_t
   if(fixed>t.maximum_block_bytes||votes.size()>UINT32_MAX/4)throw std::length_error("Bellatrix proposal body budget");
   Bytes attestations(votes.size()*4);size_t at=0;
   for(const auto& vote:votes){offset(attestations,at,attestations.size());at+=4;if(vote.size()>t.maximum_block_bytes-attestations.size())throw std::length_error("Bellatrix attestations budget");attestations.insert(attestations.end(),vote.begin(),vote.end());}
-  Bytes body(fixed);std::copy(reveal.begin(),reveal.end(),body.begin());std::copy_n(advanced.ssz.begin()+historical+4,72,body.begin()+96);
+  Bytes body(fixed);std::copy(reveal.begin(),reveal.end(),body.begin());std::copy(deposit_vote.begin(),deposit_vote.end(),body.begin()+96);
   // Empty sync participation is a valid aggregate (and incurs normal penalties).
   body[220+(uint64_t(t.state.sync_committee_size)+7)/8]=0xc0;
   offset(body,200,fixed);offset(body,204,fixed);offset(body,208,fixed+slashings.size());
-  offset(body,212,fixed+slashings.size()+attestations.size());offset(body,216,fixed+slashings.size()+attestations.size());offset(body,220+sync_bytes,fixed+slashings.size()+attestations.size()+selected_exits.size());
+  offset(body,212,fixed+slashings.size()+attestations.size());offset(body,216,fixed+slashings.size()+attestations.size()+selected_deposits.size());offset(body,220+sync_bytes,fixed+slashings.size()+attestations.size()+selected_deposits.size()+selected_exits.size());
   if(slashings.size()>t.maximum_block_bytes-body.size())throw std::length_error("Bellatrix body slashing budget");body.insert(body.end(),slashings.begin(),slashings.end());
   if(attestations.size()>t.maximum_block_bytes-body.size())throw std::length_error("Bellatrix body vote budget");body.insert(body.end(),attestations.begin(),attestations.end());
+  if(selected_deposits.size()>t.maximum_block_bytes-body.size())throw std::length_error("Bellatrix body deposit budget");body.insert(body.end(),selected_deposits.begin(),selected_deposits.end());
   if(selected_exits.size()>t.maximum_block_bytes-body.size())throw std::length_error("Bellatrix body exit budget");body.insert(body.end(),selected_exits.begin(),selected_exits.end());
   if(encoded.size()>t.maximum_block_bytes-body.size())throw std::length_error("Bellatrix body payload budget");body.insert(body.end(),encoded.begin(),encoded.end());return body;
  };

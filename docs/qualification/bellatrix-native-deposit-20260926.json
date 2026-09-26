@@ -1,0 +1,41 @@
+{
+  "result": "passed",
+  "tests": {
+    "consensus_bellatrix_signed_execution_chain": 3.82,
+    "consensus_bellatrix_voluntary_exit": 4.97,
+    "consensus_bellatrix_deposit_store": 0.83,
+    "consensus_bellatrix_native_deposit_admission": 12.42
+  },
+  "totalSeconds": 22.04,
+  "scope": [
+    "Explicit nano-native-eth1-v1 profile extension; legacy and deposit-tracking-only profiles retain their identity",
+    "Stable per-voting-period execution ancestor selection; all native votes must refer to authenticated ancestors of their own parent",
+    "Strict Eth1 majority and pending deposit count predicted before assembling the local body",
+    "Mandatory SSZ deposits included with proofs and body/payload budgets",
+    "Signed funded mempool transaction executes, then automatic proposal admits validator 64 at slot 12 after five votes in an eight-slot test period",
+    "Before majority registry stays at 64; after admission grows to 65; epoch processing makes the new key activation-eligible",
+    "Unbacked vote refused before signing and at signed-block admission without checkpoint mutation",
+    "Corrupted mandatory Merkle proof refused before signer; exact admission block replay does not republish checkpoint",
+    "Actual database reopen retains admitted validator, deposit cursor and EVM state"
+  ],
+  "limits": [
+    "Native Nano Eth1 source policy, not Ethereum external Eth1 timestamp/follow-distance selection or EIP-6110 activation",
+    "Synthetic one-epoch voting period, 64 initial validators on one host",
+    "New validator eligible but not active at scenario end; activation duties not yet qualified",
+    "No withdrawal payout, remote peer, partition, crash-injection or large-scale qualification for this new profile",
+    "Competing deposit allocations and pending exits must be qualified together",
+    "No network deployment or real funds"
+  ],
+  "sha256": {
+    "include/nano/consensus_bellatrix_deposits.hpp": "04b8a2cbf83d649850ee3a0e77b133b45a606d22f10aa98488fc82e3889c121f",
+    "src/consensus_bellatrix_deposits.cpp": "713b60ce10276e409d36fcd78f088a8910ea260385f1e703bf08781aac0fb810",
+    "src/consensus_bellatrix_local_body.cpp": "32e5cef21acbb55be9b4f1b653adb1ccb9e0100d9cea5d77c9d668541594ebc3",
+    "src/consensus_bellatrix_fork_store.cpp": "70a9ccad4c903f318ac5143206af572b8ba65084c853a8e0e9617644d7910b8f",
+    "src/consensus_bellatrix_reactor.cpp": "c5cfcd1420487bebd10a0239bd4b16b117d57e864f265153ac4036b6a2970830",
+    "src/consensus_bellatrix_profile.cpp": "cdf28ae68fe60862e3ca3dc4b3256c869531a646f76533f044d6be4bef77f0a1",
+    "src/consensus_bellatrix_store_snapshot.cpp": "e22c01a88c3fee13ecff2a149d4ba3ac85b469dcc95e4ca260329b450553c360",
+    "tests/test_bellatrix_transition.cpp": "30b7a6460a9ea0f1f884e03e7b047b06252d757ceaa15a0657a4f6cfef168254",
+    "build-release/nano-bellatrix-transition-tests": "54dff939dc0fb5e25dd2b06fc53532d97f9dc015ae8826959097dc69596e5946",
+    "build-cmake/qualification/bellatrix-native-deposit-20260926/test.log": "3c687e4d3d0f8349931ed5ee420948556ad046f21f5636db543315c4157f00a4"
+  }
+}

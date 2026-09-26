@@ -4,6 +4,7 @@
 #include "nano/consensus_message_ssz.hpp"
 #include "nano/consensus_bls.hpp"
 #include "nano/consensus_bellatrix_duty.hpp"
+#include "nano/consensus_bellatrix_deposits.hpp"
 namespace nano {
 namespace {
 void archive_require(bool ok){if(!ok)throw std::invalid_argument("Invalid Bellatrix durable archive");}
@@ -380,6 +381,7 @@ std::optional<Bytes> BellatrixDurableReactor::sign_proposal_locked(uint64_t inde
  const auto head=phase0_fork_choice_head(state_->timed.view,{t.epoch.ffg.slots_per_epoch,t.attestation.duties.effective_balance_increment,rules_.proposer_score_boost},checkpoint).head;
  const auto& parent=state_->blocks.at(head);
  if(parent.header.slot>=slot)return std::nullopt;
+ if(rules_.native_deposit_votes&&(body.size()<168||!bellatrix_native_deposit_vote_known(*state_,head,body.subspan(96,72),checkpoint)))return std::nullopt;
  const auto parent_context=bellatrix_fork_block_context(parent.state,parent.header,BellatrixEpochRules{t.epoch,rules_.transition.execution,rules_.transition.maximum_state_bytes},t.state,checkpoint);
  validate_bellatrix_execution_record(parent,rules_,checkpoint);
  if(parent_context.block_root!=head)throw std::invalid_argument("Proposal parent binding mismatch");

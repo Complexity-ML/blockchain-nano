@@ -22,6 +22,7 @@ struct BellatrixForkBlockRules {
  // Explicit network profile extension; empty retains the legacy profile bytes.
  // Pins the immutable Ethereum-format deposit contract on Nano execution.
  Bytes deposit_contract_code_hash;
+ bool native_deposit_votes=false;
 };
 // Bellatrix on_block on a trusted, internally consistent in-memory Store. Full
 // signature/operation/state-root validation precedes candidate publication.
