@@ -1,0 +1,38 @@
+{
+  "result": "passed",
+  "tests": {
+    "consensus_bellatrix_voluntary_exit_reorg": 11.32,
+    "consensus_bellatrix_voluntary_exit_pruning": 41.2,
+    "consensus_bellatrix_voluntary_exit": 5.07,
+    "consensus_bellatrix_native_deposit_admission": 11.83,
+    "consensus_bellatrix_exit_identity": 0.32
+  },
+  "totalSeconds": 69.73,
+  "scope": [
+    "Exit identity is validator index plus BLS public key derived from verified admission context",
+    "Deduplication and restore uniqueness use the identity pair",
+    "Local proposer skips mismatched identities before spending candidate trial budget",
+    "Finalized matching scheduled exits are pruned; finalized different-key indices make stale requests obsolete; head-only mismatch does not prune",
+    "Public key cache reconstructed on restore, no peer supplied key field or changed exit wire format",
+    "Two independently signed exits with same index and different keys remain distinct in synthetic registry contexts",
+    "Newly admitted but unactivated validator cannot submit a voluntary exit",
+    "Existing reorg/reinclusion, finality pruning, network relay and reopen scenarios pass"
+  ],
+  "limits": [
+    "No legitimate conflicting finalized histories were manufactured or accepted",
+    "Activation depends on finalized eligibility, so index reassignment for an already active validator is not established as an exploitable ordinary reorg",
+    "Same-index different-key case is a synthetic identity boundary test; end-to-end reorg suite retains the same keys",
+    "No withdrawal payouts or general production approval"
+  ],
+  "sha256": {
+    "include/nano/consensus_bellatrix_reactor.hpp": "fe5198a43267e51e2cdf6b0493e435ff167d0137f226bd02742744ac95d3573a",
+    "src/consensus_bellatrix_exit_identity.cpp": "18b3e22c43a346521426ed6341a188aeed11a9b8e476b59c0810917bbfa39f8e",
+    "src/consensus_bellatrix_reactor.cpp": "f41817aadcf036f22a9c503df8ee61da27d69252577aa7af316143268f45c632",
+    "src/consensus_bellatrix_local_body.cpp": "1d7c7007342b19fcc8eddda6f8ec98175bdab2fa80c3ca2a7aefd191c67a4aa3",
+    "tests/test_bellatrix_exit_identity.cpp": "76148e0455b955c481dfc8475937eac4428e720561769d253e898256222b66e0",
+    "tests/test_bellatrix_transition.cpp": "e62502994d9eb25fb4ec8da2c15e600b2bdbc75c572ea6762a9a6e52f40578e6",
+    "build-release/nano-bellatrix-exit-identity-tests": "ce17f7207a7603350ba9a42d7879f98d8509b712f24daa98938193eec98686d7",
+    "build-release/nano-bellatrix-transition-tests": "1e51c5852e37287f7f13e9cf9b98b708b5ba51d743afce151a62ce655ffd0888",
+    "build-cmake/qualification/bellatrix-exit-identity-20260926/test.log": "73d46f062676bdc3c44652f2674371a5def44dc165f856bbed6beb57e4c76b65"
+  }
+}

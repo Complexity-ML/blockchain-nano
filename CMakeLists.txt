@@ -1391,3 +1391,7 @@ set_tests_properties(consensus_bellatrix_native_deposit_admission PROPERTIES TIM
 
 add_test(NAME consensus_bellatrix_deposit_activation COMMAND nano-bellatrix-transition-tests --deposit-activation)
 set_tests_properties(consensus_bellatrix_deposit_activation PROPERTIES TIMEOUT 600 LABELS "qualification_consensus_deposits")
+
+add_executable(nano-bellatrix-exit-identity-tests tests/test_bellatrix_exit_identity.cpp)
+target_link_libraries(nano-bellatrix-exit-identity-tests PRIVATE nano_core nano_ckzg)
+add_test(NAME consensus_bellatrix_exit_identity COMMAND nano-bellatrix-exit-identity-tests)

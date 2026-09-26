@@ -103,8 +103,7 @@ std::optional<Bytes> BellatrixDurableReactor::prepare_local_body_locked(uint64_t
  for(const auto& [id,wire]:*signed_exits_){
   if(check)check();if(selected_exits.size()/112>=t.body.voluntary_exits||tried>=maximum_vote_trials)break;
   const auto exit=decode_consensus_voluntary_exit_ssz(wire->ssz,check);if(!exit)throw std::logic_error("Invalid archived exit encoding");
-  const auto member=registry.validators.find(exit->validator_index);
-  if(member==registry.validators.end()||member->second.exit_epoch!=UINT64_MAX)continue;
+  if(bellatrix_exit_membership(*wire,registry)!=BellatrixExitMembership::Matching)continue;
   ++tried;const auto size=selected_exits.size();selected_exits.insert(selected_exits.end(),wire->ssz.begin(),wire->ssz.end());auto candidate=assemble(selected);
   if(valid(candidate))body=std::move(candidate);else selected_exits.resize(size);
  }

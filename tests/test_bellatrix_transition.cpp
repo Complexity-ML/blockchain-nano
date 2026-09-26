@@ -254,7 +254,10 @@ int main(int argc,char** argv){try{
        }
        loop.poll();check(chain.tip().header.number==Int(std::to_string(next_slot)),"deposit validator loop stalled");
        const auto current=bound.current();const auto& head=bellatrix_fork_head(*current.state,fork_rules);const auto registry=bellatrix_fork_block_context(head.state,head.header,{r.consensus.epoch,r.execution,r.maximum_state_bytes},l).registry;
-       if(registry.validators.size()==65&&!admitted_slot)admitted_slot=next_slot;
+       if(registry.validators.size()==65&&!admitted_slot){
+        admitted_slot=next_slot;SignedConsensusVoluntaryExit premature{next_slot/slots,64,{}};const auto context=bellatrix_fork_block_context(head.state,head.header,{r.consensus.epoch,r.execution,r.maximum_state_bytes},l);const auto version=premature.epoch<context.fork.epoch?context.fork.previous_version:context.fork.current_version;premature.signature=Key(64).sign(consensus_signing_root(consensus_voluntary_exit_root(premature.epoch,64),consensus_domain({4,0,0,0},version,genesis_root)));const auto before=bound.current().token;
+        check(!bound.voluntary_exit_ssz(encode_consensus_voluntary_exit_ssz(premature))&&bound.current().token==before,"new unactivated key admitted a voluntary exit");
+       }
        if(deposit_activation){
         const auto member=registry.validators.find(64);const bool active=member!=registry.validators.end()&&member->second.activation_epoch<=next_slot/slots;
         if(!active)check(entrant_signatures==0,"new key signed before activation");
@@ -287,6 +290,7 @@ int main(int argc,char** argv){try{
       check(!bound.voluntary_exit_ssz(invalid)&&bound.current().token==before,"invalid exit changed checkpoint");
       auto future=request;future.epoch=2;sign_exit(future);check(!bound.voluntary_exit_ssz(encode_consensus_voluntary_exit_ssz(future)),"future exit admitted");
       check(bound.voluntary_exit_ssz(wire)&&bound.current().signed_exits->size()==1,"eligible exit not archived");
+      check(Bytes(bound.current().signed_exits->begin()->second->public_key.begin(),bound.current().signed_exits->begin()->second->public_key.end())==Key(0).public_key,"exit archive lacks verified signer identity");
       if(peers)until([&]{return peers->reactor->current().signed_exits->size()==1;},"voluntary exit received before block",20);
       const auto admitted=bound.current().token;check(bound.voluntary_exit_ssz(wire)&&bound.current().token==admitted,"duplicate exit amplified checkpoint");
       const auto disk=chain.store().fork_checkpoint(r.chain_id,execution_genesis.header.hash(),reactor_limits.envelope_bytes,admitted);

@@ -11,7 +11,19 @@ public: using std::invalid_argument::invalid_argument;
 };
 using BellatrixSignedBlockArchive=std::map<ConsensusRoot,std::shared_ptr<const Bytes>>;
 using BellatrixSignedVoteArchive=std::map<ConsensusRoot,std::shared_ptr<const Bytes>>;
-struct BellatrixSignedExitRecord {ConsensusRoot admission_root;Bytes ssz;};
+struct BellatrixExitIdentity {
+ uint64_t index;std::array<uint8_t,48> public_key;
+ auto operator<=>(const BellatrixExitIdentity&)const=default;
+};
+struct BellatrixSignedExitRecord {
+ ConsensusRoot admission_root;Bytes ssz;
+ // Derived from the BLS-verified admission context; reconstructed on restore,
+ // never supplied by the peer or accepted as separate snapshot authority.
+ std::array<uint8_t,48> public_key;
+ BellatrixExitIdentity identity()const;
+};
+enum class BellatrixExitMembership {Unknown, Matching, DifferentKey, Scheduled};
+BellatrixExitMembership bellatrix_exit_membership(const BellatrixSignedExitRecord&,const ConsensusSlashingState&);
 using BellatrixSignedExitArchive=std::map<ConsensusRoot,std::shared_ptr<const BellatrixSignedExitRecord>>;
 struct BellatrixPublishedStore {std::shared_ptr<const BellatrixForkStore> state;ForkCheckpointToken token;std::shared_ptr<const BellatrixSignedBlockArchive> signed_blocks;std::shared_ptr<const BellatrixSignedVoteArchive> signed_votes;std::shared_ptr<const BellatrixSignedVoteArchive> signed_slashings;std::shared_ptr<const BellatrixSignedExitArchive> signed_exits;};
 // Serialized durable event coordinator, NOT a P2P service or EVM activation.

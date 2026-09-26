@@ -122,7 +122,7 @@ Restored restore_durable_snapshot(std::string_view bytes,const Bytes& digest,con
  auto exits=std::make_shared<BellatrixSignedExitArchive>();
  if(with_exits){
   const auto& list=document.at("signedExits");archive_require(list.is_array()&&!list.empty()&&list.size()<=limits.messages);
-  const auto& t=rules.transition.consensus;std::set<uint64_t> indices;
+  const auto& t=rules.transition.consensus;std::set<BellatrixExitIdentity> identities;
   for(const auto& entry:list){
    if(cancel)cancel();archive_require(entry.is_array()&&entry.size()==3&&entry[0].is_string()&&entry[1].is_string()&&entry[2].is_string());
    const auto root=entry[0].get<std::string>(),admission=entry[1].get<std::string>(),payload=entry[2].get<std::string>();
@@ -132,8 +132,10 @@ Restored restore_durable_snapshot(std::string_view bytes,const Bytes& digest,con
    const auto admission_root=archive_array<32>(admission_bytes,0);archive_require(store.blocks.contains(admission_root));
    const auto& block=store.blocks.at(admission_root);
    const auto context=bellatrix_fork_block_context(block.state,block.header,{t.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},t.state,cancel);
-   const auto exit=decode_consensus_voluntary_exit_ssz(wire,cancel);archive_require(exit&&valid_exit_signature(*exit,context,t.exit,cancel)&&indices.insert(exit->validator_index).second);
-   auto record=std::make_shared<const BellatrixSignedExitRecord>(BellatrixSignedExitRecord{admission_root,std::move(wire)});
+   const auto exit=decode_consensus_voluntary_exit_ssz(wire,cancel);archive_require(exit&&valid_exit_signature(*exit,context,t.exit,cancel));
+   const auto key=context.registry.validators.at(exit->validator_index).public_key;
+   archive_require(identities.insert(BellatrixExitIdentity{exit->validator_index,key}).second);
+   auto record=std::make_shared<const BellatrixSignedExitRecord>(BellatrixSignedExitRecord{admission_root,std::move(wire),key});
    archive_require(exits->emplace(archive_array<32>(digest,0),std::move(record)).second);
   }
  }
@@ -211,7 +213,9 @@ void BellatrixDurableReactor::publish(BellatrixForkStore candidate,std::shared_p
   const auto& finalized=next->blocks.at(next->timed.view.finalized.root);const auto& t=rules_.transition.consensus;
   const auto context=bellatrix_fork_block_context(finalized.state,finalized.header,{t.epoch,rules_.transition.execution,rules_.transition.maximum_state_bytes},t.state,checkpoint);
   auto retained=std::make_shared<BellatrixSignedExitArchive>();
-  for(const auto& [id,wire]:*exits){if(checkpoint)checkpoint();const auto member=context.registry.validators.find(archive_number(wire->ssz,8));if(member==context.registry.validators.end()||member->second.exit_epoch==UINT64_MAX)retained->emplace(id,wire);}
+  for(const auto& [id,wire]:*exits){if(checkpoint)checkpoint();const auto membership=bellatrix_exit_membership(*wire,context.registry);if(membership==BellatrixExitMembership::Unknown||membership==BellatrixExitMembership::Matching)retained->emplace(id,wire);}
+  // A finalized different key makes the old request obsolete: that index can
+  // no longer be reassigned by an admissible branch. Never prune on head alone.
   if(retained->size()!=exits->size())exits=std::move(retained);
  }
  const auto encoded=durable_snapshot(*next,*archive,*votes,*slashings,*exits,rules_,limits_,checkpoint);
@@ -589,10 +593,12 @@ bool BellatrixDurableReactor::voluntary_exit_ssz(std::span<const uint8_t> wire,c
  const auto& finalized=state_->blocks.at(state_->timed.view.finalized.root);
  const auto final_context=bellatrix_fork_block_context(finalized.state,finalized.header,{t.epoch,rules_.transition.execution,rules_.transition.maximum_state_bytes},t.state,check);
  const auto member=final_context.registry.validators.find(exit->validator_index);
- if(member!=final_context.registry.validators.end()&&member->second.exit_epoch!=UINT64_MAX)return true;
- for(const auto& [_,saved]:*signed_exits_){if(check)check();if(archive_number(saved->ssz,8)==exit->validator_index)return true;}
+ const auto key=context.registry.validators.at(exit->validator_index).public_key;
+ if(member!=final_context.registry.validators.end()&&member->second.public_key==key&&member->second.exit_epoch!=UINT64_MAX)return true;
+ const BellatrixExitIdentity identity{exit->validator_index,key};
+ for(const auto& [_,saved]:*signed_exits_){if(check)check();if(saved->identity()==identity)return true;}
  if(signed_exits_->size()>=limits_.messages)throw std::length_error("Bellatrix exit archive capacity");
- auto exits=std::make_shared<BellatrixSignedExitArchive>(*signed_exits_);auto record=std::make_shared<const BellatrixSignedExitRecord>(BellatrixSignedExitRecord{consensus_beacon_header_root(head.header),Bytes(wire.begin(),wire.end())});
+ auto exits=std::make_shared<BellatrixSignedExitArchive>(*signed_exits_);auto record=std::make_shared<const BellatrixSignedExitRecord>(BellatrixSignedExitRecord{consensus_beacon_header_root(head.header),Bytes(wire.begin(),wire.end()),key});
  const auto id=archive_array<32>(sha256(record->ssz),0);exits->emplace(id,std::move(record));publish(*state_,signed_blocks_,signed_votes_,check,{},std::move(exits));return true;
 }
 bool BellatrixDurableReactor::vote_ssz(std::span<const uint8_t> bytes,const std::function<void()>& checkpoint){
