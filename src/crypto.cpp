@@ -1,46 +1,54 @@
 #include "nano/crypto.hpp"
 #include <memory>
-#include <openssl/ec.h>
-#include <openssl/bn.h>
-#include <openssl/obj_mac.h>
-#include <openssl/hmac.h>
+#include <array>
+#include <secp256k1.h>
+#include <secp256k1_recovery.h>
 #include <openssl/rand.h>
 #include <openssl/evp.h>
 #include <openssl/crypto.h>
 namespace nano {
 namespace {
-using BN=std::unique_ptr<BIGNUM,decltype(&BN_clear_free)>;
-using Point=std::unique_ptr<EC_POINT,decltype(&EC_POINT_free)>;
-struct Curve {
- std::unique_ptr<EC_GROUP,decltype(&EC_GROUP_free)> group{EC_GROUP_new_by_curve_name(NID_secp256k1),EC_GROUP_free};
- std::unique_ptr<BN_CTX,decltype(&BN_CTX_free)> ctx{BN_CTX_new(),BN_CTX_free};
- BN order{BN_new(),BN_clear_free};
- Curve(){if(!group||!ctx||!order||!EC_GROUP_get_order(group.get(),order.get(),ctx.get()))throw std::runtime_error("curve init failed");}
- Point point(){return Point(EC_POINT_new(group.get()),EC_POINT_free);}
+// Immutable after initialization: libsecp256k1 permits concurrent const use.
+struct SecpContext {
+ std::unique_ptr<secp256k1_context,decltype(&secp256k1_context_destroy)> value{secp256k1_context_create(SECP256K1_CONTEXT_NONE),secp256k1_context_destroy};
+ SecpContext(){
+  std::array<unsigned char,32> seed{};
+  const bool entropy=RAND_bytes(seed.data(),int(seed.size()))==1;
+  const bool randomized=entropy&&value&&secp256k1_context_randomize(value.get(),seed.data());
+  OPENSSL_cleanse(seed.data(),seed.size());
+  if(!randomized)throw std::runtime_error("secp256k1 context initialization failed");
+ }
 };
-BN bn(const Bytes& b){return BN(BN_bin2bn(b.data(),int(b.size()),nullptr),BN_clear_free);}
-Bytes raw(const BIGNUM* b){Bytes out(32);if(BN_bn2binpad(b,out.data(),32)!=32)throw std::runtime_error("BN export");return out;}
-Bytes export_point(Curve& c,const EC_POINT* p){Bytes out(65);if(EC_POINT_point2oct(c.group.get(),p,POINT_CONVERSION_UNCOMPRESSED,out.data(),out.size(),c.ctx.get())!=65)throw std::runtime_error("invalid curve point");return Bytes(out.begin()+1,out.end());}
-void check_key(const Bytes& key,Curve& c){auto n=bn(key);if(key.size()!=32||!n||BN_is_zero(n.get())||BN_cmp(n.get(),c.order.get())>=0)throw std::invalid_argument("invalid private key");}
-Bytes hmac(const Bytes& key,const Bytes& data){Bytes out(32);unsigned len=0;if(!HMAC(EVP_sha256(),key.data(),int(key.size()),data.data(),data.size(),out.data(),&len))throw std::runtime_error("HMAC failed");return out;}
+const secp256k1_context* secp(){static const SecpContext context;return context.value.get();}
+void check_key(const Bytes& key){if(key.size()!=32||!secp256k1_ec_seckey_verify(secp(),key.data()))throw std::invalid_argument("invalid private key");}
+Bytes export_public(const secp256k1_pubkey& key){
+ Bytes out(65);size_t size=out.size();
+ if(!secp256k1_ec_pubkey_serialize(secp(),out.data(),&size,&key,SECP256K1_EC_UNCOMPRESSED)||size!=65)throw std::runtime_error("public key serialization failed");
+ return Bytes(out.begin()+1,out.end());
+}
 Bytes random_bytes(size_t size){Bytes out(size);if(RAND_bytes(out.data(),int(size))!=1)throw std::runtime_error("random source failed");return out;}
 Bytes aes(const Bytes& input,const Bytes& key,const Bytes& iv){if(iv.size()!=16||key.size()<16)throw std::invalid_argument("invalid AES parameters");auto ctx=std::unique_ptr<EVP_CIPHER_CTX,decltype(&EVP_CIPHER_CTX_free)>(EVP_CIPHER_CTX_new(),EVP_CIPHER_CTX_free);Bytes out(input.size()+16);int count=0,last=0;if(!ctx||!EVP_EncryptInit_ex(ctx.get(),EVP_aes_128_ctr(),nullptr,key.data(),iv.data())||!EVP_EncryptUpdate(ctx.get(),out.data(),&count,input.data(),int(input.size()))||!EVP_EncryptFinal_ex(ctx.get(),out.data()+count,&last))throw std::runtime_error("AES failed");out.resize(size_t(count+last));return out;}
 }
-Bytes generate_private_key(){Curve c;for(;;){auto key=random_bytes(32);try{check_key(key,c);return key;}catch(const std::invalid_argument&){}}}
-Bytes public_key(const Bytes& key){Curve c;check_key(key,c);auto n=bn(key);auto p=c.point();if(!EC_POINT_mul(c.group.get(),p.get(),n.get(),nullptr,nullptr,c.ctx.get()))throw std::runtime_error("public key failed");return export_point(c,p.get());}
+Bytes generate_private_key(){for(;;){auto key=random_bytes(32);if(secp256k1_ec_seckey_verify(secp(),key.data()))return key;OPENSSL_cleanse(key.data(),key.size());}}
+Bytes public_key(const Bytes& key){check_key(key);secp256k1_pubkey out;if(!secp256k1_ec_pubkey_create(secp(),&out,key.data()))throw std::runtime_error("public key failed");return export_public(out);}
 std::string public_address(const Bytes& key){if(key.size()!=64)throw std::invalid_argument("public key must be 64 bytes");auto h=keccak(key);return checksum_address(hex(Bytes(h.begin()+12,h.end())));}
 Signature sign_hash(const Bytes& key,const Bytes& hash){
- Curve c;check_key(key,c);if(hash.size()!=32)throw std::invalid_argument("hash must be 32 bytes");Int order=integer(raw(c.order.get()));Int z=integer(hash)%order;
- Bytes k(32),v(32,1);k=hmac(k,concat(concat(concat(v,Bytes{0}),key),bytes(z,32)));v=hmac(k,v);k=hmac(k,concat(concat(concat(v,Bytes{1}),key),bytes(z,32)));v=hmac(k,v);
- for(;;){v=hmac(k,v);Int nonce=integer(v);if(nonce>0&&nonce<order){auto n=bn(v);auto p=c.point();if(!EC_POINT_mul(c.group.get(),p.get(),n.get(),nullptr,nullptr,c.ctx.get()))throw std::runtime_error("sign failed");auto xy=export_point(c,p.get());Int x=integer(Bytes(xy.begin(),xy.begin()+32));Int r=x%order;Int inverse;mpz_invert(inverse.get_mpz_t(),nonce.get_mpz_t(),order.get_mpz_t());Int s=((z+r*integer(key))*inverse)%order;
- if(r!=0&&s!=0&&x<order){unsigned recovery=xy.back()&1;if(s>order/2){s=order-s;recovery^=1;}return {recovery,r,s};}}
- k=hmac(k,concat(v,Bytes{0}));v=hmac(k,v);}
+ check_key(key);if(hash.size()!=32)throw std::invalid_argument("hash must be 32 bytes");
+ secp256k1_ecdsa_recoverable_signature signature;
+ if(!secp256k1_ecdsa_sign_recoverable(secp(),&signature,hash.data(),key.data(),secp256k1_nonce_function_rfc6979,nullptr))throw std::runtime_error("sign failed");
+ Bytes compact(64);int recovery=0;
+ if(!secp256k1_ecdsa_recoverable_signature_serialize_compact(secp(),compact.data(),&recovery,&signature))throw std::runtime_error("signature serialization failed");
+ // Ethereum carries y parity only; never truncate a non-representable recovery id.
+ if(recovery>1)throw std::runtime_error("signature recovery id not representable in Ethereum");
+ return {unsigned(recovery),integer(Bytes(compact.begin(),compact.begin()+32)),integer(Bytes(compact.begin()+32,compact.end()))};
 }
 Bytes recover_public_key(const Bytes& hash,const Signature& sig){
- Curve c;Int order=integer(raw(c.order.get()));if(hash.size()!=32||sig.v>1||sig.r<=0||sig.r>=order||sig.s<=0||sig.s>=order)throw std::invalid_argument("invalid signature");
- auto r=bn(bytes(sig.r,32));auto p=c.point();if(!EC_POINT_set_compressed_coordinates(c.group.get(),p.get(),r.get(),int(sig.v),c.ctx.get()))throw std::invalid_argument("invalid signature point");
- auto check=c.point();if(!EC_POINT_mul(c.group.get(),check.get(),nullptr,p.get(),c.order.get(),c.ctx.get())||!EC_POINT_is_at_infinity(c.group.get(),check.get()))throw std::invalid_argument("invalid point order");
- Int inv;mpz_invert(inv.get_mpz_t(),sig.r.get_mpz_t(),order.get_mpz_t());Int u1=(-integer(hash)*inv)%order;if(u1<0)u1+=order;Int u2=(sig.s*inv)%order;auto a=bn(bytes(u1,32));auto b=bn(bytes(u2,32));auto out=c.point();if(!EC_POINT_mul(c.group.get(),out.get(),a.get(),p.get(),b.get(),c.ctx.get())||EC_POINT_is_at_infinity(c.group.get(),out.get()))throw std::invalid_argument("signature recovery failed");return export_point(c,out.get());
+ static const Int order("0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141");
+ if(hash.size()!=32||sig.v>1||sig.r<=0||sig.r>=order||sig.s<=0||sig.s>=order)throw std::invalid_argument("invalid signature");
+ const auto compact=concat(bytes(sig.r,32),bytes(sig.s,32));secp256k1_ecdsa_recoverable_signature parsed;secp256k1_pubkey pub;
+ // Recovery deliberately accepts high-s: ECRECOVER differs from transaction admission.
+ if(!secp256k1_ecdsa_recoverable_signature_parse_compact(secp(),&parsed,compact.data(),int(sig.v))||!secp256k1_ecdsa_recover(secp(),&pub,&parsed,hash.data()))throw std::invalid_argument("invalid signature point");
+ return export_public(pub);
 }
 Bytes personal_hash(const Bytes& message){std::string prefix=std::string(1,char(0x19))+"Ethereum Signed Message:\n"+std::to_string(message.size());return keccak(concat(Bytes(prefix.begin(),prefix.end()),message));}
 Bytes sign_message(const Bytes& key,const Bytes& message){auto s=sign_hash(key,personal_hash(message));return concat(concat(bytes(s.r,32),bytes(s.s,32)),Bytes{uint8_t(s.v+27)});}

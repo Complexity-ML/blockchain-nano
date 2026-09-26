@@ -1,0 +1,58 @@
+{
+  "date": "2026-09-26",
+  "scope": "libsecp256k1 migration and Capella withdrawal candidate (not runtime activation)",
+  "source_base": "d0260dbefae5d43d5315e6b5b2e6441ec7406dd9",
+  "library": "bitcoin-core/secp256k1 v0.7.1",
+  "archive_sha256": "958f204dbafc117e73a2604285dc2eb2a5128344d3499c114dcba5de54cb7a9e",
+  "tests": {
+    "passed": 8,
+    "failed": 0,
+    "seconds": 9.82,
+    "names": [
+      "core",
+      "chain",
+      "rpc",
+      "authorization",
+      "ethereum_transaction_regressions",
+      "withdrawals",
+      "consensus_capella_withdrawal_execution",
+      "secp256k1_ethereum_compatibility"
+    ]
+  },
+  "new_ecdsa_coverage": {
+    "reference": "ethers 6.16.0 SigningKey",
+    "vectors": 18,
+    "keys": "1, 2, curve order minus 1; public test keys only",
+    "hashes": "0, 1, order-1, order, order+1, 2^256-1",
+    "parallel_context_users": 8,
+    "checks": [
+      "exact deterministic signature and public key/address",
+      "high-s recovery with flipped parity",
+      "invalid keys, digest lengths, scalar bounds, recovery ids",
+      "generated private key"
+    ]
+  },
+  "new_capella_coverage": [
+    "full and partial withdrawals",
+    "exact order, recipient, index and amounts",
+    "bounded sweep and cursor overflow safety",
+    "duplicate debit refusal",
+    "coupled EVM credit in wei",
+    "late state-root failure leaves both parents unchanged",
+    "cancellation"
+  ],
+  "builds": [
+    "CMake Release nano and affected tests on macOS arm64",
+    "Makefile static dependency target"
+  ],
+  "linkage": "nm confirms ECDSA sign/recover/public-key symbols in nano; otool shows no dynamic secp256k1 dependency",
+  "raw_logs": "build-cmake/qualification/secp256k1-capella-20260926",
+  "limitations": [
+    "Docker image and VPS not rebuilt or deployed",
+    "full Makefile application build not rerun",
+    "upstream release GPG signature not independently verified",
+    "no global production-readiness claim",
+    "Capella code returns private candidates only; SSZ fork transition, authenticated block admission, durable cursor persistence and network activation still open",
+    "Capella official consensus vectors not imported in this lot"
+  ]
+}

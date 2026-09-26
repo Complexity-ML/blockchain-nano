@@ -25,6 +25,12 @@ $(CKZG_ARCHIVE): third_party/ckzg/CMakeLists.txt third_party/ckzg/src/trusted_se
 $(BLST_ARCHIVE): $(CKZG_ARCHIVE)
 	test -f $@
 build/kzg.o: $(CKZG_ARCHIVE)
+SECP_ARCHIVE := build-secp256k1/lib/libsecp256k1.a
+CPPFLAGS += -Ithird_party/secp256k1/include
+OBJECTS += $(SECP_ARCHIVE)
+$(SECP_ARCHIVE): third_party/secp256k1/CMakeLists.txt $(wildcard third_party/secp256k1/src/*.h) third_party/secp256k1/src/secp256k1.c
+	$(CMAKE) -S third_party/secp256k1 -B build-secp256k1 -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DSECP256K1_ENABLE_MODULE_RECOVERY=ON -DSECP256K1_BUILD_TESTS=OFF -DSECP256K1_BUILD_EXHAUSTIVE_TESTS=OFF -DSECP256K1_BUILD_BENCHMARK=OFF -DSECP256K1_BUILD_CTIME_TESTS=OFF -DSECP256K1_INSTALL=OFF
+	$(CMAKE) --build build-secp256k1 --target secp256k1 -j 4
 CMAKE ?= cmake
 $(MCL_ARCHIVE):
 	$(CMAKE) -S third_party/mcl -B build-mcl -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_NO_PACKAGE_REGISTRY=ON -DMCL_BUILD_TESTING=OFF -DMCL_BUILD_SAMPLE=OFF

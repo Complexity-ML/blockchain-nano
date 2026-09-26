@@ -1612,3 +1612,40 @@ Les demandes en attente sont maintenant identifiées par **(indice, clé publiqu
 La lecture du traitement d'activation confirme que l'éligibilité doit être finalisée avant programmation de l'activation. **Une réorganisation ordinaire changeant la clé d'un validateur déjà actif n'a donc pas été établie comme attaque exploitable.** Le changement explicite l'identité au lieu de dépendre uniquement de cet invariant. Le nouveau contre-exemple utilise deux signatures BLS valides pour des clés différentes au même indice dans des contextes synthétiques ; il ne prétend pas créer deux histoires finalisées admissibles.
 
 Qualification **5/5 en 69,73 s** : nouveau contrôle d'identité, sortie volontaire existante avec cache de clé vérifié, réorganisation/réinclusion, élagage après finalité et parcours de dépôt enrichi d'un refus de sortie signé par une clé non encore activée. Les scénarios réseau existants gardent les mêmes clés entre branches. Rapport : [`qualification/bellatrix-exit-identity-20260926.json`](qualification/bellatrix-exit-identity-20260926.json). Aucun changement du format réseau des sorties, aucun versement de retrait et aucune clôture de préparation générale à la production.
+
+
+## 2026-09-26 — libsecp256k1 et candidats de retraits Capella
+
+`src/crypto.cpp` délègue désormais dérivation de clé publique, signature RFC6979
+low-s et récupération ECDSA à `libsecp256k1` v0.7.1 (source officielle fournie,
+SHA-256 épinglé dans `dependencies.lock.json`, licence MIT conservée). Le contexte
+est randomisé avant son partage en lecture. Le calcul de signature sur les secrets
+avec GMP/OpenSSL est retiré. OpenSSL demeure nécessaire pour TLS, aléa et keystores ;
+BLS conserve `blst`. CMake lie la dépendance statiquement ; le Makefile la construit
+aussi. Le Dockerfile inclut déjà ces sources via `COPY . .` et sa configuration
+CMake ; aucune bibliothèque dynamique supplémentaire n'est nécessaire.
+
+Qualification : 18 vecteurs indépendants ethers 6.16.0, y compris les condensés
+supérieurs ou égaux à l'ordre de la courbe ; récupération high-s préservée pour
+ECRECOVER, entrées invalides et huit utilisateurs concurrents du contexte.
+Les suites core (dont les précompiles et signatures EIP-712), chain, RPC,
+authorization, transactions Ethereum et retraits passent : **8/8 en 9,82 s** avec
+les deux nouvelles suites. Aucun fork ni statut global de conformité n'est promu.
+Docker/VPS non reconstruits ou redéployés sur ce lot. Signature GPG du tag amont
+non vérifiée indépendamment ; le hash de l'archive téléchargée est consigné.
+
+Pour EIP-4895/Capella, `consensus_capella_withdrawals` calcule la liste autorisée
+(retraits complets/partiels, ordre, adresses, montants, curseurs), débite un candidat
+de registre et vérifie le crédit Shanghai dans un candidat EVM. Liste altérée,
+double débit, dépassement de curseur, annulation et échec tardif de racine sont
+couverts sans mutation des états parents. **Partiel** : la transition SSZ Capella,
+l'admission réseau authentifiée, la persistance atomique des curseurs et le passage
+du profil Bellatrix/Paris au profil Capella/Shanghai restent à intégrer. Ce module
+ne suffit pas à activer les retraits du réseau ; aucun vecteur officiel de consensus
+Capella n'est revendiqué dans cette campagne.
+
+Preuves : [rapport](qualification/secp256k1-capella-20260926.json),
+`tests/test_secp256k1.cpp`, `tests/fixtures/secp256k1-ethers.json`,
+`tests/test_capella_withdrawals.cpp`.
+Sources : https://github.com/bitcoin-core/secp256k1/tree/v0.7.1 et
+https://ethereum.github.io/consensus-specs/specs/capella/beacon-chain/.

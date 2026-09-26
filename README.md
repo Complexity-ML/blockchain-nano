@@ -603,3 +603,5 @@ Le [déploiement Docker](docs/DOCKER.md) compile `nano` et `nano-p2p` dans une
 image Ubuntu 24.04. Le fichier `compose.yaml` fournit un nœud sans clé de
 validation, un volume persistant et un RPC publié sur `127.0.0.1:8545`.
 Consulter la documentation pour choisir le genesis et configurer les pairs.
+
+La cryptographie ECDSA utilise `libsecp256k1` v0.7.1, fournie dans `third_party/secp256k1` et liée statiquement par CMake (module recovery activé). Aucun paquet supplémentaire ni téléchargement au build n’est nécessaire, y compris dans Docker. OpenSSL reste utilisé pour TLS, l’aléa et les keystores. Les signatures BLS du consensus sont distinctes.
