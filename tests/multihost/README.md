@@ -113,3 +113,8 @@ conserve cet échec et poursuit l’observation bornée de la finalité.
 `late-finality-passed` qualifie uniquement cette fenêtre ultérieure ; le run
 reste en échec et n’émet pas `passed`. Les erreurs de sécurité, de RPC ou de
 restauration ne déclenchent pas cette extension.
+
+Après collecte, `node tests/multihost/audit-history.mjs <dossier>` vérifie la
+cohérence des checkpoints entre démarrage, partition et observation prolongée.
+Les observations manquantes ne valent pas réussite. Ce contrôle hors ligne
+complète les critères de vivacité et de liaison à l’exécution sans les remplacer.
