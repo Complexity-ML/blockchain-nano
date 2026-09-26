@@ -5,10 +5,10 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {observeStableFinality} from './stability.mjs';
 const endpoints = process.argv.slice(2);
-if (endpoints.length !== 2 || endpoints.some(value => {
+if (endpoints.length < 2 || endpoints.some(value => {
   const u = new URL(value);
   return u.protocol !== 'http:' || u.hostname !== '127.0.0.1' || u.username || u.password;
-})) throw Error('Two loopback node endpoints required');
+})) throw Error('At least two loopback node endpoints required');
 const directory = await mkdtemp(join(tmpdir(), 'nano-recovery-stability-'));
 console.log(JSON.stringify({event:'stability-evidence', directory}));
 try {

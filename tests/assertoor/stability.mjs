@@ -2,6 +2,7 @@
 // can erase a conflicting finalized root or a finality regression.
 import {setTimeout as delay} from 'node:timers/promises';
 export async function observeStableFinality(endpoints, epochs, record, {clock=Date.now, wait=delay, request=fetch}={}) {
+  if (!Array.isArray(endpoints) || endpoints.length < 2 || new Set(endpoints).size !== endpoints.length) throw Error('At least two distinct endpoints required');
   if (!Number.isInteger(epochs) || epochs < 2 || epochs > 16) throw Error('Stability window must be 2..16 epochs');
   const read = async (url, path) => {
     const r = await request(url + path, {headers:{Accept:'application/json'}, signal:AbortSignal.timeout(5000)});
@@ -46,7 +47,7 @@ export async function observeStableFinality(endpoints, epochs, record, {clock=Da
       return {endpoint:url, checkpoint, headSlot:head.slot};
     }));
     await record({time:clock(), samples});
-    if (samples[0].checkpoint.epoch === samples[1].checkpoint.epoch && samples[0].checkpoint.root === samples[1].checkpoint.root) {
+    if (samples.every(s => s.checkpoint.epoch === samples[0].checkpoint.epoch && s.checkpoint.root === samples[0].checkpoint.root)) {
       const epoch = BigInt(samples[0].checkpoint.epoch);
       if (epoch >= 2n && baseline === undefined) {baseline = epoch; commonEpoch = epoch; commonChanged = clock();}
       else if (baseline !== undefined && epoch > commonEpoch) {
@@ -59,7 +60,7 @@ export async function observeStableFinality(endpoints, epochs, record, {clock=Da
           if (!r.ok || !execution || execution.hash !== block.body.execution_payload.block_hash) throw Error('Finalized execution block unavailable');
           return execution.hash;
         }));
-        if (blocks[0] !== blocks[1]) throw Error('Finalized execution hashes differ');
+        if (blocks.some(hash => hash !== blocks[0])) throw Error('Finalized execution hashes differ');
         commonEpoch = epoch; commonChanged = clock(); ++advances;
         await record({time:clock(), commonEpoch:String(epoch), executionHash:blocks[0], advances});
         if (advances === epochs) return {epochs:advances, firstEpoch:String(baseline), lastEpoch:String(commonEpoch), elapsedMs:clock()-start};

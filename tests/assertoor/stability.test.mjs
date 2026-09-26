@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {observeStableFinality} from './stability.mjs';
-function fixture(change = () => {}, crossBoundary = false, unstableHead = false) {
+function fixture(change = () => {}, crossBoundary = false, unstableHead = false, endpoints = ['http://a','http://b']) {
   let time = 0, headReads = 0;
   const records = [];
   const request = async (url, options) => {
-    const endpoint = url.startsWith('http://b') ? 1 : 0;
+    const endpoint = endpoints.findIndex(endpoint => url === endpoint || url.startsWith(endpoint + '/'));
     const state = {epoch:2 + Math.floor(time/4000), slot:16 + Math.floor(time/1000), root:null, hash:'0x1234'};
     change(state, endpoint, time);
     if(crossBoundary && time === 0) state.epoch = 0;
@@ -19,7 +19,7 @@ function fixture(change = () => {}, crossBoundary = false, unstableHead = false)
     if(crossBoundary && time === 0 && url.endsWith('/finality_checkpoints')) time=4000;
     return {ok:true,json:async()=>body};
   };
-  return {records,run:()=>observeStableFinality(['http://a','http://b'],4,async r=>records.push(r),{request,clock:()=>time,wait:async ms=>{time+=ms;}})};
+  return {records,run:()=>observeStableFinality(endpoints,4,async r=>records.push(r),{request,clock:()=>time,wait:async ms=>{time+=ms;}})};
 }
 test('four consecutive common checkpoints bind to execution',async()=>{
   const f=fixture(),result=await f.run();assert.equal(result.epochs,4);assert.equal(result.firstEpoch,'2');assert.equal(result.lastEpoch,'6');assert.equal(f.records.filter(r=>r.advances).length,4);
@@ -50,4 +50,19 @@ test('head churn cannot cause unbounded sampling retries',async()=>{
 });
 test('a finality conflict remains fatal during a head change',async()=>{
   await assert.rejects(fixture((s,i)=>{if(i)s.root='0xbad';},false,true).run(),/Conflicting finalized roots/);
+});
+
+const three = ['http://a','http://b','http://c'];
+test('all three nodes must advance together',async()=>{
+ const f=fixture(()=>{},false,false,three);assert.equal((await f.run()).epochs,4);
+ assert.ok(f.records.filter(r=>r.samples).every(r=>r.samples.length===3));
+});
+test('a lagging third node cannot be ignored',async()=>{
+ await assert.rejects(fixture((s,i)=>{if(i===2)s.epoch=2;},false,false,three).run(),/stalled for two epochs|Finality lag/);
+});
+test('a third node execution mismatch fails',async()=>{
+ await assert.rejects(fixture((s,i)=>{if(i===2)s.hash='0xbad';},false,false,three).run(),/execution block unavailable/);
+});
+test('duplicate endpoints do not represent distinct nodes',async()=>{
+ await assert.rejects(fixture(()=>{},false,false,['http://a','http://a']).run(),/distinct endpoints/);
 });
