@@ -46,7 +46,10 @@ std::optional<Bytes> BellatrixDurableReactor::prepare_local_body_locked(uint64_t
  const uint64_t vote_bytes=232+(uint64_t(t.body.validators_per_committee)+8)/8;
  const uint64_t fixed_budget=184+224+(uint64_t(t.state.sync_committee_size)+7)/8+96+508;
  if(t.body.attestations&&vote_bytes>(UINT64_MAX-fixed_budget)/t.body.attestations)throw std::length_error("Bellatrix vote reserve overflow");
- const uint64_t reserved=fixed_budget+uint64_t(t.body.attestations)*vote_bytes;
+ uint64_t reserved=fixed_budget+uint64_t(t.body.attestations)*vote_bytes;
+ const uint64_t proof_bytes=468+16*uint64_t(t.body.validators_per_committee);
+ if(t.body.attester_slashings&&proof_bytes>(UINT64_MAX-reserved)/t.body.attester_slashings)throw std::length_error("Bellatrix slashing reserve overflow");
+ reserved+=uint64_t(t.body.attester_slashings)*proof_bytes;
  if(reserved>=t.maximum_block_bytes)throw std::length_error("Bellatrix block capacity cannot hold configured attestation reserve");
  size_t remaining=t.maximum_block_bytes-reserved;
  std::erase_if(pending,[&](const auto& c){const auto n=c.transaction.raw().size();if(n>e.transaction_bytes||remaining<4||n>remaining-4)return true;remaining-=n+4;return false;});
@@ -56,21 +59,38 @@ std::optional<Bytes> BellatrixDurableReactor::prepare_local_body_locked(uint64_t
  auto built=Blockchain::execute_candidate(block,parent.execution_state,std::move(pending),engine.with_checkpoint(check),check,false);
  const auto encoded=encode_bellatrix_execution_payload(payload(built.block),e,t.maximum_block_bytes,check);
  const size_t sync_bytes=(uint64_t(t.state.sync_committee_size)+7)/8+96,fixed=224+sync_bytes;
+ std::vector<Bytes> selected_slashings;
  auto assemble=[&](const std::vector<Bytes>& votes){
+  Bytes slashings(selected_slashings.size()*4);size_t proof_at=0;
+  for(const auto& proof:selected_slashings){offset(slashings,proof_at,slashings.size());proof_at+=4;if(proof.size()>t.maximum_block_bytes-slashings.size())throw std::length_error("Bellatrix slashings budget");slashings.insert(slashings.end(),proof.begin(),proof.end());}
   if(fixed>t.maximum_block_bytes||votes.size()>UINT32_MAX/4)throw std::length_error("Bellatrix proposal body budget");
   Bytes attestations(votes.size()*4);size_t at=0;
   for(const auto& vote:votes){offset(attestations,at,attestations.size());at+=4;if(vote.size()>t.maximum_block_bytes-attestations.size())throw std::length_error("Bellatrix attestations budget");attestations.insert(attestations.end(),vote.begin(),vote.end());}
   Bytes body(fixed);std::copy(reveal.begin(),reveal.end(),body.begin());std::copy_n(advanced.ssz.begin()+historical+4,72,body.begin()+96);
   // Empty sync participation is a valid aggregate (and incurs normal penalties).
   body[220+(uint64_t(t.state.sync_committee_size)+7)/8]=0xc0;
-  offset(body,200,fixed);offset(body,204,fixed);offset(body,208,fixed);
-  offset(body,212,fixed+attestations.size());offset(body,216,fixed+attestations.size());offset(body,220+sync_bytes,fixed+attestations.size());
+  offset(body,200,fixed);offset(body,204,fixed);offset(body,208,fixed+slashings.size());
+  offset(body,212,fixed+slashings.size()+attestations.size());offset(body,216,fixed+slashings.size()+attestations.size());offset(body,220+sync_bytes,fixed+slashings.size()+attestations.size());
+  if(slashings.size()>t.maximum_block_bytes-body.size())throw std::length_error("Bellatrix body slashing budget");body.insert(body.end(),slashings.begin(),slashings.end());
   if(attestations.size()>t.maximum_block_bytes-body.size())throw std::length_error("Bellatrix body vote budget");body.insert(body.end(),attestations.begin(),attestations.end());
   if(encoded.size()>t.maximum_block_bytes-body.size())throw std::length_error("Bellatrix body payload budget");body.insert(body.end(),encoded.begin(),encoded.end());return body;
  };
  auto valid=[&](const Bytes& body){return prepare_bellatrix_unsigned_block(parent.state,slot,index,head,body,rules_.transition,parent.execution_block.header,parent.execution_state,history,limits_.replay_slots,limits_.sync_trials,check).has_value();};
  std::vector<Bytes> selected;auto body=assemble(selected);
  if(!valid(body))throw std::runtime_error("Bellatrix proposal needs valid mandatory operations or execution payload");
+ size_t tried=0;
+ const auto registry=bellatrix_fork_block_context(parent.state,parent.header,epoch,t.state,check).registry;
+ for(const auto& [id,wire]:*signed_slashings_){
+  if(check)check();if(selected_slashings.size()>=t.body.attester_slashings||tried>=maximum_vote_trials)break;
+  const auto proof=decode_consensus_attester_slashing_ssz(*wire,t.body.validators_per_committee,check);
+  if(!proof)throw std::logic_error("Invalid archived slashing encoding");
+  bool useful=false;
+  for(auto i:proof->first.indices){if(check)check();if(!std::binary_search(proof->second.indices.begin(),proof->second.indices.end(),i))continue;const auto member=registry.validators.find(i);if(member!=registry.validators.end()&&!member->second.slashed){useful=true;break;}}
+  if(!useful)continue;
+  ++tried;selected_slashings.push_back(*wire);auto candidate=assemble(selected);
+  if(valid(candidate))body=std::move(candidate);else selected_slashings.pop_back();
+ }
+
  // An identical attestation already included on this branch adds no new
  // participation. Do not spend full transition trials re-including it. Only
  // walk recent ancestors of the selected parent, never competing branches.
@@ -99,7 +119,6 @@ std::optional<Bytes> BellatrixDurableReactor::prepare_local_body_locked(uint64_t
   if(ancestor==state_->timed.view.anchor)break;
   ancestor=previous.header.parent_root;
  }
- size_t tried=0;
  for(const auto& [id,wire]:*signed_votes_){
   if(check)check();if(selected.size()>=t.body.attestations||tried>=maximum_vote_trials)break;
   if(included.contains(Bytes(id.begin(),id.end())))continue;

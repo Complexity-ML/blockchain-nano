@@ -11,7 +11,7 @@ public: using std::invalid_argument::invalid_argument;
 };
 using BellatrixSignedBlockArchive=std::map<ConsensusRoot,std::shared_ptr<const Bytes>>;
 using BellatrixSignedVoteArchive=std::map<ConsensusRoot,std::shared_ptr<const Bytes>>;
-struct BellatrixPublishedStore {std::shared_ptr<const BellatrixForkStore> state;ForkCheckpointToken token;std::shared_ptr<const BellatrixSignedBlockArchive> signed_blocks;std::shared_ptr<const BellatrixSignedVoteArchive> signed_votes;};
+struct BellatrixPublishedStore {std::shared_ptr<const BellatrixForkStore> state;ForkCheckpointToken token;std::shared_ptr<const BellatrixSignedBlockArchive> signed_blocks;std::shared_ptr<const BellatrixSignedVoteArchive> signed_votes;std::shared_ptr<const BellatrixSignedVoteArchive> signed_slashings;};
 // Serialized durable event coordinator, NOT a P2P service or EVM activation.
 // The caller owns ChainStore for this object's lifetime and binds its chain.
 // Initial Store / restart commitment must be independently authenticated.
@@ -33,9 +33,10 @@ class BellatrixDurableReactor {
  std::optional<ForkCheckpointToken> token_;
  std::shared_ptr<const BellatrixSignedBlockArchive> signed_blocks_=std::make_shared<const BellatrixSignedBlockArchive>();
  std::shared_ptr<const BellatrixSignedVoteArchive> signed_votes_=std::make_shared<const BellatrixSignedVoteArchive>();
+ std::shared_ptr<const BellatrixSignedVoteArchive> signed_slashings_=std::make_shared<const BellatrixSignedVoteArchive>();
  bool unavailable_=false;
  void require_available() const;
- void publish(BellatrixForkStore,std::shared_ptr<const BellatrixSignedBlockArchive>,std::shared_ptr<const BellatrixSignedVoteArchive>,const std::function<void()>&);
+ void publish(BellatrixForkStore,std::shared_ptr<const BellatrixSignedBlockArchive>,std::shared_ptr<const BellatrixSignedVoteArchive>,const std::function<void()>&,std::shared_ptr<const BellatrixSignedVoteArchive> slashings={});
 std::optional<Bytes> prepare_local_body_locked(uint64_t index,uint64_t slot,
  const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,size_t maximum_vote_trials,const std::function<void()>& check);
 std::optional<Bytes> sign_randao_locked(uint64_t index,uint64_t slot,

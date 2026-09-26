@@ -12,6 +12,8 @@ Bytes encode_consensus_attestation_ssz(const Phase0SignedAttestation&,
  uint32_t validators_per_committee,const std::function<void()>& checkpoint={});
 std::optional<Phase0SignedAttestation> decode_consensus_attestation_ssz(
  std::span<const uint8_t>,uint32_t validators_per_committee,const std::function<void()>& checkpoint={});
+Bytes encode_consensus_attester_slashing_ssz(const IndexedConsensusAttestation&,const IndexedConsensusAttestation&,
+ uint32_t validators_per_committee,const std::function<void()>& checkpoint={});
 std::optional<std::pair<IndexedConsensusAttestation,IndexedConsensusAttestation>>
  decode_consensus_attester_slashing_ssz(std::span<const uint8_t>,uint32_t validators_per_committee,
  const std::function<void()>& checkpoint={});

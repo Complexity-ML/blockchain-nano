@@ -1491,3 +1491,37 @@ Le nouveau scénario `consensus_bellatrix_crash_runtime` passe en **19,14 s** : 
 Le scénario natif de récupération est complété par la restauration du principal à une base contenant seulement le genesis, en conservant le témoin de sa première publication réelle. Il reconstruit le bloc et l’état EVM attendus, puis vérifie encore la récupération du prédécesseur d’une publication d’horloge et le refus d’un rollback plus ancien. Cette version passe en **12,20 s** ; les anciennes preuves sont conservées.
 
 Preuves versionnées : [`qualification/bellatrix-crash-20260926.json`](qualification/bellatrix-crash-20260926.json) et [`qualification/bellatrix-execution-recovery-20260926.json`](qualification/bellatrix-execution-recovery-20260926.json). Journaux bruts dans `build-cmake/qualification/beacon-witness-20260926/`. Les limites restantes sont l’indépendance opérationnelle des témoins, leur propre rollback, la migration des journaux existants, les pannes physiques et le coût des snapshots doublés sous charge. Aucun déploiement VPS ni fonds réel.
+
+### Preuve de double vote jusqu’à la sanction locale — 26 septembre 2026
+
+Le réacteur conserve désormais les preuves BLS d’attester slashing admises, dans un format durable v4. Les formats v1/v2/v3 restent lisibles et leur encodage reste inchangé en l’absence de preuves. La restauration revérifie SSZ, empreintes et signatures. La conservation utilise le budget explicite `equivocations` et le budget d’enveloppe ; les doublons exacts n’avancent pas le checkpoint.
+
+Le constructeur local réserve de la capacité pour ces opérations et les insère avant les attestations, avec validation complète de chaque candidat. Il ignore les preuves dont tous les signataires communs sont déjà sanctionnés dans l’état parent ; les preuves restent conservées pour les branches concurrentes. Les transitions économiques existantes appliquent pénalité et sortie. Référence : [traitement officiel des attester slashings](https://ethereum.github.io/consensus-specs/specs/phase0/beacon-chain/#attester-slashings), avec les paramètres Altair/Bellatrix du profil actif.
+
+Le nouveau scénario `consensus_bellatrix_local_slashing` passe en **6,62 s** : preuve altérée refusée sans publication, preuve réelle conservée, doublon sans nouvelle version, redémarrage puis inclusion par le proposant configuré, indicateur `slashed`, sortie programmée et solde débité. Il utilise une signature malveillante synthétique produite hors du journal, pour vérifier le traitement d’un validateur qui contourne volontairement sa protection locale.
+
+L’encodeur ajouté reproduit exactement **30 preuves officielles SSZ** ; la suite étendue passe en **0,30 s**, avec refus des bornes invalides et propagation de l’annulation. Preuve : [`qualification/bellatrix-local-slashing-20260926.json`](qualification/bellatrix-local-slashing-20260926.json). Reste à raccorder l’inventaire/relais autonome de ces preuves, leur élagage après finalité, les sorties volontaires et les dépôts. Ce résultat local ne clôt pas le registre ouvert ni le cycle réseau des validateurs.
+
+### Inventaire et relais des preuves Bellatrix — 26 septembre 2026
+
+Les méthodes privées `nano_bellatrixSlashingInventory` et `nano_bellatrixSlashing` exportent les preuves archivées sous l’identité complète du réseau. Elles exigent le jeton du superviseur et passent dans la file RPC bornée. Le démon Bellatrix alterne désormais blocs, attestations et preuves avec un seul relais en vol. Le mode Altair conserve son alternance précédente. Un refus explicite de preuve permet de visiter les preuves suivantes puis de réessayer ; une réponse absente n’avance jamais le curseur. Un changement de session réinitialise aussi le curseur des preuves.
+
+Qualification des nouveaux contrôles **2/2 en 5,85 s** : inventaire sans autorisation refusé, export SSZ identique, conservation/reprise/inclusion locale ; relais indépendant du transport avec refus, preuve suivante et réponse perdue. `nano-p2p` compile. Preuve : [`qualification/bellatrix-slashing-relay-20260926.json`](qualification/bellatrix-slashing-relay-20260926.json). La propagation effective d’une preuve entre pairs réels et la régression de débit liée à l’alternance sur trois types ne sont pas encore qualifiées ; aucune réussite de réseau distribuée n’est déduite de cette compilation.
+
+### 2026-09-26 — Preuve de slashing relayée entre deux démons
+
+`consensus_bellatrix_slashing_network` passe en **5,99 s**. Deux cœurs dans le processus de test et deux vrais démons `nano-p2p`, sur un Mac et avec horloge synthétique : le destinataire reçoit et archive les octets signés avant tout bloc contenant la preuve, exclut le signataire du choix de branche, puis accepte le bloc qui applique le slashing. Le validateur synthétique 35 passe de 32 000 000 000 à 31 000 000 000 unités de solde consensus, avec sortie à l'epoch 5 ; les états EVM concordent.
+
+Preuve et empreintes : `docs/qualification/bellatrix-slashing-network-20260926.json`. Ce scénario clôt uniquement le raccordement effectif du relais de preuves. La tenue sous charge et la reprise après partition avec l'ordonnancement désormais partagé entre blocs, votes et preuves restent à qualifier ; l'archive de preuves ne dispose pas encore d'élagage après finalité. Aucune conclusion de préparation générale à la production.
+
+### 2026-09-26 — Saturation par preuves redondantes
+
+La revue du lot slashing a identifié qu'un signataire pouvait fabriquer plusieurs paires de votes contradictoires pour le même fautif et occuper l'archive. L'admission conserve désormais une nouvelle preuve seulement si l'intersection de ses signataires couvre au moins un fautif non couvert par les preuves archivées. Les exclusions de choix de branche ne remplacent pas ce contrôle : elles peuvent exister sans preuve en attente pour le constructeur de blocs.
+
+Deux nouveaux cas de `consensus_bellatrix_local_slashing` passent (**5,53 s**, avec le scénario de sanction/reprise existant) : autre preuve signée du même fautif et paire signée sans fautif commun. Ni archive ni checkpoint ne croissent dans ces cas. Rapport : `docs/qualification/bellatrix-slashing-dedup-20260926.json`. Le coût de vérification BLS reste présent ; ce résultat ne qualifie pas une résistance générale au spam. L'élagage des preuves après sanction finalisée reste ouvert.
+
+### 2026-09-26 — Reprise avec relais blocs/votes/preuves
+
+Le scénario `consensus_bellatrix_partition_recovery` passe en **517,21 s** avec l'ordonnancement du relais modifié : deux cœurs indépendants, deux démons P2P, 64 clés synthétiques réparties entre deux validateurs sur un Mac. Coupure de 96 s, branches concurrentes, finalité inchangée pendant la coupure, puis tête commune et finalité commune progressant à l'epoch 8 (justification 9). Rapport : `docs/qualification/bellatrix-slashing-partition-20260926.json`.
+
+Cette exécution a commencé avant le correctif de déduplication des preuves : ses empreintes d'entrée sont conservées séparément ; le correctif a ses nouveaux cas ciblés propres. Les 517,21 s dépassent le passage historique de 420,77 s, sans mesure permettant d'attribuer l'écart au seul relais. Ce résultat démontre la reprise bornée avec le nouvel ordonnancement, pas la tenue sous charge ni une disponibilité distribuée en production.

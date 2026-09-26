@@ -1,0 +1,20 @@
+{
+  "result": "passed",
+  "test": "consensus_bellatrix_local_slashing",
+  "durationSeconds": 5.53,
+  "newCases": [
+    "distinct signed proof covering an already archived offender does not add archive entry or publish checkpoint",
+    "signed attestations without common offender do not add archive entry or publish checkpoint"
+  ],
+  "sha256": {
+    "src/consensus_bellatrix_reactor.cpp": "26b722447d2b44717912cd95dba8b2bc144743c8a18169fc2c1485dd9d6184ac",
+    "tests/support/bellatrix_runtime_scenario.hpp": "12781354af5d4b3d8e0dafcd7b6268a0889ddbf89f50f6b1937f8167e37784bf",
+    "build-release/nano-bellatrix-transition-tests": "d2dc7b0c844ebaafddc2e6faf43eee33f39723838b3953f1c38bd211ee464c66",
+    "build-release/nano": "4ccc0403062edfdbc79c87104acaa0848c5789cc47483c0836242caa7e41f8bf"
+  },
+  "limits": [
+    "Does not remove BLS verification work for submitted duplicate proofs",
+    "Archive pruning after finalized economic slashing remains open",
+    "Pending partition qualification started with previous core binary; input hashes retained separately"
+  ]
+}

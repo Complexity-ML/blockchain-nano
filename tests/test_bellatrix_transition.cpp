@@ -88,9 +88,11 @@ int main(int argc,char** argv){try{
  const bool distributed=partition||(argc==4&&std::string(argv[1])=="--distributed-finality");
  const bool crash=argc==4&&std::string(argv[1])=="--crash-runtime";
  const bool managed=crash||distributed||(argc==4&&std::string(argv[1])=="--managed-runtime");
- const bool network=argc==3&&std::string(argv[1])=="--validator-network";
+ const bool slashing_network=argc==3&&std::string(argv[1])=="--slashing-network";
+ const bool network=slashing_network||(argc==3&&std::string(argv[1])=="--validator-network");
  const bool recovery=argc==2&&std::string(argv[1])=="--runtime-recovery";
- const bool runtime_only=recovery||(argc==2&&std::string(argv[1])=="--runtime");
+ const bool operations=argc==2&&std::string(argv[1])=="--runtime-slashing";
+ const bool runtime_only=operations||recovery||(argc==2&&std::string(argv[1])=="--runtime");
  const bool validator_only=network||(argc==2&&std::string(argv[1])=="--validator-loop");
  check(argc==1||validator_only||runtime_only||managed,"unknown Bellatrix qualification arguments");
  const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-bellatrix-containers-official",source=fixtures/"consensus-bellatrix-slots-official";
@@ -182,7 +184,7 @@ int main(int argc,char** argv){try{
    if(managed){test::bellatrix_managed_runtime_scenario(managed_genesis,fork_rules,reactor_limits,*store,argv[2],argv[3],distributed,partition,crash);return 0;}
    if(runtime_only){
     Genesis g;g.chain_id=r.chain_id;g.consensus="beacon";g.evm_revision=EvmRevision::Paris;g.block=execution_genesis;g.state=genesis_state;
-    test::bellatrix_runtime_scenario(g,fork_rules,reactor_limits,*store,sender,recovery);if(recovery)test::bellatrix_core_recovery_scenario(g,fork_rules,reactor_limits,*store);return 0;
+    test::bellatrix_runtime_scenario(g,fork_rules,reactor_limits,*store,sender,recovery,operations?std::function<Bytes(uint64_t,const ConsensusRoot&)>([](uint64_t index,const ConsensusRoot& root){Key key(index);return key.sign(root);}):std::function<Bytes(uint64_t,const ConsensusRoot&)>{});if(recovery)test::bellatrix_core_recovery_scenario(g,fork_rules,reactor_limits,*store);return 0;
    }
    if(validator_only){
     Temp live;Genesis g;g.chain_id=r.chain_id;g.consensus="beacon";g.evm_revision=EvmRevision::Paris;g.block=execution_genesis;g.state=genesis_state;
@@ -200,6 +202,33 @@ int main(int argc,char** argv){try{
      BellatrixValidatorLoop loop(bound,clock,seconds*1000,slots,128,std::move(keys),[&]{return wall.load();});
      std::unique_ptr<BellatrixNetworkPair> peers;
      if(network)peers=std::make_unique<BellatrixNetworkPair>(live.path,argv[2],g,fork_rules,reactor_limits,*store,chain,bound,clock,wall);
+     if(slashing_network){
+      wall=(genesis_time+2*seconds)*1000;loop.poll();peers->sync(chain.tip().header.hash());
+      const auto current=bound.current();const auto& parent=bellatrix_fork_head(*current.state,fork_rules);
+      const auto& t=fork_rules.transition.consensus;const BellatrixEpochRules er{t.epoch,fork_rules.transition.execution,fork_rules.transition.maximum_state_bytes};
+      const auto context=bellatrix_fork_block_context(parent.state,parent.header,er,t.state);
+      const auto proposer=prepare_bellatrix_proposer_identity(parent.state,parent.header,3,er,t.state,t.attestation.duties,reactor_limits.replay_slots,reactor_limits.sync_trials);
+      check(bool(proposer),"missing next proposer");const auto offender=(proposer->index+1)%64;
+      const auto balance=context.registry.validators.at(offender).balance;
+      IndexedConsensusAttestation a{{parent.header.slot,0,{}, {context.registry.epoch,{}},{context.registry.epoch,{}}},{offender},{}},b=a;b.data.beacon_block_root[0]=1;
+      const auto version=context.registry.epoch<context.fork.epoch?context.fork.previous_version:context.fork.current_version;
+      Key malicious(offender);for(auto* vote:{&a,&b})vote->signature=malicious.sign(consensus_signing_root(consensus_attestation_root(vote->data),consensus_domain({1,0,0,0},version,context.genesis_root)));
+      const auto proof=encode_consensus_attester_slashing_ssz(a,b,t.body.validators_per_committee);
+      check(peers->reactor->current().signed_slashings->empty(),"observer already has proof");
+      check(bound.slashing_ssz(proof),"source rejected proof");
+      until([&]{return peers->reactor->current().signed_slashings->size()==1;},"signed proof P2P propagation before block inclusion",20);
+      const auto received=peers->reactor->current();
+      check(*received.signed_slashings->begin()->second==proof&&received.state->timed.view.equivocating_indices.contains(offender),"observer changed proof or failed exclusion");
+      check(peers->observer->tip().header.number==2,"proof relay unexpectedly published a block");
+      wall=(genesis_time+3*seconds)*1000;loop.poll();peers->sync(chain.tip().header.hash());
+      const auto after=peers->reactor->current();const auto& head=bellatrix_fork_head(*after.state,fork_rules);
+      const auto result=bellatrix_fork_block_context(head.state,head.header,er,t.state);
+      const auto& member=result.registry.validators.at(offender);
+      check(member.slashed&&member.exit_epoch!=UINT64_MAX&&member.balance<balance,"observer failed economic slashing transition");
+      check(peers->observer->state().root()==chain.state().root(),"execution state differs after slashing");
+      peers->stop();
+      std::cout<<Json{{"scenario","bellatrix-slashing-network"},{"realP2pDaemons",2},{"cores",2},{"independentCoreProcesses",false},{"syntheticClock",true},{"proofReceivedBeforeBlock",true},{"offender",offender},{"slashed",true},{"balanceBefore",balance},{"balanceAfter",member.balance},{"exitEpoch",member.exit_epoch},{"executionStateMatched",true}}.dump()<<'\n';return 0;
+     }
      if(peers)check(rpc(peers->sa->port(),"eth_sendRawTransaction",Json::array({hex(pending.raw())}))==hex(pending.hash()),"wallet RPC transaction admission");
      else check(chain.submit(pending),"validator scenario wallet transaction admitted");
      for(uint64_t next_slot=2;next_slot<=4*slots;++next_slot){

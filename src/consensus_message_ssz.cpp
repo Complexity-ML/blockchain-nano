@@ -30,6 +30,16 @@ std::optional<Phase0SignedAttestation> decode_consensus_attestation_ssz(View b,u
  Phase0SignedAttestation a{data(b),{},Bytes(b.begin()+132,b.begin()+228)};a.aggregation_bits.reserve(count);
  for(size_t i=0;i<count;++i){if(checkpoint)checkpoint();a.aggregation_bits.push_back((b[228+i/8]>>(i%8))&1);}if(checkpoint)checkpoint();return a;
 }
+Bytes encode_consensus_attester_slashing_ssz(const IndexedConsensusAttestation& first,const IndexedConsensusAttestation& second,uint32_t limit,const std::function<void()>& checkpoint){
+ auto encode=[&](const IndexedConsensusAttestation& a){
+  if(!limit||a.indices.size()>limit||a.signature.size()!=96||a.indices.size()>(UINT32_MAX-228)/8)throw std::invalid_argument("Invalid indexed attestation encoding bounds");
+  // Reuse the fixed AttestationData/signature fields; replace the bitlist with indices.
+  auto out=encode_consensus_attestation_ssz({a.data,{},a.signature},limit,checkpoint);out.resize(228+8*a.indices.size());
+  for(size_t i=0;i<a.indices.size();++i){if(checkpoint)checkpoint();for(size_t j=0;j<8;++j)out[228+8*i+j]=uint8_t(a.indices[i]>>(8*j));}return out;
+ };
+ auto a=encode(first),b=encode(second);if(a.size()>UINT32_MAX-8||b.size()>UINT32_MAX-8-a.size())throw std::length_error("Slashing SSZ size overflow");
+ Bytes out(8);out[0]=8;const auto second_offset=8+a.size();for(size_t i=0;i<4;++i)out[4+i]=uint8_t(second_offset>>(8*i));out.insert(out.end(),a.begin(),a.end());out.insert(out.end(),b.begin(),b.end());return out;
+}
 std::optional<std::pair<IndexedConsensusAttestation,IndexedConsensusAttestation>> decode_consensus_attester_slashing_ssz(View b,uint32_t limit,const std::function<void()>& checkpoint){
  if(!limit)throw std::invalid_argument("zero slashing committee limit");if(checkpoint)checkpoint();
  if(b.size()<464||b.size()>464+uint64_t(limit)*16||number(b,0,4)!=8)return std::nullopt;

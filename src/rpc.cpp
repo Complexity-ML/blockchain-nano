@@ -480,15 +480,17 @@ Json Rpc::one(const Json& request,const std::function<void()>& cancelled){
    else if(method=="nano_altairSubmit")result=service->submit(params[1].get<std::string>(),sequence,params[3]);
    else result=service->job(params[1].get<std::string>(),sequence,method=="nano_altairCancel",method=="nano_altairForget");
   }
-  else if(method=="nano_bellatrixReceive"||method=="nano_bellatrixStatus"||method=="nano_bellatrixSubmit"||method=="nano_bellatrixJob"||method=="nano_bellatrixCancel"||method=="nano_bellatrixForget"||method=="nano_bellatrixJobs"||method=="nano_bellatrixRotateSession"||method=="nano_bellatrixBlock"||method=="nano_bellatrixInventory"||method=="nano_bellatrixVote"||method=="nano_bellatrixVoteInventory"){
+  else if(method=="nano_bellatrixReceive"||method=="nano_bellatrixStatus"||method=="nano_bellatrixSubmit"||method=="nano_bellatrixJob"||method=="nano_bellatrixCancel"||method=="nano_bellatrixForget"||method=="nano_bellatrixJobs"||method=="nano_bellatrixRotateSession"||method=="nano_bellatrixBlock"||method=="nano_bellatrixInventory"||method=="nano_bellatrixVote"||method=="nano_bellatrixVoteInventory"||method=="nano_bellatrixSlashing"||method=="nano_bellatrixSlashingInventory"){
    if(!bellatrix_)throw RpcError(-32601,"Method not found");
-   const auto count=method=="nano_bellatrixStatus"||method=="nano_bellatrixJobs"?1:method=="nano_bellatrixReceive"||method=="nano_bellatrixRotateSession"||method=="nano_bellatrixBlock"||method=="nano_bellatrixVote"?2:method=="nano_bellatrixSubmit"?4:3;arity(params,count,count);
+   const auto count=method=="nano_bellatrixStatus"||method=="nano_bellatrixJobs"?1:method=="nano_bellatrixReceive"||method=="nano_bellatrixRotateSession"||method=="nano_bellatrixBlock"||method=="nano_bellatrixVote"||method=="nano_bellatrixSlashing"?2:method=="nano_bellatrixSubmit"?4:3;arity(params,count,count);
    if(network_token_.empty()||!params[0].is_string()||params[0].get<std::string>()!=network_token_)throw RpcError(-32001,"Unauthorized Bellatrix request");
    uint64_t sequence=0;
    if(count>=3){if(!params[1].is_string()||!params[2].is_string())throw RpcError(-32602,"Expected session and sequence");sequence=u64(quantity(params[2]));if(!sequence||quantity(Int(std::to_string(sequence)))!=params[2].get<std::string>())throw RpcError(-32602,"Invalid admission sequence");}
    auto service=bellatrix_;lock.unlock();
    if(method=="nano_bellatrixStatus")result=service->status();
    else if(method=="nano_bellatrixJobs")result=service->jobs();
+   else if(method=="nano_bellatrixSlashing")result=service->block(params[1].get<std::string>(),false,true);
+   else if(method=="nano_bellatrixSlashingInventory")result=service->inventory(params[1].get<std::string>(),sequence,false,true);
    else if(method=="nano_bellatrixVote")result=service->block(params[1].get<std::string>(),true);
    else if(method=="nano_bellatrixVoteInventory")result=service->inventory(params[1].get<std::string>(),sequence,true);
    else if(method=="nano_bellatrixBlock")result=service->block(params[1].get<std::string>());

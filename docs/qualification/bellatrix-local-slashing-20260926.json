@@ -1,0 +1,22 @@
+{
+  "result": "passed",
+  "tests": {
+    "consensus_bellatrix_local_slashing": 6.62,
+    "consensus_message_ssz_extended": 0.3
+  },
+  "sha256": {
+    "src/consensus_bellatrix_reactor.cpp": "6c0d50d362ab0c61a77d82af432fd2e9a832e60759a6cbca001e5773eacf7394",
+    "src/consensus_bellatrix_local_body.cpp": "78536d97be7dd93b74352d75fe1e9897f37e8f386809fae8430b458b4a6799c5",
+    "src/consensus_message_ssz.cpp": "ec5dd25e8a01466a07d1e12620bf18c5391e577fe0aa98a76632aa14679a5b6f",
+    "tests/support/bellatrix_runtime_scenario.hpp": "9675883b4b2eb4af321a0310bfa7ad0742b7d76a24ed02e85ae944ab1b1fe32a",
+    "tests/test_consensus_message_ssz.cpp": "f7776dbf92bb144b95bcc0432146ef05d9dd4c6e76b9665cfcdcea911bd307c7",
+    "build-release/nano-bellatrix-transition-tests": "d6b3f4100e87daf5e97938d6f2737fba7ba1c46d752daeb52a258ad1a87821cd",
+    "build-release/nano-consensus-message-ssz-tests": "2de53b39e9743321b3eb4b438bff2ea1b990b2d9e7c337dd427cf83037d92bb8"
+  },
+  "scope": "Native local runtime: invalid proof rejection, durable proof, exact duplicate no-op, restart and local inclusion with slashed flag/exit/balance debit. Encoder exact round-trip of 30 official proofs plus invalid bounds/cancellation.",
+  "limits": [
+    "No standalone evidence inventory relay yet",
+    "No proof pruning after finality yet",
+    "Voluntary exits and deposits not wired to local builder"
+  ]
+}

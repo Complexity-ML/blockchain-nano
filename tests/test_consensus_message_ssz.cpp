@@ -16,6 +16,7 @@ int main(){try{
    }else{
     const auto a=decode_consensus_attester_slashing_ssz(b,limit);check(bool(a),"official proof encoding rejected");const auto [x,y]=attester_slashing(b);
     check(a->first.data==x.data&&a->first.signature==x.signature&&a->first.indices==x.indices&&a->second.data==y.data&&a->second.signature==y.signature&&a->second.indices==y.indices,"proof fields changed");
+    check(encode_consensus_attester_slashing_ssz(a->first,a->second,limit)==b,"slashing encoder changed official bytes");
     ++proofs;if(example_proof.empty()&&x.indices.size()>1)example_proof=b;
    }
   }
@@ -36,5 +37,11 @@ int main(){try{
   auto a=*decode_consensus_attestation_ssz(example_vote,limit);a.aggregation_bits.assign(bits,true);const auto encoded=encode_consensus_attestation_ssz(a,limit);const auto decoded=decode_consensus_attestation_ssz(encoded,limit);check(decoded&&decoded->aggregation_bits==a.aggregation_bits&&decoded->data==a.data&&decoded->signature==a.signature,"encoder bitlist boundary");
  }
  for(int mode:{0,1,2,3}){auto a=*decode_consensus_attestation_ssz(example_vote,limit);bool refused=false;if(mode==1)a.aggregation_bits.resize(limit+1);if(mode==2)a.signature.pop_back();try{encode_consensus_attestation_ssz(a,mode==0?0:limit,mode==3?std::function<void()>([]{throw std::runtime_error("cancelled");}):std::function<void()>());}catch(const std::exception&){refused=true;}check(refused,"encoder accepted invalid bounds or ignored cancellation");}
+ for(int mode:{0,1,2,3}){
+  auto pair=*decode_consensus_attester_slashing_ssz(example_proof,limit);bool refused=false;
+  if(mode==1)pair.first.indices.resize(limit+1);if(mode==2)pair.second.signature.pop_back();
+  try{encode_consensus_attester_slashing_ssz(pair.first,pair.second,mode==0?0:limit,mode==3?std::function<void()>([]{throw std::runtime_error("cancelled");}):std::function<void()>());}catch(const std::exception&){refused=true;}
+  check(refused,"slashing encoder accepted invalid bounds or ignored cancellation");
+ }
  std::cout<<Json{{"scenario","consensus-message-ssz"},{"officialVotes",votes},{"officialProofs",proofs},{"malformedOrOversizeRejected",rejected},{"networkActive",false}}.dump()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

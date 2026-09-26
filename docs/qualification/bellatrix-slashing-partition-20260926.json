@@ -1,0 +1,31 @@
+{
+  "result": "passed",
+  "test": "consensus_bellatrix_partition_recovery",
+  "durationSeconds": 517.21,
+  "physicalHosts": 1,
+  "independentCoreProcesses": 2,
+  "p2pDaemons": 2,
+  "syntheticValidatorKeys": 64,
+  "partitionSeconds": 96,
+  "finalityUnchangedDuringCut": true,
+  "commonAdvancingFinalityAfterHealing": true,
+  "finalizedEpoch": 8,
+  "finalizedRoot": "0x58f559e5d4042d0dfab6ded9ebf5e38a1484f857cf12bed76224d642bd53ef98",
+  "sha256": {
+    "src/consensus_bellatrix_reactor.cpp": "6c0d50d362ab0c61a77d82af432fd2e9a832e60759a6cbca001e5773eacf7394",
+    "src/consensus_bellatrix_local_body.cpp": "78536d97be7dd93b74352d75fe1e9897f37e8f386809fae8430b458b4a6799c5",
+    "network/main.cpp": "97d18c683340a9d7ec148bfa37dcab6ade1aafe1437913a9a8bf93b9d8a95e15",
+    "network/altair_archive_relay.hpp": "189c8de3352003ad6000963c77a449d7c041e56578bcce0ee9d8ffb377e94921",
+    "tests/test_bellatrix_transition.cpp": "6af4e795832075ce94afd25c8e13b5bf2d41749362765b57f982778bb20e502e",
+    "tests/support/bellatrix_runtime_scenario.hpp": "c9e6ad1df54f2d9e9f9032af792d167533861f495e134194c1e1ebb253467851",
+    "build-release/nano": "c14b23125bb59ecebbcfb73b9d0787a2b05ce8dd18fd24a95cea292b7f9f4b2d",
+    "build-release/nano-bellatrix-transition-tests": "ece06f5b096a53a6bb38b20f3da9c62ee622414f75d90a839b660fd1cfba3f00",
+    "build-network/nano-p2p": "14f5458355dc8bba36e8ab05512a6a174a46a9766499de8f84d258e00875434f"
+  },
+  "limits": [
+    "Bounded single-host scenario; not capacity qualification",
+    "Started before redundant-proof archive fix; that fix has separate targeted evidence",
+    "Longer duration than earlier 420.77s run; causal attribution not established"
+  ],
+  "log": "build-cmake/qualification/bellatrix-local-slashing-20260926/partition-detail.log"
+}

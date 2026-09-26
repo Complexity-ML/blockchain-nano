@@ -27,7 +27,7 @@ inline nano::Json bellatrix_runtime_config(const Temp& location,
 }
 inline void bellatrix_runtime_scenario(const nano::Genesis& genesis,
  const nano::BellatrixForkBlockRules& rules,const nano::BellatrixStoreSnapshotLimits& limits,
- const nano::BellatrixForkStore& initial,const std::string& recipient,bool witnessed=false){
+ const nano::BellatrixForkStore& initial,const std::string& recipient,bool witnessed=false,const std::function<Bytes(uint64_t,const nano::ConsensusRoot&)>& malicious_signer={}){
  using namespace nano;Temp location;
  auto q=[](uint64_t n){return quantity(Int(std::to_string(n)));};
  auto config=bellatrix_runtime_config(location,rules,limits,initial);
@@ -57,14 +57,44 @@ inline void bellatrix_runtime_scenario(const nano::Genesis& genesis,
  if(witnessed)for(size_t i=0;i<keys.size();++i)keys[i]["recoveryWitness"]=(location/("witness-key-"+std::to_string(i))).string();
  config["validator"]={{"pollIntervalMs",q(rules.slot_duration_ms)},{"maximumVoteTrials","0x80"},{"keys",keys}};
  invalid=config;invalid["validator"]["keys"]=Json::array({keys[0]});invalid["validator"]["keys"][0]["index"]="0x1";reject(invalid,"key-registry-mismatch");
- ForkCheckpointToken saved;Json commitments;Bytes head,state;
+ ForkCheckpointToken saved;Json commitments;Bytes head,state;std::optional<uint64_t> offender;uint64_t balance_before=0;
  auto stop=[](BellatrixRuntime& runtime){(void)stop_bellatrix_runtime(runtime);};
  {
   Blockchain chain(location/"chain",genesis);
   auto runtime=start_bellatrix_runtime(chain,config,{},now);
   check(runtime.rpc->status().at("executionBound")==true&&runtime.validator->status().at("localKeys")==64,"runtime services not bound");
   // Drive one real duty using the configured providers, not injected Signers.
-  wall+=rules.slot_duration_ms;runtime.validator->poll();stop(runtime);
+  wall+=rules.slot_duration_ms;runtime.validator->poll();
+  if(malicious_signer){
+   const auto current=runtime.reactor->current();const auto& parent=bellatrix_fork_head(*current.state,rules);
+   const auto& t=rules.transition.consensus;const BellatrixEpochRules epoch_rules{t.epoch,rules.transition.execution,rules.transition.maximum_state_bytes};
+   const auto context=bellatrix_fork_block_context(parent.state,parent.header,epoch_rules,t.state);
+   const auto proposer=prepare_bellatrix_proposer_identity(parent.state,parent.header,parent.header.slot+1,epoch_rules,t.state,t.attestation.duties,limits.replay_slots,limits.sync_trials);check(bool(proposer),"missing next proposer");
+   offender=(proposer->index+1)%64;balance_before=context.registry.validators.at(*offender).balance;
+   IndexedConsensusAttestation a{{parent.header.slot,0,{}, {context.registry.epoch,{}},{context.registry.epoch,{}}},{*offender},{}},b=a;b.data.beacon_block_root[0]=1;
+   const auto version=context.registry.epoch<context.fork.epoch?context.fork.previous_version:context.fork.current_version;
+   for(auto* vote:{&a,&b})vote->signature=malicious_signer(*offender,consensus_signing_root(consensus_attestation_root(vote->data),consensus_domain({1,0,0,0},version,context.genesis_root)));
+   auto invalid=b;invalid.signature[0]^=1;check(!runtime.reactor->slashing(a,invalid),"invalid evidence admitted");check(runtime.reactor->current().token==current.token,"invalid evidence published");
+   const auto wire=encode_consensus_attester_slashing_ssz(a,b,t.body.validators_per_committee);check(runtime.reactor->slashing_ssz(wire),"valid evidence refused");
+   const auto accepted=runtime.reactor->current();check(accepted.signed_slashings->size()==1&&accepted.state->timed.view.equivocating_indices.contains(*offender),"evidence not retained/excluded");
+   check(runtime.reactor->slashing_ssz(wire)&&runtime.reactor->current().token==accepted.token,"duplicate evidence amplified checkpoint");
+   auto alternate=b;alternate.data.beacon_block_root[0]=2;
+   alternate.signature=malicious_signer(*offender,consensus_signing_root(consensus_attestation_root(alternate.data),consensus_domain({1,0,0,0},version,context.genesis_root)));
+   check(runtime.reactor->slashing(a,alternate)&&runtime.reactor->current().token==accepted.token&&runtime.reactor->current().signed_slashings->size()==1,"distinct proof for covered offender amplified archive");
+   auto disjoint=b;disjoint.indices={(*offender+1)%64};
+   disjoint.signature=malicious_signer(disjoint.indices[0],consensus_signing_root(consensus_attestation_root(disjoint.data),consensus_domain({1,0,0,0},version,context.genesis_root)));
+   check(runtime.reactor->slashing(a,disjoint)&&runtime.reactor->current().token==accepted.token,"proof without common offender amplified archive");
+
+   Rpc endpoint(chain,"fixture-proof-token",AdmissionBudget::Clock::now,RpcSimulationLimits{},nullptr,runtime.rpc);
+   auto request=[&](const char* method,Json params){return endpoint.handle({{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",std::move(params)}});};
+   check(request("nano_bellatrixSlashingInventory",Json::array({"wrong-token","0x","0x1"})).at("error").at("code")==-32001,"proof inventory exposed without authorization");
+   const auto page=request("nano_bellatrixSlashingInventory",Json::array({"fixture-proof-token","0x","0x1"})).at("result");
+   check(page.at("slashings").size()==1&&page.at("missingSignedBlocks")==0,"proof inventory missing");
+   const auto exported=request("nano_bellatrixSlashing",Json::array({"fixture-proof-token",page.at("slashings")[0].at("root")})).at("result");
+   check(exported.at("available")==true&&exported.at("envelope").at("kind")=="attester_slashing"&&exported.at("envelope").at("sszBase64")==altair_base64(wire),"proof export changed bytes or kind");
+
+  }
+  stop(runtime);
   check(runtime.validator->status().at("healthy")==true&&runtime.validator->status().at("proposalsAdmitted")==1,"configured providers failed proposal");
   saved=runtime.reactor->current().token;commitments=runtime.validator->restart_commitments();head=chain.tip().header.hash();state=chain.state().root();
  }
@@ -77,16 +107,19 @@ inline void bellatrix_runtime_scenario(const nano::Genesis& genesis,
   check(refused,"runtime accepted stale external checkpoint");
   auto runtime=start_bellatrix_runtime(chain,config,{},now);
   check(chain.tip().header.hash()==head&&chain.state().root()==state,"configured restart lost execution");
+  if(offender)check(runtime.reactor->current().signed_slashings->size()==1,"restart lost pending proof");
   runtime.validator->poll();
   check(runtime.validator->status().at("proposalsAdmitted")==0&&runtime.validator->restart_commitments()==commitments,"restart repeated reserved duties");
   wall+=rules.slot_duration_ms;runtime.validator->poll();stop(runtime);
   check(runtime.validator->status().at("proposalsAdmitted")==1&&chain.tip().header.number==3,"restarted validator did not resume next slot");
+  if(offender){const auto current=runtime.reactor->current();const auto& block=bellatrix_fork_head(*current.state,rules);const auto& t=rules.transition.consensus;const auto context=bellatrix_fork_block_context(block.state,block.header,{t.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},t.state);const auto& member=context.registry.validators.at(*offender);check(member.slashed&&member.exit_epoch!=UINT64_MAX&&member.balance<balance_before,"locally proposed proof did not slash, exit and debit offender");}
+
   // Clock regression closes execution admission, rather than serving stale state.
   wall-=rules.slot_duration_ms;bool refused_clock=false;try{runtime.clock->poll();}catch(const std::exception&){refused_clock=true;}
   bool gated=false;try{chain.require_execution_ready();}catch(const std::exception&){gated=true;}
   check(refused_clock&&gated&&!runtime.clock->healthy(),"clock regression failed open");
  }
- std::cout<<Json{{"scenario","bellatrix-runtime-config-restart"},{"witnessed",witnessed},{"configuredKeys",64},{"proposalsAcrossRestart",2},{"repeatedDutySuppressed",true},{"invalidConfigCases",4},{"staleCheckpointRejected",true},{"clockRegressionGated",true},{"independentProcesses",false}}.dump()<<'\n';
+ std::cout<<Json{{"scenario","bellatrix-runtime-config-restart"},{"witnessed",witnessed},{"slashingIncludedAfterRestart",bool(offender)},{"configuredKeys",64},{"proposalsAcrossRestart",2},{"repeatedDutySuppressed",true},{"invalidConfigCases",4},{"staleCheckpointRejected",true},{"clockRegressionGated",true},{"independentProcesses",false}}.dump()<<'\n';
 }
 // One pending core publication with the primary restored to its predecessor.
 inline void bellatrix_core_recovery_scenario(const nano::Genesis& genesis,

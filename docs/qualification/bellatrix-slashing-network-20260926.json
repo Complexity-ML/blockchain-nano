@@ -1,0 +1,34 @@
+{
+  "result": "passed",
+  "test": "consensus_bellatrix_slashing_network",
+  "durationSeconds": 5.99,
+  "scope": {
+    "cores": 2,
+    "independentCoreProcesses": false,
+    "realP2pDaemons": 2,
+    "hosts": 1,
+    "syntheticClock": true,
+    "proofReceivedBeforeBlock": true,
+    "offender": 35,
+    "balanceBefore": 32000000000,
+    "balanceAfter": 31000000000,
+    "exitEpoch": 5,
+    "executionStateMatched": true
+  },
+  "limitations": [
+    "Not a distributed-host test",
+    "Does not qualify sustained load or partition recovery with the changed relay scheduler",
+    "No proof pruning after finality yet"
+  ],
+  "sha256": {
+    "tests/test_bellatrix_transition.cpp": "6af4e795832075ce94afd25c8e13b5bf2d41749362765b57f982778bb20e502e",
+    "src/consensus_bellatrix_reactor.cpp": "6c0d50d362ab0c61a77d82af432fd2e9a832e60759a6cbca001e5773eacf7394",
+    "src/consensus_bellatrix_local_body.cpp": "78536d97be7dd93b74352d75fe1e9897f37e8f386809fae8430b458b4a6799c5",
+    "network/main.cpp": "97d18c683340a9d7ec148bfa37dcab6ade1aafe1437913a9a8bf93b9d8a95e15",
+    "network/altair_archive_relay.hpp": "189c8de3352003ad6000963c77a449d7c041e56578bcce0ee9d8ffb377e94921",
+    "network/bellatrix_rpc_service.hpp": "383f3fd76a38b3b0df72df2e0e7a4a83522cef7b7a291ead54bc8f4d59ca86fa",
+    "build-release/nano-bellatrix-transition-tests": "ece06f5b096a53a6bb38b20f3da9c62ee622414f75d90a839b660fd1cfba3f00",
+    "build-network/nano-p2p": "14f5458355dc8bba36e8ab05512a6a174a46a9766499de8f84d258e00875434f"
+  },
+  "logs": "build-cmake/qualification/bellatrix-local-slashing-20260926/network-detail.log"
+}
