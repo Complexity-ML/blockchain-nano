@@ -1,0 +1,84 @@
+{
+  "coordinator": {
+    "maxConcurrentTests": 1
+  },
+  "web": {
+    "server": {
+      "host": "127.0.0.1",
+      "port": "65022"
+    },
+    "api": {
+      "enabled": true
+    },
+    "frontend": {
+      "enabled": false
+    }
+  },
+  "ai": {
+    "enabled": false
+  },
+  "playbookLibrary": {
+    "enabled": false
+  },
+  "endpoints": [
+    {
+      "name": "nano-0",
+      "executionUrl": "http://127.0.0.1:61628",
+      "consensusUrl": "http://127.0.0.1:61628"
+    },
+    {
+      "name": "nano-1",
+      "executionUrl": "http://127.0.0.1:60987",
+      "consensusUrl": "http://127.0.0.1:60987"
+    }
+  ],
+  "tests": [
+    {
+      "id": "nano-distributed-finality",
+      "name": "Nano two-validator native finality",
+      "timeout": "270s",
+      "tasks": [
+        {
+          "name": "check_clients_are_healthy",
+          "title": "Both Nano execution and consensus endpoints are healthy",
+          "timeout": "30s",
+          "config": {
+            "clientPattern": "^nano-",
+            "minClientCount": 2,
+            "maxUnhealthyCount": 0,
+            "pollInterval": "1s"
+          }
+        },
+        {
+          "name": "check_consensus_sync_status",
+          "title": "Both native consensus views are synced and progressing",
+          "timeout": "25s",
+          "config": {
+            "clientPattern": "^nano-",
+            "minSlotHeight": 3,
+            "waitForChainProgression": true,
+            "pollInterval": "1s"
+          }
+        },
+        {
+          "name": "check_consensus_block_proposals",
+          "title": "Observe two new native Beacon block bodies",
+          "timeout": "25s",
+          "config": {
+            "checkLookback": 0,
+            "blockCount": 2
+          }
+        },
+        {
+          "name": "check_consensus_finality",
+          "title": "Observe native finalized epoch at least two",
+          "timeout": "240s",
+          "config": {
+            "minFinalizedEpochs": 2,
+            "maxUnfinalizedEpochs": 4
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+300: Test command: /opt/homebrew/bin/cmake "-E" "env" "NANO_TEST_POST_RECOVERY_PROBE=/Users/boris/Dev/blockchain-nano/tests/assertoor/stability-probe.mjs" "/Users/boris/Dev/blockchain-nano/build-release/nano-bellatrix-transition-tests" "--partition-recovery" "/Users/boris/Dev/blockchain-nano/build-release/nano" "/Users/boris/Dev/blockchain-nano/build-network/nano-p2p"
+300: Test timeout computed to be: 1080
+300: {"epoch":1,"event":"distributed-progress","sameHead":false,"slot":8}
+300: {"epoch":2,"event":"distributed-progress","sameHead":true,"slot":16}
+300: {"epoch":3,"event":"distributed-progress","sameHead":true,"slot":24}
+300: {"epoch":4,"event":"distributed-progress","sameHead":false,"slot":32}
+300: {"aHead":{"hash":"0x1360816c8d035efdae78ce37c7bc7e073ab1fa2794970286986e63ddd7746766","number":"0x20","timestamp":"0x6ab7f465"},"bHead":{"hash":"0x1360816c8d035efdae78ce37c7bc7e073ab1fa2794970286986e63ddd7746766","number":"0x20","timestamp":"0x6ab7f465"},"event":"partition-baseline","finalized":{"hash":"0x8f162f281c3744820f71b58859d611c32e5b29df7f99049509662f82d3fe9281","number":"0x10","timestamp":"0x6ab7f405"},"preCutPrefix":{"0x10":"0x8f162f281c3744820f71b58859d611c32e5b29df7f99049509662f82d3fe9281","0x11":"0x9c99012aa9a134a8621c6a73837c77fdbe89580b1de0593df5d3cc8a063af6de","0x12":"0x1a6384ddc498f38bd244f88e704531ff8ed9db0d611a1a5de72886b80ee014eb","0x13":"0x14e17d667b7db1885e398d7be37aff75f89a29fcd88dd115e052f6d699bd6bb6","0x14":"0xbf647774090884a5ee4ff1c5c57915b52d08317d9209b9407a93aae663c9b2da","0x15":"0x1065a69fff28c1e829c3119f85e3d59d5b55c34d454cee6c098df85e89b78191","0x16":"0x24a71eedb3461a5d9da70df4046df15ab19dac8552f33f4f096047a720107303","0x17":"0x013d908556b5a2b724160f237d201652d55e8eea7db83265ccfe7e4f703f7e1d","0x18":"0xe4cb7162b6391edd40b46715104272559d029070bd5b6379ce5a5822958e2bce","0x19":"0x0b8a636ca6d30aa17428b9fe2ba42472521efe18b5eac9c01d9b4edd1aaa5eb0","0x1a":"0x5f3713613e178f57100ca26b607088daf6624795699109bb7092dc93cba3837f","0x1b":"0xf7e7c91594925d8d635be64eb59465a51cb62e35c14461961f920780d7837910","0x1c":"0x999904c5854311da23fb46c7e73ddf8ec6241ef02324286ad86051fff19d9f32","0x1d":"0x7591b8cbb30c2e0a24633595de6f7e66494e5a95d5bfc93c4db7be1cd1a5afe8","0x1e":"0x8e824dae56f05f0910e413377f9f69a4b72a63cf8dc35407dbacf6da26b15e3c","0x1f":"0x8540ff1f3833cee6289de7e38e1d7d4302e7a82d1566aadc8b1ae8c6dce4bacd","0x20":"0x1360816c8d035efdae78ce37c7bc7e073ab1fa2794970286986e63ddd7746766"}}
+300: {"event":"partition-start","finalizedHash":"0x8f162f281c3744820f71b58859d611c32e5b29df7f99049509662f82d3fe9281","seconds":96}
+300: {"a":"0x20","b":"0x20","elapsedSeconds":0,"event":"partition-progress","finalityUnchanged":true}
+300: {"a":"0x26","b":"0x22","elapsedSeconds":48,"event":"partition-progress","finalityUnchanged":true}
+300: {"event":"partition-healed"}
+300: {"aFinalized":"0x10","bFinalized":"0x10","elapsedSeconds":0,"event":"recovery-progress"}
+300: {"aFinalized":"0x10","bFinalized":"0x10","elapsedSeconds":48,"event":"recovery-progress"}
+300: {"aFinalized":"0x10","bFinalized":"0x26","elapsedSeconds":96,"event":"recovery-progress"}
+300: {"aFinalized":"0x26","bFinalized":"0x26","elapsedSeconds":144,"event":"recovery-progress"}
+300: {"aFinalized":"0x26","bFinalized":"0x26","elapsedSeconds":192,"event":"recovery-progress"}
+300: {"event":"stability-evidence","directory":"/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-recovery-stability-RBnUIJ"}
+300: {"event":"partition-evidence-retained","path":"/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-assertoor-core-failure-F08t65/snapshot"}
+300: post-recovery stability failed: Error: Finality lag exceeds four epochs
+300:     at async file:///Users/boris/Dev/blockchain-nano/tests/assertoor/stability-probe.mjs:15:18
+300: {"event":"stability-evidence","directory":"/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-recovery-stability-RBnUIJ"}
+1/2 Test #300: consensus_bellatrix_partition_sustained ...***Failed  521.06 sec
+301: Test command: /opt/homebrew/bin/cmake "-E" "env" "NANO_TEST_POST_RECOVERY_PROBE=/Users/boris/Dev/blockchain-nano/tests/assertoor/stability-probe.mjs" "/Users/boris/Dev/blockchain-nano/build-release/nano-bellatrix-transition-tests" "--distributed-crash" "/Users/boris/Dev/blockchain-nano/build-release/nano" "/Users/boris/Dev/blockchain-nano/build-network/nano-p2p"
+301: Test timeout computed to be: 1080
+301: {"event":"validator-killed","headBefore":"0x2d98eb8b2848e7bfe8bfde61f0764dba10384189bc5e038569a96596a73a2175","orderlyReceipt":false,"signal":"SIGKILL"}
+301: {"epoch":1,"event":"distributed-progress","sameHead":false,"slot":8}
+301: {"epoch":2,"event":"distributed-progress","sameHead":true,"slot":16}
+301: {"epoch":3,"event":"distributed-progress","sameHead":true,"slot":24}
+301: {"epoch":4,"event":"distributed-progress","sameHead":false,"slot":32}
+301: {"event":"stability-evidence","directory":"/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-recovery-stability-Tgrrxp"}
+301: {"time":1790441118433,"commonEpoch":"3","executionHash":"0x57b2fa5b011158feaf1375549f94aeb3869e18c963d5a07b0c599f7264cc7a7d","advances":1}
+301: {"time":1790441166817,"commonEpoch":"4","executionHash":"0x4d35cf2dcc887c1227edfd9ed97b3ed687a40021895667e1aebb1dd32c1ee284","advances":2}
+301: {"time":1790441215325,"commonEpoch":"5","executionHash":"0x446ba75e4e5f682191c2fdac339d65f4c248b9a93def7d327cb45fe2ceaa5988","advances":3}
+301: {"event":"stability-passed","epochs":3,"firstEpoch":"2","lastEpoch":"5","elapsedMs":145438}
+301: {"a":{"epoch":"0x5","root":"0x42b70447b30d71b04620d497f015f943939f6e3995d27b2b6db39321ad186564"},"b":{"epoch":"0x5","root":"0x42b70447b30d71b04620d497f015f943939f6e3995d27b2b6db39321ad186564"},"event":"distributed-checkpoints","justifiedA":"0x6","justifiedB":"0x6"}
+301: {"beaconPeerObservations":true,"blockAfterRestart":"0x37","blockBeforeRestart":"0x3","crashRecovered":true,"distributedStake":true,"finalized":{"epoch":"0x5","root":"0x42b70447b30d71b04620d497f015f943939f6e3995d27b2b6db39321ad186564"},"independentCoreProcesses":2,"localKeys":64,"observerSynchronized":true,"p2pDaemons":2,"partitionRecovered":false,"physicalHosts":1,"scenario":"bellatrix-managed-cores-restart","validatorNodes":2,"wallClock":true}
+2/2 Test #301: consensus_bellatrix_crash_sustained .......   Passed  325.89 sec
+The following tests passed:
+50% tests passed, 1 tests failed out of 2
+Total Test time (real) = 846.96 sec

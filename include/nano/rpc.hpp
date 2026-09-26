@@ -1,5 +1,6 @@
 #pragma once
 #include "chain.hpp"
+#include "beacon_sync.hpp"
 #include "admission_budget.hpp"
 #include <functional>
 #include "wallet.hpp"
@@ -45,6 +46,7 @@ class Rpc {
  Json account_request(const std::string& method,const Json& params,const Estimate& estimate={});
  BlockImports block_imports_;
  std::string network_token_;
+ std::shared_ptr<BeaconSyncTracker> beacon_sync_;
  Json network_report_=Json::object();
  std::chrono::steady_clock::time_point network_seen_{};
  Json network_status() const;
@@ -60,6 +62,7 @@ class Rpc {
  Json one(const Json& request,const std::function<void()>& cancelled);
 public:
  explicit Rpc(Blockchain& chain,std::string network_token={},std::function<AdmissionBudget::Clock::time_point()> now=AdmissionBudget::Clock::now,RpcSimulationLimits simulation_limits={},std::shared_ptr<::AltairRpcService> altair={},std::shared_ptr<::BellatrixRpcService> bellatrix={}):chain_(chain),altair_(std::move(altair)),bellatrix_(std::move(bellatrix)),simulation_limits_(std::move(simulation_limits)),admission_now_(std::move(now)),admission_budget_(admission_now_()),network_token_(std::move(network_token)){if(altair_&&bellatrix_)throw std::invalid_argument("Choose one consensus RPC service");chain_.require_execution_ready();}
+ void set_beacon_sync_tracker(std::shared_ptr<BeaconSyncTracker> tracker){std::lock_guard lock(mutex_);beacon_sync_=std::move(tracker);}
  bool requires_private_bind()const{return bool(altair_)||bool(bellatrix_);}
  bool local_only(){std::lock_guard lock(mutex_);return bool(altair_)||bool(bellatrix_)||dev_mode_||!wallets_.addresses().empty();}
  bool has_wallets(){std::lock_guard lock(mutex_);return !wallets_.addresses().empty();}

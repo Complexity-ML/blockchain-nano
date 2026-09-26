@@ -2,6 +2,7 @@
 #include "nano/consensus_bellatrix_runtime.hpp"
 #include "../../network/bellatrix_rpc_service.hpp"
 #include <fstream>
+#include <boost/beast.hpp>
 #include <cstdlib>
 namespace test {
 // Synthetic fixture keys only. Exercises the production configuration loader,
@@ -24,6 +25,34 @@ inline nano::Json bellatrix_runtime_config(const Temp& location,
   {"wire",{{"frameBytes",q(2*block+1024)},{"blockBytes",q(block)},{"attestationBytes",q(228+(committee+8)/8)},{"slashingBytes",q(464+16*committee)}}},
   {"worker",{{"jobs","0x2"},{"payloadBytes",q(2*block)},{"timeoutMs","0x2710"}}}
  };
+}
+// Export a fresh, isolated devnet. All 64 keys are PUBLIC synthetic fixture keys.
+inline void bellatrix_kurtosis_export(const nano::Json& genesis,
+ const nano::BellatrixForkBlockRules& rules,nano::BellatrixStoreSnapshotLimits limits,
+ const nano::BellatrixForkStore& initial,const fs::path& destination){
+ using namespace nano;Temp location;
+ check(!fs::exists(destination),"Kurtosis output already exists");
+ limits.blocks=128;limits.messages=2048;limits.total_state_bytes=64*1024*1024;limits.envelope_bytes=128*1024*1024;
+ auto config=bellatrix_runtime_config(location,rules,limits,initial);
+ config["profile"]["file"]="/config/profile.json";config["initial"]["file"]="/config/snapshot.json";
+ config["clock"]={{"intervalMs","0xfa"},{"maximumForwardStepMs",quantity(Int(std::to_string(300*rules.slot_duration_ms)))}};
+ fs::create_directories(destination);
+ fs::copy_file(location/"profile.json",destination/"profile.json");
+ fs::copy_file(location/"snapshot.json",destination/"snapshot.json");
+ save(destination/"genesis.json",genesis);
+ for(uint64_t n=0;n<2;++n){
+  Json keys=Json::array(),env=Json::object();
+  for(uint64_t i=n*32;i<(n+1)*32;++i){
+   const auto name="NANO_KURTOSIS_FIXTURE_"+std::to_string(i);
+   env[name]=hex(bytes(Int(std::to_string(i+1)),32));
+   keys.push_back({{"index",quantity(Int(std::to_string(i)))},{"feeRecipient","0x0000000000000000000000000000000000001234"},{"keyEnv",name},{"journal","/var/lib/nano/key-"+std::to_string(i)},{"restart",nullptr}});
+  }
+  auto node=Json{{"rpc_host","0.0.0.0"},{"rpc_port",8545},{"p2p_binary","/usr/local/bin/nano-p2p"},{"listen_addr","/ip4/0.0.0.0/tcp/30303"},{"bootnodes",Json::array()},{"bellatrix",config}};
+  node["bellatrix"]["validator"]={{"pollIntervalMs","0xfa"},{"maximumVoteTrials","0x80"},{"keys",keys}};
+  save(destination/("node-"+std::to_string(n)+".json"),node);
+  save(destination/("env-"+std::to_string(n)+".json"),env);
+ }
+ std::cout<<Json{{"exported",destination.string()},{"syntheticValidators",64},{"nodes",2},{"fork","Bellatrix/Paris"}}.dump()<<std::endl;
 }
 inline void bellatrix_runtime_scenario(const nano::Genesis& genesis,
  const nano::BellatrixForkBlockRules& rules,const nano::BellatrixStoreSnapshotLimits& limits,
@@ -139,9 +168,10 @@ inline void bellatrix_core_recovery_scenario(const nano::Genesis& genesis,
  fs::remove_all(location/"primary");fs::copy(location/"genesis-only",location/"primary",fs::copy_options::recursive);
  {Blockchain chain(location/"primary",genesis);auto runtime=start_bellatrix_runtime(chain,config,{},now);(void)stop_bellatrix_runtime(runtime);check(runtime.reactor->current().token==first&&chain.tip().header.hash()==head&&chain.state().root()==state,"witness failed lost execution publication recovery");}
 
- {Blockchain chain(location/"primary",genesis);auto runtime=start_bellatrix_runtime(chain,config,{},now);runtime.clock->stop();++wall;runtime.clock->poll();(void)stop_bellatrix_runtime(runtime);next=runtime.reactor->current().token;check(next.sequence==first.sequence+1,"recovery fixture advanced multiple publications");}
+ // Force one explicit durable publication: an unchanged clock phase now coalesces.
+ {Blockchain chain(location/"primary",genesis);auto runtime=start_bellatrix_runtime(chain,config,{},now);runtime.clock->stop();++wall;runtime.reactor->tick(wall);(void)stop_bellatrix_runtime(runtime);next=runtime.reactor->current().token;check(next.sequence==first.sequence+1,"recovery fixture advanced multiple publications");}
  fs::remove_all(location/"primary");fs::copy(location/"previous",location/"primary",fs::copy_options::recursive);
- {Blockchain chain(location/"primary",genesis);auto runtime=start_bellatrix_runtime(chain,config,{},now);runtime.clock->stop();check(runtime.reactor->current().token==next&&chain.tip().header.hash()==head&&chain.state().root()==state,"witness failed coupled checkpoint roll-forward");++wall;runtime.clock->poll();(void)stop_bellatrix_runtime(runtime);}
+ {Blockchain chain(location/"primary",genesis);auto runtime=start_bellatrix_runtime(chain,config,{},now);runtime.clock->stop();check(runtime.reactor->current().token==next&&chain.tip().header.hash()==head&&chain.state().root()==state,"witness failed coupled checkpoint roll-forward");++wall;runtime.reactor->tick(wall);(void)stop_bellatrix_runtime(runtime);}
  fs::remove_all(location/"primary");fs::copy(location/"previous",location/"primary",fs::copy_options::recursive);
  {Blockchain chain(location/"primary",genesis);bool refused=false;try{auto runtime=start_bellatrix_runtime(chain,config,{},now);}catch(const std::exception&){refused=true;}check(refused,"core accepted rollback beyond witnessed predecessor");bool gated=false;try{chain.tip();}catch(const std::exception&){gated=true;}check(gated,"failed recovery exposed execution");}
  std::cout<<"Bellatrix witnessed core roll-forward and rollback admission checks passed\n";
@@ -160,7 +190,7 @@ inline void bellatrix_managed_runtime_scenario(const nano::Json& genesis,
   const auto name="NANO_MANAGED_FIXTURE_KEY_"+std::to_string(i);(distributed&&i>=32?other_environment:environment)[name]=hex(bytes(Int(std::to_string(i+1)),32));
   (distributed&&i>=32?other_keys:keys).push_back({{"index",q(i)},{"feeRecipient","0x0000000000000000000000000000000000001234"},{"keyEnv",name},{"journal",(location/("key-"+std::to_string(i))).string()},{"restart",nullptr}});
  }
- if(partition){environment["NANO_TEST_NETWORK_TRACE"]="1";other_environment["NANO_TEST_NETWORK_TRACE"]="1";}
+ if(partition||std::getenv("NANO_TEST_ASSERTOOR_FINALITY")){environment["NANO_TEST_NETWORK_TRACE"]="1";other_environment["NANO_TEST_NETWORK_TRACE"]="1";}
  Json node={{"rpc_host","127.0.0.1"},{"rpc_port",0},{"p2p_binary",daemon},{"listen_addr","/ip4/127.0.0.1/tcp/0"},{"bootnodes",Json::array()},{"bellatrix",config}};
  if(distributed)node["bellatrix"]["validator"]={{"pollIntervalMs","0xfa"},{"maximumVoteTrials","0x80"},{"keys",other_keys}};
  auto validator=node;validator["bellatrix"]["validator"]={{"pollIntervalMs","0xfa"},{"maximumVoteTrials","0x80"},{"keys",keys}};
@@ -182,8 +212,14 @@ inline void bellatrix_managed_runtime_scenario(const nano::Json& genesis,
    std::cerr<<"source process output:\n"<<ar.out<<ar.err<<"peer process output:\n"<<br.out<<br.err;
    // Only this synthetic-key test opts into retention. Both processes have
    // closed RocksDB before copying; never overwrite an earlier failure.
-   if(const auto* output=std::getenv("NANO_TEST_PARTITION_EVIDENCE")){
-    const fs::path destination(output);
+   std::optional<fs::path> retain;
+   if(const auto* output=std::getenv("NANO_TEST_PARTITION_EVIDENCE"))retain=fs::path(output);
+   else if(std::getenv("NANO_TEST_ASSERTOOR_FINALITY")||std::getenv("NANO_TEST_POST_RECOVERY_PROBE")){
+    std::string pattern=(fs::temp_directory_path()/"nano-assertoor-core-failure-XXXXXX").string();
+    check(mkdtemp(pattern.data()),"create diagnostic directory");retain=fs::path(pattern)/"snapshot";
+   }
+   if(retain){
+    const fs::path destination=*retain;
     check(!fs::exists(destination),"partition evidence destination already exists");
     fs::copy(directory,destination,fs::copy_options::recursive);
     save(destination/"source-output.txt",ar.out+ar.err);
@@ -192,8 +228,36 @@ inline void bellatrix_managed_runtime_scenario(const nano::Json& genesis,
    }
   }catch(const std::exception& error){std::cerr<<"partition diagnostics: "<<error.what()<<std::endl;}}
  } diagnostics{source,observer,location.path};
+ auto beacon_get=[](int port,const char* path){
+  namespace asio=boost::asio;namespace http=boost::beast::http;using tcp=asio::ip::tcp;
+  asio::io_context context;boost::beast::tcp_stream stream(context);stream.expires_after(std::chrono::seconds(5));stream.connect(tcp::endpoint(asio::ip::make_address("127.0.0.1"),uint16_t(port)));
+  http::request<http::string_body> request(http::verb::get,path,11);request.set(http::field::host,"localhost");request.set(http::field::accept,"application/json");request.prepare_payload();http::write(stream,request);
+  boost::beast::flat_buffer buffer;http::response<http::string_body> response;http::read(stream,buffer,response);return std::pair<unsigned,Json>{response.result_int(),Json::parse(response.body())};
+ };
+ auto beacon_observed=[&](int port){
+  const auto [code,value]=beacon_get(port,"/eth/v1/node/syncing");if(code!=200)return false;
+  const auto& data=value.at("data");return data.at("is_syncing")==false&&data.at("sync_distance")=="0"&&std::stoull(data.at("head_slot").get<std::string>())>=3;
+ };
  auto latest=[&](int port){source->pump(0);observer->pump(0);return rpc(port,"eth_getBlockByNumber",Json::array({"latest",false}));};
  until([&]{const auto a=latest(source_port),b=latest(observer_port);return quantity(a.at("number"))>=3&&a.at("hash")==b.at("hash");},"independent Bellatrix cores synchronized",40);
+ until([&]{return beacon_observed(source_port)&&beacon_observed(observer_port);},"Beacon slots observed through both P2P daemons",20);
+ const auto [header_code,header]=beacon_get(source_port,"/eth/v1/beacon/headers/head");check(header_code==200&&header.at("data").at("canonical")==true,"native signed header HTTP unavailable");
+ if(const auto* probe=std::getenv("NANO_TEST_BEACON_SDK_PROBE")){
+  Process process({probe,url(source_port)});const auto result=process.wait(20);check(result.code==0,"Beacon SDK probe failed: "+result.err+result.out);std::cout<<result.out;
+ }
+ auto run_assertoor=[&](int port){
+  if(const auto* probe=std::getenv("NANO_TEST_ASSERTOOR_PROBE")){
+   Process process({probe,url(port),url(observer_port)});
+   const auto seconds=std::getenv("NANO_TEST_ASSERTOOR_STABILITY_EPOCHS")?800:std::getenv("NANO_TEST_ASSERTOOR_FINALITY")?340:120;
+   const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(seconds);
+   while(process.running()){
+    check(std::chrono::steady_clock::now()<deadline,"Assertoor process deadline");
+    source->pump(0);observer->pump(0);process.pump();
+   }
+   const auto result=process.wait(1);std::cout<<result.out;check(result.code==0,"Assertoor probe failed: "+result.err+result.out);
+  }
+ };
+ run_assertoor(source_port);
  const auto before=latest(source_port);
  if(crash){
   source->signal(SIGKILL);const auto killed=source->wait();check(killed.code==-SIGKILL,"validator did not receive SIGKILL");
@@ -212,6 +276,8 @@ inline void bellatrix_managed_runtime_scenario(const nano::Json& genesis,
  validator["bootnodes"]=Json::array({observer->event("listen").at("address")});save(location/"validator.json",validator);
  source=launch("validator",environment);source->event("bellatrix-runtime-ready");const auto resumed_port=source->port();source->event("altair-ingress-ready");
  until([&]{const auto a=latest(resumed_port),b=latest(observer_port);return quantity(a.at("number"))>quantity(before.at("number"))&&a.at("hash")==b.at("hash");},"restarted Bellatrix validator propagated next block",40);
+ until([&]{return beacon_observed(resumed_port)&&beacon_observed(observer_port);},"Beacon slot observations restored after restart",20);
+ if(std::getenv("NANO_TEST_ASSERTOOR_STABILITY_EPOCHS"))run_assertoor(resumed_port);
  if(crash)check(rpc(resumed_port,"eth_getBlockByNumber",Json::array({before.at("number"),false})).at("hash")==before.at("hash"),"crash recovery replaced acknowledged canonical block");
  if(distributed){
   uint64_t last_epoch=0;const auto start=u64(quantity(genesis.at("timestamp"))),seconds=rules.transition.seconds_per_slot,slots=rules.transition.consensus.epoch.ffg.slots_per_epoch;
@@ -256,8 +322,29 @@ inline void bellatrix_managed_runtime_scenario(const nano::Json& genesis,
   const auto recovery_start=std::chrono::steady_clock::now();unsigned recovery_report=0;
   until([&]{const auto a=finalized(resumed_port),b=finalized(observer_port);const auto elapsed=std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now()-recovery_start).count();
    if(uint64_t(elapsed)/epoch_seconds>=recovery_report){++recovery_report;std::cout<<Json{{"event","recovery-progress"},{"elapsedSeconds",elapsed},{"aFinalized",a.at("number")},{"bFinalized",b.at("number")}}.dump()<<std::endl;}
-   return quantity(a.at("number"))>quantity(initial_finalized.at("number"))&&a.at("hash")==b.at("hash")&&latest(resumed_port).at("hash")==latest(observer_port).at("hash");},"partition recovered common advancing finality",int(5*epoch_seconds));
+   if(!(quantity(a.at("number"))>quantity(initial_finalized.at("number"))&&a.at("hash")==b.at("hash")&&latest(resumed_port).at("hash")==latest(observer_port).at("hash")))return false;
+   // The Store can pull up finality before it appears in the head's post-state.
+   // Start the sustained Beacon window only after BOTH projections have caught
+   // up, within the same existing recovery deadline. Do not relax its thresholds.
+   const auto [ac,av]=beacon_get(resumed_port,"/eth/v1/beacon/states/head/finality_checkpoints");
+   const auto [bc,bv]=beacon_get(observer_port,"/eth/v1/beacon/states/head/finality_checkpoints");
+   if(ac!=200||bc!=200||av.at("data").at("finalized")!=bv.at("data").at("finalized"))return false;
+   const auto cp=av.at("data").at("finalized");const auto path="/eth/v2/beacon/blocks/"+cp.at("root").get<std::string>();
+   const auto [abc,ab]=beacon_get(resumed_port,path.c_str());const auto [bbc,bb]=beacon_get(observer_port,path.c_str());
+   if(abc!=200||bbc!=200||ab.at("data").at("message").at("body").at("execution_payload").at("block_hash")!=a.at("hash")||bb.at("data").at("message").at("body").at("execution_payload").at("block_hash")!=b.at("hash"))return false;
+   std::cout<<Json{{"event","partition-recovery-bound"},{"beaconFinalized",cp},{"executionHash",a.at("hash")},{"elapsedSeconds",elapsed}}.dump()<<std::endl;
+   return true;},"partition recovered common advancing finality",int(5*epoch_seconds));
   partition_recovered=true;
+ }
+ if(const auto* probe=std::getenv("NANO_TEST_POST_RECOVERY_PROBE")){
+  Process process({probe,url(resumed_port),url(observer_port)});
+  const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(360);
+  while(process.running()){
+   check(std::chrono::steady_clock::now()<deadline,"post-recovery stability deadline");
+   source->pump(0);observer->pump(0);process.pump();
+  }
+  const auto result=process.wait(1);std::cout<<result.out;
+  check(result.code==0,"post-recovery stability failed: "+result.err+result.out);
  }
  const auto after=latest(resumed_port);const auto source_end=source->stop(),observer_end=observer->stop();check(source_end.code==0&&observer_end.code==0,"managed peers failed shutdown");
  Json finality;
@@ -268,7 +355,7 @@ inline void bellatrix_managed_runtime_scenario(const nano::Json& genesis,
   check(quantity(a.at("finalized").at("epoch"))>=2&&a.at("finalized")==b.at("finalized"),"distributed validators did not finalize a common checkpoint");finality=a.at("finalized");
  }
 
- std::cout<<Json{{"scenario","bellatrix-managed-cores-restart"},{"independentCoreProcesses",2},{"p2pDaemons",2},{"wallClock",true},{"validatorNodes",distributed?2:1},{"physicalHosts",1},{"localKeys",64},{"blockBeforeRestart",before.at("number")},{"blockAfterRestart",after.at("number")},{"observerSynchronized",true},{"distributedStake",distributed},{"partitionRecovered",partition_recovered},{"crashRecovered",crash},{"finalized",finality}}.dump()<<std::endl;
+ std::cout<<Json{{"scenario","bellatrix-managed-cores-restart"},{"independentCoreProcesses",2},{"p2pDaemons",2},{"wallClock",true},{"validatorNodes",distributed?2:1},{"physicalHosts",1},{"localKeys",64},{"blockBeforeRestart",before.at("number")},{"blockAfterRestart",after.at("number")},{"observerSynchronized",true},{"beaconPeerObservations",true},{"distributedStake",distributed},{"partitionRecovered",partition_recovered},{"crashRecovered",crash},{"finalized",finality}}.dump()<<std::endl;
 }
 
 }

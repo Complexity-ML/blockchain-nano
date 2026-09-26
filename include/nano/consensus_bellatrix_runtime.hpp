@@ -1,5 +1,7 @@
 #pragma once
 #include "nano/chain.hpp"
+#include "nano/beacon_api.hpp"
+#include "nano/beacon_sync.hpp"
 #include "nano/consensus_bellatrix_clock.hpp"
 #include "nano/consensus_bellatrix_validator.hpp"
 class BellatrixRpcService;
@@ -11,6 +13,9 @@ struct BellatrixRuntime {
  std::shared_ptr<BellatrixValidatorLoop> validator;
  std::shared_ptr<BellatrixDurableReactor> reactor;
  std::shared_ptr<BellatrixLocalClock> clock;
+ BeaconReadHandler beacon_read;
+ std::shared_ptr<BeaconSyncTracker> sync_tracker;
+ BeaconEventsHandler beacon_events;
 };
 // Local authenticated initial snapshot OR explicit durable restart token.
 // No remote snapshots or automatic trust of disk contents. Optional validator

@@ -1,0 +1,45 @@
+Start testing: Sep 26 17:02 CEST
+----------------------------------------------------------
+298/326 Testing: consensus_bellatrix_managed_runtime
+298/326 Test: consensus_bellatrix_managed_runtime
+Command: "/Users/boris/Dev/blockchain-nano/build-cmake/nano-bellatrix-transition-tests" "--managed-runtime" "/Users/boris/Dev/blockchain-nano/build-cmake/nano" "/Users/boris/Dev/blockchain-nano/build-network/nano-p2p"
+Directory: /Users/boris/Dev/blockchain-nano/build-cmake
+"consensus_bellatrix_managed_runtime" start time: Sep 26 17:02 CEST
+Output:
+----------------------------------------------------------
+independent Bellatrix cores synchronized
+Beacon slots observed through both P2P daemons
+{"beaconSDK":"v0.1.6","blockRoot":"0x2b813a2ea167d925233ee695a812d0ffdd63637f1ceaf7a26178948aa7ebb50c","sszBytes":1016,"jsonRoundTripExact":true,"assertoorSuiteExecuted":false}
+restarted Bellatrix validator propagated next block
+Beacon slot observations restored after restart
+{"beaconPeerObservations":true,"blockAfterRestart":"0x4","blockBeforeRestart":"0x3","crashRecovered":false,"distributedStake":false,"finalized":null,"independentCoreProcesses":2,"localKeys":64,"observerSynchronized":true,"p2pDaemons":2,"partitionRecovered":false,"physicalHosts":1,"scenario":"bellatrix-managed-cores-restart","validatorNodes":1,"wallClock":true}
+<end of output>
+Test time =  14.00 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_managed_runtime" end time: Sep 26 17:02 CEST
+"consensus_bellatrix_managed_runtime" time elapsed: 00:00:14
+----------------------------------------------------------
+
+325/326 Testing: consensus_bellatrix_beacon_headers
+325/326 Test: consensus_bellatrix_beacon_headers
+Command: "/Users/boris/Dev/blockchain-nano/build-cmake/nano-bellatrix-transition-tests" "--beacon-headers"
+Directory: /Users/boris/Dev/blockchain-nano/build-cmake
+"consensus_bellatrix_beacon_headers" start time: Sep 26 17:02 CEST
+Output:
+----------------------------------------------------------
+{"anchorWithoutSignature":404,"assertoorQualified":false,"corruptBodyRejected":true,"corruptSignatureRejected":true,"signedHeaderSelectors":["head","root","slot"]}
+<end of output>
+Test time =   0.63 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_beacon_headers" end time: Sep 26 17:02 CEST
+"consensus_bellatrix_beacon_headers" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Sep 26 17:02 CEST
+
+qualification_consensus_api =   0.63 sec*proc
+
+qualification_consensus_runtime =  14.00 sec*proc
+

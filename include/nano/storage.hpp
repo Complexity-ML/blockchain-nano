@@ -7,6 +7,8 @@ namespace rocksdb { class DB; }
 namespace nano {
 struct ForkCheckpointToken {uint64_t sequence;Bytes digest;bool operator==(const ForkCheckpointToken&)const=default;};
 struct ExecutionCheckpointBlock {Block block;State state;std::vector<Receipt> receipts;};
+// Opaque authenticated consensus record; validation belongs to the reactor.
+struct CheckpointArchiveEntry {Bytes root;uint64_t slot;Bytes payload;};
 struct ForkCheckpointRecord {ForkCheckpointToken token;std::string snapshot;};
 class ChainStore {
  friend class BeaconSigningJournal;
@@ -55,7 +57,11 @@ public:
   const std::optional<ForkCheckpointToken>& expected,const Bytes& expected_tip,
   const Int& common_height,const Bytes& common_hash,
   const std::vector<ExecutionCheckpointBlock>& suffix,std::string_view snapshot,
-  size_t maximum_bytes,size_t maximum_blocks);
+  size_t maximum_bytes,size_t maximum_blocks,
+  const std::vector<CheckpointArchiveEntry>& archive={});
+ // Immutable records committed in the same batch as the execution checkpoint.
+ // The digest detects corruption, not consensus validity or external rollback.
+ std::optional<CheckpointArchiveEntry> checkpoint_archive(const Bytes& root,size_t maximum_bytes) const;
  void rewind(const Int& number);
  // Returns unsigned fields already reserved durably; never authorizes a new vote.
  std::optional<FinalityVote> latest_consensus_vote(const std::string& validator,const Int& chain_id,const Bytes& genesis_hash) const;

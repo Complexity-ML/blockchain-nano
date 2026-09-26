@@ -1,0 +1,39 @@
+Start testing: Sep 26 18:15 CEST
+----------------------------------------------------------
+303/331 Testing: consensus_bellatrix_assertoor_sustained
+303/331 Test: consensus_bellatrix_assertoor_sustained
+Command: "/opt/homebrew/bin/cmake" "-E" "env" "NANO_TEST_ASSERTOOR_PROBE=/Users/boris/Dev/blockchain-nano/tests/assertoor/probe.mjs" "NANO_TEST_ASSERTOOR_BINARY=/Users/boris/Dev/blockchain-nano/.deps/assertoor-bin" "NANO_TEST_ASSERTOOR_FINALITY=1" "NANO_TEST_ASSERTOOR_STABILITY_EPOCHS=4" "/Users/boris/Dev/blockchain-nano/build-release/nano-bellatrix-transition-tests" "--distributed-finality" "/Users/boris/Dev/blockchain-nano/build-release/nano" "/Users/boris/Dev/blockchain-nano/build-network/nano-p2p"
+Directory: /Users/boris/Dev/blockchain-nano/build-release
+"consensus_bellatrix_assertoor_sustained" start time: Sep 26 18:15 CEST
+Output:
+----------------------------------------------------------
+independent Bellatrix cores synchronized
+Beacon slots observed through both P2P daemons
+{"nativeFinalityMatched":true,"observations":[{"checkpoint":{"epoch":"2","root":"0xcc8b149b628d5ac525ab2815f6368edc6383c24491a1292d93ba11f634952970"},"beaconSlot":"16","executionNumber":"0x10","executionHash":"0x090b34ffaacd5a769905216de6de676f552337e52f1516deb15cc1d1a0856f8f"},{"checkpoint":{"epoch":"2","root":"0xcc8b149b628d5ac525ab2815f6368edc6383c24491a1292d93ba11f634952970"},"beaconSlot":"16","executionNumber":"0x10","executionHash":"0x090b34ffaacd5a769905216de6de676f552337e52f1516deb15cc1d1a0856f8f"}]}
+{"nativeStableFinality":{"epochs":4,"firstEpoch":"2","lastEpoch":"6","elapsedMs":193443}}
+{"assertoorExecuted":true,"runs":[{"run_id":1,"test_id":"nano-distributed-finality","name":"Nano two-validator native finality","status":"success","start_time":1790439317,"stop_time":1790439489}],"evidence":"/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-assertoor-eNBNtP","productionQualified":false}
+{"assertoorEvidence":"/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-assertoor-eNBNtP"}
+restarted Bellatrix validator propagated next block
+Beacon slot observations restored after restart
+{"nativeFinalityMatched":true,"observations":[{"checkpoint":{"epoch":"7","root":"0x132636648612ea7e4544fa0e8a6920f19150092668410ffd5f3cc59beeef2a7e"},"beaconSlot":"56","executionNumber":"0x38","executionHash":"0x3b4b02ea9dfbf0de85df7d018943e806f67d96cd4f7b2425a7a34b35f41bb4ea"},{"checkpoint":{"epoch":"7","root":"0x132636648612ea7e4544fa0e8a6920f19150092668410ffd5f3cc59beeef2a7e"},"beaconSlot":"56","executionNumber":"0x38","executionHash":"0x3b4b02ea9dfbf0de85df7d018943e806f67d96cd4f7b2425a7a34b35f41bb4ea"}]}
+{"nativeStableFinality":{"epochs":4,"firstEpoch":"7","lastEpoch":"11","elapsedMs":183187}}
+{"assertoorExecuted":true,"runs":[{"run_id":1,"test_id":"nano-distributed-finality","name":"Nano two-validator native finality","status":"success","start_time":1790439725,"stop_time":1790439741}],"evidence":"/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-assertoor-9vjncq","productionQualified":false}
+{"assertoorEvidence":"/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-assertoor-9vjncq"}
+{"epoch":13,"event":"distributed-progress","sameHead":true,"slot":104}
+distributed validators completed four epochs
+{"a":{"epoch":"0xb","root":"0x0f1275e7bb31706a41c788d9dba2445ca1ff06d6c5bf8713a2ea84eb4d78c436"},"b":{"epoch":"0xb","root":"0x0f1275e7bb31706a41c788d9dba2445ca1ff06d6c5bf8713a2ea84eb4d78c436"},"event":"distributed-checkpoints","justifiedA":"0xc","justifiedB":"0xc"}
+{"beaconPeerObservations":true,"blockAfterRestart":"0x65","blockBeforeRestart":"0x40","crashRecovered":false,"distributedStake":true,"finalized":{"epoch":"0xb","root":"0x0f1275e7bb31706a41c788d9dba2445ca1ff06d6c5bf8713a2ea84eb4d78c436"},"independentCoreProcesses":2,"localKeys":64,"observerSynchronized":true,"p2pDaemons":2,"partitionRecovered":false,"physicalHosts":1,"scenario":"bellatrix-managed-cores-restart","validatorNodes":2,"wallClock":true}
+<end of output>
+Test time = 616.36 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_assertoor_sustained" end time: Sep 26 18:25 CEST
+"consensus_bellatrix_assertoor_sustained" time elapsed: 00:10:16
+----------------------------------------------------------
+
+End testing: Sep 26 18:25 CEST
+
+qualification_consensus_assertoor = 616.36 sec*proc
+
+sustained = 616.36 sec*proc
+

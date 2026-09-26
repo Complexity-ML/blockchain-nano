@@ -1,0 +1,21 @@
+{
+  "passed": true,
+  "before": {
+    "killToReopenedSeconds": 3.217,
+    "reopenedToPassedSeconds": 236.29
+  },
+  "after": {
+    "killToReopenedSeconds": 3.216,
+    "reopenedToPassedSeconds": 187.785
+  },
+  "duKiBAfter": [
+    116332,
+    51756
+  ],
+  "caveats": [
+    "Reopen interval includes a deliberate two-second pause.",
+    "Single-run comparison with distinct genesis timestamps and slot timing; not a causal performance benchmark.",
+    "No power-loss, exact write-boundary or long-term pruning qualification."
+  ],
+  "change": "ChainStore: allow_fallocate=false; WAL and sync=true unchanged"
+}

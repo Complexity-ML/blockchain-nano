@@ -1,0 +1,362 @@
+{
+  "status": "OK",
+  "data": {
+    "run_id": 1,
+    "test_id": "nano-distributed-finality",
+    "name": "Nano two-validator native finality",
+    "status": "success",
+    "start_time": 1790439317,
+    "stop_time": 1790439489,
+    "tasks": [
+      {
+        "index": 1,
+        "parent_index": 0,
+        "name": "check_clients_are_healthy",
+        "title": "Both Nano execution and consensus endpoints are healthy",
+        "started": true,
+        "completed": true,
+        "start_time": 1790439317156,
+        "stop_time": 1790439318158,
+        "timeout": 30000,
+        "runtime": 1002,
+        "status": "complete",
+        "result": "success",
+        "result_error": "",
+        "progress": 100,
+        "progress_message": "All clients healthy: 2/2",
+        "log": [
+          {
+            "time": "2026-09-26T18:15:17.157+02:00",
+            "level": "info",
+            "msg": "starting task",
+            "datalen": 0,
+            "data": {}
+          },
+          {
+            "time": "2026-09-26T18:15:17.157+02:00",
+            "level": "info",
+            "msg": "Check result: false, Failed Clients: [nano-0 nano-1]",
+            "datalen": 0,
+            "data": {}
+          },
+          {
+            "time": "2026-09-26T18:15:18.157+02:00",
+            "level": "info",
+            "msg": "Check result: true, Failed Clients: []",
+            "datalen": 0,
+            "data": {}
+          },
+          {
+            "time": "2026-09-26T18:15:18.158+02:00",
+            "level": "info",
+            "msg": "task completed",
+            "datalen": 0,
+            "data": {}
+          }
+        ],
+        "config_yaml": "clientPattern: ^nano-\npollInterval: 1s\nskipConsensusCheck: false\nskipExecutionCheck: false\nexpectUnhealthy: false\nminClientCount: 2\nmaxUnhealthyCount: 0\nfailOnCheckMiss: false\nexecutionRpcResultVar: \"\"\nconsensusRpcResultVar: \"\"\ncontinueOnPass: false\n",
+        "result_yaml": "outputs:\n    failedClients: []\n    failedCount: 0\n    goodClients:\n        - clRpcUrl: http://127.0.0.1:60965\n          elRpcUrl: http://127.0.0.1:60965\n          name: nano-0\n        - clRpcUrl: http://127.0.0.1:60987\n          elRpcUrl: http://127.0.0.1:60987\n          name: nano-1\n    goodCount: 2\n    totalCount: 2\nprogress: 100\nprogressMessage: 'All clients healthy: 2/2'\nresult: 1\nrunning: false\nstarted: true\n",
+        "result_files": null
+      },
+      {
+        "index": 2,
+        "parent_index": 0,
+        "name": "check_consensus_sync_status",
+        "title": "Both native consensus views are synced and progressing",
+        "started": true,
+        "completed": true,
+        "start_time": 1790439318158,
+        "stop_time": 1790439322186,
+        "timeout": 25000,
+        "runtime": 4029,
+        "status": "complete",
+        "result": "success",
+        "result_error": "",
+        "progress": 100,
+        "progress_message": "All clients synced: 2",
+        "log": [
+          {
+            "time": "2026-09-26T18:15:18.158+02:00",
+            "level": "info",
+            "msg": "starting task",
+            "datalen": 0,
+            "data": {}
+          },
+          {
+            "time": "2026-09-26T18:15:18.161+02:00",
+            "level": "debug",
+            "msg": "check failed. check: WaitForChainProgression, expected block height: >= 3, got: 3",
+            "datalen": 1,
+            "data": {
+              "client": "nano-0"
+            }
+          },
+          {
+            "time": "2026-09-26T18:15:18.163+02:00",
+            "level": "debug",
+            "msg": "check failed. check: WaitForChainProgression, expected block height: >= 3, got: 3",
+            "datalen": 1,
+            "data": {
+              "client": "nano-1"
+            }
+          },
+          {
+            "time": "2026-09-26T18:15:18.163+02:00",
+            "level": "info",
+            "msg": "Check result: false, Failed Clients: [nano-0 nano-1]",
+            "datalen": 0,
+            "data": {}
+          },
+          {
+            "time": "2026-09-26T18:15:19.166+02:00",
+            "level": "debug",
+            "msg": "check failed. check: WaitForChainProgression, expected block height: >= 3, got: 3",
+            "datalen": 1,
+            "data": {
+              "client": "nano-0"
+            }
+          },
+          {
+            "time": "2026-09-26T18:15:19.168+02:00",
+            "level": "debug",
+            "msg": "check failed. check: WaitForChainProgression, expected block height: >= 3, got: 3",
+            "datalen": 1,
+            "data": {
+              "client": "nano-1"
+            }
+          },
+          {
+            "time": "2026-09-26T18:15:19.168+02:00",
+            "level": "info",
+            "msg": "Check result: false, Failed Clients: [nano-0 nano-1]",
+            "datalen": 0,
+            "data": {}
+          },
+          {
+            "time": "2026-09-26T18:15:20.171+02:00",
+            "level": "debug",
+            "msg": "check failed. check: WaitForChainProgression, expected block height: >= 3, got: 3",
+            "datalen": 1,
+            "data": {
+              "client": "nano-0"
+            }
+          },
+          {
+            "time": "2026-09-26T18:15:20.173+02:00",
+            "level": "debug",
+            "msg": "check failed. check: WaitForChainProgression, expected block height: >= 3, got: 3",
+            "datalen": 1,
+            "data": {
+              "client": "nano-1"
+            }
+          },
+          {
+            "time": "2026-09-26T18:15:20.173+02:00",
+            "level": "info",
+            "msg": "Check result: false, Failed Clients: [nano-0 nano-1]",
+            "datalen": 0,
+            "data": {}
+          },
+          {
+            "time": "2026-09-26T18:15:21.179+02:00",
+            "level": "debug",
+            "msg": "check failed. check: WaitForChainProgression, expected block height: >= 3, got: 3",
+            "datalen": 1,
+            "data": {
+              "client": "nano-0"
+            }
+          },
+          {
+            "time": "2026-09-26T18:15:21.182+02:00",
+            "level": "debug",
+            "msg": "check failed. check: WaitForChainProgression, expected block height: >= 3, got: 3",
+            "datalen": 1,
+            "data": {
+              "client": "nano-1"
+            }
+          },
+          {
+            "time": "2026-09-26T18:15:21.182+02:00",
+            "level": "info",
+            "msg": "Check result: false, Failed Clients: [nano-0 nano-1]",
+            "datalen": 0,
+            "data": {}
+          },
+          {
+            "time": "2026-09-26T18:15:22.186+02:00",
+            "level": "info",
+            "msg": "Check result: true, Failed Clients: []",
+            "datalen": 0,
+            "data": {}
+          },
+          {
+            "time": "2026-09-26T18:15:22.186+02:00",
+            "level": "info",
+            "msg": "task completed",
+            "datalen": 0,
+            "data": {}
+          }
+        ],
+        "config_yaml": "clientPattern: ^nano-\npollInterval: 1s\nexpectSyncing: false\nexpectOptimistic: false\nexpectMinPercent: 100\nexpectMaxPercent: 100\nminSlotHeight: 3\nwaitForChainProgression: true\ncontinueOnPass: false\n",
+        "result_yaml": "outputs:\n    failedClients: []\n    goodClients:\n        - name: nano-0\n          optimistic: false\n          syncDistance: 0\n          syncHead: 4\n          synchronizing: false\n        - name: nano-1\n          optimistic: false\n          syncDistance: 0\n          syncHead: 4\n          synchronizing: false\nprogress: 100\nprogressMessage: 'All clients synced: 2'\nresult: 1\nrunning: false\nstarted: true\n",
+        "result_files": null
+      },
+      {
+        "index": 3,
+        "parent_index": 0,
+        "name": "check_consensus_block_proposals",
+        "title": "Observe two new native Beacon block bodies",
+        "started": true,
+        "completed": true,
+        "start_time": 1790439322187,
+        "stop_time": 1790439334214,
+        "timeout": 25000,
+        "runtime": 12027,
+        "status": "complete",
+        "result": "success",
+        "result_error": "",
+        "progress": 100,
+        "progress_message": "Found 2 matching blocks",
+        "log": [
+          {
+            "time": "2026-09-26T18:15:22.187+02:00",
+            "level": "info",
+            "msg": "starting task",
+            "datalen": 0,
+            "data": {}
+          },
+          {
+            "time": "2026-09-26T18:15:28.2+02:00",
+            "level": "info",
+            "msg": "matching block 5 [0x71403095a17d896f12267b1e367f68865cc9ed7d9cc1fa4926935fd0d532e7f1]",
+            "datalen": 0,
+            "data": {}
+          },
+          {
+            "time": "2026-09-26T18:15:34.207+02:00",
+            "level": "info",
+            "msg": "matching block 6 [0xeb4cc4e044ac3730cc965b47580bafd45f4748905c48c193d6382642cf59386b]",
+            "datalen": 0,
+            "data": {}
+          },
+          {
+            "time": "2026-09-26T18:15:34.214+02:00",
+            "level": "info",
+            "msg": "task completed",
+            "datalen": 0,
+            "data": {}
+          }
+        ],
+        "config_yaml": "checkLookback: 0\nblockCount: 2\npayloadTimeout: 0\ngraffitiPattern: \"\"\nvalidatorNamePattern: \"\"\nextraDataPattern: \"\"\nminAttestationCount: 0\nminDepositCount: 0\nminExitCount: 0\nminSlashingCount: 0\nminAttesterSlashingCount: 0\nminProposerSlashingCount: 0\nminBlsChangeCount: 0\nminWithdrawalCount: 0\nminTransactionCount: 0\nminBlobCount: 0\nminDepositRequestCount: 0\nminWithdrawalRequestCount: 0\nminConsolidationRequestCount: 0\nminBuilderDepositRequestCount: 0\nminBuilderExitRequestCount: 0\nexpectDeposits: []\nexpectExits: []\nexpectSlashings: []\nexpectBlsChanges: []\nexpectWithdrawals: []\nexpectDepositRequests: []\nexpectWithdrawalRequests: []\nexpectConsolidationRequests: []\nexpectBuilderDepositRequests: []\nexpectBuilderExitRequests: []\n",
+        "result_yaml": "outputs:\n    matchingBlockBodies:\n        - message:\n            body:\n                attestations: []\n                attester_slashings: []\n                deposits: []\n                eth1_data:\n                    block_hash: 0xdadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadada\n                    deposit_count: \"64\"\n                    deposit_root: 0x4242424242424242424242424242424242424242424242424242424242424242\n                execution_payload:\n                    base_fee_per_gas: \"513227639\"\n                    block_hash: 0x824efa39067a38926daa0ec395eac7bc080d9fac4cf658fe4131ffa94281b9bd\n                    block_number: \"5\"\n                    extra_data: 0x\n                    fee_recipient: \"0x0000000000000000000000000000000000001234\"\n                    gas_limit: \"30000000\"\n                    gas_used: \"0\"\n                    logs_bloom: \"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\"\n                    parent_hash: 0x17ac2ead6f993207344fdc4f301aa12562fe72c2d6e1c4050983bd68c2fb30d5\n                    prev_randao: 0x7226a6eeb17808263127445f3b63ddcf658a72a52c63f061d583012348d67d9a\n                    receipts_root: 0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421\n                    state_root: 0xdb3e0532eb71b466d2cfb8a3876ed20f1e79f7709187efbd428d02e4a953b17a\n                    timestamp: \"1790439327\"\n                    transactions: []\n                graffiti: \"0x0000000000000000000000000000000000000000000000000000000000000000\"\n                proposer_slashings: []\n                randao_reveal: 0xa2214c76f8db118929cf81aa48a1accb042dbf2a2237122e5c9bd045a9b6b90bcf735c4b08c19f630b93b517ebb28f2d06f7dbd28934f90e0ce21f62ec80443a62860e2ff9220042596cc9cf0ebfbe2d2a16095f04b8f9b6b9cba33620db45aa\n                sync_aggregate:\n                    sync_committee_bits: \"0x00000000\"\n                    sync_committee_signature: 0xc00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n                voluntary_exits: []\n            parent_root: 0x0aba22d25d2cf94ce575fb5eb7ae51a08e79b941eda0944b277f906b765c1413\n            proposer_index: \"44\"\n            slot: \"5\"\n            state_root: 0x5e3d79136fd41e80a855904a7b669f26fe692fa1bbc9db68996840a11a3c2e4d\n          signature: 0x8c4bc52edfdcaac71842b1c033ca267577114c27d3f3c584fb0491d236badbead5c4ba337e6aad5d4fea6b0cfae116e702efa547d980ef9f635426d5965447106cda3a1987613acca86b6836c23b614a37e360dedc5525b7fecab6436d28288a\n        - message:\n            body:\n                attestations: []\n                attester_slashings: []\n                deposits: []\n                eth1_data:\n                    block_hash: 0xdadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadada\n                    deposit_count: \"64\"\n                    deposit_root: 0x4242424242424242424242424242424242424242424242424242424242424242\n                execution_payload:\n                    base_fee_per_gas: \"449074185\"\n                    block_hash: 0x3c38130d104ee3c27af51fbee035910f3f30ca2ea0437694bc15489e9842e4e6\n                    block_number: \"6\"\n                    extra_data: 0x\n                    fee_recipient: \"0x0000000000000000000000000000000000001234\"\n                    gas_limit: \"30000000\"\n                    gas_used: \"0\"\n                    logs_bloom: \"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\"\n                    parent_hash: 0x824efa39067a38926daa0ec395eac7bc080d9fac4cf658fe4131ffa94281b9bd\n                    prev_randao: 0x9a0080e9833d00e5b5a6b3d814abaa713ca98c543d4ef7cd23d8cbb21e21fa0c\n                    receipts_root: 0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421\n                    state_root: 0xdb3e0532eb71b466d2cfb8a3876ed20f1e79f7709187efbd428d02e4a953b17a\n                    timestamp: \"1790439333\"\n                    transactions: []\n                graffiti: \"0x0000000000000000000000000000000000000000000000000000000000000000\"\n                proposer_slashings: []\n                randao_reveal: 0xb320419d60fc007e5181a73912a675f49d7ef585961f02cb6b8bf9a9cfc751b5e0c154806627881968a3da5d1fb6ecaf106643b90490d279c7bec2b4d869a99c8a006e20d248a8940638de9df0f14aed380cb1be83be95d919522b63301ff0d2\n                sync_aggregate:\n                    sync_committee_bits: \"0x00000000\"\n                    sync_committee_signature: 0xc00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n                voluntary_exits: []\n            parent_root: 0x71403095a17d896f12267b1e367f68865cc9ed7d9cc1fa4926935fd0d532e7f1\n            proposer_index: \"1\"\n            slot: \"6\"\n            state_root: 0x9d4750aaf353aa17355875aea898142cb62c997a2bda781e7f0fd87a9653aece\n          signature: 0x92a1ccde6f30ad0ef6243e8b194717cc8fa8ee067f3d1323127188e1fc52fdf3a1fd57fb957f79a5b99fe838ccdd11e70b5b5ac59eb11fd295fc7cddb4660a971db010aa2a2637156d89f1c861916fbe10a0e4799f31c6a8909ee0120a076763\n    matchingBlockHeaders:\n        - message:\n            body_root: 0xc132f32a031d038292c85d8baa6e218cf8e8f94f00c0a16ac4582f5b3fbbcca9\n            parent_root: 0x0aba22d25d2cf94ce575fb5eb7ae51a08e79b941eda0944b277f906b765c1413\n            proposer_index: \"44\"\n            slot: \"5\"\n            state_root: 0x5e3d79136fd41e80a855904a7b669f26fe692fa1bbc9db68996840a11a3c2e4d\n          signature: 0x8c4bc52edfdcaac71842b1c033ca267577114c27d3f3c584fb0491d236badbead5c4ba337e6aad5d4fea6b0cfae116e702efa547d980ef9f635426d5965447106cda3a1987613acca86b6836c23b614a37e360dedc5525b7fecab6436d28288a\n        - message:\n            body_root: 0x5b4ee633dc0e1aa5d8c26a70b92ddf0032bb11ca757af2bb0e92300f977f39fd\n            parent_root: 0x71403095a17d896f12267b1e367f68865cc9ed7d9cc1fa4926935fd0d532e7f1\n            proposer_index: \"1\"\n            slot: \"6\"\n            state_root: 0x9d4750aaf353aa17355875aea898142cb62c997a2bda781e7f0fd87a9653aece\n          signature: 0x92a1ccde6f30ad0ef6243e8b194717cc8fa8ee067f3d1323127188e1fc52fdf3a1fd57fb957f79a5b99fe838ccdd11e70b5b5ac59eb11fd295fc7cddb4660a971db010aa2a2637156d89f1c861916fbe10a0e4799f31c6a8909ee0120a076763\n    matchingBlockRoots:\n        - 0x71403095a17d896f12267b1e367f68865cc9ed7d9cc1fa4926935fd0d532e7f1\n        - 0xeb4cc4e044ac3730cc965b47580bafd45f4748905c48c193d6382642cf59386b\nprogress: 100\nprogressMessage: Found 2 matching blocks\nresult: 1\nrunning: false\nstarted: true\n",
+        "result_files": null
+      },
+      {
+        "index": 4,
+        "parent_index": 0,
+        "name": "check_consensus_finality",
+        "title": "Observe native finalized epoch at least two",
+        "started": true,
+        "completed": true,
+        "start_time": 1790439334214,
+        "stop_time": 1790439489296,
+        "timeout": 240000,
+        "runtime": 155082,
+        "status": "complete",
+        "result": "success",
+        "result_error": "",
+        "progress": 100,
+        "progress_message": "Finality check passed",
+        "log": [
+          {
+            "time": "2026-09-26T18:15:34.214+02:00",
+            "level": "info",
+            "msg": "starting task",
+            "datalen": 0,
+            "data": {}
+          },
+          {
+            "time": "2026-09-26T18:15:34.214+02:00",
+            "level": "info",
+            "msg": "check failed: minFinalizedEpochs (have: 0, want >= 2)",
+            "datalen": 0,
+            "data": {}
+          },
+          {
+            "time": "2026-09-26T18:15:45+02:00",
+            "level": "info",
+            "msg": "wallclock epoch 1",
+            "datalen": 0,
+            "data": {}
+          },
+          {
+            "time": "2026-09-26T18:15:45+02:00",
+            "level": "info",
+            "msg": "check failed: minFinalizedEpochs (have: 0, want >= 2)",
+            "datalen": 0,
+            "data": {}
+          },
+          {
+            "time": "2026-09-26T18:16:33+02:00",
+            "level": "info",
+            "msg": "wallclock epoch 2",
+            "datalen": 0,
+            "data": {}
+          },
+          {
+            "time": "2026-09-26T18:16:33.001+02:00",
+            "level": "info",
+            "msg": "check failed: minFinalizedEpochs (have: 0, want >= 2)",
+            "datalen": 0,
+            "data": {}
+          },
+          {
+            "time": "2026-09-26T18:17:21.001+02:00",
+            "level": "info",
+            "msg": "wallclock epoch 3",
+            "datalen": 0,
+            "data": {}
+          },
+          {
+            "time": "2026-09-26T18:17:21.001+02:00",
+            "level": "info",
+            "msg": "check failed: minFinalizedEpochs (have: 0, want >= 2)",
+            "datalen": 0,
+            "data": {}
+          },
+          {
+            "time": "2026-09-26T18:18:09+02:00",
+            "level": "info",
+            "msg": "wallclock epoch 4",
+            "datalen": 0,
+            "data": {}
+          },
+          {
+            "time": "2026-09-26T18:18:09.001+02:00",
+            "level": "info",
+            "msg": "check failed: minFinalizedEpochs (have: 0, want >= 2)",
+            "datalen": 0,
+            "data": {}
+          },
+          {
+            "time": "2026-09-26T18:18:09.296+02:00",
+            "level": "info",
+            "msg": "new checkpoint 2",
+            "datalen": 0,
+            "data": {}
+          },
+          {
+            "time": "2026-09-26T18:18:09.296+02:00",
+            "level": "info",
+            "msg": "task completed",
+            "datalen": 0,
+            "data": {}
+          }
+        ],
+        "config_yaml": "minUnfinalizedEpochs: 0\nmaxUnfinalizedEpochs: 4\nminFinalizedEpochs: 2\nfailOnCheckMiss: false\ncontinueOnPass: false\n",
+        "result_yaml": "outputs:\n    finalizedEpoch: 2\n    finalizedRoot: 0xcc8b149b628d5ac525ab2815f6368edc6383c24491a1292d93ba11f634952970\n    unfinalizedEpochs: 2\nprogress: 100\nprogressMessage: Finality check passed\nresult: 1\nrunning: false\nstarted: true\n",
+        "result_files": null
+      }
+    ]
+  }
+}

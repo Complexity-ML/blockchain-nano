@@ -1,0 +1,101 @@
+Start testing: Sep 26 17:19 CEST
+----------------------------------------------------------
+298/326 Testing: consensus_bellatrix_managed_runtime
+298/326 Test: consensus_bellatrix_managed_runtime
+Command: "/Users/boris/Dev/blockchain-nano/build-cmake/nano-bellatrix-transition-tests" "--managed-runtime" "/Users/boris/Dev/blockchain-nano/build-cmake/nano" "/Users/boris/Dev/blockchain-nano/build-network/nano-p2p"
+Directory: /Users/boris/Dev/blockchain-nano/build-cmake
+"consensus_bellatrix_managed_runtime" start time: Sep 26 17:19 CEST
+Output:
+----------------------------------------------------------
+independent Bellatrix cores synchronized
+Beacon slots observed through both P2P daemons
+{"nativeSSEBlockReceived":true,"durableHeaderMatched":true,"slot":4}
+{"beaconSDK":"v0.1.6","blockRoot":"0x90bde0715d7208e15d6cfea6133597ba897529549f6e08698c14bf773519bce2","sszBytes":1016,"jsonRoundTripExact":true,"assertoorSuiteExecuted":false}
+restarted Bellatrix validator propagated next block
+Beacon slot observations restored after restart
+{"beaconPeerObservations":true,"blockAfterRestart":"0x5","blockBeforeRestart":"0x4","crashRecovered":false,"distributedStake":false,"finalized":null,"independentCoreProcesses":2,"localKeys":64,"observerSynchronized":true,"p2pDaemons":2,"partitionRecovered":false,"physicalHosts":1,"scenario":"bellatrix-managed-cores-restart","validatorNodes":1,"wallClock":true}
+<end of output>
+Test time =  18.93 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_managed_runtime" end time: Sep 26 17:19 CEST
+"consensus_bellatrix_managed_runtime" time elapsed: 00:00:18
+----------------------------------------------------------
+
+306/326 Testing: consensus_bellatrix_validator_loop
+306/326 Test: consensus_bellatrix_validator_loop
+Command: "/Users/boris/Dev/blockchain-nano/build-cmake/nano-bellatrix-transition-tests" "--validator-loop"
+Directory: /Users/boris/Dev/blockchain-nano/build-cmake
+"consensus_bellatrix_validator_loop" start time: Sep 26 17:19 CEST
+Output:
+----------------------------------------------------------
+{"archivedVotes":8,"currentTargetParticipants":0,"finalized":0,"justified":0,"loop":{"attestationsAdmitted":8,"failure":null,"healthy":true,"localKeys":64,"proposalsAdmitted":7,"staleDutyRetries":0},"previousTargetParticipants":0,"slot":8}
+{"archivedVotes":72,"currentTargetParticipants":0,"finalized":0,"justified":0,"loop":{"attestationsAdmitted":72,"failure":null,"healthy":true,"localKeys":64,"proposalsAdmitted":15,"staleDutyRetries":0},"previousTargetParticipants":64,"slot":16}
+{"archivedVotes":72,"currentTargetParticipants":0,"finalized":0,"justified":2,"loop":{"attestationsAdmitted":136,"failure":null,"healthy":true,"localKeys":64,"proposalsAdmitted":23,"staleDutyRetries":0},"previousTargetParticipants":64,"slot":24}
+{"archivedVotes":72,"currentTargetParticipants":0,"finalized":2,"justified":3,"loop":{"attestationsAdmitted":200,"failure":null,"healthy":true,"localKeys":64,"proposalsAdmitted":31,"staleDutyRetries":0},"previousTargetParticipants":64,"slot":32}
+{"durableBlockEvents":31,"finalityEventMatched":true}
+{"finalizedEpoch":2,"independentCoreProcesses":false,"localKeys":64,"loop":{"attestationsAdmitted":200,"failure":null,"healthy":true,"localKeys":64,"proposalsAdmitted":31,"staleDutyRetries":0},"realP2pDaemons":0,"reopened":true,"scenario":"bellatrix-local-validator-loop","syntheticClock":true,"validatorHosts":1,"walletTransactionExecuted":true}
+<end of output>
+Test time =  69.52 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_validator_loop" end time: Sep 26 17:20 CEST
+"consensus_bellatrix_validator_loop" time elapsed: 00:01:09
+----------------------------------------------------------
+
+324/326 Testing: consensus_bellatrix_beacon_reads
+324/326 Test: consensus_bellatrix_beacon_reads
+Command: "/Users/boris/Dev/blockchain-nano/build-cmake/nano-bellatrix-transition-tests" "--beacon-api"
+Directory: /Users/boris/Dev/blockchain-nano/build-cmake
+"consensus_bellatrix_beacon_reads" start time: Sep 26 17:20 CEST
+Output:
+----------------------------------------------------------
+{"assertoorQualified":false,"beaconReadEndpoints":7,"corruptStateRejected":true,"httpOriginDenied":true,"publicBindDenied":true,"specParameters":53,"syncObservationsQualified":true,"unavailableStatus":503}
+<end of output>
+Test time =   1.38 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_beacon_reads" end time: Sep 26 17:20 CEST
+"consensus_bellatrix_beacon_reads" time elapsed: 00:00:01
+----------------------------------------------------------
+
+325/326 Testing: consensus_bellatrix_beacon_headers
+325/326 Test: consensus_bellatrix_beacon_headers
+Command: "/Users/boris/Dev/blockchain-nano/build-cmake/nano-bellatrix-transition-tests" "--beacon-headers"
+Directory: /Users/boris/Dev/blockchain-nano/build-cmake
+"consensus_bellatrix_beacon_headers" start time: Sep 26 17:20 CEST
+Output:
+----------------------------------------------------------
+{"anchorWithoutSignature":404,"assertoorQualified":false,"corruptBodyRejected":true,"corruptSignatureRejected":true,"signedHeaderSelectors":["head","root","slot"]}
+<end of output>
+Test time =   0.64 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_beacon_headers" end time: Sep 26 17:20 CEST
+"consensus_bellatrix_beacon_headers" time elapsed: 00:00:00
+----------------------------------------------------------
+
+326/326 Testing: consensus_bellatrix_beacon_headers_reorg
+326/326 Test: consensus_bellatrix_beacon_headers_reorg
+Command: "/Users/boris/Dev/blockchain-nano/build-cmake/nano-bellatrix-transition-tests" "--beacon-headers-reorg"
+Directory: /Users/boris/Dev/blockchain-nano/build-cmake
+"consensus_bellatrix_beacon_headers_reorg" start time: Sep 26 17:20 CEST
+Output:
+----------------------------------------------------------
+{"assertoorQualified":false,"beaconHeaderReorgs":2,"frozenSnapshotPreserved":true}
+<end of output>
+Test time =   5.17 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_beacon_headers_reorg" end time: Sep 26 17:20 CEST
+"consensus_bellatrix_beacon_headers_reorg" time elapsed: 00:00:05
+----------------------------------------------------------
+
+End testing: Sep 26 17:20 CEST
+
+qualification_consensus_api =   7.18 sec*proc
+
+qualification_consensus_local_validator =  69.52 sec*proc
+
+qualification_consensus_runtime =  18.93 sec*proc
+

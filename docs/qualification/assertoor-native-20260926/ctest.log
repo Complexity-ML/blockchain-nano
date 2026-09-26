@@ -1,0 +1,28 @@
+Start testing: Sep 26 17:27 CEST
+----------------------------------------------------------
+299/327 Testing: consensus_bellatrix_assertoor
+299/327 Test: consensus_bellatrix_assertoor
+Command: "/opt/homebrew/bin/cmake" "-E" "env" "NANO_TEST_ASSERTOOR_PROBE=/Users/boris/Dev/blockchain-nano/tests/assertoor/probe.mjs" "NANO_TEST_ASSERTOOR_BINARY=/Users/boris/Dev/blockchain-nano/.deps/assertoor-bin" "/Users/boris/Dev/blockchain-nano/build-cmake/nano-bellatrix-transition-tests" "--managed-runtime" "/Users/boris/Dev/blockchain-nano/build-cmake/nano" "/Users/boris/Dev/blockchain-nano/build-network/nano-p2p"
+Directory: /Users/boris/Dev/blockchain-nano/build-cmake
+"consensus_bellatrix_assertoor" start time: Sep 26 17:27 CEST
+Output:
+----------------------------------------------------------
+independent Bellatrix cores synchronized
+Beacon slots observed through both P2P daemons
+{"assertoorExecuted":true,"runs":[{"run_id":1,"test_id":"nano-native-observation","name":"Nano native execution and consensus observation","status":"success","start_time":1790436429,"stop_time":1790436446}],"evidence":"/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-assertoor-GY7ibm","productionQualified":false}
+{"assertoorEvidence":"/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-assertoor-GY7ibm"}
+restarted Bellatrix validator propagated next block
+Beacon slot observations restored after restart
+{"beaconPeerObservations":true,"blockAfterRestart":"0x7","blockBeforeRestart":"0x6","crashRecovered":false,"distributedStake":false,"finalized":null,"independentCoreProcesses":2,"localKeys":64,"observerSynchronized":true,"p2pDaemons":2,"partitionRecovered":false,"physicalHosts":1,"scenario":"bellatrix-managed-cores-restart","validatorNodes":1,"wallClock":true}
+<end of output>
+Test time =  32.83 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_assertoor" end time: Sep 26 17:27 CEST
+"consensus_bellatrix_assertoor" time elapsed: 00:00:32
+----------------------------------------------------------
+
+End testing: Sep 26 17:27 CEST
+
+qualification_consensus_assertoor =  32.83 sec*proc
+

@@ -1,0 +1,152 @@
+{"level":"info","msg":"Log format set to json","time":"2026-09-26T18:22:05+02:00"}
+{"build_version":"local build","level":"info","metrics_port":0,"msg":"starting assertoor","time":"2026-09-26T18:22:05+02:00"}
+{"level":"info","msg":"initializing sqlite connection to :memory:?cache=shared with 10/50 conn limit","time":"2026-09-26T18:22:05+02:00"}
+2026/09/26 18:22:05 OK   20240913135112_init.sql (353.17µs)
+2026/09/26 18:22:05 OK   20250114224233_task_summaries.sql (66.96µs)
+2026/09/26 18:22:05 OK   20250202000000_ai_token_usage.sql (97µs)
+2026/09/26 18:22:05 OK   20250203000000_test_yaml_source.sql (98.38µs)
+2026/09/26 18:22:05 goose: successfully migrated database to version: 20250203000000
+{"level":"info","module":"clientpool","msg":"initialized client pool with 2 clients (chain id: 1337)","time":"2026-09-26T18:22:05+02:00"}
+{"client":"nano-0","level":"info","module":"execution","msg":"received el block 68 [0x3b66ad9e8661ecd004a7dea8421cae3892e10785efcfb454d113de2cc51b0f19] polled","time":"2026-09-26T18:22:05+02:00"}
+{"level":"info","module":"clientpool","msg":"client check completed (2 good clients, 0 bad clients)","time":"2026-09-26T18:22:05+02:00"}
+time="2026-09-26T18:22:05+02:00" level=info msg="initialized block stats from latest block: gasLimit=30000000 baseFee=113981 amsterdamFeeModel=true"
+{"component":"eventbus","level":"info","msg":"event bus started","time":"2026-09-26T18:22:05+02:00"}
+{"level":"warning","module":"web","msg":"authProviderUrl is empty: API endpoints are unauthenticated. Configure an authenticatoor URL to require auth.","time":"2026-09-26T18:22:05+02:00"}
+{"level":"info","msg":"Starting metrics server on :0","time":"2026-09-26T18:22:05+02:00"}
+{"level":"info","msg":"loaded 1 test descriptors (0 errors)","time":"2026-09-26T18:22:05+02:00"}
+{"RunID":1,"TestID":"nano-distributed-finality","level":"info","module":"test","msg":"starting test","time":"2026-09-26T18:22:05+02:00","timeout":"4m30s"}
+{"RunID":1,"TestID":"nano-distributed-finality","level":"info","module":"test","msg":"starting task","task":"check_clients_are_healthy","taskidx":1,"time":"2026-09-26T18:22:05+02:00"}
+{"RunID":1,"TestID":"nano-distributed-finality","level":"info","module":"test","msg":"Check result: false, Failed Clients: [nano-0 nano-1]","task":"check_clients_are_healthy","taskidx":1,"time":"2026-09-26T18:22:05+02:00"}
+{"client":"nano-1","level":"info","module":"consensus","msg":"received cl block 71 [0x0c30d80e74f266a153686c50c48f1e40de11b500ed6a0adf21ce1c5b308a91ea] polled","time":"2026-09-26T18:22:05+02:00"}
+time="2026-09-26T18:22:05+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:60987/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-1 module=rpc
+time="2026-09-26T18:22:05+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:61628/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-0 module=rpc
+{"RunID":1,"TestID":"nano-distributed-finality","level":"info","module":"test","msg":"Check result: true, Failed Clients: []","task":"check_clients_are_healthy","taskidx":1,"time":"2026-09-26T18:22:06+02:00"}
+{"RunID":1,"TestID":"nano-distributed-finality","level":"info","module":"test","msg":"task completed","task":"check_clients_are_healthy","taskidx":1,"time":"2026-09-26T18:22:06+02:00"}
+{"RunID":1,"TestID":"nano-distributed-finality","level":"info","module":"test","msg":"starting task","task":"check_consensus_sync_status","taskidx":2,"time":"2026-09-26T18:22:06+02:00"}
+{"RunID":1,"TestID":"nano-distributed-finality","level":"info","module":"test","msg":"Check result: false, Failed Clients: [nano-0 nano-1]","task":"check_consensus_sync_status","taskidx":2,"time":"2026-09-26T18:22:06+02:00"}
+{"RunID":1,"TestID":"nano-distributed-finality","level":"info","module":"test","msg":"Check result: false, Failed Clients: [nano-0 nano-1]","task":"check_consensus_sync_status","taskidx":2,"time":"2026-09-26T18:22:07+02:00"}
+{"RunID":1,"TestID":"nano-distributed-finality","level":"info","module":"test","msg":"Check result: false, Failed Clients: [nano-0 nano-1]","task":"check_consensus_sync_status","taskidx":2,"time":"2026-09-26T18:22:08+02:00"}
+{"RunID":1,"TestID":"nano-distributed-finality","level":"info","module":"test","msg":"Check result: false, Failed Clients: [nano-0]","task":"check_consensus_sync_status","taskidx":2,"time":"2026-09-26T18:22:09+02:00"}
+{"client":"nano-0","level":"info","module":"consensus","msg":"received cl block 72 [0x9023ddbc45045506982f2133b0c9049c58e9e99081b934ead3f052f6a63f1026] streamed","time":"2026-09-26T18:22:10+02:00"}
+{"client":"nano-1","level":"info","module":"execution","msg":"received el block 69 [0x501d481bc556311165f1f255e2e4198c3d78a5f338e2e8eaba312a7b43af1a87] notified","time":"2026-09-26T18:22:10+02:00"}
+{"RunID":1,"TestID":"nano-distributed-finality","level":"info","module":"test","msg":"Check result: true, Failed Clients: []","task":"check_consensus_sync_status","taskidx":2,"time":"2026-09-26T18:22:10+02:00"}
+{"RunID":1,"TestID":"nano-distributed-finality","level":"info","module":"test","msg":"task completed","task":"check_consensus_sync_status","taskidx":2,"time":"2026-09-26T18:22:10+02:00"}
+{"RunID":1,"TestID":"nano-distributed-finality","level":"info","module":"test","msg":"starting task","task":"check_consensus_block_proposals","taskidx":3,"time":"2026-09-26T18:22:10+02:00"}
+time="2026-09-26T18:22:15+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:60987/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-1 module=rpc
+time="2026-09-26T18:22:15+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:61628/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-0 module=rpc
+{"client":"nano-0","level":"info","module":"consensus","msg":"received cl block 73 [0x7bd1f89073bc68cf3fb1a4283476d833568abdc2ab3d08b1808ba55b54c80664] streamed","time":"2026-09-26T18:22:16+02:00"}
+{"client":"nano-0","level":"info","module":"execution","msg":"received el block 70 [0xe53862f9b1ac1e38822de59498cdcba580dc2a6031f82d8e6dee6907f6061093] notified","time":"2026-09-26T18:22:16+02:00"}
+{"RunID":1,"TestID":"nano-distributed-finality","level":"info","module":"test","msg":"matching block 73 [0x7bd1f89073bc68cf3fb1a4283476d833568abdc2ab3d08b1808ba55b54c80664]","task":"check_consensus_block_proposals","taskidx":3,"time":"2026-09-26T18:22:16+02:00"}
+{"client":"nano-1","level":"info","module":"consensus","msg":"received cl block 74 [0x3153678d0f08691231d3c7242e809698e35bc356ae45fd7b095ed4806d67cd8a] streamed","time":"2026-09-26T18:22:21+02:00"}
+{"RunID":1,"TestID":"nano-distributed-finality","level":"info","module":"test","msg":"matching block 74 [0x3153678d0f08691231d3c7242e809698e35bc356ae45fd7b095ed4806d67cd8a]","task":"check_consensus_block_proposals","taskidx":3,"time":"2026-09-26T18:22:21+02:00"}
+{"client":"nano-1","level":"info","module":"execution","msg":"received el block 71 [0x059a0e6c44ee45e7c8eabd17b11541aec4229330c380660ab0fd4c2fa7f0cc45] notified","time":"2026-09-26T18:22:21+02:00"}
+{"RunID":1,"TestID":"nano-distributed-finality","level":"info","module":"test","msg":"task completed","task":"check_consensus_block_proposals","taskidx":3,"time":"2026-09-26T18:22:21+02:00"}
+{"RunID":1,"TestID":"nano-distributed-finality","level":"info","module":"test","msg":"starting task","task":"check_consensus_finality","taskidx":4,"time":"2026-09-26T18:22:21+02:00"}
+{"RunID":1,"TestID":"nano-distributed-finality","level":"info","module":"test","msg":"task completed","task":"check_consensus_finality","taskidx":4,"time":"2026-09-26T18:22:21+02:00"}
+{"RunID":1,"TestID":"nano-distributed-finality","level":"info","module":"test","msg":"test completed!","time":"2026-09-26T18:22:21+02:00"}
+time="2026-09-26T18:22:25+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:60987/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-1 module=rpc
+time="2026-09-26T18:22:25+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:61628/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-0 module=rpc
+{"client":"nano-1","level":"info","module":"consensus","msg":"received cl block 75 [0x375cc745ff13e90b6b7c3e7244220aa76d7b2fa82f2c1d1eb8a11f5b3ef4ee08] streamed","time":"2026-09-26T18:22:27+02:00"}
+{"client":"nano-1","level":"info","module":"execution","msg":"received el block 72 [0xa37f8c4a356ffe41726b166613f059d9bd03d9b77a1ce87b690f753bcb2234fa] notified","time":"2026-09-26T18:22:27+02:00"}
+{"client":"nano-0","level":"info","module":"consensus","msg":"received cl block 76 [0xe7f0e070c1e653cd76c9da924b84b7353917b2cb578eca70a44dd3f4b9e7ba90] streamed","time":"2026-09-26T18:22:33+02:00"}
+{"client":"nano-0","level":"info","module":"execution","msg":"received el block 73 [0x6a741ced8d91ce8fece2ceeb957c51f5490ae37d8a94bb997f8cc4e39515935c] notified","time":"2026-09-26T18:22:34+02:00"}
+time="2026-09-26T18:22:35+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:60987/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-1 module=rpc
+time="2026-09-26T18:22:35+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:61628/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-0 module=rpc
+{"client":"nano-1","level":"info","module":"consensus","msg":"received cl block 77 [0xa4214d03362ba0eeac2de20ca738960664aa67953221ce4a5c2d913961f9052f] streamed","time":"2026-09-26T18:22:39+02:00"}
+{"client":"nano-1","level":"info","module":"execution","msg":"received el block 74 [0x2d80e24c490b5f415b40e4f313f34fb6c2984c86bac1b3e0c8bb06d4b34fb35f] notified","time":"2026-09-26T18:22:39+02:00"}
+{"level":"info","msg":"run GC (slot 77, 14.995896 sec before epoch 10)","time":"2026-09-26T18:22:42+02:00"}
+time="2026-09-26T18:22:45+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:60987/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-1 module=rpc
+time="2026-09-26T18:22:45+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:61628/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-0 module=rpc
+{"client":"nano-1","level":"info","module":"consensus","msg":"received cl block 78 [0x84f8ca0f1079bcd19a7472c9f9fe91476b79a29b1380df83d12aa44b80de34a7] streamed","time":"2026-09-26T18:22:45+02:00"}
+{"client":"nano-1","level":"info","module":"execution","msg":"received el block 75 [0xfc07d84dfd9e688734e126e0a1191967a744d8b47361b7c39b5682c6dec02a71] notified","time":"2026-09-26T18:22:45+02:00"}
+{"client":"nano-1","level":"info","module":"consensus","msg":"received cl block 79 [0x1ce5256f7f06636038241ea1cc1c736fb4f37bd09040397782fd5fbe1ae29d95] streamed","time":"2026-09-26T18:22:51+02:00"}
+{"client":"nano-0","level":"info","module":"execution","msg":"received el block 76 [0x3144033b889c1be069cbd8a3208d4d90a12967d6d91ea48124271131cd754ae2] notified","time":"2026-09-26T18:22:52+02:00"}
+time="2026-09-26T18:22:55+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:60987/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-1 module=rpc
+time="2026-09-26T18:22:55+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:61628/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-0 module=rpc
+{"client":"nano-1","level":"info","module":"consensus","msg":"received cl block 80 [0x454aca4af56e08352474decff9de6ebe82c3b8031b030bbf91d2324bd38812b1] streamed","time":"2026-09-26T18:22:57+02:00"}
+{"client":"nano-1","level":"info","module":"execution","msg":"received el block 77 [0xe11c4345f477dfb311881bb08897deb27613e8338b0613b1af8dbef06d30b1f7] notified","time":"2026-09-26T18:22:57+02:00"}
+{"client":"nano-0","level":"info","module":"consensus","msg":"received cl block 81 [0x4e81ddb30273c31938d9a71865b1f8f22740ef0f4a9cbb9f0e624858ca75f915] streamed","time":"2026-09-26T18:23:03+02:00"}
+{"client":"nano-0","level":"info","module":"execution","msg":"received el block 78 [0xb01469b897d4f234eea87eb788fc3e56535e55083b13559ddcb0ef246ed97471] notified","time":"2026-09-26T18:23:03+02:00"}
+time="2026-09-26T18:23:05+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:60987/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-1 module=rpc
+time="2026-09-26T18:23:05+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:61628/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-0 module=rpc
+{"client":"nano-1","level":"info","module":"consensus","msg":"received cl block 82 [0x81e1115997af6ec78b0e9fba09d29dcc3fb9d65c11c9176ff3b0223fbf46970d] streamed","time":"2026-09-26T18:23:10+02:00"}
+{"client":"nano-1","level":"info","module":"execution","msg":"received el block 79 [0x7236135613071b385825c3511b7ae0ef32370886430450cf1ef6353ef1fa881f] notified","time":"2026-09-26T18:23:10+02:00"}
+time="2026-09-26T18:23:15+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:60987/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-1 module=rpc
+time="2026-09-26T18:23:15+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:61628/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-0 module=rpc
+{"client":"nano-1","level":"info","module":"consensus","msg":"received cl block 83 [0x53c391d116c17e96eb7b5abb686a5adc2f4acb9f3045a3d8c66e3c0219ea9ea0] streamed","time":"2026-09-26T18:23:15+02:00"}
+{"client":"nano-1","level":"info","module":"execution","msg":"received el block 80 [0xba45656aef5152799491293edf904d12587c6c9952656bf70c22a0ff30a34a02] notified","time":"2026-09-26T18:23:15+02:00"}
+{"client":"nano-1","level":"info","module":"consensus","msg":"received cl block 84 [0x2c314e75cdeafd67d7db9a165e2d3f1084d8b3f315edcf9ece2c4325948e5970] streamed","time":"2026-09-26T18:23:21+02:00"}
+{"client":"nano-1","level":"info","module":"execution","msg":"received el block 81 [0x46ab92dc45643b9bcad5582717952b79afa911ad14456e7b2c5758085acb9f81] notified","time":"2026-09-26T18:23:22+02:00"}
+time="2026-09-26T18:23:25+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:60987/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-1 module=rpc
+time="2026-09-26T18:23:25+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:61628/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-0 module=rpc
+{"client":"nano-1","level":"info","module":"consensus","msg":"received cl block 85 [0x5bc916dae8e252594f7937be8ab1342e65f95cfe9e4837ea728e93e161fd0a4e] streamed","time":"2026-09-26T18:23:28+02:00"}
+{"client":"nano-1","level":"info","module":"execution","msg":"received el block 82 [0xa0ba166121b15142e78b4ecbbcd8aa9a0a276cfec5cf1b05a080c2631020a7c1] notified","time":"2026-09-26T18:23:28+02:00"}
+{"level":"info","msg":"run GC (slot 85, 14.995969 sec before epoch 11)","time":"2026-09-26T18:23:30+02:00"}
+{"client":"nano-1","level":"info","module":"consensus","msg":"received cl block 86 [0x6f0b8f3b61a751ecbef619f726c891f800d01f550b30dd14d468848696e47b39] streamed","time":"2026-09-26T18:23:33+02:00"}
+{"client":"nano-1","level":"info","module":"execution","msg":"received el block 83 [0x23e5af1a6a83e81b9dc863148c336183d8a3e51e17aea629ab2037e6c765bad0] notified","time":"2026-09-26T18:23:33+02:00"}
+time="2026-09-26T18:23:35+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:60987/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-1 module=rpc
+time="2026-09-26T18:23:35+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:61628/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-0 module=rpc
+{"client":"nano-1","level":"info","module":"consensus","msg":"received cl block 87 [0x09bdacd77b3825784c7085e1855175131d276c8f9c059f84ed8e12f9617dc9c4] streamed","time":"2026-09-26T18:23:39+02:00"}
+{"client":"nano-1","level":"info","module":"execution","msg":"received el block 84 [0x55dd93decb737c92e012a9b2981ff3c252990c9816da1b3b3b6eba2c9be776cf] notified","time":"2026-09-26T18:23:39+02:00"}
+time="2026-09-26T18:23:45+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:60987/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-1 module=rpc
+time="2026-09-26T18:23:45+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:61628/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-0 module=rpc
+{"client":"nano-1","level":"info","module":"consensus","msg":"received cl block 88 [0x0f1275e7bb31706a41c788d9dba2445ca1ff06d6c5bf8713a2ea84eb4d78c436] streamed","time":"2026-09-26T18:23:45+02:00"}
+{"client":"nano-1","level":"info","module":"execution","msg":"received el block 85 [0x61314c984f7e0cd5cfd60a7177db1fbf3871126986769dcb01407b7dc128683d] notified","time":"2026-09-26T18:23:45+02:00"}
+{"client":"nano-0","level":"info","module":"consensus","msg":"received cl block 89 [0xc5864415876ac416c3ab5c13e16d0f4c9a064219658f2e777242a95e9f24b0f4] streamed","time":"2026-09-26T18:23:51+02:00"}
+{"client":"nano-1","level":"info","module":"execution","msg":"received el block 86 [0x00c88736b2eaed889aed9ee49be4e1c36eda77950d7899613b54c947ba2be83f] notified","time":"2026-09-26T18:23:52+02:00"}
+time="2026-09-26T18:23:55+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:60987/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-1 module=rpc
+time="2026-09-26T18:23:55+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:61628/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-0 module=rpc
+{"client":"nano-0","level":"info","module":"consensus","msg":"received cl block 90 [0x435854409f9380a8ca1cc7c38a11ab09e313841726375b8f9b85629a68a21b4b] streamed","time":"2026-09-26T18:23:57+02:00"}
+{"client":"nano-0","level":"info","module":"execution","msg":"received el block 87 [0x9a2f65af3f8faa00cb8008c0b812bd8e7d3d3b2f9387450b7e201bb9ed401457] notified","time":"2026-09-26T18:23:57+02:00"}
+{"client":"nano-1","level":"info","module":"consensus","msg":"received cl block 91 [0x9c5affd92734ab02455f9996c731aaa89db81d1b2f195fd59f81370f828f6974] streamed","time":"2026-09-26T18:24:03+02:00"}
+{"client":"nano-1","level":"info","module":"execution","msg":"received el block 88 [0x4f7e2ab4cda44a9a2a31f80dc18565641fe5a5238efe726d7c1800e4a8997710] notified","time":"2026-09-26T18:24:03+02:00"}
+{"level":"info","module":"clientpool","msg":"client check completed (2 good clients, 0 bad clients)","time":"2026-09-26T18:24:05+02:00"}
+time="2026-09-26T18:24:05+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:60987/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-1 module=rpc
+time="2026-09-26T18:24:05+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:61628/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-0 module=rpc
+{"client":"nano-1","level":"info","module":"consensus","msg":"received cl block 92 [0x85cead80501cb6eedd18e7d8de41055b238972427c74a7e0814b440fbaf114f5] streamed","time":"2026-09-26T18:24:09+02:00"}
+{"client":"nano-1","level":"info","module":"execution","msg":"received el block 89 [0x6731e281c67079f29bb8748eaf50f0e3f8bb0349a4da019721fde2367fe03033] notified","time":"2026-09-26T18:24:09+02:00"}
+time="2026-09-26T18:24:15+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:60987/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-1 module=rpc
+time="2026-09-26T18:24:15+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:61628/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-0 module=rpc
+{"client":"nano-0","level":"info","module":"consensus","msg":"received cl block 93 [0x6ee67f57e3ac2dd6bae97330cf302ed337959e500fbf77bed6804f9c6c3ea688] streamed","time":"2026-09-26T18:24:15+02:00"}
+{"client":"nano-0","level":"info","module":"execution","msg":"received el block 90 [0xa9405ade130b06128d55f36cfc39a6011745d1ae75b38f3bd0dc6c58b070c12c] notified","time":"2026-09-26T18:24:15+02:00"}
+{"level":"info","msg":"run GC (slot 93, 14.995961 sec before epoch 12)","time":"2026-09-26T18:24:18+02:00"}
+{"client":"nano-0","level":"info","module":"consensus","msg":"received cl block 94 [0x98383c0048df9c4b5f6391f6d58d25d0a14caa23dfdcb78b10a90b8a623c8cc8] streamed","time":"2026-09-26T18:24:21+02:00"}
+{"client":"nano-0","level":"info","module":"execution","msg":"received el block 91 [0xccaf1a348aabb2b9870e2bcd8a47f65ea8d5328a0ff9126c73f0889cdda77012] notified","time":"2026-09-26T18:24:21+02:00"}
+time="2026-09-26T18:24:25+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:60987/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-1 module=rpc
+time="2026-09-26T18:24:25+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:61628/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-0 module=rpc
+{"client":"nano-1","level":"info","module":"consensus","msg":"received cl block 95 [0xd35fe53f86f0ac401df85ca091823c3cdba698410779758a028d5ef775602fab] streamed","time":"2026-09-26T18:24:27+02:00"}
+{"client":"nano-1","level":"info","module":"execution","msg":"received el block 92 [0x10359bd06130ee79665475108b78be05cfd3eb794b4f18e74c50ebaf57e0adfa] notified","time":"2026-09-26T18:24:27+02:00"}
+{"client":"nano-1","level":"info","module":"consensus","msg":"received cl block 96 [0xa72b522578989ce45fc7bf0d3b46e5f5917d9072f7754b0f186814c7854b8e84] streamed","time":"2026-09-26T18:24:33+02:00"}
+{"client":"nano-1","level":"info","module":"execution","msg":"received el block 93 [0x59442921841c74d01a445929832e4bc8277e0a1340cf918c183df194308ec646] notified","time":"2026-09-26T18:24:34+02:00"}
+time="2026-09-26T18:24:35+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:60987/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-1 module=rpc
+time="2026-09-26T18:24:35+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:61628/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-0 module=rpc
+{"client":"nano-0","level":"info","module":"consensus","msg":"received cl block 97 [0x22bffe76b994960eaf41605df7faa01199f7388266182121af983518f103913b] streamed","time":"2026-09-26T18:24:40+02:00"}
+{"client":"nano-0","level":"info","module":"execution","msg":"received el block 94 [0xc72eb5d2cbb462cf9604044c908e00a8db00e72fd11aea1a51c4b2bcf5670a18] notified","time":"2026-09-26T18:24:40+02:00"}
+time="2026-09-26T18:24:45+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:60987/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-1 module=rpc
+time="2026-09-26T18:24:45+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:61628/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-0 module=rpc
+{"client":"nano-0","level":"info","module":"consensus","msg":"received cl block 98 [0x4205882c76ce541bc632fbcc777210b5780ccf8312a1acf5909c29b1d39b463f] streamed","time":"2026-09-26T18:24:46+02:00"}
+{"client":"nano-0","level":"info","module":"execution","msg":"received el block 95 [0x7fe448d373b4d9a2ace3e09a68310f904b9957596c373efd1dd4c61d6363db5a] notified","time":"2026-09-26T18:24:46+02:00"}
+{"client":"nano-0","level":"info","module":"consensus","msg":"received cl block 99 [0x34305ef8dcb55321be9e7841a35062883e0e123e48f5c940847087d6fd24ec56] streamed","time":"2026-09-26T18:24:51+02:00"}
+{"client":"nano-0","level":"info","module":"execution","msg":"received el block 96 [0x283717f43abf30788c0ff505fa2397461dac2ca5ded44638eb5341d92f236658] notified","time":"2026-09-26T18:24:51+02:00"}
+time="2026-09-26T18:24:55+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:60987/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-1 module=rpc
+time="2026-09-26T18:24:55+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:61628/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-0 module=rpc
+{"client":"nano-1","level":"info","module":"consensus","msg":"received cl block 100 [0x9ddc159bd9846e0e32d79c826663862f7e15883d48cb09802982cf13e461aaeb] streamed","time":"2026-09-26T18:24:57+02:00"}
+{"client":"nano-1","level":"info","module":"execution","msg":"received el block 97 [0x0e7ea9069760debf762cb4412919f5e3324a94dd870b96da3787e5fe591a48a6] notified","time":"2026-09-26T18:24:57+02:00"}
+{"client":"nano-0","level":"info","module":"consensus","msg":"received cl block 101 [0xc10f89ba1df663381ffd80c5fb017f5ae27bc1fe7556d50ad0b69ee50fe98d37] streamed","time":"2026-09-26T18:25:04+02:00"}
+{"client":"nano-0","level":"info","module":"execution","msg":"received el block 98 [0xfb7f7db85921bafdfebb305c5c3b123098250e6f6ca7c64f060b3aa5fcaf9a0b] notified","time":"2026-09-26T18:25:04+02:00"}
+time="2026-09-26T18:25:05+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:60987/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-1 module=rpc
+time="2026-09-26T18:25:05+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:61628/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-0 module=rpc
+{"level":"info","msg":"run GC (slot 101, 14.997999 sec before epoch 13)","time":"2026-09-26T18:25:06+02:00"}
+{"client":"nano-0","level":"info","module":"consensus","msg":"received cl block 102 [0x394d06e79a8d577bf6016544c4035f6996338ec2394e3257ad524be57cdba014] streamed","time":"2026-09-26T18:25:09+02:00"}
+{"client":"nano-0","level":"info","module":"execution","msg":"received el block 99 [0xbe63df54f17f2cab9a1bcc1a6fae1c4ca455ffe6a856114614f6982574ff1b7a] notified","time":"2026-09-26T18:25:09+02:00"}
+time="2026-09-26T18:25:15+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:61628/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-0 module=rpc
+time="2026-09-26T18:25:15+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:60987/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-1 module=rpc
+{"client":"nano-0","level":"info","module":"consensus","msg":"received cl block 103 [0x6bd830f90fc69a994c80e76efb25ef9ecad3c3a58890a202d9fa1de1c432064a] streamed","time":"2026-09-26T18:25:15+02:00"}
+{"client":"nano-0","level":"info","module":"execution","msg":"received el block 100 [0xafcd5c3e01de016be14e4cf406006016fed9bac3922492a5884c88068422c519] notified","time":"2026-09-26T18:25:15+02:00"}
+{"client":"nano-0","level":"info","module":"consensus","msg":"received cl block 104 [0x06ba49a870b39d0358fb3f3b2831c148d3dbd0e1eb669b1f2e65e568ff61c5be] streamed","time":"2026-09-26T18:25:21+02:00"}
+{"client":"nano-0","level":"info","module":"execution","msg":"received el block 101 [0x21849ee964c1f466649bf468c3abd6be3585416cdc62593d598c8a0fe01bc03e] notified","time":"2026-09-26T18:25:21+02:00"}
+time="2026-09-26T18:25:25+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:60987/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-1 module=rpc
+time="2026-09-26T18:25:25+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:61628/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-0 module=rpc
+2026/09/26 18:25:25 Caught signal: terminated, shutdown gracefully...
+{"component":"eventbus","level":"info","msg":"event bus stopped","time":"2026-09-26T18:25:25+02:00"}
+Closing database

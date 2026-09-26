@@ -1,0 +1,45 @@
+{
+  "date": "2026-09-26",
+  "result": "passed_bounded_native_beacon_scenario",
+  "kurtosisVersion": "1.20.0",
+  "baseCommit": "30b0de21a1225ba55603de437c1200f3437a1ecb",
+  "dirtySource": true,
+  "image": {
+    "id": "sha256:c4da68d96e08a358b8909c69f610b6557eb4f89dd7beafc3d390ab96004e7d04",
+    "created": "2026-09-26T13:53:16.66590046Z",
+    "architecture": "arm64"
+  },
+  "nodes": 2,
+  "syntheticValidators": 64,
+  "validatorsPerNode": 32,
+  "fork": "Bellatrix/Paris",
+  "slotSeconds": 6,
+  "slotsPerEpoch": 8,
+  "assertions": {
+    "bidirectionalPeerCount": 1,
+    "finalizedBlock": 15,
+    "finalizedHash": "0xa05c5569adfcff22245e156018e0058430011001fb2bf8b4afbc663587bc7a7b",
+    "identicalFinalizedBlock": true
+  },
+  "engineCapabilities": {
+    "implemented": false,
+    "rpcError": -32601
+  },
+  "methodology": [
+    "Initial startup rejected all-interface RPC; harness changed to loopback container exec, runtime security unchanged.",
+    "Initial finality assertion accepted imported block 1 and used unsupported runtime wait target; that attempt is not a pass.",
+    "Corrected checks ran on the same live nodes, requiring finality beyond imported block 1 and equal finalized hashes. They passed."
+  ],
+  "limits": [
+    "Single Docker host, no independent operators.",
+    "No Assertoor, Lighthouse/Engine API interoperability, load, restart or partition scenario in this campaign.",
+    "Image includes pending Capella source changes; this campaign exercises Bellatrix/Paris, not Capella.",
+    "Not a production readiness approval."
+  ],
+  "priorities": [
+    "Qualify restart/partition and sustained bounded load in the same container topology.",
+    "Expose an authenticated or appropriately filtered Beacon monitoring interface; legacy validating field does not describe Beacon activity.",
+    "Finish and qualify the selected network fork lifecycle, including pending Capella work.",
+    "Implement Engine API and an ethPandaOps adapter only if reference-CL interoperability is selected."
+  ]
+}

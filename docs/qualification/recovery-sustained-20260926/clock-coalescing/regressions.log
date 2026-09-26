@@ -1,0 +1,56 @@
+UpdateCTestConfiguration  from :/Users/boris/Dev/blockchain-nano/build-release/DartConfiguration.tcl
+Test project /Users/boris/Dev/blockchain-nano/build-release
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 312
+    Start 312: consensus_bellatrix_runtime_restart
+
+312: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-bellatrix-transition-tests "--runtime"
+312: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+312: Test timeout computed to be: 120
+312: {"clockRegressionGated":true,"configuredKeys":64,"independentProcesses":false,"invalidConfigCases":4,"proposalsAcrossRestart":2,"repeatedDutySuppressed":true,"scenario":"bellatrix-runtime-config-restart","slashingIncludedAfterRestart":false,"staleCheckpointRejected":true,"witnessed":false}
+1/4 Test #312: consensus_bellatrix_runtime_restart ..........   Passed    8.62 sec
+test 314
+    Start 314: consensus_bellatrix_clock_coalescing
+
+314: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-bellatrix-transition-tests "--clock-coalescing"
+314: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+314: Test timeout computed to be: 60
+314: {"backwardsStepRejected":true,"observations":45,"publications":17,"scenario":"clock-phase-coalescing","stateEquivalent":true}
+2/4 Test #314: consensus_bellatrix_clock_coalescing .........   Passed    0.50 sec
+test 316
+    Start 316: consensus_bellatrix_signed_execution_chain
+
+316: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-bellatrix-transition-tests
+316: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+316: Test timeout computed to be: 120
+316: {"blocks":9,"cachedSnapshotCallbacks":3898,"cancellations":7,"doubleProposalSlashed":true,"durableCommit":true,"durableReactor":true,"forkBlocks":10,"invalidSignedBlocks":7,"localAttestations":1,"localProposals":8,"localSignatureRefusals":5,"networkActive":false,"pairedCheckpointReopens":3,"pairedExecutionReorgs":2,"reactorCancellations":3,"reactorSyncErrorTested":true,"scenario":"signed-bellatrix-evm-chain","snapshotCacheMutationRefusals":4,"snapshotRefusals":6,"snapshotValidationCallbacks":163630,"storeCancellations":3,"validators":64,"wireMessages":15,"wireRefusals":6}
+3/4 Test #316: consensus_bellatrix_signed_execution_chain ...   Passed    3.29 sec
+test 320
+    Start 320: consensus_bellatrix_witness_runtime
+
+320: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-bellatrix-transition-tests "--runtime-recovery"
+320: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+320: Test timeout computed to be: 180
+320: {"clockRegressionGated":true,"configuredKeys":64,"independentProcesses":false,"invalidConfigCases":4,"proposalsAcrossRestart":2,"repeatedDutySuppressed":true,"scenario":"bellatrix-runtime-config-restart","slashingIncludedAfterRestart":false,"staleCheckpointRejected":true,"witnessed":true}
+320: Bellatrix witnessed core roll-forward and rollback admission checks passed
+4/4 Test #320: consensus_bellatrix_witness_runtime ..........   Passed   16.96 sec
+
+The following tests passed:
+	consensus_bellatrix_runtime_restart
+	consensus_bellatrix_clock_coalescing
+	consensus_bellatrix_signed_execution_chain
+	consensus_bellatrix_witness_runtime
+
+100% tests passed out of 4
+
+Label Time Summary:
+qualification_consensus_ethereum    =   3.29 sec*proc (1 test)
+qualification_consensus_recovery    =  16.96 sec*proc (1 test)
+qualification_consensus_runtime     =   9.12 sec*proc (2 tests)
+
+Total Test time (real) =  29.38 sec

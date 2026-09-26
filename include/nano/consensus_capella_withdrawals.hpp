@@ -1,6 +1,7 @@
 #pragma once
 #include "nano/consensus_slashing.hpp"
 #include "nano/engine.hpp"
+#include "nano/consensus_beacon_state.hpp"
 namespace nano {
 struct CapellaWithdrawal {
  uint64_t index,validator_index;std::array<uint8_t,20> address;uint64_t amount_gwei;
@@ -29,4 +30,13 @@ CapellaWithdrawalExecutionCandidate verify_capella_withdrawal_execution(
  const CapellaWithdrawalState&,const CapellaWithdrawalRules&,const Header& execution_parent,
  const State& execution_state,const Block&,const Int& chain_id,ReplayPolicy,
  const std::function<Bytes(const Int&)>& block_hash={},const std::function<void()>& checkpoint={});
+struct CapellaWithdrawalSszCandidate {Bytes state;ConsensusRoot root;};
+// Isolated process_withdrawals on an independently authenticated Capella state.
+// Returns updated balances/cursors and their SSZ root; all other bytes survive.
+// Caller enforces block ordering, replay protection and durable publication.
+std::optional<CapellaWithdrawalSszCandidate> prepare_capella_withdrawal_state(
+ std::span<const uint8_t>,const ConsensusRoot& authenticated_root,
+ const AltairStateLimits&,const ExecutionPayloadLimits&,size_t maximum_state_bytes,
+ uint64_t slots_per_epoch,const CapellaWithdrawalRules&,
+ const std::vector<CapellaWithdrawal>& advertised,const std::function<void()>& checkpoint={});
 }

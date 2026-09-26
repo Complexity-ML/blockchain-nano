@@ -46,6 +46,7 @@ class Network {
  std::shared_ptr<AltairMessageIngress> altair_ingress_;Json altair_advertisement_;
  Json altair_advertisement()const{return altair_ingress_&&altair_dispatch_&&!altair_dispatch_->blocked()?altair_advertisement_:Json(nullptr);}
  bool bellatrix_mode_=false;
+ bool beacon_status_pending_=false;std::optional<uint64_t> beacon_head_slot_;std::chrono::steady_clock::time_point beacon_head_seen_{};
  std::string consensus_protocol()const{return bellatrix_mode_?"/nano/bellatrix/1.0.0":altair_protocol;}
  std::string consensus_field()const{return bellatrix_mode_?"bellatrix":"altair";}
  void consensus_call(std::string method,Json params,Reply reply){
@@ -92,7 +93,7 @@ class Network {
  std::map<std::string,uint64_t> budget_rejections_;uint64_t failed_status_=0;unsigned trace_ticks_=0;
  unsigned retry_trace_count_=0,periodic_trace_count_=0,vote_delta_trace_count_=0;
  std::map<std::string,std::shared_ptr<GossipProgress>> gossip_progress_;size_t gossip_active_=0;std::string gossip_last_;bool drop_gossip_reply_=std::getenv("NANO_TEST_DROP_GOSSIP_REPLY_ONCE")!=nullptr;
- struct Peer {PeerInfo info;Json status;std::shared_ptr<AltairRelayProgress> altair_progress=std::make_shared<AltairRelayProgress>(),altair_vote_progress=std::make_shared<AltairRelayProgress>();std::shared_ptr<AltairRelayProgress> slashing_progress=std::make_shared<AltairRelayProgress>(),exit_progress=std::make_shared<AltairRelayProgress>();unsigned next_bellatrix_kind=0;bool next_altair_vote=false;std::shared_ptr<BftVoteKnowledge> bft_known=std::make_shared<BftVoteKnowledge>();bool syncing=false;bool previous_bft_page=false;std::chrono::steady_clock::time_point fragment_retry{};};
+ struct Peer {PeerInfo info;Json status;std::shared_ptr<AltairRelayProgress> altair_progress=std::make_shared<AltairRelayProgress>(),altair_vote_progress=std::make_shared<AltairRelayProgress>();std::shared_ptr<AltairRelayProgress> slashing_progress=std::make_shared<AltairRelayProgress>(),exit_progress=std::make_shared<AltairRelayProgress>();std::chrono::steady_clock::time_point status_seen=std::chrono::steady_clock::now();unsigned next_bellatrix_kind=0;bool next_altair_vote=false;std::shared_ptr<BftVoteKnowledge> bft_known=std::make_shared<BftVoteKnowledge>();bool syncing=false;bool previous_bft_page=false;std::chrono::steady_clock::time_point fragment_retry{};};
  std::map<std::string,Peer> peers_;std::vector<PeerInfo> seeds_;std::set<std::string> connecting_,polling_,bft_polling_;
  std::vector<libp2p::multi::Multiaddress> bootstrap_;
  std::shared_ptr<libp2p::network::DnsaddrResolver> resolver_;
@@ -140,19 +141,25 @@ class Network {
    },maximum)->start();
   });
  }
- void poll_altair_archives(){
+ // Empty categories must not consume an entire relay interval: with four
+ // kinds, one vote per four 100ms ticks cannot drain a two-epoch replay of
+ // 64 votes/epoch in 48s. At most one sweep per attempt, still one in flight.
+ void poll_altair_archives(unsigned remaining=4){
   if(altair_relay_busy_||!altair_ingress_||!altair_dispatch_||altair_dispatch_->blocked()||peers_.empty())return;
   auto start=peers_.upper_bound(altair_last_peer_);if(start==peers_.end())start=peers_.begin();auto it=start;
   do{
    if(consensus_peer(it->second.status)){
     const auto peer=it->second.info;const auto step=bellatrix_mode_?it->second.next_bellatrix_kind++%4:unsigned(it->second.next_altair_vote);const bool vote=step==1,proof=step==2,exit=step==3;it->second.next_altair_vote=!vote;const auto kind=exit?AltairWireKind::voluntary_exit:proof?AltairWireKind::attester_slashing:vote?AltairWireKind::attestation:AltairWireKind::block;const auto progress=exit?it->second.exit_progress:proof?it->second.slashing_progress:vote?it->second.altair_vote_progress:it->second.altair_progress;altair_last_peer_=it->first;altair_relay_busy_=true;
-    std::make_shared<AltairArchiveRelay>(io_,[this](const auto& method,auto params,auto reply){consensus_call(method,std::move(params),std::move(reply));},[this,peer](auto frame,auto reply){send_altair(peer,std::move(frame),std::move(reply));},report_token_,altair_ingress_,progress,[this,progress,vote,proof,exit,before=progress->cursor,id=it->first](Json result){altair_relay_busy_=false;if(trace_network_&&result.value("success",false)&&progress->cursor!=before)std::cout<<Json{{"event",exit?"test-bellatrix-exit-relayed":proof?"test-bellatrix-slashing-relayed":vote?"test-altair-vote-relayed":"test-altair-block-relayed"},{"peerId",id},{"root",progress->cursor}}.dump()<<std::endl;},kind)->start();return;
+    std::make_shared<AltairArchiveRelay>(io_,[this](const auto& method,auto params,auto reply){consensus_call(method,std::move(params),std::move(reply));},[this,peer](auto frame,auto reply){send_altair(peer,std::move(frame),std::move(reply));},report_token_,altair_ingress_,progress,[this,progress,vote,proof,exit,remaining,before=progress->cursor,id=it->first](Json result){altair_relay_busy_=false;
+     if(trace_network_&&(!result.value("success",false)||result.value("elapsedMs",int64_t(0))>500))
+      std::cout<<Json{{"event","test-consensus-relay-attempt"},{"kind",exit?"exit":proof?"slashing":vote?"vote":"block"},{"success",result.value("success",false)},{"stage",result.value("stage","")},{"elapsedMs",result.value("elapsedMs",int64_t(0))},{"cursor",progress->cursor},{"dispatchBlocked",altair_dispatch_->blocked()}}.dump()<<std::endl;
+     const bool empty=result.value("success",false)&&progress->cursor==before;if(bellatrix_mode_&&empty&&remaining>1)asio::post(io_,[this,remaining]{poll_altair_archives(remaining-1);});if(trace_network_&&result.value("success",false)&&progress->cursor!=before)std::cout<<Json{{"event",exit?"test-bellatrix-exit-relayed":proof?"test-bellatrix-slashing-relayed":vote?(result.value("stage","")=="known"?"test-altair-vote-known":"test-altair-vote-relayed"):"test-altair-block-relayed"},{"peerId",id},{"root",progress->cursor}}.dump()<<std::endl;},kind)->start();return;
    }
    if(++it==peers_.end())it=peers_.begin();
   }while(it!=start);
  }
  void send(PeerInfo info,const std::string& protocol,Json value){host_->newStream(info,{protocol},[this,value=std::move(value)](auto result){if(!result)return;auto stream=result.value().stream;write_json(io_,stream,value,[stream](bool){close_stream(stream);});});}
- void add(PeerInfo info,const Json& status){if(!valid(status)||peers_.size()>=50)return;auto id=info.id.toBase58();bool fresh=!peers_.contains(id);observe_gossip_session(gossip_progress_[id],fresh?Json::object():peers_.at(id).status,status);if(fresh)peers_.emplace(id,Peer{std::move(info),status});else{if(peers_.at(id).status.value("gossip_epoch",Json())!=status.value("gossip_epoch",Json())){peers_.at(id).bft_known=std::make_shared<BftVoteKnowledge>();peers_.at(id).altair_progress=std::make_shared<AltairRelayProgress>();peers_.at(id).altair_vote_progress=std::make_shared<AltairRelayProgress>();peers_.at(id).slashing_progress=std::make_shared<AltairRelayProgress>();peers_.at(id).exit_progress=std::make_shared<AltairRelayProgress>();}peers_.at(id).info=std::move(info);peers_.at(id).status=status;}if(fresh)std::cout<<Json{{"event","peer"},{"peerId",id},{"height",status["best_block"]}}.dump()<<std::endl;}
+ void add(PeerInfo info,const Json& status){if(!valid(status)||peers_.size()>=50)return;auto id=info.id.toBase58();bool fresh=!peers_.contains(id);observe_gossip_session(gossip_progress_[id],fresh?Json::object():peers_.at(id).status,status);if(fresh)peers_.emplace(id,Peer{std::move(info),status});else{if(peers_.at(id).status.value("gossip_epoch",Json())!=status.value("gossip_epoch",Json())){peers_.at(id).bft_known=std::make_shared<BftVoteKnowledge>();peers_.at(id).altair_progress=std::make_shared<AltairRelayProgress>();peers_.at(id).altair_vote_progress=std::make_shared<AltairRelayProgress>();peers_.at(id).slashing_progress=std::make_shared<AltairRelayProgress>();peers_.at(id).exit_progress=std::make_shared<AltairRelayProgress>();}peers_.at(id).info=std::move(info);peers_.at(id).status=status;}peers_.at(id).status_seen=std::chrono::steady_clock::now();if(fresh)std::cout<<Json{{"event","peer"},{"peerId",id},{"height",status["best_block"]}}.dump()<<std::endl;}
  void import_blocks(const std::string& id,std::shared_ptr<Json> blocks,size_t index){
   if(index>=blocks->size()){if(auto it=peers_.find(id);it!=peers_.end())it->second.syncing=false;return;}
   core_.call("validator_submitBlock",Json::array({(*blocks)[index]}),[this,id,blocks,index](Json result){if(result.is_object()&&result.value("success",false))import_blocks(id,blocks,index+1);else{if(auto it=peers_.find(id);it!=peers_.end())it->second.syncing=false;std::cerr<<"Rejected block received from peer\n";}});
@@ -172,7 +179,7 @@ class Network {
  }
  void poll_status(const std::string& id){
   auto found=peers_.find(id);if(found==peers_.end()||!polling_.insert(id).second)return;auto info=found->second.info;
-  exchange(info,chainsync,Json::object(),[this,id](Json remote){polling_.erase(id);auto it=peers_.find(id);if(it==peers_.end())return;if(!valid(remote)){if(trace_network_)++failed_status_;peers_.erase(it);gossip_progress_.erase(id);return;}auto previous=gossip_progress_[id];observe_gossip_session(gossip_progress_[id],it->second.status,remote);if(trace_network_&&previous!=gossip_progress_[id]&&retry_trace_count_<8){++retry_trace_count_;std::cout<<Json{{"event","test-gossip-remote-session-reset"},{"peerId",id},{"oldEpoch",it->second.status.value("gossip_epoch",Json())},{"newEpoch",remote.value("gossip_epoch",Json())}}.dump()<<std::endl;}if(it->second.status.value("gossip_epoch",Json())!=remote.value("gossip_epoch",Json())){it->second.bft_known=std::make_shared<BftVoteKnowledge>();it->second.altair_progress=std::make_shared<AltairRelayProgress>();it->second.altair_vote_progress=std::make_shared<AltairRelayProgress>();it->second.slashing_progress=std::make_shared<AltairRelayProgress>();it->second.exit_progress=std::make_shared<AltairRelayProgress>();}it->second.status=std::move(remote);sync(id);});
+  exchange(info,chainsync,Json::object(),[this,id](Json remote){polling_.erase(id);auto it=peers_.find(id);if(it==peers_.end())return;if(!valid(remote)){if(trace_network_)++failed_status_;peers_.erase(it);gossip_progress_.erase(id);return;}auto previous=gossip_progress_[id];observe_gossip_session(gossip_progress_[id],it->second.status,remote);if(trace_network_&&previous!=gossip_progress_[id]&&retry_trace_count_<8){++retry_trace_count_;std::cout<<Json{{"event","test-gossip-remote-session-reset"},{"peerId",id},{"oldEpoch",it->second.status.value("gossip_epoch",Json())},{"newEpoch",remote.value("gossip_epoch",Json())}}.dump()<<std::endl;}if(it->second.status.value("gossip_epoch",Json())!=remote.value("gossip_epoch",Json())){it->second.bft_known=std::make_shared<BftVoteKnowledge>();it->second.altair_progress=std::make_shared<AltairRelayProgress>();it->second.altair_vote_progress=std::make_shared<AltairRelayProgress>();it->second.slashing_progress=std::make_shared<AltairRelayProgress>();it->second.exit_progress=std::make_shared<AltairRelayProgress>();}it->second.status=std::move(remote);it->second.status_seen=std::chrono::steady_clock::now();sync(id);});
  }
  Json vote_delta(Json local,const std::shared_ptr<BftVoteKnowledge>& knowledge){
   auto result=knowledge->filter(local);
@@ -325,6 +332,11 @@ class Network {
  void schedule(){timer_.expires_after(std::chrono::seconds(1));timer_.async_wait([this](auto ec){if(!ec)tick();});}
  void tick(){core_.call("nano_networkStatus",Json::array(),[this](Json local){if(!valid_peer_status(local,local)){schedule();return;}status_=std::move(local);status_[consensus_field()]=altair_advertisement();if(!initialized_){cursor_=status_.value("cursor",uint64_t(0));event_epoch_=status_.value("gossip_epoch",std::string{});initialized_=true;std::cout<<Json{{"event","ready"},{"chainId",status_["chain_id"]}}.dump()<<std::endl;}
   recover_altair();
+  if(bellatrix_mode_){
+   if(beacon_head_slot_&&std::chrono::steady_clock::now()-beacon_head_seen_<std::chrono::seconds(5))status_["beacon_head_slot"]=*beacon_head_slot_;
+   if(!beacon_status_pending_){beacon_status_pending_=true;consensus_call("nano_bellatrixStatus",Json::array({report_token_}),[this](Json result){beacon_status_pending_=false;if(result.is_object()&&result.contains("headSlot")&&result["headSlot"].is_number_unsigned()){beacon_head_slot_=result["headSlot"].get<uint64_t>();beacon_head_seen_=std::chrono::steady_clock::now();}else beacon_head_slot_.reset();});}
+  }
+
   refresh_bootstrap();
   for(const auto& seed:seeds_){if(connecting_.size()>=4||peers_.size()+connecting_.size()>=50)break;auto id=seed.id.toBase58();if(id==host_->getPeerInfo().id.toBase58()||peers_.contains(id)||connecting_.contains(id))continue;auto now=std::chrono::steady_clock::now();if(retry_after_.contains(id)&&now<retry_after_[id])continue;retry_after_[id]=now+std::chrono::seconds(5);connecting_.insert(id);exchange(seed,handshake,status_,[this,seed,id](Json remote){connecting_.erase(id);add(seed,remote);});}
   std::vector<PeerInfo> known;for(const auto& [id,peer]:peers_)known.push_back(peer.info);
@@ -334,7 +346,10 @@ class Network {
   poll_block_events();
   if(!report_token_.empty()){
    Json addresses=Json::array(),peers=Json::array(),bootnodes=Json::array();for(const auto& addr:bootstrap_)bootnodes.push_back(std::string(addr.getStringAddress()));for(const auto& addr:host_->getAddressesInterfaces())addresses.push_back(std::string(addr.getStringAddress()));
-   for(const auto& [id,peer]:peers_)peers.push_back({{"peerId",id},{"bestBlock",peer.status["best_block"]},{"bestHash",peer.status.value("best_hash",Json())}});
+   for(const auto& [id,peer]:peers_){Json report={{"peerId",id},{"bestBlock",peer.status["best_block"]},{"bestHash",peer.status.value("best_hash",Json())}};
+    if(bellatrix_mode_&&std::chrono::steady_clock::now()-peer.status_seen<std::chrono::seconds(5)&&consensus_peer(peer.status)&&peer.status.contains("beacon_head_slot")&&peer.status["beacon_head_slot"].is_number_unsigned())report["beaconHeadSlot"]=peer.status["beacon_head_slot"];
+    peers.push_back(std::move(report));
+   }
    core_.call("nano_networkReport",Json::array({report_token_,Json{{"peerId",host_->getPeerInfo().id.toBase58()},{"addresses",addresses},{"peers",peers},{"bootnodes",bootnodes}}}),[](Json){});
   }
   if(trace_network_&&trace_ticks_<40&&++trace_ticks_%5==0){Json ids=Json::array();for(const auto& [id,peer]:peers_)ids.push_back(id);std::cout<<Json{{"event","test-network-budget"},{"height",status_["best_block"]},{"peers",ids},{"rejectedByProtocol",budget_rejections_},{"failedStatus",failed_status_}}.dump()<<std::endl;}

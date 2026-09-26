@@ -1,0 +1,36 @@
+UpdateCTestConfiguration  from :/Users/boris/Dev/blockchain-nano/build-release/DartConfiguration.tcl
+Test project /Users/boris/Dev/blockchain-nano/build-release
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 318
+    Start 318: storage_execution_checkpoint
+
+318: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-execution-checkpoint-tests
+318: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+318: Test timeout computed to be: 90
+318: {"archiveAtomicRecovery":true,"archiveSurvivesReorg":true,"bellatrixReactor":false,"concurrentCAS":true,"rejections":13,"scenario":"atomic-execution-checkpoint","shorterReorg":true,"sigkillReopens":4,"unchangedHeadCheckpoint":true}
+1/2 Test #318: storage_execution_checkpoint ........   Passed    0.98 sec
+test 319
+    Start 319: storage_execution_checkpoint_sync
+
+319: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-execution-checkpoint-sync-tests
+319: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+319: Test timeout computed to be: 90
+319: {"physicalPowerLoss":false,"retainedAndLostSuffix":true,"scenario":"atomic-execution-checkpoint-sync"}
+2/2 Test #319: storage_execution_checkpoint_sync ...   Passed    0.50 sec
+
+The following tests passed:
+	storage_execution_checkpoint
+	storage_execution_checkpoint_sync
+
+100% tests passed out of 2
+
+Label Time Summary:
+qualification_storage_local         =   0.98 sec*proc (1 test)
+qualification_storage_sync_local    =   0.50 sec*proc (1 test)
+
+Total Test time (real) =   1.49 sec

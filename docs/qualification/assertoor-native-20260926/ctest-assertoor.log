@@ -1,0 +1,48 @@
+{"level":"info","msg":"Log format set to json","time":"2026-09-26T17:27:09+02:00"}
+{"build_version":"local build","level":"info","metrics_port":0,"msg":"starting assertoor","time":"2026-09-26T17:27:09+02:00"}
+{"level":"info","msg":"initializing sqlite connection to :memory:?cache=shared with 10/50 conn limit","time":"2026-09-26T17:27:09+02:00"}
+2026/09/26 17:27:09 OK   20240913135112_init.sql (213.83µs)
+2026/09/26 17:27:09 OK   20250114224233_task_summaries.sql (66.29µs)
+2026/09/26 17:27:09 OK   20250202000000_ai_token_usage.sql (101.33µs)
+2026/09/26 17:27:09 OK   20250203000000_test_yaml_source.sql (102µs)
+2026/09/26 17:27:09 goose: successfully migrated database to version: 20250203000000
+{"level":"info","module":"clientpool","msg":"initialized client pool with 2 clients (chain id: 1337)","time":"2026-09-26T17:27:09+02:00"}
+{"level":"info","module":"clientpool","msg":"client check completed (2 good clients, 0 bad clients)","time":"2026-09-26T17:27:09+02:00"}
+{"client":"nano-1","level":"info","module":"execution","msg":"received el block 3 [0x0c9977591d3ad23f3b6b50f4b58b57590e8ff66d349120ff342fde7f6b1c3bc2] polled","time":"2026-09-26T17:27:09+02:00"}
+time="2026-09-26T17:27:09+02:00" level=info msg="initialized block stats from latest block: gasLimit=30000000 baseFee=670338140 amsterdamFeeModel=true"
+{"component":"eventbus","level":"info","msg":"event bus started","time":"2026-09-26T17:27:09+02:00"}
+{"level":"warning","module":"web","msg":"authProviderUrl is empty: API endpoints are unauthenticated. Configure an authenticatoor URL to require auth.","time":"2026-09-26T17:27:09+02:00"}
+{"level":"info","msg":"Starting metrics server on :0","time":"2026-09-26T17:27:09+02:00"}
+{"level":"info","msg":"loaded 1 test descriptors (0 errors)","time":"2026-09-26T17:27:09+02:00"}
+{"RunID":1,"TestID":"nano-native-observation","level":"info","module":"test","msg":"starting test","time":"2026-09-26T17:27:09+02:00","timeout":"1m15s"}
+{"RunID":1,"TestID":"nano-native-observation","level":"info","module":"test","msg":"starting task","task":"check_clients_are_healthy","taskidx":1,"time":"2026-09-26T17:27:09+02:00"}
+{"RunID":1,"TestID":"nano-native-observation","level":"info","module":"test","msg":"Check result: false, Failed Clients: [nano-0 nano-1]","task":"check_clients_are_healthy","taskidx":1,"time":"2026-09-26T17:27:09+02:00"}
+{"client":"nano-1","level":"info","module":"consensus","msg":"received cl block 3 [0xd70d0def304af0ad4101df7f11a39eee6a73567828822427a3f0208b4d0bdb07] polled","time":"2026-09-26T17:27:09+02:00"}
+time="2026-09-26T17:27:09+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:61894/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-1 module=rpc
+time="2026-09-26T17:27:09+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:61883/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-0 module=rpc
+{"RunID":1,"TestID":"nano-native-observation","level":"info","module":"test","msg":"Check result: true, Failed Clients: []","task":"check_clients_are_healthy","taskidx":1,"time":"2026-09-26T17:27:10+02:00"}
+{"RunID":1,"TestID":"nano-native-observation","level":"info","module":"test","msg":"task completed","task":"check_clients_are_healthy","taskidx":1,"time":"2026-09-26T17:27:10+02:00"}
+{"RunID":1,"TestID":"nano-native-observation","level":"info","module":"test","msg":"starting task","task":"check_consensus_sync_status","taskidx":2,"time":"2026-09-26T17:27:10+02:00"}
+{"RunID":1,"TestID":"nano-native-observation","level":"info","module":"test","msg":"Check result: false, Failed Clients: [nano-0 nano-1]","task":"check_consensus_sync_status","taskidx":2,"time":"2026-09-26T17:27:10+02:00"}
+{"RunID":1,"TestID":"nano-native-observation","level":"info","module":"test","msg":"Check result: false, Failed Clients: [nano-0 nano-1]","task":"check_consensus_sync_status","taskidx":2,"time":"2026-09-26T17:27:11+02:00"}
+{"RunID":1,"TestID":"nano-native-observation","level":"info","module":"test","msg":"Check result: false, Failed Clients: [nano-0 nano-1]","task":"check_consensus_sync_status","taskidx":2,"time":"2026-09-26T17:27:12+02:00"}
+{"RunID":1,"TestID":"nano-native-observation","level":"info","module":"test","msg":"Check result: false, Failed Clients: [nano-0 nano-1]","task":"check_consensus_sync_status","taskidx":2,"time":"2026-09-26T17:27:13+02:00"}
+{"client":"nano-1","level":"info","module":"consensus","msg":"received cl block 4 [0xe366346fde3d94e3bcbb7fbbecf562eb29dcddec5f9e68949935c10935790235] streamed","time":"2026-09-26T17:27:14+02:00"}
+{"client":"nano-1","level":"info","module":"execution","msg":"received el block 4 [0x79685659d4f7d91d9d3af0d7350b7faeab513fcc0e51f31224affd8a76dad7e8] notified","time":"2026-09-26T17:27:14+02:00"}
+{"RunID":1,"TestID":"nano-native-observation","level":"info","module":"test","msg":"Check result: true, Failed Clients: []","task":"check_consensus_sync_status","taskidx":2,"time":"2026-09-26T17:27:14+02:00"}
+{"RunID":1,"TestID":"nano-native-observation","level":"info","module":"test","msg":"task completed","task":"check_consensus_sync_status","taskidx":2,"time":"2026-09-26T17:27:14+02:00"}
+{"RunID":1,"TestID":"nano-native-observation","level":"info","module":"test","msg":"starting task","task":"check_consensus_block_proposals","taskidx":3,"time":"2026-09-26T17:27:14+02:00"}
+time="2026-09-26T17:27:19+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:61894/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-1 module=rpc
+time="2026-09-26T17:27:19+02:00" level=warning msg="Error while subscribing beacon event stream http://127.0.0.1:61883/eth/v1/events?topics=execution_payload_available: 400: {\"code\":400,\"message\":\"Unsupported event topic\"}" client=nano-0 module=rpc
+{"client":"nano-1","level":"info","module":"consensus","msg":"received cl block 5 [0xdf97f2e522b524b803c0409ed94712af071a2ea4fa61e70c06782ba02f863e9d] streamed","time":"2026-09-26T17:27:20+02:00"}
+{"RunID":1,"TestID":"nano-native-observation","level":"info","module":"test","msg":"matching block 5 [0xdf97f2e522b524b803c0409ed94712af071a2ea4fa61e70c06782ba02f863e9d]","task":"check_consensus_block_proposals","taskidx":3,"time":"2026-09-26T17:27:20+02:00"}
+{"client":"nano-1","level":"info","module":"execution","msg":"received el block 5 [0x0a0337741fe83598578ecb657f120ef7c793803ca84edff89b55ca923a02acc8] notified","time":"2026-09-26T17:27:20+02:00"}
+{"level":"info","msg":"run GC (slot 5, 14.997932 sec before epoch 1)","time":"2026-09-26T17:27:23+02:00"}
+{"client":"nano-1","level":"info","module":"consensus","msg":"received cl block 6 [0x9b3bc506e500c72fcd6444a5735a887278765566061ec9c295bbcd8f6910c12a] streamed","time":"2026-09-26T17:27:26+02:00"}
+{"RunID":1,"TestID":"nano-native-observation","level":"info","module":"test","msg":"matching block 6 [0x9b3bc506e500c72fcd6444a5735a887278765566061ec9c295bbcd8f6910c12a]","task":"check_consensus_block_proposals","taskidx":3,"time":"2026-09-26T17:27:26+02:00"}
+{"client":"nano-1","level":"info","module":"execution","msg":"received el block 6 [0xab88e0f452b17ceb717a0e0dd04bd446f60ce2a65d4519cb779e1e1c50406616] notified","time":"2026-09-26T17:27:26+02:00"}
+{"RunID":1,"TestID":"nano-native-observation","level":"info","module":"test","msg":"task completed","task":"check_consensus_block_proposals","taskidx":3,"time":"2026-09-26T17:27:26+02:00"}
+{"RunID":1,"TestID":"nano-native-observation","level":"info","module":"test","msg":"test completed!","time":"2026-09-26T17:27:26+02:00"}
+2026/09/26 17:27:27 Caught signal: terminated, shutdown gracefully...
+{"component":"eventbus","level":"info","msg":"event bus stopped","time":"2026-09-26T17:27:27+02:00"}
+Closing database

@@ -7,7 +7,7 @@ namespace nano {
 // or local failures latch an error until restart; cancellation alone does not.
 class BellatrixLocalClock {
  BellatrixDurableReactor& reactor_;
- uint64_t maximum_step_;
+ uint64_t maximum_step_;std::optional<uint64_t> last_observed_;
  std::function<uint64_t()> now_;
  std::mutex mutex_,wait_mutex_;std::condition_variable wake_;
  std::thread thread_;bool stopping_=false,failed_=false;

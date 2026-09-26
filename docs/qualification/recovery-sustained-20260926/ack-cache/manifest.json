@@ -1,0 +1,17 @@
+{
+  "scope": "bounded acknowledged vote delivery per peer session",
+  "capacity": 2048,
+  "validatorLimit": false,
+  "priorDuplicateDeliveries": {
+    "source": 206,
+    "observer": 228
+  },
+  "targetedTest": "consensus_relay_rejected_vote_progress passed 0.34s",
+  "networkResult": "failed: common finality stalled for two epochs",
+  "sha256": {
+    "network/altair_archive_relay.hpp": "1fee288e53c0fc9a2e3e1e0e6f4a1961aad3aa9ccd6f7dd52311645778161d67",
+    "network/main.cpp": "28c5f41a9fc38013d85b50e54459f2f928793c50d881ebdb8df401c2b159bb5c",
+    "tests/test_altair_relay_progress.cpp": "9cce0a3a90843bfbb9361958c781fa8440f4bfd1cf860879da662d3a0c903f74",
+    "build-network/nano-p2p": "85e4f54b09876e4b61045aef9885e14115da7a28af849f6b0dc83c0050a27f55"
+  }
+}

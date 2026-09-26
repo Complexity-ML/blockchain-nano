@@ -43,4 +43,16 @@ Bytes encode_bellatrix_execution_header(const BellatrixExecutionPayloadHeader&,
  uint32_t maximum_extra_data,size_t maximum_bytes,const std::function<void()>& checkpoint={});
 ConsensusRoot bellatrix_execution_header_root(const BellatrixExecutionPayloadHeader&,
  uint32_t maximum_extra_data,const std::function<void()>& checkpoint={});
+// Capella adds the SSZ withdrawals list commitment (not the execution MPT root).
+struct CapellaExecutionPayloadHeader : BellatrixExecutionPayloadHeader {
+ ConsensusRoot withdrawals_root{};
+ bool operator==(const CapellaExecutionPayloadHeader&)const=default;
+};
+std::optional<CapellaExecutionPayloadHeader> decode_capella_execution_header(
+ std::span<const uint8_t>,uint32_t maximum_extra_data,size_t maximum_bytes,
+ const std::function<void()>& checkpoint={});
+Bytes encode_capella_execution_header(const CapellaExecutionPayloadHeader&,
+ uint32_t maximum_extra_data,size_t maximum_bytes,const std::function<void()>& checkpoint={});
+ConsensusRoot capella_execution_header_root(const CapellaExecutionPayloadHeader&,
+ uint32_t maximum_extra_data,const std::function<void()>& checkpoint={});
 }

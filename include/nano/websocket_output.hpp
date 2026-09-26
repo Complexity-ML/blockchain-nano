@@ -11,7 +11,7 @@ struct WebSocketOutputBudget {
  size_t connection_limit=8*1024*1024,total_limit=64*1024*1024,message_limit=256,used=0;
 };
 struct RpcConnections {
- size_t active=0;
+ size_t active=0,beacon_streams=0;
  std::shared_ptr<WebSocketOutputBudget> output=std::make_shared<WebSocketOutputBudget>();
 };
 class WebSocketOutput {

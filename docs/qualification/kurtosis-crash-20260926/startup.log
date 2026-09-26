@@ -1,0 +1,111 @@
+{"exported":"/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T//nano-kurtosis-xwOjcZ/assets","fork":"Bellatrix/Paris","nodes":2,"syntheticValidators":64}
+Package retained for diagnosis: /var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T//nano-kurtosis-xwOjcZ
+INFO[2026-09-26T16:04:02+02:00] Creating a new enclave for Starlark to run inside... 
+INFO[2026-09-26T16:04:04+02:00] Enclave 'nano-beacon-crash' created successfully 
+INFO[2026-09-26T16:04:04+02:00] Executing Starlark package at '/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-kurtosis-xwOjcZ' as the passed argument '.' looks like a directory 
+INFO[2026-09-26T16:04:04+02:00] Compressing package 'github.com/Complexity-ML/nano-kurtosis-qualification' at '.' for upload 
+INFO[2026-09-26T16:04:04+02:00] Kurtosis CLI is running in a non interactive terminal. Everything will work but progress information and the progress bar will not be displayed. 
+
+Container images used in this run:
+> blockchain-nano:local - locally cached
+
+Uploading file './assets' to files artifact 'beacon-fixtures'
+Files with artifact name 'beacon-fixtures' uploaded with artifact UUID 'afc1fc7535c54d41a116b2e6cafc427f'
+
+Rendering a template to a files artifact with name 'tranquil-camel'
+Templates artifact name 'tranquil-camel' rendered with artifact UUID 'bc63bb88903a4c47b4f1cd7123213f0a'
+
+Adding service with name 'nano-0' and image 'blockchain-nano:local'
+Service 'nano-0' added with service UUID '86c832a654b74981a5ae4d471a45f930'
+
+Waiting for at most '30s' for service 'nano-0' to reach a certain state
+Wait took 1 tries (48.5405ms in total). Assertion passed with following:
+Command returned with exit code '0' and the following output: 12D3KooWBQCX3hGfVhoAHAXid9bVMFCHF5FoWqDPFnDEYuzuNXb4
+
+Rendering a template to a files artifact with name 'bold-shark'
+Templates artifact name 'bold-shark' rendered with artifact UUID 'bdb8419e281f4c1088404735ec7d0a38'
+
+Adding service with name 'nano-1' and image 'blockchain-nano:local'
+Service 'nano-1' added with service UUID '49eea57ae55a47b39bc9139fa6f9242e'
+
+Require one connected peer
+Wait took 2 tries (1.063739s in total). Assertion passed with following:
+Command returned with exit code '0' and the following output: 0x1
+
+Executing command on service 'nano-0'
+Command returned with exit code '0' and the following output: {"id":1,"jsonrpc":"2.0","result":{"chain":{"blockNumber":2,"gasLimit":30000000,"latestBlockHash":"0x87815d7f040ff2f02cd0d67708345e9e6e12f7d3b6564279d0d544c6a3220645"},"network":{"chainId":1337,"consensus":"beacon","name":"Nano","stakingContract":null},"node":{"listenAddresses":["/ip4/0.0.0.0/tcp/30303"],"listening":true,"peerId":"12D3KooWBQCX3hGfVhoAHAXid9bVMFCHF5FoWqDPFnDEYuzuNXb4","validating":false,"validationError":null,"version":"0.1.0"},"peers":{"connected":[{"bestBlock":1,"bestHash":"0x8d5b3441747975b4e9fd2eb16a171b99dacd133c54823513dbf01d733e0065b7","peerId":"12D3KooWQu2tYZU5vXv4g1QhDAgSDyT8EX8hhMMazbLBzwZgRDjP"}],"count":1,"maxPeers":50}}}
+
+Printing a message
+{"id":1,"jsonrpc":"2.0","result":{"chain":{"blockNumber":2,"gasLimit":30000000,"latestBlockHash":"0x87815d7f040ff2f02cd0d67708345e9e6e12f7d3b6564279d0d544c6a3220645"},"network":{"chainId":1337,"consensus":"beacon","name":"Nano","stakingContract":null},"node":{"listenAddresses":["/ip4/0.0.0.0/tcp/30303"],"listening":true,"peerId":"12D3KooWBQCX3hGfVhoAHAXid9bVMFCHF5FoWqDPFnDEYuzuNXb4","validating":false,"validationError":null,"version":"0.1.0"},"peers":{"connected":[{"bestBlock":1,"bestHash":"0x8d5b3441747975b4e9fd2eb16a171b99dacd133c54823513dbf01d733e0065b7","peerId":"12D3KooWQu2tYZU5vXv4g1QhDAgSDyT8EX8hhMMazbLBzwZgRDjP"}],"count":1,"maxPeers":50}}}
+
+Require one connected peer
+Wait took 1 tries (45.27ms in total). Assertion passed with following:
+Command returned with exit code '0' and the following output: 0x1
+
+Executing command on service 'nano-1'
+Command returned with exit code '0' and the following output: {"id":1,"jsonrpc":"2.0","result":{"chain":{"blockNumber":2,"gasLimit":30000000,"latestBlockHash":"0x87815d7f040ff2f02cd0d67708345e9e6e12f7d3b6564279d0d544c6a3220645"},"network":{"chainId":1337,"consensus":"beacon","name":"Nano","stakingContract":null},"node":{"listenAddresses":["/ip4/0.0.0.0/tcp/30303"],"listening":true,"peerId":"12D3KooWQu2tYZU5vXv4g1QhDAgSDyT8EX8hhMMazbLBzwZgRDjP","validating":false,"validationError":null,"version":"0.1.0"},"peers":{"connected":[{"bestBlock":1,"bestHash":"0x8d5b3441747975b4e9fd2eb16a171b99dacd133c54823513dbf01d733e0065b7","peerId":"12D3KooWBQCX3hGfVhoAHAXid9bVMFCHF5FoWqDPFnDEYuzuNXb4"}],"count":1,"maxPeers":50}}}
+
+Printing a message
+{"id":1,"jsonrpc":"2.0","result":{"chain":{"blockNumber":2,"gasLimit":30000000,"latestBlockHash":"0x87815d7f040ff2f02cd0d67708345e9e6e12f7d3b6564279d0d544c6a3220645"},"network":{"chainId":1337,"consensus":"beacon","name":"Nano","stakingContract":null},"node":{"listenAddresses":["/ip4/0.0.0.0/tcp/30303"],"listening":true,"peerId":"12D3KooWQu2tYZU5vXv4g1QhDAgSDyT8EX8hhMMazbLBzwZgRDjP","validating":false,"validationError":null,"version":"0.1.0"},"peers":{"connected":[{"bestBlock":1,"bestHash":"0x8d5b3441747975b4e9fd2eb16a171b99dacd133c54823513dbf01d733e0065b7","peerId":"12D3KooWBQCX3hGfVhoAHAXid9bVMFCHF5FoWqDPFnDEYuzuNXb4"}],"count":1,"maxPeers":50}}}
+
+Require Beacon finality beyond the imported block-1 anchor
+Wait took 173 tries (2m52.055664495s in total). Assertion passed with following:
+Command returned with exit code '0' with no output
+
+Require Beacon finality beyond the imported block-1 anchor
+Wait took 1 tries (48.048875ms in total). Assertion passed with following:
+Command returned with exit code '0' with no output
+
+Executing command on service 'nano-0'
+Command returned with exit code '0' and the following output: 0xcf7912b19d8f92f4dad14201af47039494327467ed722d8c521c8e1677335e42
+
+Verifying whether two values meet a certain condition '!='
+Verification succeeded. Value is '"0xcf7912b19d8f92f4dad14201af47039494327467ed722d8c521c8e1677335e42"'.
+
+Executing command on service 'nano-1'
+Command returned with exit code '0' and the following output: 0xcf7912b19d8f92f4dad14201af47039494327467ed722d8c521c8e1677335e42
+
+Require identical finalized execution block hashes
+Verification succeeded. Value is '"0xcf7912b19d8f92f4dad14201af47039494327467ed722d8c521c8e1677335e42"'.
+
+Executing command on service 'nano-0'
+Command returned with exit code '0' and the following output: {"id":1,"jsonrpc":"2.0","result":{"baseFeePerGas":"0x80c34bb","difficulty":"0x0","extraData":"0x","gasLimit":"0x1c9c380","gasUsed":"0x0","hash":"0xcf7912b19d8f92f4dad14201af47039494327467ed722d8c521c8e1677335e42","logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000","miner":"0x0000000000000000000000000000000000001234","mixHash":"0x2e4824b89687950c581b0ddf11e2314f8ac48fa0a3a672a4bdc569cc0cc24ae9","nonce":"0x0000000000000000","number":"0xf","parentHash":"0xb25727476b391dee916dcdf2a420f788b71c71712471a391756f1d23936f6b2b","receiptsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421","sha3Uncles":"0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347","size":"0x1f4","stateRoot":"0x98e12e6c583785543dbc8345613242d0f15a917879111859245ca4e3834aad48","timestamp":"0x6ab7d125","transactions":[],"transactionsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421","uncles":[]}}
+
+Printing a message
+{"id":1,"jsonrpc":"2.0","result":{"baseFeePerGas":"0x80c34bb","difficulty":"0x0","extraData":"0x","gasLimit":"0x1c9c380","gasUsed":"0x0","hash":"0xcf7912b19d8f92f4dad14201af47039494327467ed722d8c521c8e1677335e42","logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000","miner":"0x0000000000000000000000000000000000001234","mixHash":"0x2e4824b89687950c581b0ddf11e2314f8ac48fa0a3a672a4bdc569cc0cc24ae9","nonce":"0x0000000000000000","number":"0xf","parentHash":"0xb25727476b391dee916dcdf2a420f788b71c71712471a391756f1d23936f6b2b","receiptsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421","sha3Uncles":"0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347","size":"0x1f4","stateRoot":"0x98e12e6c583785543dbc8345613242d0f15a917879111859245ca4e3834aad48","timestamp":"0x6ab7d125","transactions":[],"transactionsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421","uncles":[]}}
+
+Executing command on service 'nano-1'
+Command returned with exit code '0' and the following output: {"id":1,"jsonrpc":"2.0","result":{"baseFeePerGas":"0x80c34bb","difficulty":"0x0","extraData":"0x","gasLimit":"0x1c9c380","gasUsed":"0x0","hash":"0xcf7912b19d8f92f4dad14201af47039494327467ed722d8c521c8e1677335e42","logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000","miner":"0x0000000000000000000000000000000000001234","mixHash":"0x2e4824b89687950c581b0ddf11e2314f8ac48fa0a3a672a4bdc569cc0cc24ae9","nonce":"0x0000000000000000","number":"0xf","parentHash":"0xb25727476b391dee916dcdf2a420f788b71c71712471a391756f1d23936f6b2b","receiptsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421","sha3Uncles":"0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347","size":"0x1f4","stateRoot":"0x98e12e6c583785543dbc8345613242d0f15a917879111859245ca4e3834aad48","timestamp":"0x6ab7d125","transactions":[],"transactionsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421","uncles":[]}}
+
+Printing a message
+{"id":1,"jsonrpc":"2.0","result":{"baseFeePerGas":"0x80c34bb","difficulty":"0x0","extraData":"0x","gasLimit":"0x1c9c380","gasUsed":"0x0","hash":"0xcf7912b19d8f92f4dad14201af47039494327467ed722d8c521c8e1677335e42","logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000","miner":"0x0000000000000000000000000000000000001234","mixHash":"0x2e4824b89687950c581b0ddf11e2314f8ac48fa0a3a672a4bdc569cc0cc24ae9","nonce":"0x0000000000000000","number":"0xf","parentHash":"0xb25727476b391dee916dcdf2a420f788b71c71712471a391756f1d23936f6b2b","receiptsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421","sha3Uncles":"0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347","size":"0x1f4","stateRoot":"0x98e12e6c583785543dbc8345613242d0f15a917879111859245ca4e3834aad48","timestamp":"0x6ab7d125","transactions":[],"transactionsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421","uncles":[]}}
+
+Executing command on service 'nano-0'
+Command returned with exit code '0' and the following output: {"error":{"code":-32601,"message":"Method not found"},"id":1,"jsonrpc":"2.0"}
+
+Printing a message
+{"error":{"code":-32601,"message":"Method not found"},"id":1,"jsonrpc":"2.0"}
+
+Starlark code successfully run. No output was returned.
+
+⭐ us on GitHub - https://github.com/kurtosis-tech/kurtosis
+INFO[2026-09-26T16:07:02+02:00] ========================================================== 
+INFO[2026-09-26T16:07:02+02:00] ||          Created enclave: nano-beacon-crash          || 
+INFO[2026-09-26T16:07:02+02:00] ========================================================== 
+Name:            nano-beacon-crash
+UUID:            80bc96972e64
+Status:          RUNNING
+Creation Time:   Sat, 26 Sep 2026 16:04:02 CEST
+Flags:           
+
+========================================= Files Artifacts =========================================
+UUID           Name
+afc1fc7535c5   beacon-fixtures
+bdb8419e281f   bold-shark
+bc63bb88903a   tranquil-camel
+
+========================================== User Services ==========================================
+UUID           Name     Ports                               Status
+86c832a654b7   nano-0   p2p: 30303/tcp -> 127.0.0.1:58340   RUNNING
+49eea57ae55a   nano-1   p2p: 30303/tcp -> 127.0.0.1:58341   RUNNING
+

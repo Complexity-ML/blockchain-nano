@@ -10,9 +10,12 @@ bool BellatrixLocalClock::poll(const std::function<void()>& checkpoint){
  bool cancelled=false;auto check=[&]{if(checkpoint)try{checkpoint();}catch(...){cancelled=true;throw;}};
  try{
   check();const auto now=now_();const auto previous=reactor_.current().state->timed.clock.time_ms;
-  if(now<previous||now-previous>maximum_step_)throw std::runtime_error("Bellatrix local clock discontinuity");
-  if(now==previous)return false;
-  reactor_.tick(now,check);return true;
+  const auto observed=last_observed_.value_or(previous);
+  if(now<previous||now<observed||now-observed>maximum_step_)throw std::runtime_error("Bellatrix local clock discontinuity");
+  const bool changed=reactor_.tick_if_needed(now,check);
+  // Still observe every poll: coalescing must not hide backward/oversized steps
+  // within an otherwise unchanged consensus phase.
+  last_observed_=now;return changed;
  }catch(...){if(!cancelled){failed_=true;reactor_.invalidate();}throw;}
 }
 void BellatrixLocalClock::start(std::chrono::milliseconds interval){

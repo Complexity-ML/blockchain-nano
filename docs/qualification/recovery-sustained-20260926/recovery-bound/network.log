@@ -1,0 +1,51 @@
+UpdateCTestConfiguration  from :/Users/boris/Dev/blockchain-nano/build-release/DartConfiguration.tcl
+Test project /Users/boris/Dev/blockchain-nano/build-release
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 300
+    Start 300: consensus_bellatrix_partition_sustained
+
+300: Test command: /opt/homebrew/bin/cmake "-E" "env" "NANO_TEST_POST_RECOVERY_PROBE=/Users/boris/Dev/blockchain-nano/tests/assertoor/stability-probe.mjs" "/Users/boris/Dev/blockchain-nano/build-release/nano-bellatrix-transition-tests" "--partition-recovery" "/Users/boris/Dev/blockchain-nano/build-release/nano" "/Users/boris/Dev/blockchain-nano/build-network/nano-p2p"
+300: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+300: Test timeout computed to be: 1080
+300: independent Bellatrix cores synchronized
+300: Beacon slots observed through both P2P daemons
+300: restarted Bellatrix validator propagated next block
+300: Beacon slot observations restored after restart
+300: {"epoch":1,"event":"distributed-progress","sameHead":false,"slot":8}
+300: {"epoch":2,"event":"distributed-progress","sameHead":true,"slot":16}
+300: {"epoch":3,"event":"distributed-progress","sameHead":true,"slot":24}
+300: {"epoch":4,"event":"distributed-progress","sameHead":false,"slot":32}
+300: distributed validators completed four epochs
+300: {"aHead":{"hash":"0x1d8fa658ab2dba1760bd9341d7554b95c549f1b2c46e75b15871293dec94f0ed","number":"0x20","timestamp":"0x6ab81166"},"bHead":{"hash":"0x1d8fa658ab2dba1760bd9341d7554b95c549f1b2c46e75b15871293dec94f0ed","number":"0x20","timestamp":"0x6ab81166"},"event":"partition-baseline","finalized":{"hash":"0xe209b246492f952b9e0bd581e87b66134b4211b7abb0de08cbd56db304b86af3","number":"0x10","timestamp":"0x6ab81106"},"preCutPrefix":{"0x10":"0xe209b246492f952b9e0bd581e87b66134b4211b7abb0de08cbd56db304b86af3","0x11":"0xf6adedcc289ee76696c552e886a4182eaef6a9df9da504112b5b2d5aa76507d4","0x12":"0x0f8b8b9efdaad440f868844bd57223bc73d1eb01953adf87ef2a254b141ec9e5","0x13":"0xb033accc47bc94c8d237d20a270405de6a875a6df8dc3c57d3babe6be1882541","0x14":"0xeedc7e0c99dd9b5e7bb40b05b313bbcdfc890bcf8354170f828493c3672ea660","0x15":"0xc764dd1756390a55cd21aa79da515a6dba1d3a8b0dd256bfef97218dd5c56cdf","0x16":"0x18b6171eed1c1430c00c04f05365d0d307f8591ab66fb4faa2dd78e2c7dec4e0","0x17":"0xc70e1aecb93e806e62628a1b1df6fb41e1c1f7b7db0318a12accdaf67f19b10a","0x18":"0x038c85b033685259120b6dc27c099bb7fdec9a4749781e28360d8755d2f0bf03","0x19":"0x20614196846da864c27c971a541a35401d614f018e07fc6be5ebab1b8f7ff6d9","0x1a":"0x51088255e3bd965e2852e277450d99b92306953fb8736f1a04995614136cb007","0x1b":"0x2f3347e7e39249358f7d20267a5b7a43eac0a7c6adb24a9d9bb0f6a70f2fd2ec","0x1c":"0x2e8e4e258559a9c83189b795126821a370cf564191da6d0a8f30a0fdd74b6377","0x1d":"0xebfa633dd8ac90ac8d2600465ae292e67284e2af20ff50fc580dac621bd4494d","0x1e":"0x909402a543aa73fe404ec5e9b205c5486bc223bc6974eaad4a57ff6dc37a63d0","0x1f":"0x80c06d79eb8e99eb04d9ddf49e3a9bd3d36ecdc0d8e5abec57732e1c1771ba20","0x20":"0x1d8fa658ab2dba1760bd9341d7554b95c549f1b2c46e75b15871293dec94f0ed"}}
+300: {"event":"partition-start","finalizedHash":"0xe209b246492f952b9e0bd581e87b66134b4211b7abb0de08cbd56db304b86af3","seconds":96}
+300: {"a":"0x20","b":"0x20","elapsedSeconds":0,"event":"partition-progress","finalityUnchanged":true}
+300: {"a":"0x26","b":"0x21","elapsedSeconds":48,"event":"partition-progress","finalityUnchanged":true}
+300: {"event":"partition-healed"}
+300: {"aFinalized":"0x10","bFinalized":"0x10","elapsedSeconds":0,"event":"recovery-progress"}
+300: {"aFinalized":"0x10","bFinalized":"0x10","elapsedSeconds":48,"event":"recovery-progress"}
+300: {"beaconFinalized":{"epoch":"6","root":"0x0deb1c76e9992864a5952d1310ed6ea4f1f326a42158716e415ef9f81ec46543"},"elapsedSeconds":95,"event":"partition-recovery-bound","executionHash":"0xf861f84f23bc0008f46b6efd3ba55e3ff15efd7d689a2e52b5f9d925c2639fe0"}
+300: partition recovered common advancing finality
+300: {"event":"stability-evidence","directory":"/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-recovery-stability-W6QZmG"}
+300: {"time":1790448215089,"commonEpoch":"7","executionHash":"0x9cd55d77ad06305ad5113f30c5d1589030576d2c09af2b94477b2767b6c43a83","advances":1}
+300: {"time":1790448263342,"commonEpoch":"8","executionHash":"0x47b357725323fd20a035cd06ad825b733ce33d1a8b4c0f6a4f0f78bc63713670","advances":2}
+300: {"time":1790448311776,"commonEpoch":"9","executionHash":"0x90de4200905130af157f3ffe7d84dd21cc56e2dee49c1a434f0b164fd0b6b069","advances":3}
+300: {"event":"stability-passed","epochs":3,"firstEpoch":"6","lastEpoch":"9","elapsedMs":145101}
+300: {"a":{"epoch":"0x9","root":"0x13089118f5b5fe2a45b51d10018f6d16613a6f521fd85eada01268e7edfffbae"},"b":{"epoch":"0x9","root":"0x13089118f5b5fe2a45b51d10018f6d16613a6f521fd85eada01268e7edfffbae"},"event":"distributed-checkpoints","justifiedA":"0xa","justifiedB":"0xa"}
+300: {"beaconPeerObservations":true,"blockAfterRestart":"0x4e","blockBeforeRestart":"0x3","crashRecovered":false,"distributedStake":true,"finalized":{"epoch":"0x9","root":"0x13089118f5b5fe2a45b51d10018f6d16613a6f521fd85eada01268e7edfffbae"},"independentCoreProcesses":2,"localKeys":64,"observerSynchronized":true,"p2pDaemons":2,"partitionRecovered":true,"physicalHosts":1,"scenario":"bellatrix-managed-cores-restart","validatorNodes":2,"wallClock":true}
+1/1 Test #300: consensus_bellatrix_partition_sustained ...   Passed  517.99 sec
+
+The following tests passed:
+	consensus_bellatrix_partition_sustained
+
+100% tests passed out of 1
+
+Label Time Summary:
+qualification_consensus_recovery    = 517.99 sec*proc (1 test)
+sustained                           = 517.99 sec*proc (1 test)
+
+Total Test time (real) = 518.00 sec

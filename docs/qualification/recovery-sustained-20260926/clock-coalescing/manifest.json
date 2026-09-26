@@ -1,0 +1,76 @@
+{
+  "networkResult": "failed",
+  "networkLog": "/private/tmp/nano-partition-clock-coalesced-20260926.log",
+  "fourRegressionsPassed": true,
+  "regressionSeconds": 29.38,
+  "edgeCasesPassed": true,
+  "observations": 45,
+  "clockPublications": 17,
+  "resumePublicationsBefore": 167,
+  "resumePublicationsAfter": 33,
+  "resumeSameFinalizedCheckpoint": true,
+  "resumeProposalsBeforeAndAfter": 3,
+  "resumeAttestationsBeforeAndAfter": 21,
+  "sha256": {
+    "src/consensus_bellatrix_clock.cpp": "4d31169be6e64dd623b74fb97287efde0cb34f65cfca97997e99f7117bc8ea7d",
+    "src/consensus_bellatrix_reactor.cpp": "99319a12abf22da574663d5116b3190f76184001003489a8ba9ece5fdee7412e",
+    "tests/test_bellatrix_transition.cpp": "116a397372f5ec3b84bede6b5084b6618badb4c176352b6051c2a065f97d9518",
+    "build-release/nano": "5c562f3c112deeda67979ea4fe933f65fa7e5ff88ef1c181c08ada21adf5a760",
+    "build-release/nano-bellatrix-transition-tests": "72105803c7aedb701ada00b44a0328a1201cacb3853af5c82fadc900f6d514a6"
+  },
+  "networkSeconds": 519.24,
+  "networkFailure": "Finality lag exceeds four epochs",
+  "retainedSnapshot": "/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-assertoor-core-failure-b0vq7C/snapshot",
+  "stoppedRuntimes": [
+    {
+      "clockHealthy": true,
+      "finalized": {
+        "epoch": "0x6",
+        "root": "0xdc7d87d5462ae0e770d6b796f9954739947a145e54f123034755813590e40cbc"
+      },
+      "justifiedEpoch": "0xa",
+      "validator": {
+        "attestationsAdmitted": 317,
+        "failure": null,
+        "healthy": true,
+        "localKeys": 32,
+        "proposalsAdmitted": 37,
+        "staleDutyRetries": 0,
+        "timing": {
+          "maxPollMs": 1430,
+          "maxProposalMs": 1005,
+          "polls": 1785,
+          "pollsOverSlot": 0,
+          "proposalAttempts": 37,
+          "proposalsUnavailable": 0,
+          "slotBoundaryExits": 8
+        }
+      }
+    },
+    {
+      "clockHealthy": true,
+      "finalized": {
+        "epoch": "0x6",
+        "root": "0xdc7d87d5462ae0e770d6b796f9954739947a145e54f123034755813590e40cbc"
+      },
+      "justifiedEpoch": "0xa",
+      "validator": {
+        "attestationsAdmitted": 323,
+        "failure": null,
+        "healthy": true,
+        "localKeys": 32,
+        "proposalsAdmitted": 46,
+        "staleDutyRetries": 0,
+        "timing": {
+          "maxPollMs": 903,
+          "maxProposalMs": 630,
+          "polls": 1812,
+          "pollsOverSlot": 0,
+          "proposalAttempts": 46,
+          "proposalsUnavailable": 0,
+          "slotBoundaryExits": 6
+        }
+      }
+    }
+  ]
+}

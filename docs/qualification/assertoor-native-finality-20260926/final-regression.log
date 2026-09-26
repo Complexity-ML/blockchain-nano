@@ -1,0 +1,89 @@
+Start testing: Sep 26 18:27 CEST
+----------------------------------------------------------
+274/331 Testing: consensus_relay_rejected_vote_progress
+274/331 Test: consensus_relay_rejected_vote_progress
+Command: "/Users/boris/Dev/blockchain-nano/build-release/nano-altair-relay-progress-tests"
+Directory: /Users/boris/Dev/blockchain-nano/build-release
+"consensus_relay_rejected_vote_progress" start time: Sep 26 18:27 CEST
+Output:
+----------------------------------------------------------
+Rejected votes do not starve eligible successors; deferred retry, lost response and block ordering checks passed
+<end of output>
+Test time =   0.32 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_relay_rejected_vote_progress" end time: Sep 26 18:27 CEST
+"consensus_relay_rejected_vote_progress" time elapsed: 00:00:00
+----------------------------------------------------------
+
+300/331 Testing: consensus_assertoor_stability_monitor
+300/331 Test: consensus_assertoor_stability_monitor
+Command: "/opt/homebrew/bin/node" "--test" "/Users/boris/Dev/blockchain-nano/tests/assertoor/stability.test.mjs"
+Directory: /Users/boris/Dev/blockchain-nano/build-release
+"consensus_assertoor_stability_monitor" start time: Sep 26 18:27 CEST
+Output:
+----------------------------------------------------------
+✔ four consecutive common checkpoints bind to execution (2.601708ms)
+✔ conflicting finalized roots cannot be retried away (0.276209ms)
+✔ a previous success cannot hide stopped finality (0.26525ms)
+✔ finalized epoch regression fails (0.201791ms)
+✔ execution mismatch fails despite common Beacon finality (0.188ms)
+✔ missed checkpoints do not count as consecutive advances (0.439ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 66.752584
+<end of output>
+Test time =   0.19 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_assertoor_stability_monitor" end time: Sep 26 18:27 CEST
+"consensus_assertoor_stability_monitor" time elapsed: 00:00:00
+----------------------------------------------------------
+
+310/331 Testing: consensus_bellatrix_runtime_restart
+310/331 Test: consensus_bellatrix_runtime_restart
+Command: "/Users/boris/Dev/blockchain-nano/build-release/nano-bellatrix-transition-tests" "--runtime"
+Directory: /Users/boris/Dev/blockchain-nano/build-release
+"consensus_bellatrix_runtime_restart" start time: Sep 26 18:27 CEST
+Output:
+----------------------------------------------------------
+{"clockRegressionGated":true,"configuredKeys":64,"independentProcesses":false,"invalidConfigCases":4,"proposalsAcrossRestart":2,"repeatedDutySuppressed":true,"scenario":"bellatrix-runtime-config-restart","slashingIncludedAfterRestart":false,"staleCheckpointRejected":true,"witnessed":false}
+<end of output>
+Test time =   6.30 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_runtime_restart" end time: Sep 26 18:27 CEST
+"consensus_bellatrix_runtime_restart" time elapsed: 00:00:06
+----------------------------------------------------------
+
+312/331 Testing: consensus_bellatrix_signed_execution_chain
+312/331 Test: consensus_bellatrix_signed_execution_chain
+Command: "/Users/boris/Dev/blockchain-nano/build-release/nano-bellatrix-transition-tests"
+Directory: /Users/boris/Dev/blockchain-nano/build-release
+"consensus_bellatrix_signed_execution_chain" start time: Sep 26 18:27 CEST
+Output:
+----------------------------------------------------------
+{"blocks":9,"cachedSnapshotCallbacks":3898,"cancellations":7,"doubleProposalSlashed":true,"durableCommit":true,"durableReactor":true,"forkBlocks":10,"invalidSignedBlocks":7,"localAttestations":1,"localProposals":8,"localSignatureRefusals":5,"networkActive":false,"pairedCheckpointReopens":3,"pairedExecutionReorgs":2,"reactorCancellations":3,"reactorSyncErrorTested":true,"scenario":"signed-bellatrix-evm-chain","snapshotCacheMutationRefusals":4,"snapshotRefusals":6,"snapshotValidationCallbacks":163630,"storeCancellations":3,"validators":64,"wireMessages":15,"wireRefusals":6}
+<end of output>
+Test time =   2.78 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_signed_execution_chain" end time: Sep 26 18:27 CEST
+"consensus_bellatrix_signed_execution_chain" time elapsed: 00:00:02
+----------------------------------------------------------
+
+End testing: Sep 26 18:27 CEST
+
+qualification_consensus_assertoor =   0.19 sec*proc
+
+qualification_consensus_ethereum =   2.78 sec*proc
+
+qualification_consensus_runtime =   6.30 sec*proc
+
+qualification_consensus_transport =   0.32 sec*proc
+

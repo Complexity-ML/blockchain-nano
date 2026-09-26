@@ -1,6 +1,16 @@
 #include "nano/consensus_bellatrix_validator.hpp"
 #include <set>
+#include <algorithm>
+#include <chrono>
 namespace nano {
+namespace {
+struct DutyWallTiming {
+ using Clock=std::chrono::steady_clock;
+ Clock::time_point start=Clock::now();uint64_t& maximum;uint64_t* overruns=nullptr;uint64_t threshold=0;
+ ~DutyWallTiming(){const auto elapsed=uint64_t(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now()-start).count());maximum=std::max(maximum,elapsed);if(overruns&&elapsed>=threshold)++*overruns;}
+};
+}
+
 BellatrixValidatorLoop::BellatrixValidatorLoop(BellatrixDurableReactor& reactor,BellatrixLocalClock& clock,
  uint64_t slot_ms,uint64_t slots_per_epoch,size_t vote_trials,std::vector<BellatrixValidatorKey> keys,std::function<uint64_t()> now):
  reactor_(reactor),clock_(clock),slot_ms_(slot_ms),slots_per_epoch_(slots_per_epoch),vote_trials_(vote_trials),keys_(std::move(keys)),now_(std::move(now)){
@@ -11,6 +21,7 @@ BellatrixValidatorLoop::BellatrixValidatorLoop(BellatrixDurableReactor& reactor,
 BellatrixValidatorLoop::~BellatrixValidatorLoop(){stop();}
 void BellatrixValidatorLoop::poll(const std::function<void()>& checkpoint){
  std::lock_guard lock(mutex_);if(failed_)throw std::runtime_error("Bellatrix validator loop unavailable");
+ ++polls_;DutyWallTiming poll_timing{DutyWallTiming::Clock::now(),poll_max_ms_,&polls_over_slot_,slot_ms_};
  bool cancelled=false;auto check=[&]{if(checkpoint)try{checkpoint();}catch(...){cancelled=true;throw;}};
  try{
   check();clock_.poll(check);auto current=reactor_.current();
@@ -19,11 +30,12 @@ void BellatrixValidatorLoop::poll(const std::function<void()>& checkpoint){
   const auto proposer=reactor_.current_proposer(slot,check);
   for(const auto& key:keys_){
    if(!proposer||key.index!=*proposer)continue;
-   check();if((now_()-genesis)/slot_ms_!=slot)return;
+   check();if((now_()-genesis)/slot_ms_!=slot){++slot_exits_;return;}
    const auto previous=key.journal->latest_proposal_slot();
    if(!previous||*previous<slot){
+    ++proposal_attempts_;DutyWallTiming proposal_timing{DutyWallTiming::Clock::now(),proposal_max_ms_};
     const auto signed_block=reactor_.propose_current(key.index,slot,key.fee_recipient,vote_trials_,now_,*key.journal,key.signer,check);
-    if(signed_block){if(!reactor_.block(*signed_block,check))throw std::runtime_error("Locally signed Bellatrix proposal refused by admission");++proposals_;}
+    if(signed_block){if(!reactor_.block(*signed_block,check))throw std::runtime_error("Locally signed Bellatrix proposal refused by admission");++proposals_;}else ++proposals_unavailable_;
 
    }
   }
@@ -31,10 +43,10 @@ void BellatrixValidatorLoop::poll(const std::function<void()>& checkpoint){
   const auto attesters=reactor_.current_attesters(slot,check);
   for(const auto& key:keys_){
    if(!attesters.contains(key.index))continue;
-   check();if((now_()-genesis)/slot_ms_!=slot)return;
+   check();if((now_()-genesis)/slot_ms_!=slot){++slot_exits_;return;}
    const auto previous=key.journal->latest_attestation_target();if(previous&&*previous>=epoch)continue;
    const auto vote=reactor_.attest_current(key.index,slot,now_,*key.journal,key.signer,check);
-   if(vote){if(!reactor_.vote(*vote,check))throw std::runtime_error("Locally signed Bellatrix attestation refused by admission");++votes_;}
+   if(vote){record_duty(key.index,*vote);if(!reactor_.vote(*vote,check))throw std::runtime_error("Locally signed Bellatrix attestation refused by admission");++votes_;}
   }
  }catch(const StaleBellatrixDuty&){
   if(cancelled)throw;
@@ -43,7 +55,29 @@ void BellatrixValidatorLoop::poll(const std::function<void()>& checkpoint){
  }catch(...){if(!cancelled){failed_=true;failure_="Unknown validator failure";}throw;}
 
 }
-Json BellatrixValidatorLoop::status(){std::lock_guard lock(mutex_);return {{"healthy",!failed_},{"localKeys",keys_.size()},{"proposalsAdmitted",proposals_},{"attestationsAdmitted",votes_},{"staleDutyRetries",stale_retries_},{"failure",failure_.empty()?Json(nullptr):Json(failure_)}};}
+void BellatrixValidatorLoop::set_duty_trace_limit(size_t limit){
+ std::lock_guard lock(mutex_);trace_limit_=limit;while(duty_trace_.size()>limit)duty_trace_.pop_front();
+ if(!limit)traced_slot_.reset();
+}
+void BellatrixValidatorLoop::record_duty(uint64_t index,const Phase0SignedAttestation& vote){
+ if(!trace_limit_||traced_slot_==vote.data.slot)return;
+ // Telemetry must not turn a successfully signed duty into a scheduler failure.
+ try{
+  const auto current=reactor_.current();const auto& view=current.state->timed.view;
+  auto root=[](const ConsensusRoot& r){return hex(Bytes(r.begin(),r.end()));};
+  auto cp=[&](const ConsensusCheckpoint& c){return Json{{"epoch",c.epoch},{"root",root(c.root)}};};
+  std::set<uint64_t> local;for(const auto& key:keys_)local.insert(key.index);
+  Json messages=Json::array();
+  for(const auto& [member,message]:view.latest_messages)messages.push_back({{"index",member},{"local",local.contains(member)},{"epoch",message.epoch},{"root",root(message.root)}});
+  Json entry={{"slot",vote.data.slot},{"validator",index},{"signedHead",root(vote.data.beacon_block_root)},
+   {"signedSource",cp(vote.data.source)},{"signedTarget",cp(vote.data.target)},
+   {"observedSequence",current.token.sequence},{"observedTimeMs",current.state->timed.clock.time_ms},
+   {"observedJustified",cp(view.justified)},{"observedFinalized",cp(view.finalized)},
+   {"observedBoost",view.proposer_boost?Json(root(*view.proposer_boost)):Json(nullptr)},{"latestMessages",std::move(messages)}};
+  duty_trace_.push_back(std::move(entry));while(duty_trace_.size()>trace_limit_)duty_trace_.pop_front();traced_slot_=vote.data.slot;
+ }catch(...){++trace_failures_;/* Consensus admission still follows. */}
+}
+Json BellatrixValidatorLoop::status(bool include_trace){std::lock_guard lock(mutex_);Json result={{"healthy",!failed_},{"localKeys",keys_.size()},{"proposalsAdmitted",proposals_},{"attestationsAdmitted",votes_},{"staleDutyRetries",stale_retries_},{"timing",{{"polls",polls_},{"maxPollMs",poll_max_ms_},{"pollsOverSlot",polls_over_slot_},{"proposalAttempts",proposal_attempts_},{"maxProposalMs",proposal_max_ms_},{"proposalsUnavailable",proposals_unavailable_},{"slotBoundaryExits",slot_exits_}}},{"failure",failure_.empty()?Json(nullptr):Json(failure_)},{"dutyTraceFailures",trace_failures_}};if(include_trace)result["dutyTrace"]=duty_trace_;return result;}
 Json BellatrixValidatorLoop::restart_commitments(){
  std::lock_guard lock(mutex_);Json out=Json::array();
  for(const auto& key:keys_){const auto token=key.journal->commitment();out.push_back({{"index",quantity(Int(std::to_string(key.index)))},{"restart",{{"sequence",quantity(Int(std::to_string(token.sequence)))},{"digest",hex(token.digest)}}}});}

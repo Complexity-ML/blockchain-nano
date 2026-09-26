@@ -1310,6 +1310,47 @@ if(NANO_NETWORK_EXECUTABLE)
  set_tests_properties(consensus_bellatrix_distributed_finality PROPERTIES TIMEOUT 360 LABELS "qualification_consensus_distributed")
  add_test(NAME consensus_bellatrix_managed_runtime COMMAND nano-bellatrix-transition-tests --managed-runtime $<TARGET_FILE:nano> ${NANO_NETWORK_EXECUTABLE})
  set_tests_properties(consensus_bellatrix_managed_runtime PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_runtime")
+ find_program(NANO_RECOVERY_NODEJS_EXECUTABLE NAMES node)
+ if(NANO_RECOVERY_NODEJS_EXECUTABLE)
+  foreach(scenario IN ITEMS partition crash)
+   if(scenario STREQUAL "partition")
+    set(recovery_mode --partition-recovery)
+   else()
+    set(recovery_mode --distributed-crash)
+   endif()
+   add_test(NAME consensus_bellatrix_${scenario}_sustained COMMAND ${CMAKE_COMMAND} -E env
+    "NANO_TEST_POST_RECOVERY_PROBE=${CMAKE_CURRENT_SOURCE_DIR}/tests/assertoor/stability-probe.mjs"
+    $<TARGET_FILE:nano-bellatrix-transition-tests> ${recovery_mode} $<TARGET_FILE:nano> ${NANO_NETWORK_EXECUTABLE})
+   set_tests_properties(consensus_bellatrix_${scenario}_sustained PROPERTIES TIMEOUT 1080 RUN_SERIAL TRUE LABELS "qualification_consensus_recovery;sustained")
+  endforeach()
+ endif()
+ set(NANO_ASSERTOOR_EXECUTABLE "" CACHE FILEPATH "Official Assertoor binary for optional local qualification")
+ if(NANO_ASSERTOOR_EXECUTABLE)
+  find_program(NANO_NODEJS_EXECUTABLE NAMES node REQUIRED)
+  add_test(NAME consensus_assertoor_stability_monitor COMMAND ${NANO_NODEJS_EXECUTABLE} --test ${CMAKE_CURRENT_SOURCE_DIR}/tests/assertoor/stability.test.mjs)
+  set_tests_properties(consensus_assertoor_stability_monitor PROPERTIES TIMEOUT 15 LABELS "qualification_consensus_assertoor")
+  if(NOT EXISTS "${NANO_ASSERTOOR_EXECUTABLE}")
+   message(FATAL_ERROR "NANO_ASSERTOOR_EXECUTABLE does not exist")
+  endif()
+  add_test(NAME consensus_bellatrix_assertoor COMMAND ${CMAKE_COMMAND} -E env
+   "NANO_TEST_ASSERTOOR_PROBE=${CMAKE_CURRENT_SOURCE_DIR}/tests/assertoor/probe.mjs"
+   "NANO_TEST_ASSERTOOR_BINARY=${NANO_ASSERTOOR_EXECUTABLE}"
+   $<TARGET_FILE:nano-bellatrix-transition-tests> --managed-runtime $<TARGET_FILE:nano> ${NANO_NETWORK_EXECUTABLE})
+  set_tests_properties(consensus_bellatrix_assertoor PROPERTIES TIMEOUT 150 LABELS "qualification_consensus_assertoor")
+  add_test(NAME consensus_bellatrix_assertoor_finality COMMAND ${CMAKE_COMMAND} -E env
+   "NANO_TEST_ASSERTOOR_PROBE=${CMAKE_CURRENT_SOURCE_DIR}/tests/assertoor/probe.mjs"
+   "NANO_TEST_ASSERTOOR_BINARY=${NANO_ASSERTOOR_EXECUTABLE}"
+   "NANO_TEST_ASSERTOOR_FINALITY=1"
+   $<TARGET_FILE:nano-bellatrix-transition-tests> --distributed-finality $<TARGET_FILE:nano> ${NANO_NETWORK_EXECUTABLE})
+  set_tests_properties(consensus_bellatrix_assertoor_finality PROPERTIES TIMEOUT 420 LABELS "qualification_consensus_assertoor")
+  add_test(NAME consensus_bellatrix_assertoor_sustained COMMAND ${CMAKE_COMMAND} -E env
+   "NANO_TEST_ASSERTOOR_PROBE=${CMAKE_CURRENT_SOURCE_DIR}/tests/assertoor/probe.mjs"
+   "NANO_TEST_ASSERTOOR_BINARY=${NANO_ASSERTOOR_EXECUTABLE}"
+   "NANO_TEST_ASSERTOOR_FINALITY=1"
+   "NANO_TEST_ASSERTOOR_STABILITY_EPOCHS=4"
+   $<TARGET_FILE:nano-bellatrix-transition-tests> --distributed-finality $<TARGET_FILE:nano> ${NANO_NETWORK_EXECUTABLE})
+  set_tests_properties(consensus_bellatrix_assertoor_sustained PROPERTIES TIMEOUT 1800 LABELS "qualification_consensus_assertoor;sustained")
+ endif()
  add_test(NAME consensus_bellatrix_voluntary_exit_reorg COMMAND nano-bellatrix-transition-tests --exit-reorg ${NANO_NETWORK_EXECUTABLE})
  set_tests_properties(consensus_bellatrix_voluntary_exit_reorg PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_local_network")
  add_test(NAME consensus_bellatrix_voluntary_exit_pruning COMMAND nano-bellatrix-transition-tests --exit-pruning ${NANO_NETWORK_EXECUTABLE})
@@ -1327,6 +1368,12 @@ add_test(NAME consensus_bellatrix_runtime_restart COMMAND nano-bellatrix-transit
 set_tests_properties(consensus_bellatrix_runtime_restart PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_runtime")
 add_test(NAME consensus_bellatrix_validator_loop COMMAND nano-bellatrix-transition-tests --validator-loop)
 set_tests_properties(consensus_bellatrix_validator_loop PROPERTIES TIMEOUT 240 LABELS "qualification_consensus_local_validator")
+add_test(NAME consensus_bellatrix_duty_trace COMMAND nano-bellatrix-transition-tests --duty-trace)
+set_tests_properties(consensus_bellatrix_duty_trace PROPERTIES TIMEOUT 60)
+add_test(NAME consensus_bellatrix_clock_coalescing COMMAND nano-bellatrix-transition-tests --clock-coalescing)
+set_tests_properties(consensus_bellatrix_clock_coalescing PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_runtime")
+add_test(NAME consensus_bellatrix_partition_simulation COMMAND nano-bellatrix-transition-tests --partition-simulation)
+set_tests_properties(consensus_bellatrix_partition_simulation PROPERTIES TIMEOUT 240 LABELS "qualification_consensus_simulation")
 add_test(NAME consensus_bellatrix_signed_execution_chain COMMAND nano-bellatrix-transition-tests)
 set_tests_properties(consensus_bellatrix_signed_execution_chain PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_ethereum")
 
@@ -1406,3 +1453,18 @@ add_executable(nano-secp256k1-tests tests/test_secp256k1.cpp)
 target_link_libraries(nano-secp256k1-tests PRIVATE nano_core)
 add_test(NAME secp256k1_ethereum_compatibility COMMAND nano-secp256k1-tests)
 set_tests_properties(secp256k1_ethereum_compatibility PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_executable(nano-capella-containers-tests tests/test_capella_containers.cpp)
+target_link_libraries(nano-capella-containers-tests PRIVATE nano_core)
+target_compile_definitions(nano-capella-containers-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+add_test(NAME ethereum_official_capella_containers COMMAND nano-capella-containers-tests)
+set_tests_properties(ethereum_official_capella_containers PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")
+
+add_test(NAME consensus_bellatrix_beacon_reads COMMAND nano-bellatrix-transition-tests --beacon-api)
+set_tests_properties(consensus_bellatrix_beacon_reads PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_api")
+
+add_test(NAME consensus_bellatrix_beacon_headers COMMAND nano-bellatrix-transition-tests --beacon-headers)
+set_tests_properties(consensus_bellatrix_beacon_headers PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_api")
+
+add_test(NAME consensus_bellatrix_beacon_headers_reorg COMMAND nano-bellatrix-transition-tests --beacon-headers-reorg)
+set_tests_properties(consensus_bellatrix_beacon_headers_reorg PROPERTIES TIMEOUT 90 LABELS "qualification_consensus_api")

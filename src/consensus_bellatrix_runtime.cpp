@@ -118,11 +118,29 @@ BellatrixRuntime start_bellatrix_runtime(Blockchain& chain,const Json& config,co
    keys.push_back({index,std::shared_ptr<BeaconSigningJournal>(journal,journal->journal.get()),[secret](const ConsensusRoot& root){return secret->sign(root);},fee});
   }
   owner->validator=std::make_unique<BellatrixValidatorLoop>(*owner->reactor,*owner->clock,rules.slot_duration_ms,rules.transition.consensus.epoch.ffg.slots_per_epoch,trials,std::move(keys),now);
+  if(const char* trace=std::getenv("NANO_TEST_NETWORK_TRACE");trace&&std::string_view(trace)=="1")owner->validator->set_duty_trace_limit(128);
   owner->rpc->set_validator_status([loop=owner->validator.get()]{return loop->status();});
   owner->validator->start(std::chrono::milliseconds(poll));
  }
  owner->clock->start(std::chrono::milliseconds(interval));
- return {std::shared_ptr<BellatrixRpcService>(owner,owner->rpc.get()),owner->validator?std::shared_ptr<BellatrixValidatorLoop>(owner,owner->validator.get()):nullptr,std::shared_ptr<BellatrixDurableReactor>(owner,owner->reactor.get()),std::shared_ptr<BellatrixLocalClock>(owner,owner->clock.get())};
+ auto sync_tracker=std::make_shared<BeaconSyncTracker>();
+ return {std::shared_ptr<BellatrixRpcService>(owner,owner->rpc.get()),owner->validator?std::shared_ptr<BellatrixValidatorLoop>(owner,owner->validator.get()):nullptr,std::shared_ptr<BellatrixDurableReactor>(owner,owner->reactor.get()),std::shared_ptr<BellatrixLocalClock>(owner,owner->clock.get()),[owner,rules,sync_tracker,now](std::string_view path,const std::function<void()>& check){
+  if(!owner->clock->healthy())throw std::runtime_error("Beacon clock unavailable");
+  const auto snapshot=owner->reactor->current();
+  if(path=="/eth/v1/node/syncing"){
+   const auto observation=sync_tracker->current();
+   if(!observation||observation->peer_slots.empty())return BeaconReadResponse{503,{{"code",503},{"message","Beacon peer observation unavailable"}}};
+   const auto local_time=now();const auto genesis_time=snapshot.state->timed.clock.genesis_time_ms;
+   if(local_time<snapshot.state->timed.clock.time_ms||local_time<genesis_time)throw std::runtime_error("Beacon clock discontinuity");
+   const auto wall_slot=(local_time-genesis_time)/rules.slot_duration_ms;
+   const auto& head=bellatrix_fork_head(*snapshot.state,rules,check);uint64_t target=head.header.slot;
+   if(target>wall_slot)throw std::runtime_error("Beacon head in future");
+   for(const auto slot:observation->peer_slots){if(slot>wall_slot)throw std::runtime_error("Beacon peer claims future slot");target=std::max(target,slot);}
+   if(check)check();
+   return BeaconReadResponse{200,{{"data",{{"head_slot",std::to_string(head.header.slot)},{"sync_distance",std::to_string(target-head.header.slot)},{"is_syncing",target>head.header.slot},{"is_optimistic",false},{"el_offline",false}}}}};
+  }
+  return bellatrix_beacon_read(snapshot,rules,path,check);
+ },sync_tracker,[owner](std::optional<uint64_t> cursor){if(!owner->clock->healthy())throw std::runtime_error("Beacon clock unavailable");return owner->reactor->beacon_events(cursor);}};
 }
 Json stop_bellatrix_runtime(BellatrixRuntime& runtime){
  if(!runtime.reactor||!runtime.clock||!runtime.rpc)throw std::invalid_argument("Missing Bellatrix runtime");
@@ -132,7 +150,7 @@ Json stop_bellatrix_runtime(BellatrixRuntime& runtime){
  return {{"restart",{{"sequence",quantity(Int(std::to_string(current.token.sequence)))},{"digest",hex(current.token.digest)}}},
   {"validatorKeys",runtime.validator?runtime.validator->restart_commitments():Json::array()},
   {"finalized",{{"epoch",quantity(Int(std::to_string(current.state->timed.view.finalized.epoch)))},{"root",hex(Bytes(current.state->timed.view.finalized.root.begin(),current.state->timed.view.finalized.root.end()))}}},
-  {"validator",runtime.validator?runtime.validator->status():Json(nullptr)},{"clockHealthy",runtime.clock->healthy()},
+  {"validator",runtime.validator?runtime.validator->status(true):Json(nullptr)},{"clockHealthy",runtime.clock->healthy()},
   {"justifiedEpoch",quantity(Int(std::to_string(current.state->timed.view.justified.epoch)))}};
 }
 

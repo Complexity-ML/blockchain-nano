@@ -65,7 +65,7 @@ int run_node(Blockchain& chain,const std::filesystem::path& database,const std::
   const auto state=altair.reactor->current();
   std::cout<<Json{{"event","altair-runtime-ready"},{"sequence",quantity(Int(std::to_string(state.token.sequence)))},{"digest",hex(state.token.digest)},{"executionBound",false},{"networkProtocolActive",false}}.dump()<<std::endl;
  }
- auto token=hex(generate_private_key());Rpc rpc(chain,token,AdmissionBudget::Clock::now,RpcSimulationLimits{},altair.rpc,bellatrix.rpc);rpc.load_wallets(config,host);auto server=std::make_unique<HttpServer>(rpc,host,uint16_t(port));
+ auto token=hex(generate_private_key());Rpc rpc(chain,token,AdmissionBudget::Clock::now,RpcSimulationLimits{},altair.rpc,bellatrix.rpc);rpc.set_beacon_sync_tracker(bellatrix.sync_tracker);rpc.load_wallets(config,host);auto server=std::make_unique<HttpServer>(rpc,host,uint16_t(port),std::chrono::seconds(4),bellatrix.beacon_read,bellatrix.beacon_events);
  std::vector<std::string> args{std::to_string(server->port()),identity,listen};auto peers=config.value("bootnodes",std::vector<std::string>{});args.insert(args.end(),peers.begin(),peers.end());std::vector<std::string> excluded;for(const auto& entry:config.value("wallets",Json::array()))excluded.push_back(entry.at("password_env"));if(config.contains("bft"))excluded.push_back(config.at("bft").at("key_env").get<std::string>());if(config.contains("bellatrix")&&config.at("bellatrix").contains("validator"))for(const auto& key:config.at("bellatrix").at("validator").at("keys"))excluded.push_back(key.at("keyEnv").get<std::string>());Child child(binary,args,token,excluded);
  auto child_pid=child.pid();
  std::atomic<bool> stopping=false,failed=false;

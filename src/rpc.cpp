@@ -222,6 +222,14 @@ Json Rpc::dispatch(const std::string& method,const Json& p,const Estimate& estim
   const auto& report=p[1];if(!report.is_object()||!report.at("peerId").is_string()||report.at("peerId").get<std::string>().size()>128||!report.at("addresses").is_array()||report.at("addresses").size()>32||!report.at("peers").is_array()||report.at("peers").size()>50)throw RpcError(-32602,"Invalid network report");
   for(const auto& addr:report["addresses"])if(!addr.is_string()||addr.get<std::string>().size()>1024)throw RpcError(-32602,"Invalid listen address");
   for(const auto& peer:report["peers"]){if(!peer.at("peerId").is_string()||peer.at("peerId").get<std::string>().size()>128)throw RpcError(-32602,"Invalid peer");u64(quantity(peer.at("bestBlock")));}
+  if(beacon_sync_){
+   std::vector<uint64_t> slots;
+   for(const auto& peer:report["peers"])if(peer.contains("beaconHeadSlot")){
+    if(!peer.at("beaconHeadSlot").is_number_unsigned())throw RpcError(-32602,"Invalid Beacon peer slot");
+    slots.push_back(peer.at("beaconHeadSlot").get<uint64_t>());
+   }
+   beacon_sync_->report(std::move(slots));
+  }
   network_report_=report;network_seen_=std::chrono::steady_clock::now();return true;
  }
  if(method=="nno_getNodes"){

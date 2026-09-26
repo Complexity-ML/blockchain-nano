@@ -43,13 +43,59 @@ ne démontre pas une finalité sur plusieurs epochs.
 
 Preuves : `build-cmake/qualification/bellatrix-reactor-20260925/`.
 
+## État d’intégration au 26 septembre 2026
+
+Le coordinateur est raccordé au runtime, à la boucle autonome des validateurs,
+au journal anti-slashing et au transport/rattrapage P2P. Les archives durables
+conservent aussi les preuves d’attester slashing et les sorties volontaires ;
+les inventaires et exports correspondants existent dans `BellatrixRpcService`.
+Ces intégrations ne sont plus des éléments non commencés.
+
+La partition prolongée à deux cœurs et deux démons P2P, 64 clés synthétiques
+réparties 32/32 sur un Mac, passe : coupure de 96 s, reprise en 95 s, puis
+finalité commune 6→7→8→9. La fenêtre débute après concordance du checkpoint
+Beacon réalisé avec le bloc finalisé d’exécution.
+[Preuves et périmètre](qualification/recovery-sustained-20260926/recovery-bound/README.md).
+Le test SIGKILL avec ces mêmes binaires passe en 325,58 s, suivi de trois
+avancées communes 2→3→4→5 pendant 144,793 s.
+[Preuves de reprise](qualification/recovery-sustained-20260926/crash-current/README.md).
+
+Les observations d’horloge sans changement de slot ni franchissement du seuil
+d’attestation sont coalescées ; les changements de phase et les événements
+de consensus conservent la publication durable synchronisée. Le cache local
+de validation ne dispense pas de la revalidation lors d’une restauration.
+
 ## Périmètre restant
 
-Ce coordinateur n'est pas encore un service P2P et n'active aucun fork réseau.
-Les signatures locales et leurs duties sont raccordées au journal anti-slashing :
-voir [BELLATRIX-LOCAL-SIGNING.md](BELLATRIX-LOCAL-SIGNING.md). Restent la boucle
-autonome, le transport/rattrapage et la qualification des pannes/partitions avec
-plusieurs processus. Les snapshots complets à chaque événement
-et la conservation des blocs sont un socle fonctionnel, sans qualification de
-capacité ni pruning des branches. Les preuves d'attester slashing reçues mettent
-à jour l'état mais ne disposent pas encore d'une archive dédiée à leur rediffusion.
+Les snapshots complets et les états de tous les blocs restent conservés.
+L’élagage des anciens états/branches, la conservation et le service de l’archive
+historique après cet élagage, ainsi que la tenue au-delà des budgets de blocs
+et d’enveloppe restent à implémenter/qualifier. Un catalogue de votes borné ou
+une meilleure allocation RocksDB ne résout pas cette rétention des états.
+Les essais locaux bornés ne prouvent ni une longue endurance, ni une capacité
+multi-hôte ou à très grand registre, ni l’ensemble des critères de production.
+
+### Dépendances de l’élagage à implémenter
+
+L’audit du chemin actuel relève trois couplages : `durable_snapshot` exige que
+chaque bloc signé archivé existe dans `Store.blocks`, `publish` exige que
+l’ancre reste inchangée et `bellatrix_store_from_snapshot` reconstruit le registre
+justifié depuis les états authentifiés. Une suppression directe des anciens
+états rendrait donc le checkpoint ou son historique inutilisable.
+
+Le chantier doit préserver ensemble :
+
+1. Une archive persistante des blocs signés avec index par racine et slot,
+   accessible au rattrapage P2P après retrait des états complets de la mémoire.
+2. Une frontière d’élagage issue de la finalité authentifiée, avec conservation
+   des contextes nécessaires aux votes, au slashing, aux sorties, aux dépôts et
+   aux ancêtres d’exécution utilisés par BLOCKHASH.
+3. Une publication atomique de l’archive, du checkpoint et de l’état d’exécution,
+   avec migration explicite du format durable et validation à la réouverture.
+4. Une qualification dépassant la capacité de l’ancien snapshot : finalité et
+   tête inchangées face à un témoin sans élagage, refus des branches incompatibles,
+   rattrapage d’un nouveau pair depuis l’historique, et crash aux frontières de
+   commit. Mesurer mémoire, disque, temps de reprise et taille du checkpoint.
+
+Cette liste décrit du travail restant, pas une fonctionnalité livrée. Augmenter
+les budgets du snapshot ne clôt pas le critère de rétention.

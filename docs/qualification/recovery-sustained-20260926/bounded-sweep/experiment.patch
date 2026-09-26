@@ -1,0 +1,25 @@
+--- a/network/main.cpp
++++ b/network/main.cpp
+@@ -141,9 +141,10 @@
+    },maximum)->start();
+   });
+  }
+- // Empty categories must not consume an entire relay interval: with four
+- // kinds, one vote per four 100ms ticks cannot drain a two-epoch replay of
+- // 64 votes/epoch in 48s. At most one sweep per attempt, still one in flight.
++ // Drain one bounded sweep per timer tick, rotating peers and message kinds.
++ // Waiting another full interval after every successful item amplifies replay
++ // latency after a partition. Failures end the sweep; only one call is in flight.
++ // The remaining budget also bounds empty-category scans, preventing busy loops.
+  void poll_altair_archives(unsigned remaining=4){
+   if(altair_relay_busy_||!altair_ingress_||!altair_dispatch_||altair_dispatch_->blocked()||peers_.empty())return;
+   auto start=peers_.upper_bound(altair_last_peer_);if(start==peers_.end())start=peers_.begin();auto it=start;
+@@ -153,7 +154,7 @@
+     std::make_shared<AltairArchiveRelay>(io_,[this](const auto& method,auto params,auto reply){consensus_call(method,std::move(params),std::move(reply));},[this,peer](auto frame,auto reply){send_altair(peer,std::move(frame),std::move(reply));},report_token_,altair_ingress_,progress,[this,progress,vote,proof,exit,remaining,before=progress->cursor,id=it->first](Json result){altair_relay_busy_=false;
+      if(trace_network_&&(!result.value("success",false)||result.value("elapsedMs",int64_t(0))>500))
+       std::cout<<Json{{"event","test-consensus-relay-attempt"},{"kind",exit?"exit":proof?"slashing":vote?"vote":"block"},{"success",result.value("success",false)},{"stage",result.value("stage","")},{"elapsedMs",result.value("elapsedMs",int64_t(0))},{"cursor",progress->cursor},{"dispatchBlocked",altair_dispatch_->blocked()}}.dump()<<std::endl;
+-     const bool empty=result.value("success",false)&&progress->cursor==before;if(bellatrix_mode_&&empty&&remaining>1)asio::post(io_,[this,remaining]{poll_altair_archives(remaining-1);});if(trace_network_&&result.value("success",false)&&progress->cursor!=before)std::cout<<Json{{"event",exit?"test-bellatrix-exit-relayed":proof?"test-bellatrix-slashing-relayed":vote?"test-altair-vote-relayed":"test-altair-block-relayed"},{"peerId",id},{"root",progress->cursor}}.dump()<<std::endl;},kind)->start();return;
++     const bool success=result.value("success",false);if(bellatrix_mode_&&success&&remaining>1)asio::post(io_,[this,remaining]{poll_altair_archives(remaining-1);});if(trace_network_&&result.value("success",false)&&progress->cursor!=before)std::cout<<Json{{"event",exit?"test-bellatrix-exit-relayed":proof?"test-bellatrix-slashing-relayed":vote?"test-altair-vote-relayed":"test-altair-block-relayed"},{"peerId",id},{"root",progress->cursor}}.dump()<<std::endl;},kind)->start();return;
+    }
+    if(++it==peers_.end())it=peers_.begin();
+   }while(it!=start);

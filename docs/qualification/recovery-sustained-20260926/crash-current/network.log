@@ -1,0 +1,43 @@
+UpdateCTestConfiguration  from :/Users/boris/Dev/blockchain-nano/build-release/DartConfiguration.tcl
+Test project /Users/boris/Dev/blockchain-nano/build-release
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 301
+    Start 301: consensus_bellatrix_crash_sustained
+
+301: Test command: /opt/homebrew/bin/cmake "-E" "env" "NANO_TEST_POST_RECOVERY_PROBE=/Users/boris/Dev/blockchain-nano/tests/assertoor/stability-probe.mjs" "/Users/boris/Dev/blockchain-nano/build-release/nano-bellatrix-transition-tests" "--distributed-crash" "/Users/boris/Dev/blockchain-nano/build-release/nano" "/Users/boris/Dev/blockchain-nano/build-network/nano-p2p"
+301: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+301: Test timeout computed to be: 1080
+301: independent Bellatrix cores synchronized
+301: Beacon slots observed through both P2P daemons
+301: {"event":"validator-killed","headBefore":"0x84727ef5b2e47b5dec43d8322fd842878ffafa2fe7dd9c05e0d44b0fe7a3bfb6","orderlyReceipt":false,"signal":"SIGKILL"}
+301: restarted Bellatrix validator propagated next block
+301: Beacon slot observations restored after restart
+301: {"epoch":1,"event":"distributed-progress","sameHead":false,"slot":8}
+301: {"epoch":2,"event":"distributed-progress","sameHead":false,"slot":16}
+301: {"epoch":3,"event":"distributed-progress","sameHead":true,"slot":24}
+301: {"epoch":4,"event":"distributed-progress","sameHead":false,"slot":32}
+301: distributed validators completed four epochs
+301: {"event":"stability-evidence","directory":"/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-recovery-stability-XUa7BQ"}
+301: {"time":1790448632028,"commonEpoch":"3","executionHash":"0xfd1b50c3401e1de4890c9284aabb602c183ca7247f291cf1de95427e9c580fda","advances":1}
+301: {"time":1790448680243,"commonEpoch":"4","executionHash":"0xaaf41fe369bcbeea6b37c6b2547b43f0880b534fec9206ac54e94e12a1095bf9","advances":2}
+301: {"time":1790448728456,"commonEpoch":"5","executionHash":"0x4c7c2fa6f9ee4e248a78130da7d4f65938358271ca1149bb7fd076e206ad9704","advances":3}
+301: {"event":"stability-passed","epochs":3,"firstEpoch":"2","lastEpoch":"5","elapsedMs":144793}
+301: {"a":{"epoch":"0x5","root":"0xf28a06252083fd1a81a74367934a3dc4d62a4ecbab1cbf4ce4c3c4b5cb43567b"},"b":{"epoch":"0x5","root":"0xf28a06252083fd1a81a74367934a3dc4d62a4ecbab1cbf4ce4c3c4b5cb43567b"},"event":"distributed-checkpoints","justifiedA":"0x6","justifiedB":"0x6"}
+301: {"beaconPeerObservations":true,"blockAfterRestart":"0x37","blockBeforeRestart":"0x3","crashRecovered":true,"distributedStake":true,"finalized":{"epoch":"0x5","root":"0xf28a06252083fd1a81a74367934a3dc4d62a4ecbab1cbf4ce4c3c4b5cb43567b"},"independentCoreProcesses":2,"localKeys":64,"observerSynchronized":true,"p2pDaemons":2,"partitionRecovered":false,"physicalHosts":1,"scenario":"bellatrix-managed-cores-restart","validatorNodes":2,"wallClock":true}
+1/1 Test #301: consensus_bellatrix_crash_sustained ...   Passed  325.58 sec
+
+The following tests passed:
+	consensus_bellatrix_crash_sustained
+
+100% tests passed out of 1
+
+Label Time Summary:
+qualification_consensus_recovery    = 325.58 sec*proc (1 test)
+sustained                           = 325.58 sec*proc (1 test)
+
+Total Test time (real) = 325.58 sec

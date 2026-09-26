@@ -66,8 +66,10 @@ public:
  ~BellatrixRpcService(){stop();join();}
  nano::Json status(){
   const auto current=reactor_.current();
+  const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(2);
+  const auto head_slot=reactor_.beacon_head_slot([&]{if(std::chrono::steady_clock::now()>=deadline)throw std::runtime_error("Beacon status deadline");});
   return nano::Json{{"sequence",nano::quantity(nano::Int(std::to_string(current.token.sequence)))},{"digest",nano::hex(current.token.digest)},
-   {"timeMs",nano::quantity(nano::Int(std::to_string(current.state->timed.clock.time_ms)))},
+   {"headSlot",head_slot},{"timeMs",nano::quantity(nano::Int(std::to_string(current.state->timed.clock.time_ms)))},
    {"admissionSession",receipts_.session()},{"chainId",profile_.chain_id},{"genesisHash",profile_.genesis_hash},{"forkDigest",profile_.fork_digest},
    {"networkAdmissionEnabled",network_admission_},{"workerJobs",worker_jobs_},{"consensusIdentity",consensus_identity_.empty()?nano::Json(nullptr):nano::Json(consensus_identity_)},
    {"wire",{{"frameBytes",profile_.frame_bytes},{"blockBytes",profile_.block_bytes},{"attestationBytes",profile_.attestation_bytes},{"slashingBytes",profile_.slashing_bytes}}},

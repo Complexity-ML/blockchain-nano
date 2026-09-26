@@ -44,11 +44,14 @@ BellatrixExecutionPayloadHeader bellatrix_execution_payload_header(const Bellatr
  BellatrixExecutionPayloadHeader h;static_cast<BellatrixExecutionFields&>(h)=p;
  h.transactions_root=consensus_signing_root(merkle(std::move(transactions),l.transactions,check),integer_root(p.transactions.size()));return h;
 }
-ConsensusRoot bellatrix_execution_header_root(const BellatrixExecutionPayloadHeader& p,uint32_t extra_limit,const std::function<void()>& check){
+static ConsensusRoot execution_header_root(const BellatrixExecutionPayloadHeader& p,uint32_t extra_limit,const std::function<void()>& check,const ConsensusRoot* withdrawals=nullptr){
  if(!extra_limit||p.extra_data.size()>extra_limit)throw std::invalid_argument("Execution header extra data limit");
  if(check)check();
- return merkle({p.parent_hash,scalar(p.fee_recipient),p.state_root,p.receipts_root,packed(p.logs_bloom,256,check),p.prev_randao,integer_root(p.block_number),integer_root(p.gas_limit),integer_root(p.gas_used),integer_root(p.timestamp),consensus_signing_root(packed(p.extra_data,extra_limit,check),integer_root(p.extra_data.size())),p.base_fee_per_gas,p.block_hash,p.transactions_root},14,check);
+ std::vector<Root> fields{p.parent_hash,scalar(p.fee_recipient),p.state_root,p.receipts_root,packed(p.logs_bloom,256,check),p.prev_randao,integer_root(p.block_number),integer_root(p.gas_limit),integer_root(p.gas_used),integer_root(p.timestamp),consensus_signing_root(packed(p.extra_data,extra_limit,check),integer_root(p.extra_data.size())),p.base_fee_per_gas,p.block_hash,p.transactions_root};
+ if(withdrawals)fields.push_back(*withdrawals);return merkle(std::move(fields),withdrawals?15:14,check);
 }
+ConsensusRoot bellatrix_execution_header_root(const BellatrixExecutionPayloadHeader& p,uint32_t extra_limit,const std::function<void()>& check){return execution_header_root(p,extra_limit,check);}
+ConsensusRoot capella_execution_header_root(const CapellaExecutionPayloadHeader& p,uint32_t extra_limit,const std::function<void()>& check){return execution_header_root(p,extra_limit,check,&p.withdrawals_root);}
 ConsensusRoot bellatrix_execution_payload_root(const BellatrixExecutionPayload& p,const ExecutionPayloadLimits& l,const std::function<void()>& check){
  return bellatrix_execution_header_root(bellatrix_execution_payload_header(p,l,check),l.extra_data_bytes,check);
 }
@@ -65,5 +68,24 @@ Bytes encode_bellatrix_execution_header(const BellatrixExecutionPayloadHeader& p
  Bytes out;out.reserve(536+p.extra_data.size());
  auto append=[&](const auto& b){out.insert(out.end(),b.begin(),b.end());};auto num=[&](uint64_t value,unsigned width){for(unsigned i=0;i<width;++i)out.push_back(uint8_t(value>>(8*i)));};
  append(p.parent_hash);append(p.fee_recipient);append(p.state_root);append(p.receipts_root);append(p.logs_bloom);append(p.prev_randao);num(p.block_number,8);num(p.gas_limit,8);num(p.gas_used,8);num(p.timestamp,8);num(536,4);append(p.base_fee_per_gas);append(p.block_hash);append(p.transactions_root);append(p.extra_data);return out;
+}
+std::optional<CapellaExecutionPayloadHeader> decode_capella_execution_header(View b,uint32_t extra_limit,size_t budget,const std::function<void()>& check){
+ if(!extra_limit)throw std::invalid_argument("Execution header extra data limit");
+ if(check)check();
+ if(b.size()<568||b.size()>budget||b.size()>UINT32_MAX||number(b,436,4)!=568||b.size()-568>extra_limit)return std::nullopt;
+ // Reuse Bellatrix's common-field decoder after validating the Capella layout.
+ Bytes common(b.begin(),b.begin()+536);common.insert(common.end(),b.begin()+568,b.end());
+ for(unsigned i=0;i<4;++i)common[436+i]=uint8_t(536U>>(8*i));
+ const auto decoded=decode_bellatrix_execution_header(common,extra_limit,budget-32,check);
+ if(!decoded)return std::nullopt;
+ CapellaExecutionPayloadHeader out;static_cast<BellatrixExecutionPayloadHeader&>(out)=*decoded;out.withdrawals_root=array<32>(b,536);return out;
+}
+Bytes encode_capella_execution_header(const CapellaExecutionPayloadHeader& p,uint32_t extra_limit,size_t budget,const std::function<void()>& check){
+ if(check)check();
+ if(budget<568||p.extra_data.size()>UINT32_MAX-568)throw std::invalid_argument("Capella header size or budget");
+ auto out=encode_bellatrix_execution_header(p,extra_limit,budget-32,check);
+ out.insert(out.begin()+536,p.withdrawals_root.begin(),p.withdrawals_root.end());
+ for(unsigned i=0;i<4;++i)out[436+i]=uint8_t(568U>>(8*i));
+ return out;
 }
 }

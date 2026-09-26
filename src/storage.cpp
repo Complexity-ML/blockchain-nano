@@ -78,6 +78,10 @@ std::optional<std::string> ChainStore::proposal_data_impl(const std::string& key
 ChainStore::ChainStore(const std::filesystem::path& path){
  if(path.has_parent_path())std::filesystem::create_directories(path.parent_path());
  rocksdb::Options options;options.create_if_missing=true;options.paranoid_checks=true;
+ // A validator opens separate signing journals and recovery witnesses. RocksDB's
+ // default file preallocation multiplies reserved disk space across these tiny
+ // databases. Allocate on demand; keep WAL and synchronous durability unchanged.
+ options.allow_fallocate=false;
  db_=open_database(options,path.string()).release();
  try{
   auto schema=get("meta/schema");
@@ -436,8 +440,8 @@ namespace nano {
 ForkCheckpointToken ChainStore::commit_execution_checkpoint(const Int& chain_id,const Bytes& genesis_hash,
  const std::optional<ForkCheckpointToken>& expected,const Bytes& expected_tip,
  const Int& common_height,const Bytes& common_hash,const std::vector<ExecutionCheckpointBlock>& suffix,
- std::string_view snapshot,size_t maximum_bytes,size_t maximum_blocks){
- if(snapshot.empty()||snapshot.size()>maximum_bytes||suffix.size()>maximum_blocks||common_height<0||common_height>Int("18446744073709551615")||expected_tip.size()!=32||common_hash.size()!=32)
+ std::string_view snapshot,size_t maximum_bytes,size_t maximum_blocks,const std::vector<CheckpointArchiveEntry>& archive){
+ if(snapshot.empty()||snapshot.size()>maximum_bytes||suffix.size()>maximum_blocks||archive.size()>maximum_blocks||common_height<0||common_height>Int("18446744073709551615")||expected_tip.size()!=32||common_hash.size()!=32)
   throw std::invalid_argument("execution checkpoint bounds");
  const auto digest=sha256(Bytes(snapshot.begin(),snapshot.end()));
  std::lock_guard lock(mutex_);const auto previous=fork_checkpoint_impl(chain_id,genesis_hash,maximum_bytes);
@@ -461,6 +465,22 @@ ForkCheckpointToken ChainStore::commit_execution_checkpoint(const Int& chain_id,
   for(const auto& tx:old->at("transactions")){const auto hash=tx.at("hash").get<std::string>();removed.insert(hash);batch.Delete("tx/"+hash);batch.Delete("receipt/"+hash);}
   batch.Delete("hash/"+old->at("hash").get<std::string>());batch.Delete("block/"+key);batch.Delete("state/"+key);batch.Delete("consensus/"+key);total-=quantity(old->at("difficulty"));--count;bounded();
  }
+ // History survives a canonical reorg. Conflicting bytes under an existing
+ // consensus root are never replaced, including duplicates within one batch.
+ std::map<std::string,std::string> archived;
+ for(const auto& entry:archive){
+  if(entry.root.size()!=32||entry.payload.empty()||entry.payload.size()>maximum_bytes)
+   throw std::invalid_argument("checkpoint archive bounds");
+  const auto key="checkpoint-archive/v1/"+hex(entry.root);
+  const auto encoded=Json{{"slot",quantity(Int(std::to_string(entry.slot)))},{"payload",hex(entry.payload)},{"digest",hex(sha256(entry.payload))}}.dump();
+  if(encoded.size()>maximum_bytes)throw std::length_error("checkpoint archive record budget");
+  const auto [it,added]=archived.emplace(key,encoded);
+  if(!added){if(it->second!=encoded)throw std::invalid_argument("conflicting checkpoint archive duplicate");continue;}
+  const auto old=get(key);
+  if(old){if(*old!=encoded)throw std::invalid_argument("conflicting checkpoint archive record");continue;}
+  batch.Put(key,encoded);
+  batch.Put("checkpoint-archive-slot/v1/"+height_key(Int(std::to_string(entry.slot)))+"/"+hex(entry.root),"");bounded();
+ }
  auto parent=Block::from_json(*common).header;
  for(const auto& record:suffix){
   const auto& block=record.block;const auto& h=block.header;const auto& receipts=record.receipts;const auto hash=h.hash();
@@ -478,5 +498,23 @@ ForkCheckpointToken ChainStore::commit_execution_checkpoint(const Int& chain_id,
  batch.Put("fork-checkpoint/v1/payload",rocksdb::Slice(snapshot.data(),snapshot.size()));batch.Put("fork-checkpoint/v1/token",Json{{"sequence",quantity(Int(std::to_string(token.sequence)))},{"digest",hex(digest)}}.dump());
  batch.Put("execution-checkpoint/v1",Json{{"digest",hex(digest)},{"tip",hex(parent.hash())}}.dump());bounded();
  const auto status=db_->Write(durable_write(),&batch);if(!status.ok())fork_checkpoint_write_uncertain_=true;require_ok(status);return token;
+}
+}
+
+namespace nano {
+std::optional<CheckpointArchiveEntry> ChainStore::checkpoint_archive(const Bytes& root,size_t maximum_bytes)const{
+ if(root.size()!=32)throw std::invalid_argument("checkpoint archive root");
+ std::lock_guard lock(mutex_);const auto encoded=get("checkpoint-archive/v1/"+hex(root));
+ if(!encoded)return std::nullopt;
+ if(encoded->size()>maximum_bytes)throw std::length_error("checkpoint archive read budget");
+ const auto data=Json::parse(*encoded);
+ if(!data.is_object()||data.size()!=3)throw std::runtime_error("checkpoint archive encoding");
+ const auto slot=quantity(data.at("slot"));
+ if(slot<0||slot>Int("18446744073709551615"))throw std::runtime_error("checkpoint archive slot");
+ auto payload=unhex(data.at("payload").get<std::string>());
+ if(payload.empty()||hex(sha256(payload))!=data.at("digest").get<std::string>())throw std::runtime_error("checkpoint archive digest");
+ const auto canonical=Json{{"slot",quantity(slot)},{"payload",hex(payload)},{"digest",hex(sha256(payload))}}.dump();
+ if(canonical!=*encoded)throw std::runtime_error("checkpoint archive noncanonical encoding");
+ return CheckpointArchiveEntry{root,u64(slot),std::move(payload)};
 }
 }

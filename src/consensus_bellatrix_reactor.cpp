@@ -42,9 +42,9 @@ bool valid_exit_signature(const SignedConsensusVoluntaryExit& exit,const Phase0F
  const auto version=exit.epoch<context.fork.epoch?context.fork.previous_version:context.fork.current_version;
  return verify_consensus_bls(member.public_key,consensus_signing_root(consensus_voluntary_exit_root(exit.epoch,exit.validator_index),consensus_domain({4,0,0,0},version,context.genesis_root)),exit.signature);
 }
-std::string durable_snapshot(const BellatrixForkStore& store,const BellatrixSignedBlockArchive& archive,const BellatrixSignedVoteArchive& votes,const BellatrixSignedVoteArchive& slashings,const BellatrixSignedExitArchive& exits,const BellatrixForkBlockRules& rules,const BellatrixStoreSnapshotLimits& limits,const std::function<void()>& cancel){
+std::string durable_snapshot(const BellatrixForkStore& store,const BellatrixSignedBlockArchive& archive,const BellatrixSignedVoteArchive& votes,const BellatrixSignedVoteArchive& slashings,const BellatrixSignedExitArchive& exits,const BellatrixForkBlockRules& rules,const BellatrixStoreSnapshotLimits& limits,const std::function<void()>& cancel,BellatrixStoreSnapshotCache* cache=nullptr){
  // Retain byte-for-byte v1 encoding while both signed archives are empty.
- auto encoded=bellatrix_store_snapshot(store,rules,limits,cancel);if(archive.empty()&&votes.empty()&&slashings.empty()&&exits.empty())return encoded;
+ auto encoded=bellatrix_store_snapshot(store,rules,limits,cancel,cache);if(archive.empty()&&votes.empty()&&slashings.empty()&&exits.empty())return encoded;
  archive_require(archive.size()<store.blocks.size());size_t total=0;Json blocks=Json::array();
  for(const auto& [id,bytes]:archive){
   if(cancel)cancel();archive_require(bytes&&id!=store.timed.view.anchor&&store.blocks.contains(id)&&bytes->size()<=rules.transition.consensus.maximum_block_bytes&&bytes->size()<=limits.envelope_bytes/2-total);total+=bytes->size();
@@ -218,7 +218,7 @@ void BellatrixDurableReactor::publish(BellatrixForkStore candidate,std::shared_p
   // no longer be reassigned by an admissible branch. Never prune on head alone.
   if(retained->size()!=exits->size())exits=std::move(retained);
  }
- const auto encoded=durable_snapshot(*next,*archive,*votes,*slashings,*exits,rules_,limits_,checkpoint);
+ const auto encoded=durable_snapshot(*next,*archive,*votes,*slashings,*exits,rules_,limits_,checkpoint,&snapshot_cache_);
  if(checkpoint)checkpoint();
  // A retransmission with identical durable contents is already acknowledged by
  // this checkpoint. Do not invalidate local duty tokens or amplify disk writes
@@ -254,14 +254,44 @@ void BellatrixDurableReactor::publish(BellatrixForkStore candidate,std::shared_p
   at=record.header.parent_root;
  }
  std::reverse(suffix.begin(),suffix.end());
+ // Prepare notifications before disk I/O, but publish them only after the
+ // atomic checkpoint succeeds. Initial anchors and duplicate imports emit none.
+ auto notifications=events_;
+ std::shared_ptr<BeaconEventJournal> pending_events;
+ auto emit=[&](std::string topic,Json data){
+  if(!pending_events)pending_events=std::make_shared<BeaconEventJournal>(*events_);
+  pending_events->append(std::move(topic),std::move(data));
+ };
+ auto root_text=[](const ConsensusRoot& root){return hex(Bytes(root.begin(),root.end()));};
+ if(state_){
+  if(archive!=signed_blocks_)for(const auto& [root,wire]:*archive){
+   if(checkpoint)checkpoint();
+   if(!signed_blocks_->contains(root))emit("block",{{"slot",std::to_string(next->blocks.at(root).header.slot)},{"block",root_text(root)},{"execution_optimistic",false}});
+  }
+  const auto& finalized=next->timed.view.finalized;
+  if(finalized.epoch!=state_->timed.view.finalized.epoch||finalized.root!=state_->timed.view.finalized.root){
+   const auto& record=next->blocks.at(finalized.root);
+   emit("finalized_checkpoint",{{"block",root_text(finalized.root)},{"state",root_text(record.header.state_root)},{"epoch",std::to_string(finalized.epoch)},{"execution_optimistic",false}});
+  }
+ }
+ if(pending_events)notifications=std::move(pending_events);
+ // New authenticated signed blocks are retained independently of the full
+ // Store snapshot, atomically with its execution publication. Historical
+ // snapshots still retain their archive until migration/pruning is qualified.
+ std::vector<CheckpointArchiveEntry> archived;
+ if(archive!=signed_blocks_)for(const auto& [root,wire]:*archive){
+  if(checkpoint)checkpoint();
+  if(!signed_blocks_||!signed_blocks_->contains(root))archived.push_back({Bytes(root.begin(),root.end()),next->blocks.at(root).header.slot,*wire});
+ }
+
  if(checkpoint)checkpoint();
  try{
   witness_prepare(encoded);
-  if(execution_)committed=execution_->commit_beacon_checkpoint(token_,tip->header.hash(),common_height,common_hash,suffix,next->blocks.at(next->timed.view.finalized.root).execution_block,encoded,limits_.envelope_bytes,limits_.blocks);
-  else committed=disk_.commit_execution_checkpoint(chain_id_,genesis_,token_,tip->header.hash(),common_height,common_hash,suffix,encoded,limits_.envelope_bytes,limits_.blocks);
+  if(execution_)committed=execution_->commit_beacon_checkpoint(token_,tip->header.hash(),common_height,common_hash,suffix,next->blocks.at(next->timed.view.finalized.root).execution_block,encoded,limits_.envelope_bytes,limits_.blocks,archived);
+  else committed=disk_.commit_execution_checkpoint(chain_id_,genesis_,token_,tip->header.hash(),common_height,common_hash,suffix,encoded,limits_.envelope_bytes,limits_.blocks,archived);
  }
  catch(...){unavailable_=true;if(execution_){std::lock_guard lock(execution_->mutex_);execution_->beacon_ready_=false;}throw;}
- token_=std::move(committed);state_=std::move(next);signed_blocks_=std::move(archive);signed_votes_=std::move(votes);signed_slashings_=std::move(slashings);signed_exits_=std::move(exits);
+ events_=std::move(notifications);token_=std::move(committed);state_=std::move(next);signed_blocks_=std::move(archive);signed_votes_=std::move(votes);signed_slashings_=std::move(slashings);signed_exits_=std::move(exits);
 }
 BellatrixDurableReactor::BellatrixDurableReactor(Blockchain& execution,BellatrixForkBlockRules rules,
  BellatrixStoreSnapshotLimits limits,BellatrixForkStore initial,const std::function<void()>& checkpoint,ChainStore* witness):
@@ -318,6 +348,7 @@ BellatrixDurableReactor::BellatrixDurableReactor(Blockchain& execution,Bellatrix
  state_=std::make_shared<const BellatrixForkStore>(std::move(restored.store));signed_blocks_=std::move(restored.blocks);signed_votes_=std::move(restored.votes);signed_slashings_=std::move(restored.slashings);signed_exits_=std::move(restored.exits);token_=*next;
  std::lock_guard chain_lock(execution_->mutex_);execution_->beacon_finalized_=std::move(finalized);execution_->beacon_ready_=true;
 }
+Json BellatrixDurableReactor::beacon_events(std::optional<uint64_t> cursor)const{std::lock_guard lock(mutex_);require_available();return events_->read(cursor);}
 BellatrixPublishedStore BellatrixDurableReactor::current()const{std::lock_guard lock(mutex_);require_available();return {state_,*token_,signed_blocks_,signed_votes_,signed_slashings_,signed_exits_};}
 std::optional<Phase0SignedAttestation> BellatrixDurableReactor::sign_attestation(uint64_t index,
  uint64_t slot,const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected,BeaconSigningJournal& journal,
@@ -512,8 +543,19 @@ std::optional<Bytes> BellatrixDurableReactor::propose_current(uint64_t index,uin
  size_t trials,const std::function<uint64_t()>& clock,BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint){
  std::lock_guard lock(mutex_);require_available();return propose_local_locked(index,slot,recipient,trials,clock,*token_,journal,signer,checkpoint);
 }
+bool BellatrixDurableReactor::tick_if_needed(uint64_t ms,const std::function<void()>& checkpoint){
+ std::lock_guard lock(mutex_);require_available();if(checkpoint)checkpoint();
+ const auto& clock=state_->timed.clock;
+ if(ms<clock.time_ms||clock.time_ms<clock.genesis_time_ms)throw std::invalid_argument("Bellatrix clock moved backwards");
+ const auto previous=clock.time_ms-clock.genesis_time_ms,current=ms-clock.genesis_time_ms;
+ if(previous/rules_.slot_duration_ms==current/rules_.slot_duration_ms&&
+    (previous%rules_.slot_duration_ms<rules_.attestation_due_ms)==(current%rules_.slot_duration_ms<rules_.attestation_due_ms))return false;
+ tick_locked(ms,checkpoint);return true;
+}
 void BellatrixDurableReactor::tick(uint64_t ms,const std::function<void()>& checkpoint){
- std::lock_guard lock(mutex_);require_available();
+ std::lock_guard lock(mutex_);require_available();tick_locked(ms,checkpoint);
+}
+void BellatrixDurableReactor::tick_locked(uint64_t ms,const std::function<void()>& checkpoint){
  auto next=prepare_bellatrix_store_tick(*state_,ms,rules_,limits_.replay_slots,limits_.sync_trials,checkpoint);
  const auto& previous_clock=state_->timed.clock;const auto previous_slot=(previous_clock.time_ms-previous_clock.genesis_time_ms)/rules_.slot_duration_ms;
  const auto current_slot=(ms-previous_clock.genesis_time_ms)/rules_.slot_duration_ms;
@@ -618,5 +660,20 @@ Json BellatrixDurableReactor::network_identity()const{
  std::lock_guard lock(mutex_);require_available();const auto& anchor=state_->timed.view.anchor;
  const auto encoded=Json::array({"nano-bellatrix-network-v1",quantity(chain_id_),hex(genesis_),hex(Bytes(anchor.begin(),anchor.end())),bellatrix_fork_profile(rules_)}).dump();const auto digest=sha256(Bytes(encoded.begin(),encoded.end()));
  return Json{{"chainId",quantity(chain_id_)},{"genesisHash",hex(genesis_)},{"consensusIdentity",hex(digest)},{"forkDigest",hex(Bytes(digest.begin(),digest.begin()+4))}};
+}
+}
+
+namespace nano {
+void validate_bellatrix_archived_block(const ConsensusRoot& id,const Bytes& wire,
+ const BellatrixForkStore& store,const BellatrixForkBlockRules& rules,const std::function<void()>& check){
+ verify_archived_block(id,wire,store,rules,check);
+}
+}
+
+namespace nano {
+uint64_t BellatrixDurableReactor::beacon_head_slot(const std::function<void()>& check)const{
+ const auto snapshot=current();const auto& c=rules_.transition.consensus;
+ const auto id=phase0_fork_choice_head(snapshot.state->timed.view,{c.epoch.ffg.slots_per_epoch,c.attestation.duties.effective_balance_increment,rules_.proposer_score_boost},check).head;
+ return snapshot.state->blocks.at(id).header.slot;
 }
 }

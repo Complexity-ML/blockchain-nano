@@ -1,6 +1,7 @@
 #pragma once
 #include "nano/consensus_bellatrix_store_snapshot.hpp"
 #include "nano/storage.hpp"
+#include "nano/beacon_events.hpp"
 #include <memory>
 #include "nano/consensus_beacon_signer.hpp"
 namespace nano {
@@ -45,10 +46,12 @@ class BellatrixDurableReactor {
  std::mutex& mutex_;
  std::shared_ptr<const BellatrixForkStore> state_;
  std::optional<ForkCheckpointToken> token_;
+ BellatrixStoreSnapshotCache snapshot_cache_;
  std::shared_ptr<const BellatrixSignedBlockArchive> signed_blocks_=std::make_shared<const BellatrixSignedBlockArchive>();
  std::shared_ptr<const BellatrixSignedVoteArchive> signed_votes_=std::make_shared<const BellatrixSignedVoteArchive>();
  std::shared_ptr<const BellatrixSignedVoteArchive> signed_slashings_=std::make_shared<const BellatrixSignedVoteArchive>();
  std::shared_ptr<const BellatrixSignedExitArchive> signed_exits_=std::make_shared<const BellatrixSignedExitArchive>();
+ std::shared_ptr<const BeaconEventJournal> events_=std::make_shared<const BeaconEventJournal>();
  bool unavailable_=false;
  void require_available() const;
  void publish(BellatrixForkStore,std::shared_ptr<const BellatrixSignedBlockArchive>,std::shared_ptr<const BellatrixSignedVoteArchive>,const std::function<void()>&,std::shared_ptr<const BellatrixSignedVoteArchive> slashings={},std::shared_ptr<const BellatrixSignedExitArchive> exits={});
@@ -69,7 +72,13 @@ std::set<uint64_t> local_attesters_locked(uint64_t slot,const ForkCheckpointToke
 std::optional<Bytes> propose_local_locked(uint64_t index,uint64_t slot,const std::string& recipient,
  size_t maximum_vote_trials,const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected,
  BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint);
+ void tick_locked(uint64_t,const std::function<void()>&);
 public:
+ // Persist clock advancement only when slot or attestation eligibility changes.
+ // Explicit tick() remains an unconditional durable checkpoint operation.
+ bool tick_if_needed(uint64_t,const std::function<void()>& checkpoint={});
+ Json beacon_events(std::optional<uint64_t> cursor)const;
+ uint64_t beacon_head_slot(const std::function<void()>& checkpoint={}) const;
  BellatrixDurableReactor(Blockchain&,BellatrixForkBlockRules,BellatrixStoreSnapshotLimits,
   BellatrixForkStore trusted_initial,const std::function<void()>& checkpoint={},ChainStore* witness=nullptr);
  BellatrixDurableReactor(Blockchain&,BellatrixForkBlockRules,BellatrixStoreSnapshotLimits,
@@ -150,4 +159,11 @@ public:
  bool slashing(const IndexedConsensusAttestation&,const IndexedConsensusAttestation&,
   const std::function<void()>& checkpoint={});
 };
+}
+
+namespace nano {
+// Revalidate a retained signed block against its authenticated store record,
+// including SSZ body commitment and BLS proposer signature.
+void validate_bellatrix_archived_block(const ConsensusRoot&,const Bytes&,
+ const BellatrixForkStore&,const BellatrixForkBlockRules&,const std::function<void()>& checkpoint={});
 }

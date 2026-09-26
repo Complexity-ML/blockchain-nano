@@ -292,3 +292,209 @@ zéro ni considérer une liste comme une implémentation.
 Complément Cancun/Prague : suivre 7516, 2537, 2935, 7623, 7691, 7840 et
 le périmètre de 7642 dans la matrice ; provisionnement des contrats système,
 SSZ consensus distinct de RLP transactions, et eth_createAccessList à qualifier.
+
+
+### 2026-09-26 — Kurtosis native Beacon qualification
+
+Two real Docker Nano nodes, 32 synthetic validators each, connected and finalized
+execution block 15 with the same hash. Evidence: `qualification/kurtosis-20260926/summary.json`.
+The initial harness needed RPC-loopback and assertion corrections; the corrected
+finality checks passed on the same live nodes. This qualifies a bounded native
+Bellatrix/Paris scenario, not ethereum-package/Lighthouse interoperability.
+Engine capability RPC returns -32601. Priorities: container restart/partition,
+bounded load, accurate Beacon supervision, and completing the selected fork
+lifecycle. Assertoor and chaos scenarios remain unqualified by this campaign.
+
+La suite des campagnes et leurs critères de clôture sont suivis dans
+`SYSTEM-TEST-PLAN.md` : crash atomique, partitions/quorum, charge bornée,
+invariants rejoués sur Nano et intégration Assertoor conditionnée aux API réelles.
+
+### 2026-09-26 — Reprise Docker Beacon sous écritures
+
+Campagne bornée réussie : SIGKILL (137), reprise du même volume avec témoins,
+24 transactions SSTORE, reçus réussis, nonce/compteur exacts et finalité commune
+au bloc 45. Preuves : `qualification/kurtosis-crash-20260926/`. Aucun test de
+coupure électrique ni de frontière exacte d'écriture. Limites mesurées :
+~236 s après réouverture avant clôture de finalité ; ~4,9 Go sur un nœud.
+Analyser l'amplification de stockage et la latence avant toute conclusion
+opérationnelle. Assertoor/Foundry/Chaos Mesh restent des campagnes distinctes.
+
+### Correction d'allocation et comparaison qualifiée (2026-09-26)
+
+`allow_fallocate=false` dans ChainStore supprime la réservation anticipée,
+sans désactiver WAL ni sync. Les trois tests ciblés de durabilité passent ;
+le rejeu Kurtosis SIGKILL/24 transactions passe aussi (bloc 39 commun).
+Empreinte finale : ~114/51 Mio au lieu de ~4,9 Go par nœud. Reprise RPC
+~3,2 s dans les deux essais ; finalité après reprise 188 s versus 236 s,
+sans attribution causale à partir d'un seul essai. Preuves :
+`qualification/rocksdb-allocation-20260926/README.md`. Prochaine priorité :
+interfaces Beacon pour Assertoor, décrites dans `ASSERTOOR-INTEGRATION.md`.
+Le pruning et la maîtrise de l'amplification d'écriture restent ouverts.
+
+- 2026-09-26 : lectures Beacon head/root, fork et checkpoints intégrées au runtime
+  et testées sur HTTP réel avec refus d'accès et indisponibilité. Détails et
+  limites : `docs/qualification/beacon-reads-20260926/README.md`. Raccordement
+  Assertoor toujours partiel, aucune clôture de la qualification système.
+
+- 2026-09-26 : NodeSyncing natif implémenté avec observations P2P de slots distinctes
+  des hauteurs EVM, expiration et refus des annonces futures. Deux processus et
+  démons P2P testés avant/après redémarrage ; preuves dans
+  `docs/qualification/beacon-sync-20260926/README.md`. Qualification Assertoor complète
+  toujours ouverte (notamment corps de blocs et événements).
+
+- 2026-09-26 : événements Beacon `block`/`finalized_checkpoint` publiés après
+  commit durable, SSE borné intégré au serveur natif. Cinq tests passent,
+  dont réception SDK sur deux processus et validation de 31 événements de
+  blocs avec finalité. [Preuves](qualification/beacon-events-20260926/README.md).
+  Raccordement Assertoor avancé ; suite complète et qualification production
+  toujours ouvertes. Aucun nouveau statut de conformité EIP attribué.
+
+- 2026-09-26 : première exécution réelle d'Assertoor officiel contre deux nœuds
+  natifs. Santé EL/CL, progression synchronisée et deux nouveaux corps de blocs
+  passent, sans désactivation des contrôles. Cible CTest optionnelle ajoutée.
+  [Preuves et limites](qualification/assertoor-native-20260926/README.md).
+  Finalité non nulle, partitions et catalogue Assertoor restent à qualifier ;
+  aucune EIP ou conformité production supplémentaire déclarée par déduction.
+
+## Échec ouvert : finalité avec Assertoor — 2026-09-26
+
+La nouvelle cible `consensus_bellatrix_assertoor_finality` répartit les 64 clés
+sur deux processus. Santé, synchronisation et propositions passent, mais la
+finalité reste à l'époque 0 : timeout après 240 s, campagne 265,84 s. Les reçus
+natifs confirment ce résultat ; deux lectures Beacon 503 sont également observées.
+Cause non établie. Priorité : contention RPC/consensus et propagation des votes,
+avec témoin sans Assertoor ; ne pas assouplir le seuil d'époque finalisée 2.
+[Preuves et diagnostic](qualification/assertoor-finality-20260926/README.md).
+La finalité sous cette supervision n'est pas qualifiée ; les partitions Assertoor
+et la clôture production restent ouvertes.
+
+- 2026-09-26, diagnostic de finalité : le témoin **sans Assertoor** échoue aussi
+  à retrouver des têtes communes (253,70 s), malgré un checkpoint finalisé commun
+  époque 2 à l'arrêt. Un ordonnancement qui saute les catégories vides corrige
+  une limite de capacité du relais, mais ne suffit pas : Assertoor reste en échec
+  (269,82 s, finalisée 0). Sorties et slashing passent (10,30/5,33 s).
+  [Preuves avant/après](qualification/bellatrix-relay-scheduling-20260926/README.md).
+  Résolution toujours ouverte. Conservation automatique des bases et des blocs
+  de tête ajoutée pour le prochain diagnostic ; aucun changement de quorum.
+
+- 2026-09-26 — Critère de réussite continue : nouvelle cible
+  `consensus_bellatrix_assertoor_sustained`, quatre avancées consécutives de
+  finalité commune puis quatre après redémarrage, avec cohérence Beacon/EVM.
+  Le diagnostic distingue le défaut JSON/SSZ de la sonde, le retard réel du
+  relais et un build sans optimisation. Cache de validation historique ajouté
+  sans modification des règles ni des checkpoints ; trois cibles Release
+  réussies (9,48 s). Campagne prolongée **réussie en 616,36 s** : quatre
+  avancées communes 2→6, puis quatre 7→11 après redémarrage ordonné ; 64
+  observations sans écart de tête ou d’époque finalisée. Qualification locale
+  bornée en Release, sans conclusion de production ou de tenue indéfinie.
+  [Preuves et limites](qualification/assertoor-native-finality-20260926/README.md).
+
+- 2026-09-26 — Reprise prolongée : **SIGKILL distribué réussi** (325,89 s),
+  finalité commune 2→3→4→5. **Partition prolongée en échec** (521,06 s) :
+  sûreté conservée pendant 96 s d’isolement et convergence ultérieure, mais
+  retard de finalité supérieur à quatre époques au début du contrôle prolongé.
+  Le succès du redémarrage ordonné ne clôt donc pas la reprise après partition.
+  [Preuves, critères et limites](qualification/recovery-sustained-20260926/README.md).
+
+- 2026-09-26 — Contre-épreuve après partition : un relais par salves bornées
+  améliore la convergence initiale dans cet essai mais échoue au contrôle
+  prolongé (501,40 s, finalité immobile deux époques). Hypothèse insuffisante,
+  patch expérimental retiré. Prochaine analyse : attestations incluses et
+  checkpoints source/cible après reconnexion.
+  [Preuves](qualification/recovery-sustained-20260926/README.md#contre-épreuve-du-délai-de-relais).
+
+- 2026-09-26 — Diagnostic hors ligne ajouté (`--attestation-report`) et vérifié
+  sur les deux bases arrêtées : rapports identiques, participation utile divisée
+  entre branches après partition. Les votes inclus avec une mauvaise cible sont
+  distingués des votes utiles. Prochaine correction à cibler : convergence des
+  branches / inclusion des attestations, sans modifier quorum ni slashing.
+  [Détails](qualification/recovery-sustained-20260926/README.md#diagnostic-des-attestations-incluses).
+
+- 2026-09-26 — Cache borné des acquittements de votes par session ajouté :
+  tests de réessai/perte de réponse/session/éviction réussis, retransmissions
+  répétées réduites dans le scénario réel. La finalité après partition reste
+  en échec (503,39 s). Ne pas assimiler cette correction de transport à une
+  résolution du choix de branche ou à la préparation production.
+  [Preuves](qualification/recovery-sustained-20260926/README.md#acquittements-de-votes-mémorisés-par-session).
+
+- 2026-09-26 — Nouveau témoin déterministe de partition à livraison directe :
+  réussi en 122,04 s, six avancées communes 6→12 après deux époques d’isolement.
+  Deux cœurs durables, BLS/EVM/RocksDB réels, horloge simulée et aucun P2P.
+  Le contraste avec l’échec réseau cible désormais l’ordre et les délais de
+  livraison/rattrapage ; le critère réseau n’est ni remplacé ni assoupli.
+  [Preuves](qualification/recovery-sustained-20260926/README.md#témoin-à-livraison-directe-et-horloge-contrôlée).
+
+- 2026-09-26 — Observabilité des délais du validateur ajoutée. Le témoin
+  instrumenté passe (134,92 s), sans cycle de six secondes. Une copie arrêtée
+  reprend ensuite avec horloge réelle et passe de la finalité 6 à 9 sans pair
+  pendant une courte observation. L’échec réseau caractérise un délai excessif
+  selon le critère strict ; il ne prouve pas un blocage définitif. Critère intact.
+  [Mesures](qualification/recovery-sustained-20260926/README.md#mesure-des-échéances-du-validateur).
+
+- 2026-09-26 — Coalescence des observations d’horloge sans changement de phase
+  ajoutée : équivalence d’état et protections d’horloge testées, quatre cibles
+  réussies (29,38 s). Reprise courte : 33 publications contre 167, même finalité.
+  La partition prolongée échoue en 519,24 s : retard de finalité supérieur
+  à quatre époques. Aucun cycle validateur ne dépasse six secondes ; la réduction
+  des écritures ne clôt pas le défaut de convergence/finalité.
+  [Preuves](qualification/recovery-sustained-20260926/README.md#coalescence-des-observations-dhorloge-bellatrix).
+
+- 2026-09-26 — Diagnostic borné des votes locaux ajouté, inactif par défaut.
+  Test dédié réussi (8,56 s) : votes réellement admis, éviction, désactivation
+  et accord des deux cœurs. Partition instrumentée en échec (522,42 s) : saut d’époque finalisée.
+  Les traces révèlent une stagnation temporaire des messages distants ;
+  correction en cours du parcours des votes déjà acquittés.
+  Ce diagnostic ne ferme pas le défaut de finalité.
+  [Preuves](qualification/recovery-sustained-20260926/duty-trace/README.md).
+
+- 2026-09-26 — Parcours asynchrone borné des votes déjà acquittés ajouté.
+  Le test atteint un vote nouveau derrière 70 connus en trois tentatives ;
+  perte de réponse et réessai conservés (0,32 s). Relais P2P reconstruit,
+  partition en échec (373,12 s), suspicion de course entre lectures RPC.
+  La fraîcheur des votes distants progresse bien sur les traces.
+  [Preuves](qualification/recovery-sustained-20260926/cached-scan/README.md).
+
+- 2026-09-26 — Course du moniteur reproduite puis corrigée : deux lectures
+  de tête encadrent le checkpoint, trois tentatives maximum. Conflits et reculs
+  restent fatals pendant une course. Neuf tests passent, seuils inchangés ;
+  qualification réseau relancée avec cette mesure corrigée.
+  [Preuves](qualification/recovery-sustained-20260926/consistent-sampling/README.md).
+
+- 2026-09-26 — La lecture cohérente seule ne résout pas l’échec (373,31 s).
+  Diagnostic prouvé sur le checkpoint arrêté : blocs 62–63, finalité réalisée 2
+  mais non réalisée 6 ; bloc 64, réalisée 6. Le scénario exige désormais
+  la concordance Beacon réalisé / exécution avant de démarrer sa fenêtre,
+  dans le même délai de cinq époques. Neuf tests du moniteur passent ;
+  qualification réseau en cours. Les résultats précédents restent des échecs.
+  [Preuves](qualification/recovery-sustained-20260926/recovery-bound/README.md).
+
+- 2026-09-26 — **Partition prolongée réussie, 517,99 s** avec le relais corrigé
+  et le seuil de reprise lié aux deux projections : coupure 96 s, reprise 95 s,
+  trois finalités communes 6→7→8→9, mêmes blocs d’exécution et arrêt propre.
+  Deux cœurs / deux P2P, 64 clés synthétiques, un Mac. Clôture de ce scénario
+  local uniquement ; les échecs historiques et autres critères production restent
+  conservés. Prochaine validation : arrêt brutal avec les binaires actuels.
+  [Preuves](qualification/recovery-sustained-20260926/recovery-bound/README.md).
+
+- 2026-09-26 — **Reprise SIGKILL et finalité continue réussies, 325,58 s** :
+  deux cœurs / deux P2P, 64 clés synthétiques sur un Mac ; trois avancées
+  communes 2→3→4→5 après redémarrage, liées aux blocs d’exécution finalisés.
+  Empreintes des binaires inchangées depuis la partition réussie et vérifiées.
+  Ce scénario ne couvre pas une panne électrique ni la rétention longue.
+  [Preuves](qualification/recovery-sustained-20260926/crash-current/README.md).
+
+- 2026-09-26 — Primitive d’archive atomique de checkpoint implémentée et testée :
+  deux cibles passent en 1,49 s, avec réorganisation, SIGKILL et suffixe WAL
+  conservé/perdu. **Raccordement Bellatrix/P2P et élagage non réalisés.**
+  [Preuves](qualification/checkpoint-archive-20260926/README.md).
+
+- Critère bridge ajouté : avant tout mint, vérifier l’inclusion du dépôt dans
+  l’ascendance d’un checkpoint source finalisé selon le protocole choisi.
+  Un seuil arbitraire de 12–64 blocs n’est pas une preuve de finalité.
+  Tester dépôt réorganisé avant finalité (aucun mint), rejeu (un seul mint),
+  finalité bloquée (attente), source RPC mensongère et conflit de finalité
+  (arrêt de nouvelles émissions, incident explicite). Une réorganisation
+  exceptionnelle après mint ne s’annule pas automatiquement sur Nano : plan
+  de traitement des engagements et modèle de confiance à définir avant fonds.
+  Références : https://ethereum.org/developers/docs/consensus-mechanisms/pos/faqs
+  et https://docs.base.org/base-chain/specs/protocol/consensus/derivation.

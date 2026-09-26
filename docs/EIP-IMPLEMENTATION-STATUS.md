@@ -1679,3 +1679,131 @@ qualification distribuée. Les campagnes des autres profils restent ouvertes.
 
 [Protocole reproductible](EEST.md) ;
 [rapport et empreintes](qualification/eest-v5.4.0-20260926.json).
+
+
+### Limite opérationnelle transverse — allocation RocksDB (2026-09-26)
+
+Le constructeur conserve WAL et `sync=true`, mais désactive la préallocation
+`allow_fallocate`. Un comparatif de 66 petites bases reproduit 5,15 Go alloués
+avec les défauts contre 2,97 Mo sans préallocation ; les 198 valeurs des trois
+variantes survivent à la réouverture. Les tests du journal de signature et des
+témoins de récupération passent. Voir
+[rapport](qualification/rocksdb-allocation-20260926/README.md).
+
+Cette optimisation n'est ni un pruning de l'état EVM, ni une nouvelle preuve de
+conformité EIP. La reprise RPC (~3 s, avec attente volontaire du test) doit rester
+distincte de la finalité après crash. Les règles de rétention et l'endurance
+restent des critères de clôture séparés.
+
+### Observation Beacon native (2026-09-26, partielle)
+
+Trois lectures HTTP `states/head/{root,fork,finality_checkpoints}` sont raccordées
+au runtime Bellatrix avec snapshots validés, file de calcul bornée et accès
+loopback. Nouveau test HTTP natif passé, redémarrage runtime passé ; voir
+[preuves](qualification/beacon-reads-20260926/README.md) et
+[périmètre restant Assertoor](ASSERTOOR-INTEGRATION.md).
+Aucune EIP supplémentaire qualifiée par ces lectures ; Assertoor n'a pas encore
+été exécuté et les routes genesis/spec/syncing/headers/blocks/events restent ouvertes.
+
+- Extension d'observation du 2026-09-26 : en-têtes Beacon signés par tête/racine/slot
+  raccordés aux archives natives. Tests de corruption BLS/SSZ et de cohérence après
+  deux changements de tête passés ; [preuves](qualification/beacon-headers-20260926/README.md).
+  Ce résultat ne qualifie aucune EIP supplémentaire et ne clôt pas Assertoor.
+
+- Observation Beacon, suite du 2026-09-26 : genesis/version et paramètres issus
+  du profil authentifié servis en HTTP natif et testés. La route spec reste
+  partielle ; aucun historique Ethereum inventé. Le SDK exact d'Assertoor exige
+  NodeSyncing dès son initialisation : télémétrie native encore à raccorder.
+  [Preuves et prérequis](qualification/beacon-metadata-20260926/README.md).
+  Aucun changement d'état de qualification des EIP ni activation réseau.
+
+- Observation Beacon, suite du 2026-09-26 : NodeSyncing raccordé aux slots annoncés
+  par les pairs Bellatrix compatibles via nano-p2p et rapport interne authentifié.
+  Tests HTTP (retard, absence, expiration, annonce future) et deux processus avec
+  redémarrage passés. [Preuves](qualification/beacon-sync-20260926/README.md).
+  Ce statut d'observation n'est ni une preuve de finalité ni une qualification
+  Assertoor ; aucune EIP supplémentaire déclarée conforme.
+
+- Observation Beacon, suite du 2026-09-26 : blocs signés Bellatrix exposés en
+  JSON/SSZ. SDK exact d'Assertoor exécuté contre Nano ; octets réencodés identiques.
+  Huit corps officiels avec opérations non vides passent aussi le round-trip
+  externe. [Preuves et limites](qualification/beacon-blocks-20260926/README.md).
+  Cela qualifie ces formats, pas une nouvelle EIP ni la suite Assertoor complète.
+
+- 2026-09-26 : événements Beacon `block`/`finalized_checkpoint` publiés après
+  commit durable, SSE borné intégré au serveur natif. Cinq tests passent,
+  dont réception SDK sur deux processus et validation de 31 événements de
+  blocs avec finalité. [Preuves](qualification/beacon-events-20260926/README.md).
+  Raccordement Assertoor avancé ; suite complète et qualification production
+  toujours ouvertes. Aucun nouveau statut de conformité EIP attribué.
+
+- 2026-09-26 : première exécution réelle d'Assertoor officiel contre deux nœuds
+  natifs. Santé EL/CL, progression synchronisée et deux nouveaux corps de blocs
+  passent, sans désactivation des contrôles. Cible CTest optionnelle ajoutée.
+  [Preuves et limites](qualification/assertoor-native-20260926/README.md).
+  Finalité non nulle, partitions et catalogue Assertoor restent à qualifier ;
+  aucune EIP ou conformité production supplémentaire déclarée par déduction.
+
+## Historique : échec initial de finalité avec Assertoor — 2026-09-26
+
+La nouvelle cible `consensus_bellatrix_assertoor_finality` répartit les 64 clés
+sur deux processus. Santé, synchronisation et propositions passent, mais la
+finalité reste à l'époque 0 : timeout après 240 s, campagne 265,84 s. Les reçus
+natifs confirment ce résultat ; deux lectures Beacon 503 sont également observées.
+Cause non établie. Priorité : contention RPC/consensus et propagation des votes,
+avec témoin sans Assertoor ; ne pas assouplir le seuil d'époque finalisée 2.
+[Preuves et diagnostic](qualification/assertoor-finality-20260926/README.md).
+La finalité sous cette supervision n'est pas qualifiée ; les partitions Assertoor
+et la clôture production restent ouvertes.
+
+- 2026-09-26, diagnostic de finalité : le témoin **sans Assertoor** échoue aussi
+  à retrouver des têtes communes (253,70 s), malgré un checkpoint finalisé commun
+  époque 2 à l'arrêt. Un ordonnancement qui saute les catégories vides corrige
+  une limite de capacité du relais, mais ne suffit pas : Assertoor reste en échec
+  (269,82 s, finalisée 0). Sorties et slashing passent (10,30/5,33 s).
+  [Preuves avant/après](qualification/bellatrix-relay-scheduling-20260926/README.md).
+  Résolution toujours ouverte. Conservation automatique des bases et des blocs
+  de tête ajoutée pour le prochain diagnostic ; aucun changement de quorum.
+
+- 2026-09-26 — Critère de réussite continue : nouvelle cible
+  `consensus_bellatrix_assertoor_sustained`, quatre avancées consécutives de
+  finalité commune puis quatre après redémarrage, avec cohérence Beacon/EVM.
+  Le diagnostic distingue le défaut JSON/SSZ de la sonde, le retard réel du
+  relais et un build sans optimisation. Cache de validation historique ajouté
+  sans modification des règles ni des checkpoints ; trois cibles Release
+  réussies (9,48 s). Campagne prolongée **réussie en 616,36 s** : quatre
+  avancées communes 2→6, puis quatre 7→11 après redémarrage ordonné ; 64
+  observations sans écart de tête ou d’époque finalisée. Qualification locale
+  bornée en Release, sans conclusion de production ou de tenue indéfinie.
+  [Preuves et limites](qualification/assertoor-native-finality-20260926/README.md).
+
+- 2026-09-26 — Qualification de reprise Bellatrix : le nouveau témoin natif
+  à livraison directe passe (six avancées 6→12, 122,04 s), mais le scénario
+  P2P de partition prolongée reste en échec. Cette différence ne change aucun
+  statut EIP en conformité complète ; elle localise la prochaine investigation
+  dans l’intégration temps réel et le rattrapage des messages.
+  [Résultats et périmètres](qualification/recovery-sustained-20260926/README.md).
+
+### Reprise réseau : état courant après corrections — 2026-09-26
+
+Les échecs ci-dessus restent conservés comme historique. Le relais saute désormais
+les votes déjà acquittés avec un budget borné ; le moniteur vérifie la cohérence
+des lectures et lie la finalité Beacon réalisée à l’exécution finalisée.
+
+| Scénario | Preuve actuelle | Limite |
+| --- | --- | --- |
+| Partition P2P de 96 s | Réussite 517,99 s ; reprise 95 s puis trois avancées communes 6→7→8→9 | Deux cœurs, deux P2P, 64 clés synthétiques, un Mac |
+| SIGKILL puis redémarrage | Réussite 325,58 s ; trois avancées communes 2→3→4→5 pendant 144,793 s | Arrêt de processus, pas panne électrique |
+
+[Partition](qualification/recovery-sustained-20260926/recovery-bound/README.md) et
+[crash](qualification/recovery-sustained-20260926/crash-current/README.md) :
+logs, observations et empreintes conservés. Ces résultats ferment ces scénarios
+locaux bornés ; aucune EIP supplémentaire ne devient conforme par déduction.
+La rétention des états historiques, l’endurance, le multi-hôte et le grand
+registre restent ouverts. Le profil réseau reste Bellatrix ; les profils EVM
+plus récents du banc ne constituent pas leur activation réseau.
+
+- 2026-09-26 — Primitive d’archive atomique de checkpoint implémentée et testée :
+  deux cibles passent en 1,49 s, avec réorganisation, SIGKILL et suffixe WAL
+  conservé/perdu. **Raccordement Bellatrix/P2P et élagage non réalisés.**
+  [Preuves](qualification/checkpoint-archive-20260926/README.md).

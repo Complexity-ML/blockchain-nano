@@ -1,0 +1,96 @@
+{"exported":"/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T//nano-kurtosis-g7c3yU/assets","fork":"Bellatrix/Paris","nodes":2,"syntheticValidators":64}
+Package retained for diagnosis: /var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T//nano-kurtosis-g7c3yU
+INFO[2026-09-26T15:56:43+02:00] Creating a new enclave for Starlark to run inside... 
+INFO[2026-09-26T15:56:44+02:00] Enclave 'nano-beacon-qualification' created successfully 
+INFO[2026-09-26T15:56:44+02:00] Executing Starlark package at '/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-kurtosis-g7c3yU' as the passed argument '.' looks like a directory 
+INFO[2026-09-26T15:56:44+02:00] Compressing package 'github.com/Complexity-ML/nano-kurtosis-qualification' at '.' for upload 
+INFO[2026-09-26T15:56:44+02:00] Kurtosis CLI is running in a non interactive terminal. Everything will work but progress information and the progress bar will not be displayed. 
+
+Container images used in this run:
+> blockchain-nano:local - locally cached
+
+Uploading file './assets' to files artifact 'beacon-fixtures'
+Files with artifact name 'beacon-fixtures' uploaded with artifact UUID '6496026c81b1437dbd562b89b22a9694'
+
+Rendering a template to a files artifact with name 'dense-smoke'
+Templates artifact name 'dense-smoke' rendered with artifact UUID 'b6914141af4649079e064f9081b2f900'
+
+Adding service with name 'nano-0' and image 'blockchain-nano:local'
+Service 'nano-0' added with service UUID '00f94e63238148f4820a6b44df8a9334'
+
+Waiting for at most '30s' for service 'nano-0' to reach a certain state
+Wait took 1 tries (56.710042ms in total). Assertion passed with following:
+Command returned with exit code '0' and the following output: 12D3KooWPojQz1h8VeJnvvRZrFPDhgXM165xiyBtmCiZNooZkfHZ
+
+Rendering a template to a files artifact with name 'strong-cygnet'
+Templates artifact name 'strong-cygnet' rendered with artifact UUID '4326fe896372415a9482b3eb36377224'
+
+Adding service with name 'nano-1' and image 'blockchain-nano:local'
+Service 'nano-1' added with service UUID 'b3d909d2af464e3f8416b114a7a4e021'
+
+Require one connected peer
+Wait took 2 tries (1.042853376s in total). Assertion passed with following:
+Command returned with exit code '0' and the following output: 0x1
+
+Executing command on service 'nano-0'
+Command returned with exit code '0' and the following output: {"id":1,"jsonrpc":"2.0","result":{"chain":{"blockNumber":2,"gasLimit":30000000,"latestBlockHash":"0x3ca20443e8413677495ab9c94075dd9d5d51a929dbd4d753a724d9d1886871bb"},"network":{"chainId":1337,"consensus":"beacon","name":"Nano","stakingContract":null},"node":{"listenAddresses":["/ip4/0.0.0.0/tcp/30303"],"listening":true,"peerId":"12D3KooWPojQz1h8VeJnvvRZrFPDhgXM165xiyBtmCiZNooZkfHZ","validating":false,"validationError":null,"version":"0.1.0"},"peers":{"connected":[{"bestBlock":1,"bestHash":"0xa8dbfb98dc399898b2c0503256d1b1b750989b2350f766ca5652f0ef1706430d","peerId":"12D3KooWDGeDu5odeZ2yf8tDiEyhXHsMVz7HV5nZxMC7BWtA1uNG"}],"count":1,"maxPeers":50}}}
+
+Printing a message
+{"id":1,"jsonrpc":"2.0","result":{"chain":{"blockNumber":2,"gasLimit":30000000,"latestBlockHash":"0x3ca20443e8413677495ab9c94075dd9d5d51a929dbd4d753a724d9d1886871bb"},"network":{"chainId":1337,"consensus":"beacon","name":"Nano","stakingContract":null},"node":{"listenAddresses":["/ip4/0.0.0.0/tcp/30303"],"listening":true,"peerId":"12D3KooWPojQz1h8VeJnvvRZrFPDhgXM165xiyBtmCiZNooZkfHZ","validating":false,"validationError":null,"version":"0.1.0"},"peers":{"connected":[{"bestBlock":1,"bestHash":"0xa8dbfb98dc399898b2c0503256d1b1b750989b2350f766ca5652f0ef1706430d","peerId":"12D3KooWDGeDu5odeZ2yf8tDiEyhXHsMVz7HV5nZxMC7BWtA1uNG"}],"count":1,"maxPeers":50}}}
+
+Require one connected peer
+Wait took 1 tries (34.389792ms in total). Assertion passed with following:
+Command returned with exit code '0' and the following output: 0x1
+
+Executing command on service 'nano-1'
+Command returned with exit code '0' and the following output: {"id":1,"jsonrpc":"2.0","result":{"chain":{"blockNumber":2,"gasLimit":30000000,"latestBlockHash":"0xc3ad77b9ec675910294f861998cf8cd3b511582f0aea5976851389209f58075f"},"network":{"chainId":1337,"consensus":"beacon","name":"Nano","stakingContract":null},"node":{"listenAddresses":["/ip4/0.0.0.0/tcp/30303"],"listening":true,"peerId":"12D3KooWDGeDu5odeZ2yf8tDiEyhXHsMVz7HV5nZxMC7BWtA1uNG","validating":false,"validationError":null,"version":"0.1.0"},"peers":{"connected":[{"bestBlock":2,"bestHash":"0x3ca20443e8413677495ab9c94075dd9d5d51a929dbd4d753a724d9d1886871bb","peerId":"12D3KooWPojQz1h8VeJnvvRZrFPDhgXM165xiyBtmCiZNooZkfHZ"}],"count":1,"maxPeers":50}}}
+
+Printing a message
+{"id":1,"jsonrpc":"2.0","result":{"chain":{"blockNumber":2,"gasLimit":30000000,"latestBlockHash":"0xc3ad77b9ec675910294f861998cf8cd3b511582f0aea5976851389209f58075f"},"network":{"chainId":1337,"consensus":"beacon","name":"Nano","stakingContract":null},"node":{"listenAddresses":["/ip4/0.0.0.0/tcp/30303"],"listening":true,"peerId":"12D3KooWDGeDu5odeZ2yf8tDiEyhXHsMVz7HV5nZxMC7BWtA1uNG","validating":false,"validationError":null,"version":"0.1.0"},"peers":{"connected":[{"bestBlock":2,"bestHash":"0x3ca20443e8413677495ab9c94075dd9d5d51a929dbd4d753a724d9d1886871bb","peerId":"12D3KooWPojQz1h8VeJnvvRZrFPDhgXM165xiyBtmCiZNooZkfHZ"}],"count":1,"maxPeers":50}}}
+
+Require Beacon finality beyond genesis
+Wait took 1 tries (33.536917ms in total). Assertion passed with following:
+Command returned with exit code '0' with no output
+
+Require Beacon finality beyond genesis
+Wait took 1 tries (32.72325ms in total). Assertion passed with following:
+Command returned with exit code '0' with no output
+
+Executing command on service 'nano-0'
+Command returned with exit code '0' and the following output: 0xa8dbfb98dc399898b2c0503256d1b1b750989b2350f766ca5652f0ef1706430d
+
+Verifying whether two values meet a certain condition '!='
+Verification succeeded. Value is '"0xa8dbfb98dc399898b2c0503256d1b1b750989b2350f766ca5652f0ef1706430d"'.
+
+Require identical finalized execution block hashes
+There was an error executing Starlark code 
+An error occurred executing instruction (number 17) at github.com/Complexity-ML/nano-kurtosis-qualification/main.star[43:14]:
+  wait(service_name="nano-1", recipe=ExecRecipe(command=["sh", "-c", "response=$(\"$@\") || exit; printf \"%s\" \"$response\" | sed -nE 's/.*\"hash\":\"([^\"]+)\".*/\\1/p' | tr -d '\\n'", "rpc", "curl", "-fsS", "--max-time", "5", "-H", "Content-Type: application/json", "--data", "{\"id\":1,\"jsonrpc\":\"2.0\",\"method\":\"eth_getBlockByNumber\",\"params\":[\"finalized\",false]}", "http://127.0.0.1:8545"]), field="output", assertion="==", target_value="{{kurtosis:e230b372d748423fb5172ad2054e54d4:output.runtime_value}}", timeout="30s", description="Require identical finalized execution block hashes")
+  Caused by: An error occurred checking if service 'nano-1' is ready.
+  Caused by: Recipe execution timed-out waiting for the recipe execution to become valid on service 'nano-1'. Tried '31' times. Last assertion execution error was:
+   '$Verification failed '"0xa8dbfb98dc399898b2c0503256d1b1b750989b2350f766ca5652f0ef1706430d"' '==' '"{{kurtosis:e230b372d748423fb5172ad2054e54d4:output.runtime_value}}"'
+   --- at /home/runner/work/kurtosis/kurtosis/core/server/api_container/server/startosis_engine/kurtosis_instruction/verify/verify.go:197 (Verify) ---'
+
+Error encountered running Starlark code.
+
+⭐ us on GitHub - https://github.com/kurtosis-tech/kurtosis
+INFO[2026-09-26T15:57:20+02:00] ================================================================== 
+INFO[2026-09-26T15:57:20+02:00] ||          Created enclave: nano-beacon-qualification          || 
+INFO[2026-09-26T15:57:20+02:00] ================================================================== 
+Name:            nano-beacon-qualification
+UUID:            6e52796b3e36
+Status:          RUNNING
+Creation Time:   Sat, 26 Sep 2026 15:56:43 CEST
+Flags:           
+
+========================================= Files Artifacts =========================================
+UUID           Name
+6496026c81b1   beacon-fixtures
+b6914141af46   dense-smoke
+4326fe896372   strong-cygnet
+
+========================================== User Services ==========================================
+UUID           Name     Ports                               Status
+00f94e632381   nano-0   p2p: 30303/tcp -> 127.0.0.1:58158   RUNNING
+b3d909d2af46   nano-1   p2p: 30303/tcp -> 127.0.0.1:58159   RUNNING
+

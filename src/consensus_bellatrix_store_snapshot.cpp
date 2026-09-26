@@ -21,7 +21,7 @@ ConsensusSlashingState registry(const BellatrixForkStore& s,const BellatrixForkB
 }
 }
 std::string bellatrix_store_snapshot(const BellatrixForkStore& s,const BellatrixForkBlockRules& r,
- const BellatrixStoreSnapshotLimits& l,const std::function<void()>& cancel){
+ const BellatrixStoreSnapshotLimits& l,const std::function<void()>& cancel,BellatrixStoreSnapshotCache* cache){
  const auto& v=s.timed.view;const auto& c=s.timed.clock;const auto slots=r.transition.consensus.epoch.ffg.slots_per_epoch;
  require(slots&&r.slot_duration_ms&&r.attestation_due_ms<=r.slot_duration_ms&&c.time_ms>=c.genesis_time_ms&&
   v.current_epoch==(c.time_ms-c.genesis_time_ms)/r.slot_duration_ms/slots&&
@@ -30,15 +30,27 @@ std::string bellatrix_store_snapshot(const BellatrixForkStore& s,const Bellatrix
  require(s.unrealized_justifications.size()==s.blocks.size()&&s.timely.size()+1==s.blocks.size()&&!s.timely.contains(v.anchor));
  require(v.justified_registry==registry(s,r,l,cancel));
  phase0_fork_choice_head(v,{slots,r.transition.consensus.attestation.duties.effective_balance_increment,r.proposer_score_boost},cancel);
+ const auto current_profile=profile(r);
+ if(cache&&cache->profile_!=current_profile){cache->records_.clear();cache->profile_=current_profile;}
+ if(cache)std::erase_if(cache->records_,[&](const auto& item){return !s.blocks.contains(item.first);});
  Json blocks=Json::array(),messages=Json::array(),equiv=Json::array(),timely=Json::array(),unrealized=Json::array();size_t bytes=0;
  for(const auto& [id,b]:s.blocks){
-  if(cancel)cancel();require(b.state.ssz.size()<=l.state_bytes&&b.state.ssz.size()<=l.total_state_bytes-bytes);bytes+=b.state.ssz.size();
-  require(consensus_beacon_header_root(b.header)==id);validate_bellatrix_execution_record(b,r,cancel);
+  if(cancel)cancel();require(b.state.ssz.size()>=8&&b.state.ssz.size()<=l.state_bytes&&b.state.ssz.size()<=l.total_state_bytes-bytes);bytes+=b.state.ssz.size();
+  require(consensus_beacon_header_root(b.header)==id);
   const auto& n=v.nodes.at(id);require(n.slot==b.header.slot&&n.parent==b.header.parent_root);
   uint64_t genesis_seconds=0;for(unsigned i=0;i<8;++i)genesis_seconds|=uint64_t(b.state.ssz[i])<<(8*i);
   require(genesis_seconds<=UINT64_MAX/1000&&genesis_seconds*1000==c.genesis_time_ms&&b.header.slot<=(c.time_ms-c.genesis_time_ms)/r.slot_duration_ms);
-  if(id!=v.anchor){const auto ffg=bellatrix_fork_checkpoints(b.state,epoch_rules(r),r.transition.consensus.state,cancel);require(n.realized_justified_epoch==ffg.realized.current_justified.epoch&&n.unrealized_justified_epoch==ffg.unrealized.current_justified.epoch&&s.unrealized_justifications.at(id)==ffg.unrealized.current_justified);}
-  blocks.push_back(Json::array({root(id),Json::array({num(b.header.slot),num(b.header.proposer_index),root(b.header.parent_root),root(b.header.state_root),root(b.header.body_root)}),slot_snapshot(b.state),num(n.realized_justified_epoch),num(n.unrealized_justified_epoch),execution(b,cancel)}));
+  auto row=Json::array({root(id),Json::array({num(b.header.slot),num(b.header.proposer_index),root(b.header.parent_root),root(b.header.state_root),root(b.header.body_root)}),slot_snapshot(b.state),num(n.realized_justified_epoch),num(n.unrealized_justified_epoch),execution(b,cancel)});
+  // Compare every serialized field, including state/receipts/deposit history,
+  // plus the checkpoint metadata checked below. Root equality alone is unsafe.
+  const auto validation=cache?Json::array({row,cp(s.unrealized_justifications.at(id)),id==v.anchor}):Json();
+  const auto known=cache?cache->records_.find(id):std::map<ConsensusRoot,Json>::iterator{};
+  if(!cache||known==cache->records_.end()||known->second!=validation){
+   validate_bellatrix_execution_record(b,r,cancel);
+   if(id!=v.anchor){const auto ffg=bellatrix_fork_checkpoints(b.state,epoch_rules(r),r.transition.consensus.state,cancel);require(n.realized_justified_epoch==ffg.realized.current_justified.epoch&&n.unrealized_justified_epoch==ffg.unrealized.current_justified.epoch&&s.unrealized_justifications.at(id)==ffg.unrealized.current_justified);}
+   if(cancel)cancel();if(cache)cache->records_.insert_or_assign(id,validation);
+  }
+  blocks.push_back(std::move(row));
  }
  for(const auto& [i,m]:v.latest_messages)messages.push_back(Json::array({num(i),num(m.epoch),root(m.root)}));
  for(auto i:v.equivocating_indices)equiv.push_back(num(i));
@@ -48,7 +60,7 @@ std::string bellatrix_store_snapshot(const BellatrixForkStore& s,const Bellatrix
  require(child.number>=0&&child.number<=Int("18446744073709551615")&&s.anchor_execution_ancestors.size()==std::min<uint64_t>(u64(child.number),256));
  for(const auto& ancestor:s.anchor_execution_ancestors){if(cancel)cancel();require(ancestor.number+1==child.number&&ancestor.hash()==child.parent_hash);ancestors.push_back(ancestor.to_json());child=ancestor;}
  for(const auto& [id,b]:s.blocks)if(id!=v.anchor){const auto& parent=s.blocks.at(b.header.parent_root);require(parent.header.slot<b.header.slot&&parent.execution_block.header.number+1==b.execution_block.header.number&&parent.execution_block.header.hash()==b.execution_block.header.parent_hash);}
- Json j{{"ancestors",ancestors},{"format","nano-bellatrix-store-v1"},{"profile",profile(r)},{"anchor",root(v.anchor)},{"justified",cp(v.justified)},{"finalized",cp(v.finalized)},
+ Json j{{"ancestors",ancestors},{"format","nano-bellatrix-store-v1"},{"profile",current_profile},{"anchor",root(v.anchor)},{"justified",cp(v.justified)},{"finalized",cp(v.finalized)},
  {"clock",Json::array({num(c.genesis_time_ms),num(c.time_ms),cp(c.unrealized_justified),cp(c.unrealized_finalized)})},
  {"boost",v.proposer_boost?Json(root(*v.proposer_boost)):Json(nullptr)},{"blocks",blocks},{"messages",messages},{"equivocations",equiv},{"timely",timely},{"unrealized",unrealized}};
  auto encoded=j.dump();require(encoded.size()<=l.envelope_bytes);if(cancel)cancel();return encoded;

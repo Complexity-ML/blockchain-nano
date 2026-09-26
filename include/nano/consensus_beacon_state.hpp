@@ -29,4 +29,9 @@ ConsensusRoot altair_beacon_state_root(std::span<const uint8_t>,const AltairStat
 // validation only; no lifecycle or execution acceptance is implied.
 ConsensusRoot bellatrix_beacon_state_root(std::span<const uint8_t>,const AltairStateLimits&,
  const ExecutionPayloadLimits&,size_t maximum_bytes,const std::function<void()>& checkpoint={});
+// Capella's 28-field schema includes the execution withdrawal commitment,
+// both withdrawal cursors and historical summaries. Schema authentication only:
+// it does not validate lifecycle coherence, execute blocks or activate a fork.
+ConsensusRoot capella_beacon_state_root(std::span<const uint8_t>,const AltairStateLimits&,
+ const ExecutionPayloadLimits&,size_t maximum_bytes,const std::function<void()>& checkpoint={});
 }
