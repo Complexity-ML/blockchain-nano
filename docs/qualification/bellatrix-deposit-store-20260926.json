@@ -1,0 +1,45 @@
+{
+  "result": "passed",
+  "tests": {
+    "consensus_bellatrix_signed_execution_chain": 3.93,
+    "consensus_execution_deposit_source": 0.75,
+    "consensus_execution_deposit_history": 0.32,
+    "consensus_bellatrix_deposit_store": 0.8
+  },
+  "totalSeconds": 5.79,
+  "scope": [
+    "Optional deposit runtime hash is bound into the Bellatrix profile and network identity; legacy encoding retained when disabled",
+    "Accepted Bellatrix execution records carry immutable branch-local deposit history",
+    "Already verified execution receipts are consumed without a second transaction replay",
+    "All histories participate in the existing coupled consensus/execution checkpoint",
+    "Two funded deposits, competing signed blocks with distinct deposit counts, canonical execution consistency",
+    "Tampered history refused even with recomputed outer snapshot checksum; profile downgrade refused",
+    "Actual Blockchain and reactor close/reopen preserve all branch histories and canonical EVM head",
+    "Existing no-deposit profile signed execution regression and enriched deposit proof suites pass"
+  ],
+  "initialFailure": {
+    "result": "test teardown abort after successful assertions",
+    "cause": "new test declared Blockchain owner after reactor, causing wrong destruction order",
+    "resolution": "owner declared before reactor; final test exits successfully",
+    "log": "build-cmake/qualification/bellatrix-deposit-store-20260926/initial-failure.log"
+  },
+  "limits": [
+    "Single-process core and inbound service, no remote daemon/host qualification for this new profile",
+    "Orderly database reopen; no crash injection with deposits in this lot",
+    "Eth1 root selection/votes and mandatory deposit inclusion not yet connected to local proposer",
+    "No automatic Beacon registry admission, activation or withdrawal payout",
+    "Full per-event snapshots and per-record deposit copies on disk remain a scaling cost; no large-validator claim",
+    "No VPS deployment or real funds"
+  ],
+  "sha256": {
+    "include/nano/consensus_bellatrix_fork_store.hpp": "f941317dd79f8e7b89e979ee5f6f7f3f2c849ba76f7257acfef164985abcff6b",
+    "src/consensus_bellatrix_fork_store.cpp": "e14c8947a37ef05da0c784c2f01c2d828d79486e961a471e9be867fde03983e9",
+    "src/consensus_bellatrix_store_snapshot.cpp": "9d27286fae94a934236080daea7698df32a0abbcec424e5485a8275c23828431",
+    "src/consensus_bellatrix_profile.cpp": "0f37a8ba02769fc06d8b9a26baa2c014f467dd4e8bce760a185409ce9454c4b2",
+    "src/consensus_deposit_history.cpp": "4b870745925f234e33cd8e235c4246c48532a6bbde41377acba22620463dc0c8",
+    "include/nano/consensus_deposit_history.hpp": "59e86403a7e738e67bf995c369c7e062410639d4036826d4abc0aecb8077ba43",
+    "tests/test_bellatrix_transition.cpp": "02fc9d7c89eaa2dff86b417efbe85ddfe3979ba7e4a54e50d29350f44d711039",
+    "build-release/nano-bellatrix-transition-tests": "cc42ec5d0fe1c0e4e4162bae884531ca267d5f33ade077f27697e3b63af34471",
+    "build-cmake/qualification/bellatrix-deposit-store-20260926/test.log": "1d63c862673151bde90c845a9f9c862da1048825177992f57f98275038dd1a2e"
+  }
+}

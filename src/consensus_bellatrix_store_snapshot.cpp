@@ -10,10 +10,10 @@ ConsensusRoot root(const Json& j){require(j.is_string());const auto& s=j.get_ref
 Json cp(const ConsensusCheckpoint& c){return Json::array({num(c.epoch),root(c.root)});}
 ConsensusCheckpoint cp(const Json& j){require(j.is_array()&&j.size()==2);return {number(j[0]),root(j[1])};}
 BellatrixEpochRules epoch_rules(const BellatrixForkBlockRules& r){return {r.transition.consensus.epoch,r.transition.execution,r.transition.maximum_state_bytes};}
-Json profile(const BellatrixForkBlockRules& r){return Json::array({altair_transition_profile(r.transition.consensus),num(r.slot_duration_ms),num(r.attestation_due_ms),num(r.proposer_score_boost),num(static_cast<uint64_t>(r.boost_profile)),quantity(r.transition.chain_id),num(static_cast<uint64_t>(r.transition.replay_policy)),num(r.transition.seconds_per_slot),num(r.transition.maximum_state_bytes),num(r.transition.execution.extra_data_bytes),num(r.transition.execution.transaction_bytes),num(r.transition.execution.transactions)});}
+Json profile(const BellatrixForkBlockRules& r){auto out=Json::array({altair_transition_profile(r.transition.consensus),num(r.slot_duration_ms),num(r.attestation_due_ms),num(r.proposer_score_boost),num(static_cast<uint64_t>(r.boost_profile)),quantity(r.transition.chain_id),num(static_cast<uint64_t>(r.transition.replay_policy)),num(r.transition.seconds_per_slot),num(r.transition.maximum_state_bytes),num(r.transition.execution.extra_data_bytes),num(r.transition.execution.transaction_bytes),num(r.transition.execution.transactions)});if(!r.deposit_contract_code_hash.empty()){require(r.deposit_contract_code_hash.size()==32);out.push_back(hex(r.deposit_contract_code_hash));}return out;}
 Json slot_snapshot(const BellatrixSlotState& s){return Json::array({hex(s.ssz),s.last_processed_epoch?Json(num(*s.last_processed_epoch)):Json(nullptr)});}
 BellatrixSlotState slot_restore(const Json& j,size_t budget){require(j.is_array()&&j.size()==2&&j[0].is_string());const auto& hexstate=j[0].get_ref<const std::string&>();require(hexstate.starts_with("0x")&&hexstate.size()%2==0&&(hexstate.size()-2)/2<=budget);BellatrixSlotState s{unhex(hexstate),std::nullopt};if(!j[1].is_null())s.last_processed_epoch=number(j[1]);return s;}
-Json execution(const BellatrixForkBlock& b){Json receipts=Json::array();for(const auto& receipt:b.receipts)receipts.push_back(receipt.to_json());return Json::array({b.execution_block.to_json(true),b.execution_state.to_json(),receipts});}
+Json execution(const BellatrixForkBlock& b,const std::function<void()>& cancel){Json receipts=Json::array();for(const auto& receipt:b.receipts)receipts.push_back(receipt.to_json());auto out=Json::array({b.execution_block.to_json(true),b.execution_state.to_json(),receipts});if(b.deposit_history)out.push_back(b.deposit_history->snapshot(cancel));return out;}
 ConsensusSlashingState registry(const BellatrixForkStore& s,const BellatrixForkBlockRules& r,const BellatrixStoreSnapshotLimits& l,const std::function<void()>& cancel){
  const auto& b=s.blocks.at(s.timed.view.justified.root);
  if(s.timed.view.justified.root==s.timed.view.anchor&&s.timed.view.justified.epoch==b.header.slot/r.transition.consensus.epoch.ffg.slots_per_epoch)return bellatrix_fork_block_context(b.state,b.header,epoch_rules(r),r.transition.consensus.state,cancel).registry;
@@ -38,7 +38,7 @@ std::string bellatrix_store_snapshot(const BellatrixForkStore& s,const Bellatrix
   uint64_t genesis_seconds=0;for(unsigned i=0;i<8;++i)genesis_seconds|=uint64_t(b.state.ssz[i])<<(8*i);
   require(genesis_seconds<=UINT64_MAX/1000&&genesis_seconds*1000==c.genesis_time_ms&&b.header.slot<=(c.time_ms-c.genesis_time_ms)/r.slot_duration_ms);
   if(id!=v.anchor){const auto ffg=bellatrix_fork_checkpoints(b.state,epoch_rules(r),r.transition.consensus.state,cancel);require(n.realized_justified_epoch==ffg.realized.current_justified.epoch&&n.unrealized_justified_epoch==ffg.unrealized.current_justified.epoch&&s.unrealized_justifications.at(id)==ffg.unrealized.current_justified);}
-  blocks.push_back(Json::array({root(id),Json::array({num(b.header.slot),num(b.header.proposer_index),root(b.header.parent_root),root(b.header.state_root),root(b.header.body_root)}),slot_snapshot(b.state),num(n.realized_justified_epoch),num(n.unrealized_justified_epoch),execution(b)}));
+  blocks.push_back(Json::array({root(id),Json::array({num(b.header.slot),num(b.header.proposer_index),root(b.header.parent_root),root(b.header.state_root),root(b.header.body_root)}),slot_snapshot(b.state),num(n.realized_justified_epoch),num(n.unrealized_justified_epoch),execution(b,cancel)}));
  }
  for(const auto& [i,m]:v.latest_messages)messages.push_back(Json::array({num(i),num(m.epoch),root(m.root)}));
  for(auto i:v.equivocating_indices)equiv.push_back(num(i));
@@ -68,8 +68,10 @@ BellatrixForkStore bellatrix_store_from_snapshot(std::string_view bytes,const By
   if(cancel)cancel();require(b.is_array()&&b.size()==6);const auto id=root(b[0]);const auto& h=b[1];require(h.is_array()&&h.size()==5);
   ConsensusBeaconHeader header{number(h[0]),number(h[1]),root(h[2]),root(h[3]),root(h[4])};
   auto state=slot_restore(b[2],std::min(l.state_bytes,l.total_state_bytes-total));total+=state.ssz.size();
-  require(b[5].is_array()&&b[5].size()==3&&b[5][2].is_array());std::vector<Receipt> receipts;for(const auto& receipt:b[5][2]){if(cancel)cancel();receipts.push_back(Receipt::from_json(receipt));}
-  require(s.blocks.emplace(id,BellatrixForkBlock{header,std::move(state),Block::from_json(b[5][0]),State::from_json(b[5][1]),std::move(receipts)}).second);v.nodes.emplace(id,Phase0ForkNode{header.slot,header.parent_root,number(b[3]),number(b[4])});
+  require(b[5].is_array()&&b[5].size()==(r.deposit_contract_code_hash.empty()?3:4)&&b[5][2].is_array());std::vector<Receipt> receipts;for(const auto& receipt:b[5][2]){if(cancel)cancel();receipts.push_back(Receipt::from_json(receipt));}
+  auto execution_block=Block::from_json(b[5][0]);auto execution_state=State::from_json(b[5][1]);std::shared_ptr<const ExecutionDepositHistory> deposits;
+  if(!r.deposit_contract_code_hash.empty())deposits=std::make_shared<const ExecutionDepositHistory>(ExecutionDepositHistory::from_snapshot(b[5][3],execution_block.header,execution_state,execution_block.header.hash(),r.deposit_contract_code_hash,UINT32_MAX,cancel));
+  require(s.blocks.emplace(id,BellatrixForkBlock{header,std::move(state),std::move(execution_block),std::move(execution_state),std::move(receipts),std::move(deposits)}).second);v.nodes.emplace(id,Phase0ForkNode{header.slot,header.parent_root,number(b[3]),number(b[4])});
  }
  for(const auto& m:j.at("messages")){require(m.is_array()&&m.size()==3);require(v.latest_messages.emplace(number(m[0]),Phase0LatestMessage{number(m[1]),root(m[2])}).second);}
  for(const auto& i:j.at("equivocations"))require(v.equivocating_indices.insert(number(i)).second);

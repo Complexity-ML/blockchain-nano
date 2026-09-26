@@ -8,11 +8,14 @@ ConsensusRoot root(std::span<const uint8_t> b,size_t at){ConsensusRoot r{};std::
 BellatrixEpochRules epoch_rules(const BellatrixForkBlockRules& r){return {r.transition.consensus.epoch,r.transition.execution,r.transition.maximum_state_bytes};}
 void validate_rules(const BellatrixForkBlockRules& r){
  validate_altair_transition_rules(r.transition.consensus);
+ if(!r.deposit_contract_code_hash.empty()&&r.deposit_contract_code_hash.size()!=32)throw std::invalid_argument("Bellatrix deposit code hash width");
  if(!r.transition.seconds_per_slot||r.transition.seconds_per_slot>UINT64_MAX/1000||r.slot_duration_ms!=r.transition.seconds_per_slot*1000||r.attestation_due_ms>r.slot_duration_ms)
   throw std::invalid_argument("inconsistent Bellatrix fork clock rules");
 }
 template<class A> Bytes as_bytes(const A& a){return {a.begin(),a.end()};}
 void validate_execution(const BellatrixForkBlock& record,const BellatrixForkBlockRules& rules,const std::function<void()>& check){
+ if(rules.deposit_contract_code_hash.empty()){if(record.deposit_history)throw std::invalid_argument("unexpected Bellatrix deposit history");}
+ else {if(!record.deposit_history)throw std::invalid_argument("missing Bellatrix deposit history");record.deposit_history->validate_execution(record.execution_block.header,record.execution_state,rules.deposit_contract_code_hash,check);}
  const auto& l=rules.transition.consensus.state;const auto& e=rules.transition.execution;const auto& b=record.state.ssz;
  bellatrix_beacon_state_root(b,l,e,rules.transition.maximum_state_bytes,check);
  const size_t start=bellatrix_detail::offset(b,bellatrix_detail::execution_field(l));
@@ -66,7 +69,12 @@ std::optional<BellatrixForkStore> prepare_bellatrix_fork_block(const BellatrixFo
  const auto head=phase0_fork_choice_head(view,{slots,t.attestation.duties.effective_balance_increment,rules.proposer_score_boost},checkpoint).head;
  const auto ffg=bellatrix_fork_checkpoints(post->consensus,epoch_rules(rules),t.state,checkpoint);
  auto out=input;auto& v=out.timed.view;auto& c=out.timed.clock;
- out.blocks.emplace(id,BellatrixForkBlock{h,std::move(post->consensus),std::move(post->execution.block),std::move(post->execution.state),std::move(post->execution.receipts)});
+ std::shared_ptr<const ExecutionDepositHistory> deposits;
+ if(!rules.deposit_contract_code_hash.empty()){
+  if(!parent.deposit_history)throw std::invalid_argument("missing Bellatrix parent deposits");
+  deposits=std::make_shared<const ExecutionDepositHistory>(parent.deposit_history->append_verified_execution(post->execution.block.header,post->execution.state,post->execution.receipts,rules.deposit_contract_code_hash,UINT32_MAX,checkpoint));
+ }
+ out.blocks.emplace(id,BellatrixForkBlock{h,std::move(post->consensus),std::move(post->execution.block),std::move(post->execution.state),std::move(post->execution.receipts),std::move(deposits)});
  v.nodes.emplace(id,Phase0ForkNode{h.slot,h.parent_root,ffg.realized.current_justified.epoch,ffg.unrealized.current_justified.epoch});
  const auto into=(clock.time_ms-clock.genesis_time_ms)%rules.slot_duration_ms;
  const bool timely=h.slot==current_slot&&into<rules.attestation_due_ms;out.timely[id]=timely;
@@ -137,7 +145,7 @@ BellatrixForkStore prepare_bellatrix_store_tick(const BellatrixForkStore& input,
 namespace nano {
 BellatrixForkStore initialize_bellatrix_fork_store(const BellatrixSlotState& state,
  std::span<const uint8_t> block,const Block& execution_block,const State& execution_state,const std::vector<Receipt>& execution_receipts,
- const std::vector<Header>& execution_ancestors,const BellatrixForkBlockRules& r,const std::function<void()>& checkpoint){
+ const std::vector<Header>& execution_ancestors,const BellatrixForkBlockRules& r,const std::function<void()>& checkpoint,std::shared_ptr<const ExecutionDepositHistory> anchor_deposits){
  validate_rules(r);const auto slots=r.transition.consensus.epoch.ffg.slots_per_epoch;
  if(!slots||!r.slot_duration_ms||block.size()<304||block.size()>r.transition.consensus.maximum_block_bytes||number(block,80,4)!=84)
   throw std::invalid_argument("invalid Bellatrix anchor block");
@@ -145,7 +153,8 @@ BellatrixForkStore initialize_bellatrix_fork_store(const BellatrixSlotState& sta
  const auto context=bellatrix_fork_block_context(state,h,epoch_rules(r),r.transition.consensus.state,checkpoint);const auto id=consensus_beacon_header_root(h);const auto epoch=h.slot/slots;
  const auto seconds=number(state.ssz,0);if(seconds>UINT64_MAX/1000||h.slot>(UINT64_MAX-seconds*1000)/r.slot_duration_ms)throw std::overflow_error("Bellatrix anchor time overflow");
  BellatrixForkStore out;auto& v=out.timed.view;v.anchor=id;v.justified={epoch,id};v.finalized=v.justified;v.current_epoch=epoch;v.justified_registry=context.registry;
- v.nodes.emplace(id,Phase0ForkNode{h.slot,h.parent_root,epoch,epoch});out.blocks.emplace(id,BellatrixForkBlock{h,state,execution_block,execution_state,execution_receipts});validate_execution(out.blocks.at(id),r,checkpoint);
+ if(!r.deposit_contract_code_hash.empty()&&!anchor_deposits)anchor_deposits=std::make_shared<const ExecutionDepositHistory>(execution_block.header.hash());
+ v.nodes.emplace(id,Phase0ForkNode{h.slot,h.parent_root,epoch,epoch});out.blocks.emplace(id,BellatrixForkBlock{h,state,execution_block,execution_state,execution_receipts,std::move(anchor_deposits)});validate_execution(out.blocks.at(id),r,checkpoint);
  const auto payload_start=number(block,84+220+(r.transition.consensus.state.sync_committee_size+7)/8+96,4);
  const auto payload=decode_bellatrix_execution_payload(block.subspan(84+payload_start),r.transition.execution,r.transition.consensus.maximum_block_bytes,checkpoint);
  const auto& state_bytes=state.ssz;const size_t header_at=bellatrix_detail::offset(state_bytes,bellatrix_detail::execution_field(r.transition.consensus.state));

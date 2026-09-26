@@ -1,9 +1,10 @@
 #pragma once
 #include "nano/consensus_fork_clock.hpp"
+#include "nano/consensus_deposit_history.hpp"
 #include "nano/consensus_bellatrix_fork_state.hpp"
 #include "nano/consensus_bellatrix_transition.hpp"
 namespace nano {
-struct BellatrixForkBlock {ConsensusBeaconHeader header;BellatrixSlotState state;Block execution_block;State execution_state;std::vector<Receipt> receipts;};
+struct BellatrixForkBlock {ConsensusBeaconHeader header;BellatrixSlotState state;Block execution_block;State execution_state;std::vector<Receipt> receipts;std::shared_ptr<const ExecutionDepositHistory> deposit_history;};
 struct BellatrixForkStore {
  Phase0ForkTimedView timed;
  // Authenticated newest-first execution ancestors of the anchor (up to 256).
@@ -18,6 +19,9 @@ struct BellatrixForkBlockRules {
  uint64_t slot_duration_ms,attestation_due_ms,proposer_score_boost;
  // Explicit spec revision: the 2025 fixtures predate the dependent-root gate.
  BellatrixProposerBoostProfile boost_profile=BellatrixProposerBoostProfile::ShufflingDependent;
+ // Explicit network profile extension; empty retains the legacy profile bytes.
+ // Pins the immutable Ethereum-format deposit contract on Nano execution.
+ Bytes deposit_contract_code_hash;
 };
 // Bellatrix on_block on a trusted, internally consistent in-memory Store. Full
 // signature/operation/state-root validation precedes candidate publication.
@@ -57,7 +61,7 @@ namespace nano {
 BellatrixForkStore initialize_bellatrix_fork_store(const BellatrixSlotState& anchor,
  std::span<const uint8_t> unsigned_block,const Block& execution_block,const State& execution_state,const std::vector<Receipt>& execution_receipts,
  const std::vector<Header>& execution_ancestors,const BellatrixForkBlockRules&,
- const std::function<void()>& checkpoint={});
+ const std::function<void()>& checkpoint={},std::shared_ptr<const ExecutionDepositHistory> anchor_deposits={});
 }
 
 namespace nano {

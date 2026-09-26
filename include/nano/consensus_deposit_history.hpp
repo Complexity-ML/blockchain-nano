@@ -16,12 +16,20 @@ public:
  const Bytes& execution_hash()const{return execution_hash_;}
  ConsensusRoot root()const;
  Phase0Deposit proof(uint64_t index,const std::function<void()>& checkpoint={})const;
+ void validate_execution(const Header&,const State&,const Bytes& pinned_code_hash,
+  const std::function<void()>& checkpoint={})const;
  Json snapshot(const std::function<void()>& checkpoint={})const;
  // Restore against an independently authenticated execution state; a snapshot
  // cannot authenticate its own anchor. Caller also bounds input parsing bytes.
  static ExecutionDepositHistory from_snapshot(const Json&,const Header& trusted_header,
   const State& trusted_state,const Bytes& expected_block_hash,const Bytes& pinned_code_hash,
   size_t maximum_deposits,const std::function<void()>& checkpoint={});
+ // For a block already admitted by the full execution/consensus transition.
+ // Checks the parent link, state/code and receipts commitment, then binds all
+ // extracted deposits to the contract root. Does not authenticate a peer block.
+ ExecutionDepositHistory append_verified_execution(const Header&,const State&,
+  const std::vector<Receipt>&,const Bytes& pinned_code_hash,size_t maximum_deposits,
+  const std::function<void()>& checkpoint={})const;
  // Extends only this execution parent. Independently trusted block/code hashes
  // have the same requirements as replay_execution_deposits. Both contract views
  // must agree with the parent and resulting tree. The original history and

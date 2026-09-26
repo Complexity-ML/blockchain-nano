@@ -1382,3 +1382,6 @@ add_executable(nano-deposit-history-tests tests/test_deposit_history.cpp)
 target_link_libraries(nano-deposit-history-tests PRIVATE nano_core nano_ckzg)
 target_compile_definitions(nano-deposit-history-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
 add_test(NAME consensus_execution_deposit_history COMMAND nano-deposit-history-tests)
+
+add_test(NAME consensus_bellatrix_deposit_store COMMAND nano-bellatrix-transition-tests --deposit-store)
+set_tests_properties(consensus_bellatrix_deposit_store PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_deposits")

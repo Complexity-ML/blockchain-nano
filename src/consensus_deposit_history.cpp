@@ -40,11 +40,30 @@ std::pair<ExecutionDepositHistory,ExecutionDepositBatch> ExecutionDepositHistory
  if(check)check();if(parent.hash()!=execution_hash_)throw std::invalid_argument("deposit history execution parent mismatch");
  auto batch=replay_execution_deposits(engine,parent_state,parent,block,expected_hash,code_hash,count_,maximum,check);
  validate_view(*this,parent_state,parent,check);
- auto next=*this;
- for(const auto& deposit:batch.deposits){next.tree_=insert(next.tree_,32,next.count_,deposit,check);++next.count_;}
+ auto next=append_verified_execution(block.header,batch.state,batch.receipts,code_hash,maximum,check);
  if(next.count_!=batch.next_deposit_index)throw std::logic_error("deposit history count mismatch");
- next.execution_hash_=expected_hash;validate_view(next,batch.state,block.header,check);if(check)check();return {std::move(next),std::move(batch)};
+ if(check)check();return {std::move(next),std::move(batch)};
 }
+ExecutionDepositHistory ExecutionDepositHistory::append_verified_execution(const Header& header,const State& state,const std::vector<Receipt>& receipts,const Bytes& code_hash,size_t maximum,const std::function<void()>& check)const{
+ if(check)check();if(header.parent_hash!=execution_hash_||header.receipts_root!=receipts_root(receipts)||header.state_root!=state.root())throw std::invalid_argument("deposit execution commitments mismatch");
+ auto next=*this;size_t added=0;
+ for(const auto& receipt:receipts){if(check)check();for(const auto& log:receipt.logs){
+  if(check)check();const auto encoded=deposit_requests({log});if(encoded.size()==1)continue;
+  if(!receipt.success||encoded.size()!=193)throw std::invalid_argument("invalid executed deposit event");
+  auto number=[&](size_t at){uint64_t n=0;for(unsigned i=0;i<8;++i)n|=uint64_t(encoded[at+i])<<(8*i);return n;};
+  if(number(185)!=next.count_||next.count_>=((uint64_t(1)<<32)-1))throw std::invalid_argument("nonconsecutive execution deposit index");
+  if(added>=maximum)throw std::length_error("execution deposit batch capacity");
+  Phase0Deposit d{};std::copy_n(encoded.begin()+1,48,d.message.public_key.begin());std::copy_n(encoded.begin()+49,32,d.message.withdrawal_credentials.begin());d.message.amount_gwei=number(81);std::copy_n(encoded.begin()+89,96,d.signature.begin());
+  next.tree_=insert(next.tree_,32,next.count_,d,check);++next.count_;++added;
+ }}
+ next.execution_hash_=header.hash();next.validate_execution(header,state,code_hash,check);if(check)check();return next;
+}
+
+void ExecutionDepositHistory::validate_execution(const Header& header,const State& state,const Bytes& code_hash,const std::function<void()>& check)const{
+ if(check)check();if(header.hash()!=execution_hash_||state.root()!=header.state_root||code_hash.size()!=32||state.get(ethereum_deposit_contract).code.empty()||keccak(state.get(ethereum_deposit_contract).code)!=code_hash)throw std::invalid_argument("deposit history execution binding mismatch");
+ validate_view(*this,state,header,check);
+}
+
 Json ExecutionDepositHistory::snapshot(const std::function<void()>& check)const{
  if(check)check();Json entries=Json::array();
  for(uint64_t i=0;i<count_;++i){const auto d=proof(i,check);Bytes data(d.message.public_key.begin(),d.message.public_key.end());data.insert(data.end(),d.message.withdrawal_credentials.begin(),d.message.withdrawal_credentials.end());for(unsigned j=0;j<8;++j)data.push_back(uint8_t(d.message.amount_gwei>>(8*j)));data.insert(data.end(),d.signature.begin(),d.signature.end());entries.push_back(hex(data));}
