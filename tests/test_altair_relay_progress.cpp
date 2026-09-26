@@ -7,7 +7,7 @@ int main(){try{
  const AltairWireProfile profile{"0x539","0x"+std::string(64,'a'),"0x12345678",4096,1024,1024,1024};
  auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);
  auto progress=std::make_shared<AltairRelayProgress>();bool permit_first=false,uncertain=false;unsigned sent=0;
- std::string catalogue_epoch=epoch;std::vector<std::string> backlog;unsigned inventory_calls=0;
+ std::string catalogue_epoch=epoch;std::vector<std::string> backlog;unsigned inventory_calls=0;bool duplicate_page=false,oversized_page=false;
  auto call=[&](const std::string& method,Json params,Reply reply){
   const bool proofs=method=="nano_altairSlashingInventory"||method=="nano_altairSlashing";
   const bool votes=method=="nano_altairVoteInventory"||method=="nano_altairVote";
@@ -16,8 +16,11 @@ int main(){try{
    ++inventory_calls;
    if(!backlog.empty()){
     const auto at=cursor=="0x"?backlog.begin():std::find(backlog.begin(),backlog.end(),cursor)+1;
-    if(at!=backlog.end())entries.push_back({{"root",*at}});
+    const auto limit=std::stoul(params.at(2).get<std::string>(),nullptr,16);
+    for(auto item=at;item!=backlog.end()&&entries.size()<limit;++item)entries.push_back({{"root",*item}});
    }else if(cursor=="0x")entries.push_back({{"root",first}});else if(cursor==first)entries.push_back({{"root",second}});
+   if(duplicate_page&&!entries.empty())entries.back()=entries.front();
+   if(oversized_page)while(entries.size()<=32)entries.push_back({{"root",first}});
    reply(Json{{"catalogEpoch",catalogue_epoch},{proofs?"slashings":votes?"votes":"blocks",entries},{"missingSignedBlocks",0}});
   }else{
    const auto root=params.at(1).get<std::string>();const std::vector<uint8_t> data{uint8_t(root==first?1:2)};
@@ -66,13 +69,20 @@ int main(){try{
  progress=std::make_shared<AltairRelayProgress>();uncertain=false;permit_first=true;
  for(unsigned i=0;i<70;++i){auto id=std::string(64,'0');const char* digits="0123456789abcdef";id[62]=digits[(i+1)/16];id[63]=digits[(i+1)%16];backlog.push_back("0x"+id);progress->acknowledge(backlog.back());}
  backlog.push_back(second);const auto sent_before=sent,calls_before=inventory_calls;
- check(attempt()&&sent==sent_before&&inventory_calls-calls_before==32,"cached scan did not yield at its budget");
- check(attempt()&&sent==sent_before&&inventory_calls-calls_before==64,"second cached scan lost bounded progress");
- check(attempt()&&sent==sent_before+1&&progress->cursor==second&&inventory_calls-calls_before==71,"fresh vote remained behind acknowledged backlog");
+ check(attempt()&&sent==sent_before&&inventory_calls-calls_before==1,"cached scan did not yield at its budget");
+ check(attempt()&&sent==sent_before&&inventory_calls-calls_before==2,"second cached scan lost bounded progress");
+ check(attempt()&&sent==sent_before+1&&progress->cursor==second&&inventory_calls-calls_before==3,"fresh vote remained behind acknowledged backlog");
  // Unknown delivery still obeys the original retry contract after a fast scan.
  progress=std::make_shared<AltairRelayProgress>();for(size_t i=0;i<70;++i)progress->acknowledge(backlog[i]);uncertain=true;
  check(attempt()&&attempt(),"cached prefix lost progress");
  check(!attempt()&&progress->cursor==backlog[69]&&!progress->acknowledged(second),"lost tail reply was treated as acknowledged");
  uncertain=false;check(attempt()&&progress->cursor==second,"fresh tail was not retried after reply loss");
+ // Corrupt pages cannot turn unknown entries into acknowledged progress.
+ for(const bool oversized:{false,true}){
+  progress=std::make_shared<AltairRelayProgress>();for(size_t i=0;i<70;++i)progress->acknowledge(backlog[i]);
+  duplicate_page=!oversized;oversized_page=oversized;const auto prior=sent;
+  check(!attempt()&&progress->cursor=="0x"&&sent==prior,"malformed page advanced cursor or sent payload");
+ }
+ duplicate_page=false;oversized_page=false;
  std::cout<<"Rejected votes do not starve eligible successors; deferred retry, lost response and block ordering checks passed\n";
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

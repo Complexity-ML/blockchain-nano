@@ -4,6 +4,7 @@
 #include <deque>
 #include <map>
 #include <set>
+#include <sstream>
 struct AltairRelayProgress {
  std::string cursor="0x",epoch;bool retry_votes=false;
  // Session-scoped delivery knowledge, not consensus state or a validator cap.
@@ -39,11 +40,13 @@ class AltairArchiveRelay:public std::enable_shared_from_this<AltairArchiveRelay>
  void request_inventory(){
   enter_stage("inventory");
   auto reply=callback([](auto& self,Json result){self.inventory(std::move(result));});
-  try{core_(kind_==AltairWireKind::block?"nano_altairInventory":kind_==AltairWireKind::attester_slashing?"nano_altairSlashingInventory":kind_==AltairWireKind::voluntary_exit?"nano_altairExitInventory":"nano_altairVoteInventory",Json::array({token_,progress_->cursor,"0x1"}),reply);}catch(...){reply(nullptr);}
+  const auto count=kind_==AltairWireKind::attestation?std::min(size_t(32),cached_scan_budget_-cached_skips_):size_t(1);
+  std::ostringstream encoded_count;encoded_count<<"0x"<<std::hex<<count;
+  try{core_(kind_==AltairWireKind::block?"nano_altairInventory":kind_==AltairWireKind::attester_slashing?"nano_altairSlashingInventory":kind_==AltairWireKind::voluntary_exit?"nano_altairExitInventory":"nano_altairVoteInventory",Json::array({token_,progress_->cursor,encoded_count.str()}),reply);}catch(...){reply(nullptr);}
  }
  void inventory(Json page){
   if(!page.is_object()){progress_->cursor="0x";progress_->epoch.clear();finish(false);return;}
-  if(!root(page.at("catalogEpoch"))||!page.at(entries()).is_array()||page.at(entries()).size()>1||page.at("missingSignedBlocks")!=0){finish(false);return;}
+  if(!root(page.at("catalogEpoch"))||!page.at(entries()).is_array()||page.at(entries()).size()>(kind_==AltairWireKind::attestation?std::min(size_t(32),cached_scan_budget_-cached_skips_):size_t(1))||page.at("missingSignedBlocks")!=0){finish(false);return;}
   const auto epoch=page.at("catalogEpoch").get<std::string>();
   if(!progress_->epoch.empty()&&progress_->epoch!=epoch){progress_->cursor="0x";progress_->epoch=epoch;progress_->retry_votes=false;finish(false);return;}progress_->epoch=epoch;
   if(page.at(entries()).empty()){
@@ -52,17 +55,23 @@ class AltairArchiveRelay:public std::enable_shared_from_this<AltairArchiveRelay>
    if(kind_!=AltairWireKind::block&&progress_->retry_votes){progress_->cursor="0x";progress_->retry_votes=false;}
    finish(true);return;
   }
-  const auto& item=page.at(entries())[0];if(!root(item.at("root"))||item.at("root")==progress_->cursor){finish(false);return;}root_=item.at("root").get<std::string>();
-  // A rejected vote can restart the catalogue scan. Do not send the already
-  // durably acknowledged successors again while retrying that dependency.
-  if(kind_==AltairWireKind::attestation&&progress_->acknowledged(root_)){
-   progress_->cursor=root_;enter_stage("known");
-   // Cached entries need no network delivery. Continue asynchronously within a
-   // bounded scan instead of spending one scheduler interval per known vote.
-   // The shared deadline and budget retain fairness even for a cyclic catalogue.
-   if(++cached_skips_<cached_scan_budget_)request_inventory();else finish(true);return;
+  std::set<std::string> page_roots;
+  for(const auto& item:page.at(entries())){
+   if(!item.is_object()||!item.contains("root")||!root(item.at("root"))||item.at("root")==progress_->cursor||!page_roots.insert(item.at("root").get<std::string>()).second){finish(false);return;}
   }
-  enter_stage("payload");auto reply=callback([](auto& self,Json result){self.payload(std::move(result));});try{core_(kind_==AltairWireKind::block?"nano_altairBlock":kind_==AltairWireKind::attester_slashing?"nano_altairSlashing":kind_==AltairWireKind::voluntary_exit?"nano_altairExit":"nano_altairVote",Json::array({token_,root_}),reply);}catch(...){reply(nullptr);}
+  for(const auto& item:page.at(entries())){
+   root_=item.at("root").get<std::string>();
+   if(kind_==AltairWireKind::attestation&&progress_->acknowledged(root_)){
+    progress_->cursor=root_;enter_stage("known");++cached_skips_;
+    continue;
+   }
+   // Only acknowledged entries may be skipped. Export/send at most one new
+   // item, retaining the cursor on its predecessor if the reply is lost.
+   enter_stage("payload");auto reply=callback([](auto& self,Json result){self.payload(std::move(result));});try{core_(kind_==AltairWireKind::block?"nano_altairBlock":kind_==AltairWireKind::attester_slashing?"nano_altairSlashing":kind_==AltairWireKind::voluntary_exit?"nano_altairExit":"nano_altairVote",Json::array({token_,root_}),reply);}catch(...){reply(nullptr);}return;
+  }
+  // A page amortizes local RPC latency but does not increase the scan budget.
+  if(cached_skips_<cached_scan_budget_)request_inventory();else finish(true);
+
  }
  void payload(Json value){
   if(!value.is_object()||value.value("available",Json())!=true||value.value("root",Json())!=root_){finish(false);return;}
