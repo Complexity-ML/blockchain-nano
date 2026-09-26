@@ -1895,3 +1895,12 @@ du slot 80 (~184 s après reconnexion). Au slot 72, les trois nœuds connaissent
 64 votes précédents. Trois boucles saines. La fenêtre de progression durable
 n’a pas été atteinte ; aucun reclassement en réussite.
 [Preuves](qualification/multihost-20260927/peer-relay/README.md).
+
+### Reprise WAN suivie de finalité soutenue — périmètre borné
+
+Cœur `c41e7b4`, banc `14f1f15` : coupure 96 s, reprise commune observée
+à 186922 ms (**échec du seuil initial 180 s**), puis **8→9→10→11 en 143118 ms**.
+Trois boucles saines, checkpoints liés à l’exécution et audit de 207 observations
+sans conflit ni régression. Sortie globale 1 conservée. La fenêtre après reprise
+est qualifiée dans ce périmètre, pas le délai ni la production globale.
+[Preuves](qualification/multihost-20260927/sustained-recovery/README.md).
