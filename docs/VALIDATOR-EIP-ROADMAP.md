@@ -2439,3 +2439,9 @@ Les retransmissions SSZ identiques déjà authentifiées évitent désormais la
 revalidation et la sérialisation globale. Signatures altérées, annulation et
 réouverture contrôlées ; [preuves locales](qualification/vote-retry-20260927/README.md).
 La reprise WAN reste non qualifiée : cette optimisation ne clôt aucun EIP.
+
+La campagne WAN `b2e4ebe` **échoue** également : finalité restée à 2 sous
+180 s après reconnexion, trois boucles saines, aucun cycle au-delà du slot.
+Au slot 64, visibilité des votes précédents 22/21/64 : le relais sortant et
+l’ordre de rattrapage restent à diagnostiquer.
+[Preuves](qualification/multihost-20260927/vote-retry/README.md).
