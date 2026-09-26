@@ -107,3 +107,9 @@ et ajoute `peerGroups` lorsque les traces portent `peerId`. Les anciennes
 traces sont comptées dans `withoutPeerIdentity`, sans attribution inventée.
 Ces statistiques couvrent seulement les tentatives lentes ou échouées ;
 elles ne mesurent ni le débit total ni la seule latence réseau.
+
+Après une restauration réussie mais un délai de reprise manqué, le banc
+conserve cet échec et poursuit l’observation bornée de la finalité.
+`late-finality-passed` qualifie uniquement cette fenêtre ultérieure ; le run
+reste en échec et n’émet pas `passed`. Les erreurs de sécurité, de RPC ou de
+restauration ne déclenchent pas cette extension.

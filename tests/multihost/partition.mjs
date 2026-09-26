@@ -1,5 +1,9 @@
 import {setTimeout as delay} from 'node:timers/promises';
 
+export class PartitionRecoveryDeadline extends Error {
+ constructor(){super('Partition recovery deadline exceeded');this.name='PartitionRecoveryDeadline';}
+}
+
 // Docker commands operate only on the fresh, labelled test container. No host
 // firewall changes; loopback RPC remains reachable via docker exec while cut.
 export async function partitionRemote({docker, container, network, revision, sample, record,
@@ -63,5 +67,5 @@ export async function partitionRemote({docker, container, network, revision, sam
   }
   await wait(5000);
  }
- throw Error('Partition recovery deadline exceeded');
+ throw new PartitionRecoveryDeadline();
 }
