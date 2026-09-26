@@ -1904,3 +1904,20 @@ Trois boucles saines, checkpoints liés à l’exécution et audit de 207 observ
 sans conflit ni régression. Sortie globale 1 conservée. La fenêtre après reprise
 est qualifiée dans ce périmètre, pas le délai ni la production globale.
 [Preuves](qualification/multihost-20260927/sustained-recovery/README.md).
+
+### Reprise WAN horodatée et correction du parcours d’inventaire
+
+La campagne `80493b7`, banc `398148d`, reproduit le dépassement du délai :
+**187542 ms contre 180 s**, puis finalité commune **8→11 en 141066 ms**.
+Trois boucles saines ; l’audit de 209 observations ne relève ni conflit par
+epoch ni régression. Les traces corrèlent plusieurs votes inclus tard à
+17,6–18,2 s entre relais successifs, avec limites d’horloge documentées.
+[Campagne et périmètre](qualification/multihost-20260927/timed-recovery/README.md).
+
+La correction `a4bf5e6` conserve une page bornée par pair après accusé et
+réduit de 32 à 1 les requêtes d’inventaire pour 32 votes inconnus dans le
+nouveau test. Exports et accusés individuels restent obligatoires ; perte
+d’accusé, payload indisponible et catalogue renouvelé sont couverts.
+L’ancien code échoue au contrôle négatif ; le daemon corrigé compile.
+[Preuves locales](qualification/relay-page-cache-20260927/README.md).
+Effet WAN encore à mesurer : aucun EIP ni critère de production clôturé.
