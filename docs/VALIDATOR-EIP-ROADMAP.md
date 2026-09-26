@@ -2406,3 +2406,12 @@ Ajouter l'import/export EIP-3076 v5 à la clôture de production : racines absen
 fusion d'historiques et protection des zones sans historique. Ce format n'est
 pas encore implémenté. Le journal local ne protège pas une clé utilisée ailleurs
 ou un quorum de bridge compromis ; aucune finalité réseau n'est activée.
+
+## Qualification multi-hôte après correction des propositions expirées
+
+Révision b1ccbac : finalité commune 2→3→4→5 en 145763 ms, trois
+validateurs sains et actifs (136/133/128 attestations locales admises).
+Mac natif + Docker ARM64 + VPS AMD64, deux machines, 64 clés synthétiques.
+La campagne précédente avec validateur arrêté reste classée en échec.
+Les partitions WAN, l’endurance et le grand registre restent ouverts ; aucun
+statut EIP ou production global ne découle de cette fenêtre. [Preuves](qualification/multihost-20260926/with-expiry/README.md).
