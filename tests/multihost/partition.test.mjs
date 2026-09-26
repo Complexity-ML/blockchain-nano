@@ -14,7 +14,7 @@ function fixture(mode='pass'){
   if(didCut&&!attached&&mode==='rpc-fails')throw Error('RPC unavailable');
   return ['mac-native','mac-docker','vps-docker'].map((name,i)=>({name,peers:!attached&&i===2&&mode!=='peers-remain'?'0x0':'0x1',checkpoint:{epoch:didCut&&attached&&mode==='regression'?'1':didCut&&attached&&mode!=='no-recovery'?'3':'2',root:'0x'+(mode==='conflict'&&didCut&&i===2?'b':'a').repeat(64)}}));
  };
- return {args:{docker,container,network,revision,sample,record:async e=>events.push(e),clock:()=>time,wait:async ms=>{time+=ms;},cutMs:10000,recoveryMs:10000},calls,events,attached:()=>attached};
+ return {args:{docker,container,network,revision,sample,record:async e=>events.push(e),clock:()=>time,wait:async ms=>{time+=ms;},cutMs:10000,recoveryMs:10000},calls,events,attached:()=>attached,setMode:value=>{mode=value;}};
 }
 test('cut leaves node queryable, restores original IP, requires later common finality',async()=>{
  const f=fixture();await partitionRemote(f.args);assert.equal(f.attached(),true);
@@ -37,4 +37,23 @@ test('peer isolation must be observed, not inferred from Docker success',async()
 });
 test('finality regression after reconnection is rejected',async()=>{
  const f=fixture('regression');await assert.rejects(partitionRemote(f.args),/Finality regressed/);assert.equal(f.attached(),true);
+});
+
+test('late recovery reuses history without another network cut',async()=>{
+ const f=fixture('no-recovery');let deadline;
+ try{await partitionRemote(f.args);}catch(error){deadline=error;}
+ assert.equal(typeof deadline?.waitForRecovery,'function');f.setMode('pass');
+ await deadline.waitForRecovery();assert.equal(f.events.at(-1).event,'late-partition-recovery-bound');
+ assert.equal(f.calls.filter(c=>c[1]==='disconnect').length,1);
+});
+for(const mode of ['conflict','regression'])test('late '+mode+' remains fatal',async()=>{
+ const f=fixture('no-recovery');let deadline;
+ try{await partitionRemote(f.args);}catch(error){deadline=error;}
+ f.setMode(mode);await assert.rejects(deadline.waitForRecovery(),/Conflicting finalized|Finality regressed/);
+});
+test('late recovery is bounded too',async()=>{
+ const f=fixture('no-recovery');let deadline;
+ try{await partitionRemote(f.args);}catch(error){deadline=error;}
+ await assert.rejects(deadline.waitForRecovery(),/Late recovery observation deadline/);
+ assert.equal(f.args.clock(),30000);
 });

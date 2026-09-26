@@ -1,7 +1,7 @@
 import {setTimeout as delay} from 'node:timers/promises';
 
 export class PartitionRecoveryDeadline extends Error {
- constructor(){super('Partition recovery deadline exceeded');this.name='PartitionRecoveryDeadline';}
+ constructor(waitForRecovery){super('Partition recovery deadline exceeded');this.name='PartitionRecoveryDeadline';this.waitForRecovery=waitForRecovery;}
 }
 
 // Docker commands operate only on the fresh, labelled test container. No host
@@ -59,13 +59,21 @@ export async function partitionRemote({docker, container, network, revision, sam
    await record({event:'partition-reconnected',container,network,address});
   }
  }
- const deadline=clock()+recoveryMs;
- while(clock()<deadline){
-  const rows=await read(),first=rows[0].checkpoint;
-  if(rows.every(r=>BigInt(r.peers)>0n&&r.checkpoint.epoch===first.epoch&&r.checkpoint.root===first.root)&&BigInt(first.epoch)>baseline){
-   await record({event:'partition-recovery-bound',checkpoint:first});return;
+ const waitRecovery=async(event)=>{
+  const deadline=clock()+recoveryMs;
+  while(clock()<deadline){
+   const rows=await read(),first=rows[0].checkpoint;
+   if(rows.every(r=>BigInt(r.peers)>0n&&r.checkpoint.epoch===first.epoch&&r.checkpoint.root===first.root)&&BigInt(first.epoch)>baseline){
+    await record({event,checkpoint:first});return true;
+   }
+   await wait(5000);
   }
-  await wait(5000);
- }
- throw new PartitionRecoveryDeadline();
+  return false;
+ };
+ if(await waitRecovery('partition-recovery-bound'))return;
+ // Preserve the same roots/previous maps for an optional diagnostic extension.
+ // No second partition, baseline reset or relaxation of the original verdict.
+ throw new PartitionRecoveryDeadline(async()=>{
+  if(!await waitRecovery('late-partition-recovery-bound'))throw Error('Late recovery observation deadline exceeded');
+ });
 }

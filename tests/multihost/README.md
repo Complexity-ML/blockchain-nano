@@ -118,3 +118,8 @@ Après collecte, `node tests/multihost/audit-history.mjs <dossier>` vérifie la
 cohérence des checkpoints entre démarrage, partition et observation prolongée.
 Les observations manquantes ne valent pas réussite. Ce contrôle hors ligne
 complète les critères de vivacité et de liaison à l’exécution sans les remplacer.
+
+L’extension tardive attend d’abord une nouvelle finalité commune, au maximum
+180 s supplémentaires, en conservant les contrôles de conflits et régressions
+de la partition. Elle démarre ensuite la fenêtre de stabilité habituelle. Le
+critère initial de 180 s reste échoué, même si ces phases ultérieures passent.

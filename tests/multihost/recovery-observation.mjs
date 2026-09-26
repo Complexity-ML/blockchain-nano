@@ -9,7 +9,13 @@ export async function observeRecovery({partition,observe,record}) {
   if(!(error instanceof PartitionRecoveryDeadline))throw error;
   late=error;await record({event:'partition-recovery-deadline-missed',message:error.message});
  }
- try{await observe();}
+ try{
+  if(late){
+   if(typeof late.waitForRecovery!=='function')throw Error('Late recovery observer unavailable');
+   await late.waitForRecovery();
+  }
+  await observe();
+ }
  catch(error){
   if(late)await record({event:'late-finality-failed',message:error.message});
   throw error;
