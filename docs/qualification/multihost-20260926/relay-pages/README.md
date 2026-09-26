@@ -17,3 +17,18 @@ Ce résultat mesure des appels au cœur dans le banc, pas la latence WAN. Le
 relais conserve son délai global et n'envoie pas de nouveaux votes en parallèle.
 La reprise WAN précédente reste en échec ; une nouvelle image et une campagne
 aux mêmes critères sont nécessaires avant toute conclusion réseau.
+
+## Vérification complémentaire du banc réseau
+
+Le binaire `nano-altair-block-relay-tests` vérifie 18 tentatives (blocs et
+attestations). Son ancienne assertion confondait progression du parcours et
+acquittement : elle échouait sur le rejet explicite d’un vote. L’assertion
+corrigée exige ce seul avancement différé, l’absence d’acquittement et le
+drapeau de nouvelle tentative. Les réponses perdues et les blocs rejetés
+conservent leur curseur. Le double callback ne modifie pas un succès acquis.
+
+Commande : `cmake --build build-network --target nano-altair-block-relay-tests
+-j 2`, puis `./build-network/nano-altair-block-relay-tests`. Résultat : 18 cas
+réussis (`legacy-after.log`), échec antérieur conservé (`legacy-before.log`).
+Cette correction concerne seulement le test, sans changement du relais ni des
+binaires de la campagne WAN construits à la révision `5da8484`.

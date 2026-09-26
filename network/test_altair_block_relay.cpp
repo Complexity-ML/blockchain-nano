@@ -15,8 +15,14 @@ int main(){try{
   };
   auto send=[&](Json frame,Reply cb){++sends;check(frame.at("ssz")=="0x0102"&&!frame.contains("sszBase64"),"peer encoding changed");if(mode=="loss")cb(nullptr);else cb(Json{{"accepted",mode!="rejected"}});if(mode=="duplicate")cb(Json{{"accepted",false}});};
   auto job=std::make_shared<AltairArchiveRelay>(io,core,send,"token",ingress,progress,[&](Json result){++done;success=result.at("success");},vote?AltairWireKind::attestation:AltairWireKind::block);job->start(50ms);io.run();
-  const bool accepted=mode=="success"||mode=="duplicate";check(done==1&&success==(accepted||mode=="empty"),"bad relay completion");check(progress->cursor==(accepted?id:"0x"),"unacknowledged cursor advanced");
+  const bool accepted=mode=="success"||mode=="duplicate";check(done==1&&success==(accepted||mode=="empty"),"bad relay completion");
+  // A rejected vote advances only the scan cursor so later votes are not
+  // starved. It must remain unacknowledged and eligible for a later sweep.
+  const bool deferred=vote&&mode=="rejected";
+  check(progress->cursor==((accepted||deferred)?id:"0x"),"incorrect relay scan cursor");
+  check(progress->acknowledged(id)==(vote&&accepted),"incorrect vote acknowledgement");
+  check(progress->retry_votes==deferred,"incorrect deferred vote retry");
   if(mode=="foreign-payload"||mode=="incomplete"||mode=="epoch"||mode=="silent"||mode=="empty")check(sends==0,"unverified export sent");++cases;
  }
- std::cout<<cases<<" Altair relay attempts verified: loss/rejection never advance progress\n";
+ std::cout<<cases<<" Altair relay attempts verified: lost replies retain cursor; rejected votes defer without acknowledgement\n";
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
