@@ -587,15 +587,20 @@ bool BellatrixDurableReactor::block(std::span<const uint8_t> bytes,const std::fu
  publish(std::move(*next),std::move(archive),signed_votes_,checkpoint);return true;
 }
 bool BellatrixDurableReactor::vote(const Phase0SignedAttestation& vote,const std::function<void()>& checkpoint){
- std::lock_guard lock(mutex_);require_available();auto next=checked_vote(*state_,vote,rules_,limits_,checkpoint);if(!next)return false;
+ std::lock_guard lock(mutex_);require_available();if(checkpoint)checkpoint();
+ auto bytes=std::make_shared<const Bytes>(encode_consensus_attestation_ssz(vote,rules_.transition.consensus.body.validators_per_committee,checkpoint));
+ const auto id=archive_array<32>(sha256(*bytes),0);
+ // This archive contains only authenticated, durably admitted votes and is
+ // revalidated on restore. A byte-identical retry acknowledges delivery; it
+ // must not replay fork choice or reserialize the entire durable store.
+ // Deferred current-slot votes still become effective only in tick_locked.
+ const auto known=signed_votes_->find(id);
+ if(known!=signed_votes_->end()&&*known->second==*bytes)return true;
+ auto next=checked_vote(*state_,vote,rules_,limits_,checkpoint);if(!next)return false;
  auto votes=signed_votes_;
- {
-  auto bytes=std::make_shared<const Bytes>(encode_consensus_attestation_ssz(vote,rules_.transition.consensus.body.validators_per_committee,checkpoint));
-  const auto id=archive_array<32>(sha256(*bytes),0);
-  if(!signed_votes_->contains(id)){
-   if(signed_votes_->size()>=limits_.messages)throw std::length_error("Bellatrix vote archive capacity");
-   auto updated=std::make_shared<BellatrixSignedVoteArchive>(*signed_votes_);updated->emplace(id,std::move(bytes));votes=std::move(updated);
-  }
+ if(known==signed_votes_->end()){
+  if(signed_votes_->size()>=limits_.messages)throw std::length_error("Bellatrix vote archive capacity");
+  auto updated=std::make_shared<BellatrixSignedVoteArchive>(*signed_votes_);updated->emplace(id,std::move(bytes));votes=std::move(updated);
  }
  publish(std::move(*next),signed_blocks_,std::move(votes),checkpoint);return true;
 }

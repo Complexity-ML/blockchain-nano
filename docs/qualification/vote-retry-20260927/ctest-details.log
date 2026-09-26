@@ -1,0 +1,52 @@
+Start testing: Sep 27 00:01 CEST
+----------------------------------------------------------
+316/340 Testing: consensus_bellatrix_attestation_expiry
+316/340 Test: consensus_bellatrix_attestation_expiry
+Command: "/Users/boris/Dev/blockchain-nano/build-release/nano-bellatrix-transition-tests" "--attestation-expiry-loop"
+Directory: /Users/boris/Dev/blockchain-nano/build-release
+"consensus_bellatrix_attestation_expiry" start time: Sep 27 00:01 CEST
+Output:
+----------------------------------------------------------
+{"providerFailureFatal":true,"recoveredLoop":{"attestationsAdmitted":8,"dutyTraceFailures":0,"failure":null,"healthy":true,"localKeys":64,"proposalsAdmitted":2,"staleDutyRetries":0,"timing":{"maxPollMs":195,"maxProposalMs":73,"polls":2,"pollsOverSlot":0,"proposalAttempts":2,"proposalsUnavailable":0,"slotBoundaryExits":1}},"reopenedConflictRefused":false,"reservationRetained":true,"scenario":"attestation-expiry-loop"}
+<end of output>
+Test time =   5.01 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_attestation_expiry" end time: Sep 27 00:01 CEST
+"consensus_bellatrix_attestation_expiry" time elapsed: 00:00:05
+----------------------------------------------------------
+
+319/340 Testing: consensus_bellatrix_partition_simulation
+319/340 Test: consensus_bellatrix_partition_simulation
+Command: "/Users/boris/Dev/blockchain-nano/build-release/nano-bellatrix-transition-tests" "--partition-simulation"
+Directory: /Users/boris/Dev/blockchain-nano/build-release
+"consensus_bellatrix_partition_simulation" start time: Sep 27 00:01 CEST
+Output:
+----------------------------------------------------------
+{"consecutive":0,"event":"simulation-epoch","finalizedA":0,"finalizedB":0,"sameHead":true,"slot":8}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":0,"finalizedB":0,"sameHead":true,"slot":16}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":0,"finalizedB":0,"sameHead":true,"slot":24}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":2,"finalizedB":2,"sameHead":true,"slot":32}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":2,"finalizedB":2,"sameHead":false,"slot":40}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":2,"finalizedB":2,"sameHead":false,"slot":48}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":2,"finalizedB":2,"sameHead":true,"slot":56}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":6,"finalizedB":6,"sameHead":true,"slot":64}
+{"consecutive":1,"event":"simulation-epoch","finalizedA":7,"finalizedB":7,"sameHead":true,"slot":72}
+{"consecutive":2,"event":"simulation-epoch","finalizedA":8,"finalizedB":8,"sameHead":true,"slot":80}
+{"consecutive":3,"event":"simulation-epoch","finalizedA":9,"finalizedB":9,"sameHead":true,"slot":88}
+{"consecutive":4,"event":"simulation-epoch","finalizedA":10,"finalizedB":10,"sameHead":true,"slot":96}
+{"consecutive":5,"event":"simulation-epoch","finalizedA":11,"finalizedB":11,"sameHead":true,"slot":104}
+{"consecutive":6,"event":"simulation-epoch","finalizedA":12,"finalizedB":12,"sameHead":true,"slot":112}
+{"consecutiveAdvances":6,"cores":2,"finalizedEpoch":12,"p2p":false,"scenario":"partition-direct-delivery","syntheticClock":true,"validatorA":{"attestationsAdmitted":415,"dutyTraceFailures":0,"failure":null,"healthy":true,"localKeys":32,"proposalsAdmitted":56,"staleDutyRetries":0,"timing":{"maxPollMs":558,"maxProposalMs":214,"polls":333,"pollsOverSlot":0,"proposalAttempts":56,"proposalsUnavailable":0,"slotBoundaryExits":0}},"validatorB":{"attestationsAdmitted":422,"dutyTraceFailures":0,"failure":null,"healthy":true,"localKeys":32,"proposalsAdmitted":55,"staleDutyRetries":0,"timing":{"maxPollMs":1148,"maxProposalMs":952,"polls":333,"pollsOverSlot":0,"proposalAttempts":55,"proposalsUnavailable":0,"slotBoundaryExits":0}},"validators":64}
+<end of output>
+Test time = 107.76 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_partition_simulation" end time: Sep 27 00:02 CEST
+"consensus_bellatrix_partition_simulation" time elapsed: 00:01:47
+----------------------------------------------------------
+
+End testing: Sep 27 00:02 CEST
+
+qualification_consensus_simulation = 107.76 sec*proc
+

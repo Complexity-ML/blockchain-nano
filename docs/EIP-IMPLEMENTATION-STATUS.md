@@ -1868,3 +1868,10 @@ saines ; justification 7/7/7, finalité 2. Le VPS dépasse une fois la durée
 du slot (6360 ms). L’asymétrie de visibilité des votes demeure.
 [Preuves complètes](qualification/multihost-20260926/wan-pages/README.md).
 Ces modifications ne changent pas les règles de fork ni le statut d'une EIP.
+
+### Réception idempotente des votes — qualification locale
+
+Les retransmissions SSZ identiques déjà authentifiées évitent désormais la
+revalidation et la sérialisation globale. Signatures altérées, annulation et
+réouverture contrôlées ; [preuves locales](qualification/vote-retry-20260927/README.md).
+La reprise WAN reste non qualifiée : cette optimisation ne clôt aucun EIP.

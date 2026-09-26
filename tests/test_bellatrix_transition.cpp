@@ -776,6 +776,22 @@ int main(int argc,char** argv){try{
  check(beacon.last_processed_epoch==0,"epoch boundary not processed");
  check(bellatrix_store_snapshot(*reactor->current().state,fork_rules,reactor_limits)==bellatrix_store_snapshot(*store,fork_rules,reactor_limits),"reactor state differs from in-memory admission");
  const auto published=reactor->current();check(published.signed_blocks->size()==9&&published.signed_votes->size()==6,"durable signed archives incomplete");
+ auto verify_vote_retries=[&]{
+  const auto before=reactor->current();size_t checks=0,retries=0;
+  const auto start=std::chrono::steady_clock::now();
+  for(const auto& [id,wire]:*before.signed_votes){
+   const auto vote=decode_consensus_attestation_ssz(*wire,r.consensus.body.validators_per_committee);check(bool(vote),"archived retry decode failed");
+   for(unsigned i=0;i<3;++i){check(reactor->vote(*vote,[&]{++checks;}),"authenticated vote retry rejected");++retries;}
+   auto changed=*vote;changed.signature[0]^=1;
+   check(!reactor->vote(changed),"different signature bypassed vote validation");
+  }
+  check(retries>0&&reactor->current().token==before.token&&reactor->current().signed_votes==before.signed_votes,"vote retries changed durable state");
+  bool cancelled=false;const auto vote=decode_consensus_attestation_ssz(*before.signed_votes->begin()->second,r.consensus.body.validators_per_committee);
+  try{reactor->vote(*vote,[]{throw std::runtime_error("cancel duplicate");});}catch(const std::runtime_error& e){cancelled=std::string(e.what())=="cancel duplicate";}
+  check(cancelled&&reactor->current().token==before.token,"duplicate ignored cancellation");
+  std::cout<<"vote retry batch: "<<retries<<" retries, "<<checks<<" checkpoints, "<<std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now()-start).count()<<" us (including negative signatures)\n";
+ };
+ verify_vote_retries();
  auto verify_archive=[&]{for(const auto& [root,wire]:*published.signed_blocks){const auto stored=reactor_disk->checkpoint_archive(Bytes(root.begin(),root.end()),reactor_limits.envelope_bytes);check(stored&&stored->payload==*wire&&stored->slot==published.state->blocks.at(root).header.slot,"persistent signed block archive mismatch");}};
  verify_archive();
 
@@ -793,7 +809,7 @@ int main(int argc,char** argv){try{
   BellatrixConsensusService tiny(*reactor,wire_budget,4*1024*1024,r.consensus.maximum_block_bytes,65536,65536,4,1);check(!tiny.submit(frame,std::make_shared<std::atomic<bool>>(false),[](auto){}),"worker byte budget ignored");
  }
  service->stop();service->join();service.reset();reactor.reset();reactor_disk.reset();reactor_disk=std::make_unique<ChainStore>(reactor_location/"chain");reactor=std::make_unique<BellatrixDurableReactor>(*reactor_disk,1337,execution_genesis.header.hash(),fork_rules,reactor_limits,published.token);
- check(reactor->current().token==published.token&&reactor->current().signed_blocks->size()==9&&reactor->current().signed_votes->size()==6,"reactor restart lost checkpoint/archives");verify_archive();
+ check(reactor->current().token==published.token&&reactor->current().signed_blocks->size()==9&&reactor->current().signed_votes->size()==6,"reactor restart lost checkpoint/archives");verify_archive();verify_vote_retries();
  const auto clock_ms=reactor->current().state->timed.clock.time_ms;reactor->tick(clock_ms);size_t calls_before_write=0;reactor->tick(clock_ms+1,[&]{++calls_before_write;});const auto before_cancel=reactor->current().token;
  size_t reactor_cancellations=0;for(size_t stop:std::set<size_t>{1,calls_before_write/2,calls_before_write}){size_t seen=0;bool stopped=false;try{reactor->tick(clock_ms+2,[&]{if(++seen==stop)throw std::runtime_error("cancel reactor");});}catch(const std::runtime_error& e){stopped=std::string(e.what())=="cancel reactor";}check(stopped&&reactor->current().token==before_cancel&&reactor_disk->fork_checkpoint(1337,execution_genesis.header.hash(),reactor_limits.envelope_bytes)->token==before_cancel,"reactor cancellation published candidate");++reactor_cancellations;}
  BellatrixDurableReactor competing(*reactor_disk,1337,execution_genesis.header.hash(),fork_rules,reactor_limits,before_cancel);competing.tick(clock_ms+2);bool stale=false;try{reactor->tick(clock_ms+1);}catch(const std::runtime_error& e){stale=std::string(e.what())=="fork checkpoint differs from external commitment";}check(stale&&reactor_disk->fork_checkpoint(1337,execution_genesis.header.hash(),reactor_limits.envelope_bytes)->token==competing.current().token,"stale reactor overwrote checkpoint");bool unavailable=false;try{reactor->current();}catch(const std::runtime_error&){unavailable=true;}check(unavailable,"stale reactor remained publishable");
