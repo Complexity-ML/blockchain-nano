@@ -88,7 +88,8 @@ int main(int argc,char** argv){try{
  const bool distributed=partition||(argc==4&&std::string(argv[1])=="--distributed-finality");
  const bool crash=argc==4&&std::string(argv[1])=="--crash-runtime";
  const bool managed=crash||distributed||(argc==4&&std::string(argv[1])=="--managed-runtime");
- const bool slashing_network=argc==3&&std::string(argv[1])=="--slashing-network";
+ const bool pruning=argc==3&&std::string(argv[1])=="--slashing-pruning";
+ const bool slashing_network=pruning||(argc==3&&std::string(argv[1])=="--slashing-network");
  const bool network=slashing_network||(argc==3&&std::string(argv[1])=="--validator-network");
  const bool recovery=argc==2&&std::string(argv[1])=="--runtime-recovery";
  const bool operations=argc==2&&std::string(argv[1])=="--runtime-slashing";
@@ -226,7 +227,42 @@ int main(int argc,char** argv){try{
       const auto& member=result.registry.validators.at(offender);
       check(member.slashed&&member.exit_epoch!=UINT64_MAX&&member.balance<balance,"observer failed economic slashing transition");
       check(peers->observer->state().root()==chain.state().root(),"execution state differs after slashing");
+      if(pruning){
+       check(bound.current().signed_slashings->size()==1&&after.signed_slashings->size()==1,"head-only sanction discarded reorg evidence");
+       bool finalized_slashing=false;
+       for(uint64_t slot=4;slot<=4*slots;++slot){
+        wall=(genesis_time+slot*seconds)*1000;loop.poll();peers->sync(chain.tip().header.hash());
+        for(auto* reactor:{&bound,peers->reactor.get()}){
+         const auto view=reactor->current();const auto& finalized=view.state->blocks.at(view.state->timed.view.finalized.root);
+         const auto ctx=bellatrix_fork_block_context(finalized.state,finalized.header,er,t.state);
+         const bool slashed=ctx.registry.validators.at(offender).slashed;
+         check(view.signed_slashings->size()==(slashed?0:1),"proof lifetime differs from finalized sanction");
+         if(reactor==&bound)finalized_slashing=slashed;
+        }
+        if(finalized_slashing)break;
+       }
+       check(finalized_slashing,"slashing did not finalize before scenario limit");
+       const auto before=bound.current().token;
+       check(bound.slashing_ssz(proof)&&bound.current().signed_slashings->empty()&&bound.current().token==before,"finalized proof replay recreated archive or checkpoint");
+       auto fresh_a=a,fresh_b=b;const auto fresh_offender=(offender+1)%64;Key fresh_key(fresh_offender);
+       for(auto* vote:{&fresh_a,&fresh_b}){vote->indices={fresh_offender};vote->signature=fresh_key.sign(consensus_signing_root(consensus_attestation_root(vote->data),consensus_domain({1,0,0,0},version,context.genesis_root)));}
+       const auto fresh_proof=encode_consensus_attester_slashing_ssz(fresh_a,fresh_b,t.body.validators_per_committee);
+       check(bound.slashing_ssz(fresh_proof)&&bound.current().signed_slashings->size()==1,"archive rejected new offender after pruning");
+       until([&]{const auto view=peers->reactor->current();return view.signed_slashings->size()==1&&*view.signed_slashings->begin()->second==fresh_proof;},"new proof relay after pruned cursor",20);
+       std::cout<<Json{{"scenario","bellatrix-finalized-proof-pruning"},{"retainedBeforeFinality",true},{"prunedAfterFinality",true},{"replayDidNotRearchive",true},{"twoCores",true}}.dump()<<'\n';
+      }
       peers->stop();
+      const auto observer_token=peers->reactor->current().token;
+      const auto observer_head=peers->observer->tip().header.hash();
+      if(pruning){
+       peers->hb.reset();peers->sb.reset();peers->rb.reset();peers->eb.reset();
+       peers->clock.reset();peers->reactor.reset();peers->observer.reset();
+       Blockchain reopened(live/"observer",g);
+       BellatrixDurableReactor restored(reopened,fork_rules,reactor_limits,observer_token);
+       check(restored.current().signed_slashings->size()==1&&reopened.tip().header.hash()==observer_head,"restart lost new proof or execution head");
+       check(restored.slashing_ssz(proof)&&restored.current().token==observer_token,"restarted node rearchived finalized evidence");
+       std::cout<<Json{{"scenario","bellatrix-pruning-reopen"},{"checkpointPreserved",true},{"replayDidNotRearchive",true}}.dump()<<'\n';
+      }
       std::cout<<Json{{"scenario","bellatrix-slashing-network"},{"realP2pDaemons",2},{"cores",2},{"independentCoreProcesses",false},{"syntheticClock",true},{"proofReceivedBeforeBlock",true},{"offender",offender},{"slashed",true},{"balanceBefore",balance},{"balanceAfter",member.balance},{"exitEpoch",member.exit_epoch},{"executionStateMatched",true}}.dump()<<'\n';return 0;
      }
      if(peers)check(rpc(peers->sa->port(),"eth_sendRawTransaction",Json::array({hex(pending.raw())}))==hex(pending.hash()),"wallet RPC transaction admission");

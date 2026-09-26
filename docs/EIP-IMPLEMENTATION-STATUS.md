@@ -1525,3 +1525,9 @@ Deux nouveaux cas de `consensus_bellatrix_local_slashing` passent (**5,53 s**, a
 Le scénario `consensus_bellatrix_partition_recovery` passe en **517,21 s** avec l'ordonnancement du relais modifié : deux cœurs indépendants, deux démons P2P, 64 clés synthétiques réparties entre deux validateurs sur un Mac. Coupure de 96 s, branches concurrentes, finalité inchangée pendant la coupure, puis tête commune et finalité commune progressant à l'epoch 8 (justification 9). Rapport : `docs/qualification/bellatrix-slashing-partition-20260926.json`.
 
 Cette exécution a commencé avant le correctif de déduplication des preuves : ses empreintes d'entrée sont conservées séparément ; le correctif a ses nouveaux cas ciblés propres. Les 517,21 s dépassent le passage historique de 420,77 s, sans mesure permettant d'attribuer l'écart au seul relais. Ce résultat démontre la reprise bornée avec le nouvel ordonnancement, pas la tenue sous charge ni une disponibilité distribuée en production.
+
+### 2026-09-26 — Élagage des preuves après sanction finalisée
+
+Le réacteur conserve les preuves tant qu'au moins un fautif commun n'est pas sanctionné dans l'état finalisé authentifié. À l'avancement de la finalité, il retire atomiquement les preuves devenues inutiles ; les rejeux n'en recréent pas. La récupération restaure son snapshot exact sans y appliquer un nouvel élagage.
+
+Nouveau scénario `consensus_bellatrix_slashing_pruning` : **40,72 s**, deux cœurs dans un processus, deux démons P2P, horloge synthétique. Il vérifie la conservation avant finalité, l'élagage après, le rejeu sans écriture, une nouvelle preuve reçue après disparition de l'ancien curseur de catalogue et la réouverture du stockage. Rapport : `docs/qualification/bellatrix-slashing-pruning-20260926.json`. Cela ferme le manque d'élagage des preuves signalé dans les notes précédentes ; l'historique complet des blocs/états et la charge prolongée restent hors de ce résultat.

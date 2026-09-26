@@ -1,0 +1,27 @@
+{
+  "result": "passed",
+  "test": "consensus_bellatrix_slashing_pruning",
+  "durationSeconds": 40.72,
+  "scope": [
+    "retain evidence until every common offender is slashed in finalized state",
+    "prune on finality advancement",
+    "finalized proof replay does not recreate archive or checkpoint",
+    "new offender proof relayed after old catalog cursor pruning",
+    "reopen preserves remaining proof and execution head; old proof replay does not publish"
+  ],
+  "cores": 2,
+  "p2pDaemons": 2,
+  "physicalHosts": 1,
+  "syntheticClock": true,
+  "sha256": {
+    "src/consensus_bellatrix_reactor.cpp": "3a11d25e452479e5e2808c07cc46a01839567bc17379516059154eae1320f41f",
+    "tests/test_bellatrix_transition.cpp": "8d2c917364bc308c0ec1598b3109f3f557c6eaf76a4f0c402da7b61a34067436",
+    "build-release/nano-bellatrix-transition-tests": "c1a40fd9cdff0c5aa3906dd93e4191571bb5939e87b4da1474648a23631d583a",
+    "build-network/nano-p2p": "14f5458355dc8bba36e8ab05512a6a174a46a9766499de8f84d258e00875434f"
+  },
+  "limitations": [
+    "Not a sustained-load qualification",
+    "No independent-host deployment",
+    "Does not prune full retained block/state history"
+  ]
+}

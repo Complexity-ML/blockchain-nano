@@ -154,6 +154,25 @@ void BellatrixDurableReactor::publish(BellatrixForkStore candidate,std::shared_p
  if(std::any_of(votes->begin(),votes->end(),[&](const auto& entry){return archive_number(*entry.second,92)<oldest;})){
   auto retained=std::make_shared<BellatrixSignedVoteArchive>();for(const auto& [id,payload]:*votes){if(checkpoint)checkpoint();if(archive_number(*payload,92)>=oldest)retained->emplace(id,payload);}votes=std::move(retained);
  }
+ // A head-only sanction can disappear on reorganisation. Drop evidence only
+ // when every common offender is slashed in the authenticated finalized state.
+ if(!slashings->empty()&&state_&&state_->timed.view.finalized.root!=next->timed.view.finalized.root){
+  const auto& finalized=next->blocks.at(next->timed.view.finalized.root);const auto& t=rules_.transition.consensus;
+  const auto context=bellatrix_fork_block_context(finalized.state,finalized.header,{t.epoch,rules_.transition.execution,rules_.transition.maximum_state_bytes},t.state,checkpoint);
+  auto retained=std::make_shared<BellatrixSignedVoteArchive>();
+  for(const auto& [id,wire]:*slashings){
+   if(checkpoint)checkpoint();const auto proof=decode_consensus_attester_slashing_ssz(*wire,t.body.validators_per_committee,checkpoint);
+   if(!proof)throw std::logic_error("Invalid archived slashing encoding");
+   bool needed=false;
+   for(auto index:proof->first.indices){
+    if(checkpoint)checkpoint();if(!std::binary_search(proof->second.indices.begin(),proof->second.indices.end(),index))continue;
+    const auto member=context.registry.validators.find(index);
+    if(member==context.registry.validators.end()||!member->second.slashed){needed=true;break;}
+   }
+   if(needed)retained->emplace(id,wire);
+  }
+  if(retained->size()!=slashings->size())slashings=std::move(retained);
+ }
  const auto encoded=durable_snapshot(*next,*archive,*votes,*slashings,rules_,limits_,checkpoint);
  if(checkpoint)checkpoint();
  // A retransmission with identical durable contents is already acknowledged by
@@ -499,6 +518,10 @@ bool BellatrixDurableReactor::slashing(const IndexedConsensusAttestation& a,cons
   // or blocks without leaving a pending proof available to the local proposer.
   std::set<uint64_t> uncovered;
   std::set_intersection(a.indices.begin(),a.indices.end(),b.indices.begin(),b.indices.end(),std::inserter(uncovered,uncovered.end()));
+  const auto& finalized=state_->blocks.at(state_->timed.view.finalized.root);const auto& t=rules_.transition.consensus;
+  const auto context=bellatrix_fork_block_context(finalized.state,finalized.header,{t.epoch,rules_.transition.execution,rules_.transition.maximum_state_bytes},t.state,checkpoint);
+  std::erase_if(uncovered,[&](auto index){if(checkpoint)checkpoint();const auto member=context.registry.validators.find(index);return member!=context.registry.validators.end()&&member->second.slashed;});
+
   for(const auto& [_,saved]:*proofs){
    if(checkpoint)checkpoint();if(uncovered.empty())break;
    const auto decoded=decode_consensus_attester_slashing_ssz(*saved,rules_.transition.consensus.body.validators_per_committee,checkpoint);
