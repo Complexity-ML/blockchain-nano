@@ -78,3 +78,20 @@ des verrous ; elles ne prouvent pas encore une cause unique.
 La réussite de cette fenêtre ne résout pas la variabilité observée dans la
 campagne précédente, ni l’endurance, les partitions WAN, la charge ou la
 production. Aucun réglage de consensus ni assouplissement du moniteur.
+
+## Campagne avec mesures par étape (5131589)
+
+La fenêtre de trois avancées 2 → 3 → 4 → 5 réussit en 143494 ms sur
+les trois instances. Lanceur terminé avec code 0. Mesures et logs conservés
+dans `with-phases/`. Aucun autre changement fonctionnel que l’instrumentation.
+
+Les traces ne comprennent que les tentatives lentes (>500 ms) ou échouées.
+Sur VPS, une récupération locale de vote atteint 2198994 µs ; sur Mac natif,
+l’attente d’acquittement d’un vote atteint 1562563 µs. Ces observations
+localisent des délais côté cœur VPS, mais ne séparent pas encore attente
+du verrou et calcul sous verrou. La construction locale réexécute une
+transition complète pour chaque attestation candidate : piste à optimiser
+avec contrôle de validité conservé et comparaison avant/après.
+
+Deux fenêtres réussies et un échec antérieur ne clôturent pas le retard
+intermittent ni la qualification d’endurance.

@@ -1,5 +1,6 @@
 #include "nano/consensus_bellatrix_reactor.hpp"
 #include "nano/chain.hpp"
+#include "proposal_vote_selection.hpp"
 #include "nano/consensus_message_ssz.hpp"
 #include "nano/consensus_bellatrix_deposits.hpp"
 namespace nano {
@@ -135,14 +136,16 @@ std::optional<Bytes> BellatrixDurableReactor::prepare_local_body_locked(uint64_t
   if(ancestor==state_->timed.view.anchor)break;
   ancestor=previous.header.parent_root;
  }
+ std::vector<Bytes> candidates;
  for(const auto& [id,wire]:*signed_votes_){
-  if(check)check();if(selected.size()>=t.body.attestations||tried>=maximum_vote_trials)break;
+  if(check)check();if(candidates.size()>=maximum_vote_trials-tried)break;
   if(included.contains(Bytes(id.begin(),id.end())))continue;
   const auto vote=decode_consensus_attestation_ssz(*wire,t.body.validators_per_committee,check);
   if(!vote||vote->data.slot>=slot||slot-vote->data.slot<t.attestation.minimum_inclusion_delay||slot-vote->data.slot>t.epoch.ffg.slots_per_epoch)continue;
-  ++tried;selected.push_back(*wire);auto candidate=assemble(selected);
-  if(valid(candidate))body=std::move(candidate);else selected.pop_back();
+  candidates.push_back(*wire);
  }
+ selected=detail::select_proposal_votes(candidates,t.body.attestations,maximum_vote_trials-tried,
+  [&]{if(check)check();},[&](const std::vector<Bytes>& votes){auto candidate=assemble(votes);if(!valid(candidate))return false;body=std::move(candidate);return true;});
  if(check)check();return body;
 }
 }

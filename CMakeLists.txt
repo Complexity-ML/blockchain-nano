@@ -1468,3 +1468,8 @@ set_tests_properties(consensus_bellatrix_beacon_headers PROPERTIES TIMEOUT 60 LA
 
 add_test(NAME consensus_bellatrix_beacon_headers_reorg COMMAND nano-bellatrix-transition-tests --beacon-headers-reorg)
 set_tests_properties(consensus_bellatrix_beacon_headers_reorg PROPERTIES TIMEOUT 90 LABELS "qualification_consensus_api")
+
+add_executable(nano-proposal-vote-selection-tests tests/test_proposal_vote_selection.cpp)
+target_compile_features(nano-proposal-vote-selection-tests PRIVATE cxx_std_20)
+add_test(NAME consensus_proposal_vote_selection COMMAND nano-proposal-vote-selection-tests)
+set_tests_properties(consensus_proposal_vote_selection PROPERTIES TIMEOUT 10 LABELS "qualification_consensus_ethereum")
