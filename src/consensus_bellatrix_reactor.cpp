@@ -90,6 +90,26 @@ Restored restore_durable_snapshot(std::string_view bytes,const Bytes& digest,con
 }
 static_assert(std::is_nothrow_move_assignable_v<std::optional<ForkCheckpointToken>>);
 static_assert(std::is_nothrow_move_assignable_v<std::shared_ptr<const BellatrixForkStore>>);
+namespace {
+Json recovery_token_json(const std::optional<ForkCheckpointToken>& token){return token?Json{{"sequence",quantity(Int(std::to_string(token->sequence)))},{"digest",hex(token->digest)}}:Json(nullptr);}
+std::optional<ForkCheckpointToken> recovery_token_parse(const Json& j){
+ if(j.is_null())return std::nullopt;
+ archive_require(j.is_object()&&j.size()==2);
+ const ForkCheckpointToken token{u64(quantity(j.at("sequence"))),unhex(j.at("digest").get<std::string>())};
+ archive_require(token.sequence&&token.digest.size()==32&&recovery_token_json(token)==j);return token;
+}
+}
+size_t BellatrixDurableReactor::witness_limit()const{
+ if(limits_.envelope_bytes>(SIZE_MAX-1024)/6)throw std::length_error("Bellatrix witness size overflow");
+ return 1024+6*limits_.envelope_bytes;
+}
+void BellatrixDurableReactor::witness_prepare(std::string_view snapshot){
+ if(!witness_)return;
+ if(token_&&token_->sequence==UINT64_MAX)throw std::overflow_error("Bellatrix witness sequence exhausted");
+ const ForkCheckpointToken next{token_?token_->sequence+1:1,sha256(Bytes(snapshot.begin(),snapshot.end()))};
+ const auto encoded=Json{{"format","nano-bellatrix-recovery-v1"},{"previous",recovery_token_json(token_)},{"next",recovery_token_json(next)},{"snapshot",snapshot}}.dump();
+ witness_token_=witness_->commit_fork_checkpoint(chain_id_,genesis_,witness_token_,encoded,witness_limit());
+}
 void BellatrixDurableReactor::validate_execution_binding()const{
  if(!execution_)return;
  std::lock_guard lock(execution_->mutex_);
@@ -120,7 +140,7 @@ void BellatrixDurableReactor::publish(BellatrixForkStore candidate,std::shared_p
  // this checkpoint. Do not invalidate local duty tokens or amplify disk writes
  // merely because another peer returned a block/vote we already retained.
  if(token_&&sha256(Bytes(encoded.begin(),encoded.end()))==token_->digest){
-  try{if(!disk_.fork_checkpoint(chain_id_,genesis_,limits_.envelope_bytes,token_))throw std::runtime_error("Missing duplicate checkpoint");}
+  try{if(witness_)witness_->fork_checkpoint(chain_id_,genesis_,witness_limit(),witness_token_);if(!disk_.fork_checkpoint(chain_id_,genesis_,limits_.envelope_bytes,token_))throw std::runtime_error("Missing duplicate checkpoint");}
   catch(...){unavailable_=true;if(execution_){std::lock_guard lock(execution_->mutex_);execution_->beacon_ready_=false;}throw;}
   return;
  }
@@ -152,6 +172,7 @@ void BellatrixDurableReactor::publish(BellatrixForkStore candidate,std::shared_p
  std::reverse(suffix.begin(),suffix.end());
  if(checkpoint)checkpoint();
  try{
+  witness_prepare(encoded);
   if(execution_)committed=execution_->commit_beacon_checkpoint(token_,tip->header.hash(),common_height,common_hash,suffix,next->blocks.at(next->timed.view.finalized.root).execution_block,encoded,limits_.envelope_bytes,limits_.blocks);
   else committed=disk_.commit_execution_checkpoint(chain_id_,genesis_,token_,tip->header.hash(),common_height,common_hash,suffix,encoded,limits_.envelope_bytes,limits_.blocks);
  }
@@ -159,14 +180,16 @@ void BellatrixDurableReactor::publish(BellatrixForkStore candidate,std::shared_p
  token_=std::move(committed);state_=std::move(next);signed_blocks_=std::move(archive);signed_votes_=std::move(votes);
 }
 BellatrixDurableReactor::BellatrixDurableReactor(Blockchain& execution,BellatrixForkBlockRules rules,
- BellatrixStoreSnapshotLimits limits,BellatrixForkStore initial,const std::function<void()>& checkpoint):
- BellatrixDurableReactor(execution.store_,execution.genesis_.chain_id,execution.genesis_.block.header.hash(),std::move(rules),limits,std::move(initial),checkpoint,&execution){}
+ BellatrixStoreSnapshotLimits limits,BellatrixForkStore initial,const std::function<void()>& checkpoint,ChainStore* witness):
+ BellatrixDurableReactor(execution.store_,execution.genesis_.chain_id,execution.genesis_.block.header.hash(),std::move(rules),limits,std::move(initial),checkpoint,&execution,witness){}
 BellatrixDurableReactor::BellatrixDurableReactor(Blockchain& execution,BellatrixForkBlockRules rules,
  BellatrixStoreSnapshotLimits limits,const ForkCheckpointToken& expected,const std::function<void()>& checkpoint):
  BellatrixDurableReactor(execution.store_,execution.genesis_.chain_id,execution.genesis_.block.header.hash(),std::move(rules),limits,expected,checkpoint,&execution){}
 BellatrixDurableReactor::BellatrixDurableReactor(ChainStore& disk,Int chain,Bytes genesis,BellatrixForkBlockRules rules,
- BellatrixStoreSnapshotLimits limits,BellatrixForkStore initial,const std::function<void()>& checkpoint,Blockchain* owner):
- disk_(disk),execution_(owner),chain_id_(std::move(chain)),genesis_(std::move(genesis)),rules_(std::move(rules)),limits_(limits),mutex_(disk.altair_reactor_mutex_){std::lock_guard lock(mutex_);validate_execution_binding();publish(std::move(initial),signed_blocks_,signed_votes_,checkpoint);}
+ BellatrixStoreSnapshotLimits limits,BellatrixForkStore initial,const std::function<void()>& checkpoint,Blockchain* owner,ChainStore* witness):
+ disk_(disk),execution_(owner),chain_id_(std::move(chain)),genesis_(std::move(genesis)),rules_(std::move(rules)),limits_(limits),mutex_(disk.altair_reactor_mutex_){std::lock_guard lock(mutex_);validate_execution_binding();
+ if(witness){archive_require(witness!=&disk_);witness_=witness;witness_->bind_chain(chain_id_,genesis_,"nano-bellatrix-recovery-v1");archive_require(!witness_->fork_checkpoint(chain_id_,genesis_,witness_limit())&&!disk_.fork_checkpoint(chain_id_,genesis_,limits_.envelope_bytes));}
+ publish(std::move(initial),signed_blocks_,signed_votes_,checkpoint);}
 BellatrixDurableReactor::BellatrixDurableReactor(ChainStore& disk,Int chain,Bytes genesis,BellatrixForkBlockRules rules,
  BellatrixStoreSnapshotLimits limits,const ForkCheckpointToken& expected,const std::function<void()>& checkpoint,Blockchain* owner):
  disk_(disk),execution_(owner),chain_id_(std::move(chain)),genesis_(std::move(genesis)),rules_(std::move(rules)),limits_(limits),mutex_(disk.altair_reactor_mutex_){std::lock_guard lock(mutex_);
@@ -183,6 +206,33 @@ BellatrixDurableReactor::BellatrixDurableReactor(ChainStore& disk,Int chain,Byte
   const auto canonical=disk_.block_by_number(finalized.header.number);archive_require(canonical&&canonical->header.hash()==finalized.header.hash());
   std::lock_guard lock(execution_->mutex_);execution_->beacon_finalized_=std::move(finalized);execution_->beacon_ready_=true;
  }
+}
+BellatrixDurableReactor::BellatrixDurableReactor(Blockchain& execution,BellatrixForkBlockRules rules,
+ BellatrixStoreSnapshotLimits limits,ChainStore& witness,const std::function<void()>& checkpoint):
+ disk_(execution.store_),execution_(&execution),witness_(&witness),chain_id_(execution.genesis_.chain_id),genesis_(execution.genesis_.block.header.hash()),rules_(std::move(rules)),limits_(limits),mutex_(disk_.altair_reactor_mutex_){
+ std::lock_guard lock(mutex_);validate_execution_binding();archive_require(witness_!=&disk_);
+ witness_->bind_chain(chain_id_,genesis_,"nano-bellatrix-recovery-v1");
+ const auto saved=witness_->fork_checkpoint(chain_id_,genesis_,witness_limit());archive_require(bool(saved));
+ const auto intent=Json::parse(saved->snapshot);archive_require(intent.is_object()&&intent.size()==4&&intent.at("format")=="nano-bellatrix-recovery-v1"&&intent.dump()==saved->snapshot);
+ const auto previous=recovery_token_parse(intent.at("previous")),next=recovery_token_parse(intent.at("next"));
+ archive_require(next&&(!previous||previous->sequence<UINT64_MAX)&&next->sequence==(previous?previous->sequence+1:1));
+ const auto encoded=intent.at("snapshot").get<std::string>();
+ auto restored=restore_durable_snapshot(encoded,next->digest,rules_,limits_,checkpoint);
+ // Re-encoding must be identical before any replay publication can write.
+ archive_require(durable_snapshot(restored.store,*restored.blocks,*restored.votes,rules_,limits_,checkpoint)==encoded);
+ const auto primary=disk_.fork_checkpoint(chain_id_,genesis_,limits_.envelope_bytes);
+ const auto actual=primary?std::optional<ForkCheckpointToken>(primary->token):std::nullopt;
+ archive_require(actual==next||actual==previous);witness_token_=saved->token;
+ if(actual!=next){
+  token_=previous;publish(std::move(restored.store),std::move(restored.blocks),std::move(restored.votes),checkpoint);return;
+ }
+ const auto& head=bellatrix_fork_head(restored.store,rules_,checkpoint);const auto tip=disk_.latest();const auto state=disk_.state_at(head.execution_block.header.number);
+ archive_require(chain_id_==rules_.transition.chain_id&&tip&&tip->header.hash()==head.execution_block.header.hash()&&state&&state->root()==head.execution_state.root());
+ for(const auto& receipt:head.receipts){if(checkpoint)checkpoint();const auto persisted=disk_.receipt(receipt.transaction_hash);archive_require(persisted&&persisted->to_json()==receipt.to_json());}
+ auto finalized=restored.store.blocks.at(restored.store.timed.view.finalized.root).execution_block;
+ const auto canonical=disk_.block_by_number(finalized.header.number);archive_require(canonical&&canonical->header.hash()==finalized.header.hash());
+ state_=std::make_shared<const BellatrixForkStore>(std::move(restored.store));signed_blocks_=std::move(restored.blocks);signed_votes_=std::move(restored.votes);token_=*next;
+ std::lock_guard chain_lock(execution_->mutex_);execution_->beacon_finalized_=std::move(finalized);execution_->beacon_ready_=true;
 }
 BellatrixPublishedStore BellatrixDurableReactor::current()const{std::lock_guard lock(mutex_);require_available();return {state_,*token_,signed_blocks_,signed_votes_};}
 std::optional<Phase0SignedAttestation> BellatrixDurableReactor::sign_attestation(uint64_t index,

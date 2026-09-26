@@ -24,17 +24,22 @@ private:
  ChainStore& disk_;const Int chain_;const Bytes execution_genesis_,public_key_;
  const ConsensusRoot validators_genesis_;const uint64_t slots_per_epoch_;
  std::mutex& mutex_;std::optional<Proposal> proposal_;std::optional<Vote> vote_;
+ ChainStore* recovery_=nullptr;std::optional<ForkCheckpointToken> recovery_token_;
  std::optional<ForkCheckpointToken> token_;bool unavailable_=false,retired_=false;
  std::string encode(const std::optional<Proposal>&,const std::optional<Vote>&,bool retired)const;
  void commit(const std::optional<Proposal>&,const std::optional<Vote>&,bool retired=false);
  void ready()const;
  Bytes sign(const ConsensusRoot&,const Signer&)const;
 public:
+ // Optional witness is an explicitly trusted, separately retained store.
+ // It writes each reservation before the primary and permits only completion
+ // of that exact reservation after a crash. Never roll both stores back.
  // Empty DB only when expected is absent. Existing DB requires an independently
  // retained exact token. Database must be dedicated to this key and purpose.
  BeaconSigningJournal(ChainStore&,Int chain_id,Bytes execution_genesis,
   ConsensusRoot genesis_validators_root,Bytes public_key,uint64_t slots_per_epoch,
-  const std::optional<ForkCheckpointToken>& expected=std::nullopt);
+  const std::optional<ForkCheckpointToken>& expected=std::nullopt,
+  ChainStore* recovery_witness=nullptr);
  BeaconSigningJournal(const BeaconSigningJournal&)=delete;
  BeaconSigningJournal& operator=(const BeaconSigningJournal&)=delete;
  ForkCheckpointToken commitment()const;

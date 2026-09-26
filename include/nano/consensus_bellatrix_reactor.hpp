@@ -22,6 +22,9 @@ struct BellatrixPublishedStore {std::shared_ptr<const BellatrixForkStore> state;
 class BellatrixDurableReactor {
  ChainStore& disk_;
  Blockchain* execution_=nullptr;
+ ChainStore* witness_=nullptr;std::optional<ForkCheckpointToken> witness_token_;
+ size_t witness_limit()const;
+ void witness_prepare(std::string_view);
  void validate_execution_binding() const;
  const Int chain_id_;const Bytes genesis_;
  const BellatrixForkBlockRules rules_;const BellatrixStoreSnapshotLimits limits_;
@@ -52,11 +55,14 @@ std::optional<Bytes> propose_local_locked(uint64_t index,uint64_t slot,const std
  BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint);
 public:
  BellatrixDurableReactor(Blockchain&,BellatrixForkBlockRules,BellatrixStoreSnapshotLimits,
-  BellatrixForkStore trusted_initial,const std::function<void()>& checkpoint={});
+  BellatrixForkStore trusted_initial,const std::function<void()>& checkpoint={},ChainStore* witness=nullptr);
  BellatrixDurableReactor(Blockchain&,BellatrixForkBlockRules,BellatrixStoreSnapshotLimits,
   const ForkCheckpointToken& expected,const std::function<void()>& checkpoint={});
+ // Explicitly trusted separate witness; finish its exact pending publication.
+ BellatrixDurableReactor(Blockchain&,BellatrixForkBlockRules,BellatrixStoreSnapshotLimits,
+  ChainStore& witness,const std::function<void()>& checkpoint={});
  BellatrixDurableReactor(ChainStore&,Int,Bytes,BellatrixForkBlockRules,BellatrixStoreSnapshotLimits,
-  BellatrixForkStore trusted_initial,const std::function<void()>& checkpoint={},Blockchain* execution=nullptr);
+  BellatrixForkStore trusted_initial,const std::function<void()>& checkpoint={},Blockchain* execution=nullptr,ChainStore* witness=nullptr);
  BellatrixDurableReactor(ChainStore&,Int,Bytes,BellatrixForkBlockRules,BellatrixStoreSnapshotLimits,
   const ForkCheckpointToken& expected,const std::function<void()>& checkpoint={},Blockchain* execution=nullptr);
  ~BellatrixDurableReactor();

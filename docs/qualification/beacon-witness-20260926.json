@@ -1,0 +1,17 @@
+{
+  "result": "passed",
+  "tests": {
+    "consensus_beacon_signing_journal": 1.23,
+    "consensus_beacon_witness_recovery": 1.06
+  },
+  "total_seconds": 2.3,
+  "sha256": {
+    "src/consensus_beacon_signer.cpp": "38f9591f6b18e666d309080e91c2d0498f0209dba03007b28d20971bf2292e73",
+    "include/nano/consensus_beacon_signer.hpp": "51384e99ad4eb1692dd39b9627996cbaef3c4ae9cf996649be12fea025cca1d8",
+    "tests/test_beacon_recovery.cpp": "5e06feebf9cb7ba93bf6a3fc17c64ea96a549c2e43c00118c19b253d234a5230",
+    "build-release/nano-beacon-recovery-tests": "2326b8394dc9f9f82fc28380a011846e3d8de496d497392888f0bc4cddd10942",
+    "build-release/nano-beacon-signer-tests": "edace9b6a356920f131c3f89c617cb91a44d783601c519d10f54d456c4e557bf"
+  },
+  "fault_injection": "macOS WAL synchronization failure in primary and witness; no provider call",
+  "scope": "Native journal component only; runtime and execution checkpoint recovery not integrated"
+}

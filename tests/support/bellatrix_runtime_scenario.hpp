@@ -27,13 +27,15 @@ inline nano::Json bellatrix_runtime_config(const Temp& location,
 }
 inline void bellatrix_runtime_scenario(const nano::Genesis& genesis,
  const nano::BellatrixForkBlockRules& rules,const nano::BellatrixStoreSnapshotLimits& limits,
- const nano::BellatrixForkStore& initial,const std::string& recipient){
+ const nano::BellatrixForkStore& initial,const std::string& recipient,bool witnessed=false){
  using namespace nano;Temp location;
  auto q=[](uint64_t n){return quantity(Int(std::to_string(n)));};
  auto config=bellatrix_runtime_config(location,rules,limits,initial);
+ if(witnessed)config["recoveryWitness"]=(location/"consensus-witness").string();
  std::atomic<uint64_t> wall=initial.timed.clock.time_ms;
  auto now=[&]{return wall.load();};
  auto reject=[&](Json invalid,const char* label){
+  if(witnessed)invalid["recoveryWitness"]=(location/(std::string(label)+"-witness")).string();
   Blockchain chain(location/label,genesis);bool refused=false;
   try{auto runtime=start_bellatrix_runtime(chain,invalid,{},now);}catch(const std::exception&){refused=true;}
   check(refused,label);bool gated=false;try{chain.require_execution_ready();}catch(const std::exception&){gated=true;}check(gated,"failed runtime left execution available");
@@ -52,6 +54,7 @@ inline void bellatrix_runtime_scenario(const nano::Genesis& genesis,
   const auto name="NANO_RUNTIME_FIXTURE_BLS_"+std::to_string(i);env.set(name,hex(bytes(Int(std::to_string(i+1)),32)));
   keys.push_back({{"index",q(i)},{"feeRecipient",recipient},{"keyEnv",name},{"journal",(location/("key-"+std::to_string(i))).string()},{"restart",nullptr}});
  }
+ if(witnessed)for(size_t i=0;i<keys.size();++i)keys[i]["recoveryWitness"]=(location/("witness-key-"+std::to_string(i))).string();
  config["validator"]={{"pollIntervalMs",q(rules.slot_duration_ms)},{"maximumVoteTrials","0x80"},{"keys",keys}};
  invalid=config;invalid["validator"]["keys"]=Json::array({keys[0]});invalid["validator"]["keys"][0]["index"]="0x1";reject(invalid,"key-registry-mismatch");
  ForkCheckpointToken saved;Json commitments;Bytes head,state;
@@ -65,8 +68,8 @@ inline void bellatrix_runtime_scenario(const nano::Genesis& genesis,
   check(runtime.validator->status().at("healthy")==true&&runtime.validator->status().at("proposalsAdmitted")==1,"configured providers failed proposal");
   saved=runtime.reactor->current().token;commitments=runtime.validator->restart_commitments();head=chain.tip().header.hash();state=chain.state().root();
  }
- config["initial"]=nullptr;config["restart"]={{"sequence",q(saved.sequence)},{"digest",hex(saved.digest)}};
- for(size_t i=0;i<keys.size();++i)config["validator"]["keys"][i]["restart"]=commitments.at(i).at("restart");
+ config["initial"]=nullptr;if(!witnessed){config["restart"]={{"sequence",q(saved.sequence)},{"digest",hex(saved.digest)}};
+ for(size_t i=0;i<keys.size();++i)config["validator"]["keys"][i]["restart"]=commitments.at(i).at("restart");}
  {
   Blockchain chain(location/"chain",genesis);
   auto stale=config;stale["restart"]["digest"]=hex(Bytes(32,0));bool refused=false;
@@ -83,11 +86,36 @@ inline void bellatrix_runtime_scenario(const nano::Genesis& genesis,
   bool gated=false;try{chain.require_execution_ready();}catch(const std::exception&){gated=true;}
   check(refused_clock&&gated&&!runtime.clock->healthy(),"clock regression failed open");
  }
- std::cout<<Json{{"scenario","bellatrix-runtime-config-restart"},{"configuredKeys",64},{"proposalsAcrossRestart",2},{"repeatedDutySuppressed",true},{"invalidConfigCases",4},{"staleCheckpointRejected",true},{"clockRegressionGated",true},{"independentProcesses",false}}.dump()<<'\n';
+ std::cout<<Json{{"scenario","bellatrix-runtime-config-restart"},{"witnessed",witnessed},{"configuredKeys",64},{"proposalsAcrossRestart",2},{"repeatedDutySuppressed",true},{"invalidConfigCases",4},{"staleCheckpointRejected",true},{"clockRegressionGated",true},{"independentProcesses",false}}.dump()<<'\n';
+}
+// One pending core publication with the primary restored to its predecessor.
+inline void bellatrix_core_recovery_scenario(const nano::Genesis& genesis,
+ const nano::BellatrixForkBlockRules& rules,const nano::BellatrixStoreSnapshotLimits& limits,
+ const nano::BellatrixForkStore& initial){
+ using namespace nano;Temp location;auto config=bellatrix_runtime_config(location,rules,limits,initial);
+ config["recoveryWitness"]=(location/"witness").string();std::atomic<uint64_t> wall=initial.timed.clock.time_ms;
+ auto now=[&]{return wall.load();};ForkCheckpointToken first,next;Bytes head,state;
+ {Blockchain genesis_only(location/"primary",genesis);}
+ fs::copy(location/"primary",location/"genesis-only",fs::copy_options::recursive);
+ {Blockchain chain(location/"primary",genesis);auto runtime=start_bellatrix_runtime(chain,config,{},now);(void)stop_bellatrix_runtime(runtime);first=runtime.reactor->current().token;head=chain.tip().header.hash();state=chain.state().root();}
+ fs::copy(location/"primary",location/"previous",fs::copy_options::recursive);
+ config["initial"]=nullptr;
+ // Lose the entire first execution/checkpoint publication, retain its witness.
+ // This replays a real block/state suffix from genesis, not only a clock tick.
+ check(first.sequence==1,"initial recovery fixture wrote multiple checkpoints");
+ fs::remove_all(location/"primary");fs::copy(location/"genesis-only",location/"primary",fs::copy_options::recursive);
+ {Blockchain chain(location/"primary",genesis);auto runtime=start_bellatrix_runtime(chain,config,{},now);(void)stop_bellatrix_runtime(runtime);check(runtime.reactor->current().token==first&&chain.tip().header.hash()==head&&chain.state().root()==state,"witness failed lost execution publication recovery");}
+
+ {Blockchain chain(location/"primary",genesis);auto runtime=start_bellatrix_runtime(chain,config,{},now);runtime.clock->stop();++wall;runtime.clock->poll();(void)stop_bellatrix_runtime(runtime);next=runtime.reactor->current().token;check(next.sequence==first.sequence+1,"recovery fixture advanced multiple publications");}
+ fs::remove_all(location/"primary");fs::copy(location/"previous",location/"primary",fs::copy_options::recursive);
+ {Blockchain chain(location/"primary",genesis);auto runtime=start_bellatrix_runtime(chain,config,{},now);runtime.clock->stop();check(runtime.reactor->current().token==next&&chain.tip().header.hash()==head&&chain.state().root()==state,"witness failed coupled checkpoint roll-forward");++wall;runtime.clock->poll();(void)stop_bellatrix_runtime(runtime);}
+ fs::remove_all(location/"primary");fs::copy(location/"previous",location/"primary",fs::copy_options::recursive);
+ {Blockchain chain(location/"primary",genesis);bool refused=false;try{auto runtime=start_bellatrix_runtime(chain,config,{},now);}catch(const std::exception&){refused=true;}check(refused,"core accepted rollback beyond witnessed predecessor");bool gated=false;try{chain.tip();}catch(const std::exception&){gated=true;}check(gated,"failed recovery exposed execution");}
+ std::cout<<"Bellatrix witnessed core roll-forward and rollback admission checks passed\n";
 }
 inline void bellatrix_managed_runtime_scenario(const nano::Json& genesis,
  const nano::BellatrixForkBlockRules& rules,const nano::BellatrixStoreSnapshotLimits& limits,
- const nano::BellatrixForkStore& initial,const std::string& executable,const std::string& daemon,bool distributed=false,bool partition=false){
+ const nano::BellatrixForkStore& initial,const std::string& executable,const std::string& daemon,bool distributed=false,bool partition=false,bool crash=false){
  using namespace nano;Temp location;
  auto bounded=limits;
  if(distributed){bounded.blocks=128;bounded.messages=2048;bounded.total_state_bytes=64*1024*1024;bounded.envelope_bytes=128*1024*1024;}
@@ -103,6 +131,10 @@ inline void bellatrix_managed_runtime_scenario(const nano::Json& genesis,
  Json node={{"rpc_host","127.0.0.1"},{"rpc_port",0},{"p2p_binary",daemon},{"listen_addr","/ip4/127.0.0.1/tcp/0"},{"bootnodes",Json::array()},{"bellatrix",config}};
  if(distributed)node["bellatrix"]["validator"]={{"pollIntervalMs","0xfa"},{"maximumVoteTrials","0x80"},{"keys",other_keys}};
  auto validator=node;validator["bellatrix"]["validator"]={{"pollIntervalMs","0xfa"},{"maximumVoteTrials","0x80"},{"keys",keys}};
+ if(crash){
+  validator["bellatrix"]["recoveryWitness"]=(location/"core-witness").string();
+  for(size_t i=0;i<keys.size();++i)validator["bellatrix"]["validator"]["keys"][i]["recoveryWitness"]=(location/("key-witness-"+std::to_string(i))).string();
+ }
  save(location/"genesis.json",genesis);save(location/"validator.json",validator);
  auto launch=[&](const char* name,const Env& env=Env{}){return std::make_unique<Process>(std::vector<std::string>{executable,"run",(location/"genesis.json").string(),(location/name).string(),(location/(std::string(name)+".json")).string()},env);};
  auto source=launch("validator",environment);source->event("bellatrix-runtime-ready");const auto source_port=source->port();
@@ -130,16 +162,24 @@ inline void bellatrix_managed_runtime_scenario(const nano::Json& genesis,
  auto latest=[&](int port){source->pump(0);observer->pump(0);return rpc(port,"eth_getBlockByNumber",Json::array({"latest",false}));};
  until([&]{const auto a=latest(source_port),b=latest(observer_port);return quantity(a.at("number"))>=3&&a.at("hash")==b.at("hash");},"independent Bellatrix cores synchronized",40);
  const auto before=latest(source_port);
- auto result=source->stop();check(result.code==0,"managed validator shutdown: "+result.err);
- Json stopped;std::istringstream lines(result.out);std::string line;
- while(std::getline(lines,line)){auto j=Json::parse(line,nullptr,false);if(j.is_object()&&j.value("event","")=="bellatrix-runtime-stopped")stopped=std::move(j);}
- check(stopped.is_object()&&stopped.at("validatorKeys").size()==keys.size(),"managed shutdown missing journal commitments");
- validator["bellatrix"]["initial"]=nullptr;validator["bellatrix"]["restart"]=stopped.at("restart");
- for(size_t i=0;i<keys.size();++i)validator["bellatrix"]["validator"]["keys"][i]["restart"]=stopped.at("validatorKeys")[i].at("restart");
+ if(crash){
+  source->signal(SIGKILL);const auto killed=source->wait();check(killed.code==-SIGKILL,"validator did not receive SIGKILL");
+  check(killed.out.find("bellatrix-runtime-stopped")==std::string::npos,"crash produced an orderly restart receipt");
+  validator["bellatrix"]["initial"]=nullptr;
+  std::cout<<Json{{"event","validator-killed"},{"signal","SIGKILL"},{"orderlyReceipt",false},{"headBefore",before.at("hash")}}.dump()<<std::endl;
+ }else{
+  auto result=source->stop();check(result.code==0,"managed validator shutdown: "+result.err);
+  Json stopped;std::istringstream lines(result.out);std::string line;
+  while(std::getline(lines,line)){auto j=Json::parse(line,nullptr,false);if(j.is_object()&&j.value("event"," ")=="bellatrix-runtime-stopped")stopped=std::move(j);}
+  check(stopped.is_object()&&stopped.at("validatorKeys").size()==keys.size(),"managed shutdown missing journal commitments");
+  validator["bellatrix"]["initial"]=nullptr;validator["bellatrix"]["restart"]=stopped.at("restart");
+  for(size_t i=0;i<keys.size();++i)validator["bellatrix"]["validator"]["keys"][i]["restart"]=stopped.at("validatorKeys")[i].at("restart");
+ }
  // Reconnect to the observer's live port; the source uses an ephemeral listener.
  validator["bootnodes"]=Json::array({observer->event("listen").at("address")});save(location/"validator.json",validator);
  source=launch("validator",environment);source->event("bellatrix-runtime-ready");const auto resumed_port=source->port();source->event("altair-ingress-ready");
  until([&]{const auto a=latest(resumed_port),b=latest(observer_port);return quantity(a.at("number"))>quantity(before.at("number"))&&a.at("hash")==b.at("hash");},"restarted Bellatrix validator propagated next block",40);
+ if(crash)check(rpc(resumed_port,"eth_getBlockByNumber",Json::array({before.at("number"),false})).at("hash")==before.at("hash"),"crash recovery replaced acknowledged canonical block");
  if(distributed){
   uint64_t last_epoch=0;const auto start=u64(quantity(genesis.at("timestamp"))),seconds=rules.transition.seconds_per_slot,slots=rules.transition.consensus.epoch.ffg.slots_per_epoch;
   until([&]{const auto a=latest(resumed_port),b=latest(observer_port);const auto slot=(u64(quantity(a.at("timestamp")))-start)/seconds;
@@ -195,7 +235,7 @@ inline void bellatrix_managed_runtime_scenario(const nano::Json& genesis,
   check(quantity(a.at("finalized").at("epoch"))>=2&&a.at("finalized")==b.at("finalized"),"distributed validators did not finalize a common checkpoint");finality=a.at("finalized");
  }
 
- std::cout<<Json{{"scenario","bellatrix-managed-cores-restart"},{"independentCoreProcesses",2},{"p2pDaemons",2},{"wallClock",true},{"validatorNodes",distributed?2:1},{"physicalHosts",1},{"localKeys",64},{"blockBeforeRestart",before.at("number")},{"blockAfterRestart",after.at("number")},{"observerSynchronized",true},{"distributedStake",distributed},{"partitionRecovered",partition_recovered},{"finalized",finality}}.dump()<<std::endl;
+ std::cout<<Json{{"scenario","bellatrix-managed-cores-restart"},{"independentCoreProcesses",2},{"p2pDaemons",2},{"wallClock",true},{"validatorNodes",distributed?2:1},{"physicalHosts",1},{"localKeys",64},{"blockBeforeRestart",before.at("number")},{"blockAfterRestart",after.at("number")},{"observerSynchronized",true},{"distributedStake",distributed},{"partitionRecovered",partition_recovered},{"crashRecovered",crash},{"finalized",finality}}.dump()<<std::endl;
 }
 
 }

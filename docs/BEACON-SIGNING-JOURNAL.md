@@ -1,7 +1,8 @@
 # Journal de signature Beacon
 
-État au 25 septembre 2026 : composant local implémenté et testé, sans activation
-des tâches de validateur dans `nano run`. Il ne remplace pas le journal de votes
+État au 26 septembre 2026 : composant intégré aux tâches locales du profil
+Bellatrix de `nano run` ; voir la matrice pour les preuves et limites réseau.
+Il ne remplace pas le journal de votes
 hauteur/tour du consensus BFT historique.
 
 ## Réservation avant signature
@@ -203,3 +204,23 @@ de l'état, identité complète et engagement vérifiés, créneau contrôlé av
 après le fournisseur. Les méthodes de bas niveau du journal restent distinctes ;
 elles ne doivent pas être exposées comme service de signature sans ces contrôles.
 Aucun validateur autonome ni binding EVM n'est activé par cette intégration.
+
+## Témoin de réservation pour la reprise après crash
+
+L’API C++ accepte désormais un `ChainStore* recovery_witness` optionnel, explicitement choisi comme stockage de référence et conservé indépendamment du journal principal. Le runtime Bellatrix accepte cette option via `recoveryWitness` dans chaque entrée de clé. Sans ce paramètre, les règles précédentes d’engagement exact restent inchangées.
+
+Pour chaque réservation, import ou retrait, le témoin synchronise d’abord un document borné contenant l’engagement précédent, le suivant et le snapshot complet du journal (sans clé privée). Le journal principal est écrit ensuite ; le fournisseur de signature n’est appelé qu’après ces écritures. Toute erreur rend l’instance indisponible. Les écritures du témoin utilisent aussi une comparaison de version pour refuser les instances périmées.
+
+À la réouverture, le témoin permet uniquement de constater le nouvel engagement exact ou de terminer son écriture lorsque le principal correspond exactement à son prédécesseur. La récupération vérifie identité de chaîne, clé publique, genesis des validateurs, slots par époque, séquence et empreinte avant cette écriture. Une base plus ancienne, un témoin absent pour une base existante, une mauvaise identité ou un engagement explicite contradictoire sont refusés. La première utilisation du témoin exige donc une base principale neuve ; la migration d’un journal existant reste à réaliser hors ligne avec ses protections conservées.
+
+Le témoin est une **racine de confiance opérationnelle**, pas une garantie contre sa propre falsification ou la restauration conjointe des deux bases. Le placer dans le même ensemble de sauvegardes restauré avec le principal annule cette indépendance. Aucune détection de rollback du témoin lui-même ni coordination avec une copie de clé utilisée ailleurs n’est revendiquée.
+
+Cette brique protège les réservations de signature. Le coordinateur Bellatrix possède désormais son propre témoin du checkpoint couplé consensus/exécution. Le chargeur runtime est raccordé aux deux ; un scénario de redémarrage de `nano run` après `SIGKILL`, sans reçu d’arrêt, est qualifié sur un hôte avec propagation vers un observateur. Les pannes de stockage physiques et le coût sous charge restent à qualifier.
+
+### Configuration runtime des témoins
+
+Dans la section `bellatrix`, `recoveryWitness` est le chemin d’une base dédiée au témoin consensus/exécution. Au premier démarrage, conserver `initial` authentifié et `restart: null` ; le témoin et le checkpoint principal doivent être vierges. Pour récupérer ce réseau, définir ensuite `initial: null` et `restart: null` avec le même témoin. Un engagement de reprise explicite ne peut pas être combiné avec ce mode. Sans `recoveryWitness`, la configuration antérieure reste obligatoire.
+
+Dans chaque entrée `validator.keys`, `recoveryWitness` désigne le témoin dédié à cette clé ; `restart: null` permet la récupération depuis ce témoin. Un engagement explicite facultatif reste une exigence supplémentaire et doit correspondre exactement. Les chemins des journaux et témoins doivent être distincts. La restauration conjointe du principal et des témoins demeure hors protection. La reprise ne réinitialise aucun journal et ne restaure pas une base plus ancienne que le prédécesseur exact.
+
+Le témoin de consensus conserve le snapshot complet, archives signées comprises. Sa taille est bornée à partir du budget d’enveloppe configuré. Cette implémentation ajoute une écriture synchronisée et la sérialisation du snapshot par publication ; son coût sous charge n’est pas encore qualifié.

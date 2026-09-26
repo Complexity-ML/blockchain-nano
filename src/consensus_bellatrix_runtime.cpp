@@ -27,10 +27,10 @@ std::string read_bounded(const std::filesystem::path& path,size_t maximum,const 
  while(input){if(checkpoint)checkpoint();input.read(buffer.data(),buffer.size());const auto n=size_t(input.gcount());if(n>maximum-out.size())throw std::length_error("Bellatrix input grew beyond bound");out.append(buffer.data(),n);}
  if(input.bad()||!input.eof())throw std::runtime_error("Bellatrix input read failed");return out;
 }
-struct Owner {std::unique_ptr<BellatrixDurableReactor> reactor;std::unique_ptr<BellatrixLocalClock> clock;std::unique_ptr<BellatrixRpcService> rpc;std::unique_ptr<BellatrixValidatorLoop> validator;};
+struct Owner {std::unique_ptr<ChainStore> witness;std::unique_ptr<BellatrixDurableReactor> reactor;std::unique_ptr<BellatrixLocalClock> clock;std::unique_ptr<BellatrixRpcService> rpc;std::unique_ptr<BellatrixValidatorLoop> validator;};
 }
 BellatrixRuntime start_bellatrix_runtime(Blockchain& chain,const Json& config,const std::function<void()>& checkpoint,std::function<uint64_t()> now){
- if(checkpoint)checkpoint();auto base=config;base.erase("validator");shape(base,{"profile","limits","initial","restart","clock","wire","worker"});
+ if(checkpoint)checkpoint();auto base=config;base.erase("validator");base.erase("recoveryWitness");shape(base,{"profile","limits","initial","restart","clock","wire","worker"});
  const auto& genesis=chain.genesis();
  if(genesis.consensus!="beacon"||genesis.evm_revision!=EvmRevision::Paris)throw std::invalid_argument("Bellatrix runtime requires Beacon Paris chain");
  const auto& p=config.at("profile");shape(p,{"file","sha256","maximumBytes"});const auto maximum=number(p.at("maximumBytes"));
@@ -52,16 +52,21 @@ BellatrixRuntime start_bellatrix_runtime(Blockchain& chain,const Json& config,co
  if(vote<228+(committee+8)/8||slash<464+16*committee||block<rules.transition.consensus.maximum_block_bytes||payload<largest||frame<1024||largest>(frame-1024)/2||largest/3+(largest%3!=0)>(16*1024*1024-2048)/4)
   throw std::invalid_argument("Bellatrix transport cannot carry configured consensus messages");
  const bool restart=!config.at("restart").is_null();
- if(restart==!config.at("initial").is_null())throw std::invalid_argument("Choose exactly one Bellatrix initial snapshot or restart token");
- auto owner=std::make_shared<Owner>();
- if(restart){
+ const bool witnessed=config.contains("recoveryWitness");
+ if(witnessed){if(restart)throw std::invalid_argument("Witness recovery cannot use a restart token");}
+ else if(restart==!config.at("initial").is_null())throw std::invalid_argument("Choose exactly one Bellatrix initial snapshot or restart token");
+ auto owner=std::make_shared<Owner>();std::set<std::filesystem::path> paths;
+ if(witnessed){const auto path=config.at("recoveryWitness").get<std::string>();if(path.empty())throw std::invalid_argument("Empty Bellatrix recovery witness path");paths.insert(std::filesystem::weakly_canonical(path));owner->witness=std::make_unique<ChainStore>(path);}
+ if(witnessed&&config.at("initial").is_null()){
+  owner->reactor=std::make_unique<BellatrixDurableReactor>(chain,rules,limits,*owner->witness,checkpoint);
+ }else if(restart){
   const auto& r=config.at("restart");shape(r,{"sequence","digest"});const ForkCheckpointToken token{number(r.at("sequence")),digest(r.at("digest"))};
   owner->reactor=std::make_unique<BellatrixDurableReactor>(chain,rules,limits,token,checkpoint);
  }else{
   if(chain.store().fork_checkpoint(genesis.chain_id,genesis.block.header.hash(),limits.envelope_bytes))throw std::invalid_argument("Existing Bellatrix checkpoint requires explicit restart token");
   const auto& a=config.at("initial");shape(a,{"file","sha256"});
   auto initial=bellatrix_store_from_snapshot(read_bounded(a.at("file").get<std::string>(),limits.envelope_bytes,checkpoint),digest(a.at("sha256")),rules,limits,checkpoint);
-  owner->reactor=std::make_unique<BellatrixDurableReactor>(chain,rules,limits,std::move(initial),checkpoint);
+  owner->reactor=std::make_unique<BellatrixDurableReactor>(chain,rules,limits,std::move(initial),checkpoint,owner->witness.get());
  }
  if(!now)now=[](){const auto ms=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();if(ms<0)throw std::runtime_error("Negative local time");return uint64_t(ms);};
  owner->clock=std::make_unique<BellatrixLocalClock>(*owner->reactor,step,now);
@@ -82,14 +87,14 @@ BellatrixRuntime start_bellatrix_runtime(Blockchain& chain,const Json& config,co
     Bytes signature(96);blst_p2_compress(signature.data(),&result);return signature;
    }
   };
-  struct JournalOwner {std::unique_ptr<ChainStore> disk;std::unique_ptr<BeaconSigningJournal> journal;};
+  struct JournalOwner {std::unique_ptr<ChainStore> witness;std::unique_ptr<ChainStore> disk;std::unique_ptr<BeaconSigningJournal> journal;};
   const auto current=owner->reactor->current();const auto& anchor=current.state->blocks.at(current.state->timed.view.anchor).state.ssz;
   if(anchor.size()<40)throw std::invalid_argument("Missing authenticated validators genesis");ConsensusRoot validators_genesis{};std::copy_n(anchor.begin()+8,32,validators_genesis.begin());
   const auto& head=bellatrix_fork_head(*current.state,rules,checkpoint);
   const auto registry=bellatrix_fork_block_context(head.state,head.header,{rules.transition.consensus.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},rules.transition.consensus.state,checkpoint).registry;
-  std::vector<BellatrixValidatorKey> keys;std::set<std::filesystem::path> paths;std::set<std::string> public_keys;
+  std::vector<BellatrixValidatorKey> keys;std::set<std::string> public_keys;
   for(const auto& k:v.at("keys")){
-   if(checkpoint)checkpoint();shape(k,{"index","feeRecipient","keyEnv","journal","restart"});
+   if(checkpoint)checkpoint();auto fields=k;fields.erase("recoveryWitness");shape(fields,{"index","feeRecipient","keyEnv","journal","restart"});
    if(!k.at("index").is_string())throw std::invalid_argument("Validator index quantity");const auto index=u64(quantity(k.at("index")));if(quantity(Int(std::to_string(index)))!=k.at("index").get<std::string>())throw std::invalid_argument("Validator index encoding");
    const auto fee=address(k.at("feeRecipient").get<std::string>()),env=k.at("keyEnv").get<std::string>();
    if(env.empty())throw std::invalid_argument("Validator signing environment name required");const char* raw=std::getenv(env.c_str());if(!raw)throw std::invalid_argument("Validator signing environment unavailable");
@@ -102,8 +107,14 @@ BellatrixRuntime start_bellatrix_runtime(Blockchain& chain,const Json& config,co
    if(!public_keys.insert(hex(secret->public_key)).second)throw std::invalid_argument("Duplicate local validator key");
    const auto input_path=k.at("journal").get<std::string>();if(input_path.empty())throw std::invalid_argument("Empty validator journal path");const auto path=std::filesystem::weakly_canonical(input_path);if(path.empty()||!paths.insert(path).second)throw std::invalid_argument("Duplicate or empty validator journal path");
    std::optional<ForkCheckpointToken> restart;if(!k.at("restart").is_null()){const auto& r=k.at("restart");shape(r,{"sequence","digest"});restart=ForkCheckpointToken{number(r.at("sequence")),digest(r.at("digest"))};}
-   auto journal=std::make_shared<JournalOwner>();journal->disk=std::make_unique<ChainStore>(path);
-   journal->journal=std::make_unique<BeaconSigningJournal>(*journal->disk,genesis.chain_id,genesis.block.header.hash(),validators_genesis,secret->public_key,rules.transition.consensus.epoch.ffg.slots_per_epoch,restart);
+   auto journal=std::make_shared<JournalOwner>();
+   if(k.contains("recoveryWitness")){
+    const auto witness_path=k.at("recoveryWitness").get<std::string>();
+    if(witness_path.empty()||!paths.insert(std::filesystem::weakly_canonical(witness_path)).second)throw std::invalid_argument("Duplicate or empty validator witness path");
+    journal->witness=std::make_unique<ChainStore>(witness_path);
+   }
+   journal->disk=std::make_unique<ChainStore>(path);
+   journal->journal=std::make_unique<BeaconSigningJournal>(*journal->disk,genesis.chain_id,genesis.block.header.hash(),validators_genesis,secret->public_key,rules.transition.consensus.epoch.ffg.slots_per_epoch,restart,journal->witness.get());
    keys.push_back({index,std::shared_ptr<BeaconSigningJournal>(journal,journal->journal.get()),[secret](const ConsensusRoot& root){return secret->sign(root);},fee});
   }
   owner->validator=std::make_unique<BellatrixValidatorLoop>(*owner->reactor,*owner->clock,rules.slot_duration_ms,rules.transition.consensus.epoch.ffg.slots_per_epoch,trials,std::move(keys),now);

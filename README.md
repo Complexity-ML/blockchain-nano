@@ -41,8 +41,11 @@ Ce chemin est partiellement qualifié : les scénarios locaux, signatures et
 redémarrages ciblés passent. Un scénario à deux nœuds sur un seul hôte retrouve
 une finalité commune après 96 secondes de partition réseau ; cela ne qualifie
 pas encore les partitions prolongées ou un réseau de production.
-Le registre ouvert, les opérations de validateurs et la reprise après panne
-ne sont pas qualifiés de bout en bout. Voir la
+Un mode optionnel à témoins durables permet aussi une reprise après crash :
+un arrêt `SIGKILL` suivi de récupération et propagation passe sur deux processus
+locaux. Les témoins doivent être conservés indépendamment des bases principales.
+Le registre ouvert, les opérations de validateurs, les pannes de stockage et
+le coût de ce mode sous charge restent à qualifier. Voir la
 [matrice d’implémentation et ses preuves](docs/EIP-IMPLEMENTATION-STATUS.md).
 
 `include/nano/opcodes.hpp` expose **NanoOpCodes** : 169 valeurs distinctes,

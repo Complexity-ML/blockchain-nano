@@ -1,0 +1,16 @@
+{
+  "result": "passed",
+  "scenario": "consensus_bellatrix_crash_runtime",
+  "seconds": 19.14,
+  "sha256": {
+    "src/consensus_bellatrix_reactor.cpp": "dd00debeb953019aa24dee0c2c122a46ee14353cc3f3588bc2f353a91c0f97f9",
+    "src/consensus_bellatrix_runtime.cpp": "c36320cc2e34cedab08e2b00c27f0492d999f052a903c7e536387d0b015be1d6",
+    "src/consensus_beacon_signer.cpp": "38f9591f6b18e666d309080e91c2d0498f0209dba03007b28d20971bf2292e73",
+    "tests/support/bellatrix_runtime_scenario.hpp": "00cdba3a9bab5435c70d37fba3ca66f222f8d96e4aef68d2d3bbc188887d7629",
+    "tests/test_bellatrix_transition.cpp": "492d9049ea07911c123c29fc7d64d1172cb4c664f6fd73e38d11d746f7c31fe8",
+    "build-release/nano": "8c2356fab32a74cbf1d9c685ea6602e9b598fd4b7e468eaa394b14c1ec7d79e8",
+    "build-release/nano-bellatrix-transition-tests": "b2241bc8803fb89648975c7b1f09570a54b8590a238ce742e64028cf6b516603",
+    "build-network/nano-p2p": "750801c79ff3429cc60c00df3779198c46c19616fbb4dc3853c44a65e674e208"
+  },
+  "scope": "Two real cores and two P2P daemons, one host; 64 keys on source, observer without validator keys; SIGKILL without orderly receipt; canonical block 3 retained and block 4 propagated; no distributed finality assertion"
+}

@@ -1338,3 +1338,21 @@ endif()
 # modes may start local clocks/signers; no networking is started.
 add_executable(nano-bellatrix-checkpoint-export tests/bellatrix_checkpoint_export.cpp)
 target_link_libraries(nano-bellatrix-checkpoint-export PRIVATE nano_core nano_ckzg)
+
+add_executable(nano-beacon-recovery-tests tests/test_beacon_recovery.cpp)
+target_link_libraries(nano-beacon-recovery-tests PRIVATE nano_core nano_ckzg)
+add_test(NAME consensus_beacon_witness_recovery COMMAND nano-beacon-recovery-tests)
+set_tests_properties(consensus_beacon_witness_recovery PROPERTIES TIMEOUT 30 LABELS "qualification_consensus_recovery")
+
+if(APPLE)
+ target_link_libraries(nano-beacon-recovery-tests PRIVATE nano-test-sync-fault)
+ target_compile_definitions(nano-beacon-recovery-tests PRIVATE NANO_TEST_SYNC_FAULT=1)
+endif()
+
+add_test(NAME consensus_bellatrix_witness_runtime COMMAND nano-bellatrix-transition-tests --runtime-recovery)
+set_tests_properties(consensus_bellatrix_witness_runtime PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_recovery")
+
+if(NANO_NETWORK_EXECUTABLE)
+ add_test(NAME consensus_bellatrix_crash_runtime COMMAND nano-bellatrix-transition-tests --crash-runtime $<TARGET_FILE:nano> ${NANO_NETWORK_EXECUTABLE})
+ set_tests_properties(consensus_bellatrix_crash_runtime PROPERTIES TIMEOUT 150 LABELS "qualification_consensus_recovery")
+endif()

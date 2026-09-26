@@ -86,9 +86,11 @@ Bytes signed_header(const ConsensusBeaconHeader& h,const Bytes& signature){Bytes
 int main(int argc,char** argv){try{
  const bool partition=argc==4&&std::string(argv[1])=="--partition-recovery";
  const bool distributed=partition||(argc==4&&std::string(argv[1])=="--distributed-finality");
- const bool managed=distributed||(argc==4&&std::string(argv[1])=="--managed-runtime");
+ const bool crash=argc==4&&std::string(argv[1])=="--crash-runtime";
+ const bool managed=crash||distributed||(argc==4&&std::string(argv[1])=="--managed-runtime");
  const bool network=argc==3&&std::string(argv[1])=="--validator-network";
- const bool runtime_only=argc==2&&std::string(argv[1])=="--runtime";
+ const bool recovery=argc==2&&std::string(argv[1])=="--runtime-recovery";
+ const bool runtime_only=recovery||(argc==2&&std::string(argv[1])=="--runtime");
  const bool validator_only=network||(argc==2&&std::string(argv[1])=="--validator-loop");
  check(argc==1||validator_only||runtime_only||managed,"unknown Bellatrix qualification arguments");
  const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-bellatrix-containers-official",source=fixtures/"consensus-bellatrix-slots-official";
@@ -177,10 +179,10 @@ int main(int argc,char** argv){try{
   check(received->execution.state.get_storage(target,1)==integer(parent.header.hash()),"BLOCKHASH did not use parent branch");
   if(slot==1){
    store=initialize_bellatrix_fork_store(received->consensus,built->message_ssz,received->execution.block,received->execution.state,received->execution.receipts,{parent.header},fork_rules);
-   if(managed){test::bellatrix_managed_runtime_scenario(managed_genesis,fork_rules,reactor_limits,*store,argv[2],argv[3],distributed,partition);return 0;}
+   if(managed){test::bellatrix_managed_runtime_scenario(managed_genesis,fork_rules,reactor_limits,*store,argv[2],argv[3],distributed,partition,crash);return 0;}
    if(runtime_only){
     Genesis g;g.chain_id=r.chain_id;g.consensus="beacon";g.evm_revision=EvmRevision::Paris;g.block=execution_genesis;g.state=genesis_state;
-    test::bellatrix_runtime_scenario(g,fork_rules,reactor_limits,*store,sender);return 0;
+    test::bellatrix_runtime_scenario(g,fork_rules,reactor_limits,*store,sender,recovery);if(recovery)test::bellatrix_core_recovery_scenario(g,fork_rules,reactor_limits,*store);return 0;
    }
    if(validator_only){
     Temp live;Genesis g;g.chain_id=r.chain_id;g.consensus="beacon";g.evm_revision=EvmRevision::Paris;g.block=execution_genesis;g.state=genesis_state;
