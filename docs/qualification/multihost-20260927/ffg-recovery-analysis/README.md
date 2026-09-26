@@ -65,3 +65,17 @@ de budget. Les anciennes traces restent non horodatées ; cette modification
 ne les enrichit pas rétroactivement et n’est pas encore qualifiée en WAN.
 
 Validation de l’instrumentation : `cmake --build build-network --target nano-p2p -j 2` réussit (`relay-time-build.log`). Pas de nouvelle campagne réseau ni de changement du résultat WAN existant.
+
+## Corrélation préparée pour la prochaine campagne
+
+`node tests/multihost/inclusion-timing.mjs checkpoint.json.gz campagne/`
+relie l’empreinte SHA-256 des attestations incluses aux événements
+`test-altair-vote-relayed` horodatés. Il exclut les lectures `known` du cache.
+Le résultat conserve toutes les correspondances, leur pair destinataire et
+l’écart signé par rapport à l’ouverture du slot d’inclusion. Ce sont des
+fins de relais enregistrées, pas une preuve de disponibilité chez le proposant.
+
+Contrôles exécutés : archive précédente = 519 inclusions, 2606 événements
+sans date, aucune correspondance datée inventée ; événement synthétique sur
+une empreinte incluse = une correspondance à -123 ms ; événement `known`
+identique exclu. L’outil n’altère aucun état et ne valide pas les signatures.
