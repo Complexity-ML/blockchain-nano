@@ -1888,3 +1888,10 @@ Une tentative par pair, quatre au total par défaut, configurables via
 `NANO_CONSENSUS_RELAY_CONCURRENCY`. Le test de pair lent, saturation et réponse
 tardive passe ; le binaire P2P compile. [Preuves](qualification/peer-relay-20260927/README.md).
 Effet sur la reprise WAN non encore qualifié ; aucun statut EIP clôturé.
+
+La campagne `c41e7b4` échoue au délai de 180 s, mais une reprise tardive est
+observée : finalité 8 commune dans les statuts terminaux et les échantillons
+du slot 80 (~184 s après reconnexion). Au slot 72, les trois nœuds connaissent
+64 votes précédents. Trois boucles saines. La fenêtre de progression durable
+n’a pas été atteinte ; aucun reclassement en réussite.
+[Preuves](qualification/multihost-20260927/peer-relay/README.md).
