@@ -1388,3 +1388,6 @@ set_tests_properties(consensus_bellatrix_deposit_store PROPERTIES TIMEOUT 180 LA
 
 add_test(NAME consensus_bellatrix_native_deposit_admission COMMAND nano-bellatrix-transition-tests --deposit-loop)
 set_tests_properties(consensus_bellatrix_native_deposit_admission PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_deposits")
+
+add_test(NAME consensus_bellatrix_deposit_activation COMMAND nano-bellatrix-transition-tests --deposit-activation)
+set_tests_properties(consensus_bellatrix_deposit_activation PROPERTIES TIMEOUT 600 LABELS "qualification_consensus_deposits")

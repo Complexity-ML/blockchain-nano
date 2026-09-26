@@ -1,0 +1,34 @@
+{
+  "result": "passed",
+  "test": "consensus_bellatrix_deposit_activation",
+  "seconds": 139.72,
+  "activationEpoch": 8,
+  "finalizedEpochAtCompletion": 7,
+  "entrantSignatures": 1,
+  "scope": [
+    "Funded native deposit admitted through the existing autonomous proposer path",
+    "Registry epoch processing schedules and activates new validator index 64",
+    "No new-key signing callback before activation; authenticated attestation admitted after activation",
+    "Fork-choice latest_messages contains the new validator and finality advances after activation",
+    "Coupled node checkpoint reopened preserving the admitted registry and execution state"
+  ],
+  "resourcesPointSample": {
+    "elapsedSeconds": 136,
+    "rssKiB": 402080,
+    "cpuPercent": 98.1,
+    "peakMeasurement": false
+  },
+  "limits": [
+    "One Mac, synthetic clock, one-epoch Eth1 voting period and 64 bootstrap validators",
+    "65 local signing keys preconfigured directly in scheduler; CLI joining from another machine not qualified",
+    "Attestation demonstrated; new validator block proposal not demonstrated",
+    "Store limits enlarged only for this bounded test; no pruning/scalability claim",
+    "No withdrawals, concurrent-index exit lifecycle, network partition or crash injection in this run"
+  ],
+  "sha256": {
+    "tests/test_bellatrix_transition.cpp": "7d0682335fc4d387acac7a70e760e94cf32a6361761225fec406313f9495359a",
+    "CMakeLists.txt": "eab068be770a02216fd3effd82f6f60c2d5ffe53f9747dda66da606db917a6fe",
+    "build-release/nano-bellatrix-transition-tests": "98a6d2324073634d0f5646154f733cbca4005bb8d6e260c4c38772d9eb009167",
+    "build-cmake/qualification/bellatrix-deposit-activation-20260926/test.log": "83a2d9ee9d8819b349f04f9066caa05cba94857c5c41333786073ccfe2e6cf90"
+  }
+}
