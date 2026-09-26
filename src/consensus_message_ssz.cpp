@@ -30,6 +30,15 @@ std::optional<Phase0SignedAttestation> decode_consensus_attestation_ssz(View b,u
  Phase0SignedAttestation a{data(b),{},Bytes(b.begin()+132,b.begin()+228)};a.aggregation_bits.reserve(count);
  for(size_t i=0;i<count;++i){if(checkpoint)checkpoint();a.aggregation_bits.push_back((b[228+i/8]>>(i%8))&1);}if(checkpoint)checkpoint();return a;
 }
+Bytes encode_consensus_voluntary_exit_ssz(const SignedConsensusVoluntaryExit& exit,const std::function<void()>& check){
+ if(check)check();if(exit.signature.size()!=96)throw std::invalid_argument("Invalid voluntary exit signature width");
+ Bytes out(112);for(size_t i=0;i<8;++i){out[i]=uint8_t(exit.epoch>>(8*i));out[8+i]=uint8_t(exit.validator_index>>(8*i));}
+ std::copy(exit.signature.begin(),exit.signature.end(),out.begin()+16);return out;
+}
+std::optional<SignedConsensusVoluntaryExit> decode_consensus_voluntary_exit_ssz(std::span<const uint8_t> b,const std::function<void()>& check){
+ if(check)check();if(b.size()!=112)return std::nullopt;
+ return SignedConsensusVoluntaryExit{number(b,0),number(b,8),Bytes(b.begin()+16,b.end())};
+}
 Bytes encode_consensus_attester_slashing_ssz(const IndexedConsensusAttestation& first,const IndexedConsensusAttestation& second,uint32_t limit,const std::function<void()>& checkpoint){
  auto encode=[&](const IndexedConsensusAttestation& a){
   if(!limit||a.indices.size()>limit||a.signature.size()!=96||a.indices.size()>(UINT32_MAX-228)/8)throw std::invalid_argument("Invalid indexed attestation encoding bounds");

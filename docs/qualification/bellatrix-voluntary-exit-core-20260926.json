@@ -1,0 +1,30 @@
+{
+  "result": "passed",
+  "test": "consensus_bellatrix_voluntary_exit",
+  "durationSeconds": 5.5,
+  "scope": [
+    "112-byte signed voluntary-exit SSZ",
+    "minimum tenure and future epoch admission checks",
+    "invalid signature refusal without publication",
+    "durable v5 pending archive and duplicate suppression",
+    "registry unchanged before block inclusion",
+    "local proposal schedules exit without slashing"
+  ],
+  "syntheticTenureEpochs": 1,
+  "exitEpoch": 6,
+  "withdrawableEpoch": 262,
+  "networkAdmissionQualified": false,
+  "payoutImplemented": false,
+  "sha256": {
+    "src/consensus_bellatrix_reactor.cpp": "7a660f6dc3812ed17259cb1b68fe487a1c120fecd5ab5cc5fb39676b4c5d6510",
+    "src/consensus_bellatrix_local_body.cpp": "a0bb3a639d642a06fffcd88e534587351c195024f4c85d92787f06f5b50e6475",
+    "src/consensus_message_ssz.cpp": "fb2c7693a5fbb569d0e7a7f369e19f3087148b4c587527fd5163bcb92014a4db",
+    "tests/test_bellatrix_transition.cpp": "dc22a514d19a66a481af56333272bcc2bd8964a8a286b2069691017b49034ecf",
+    "build-release/nano-bellatrix-transition-tests": "2df04a06d349e7c812a59b6aaa52789a4683f75384cad74171c36cc4ee84ab3c"
+  },
+  "remaining": [
+    "P2P ingress, inventory and relay",
+    "Restart of pending exits and reorganisation context authentication",
+    "Finalized pruning and complete lifecycle qualification"
+  ]
+}

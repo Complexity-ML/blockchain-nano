@@ -1,0 +1,28 @@
+{
+  "result": "passed",
+  "tests": {
+    "bellatrix_wire_identity": 0.33,
+    "consensus_bellatrix_voluntary_exit_pruning": 44.13
+  },
+  "scope": [
+    "strict 112-byte exit envelopes; legacy and foreign identity refused",
+    "pending exit retained before finality and pruned after finalized scheduling",
+    "replay without new checkpoint; new validator exit relayed after catalog reset",
+    "storage reopen with remaining request"
+  ],
+  "limits": [
+    "synthetic tenure 1 epoch",
+    "single host; two cores in one process and two P2P daemons",
+    "competing branch exit lifecycle not yet qualified"
+  ],
+  "sha256": {
+    "src/consensus_bellatrix_reactor.cpp": "4fed8f129b490af610b185d1d79d6778fb8281e034920076d5f086a43c1c768e",
+    "network/altair_message.hpp": "07fa501297d5865ed789346dc5a94960e2893f59e1277e563c926f09afc07942",
+    "network/altair_core_dispatch.hpp": "518e282acf5361f1456fca1b03785f4e4b05a9585e1e68c5ca162a9322aef550",
+    "tests/test_bellatrix_transition.cpp": "66eb2b76cfeaade4664b98fc6287e0a16312eaf81b63e816f2600ea4df09238e",
+    "tests/test_bellatrix_wire_identity.cpp": "bf39ad93977fb33eb933e2e6ab01bfb87669c180534b7596a459b7b0f5805763",
+    "build-release/nano-bellatrix-transition-tests": "0baba96fcd4c8b20d4e8e5da991f1adc5132754c0ed4e08c40e0c7f17ef51a92",
+    "build-release/nano-bellatrix-wire-identity-tests": "afba158c6f42b1eb7079c0de805464196a32889448653e058a54bcc5f6a2dc63",
+    "build-network/nano-p2p": "a096f7ad4b1b52fef36f8828900539045bc0e49df490d692553878851a3cacb7"
+  }
+}

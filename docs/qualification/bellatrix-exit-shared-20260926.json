@@ -1,0 +1,26 @@
+{
+  "result": "passed",
+  "tests": [
+    "consensus_relay_rejected_vote_progress",
+    "consensus_altair_receipts",
+    "consensus_altair_core_client",
+    "consensus_bellatrix_witness_runtime",
+    "consensus_bellatrix_local_slashing"
+  ],
+  "passed": 5,
+  "durationSeconds": 18.68,
+  "scope": "Affected shared relay, receipt, IPC, witness recovery and local slashing regression",
+  "sha256": {
+    "src/consensus_bellatrix_reactor.cpp": "4fed8f129b490af610b185d1d79d6778fb8281e034920076d5f086a43c1c768e",
+    "src/consensus_bellatrix_local_body.cpp": "0204451d1792d44be3d87fc90cb3db9ca512e81ff734adf77b07677b6223cef2",
+    "network/altair_core_dispatch.hpp": "518e282acf5361f1456fca1b03785f4e4b05a9585e1e68c5ca162a9322aef550",
+    "network/altair_message.hpp": "07fa501297d5865ed789346dc5a94960e2893f59e1277e563c926f09afc07942",
+    "network/altair_archive_relay.hpp": "af43de3f481d079a154d27beb1f8a7ec116ac1e1f7781edb492fb34e443428eb",
+    "network/bellatrix_rpc_service.hpp": "87fd71edb4a0c8d146734c0921a9d1011b94733305c153bba19c1a8a4955e27e",
+    "network/main.cpp": "9c34ca6b8249f6594a621b55d264b5395c340007485302bc35afa352cf158034",
+    "src/rpc.cpp": "487205ac0ff1278720259eac574fc88fae8ae81843cbbe6b9a780884c5cbb609",
+    "build-release/nano": "d7b18c0829625d1010707677cebb739dc1d8f25ddc59ce5dcf7eb74a32e3ec07",
+    "build-release/nano-bellatrix-transition-tests": "28a08cfc26ff320f5af4e84c7611a192f9ce23a8d67040c5b553016923791616",
+    "build-network/nano-p2p": "a096f7ad4b1b52fef36f8828900539045bc0e49df490d692553878851a3cacb7"
+  }
+}

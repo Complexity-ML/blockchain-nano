@@ -50,6 +50,8 @@ std::optional<Bytes> BellatrixDurableReactor::prepare_local_body_locked(uint64_t
  const uint64_t proof_bytes=468+16*uint64_t(t.body.validators_per_committee);
  if(t.body.attester_slashings&&proof_bytes>(UINT64_MAX-reserved)/t.body.attester_slashings)throw std::length_error("Bellatrix slashing reserve overflow");
  reserved+=uint64_t(t.body.attester_slashings)*proof_bytes;
+ if(uint64_t(t.body.voluntary_exits)>(UINT64_MAX-reserved)/112)throw std::length_error("Bellatrix exit reserve overflow");
+ reserved+=uint64_t(t.body.voluntary_exits)*112;
  if(reserved>=t.maximum_block_bytes)throw std::length_error("Bellatrix block capacity cannot hold configured attestation reserve");
  size_t remaining=t.maximum_block_bytes-reserved;
  std::erase_if(pending,[&](const auto& c){const auto n=c.transaction.raw().size();if(n>e.transaction_bytes||remaining<4||n>remaining-4)return true;remaining-=n+4;return false;});
@@ -59,7 +61,7 @@ std::optional<Bytes> BellatrixDurableReactor::prepare_local_body_locked(uint64_t
  auto built=Blockchain::execute_candidate(block,parent.execution_state,std::move(pending),engine.with_checkpoint(check),check,false);
  const auto encoded=encode_bellatrix_execution_payload(payload(built.block),e,t.maximum_block_bytes,check);
  const size_t sync_bytes=(uint64_t(t.state.sync_committee_size)+7)/8+96,fixed=224+sync_bytes;
- std::vector<Bytes> selected_slashings;
+ std::vector<Bytes> selected_slashings;Bytes selected_exits;
  auto assemble=[&](const std::vector<Bytes>& votes){
   Bytes slashings(selected_slashings.size()*4);size_t proof_at=0;
   for(const auto& proof:selected_slashings){offset(slashings,proof_at,slashings.size());proof_at+=4;if(proof.size()>t.maximum_block_bytes-slashings.size())throw std::length_error("Bellatrix slashings budget");slashings.insert(slashings.end(),proof.begin(),proof.end());}
@@ -70,9 +72,10 @@ std::optional<Bytes> BellatrixDurableReactor::prepare_local_body_locked(uint64_t
   // Empty sync participation is a valid aggregate (and incurs normal penalties).
   body[220+(uint64_t(t.state.sync_committee_size)+7)/8]=0xc0;
   offset(body,200,fixed);offset(body,204,fixed);offset(body,208,fixed+slashings.size());
-  offset(body,212,fixed+slashings.size()+attestations.size());offset(body,216,fixed+slashings.size()+attestations.size());offset(body,220+sync_bytes,fixed+slashings.size()+attestations.size());
+  offset(body,212,fixed+slashings.size()+attestations.size());offset(body,216,fixed+slashings.size()+attestations.size());offset(body,220+sync_bytes,fixed+slashings.size()+attestations.size()+selected_exits.size());
   if(slashings.size()>t.maximum_block_bytes-body.size())throw std::length_error("Bellatrix body slashing budget");body.insert(body.end(),slashings.begin(),slashings.end());
   if(attestations.size()>t.maximum_block_bytes-body.size())throw std::length_error("Bellatrix body vote budget");body.insert(body.end(),attestations.begin(),attestations.end());
+  if(selected_exits.size()>t.maximum_block_bytes-body.size())throw std::length_error("Bellatrix body exit budget");body.insert(body.end(),selected_exits.begin(),selected_exits.end());
   if(encoded.size()>t.maximum_block_bytes-body.size())throw std::length_error("Bellatrix body payload budget");body.insert(body.end(),encoded.begin(),encoded.end());return body;
  };
  auto valid=[&](const Bytes& body){return prepare_bellatrix_unsigned_block(parent.state,slot,index,head,body,rules_.transition,parent.execution_block.header,parent.execution_state,history,limits_.replay_slots,limits_.sync_trials,check).has_value();};
@@ -91,6 +94,14 @@ std::optional<Bytes> BellatrixDurableReactor::prepare_local_body_locked(uint64_t
   if(valid(candidate))body=std::move(candidate);else selected_slashings.pop_back();
  }
 
+ for(const auto& [id,wire]:*signed_exits_){
+  if(check)check();if(selected_exits.size()/112>=t.body.voluntary_exits||tried>=maximum_vote_trials)break;
+  const auto exit=decode_consensus_voluntary_exit_ssz(wire->ssz,check);if(!exit)throw std::logic_error("Invalid archived exit encoding");
+  const auto member=registry.validators.find(exit->validator_index);
+  if(member==registry.validators.end()||member->second.exit_epoch!=UINT64_MAX)continue;
+  ++tried;const auto size=selected_exits.size();selected_exits.insert(selected_exits.end(),wire->ssz.begin(),wire->ssz.end());auto candidate=assemble(selected);
+  if(valid(candidate))body=std::move(candidate);else selected_exits.resize(size);
+ }
  // An identical attestation already included on this branch adds no new
  // participation. Do not spend full transition trials re-including it. Only
  // walk recent ancestors of the selected parent, never competing branches.

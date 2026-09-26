@@ -17,7 +17,7 @@ struct AltairWireProfile {
  // Required full identity for Bellatrix; empty preserves the Altair v1 schema.
  std::string consensus_identity{};
 };
-enum class AltairWireKind {block,attestation,attester_slashing};
+enum class AltairWireKind {block,attestation,attester_slashing,voluntary_exit};
 struct AltairWireMessage {AltairWireKind kind;std::vector<uint8_t> ssz;};
 class AltairMessageIngress {
  AltairWireProfile profile_;
@@ -53,9 +53,11 @@ public:
   if(j.at("kind")=="block"){kind=AltairWireKind::block;maximum=profile_.block_bytes;}
   else if(j.at("kind")=="attestation"){kind=AltairWireKind::attestation;maximum=profile_.attestation_bytes;}
   else if(j.at("kind")=="attester_slashing"){kind=AltairWireKind::attester_slashing;maximum=profile_.slashing_bytes;}
+  else if(j.at("kind")=="voluntary_exit"&&!profile_.consensus_identity.empty()){kind=AltairWireKind::voluntary_exit;maximum=112;}
   else return std::nullopt;
   const auto& encoded=j.at("ssz").get_ref<const std::string&>();
   if(encoded.size()<2||!encoded.starts_with("0x")||encoded.size()%2||(encoded.size()-2)/2>maximum)return std::nullopt;
+  if(kind==AltairWireKind::voluntary_exit&&encoded.size()!=226)return std::nullopt;
   // Validate the entire alphabet before allocating binary payload memory.
   if(!std::all_of(encoded.begin()+2,encoded.end(),[](char c){return nibble(c)>=0;}))return std::nullopt;
   AltairWireMessage message{kind,{}};message.ssz.reserve((encoded.size()-2)/2);
@@ -70,12 +72,13 @@ public:
   if(j.at("kind")=="block"){kind=AltairWireKind::block;maximum=profile_.block_bytes;}
   else if(j.at("kind")=="attestation"){kind=AltairWireKind::attestation;maximum=profile_.attestation_bytes;}
   else if(j.at("kind")=="attester_slashing"){kind=AltairWireKind::attester_slashing;maximum=profile_.slashing_bytes;}
+  else if(j.at("kind")=="voluntary_exit"&&!profile_.consensus_identity.empty()){kind=AltairWireKind::voluntary_exit;maximum=112;}
   else return std::nullopt;
   auto envelope=nlohmann::json{{"chainId",profile_.chain_id},{"genesisHash",profile_.genesis_hash},{"forkDigest",profile_.fork_digest},{"kind",j.at("kind")},{"ssz","0x"}};
   if(!profile_.consensus_identity.empty())envelope["consensusIdentity"]=profile_.consensus_identity;
   const auto overhead=envelope.dump().size();
   if(overhead>profile_.frame_bytes)return std::nullopt;maximum=std::min(maximum,(profile_.frame_bytes-overhead)/2);
-  auto bytes=altair_unbase64(j.at("sszBase64").get_ref<const std::string&>(),maximum);if(!bytes)return std::nullopt;
+  auto bytes=altair_unbase64(j.at("sszBase64").get_ref<const std::string&>(),maximum);if(!bytes||(kind==AltairWireKind::voluntary_exit&&bytes->size()!=112))return std::nullopt;
   return AltairWireMessage{kind,std::move(*bytes)};
  }
  Result receive(const std::string& authenticated_peer,std::string_view frame,const Handler& handler,

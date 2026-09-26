@@ -1,0 +1,25 @@
+{
+  "result": "passed",
+  "test": "consensus_bellatrix_voluntary_exit_reorg",
+  "durationSeconds": 10.81,
+  "scope": [
+    "two valid same-slot blocks from synthetic equivocating proposer",
+    "higher-root competing branch selected after proposer boost expires",
+    "exit scheduling rolled back while signed request remains archived",
+    "request reincluded on selected branch",
+    "peer follows reorganisation and storage reopens with matching scheduled exit"
+  ],
+  "limits": [
+    "two cores in one process; two real P2P daemons; one Mac",
+    "synthetic tenure one epoch",
+    "unchanged validator public keys; competing deposit registry allocations not covered",
+    "no payout"
+  ],
+  "sha256": {
+    "src/consensus_bellatrix_reactor.cpp": "4fed8f129b490af610b185d1d79d6778fb8281e034920076d5f086a43c1c768e",
+    "src/consensus_bellatrix_local_body.cpp": "0204451d1792d44be3d87fc90cb3db9ca512e81ff734adf77b07677b6223cef2",
+    "tests/test_bellatrix_transition.cpp": "4ca84e701b6c69ff284889c85c2bc9c261230059675577d9a4da165d92d92697",
+    "build-release/nano-bellatrix-transition-tests": "28a08cfc26ff320f5af4e84c7611a192f9ce23a8d67040c5b553016923791616",
+    "build-network/nano-p2p": "a096f7ad4b1b52fef36f8828900539045bc0e49df490d692553878851a3cacb7"
+  }
+}

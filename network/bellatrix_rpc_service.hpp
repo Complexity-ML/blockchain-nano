@@ -21,6 +21,8 @@ class BellatrixRpcService {
  AltairReceipts receipts_;
  struct CatalogEntry {nano::ConsensusRoot root,parent;uint64_t slot;};
  struct Catalog {std::weak_ptr<const nano::BellatrixSignedBlockArchive> archive;std::vector<CatalogEntry> entries;std::map<nano::ConsensusRoot,size_t> positions;std::string epoch;};
+ struct ExitCatalog {std::weak_ptr<const nano::BellatrixSignedExitArchive> archive;std::vector<CatalogEntry> entries;std::map<nano::ConsensusRoot,size_t> positions;std::string epoch;};
+ std::shared_ptr<const ExitCatalog> exit_catalog_;
  std::mutex catalog_mutex_;std::shared_ptr<const Catalog> catalog_,vote_catalog_,slashing_catalog_;
  std::shared_ptr<const Catalog> catalog(const nano::BellatrixPublishedStore& current,bool votes=false,bool slashings=false){
   std::lock_guard lock(catalog_mutex_);auto& cached=slashings?slashing_catalog_:votes?vote_catalog_:catalog_;const auto archive=slashings?current.signed_slashings:votes?current.signed_votes:current.signed_blocks;
@@ -36,6 +38,15 @@ class BellatrixRpcService {
   std::sort(added.begin(),added.end(),[](const auto& a,const auto& b){return a.slot!=b.slot?a.slot<b.slot:a.root<b.root;});
   for(const auto& entry:added){next->positions.emplace(entry.root,next->entries.size());next->entries.push_back(entry);}
   next->archive=archive;cached=next;return next;
+ }
+ std::shared_ptr<const ExitCatalog> exit_catalog(const nano::BellatrixPublishedStore& current){
+  std::lock_guard lock(catalog_mutex_);const auto archive=current.signed_exits;
+  if(exit_catalog_&&exit_catalog_->archive.lock()==archive)return exit_catalog_;
+  auto next=std::make_shared<ExitCatalog>();bool append=bool(exit_catalog_);
+  if(append)for(const auto& [id,_]:exit_catalog_->positions)if(!archive->contains(id)){append=false;break;}
+  if(append)*next=*exit_catalog_;else{nano::Bytes nonce(32);if(RAND_bytes(nonce.data(),nonce.size())!=1)throw std::runtime_error("Exit catalog randomness unavailable");next->epoch=nano::hex(nonce);}
+  for(const auto& [id,record]:*archive)if(!next->positions.contains(id)){next->positions.emplace(id,next->entries.size());next->entries.push_back({id,record->admission_root,current.state->blocks.at(record->admission_root).header.slot});}
+  next->archive=archive;exit_catalog_=next;return next;
  }
  static nano::ConsensusRoot block_root(const std::string& encoded){
   if(encoded.size()!=66)throw nano::RpcError(-32602,"Invalid Bellatrix block root");const auto bytes=nano::unhex(encoded);
@@ -91,6 +102,20 @@ public:
   const auto& bytes=*found->second;if(bytes.size()>(slashings?profile_.slashing_bytes:vote?profile_.attestation_bytes:profile_.block_bytes)||bytes.size()/3+(bytes.size()%3!=0)>(16*1024*1024-1024)/4)throw nano::RpcError(-32005,"Bellatrix block exceeds IPC export capacity");
   return nano::Json{{"available",true},{"root",root},{"sequence",nano::quantity(nano::Int(std::to_string(current.token.sequence)))},{"digest",nano::hex(current.token.digest)},
    {"envelope",{{"consensusIdentity",consensus_identity_},{"chainId",profile_.chain_id},{"genesisHash",profile_.genesis_hash},{"forkDigest",profile_.fork_digest},{"kind",slashings?"attester_slashing":vote?"attestation":"block"},{"sszBase64",altair_base64(bytes)}}}};
+ }
+ nano::Json exit(const std::string& root){
+  const auto id=block_root(root);const auto current=reactor_.current();const auto found=current.signed_exits->find(id);
+  if(found==current.signed_exits->end())return nano::Json{{"available",false}};
+  return nano::Json{{"available",true},{"root",root},{"sequence",nano::quantity(nano::Int(std::to_string(current.token.sequence)))},{"digest",nano::hex(current.token.digest)},
+   {"envelope",{{"consensusIdentity",consensus_identity_},{"chainId",profile_.chain_id},{"genesisHash",profile_.genesis_hash},{"forkDigest",profile_.fork_digest},{"kind","voluntary_exit"},{"sszBase64",altair_base64(found->second->ssz)}}}};
+ }
+ nano::Json exit_inventory(const std::string& cursor,uint64_t requested){
+  if(!requested)throw nano::RpcError(-32602,"Positive exit page limit required");const auto current=reactor_.current();const auto index=exit_catalog(current);size_t offset=0;
+  if(cursor!="0x"){const auto found=index->positions.find(block_root(cursor));if(found==index->positions.end())throw nano::RpcError(-32602,"Unknown exit inventory cursor");offset=found->second+1;}
+  const auto budget=std::min(profile_.frame_bytes,size_t(16*1024*1024));if(budget<=512)throw nano::RpcError(-32005,"Exit inventory capacity unavailable");const auto maximum=std::min<uint64_t>(requested,(budget-512)/256);if(!maximum)throw nano::RpcError(-32005,"Exit inventory capacity unavailable");
+  nano::Json entries=nano::Json::array();std::string last;
+  for(size_t n=0;n<maximum&&offset<index->entries.size();++n,++offset){const auto& entry=index->entries[offset];last=nano::hex(nano::Bytes(entry.root.begin(),entry.root.end()));entries.push_back({{"root",last},{"admissionRoot",nano::hex(nano::Bytes(entry.parent.begin(),entry.parent.end()))},{"slot",nano::quantity(nano::Int(std::to_string(entry.slot)))}});}
+  return nano::Json{{"sequence",nano::quantity(nano::Int(std::to_string(current.token.sequence)))},{"digest",nano::hex(current.token.digest)},{"catalogEpoch",index->epoch},{"exits",entries},{"next",offset==index->entries.size()?nano::Json(nullptr):nano::Json(last)},{"missingSignedBlocks",0}};
  }
  nano::Json inventory(const std::string& cursor,uint64_t requested,bool votes=false,bool slashings=false){
   if(!requested)throw nano::RpcError(-32602,"Positive Bellatrix page limit required");const auto current=reactor_.current();

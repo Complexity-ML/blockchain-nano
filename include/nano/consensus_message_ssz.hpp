@@ -1,6 +1,9 @@
 #pragma once
 #include "nano/consensus_attestation_inclusion.hpp"
+#include "nano/consensus_exit.hpp"
 namespace nano {
+Bytes encode_consensus_voluntary_exit_ssz(const SignedConsensusVoluntaryExit&,const std::function<void()>& checkpoint={});
+std::optional<SignedConsensusVoluntaryExit> decode_consensus_voluntary_exit_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
 // Canonical pre-Electra attestation / indexed-attestation schemas (Phase0 through
 // Deneb). Encoding validation only: signatures, committee membership and gossip
 // time windows are validated by the event admission layer, never by this codec.

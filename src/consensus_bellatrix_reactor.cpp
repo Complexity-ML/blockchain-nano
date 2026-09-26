@@ -33,16 +33,24 @@ std::optional<BellatrixForkStore> checked_vote(const BellatrixForkStore& store,c
  if(!prepare_bellatrix_store_vote(future,vote,rules,limits.replay_slots,limits.sync_trials,check))return std::nullopt;
  return store;
 }
-std::string durable_snapshot(const BellatrixForkStore& store,const BellatrixSignedBlockArchive& archive,const BellatrixSignedVoteArchive& votes,const BellatrixSignedVoteArchive& slashings,const BellatrixForkBlockRules& rules,const BellatrixStoreSnapshotLimits& limits,const std::function<void()>& cancel){
+bool valid_exit_signature(const SignedConsensusVoluntaryExit& exit,const Phase0ForkSlashingContext& context,const Phase0ExitRules& rules,const std::function<void()>& check){
+ if(check)check();const auto found=context.registry.validators.find(exit.validator_index);
+ if(found==context.registry.validators.end()||exit.epoch>context.registry.epoch)return false;
+ const auto& member=found->second;
+ if(member.activation_epoch>context.registry.epoch||context.registry.epoch-member.activation_epoch<rules.shard_committee_period)return false;
+ const auto version=exit.epoch<context.fork.epoch?context.fork.previous_version:context.fork.current_version;
+ return verify_consensus_bls(member.public_key,consensus_signing_root(consensus_voluntary_exit_root(exit.epoch,exit.validator_index),consensus_domain({4,0,0,0},version,context.genesis_root)),exit.signature);
+}
+std::string durable_snapshot(const BellatrixForkStore& store,const BellatrixSignedBlockArchive& archive,const BellatrixSignedVoteArchive& votes,const BellatrixSignedVoteArchive& slashings,const BellatrixSignedExitArchive& exits,const BellatrixForkBlockRules& rules,const BellatrixStoreSnapshotLimits& limits,const std::function<void()>& cancel){
  // Retain byte-for-byte v1 encoding while both signed archives are empty.
- auto encoded=bellatrix_store_snapshot(store,rules,limits,cancel);if(archive.empty()&&votes.empty()&&slashings.empty())return encoded;
+ auto encoded=bellatrix_store_snapshot(store,rules,limits,cancel);if(archive.empty()&&votes.empty()&&slashings.empty()&&exits.empty())return encoded;
  archive_require(archive.size()<store.blocks.size());size_t total=0;Json blocks=Json::array();
  for(const auto& [id,bytes]:archive){
   if(cancel)cancel();archive_require(bytes&&id!=store.timed.view.anchor&&store.blocks.contains(id)&&bytes->size()<=rules.transition.consensus.maximum_block_bytes&&bytes->size()<=limits.envelope_bytes/2-total);total+=bytes->size();
   blocks.push_back(Json::array({hex(Bytes(id.begin(),id.end())),hex(*bytes)}));
  }
- Json document{{"format",!slashings.empty()?"nano-bellatrix-durable-v4":votes.empty()?"nano-bellatrix-durable-v2":"nano-bellatrix-durable-v3"},{"store",Json::parse(encoded)},{"signedBlocks",std::move(blocks)}};
- if(!votes.empty()||!slashings.empty()){
+ Json document{{"format",!exits.empty()?"nano-bellatrix-durable-v5":!slashings.empty()?"nano-bellatrix-durable-v4":votes.empty()?"nano-bellatrix-durable-v2":"nano-bellatrix-durable-v3"},{"store",Json::parse(encoded)},{"signedBlocks",std::move(blocks)}};
+ if(!votes.empty()||!slashings.empty()||!exits.empty()){
   archive_require(votes.size()<=limits.messages);Json messages=Json::array();
   const auto epoch=store.timed.view.current_epoch,oldest=epoch?epoch-1:0;
   for(const auto& [id,bytes]:votes){
@@ -52,21 +60,27 @@ std::string durable_snapshot(const BellatrixForkStore& store,const BellatrixSign
   }
   document["signedVotes"]=std::move(messages);
  }
- if(!slashings.empty()){
+ if(!slashings.empty()||!exits.empty()){
   archive_require(slashings.size()<=limits.equivocations);Json list=Json::array();
   for(const auto& [id,wire]:slashings){if(cancel)cancel();archive_require(wire&&wire->size()<=464+uint64_t(rules.transition.consensus.body.validators_per_committee)*16&&wire->size()<=limits.envelope_bytes/2-total);total+=wire->size();list.push_back(Json::array({hex(Bytes(id.begin(),id.end())),hex(*wire)}));}
   document["signedSlashings"]=std::move(list);
  }
+ if(!exits.empty()){
+  archive_require(exits.size()<=limits.messages);Json list=Json::array();
+  for(const auto& [id,record]:exits){if(cancel)cancel();archive_require(record&&record->ssz.size()==112&&store.blocks.contains(record->admission_root)&&144<=limits.envelope_bytes/2-total);total+=144;list.push_back(Json::array({hex(Bytes(id.begin(),id.end())),hex(Bytes(record->admission_root.begin(),record->admission_root.end())),hex(record->ssz)}));}
+  document["signedExits"]=std::move(list);
+ }
  auto result=document.dump();archive_require(result.size()<=limits.envelope_bytes);if(cancel)cancel();return result;
 }
-struct Restored {BellatrixForkStore store;std::shared_ptr<const BellatrixSignedBlockArchive> blocks;std::shared_ptr<const BellatrixSignedVoteArchive> votes,slashings;};
+struct Restored {BellatrixForkStore store;std::shared_ptr<const BellatrixSignedBlockArchive> blocks;std::shared_ptr<const BellatrixSignedVoteArchive> votes,slashings;std::shared_ptr<const BellatrixSignedExitArchive> exits;};
 Restored restore_durable_snapshot(std::string_view bytes,const Bytes& digest,const BellatrixForkBlockRules& rules,const BellatrixStoreSnapshotLimits& limits,const std::function<void()>& cancel){
  archive_require(bytes.size()<=limits.envelope_bytes&&digest.size()==32);if(cancel)cancel();archive_require(sha256(Bytes(bytes.begin(),bytes.end()))==digest);
  const auto document=Json::parse(bytes);
- if(document.value("format",Json())=="nano-bellatrix-store-v1")return {bellatrix_store_from_snapshot(bytes,digest,rules,limits,cancel),std::make_shared<const BellatrixSignedBlockArchive>(),std::make_shared<const BellatrixSignedVoteArchive>(),std::make_shared<const BellatrixSignedVoteArchive>()};
- const bool with_slashings=document.value("format",Json())=="nano-bellatrix-durable-v4";
+ if(document.value("format",Json())=="nano-bellatrix-store-v1")return {bellatrix_store_from_snapshot(bytes,digest,rules,limits,cancel),std::make_shared<const BellatrixSignedBlockArchive>(),std::make_shared<const BellatrixSignedVoteArchive>(),std::make_shared<const BellatrixSignedVoteArchive>(),std::make_shared<const BellatrixSignedExitArchive>()};
+ const bool with_exits=document.value("format",Json())=="nano-bellatrix-durable-v5";
+ const bool with_slashings=with_exits||document.value("format",Json())=="nano-bellatrix-durable-v4";
  const bool with_votes=with_slashings||document.value("format",Json())=="nano-bellatrix-durable-v3";
- archive_require(document.is_object()&&document.size()==(with_slashings?5:with_votes?4:3)&&(with_votes||document.at("format")=="nano-bellatrix-durable-v2")&&document.at("signedBlocks").is_array()&&(with_votes||!document.at("signedBlocks").empty())&&document.at("signedBlocks").size()<=limits.blocks);
+ archive_require(document.is_object()&&document.size()==(with_exits?6:with_slashings?5:with_votes?4:3)&&(with_votes||document.at("format")=="nano-bellatrix-durable-v2")&&document.at("signedBlocks").is_array()&&(with_votes||!document.at("signedBlocks").empty())&&document.at("signedBlocks").size()<=limits.blocks);
  const auto serialized=document.at("store").dump();auto store=bellatrix_store_from_snapshot(serialized,sha256(Bytes(serialized.begin(),serialized.end())),rules,limits,cancel);
  auto archive=std::make_shared<BellatrixSignedBlockArchive>();size_t total=0;
  for(const auto& entry:document.at("signedBlocks")){
@@ -93,7 +107,7 @@ Restored restore_durable_snapshot(std::string_view bytes,const Bytes& digest,con
  }
  auto slashings=std::make_shared<BellatrixSignedVoteArchive>();
  if(with_slashings){
-  const auto& list=document.at("signedSlashings");archive_require(list.is_array()&&!list.empty()&&list.size()<=limits.equivocations);
+  const auto& list=document.at("signedSlashings");archive_require(list.is_array()&&(with_exits||!list.empty())&&list.size()<=limits.equivocations);
   for(const auto& entry:list){
    if(cancel)cancel();archive_require(entry.is_array()&&entry.size()==2&&entry[0].is_string()&&entry[1].is_string());
    const auto root=entry[0].get<std::string>(),payload=entry[1].get<std::string>();
@@ -104,7 +118,25 @@ Restored restore_durable_snapshot(std::string_view bytes,const Bytes& digest,con
    archive_require(slashings->emplace(archive_array<32>(digest,0),std::move(wire)).second);
   }
  }
- archive_require(durable_snapshot(store,*archive,*votes,*slashings,rules,limits,cancel)==bytes);return {std::move(store),std::move(archive),std::move(votes),std::move(slashings)};
+ auto exits=std::make_shared<BellatrixSignedExitArchive>();
+ if(with_exits){
+  const auto& list=document.at("signedExits");archive_require(list.is_array()&&!list.empty()&&list.size()<=limits.messages);
+  const auto& t=rules.transition.consensus;std::set<uint64_t> indices;
+  for(const auto& entry:list){
+   if(cancel)cancel();archive_require(entry.is_array()&&entry.size()==3&&entry[0].is_string()&&entry[1].is_string()&&entry[2].is_string());
+   const auto root=entry[0].get<std::string>(),admission=entry[1].get<std::string>(),payload=entry[2].get<std::string>();
+   archive_require(root.size()==66&&admission.size()==66&&payload.size()==226&&144<=limits.envelope_bytes/2-total);
+   auto wire=unhex(payload);const auto digest=sha256(wire);auto admission_bytes=unhex(admission);
+   archive_require(admission_bytes.size()==32&&hex(admission_bytes)==admission&&hex(wire)==payload&&hex(digest)==root);total+=144;
+   const auto admission_root=archive_array<32>(admission_bytes,0);archive_require(store.blocks.contains(admission_root));
+   const auto& block=store.blocks.at(admission_root);
+   const auto context=bellatrix_fork_block_context(block.state,block.header,{t.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},t.state,cancel);
+   const auto exit=decode_consensus_voluntary_exit_ssz(wire,cancel);archive_require(exit&&valid_exit_signature(*exit,context,t.exit,cancel)&&indices.insert(exit->validator_index).second);
+   auto record=std::make_shared<const BellatrixSignedExitRecord>(BellatrixSignedExitRecord{admission_root,std::move(wire)});
+   archive_require(exits->emplace(archive_array<32>(digest,0),std::move(record)).second);
+  }
+ }
+ archive_require(durable_snapshot(store,*archive,*votes,*slashings,*exits,rules,limits,cancel)==bytes);return {std::move(store),std::move(archive),std::move(votes),std::move(slashings),std::move(exits)};
 }
 }
 static_assert(std::is_nothrow_move_assignable_v<std::optional<ForkCheckpointToken>>);
@@ -147,8 +179,9 @@ void BellatrixDurableReactor::invalidate(){
  if(execution_){std::lock_guard chain_lock(execution_->mutex_);execution_->beacon_ready_=false;}
 }
 void BellatrixDurableReactor::require_available()const{if(unavailable_||!state_||!token_)throw std::runtime_error("Bellatrix reactor unavailable; reopen and resolve checkpoint required");}
-void BellatrixDurableReactor::publish(BellatrixForkStore candidate,std::shared_ptr<const BellatrixSignedBlockArchive> archive,std::shared_ptr<const BellatrixSignedVoteArchive> votes,const std::function<void()>& checkpoint,std::shared_ptr<const BellatrixSignedVoteArchive> slashings){
+void BellatrixDurableReactor::publish(BellatrixForkStore candidate,std::shared_ptr<const BellatrixSignedBlockArchive> archive,std::shared_ptr<const BellatrixSignedVoteArchive> votes,const std::function<void()>& checkpoint,std::shared_ptr<const BellatrixSignedVoteArchive> slashings,std::shared_ptr<const BellatrixSignedExitArchive> exits){
  if(!slashings)slashings=signed_slashings_;
+ if(!exits)exits=signed_exits_;
  auto next=std::make_shared<const BellatrixForkStore>(std::move(candidate));
  const auto oldest=next->timed.view.current_epoch?next->timed.view.current_epoch-1:0;
  if(std::any_of(votes->begin(),votes->end(),[&](const auto& entry){return archive_number(*entry.second,92)<oldest;})){
@@ -173,7 +206,14 @@ void BellatrixDurableReactor::publish(BellatrixForkStore candidate,std::shared_p
   }
   if(retained->size()!=slashings->size())slashings=std::move(retained);
  }
- const auto encoded=durable_snapshot(*next,*archive,*votes,*slashings,rules_,limits_,checkpoint);
+ if(!exits->empty()&&state_&&state_->timed.view.finalized.root!=next->timed.view.finalized.root){
+  const auto& finalized=next->blocks.at(next->timed.view.finalized.root);const auto& t=rules_.transition.consensus;
+  const auto context=bellatrix_fork_block_context(finalized.state,finalized.header,{t.epoch,rules_.transition.execution,rules_.transition.maximum_state_bytes},t.state,checkpoint);
+  auto retained=std::make_shared<BellatrixSignedExitArchive>();
+  for(const auto& [id,wire]:*exits){if(checkpoint)checkpoint();const auto member=context.registry.validators.find(archive_number(wire->ssz,8));if(member==context.registry.validators.end()||member->second.exit_epoch==UINT64_MAX)retained->emplace(id,wire);}
+  if(retained->size()!=exits->size())exits=std::move(retained);
+ }
+ const auto encoded=durable_snapshot(*next,*archive,*votes,*slashings,*exits,rules_,limits_,checkpoint);
  if(checkpoint)checkpoint();
  // A retransmission with identical durable contents is already acknowledged by
  // this checkpoint. Do not invalidate local duty tokens or amplify disk writes
@@ -216,7 +256,7 @@ void BellatrixDurableReactor::publish(BellatrixForkStore candidate,std::shared_p
   else committed=disk_.commit_execution_checkpoint(chain_id_,genesis_,token_,tip->header.hash(),common_height,common_hash,suffix,encoded,limits_.envelope_bytes,limits_.blocks);
  }
  catch(...){unavailable_=true;if(execution_){std::lock_guard lock(execution_->mutex_);execution_->beacon_ready_=false;}throw;}
- token_=std::move(committed);state_=std::move(next);signed_blocks_=std::move(archive);signed_votes_=std::move(votes);signed_slashings_=std::move(slashings);
+ token_=std::move(committed);state_=std::move(next);signed_blocks_=std::move(archive);signed_votes_=std::move(votes);signed_slashings_=std::move(slashings);signed_exits_=std::move(exits);
 }
 BellatrixDurableReactor::BellatrixDurableReactor(Blockchain& execution,BellatrixForkBlockRules rules,
  BellatrixStoreSnapshotLimits limits,BellatrixForkStore initial,const std::function<void()>& checkpoint,ChainStore* witness):
@@ -239,7 +279,7 @@ BellatrixDurableReactor::BellatrixDurableReactor(ChainStore& disk,Int chain,Byte
  const auto& head=bellatrix_fork_head(restored.store,rules_,checkpoint);const auto tip=disk_.latest();const auto execution=disk_.state_at(head.execution_block.header.number);
  archive_require(chain_id_==rules_.transition.chain_id&&tip&&tip->header.hash()==head.execution_block.header.hash()&&execution&&execution->root()==head.execution_state.root());
  for(const auto& receipt:head.receipts){if(checkpoint)checkpoint();const auto persisted=disk_.receipt(receipt.transaction_hash);archive_require(persisted&&persisted->to_json()==receipt.to_json());}
- state_=std::make_shared<const BellatrixForkStore>(std::move(restored.store));signed_blocks_=std::move(restored.blocks);signed_votes_=std::move(restored.votes);signed_slashings_=std::move(restored.slashings);token_=expected;
+ state_=std::make_shared<const BellatrixForkStore>(std::move(restored.store));signed_blocks_=std::move(restored.blocks);signed_votes_=std::move(restored.votes);signed_slashings_=std::move(restored.slashings);signed_exits_=std::move(restored.exits);token_=expected;
  if(execution_){
   auto finalized=state_->blocks.at(state_->timed.view.finalized.root).execution_block;
   const auto canonical=disk_.block_by_number(finalized.header.number);archive_require(canonical&&canonical->header.hash()==finalized.header.hash());
@@ -258,22 +298,22 @@ BellatrixDurableReactor::BellatrixDurableReactor(Blockchain& execution,Bellatrix
  const auto encoded=intent.at("snapshot").get<std::string>();
  auto restored=restore_durable_snapshot(encoded,next->digest,rules_,limits_,checkpoint);
  // Re-encoding must be identical before any replay publication can write.
- archive_require(durable_snapshot(restored.store,*restored.blocks,*restored.votes,*restored.slashings,rules_,limits_,checkpoint)==encoded);
+ archive_require(durable_snapshot(restored.store,*restored.blocks,*restored.votes,*restored.slashings,*restored.exits,rules_,limits_,checkpoint)==encoded);
  const auto primary=disk_.fork_checkpoint(chain_id_,genesis_,limits_.envelope_bytes);
  const auto actual=primary?std::optional<ForkCheckpointToken>(primary->token):std::nullopt;
  archive_require(actual==next||actual==previous);witness_token_=saved->token;
  if(actual!=next){
-  token_=previous;publish(std::move(restored.store),std::move(restored.blocks),std::move(restored.votes),checkpoint,std::move(restored.slashings));return;
+  token_=previous;publish(std::move(restored.store),std::move(restored.blocks),std::move(restored.votes),checkpoint,std::move(restored.slashings),std::move(restored.exits));return;
  }
  const auto& head=bellatrix_fork_head(restored.store,rules_,checkpoint);const auto tip=disk_.latest();const auto state=disk_.state_at(head.execution_block.header.number);
  archive_require(chain_id_==rules_.transition.chain_id&&tip&&tip->header.hash()==head.execution_block.header.hash()&&state&&state->root()==head.execution_state.root());
  for(const auto& receipt:head.receipts){if(checkpoint)checkpoint();const auto persisted=disk_.receipt(receipt.transaction_hash);archive_require(persisted&&persisted->to_json()==receipt.to_json());}
  auto finalized=restored.store.blocks.at(restored.store.timed.view.finalized.root).execution_block;
  const auto canonical=disk_.block_by_number(finalized.header.number);archive_require(canonical&&canonical->header.hash()==finalized.header.hash());
- state_=std::make_shared<const BellatrixForkStore>(std::move(restored.store));signed_blocks_=std::move(restored.blocks);signed_votes_=std::move(restored.votes);signed_slashings_=std::move(restored.slashings);token_=*next;
+ state_=std::make_shared<const BellatrixForkStore>(std::move(restored.store));signed_blocks_=std::move(restored.blocks);signed_votes_=std::move(restored.votes);signed_slashings_=std::move(restored.slashings);signed_exits_=std::move(restored.exits);token_=*next;
  std::lock_guard chain_lock(execution_->mutex_);execution_->beacon_finalized_=std::move(finalized);execution_->beacon_ready_=true;
 }
-BellatrixPublishedStore BellatrixDurableReactor::current()const{std::lock_guard lock(mutex_);require_available();return {state_,*token_,signed_blocks_,signed_votes_,signed_slashings_};}
+BellatrixPublishedStore BellatrixDurableReactor::current()const{std::lock_guard lock(mutex_);require_available();return {state_,*token_,signed_blocks_,signed_votes_,signed_slashings_,signed_exits_};}
 std::optional<Phase0SignedAttestation> BellatrixDurableReactor::sign_attestation(uint64_t index,
  uint64_t slot,const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected,BeaconSigningJournal& journal,
  const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint){
@@ -538,6 +578,21 @@ bool BellatrixDurableReactor::slashing(const IndexedConsensusAttestation& a,cons
 }
 
 namespace nano {
+bool BellatrixDurableReactor::voluntary_exit_ssz(std::span<const uint8_t> wire,const std::function<void()>& check){
+ const auto exit=decode_consensus_voluntary_exit_ssz(wire,check);if(!exit)return false;
+ std::lock_guard lock(mutex_);require_available();const auto& t=rules_.transition.consensus;
+ const auto& head=bellatrix_fork_head(*state_,rules_,check);
+ const auto context=bellatrix_fork_block_context(head.state,head.header,{t.epoch,rules_.transition.execution,rules_.transition.maximum_state_bytes},t.state,check);
+ if(!valid_exit_signature(*exit,context,t.exit,check))return false;
+ const auto& finalized=state_->blocks.at(state_->timed.view.finalized.root);
+ const auto final_context=bellatrix_fork_block_context(finalized.state,finalized.header,{t.epoch,rules_.transition.execution,rules_.transition.maximum_state_bytes},t.state,check);
+ const auto member=final_context.registry.validators.find(exit->validator_index);
+ if(member!=final_context.registry.validators.end()&&member->second.exit_epoch!=UINT64_MAX)return true;
+ for(const auto& [_,saved]:*signed_exits_){if(check)check();if(archive_number(saved->ssz,8)==exit->validator_index)return true;}
+ if(signed_exits_->size()>=limits_.messages)throw std::length_error("Bellatrix exit archive capacity");
+ auto exits=std::make_shared<BellatrixSignedExitArchive>(*signed_exits_);auto record=std::make_shared<const BellatrixSignedExitRecord>(BellatrixSignedExitRecord{consensus_beacon_header_root(head.header),Bytes(wire.begin(),wire.end())});
+ const auto id=archive_array<32>(sha256(record->ssz),0);exits->emplace(id,std::move(record));publish(*state_,signed_blocks_,signed_votes_,check,{},std::move(exits));return true;
+}
 bool BellatrixDurableReactor::vote_ssz(std::span<const uint8_t> bytes,const std::function<void()>& checkpoint){
  auto decoded=decode_consensus_attestation_ssz(bytes,rules_.transition.consensus.body.validators_per_committee,checkpoint);
  if(!decoded){std::lock_guard lock(mutex_);require_available();return false;}

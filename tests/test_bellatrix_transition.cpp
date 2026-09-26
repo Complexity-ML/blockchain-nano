@@ -88,13 +88,17 @@ int main(int argc,char** argv){try{
  const bool distributed=partition||(argc==4&&std::string(argv[1])=="--distributed-finality");
  const bool crash=argc==4&&std::string(argv[1])=="--crash-runtime";
  const bool managed=crash||distributed||(argc==4&&std::string(argv[1])=="--managed-runtime");
+ const bool exits_reorg=argc==3&&std::string(argv[1])=="--exit-reorg";
+ const bool exits_pruning=argc==3&&std::string(argv[1])=="--exit-pruning";
+ const bool exits_network=exits_reorg||exits_pruning||(argc==3&&std::string(argv[1])=="--exit-network");
+ const bool exits_only=exits_network||(argc==2&&std::string(argv[1])=="--exit-loop");
  const bool pruning=argc==3&&std::string(argv[1])=="--slashing-pruning";
  const bool slashing_network=pruning||(argc==3&&std::string(argv[1])=="--slashing-network");
- const bool network=slashing_network||(argc==3&&std::string(argv[1])=="--validator-network");
+ const bool network=exits_network||slashing_network||(argc==3&&std::string(argv[1])=="--validator-network");
  const bool recovery=argc==2&&std::string(argv[1])=="--runtime-recovery";
  const bool operations=argc==2&&std::string(argv[1])=="--runtime-slashing";
  const bool runtime_only=operations||recovery||(argc==2&&std::string(argv[1])=="--runtime");
- const bool validator_only=network||(argc==2&&std::string(argv[1])=="--validator-loop");
+ const bool validator_only=exits_only||network||(argc==2&&std::string(argv[1])=="--validator-loop");
  check(argc==1||validator_only||runtime_only||managed,"unknown Bellatrix qualification arguments");
  const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-bellatrix-containers-official",source=fixtures/"consensus-bellatrix-slots-official";
  const auto manifest=load(source/"manifest.json");check(manifest.at("commit")=="bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908","initial state revision");
@@ -106,6 +110,8 @@ int main(int argc,char** argv){try{
  const auto clock_manifest=load(fixtures/"consensus-altair-fork-head-official/manifest.json");
  check(hex(sha256(binary(clock_file))).substr(2)==clock_manifest.at("referenceFiles").at("minimal-config-v1.6.0-beta.0.yaml").at("sha256").get<std::string>(),"clock config digest");
  const auto seconds=parameter(read(clock_file),"SECONDS_PER_SLOT");
+ // Explicit synthetic lifecycle profile: one epoch of tenure for this scenario.
+ if(exits_only)common.exit.shard_committee_period=1;
  const BellatrixTransitionRules r{common,{uint32_t(p("MAX_EXTRA_DATA_BYTES")),uint32_t(p("MAX_BYTES_PER_TRANSACTION")),uint32_t(p("MAX_TRANSACTIONS_PER_PAYLOAD"))},4*1024*1024,seconds,1337,ReplayPolicy::RequireChainId};
  const auto& l=r.consensus.state;const auto& duties=r.consensus.attestation.duties;const uint64_t slots=duties.slots_per_epoch;
  const size_t hist=176+64*l.slots_per_historical_root,randao=hist+96,execution_field=randao+32*l.epochs_per_historical_vector+8*l.epochs_per_slashings_vector+229+96*l.sync_committee_size;
@@ -203,6 +209,96 @@ int main(int argc,char** argv){try{
      BellatrixValidatorLoop loop(bound,clock,seconds*1000,slots,128,std::move(keys),[&]{return wall.load();});
      std::unique_ptr<BellatrixNetworkPair> peers;
      if(network)peers=std::make_unique<BellatrixNetworkPair>(live.path,argv[2],g,fork_rules,reactor_limits,*store,chain,bound,clock,wall);
+     if(exits_only){
+      Key exiting(0);SignedConsensusVoluntaryExit request{0,0,{}};
+      auto sign_exit=[&](SignedConsensusVoluntaryExit& exit){const auto view=bound.current();const auto& h=bellatrix_fork_head(*view.state,fork_rules);const auto& t=fork_rules.transition.consensus;const auto ctx=bellatrix_fork_block_context(h.state,h.header,{t.epoch,fork_rules.transition.execution,fork_rules.transition.maximum_state_bytes},t.state);const auto version=exit.epoch<ctx.fork.epoch?ctx.fork.previous_version:ctx.fork.current_version;exit.signature=Key(exit.validator_index).sign(consensus_signing_root(consensus_voluntary_exit_root(exit.epoch,exit.validator_index),consensus_domain({4,0,0,0},version,ctx.genesis_root)));};
+      sign_exit(request);check(!bound.voluntary_exit_ssz(encode_consensus_voluntary_exit_ssz(request)),"exit accepted before minimum active tenure");
+      for(uint64_t slot=2;slot<=slots;++slot){wall=(genesis_time+slot*seconds)*1000;loop.poll();if(peers)peers->sync(chain.tip().header.hash());}
+      request.epoch=1;sign_exit(request);const auto wire=encode_consensus_voluntary_exit_ssz(request);
+      const auto decoded=decode_consensus_voluntary_exit_ssz(wire);check(decoded&&decoded->epoch==request.epoch&&decoded->validator_index==request.validator_index&&decoded->signature==request.signature,"exit SSZ round trip");
+      auto invalid=wire;invalid.back()^=1;const auto before=bound.current().token;
+      check(!bound.voluntary_exit_ssz(invalid)&&bound.current().token==before,"invalid exit changed checkpoint");
+      auto future=request;future.epoch=2;sign_exit(future);check(!bound.voluntary_exit_ssz(encode_consensus_voluntary_exit_ssz(future)),"future exit admitted");
+      check(bound.voluntary_exit_ssz(wire)&&bound.current().signed_exits->size()==1,"eligible exit not archived");
+      if(peers)until([&]{return peers->reactor->current().signed_exits->size()==1;},"voluntary exit received before block",20);
+      const auto admitted=bound.current().token;check(bound.voluntary_exit_ssz(wire)&&bound.current().token==admitted,"duplicate exit amplified checkpoint");
+      const auto disk=chain.store().fork_checkpoint(r.chain_id,execution_genesis.header.hash(),reactor_limits.envelope_bytes,admitted);
+      check(disk&&Json::parse(disk->snapshot).at("format")=="nano-bellatrix-durable-v5","pending exit not in durable snapshot");
+      const auto& t=fork_rules.transition.consensus;auto context=[&]{const auto v=bound.current();const auto& h=bellatrix_fork_head(*v.state,fork_rules);return bellatrix_fork_block_context(h.state,h.header,{t.epoch,fork_rules.transition.execution,fork_rules.transition.maximum_state_bytes},t.state);};
+      check(context().registry.validators.at(0).exit_epoch==UINT64_MAX,"admission mutated registry before block");
+      if(exits_reorg){
+       const auto next_slot=slots+1;wall=(genesis_time+next_slot*seconds)*1000;clock.poll();
+       const auto view=bound.current();const auto& parent=bellatrix_fork_head(*view.state,fork_rules);const auto parent_root=consensus_beacon_header_root(parent.header);
+       const BellatrixEpochRules er{t.epoch,fork_rules.transition.execution,fork_rules.transition.maximum_state_bytes};
+       const auto identity=prepare_bellatrix_proposer_identity(parent.state,parent.header,next_slot,er,t.state,t.attestation.duties,reactor_limits.replay_slots,reactor_limits.sync_trials);check(bool(identity),"missing reorg proposer");
+       Key proposer_key(identity->index);const auto ctx=context();const auto epoch=next_slot/slots;ConsensusRoot epoch_root{};for(unsigned i=0;i<8;++i)epoch_root[i]=uint8_t(epoch>>(8*i));
+       const auto version=epoch<ctx.fork.epoch?ctx.fork.previous_version:ctx.fork.current_version;
+       const auto reveal=proposer_key.sign(consensus_signing_root(epoch_root,consensus_domain({2,0,0,0},version,ctx.genesis_root)));
+       const auto body=bound.prepare_local_body(identity->index,next_slot,reveal,sender,view.token,128);check(bool(body),"missing exit body");
+       auto build=[&](const Bytes& contents){
+        auto history=[&](const Int& n){return bellatrix_execution_history(*view.state,parent_root,n);};
+        const auto built=prepare_bellatrix_unsigned_block(parent.state,next_slot,identity->index,parent_root,contents,fork_rules.transition,parent.execution_block.header,parent.execution_state,history,reactor_limits.replay_slots,reactor_limits.sync_trials);check(bool(built),"invalid reorg candidate");
+        const auto& message=built->message_ssz;const ConsensusBeaconHeader h{little(message,0,8),little(message,8,8),root_at(message,16),root_at(message,48),bellatrix_beacon_body_root(std::span<const uint8_t>(message).subspan(84),t.body,t.state.sync_committee_size,fork_rules.transition.execution,t.maximum_block_bytes)};
+        const auto root=consensus_beacon_header_root(h);const auto signature=proposer_key.sign(consensus_signing_root(root,consensus_domain({0,0,0,0},version,ctx.genesis_root)));
+        Bytes signed_block(100);put(signed_block,0,100,4);std::copy(signature.begin(),signature.end(),signed_block.begin()+4);signed_block.insert(signed_block.end(),message.begin(),message.end());return std::pair(root,signed_block);
+       };
+       const auto canonical=build(*body);check(bound.block(canonical.second),"canonical exit block refused");peers->sync(chain.tip().header.hash());check(context().registry.validators.at(0).exit_epoch!=UINT64_MAX,"canonical exit not applied");
+       // Synthetic equivocating proposer: remove the exit and vary graffiti to
+       // obtain the higher-root sibling used by the specified tie-break rule.
+       auto sibling=*body;const auto payload_field=220+(t.state.sync_committee_size+7)/8+96;
+       const auto exit_begin=little(sibling,216,4),payload_begin=little(sibling,payload_field,4);check(payload_begin-exit_begin==112,"expected one pending exit");
+       sibling.erase(sibling.begin()+exit_begin,sibling.begin()+payload_begin);put(sibling,payload_field,exit_begin,4);
+       std::optional<std::pair<ConsensusRoot,Bytes>> alternative;
+       for(uint64_t nonce=1;nonce<=64;++nonce){put(sibling,168,nonce);auto built=build(sibling);if(built.first>canonical.first){alternative=std::move(built);break;}}
+       check(bool(alternative)&&bound.block(alternative->second),"higher-root competing block refused");
+       wall=(genesis_time+(next_slot+1)*seconds)*1000;clock.poll();
+       check(consensus_beacon_header_root(bellatrix_fork_head(*bound.current().state,fork_rules).header)==alternative->first,"fork choice did not switch to sibling");
+       check(context().registry.validators.at(0).exit_epoch==UINT64_MAX&&bound.current().signed_exits->size()==1,"reorg lost pending exit or failed registry rollback");peers->sync(chain.tip().header.hash());
+       loop.poll();peers->sync(chain.tip().header.hash());
+       check(context().registry.validators.at(0).exit_epoch!=UINT64_MAX,"pending exit not reincluded after reorg");
+       std::cout<<Json{{"scenario","bellatrix-exit-reorg"},{"syntheticEquivocatingProposer",true},{"exitRolledBack",true},{"pendingRequestRetained",true},{"reincluded",true}}.dump()<<'\n';
+      }else{wall=(genesis_time+(slots+1)*seconds)*1000;loop.poll();}
+      const auto member=context().registry.validators.at(0);
+      check(member.exit_epoch!=UINT64_MAX&&!member.slashed,"block did not schedule voluntary exit");
+      check(bound.current().signed_exits->size()==1,"unfinalized exit proof prematurely dropped");
+      auto pending_wire=wire;
+      if(exits_pruning){
+       bool finalized_exit=false;
+       for(uint64_t slot=slots+2;slot<=5*slots;++slot){
+        wall=(genesis_time+slot*seconds)*1000;loop.poll();peers->sync(chain.tip().header.hash());
+        for(auto* reactor:{&bound,peers->reactor.get()}){
+         const auto view=reactor->current();const auto& finalized=view.state->blocks.at(view.state->timed.view.finalized.root);
+         const auto ctx=bellatrix_fork_block_context(finalized.state,finalized.header,{t.epoch,fork_rules.transition.execution,fork_rules.transition.maximum_state_bytes},t.state);
+         const bool scheduled=ctx.registry.validators.at(0).exit_epoch!=UINT64_MAX;
+         check(view.signed_exits->size()==(scheduled?0:1),"pending exit lifetime differs from finalized scheduling");
+         if(reactor==&bound)finalized_exit=scheduled;
+        }
+        if(finalized_exit)break;
+       }
+       check(finalized_exit,"voluntary exit did not finalize");const auto token=bound.current().token;
+       check(bound.voluntary_exit_ssz(wire)&&bound.current().token==token&&bound.current().signed_exits->empty(),"finalized exit replay recreated archive");
+       SignedConsensusVoluntaryExit fresh{1,1,{}};sign_exit(fresh);pending_wire=encode_consensus_voluntary_exit_ssz(fresh);
+       check(bound.voluntary_exit_ssz(pending_wire),"new exit refused after pruning");
+       until([&]{const auto view=peers->reactor->current();return view.signed_exits->size()==1&&view.signed_exits->begin()->second->ssz==pending_wire;},"new exit relayed after pruned cursor",20);
+       std::cout<<Json{{"scenario","bellatrix-exit-finalized-pruning"},{"retainedUntilFinality",true},{"pruned",true},{"replayDidNotPublish",true},{"newExitRelayed",true}}.dump()<<'\n';
+      }
+      if(peers){
+       peers->sync(chain.tip().header.hash());peers->stop();
+       const auto view=peers->reactor->current();const auto token=view.token;const auto hash=peers->observer->tip().header.hash();
+       check(view.signed_exits->size()==1&&view.signed_exits->begin()->second->ssz==pending_wire,"peer archive differs from signed exit");
+       if(!exits_pruning)check(view.signed_exits->begin()->second->admission_root!=consensus_beacon_header_root(bellatrix_fork_head(*view.state,fork_rules).header),"exit inclusion did not advance head");
+       peers->hb.reset();peers->sb.reset();peers->rb.reset();peers->eb.reset();peers->clock.reset();peers->reactor.reset();peers->observer.reset();
+       Blockchain reopened(live/"observer",g);BellatrixDurableReactor restored(reopened,fork_rules,reactor_limits,token);
+       check(restored.current().signed_exits->size()==1&&reopened.tip().header.hash()==hash,"reopen lost exit or execution head");
+       const auto snapshot=restored.current();const auto& h=bellatrix_fork_head(*snapshot.state,fork_rules);
+       const auto ctx=bellatrix_fork_block_context(h.state,h.header,{t.epoch,fork_rules.transition.execution,fork_rules.transition.maximum_state_bytes},t.state);
+       check(ctx.registry.validators.at(0).exit_epoch==member.exit_epoch,"peer exit schedule differs after reopen");
+       check(restored.voluntary_exit_ssz(wire)&&restored.current().token==token,"reopened pending duplicate published again");
+       std::cout<<Json{{"scenario","bellatrix-network-voluntary-exit"},{"p2pDaemons",2},{"cores",2},{"receivedBeforeInclusion",true},{"reopened",true},{"scheduledExitEpoch",member.exit_epoch}}.dump()<<'\n';
+      }
+
+      std::cout<<Json{{"scenario","bellatrix-local-voluntary-exit"},{"syntheticTenureEpochs",1},{"invalidSignatureRejected",true},{"futureEpochRejected",true},{"duplicateDidNotPublish",true},{"durableArchive",true},{"scheduledByBlock",true},{"exitEpoch",member.exit_epoch},{"withdrawableEpoch",member.withdrawable_epoch},{"payoutImplemented",false},{"networkAdmissionQualified",exits_network}}.dump()<<'\n';return 0;
+     }
      if(slashing_network){
       wall=(genesis_time+2*seconds)*1000;loop.poll();peers->sync(chain.tip().header.hash());
       const auto current=bound.current();const auto& parent=bellatrix_fork_head(*current.state,fork_rules);

@@ -79,7 +79,7 @@ reste à compléter. Le genesis réseau autorise actuellement Paris/Shanghai.
 | BLS de consensus / agrégation | Partiel : signatures BLS des devoirs et blocs Bellatrix intégrées ; primitives et scénarios à clés synthétiques qualifiés | Cycle du registre/PoP, agrégats de réseau et changements de validateurs à qualifier de bout en bout |
 | Domaines et racines SSZ de signature | Intégrés aux signatures Bellatrix locales avec identité/registre authentifiés ; tests de refus et de reprise existants | Qualifier les transitions de forks et l’activation publique ; les fixtures ne prouvent pas ces opérations réseau |
 | Casper FFG / LMD-GHOST | Partiel : transitions et choix de branche Bellatrix implémentés ; finalité locale et scénario distribué ciblé enregistrés | Reprise après partition de 96 s réussie sur deux nœuds / un hôte ; partitions prolongées, autres répartitions du stake et exploitation distribuée à qualifier |
-| Registre beacon / RANDAO / slashing | Partiel : opérations et snapshots locaux ; RANDAO intégré aux propositions Bellatrix, journal anti-slashing par clé | Cycle ouvert entrées/sorties/sanctions, disponibilité des opérations et reprise après panne à terminer et qualifier |
+| Registre beacon / RANDAO / slashing | Partiel : RANDAO, journal anti-slashing, preuves de sanctions et sorties volontaires signées intégrées aux propositions/archives/P2P Bellatrix | Cycle ouvert entrées/sorties/sanctions, disponibilité des opérations et reprise après panne à terminer et qualifier |
 | ERC-20/721/1155 | Contrats et scénarios ciblés existants | Étendre les scénarios ; pas de revendication « tout OpenZeppelin testé » |
 | ERC-1271/165/2612 et EIP-712 | Audit de couverture nécessaire | Répertorier contrats et cas exacts ; éviter d’assimiler compilation et comportement |
 
@@ -1531,3 +1531,29 @@ Cette exécution a commencé avant le correctif de déduplication des preuves : 
 Le réacteur conserve les preuves tant qu'au moins un fautif commun n'est pas sanctionné dans l'état finalisé authentifié. À l'avancement de la finalité, il retire atomiquement les preuves devenues inutiles ; les rejeux n'en recréent pas. La récupération restaure son snapshot exact sans y appliquer un nouvel élagage.
 
 Nouveau scénario `consensus_bellatrix_slashing_pruning` : **40,72 s**, deux cœurs dans un processus, deux démons P2P, horloge synthétique. Il vérifie la conservation avant finalité, l'élagage après, le rejeu sans écriture, une nouvelle preuve reçue après disparition de l'ancien curseur de catalogue et la réouverture du stockage. Rapport : `docs/qualification/bellatrix-slashing-pruning-20260926.json`. Cela ferme le manque d'élagage des preuves signalé dans les notes précédentes ; l'historique complet des blocs/états et la charge prolongée restent hors de ce résultat.
+
+### 2026-09-26 — Sorties volontaires Bellatrix, raccordement local en cours
+
+Admission des sorties signées SSZ de 112 octets, contrôle BLS et ancienneté, déduplication par validateur, archive durable v5 et inclusion par le constructeur local ajoutées. L'admission seule ne modifie pas le registre ; la transition complète du bloc programme la sortie. Le scénario nouveau `consensus_bellatrix_voluntary_exit` passe en **5,50 s** : signature invalide, demande future, ancienneté insuffisante, doublon sans publication et sortie sans slashing. Délai synthétique d'ancienneté : une epoch, explicitement limité au test ; sortie à l'epoch 6, retrait autorisable au plus tôt à 262.
+
+Rapport : `docs/qualification/bellatrix-voluntary-exit-core-20260926.json`. Ce lot reste en cours : transport P2P, reprise des sorties en attente et authentification de leur contexte lors des changements de branche ne sont pas qualifiés. Le versement des retraits n'est pas implémenté par ce parcours Bellatrix ; ne pas assimiler cette étape aux EIP-4895, 7002 ou 7044 activées sur le réseau.
+
+### 2026-09-26 — Sorties volontaires : transport et restauration du contexte
+
+L'archive de sorties conserve désormais la racine du bloc d'admission avec les octets SSZ signés. La restauration vérifie le registre et le domaine de signature à ce bloc authentifié, indépendamment de la tête courante. Inventaire/export RPC authentifiés, transport Bellatrix borné à 112 octets et relais P2P des sorties ajoutés.
+
+`consensus_bellatrix_voluntary_exit_network` passe en **9,54 s** : deux cœurs dans le processus du scénario, deux démons P2P, un hôte, ancienneté synthétique d'une epoch. Réception avant inclusion, calendrier de sortie identique après le bloc, puis réouverture conservant archive, contexte et tête ; doublon sans nouvelle publication. Un premier échec de 28,79 s a révélé une catégorie omise dans le dispatch démon-vers-cœur ; correction et échec sont conservés dans `docs/qualification/bellatrix-voluntary-exit-network-20260926.json`.
+
+Restent avant clôture de ce lot : branches concurrentes, élagage à la finalité, cas négatifs du transport et qualification des composants partagés affectés. Le relais alterne désormais blocs/votes/preuves/sorties ; les preuves de partition précédentes concernent l'ordonnancement antérieur. Pas de versement de retrait ni d'activation d'un fork ultérieur dans ce résultat.
+
+### 2026-09-26 — Sorties volontaires : cycle de demande qualifié et livraison
+
+Le lot couvre admission signée, stockage du contexte d'admission authentifié, transport, inclusion, conservation en cas de réorganisation, puis élagage après programmation finalisée de la sortie. Il ne verse pas de retrait et ne constitue pas le cycle complet des dépôts/activations/retraits du registre ouvert.
+
+Nouveaux résultats :
+- `consensus_bellatrix_voluntary_exit_pruning` : **44,13 s**, conservation jusqu'à finalité, élagage, rejeu sans publication, nouvelle sortie relayée après changement de catalogue et réouverture.
+- `bellatrix_wire_identity` enrichi : **0,33 s**, sorties de taille exactement 112 octets, rejet des tailles 0/111/113, de l'identité étrangère et du protocole legacy ; enveloppes hex et IPC compact.
+- `consensus_bellatrix_voluntary_exit_reorg` : **10,81 s**, deux blocs valides signés par un proposant synthétique équivoque ; après expiration du proposer boost, choix de la branche sans sortie, annulation du calendrier, conservation de la demande et réinclusion ; pair synchronisé et stockage rouvert.
+- Régression groupée des composants affectés : **5/5 en 18,68 s** (relais, reçus, client IPC, reprise témoin et slashing local).
+
+Rapports : `docs/qualification/bellatrix-exit-lifecycle-20260926.json`, `bellatrix-exit-reorg-20260926.json` et `bellatrix-exit-shared-20260926.json`. Profils synthétiques sur un seul Mac, ancienneté minimale d'une epoch dans ces scénarios seulement. La réorganisation conserve les mêmes clés de registre : les allocations concurrentes de nouveaux validateurs par dépôts ne sont pas couvertes. La charge et la reprise après partition avec l'ordonnancement à quatre catégories restent à qualifier ; les résultats antérieurs de partition restent ceux de leurs empreintes enregistrées.

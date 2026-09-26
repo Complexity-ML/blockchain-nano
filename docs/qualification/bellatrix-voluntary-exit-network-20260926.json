@@ -1,0 +1,41 @@
+{
+  "result": "passed",
+  "test": "consensus_bellatrix_voluntary_exit_network",
+  "durationSeconds": 9.54,
+  "scope": [
+    "exit received over P2P before inclusion",
+    "local proposal schedules exit and observer agrees",
+    "archive includes authenticated admission block root",
+    "reopen revalidates original admission context after head advancement",
+    "duplicate after reopen does not republish"
+  ],
+  "syntheticTenureEpochs": 1,
+  "cores": 2,
+  "independentCoreProcesses": false,
+  "p2pDaemons": 2,
+  "physicalHosts": 1,
+  "exitEpoch": 6,
+  "priorFailure": {
+    "durationSeconds": 28.79,
+    "cause": "Daemon-to-core dispatch allowed kinds omitted voluntary_exit",
+    "preservedLog": "build-cmake/qualification/bellatrix-voluntary-exit-20260926/network-failure-dispatch.log"
+  },
+  "sha256": {
+    "src/consensus_bellatrix_reactor.cpp": "4fed8f129b490af610b185d1d79d6778fb8281e034920076d5f086a43c1c768e",
+    "src/consensus_bellatrix_local_body.cpp": "0204451d1792d44be3d87fc90cb3db9ca512e81ff734adf77b07677b6223cef2",
+    "network/bellatrix_rpc_service.hpp": "87fd71edb4a0c8d146734c0921a9d1011b94733305c153bba19c1a8a4955e27e",
+    "network/altair_core_dispatch.hpp": "9cfe3a000f6fe0f7ef1d6cc41d3ca05956449987f8350f9707b5d44edebf052c",
+    "network/altair_message.hpp": "f6609f3ab39d12bbc5937d15866496522de7d1c1aa86d112765fe4f887caf0f1",
+    "network/altair_archive_relay.hpp": "af43de3f481d079a154d27beb1f8a7ec116ac1e1f7781edb492fb34e443428eb",
+    "network/main.cpp": "9c34ca6b8249f6594a621b55d264b5395c340007485302bc35afa352cf158034",
+    "tests/test_bellatrix_transition.cpp": "9ba779619be2e95bf8054bc06ab65b002785008bb1adbabc7b83dc9dd4168099",
+    "build-release/nano-bellatrix-transition-tests": "eba93b10a1e42138dd5c380e33825c2a11fb18c4df1d0bb773c4b9e87adb108c",
+    "build-network/nano-p2p": "a3545637bf697cb0cd28f3d5da4df14a9825b8e69a49e6d9414bed54b525e1f4"
+  },
+  "remaining": [
+    "Competing branch lifecycle and pruning after finalized exit",
+    "Negative transport and affected shared relay qualification",
+    "Four-way scheduler load and liveness",
+    "Actual payouts need later consensus/execution fork"
+  ]
+}
