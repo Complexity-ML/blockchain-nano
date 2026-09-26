@@ -1845,3 +1845,9 @@ Mac natif + Docker ARM64 + VPS AMD64, deux machines, 64 clés synthétiques.
 La campagne précédente avec validateur arrêté reste classée en échec.
 Les partitions WAN, l’endurance et le grand registre restent ouverts ; aucun
 statut EIP ou production global ne découle de cette fenêtre. [Preuves](qualification/multihost-20260926/with-expiry/README.md).
+
+- Partition WAN du 26 septembre, cœur b1ccbac : **échec de reprise** dans les
+  180 s après reconnexion d'une coupure de 96 s. Trois validateurs actifs,
+  198/187/185 attestations admises, finalité restée à 2 ; justification 3/3/9
+  à l'arrêt. Retard de convergence à diagnostiquer, pas une panne du fournisseur
+  de signature observée. [Preuves](qualification/multihost-20260926/wan-partition/README.md).
