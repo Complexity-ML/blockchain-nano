@@ -1852,7 +1852,7 @@ statut EIP ou production global ne découle de cette fenêtre. [Preuves](qualifi
   à l'arrêt. Retard de convergence à diagnostiquer, pas une panne du fournisseur
   de signature observée. [Preuves](qualification/multihost-20260926/wan-partition/README.md).
 
-### Correctifs locaux en attente de nouvelle qualification WAN
+### Correctifs locaux et nouvelle qualification WAN échouée
 
 - `9e1b904` : expiration normale RANDAO/attestation reprise au slot suivant ;
   engagements durables conservés, erreurs fournisseur fatales. Scénarios locaux
@@ -1862,7 +1862,9 @@ statut EIP ou production global ne découle de cette fenêtre. [Preuves](qualifi
   du cœur, avec le même budget de parcours et un seul nouvel envoi par tentative.
   [Preuves locales](qualification/multihost-20260926/relay-pages/README.md).
 
-La campagne WAN suivante conserve les seuils : coupure 96 s, reprise commune
-sous 180 s, puis trois avancées successives liées à l'exécution et contrôle des
-trois validateurs à l'arrêt. Aucun verdict acquis par la compilation des images.
+La campagne `5da8484` conserve ces seuils et **échoue** : après la coupure de
+96 s, aucune nouvelle finalité commune sous 180 s. Les trois boucles restent
+saines ; justification 7/7/7, finalité 2. Le VPS dépasse une fois la durée
+du slot (6360 ms). L’asymétrie de visibilité des votes demeure.
+[Preuves complètes](qualification/multihost-20260926/wan-pages/README.md).
 Ces modifications ne changent pas les règles de fork ni le statut d'une EIP.
