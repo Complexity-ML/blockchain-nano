@@ -1152,6 +1152,11 @@ if(NANO_NETWORK_EXECUTABLE)
  set_tests_properties(consensus_altair_managed_runtime PROPERTIES TIMEOUT 90 LABELS "qualification_consensus_ethereum")
 endif()
 
+add_executable(nano-peer-relay-concurrency-tests tests/test_peer_relay_concurrency.cpp)
+target_link_libraries(nano-peer-relay-concurrency-tests PRIVATE nano_core)
+add_test(NAME consensus_relay_peer_concurrency COMMAND nano-peer-relay-concurrency-tests)
+set_tests_properties(consensus_relay_peer_concurrency PROPERTIES TIMEOUT 10)
+
 add_executable(nano-altair-relay-progress-tests tests/test_altair_relay_progress.cpp)
 target_link_libraries(nano-altair-relay-progress-tests PRIVATE nano_core)
 add_test(NAME consensus_relay_rejected_vote_progress COMMAND nano-altair-relay-progress-tests)

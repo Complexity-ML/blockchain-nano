@@ -11,6 +11,7 @@
 #include "altair_stream.hpp"
 #include "altair_peer.hpp"
 #include "altair_archive_relay.hpp"
+#include "peer_relay_budget.hpp"
 #include <sstream>
 #include <libp2p/network/impl/dnsaddr_resolver_impl.hpp>
 #include <libp2p/injector/host_injector.hpp>
@@ -56,7 +57,7 @@ class Network {
   }else core_.call(method,std::move(params),std::move(reply));
  }
  bool consensus_peer(const Json& remote)const{return compatible_altair_peer(remote,status_,consensus_field(),consensus_protocol());}
- bool altair_started_=false,altair_relay_busy_=false;std::string altair_last_peer_;
+ bool altair_started_=false;PeerRelayBudget altair_relay_budget_{4};std::string altair_last_peer_;
  void recover_altair(){
   if(altair_started_||(status_.value("altairIpc",Json())!=true&&status_.value("bellatrixIpc",Json())!=true))return;
   if(status_.value("altairIpc",false)&&status_.value("bellatrixIpc",false))throw std::runtime_error("Ambiguous consensus IPC");
@@ -143,16 +144,17 @@ class Network {
  }
  // Empty categories must not consume an entire relay interval: with four
  // kinds, one vote per four 100ms ticks cannot drain a two-epoch replay of
- // 64 votes/epoch in 48s. At most one sweep per attempt, still one in flight.
+ // 64 votes/epoch in 48s. At most one sweep per attempt and one attempt per peer.
+ // Slow peers do not monopolize all outbound work; the global budget is bounded.
  void poll_altair_archives(unsigned remaining=4){
-  if(altair_relay_busy_||!altair_ingress_||!altair_dispatch_||altair_dispatch_->blocked()||peers_.empty())return;
+  if(!altair_relay_budget_.available()||!altair_ingress_||!altair_dispatch_||altair_dispatch_->blocked()||peers_.empty())return;
   auto start=peers_.upper_bound(altair_last_peer_);if(start==peers_.end())start=peers_.begin();auto it=start;
   do{
-   if(consensus_peer(it->second.status)){
-    const auto peer=it->second.info;const auto step=bellatrix_mode_?it->second.next_bellatrix_kind++%4:unsigned(it->second.next_altair_vote);const bool vote=step==1,proof=step==2,exit=step==3;it->second.next_altair_vote=!vote;const auto kind=exit?AltairWireKind::voluntary_exit:proof?AltairWireKind::attester_slashing:vote?AltairWireKind::attestation:AltairWireKind::block;const auto progress=exit?it->second.exit_progress:proof?it->second.slashing_progress:vote?it->second.altair_vote_progress:it->second.altair_progress;altair_last_peer_=it->first;altair_relay_busy_=true;
-    std::make_shared<AltairArchiveRelay>(io_,[this](const auto& method,auto params,auto reply){consensus_call(method,std::move(params),std::move(reply));},[this,peer](auto frame,auto reply){send_altair(peer,std::move(frame),std::move(reply));},report_token_,altair_ingress_,progress,[this,progress,vote,proof,exit,remaining,before=progress->cursor,id=it->first](Json result){altair_relay_busy_=false;
+   if(consensus_peer(it->second.status)&&!altair_relay_budget_.busy(it->first)){
+    const auto peer=it->second.info;const auto step=bellatrix_mode_?it->second.next_bellatrix_kind++%4:unsigned(it->second.next_altair_vote);const bool vote=step==1,proof=step==2,exit=step==3;it->second.next_altair_vote=!vote;const auto kind=exit?AltairWireKind::voluntary_exit:proof?AltairWireKind::attester_slashing:vote?AltairWireKind::attestation:AltairWireKind::block;const auto progress=exit?it->second.exit_progress:proof?it->second.slashing_progress:vote?it->second.altair_vote_progress:it->second.altair_progress;altair_last_peer_=it->first;if(!altair_relay_budget_.acquire(it->first))return;
+    std::make_shared<AltairArchiveRelay>(io_,[this](const auto& method,auto params,auto reply){consensus_call(method,std::move(params),std::move(reply));},[this,peer](auto frame,auto reply){send_altair(peer,std::move(frame),std::move(reply));},report_token_,altair_ingress_,progress,[this,progress,vote,proof,exit,remaining,before=progress->cursor,id=it->first](Json result){altair_relay_budget_.release(id);
      if(trace_network_&&(!result.value("success",false)||result.value("elapsedMs",int64_t(0))>500))
-      std::cout<<Json{{"event","test-consensus-relay-attempt"},{"kind",exit?"exit":proof?"slashing":vote?"vote":"block"},{"success",result.value("success",false)},{"stage",result.value("stage","")},{"stageUs",result.value("stageUs",Json::object())},{"elapsedMs",result.value("elapsedMs",int64_t(0))},{"cursor",progress->cursor},{"dispatchBlocked",altair_dispatch_->blocked()}}.dump()<<std::endl;
+      std::cout<<Json{{"event","test-consensus-relay-attempt"},{"peerId",id},{"kind",exit?"exit":proof?"slashing":vote?"vote":"block"},{"success",result.value("success",false)},{"stage",result.value("stage","")},{"stageUs",result.value("stageUs",Json::object())},{"elapsedMs",result.value("elapsedMs",int64_t(0))},{"cursor",progress->cursor},{"dispatchBlocked",altair_dispatch_->blocked()}}.dump()<<std::endl;
      const bool empty=result.value("success",false)&&progress->cursor==before;if(bellatrix_mode_&&empty&&remaining>1)asio::post(io_,[this,remaining]{poll_altair_archives(remaining-1);});if(trace_network_&&result.value("success",false)&&progress->cursor!=before)std::cout<<Json{{"event",exit?"test-bellatrix-exit-relayed":proof?"test-bellatrix-slashing-relayed":vote?(result.value("stage","")=="known"?"test-altair-vote-known":"test-altair-vote-relayed"):"test-altair-block-relayed"},{"peerId",id},{"root",progress->cursor}}.dump()<<std::endl;},kind)->start();return;
    }
    if(++it==peers_.end())it=peers_.begin();
@@ -357,6 +359,7 @@ class Network {
  });}
 public:
  Network(asio::io_context& io,Host host,uint16_t port,std::vector<libp2p::multi::Multiaddress> bootstrap,std::shared_ptr<libp2p::network::DnsaddrResolver> resolver):io_(io),host_(std::move(host)),core_(io,port),timer_(io),bft_timer_(io),consensus_relay_timer_(io),bootstrap_(std::move(bootstrap)),resolver_(std::move(resolver)){if(const char* token=std::getenv("NANO_NETWORK_TOKEN"))report_token_=token;
+  if(const char* raw=std::getenv("NANO_CONSENSUS_RELAY_CONCURRENCY")){const std::string value(raw);if(value.empty()||value.size()>4||value.find_first_not_of("0123456789")!=std::string::npos)throw std::invalid_argument("Invalid consensus relay concurrency");altair_relay_budget_=PeerRelayBudget(std::stoul(value));}
   if(const char* raw=std::getenv("NANO_CONSENSUS_RELAY_INTERVAL_MS")){const std::string value(raw);if(value.empty()||value.size()>5||value.find_first_not_of("0123456789")!=std::string::npos)throw std::invalid_argument("Invalid consensus relay interval");const auto n=std::stoul(value);if(n<25||n>60000)throw std::invalid_argument("Consensus relay interval outside 25..60000 ms");consensus_relay_interval_=std::chrono::milliseconds(n);}
  }
  void start(){for(const auto& protocol:{handshake,blocksync,announce,announce_ref,gossip,reliable_gossip,chainsync,bft,bft_manifest,bft_parts,blockparts})host_->setProtocolHandler({protocol},[this,protocol](libp2p::StreamAndProtocol stream){inbound(protocol,std::move(stream.stream));});tick();schedule_bft();schedule_consensus_relay();}

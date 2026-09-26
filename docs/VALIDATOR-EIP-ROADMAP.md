@@ -2445,3 +2445,10 @@ La campagne WAN `b2e4ebe` **échoue** également : finalité restée à 2 sous
 Au slot 64, visibilité des votes précédents 22/21/64 : le relais sortant et
 l’ordre de rattrapage restent à diagnostiquer.
 [Preuves](qualification/multihost-20260927/vote-retry/README.md).
+
+### Relais sortant par pair — qualification locale
+
+Une tentative par pair, quatre au total par défaut, configurables via
+`NANO_CONSENSUS_RELAY_CONCURRENCY`. Le test de pair lent, saturation et réponse
+tardive passe ; le binaire P2P compile. [Preuves](qualification/peer-relay-20260927/README.md).
+Effet sur la reprise WAN non encore qualifié ; aucun statut EIP clôturé.

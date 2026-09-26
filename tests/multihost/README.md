@@ -96,3 +96,8 @@ pas une destruction du processus orchestrateur ou la perte totale de SSH.
 Les tests unitaires de `partition.test.mjs` contrôlent l'orchestrateur et ses
 refus ; ils ne prouvent pas la reprise du réseau réel. Campagne lancée le
 26 septembre 2026, résultats à consigner après son arrêt.
+
+Le relais sortant utilise quatre permissions globales par défaut, au maximum
+une par pair. `NANO_CONSENSUS_RELAY_CONCURRENCY=1` restaure la sérialisation
+pour diagnostic ; plage opérationnelle 1..1024. Ce budget local ne limite pas
+le registre des validateurs. Le test standard conserve le défaut.
