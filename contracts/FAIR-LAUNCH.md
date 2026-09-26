@@ -4,6 +4,14 @@ Statut : cadrage technique. Aucun contrat de vente ni bridge de lancement n'est
 implémenté par ce document. Aucun financement réel n'est ouvert. La cible de
 10 000 USDC vient de l'exemple utilisateur ; elle reste un paramètre à confirmer.
 
+## Choix utilisateur courant
+
+Fair launch sur bonding curve, sans pool initiale financée avec 100 USDC.
+La pool V3 intervient après la graduation. Les variantes de petite pool restent
+ci-dessous comme historique et leurs tests comme qualification du DEX ; elles
+ne constituent plus la stratégie de lancement. Un graphique propriétaire est
+prévu, sans dépendance à une reconnaissance automatique par DexScreener.
+
 ## Actif et compatibilité
 
 Nano exécute du bytecode EVM compilé depuis Solidity ; la qualification dépend
@@ -70,12 +78,54 @@ pas cet alignement. Vérifier aussi une pool préexistante ou initialisée à un
 hostile. Les parts V3 sont des positions NFT : leur verrouillage exige un contrat
 et une politique de collecte des frais, pas une simple destruction de LP V2.
 
+## Tableau de bord économique à implémenter
+
+Aucune UI n'est encore livrée par ce cadrage. Elle affichera les données suivantes,
+sans promesse de performance et sans jauge destinée à provoquer une urgence d'achat.
+
+| Champ | Sens et provenance exigés |
+| --- | --- |
+| Prix marginal de la courbe | Calcul depuis l'état canonique au bloc identifié ; distinct du prix moyen d'un ordre |
+| Devis d'achat ou de revente | Montant net, frais, minimum reçu/maximal payé, échéance et hypothèse d'état ; estimation avant confirmation |
+| Réserves | Solde brut du contrat, réserve comptabilisée pour la courbe, obligations de remboursement et fonds en transit séparés |
+| Offre | Allocation de vente, offre nette vendue, inventaire restant, allocation réservée à la graduation et adossement du token Base |
+| Historique | Achats/ventes exécutés avec montants et frais, réseau, hash de transaction, bloc et statut de finalité |
+| Phase | Vente ouverte, clôture, règlement des ordres, graduation partielle/complète ou remboursement selon les droits du contrat |
+| Après graduation | Adresse pool, token0/token1, frais, ticks, prix courant, liquidité active, état hors plage, NFT et politique de verrouillage |
+
+Le prix théorique et les transactions réalisées sont des séries distinctes. Avant
+le premier échange, afficher « aucun échange exécuté » ; ne pas fabriquer des
+bougies de marché à partir des devis ou de la formule. Afficher l'unité USDC,
+sans assimiler mécaniquement un token bridgé à des dollars disponibles.
+
+Chaque vue porte réseau/chainId, adresses vérifiées, numéro et hash du bloc lu,
+heure de mise à jour et niveau de finalité. Les lectures d'une même chaîne doivent
+viser le même bloc ; Base et Nano ont des références distinctes. Une réorganisation
+invalide les événements concernés et reconstruit les agrégats, sans les compter deux
+fois. Dédupliquer par réseau/contrat/transaction/index de log et suivre leur bloc.
+Données indisponibles ou périmées : afficher l'état explicitement, pas zéro.
+
+Un montant envoyé à un relais n'est pas encore une réserve disponible. Une copie
+bridgée et son collatéral canonique ne sont jamais additionnés comme deux apports.
+Les fonds remboursables ne sont pas présentés comme librement injectables dans V3.
+
+La revente sur courbe, le remboursement d'un ordre non exécuté et l'échange sur DEX
+sont trois opérations distinctes. Après graduation, la réserve devenue liquidité
+ne garantit plus un remboursement au prix d'achat. La clôture et les délais du
+bridge doivent être visibles avant signature, selon les règles effectivement codées.
+L'interface seule ne crée aucun droit de retrait.
+
+Critères UI : vérifier les totaux contre l'état on-chain au bloc retenu ; simuler
+événements dupliqués/désordonnés, reorg, RPC indisponible, devis expiré, ordre distant
+en attente et graduation partielle. Les boutons suivent les droits des contrats,
+et aucune donnée de démonstration ne doit être affichée comme un marché réel.
+
 ## Modules à développer et critères de clôture
 
-### Variante demandée : petite pool et vente parallèle
+### Historique écarté : petite pool et vente parallèle
 
-Une pool initiale avec 100 USDC reste une option à tester, pas un financement
-autorisé. Ne pas utiliser son prix spot ni son TWAP comme autorité de tarification
+Cette variante a été écartée par l’utilisateur. Les points suivants documentent
+les contraintes étudiées, sans autorisation de financement. Ne pas utiliser son prix spot ni son TWAP comme autorité de tarification
 de la vente : la profondeur, la durée d'observation et le coût de manipulation
 doivent être évalués. Une moyenne temporelle ne crée pas de liquidité.
 
