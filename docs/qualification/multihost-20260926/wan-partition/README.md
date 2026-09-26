@@ -29,3 +29,17 @@ conservés. Les fichiers privés de configuration et les bases ne sont pas publi
 Le test révèle un écart réel de reprise dans ce périmètre ; il ne démontre
 ni finalités contradictoires ni perte de fonds. Les contrôles unitaires du banc
 (9/9) ne remplacent pas cette qualification réseau échouée.
+
+## Visibilité des votes après reconnexion
+
+Diagnostic reproductible : `node vote-visibility.mjs <dossier-campagne>`.
+Au slot 56, les traces montrent respectivement 22/21/57 derniers messages de
+l'epoch précédente connus par Mac natif / Docker Mac / VPS. Au slot 64 :
+22/21/64. Les cibles signées ne deviennent communes dans ces échantillons
+qu'au slot 68, et les têtes au slot 72. Les horodatages restent disponibles :
+ces échantillons ne sont pas simultanés et ne couvrent pas tous les votes.
+
+Cette asymétrie place le relais sortant du VPS et l'admission côté Mac parmi
+les priorités de diagnostic. Elle ne prouve pas à elle seule le coût d'une
+étape précise, ni un défaut de la règle de choix de branche. Les traces de
+relais actuelles ne chronomètrent que les tentatives lentes ou échouées.
