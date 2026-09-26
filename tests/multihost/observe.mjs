@@ -8,8 +8,8 @@ import {observeStableFinality} from '../assertoor/stability.mjs';
 const exec=promisify(execFile),[configFile,output]=process.argv.slice(2);
 if(!configFile||!output)throw Error('Usage: observe.mjs observers.json fresh-output');
 const config=JSON.parse(await readFile(configFile,'utf8'));
-if(!Array.isArray(config.nodes)||config.nodes.length<2||!/^0x[0-9a-f]{64}$/.test(config.genesisHash)||!/^\w{40}$/.test(config.revision))throw Error('Expected genesis hash, revision and nodes');
-const names=new Set();
+if(!Array.isArray(config.nodes)||config.nodes.length<2||!/^0x[0-9a-f]{64}$/.test(config.genesisHash)||!/^[0-9a-f]{40}$/.test(config.revision))throw Error('Expected genesis hash, revision and nodes');
+const names=new Set(),transports=new Set(),peerIds=new Set();
 const quote=s=>"'"+s.replaceAll("'","'\\''")+"'";
 const command=async(node,args)=>{
  let binary='curl',argv=args;
@@ -28,6 +28,9 @@ for(const n of config.nodes){
  if(u.protocol!=='http:'||u.hostname!=='127.0.0.1'||u.username||u.password||u.pathname!=='/'||u.search||u.hash)throw Error('RPC must remain loopback');
  if(n.kind!=='native'&&!/^nano-qualification-[a-z0-9-]+$/.test(n.container))throw Error('Unexpected test container name');
  if(n.kind==='ssh-docker'&&!/^[a-z_][a-z0-9_-]*@[a-z0-9.-]+$/.test(n.ssh))throw Error('Invalid SSH target');
+ const identity=n.kind==='native'?`native:${u.origin}`:`${n.kind}:${n.ssh??'local'}:${n.container}`;
+ if(transports.has(identity))throw Error('Duplicate observer transport');transports.add(identity);
+
 }
 await mkdir(output);
 const record=async value=>appendFile(join(output,'samples.jsonl'),JSON.stringify(value)+'\n');
@@ -57,7 +60,10 @@ try{
   }
   const chain=await rpc(node,'eth_chainId'),genesis=await rpc(node,'eth_getBlockByNumber',['0x0',false]);
   if(BigInt(chain)!==1337n||genesis?.hash!==config.genesisHash)throw Error('Unexpected chain/genesis');
-  await record({event:'observer-bound',name:node.name,kind:node.kind,chain,genesisHash:genesis.hash});
+  const info=await rpc(node,'nno_getNetworkInfo'),peerId=info?.node?.peerId;
+  if(typeof peerId!=='string'||!peerId||peerIds.has(peerId))throw Error('Missing or duplicate P2P identity');
+  peerIds.add(peerId);
+  await record({event:'observer-bound',name:node.name,kind:node.kind,chain,genesisHash:genesis.hash,peerId});
  }
  const result=await observeStableFinality(config.nodes.map(n=>`http://${n.name}`),3,record,{request});
  await writeFile(join(output,'result.json'),JSON.stringify({...result,nodes:config.nodes.map(n=>n.name),revision:config.revision},null,2)+'\n');

@@ -1807,3 +1807,12 @@ plus récents du banc ne constituent pas leur activation réseau.
   deux cibles passent en 1,49 s, avec réorganisation, SIGKILL et suffixe WAL
   conservé/perdu. **Raccordement Bellatrix/P2P et élagage non réalisés.**
   [Preuves](qualification/checkpoint-archive-20260926/README.md).
+
+## Qualification multi-hôte — 26 septembre 2026
+
+Cœur b7e2748 : Mac natif, Docker ARM64 Mac et Docker AMD64 VPS, deux hôtes
+physiques et 64 clés synthétiques 22/21/21. Une fenêtre instrumentée réussit
+la finalité commune 2 → 3 → 4 → 5 en 199002 ms. La campagne précédente
+échoue au critère de continuité avec 2 → 3 → 4 → 6 ; accord final conservé.
+Le retard intermittent d’inclusion reste ouvert. Aucune qualification
+d’endurance ou de production : voir [preuves multi-hôte](qualification/multihost-20260926/README.md).
