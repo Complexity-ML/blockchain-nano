@@ -1368,6 +1368,8 @@ add_test(NAME consensus_bellatrix_runtime_restart COMMAND nano-bellatrix-transit
 set_tests_properties(consensus_bellatrix_runtime_restart PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_runtime")
 add_test(NAME consensus_bellatrix_validator_loop COMMAND nano-bellatrix-transition-tests --validator-loop)
 add_test(NAME consensus_bellatrix_proposal_expiry COMMAND nano-bellatrix-transition-tests --proposal-expiry-loop)
+add_test(NAME consensus_bellatrix_randao_expiry COMMAND nano-bellatrix-transition-tests --randao-expiry-loop)
+add_test(NAME consensus_bellatrix_attestation_expiry COMMAND nano-bellatrix-transition-tests --attestation-expiry-loop)
 set_tests_properties(consensus_bellatrix_validator_loop PROPERTIES TIMEOUT 240 LABELS "qualification_consensus_local_validator")
 add_test(NAME consensus_bellatrix_duty_trace COMMAND nano-bellatrix-transition-tests --duty-trace)
 set_tests_properties(consensus_bellatrix_duty_trace PROPERTIES TIMEOUT 60)

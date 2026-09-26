@@ -364,12 +364,14 @@ std::optional<Phase0SignedAttestation> BellatrixDurableReactor::sign_attestation
  const auto& clock=state_->timed.clock;
  // Per-attempt monotonic observations: remaining in the same slot is not
  // sufficient if the independent wall clock moves backwards during signing.
- uint64_t last_time=clock.time_ms;
+ uint64_t last_time=clock.time_ms;bool expired=false;
  auto timely=[&]{
   const auto time=local_clock();
+  expired=rules_.slot_duration_ms&&time>=last_time&&time>=clock.genesis_time_ms&&(time-clock.genesis_time_ms)/rules_.slot_duration_ms>slot;
   if(!rules_.slot_duration_ms||time<last_time||time<clock.genesis_time_ms||(time-clock.genesis_time_ms)/rules_.slot_duration_ms!=slot)return false;
   last_time=time;return true;
  };
+ auto expiry=[&](const char* message){if(expired)throw ExpiredBellatrixDuty(message);throw std::runtime_error(message);};
  if(!timely())return std::nullopt;
  auto duty=prepare_bellatrix_attestation_duty(*state_,rules_,index,slot,limits_.replay_slots,limits_.sync_trials,checkpoint);if(!duty)return std::nullopt;
  // Non-duty keys must not reread the complete durable archive on every poll.
@@ -380,16 +382,16 @@ std::optional<Phase0SignedAttestation> BellatrixDurableReactor::sign_attestation
  if(checkpoint)checkpoint();
  if(!timely())return std::nullopt;
  duty->attestation.signature=journal.sign_attestation(duty->attestation.data,duty->fork_version,[&](const ConsensusRoot& root){
-  if(!timely())throw std::runtime_error("Attestation duty expired before provider");
+  if(!timely())expiry("Attestation duty expired before provider");
   auto signature=signer(root);
-  if(!timely())throw std::runtime_error("Attestation duty expired during provider");
+  if(!timely())expiry("Attestation duty expired during provider");
   return signature;
  });
  // The journal verifies BLS after the provider returns. Verification and
  // cancellation handling can outlive the duty too; keep its reservation but
  // never return an already expired or cancelled result.
  if(checkpoint)checkpoint();
- if(!timely())throw std::runtime_error("Attestation duty expired after verification");
+ if(!timely())expiry("Attestation duty expired after verification");
  return std::move(duty->attestation);
 }
 std::optional<Bytes> BellatrixDurableReactor::sign_proposal(uint64_t index,uint64_t slot,
@@ -461,8 +463,9 @@ std::optional<Bytes> BellatrixDurableReactor::sign_randao_locked(uint64_t index,
  const auto& clock=state_->timed.clock;const auto& t=rules_.transition.consensus;validate_altair_transition_rules(t);
  if(!rules_.slot_duration_ms||clock.time_ms<clock.genesis_time_ms)throw std::invalid_argument("Invalid RANDAO clock");
  if((clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms!=slot||state_->timed.view.current_epoch!=slot/t.epoch.ffg.slots_per_epoch||state_->timed.view.equivocating_indices.contains(index))return std::nullopt;
- uint64_t last_time=clock.time_ms;
- auto timely=[&]{const auto time=local_clock();if(time<last_time||time<clock.genesis_time_ms||(time-clock.genesis_time_ms)/rules_.slot_duration_ms!=slot)return false;last_time=time;return true;};
+ uint64_t last_time=clock.time_ms;bool expired=false;
+ auto timely=[&]{const auto time=local_clock();expired=time>=last_time&&time>=clock.genesis_time_ms&&(time-clock.genesis_time_ms)/rules_.slot_duration_ms>slot;if(time<last_time||time<clock.genesis_time_ms||(time-clock.genesis_time_ms)/rules_.slot_duration_ms!=slot)return false;last_time=time;return true;};
+ auto expiry=[&](const char* message){if(expired)throw ExpiredBellatrixDuty(message);throw std::runtime_error(message);};
  if(!timely())return std::nullopt;
  const auto head=phase0_fork_choice_head(state_->timed.view,{t.epoch.ffg.slots_per_epoch,t.attestation.duties.effective_balance_increment,rules_.proposer_score_boost},checkpoint).head;
  const auto& parent=state_->blocks.at(head);
@@ -485,10 +488,10 @@ std::optional<Bytes> BellatrixDurableReactor::sign_randao_locked(uint64_t index,
  if(!timely())return std::nullopt;
  auto signature=journal.sign(root,[&](const ConsensusRoot& signing_root){
   auto result=signer(signing_root);
-  if(!timely())throw std::runtime_error("RANDAO expired during provider");
+  if(!timely())expiry("RANDAO expired during provider");
   return result;
  });
- if(checkpoint)checkpoint();if(!timely())throw std::runtime_error("RANDAO expired after verification");
+ if(checkpoint)checkpoint();if(!timely())expiry("RANDAO expired after verification");
  return signature;
 }
 std::optional<Bytes> BellatrixDurableReactor::propose_local(uint64_t index,uint64_t slot,const std::string& recipient,

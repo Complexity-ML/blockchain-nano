@@ -117,7 +117,9 @@ int main(int argc,char** argv){try{
  const bool recovery=argc==2&&std::string(argv[1])=="--runtime-recovery";
  const bool operations=argc==2&&std::string(argv[1])=="--runtime-slashing";
  const bool runtime_only=operations||recovery||(argc==2&&std::string(argv[1])=="--runtime");
- const bool expiry_loop=argc==2&&std::string(argv[1])=="--proposal-expiry-loop";
+ const bool expiry_randao=argc==2&&std::string(argv[1])=="--randao-expiry-loop";
+ const bool expiry_attestation=argc==2&&std::string(argv[1])=="--attestation-expiry-loop";
+ const bool expiry_loop=expiry_randao||expiry_attestation||(argc==2&&std::string(argv[1])=="--proposal-expiry-loop");
  const bool validator_only=expiry_loop||deposit_loop||exits_only||network||(argc==2&&std::string(argv[1])=="--validator-loop");
  check(argc==1||duty_trace||clock_coalescing||partition_simulation||beacon_headers_reorg||beacon_headers||beacon_api||deposit_store||validator_only||runtime_only||managed,"unknown Bellatrix qualification arguments");
  const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-bellatrix-containers-official",source=fixtures/"consensus-bellatrix-slots-official";
@@ -344,20 +346,29 @@ int main(int argc,char** argv){try{
      Blockchain chain(live/"chain",g);BellatrixDurableReactor bound(chain,fork_rules,reactor_limits,*store);
      std::atomic<uint64_t> wall=store->timed.clock.time_ms;BellatrixLocalClock clock(bound,seconds*1000,[&]{return wall.load();});
      std::vector<std::unique_ptr<ChainStore>> journals;std::vector<BellatrixValidatorKey> keys;
-     size_t entrant_signatures=0,expiry_calls=0;bool inject_expiry=expiry_loop,inject_provider_failure=false;std::vector<std::shared_ptr<BeaconSigningJournal>> expiry_journals;std::shared_ptr<BeaconSigningJournal> entrant_journal;
+     size_t entrant_signatures=0,expiry_calls=0;uint64_t expired_index=0;const size_t expiry_call=expiry_randao?1:expiry_attestation?3:2;bool inject_expiry=expiry_loop,inject_provider_failure=false;std::vector<std::shared_ptr<BeaconSigningJournal>> expiry_journals;std::shared_ptr<BeaconSigningJournal> entrant_journal;
      for(uint64_t i=0;i<(deposit_activation?65u:64u);++i){
       auto signer=std::make_shared<Key>(i);journals.push_back(std::make_unique<ChainStore>(live/("signer-"+std::to_string(i))));
       auto journal=std::make_shared<BeaconSigningJournal>(*journals.back(),r.chain_id,execution_genesis.header.hash(),genesis_root,signer->public_key,slots);
       if(i==64)entrant_journal=journal;
       expiry_journals.push_back(journal);
-      keys.push_back({i,std::move(journal),[signer,i,&entrant_signatures,&inject_expiry,&inject_provider_failure,&expiry_calls,&wall,seconds](const ConsensusRoot& root){if(i==64)++entrant_signatures;if(inject_provider_failure)throw std::runtime_error("injected provider failure");auto signature=signer->sign(root);if(inject_expiry&&++expiry_calls==2){wall+=seconds*1000;inject_expiry=false;}return signature;},sender});
+      keys.push_back({i,std::move(journal),[signer,i,&entrant_signatures,&inject_expiry,&inject_provider_failure,&expiry_calls,&expired_index,expiry_call,&wall,seconds](const ConsensusRoot& root){if(i==64)++entrant_signatures;if(inject_provider_failure)throw std::runtime_error("injected provider failure");auto signature=signer->sign(root);if(inject_expiry&&++expiry_calls==expiry_call){expired_index=i;wall+=seconds*1000;inject_expiry=false;}return signature;},sender});
      }
      BellatrixValidatorLoop loop(bound,clock,seconds*1000,slots,128,std::move(keys),[&]{return wall.load();});
      if(expiry_loop){
-      wall=(genesis_time+2*seconds)*1000;clock.poll();
-      const auto proposer=bound.current_proposer(2);check(proposer.has_value(),"expiry proposer missing");
+      const uint64_t expiry_slot=expiry_attestation?slots:2;
+      for(uint64_t step=2;step<=expiry_slot;++step){wall=(genesis_time+step*seconds)*1000;clock.poll();}
+      const auto proposer=bound.current_proposer(expiry_slot);check(proposer.has_value(),"expiry proposer missing");
       loop.poll();const auto stopped=loop.status();
-      check(!inject_expiry&&stopped.at("healthy")==true&&stopped.at("proposalsAdmitted")==0&&stopped.at("timing").at("slotBoundaryExits")==1,"expired proposal killed loop or was published");
+      check(!inject_expiry&&stopped.at("healthy")==true&&stopped.at("proposalsAdmitted")== (expiry_attestation?1:0)&&stopped.at("timing").at("slotBoundaryExits")==1,"expired proposal killed loop or was published");
+      if(expiry_attestation){
+       check(stopped.at("attestationsAdmitted")==0,"expired attestation was published");
+       Key expired_key(expired_index);const auto token=expiry_journals.at(expired_index)->commitment();
+       BeaconSigningJournal reopened(*journals.at(expired_index),r.chain_id,execution_genesis.header.hash(),genesis_root,expired_key.public_key,slots,token);
+       check(reopened.latest_attestation_target()==expiry_slot/slots,"expired attestation lost durable target");
+      }else if(expiry_randao){
+       check(!expiry_journals.at(*proposer)->latest_proposal_slot(),"RANDAO invented proposal reservation");
+      }else{
       check(expiry_journals.at(*proposer)->latest_proposal_slot()==2,"expired signature lost durable reservation");
       {
        const auto token=expiry_journals.at(*proposer)->commitment();Key key(*proposer);
@@ -368,11 +379,12 @@ int main(int argc,char** argv){try{
        try{reopened.sign_proposal(conflicting,{},[&](const ConsensusRoot& root){++calls;return key.sign(root);});}catch(const std::runtime_error&){rejected=true;}
        check(rejected&&calls==0,"expired reservation allowed conflicting signature after reopening");
       }
-      loop.poll();check(loop.status().at("healthy")==true&&loop.status().at("proposalsAdmitted").get<uint64_t>()>0,"loop did not resume next slot");
+      }
+      loop.poll();check(loop.status().at("healthy")==true&&loop.status().at("proposalsAdmitted").get<uint64_t>()>stopped.at("proposalsAdmitted").get<uint64_t>(),"loop did not resume next slot");
       const auto recovered_status=loop.status();inject_provider_failure=true;wall+=seconds*1000;
       bool failed=false;try{loop.poll();}catch(const std::runtime_error& error){failed=std::string(error.what())=="injected provider failure";}
       check(failed&&loop.status().at("healthy")==false&&loop.status().at("failure")=="injected provider failure","provider failure was silently retried");
-      std::cout<<Json{{"scenario","proposal-expiry-loop"},{"reservationRetained",true},{"reopenedConflictRefused",true},{"providerFailureFatal",true},{"recoveredLoop",recovered_status}}.dump()<<std::endl;return 0;
+      std::cout<<Json{{"scenario",expiry_randao?"randao-expiry-loop":expiry_attestation?"attestation-expiry-loop":"proposal-expiry-loop"},{"reservationRetained",!expiry_randao},{"reopenedConflictRefused",!expiry_randao&&!expiry_attestation},{"providerFailureFatal",true},{"recoveredLoop",recovered_status}}.dump()<<std::endl;return 0;
      }
      std::unique_ptr<BellatrixNetworkPair> peers;
      if(network)peers=std::make_unique<BellatrixNetworkPair>(live.path,argv[2],g,fork_rules,reactor_limits,*store,chain,bound,clock,wall);
