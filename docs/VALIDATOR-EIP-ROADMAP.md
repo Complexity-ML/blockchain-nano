@@ -2468,3 +2468,11 @@ Trois boucles saines, checkpoints liés à l’exécution et audit de 207 observ
 sans conflit ni régression. Sortie globale 1 conservée. La fenêtre après reprise
 est qualifiée dans ce périmètre, pas le délai ni la production globale.
 [Preuves](qualification/multihost-20260927/sustained-recovery/README.md).
+
+### Diagnostic des transitions FFG après reprise WAN
+
+Le checkpoint natif de la campagne ci-dessus montre 60,9 % de poids de cible
+précédente au slot 64, puis quorum au slot 66 ; justification 8 au slot 72
+et finalisation 8 au slot 80. Investigation suivante : arrivée et inclusion
+des attestations avant la frontière d’époque. Aucun délai assoupli.
+[Analyse reproductible et limites](qualification/multihost-20260927/ffg-recovery-analysis/README.md).
