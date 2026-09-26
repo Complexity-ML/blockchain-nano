@@ -10,6 +10,7 @@ import {createHash} from 'node:crypto';
 import {validateStoppedValidators} from './validator-gate.mjs';
 import {partitionRemote} from './partition.mjs';
 import {observeRecovery} from './recovery-observation.mjs';
+import {sampleClock} from './clock-sample.mjs';
 const exec=promisify(execFile),[target,revision,outputArg]=process.argv.slice(2);
 if(!/^[a-z_][a-z0-9_-]*@[0-9.]+$/.test(target??'')||!(/^[0-9a-f]{40}$/).test(revision??'')||!outputArg)throw Error('Usage: run.mjs user@IPv4 core-revision fresh-output');
 const output=resolve(outputArg),repo=process.cwd(),image=`blockchain-nano:${revision.slice(0,7)}`;
@@ -34,6 +35,12 @@ for(const onRemote of [false,true]){
 await mkdir(output);
 const log=async event=>appendFile(join(output,'run.jsonl'),JSON.stringify({time:Date.now(),...event})+'\n');
 let native,localStarted=false,remoteStarted=false;
+const clockSamples=async phase=>{
+ for(const [host,remoteClock] of [['vps',()=>sh(['date','+%s%3N'])],['docker-mac',()=>docker(['exec',local,'date','+%s%3N'])]]){
+  try{await log({event:'clock-sample',phase,host,...await sampleClock(remoteClock)});}
+  catch(error){await log({event:'clock-sample-unavailable',phase,host,message:error.message});}
+ }
+};
 const request=async(kind,path,body)=>{
  const args=['-fsS','--max-time','5','-H','Accept: application/json'];
  if(body)args.push('-H','Content-Type: application/json','--data',JSON.stringify(body));
@@ -46,7 +53,7 @@ const rpc=async(kind,method,params=[])=>{
 };
 try{
  const binary=join(repo,'build-release/nano'),p2p=join(repo,'build-network/nano-p2p');
- const harness={};for(const name of ['run.mjs','partition.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
+ const harness={};for(const name of ['run.mjs','partition.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
  await log({event:'harness',partition,sha256:harness});
  await log({event:'binaries',revision,nanoSha256:createHash('sha256').update(await readFile(binary)).digest('hex'),p2pSha256:createHash('sha256').update(await readFile(p2p)).digest('hex')});
  const assets=join(output,'assets'),prepared=join(output,'prepared');
@@ -94,6 +101,7 @@ try{
  const genesis=await rpc('native','eth_getBlockByNumber',['0x0',false]);
  const observers={revision,genesisHash:genesis.hash,nodes:[{name:'mac-native',kind:'native',url:'http://127.0.0.1:18545'},{name:'mac-docker',kind:'docker',container:local,url:'http://127.0.0.1:8545'},{name:'vps-docker',kind:'ssh-docker',ssh:target,container:remote,url:'http://127.0.0.1:8545'}]};
  await writeFile(join(output,'observers.json'),JSON.stringify(observers,null,2));
+ await clockSamples('before-partition');
  await observeRecovery({record:log,partition:async()=>{if(partition)await partitionRemote({docker:args=>docker(args,true),container:remote,network:testNetwork,revision,record:log,
   sample:()=>Promise.all(['native','local','remote'].map(async(kind,i)=>({name:observers.nodes[i].name,
    peers:await rpc(kind,'net_peerCount'),
@@ -102,6 +110,7 @@ try{
  await log({event:'finality-passed'});
 }catch(error){await log({event:'failed',message:error.stack});process.exitCode=1;}
 finally{
+ if(localStarted&&remoteStarted)await clockSamples('before-stop');
  if(native&&native.exitCode===null&&native.signalCode===null){native.kill('SIGTERM');for(let i=0;i<30&&native.exitCode===null&&native.signalCode===null;i++)await delay(1000);if(native.exitCode===null&&native.signalCode===null)native.kill('SIGKILL');}
  for(const [name,onRemote,started] of [[local,false,localStarted],[remote,true,remoteStarted]])if(started){
   try{await docker(['stop','--time','20',name],onRemote);await writeFile(join(output,onRemote?'vps.log':'docker-mac.log'),await captureLogs(name,onRemote));}catch(error){await log({event:'cleanup-error',name,message:error.message});process.exitCode=1;}

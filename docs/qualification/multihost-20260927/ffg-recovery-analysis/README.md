@@ -79,3 +79,12 @@ Contrôles exécutés : archive précédente = 519 inclusions, 2606 événements
 sans date, aucune correspondance datée inventée ; événement synthétique sur
 une empreinte incluse = une correspondance à -123 ms ; événement `known`
 identique exclu. L’outil n’altère aucun état et ne valide pas les signatures.
+
+Le banc enregistre désormais `clock-sample` avant partition et avant arrêt,
+pour le VPS et la VM Docker Mac. L’intervalle d’écart est
+`[temps distant - réception locale, temps distant - envoi local]` : aucune
+hypothèse de transport symétrique. Une mesure indisponible est signalée et
+ne remplace pas les critères de finalité. Ces échantillons ne garantissent
+pas l’absence de saut d’horloge entre les mesures. Trois nouveaux contrôles
+(`node --test tests/multihost/clock-sample.test.mjs`) passent : asymétrie,
+valeurs invalides/horloge reculant, erreur de transport conservée.
