@@ -1,0 +1,36 @@
+{
+  "result": "passed",
+  "scenario": "consensus_execution_deposit_source",
+  "elapsedSeconds": 0.8,
+  "officialCases": 35,
+  "deposits": 680,
+  "zeroDepositCases": 13,
+  "scope": [
+    "Full EVM replay with independently supplied block hash and pinned deposit runtime code hash",
+    "Parent state root and advertised execution commitments verified",
+    "Consecutive deposit event indices with bounded extraction and cancellation",
+    "Official post-state plus actual Solidity deposit count and Merkle root matched",
+    "Deposit amounts matched executed contract balance increase in all selected fixtures",
+    "Direct and nested calls, revert, out-of-gas, staticcall, delegatecall and invalid amounts from official fixtures",
+    "Wrong block/code/parent, mismatched receipt commitment, wrong index and exhausted capacity rejected"
+  ],
+  "limits": [
+    "Library helper only; not invoked by Bellatrix runtime or RPC",
+    "Trusted block hash and runtime hash are caller supplied; not a remote-chain light client",
+    "Ethereum deposit contract address only in this initial helper",
+    "Merkle proofs, branch-bound deposit history, Eth1 votes and registry admission not connected",
+    "No validator activation or withdrawal payout demonstrated",
+    "Fixture engine profile is Prague; this does not activate Prague on Bellatrix"
+  ],
+  "sources": [
+    "https://ethereum.github.io/consensus-specs/specs/phase0/deposit-contract/"
+  ],
+  "sha256": {
+    "include/nano/consensus_execution_deposit.hpp": "1d47a5d5411a8398076857722170b8aaa7959b2a7dced5807b76f131416bd5e1",
+    "src/consensus_execution_deposit.cpp": "7ee5a1356560816812bcb9e572c43f997ad7d05cd8c733cc773b786b52ff73fe",
+    "tests/test_execution_deposit.cpp": "5700be96a6f2aa6f6d3683568aee290b67cd36ed65fc71732d617f6a92994b16",
+    "tests/fixtures/ethereum-blocks/for_prague--prague--eip6110_deposits--deposits--deposit.json": "f815a9ff1b1d3e9f7947888281bccad078d2572dbf5acf5ee4d50fc00e60af48",
+    "build-release/nano-execution-deposit-tests": "6ba100d7e09a9a2e494c9acbcbd394ef343540026bd8f91862195c5b79f7a5ac",
+    "build-cmake/qualification/execution-deposit-source-20260926/test.log": "273f20eff5756367cbfd4b0f06aa0ddb8dfe48ee595f0c210bed595960ad05ea"
+  }
+}

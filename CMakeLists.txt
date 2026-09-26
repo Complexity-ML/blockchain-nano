@@ -1372,3 +1372,8 @@ set_tests_properties(consensus_bellatrix_local_slashing PROPERTIES TIMEOUT 180 L
 
 add_test(NAME consensus_bellatrix_voluntary_exit COMMAND nano-bellatrix-transition-tests --exit-loop)
 set_tests_properties(consensus_bellatrix_voluntary_exit PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_operations")
+
+add_executable(nano-execution-deposit-tests tests/test_execution_deposit.cpp)
+target_link_libraries(nano-execution-deposit-tests PRIVATE nano_core)
+target_compile_definitions(nano-execution-deposit-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+add_test(NAME consensus_execution_deposit_source COMMAND nano-execution-deposit-tests)
