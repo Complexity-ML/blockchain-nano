@@ -2415,3 +2415,18 @@ Mac natif + Docker ARM64 + VPS AMD64, deux machines, 64 clés synthétiques.
 La campagne précédente avec validateur arrêté reste classée en échec.
 Les partitions WAN, l’endurance et le grand registre restent ouverts ; aucun
 statut EIP ou production global ne découle de cette fenêtre. [Preuves](qualification/multihost-20260926/with-expiry/README.md).
+
+### Correctifs locaux en attente de nouvelle qualification WAN
+
+- `9e1b904` : expiration normale RANDAO/attestation reprise au slot suivant ;
+  engagements durables conservés, erreurs fournisseur fatales. Scénarios locaux
+  passés ; [preuves et limites](qualification/multihost-20260926/duty-expiry/README.md).
+- `5da8484` : lecture par page de l'inventaire des votes déjà acquittés. Le
+  scénario de 70 votes connus puis un vote nouveau passe de 71 à 3 lectures
+  du cœur, avec le même budget de parcours et un seul nouvel envoi par tentative.
+  [Preuves locales](qualification/multihost-20260926/relay-pages/README.md).
+
+La campagne WAN suivante conserve les seuils : coupure 96 s, reprise commune
+sous 180 s, puis trois avancées successives liées à l'exécution et contrôle des
+trois validateurs à l'arrêt. Aucun verdict acquis par la compilation des images.
+Ces modifications ne changent pas les règles de fork ni le statut d'une EIP.

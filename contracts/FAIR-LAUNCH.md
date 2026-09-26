@@ -176,3 +176,87 @@ banc seront synthétiques, sans cotation USD annoncée.
 
 La collecte communautaire n'élimine ni les coûts de déploiement et de relais,
 ni les risques de contrats, de bridge, de MEV ou de pertes des participants.
+
+## Visibilité dès T0 — critère de sélection
+
+L'utilisateur demande une cotation directement visible à l'ouverture de la vente.
+Vérifier l'indexation pré-graduation du protocole retenu ; un graphique propriétaire
+ne suffit pas à démontrer une disponibilité sur DexScreener. L'indexation externe
+étant asynchrone, mesurer son délai et ne pas promettre une simultanéité absolue.
+Séparer le prix initial achetable, la première transaction et les bougies indexées.
+
+Avant de sélectionner un launchpad : vérifier sur une vente réelle comparable
+réseau, factory, token, phase active et visibilité dans l'agrégateur ; examiner
+l'actif de paiement, les frais, l'offre créée ou importable, l'adossement NANO,
+les règles de retrait, le seuil et les destinations de la liquidité. Aucun
+protocole tiers n'est choisi sur la seule présence d'une API.
+
+Premier examen documentaire (26 septembre 2026, non qualification) :
+
+| Candidat | Fait documenté | Écart ou preuve manquante pour Nano |
+| --- | --- | --- |
+| Flaunch | API Base/Base Sepolia ; lancement à prix fixe ; paramètre de capitalisation initiale exprimé en USDC | Ce paramètre n'est pas une réserve USDC ni un seuil de collecte ; compatibilité token adossé, courbe choisie, migration Nano et indexation T0 à prouver |
+| Virtuals | VIRTUAL sert d'actif de référence/liquidité de son écosystème d'agents | Ce n'est pas automatiquement une vente USDC de NANO ; usage, token importable, migration et indexation T0 à prouver |
+| Contrat Nano propre | Architecture décrite dans ce fichier, non implémentée | Intégration de l'indexeur à obtenir et vérifier ; reproduire des noms d'événements ne suffit pas |
+
+Sources primaires consultées :
+- https://docs.flaunch.gg/references/api
+- https://docs.flaunch.gg/
+- https://whitepaper.virtuals.io/
+- https://docs.dexscreener.com/token-listing
+- https://docs.dexscreener.com/api/reference
+
+Aucun contact n'a été envoyé et aucun lancement n'a été effectué.
+
+### Écarts confirmés lors de l'examen documentaire
+
+Flaunch décrit un lancement à prix fixe et en ETH ; sa FAQ interdit les ventes
+pendant le fair launch. Son API crée un nouveau memecoin. Ce parcours documenté
+ne remplace donc pas tel quel la courbe USDC avec rachats décrite ici ; il faudrait
+revoir ces choix et prouver l'adossement avant toute adoption. Aucune preuve
+consultée n'établit à elle seule son indexation DexScreener à l'ouverture.
+Sources : https://docs.flaunch.gg/protocol/frequently-asked-questions et
+https://docs.flaunch.gg/references/api.
+
+Doppler est un candidat technique supplémentaire : la documentation décrit des
+modules de création de tokens, des courbes configurables et des déploiements sur
+Base/Base Sepolia. Cela justifie une étude, pas une sélection. Restent à vérifier
+l'indexation avant migration, l'utilisation de l'actif USDC retenu, l'import ou
+l'adossement de l'offre NANO, les modules canoniques autorisés et la destination
+des liquidités. Sources : https://docs.doppler.lol/explainer et
+https://docs.doppler.lol/reference/contract-addresses.
+
+Critère non négociable avant lancement : preuve d'indexation du parcours exact,
+pas seulement d'autres tokens du même écosystème après leur graduation. Le choix
+du prestataire, les fonds réels et le déploiement restent non effectués.
+
+### Parcours Dynamic examiné avec l'utilisateur
+
+Le formulaire copié par l'utilisateur le 26 septembre 2026 expose Base et
+permet de remplacer le numéraire ETH par **USDC**. C'est une observation de
+l'interface, pas une vérification des contrats ou de l'adresse USDC émise par
+Circle. Nom proposé : Nanobees ; symbole proposé : NBE, non confirmé.
+Couverture générée ; aucune signature ni transaction de création effectuée par
+l'assistant. La date du 10 octobre à 18 h Paris a uniquement été proposée comme
+valeur provisoire pour parcourir les étapes ; elle n'est pas une échéance de
+production validée.
+
+Le SDK officiel consulté est `@whetstone-research/doppler-sdk` (exemples EVM
+avec import `/evm`), et non `@dopplerprotocol`. Les exemples Multicurve avec
+WETH ne prouvent pas les paramètres de ce parcours Dynamic/USDC. Sources :
+https://docs.doppler.lol/reference/examples/multicurve et
+https://github.com/whetstoneresearch/doppler-sdk.
+
+Avant création : vérifier adresse/decimals du numéraire, offre et droits de
+création du token, garantie de conversion au NANO natif, paramètres de vente,
+remboursement et migration, destinataires des fonds et contrôle des positions
+LP. Un nom identique n'est pas une garantie de conversion. La sélection USDC
+ne prouve toujours pas l'indexation DexScreener pré-graduation.
+
+### Décision utilisateur : reporter le formulaire
+
+L'utilisateur préfère reprendre le formulaire une fois les éléments essentiels
+prêts. Conserver le visuel et le brouillon ; aucune création de token, signature,
+collecte ou publication n'est autorisée par cette préparation. Priorité actuelle :
+reprise WAN, définition et qualification de l'adossement Base/NANO, puis vente
+et migration de liquidité. La date provisoire n'est pas un calendrier de lancement.
