@@ -35,12 +35,14 @@ const initialPrice=sqrt((amount1<<192n)/amount0),fee=3000;
 await (await manager.createAndInitializePoolIfNecessary(token0,token1,fee,initialPrice)).wait();
 const poolAddress=await factory.getPool(token0,token1,fee);assert.notEqual(poolAddress,ZeroAddress);
 const pool=new Contract(poolAddress,Pool.abi,alice),slot=await pool.slot0();assert.equal(slot.sqrtPriceX96,initialPrice);assert.equal(await pool.tickSpacing(),60n);
-const center=Math.floor(Number(slot.tick)/60)*60,tickLower=center-600,tickUpper=center+600;
+const fullRange=process.env.NANO_TEST_FULL_RANGE==='1',quoteBudget=fullRange?100000000n:1000000n;
+const center=Math.floor(Number(slot.tick)/60)*60;
+const rangeArgs=fullRange?['--full-range']:['--tick-lower',String(center-600),'--tick-upper',String(center+600)];
 const simulation=JSON.parse(execFileSync('python3',[fileURLToPath(new URL('../../../scripts/simulation/graduation_v3.py',import.meta.url)),
- '--usdc','1','--sqrt-price-x96',initialPrice.toString(),'--quote-index',wnFirst?'1':'0',
- '--tick-lower',String(tickLower),'--tick-upper',String(tickUpper),'--tick-spacing','60'],{encoding:'utf8'}));
-const allocation=BigInt(simulation.allocationCRaw);
-amount0=wnFirst?allocation:1000000n;amount1=wnFirst?1000000n:allocation;
+ '--usdc',fullRange?'100':'1','--sqrt-price-x96',initialPrice.toString(),'--quote-index',wnFirst?'1':'0',
+ ...rangeArgs,'--tick-spacing','60'],{encoding:'utf8'}));
+const allocation=BigInt(simulation.allocationCRaw),tickLower=simulation.tickLower,tickUpper=simulation.tickUpper;
+amount0=wnFirst?allocation:quoteBudget;amount1=wnFirst?quoteBudget:allocation;
 const latest=await provider.send('eth_getBlockByNumber',['latest',false]),deadline=BigInt(latest.timestamp)+3600n;
 await (await wn.deposit({value:parseEther('100')})).wait();await (await wn.approve(managerAddress,parseEther('100'))).wait();await (await quote.approve(managerAddress,1000000000n)).wait();
 const before0=wnFirst?await wn.balanceOf(alice.address):await quote.balanceOf(alice.address),before1=wnFirst?await quote.balanceOf(alice.address):await wn.balanceOf(alice.address);
@@ -56,7 +58,27 @@ const used=wnFirst?mint.args.amount1:mint.args.amount0;
 assert.equal(used,BigInt(simulation.usdcUsedRaw));
 assert.equal((await pool.slot0()).sqrtPriceX96,initialPrice);
 assert.equal((await pool.slot0()).tick,slot.tick);
+let roundTrip:any=null;
+if(fullRange){
+ // Spend the same quote amount as the initial reserve, then sell only received tokens.
+ await (await quote.approve(routerAddress,quoteBudget)).wait();
+ const quoteBefore=await quote.balanceOf(alice.address),nanoBefore=await wn.balanceOf(alice.address);
+ const buy={tokenIn:quoteAddress,tokenOut:wnAddress,fee,recipient:alice.address,deadline,
+  amountIn:quoteBudget,amountOutMinimum:1n,sqrtPriceLimitX96:0};
+ await (await router.exactInputSingle(buy)).wait();
+ const received=await wn.balanceOf(alice.address)-nanoBefore,peak=(await pool.slot0()).sqrtPriceX96;
+ assert(received>0n&&received<allocation);assert.equal(quoteBefore-await quote.balanceOf(alice.address),quoteBudget);
+ assert(wnFirst?peak>initialPrice:peak<initialPrice);
+ await (await wn.approve(routerAddress,received)).wait();
+ const beforeSell=await quote.balanceOf(alice.address);
+ await (await router.exactInputSingle({...buy,tokenIn:wnAddress,tokenOut:quoteAddress,amountIn:received})).wait();
+ const returned=await quote.balanceOf(alice.address)-beforeSell,ending=(await pool.slot0()).sqrtPriceX96;
+ assert(returned>0n&&returned<quoteBudget);assert.equal(await wn.balanceOf(alice.address),nanoBefore);
+ assert(wnFirst?ending<peak:ending>peak);assert.equal(await pool.liquidity(),position.liquidity);
+ roundTrip={quoteIn:quoteBudget.toString(),nanoReceived:received.toString(),quoteReturned:returned.toString(),
+  sqrtAfterBuy:peak.toString(),sqrtAfterSell:ending.toString(),liquidityRemainedActive:true};
+}
 console.log(JSON.stringify({scenario:'graduation-v3-python-vs-nano',fork:process.env.NANO_TEST_EVM_FORK,
- core:'1.0.1',periphery:'1.4.4',simulation,actual:{liquidity:position.liquidity.toString(),
- allocationRaw:allocation.toString(),quoteUsedRaw:used.toString()},priceAndTickUnchanged:true,syntheticAssets:true}));
+ core:'1.0.1',periphery:'1.4.4',roundTrip,simulation,actual:{liquidity:position.liquidity.toString(),
+ allocationRaw:allocation.toString(),quoteUsedRaw:used.toString()},priceAndTickUnchangedByMint:true,syntheticAssets:true}));
 await connection.close();

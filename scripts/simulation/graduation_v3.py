@@ -65,6 +65,12 @@ def human(raw, decimals):
         ctx.prec = 100
         return format(Decimal(raw) / Decimal(10)**decimals, 'f')
 
+def full_range(spacing):
+    if not 0 < spacing < 16384:
+        raise ValueError("tick spacing outside Uniswap V3 factory bounds")
+    maximum = (887272 // spacing) * spacing
+    return -maximum, maximum
+
 def main():
     parser=argparse.ArgumentParser(description="Size allocation C for a V3 position; offline only")
     parser.add_argument('--usdc',required=True,help="human USDC budget, at most 6 decimals")
@@ -73,10 +79,17 @@ def main():
     pricing.add_argument('--sqrt-price-x96',type=int,help="actual pool slot0 value")
     parser.add_argument('--quote-index',type=int,choices=[0,1],required=True,help="USDC token index determined by address ordering")
     parser.add_argument('--token-decimals',type=int,default=18)
-    parser.add_argument('--tick-lower',type=int,required=True)
-    parser.add_argument('--tick-upper',type=int,required=True)
+    parser.add_argument('--full-range',action='store_true')
+    parser.add_argument('--tick-lower',type=int)
+    parser.add_argument('--tick-upper',type=int)
     parser.add_argument('--tick-spacing',type=int,required=True,help="read from the actual pool/factory")
     args=parser.parse_args()
+    if args.full_range:
+        if args.tick_lower is not None or args.tick_upper is not None:
+            parser.error("--full-range cannot be combined with explicit ticks")
+        args.tick_lower,args.tick_upper=full_range(args.tick_spacing)
+    elif args.tick_lower is None or args.tick_upper is None:
+        parser.error("provide --full-range or both tick bounds")
     if not 0 <= args.token_decimals <= 36: raise ValueError("unsupported token decimals")
     quote=Fraction(args.usdc)*10**6
     if quote.denominator != 1: raise ValueError("USDC supports six decimals")

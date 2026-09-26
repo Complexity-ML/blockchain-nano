@@ -1831,3 +1831,8 @@ d’endurance ou de production : voir [preuves multi-hôte](qualification/multih
   comparé au mint des bytecodes officiels sur Nano Paris, deux ordres des actifs.
   Montants, liquidité et tick vérifiés ; aucune qualification du bridge ou de la
   vente publique. [Preuves](qualification/graduation-v3-20260926/README.md).
+
+- 2026-09-26 — Position V3 full range : mint à 100 unités synthétiques puis
+  achat/revente du montant reçu sur Nano Paris. Position active conservée,
+  soldes et variation de prix vérifiés ; aucun actif réel ni mesure de capacité
+  réseau. [Résultats](qualification/graduation-v3-20260926/full-range/README.md).

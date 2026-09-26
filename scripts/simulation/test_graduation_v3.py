@@ -1,7 +1,7 @@
 import unittest
 from fractions import Fraction
 from math import isqrt
-from graduation_v3 import Q96, sqrt_at_tick, tick_at_sqrt, size, amounts
+from graduation_v3 import Q96, sqrt_at_tick, tick_at_sqrt, size, amounts, full_range
 
 class GraduationTests(unittest.TestCase):
     def test_tick_vectors(self):
@@ -25,6 +25,17 @@ class GraduationTests(unittest.TestCase):
                 expected=(budget*Q96//(Q96-a) if index else budget*(Q96*b//Q96)//(b-Q96))
                 self.assertEqual(L,expected)
                 self.assertEqual(pair,amounts(L,Q96,a,b))
+    def test_full_range(self):
+        for spacing in [1,10,60,200]:
+            lo,hi=full_range(spacing)
+            self.assertEqual(lo,-hi)
+            self.assertEqual(hi%spacing,0)
+            self.assertLessEqual(hi,887272)
+            self.assertGreater(hi+spacing,887272)
+        self.assertEqual(full_range(60),(-887220,887220))
+        for spacing in [0,-1,16384]:
+            with self.assertRaises(ValueError):full_range(spacing)
+
     def test_rejections(self):
         for lower,upper,spacing in [(0,120,60),(-120,0,60),(-119,120,60),(-120,120,0),(-120,120,-1),(120,-120,60)]:
             with self.assertRaises(ValueError):size(100,Q96,lower,upper,spacing,1)

@@ -31,3 +31,18 @@ invalides. La comparaison à un mint effectif sur Nano Paris passe dans les deux
 des actifs (quote token0 et token1), montants et liquidité exactement égaux.
 Preuves : docs/qualification/graduation-v3-20260926. Cela ne qualifie ni le
 contrat de graduation ni le bridge.
+
+## Plage complète utilisable
+
+`--full-range` remplace les deux arguments de ticks. Les bornes sont les multiples
+extrêmes du spacing, par exemple -887220 et 887220 pour 60. Ce n'est pas une plage
+mathématique infinie ni une garantie de profondeur. Exemple purement synthétique :
+
+```sh
+python3 scripts/simulation/graduation_v3.py --usdc 100 --price 0.01 \
+ --quote-index 1 --tick-spacing 60 --full-range
+```
+
+Le banc Hardhat accepte `NANO_TEST_FULL_RANGE=1` et utilise 100 unités quote à
+six décimales. Sa fixture actuelle fixe 10 unités quote/NANO, indépendamment de
+l'exemple économique ci-dessus : ne pas confondre ces deux prix.
