@@ -40,7 +40,7 @@ la progression et trois avancées consécutives du même checkpoint finalisé
 sur **les trois instances**, liées aux mêmes blocs d’exécution. Conserver
 observations, latences, empreintes et logs, y compris en cas d’échec.
 Les changements de connexion et crashs viennent ensuite, sur ces seules
-instances isolées. Aucun résultat multi-hôte n’est encore revendiqué.
+instances isolées. Les résultats bornés sont archivés dans `docs/qualification/multihost-20260926/`.
 
 ## Lancement de la campagne isolée
 
@@ -67,3 +67,32 @@ Diagnostic optionnel : préfixer le lancement par `NANO_TEST_NETWORK_TRACE=1`.
 Le même réglage est alors transmis aux deux conteneurs et au processus natif.
 Il active les traces existantes du relais et des devoirs, sans modifier les
 intervalles, seuils ou règles de consensus. Son coût fait partie de la mesure.
+
+## Partition WAN isolée (scénario en cours de qualification)
+
+Préfixer la commande par `NANO_TEST_WAN_PARTITION=1`. Le lanceur crée un
+réseau Docker dédié au seul conteneur VPS de cette campagne. Après finalité
+commune, il déconnecte ce conteneur pendant 96 secondes, conserve les RPC sur
+loopback via docker exec et contrôle zéro pair et le processus encore actif.
+Il reconnecte ensuite la même adresse interne dans un bloc finally, y compris
+si une observation échoue ou si la réponse SSH de déconnexion est perdue.
+Aucune règle de pare-feu du serveur ni autre conteneur n’est modifié.
+
+Les checkpoints sont comparés pendant la coupure et la reprise (refus de
+régression et de racines contradictoires). Délai maximal de reprise : 180 s,
+avec pairs reconnectés et un checkpoint commun supérieur à celui de départ.
+Suit la fenêtre habituelle de trois avancées consécutives, liées à l’exécution,
+puis le contrôle terminal des trois validateurs. Le lanceur conserve ses
+empreintes et les binaires dans run.jsonl. Les réseaux arrêtés restent conservés
+avec les conteneurs et bases de diagnostic, sans suppression automatique.
+
+Ce scénario isole les 21 clés du VPS des 43 clés Mac ; il ne constitue pas une
+partition équilibrée 32/32 ni trois domaines de panne. On ne suppose pas que
+l'ensemble du réseau doit cesser de finaliser : cela dépend aussi des liaisons
+restantes entre les instances Mac. Ce test n’injecte ni transaction utilisateur,
+ni charge continue. Une restauration dans finally couvre les erreurs capturées,
+pas une destruction du processus orchestrateur ou la perte totale de SSH.
+
+Les tests unitaires de `partition.test.mjs` contrôlent l'orchestrateur et ses
+refus ; ils ne prouvent pas la reprise du réseau réel. Campagne lancée le
+26 septembre 2026, résultats à consigner après son arrêt.
