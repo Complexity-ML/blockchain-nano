@@ -39,7 +39,9 @@ std::string validation_exception(const std::string& message){
 // Differential adapter for the current Nano engine. A matching case does not
 // establish fork compliance: the engine's fork selection is still incomplete.
 int main(int argc,char** argv){
- if(argc!=2){std::cerr<<"Usage: nano-ethereum-state-runner <state-fixture.json or directory>\n";return 2;}
+ if(argc==2&&std::string(argv[1])=="--version"){std::cout<<"nano-ethereum-state-runner 1\n";return 0;}
+ const bool selected=argc==4;const std::string case_name=selected?argv[3]:"";
+ if((argc!=2&&argc!=4)||(selected&&std::string(argv[2])!="--case")){std::cerr<<"Usage: nano-ethereum-state-runner <state-fixture.json or directory> [--case exact-id]\n";return 2;}
  uint64_t matched=0,mismatched=0,unsupported=0,errors=0,validation_matched=0;std::vector<fs::path> files;
  try{
   fs::path input=argv[1];if(fs::is_directory(input)){for(const auto& entry:fs::recursive_directory_iterator(input))if(entry.is_regular_file()&&entry.path().extension()==".json")files.push_back(entry.path());std::sort(files.begin(),files.end());}else files.push_back(input);
@@ -49,6 +51,7 @@ int main(int argc,char** argv){
     Json fixture;std::ifstream in(file);if(!in)throw std::runtime_error("cannot open fixture");in>>fixture;
     if(!fixture.is_object())throw std::runtime_error("fixture root must be object");
     for(const auto& [name,test]:fixture.items()){
+     if(selected&&name!=case_name)continue;
      if(!test.is_object()||!test.contains("pre")||!test.contains("env")||!test.contains("post")){++unsupported;std::cout<<Json{{"file",file.string()},{"case",name},{"status","unsupported-format"}}.dump()<<'\n';continue;}
      for(const auto& [fork,variants]:test.at("post").items())for(size_t i=0;i<variants.size();++i){
       Json report={{"file",file.string()},{"case",name},{"fork",fork},{"variant",i},{"engine","Nano current unversioned rules"}};

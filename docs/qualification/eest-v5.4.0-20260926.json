@@ -1,0 +1,79 @@
+{
+  "date": "2026-09-26",
+  "source_base": "809f4d672abec19dd4887f3502672a9290c9d27b",
+  "framework": {
+    "name": "Ethereum Execution Spec Tests",
+    "commit": "10eaa63d5da2f50b63d4359968f36542212f9f50",
+    "method": "consume direct -p nano_consumer; Nano C++ runners linked to nano_core"
+  },
+  "corpus": {
+    "release": "v5.4.0 stable",
+    "sha256": "92cf1b47ad12fb27163261fc3c1cea5df72439cab507983d06b56c94f8741909",
+    "matches_github_asset_digest": true,
+    "index_cases_all_formats": 176149
+  },
+  "state_tests": {
+    "selected": 20156,
+    "passed": 20156,
+    "failed": 0,
+    "skipped": 0,
+    "timeout": 0,
+    "unsupported": 0,
+    "forks": {
+      "Paris": 1564,
+      "Shanghai": 1745,
+      "Cancun": 16847
+    },
+    "pytest_wall_seconds": 431.29,
+    "workers": 2,
+    "maxfail": 30,
+    "stopped_early": false
+  },
+  "block_tests": {
+    "fork": "Paris",
+    "selected": 1624,
+    "passed": 1624,
+    "failed": 0,
+    "skipped": 0,
+    "timeout": 0,
+    "unsupported": 0,
+    "pytest_wall_seconds": 171.57,
+    "workers": 1,
+    "maxfail": 20,
+    "stopped_early": false
+  },
+  "adapter_controls": {
+    "passed": 4,
+    "cases": [
+      "official ecrecover reference succeeds",
+      "false state root fails",
+      "missing case fails",
+      "unsupported fork fails"
+    ]
+  },
+  "binaries": {
+    "nano-ethereum-state-runner": "7cf6da55927f40ccd143d2c61c838dce499c100d130a09b7221ba1d7ec51909f",
+    "nano-ethereum-block-runner": "51192783dab9f2d1a2a72925ec3681c7e8e1831c58c3a14dc1c6138f3e442091"
+  },
+  "artifacts": {
+    "docs/qualification/eest-v5.4.0-20260926/report.json.gz": {
+      "bytes": 997323,
+      "sha256": "eeace939407f15bb44b58370bf9003cb68f5fd8456d65c0b18d9192deaf5aecb",
+      "uncompressed_sha256": "fbd348824d95293c9b89c725903c00a15ea2c40955522d417299c3bb41d99c78"
+    },
+    "docs/qualification/eest-v5.4.0-20260926/blocks-report.json.gz": {
+      "bytes": 81193,
+      "sha256": "4bf64ef82d386261858338288842408e22c38d6a2ad69120afbb2a93f16d03c4",
+      "uncompressed_sha256": "d17f6e52002da2e12c25735fe078d6349efd2e4f486b36e3edb92769d7fb027b"
+    }
+  },
+  "limitations": [
+    "Only the explicitly selected fixture formats and forks were executed; no whole-corpus success claim",
+    "Block runner qualifies execution commitments, not every header or consensus validity rule",
+    "No RPC/P2P, Beacon finality, durability, network fork activation or distributed recovery qualification",
+    "EEST truncated some diagnostic directory names in this first run; complete case verdicts are preserved in the compressed JSON reports. Adapter now appends a full-identity digest to avoid future dump collisions",
+    "No node or VPS redeployment"
+  ],
+  "priority_inference": "No divergence observed in selected EVM execution scope. Continue Capella withdrawal integration, coherent consensus/network fork activation, storage pruning and distributed qualification. Other fork/format campaigns remain open.",
+  "production_ready": false
+}

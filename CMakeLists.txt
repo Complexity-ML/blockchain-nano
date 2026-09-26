@@ -387,6 +387,7 @@ add_executable(nano-kzg-tests tests/test_kzg.cpp)
 target_link_libraries(nano-kzg-tests PRIVATE nano_core)
 add_test(NAME kzg COMMAND nano-kzg-tests)
 set_tests_properties(kzg PROPERTIES TIMEOUT 30)
+install(FILES third_party/secp256k1/COPYING DESTINATION ${CMAKE_INSTALL_DATADIR}/nano/licenses RENAME secp256k1-LICENSE)
 install(FILES third_party/ckzg/LICENSE DESTINATION ${CMAKE_INSTALL_DATADIR}/nano/licenses RENAME ckzg-LICENSE)
 install(FILES third_party/ckzg/blst/LICENSE DESTINATION ${CMAKE_INSTALL_DATADIR}/nano/licenses RENAME blst-LICENSE)
 

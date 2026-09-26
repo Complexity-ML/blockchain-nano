@@ -1649,3 +1649,33 @@ Preuves : [rapport](qualification/secp256k1-capella-20260926.json),
 `tests/test_capella_withdrawals.cpp`.
 Sources : https://github.com/bitcoin-core/secp256k1/tree/v0.7.1 et
 https://ethereum.github.io/consensus-specs/specs/capella/beacon-chain/.
+
+
+## 2026-09-26 — campagne officielle EEST consume direct
+
+L'outil officiel EEST pilote désormais les runners C++ Nano via un consumer dédié,
+sans se présenter comme Geth et sans utiliser un autre moteur. Corpus stable
+v5.4.0 épinglé, archive vérifiée contre le digest GitHub publié. Résultats :
+
+| Sélection | Réussis | Échecs / non pris en charge |
+| --- | ---: | ---: |
+| StateTest Paris | 1 564 | 0 |
+| StateTest Shanghai | 1 745 | 0 |
+| StateTest Cancun | 16 847 | 0 |
+| BlockchainTest Paris | 1 624 | 0 |
+
+Les deux campagnes vont au terme de leur sélection, sans atteindre les seuils
+maxfail. Durées pytest : 431,29 s pour les états (deux workers), 171,57 s pour les
+blocs (un worker). Quatre contrôles du consumer exigent le rejet d'une racine
+fausse, d'un cas absent et d'un fork non implémenté, ainsi que le succès du témoin.
+Les verdicts individuels complets sont conservés dans les rapports JSON compressés.
+
+Ce résultat qualifie l'exécution sur ces fixtures, pas l'ensemble du corpus, tous
+les forks, toutes les règles d'en-tête ni le consensus réseau. Aucun statut
+« terminé pour production » n'en découle. Sur le périmètre observé, aucune
+nouvelle divergence EVM n'impose un changement de moteur ; la priorité reste
+l'intégration Capella/retraits et du consensus, la rétention du stockage et la
+qualification distribuée. Les campagnes des autres profils restent ouvertes.
+
+[Protocole reproductible](EEST.md) ;
+[rapport et empreintes](qualification/eest-v5.4.0-20260926.json).

@@ -86,12 +86,15 @@ std::string unsupported(const Json& test){
 }
 }
 int main(int argc,char** argv){
- if(argc!=2){std::cerr<<"Usage: nano-ethereum-block-runner <fixture file or directory>\n";return 2;}
+ if(argc==2&&std::string(argv[1])=="--version"){std::cout<<"nano-ethereum-block-runner 1\n";return 0;}
+ const bool selected=argc==4;const std::string case_name=selected?argv[3]:"";
+ if((argc!=2&&argc!=4)||(selected&&std::string(argv[2])!="--case")){std::cerr<<"Usage: nano-ethereum-block-runner <fixture file or directory> [--case exact-id]\n";return 2;}
  size_t matched=0,mismatched=0,skipped=0,errors=0;std::vector<fs::path> files;
  try{
   if(fs::is_directory(argv[1])){for(const auto& f:fs::recursive_directory_iterator(argv[1]))if(f.is_regular_file()&&f.path().extension()==".json")files.push_back(f.path());std::sort(files.begin(),files.end());}else files.emplace_back(argv[1]);
   for(const auto& file:files){Json fixture;std::ifstream in(file);if(!in)throw std::runtime_error("cannot open fixture");in>>fixture;
    for(const auto& [name,test]:fixture.items()){
+     if(selected&&name!=case_name)continue;
     Json report={{"case",name},{"file",file.string()},{"scope","Block execution commitments; not full header/consensus validation"}};
     try{
      if(!test.contains("blocks")||!test.contains("pre")||!test.contains("genesisBlockHeader")){++skipped;report["status"]="unsupported-format";std::cout<<report.dump()<<'\n';continue;}
