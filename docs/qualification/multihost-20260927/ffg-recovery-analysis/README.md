@@ -40,3 +40,28 @@ Limites : décodage diagnostic, pas revalidation des signatures, racines SSZ
 ou transitions ; liens parent non revérifiés cryptographiquement. Un seul
 stockage natif terminal, pas une chronologie d’arrivée des votes ni une preuve
 causale sur tous les nœuds. Le délai initial de 180 secondes reste échoué.
+
+## Délais d’inclusion et instrumentation suivante
+
+`inclusion.py native-checkpoint.json.gz` reproduit `inclusion.json` : les
+blocs de la branche finalisée entre slots 56 et 72 contiennent 2 à 21
+attestations (capacité du profil : 128). Au slot 66, cinq attestations du
+slot 61 sont incluses ; au slot 67, six du slot 63. La capacité des blocs
+n’est donc pas saturée dans cet échantillon. Cela n’exclut pas un budget de
+sélection épuisé par des candidats invalides : les candidats rejetés et les
+instants de réception ne sont pas présents dans ce checkpoint terminal.
+
+Le code de sélection parcourt l’archive par identifiant, ignore les votes
+identiques déjà inclus sur les ancêtres récents, puis vérifie les candidats
+par transition complète (`src/consensus_bellatrix_local_body.cpp`). Les
+preuves actuelles ne permettent pas d’attribuer le retard à cette politique.
+
+Les événements réseau de relais, auparavant sans horodatage absolu, reçoivent
+`timeMs` à leur émission, y compris les réussites rapides. Ce temps système
+sert à corréler les traces avec les slots ; il ne mesure pas la latence entre
+machines sans qualification des horloges. `elapsedMs` reste la durée mesurée
+par le relais. Aucun nouveau trafic, changement de validation, de délai ou
+de budget. Les anciennes traces restent non horodatées ; cette modification
+ne les enrichit pas rétroactivement et n’est pas encore qualifiée en WAN.
+
+Validation de l’instrumentation : `cmake --build build-network --target nano-p2p -j 2` réussit (`relay-time-build.log`). Pas de nouvelle campagne réseau ni de changement du résultat WAN existant.
