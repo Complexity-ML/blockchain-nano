@@ -1,0 +1,868 @@
+{
+  "scope": "Slow (>500ms) or unsuccessful relay attempts only. Stage ack includes stream setup, transfer and remote admission; not network latency. Success may be a cache scan, not a new delivery. Validator counters come from the final runtime status and cover its whole run; null means no stop status. Peer groups are absent for older logs without peerId; withoutPeerIdentity counts timed attempts lacking that field. No throughput or population percentile claim.",
+  "nodes": [
+    {
+      "file": "native.log",
+      "attempts": 170,
+      "withoutStageTiming": 0,
+      "withoutPeerIdentity": 0,
+      "validatorAtStop": {
+        "healthy": true,
+        "failure": null,
+        "proposalsAdmitted": 33,
+        "attestationsAdmitted": 265,
+        "timing": {
+          "maxPollMs": 635,
+          "maxProposalMs": 238,
+          "polls": 2129,
+          "pollsOverSlot": 0,
+          "proposalAttempts": 33,
+          "proposalsUnavailable": 0,
+          "slotBoundaryExits": 6
+        },
+        "finalized": {
+          "epoch": "0xb",
+          "root": "0xd20a44c3a1e6ba3c6bd3ea88b6449fe78958c515e9e70e0f33ffcbe5b0f3a4c4"
+        }
+      },
+      "groups": [
+        {
+          "kind": "block",
+          "success": true,
+          "count": 44,
+          "totalMs": 33531,
+          "maxMs": 1526,
+          "stages": {
+            "ack": {
+              "count": 44,
+              "totalUs": 31611900,
+              "maxUs": 1456724
+            },
+            "inventory": {
+              "count": 44,
+              "totalUs": 1154296,
+              "maxUs": 173313
+            },
+            "payload": {
+              "count": 44,
+              "totalUs": 786434,
+              "maxUs": 81572
+            }
+          }
+        },
+        {
+          "kind": "vote",
+          "success": false,
+          "count": 52,
+          "totalMs": 14617,
+          "maxMs": 1253,
+          "stages": {
+            "inventory": {
+              "count": 52,
+              "totalUs": 203866,
+              "maxUs": 61162
+            },
+            "ack": {
+              "count": 43,
+              "totalUs": 14349533,
+              "maxUs": 1251693
+            },
+            "payload": {
+              "count": 43,
+              "totalUs": 85092,
+              "maxUs": 67636
+            }
+          }
+        },
+        {
+          "kind": "block",
+          "success": false,
+          "count": 5,
+          "totalMs": 359,
+          "maxMs": 297,
+          "stages": {
+            "ack": {
+              "count": 5,
+              "totalUs": 309851,
+              "maxUs": 248932
+            },
+            "inventory": {
+              "count": 5,
+              "totalUs": 16439,
+              "maxUs": 15258
+            },
+            "payload": {
+              "count": 5,
+              "totalUs": 35483,
+              "maxUs": 33524
+            }
+          }
+        },
+        {
+          "kind": "vote",
+          "success": true,
+          "count": 69,
+          "totalMs": 58327,
+          "maxMs": 3518,
+          "stages": {
+            "ack": {
+              "count": 69,
+              "totalUs": 57997605,
+              "maxUs": 3517831
+            },
+            "inventory": {
+              "count": 69,
+              "totalUs": 262579,
+              "maxUs": 76955
+            },
+            "payload": {
+              "count": 69,
+              "totalUs": 101620,
+              "maxUs": 70849
+            }
+          }
+        }
+      ],
+      "peerGroups": [
+        {
+          "peerId": "12D3KooWEfV3drmXnrwGCyvhGL89XKTZ4tin3dmnnXdWd88rVtJj",
+          "kind": "block",
+          "success": true,
+          "count": 44,
+          "totalMs": 33531,
+          "maxMs": 1526,
+          "stages": {
+            "ack": {
+              "count": 44,
+              "totalUs": 31611900,
+              "maxUs": 1456724
+            },
+            "inventory": {
+              "count": 44,
+              "totalUs": 1154296,
+              "maxUs": 173313
+            },
+            "payload": {
+              "count": 44,
+              "totalUs": 786434,
+              "maxUs": 81572
+            }
+          }
+        },
+        {
+          "peerId": "12D3KooWEfV3drmXnrwGCyvhGL89XKTZ4tin3dmnnXdWd88rVtJj",
+          "kind": "vote",
+          "success": false,
+          "count": 52,
+          "totalMs": 14617,
+          "maxMs": 1253,
+          "stages": {
+            "inventory": {
+              "count": 52,
+              "totalUs": 203866,
+              "maxUs": 61162
+            },
+            "ack": {
+              "count": 43,
+              "totalUs": 14349533,
+              "maxUs": 1251693
+            },
+            "payload": {
+              "count": 43,
+              "totalUs": 85092,
+              "maxUs": 67636
+            }
+          }
+        },
+        {
+          "peerId": "12D3KooWEfV3drmXnrwGCyvhGL89XKTZ4tin3dmnnXdWd88rVtJj",
+          "kind": "block",
+          "success": false,
+          "count": 5,
+          "totalMs": 359,
+          "maxMs": 297,
+          "stages": {
+            "ack": {
+              "count": 5,
+              "totalUs": 309851,
+              "maxUs": 248932
+            },
+            "inventory": {
+              "count": 5,
+              "totalUs": 16439,
+              "maxUs": 15258
+            },
+            "payload": {
+              "count": 5,
+              "totalUs": 35483,
+              "maxUs": 33524
+            }
+          }
+        },
+        {
+          "peerId": "12D3KooWEfV3drmXnrwGCyvhGL89XKTZ4tin3dmnnXdWd88rVtJj",
+          "kind": "vote",
+          "success": true,
+          "count": 69,
+          "totalMs": 58327,
+          "maxMs": 3518,
+          "stages": {
+            "ack": {
+              "count": 69,
+              "totalUs": 57997605,
+              "maxUs": 3517831
+            },
+            "inventory": {
+              "count": 69,
+              "totalUs": 262579,
+              "maxUs": 76955
+            },
+            "payload": {
+              "count": 69,
+              "totalUs": 101620,
+              "maxUs": 70849
+            }
+          }
+        }
+      ]
+    },
+    {
+      "file": "docker-mac.log",
+      "attempts": 160,
+      "withoutStageTiming": 0,
+      "withoutPeerIdentity": 0,
+      "validatorAtStop": {
+        "healthy": true,
+        "failure": null,
+        "proposalsAdmitted": 37,
+        "attestationsAdmitted": 257,
+        "timing": {
+          "maxPollMs": 613,
+          "maxProposalMs": 453,
+          "polls": 2138,
+          "pollsOverSlot": 0,
+          "proposalAttempts": 37,
+          "proposalsUnavailable": 0,
+          "slotBoundaryExits": 6
+        },
+        "finalized": {
+          "epoch": "0xb",
+          "root": "0xd20a44c3a1e6ba3c6bd3ea88b6449fe78958c515e9e70e0f33ffcbe5b0f3a4c4"
+        }
+      },
+      "groups": [
+        {
+          "kind": "block",
+          "success": false,
+          "count": 9,
+          "totalMs": 535,
+          "maxMs": 230,
+          "stages": {
+            "ack": {
+              "count": 9,
+              "totalUs": 455436,
+              "maxUs": 152487
+            },
+            "inventory": {
+              "count": 9,
+              "totalUs": 35989,
+              "maxUs": 33524
+            },
+            "payload": {
+              "count": 9,
+              "totalUs": 47420,
+              "maxUs": 44772
+            }
+          }
+        },
+        {
+          "kind": "vote",
+          "success": false,
+          "count": 48,
+          "totalMs": 10173,
+          "maxMs": 851,
+          "stages": {
+            "inventory": {
+              "count": 48,
+              "totalUs": 478453,
+              "maxUs": 117719
+            },
+            "ack": {
+              "count": 39,
+              "totalUs": 9630017,
+              "maxUs": 797872
+            },
+            "payload": {
+              "count": 39,
+              "totalUs": 84447,
+              "maxUs": 47383
+            }
+          }
+        },
+        {
+          "kind": "block",
+          "success": true,
+          "count": 49,
+          "totalMs": 37926,
+          "maxMs": 1740,
+          "stages": {
+            "ack": {
+              "count": 49,
+              "totalUs": 36041378,
+              "maxUs": 1739231
+            },
+            "inventory": {
+              "count": 49,
+              "totalUs": 1052084,
+              "maxUs": 186498
+            },
+            "payload": {
+              "count": 49,
+              "totalUs": 855740,
+              "maxUs": 77257
+            }
+          }
+        },
+        {
+          "kind": "vote",
+          "success": true,
+          "count": 54,
+          "totalMs": 47232,
+          "maxMs": 3919,
+          "stages": {
+            "ack": {
+              "count": 54,
+              "totalUs": 46600843,
+              "maxUs": 3918423
+            },
+            "inventory": {
+              "count": 54,
+              "totalUs": 396977,
+              "maxUs": 76748
+            },
+            "payload": {
+              "count": 54,
+              "totalUs": 262692,
+              "maxUs": 90810
+            },
+            "known": {
+              "count": 2,
+              "totalUs": 2,
+              "maxUs": 2
+            }
+          }
+        }
+      ],
+      "peerGroups": [
+        {
+          "peerId": "12D3KooWEfV3drmXnrwGCyvhGL89XKTZ4tin3dmnnXdWd88rVtJj",
+          "kind": "block",
+          "success": false,
+          "count": 9,
+          "totalMs": 535,
+          "maxMs": 230,
+          "stages": {
+            "ack": {
+              "count": 9,
+              "totalUs": 455436,
+              "maxUs": 152487
+            },
+            "inventory": {
+              "count": 9,
+              "totalUs": 35989,
+              "maxUs": 33524
+            },
+            "payload": {
+              "count": 9,
+              "totalUs": 47420,
+              "maxUs": 44772
+            }
+          }
+        },
+        {
+          "peerId": "12D3KooWEfV3drmXnrwGCyvhGL89XKTZ4tin3dmnnXdWd88rVtJj",
+          "kind": "vote",
+          "success": false,
+          "count": 48,
+          "totalMs": 10173,
+          "maxMs": 851,
+          "stages": {
+            "inventory": {
+              "count": 48,
+              "totalUs": 478453,
+              "maxUs": 117719
+            },
+            "ack": {
+              "count": 39,
+              "totalUs": 9630017,
+              "maxUs": 797872
+            },
+            "payload": {
+              "count": 39,
+              "totalUs": 84447,
+              "maxUs": 47383
+            }
+          }
+        },
+        {
+          "peerId": "12D3KooWEfV3drmXnrwGCyvhGL89XKTZ4tin3dmnnXdWd88rVtJj",
+          "kind": "block",
+          "success": true,
+          "count": 49,
+          "totalMs": 37926,
+          "maxMs": 1740,
+          "stages": {
+            "ack": {
+              "count": 49,
+              "totalUs": 36041378,
+              "maxUs": 1739231
+            },
+            "inventory": {
+              "count": 49,
+              "totalUs": 1052084,
+              "maxUs": 186498
+            },
+            "payload": {
+              "count": 49,
+              "totalUs": 855740,
+              "maxUs": 77257
+            }
+          }
+        },
+        {
+          "peerId": "12D3KooWEfV3drmXnrwGCyvhGL89XKTZ4tin3dmnnXdWd88rVtJj",
+          "kind": "vote",
+          "success": true,
+          "count": 54,
+          "totalMs": 47232,
+          "maxMs": 3919,
+          "stages": {
+            "ack": {
+              "count": 54,
+              "totalUs": 46600843,
+              "maxUs": 3918423
+            },
+            "inventory": {
+              "count": 54,
+              "totalUs": 396977,
+              "maxUs": 76748
+            },
+            "payload": {
+              "count": 54,
+              "totalUs": 262692,
+              "maxUs": 90810
+            },
+            "known": {
+              "count": 2,
+              "totalUs": 2,
+              "maxUs": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "file": "vps.log",
+      "attempts": 277,
+      "withoutStageTiming": 0,
+      "withoutPeerIdentity": 0,
+      "validatorAtStop": {
+        "healthy": true,
+        "failure": null,
+        "proposalsAdmitted": 35,
+        "attestationsAdmitted": 253,
+        "timing": {
+          "maxPollMs": 4046,
+          "maxProposalMs": 2628,
+          "polls": 1660,
+          "pollsOverSlot": 0,
+          "proposalAttempts": 35,
+          "proposalsUnavailable": 0,
+          "slotBoundaryExits": 14
+        },
+        "finalized": {
+          "epoch": "0xb",
+          "root": "0xd20a44c3a1e6ba3c6bd3ea88b6449fe78958c515e9e70e0f33ffcbe5b0f3a4c4"
+        }
+      },
+      "groups": [
+        {
+          "kind": "block",
+          "success": true,
+          "count": 82,
+          "totalMs": 70910,
+          "maxMs": 2229,
+          "stages": {
+            "ack": {
+              "count": 82,
+              "totalUs": 21391120,
+              "maxUs": 484000
+            },
+            "inventory": {
+              "count": 82,
+              "totalUs": 28564115,
+              "maxUs": 1214117
+            },
+            "payload": {
+              "count": 82,
+              "totalUs": 20998469,
+              "maxUs": 801523
+            }
+          }
+        },
+        {
+          "kind": "vote",
+          "success": true,
+          "count": 66,
+          "totalMs": 47822,
+          "maxMs": 1713,
+          "stages": {
+            "ack": {
+              "count": 62,
+              "totalUs": 13738647,
+              "maxUs": 498884
+            },
+            "inventory": {
+              "count": 66,
+              "totalUs": 22764430,
+              "maxUs": 955305
+            },
+            "payload": {
+              "count": 62,
+              "totalUs": 11349595,
+              "maxUs": 1213340
+            },
+            "known": {
+              "count": 2,
+              "totalUs": 3,
+              "maxUs": 2
+            }
+          }
+        },
+        {
+          "kind": "slashing",
+          "success": true,
+          "count": 20,
+          "totalMs": 20857,
+          "maxMs": 2919,
+          "stages": {
+            "inventory": {
+              "count": 20,
+              "totalUs": 20864620,
+              "maxUs": 2919456
+            }
+          }
+        },
+        {
+          "kind": "vote",
+          "success": false,
+          "count": 94,
+          "totalMs": 32595,
+          "maxMs": 10080,
+          "stages": {
+            "inventory": {
+              "count": 94,
+              "totalUs": 5742592,
+              "maxUs": 767380
+            },
+            "ack": {
+              "count": 76,
+              "totalUs": 24621465,
+              "maxUs": 10036907
+            },
+            "payload": {
+              "count": 76,
+              "totalUs": 2279224,
+              "maxUs": 622694
+            }
+          }
+        },
+        {
+          "kind": "exit",
+          "success": true,
+          "count": 14,
+          "totalMs": 10938,
+          "maxMs": 2152,
+          "stages": {
+            "inventory": {
+              "count": 14,
+              "totalUs": 10945778,
+              "maxUs": 2152631
+            }
+          }
+        },
+        {
+          "kind": "block",
+          "success": false,
+          "count": 1,
+          "totalMs": 5232,
+          "maxMs": 5232,
+          "stages": {
+            "ack": {
+              "count": 1,
+              "totalUs": 4999483,
+              "maxUs": 4999483
+            },
+            "inventory": {
+              "count": 1,
+              "totalUs": 100772,
+              "maxUs": 100772
+            },
+            "payload": {
+              "count": 1,
+              "totalUs": 132656,
+              "maxUs": 132656
+            }
+          }
+        }
+      ],
+      "peerGroups": [
+        {
+          "peerId": "12D3KooWKGtSwLK13LBTLrVkUwhLjxS8CoFZp56BLrVZXY7b3kRz",
+          "kind": "block",
+          "success": true,
+          "count": 43,
+          "totalMs": 36709,
+          "maxMs": 2229,
+          "stages": {
+            "ack": {
+              "count": 43,
+              "totalUs": 11149763,
+              "maxUs": 484000
+            },
+            "inventory": {
+              "count": 43,
+              "totalUs": 15843171,
+              "maxUs": 1165595
+            },
+            "payload": {
+              "count": 43,
+              "totalUs": 9739155,
+              "maxUs": 801523
+            }
+          }
+        },
+        {
+          "peerId": "12D3KooWNSCx8MW3n328g8foMFS5xKMYutY8WAudAKGhjgx49mAe",
+          "kind": "vote",
+          "success": true,
+          "count": 35,
+          "totalMs": 24861,
+          "maxMs": 1365,
+          "stages": {
+            "ack": {
+              "count": 32,
+              "totalUs": 6611620,
+              "maxUs": 480994
+            },
+            "inventory": {
+              "count": 35,
+              "totalUs": 13389113,
+              "maxUs": 955305
+            },
+            "payload": {
+              "count": 32,
+              "totalUs": 4878938,
+              "maxUs": 602178
+            },
+            "known": {
+              "count": 1,
+              "totalUs": 1,
+              "maxUs": 1
+            }
+          }
+        },
+        {
+          "peerId": "12D3KooWKGtSwLK13LBTLrVkUwhLjxS8CoFZp56BLrVZXY7b3kRz",
+          "kind": "vote",
+          "success": true,
+          "count": 31,
+          "totalMs": 22961,
+          "maxMs": 1713,
+          "stages": {
+            "ack": {
+              "count": 30,
+              "totalUs": 7127027,
+              "maxUs": 498884
+            },
+            "inventory": {
+              "count": 31,
+              "totalUs": 9375317,
+              "maxUs": 763887
+            },
+            "payload": {
+              "count": 30,
+              "totalUs": 6470657,
+              "maxUs": 1213340
+            },
+            "known": {
+              "count": 1,
+              "totalUs": 2,
+              "maxUs": 2
+            }
+          }
+        },
+        {
+          "peerId": "12D3KooWNSCx8MW3n328g8foMFS5xKMYutY8WAudAKGhjgx49mAe",
+          "kind": "block",
+          "success": true,
+          "count": 39,
+          "totalMs": 34201,
+          "maxMs": 1733,
+          "stages": {
+            "ack": {
+              "count": 39,
+              "totalUs": 10241357,
+              "maxUs": 466982
+            },
+            "inventory": {
+              "count": 39,
+              "totalUs": 12720944,
+              "maxUs": 1214117
+            },
+            "payload": {
+              "count": 39,
+              "totalUs": 11259314,
+              "maxUs": 701678
+            }
+          }
+        },
+        {
+          "peerId": "12D3KooWKGtSwLK13LBTLrVkUwhLjxS8CoFZp56BLrVZXY7b3kRz",
+          "kind": "slashing",
+          "success": true,
+          "count": 13,
+          "totalMs": 12904,
+          "maxMs": 2719,
+          "stages": {
+            "inventory": {
+              "count": 13,
+              "totalUs": 12909204,
+              "maxUs": 2719297
+            }
+          }
+        },
+        {
+          "peerId": "12D3KooWKGtSwLK13LBTLrVkUwhLjxS8CoFZp56BLrVZXY7b3kRz",
+          "kind": "vote",
+          "success": false,
+          "count": 48,
+          "totalMs": 13973,
+          "maxMs": 909,
+          "stages": {
+            "inventory": {
+              "count": 48,
+              "totalUs": 3531007,
+              "maxUs": 767380
+            },
+            "ack": {
+              "count": 39,
+              "totalUs": 8392133,
+              "maxUs": 473428
+            },
+            "payload": {
+              "count": 39,
+              "totalUs": 2074269,
+              "maxUs": 622694
+            }
+          }
+        },
+        {
+          "peerId": "12D3KooWNSCx8MW3n328g8foMFS5xKMYutY8WAudAKGhjgx49mAe",
+          "kind": "vote",
+          "success": false,
+          "count": 46,
+          "totalMs": 18622,
+          "maxMs": 10080,
+          "stages": {
+            "inventory": {
+              "count": 46,
+              "totalUs": 2211585,
+              "maxUs": 764470
+            },
+            "ack": {
+              "count": 37,
+              "totalUs": 16229332,
+              "maxUs": 10036907
+            },
+            "payload": {
+              "count": 37,
+              "totalUs": 204955,
+              "maxUs": 187963
+            }
+          }
+        },
+        {
+          "peerId": "12D3KooWNSCx8MW3n328g8foMFS5xKMYutY8WAudAKGhjgx49mAe",
+          "kind": "exit",
+          "success": true,
+          "count": 10,
+          "totalMs": 8154,
+          "maxMs": 2152,
+          "stages": {
+            "inventory": {
+              "count": 10,
+              "totalUs": 8160553,
+              "maxUs": 2152631
+            }
+          }
+        },
+        {
+          "peerId": "12D3KooWKGtSwLK13LBTLrVkUwhLjxS8CoFZp56BLrVZXY7b3kRz",
+          "kind": "block",
+          "success": false,
+          "count": 1,
+          "totalMs": 5232,
+          "maxMs": 5232,
+          "stages": {
+            "ack": {
+              "count": 1,
+              "totalUs": 4999483,
+              "maxUs": 4999483
+            },
+            "inventory": {
+              "count": 1,
+              "totalUs": 100772,
+              "maxUs": 100772
+            },
+            "payload": {
+              "count": 1,
+              "totalUs": 132656,
+              "maxUs": 132656
+            }
+          }
+        },
+        {
+          "peerId": "12D3KooWNSCx8MW3n328g8foMFS5xKMYutY8WAudAKGhjgx49mAe",
+          "kind": "slashing",
+          "success": true,
+          "count": 7,
+          "totalMs": 7953,
+          "maxMs": 2919,
+          "stages": {
+            "inventory": {
+              "count": 7,
+              "totalUs": 7955416,
+              "maxUs": 2919456
+            }
+          }
+        },
+        {
+          "peerId": "12D3KooWKGtSwLK13LBTLrVkUwhLjxS8CoFZp56BLrVZXY7b3kRz",
+          "kind": "exit",
+          "success": true,
+          "count": 4,
+          "totalMs": 2784,
+          "maxMs": 923,
+          "stages": {
+            "inventory": {
+              "count": 4,
+              "totalUs": 2785225,
+              "maxUs": 923028
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

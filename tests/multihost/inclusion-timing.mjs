@@ -11,12 +11,13 @@ const blocks=new Map(p.store.blocks.map(r=>[r[0],r])),ancestors=new Set();let ro
 while(blocks.has(root)&&!ancestors.has(root)){ancestors.add(root);root=blocks.get(root)[1][2];}
 const genesisMs=BigInt(p.store.clock[0]),slotMs=BigInt(p.store.profile[1]);
 if(slotMs<=0n)throw Error('Invalid slot duration');
-const relays=new Map();let undated=0,dated=0;
+const relays=new Map();let undated=0,dated=0,cursorResets=0;
 for(const file of ['native.log','docker-mac.log','vps.log']){
  for(const line of (await readFile(join(directory,file),'utf8')).split('\n')){
   let e;try{e=JSON.parse(line);}catch{continue;}
   // "known" may be a cached scan, and is not evidence of a new transfer.
   if(e.event!=='test-altair-vote-relayed')continue;
+  if(e.root==='0x'){++cursorResets;continue;} // Inventory cursor reset, no vote identifier.
   if(e.timeMs===undefined){++undated;continue;}
   if(!Number.isSafeInteger(e.timeMs)||e.timeMs<0||!/^0x[0-9a-f]{64}$/.test(e.root)||typeof e.peerId!=='string')throw Error('Malformed timed relay');
   ++dated;const list=relays.get(e.root)??[];list.push({file,peerId:e.peerId,timeMs:e.timeMs});relays.set(e.root,list);
@@ -44,4 +45,4 @@ for(const [root,wire] of p.signedBlocks){
  }
 }
 rows.sort((a,b)=>Number(BigInt(a.slot)-BigInt(b.slot))||a.voteRoot.localeCompare(b.voteRoot));
-console.log(JSON.stringify({scope:'Recorded relay completion times matched by exact attestation bytes on the native finalized ancestry. Not arrival or proposer availability proof; no signature/state-root revalidation. Wall clocks may differ. Missing records do not prove missing delivery. Known/cache scans excluded.',datedRelayEvents:dated,undatedRelayEvents:undated,inclusions:rows.length,matchedInclusions:rows.filter(r=>r.relayCompletions.length).length,rows},null,2));
+console.log(JSON.stringify({scope:'Recorded relay completion times matched by exact attestation bytes on the native finalized ancestry. Not arrival or proposer availability proof; no signature/state-root revalidation. Wall clocks may differ. Missing records do not prove missing delivery. Known/cache scans excluded.',datedRelayEvents:dated,undatedRelayEvents:undated,cursorResetEvents:cursorResets,inclusions:rows.length,matchedInclusions:rows.filter(r=>r.relayCompletions.length).length,rows},null,2));

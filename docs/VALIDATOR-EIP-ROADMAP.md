@@ -2476,3 +2476,12 @@ précédente au slot 64, puis quorum au slot 66 ; justification 8 au slot 72
 et finalisation 8 au slot 80. Investigation suivante : arrivée et inclusion
 des attestations avant la frontière d’époque. Aucun délai assoupli.
 [Analyse reproductible et limites](qualification/multihost-20260927/ffg-recovery-analysis/README.md).
+
+### Reprise WAN horodatée — redistribution à investiguer
+
+Campagne `80493b7` : seuil 180 s encore échoué (187542 ms), puis trois avancées
+8→11 en 141066 ms. Six votes inclus tard montrent 17,6–18,2 s entre fin du
+relais natif→VPS et fin du premier relais VPS enregistré. Les mesures d’horloge
+ne suffisent pas à expliquer cet écart ; analyser les files et le parcours
+d’inventaire, sans assimiler cet écart à une latence réseau pure.
+[Preuves et limites](qualification/multihost-20260927/timed-recovery/README.md).
