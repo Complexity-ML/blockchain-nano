@@ -101,3 +101,9 @@ Le relais sortant utilise quatre permissions globales par défaut, au maximum
 une par pair. `NANO_CONSENSUS_RELAY_CONCURRENCY=1` restaure la sérialisation
 pour diagnostic ; plage opérationnelle 1..1024. Ce budget local ne limite pas
 le registre des validateurs. Le test standard conserve le défaut.
+
+`node tests/multihost/relay-summary.mjs <dossier>` conserve les totaux par type
+et ajoute `peerGroups` lorsque les traces portent `peerId`. Les anciennes
+traces sont comptées dans `withoutPeerIdentity`, sans attribution inventée.
+Ces statistiques couvrent seulement les tentatives lentes ou échouées ;
+elles ne mesurent ni le débit total ni la seule latence réseau.
