@@ -410,8 +410,9 @@ std::optional<Bytes> BellatrixDurableReactor::sign_proposal_locked(uint64_t inde
  validate_altair_transition_rules(t);
  if(!rules_.slot_duration_ms||clock.time_ms<clock.genesis_time_ms)throw std::invalid_argument("Invalid proposal clock");
  if((clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms!=slot||state_->timed.view.current_epoch!=slot/t.epoch.ffg.slots_per_epoch||state_->timed.view.equivocating_indices.contains(index))return std::nullopt;
- uint64_t last_time=clock.time_ms;
- auto timely=[&]{const auto time=local_clock();if(time<last_time||time<clock.genesis_time_ms||(time-clock.genesis_time_ms)/rules_.slot_duration_ms!=slot)return false;last_time=time;return true;};
+ uint64_t last_time=clock.time_ms;bool expired=false;
+ auto timely=[&]{const auto time=local_clock();expired=time>=last_time&&time>=clock.genesis_time_ms&&(time-clock.genesis_time_ms)/rules_.slot_duration_ms>slot;if(time<last_time||time<clock.genesis_time_ms||(time-clock.genesis_time_ms)/rules_.slot_duration_ms!=slot)return false;last_time=time;return true;};
+ auto expiry=[&](const char* message){if(expired)throw ExpiredBellatrixDuty(message);throw std::runtime_error(message);};
  if(!timely())return std::nullopt;
  const auto head=phase0_fork_choice_head(state_->timed.view,{t.epoch.ffg.slots_per_epoch,t.attestation.duties.effective_balance_increment,rules_.proposer_score_boost},checkpoint).head;
  const auto& parent=state_->blocks.at(head);
@@ -437,13 +438,13 @@ std::optional<Bytes> BellatrixDurableReactor::sign_proposal_locked(uint64_t inde
  Bytes wire(100,0);wire[0]=100;wire.insert(wire.end(),message.begin(),message.end());
  if(checkpoint)checkpoint();if(!timely())return std::nullopt;
  const auto signature=journal.sign_proposal(header,version,[&](const ConsensusRoot& root){
-  if(!timely())throw std::runtime_error("Proposal expired before provider");
+  if(!timely())expiry("Proposal expired before provider");
   auto result=signer(root);
-  if(!timely())throw std::runtime_error("Proposal expired during provider");
+  if(!timely())expiry("Proposal expired during provider");
   return result;
  });
  std::copy(signature.begin(),signature.end(),wire.begin()+4);
- if(checkpoint)checkpoint();if(!timely())throw std::runtime_error("Proposal expired after verification");
+ if(checkpoint)checkpoint();if(!timely())expiry("Proposal expired after verification");
  return wire;
 }
 std::optional<Bytes> BellatrixDurableReactor::sign_randao(uint64_t index,uint64_t slot,

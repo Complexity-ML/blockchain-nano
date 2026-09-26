@@ -10,6 +10,10 @@ class Blockchain;
 class StaleBellatrixDuty : public std::invalid_argument {
 public: using std::invalid_argument::invalid_argument;
 };
+// A monotonic clock advanced beyond the duty slot; signing reservations remain.
+class ExpiredBellatrixDuty : public std::runtime_error {
+public: using std::runtime_error::runtime_error;
+};
 using BellatrixSignedBlockArchive=std::map<ConsensusRoot,std::shared_ptr<const Bytes>>;
 using BellatrixSignedVoteArchive=std::map<ConsensusRoot,std::shared_ptr<const Bytes>>;
 struct BellatrixExitIdentity {

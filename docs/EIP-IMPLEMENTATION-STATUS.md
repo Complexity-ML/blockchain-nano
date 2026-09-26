@@ -1805,7 +1805,10 @@ plus récents du banc ne constituent pas leur activation réseau.
 
 - 2026-09-26 — Primitive d’archive atomique de checkpoint implémentée et testée :
   deux cibles passent en 1,49 s, avec réorganisation, SIGKILL et suffixe WAL
-  conservé/perdu. **Raccordement Bellatrix/P2P et élagage non réalisés.**
+  conservé/perdu. Raccordement des nouveaux blocs signés Bellatrix réalisé :
+  neuf archives identiques avant/après réouverture dans le scénario signé.
+  **Migration des anciens snapshots, lecture P2P depuis cette archive et
+  élagage non réalisés.**
   [Preuves](qualification/checkpoint-archive-20260926/README.md).
 
 ## Qualification multi-hôte — 26 septembre 2026
@@ -1816,3 +1819,15 @@ la finalité commune 2 → 3 → 4 → 5 en 199002 ms. La campagne précédente
 échoue au critère de continuité avec 2 → 3 → 4 → 6 ; accord final conservé.
 Le retard intermittent d’inclusion reste ouvert. Aucune qualification
 d’endurance ou de production : voir [preuves multi-hôte](qualification/multihost-20260926/README.md).
+
+- 2026-09-26, révision 42a3b13 : finalité 2→3→4→5 en 135047 ms,
+  mais validateur Docker Mac arrêté par expiration de proposition. Le nœud
+  continuait à suivre la chaîne : **qualification globale en échec** malgré
+  le code 0 de l'ancien lanceur. Un contrôle des trois statuts validateurs
+  rejette maintenant cette campagne et accepte le témoin précédent.
+  [Preuves et prochain correctif](qualification/multihost-20260926/with-batch/README.md).
+
+- 2026-09-26 — Dimensionnement de position Uniswap V3 : simulateur entier Python
+  comparé au mint des bytecodes officiels sur Nano Paris, deux ordres des actifs.
+  Montants, liquidité et tick vérifiés ; aucune qualification du bridge ou de la
+  vente publique. [Preuves](qualification/graduation-v3-20260926/README.md).

@@ -117,7 +117,8 @@ int main(int argc,char** argv){try{
  const bool recovery=argc==2&&std::string(argv[1])=="--runtime-recovery";
  const bool operations=argc==2&&std::string(argv[1])=="--runtime-slashing";
  const bool runtime_only=operations||recovery||(argc==2&&std::string(argv[1])=="--runtime");
- const bool validator_only=deposit_loop||exits_only||network||(argc==2&&std::string(argv[1])=="--validator-loop");
+ const bool expiry_loop=argc==2&&std::string(argv[1])=="--proposal-expiry-loop";
+ const bool validator_only=expiry_loop||deposit_loop||exits_only||network||(argc==2&&std::string(argv[1])=="--validator-loop");
  check(argc==1||duty_trace||clock_coalescing||partition_simulation||beacon_headers_reorg||beacon_headers||beacon_api||deposit_store||validator_only||runtime_only||managed,"unknown Bellatrix qualification arguments");
  const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-bellatrix-containers-official",source=fixtures/"consensus-bellatrix-slots-official";
  const auto manifest=load(source/"manifest.json");check(manifest.at("commit")=="bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908","initial state revision");
@@ -210,6 +211,19 @@ int main(int argc,char** argv){try{
     auto conflicting=contents;conflicting[168]^=1;refuse([&]{return reactor->sign_proposal(proposer,slot,conflicting,[&]{return now;},commitment,journal,signer);});
     const auto saved=journal.commitment();signers.erase(proposer);signer_disks.erase(proposer);signer_disks[proposer]=std::make_unique<ChainStore>(reactor_location/("key-"+std::to_string(proposer)));signers[proposer]=std::make_unique<BeaconSigningJournal>(*signer_disks[proposer],1337,execution_genesis.header.hash(),genesis_root,signing.public_key,slots,saved);
     refuse([&]{return reactor->sign_proposal(proposer,slot,conflicting,[&]{return now;},commitment,*signers.at(proposer),signer);});
+    for(const size_t boundary:{3u,5u}){
+     size_t reads=0,calls=0;bool classified=false;
+     try{reactor->sign_proposal(proposer,slot,contents,[&]{return now+(++reads>=boundary?seconds*1000:0);},commitment,*signers.at(proposer),[&](const ConsensusRoot& root){++calls;return signing.sign(root);});}
+     catch(const ExpiredBellatrixDuty&){classified=true;}
+     check(classified&&calls==(boundary==3?0u:1u),"proposal expiry window misclassified");++signature_refusals;
+    }
+    {
+     size_t reads=0;bool fatal=false;
+     try{reactor->sign_proposal(proposer,slot,contents,[&]{return now-(++reads>=3?1:0);},commitment,*signers.at(proposer),signer);}
+     catch(const ExpiredBellatrixDuty&){throw std::runtime_error("backwards clock treated as benign expiry");}
+     catch(const std::runtime_error&){fatal=true;}
+     check(fatal,"backwards signing clock not rejected");++signature_refusals;
+    }
     uint64_t live_clock=now;bool expired=false;try{reactor->sign_proposal(proposer,slot,contents,[&]{return live_clock;},commitment,*signers.at(proposer),[&](const ConsensusRoot& root){auto signature=signing.sign(root);live_clock+=seconds*1000;return signature;});}catch(const std::runtime_error&){expired=true;}check(expired,"proposal escaped after signing provider crossed slot boundary");++signature_refusals;
 
    }
@@ -330,14 +344,36 @@ int main(int argc,char** argv){try{
      Blockchain chain(live/"chain",g);BellatrixDurableReactor bound(chain,fork_rules,reactor_limits,*store);
      std::atomic<uint64_t> wall=store->timed.clock.time_ms;BellatrixLocalClock clock(bound,seconds*1000,[&]{return wall.load();});
      std::vector<std::unique_ptr<ChainStore>> journals;std::vector<BellatrixValidatorKey> keys;
-     size_t entrant_signatures=0;std::shared_ptr<BeaconSigningJournal> entrant_journal;
+     size_t entrant_signatures=0,expiry_calls=0;bool inject_expiry=expiry_loop,inject_provider_failure=false;std::vector<std::shared_ptr<BeaconSigningJournal>> expiry_journals;std::shared_ptr<BeaconSigningJournal> entrant_journal;
      for(uint64_t i=0;i<(deposit_activation?65u:64u);++i){
       auto signer=std::make_shared<Key>(i);journals.push_back(std::make_unique<ChainStore>(live/("signer-"+std::to_string(i))));
       auto journal=std::make_shared<BeaconSigningJournal>(*journals.back(),r.chain_id,execution_genesis.header.hash(),genesis_root,signer->public_key,slots);
       if(i==64)entrant_journal=journal;
-      keys.push_back({i,std::move(journal),[signer,i,&entrant_signatures](const ConsensusRoot& root){if(i==64)++entrant_signatures;return signer->sign(root);},sender});
+      expiry_journals.push_back(journal);
+      keys.push_back({i,std::move(journal),[signer,i,&entrant_signatures,&inject_expiry,&inject_provider_failure,&expiry_calls,&wall,seconds](const ConsensusRoot& root){if(i==64)++entrant_signatures;if(inject_provider_failure)throw std::runtime_error("injected provider failure");auto signature=signer->sign(root);if(inject_expiry&&++expiry_calls==2){wall+=seconds*1000;inject_expiry=false;}return signature;},sender});
      }
      BellatrixValidatorLoop loop(bound,clock,seconds*1000,slots,128,std::move(keys),[&]{return wall.load();});
+     if(expiry_loop){
+      wall=(genesis_time+2*seconds)*1000;clock.poll();
+      const auto proposer=bound.current_proposer(2);check(proposer.has_value(),"expiry proposer missing");
+      loop.poll();const auto stopped=loop.status();
+      check(!inject_expiry&&stopped.at("healthy")==true&&stopped.at("proposalsAdmitted")==0&&stopped.at("timing").at("slotBoundaryExits")==1,"expired proposal killed loop or was published");
+      check(expiry_journals.at(*proposer)->latest_proposal_slot()==2,"expired signature lost durable reservation");
+      {
+       const auto token=expiry_journals.at(*proposer)->commitment();Key key(*proposer);
+       BeaconSigningJournal reopened(*journals.at(*proposer),r.chain_id,execution_genesis.header.hash(),genesis_root,key.public_key,slots,token);
+       check(reopened.latest_proposal_slot()==2,"expired reservation missing from durable journal");
+       ConsensusBeaconHeader conflicting{};conflicting.slot=2;conflicting.proposer_index=*proposer;
+       bool rejected=false;size_t calls=0;
+       try{reopened.sign_proposal(conflicting,{},[&](const ConsensusRoot& root){++calls;return key.sign(root);});}catch(const std::runtime_error&){rejected=true;}
+       check(rejected&&calls==0,"expired reservation allowed conflicting signature after reopening");
+      }
+      loop.poll();check(loop.status().at("healthy")==true&&loop.status().at("proposalsAdmitted").get<uint64_t>()>0,"loop did not resume next slot");
+      const auto recovered_status=loop.status();inject_provider_failure=true;wall+=seconds*1000;
+      bool failed=false;try{loop.poll();}catch(const std::runtime_error& error){failed=std::string(error.what())=="injected provider failure";}
+      check(failed&&loop.status().at("healthy")==false&&loop.status().at("failure")=="injected provider failure","provider failure was silently retried");
+      std::cout<<Json{{"scenario","proposal-expiry-loop"},{"reservationRetained",true},{"reopenedConflictRefused",true},{"providerFailureFatal",true},{"recoveredLoop",recovered_status}}.dump()<<std::endl;return 0;
+     }
      std::unique_ptr<BellatrixNetworkPair> peers;
      if(network)peers=std::make_unique<BellatrixNetworkPair>(live.path,argv[2],g,fork_rules,reactor_limits,*store,chain,bound,clock,wall);
      if(deposit_loop){

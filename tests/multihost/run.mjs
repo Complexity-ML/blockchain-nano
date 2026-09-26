@@ -7,6 +7,7 @@ import {openSync,closeSync} from 'node:fs';
 import {resolve,join} from 'node:path';
 import {setTimeout as delay} from 'node:timers/promises';
 import {createHash} from 'node:crypto';
+import {validateStoppedValidators} from './validator-gate.mjs';
 const exec=promisify(execFile),[target,revision,outputArg]=process.argv.slice(2);
 if(!/^[a-z_][a-z0-9_-]*@[0-9.]+$/.test(target??'')||!(/^[0-9a-f]{40}$/).test(revision??'')||!outputArg)throw Error('Usage: run.mjs user@IPv4 core-revision fresh-output');
 const output=resolve(outputArg),repo=process.cwd(),image=`blockchain-nano:${revision.slice(0,7)}`;
@@ -88,7 +89,7 @@ try{
  const observers={revision,genesisHash:genesis.hash,nodes:[{name:'mac-native',kind:'native',url:'http://127.0.0.1:18545'},{name:'mac-docker',kind:'docker',container:local,url:'http://127.0.0.1:8545'},{name:'vps-docker',kind:'ssh-docker',ssh:target,container:remote,url:'http://127.0.0.1:8545'}]};
  await writeFile(join(output,'observers.json'),JSON.stringify(observers,null,2));
  await exec(process.execPath,['tests/multihost/observe.mjs',join(output,'observers.json'),join(output,'observations')],{timeout:480000,maxBuffer:8*1024*1024});
- await log({event:'passed'});
+ await log({event:'finality-passed'});
 }catch(error){await log({event:'failed',message:error.stack});process.exitCode=1;}
 finally{
  if(native&&native.exitCode===null&&native.signalCode===null){native.kill('SIGTERM');for(let i=0;i<30&&native.exitCode===null&&native.signalCode===null;i++)await delay(1000);if(native.exitCode===null&&native.signalCode===null)native.kill('SIGKILL');}
@@ -96,4 +97,8 @@ finally{
   try{await docker(['stop','--time','20',name],onRemote);await writeFile(join(output,onRemote?'vps.log':'docker-mac.log'),await captureLogs(name,onRemote));}catch(error){await log({event:'cleanup-error',name,message:error.message});process.exitCode=1;}
  }
  // Retain stopped containers/volumes and native DBs for inspection; no pruning.
+}
+if(!process.exitCode){
+ try{const validators=await validateStoppedValidators(output);await log({event:'passed',validators});}
+ catch(error){await log({event:'failed',message:error.stack});process.exitCode=1;}
 }

@@ -48,6 +48,9 @@ void BellatrixValidatorLoop::poll(const std::function<void()>& checkpoint){
    const auto vote=reactor_.attest_current(key.index,slot,now_,*key.journal,key.signer,check);
    if(vote){record_duty(key.index,*vote);if(!reactor_.vote(*vote,check))throw std::runtime_error("Locally signed Bellatrix attestation refused by admission");++votes_;}
   }
+ }catch(const ExpiredBellatrixDuty&){
+  if(cancelled)throw;
+  ++slot_exits_;return;
  }catch(const StaleBellatrixDuty&){
   if(cancelled)throw;
   ++stale_retries_;return;

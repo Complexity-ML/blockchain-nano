@@ -6,9 +6,12 @@ const [directory]=process.argv.slice(2);
 if(!directory)throw Error('Usage: relay-summary.mjs campaign-directory');
 const nodes=[];
 for(const file of ['native.log','docker-mac.log','vps.log']){
- const groups=new Map();let attempts=0,withoutStageTiming=0;
+ const groups=new Map();let attempts=0,withoutStageTiming=0,validatorAtStop=null;
  for(const line of (await readFile(join(directory,file),'utf8')).split('\n')){
   let entry;try{entry=JSON.parse(line);}catch{continue;}
+  if(entry.event==='bellatrix-runtime-stopped'){
+   const v=entry.validator;validatorAtStop={healthy:v?.healthy,failure:v?.failure,proposalsAdmitted:v?.proposalsAdmitted,attestationsAdmitted:v?.attestationsAdmitted,timing:v?.timing,finalized:entry.finalized};
+  }
   if(entry.event!=='test-consensus-relay-attempt')continue;
   ++attempts;
   if(!entry.stageUs){++withoutStageTiming;continue;}
@@ -21,6 +24,6 @@ for(const file of ['native.log','docker-mac.log','vps.log']){
    const value=group.stages[stage]??={count:0,totalUs:0,maxUs:0};++value.count;value.totalUs+=us;value.maxUs=Math.max(value.maxUs,us);
   }
  }
- nodes.push({file,attempts,withoutStageTiming,groups:[...groups.values()]});
+ nodes.push({file,attempts,withoutStageTiming,validatorAtStop,groups:[...groups.values()]});
 }
-console.log(JSON.stringify({scope:'Slow (>500ms) or unsuccessful relay attempts only. Stage ack includes stream setup, transfer and remote admission; not network latency. Success may be a cache scan, not a new delivery. No throughput or population percentile claim.',nodes},null,2));
+console.log(JSON.stringify({scope:'Slow (>500ms) or unsuccessful relay attempts only. Stage ack includes stream setup, transfer and remote admission; not network latency. Success may be a cache scan, not a new delivery. Validator counters come from the final runtime status and cover its whole run; null means no stop status. No throughput or population percentile claim.',nodes},null,2));
