@@ -28,7 +28,13 @@ int main(){try{
  auto attempt=[&](AltairWireKind kind=AltairWireKind::attestation){
   io.restart();std::optional<Json> done;
   auto relay=std::make_shared<AltairArchiveRelay>(io,call,send,"fixture",ingress,progress,[&](Json result){done=std::move(result);},kind);
-  relay->start(std::chrono::seconds(1));io.run();check(done.has_value(),"relay callback missing");return done->at("success").get<bool>();
+  relay->start(std::chrono::seconds(1));io.run();check(done.has_value(),"relay callback missing");
+  const auto& timings=done->at("stageUs");check(timings.is_object()&&timings.contains("inventory"),"missing inventory timing");
+  int64_t sum=0;for(const auto& value:timings){const auto us=value.get<int64_t>();check(us>=0,"negative relay timing");sum+=us;}
+  const auto total=done->at("elapsedMs").get<int64_t>()*1000;
+  check(sum<=total+1000,"stage timings do not account for relay duration");
+  if(done->at("stage")=="ack")check(timings.contains("payload")&&timings.contains("ack"),"missing payload or acknowledgement timing");
+  return done->at("success").get<bool>();
  };
  check(!attempt()&&progress->cursor==first&&progress->retry_votes,"explicit rejection blocks newer votes or is falsely acknowledged");
  check(attempt()&&progress->cursor==second,"later eligible vote starved behind rejected vote");
