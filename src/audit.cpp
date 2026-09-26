@@ -7,6 +7,7 @@ Json Blockchain::audit()const{
  return result;
 }
 Json Blockchain::audit_locked()const{
+ if(genesis_.consensus=="beacon")throw std::invalid_argument("Beacon audit requires consensus archive replay, not legacy block replay");
  std::string pattern=(std::filesystem::temp_directory_path()/"nano-audit-XXXXXX").string();
  std::vector<char> name(pattern.begin(),pattern.end());name.push_back(0);
  if(!mkdtemp(name.data()))throw std::runtime_error("cannot create audit scratch directory");

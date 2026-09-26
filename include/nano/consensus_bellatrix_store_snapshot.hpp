@@ -2,6 +2,10 @@
 #include "nano/consensus_bellatrix_fork_store.hpp"
 #include "nano/consensus_altair_snapshot.hpp"
 namespace nano {
+// Canonical local consensus/execution configuration commitment.
+Json bellatrix_fork_profile(const BellatrixForkBlockRules&);
+// Explicit canonical profile, authenticated before parsing; no inferred defaults.
+BellatrixForkBlockRules load_bellatrix_fork_profile(std::string_view,const Bytes& expected_digest,size_t maximum_bytes);
 struct BellatrixStoreSnapshotLimits {
  size_t envelope_bytes,blocks,messages,equivocations,state_bytes,total_state_bytes;
  uint64_t replay_slots,sync_trials;

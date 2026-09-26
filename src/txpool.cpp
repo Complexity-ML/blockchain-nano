@@ -1,4 +1,5 @@
 #include "nano/txpool.hpp"
+#include <memory>
 namespace nano {
 Int TxPool::price(const Transaction& tx){return tx.type==2?tx.max_fee:tx.gas_price;}
 TxPool::TxPool(size_t capacity,size_t per_account,Int minimum,size_t max_bytes):max_size_(capacity),max_per_account_(per_account),max_bytes_(max_bytes),minimum_price_(std::move(minimum)){if(!capacity||!per_account||!max_bytes||minimum_price_<0)throw std::invalid_argument("invalid pool limits");}
@@ -79,4 +80,26 @@ Json TxPool::page(const std::string& after)const{
 }
 Json TxPool::status()const{return {{"pending",size()},{"queued",0}};}
 void TxPool::clear(){std::lock_guard lock(mutex_);entries_.clear();mined_.clear();mined_order_.clear();bytes_=0;arrival_=0;}
+}
+
+namespace nano {
+std::function<void()> TxPool::prepare_canonical_change(const State& state,const std::vector<SignedTransaction>& included,const std::vector<SignedTransaction>& orphaned){
+ struct Prepared {std::unique_lock<std::mutex> lock;std::unique_ptr<TxPool> candidate;bool published=false;explicit Prepared(TxPool& p):lock(p.mutex_),candidate(std::make_unique<TxPool>(p.max_size_,p.max_per_account_,p.minimum_price_,p.max_bytes_)) {}};
+ auto prepared=std::make_shared<Prepared>(*this);auto& next=*prepared->candidate;
+ next.mined_=mined_;next.mined_order_=mined_order_;
+ for(const auto& tx:orphaned){const auto hash=hex(tx.hash());next.mined_.erase(hash);std::erase(next.mined_order_,hash);}
+ // Preserve authenticated entry metadata and arrival order without repeating
+ // signature recovery for every pending transaction on each new block.
+ next.entries_=entries_;next.bytes_=bytes_;next.arrival_=arrival_;
+ // Free canonical/stale entries before restoring orphaned transactions, so
+ // already-mined transactions cannot evict useful pending entries at capacity.
+ next.remove_mined(included);next.remove_stale(state);
+ for(const auto& tx:orphaned){
+  const auto sender=address(tx.sender());const auto& account=state.get(sender);
+  if(tx.tx.nonce<account.nonce||tx.tx.value+tx.tx.gas*price(tx.tx)>account.balance)continue;
+  next.add(tx);
+ }
+ next.remove_stale(state);
+ return [this,prepared]()noexcept{if(prepared->published)return;auto& next=*prepared->candidate;entries_.swap(next.entries_);mined_.swap(next.mined_);mined_order_.swap(next.mined_order_);bytes_=next.bytes_;arrival_=next.arrival_;prepared->published=true;};
+}
 }

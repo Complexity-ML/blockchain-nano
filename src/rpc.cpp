@@ -1,6 +1,7 @@
 #include "nano/rpc_timing.hpp"
 #include "nano/rpc.hpp"
 #include "../network/altair_rpc_service.hpp"
+#include "../network/bellatrix_rpc_service.hpp"
 namespace nano {
 namespace {
 Json error_response(const Json& id,int code,const std::string& message,const Json& data=nullptr){Json error={{"code",code},{"message",message}};if(!data.is_null())error["data"]=data;return {{"jsonrpc","2.0"},{"id",id},{"error",error}};}
@@ -59,7 +60,8 @@ std::optional<Block> Rpc::block(const Json& tag)const{
  if(!tag.is_string())throw RpcError(-32602,"Expected block tag");auto text=tag.get<std::string>();
  if(text=="latest")return chain_.tip();
  if(text=="earliest")return chain_.store().block_by_number(0);
- if(text=="pending"||text=="safe"||text=="finalized")throw RpcError(-32000,"Block tag is not available yet");
+ if(text=="finalized"){auto finalized=chain_.finalized_block();if(!finalized)throw RpcError(-32000,"Finalized block is unavailable for this consensus");return finalized;}
+ if(text=="pending"||text=="safe")throw RpcError(-32000,"Block tag is not available yet");
  return chain_.store().block_by_number(quantity(tag));
 }
 Int Rpc::development_timestamp()const{
@@ -229,7 +231,7 @@ Json Rpc::dispatch(const std::string& method,const Json& p,const Estimate& estim
   arity(p,0,0);auto status=network_status();auto tip=chain_.tip();return Json{{"network",{{"name","Nano"},{"chainId",u64(chain_.genesis().chain_id)},{"consensus",chain_.genesis().consensus},{"stakingContract",chain_.genesis().staking_contract.empty()?Json(nullptr):Json(chain_.genesis().staking_contract)}}},{"node",{{"version","0.1.0"},{"validating",validating_},{"validationError",validator_error_.empty()?Json(nullptr):Json(validator_error_)},{"peerId",status["peerId"]},{"listenAddresses",status["addresses"]},{"listening",status["listening"]}}},{"chain",{{"blockNumber",u64(tip.header.number)},{"latestBlockHash",hex(tip.header.hash())},{"gasLimit",u64(tip.header.gas_limit)}}},{"peers",{{"count",status["peerCount"]},{"maxPeers",50},{"connected",status["peers"]}}}};
  }
  if(method=="nano_networkStatus"){
-  arity(p,0,0);auto tip=chain_.tip();return Json{{"altairIpc",bool(altair_)},{"chain_id",u64(chain_.genesis().chain_id)},{"network_id",u64(chain_.genesis().chain_id)},{"best_block",u64(tip.header.number)},{"best_hash",hex(tip.header.hash())},{"genesis_hash",hex(chain_.genesis().block.header.hash())},{"cursor",chain_.event_cursor()},{"gossip_epoch",chain_.event_epoch()},{"version","nano/1.0.0"}};
+  arity(p,0,0);auto tip=chain_.tip();return Json{{"bellatrixIpc",bool(bellatrix_)},{"altairIpc",bool(altair_)},{"chain_id",u64(chain_.genesis().chain_id)},{"network_id",u64(chain_.genesis().chain_id)},{"best_block",u64(tip.header.number)},{"best_hash",hex(tip.header.hash())},{"genesis_hash",hex(chain_.genesis().block.header.hash())},{"cursor",chain_.event_cursor()},{"gossip_epoch",chain_.event_epoch()},{"version","nano/1.0.0"}};
  }
  if(method=="nano_beginBftImport"||method=="nano_finishBftImport"){
   arity(p,2,2);if(network_token_.empty()||!p[0].is_string()||p[0].get<std::string>()!=network_token_)throw RpcError(-32001,"Unauthorized BFT import");
@@ -477,6 +479,24 @@ Json Rpc::one(const Json& request,const std::function<void()>& cancelled){
    else if(method=="nano_altairReceive")result=service->receive(params[1].get_ref<const std::string&>(),cancelled);
    else if(method=="nano_altairSubmit")result=service->submit(params[1].get<std::string>(),sequence,params[3]);
    else result=service->job(params[1].get<std::string>(),sequence,method=="nano_altairCancel",method=="nano_altairForget");
+  }
+  else if(method=="nano_bellatrixReceive"||method=="nano_bellatrixStatus"||method=="nano_bellatrixSubmit"||method=="nano_bellatrixJob"||method=="nano_bellatrixCancel"||method=="nano_bellatrixForget"||method=="nano_bellatrixJobs"||method=="nano_bellatrixRotateSession"||method=="nano_bellatrixBlock"||method=="nano_bellatrixInventory"||method=="nano_bellatrixVote"||method=="nano_bellatrixVoteInventory"){
+   if(!bellatrix_)throw RpcError(-32601,"Method not found");
+   const auto count=method=="nano_bellatrixStatus"||method=="nano_bellatrixJobs"?1:method=="nano_bellatrixReceive"||method=="nano_bellatrixRotateSession"||method=="nano_bellatrixBlock"||method=="nano_bellatrixVote"?2:method=="nano_bellatrixSubmit"?4:3;arity(params,count,count);
+   if(network_token_.empty()||!params[0].is_string()||params[0].get<std::string>()!=network_token_)throw RpcError(-32001,"Unauthorized Bellatrix request");
+   uint64_t sequence=0;
+   if(count>=3){if(!params[1].is_string()||!params[2].is_string())throw RpcError(-32602,"Expected session and sequence");sequence=u64(quantity(params[2]));if(!sequence||quantity(Int(std::to_string(sequence)))!=params[2].get<std::string>())throw RpcError(-32602,"Invalid admission sequence");}
+   auto service=bellatrix_;lock.unlock();
+   if(method=="nano_bellatrixStatus")result=service->status();
+   else if(method=="nano_bellatrixJobs")result=service->jobs();
+   else if(method=="nano_bellatrixVote")result=service->block(params[1].get<std::string>(),true);
+   else if(method=="nano_bellatrixVoteInventory")result=service->inventory(params[1].get<std::string>(),sequence,true);
+   else if(method=="nano_bellatrixBlock")result=service->block(params[1].get<std::string>());
+   else if(method=="nano_bellatrixInventory")result=service->inventory(params[1].get<std::string>(),sequence);
+   else if(method=="nano_bellatrixRotateSession")result=service->rotate(params[1].get<std::string>());
+   else if(method=="nano_bellatrixReceive")result=service->receive(params[1].get_ref<const std::string&>(),cancelled);
+   else if(method=="nano_bellatrixSubmit")result=service->submit(params[1].get<std::string>(),sequence,params[3]);
+   else result=service->job(params[1].get<std::string>(),sequence,method=="nano_bellatrixCancel",method=="nano_bellatrixForget");
   }
   else if(method=="eth_call"||method=="eth_estimateGas"){
    std::function<Json()> simulation;{rpc_timing::Span preparation("prepare");simulation=prepare_simulation(method,params,cancelled);}

@@ -10,7 +10,12 @@ Genesis Genesis::from_json(const Json& data){
  g.chain_id=quantity(config.value("chainId",Json(1337)));bytes(g.chain_id,32);
  if(config.contains("evmFork")){if(config.at("evmFork")=="Paris")g.evm_revision=EvmRevision::Paris;else if(config.at("evmFork")=="Shanghai")g.evm_revision=EvmRevision::Shanghai;else throw std::invalid_argument("unsupported chain evmFork; expected Paris or Shanghai");}
  g.consensus=config.value("consensus",std::string("pow"));
- if(g.consensus!="pow"&&g.consensus!="pos")throw std::invalid_argument("unknown consensus");
+ if(g.consensus!="pow"&&g.consensus!="pos"&&g.consensus!="beacon")throw std::invalid_argument("unknown consensus");
+ if(g.consensus=="beacon"){
+  if(g.evm_revision!=EvmRevision::Paris||g.chain_id<=0)throw std::invalid_argument("Beacon execution requires explicit Paris profile and positive chain ID");
+  for(const char* field:{"stakingContract","posSignatureVersion","bootstrapValidator","bftVersion","consensusRules","stakingQueryRules"})
+   if(config.contains(field))throw std::invalid_argument("Beacon genesis cannot contain legacy consensus parameters");
+ }
  g.staking_contract=config.value("stakingContract",std::string());if(!g.staking_contract.empty()){g.staking_contract=address(g.staking_contract);if(g.consensus!="pos")throw std::invalid_argument("staking contract requires PoS");}
  auto version=config.value("posSignatureVersion",Json(0));
  if(!version.is_number_integer()||(version!=0&&version!=1))throw std::invalid_argument("unsupported PoS signature version");
@@ -43,7 +48,7 @@ Genesis Genesis::from_json(const Json& data){
  }
  g.state=State::from_json(data.value("alloc",Json::object()));
  auto& h=g.block.header;h.state_root=g.state.root();
- h.difficulty=quantity(data.value("difficulty",Json("0x1")));
+ h.difficulty=quantity(data.value("difficulty",Json(g.consensus=="beacon"?"0x0":"0x1")));
  h.gas_limit=quantity(data.value("gasLimit",Json("0x1c9c380")));
  if(data.contains("baseFeePerGas"))h.base_fee=quantity(data.at("baseFeePerGas"));
  if(data.contains("evm_rules")){
@@ -60,7 +65,12 @@ Genesis Genesis::from_json(const Json& data){
  h.nonce=bytes(quantity(data.value("nonce",Json("0x0"))),8);
  h.extra_data=unhex(data.value("extraData",std::string("0x4e616e6f5079")));
  if(h.extra_data.size()>32)h.extra_data.resize(32); // Source genesis convention.
- if(h.difficulty<1||h.gas_limit<g.minimum_gas_limit)throw std::invalid_argument("invalid genesis limits");
+ if((g.consensus=="beacon"?h.difficulty!=0:h.difficulty<1)||h.gas_limit<g.minimum_gas_limit)throw std::invalid_argument("invalid genesis limits");
+ if(g.consensus=="beacon"){
+  if(h.nonce!=Bytes(8))throw std::invalid_argument("Beacon genesis nonce must be zero");
+  const std::string domain="Nano/Beacon/Bellatrix/v1";
+  h.extra_data=keccak(Rlp(std::vector<Rlp>{Rlp(Bytes(domain.begin(),domain.end())),Rlp(g.chain_id),Rlp(h.extra_data)}).encode());
+ }
  if(g.pos_signature_version){const std::string domain="Nano/PoS/Genesis";h.extra_data=keccak(Rlp(std::vector<Rlp>{Rlp(Bytes(domain.begin(),domain.end())),Rlp(Int(g.pos_signature_version)),Rlp(g.chain_id),Rlp(unhex(g.bootstrap_validator)),Rlp(g.staking_contract.empty()?Bytes():unhex(g.staking_contract)),Rlp(h.extra_data)}).encode());}
  if(g.consensus_rules_version){const std::string domain="Nano/Consensus/Rules";h.extra_data=keccak(Rlp(std::vector<Rlp>{Rlp(Bytes(domain.begin(),domain.end())),Rlp(Int(1)),Rlp(g.minimum_block_interval),Rlp(g.maximum_future_drift),Rlp(g.minimum_gas_limit),Rlp(h.extra_data)}).encode());}
  if(g.staking_query_version){const std::string domain="Nano/Staking/QueryRules";h.extra_data=keccak(Rlp(std::vector<Rlp>{Rlp(Bytes(domain.begin(),domain.end())),Rlp(Int(g.staking_query_version)),Rlp(Int(std::to_string(g.staking_query_limits.per_call_gas))),Rlp(Int(std::to_string(g.staking_query_limits.sync_gas))),Rlp(h.extra_data)}).encode());}
@@ -80,7 +90,7 @@ Blockchain::Blockchain(const std::filesystem::path& database,Genesis genesis)
   if(!first||first->header.hash()!=genesis_.block.header.hash())throw std::invalid_argument("genesis does not match database");
   auto persisted=store_.state_at(latest->header.number);
   if(!persisted)throw std::runtime_error("missing canonical state");
-  if(latest->header.number!=0)verify_authentication(*latest);
+  if(latest->header.number!=0&&genesis_.consensus!="beacon")verify_authentication(*latest);
   if(genesis_.bft_version&&latest->header.number!=0&&!store_.certificate_at(latest->header.number))throw std::runtime_error("BFT chain tip lacks certificate");
   tip_=std::move(*latest);state_=std::move(*persisted);
   if(genesis_.consensus=="pos"){
@@ -130,15 +140,16 @@ Json Blockchain::gossip_page(uint64_t cursor,const std::string& epoch,const std:
  return {{"mode","events"},{"epoch",event_epoch_},{"cursor",cursor},{"next",nullptr},{"transactions",transactions}};
 }
 bool Blockchain::restore(const Int& number,const Bytes& expected_hash){
+ if(genesis_.consensus=="beacon")throw std::invalid_argument("Beacon rewind requires consensus fork choice");
  std::lock_guard lock(mutex_);auto block=store_.block_by_number(number);if(!block||block->header.hash()!=expected_hash)return false;
  auto state=store_.state_at(number);if(!state)throw std::runtime_error("snapshot state unavailable");
  auto registry=pos_;if(genesis_.consensus=="pos"){auto saved=store_.consensus_at(number);if(!saved)throw std::runtime_error("snapshot validator registry unavailable");registry=ProofOfStake::from_json(*saved);}
  audited_certified_tip_.reset();store_.rewind(number);state_=std::move(*state);tip_=std::move(*block);pos_=std::move(registry);pool_.clear();events_.clear();emit("reset",nullptr);return true;
 }
-Block Blockchain::tip()const{std::lock_guard lock(mutex_);return tip_;}
-State Blockchain::state()const{std::lock_guard lock(mutex_);return state_;}
+Block Blockchain::tip()const{std::lock_guard lock(mutex_);require_execution_ready_locked();return tip_;}
+State Blockchain::state()const{std::lock_guard lock(mutex_);require_execution_ready_locked();return state_;}
 bool Blockchain::submit(const SignedTransaction& tx){
- std::lock_guard lock(mutex_);
+ std::lock_guard lock(mutex_);require_execution_ready_locked();
  // Local admission policy, separate from consensus decoding of signed envelopes.
  if(tx.raw().size()>1024*1024)throw std::invalid_argument("transaction exceeds Nano pool byte limit");
  const auto& t=tx.tx;if(t.type>2)throw std::invalid_argument("transaction type unavailable on Nano network");auto sender=tx.sender();
@@ -192,6 +203,7 @@ std::optional<std::string> Blockchain::selected_validator(uint64_t round)const{
  auto index=size_t(first-members.begin());return members[(index+round%members.size())%members.size()].first;
 }
 void Blockchain::verify_authentication(const Block& block)const{
+ if(genesis_.consensus=="beacon")throw std::invalid_argument("Beacon block authentication requires signed consensus envelope");
  if(genesis_.pos_signature_version){if(!verify_block_signature(block,genesis_.chain_id,genesis_.block.header.hash()))throw std::invalid_argument("invalid or missing PoS producer signature");}
  else if(!block.producer_signature.empty())throw std::invalid_argument("producer signature is not enabled on this chain");
 }
@@ -214,6 +226,7 @@ Block Blockchain::validate_signed(const Bytes& key,const Int& timestamp){
  reserve_signature(block,public_address(public_key(key)));sign_block(block,key,genesis_.chain_id,genesis_.block.header.hash());import_block(block,timestamp);return block;
 }
 Blockchain::Prepared Blockchain::verify_contents(const Block& block,const Int& now)const{
+ if(genesis_.consensus=="beacon")throw std::invalid_argument("Beacon block import requires consensus admission");
  auto validation=genesis_.consensus=="pow"?validate_pow_header(block.header,tip_.header,now):HeaderValidation{true,{}};
  if(genesis_.consensus=="pos"){
   // PoS uses the same structural bounds but has no PoW seal.
@@ -363,11 +376,11 @@ Json Blockchain::validators()const{std::lock_guard lock(mutex_);return pos_.vali
 std::optional<std::string> Blockchain::next_validator(uint64_t round)const{std::lock_guard lock(mutex_);return genesis_.consensus=="pos"?selected_validator(round):std::nullopt;}
 Block Blockchain::validate(const std::string& coinbase,const Int& timestamp){return produce(coinbase,timestamp,false,std::chrono::milliseconds(0));}
 Block Blockchain::mine(const std::string& coinbase,const Int& timestamp,std::chrono::milliseconds timeout){return produce(coinbase,timestamp,true,timeout);}
-Block Blockchain::block_template(const std::string& coinbase,const Int& timestamp,uint64_t round)const{std::lock_guard lock(mutex_);return prepare(coinbase,timestamp,round).block;}
+Block Blockchain::block_template(const std::string& coinbase,const Int& timestamp,uint64_t round)const{std::lock_guard lock(mutex_);if(genesis_.consensus=="beacon")throw std::invalid_argument("Beacon templates require authenticated slot context");return prepare(coinbase,timestamp,round).block;}
 Blockchain::PendingSnapshot Blockchain::pending_snapshot(const std::string& coinbase,const Int& now,const std::function<void()>& checkpoint)const{
- std::lock_guard lock(mutex_);if(checkpoint)checkpoint();
+ std::lock_guard lock(mutex_);require_execution_ready_locked();if(checkpoint)checkpoint();
  std::string producer=coinbase;
- if(genesis_.consensus!="pow"){
+ if(genesis_.consensus=="pos"){
   auto selected=selected_validator();if(!selected)throw std::invalid_argument("no active validator for pending execution");producer=*selected;
  }
  Block block;block.header=prepare_header(producer,std::max(now,Int(tip_.header.timestamp+genesis_.minimum_block_interval)),0);
@@ -379,8 +392,8 @@ Blockchain::PendingSnapshot Blockchain::pending_snapshot(const std::string& coin
  // pool changes or a development rewind without mixing block contexts.
  ExecutionEngine engine(genesis_.chain_id,[ancestors](const Int& number){auto it=ancestors.find(number);if(it==ancestors.end())throw std::runtime_error("missing captured pending ancestor");return it->second;},genesis_.evm_revision);
  engine=engine.with_checkpoint(checkpoint);
- auto execute=[block,initial=state_,pending=pool_.candidates_for_block(Int(1)<<256),engine,checkpoint]{
-  auto prepared=execute_candidate(block,initial,pending,engine,checkpoint);
+ auto execute=[block,initial=state_,pending=pool_.candidates_for_block(Int(1)<<256),engine,checkpoint,reward=genesis_.consensus!="beacon"]{
+  auto prepared=execute_candidate(block,initial,pending,engine,checkpoint,reward);
   return std::make_pair(std::move(prepared.block.header),std::move(prepared.state));
  };
  return {block.header,std::move(ancestors),std::move(execute)};
@@ -391,9 +404,12 @@ std::pair<Header,State> Blockchain::pending_execution(const std::string& coinbas
 std::vector<SignedTransaction> Blockchain::pending_transactions(const Int& gas_limit)const{std::lock_guard lock(mutex_);return pool_.pending_for_block(gas_limit);}
 Header Blockchain::prepare_header(const std::string& coinbase,const Int& timestamp,uint64_t round)const{
  bool mining=genesis_.consensus=="pow";
- if(!mining){auto selected=selected_validator(round);if(!selected||address(*selected)!=address(coinbase))throw std::invalid_argument("unexpected PoS validator");}
+ if(genesis_.consensus=="pos"){auto selected=selected_validator(round);if(!selected||address(*selected)!=address(coinbase))throw std::invalid_argument("unexpected PoS validator");}
  if(timestamp<tip_.header.timestamp+genesis_.minimum_block_interval)throw std::invalid_argument("timestamp violates minimum block interval");
- Header h;h.parent_hash=tip_.header.hash();h.number=tip_.header.number+1;h.coinbase=address(coinbase);h.timestamp=timestamp;h.gas_limit=tip_.header.gas_limit;h.base_fee=next_base_fee(tip_.header);h.difficulty=mining?ProofOfWork::adjust_difficulty(tip_.header,timestamp):Int(1);
+ Header h;h.parent_hash=tip_.header.hash();h.number=tip_.header.number+1;h.coinbase=address(coinbase);h.timestamp=timestamp;h.gas_limit=tip_.header.gas_limit;h.base_fee=next_base_fee(tip_.header);h.difficulty=mining?ProofOfWork::adjust_difficulty(tip_.header,timestamp):Int(genesis_.consensus=="beacon"?0:1);
+ // Pending simulation uses the latest known randomness; an actual proposal
+ // obtains its slot-specific RANDAO from the authenticated Beacon transition.
+ if(genesis_.consensus=="beacon"){if(round)throw std::invalid_argument("Beacon has no legacy BFT round");h.mix_hash=tip_.header.mix_hash;}
  if(genesis_.bft_version)h.extra_data=bft_round_extra(round);
  return h;
 }
@@ -401,7 +417,7 @@ Blockchain::Prepared Blockchain::prepare(const std::string& coinbase,const Int& 
  if(checkpoint)checkpoint();Block block;block.header=prepare_header(coinbase,timestamp,round);
  return execute_candidate(std::move(block),state_,pool_.candidates_for_block(Int(1)<<256),engine_.with_checkpoint(checkpoint),checkpoint);
 }
-Blockchain::Prepared Blockchain::execute_candidate(Block block,const State& initial,std::vector<TxPool::Candidate> pending,const ExecutionEngine& engine,const std::function<void()>& checkpoint){
+Blockchain::Prepared Blockchain::execute_candidate(Block block,const State& initial,std::vector<TxPool::Candidate> pending,const ExecutionEngine& engine,const std::function<void()>& checkpoint,bool reward){
  if(checkpoint)checkpoint();
  // Select by sender nonce using a trial state; future nonces stay in the pool.
  auto trial=initial;Int cumulative=0;auto& h=block.header;
@@ -415,10 +431,11 @@ Blockchain::Prepared Blockchain::execute_candidate(Block block,const State& init
   try{auto receipt=engine.apply_transaction(trial,it->transaction,h,Int(block.transactions.size()),cumulative);cumulative=receipt.cumulative_gas_used;block.transactions.push_back(it->transaction);it=pending.erase(it);progress=true;}
   catch(const std::invalid_argument&){it=pending.erase(it);}
  }}
- auto candidate=initial;auto receipts=engine.execute_block(candidate,block);
+ auto candidate=initial;auto receipts=engine.execute_block(candidate,block,reward);
  return {std::move(block),std::move(candidate),std::move(receipts)};
 }
 Block Blockchain::produce(const std::string& coinbase,const Int& timestamp,bool mining,std::chrono::milliseconds timeout){
+ if(genesis_.consensus=="beacon")throw std::invalid_argument("Beacon production requires a signed slot proposal");
  std::lock_guard lock(mutex_);
  if((genesis_.consensus=="pow")!=mining)throw std::invalid_argument("production mode does not match consensus");
  if(!mining&&genesis_.pos_signature_version)throw std::invalid_argument("signed PoS production requires a signing key");

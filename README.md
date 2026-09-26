@@ -32,6 +32,19 @@ Legacy/EIP-2930/EIP-1559, état des comptes et contrats, blocs, reçus et bloom,
 EVM native avec appels et créations, précompilés 1 à 9, consensus PoW/PoS
 avec registre persistant, mempool, exécution et rejeu atomique des blocs.
 
+Un profil distinct `beacon` intègre aussi le consensus Bellatrix et l’exécution
+Paris : slots/époques, choix de branche, finalité, signatures BLS locales,
+journaux anti-slashing par clé et publication atomique du checkpoint avec
+l’état EVM. Le runtime charge un profil et un état initial authentifiés, ou des
+engagements explicites de reprise ; `nano-p2p` relaie ses blocs et attestations.
+Ce chemin est partiellement qualifié : les scénarios locaux, signatures et
+redémarrages ciblés passent. Un scénario à deux nœuds sur un seul hôte retrouve
+une finalité commune après 96 secondes de partition réseau ; cela ne qualifie
+pas encore les partitions prolongées ou un réseau de production.
+Le registre ouvert, les opérations de validateurs et la reprise après panne
+ne sont pas qualifiés de bout en bout. Voir la
+[matrice d’implémentation et ses preuves](docs/EIP-IMPLEMENTATION-STATUS.md).
+
 `include/nano/opcodes.hpp` expose **NanoOpCodes** : 169 valeurs distinctes,
 plus les alias SHA3 et DIFFICULTY, provenant des sources evm.codes / EthereumJS
 10.1.0. Les instructions EOF/proposées du catalogue ne sont pas toutes exécutables.

@@ -35,6 +35,11 @@ public:
  Json classified(bool content,const State& state) const;
  Json page(const std::string& after) const;
  Json status() const;
+ // Hold the pool lock across a canonical disk commit. All allocation and
+ // orphan re-admission occurs before returning; invoke once after disk success.
+ // Destroying without invoking leaves the original pool intact.
+ std::function<void()> prepare_canonical_change(const State&,
+  const std::vector<SignedTransaction>& included,const std::vector<SignedTransaction>& orphaned);
  void clear();
 };
 }

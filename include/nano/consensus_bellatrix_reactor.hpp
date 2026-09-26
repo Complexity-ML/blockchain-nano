@@ -4,6 +4,11 @@
 #include <memory>
 #include "nano/consensus_beacon_signer.hpp"
 namespace nano {
+class Blockchain;
+// Only this explicitly classified race is retryable by the local scheduler.
+class StaleBellatrixDuty : public std::invalid_argument {
+public: using std::invalid_argument::invalid_argument;
+};
 using BellatrixSignedBlockArchive=std::map<ConsensusRoot,std::shared_ptr<const Bytes>>;
 using BellatrixSignedVoteArchive=std::map<ConsensusRoot,std::shared_ptr<const Bytes>>;
 struct BellatrixPublishedStore {std::shared_ptr<const BellatrixForkStore> state;ForkCheckpointToken token;std::shared_ptr<const BellatrixSignedBlockArchive> signed_blocks;std::shared_ptr<const BellatrixSignedVoteArchive> signed_votes;};
@@ -11,9 +16,13 @@ struct BellatrixPublishedStore {std::shared_ptr<const BellatrixForkStore> state;
 // The caller owns ChainStore for this object's lifetime and binds its chain.
 // Initial Store / restart commitment must be independently authenticated.
 // Cancellation callbacks must not re-enter this serialized coordinator.
+// Optional execution owner must own the exact same store and outlive this
+// reactor. Its canonical cache/pool/events publish in the same commit path.
 // Full snapshots per event are a correctness baseline, not a throughput claim.
 class BellatrixDurableReactor {
  ChainStore& disk_;
+ Blockchain* execution_=nullptr;
+ void validate_execution_binding() const;
  const Int chain_id_;const Bytes genesis_;
  const BellatrixForkBlockRules rules_;const BellatrixStoreSnapshotLimits limits_;
  std::mutex& mutex_;
@@ -24,14 +33,49 @@ class BellatrixDurableReactor {
  bool unavailable_=false;
  void require_available() const;
  void publish(BellatrixForkStore,std::shared_ptr<const BellatrixSignedBlockArchive>,std::shared_ptr<const BellatrixSignedVoteArchive>,const std::function<void()>&);
+std::optional<Bytes> prepare_local_body_locked(uint64_t index,uint64_t slot,
+ const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,size_t maximum_vote_trials,const std::function<void()>& check);
+std::optional<Bytes> sign_randao_locked(uint64_t index,uint64_t slot,
+ const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected,
+ BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint);
+std::optional<Bytes> sign_proposal_locked(uint64_t index,uint64_t slot,
+ std::span<const uint8_t> body,const std::function<uint64_t()>& local_clock,
+ const ForkCheckpointToken& expected,BeaconSigningJournal& journal,
+ const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint);
+std::optional<Phase0SignedAttestation> sign_attestation_locked(uint64_t index,
+ uint64_t slot,const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected,BeaconSigningJournal& journal,
+ const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint);
+std::optional<uint64_t> local_proposer_locked(uint64_t slot,const ForkCheckpointToken& expected,const std::function<void()>& checkpoint);
+std::set<uint64_t> local_attesters_locked(uint64_t slot,const ForkCheckpointToken& expected,const std::function<void()>& checkpoint);
+std::optional<Bytes> propose_local_locked(uint64_t index,uint64_t slot,const std::string& recipient,
+ size_t maximum_vote_trials,const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected,
+ BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint);
 public:
- BellatrixDurableReactor(ChainStore&,Int,Bytes,BellatrixForkBlockRules,BellatrixStoreSnapshotLimits,
+ BellatrixDurableReactor(Blockchain&,BellatrixForkBlockRules,BellatrixStoreSnapshotLimits,
   BellatrixForkStore trusted_initial,const std::function<void()>& checkpoint={});
- BellatrixDurableReactor(ChainStore&,Int,Bytes,BellatrixForkBlockRules,BellatrixStoreSnapshotLimits,
+ BellatrixDurableReactor(Blockchain&,BellatrixForkBlockRules,BellatrixStoreSnapshotLimits,
   const ForkCheckpointToken& expected,const std::function<void()>& checkpoint={});
+ BellatrixDurableReactor(ChainStore&,Int,Bytes,BellatrixForkBlockRules,BellatrixStoreSnapshotLimits,
+  BellatrixForkStore trusted_initial,const std::function<void()>& checkpoint={},Blockchain* execution=nullptr);
+ BellatrixDurableReactor(ChainStore&,Int,Bytes,BellatrixForkBlockRules,BellatrixStoreSnapshotLimits,
+  const ForkCheckpointToken& expected,const std::function<void()>& checkpoint={},Blockchain* execution=nullptr);
+ ~BellatrixDurableReactor();
+ // Fail closed on runtime/clock shutdown; requires construction and verification anew.
+ void invalidate();
  BellatrixDurableReactor(const BellatrixDurableReactor&)=delete;
  BellatrixDurableReactor& operator=(const BellatrixDurableReactor&)=delete;
  BellatrixPublishedStore current() const;
+ // Compatibility identity, not proof of peer honesty or finality.
+ Json network_identity() const;
+ bool execution_bound() const{return execution_!=nullptr;}
+ // Build on the authenticated head using its state/history and a pool snapshot.
+ // Candidate votes are individually inclusion-validated, bounded by local work
+ // policy. No signature is issued here. Pending deposits require an operation
+ // provider; construction fails rather than bypassing mandatory deposits.
+ std::optional<Bytes> prepare_local_body(uint64_t validator_index,uint64_t slot,
+  const Bytes& randao_reveal,const std::string& fee_recipient,
+  const ForkCheckpointToken& expected,size_t maximum_vote_trials,
+  const std::function<void()>& checkpoint={});
  // Current-slot local duty; no caller-supplied vote fields or fork domain.
  // local_clock must come from the validator service's independent local clock,
  // never a peer. Holds Store/journal gates through the bounded signing callback.
@@ -49,6 +93,11 @@ public:
   std::span<const uint8_t> body,const std::function<uint64_t()>& local_clock,
   const ForkCheckpointToken& expected_store,BeaconSigningJournal&,
   const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={});
+ // One coherent local proposal attempt; still uses normal admission afterwards.
+ std::optional<Bytes> propose_local(uint64_t index,uint64_t slot,const std::string& recipient,
+  size_t maximum_vote_trials,const std::function<uint64_t()>& local_clock,
+  const ForkCheckpointToken&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,
+  const std::function<void()>& checkpoint={});
  // Epoch RANDAO reveal for the selected current-slot proposer only. Domain
  // and key derived locally. Uses the journal gate/retirement check; RANDAO is
  // not a slashable proposal/vote and does not advance those reservations.
@@ -56,12 +105,24 @@ public:
   const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected_store,
   BeaconSigningJournal&,const BeaconSigningJournal::Signer&,
   const std::function<void()>& checkpoint={});
+ // Scheduling hints from the authenticated current state; signing revalidates them.
+ std::optional<uint64_t> local_proposer(uint64_t slot,const ForkCheckpointToken&,const std::function<void()>& checkpoint={});
+ std::set<uint64_t> local_attesters(uint64_t slot,const ForkCheckpointToken&,const std::function<void()>& checkpoint={});
+ // Local intent-only operations: derive all signing data from the latest
+ // authenticated state, keeping disk/journal/deadline checks before signatures.
+ std::optional<uint64_t> current_proposer(uint64_t slot,const std::function<void()>& checkpoint={});
+ std::set<uint64_t> current_attesters(uint64_t slot,const std::function<void()>& checkpoint={});
+ std::optional<Phase0SignedAttestation> attest_current(uint64_t index,uint64_t slot,
+  const std::function<uint64_t()>&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={});
+ std::optional<Bytes> propose_current(uint64_t index,uint64_t slot,const std::string& recipient,size_t trials,
+  const std::function<uint64_t()>&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={});
  void tick(uint64_t time_ms,const std::function<void()>& checkpoint={});
  bool block(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
  // Wire admission uses the configured fork schema/committee limit. There is
  // no sender-controlled "already included in a block" or time-window bypass.
  bool vote_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
  bool slashing_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
+ // Current-slot votes are durably archived and applied by the next slot tick.
  bool vote(const Phase0SignedAttestation&,const std::function<void()>& checkpoint={});
  bool slashing(const IndexedConsensusAttestation&,const IndexedConsensusAttestation&,
   const std::function<void()>& checkpoint={});

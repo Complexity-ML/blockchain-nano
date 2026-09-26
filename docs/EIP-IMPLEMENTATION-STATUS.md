@@ -1,7 +1,7 @@
 # Feuille de route EIP — état réel de Nano
 
-Dernière revue : 24 septembre 2026. Source de vérité : code actuel, tests et
-rapports. Les anciennes notes chronologiques ne remplacent pas cette matrice.
+Dernière revue partielle : 26 septembre 2026 (intégration Bellatrix et reprise).
+Source de vérité : code actuel, tests et rapports. Les anciennes notes chronologiques ne remplacent pas cette matrice.
 
 - **Implémenté** : comportement présent dans le périmètre indiqué ; ne signifie
   pas que toute la blockchain est prête pour la production.
@@ -19,7 +19,7 @@ reste à compléter. Le genesis réseau autorise actuellement Paris/Shanghai.
 
 | EIP | État actuel | Périmètre réel | Code / preuves à consulter | Reste à faire / critère de clôture | Priorité |
 | --- | --- | --- | --- | --- | --- |
-| [3076](https://eips.ethereum.org/EIPS/eip-3076) | Partiel (API/CLI locale v5) | Journal anti-slashing ; import/fusion, export avec arrêt durable et CLI hors ligne mono-validateur ; corpus inter-clients qualifié dans ce périmètre | src/consensus_beacon_signer.cpp ; docs/BEACON-SIGNING-JOURNAL.md | Coordination multi-clés, tâches réelles et récupération des engagements externes après panne ; aucun statut production | Validateurs |
+| [3076](https://eips.ethereum.org/EIPS/eip-3076) | Partiel | Journal v5 et devoirs locaux Bellatrix à plusieurs clés ; redémarrage ordonné avec engagements explicites qualifié sur 64 clés synthétiques | src/consensus_beacon_signer.cpp ; src/consensus_bellatrix_validator.cpp ; tests/test_bellatrix_transition.cpp ; docs/BEACON-SIGNING-JOURNAL.md | Reprise après panne non ordonnée et gestion indépendante des engagements externes ; ne vaut pas qualification de tout le cycle validateur | Validateurs |
 | [2](https://eips.ethereum.org/EIPS/eip-2) | Implémenté | Transactions et signatures | src/transaction.cpp ; tests/fixtures/ethereum-official.json | Conserver les régressions du profil activé et relier les cas exacts à chaque EIP | Socle |
 | [155](https://eips.ethereum.org/EIPS/eip-155) | Implémenté | Transactions et signatures | src/transaction.cpp ; tests/fixtures/ethereum-official.json | Conserver les régressions du profil activé et relier les cas exacts à chaque EIP | Socle |
 | [2718](https://eips.ethereum.org/EIPS/eip-2718) | Implémenté | Transactions et signatures | src/transaction.cpp ; tests/fixtures/ethereum-official.json | Conserver les régressions du profil activé et relier les cas exacts à chaque EIP | Socle |
@@ -75,11 +75,11 @@ reste à compléter. Le genesis réseau autorise actuellement Paris/Shanghai.
 | --- | --- | --- |
 | Admission au-delà de 1 000 | Implémentée et testée localement à 1 001 par transactions signées, RPC et réouverture | Lecture du staking et transport encore bornés ; ne pas promettre capacité réseau illimitée |
 | Votes individuels à grande échelle | 100 000 et 1 million validés localement, certificats complets | Intégrer comités/agrégats et qualifier le réseau ; pas assimiler à autant de nœuds |
-| Permutation des comités Ethereum | Primitive vérifiée : 240 vecteurs officiels, invariants de partition jusqu’à 1 million ; RANDAO et graines testés localement ; non activée | Authentification du proposant/registre, persistance du RANDAO, slots/epochs et activation |
-| BLS de consensus / agrégation | Partiel : vérification individuelle (29 cas), agrégée (12 cas) et mutations ; registre/consensus non intégrés | Preuves de possession, domaines, signataires, pondération et doubles comptages |
-| Domaines et racines SSZ de signature | Primitive vérifiée : 10 vecteurs officiels ForkData/SigningData et mutations de contexte | Intégrer racine authentifiée du registre genesis, versions par epoch et domaines des votes ; pas encore actif |
-| Casper FFG / LMD-GHOST | Non commencé ; BFT natif existant | État consensus, justification/finalité, choix de branche et partitions |
-| Registre beacon / RANDAO / slashing | Partiel : sanctions Phase0, snapshots/reprise et comptabilité par époque testés localement ; non activés | Registre authentifié, persistance, epochs/RANDAO, pénalités différées et intégration réseau |
+| Permutation des comités Ethereum | Primitives qualifiées localement jusqu’à 1 million ; affectations de slots intégrées aux devoirs Bellatrix et sélection groupée testée sur 64 clés | Qualifier le registre ouvert, les opérations et le réseau à grande échelle ; aucune équivalence avec 1 million de nœuds |
+| BLS de consensus / agrégation | Partiel : signatures BLS des devoirs et blocs Bellatrix intégrées ; primitives et scénarios à clés synthétiques qualifiés | Cycle du registre/PoP, agrégats de réseau et changements de validateurs à qualifier de bout en bout |
+| Domaines et racines SSZ de signature | Intégrés aux signatures Bellatrix locales avec identité/registre authentifiés ; tests de refus et de reprise existants | Qualifier les transitions de forks et l’activation publique ; les fixtures ne prouvent pas ces opérations réseau |
+| Casper FFG / LMD-GHOST | Partiel : transitions et choix de branche Bellatrix implémentés ; finalité locale et scénario distribué ciblé enregistrés | Reprise après partition de 96 s réussie sur deux nœuds / un hôte ; partitions prolongées, autres répartitions du stake et exploitation distribuée à qualifier |
+| Registre beacon / RANDAO / slashing | Partiel : opérations et snapshots locaux ; RANDAO intégré aux propositions Bellatrix, journal anti-slashing par clé | Cycle ouvert entrées/sorties/sanctions, disponibilité des opérations et reprise après panne à terminer et qualifier |
 | ERC-20/721/1155 | Contrats et scénarios ciblés existants | Étendre les scénarios ; pas de revendication « tout OpenZeppelin testé » |
 | ERC-1271/165/2612 et EIP-712 | Audit de couverture nécessaire | Répertorier contrats et cas exacts ; éviter d’assimiler compilation et comportement |
 
@@ -1124,3 +1124,346 @@ propositions/reveals, une attestation et cinq refus, dont une double proposition
 après réouverture du journal et une expiration pendant la signature. Voir
 [BELLATRIX-LOCAL-SIGNING.md](BELLATRIX-LOCAL-SIGNING.md). La boucle autonome et le
 transport réseau Bellatrix restent à raccorder ; pas d'activation de production.
+
+### 2026-09-25 — Lot réseau Bellatrix en cours, non qualifié
+
+Le code relie maintenant `run_node`, le runtime Bellatrix, les méthodes privées
+`nano_bellatrix*` et le daemon libp2p sous `/nano/bellatrix/1.0.0`. Les blocs/votes
+archivés passent par l'inventaire, l'export borné et les tickets d'admission durable.
+Chaque enveloppe porte l'identité complète du profil ; les enveloppes Altair à
+cinq champs ne sont pas acceptées en Bellatrix. Les imports/synchronisations de
+blocs legacy sont refusés dans ce mode ; le gossip des transactions est conservé.
+
+Le mode genesis `beacon` exige Paris. Le runtime partage la base canonique et
+exige soit un snapshot initial local authentifié, soit un jeton exact de reprise,
+sans repli automatique. Le RPC ne démarre qu'après vérification du checkpoint.
+L'horloge locale invalide le coordinateur en cas de discontinuité ou erreur locale.
+Tête, état EVM, mempool et événements sont publiés après le commit atomique ; la
+préparation de la mempool conserve les métadonnées déjà authentifiées et traite
+les transactions communes aux branches avant réadmission des orphelines.
+
+Compilation réussie de `nano`, `nano-p2p`, `nano-beacon-execution-gate-tests`,
+`nano-txpool-canonical-tests`, `nano-bellatrix-wire-identity-tests` et
+`nano-bellatrix-transition-tests`. Journaux locaux :
+`build-cmake/qualification/bellatrix-network-integration-20260925/`.
+La première compilation a révélé des comparaisons string/JSON corrigées ; un
+appel a ensuite demandé une nouvelle cible avant régénération de CMake, puis la
+régénération et la compilation de cette cible ont réussi.
+
+La campagne regroupée a exécuté les nouveaux scénarios. Les nouveaux fichiers
+couvrent les contrôles d'accès avant vérification du checkpoint, l'isolation des
+mutations legacy, les enveloppes de réseau/IPC et la mempool lors des réorganisations.
+Le scénario local de boucle validateur passe après les corrections décrites
+ci-dessous. La finalité distribuée et la reprise réseau restent à terminer. La compilation
+ne clôture aucun EIP ni critère de production. Aucun push ou déploiement de ce lot.
+
+La boucle validateur locale est maintenant écrite et raccordée à la configuration
+optionnelle `bellatrix.validator`. Elle charge les clés BLS depuis les variables
+d'environnement nommées (exclues de l'environnement du daemon P2P), vérifie leur
+liaison au registre authentifié et utilise un journal distinct par clé. Elle
+construit le payload depuis la mempool et l'état de la branche, réserve de la
+place pour les attestations, signe via le journal puis repasse par l'admission
+normale. Les réservations de signature déjà durables sont respectées après reprise.
+Le chemin Beacon de préparation EVM n'ajoute plus la récompense legacy de minage.
+
+Nouveau scénario écrit : `consensus_bellatrix_validator_loop` (64 clés locales,
+horloge synthétique, transaction de la mempool, finalité puis réouverture de la
+base). **Il passe en 80,26 s et ne représente pas un réseau distribué.**
+Résultat : 31 propositions, 200 attestations admises, époque 2 finalisée et
+époque 3 justifiée, transaction exécutée, état/racine/finalité retrouvés après
+réouverture. Les scénarios de mempool, de contrôle de démarrage, d’identité des
+enveloppes et de transitions signées passent également dans leur périmètre.
+Le constructeur utilise pour l'instant une participation sync vide et les votes
+archivés ; il refuse une proposition nécessitant des dépôts obligatoires qu'aucun
+fournisseur local ne lui a donnés. La collecte des opérations, l'agrégation et la
+qualification de performance restent ouvertes. La validation complète de chaque
+vote candidat est une base de correction, pas une preuve de débit en production.
+
+La première exécution de la boucle a révélé deux écarts corrigés : abstention
+lorsqu'un checkpoint d'époque précède l'ancre disponible, puis conservation
+durable des votes du slot courant sans effet prématuré sur le choix de branche.
+Le tick du slot suivant applique ces votes ; la reprise vérifie aussi les votes
+en attente. Le scénario a été prolongé à quatre époques pour respecter le délai
+FFG de démarrage, sans réduire les critères : époque finalisée >= 2 et justifiée >= 3.
+
+Le nouveau scénario `consensus_bellatrix_validator_network` utilise deux daemons
+libp2p et deux cœurs HTTP/base séparés dans un seul processus de test. Sa première
+exécution a synchronisé les blocs et l'état mais a échoué sur la participation :
+les retours de messages identiques modifiaient inutilement le jeton durable et
+perturbaient les tâches locales. Les doublons exacts vérifient désormais le
+checkpoint existant sans recommit. Le scénario réseau passe après cette correction en 112,33 s : même état EVM,
+reçu de transaction et époque finalisée 2 sur le nœud observateur. Ce scénario concentre les clés
+sur un seul hôte validateur, avec un second nœud observateur ; il ne qualifie pas
+la répartition du stake entre machines ni les partitions réseau.
+
+Le contrôle de concurrence a été adapté pour modifier effectivement l'horloge :
+un appel identique n'écrit plus de checkpoint. L'ancien scénario supposait à
+tort que deux opérations sans changement de contenu créaient un auteur obsolète.
+Les contrôles conservent les refus d'auteur obsolète, les annulations avant commit
+et l'erreur de synchronisation disque ; la dernière exécution passe en 4,07 s.
+Le journal `cas-final.log` conserve ce résultat.
+
+Le scénario ajouté `consensus_bellatrix_runtime_restart` passe en **8,98 s**.
+Il appelle le véritable chargeur `start_bellatrix_runtime` avec profil/snapshot
+sur disque, 64 clés BLS synthétiques chargées par variables d’environnement et
+64 journaux séparés. Il produit un bloc, arrête les services, retient explicitement
+les engagements du coordinateur et des journaux, rouvre la base puis produit le
+bloc suivant. Un nouvel appel au même slot ne répète pas les signatures réservées.
+Il refuse un digest de profil altéré, une capacité de transport insuffisante,
+deux sources de confiance simultanées, une clé incompatible avec son index et
+un engagement de reprise obsolète. Une régression de l’horloge ferme l’accès à
+l’exécution. `BellatrixValidatorLoop::restart_commitments()` permet la capture
+explicite des engagements des journaux ; ce n’est pas une sauvegarde externe
+automatique ni une garantie contre le rollback de ces engagements.
+Preuve locale : `runtime-restart.log` dans le répertoire de qualification du lot.
+Ce scénario reste dans un processus avec horloge synthétique : le lancement par
+CLI, les cœurs indépendants, le stake réparti et les partitions restent à qualifier.
+
+Les trois contrôles de non-régression du transport partagé passent en 3,06 s :
+`consensus_altair_wire_admission`, `consensus_altair_core_client` et
+`consensus_altair_libp2p`. Ils ont été reconstruits après les changements aux
+schémas d’enveloppes, au dispatch IPC et à la compatibilité des pairs. Le dernier
+utilise un vrai daemon et neuf identités de pairs distinctes ; ce résultat couvre
+l’admission réseau, pas la finalité distribuée. Journal :
+`shared-transport-regression.log`. Les scénarios réseau Bellatrix déjà passés
+n’ont pas été rejoués pour cette seule extension du test de configuration.
+
+### 2026-09-25 — Lancement CLI Bellatrix et reprise des processus
+
+`consensus_bellatrix_managed_runtime` lance deux vrais binaires `nano run`,
+chacun avec son daemon libp2p, sa base et son serveur HTTP. Le Genesis Beacon
+est chargé par le parseur réel ; le snapshot de consensus synthétique correspond
+à ce Genesis. Les 64 clés de test sont chargées via l’environnement du seul
+nœud validateur. L’autre cœur est observateur. L’horloge est celle du système.
+Le scénario attend la synchronisation au bloc 3, arrête le validateur,
+reprend avec les engagements capturés à l’arrêt et vérifie la réception du bloc
+suivant sur l’observateur resté actif. La première exécution passe en 18,21 s
+(blocs 3 puis 4). Le test du chargeur/reprise passe aussi en 6,46 s après
+raccordement au même arrêt explicite.
+
+L’arrêt expose `bellatrix-runtime-stopped` avec le jeton du coordinateur et ceux
+des journaux des clés. Le chemin `run_node` termine le daemon et les workers HTTP
+avant la capture ; `stop_bellatrix_runtime` termine les devoirs locaux, l’horloge
+et les workers consensus avant de lire ces engagements. Aucun secret n’est
+inclus. Ces métadonnées doivent être retenues séparément et reportées dans la
+configuration de reprise ; leur émission dans un journal ne constitue pas une
+sauvegarde externe automatique. Un arrêt brutal et la perte du dernier engagement
+ne sont pas résolus par une confiance automatique dans le disque.
+
+Périmètre prouvé : processus indépendants, démarrage CLI, production signée,
+synchronisation P2P et reprise propre d’un validateur. Restent ouverts : stake
+réparti entre signataires indépendants, finalité distribuée, partition/rattrapage,
+arrêt brutal et procédures de conservation durable des engagements. Aucun de
+ces résultats ne clôture le lancement public ni les autres EIP de la matrice.
+
+Après correction de l’ordre de terminaison HTTP, le scénario concerné est rejoué
+et passe en **17,97 s**, avec synchronisation aux blocs 3 puis 4 après reprise.
+Journal complet : `managed-drain-qualification.log`. Cette réexécution couvre
+la modification de l’arrêt ; les suites EVM et de finalité locale inchangées
+n’ont pas été relancées. Aucun push ni déploiement de ce lot à ce stade.
+
+### 2026-09-25 — Qualification des signataires répartis
+
+Nouveau scénario `consensus_bellatrix_distributed_finality` : deux cœurs `nano run`
+et deux daemons libp2p sur un même Mac, chacun avec 32 des 64 clés synthétiques.
+Les environnements enfants ne reçoivent que leurs clés respectives. Le scénario
+redémarre un des validateurs avec ses engagements exacts, puis attend quatre
+époques avec horloge réelle. Le critère de passage exige le même checkpoint
+finalisé (racine et époque), d’époque >= 2, sur les deux nœuds ; une tête commune
+ou un bloc produit ne suffit pas. Les engagements d’arrêt exposent maintenant
+également le checkpoint finalisé et l’époque justifiée pour cette vérification.
+
+Le budget propre à ce test est explicite : 128 blocs, 2 048 votes archivés,
+64 Mio d’états cumulés, enveloppe de 128 Mio. Ce budget ne modifie pas les règles
+du registre ni les paramètres d’un réseau déployé. Il ne corrige pas l’absence
+d’élagage des états/blocs du Store, qui reste un écart de fonctionnement durable.
+Ce scénario ne couvre ni plusieurs machines physiques ni les partitions.
+
+**Résultat : passage en 183,45 s.** Les deux nœuds finalisent l’époque 2 avec la
+même racine `0xc90b8d700df145836b8a3d43af2c85fd536c4a9271a548da0f1a89509c07799f`
+et justifient l’époque 3. Le scénario atteint le slot 32 (hauteur d’exécution 31,
+un slot sans bloc) après redémarrage d’un validateur à la hauteur 3. Cette preuve
+couvre une finalité commune avec signataires répartis entre deux processus,
+chacun détenant la moitié des clés, sur **une seule machine physique**.
+Journal complet : `distributed-qualification.log` dans le répertoire du lot.
+Les partitions, la panne brutale, le rattrapage prolongé, l’élagage et la mise
+à l’échelle ne sont pas clos par ce résultat. Le RPC refuse encore explicitement
+les tags `safe`/`finalized` ; leur raccordement au checkpoint Beacon reste ouvert.
+Aucun push, changement du VPS ou lancement public n’est effectué ici.
+
+### 2026-09-25 — Raccordement RPC du checkpoint finalisé Beacon
+
+Le tag `finalized` est raccordé au bloc d’exécution du checkpoint finalisé
+Beacon. Il est publié sous le verrou de chaîne après le même commit atomique
+que la tête/l’état, vérifié contre l’ancêtre canonique ou le suffixe validé,
+et ne peut reculer ou changer de hash à hauteur égale. Après réouverture,
+le coordinateur revalide le snapshot et le bloc canonique avant de rendre
+ce tag disponible. Le tag est refusé sans consensus Beacon authentifié ;
+il ne constitue jamais un alias de `latest`.
+
+Référence : [paramètre de bloc JSON-RPC Ethereum](https://ethereum.org/en/developers/docs/apis/json-rpc/#the-block-parameter).
+Méthodes raccordées par le résolveur commun : lecture de blocs/transactions,
+solde, nonce, code, stockage, historique des frais et simulations. `safe` reste
+refusé, et le parseur spécifique des filtres/logs ne prend pas encore en charge
+`finalized` : aucune conformité RPC complète n’est déclarée ici.
+Le scénario de finalité locale comporte désormais une transaction supplémentaire
+après le checkpoint : le stockage finalisé doit rester à 2 tandis que la tête
+courante vaut 3. Les réponses sont comparées à l’état d’exécution associé au
+checkpoint du Store, puis revérifiées après réouverture.
+
+**Qualification passée : 3/3 en 90,11 s.** Contrôle d’accès : 0,56 s ;
+configuration/reprise : 9,11 s ; boucle avec finalité et lectures RPC : 80,44 s.
+Le scénario compare huit familles de réponses au checkpoint puis après
+réouverture, vérifie le stockage finalisé à 2 contre 3 à la tête et l’absence
+de mutation canonique par `eth_call`. L’époque 2 reste finalisée, l’époque 3
+justifiée. Preuve : `finalized-rpc-qualification.log`. Les scénarios P2P longs,
+non modifiés par ce raccordement, n’ont pas été relancés. Les binaires de test
+ont été liés au code modifié ; aucun binaire n’a été déployé sur le VPS.
+
+### 2026-09-25 — Coupure du transport entre deux moitiés du stake
+
+Scénario ajouté : `consensus_bellatrix_partition_recovery`. Il démarre les deux
+cœurs et daemons réels, répartit les 64 clés en deux ensembles de 32, effectue
+une reprise propre puis attend quatre époques. Après établissement d’une finalité
+commune, il suspend uniquement les deux daemons enfants par SIGSTOP pendant
+deux époques (96 s avec ce preset). Les cœurs/signataires restent actifs.
+Il exige que les deux branches avancent et divergent, sans changement du bloc
+finalisé. Après SIGCONT, il exige un nouveau bloc finalisé commun plus récent
+et la convergence des têtes. Les daemons sont repris même si une assertion échoue.
+La coupure est une suspension du composant transport, pas une simulation de
+latence/perte sélective de paquets ni de plusieurs machines physiques.
+
+La durée totale est bornée par CTest à 720 s. Aucun trafic de flood ni fonds
+réels. `partition-run-inputs.json` conserve les empreintes des binaires et des
+sources modifiées utilisées, avec le commit de base. Le résultat doit être lu
+avec le journal complet, sans assimiler le démarrage du scénario à son succès.
+
+**Première exécution : échec en 519,26 s.** La finalité reste inchangée pendant
+les 96 s d’isolement et les têtes reconvergent ensuite, mais aucun checkpoint
+plus récent n’est finalisé dans les cinq époques de récupération. Le journal
+`partition-qualification.log` et `partition-run-inputs.json` conservent cet échec.
+Il ne faut pas le résumer comme une réussite de la reprise après partition.
+
+L’inspection du relais révèle un blocage de parcours sur un vote explicitement
+refusé et une cadence d’un seul élément par seconde, alternant blocs/votes.
+Correction en cours de qualification : les votes refusés sont différés jusqu’à
+la fin d’un parcours, sans bloquer les suivants ni être considérés comme livrés.
+Un ACK absent/ambigu ne fait toujours pas avancer le curseur ; l’ordre des
+blocs reste inchangé. Le relais utilise un timer indépendant, 100 ms par défaut,
+réglable par `NANO_CONSENSUS_RELAY_INTERVAL_MS` (25..60000 ms), avec toujours une
+seule tentative en vol et les mêmes budgets d’admission entrants. Cette cadence
+est une politique locale, pas une règle de stake. Le nouveau scénario de transport
+`consensus_relay_rejected_vote_progress` vérifie les refus, la reprise différée,
+les réponses perdues et la conservation de l’ordre des blocs ; il passe.
+Le lien causal avec l’échec de finalité doit encore être confirmé par le scénario
+complet, dont les critères restent inchangés.
+
+**Seconde exécution : non qualifiée.** Le contrôle Altair/libp2p passe en 2,30 s,
+mais le scénario de partition échoue en 228,84 s sur
+`isolated half-stake advanced finality`, avant la récupération réseau. Le journal
+complet `partition-recheck.log` contient les traces de relais ;
+`partition-recheck-inputs.json` identifie les sources et binaires de ce passage.
+Le test local de progression du relais passe en 0,33 s. Cela ne suffit pas à
+valider la correction de la récupération après partition.
+
+La trace du second échec ne donne pas les hauteurs et racines des deux réponses
+ayant déclenché cette assertion. Il faut capturer les checkpoints au changement
+et leur lien au préfixe signé avant coupure pour distinguer une finalisation
+retardée utilisant des votes antérieurs d’une finalisation illégitime pendant
+l’isolement. Aucune violation du quorum n’est affirmée sur la seule assertion,
+et aucune réussite de reprise n’est revendiquée. Les critères de sécurité ne
+sont pas retirés. Aucun push ou déploiement de ce correctif non qualifié.
+
+### Diagnostic FFG retardé — 25 septembre 2026
+
+Le test `ethereum_official_altair_ffg` couvre désormais trois assertions supplémentaires : un quorum de l’époque précédente peut finaliser un checkpoint plus ancien sans votes de l’époque courante ; la racine finalisée reste celle du checkpoint ; sans ce quorum précédent, cette finalisation ne se produit pas. Les dix fixtures officielles et ces nouveaux cas passent (0,31 s). Source : [consensus-specs v1.5.0, justification et finalisation](https://github.com/ethereum/consensus-specs/blob/v1.5.0/specs/phase0/beacon-chain.md#justification-and-finalization).
+
+Ce contre-exemple précise la portée d’une assertion de partition ; il ne démontre pas la cause du précédent échec réseau et ne clôt pas la reprise après partition. Le scénario réseau diagnostique conserve son assertion stricte pendant son exécution. Preuves et empreintes : `build-cmake/qualification/bellatrix-network-integration-20260925/{nano-delayed-ffg-test.log,delayed-ffg-inputs.json}`.
+
+### Partition diagnostique : reprise non acquise — 25 septembre 2026
+
+`consensus_bellatrix_partition_recovery` échoue en **518,79 s** après deux époques de coupure puis cinq époques de reconnexion. Pendant la coupure, les branches progressent sans changer la finalité ; le scénario ne rencontre donc pas cette fois l’assertion ambiguë de finalisation retardée. La finalité RPC reste au bloc `0x1`. À l’arrêt ordonné, les deux nœuds exposent la même finalité Beacon d’époque `0x0`, une justification d’époque `0x2`, `clockHealthy=true` et `validator.healthy=true`. Les compteurs locaux sont respectivement 39/35 propositions et 165/171 attestations admises (le compteur source repart après son redémarrage initial).
+
+Cela écarte un arrêt déclaré de l’ordonnanceur ou de l’horloge dans cette exécution. Cela ne prouve ni la livraison utile de chaque vote, ni son inclusion dans la branche canonique : la prochaine investigation porte sur ces deux étapes et la participation par époque. La correction du relais ne clôt donc pas la reprise. Aucun assouplissement d’assertion, push ou déploiement n’a été réalisé. Preuves : `build-cmake/qualification/bellatrix-network-integration-20260925/partition-diagnostic.log` et `partition-diagnostic-inputs.json`.
+
+### Conservation des preuves de partition — 25 septembre 2026
+
+Le scénario sait désormais conserver ses bases **après arrêt des deux processus**, uniquement sur échec et avec `NANO_TEST_PARTITION_EVIDENCE` explicite ; il refuse d’écraser un dossier précédent. Le nouvel outil natif `nano-bellatrix-checkpoint-export` lit une copie de base et vérifie le checkpoint contre le jeton enregistré dans la sortie d’arrêt indépendante avant export. Il ne lance ni réseau ni signataire. Compilation réussie ; validation de l’export sur la prochaine base conservée encore en attente.
+
+Une exécution diagnostique est en cours avec cette conservation, sans modification supplémentaire des règles de consensus ni de l’assertion de partition. Ses entrées sont empreintées dans `build-cmake/qualification/bellatrix-network-integration-20260925/partition-retained-inputs.json`. Aucun verdict nouveau de reprise n’est acquis à ce stade.
+
+### Participation après partition et coût des clés sans devoir — 25 septembre 2026
+
+L’exécution avec conservation échoue en **521,87 s**. Les bases arrêtées sont conservées (42 Mio). L’export natif vérifie avec succès les deux checkpoints contre les engagements d’arrêt ; les rapports dérivés des SSZ indiquent que le maximum de participation cible précédente dans les états retenus n’atteint que 20,3 %, 20,3 %, 9,4 % et 12,5 % aux époques 7 à 10, sur les deux nœuds. Ces maxima sur les branches retenues ne sont pas des métriques de réseau distribué ni une validation complète du parseur diagnostique.
+
+L’inspection du chemin local montre une relecture du checkpoint complet (4 690 018 octets en fin de ce scénario) pour chaque clé interrogée par `sign_randao` et `sign_attestation`, y compris celles sans devoir. La vérification disque est déplacée après la sélection du devoir et reste obligatoire **avant toute signature éligible**. Cela élimine des relectures inutiles ; son effet sur la reprise de finalité reste à mesurer. Une qualification groupée de la chaîne signée et de la boucle de validation est lancée après cette modification.
+
+Preuves : `partition-retained-db/`, `nano-{source,observer}-checkpoint.json`, `nano-{source,observer}-participation.txt` et le script d’analyse conservé, sous `build-cmake/qualification/bellatrix-network-integration-20260925/`.
+
+### Sélection groupée des devoirs locaux — 25 septembre 2026
+
+La seule suppression des lectures disque pour les clés sans devoir préserve les deux tests ciblés (84,17 s cumulées), mais ne réduit pas sensiblement la durée de la boucle locale (80,41 s contre 80,44 s précédemment). Elle ne peut donc pas être présentée comme la cause résolue du blocage.
+
+Le lot ajoute une sélection groupée du proposant et du comité d’attestateurs à partir de l’état authentifié. L’ordonnanceur évite d’interroger les fonctions de signature pour toutes les clés sans devoir ; les fonctions de signature revalident encore identité, slot, engagement disque et journal avant utilisation du signataire. La préparation du comité partage désormais les traversées d’état et le calcul des affectations. Les nouveaux contrôles comparent le proposant à la sélection de référence, vérifient les huit affectations du profil minimal, leur bit unique, l’exclusion d’un équivoque et le refus d’un slot périmé.
+
+Compilation réussie ; qualification groupée runtime/redémarrage, boucle locale et chaîne signée en cours. Ni la reprise réseau ni la capacité à 100 000 validateurs ne sont démontrées par cette modification. Entrées : `batch-duties-inputs.json` dans le dossier de qualification Bellatrix.
+
+La sélection groupée passe ses trois tests : redémarrage 8,66 s, boucle locale 75,01 s et chaîne signée 3,72 s. Ce gain reste modeste et ne prouve pas encore la reprise réseau.
+
+### Attestations identiques déjà incluses — 25 septembre 2026
+
+Les blocs conservés montrent des inclusions répétées des mêmes attestations. Le constructeur local filtre maintenant les empreintes des attestations identiques déjà incluses dans les **ancêtres récents du parent choisi**, sans consulter les branches concurrentes pour décider une exclusion. Les messages restent archivés pour le relais. Les nouveaux votes gardent la validation complète habituelle. La boucle locale vérifie désormais l’absence de doublons identiques dans sa chaîne et la conservation d’au moins 128 attestations utiles ; finalité, transactions, réouverture et garde-fous de signature restent dans la qualification groupée lancée. Résultat encore en attente.
+
+La qualification groupée après déduplication passe **3/3** : runtime/redémarrage 8,69 s, boucle locale **28,04 s**, chaîne signée 3,75 s (40,49 s cumulées). La boucle locale était à 80,41 s avant sélection groupée/déduplication ; ces mesures sur le même Mac indiquent une réduction d’environ 65 % de sa durée, sans constituer un benchmark réseau. Le nouveau contrôle d’unicité et de conservation des votes utiles passe, ainsi que la finalité et la réouverture.
+
+La partition est relancée avec ce lot modifié et conservation des bases en cas d’échec (`partition-optimized-db`, manifeste `partition-optimized-inputs.json`). Sa réussite n’est pas acquise au lancement.
+
+### Reprise : arrêt des propositions et erreurs masquées — 26 septembre 2026
+
+La partition après optimisation échoue en **518,11 s**. Les deux ordonnanceurs restent déclarés sains (203 et 195 attestations admises), finalité d’époque 0 et justification d’époque 2. Les bases concordent : horloge au slot 88, dernier bloc au slot 79. Les gains locaux n’ont donc pas résolu la reprise réseau.
+
+L’inspecteur hors ligne reconstruit l’état depuis l’engagement d’arrêt vérifié. Au slot 88 il trouve le proposant 36, huit attestateurs et un corps de bloc valide de 3 395 octets. Le diagnostic de corps reconnaît uniquement les clés publiques des fixtures synthétiques connues, prépare leur révélation RANDAO et ne publie ni bloc ni transaction. Il opère sur la copie arrêtée, sans horloge active ni réseau. Cela écarte une impossibilité intrinsèque de construire le prochain bloc depuis cet état ; cela ne reproduit pas les courses concurrentes.
+
+Le traitement d’erreur local avait un défaut : n’importe quelle `invalid_argument` pouvait être ignorée si le jeton avait changé entre-temps. La reprise est maintenant limitée à une exception typée `StaleBellatrixDuty`, émise explicitement lors d’un conflit de jeton. Les autres erreurs arrêtent l’ordonnanceur et restent visibles dans `failure` ; `staleDutyRetries` compte les conflits réellement classifiés. La lecture initiale du réacteur est elle aussi couverte par ce traitement. Nouveau contrôle de classification et qualification groupée en cours ; aucun nouveau résultat réseau revendiqué.
+
+La qualification du traitement typé passe **3/3** : runtime/redémarrage 8,82 s, boucle locale 27,78 s, chaîne signée 3,77 s (40,37 s cumulées). La boucle locale termine sans erreur ni reprise de conflit dans ce scénario synthétique. Les conflits réels du réseau et la cause de l’arrêt des propositions restent à reproduire ; aucune nouvelle partition n’est lancée à ce stade. Les bases conservées servent au prochain diagnostic de reprise. Preuves : `nano-duty-race-qualification.log` et `duty-race-inputs.json`.
+
+### Reproduction courte et proposition cohérente — 26 septembre 2026
+
+L’inspection des journaux à partir de leurs engagements d’arrêt ne montre aucune proposition réservée au-delà du slot 79. Sur une **copie distincte**, l’outil natif reconnaissant les clés de fixture synthétiques prépare, signe puis admet le bloc du slot 88 : tête 79 → 88, sans réseau ni fonds réels (`nano-fixture-replay.json`).
+
+La reprise de 24 secondes avec horloge et ordonnanceur actifs, sans P2P, reproduit ensuite le blocage : zéro proposition, neuf attestations, sept reprises pour conflit de version, tête toujours 79 (`nano-fixture-resume.json`). Les bases historiques sont conservées ; chaque essai utilise une autre copie.
+
+Le chemin local de proposition regroupe maintenant RANDAO, construction et signature sous un même verrou du réacteur. Les wrappers unitaires conservent leur verrouillage ; les helpers privés sont utilisés uniquement sous ce verrou. L’horloge ne peut plus changer le jeton entre ces étapes. Délais réels, identité, journaux anti-slashing, validation complète et admission normale après signature restent appliqués. La reprise courte modifiée admet une proposition et treize attestations, avec trois conflits de version, tête 79 → 91 et ordonnanceur/horloge sains (`nano-fixture-atomic.json`). Ces deux observations bornées ne sont pas un benchmark ni une preuve de finalité réseau.
+
+Qualification groupée chaîne signée, boucle locale, redémarrage et scénario à deux processus gérés lancée ; résultat en attente. Entrées empreintées : `atomic-proposal-inputs.json`.
+
+La qualification de la proposition cohérente passe **4/4** en 49,19 s : processus réseau gérés/redémarrage, runtime local, boucle à 64 clés et chaîne signée. La boucle locale prend 26,78 s ; les scénarios conservent les contrôles de finalité, signature, annulation et réouverture dans leurs périmètres respectifs. La matrice principale a été actualisée pour distinguer intégration Bellatrix existante et qualification réseau encore partielle.
+
+Le scénario complet de partition est lancé avec ce lot (`partition-atomic-inputs.json`, conservation prévue dans `partition-atomic-db`). Aucun verdict de reprise ni statut production n’est acquis au lancement.
+
+### Départ à finalité 2, puis conflits locaux persistants — 26 septembre 2026
+
+La partition avec proposition cohérente échoue en **517,25 s**. Avant isolement, la finalité atteint cette fois le bloc 16 / époque 2 ; elle reste inchangée pendant la coupure et la reprise. À l’arrêt : mêmes 77 blocs retenus, dernier slot 83, 218/217 attestations admises, aucune erreur déclarée, mais **206/203 reprises pour conflit de version**. Le résultat ne clôt pas la finalité après reconnexion.
+
+Les opérations locales de devoirs dérivent désormais leurs données depuis l’état courant sous le verrou qui protège l’opération. Les appels locaux ne transportent plus un jeton capturé entre deux prises de verrou, périmé par les publications d’horloge. Les API à engagement explicite continuent à refuser les anciens jetons ; les vérifications disque, registre, clé, slot, signature et journal sont conservées. Les sélecteurs de tâches fournissent seulement des indications : les méthodes de signature redérivent et vérifient les données sous verrou.
+
+Sur une nouvelle copie de la même base de référence, la reprise locale de 24 secondes admet **2 propositions et 14 attestations, zéro conflit de version**, tête 79 → 91, horloge et ordonnanceur sains (`nano-fixture-current.json`). Cette observation n’est pas un résultat réseau. Contrôles supplémentaires : équivalence du comité local au comité du checkpoint, refus d’un slot futur et impossibilité pour une clé non affectée d’atteindre le signataire. La qualification groupée correspondante est en cours. Le README décrit désormais ce profil Bellatrix et ses limites.
+
+La qualification des devoirs dérivés sous verrou passe **4/4** en 49,34 s : chaîne signée 3,48 s, boucle locale 26,88 s, runtime/redémarrage et processus réseau gérés 18,97 s cumulées. Les nouveaux contrôles de clé non affectée et de slot futur passent. Le scénario complet de partition est lancé sur ce lot (`partition-current-inputs.json`, conservation prévue `partition-current-db`) ; son résultat reste en attente.
+
+### Reprise réseau après correction des devoirs locaux — 26 septembre 2026
+
+Le scénario `consensus_bellatrix_partition_recovery` passe en **420,77 s** sur les binaires du manifeste `partition-current-inputs.json`, dont les neuf empreintes ont été revérifiées après le test. Preuve conservée : `build-cmake/qualification/bellatrix-network-integration-20260925/nano-partition-current.log`. Aucun nouveau lancement n’a été nécessaire pour recueillir ce résultat.
+
+Périmètre effectivement exercé : deux processus cœur et deux démons P2P, 64 clés synthétiques réparties entre deux validateurs, horloge réelle, un seul Mac. Le scénario comprend un redémarrage ordonné avec engagements externes, quatre époques initiales, 96 secondes de suspension des communications avec branches concurrentes actives, puis reconnexion. La finalité initiale (bloc 16 / époque 2) reste inchangée pendant la coupure. Après reconnexion, les deux nœuds retrouvent une tête commune et une finalité strictement plus récente ; à l’arrêt, même racine finalisée `0x9732ff022994f1c76ab927942248bc9fa6699db30a0dfbef5dc3baef08c531c5`, époque 7, justification 8. Les assertions de sûreté et de reprise n’ont pas été affaiblies.
+
+Les échecs précédents restent conservés ci-dessus. Cette réussite clôt ce scénario borné de reprise ; elle ne clôt ni le registre ouvert, ni la reprise après crash sans engagement d’arrêt, ni les partitions prolongées, ni la qualification sur plusieurs hôtes. Le journal de réussite n’exporte pas les compteurs finaux de l’ordonnanceur : aucune affirmation de zéro conflit de version réseau n’en est déduite.
+
+Preuve synthétique versionnée (événements observés et empreintes, sans clés privées) : [`qualification/bellatrix-partition-20260926.json`](qualification/bellatrix-partition-20260926.json). Le journal brut reste dans le dossier local de qualification indiqué ci-dessus.
+
+### Vérification groupée des composants partagés — 26 septembre 2026
+
+La revue du lot examine aussi le rattachement du runtime au nœud, le filtrage des secrets transmis au démon, l’arrêt avant capture des engagements, les tags RPC de finalité, la publication du mempool et le relais partagé Altair/Bellatrix. La vérification groupée de fin de lot passe **10/10 en 5,10 s** : historique/capacité/publication canonique du mempool, identité Bellatrix, verrou d’exécution, progression après vote refusé, reçus IPC, client cœur, transport libp2p Altair et journal anti-slashing. Ce contrôle cible les composants partagés modifiés ; les scénarios locaux et la partition réussis ne sont pas relancés.
+
+Preuve versionnée : [`qualification/bellatrix-shared-20260926.json`](qualification/bellatrix-shared-20260926.json), empreintes des exécutables et du journal. Journal brut local : `build-cmake/qualification/bellatrix-network-integration-20260925/nano-bellatrix-lot-shared.log`. Ces résultats ne clôturent pas les critères de production encore ouverts.

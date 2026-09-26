@@ -1,0 +1,163 @@
+{
+  "scenario": "consensus_bellatrix_partition_recovery",
+  "result": "passed",
+  "duration_seconds": 420.77,
+  "date": "2026-09-26",
+  "physical_hosts": 1,
+  "core_processes": 2,
+  "p2p_daemons": 2,
+  "synthetic_validator_keys": 64,
+  "partition_seconds": 96,
+  "input_sha256": {
+    "src/consensus_bellatrix_reactor.cpp": "46a69a7f818f3b1c03986d74e63faf3d02e09411ac1a773058a403a293dbb56d",
+    "src/consensus_bellatrix_validator.cpp": "95cd7b902a2db14fa1df3be04df58095b97b8030cec8725309b5c366757c87ec",
+    "src/consensus_bellatrix_local_body.cpp": "89176e463da9c40a16489cf134f211fd3142a4ec22a5f8477f17acac11c7040c",
+    "include/nano/consensus_bellatrix_reactor.hpp": "b0e1a80b946f628fd4fb00736ea23da2e08d536ca8c0d77cf0357a4ca1564dd2",
+    "tests/test_bellatrix_transition.cpp": "dc9f1c67f1c6676e6fce76f979ac4a1a31099f5f7933345587a6402512472d7c",
+    "tests/support/bellatrix_runtime_scenario.hpp": "56b5e22e558b3610ab4faa83385b1a14bcbc8d662e7a1aa9491cc5491ccd05f1",
+    "build-release/nano": "e9049854c54a9c09ba7ab7d4f98e7ce1358e8c61e7d4622d914c57d41855c472",
+    "build-release/nano-bellatrix-transition-tests": "ed7e8317220633db4794038a6955fa72de9bf5adb8aae9209e2c93dc300ff1fc",
+    "build-network/nano-p2p": "750801c79ff3429cc60c00df3779198c46c19616fbb4dc3853c44a65e674e208"
+  },
+  "log_sha256": "b2d4556c51bfc09267c61a4675685fd323dd7e92b6bb2c7591281c0f5e7e05c5",
+  "events": [
+    {
+      "epoch": 1,
+      "event": "distributed-progress",
+      "sameHead": false,
+      "slot": 8
+    },
+    {
+      "epoch": 2,
+      "event": "distributed-progress",
+      "sameHead": true,
+      "slot": 16
+    },
+    {
+      "epoch": 3,
+      "event": "distributed-progress",
+      "sameHead": true,
+      "slot": 24
+    },
+    {
+      "epoch": 4,
+      "event": "distributed-progress",
+      "sameHead": false,
+      "slot": 32
+    },
+    {
+      "aHead": {
+        "hash": "0x34c53bf03d21fe78bf517d9567a2cfffab9a246261ded29f8bccf33885c1ece7",
+        "number": "0x20",
+        "timestamp": "0x6ab6f774"
+      },
+      "bHead": {
+        "hash": "0x34c53bf03d21fe78bf517d9567a2cfffab9a246261ded29f8bccf33885c1ece7",
+        "number": "0x20",
+        "timestamp": "0x6ab6f774"
+      },
+      "event": "partition-baseline",
+      "finalized": {
+        "hash": "0xf5c24fb8ca73fd3a52cbe3a284363e66a92d76538475b38ec158e1e6d464f033",
+        "number": "0x10",
+        "timestamp": "0x6ab6f714"
+      },
+      "preCutPrefix": {
+        "0x10": "0xf5c24fb8ca73fd3a52cbe3a284363e66a92d76538475b38ec158e1e6d464f033",
+        "0x11": "0x82227b520063139aa74029ecd6a89d24f1ceb7a08d4ac6ca5236595f87f54f17",
+        "0x12": "0x2e506df14cd245aeb8954a5ecd999e628fae5d073e0878717f7dd5e271d6fa2e",
+        "0x13": "0x78e28bf92458df13b07c25fe1258e57b18fa9a085ff52527cdfb06670790cb1c",
+        "0x14": "0x25147ddbf7ca5f57b90d8aea1d48796b81a373bedf09874e0637cdb6cb139a60",
+        "0x15": "0x61049e467c4e6b26f2f76dd4231d22a6cd7bbc8bbced368e2c0c6c339251f9b2",
+        "0x16": "0x6a1c37774376c2da76e1b60b5695a1f47d30bfa6b5bb836d63a13e859e4f97ca",
+        "0x17": "0xf9285e5146e0fcfc265529569f6b8a66abcf5517cf05b08d2a446535fbbf57b5",
+        "0x18": "0xdb547efb08142475292a3b22883044c7dd1a856558c7f4998de85a0960772a0d",
+        "0x19": "0x095de55ae5747ca8daeff612f3b6dc373f18db225422f5c901a35e91b3d39c98",
+        "0x1a": "0x97fb91141e2322798a47826cb3eb6ff9713015c0644f2a3ef1731a976d38ea3f",
+        "0x1b": "0x7b59a1082bf4f34006d39f641a1238c3761bf62ee6b9798e5e270429bcb7db42",
+        "0x1c": "0x473402f2f56c6449441c57cc5879a217eb85e0fdd680c6bf806e908541216b4a",
+        "0x1d": "0x315796f03c6427dd6e676c87780409ee86decf9e5d20e1827bba62f40b4b5cc6",
+        "0x1e": "0x2bea318f01256ea38f03ddbf26ced0d9432bc58fc5747fe0e4bad45a3e10f989",
+        "0x1f": "0x01e0f5d98d5419a62bfaede1b0d2d9beec48e00b37c97f7e4a6dd941db4ba991",
+        "0x20": "0x34c53bf03d21fe78bf517d9567a2cfffab9a246261ded29f8bccf33885c1ece7"
+      }
+    },
+    {
+      "event": "partition-start",
+      "finalizedHash": "0xf5c24fb8ca73fd3a52cbe3a284363e66a92d76538475b38ec158e1e6d464f033",
+      "seconds": 96
+    },
+    {
+      "a": "0x20",
+      "b": "0x20",
+      "elapsedSeconds": 0,
+      "event": "partition-progress",
+      "finalityUnchanged": true
+    },
+    {
+      "a": "0x26",
+      "b": "0x22",
+      "elapsedSeconds": 48,
+      "event": "partition-progress",
+      "finalityUnchanged": true
+    },
+    {
+      "event": "partition-healed"
+    },
+    {
+      "aFinalized": "0x10",
+      "bFinalized": "0x10",
+      "elapsedSeconds": 0,
+      "event": "recovery-progress"
+    },
+    {
+      "aFinalized": "0x10",
+      "bFinalized": "0x10",
+      "elapsedSeconds": 48,
+      "event": "recovery-progress"
+    },
+    {
+      "aFinalized": "0x10",
+      "bFinalized": "0x10",
+      "elapsedSeconds": 96,
+      "event": "recovery-progress"
+    },
+    {
+      "a": {
+        "epoch": "0x7",
+        "root": "0x9732ff022994f1c76ab927942248bc9fa6699db30a0dfbef5dc3baef08c531c5"
+      },
+      "b": {
+        "epoch": "0x7",
+        "root": "0x9732ff022994f1c76ab927942248bc9fa6699db30a0dfbef5dc3baef08c531c5"
+      },
+      "event": "distributed-checkpoints",
+      "justifiedA": "0x8",
+      "justifiedB": "0x8"
+    },
+    {
+      "blockAfterRestart": "0x3d",
+      "blockBeforeRestart": "0x3",
+      "distributedStake": true,
+      "finalized": {
+        "epoch": "0x7",
+        "root": "0x9732ff022994f1c76ab927942248bc9fa6699db30a0dfbef5dc3baef08c531c5"
+      },
+      "independentCoreProcesses": 2,
+      "localKeys": 64,
+      "observerSynchronized": true,
+      "p2pDaemons": 2,
+      "partitionRecovered": true,
+      "physicalHosts": 1,
+      "scenario": "bellatrix-managed-cores-restart",
+      "validatorNodes": 2,
+      "wallClock": true
+    }
+  ],
+  "limits": [
+    "Single bounded scenario on one Mac",
+    "Orderly restart with external checkpoint commitments; not crash recovery",
+    "No evidence of open validator lifecycle or multi-host scale",
+    "Scheduler final counters not exported by successful harness"
+  ]
+}

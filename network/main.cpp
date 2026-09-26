@@ -40,16 +40,29 @@ libp2p::crypto::KeyPair identity(const std::filesystem::path& path){
  auto* key=EVP_PKEY_new_raw_private_key(EVP_PKEY_ED25519,nullptr,secret.data(),secret.size());if(!key)throw std::runtime_error("Invalid Ed25519 identity");size_t size=pub.size();int ok=EVP_PKEY_get_raw_public_key(key,pub.data(),&size);EVP_PKEY_free(key);if(ok!=1||size!=32)throw std::runtime_error("Cannot derive P2P identity");using namespace libp2p::crypto;return {PublicKey{{Key::Type::Ed25519,std::move(pub)}},PrivateKey{{Key::Type::Ed25519,std::move(secret)}}};
 }
 class Network {
- asio::io_context& io_;Host host_;Core core_;asio::steady_timer timer_,bft_timer_;
+ asio::io_context& io_;Host host_;Core core_;asio::steady_timer timer_,bft_timer_,consensus_relay_timer_;
+ std::chrono::milliseconds consensus_relay_interval_{100};
  std::shared_ptr<AltairCoreRecovery> altair_recovery_;std::shared_ptr<AltairCoreDispatch> altair_dispatch_;
  std::shared_ptr<AltairMessageIngress> altair_ingress_;Json altair_advertisement_;
  Json altair_advertisement()const{return altair_ingress_&&altair_dispatch_&&!altair_dispatch_->blocked()?altair_advertisement_:Json(nullptr);}
+ bool bellatrix_mode_=false;
+ std::string consensus_protocol()const{return bellatrix_mode_?"/nano/bellatrix/1.0.0":altair_protocol;}
+ std::string consensus_field()const{return bellatrix_mode_?"bellatrix":"altair";}
+ void consensus_call(std::string method,Json params,Reply reply){
+  if(bellatrix_mode_&&method.starts_with("nano_altair"))method.replace(0,11,"nano_bellatrix");
+  if(bellatrix_mode_&&method=="nano_bellatrixStatus"){
+   core_.call(method,std::move(params),[reply=std::move(reply)](Json result)mutable{if(!result.is_object()||result.value("executionBound",Json())!=true){reply(nullptr);return;}reply(std::move(result));});
+  }else core_.call(method,std::move(params),std::move(reply));
+ }
+ bool consensus_peer(const Json& remote)const{return compatible_altair_peer(remote,status_,consensus_field(),consensus_protocol());}
  bool altair_started_=false,altair_relay_busy_=false;std::string altair_last_peer_;
  void recover_altair(){
-  if(altair_started_||status_.value("altairIpc",Json())!=true)return;altair_started_=true;
+  if(altair_started_||(status_.value("altairIpc",Json())!=true&&status_.value("bellatrixIpc",Json())!=true))return;
+  if(status_.value("altairIpc",false)&&status_.value("bellatrixIpc",false))throw std::runtime_error("Ambiguous consensus IPC");
+  bellatrix_mode_=status_.value("bellatrixIpc",false);altair_started_=true;
   if(report_token_.empty()){std::cerr<<"Altair IPC recovery requires the supervisor token\n";return;}
   std::ostringstream chain;chain<<"0x"<<std::hex<<status_.at("chain_id").get<uint64_t>();
-  auto call=[this](const std::string& method,Json params,Reply reply){core_.call(method,std::move(params),std::move(reply));};
+  auto call=[this](const std::string& method,Json params,Reply reply){consensus_call(method,std::move(params),std::move(reply));};
   // Local IPC recovery budgets, independent of validator registry size.
   // Peer admission additionally requires explicit core configuration.
   altair_recovery_=std::make_shared<AltairCoreRecovery>(io_,call,report_token_,chain.str(),status_.at("genesis_hash").get<std::string>(),3,std::chrono::milliseconds(100),std::chrono::seconds(30),[this,call](Json result){
@@ -57,16 +70,17 @@ class Network {
    if(result.is_null()){std::cerr<<Json{{"event","altair-ipc-recovery-failed"},{"networkProtocolActive",false}}.dump()<<std::endl;return;}
    try{
     const auto& w=result.at("wire");AltairWireProfile profile{result.at("chainId").get<std::string>(),result.at("genesisHash").get<std::string>(),result.at("forkDigest").get<std::string>(),w.at("frameBytes").get<size_t>(),w.at("blockBytes").get<size_t>(),w.at("attestationBytes").get<size_t>(),w.at("slashingBytes").get<size_t>()};
+    if(bellatrix_mode_)profile.consensus_identity=result.at("consensusIdentity").get<std::string>();
     altair_dispatch_=std::make_shared<AltairCoreDispatch>(io_,call,profile,report_token_,result.at("session").get<std::string>(),result.at("highWater").get<uint64_t>(),result.at("workerJobs").get<size_t>(),3,std::chrono::milliseconds(100));
     if(result.at("networkAdmissionEnabled")==true){
      altair_ingress_=std::make_shared<AltairMessageIngress>(profile,inbound_budget_);
-     altair_advertisement_={{"protocol",altair_protocol},{"consensusIdentity",result.at("consensusIdentity")},{"forkDigest",profile.fork_digest}};
-     status_["altair"]=altair_advertisement();
-     host_->setProtocolHandler({altair_protocol},[this](libp2p::StreamAndProtocol stream){inbound(altair_protocol,std::move(stream.stream));});
-     std::cout<<Json{{"event","altair-ingress-ready"},{"consensusIdentity",result.at("consensusIdentity")},{"executionBound",false}}.dump()<<std::endl;
+     altair_advertisement_={{"protocol",consensus_protocol()},{"consensusIdentity",result.at("consensusIdentity")},{"forkDigest",profile.fork_digest}};
+     status_[consensus_field()]=altair_advertisement();
+     host_->setProtocolHandler({consensus_protocol()},[this](libp2p::StreamAndProtocol stream){inbound(consensus_protocol(),std::move(stream.stream));});
+     std::cout<<Json{{"event","altair-ingress-ready"},{"consensusIdentity",result.at("consensusIdentity")},{"executionBound",bellatrix_mode_}}.dump()<<std::endl;
     }
     std::cout<<Json{{"event","altair-ipc-ready"},{"consensusIdentity",result.at("consensusIdentity")},{"networkProtocolActive",bool(altair_ingress_)}}.dump()<<std::endl;
-   }catch(const std::exception&){altair_ingress_.reset();altair_advertisement_=nullptr;status_["altair"]=nullptr;if(altair_dispatch_)altair_dispatch_->stop();std::cerr<<Json{{"event","altair-ipc-recovery-failed"},{"networkProtocolActive",false}}.dump()<<std::endl;}
+   }catch(const std::exception&){altair_ingress_.reset();altair_advertisement_=nullptr;status_[consensus_field()]=nullptr;if(altair_dispatch_)altair_dispatch_->stop();std::cerr<<Json{{"event","altair-ipc-recovery-failed"},{"networkProtocolActive",false}}.dump()<<std::endl;}
   });altair_recovery_->start();
  }
  Json status_;uint64_t cursor_=0;bool initialized_=false;bool previous_bft_page_=false;bool download_busy_=false,bft_download_busy_=false;
@@ -119,7 +133,7 @@ class Network {
  void send_altair(PeerInfo peer,Json frame,Reply reply){
   auto pending=std::make_shared<TimedReply>(io_,std::move(reply));pending->start();
   const auto maximum=altair_ingress_->frame_limit();
-  host_->newStream(peer,{altair_protocol},[this,pending,maximum,frame=std::move(frame)](auto result){
+  host_->newStream(peer,{consensus_protocol()},[this,pending,maximum,frame=std::move(frame)](auto result){
    if(!result){pending->finish(nullptr);return;}auto stream=result.value().stream;if(!pending->on_cancel([stream]{stream->reset();}))return;
    std::make_shared<JsonWrite>(io_,stream,frame,[this,stream,pending](bool ok){if(!pending->active())return;if(!ok){stream->reset();pending->finish(nullptr);return;}
     read_json_frame(io_,stream,256,[stream,pending](auto raw){close_stream(stream);auto result=raw?Json::parse(*raw,nullptr,false):Json(nullptr);pending->finish(result.is_discarded()?Json(nullptr):std::move(result));});
@@ -130,9 +144,9 @@ class Network {
   if(altair_relay_busy_||!altair_ingress_||!altair_dispatch_||altair_dispatch_->blocked()||peers_.empty())return;
   auto start=peers_.upper_bound(altair_last_peer_);if(start==peers_.end())start=peers_.begin();auto it=start;
   do{
-   if(compatible_altair_peer(it->second.status,status_)){
+   if(consensus_peer(it->second.status)){
     const auto peer=it->second.info;const bool vote=it->second.next_altair_vote;it->second.next_altair_vote=!vote;const auto progress=vote?it->second.altair_vote_progress:it->second.altair_progress;altair_last_peer_=it->first;altair_relay_busy_=true;
-    std::make_shared<AltairArchiveRelay>(io_,[this](const auto& method,auto params,auto reply){core_.call(method,std::move(params),std::move(reply));},[this,peer](auto frame,auto reply){send_altair(peer,std::move(frame),std::move(reply));},report_token_,altair_ingress_,progress,[this,progress,vote,before=progress->cursor,id=it->first](Json result){altair_relay_busy_=false;if(trace_network_&&result.value("success",false)&&progress->cursor!=before)std::cout<<Json{{"event",vote?"test-altair-vote-relayed":"test-altair-block-relayed"},{"peerId",id},{"root",progress->cursor}}.dump()<<std::endl;},vote?AltairWireKind::attestation:AltairWireKind::block)->start();return;
+    std::make_shared<AltairArchiveRelay>(io_,[this](const auto& method,auto params,auto reply){consensus_call(method,std::move(params),std::move(reply));},[this,peer](auto frame,auto reply){send_altair(peer,std::move(frame),std::move(reply));},report_token_,altair_ingress_,progress,[this,progress,vote,before=progress->cursor,id=it->first](Json result){altair_relay_busy_=false;if(trace_network_&&result.value("success",false)&&progress->cursor!=before)std::cout<<Json{{"event",vote?"test-altair-vote-relayed":"test-altair-block-relayed"},{"peerId",id},{"root",progress->cursor}}.dump()<<std::endl;},vote?AltairWireKind::attestation:AltairWireKind::block)->start();return;
    }
    if(++it==peers_.end())it=peers_.begin();
   }while(it!=start);
@@ -143,7 +157,7 @@ class Network {
   if(index>=blocks->size()){if(auto it=peers_.find(id);it!=peers_.end())it->second.syncing=false;return;}
   core_.call("validator_submitBlock",Json::array({(*blocks)[index]}),[this,id,blocks,index](Json result){if(result.is_object()&&result.value("success",false))import_blocks(id,blocks,index+1);else{if(auto it=peers_.find(id);it!=peers_.end())it->second.syncing=false;std::cerr<<"Rejected block received from peer\n";}});
  }
- void sync(const std::string& id){auto it=peers_.find(id);if(it==peers_.end()||it->second.syncing||it->second.status["best_block"]<=status_["best_block"])return;
+ void sync(const std::string& id){if(bellatrix_mode_)return;auto it=peers_.find(id);if(it==peers_.end()||it->second.syncing||it->second.status["best_block"]<=status_["best_block"])return;
   if(!report_token_.empty()){
    if(download_busy_||std::chrono::steady_clock::now()<it->second.fragment_retry)return;
    download_busy_=true;it->second.syncing=true;auto info=it->second.info;auto height=status_.at("best_block").get<uint64_t>();
@@ -185,13 +199,16 @@ class Network {
  }
  void inbound(const std::string& protocol,Stream stream){
   auto remote=stream->remotePeerId();if(!remote||!initialized_){stream->reset();return;}auto id=remote.value().toBase58();
-  if(protocol==altair_protocol){
-   if(!altair_ingress_||!altair_dispatch_||altair_dispatch_->blocked()||!peers_.contains(id)||!compatible_altair_peer(peers_.at(id).status,status_)){stream->reset();return;}
+  if(protocol==consensus_protocol()){
+   if(!altair_ingress_||!altair_dispatch_||altair_dispatch_->blocked()||!peers_.contains(id)||!consensus_peer(peers_.at(id).status)){stream->reset();return;}
    // AltairStreamRequest owns the shared budget lease through durable worker
    // completion. Do not acquire the generic lease a second time below.
    auto dispatch=altair_dispatch_->dispatcher();auto delivery=[this,stream,dispatch](auto message,auto cancel,auto done){const auto kind=message.kind;return dispatch(std::move(message),std::move(cancel),[this,stream,kind,done=std::move(done)](auto decision){const bool drop_vote=drop_altair_vote_reply_&&kind==AltairWireKind::attestation;if((drop_altair_reply_||drop_vote)&&decision==AltairWork::Decision::accepted){if(drop_vote)drop_altair_vote_reply_=false;else drop_altair_reply_=false;stream->reset();std::cout<<Json{{"event",drop_vote?"test-altair-vote-reply-dropped":"test-altair-reply-dropped"}}.dump()<<std::endl;}done(decision);});};
    std::make_shared<AltairStreamRequest>(io_,std::move(stream),altair_ingress_,std::move(delivery))->start();return;
   }
+  // Beacon blocks travel with signed consensus envelopes, never through the
+  // legacy height-only importer or legacy BFT round protocol.
+  if(bellatrix_mode_&&(protocol==blockparts||protocol==blocksync||protocol==announce||protocol==announce_ref||protocol==bft||protocol==bft_manifest||protocol==bft_parts)){stream->reset();return;}
   auto admission=inbound_budget_.acquire(id,InboundBudget::Clock::now(),(protocol==bft||protocol==bft_manifest||protocol==chainsync||protocol==blocksync)?InboundBudget::Traffic::control:InboundBudget::Traffic::bulk);if(!admission){if(trace_network_)++budget_rejections_[protocol];stream->reset();return;}
   struct HeldStream {Stream stream;std::shared_ptr<InboundBudget::Lease> admission;};
   auto held=std::make_shared<HeldStream>(HeldStream{stream,std::move(admission)});
@@ -297,21 +314,22 @@ class Network {
    // References are hints backed by periodic canonical status reconciliation.
    // A failed local RPC does not silently skip its cursor.
    cursor_=next;
+   if(bellatrix_mode_)return;
    for(const auto& event:response.at("events"))if(event.value("type",Json())=="block"){
     if(refs&&trace_network_&&reference_trace_count_++<32)std::cout<<Json{{"event","test-block-reference-sent"},{"reference",event.at("value")},{"cursor",cursor_}}.dump()<<std::endl;
     for(const auto& [id,peer]:peers_)send(peer.info,refs?announce_ref:announce,refs?event.at("value"):Json{{"block",event.at("value")}});
    }
   });
  }
+ void schedule_consensus_relay(){consensus_relay_timer_.expires_after(consensus_relay_interval_);consensus_relay_timer_.async_wait([this](auto ec){if(!ec){poll_altair_archives();schedule_consensus_relay();}});}
  void schedule(){timer_.expires_after(std::chrono::seconds(1));timer_.async_wait([this](auto ec){if(!ec)tick();});}
- void tick(){core_.call("nano_networkStatus",Json::array(),[this](Json local){if(!valid_peer_status(local,local)){schedule();return;}status_=std::move(local);status_["altair"]=altair_advertisement();if(!initialized_){cursor_=status_.value("cursor",uint64_t(0));event_epoch_=status_.value("gossip_epoch",std::string{});initialized_=true;std::cout<<Json{{"event","ready"},{"chainId",status_["chain_id"]}}.dump()<<std::endl;}
+ void tick(){core_.call("nano_networkStatus",Json::array(),[this](Json local){if(!valid_peer_status(local,local)){schedule();return;}status_=std::move(local);status_[consensus_field()]=altair_advertisement();if(!initialized_){cursor_=status_.value("cursor",uint64_t(0));event_epoch_=status_.value("gossip_epoch",std::string{});initialized_=true;std::cout<<Json{{"event","ready"},{"chainId",status_["chain_id"]}}.dump()<<std::endl;}
   recover_altair();
   refresh_bootstrap();
   for(const auto& seed:seeds_){if(connecting_.size()>=4||peers_.size()+connecting_.size()>=50)break;auto id=seed.id.toBase58();if(id==host_->getPeerInfo().id.toBase58()||peers_.contains(id)||connecting_.contains(id))continue;auto now=std::chrono::steady_clock::now();if(retry_after_.contains(id)&&now<retry_after_[id])continue;retry_after_[id]=now+std::chrono::seconds(5);connecting_.insert(id);exchange(seed,handshake,status_,[this,seed,id](Json remote){connecting_.erase(id);add(seed,remote);});}
   std::vector<PeerInfo> known;for(const auto& [id,peer]:peers_)known.push_back(peer.info);
   for(const auto& info:known)poll_status(info.id.toBase58());
 
-  poll_altair_archives();
   poll_gossip();
   poll_block_events();
   if(!report_token_.empty()){
@@ -323,8 +341,10 @@ class Network {
   schedule();
  });}
 public:
- Network(asio::io_context& io,Host host,uint16_t port,std::vector<libp2p::multi::Multiaddress> bootstrap,std::shared_ptr<libp2p::network::DnsaddrResolver> resolver):io_(io),host_(std::move(host)),core_(io,port),timer_(io),bft_timer_(io),bootstrap_(std::move(bootstrap)),resolver_(std::move(resolver)){if(const char* token=std::getenv("NANO_NETWORK_TOKEN"))report_token_=token;}
- void start(){for(const auto& protocol:{handshake,blocksync,announce,announce_ref,gossip,reliable_gossip,chainsync,bft,bft_manifest,bft_parts,blockparts})host_->setProtocolHandler({protocol},[this,protocol](libp2p::StreamAndProtocol stream){inbound(protocol,std::move(stream.stream));});tick();schedule_bft();}
+ Network(asio::io_context& io,Host host,uint16_t port,std::vector<libp2p::multi::Multiaddress> bootstrap,std::shared_ptr<libp2p::network::DnsaddrResolver> resolver):io_(io),host_(std::move(host)),core_(io,port),timer_(io),bft_timer_(io),consensus_relay_timer_(io),bootstrap_(std::move(bootstrap)),resolver_(std::move(resolver)){if(const char* token=std::getenv("NANO_NETWORK_TOKEN"))report_token_=token;
+  if(const char* raw=std::getenv("NANO_CONSENSUS_RELAY_INTERVAL_MS")){const std::string value(raw);if(value.empty()||value.size()>5||value.find_first_not_of("0123456789")!=std::string::npos)throw std::invalid_argument("Invalid consensus relay interval");const auto n=std::stoul(value);if(n<25||n>60000)throw std::invalid_argument("Consensus relay interval outside 25..60000 ms");consensus_relay_interval_=std::chrono::milliseconds(n);}
+ }
+ void start(){for(const auto& protocol:{handshake,blocksync,announce,announce_ref,gossip,reliable_gossip,chainsync,bft,bft_manifest,bft_parts,blockparts})host_->setProtocolHandler({protocol},[this,protocol](libp2p::StreamAndProtocol stream){inbound(protocol,std::move(stream.stream));});tick();schedule_bft();schedule_consensus_relay();}
 };
 int main(int argc,char** argv){try{
  // The direct parent is the lifetime owner only for managed relays. Pin its

@@ -1,5 +1,6 @@
 #include "nano/consensus_bellatrix_reactor.hpp"
 #include <type_traits>
+#include "nano/chain.hpp"
 #include "nano/consensus_message_ssz.hpp"
 #include "nano/consensus_bls.hpp"
 #include "nano/consensus_bellatrix_duty.hpp"
@@ -18,6 +19,19 @@ void verify_archived_block(const ConsensusRoot& id,const Bytes& bytes,const Bell
  const auto& state=block.state.ssz;const auto version=archive_array<4>(state,context.registry.epoch<archive_number(state,56)?48:52);
  archive_require(verify_consensus_beacon_header(header,version,archive_array<32>(state,8),proposer->second.public_key,std::span(bytes).subspan(4,96)));
  if(cancel)cancel();
+}
+// Current-slot votes are authenticated and durably queued, but cannot affect
+// fork choice until the next slot (on_attestation's slot + 1 condition).
+std::optional<BellatrixForkStore> checked_vote(const BellatrixForkStore& store,const Phase0SignedAttestation& vote,
+ const BellatrixForkBlockRules& rules,const BellatrixStoreSnapshotLimits& limits,const std::function<void()>& check){
+ const auto& clock=store.timed.clock;
+ if(!rules.slot_duration_ms||clock.time_ms<clock.genesis_time_ms)throw std::invalid_argument("Invalid Bellatrix vote clock");
+ const auto slot=(clock.time_ms-clock.genesis_time_ms)/rules.slot_duration_ms;
+ if(vote.data.slot!=slot)return prepare_bellatrix_store_vote(store,vote,rules,limits.replay_slots,limits.sync_trials,check);
+ if(slot==UINT64_MAX||(slot+1)>(UINT64_MAX-clock.genesis_time_ms)/rules.slot_duration_ms)throw std::overflow_error("Bellatrix deferred vote clock");
+ const auto future=prepare_bellatrix_store_tick(store,clock.genesis_time_ms+(slot+1)*rules.slot_duration_ms,rules,limits.replay_slots,limits.sync_trials,check);
+ if(!prepare_bellatrix_store_vote(future,vote,rules,limits.replay_slots,limits.sync_trials,check))return std::nullopt;
+ return store;
 }
 std::string durable_snapshot(const BellatrixForkStore& store,const BellatrixSignedBlockArchive& archive,const BellatrixSignedVoteArchive& votes,const BellatrixForkBlockRules& rules,const BellatrixStoreSnapshotLimits& limits,const std::function<void()>& cancel){
  // Retain byte-for-byte v1 encoding while both signed archives are empty.
@@ -67,7 +81,7 @@ Restored restore_durable_snapshot(std::string_view bytes,const Bytes& digest,con
    const auto decoded=decode_consensus_attestation_ssz(*data,rules.transition.consensus.body.validators_per_committee,cancel);archive_require(decoded.has_value());
    // Local restore revalidates signature, target ancestry and gossip window;
    // it never publishes the candidate or re-applies a vote to the restored state.
-   archive_require(prepare_bellatrix_store_vote(store,*decoded,rules,limits.replay_slots,limits.sync_trials,cancel).has_value());
+   archive_require(checked_vote(store,*decoded,rules,limits,cancel).has_value());
    archive_require(votes->emplace(archive_array<32>(digest,0),std::move(data)).second);
   }
  }
@@ -76,6 +90,23 @@ Restored restore_durable_snapshot(std::string_view bytes,const Bytes& digest,con
 }
 static_assert(std::is_nothrow_move_assignable_v<std::optional<ForkCheckpointToken>>);
 static_assert(std::is_nothrow_move_assignable_v<std::shared_ptr<const BellatrixForkStore>>);
+void BellatrixDurableReactor::validate_execution_binding()const{
+ if(!execution_)return;
+ std::lock_guard lock(execution_->mutex_);
+ const auto& genesis=execution_->genesis_;
+ if(&execution_->store_!=&disk_||genesis.consensus!="beacon"||genesis.evm_revision!=EvmRevision::Paris||genesis.chain_id!=chain_id_||genesis.block.header.hash()!=genesis_)
+  throw std::invalid_argument("Bellatrix execution owner/profile mismatch");
+ const auto tip=disk_.latest();
+ if(!tip||tip->header.hash()!=execution_->tip_.header.hash()||execution_->state_.root()!=tip->header.state_root)
+  throw std::invalid_argument("Bellatrix execution cache does not match durable head");
+}
+BellatrixDurableReactor::~BellatrixDurableReactor(){
+ if(execution_){std::lock_guard lock(execution_->mutex_);execution_->beacon_ready_=false;}
+}
+void BellatrixDurableReactor::invalidate(){
+ std::lock_guard lock(mutex_);unavailable_=true;
+ if(execution_){std::lock_guard chain_lock(execution_->mutex_);execution_->beacon_ready_=false;}
+}
 void BellatrixDurableReactor::require_available()const{if(unavailable_||!state_||!token_)throw std::runtime_error("Bellatrix reactor unavailable; reopen and resolve checkpoint required");}
 void BellatrixDurableReactor::publish(BellatrixForkStore candidate,std::shared_ptr<const BellatrixSignedBlockArchive> archive,std::shared_ptr<const BellatrixSignedVoteArchive> votes,const std::function<void()>& checkpoint){
  auto next=std::make_shared<const BellatrixForkStore>(std::move(candidate));
@@ -85,6 +116,15 @@ void BellatrixDurableReactor::publish(BellatrixForkStore candidate,std::shared_p
  }
  const auto encoded=durable_snapshot(*next,*archive,*votes,rules_,limits_,checkpoint);
  if(checkpoint)checkpoint();
+ // A retransmission with identical durable contents is already acknowledged by
+ // this checkpoint. Do not invalidate local duty tokens or amplify disk writes
+ // merely because another peer returned a block/vote we already retained.
+ if(token_&&sha256(Bytes(encoded.begin(),encoded.end()))==token_->digest){
+  try{if(!disk_.fork_checkpoint(chain_id_,genesis_,limits_.envelope_bytes,token_))throw std::runtime_error("Missing duplicate checkpoint");}
+  catch(...){unavailable_=true;if(execution_){std::lock_guard lock(execution_->mutex_);execution_->beacon_ready_=false;}throw;}
+  return;
+ }
+
  // All candidate preparation/allocation/cancellation occurs before the write.
  // After a successful write, publishing shared_ptr and vector-backed token moves
  // cannot throw. No callback is invoked between commit and publication.
@@ -111,16 +151,26 @@ void BellatrixDurableReactor::publish(BellatrixForkStore candidate,std::shared_p
  }
  std::reverse(suffix.begin(),suffix.end());
  if(checkpoint)checkpoint();
- try{committed=disk_.commit_execution_checkpoint(chain_id_,genesis_,token_,tip->header.hash(),common_height,common_hash,suffix,encoded,limits_.envelope_bytes,limits_.blocks);}
- catch(...){unavailable_=true;throw;}
+ try{
+  if(execution_)committed=execution_->commit_beacon_checkpoint(token_,tip->header.hash(),common_height,common_hash,suffix,next->blocks.at(next->timed.view.finalized.root).execution_block,encoded,limits_.envelope_bytes,limits_.blocks);
+  else committed=disk_.commit_execution_checkpoint(chain_id_,genesis_,token_,tip->header.hash(),common_height,common_hash,suffix,encoded,limits_.envelope_bytes,limits_.blocks);
+ }
+ catch(...){unavailable_=true;if(execution_){std::lock_guard lock(execution_->mutex_);execution_->beacon_ready_=false;}throw;}
  token_=std::move(committed);state_=std::move(next);signed_blocks_=std::move(archive);signed_votes_=std::move(votes);
 }
-BellatrixDurableReactor::BellatrixDurableReactor(ChainStore& disk,Int chain,Bytes genesis,BellatrixForkBlockRules rules,
+BellatrixDurableReactor::BellatrixDurableReactor(Blockchain& execution,BellatrixForkBlockRules rules,
  BellatrixStoreSnapshotLimits limits,BellatrixForkStore initial,const std::function<void()>& checkpoint):
- disk_(disk),chain_id_(std::move(chain)),genesis_(std::move(genesis)),rules_(std::move(rules)),limits_(limits),mutex_(disk.altair_reactor_mutex_){std::lock_guard lock(mutex_);publish(std::move(initial),signed_blocks_,signed_votes_,checkpoint);}
-BellatrixDurableReactor::BellatrixDurableReactor(ChainStore& disk,Int chain,Bytes genesis,BellatrixForkBlockRules rules,
+ BellatrixDurableReactor(execution.store_,execution.genesis_.chain_id,execution.genesis_.block.header.hash(),std::move(rules),limits,std::move(initial),checkpoint,&execution){}
+BellatrixDurableReactor::BellatrixDurableReactor(Blockchain& execution,BellatrixForkBlockRules rules,
  BellatrixStoreSnapshotLimits limits,const ForkCheckpointToken& expected,const std::function<void()>& checkpoint):
- disk_(disk),chain_id_(std::move(chain)),genesis_(std::move(genesis)),rules_(std::move(rules)),limits_(limits),mutex_(disk.altair_reactor_mutex_){std::lock_guard lock(mutex_);
+ BellatrixDurableReactor(execution.store_,execution.genesis_.chain_id,execution.genesis_.block.header.hash(),std::move(rules),limits,expected,checkpoint,&execution){}
+BellatrixDurableReactor::BellatrixDurableReactor(ChainStore& disk,Int chain,Bytes genesis,BellatrixForkBlockRules rules,
+ BellatrixStoreSnapshotLimits limits,BellatrixForkStore initial,const std::function<void()>& checkpoint,Blockchain* owner):
+ disk_(disk),execution_(owner),chain_id_(std::move(chain)),genesis_(std::move(genesis)),rules_(std::move(rules)),limits_(limits),mutex_(disk.altair_reactor_mutex_){std::lock_guard lock(mutex_);validate_execution_binding();publish(std::move(initial),signed_blocks_,signed_votes_,checkpoint);}
+BellatrixDurableReactor::BellatrixDurableReactor(ChainStore& disk,Int chain,Bytes genesis,BellatrixForkBlockRules rules,
+ BellatrixStoreSnapshotLimits limits,const ForkCheckpointToken& expected,const std::function<void()>& checkpoint,Blockchain* owner):
+ disk_(disk),execution_(owner),chain_id_(std::move(chain)),genesis_(std::move(genesis)),rules_(std::move(rules)),limits_(limits),mutex_(disk.altair_reactor_mutex_){std::lock_guard lock(mutex_);
+ validate_execution_binding();
  const auto record=disk_.fork_checkpoint(chain_id_,genesis_,limits_.envelope_bytes,expected);
  if(!record)throw std::runtime_error("missing Bellatrix restart checkpoint");
  auto restored=restore_durable_snapshot(record->snapshot,expected.digest,rules_,limits_,checkpoint);
@@ -128,14 +178,23 @@ BellatrixDurableReactor::BellatrixDurableReactor(ChainStore& disk,Int chain,Byte
  archive_require(chain_id_==rules_.transition.chain_id&&tip&&tip->header.hash()==head.execution_block.header.hash()&&execution&&execution->root()==head.execution_state.root());
  for(const auto& receipt:head.receipts){if(checkpoint)checkpoint();const auto persisted=disk_.receipt(receipt.transaction_hash);archive_require(persisted&&persisted->to_json()==receipt.to_json());}
  state_=std::make_shared<const BellatrixForkStore>(std::move(restored.store));signed_blocks_=std::move(restored.blocks);signed_votes_=std::move(restored.votes);token_=expected;
+ if(execution_){
+  auto finalized=state_->blocks.at(state_->timed.view.finalized.root).execution_block;
+  const auto canonical=disk_.block_by_number(finalized.header.number);archive_require(canonical&&canonical->header.hash()==finalized.header.hash());
+  std::lock_guard lock(execution_->mutex_);execution_->beacon_finalized_=std::move(finalized);execution_->beacon_ready_=true;
+ }
 }
 BellatrixPublishedStore BellatrixDurableReactor::current()const{std::lock_guard lock(mutex_);require_available();return {state_,*token_,signed_blocks_,signed_votes_};}
 std::optional<Phase0SignedAttestation> BellatrixDurableReactor::sign_attestation(uint64_t index,
  uint64_t slot,const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected,BeaconSigningJournal& journal,
  const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint){
- std::lock_guard lock(mutex_);require_available();
- if(expected!=*token_)throw std::invalid_argument("Stale attestation duty request");
- disk_.fork_checkpoint(chain_id_,genesis_,limits_.envelope_bytes,token_);
+ std::lock_guard lock(mutex_);return sign_attestation_locked(index,slot,local_clock,expected,journal,signer,checkpoint);
+}
+std::optional<Phase0SignedAttestation> BellatrixDurableReactor::sign_attestation_locked(uint64_t index,
+ uint64_t slot,const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected,BeaconSigningJournal& journal,
+ const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint){
+ require_available();
+ if(expected!=*token_)throw StaleBellatrixDuty("Stale attestation duty request");
  if(!local_clock||!signer)throw std::invalid_argument("Missing duty clock or signing provider");
  const auto& clock=state_->timed.clock;
  // Per-attempt monotonic observations: remaining in the same slot is not
@@ -148,6 +207,9 @@ std::optional<Phase0SignedAttestation> BellatrixDurableReactor::sign_attestation
  };
  if(!timely())return std::nullopt;
  auto duty=prepare_bellatrix_attestation_duty(*state_,rules_,index,slot,limits_.replay_slots,limits_.sync_trials,checkpoint);if(!duty)return std::nullopt;
+ // Non-duty keys must not reread the complete durable archive on every poll.
+ // Eligible duties still verify the disk commitment before any signature.
+ disk_.fork_checkpoint(chain_id_,genesis_,limits_.envelope_bytes,token_);
  if(journal.chain_!=chain_id_||journal.execution_genesis_!=genesis_||journal.validators_genesis_!=duty->genesis_root||journal.public_key_!=duty->public_key||journal.slots_per_epoch_!=rules_.transition.consensus.epoch.ffg.slots_per_epoch||&journal.disk_==&disk_)
   throw std::invalid_argument("Signing journal does not match authenticated duty");
  if(checkpoint)checkpoint();
@@ -169,8 +231,14 @@ std::optional<Bytes> BellatrixDurableReactor::sign_proposal(uint64_t index,uint6
  std::span<const uint8_t> body,const std::function<uint64_t()>& local_clock,
  const ForkCheckpointToken& expected,BeaconSigningJournal& journal,
  const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint){
- std::lock_guard lock(mutex_);require_available();
- if(expected!=*token_)throw std::invalid_argument("Stale proposal duty request");
+ std::lock_guard lock(mutex_);return sign_proposal_locked(index,slot,body,local_clock,expected,journal,signer,checkpoint);
+}
+std::optional<Bytes> BellatrixDurableReactor::sign_proposal_locked(uint64_t index,uint64_t slot,
+ std::span<const uint8_t> body,const std::function<uint64_t()>& local_clock,
+ const ForkCheckpointToken& expected,BeaconSigningJournal& journal,
+ const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint){
+ require_available();
+ if(expected!=*token_)throw StaleBellatrixDuty("Stale proposal duty request");
  disk_.fork_checkpoint(chain_id_,genesis_,limits_.envelope_bytes,token_);
  if(!local_clock||!signer)throw std::invalid_argument("Missing proposal clock or signing provider");
  const auto& clock=state_->timed.clock;const auto& t=rules_.transition.consensus;
@@ -215,9 +283,13 @@ std::optional<Bytes> BellatrixDurableReactor::sign_proposal(uint64_t index,uint6
 std::optional<Bytes> BellatrixDurableReactor::sign_randao(uint64_t index,uint64_t slot,
  const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected,
  BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint){
- std::lock_guard lock(mutex_);require_available();
- if(expected!=*token_)throw std::invalid_argument("Stale RANDAO duty request");
- disk_.fork_checkpoint(chain_id_,genesis_,limits_.envelope_bytes,token_);
+ std::lock_guard lock(mutex_);return sign_randao_locked(index,slot,local_clock,expected,journal,signer,checkpoint);
+}
+std::optional<Bytes> BellatrixDurableReactor::sign_randao_locked(uint64_t index,uint64_t slot,
+ const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected,
+ BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint){
+ require_available();
+ if(expected!=*token_)throw StaleBellatrixDuty("Stale RANDAO duty request");
  if(!local_clock||!signer)throw std::invalid_argument("Missing RANDAO clock or signing provider");
  const auto& clock=state_->timed.clock;const auto& t=rules_.transition.consensus;validate_altair_transition_rules(t);
  if(!rules_.slot_duration_ms||clock.time_ms<clock.genesis_time_ms)throw std::invalid_argument("Invalid RANDAO clock");
@@ -230,6 +302,9 @@ std::optional<Bytes> BellatrixDurableReactor::sign_randao(uint64_t index,uint64_
  if(consensus_beacon_header_root(parent.header)!=head)throw std::invalid_argument("RANDAO parent binding mismatch");
  const auto identity=prepare_bellatrix_proposer_identity(parent.state,parent.header,slot,BellatrixEpochRules{t.epoch,rules_.transition.execution,rules_.transition.maximum_state_bytes},t.state,t.attestation.duties,limits_.replay_slots,limits_.sync_trials,checkpoint);
  if(!identity||identity->index!=index)return std::nullopt;
+ // Non-duty keys must not reread the complete durable archive on every poll.
+ // Eligible duties still verify the disk commitment before any signature.
+ disk_.fork_checkpoint(chain_id_,genesis_,limits_.envelope_bytes,token_);
  if(journal.chain_!=chain_id_||journal.execution_genesis_!=genesis_||journal.validators_genesis_!=identity->genesis_root||journal.public_key_!=identity->public_key||journal.slots_per_epoch_!=t.epoch.ffg.slots_per_epoch||&journal.disk_==&disk_)
   throw std::invalid_argument("Signing journal does not match authenticated RANDAO duty");
  ConsensusRoot epoch_root{};const auto epoch=slot/t.epoch.ffg.slots_per_epoch;
@@ -249,8 +324,74 @@ std::optional<Bytes> BellatrixDurableReactor::sign_randao(uint64_t index,uint64_
  if(checkpoint)checkpoint();if(!timely())throw std::runtime_error("RANDAO expired after verification");
  return signature;
 }
+std::optional<Bytes> BellatrixDurableReactor::propose_local(uint64_t index,uint64_t slot,const std::string& recipient,
+ size_t maximum_vote_trials,const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected,
+ BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint){
+ std::lock_guard lock(mutex_);return propose_local_locked(index,slot,recipient,maximum_vote_trials,local_clock,expected,journal,signer,checkpoint);
+}
+std::optional<Bytes> BellatrixDurableReactor::propose_local_locked(uint64_t index,uint64_t slot,const std::string& recipient,
+ size_t maximum_vote_trials,const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected,
+ BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint){
+ require_available();
+ const auto reveal=sign_randao_locked(index,slot,local_clock,expected,journal,signer,checkpoint);
+ if(!reveal)return std::nullopt;
+ const auto body=prepare_local_body_locked(index,slot,*reveal,recipient,expected,maximum_vote_trials,checkpoint);
+ if(!body)return std::nullopt;
+ return sign_proposal_locked(index,slot,*body,local_clock,expected,journal,signer,checkpoint);
+}
+std::optional<uint64_t> BellatrixDurableReactor::local_proposer(uint64_t slot,const ForkCheckpointToken& expected,const std::function<void()>& checkpoint){
+ std::lock_guard lock(mutex_);return local_proposer_locked(slot,expected,checkpoint);
+}
+std::optional<uint64_t> BellatrixDurableReactor::local_proposer_locked(uint64_t slot,const ForkCheckpointToken& expected,const std::function<void()>& checkpoint){
+ require_available();
+ if(expected!=*token_)throw StaleBellatrixDuty("Stale proposer selection");
+ const auto& t=rules_.transition.consensus;const auto& c=state_->timed.clock;
+ if((c.time_ms-c.genesis_time_ms)/rules_.slot_duration_ms!=slot)return std::nullopt;
+ const auto& parent=bellatrix_fork_head(*state_,rules_,checkpoint);
+ const auto identity=prepare_bellatrix_proposer_identity(parent.state,parent.header,slot,BellatrixEpochRules{t.epoch,rules_.transition.execution,rules_.transition.maximum_state_bytes},t.state,t.attestation.duties,limits_.replay_slots,limits_.sync_trials,checkpoint);
+ if(!identity||state_->timed.view.equivocating_indices.contains(identity->index))return std::nullopt;
+ return identity->index;
+}
+std::set<uint64_t> BellatrixDurableReactor::local_attesters(uint64_t slot,const ForkCheckpointToken& expected,const std::function<void()>& checkpoint){
+ std::lock_guard lock(mutex_);return local_attesters_locked(slot,expected,checkpoint);
+}
+std::set<uint64_t> BellatrixDurableReactor::local_attesters_locked(uint64_t slot,const ForkCheckpointToken& expected,const std::function<void()>& checkpoint){
+ require_available();
+ if(expected!=*token_)throw StaleBellatrixDuty("Stale attester selection");
+ const auto duties=prepare_bellatrix_attestation_duties(*state_,rules_,slot,limits_.replay_slots,limits_.sync_trials,checkpoint);
+ std::set<uint64_t> result;for(const auto& [index,duty]:duties)result.insert(index);return result;
+}
+// Local callers provide intent (key/slot), not precomputed signed data. Derive
+// and verify against the current authenticated state under this same lock.
+std::optional<uint64_t> BellatrixDurableReactor::current_proposer(uint64_t slot,const std::function<void()>& checkpoint){
+ std::lock_guard lock(mutex_);require_available();return local_proposer_locked(slot,*token_,checkpoint);
+}
+std::set<uint64_t> BellatrixDurableReactor::current_attesters(uint64_t slot,const std::function<void()>& checkpoint){
+ std::lock_guard lock(mutex_);require_available();return local_attesters_locked(slot,*token_,checkpoint);
+}
+std::optional<Phase0SignedAttestation> BellatrixDurableReactor::attest_current(uint64_t index,uint64_t slot,
+ const std::function<uint64_t()>& clock,BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint){
+ std::lock_guard lock(mutex_);require_available();return sign_attestation_locked(index,slot,clock,*token_,journal,signer,checkpoint);
+}
+std::optional<Bytes> BellatrixDurableReactor::propose_current(uint64_t index,uint64_t slot,const std::string& recipient,
+ size_t trials,const std::function<uint64_t()>& clock,BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint){
+ std::lock_guard lock(mutex_);require_available();return propose_local_locked(index,slot,recipient,trials,clock,*token_,journal,signer,checkpoint);
+}
 void BellatrixDurableReactor::tick(uint64_t ms,const std::function<void()>& checkpoint){
- std::lock_guard lock(mutex_);require_available();publish(prepare_bellatrix_store_tick(*state_,ms,rules_,limits_.replay_slots,limits_.sync_trials,checkpoint),signed_blocks_,signed_votes_,checkpoint);
+ std::lock_guard lock(mutex_);require_available();
+ auto next=prepare_bellatrix_store_tick(*state_,ms,rules_,limits_.replay_slots,limits_.sync_trials,checkpoint);
+ const auto& previous_clock=state_->timed.clock;const auto previous_slot=(previous_clock.time_ms-previous_clock.genesis_time_ms)/rules_.slot_duration_ms;
+ const auto current_slot=(ms-previous_clock.genesis_time_ms)/rules_.slot_duration_ms;
+ if(current_slot>previous_slot){
+  for(const auto& [id,wire]:*signed_votes_){
+   if(checkpoint)checkpoint();const auto vote=decode_consensus_attestation_ssz(*wire,rules_.transition.consensus.body.validators_per_committee,checkpoint);
+   if(vote&&vote->data.slot==previous_slot){
+    auto applied=prepare_bellatrix_store_vote(next,*vote,rules_,limits_.replay_slots,limits_.sync_trials,checkpoint);
+    if(applied)next=std::move(*applied);
+   }
+  }
+ }
+ publish(std::move(next),signed_blocks_,signed_votes_,checkpoint);
 }
 bool BellatrixDurableReactor::block(std::span<const uint8_t> bytes,const std::function<void()>& checkpoint){
  std::lock_guard lock(mutex_);require_available();auto next=prepare_bellatrix_received_block(*state_,bytes,rules_,limits_.replay_slots,limits_.sync_trials,checkpoint);if(!next)return false;
@@ -265,11 +406,15 @@ bool BellatrixDurableReactor::block(std::span<const uint8_t> bytes,const std::fu
  publish(std::move(*next),std::move(archive),signed_votes_,checkpoint);return true;
 }
 bool BellatrixDurableReactor::vote(const Phase0SignedAttestation& vote,const std::function<void()>& checkpoint){
- std::lock_guard lock(mutex_);require_available();auto next=prepare_bellatrix_store_vote(*state_,vote,rules_,limits_.replay_slots,limits_.sync_trials,checkpoint);if(!next)return false;
+ std::lock_guard lock(mutex_);require_available();auto next=checked_vote(*state_,vote,rules_,limits_,checkpoint);if(!next)return false;
  auto votes=signed_votes_;
- if(next->timed.view.latest_messages!=state_->timed.view.latest_messages){
+ {
   auto bytes=std::make_shared<const Bytes>(encode_consensus_attestation_ssz(vote,rules_.transition.consensus.body.validators_per_committee,checkpoint));
-  auto updated=std::make_shared<BellatrixSignedVoteArchive>(*signed_votes_);updated->emplace(archive_array<32>(sha256(*bytes),0),std::move(bytes));votes=std::move(updated);
+  const auto id=archive_array<32>(sha256(*bytes),0);
+  if(!signed_votes_->contains(id)){
+   if(signed_votes_->size()>=limits_.messages)throw std::length_error("Bellatrix vote archive capacity");
+   auto updated=std::make_shared<BellatrixSignedVoteArchive>(*signed_votes_);updated->emplace(id,std::move(bytes));votes=std::move(updated);
+  }
  }
  publish(std::move(*next),signed_blocks_,std::move(votes),checkpoint);return true;
 }
@@ -288,5 +433,13 @@ bool BellatrixDurableReactor::slashing_ssz(std::span<const uint8_t> bytes,const 
  auto decoded=decode_consensus_attester_slashing_ssz(bytes,rules_.transition.consensus.body.validators_per_committee,checkpoint);
  if(!decoded){std::lock_guard lock(mutex_);require_available();return false;}
  return slashing(decoded->first,decoded->second,checkpoint);
+}
+}
+
+namespace nano {
+Json BellatrixDurableReactor::network_identity()const{
+ std::lock_guard lock(mutex_);require_available();const auto& anchor=state_->timed.view.anchor;
+ const auto encoded=Json::array({"nano-bellatrix-network-v1",quantity(chain_id_),hex(genesis_),hex(Bytes(anchor.begin(),anchor.end())),bellatrix_fork_profile(rules_)}).dump();const auto digest=sha256(Bytes(encoded.begin(),encoded.end()));
+ return Json{{"chainId",quantity(chain_id_)},{"genesisHash",hex(genesis_)},{"consensusIdentity",hex(digest)},{"forkDigest",hex(Bytes(digest.begin(),digest.begin()+4))}};
 }
 }

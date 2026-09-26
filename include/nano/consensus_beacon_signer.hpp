@@ -38,6 +38,9 @@ public:
  BeaconSigningJournal(const BeaconSigningJournal&)=delete;
  BeaconSigningJournal& operator=(const BeaconSigningJournal&)=delete;
  ForkCheckpointToken commitment()const;
+ // Durable reservations count even when a crash prevented signature delivery.
+ std::optional<uint64_t> latest_proposal_slot() const;
+ std::optional<uint64_t> latest_attestation_target() const;
  bool is_retired()const;
  // Caller must first stop all OTHER users of this key (including copies using
  // independent databases). All instances sharing this ChainStore serialize

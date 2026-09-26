@@ -25,7 +25,11 @@ struct Genesis {
 };
 // Owns canonical state; durable commit precedes publication to readers.
 class Blockchain {
+ friend class BellatrixDurableReactor;
  mutable std::mutex mutex_;
+ bool beacon_ready_=false;
+ std::optional<Block> beacon_finalized_; // populated only by authenticated coordinator
+ void require_execution_ready_locked() const;
  // Process-local proof: unknown on reopen; extended only by verified durable certificates.
  mutable std::optional<Bytes> audited_certified_tip_;
  Json audit_locked() const;
@@ -48,11 +52,20 @@ class Blockchain {
  struct Prepared {Block block;State state;std::vector<Receipt> receipts;};
  Prepared verify_contents(const Block& block,const Int& now) const;
  Header prepare_header(const std::string& coinbase,const Int& timestamp,uint64_t round) const;
- static Prepared execute_candidate(Block block,const State& initial,std::vector<TxPool::Candidate> pending,const ExecutionEngine& engine,const std::function<void()>& checkpoint);
+ static Prepared execute_candidate(Block block,const State& initial,std::vector<TxPool::Candidate> pending,const ExecutionEngine& engine,const std::function<void()>& checkpoint,bool reward=true);
  Prepared prepare(const std::string& coinbase,const Int& timestamp,uint64_t round=0,const std::function<void()>& checkpoint={}) const;
  Block produce(const std::string& coinbase,const Int& timestamp,bool pow,std::chrono::milliseconds timeout);
+ // Reserved for the Bellatrix coordinator: validated candidate, same database.
+ // Memory/pool/event preparation precedes the atomic write; readers remain
+ // excluded until the canonical head and state have been published.
+ ForkCheckpointToken commit_beacon_checkpoint(const std::optional<ForkCheckpointToken>& expected,
+  const Bytes& expected_tip,const Int& common_height,const Bytes& common_hash,
+  const std::vector<ExecutionCheckpointBlock>& suffix,Block finalized,std::string_view snapshot,
+  size_t maximum_bytes,size_t maximum_blocks);
 public:
  Blockchain(const std::filesystem::path& database,Genesis genesis);
+ // RPC must not serve a Beacon database until its checkpoint has been verified.
+ void require_execution_ready() const;
  uint64_t event_cursor() const;
  std::string event_epoch() const{return event_epoch_;}
  Json gossip_page(uint64_t cursor,const std::string& epoch,const std::string& after,bool snapshot) const;
@@ -60,6 +73,7 @@ public:
  Json block_reference_page(uint64_t cursor,const std::string& epoch) const;
  bool restore(const Int& number,const Bytes& expected_hash);
  Block tip() const;
+ std::optional<Block> finalized_block() const;
  Json audit() const;
  void recover_voting_progress(ChainStore& journal,const std::string& signer) const;
  State state() const;

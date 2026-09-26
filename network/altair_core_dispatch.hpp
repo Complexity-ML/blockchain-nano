@@ -75,9 +75,12 @@ public:
   const auto bound=message.kind==AltairWireKind::block?profile_.block_bytes:message.kind==AltairWireKind::attestation?profile_.attestation_bytes:profile_.slashing_bytes;
   if(message.ssz.size()>bound||message.ssz.size()>profile_.frame_bytes/2)return false;
   const auto kind=message.kind==AltairWireKind::block?"block":message.kind==AltairWireKind::attestation?"attestation":"attester_slashing";
-  const auto overhead=Json{{"chainId",profile_.chain_id},{"genesisHash",profile_.genesis_hash},{"forkDigest",profile_.fork_digest},{"kind",kind},{"ssz","0x"}}.dump().size();
+  auto envelope=Json{{"chainId",profile_.chain_id},{"genesisHash",profile_.genesis_hash},{"forkDigest",profile_.fork_digest},{"kind",kind},{"ssz","0x"}};
+  if(!profile_.consensus_identity.empty())envelope["consensusIdentity"]=profile_.consensus_identity;
+  const auto overhead=envelope.dump().size();
   if(overhead>profile_.frame_bytes||message.ssz.size()>(profile_.frame_bytes-overhead)/2)return false;
   auto frame=Json{{"chainId",profile_.chain_id},{"genesisHash",profile_.genesis_hash},{"forkDigest",profile_.fork_digest},{"kind",kind},{"sszBase64",altair_base64(message.ssz)}};
+  if(!profile_.consensus_identity.empty())frame["consensusIdentity"]=profile_.consensus_identity;
   jobs_.push_back(Job{std::move(frame),std::move(cancel),std::move(done)});
   try{schedule(std::chrono::milliseconds(0));}catch(...){scheduled_=false;blocked_=true;jobs_.pop_back();throw;}return true;
  }

@@ -136,3 +136,8 @@ Bytes BeaconSigningJournal::sign_attestation(const ConsensusAttestationData& dat
  std::lock_guard lock(mutex_);reserve_attestation(data.source.epoch,data.target.epoch,root);return sign(root,provider);
 }
 }
+
+namespace nano {
+std::optional<uint64_t> BeaconSigningJournal::latest_proposal_slot()const{std::lock_guard lock(mutex_);ready();return proposal_?std::optional<uint64_t>(proposal_->slot):std::nullopt;}
+std::optional<uint64_t> BeaconSigningJournal::latest_attestation_target()const{std::lock_guard lock(mutex_);ready();return vote_?std::optional<uint64_t>(vote_->target):std::nullopt;}
+}

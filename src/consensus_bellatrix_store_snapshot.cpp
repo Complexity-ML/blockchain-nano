@@ -80,3 +80,5 @@ BellatrixForkStore bellatrix_store_from_snapshot(std::string_view bytes,const By
  require(bellatrix_store_snapshot(s,r,l,cancel)==bytes);return s;
 }
 }
+
+namespace nano {Json bellatrix_fork_profile(const BellatrixForkBlockRules& r){return profile(r);}}
