@@ -7,7 +7,7 @@ int main(){try{
  const AltairWireProfile profile{"0x539","0x"+std::string(64,'a'),"0x12345678",4096,1024,1024,1024};
  auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);
  auto progress=std::make_shared<AltairRelayProgress>();bool permit_first=false,uncertain=false;unsigned sent=0;
- std::string catalogue_epoch=epoch;std::vector<std::string> backlog;unsigned inventory_calls=0;bool duplicate_page=false,oversized_page=false;
+ std::string catalogue_epoch=epoch;std::vector<std::string> backlog;unsigned inventory_calls=0;bool duplicate_page=false,oversized_page=false,missing_payload=false;
  auto call=[&](const std::string& method,Json params,Reply reply){
   const bool proofs=method=="nano_altairSlashingInventory"||method=="nano_altairSlashing";
   const bool votes=method=="nano_altairVoteInventory"||method=="nano_altairVote";
@@ -23,6 +23,7 @@ int main(){try{
    if(oversized_page)while(entries.size()<=32)entries.push_back({{"root",first}});
    reply(Json{{"catalogEpoch",catalogue_epoch},{proofs?"slashings":votes?"votes":"blocks",entries},{"missingSignedBlocks",0}});
   }else{
+   if(missing_payload){reply(Json{{"available",false}});return;}
    const auto root=params.at(1).get<std::string>();const std::vector<uint8_t> data{uint8_t(root==first?1:2)};
    reply(Json{{"available",true},{"root",root},{"envelope",{{"chainId",profile.chain_id},{"genesisHash",profile.genesis_hash},{"forkDigest",profile.fork_digest},{"kind",proofs?"attester_slashing":votes?"attestation":"block"},{"sszBase64",altair_base64(data)}}}});
   }
@@ -84,5 +85,24 @@ int main(){try{
   check(!attempt()&&progress->cursor=="0x"&&sent==prior,"malformed page advanced cursor or sent payload");
  }
  duplicate_page=false;oversized_page=false;
+ // A page of unknown votes must amortize inventory RPCs too, while retaining
+ // per-item durable export and ACK semantics across distinct relay attempts.
+ progress=std::make_shared<AltairRelayProgress>();backlog.resize(32);permit_first=true;
+ const auto page_calls=inventory_calls,page_sent=sent;
+ for(size_t i=0;i<backlog.size();++i)check(attempt()&&progress->cursor==backlog[i],"cached unknown page lost ordered delivery");
+ check(inventory_calls==page_calls+1&&sent==page_sent+32,"unknown page fetched repeatedly or payload ACKs skipped");
+ // A lost ACK cannot consume the rest of a cached page or skip its item.
+ progress=std::make_shared<AltairRelayProgress>();check(attempt(),"page head missing");
+ uncertain=true;const auto cursor=progress->cursor;
+ check(!attempt()&&progress->cursor==cursor&&!progress->acknowledged(backlog[1]),"cached page advanced after lost ACK");
+ uncertain=false;check(attempt()&&progress->cursor==backlog[1],"lost cached item was not retried");
+ // Pruning between inventory and export invalidates the cached item: do
+ // not acknowledge it, and refresh the catalogue before trying it again.
+ progress=std::make_shared<AltairRelayProgress>();check(attempt(),"prune fixture head missing");
+ missing_payload=true;const auto prune_sent=sent,prune_calls=inventory_calls;
+ check(!attempt()&&progress->cursor==backlog[0]&&sent==prune_sent,"missing cached payload was delivered");
+ missing_payload=false;catalogue_epoch="0x"+std::string(64,'5');
+ check(!attempt()&&progress->cursor=="0x"&&inventory_calls==prune_calls+1,"stale cached page did not refresh catalogue");
+ check(attempt()&&progress->cursor==backlog[1]&&sent==prune_sent+1,"refreshed page lost acknowledgement or successor");
  std::cout<<"Rejected votes do not starve eligible successors; deferred retry, lost response and block ordering checks passed\n";
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

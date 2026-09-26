@@ -2485,3 +2485,11 @@ relais natif→VPS et fin du premier relais VPS enregistré. Les mesures d’hor
 ne suffisent pas à expliquer cet écart ; analyser les files et le parcours
 d’inventaire, sans assimiler cet écart à une latence réseau pure.
 [Preuves et limites](qualification/multihost-20260927/timed-recovery/README.md).
+
+### Relais : réutilisation des pages inconnues
+
+Correction du gaspillage d’inventaire : 32 votes inconnus utilisent une seule
+page RPC tout en conservant 32 exports et accusés indépendants. Contrôle
+négatif sur l’ancien code, perte d’accusé et invalidation après export
+couverts. Compilation du daemon réussie ; effet WAN encore non mesuré.
+[Preuves](qualification/relay-page-cache-20260927/README.md).

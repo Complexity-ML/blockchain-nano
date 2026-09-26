@@ -7,6 +7,10 @@
 #include <sstream>
 struct AltairRelayProgress {
  std::string cursor="0x",epoch;bool retry_votes=false;
+ // At most one validated inventory page (32 votes), reusable only after the
+ // preceding item advanced this session's cursor. Payloads still come from
+ // the durable core and every new delivery still requires its own ACK.
+ Json pending_votes;std::string pending_after;
  // Session-scoped delivery knowledge, not consensus state or a validator cap.
  // Eviction merely permits retransmission. A peer/session reset replaces this
  // object, so a restarted core must acknowledge the vote again.
@@ -67,6 +71,11 @@ class AltairArchiveRelay:public std::enable_shared_from_this<AltairArchiveRelay>
    }
    // Only acknowledged entries may be skipped. Export/send at most one new
    // item, retaining the cursor on its predecessor if the reply is lost.
+   if(kind_==AltairWireKind::attestation){
+    auto remaining=Json::array();bool after=false;
+    for(const auto& candidate:page.at(entries())){if(after)remaining.push_back(candidate);if(candidate.at("root")==root_)after=true;}
+    if(!remaining.empty()){progress_->pending_votes=page;progress_->pending_votes[entries()]=std::move(remaining);progress_->pending_after=root_;}
+   }
    enter_stage("payload");auto reply=callback([](auto& self,Json result){self.payload(std::move(result));});try{core_(kind_==AltairWireKind::block?"nano_altairBlock":kind_==AltairWireKind::attester_slashing?"nano_altairSlashing":kind_==AltairWireKind::voluntary_exit?"nano_altairExit":"nano_altairVote",Json::array({token_,root_}),reply);}catch(...){reply(nullptr);}return;
   }
   // A page amortizes local RPC latency but does not increase the scan budget.
@@ -84,5 +93,11 @@ class AltairArchiveRelay:public std::enable_shared_from_this<AltairArchiveRelay>
  }
 public:
  AltairArchiveRelay(asio::io_context& io,Call core,std::function<void(Json,Reply)> send,std::string token,std::shared_ptr<AltairMessageIngress> ingress,std::shared_ptr<AltairRelayProgress> progress,Reply done,AltairWireKind kind=AltairWireKind::block,size_t cached_scan_budget=32):io_(io),core_(std::move(core)),send_(std::move(send)),token_(std::move(token)),ingress_(std::move(ingress)),progress_(std::move(progress)),done_(std::move(done)),deadline_(io),kind_(kind),cached_scan_budget_(cached_scan_budget){if(!cached_scan_budget_||(kind_!=AltairWireKind::block&&kind_!=AltairWireKind::attestation&&kind_!=AltairWireKind::attester_slashing&&kind_!=AltairWireKind::voluntary_exit)||!core_||!send_||token_.empty()||!ingress_||!progress_||!done_)throw std::invalid_argument("invalid Altair relay");}
- void start(std::chrono::steady_clock::duration timeout=std::chrono::seconds(30)){if(timeout<=std::chrono::steady_clock::duration::zero())throw std::invalid_argument("invalid relay deadline");if(started_)throw std::logic_error("Altair relay already started");started_=true;began_=std::chrono::steady_clock::now();stage_started_=began_;deadline_.expires_after(timeout);deadline_.async_wait([self=shared_from_this()](auto error){if(!error)self->finish(false);});request_inventory();}
+ void start(std::chrono::steady_clock::duration timeout=std::chrono::seconds(30)){if(timeout<=std::chrono::steady_clock::duration::zero())throw std::invalid_argument("invalid relay deadline");if(started_)throw std::logic_error("Altair relay already started");started_=true;began_=std::chrono::steady_clock::now();stage_started_=began_;deadline_.expires_after(timeout);deadline_.async_wait([self=shared_from_this()](auto error){if(!error)self->finish(false);});
+  if(kind_==AltairWireKind::attestation){
+   auto pending=std::move(progress_->pending_votes);progress_->pending_votes=nullptr;
+   const bool resume=progress_->pending_after==progress_->cursor;progress_->pending_after.clear();
+   if(resume&&pending.is_object()){auto reply=callback([](auto& self,Json page){self.inventory(std::move(page));});reply(std::move(pending));return;}
+  }
+  request_inventory();}
 };
