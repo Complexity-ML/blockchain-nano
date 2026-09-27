@@ -130,3 +130,10 @@ target_compile_definitions(nano-capella-catalog-relay-tests PRIVATE FMT_CONSTEVA
 target_link_libraries(nano-capella-catalog-relay-tests PRIVATE p2p::p2p)
 add_test(NAME capella_catalog_relay COMMAND nano-capella-catalog-relay-tests)
 set_tests_properties(capella_catalog_relay PROPERTIES TIMEOUT 20)
+
+add_executable(nano-capella-block-delivery-tests test_capella_block_delivery.cpp)
+target_include_directories(nano-capella-block-delivery-tests PRIVATE ../third_party)
+target_compile_definitions(nano-capella-block-delivery-tests PRIVATE FMT_CONSTEVAL=)
+target_link_libraries(nano-capella-block-delivery-tests PRIVATE p2p::p2p)
+add_test(NAME capella_block_delivery COMMAND nano-capella-block-delivery-tests)
+set_tests_properties(capella_block_delivery PROPERTIES TIMEOUT 20)

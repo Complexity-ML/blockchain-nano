@@ -2496,3 +2496,14 @@ du checkpoint, catalogues fermés (21,87 s).
 [Preuves](qualification/capella-catalog-relay-20260927/README.md).
 L’ordre des racines ne garantit pas l’ordre des parents. Raccordement aux pairs,
 collecte des dépendances et reprise après expiration restent requis avant activation.
+
+### Capella : livraison des ancêtres avant les descendants
+
+Préparation bornée depuis l’archive locale jusqu’à l’ancre ou un ancêtre confirmé
+par le même pair/session ; livraison séquentielle et cache alimenté uniquement
+sur accusé positif. Treize scénarios passent (0,31 s). Le test à deux réacteurs
+demande les descendants d’abord : neuf exports/livraisons sans doublons, puis
+votes/slashing, avec convergence tête/état/preuves (5,73 s).
+[Preuves](qualification/capella-block-delivery-20260927/README.md).
+Callbacks encore locaux ; cycle de vie des sessions pairs et raccordement au
+démon restent ouverts. Finalité à l’epoch zéro dans cette preuve de rattrapage.

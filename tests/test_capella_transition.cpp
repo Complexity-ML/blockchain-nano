@@ -24,6 +24,7 @@
 #include "../network/capella_inventory_sessions.hpp"
 #include "../network/altair_core_recovery.hpp"
 #include "../network/capella_catalog_relay.hpp"
+#include "../network/capella_block_delivery.hpp"
 #include <future>
 #include "../src/consensus_bellatrix_projection.hpp"
 using namespace test;using namespace test::phase0_minimal;
@@ -629,6 +630,15 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
     std::vector<Json> sorted;for(size_t i=0;i<order.size();++i){auto message=std::move(messages[order[i]]);message["envelope"]["ssz"]=hex(collected[i].ssz);sorted.push_back(std::move(message));}messages=std::move(sorted);
    }
 
+   if(std::string_view(kind)=="block"){
+    asio::io_context io;InboundBudget delivery_budget;const auto identity=reactor->network_identity();auto ingress=std::make_shared<AltairMessageIngress>(AltairWireProfile{identity.at("chainId").get<std::string>(),identity.at("genesisHash").get<std::string>(),identity.at("forkDigest").get<std::string>(),16*1024*1024,r.consensus.maximum_block_bytes,65536,65536,identity.at("consensusIdentity").get<std::string>()},delivery_budget);auto knowledge=std::make_shared<AltairRelayProgress>(1000);size_t exports=0;
+    auto core=[&](std::string method,Json params,Reply reply){check(method=="nano_capellaExport"&&params[0]=="test-token"&&params[1]=="block","unexpected delivery export");++exports;const auto bytes=unhex(params[2].get<std::string>());ConsensusRoot id{};std::copy(bytes.begin(),bytes.end(),id.begin());reply(reactor->export_message("block",id,8*1024*1024));};
+    auto send=[&](Json frame,Reply reply){const bool queued=follower_service.submit(frame.dump(),std::make_shared<std::atomic<bool>>(false),[&,reply](auto decision){const bool accepted=decision==CapellaConsensusService::Decision::accepted;if(accepted)++fetched;reply(Json{{"accepted",accepted}});});if(!queued)reply(nullptr);};
+    const auto& anchor=catchup_anchor->timed.view.anchor;
+    // Deliberately ask for descendants first; delivery must discover ancestors.
+    for(auto it=messages.rbegin();it!=messages.rend();++it){io.restart();Json result;auto delivery=std::make_shared<CapellaBlockDelivery>(io,core,send,"test-token",hex(Bytes(anchor.begin(),anchor.end())),it->at("root").get<std::string>(),ingress,knowledge,1000,16*1024*1024,[&](Json value){result=value;});delivery->start(std::chrono::seconds(10));io.run();check(result.at("accepted")==true,"ancestor-first delivery failed");}
+    check(exports==messages.size()&&fetched==messages.size(),"delivery duplicated confirmed ancestors");continue;
+   }
    for(const auto& message:messages){auto promise=std::make_shared<std::promise<CapellaConsensusService::Decision>>();auto result=promise->get_future();check(follower_service.submit(message.at("envelope").dump(),std::make_shared<std::atomic<bool>>(false),[promise](auto d){promise->set_value(d);}),"catchup enqueue refused");check(result.wait_for(std::chrono::seconds(10))==std::future_status::ready&&result.get()==CapellaConsensusService::Decision::accepted,"catchup message rejected");++fetched;}
   }
   follower_service.stop();follower_service.join();const auto recovered=follower.current();const auto& expected_head=capella_fork_head(*source.state,store_rules);const auto& recovered_head=capella_fork_head(*recovered.state,store_rules);
