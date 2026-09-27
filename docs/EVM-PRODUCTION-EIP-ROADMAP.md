@@ -138,3 +138,15 @@ en 22,78 s ; rattrapage réel à deux processus et reprise après perte d'ACK r�
 L'équité entre plusieurs pairs concurrents reste à qualifier. Aucun EIP ni
 critère de production globale clôturé par cette correction de transport.
 [Preuves et limites](qualification/capella-peer-cleanup-20260927/README.md).
+
+### 2026-09-27 — Six nœuds Capella, concurrence et pair non réactif
+
+Qualification du démon réel : un source et cinq followers indépendants via
+libp2p. Après un premier relais, le démon d'un follower est suspendu ; pendant
+40,10 s, les quatre autres avancent et reçoivent des tours pour les trois
+catégories. Tentatives terminées : [5,98,96,96,99], pair suspendu en premier.
+Après reprise, les six têtes et racines d'état correspondent. Arrêt propre.
+Ce résultat borne un cas d'équité réseau locale ; ni équité générale, ni finalité
+avec stake distribué, ni qualification WAN. Le premier essai moins strict est
+conservé séparément. Aucun changement du moteur ni nouveau statut EIP.
+[Preuves et périmètre](qualification/capella-competing-peers-20260927/README.md).

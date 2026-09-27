@@ -50,7 +50,7 @@ static bool owner_witness=false;
 static bool scheduled=false;
 static bool configured_runtime=false;
 static bool capella_http=false;
-static std::string cli_binary;static Json cli_genesis;static bool managed_cli=false;static std::string daemon_binary;static bool network_cli=false;static bool distributed_cli=false;static bool transport_outage_cli=false;static fs::path network_export;
+static std::string cli_binary;static Json cli_genesis;static bool managed_cli=false;static std::string daemon_binary;static bool network_cli=false;static bool multipeer_cli=false;static bool distributed_cli=false;static bool transport_outage_cli=false;static fs::path network_export;
 static bool beacon_reads=false;
 static bool wire_mode=false;static bool catalog_concurrency=false;
 static size_t beacon_read_checks=0;
@@ -239,6 +239,42 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
     }
     const auto source_config=directory/"source.json";save(source_config,node);Process source_node({cli_binary,"run",(directory/"genesis.json").string(),(directory/"source-db").string(),source_config.string()},env);const auto source_port=source_node.port();const auto source_address=source_node.event("listen").at("address").get<std::string>();check(source_node.event("altair-ipc-ready").at("networkProtocolActive")==true,"source network inactive");
     until([&]{source_node.pump(0);return quantity(rpc(source_port,"eth_blockNumber"))>=2;},"source produced before follower",40);
+    if(multipeer_cli){
+     constexpr size_t followers=5;
+     std::vector<std::unique_ptr<Process>> peers;std::vector<uint16_t> ports;std::vector<std::string> identities;
+     struct PausedDaemon {pid_t pid=-1;bool paused=false;void resume()noexcept{if(paused){::kill(pid,SIGCONT);paused=false;}}~PausedDaemon(){resume();}} slow;
+     auto stop_all=[&]{slow.resume();for(auto& peer:peers){const auto result=peer->stop();std::cout<<result.out<<result.err;check(result.code==0,"competing peer failed shutdown");}const auto result=source_node.stop();std::cout<<result.out<<result.err;check(result.code==0,"source failed shutdown");};
+     try{
+      for(size_t i=0;i<followers;++i){
+       auto cfg=node;cfg["capella"].erase("validator");cfg["capella"]["recoveryWitness"]=(directory/("peer-witness-"+std::to_string(i))).string();cfg["bootnodes"]=Json::array({source_address});const auto file=directory/("peer-"+std::to_string(i)+".json");save(file,cfg);
+       peers.push_back(std::make_unique<Process>(std::vector<std::string>{cli_binary,"run",(directory/"genesis.json").string(),(directory/("peer-db-"+std::to_string(i))).string(),file.string()},Env{{"NANO_TEST_NETWORK_TRACE","1"}}));
+       auto& peer=*peers.back();ports.push_back(peer.port());const auto address=peer.event("listen").at("address").get<std::string>();identities.push_back(address.substr(address.rfind("/p2p/")+5));check(peer.event("altair-ipc-ready").at("networkProtocolActive")==true,"competing peer inactive");source_node.pump(0);
+       if(i==0){
+        slow.pid=peer.event("p2p-process").at("pid").get<pid_t>();check(slow.pid>1,"invalid slow daemon pid");
+        until([&]{source_node.pump(0);peer.pump(0);std::istringstream events(source_node.output());std::string text;while(std::getline(events,text)){const auto event=Json::parse(text,nullptr,false);if(event.is_object()&&event.value("event","")=="test-capella-catalog-relay"&&event.value("peerId","")==identities[0])return true;}return false;},"slow peer completed initial relay before pause",30);
+        check(::kill(slow.pid,SIGSTOP)==0,"could not pause slow daemon");slow.paused=true;
+       }
+      }
+      const auto pause_start=std::chrono::steady_clock::now();const auto floor=rpc(source_port,"eth_getBlockByNumber",Json::array({"latest",false}));const auto floor_number=quantity(floor.at("number"));
+      std::vector<bool> progressed(followers,false);std::vector<std::set<std::string>> kinds(followers);std::vector<size_t> attempts(followers,0);
+      // Measure only work completed after all contenders have started.
+      const auto before=source_node.output().size();
+      const auto deadline=pause_start+std::chrono::seconds(40);
+      while(std::chrono::steady_clock::now()<deadline){
+       source_node.pump(0);check(source_node.running(),"source exited with slow peer");for(auto& peer:peers){peer->pump(0);check(peer->running(),"peer core exited under contention");}
+       for(size_t i=1;i<followers;++i){const auto head=rpc(ports[i],"eth_getBlockByNumber",Json::array({"latest",false}));if(quantity(head.at("number"))>floor_number){const auto expected=rpc(source_port,"eth_getBlockByNumber",Json::array({head.at("number"),false}));if(!expected.is_null()&&head.at("hash")==expected.at("hash")&&head.at("stateRoot")==expected.at("stateRoot"))progressed[i]=true;}}
+       std::this_thread::sleep_for(std::chrono::milliseconds(250));
+      }
+      const auto during=source_node.output().substr(before);std::istringstream lines(during);std::string line;
+      while(std::getline(lines,line)){auto event=Json::parse(line,nullptr,false);if(!event.is_object()||event.value("event","")!="test-capella-catalog-relay")continue;for(size_t i=0;i<followers;++i)if(event.value("peerId","")==identities[i]){++attempts[i];kinds[i].insert(event.at("kind").get<std::string>());}}
+      check(attempts[0]>0,"paused peer did not exercise an active relay attempt");
+      for(size_t i=1;i<followers;++i)check(progressed[i]&&attempts[i]>0&&kinds[i].size()==3,"healthy peer starved while daemon paused");
+      std::cout<<Json{{"event","capella-competing-peers-progress"},{"followers",followers},{"pausedDaemonSeconds",std::chrono::duration<double>(std::chrono::steady_clock::now()-pause_start).count()},{"floorNumber",floor.at("number")},{"completedAttempts",attempts},{"healthyPeersProgressed",followers-1},{"allHealthyKindsScheduled",true}}.dump()<<std::endl;
+      slow.resume();
+      until([&]{source_node.pump(0);for(auto& p:peers)p->pump(0);const auto target=rpc(source_port,"eth_getBlockByNumber",Json::array({"latest",false}));for(auto port:ports){const auto head=rpc(port,"eth_getBlockByNumber",Json::array({"latest",false}));if(head.at("hash")!=target.at("hash")||head.at("stateRoot")!=target.at("stateRoot"))return false;}return true;},"all competing peers recovered common execution head",60);
+      stop_all();std::cout<<Json{{"scenario","capella-competing-peers"},{"nodes",followers+1},{"healthyPeersProgressedDuringPause",followers-1},{"allKindsScheduled",true},{"allPeersRecovered",true},{"realLibp2p",true},{"distributedFinalityQualified",false}}.dump()<<std::endl;return;
+     }catch(...){slow.resume();for(auto& peer:peers){const auto result=peer->stop();std::cerr<<result.out<<result.err;}const auto result=source_node.stop();std::cerr<<result.out<<result.err;throw;}
+    }
     auto follower_config=node;follower_config["capella"].erase("validator");follower_config["capella"]["recoveryWitness"]=(directory/"follower-witness").string();follower_config["bootnodes"]=Json::array({source_address});const auto follower_file=directory/"follower.json";save(follower_file,follower_config);
     Process follower_node({cli_binary,"run",(directory/"genesis.json").string(),(directory/"follower-db").string(),follower_file.string()},{{"NANO_TEST_NETWORK_TRACE","1"}});const auto follower_port=follower_node.port();const auto follower_address=follower_node.event("listen").at("address").get<std::string>();check(follower_node.event("altair-ipc-ready").at("networkProtocolActive")==true,"follower network inactive");
     until([&]{source_node.pump(0);follower_node.pump(0);const auto a=rpc(source_port,"eth_getBlockByNumber",Json::array({"latest",false}));const auto b=rpc(follower_port,"eth_getBlockByNumber",Json::array({"latest",false}));return quantity(a.at("number"))>=2&&a.at("hash")==b.at("hash")&&a.at("stateRoot")==b.at("stateRoot");},"two real Capella peers converged",50);
@@ -887,6 +923,7 @@ int main(int argc,char** argv){try{executable=argv[0];
  if(argc==3&&std::string(argv[1])=="--export-network"){network_export=fs::absolute(argv[2]);network_cli=true;managed_cli=true;cli_binary="export-only";configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--transport-outage-cli"){transport_outage_cli=true;distributed_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--distributed-cli"){distributed_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
+ if(argc==4&&std::string(argv[1])=="--multipeer-cli"){multipeer_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--network-cli"){network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--daemon-cli"){managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==3&&std::string(argv[1])=="--managed-cli"){managed_cli=true;cli_binary=argv[2];configured_runtime=true;scenario(false);return 0;}
