@@ -2652,3 +2652,13 @@ qualifiées, avec refus de signatures/retraits altérés et annulations ; régre
 Qualification spécifique votes/slashing/dépôts, snapshot, conservation des
 branches à travers le fork, persistance et réacteur restent ouverts. Le Store
 testé démarre sur une ancre Capella authentifiée ; réseau inchangé.
+
+### Capella : snapshot local et restauration
+
+Format local et profil canonique Capella, digest vérifié avant parsing,
+registre justifié reconstruit depuis SSZ. Trois chaînes de neuf blocs avec
+aller-retour de branches et cache qualifiés ; commit atomique du vrai snapshot
+et réouverture RocksDB avec tête/racine EVM concordantes. Régression 3/3.
+[Preuves](qualification/capella-snapshot-20260927/README.md).
+Restent crash du vrai Store, votes/finalité, branches Bellatrix à travers le
+fork et intégration réseau. Checkpoint local authentifié uniquement.
