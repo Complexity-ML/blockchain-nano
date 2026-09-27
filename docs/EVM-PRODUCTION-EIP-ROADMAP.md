@@ -992,3 +992,15 @@ reconstruisent leurs registres. Le sélecteur natif distingue les deux ascendanc
 reactor, fork choice et signatures après réindexation restent ouverts.
 Aucun changement de production, aucun EIP clôturé.
 [Preuves et limites](qualification/competing-deposit-order-20260927/README.md).
+
+## 2026-09-27 — Reactor réindexé par de vrais blocs à dépôts concurrents
+
+Nouveau scénario local avec trois propriétaires RocksDB : branches AB/BA
+signées et admises jusqu'au slot 49, dépôts consommés, registre de 66 membres.
+Les votes de comité sélectionnent chaque branche ; la clé A passe de 64 à 65,
+avec état EVM/historique cohérents et deux réouvertures vérifiées. L'ancien
+index est refusé avant signature sans mutation ; le nouveau reste inactif.
+Test passé en 22,09 s. Échec initial du budget de 64 blocs du banc conservé,
+budget du scénario calculé à 98 sans changement de consensus. Activation après
+reorg, finalité, threads concurrents et WAN restent ouverts. Aucun EIP clôturé.
+[Preuves](qualification/capella-competing-deposit-reorg-20260927/README.md).

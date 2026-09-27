@@ -1690,3 +1690,6 @@ set_tests_properties(consensus_capella_registration_scale PROPERTIES TIMEOUT 120
 
 add_test(NAME consensus_capella_registration_signing_guard COMMAND nano-capella-transition-tests --scheduler-registration)
 set_tests_properties(consensus_capella_registration_signing_guard PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_runtime")
+
+add_test(NAME consensus_capella_competing_deposit_reorg COMMAND nano-capella-transition-tests --deposit-reorg)
+set_tests_properties(consensus_capella_competing_deposit_reorg PROPERTIES TIMEOUT 360 LABELS "qualification_consensus_runtime")

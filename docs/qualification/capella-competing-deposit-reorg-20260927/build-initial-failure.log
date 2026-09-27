@@ -1,0 +1,121 @@
+-- Could NOT find Valgrind (missing: Valgrind_INCLUDE_DIR Valgrind_WORKS)
+
+
+secp256k1 configure summary
+===========================
+Build artifacts:
+  library type ........................ Static
+Optional modules:
+  ECDH ................................ OFF
+  ECDSA pubkey recovery ............... ON
+  extrakeys ........................... OFF
+  schnorrsig .......................... OFF
+  musig ............................... OFF
+  ElligatorSwift ...................... OFF
+Parameters:
+  ecmult window size .................. 15
+  ecmult gen table size ............... 86 KiB
+Optional features:
+  assembly ............................ OFF
+  external callbacks .................. OFF
+Optional binaries:
+  benchmark ........................... OFF
+  noverify_tests ...................... OFF
+  tests ............................... OFF
+  exhaustive tests .................... OFF
+  ctime_tests ......................... OFF
+  examples ............................ OFF
+
+Cross compiling ....................... FALSE
+API visibility attributes ............. ON
+Valgrind .............................. OFF
+Preprocessor defined macros ........... ECMULT_WINDOW_SIZE=15 COMB_BLOCKS=43 COMB_TEETH=6
+C compiler ............................ AppleClang 21.0.0.21000334, /usr/bin/cc
+CFLAGS ................................
+Compile options ....................... -Wall -pedantic -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef
+Build type:
+ - CMAKE_BUILD_TYPE ................... Release
+ - CFLAGS ............................. -O2
+ - LDFLAGS for executables ............
+ - LDFLAGS for shared libraries .......
+
+bint_obj=/Users/boris/Dev/blockchain-nano/build-release/third_party/mcl/bint64.o
+base_obj=/Users/boris/Dev/blockchain-nano/build-release/third_party/mcl/base64.o
+-- Configuring done (0.4s)
+-- Generating done (0.4s)
+-- Build files have been written to: /Users/boris/Dev/blockchain-nano/build-release
+[  0%] Built target gen_bint.o
+[  0%] Built target gen_base.o
+[  3%] Built target secp256k1_precomputed
+[  3%] Built target nano_blst
+[  3%] Built target nano-test-sync-fault
+[  7%] Built target mcl_st
+[ 10%] Built target nano_ckzg
+[ 10%] Built target secp256k1
+[ 10%] Building CXX object CMakeFiles/nano_core.dir/src/kzg.cpp.o
+[ 10%] Linking CXX static library libnano_core.a
+[100%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-capella-transition-tests.dir/tests/test_capella_transition.cpp.o
+In file included from /Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/altair_transition_rules.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_transition_rules.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_epoch_ssz.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_ffg_ssz.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_minimal_ssz.hpp:2:
+/Users/boris/Dev/blockchain-nano/tests/support/process.hpp:39:19: warning: 'posix_spawn_file_actions_addchdir_np' is deprecated: first deprecated in macOS 26.0 - posix_spawn_file_actions_addchdir(3) has replaced posix_spawn_file_actions_addchdir_np(3) [-Wdeprecated-declarations]
+   39 |   if(!cwd.empty())posix_spawn_file_actions_addchdir_np(&actions,cwd.c_str());
+      |                   ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/spawn.h:184:9: note: 'posix_spawn_file_actions_addchdir_np' has been explicitly marked deprecated here
+  184 | int     posix_spawn_file_actions_addchdir_np(posix_spawn_file_actions_t *,
+      |         ^
+In file included from /Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:101:
+/Users/boris/Dev/blockchain-nano/tests/support/capella_deposit_reorg.hpp:16:97: error: ambiguous conversion for functional-style cast from 'uint64_t' (aka 'unsigned long long') to 'Int' (aka '__gmp_expr<__mpz_struct[1], __mpz_struct[1]>')
+   16 |  for(size_t n=0;n<2;++n)for(uint64_t i=0;i<2;++i){tx.nonce=owners[n]->state().get(sender).nonce+Int(i);tx.data=data(64+(n?1-i:i));check(owners[n]->submit(SignedTransaction::sign(tx,secret)),"competing deposit submit failed");}
+      |                                                                                                 ^~~~~~
+/opt/homebrew/include/gmpxx.h:1646:3: note: candidate constructor
+ 1646 |   __GMPXX_DEFINE_ARITHMETIC_CONSTRUCTORS
+      |   ^
+/opt/homebrew/include/gmpxx.h:1515:3: note: expanded from macro '__GMPXX_DEFINE_ARITHMETIC_CONSTRUCTORS'
+ 1515 |   __gmp_expr(signed char c) { init_si(c); }             \
+      |   ^
+/opt/homebrew/include/gmpxx.h:1646:3: note: candidate constructor
+/opt/homebrew/include/gmpxx.h:1516:3: note: expanded from macro '__GMPXX_DEFINE_ARITHMETIC_CONSTRUCTORS'
+ 1516 |   __gmp_expr(unsigned char c) { init_ui(c); }           \
+      |   ^
+/opt/homebrew/include/gmpxx.h:1646:3: note: candidate constructor
+/opt/homebrew/include/gmpxx.h:1517:3: note: expanded from macro '__GMPXX_DEFINE_ARITHMETIC_CONSTRUCTORS'
+ 1517 |   __gmp_expr(signed int i) { init_si(i); }              \
+      |   ^
+/opt/homebrew/include/gmpxx.h:1646:3: note: candidate constructor
+/opt/homebrew/include/gmpxx.h:1518:3: note: expanded from macro '__GMPXX_DEFINE_ARITHMETIC_CONSTRUCTORS'
+ 1518 |   __gmp_expr(unsigned int i) { init_ui(i); }            \
+      |   ^
+/opt/homebrew/include/gmpxx.h:1646:3: note: candidate constructor
+/opt/homebrew/include/gmpxx.h:1519:3: note: expanded from macro '__GMPXX_DEFINE_ARITHMETIC_CONSTRUCTORS'
+ 1519 |   __gmp_expr(signed short int s) { init_si(s); }        \
+      |   ^
+/opt/homebrew/include/gmpxx.h:1646:3: note: candidate constructor
+/opt/homebrew/include/gmpxx.h:1520:3: note: expanded from macro '__GMPXX_DEFINE_ARITHMETIC_CONSTRUCTORS'
+ 1520 |   __gmp_expr(unsigned short int s) { init_ui(s); }      \
+      |   ^
+/opt/homebrew/include/gmpxx.h:1646:3: note: candidate constructor
+/opt/homebrew/include/gmpxx.h:1521:3: note: expanded from macro '__GMPXX_DEFINE_ARITHMETIC_CONSTRUCTORS'
+ 1521 |   __gmp_expr(signed long int l) { init_si(l); }         \
+      |   ^
+/opt/homebrew/include/gmpxx.h:1646:3: note: candidate constructor
+/opt/homebrew/include/gmpxx.h:1522:3: note: expanded from macro '__GMPXX_DEFINE_ARITHMETIC_CONSTRUCTORS'
+ 1522 |   __gmp_expr(unsigned long int l) { init_ui(l); }       \
+      |   ^
+/opt/homebrew/include/gmpxx.h:1646:3: note: candidate constructor
+/opt/homebrew/include/gmpxx.h:1523:3: note: expanded from macro '__GMPXX_DEFINE_ARITHMETIC_CONSTRUCTORS'
+ 1523 |   __gmp_expr(float f) { init_d(f); }                    \
+      |   ^
+/opt/homebrew/include/gmpxx.h:1646:3: note: candidate constructor
+/opt/homebrew/include/gmpxx.h:1524:3: note: expanded from macro '__GMPXX_DEFINE_ARITHMETIC_CONSTRUCTORS'
+ 1524 |   __gmp_expr(double d) { init_d(d); }
+      |   ^
+1 warning and 1 error generated.
+gmake[3]: *** [CMakeFiles/nano-capella-transition-tests.dir/build.make:79: CMakeFiles/nano-capella-transition-tests.dir/tests/test_capella_transition.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:7613: CMakeFiles/nano-capella-transition-tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:7620: CMakeFiles/nano-capella-transition-tests.dir/rule] Error 2
+gmake: *** [Makefile:2650: nano-capella-transition-tests] Error 2

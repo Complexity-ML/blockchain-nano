@@ -66,9 +66,11 @@ signataire. Une clé configurée différente de celle du journal reste une erreu
 bloquante ; elle n'est pas masquée comme simple changement de branche.
 
 Le contrôle d'identité complet du devoir et le journal anti-slashing restent
-obligatoires. La disponibilité sous des réorganisations soutenues et deux dépôts
-concurrents attribuant des indices différents demandent encore une qualification
-distribuée ; le refus d'un index périmé n'en constitue pas la preuve.
+obligatoires. Une bascule locale entre deux branches à dépôts inversés est maintenant
+qualifiée : index 64 puis 65, deux réouvertures, ancien index refusé sans
+signature. [Preuves](qualification/capella-competing-deposit-reorg-20260927/README.md).
+La disponibilité sous reorgs soutenues, l'activation après cette bascule et le
+transport distribué restent à qualifier.
 
 Ce mode concerne Capella natif Nano. Il ne déclare pas le cycle EIP-6110 Ethereum
 complet ni l’activation publique du réseau.
