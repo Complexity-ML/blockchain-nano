@@ -1,0 +1,50 @@
+[
+  {
+    "name": "consensus_bellatrix_assertoor_finality",
+    "exitCode": 0,
+    "durationSeconds": 198.31958166701952,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-E",
+      "env",
+      "NANO_TEST_ASSERTOOR_PROBE=/Users/boris/Dev/blockchain-nano/tests/assertoor/probe.mjs",
+      "NANO_TEST_ASSERTOOR_BINARY=/Users/boris/Dev/blockchain-nano/.deps/assertoor-bin",
+      "NANO_TEST_ASSERTOOR_FINALITY=1",
+      "/private/tmp/nano-partition-drain-candidate/nano-bellatrix-transition-tests",
+      "--distributed-finality",
+      "/Users/boris/Dev/blockchain-nano/build-release/nano",
+      "/Users/boris/Dev/blockchain-nano/build-network/nano-p2p"
+    ],
+    "cwd": "/Users/boris/Dev/blockchain-nano/build-release",
+    "timeoutSeconds": 420.0,
+    "hashes": {
+      "/private/tmp/nano-partition-drain-candidate/nano-bellatrix-transition-tests": "de9034690336905cde09e1a877ec162e92d72d2be4c05c61a86ff89458083d5a",
+      "/Users/boris/Dev/blockchain-nano/tests/assertoor/probe.mjs": "5d6b1e6af0aedd590884f3c753be3034098f0679e0997b4ced02591f22c6f191",
+      "/Users/boris/Dev/blockchain-nano/tests/assertoor/stability-probe.mjs": "f7a8cf28b63ab55be855676541fa88bdebf7fddca11f957ec84f768db735eb4c",
+      "/Users/boris/Dev/blockchain-nano/tests/assertoor/stability.mjs": "d57dd58dd7a7e72e9ee2adcad0d84fa66e5c90d2b83b9e90a61b9593a9632423"
+    }
+  },
+  {
+    "name": "consensus_bellatrix_partition_sustained",
+    "exitCode": 0,
+    "durationSeconds": 565.8493959169718,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-E",
+      "env",
+      "NANO_TEST_POST_RECOVERY_PROBE=/Users/boris/Dev/blockchain-nano/tests/assertoor/stability-probe.mjs",
+      "/private/tmp/nano-partition-drain-candidate/nano-bellatrix-transition-tests",
+      "--partition-recovery",
+      "/Users/boris/Dev/blockchain-nano/build-release/nano",
+      "/Users/boris/Dev/blockchain-nano/build-network/nano-p2p"
+    ],
+    "cwd": "/Users/boris/Dev/blockchain-nano/build-release",
+    "timeoutSeconds": 1080.0,
+    "hashes": {
+      "/private/tmp/nano-partition-drain-candidate/nano-bellatrix-transition-tests": "de9034690336905cde09e1a877ec162e92d72d2be4c05c61a86ff89458083d5a",
+      "/Users/boris/Dev/blockchain-nano/tests/assertoor/probe.mjs": "5d6b1e6af0aedd590884f3c753be3034098f0679e0997b4ced02591f22c6f191",
+      "/Users/boris/Dev/blockchain-nano/tests/assertoor/stability-probe.mjs": "f7a8cf28b63ab55be855676541fa88bdebf7fddca11f957ec84f768db735eb4c",
+      "/Users/boris/Dev/blockchain-nano/tests/assertoor/stability.mjs": "d57dd58dd7a7e72e9ee2adcad0d84fa66e5c90d2b83b9e90a61b9593a9632423"
+    }
+  }
+]

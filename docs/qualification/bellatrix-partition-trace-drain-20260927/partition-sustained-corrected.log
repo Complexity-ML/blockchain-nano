@@ -1,0 +1,27 @@
+independent Bellatrix cores synchronized
+Beacon slots observed through both P2P daemons
+restarted Bellatrix validator propagated next block
+Beacon slot observations restored after restart
+{"epoch":1,"event":"distributed-progress","sameHead":false,"slot":8}
+{"epoch":2,"event":"distributed-progress","sameHead":true,"slot":16}
+{"epoch":3,"event":"distributed-progress","sameHead":true,"slot":24}
+{"epoch":4,"event":"distributed-progress","sameHead":false,"slot":32}
+distributed validators completed four epochs
+{"aHead":{"hash":"0x79ec501e6adb677349148a62fd72b408bc4f9a709ce2f3bc7dcf5c1f1a24e85c","number":"0x20","timestamp":"0x6ab92262"},"bHead":{"hash":"0x79ec501e6adb677349148a62fd72b408bc4f9a709ce2f3bc7dcf5c1f1a24e85c","number":"0x20","timestamp":"0x6ab92262"},"event":"partition-baseline","finalized":{"hash":"0x5a596ab5fd80c114723050811f230407c07e14c8286c7cb1ca9afe844acaf3ff","number":"0x10","timestamp":"0x6ab92202"},"preCutPrefix":{"0x10":"0x5a596ab5fd80c114723050811f230407c07e14c8286c7cb1ca9afe844acaf3ff","0x11":"0x011c121a9d012692c98c31c573a3992a8eeb1a4d8900340f9d35ace019d3a018","0x12":"0x0782b4cf5f4f925cd2ac3a52b35f5fa69ffb72290fa0ec26b281f392e14a2d88","0x13":"0x8c7538ba0916e8f040438eda0ffe4359fcd6a0d1ea3b70ed9a7657524dc9115c","0x14":"0xfaf499898dfc3c50ef9097f66ed1a0b3e3fb1b7d9cc75e1a158618e0ee6a5c99","0x15":"0x5f380a7aee897b0f96ec7cdec7295dab707663170630939b1d65059d710e00f9","0x16":"0x81f386ed100518024f2a60d573721c0eaa85061d9b635229c27e97a2e47efcea","0x17":"0xab21c9045da00968f5f12927239f233f2235f1e6023f1f0b3c41570e7a6ad92b","0x18":"0x346e95cbb53837b1a050907ad00e0a794214c01af4e7cd6cfd0546a8debada1c","0x19":"0x217c1d0c7abc5d01509b6fccd6b89862a43db5532c7b1cd86333113347ec7e2d","0x1a":"0xd20a96442f0a38aff521b5eb4f4da2fb57902b092116b675437396da55d19893","0x1b":"0x6a927e802250a2aa5fc5ab810e10182a169cf3f9ac747a32c5d9e5b4a98c3083","0x1c":"0x28e706f6f32df2b277f9d7460655fce71b2b94d09a0ba7c44664e31a3d8baa65","0x1d":"0x877682a27281eda1adbdb3fe3b9a522121a67a7e6e261d2f313e22a12120fced","0x1e":"0xd1cf315528c04f1760f8e3e0e590be493b04090cc5a344ee60000ee8a0b79179","0x1f":"0x564e81d1b36a8ab1f3884642043e07511b5eab3cd2c1649876101d920deea9bf","0x20":"0x79ec501e6adb677349148a62fd72b408bc4f9a709ce2f3bc7dcf5c1f1a24e85c"}}
+{"event":"partition-start","finalizedHash":"0x5a596ab5fd80c114723050811f230407c07e14c8286c7cb1ca9afe844acaf3ff","seconds":96}
+{"a":"0x20","b":"0x20","elapsedSeconds":0,"event":"partition-progress","finalityUnchanged":true}
+{"a":"0x26","b":"0x22","elapsedSeconds":48,"event":"partition-progress","finalityUnchanged":true}
+{"event":"partition-healed"}
+{"aFinalized":"0x10","bFinalized":"0x10","elapsedSeconds":0,"event":"recovery-progress"}
+{"aFinalized":"0x10","bFinalized":"0x10","elapsedSeconds":48,"event":"recovery-progress"}
+{"aFinalized":"0x10","bFinalized":"0x10","elapsedSeconds":96,"event":"recovery-progress"}
+{"aFinalized":"0x30","bFinalized":"0x30","elapsedSeconds":144,"event":"recovery-progress"}
+{"beaconFinalized":{"epoch":"7","root":"0xdcaa49c6eba36a281c6b7b6903690ef1a7aff2da75a0282870cc3c487a9a0d5b"},"elapsedSeconds":144,"event":"partition-recovery-bound","executionHash":"0xc85a1530a7e6c1d75c7f85c4c89afa7c1eb4a45f8a0d89cc24f131a456944c9d"}
+partition recovered common advancing finality
+{"event":"stability-evidence","directory":"/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-recovery-stability-7XNie2"}
+{"time":1790518147082,"commonEpoch":"8","executionHash":"0x1ac21965a11a8e8955c1a775b6f4d25d936b5039629f3e6b248baaea68556707","advances":1}
+{"time":1790518195271,"commonEpoch":"9","executionHash":"0x924eef68848f7a12f1b4fdcfc37b0257344907dad6bffefc98d842746cfe410b","advances":2}
+{"time":1790518243417,"commonEpoch":"10","executionHash":"0x519cf9c37d20a54fb1c32a978412efaed7f6362cfd321150eec8d9bff7e3d092","advances":3}
+{"event":"stability-passed","epochs":3,"firstEpoch":"7","lastEpoch":"10","elapsedMs":144552}
+{"a":{"epoch":"0xa","root":"0x71dea9f07740e41b4264c5a69b785e3067880cb28717de99ae4aedd8262d6261"},"b":{"epoch":"0xa","root":"0x71dea9f07740e41b4264c5a69b785e3067880cb28717de99ae4aedd8262d6261"},"event":"distributed-checkpoints","justifiedA":"0xb","justifiedB":"0xb"}
+{"beaconPeerObservations":true,"blockAfterRestart":"0x58","blockBeforeRestart":"0x3","crashRecovered":false,"distributedStake":true,"finalized":{"epoch":"0xa","root":"0x71dea9f07740e41b4264c5a69b785e3067880cb28717de99ae4aedd8262d6261"},"independentCoreProcesses":2,"localKeys":64,"observerSynchronized":true,"p2pDaemons":2,"partitionRecovered":true,"physicalHosts":1,"scenario":"bellatrix-managed-cores-restart","validatorNodes":2,"wallClock":true}

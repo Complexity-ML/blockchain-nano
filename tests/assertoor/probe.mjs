@@ -21,6 +21,9 @@ const stabilityEpochs = Number(process.env.NANO_TEST_ASSERTOOR_STABILITY_EPOCHS 
 if (stabilityEpochs && (!finality || !Number.isInteger(stabilityEpochs) || stabilityEpochs < 2 || stabilityEpochs > 16)) throw Error('Invalid stability window');
 const tests = JSON.parse(await readFile(new URL(finality ? './finality.json' : './smoke.json', import.meta.url), 'utf8'));
 const config = {
+  // Assertoor's default in-memory DSN does not share its schema across the
+  // connection pool. Keep one isolated on-disk result database per run.
+  database: {engine: 'sqlite', sqlite: {file: join(directory, 'assertoor.sqlite')}},
   coordinator: {maxConcurrentTests: 1},
   web: {server: {host: '127.0.0.1', port: String(port)}, api: {enabled: true}, frontend: {enabled: false}},
   ai: {enabled: false}, playbookLibrary: {enabled: false},

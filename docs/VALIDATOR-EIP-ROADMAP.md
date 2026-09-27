@@ -3849,3 +3849,63 @@ authentifiée, sortie malformée, isolation et abandon). À un million, prépara
 de 2 911 148 à 1 525 469 µs ; RSS 639 090 688 octets, racines identiques.
 Mesures locales uniques hors runtime complet ; aucune clôture EIP/production.
 [Preuves et frontière de confiance](qualification/ssz-scoped-field-reuse-20260927/README.md).
+
+## 2026-09-27 — Régression Bellatrix : drainage des traces de reprise
+
+La régression sur `af7f99e` expose un échec de finalité après partition
+(516,39 s). Le prédicat ne drainait plus les sorties tant que la finalité
+n’avançait pas : le correctif draine les deux processus inconditionnellement.
+Un nouveau contrôle à deux enfants reproduit la contre-pression stdout/stderr
+et vérifie la récupération intégrale après drainage. Le scénario réseau avec
+ce correctif reste à rejouer ; la campagne initiale continue sur ses binaires
+inchangés. Aucun délai ni critère abaissé, aucune EIP clôturée.
+[Échec, contrôle et limites](qualification/bellatrix-partition-trace-drain-20260927/README.md).
+
+## 2026-09-27 — Assertoor : défaut de base de résultats reproduit
+
+La régression `consensus_bellatrix_assertoor_finality` échoue après 296,02 s
+malgré une finalité commune d’époque 4 à l’arrêt. Le journal Assertoor signale
+une table `task_logs` absente. Un reproducer à deux connexions avec son pilote
+exact reproduit l’erreur du DSN mémoire ; un fichier temporaire partagé entre
+connexions passe. Le probe configure désormais une base de résultats sur disque
+propre à chaque run. Le rejeu réel reste à effectuer ; aucune règle de consensus
+ni limite temporelle modifiée, aucun EIP clôturé.
+[Échec, reproducer et correction](qualification/assertoor-result-database-20260927/README.md).
+
+## 2026-09-27 — Bilan initial de la régression consensus
+
+Sur les binaires `af7f99e`, **185/188 tests sélectionnés passent, 3 échouent,
+aucun n’est ignoré**. Les deux partitions Bellatrix échouent avant la reprise
+de finalité ; Assertoor finalité échoue avec une table de résultats absente.
+Les correctifs de banc d’essai sont préparés séparément et attendent leurs
+rejeux réels. La reprise après crash avec stabilité prolongée passe (325,44 s).
+Les 201 autres tests CTest sont hors de cette campagne ; aucun statut EIP ou
+production n’est clôturé. [Bilan, empreintes et résultats complets](qualification/consensus-regression-20260927/README.md).
+
+## 2026-09-27 — Rejeu de partition Bellatrix après correction du banc
+
+Le scénario simple corrigé passe : coupure demandée de 96 s, finalité commune
+d’époque 6 retrouvée en 95 s, mêmes racines Beacon et bloc d’exécution sur les
+deux nœuds. Les binaires Nano/P2P sont inchangés ; seul le drainage des sorties
+du scénario est corrigé. Les seuils et délais restent identiques. La variante
+prolongée et le rejeu Assertoor sont encore attendus ; aucune clôture EIP ou
+production. [Rejeu et contre-exemples conservés](qualification/bellatrix-partition-trace-drain-20260927/README.md).
+
+## 2026-09-27 — Rejeu Assertoor après correction de sa base
+
+Le contrôle réel de finalité passe en 198,32 s : quatre tâches Assertoor
+réussies, finalité commune d’époque 2 et même bloc d’exécution sur les deux
+nœuds, vérifiés indépendamment du cache Assertoor. Plus d’erreur de table SQL
+absente dans ce rejeu. Les binaires Nano/P2P et les délais restent inchangés.
+Ce résultat local couvre ce défaut du banc ; il ne clôture aucune EIP ni la
+production. [Échec initial et rejeu complet](qualification/assertoor-result-database-20260927/README.md).
+
+## 2026-09-27 — Trois échecs initiaux couverts par leurs rejeux
+
+La partition prolongée corrigée passe (565,85 s) : reprise commune d’époque 7
+en 144 s après reconnexion, puis trois avancées communes jusqu’à l’époque 10
+en 144,552 s. Avec la partition simple et Assertoor déjà rejoués, les trois
+échecs initiaux ont chacun une preuve corrigée réussie. La campagne initiale
+reste 185/188 ; ne pas présenter l’ensemble comme un unique run 188/188. Aucun
+code de consensus ni seuil assoupli, aucune nouvelle clôture EIP/production.
+[Campagne et rejeux séparés](qualification/consensus-regression-20260927/README.md).

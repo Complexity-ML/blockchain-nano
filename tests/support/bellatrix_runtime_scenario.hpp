@@ -320,7 +320,12 @@ inline void bellatrix_managed_runtime_scenario(const nano::Json& genesis,
   check(divergent&&quantity(latest(resumed_port).at("number"))>quantity(a_start.at("number"))&&quantity(latest(observer_port).at("number"))>quantity(b_start.at("number")),"partition did not exercise competing live branches");
   paused.resume();std::cout<<Json{{"event","partition-healed"}}.dump()<<std::endl;
   const auto recovery_start=std::chrono::steady_clock::now();unsigned recovery_report=0;
-  until([&]{const auto a=finalized(resumed_port),b=finalized(observer_port);const auto elapsed=std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now()-recovery_start).count();
+  until([&]{
+   // Drain before testing finality: the short-circuit below deliberately skips
+   // latest() while finality is unchanged. Without this, trace pipes fill and
+   // stall the peers whose recovery we are trying to observe.
+   source->pump(0);observer->pump(0);
+   const auto a=finalized(resumed_port),b=finalized(observer_port);const auto elapsed=std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now()-recovery_start).count();
    if(uint64_t(elapsed)/epoch_seconds>=recovery_report){++recovery_report;std::cout<<Json{{"event","recovery-progress"},{"elapsedSeconds",elapsed},{"aFinalized",a.at("number")},{"bFinalized",b.at("number")}}.dump()<<std::endl;}
    if(!(quantity(a.at("number"))>quantity(initial_finalized.at("number"))&&a.at("hash")==b.at("hash")&&latest(resumed_port).at("hash")==latest(observer_port).at("hash")))return false;
    // The Store can pull up finality before it appears in the head's post-state.
