@@ -1,0 +1,26 @@
+Test project /Users/boris/Dev/blockchain-nano/build-release
+    Start 338: consensus_bellatrix_beacon_reads
+1/4 Test #338: consensus_bellatrix_beacon_reads .......***Failed    0.60 sec
+bind: Operation not permitted [system:1 at /opt/homebrew/include/boost/asio/detail/reactive_socket_service.hpp:162:33 in function 'boost::system::error_code boost::asio::detail::reactive_socket_service<boost::asio::ip::tcp>::bind(implementation_type &, const endpoint_type &, boost::system::error_code &) [Protocol = boost::asio::ip::tcp]']
+
+    Start 339: consensus_bellatrix_beacon_headers
+2/4 Test #339: consensus_bellatrix_beacon_headers .....   Passed    0.42 sec
+    Start 361: consensus_capella_configured_runtime
+3/4 Test #361: consensus_capella_configured_runtime ...   Passed   21.46 sec
+    Start 362: consensus_capella_beacon_reads
+4/4 Test #362: consensus_capella_beacon_reads .........***Failed    0.55 sec
+Beacon BLS change projection differs
+
+
+50% tests passed, 2 tests failed out of 4
+
+Label Time Summary:
+qualification_consensus_api        =   1.02 sec*proc (2 tests)
+qualification_consensus_runtime    =  22.01 sec*proc (2 tests)
+
+Total Test time (real) =  23.04 sec
+
+The following tests FAILED:
+	338 - consensus_bellatrix_beacon_reads (Failed)         qualification_consensus_api
+	362 - consensus_capella_beacon_reads (Failed)           qualification_consensus_runtime
+Errors while running CTest

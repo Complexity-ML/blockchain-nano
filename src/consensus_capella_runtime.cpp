@@ -108,7 +108,7 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const 
   owner->validator->start(std::chrono::milliseconds(poll));
  }
  owner->clock->start(std::chrono::milliseconds(interval));
- return {owner->validator?std::shared_ptr<CapellaValidatorLoop>(owner,owner->validator.get()):nullptr,std::shared_ptr<CapellaDurableReactor>(owner,owner->reactor.get()),std::shared_ptr<CapellaLocalClock>(owner,owner->clock.get())};
+ return {owner->validator?std::shared_ptr<CapellaValidatorLoop>(owner,owner->validator.get()):nullptr,std::shared_ptr<CapellaDurableReactor>(owner,owner->reactor.get()),std::shared_ptr<CapellaLocalClock>(owner,owner->clock.get()),[owner](std::string_view path,const std::function<void()>& check){if(!owner->clock->healthy())throw std::runtime_error("Capella clock unavailable");return owner->reactor->beacon_read(path,check);}};
 }
 Json stop_capella_runtime(CapellaRuntime& runtime){
  if(!runtime.reactor||!runtime.clock)throw std::invalid_argument("Missing Capella runtime");

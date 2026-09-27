@@ -16,6 +16,7 @@
 #include "nano/consensus_proposer.hpp"
 #include "blst.h"
 #include "../src/consensus_capella_projection.hpp"
+#include "../src/beacon_block_json.hpp"
 #include "../src/consensus_bellatrix_projection.hpp"
 using namespace test;using namespace test::phase0_minimal;
 namespace {
@@ -37,6 +38,8 @@ static bool owner_sync=false;
 static bool owner_witness=false;
 static bool scheduled=false;
 static bool configured_runtime=false;
+static bool beacon_reads=false;
+static size_t beacon_read_checks=0;
 #ifdef NANO_SYNC_FAULT
 extern "C" void nano_test_arm_sync_fault(const char*);
 extern "C" unsigned nano_test_sync_failures();
@@ -140,11 +143,12 @@ static void scheduler_loop(const CapellaForkStore& initial,const CapellaForkBloc
   }
  }
  const auto current=reactor->current();check(current.state->timed.view.finalized.epoch>=3&&owner->state().get(sender).nonce==41,"scheduled chain did not finalize all transactions");
+ const auto finalized_header=reactor->beacon_read("/eth/v1/beacon/headers/finalized");const auto finalized_root=current.state->timed.view.finalized.root;check(finalized_header.status==200&&finalized_header.body.at("finalized")==true&&finalized_header.body.at("data").at("root")==hex(Bytes(finalized_root.begin(),finalized_root.end())),"scheduled finalized Beacon header mismatch");
  proposals+=loop->status().at("proposalsAdmitted").get<uint64_t>();votes+=loop->status().at("attestationsAdmitted").get<uint64_t>();check(proposals==40&&votes>0,"scheduler duty counters");
  bool cancelled=false;try{loop->poll([]{throw ExecutionCancelled("scheduler cancellation");});}catch(const ExecutionCancelled&){cancelled=true;}check(cancelled&&loop->status().at("healthy")==true&&clock->healthy(),"cancellation poisoned scheduler");
  // Exercise the real worker lifecycle with a stable clock and already completed duties.
  const auto prior=signatures;const auto polls_before=loop->status().at("timing").at("polls").get<uint64_t>();loop->start(std::chrono::milliseconds(1));std::this_thread::sleep_for(std::chrono::milliseconds(20));loop->stop();check(signatures==prior&&loop->status().at("healthy")==true&&loop->status().at("timing").at("polls").get<uint64_t>()>polls_before,"worker failed to poll or duplicated completed duty");
- now-=1;bool rejected=false;try{clock->poll();}catch(const std::runtime_error&){rejected=true;}check(rejected&&!clock->healthy(),"backward clock accepted");bool closed=false;try{owner->tip();}catch(const std::runtime_error&){closed=true;}check(closed,"clock failure left execution readable");
+ now-=1;bool rejected=false;try{clock->poll();}catch(const std::runtime_error&){rejected=true;}check(rejected&&!clock->healthy(),"backward clock accepted");bool closed=false;try{owner->tip();}catch(const std::runtime_error&){closed=true;}check(closed,"clock failure left execution readable");bool beacon_closed=false;try{reactor->beacon_read("/eth/v1/beacon/headers/head");}catch(const std::runtime_error&){beacon_closed=true;}check(beacon_closed,"clock failure left Beacon readable");
  std::cout<<Json{{"scenario","capella-scheduled-finality"},{"blocks",proposals},{"votes",votes},{"finalizedEpoch",current.state->timed.view.finalized.epoch},{"witnessRestart",true},{"signingJournalsReopened",64},{"duplicatePollNoSignature",true},{"backwardsClockClosedOwner",true},{"networkTransport",false}}.dump()<<std::endl;
 }
 static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules,const Block& genesis,const State& genesis_state){
@@ -162,11 +166,24 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
  config["initial"]=nullptr;auto runtime=start_capella_runtime(*owner,config,{},wall);check(bool(runtime.validator)&&runtime.clock->healthy(),"configured runtime unavailable");
  const auto secret=bytes(Int(777),32);Transaction tx;tx.type=2;tx.to="0x0000000000000000000000000000000000001234";tx.gas=100000;tx.max_fee=2000000000;tx.priority_fee=100000000;const auto sender=SignedTransaction::sign(tx,secret).sender();uint64_t proposals=0;
  for(uint64_t slot=2;slot<=2*slots+1;++slot){
-  tx.nonce=owner->state().get(sender).nonce;check(owner->submit(SignedTransaction::sign(tx,secret)),"runtime transaction refused");now=initial.timed.clock.genesis_time_ms+slot*rules.slot_duration_ms;runtime.validator->poll();check(owner->state().get(sender).nonce==Int(std::to_string(slot)),"runtime block failed to execute");now=now.load()+rules.attestation_due_ms;runtime.validator->poll();
+  tx.nonce=owner->state().get(sender).nonce;check(owner->submit(SignedTransaction::sign(tx,secret)),"runtime transaction refused");now=initial.timed.clock.genesis_time_ms+slot*rules.slot_duration_ms;runtime.validator->poll();check(owner->state().get(sender).nonce==Int(std::to_string(slot)),"runtime block failed to execute");check(runtime.beacon_read("/eth/v2/beacon/blocks/head",{}).body.at("data").at("message").at("body").at("execution_payload").at("block_hash")==hex(owner->tip().header.hash()),"runtime Beacon handler diverged");now=now.load()+rules.attestation_due_ms;runtime.validator->poll();
   if(slot==slots+1){const auto receipt=stop_capella_runtime(runtime);check(receipt.at("clockHealthy")==true&&receipt.at("validatorKeys").size()==64,"runtime stop receipt incomplete");proposals+=receipt.at("validator").at("proposalsAdmitted").get<uint64_t>();runtime={};owner.reset();owner=std::make_unique<Blockchain>(directory/"owner",g);runtime=start_capella_runtime(*owner,config,{},wall);}
  }
  const auto final=stop_capella_runtime(runtime);proposals+=final.at("validator").at("proposalsAdmitted").get<uint64_t>();check(proposals==2*slots&&final.at("clockHealthy")==true,"runtime proposal total differs");runtime={};closed=false;try{owner->tip();}catch(const std::runtime_error&){closed=true;}check(closed,"released runtime left execution readable");
  std::cout<<Json{{"scenario","capella-configured-runtime"},{"blocks",proposals},{"keysLoaded",64},{"witnessRestart",true},{"signerWitnessRestart",true},{"invalidConfigurationsRejected",4},{"workersStopped",true},{"networkTransport",false}}.dump()<<std::endl;
+}
+static void verify_beacon_reads(CapellaDurableReactor& reactor,const CapellaForkBlockRules& rules){
+ const auto snapshot=reactor.current();const auto& head=capella_fork_head(*snapshot.state,rules);const auto id=consensus_beacon_header_root(head.header);auto text=[](const ConsensusRoot& r){return hex(Bytes(r.begin(),r.end()));};
+ const auto header=reactor.beacon_read("/eth/v1/beacon/headers/head");check(header.status==200&&header.body.at("data").at("root")==text(id)&&header.body.at("data").at("canonical")==true,"Capella Beacon head header differs");
+ check(reactor.beacon_read("/eth/v1/beacon/headers/"+std::to_string(head.header.slot)).body==header.body&&reactor.beacon_read("/eth/v1/beacon/headers/"+text(id)).body==header.body,"Capella Beacon header selectors differ");
+ const auto full=reactor.beacon_read("/eth/v2/beacon/blocks/head");check(full.status==200&&full.version=="capella"&&full.body.at("version")=="capella"&&full.ssz==*reactor.signed_block(id),"Capella Beacon signed bytes differ");const auto& body=full.body.at("data").at("message").at("body");const auto& payload=body.at("execution_payload");
+ check(payload.at("block_hash")==hex(head.execution_block.header.hash())&&payload.at("state_root")==hex(head.execution_state.root())&&payload.at("transactions").size()==head.execution_block.transactions.size(),"Capella Beacon execution projection differs");
+ const auto& withdrawals=payload.at("withdrawals");check(withdrawals.size()==head.execution_block.withdrawals.size(),"Beacon withdrawal count differs");for(size_t i=0;i<withdrawals.size();++i){const auto& expected=head.execution_block.withdrawals[i];check(withdrawals[i].at("index")==quantity(expected.at("index")).get_str()&&withdrawals[i].at("validator_index")==quantity(expected.at("validatorIndex")).get_str()&&withdrawals[i].at("amount")==quantity(expected.at("amount")).get_str()&&withdrawals[i].at("address")==expected.at("address"),"Beacon withdrawal fields differ");}
+ check(reactor.beacon_read("/eth/v1/beacon/states/head/root").body.at("data").at("root")==text(head.header.state_root),"Beacon state root differs");
+ const auto checkpoints=capella_fork_checkpoints(head.state,{rules.transition.consensus.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},rules.transition.consensus.state);const auto finality=reactor.beacon_read("/eth/v1/beacon/states/head/finality_checkpoints");check(finality.body.at("data").at("finalized").at("epoch")==std::to_string(checkpoints.realized.finalized.epoch)&&finality.body.at("data").at("finalized").at("root")==text(checkpoints.realized.finalized.root),"Beacon finalized state checkpoint differs");
+ const auto spec=reactor.beacon_read("/eth/v1/config/spec");check(spec.body.at("data").at("MAX_WITHDRAWALS_PER_PAYLOAD")==std::to_string(rules.transition.withdrawals.maximum_per_payload),"Beacon Capella spec differs");
+ check(reactor.beacon_read("/eth/v1/beacon/headers/0x12").status==400&&reactor.beacon_read("/eth/v1/beacon/headers/genesis").status==404&&reactor.beacon_read("/eth/v1/node/syncing").status==404,"Beacon unsupported selector behavior");
+ bool cancelled=false;try{reactor.beacon_read("/eth/v2/beacon/blocks/head",[]{throw ExecutionCancelled("Beacon read cancelled");});}catch(const ExecutionCancelled&){cancelled=true;}check(cancelled&&reactor.current().token==snapshot.token,"Beacon read cancellation changed checkpoint");++beacon_read_checks;
 }
 static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigned participation=100){
  const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-bellatrix-containers-official",source=fixtures/"consensus-capella-slots-official";
@@ -289,6 +306,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
   }
   if(slot==first_slot+1){sync_wire=wire;sync_time=(genesis_time+slot*seconds)*1000;}size_t calls=0;const auto received=receive(wire,[&]{++calls;});
   check(received&&received->consensus==built->post.consensus&&received->execution.state.root()==expected.root(),"signed Capella transition differs");check(received->execution.receipts[0].success&&received->execution.state.get_storage(target,0)==42,"Shanghai write missing");
+  if(beacon_reads&&slot==first_slot){const auto rendered=beacon_block_json(wire,store_rules,{}).at("message").at("body").at("bls_to_execution_changes");check(rendered.size()==1&&rendered[0].at("message").at("validator_index")=="0"&&rendered[0].at("message").at("from_bls_pubkey")==hex(Bytes(change.from_bls_pubkey.begin(),change.from_bls_pubkey.end()))&&rendered[0].at("message").at("to_execution_address")==hex(Bytes(change.to_execution_address.begin(),change.to_execution_address.end()))&&rendered[0].at("signature")==hex(Bytes(change.signature.begin(),change.signature.end())),"Beacon anchor BLS change projection differs");}
   auto deny=[&](const Bytes& b){bool refused=false;try{refused=!receive(b);}catch(const std::invalid_argument&){refused=true;}check(refused&&beacon==original&&state.root()==evm_before,"bad block mutated parent");++rejected;};
   if(crossing){
    auto rejected_context=[&](ConsensusRoot root,CapellaForkSchedule fork,uint64_t budget){bool refused=false;
@@ -349,7 +367,8 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
    check(reactor->block(wire),"durable Capella block rejected");check(capella_store_snapshot(*reactor->current().state,store_rules,snapshot_limits)==capella_store_snapshot(*admitted_store,store_rules,snapshot_limits),"durable Store differs");
    const auto accepted_token=reactor->current().token;check(reactor->block(wire)&&reactor->current().token==accepted_token,"duplicate block rewrote checkpoint");
    const auto admitted_id=consensus_beacon_header_root(admitted);signed_wires.emplace(admitted_id,wire);
-   check(reactor->signed_block(admitted_id)==std::optional<Bytes>(wire),"Capella signed archive differs");
+   check(reactor->signed_block(admitted_id)==std::optional<Bytes>(wire),"Capella signed archive differs");if(beacon_reads){verify_beacon_reads(*reactor,store_rules);const auto rendered=reactor->beacon_read("/eth/v2/beacon/blocks/head").body.at("data").at("message").at("body").at("bls_to_execution_changes");check(rendered.empty(),"Beacon repeated anchor BLS change");}
+
    check(reactor->block(bad_signature)&&reactor->current().token==accepted_token&&reactor->signed_block(admitted_id)==std::optional<Bytes>(wire),"duplicate signature replaced archive");
    store=*admitted_store;
    if(!finality&&slot==first_slot+slots){
@@ -385,7 +404,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
      Phase0SignedAttestation vote{{slot,committee_index,head,{},target_checkpoint},std::vector<bool>(members.size()),{}};vote.aggregation_bits[position]=true;Key voter(members[position]);
      vote.signature=voter.sign(consensus_signing_root(consensus_attestation_root(vote.data),consensus_domain({1,0,0,0},context.target.fork.current_version,context.target.genesis_root)));
      auto invalid=vote;invalid.signature[0]^=1;check(!prepare_capella_store_vote(voting,invalid,store_rules,64,100000),"invalid Capella vote signature accepted");
-     const auto next=prepare_capella_store_vote(voting,vote,store_rules,64,100000);check(next.has_value(),"Capella branch vote rejected");voting=*next;check(reactor->vote(vote)&&capella_store_snapshot(*reactor->current().state,store_rules,snapshot_limits)==capella_store_snapshot(voting,store_rules,snapshot_limits),"durable Capella vote differs");if(bound){check(bound->vote(vote),"bound branch vote refused");verify_owner(voting);}++votes;return std::pair{members[position],vote};
+     const auto next=prepare_capella_store_vote(voting,vote,store_rules,64,100000);check(next.has_value(),"Capella branch vote rejected");voting=*next;check(reactor->vote(vote)&&capella_store_snapshot(*reactor->current().state,store_rules,snapshot_limits)==capella_store_snapshot(voting,store_rules,snapshot_limits),"durable Capella vote differs");if(bound){check(bound->vote(vote),"bound branch vote refused");verify_owner(voting);}if(beacon_reads){verify_beacon_reads(*reactor,store_rules);const auto selected=consensus_beacon_header_root(capella_fork_head(voting,store_rules).header);for(const auto& id:{canonical,alternate_root}){const auto response=reactor->beacon_read("/eth/v1/beacon/headers/"+hex(Bytes(id.begin(),id.end())));check(response.status==200&&response.body.at("data").at("canonical")==Json(id==selected)&&response.body.at("finalized")==false,"Beacon sibling canonical/finalized flag differs");}}++votes;return std::pair{members[position],vote};
     };
     const auto first_vote=vote_for(0,canonical);check(capella_fork_head(voting,store_rules).execution_state.root()==expected.root(),"canonical vote head mismatch");
     vote_for(1,alternate_root);vote_for(2,alternate_root);check(capella_fork_head(voting,store_rules).execution_state.root()==alternate_state.root(),"votes did not select alternate EVM state");++vote_reorgs;
@@ -564,9 +583,9 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
   for(const auto& [height,b]:ordered){const bool canonical=height<=latest->header.number;check(bool(disk.block_by_number(height))==canonical,"stale block after crash reorg");for(const auto& tx:b.block.transactions)check(bool(disk.receipt(tx.hash()))==canonical&&bool(disk.transaction(tx.hash()))==canonical,"stale transaction after crash reorg");}
   token=record->token;
  }
- std::cout<<Json{{"scenario","capella-signed-transition"},{"migrated",migrate},{"finalityScenario",finality},{"participationPercent",participation},{"finalizedEpoch",store->timed.view.finalized.epoch},{"includedAttestations",included_attestations},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"storeBlocks",store->blocks.size()},{"snapshotReopened",true},{"durableReactor",true},{"signedArchives",signed_wires.size()},{"signedVotes",durable_votes.size()},{"signedSlashings",durable_proofs.size()},{"deferredVotes",deferred_votes.size()},{"localAttestations",local_signatures},{"localProposals",local_proposals},{"localRandao",local_randao},{"assembledBodies",assembled_bodies},{"storeSigkillReopens",2},{"storeVotes",votes},{"voteReorgs",vote_reorgs},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
+ std::cout<<Json{{"beaconReadChecks",beacon_read_checks},{"scenario","capella-signed-transition"},{"migrated",migrate},{"finalityScenario",finality},{"participationPercent",participation},{"finalizedEpoch",store->timed.view.finalized.epoch},{"includedAttestations",included_attestations},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"storeBlocks",store->blocks.size()},{"snapshotReopened",true},{"durableReactor",true},{"signedArchives",signed_wires.size()},{"signedVotes",durable_votes.size()},{"signedSlashings",durable_proofs.size()},{"deferredVotes",deferred_votes.size()},{"localAttestations",local_signatures},{"localProposals",local_proposals},{"localRandao",local_randao},{"assembledBodies",assembled_bodies},{"storeSigkillReopens",2},{"storeVotes",votes},{"voteReorgs",vote_reorgs},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
 }
-int main(int argc,char** argv){try{executable=argv[0];if(argc==2&&std::string(argv[1])=="--configured-runtime"){configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler"){scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-reorg"){owner_reorg=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}
+int main(int argc,char** argv){try{executable=argv[0];if(argc==2&&std::string(argv[1])=="--beacon-reads"){beacon_reads=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--configured-runtime"){configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler"){scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-reorg"){owner_reorg=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}
 #ifdef NANO_SYNC_FAULT
 if(argc==3&&std::string(argv[1])=="--sync-writer")return sync_writer(argv[2]);
 if(argc==2&&std::string(argv[1])=="--owner-witness"){owner_witness=true;owner_sync=true;sync_scenario=true;scenario(false);return 0;}

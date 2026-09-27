@@ -1,0 +1,71 @@
+Start testing: Sep 27 05:00 CEST
+----------------------------------------------------------
+338/362 Testing: consensus_bellatrix_beacon_reads
+338/362 Test: consensus_bellatrix_beacon_reads
+Command: "/Users/boris/Dev/blockchain-nano/build-release/nano-bellatrix-transition-tests" "--beacon-api"
+Directory: /Users/boris/Dev/blockchain-nano/build-release
+"consensus_bellatrix_beacon_reads" start time: Sep 27 05:00 CEST
+Output:
+----------------------------------------------------------
+bind: Operation not permitted [system:1 at /opt/homebrew/include/boost/asio/detail/reactive_socket_service.hpp:162:33 in function 'boost::system::error_code boost::asio::detail::reactive_socket_service<boost::asio::ip::tcp>::bind(implementation_type &, const endpoint_type &, boost::system::error_code &) [Protocol = boost::asio::ip::tcp]']
+<end of output>
+Test time =   0.60 sec
+----------------------------------------------------------
+Test Failed.
+"consensus_bellatrix_beacon_reads" end time: Sep 27 05:00 CEST
+"consensus_bellatrix_beacon_reads" time elapsed: 00:00:00
+----------------------------------------------------------
+
+339/362 Testing: consensus_bellatrix_beacon_headers
+339/362 Test: consensus_bellatrix_beacon_headers
+Command: "/Users/boris/Dev/blockchain-nano/build-release/nano-bellatrix-transition-tests" "--beacon-headers"
+Directory: /Users/boris/Dev/blockchain-nano/build-release
+"consensus_bellatrix_beacon_headers" start time: Sep 27 05:00 CEST
+Output:
+----------------------------------------------------------
+{"anchorWithoutSignature":404,"assertoorQualified":false,"corruptBodyRejected":true,"corruptSignatureRejected":true,"signedHeaderSelectors":["head","root","slot"]}
+<end of output>
+Test time =   0.42 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_beacon_headers" end time: Sep 27 05:00 CEST
+"consensus_bellatrix_beacon_headers" time elapsed: 00:00:00
+----------------------------------------------------------
+
+361/362 Testing: consensus_capella_configured_runtime
+361/362 Test: consensus_capella_configured_runtime
+Command: "/Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests" "--configured-runtime"
+Directory: /Users/boris/Dev/blockchain-nano/build-release
+"consensus_capella_configured_runtime" start time: Sep 27 05:00 CEST
+Output:
+----------------------------------------------------------
+{"blocks":16,"invalidConfigurationsRejected":4,"keysLoaded":64,"networkTransport":false,"scenario":"capella-configured-runtime","signerWitnessRestart":true,"witnessRestart":true,"workersStopped":true}
+<end of output>
+Test time =  21.46 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_configured_runtime" end time: Sep 27 05:00 CEST
+"consensus_capella_configured_runtime" time elapsed: 00:00:21
+----------------------------------------------------------
+
+362/362 Testing: consensus_capella_beacon_reads
+362/362 Test: consensus_capella_beacon_reads
+Command: "/Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests" "--beacon-reads"
+Directory: /Users/boris/Dev/blockchain-nano/build-release
+"consensus_capella_beacon_reads" start time: Sep 27 05:00 CEST
+Output:
+----------------------------------------------------------
+Beacon BLS change projection differs
+<end of output>
+Test time =   0.55 sec
+----------------------------------------------------------
+Test Failed.
+"consensus_capella_beacon_reads" end time: Sep 27 05:00 CEST
+"consensus_capella_beacon_reads" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Sep 27 05:00 CEST
+
+qualification_consensus_api =   1.02 sec*proc
+
+qualification_consensus_runtime =  22.01 sec*proc

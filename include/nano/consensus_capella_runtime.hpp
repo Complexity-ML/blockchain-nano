@@ -1,5 +1,6 @@
 #pragma once
 #include "nano/chain.hpp"
+#include "nano/beacon_api.hpp"
 #include "nano/consensus_capella_validator.hpp"
 namespace nano {
 // Shared lifetime: workers stop before coordinator, journals and witness close.
@@ -8,6 +9,7 @@ struct CapellaRuntime {
  std::shared_ptr<CapellaValidatorLoop> validator;
  std::shared_ptr<CapellaDurableReactor> reactor;
  std::shared_ptr<CapellaLocalClock> clock;
+ BeaconReadHandler beacon_read;
 };
 // Locally authenticated profile + initial snapshot, exact restart token, or
 // explicitly trusted recovery witness. This does not register P2P/HTTP/CLI.

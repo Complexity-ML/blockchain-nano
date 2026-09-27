@@ -4,6 +4,7 @@
 #include "nano/consensus_beacon_signer.hpp"
 namespace nano {
 class Blockchain;
+struct BeaconReadResponse;
 class StaleCapellaDuty : public std::invalid_argument {public: using std::invalid_argument::invalid_argument;};
 class ExpiredCapellaDuty : public std::runtime_error {public: using std::runtime_error::runtime_error;};
 using CapellaSignedVotes=std::map<Bytes,Bytes>;
@@ -51,6 +52,7 @@ public:
  std::optional<Phase0SignedAttestation> attest_current(uint64_t,uint64_t,const std::function<uint64_t()>&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={});
  std::optional<Bytes> propose_current(uint64_t,uint64_t,const std::string&,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<uint64_t()>&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={});
  CapellaPublishedStore current()const;
+ BeaconReadResponse beacon_read(std::string_view,const std::function<void()>& checkpoint={})const;
  // Caller supplies identity and an independent clock, never unsigned vote data.
  // Signature reservations live in a separate durable journal and survive expiry.
  std::optional<Phase0SignedAttestation> sign_attestation(uint64_t validator_index,

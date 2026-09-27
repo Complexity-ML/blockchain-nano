@@ -2286,3 +2286,16 @@ consensus et des signataires. Quatre configurations invalides refusées.
 réussi en 21,43 s. Aucun changement Bellatrix ni répétition des suites inchangées.
 Cette factory C++ ne constitue pas encore le branchement CLI : dispatch CLI,
 services RPC/Beacon, transport P2P et migration inter-forks restent ouverts.
+
+### Capella : lectures Beacon authentifiées
+
+Projection des états root/fork/finalité, genesis et paramètres ; en-têtes et blocs
+signés JSON/SSZ par tête, finalité, slot ou racine, avec retraits et changements BLS.
+Lecture Store/archive sous le même verrou ; blocs non archivés explicitement absents.
+Quatorze lots de contrôles sur neuf blocs et six votes/deux réorganisations ;
+indicateurs canonical/finalized des branches vérifiés. Handler du runtime vérifié
+sur seize blocs/reprise et en-tête finalisé contrôlé après la boucle de quarante blocs.
+[Preuves et corrections des essais initiaux](qualification/capella-beacon-reads-20260927/README.md).
+Cinq suites distinctes réussies, dont les régressions Beacon Bellatrix.
+La lecture Capella est raccordée au runtime C++ ; serveur HTTP/dispatch CLI,
+worker d’admission privé, observations de pairs, P2P et migration inter-forks restent ouverts.
