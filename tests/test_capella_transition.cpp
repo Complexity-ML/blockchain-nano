@@ -480,8 +480,11 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
       if(transport_outage_cli){
        // Suspend only the child daemons: validator duties, clocks and stores remain live.
        // This qualifies a transport-process outage, not packet loss with running daemons.
-       until([&]{a.pump(0);b.pump(0);const auto ha=head(ap),hb=head(bp);return slot_of(ha)>=slots+2&&slot_of(hb)>=slots+2&&ha.at("root")==hb.at("root");},"distributed peers reached outage start",2*slots*t.seconds_per_slot);
+       const uint64_t rotation_boundary=2*sync_period*slots;
+       const uint64_t outage_start=distributed_sync_rotation?rotation_boundary-slots:slots+2;
+       until([&]{a.pump(0);b.pump(0);const auto ha=head(ap),hb=head(bp);return slot_of(ha)>=outage_start&&slot_of(hb)>=outage_start&&ha.at("root")==hb.at("root");},"distributed peers reached outage start",(distributed_sync_rotation?outage_start+2*slots:2*slots)*t.seconds_per_slot);
        transport.pause();const auto before_a=head(ap),before_b=head(bp);const auto cutoff=std::max(slot_of(before_a),slot_of(before_b))/slots;
+       if(distributed_sync_rotation)check(slot_of(before_a)<rotation_boundary&&slot_of(before_b)<rotation_boundary,"outage started after target rotation");
        std::cout<<Json{{"event","capella-transport-outage-start"},{"leftHead",before_a},{"rightHead",before_b},{"maximumFinalizedEpochDuringOutage",cutoff},{"durationSeconds",96}}.dump()<<std::endl;
        const auto end=std::chrono::steady_clock::now()+std::chrono::seconds(96);
        while(std::chrono::steady_clock::now()<end){a.pump(0);b.pump(0);check(a.running()&&b.running(),"validator exited during transport outage");
@@ -489,7 +492,9 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
         std::this_thread::sleep_for(std::chrono::seconds(1));
        }
        const auto after_a=head(ap),after_b=head(bp);check(slot_of(after_a)>slot_of(before_a)&&slot_of(after_b)>slot_of(before_b),"isolated validators did not continue proposing");check(after_a.at("root")!=after_b.at("root"),"outage did not produce distinct branches");
-       sync_after_slot=std::max(slot_of(after_a),slot_of(after_b))+1;minimum_finalized=std::max(slot_of(after_a),slot_of(after_b))/slots;transport.resume();
+       if(distributed_sync_rotation)check(slot_of(after_a)>=rotation_boundary&&slot_of(after_b)>=rotation_boundary,"isolated branches did not cross target rotation");
+       sync_after_slot=std::max(slot_of(after_a),slot_of(after_b))+1;
+       minimum_finalized=std::max(slot_of(after_a),slot_of(after_b))/slots+(distributed_sync_rotation?1:0);transport.resume();
        std::cout<<Json{{"event","capella-transport-resumed"},{"leftHead",after_a},{"rightHead",after_b},{"minimumRecoveredFinalizedEpoch",minimum_finalized},{"syncInclusionMustExceedSlot",sync_after_slot}}.dump()<<std::endl;
       }
       const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(distributed_sync_rotation?(2*sync_period+4)*slots*t.seconds_per_slot+120:transport_outage_cli?240:210);while(std::chrono::steady_clock::now()<deadline){a.pump(0);b.pump(0);check(a.running()&&b.running(),"distributed validator process exited");const auto fa=beacon(ap,"/eth/v1/beacon/states/head/finality_checkpoints").at("data").at("finalized"),fb=beacon(bp,"/eth/v1/beacon/states/head/finality_checkpoints").at("data").at("finalized");const auto ea=std::stoull(fa.at("epoch").get<std::string>()),eb=std::stoull(fb.at("epoch").get<std::string>());if(ea&&ea==eb)check(fa.at("root")==fb.at("root"),"conflicting finalized roots");
@@ -1260,6 +1265,7 @@ int main(int argc,char** argv){try{executable=argv[0];
   if(std::getenv("NANO_TEST_MANAGED_CHILD_EXIT"))return 7;for(;;)pause();
  }
  if(argc==3&&std::string(argv[1])=="--export-network"){network_export=fs::absolute(argv[2]);network_cli=true;managed_cli=true;cli_binary="export-only";configured_runtime=true;scenario(false);return 0;}
+ if(argc==4&&std::string(argv[1])=="--sync-rotation-outage-cli"){distributed_sync_rotation=true;sync_distributed_cli=true;transport_outage_cli=true;distributed_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--sync-transport-outage-cli"){sync_distributed_cli=true;transport_outage_cli=true;distributed_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--transport-outage-cli"){transport_outage_cli=true;distributed_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--sync-rotation-distributed-cli"){distributed_sync_rotation=true;sync_distributed_cli=true;distributed_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}

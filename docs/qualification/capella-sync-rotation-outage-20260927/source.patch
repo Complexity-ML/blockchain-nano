@@ -1,0 +1,18 @@
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index 5569d41..7562e61 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -483 +483,3 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
+-       until([&]{a.pump(0);b.pump(0);const auto ha=head(ap),hb=head(bp);return slot_of(ha)>=slots+2&&slot_of(hb)>=slots+2&&ha.at("root")==hb.at("root");},"distributed peers reached outage start",2*slots*t.seconds_per_slot);
++       const uint64_t rotation_boundary=2*sync_period*slots;
++       const uint64_t outage_start=distributed_sync_rotation?rotation_boundary-slots:slots+2;
++       until([&]{a.pump(0);b.pump(0);const auto ha=head(ap),hb=head(bp);return slot_of(ha)>=outage_start&&slot_of(hb)>=outage_start&&ha.at("root")==hb.at("root");},"distributed peers reached outage start",(distributed_sync_rotation?outage_start+2*slots:2*slots)*t.seconds_per_slot);
+@@ -484,0 +487 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
++       if(distributed_sync_rotation)check(slot_of(before_a)<rotation_boundary&&slot_of(before_b)<rotation_boundary,"outage started after target rotation");
+@@ -492 +495,3 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
+-       sync_after_slot=std::max(slot_of(after_a),slot_of(after_b))+1;minimum_finalized=std::max(slot_of(after_a),slot_of(after_b))/slots;transport.resume();
++       if(distributed_sync_rotation)check(slot_of(after_a)>=rotation_boundary&&slot_of(after_b)>=rotation_boundary,"isolated branches did not cross target rotation");
++       sync_after_slot=std::max(slot_of(after_a),slot_of(after_b))+1;
++       minimum_finalized=std::max(slot_of(after_a),slot_of(after_b))/slots+(distributed_sync_rotation?1:0);transport.resume();
+@@ -1262,0 +1268 @@ int main(int argc,char** argv){try{executable=argv[0];
++ if(argc==4&&std::string(argv[1])=="--sync-rotation-outage-cli"){distributed_sync_rotation=true;sync_distributed_cli=true;transport_outage_cli=true;distributed_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}

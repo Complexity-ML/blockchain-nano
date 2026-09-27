@@ -3091,3 +3091,19 @@ sync du cœur (19 racines, 10 inclusions déjà atteintes) et un ACK sync non co
 restent tracés. **Partiel** : coupure de processus transport sur un seul hôte,
 sans rotation pendant la partition ni crash disque. Aucun nouveau statut de
 conformité EVM/EIP ni validation de production. [Preuves](qualification/capella-sync-outage-recovery-20260927/README.md).
+
+
+### Rotation sync pendant une coupure — 27 septembre 2026
+
+Le mode `--sync-rotation-outage-cli` passe : deux pairs, 32 clés distinctes chacun,
+coupure des démons P2P pendant 96 s commencée avant le slot128, franchissement
+de la rotation sur deux branches isolées, puis finalité commune époque18.
+Les deux bases réouvertes donnent le même état SSZ engagé au slot144 et un comité
+explicitement différent de l'initial. Cinq blocs finalisés (140–144) ont leurs
+32 positions BLS vérifiées, dont12 ou20 distantes ; le slot139 n'a que12 positions
+et aucune distante. Reprise progressive. Zéro refus de budget observé, mais
+67 refus sync (56 racines/11 inclusions atteintes), un échec d'écriture ACK,
+deux livraisons non confirmées et six exports indisponibles restent archivés.
+**Partiel** : outage de processus sur un hôte, sans qualification WAN, pertes
+asymétriques, crash sous charge ou grande population. Aucun nouveau statut EVM
+ou production. [Preuves](qualification/capella-sync-rotation-outage-20260927/README.md).
