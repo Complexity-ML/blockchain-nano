@@ -2818,3 +2818,20 @@ réouverture des deux owners. Régression de preuve non finalisée également ve
 partiellement finalisées, réorganisation et panne au retrait restent à qualifier.
 Aucun proposer refusé observé dans ce run ; pas de qualification de ce cas.
 [Implémentation et preuves](qualification/capella-slashing-retirement-20260927/README.md).
+
+### 2026-09-27 — Consommation d’un dépôt natif après élagage
+
+Nouveau scénario `consensus_capella_deposit_consumption` : transaction de dépôt
+sur le contrat natif après élagage, réouverture, puis votes natifs jusqu’à la
+majorité de la période suivante. Deux owners doivent rester identiques ; le
+curseur ne passe de 0 à 1 qu’une fois. Le solde du validateur existant est vérifié
+exactement, dépôt et pénalités du comité de synchronisation inclus ; le rejeu ne
+change pas le checkpoint, puis les deux bases sont rouvertes.
+L’assertion initiale ignorait les pénalités de participation sync vide : échec
+conservé, correction du test sans changement des règles de consensus.
+**Partiel** : top-up d’un validateur existant, pas admission/activation d’une
+nouvelle clé, ni EIP-6110 Ethereum, bridge, WAN ou panne au commit du dépôt.
+Résultat : passé en 87,06 s ; consommation au slot 80, poursuite jusqu’au slot 89,
+pénalité exacte de 11 180 gwei, solde attendu/observé de 33 007 719 982 gwei.
+Réouverture des deux bases et rejeu idempotent vérifiés.
+[Scénario et preuves](qualification/capella-deposit-consumption-20260927/README.md).

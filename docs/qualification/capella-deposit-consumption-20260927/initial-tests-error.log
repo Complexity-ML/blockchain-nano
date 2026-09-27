@@ -1,0 +1,39 @@
+UpdateCTestConfiguration  from :/Users/boris/Dev/blockchain-nano/build-release/DartConfiguration.tcl
+Test project /Users/boris/Dev/blockchain-nano/build-release
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 382
+    Start 382: consensus_capella_deposit_consumption
+
+382: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests "--deposit-consumption"
+382: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+382: Test timeout computed to be: 300
+382: {"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+382: {"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+382: {"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+382: {"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+382: {"finalizedEpoch":3,"progressSlot":40,"signedVotes":264}
+382: {"finalizedEpoch":3,"progressSlot":41,"signedVotes":272}
+382: {"depositIndex":0,"depositProgressSlot":48,"finalizedEpoch":4}
+382: {"depositIndex":0,"depositProgressSlot":56,"finalizedEpoch":5}
+382: {"depositIndex":0,"depositProgressSlot":64,"finalizedEpoch":6}
+382: {"depositIndex":0,"depositProgressSlot":72,"finalizedEpoch":7}
+382: consumed deposit failed to top up existing validator
+1/1 Test #382: consensus_capella_deposit_consumption ...***Failed   77.43 sec
+
+0% tests passed, 1 tests failed out of 1
+
+Label Time Summary:
+qualification_consensus_runtime    =  77.43 sec*proc (1 test)
+
+Total Test time (real) =  77.44 sec
+
+The following tests FAILED:
+	382 - consensus_capella_deposit_consumption (Failed)    qualification_consensus_runtime
+Errors while running CTest
+Output from these tests are in: /Users/boris/Dev/blockchain-nano/build-release/Testing/Temporary/LastTest.log
+Use "--rerun-failed --output-on-failure" to re-run the failed cases verbosely.

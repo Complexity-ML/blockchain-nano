@@ -1635,3 +1635,6 @@ set_tests_properties(consensus_capella_pruning_slashing PROPERTIES TIMEOUT 180 L
 
 add_test(NAME consensus_capella_slashing_retirement COMMAND nano-capella-transition-tests --slashing-retirement)
 set_tests_properties(consensus_capella_slashing_retirement PROPERTIES TIMEOUT 300 LABELS "qualification_consensus_recovery")
+
+add_test(NAME consensus_capella_deposit_consumption COMMAND nano-capella-transition-tests --deposit-consumption)
+set_tests_properties(consensus_capella_deposit_consumption PROPERTIES TIMEOUT 300 LABELS "qualification_consensus_runtime")
