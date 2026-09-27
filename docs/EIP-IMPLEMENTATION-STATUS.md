@@ -2164,3 +2164,14 @@ retrouvés après réouverture ; signatures altérées et entrées dupliquées r
 Restent notamment archives sorties/slashings, file des parents inconnus,
 signature locale, notifications, intégration réseau et Store vivant inter-forks.
 Aucune activation publique ni conformité réseau complète revendiquée.
+
+### Capella : preuves de double vote durables
+
+Enveloppe locale v2 avec preuves SSZ signées et exclusion fork-choice engagées
+atomiquement. Reprise authentifiée, variantes d'un même fautif sans croissance
+de l'archive : trois preuves restaurées, dix-huit répétitions sans réécriture,
+neuf checkpoints altérés refusés. Quatre suites réussies.
+[Preuves](qualification/capella-durable-slashings-20260927/README.md).
+Ce n'est pas une sanction financière automatique. Restent inclusion locale dans
+les blocs, retrait des preuves consommées finalisées, sorties, signature locale,
+notifications, réseau et migration du Store inter-forks.
