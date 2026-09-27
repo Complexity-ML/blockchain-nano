@@ -1,5 +1,57 @@
 # Objectif : Nano C++ de niveau production
 
+## Mise à jour de l'objectif — 27 septembre 2026
+
+**Statut : actif, production non démontrée.** Le périmètre complet de l'objectif
+est conservé. La [matrice EIP](EIP-IMPLEMENTATION-STATUS.md), la
+[feuille de route validateurs](VALIDATOR-EIP-ROADMAP.md) et celle de
+[l'exécution](EVM-PRODUCTION-EIP-ROADMAP.md) restent les références de suivi.
+Une preuve ciblée ferme seulement le scénario qu'elle couvre.
+
+### Acquis récents vérifiables
+
+- Résolution automatique des validateurs par clé publique ; contrôle de la
+  paire clé/index avant signature et refus des index périmés après reorg.
+- Deux branches à dépôts inversés : réindexation 64→65, activation à l'époque
+  13, neuf attestations et finalité commune époque 20 conservée après réouverture.
+  [Preuves](qualification/capella-reindexed-activation-20260927/README.md).
+- Panne WAL au vote de bascule : état ancien ou nouveau cohérent, fermeture des
+  accès incertains et rejeu qualifiés sur macOS, Linux ARM64 et désormais sur le
+  VPS Ubuntu x86-64 (99,87 s). [Preuve VPS](qualification/vps-deposit-reorg-sync-20260927/README.md).
+- Recherche de clés dans des états SSZ de 100 000 et un million de validateurs,
+  avec cache lié à la racine authentifiée. Ces mesures ne représentent pas des
+  réseaux de cette taille. [Preuves et coût restant](qualification/capella-registration-ssz-scale-20260927/README.md).
+
+### Travail restant, dans l'ordre de priorité
+
+1. Achever le cycle des validateurs intégré : entrées, activation, sorties,
+   retraits, sanctions, réorganisations et reprise. Étendre les preuves aux
+   points d'interruption non couverts et aux témoins indépendants ; contrôler
+   les signatures et la finalité après reprise, pas seulement le redémarrage.
+2. Qualifier la finalité durable via le vrai transport entre Mac et VPS :
+   partitions asymétriques, rotation des comités, reconnexion et charge bornée.
+   Mesurer mémoire, disque, latence et coûts de registre ; traiter les limites
+   implicites sans les masquer par un plafond arbitrairement augmenté.
+3. Fermer les écarts du profil EVM/réseau retenu et de ses dépendances. Séparer
+   forks activés, runners de conformité et propositions expérimentales ; conserver
+   les preuves Ethereum/Anvil/Geth, RPC, OpenZeppelin et Uniswap. Les succès EEST
+   ciblés ne prouvent pas l'activation réseau complète de Cancun/Prague.
+4. Exécuter une qualification de version candidate cohérente, avec empreintes
+   des mêmes sources/binaires, régression pertinente, pannes et ressources,
+   sauvegarde/restauration et procédures d'exploitation. Conserver tous les
+   échecs, exclusions et limites ; aucune somme de petits runs ne vaut une
+   campagne complète non exécutée. La revue indépendante reste un point ouvert.
+5. Finaliser le lancement Base–Nano : utilité et relation du token Base avec
+   l'actif natif, couverture USDC, confiance et finalité du bridge, retraits,
+   allocation et migration de liquidité/fair launch. Qualifier le parcours
+   complet avant une ouverture de vente. Aucun référencement tiers garanti.
+
+Les travaux de bridge et de lancement restent dans l'objectif, sans fonds réels
+ni déploiement public implicites. Le budget de préparation de 200 euros n'est
+pas une autorisation de dépense. Le code, les preuves et l'historique doivent
+être préservés ; push sur main après revue et qualification autorisé.
+
+
 Décision utilisateur du 21 septembre 2026 : le portage doit corriger ce qui
 n'était pas adapté à la production dans le Python. La référence Python reste
 intacte. La parité avec ses défauts n'est plus un critère de réussite.
@@ -86,7 +138,7 @@ Des suites vertes ne suffisent pas à déclarer le réseau prêt pour la product
 Aucun déploiement public ni engagement financier n'est autorisé implicitement
 par cet objectif de développement.
 
-## Priorité immédiate
+## Priorité historique — remplacée par la mise à jour du 27 septembre
 
 Terminer la qualification d’exécution EVM à partir des fixtures Ethereum
 épinglées et de transactions signées identiques comparées à des clients de

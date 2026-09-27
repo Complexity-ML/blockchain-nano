@@ -1,0 +1,36 @@
+Internal ctest changing into directory: /build
+UpdateCTestConfiguration  from :/build/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/build/DartConfiguration.tcl
+Test project /build
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 285
+    Start 285: consensus_capella_deposit_reorg_sync
+
+285: Test command: /build/nano-capella-transition-tests "--deposit-reorg-sync"
+285: Working Directory: /build
+285: Test timeout computed to be: 180
+285: {"observerRecords":15,"scenario":"deposit-reorg-progress","slot":8}
+285: {"observerRecords":31,"scenario":"deposit-reorg-progress","slot":16}
+285: {"observerRecords":47,"scenario":"deposit-reorg-progress","slot":24}
+285: {"observerRecords":63,"scenario":"deposit-reorg-progress","slot":32}
+285: {"observerRecords":79,"scenario":"deposit-reorg-progress","slot":40}
+285: {"observerRecords":95,"scenario":"deposit-reorg-progress","slot":48}
+285: {"blockedOperations":5,"lostSuffix":false,"networkTransport":false,"physicalPowerLoss":false,"recoveredIndex":65,"replayedIndex":65,"scenario":"capella-deposit-reorg-sync"}
+285: {"blockedOperations":5,"lostSuffix":true,"networkTransport":false,"physicalPowerLoss":false,"recoveredIndex":64,"replayedIndex":65,"scenario":"capella-deposit-reorg-sync"}
+285: {"activationQualified":false,"branches":2,"depositsPerBranch":2,"indexA":[64,65],"networkTransport":false,"observerReopens":2,"providerCalls":0,"registrySize":66,"scenario":"capella-competing-deposit-reorg","selectedBranches":2,"staleIndexRefused":true}
+1/1 Test #285: consensus_capella_deposit_reorg_sync ...   Passed   99.87 sec
+
+The following tests passed:
+	consensus_capella_deposit_reorg_sync
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+qualification_storage_sync_local    =  99.87 sec*proc (1 test)
+
+Total Test time (real) =  99.88 sec

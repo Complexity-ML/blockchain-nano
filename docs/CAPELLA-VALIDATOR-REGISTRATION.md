@@ -76,7 +76,7 @@ Une erreur de synchronisation WAL au vote de bascule est qualifiée sur macOS :
 issue entièrement ancienne ou nouvelle, archives cohérentes et rejeu vérifiés.
 [Preuves](qualification/capella-deposit-reorg-sync-20260927/README.md).
 La disponibilité sous reorgs soutenues, les autres points d'interruption,
-Linux x86-64/VPS, les témoins indépendants et le transport distribué restent ouverts.
+les témoins indépendants et le transport distribué restent ouverts.
 Le rejeu de cette panne WAL passe aussi sur Linux ARM64/Docker :
 [preuves](qualification/linux-deposit-reorg-sync-20260927/README.md).
 
@@ -86,3 +86,6 @@ complet ni l’activation publique du réseau.
 [Qualification du cache et régression d’activation](qualification/capella-registration-cache-20260927/README.md) : 3/3 tests passent ; changement de racine et de clés contrôlé.
 
 [Qualification des index périmés avant signature](qualification/capella-registration-signing-guard-20260927/README.md).
+
+Le même scénario WAL passe sur le VPS Linux x86-64 en 99,87 s, en conteneur
+isolé sans transport réseau : [preuves et limites](qualification/vps-deposit-reorg-sync-20260927/README.md).

@@ -3499,3 +3499,13 @@ avec WAL conservé/perdu passe en 24,63 s : fermeture après EIO, état ancien o
 nouveau cohérent, archives et rejeu vers l'index 65 vérifiés. Aucun code du nœud
 modifié, ni nouvelle image/VPS. Linux ARM64 local seulement : x86-64/VPS,
 WAN et autres pannes restent ouverts. [Preuves](qualification/linux-deposit-reorg-sync-20260927/README.md).
+
+## 2026-09-27 — Panne WAL qualifiée sur VPS Linux x86-64
+
+Au commit `c379e7d`, le scénario de réorganisation de dépôts passe sur le VPS
+Ubuntu 24.04/Docker amd64 en **99,87 s** : cinq accès refusés après EIO,
+ancien état/index 64 si suffixe perdu, nouvel état/index 65 si WAL conservé,
+puis rejeu cohérent vers 65. Sources propres, empreintes et journaux archivés.
+Test local isolé sur le VPS, pas WAN ni panne physique ; autres points de panne,
+charge, témoins indépendants et qualification globale restent ouverts.
+[Preuves et limites](qualification/vps-deposit-reorg-sync-20260927/README.md).
