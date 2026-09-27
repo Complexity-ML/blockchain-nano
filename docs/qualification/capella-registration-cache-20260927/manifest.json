@@ -1,0 +1,34 @@
+{
+  "base_commit": "c2f1568fb37604242bdea70053c4258f9571dbe6",
+  "source_sha256": {
+    "include/nano/consensus_capella_reactor.hpp": "64e86ef0e0d94ffd55809bf83f184bc333aaa5a332dcd56da4aa04e1690f30de",
+    "src/consensus_capella_signing.cpp": "524bd6a2b89b2a984c5c9d36a802718d0a9ba18472cfc56ed25eca78ab6572da",
+    "src/consensus_capella_registration.cpp": "46c9ee4d95a7f338e1fd69d6d5841abd71921de3fb4d1a39f364d23a9d7a582d",
+    "tests/test_capella_transition.cpp": "08c2db049d7393840301f73f11df09dd83de502e0f90648b16dc19f22170cb5b"
+  },
+  "binary_sha256": {
+    "nano": "85e1444dc3338b2b8585480c390da4eb2e28844f49c8fa9ee57517441bc19644",
+    "nano-capella-transition-tests": "be9d485888d391493bbe8159db08d5cbb65a50b5c9a63a0bb1ca05af921e47bc"
+  },
+  "command": "ctest --test-dir build-release -R '^consensus_capella_(execution_owner_reorg|automatic_registration|deposit_auto_registration)$' -j 2 -V",
+  "results": [
+    {
+      "name": "consensus_capella_execution_owner_reorg",
+      "classname": "consensus_capella_execution_owner_reorg",
+      "time": "4.62606",
+      "status": "run"
+    },
+    {
+      "name": "consensus_capella_automatic_registration",
+      "classname": "consensus_capella_automatic_registration",
+      "time": "23.5519",
+      "status": "run"
+    },
+    {
+      "name": "consensus_capella_deposit_auto_registration",
+      "classname": "consensus_capella_deposit_auto_registration",
+      "time": "163.766",
+      "status": "run"
+    }
+  ]
+}

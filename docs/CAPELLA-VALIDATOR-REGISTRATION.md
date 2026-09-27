@@ -47,9 +47,16 @@ perte ou du rollback simultané du journal et de son témoin.
 La résolution authentifie directement le SSZ puis parcourt les enregistrements
 sans projeter tout le registre. Les recherches locales de quatre clés mesurées
 à 100 000 et un million d'entrées prennent respectivement 146 ms et 1,43 s,
-authentification comprise. Ce coût reste linéaire sous verrou à chaque poll ;
-les parcours à index fixe évitent cette recherche. Ce ne sont pas des mesures
+authentification comprise. Ce coût reste linéaire sous verrou sur un défaut de
+cache ; les parcours à index fixe évitent cette recherche. Ce ne sont pas des mesures
 d'un réseau de cette taille. [Preuves et limites](qualification/capella-registration-ssz-scale-20260927/README.md).
+
+Un cache interne à une seule entrée conserve le résultat pour la racine d'état
+et l'ensemble exact de clés demandées. Il n'est alimenté qu'après authentification
+complète d'une tête déjà admise ; les paramètres du reactor sont immuables.
+Une nouvelle racine ou une demande différente impose un recalcul. Le cache ne
+retient aucun snapshot, n'est pas persistant, et le contrôle d'annulation reste
+actif sur un hit. Il réduit les polls répétés, pas le coût de chaque nouvel état.
 
 Une réorganisation concurrente entre résolution et signature reste
 soumise au contrôle d’identité du reactor : une erreur peut arrêter la boucle
@@ -57,3 +64,5 @@ locale, elle ne permet pas de signer pour une autre clé.
 
 Ce mode concerne Capella natif Nano. Il ne déclare pas le cycle EIP-6110 Ethereum
 complet ni l’activation publique du réseau.
+
+[Qualification du cache et régression d’activation](qualification/capella-registration-cache-20260927/README.md) : 3/3 tests passent ; changement de racine et de clés contrôlé.

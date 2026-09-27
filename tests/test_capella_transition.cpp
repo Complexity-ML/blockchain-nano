@@ -989,7 +989,19 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
 
     Temp owner_directory;std::unique_ptr<Blockchain> execution_owner;std::unique_ptr<CapellaDurableReactor> bound;
     if(owner_reorg){Genesis g;g.chain_id=r.chain_id;g.consensus="beacon";g.evm_revision=EvmRevision::Shanghai;g.block=disk_genesis;g.state=disk_genesis_state;execution_owner=std::make_unique<Blockchain>(owner_directory/"chain",g);bound=std::make_unique<CapellaDurableReactor>(*execution_owner,store_rules,snapshot_limits,*store);}
+    std::optional<ConsensusRoot> registration_root;size_t registration_misses=0,registration_hits=0;
+    const std::set<Bytes> registration_keys{Key(0).public_key,Key(63).public_key,Key(64).public_key};
+    const std::map<Bytes,uint64_t> registration_expected{{Key(0).public_key,0},{Key(63).public_key,63}};
     auto verify_owner=[&](const CapellaForkStore& reference){if(!bound)return;const auto& h=capella_fork_head(reference,store_rules);const auto hash=execution.transactions.front().hash();const bool included=!h.execution_block.transactions.empty();
+     size_t first_checks=0,warm_checks=0;
+     check(bound->current_validator_indices(registration_keys,[&]{++first_checks;})==registration_expected,"registration lookup after branch change differs");
+     check(bound->current_validator_indices(registration_keys,[&]{++warm_checks;})==registration_expected,"cached registration differs");
+     if(!registration_root||*registration_root!=h.header.state_root){check(first_checks>warm_checks,"changed branch reused stale registry cache");++registration_misses;}
+     else check(first_checks==warm_checks,"same authenticated head missed registry cache");
+     ++registration_hits;registration_root=h.header.state_root;
+     bool cancelled_lookup=false;try{bound->current_validator_indices(registration_keys,[]{throw ExecutionCancelled("cached lookup stop");});}catch(const ExecutionCancelled&){cancelled_lookup=true;}check(cancelled_lookup,"cached lookup ignored cancellation");
+     const auto subset=bound->current_validator_indices({Key(63).public_key});check(subset==std::map<Bytes,uint64_t>{{Key(63).public_key,63}},"changed requested keys reused stale cache");
+     check(bound->current_validator_indices(registration_keys)==registration_expected,"full request after subset differs");
      check(execution_owner->tip().header.hash()==h.execution_block.header.hash()&&execution_owner->state().root()==h.execution_state.root(),"reorg owner state mismatch");
      check(bool(execution_owner->store().receipt(hash))==included&&bool(execution_owner->store().transaction(hash))==included,"reorg owner stale transaction indexes");
      check(execution_owner->pending_count()==(included?0:1)&&bool(execution_owner->pending_transaction(hash))==!included,"reorg orphan pool mismatch");
@@ -1035,6 +1047,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
     const auto proof_token=reactor->current().token;check(reactor->signed_slashings().size()==1,"missing slashing archive");
     check(reactor->slashing(proof_a,proof_b)&&reactor->slashing(proof_b,proof_a)&&reactor->current().token==proof_token,"duplicate/reversed slashing rewrote checkpoint");
     for(unsigned variant=1;variant<=4;++variant){auto alternative=proof_b;alternative.data.beacon_block_root[0]^=uint8_t(variant);alternative.signature=Key(first_vote.first).sign(consensus_signing_root(consensus_attestation_root(alternative.data),consensus_domain({1,0,0,0},version,genesis_root)));check(reactor->slashing(proof_a,alternative)&&reactor->signed_slashings().size()==1&&reactor->current().token==proof_token,"equivalent offender grew archive");}
+    if(bound){check(registration_misses>=2&&registration_hits>=3,"registration cache branch coverage missing");std::cout<<Json{{"scenario","capella-registration-cache-reorg"},{"rootMisses",registration_misses},{"warmHits",registration_hits},{"cancelledHitRejected",true},{"requestChangeChecked",true}}.dump()<<std::endl;}
     roundtrip(*branch);
     const auto duplicate=prepare_capella_received_block(*branch,wire,store_rules,64,100000);check(duplicate&&duplicate->blocks.size()==branch->blocks.size(),"duplicate changed Store cardinality");
    }

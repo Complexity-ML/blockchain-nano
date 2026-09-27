@@ -3419,3 +3419,15 @@ La régression du runtime à 65 clés configurées passe ; 2/2 tests en 29,37 s.
 Le coût linéaire sous verrou à chaque poll, les changements de branche concurrents
 et la charge distribuée restent ouverts. Aucun million de nœuds ni BLS mesuré,
 aucune clôture EIP ou production. [Preuves](qualification/capella-registration-ssz-scale-20260927/README.md).
+
+## 2026-09-27 — Cache des index lié à la tête authentifiée
+
+Cache privé à une entrée, indexé par racine SSZ et ensemble exact de clés locales,
+sous verrou du reactor. Pas de snapshot conservé ; une absence n'est mémorisée
+que pour la racine courante. Nouvelle couverture du scénario de réorganisation :
+trois recalculs de racine, sept hits, deux bascules de branche, annulation et
+changement des clés contrôlés. Runtime et dépôt/activation passent aussi :
+**3/3 en 163,77 s**, trois attestations de la nouvelle clé après activation.
+Le coût froid à chaque nouvel état, les indices divergents après dépôts concurrents
+et la charge distribuée restent ouverts. Aucun EIP/production clôturé.
+[Preuves et limites](qualification/capella-registration-cache-20260927/README.md).

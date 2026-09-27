@@ -28,6 +28,10 @@ class CapellaDurableReactor {
  ChainStore& disk_;Blockchain* execution_=nullptr;Int chain_;Bytes genesis_;CapellaForkBlockRules rules_;CapellaStoreSnapshotLimits limits_;
  std::mutex& mutex_;std::shared_ptr<const CapellaForkStore> state_;std::optional<ForkCheckpointToken> token_;
  CapellaSignedVotes votes_,slashings_;CapellaPendingBlsChanges bls_changes_;CapellaStoreSnapshotCache cache_;bool unavailable_=false;bool automatic_pruning_=false;
+ // Only populated from this reactor's immutable, admitted head under mutex_.
+ // Single-entry cache: no retained state snapshots or old-branch registry maps.
+ struct ValidatorIndexCache {ConsensusRoot root;std::set<Bytes> keys;std::map<Bytes,uint64_t> indices;};
+ std::optional<ValidatorIndexCache> validator_index_cache_;
  std::optional<Bytes> signed_block_locked(const ConsensusRoot&,const std::function<void()>&)const;
  Json network_identity_locked()const;
  struct PendingSyncAggregate {uint64_t slot;ConsensusRoot parent;size_t participants;Bytes ssz;};

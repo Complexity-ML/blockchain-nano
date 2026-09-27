@@ -1,0 +1,103 @@
+[  0%] Built target gen_base.o
+[  0%] Built target gen_bint.o
+[  0%] Built target nano_blst
+[  3%] Built target secp256k1_precomputed
+[  3%] Built target nano-test-sync-fault
+[  7%] Built target mcl_st
+[ 10%] Built target nano_ckzg
+[ 10%] Built target secp256k1
+[ 10%] Building CXX object CMakeFiles/nano_core.dir/src/beacon_api.cpp.o
+[ 14%] Building CXX object CMakeFiles/nano_core.dir/src/beacon_block_json.cpp.o
+/Users/boris/Dev/blockchain-nano/src/beacon_api.cpp:12:89: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   12 |  if(path=="/eth/v1/node/version")return {200,{{"data",{{"version","Nano/0.1.0/c++20"}}}}};
+      |                                                                                         ^
+/Users/boris/Dev/blockchain-nano/src/beacon_api.cpp:18:118: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   18 |  if(!root&&!fork&&!finality&&!genesis&&!spec)return {404,{{"code",404},{"message","Beacon endpoint not implemented"}}};
+      |                                                                                                                      ^
+/Users/boris/Dev/blockchain-nano/src/beacon_api.cpp:26:166: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   26 |  if(genesis)return {200,{{"data",{{"genesis_time",std::to_string(number(b,0))},{"genesis_validators_root",octets(b,8,32)},{"genesis_fork_version",genesis_version}}}}};
+      |                                                                                                                                                                      ^
+/Users/boris/Dev/blockchain-nano/src/beacon_api.cpp:63:70: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   63 |   if(checkpoint)checkpoint();return {200,{{"data",std::move(values)}}};
+      |                                                                      ^
+/Users/boris/Dev/blockchain-nano/src/beacon_api.cpp:77:160: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   77 |  return {200,{{"execution_optimistic",false},{"finalized",consensus_beacon_header_root(head.header)==store.timed.view.finalized.root},{"data",std::move(data)}}};
+      |                                                                                                                                                                ^
+/Users/boris/Dev/blockchain-nano/src/beacon_api.cpp:88:117: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   88 |  auto error=[](unsigned code,const char* message){return BeaconReadResponse{code,{{"code",code},{"message",message}}};};
+      |                                                                                                                     ^
+/Users/boris/Dev/blockchain-nano/src/beacon_api.cpp:132:99: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  132 |    {"header",{{"message",std::move(message)},{"signature",octets(*signed_block->second,4,96)}}}}}}};
+      |                                                                                                   ^
+[ 14%] Building CXX object CMakeFiles/nano_core.dir/src/capella_beacon_api.cpp.o
+7 warnings generated.
+[ 14%] Building CXX object CMakeFiles/nano_core.dir/src/capella_beacon_block_json.cpp.o
+/Users/boris/Dev/blockchain-nano/src/capella_beacon_api.cpp:12:89: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   12 |  if(path=="/eth/v1/node/version")return {200,{{"data",{{"version","Nano/0.1.0/c++20"}}}}};
+      |                                                                                         ^
+/Users/boris/Dev/blockchain-nano/src/capella_beacon_api.cpp:18:118: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   18 |  if(!root&&!fork&&!finality&&!genesis&&!spec)return {404,{{"code",404},{"message","Beacon endpoint not implemented"}}};
+      |                                                                                                                      ^
+/Users/boris/Dev/blockchain-nano/src/capella_beacon_api.cpp:26:166: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   26 |  if(genesis)return {200,{{"data",{{"genesis_time",std::to_string(number(b,0))},{"genesis_validators_root",octets(b,8,32)},{"genesis_fork_version",genesis_version}}}}};
+      |                                                                                                                                                                      ^
+/Users/boris/Dev/blockchain-nano/src/capella_beacon_api.cpp:64:70: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   64 |   if(checkpoint)checkpoint();return {200,{{"data",std::move(values)}}};
+      |                                                                      ^
+/Users/boris/Dev/blockchain-nano/src/capella_beacon_api.cpp:78:160: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   78 |  return {200,{{"execution_optimistic",false},{"finalized",consensus_beacon_header_root(head.header)==store.timed.view.finalized.root},{"data",std::move(data)}}};
+      |                                                                                                                                                                ^
+/Users/boris/Dev/blockchain-nano/src/capella_beacon_api.cpp:88:117: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   88 |  auto error=[](unsigned code,const char* message){return BeaconReadResponse{code,{{"code",code},{"message",message}}};};
+      |                                                                                                                     ^
+/Users/boris/Dev/blockchain-nano/src/capella_beacon_api.cpp:129:91: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  129 |    {"header",{{"message",std::move(message)},{"signature",octets(*signed_block,4,96)}}}}}}};
+      |                                                                                           ^
+7 warnings generated.
+[ 14%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_runtime.cpp.o
+[ 14%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_clock.cpp.o
+[ 17%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_local_body.cpp.o
+/Users/boris/Dev/blockchain-nano/src/consensus_bellatrix_runtime.cpp:132:147: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  132 |    if(!observation||observation->peer_slots.empty())return BeaconReadResponse{503,{{"code",503},{"message","Beacon peer observation unavailable"}}};
+      |                                                                                                                                                   ^
+/Users/boris/Dev/blockchain-nano/src/consensus_bellatrix_runtime.cpp:140:235: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  140 |    return BeaconReadResponse{200,{{"data",{{"head_slot",std::to_string(head.header.slot)},{"sync_distance",std::to_string(target-head.header.slot)},{"is_syncing",target>head.header.slot},{"is_optimistic",false},{"el_offline",false}}}}};
+      |                                                                                                                                                                                                                                           ^
+2 warnings generated.
+[ 17%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_reactor.cpp.o
+[ 17%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_runtime.cpp.o
+[ 21%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_signing.cpp.o
+[ 21%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_sync_signing.cpp.o
+[ 21%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_validator.cpp.o
+[ 25%] Building CXX object CMakeFiles/nano_core.dir/src/http.cpp.o
+[ 25%] Building CXX object CMakeFiles/nano_core.dir/src/node.cpp.o
+[ 25%] Building CXX object CMakeFiles/nano_core.dir/src/rpc.cpp.o
+[ 25%] Linking CXX static library libnano_core.a
+[100%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-capella-transition-tests.dir/tests/test_capella_transition.cpp.o
+In file included from /Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/altair_transition_rules.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_transition_rules.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_epoch_ssz.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_ffg_ssz.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_minimal_ssz.hpp:2:
+/Users/boris/Dev/blockchain-nano/tests/support/process.hpp:39:19: warning: 'posix_spawn_file_actions_addchdir_np' is deprecated: first deprecated in macOS 26.0 - posix_spawn_file_actions_addchdir(3) has replaced posix_spawn_file_actions_addchdir_np(3) [-Wdeprecated-declarations]
+   39 |   if(!cwd.empty())posix_spawn_file_actions_addchdir_np(&actions,cwd.c_str());
+      |                   ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/spawn.h:184:9: note: 'posix_spawn_file_actions_addchdir_np' has been explicitly marked deprecated here
+  184 | int     posix_spawn_file_actions_addchdir_np(posix_spawn_file_actions_t *,
+      |         ^
+1 warning generated.
+[100%] Linking CXX executable nano-capella-transition-tests
+[100%] Built target nano-capella-transition-tests
+[  0%] Built target gen_base.o
+[  0%] Built target gen_bint.o
+[  3%] Built target nano_blst
+[  3%] Built target secp256k1_precomputed
+[  7%] Built target nano_ckzg
+[ 10%] Built target mcl_st
+[ 10%] Built target secp256k1
+[100%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano.dir/src/main.cpp.o
+[100%] Linking CXX executable nano
+[100%] Built target nano

@@ -163,7 +163,12 @@ std::map<Bytes,uint64_t> CapellaDurableReactor::current_validator_indices(const 
  for(const auto& key:keys)if(key.size()!=48)throw std::invalid_argument("Validator public key width");
  if(keys.empty())return result;
  const auto& t=rules_.transition;const auto& head=capella_fork_head(*state_,rules_,check);
- return capella_validator_indices(head.state.ssz,head.header.state_root,t.consensus.state,t.execution,t.maximum_state_bytes,keys,check);
+ if(check)check();
+ if(validator_index_cache_&&validator_index_cache_->root==head.header.state_root&&validator_index_cache_->keys==keys)return validator_index_cache_->indices;
+ ValidatorIndexCache candidate{head.header.state_root,keys,capella_validator_indices(head.state.ssz,head.header.state_root,t.consensus.state,t.execution,t.maximum_state_bytes,keys,check)};
+ if(check)check();
+ validator_index_cache_=std::move(candidate);
+ return validator_index_cache_->indices;
 }
 std::set<uint64_t> CapellaDurableReactor::current_attesters(uint64_t slot,const std::function<void()>& check){
  std::lock_guard lock(mutex_);require_available();const auto duties=prepare_capella_attestation_duties(*state_,rules_,slot,limits_.replay_slots,limits_.sync_trials,check);std::set<uint64_t> result;for(const auto& [index,duty]:duties)result.insert(index);return result;
