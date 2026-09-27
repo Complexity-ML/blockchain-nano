@@ -3352,3 +3352,16 @@ concurrente, les preuves de slashing ou les pannes entre tick et élagage. Les
 55 références de dépôts conservées, l’historique EVM et les archives croissent
 encore ; aucune borne globale du disque ni qualification WAN/production.
 [Implémentation et mesures](qualification/capella-automatic-pruning-20260927/README.md).
+
+### 2026-09-27 — Erreurs de synchronisation pendant l’élagage natif
+
+Nouveau test macOS passé en 67,06 s, quatre cas : erreur EIO du WAL principal
+ou témoin, dernière écriture conservée ou supprimée dans une base jetable.
+Réacteur/owner/RPC indisponibles après l’erreur ; reprise au checkpoint élagué
+si le témoin le conserve, sinon ancien checkpoint jusqu’à la nouvelle tentative.
+Votes signés et état EVM préservés, nouvelle tentative idempotente, réouverture
+et lecture RPC après reprise réussies. Aucun correctif du moteur nécessaire.
+**Partiel** : pas de coupure physique, de qualification Linux/VPS ni d’injection
+entre le commit du tick et l’élagage automatique ; archives BLS/slashing en attente
+et branches concurrentes restent à qualifier dans ce scénario.
+[Quatre cas et preuves](qualification/capella-pruning-sync-20260927/README.md).

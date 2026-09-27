@@ -1,0 +1,36 @@
+UpdateCTestConfiguration  from :/Users/boris/Dev/blockchain-nano/build-release/DartConfiguration.tcl
+Test project /Users/boris/Dev/blockchain-nano/build-release
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 379
+    Start 379: consensus_capella_pruning_sync
+
+379: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests "--pruning-sync"
+379: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+379: Test timeout computed to be: 240
+379: {"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+379: {"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+379: {"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+379: {"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+379: {"finalizedEpoch":3,"progressSlot":40,"signedVotes":264}
+379: {"finalizedEpoch":3,"progressSlot":41,"signedVotes":272}
+379: {"blockedOperations":8,"faultWitness":false,"lostSuffix":false,"physicalPowerLoss":false,"recoveredPrunedBeforeRetry":true,"retryIdempotent":true,"scenario":"capella-pruning-sync-recovery","signedVotesPreserved":true}
+379: {"blockedOperations":8,"faultWitness":false,"lostSuffix":true,"physicalPowerLoss":false,"recoveredPrunedBeforeRetry":true,"retryIdempotent":true,"scenario":"capella-pruning-sync-recovery","signedVotesPreserved":true}
+379: {"blockedOperations":6,"faultWitness":true,"lostSuffix":false,"physicalPowerLoss":false,"recoveredPrunedBeforeRetry":true,"retryIdempotent":true,"scenario":"capella-pruning-sync-recovery","signedVotesPreserved":true}
+379: {"blockedOperations":6,"faultWitness":true,"lostSuffix":true,"physicalPowerLoss":false,"recoveredPrunedBeforeRetry":false,"retryIdempotent":true,"scenario":"capella-pruning-sync-recovery","signedVotesPreserved":true}
+379: {"blocks":40,"executionOwner":true,"finalizedEpoch":3,"independentStores":2,"justifiedEpoch":4,"networkActivated":false,"networkTransport":false,"participationPercent":100,"scenario":"capella-local-assembly-finality","signingJournalsReopened":64,"storeReopens":2,"votes":272}
+1/1 Test #379: consensus_capella_pruning_sync ...   Passed   67.06 sec
+
+The following tests passed:
+	consensus_capella_pruning_sync
+
+100% tests passed out of 1
+
+Label Time Summary:
+qualification_consensus_recovery    =  67.06 sec*proc (1 test)
+
+Total Test time (real) =  67.07 sec
