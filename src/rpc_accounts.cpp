@@ -22,7 +22,7 @@ void Rpc::load_wallets(const Json& config,const std::string& bind){
   bft=std::make_unique<BftReactor>(chain_,b.at("journal").get<std::string>(),unhex(key));
  }
  bft_=std::move(bft);
- fee_policy_=std::move(fees);fee_head_.reset();
+ fee_policy_=std::move(fees);fee_head_.reset();fee_blocks_.clear();
  validating_=false;validator_error_.clear();block_time_=interval;
  wallets_=std::move(candidate);dev_mode_=dev;coinbase_=coinbase;if(!dev_mode_){snapshots_.clear();time_offset_=0;next_timestamp_.reset();}
 }

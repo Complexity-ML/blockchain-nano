@@ -32,7 +32,8 @@ Les bornes de fenêtre et d’échantillonnage sont des limites de travail RPC,
 pas des limites du registre de validateurs. Une clé inconnue, un type invalide,
 une valeur hors domaine ou un fallback supérieur au maximum font échouer la
 configuration. Un rechargement invalide conserve la politique précédente.
-Un rechargement valide invalide le cache de recommandation.
+Un rechargement valide invalide le cache de recommandation et les échantillons
+de blocs.
 
 ## Calcul
 
@@ -50,9 +51,17 @@ Un rechargement valide invalide le cache de recommandation.
 
 Les blocs vides n’ajoutent pas de prix synthétique. Le résultat est mémorisé
 pour le hash de tête, ce qui invalide aussi une réorganisation à hauteur égale.
-Une consultation du cache ne copie pas les transactions du bloc. Si la tête
-change pendant le calcul, ou si un ancêtre n’est plus disponible, la requête
-échoue explicitement et peut être réessayée. Aucun résultat partiel n’est caché.
+Une consultation du cache ne copie pas les transactions du bloc. Les échantillons
+sont également conservés par hash de bloc : un nouveau bloc réutilise ses ancêtres
+communs sans relire leurs transactions. Seule la fenêtre de la dernière estimation
+réussie est conservée (au plus `history_blocks` entrées de `samples_per_block`
+pourboires). Une fenêtre candidate de même taille est temporairement construite.
+Les anciennes branches et les blocs sortis de la fenêtre sont évincés.
+
+Si la tête change pendant le calcul, ou si un bloc non présent dans ce cache
+n’est plus disponible en base, la requête échoue et peut être réessayée. Un
+échantillon déjà calculé reste réutilisable par son hash même si son bloc a depuis
+été élagué. Ni la fenêtre ni la recommandation ne sont publiées partiellement.
 
 ## RPC et portefeuille
 
@@ -73,8 +82,12 @@ indépendantes du bénéficiaire peuvent encore influencer les échantillons. Le
 valeurs peuvent différer de celles d’autres clients, qui emploient leurs propres
 politiques. Une mesure locale sur 20 blocs de 1 428 transactions observe environ 652 ms
 sans cache de recommandation (caches disque non purgés), sous verrou RPC. Le
-cache évite de répéter ce coût sur une tête inchangée. Le coût répété par tête,
-la fenêtre maximale et la saturation HTTP/P2P restent à qualifier.
+cache évite de répéter ce coût sur une tête inchangée. Avec réutilisation des
+ancêtres après un nouveau bloc de 1 428 transactions : 33,518 ms, contre
+671,225 ms pour un estimateur neuf sur la même tête dans le même run. Le premier
+calcul, les branches nouvelles, la fenêtre maximale et la saturation HTTP/P2P
+restent à qualifier au-delà de ces mesures locales.
+[Cache incrémental et limites](qualification/rpc-fee-incremental-20260927/README.md).
 [Mesures et défaut d’adresse corrigé](qualification/rpc-fee-load-20260927/README.md).
 
 Référence de conception pour l’échantillonnage des frais effectifs et le cache

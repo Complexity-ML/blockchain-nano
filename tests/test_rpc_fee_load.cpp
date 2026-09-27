@@ -14,7 +14,7 @@ int main(int argc,char** argv){try{
  auto genesis=Genesis::from_json({{"config",{{"chainId",1337}}},{"gasLimit",quantity(Int(per_block*21000))},{"alloc",allocations}});
  Blockchain chain(directory/"chain",genesis);Rpc rpc(chain);
  const auto setup_start=Clock::now();
- for(unsigned height=0;height<blocks;++height){
+ auto append_block=[&](unsigned height){
   const auto base=next_base_fee(chain.tip_header());
   for(unsigned i=0;i<per_block;++i){
     const auto account=i/per_sender;
@@ -25,7 +25,8 @@ int main(int argc,char** argv){try{
   }
   auto mined=chain.mine(producer,12*(height+1));
   test::check(mined.transactions.size()==per_block&&mined.header.gas_used==mined.header.gas_limit,"fixture must fill every configured block");
- }
+ };
+ for(unsigned height=0;height<blocks;++height)append_block(height);
  const auto setup_us=micros(setup_start);const auto original=chain.tip_header().hash();
  auto request=[&](const char* method){auto r=rpc.handle({{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",Json::array()}});test::check(!r.contains("error"),r.dump());return r.at("result");};
  auto quote=[&]{const auto actual=quantity(request("eth_maxPriorityFeePerGas"));test::check(actual==101,"loaded history effective percentile: expected 101, got "+actual.get_str());};
@@ -39,6 +40,12 @@ int main(int argc,char** argv){try{
  for(unsigned thread=0;thread<8;++thread)workers.push_back(std::async(std::launch::async,[&]{ready.wait();for(unsigned i=0;i<128;++i){quote();test::check(quantity(request("eth_blockNumber"))==blocks,"ordinary reads survive concurrent fee requests");}}));
  const auto concurrent_start=Clock::now();release.set_value();for(auto& worker:workers)worker.get();auto concurrent_us=micros(concurrent_start);
  test::check(chain.tip_header().hash()==original&&chain.pending_count()==0,"read load must not mutate chain or pool");
- std::cout<<Json{{"blocks",blocks},{"transactions_per_block",per_block},{"total_transactions",blocks*per_block},{"gas_limit",per_block*21000},{"setup_us",setup_us},{"cold_calculation_us",cold},{"cached_1000_requests_us",cached_us},{"concurrent_workers",8},{"concurrent_total_requests",2048},{"concurrent_cold_and_cached_us",concurrent_us},{"expected_tip_wei",101},{"head_unchanged",true},{"transport","in-process RPC; no HTTP/P2P"}}.dump(2)<<'\n';
+ append_block(blocks);const auto next_head=chain.tip_header().hash();
+ auto incremental_start=Clock::now();quote();const auto incremental_us=micros(incremental_start);
+ // An independent empty cache must return exactly the same recommendation.
+ Rpc reference(chain);auto reference_start=Clock::now();auto result=reference.handle({{"jsonrpc","2.0"},{"id",1},{"method","eth_maxPriorityFeePerGas"},{"params",Json::array()}});
+ test::check(!result.contains("error")&&quantity(result.at("result"))==101,"incremental estimate must equal a fresh oracle");const auto reference_us=micros(reference_start);
+ test::check(chain.tip_header().hash()==next_head&&chain.pending_count()==0,"incremental reads cannot mutate chain");
+ std::cout<<Json{{"blocks",blocks},{"incremental_block_transactions",per_block},{"incremental_quote_us",incremental_us},{"fresh_quote_same_head_us",reference_us},{"transactions_per_block",per_block},{"total_transactions",blocks*per_block},{"gas_limit",per_block*21000},{"setup_us",setup_us},{"cold_calculation_us",cold},{"cached_1000_requests_us",cached_us},{"concurrent_workers",8},{"concurrent_total_requests",2048},{"concurrent_cold_and_cached_us",concurrent_us},{"expected_tip_wei",101},{"head_unchanged",true},{"transport","in-process RPC; no HTTP/P2P"}}.dump(2)<<'\n';
  return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

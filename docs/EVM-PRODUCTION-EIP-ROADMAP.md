@@ -906,3 +906,14 @@ recommandation autour de 652 ms, sous mutex RPC ; 1 000 lectures en cache en
 5,385 ms au total. Mesures locales, caches disque non purgés, sans HTTP/P2P.
 Coût répété à chaque tête, fenêtre maximale, équité et saturation restent ouverts.
 [Échec initial, correction et mesures](qualification/rpc-fee-load-20260927/README.md).
+
+## 2026-09-27 — Réutilisation bornée des échantillons de frais RPC
+
+Les pourboires sont maintenant réutilisés par hash de bloc, dans la seule fenêtre
+courante ; rechargement de politique, réorganisation et expiration de fenêtre
+restent contrôlés. Cinq tests affectés passent, avec nouveaux cas de branche
+remplacée et expiration. Après un nouveau bloc de 1 428 transactions, mesure
+locale de 33,518 ms contre 671,225 ms pour un estimateur neuf sur la même tête.
+Le premier calcul, les branches non cachées, la fenêtre maximale et l’équité
+sous mutex RPC restent ouverts. Aucun changement de consensus EIP-1559.
+[Implémentation, mesures et limites](qualification/rpc-fee-incremental-20260927/README.md).

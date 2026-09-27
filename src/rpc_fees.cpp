@@ -30,31 +30,36 @@ Int Rpc::suggested_tip(const Header& head){
  const auto hash=head.hash();
  if(fee_head_&&*fee_head_==hash)return fee_tip_;
  std::vector<Int> samples;
- Block current;current.header=head;
- if(head.number>0){
-  auto saved=chain_.store().block_by_hash(hash);
-  if(!saved)throw RpcError(-32000,"Fee estimation head unavailable; retry");
-  current=std::move(*saved);
- }
- for(size_t height=0;height<fee_policy_.history_blocks&&current.header.number>0;++height){
-  const Int base=current.header.base_fee.value_or(Int(0));
-  std::vector<std::pair<Int,size_t>> ordered;
-  ordered.reserve(current.transactions.size());
-  for(size_t i=0;i<current.transactions.size();++i)
-   ordered.emplace_back(std::max(Int(0),Int(current.transactions[i].tx.effective_gas_price(base)-base)),i);
-  std::sort(ordered.begin(),ordered.end());
-  const auto producer=address(current.header.coinbase);
-  size_t added=0;
-  for(const auto& [tip,index]:ordered){
-   // A producer's own transfers are not independent evidence of fee demand.
-   if(address(current.transactions[index].sender())==producer)continue;
-   samples.push_back(tip);
-   if(++added==fee_policy_.samples_per_block)break;
+ // Publish only the current window after a coherent calculation. Hash keys
+ // preserve shared ancestry across new heads without retaining old branches.
+ std::map<Bytes,FeeBlockSamples> window;
+ auto cursor=hash;Int number=head.number;
+ for(size_t height=0;height<fee_policy_.history_blocks&&number>0;++height){
+  FeeBlockSamples entry;
+  if(auto cached=fee_blocks_.find(cursor);cached!=fee_blocks_.end())entry=cached->second;
+  else{
+   auto saved=chain_.store().block_by_hash(cursor);
+   if(!saved)throw RpcError(-32000,"Fee estimation block unavailable; retry");
+   const auto& current=*saved;
+   entry.parent_hash=current.header.parent_hash;entry.number=current.header.number;
+   const Int base=current.header.base_fee.value_or(Int(0));
+   std::vector<std::pair<Int,size_t>> ordered;
+   ordered.reserve(current.transactions.size());
+   for(size_t i=0;i<current.transactions.size();++i)
+    ordered.emplace_back(std::max(Int(0),Int(current.transactions[i].tx.effective_gas_price(base)-base)),i);
+   std::sort(ordered.begin(),ordered.end());
+   const auto producer=address(current.header.coinbase);
+   for(const auto& [tip,index]:ordered){
+    // A producer's own transfers are not independent evidence of fee demand.
+    if(address(current.transactions[index].sender())==producer)continue;
+    entry.tips.push_back(tip);
+    if(entry.tips.size()==fee_policy_.samples_per_block)break;
+   }
   }
-  if(height+1==fee_policy_.history_blocks||current.header.number==1)break;
-  auto parent=chain_.store().block_by_hash(current.header.parent_hash);
-  if(!parent)throw RpcError(-32000,"Fee estimation ancestor unavailable; retry");
-  current=std::move(*parent);
+  if(entry.number!=number)throw RpcError(-32000,"Fee estimation ancestry mismatch");
+  samples.insert(samples.end(),entry.tips.begin(),entry.tips.end());
+  const auto parent=entry.parent_hash;
+  window.emplace(cursor,std::move(entry));cursor=parent;--number;
  }
  Int tip=fee_policy_.fallback_tip;
  if(!samples.empty()){
@@ -63,7 +68,7 @@ Int Rpc::suggested_tip(const Header& head){
  }
  if(fee_policy_.maximum_tip)tip=std::min(tip,*fee_policy_.maximum_tip);
  if(chain_.tip_header().hash()!=hash)throw RpcError(-32000,"Chain head changed during fee estimation; retry");
- fee_head_=hash;fee_tip_=tip;return tip;
+ fee_blocks_=std::move(window);fee_head_=hash;fee_tip_=tip;return tip;
 }
 
 Json Rpc::fee_history(const Json& params) const {

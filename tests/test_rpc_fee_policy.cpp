@@ -56,6 +56,13 @@ int main(){try{
  const auto wide=sign({{"type","0x2"}});
  test::check(wide.tx.max_fee==maximum&&wide.tx.priority_fee==maximum,"implicit typed fee cap cannot overflow uint256");
  test::check(chain.pending_count()==0,"fee queries and signing do not submit transactions");
+ // Reuse ancestors, replace two cached heights, then age all samples out.
+ policy({{"history_blocks",2},{"percentile",100}});test::check(tip()==700,"prime two-block cache");
+ submit(key,1,900);chain.mine(producer,48);test::check(tip()==900,"new block enters rolling cache");
+ test::check(chain.restore(1,replacement.header.hash()),"rewind two cached heights");
+ submit(key,1,300);chain.mine(producer,60);test::check(tip()==700,"replacement uses common ancestor, not removed branch");
+ chain.mine(producer,72);test::check(tip()==300,"oldest ancestor leaves rolling window");
+ chain.mine(producer,84);test::check(tip()==0,"empty window cannot retain evicted samples");
  unsetenv("NANO_FEE_POLICY_PASSWORD");
  std::cout<<"RPC fee policy: empty history, mixed fees, producer exclusion, limits, reload, reorg and wallet defaults passed\n";
  return 0;

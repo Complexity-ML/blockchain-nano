@@ -1,0 +1,22 @@
+{
+  "base_commit": "61708c7f5a7e527ba861aaca43d643db299d5676",
+  "source_sha256": {
+    "include/nano/rpc.hpp": "65632f9f52b59c1b8fa12e2c2b4c73a6199c62e5c0206368af65186d3dca5370",
+    "src/rpc_accounts.cpp": "474f25b3653f4485c51a27ad94e774c9b211d0f23ab27ff534d7c2f5ca9c155e",
+    "src/rpc_fees.cpp": "fe4fd097f8b5020f141e654ff5868cf31bed7b2180680ec6d0345cd90a9b9146",
+    "tests/test_rpc_fee_load.cpp": "6549d9a94e79d605ec8274791660e0254a3feb31b941c01a366fd5cbff6d18c7",
+    "tests/test_rpc_fee_policy.cpp": "c41925e6c15b5d59d35c436ead3c84bb4b90bee54ceb9b9c12755bd6fa4f321d"
+  },
+  "binary_sha256": {
+    "nano": "2dde2a2302f3d7cda19b39de6f3456208bf7c8907711deadbb043ba198826736",
+    "nano-rpc-tests": "6bdd94dd60e957cf6076c54601a0fa28e19a6b715e23faf6c186535fbff91cf9",
+    "nano-rpc-fee-policy-tests": "bbb82c13a849f73c67fa9f7b2c6c04a045d8ca4bfc7221cce4325a84f9087cb5",
+    "nano-rpc-fee-load-tests": "e41c5fcba44560f757697cad00216c0c9da312feaec9b49e388c7f8a48f46279",
+    "nano-wallet-cli-tests": "47867d0ef9141ab0368b6a1498ed8ca29133b4ddd7abe119268f1b8270d1f2e4",
+    "nano-rpc-cli-tests": "cd8e25d0204213bf59b895ee7e3377eeeb2d563c40559e7bd71018937aad6606"
+  },
+  "commands": [
+    "ctest --test-dir build-release -R '^(rpc_fee_policy|rpc_fee_load|rpc|rpc_cli|wallet_cli)$' -V",
+    "build-release/nano-rpc-fee-load-tests 1428"
+  ]
+}

@@ -1,0 +1,117 @@
+[  0%] Built target gen_base.o
+[  0%] Built target gen_bint.o
+[  0%] Built target nano_blst
+[  3%] Built target secp256k1_precomputed
+[  7%] Built target nano_ckzg
+[ 10%] Built target mcl_st
+[ 10%] Built target secp256k1
+[ 10%] Building CXX object CMakeFiles/nano_core.dir/src/cli_client.cpp.o
+[ 10%] Building CXX object CMakeFiles/nano_core.dir/src/client.cpp.o
+[ 14%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_runtime.cpp.o
+[ 14%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_runtime.cpp.o
+/Users/boris/Dev/blockchain-nano/src/consensus_bellatrix_runtime.cpp:132:147: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  132 |    if(!observation||observation->peer_slots.empty())return BeaconReadResponse{503,{{"code",503},{"message","Beacon peer observation unavailable"}}};
+      |                                                                                                                                                   ^
+/Users/boris/Dev/blockchain-nano/src/consensus_bellatrix_runtime.cpp:140:235: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  140 |    return BeaconReadResponse{200,{{"data",{{"head_slot",std::to_string(head.header.slot)},{"sync_distance",std::to_string(target-head.header.slot)},{"is_syncing",target>head.header.slot},{"is_optimistic",false},{"el_offline",false}}}}};
+      |                                                                                                                                                                                                                                           ^
+2 warnings generated.
+[ 17%] Building CXX object CMakeFiles/nano_core.dir/src/http.cpp.o
+[ 17%] Building CXX object CMakeFiles/nano_core.dir/src/node.cpp.o
+[ 17%] Building CXX object CMakeFiles/nano_core.dir/src/rpc.cpp.o
+[ 21%] Building CXX object CMakeFiles/nano_core.dir/src/rpc_accounts.cpp.o
+[ 21%] Building CXX object CMakeFiles/nano_core.dir/src/rpc_fees.cpp.o
+[ 21%] Building CXX object CMakeFiles/nano_core.dir/src/rpc_filters.cpp.o
+[ 25%] Building CXX object CMakeFiles/nano_core.dir/src/websocket.cpp.o
+[ 25%] Linking CXX static library libnano_core.a
+[100%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-rpc-fee-load-tests.dir/tests/test_rpc_fee_load.cpp.o
+In file included from /Users/boris/Dev/blockchain-nano/tests/test_rpc_fee_load.cpp:2:
+/Users/boris/Dev/blockchain-nano/tests/support/process.hpp:39:19: warning: 'posix_spawn_file_actions_addchdir_np' is deprecated: first deprecated in macOS 26.0 - posix_spawn_file_actions_addchdir(3) has replaced posix_spawn_file_actions_addchdir_np(3) [-Wdeprecated-declarations]
+   39 |   if(!cwd.empty())posix_spawn_file_actions_addchdir_np(&actions,cwd.c_str());
+      |                   ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/spawn.h:184:9: note: 'posix_spawn_file_actions_addchdir_np' has been explicitly marked deprecated here
+  184 | int     posix_spawn_file_actions_addchdir_np(posix_spawn_file_actions_t *,
+      |         ^
+1 warning generated.
+[100%] Linking CXX executable nano-rpc-fee-load-tests
+[100%] Built target nano-rpc-fee-load-tests
+[  0%] Built target gen_bint.o
+[  0%] Built target gen_base.o
+[  3%] Built target nano_blst
+[  3%] Built target secp256k1_precomputed
+[  7%] Built target nano_ckzg
+[ 10%] Built target mcl_st
+[ 10%] Built target secp256k1
+[100%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-rpc-fee-policy-tests.dir/tests/test_rpc_fee_policy.cpp.o
+In file included from /Users/boris/Dev/blockchain-nano/tests/test_rpc_fee_policy.cpp:2:
+/Users/boris/Dev/blockchain-nano/tests/support/process.hpp:39:19: warning: 'posix_spawn_file_actions_addchdir_np' is deprecated: first deprecated in macOS 26.0 - posix_spawn_file_actions_addchdir(3) has replaced posix_spawn_file_actions_addchdir_np(3) [-Wdeprecated-declarations]
+   39 |   if(!cwd.empty())posix_spawn_file_actions_addchdir_np(&actions,cwd.c_str());
+      |                   ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/spawn.h:184:9: note: 'posix_spawn_file_actions_addchdir_np' has been explicitly marked deprecated here
+  184 | int     posix_spawn_file_actions_addchdir_np(posix_spawn_file_actions_t *,
+      |         ^
+1 warning generated.
+[100%] Linking CXX executable nano-rpc-fee-policy-tests
+[100%] Built target nano-rpc-fee-policy-tests
+[  0%] Built target gen_base.o
+[  0%] Built target gen_bint.o
+[  0%] Built target nano_blst
+[  3%] Built target secp256k1_precomputed
+[  7%] Built target nano_ckzg
+[ 10%] Built target mcl_st
+[ 10%] Built target secp256k1
+[100%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-rpc-tests.dir/tests/test_rpc.cpp.o
+[100%] Linking CXX executable nano-rpc-tests
+[100%] Built target nano-rpc-tests
+[  0%] Built target gen_base.o
+[  0%] Built target gen_bint.o
+[  0%] Built target nano_blst
+[  3%] Built target secp256k1_precomputed
+[  7%] Built target nano_ckzg
+[ 10%] Built target mcl_st
+[ 10%] Built target secp256k1
+[100%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-wallet-cli-tests.dir/tests/test_wallet_cli.cpp.o
+In file included from /Users/boris/Dev/blockchain-nano/tests/test_wallet_cli.cpp:1:
+/Users/boris/Dev/blockchain-nano/tests/support/process.hpp:39:19: warning: 'posix_spawn_file_actions_addchdir_np' is deprecated: first deprecated in macOS 26.0 - posix_spawn_file_actions_addchdir(3) has replaced posix_spawn_file_actions_addchdir_np(3) [-Wdeprecated-declarations]
+   39 |   if(!cwd.empty())posix_spawn_file_actions_addchdir_np(&actions,cwd.c_str());
+      |                   ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/spawn.h:184:9: note: 'posix_spawn_file_actions_addchdir_np' has been explicitly marked deprecated here
+  184 | int     posix_spawn_file_actions_addchdir_np(posix_spawn_file_actions_t *,
+      |         ^
+1 warning generated.
+[100%] Linking CXX executable nano-wallet-cli-tests
+[100%] Built target nano-wallet-cli-tests
+[  0%] Built target gen_base.o
+[  0%] Built target gen_bint.o
+[  3%] Built target secp256k1_precomputed
+[  3%] Built target nano_blst
+[  3%] Built target secp256k1
+[  6%] Built target mcl_st
+[ 10%] Built target nano_ckzg
+[ 96%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-rpc-cli-tests.dir/tests/test_rpc_cli.cpp.o
+In file included from /Users/boris/Dev/blockchain-nano/tests/test_rpc_cli.cpp:1:
+/Users/boris/Dev/blockchain-nano/tests/support/process.hpp:39:19: warning: 'posix_spawn_file_actions_addchdir_np' is deprecated: first deprecated in macOS 26.0 - posix_spawn_file_actions_addchdir(3) has replaced posix_spawn_file_actions_addchdir_np(3) [-Wdeprecated-declarations]
+   39 |   if(!cwd.empty())posix_spawn_file_actions_addchdir_np(&actions,cwd.c_str());
+      |                   ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/spawn.h:184:9: note: 'posix_spawn_file_actions_addchdir_np' has been explicitly marked deprecated here
+  184 | int     posix_spawn_file_actions_addchdir_np(posix_spawn_file_actions_t *,
+      |         ^
+1 warning generated.
+[100%] Linking CXX executable nano-rpc-cli-tests
+[100%] Built target nano-rpc-cli-tests
+[  0%] Built target gen_bint.o
+[  0%] Built target gen_base.o
+[  0%] Built target nano_blst
+[  3%] Built target secp256k1_precomputed
+[  7%] Built target nano_ckzg
+[ 10%] Built target mcl_st
+[ 10%] Built target secp256k1
+[100%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano.dir/src/main.cpp.o
+[100%] Linking CXX executable nano
+[100%] Built target nano

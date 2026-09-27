@@ -64,6 +64,8 @@ class Rpc {
  RpcFeePolicy fee_policy_;
  std::optional<Bytes> fee_head_;
  Int fee_tip_=0;
+ struct FeeBlockSamples { Bytes parent_hash;Int number;std::vector<Int> tips; };
+ std::map<Bytes,FeeBlockSamples> fee_blocks_;
  Int suggested_tip(const Header& head);
  std::recursive_mutex mutex_;
  uint64_t next_filter_=0;
