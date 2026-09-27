@@ -1652,3 +1652,8 @@ set_tests_properties(consensus_capella_local_sync PROPERTIES TIMEOUT 240 LABELS 
 
 add_test(NAME consensus_capella_automatic_recovery COMMAND nano-capella-transition-tests --automatic-recovery)
 set_tests_properties(consensus_capella_automatic_recovery PROPERTIES TIMEOUT 240 LABELS "qualification_consensus_runtime")
+
+add_executable(nano-capella-withdrawal-scale-tests tests/test_capella_withdrawal_scale.cpp)
+target_link_libraries(nano-capella-withdrawal-scale-tests PRIVATE nano_core)
+add_test(NAME consensus_capella_withdrawal_scale COMMAND nano-capella-withdrawal-scale-tests)
+set_tests_properties(consensus_capella_withdrawal_scale PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_scale")

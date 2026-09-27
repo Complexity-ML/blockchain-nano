@@ -762,3 +762,15 @@ précédent. WAN, pertes physiques, rollback indépendant, longues pannes, charg
 et production globale restent ouverts. Aucun EIP clôturé ni VPS modifié.
 [Preuves](qualification/capella-automatic-docker-recovery-20260927/README.md).
 [Procédure de reprise](CAPELLA-RECOVERY.md).
+
+### Coût des retraits sur grands registres — 27 septembre 2026
+
+Six nouveaux cas Capella passent : 100 000 et 1 000 000 entrées synthétiques,
+retraits denses/rares/absents, bouclage du curseur, montants/adresses/ordre,
+conservation de tous les validateurs et refus de listes altérées. À un million,
+préparation du candidat en 13 788–32 442 µs ; pic RSS processus 394 772 480 octets.
+Sélection bornée à 16 384 entrées, mais copie du registre O(N) toujours présente.
+Mesure locale unique hors SSZ/BLS/disque/réseau, pas une capacité de nœud actif.
+Aucun EIP ni objectif production clôturé ; mesurer ensuite la projection SSZ
+authentifiée et le runtime complet.
+[Code, mesures et limites](qualification/capella-withdrawal-scale-20260927/README.md).

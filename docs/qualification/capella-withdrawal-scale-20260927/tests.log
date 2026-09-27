@@ -1,0 +1,40 @@
+UpdateCTestConfiguration  from :/Users/boris/Dev/blockchain-nano/build-release/DartConfiguration.tcl
+Test project /Users/boris/Dev/blockchain-nano/build-release
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 335
+    Start 335: consensus_capella_withdrawal_execution
+
+335: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-withdrawal-tests
+335: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+335: Test timeout computed to be: 10000000
+335: Capella sweep, debit/credit, ordering, cursor wrap, duplicate, malformed and rollback checks passed; runtime not activated
+1/2 Test #335: consensus_capella_withdrawal_execution ...   Passed    0.39 sec
+test 388
+    Start 388: consensus_capella_withdrawal_scale
+
+388: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-withdrawal-scale-tests
+388: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+388: Test timeout computed to be: 120
+388: {"candidateMicroseconds":3866,"distributedNodes":0,"distribution":"dense","includesBls":false,"includesSszAuthentication":false,"processPeakRssBytes":46202880,"scenario":"capella-withdrawal-scale","selectionCheckpoints":17,"selectionMicroseconds":68,"syntheticRegistry":true,"validators":100000,"withdrawals":16}
+388: {"candidateMicroseconds":2919,"distributedNodes":0,"distribution":"sparse","includesBls":false,"includesSszAuthentication":false,"processPeakRssBytes":46301184,"scenario":"capella-withdrawal-scale","selectionCheckpoints":16385,"selectionMicroseconds":629,"syntheticRegistry":true,"validators":100000,"withdrawals":1}
+388: {"candidateMicroseconds":2036,"distributedNodes":0,"distribution":"empty","includesBls":false,"includesSszAuthentication":false,"processPeakRssBytes":46301184,"scenario":"capella-withdrawal-scale","selectionCheckpoints":16385,"selectionMicroseconds":562,"syntheticRegistry":true,"validators":100000,"withdrawals":0}
+388: {"candidateMicroseconds":32442,"distributedNodes":0,"distribution":"dense","includesBls":false,"includesSszAuthentication":false,"processPeakRssBytes":394657792,"scenario":"capella-withdrawal-scale","selectionCheckpoints":17,"selectionMicroseconds":9,"syntheticRegistry":true,"validators":1000000,"withdrawals":16}
+388: {"candidateMicroseconds":13788,"distributedNodes":0,"distribution":"sparse","includesBls":false,"includesSszAuthentication":false,"processPeakRssBytes":394772480,"scenario":"capella-withdrawal-scale","selectionCheckpoints":16385,"selectionMicroseconds":442,"syntheticRegistry":true,"validators":1000000,"withdrawals":1}
+388: {"candidateMicroseconds":17208,"distributedNodes":0,"distribution":"empty","includesBls":false,"includesSszAuthentication":false,"processPeakRssBytes":394772480,"scenario":"capella-withdrawal-scale","selectionCheckpoints":16385,"selectionMicroseconds":450,"syntheticRegistry":true,"validators":1000000,"withdrawals":0}
+2/2 Test #388: consensus_capella_withdrawal_scale .......   Passed    0.64 sec
+
+The following tests passed:
+	consensus_capella_withdrawal_execution
+	consensus_capella_withdrawal_scale
+
+100% tests passed out of 2
+
+Label Time Summary:
+qualification_consensus_scale    =   0.64 sec*proc (1 test)
+
+Total Test time (real) =   1.03 sec
