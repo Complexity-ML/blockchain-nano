@@ -2379,3 +2379,14 @@ Régression du registre également verte : deux suites en 26,52 s.
 [Preuves](qualification/capella-runtime-catalogs-20260927/README.md).
 Les services sont raccordés au runtime C++, pas encore aux méthodes HTTP privées
 ni au dispatch CLI/P2P. Ces raccordements restent des critères ouverts.
+
+### Capella : méthodes RPC privées raccordées
+
+Injection explicite du runtime dans `Rpc`, exclusive des services Altair/Bellatrix.
+Méthodes de statut, reçus, export et catalogues protégées par le jeton privé ;
+écoute locale obligatoire via la politique existante du serveur HTTP. Les porteurs
+du jeton forment un principal administratif commun, pas des identités P2P distinctes.
+Scénario runtime enrichi vert (21,43 s), régression RPC générale verte (6,27 s).
+[Preuves et signatures des méthodes](qualification/capella-private-rpc-20260927/README.md).
+Qualification limitée au répartiteur `Rpc::handle` : sockets HTTP, dispatch CLI et
+synchronisation entre pairs restent à qualifier/raccorder avant activation.
