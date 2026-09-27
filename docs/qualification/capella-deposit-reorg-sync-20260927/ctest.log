@@ -1,0 +1,34 @@
+UpdateCTestConfiguration  from :/Users/boris/Dev/blockchain-nano/build-release/DartConfiguration.tcl
+Test project /Users/boris/Dev/blockchain-nano/build-release
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 400
+    Start 400: consensus_capella_deposit_reorg_sync
+
+400: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests "--deposit-reorg-sync"
+400: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+400: Test timeout computed to be: 180
+400: {"observerRecords":15,"scenario":"deposit-reorg-progress","slot":8}
+400: {"observerRecords":31,"scenario":"deposit-reorg-progress","slot":16}
+400: {"observerRecords":47,"scenario":"deposit-reorg-progress","slot":24}
+400: {"observerRecords":63,"scenario":"deposit-reorg-progress","slot":32}
+400: {"observerRecords":79,"scenario":"deposit-reorg-progress","slot":40}
+400: {"observerRecords":95,"scenario":"deposit-reorg-progress","slot":48}
+400: {"blockedOperations":5,"lostSuffix":false,"networkTransport":false,"physicalPowerLoss":false,"recoveredIndex":65,"replayedIndex":65,"scenario":"capella-deposit-reorg-sync"}
+400: {"blockedOperations":5,"lostSuffix":true,"networkTransport":false,"physicalPowerLoss":false,"recoveredIndex":64,"replayedIndex":65,"scenario":"capella-deposit-reorg-sync"}
+400: {"activationQualified":false,"branches":2,"depositsPerBranch":2,"indexA":[64,65],"networkTransport":false,"observerReopens":2,"providerCalls":0,"registrySize":66,"scenario":"capella-competing-deposit-reorg","selectedBranches":2,"staleIndexRefused":true}
+1/1 Test #400: consensus_capella_deposit_reorg_sync ...   Passed   28.61 sec
+
+The following tests passed:
+	consensus_capella_deposit_reorg_sync
+
+100% tests passed out of 1
+
+Label Time Summary:
+qualification_storage_sync_local    =  28.61 sec*proc (1 test)
+
+Total Test time (real) =  28.62 sec

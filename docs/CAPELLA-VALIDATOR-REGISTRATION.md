@@ -72,8 +72,11 @@ signature. [Preuves](qualification/capella-competing-deposit-reorg-20260927/READ
 L'activation après cette bascule est qualifiée localement : époque 13, neuf
 attestations de A à l'index 65, finalité commune époque 20 conservée après
 réouverture des deux propriétaires. [Preuves](qualification/capella-reindexed-activation-20260927/README.md).
-La disponibilité sous reorgs soutenues, les crashes pendant transition et le
-transport distribué restent à qualifier.
+Une erreur de synchronisation WAL au vote de bascule est qualifiée sur macOS :
+issue entièrement ancienne ou nouvelle, archives cohérentes et rejeu vérifiés.
+[Preuves](qualification/capella-deposit-reorg-sync-20260927/README.md).
+La disponibilité sous reorgs soutenues, les autres points d'interruption,
+Linux/VPS, les témoins indépendants et le transport distribué restent ouverts.
 
 Ce mode concerne Capella natif Nano. Il ne déclare pas le cycle EIP-6110 Ethereum
 complet ni l’activation publique du réseau.

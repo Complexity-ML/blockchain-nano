@@ -4042,3 +4042,13 @@ deux réouvertures conservent finalité et index. Test passé en 175,54 s, jusqu
 slot 177. Trois bases locales, appels orchestrés sans transport WAN, journal A
 resté ouvert, pas de crash au commit ni reorgs soutenues. Aucun EIP/profil ou
 objectif production clôturé. [Preuves](qualification/capella-reindexed-activation-20260927/README.md).
+
+## 2026-09-27 — Panne WAL au vote de réorganisation de dépôts
+
+Injection macOS fsync/F_FULLFSYNC EIO dans un sous-processus au vote qui fait
+passer A de 64 à 65. Cinq accès refusés après erreur. WAL conservé : état complet
+65 et archive du vote ; suffixe perdu : état complet 64 sans archive, puis rejeu
+vers 65. Racines EVM/têtes et enveloppes durables exactes contrôlées. Test passé
+en 28,61 s. Échec initial du banc (snapshot simple versus enveloppe de votes)
+conservé et corrigé. Pas de panne physique, Linux/VPS, témoins indépendants ou
+WAN ; aucun EIP/production clôturé. [Preuves](qualification/capella-deposit-reorg-sync-20260927/README.md).

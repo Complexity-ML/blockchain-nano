@@ -1,3 +1,37 @@
+#ifdef NANO_SYNC_FAULT
+static int deposit_vote_sync_writer(const fs::path& directory){
+ const auto bundle=load(directory/"bundle.json");const auto profile=bundle.at("profile").get<std::string>();const auto rules=load_capella_fork_profile(profile,sha256(Bytes(profile.begin(),profile.end())),1024*1024);auto limits=crash_limits;limits.blocks=bundle.at("blocks").get<size_t>();
+ Genesis g;g.chain_id=rules.transition.chain_id;g.consensus="beacon";g.evm_revision=EvmRevision::Shanghai;g.block=Block::from_json(bundle.at("genesis"));g.state=State::from_json(bundle.at("alloc"));
+ Blockchain owner(directory/"db",g);const auto& disk=owner.store();const auto record=disk.fork_checkpoint(g.chain_id,g.block.header.hash(),limits.envelope_bytes);check(bool(record),"reorg writer checkpoint missing");CapellaDurableReactor node(owner,rules,limits,record->token);
+ const auto wire=unhex(bundle.at("vote").get<std::string>());const auto vote=decode_consensus_attestation_ssz(wire,rules.transition.consensus.body.validators_per_committee);check(bool(vote),"reorg vote decode");
+ fs::path wal;for(const auto& entry:fs::directory_iterator(directory/"db"))if(entry.path().extension()==".log"&&(wal.empty()||entry.path().filename()>wal.filename()))wal=entry.path();check(!wal.empty(),"reorg WAL missing");const auto before=fs::file_size(wal);
+ nano_test_arm_sync_fault(wal.c_str());bool failed=false;try{node.vote(*vote);}catch(const std::runtime_error&){failed=true;}check(failed&&nano_test_sync_failures()>0,"reorg sync fault not reached");
+ unsigned blocked=0;auto refuse=[&](auto action){try{action();}catch(const std::runtime_error&){++blocked;}};
+ refuse([&]{node.current();});refuse([&]{node.current_validator_indices({Key(64).public_key});});refuse([&]{owner.tip();});refuse([&]{owner.state();});refuse([&]{disk.latest();});check(blocked==5,"uncertain reorg state remained usable");
+ std::cout<<Json{{"wal",wal.filename().string()},{"before",before},{"after",fs::file_size(wal)},{"blocked",blocked}}.dump()<<std::endl;_exit(0);
+}
+static void qualify_deposit_vote_sync(const CapellaForkStore& before,const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits,const Genesis& g,const Phase0SignedAttestation& vote){
+ const auto candidate=prepare_capella_store_vote(before,vote,rules,limits.replay_slots,limits.sync_trials);check(bool(candidate),"reorg fault candidate missing");
+ const auto old_snapshot=capella_store_snapshot(before,rules,limits),new_snapshot=capella_store_snapshot(*candidate,rules,limits);
+ check(capella_fork_head(before,rules).header.state_root!=capella_fork_head(*candidate,rules).header.state_root,"fault vote does not change head");
+ std::string old_durable,new_durable;
+ {Temp reference;Blockchain owner(reference/"db",g);CapellaDurableReactor node(owner,rules,limits,before);old_durable=owner.store().fork_checkpoint(g.chain_id,g.block.header.hash(),limits.envelope_bytes)->snapshot;check(node.vote(vote),"reference reorg vote refused");new_durable=owner.store().fork_checkpoint(g.chain_id,g.block.header.hash(),limits.envelope_bytes)->snapshot;check(capella_store_snapshot(*node.current().state,rules,limits)==new_snapshot,"reference state differs from pure transition");}
+ for(bool lose:{false,true}){Temp temp;ForkCheckpointToken initial_token;
+  {Blockchain owner(temp/"db",g);CapellaDurableReactor initial(owner,rules,limits,before);initial_token=initial.current().token;}
+  save(temp/"bundle.json",Json{{"profile",capella_fork_profile(rules).dump()},{"blocks",limits.blocks},{"genesis",g.block.to_json(true)},{"alloc",g.state.to_json()},{"vote",hex(encode_consensus_attestation_ssz(vote,rules.transition.consensus.body.validators_per_committee))}});
+  const auto result=success(run({executable,"--deposit-vote-sync-writer",temp.path.string()}));const auto wal=temp/"db"/result.at("wal").get<std::string>();check(result.at("after")>result.at("before"),"fault left no WAL suffix");
+  if(lose){const int fd=open(wal.c_str(),O_WRONLY);check(fd>=0,"open reorg test WAL");const bool ok=ftruncate(fd,result.at("before").get<uint64_t>())==0&&fsync(fd)==0;close(fd);check(ok,"truncate reorg test WAL");}
+  Blockchain owner(temp/"db",g);const auto record=owner.store().fork_checkpoint(g.chain_id,g.block.header.hash(),limits.envelope_bytes);const auto& expected=lose?old_durable:new_durable;
+  check(record&&record->snapshot==expected&&record->token.sequence==initial_token.sequence+(lose?0:1),"mixed reorg checkpoint recovered");
+  // Compare complete snapshots to externally computed outcomes before accepting
+  // the recovered token in this isolated test, not a production trust policy.
+  CapellaDurableReactor restored(owner,rules,limits,record->token);const auto index=restored.current_validator_indices({Key(64).public_key}).at(Key(64).public_key);check(index==(lose?64:65),"recovered index detached from checkpoint");check(restored.signed_votes().size()==(lose?0:1),"vote archive detached from WAL outcome");
+  const auto& head=capella_fork_head(*restored.current().state,rules);check(owner.state().root()==head.execution_state.root()&&owner.tip().header.hash()==head.execution_block.header.hash(),"recovered execution mixed branches");
+  check(restored.vote(vote),"reorg vote replay rejected");check(restored.current_validator_indices({Key(64).public_key}).at(Key(64).public_key)==65&&capella_store_snapshot(*restored.current().state,rules,limits)==new_snapshot,"replayed reorg differs");
+  std::cout<<Json{{"scenario","capella-deposit-reorg-sync"},{"lostSuffix",lose},{"recoveredIndex",index},{"replayedIndex",65},{"blockedOperations",result.at("blocked")},{"physicalPowerLoss",false},{"networkTransport",false}}.dump()<<std::endl;
+ }
+}
+#endif
 // Isolated adversarial publishers deliberately sign competing blocks with separate
 // journals. Never run this fixture with real validator keys or public peers.
 static void deposit_reorg_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules,const Block& genesis,const State& genesis_state){
@@ -29,8 +63,12 @@ static void deposit_reorg_loop(const CapellaForkStore& initial,const CapellaFork
  for(size_t n=0;n<2;++n)duties[n]=prepare_capella_attestation_duties(*nodes[n]->current().state,rules,stop,limits.replay_slots,limits.sync_trials);
  nodes[2]->tick(now+rules.slot_duration_ms);
  ChainStore local_key_disk(directory/"observer-key-64");BeaconSigningJournal local_journal(local_key_disk,t.chain_id,genesis.header.hash(),validators,Key(64).public_key,slots);size_t provider_calls=0;
- std::set<uint64_t> used;unsigned switches=0;bool stale_index_refused=false;
- for(size_t n=0;n<2;++n){size_t signed_votes=0;for(const auto& [index,duty]:duties[n]){if(used.contains(index))continue;auto vote=duty.attestation;vote.signature=Key(index).sign(consensus_signing_root(consensus_attestation_root(vote.data),consensus_domain({1,0,0,0},duty.fork_version,duty.genesis_root)));check(nodes[2]->vote(vote),"branch selection vote rejected");used.insert(index);if(++signed_votes==1+2*n)break;}check(signed_votes==1+2*n,"insufficient distinct voters");
+ std::set<uint64_t> used;unsigned switches=0;bool stale_index_refused=false;bool reorg_sync_qualified=false;
+ for(size_t n=0;n<2;++n){size_t signed_votes=0;for(const auto& [index,duty]:duties[n]){if(used.contains(index))continue;auto vote=duty.attestation;vote.signature=Key(index).sign(consensus_signing_root(consensus_attestation_root(vote.data),consensus_domain({1,0,0,0},duty.fork_version,duty.genesis_root)));
+#ifdef NANO_SYNC_FAULT
+ if(deposit_reorg_sync&&n==1&&!reorg_sync_qualified){const auto current=nodes[2]->current();const auto next=prepare_capella_store_vote(*current.state,vote,rules,limits.replay_slots,limits.sync_trials);check(bool(next),"sync candidate refused");if(capella_fork_head(*next,rules).header.state_root!=capella_fork_head(*current.state,rules).header.state_root){qualify_deposit_vote_sync(*current.state,rules,limits,g,vote);reorg_sync_qualified=true;}}
+#endif
+ check(nodes[2]->vote(vote),"branch selection vote rejected");used.insert(index);if(++signed_votes==1+2*n)break;}check(signed_votes==1+2*n,"insufficient distinct voters");
   const auto expected=nodes[n]->current_validator_indices(requested);check(nodes[2]->current_validator_indices(requested)==expected,"observer retained stale branch indices");const auto current=nodes[2]->current();const auto& head=capella_fork_head(*current.state,rules);check(head.deposit_history->snapshot()==capella_fork_head(*nodes[n]->current().state,rules).deposit_history->snapshot(),"observer deposit history from wrong branch");check(owners[2]->state().root()==head.execution_state.root(),"observer EVM differs after reorg");
   if(n==1){const auto commitment=local_journal.commitment();auto signer=[&](const ConsensusRoot& root){++provider_calls;return Key(64).sign(root);};
    try{nodes[2]->attest_current(64,stop+1,[&]{return now+rules.slot_duration_ms;},local_journal,signer,{},Key(64).public_key);}catch(const StaleCapellaDuty&){stale_index_refused=true;}
@@ -40,6 +78,7 @@ static void deposit_reorg_loop(const CapellaForkStore& initial,const CapellaFork
   nodes[2].reset();owners[2].reset();owners[2]=std::make_unique<Blockchain>(directory/"owner-2",g);nodes[2]=std::make_unique<CapellaDurableReactor>(*owners[2],rules,limits,current.token);check(nodes[2]->current_validator_indices(requested)==expected,"reopen lost branch registry");++switches;
  }
  std::cout<<Json{{"scenario","capella-competing-deposit-reorg"},{"branches",2},{"depositsPerBranch",2},{"registrySize",66},{"selectedBranches",switches},{"observerReopens",switches},{"indexA",Json::array({64,65})},{"networkTransport",false},{"activationQualified",false},{"staleIndexRefused",stale_index_refused},{"providerCalls",provider_calls}}.dump()<<std::endl;
+ if(deposit_reorg_sync)check(reorg_sync_qualified,"reorg sync scenario never triggered");
  if(deposit_reorg_activation){
   for(size_t n:{1,2})nodes[n]->set_automatic_pruning(true);
   uint64_t local_clock=nodes[2]->current().state->timed.clock.time_ms;

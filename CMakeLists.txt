@@ -1696,3 +1696,8 @@ set_tests_properties(consensus_capella_competing_deposit_reorg PROPERTIES TIMEOU
 
 add_test(NAME consensus_capella_reindexed_validator_activation COMMAND nano-capella-transition-tests --deposit-reorg-activation)
 set_tests_properties(consensus_capella_reindexed_validator_activation PROPERTIES TIMEOUT 360 LABELS "qualification_consensus_runtime")
+
+if(APPLE)
+ add_test(NAME consensus_capella_deposit_reorg_sync COMMAND nano-capella-transition-tests --deposit-reorg-sync)
+ set_tests_properties(consensus_capella_deposit_reorg_sync PROPERTIES TIMEOUT 180 LABELS "qualification_storage_sync_local")
+endif()
