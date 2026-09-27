@@ -1,0 +1,159 @@
+{
+  "baseCommit": "c3696938febcc63bbb015f5ffb7f7b28511a799e",
+  "sha256": {
+    "tests/capella/docker-partition.mjs": "c6dba39bbed728c8304daf0c76eedbfc002442a2286c77920bd99105866fc510",
+    "tests/capella/Dockerfile.netem": "b2691c50225930e3ea78f093b322dbe03d1d785ed21094a3cceb3dae06802c1c",
+    "build-release/nano-capella-transition-tests": "2f2b285715d0590d189f3d3343fe882ce462ded6bb8e2b660c4ac55290d49dd7"
+  },
+  "images": [
+    {
+      "Id": "sha256:bb89e84860f035107c0e7f14a55d534c7f7088462ff9eb33d5bbdab2043b3507",
+      "RepoTags": [
+        "blockchain-nano:capella-asymmetric"
+      ],
+      "RepoDigests": [
+        "blockchain-nano@sha256:bb89e84860f035107c0e7f14a55d534c7f7088462ff9eb33d5bbdab2043b3507"
+      ],
+      "Comment": "buildkit.dockerfile.v0",
+      "Created": "2026-09-27T10:45:05.827688294Z",
+      "Config": {
+        "User": "10001:10001",
+        "ExposedPorts": {
+          "30303/tcp": {},
+          "8545/tcp": {}
+        },
+        "Env": [
+          "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+        ],
+        "Entrypoint": [
+          "/usr/local/bin/nano"
+        ],
+        "Cmd": [
+          "run",
+          "/usr/local/share/nano/genesis/testnet.json",
+          "/var/lib/nano/chain",
+          "/etc/nano/node.json"
+        ],
+        "Volumes": {
+          "/var/lib/nano": {}
+        },
+        "WorkingDir": "/var/lib/nano",
+        "Labels": {
+          "org.nanobees.source-dirty": "false",
+          "org.opencontainers.image.revision": "c3696938febcc63bbb015f5ffb7f7b28511a799e",
+          "org.opencontainers.image.version": "24.04"
+        },
+        "ArgsEscaped": true
+      },
+      "Architecture": "arm64",
+      "Os": "linux",
+      "Size": 272218770,
+      "RootFS": {
+        "Type": "layers",
+        "Layers": [
+          "sha256:8edaba05454265cd17270d38ec146446c640d1d25637413c3da64a3eff296c36",
+          "sha256:e26bbb982487893c57878331c3433b2a0e075b082e1843976dbbc74c1e18d738",
+          "sha256:1acebec9dd877ebcc8b8bafe870373bb343fafac186cbf9b4a87abd48399dbf2",
+          "sha256:0a0b00b9b5878a7a788a161104bd623ae137de91955a1fef7524147d386825dc",
+          "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+          "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"
+        ]
+      },
+      "Metadata": {
+        "LastTagTime": "2026-09-27T10:45:06.377194211Z"
+      },
+      "Descriptor": {
+        "mediaType": "application/vnd.oci.image.index.v1+json",
+        "digest": "sha256:bb89e84860f035107c0e7f14a55d534c7f7088462ff9eb33d5bbdab2043b3507",
+        "size": 856
+      },
+      "Identity": {
+        "Pull": [
+          {
+            "Repository": "docker.io/library/blockchain-nano"
+          }
+        ],
+        "Build": [
+          {
+            "Ref": "whyg1ekisceg0c4zsvnovf65w",
+            "CreatedAt": "2026-09-27T10:45:06.538550336Z"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "sha256:0358e804d96231489d0f8a7c2fc169c36b40e1e600bb7e187c9b49ed23d9d051",
+      "RepoTags": [
+        "blockchain-nano:capella-netem"
+      ],
+      "RepoDigests": [
+        "blockchain-nano@sha256:0358e804d96231489d0f8a7c2fc169c36b40e1e600bb7e187c9b49ed23d9d051"
+      ],
+      "Comment": "buildkit.dockerfile.v0",
+      "Created": "2026-09-27T10:45:19.717176259Z",
+      "Config": {
+        "User": "10001:10001",
+        "ExposedPorts": {
+          "30303/tcp": {},
+          "8545/tcp": {}
+        },
+        "Env": [
+          "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+        ],
+        "Entrypoint": [
+          "/usr/local/bin/nano"
+        ],
+        "Cmd": [
+          "run",
+          "/usr/local/share/nano/genesis/testnet.json",
+          "/var/lib/nano/chain",
+          "/etc/nano/node.json"
+        ],
+        "Volumes": {
+          "/var/lib/nano": {}
+        },
+        "WorkingDir": "/var/lib/nano",
+        "Labels": {
+          "org.nanobees.source-dirty": "false",
+          "org.opencontainers.image.revision": "c3696938febcc63bbb015f5ffb7f7b28511a799e",
+          "org.opencontainers.image.version": "24.04"
+        },
+        "ArgsEscaped": true
+      },
+      "Architecture": "arm64",
+      "Os": "linux",
+      "Size": 280404071,
+      "RootFS": {
+        "Type": "layers",
+        "Layers": [
+          "sha256:8edaba05454265cd17270d38ec146446c640d1d25637413c3da64a3eff296c36",
+          "sha256:e26bbb982487893c57878331c3433b2a0e075b082e1843976dbbc74c1e18d738",
+          "sha256:1acebec9dd877ebcc8b8bafe870373bb343fafac186cbf9b4a87abd48399dbf2",
+          "sha256:0a0b00b9b5878a7a788a161104bd623ae137de91955a1fef7524147d386825dc",
+          "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+          "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+          "sha256:32e2ca53c108859531e6057f9a4b732dfcfda6ac9d55768de14df04a142ad705"
+        ]
+      },
+      "Metadata": {
+        "LastTagTime": "2026-09-27T10:45:19.84038105Z"
+      },
+      "Descriptor": {
+        "mediaType": "application/vnd.oci.image.index.v1+json",
+        "digest": "sha256:0358e804d96231489d0f8a7c2fc169c36b40e1e600bb7e187c9b49ed23d9d051",
+        "size": 856
+      },
+      "Identity": {
+        "Build": [
+          {
+            "Ref": "z4buiugs4hsdmpv278s63o08e",
+            "CreatedAt": "2026-09-27T10:45:19.8697918Z"
+          }
+        ]
+      }
+    }
+  ],
+  "exitCode": 1,
+  "postRunHashesVerified": true,
+  "cleanupVerified": true
+}

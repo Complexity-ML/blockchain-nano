@@ -1,0 +1,48 @@
+diff --git a/tests/capella/docker-partition.mjs b/tests/capella/docker-partition.mjs
+index ded5364..a0f2a23 100644
+--- a/tests/capella/docker-partition.mjs
++++ b/tests/capella/docker-partition.mjs
+@@ -7,2 +7,4 @@ import {setTimeout as wait} from 'node:timers/promises';
+-const [exporter,outArg,image,revision]=process.argv.slice(2);
+-if(!exporter||!outArg||!image||!/^([a-f0-9]{40})$/.test(revision??''))throw Error('Usage: docker-partition.mjs exporter NEW-output-directory image revision');
++const [exporter,outArg,image,revision,mode="partition"]=process.argv.slice(2);
++if(!["partition","asymmetric-delay"].includes(mode))throw Error("Unknown network fault mode");
++const asymmetric=mode==="asymmetric-delay";
++if(!exporter||!outArg||!image||!/^([a-f0-9]{40})$/.test(revision??''))throw Error('Usage: docker-partition.mjs exporter NEW-output-directory image revision [partition|asymmetric-delay]');
+@@ -14 +16 @@ const inspect=async name=>JSON.parse(await docker(['inspect','--format','{{json
+-const roots=new Map(),epochs=new Map();let created=[],networkCreated=false,isolated=false,address,daemonPids=[],result='FAILED',failure;
++const roots=new Map(),epochs=new Map();let created=[],networkCreated=false,isolated=false,delayed=false,address,daemonPids=[],result='FAILED',failure;
+@@ -30 +32 @@ try{
+-  await docker(['create','--name',names[i],'--label',label,'--label','org.opencontainers.image.revision='+revision,'--network',network,'--env-file',file,'--mount','type=bind,src='+fixture+',dst=/config,readonly',image,'run','/config/genesis.json','/var/lib/nano/chain',`/config/node-${i}.json`]);created.push(names[i]);await docker(['start',names[i]]);
++  await docker(['create','--name',names[i],'--label',label,'--label','org.opencontainers.image.revision='+revision,'--network',network,...(asymmetric?['--cap-add','NET_ADMIN']:[]),'--env-file',file,'--mount','type=bind,src='+fixture+',dst=/config,readonly',image,'run','/config/genesis.json','/var/lib/nano/chain',`/config/node-${i}.json`]);created.push(names[i]);await docker(['start',names[i]]);
+@@ -36,0 +39,23 @@ try{
++ if(asymmetric){
++  // tc runs only in this campaign container's network namespace. RPC uses lo.
++  const tc=args=>docker(['exec','--user','0',names[1],'tc',...args]);
++  const qdiscs=async()=>JSON.parse(await tc(['-j','-s','qdisc','show','dev','eth0']));
++  const state=await provenance(names[1]);check(Object.keys(state.NetworkSettings.Networks).length===1,'Unexpected extra container network');
++  check(!(await qdiscs()).some(q=>q.kind==='netem'),'Unexpected pre-existing netem');
++  delayed=true;await tc(['qdisc','add','dev','eth0','root','netem','delay','500ms']);
++  await record({event:'asymmetric-delay-start',node:1,egressMilliseconds:500,durationSeconds:96,qdiscs:await qdiscs()});
++  const until=Date.now()+96000;
++  while(Date.now()<until){
++   for(let i=0;i<2;++i){const current=await provenance(names[i]);check(current.State.Running&&!current.State.Paused,'Node stopped during delay');const stat=await docker(['exec',names[i],'cat',`/proc/${daemonPids[i]}/stat`]);check(!['T','t','Z','X'].includes(stat.slice(stat.lastIndexOf(')')+2).split(' ')[0]),'Daemon stopped during delay');}
++   check((await qdiscs()).some(q=>q.kind==='netem'),'Delay disappeared');await sample();await wait(2000);
++  }
++  const minimum=BigInt(before[0].checkpoint.epoch)+2n;
++  const impaired=await commonFinality(minimum,144),stats=await qdiscs();
++  check(stats.some(q=>q.kind==='netem'&&Number(q.packets)>0),'No packets passed through netem');
++  await record({event:'asymmetric-delay-finality',impaired,qdiscs:stats});
++  await tc(['qdisc','del','dev','eth0','root']);delayed=false;
++  check(!(await qdiscs()).some(q=>q.kind==='netem'),'Delay not removed');
++  await record({event:'asymmetric-delay-restored'});
++  const final=await commonFinality(BigInt(impaired[0].checkpoint.epoch)+1n,240);
++  result='PASSED';await record({event:'asymmetric-delay-qualified',final});
++ }else{
+@@ -45,0 +71 @@ try{
++ }
+@@ -47,0 +74 @@ finally{
++ if(delayed){try{await provenance(names[1]);await docker(['exec','--user','0',names[1],'tc','qdisc','del','dev','eth0','root']);}catch(e){failure??=e;result='FAILED';await record({event:'delay-cleanup-failed',message:e.message});}}
+@@ -51 +78 @@ finally{
+- await writeFile(join(out,'summary.json'),JSON.stringify({result,revision,image,campaign,scope:'Docker packet partition; two running native Capella daemons, 32 validators each',failure:failure?.message??null},null,2)+'\n');
++ await writeFile(join(out,'summary.json'),JSON.stringify({result,revision,image,campaign,scope:asymmetric?'Docker one-peer 500ms egress delay; two running Capella daemons, 32 validators each':'Docker packet partition; two running native Capella daemons, 32 validators each',failure:failure?.message??null},null,2)+'\n');

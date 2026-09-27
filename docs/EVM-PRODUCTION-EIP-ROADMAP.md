@@ -652,3 +652,16 @@ deux livraisons non confirmées et six exports indisponibles restent archivés.
 **Partiel** : outage de processus sur un hôte, sans qualification WAN, pertes
 asymétriques, crash sous charge ou grande population. Aucun nouveau statut EVM
 ou production. [Preuves](qualification/capella-sync-rotation-outage-20260927/README.md).
+
+
+### Contre-exemple actif : retard asymétrique — 27 septembre 2026
+
+**ÉCHEC** sur l'image du commit `c369693` : retard netem de500ms sur la seule
+sortie d'un pair, deux démons actifs/32clés chacun. Finalité commune2 avant
+perturbation, puis3, sans atteindre4 dans la fenêtre96+144s. Têtes divergentes,
+processus/horloges sains ; aucune finalité contradictoire observée. Ce résultat
+réouvre la qualification de progression sous latence, malgré les reprises de
+partition réussies. Les catalogues d'attestations prennent jusqu'à27s près de
+l'arrêt ; cause précise à établir, sans relâcher les règles ni les échéances.
+La reprise sans retard n'a pas été qualifiée après cet échec. Ressources dédiées
+nettoyées et absence vérifiée. [Preuves](qualification/capella-asymmetric-delay-20260927/README.md).
