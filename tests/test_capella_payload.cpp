@@ -34,6 +34,12 @@ int main(){try{
   const auto payload=decode_capella_execution_payload(wire,limits,max_withdrawals,budget);check(payload.has_value(),"withdrawal operation payload encoding rejected: "+name);
   const auto root=capella_beacon_state_root(pre,state_limits,limits,budget);
   const auto post=prepare_capella_withdrawal_state(pre,root,state_limits,limits,budget,p("SLOTS_PER_EPOCH"),rules,payload->withdrawals);
+  if(name=="all_withdrawal"){
+   unsigned root_calls=0,total_calls=0;capella_beacon_state_root(pre,state_limits,limits,budget,[&]{++root_calls;});
+   const auto counted=prepare_capella_withdrawal_state(pre,root,state_limits,limits,budget,p("SLOTS_PER_EPOCH"),rules,payload->withdrawals,[&]{++total_calls;});
+   check(counted&&post&&counted->state==post->state&&total_calls>root_calls+2,"direct sweep cancellation coverage");
+   for(unsigned stop:{root_calls+2,total_calls-1}){unsigned calls=0;bool cancelled=false;try{prepare_capella_withdrawal_state(pre,root,state_limits,limits,budget,p("SLOTS_PER_EPOCH"),rules,payload->withdrawals,[&]{if(++calls==stop)throw ExecutionCancelled("sweep cancel");});}catch(const ExecutionCancelled&){cancelled=true;}check(cancelled&&pre==binary(withdrawal_folder/name/"pre.ssz"),"direct sweep cancellation mutated source");++cancellations;}
+  }
   if(row.at("valid").get<bool>()){check(post&&post->state==binary(withdrawal_folder/name/"post.ssz"),"whole withdrawal state differs: "+name);++withdrawal_valid;}
   else{check(!post,"invalid official withdrawal accepted: "+name);++withdrawal_invalid;}
  }

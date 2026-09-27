@@ -10,14 +10,17 @@ uint64_t advance(uint64_t index,uint64_t amount,uint64_t size){amount%=size;retu
 std::string q(uint64_t n){return quantity(Int(std::to_string(n)));}
 }
 Json CapellaWithdrawal::to_json()const{return {{"index",q(index)},{"validatorIndex",q(validator_index)},{"address",hex(Bytes(address.begin(),address.end()))},{"amount",q(amount_gwei)}};}
-std::vector<CapellaWithdrawal> expected_capella_withdrawals(const CapellaWithdrawalState& state,const CapellaWithdrawalRules& rules,const std::function<void()>& check){
- if(check)check();validate(state,rules);const auto count=uint64_t(state.registry.validators.size());
- auto cursor=state.next_validator_index,index=state.next_withdrawal_index;std::vector<CapellaWithdrawal> out;
+namespace {
+template<class Lookup>
+std::vector<CapellaWithdrawal> select_withdrawals(uint64_t count,uint64_t epoch,uint64_t cursor,uint64_t index,const CapellaWithdrawalRules& rules,Lookup lookup,const std::function<void()>& check){
+ if(check)check();
+ if(!rules.maximum_effective_balance||!rules.maximum_per_payload||!rules.maximum_validators_per_sweep||!count||cursor>=count)throw std::invalid_argument("invalid Capella withdrawal state or rules");
+ std::vector<CapellaWithdrawal> out;
  const auto limit=std::min(count,rules.maximum_validators_per_sweep);
  for(uint64_t visited=0;visited<limit&&out.size()<rules.maximum_per_payload;++visited){
-  if(check)check();const auto& v=state.registry.validators.at(cursor);uint64_t amount=0;
+  if(check)check();const auto& v=lookup(cursor);uint64_t amount=0;
   if(v.withdrawal_credentials[0]==1){
-   if(v.withdrawable_epoch<=state.registry.epoch&&v.balance)amount=v.balance;
+   if(v.withdrawable_epoch<=epoch&&v.balance)amount=v.balance;
    else if(v.effective_balance==rules.maximum_effective_balance&&v.balance>rules.maximum_effective_balance)amount=v.balance-rules.maximum_effective_balance;
   }
   if(amount){
@@ -27,6 +30,11 @@ std::vector<CapellaWithdrawal> expected_capella_withdrawals(const CapellaWithdra
   cursor=advance(cursor,1,count);
  }
  return out;
+}
+}
+std::vector<CapellaWithdrawal> expected_capella_withdrawals(const CapellaWithdrawalState& state,const CapellaWithdrawalRules& rules,const std::function<void()>& check){
+ validate(state,rules);
+ return select_withdrawals(state.registry.validators.size(),state.registry.epoch,state.next_validator_index,state.next_withdrawal_index,rules,[&](uint64_t index)->const auto&{return state.registry.validators.at(index);},check);
 }
 std::optional<CapellaWithdrawalState> prepare_capella_withdrawals(const CapellaWithdrawalState& state,const CapellaWithdrawalRules& rules,const std::vector<CapellaWithdrawal>& advertised,const std::function<void()>& check){
  const auto expected=expected_capella_withdrawals(state,rules,check);if(expected!=advertised)return std::nullopt;
@@ -47,12 +55,13 @@ CapellaWithdrawalExecutionCandidate verify_capella_withdrawal_execution(const Ca
  candidate.receipts=engine.with_checkpoint(check).verify_block(candidate.execution,block,parent,false);
  if(check)check();return candidate;
 }
-CapellaWithdrawalState read_capella_withdrawal_state(std::span<const uint8_t> state,
- const ConsensusRoot& authenticated_root,const AltairStateLimits& l,const ExecutionPayloadLimits& execution,
- size_t budget,uint64_t slots,const std::function<void()>& check){
+namespace {
+uint64_t ssz_number(std::span<const uint8_t> state,size_t at,size_t width=8){uint64_t n=0;for(size_t i=0;i<width;++i)n|=uint64_t(state[at+i])<<(8*i);return n;}
+struct WithdrawalLayout {size_t start,balances,count,execution_field;};
+WithdrawalLayout authenticated_layout(std::span<const uint8_t> state,const ConsensusRoot& authenticated_root,const AltairStateLimits& l,const ExecutionPayloadLimits& execution,size_t budget,uint64_t slots,const std::function<void()>& check){
  if(!slots)throw std::invalid_argument("invalid Capella epoch length");
  if(capella_beacon_state_root(state,l,execution,budget,check)!=authenticated_root)throw std::invalid_argument("Capella withdrawal state authentication failed");
- auto number=[&](size_t at,size_t width=8){uint64_t n=0;for(size_t i=0;i<width;++i)n|=uint64_t(state[at+i])<<(8*i);return n;};
+ auto number=[&](size_t at,size_t width=8){return ssz_number(state,at,width);};
  const size_t historical=176+64*l.slots_per_historical_root,randao=historical+96;
  const size_t slashings=randao+32*l.epochs_per_historical_vector,previous=slashings+8*l.epochs_per_slashings_vector;
  const size_t execution_field=previous+229+96*l.sync_committee_size;
@@ -60,6 +69,14 @@ CapellaWithdrawalState read_capella_withdrawal_state(std::span<const uint8_t> st
  const size_t count=(balances-start)/121;
  const size_t current=number(previous+4,4),inactivity=number(previous+129,4),header=number(execution_field,4);
  if((end-balances)/8!=count||current-end!=count||inactivity-current!=count||(header-inactivity)/8!=count)throw std::invalid_argument("Capella registry cardinality mismatch");
+ return {start,balances,count,execution_field};
+}
+}
+CapellaWithdrawalState read_capella_withdrawal_state(std::span<const uint8_t> state,
+ const ConsensusRoot& authenticated_root,const AltairStateLimits& l,const ExecutionPayloadLimits& execution,
+ size_t budget,uint64_t slots,const std::function<void()>& check){
+ const auto [start,balances,count,execution_field]=authenticated_layout(state,authenticated_root,l,execution,budget,slots,check);
+ auto number=[&](size_t at,size_t width=8){return ssz_number(state,at,width);};
  CapellaWithdrawalState projected;projected.registry.epoch=number(40)/slots;
  projected.next_withdrawal_index=number(execution_field+4);projected.next_validator_index=number(execution_field+12);
  for(size_t i=0;i<count;++i){
@@ -74,14 +91,21 @@ std::optional<CapellaWithdrawalSszCandidate> prepare_capella_withdrawal_state(
  const AltairStateLimits& l,const ExecutionPayloadLimits& execution,size_t budget,
  uint64_t slots,const CapellaWithdrawalRules& rules,const std::vector<CapellaWithdrawal>& advertised,
  const std::function<void()>& check){
- const auto projected=read_capella_withdrawal_state(state,authenticated_root,l,execution,budget,slots,check);
- const size_t historical=176+64*l.slots_per_historical_root,randao=historical+96;
- const size_t execution_field=randao+32*l.epochs_per_historical_vector+8*l.epochs_per_slashings_vector+229+96*l.sync_committee_size;
- size_t balances=0;for(unsigned i=0;i<4;++i)balances|=size_t(state[historical+92+i])<<(8*i);
- const auto after=prepare_capella_withdrawals(projected,rules,advertised,check);if(!after)return std::nullopt;
- Bytes post(state.begin(),state.end());auto put=[&](size_t at,uint64_t n){for(unsigned i=0;i<8;++i)post[at+i]=uint8_t(n>>(8*i));};
- for(const auto& w:advertised){if(check)check();put(balances+8*w.validator_index,after->registry.validators.at(w.validator_index).balance);}
- put(execution_field+4,after->next_withdrawal_index);put(execution_field+12,after->next_validator_index);
+ const auto [start,balances,count,execution_field]=authenticated_layout(state,authenticated_root,l,execution,budget,slots,check);
+ auto number=[&](size_t at){return ssz_number(state,at);};
+ const auto cursor=number(execution_field+12),index=number(execution_field+4);
+ // The full SSZ root and list cardinalities were checked above. Read only the
+ // bounded sweep; no full map projection or second registry copy is needed.
+ const auto expected=select_withdrawals(count,number(40)/slots,cursor,index,rules,[&](uint64_t i){
+  const size_t at=start+121*i;ConsensusSlashingValidator v;
+  std::copy_n(state.begin()+at+48,32,v.withdrawal_credentials.begin());
+  v.balance=number(balances+8*i);v.effective_balance=number(at+80);v.withdrawable_epoch=number(at+113);return v;
+ },check);
+ if(expected!=advertised)return std::nullopt;
+ if(check)check();Bytes post(state.begin(),state.end());auto put=[&](size_t at,uint64_t n){for(unsigned i=0;i<8;++i)post[at+i]=uint8_t(n>>(8*i));};
+ for(const auto& w:expected){if(check)check();put(balances+8*w.validator_index,number(balances+8*w.validator_index)-w.amount_gwei);}
+ put(execution_field+4,expected.empty()?index:expected.back().index+1);
+ put(execution_field+12,expected.size()==rules.maximum_per_payload?advance(expected.back().validator_index,1,count):advance(cursor,rules.maximum_validators_per_sweep,count));
  const auto root=capella_beacon_state_root(post,l,execution,budget,check);if(check)check();return CapellaWithdrawalSszCandidate{std::move(post),root};
 }
 }

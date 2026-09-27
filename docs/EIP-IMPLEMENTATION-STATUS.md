@@ -3254,3 +3254,14 @@ passent ; 17 nouvelles mutations de champs. Racines avant/après identiques à
 4 468 134 à 3 029 580 µs (~32 % de temps en moins, comparaison unique).
 Le coût complet du runtime reste ouvert ; aucune conformité EIP supplémentaire.
 [Preuves et comparaison](qualification/ssz-validator-fixed-tree-20260927/README.md).
+
+### Retraits SSZ sans projection complète du registre — 27 septembre 2026
+
+Le chemin SSZ authentifie la racine et les cardinalités, puis sélectionne les
+retraits directement dans une fenêtre bornée. Règles de sélection partagées avec
+le registre classique ; comparaison exacte de la liste et recalcul final maintenus.
+Cinq suites passent, avec deux nouvelles annulations sans mutation. À un million,
+RSS maximal du benchmark de 854 589 440 à 639 205 376 octets ; temps mesuré de
+3 029 580 à 2 911 148 µs. Racines identiques. Les autres projections et le coût
+runtime complet restent ouverts ; aucune clôture EIP ou production.
+[Preuves](qualification/ssz-withdrawal-direct-sweep-20260927/README.md).
