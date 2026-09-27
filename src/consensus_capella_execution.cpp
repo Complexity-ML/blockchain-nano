@@ -18,6 +18,9 @@ BellatrixPayloadStateCandidate prepare_capella_payload_state(
  const size_t header_at=number(state,field,4),summaries=number(state,field+20,4);
  const auto latest=decode_capella_execution_header(state.subspan(header_at,summaries-header_at),e.extra_data_bytes,state_budget,check);
  if(!latest||Bytes(latest->block_hash.begin(),latest->block_hash.end())!=parent.hash())throw std::invalid_argument("Capella beacon execution parent mismatch");
+ // A migrated Paris header has the zero SSZ withdrawal root. After the first
+ // Capella payload it holds a real list root, including for an empty list.
+ if(!parent.withdrawals_root&&latest->withdrawals_root!=ConsensusRoot{})throw std::invalid_argument("Paris parent without migrated Capella header");
  const uint64_t slot=number(state,40),genesis=number(state,0);
  if(slot>(UINT64_MAX-genesis)/seconds)throw std::invalid_argument("Capella timestamp overflow");
  const auto mix=root_at(state,randao+32*((slot/slots)%s.epochs_per_historical_vector));

@@ -1,4 +1,7 @@
 #include "nano/consensus_capella_execution.hpp"
+#include "nano/consensus_capella_fork.hpp"
+#include "../src/consensus_capella_projection.hpp"
+#include "../src/consensus_bellatrix_projection.hpp"
 #include "support/phase0_minimal_ssz.hpp"
 using namespace nano;
 static void require(bool ok,const char* message){if(!ok)throw std::runtime_error(message);}
@@ -12,7 +15,7 @@ static CapellaExecutionPayload payload(const Block& b){
  p.block_number=u64(h.number);p.timestamp=u64(h.timestamp);p.gas_limit=u64(h.gas_limit);p.gas_used=u64(h.gas_used);p.extra_data=h.extra_data;
  for(const auto& tx:b.transactions)p.transactions.push_back(tx.raw());return p;
 }
-int main(){try{
+static void scenario(bool first_capella){
  using namespace test;using namespace test::phase0_minimal;
  const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",preset_folder=fixtures/"consensus-bellatrix-containers-official";
  const auto phase0=read(preset_folder/"minimal-phase0.yaml"),altair=read(preset_folder/"minimal-altair.yaml");auto par=[&](const char* k){return parameter(phase0,k);};
@@ -28,9 +31,16 @@ int main(){try{
  const size_t header_at=little(beacon,field,4);ConsensusRoot randao{};std::copy_n(beacon.begin()+randao_at+32*((slot/par("SLOTS_PER_EPOCH"))%sl.epochs_per_historical_vector),32,randao.begin());
  State state;const std::string target="0x0000000000000000000000000000000000001234";
  Transaction tx;tx.to=target;tx.gas=100000;tx.gas_price=0;const auto signed_tx=SignedTransaction::sign(tx,bytes(Int(777),32));state.get(signed_tx.sender()).balance=1000000;state.get(target).code=unhex("602a5f5500");
- Header parent;parent.difficulty=0;parent.base_fee=0;parent.withdrawals_root=withdrawals_root(Json::array());parent.state_root=state.root();parent.timestamp=0;
+ Header parent;parent.difficulty=0;parent.base_fee=0;if(!first_capella)parent.withdrawals_root=withdrawals_root(Json::array());parent.state_root=state.root();parent.timestamp=0;
  Block previous;previous.header=parent;const auto header=encode_capella_execution_header(capella_execution_payload_header(payload(previous),limits,rules.maximum_per_payload),limits.extra_data_bytes,budget);
- beacon.resize(header_at);beacon.insert(beacon.end(),header.begin(),header.end());put(beacon,field+20,beacon.size(),4);const Bytes summaries(64,42);beacon.insert(beacon.end(),summaries.begin(),summaries.end());
+ beacon.resize(header_at);beacon.insert(beacon.end(),header.begin(),header.end());put(beacon,field+20,beacon.size(),4);const Bytes summaries(first_capella?0:64,42);beacon.insert(beacon.end(),summaries.begin(),summaries.end());
+ if(first_capella){
+  const auto common=capella_detail::project(beacon,sl,limits,budget,{});
+  const auto bellatrix_header=encode_bellatrix_execution_header(static_cast<const BellatrixExecutionPayloadHeader&>(capella_execution_payload_header(payload(previous),limits,rules.maximum_per_payload)),limits.extra_data_bytes,budget);
+  const auto pre=bellatrix_detail::restore(common.common,bellatrix_header,sl,limits,budget,{});
+  const auto pre_root=bellatrix_beacon_state_root(pre,sl,limits,budget);
+  beacon=upgrade_capella_state({pre,std::nullopt},pre_root,sl,limits,budget,par("SLOTS_PER_EPOCH"),ConsensusBytes4{3,0,0,1}).ssz;
+ }
  const auto root=capella_beacon_state_root(beacon,sl,limits,budget),before=root;const auto original=beacon;const auto evm_before=state.to_json();
  auto history=[&](const Int&){return parent.hash();};
  Block block;block.transactions.push_back(signed_tx);block.header.parent_hash=parent.hash();block.header.number=1;block.header.timestamp=Int(std::to_string(timestamp));block.header.base_fee=0;block.header.difficulty=0;block.header.mix_hash=Bytes(randao.begin(),randao.end());block.header.extra_data={1,2,3};
@@ -53,7 +63,16 @@ int main(){try{
  auto forged_payload=payload(forged);forged_payload.withdrawals=forged_withdrawals;
  const auto independently_valid=prepare_capella_execution(encode_capella_execution_payload(forged_payload,limits,rules.maximum_per_payload,budget),limits,rules.maximum_per_payload,budget,parent,state,timestamp,randao,1337,ReplayPolicy::RequireChainId,history);
  require(independently_valid.state.root()==forged_state.root(),"forged withdrawal control not EVM-valid");deny(forged_payload);
+ if(first_capella){
+  auto altered=beacon;const auto end=little(altered,field+20,4);altered.at(end-1)^=1;
+  const auto altered_root=capella_beacon_state_root(altered,sl,limits,budget);
+  bool refused=false;try{prepare_capella_payload_state(altered,altered_root,sl,limits,budget,par("SLOTS_PER_EPOCH"),6,rules,encode_capella_execution_payload(p,limits,rules.maximum_per_payload,budget),budget,parent,state,1337,ReplayPolicy::RequireChainId,history);}
+  catch(const std::invalid_argument& e){refused=std::string(e.what())=="Paris parent without migrated Capella header";}
+  require(refused&&beacon==original&&state.to_json()==evm_before,"non-migrated header accepted with Paris parent");++rejected;
+ }
  unsigned cancellations=0;for(unsigned stop:{1U,callbacks/2,callbacks}){unsigned n=0;bool stopped=false;try{run(p,[&]{if(++n==stop)throw ExecutionCancelled("cancel");});}catch(const ExecutionCancelled&){stopped=true;}require(stopped&&beacon==original&&state.to_json()==evm_before,"cancel leaked state");++cancellations;}
  require(before==capella_beacon_state_root(beacon,sl,limits,budget),"authenticated parent changed");
- std::cout<<Json{{"scenario","capella-payload-paired-state"},{"rejected",rejected},{"cancellations",cancellations},{"withdrawals",p.withdrawals.size()},{"historicalSummariesPreserved",true},{"networkActivated",false}}.dump()<<'\n';return 0;
+ std::cout<<Json{{"scenario","capella-payload-paired-state"},{"firstCapella",first_capella},{"rejected",rejected},{"cancellations",cancellations},{"withdrawals",p.withdrawals.size()},{"historicalSummariesPreserved",true},{"networkActivated",false}}.dump()<<'\n';
+}
+int main(){try{scenario(false);scenario(true);return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

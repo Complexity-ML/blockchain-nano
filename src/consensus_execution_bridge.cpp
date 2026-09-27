@@ -11,8 +11,9 @@ static BellatrixExecutionCandidate prepare_execution(
  const std::function<Bytes(const Int&)>& history,const std::function<void()>& check){
  if(check)check();
  if(!history)throw std::invalid_argument("authenticated execution history required");
- // Continuation within the selected post-merge fork; activation is separate.
- if(parent.difficulty!=0||!parent.base_fee||(bool(parent.withdrawals_root)!=bool(withdrawals))||parent.blob_gas_used||
+ // The caller selects the authenticated fork. Shanghai may extend Paris at
+ // activation, but Paris must never extend a Shanghai parent.
+ if(parent.difficulty!=0||!parent.base_fee||(parent.withdrawals_root&&!withdrawals)||parent.blob_gas_used||
     parent.excess_blob_gas||parent.parent_beacon_block_root||parent.requests_hash)
   throw std::invalid_argument("parent does not match post-merge execution profile");
  if(vector_bytes(p.parent_hash)!=parent.hash()||uint64_int(p.block_number)!=parent.number+1)

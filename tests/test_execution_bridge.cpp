@@ -63,6 +63,11 @@ int main(){try{
  // Cancellation at every observed callback, including during/after EVM writes.
  for(size_t stop=1;stop<=checkpoints;++stop){size_t seen=0;bool aborted=false;try{run(p,[&]{if(++seen==stop)throw std::runtime_error("cancel bridge");});}catch(const std::runtime_error& e){aborted=std::string(e.what())=="cancel bridge";}require(aborted&&state.root()==before,"cancellation leaked state or was swallowed");}
  auto wire=encode_bellatrix_execution_payload(p,limits,budget);
+ // Fork activation is one-way: Paris admission cannot follow Shanghai.
+ {auto shanghai_parent=parent;shanghai_parent.withdrawals_root=withdrawals_root(Json::array());bool refused=false;
+  try{prepare_bellatrix_execution(wire,limits,budget,shanghai_parent,state,112,p.prev_randao,1337,ReplayPolicy::RequireChainId,history);}
+  catch(const std::invalid_argument& e){refused=std::string(e.what())=="parent does not match post-merge execution profile";}
+  require(refused&&state.root()==before,"Shanghai to Paris downgrade accepted");++rejected;}
  bool wrong_state=false;try{State unrelated;prepare_bellatrix_execution(wire,limits,budget,parent,unrelated,112,p.prev_randao,1337,ReplayPolicy::RequireChainId,history);}catch(const std::invalid_argument& e){wrong_state=std::string(e.what()).find("parent state")!=std::string::npos;}require(wrong_state,"unauthenticated parent state accepted");
  bool oversize=false;try{prepare_bellatrix_execution(wire,limits,wire.size()-1,parent,state,112,p.prev_randao,1337,ReplayPolicy::RequireChainId,history);}catch(const std::invalid_argument& e){oversize=std::string(e.what()).find("budget")!=std::string::npos;}require(oversize,"transport budget ignored");
  // A producer can construct commitments matching an EVM that swallowed a host

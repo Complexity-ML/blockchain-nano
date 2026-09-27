@@ -18,6 +18,8 @@ BellatrixExecutionCandidate prepare_bellatrix_execution(
  const std::function<void()>& checkpoint={});
 // Post-merge Shanghai payload validation. Withdrawal authorization is supplied
 // by the enclosing authenticated Capella state transition, not this EL bridge.
+// Accepts a Paris parent at activation or a Shanghai parent thereafter; the
+// caller must authenticate fork activation, not infer it from payload contents.
 BellatrixExecutionCandidate prepare_capella_execution(
  std::span<const uint8_t>,const ExecutionPayloadLimits&,uint64_t maximum_withdrawals,size_t maximum_bytes,
  const Header&,const State&,uint64_t expected_timestamp,const ConsensusRoot& expected_randao,

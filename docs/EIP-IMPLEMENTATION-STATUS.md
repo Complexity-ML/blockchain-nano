@@ -2030,3 +2030,13 @@ complets concordent ; dix refus et trois annulations contrôlent les candidats.
 Reste le premier payload Shanghai sur parent Paris, puis la composition
 Store/réacteur, l'activation et le commit durable. Le profil réseau ne change
 pas ; EIP-4895 et l'objectif production restent partiels.
+
+### Capella : premier payload Shanghai sur parent Paris
+
+Le pont EL autorise maintenant la transition Paris→Shanghai sous contexte
+Capella authentifié, tout en rejetant Shanghai→Paris et les profils ultérieurs.
+Un état Bellatrix synthétique est migré puis reçoit quatre retraits et une
+transaction PUSH0/SSTORE. Refus, annulations et régression 4/4 qualifiés.
+[Preuves](qualification/capella-first-payload-20260927/README.md).
+Restent le calendrier composé avec l'admission signée, Store/réacteur, commit
+durable et qualification réseau. Aucun profil actif ni statut EIP clos ne change.
