@@ -38,7 +38,13 @@ struct Hasher {
  Root eth1(View b)const{require(b.size()==72);return container({scalar(b.first(32)),scalar(b.subspan(32,8)),scalar(b.subspan(40,32))});}
  Root validator(View b)const{
   require(b.size()==121&&b[88]<=1);
-  return container({packed(b.first(48),2),scalar(b.subspan(48,32)),scalar(b.subspan(80,8)),scalar(b.subspan(88,1)),scalar(b.subspan(89,8)),scalar(b.subspan(97,8)),scalar(b.subspan(105,8)),scalar(b.subspan(113,8))});
+  // Validator has exactly eight fields: no padding subtrees or heap buffers.
+  // Its 48-byte public key is two chunks, with the final 16 bytes zero-padded.
+  tick();const auto key=consensus_signing_root(scalar(b.first(32)),scalar(b.subspan(32,16)));
+  std::array<Root,8> nodes{key,scalar(b.subspan(48,32)),scalar(b.subspan(80,8)),scalar(b.subspan(88,1)),scalar(b.subspan(89,8)),scalar(b.subspan(97,8)),scalar(b.subspan(105,8)),scalar(b.subspan(113,8))};
+  for(size_t width=nodes.size();width>1;width/=2)
+   for(size_t i=0;i<width/2;++i){tick();nodes[i]=consensus_signing_root(nodes[2*i],nodes[2*i+1]);}
+  return nodes[0];
  }
  Root bitlist(View b,uint64_t limit)const{
   require(limit&&!b.empty()&&b.back()!=0&&b.size()-1<=limit/8);

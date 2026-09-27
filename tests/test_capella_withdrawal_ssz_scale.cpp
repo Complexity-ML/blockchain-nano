@@ -40,7 +40,7 @@ int main(){try{
 #else
   const uint64_t rss=uint64_t(usage.ru_maxrss)*1024;
 #endif
-  std::cout<<Json{{"scenario","capella-withdrawal-ssz-scale"},{"validators",count},{"stateBytes",state.size()},{"rootMicroseconds",root_us},{"prepareMicroseconds",preparation_us},{"processPeakRssBytes",rss},{"syntheticRegistry",true},{"includesSszAuthentication",true},{"includesBls",false},{"distributedNodes",0},{"fullStateCompared",true},{"wrongRootRejected",true}}.dump()<<std::endl;
+  std::cout<<Json{{"scenario","capella-withdrawal-ssz-scale"},{"validators",count},{"inputRoot",hex(Bytes(root.begin(),root.end()))},{"outputRoot",hex(Bytes(result->root.begin(),result->root.end()))},{"stateBytes",state.size()},{"rootMicroseconds",root_us},{"prepareMicroseconds",preparation_us},{"processPeakRssBytes",rss},{"syntheticRegistry",true},{"includesSszAuthentication",true},{"includesBls",false},{"distributedNodes",0},{"fullStateCompared",true},{"wrongRootRejected",true}}.dump()<<std::endl;
  }
  return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<std::endl;return 1;}}

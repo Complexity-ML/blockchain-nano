@@ -3243,3 +3243,14 @@ que le benchmark registre seul masquait ; aucune capacité runtime clôturée.
 Priorité : profiler et réduire les calculs complets répétés sans supprimer
 l'authentification, puis mesurer le nœud complet. Aucun EIP clôturé.
 [Preuves](qualification/capella-withdrawal-ssz-scale-20260927/README.md).
+
+### Arbre SSZ Validator de taille fixe — 27 septembre 2026
+
+Optimisation C++ : les huit champs du validateur sont hachés sur la pile, sans
+vecteurs temporaires ni recalcul des sous-arbres nuls inutiles. Vérifications de
+format, annulation, authentification et racine de sortie conservées. Six suites
+passent ; 17 nouvelles mutations de champs. Racines avant/après identiques à
+100 000 et un million d'entrées. À un million, préparation SSZ mesurée de
+4 468 134 à 3 029 580 µs (~32 % de temps en moins, comparaison unique).
+Le coût complet du runtime reste ouvert ; aucune conformité EIP supplémentaire.
+[Preuves et comparaison](qualification/ssz-validator-fixed-tree-20260927/README.md).
