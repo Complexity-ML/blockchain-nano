@@ -2581,3 +2581,15 @@ ensuite un accès en exécution sérialisée. Ce test du registre ne qualifie pa
 l'ordonnancement tournant des pairs du démon, ni un réseau de 32 nœuds.
 Aucune nouvelle conformité EIP ni disponibilité production déclarée.
 [Mesures, preuve et prochain critère](qualification/capella-catalog-concurrency-20260927/README.md).
+
+### 2026-09-27 — Nettoyage Capella après disparition d'un pair
+
+Défaut de raccordement corrigé : le filtre du démon refusait la nouvelle
+libération de catalogue après invalidation du pair. Le filtre partagé autorise
+maintenant le nettoyage authentifié, tout en bloquant les nouveaux travaux.
+Régression avec filtre/registre/RPC réels : ouverture allouée, pair invalidé,
+réponse perdue, libération et quota immédiatement réutilisable. Test HTTP réussi
+en 22,78 s ; rattrapage réel à deux processus et reprise après perte d'ACK réussis.
+L'équité entre plusieurs pairs concurrents reste à qualifier. Aucun EIP ni
+critère de production globale clôturé par cette correction de transport.
+[Preuves et limites](qualification/capella-peer-cleanup-20260927/README.md).

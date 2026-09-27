@@ -24,6 +24,7 @@
 #include "../network/capella_inventory_sessions.hpp"
 #include "../network/altair_core_recovery.hpp"
 #include "../network/capella_catalog_relay.hpp"
+#include "../network/capella_peer_core.hpp"
 #include "../network/capella_block_delivery.hpp"
 #include <future>
 #include "support/capella_catalog_concurrency.hpp"
@@ -332,12 +333,17 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
    check(result.at("success")==true&&result.at("closed")==true,"real Capella catalog relay failed");relayed+=result.at("delivered").get<size_t>();
   }
   check(relayed>=proposals&&runtime.reactor->current().token==saved.token,"catalog relay mutated duplicate checkpoint or omitted blocks");
-  io.restart();Json lost_result;std::string lost_handle;unsigned releases=0;
-  auto lose_open=[&](std::string method,Json params,Reply reply){auto response=ipc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",std::move(params)}});if(method=="nano_capellaCatalogAcquire"){check(response.contains("result"),"fault injection open failed before reply loss");lost_handle=response.at("result").at("handle");reply(nullptr);return;}if(method=="nano_capellaCatalogRelease")++releases;reply(response.contains("result")?response.at("result"):Json(nullptr));};
-  auto lost_relay=std::make_shared<CapellaCatalogRelay>(io,lose_open,[](auto,auto,auto){throw std::runtime_error("lost open delivered payload");},"capella-ipc-test","block",ingress,1,2,[&](Json value){lost_result=std::move(value);});lost_relay->start(std::chrono::seconds(10));io.run();
-  check(lost_result.at("success")==false&&lost_result.at("closed")==true&&releases==1&&!lost_handle.empty(),"real lost open not released");
+  io.restart();Json lost_result;std::string lost_handle;unsigned releases=0;bool peer_current=true;
+  auto lose_open=[&](std::string method,Json params,Reply reply){auto response=ipc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",std::move(params)}});if(method=="nano_capellaCatalogAcquire"){check(response.contains("result"),"fault injection open failed before reply loss");lost_handle=response.at("result").at("handle");peer_current=false;reply(nullptr);return;}if(method=="nano_capellaCatalogRelease")++releases;reply(response.contains("result")?response.at("result"):Json(nullptr));};
+  auto gated_core=capella_peer_core(lose_open,[&]{return peer_current;});
+  auto lost_relay=std::make_shared<CapellaCatalogRelay>(io,gated_core,[](auto,auto,auto){throw std::runtime_error("lost open delivered payload");},"capella-ipc-test","block",ingress,1,2,[&](Json value){lost_result=std::move(value);});lost_relay->start(std::chrono::seconds(10));io.run();
+  check(lost_result.at("success")==false&&lost_result.at("closed")==true&&releases==1&&!lost_handle.empty(),"disconnected peer lost open not released");
   bool released=false;try{runtime.catalogs->page("capella-private-daemon",lost_handle,{},1,512);}catch(const std::invalid_argument&){released=true;}check(released,"lost open retained snapshot");
   const auto free_quota=runtime.catalogs->open("quota-check","block");runtime.catalogs->close("quota-check",free_quota);
+  unsigned forwarded=0,denied=0;auto disconnected=capella_peer_core([&](const std::string&,Json,Reply reply){++forwarded;reply(true);},[]{return false;});
+  for(const auto* method:{"nano_capellaCatalogGeneration","nano_capellaCatalogAcquire","nano_capellaCatalogPage","nano_capellaExport","nano_capellaSubmit"})disconnected(method,Json::array(),[&](Json value){check(value.is_null(),"disconnected peer started new core work");++denied;});
+  check(forwarded==0&&denied==5,"disconnected gate failed to deny new work");
+
 
 
  }

@@ -13,6 +13,7 @@
 #include "altair_peer.hpp"
 #include "altair_archive_relay.hpp"
 #include "capella_catalog_relay.hpp"
+#include "capella_peer_core.hpp"
 #include "capella_block_delivery.hpp"
 #include "altair_vote_delivery.hpp"
 #include "peer_relay_budget.hpp"
@@ -161,7 +162,7 @@ class Network {
     if(!altair_relay_budget_.acquire(id))return;altair_last_peer_=id;
     auto current=[this,id,generation]{const auto p=peers_.find(id);return p!=peers_.end()&&p->second.capella_generation==generation&&altair_ingress_&&altair_dispatch_&&!altair_dispatch_->blocked()&&consensus_peer(p->second.status);};
     auto send=[this,info,current](Json frame,Reply reply){if(!current()){reply(nullptr);return;}send_altair(info,std::move(frame),[current,reply=std::move(reply)](Json result)mutable{reply(current()?std::move(result):Json(nullptr));});};
-    auto core=[this,current](std::string method,Json params,Reply reply){if(!current()&&method!="nano_capellaCatalogClose"){reply(nullptr);return;}core_.call(method,std::move(params),std::move(reply));};
+    auto core=capella_peer_core([this](const std::string& method,Json params,Reply reply){core_.call(method,std::move(params),std::move(reply));},current);
     auto active=std::make_shared<std::shared_ptr<CapellaBlockDelivery>>();
     auto deliver=[this,core,send,current,knowledge,kind,active](std::string root,Json frame,Reply reply){
      if(!current()){reply(nullptr);return;}if(knowledge->acknowledged(root)){reply(Json{{"accepted",true}});return;}

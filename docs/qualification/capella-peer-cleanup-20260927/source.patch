@@ -1,0 +1,45 @@
+diff --git a/network/main.cpp b/network/main.cpp
+index 25938ec..d82c9d3 100644
+--- a/network/main.cpp
++++ b/network/main.cpp
+@@ -15,0 +16 @@
++#include "capella_peer_core.hpp"
+@@ -164 +165 @@ class Network {
+-    auto core=[this,current](std::string method,Json params,Reply reply){if(!current()&&method!="nano_capellaCatalogClose"){reply(nullptr);return;}core_.call(method,std::move(params),std::move(reply));};
++    auto core=capella_peer_core([this](const std::string& method,Json params,Reply reply){core_.call(method,std::move(params),std::move(reply));},current);
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index 9d104d3..0830807 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -26,0 +27 @@
++#include "../network/capella_peer_core.hpp"
+@@ -335,4 +336,5 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
+-  io.restart();Json lost_result;std::string lost_handle;unsigned releases=0;
+-  auto lose_open=[&](std::string method,Json params,Reply reply){auto response=ipc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",std::move(params)}});if(method=="nano_capellaCatalogAcquire"){check(response.contains("result"),"fault injection open failed before reply loss");lost_handle=response.at("result").at("handle");reply(nullptr);return;}if(method=="nano_capellaCatalogRelease")++releases;reply(response.contains("result")?response.at("result"):Json(nullptr));};
+-  auto lost_relay=std::make_shared<CapellaCatalogRelay>(io,lose_open,[](auto,auto,auto){throw std::runtime_error("lost open delivered payload");},"capella-ipc-test","block",ingress,1,2,[&](Json value){lost_result=std::move(value);});lost_relay->start(std::chrono::seconds(10));io.run();
+-  check(lost_result.at("success")==false&&lost_result.at("closed")==true&&releases==1&&!lost_handle.empty(),"real lost open not released");
++  io.restart();Json lost_result;std::string lost_handle;unsigned releases=0;bool peer_current=true;
++  auto lose_open=[&](std::string method,Json params,Reply reply){auto response=ipc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",std::move(params)}});if(method=="nano_capellaCatalogAcquire"){check(response.contains("result"),"fault injection open failed before reply loss");lost_handle=response.at("result").at("handle");peer_current=false;reply(nullptr);return;}if(method=="nano_capellaCatalogRelease")++releases;reply(response.contains("result")?response.at("result"):Json(nullptr));};
++  auto gated_core=capella_peer_core(lose_open,[&]{return peer_current;});
++  auto lost_relay=std::make_shared<CapellaCatalogRelay>(io,gated_core,[](auto,auto,auto){throw std::runtime_error("lost open delivered payload");},"capella-ipc-test","block",ingress,1,2,[&](Json value){lost_result=std::move(value);});lost_relay->start(std::chrono::seconds(10));io.run();
++  check(lost_result.at("success")==false&&lost_result.at("closed")==true&&releases==1&&!lost_handle.empty(),"disconnected peer lost open not released");
+@@ -340,0 +343,4 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
++  unsigned forwarded=0,denied=0;auto disconnected=capella_peer_core([&](const std::string&,Json,Reply reply){++forwarded;reply(true);},[]{return false;});
++  for(const auto* method:{"nano_capellaCatalogGeneration","nano_capellaCatalogAcquire","nano_capellaCatalogPage","nano_capellaExport","nano_capellaSubmit"})disconnected(method,Json::array(),[&](Json value){check(value.is_null(),"disconnected peer started new core work");++denied;});
++  check(forwarded==0&&denied==5,"disconnected gate failed to deny new work");
++
+--- /dev/null
++++ b/network/capella_peer_core.hpp
+@@ -0,0 +1,12 @@
++#pragma once
++#include "altair_core_dispatch.hpp"
++
++// Peer/session validity gates new work, not cleanup of local snapshots already
++// owned by an attempt. Cleanup RPCs remain authenticated by the core's token.
++inline AltairCoreDispatch::Call capella_peer_core(AltairCoreDispatch::Call core,std::function<bool()> current){
++ if(!core||!current)throw std::invalid_argument("Invalid Capella peer core gate");
++ return [core=std::move(core),current=std::move(current)](const std::string& method,Json params,Reply reply){
++  if(!current()&&method!="nano_capellaCatalogClose"&&method!="nano_capellaCatalogRelease"){reply(nullptr);return;}
++  core(method,std::move(params),std::move(reply));
++ };
++}
