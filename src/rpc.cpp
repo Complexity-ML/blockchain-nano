@@ -513,20 +513,23 @@ Json Rpc::one(const Json& request,const std::function<void()>& cancelled){
    else if(method=="nano_bellatrixSubmit")result=service->submit(params[1].get<std::string>(),sequence,params[3]);
    else result=service->job(params[1].get<std::string>(),sequence,method=="nano_bellatrixCancel",method=="nano_bellatrixForget");
   }
-  else if(method=="nano_capellaStatus"||method=="nano_capellaSubmit"||method=="nano_capellaJob"||method=="nano_capellaCancel"||method=="nano_capellaForget"||method=="nano_capellaJobs"||method=="nano_capellaRotateSession"||method=="nano_capellaExport"||method=="nano_capellaCatalogOpen"||method=="nano_capellaCatalogPage"||method=="nano_capellaCatalogClose"){
+  else if(method=="nano_capellaStatus"||method=="nano_capellaSubmit"||method=="nano_capellaJob"||method=="nano_capellaCancel"||method=="nano_capellaForget"||method=="nano_capellaJobs"||method=="nano_capellaRotateSession"||method=="nano_capellaExport"||method=="nano_capellaCatalogGeneration"||method=="nano_capellaCatalogAcquire"||method=="nano_capellaCatalogRelease"||method=="nano_capellaCatalogOpen"||method=="nano_capellaCatalogPage"||method=="nano_capellaCatalogClose"){
    if(!capella_||!capella_->reactor||!capella_->clock)throw RpcError(-32601,"Method not found");
-   const size_t count=method=="nano_capellaStatus"||method=="nano_capellaJobs"?1:method=="nano_capellaRotateSession"||method=="nano_capellaCatalogOpen"||method=="nano_capellaCatalogClose"?2:method=="nano_capellaSubmit"||method=="nano_capellaCatalogPage"?4:3;arity(params,count,count);
+   const size_t count=method=="nano_capellaCatalogAcquire"?4:method=="nano_capellaCatalogRelease"?3:method=="nano_capellaCatalogGeneration"?1:method=="nano_capellaStatus"||method=="nano_capellaJobs"?1:method=="nano_capellaRotateSession"||method=="nano_capellaCatalogOpen"||method=="nano_capellaCatalogClose"?2:method=="nano_capellaSubmit"||method=="nano_capellaCatalogPage"?4:3;arity(params,count,count);
    if(network_token_.empty()||!params[0].is_string()||params[0].get<std::string>()!=network_token_)throw RpcError(-32001,"Unauthorized Capella request");
    auto runtime=capella_;lock.unlock();if(cancelled)cancelled();if(!runtime->clock->healthy())throw RpcError(-32603,"Capella clock unavailable");
    auto root=[](const Json& value){if(!value.is_string())throw RpcError(-32602,"Expected Capella root");const auto text=value.get<std::string>();const auto bytes=unhex(text);if(bytes.size()!=32||hex(bytes)!=text)throw RpcError(-32602,"Invalid Capella root");ConsensusRoot id{};std::copy(bytes.begin(),bytes.end(),id.begin());return id;};
    auto positive=[](const Json& value){const auto n=u64(quantity(value));if(!n||!value.is_string()||quantity(Int(std::to_string(n)))!=value.get<std::string>())throw RpcError(-32602,"Invalid Capella quantity");return n;};
    if(method=="nano_capellaStatus"){result=runtime->reactor->network_identity();result["clockHealthy"]=true;result["networkProtocolActive"]=runtime->network.value("enabled",false)?Json(nullptr):Json(false);result["networkAdmissionEnabled"]=runtime->network.value("enabled",false);result["capellaRelay"]=runtime->network;result["executionBound"]=runtime->reactor->execution_bound();if(runtime->admission)result.update(runtime->admission->capacities());result["admissionSession"]=runtime->admission?runtime->admission->receipts().at("session"):Json(nullptr);}
    else if(method=="nano_capellaExport")result=runtime->reactor->export_message(params[1].get<std::string>(),root(params[2]),(16*1024*1024-4096)/2,{},cancelled);
-   else if(method=="nano_capellaCatalogOpen"||method=="nano_capellaCatalogPage"||method=="nano_capellaCatalogClose"){
+   else if(method=="nano_capellaCatalogGeneration"||method=="nano_capellaCatalogAcquire"||method=="nano_capellaCatalogRelease"||method=="nano_capellaCatalogOpen"||method=="nano_capellaCatalogPage"||method=="nano_capellaCatalogClose"){
     if(!runtime->catalogs)throw RpcError(-32601,"Capella catalogs unavailable");
     // All holders of this private bearer token form one administrative principal.
     const std::string principal="capella-private-daemon";
-    if(method=="nano_capellaCatalogOpen")result={{"handle",runtime->catalogs->open(principal,params[1].get<std::string>(),cancelled)}};
+    if(method=="nano_capellaCatalogGeneration")result=runtime->catalogs->generation();
+    else if(method=="nano_capellaCatalogAcquire")result={{"handle",runtime->catalogs->acquire(principal,params[2].get<std::string>(),params[3].get<std::string>(),params[1].get<std::string>(),cancelled)}};
+    else if(method=="nano_capellaCatalogRelease"){runtime->catalogs->release(principal,params[1].get<std::string>(),params[2].get<std::string>());result=true;}
+    else if(method=="nano_capellaCatalogOpen")result={{"handle",runtime->catalogs->open(principal,params[1].get<std::string>(),cancelled)}};
     else if(method=="nano_capellaCatalogClose"){runtime->catalogs->close(principal,params[1].get<std::string>());result=true;}
     else{std::optional<ConsensusRoot> cursor;if(!params[2].is_null())cursor=root(params[2]);result=runtime->catalogs->page(principal,params[1].get<std::string>(),cursor,positive(params[3]),1024*1024,cancelled);}
    }else{

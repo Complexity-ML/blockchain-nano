@@ -1,0 +1,168 @@
+diff --git a/network/capella_catalog_relay.hpp b/network/capella_catalog_relay.hpp
+index c9f093f..aa0d95b 100644
+--- a/network/capella_catalog_relay.hpp
++++ b/network/capella_catalog_relay.hpp
+@@ -3,0 +4 @@
++#include <openssl/rand.h>
+@@ -13 +14 @@ private:
+- asio::io_context& io_;Call core_;Deliver deliver_;std::string token_,kind_,handle_,cursor_,sequence_,digest_,stage_="open";
++ asio::io_context& io_;Call core_;Deliver deliver_;std::string token_,kind_,handle_,cursor_,sequence_,digest_,stage_="open",generation_,request_;
+@@ -19,0 +21,2 @@ private:
++ Json release_params(){return Json::array({token_,generation_,request_});}
++ void cleanup_request(){if(request_.empty())return;try{core_("nano_capellaCatalogRelease",release_params(),[](Json){});}catch(...){}}
+@@ -29 +32 @@ private:
+-  call("nano_capellaCatalogClose",Json::array({token_,handle_}),callback([retry](auto& self,Json value){
++  call("nano_capellaCatalogRelease",release_params(),callback([retry](auto& self,Json value){
+@@ -36 +39 @@ private:
+-  if(handle_.empty()){complete(false,false);return;}
++  if(request_.empty()){complete(false,false);return;}
+@@ -79 +82,6 @@ public:
+-  call("nano_capellaCatalogOpen",Json::array({token_,kind_}),callback([](auto& self,Json value){if(!value.is_object()||!root(value.at("handle"))){self.complete(false,false);return;}self.handle_=value.at("handle").template get<std::string>();self.page();},true));
++  call("nano_capellaCatalogGeneration",Json::array({token_}),callback([](auto& self,Json generation){
++   if(!root(generation)){self.complete(false,false);return;}self.generation_=generation.template get<std::string>();
++   unsigned char bytes[32];if(RAND_bytes(bytes,sizeof(bytes))!=1){self.complete(false,false);return;}
++   self.request_="0x";for(auto byte:bytes){self.request_+="0123456789abcdef"[byte>>4];self.request_+="0123456789abcdef"[byte&15];}
++   self.call("nano_capellaCatalogAcquire",Json::array({self.token_,self.kind_,self.generation_,self.request_}),self.callback([](auto& s,Json value){if(!value.is_object()||!root(value.at("handle"))){s.close(false);return;}s.handle_=value.at("handle").template get<std::string>();s.page();},true));
++  }));
+@@ -83 +91 @@ public:
+- void cancel(){if(finished_)return;if(!handle_.empty()&&!closing_)cleanup(handle_);stage_="cancelled";complete(false,false);}
++ void cancel(){if(finished_)return;if(!request_.empty()&&!closing_)cleanup_request();stage_="cancelled";complete(false,false);}
+diff --git a/network/capella_inventory_sessions.hpp b/network/capella_inventory_sessions.hpp
+index e25a055..454fec4 100644
+--- a/network/capella_inventory_sessions.hpp
++++ b/network/capella_inventory_sessions.hpp
+@@ -4,0 +5 @@
++#include <set>
+@@ -11 +12 @@ class CapellaInventorySessions {
+- struct Entry {std::string owner;Clock::time_point created;std::shared_ptr<const nano::CapellaInventorySnapshot> snapshot;};
++ struct Entry {std::string owner;Clock::time_point created;std::shared_ptr<const nano::CapellaInventorySnapshot> snapshot;std::string generation,request,kind;};
+@@ -16 +17,11 @@ class CapellaInventorySessions {
+- void reap(Clock::time_point now){for(auto it=entries_.begin();it!=entries_.end();){if(now<it->second.created||now-it->second.created>=ttl_){bytes_-=it->second.snapshot->root_bytes();it=entries_.erase(it);}else ++it;}}
++ std::string generation_=random_id();std::set<std::pair<std::string,std::string>> retired_;
++ static std::string random_id(){nano::Bytes value(32);if(RAND_bytes(value.data(),value.size())!=1)throw std::runtime_error("Capella inventory randomness unavailable");return nano::hex(value);}
++ static void identity(const std::string& owner,const std::string& id){if(owner.empty()||owner.size()>256||id.size()!=66||!id.starts_with("0x")||!std::all_of(id.begin()+2,id.end(),[](char c){return (c>='0'&&c<='9')||(c>='a'&&c<='f');}))throw std::invalid_argument("Invalid Capella inventory identity");}
++ // Retire identifiers without unbounded tombstones. Rotation fences every older
++ // acquire, while existing handles and request releases remain valid.
++ void retire(const std::string& owner,const std::string& generation,const std::string& request){
++  if(request.empty()||generation!=generation_||retired_.contains({owner,request}))return;
++  if(retired_.size()>=maximum_){auto next=random_id();if(next==generation_)throw std::runtime_error("Capella generation collision");generation_.swap(next);retired_.clear();return;}
++  retired_.emplace(owner,request);
++ }
++ void reap(Clock::time_point now){for(auto it=entries_.begin();it!=entries_.end();){if(now<it->second.created||now-it->second.created>=ttl_){retire(it->second.owner,it->second.generation,it->second.request);bytes_-=it->second.snapshot->root_bytes();it=entries_.erase(it);}else ++it;}}
+@@ -21,0 +33,14 @@ public:
++ std::string generation(){std::lock_guard lock(mutex_);if(stopped_)throw std::runtime_error("Capella inventory sessions stopped");return generation_;}
++ std::string acquire(const std::string& owner,const std::string& generation,const std::string& request,std::string_view kind,const std::function<void()>& check={}){
++  identity(owner,request);identity(owner,generation);
++  std::lock_guard lock(mutex_);const auto now=now_();reap(now);
++  if(stopped_||generation!=generation_||retired_.contains({owner,request}))throw std::invalid_argument("Capella inventory request retired");
++  for(const auto& [id,entry]:entries_)if(entry.owner==owner&&entry.generation==generation&&entry.request==request){if(entry.kind!=kind)throw std::invalid_argument("Capella inventory request conflict");if(check)check();return id;}
++  return open_locked(owner,kind,now,check,generation,request);
++ }
++ // Also fences cancel-before-acquire. An old generation cannot create a new
++ // snapshot; its existing snapshot can still be found and released.
++ void release(const std::string& owner,const std::string& generation,const std::string& request){
++  identity(owner,request);identity(owner,generation);std::lock_guard lock(mutex_);if(stopped_)return;reap(now_());retire(owner,generation,request);
++  for(auto it=entries_.begin();it!=entries_.end();++it)if(it->second.owner==owner&&it->second.generation==generation&&it->second.request==request){bytes_-=it->second.snapshot->root_bytes();entries_.erase(it);break;}
++ }
+@@ -24,4 +49 @@ public:
+-  std::lock_guard lock(mutex_);const auto now=now_();reap(now);if(stopped_)throw std::runtime_error("Capella inventory sessions stopped");if(entries_.size()>=maximum_)throw std::length_error("Capella inventory session capacity exhausted");
+-  auto snapshot=reactor_.capture_inventory(kind,budget_-bytes_,check);
+-  nano::Bytes random(32);if(RAND_bytes(random.data(),random.size())!=1)throw std::runtime_error("Capella inventory randomness unavailable");const auto id=nano::hex(random);
+-  if(check)check();auto [it,inserted]=entries_.emplace(id,Entry{owner,now,std::move(snapshot)});if(!inserted)throw std::runtime_error("Capella inventory handle collision");bytes_+=it->second.snapshot->root_bytes();return id;
++  std::lock_guard lock(mutex_);const auto now=now_();reap(now);return open_locked(owner,kind,now,check,{},{});
+@@ -28,0 +51,7 @@ public:
++private:
++ std::string open_locked(const std::string& owner,std::string_view kind,Clock::time_point now,const std::function<void()>& check,const std::string& generation,const std::string& request){
++  if(stopped_)throw std::runtime_error("Capella inventory sessions stopped");if(entries_.size()>=maximum_)throw std::length_error("Capella inventory session capacity exhausted");
++  auto snapshot=reactor_.capture_inventory(kind,budget_-bytes_,check);const auto id=random_id();
++  if(check)check();auto [it,inserted]=entries_.emplace(id,Entry{owner,now,std::move(snapshot),generation,request,std::string(kind)});if(!inserted)throw std::runtime_error("Capella inventory handle collision");bytes_+=it->second.snapshot->root_bytes();return id;
++ }
++public:
+@@ -32 +61 @@ public:
+- void stop(){std::lock_guard lock(mutex_);stopped_=true;entries_.clear();bytes_=0;}
++ void stop(){std::lock_guard lock(mutex_);stopped_=true;entries_.clear();retired_.clear();bytes_=0;}
+@@ -34 +63 @@ public:
+- // retaining tombstones or extending leases. A live foreign handle is protected.
++ // extending leases. Request retirement remains bounded. Foreign handles are protected.
+@@ -39 +68 @@ public:
+-  bytes_-=it->second.snapshot->root_bytes();entries_.erase(it);
++  retire(it->second.owner,it->second.generation,it->second.request);bytes_-=it->second.snapshot->root_bytes();entries_.erase(it);
+diff --git a/network/test_capella_catalog_relay.cpp b/network/test_capella_catalog_relay.cpp
+index baafa2d..804b4a4 100644
+--- a/network/test_capella_catalog_relay.cpp
++++ b/network/test_capella_catalog_relay.cpp
+@@ -8 +8 @@ int main(){try{
+- for(const std::string mode:{"success","duplicate","empty","changed-snapshot","wrong-next","unsorted","unavailable","foreign","rejected","lost-ack","lost-close","close-applied-reply-lost","close-request-lost","close-unreachable","close-refused","limit","expired"}){
++ for(const std::string mode:{"success","lost-open","duplicate","empty","changed-snapshot","wrong-next","unsorted","unavailable","foreign","rejected","lost-ack","lost-close","close-applied-reply-lost","close-request-lost","close-unreachable","close-refused","limit","expired"}){
+@@ -11,2 +11,3 @@ int main(){try{
+-   if(method=="nano_capellaCatalogOpen"){allocated=true;value={{"handle",root('c')}};}
+-   else if(method=="nano_capellaCatalogClose"){++closes;check(p[1]==root('c'),"wrong close handle");if(mode=="lost-close")return;
++   if(method=="nano_capellaCatalogGeneration"){cb(root('e'));return;}
++   if(method=="nano_capellaCatalogAcquire"){allocated=true;if(mode=="lost-open"){cb(nullptr);return;}value={{"handle",root('c')}};}
++   else if(method=="nano_capellaCatalogRelease"){++closes;check(p[1]==root('e')&&p[2].get<std::string>().size()==66,"wrong release request");if(mode=="lost-close")return;
+@@ -28,0 +30 @@ int main(){try{
++  if(mode=="lost-open")check(removals==1&&!allocated&&sends==0&&result["closed"]==true,"lost open reply leaked snapshot");
+@@ -36,2 +38,3 @@ int main(){try{
+-  auto core=[&](std::string method,Json,Reply cb){if(method=="nano_capellaCatalogOpen"){if(late_open)delayed=cb;else cb(Json{{"handle",root('c')}});}else if(method=="nano_capellaCatalogClose"){++closes;cb(true);}else delayed=cb;};
+-  auto relay=std::make_shared<CapellaCatalogRelay>(io,core,[](auto,auto,auto){throw std::runtime_error("delivery after cancellation");},"token","block",ingress,1,2,[&](Json value){++done;result=value;});relay->start(20ms);if(!late_open)io.poll();relay->cancel();check(bool(delayed),"missing delayed call");delayed(Json{{"handle",root('c')}});delayed(Json{{"handle",root('c')}});io.restart();io.run();check(done==1&&result["success"]==false&&closes==1,"late callback resurrected/leaked catalog");++scenarios;
++  auto core=[&](std::string method,Json,Reply cb){if(method=="nano_capellaCatalogGeneration"){cb(root('e'));return;}
++   if(method=="nano_capellaCatalogAcquire"){if(late_open)delayed=cb;else cb(Json{{"handle",root('c')}});}else if(method=="nano_capellaCatalogRelease"||method=="nano_capellaCatalogClose"){++closes;cb(true);}else delayed=cb;};
++  auto relay=std::make_shared<CapellaCatalogRelay>(io,core,[](auto,auto,auto){throw std::runtime_error("delivery after cancellation");},"token","block",ingress,1,2,[&](Json value){++done;result=value;});relay->start(20ms);io.poll();relay->cancel();check(bool(delayed),"missing delayed call");delayed(Json{{"handle",root('c')}});delayed(Json{{"handle",root('c')}});io.restart();io.run();check(done==1&&result["success"]==false&&closes==(late_open?2:1),"late callback resurrected/leaked catalog");++scenarios;
+diff --git a/src/rpc.cpp b/src/rpc.cpp
+index 1bc3114..6125f5f 100644
+--- a/src/rpc.cpp
++++ b/src/rpc.cpp
+@@ -516 +516 @@ Json Rpc::one(const Json& request,const std::function<void()>& cancelled){
+-  else if(method=="nano_capellaStatus"||method=="nano_capellaSubmit"||method=="nano_capellaJob"||method=="nano_capellaCancel"||method=="nano_capellaForget"||method=="nano_capellaJobs"||method=="nano_capellaRotateSession"||method=="nano_capellaExport"||method=="nano_capellaCatalogOpen"||method=="nano_capellaCatalogPage"||method=="nano_capellaCatalogClose"){
++  else if(method=="nano_capellaStatus"||method=="nano_capellaSubmit"||method=="nano_capellaJob"||method=="nano_capellaCancel"||method=="nano_capellaForget"||method=="nano_capellaJobs"||method=="nano_capellaRotateSession"||method=="nano_capellaExport"||method=="nano_capellaCatalogGeneration"||method=="nano_capellaCatalogAcquire"||method=="nano_capellaCatalogRelease"||method=="nano_capellaCatalogOpen"||method=="nano_capellaCatalogPage"||method=="nano_capellaCatalogClose"){
+@@ -518 +518 @@ Json Rpc::one(const Json& request,const std::function<void()>& cancelled){
+-   const size_t count=method=="nano_capellaStatus"||method=="nano_capellaJobs"?1:method=="nano_capellaRotateSession"||method=="nano_capellaCatalogOpen"||method=="nano_capellaCatalogClose"?2:method=="nano_capellaSubmit"||method=="nano_capellaCatalogPage"?4:3;arity(params,count,count);
++   const size_t count=method=="nano_capellaCatalogAcquire"?4:method=="nano_capellaCatalogRelease"?3:method=="nano_capellaCatalogGeneration"?1:method=="nano_capellaStatus"||method=="nano_capellaJobs"?1:method=="nano_capellaRotateSession"||method=="nano_capellaCatalogOpen"||method=="nano_capellaCatalogClose"?2:method=="nano_capellaSubmit"||method=="nano_capellaCatalogPage"?4:3;arity(params,count,count);
+@@ -525 +525 @@ Json Rpc::one(const Json& request,const std::function<void()>& cancelled){
+-   else if(method=="nano_capellaCatalogOpen"||method=="nano_capellaCatalogPage"||method=="nano_capellaCatalogClose"){
++   else if(method=="nano_capellaCatalogGeneration"||method=="nano_capellaCatalogAcquire"||method=="nano_capellaCatalogRelease"||method=="nano_capellaCatalogOpen"||method=="nano_capellaCatalogPage"||method=="nano_capellaCatalogClose"){
+@@ -529 +529,4 @@ Json Rpc::one(const Json& request,const std::function<void()>& cancelled){
+-    if(method=="nano_capellaCatalogOpen")result={{"handle",runtime->catalogs->open(principal,params[1].get<std::string>(),cancelled)}};
++    if(method=="nano_capellaCatalogGeneration")result=runtime->catalogs->generation();
++    else if(method=="nano_capellaCatalogAcquire")result={{"handle",runtime->catalogs->acquire(principal,params[2].get<std::string>(),params[3].get<std::string>(),params[1].get<std::string>(),cancelled)}};
++    else if(method=="nano_capellaCatalogRelease"){runtime->catalogs->release(principal,params[1].get<std::string>(),params[2].get<std::string>());result=true;}
++    else if(method=="nano_capellaCatalogOpen")result={{"handle",runtime->catalogs->open(principal,params[1].get<std::string>(),cancelled)}};
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index 2525118..7540edd 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -295 +295 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
+-  for(const auto* method:{"nano_capellaStatus","nano_capellaJobs"})check(call(method,Json::array({"wrong-token"})).at("error").at("code")==-32001,"unauthorized Capella read accepted");
++  for(const auto* method:{"nano_capellaStatus","nano_capellaJobs","nano_capellaCatalogGeneration"})check(call(method,Json::array({"wrong-token"})).at("error").at("code")==-32001,"unauthorized Capella read accepted");
+@@ -333,0 +334,7 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
++  io.restart();Json lost_result;std::string lost_handle;unsigned releases=0;
++  auto lose_open=[&](std::string method,Json params,Reply reply){auto response=ipc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",std::move(params)}});if(method=="nano_capellaCatalogAcquire"){check(response.contains("result"),"fault injection open failed before reply loss");lost_handle=response.at("result").at("handle");reply(nullptr);return;}if(method=="nano_capellaCatalogRelease")++releases;reply(response.contains("result")?response.at("result"):Json(nullptr));};
++  auto lost_relay=std::make_shared<CapellaCatalogRelay>(io,lose_open,[](auto,auto,auto){throw std::runtime_error("lost open delivered payload");},"capella-ipc-test","block",ingress,1,2,[&](Json value){lost_result=std::move(value);});lost_relay->start(std::chrono::seconds(10));io.run();
++  check(lost_result.at("success")==false&&lost_result.at("closed")==true&&releases==1&&!lost_handle.empty(),"real lost open not released");
++  bool released=false;try{runtime.catalogs->page("capella-private-daemon",lost_handle,{},1,512);}catch(const std::invalid_argument&){released=true;}check(released,"lost open retained snapshot");
++  const auto free_quota=runtime.catalogs->open("quota-check","block");runtime.catalogs->close("quota-check",free_quota);
++
+@@ -658,0 +666,23 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
++  // Request-addressed catalogs survive a lost open ACK without waiting for TTL.
++  {
++   CapellaInventorySessions leases(*reactor,2,9*sizeof(ConsensusRoot),std::chrono::seconds(1),[&]{return catalog_now;});
++   const auto id=[](char c){return "0x"+std::string(64,c);};auto gen=leases.generation();
++   const auto opened=leases.acquire("a",gen,id('1'),"block");
++   check(leases.acquire("a",gen,id('1'),"block")==opened,"duplicate acquire allocated another snapshot");
++   bool refused=false;try{leases.acquire("a",gen,id('1'),"attestation");}catch(const std::invalid_argument&){refused=true;}check(refused,"acquire changed kind");
++   leases.release("b",gen,id('1'));check(!leases.page("a",opened,{},2,512).at("entries").empty(),"foreign release removed snapshot");
++   leases.release("a",gen,id('1'));leases.release("a",gen,id('1'));
++   refused=false;try{leases.acquire("a",gen,id('1'),"block");}catch(const std::invalid_argument&){refused=true;}check(refused,"released request resurrected");
++   gen=leases.generation();leases.release("a",gen,id('2'));
++   refused=false;try{leases.acquire("a",gen,id('2'),"block");}catch(const std::invalid_argument&){refused=true;}check(refused,"cancel-before-acquire resurrected");
++   gen=leases.generation();const auto live=leases.acquire("a",gen,id('3'),"block");
++   for(char c='4';c<='8';++c)leases.release("a",leases.generation(),id(c));
++   check(leases.generation()!=gen&&!leases.page("a",live,{},2,512).at("entries").empty(),"bounded retirement lost live handle");
++   leases.release("a",gen,id('3')); // old generation still releases live request
++   const auto current=leases.generation();const auto replacement=leases.acquire("a",current,id('9'),"block");
++   catalog_now+=std::chrono::seconds(1);
++   refused=false;try{leases.acquire("a",current,id('9'),"block");}catch(const std::invalid_argument&){refused=true;}check(refused,"expired acquire extended lease");
++   CapellaInventorySessions restarted(*reactor,2,9*sizeof(ConsensusRoot),std::chrono::seconds(1));
++   refused=false;try{restarted.acquire("a",current,id('9'),"block");}catch(const std::invalid_argument&){refused=true;}check(refused,"restart accepted stale generation");
++   leases.stop();refused=false;try{leases.generation();}catch(const std::runtime_error&){refused=true;}check(refused,"stopped catalog exposed generation");
++  }

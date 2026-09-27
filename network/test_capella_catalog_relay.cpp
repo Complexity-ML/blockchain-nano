@@ -5,11 +5,12 @@ void check(bool ok,const char* text){if(!ok)throw std::runtime_error(text);}
 std::string root(char c){return "0x"+std::string(64,c);}
 int main(){try{
  const AltairWireProfile profile{"0x539",root('a'),"0x01020304",1024,256,256,256,root('b')};unsigned scenarios=0;
- for(const std::string mode:{"success","duplicate","empty","changed-snapshot","wrong-next","unsorted","unavailable","foreign","rejected","lost-ack","lost-close","close-applied-reply-lost","close-request-lost","close-unreachable","close-refused","limit","expired"}){
+ for(const std::string mode:{"success","lost-open","duplicate","empty","changed-snapshot","wrong-next","unsorted","unavailable","foreign","rejected","lost-ack","lost-close","close-applied-reply-lost","close-request-lost","close-unreachable","close-refused","limit","expired"}){
   asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);unsigned pages=0,sends=0,closes=0,done=0;Json result;bool allocated=false;unsigned removals=0;
   auto core=[&](std::string method,Json p,Reply cb){check(p[0]=="token","missing authentication");Json value;
-   if(method=="nano_capellaCatalogOpen"){allocated=true;value={{"handle",root('c')}};}
-   else if(method=="nano_capellaCatalogClose"){++closes;check(p[1]==root('c'),"wrong close handle");if(mode=="lost-close")return;
+   if(method=="nano_capellaCatalogGeneration"){cb(root('e'));return;}
+   if(method=="nano_capellaCatalogAcquire"){allocated=true;if(mode=="lost-open"){cb(nullptr);return;}value={{"handle",root('c')}};}
+   else if(method=="nano_capellaCatalogRelease"){++closes;check(p[1]==root('e')&&p[2].get<std::string>().size()==66,"wrong release request");if(mode=="lost-close")return;
     if(mode=="close-unreachable"||(mode=="close-request-lost"&&closes==1)){cb(nullptr);return;}
     if(mode=="close-refused"){cb(false);return;}
     if(allocated){allocated=false;++removals;}
@@ -26,6 +27,7 @@ int main(){try{
   auto relay=std::make_shared<CapellaCatalogRelay>(io,core,deliver,"token","block",ingress,2,mode=="limit"?2:4,[&](Json value){++done;result=std::move(value);});relay->start(20ms);io.run();
   const bool success=mode=="success"||mode=="duplicate"||mode=="empty"||mode=="close-applied-reply-lost"||mode=="close-request-lost";const bool retried=mode=="close-applied-reply-lost"||mode=="close-request-lost"||mode=="close-unreachable";check(done==1&&result["success"]==success&&closes==(retried?2:1),"incorrect completion/cleanup");
   if(mode=="success"||mode=="duplicate")check(sends==3&&pages==2&&result["closed"]==true,"pagination failed");
+  if(mode=="lost-open")check(removals==1&&!allocated&&sends==0&&result["closed"]==true,"lost open reply leaked snapshot");
   if(mode=="close-applied-reply-lost"||mode=="close-request-lost")check(removals==1&&!allocated&&result["closed"]==true&&sends==3,"close retry leaked or replayed delivery");
   if(mode=="close-unreachable"||mode=="close-refused")check(allocated&&result["closed"]==false,"unconfirmed close reported success");
   if(mode=="limit")check(sends==2&&pages==1,"entry limit exceeded");if(mode=="lost-ack")check(result["delivered"]==0,"unacknowledged delivery counted");++scenarios;
@@ -33,8 +35,9 @@ int main(){try{
  // Open may allocate a handle after cancellation: close the late handle once.
  for(const bool late_open:{true,false}){
   asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);Reply delayed;unsigned closes=0,done=0;Json result;
-  auto core=[&](std::string method,Json,Reply cb){if(method=="nano_capellaCatalogOpen"){if(late_open)delayed=cb;else cb(Json{{"handle",root('c')}});}else if(method=="nano_capellaCatalogClose"){++closes;cb(true);}else delayed=cb;};
-  auto relay=std::make_shared<CapellaCatalogRelay>(io,core,[](auto,auto,auto){throw std::runtime_error("delivery after cancellation");},"token","block",ingress,1,2,[&](Json value){++done;result=value;});relay->start(20ms);if(!late_open)io.poll();relay->cancel();check(bool(delayed),"missing delayed call");delayed(Json{{"handle",root('c')}});delayed(Json{{"handle",root('c')}});io.restart();io.run();check(done==1&&result["success"]==false&&closes==1,"late callback resurrected/leaked catalog");++scenarios;
+  auto core=[&](std::string method,Json,Reply cb){if(method=="nano_capellaCatalogGeneration"){cb(root('e'));return;}
+   if(method=="nano_capellaCatalogAcquire"){if(late_open)delayed=cb;else cb(Json{{"handle",root('c')}});}else if(method=="nano_capellaCatalogRelease"||method=="nano_capellaCatalogClose"){++closes;cb(true);}else delayed=cb;};
+  auto relay=std::make_shared<CapellaCatalogRelay>(io,core,[](auto,auto,auto){throw std::runtime_error("delivery after cancellation");},"token","block",ingress,1,2,[&](Json value){++done;result=value;});relay->start(20ms);io.poll();relay->cancel();check(bool(delayed),"missing delayed call");delayed(Json{{"handle",root('c')}});delayed(Json{{"handle",root('c')}});io.restart();io.run();check(done==1&&result["success"]==false&&closes==(late_open?2:1),"late callback resurrected/leaked catalog");++scenarios;
  }
  std::cout<<scenarios<<" Capella catalog relay scenarios passed; no consensus validity inferred from mocked ACKs\n";
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

@@ -292,7 +292,7 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
   if(capella_http){bool public_refused=false;try{HttpServer forbidden(rpc,"0.0.0.0",0);}catch(const std::invalid_argument&){public_refused=true;}check(public_refused,"Capella HTTP accepted public bind");http_server=std::make_unique<HttpServer>(rpc,"127.0.0.1",0);http_running=std::make_unique<RunningHttp>(*http_server);http_client=std::make_unique<PersistentRpc>(http_server->port());}
   auto call=[&](const char* method,Json params){if(http_client){try{return Json{{"result",http_client->call(method,std::move(params))}};}catch(const PersistentRpcError& e){return Json{{"error",{{"code",e.code}}}};}}return rpc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",std::move(params)}});};
 
-  for(const auto* method:{"nano_capellaStatus","nano_capellaJobs"})check(call(method,Json::array({"wrong-token"})).at("error").at("code")==-32001,"unauthorized Capella read accepted");
+  for(const auto* method:{"nano_capellaStatus","nano_capellaJobs","nano_capellaCatalogGeneration"})check(call(method,Json::array({"wrong-token"})).at("error").at("code")==-32001,"unauthorized Capella read accepted");
   check(call("nano_capellaCatalogOpen",Json::array({"wrong-token","block"})).at("error").at("code")==-32001,"unauthorized catalog opened");
   check(call("nano_capellaSubmit",Json::array({"wrong-token","invalid","0x1",envelope.dump()})).at("error").at("code")==-32001,"unauthorized submit accepted");
   const auto status=call("nano_capellaStatus",Json::array({"capella-test-token"})).at("result");check(status.at("consensusIdentity")==runtime_identity.at("consensusIdentity")&&status.at("networkProtocolActive")==false,"Capella RPC status differs");
@@ -331,6 +331,13 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
    check(result.at("success")==true&&result.at("closed")==true,"real Capella catalog relay failed");relayed+=result.at("delivered").get<size_t>();
   }
   check(relayed>=proposals&&runtime.reactor->current().token==saved.token,"catalog relay mutated duplicate checkpoint or omitted blocks");
+  io.restart();Json lost_result;std::string lost_handle;unsigned releases=0;
+  auto lose_open=[&](std::string method,Json params,Reply reply){auto response=ipc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",std::move(params)}});if(method=="nano_capellaCatalogAcquire"){check(response.contains("result"),"fault injection open failed before reply loss");lost_handle=response.at("result").at("handle");reply(nullptr);return;}if(method=="nano_capellaCatalogRelease")++releases;reply(response.contains("result")?response.at("result"):Json(nullptr));};
+  auto lost_relay=std::make_shared<CapellaCatalogRelay>(io,lose_open,[](auto,auto,auto){throw std::runtime_error("lost open delivered payload");},"capella-ipc-test","block",ingress,1,2,[&](Json value){lost_result=std::move(value);});lost_relay->start(std::chrono::seconds(10));io.run();
+  check(lost_result.at("success")==false&&lost_result.at("closed")==true&&releases==1&&!lost_handle.empty(),"real lost open not released");
+  bool released=false;try{runtime.catalogs->page("capella-private-daemon",lost_handle,{},1,512);}catch(const std::invalid_argument&){released=true;}check(released,"lost open retained snapshot");
+  const auto free_quota=runtime.catalogs->open("quota-check","block");runtime.catalogs->close("quota-check",free_quota);
+
 
  }
  const auto final=stop_capella_runtime(runtime);bool catalog_closed=false;try{runtime.catalogs->page("authenticated-test-peer",runtime_catalog,{},2,512);}catch(const std::invalid_argument&){catalog_closed=true;}check(catalog_closed,"stopped runtime retained catalog");catalog_closed=false;try{runtime.catalogs->open("authenticated-test-peer","block");}catch(const std::runtime_error&){catalog_closed=true;}check(catalog_closed,"stopped runtime opened catalog");check(!runtime.admission->submit(envelope.dump(),std::make_shared<std::atomic<bool>>(false),[](auto){}),"stopped runtime accepted admission");proposals+=final.at("validator").at("proposalsAdmitted").get<uint64_t>();check(proposals==2*slots&&final.at("clockHealthy")==true,"runtime proposal total differs");runtime={};closed=false;try{owner->tip();}catch(const std::runtime_error&){closed=true;}check(closed,"released runtime left execution readable");
@@ -656,6 +663,29 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
   catalog_refused=false;try{catalogs.open("peer-c","attester_slashing");}catch(const std::length_error&){catalog_refused=true;}check(catalog_refused,"catalog handle quota ignored");
   catalog_now+=std::chrono::seconds(1);catalog_refused=false;try{catalogs.page("peer-a",vote_handle,{},2,512);}catch(const std::invalid_argument&){catalog_refused=true;}check(catalog_refused,"expired catalog readable");catalogs.close("peer-a",vote_handle);catalogs.close("peer-a",vote_handle);
   const auto replacement=catalogs.open("peer-a","block");check(replacement!=handle&&catalogs.page("peer-a",replacement,{},2,512).at("entries").size()==2,"expired quota not reclaimed");catalogs.close("peer-a",replacement);
+  // Request-addressed catalogs survive a lost open ACK without waiting for TTL.
+  {
+   CapellaInventorySessions leases(*reactor,2,9*sizeof(ConsensusRoot),std::chrono::seconds(1),[&]{return catalog_now;});
+   const auto id=[](char c){return "0x"+std::string(64,c);};auto gen=leases.generation();
+   const auto opened=leases.acquire("a",gen,id('1'),"block");
+   check(leases.acquire("a",gen,id('1'),"block")==opened,"duplicate acquire allocated another snapshot");
+   bool refused=false;try{leases.acquire("a",gen,id('1'),"attestation");}catch(const std::invalid_argument&){refused=true;}check(refused,"acquire changed kind");
+   leases.release("b",gen,id('1'));check(!leases.page("a",opened,{},2,512).at("entries").empty(),"foreign release removed snapshot");
+   leases.release("a",gen,id('1'));leases.release("a",gen,id('1'));
+   refused=false;try{leases.acquire("a",gen,id('1'),"block");}catch(const std::invalid_argument&){refused=true;}check(refused,"released request resurrected");
+   gen=leases.generation();leases.release("a",gen,id('2'));
+   refused=false;try{leases.acquire("a",gen,id('2'),"block");}catch(const std::invalid_argument&){refused=true;}check(refused,"cancel-before-acquire resurrected");
+   gen=leases.generation();const auto live=leases.acquire("a",gen,id('3'),"block");
+   for(char c='4';c<='8';++c)leases.release("a",leases.generation(),id(c));
+   check(leases.generation()!=gen&&!leases.page("a",live,{},2,512).at("entries").empty(),"bounded retirement lost live handle");
+   leases.release("a",gen,id('3')); // old generation still releases live request
+   const auto current=leases.generation();const auto replacement=leases.acquire("a",current,id('9'),"block");
+   catalog_now+=std::chrono::seconds(1);
+   refused=false;try{leases.acquire("a",current,id('9'),"block");}catch(const std::invalid_argument&){refused=true;}check(refused,"expired acquire extended lease");
+   CapellaInventorySessions restarted(*reactor,2,9*sizeof(ConsensusRoot),std::chrono::seconds(1));
+   refused=false;try{restarted.acquire("a",current,id('9'),"block");}catch(const std::invalid_argument&){refused=true;}check(refused,"restart accepted stale generation");
+   leases.stop();refused=false;try{leases.generation();}catch(const std::runtime_error&){refused=true;}check(refused,"stopped catalog exposed generation");
+  }
   const auto checkpoint=reactor->current();size_t exports=0;
   auto verify_export=[&](const char* kind,const ConsensusRoot& id,const Bytes& bytes){const auto result=reactor->export_message(kind,id,16*1024*1024,checkpoint.token);check(result.at("available")==true&&result.at("envelope").at("ssz")==hex(bytes)&&result.at("digest")==hex(checkpoint.token.digest),"Capella export changed bytes/checkpoint");auto decoded=service->decode(result.at("envelope").dump());check(decoded&&decoded->ssz==bytes,"Capella exported envelope cannot be admitted");++exports;};
   for(const auto& [id,wire]:signed_wires)verify_export("block",id,wire);

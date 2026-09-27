@@ -96,3 +96,21 @@ réponse est perdue reste **partielle** : quota conservé jusqu'au TTL ; clôtur
 requise par identifiant de requête et tests de réordonnancement/annulation.
 Pas de qualification production ni de déploiement VPS pour cette tranche.
 [Preuves et limites](qualification/capella-catalog-close-20260927/README.md).
+
+### 2026-09-27 — Ouverture de catalogue adressable et annulation préalable
+
+Le démon Capella utilise maintenant un identifiant de requête et une génération
+serveur pour libérer une ouverture même sans son accusé. Annulation avant
+ouverture, doublons, conflit de contenu, expiration, changement de génération
+et redémarrage sont qualifiés localement. Historique des annulations borné par
+rotation ; les handles vivants restent consultables et libérables.
+20 scénarios de relais, registre réel, RPC et rattrapage à deux processus passent.
+L'ancienne ouverture sans identifiant reste disponible et dépend toujours de son
+handle/TTL ; le démon ne l'utilise plus. Serveur inaccessible : nettoyage au TTL.
+Les effets de rotation sous forte concurrence restent à mesurer. Aucun nouvel
+EIP déclaré conforme par cette modification de transport.
+[Protocole, preuves et limites](qualification/capella-catalog-acquire-20260927/README.md).
+
+Régression distribuée supplémentaire : deux nœuds locaux × 32 validateurs,
+époque 2 finalisée sur une racine commune, trois observations stables.
+2 863 relais réussis, 8 échecs fermés ; aucune qualification WAN supplémentaire.

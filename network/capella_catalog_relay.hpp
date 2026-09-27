@@ -1,6 +1,7 @@
 #pragma once
 #include "altair_core_dispatch.hpp"
 #include <sstream>
+#include <openssl/rand.h>
 
 // One stable catalog, bounded pages and one payload/delivery in flight.
 // The delivery callback must resolve block dependencies and require consensus
@@ -10,13 +11,15 @@ public:
  using Call=AltairCoreDispatch::Call;
  using Deliver=std::function<void(std::string,Json,Reply)>;
 private:
- asio::io_context& io_;Call core_;Deliver deliver_;std::string token_,kind_,handle_,cursor_,sequence_,digest_,stage_="open";
+ asio::io_context& io_;Call core_;Deliver deliver_;std::string token_,kind_,handle_,cursor_,sequence_,digest_,stage_="open",generation_,request_;
  std::shared_ptr<AltairMessageIngress> ingress_;Reply done_;asio::steady_timer timer_;
  const size_t page_size_,maximum_;size_t delivered_=0,index_=0;Json entries_,next_;
  bool started_=false,finished_=false,closing_=false;bool desired_success_=false;
  static bool root(const Json& j){if(!j.is_string())return false;const auto& s=j.get_ref<const std::string&>();return s.size()==66&&s.starts_with("0x")&&std::all_of(s.begin()+2,s.end(),[](char c){return (c>='0'&&c<='9')||(c>='a'&&c<='f');});}
  static bool quantity(const Json& j){if(!j.is_string())return false;const auto& s=j.get_ref<const std::string&>();return s.size()>=3&&s.size()<=18&&s.starts_with("0x")&&(s.size()==3||s[2]!='0')&&std::all_of(s.begin()+2,s.end(),[](char c){return (c>='0'&&c<='9')||(c>='a'&&c<='f');});}
  void complete(bool success,bool closed){if(finished_)return;finished_=true;timer_.cancel();auto done=std::move(done_);done(Json{{"success",success},{"closed",closed},{"delivered",delivered_},{"stage",stage_}});}
+ Json release_params(){return Json::array({token_,generation_,request_});}
+ void cleanup_request(){if(request_.empty())return;try{core_("nano_capellaCatalogRelease",release_params(),[](Json){});}catch(...){}}
  void cleanup(const std::string& handle){try{core_("nano_capellaCatalogClose",Json::array({token_,handle}),[](Json){});}catch(...){}}
  template<class F>Reply callback(F handler,bool late_open=false){auto once=std::make_shared<std::atomic<bool>>(false);return [self=shared_from_this(),once,handler,late_open](Json value){if(once->exchange(true))return;asio::post(self->io_,[self,handler,late_open,value=std::move(value)]()mutable{
    if(self->finished_){if(late_open&&value.is_object()&&value.contains("handle")&&root(value["handle"]))self->cleanup(value["handle"].template get<std::string>());return;}
@@ -26,14 +29,14 @@ private:
  // Only this idempotent operation may be retried; never retry delivery or open.
  // A missing transport response remains bounded by the overall deadline.
  void close_attempt(bool retry){
-  call("nano_capellaCatalogClose",Json::array({token_,handle_}),callback([retry](auto& self,Json value){
+  call("nano_capellaCatalogRelease",release_params(),callback([retry](auto& self,Json value){
    if(value.is_null()&&retry){self.close_attempt(false);return;}
    self.complete(self.desired_success_&&value==true,value==true);
   }));
  }
  void close(bool success){
   if(finished_||closing_)return;
-  if(handle_.empty()){complete(false,false);return;}
+  if(request_.empty()){complete(false,false);return;}
   closing_=true;desired_success_=success;stage_="close";
   close_attempt(true);
  }
@@ -76,9 +79,14 @@ public:
  void start(std::chrono::steady_clock::duration timeout=std::chrono::seconds(30)){
   if(started_)throw std::logic_error("Capella catalog relay already started");if(timeout<=std::chrono::steady_clock::duration::zero())throw std::invalid_argument("Invalid Capella relay timeout");started_=true;
   timer_.expires_after(timeout);timer_.async_wait([self=shared_from_this()](auto error){if(!error)self->cancel();});
-  call("nano_capellaCatalogOpen",Json::array({token_,kind_}),callback([](auto& self,Json value){if(!value.is_object()||!root(value.at("handle"))){self.complete(false,false);return;}self.handle_=value.at("handle").template get<std::string>();self.page();},true));
+  call("nano_capellaCatalogGeneration",Json::array({token_}),callback([](auto& self,Json generation){
+   if(!root(generation)){self.complete(false,false);return;}self.generation_=generation.template get<std::string>();
+   unsigned char bytes[32];if(RAND_bytes(bytes,sizeof(bytes))!=1){self.complete(false,false);return;}
+   self.request_="0x";for(auto byte:bytes){self.request_+="0123456789abcdef"[byte>>4];self.request_+="0123456789abcdef"[byte&15];}
+   self.call("nano_capellaCatalogAcquire",Json::array({self.token_,self.kind_,self.generation_,self.request_}),self.callback([](auto& s,Json value){if(!value.is_object()||!root(value.at("handle"))){s.close(false);return;}s.handle_=value.at("handle").template get<std::string>();s.page();},true));
+  }));
  }
  // Called on the same executor as start. In-flight delivery has unknown outcome
  // after cancellation; a late acknowledgement cannot turn it into success.
- void cancel(){if(finished_)return;if(!handle_.empty()&&!closing_)cleanup(handle_);stage_="cancelled";complete(false,false);}
+ void cancel(){if(finished_)return;if(!request_.empty()&&!closing_)cleanup_request();stage_="cancelled";complete(false,false);}
 };
