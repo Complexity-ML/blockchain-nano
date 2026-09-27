@@ -3801,3 +3801,17 @@ Mesure locale unique hors SSZ/BLS/disque/réseau, pas une capacité de nœud act
 Aucun EIP ni objectif production clôturé ; mesurer ensuite la projection SSZ
 authentifiée et le runtime complet.
 [Code, mesures et limites](qualification/capella-withdrawal-scale-20260927/README.md).
+
+### Authentification SSZ à un million : coût limitant mesuré — 27 septembre 2026
+
+Deux nouveaux cas passent avec comparaison de tous les octets et refus d'une
+racine incorrecte. États synthétiques de 100 000 / 1 000 000 entrées, autres
+vecteurs au preset minimal. Préparation complète des retraits SSZ : 422 669 /
+4 258 573 µs ; calcul initial de racine : 215 134 / 2 068 384 µs. À un million,
+état de 139 010 821 octets et RSS maximal du processus 875 020 288 octets.
+La mesure inclut authentification/projection/copie/recalcul de racine, hors
+BLS, reste de transition, disque et réseau. Elle démontre un coût significatif
+que le benchmark registre seul masquait ; aucune capacité runtime clôturée.
+Priorité : profiler et réduire les calculs complets répétés sans supprimer
+l'authentification, puis mesurer le nœud complet. Aucun EIP clôturé.
+[Preuves](qualification/capella-withdrawal-ssz-scale-20260927/README.md).

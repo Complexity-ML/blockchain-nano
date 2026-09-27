@@ -1657,3 +1657,9 @@ add_executable(nano-capella-withdrawal-scale-tests tests/test_capella_withdrawal
 target_link_libraries(nano-capella-withdrawal-scale-tests PRIVATE nano_core)
 add_test(NAME consensus_capella_withdrawal_scale COMMAND nano-capella-withdrawal-scale-tests)
 set_tests_properties(consensus_capella_withdrawal_scale PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_scale")
+
+add_executable(nano-capella-withdrawal-ssz-scale-tests tests/test_capella_withdrawal_ssz_scale.cpp)
+target_link_libraries(nano-capella-withdrawal-ssz-scale-tests PRIVATE nano_core)
+target_compile_definitions(nano-capella-withdrawal-ssz-scale-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+add_test(NAME consensus_capella_withdrawal_ssz_scale COMMAND nano-capella-withdrawal-ssz-scale-tests)
+set_tests_properties(consensus_capella_withdrawal_ssz_scale PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_scale")
