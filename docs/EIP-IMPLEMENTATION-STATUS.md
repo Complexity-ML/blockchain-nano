@@ -3032,3 +3032,18 @@ locaux : finalité commune 2, 32/32 dans huit blocs finalisés contrôlés, aucu
 de budget, une livraison sync non confirmée (132 auparavant), 18 refus explicites.
 **Partiel** : ces derniers refus restent à attribuer ; pas de garantie statistique,
 WAN, rotation ou grande population. [Preuves et limites](qualification/capella-send-pacing-20260927/README.md).
+
+
+### Causes des refus sync du cœur — 27 septembre 2026
+
+Compteurs bornés, saturants et éphémères ajoutés au statut RPC authentifié et au
+reçu d’arrêt ; aucune modification des décisions ni des checkpoints. Le scénario
+local (45,95 s) vérifie les causes et distingue annulation/checkpoint périmé d’un
+refus de message. Deux pairs réels locaux : finalité commune 2, 32/32 positions
+dans huit blocs finalisés. Les 16 refus sync du run correspondent à **14 racines
+inattendues, un slot expiré et un slot déjà atteint par la tête** ; aucun échec au
+contrôle BLS observé. Cela ne valide pas les signatures rejetées avant ce contrôle.
+Zéro refus de budget ; deux livraisons sans accusé confirmé restent ouvertes.
+**Partiel** : attribution agrégée, pas causalité réseau par message ; ne pas relâcher
+ces contrôles. Prochaine qualification : rotation des comités et réseau asymétrique.
+[Preuves](qualification/capella-sync-admission-causes-20260927/README.md).

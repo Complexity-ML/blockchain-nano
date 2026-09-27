@@ -34,6 +34,9 @@ class CapellaDurableReactor {
  std::map<uint64_t,PendingSyncAggregate> pending_sync_;
  struct PendingSyncMessages { uint64_t slot; ConsensusRoot parent; std::map<uint64_t,Bytes> wires; };
  std::map<uint64_t,PendingSyncMessages> pending_sync_messages_;
+ enum class SyncOutcome {accepted,invalid_width,slot_overflow,expired_slot,future_slot,head_at_or_after_inclusion,unknown_validator,root_mismatch,not_in_committee,invalid_signature,aggregation_failed,count};
+ std::array<uint64_t,static_cast<size_t>(SyncOutcome::count)> sync_outcomes_{};
+ bool record_sync_outcome(SyncOutcome)noexcept;
  struct SyncSigningContext {uint64_t slot;ConsensusRoot parent,block_root,genesis_root;ConsensusBytes4 version;std::map<uint64_t,Bytes> members;};
  std::optional<SyncSigningContext> sync_signing_context_;
  const SyncSigningContext& sync_signing_context_locked(uint64_t,const std::function<void()>&);
@@ -57,6 +60,8 @@ class CapellaDurableReactor {
  std::optional<Bytes> prepare_local_body_from_pool_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,size_t,size_t,const std::function<void()>&);
  void publish(CapellaForkStore,const std::function<void()>&,const std::vector<CheckpointArchiveEntry>& archive={},std::optional<CapellaSignedVotes> votes=std::nullopt,std::optional<CapellaSignedVotes> slashings=std::nullopt,std::optional<CapellaPendingBlsChanges> changes=std::nullopt);
 public:
+ // Ephemeral bounded diagnostic counters; never part of consensus state.
+ Json sync_admission_stats()const;
  // Local duties sign during the signed slot and enter normal admission.
  // Returns only committee members whose current message is not already held.
  std::set<uint64_t> current_sync_members(uint64_t signed_slot,const std::function<void()>& checkpoint={});

@@ -58,38 +58,47 @@ bool CapellaDurableReactor::submit_sync_aggregate_locked(uint64_t slot,std::span
  aggregates.insert_or_assign(slot,std::move(candidate));
  if(check)check();pending_sync_.swap(aggregates);return true;
 }
+bool CapellaDurableReactor::record_sync_outcome(SyncOutcome outcome)noexcept{
+ auto& count=sync_outcomes_[static_cast<size_t>(outcome)];if(count!=UINT64_MAX)++count;return outcome==SyncOutcome::accepted;
+}
+Json CapellaDurableReactor::sync_admission_stats()const{
+ std::lock_guard lock(mutex_);Json result=Json::object();
+ constexpr std::array names{"accepted","invalid-width","slot-overflow","expired-slot","future-slot","head-at-or-after-inclusion","unknown-validator","root-mismatch","not-in-committee","invalid-signature","aggregation-failed"};
+ static_assert(names.size()==static_cast<size_t>(SyncOutcome::count));
+ for(size_t i=0;i<names.size();++i)result[names[i]]=sync_outcomes_[i];return result;
+}
 bool CapellaDurableReactor::submit_sync_message(const CapellaSyncMessage& message,
  const ForkCheckpointToken& expected,const std::function<void()>& check){
  std::lock_guard lock(mutex_);return submit_sync_message_locked(message,expected,check);
 }
 bool CapellaDurableReactor::sync_message_ssz(std::span<const uint8_t> bytes,const std::function<void()>& check){
- const auto message=decode_capella_sync_message(bytes);if(!message)return false;
+ const auto message=decode_capella_sync_message(bytes);if(!message){std::lock_guard lock(mutex_);return record_sync_outcome(SyncOutcome::invalid_width);}
  std::lock_guard lock(mutex_);require_available();return submit_sync_message_locked(*message,*token_,check);
 }
 bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage& message,
  const ForkCheckpointToken& expected,const std::function<void()>& check){
  require_available();
  if(expected!=*token_)throw StaleCapellaDuty("Stale sync message submission");
- if(message.slot==UINT64_MAX)return false;const auto slot=message.slot+1;
- const auto& clock=state_->timed.clock;const auto current_slot=(clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms;if(slot<current_slot||slot-current_slot>1)return false;
+ if(message.slot==UINT64_MAX)return record_sync_outcome(SyncOutcome::slot_overflow);const auto slot=message.slot+1;
+ const auto& clock=state_->timed.clock;const auto current_slot=(clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms;if(slot<current_slot)return record_sync_outcome(SyncOutcome::expired_slot);if(slot-current_slot>1)return record_sync_outcome(SyncOutcome::future_slot);
  if(check)check();const auto& t=rules_.transition;const auto& c=t.consensus;const auto& l=c.state;
  const auto head=phase0_fork_choice_head(state_->timed.view,{c.epoch.ffg.slots_per_epoch,c.attestation.duties.effective_balance_increment,rules_.proposer_score_boost},check).head;
- const auto& parent=state_->blocks.at(head);if(parent.header.slot>=slot)return false;
+ const auto& parent=state_->blocks.at(head);if(parent.header.slot>=slot)return record_sync_outcome(SyncOutcome::head_at_or_after_inclusion);
  const auto advanced=prepare_capella_slots(parent.state,{c.epoch,t.execution,t.maximum_state_bytes},l,slot,limits_.replay_slots,limits_.sync_trials,check);
  const auto& state=advanced.ssz;const size_t historical=176+64*l.slots_per_historical_root;
  const auto validators=capella_detail::offset(state,historical+88),balances=capella_detail::offset(state,historical+92);
- if(message.validator_index>=(balances-validators)/121)return false;
+ if(message.validator_index>=(balances-validators)/121)return record_sync_outcome(SyncOutcome::unknown_validator);
  const auto block_root_at=176+32*(message.slot%l.slots_per_historical_root);
- if(!std::equal(message.beacon_block_root.begin(),message.beacon_block_root.end(),state.begin()+block_root_at))return false;
+ if(!std::equal(message.beacon_block_root.begin(),message.beacon_block_root.end(),state.begin()+block_root_at))return record_sync_outcome(SyncOutcome::root_mismatch);
  const auto key_at=validators+121*message.validator_index;const Bytes key(state.begin()+key_at,state.begin()+key_at+48);
  const size_t committee=historical+96+32*l.epochs_per_historical_vector+8*l.epochs_per_slashings_vector+133;
  std::vector<size_t> positions;
  for(size_t i=0;i<l.sync_committee_size;++i){if(check)check();if(std::equal(key.begin(),key.end(),state.begin()+committee+48*i))positions.push_back(i);}
- if(positions.empty())return false;
+ if(positions.empty())return record_sync_outcome(SyncOutcome::not_in_committee);
  ConsensusBytes4 version{};std::copy_n(state.begin()+(message.slot/c.sync.slots_per_epoch<number(state,56)?48:52),4,version.begin());
  ConsensusRoot genesis{};std::copy_n(state.begin()+8,32,genesis.begin());
  const auto root=consensus_signing_root(message.beacon_block_root,consensus_domain({7,0,0,0},version,genesis));
- if(!verify_consensus_bls(key,root,message.signature))return false;
+ if(!verify_consensus_bls(key,root,message.signature))return record_sync_outcome(SyncOutcome::invalid_signature);
  const size_t bit_bytes=(uint64_t(l.sync_committee_size)+7)/8;Bytes aggregate(bit_bytes+96);
  const auto found=pending_sync_.find(slot);const auto* pending=found==pending_sync_.end()?nullptr:&found->second;
  std::vector<Bytes> signatures;
@@ -108,11 +117,11 @@ bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage&
  retained.insert_or_assign(slot,std::move(messages));
  if(check)check();
  if(!signatures.empty()){
-  const auto signature=aggregate_consensus_bls_signatures(signatures);if(!signature)return false;
+  const auto signature=aggregate_consensus_bls_signatures(signatures);if(!signature)return record_sync_outcome(SyncOutcome::aggregation_failed);
   std::copy(signature->begin(),signature->end(),aggregate.begin()+bit_bytes);
-  if(!submit_sync_aggregate_locked(slot,aggregate,expected,check))return false;
+  if(!submit_sync_aggregate_locked(slot,aggregate,expected,check))return record_sync_outcome(SyncOutcome::aggregation_failed);
  }
- pending_sync_messages_.swap(retained);return true;
+ pending_sync_messages_.swap(retained);return record_sync_outcome(SyncOutcome::accepted);
 }
 std::optional<Bytes> CapellaDurableReactor::prepare_local_body(uint64_t index,uint64_t slot,
  const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,

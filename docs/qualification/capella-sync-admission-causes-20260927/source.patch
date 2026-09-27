@@ -1,0 +1,88 @@
+diff --git a/include/nano/consensus_capella_reactor.hpp b/include/nano/consensus_capella_reactor.hpp
+index 050d338..e721895 100644
+--- a/include/nano/consensus_capella_reactor.hpp
++++ b/include/nano/consensus_capella_reactor.hpp
+@@ -36,0 +37,3 @@ class CapellaDurableReactor {
++ enum class SyncOutcome {accepted,invalid_width,slot_overflow,expired_slot,future_slot,head_at_or_after_inclusion,unknown_validator,root_mismatch,not_in_committee,invalid_signature,aggregation_failed,count};
++ std::array<uint64_t,static_cast<size_t>(SyncOutcome::count)> sync_outcomes_{};
++ bool record_sync_outcome(SyncOutcome)noexcept;
+@@ -59,0 +63,2 @@ public:
++ // Ephemeral bounded diagnostic counters; never part of consensus state.
++ Json sync_admission_stats()const;
+diff --git a/src/consensus_capella_local_body.cpp b/src/consensus_capella_local_body.cpp
+index b2e1a6c..44698e5 100644
+--- a/src/consensus_capella_local_body.cpp
++++ b/src/consensus_capella_local_body.cpp
+@@ -60,0 +61,9 @@ bool CapellaDurableReactor::submit_sync_aggregate_locked(uint64_t slot,std::span
++bool CapellaDurableReactor::record_sync_outcome(SyncOutcome outcome)noexcept{
++ auto& count=sync_outcomes_[static_cast<size_t>(outcome)];if(count!=UINT64_MAX)++count;return outcome==SyncOutcome::accepted;
++}
++Json CapellaDurableReactor::sync_admission_stats()const{
++ std::lock_guard lock(mutex_);Json result=Json::object();
++ constexpr std::array names{"accepted","invalid-width","slot-overflow","expired-slot","future-slot","head-at-or-after-inclusion","unknown-validator","root-mismatch","not-in-committee","invalid-signature","aggregation-failed"};
++ static_assert(names.size()==static_cast<size_t>(SyncOutcome::count));
++ for(size_t i=0;i<names.size();++i)result[names[i]]=sync_outcomes_[i];return result;
++}
+@@ -66 +75 @@ bool CapellaDurableReactor::sync_message_ssz(std::span<const uint8_t> bytes,cons
+- const auto message=decode_capella_sync_message(bytes);if(!message)return false;
++ const auto message=decode_capella_sync_message(bytes);if(!message){std::lock_guard lock(mutex_);return record_sync_outcome(SyncOutcome::invalid_width);}
+@@ -73,2 +82,2 @@ bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage&
+- if(message.slot==UINT64_MAX)return false;const auto slot=message.slot+1;
+- const auto& clock=state_->timed.clock;const auto current_slot=(clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms;if(slot<current_slot||slot-current_slot>1)return false;
++ if(message.slot==UINT64_MAX)return record_sync_outcome(SyncOutcome::slot_overflow);const auto slot=message.slot+1;
++ const auto& clock=state_->timed.clock;const auto current_slot=(clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms;if(slot<current_slot)return record_sync_outcome(SyncOutcome::expired_slot);if(slot-current_slot>1)return record_sync_outcome(SyncOutcome::future_slot);
+@@ -77 +86 @@ bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage&
+- const auto& parent=state_->blocks.at(head);if(parent.header.slot>=slot)return false;
++ const auto& parent=state_->blocks.at(head);if(parent.header.slot>=slot)return record_sync_outcome(SyncOutcome::head_at_or_after_inclusion);
+@@ -81 +90 @@ bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage&
+- if(message.validator_index>=(balances-validators)/121)return false;
++ if(message.validator_index>=(balances-validators)/121)return record_sync_outcome(SyncOutcome::unknown_validator);
+@@ -83 +92 @@ bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage&
+- if(!std::equal(message.beacon_block_root.begin(),message.beacon_block_root.end(),state.begin()+block_root_at))return false;
++ if(!std::equal(message.beacon_block_root.begin(),message.beacon_block_root.end(),state.begin()+block_root_at))return record_sync_outcome(SyncOutcome::root_mismatch);
+@@ -88 +97 @@ bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage&
+- if(positions.empty())return false;
++ if(positions.empty())return record_sync_outcome(SyncOutcome::not_in_committee);
+@@ -92 +101 @@ bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage&
+- if(!verify_consensus_bls(key,root,message.signature))return false;
++ if(!verify_consensus_bls(key,root,message.signature))return record_sync_outcome(SyncOutcome::invalid_signature);
+@@ -111 +120 @@ bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage&
+-  const auto signature=aggregate_consensus_bls_signatures(signatures);if(!signature)return false;
++  const auto signature=aggregate_consensus_bls_signatures(signatures);if(!signature)return record_sync_outcome(SyncOutcome::aggregation_failed);
+@@ -113 +122 @@ bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage&
+-  if(!submit_sync_aggregate_locked(slot,aggregate,expected,check))return false;
++  if(!submit_sync_aggregate_locked(slot,aggregate,expected,check))return record_sync_outcome(SyncOutcome::aggregation_failed);
+@@ -115 +124 @@ bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage&
+- pending_sync_messages_.swap(retained);return true;
++ pending_sync_messages_.swap(retained);return record_sync_outcome(SyncOutcome::accepted);
+diff --git a/src/consensus_capella_runtime.cpp b/src/consensus_capella_runtime.cpp
+index 2baf514..b35259d 100644
+--- a/src/consensus_capella_runtime.cpp
++++ b/src/consensus_capella_runtime.cpp
+@@ -146,0 +147 @@ Json stop_capella_runtime(CapellaRuntime& runtime){
++  {"syncAdmission",runtime.reactor->sync_admission_stats()},
+diff --git a/src/rpc.cpp b/src/rpc.cpp
+index 6125f5f..ca6ca6f 100644
+--- a/src/rpc.cpp
++++ b/src/rpc.cpp
+@@ -523 +523 @@ Json Rpc::one(const Json& request,const std::function<void()>& cancelled){
+-   if(method=="nano_capellaStatus"){result=runtime->reactor->network_identity();result["clockHealthy"]=true;result["networkProtocolActive"]=runtime->network.value("enabled",false)?Json(nullptr):Json(false);result["networkAdmissionEnabled"]=runtime->network.value("enabled",false);result["capellaRelay"]=runtime->network;result["executionBound"]=runtime->reactor->execution_bound();if(runtime->admission)result.update(runtime->admission->capacities());result["admissionSession"]=runtime->admission?runtime->admission->receipts().at("session"):Json(nullptr);}
++   if(method=="nano_capellaStatus"){result=runtime->reactor->network_identity();result["syncAdmission"]=runtime->reactor->sync_admission_stats();result["clockHealthy"]=true;result["networkProtocolActive"]=runtime->network.value("enabled",false)?Json(nullptr):Json(false);result["networkAdmissionEnabled"]=runtime->network.value("enabled",false);result["capellaRelay"]=runtime->network;result["executionBound"]=runtime->reactor->execution_bound();if(runtime->admission)result.update(runtime->admission->capacities());result["admissionSession"]=runtime->admission?runtime->admission->receipts().at("session"):Json(nullptr);}
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index 4e1d30f..794791e 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -184,0 +185 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
++     const auto outcomes_before=nodes[0]->sync_admission_stats();
+@@ -190,0 +192,4 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
++     auto outcomes=nodes[0]->sync_admission_stats();
++     for(const auto name:{"root-mismatch","slot-overflow","future-slot","unknown-validator","invalid-signature","not-in-committee"})check(outcomes.at(name).get<uint64_t>()==outcomes_before.at(name).get<uint64_t>()+1,"sync rejection cause misclassified");
++     if(slot>1){bad_message=message;bad_message.slot=slot-2;check(!nodes[0]->submit_sync_message(bad_message,current.token),"expired sync accepted");check(nodes[0]->sync_admission_stats().at("expired-slot").get<uint64_t>()==outcomes.at("expired-slot").get<uint64_t>()+1,"expired sync not attributed");}
++     const auto before_exceptions=nodes[0]->sync_admission_stats();
+@@ -192 +197 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+-     bool message_cancelled=false;try{nodes[0]->submit_sync_message(message,current.token,[]{throw ExecutionCancelled("sync message stop");});}catch(const ExecutionCancelled&){message_cancelled=true;}check(message_cancelled,"sync message cancellation ignored");
++     bool message_cancelled=false;try{nodes[0]->submit_sync_message(message,current.token,[]{throw ExecutionCancelled("sync message stop");});}catch(const ExecutionCancelled&){message_cancelled=true;}check(message_cancelled,"sync message cancellation ignored");check(nodes[0]->sync_admission_stats()==before_exceptions,"cancelled or stale duty mislabeled as rejection");
+@@ -196,0 +202 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
++     check(nodes[0]->sync_admission_stats().at("invalid-width").get<uint64_t>()==outcomes_before.at("invalid-width").get<uint64_t>()+3,"invalid wire width not attributed");
+@@ -233,0 +240 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
++  if(local_sync){CapellaSyncMessage obsolete;obsolete.slot=slot-1;const auto stats=nodes[0]->sync_admission_stats();const auto published=nodes[0]->current();check(!nodes[0]->submit_sync_message(obsolete,published.token),"old-parent sync accepted after proposal");check(nodes[0]->sync_admission_stats().at("head-at-or-after-inclusion").get<uint64_t>()==stats.at("head-at-or-after-inclusion").get<uint64_t>()+1&&nodes[0]->current().token==published.token,"obsolete sync changed checkpoint or wrong cause");}

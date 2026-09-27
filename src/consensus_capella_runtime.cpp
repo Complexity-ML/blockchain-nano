@@ -144,6 +144,7 @@ Json stop_capella_runtime(CapellaRuntime& runtime){
  runtime.clock->stop();
  const auto current=runtime.reactor->current();
  return {{"restart",{{"sequence",quantity(Int(std::to_string(current.token.sequence)))},{"digest",hex(current.token.digest)}}},
+  {"syncAdmission",runtime.reactor->sync_admission_stats()},
   {"validatorKeys",runtime.validator?runtime.validator->restart_commitments():Json::array()},
   {"finalized",{{"epoch",quantity(Int(std::to_string(current.state->timed.view.finalized.epoch)))},{"root",hex(Bytes(current.state->timed.view.finalized.root.begin(),current.state->timed.view.finalized.root.end()))}}},
   {"validator",runtime.validator?runtime.validator->status(true):Json(nullptr)},{"clockHealthy",runtime.clock->healthy()},
