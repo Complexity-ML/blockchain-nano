@@ -1,0 +1,25 @@
+Test project /Users/boris/Dev/blockchain-nano/build-release
+    Start 347: consensus_capella_reactor_sync_failure
+1/4 Test #347: consensus_capella_reactor_sync_failure ....   Passed    3.22 sec
+    Start 348: consensus_capella_signed_transition
+2/4 Test #348: consensus_capella_signed_transition .......   Passed   10.75 sec
+    Start 352: consensus_capella_multiepoch_finality
+3/4 Test #352: consensus_capella_multiepoch_finality .....***Failed    9.65 sec
+reopened signer repeated signature
+
+    Start 353: consensus_capella_insufficient_finality
+4/4 Test #353: consensus_capella_insufficient_finality ...***Failed    8.32 sec
+reopened signer repeated signature
+
+
+50% tests passed, 2 tests failed out of 4
+
+Label Time Summary:
+qualification_consensus_ethereum    =  21.19 sec*proc (3 tests)
+
+Total Test time (real) =  31.95 sec
+
+The following tests FAILED:
+	352 - consensus_capella_multiepoch_finality (Failed)    qualification_consensus_ethereum
+	353 - consensus_capella_insufficient_finality (Failed)  qualification_consensus_ethereum
+Errors while running CTest

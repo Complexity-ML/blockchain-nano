@@ -2175,3 +2175,13 @@ neuf checkpoints altérés refusés. Quatre suites réussies.
 Ce n'est pas une sanction financière automatique. Restent inclusion locale dans
 les blocs, retrait des preuves consommées finalisées, sorties, signature locale,
 notifications, réseau et migration du Store inter-forks.
+
+### Capella : devoirs et signature locale d'attestations
+
+Comités, checkpoint source/cible et domaine dérivés du Store authentifié ;
+signature protégée par le journal anti-slashing existant et contrôle d'horloge.
+Douze attestations locales comparées, reprise du journal et conflits refusés ;
+journaux d'une autre chaîne et résultats expirés rejetés.
+[Preuves et correction d'une attente de test](qualification/capella-local-attestation-20260927/README.md).
+Restent RANDAO/propositions locales, ordonnanceur, diffusion réseau, exploitation
+des journaux et migration inter-forks. Aucune activation réseau Capella.

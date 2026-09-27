@@ -6,6 +6,7 @@
 #include "nano/consensus_capella_store_snapshot.hpp"
 #include "nano/storage.hpp"
 #include "nano/consensus_capella_reactor.hpp"
+#include "nano/consensus_capella_duty.hpp"
 #include "nano/committee.hpp"
 #include "nano/consensus_message_ssz.hpp"
 #include "nano/consensus_proposer.hpp"
@@ -102,7 +103,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
  const auto disk_genesis=parent;const auto disk_genesis_state=state;
  const CapellaForkBlockRules store_rules{r,seconds*1000,seconds*1000/3,40};
  Temp reactor_database;auto reactor_disk=std::make_unique<ChainStore>(reactor_database/"db");reactor_disk->bind_chain(r.chain_id,disk_genesis.header.hash(),"capella-reactor-test");reactor_disk->commit(disk_genesis,disk_genesis_state,{});std::unique_ptr<CapellaDurableReactor> reactor;
- std::vector<Phase0SignedAttestation> deferred_votes;std::map<ConsensusRoot,Bytes> signed_wires;std::optional<CapellaForkStore> store;std::string short_snapshot;Bytes sync_wire;uint64_t sync_time=0;
+ unsigned local_signatures=0;std::vector<Phase0SignedAttestation> deferred_votes;std::map<ConsensusRoot,Bytes> signed_wires;std::optional<CapellaForkStore> store;std::string short_snapshot;Bytes sync_wire;uint64_t sync_time=0;
  const CapellaStoreSnapshotLimits snapshot_limits{16*1024*1024,64,1000,1000,r.maximum_state_bytes,8*1024*1024,64,100000};
  auto roundtrip=[&](const CapellaForkStore& value){
   CapellaStoreSnapshotCache cache;size_t cold=0,warm=0;
@@ -276,6 +277,25 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
      vote.signature=Key(members[position]).sign(consensus_signing_root(consensus_attestation_root(vote.data),consensus_domain({1,0,0,0},version,genesis_root)));
      pending_attestations.push_back(encode_consensus_attestation_ssz(vote,r.consensus.body.validators_per_committee));
      if(slot==4*slots+1){
+      const auto current=reactor->current();const auto now=current.state->timed.clock.time_ms;const auto index=members[position];Key local_key(index);Temp signing_dir;ForkCheckpointToken signed_token;unsigned provider_calls=0;
+      const auto duty=prepare_capella_attestation_duty(*current.state,store_rules,index,slot,64,100000);check(duty&&duty->attestation.data==vote.data&&duty->attestation.aggregation_bits==vote.aggregation_bits,"derived Capella duty differs");
+      auto excluded=*current.state;excluded.timed.view.equivocating_indices.insert(index);check(!prepare_capella_attestation_duty(excluded,store_rules,index,slot,64,100000),"equivocator received local duty");
+      check(!prepare_capella_attestation_duty(*current.state,store_rules,index,slot+1,64,100000),"future local duty accepted");
+      auto provider=[&](const ConsensusRoot& root){++provider_calls;return local_key.sign(root);};
+      {ChainStore disk(signing_dir/"journal");BeaconSigningJournal journal(disk,r.chain_id,disk_genesis.header.hash(),genesis_root,local_key.public_key,slots);
+       auto stale=current.token;++stale.sequence;bool rejected=false;try{reactor->sign_attestation(index,slot,[&]{return now;},stale,journal,provider);}catch(const StaleCapellaDuty&){rejected=true;}check(rejected&&provider_calls==0,"stale duty reached signer");
+       check(!reactor->sign_attestation(UINT64_MAX,slot,[&]{return now;},current.token,journal,provider)&&provider_calls==0,"unassigned validator signed");
+       const auto signed_vote=reactor->sign_attestation(index,slot,[&]{return now;},current.token,journal,provider);check(signed_vote&&signed_vote->data==vote.data&&signed_vote->signature==vote.signature&&provider_calls==1,"local signed attestation differs");signed_token=journal.commitment();++local_signatures;
+      }
+      {ChainStore disk(signing_dir/"journal");BeaconSigningJournal journal(disk,r.chain_id,disk_genesis.header.hash(),genesis_root,local_key.public_key,slots,signed_token);
+       const auto retry=reactor->sign_attestation(index,slot,[&]{return now;},current.token,journal,provider);check(retry&&retry->signature==vote.signature&&provider_calls==2&&journal.commitment()==signed_token,"reopened signer changed attestation or reservation");
+       auto conflict=vote.data;conflict.beacon_block_root[0]^=1;bool rejected=false;try{journal.sign_attestation(conflict,version,provider);}catch(const std::exception&){rejected=true;}check(rejected&&provider_calls==2,"reopened journal allowed double vote");
+      }
+      if(position==0&&committee_index==0){
+       {ChainStore disk(signing_dir/"wrong-domain");BeaconSigningJournal journal(disk,r.chain_id+1,disk_genesis.header.hash(),genesis_root,local_key.public_key,slots);bool rejected=false;try{reactor->sign_attestation(index,slot,[&]{return now;},current.token,journal,provider);}catch(const std::invalid_argument&){rejected=true;}check(rejected&&provider_calls==2,"foreign journal reached signer");}
+       {ChainStore disk(signing_dir/"expired");BeaconSigningJournal journal(disk,r.chain_id,disk_genesis.header.hash(),genesis_root,local_key.public_key,slots);auto wall=now;bool expired=false;try{reactor->sign_attestation(index,slot,[&]{return wall;},current.token,journal,[&](const ConsensusRoot& root){wall+=store_rules.slot_duration_ms;return local_key.sign(root);});}catch(const ExpiredCapellaDuty&){expired=true;}check(expired,"expired provider result escaped");auto conflict=vote.data;conflict.beacon_block_root[0]^=1;bool rejected=false;try{journal.sign_attestation(conflict,version,provider);}catch(const std::exception&){rejected=true;}check(rejected&&provider_calls==2,"expired duty lost reservation");}
+      }
+
       const auto before=reactor->current();auto bad=vote;bad.signature[0]^=1;check(!reactor->vote(bad)&&reactor->current().token==before.token,"invalid deferred vote persisted");
       bool stopped=false;try{reactor->vote(vote,[]{throw ExecutionCancelled("vote stop");});}catch(const ExecutionCancelled&){stopped=true;}check(stopped&&reactor->current().token==before.token,"cancelled deferred vote persisted");
       check(reactor->vote(vote)&&capella_store_snapshot(*reactor->current().state,store_rules,snapshot_limits)==capella_store_snapshot(*before.state,store_rules,snapshot_limits),"current-slot vote changed fork choice");
@@ -374,7 +394,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
   for(const auto& [height,b]:ordered){const bool canonical=height<=latest->header.number;check(bool(disk.block_by_number(height))==canonical,"stale block after crash reorg");for(const auto& tx:b.block.transactions)check(bool(disk.receipt(tx.hash()))==canonical&&bool(disk.transaction(tx.hash()))==canonical,"stale transaction after crash reorg");}
   token=record->token;
  }
- std::cout<<Json{{"scenario","capella-signed-transition"},{"migrated",migrate},{"finalityScenario",finality},{"participationPercent",participation},{"finalizedEpoch",store->timed.view.finalized.epoch},{"includedAttestations",included_attestations},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"storeBlocks",store->blocks.size()},{"snapshotReopened",true},{"durableReactor",true},{"signedArchives",signed_wires.size()},{"signedVotes",durable_votes.size()},{"signedSlashings",durable_proofs.size()},{"deferredVotes",deferred_votes.size()},{"storeSigkillReopens",2},{"storeVotes",votes},{"voteReorgs",vote_reorgs},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
+ std::cout<<Json{{"scenario","capella-signed-transition"},{"migrated",migrate},{"finalityScenario",finality},{"participationPercent",participation},{"finalizedEpoch",store->timed.view.finalized.epoch},{"includedAttestations",included_attestations},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"storeBlocks",store->blocks.size()},{"snapshotReopened",true},{"durableReactor",true},{"signedArchives",signed_wires.size()},{"signedVotes",durable_votes.size()},{"signedSlashings",durable_proofs.size()},{"deferredVotes",deferred_votes.size()},{"localAttestations",local_signatures},{"storeSigkillReopens",2},{"storeVotes",votes},{"voteReorgs",vote_reorgs},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
 }
 int main(int argc,char** argv){try{executable=argv[0];
 #ifdef NANO_SYNC_FAULT

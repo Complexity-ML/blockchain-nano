@@ -1,7 +1,10 @@
 #pragma once
 #include "nano/consensus_capella_store_snapshot.hpp"
 #include "nano/storage.hpp"
+#include "nano/consensus_beacon_signer.hpp"
 namespace nano {
+class StaleCapellaDuty : public std::invalid_argument {public: using std::invalid_argument::invalid_argument;};
+class ExpiredCapellaDuty : public std::runtime_error {public: using std::runtime_error::runtime_error;};
 using CapellaSignedVotes=std::map<Bytes,Bytes>;
 struct CapellaPublishedStore {std::shared_ptr<const CapellaForkStore> state;ForkCheckpointToken token;};
 // Serialized local event coordinator. Initial anchor or restart token must be
@@ -17,6 +20,11 @@ public:
  CapellaDurableReactor(ChainStore&,Int,Bytes,CapellaForkBlockRules,CapellaStoreSnapshotLimits,CapellaForkStore,const std::function<void()>& checkpoint={});
  CapellaDurableReactor(ChainStore&,Int,Bytes,CapellaForkBlockRules,CapellaStoreSnapshotLimits,const ForkCheckpointToken&,const std::function<void()>& checkpoint={});
  CapellaPublishedStore current()const;
+ // Caller supplies identity and an independent clock, never unsigned vote data.
+ // Signature reservations live in a separate durable journal and survive expiry.
+ std::optional<Phase0SignedAttestation> sign_attestation(uint64_t validator_index,
+  uint64_t slot,const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected,
+  BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={});
  // Authenticated recent gossip votes, including deferred current-slot votes.
  // Retained for current/previous epoch; copy is bounded by snapshot limits.
  CapellaSignedVotes signed_votes()const;
