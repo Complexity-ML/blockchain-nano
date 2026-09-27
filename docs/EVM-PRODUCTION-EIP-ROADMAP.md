@@ -1025,3 +1025,13 @@ vers 65. Racines EVM/têtes et enveloppes durables exactes contrôlées. Test pa
 en 28,61 s. Échec initial du banc (snapshot simple versus enveloppe de votes)
 conservé et corrigé. Pas de panne physique, Linux/VPS, témoins indépendants ou
 WAN ; aucun EIP/production clôturé. [Preuves](qualification/capella-deposit-reorg-sync-20260927/README.md).
+
+## 2026-09-27 — Injection WAL portée et qualifiée sous Linux ARM64
+
+Interposition fsync/fdatasync réservée aux tests Linux, contrôlée sur fichier
+ciblé, fichier distinct et après désactivation. Réutilisation de l'image de
+dépendances dans Docker sans réseau, 2 CPU/4 Go. Le scénario de réorganisation
+avec WAL conservé/perdu passe en 24,63 s : fermeture après EIO, état ancien ou
+nouveau cohérent, archives et rejeu vers l'index 65 vérifiés. Aucun code du nœud
+modifié, ni nouvelle image/VPS. Linux ARM64 local seulement : x86-64/VPS,
+WAN et autres pannes restent ouverts. [Preuves](qualification/linux-deposit-reorg-sync-20260927/README.md).

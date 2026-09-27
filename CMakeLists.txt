@@ -295,6 +295,11 @@ target_link_libraries(nano-finality-tests PRIVATE nano_core)
 add_test(NAME finality COMMAND nano-finality-tests)
 set_tests_properties(finality PROPERTIES TIMEOUT 15)
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+ add_library(nano-test-sync-fault SHARED tests/support/sync_fault_linux.cpp)
+ target_link_libraries(nano-test-sync-fault PRIVATE ${CMAKE_DL_LIBS})
+endif()
+
 if(APPLE)
  add_library(nano-test-sync-fault SHARED tests/support/sync_fault_macos.cpp)
  add_executable(nano-storage-sync-failure-tests tests/test_storage_sync_failure.cpp)
@@ -1526,7 +1531,7 @@ set_tests_properties(ethereum_official_capella_slots PROPERTIES TIMEOUT 180 LABE
 
 add_executable(nano-capella-transition-tests tests/test_capella_transition.cpp)
 target_link_libraries(nano-capella-transition-tests PRIVATE nano_core nano_ckzg)
-if(APPLE)
+if(TARGET nano-test-sync-fault)
  target_link_libraries(nano-capella-transition-tests PRIVATE nano-test-sync-fault)
  target_compile_definitions(nano-capella-transition-tests PRIVATE NANO_SYNC_FAULT=1)
  add_test(NAME consensus_capella_queued_bls_sync COMMAND nano-capella-transition-tests --queued-bls-sync)
@@ -1697,7 +1702,7 @@ set_tests_properties(consensus_capella_competing_deposit_reorg PROPERTIES TIMEOU
 add_test(NAME consensus_capella_reindexed_validator_activation COMMAND nano-capella-transition-tests --deposit-reorg-activation)
 set_tests_properties(consensus_capella_reindexed_validator_activation PROPERTIES TIMEOUT 360 LABELS "qualification_consensus_runtime")
 
-if(APPLE)
+if(TARGET nano-test-sync-fault)
  add_test(NAME consensus_capella_deposit_reorg_sync COMMAND nano-capella-transition-tests --deposit-reorg-sync)
  set_tests_properties(consensus_capella_deposit_reorg_sync PROPERTIES TIMEOUT 180 LABELS "qualification_storage_sync_local")
 endif()

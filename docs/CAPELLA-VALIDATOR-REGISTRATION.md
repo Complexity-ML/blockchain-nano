@@ -76,7 +76,9 @@ Une erreur de synchronisation WAL au vote de bascule est qualifiée sur macOS :
 issue entièrement ancienne ou nouvelle, archives cohérentes et rejeu vérifiés.
 [Preuves](qualification/capella-deposit-reorg-sync-20260927/README.md).
 La disponibilité sous reorgs soutenues, les autres points d'interruption,
-Linux/VPS, les témoins indépendants et le transport distribué restent ouverts.
+Linux x86-64/VPS, les témoins indépendants et le transport distribué restent ouverts.
+Le rejeu de cette panne WAL passe aussi sur Linux ARM64/Docker :
+[preuves](qualification/linux-deposit-reorg-sync-20260927/README.md).
 
 Ce mode concerne Capella natif Nano. Il ne déclare pas le cycle EIP-6110 Ethereum
 complet ni l’activation publique du réseau.

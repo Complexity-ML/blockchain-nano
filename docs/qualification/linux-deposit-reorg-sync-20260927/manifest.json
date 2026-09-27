@@ -1,0 +1,29 @@
+{
+  "base_commit": "f7c963b77fbc9c29c2c77fa63c50a10bcdfafa67",
+  "source_sha256": {
+    "CMakeLists.txt": "e71a1974889af43fdb53c8876233927182c6b9c11e6426a014d179556cbca7a5",
+    "tests/support/sync_fault_linux.cpp": "582915c701e59f3f9cd2a746f8c35aace79c5c501f9db3cff8c6553070fcdabe",
+    "tests/test_capella_transition.cpp": "8fb85f59d2c0e364f35bfbfab2ec2b58089a33e3c49ebd9f7cae8ca8b2f5c20f",
+    "tests/support/capella_deposit_reorg.hpp": "ee5fa3b09dd599ccc0b018e198ecee40014888e7b1311e960f94f449dd7bf509"
+  },
+  "binary_sha256": {
+    "nano-capella-transition-tests": "97a32c80357d944d649438497e68356b7b4b0612474a3cc5c753ce38d5ebf9bc",
+    "libnano-test-sync-fault.so": "6061bf5af385d685e4c1e3474e36e68026f6f68e93004ac5f313eb557aa727bc"
+  },
+  "image": "sha256:6116669430b02b7e8012af8c8bd515a5a7dcd1dd2034649f9b45ae5b9e70a3a4 arm64 linux",
+  "limits": {
+    "cpus": 2,
+    "memory": "4g",
+    "network": "none",
+    "sourceMount": "read-only"
+  },
+  "command": "ctest --test-dir /build -R '^consensus_capella_deposit_reorg_sync$' -V --output-junit /build/reorg-sync.xml",
+  "results": [
+    {
+      "name": "consensus_capella_deposit_reorg_sync",
+      "classname": "consensus_capella_deposit_reorg_sync",
+      "time": "24.6298",
+      "status": "run"
+    }
+  ]
+}
