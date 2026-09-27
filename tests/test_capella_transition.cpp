@@ -130,9 +130,9 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
     ConsensusBytes4 version{};std::copy_n(advanced.ssz.begin()+((slot-1)/slots<little(advanced.ssz,56,8)?48:52),4,version.begin());
     const auto root=consensus_signing_root(root_at(advanced.ssz,176+32*((slot-1)%l.slots_per_historical_root)),consensus_domain({7,0,0,0},version,genesis_root));
     const size_t committee=272+64*l.slots_per_historical_root+32*l.epochs_per_historical_vector+8*l.epochs_per_slashings_vector+133;
-    blst_p2 sum{};bool first=true;std::array<blst_p2,2> partial_sums{};std::array<bool,2> partial_first{true,true};std::array<Bytes,2> partials{Bytes(bit_bytes+96),Bytes(bit_bytes+96)};
+    std::map<uint64_t,Bytes> individual_signatures;blst_p2 sum{};bool first=true;std::array<blst_p2,2> partial_sums{};std::array<bool,2> partial_first{true,true};std::array<Bytes,2> partials{Bytes(bit_bytes+96),Bytes(bit_bytes+96)};
     for(size_t position=0;position<l.sync_committee_size;++position){size_t member=0;for(;member<64;++member){const auto key=Key(member).public_key;if(std::equal(key.begin(),key.end(),advanced.ssz.begin()+committee+48*position))break;}check(member<64,"unknown sync fixture key");
-     const auto signature=Key(member).sign(root);blst_p2_affine affine;check(blst_p2_uncompress(&affine,signature.data())==BLST_SUCCESS,"sync signature encoding");blst_p2 point;blst_p2_from_affine(&point,&affine);if(first){sum=point;first=false;}else blst_p2_add_or_double(&sum,&sum,&point);expected_sync[position/8]|=uint8_t(1u<<(position%8));const auto part=position%2;if(partial_first[part]){partial_sums[part]=point;partial_first[part]=false;}else blst_p2_add_or_double(&partial_sums[part],&partial_sums[part],&point);partials[part][position/8]|=uint8_t(1u<<(position%8));
+     const auto signature=Key(member).sign(root);individual_signatures.emplace(member,signature);blst_p2_affine affine;check(blst_p2_uncompress(&affine,signature.data())==BLST_SUCCESS,"sync signature encoding");blst_p2 point;blst_p2_from_affine(&point,&affine);if(first){sum=point;first=false;}else blst_p2_add_or_double(&sum,&sum,&point);expected_sync[position/8]|=uint8_t(1u<<(position%8));const auto part=position%2;if(partial_first[part]){partial_sums[part]=point;partial_first[part]=false;}else blst_p2_add_or_double(&partial_sums[part],&partial_sums[part],&point);partials[part][position/8]|=uint8_t(1u<<(position%8));
     }
     blst_p2_compress(expected_sync.data()+bit_bytes,&sum);for(size_t part=0;part<2;++part)blst_p2_compress(partials[part].data()+bit_bytes,&partial_sums[part]);
     auto bad=expected_sync;bad.back()^=1;check(!nodes[0]->submit_sync_aggregate(slot,bad,current.token),"corrupt sync aggregate accepted");
@@ -141,7 +141,19 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
     const size_t first_part=(slot/2)%2;
     check(nodes[0]->submit_sync_aggregate(slot,partials[first_part],current.token),"first partial sync rejected");
     check(nodes[0]->submit_sync_aggregate(slot,partials[first_part],current.token),"duplicate partial sync not idempotent");
-    check(nodes[0]->submit_sync_aggregate(slot,partials[1-first_part],current.token),"disjoint partial sync rejected");
+    if(slot%4==0){
+     CapellaSyncMessage message{};message.slot=slot-1;message.beacon_block_root=root_at(advanced.ssz,176+32*((slot-1)%l.slots_per_historical_root));message.validator_index=individual_signatures.begin()->first;copy_to(message.signature,individual_signatures.begin()->second);
+     auto bad_message=message;bad_message.beacon_block_root[0]^=1;check(!nodes[0]->submit_sync_message(bad_message,current.token),"wrong sync message root accepted");
+     bad_message=message;bad_message.slot=UINT64_MAX;check(!nodes[0]->submit_sync_message(bad_message,current.token),"overflow sync message slot accepted");
+     bad_message=message;bad_message.slot=slot;check(!nodes[0]->submit_sync_message(bad_message,current.token),"future sync message accepted");
+     bad_message=message;bad_message.validator_index=UINT64_MAX;check(!nodes[0]->submit_sync_message(bad_message,current.token),"unknown sync validator accepted");
+     bad_message=message;bad_message.signature[95]^=1;check(!nodes[0]->submit_sync_message(bad_message,current.token),"bad individual sync signature accepted");
+     for(size_t outsider=0;outsider<64;++outsider)if(!individual_signatures.contains(outsider)){bad_message=message;bad_message.validator_index=outsider;copy_to(bad_message.signature,Key(outsider).sign(root));check(!nodes[0]->submit_sync_message(bad_message,current.token),"noncommittee validator accepted");break;}
+     bool message_stale=false;try{nodes[0]->submit_sync_message(message,stale);}catch(const StaleCapellaDuty&){message_stale=true;}check(message_stale,"stale sync message accepted");
+     bool message_cancelled=false;try{nodes[0]->submit_sync_message(message,current.token,[]{throw ExecutionCancelled("sync message stop");});}catch(const ExecutionCancelled&){message_cancelled=true;}check(message_cancelled,"sync message cancellation ignored");
+     for(const auto& [member,signature]:individual_signatures){message.validator_index=member;copy_to(message.signature,signature);check(nodes[0]->submit_sync_message(message,current.token)&&nodes[0]->submit_sync_message(message,current.token),"individual sync message or replay rejected");}
+     check(nodes[0]->current().token==current.token,"individual sync collection mutated checkpoint");
+    }else check(nodes[0]->submit_sync_aggregate(slot,partials[1-first_part],current.token),"disjoint partial sync rejected");
     check(!nodes[0]->submit_sync_aggregate(slot,partials[first_part],current.token),"overlapping partial double counted");
     check(nodes[0]->submit_sync_aggregate(slot,expected_sync,current.token)&&nodes[0]->submit_sync_aggregate(slot,expected_sync,current.token),"valid sync aggregate rejected");
     Bytes empty(bit_bytes+96);empty[bit_bytes]=0xc0;check(!nodes[0]->submit_sync_aggregate(slot,empty,current.token),"empty sync replaced full participation");
@@ -264,7 +276,7 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
  }
  if(queued_bls_changes){check(head.execution_state.get("0x000000000000000000000000000000000000002b").balance>0,"owner queued withdrawal unpaid");for(size_t i=0;i<2;++i){const auto& disk=owner_mode?owners[i]->store():*disks[i];const auto record=disk.fork_checkpoint(t.chain_id,genesis.header.hash(),limits.envelope_bytes,nodes[i]->current().token);check(record&&!Json::parse(record->snapshot).contains("blsChanges"),"finalized BLS queue not retired");}}
  if(owner_mode){Rpc rpc(*owners[0]);nodes[0]->invalidate();check(rpc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method","eth_blockNumber"},{"params",Json::array()}}).contains("error"),"invalidated owner still served block number");}
- std::cout<<Json{{"scenario","capella-local-assembly-finality"},{"localSyncAggregates",local_sync},{"disjointSyncMerging",local_sync},{"executionOwner",owner_mode},{"participationPercent",local_finality},{"blocks",blocks},{"votes",votes},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"justifiedEpoch",result.state->timed.view.justified.epoch},{"independentStores",2},{"storeReopens",restarts},{"signingJournalsReopened",reopened_journals},{"networkTransport",false},{"networkActivated",false}}.dump()<<std::endl;
+ std::cout<<Json{{"scenario","capella-local-assembly-finality"},{"localSyncAggregates",local_sync},{"disjointSyncMerging",local_sync},{"individualSyncMessages",local_sync},{"executionOwner",owner_mode},{"participationPercent",local_finality},{"blocks",blocks},{"votes",votes},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"justifiedEpoch",result.state->timed.view.justified.epoch},{"independentStores",2},{"storeReopens",restarts},{"signingJournalsReopened",reopened_journals},{"networkTransport",false},{"networkActivated",false}}.dump()<<std::endl;
 }
 static void scheduler_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules,const Block& genesis,const State& genesis_state){
  Temp directory;const auto limits=crash_limits;const auto& t=rules.transition;const auto slots=t.consensus.epoch.ffg.slots_per_epoch;const auto validators=root_at(initial.blocks.at(initial.timed.view.anchor).state.ssz,8);

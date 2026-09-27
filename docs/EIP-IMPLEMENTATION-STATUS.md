@@ -2902,3 +2902,19 @@ conformes, mutations existantes et nouvelles assertions de somme validées.
 ni collecte/signature individuelle, P2P ou scheduler. Les bascules de branche et
 redémarrages entre contributions restent à qualifier.
 [Implémentation et preuves](qualification/capella-sync-merge-20260927/README.md).
+
+### 2026-09-27 — Admission individuelle des messages sync
+
+Le reactor accepte maintenant un message `(slot, racine Beacon, index, signature)`
+pour le slot de proposition suivant. Il vérifie l’état/branche, l’appartenance au
+comité et la signature BLS dans le domaine approprié. Seules les positions non
+encore couvertes sont ajoutées, avec multiplicité des clés répétées ; le rejeu
+n’augmente pas le poids. Aucune écriture durable lors de la collecte.
+Scénario renforcé : complétion d’une moitié agrégée par messages individuels,
+comparaison à l’agrégat complet indépendant et rejets adversariaux. Passé en
+38,33 s : 40 blocs dont 10 complétés par messages individuels, 272 votes,
+finalité époque 3 et deux réouvertures. Empreintes et logs conservés.
+**Partiel** : API locale uniquement ; format réseau, P2P, signature et scheduler
+restent ouverts. Dérivation du contexte répétée par message : coût à mesurer et
+optimiser avant toute revendication à 100k/1M validateurs.
+[Implémentation et preuves](qualification/capella-sync-message-20260927/README.md).
