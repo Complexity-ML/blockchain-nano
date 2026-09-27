@@ -2962,3 +2962,13 @@ Scénario runtime enrichi vert (21,43 s), régression RPC générale verte (6,27
 [Preuves et signatures des méthodes](qualification/capella-private-rpc-20260927/README.md).
 Qualification limitée au répartiteur `Rpc::handle` : sockets HTTP, dispatch CLI et
 synchronisation entre pairs restent à qualifier/raccorder avant activation.
+
+### Capella : qualification HTTP privée
+
+Nouveau scénario `consensus_capella_private_http` : serveur réel sur port loopback
+éphémère et client persistant. Écoute publique refusée, mauvais jeton rejeté et
+requête d’origine navigateur interdite même avec jeton correct. Soumission/reçu,
+export et cycle des catalogues passent par HTTP ; scénario réussi en 17,24 s.
+[Preuves](qualification/capella-private-http-20260927/README.md).
+Il reste le dispatch CLI, la synchronisation et ses dépendances, puis le transport
+libp2p. Ce test local ne prouve pas une qualification distribuée ou sous surcharge.

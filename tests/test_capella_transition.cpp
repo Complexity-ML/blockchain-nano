@@ -8,6 +8,8 @@
 #include "nano/consensus_capella_reactor.hpp"
 #include "nano/consensus_capella_duty.hpp"
 #include "nano/rpc.hpp"
+#include "nano/http.hpp"
+#include "support/persistent_rpc.hpp"
 #include "nano/consensus_capella_validator.hpp"
 #include "nano/consensus_capella_runtime.hpp"
 #include <atomic>
@@ -41,6 +43,7 @@ static bool owner_sync=false;
 static bool owner_witness=false;
 static bool scheduled=false;
 static bool configured_runtime=false;
+static bool capella_http=false;
 static bool beacon_reads=false;
 static bool wire_mode=false;
 static size_t beacon_read_checks=0;
@@ -179,7 +182,11 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
  check(runtime.reactor->network_identity()==runtime_identity,"runtime identity changed across restart");const auto saved=runtime.reactor->current();const auto root=consensus_beacon_header_root(capella_fork_head(*saved.state,rules).header);Json envelope=runtime_identity;envelope["kind"]="block";envelope["ssz"]=hex(*runtime.reactor->signed_block(root));auto done=std::make_shared<std::promise<CapellaConsensusService::Decision>>();auto result=done->get_future();check(runtime.admission->submit(envelope.dump(),std::make_shared<std::atomic<bool>>(false),[done](auto d){done->set_value(d);}),"runtime admission refused duplicate");check(result.wait_for(std::chrono::seconds(10))==std::future_status::ready&&result.get()==CapellaConsensusService::Decision::accepted&&runtime.reactor->current().token==saved.token,"runtime admission changed duplicate checkpoint");
  {
   Rpc rpc(*owner,"capella-test-token",AdmissionBudget::Clock::now,{}, {}, {},std::make_shared<CapellaRuntime>(runtime));check(rpc.requires_private_bind()&&rpc.local_only(),"Capella RPC exposed public bind");
-  auto call=[&](const char* method,Json params){return rpc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",std::move(params)}});};
+  struct RunningHttp {HttpServer& server;std::thread thread;explicit RunningHttp(HttpServer& s):server(s),thread([&s]{s.run();}){}~RunningHttp(){server.stop();thread.join();}};
+  std::unique_ptr<HttpServer> http_server;std::unique_ptr<RunningHttp> http_running;std::unique_ptr<PersistentRpc> http_client;
+  if(capella_http){bool public_refused=false;try{HttpServer forbidden(rpc,"0.0.0.0",0);}catch(const std::invalid_argument&){public_refused=true;}check(public_refused,"Capella HTTP accepted public bind");http_server=std::make_unique<HttpServer>(rpc,"127.0.0.1",0);http_running=std::make_unique<RunningHttp>(*http_server);http_client=std::make_unique<PersistentRpc>(http_server->port());}
+  auto call=[&](const char* method,Json params){if(http_client){try{return Json{{"result",http_client->call(method,std::move(params))}};}catch(const PersistentRpcError& e){return Json{{"error",{{"code",e.code}}}};}}return rpc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",std::move(params)}});};
+
   for(const auto* method:{"nano_capellaStatus","nano_capellaJobs"})check(call(method,Json::array({"wrong-token"})).at("error").at("code")==-32001,"unauthorized Capella read accepted");
   check(call("nano_capellaCatalogOpen",Json::array({"wrong-token","block"})).at("error").at("code")==-32001,"unauthorized catalog opened");
   check(call("nano_capellaSubmit",Json::array({"wrong-token","invalid","0x1",envelope.dump()})).at("error").at("code")==-32001,"unauthorized submit accepted");
@@ -190,6 +197,8 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
   const auto handle=call("nano_capellaCatalogOpen",Json::array({"capella-test-token","block"})).at("result").at("handle");check(call("nano_capellaCatalogPage",Json::array({"capella-test-token",handle,nullptr,"0x2"})).at("result").at("entries").size()==2,"Capella RPC page failed");check(call("nano_capellaCatalogClose",Json::array({"capella-test-token",handle})).at("result")==true,"Capella RPC close failed");
   check(call("nano_capellaCatalogPage",Json::array({"capella-test-token",handle,nullptr,"0x2"})).contains("error"),"closed RPC catalog readable");
   check(call("nano_capellaExport",Json::array({"capella-test-token","block","0x01"})).at("error").at("code")==-32602,"invalid RPC root accepted");
+  if(capella_http){namespace asio=boost::asio;namespace beast=boost::beast;namespace http=beast::http;asio::io_context context;beast::tcp_stream stream(context);stream.connect({asio::ip::make_address("127.0.0.1"),http_server->port()});http::request<http::string_body> request(http::verb::post,"/",11);request.set(http::field::host,"localhost");request.set(http::field::origin,"https://example.invalid");request.body()=Json{{"jsonrpc","2.0"},{"id",1},{"method","nano_capellaStatus"},{"params",Json::array({"capella-test-token"})}}.dump();request.prepare_payload();http::write(stream,request);beast::flat_buffer buffer;http::response<http::string_body> response;http::read(stream,buffer,response);check(response.result()==http::status::forbidden,"browser-origin Capella request accepted");}
+
  }
  const auto runtime_catalog=runtime.catalogs->open("authenticated-test-peer","block");check(!runtime.catalogs->page("authenticated-test-peer",runtime_catalog,{},2,512).at("entries").empty(),"configured catalog empty");
  const auto session=runtime.admission->receipts().at("session").get<std::string>();
@@ -203,7 +212,7 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
  check(runtime.admission->receipt(session,2,true).at("state")=="retired"&&runtime.admission->submit_receipt(session,2,envelope.dump()).at("state")=="retired","cancel-before-submit fence failed");
  const auto rotated=runtime.admission->rotate_session(session);bool stale=false;try{runtime.admission->submit_receipt(session,3,envelope.dump());}catch(const std::invalid_argument&){stale=true;}check(stale&&rotated.at("session")!=session&&runtime.reactor->current().token==saved.token,"session fence changed consensus");
  const auto final=stop_capella_runtime(runtime);bool catalog_closed=false;try{runtime.catalogs->page("authenticated-test-peer",runtime_catalog,{},2,512);}catch(const std::invalid_argument&){catalog_closed=true;}check(catalog_closed,"stopped runtime retained catalog");catalog_closed=false;try{runtime.catalogs->open("authenticated-test-peer","block");}catch(const std::runtime_error&){catalog_closed=true;}check(catalog_closed,"stopped runtime opened catalog");check(!runtime.admission->submit(envelope.dump(),std::make_shared<std::atomic<bool>>(false),[](auto){}),"stopped runtime accepted admission");proposals+=final.at("validator").at("proposalsAdmitted").get<uint64_t>();check(proposals==2*slots&&final.at("clockHealthy")==true,"runtime proposal total differs");runtime={};closed=false;try{owner->tip();}catch(const std::runtime_error&){closed=true;}check(closed,"released runtime left execution readable");
- std::cout<<Json{{"scenario","capella-configured-runtime"},{"blocks",proposals},{"keysLoaded",64},{"witnessRestart",true},{"signerWitnessRestart",true},{"admissionReceiptChecks",6},{"runtimeCatalogChecks",3},{"invalidConfigurationsRejected",6},{"workersStopped",true},{"networkTransport",false}}.dump()<<std::endl;
+ std::cout<<Json{{"scenario","capella-configured-runtime"},{"blocks",proposals},{"keysLoaded",64},{"witnessRestart",true},{"signerWitnessRestart",true},{"admissionReceiptChecks",6},{"httpTransport",capella_http},{"runtimeCatalogChecks",3},{"invalidConfigurationsRejected",6},{"workersStopped",true},{"networkTransport",false}}.dump()<<std::endl;
 }
 static void verify_beacon_reads(CapellaDurableReactor& reactor,const CapellaForkBlockRules& rules){
  const auto snapshot=reactor.current();const auto& head=capella_fork_head(*snapshot.state,rules);const auto id=consensus_beacon_header_root(head.header);auto text=[](const ConsensusRoot& r){return hex(Bytes(r.begin(),r.end()));};
@@ -663,7 +672,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
  }
  std::cout<<Json{{"wireMessages",wire_messages},{"beaconReadChecks",beacon_read_checks},{"scenario","capella-signed-transition"},{"migrated",migrate},{"finalityScenario",finality},{"participationPercent",participation},{"finalizedEpoch",store->timed.view.finalized.epoch},{"includedAttestations",included_attestations},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"storeBlocks",store->blocks.size()},{"snapshotReopened",true},{"durableReactor",true},{"signedArchives",signed_wires.size()},{"signedVotes",durable_votes.size()},{"signedSlashings",durable_proofs.size()},{"deferredVotes",deferred_votes.size()},{"localAttestations",local_signatures},{"localProposals",local_proposals},{"localRandao",local_randao},{"assembledBodies",assembled_bodies},{"storeSigkillReopens",2},{"storeVotes",votes},{"voteReorgs",vote_reorgs},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
 }
-int main(int argc,char** argv){try{executable=argv[0];if(argc==2&&std::string(argv[1])=="--wire"){wire_mode=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--beacon-reads"){beacon_reads=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--configured-runtime"){configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler"){scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-reorg"){owner_reorg=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}
+int main(int argc,char** argv){try{executable=argv[0];if(argc==2&&std::string(argv[1])=="--http"){configured_runtime=true;capella_http=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--wire"){wire_mode=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--beacon-reads"){beacon_reads=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--configured-runtime"){configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler"){scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-reorg"){owner_reorg=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}
 #ifdef NANO_SYNC_FAULT
 if(argc==3&&std::string(argv[1])=="--sync-writer")return sync_writer(argv[2]);
 if(argc==2&&std::string(argv[1])=="--owner-witness"){owner_witness=true;owner_sync=true;sync_scenario=true;scenario(false);return 0;}

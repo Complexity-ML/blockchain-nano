@@ -1580,3 +1580,6 @@ set_tests_properties(consensus_capella_beacon_reads PROPERTIES TIMEOUT 120 LABEL
 
 add_test(NAME consensus_capella_wire_admission COMMAND nano-capella-transition-tests --wire)
 set_tests_properties(consensus_capella_wire_admission PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_runtime")
+
+add_test(NAME consensus_capella_private_http COMMAND nano-capella-transition-tests --http)
+set_tests_properties(consensus_capella_private_http PROPERTIES TIMEOUT 240 LABELS "qualification_consensus_runtime")
