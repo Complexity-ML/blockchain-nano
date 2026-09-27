@@ -2453,3 +2453,13 @@ normale converge avec votes/slashing. Indisponibilité, limite et annulation tes
 (5,73 s). [Preuves](qualification/capella-sync-dependencies-20260927/README.md).
 Le callback de récupération n’est pas encore un transport libp2p ; sélection des
 pairs, délais réseau et reprise après élagage restent à raccorder.
+
+### Capella : récupération de session IPC privée
+
+Le statut publie le profil Capella, les capacités réelles du worker et des messages,
+la liaison d’exécution et la session. La machine commune de récupération IPC est
+exercée via les RPC Capella : rotation, maintien de highWater=3 et vidage des anciens
+jobs. Test runtime passé en 21,57 s ; admission réseau explicitement désactivée.
+[Preuves](qualification/capella-ipc-recovery-20260927/README.md).
+Le démon libp2p, le relais de catalogues et le démarrage réseau géré restent à
+raccorder ; cette preuve locale ne clôture pas la qualification réseau Capella.

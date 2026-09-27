@@ -11,6 +11,7 @@ inline const std::string capella_protocol="/nano/capella/1.0.0";
 // Peer ID comes from the authenticated transport, never the JSON payload.
 class CapellaConsensusService {
  AltairMessageIngress ingress_; // reuse the checked SSZ envelope decoder
+ const nano::Json capacities_;
  AltairReceipts receipts_;
  AltairWorker worker_; // ordered transport-independent bounded queue
  static AltairWireProfile profile(nano::CapellaDurableReactor& reactor,size_t frame,size_t block,size_t vote,size_t slashing){const auto j=reactor.network_identity();return {j.at("chainId").get<std::string>(),j.at("genesisHash").get<std::string>(),j.at("forkDigest").get<std::string>(),frame,block,vote,slashing,j.at("consensusIdentity").get<std::string>()};}
@@ -20,7 +21,7 @@ public:
  using Done=AltairWork::Done;
  CapellaConsensusService(nano::CapellaDurableReactor& reactor,InboundBudget& budget,
   size_t frame_bytes,size_t block_bytes,size_t vote_bytes,size_t slashing_bytes,
-  size_t max_jobs,size_t max_bytes,std::function<void(const std::function<void()>&)> before_message={}):ingress_(profile(reactor,frame_bytes,block_bytes,vote_bytes,slashing_bytes),budget),receipts_(max_jobs),
+  size_t max_jobs,size_t max_bytes,std::function<void(const std::function<void()>&)> before_message={}):ingress_(profile(reactor,frame_bytes,block_bytes,vote_bytes,slashing_bytes),budget),capacities_{{"wire",{{"frameBytes",frame_bytes},{"blockBytes",block_bytes},{"attestationBytes",vote_bytes},{"slashingBytes",slashing_bytes}}},{"workerJobs",max_jobs}},receipts_(max_jobs),
   worker_(max_jobs,max_bytes,[&reactor,before_message=std::move(before_message)](const AltairWireMessage& message,const Cancellation& cancelled){
    const auto check=[&]{if(cancelled->load())throw std::runtime_error("Capella message cancelled");};check();if(before_message)before_message(check);check();bool accepted=false;
    switch(message.kind){case AltairWireKind::block:accepted=reactor.block(message.ssz,check);break;case AltairWireKind::attestation:accepted=reactor.vote_ssz(message.ssz,check);break;case AltairWireKind::attester_slashing:accepted=reactor.slashing_ssz(message.ssz,check);break;default:return Decision::rejected;}
@@ -50,6 +51,7 @@ public:
   return receipts_.submit(session,sequence,std::move(*message),worker_.dispatcher());
  }
  nano::Json receipt(const std::string& session,uint64_t sequence,bool cancel=false,bool retire=false){return receipts_.get(session,sequence,cancel,retire);}
+ nano::Json capacities()const{return capacities_;}
  nano::Json receipts(){return receipts_.list();}
  nano::Json rotate_session(const std::string& expected){return receipts_.rotate(expected);}
  void stop(){worker_.stop();}

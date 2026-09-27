@@ -22,6 +22,7 @@
 #include "../src/beacon_block_json.hpp"
 #include "../network/capella_consensus_service.hpp"
 #include "../network/capella_inventory_sessions.hpp"
+#include "../network/altair_core_recovery.hpp"
 #include <future>
 #include "../src/consensus_bellatrix_projection.hpp"
 using namespace test;using namespace test::phase0_minimal;
@@ -221,6 +222,13 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
  runtime.admission->receipt(session,1,false,true);check(runtime.admission->submit_receipt(session,1,envelope.dump()).at("state")=="retired","retired receipt replay admitted");
  check(runtime.admission->receipt(session,2,true).at("state")=="retired"&&runtime.admission->submit_receipt(session,2,envelope.dump()).at("state")=="retired","cancel-before-submit fence failed");
  const auto rotated=runtime.admission->rotate_session(session);bool stale=false;try{runtime.admission->submit_receipt(session,3,envelope.dump());}catch(const std::invalid_argument&){stale=true;}check(stale&&rotated.at("session")!=session&&runtime.reactor->current().token==saved.token,"session fence changed consensus");
+ {
+  Rpc ipc(*owner,"capella-ipc-test",AdmissionBudget::Clock::now,{}, {}, {},std::make_shared<CapellaRuntime>(runtime));
+  const auto old_session=runtime.admission->receipts().at("session").get<std::string>();runtime.admission->submit_receipt(old_session,3,envelope.dump());
+  boost::asio::io_context io;Json recovered;auto call=[&](std::string method,Json params,auto reply){check(method.starts_with("nano_altair"),"unexpected recovery method");method.replace(0,11,"nano_capella");auto response=ipc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",std::move(params)}});reply(response.contains("result")?response.at("result"):Json(nullptr));};
+  auto recovery=std::make_shared<AltairCoreRecovery>(io,call,"capella-ipc-test",runtime_identity.at("chainId").get<std::string>(),runtime_identity.at("genesisHash").get<std::string>(),2,std::chrono::milliseconds(1),std::chrono::seconds(10),[&](Json result){recovered=std::move(result);});recovery->start();io.run();
+  check(recovered.is_object()&&recovered.at("session")!=old_session&&recovered.at("highWater")==3&&recovered.at("networkAdmissionEnabled")==false&&runtime.admission->receipts().at("jobs").empty(),"Capella IPC recovery failed to fence/drain");
+ }
  const auto final=stop_capella_runtime(runtime);bool catalog_closed=false;try{runtime.catalogs->page("authenticated-test-peer",runtime_catalog,{},2,512);}catch(const std::invalid_argument&){catalog_closed=true;}check(catalog_closed,"stopped runtime retained catalog");catalog_closed=false;try{runtime.catalogs->open("authenticated-test-peer","block");}catch(const std::runtime_error&){catalog_closed=true;}check(catalog_closed,"stopped runtime opened catalog");check(!runtime.admission->submit(envelope.dump(),std::make_shared<std::atomic<bool>>(false),[](auto){}),"stopped runtime accepted admission");proposals+=final.at("validator").at("proposalsAdmitted").get<uint64_t>();check(proposals==2*slots&&final.at("clockHealthy")==true,"runtime proposal total differs");runtime={};closed=false;try{owner->tip();}catch(const std::runtime_error&){closed=true;}check(closed,"released runtime left execution readable");
  std::cout<<Json{{"scenario","capella-configured-runtime"},{"blocks",proposals},{"keysLoaded",64},{"witnessRestart",true},{"signerWitnessRestart",true},{"admissionReceiptChecks",6},{"httpTransport",capella_http},{"runtimeCatalogChecks",3},{"invalidConfigurationsRejected",6},{"workersStopped",true},{"networkTransport",false}}.dump()<<std::endl;
 }
