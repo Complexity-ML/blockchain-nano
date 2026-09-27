@@ -3,6 +3,8 @@
 #include "proposal_vote_selection.hpp"
 #include "nano/consensus_message_ssz.hpp"
 #include "nano/consensus_capella_deposits.hpp"
+#include "consensus_capella_projection.hpp"
+#include <bit>
 namespace nano {
 namespace {
 uint64_t number(const Bytes& b,size_t at){uint64_t n=0;for(size_t i=0;i<8;++i)n|=uint64_t(b.at(at+i))<<(8*i);return n;}
@@ -15,6 +17,29 @@ CapellaExecutionPayload payload(const Block& b,const std::vector<CapellaWithdraw
  p.block_number=u64(h.number);p.gas_limit=u64(h.gas_limit);p.gas_used=u64(h.gas_used);p.timestamp=u64(h.timestamp);p.extra_data=h.extra_data;
  for(const auto& tx:b.transactions)p.transactions.push_back(tx.raw());return p;
 }
+}
+bool CapellaDurableReactor::submit_sync_aggregate(uint64_t slot,std::span<const uint8_t> aggregate,
+ const ForkCheckpointToken& expected,const std::function<void()>& check){
+ std::lock_guard lock(mutex_);require_available();
+ if(expected!=*token_)throw StaleCapellaDuty("Stale sync aggregate submission");
+ const auto& t=rules_.transition;const auto& c=t.consensus;
+ const size_t bit_bytes=(uint64_t(c.state.sync_committee_size)+7)/8;
+ if(!slot||aggregate.size()!=bit_bytes+96)return false;
+ const auto& clock=state_->timed.clock;
+ if((clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms!=slot)return false;
+ if(check)check();
+ const auto head=phase0_fork_choice_head(state_->timed.view,{c.epoch.ffg.slots_per_epoch,c.attestation.duties.effective_balance_increment,rules_.proposer_score_boost},check).head;
+ const auto& parent=state_->blocks.at(head);if(parent.header.slot>=slot)return false;
+ const auto advanced=prepare_capella_slots(parent.state,{c.epoch,t.execution,t.maximum_state_bytes},c.state,slot,limits_.replay_slots,limits_.sync_trials,check);
+ const auto projected=capella_detail::project(advanced.ssz,c.state,t.execution,t.maximum_state_bytes,check);
+ if(!verify_altair_sync_aggregate(projected.common,aggregate,c.state,c.sync,check))return false;
+ size_t participants=0;for(size_t i=0;i<bit_bytes;++i)participants+=std::popcount(aggregate[i]);
+ if(pending_sync_&&pending_sync_->slot==slot&&pending_sync_->parent==head){
+  if(std::equal(aggregate.begin(),aggregate.end(),pending_sync_->ssz.begin(),pending_sync_->ssz.end()))return true;
+  if(participants<=pending_sync_->participants)return false;
+ }
+ PendingSyncAggregate candidate{slot,head,participants,Bytes(aggregate.begin(),aggregate.end())};
+ if(check)check();pending_sync_=std::move(candidate);return true;
 }
 std::optional<Bytes> CapellaDurableReactor::prepare_local_body(uint64_t index,uint64_t slot,
  const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,
@@ -95,6 +120,7 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t i
   Bytes body(fixed);std::copy(reveal.begin(),reveal.end(),body.begin());std::copy(deposit_vote.begin(),deposit_vote.end(),body.begin()+96);
   // Empty sync participation is a valid aggregate (and incurs normal penalties).
   body[220+(uint64_t(t.state.sync_committee_size)+7)/8]=0xc0;
+  if(pending_sync_&&pending_sync_->slot==slot&&pending_sync_->parent==head)std::copy(pending_sync_->ssz.begin(),pending_sync_->ssz.end(),body.begin()+220);
   offset(body,200,fixed);offset(body,204,fixed);offset(body,208,fixed+slashings.size());
   offset(body,212,fixed+slashings.size()+attestations.size());offset(body,216,fixed+slashings.size()+attestations.size()+selected_deposits.size());offset(body,220+sync_bytes,fixed+slashings.size()+attestations.size()+selected_deposits.size()+selected_exits.size());
   offset(body,224+sync_bytes,fixed+slashings.size()+attestations.size()+selected_deposits.size()+selected_exits.size()+encoded.size());

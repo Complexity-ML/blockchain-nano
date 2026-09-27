@@ -1,0 +1,146 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 9ddcec9..f48c865 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1646,0 +1647,3 @@ set_tests_properties(consensus_capella_deposit_invalid_signature PROPERTIES TIME
++
++add_test(NAME consensus_capella_local_sync COMMAND nano-capella-transition-tests --local-sync)
++set_tests_properties(consensus_capella_local_sync PROPERTIES TIMEOUT 240 LABELS "qualification_consensus_runtime")
+diff --git a/include/nano/consensus_altair_sync_aggregate.hpp b/include/nano/consensus_altair_sync_aggregate.hpp
+index 81fa3ff..3ced5eb 100644
+--- a/include/nano/consensus_altair_sync_aggregate.hpp
++++ b/include/nano/consensus_altair_sync_aggregate.hpp
+@@ -9,0 +10,5 @@ struct AltairSyncAggregateRules {
++// Signature/committee validation only; no reward or balance transition.
++// Caller must authenticate the surrounding state and its chain/branch identity.
++bool verify_altair_sync_aggregate(std::span<const uint8_t> state,
++ std::span<const uint8_t> aggregate,const AltairStateLimits&,const AltairSyncAggregateRules&,
++ const std::function<void()>& checkpoint={});
+diff --git a/include/nano/consensus_capella_reactor.hpp b/include/nano/consensus_capella_reactor.hpp
+index efd2701..22f6630 100644
+--- a/include/nano/consensus_capella_reactor.hpp
++++ b/include/nano/consensus_capella_reactor.hpp
+@@ -31,0 +32,2 @@ class CapellaDurableReactor {
++ struct PendingSyncAggregate {uint64_t slot;ConsensusRoot parent;size_t participants;Bytes ssz;};
++ std::optional<PendingSyncAggregate> pending_sync_;
+@@ -48,0 +51,7 @@ public:
++ // Ephemeral, bounded to one aggregate for the current proposal slot and head.
++ // Verifies membership/domain/signature; retains the highest participation.
++ // No durable mutation or local signing. RPC/P2P collection is separate.
++ bool submit_sync_aggregate(uint64_t proposal_slot,std::span<const uint8_t>,
++  const ForkCheckpointToken&,const std::function<void()>& checkpoint={});
++
++
+diff --git a/src/consensus_altair_sync_aggregate.cpp b/src/consensus_altair_sync_aggregate.cpp
+index f9b6981..69d78a2 100644
+--- a/src/consensus_altair_sync_aggregate.cpp
++++ b/src/consensus_altair_sync_aggregate.cpp
+@@ -6 +6,3 @@ namespace nano {
+-std::optional<Bytes> prepare_altair_sync_aggregate(std::span<const uint8_t> b,
++namespace {
++struct VerifiedSync {std::vector<bool> bits;std::vector<Bytes> committee;};
++std::optional<VerifiedSync> verified_sync(std::span<const uint8_t> b,
+@@ -16 +18 @@ std::optional<Bytes> prepare_altair_sync_aggregate(std::span<const uint8_t> b,
+- const auto slot=number(40),epoch=slot/r.slots_per_epoch;if(!slot)throw std::invalid_argument("sync aggregate at genesis slot");
++ const auto slot=number(40);if(!slot)throw std::invalid_argument("sync aggregate at genesis slot");
+@@ -31,0 +34,17 @@ std::optional<Bytes> prepare_altair_sync_aggregate(std::span<const uint8_t> b,
++ return VerifiedSync{std::move(bits),std::move(committee)};
++}
++}
++bool verify_altair_sync_aggregate(std::span<const uint8_t> state,std::span<const uint8_t> aggregate,
++ const AltairStateLimits& limits,const AltairSyncAggregateRules& rules,const std::function<void()>& checkpoint){
++ return verified_sync(state,aggregate,limits,rules,checkpoint).has_value();
++}
++std::optional<Bytes> prepare_altair_sync_aggregate(std::span<const uint8_t> b,
++ std::span<const uint8_t> aggregate,const AltairStateLimits& l,const AltairSyncAggregateRules& r,
++ const std::function<void()>& checkpoint){
++ const auto verified=verified_sync(b,aggregate,l,r,checkpoint);if(!verified)return std::nullopt;
++ const auto& bits=verified->bits;const auto& committee=verified->committee;
++ auto number=[&](size_t at,size_t width=8){uint64_t n=0;for(size_t j=0;j<width;++j)n|=uint64_t(b[at+j])<<(8*j);return n;};
++ auto root=[&](size_t at){ConsensusRoot v{};std::copy_n(b.begin()+at,32,v.begin());return v;};
++ const auto slot=number(40),epoch=slot/r.slots_per_epoch;
++ const size_t historical=176+64*l.slots_per_historical_root,randao_at=historical+96;
++ const auto validators=number(historical+88,4),balances=number(historical+92,4),count=(balances-validators)/121;
+diff --git a/src/consensus_capella_local_body.cpp b/src/consensus_capella_local_body.cpp
+index af42d24..82b97c4 100644
+--- a/src/consensus_capella_local_body.cpp
++++ b/src/consensus_capella_local_body.cpp
+@@ -5,0 +6,2 @@
++#include "consensus_capella_projection.hpp"
++#include <bit>
+@@ -18,0 +21,23 @@ CapellaExecutionPayload payload(const Block& b,const std::vector<CapellaWithdraw
++bool CapellaDurableReactor::submit_sync_aggregate(uint64_t slot,std::span<const uint8_t> aggregate,
++ const ForkCheckpointToken& expected,const std::function<void()>& check){
++ std::lock_guard lock(mutex_);require_available();
++ if(expected!=*token_)throw StaleCapellaDuty("Stale sync aggregate submission");
++ const auto& t=rules_.transition;const auto& c=t.consensus;
++ const size_t bit_bytes=(uint64_t(c.state.sync_committee_size)+7)/8;
++ if(!slot||aggregate.size()!=bit_bytes+96)return false;
++ const auto& clock=state_->timed.clock;
++ if((clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms!=slot)return false;
++ if(check)check();
++ const auto head=phase0_fork_choice_head(state_->timed.view,{c.epoch.ffg.slots_per_epoch,c.attestation.duties.effective_balance_increment,rules_.proposer_score_boost},check).head;
++ const auto& parent=state_->blocks.at(head);if(parent.header.slot>=slot)return false;
++ const auto advanced=prepare_capella_slots(parent.state,{c.epoch,t.execution,t.maximum_state_bytes},c.state,slot,limits_.replay_slots,limits_.sync_trials,check);
++ const auto projected=capella_detail::project(advanced.ssz,c.state,t.execution,t.maximum_state_bytes,check);
++ if(!verify_altair_sync_aggregate(projected.common,aggregate,c.state,c.sync,check))return false;
++ size_t participants=0;for(size_t i=0;i<bit_bytes;++i)participants+=std::popcount(aggregate[i]);
++ if(pending_sync_&&pending_sync_->slot==slot&&pending_sync_->parent==head){
++  if(std::equal(aggregate.begin(),aggregate.end(),pending_sync_->ssz.begin(),pending_sync_->ssz.end()))return true;
++  if(participants<=pending_sync_->participants)return false;
++ }
++ PendingSyncAggregate candidate{slot,head,participants,Bytes(aggregate.begin(),aggregate.end())};
++ if(check)check();pending_sync_=std::move(candidate);return true;
++}
+@@ -97,0 +123 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t i
++  if(pending_sync_&&pending_sync_->slot==slot&&pending_sync_->parent==head)std::copy(pending_sync_->ssz.begin(),pending_sync_->ssz.end(),body.begin()+220);
+diff --git a/tests/test_altair_sync_aggregate.cpp b/tests/test_altair_sync_aggregate.cpp
+index a0d7657..db49ecd 100644
+--- a/tests/test_altair_sync_aggregate.cpp
++++ b/tests/test_altair_sync_aggregate.cpp
+@@ -10 +10 @@ int main(){try{
+- for(const auto& row:manifest.at("cases")){const auto name=row.at("name").get<std::string>();for(const auto& [path,info]:row.at("files").items()){const auto bytes=binary(root/path);check(bytes.size()==info.at("bytes").get<size_t>()&&hex(sha256(bytes)).substr(2)==info.at("sha256").get<std::string>(),"fixture digest: "+path);}const auto before=binary(root/name/"pre.ssz"),op=binary(root/name/"sync_aggregate.ssz");const auto result=prepare_altair_sync_aggregate(before,op,l,r);if(row.at("valid").get<bool>()){check(result&&*result==binary(root/name/"post.ssz"),"official post-state mismatch: "+name);++valid;if(name=="proposer_in_committee_with_participation"){example=before;operation=op;}}else{check(!result,"invalid official aggregate accepted: "+name);++invalid;}}
++ for(const auto& row:manifest.at("cases")){const auto name=row.at("name").get<std::string>();for(const auto& [path,info]:row.at("files").items()){const auto bytes=binary(root/path);check(bytes.size()==info.at("bytes").get<size_t>()&&hex(sha256(bytes)).substr(2)==info.at("sha256").get<std::string>(),"fixture digest: "+path);}const auto before=binary(root/name/"pre.ssz"),op=binary(root/name/"sync_aggregate.ssz");check(verify_altair_sync_aggregate(before,op,l,r)==row.at("valid").get<bool>(),"signature-only fixture mismatch: "+name);const auto result=prepare_altair_sync_aggregate(before,op,l,r);if(row.at("valid").get<bool>()){check(result&&*result==binary(root/name/"post.ssz"),"official post-state mismatch: "+name);++valid;if(name=="proposer_in_committee_with_participation"){example=before;operation=op;}}else{check(!result,"invalid official aggregate accepted: "+name);++invalid;}}
+@@ -14 +14 @@ int main(){try{
+- auto overflow=example;const auto balances=little(overflow,4364,4),previous=little(overflow,6928,4);std::fill(overflow.begin()+balances,overflow.begin()+previous,255);refuse(overflow,r);
++ auto overflow=example;const auto balances=little(overflow,4364,4),previous=little(overflow,6928,4);std::fill(overflow.begin()+balances,overflow.begin()+previous,255);check(verify_altair_sync_aggregate(overflow,operation,l,r),"signature validation incorrectly applied balance rewards");refuse(overflow,r);
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index 6e73de5..f3afa90 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -55 +55 @@ static bool beacon_reads=false;
+-static bool deposit_invalid_signature=false;static bool deposit_activation=false;static bool deposit_consumption=false;static bool slashing_retirement=false;static bool pruning_slashing=false;static bool pruning_sync=false;static bool pruning_automatic=false;static bool pruning_native=false;static bool pruning_bls=false;static bool pruning_primitive=false;static bool queued_bls_sync=false;static bool queued_bls_reorg=false;static bool queued_bls_changes=false;static bool local_bls_changes=false;static bool wire_mode=false;static bool catalog_concurrency=false;
++static bool local_sync=false;static bool deposit_invalid_signature=false;static bool deposit_activation=false;static bool deposit_consumption=false;static bool slashing_retirement=false;static bool pruning_slashing=false;static bool pruning_sync=false;static bool pruning_automatic=false;static bool pruning_native=false;static bool pruning_bls=false;static bool pruning_primitive=false;static bool queued_bls_sync=false;static bool queued_bls_reorg=false;static bool queued_bls_changes=false;static bool local_bls_changes=false;static bool wire_mode=false;static bool catalog_concurrency=false;
+@@ -124,2 +124,24 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+-  const auto body=owner_mode?nodes[0]->prepare_local_body_from_pool(proposer->index,slot,*reveal,head.execution_block.header.coinbase,current.token,16,64):nodes[0]->prepare_local_body(proposer->index,slot,*reveal,head.execution_block.header.coinbase,current.token,pending,16,64);check(bool(body),"local loop body missing");
+-  const auto wire=queued_bls_changes?nodes[0]->propose_current(proposer->index,slot,head.execution_block.header.coinbase,16,64,[&]{return now;},proposer_journal,provider):nodes[0]->sign_proposal(proposer->index,slot,*body,[&]{return now;},current.token,proposer_journal,provider);check(bool(wire),"local loop signed block missing");
++  Bytes expected_sync;
++  if(local_sync){
++   const auto& l=t.consensus.state;const size_t bit_bytes=(l.sync_committee_size+7)/8;
++   expected_sync.resize(bit_bytes+96);expected_sync[bit_bytes]=0xc0;
++   if(slot%2==0){
++    const auto advanced=prepare_capella_slots(head.state,{t.consensus.epoch,t.execution,t.maximum_state_bytes},l,slot,limits.replay_slots,limits.sync_trials);
++    ConsensusBytes4 version{};std::copy_n(advanced.ssz.begin()+((slot-1)/slots<little(advanced.ssz,56,8)?48:52),4,version.begin());
++    const auto root=consensus_signing_root(root_at(advanced.ssz,176+32*((slot-1)%l.slots_per_historical_root)),consensus_domain({7,0,0,0},version,genesis_root));
++    const size_t committee=272+64*l.slots_per_historical_root+32*l.epochs_per_historical_vector+8*l.epochs_per_slashings_vector+133;
++    blst_p2 sum{};bool first=true;
++    for(size_t position=0;position<l.sync_committee_size;++position){size_t member=0;for(;member<64;++member){const auto key=Key(member).public_key;if(std::equal(key.begin(),key.end(),advanced.ssz.begin()+committee+48*position))break;}check(member<64,"unknown sync fixture key");
++     const auto signature=Key(member).sign(root);blst_p2_affine affine;check(blst_p2_uncompress(&affine,signature.data())==BLST_SUCCESS,"sync signature encoding");blst_p2 point;blst_p2_from_affine(&point,&affine);if(first){sum=point;first=false;}else blst_p2_add_or_double(&sum,&sum,&point);expected_sync[position/8]|=uint8_t(1u<<(position%8));
++    }
++    blst_p2_compress(expected_sync.data()+bit_bytes,&sum);
++    auto bad=expected_sync;bad.back()^=1;check(!nodes[0]->submit_sync_aggregate(slot,bad,current.token),"corrupt sync aggregate accepted");
++    check(!nodes[0]->submit_sync_aggregate(slot+1,expected_sync,current.token),"future sync aggregate accepted");
++    auto stale=current.token;++stale.sequence;bool stale_refused=false;try{nodes[0]->submit_sync_aggregate(slot,expected_sync,stale);}catch(const StaleCapellaDuty&){stale_refused=true;}check(stale_refused,"stale sync checkpoint accepted");
++    check(nodes[0]->submit_sync_aggregate(slot,expected_sync,current.token)&&nodes[0]->submit_sync_aggregate(slot,expected_sync,current.token),"valid sync aggregate rejected");
++    Bytes empty(bit_bytes+96);empty[bit_bytes]=0xc0;check(!nodes[0]->submit_sync_aggregate(slot,empty,current.token),"empty sync replaced full participation");
++    bool cancelled=false;try{nodes[0]->submit_sync_aggregate(slot,expected_sync,current.token,[]{throw ExecutionCancelled("sync stop");});}catch(const ExecutionCancelled&){cancelled=true;}check(cancelled&&nodes[0]->current().token==current.token,"sync submission changed durable state");
++   }
++  }
++  const auto body=owner_mode?nodes[0]->prepare_local_body_from_pool(proposer->index,slot,*reveal,head.execution_block.header.coinbase,current.token,16,64):nodes[0]->prepare_local_body(proposer->index,slot,*reveal,head.execution_block.header.coinbase,current.token,pending,16,64);check(bool(body),"local loop body missing");if(local_sync)check(std::equal(expected_sync.begin(),expected_sync.end(),body->begin()+220),"selected sync aggregate differs or stale aggregate leaked");
++  const auto wire=(queued_bls_changes||local_sync)?nodes[0]->propose_current(proposer->index,slot,head.execution_block.header.coinbase,16,64,[&]{return now;},proposer_journal,provider):nodes[0]->sign_proposal(proposer->index,slot,*body,[&]{return now;},current.token,proposer_journal,provider);check(bool(wire),"local loop signed block missing");
+@@ -240 +262 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+- std::cout<<Json{{"scenario","capella-local-assembly-finality"},{"executionOwner",owner_mode},{"participationPercent",local_finality},{"blocks",blocks},{"votes",votes},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"justifiedEpoch",result.state->timed.view.justified.epoch},{"independentStores",2},{"storeReopens",restarts},{"signingJournalsReopened",reopened_journals},{"networkTransport",false},{"networkActivated",false}}.dump()<<std::endl;
++ std::cout<<Json{{"scenario","capella-local-assembly-finality"},{"localSyncAggregates",local_sync},{"executionOwner",owner_mode},{"participationPercent",local_finality},{"blocks",blocks},{"votes",votes},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"justifiedEpoch",result.state->timed.view.justified.epoch},{"independentStores",2},{"storeReopens",restarts},{"signingJournalsReopened",reopened_journals},{"networkTransport",false},{"networkActivated",false}}.dump()<<std::endl;
+@@ -1099 +1121 @@ int main(int argc,char** argv){try{executable=argv[0];
+-if(argc==3&&std::string(argv[1])=="--cli"){cli_binary=argv[2];configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--http"){configured_runtime=true;capella_http=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--catalog-concurrency"){wire_mode=true;catalog_concurrency=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-reorg"){queued_bls_reorg=true;queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-automatic"){pruning_automatic=true;pruning_native=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--slashing-retirement"){slashing_retirement=true;pruning_automatic=true;pruning_native=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-slashing"){pruning_slashing=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-invalid-signature"){deposit_invalid_signature=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-activation"){deposit_activation=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-consumption"){deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-native"){pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-bls"){pruning_bls=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-primitive"){pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-owner"){queued_bls_changes=true;local_bls_changes=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-rpc"){queued_bls_changes=true;local_bls_changes=true;configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-wire"){wire_mode=true;queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-changes"){queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--local-bls-changes"){local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--wire"){wire_mode=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--beacon-reads"){beacon_reads=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--configured-runtime"){configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler"){scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-reorg"){owner_reorg=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}
++if(argc==3&&std::string(argv[1])=="--cli"){cli_binary=argv[2];configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--http"){configured_runtime=true;capella_http=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--catalog-concurrency"){wire_mode=true;catalog_concurrency=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-reorg"){queued_bls_reorg=true;queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-automatic"){pruning_automatic=true;pruning_native=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--slashing-retirement"){slashing_retirement=true;pruning_automatic=true;pruning_native=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-slashing"){pruning_slashing=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--local-sync"){local_sync=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-invalid-signature"){deposit_invalid_signature=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-activation"){deposit_activation=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-consumption"){deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-native"){pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-bls"){pruning_bls=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-primitive"){pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-owner"){queued_bls_changes=true;local_bls_changes=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-rpc"){queued_bls_changes=true;local_bls_changes=true;configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-wire"){wire_mode=true;queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-changes"){queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--local-bls-changes"){local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--wire"){wire_mode=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--beacon-reads"){beacon_reads=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--configured-runtime"){configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler"){scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-reorg"){owner_reorg=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}

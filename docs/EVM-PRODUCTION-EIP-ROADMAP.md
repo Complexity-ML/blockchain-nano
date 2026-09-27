@@ -412,3 +412,21 @@ et empreintes archivés. Aucun correctif runtime requis.
 reorg, injection de votes hostiles ou panne au commit. Aucun changement des règles
 runtime ; EIP-6110 et la préparation production globale restent ouverts.
 [Scénario et preuves](qualification/capella-invalid-deposit-signature-20260927/README.md).
+
+### 2026-09-27 — Agrégats sync dans le proposant Capella natif
+
+`submit_sync_aggregate` vérifie un agrégat complet contre l’état authentifié,
+le slot courant et la tête sélectionnée. Un seul agrégat éphémère est retenu,
+avec préférence pour davantage de positions participantes. L’assemblage local et
+`propose_current` l’incluent uniquement pour le même slot/parent, puis la transition
+complète revalide le bloc. Signature seule et application des récompenses sont
+séparées pour ne pas appliquer prématurément la comptabilité avant les retraits.
+Nouveau scénario alternant pleine participation et agrégat vide, avec corruption,
+slot futur, checkpoint périmé, rejeu et annulation. Fixtures officielles sync
+également contrôlées avec un cas de soldes saturés. Résultat : 35,37 s,
+40 blocs dont 20 pleinement participatifs, 272 votes, finalité époque 3 et
+deux réouvertures ; 16 fixtures officielles valides et 8 invalides conformes.
+**Partiel** : collecte/signature des messages individuels, sous-réseaux,
+agrégation de contributions partielles, transport RPC/P2P et raccordement au
+scheduler restent à implémenter ; invalidation par reorg à qualifier séparément.
+[Code et preuves](qualification/capella-local-sync-20260927/README.md).

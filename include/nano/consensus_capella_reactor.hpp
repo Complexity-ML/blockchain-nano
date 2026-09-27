@@ -29,6 +29,8 @@ class CapellaDurableReactor {
  CapellaSignedVotes votes_,slashings_;CapellaPendingBlsChanges bls_changes_;CapellaStoreSnapshotCache cache_;bool unavailable_=false;bool automatic_pruning_=false;
  std::optional<Bytes> signed_block_locked(const ConsensusRoot&,const std::function<void()>&)const;
  Json network_identity_locked()const;
+ struct PendingSyncAggregate {uint64_t slot;ConsensusRoot parent;size_t participants;Bytes ssz;};
+ std::optional<PendingSyncAggregate> pending_sync_;
  void require_available()const;
  ChainStore* witness_=nullptr;std::optional<ForkCheckpointToken> witness_token_;
  size_t witness_limit()const;
@@ -46,6 +48,13 @@ class CapellaDurableReactor {
  std::optional<Bytes> prepare_local_body_from_pool_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,size_t,size_t,const std::function<void()>&);
  void publish(CapellaForkStore,const std::function<void()>&,const std::vector<CheckpointArchiveEntry>& archive={},std::optional<CapellaSignedVotes> votes=std::nullopt,std::optional<CapellaSignedVotes> slashings=std::nullopt,std::optional<CapellaPendingBlsChanges> changes=std::nullopt);
 public:
+ // Ephemeral, bounded to one aggregate for the current proposal slot and head.
+ // Verifies membership/domain/signature; retains the highest participation.
+ // No durable mutation or local signing. RPC/P2P collection is separate.
+ bool submit_sync_aggregate(uint64_t proposal_slot,std::span<const uint8_t>,
+  const ForkCheckpointToken&,const std::function<void()>& checkpoint={});
+
+
  CapellaDurableReactor(ChainStore&,Int,Bytes,CapellaForkBlockRules,CapellaStoreSnapshotLimits,CapellaForkStore,const std::function<void()>& checkpoint={},Blockchain* owner=nullptr,ChainStore* witness=nullptr);
  CapellaDurableReactor(ChainStore&,Int,Bytes,CapellaForkBlockRules,CapellaStoreSnapshotLimits,const ForkCheckpointToken&,const std::function<void()>& checkpoint={},Blockchain* owner=nullptr);
  CapellaDurableReactor(Blockchain&,CapellaForkBlockRules,CapellaStoreSnapshotLimits,CapellaForkStore,const std::function<void()>& checkpoint={},ChainStore* witness=nullptr);

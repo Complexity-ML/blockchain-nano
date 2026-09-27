@@ -7,6 +7,11 @@ struct AltairSyncAggregateRules {
  uint64_t min_seed_lookahead,maximum_effective_balance;
  uint16_t shuffle_rounds;
 };
+// Signature/committee validation only; no reward or balance transition.
+// Caller must authenticate the surrounding state and its chain/branch identity.
+bool verify_altair_sync_aggregate(std::span<const uint8_t> state,
+ std::span<const uint8_t> aggregate,const AltairStateLimits&,const AltairSyncAggregateRules&,
+ const std::function<void()>& checkpoint={});
 // Isolated process_sync_aggregate on a validated state at the block slot.
 // Derives proposer, membership and signing domain from state. Registry keys
 // require PoP and the stored committee must be authenticated at admission.
