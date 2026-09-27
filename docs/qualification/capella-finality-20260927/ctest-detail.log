@@ -1,0 +1,55 @@
+Start testing: Sep 27 03:39 CEST
+----------------------------------------------------------
+347/352 Testing: consensus_capella_signed_transition
+347/352 Test: consensus_capella_signed_transition
+Command: "/Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests"
+Directory: /Users/boris/Dev/blockchain-nano/build-release
+"consensus_capella_signed_transition" start time: Sep 27 03:39 CEST
+Output:
+----------------------------------------------------------
+{"blocks":9,"cancellations":18,"contexts":9,"finalityScenario":false,"finalizedEpoch":0,"includedAttestations":0,"migrated":false,"networkActivated":false,"participationPercent":100,"rejected":20,"scenario":"capella-signed-transition","skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"withdrawals":1}
+{"blocks":9,"cancellations":18,"contexts":9,"finalityScenario":false,"finalizedEpoch":1,"includedAttestations":0,"migrated":true,"networkActivated":false,"participationPercent":100,"rejected":24,"scenario":"capella-signed-transition","skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"withdrawals":1}
+{"blocks":9,"cancellations":18,"contexts":9,"finalityScenario":false,"finalizedEpoch":1,"includedAttestations":0,"migrated":true,"networkActivated":false,"participationPercent":100,"rejected":24,"scenario":"capella-signed-transition","skippedForkSlots":3,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"withdrawals":1}
+<end of output>
+Test time =   4.67 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_signed_transition" end time: Sep 27 03:39 CEST
+"consensus_capella_signed_transition" time elapsed: 00:00:04
+----------------------------------------------------------
+
+351/352 Testing: consensus_capella_multiepoch_finality
+351/352 Test: consensus_capella_multiepoch_finality
+Command: "/Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests" "--finality"
+Directory: /Users/boris/Dev/blockchain-nano/build-release
+"consensus_capella_multiepoch_finality" start time: Sep 27 03:39 CEST
+Output:
+----------------------------------------------------------
+{"blocks":33,"cancellations":66,"contexts":33,"finalityScenario":true,"finalizedEpoch":2,"includedAttestations":256,"migrated":false,"networkActivated":false,"participationPercent":100,"rejected":68,"scenario":"capella-signed-transition","skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":33,"storeSigkillReopens":2,"storeVotes":0,"voteReorgs":0,"withdrawals":3}
+<end of output>
+Test time =   4.70 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_multiepoch_finality" end time: Sep 27 03:39 CEST
+"consensus_capella_multiepoch_finality" time elapsed: 00:00:04
+----------------------------------------------------------
+
+352/352 Testing: consensus_capella_insufficient_finality
+352/352 Test: consensus_capella_insufficient_finality
+Command: "/Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests" "--finality-half"
+Directory: /Users/boris/Dev/blockchain-nano/build-release
+"consensus_capella_insufficient_finality" start time: Sep 27 03:39 CEST
+Output:
+----------------------------------------------------------
+{"blocks":33,"cancellations":66,"contexts":33,"finalityScenario":true,"finalizedEpoch":0,"includedAttestations":128,"migrated":false,"networkActivated":false,"participationPercent":50,"rejected":68,"scenario":"capella-signed-transition","skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":33,"storeSigkillReopens":2,"storeVotes":0,"voteReorgs":0,"withdrawals":2}
+<end of output>
+Test time =   3.73 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_insufficient_finality" end time: Sep 27 03:39 CEST
+"consensus_capella_insufficient_finality" time elapsed: 00:00:03
+----------------------------------------------------------
+
+End testing: Sep 27 03:39 CEST
+
+qualification_consensus_ethereum =   8.42 sec*proc

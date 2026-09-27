@@ -1536,3 +1536,9 @@ if(APPLE)
  add_test(NAME storage_shanghai_checkpoint_sync COMMAND nano-shanghai-checkpoint-sync-tests)
  set_tests_properties(storage_shanghai_checkpoint_sync PROPERTIES TIMEOUT 90 LABELS "qualification_storage_sync_local")
 endif()
+
+add_test(NAME consensus_capella_multiepoch_finality COMMAND nano-capella-transition-tests --finality)
+set_tests_properties(consensus_capella_multiepoch_finality PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_ethereum")
+
+add_test(NAME consensus_capella_insufficient_finality COMMAND nano-capella-transition-tests --finality-half)
+set_tests_properties(consensus_capella_insufficient_finality PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_ethereum")

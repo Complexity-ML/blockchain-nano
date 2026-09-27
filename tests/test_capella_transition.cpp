@@ -6,6 +6,7 @@
 #include "nano/consensus_capella_store_snapshot.hpp"
 #include "nano/storage.hpp"
 #include "nano/committee.hpp"
+#include "nano/consensus_message_ssz.hpp"
 #include "nano/consensus_proposer.hpp"
 #include "blst.h"
 #include "../src/consensus_capella_projection.hpp"
@@ -36,7 +37,7 @@ static int crash_writer(const fs::path& directory){
  for(unsigned i=0;i<128;++i){const auto choice=disk.latest()->header.number==1?1:0;const auto token=disk.commit_execution_checkpoint(rules.transition.chain_id,genesis.header.hash(),record->token,disk.latest()->header.hash(),0,genesis.header.hash(),suffixes[choice],snapshots[choice],crash_limits.envelope_bytes,64);record->token=token;std::cout<<token.sequence<<std::endl;}
  return 0;
 }
-static void scenario(bool migrate,uint64_t skipped=0){
+static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigned participation=100){
  const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-bellatrix-containers-official",source=fixtures/"consensus-capella-slots-official";
  const auto manifest=load(source/"manifest.json");check(manifest.at("commit")=="194a91fd9e6f97118156421aac4c80e6e47a9a7f","initial state revision");
  for(const auto& row:manifest.at("cases"))if(row.at("name")=="slots_1")for(const auto& [path,info]:row.at("files").items())check(hex(sha256(binary(source/"slots_1"/path))).substr(2)==info.at("sha256").get<std::string>(),"initial state digest");
@@ -91,8 +92,10 @@ static void scenario(bool migrate,uint64_t skipped=0){
   return encoded;
  };
 
+ std::vector<Bytes> pending_attestations;uint64_t included_attestations=0;
  unsigned accepted=0,rejected=0,cancelled=0,contexts=0,votes=0,vote_reorgs=0;uint64_t paid=0;
- for(uint64_t slot=first_slot;slot<=first_slot+slots;++slot){
+ const uint64_t last_slot=finality?4*slots+1:first_slot+slots;
+ for(uint64_t slot=first_slot;slot<=last_slot;++slot){
   const bool crossing=migrate&&slot==first_slot;
   const auto original=beacon;const auto evm_before=state.root();
   const auto advanced=crossing?prepare_capella_fork_slots(before_fork,before_fork_root,{r.consensus.epoch,r.execution,r.maximum_state_bytes},l,schedule,slot,64,100000):prepare_capella_slots(beacon,{r.consensus.epoch,r.execution,r.maximum_state_bytes},l,slot,64,100000);
@@ -119,6 +122,10 @@ static void scenario(bool migrate,uint64_t skipped=0){
   const size_t sync_bytes=(l.sync_committee_size+7)/8+96,fixed=228+sync_bytes;
   Bytes body(fixed,0);std::copy(reveal.begin(),reveal.end(),body.begin());std::copy_n(advanced.ssz.begin()+hist+4,72,body.begin()+96);body[220+(l.sync_committee_size+7)/8]=0xc0;
   for(size_t at:std::array<size_t,6>{200,204,208,212,216,220+sync_bytes})put(body,at,fixed,4);put(body,224+sync_bytes,fixed+encoded.size(),4);body.insert(body.end(),encoded.begin(),encoded.end());if(slot==first_slot){const auto wire=encode_capella_bls_change(change);body.insert(body.end(),wire.begin(),wire.end());}
+  if(finality&&!pending_attestations.empty()){
+   Bytes list(4*pending_attestations.size());for(size_t i=0;i<pending_attestations.size();++i){put(list,4*i,list.size(),4);list.insert(list.end(),pending_attestations[i].begin(),pending_attestations[i].end());}
+   body.resize(fixed);for(size_t at:std::array<size_t,3>{212,216,220+sync_bytes})put(body,at,fixed+list.size(),4);put(body,224+sync_bytes,fixed+list.size()+encoded.size(),4);body.insert(body.end(),list.begin(),list.end());body.insert(body.end(),encoded.begin(),encoded.end());included_attestations+=pending_attestations.size();
+  }
   const auto built=crossing?prepare_capella_fork_unsigned_block(before_fork,before_fork_root,schedule,slot,proposer,parent_root,body,r,parent.header,state,history,64,100000):prepare_capella_unsigned_block(beacon,slot,proposer,parent_root,body,r,parent.header,state,history,64,100000);check(built.has_value(),"Capella unsigned block rejected");
   auto sign_message=[&](Bytes message,uint64_t index=UINT64_MAX){const auto owner=index==UINT64_MAX?proposer:index;Key k(owner);const auto bytes=std::span<const uint8_t>(message);const ConsensusBeaconHeader h{little(message,0,8),little(message,8,8),root_at(message,16),root_at(message,48),capella_beacon_body_root(bytes.subspan(84),r.consensus.body,l.sync_committee_size,r.execution,r.withdrawals.maximum_per_payload,r.maximum_bls_changes,r.consensus.maximum_block_bytes)};const auto sig=k.sign(consensus_signing_root(consensus_beacon_header_root(h),consensus_domain({0,0,0,0},version,genesis_root)));Bytes wire(100,0);put(wire,0,100,4);std::copy(sig.begin(),sig.end(),wire.begin()+4);wire.insert(wire.end(),message.begin(),message.end());return wire;};
 
@@ -182,7 +189,7 @@ static void scenario(bool migrate,uint64_t skipped=0){
    bool cancelled_store=false;try{prepare_capella_received_block(timed,wire,store_rules,64,100000,[]{throw ExecutionCancelled("store stop");});}catch(const ExecutionCancelled&){cancelled_store=true;}check(cancelled_store&&timed.blocks.size()==store->blocks.size(),"Store cancellation leaked publication");
    auto bad_signature=wire;bad_signature[4]^=1;check(!prepare_capella_received_block(timed,bad_signature,store_rules,64,100000),"Store admitted bad signature");
    store=*admitted_store;
-   if(slot==first_slot+slots){
+   if(!finality&&slot==first_slot+slots){
     auto alternate_execution=execution;auto alternative_tx=tx;alternative_tx.value=1;alternate_execution.transactions[0]=SignedTransaction::sign(alternative_tx,key);
     State alternate_state=state;ExecutionEngine(r.chain_id,history,EvmRevision::Shanghai,r.replay_policy,ConsensusInputPolicy::EthereumValidated).execute_block(alternate_state,alternate_execution,false);
     auto alternative_payload=payload(alternate_execution);alternative_payload.withdrawals=withdrawals;const auto alternative_encoded=encode_capella_execution_payload(alternative_payload,r.execution,r.withdrawals.maximum_per_payload,r.consensus.maximum_block_bytes);
@@ -218,10 +225,24 @@ static void scenario(bool migrate,uint64_t skipped=0){
     const auto duplicate=prepare_capella_received_block(*branch,wire,store_rules,64,100000);check(duplicate&&duplicate->blocks.size()==branch->blocks.size(),"duplicate changed Store cardinality");
    }
   }
+  if(finality){
+   pending_attestations.clear();ConsensusRandaoState post_randao;post_randao.epoch=epoch;post_randao.last_reveal_slot=slot;
+   for(size_t i=0;i<l.epochs_per_historical_vector;++i)post_randao.mixes.push_back(root_at(received->consensus.ssz,randao+32*i));
+   const auto assignment=phase0_attestation_duties(context.registry,post_randao,duties,epoch);
+   const auto target_root=slot%slots==0?consensus_beacon_header_root(admitted):root_at(received->consensus.ssz,176+32*((epoch*slots)%l.slots_per_historical_root));
+   for(uint64_t committee_index=0;committee_index<assignment.committees_per_slot;++committee_index){
+    const auto members=partition_committee(assignment.shuffled,(slot%slots)*assignment.committees_per_slot+committee_index,assignment.committees_per_slot*slots);
+    for(size_t position=0;position<members.size()&&position*100<members.size()*participation;++position){Phase0SignedAttestation vote{{slot,committee_index,consensus_beacon_header_root(admitted),checkpoints.realized.current_justified,{epoch,target_root}},std::vector<bool>(members.size()),{}};vote.aggregation_bits[position]=true;
+     vote.signature=Key(members[position]).sign(consensus_signing_root(consensus_attestation_root(vote.data),consensus_domain({1,0,0,0},version,genesis_root)));
+     pending_attestations.push_back(encode_consensus_attestation_ssz(vote,r.consensus.body.validators_per_committee));
+    }
+   }
+  }
   if(slot==first_slot)short_snapshot=capella_store_snapshot(*store,store_rules,snapshot_limits);
   ++contexts;
   beacon=received->consensus;state=received->execution.state;parent=received->execution.block;hashes[parent.header.number]=parent.header.hash();++accepted;
  }
+ if(finality){if(participation==100)check(store->timed.view.finalized.epoch>=2&&store->timed.view.justified.epoch>=3&&included_attestations>=128,"Capella participation did not advance finality");else check(store->timed.view.finalized.epoch==0&&store->timed.view.justified.epoch==0,"insufficient participation finalized a checkpoint");}
  const auto snapshot=roundtrip(*store);const auto profile=capella_fork_profile(store_rules).dump();const auto profile_digest=sha256(Bytes(profile.begin(),profile.end()));
  auto reject_profile=[&](const std::string& value,const Bytes& digest,size_t budget){bool refused=false;try{load_capella_fork_profile(value,digest,budget);}catch(const std::exception&){refused=true;}check(refused,"invalid Capella profile accepted");};
  auto wrong_digest=profile_digest;wrong_digest[0]^=1;reject_profile(profile,wrong_digest,1024*1024);reject_profile(profile,profile_digest,profile.size()-1);
@@ -245,7 +266,7 @@ static void scenario(bool migrate,uint64_t skipped=0){
   for(const auto& [height,b]:ordered){const bool canonical=height<=latest->header.number;check(bool(disk.block_by_number(height))==canonical,"stale block after crash reorg");for(const auto& tx:b.block.transactions)check(bool(disk.receipt(tx.hash()))==canonical&&bool(disk.transaction(tx.hash()))==canonical,"stale transaction after crash reorg");}
   token=record->token;
  }
- std::cout<<Json{{"scenario","capella-signed-transition"},{"migrated",migrate},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"storeBlocks",store->blocks.size()},{"snapshotReopened",true},{"storeSigkillReopens",2},{"storeVotes",votes},{"voteReorgs",vote_reorgs},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
+ std::cout<<Json{{"scenario","capella-signed-transition"},{"migrated",migrate},{"finalityScenario",finality},{"participationPercent",participation},{"finalizedEpoch",store->timed.view.finalized.epoch},{"includedAttestations",included_attestations},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"storeBlocks",store->blocks.size()},{"snapshotReopened",true},{"storeSigkillReopens",2},{"storeVotes",votes},{"voteReorgs",vote_reorgs},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
 }
-int main(int argc,char** argv){try{executable=argv[0];if(argc==3&&std::string(argv[1])=="--crash-writer")return crash_writer(argv[2]);scenario(false);scenario(true);scenario(true,3);return 0;
+int main(int argc,char** argv){try{executable=argv[0];if(argc==3&&std::string(argv[1])=="--crash-writer")return crash_writer(argv[2]);if(argc==2&&std::string(argv[1])=="--finality-half"){scenario(false,0,true,50);return 0;}if(argc==2&&std::string(argv[1])=="--finality"){scenario(false,0,true);return 0;}scenario(false);scenario(true);scenario(true,3);return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

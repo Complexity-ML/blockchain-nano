@@ -2110,3 +2110,12 @@ restaurés exactement.
 [Preuves](qualification/capella-votes-20260927/README.md).
 Qualification d'admission locale et de LMD-GHOST, pas de finalité FFG
 multi-époque, de pénalité économique ni de réseau Capella.
+
+### Capella : finalité FFG locale sur plusieurs époques
+
+Deux nouvelles chaînes de 33 blocs avec votes inclus : participation complète,
+256 attestations et finalité époque 2 ; contrôle à 50 %, 128 attestations et
+aucune progression de justification/finalité. Restauration et crashs conservés ;
+régression 3/3. [Preuves](qualification/capella-finality-20260927/README.md).
+Preuve locale au Store, pas de réseau multi-hôte. Réacteur, activation du Store
+à travers les forks et qualification distribuée restent ouverts.
