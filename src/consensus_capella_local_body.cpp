@@ -91,10 +91,19 @@ bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage&
   if(pending_sync_&&pending_sync_->slot==slot&&pending_sync_->parent==head&&(pending_sync_->ssz[position/8]&(1u<<(position%8))))continue;
   aggregate[position/8]|=uint8_t(1u<<(position%8));signatures.emplace_back(message.signature.begin(),message.signature.end());
  }
- if(signatures.empty())return true;
- const auto signature=aggregate_consensus_bls_signatures(signatures);if(!signature)return false;
- std::copy(signature->begin(),signature->end(),aggregate.begin()+bit_bytes);
- return submit_sync_aggregate_locked(slot,aggregate,expected,check);
+ // Prepare allocations before publishing either ephemeral cache. One message
+ // per committee validator, one slot/head context; never persisted to RocksDB.
+ PendingSyncMessages messages{slot,head,{}};
+ if(pending_sync_messages_&&pending_sync_messages_->slot==slot&&pending_sync_messages_->parent==head)messages=*pending_sync_messages_;
+ messages.wires.insert_or_assign(message.validator_index,encode_capella_sync_message(message));
+ if(messages.wires.size()>l.sync_committee_size)throw std::logic_error("Sync message committee bound");
+ if(check)check();
+ if(!signatures.empty()){
+  const auto signature=aggregate_consensus_bls_signatures(signatures);if(!signature)return false;
+  std::copy(signature->begin(),signature->end(),aggregate.begin()+bit_bytes);
+  if(!submit_sync_aggregate_locked(slot,aggregate,expected,check))return false;
+ }
+ pending_sync_messages_=std::move(messages);return true;
 }
 std::optional<Bytes> CapellaDurableReactor::prepare_local_body(uint64_t index,uint64_t slot,
  const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,

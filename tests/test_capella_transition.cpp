@@ -122,7 +122,7 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
   const auto reveal=nodes[0]->sign_randao(proposer->index,slot,[&]{return now;},current.token,proposer_journal,provider);check(bool(reveal),"local loop RANDAO missing");
   tx.nonce=head.execution_state.get(sender).nonce;const std::vector<SignedTransaction> pending{SignedTransaction::sign(tx,sender_key)};
   if(owner_mode)for(auto& owner:owners)check(owner->submit(pending.front())&&owner->pending_count()==1,"Capella pool submission failed");
-  Bytes expected_sync;
+  Bytes expected_sync;std::vector<ConsensusRoot> exported_sync;
   if(local_sync){
    const auto& l=t.consensus.state;const size_t bit_bytes=(l.sync_committee_size+7)/8;
    expected_sync.resize(bit_bytes+96);expected_sync[bit_bytes]=0xc0;
@@ -157,6 +157,8 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
      auto envelope=nodes[0]->network_identity();envelope["kind"]="sync_committee_message";envelope["ssz"]=hex(encode_capella_sync_message(message));
      for(const size_t width:{size_t(0),size_t(143),size_t(145)}){const Bytes malformed(width);check(!decode_capella_sync_message(malformed)&&!nodes[0]->sync_message_ssz(malformed),"malformed sync SSZ accepted");auto frame=envelope;frame["ssz"]=hex(malformed);check(!sync_service.decode(frame.dump()),"malformed sync frame accepted");frame.erase("ssz");frame["sszBase64"]=altair_base64(malformed);check(!sync_service.decode_compact(frame),"malformed compact sync frame accepted");}
      auto foreign=envelope;foreign["chainId"]="0xffff";check(!sync_service.decode(foreign.dump()),"foreign sync chain accepted");foreign=envelope;foreign["consensusIdentity"]=hex(Bytes(32,255));check(!sync_service.decode(foreign.dump()),"foreign sync identity accepted");
+     const auto empty_catalog=nodes[0]->capture_inventory("sync_committee_message",4096);
+     check(empty_catalog->page({},64,16384)["entries"].empty(),"sync catalog not initially empty");
      for(const auto& [member,signature]:individual_signatures){
       message.validator_index=member;copy_to(message.signature,signature);const auto encoded=encode_capella_sync_message(message);const auto decoded=decode_capella_sync_message(encoded);check(decoded&&decoded->slot==message.slot&&decoded->validator_index==member&&decoded->beacon_block_root==message.beacon_block_root&&decoded->signature==message.signature,"sync SSZ roundtrip differs");
       envelope["ssz"]=hex(encoded);auto compact=envelope;compact.erase("ssz");compact["sszBase64"]=altair_base64(encoded);
@@ -166,6 +168,13 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
       check(nodes[0]->sync_message_ssz(encoded),"individual sync SSZ replay rejected");
      }
      sync_service.stop();sync_service.join();
+     check(empty_catalog->page({},64,16384)["entries"].empty(),"pinned sync catalog changed");
+     const auto catalog=nodes[0]->capture_inventory("sync_committee_message",4096)->page({},64,16384);
+     check(catalog["entries"].size()==individual_signatures.size(),"sync replay duplicated or lost exported members");
+     bool bounded=false;try{nodes[0]->capture_inventory("sync_committee_message",0);}catch(const std::length_error&){bounded=true;}check(bounded,"sync root budget ignored");
+     bool legacy=false;try{nodes[0]->inventory("sync_committee_message",{},64,16384);}catch(const std::invalid_argument&){legacy=true;}check(legacy,"ephemeral inventory accepted durable cursor API");
+     for(const auto& entry:catalog["entries"]){ConsensusRoot id{};copy_to(id,unhex(entry.get<std::string>()));exported_sync.push_back(id);const auto out=nodes[0]->export_message("sync_committee_message",id,144);check(out["available"]==true,"sync export missing");const auto bytes=unhex(out["envelope"]["ssz"].get<std::string>());check(hex(sha256(bytes))==entry.get<std::string>(),"sync export hash differs");check(nodes[1]->sync_message_ssz(bytes),"second reactor rejected exported sync");bool small=false;try{nodes[0]->export_message("sync_committee_message",id,143);}catch(const std::length_error&){small=true;}check(small,"sync export byte bound ignored");}
+
      check(nodes[0]->current().token==current.token,"individual sync collection mutated checkpoint");
     }else check(nodes[0]->submit_sync_aggregate(slot,partials[1-first_part],current.token),"disjoint partial sync rejected");
     check(!nodes[0]->submit_sync_aggregate(slot,partials[first_part],current.token),"overlapping partial double counted");
@@ -177,6 +186,7 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
   const auto body=owner_mode?nodes[0]->prepare_local_body_from_pool(proposer->index,slot,*reveal,head.execution_block.header.coinbase,current.token,16,64):nodes[0]->prepare_local_body(proposer->index,slot,*reveal,head.execution_block.header.coinbase,current.token,pending,16,64);check(bool(body),"local loop body missing");if(local_sync)check(std::equal(expected_sync.begin(),expected_sync.end(),body->begin()+220),"selected sync aggregate differs or stale aggregate leaked");
   const auto wire=(queued_bls_changes||local_sync)?nodes[0]->propose_current(proposer->index,slot,head.execution_block.header.coinbase,16,64,[&]{return now;},proposer_journal,provider):nodes[0]->sign_proposal(proposer->index,slot,*body,[&]{return now;},current.token,proposer_journal,provider);check(bool(wire),"local loop signed block missing");
   for(auto& node:nodes)check(node->block(*wire),"local loop block admission failed");++blocks;
+  if(local_sync){check(nodes[0]->capture_inventory("sync_committee_message",4096)->page({},64,16384)["entries"].empty(),"changed head retained sync catalog");for(const auto& id:exported_sync)check(nodes[0]->export_message("sync_committee_message",id,144)["available"]==false,"changed head exported stale sync");}
   const auto admitted=nodes[0]->current();const auto duties=prepare_capella_attestation_duties(*admitted.state,rules,slot,limits.replay_slots,limits.sync_trials);
   for(const auto& [index,duty]:duties){if(slashing_retirement&&index==0)continue;if(local_finality==50&&index%2)continue;
    const auto vote=nodes[0]->sign_attestation(index,slot,[&]{return now;},nodes[0]->current().token,journal(index),[&](const ConsensusRoot& root){return Key(index).sign(root);});check(bool(vote),"local loop attestation missing");for(auto& node:nodes)check(node->vote(*vote),"local loop gossip vote rejected");++votes;
@@ -290,7 +300,7 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
  }
  if(queued_bls_changes){check(head.execution_state.get("0x000000000000000000000000000000000000002b").balance>0,"owner queued withdrawal unpaid");for(size_t i=0;i<2;++i){const auto& disk=owner_mode?owners[i]->store():*disks[i];const auto record=disk.fork_checkpoint(t.chain_id,genesis.header.hash(),limits.envelope_bytes,nodes[i]->current().token);check(record&&!Json::parse(record->snapshot).contains("blsChanges"),"finalized BLS queue not retired");}}
  if(owner_mode){Rpc rpc(*owners[0]);nodes[0]->invalidate();check(rpc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method","eth_blockNumber"},{"params",Json::array()}}).contains("error"),"invalidated owner still served block number");}
- std::cout<<Json{{"scenario","capella-local-assembly-finality"},{"localSyncAggregates",local_sync},{"disjointSyncMerging",local_sync},{"individualSyncMessages",local_sync},{"syncWireWorker",local_sync},{"executionOwner",owner_mode},{"participationPercent",local_finality},{"blocks",blocks},{"votes",votes},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"justifiedEpoch",result.state->timed.view.justified.epoch},{"independentStores",2},{"storeReopens",restarts},{"signingJournalsReopened",reopened_journals},{"networkTransport",false},{"networkActivated",false}}.dump()<<std::endl;
+ std::cout<<Json{{"scenario","capella-local-assembly-finality"},{"localSyncAggregates",local_sync},{"disjointSyncMerging",local_sync},{"individualSyncMessages",local_sync},{"syncWireWorker",local_sync},{"syncCatalogExport",local_sync},{"executionOwner",owner_mode},{"participationPercent",local_finality},{"blocks",blocks},{"votes",votes},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"justifiedEpoch",result.state->timed.view.justified.epoch},{"independentStores",2},{"storeReopens",restarts},{"signingJournalsReopened",reopened_journals},{"networkTransport",false},{"networkActivated",false}}.dump()<<std::endl;
 }
 static void scheduler_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules,const Block& genesis,const State& genesis_state){
  Temp directory;const auto limits=crash_limits;const auto& t=rules.transition;const auto slots=t.consensus.epoch.ffg.slots_per_epoch;const auto validators=root_at(initial.blocks.at(initial.timed.view.anchor).state.ssz,8);

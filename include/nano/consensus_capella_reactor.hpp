@@ -32,6 +32,9 @@ class CapellaDurableReactor {
  Json network_identity_locked()const;
  struct PendingSyncAggregate {uint64_t slot;ConsensusRoot parent;size_t participants;Bytes ssz;};
  std::optional<PendingSyncAggregate> pending_sync_;
+ struct PendingSyncMessages { uint64_t slot; ConsensusRoot parent; std::map<uint64_t,Bytes> wires; };
+ std::optional<PendingSyncMessages> pending_sync_messages_;
+ bool sync_messages_current_locked(const std::function<void()>&)const;
  bool submit_sync_message_locked(const CapellaSyncMessage&,const ForkCheckpointToken&,const std::function<void()>&);
  bool submit_sync_aggregate_locked(uint64_t,std::span<const uint8_t>,const ForkCheckpointToken&,const std::function<void()>&);
  void require_available()const;

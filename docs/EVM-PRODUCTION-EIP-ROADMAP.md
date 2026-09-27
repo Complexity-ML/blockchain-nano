@@ -478,3 +478,16 @@ dispatcher/stream verts en 0,52 s. Binaire nano-p2p recompilé, empreintes véri
 sync ; l’adaptateur RPC est exercé directement, pas via HTTP. Signature locale,
 scheduler, export éphémère et qualification WAN restent ouverts.
 [Implémentation et preuves](qualification/capella-sync-wire-20260927/README.md).
+
+
+### Diffusion sortante sync Capella — 27 septembre 2026
+
+Les messages sync individuels validés sont exportables via catalogue figé et relais
+P2P privé, avec un cache mémoire borné au comité et au contexte slot/branche.
+Le daemon traite ce cinquième type ; le relais vérifie le hash du contenu.
+Qualification : 40 blocs / 272 votes / finalité 3 / deux réouvertures (41,36 s),
+export vers un second réacteur, doublons, budgets et invalidation après changement
+de tête ; trois tests réseau passent. **Partiel** : aucune nouvelle preuve de
+transport libp2p réel ni de livraison avant échéance. Signature automatique,
+ordonnancement, sous-réseaux et performances restent ouverts ; aucune clôture EIP
+ou production. [Preuves](qualification/capella-sync-export-20260927/README.md).

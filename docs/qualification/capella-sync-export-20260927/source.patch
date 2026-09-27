@@ -1,0 +1,128 @@
+diff --git a/include/nano/consensus_capella_reactor.hpp b/include/nano/consensus_capella_reactor.hpp
+index e1f5dfd..c25eff4 100644
+--- a/include/nano/consensus_capella_reactor.hpp
++++ b/include/nano/consensus_capella_reactor.hpp
+@@ -34,0 +35,3 @@ class CapellaDurableReactor {
++ struct PendingSyncMessages { uint64_t slot; ConsensusRoot parent; std::map<uint64_t,Bytes> wires; };
++ std::optional<PendingSyncMessages> pending_sync_messages_;
++ bool sync_messages_current_locked(const std::function<void()>&)const;
+diff --git a/network/capella_catalog_relay.hpp b/network/capella_catalog_relay.hpp
+index 95ba5b6..7be9509 100644
+--- a/network/capella_catalog_relay.hpp
++++ b/network/capella_catalog_relay.hpp
+@@ -63 +63 @@ private:
+-   const auto expected=self.kind_=="block"?AltairWireKind::block:self.kind_=="attestation"?AltairWireKind::attestation:self.kind_=="bls_to_execution_change"?AltairWireKind::bls_to_execution_change:AltairWireKind::attester_slashing;
++   const auto expected=self.kind_=="sync_committee_message"?AltairWireKind::sync_committee_message:self.kind_=="block"?AltairWireKind::block:self.kind_=="attestation"?AltairWireKind::attestation:self.kind_=="bls_to_execution_change"?AltairWireKind::bls_to_execution_change:AltairWireKind::attester_slashing;
+@@ -65 +65 @@ private:
+-   if(expected==AltairWireKind::bls_to_execution_change){unsigned char digest[32];SHA256(message->ssz.data(),message->ssz.size(),digest);std::string actual="0x";for(auto b:digest){actual+="0123456789abcdef"[b>>4];actual+="0123456789abcdef"[b&15];}if(actual!=id){self.close(false);return;}}
++   if(expected==AltairWireKind::bls_to_execution_change||expected==AltairWireKind::sync_committee_message){unsigned char digest[32];SHA256(message->ssz.data(),message->ssz.size(),digest);std::string actual="0x";for(auto b:digest){actual+="0123456789abcdef"[b>>4];actual+="0123456789abcdef"[b&15];}if(actual!=id){self.close(false);return;}}
+@@ -79 +79 @@ public:
+-  if(!core_||!deliver_||token_.empty()||!ingress_||!done_||!page_size_||!maximum_||page_size_>maximum_||(kind_!="block"&&kind_!="attestation"&&kind_!="attester_slashing"&&kind_!="bls_to_execution_change"))throw std::invalid_argument("Invalid Capella catalog relay");
++  if(!core_||!deliver_||token_.empty()||!ingress_||!done_||!page_size_||!maximum_||page_size_>maximum_||(kind_!="block"&&kind_!="attestation"&&kind_!="attester_slashing"&&kind_!="bls_to_execution_change"&&kind_!="sync_committee_message"))throw std::invalid_argument("Invalid Capella catalog relay");
+diff --git a/network/main.cpp b/network/main.cpp
+index b9c5637..bc67455 100644
+--- a/network/main.cpp
++++ b/network/main.cpp
+@@ -106 +106 @@ class Network {
+- struct Peer {PeerInfo info;Json status;std::shared_ptr<int> capella_generation=std::make_shared<int>(0);std::shared_ptr<AltairRelayProgress> capella_blocks,capella_votes,capella_slashings,capella_bls_changes;std::shared_ptr<AltairRelayProgress> altair_progress=std::make_shared<AltairRelayProgress>(),altair_vote_progress=std::make_shared<AltairRelayProgress>();std::shared_ptr<AltairRelayProgress> slashing_progress=std::make_shared<AltairRelayProgress>(),exit_progress=std::make_shared<AltairRelayProgress>();std::chrono::steady_clock::time_point status_seen=std::chrono::steady_clock::now();unsigned next_bellatrix_kind=0;bool next_altair_vote=false;std::shared_ptr<BftVoteKnowledge> bft_known=std::make_shared<BftVoteKnowledge>();bool syncing=false;bool previous_bft_page=false;std::chrono::steady_clock::time_point fragment_retry{};};
++ struct Peer {PeerInfo info;Json status;std::shared_ptr<int> capella_generation=std::make_shared<int>(0);std::shared_ptr<AltairRelayProgress> capella_blocks,capella_votes,capella_slashings,capella_bls_changes,capella_sync_messages;std::shared_ptr<AltairRelayProgress> altair_progress=std::make_shared<AltairRelayProgress>(),altair_vote_progress=std::make_shared<AltairRelayProgress>();std::shared_ptr<AltairRelayProgress> slashing_progress=std::make_shared<AltairRelayProgress>(),exit_progress=std::make_shared<AltairRelayProgress>();std::chrono::steady_clock::time_point status_seen=std::chrono::steady_clock::now();unsigned next_bellatrix_kind=0;bool next_altair_vote=false;std::shared_ptr<BftVoteKnowledge> bft_known=std::make_shared<BftVoteKnowledge>();bool syncing=false;bool previous_bft_page=false;std::chrono::steady_clock::time_point fragment_retry{};};
+@@ -160,2 +160,2 @@ class Network {
+-    const auto step=peer.next_bellatrix_kind++%4;const std::string kind=step==0?"block":step==1?"attestation":step==2?"attester_slashing":"bls_to_execution_change";
+-    auto& cache=step==0?peer.capella_blocks:step==1?peer.capella_votes:step==2?peer.capella_slashings:peer.capella_bls_changes;
++    const auto step=peer.next_bellatrix_kind++%5;const std::string kind=step==0?"block":step==1?"attestation":step==2?"attester_slashing":step==3?"bls_to_execution_change":"sync_committee_message";
++    auto& cache=step==0?peer.capella_blocks:step==1?peer.capella_votes:step==2?peer.capella_slashings:step==3?peer.capella_bls_changes:peer.capella_sync_messages;
+@@ -200 +200 @@ class Network {
+- void add(PeerInfo info,const Json& status){if(!valid(status)||peers_.size()>=50)return;auto id=info.id.toBase58();bool fresh=!peers_.contains(id);observe_gossip_session(gossip_progress_[id],fresh?Json::object():peers_.at(id).status,status);if(fresh)peers_.emplace(id,Peer{std::move(info),status});else{if((peers_.at(id).status.value("gossip_epoch",Json())!=status.value("gossip_epoch",Json())||peers_.at(id).status.value("capellaSession",Json())!=status.value("capellaSession",Json()))){peers_.at(id).capella_generation=std::make_shared<int>(0);peers_.at(id).capella_blocks.reset();peers_.at(id).capella_votes.reset();peers_.at(id).capella_slashings.reset();peers_.at(id).capella_bls_changes.reset();peers_.at(id).bft_known=std::make_shared<BftVoteKnowledge>();peers_.at(id).altair_progress=std::make_shared<AltairRelayProgress>();peers_.at(id).altair_vote_progress=std::make_shared<AltairRelayProgress>();peers_.at(id).slashing_progress=std::make_shared<AltairRelayProgress>();peers_.at(id).exit_progress=std::make_shared<AltairRelayProgress>();}peers_.at(id).info=std::move(info);peers_.at(id).status=status;}peers_.at(id).status_seen=std::chrono::steady_clock::now();if(fresh)std::cout<<Json{{"event","peer"},{"peerId",id},{"height",status["best_block"]}}.dump()<<std::endl;}
++ void add(PeerInfo info,const Json& status){if(!valid(status)||peers_.size()>=50)return;auto id=info.id.toBase58();bool fresh=!peers_.contains(id);observe_gossip_session(gossip_progress_[id],fresh?Json::object():peers_.at(id).status,status);if(fresh)peers_.emplace(id,Peer{std::move(info),status});else{if((peers_.at(id).status.value("gossip_epoch",Json())!=status.value("gossip_epoch",Json())||peers_.at(id).status.value("capellaSession",Json())!=status.value("capellaSession",Json()))){peers_.at(id).capella_generation=std::make_shared<int>(0);peers_.at(id).capella_blocks.reset();peers_.at(id).capella_votes.reset();peers_.at(id).capella_slashings.reset();peers_.at(id).capella_bls_changes.reset();peers_.at(id).capella_sync_messages.reset();peers_.at(id).bft_known=std::make_shared<BftVoteKnowledge>();peers_.at(id).altair_progress=std::make_shared<AltairRelayProgress>();peers_.at(id).altair_vote_progress=std::make_shared<AltairRelayProgress>();peers_.at(id).slashing_progress=std::make_shared<AltairRelayProgress>();peers_.at(id).exit_progress=std::make_shared<AltairRelayProgress>();}peers_.at(id).info=std::move(info);peers_.at(id).status=status;}peers_.at(id).status_seen=std::chrono::steady_clock::now();if(fresh)std::cout<<Json{{"event","peer"},{"peerId",id},{"height",status["best_block"]}}.dump()<<std::endl;}
+@@ -220 +220 @@ class Network {
+-  exchange(info,chainsync,Json::object(),[this,id](Json remote){polling_.erase(id);auto it=peers_.find(id);if(it==peers_.end())return;if(!valid(remote)){if(trace_network_)++failed_status_;peers_.erase(it);gossip_progress_.erase(id);return;}auto previous=gossip_progress_[id];observe_gossip_session(gossip_progress_[id],it->second.status,remote);if(trace_network_&&previous!=gossip_progress_[id]&&retry_trace_count_<8){++retry_trace_count_;std::cout<<Json{{"event","test-gossip-remote-session-reset"},{"peerId",id},{"oldEpoch",it->second.status.value("gossip_epoch",Json())},{"newEpoch",remote.value("gossip_epoch",Json())}}.dump()<<std::endl;}if((it->second.status.value("gossip_epoch",Json())!=remote.value("gossip_epoch",Json())||it->second.status.value("capellaSession",Json())!=remote.value("capellaSession",Json()))){it->second.capella_generation=std::make_shared<int>(0);it->second.capella_blocks.reset();it->second.capella_votes.reset();it->second.capella_slashings.reset();it->second.capella_bls_changes.reset();it->second.bft_known=std::make_shared<BftVoteKnowledge>();it->second.altair_progress=std::make_shared<AltairRelayProgress>();it->second.altair_vote_progress=std::make_shared<AltairRelayProgress>();it->second.slashing_progress=std::make_shared<AltairRelayProgress>();it->second.exit_progress=std::make_shared<AltairRelayProgress>();}it->second.status=std::move(remote);it->second.status_seen=std::chrono::steady_clock::now();sync(id);});
++  exchange(info,chainsync,Json::object(),[this,id](Json remote){polling_.erase(id);auto it=peers_.find(id);if(it==peers_.end())return;if(!valid(remote)){if(trace_network_)++failed_status_;peers_.erase(it);gossip_progress_.erase(id);return;}auto previous=gossip_progress_[id];observe_gossip_session(gossip_progress_[id],it->second.status,remote);if(trace_network_&&previous!=gossip_progress_[id]&&retry_trace_count_<8){++retry_trace_count_;std::cout<<Json{{"event","test-gossip-remote-session-reset"},{"peerId",id},{"oldEpoch",it->second.status.value("gossip_epoch",Json())},{"newEpoch",remote.value("gossip_epoch",Json())}}.dump()<<std::endl;}if((it->second.status.value("gossip_epoch",Json())!=remote.value("gossip_epoch",Json())||it->second.status.value("capellaSession",Json())!=remote.value("capellaSession",Json()))){it->second.capella_generation=std::make_shared<int>(0);it->second.capella_blocks.reset();it->second.capella_votes.reset();it->second.capella_slashings.reset();it->second.capella_bls_changes.reset();it->second.capella_sync_messages.reset();it->second.bft_known=std::make_shared<BftVoteKnowledge>();it->second.altair_progress=std::make_shared<AltairRelayProgress>();it->second.altair_vote_progress=std::make_shared<AltairRelayProgress>();it->second.slashing_progress=std::make_shared<AltairRelayProgress>();it->second.exit_progress=std::make_shared<AltairRelayProgress>();}it->second.status=std::move(remote);it->second.status_seen=std::chrono::steady_clock::now();sync(id);});
+diff --git a/network/test_capella_catalog_relay.cpp b/network/test_capella_catalog_relay.cpp
+index a6eee34..26a5e0d 100644
+--- a/network/test_capella_catalog_relay.cpp
++++ b/network/test_capella_catalog_relay.cpp
+@@ -42,4 +42,4 @@ int main(){try{
+- for(bool wrong_id:{false,true}){
+-  asio::io_context io;InboundBudget budget;auto capable=profile;capable.bls_changes=true;auto ingress=std::make_shared<AltairMessageIngress>(capable,budget);std::vector<uint8_t> bytes(172,7);unsigned char digest[32];SHA256(bytes.data(),bytes.size(),digest);std::string id="0x",wire="0x";for(auto b:digest){id+="0123456789abcdef"[b>>4];id+="0123456789abcdef"[b&15];}for(auto b:bytes){wire+="0123456789abcdef"[b>>4];wire+="0123456789abcdef"[b&15];}if(wrong_id)id=root('1');unsigned delivered=0,closed=0;Json result;
+-  auto core=[&](std::string method,Json args,Reply reply){if(method=="nano_capellaCatalogGeneration")reply(root('e'));else if(method=="nano_capellaCatalogAcquire"){check(args[1]=="bls_to_execution_change","wrong BLS catalog requested");reply(Json{{"handle",root('c')}});}else if(method=="nano_capellaCatalogPage")reply(Json{{"kind","bls_to_execution_change"},{"sequence","0x1"},{"digest",root('d')},{"entries",Json::array({id})},{"next",nullptr}});else if(method=="nano_capellaExport")reply(Json{{"available",true},{"root",id},{"envelope",{{"chainId",capable.chain_id},{"genesisHash",capable.genesis_hash},{"forkDigest",capable.fork_digest},{"consensusIdentity",capable.consensus_identity},{"kind","bls_to_execution_change"},{"ssz",wire}}}});else if(method=="nano_capellaCatalogRelease"){++closed;reply(true);}else throw std::runtime_error("unexpected BLS catalog method");};
+-  auto deliver=[&](std::string actual,Json frame,Reply reply){check(actual==id&&frame.at("ssz")==wire,"changed BLS catalog payload");++delivered;reply(Json{{"accepted",true}});};auto relay=std::make_shared<CapellaCatalogRelay>(io,core,deliver,"token","bls_to_execution_change",ingress,1,1,[&](Json value){result=std::move(value);});relay->start(1s);io.run();check(result.at("success")==!wrong_id&&delivered==(wrong_id?0:1)&&closed==1,"BLS catalog identity or cleanup failed");++scenarios;
++ for(bool sync:{false,true})for(bool wrong_id:{false,true}){
++  asio::io_context io;InboundBudget budget;auto capable=profile;capable.bls_changes=true;capable.sync_messages=true;const std::string kind=sync?"sync_committee_message":"bls_to_execution_change";auto ingress=std::make_shared<AltairMessageIngress>(capable,budget);std::vector<uint8_t> bytes(sync?144:172,7);unsigned char digest[32];SHA256(bytes.data(),bytes.size(),digest);std::string id="0x",wire="0x";for(auto b:digest){id+="0123456789abcdef"[b>>4];id+="0123456789abcdef"[b&15];}for(auto b:bytes){wire+="0123456789abcdef"[b>>4];wire+="0123456789abcdef"[b&15];}if(wrong_id)id=root('1');unsigned delivered=0,closed=0;Json result;
++  auto core=[&](std::string method,Json args,Reply reply){if(method=="nano_capellaCatalogGeneration")reply(root('e'));else if(method=="nano_capellaCatalogAcquire"){check(args[1]==kind,"wrong BLS catalog requested");reply(Json{{"handle",root('c')}});}else if(method=="nano_capellaCatalogPage")reply(Json{{"kind",kind},{"sequence","0x1"},{"digest",root('d')},{"entries",Json::array({id})},{"next",nullptr}});else if(method=="nano_capellaExport")reply(Json{{"available",true},{"root",id},{"envelope",{{"chainId",capable.chain_id},{"genesisHash",capable.genesis_hash},{"forkDigest",capable.fork_digest},{"consensusIdentity",capable.consensus_identity},{"kind",kind},{"ssz",wire}}}});else if(method=="nano_capellaCatalogRelease"){++closed;reply(true);}else throw std::runtime_error("unexpected BLS catalog method");};
++  auto deliver=[&](std::string actual,Json frame,Reply reply){check(actual==id&&frame.at("ssz")==wire,"changed BLS catalog payload");++delivered;reply(Json{{"accepted",true}});};auto relay=std::make_shared<CapellaCatalogRelay>(io,core,deliver,"token",kind,ingress,1,1,[&](Json value){result=std::move(value);});relay->start(1s);io.run();check(result.at("success")==!wrong_id&&delivered==(wrong_id?0:1)&&closed==1,"BLS catalog identity or cleanup failed");++scenarios;
+diff --git a/src/consensus_capella_local_body.cpp b/src/consensus_capella_local_body.cpp
+index 65668fe..afbeb60 100644
+--- a/src/consensus_capella_local_body.cpp
++++ b/src/consensus_capella_local_body.cpp
+@@ -94,4 +94,13 @@ bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage&
+- if(signatures.empty())return true;
+- const auto signature=aggregate_consensus_bls_signatures(signatures);if(!signature)return false;
+- std::copy(signature->begin(),signature->end(),aggregate.begin()+bit_bytes);
+- return submit_sync_aggregate_locked(slot,aggregate,expected,check);
++ // Prepare allocations before publishing either ephemeral cache. One message
++ // per committee validator, one slot/head context; never persisted to RocksDB.
++ PendingSyncMessages messages{slot,head,{}};
++ if(pending_sync_messages_&&pending_sync_messages_->slot==slot&&pending_sync_messages_->parent==head)messages=*pending_sync_messages_;
++ messages.wires.insert_or_assign(message.validator_index,encode_capella_sync_message(message));
++ if(messages.wires.size()>l.sync_committee_size)throw std::logic_error("Sync message committee bound");
++ if(check)check();
++ if(!signatures.empty()){
++  const auto signature=aggregate_consensus_bls_signatures(signatures);if(!signature)return false;
++  std::copy(signature->begin(),signature->end(),aggregate.begin()+bit_bytes);
++  if(!submit_sync_aggregate_locked(slot,aggregate,expected,check))return false;
++ }
++ pending_sync_messages_=std::move(messages);return true;
+diff --git a/src/consensus_capella_reactor.cpp b/src/consensus_capella_reactor.cpp
+index f54a22e..aaccb46 100644
+--- a/src/consensus_capella_reactor.cpp
++++ b/src/consensus_capella_reactor.cpp
+@@ -283,0 +284,9 @@ std::vector<ConsensusRoot> CapellaDurableReactor::bls_change_roots_locked(const
++bool CapellaDurableReactor::sync_messages_current_locked(const std::function<void()>& check)const{
++ if(!pending_sync_messages_)return false;
++ const auto& clock=state_->timed.clock;
++ if((clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms!=pending_sync_messages_->slot)return false;
++ const auto& c=rules_.transition.consensus;
++ const auto head=phase0_fork_choice_head(state_->timed.view,{c.epoch.ffg.slots_per_epoch,c.attestation.duties.effective_balance_increment,rules_.proposer_score_boost},check).head;
++ return head==pending_sync_messages_->parent;
++}
++
+@@ -286,2 +295,3 @@ std::shared_ptr<const CapellaInventorySnapshot> CapellaDurableReactor::capture_i
+- if(kind!="block"&&kind!="attestation"&&kind!="attester_slashing"&&kind!="bls_to_execution_change")throw std::invalid_argument("Unsupported Capella inventory kind");
+- const auto count=kind=="block"?state_->blocks.size()-size_t(state_->blocks.contains(state_->timed.view.anchor)):kind=="attestation"?votes_.size():kind=="bls_to_execution_change"?bls_changes_.size():slashings_.size();
++ if(kind!="block"&&kind!="attestation"&&kind!="attester_slashing"&&kind!="bls_to_execution_change"&&kind!="sync_committee_message")throw std::invalid_argument("Unsupported Capella inventory kind");
++ const bool sync=kind=="sync_committee_message";const bool current_sync=sync&&sync_messages_current_locked(check);
++ const auto count=sync?(current_sync?pending_sync_messages_->wires.size():0):kind=="block"?state_->blocks.size()-size_t(state_->blocks.contains(state_->timed.view.anchor)):kind=="attestation"?votes_.size():kind=="bls_to_execution_change"?bls_changes_.size():slashings_.size();
+@@ -290 +300,2 @@ std::shared_ptr<const CapellaInventorySnapshot> CapellaDurableReactor::capture_i
+- if(kind=="block"){for(const auto& [root,_]:state_->blocks){if(check)check();if(root!=state_->timed.view.anchor)snapshot->roots_.push_back(root);}}
++ if(sync){if(current_sync)for(const auto& [_,wire]:pending_sync_messages_->wires){if(check)check();snapshot->roots_.push_back(archive_array<32>(sha256(wire),0));}std::sort(snapshot->roots_.begin(),snapshot->roots_.end());}
++ else if(kind=="block"){for(const auto& [root,_]:state_->blocks){if(check)check();if(root!=state_->timed.view.anchor)snapshot->roots_.push_back(root);}}
+@@ -329 +340 @@ Json CapellaDurableReactor::export_message(std::string_view kind,const Consensus
+- if(kind!="block"&&kind!="attestation"&&kind!="attester_slashing"&&kind!="bls_to_execution_change")throw std::invalid_argument("Unsupported Capella archive kind");
++ if(kind!="block"&&kind!="attestation"&&kind!="attester_slashing"&&kind!="bls_to_execution_change"&&kind!="sync_committee_message")throw std::invalid_argument("Unsupported Capella archive kind");
+@@ -332 +343,2 @@ Json CapellaDurableReactor::export_message(std::string_view kind,const Consensus
+- if(kind=="block")payload=signed_block_locked(id,check);
++ if(kind=="sync_committee_message"){if(sync_messages_current_locked(check))for(const auto& [_,wire]:pending_sync_messages_->wires){if(check)check();if(sha256(wire)==key){if(wire.size()>maximum)throw std::length_error("Capella export exceeds capacity");payload=wire;break;}}}
++ else if(kind=="block")payload=signed_block_locked(id,check);
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index 3a3aba4..279ac48 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -125 +125 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+-  Bytes expected_sync;
++  Bytes expected_sync;std::vector<ConsensusRoot> exported_sync;
+@@ -159,0 +160,2 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
++     const auto empty_catalog=nodes[0]->capture_inventory("sync_committee_message",4096);
++     check(empty_catalog->page({},64,16384)["entries"].empty(),"sync catalog not initially empty");
+@@ -168,0 +171,7 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
++     check(empty_catalog->page({},64,16384)["entries"].empty(),"pinned sync catalog changed");
++     const auto catalog=nodes[0]->capture_inventory("sync_committee_message",4096)->page({},64,16384);
++     check(catalog["entries"].size()==individual_signatures.size(),"sync replay duplicated or lost exported members");
++     bool bounded=false;try{nodes[0]->capture_inventory("sync_committee_message",0);}catch(const std::length_error&){bounded=true;}check(bounded,"sync root budget ignored");
++     bool legacy=false;try{nodes[0]->inventory("sync_committee_message",{},64,16384);}catch(const std::invalid_argument&){legacy=true;}check(legacy,"ephemeral inventory accepted durable cursor API");
++     for(const auto& entry:catalog["entries"]){ConsensusRoot id{};copy_to(id,unhex(entry.get<std::string>()));exported_sync.push_back(id);const auto out=nodes[0]->export_message("sync_committee_message",id,144);check(out["available"]==true,"sync export missing");const auto bytes=unhex(out["envelope"]["ssz"].get<std::string>());check(hex(sha256(bytes))==entry.get<std::string>(),"sync export hash differs");check(nodes[1]->sync_message_ssz(bytes),"second reactor rejected exported sync");bool small=false;try{nodes[0]->export_message("sync_committee_message",id,143);}catch(const std::length_error&){small=true;}check(small,"sync export byte bound ignored");}
++
+@@ -179,0 +189 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
++  if(local_sync){check(nodes[0]->capture_inventory("sync_committee_message",4096)->page({},64,16384)["entries"].empty(),"changed head retained sync catalog");for(const auto& id:exported_sync)check(nodes[0]->export_message("sync_committee_message",id,144)["available"]==false,"changed head exported stale sync");}
+@@ -293 +303 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+- std::cout<<Json{{"scenario","capella-local-assembly-finality"},{"localSyncAggregates",local_sync},{"disjointSyncMerging",local_sync},{"individualSyncMessages",local_sync},{"syncWireWorker",local_sync},{"executionOwner",owner_mode},{"participationPercent",local_finality},{"blocks",blocks},{"votes",votes},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"justifiedEpoch",result.state->timed.view.justified.epoch},{"independentStores",2},{"storeReopens",restarts},{"signingJournalsReopened",reopened_journals},{"networkTransport",false},{"networkActivated",false}}.dump()<<std::endl;
++ std::cout<<Json{{"scenario","capella-local-assembly-finality"},{"localSyncAggregates",local_sync},{"disjointSyncMerging",local_sync},{"individualSyncMessages",local_sync},{"syncWireWorker",local_sync},{"syncCatalogExport",local_sync},{"executionOwner",owner_mode},{"participationPercent",local_finality},{"blocks",blocks},{"votes",votes},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"justifiedEpoch",result.state->timed.view.justified.epoch},{"independentStores",2},{"storeReopens",restarts},{"signingJournalsReopened",reopened_journals},{"networkTransport",false},{"networkActivated",false}}.dump()<<std::endl;
