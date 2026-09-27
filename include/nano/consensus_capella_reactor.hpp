@@ -3,6 +3,7 @@
 #include "nano/storage.hpp"
 #include "nano/consensus_beacon_signer.hpp"
 #include "nano/consensus_capella_bls_change.hpp"
+#include "nano/consensus_sync_message.hpp"
 namespace nano {
 class Blockchain;
 struct BeaconReadResponse;
@@ -11,7 +12,6 @@ class ExpiredCapellaDuty : public std::runtime_error {public: using std::runtime
 using CapellaSignedVotes=std::map<Bytes,Bytes>;
 struct CapellaPendingBlsChange {ConsensusRoot admission_root;Bytes wire;};
 using CapellaPendingBlsChanges=std::map<uint64_t,CapellaPendingBlsChange>;
-struct CapellaSyncMessage {uint64_t slot,validator_index;ConsensusRoot beacon_block_root;std::array<uint8_t,96> signature;};
 struct CapellaPublishedStore {std::shared_ptr<const CapellaForkStore> state;ForkCheckpointToken token;};
 // Immutable root-only inventory; does not pin EVM state or payload archives.
 class CapellaInventorySnapshot {
@@ -32,6 +32,7 @@ class CapellaDurableReactor {
  Json network_identity_locked()const;
  struct PendingSyncAggregate {uint64_t slot;ConsensusRoot parent;size_t participants;Bytes ssz;};
  std::optional<PendingSyncAggregate> pending_sync_;
+ bool submit_sync_message_locked(const CapellaSyncMessage&,const ForkCheckpointToken&,const std::function<void()>&);
  bool submit_sync_aggregate_locked(uint64_t,std::span<const uint8_t>,const ForkCheckpointToken&,const std::function<void()>&);
  void require_available()const;
  ChainStore* witness_=nullptr;std::optional<ForkCheckpointToken> witness_token_;
@@ -56,6 +57,7 @@ public:
  // No durable mutation or local signing. RPC/P2P collection is separate.
  // Message.slot is the signed slot; accepted during the following proposal slot.
  // Adds only this validator's missing committee positions, retaining multiplicity.
+ bool sync_message_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
  bool submit_sync_message(const CapellaSyncMessage&,const ForkCheckpointToken&,
   const std::function<void()>& checkpoint={});
  bool submit_sync_aggregate(uint64_t proposal_slot,std::span<const uint8_t>,

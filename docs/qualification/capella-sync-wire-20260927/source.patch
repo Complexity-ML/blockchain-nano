@@ -1,0 +1,150 @@
+diff --git a/include/nano/consensus_capella_reactor.hpp b/include/nano/consensus_capella_reactor.hpp
+index 9fa808c..e1f5dfd 100644
+--- a/include/nano/consensus_capella_reactor.hpp
++++ b/include/nano/consensus_capella_reactor.hpp
+@@ -5,0 +6 @@
++#include "nano/consensus_sync_message.hpp"
+@@ -14 +14,0 @@ using CapellaPendingBlsChanges=std::map<uint64_t,CapellaPendingBlsChange>;
+-struct CapellaSyncMessage {uint64_t slot,validator_index;ConsensusRoot beacon_block_root;std::array<uint8_t,96> signature;};
+@@ -34,0 +35 @@ class CapellaDurableReactor {
++ bool submit_sync_message_locked(const CapellaSyncMessage&,const ForkCheckpointToken&,const std::function<void()>&);
+@@ -58,0 +60 @@ public:
++ bool sync_message_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
+diff --git a/network/altair_core_dispatch.hpp b/network/altair_core_dispatch.hpp
+index be4d35c..e4f0df1 100644
+--- a/network/altair_core_dispatch.hpp
++++ b/network/altair_core_dispatch.hpp
+@@ -74 +74 @@ public:
+-  if(message.kind!=AltairWireKind::block&&message.kind!=AltairWireKind::attestation&&message.kind!=AltairWireKind::attester_slashing&&message.kind!=AltairWireKind::voluntary_exit&&message.kind!=AltairWireKind::bls_to_execution_change)return false;
++  if(message.kind!=AltairWireKind::block&&message.kind!=AltairWireKind::attestation&&message.kind!=AltairWireKind::attester_slashing&&message.kind!=AltairWireKind::voluntary_exit&&message.kind!=AltairWireKind::bls_to_execution_change&&message.kind!=AltairWireKind::sync_committee_message)return false;
+@@ -77 +77,2 @@ public:
+-  const auto bound=message.kind==AltairWireKind::block?profile_.block_bytes:message.kind==AltairWireKind::attestation?profile_.attestation_bytes:message.kind==AltairWireKind::voluntary_exit?size_t(112):message.kind==AltairWireKind::bls_to_execution_change?size_t(172):profile_.slashing_bytes;
++  if(message.kind==AltairWireKind::sync_committee_message&&(!profile_.sync_messages||profile_.consensus_identity.empty()||message.ssz.size()!=144))return false;
++  const auto bound=message.kind==AltairWireKind::block?profile_.block_bytes:message.kind==AltairWireKind::attestation?profile_.attestation_bytes:message.kind==AltairWireKind::voluntary_exit?size_t(112):message.kind==AltairWireKind::bls_to_execution_change?size_t(172):message.kind==AltairWireKind::sync_committee_message?size_t(144):profile_.slashing_bytes;
+@@ -79 +80 @@ public:
+-  const auto kind=message.kind==AltairWireKind::block?"block":message.kind==AltairWireKind::attestation?"attestation":message.kind==AltairWireKind::voluntary_exit?"voluntary_exit":message.kind==AltairWireKind::bls_to_execution_change?"bls_to_execution_change":"attester_slashing";
++  const auto kind=message.kind==AltairWireKind::block?"block":message.kind==AltairWireKind::attestation?"attestation":message.kind==AltairWireKind::voluntary_exit?"voluntary_exit":message.kind==AltairWireKind::bls_to_execution_change?"bls_to_execution_change":message.kind==AltairWireKind::sync_committee_message?"sync_committee_message":"attester_slashing";
+diff --git a/network/altair_message.hpp b/network/altair_message.hpp
+index 261ef1b..aec2598 100644
+--- a/network/altair_message.hpp
++++ b/network/altair_message.hpp
+@@ -19,0 +20 @@ struct AltairWireProfile {
++ bool sync_messages=false;
+@@ -21 +22 @@ struct AltairWireProfile {
+-enum class AltairWireKind {block,attestation,attester_slashing,voluntary_exit,bls_to_execution_change};
++enum class AltairWireKind {block,attestation,attester_slashing,voluntary_exit,bls_to_execution_change,sync_committee_message};
+@@ -58,0 +60 @@ public:
++  else if(j.at("kind")=="sync_committee_message"&&profile_.sync_messages&&!profile_.consensus_identity.empty()){kind=AltairWireKind::sync_committee_message;maximum=144;}
+@@ -62 +64 @@ public:
+-  if((kind==AltairWireKind::voluntary_exit&&encoded.size()!=226)||(kind==AltairWireKind::bls_to_execution_change&&encoded.size()!=346))return std::nullopt;
++  if((kind==AltairWireKind::voluntary_exit&&encoded.size()!=226)||(kind==AltairWireKind::bls_to_execution_change&&encoded.size()!=346)||(kind==AltairWireKind::sync_committee_message&&encoded.size()!=290))return std::nullopt;
+@@ -78,0 +81 @@ public:
++  else if(j.at("kind")=="sync_committee_message"&&profile_.sync_messages&&!profile_.consensus_identity.empty()){kind=AltairWireKind::sync_committee_message;maximum=144;}
+@@ -84 +87 @@ public:
+-  auto bytes=altair_unbase64(j.at("sszBase64").get_ref<const std::string&>(),maximum);if(!bytes||(kind==AltairWireKind::voluntary_exit&&bytes->size()!=112)||(kind==AltairWireKind::bls_to_execution_change&&bytes->size()!=172))return std::nullopt;
++  auto bytes=altair_unbase64(j.at("sszBase64").get_ref<const std::string&>(),maximum);if(!bytes||(kind==AltairWireKind::voluntary_exit&&bytes->size()!=112)||(kind==AltairWireKind::bls_to_execution_change&&bytes->size()!=172)||(kind==AltairWireKind::sync_committee_message&&bytes->size()!=144))return std::nullopt;
+diff --git a/network/capella_consensus_service.hpp b/network/capella_consensus_service.hpp
+index 5e423b9..55f98a7 100644
+--- a/network/capella_consensus_service.hpp
++++ b/network/capella_consensus_service.hpp
+@@ -17 +17 @@ class CapellaConsensusService {
+- static AltairWireProfile profile(nano::CapellaDurableReactor& reactor,size_t frame,size_t block,size_t vote,size_t slashing){const auto j=reactor.network_identity();return {j.at("chainId").get<std::string>(),j.at("genesisHash").get<std::string>(),j.at("forkDigest").get<std::string>(),frame,block,vote,slashing,j.at("consensusIdentity").get<std::string>(),true};}
++ static AltairWireProfile profile(nano::CapellaDurableReactor& reactor,size_t frame,size_t block,size_t vote,size_t slashing){const auto j=reactor.network_identity();return {j.at("chainId").get<std::string>(),j.at("genesisHash").get<std::string>(),j.at("forkDigest").get<std::string>(),frame,block,vote,slashing,j.at("consensusIdentity").get<std::string>(),true,true};}
+@@ -27 +27 @@ public:
+-   switch(message.kind){case AltairWireKind::block:accepted=reactor.block(message.ssz,check);break;case AltairWireKind::attestation:accepted=reactor.vote_ssz(message.ssz,check);break;case AltairWireKind::attester_slashing:accepted=reactor.slashing_ssz(message.ssz,check);break;case AltairWireKind::bls_to_execution_change:accepted=reactor.bls_change_ssz(message.ssz,check);break;default:return Decision::rejected;}
++   switch(message.kind){case AltairWireKind::block:accepted=reactor.block(message.ssz,check);break;case AltairWireKind::attestation:accepted=reactor.vote_ssz(message.ssz,check);break;case AltairWireKind::attester_slashing:accepted=reactor.slashing_ssz(message.ssz,check);break;case AltairWireKind::sync_committee_message:accepted=reactor.sync_message_ssz(message.ssz,check);break;case AltairWireKind::bls_to_execution_change:accepted=reactor.bls_change_ssz(message.ssz,check);break;default:return Decision::rejected;}
+diff --git a/network/main.cpp b/network/main.cpp
+index f9124e2..b9c5637 100644
+--- a/network/main.cpp
++++ b/network/main.cpp
+@@ -83 +83 @@ class Network {
+-    profile.bls_changes=capella_mode_;
++    profile.bls_changes=capella_mode_;profile.sync_messages=capella_mode_;
+diff --git a/network/test_altair_core_dispatch.cpp b/network/test_altair_core_dispatch.cpp
+index f125fc5..d5bbc07 100644
+--- a/network/test_altair_core_dispatch.cpp
++++ b/network/test_altair_core_dispatch.cpp
+@@ -60,0 +61,8 @@ int main(){try{
++ } {
++  asio::io_context io;auto capella=profile;capella.consensus_identity="0x"+std::string(64,'1');capella.sync_messages=true;
++  InboundBudget budget;AltairMessageIngress decoder(capella,budget);unsigned submitted=0,done=0;
++  auto call=[&](const std::string& method,Json args,Reply reply){if(method=="nano_altairSubmit"){const auto decoded=decoder.decode_compact(args.at(3));check(decoded&&decoded->kind==AltairWireKind::sync_committee_message&&decoded->ssz==std::vector<uint8_t>(144,7),"sync dispatch changed payload");++submitted;reply(Json{{"state","completed"},{"sequence","0x1"},{"decision","accepted"}});}else if(method=="nano_altairForget")reply(Json{{"state","completed"},{"sequence","0x1"},{"decision","accepted"}});else throw std::runtime_error("unexpected sync dispatch method");};
++  auto client=std::make_shared<AltairCoreDispatch>(io,call,capella,"token","session",0,2,3,std::chrono::milliseconds(1));auto cancel=std::make_shared<std::atomic<bool>>(false);auto finish=[&](D d){check(d==D::accepted,"sync dispatch rejected");++done;};
++  check(!client->enqueue({AltairWireKind::sync_committee_message,std::vector<uint8_t>(143)},cancel,finish),"short sync dispatch accepted");
++  check(client->enqueue({AltairWireKind::sync_committee_message,std::vector<uint8_t>(144,7)},cancel,finish),"sync dispatch refused");io.run();check(submitted==1&&done==1,"sync dispatch incomplete");
++  auto legacy=capella;legacy.sync_messages=false;auto other=std::make_shared<AltairCoreDispatch>(io,call,legacy,"token","session",0,2,3,std::chrono::milliseconds(1));check(!other->enqueue({AltairWireKind::sync_committee_message,std::vector<uint8_t>(144)},cancel,finish),"legacy profile admitted sync change");++cases;
+diff --git a/src/consensus_capella_local_body.cpp b/src/consensus_capella_local_body.cpp
+index f287acc..65668fe 100644
+--- a/src/consensus_capella_local_body.cpp
++++ b/src/consensus_capella_local_body.cpp
+@@ -58 +58,9 @@ bool CapellaDurableReactor::submit_sync_message(const CapellaSyncMessage& messag
+- std::lock_guard lock(mutex_);require_available();
++ std::lock_guard lock(mutex_);return submit_sync_message_locked(message,expected,check);
++}
++bool CapellaDurableReactor::sync_message_ssz(std::span<const uint8_t> bytes,const std::function<void()>& check){
++ const auto message=decode_capella_sync_message(bytes);if(!message)return false;
++ std::lock_guard lock(mutex_);require_available();return submit_sync_message_locked(*message,*token_,check);
++}
++bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage& message,
++ const ForkCheckpointToken& expected,const std::function<void()>& check){
++ require_available();
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index 48e66fa..3a3aba4 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -99,0 +100 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
++ if(local_sync){CapellaSyncMessage golden{};golden.slot=0x0807060504030201ULL;golden.validator_index=0x1817161514131211ULL;golden.beacon_block_root.fill(0xaa);golden.signature.fill(0xbb);const auto expected=unhex("0102030405060708"+std::string(64,'a')+"1112131415161718"+std::string(192,'b'));check(encode_capella_sync_message(golden)==expected,"sync SSZ field ordering/endian mismatch");const auto decoded=decode_capella_sync_message(expected);check(decoded&&decoded->slot==golden.slot&&decoded->validator_index==golden.validator_index,"sync SSZ golden decode mismatch");}
+@@ -154 +155,14 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+-     for(const auto& [member,signature]:individual_signatures){message.validator_index=member;copy_to(message.signature,signature);check(nodes[0]->submit_sync_message(message,current.token)&&nodes[0]->submit_sync_message(message,current.token),"individual sync message or replay rejected");}
++     InboundBudget sync_budget;CapellaConsensusService sync_service(*nodes[0],sync_budget,65536,32768,4096,4096,64,65536);
++     const auto session=sync_service.receipts().at("session").get<std::string>();uint64_t sequence=0;
++     auto envelope=nodes[0]->network_identity();envelope["kind"]="sync_committee_message";envelope["ssz"]=hex(encode_capella_sync_message(message));
++     for(const size_t width:{size_t(0),size_t(143),size_t(145)}){const Bytes malformed(width);check(!decode_capella_sync_message(malformed)&&!nodes[0]->sync_message_ssz(malformed),"malformed sync SSZ accepted");auto frame=envelope;frame["ssz"]=hex(malformed);check(!sync_service.decode(frame.dump()),"malformed sync frame accepted");frame.erase("ssz");frame["sszBase64"]=altair_base64(malformed);check(!sync_service.decode_compact(frame),"malformed compact sync frame accepted");}
++     auto foreign=envelope;foreign["chainId"]="0xffff";check(!sync_service.decode(foreign.dump()),"foreign sync chain accepted");foreign=envelope;foreign["consensusIdentity"]=hex(Bytes(32,255));check(!sync_service.decode(foreign.dump()),"foreign sync identity accepted");
++     for(const auto& [member,signature]:individual_signatures){
++      message.validator_index=member;copy_to(message.signature,signature);const auto encoded=encode_capella_sync_message(message);const auto decoded=decode_capella_sync_message(encoded);check(decoded&&decoded->slot==message.slot&&decoded->validator_index==member&&decoded->beacon_block_root==message.beacon_block_root&&decoded->signature==message.signature,"sync SSZ roundtrip differs");
++      envelope["ssz"]=hex(encoded);auto compact=envelope;compact.erase("ssz");compact["sszBase64"]=altair_base64(encoded);
++      const Json request=sequence%2?Json(envelope.dump()):compact;sync_service.submit_receipt(session,++sequence,request);
++      Json receipt;const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(10);do{receipt=sync_service.receipt(session,sequence);if(receipt.at("state")=="completed")break;std::this_thread::sleep_for(std::chrono::milliseconds(1));}while(std::chrono::steady_clock::now()<deadline);
++      check(receipt.value("decision",std::string())=="accepted","sync worker receipt rejected");sync_service.receipt(session,sequence,false,true);
++      check(nodes[0]->sync_message_ssz(encoded),"individual sync SSZ replay rejected");
++     }
++     sync_service.stop();sync_service.join();
+@@ -279 +293 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+- std::cout<<Json{{"scenario","capella-local-assembly-finality"},{"localSyncAggregates",local_sync},{"disjointSyncMerging",local_sync},{"individualSyncMessages",local_sync},{"executionOwner",owner_mode},{"participationPercent",local_finality},{"blocks",blocks},{"votes",votes},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"justifiedEpoch",result.state->timed.view.justified.epoch},{"independentStores",2},{"storeReopens",restarts},{"signingJournalsReopened",reopened_journals},{"networkTransport",false},{"networkActivated",false}}.dump()<<std::endl;
++ std::cout<<Json{{"scenario","capella-local-assembly-finality"},{"localSyncAggregates",local_sync},{"disjointSyncMerging",local_sync},{"individualSyncMessages",local_sync},{"syncWireWorker",local_sync},{"executionOwner",owner_mode},{"participationPercent",local_finality},{"blocks",blocks},{"votes",votes},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"justifiedEpoch",result.state->timed.view.justified.epoch},{"independentStores",2},{"storeReopens",restarts},{"signingJournalsReopened",reopened_journals},{"networkTransport",false},{"networkActivated",false}}.dump()<<std::endl;
+diff --git a/include/nano/consensus_sync_message.hpp b/include/nano/consensus_sync_message.hpp
+new file mode 100644
+index 0000000..2d028e3
+--- /dev/null
++++ b/include/nano/consensus_sync_message.hpp
+@@ -0,0 +1,10 @@
++#pragma once
++#include "nano/core.hpp"
++#include "nano/consensus_signing.hpp"
++namespace nano {
++struct CapellaSyncMessage {uint64_t slot=0,validator_index=0;ConsensusRoot beacon_block_root{};std::array<uint8_t,96> signature{};};
++// Fixed SSZ SyncCommitteeMessage: slot, block root, validator index, signature.
++// Encoding only; admission checks time, branch, membership and signature.
++Bytes encode_capella_sync_message(const CapellaSyncMessage&);
++std::optional<CapellaSyncMessage> decode_capella_sync_message(std::span<const uint8_t>);
++}
+diff --git a/src/consensus_sync_message.cpp b/src/consensus_sync_message.cpp
+new file mode 100644
+index 0000000..806e0ff
+--- /dev/null
++++ b/src/consensus_sync_message.cpp
+@@ -0,0 +1,13 @@
++#include "nano/consensus_sync_message.hpp"
++namespace nano {
++Bytes encode_capella_sync_message(const CapellaSyncMessage& message){
++ Bytes out(144);for(unsigned i=0;i<8;++i){out[i]=uint8_t(message.slot>>(8*i));out[40+i]=uint8_t(message.validator_index>>(8*i));}
++ std::copy(message.beacon_block_root.begin(),message.beacon_block_root.end(),out.begin()+8);
++ std::copy(message.signature.begin(),message.signature.end(),out.begin()+48);return out;
++}
++std::optional<CapellaSyncMessage> decode_capella_sync_message(std::span<const uint8_t> bytes){
++ if(bytes.size()!=144)return std::nullopt;CapellaSyncMessage out;
++ for(unsigned i=0;i<8;++i){out.slot|=uint64_t(bytes[i])<<(8*i);out.validator_index|=uint64_t(bytes[40+i])<<(8*i);}
++ std::copy_n(bytes.begin()+8,32,out.beacon_block_root.begin());std::copy_n(bytes.begin()+48,96,out.signature.begin());return out;
++}
++}

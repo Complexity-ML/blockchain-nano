@@ -55,7 +55,15 @@ bool CapellaDurableReactor::submit_sync_aggregate_locked(uint64_t slot,std::span
 }
 bool CapellaDurableReactor::submit_sync_message(const CapellaSyncMessage& message,
  const ForkCheckpointToken& expected,const std::function<void()>& check){
- std::lock_guard lock(mutex_);require_available();
+ std::lock_guard lock(mutex_);return submit_sync_message_locked(message,expected,check);
+}
+bool CapellaDurableReactor::sync_message_ssz(std::span<const uint8_t> bytes,const std::function<void()>& check){
+ const auto message=decode_capella_sync_message(bytes);if(!message)return false;
+ std::lock_guard lock(mutex_);require_available();return submit_sync_message_locked(*message,*token_,check);
+}
+bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage& message,
+ const ForkCheckpointToken& expected,const std::function<void()>& check){
+ require_available();
  if(expected!=*token_)throw StaleCapellaDuty("Stale sync message submission");
  if(message.slot==UINT64_MAX)return false;const auto slot=message.slot+1;
  const auto& clock=state_->timed.clock;if((clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms!=slot)return false;

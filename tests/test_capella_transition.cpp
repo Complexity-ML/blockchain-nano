@@ -97,6 +97,7 @@ static int sync_writer(const fs::path& directory){
 #include "support/capella_bls_sync.hpp"
 #include "support/capella_pruning_sync.hpp"
 static void local_finality_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules,const Block& genesis,const State& genesis_state){
+ if(local_sync){CapellaSyncMessage golden{};golden.slot=0x0807060504030201ULL;golden.validator_index=0x1817161514131211ULL;golden.beacon_block_root.fill(0xaa);golden.signature.fill(0xbb);const auto expected=unhex("0102030405060708"+std::string(64,'a')+"1112131415161718"+std::string(192,'b'));check(encode_capella_sync_message(golden)==expected,"sync SSZ field ordering/endian mismatch");const auto decoded=decode_capella_sync_message(expected);check(decoded&&decoded->slot==golden.slot&&decoded->validator_index==golden.validator_index,"sync SSZ golden decode mismatch");}
  Temp directory;const auto limits=crash_limits;const auto& t=rules.transition;const auto slots=t.consensus.epoch.ffg.slots_per_epoch;const auto genesis_root=root_at(initial.blocks.at(initial.timed.view.anchor).state.ssz,8);
  Genesis owner_genesis;owner_genesis.chain_id=t.chain_id;owner_genesis.consensus="beacon";owner_genesis.evm_revision=EvmRevision::Shanghai;owner_genesis.block=genesis;owner_genesis.state=genesis_state;
  std::array<std::unique_ptr<ChainStore>,2> disks;std::array<std::unique_ptr<Blockchain>,2> owners;std::array<std::unique_ptr<CapellaDurableReactor>,2> nodes;
@@ -151,7 +152,20 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
      for(size_t outsider=0;outsider<64;++outsider)if(!individual_signatures.contains(outsider)){bad_message=message;bad_message.validator_index=outsider;copy_to(bad_message.signature,Key(outsider).sign(root));check(!nodes[0]->submit_sync_message(bad_message,current.token),"noncommittee validator accepted");break;}
      bool message_stale=false;try{nodes[0]->submit_sync_message(message,stale);}catch(const StaleCapellaDuty&){message_stale=true;}check(message_stale,"stale sync message accepted");
      bool message_cancelled=false;try{nodes[0]->submit_sync_message(message,current.token,[]{throw ExecutionCancelled("sync message stop");});}catch(const ExecutionCancelled&){message_cancelled=true;}check(message_cancelled,"sync message cancellation ignored");
-     for(const auto& [member,signature]:individual_signatures){message.validator_index=member;copy_to(message.signature,signature);check(nodes[0]->submit_sync_message(message,current.token)&&nodes[0]->submit_sync_message(message,current.token),"individual sync message or replay rejected");}
+     InboundBudget sync_budget;CapellaConsensusService sync_service(*nodes[0],sync_budget,65536,32768,4096,4096,64,65536);
+     const auto session=sync_service.receipts().at("session").get<std::string>();uint64_t sequence=0;
+     auto envelope=nodes[0]->network_identity();envelope["kind"]="sync_committee_message";envelope["ssz"]=hex(encode_capella_sync_message(message));
+     for(const size_t width:{size_t(0),size_t(143),size_t(145)}){const Bytes malformed(width);check(!decode_capella_sync_message(malformed)&&!nodes[0]->sync_message_ssz(malformed),"malformed sync SSZ accepted");auto frame=envelope;frame["ssz"]=hex(malformed);check(!sync_service.decode(frame.dump()),"malformed sync frame accepted");frame.erase("ssz");frame["sszBase64"]=altair_base64(malformed);check(!sync_service.decode_compact(frame),"malformed compact sync frame accepted");}
+     auto foreign=envelope;foreign["chainId"]="0xffff";check(!sync_service.decode(foreign.dump()),"foreign sync chain accepted");foreign=envelope;foreign["consensusIdentity"]=hex(Bytes(32,255));check(!sync_service.decode(foreign.dump()),"foreign sync identity accepted");
+     for(const auto& [member,signature]:individual_signatures){
+      message.validator_index=member;copy_to(message.signature,signature);const auto encoded=encode_capella_sync_message(message);const auto decoded=decode_capella_sync_message(encoded);check(decoded&&decoded->slot==message.slot&&decoded->validator_index==member&&decoded->beacon_block_root==message.beacon_block_root&&decoded->signature==message.signature,"sync SSZ roundtrip differs");
+      envelope["ssz"]=hex(encoded);auto compact=envelope;compact.erase("ssz");compact["sszBase64"]=altair_base64(encoded);
+      const Json request=sequence%2?Json(envelope.dump()):compact;sync_service.submit_receipt(session,++sequence,request);
+      Json receipt;const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(10);do{receipt=sync_service.receipt(session,sequence);if(receipt.at("state")=="completed")break;std::this_thread::sleep_for(std::chrono::milliseconds(1));}while(std::chrono::steady_clock::now()<deadline);
+      check(receipt.value("decision",std::string())=="accepted","sync worker receipt rejected");sync_service.receipt(session,sequence,false,true);
+      check(nodes[0]->sync_message_ssz(encoded),"individual sync SSZ replay rejected");
+     }
+     sync_service.stop();sync_service.join();
      check(nodes[0]->current().token==current.token,"individual sync collection mutated checkpoint");
     }else check(nodes[0]->submit_sync_aggregate(slot,partials[1-first_part],current.token),"disjoint partial sync rejected");
     check(!nodes[0]->submit_sync_aggregate(slot,partials[first_part],current.token),"overlapping partial double counted");
@@ -276,7 +290,7 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
  }
  if(queued_bls_changes){check(head.execution_state.get("0x000000000000000000000000000000000000002b").balance>0,"owner queued withdrawal unpaid");for(size_t i=0;i<2;++i){const auto& disk=owner_mode?owners[i]->store():*disks[i];const auto record=disk.fork_checkpoint(t.chain_id,genesis.header.hash(),limits.envelope_bytes,nodes[i]->current().token);check(record&&!Json::parse(record->snapshot).contains("blsChanges"),"finalized BLS queue not retired");}}
  if(owner_mode){Rpc rpc(*owners[0]);nodes[0]->invalidate();check(rpc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method","eth_blockNumber"},{"params",Json::array()}}).contains("error"),"invalidated owner still served block number");}
- std::cout<<Json{{"scenario","capella-local-assembly-finality"},{"localSyncAggregates",local_sync},{"disjointSyncMerging",local_sync},{"individualSyncMessages",local_sync},{"executionOwner",owner_mode},{"participationPercent",local_finality},{"blocks",blocks},{"votes",votes},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"justifiedEpoch",result.state->timed.view.justified.epoch},{"independentStores",2},{"storeReopens",restarts},{"signingJournalsReopened",reopened_journals},{"networkTransport",false},{"networkActivated",false}}.dump()<<std::endl;
+ std::cout<<Json{{"scenario","capella-local-assembly-finality"},{"localSyncAggregates",local_sync},{"disjointSyncMerging",local_sync},{"individualSyncMessages",local_sync},{"syncWireWorker",local_sync},{"executionOwner",owner_mode},{"participationPercent",local_finality},{"blocks",blocks},{"votes",votes},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"justifiedEpoch",result.state->timed.view.justified.epoch},{"independentStores",2},{"storeReopens",restarts},{"signingJournalsReopened",reopened_journals},{"networkTransport",false},{"networkActivated",false}}.dump()<<std::endl;
 }
 static void scheduler_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules,const Block& genesis,const State& genesis_state){
  Temp directory;const auto limits=crash_limits;const auto& t=rules.transition;const auto slots=t.consensus.epoch.ffg.slots_per_epoch;const auto validators=root_at(initial.blocks.at(initial.timed.view.anchor).state.ssz,8);

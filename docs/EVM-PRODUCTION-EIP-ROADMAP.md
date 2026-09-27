@@ -463,3 +463,18 @@ finalité époque 3 et deux réouvertures. Empreintes et logs conservés.
 restent ouverts. Dérivation du contexte répétée par message : coût à mesurer et
 optimiser avant toute revendication à 100k/1M validateurs.
 [Implémentation et preuves](qualification/capella-sync-message-20260927/README.md).
+
+### 2026-09-27 — Encodage et admission réseau des messages sync
+
+Codec SSZ strict de 144 octets ajouté avec vecteur connu d’ordre/endianness.
+Le type `sync_committee_message`, activé seulement pour Capella, traverse les
+enveloppes hex/base64, le dispatcher privé et le worker borné jusqu’au reactor.
+L’admission SSZ choisit son checkpoint sous verrou ; tailles et identité réseau
+sont contrôlées avant traitement. Scénario local renforcé avec reçus asynchrones
+réels du service et alternance hex/base64, plus régression dispatcher/stream.
+Passé : 38,76 s pour 40 blocs/272 votes, finalité époque 3 et deux réouvertures ;
+dispatcher/stream verts en 0,52 s. Binaire nano-p2p recompilé, empreintes vérifiées.
+**Partiel** : pas encore de diffusion sortante ni d’échange libp2p réel de messages
+sync ; l’adaptateur RPC est exercé directement, pas via HTTP. Signature locale,
+scheduler, export éphémère et qualification WAN restent ouverts.
+[Implémentation et preuves](qualification/capella-sync-wire-20260927/README.md).
