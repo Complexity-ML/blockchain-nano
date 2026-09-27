@@ -1,0 +1,43 @@
+{
+  "base_commit": "93a9b06daed74b48ea966be086782defd63744aa",
+  "source_sha256": {
+    "CMakeLists.txt": "422f2168f15cc55b5c5bed65fcff623c263aec3cda7748541abb5e7078ecaa7c",
+    "include/nano/consensus_capella_reactor.hpp": "1f0205bbd422dfe7041c8889363cf8e6f8d3078f180b6e1bd3e5e33e311ba3dd",
+    "include/nano/consensus_capella_validator.hpp": "c2107dc136881b22060aaa10ae2daf1a548881d3e0489434eba0891de4cd01a3",
+    "src/consensus_capella_runtime.cpp": "446a731e9bb52dad727283c6316df037eed3236563360e08d361fe409a345f50",
+    "src/consensus_capella_signing.cpp": "8a7c542cda801f9d1f9737d5b7c97232aa05722d8f58eab796a5e4596d14170a",
+    "src/consensus_capella_validator.cpp": "632570075a32c2b8e96b0cd6bbb26149883a0272f732a505e871a45c2172e754",
+    "tests/test_capella_transition.cpp": "c87c25b6df748b8e4bb48cfc0056277dfbff16a976ce03fc45de245eba4e1e55"
+  },
+  "binary_sha256": {
+    "nano": "acf6e7aa5563182bafb3f5a7e0f2e711288d75a88fb0c298c838e40782ca71d5",
+    "nano-capella-transition-tests": "b53b7119755d327bd25a9e1b29174b3e8d99805431b239661284a716132ad893"
+  },
+  "command": "ctest --test-dir build-release -R '^consensus_capella_(automatic_registration|deposit_auto_registration|configured_runtime|scheduled_finality)$' -j 2 -V",
+  "results": [
+    {
+      "name": "consensus_capella_scheduled_finality",
+      "classname": "consensus_capella_scheduled_finality",
+      "time": "32.9508",
+      "status": "run"
+    },
+    {
+      "name": "consensus_capella_configured_runtime",
+      "classname": "consensus_capella_configured_runtime",
+      "time": "20.4872",
+      "status": "run"
+    },
+    {
+      "name": "consensus_capella_automatic_registration",
+      "classname": "consensus_capella_automatic_registration",
+      "time": "24.0449",
+      "status": "run"
+    },
+    {
+      "name": "consensus_capella_deposit_auto_registration",
+      "classname": "consensus_capella_deposit_auto_registration",
+      "time": "167.842",
+      "status": "run"
+    }
+  ]
+}

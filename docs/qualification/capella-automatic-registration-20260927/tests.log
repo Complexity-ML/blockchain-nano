@@ -1,0 +1,78 @@
+UpdateCTestConfiguration  from :/Users/boris/Dev/blockchain-nano/build-release/DartConfiguration.tcl
+Test project /Users/boris/Dev/blockchain-nano/build-release
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 390
+    Start 390: consensus_capella_deposit_auto_registration
+
+390: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests "--deposit-auto-registration"
+390: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+390: Test timeout computed to be: 360
+test 389
+    Start 389: consensus_capella_automatic_registration
+
+389: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests "--automatic-registration"
+389: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+389: Test timeout computed to be: 180
+390: {"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+390: {"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+390: {"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+389: {"admissionReceiptChecks":6,"automaticRecovery":false,"automaticRegistration":true,"blocks":16,"httpTransport":false,"invalidConfigurationsRejected":6,"keysLoaded":65,"networkTransport":false,"runtimeCatalogChecks":3,"scenario":"capella-configured-runtime","signerWitnessRestart":true,"witnessRestart":true,"workersStopped":true}
+1/4 Test #389: consensus_capella_automatic_registration ......   Passed   24.04 sec
+test 365
+    Start 365: consensus_capella_scheduled_finality
+
+365: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests "--scheduler"
+365: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+365: Test timeout computed to be: 360
+390: {"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+390: {"finalizedEpoch":3,"progressSlot":40,"signedVotes":264}
+390: {"finalizedEpoch":3,"progressSlot":41,"signedVotes":272}
+390: {"depositIndex":0,"depositProgressSlot":48,"finalizedEpoch":4}
+365: {"backwardsClockClosedOwner":true,"blocks":40,"committeeChanges":0,"duplicatePollNoSignature":true,"finalizedEpoch":3,"maximumRetainedRecords":0,"networkTransport":false,"restartSlot":24,"rotations":0,"scenario":"capella-scheduled-finality","signingJournalsReopened":64,"syncMessages":1280,"verifiedSyncAggregates":0,"votes":272,"witnessRestart":true}
+2/4 Test #365: consensus_capella_scheduled_finality ..........   Passed   32.95 sec
+test 366
+    Start 366: consensus_capella_configured_runtime
+
+366: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests "--configured-runtime"
+366: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+366: Test timeout computed to be: 240
+390: {"depositIndex":0,"depositProgressSlot":56,"finalizedEpoch":5}
+390: {"depositIndex":0,"depositProgressSlot":64,"finalizedEpoch":6}
+390: {"depositIndex":0,"depositProgressSlot":72,"finalizedEpoch":7}
+366: {"admissionReceiptChecks":6,"automaticRecovery":false,"automaticRegistration":false,"blocks":16,"httpTransport":false,"invalidConfigurationsRejected":6,"keysLoaded":64,"networkTransport":false,"runtimeCatalogChecks":3,"scenario":"capella-configured-runtime","signerWitnessRestart":true,"witnessRestart":true,"workersStopped":true}
+3/4 Test #366: consensus_capella_configured_runtime ..........   Passed   20.49 sec
+390: {"depositIndex":1,"depositProgressSlot":80,"finalizedEpoch":8}
+390: {"depositIndex":1,"depositProgressSlot":88,"finalizedEpoch":9}
+390: {"depositIndex":1,"depositProgressSlot":96,"finalizedEpoch":10}
+390: {"depositIndex":1,"depositProgressSlot":104,"finalizedEpoch":11}
+390: {"depositIndex":1,"depositProgressSlot":112,"finalizedEpoch":12}
+390: {"depositIndex":1,"depositProgressSlot":120,"finalizedEpoch":13}
+390: {"depositIndex":1,"depositProgressSlot":128,"finalizedEpoch":14}
+390: {"depositIndex":1,"depositProgressSlot":136,"finalizedEpoch":15}
+390: {"depositIndex":1,"depositProgressSlot":144,"finalizedEpoch":16}
+390: {"depositIndex":1,"depositProgressSlot":152,"finalizedEpoch":17}
+390: {"depositIndex":1,"depositProgressSlot":160,"finalizedEpoch":18}
+390: {"depositIndex":1,"depositProgressSlot":161,"finalizedEpoch":18}
+390: {"newValidatorVotes":3,"publicKeyBound":true,"scenario":"capella-automatic-registration","signatures":3}
+390: {"activationEpoch":17,"blockReplayIdempotent":true,"bothOwnersReopened":true,"consumedAtSlot":80,"consumptionTransitions":1,"continuedThroughSlot":161,"existingValidatorTopup":false,"invalidSignatureConsumedWithoutAdmission":false,"newValidatorVotes":3,"scenario":"capella-native-deposit-activation","votingPeriodSlots":32}
+390: {"afterBlocks":18,"afterSnapshotBytes":1191797,"automaticPruning":false,"beforeBlocks":41,"beforeSnapshotBytes":2528249,"durablePruningRestart":true,"historyPreserved":true,"nativeCheckpointV3":true,"networkAnchorPreserved":true,"nextBlockEqual":true,"oldSlashingPreservedAndApplied":false,"pendingBlsReanchoredAndIncluded":false,"scenario":"capella-pruning-primitive"}
+390: {"blocks":40,"disjointSyncMerging":false,"executionOwner":true,"finalizedEpoch":3,"independentStores":2,"individualSyncMessages":false,"justifiedEpoch":4,"localSyncAggregates":false,"localSyncSigning":false,"networkActivated":false,"networkTransport":false,"participationPercent":100,"scenario":"capella-local-assembly-finality","signingJournalsReopened":64,"storeReopens":2,"syncCatalogExport":false,"syncPrecollection":false,"syncWireWorker":false,"votes":272}
+4/4 Test #390: consensus_capella_deposit_auto_registration ...   Passed  167.84 sec
+
+The following tests passed:
+	consensus_capella_automatic_registration
+	consensus_capella_scheduled_finality
+	consensus_capella_configured_runtime
+	consensus_capella_deposit_auto_registration
+
+100% tests passed out of 4
+
+Label Time Summary:
+qualification_consensus_runtime    = 245.32 sec*proc (4 tests)
+
+Total Test time (real) = 167.85 sec

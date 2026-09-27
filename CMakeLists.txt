@@ -1657,6 +1657,10 @@ add_test(NAME consensus_capella_deposit_activation COMMAND nano-capella-transiti
 set_tests_properties(consensus_capella_deposit_activation PROPERTIES TIMEOUT 360 LABELS "qualification_consensus_runtime")
 add_test(NAME consensus_capella_deposit_activation_restart COMMAND nano-capella-transition-tests --deposit-activation-restart)
 set_tests_properties(consensus_capella_deposit_activation_restart PROPERTIES TIMEOUT 360 LABELS "qualification_consensus_runtime")
+add_test(NAME consensus_capella_automatic_registration COMMAND nano-capella-transition-tests --automatic-registration)
+set_tests_properties(consensus_capella_automatic_registration PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_runtime")
+add_test(NAME consensus_capella_deposit_auto_registration COMMAND nano-capella-transition-tests --deposit-auto-registration)
+set_tests_properties(consensus_capella_deposit_auto_registration PROPERTIES TIMEOUT 360 LABELS "qualification_consensus_runtime")
 
 add_test(NAME consensus_capella_deposit_invalid_signature COMMAND nano-capella-transition-tests --deposit-invalid-signature)
 set_tests_properties(consensus_capella_deposit_invalid_signature PROPERTIES TIMEOUT 300 LABELS "qualification_consensus_runtime")

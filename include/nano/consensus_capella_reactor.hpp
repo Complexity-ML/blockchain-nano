@@ -95,6 +95,7 @@ public:
  std::pair<uint64_t,uint64_t> local_duty_timing()const{return {rules_.slot_duration_ms,rules_.transition.consensus.epoch.ffg.slots_per_epoch};}
  bool tick_if_needed(uint64_t,const std::function<void()>& checkpoint={});
  std::optional<uint64_t> current_proposer(uint64_t,const std::function<void()>& checkpoint={});
+ std::map<Bytes,uint64_t> current_validator_indices(const std::set<Bytes>&,const std::function<void()>& checkpoint={});
  std::set<uint64_t> current_attesters(uint64_t,const std::function<void()>& checkpoint={});
  std::optional<Phase0SignedAttestation> attest_current(uint64_t,uint64_t,const std::function<uint64_t()>&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={});
  std::optional<Bytes> propose_current(uint64_t,uint64_t,const std::string&,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<uint64_t()>&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={});

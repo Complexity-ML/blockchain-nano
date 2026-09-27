@@ -120,7 +120,8 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const 
   std::vector<CapellaValidatorKey> keys;std::set<std::string> public_keys;
   for(const auto& k:v.at("keys")){
    if(checkpoint)checkpoint();auto fields=k;fields.erase("recoveryWitness");shape(fields,{"index","feeRecipient","keyEnv","journal","restart"});
-   if(!k.at("index").is_string())throw std::invalid_argument("Validator index quantity");const auto index=u64(quantity(k.at("index")));if(quantity(Int(std::to_string(index)))!=k.at("index").get<std::string>())throw std::invalid_argument("Validator index encoding");
+   const bool automatic_index=k.at("index").is_null();uint64_t index=0;
+   if(!automatic_index){if(!k.at("index").is_string())throw std::invalid_argument("Validator index quantity");index=u64(quantity(k.at("index")));if(quantity(Int(std::to_string(index)))!=k.at("index").get<std::string>())throw std::invalid_argument("Validator index encoding");}
    const auto fee=address(k.at("feeRecipient").get<std::string>()),env=k.at("keyEnv").get<std::string>();
    if(env.empty())throw std::invalid_argument("Validator signing environment name required");const char* raw=std::getenv(env.c_str());if(!raw)throw std::invalid_argument("Validator signing environment unavailable");
    std::string encoded(raw);struct Wipe {std::string& value;~Wipe(){OPENSSL_cleanse(value.data(),value.size());}} wipe{encoded};
@@ -128,7 +129,7 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const 
    blst_scalar_from_bendian(&secret->scalar,scalar.data());OPENSSL_cleanse(scalar.data(),scalar.size());if(!blst_sk_check(&secret->scalar))throw std::invalid_argument("Invalid validator BLS scalar");
    blst_p1 pk;blst_sk_to_pk_in_g1(&pk,&secret->scalar);secret->public_key.resize(48);blst_p1_compress(secret->public_key.data(),&pk);
    const auto member=registry.validators.find(index);
-   if(member==registry.validators.end()||Bytes(member->second.public_key.begin(),member->second.public_key.end())!=secret->public_key)throw std::invalid_argument("Local signing key does not match authenticated validator index");
+   if(!automatic_index&&(member==registry.validators.end()||Bytes(member->second.public_key.begin(),member->second.public_key.end())!=secret->public_key))throw std::invalid_argument("Local signing key does not match authenticated validator index");
    if(!public_keys.insert(hex(secret->public_key)).second)throw std::invalid_argument("Duplicate local validator key");
    const auto input_path=k.at("journal").get<std::string>();if(input_path.empty())throw std::invalid_argument("Empty validator journal path");const auto path=std::filesystem::weakly_canonical(input_path);if(path.empty()||!paths.insert(path).second)throw std::invalid_argument("Duplicate or empty validator journal path");
    std::optional<ForkCheckpointToken> restart;if(!k.at("restart").is_null()){const auto& r=k.at("restart");shape(r,{"sequence","digest"});restart=ForkCheckpointToken{number(r.at("sequence")),digest(r.at("digest"))};}
@@ -140,7 +141,7 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const 
    }
    journal->disk=std::make_unique<ChainStore>(path);
    journal->journal=std::make_unique<BeaconSigningJournal>(*journal->disk,genesis.chain_id,genesis.block.header.hash(),validators_genesis,secret->public_key,rules.transition.consensus.epoch.ffg.slots_per_epoch,restart,journal->witness.get());
-   keys.push_back({index,std::shared_ptr<BeaconSigningJournal>(journal,journal->journal.get()),[secret](const ConsensusRoot& root){return secret->sign(root);},fee});
+   keys.push_back({index,std::shared_ptr<BeaconSigningJournal>(journal,journal->journal.get()),[secret](const ConsensusRoot& root){return secret->sign(root);},fee,automatic_index?secret->public_key:Bytes{}});
   }
   owner->validator=std::make_unique<CapellaValidatorLoop>(*owner->reactor,*owner->clock,rules.slot_duration_ms,rules.transition.consensus.epoch.ffg.slots_per_epoch,transactions,trials,std::move(keys),now);
   if(const char* trace=std::getenv("NANO_TEST_NETWORK_TRACE");trace&&std::string_view(trace)=="1")owner->validator->set_duty_trace_limit(128);

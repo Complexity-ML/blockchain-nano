@@ -3957,3 +3957,17 @@ L’échec initial de banc est conservé, aucun correctif runtime. **Partiel** :
 réouvertures ordonnées, pas crash au commit, perte de témoin, WAN ou churn massif.
 Ne clôture ni EIP-6110 ni le cycle validateur de production.
 [Preuves et limites](qualification/capella-activation-restart-20260927/README.md).
+
+## 2026-09-27 — Clé configurée avant inscription, résolution automatique
+
+Le runtime accepte désormais `index: null` : clé publique dérivée du secret,
+index recherché dans la tête authentifiée à chaque poll, attente sans devoir
+si absente et garde d’activation inchangée. Journal, identité de chaîne et
+identité du devoir restent vérifiés avant signature. Les index explicites
+restent stricts ; reçus et traces identifient les clés automatiques.
+Quatre tests passent : deux nouveaux (chargement/reprise avec clé absente et
+dépôt jusqu’aux trois attestations automatiques) plus runtime et finalité de la
+boucle existante. Dépôt slot 80, activation époque 17, finalité époque 18.
+**Partiel** : projection du registre à grande échelle, reorg concurrent, crash
+au commit et WAN restent ouverts. Aucun statut EIP-6110/production clôturé.
+[Configuration](CAPELLA-VALIDATOR-REGISTRATION.md) et [preuves](qualification/capella-automatic-registration-20260927/README.md).

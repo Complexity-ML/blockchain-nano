@@ -157,6 +157,15 @@ std::optional<uint64_t> CapellaDurableReactor::current_proposer(uint64_t slot,co
  const auto& parent=capella_fork_head(*state_,rules_,check);const auto identity=prepare_capella_proposer_identity(parent.state,parent.header,slot,{t.epoch,rules_.transition.execution,rules_.transition.maximum_state_bytes},t.state,t.attestation.duties,limits_.replay_slots,limits_.sync_trials,check);
  if(!identity||state_->timed.view.equivocating_indices.contains(identity->index))return std::nullopt;return identity->index;
 }
+std::map<Bytes,uint64_t> CapellaDurableReactor::current_validator_indices(const std::set<Bytes>& keys,const std::function<void()>& check){
+ std::lock_guard lock(mutex_);require_available();std::map<Bytes,uint64_t> result;
+ for(const auto& key:keys)if(key.size()!=48)throw std::invalid_argument("Validator public key width");
+ if(keys.empty())return result;
+ const auto& t=rules_.transition;const auto& head=capella_fork_head(*state_,rules_,check);
+ const auto context=capella_fork_block_context(head.state,head.header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state,check);
+ for(const auto& [index,member]:context.registry.validators){if(check)check();Bytes key(member.public_key.begin(),member.public_key.end());if(keys.contains(key)&&!result.emplace(std::move(key),index).second)throw std::runtime_error("Ambiguous validator public key");}
+ return result;
+}
 std::set<uint64_t> CapellaDurableReactor::current_attesters(uint64_t slot,const std::function<void()>& check){
  std::lock_guard lock(mutex_);require_available();const auto duties=prepare_capella_attestation_duties(*state_,rules_,slot,limits_.replay_slots,limits_.sync_trials,check);std::set<uint64_t> result;for(const auto& [index,duty]:duties)result.insert(index);return result;
 }
