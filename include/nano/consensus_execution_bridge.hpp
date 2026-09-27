@@ -16,4 +16,12 @@ BellatrixExecutionCandidate prepare_bellatrix_execution(
  const Int& chain_id,ReplayPolicy,
  const std::function<Bytes(const Int&)>& authenticated_block_hash,
  const std::function<void()>& checkpoint={});
+// Post-merge Shanghai payload validation. Withdrawal authorization is supplied
+// by the enclosing authenticated Capella state transition, not this EL bridge.
+BellatrixExecutionCandidate prepare_capella_execution(
+ std::span<const uint8_t>,const ExecutionPayloadLimits&,uint64_t maximum_withdrawals,size_t maximum_bytes,
+ const Header&,const State&,uint64_t expected_timestamp,const ConsensusRoot& expected_randao,
+ const Int& chain_id,ReplayPolicy,const std::function<Bytes(const Int&)>& authenticated_block_hash,
+ const std::function<void()>& checkpoint={});
+
 }

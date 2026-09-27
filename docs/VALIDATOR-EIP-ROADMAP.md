@@ -2547,3 +2547,15 @@ retrait et 60 annulations sont vérifiés. Le même décodeur alimente les
 Régression ciblée 5/5. Il reste à composer la transition payload/état EVM,
 les slots/epochs, le bloc signé et sa publication durable. Aucun changement
 du profil réseau Bellatrix ni clôture EIP-4895.
+
+### Capella : couplage des retraits et de l'exécution Shanghai
+
+Le payload reçu est maintenant relié à un état SSZ authentifié : parent
+EVM, timestamp, RANDAO, liste de retraits attendue, débit consensus et
+exécution Shanghai sont vérifiés avant retour d'un candidat privé unique.
+Le header actualisé conserve les historiques et ajuste leur offset.
+[Preuves](qualification/capella-paired-execution-20260927/README.md) :
+PUSH0 exécuté, quatre retraits, sept refus dont un paiement excessif
+EVM-valide, trois annulations et régression ciblée 6/6.
+Le bloc signé complet, slots/epochs Capella, l'activation et le commit
+durable restent ouverts ; aucun changement de profil réseau ni clôture EIP.
