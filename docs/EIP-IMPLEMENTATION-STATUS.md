@@ -2852,3 +2852,18 @@ du runtime requis. L’époque exacte n’est pas comparée à un client de réf
 de dépôt invalide, partition, reorg ni panne au commit d’activation. Ne clôture
 pas EIP-6110 ni l’ensemble du consensus de production.
 [Scénario et preuves](qualification/capella-deposit-activation-20260927/README.md).
+
+### 2026-09-27 — Dépôt natif à preuve de possession invalide
+
+Nouveau scénario : dépôt payé et preuve Merkle cohérente pour une nouvelle clé,
+mais signature BLS produite par une autre clé. Le curseur doit avancer sans
+admettre le validateur. Les deux reactors doivent refuser ses demandes de
+signature avant tout appel au signataire, sans changement de checkpoint ;
+rejeu, égalité Beacon/EVM et absence d’admission après réouverture sont vérifiés.
+Passé en 87,21 s : consommation au slot 80, poursuite jusqu’au slot 89, registre
+à 64 conservé et finalité époque 9. Runner officiel passé en 0,38 s ; résultats
+et empreintes archivés. Aucun correctif runtime requis.
+**Partiel** : une signature par mauvaise clé, pas toutes les variantes malformées,
+reorg, injection de votes hostiles ou panne au commit. Aucun changement des règles
+runtime ; EIP-6110 et la préparation production globale restent ouverts.
+[Scénario et preuves](qualification/capella-invalid-deposit-signature-20260927/README.md).
