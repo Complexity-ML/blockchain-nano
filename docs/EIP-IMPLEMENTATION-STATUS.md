@@ -2100,3 +2100,13 @@ commit acquitté perdu dans cette campagne.
 [Preuves](qualification/capella-store-crash-20260927/README.md).
 Crash de processus uniquement, pas panne électrique. Votes/finalité réseau,
 Store vivant traversant le fork et réacteur restent à qualifier/raccorder.
+
+### Capella : votes et réorganisations avec états EVM distincts
+
+Dix-huit votes BLS valides et dix-huit signatures altérées testés, six bascules
+de tête/EVM entre deux branches réellement différentes. Trois preuves de
+double vote marquent les équivoques ; snapshots avec votes et exclusions
+restaurés exactement.
+[Preuves](qualification/capella-votes-20260927/README.md).
+Qualification d'admission locale et de LMD-GHOST, pas de finalité FFG
+multi-époque, de pénalité économique ni de réseau Capella.
