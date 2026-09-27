@@ -1,0 +1,174 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 6b0618f..3b434da 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1597,0 +1598,6 @@ set_tests_properties(consensus_capella_local_bls_changes PROPERTIES TIMEOUT 120
++
++add_test(NAME consensus_capella_queued_bls_changes COMMAND nano-capella-transition-tests --queued-bls-changes)
++set_tests_properties(consensus_capella_queued_bls_changes PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_runtime")
++
++add_test(NAME consensus_capella_queued_bls_owner COMMAND nano-capella-transition-tests --queued-bls-owner)
++set_tests_properties(consensus_capella_queued_bls_owner PROPERTIES TIMEOUT 180 LABELS qualification_consensus_runtime)
+diff --git a/include/nano/consensus_capella_reactor.hpp b/include/nano/consensus_capella_reactor.hpp
+index 2744404..9b09fe1 100644
+--- a/include/nano/consensus_capella_reactor.hpp
++++ b/include/nano/consensus_capella_reactor.hpp
+@@ -11,0 +12,2 @@ using CapellaSignedVotes=std::map<Bytes,Bytes>;
++struct CapellaPendingBlsChange {ConsensusRoot admission_root;Bytes wire;};
++using CapellaPendingBlsChanges=std::map<uint64_t,CapellaPendingBlsChange>;
+@@ -27 +29 @@ class CapellaDurableReactor {
+- CapellaSignedVotes votes_,slashings_;CapellaStoreSnapshotCache cache_;bool unavailable_=false;
++ CapellaSignedVotes votes_,slashings_;CapellaPendingBlsChanges bls_changes_;CapellaStoreSnapshotCache cache_;bool unavailable_=false;
+@@ -36,0 +39 @@ class CapellaDurableReactor {
++ std::vector<SignedCapellaBlsChange> pending_bls_changes_locked(size_t,const std::function<void()>&)const;
+@@ -42 +45 @@ class CapellaDurableReactor {
+- void publish(CapellaForkStore,const std::function<void()>&,const std::vector<CheckpointArchiveEntry>& archive={},std::optional<CapellaSignedVotes> votes=std::nullopt,std::optional<CapellaSignedVotes> slashings=std::nullopt);
++ void publish(CapellaForkStore,const std::function<void()>&,const std::vector<CheckpointArchiveEntry>& archive={},std::optional<CapellaSignedVotes> votes=std::nullopt,std::optional<CapellaSignedVotes> slashings=std::nullopt,std::optional<CapellaPendingBlsChanges> changes=std::nullopt);
+@@ -71,0 +75,3 @@ public:
++ bool bls_change_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
++ // Candidates applicable to the selected head; archive entries survive until finality.
++ std::vector<SignedCapellaBlsChange> pending_bls_changes()const;
+diff --git a/src/consensus_capella_local_body.cpp b/src/consensus_capella_local_body.cpp
+index a64e63e..af42d24 100644
+--- a/src/consensus_capella_local_body.cpp
++++ b/src/consensus_capella_local_body.cpp
+@@ -22 +22 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body(uint64_t index,ui
+- std::lock_guard lock(mutex_);return prepare_local_body_locked(index,slot,reveal,recipient,expected,transactions,maximum_transaction_trials,maximum_vote_trials,check);
++ std::lock_guard lock(mutex_);const auto changes=pending_bls_changes_locked(maximum_vote_trials,check);return prepare_local_body_locked(index,slot,reveal,recipient,expected,transactions,maximum_transaction_trials,maximum_vote_trials,check,changes,maximum_vote_trials);
+@@ -35 +35 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_from_pool_locked(
+- return prepare_local_body_locked(index,slot,reveal,recipient,expected,transactions,maximum_transaction_trials,maximum_vote_trials,check);
++ const auto changes=pending_bls_changes_locked(maximum_vote_trials,check);return prepare_local_body_locked(index,slot,reveal,recipient,expected,transactions,maximum_transaction_trials,maximum_vote_trials,check,changes,maximum_vote_trials);
+diff --git a/src/consensus_capella_reactor.cpp b/src/consensus_capella_reactor.cpp
+index a000fd6..b655569 100644
+--- a/src/consensus_capella_reactor.cpp
++++ b/src/consensus_capella_reactor.cpp
+@@ -30,2 +30,7 @@ std::optional<CapellaForkStore> checked_vote(const CapellaForkStore& store,const
+-std::string durable_snapshot(const CapellaForkStore& store,const CapellaSignedVotes& votes,const CapellaSignedVotes& slashings,const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits,const std::function<void()>& check,CapellaStoreSnapshotCache* cache=nullptr){
+- const auto encoded=capella_store_snapshot(store,rules,limits,check,cache);if(votes.empty()&&slashings.empty())return encoded;
++bool valid_bls_change(const CapellaForkStore& store,const ConsensusRoot& root,const SignedCapellaBlsChange& change,const CapellaForkBlockRules& rules,const std::function<void()>& check){
++ const auto found=store.blocks.find(root);if(found==store.blocks.end())return false;const auto& t=rules.transition;const auto& state=found->second.state;
++ const auto digest=capella_beacon_state_root(state.ssz,t.consensus.state,t.execution,t.maximum_state_bytes,check);
++ return prepare_capella_bls_changes(state.ssz,digest,t.consensus.state,t.execution,t.maximum_state_bytes,t.genesis_version,t.maximum_bls_changes,std::span(&change,1),check).has_value();
++}
++std::string durable_snapshot(const CapellaForkStore& store,const CapellaSignedVotes& votes,const CapellaSignedVotes& slashings,const CapellaPendingBlsChanges& changes,const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits,const std::function<void()>& check,CapellaStoreSnapshotCache* cache=nullptr){
++ const auto encoded=capella_store_snapshot(store,rules,limits,check,cache);if(votes.empty()&&slashings.empty()&&changes.empty())return encoded;
+@@ -35 +40 @@ std::string durable_snapshot(const CapellaForkStore& store,const CapellaSignedVo
+- if(!slashings.empty()){
++ if(!slashings.empty()||!changes.empty()){
+@@ -39,0 +45,5 @@ std::string durable_snapshot(const CapellaForkStore& store,const CapellaSignedVo
++ if(!changes.empty()){
++  if(changes.size()>limits.messages)throw std::length_error("Capella BLS change capacity");Json operations=Json::array();
++  for(const auto& [index,record]:changes){if(check)check();if(record.wire.size()!=172||204>limits.envelope_bytes/2-total)throw std::length_error("Capella BLS change bytes");total+=204;operations.push_back(Json::array({quantity(Int(std::to_string(index))),hex(Bytes(record.admission_root.begin(),record.admission_root.end())),hex(record.wire)}));}
++  document["format"]="nano-capella-durable-v3";document["blsChanges"]=std::move(operations);
++ }
+@@ -43 +53 @@ std::string durable_snapshot(const CapellaForkStore& store,const CapellaSignedVo
+-std::tuple<CapellaForkStore,CapellaSignedVotes,CapellaSignedVotes> restore_durable(std::string_view encoded,const Bytes& digest,const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits,const std::function<void()>& check){
++std::tuple<CapellaForkStore,CapellaSignedVotes,CapellaSignedVotes,CapellaPendingBlsChanges> restore_durable(std::string_view encoded,const Bytes& digest,const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits,const std::function<void()>& check){
+@@ -46,3 +56,4 @@ std::tuple<CapellaForkStore,CapellaSignedVotes,CapellaSignedVotes> restore_durab
+- const bool with_proofs=document.value("format",std::string())=="nano-capella-durable-v2";
+- if(!with_proofs&&document.value("format",std::string())!="nano-capella-durable-v1")return {capella_store_from_snapshot(encoded,digest,rules,limits,check),{}, {}};
+- archive_require(document.size()==(with_proofs?4:3)&&document.at("signedVotes").is_array()&&(with_proofs||!document.at("signedVotes").empty())&&document.at("signedVotes").size()<=limits.messages);
++ const bool with_changes=document.value("format",std::string())=="nano-capella-durable-v3";
++ const bool with_proofs=with_changes||document.value("format",std::string())=="nano-capella-durable-v2";
++ if(!with_proofs&&document.value("format",std::string())!="nano-capella-durable-v1")return {capella_store_from_snapshot(encoded,digest,rules,limits,check),{}, {}, {}};
++ archive_require(document.size()==(with_changes?5:with_proofs?4:3)&&document.at("signedVotes").is_array()&&(with_proofs||!document.at("signedVotes").empty())&&document.at("signedVotes").size()<=limits.messages);
+@@ -57 +68 @@ std::tuple<CapellaForkStore,CapellaSignedVotes,CapellaSignedVotes> restore_durab
+-  const auto& list=document.at("signedSlashings");archive_require(list.is_array()&&!list.empty()&&list.size()<=limits.equivocations);
++  const auto& list=document.at("signedSlashings");archive_require(list.is_array()&&(with_changes||!list.empty())&&list.size()<=limits.equivocations);
+@@ -67 +78,10 @@ std::tuple<CapellaForkStore,CapellaSignedVotes,CapellaSignedVotes> restore_durab
+- archive_require(durable_snapshot(store,votes,proofs,rules,limits,check)==encoded);return {std::move(store),std::move(votes),std::move(proofs)};
++ CapellaPendingBlsChanges changes;
++ if(with_changes){
++  const auto& list=document.at("blsChanges");archive_require(list.is_array()&&!list.empty()&&list.size()<=limits.messages);
++  for(const auto& item:list){if(check)check();archive_require(item.is_array()&&item.size()==3&&item[0].is_string()&&item[1].is_string()&&item[2].is_string());
++   const auto index=u64(quantity(item[0]));const auto root_text=item[1].get<std::string>(),wire_text=item[2].get<std::string>();archive_require(root_text.size()==66&&wire_text.size()==346);
++   const auto root_bytes=unhex(root_text),wire=unhex(wire_text);archive_require(root_bytes.size()==32&&hex(root_bytes)==root_text&&hex(wire)==wire_text&&quantity(Int(std::to_string(index)))==item[0].get<std::string>());const auto root=archive_array<32>(root_bytes,0);const auto operation=decode_capella_bls_change(wire);
++   archive_require(operation&&operation->validator_index==index&&valid_bls_change(store,root,*operation,rules,check));archive_require(changes.emplace(index,CapellaPendingBlsChange{root,wire}).second);
++  }
++ }
++ archive_require(durable_snapshot(store,votes,proofs,changes,rules,limits,check)==encoded);return {std::move(store),std::move(votes),std::move(proofs),std::move(changes)};
+@@ -97 +117 @@ void CapellaDurableReactor::require_available()const{if(unavailable_||!state_||!
+-void CapellaDurableReactor::publish(CapellaForkStore candidate,const std::function<void()>& check,const std::vector<CheckpointArchiveEntry>& archive,std::optional<CapellaSignedVotes> votes,std::optional<CapellaSignedVotes> slashings){
++void CapellaDurableReactor::publish(CapellaForkStore candidate,const std::function<void()>& check,const std::vector<CheckpointArchiveEntry>& archive,std::optional<CapellaSignedVotes> votes,std::optional<CapellaSignedVotes> slashings,std::optional<CapellaPendingBlsChanges> changes){
+@@ -99,0 +120,10 @@ void CapellaDurableReactor::publish(CapellaForkStore candidate,const std::functi
++ if(!changes)changes=bls_changes_;
++ if(!changes->empty()){
++  const auto& finalized=candidate.blocks.at(candidate.timed.view.finalized.root);const auto& t=rules_.transition;
++  const auto context=capella_fork_block_context(finalized.state,finalized.header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state,check);
++  for(auto it=changes->begin();it!=changes->end();){if(check)check();const auto member=context.registry.validators.find(it->first);
++   if(member!=context.registry.validators.end()&&member->second.withdrawal_credentials[0]==1){it=changes->erase(it);continue;}
++   if(!candidate.blocks.contains(it->second.admission_root)){const auto operation=decode_capella_bls_change(it->second.wire);if(!operation||!valid_bls_change(candidate,candidate.timed.view.finalized.root,*operation,rules_,check)){it=changes->erase(it);continue;}it->second.admission_root=candidate.timed.view.finalized.root;}
++   ++it;
++  }
++ }
+@@ -101 +131 @@ void CapellaDurableReactor::publish(CapellaForkStore candidate,const std::functi
+- const auto encoded=durable_snapshot(*next,votes?*votes:votes_,slashings?*slashings:slashings_,rules_,limits_,check,&cache_);
++ const auto encoded=durable_snapshot(*next,votes?*votes:votes_,slashings?*slashings:slashings_,*changes,rules_,limits_,check,&cache_);
+@@ -131 +161 @@ void CapellaDurableReactor::publish(CapellaForkStore candidate,const std::functi
+- token_=std::move(committed);state_=std::move(next);if(votes)votes_=std::move(*votes);if(slashings)slashings_=std::move(*slashings);
++ token_=std::move(committed);state_=std::move(next);if(votes)votes_=std::move(*votes);if(slashings)slashings_=std::move(*slashings);bls_changes_=std::move(*changes);
+@@ -138 +168 @@ CapellaDurableReactor::CapellaDurableReactor(ChainStore& disk,Int chain,Bytes ge
+- auto [restored,votes,slashings]=restore_durable(record->snapshot,expected.digest,rules_,limits_,check);const auto& head=capella_fork_head(restored,rules_,check);const auto tip=disk_.latest();const auto state=disk_.state_at(head.execution_block.header.number);
++ auto [restored,votes,slashings,changes]=restore_durable(record->snapshot,expected.digest,rules_,limits_,check);const auto& head=capella_fork_head(restored,rules_,check);const auto tip=disk_.latest();const auto state=disk_.state_at(head.execution_block.header.number);
+@@ -142 +172 @@ CapellaDurableReactor::CapellaDurableReactor(ChainStore& disk,Int chain,Bytes ge
+- if(check)check();state_=std::make_shared<const CapellaForkStore>(std::move(restored));token_=expected;votes_=std::move(votes);slashings_=std::move(slashings);
++ if(check)check();state_=std::make_shared<const CapellaForkStore>(std::move(restored));token_=expected;votes_=std::move(votes);slashings_=std::move(slashings);bls_changes_=std::move(changes);
+@@ -152 +182 @@ CapellaDurableReactor::CapellaDurableReactor(Blockchain& owner,CapellaForkBlockR
+- const auto encoded=intent.at("snapshot").get<std::string>();auto [restored,votes,slashings]=restore_durable(encoded,next->digest,rules_,limits_,check);archive_require(durable_snapshot(restored,votes,slashings,rules_,limits_,check)==encoded);
++ const auto encoded=intent.at("snapshot").get<std::string>();auto [restored,votes,slashings,changes]=restore_durable(encoded,next->digest,rules_,limits_,check);archive_require(durable_snapshot(restored,votes,slashings,changes,rules_,limits_,check)==encoded);
+@@ -156 +186 @@ CapellaDurableReactor::CapellaDurableReactor(Blockchain& owner,CapellaForkBlockR
+- if(actual!=next){token_=previous;publish(std::move(restored),check,archive,std::move(votes),std::move(slashings));return;}
++ if(actual!=next){token_=previous;publish(std::move(restored),check,archive,std::move(votes),std::move(slashings),std::move(changes));return;}
+@@ -161 +191 @@ CapellaDurableReactor::CapellaDurableReactor(Blockchain& owner,CapellaForkBlockR
+- if(check)check();state_=std::make_shared<const CapellaForkStore>(std::move(restored));token_=*next;votes_=std::move(votes);slashings_=std::move(slashings);
++ if(check)check();state_=std::make_shared<const CapellaForkStore>(std::move(restored));token_=*next;votes_=std::move(votes);slashings_=std::move(slashings);bls_changes_=std::move(changes);
+@@ -170,0 +201,12 @@ Json CapellaDurableReactor::network_identity_locked()const{
++std::vector<SignedCapellaBlsChange> CapellaDurableReactor::pending_bls_changes_locked(size_t maximum,const std::function<void()>& check)const{
++ require_available();std::vector<SignedCapellaBlsChange> result;result.reserve(std::min(maximum,bls_changes_.size()));if(bls_changes_.empty())return result;
++ const auto& head=capella_fork_head(*state_,rules_,check);const auto& t=rules_.transition;const auto context=capella_fork_block_context(head.state,head.header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state,check);
++ for(const auto& [index,record]:bls_changes_){if(result.size()>=maximum)break;if(check)check();const auto operation=decode_capella_bls_change(record.wire);if(!operation)throw std::logic_error("Invalid queued BLS change");const auto member=context.registry.validators.find(index);if(member==context.registry.validators.end()||member->second.withdrawal_credentials[0]!=0)continue;const auto key_hash=sha256(Bytes(operation->from_bls_pubkey.begin(),operation->from_bls_pubkey.end()));if(!std::equal(key_hash.begin()+1,key_hash.end(),member->second.withdrawal_credentials.begin()+1))continue;result.push_back(*operation);}return result;
++}
++std::vector<SignedCapellaBlsChange> CapellaDurableReactor::pending_bls_changes()const{std::lock_guard lock(mutex_);return pending_bls_changes_locked(limits_.messages,{});}
++bool CapellaDurableReactor::bls_change_ssz(std::span<const uint8_t> wire,const std::function<void()>& check){
++ const auto operation=decode_capella_bls_change(wire);if(!operation)return false;std::lock_guard lock(mutex_);require_available();if(check)check();
++ if(const auto it=bls_changes_.find(operation->validator_index);it!=bls_changes_.end())return it->second.wire==Bytes(wire.begin(),wire.end());
++ const auto root=consensus_beacon_header_root(capella_fork_head(*state_,rules_,check).header);if(!valid_bls_change(*state_,root,*operation,rules_,check))return false;
++ if(bls_changes_.size()>=limits_.messages)throw std::length_error("Capella BLS change queue capacity");auto changes=bls_changes_;changes.emplace(operation->validator_index,CapellaPendingBlsChange{root,Bytes(wire.begin(),wire.end())});publish(*state_,check,{},std::nullopt,std::nullopt,std::move(changes));return true;
++}
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index b6db7f6..cd76fde 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -55 +55 @@ static bool beacon_reads=false;
+-static bool local_bls_changes=false;static bool wire_mode=false;static bool catalog_concurrency=false;
++static bool queued_bls_changes=false;static bool local_bls_changes=false;static bool wire_mode=false;static bool catalog_concurrency=false;
+@@ -101,0 +102 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
++ if(queued_bls_changes){SignedCapellaBlsChange change;Key withdrawal_key(1001);change.validator_index=1;copy_to(change.from_bls_pubkey,withdrawal_key.public_key);change.to_execution_address[19]=43;copy_to(change.signature,withdrawal_key.sign(consensus_signing_root(capella_bls_change_root(change),consensus_domain({10,0,0,0},t.genesis_version,genesis_root))));for(auto& node:nodes)check(node->bls_change_ssz(encode_capella_bls_change(change)),"owner queue admission rejected");}
+@@ -117 +118 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+-  const auto wire=nodes[0]->sign_proposal(proposer->index,slot,*body,[&]{return now;},current.token,proposer_journal,provider);check(bool(wire),"local loop signed block missing");
++  const auto wire=queued_bls_changes?nodes[0]->propose_current(proposer->index,slot,head.execution_block.header.coinbase,16,64,[&]{return now;},proposer_journal,provider):nodes[0]->sign_proposal(proposer->index,slot,*body,[&]{return now;},current.token,proposer_journal,provider);check(bool(wire),"local loop signed block missing");
+@@ -132,0 +134 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
++ if(queued_bls_changes){check(head.execution_state.get("0x000000000000000000000000000000000000002b").balance>0,"owner queued withdrawal unpaid");for(size_t i=0;i<2;++i){const auto& disk=owner_mode?owners[i]->store():*disks[i];const auto record=disk.fork_checkpoint(t.chain_id,genesis.header.hash(),limits.envelope_bytes,nodes[i]->current().token);check(record&&!Json::parse(record->snapshot).contains("blsChanges"),"finalized BLS queue not retired");}}
+@@ -509 +511,12 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
+-   const auto now=(genesis_time+slot*seconds)*1000;reactor->tick(now);const auto current=reactor->current();auto& journal=journal_for(proposer);unsigned calls=0;auto provider=[&](const ConsensusRoot& root){++calls;return Key(proposer).sign(root);};
++   const auto now=(genesis_time+slot*seconds)*1000;reactor->tick(now);
++   if(queued_bls_changes&&slot==first_slot+1){
++    const auto before=reactor->current();auto invalid=local_change;invalid.signature[0]^=1;
++    check(!reactor->bls_change_ssz(encode_capella_bls_change(invalid))&&reactor->current().token==before.token,"invalid queue change published");
++    bool cancelled=false;try{reactor->bls_change_ssz(encode_capella_bls_change(local_change),[]{throw ExecutionCancelled("queue stopped");});}catch(const ExecutionCancelled&){cancelled=true;}check(cancelled&&reactor->current().token==before.token,"cancelled queue change published");
++    check(reactor->bls_change_ssz(encode_capella_bls_change(local_change)),"valid queue change rejected");const auto committed=reactor->current();check(committed.token.sequence==before.token.sequence+1&&capella_fork_head(*committed.state,store_rules).state==capella_fork_head(*before.state,store_rules).state,"queue admission changed consensus state");
++    check(reactor->bls_change_ssz(encode_capella_bls_change(local_change))&&reactor->current().token==committed.token,"duplicate queue change published");
++    auto conflicting=local_change;conflicting.to_execution_address[19]=44;copy_to(conflicting.signature,local_withdrawal_key.sign(consensus_signing_root(capella_bls_change_root(conflicting),consensus_domain({10,0,0,0},r.genesis_version,genesis_root))));check(!reactor->bls_change_ssz(encode_capella_bls_change(conflicting))&&reactor->current().token==committed.token,"conflicting change replaced queue");
++    reactor.reset();reactor=std::make_unique<CapellaDurableReactor>(*reactor_disk,r.chain_id,disk_genesis.header.hash(),store_rules,snapshot_limits,committed.token);
++    const auto restored=reactor->pending_bls_changes();check(restored.size()==1&&encode_capella_bls_change(restored[0])==encode_capella_bls_change(local_change),"pending BLS change lost after restart");
++   }
++   const auto current=reactor->current();auto& journal=journal_for(proposer);unsigned calls=0;auto provider=[&](const ConsensusRoot& root){++calls;return Key(proposer).sign(root);};
+@@ -518 +531 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
+-    if(local_bls_changes&&slot==first_slot+1){
++    if(local_bls_changes&&!queued_bls_changes&&slot==first_slot+1){
+@@ -924 +937 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
+- std::cout<<Json{{"localBlsChangeSelection",local_bls_changes},{"wireMessages",wire_messages},{"beaconReadChecks",beacon_read_checks},{"scenario","capella-signed-transition"},{"migrated",migrate},{"finalityScenario",finality},{"participationPercent",participation},{"finalizedEpoch",store->timed.view.finalized.epoch},{"includedAttestations",included_attestations},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"storeBlocks",store->blocks.size()},{"snapshotReopened",true},{"durableReactor",true},{"signedArchives",signed_wires.size()},{"signedVotes",durable_votes.size()},{"signedSlashings",durable_proofs.size()},{"deferredVotes",deferred_votes.size()},{"localAttestations",local_signatures},{"localProposals",local_proposals},{"localRandao",local_randao},{"assembledBodies",assembled_bodies},{"storeSigkillReopens",2},{"storeVotes",votes},{"voteReorgs",vote_reorgs},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
++ std::cout<<Json{{"queuedBlsChangeSelection",queued_bls_changes},{"localBlsChangeSelection",local_bls_changes},{"wireMessages",wire_messages},{"beaconReadChecks",beacon_read_checks},{"scenario","capella-signed-transition"},{"migrated",migrate},{"finalityScenario",finality},{"participationPercent",participation},{"finalizedEpoch",store->timed.view.finalized.epoch},{"includedAttestations",included_attestations},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"storeBlocks",store->blocks.size()},{"snapshotReopened",true},{"durableReactor",true},{"signedArchives",signed_wires.size()},{"signedVotes",durable_votes.size()},{"signedSlashings",durable_proofs.size()},{"deferredVotes",deferred_votes.size()},{"localAttestations",local_signatures},{"localProposals",local_proposals},{"localRandao",local_randao},{"assembledBodies",assembled_bodies},{"storeSigkillReopens",2},{"storeVotes",votes},{"voteReorgs",vote_reorgs},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
+@@ -942 +955 @@ int main(int argc,char** argv){try{executable=argv[0];
+-if(argc==3&&std::string(argv[1])=="--cli"){cli_binary=argv[2];configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--http"){configured_runtime=true;capella_http=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--catalog-concurrency"){wire_mode=true;catalog_concurrency=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--local-bls-changes"){local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--wire"){wire_mode=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--beacon-reads"){beacon_reads=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--configured-runtime"){configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler"){scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-reorg"){owner_reorg=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}
++if(argc==3&&std::string(argv[1])=="--cli"){cli_binary=argv[2];configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--http"){configured_runtime=true;capella_http=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--catalog-concurrency"){wire_mode=true;catalog_concurrency=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-owner"){queued_bls_changes=true;local_bls_changes=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-changes"){queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--local-bls-changes"){local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--wire"){wire_mode=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--beacon-reads"){beacon_reads=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--configured-runtime"){configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler"){scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-reorg"){owner_reorg=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}

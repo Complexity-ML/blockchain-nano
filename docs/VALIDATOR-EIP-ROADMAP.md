@@ -3190,3 +3190,19 @@ changement ; deux retraits observés, test final 5,47 s.
 à faire ; le scheduler ne fournit pas encore ces opérations. Aucune activation
 publique ni clôture complète EIP-4895.
 [Code, référence Capella et preuves](qualification/capella-local-bls-changes-20260927/README.md).
+
+### 2026-09-27 — File durable BLS et propositions Capella
+
+La file des changements de credentials BLS est persistée avec le checkpoint,
+authentifiée à la reprise, bornée par la configuration et consultée par les
+constructeurs ordinaires et `propose_current`. Doublons idempotents, cible
+concurrente refusée, admission sans mutation des credentials ; suppression après
+finalisation. Qualification : 3 tests de transition/sélection/file passent ;
+le nouveau parcours `propose_current` avec deux bases et mempools indépendants
+produit 40 blocs et 272 votes, finalise l'époque 3, reprend les deux bases et
+64 journaux de signature, verse le retrait et retire la file finalisée (34,56 s).
+**Partiel** : entrée RPC/P2P et relais, réorganisations de cette file, pruning de
+son contexte d'admission, saturation et crash pendant admission restent à
+qualifier. Le test est local, sans transport ni activation publique ; il ne
+clôture pas EIP-4895 ou l'objectif production.
+[Code et preuves](qualification/capella-queued-bls-changes-20260927/README.md).

@@ -66,7 +66,7 @@ reste à compléter. Le genesis réseau autorise actuellement Paris/Shanghai.
 | [6780](https://eips.ethereum.org/EIPS/eip-6780) | Partiel pour la production | Moteur Cancun présent ; pas de genesis réseau Cancun | src/evm.cpp ; src/chain.cpp ; docs/EVM-CONFORMANCE.md | Activation réseau cohérente du fork, admission, régressions et reprise | Avant activation Cancun |
 | [7702](https://eips.ethereum.org/EIPS/eip-7702) | Partiel pour la production | Autorisations et exécution Prague ; non activé sur réseau | src/authorization.cpp ; src/transaction.cpp ; src/engine.cpp | Mempool/P2P, admission type 4 et activation réseau Prague | Avant activation Prague |
 | [4844](https://eips.ethereum.org/EIPS/eip-4844) | Partiel | Blobs/KZG dans le moteur et les runners | src/kzg.cpp ; src/engine.cpp ; tests/test_blobs.cpp | Admission réseau type 3, sidecars, disponibilité, rétention et récupération | Avant service blobs |
-| [4895](https://eips.ethereum.org/EIPS/eip-4895) | Partiel | Retraits EVM/Capella, publication atomique et réseau local qualifiés dans des scénarios bornés ; sélection locale de changements BLS par API, pas encore par le scheduler autonome | src/engine.cpp ; src/consensus_capella_withdrawals.cpp ; src/consensus_capella_bls_change.cpp ; src/consensus_capella_local_body.cpp ; tests/test_capella_transition.cpp | File durable des changements BLS, admission/relais et alimentation du scheduler ; migration réseau et qualification complète du profil avant activation publique | Consensus cible |
+| [4895](https://eips.ethereum.org/EIPS/eip-4895) | Partiel | Retraits EVM/Capella, publication atomique et réseau local qualifiés dans des scénarios bornés ; file durable de changements BLS et sélection locale raccordée au constructeur de propositions | src/engine.cpp ; src/consensus_capella_withdrawals.cpp ; src/consensus_capella_bls_change.cpp ; src/consensus_capella_local_body.cpp ; tests/test_capella_transition.cpp | Admission RPC/P2P et relais des changements BLS ; qualification des réorganisations de la file, migration réseau et qualification complète du profil avant activation publique | Consensus cible |
 | [4788](https://eips.ethereum.org/EIPS/eip-4788) | Partiel | Appel système côté exécution | src/engine.cpp ; tests/test_beacon.cpp | Provisionnement versionné du contrat (code, nonce, adresse) au genesis si fork actif dès le départ, sinon à la transition ; fourniture authentifiée des racines par le nouveau consensus | Consensus cible |
 | [6110](https://eips.ethereum.org/EIPS/eip-6110) | Partiel | Requêtes côté exécution ; cycle consensus non terminé | src/requests.cpp ; src/engine.cpp ; tests/test_requests.cpp | Registre BLS, dépôts, sorties, consolidations et application des requêtes dans le consensus | Consensus cible |
 | [7685](https://eips.ethereum.org/EIPS/eip-7685) | Partiel | Requêtes côté exécution ; cycle consensus non terminé | src/requests.cpp ; src/engine.cpp ; tests/test_requests.cpp | Qualifier encodage, ordre par type, omission des requêtes vides et requests_hash ; rejeter les engagements altérés ; appliquer dépôts/sorties/consolidations au consensus et vérifier reprise/rejeu | Consensus cible |
@@ -2618,3 +2618,19 @@ changement ; deux retraits observés, test final 5,47 s.
 à faire ; le scheduler ne fournit pas encore ces opérations. Aucune activation
 publique ni clôture complète EIP-4895.
 [Code, référence Capella et preuves](qualification/capella-local-bls-changes-20260927/README.md).
+
+### 2026-09-27 — File durable BLS et propositions Capella
+
+La file des changements de credentials BLS est persistée avec le checkpoint,
+authentifiée à la reprise, bornée par la configuration et consultée par les
+constructeurs ordinaires et `propose_current`. Doublons idempotents, cible
+concurrente refusée, admission sans mutation des credentials ; suppression après
+finalisation. Qualification : 3 tests de transition/sélection/file passent ;
+le nouveau parcours `propose_current` avec deux bases et mempools indépendants
+produit 40 blocs et 272 votes, finalise l'époque 3, reprend les deux bases et
+64 journaux de signature, verse le retrait et retire la file finalisée (34,56 s).
+**Partiel** : entrée RPC/P2P et relais, réorganisations de cette file, pruning de
+son contexte d'admission, saturation et crash pendant admission restent à
+qualifier. Le test est local, sans transport ni activation publique ; il ne
+clôture pas EIP-4895 ou l'objectif production.
+[Code et preuves](qualification/capella-queued-bls-changes-20260927/README.md).

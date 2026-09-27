@@ -9,6 +9,8 @@ struct BeaconReadResponse;
 class StaleCapellaDuty : public std::invalid_argument {public: using std::invalid_argument::invalid_argument;};
 class ExpiredCapellaDuty : public std::runtime_error {public: using std::runtime_error::runtime_error;};
 using CapellaSignedVotes=std::map<Bytes,Bytes>;
+struct CapellaPendingBlsChange {ConsensusRoot admission_root;Bytes wire;};
+using CapellaPendingBlsChanges=std::map<uint64_t,CapellaPendingBlsChange>;
 struct CapellaPublishedStore {std::shared_ptr<const CapellaForkStore> state;ForkCheckpointToken token;};
 // Immutable root-only inventory; does not pin EVM state or payload archives.
 class CapellaInventorySnapshot {
@@ -24,7 +26,7 @@ public:
 class CapellaDurableReactor {
  ChainStore& disk_;Blockchain* execution_=nullptr;Int chain_;Bytes genesis_;CapellaForkBlockRules rules_;CapellaStoreSnapshotLimits limits_;
  std::mutex& mutex_;std::shared_ptr<const CapellaForkStore> state_;std::optional<ForkCheckpointToken> token_;
- CapellaSignedVotes votes_,slashings_;CapellaStoreSnapshotCache cache_;bool unavailable_=false;
+ CapellaSignedVotes votes_,slashings_;CapellaPendingBlsChanges bls_changes_;CapellaStoreSnapshotCache cache_;bool unavailable_=false;
  std::optional<Bytes> signed_block_locked(const ConsensusRoot&,const std::function<void()>&)const;
  Json network_identity_locked()const;
  void require_available()const;
@@ -34,12 +36,13 @@ class CapellaDurableReactor {
  void validate_execution_binding()const;
  void fail_closed();
  std::optional<Bytes> prepare_local_body_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,std::span<const SignedTransaction>,size_t,size_t,const std::function<void()>&,std::span<const SignedCapellaBlsChange> = {},size_t maximum_change_trials = 0);
+ std::vector<SignedCapellaBlsChange> pending_bls_changes_locked(size_t,const std::function<void()>&)const;
  void tick_locked(uint64_t,const std::function<void()>&);
  std::optional<Phase0SignedAttestation> sign_attestation_locked(uint64_t,uint64_t,const std::function<uint64_t()>&,const ForkCheckpointToken&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>&);
  std::optional<Bytes> sign_randao_locked(uint64_t,uint64_t,const std::function<uint64_t()>&,const ForkCheckpointToken&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>&);
  std::optional<Bytes> sign_proposal_locked(uint64_t,uint64_t,std::span<const uint8_t>,const std::function<uint64_t()>&,const ForkCheckpointToken&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>&);
  std::optional<Bytes> prepare_local_body_from_pool_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,size_t,size_t,const std::function<void()>&);
- void publish(CapellaForkStore,const std::function<void()>&,const std::vector<CheckpointArchiveEntry>& archive={},std::optional<CapellaSignedVotes> votes=std::nullopt,std::optional<CapellaSignedVotes> slashings=std::nullopt);
+ void publish(CapellaForkStore,const std::function<void()>&,const std::vector<CheckpointArchiveEntry>& archive={},std::optional<CapellaSignedVotes> votes=std::nullopt,std::optional<CapellaSignedVotes> slashings=std::nullopt,std::optional<CapellaPendingBlsChanges> changes=std::nullopt);
 public:
  CapellaDurableReactor(ChainStore&,Int,Bytes,CapellaForkBlockRules,CapellaStoreSnapshotLimits,CapellaForkStore,const std::function<void()>& checkpoint={},Blockchain* owner=nullptr,ChainStore* witness=nullptr);
  CapellaDurableReactor(ChainStore&,Int,Bytes,CapellaForkBlockRules,CapellaStoreSnapshotLimits,const ForkCheckpointToken&,const std::function<void()>& checkpoint={},Blockchain* owner=nullptr);
@@ -69,6 +72,9 @@ public:
  std::shared_ptr<const CapellaInventorySnapshot> capture_inventory(std::string_view kind,size_t maximum_root_bytes,const std::function<void()>& checkpoint={})const;
  Json inventory(std::string_view kind,const std::optional<ConsensusRoot>& after,size_t maximum_entries,size_t maximum_json_bytes,const std::optional<ForkCheckpointToken>& expected={},const std::function<void()>& checkpoint={})const;
  Json export_message(std::string_view kind,const ConsensusRoot&,size_t maximum_bytes,const std::optional<ForkCheckpointToken>& expected={},const std::function<void()>& checkpoint={})const;
+ bool bls_change_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
+ // Candidates applicable to the selected head; archive entries survive until finality.
+ std::vector<SignedCapellaBlsChange> pending_bls_changes()const;
  bool vote_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
  bool slashing_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
  BeaconReadResponse beacon_read(std::string_view,const std::function<void()>& checkpoint={})const;
