@@ -1921,3 +1921,12 @@ d’accusé, payload indisponible et catalogue renouvelé sont couverts.
 L’ancien code échoue au contrôle négatif ; le daemon corrigé compile.
 [Preuves locales](qualification/relay-page-cache-20260927/README.md).
 Effet WAN encore à mesurer : aucun EIP ni critère de production clôturé.
+
+### Cache des pages : résultat WAN
+
+La campagne `a4bf5e6` échoue encore au seuil de reprise (189200 ms contre
+180 s), puis progresse de 8 à 11 en 148066 ms. Au slot 64, seulement 53,1 %
+du poids de cible précédente est inclus ; quorum au slot 66. Le gain local
+de requêtes ne démontre pas un gain de finalité WAN. Trois boucles saines,
+preuves et échec conservés ; aucun statut EIP clôturé.
+[Campagne](qualification/multihost-20260927/page-cache-recovery/README.md).
