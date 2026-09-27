@@ -3281,3 +3281,16 @@ votes et identité conservés, même bloc et racine d’état au bloc suivant.
 changements BLS/preuves en attente et pannes pendant l’élagage restent ouverts.
 Pas de récupération d’espace disque ni de production démontrée par ce seul test.
 [Preuves et portée](qualification/capella-durable-pruning-20260927/README.md).
+
+### 2026-09-27 — Demande BLS en attente lors de l’élagage
+
+Nouveau scénario passé en 34,06 s : le nœud suiveur conserve une demande signée
+pendant 40 blocs ; son état d’admission est ensuite supprimé par l’élagage.
+Après fermeture/réouverture de RocksDB, les octets signés sont identiques et la
+racine d’admission désigne l’état finalisé conservé. Le doublon ne réécrit rien.
+Le bloc suivant applique les credentials attendus et donne les mêmes états sur
+les stores élagué et non élagué. L’archive non finalisée reste présente.
+Aucun correctif du moteur requis. **Partiel** : paiement ultérieur, réorganisation
+après élagage, preuves de slashing, dépôts natifs, pannes et déclenchement
+automatique restent à qualifier dans ce contexte.
+[Scénario et preuves](qualification/capella-pruning-bls-20260927/README.md).
