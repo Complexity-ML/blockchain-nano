@@ -162,7 +162,10 @@ CapellaDurableReactor::CapellaDurableReactor(Blockchain& owner,CapellaForkBlockR
  std::lock_guard chain_lock(owner.mutex_);owner.beacon_finalized_=std::move(finalized);owner.beacon_ready_=true;
 }
 Json CapellaDurableReactor::network_identity()const{
- std::lock_guard lock(mutex_);require_available();const auto& anchor=state_->timed.view.anchor;const auto encoded=Json::array({"nano-capella-network-v1",quantity(chain_),hex(genesis_),hex(Bytes(anchor.begin(),anchor.end())),capella_fork_profile(rules_)}).dump();const auto digest=sha256(Bytes(encoded.begin(),encoded.end()));
+ std::lock_guard lock(mutex_);return network_identity_locked();
+}
+Json CapellaDurableReactor::network_identity_locked()const{
+ require_available();const auto& anchor=state_->timed.view.anchor;const auto encoded=Json::array({"nano-capella-network-v1",quantity(chain_),hex(genesis_),hex(Bytes(anchor.begin(),anchor.end())),capella_fork_profile(rules_)}).dump();const auto digest=sha256(Bytes(encoded.begin(),encoded.end()));
  return {{"chainId",quantity(chain_)},{"genesisHash",hex(genesis_)},{"consensusIdentity",hex(digest)},{"forkDigest",hex(Bytes(digest.begin(),digest.begin()+4))}};
 }
 bool CapellaDurableReactor::vote_ssz(std::span<const uint8_t> wire,const std::function<void()>& check){const auto decoded=decode_consensus_attestation_ssz(wire,rules_.transition.consensus.body.validators_per_committee,check);return decoded&&vote(*decoded,check);}
@@ -212,6 +215,23 @@ std::optional<Bytes> CapellaDurableReactor::signed_block_locked(const ConsensusR
  if(id==state_->timed.view.anchor||!state_->blocks.contains(id))return std::nullopt;
  const auto record=disk_.checkpoint_archive(Bytes(id.begin(),id.end()),limits_.envelope_bytes);if(!record)return std::nullopt;
  archive_require(record->slot==state_->blocks.at(id).header.slot);verify_archived_block(id,record->payload,*state_,rules_,check);return record->payload;
+}
+
+Json CapellaDurableReactor::export_message(std::string_view kind,const ConsensusRoot& id,size_t maximum,const std::optional<ForkCheckpointToken>& expected,const std::function<void()>& check)const{
+ std::lock_guard lock(mutex_);require_available();if(check)check();
+ if(!maximum)throw std::invalid_argument("Capella export capacity required");
+ if(kind!="block"&&kind!="attestation"&&kind!="attester_slashing")throw std::invalid_argument("Unsupported Capella archive kind");
+ if(expected&&*expected!=*token_)throw std::invalid_argument("Stale Capella export checkpoint");
+ const Bytes key(id.begin(),id.end());std::optional<Bytes> payload;
+ if(kind=="block")payload=signed_block_locked(id,check);
+ else{const auto& archive=kind=="attestation"?votes_:slashings_;const auto found=archive.find(key);if(found!=archive.end()){
+  if(found->second.size()>maximum)throw std::length_error("Capella export exceeds capacity");
+  if(sha256(found->second)!=key)throw std::runtime_error("Capella archive digest mismatch");payload=found->second;
+ }}
+ Json result{{"available",bool(payload)},{"root",hex(key)},{"sequence",quantity(Int(std::to_string(token_->sequence)))},{"digest",hex(token_->digest)},
+  {"known",kind=="block"&&state_->blocks.contains(id)},{"anchor",kind=="block"&&id==state_->timed.view.anchor}};
+ if(payload){if(payload->size()>maximum)throw std::length_error("Capella export exceeds capacity");auto envelope=network_identity_locked();envelope["kind"]=kind;envelope["ssz"]=hex(*payload);result["envelope"]=std::move(envelope);}
+ if(check)check();return result;
 }
 
 bool CapellaDurableReactor::vote(const Phase0SignedAttestation& vote,const std::function<void()>& check){

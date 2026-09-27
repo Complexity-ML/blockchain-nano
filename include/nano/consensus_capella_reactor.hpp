@@ -17,6 +17,7 @@ class CapellaDurableReactor {
  std::mutex& mutex_;std::shared_ptr<const CapellaForkStore> state_;std::optional<ForkCheckpointToken> token_;
  CapellaSignedVotes votes_,slashings_;CapellaStoreSnapshotCache cache_;bool unavailable_=false;
  std::optional<Bytes> signed_block_locked(const ConsensusRoot&,const std::function<void()>&)const;
+ Json network_identity_locked()const;
  void require_available()const;
  ChainStore* witness_=nullptr;std::optional<ForkCheckpointToken> witness_token_;
  size_t witness_limit()const;
@@ -53,6 +54,9 @@ public:
  std::optional<Bytes> propose_current(uint64_t,uint64_t,const std::string&,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<uint64_t()>&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={});
  CapellaPublishedStore current()const;
  Json network_identity()const;
+ // Atomic archive/checkpoint projection. maximum_bytes bounds raw SSZ; caller
+ // must separately budget JSON/hex framing. An anchor has no fabricated signature.
+ Json export_message(std::string_view kind,const ConsensusRoot&,size_t maximum_bytes,const std::optional<ForkCheckpointToken>& expected={},const std::function<void()>& checkpoint={})const;
  bool vote_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
  bool slashing_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
  BeaconReadResponse beacon_read(std::string_view,const std::function<void()>& checkpoint={})const;

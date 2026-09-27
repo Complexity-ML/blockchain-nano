@@ -488,6 +488,18 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
  }
  if(finality){if(participation==100)check(store->timed.view.finalized.epoch>=2&&store->timed.view.justified.epoch>=3&&included_attestations>=128,"Capella participation did not advance finality");else check(store->timed.view.finalized.epoch==0&&store->timed.view.justified.epoch==0,"insufficient participation finalized a checkpoint");}
  if(wire_mode){
+  const auto checkpoint=reactor->current();size_t exports=0;
+  auto verify_export=[&](const char* kind,const ConsensusRoot& id,const Bytes& bytes){const auto result=reactor->export_message(kind,id,16*1024*1024,checkpoint.token);check(result.at("available")==true&&result.at("envelope").at("ssz")==hex(bytes)&&result.at("digest")==hex(checkpoint.token.digest),"Capella export changed bytes/checkpoint");auto decoded=service->decode(result.at("envelope").dump());check(decoded&&decoded->ssz==bytes,"Capella exported envelope cannot be admitted");++exports;};
+  for(const auto& [id,wire]:signed_wires)verify_export("block",id,wire);
+  for(const auto& [id,wire]:reactor->signed_votes()){ConsensusRoot root{};std::copy(id.begin(),id.end(),root.begin());verify_export("attestation",root,wire);}
+  for(const auto& [id,wire]:reactor->signed_slashings()){ConsensusRoot root{};std::copy(id.begin(),id.end(),root.begin());verify_export("attester_slashing",root,wire);}
+  const auto anchor=reactor->export_message("block",checkpoint.state->timed.view.anchor,16*1024*1024);check(anchor.at("available")==false&&anchor.at("known")==true&&anchor.at("anchor")==true,"Capella export fabricated anchor signature");
+  ConsensusRoot unknown{};check(reactor->export_message("block",unknown,1024).at("available")==false,"unknown export available");
+  auto stale=checkpoint.token;++stale.sequence;bool refused=false;try{reactor->export_message("block",signed_wires.begin()->first,16*1024*1024,stale);}catch(const std::invalid_argument&){refused=true;}check(refused,"stale archive checkpoint accepted");
+  refused=false;try{reactor->export_message("block",signed_wires.begin()->first,1);}catch(const std::length_error&){refused=true;}check(refused,"archive export ignored byte limit");
+  refused=false;try{reactor->export_message("block",unknown,1024,{},[]{throw ExecutionCancelled("export cancelled");});}catch(const ExecutionCancelled&){refused=true;}check(refused&&reactor->current().token==checkpoint.token&&exports==16,"export changed consensus or missed messages");
+ }
+ if(wire_mode){
   const auto before=reactor->current().token;auto bad=sync_wire;bad.at(184+168)^=1;check(!deliver("block",bad)&&reactor->current().token==before,"invalid signed wire changed checkpoint");
   Json envelope=reactor->network_identity();envelope["kind"]="block";envelope["ssz"]=hex(sync_wire);const auto frame=envelope.dump();
   std::promise<void> entered,release;auto gate=release.get_future();auto started=entered.get_future();

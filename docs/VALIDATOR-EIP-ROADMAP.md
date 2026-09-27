@@ -2896,3 +2896,14 @@ et ancienne session. Test réussi en 21,55 s avec seize blocs et reprise.
 Les reçus sont locaux au processus : perte de session signifie résultat inconnu.
 Les points d’entrée C++ restent à exposer par RPC privé authentifié ; inventaire,
 export, synchronisation et transport libp2p restent ouverts.
+
+### Capella : export cohérent des archives
+
+Export des blocs signés, votes et preuves de slashing avec identité réseau et
+checkpoint lus sous un même verrou ; contrôle facultatif du checkpoint attendu,
+limite SSZ et annulation. L’ancre de confiance reste sans signature fabriquée.
+Seize messages exportés puis décodés à l’identique après deux réorganisations ;
+checkpoint périmé et budget insuffisant refusés. Test enrichi réussi en 5,38 s.
+[Preuves](qualification/capella-archive-export-20260927/README.md).
+Cette primitive C++ ne clôt pas la synchronisation : pagination d’inventaire,
+transport, authentification RPC et budgets réseau restent à raccorder.
