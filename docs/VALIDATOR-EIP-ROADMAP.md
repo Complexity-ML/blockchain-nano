@@ -2569,3 +2569,14 @@ cinq suites structurelles ciblées passent.
 [Preuves](qualification/capella-body-20260927/README.md).
 Il ne s'agit pas encore de la transition signée complète : slots/epochs,
 composition, activation et persistance restent requis. Réseau inchangé.
+
+### Capella : slots et époques
+
+Les candidats Capella calculent les racines du bon fork, composent les
+opérations d'époque et ajoutent les résumés historiques sans prolonger
+l'ancienne liste. Sept scénarios officiels, 100 slots et états SSZ complets
+concordants ; rejeu découpé, rollback tardif et annulations qualifiés.
+Headers et curseurs non nuls sont conservés. Régression Altair/Bellatrix/
+Capella 3/3. [Preuves](qualification/capella-slots-20260927/README.md).
+La transition signée complète, l'activation et la publication durable restent
+à raccorder. EIP-4895 et le réseau demeurent partiels.

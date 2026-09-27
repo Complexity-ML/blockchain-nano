@@ -1,4 +1,5 @@
 #include "nano/consensus_altair_slots.hpp"
+#include "consensus_epoch_common.hpp"
 #include <algorithm>
 namespace nano {
 namespace {
@@ -18,8 +19,8 @@ void config(const AltairEpochRules& r,const AltairStateLimits& l){
 void coherent(const Bytes& b,const Layout& l){const auto v=number(b,l.fields[2],4),bal=number(b,l.fields[3],4),prev=number(b,l.fields[4],4),curr=number(b,l.fields[5],4),scores=number(b,l.fields[6],4),n=(bal-v)/121;require((prev-bal)/8==n&&curr-prev==n&&scores-curr==n&&(b.size()-scores)/8==n);}
 }
 void validate_altair_epoch_rules(const AltairEpochRules& r,const AltairStateLimits& l){config(r,l);}
-AltairSlotState prepare_altair_epoch(const AltairSlotState& input,const AltairEpochRules& r,
- const AltairStateLimits& l,uint64_t expected,uint64_t trials,const std::function<void()>& checkpoint){
+AltairSlotState detail::prepare_common_epoch(const AltairSlotState& input,const AltairEpochRules& r,
+ const AltairStateLimits& l,uint64_t expected,uint64_t trials,const std::function<void()>& checkpoint,bool update_history){
  config(r,l);altair_beacon_state_root(input.ssz,l,checkpoint);const Layout layout(l);coherent(input.ssz,layout);
  const auto slot=number(input.ssz,40),epoch=slot/r.ffg.slots_per_epoch;
  require(slot!=UINT64_MAX&&number(input.ssz,64)<=slot&&(slot+1)%r.ffg.slots_per_epoch==0&&epoch==expected&&(!input.last_processed_epoch||(epoch&&*input.last_processed_epoch==epoch-1)));
@@ -39,12 +40,16 @@ AltairSlotState prepare_altair_epoch(const AltairSlotState& input,const AltairEp
  registry=prepare_phase0_effective_balances(registry,r.effective,checkpoint);
  registry.slashings=phase0_slashings_after_reset(epoch,registry.slashings,l.epochs_per_slashings_vector);
  ConsensusRandaoState randao;randao.epoch=epoch;randao.last_reveal_slot=number(b,64);for(size_t i=0;i<l.epochs_per_historical_vector;++i)randao.mixes.push_back(array<32>(b,layout.randao+32*i));randao=phase0_randao_after_reset(randao,{r.ffg.slots_per_epoch,r.sync.min_seed_lookahead});
- std::vector<ConsensusRoot> blocks,states,history;for(size_t i=0;i<l.slots_per_historical_root;++i){blocks.push_back(array<32>(b,176+32*i));states.push_back(array<32>(b,176+32*l.slots_per_historical_root+32*i));}for(size_t at=0;at<lists[0].size();at+=32)history.push_back(array<32>(lists[0],at));history=phase0_history_after_update(epoch,blocks,states,history,r.history,checkpoint);lists[0].clear();for(const auto& root:history)lists[0].insert(lists[0].end(),root.begin(),root.end());
+ if(update_history){std::vector<ConsensusRoot> blocks,states,history;for(size_t i=0;i<l.slots_per_historical_root;++i){blocks.push_back(array<32>(b,176+32*i));states.push_back(array<32>(b,176+32*l.slots_per_historical_root+32*i));}for(size_t at=0;at<lists[0].size();at+=32)history.push_back(array<32>(lists[0],at));history=phase0_history_after_update(epoch,blocks,states,history,r.history,checkpoint);lists[0].clear();for(const auto& root:history)lists[0].insert(lists[0].end(),root.begin(),root.end());}
  for(const auto& [i,v]:registry.validators){if(checkpoint)checkpoint();const size_t at=121*i;put(lists[2],at+80,v.effective_balance);lists[2][at+88]=v.slashed;put(lists[2],at+89,v.activation_eligibility_epoch);put(lists[2],at+97,v.activation_epoch);put(lists[2],at+105,v.exit_epoch);put(lists[2],at+113,v.withdrawable_epoch);put(lists[3],8*i,v.balance);}
  for(size_t i=0;i<randao.mixes.size();++i)putroot(b,layout.randao+32*i,randao.mixes[i]);for(size_t i=0;i<registry.slashings.size();++i)put(b,slash_at+8*i,registry.slashings[i]);
  b.resize(number(b,layout.fields[0],4));for(size_t i=0;i<7;++i){require(lists[i].size()<=UINT32_MAX&&b.size()<=UINT32_MAX-lists[i].size());put(b,layout.fields[i],b.size(),4);b.insert(b.end(),lists[i].begin(),lists[i].end());}
  b=prepare_altair_participation_updates(b,l,checkpoint);b=prepare_altair_sync_updates(b,l,r.sync,trials,checkpoint);out.last_processed_epoch=epoch;
  altair_beacon_state_root(b,l,checkpoint);if(checkpoint)checkpoint();return out;
+}
+AltairSlotState prepare_altair_epoch(const AltairSlotState& input,const AltairEpochRules& r,
+ const AltairStateLimits& l,uint64_t expected,uint64_t trials,const std::function<void()>& check){
+ return detail::prepare_common_epoch(input,r,l,expected,trials,check,true);
 }
 AltairSlotState prepare_altair_slots(const AltairSlotState& input,const AltairEpochRules& r,
  const AltairStateLimits& l,uint64_t target,uint64_t maximum_slots,uint64_t trials,const std::function<void()>& checkpoint){

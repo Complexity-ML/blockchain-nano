@@ -1,0 +1,189 @@
+{
+  "repository": "https://github.com/ethereum/consensus-spec-tests",
+  "commit": "194a91fd9e6f97118156421aac4c80e6e47a9a7f",
+  "path": "tests/minimal/capella/sanity/slots/pyspec_tests",
+  "cases": [
+    {
+      "name": "balance_change_affects_proposer",
+      "valid": true,
+      "files": {
+        "pre.ssz_snappy": {
+          "bytes": 8155,
+          "sha256": "6b82bbaf462168808173acfec638efcedb2ee6e5d3a3b417cbd342eac7e319e3"
+        },
+        "pre.ssz": {
+          "bytes": 19717,
+          "sha256": "14388951119e074887cae3c40bc682f7145448ef2c777f1784e9ab710be59ffd"
+        },
+        "post.ssz_snappy": {
+          "bytes": 8214,
+          "sha256": "7e5a4241ffc2c28f99e0708f84e71da89b8b47430126cc9c5d22ce728c9f6f37"
+        },
+        "post.ssz": {
+          "bytes": 19717,
+          "sha256": "3b2b1260d5c341b6d0e37d90059153424d355dd36fd66e762763b0715a11c9cd"
+        },
+        "slots.yaml": {
+          "bytes": 6,
+          "sha256": "0b6477aecfbf4beb7578413d2833a505e8f36d56a749ed3fcc43f85c537408d9"
+        }
+      }
+    },
+    {
+      "name": "double_empty_epoch",
+      "valid": true,
+      "files": {
+        "pre.ssz_snappy": {
+          "bytes": 6638,
+          "sha256": "ffdf6425c022674e2b5f49d88ae8ad7d5bcb19bc1e2e1f33a803b5548b318098"
+        },
+        "pre.ssz": {
+          "bytes": 19717,
+          "sha256": "f5a464175565a8ed6a74790a60b84477c16a5b1bf71ece55736f192142cbca3d"
+        },
+        "post.ssz_snappy": {
+          "bytes": 7181,
+          "sha256": "92509f2e42c849a16433deae1f8da5fd992d1e4620b2048552dc9bce964fa263"
+        },
+        "post.ssz": {
+          "bytes": 19717,
+          "sha256": "4aff1ee6f3b1ace32ce8c53971209bafa70972c4225d48dafe34ac4d8cf989b0"
+        },
+        "slots.yaml": {
+          "bytes": 7,
+          "sha256": "1b1951ca02e8d0bba6c021d3487a95c659ff0bc0625f259d7399966a75e44f5c"
+        }
+      }
+    },
+    {
+      "name": "empty_epoch",
+      "valid": true,
+      "files": {
+        "pre.ssz_snappy": {
+          "bytes": 6638,
+          "sha256": "ffdf6425c022674e2b5f49d88ae8ad7d5bcb19bc1e2e1f33a803b5548b318098"
+        },
+        "pre.ssz": {
+          "bytes": 19717,
+          "sha256": "f5a464175565a8ed6a74790a60b84477c16a5b1bf71ece55736f192142cbca3d"
+        },
+        "post.ssz_snappy": {
+          "bytes": 6935,
+          "sha256": "bfdca1777b70fd28f2833d54378252f4ee085698d21ba45d547bba1c64086726"
+        },
+        "post.ssz": {
+          "bytes": 19717,
+          "sha256": "671c611f49a261b6f2c6461e50196d080f06193f1cd8a8055d00aeebbf0cfa66"
+        },
+        "slots.yaml": {
+          "bytes": 6,
+          "sha256": "0914b5ddf42acde63481c3745a73272d33e6cbc051c2c080e103772e20af1566"
+        }
+      }
+    },
+    {
+      "name": "historical_accumulator",
+      "valid": true,
+      "files": {
+        "pre.ssz_snappy": {
+          "bytes": 6638,
+          "sha256": "ffdf6425c022674e2b5f49d88ae8ad7d5bcb19bc1e2e1f33a803b5548b318098"
+        },
+        "pre.ssz": {
+          "bytes": 19717,
+          "sha256": "f5a464175565a8ed6a74790a60b84477c16a5b1bf71ece55736f192142cbca3d"
+        },
+        "post.ssz_snappy": {
+          "bytes": 9427,
+          "sha256": "ff584f4e235909568228c5015d1a7b909b45f1de1c651df8e70e7b78a4dca592"
+        },
+        "post.ssz": {
+          "bytes": 19781,
+          "sha256": "75954e7c6ea23178702677116867c63fb549fe45e197f14751ff73fb347e15d5"
+        },
+        "slots.yaml": {
+          "bytes": 7,
+          "sha256": "10c6f5d7ef5c57ffe51139d8781e3994de25d9cc94d36d2b80fe6df9059f9a90"
+        }
+      }
+    },
+    {
+      "name": "over_epoch_boundary",
+      "valid": true,
+      "files": {
+        "pre.ssz_snappy": {
+          "bytes": 6809,
+          "sha256": "6dc8186251696a7a22a75fcb321f79471aaf5b952d11d23e2b60c6e35e156bb7"
+        },
+        "pre.ssz": {
+          "bytes": 19717,
+          "sha256": "02b6121f44d8034e9ea8339bc5d6aec5695f3a91d5239a09985ff6d004617fdc"
+        },
+        "post.ssz_snappy": {
+          "bytes": 7062,
+          "sha256": "50780458687df04e268f91c6e7f283ca16576163fb3d50262d4639fcb6b9f16b"
+        },
+        "post.ssz": {
+          "bytes": 19717,
+          "sha256": "b58f49e56d3a699233df673e55ac7cdaa509bb4a6bf307bb64429006f470f41f"
+        },
+        "slots.yaml": {
+          "bytes": 6,
+          "sha256": "0914b5ddf42acde63481c3745a73272d33e6cbc051c2c080e103772e20af1566"
+        }
+      }
+    },
+    {
+      "name": "slots_1",
+      "valid": true,
+      "files": {
+        "pre.ssz_snappy": {
+          "bytes": 6638,
+          "sha256": "ffdf6425c022674e2b5f49d88ae8ad7d5bcb19bc1e2e1f33a803b5548b318098"
+        },
+        "pre.ssz": {
+          "bytes": 19717,
+          "sha256": "f5a464175565a8ed6a74790a60b84477c16a5b1bf71ece55736f192142cbca3d"
+        },
+        "post.ssz_snappy": {
+          "bytes": 6700,
+          "sha256": "b16fb93cb80c916623f854035b1a2856e58c795f238422acd5c2bb2b106fabd5"
+        },
+        "post.ssz": {
+          "bytes": 19717,
+          "sha256": "76db391274f7c1aa76a93c223c652a067884fce567d3d312512b62bd681d90dc"
+        },
+        "slots.yaml": {
+          "bytes": 6,
+          "sha256": "0b6477aecfbf4beb7578413d2833a505e8f36d56a749ed3fcc43f85c537408d9"
+        }
+      }
+    },
+    {
+      "name": "slots_2",
+      "valid": true,
+      "files": {
+        "pre.ssz_snappy": {
+          "bytes": 6638,
+          "sha256": "ffdf6425c022674e2b5f49d88ae8ad7d5bcb19bc1e2e1f33a803b5548b318098"
+        },
+        "pre.ssz": {
+          "bytes": 19717,
+          "sha256": "f5a464175565a8ed6a74790a60b84477c16a5b1bf71ece55736f192142cbca3d"
+        },
+        "post.ssz_snappy": {
+          "bytes": 6744,
+          "sha256": "a7dfb01845dae7f0a8eed9a355836b805605abe86d6c19f51f70a39dbdc729fc"
+        },
+        "post.ssz": {
+          "bytes": 19717,
+          "sha256": "c7421f306151870a2d8ef4c86588fee679c7a6185bbf74c47c58b8c88d97ef7d"
+        },
+        "slots.yaml": {
+          "bytes": 6,
+          "sha256": "d6bae4a60ad0ef8a6dee9a3fadb606d0e8cc0092a74b7e36dcbd2260e3526b8d"
+        }
+      }
+    }
+  ]
+}
