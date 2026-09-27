@@ -137,7 +137,10 @@ bool CapellaDurableReactor::block(std::span<const uint8_t> wire,const std::funct
  publish(std::move(*next),check,archive);return true;
 }
 std::optional<Bytes> CapellaDurableReactor::signed_block(const ConsensusRoot& id,const std::function<void()>& check)const{
- std::lock_guard lock(mutex_);require_available();if(check)check();
+ std::lock_guard lock(mutex_);return signed_block_locked(id,check);
+}
+std::optional<Bytes> CapellaDurableReactor::signed_block_locked(const ConsensusRoot& id,const std::function<void()>& check)const{
+ require_available();if(check)check();
  if(id==state_->timed.view.anchor||!state_->blocks.contains(id))return std::nullopt;
  const auto record=disk_.checkpoint_archive(Bytes(id.begin(),id.end()),limits_.envelope_bytes);if(!record)return std::nullopt;
  archive_require(record->slot==state_->blocks.at(id).header.slot);verify_archived_block(id,record->payload,*state_,rules_,check);return record->payload;

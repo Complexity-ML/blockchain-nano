@@ -14,6 +14,7 @@ class CapellaDurableReactor {
  ChainStore& disk_;Int chain_;Bytes genesis_;CapellaForkBlockRules rules_;CapellaStoreSnapshotLimits limits_;
  mutable std::mutex mutex_;std::shared_ptr<const CapellaForkStore> state_;std::optional<ForkCheckpointToken> token_;
  CapellaSignedVotes votes_,slashings_;CapellaStoreSnapshotCache cache_;bool unavailable_=false;
+ std::optional<Bytes> signed_block_locked(const ConsensusRoot&,const std::function<void()>&)const;
  void require_available()const;
  void publish(CapellaForkStore,const std::function<void()>&,const std::vector<CheckpointArchiveEntry>& archive={},std::optional<CapellaSignedVotes> votes=std::nullopt,std::optional<CapellaSignedVotes> slashings=std::nullopt);
 public:
@@ -32,6 +33,11 @@ public:
  std::optional<Bytes> sign_proposal(uint64_t validator_index,uint64_t slot,
   std::span<const uint8_t> body,const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected,
   BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={});
+ // Bounded transaction candidates; sender identities are recovered internally.
+ std::optional<Bytes> prepare_local_body(uint64_t validator_index,uint64_t slot,
+  const Bytes& randao,const std::string& fee_recipient,const ForkCheckpointToken& expected,
+  std::span<const SignedTransaction> pending,size_t maximum_transaction_trials,size_t maximum_vote_trials,
+  const std::function<void()>& checkpoint={});
  // Authenticated recent gossip votes, including deferred current-slot votes.
  // Retained for current/previous epoch; copy is bounded by snapshot limits.
  CapellaSignedVotes signed_votes()const;

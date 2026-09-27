@@ -26,6 +26,7 @@ struct Genesis {
 // Owns canonical state; durable commit precedes publication to readers.
 class Blockchain {
  friend class BellatrixDurableReactor;
+ friend class CapellaDurableReactor;
  mutable std::mutex mutex_;
  bool beacon_ready_=false;
  std::optional<Block> beacon_finalized_; // populated only by authenticated coordinator

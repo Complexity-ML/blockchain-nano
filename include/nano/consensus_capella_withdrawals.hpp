@@ -26,6 +26,10 @@ CapellaWithdrawalExecutionCandidate verify_capella_withdrawal_execution(
  const State& execution_state,const Block&,const Int& chain_id,ReplayPolicy,
  const std::function<Bytes(const Int&)>& block_hash={},const std::function<void()>& checkpoint={});
 struct CapellaWithdrawalSszCandidate {Bytes state;ConsensusRoot root;};
+// Decode registry and withdrawal cursors only after complete SSZ authentication.
+CapellaWithdrawalState read_capella_withdrawal_state(std::span<const uint8_t>,
+ const ConsensusRoot&,const AltairStateLimits&,const ExecutionPayloadLimits&,size_t maximum_state_bytes,
+ uint64_t slots_per_epoch,const std::function<void()>& checkpoint={});
 // Isolated process_withdrawals on an independently authenticated Capella state.
 // Returns updated balances/cursors and their SSZ root; all other bytes survive.
 // Caller enforces block ordering, replay protection and durable publication.

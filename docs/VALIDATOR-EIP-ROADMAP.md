@@ -2768,3 +2768,14 @@ propositions après réouverture, corps invalides et signatures expirées refus�
 Restent assemblage automatique des corps, ordonnanceur, diffusion réseau,
 qualification dépôts natifs et première proposition lors de la migration du
 Store vivant. Les descendants d'une ancre Capella sont seuls qualifiés ici.
+
+### Capella : assemblage local du corps de bloc
+
+Retraits calculés depuis SSZ authentifié, payload Shanghai exécuté, transactions
+sélectionnées par nonce avec budgets explicites ; inclusion bornée des preuves
+et votes archivés. Vingt-neuf corps assemblés puis admis sur cinq scénarios,
+reprise des cinq blocs supplémentaires et trois fautifs marqués slashed.
+Sept suites réussies, dont les contrôles de retraits directement affectés.
+[Preuves](qualification/capella-local-body-20260927/README.md).
+Restent mempool propriétaire, sorties/changements BLS, contributions sync,
+finalité entièrement produite par l'assembleur, ordonnanceur et réseau.
