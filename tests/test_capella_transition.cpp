@@ -51,7 +51,7 @@ static bool owner_witness=false;
 static bool scheduled=false,sync_rotation=false;
 static bool configured_runtime=false;
 static bool capella_http=false;
-static std::string cli_binary;static Json cli_genesis;static bool managed_cli=false;static std::string daemon_binary;static bool network_cli=false;static bool multipeer_cli=false;static bool distributed_cli=false;static bool sync_distributed_cli=false;static bool transport_outage_cli=false;static fs::path network_export;
+static std::string cli_binary;static Json cli_genesis;static bool managed_cli=false;static std::string daemon_binary;static bool network_cli=false;static bool multipeer_cli=false;static bool distributed_cli=false;static bool sync_distributed_cli=false,distributed_sync_rotation=false;static bool transport_outage_cli=false;static fs::path network_export;
 static bool beacon_reads=false;
 static bool local_sync=false;static bool deposit_invalid_signature=false;static bool deposit_activation=false;static bool deposit_consumption=false;static bool slashing_retirement=false;static bool pruning_slashing=false;static bool pruning_sync=false;static bool pruning_automatic=false;static bool pruning_native=false;static bool pruning_bls=false;static bool pruning_primitive=false;static bool queued_bls_sync=false;static bool queued_bls_reorg=false;static bool queued_bls_changes=false;static bool local_bls_changes=false;static bool wire_mode=false;static bool catalog_concurrency=false;
 static size_t beacon_read_checks=0;
@@ -449,10 +449,12 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
       void pause(){check(left>0&&right>0&&left!=right,"invalid child P2P identities");check(::kill(left,SIGSTOP)==0,"stop left transport");left_stopped=true;check(::kill(right,SIGSTOP)==0,"stop right transport");right_stopped=true;}
      } transport;
      transport.left=a.event("p2p-process").at("pid").get<pid_t>();transport.right=b.event("p2p-process").at("pid").get<pid_t>();
-     bool complete=false;uint64_t previous=UINT64_MAX,minimum_finalized=2;unsigned stable=0;
+     const auto sync_period=t.consensus.epoch.sync.epochs_per_sync_committee_period;check(sync_period&&sync_period<=16,"distributed rotation fixture period unbounded");
+     bool complete=false;uint64_t previous=UINT64_MAX,minimum_finalized=distributed_sync_rotation?2*sync_period+1:2;unsigned stable=0;
+     std::optional<Bytes> rotation_state;std::string qualified_finalized_root;
      std::set<std::string> sync_checked,remote_sync_blocks;std::map<std::string,Json> observed_sync_blocks;std::map<std::string,unsigned> sync_observers;
      auto qualify_sync=[&](const std::string& finalized_root){
-      const auto& l=t.consensus.state;const auto& seed=initial.blocks.at(initial.timed.view.anchor).state.ssz;
+      const auto& l=t.consensus.state;const auto& seed=rotation_state?*rotation_state:initial.blocks.at(initial.timed.view.anchor).state.ssz;
       const size_t committee=272+64*l.slots_per_historical_root+32*l.epochs_per_historical_vector+8*l.epochs_per_slashings_vector+133;
       auto root=finalized_root;
       for(size_t depth=0;depth<8&&root!=hex(Bytes(initial.timed.view.anchor.begin(),initial.timed.view.anchor.end()));++depth){
@@ -460,7 +462,7 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
        const auto& message=found->second.at("message");const auto id=root;root=message.at("parent_root").get<std::string>();if(sync_observers[id]!=3||!sync_checked.insert(id).second)continue;
        const auto slot=std::stoull(message.at("slot").get<std::string>()),proposer=std::stoull(message.at("proposer_index").get<std::string>());
        const auto period=t.consensus.epoch.sync.epochs_per_sync_committee_period;
-       if(slot/slots/period!=little(seed,40,8)/slots/period)continue; // Only the authenticated initial committee period.
+       if(slot/slots/period!=little(seed,40,8)/slots/period)continue; // Committee must come from an authenticated state in the same period.
        const auto& aggregate=message.at("body").at("sync_aggregate");const auto bits=unhex(aggregate.at("sync_committee_bits").get<std::string>()),signature=unhex(aggregate.at("sync_committee_signature").get<std::string>());check(bits.size()==(l.sync_committee_size+7)/8,"sync bitvector width");
        std::vector<Bytes> keys;size_t remote=0;
        for(size_t position=0;position<l.sync_committee_size;++position)if(bits[position/8]&(1u<<(position%8))){Bytes key(seed.begin()+committee+48*position,seed.begin()+committee+48*(position+1));size_t member=0;for(;member<64&&Key(member).public_key!=key;++member){}check(member<64,"unknown distributed sync fixture key");remote+=(member<32)!=(proposer<32);keys.push_back(std::move(key));}
@@ -489,13 +491,27 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
        minimum_finalized=std::max(slot_of(after_a),slot_of(after_b))/slots;transport.resume();
        std::cout<<Json{{"event","capella-transport-resumed"},{"leftHead",after_a},{"rightHead",after_b},{"minimumRecoveredFinalizedEpoch",minimum_finalized}}.dump()<<std::endl;
       }
-      const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(transport_outage_cli?240:210);while(std::chrono::steady_clock::now()<deadline){a.pump(0);b.pump(0);check(a.running()&&b.running(),"distributed validator process exited");const auto fa=beacon(ap,"/eth/v1/beacon/states/head/finality_checkpoints").at("data").at("finalized"),fb=beacon(bp,"/eth/v1/beacon/states/head/finality_checkpoints").at("data").at("finalized");const auto ea=std::stoull(fa.at("epoch").get<std::string>()),eb=std::stoull(fb.at("epoch").get<std::string>());if(ea&&ea==eb)check(fa.at("root")==fb.at("root"),"conflicting finalized roots");
+      const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(distributed_sync_rotation?(2*sync_period+4)*slots*t.seconds_per_slot+120:transport_outage_cli?240:210);while(std::chrono::steady_clock::now()<deadline){a.pump(0);b.pump(0);check(a.running()&&b.running(),"distributed validator process exited");const auto fa=beacon(ap,"/eth/v1/beacon/states/head/finality_checkpoints").at("data").at("finalized"),fb=beacon(bp,"/eth/v1/beacon/states/head/finality_checkpoints").at("data").at("finalized");const auto ea=std::stoull(fa.at("epoch").get<std::string>()),eb=std::stoull(fb.at("epoch").get<std::string>());if(ea&&ea==eb)check(fa.at("root")==fb.at("root"),"conflicting finalized roots");
       if(sync_distributed_cli)for(auto port:{ap,bp}){const auto h=beacon(port,"/eth/v1/beacon/headers/head").at("data");const auto root=h.at("root").get<std::string>();const unsigned observer=port==ap?1:2;if(!(sync_observers[root]&observer)){const auto block=beacon(port,"/eth/v2/beacon/blocks/"+root).at("data");const auto& m=block.at("message");const auto& header=h.at("header").at("message");for(const auto field:{"slot","proposer_index","parent_root","state_root"})check(m.at(field)==header.at(field),"observed sync block/header mismatch");if(observed_sync_blocks.contains(root))check(observed_sync_blocks.at(root)==block,"peers disagree on signed sync block");else observed_sync_blocks.emplace(root,block);sync_observers[root]|=observer;}}
       if(std::min(ea,eb)!=previous){previous=std::min(ea,eb);std::cout<<Json{{"event","distributed-finality-observation"},{"left",fa},{"right",fb}}.dump()<<std::endl;}
-      if(ea>=minimum_finalized&&fa==fb){const auto ha=beacon(ap,"/eth/v1/beacon/headers/finalized"),hb=beacon(bp,"/eth/v1/beacon/headers/finalized");if(ha.at("finalized")==true&&hb.at("finalized")==true&&ha.at("data").at("root")==fa.at("root")&&hb.at("data").at("root")==fa.at("root")){if(sync_distributed_cli)qualify_sync(fa.at("root").get<std::string>());if(++stable>=3&&(!sync_distributed_cli||remote_sync_blocks.size()>=3)){complete=true;break;}}else stable=0;}else stable=0;
+      if(ea>=minimum_finalized&&fa==fb){const auto ha=beacon(ap,"/eth/v1/beacon/headers/finalized"),hb=beacon(bp,"/eth/v1/beacon/headers/finalized");if(ha.at("finalized")==true&&hb.at("finalized")==true&&ha.at("data").at("root")==fa.at("root")&&hb.at("data").at("root")==fa.at("root")){qualified_finalized_root=fa.at("root").get<std::string>();if(sync_distributed_cli&&!distributed_sync_rotation)qualify_sync(qualified_finalized_root);if(++stable>=3&&(distributed_sync_rotation||!sync_distributed_cli||remote_sync_blocks.size()>=3)){complete=true;break;}}else stable=0;}else stable=0;
       std::this_thread::sleep_for(std::chrono::seconds(1));}check(complete,"distributed Capella finality did not reach required common epoch");
      }catch(...){transport.resume();const auto ar=a.stop(),br=b.stop();std::cerr<<ar.out<<ar.err<<br.out<<br.err;throw;}
-     const auto ar=a.stop(),br=b.stop();check(ar.code==0&&br.code==0,"distributed nodes did not stop cleanly");std::cout<<ar.out<<br.out<<Json{{"scenario",transport_outage_cli?"capella-transport-outage-recovery":"capella-distributed-finality"},{"validatorsPerNode",32},{"nodes",2},{"minimumFinalizedEpoch",minimum_finalized},{"stableObservations",stable},{"syncQualification",sync_distributed_cli},{"finalizedBlocksWithRemoteSync",remote_sync_blocks.size()},{"realLibp2p",true}}.dump()<<std::endl;return;
+     const auto ar=a.stop(),br=b.stop();check(ar.code==0&&br.code==0,"distributed nodes did not stop cleanly");std::cout<<ar.out<<br.out;
+     if(distributed_sync_rotation){
+      ConsensusRoot finalized{};copy_to(finalized,unhex(qualified_finalized_root));
+      for(const auto& [db,witness_path]:std::array<std::pair<std::string,std::string>,2>{{{"left-db","witness"},{"right-db","right-witness"}}}){
+       Blockchain reopened(directory/db,g);ChainStore recovered_witness(directory/witness_path);CapellaDurableReactor recovered(reopened,rules,limits,recovered_witness);const auto durable=recovered.current();
+       const auto found=durable.state->blocks.find(finalized);check(found!=durable.state->blocks.end(),"finalized rotation state missing after reopen");const auto& block=found->second;
+       check(capella_beacon_state_root(block.state.ssz,t.consensus.state,t.execution,t.maximum_state_bytes)==block.header.state_root,"rotated state commitment mismatch");
+       if(rotation_state)check(*rotation_state==block.state.ssz,"peers disagree on finalized rotated state");else rotation_state=block.state.ssz;
+      }
+      const auto& l=t.consensus.state;const size_t at=272+64*l.slots_per_historical_root+32*l.epochs_per_historical_vector+8*l.epochs_per_slashings_vector+133,width=48*(l.sync_committee_size+1);const auto& seed=initial.blocks.at(initial.timed.view.anchor).state.ssz;
+      Bytes committee(rotation_state->begin()+at,rotation_state->begin()+at+width),original(seed.begin()+at,seed.begin()+at+width);check(committee!=original,"distributed run never changed sync committee");
+      check(little(*rotation_state,40,8)/slots/sync_period>=2,"rotation state predates composition change");qualify_sync(qualified_finalized_root);check(remote_sync_blocks.size()>=3,"rotated finalized blocks lack verified remote sync");
+      std::cout<<Json{{"event","distributed-sync-rotation-verified"},{"finalizedRoot",qualified_finalized_root},{"stateSlot",little(*rotation_state,40,8)},{"committeeHash",hex(sha256(committee))},{"initialCommitteeHash",hex(sha256(original))},{"bothStoresReopened",true}}.dump()<<std::endl;
+     }
+     std::cout<<Json{{"scenario",transport_outage_cli?"capella-transport-outage-recovery":"capella-distributed-finality"},{"validatorsPerNode",32},{"nodes",2},{"minimumFinalizedEpoch",minimum_finalized},{"stableObservations",stable},{"syncQualification",sync_distributed_cli},{"syncRotation",distributed_sync_rotation},{"finalizedBlocksWithRemoteSync",remote_sync_blocks.size()},{"realLibp2p",true}}.dump()<<std::endl;return;
     }
     const auto source_config=directory/"source.json";save(source_config,node);Process source_node({cli_binary,"run",(directory/"genesis.json").string(),(directory/"source-db").string(),source_config.string()},env);const auto source_port=source_node.port();const auto source_address=source_node.event("listen").at("address").get<std::string>();check(source_node.event("altair-ipc-ready").at("networkProtocolActive")==true,"source network inactive");
     until([&]{source_node.pump(0);return quantity(rpc(source_port,"eth_blockNumber"))>=2;},"source produced before follower",40);
@@ -1244,6 +1260,7 @@ int main(int argc,char** argv){try{executable=argv[0];
  }
  if(argc==3&&std::string(argv[1])=="--export-network"){network_export=fs::absolute(argv[2]);network_cli=true;managed_cli=true;cli_binary="export-only";configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--transport-outage-cli"){transport_outage_cli=true;distributed_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
+ if(argc==4&&std::string(argv[1])=="--sync-rotation-distributed-cli"){distributed_sync_rotation=true;sync_distributed_cli=true;distributed_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--sync-distributed-cli"){sync_distributed_cli=true;distributed_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--distributed-cli"){distributed_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--multipeer-cli"){multipeer_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}

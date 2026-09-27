@@ -3061,3 +3061,17 @@ initiaux de la fixture différaient, est conservé ; le test étendu exige bien 
 changements réels. **Partiel** : horloge simulée, un processus natif, pas de transport
 réseau ni de crash physique. Rotation distribuée, asymétrie et partitions restent
 à qualifier. [Preuves et référence](qualification/capella-sync-rotation-20260927/README.md).
+
+
+### Rotation sync distribuée — 27 septembre 2026
+
+Deux nœuds libp2p réels avec 32 clés distinctes chacun, slots de 6 s et preset
+inchangés : **finalité commune époque 17 après changement effectif du comité**.
+Les deux bases réouvertes via leurs témoins de reprise contiennent le même état
+finalisé au slot 136 ; son engagement SSZ et son nouveau comité sont vérifiés.
+Huit blocs finalisés (129–136) portent des contributions distantes BLS vérifiées,
+avec **28–32 positions sur 32**, et non 100 % partout. Zéro refus de budget observé ;
+80 refus sync du cœur (65 racines, 15 slots déjà atteints), deux livraisons sans ACK
+confirmé et neuf exports indisponibles restent tracés. **Partiel** : deux pairs
+sur un hôte, réseau stable ; asymétrie, partitions à la rotation, reprise après
+crash et grande population restent ouverts. [Preuves](qualification/capella-distributed-sync-rotation-20260927/README.md).
