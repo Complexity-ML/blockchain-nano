@@ -46,6 +46,36 @@ int main(){try{
  Phase0DepositState other{};other.deposit_root=hb.root();other.deposit_count=1;const auto before=other;
  check(!process_phase0_deposit(other,rules,ha.proof(0))&&other==before,"foreign branch proof changed registry");
  check(process_phase0_deposit(other,rules,hb.proof(0))==Phase0DepositOutcome::Admitted,"alternative branch deposit failed");
+ // Competing funded branches contain the same keys in opposite orders.
+ // The execution nonce and authenticated history, not the public key, determine
+ // the index. Never reuse the registry or a proof from the sibling branch.
+ const auto bab=block(ra.state,ba.header,1,&b),bba=block(rb.state,bb.header,1,&a);
+ const auto [hab,rab]=ha.extend(engine,ra.state,ba.header,bab,bab.header.hash(),code_hash,4);
+ const auto [hba,rba]=hb.extend(engine,rb.state,bb.header,bba,bba.header.hash(),code_hash,4);
+ auto consume=[&](const ExecutionDepositHistory& history){Phase0DepositState out{};out.deposit_root=history.root();out.deposit_count=history.count();
+  for(uint64_t i=0;i<history.count();++i)check(process_phase0_deposit(out,rules,history.proof(i))==Phase0DepositOutcome::Admitted,"ordered branch deposit rejected");return out;};
+ const auto registry_ab=consume(hab),registry_ba=consume(hba);
+ check(registry_ab.registry.validators.at(0).public_key==a.message.public_key&&registry_ab.registry.validators.at(1).public_key==b.message.public_key&&registry_ba.registry.validators.at(0).public_key==b.message.public_key&&registry_ba.registry.validators.at(1).public_key==a.message.public_key,"competing order did not change validator indices");
+ check(hab.root()!=hba.root()&&hab.execution_hash()!=hba.execution_hash(),"opposite orders share deposit commitment");
+ const Int backing("64000000000000000000");
+ for(const auto* post:{&rab.state,&rba.state})check(post->get(ethereum_deposit_contract).balance-state.get(ethereum_deposit_contract).balance==backing,"two-branch deposits not backed by execution");
+ unsigned foreign_rejections=0,replayed_positions=0;
+ for(const auto& pair:{std::pair{&hab,&hba},std::pair{&hba,&hab}}){
+  Phase0DepositState local{};local.deposit_root=pair.first->root();local.deposit_count=2;
+  for(uint64_t i=0;i<2;++i){const auto unchanged=local;
+   check(!process_phase0_deposit(local,rules,pair.second->proof(i))&&local==unchanged,"foreign ordered proof changed cursor or registry");++foreign_rejections;
+   check(process_phase0_deposit(local,rules,pair.first->proof(i))==Phase0DepositOutcome::Admitted,"valid proof failed after foreign rejection");
+  }
+  const auto completed=local;
+  for(uint64_t i=0;i<2;++i){check(!process_phase0_deposit(local,rules,pair.first->proof(i))&&local==completed,"completed branch double credited");++replayed_positions;}
+ }
+ const auto restored_ab=ExecutionDepositHistory::from_snapshot(hab.snapshot(),bab.header,rab.state,bab.header.hash(),code_hash,2);
+ const auto restored_ba=ExecutionDepositHistory::from_snapshot(hba.snapshot(),bba.header,rba.state,bba.header.hash(),code_hash,2);
+ check(consume(restored_ab)==registry_ab&&consume(restored_ba)==registry_ba,"restored branches changed validator indices");
+ refuses([&]{ExecutionDepositHistory::from_snapshot(hab.snapshot(),bba.header,rba.state,bba.header.hash(),code_hash,2);});
+ refuses([&]{ExecutionDepositHistory::from_snapshot(hba.snapshot(),bab.header,rab.state,bab.header.hash(),code_hash,2);});
+ check(consume(hab)==registry_ab&&consume(hba)==registry_ba&&ha.count()==1&&hb.count()==1,"branch rejection mutated shared prefix");
+ std::cout<<Json{{"scenario","competing-deposit-order"},{"fundedBranches",2},{"depositsPerBranch",2},{"sameKeyIndices",Json::array({0,1})},{"foreignProofsRejected",foreign_rejections},{"replayedPositionsRejected",replayed_positions},{"bothHistoriesRestored",true},{"beaconForkChoice",false},{"runtimeConnected",false}}.dump()<<'\n';
  auto top=a;top.message.amount_gwei=8000000000;top.message.withdrawal_credentials[31]=99;top.signature.fill(0);
  const auto bt=block(ra.state,ba.header,1,&top);const auto [ht,rt]=ha.extend(engine,ra.state,ba.header,bt,bt.header.hash(),code_hash,4);
  registry.deposit_root=ht.root();registry.deposit_count=ht.count();check(process_phase0_deposit(registry,rules,ht.proof(1))==Phase0DepositOutcome::ToppedUp,"funded topup failed");
@@ -91,6 +121,28 @@ int main(){try{
  size_t vote_comparisons=0;for(uint64_t period:{2,64}){native.transition.consensus.state.eth1_votes_limit=period;for(uint64_t slot:{4,5,63,64,128}){check(capella_native_deposit_vote(full,ids[4],slot,native)==capella_native_deposit_vote(pruned,ids[4],slot,native),"pruning changed native period vote");++vote_comparisons;}}
  native.transition.consensus.state.eth1_votes_limit=64;
  auto vote_bytes=[](const ExecutionDepositHistory& history){const auto root=history.root();Bytes value(root.begin(),root.end());for(unsigned n=0;n<8;++n)value.push_back(uint8_t(history.count()>>(8*n)));value.insert(value.end(),history.execution_hash().begin(),history.execution_hash().end());return value;};
+ // Select mandatory operations from each parent in a store retaining both
+ // branches. Equal counts must not make the sibling's root/anchor acceptable.
+ CapellaForkStore competing;competing.blocks.emplace(ids[0],full.blocks.at(ids[0]));competing.timed.view.anchor=ids[0];
+ auto add_branch=[&](const ExecutionDepositHistory& first,const Header& first_execution,const ExecutionDepositHistory& second,const Header& second_execution){
+  ConsensusRoot parent=ids[0];uint64_t slot=1;
+  for(const auto& item:{std::pair{&first,&first_execution},std::pair{&second,&second_execution}}){CapellaForkBlock record{};record.header.slot=slot++;record.header.parent_root=parent;record.header.state_root=item.first->root();record.execution_block.header=*item.second;record.deposit_history=std::make_shared<const ExecutionDepositHistory>(*item.first);parent=consensus_beacon_header_root(record.header);check(competing.blocks.emplace(parent,std::move(record)).second,"competing deposit record collision");}return parent;
+ };
+ const auto parent_ab=add_branch(ha,ba.header,hab,bab.header),parent_ba=add_branch(hb,bb.header,hba,bba.header);
+ unsigned selected_operations=0;
+ for(const auto& side:{std::pair{parent_ab,&hab},std::pair{parent_ba,&hba}}){
+  const auto own=vote_bytes(*side.second),foreign=vote_bytes(side.second==&hab?hba:hab);
+  check(capella_native_deposit_vote_known(competing,side.first,own)&&!capella_native_deposit_vote_known(competing,side.first,foreign),"native ancestry accepted sibling at equal count");
+  Bytes view(272);auto set4=[&](size_t at,uint64_t n){for(unsigned k=0;k<4;++k)view[at+k]=uint8_t(n>>(8*k));};set4(252,272);set4(264,272);std::copy(own.begin(),own.end(),view.begin()+180);
+  const auto operations=capella_native_deposit_operations(competing,side.first,view,own,native);check(operations.size()==2480,"native selection mixed competing histories");
+  for(size_t i=0;i<2;++i){const auto proof=side.second->proof(i);const auto at=i*1240;
+   for(size_t j=0;j<33;++j)check(std::equal(proof.proof[j].begin(),proof.proof[j].end(),operations.begin()+at+32*j),"native sibling proof differs");
+   check(std::equal(proof.message.public_key.begin(),proof.message.public_key.end(),operations.begin()+at+1056),"native operation assigned wrong public key");++selected_operations;
+  }
+  refuses([&]{capella_native_deposit_operations(competing,side.first,view,foreign,native);});
+  std::copy(foreign.begin(),foreign.end(),view.begin()+180);refuses([&]{capella_native_deposit_operations(competing,side.first,view,own,native);});
+ }
+ std::cout<<Json{{"scenario","competing-native-deposit-selection"},{"retainedBranches",2},{"mandatoryOperationsChecked",selected_operations},{"siblingVotesRejected",true},{"foreignSelectedHistoryRejected",true},{"syntheticBeaconEnvelope",true},{"runtimeConnected",false}}.dump()<<'\n';
  for(const auto* history:histories){const auto vote=vote_bytes(*history);check(capella_native_deposit_vote_known(pruned,ids[4],vote),"pruning lost historical native vote");}
  check(!capella_native_deposit_vote_known(pruned,ids[4],vote_bytes(hb)),"pruned history accepted foreign branch vote");
  Bytes advanced(272);const auto selected_vote=vote_bytes(ha);std::copy(selected_vote.begin(),selected_vote.end(),advanced.begin()+180);auto put=[&](size_t at,uint64_t value){for(unsigned n=0;n<4;++n)advanced[at+n]=uint8_t(value>>(8*n));};put(252,272);put(264,272);

@@ -4007,3 +4007,15 @@ avec les clés automatiques. Régressions index fixe et dépôt/activation passe
 WAN restent ouverts ; le test injecte directement un index périmé, pas un thread
 concurrent. Aucun EIP/production clôturé.
 [Preuves](qualification/capella-registration-signing-guard-20260927/README.md).
+
+## 2026-09-27 — Deux branches financées, ordres de dépôts inversés
+
+Nouveau cas dans `consensus_execution_deposit_history` : mêmes clés A/B déposées
+par transactions exécutées dans les ordres AB/BA, index de A 0/1 ; quatre preuves
+étrangères et quatre rejeux refusés sans mutation. Les deux restaurations
+reconstruisent leurs registres. Le sélecteur natif distingue les deux ascendances
+à cardinalité égale et vérifie quatre opérations obligatoires. Test passé en
+0,39 s. Enveloppes Beacon synthétiques pour la sélection ; bascule réelle du
+reactor, fork choice et signatures après réindexation restent ouverts.
+Aucun changement de production, aucun EIP clôturé.
+[Preuves et limites](qualification/competing-deposit-order-20260927/README.md).
