@@ -12,7 +12,7 @@ Genesis Genesis::from_json(const Json& data){
  g.consensus=config.value("consensus",std::string("pow"));
  if(g.consensus!="pow"&&g.consensus!="pos"&&g.consensus!="beacon")throw std::invalid_argument("unknown consensus");
  if(g.consensus=="beacon"){
-  if(g.evm_revision!=EvmRevision::Paris||g.chain_id<=0)throw std::invalid_argument("Beacon execution requires explicit Paris profile and positive chain ID");
+  if((g.evm_revision!=EvmRevision::Paris&&g.evm_revision!=EvmRevision::Shanghai)||g.chain_id<=0)throw std::invalid_argument("Beacon execution requires explicit Paris or Shanghai profile and positive chain ID");
   for(const char* field:{"stakingContract","posSignatureVersion","bootstrapValidator","bftVersion","consensusRules","stakingQueryRules"})
    if(config.contains(field))throw std::invalid_argument("Beacon genesis cannot contain legacy consensus parameters");
  }
@@ -68,7 +68,12 @@ Genesis Genesis::from_json(const Json& data){
  if((g.consensus=="beacon"?h.difficulty!=0:h.difficulty<1)||h.gas_limit<g.minimum_gas_limit)throw std::invalid_argument("invalid genesis limits");
  if(g.consensus=="beacon"){
   if(h.nonce!=Bytes(8))throw std::invalid_argument("Beacon genesis nonce must be zero");
-  const std::string domain="Nano/Beacon/Bellatrix/v1";
+  const std::string domain=g.evm_revision==EvmRevision::Shanghai?"Nano/Beacon/Capella/v1":"Nano/Beacon/Bellatrix/v1";
+  if(g.evm_revision==EvmRevision::Shanghai){
+   h.withdrawals_root=withdrawals_root(g.block.withdrawals);
+   if(data.contains("withdrawals")&&data.at("withdrawals")!=Json::array())throw std::invalid_argument("Capella genesis withdrawals must be empty");
+   if(data.contains("withdrawalsRoot")&&data.at("withdrawalsRoot")!=hex(*h.withdrawals_root))throw std::invalid_argument("Capella genesis withdrawals root mismatch");
+  }
   h.extra_data=keccak(Rlp(std::vector<Rlp>{Rlp(Bytes(domain.begin(),domain.end())),Rlp(g.chain_id),Rlp(h.extra_data)}).encode());
  }
  if(g.pos_signature_version){const std::string domain="Nano/PoS/Genesis";h.extra_data=keccak(Rlp(std::vector<Rlp>{Rlp(Bytes(domain.begin(),domain.end())),Rlp(Int(g.pos_signature_version)),Rlp(g.chain_id),Rlp(unhex(g.bootstrap_validator)),Rlp(g.staking_contract.empty()?Bytes():unhex(g.staking_contract)),Rlp(h.extra_data)}).encode());}

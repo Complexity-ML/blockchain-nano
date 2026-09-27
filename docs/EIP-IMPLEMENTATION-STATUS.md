@@ -2400,3 +2400,14 @@ export et cycle des catalogues passent par HTTP ; scénario réussi en 17,24 s.
 [Preuves](qualification/capella-private-http-20260927/README.md).
 Il reste le dispatch CLI, la synchronisation et ses dépendances, puis le transport
 libp2p. Ce test local ne prouve pas une qualification distribuée ou sous surcharge.
+
+### Capella : genesis Beacon/Shanghai depuis JSON
+
+Le chargeur accepte maintenant Shanghai explicitement pour Beacon, avec domaine
+Capella distinct et engagement de retraits vides. Retraits non vides ou racine
+incohérente refusés ; règles Paris inchangées. Les barrières avant vérification du
+checkpoint sont testées à l’ouverture et à la réouverture pour les deux profils.
+Tests `beacon_execution_gate` et `chain` verts en 4,28 s.
+[Preuves](qualification/capella-json-genesis-20260927/README.md).
+Ce changement est un prérequis du démarrage CLI : sélection du runtime dans
+`run_node`, transport P2P et migration d’une chaîne existante restent ouverts.
