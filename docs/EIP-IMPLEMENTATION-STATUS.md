@@ -3381,3 +3381,16 @@ locale de 33,518 ms contre 671,225 ms pour un estimateur neuf sur la même tête
 Le premier calcul, les branches non cachées, la fenêtre maximale et l’équité
 sous mutex RPC restent ouverts. Aucun changement de consensus EIP-1559.
 [Implémentation, mesures et limites](qualification/rpc-fee-incremental-20260927/README.md).
+
+## 2026-09-27 — Reprise ordonnée pendant l’activation d’une nouvelle clé
+
+Nouveau scénario `consensus_capella_deposit_activation_restart` passé en 159,53 s.
+Dépôt consommé au slot 80 ; owner et journal rouverts au slot 104 pendant l’attente,
+puis second owner et journal après le premier vote au slot 142. Le vote
+contradictoire est rejeté avant le signataire, sans mutation du journal ; trois
+votes légitimes sont admis et la finalité atteint l’époque 18. Registre à 65,
+activation époque 17 et curseur unique conservés après réouverture finale.
+L’échec initial de banc est conservé, aucun correctif runtime. **Partiel** :
+réouvertures ordonnées, pas crash au commit, perte de témoin, WAN ou churn massif.
+Ne clôture ni EIP-6110 ni le cycle validateur de production.
+[Preuves et limites](qualification/capella-activation-restart-20260927/README.md).

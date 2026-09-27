@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="1"
+	failures="1"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="139"
+	timestamp="2026-09-27T16:43:15"
+	>
+	<testcase name="consensus_capella_deposit_activation_restart" classname="consensus_capella_deposit_activation_restart" time="139.063" status="fail">
+		<failure message="Failed"/>
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_runtime"/>
+		</properties>
+		<system-out>{"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+{"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+{"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+{"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+{"finalizedEpoch":3,"progressSlot":40,"signedVotes":264}
+{"finalizedEpoch":3,"progressSlot":41,"signedVotes":272}
+{"depositIndex":0,"depositProgressSlot":48,"finalizedEpoch":4}
+{"depositIndex":0,"depositProgressSlot":56,"finalizedEpoch":5}
+{"depositIndex":0,"depositProgressSlot":64,"finalizedEpoch":6}
+{"depositIndex":0,"depositProgressSlot":72,"finalizedEpoch":7}
+{"depositIndex":1,"depositProgressSlot":80,"finalizedEpoch":8}
+{"depositIndex":1,"depositProgressSlot":88,"finalizedEpoch":9}
+{"depositIndex":1,"depositProgressSlot":96,"finalizedEpoch":10}
+{"activationRestartPhase":"scheduled-pending","owner":0,"signedTarget":null,"slot":104}
+{"depositIndex":1,"depositProgressSlot":104,"finalizedEpoch":11}
+{"depositIndex":1,"depositProgressSlot":112,"finalizedEpoch":12}
+{"depositIndex":1,"depositProgressSlot":120,"finalizedEpoch":13}
+{"depositIndex":1,"depositProgressSlot":128,"finalizedEpoch":14}
+{"depositIndex":1,"depositProgressSlot":136,"finalizedEpoch":15}
+{"activationRestartPhase":"first-vote","owner":1,"signedTarget":17,"slot":142}
+Conflicting or old beacon attestation refused
+</system-out>
+	</testcase>
+</testsuite>
