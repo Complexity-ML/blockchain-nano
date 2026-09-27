@@ -1555,3 +1555,11 @@ set_tests_properties(consensus_capella_local_assembly_finality consensus_capella
 
 add_test(NAME consensus_capella_execution_owner COMMAND nano-capella-transition-tests --owner-finality)
 set_tests_properties(consensus_capella_execution_owner PROPERTIES TIMEOUT 360 LABELS "qualification_consensus_ethereum")
+
+add_test(NAME consensus_capella_execution_owner_reorg COMMAND nano-capella-transition-tests --owner-reorg)
+set_tests_properties(consensus_capella_execution_owner_reorg PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_ethereum")
+
+if(APPLE)
+ add_test(NAME consensus_capella_execution_owner_sync COMMAND nano-capella-transition-tests --owner-sync)
+ set_tests_properties(consensus_capella_execution_owner_sync PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_ethereum")
+endif()

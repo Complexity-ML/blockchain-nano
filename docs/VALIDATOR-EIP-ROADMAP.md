@@ -2802,3 +2802,17 @@ réouverture au slot 24 et contrôles directs des RPC latest/finalized/nonce.
 Le Genesis Shanghai est construit dans le test ; le démarrage public reste Paris.
 Restent migration du Store vivant, ordonnanceur/P2P/services Beacon, réorganisations
 et pannes d’écriture avec propriétaire, sorties/changements BLS et contributions sync.
+
+### Capella : réorganisations et panne WAL avec propriétaire
+
+Deux nouveaux scénarios qualifient le raccordement `Blockchain` : bascule vers
+une branche vide puis retour, réinsertion/retrait de la transaction dans la mempool,
+index et reçu RPC cohérents ; erreur fsync injectée, huit accès directs bloqués
+et RPC fermé, reprise après conservation ou perte du suffixe WAL puis rejeu.
+Quatre suites réussies en 28,78 s, dont deux contrôles existants affectés.
+[Preuves](qualification/capella-owner-resilience-20260927/README.md).
+Périmètre local synthétique, sans panne électrique physique ni réseau. Le test
+fournit le jeton de reprise correspondant à l’issue connue ; l’authentification
+indépendante de ce jeton reste requise pour le runtime de production.
+Restent migration inter-forks du Store vivant, ordonnanceur/transport Capella,
+files de sorties/changements BLS, contributions sync et qualification dépôts natifs.

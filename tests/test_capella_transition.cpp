@@ -29,6 +29,8 @@ static std::string executable;
 static bool sync_scenario=false;
 static unsigned local_finality=0;
 static bool owner_mode=false;
+static bool owner_reorg=false;
+static bool owner_sync=false;
 #ifdef NANO_SYNC_FAULT
 extern "C" void nano_test_arm_sync_fault(const char*);
 extern "C" unsigned nano_test_sync_failures();
@@ -52,8 +54,11 @@ static int sync_writer(const fs::path& directory){
  const auto bundle=load(directory/"bundle.json");const auto profile=bundle.at("profile").get<std::string>();
  const auto rules=load_capella_fork_profile(profile,sha256(Bytes(profile.begin(),profile.end())),1024*1024);
  const auto genesis=Block::from_json(bundle.at("genesis"));const auto chain=rules.transition.chain_id;
- ChainStore disk(directory/"db");const auto initial=disk.fork_checkpoint(chain,genesis.header.hash(),crash_limits.envelope_bytes);check(bool(initial),"sync checkpoint missing");
- CapellaDurableReactor reactor(disk,chain,genesis.header.hash(),rules,crash_limits,initial->token);
+ const bool bound=bundle.value("executionOwner",false);std::unique_ptr<ChainStore> standalone;std::unique_ptr<Blockchain> owner;
+ if(bound){Genesis g;g.chain_id=chain;g.consensus="beacon";g.evm_revision=EvmRevision::Shanghai;g.block=genesis;g.state=State::from_json(bundle.at("alloc"));owner=std::make_unique<Blockchain>(directory/"db",g);}else standalone=std::make_unique<ChainStore>(directory/"db");
+ const auto& disk=bound?owner->store():*standalone;const auto initial=disk.fork_checkpoint(chain,genesis.header.hash(),crash_limits.envelope_bytes);check(bool(initial),"sync checkpoint missing");
+ auto coordinator=bound?std::make_unique<CapellaDurableReactor>(*owner,rules,crash_limits,initial->token):std::make_unique<CapellaDurableReactor>(*standalone,chain,genesis.header.hash(),rules,crash_limits,initial->token);auto& reactor=*coordinator;
+ std::unique_ptr<Rpc> rpc;if(bound)rpc=std::make_unique<Rpc>(*owner);
  reactor.tick(bundle.at("time").get<uint64_t>());const auto before=reactor.current();const auto wire=unhex(bundle.at("wire").get<std::string>());
  const auto next=prepare_capella_received_block(*before.state,wire,rules,crash_limits.replay_slots,crash_limits.sync_trials);check(bool(next),"sync candidate rejected");
  save(directory/"expected.json",Json{{"old",capella_store_snapshot(*before.state,rules,crash_limits)},{"new",capella_store_snapshot(*next,rules,crash_limits)},{"sequence",before.token.sequence}});
@@ -61,7 +66,8 @@ static int sync_writer(const fs::path& directory){
  nano_test_arm_sync_fault(wal.c_str());bool failed=false;try{reactor.block(wire);}catch(const std::runtime_error&){failed=true;}check(failed&&nano_test_sync_failures()>0,"Capella sync fault not reached");
  unsigned blocked=0;auto refuse=[&](auto action){try{action();}catch(const std::runtime_error&){++blocked;}};
  refuse([&]{reactor.current();});refuse([&]{reactor.tick(bundle.at("time").get<uint64_t>());});refuse([&]{reactor.block(wire);});refuse([&]{disk.latest();});refuse([&]{disk.fork_checkpoint(chain,genesis.header.hash(),crash_limits.envelope_bytes);});
- check(blocked==5,"uncertain Capella state still accessible");
+ if(bound){refuse([&]{owner->tip();});refuse([&]{owner->state();});refuse([&]{owner->finalized_block();});check(rpc->handle(Json{{"jsonrpc","2.0"},{"id",1},{"method","eth_blockNumber"},{"params",Json::array()}}).contains("error"),"uncertain owner RPC accessible");}
+ check(blocked==(bound?8:5),"uncertain Capella state still accessible");
  std::cout<<Json{{"wal",wal.filename().string()},{"before",offset},{"after",fs::file_size(wal)},{"blocked",blocked}}.dump()<<std::endl;_exit(0);
 }
 #endif
@@ -289,15 +295,24 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
    check(reactor->block(bad_signature)&&reactor->current().token==accepted_token&&reactor->signed_block(admitted_id)==std::optional<Bytes>(wire),"duplicate signature replaced archive");
    store=*admitted_store;
    if(!finality&&slot==first_slot+slots){
-    auto alternate_execution=execution;auto alternative_tx=tx;alternative_tx.value=1;alternate_execution.transactions[0]=SignedTransaction::sign(alternative_tx,key);
+    auto alternate_execution=execution;auto alternative_tx=tx;alternative_tx.value=1;alternate_execution.transactions[0]=SignedTransaction::sign(alternative_tx,key);if(owner_reorg)alternate_execution.transactions.clear();
     State alternate_state=state;ExecutionEngine(r.chain_id,history,EvmRevision::Shanghai,r.replay_policy,ConsensusInputPolicy::EthereumValidated).execute_block(alternate_state,alternate_execution,false);
     auto alternative_payload=payload(alternate_execution);alternative_payload.withdrawals=withdrawals;const auto alternative_encoded=encode_capella_execution_payload(alternative_payload,r.execution,r.withdrawals.maximum_per_payload,r.consensus.maximum_block_bytes);
     auto alternate_body=body;alternate_body.resize(fixed);put(alternate_body,224+sync_bytes,fixed+alternative_encoded.size(),4);alternate_body.insert(alternate_body.end(),alternative_encoded.begin(),alternative_encoded.end());
 
+    Temp owner_directory;std::unique_ptr<Blockchain> execution_owner;std::unique_ptr<CapellaDurableReactor> bound;
+    if(owner_reorg){Genesis g;g.chain_id=r.chain_id;g.consensus="beacon";g.evm_revision=EvmRevision::Shanghai;g.block=disk_genesis;g.state=disk_genesis_state;execution_owner=std::make_unique<Blockchain>(owner_directory/"chain",g);bound=std::make_unique<CapellaDurableReactor>(*execution_owner,store_rules,snapshot_limits,*store);}
+    auto verify_owner=[&](const CapellaForkStore& reference){if(!bound)return;const auto& h=capella_fork_head(reference,store_rules);const auto hash=execution.transactions.front().hash();const bool included=!h.execution_block.transactions.empty();
+     check(execution_owner->tip().header.hash()==h.execution_block.header.hash()&&execution_owner->state().root()==h.execution_state.root(),"reorg owner state mismatch");
+     check(bool(execution_owner->store().receipt(hash))==included&&bool(execution_owner->store().transaction(hash))==included,"reorg owner stale transaction indexes");
+     check(execution_owner->pending_count()==(included?0:1)&&bool(execution_owner->pending_transaction(hash))==!included,"reorg orphan pool mismatch");
+     Rpc rpc(*execution_owner);const auto response=rpc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method","eth_getTransactionReceipt"},{"params",Json::array({hex(hash)})}});check(!response.contains("error")&&response.at("result").is_null()==!included,"reorg receipt RPC mismatch");
+    };verify_owner(*store);
     const auto alternate=prepare_capella_unsigned_block(beacon,slot,proposer,parent_root,alternate_body,r,parent.header,state,history,64,100000);check(alternate.has_value(),"alternate construction failed");
     const auto branch=prepare_capella_received_block(*store,sign_message(alternate->message_ssz),store_rules,64,100000);check(branch&&branch->blocks.size()==store->blocks.size()+1,"sibling branch lost");
     const auto& branch_head=capella_fork_head(*branch,store_rules);check(branch_head.execution_state.root()==expected.root()||branch_head.execution_state.root()==alternate_state.root(),"sibling head execution mismatch");
     check(reactor->block(sign_message(alternate->message_ssz)),"durable alternate block rejected");for(const auto& [id,b]:branch->blocks)if(!store->blocks.contains(id))signed_wires.emplace(id,sign_message(alternate->message_ssz));reactor->tick((genesis_time+(slot+1)*seconds)*1000);
+    if(bound){check(bound->block(sign_message(alternate->message_ssz)),"bound sibling refused");bound->tick((genesis_time+(slot+1)*seconds)*1000);}
     auto voting=prepare_capella_store_tick(*branch,(genesis_time+(slot+1)*seconds)*1000,store_rules,64,100000);
     const auto canonical=consensus_beacon_header_root(admitted);
     const ConsensusBeaconHeader alternate_header{slot,proposer,parent_root,root_at(alternate->message_ssz,48),capella_beacon_body_root(alternate_body,r.consensus.body,l.sync_committee_size,r.execution,r.withdrawals.maximum_per_payload,r.maximum_bls_changes,r.consensus.maximum_block_bytes)};
@@ -312,11 +327,11 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
      Phase0SignedAttestation vote{{slot,committee_index,head,{},target_checkpoint},std::vector<bool>(members.size()),{}};vote.aggregation_bits[position]=true;Key voter(members[position]);
      vote.signature=voter.sign(consensus_signing_root(consensus_attestation_root(vote.data),consensus_domain({1,0,0,0},context.target.fork.current_version,context.target.genesis_root)));
      auto invalid=vote;invalid.signature[0]^=1;check(!prepare_capella_store_vote(voting,invalid,store_rules,64,100000),"invalid Capella vote signature accepted");
-     const auto next=prepare_capella_store_vote(voting,vote,store_rules,64,100000);check(next.has_value(),"Capella branch vote rejected");voting=*next;check(reactor->vote(vote)&&capella_store_snapshot(*reactor->current().state,store_rules,snapshot_limits)==capella_store_snapshot(voting,store_rules,snapshot_limits),"durable Capella vote differs");++votes;return std::pair{members[position],vote};
+     const auto next=prepare_capella_store_vote(voting,vote,store_rules,64,100000);check(next.has_value(),"Capella branch vote rejected");voting=*next;check(reactor->vote(vote)&&capella_store_snapshot(*reactor->current().state,store_rules,snapshot_limits)==capella_store_snapshot(voting,store_rules,snapshot_limits),"durable Capella vote differs");if(bound){check(bound->vote(vote),"bound branch vote refused");verify_owner(voting);}++votes;return std::pair{members[position],vote};
     };
     const auto first_vote=vote_for(0,canonical);check(capella_fork_head(voting,store_rules).execution_state.root()==expected.root(),"canonical vote head mismatch");
     vote_for(1,alternate_root);vote_for(2,alternate_root);check(capella_fork_head(voting,store_rules).execution_state.root()==alternate_state.root(),"votes did not select alternate EVM state");++vote_reorgs;
-    vote_for(3,canonical);vote_for(4,canonical);vote_for(5,canonical);check(capella_fork_head(voting,store_rules).execution_state.root()==expected.root(),"votes did not restore canonical EVM state");++vote_reorgs;roundtrip(voting);
+    vote_for(3,canonical);vote_for(4,canonical);vote_for(5,canonical);check(capella_fork_head(voting,store_rules).execution_state.root()==expected.root(),"votes did not restore canonical EVM state");++vote_reorgs;roundtrip(voting);if(bound)std::cout<<Json{{"scenario","capella-owner-reorg"},{"branchSwitches",2},{"orphanReinserted",true},{"receiptRpcChecked",true},{"networkTransport",false}}.dump()<<std::endl;
     auto conflicting=first_vote.second;conflicting.data.beacon_block_root=alternate_root;if(slot%slots==0)conflicting.data.target.root=alternate_root;
     conflicting.signature=Key(first_vote.first).sign(consensus_signing_root(consensus_attestation_root(conflicting.data),consensus_domain({1,0,0,0},version,genesis_root)));
     const auto slashed=prepare_capella_store_slashing(voting,{first_vote.second.data,{first_vote.first},first_vote.second.signature},{conflicting.data,{first_vote.first},conflicting.signature},store_rules);
@@ -409,22 +424,24 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
  const auto restored_rules=load_capella_fork_profile(profile,profile_digest,1024*1024);check(capella_fork_profile(restored_rules)==capella_fork_profile(store_rules),"Capella profile roundtrip differs");
 #ifdef NANO_SYNC_FAULT
  if(sync_scenario){
+  Genesis owner_genesis;owner_genesis.chain_id=r.chain_id;owner_genesis.consensus="beacon";owner_genesis.evm_revision=EvmRevision::Shanghai;owner_genesis.block=disk_genesis;owner_genesis.state=disk_genesis_state;
   for(bool lose:{false,true}){Temp tmp;
-   {ChainStore disk(tmp/"db");disk.bind_chain(r.chain_id,disk_genesis.header.hash(),"capella-sync-test");disk.commit(disk_genesis,disk_genesis_state,{});auto first=capella_store_from_snapshot(short_snapshot,sha256(Bytes(short_snapshot.begin(),short_snapshot.end())),store_rules,snapshot_limits);CapellaDurableReactor initial(disk,r.chain_id,disk_genesis.header.hash(),store_rules,snapshot_limits,std::move(first));}
-   save(tmp/"bundle.json",Json{{"profile",profile},{"genesis",disk_genesis.to_json(true)},{"wire",hex(sync_wire)},{"time",sync_time}});
+   if(owner_sync){Blockchain owner(tmp/"db",owner_genesis);auto first=capella_store_from_snapshot(short_snapshot,sha256(Bytes(short_snapshot.begin(),short_snapshot.end())),store_rules,snapshot_limits);CapellaDurableReactor initial(owner,store_rules,snapshot_limits,std::move(first));}else{ChainStore disk(tmp/"db");disk.bind_chain(r.chain_id,disk_genesis.header.hash(),"capella-sync-test");disk.commit(disk_genesis,disk_genesis_state,{});auto first=capella_store_from_snapshot(short_snapshot,sha256(Bytes(short_snapshot.begin(),short_snapshot.end())),store_rules,snapshot_limits);CapellaDurableReactor initial(disk,r.chain_id,disk_genesis.header.hash(),store_rules,snapshot_limits,std::move(first));}
+   save(tmp/"bundle.json",Json{{"profile",profile},{"genesis",disk_genesis.to_json(true)},{"wire",hex(sync_wire)},{"time",sync_time},{"executionOwner",owner_sync},{"alloc",disk_genesis_state.to_json()}});
    const auto result=success(run({executable,"--sync-writer",tmp.path.string()}));const auto wal=tmp/"db"/result.at("wal").get<std::string>();check(fs::file_size(wal)==result.at("after").get<uint64_t>()&&result.at("after")>result.at("before"),"sync WAL suffix missing");
    if(lose){const int fd=open(wal.c_str(),O_WRONLY);check(fd>=0,"open owned WAL");const bool ok=ftruncate(fd,result.at("before").get<uint64_t>())==0&&fsync(fd)==0;close(fd);check(ok,"truncate owned WAL");}
-   const auto expected=load(tmp/"expected.json");ChainStore disk(tmp/"db");const auto record=disk.fork_checkpoint(r.chain_id,disk_genesis.header.hash(),snapshot_limits.envelope_bytes);
+   const auto expected=load(tmp/"expected.json");std::unique_ptr<ChainStore> standalone;std::unique_ptr<Blockchain> owner;if(owner_sync)owner=std::make_unique<Blockchain>(tmp/"db",owner_genesis);else standalone=std::make_unique<ChainStore>(tmp/"db");const auto& disk=owner_sync?owner->store():*standalone;const auto record=disk.fork_checkpoint(r.chain_id,disk_genesis.header.hash(),snapshot_limits.envelope_bytes);
    check(record&&record->snapshot==expected.at(lose?"old":"new").get<std::string>()&&record->token.sequence==expected.at("sequence").get<uint64_t>()+(lose?0:1),"mixed Capella recovery disposition");
    // The test resolves both known outcomes; production must authenticate its restart token independently.
-   CapellaDurableReactor restored(disk,r.chain_id,disk_genesis.header.hash(),store_rules,snapshot_limits,record->token);const auto recovered=restored.current();const auto& head=capella_fork_head(*recovered.state,store_rules);const auto latest=disk.latest();
+   auto coordinator=owner_sync?std::make_unique<CapellaDurableReactor>(*owner,store_rules,snapshot_limits,record->token):std::make_unique<CapellaDurableReactor>(*standalone,r.chain_id,disk_genesis.header.hash(),store_rules,snapshot_limits,record->token);auto& restored=*coordinator;const auto recovered=restored.current();const auto& head=capella_fork_head(*recovered.state,store_rules);const auto latest=disk.latest();
    check(latest&&latest->header.hash()==head.execution_block.header.hash()&&latest->withdrawals==head.execution_block.withdrawals&&disk.state_at(latest->header.number)->root()==head.execution_state.root()&&disk.count()==latest->header.number+1,"Capella recovery paired state mismatch");
    for(const auto& [id,b]:recovered.state->blocks)for(const auto& tx:b.execution_block.transactions)check(disk.receipt(tx.hash())&&disk.receipt(tx.hash())->block_hash==b.execution_block.header.hash()&&disk.transaction(tx.hash()),"Capella recovered transaction index missing");
    const auto candidate_bytes=expected.at("new").get<std::string>();const auto candidate=capella_store_from_snapshot(candidate_bytes,sha256(Bytes(candidate_bytes.begin(),candidate_bytes.end())),store_rules,snapshot_limits);const auto& next_head=capella_fork_head(candidate,store_rules);
    const auto next_id=consensus_beacon_header_root(next_head.header);check(bool(disk.checkpoint_archive(Bytes(next_id.begin(),next_id.end()),snapshot_limits.envelope_bytes))==!lose,"Capella archive detached from WAL outcome");
    check(bool(disk.block_by_number(next_head.execution_block.header.number))==!lose,"lost Capella block remained indexed");for(const auto& tx:next_head.execution_block.transactions)check(bool(disk.receipt(tx.hash()))==!lose&&bool(disk.transaction(tx.hash()))==!lose,"lost Capella transaction remained indexed");
    check(restored.block(sync_wire),"Capella replay after recovery rejected");const auto completed=restored.current();check(restored.signed_block(next_id)==std::optional<Bytes>(sync_wire),"Capella replay archive differs");check(capella_store_snapshot(*completed.state,store_rules,snapshot_limits)==expected.at("new").get<std::string>(),"Capella recovery replay differs");
-   std::cout<<Json{{"scenario","capella-reactor-sync"},{"lostSuffix",lose},{"blockedOperations",result.at("blocked")},{"replay",true},{"physicalPowerLoss",false},{"networkActivated",false}}.dump()<<'\n';
+   if(owner_sync){const auto& h=capella_fork_head(*completed.state,store_rules);check(owner->tip().header.hash()==h.execution_block.header.hash()&&owner->state().root()==h.execution_state.root(),"recovered owner cache mismatch");Rpc rpc(*owner);const auto response=rpc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method","eth_getBlockByNumber"},{"params",Json::array({"latest",false})}});check(!response.contains("error")&&response.at("result").at("hash")==hex(h.execution_block.header.hash()),"recovered owner RPC mismatch");}
+   std::cout<<Json{{"scenario","capella-reactor-sync"},{"executionOwner",owner_sync},{"lostSuffix",lose},{"blockedOperations",result.at("blocked")},{"replay",true},{"physicalPowerLoss",false},{"networkActivated",false}}.dump()<<'\n';
   }
   return;
  }
@@ -476,9 +493,10 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
  }
  std::cout<<Json{{"scenario","capella-signed-transition"},{"migrated",migrate},{"finalityScenario",finality},{"participationPercent",participation},{"finalizedEpoch",store->timed.view.finalized.epoch},{"includedAttestations",included_attestations},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"storeBlocks",store->blocks.size()},{"snapshotReopened",true},{"durableReactor",true},{"signedArchives",signed_wires.size()},{"signedVotes",durable_votes.size()},{"signedSlashings",durable_proofs.size()},{"deferredVotes",deferred_votes.size()},{"localAttestations",local_signatures},{"localProposals",local_proposals},{"localRandao",local_randao},{"assembledBodies",assembled_bodies},{"storeSigkillReopens",2},{"storeVotes",votes},{"voteReorgs",vote_reorgs},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
 }
-int main(int argc,char** argv){try{executable=argv[0];if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}
+int main(int argc,char** argv){try{executable=argv[0];if(argc==2&&std::string(argv[1])=="--owner-reorg"){owner_reorg=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}
 #ifdef NANO_SYNC_FAULT
 if(argc==3&&std::string(argv[1])=="--sync-writer")return sync_writer(argv[2]);
+if(argc==2&&std::string(argv[1])=="--owner-sync"){owner_sync=true;sync_scenario=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--reactor-sync"){sync_scenario=true;scenario(false);return 0;}
 #endif
 if(argc==3&&std::string(argv[1])=="--crash-writer")return crash_writer(argv[2]);if(argc==2&&std::string(argv[1])=="--finality-half"){scenario(false,0,true,50);return 0;}if(argc==2&&std::string(argv[1])=="--finality"){scenario(false,0,true);return 0;}scenario(false);scenario(true);scenario(true,3);return 0;
