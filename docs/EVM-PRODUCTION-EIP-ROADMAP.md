@@ -114,3 +114,15 @@ EIP déclaré conforme par cette modification de transport.
 Régression distribuée supplémentaire : deux nœuds locaux × 32 validateurs,
 époque 2 finalisée sur une racine commune, trois observations stables.
 2 863 relais réussis, 8 échecs fermés ; aucune qualification WAN supplémentaire.
+
+### 2026-09-27 — Concurrence des catalogues : quotas validés, équité ouverte
+
+Nouveau test natif : 32 threads × 32 vagues, budgets séparés de handles/mémoire,
+32 ouvertures identiques simultanées et 128 courses ouverture/annulation.
+Quotas, absence de résurrection, récupération sans TTL et checkpoint inchangé
+validés en 5,92 s. Deux threads sur 32 n'obtiennent aucun accès pendant les vagues
+avec capacité 2 : **équité sous contention non démontrée**. Tous récupèrent
+ensuite un accès en exécution sérialisée. Ce test du registre ne qualifie pas
+l'ordonnancement tournant des pairs du démon, ni un réseau de 32 nœuds.
+Aucune nouvelle conformité EIP ni disponibilité production déclarée.
+[Mesures, preuve et prochain critère](qualification/capella-catalog-concurrency-20260927/README.md).

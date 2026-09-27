@@ -1589,3 +1589,6 @@ set_tests_properties(consensus_capella_cli_serve PROPERTIES TIMEOUT 240 LABELS "
 
 add_test(NAME consensus_capella_managed_node COMMAND nano-capella-transition-tests --managed-cli $<TARGET_FILE:nano>)
 set_tests_properties(consensus_capella_managed_node PROPERTIES TIMEOUT 240 LABELS "qualification_consensus_runtime")
+
+add_test(NAME consensus_capella_catalog_concurrency COMMAND nano-capella-transition-tests --catalog-concurrency)
+set_tests_properties(consensus_capella_catalog_concurrency PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_runtime")

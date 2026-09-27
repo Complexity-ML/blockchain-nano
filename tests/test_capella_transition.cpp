@@ -26,6 +26,7 @@
 #include "../network/capella_catalog_relay.hpp"
 #include "../network/capella_block_delivery.hpp"
 #include <future>
+#include "support/capella_catalog_concurrency.hpp"
 #include "../src/consensus_bellatrix_projection.hpp"
 using namespace test;using namespace test::phase0_minimal;
 namespace {
@@ -50,7 +51,7 @@ static bool configured_runtime=false;
 static bool capella_http=false;
 static std::string cli_binary;static Json cli_genesis;static bool managed_cli=false;static std::string daemon_binary;static bool network_cli=false;static bool distributed_cli=false;static bool transport_outage_cli=false;static fs::path network_export;
 static bool beacon_reads=false;
-static bool wire_mode=false;
+static bool wire_mode=false;static bool catalog_concurrency=false;
 static size_t beacon_read_checks=0;
 #ifdef NANO_SYNC_FAULT
 extern "C" void nano_test_arm_sync_fault(const char*);
@@ -686,6 +687,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
    refused=false;try{restarted.acquire("a",current,id('9'),"block");}catch(const std::invalid_argument&){refused=true;}check(refused,"restart accepted stale generation");
    leases.stop();refused=false;try{leases.generation();}catch(const std::runtime_error&){refused=true;}check(refused,"stopped catalog exposed generation");
   }
+  if(catalog_concurrency)std::cout<<qualify_capella_catalog_concurrency(*reactor).dump()<<std::endl;
   const auto checkpoint=reactor->current();size_t exports=0;
   auto verify_export=[&](const char* kind,const ConsensusRoot& id,const Bytes& bytes){const auto result=reactor->export_message(kind,id,16*1024*1024,checkpoint.token);check(result.at("available")==true&&result.at("envelope").at("ssz")==hex(bytes)&&result.at("digest")==hex(checkpoint.token.digest),"Capella export changed bytes/checkpoint");auto decoded=service->decode(result.at("envelope").dump());check(decoded&&decoded->ssz==bytes,"Capella exported envelope cannot be admitted");++exports;};
   for(const auto& [id,wire]:signed_wires)verify_export("block",id,wire);
@@ -882,7 +884,7 @@ int main(int argc,char** argv){try{executable=argv[0];
  if(argc==4&&std::string(argv[1])=="--network-cli"){network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--daemon-cli"){managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==3&&std::string(argv[1])=="--managed-cli"){managed_cli=true;cli_binary=argv[2];configured_runtime=true;scenario(false);return 0;}
-if(argc==3&&std::string(argv[1])=="--cli"){cli_binary=argv[2];configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--http"){configured_runtime=true;capella_http=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--wire"){wire_mode=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--beacon-reads"){beacon_reads=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--configured-runtime"){configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler"){scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-reorg"){owner_reorg=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}
+if(argc==3&&std::string(argv[1])=="--cli"){cli_binary=argv[2];configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--http"){configured_runtime=true;capella_http=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--catalog-concurrency"){wire_mode=true;catalog_concurrency=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--wire"){wire_mode=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--beacon-reads"){beacon_reads=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--configured-runtime"){configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler"){scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-reorg"){owner_reorg=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}
 #ifdef NANO_SYNC_FAULT
 if(argc==3&&std::string(argv[1])=="--sync-writer")return sync_writer(argv[2]);
 if(argc==2&&std::string(argv[1])=="--owner-witness"){owner_witness=true;owner_sync=true;sync_scenario=true;scenario(false);return 0;}
