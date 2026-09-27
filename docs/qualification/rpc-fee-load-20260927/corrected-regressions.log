@@ -1,0 +1,81 @@
+UpdateCTestConfiguration  from :/Users/boris/Dev/blockchain-nano/build-release/DartConfiguration.tcl
+Test project /Users/boris/Dev/blockchain-nano/build-release
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 4
+    Start  4: rpc
+
+4: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-rpc-tests
+4: Working Directory: /Users/boris/Dev/blockchain-nano
+4: Test timeout computed to be: 10000000
+4: 991 RPC checks passed
+1/5 Test  #4: rpc ..............................   Passed    5.01 sec
+test 5
+    Start  5: rpc_fee_policy
+
+5: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-rpc-fee-policy-tests
+5: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+5: Test timeout computed to be: 60
+5: RPC fee policy: empty history, mixed fees, producer exclusion, limits, reload, reorg and wallet defaults passed
+2/5 Test  #5: rpc_fee_policy ...................   Passed    0.45 sec
+test 6
+    Start  6: rpc_fee_load
+
+6: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-rpc-fee-load-tests
+6: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+6: Test timeout computed to be: 180
+6: {
+6:   "blocks": 20,
+6:   "cached_1000_requests_us": 5398,
+6:   "cold_calculation_us": [
+6:     80139,
+6:     79539,
+6:     80184
+6:   ],
+6:   "concurrent_cold_and_cached_us": 117817,
+6:   "concurrent_total_requests": 2048,
+6:   "concurrent_workers": 8,
+6:   "expected_tip_wei": 101,
+6:   "gas_limit": 2688000,
+6:   "head_unchanged": true,
+6:   "setup_us": 624653,
+6:   "total_transactions": 2560,
+6:   "transactions_per_block": 128,
+6:   "transport": "in-process RPC; no HTTP/P2P"
+6: }
+3/5 Test  #6: rpc_fee_load .....................   Passed    1.31 sec
+test 79
+    Start 79: wallet_cli
+
+79: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-wallet-cli-tests "/Users/boris/Dev/blockchain-nano/build-release/nano"
+79: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+79: Test timeout computed to be: 90
+79: Native wallet CLI scenarios passed
+4/5 Test #79: wallet_cli .......................   Passed    1.82 sec
+test 80
+    Start 80: rpc_cli
+
+80: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-rpc-cli-tests "/Users/boris/Dev/blockchain-nano/build-release/nano"
+80: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+80: Test timeout computed to be: 90
+80: Native RPC CLI scenarios passed
+5/5 Test #80: rpc_cli ..........................   Passed    1.20 sec
+
+The following tests passed:
+	rpc
+	rpc_fee_policy
+	rpc_fee_load
+	wallet_cli
+	rpc_cli
+
+100% tests passed out of 5
+
+Label Time Summary:
+qualification_evm         =   5.01 sec*proc (1 test)
+qualification_rpc_load    =   1.31 sec*proc (1 test)
+
+Total Test time (real) =   9.80 sec

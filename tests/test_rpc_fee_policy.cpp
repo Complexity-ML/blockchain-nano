@@ -21,7 +21,7 @@ int main(){try{
  };
  test::check(tip()==0,"empty history must not invent a fixed tip");
  test::check(quantity(call("eth_gasPrice"))==genesis.block.header.base_fee.value(),"empty history gas price includes base fee");
- submit(key,0,100);submit(key,1,200);submit(key,2,300,true);submit(producer_key,0,1000000);
+ submit(key,0,100);submit(key,1,200);submit(key,2,300,true);submit(producer_key,0,1);
  const auto first=chain.mine(producer,12);
  test::check(first.transactions.size()==4&&tip()==200,"percentile uses effective tips and excludes producer transfers");
  test::check(quantity(call("eth_gasPrice"))==first.header.base_fee.value()+200,"legacy gas quote and priority quote agree");

@@ -894,3 +894,15 @@ les parcours RPC/CLI existants. Aucun changement de formule consensus EIP-1559.
 Coût à froid, saturation et concurrence pendant une réorganisation restent à
 qualifier ; aucun statut global de production clôturé.
 [Politique](RPC-FEE-POLICY.md) et [preuves](qualification/rpc-fee-policy-20260927/README.md).
+
+## 2026-09-27 — Charge RPC et correction de l’exclusion du producteur
+
+Le nouveau scénario détecte un défaut masqué par l’ancien test : adresse avec
+checksum comparée à une adresse normalisée, donc producteur non exclu. Les deux
+adresses sont désormais normalisées ; l’ancien test utilise un pourboire du
+producteur inférieur aux frais externes. Cinq tests ciblés passent ; le scénario
+final couvre aussi 20 blocs / 28 560 transactions. Calcul sans cache de
+recommandation autour de 652 ms, sous mutex RPC ; 1 000 lectures en cache en
+5,385 ms au total. Mesures locales, caches disque non purgés, sans HTTP/P2P.
+Coût répété à chaque tête, fenêtre maximale, équité et saturation restent ouverts.
+[Échec initial, correction et mesures](qualification/rpc-fee-load-20260927/README.md).

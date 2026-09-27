@@ -71,9 +71,11 @@ change pendant le calcul, ou si un ancêtre n’est plus disponible, la requête
 Une recommandation historique ne garantit pas l’inclusion future. Des adresses
 indépendantes du bénéficiaire peuvent encore influencer les échantillons. Les
 valeurs peuvent différer de celles d’autres clients, qui emploient leurs propres
-politiques. Les coûts à froid avec de très gros blocs et sous saturation restent
-à mesurer ; le cache évite de répéter l’analyse pour chaque requête sur une tête
-inchangée.
+politiques. Une mesure locale sur 20 blocs de 1 428 transactions observe environ 652 ms
+sans cache de recommandation (caches disque non purgés), sous verrou RPC. Le
+cache évite de répéter ce coût sur une tête inchangée. Le coût répété par tête,
+la fenêtre maximale et la saturation HTTP/P2P restent à qualifier.
+[Mesures et défaut d’adresse corrigé](qualification/rpc-fee-load-20260927/README.md).
 
 Référence de conception pour l’échantillonnage des frais effectifs et le cache
 par tête : [oracle de frais de Geth](https://github.com/ethereum/go-ethereum/blob/master/eth/gasprice/gasprice.go).

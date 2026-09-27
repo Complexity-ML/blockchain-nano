@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="5"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="9"
+	timestamp="2026-09-27T16:33:26"
+	>
+	<testcase name="rpc" classname="rpc" time="5.00914" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_evm"/>
+		</properties>
+		<system-out>991 RPC checks passed
+</system-out>
+	</testcase>
+	<testcase name="rpc_fee_policy" classname="rpc_fee_policy" time="0.445097" status="run">
+		<properties/>
+		<system-out>RPC fee policy: empty history, mixed fees, producer exclusion, limits, reload, reorg and wallet defaults passed
+</system-out>
+	</testcase>
+	<testcase name="rpc_fee_load" classname="rpc_fee_load" time="1.31353" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_rpc_load"/>
+		</properties>
+		<system-out>{
+  "blocks": 20,
+  "cached_1000_requests_us": 5398,
+  "cold_calculation_us": [
+    80139,
+    79539,
+    80184
+  ],
+  "concurrent_cold_and_cached_us": 117817,
+  "concurrent_total_requests": 2048,
+  "concurrent_workers": 8,
+  "expected_tip_wei": 101,
+  "gas_limit": 2688000,
+  "head_unchanged": true,
+  "setup_us": 624653,
+  "total_transactions": 2560,
+  "transactions_per_block": 128,
+  "transport": "in-process RPC; no HTTP/P2P"
+}
+</system-out>
+	</testcase>
+	<testcase name="wallet_cli" classname="wallet_cli" time="1.82407" status="run">
+		<properties/>
+		<system-out>Native wallet CLI scenarios passed
+</system-out>
+	</testcase>
+	<testcase name="rpc_cli" classname="rpc_cli" time="1.20304" status="run">
+		<properties/>
+		<system-out>Native RPC CLI scenarios passed
+</system-out>
+	</testcase>
+</testsuite>

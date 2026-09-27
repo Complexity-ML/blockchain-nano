@@ -43,10 +43,11 @@ Int Rpc::suggested_tip(const Header& head){
   for(size_t i=0;i<current.transactions.size();++i)
    ordered.emplace_back(std::max(Int(0),Int(current.transactions[i].tx.effective_gas_price(base)-base)),i);
   std::sort(ordered.begin(),ordered.end());
+  const auto producer=address(current.header.coinbase);
   size_t added=0;
   for(const auto& [tip,index]:ordered){
    // A producer's own transfers are not independent evidence of fee demand.
-   if(current.transactions[index].sender()==address(current.header.coinbase))continue;
+   if(address(current.transactions[index].sender())==producer)continue;
    samples.push_back(tip);
    if(++added==fee_policy_.samples_per_block)break;
   }
