@@ -2535,3 +2535,15 @@ effectivement détecté ; régression Capella ciblée 3/3.
 [Preuves](qualification/capella-bls-change-20260927/README.md).
 L'ordre des opérations du bloc, l'activation, le réacteur et le transport
 restent à raccorder. EIP-4895 demeure partiel, sans activation réseau.
+
+### Capella : payload SSZ et retraits officiels
+
+Le codec Capella complet est ajouté : offsets canoniques, budgets,
+transactions et retraits séparés, racine SSZ du payload et de son header.
+30 vecteurs officiels concordent ; 271 rejets locaux, 30 mutations de
+retrait et 60 annulations sont vérifiés. Le même décodeur alimente les
+54 cas officiels de retraits : 35 états SSZ complets identiques et 19 refus.
+[Preuves](qualification/capella-payload-20260927/README.md).
+Régression ciblée 5/5. Il reste à composer la transition payload/état EVM,
+les slots/epochs, le bloc signé et sa publication durable. Aucun changement
+du profil réseau Bellatrix ni clôture EIP-4895.

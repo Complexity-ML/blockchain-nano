@@ -43,6 +43,21 @@ Bytes encode_bellatrix_execution_header(const BellatrixExecutionPayloadHeader&,
  uint32_t maximum_extra_data,size_t maximum_bytes,const std::function<void()>& checkpoint={});
 ConsensusRoot bellatrix_execution_header_root(const BellatrixExecutionPayloadHeader&,
  uint32_t maximum_extra_data,const std::function<void()>& checkpoint={});
+struct CapellaWithdrawal {
+ uint64_t index,validator_index;std::array<uint8_t,20> address;uint64_t amount_gwei;
+ bool operator==(const CapellaWithdrawal&)const=default;
+ Json to_json()const;
+};
+struct CapellaExecutionPayload : BellatrixExecutionPayload {
+ std::vector<CapellaWithdrawal> withdrawals;
+ bool operator==(const CapellaExecutionPayload&)const=default;
+};
+std::optional<CapellaExecutionPayload> decode_capella_execution_payload(
+ std::span<const uint8_t>,const ExecutionPayloadLimits&,uint64_t maximum_withdrawals,
+ size_t maximum_bytes,const std::function<void()>& checkpoint={});
+Bytes encode_capella_execution_payload(const CapellaExecutionPayload&,
+ const ExecutionPayloadLimits&,uint64_t maximum_withdrawals,size_t maximum_bytes,
+ const std::function<void()>& checkpoint={});
 // Capella adds the SSZ withdrawals list commitment (not the execution MPT root).
 struct CapellaExecutionPayloadHeader : BellatrixExecutionPayloadHeader {
  ConsensusRoot withdrawals_root{};
@@ -55,4 +70,9 @@ Bytes encode_capella_execution_header(const CapellaExecutionPayloadHeader&,
  uint32_t maximum_extra_data,size_t maximum_bytes,const std::function<void()>& checkpoint={});
 ConsensusRoot capella_execution_header_root(const CapellaExecutionPayloadHeader&,
  uint32_t maximum_extra_data,const std::function<void()>& checkpoint={});
+CapellaExecutionPayloadHeader capella_execution_payload_header(const CapellaExecutionPayload&,
+ const ExecutionPayloadLimits&,uint64_t maximum_withdrawals,const std::function<void()>& checkpoint={});
+ConsensusRoot capella_execution_payload_root(const CapellaExecutionPayload&,
+ const ExecutionPayloadLimits&,uint64_t maximum_withdrawals,const std::function<void()>& checkpoint={});
+
 }

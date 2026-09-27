@@ -3,11 +3,6 @@
 #include "nano/engine.hpp"
 #include "nano/consensus_beacon_state.hpp"
 namespace nano {
-struct CapellaWithdrawal {
- uint64_t index,validator_index;std::array<uint8_t,20> address;uint64_t amount_gwei;
- bool operator==(const CapellaWithdrawal&)const=default;
- Json to_json()const;
-};
 struct CapellaWithdrawalRules {uint64_t maximum_effective_balance,maximum_per_payload,maximum_validators_per_sweep;};
 struct CapellaWithdrawalState {
  ConsensusSlashingState registry;uint64_t next_withdrawal_index=0,next_validator_index=0;

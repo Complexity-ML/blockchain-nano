@@ -88,4 +88,49 @@ Bytes encode_capella_execution_header(const CapellaExecutionPayloadHeader& p,uin
  for(unsigned i=0;i<4;++i)out[436+i]=uint8_t(568U>>(8*i));
  return out;
 }
+std::optional<CapellaExecutionPayload> decode_capella_execution_payload(View b,
+ const ExecutionPayloadLimits& l,uint64_t maximum_withdrawals,size_t budget,const std::function<void()>& check){
+ config(l);if(!maximum_withdrawals||maximum_withdrawals>UINT32_MAX/44)throw std::invalid_argument("invalid Capella withdrawal list limit");
+ if(check)check();
+ if(b.size()<512||b.size()>budget||b.size()>UINT32_MAX||number(b,436,4)!=512)return std::nullopt;
+ const size_t transactions=number(b,504,4),withdrawals=number(b,508,4);
+ if(transactions<512||transactions>withdrawals||withdrawals>b.size()||transactions-512>l.extra_data_bytes||
+    (b.size()-withdrawals)%44||(b.size()-withdrawals)/44>maximum_withdrawals)return std::nullopt;
+ // Withdrawals delimit the transaction list. Never expose their bytes as a transaction.
+ Bytes common(b.begin(),b.begin()+508);common.insert(common.end(),b.begin()+512,b.begin()+withdrawals);
+ for(unsigned i=0;i<4;++i){common[436+i]=uint8_t(508U>>(8*i));common[504+i]=uint8_t((transactions-4)>>(8*i));}
+ auto decoded=decode_bellatrix_execution_payload(common,l,budget-4,check);if(!decoded)return std::nullopt;
+ CapellaExecutionPayload out;static_cast<BellatrixExecutionPayload&>(out)=std::move(*decoded);
+ for(size_t at=withdrawals;at<b.size();at+=44){if(check)check();out.withdrawals.push_back({number(b,at,8),number(b,at+8,8),array<20>(b,at+16),number(b,at+36,8)});}
+ return out;
+}
+Bytes encode_capella_execution_payload(const CapellaExecutionPayload& p,
+ const ExecutionPayloadLimits& l,uint64_t maximum_withdrawals,size_t budget,const std::function<void()>& check){
+ if(!maximum_withdrawals||maximum_withdrawals>UINT32_MAX/44||p.withdrawals.size()>maximum_withdrawals)
+  throw std::invalid_argument("invalid Capella withdrawal list limit");
+ const uint64_t extra=4+44*uint64_t(p.withdrawals.size()),common_size=size(p,l,check);
+ if(extra>budget||common_size>budget-extra||common_size+extra>UINT32_MAX)throw std::invalid_argument("Capella payload byte budget");
+ auto out=encode_bellatrix_execution_payload(p,l,budget-extra,check);const auto withdrawal_offset=out.size()+4;
+ out.insert(out.begin()+508,4,0);
+ for(unsigned i=0;i<4;++i){out[436+i]=uint8_t(512U>>(8*i));out[504+i]=uint8_t((512+p.extra_data.size())>>(8*i));out[508+i]=uint8_t(withdrawal_offset>>(8*i));}
+ auto num=[&](uint64_t v){for(unsigned i=0;i<8;++i)out.push_back(uint8_t(v>>(8*i)));};
+ for(const auto& w:p.withdrawals){if(check)check();num(w.index);num(w.validator_index);out.insert(out.end(),w.address.begin(),w.address.end());num(w.amount_gwei);}
+ return out;
+}
+CapellaExecutionPayloadHeader capella_execution_payload_header(const CapellaExecutionPayload& p,
+ const ExecutionPayloadLimits& l,uint64_t maximum_withdrawals,const std::function<void()>& check){
+ if(!maximum_withdrawals||maximum_withdrawals>UINT32_MAX/44||p.withdrawals.size()>maximum_withdrawals)
+  throw std::invalid_argument("invalid Capella withdrawal list limit");
+ CapellaExecutionPayloadHeader out;static_cast<BellatrixExecutionPayloadHeader&>(out)=bellatrix_execution_payload_header(p,l,check);
+ std::vector<Root> roots;roots.reserve(p.withdrawals.size());
+ for(const auto& w:p.withdrawals){if(check)check();roots.push_back(consensus_signing_root(
+  consensus_signing_root(integer_root(w.index),integer_root(w.validator_index)),
+  consensus_signing_root(scalar(w.address),integer_root(w.amount_gwei))));}
+ out.withdrawals_root=consensus_signing_root(merkle(std::move(roots),maximum_withdrawals,check),integer_root(p.withdrawals.size()));return out;
+}
+ConsensusRoot capella_execution_payload_root(const CapellaExecutionPayload& p,
+ const ExecutionPayloadLimits& l,uint64_t maximum_withdrawals,const std::function<void()>& check){
+ return capella_execution_header_root(capella_execution_payload_header(p,l,maximum_withdrawals,check),l.extra_data_bytes,check);
+}
+
 }
