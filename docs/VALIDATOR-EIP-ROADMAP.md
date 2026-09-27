@@ -3046,3 +3046,14 @@ sur panne enfant (1,45 s). CLI serve et RPC existantes également vertes.
 [Preuves](qualification/capella-managed-node-20260927/README.md).
 L’enfant du test n’est pas libp2p : adaptation du démon Capella et relais des
 archives/catalogues encore ouverts. Aucun déploiement distribué Capella qualifié.
+
+### Capella : raccordement IPC du véritable démon libp2p
+
+Le démon reconnaît Capella, route les RPC de récupération et conserve l’identité
+complète. Les chemins historiques d’import/annonce de blocs sont exclus de ce
+profil ; le relais d’archives ancien ne lui est pas appliqué. Deux démarrages réels
+`nano` + `nano-p2p` en loopback passent avec reprise persistante et session IPC prête.
+[Preuves](qualification/capella-daemon-ipc-20260927/README.md).
+Admission Capella toujours désactivée : aucun échange de blocs ni progression de
+finalité distribuée prouvés. Relais de catalogues, recherche de parents via pairs
+et critères d’activation restent ouverts.

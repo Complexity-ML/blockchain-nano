@@ -46,7 +46,7 @@ static bool owner_witness=false;
 static bool scheduled=false;
 static bool configured_runtime=false;
 static bool capella_http=false;
-static std::string cli_binary;static Json cli_genesis;static bool managed_cli=false;
+static std::string cli_binary;static Json cli_genesis;static bool managed_cli=false;static std::string daemon_binary;
 static bool beacon_reads=false;
 static bool wire_mode=false;
 static size_t beacon_read_checks=0;
@@ -172,18 +172,23 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
   if(managed_cli){
    const std::string key_env="NANO_TEST_MANAGED_CAPELLA_KEY";
    config["validator"]={{"pollIntervalMs","0x3e8"},{"maximumTransactionTrials","0x10"},{"maximumVoteTrials","0x40"},{"keys",Json::array({Json{{"index","0x0"},{"feeRecipient",genesis.header.coinbase},{"keyEnv",key_env},{"journal",(directory/"managed-key").string()},{"restart",nullptr},{"recoveryWitness",(directory/"managed-key-witness").string()}}})}};
-   Json node{{"capella",config},{"rpc_port",0},{"p2p_binary",fs::absolute(executable).string()}};
+   const uint64_t block_budget=t.consensus.maximum_block_bytes,vote_budget=228+(uint64_t(t.consensus.body.validators_per_committee)+8)/8,slash_budget=464+16*uint64_t(t.consensus.body.validators_per_committee),largest=std::max({block_budget,vote_budget,slash_budget});
+   config["admission"]={{"frameBytes",quantity(Int(std::to_string(1024+2*largest)))},{"blockBytes",quantity(Int(std::to_string(block_budget)))},{"attestationBytes",quantity(Int(std::to_string(vote_budget)))},{"slashingBytes",quantity(Int(std::to_string(slash_budget)))},{"jobs","0x2"},{"payloadBytes",quantity(Int(std::to_string(2*largest)))}};
+   Json node{{"capella",config},{"rpc_port",0},{"listen_addr","/ip4/127.0.0.1/tcp/0"},{"p2p_binary",daemon_binary.empty()?fs::absolute(executable).string():daemon_binary}};
    const auto node_file=directory/"node.json";save(node_file,node);
    const std::vector<std::string> args{cli_binary,"run",(directory/"genesis.json").string(),(directory/"managed-db").string(),node_file.string()};
    const Env env{{"NANO_TEST_MANAGED_CHILD","1"},{key_env,hex(bytes(Int(1),32))},{"NANO_PRIVATE_KEY","synthetic-user-secret"},{"NANO_NETWORK_TOKEN","must-be-replaced"}};
    auto bad=node;bad["rpc_host"]="0.0.0.0";save(node_file,bad);auto denied=run(args,env);check(denied.code!=0&&denied.err.find("local RPC")!=std::string::npos,"managed Capella allowed public RPC");
    bad=node;bad["bellatrix"]=Json::object();save(node_file,bad);denied=run(args,env);check(denied.code!=0&&denied.err.find("exclusive")!=std::string::npos,"managed Capella accepted conflicting profiles");
-   for(unsigned restart=0;restart<3;++restart){
+   const unsigned starts=daemon_binary.empty()?3:2;for(unsigned restart=0;restart<starts;++restart){
     save(node_file,node);auto child_env=env;if(restart==2)child_env["NANO_TEST_MANAGED_CHILD_EXIT"]="1";
-    Process child(args,child_env);child.port();const auto ready=child.event("capella-managed-child-ready");check(ready.at("executionBound")==true&&ready.at("secretsExcluded")==true,"managed child IPC/secret isolation failed");
+    Process child(args,child_env);child.port();
+    if(daemon_binary.empty()){const auto ready=child.event("capella-managed-child-ready");check(ready.at("executionBound")==true&&ready.at("secretsExcluded")==true,"managed child IPC/secret isolation failed");}
+    else{const auto ready=child.event("altair-ipc-ready");check(ready.at("profile")=="capella"&&ready.at("networkProtocolActive")==false,"daemon did not recover Capella IPC privately");}
     const auto result=restart==2?child.wait():child.stop();check(result.code==(restart==2?1:0)&&result.out.find("capella-runtime-stopped")!=std::string::npos,"managed runtime did not stop cleanly");
-    check(result.out.find("synthetic-user-secret")==std::string::npos&&result.err.find("synthetic-user-secret")==std::string::npos,"managed secret logged");node["capella"]["initial"]=nullptr;
+    check(result.out.find("synthetic-user-secret")==std::string::npos&&result.err.find("synthetic-user-secret")==std::string::npos,"managed secret logged");if(!daemon_binary.empty())std::cout<<result.out;node["capella"]["initial"]=nullptr;
    }
+   if(!daemon_binary.empty()){std::cout<<Json{{"scenario","capella-daemon-ipc"},{"starts",starts},{"libp2pProcess",true},{"consensusNetworkActive",false},{"witnessRestart",true}}.dump()<<std::endl;return;}
    std::cout<<Json{{"scenario","capella-managed-node"},{"starts",3},{"witnessRestart",true},{"negativeConfigs",2},{"childFailureStopsNode",true},{"validatorKeyExcludedFromChild",true},{"libp2p",false}}.dump()<<std::endl;return;
   }
   const auto token=hex(Bytes(32,0x42));const std::vector<std::string> args{cli_binary,"serve",(directory/"genesis.json").string(),(directory/"cli-db").string(),"0","127.0.0.1",(directory/"serve.json").string()};
@@ -747,6 +752,7 @@ int main(int argc,char** argv){try{executable=argv[0];
   std::cout<<Json{{"event","capella-managed-child-ready"},{"executionBound",true},{"secretsExcluded",true}}.dump()<<std::endl;
   if(std::getenv("NANO_TEST_MANAGED_CHILD_EXIT"))return 7;for(;;)pause();
  }
+ if(argc==4&&std::string(argv[1])=="--daemon-cli"){managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==3&&std::string(argv[1])=="--managed-cli"){managed_cli=true;cli_binary=argv[2];configured_runtime=true;scenario(false);return 0;}
 if(argc==3&&std::string(argv[1])=="--cli"){cli_binary=argv[2];configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--http"){configured_runtime=true;capella_http=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--wire"){wire_mode=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--beacon-reads"){beacon_reads=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--configured-runtime"){configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler"){scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-reorg"){owner_reorg=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}
 #ifdef NANO_SYNC_FAULT
