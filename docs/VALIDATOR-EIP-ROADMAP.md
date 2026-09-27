@@ -3777,3 +3777,15 @@ Le crash Docker sans modification de configuration reste à qualifier ; la perte
 ou le rollback conjoint des deux stores exige une frontière de confiance externe.
 Aucun EIP clôturé, aucune qualification globale de production.
 [Preuves et limites](qualification/capella-automatic-recovery-20260927/README.md).
+
+### Crash Docker avec configuration inchangée — 27 septembre 2026
+
+**PASS** : deux nœuds × 32 clés synthétiques, SIGKILL complet pendant 96,757 s,
+reprise automatique avec le même fichier (SHA256 contrôlé), la même identité
+P2P et le checkpoint conservé. Finalité commune d'époque 7 après 143,110 s
+depuis la préparation du redémarrage ; disponibilité vérifiée après 2,022 s.
+Ce cas clôt la limite de modification manuelle de configuration du scénario
+précédent. WAN, pertes physiques, rollback indépendant, longues pannes, charge
+et production globale restent ouverts. Aucun EIP clôturé ni VPS modifié.
+[Preuves](qualification/capella-automatic-docker-recovery-20260927/README.md).
+[Procédure de reprise](CAPELLA-RECOVERY.md).

@@ -2,12 +2,12 @@
 import {spawn} from 'node:child_process';
 import {mkdir,readFile,writeFile,appendFile} from 'node:fs/promises';
 import {resolve,join} from 'node:path';
-import {randomBytes} from 'node:crypto';
+import {randomBytes,createHash} from 'node:crypto';
 import {setTimeout as wait} from 'node:timers/promises';
 const [exporter,outArg,image,revision,mode="partition"]=process.argv.slice(2);
-if(!["partition","asymmetric-delay","crash-restart"].includes(mode))throw Error("Unknown network fault mode");
-const asymmetric=mode==="asymmetric-delay",crash=mode==="crash-restart";
-if(!exporter||!outArg||!image||!/^([a-f0-9]{40})$/.test(revision??''))throw Error('Usage: docker-partition.mjs exporter NEW-output-directory image revision [partition|asymmetric-delay|crash-restart]');
+if(!["partition","asymmetric-delay","crash-restart","automatic-restart"].includes(mode))throw Error("Unknown network fault mode");
+const asymmetric=mode==="asymmetric-delay",automatic=mode==="automatic-restart",crash=mode==="crash-restart"||automatic;
+if(!exporter||!outArg||!image||!/^([a-f0-9]{40})$/.test(revision??''))throw Error('Usage: docker-partition.mjs exporter NEW-output-directory image revision [partition|asymmetric-delay|crash-restart|automatic-restart]');
 const out=resolve(outArg),fixture=join(out,'fixture'),campaign='nano-capella-partition-'+randomBytes(6).toString('hex'),network=campaign+'-net',names=[campaign+'-0',campaign+'-1'];
 await mkdir(out);const label='nano.qualification=capella-partition';
 function run(bin,args,timeout=30000){return new Promise((ok,no)=>{const child=spawn(bin,args,{stdio:['ignore','pipe','pipe']});let stdout='',stderr='',done=false;const timer=setTimeout(()=>child.kill('SIGKILL'),timeout);child.stdout.on('data',x=>{stdout+=x;if(stdout.length>16*1024*1024)child.kill('SIGKILL');});child.stderr.on('data',x=>{stderr+=x;});child.on('error',e=>{clearTimeout(timer);if(!done){done=true;no(e);}});child.on('close',code=>{clearTimeout(timer);if(done)return;done=true;code===0?ok(bin==='docker'&&args[0]==='logs'?stdout+stderr:stdout):no(Error(`${bin} ${args[0]} failed (${code}): ${stderr.slice(-2000)}`));});});}
@@ -27,7 +27,7 @@ try{
  const meta=JSON.parse(await readFile(join(fixture,'fixture.json'),'utf8'));check(meta.chainId===1337&&meta.nodes===2&&meta.syntheticValidators===64&&meta.fork==='Capella/Shanghai','Unexpected fixture');
  await docker(['network','create','--internal','--label',label,network]);networkCreated=true;
  for(let i=0;i<2;++i){
-  if(i===1){const logs=await docker(['logs',names[0]]);const listen=logs.split('\n').map(x=>{try{return JSON.parse(x);}catch{return {};}}).find(x=>x.event==='listen');check(listen,'Missing peer listen address');const left=await provenance(names[0]);const ip=left.NetworkSettings.Networks[network].IPAddress;const cfg=JSON.parse(await readFile(join(fixture,'node-1.json'),'utf8'));cfg.bootnodes=[listen.address.replace('/ip4/0.0.0.0/','/ip4/'+ip+'/')];if(crash)cfg.capella.recoveryWitness='/var/lib/nano/recovery-witness';await writeFile(join(fixture,'node-1.json'),JSON.stringify(cfg));}
+  if(i===1){const logs=await docker(['logs',names[0]]);const listen=logs.split('\n').map(x=>{try{return JSON.parse(x);}catch{return {};}}).find(x=>x.event==='listen');check(listen,'Missing peer listen address');const left=await provenance(names[0]);const ip=left.NetworkSettings.Networks[network].IPAddress;const cfg=JSON.parse(await readFile(join(fixture,'node-1.json'),'utf8'));cfg.bootnodes=[listen.address.replace('/ip4/0.0.0.0/','/ip4/'+ip+'/')];if(crash)cfg.capella.recoveryWitness='/var/lib/nano/recovery-witness';if(automatic)cfg.capella.automaticRecovery=true;await writeFile(join(fixture,'node-1.json'),JSON.stringify(cfg));}
   const env=JSON.parse(await readFile(join(fixture,`env-${i}.json`),'utf8')),file=join(out,`fixture-${i}.env`);await writeFile(file,Object.entries(env).map(([k,v])=>k+'='+v).join('\n')+'\n');
   await docker(['create','--name',names[i],'--label',label,'--label','org.opencontainers.image.revision='+revision,'--network',network,...(asymmetric?['--cap-add','NET_ADMIN']:[]),'--env-file',file,'--mount','type=bind,src='+fixture+',dst=/config,readonly',image,'run','/config/genesis.json','/var/lib/nano/chain',`/config/node-${i}.json`]);created.push(names[i]);await docker(['start',names[i]]);
   const until=Date.now()+30000;let ready=false;while(Date.now()<until){const logs=await docker(['logs',names[i]]);const events=logs.split('\n').map(x=>{try{return JSON.parse(x);}catch{return {};}}),pid=events.find(x=>x.event==='p2p-process')?.pid;if(events.some(x=>x.event==='altair-ipc-ready'&&x.networkProtocolActive===true)&&Number.isInteger(pid)&&pid>0){daemonPids[i]=pid;ready=true;break;}check((await provenance(names[i])).State.Running,'Node exited during startup');await wait(500);}check(ready,'Node startup deadline');
@@ -60,6 +60,8 @@ try{
   result='PASSED';await record({event:'asymmetric-delay-qualified',final});
  }else if(crash){
   const original=await provenance(names[1]);
+  const configurationBefore=await readFile(join(fixture,'node-1.json'));
+  const configHash=data=>createHash('sha256').update(data).digest('hex');
   const logsBefore=await docker(['logs',names[1]]);
   const parseEvents=text=>text.split('\n').flatMap(line=>{try{return [JSON.parse(line)];}catch{return [];}});
   const listenBefore=parseEvents(logsBefore).filter(x=>x.event==='listen').at(-1);
@@ -81,12 +83,18 @@ try{
    await record({event:'crash-offline-observation',checkpoint,headRoot:survivingHead.root,slot:survivingHead.header.message.slot});await wait(2000);
   }
   check(BigInt(survivingHead.header.message.slot)>BigInt(before[0].slot),'Surviving chain did not advance');
-  // Explicit operator transition from initial bootstrap to witnessed recovery.
+  // Compare automatic unchanged-config recovery with the explicit legacy transition.
   // The witness was written throughout the first run, not inferred after crash.
   const restartConfig=JSON.parse(await readFile(join(fixture,'node-1.json'),'utf8'));
   check(restartConfig.capella.recoveryWitness==='/var/lib/nano/recovery-witness'&&restartConfig.capella.restart===null,'Unexpected recovery policy');
-  restartConfig.capella.initial=null;await writeFile(join(fixture,'node-1.json'),JSON.stringify(restartConfig));
-  await record({event:'crash-recovery-configured',mode:'existing-witness',bootstrapInitialCleared:true});
+  if(automatic){
+   check(restartConfig.capella.automaticRecovery===true&&restartConfig.capella.initial!==null,'Missing automatic recovery configuration');
+   check(configurationBefore.equals(await readFile(join(fixture,'node-1.json'))),'Configuration changed during crash');
+   await record({event:'crash-recovery-configured',mode:'automatic-witness',bootstrapInitialCleared:false,configSha256:configHash(configurationBefore)});
+  }else{
+   restartConfig.capella.initial=null;await writeFile(join(fixture,'node-1.json'),JSON.stringify(restartConfig));
+   await record({event:'crash-recovery-configured',mode:'existing-witness',bootstrapInitialCleared:true});
+  }
   await docker(['start',names[1]]);const deadline=Date.now()+60000;let ready=false;
   while(Date.now()<deadline){
    const state=await provenance(names[1]);check(state.State.Running,'Restarted node exited');
@@ -105,7 +113,8 @@ try{
   const minimum=BigInt(survivingHead.header.message.slot)/BigInt(meta.slotsPerEpoch);
   await record({event:'crash-restarted',recovered,minimumFinalizedEpoch:String(minimum),persistedFinalizedRoot:oldHeader.data.root});
   const final=await commonFinality(minimum,240);
-  result='PASSED';await record({event:'crash-restart-qualified',final});
+  if(automatic)check(configurationBefore.equals(await readFile(join(fixture,'node-1.json'))),'Configuration changed during recovery');
+  result='PASSED';await record({event:'crash-restart-qualified',automaticRecovery:automatic,configSha256:automatic?configHash(configurationBefore):null,final});
  }else{
  const remote=await provenance(names[1]);check(Object.keys(remote.NetworkSettings.Networks).length===1,'Unexpected extra container network');address=remote.NetworkSettings.Networks[network].IPAddress;
  isolated=true;await docker(['network','disconnect',network,names[1]]);await record({event:'partition-start',cutoffEpoch:String(cutoff),address,durationSeconds:96});const cutEnd=Date.now()+96000;let sawZero=false;
