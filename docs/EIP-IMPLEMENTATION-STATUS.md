@@ -2313,3 +2313,14 @@ Deux suites initiales réussies ; seule la suite runtime modifiée a été rejou
 Il reste à raccorder reçus RPC privés, inventaire/export/synchronisation, serveur
 HTTP/CLI et libp2p avec budgets par pair authentifié, puis migration inter-forks.
 Ce worker C++ ne constitue pas une qualification réseau ni une activation publique.
+
+### Capella : reçus d’admission privés
+
+Le service expose soumission, consultation, annulation, retrait et rotation de
+session sur la même file bornée. Six contrôles ajoutés au test runtime : résultat
+commis, répétition identique, conflit de contenu, rejeu retiré, annulation anticipée
+et ancienne session. Test réussi en 21,55 s avec seize blocs et reprise.
+[Preuves](qualification/capella-admission-receipts-20260927/README.md).
+Les reçus sont locaux au processus : perte de session signifie résultat inconnu.
+Les points d’entrée C++ restent à exposer par RPC privé authentifié ; inventaire,
+export, synchronisation et transport libp2p restent ouverts.
