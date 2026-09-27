@@ -1,0 +1,37 @@
+UpdateCTestConfiguration  from :/Users/boris/Dev/blockchain-nano/build-release/DartConfiguration.tcl
+Test project /Users/boris/Dev/blockchain-nano/build-release
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 389
+    Start 389: consensus_capella_automatic_registration
+
+389: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests "--automatic-registration"
+389: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+389: Test timeout computed to be: 180
+389: {"admissionReceiptChecks":6,"automaticRecovery":false,"automaticRegistration":true,"blocks":16,"httpTransport":false,"invalidConfigurationsRejected":6,"keysLoaded":65,"networkTransport":false,"runtimeCatalogChecks":3,"scenario":"capella-configured-runtime","signerWitnessRestart":true,"witnessRestart":true,"workersStopped":true}
+1/2 Test #389: consensus_capella_automatic_registration ...   Passed   20.50 sec
+test 396
+    Start 396: consensus_capella_registration_scale
+
+396: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-registration-scale-tests
+396: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+396: Test timeout computed to be: 120
+396: {"cancelledWithoutMutation":true,"distributedNodes":0,"duplicateRejected":true,"includesBls":false,"inputRoot":"0x2efda5e1774bf097307f3c56ff304e7b4bfb3627a060cefa0d1b2029560a5035","lookupIncludingAuthenticationMicroseconds":145599,"matchedKeys":3,"processPeakRssBytes":54542336,"requestedKeys":4,"rootMicroseconds":160693,"scenario":"capella-registration-ssz-scale","stateBytes":13910821,"syntheticRegistry":true,"validators":100000,"wrongRootRejected":true}
+396: {"cancelledWithoutMutation":true,"distributedNodes":0,"duplicateRejected":true,"includesBls":false,"inputRoot":"0x7068492564dc6a5cc1e632b051ae11144bf9156db70b340ff2a10be8366ae52c","lookupIncludingAuthenticationMicroseconds":1432485,"matchedKeys":3,"processPeakRssBytes":346947584,"requestedKeys":4,"rootMicroseconds":1608758,"scenario":"capella-registration-ssz-scale","stateBytes":139010821,"syntheticRegistry":true,"validators":1000000,"wrongRootRejected":true}
+2/2 Test #396: consensus_capella_registration_scale .......   Passed    8.87 sec
+
+The following tests passed:
+	consensus_capella_automatic_registration
+	consensus_capella_registration_scale
+
+100% tests passed out of 2
+
+Label Time Summary:
+qualification_consensus_runtime    =  20.50 sec*proc (1 test)
+qualification_consensus_scale      =   8.87 sec*proc (1 test)
+
+Total Test time (real) =  29.37 sec

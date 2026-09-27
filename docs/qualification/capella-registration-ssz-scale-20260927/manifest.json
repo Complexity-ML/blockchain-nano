@@ -1,0 +1,33 @@
+{
+  "base_commit": "dc0c3047c37b20d7745d1ce4149d34e6297ef3c0",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "source_sha256": {
+    "CMakeLists.txt": "e9458331b744913c102a0e8683ed404283cf6d191508150651ca29e51939477d",
+    "include/nano/consensus_capella_registration.hpp": "cabe3236d60562b55e34ed4b9693afaba2149fc2c8f3f8f66e13c13245dc916b",
+    "src/consensus_capella_registration.cpp": "46c9ee4d95a7f338e1fd69d6d5841abd71921de3fb4d1a39f364d23a9d7a582d",
+    "src/consensus_capella_signing.cpp": "825ed214355a2a1f450bd8197b2fda8936d093475639c10c26fc40189dacdc61",
+    "tests/test_capella_registration_scale.cpp": "c53958b6fdc03419003862062551ca50e5e4058d631906a0e34987673a279eb8",
+    "tests/test_capella_transition.cpp": "c87c25b6df748b8e4bb48cfc0056277dfbff16a976ce03fc45de245eba4e1e55",
+    "src/consensus_beacon_state.cpp": "0f8ca251f2812f15b2f7855dc366ab2d866f7369947c964d4589919b71807a5d"
+  },
+  "binary_sha256": {
+    "nano": "e7aa2fea8a3f7d1645c4ff1b3ccd68f94d0a5cef2286e703893058a0c7af7f1c",
+    "nano-capella-transition-tests": "87c8518c2c524b347517c161e16f3e5bf32ec65e2fc5760cf9f2133587aae10c",
+    "nano-capella-registration-scale-tests": "80a71c63f7d89f41163e6c9dc01c712cbb1f04e990e67372f1266bbbda41bfd5"
+  },
+  "command": "ctest --test-dir build-release -R '^consensus_capella_(registration_scale|automatic_registration)$' -V --output-junit /private/tmp/nano-registration-gate.xml",
+  "results": [
+    {
+      "name": "consensus_capella_automatic_registration",
+      "classname": "consensus_capella_automatic_registration",
+      "time": "20.4954",
+      "status": "run"
+    },
+    {
+      "name": "consensus_capella_registration_scale",
+      "classname": "consensus_capella_registration_scale",
+      "time": "8.86526",
+      "status": "run"
+    }
+  ]
+}

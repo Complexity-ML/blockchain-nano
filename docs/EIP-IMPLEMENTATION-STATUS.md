@@ -3408,3 +3408,14 @@ boucle existante. Dépôt slot 80, activation époque 17, finalité époque 18.
 **Partiel** : projection du registre à grande échelle, reorg concurrent, crash
 au commit et WAN restent ouverts. Aucun statut EIP-6110/production clôturé.
 [Configuration](CAPELLA-VALIDATOR-REGISTRATION.md) et [preuves](qualification/capella-automatic-registration-20260927/README.md).
+
+## 2026-09-27 — Recherche des clés automatiques sans projection complète
+
+Le reactor Capella authentifie le SSZ de la tête puis ne conserve que les clés
+locales demandées. Nouveau test à 100 000/1 000 000 enregistrements synthétiques :
+146 ms/1,43 s avec authentification, trois correspondances exactes et une absence.
+Racine incorrecte, doublon, largeur, annulation et cardinalité incohérente refusés.
+La régression du runtime à 65 clés configurées passe ; 2/2 tests en 29,37 s.
+Le coût linéaire sous verrou à chaque poll, les changements de branche concurrents
+et la charge distribuée restent ouverts. Aucun million de nœuds ni BLS mesuré,
+aucune clôture EIP ou production. [Preuves](qualification/capella-registration-ssz-scale-20260927/README.md).

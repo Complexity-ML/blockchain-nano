@@ -44,10 +44,14 @@ perte ou du rollback simultané du journal et de son témoin.
 
 ## Limites actuelles
 
-La résolution projette actuellement le registre lors des polls utilisant des
-clés automatiques. Son coût à 100 000 ou un million de validateurs n’est pas
-qualifié. Les parcours à index fixe ne projettent pas le registre pour cette
-résolution. Une réorganisation concurrente entre résolution et signature reste
+La résolution authentifie directement le SSZ puis parcourt les enregistrements
+sans projeter tout le registre. Les recherches locales de quatre clés mesurées
+à 100 000 et un million d'entrées prennent respectivement 146 ms et 1,43 s,
+authentification comprise. Ce coût reste linéaire sous verrou à chaque poll ;
+les parcours à index fixe évitent cette recherche. Ce ne sont pas des mesures
+d'un réseau de cette taille. [Preuves et limites](qualification/capella-registration-ssz-scale-20260927/README.md).
+
+Une réorganisation concurrente entre résolution et signature reste
 soumise au contrôle d’identité du reactor : une erreur peut arrêter la boucle
 locale, elle ne permet pas de signer pour une autre clé.
 

@@ -1,6 +1,7 @@
 #include "nano/consensus_capella_reactor.hpp"
 #include "nano/consensus_capella_duty.hpp"
 #include "nano/consensus_capella_deposits.hpp"
+#include "nano/consensus_capella_registration.hpp"
 #include "nano/consensus_proposer.hpp"
 namespace nano {
 namespace {
@@ -162,9 +163,7 @@ std::map<Bytes,uint64_t> CapellaDurableReactor::current_validator_indices(const 
  for(const auto& key:keys)if(key.size()!=48)throw std::invalid_argument("Validator public key width");
  if(keys.empty())return result;
  const auto& t=rules_.transition;const auto& head=capella_fork_head(*state_,rules_,check);
- const auto context=capella_fork_block_context(head.state,head.header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state,check);
- for(const auto& [index,member]:context.registry.validators){if(check)check();Bytes key(member.public_key.begin(),member.public_key.end());if(keys.contains(key)&&!result.emplace(std::move(key),index).second)throw std::runtime_error("Ambiguous validator public key");}
- return result;
+ return capella_validator_indices(head.state.ssz,head.header.state_root,t.consensus.state,t.execution,t.maximum_state_bytes,keys,check);
 }
 std::set<uint64_t> CapellaDurableReactor::current_attesters(uint64_t slot,const std::function<void()>& check){
  std::lock_guard lock(mutex_);require_available();const auto duties=prepare_capella_attestation_duties(*state_,rules_,slot,limits_.replay_slots,limits_.sync_trials,check);std::set<uint64_t> result;for(const auto& [index,duty]:duties)result.insert(index);return result;
