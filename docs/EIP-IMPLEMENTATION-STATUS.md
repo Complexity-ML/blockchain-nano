@@ -2020,3 +2020,13 @@ balayage suivant ; 20 refus et 18 annulations conservent les parents.
 Régression des transitions Altair/Bellatrix/Capella 3/3. Ce scénario ne vaut
 pas corpus complet Capella. Activation, Store/réacteur, réseau et commit
 durable restent ouverts ; aucun EIP ni objectif production n'est clôturé.
+
+### Capella : migration de fork programmée
+
+Migration Bellatrix→Capella authentifiée et calendrier explicite, y compris
+frontière sans bloc et entrée au slot exact. Quatorze états officiels SSZ
+complets concordent ; dix refus et trois annulations contrôlent les candidats.
+[Preuves](qualification/capella-fork-20260927/README.md).
+Reste le premier payload Shanghai sur parent Paris, puis la composition
+Store/réacteur, l'activation et le commit durable. Le profil réseau ne change
+pas ; EIP-4895 et l'objectif production restent partiels.
