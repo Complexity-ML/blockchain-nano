@@ -1939,3 +1939,15 @@ refus de file, autres types et autres sessions sont isolés dans les nouveaux
 contrôles. Le relais injecté envoie toujours au pair indépendant.
 [Preuves locales](qualification/vote-sender-knowledge-20260927/README.md).
 Compilation réussie ; aucun gain WAN ni critère production encore revendiqué.
+
+### Reprise WAN qualifiée avec suppression des renvois
+
+La campagne `c2ec4d7` respecte pour la première fois ce scénario WAN :
+reprise commune en **141002 ms** après reconnexion (seuil inchangé 180 s),
+puis **7→8→9→10 en 144025 ms**. Trois instances, deux hôtes, 64 validateurs
+synthétiques, coupure 96 s ; trois boucles saines, sortie globale 0.
+183 observations sans conflit de racine par époque ni régression.
+[Preuves](qualification/multihost-20260927/noecho-recovery/README.md).
+Les échecs précédents sont conservés. Une campagne ne prouve pas le gain
+causal statistique, l'endurance, la charge ou les autres topologies ; aucun
+EIP supplémentaire ni la production globale n'est déclaré achevé.
