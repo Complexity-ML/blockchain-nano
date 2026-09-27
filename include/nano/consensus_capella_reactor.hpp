@@ -31,10 +31,10 @@ class CapellaDurableReactor {
  std::optional<Bytes> signed_block_locked(const ConsensusRoot&,const std::function<void()>&)const;
  Json network_identity_locked()const;
  struct PendingSyncAggregate {uint64_t slot;ConsensusRoot parent;size_t participants;Bytes ssz;};
- std::optional<PendingSyncAggregate> pending_sync_;
+ std::map<uint64_t,PendingSyncAggregate> pending_sync_;
  struct PendingSyncMessages { uint64_t slot; ConsensusRoot parent; std::map<uint64_t,Bytes> wires; };
- std::optional<PendingSyncMessages> pending_sync_messages_;
- bool sync_messages_current_locked(const std::function<void()>&)const;
+ std::map<uint64_t,PendingSyncMessages> pending_sync_messages_;
+ bool sync_messages_current_locked(const PendingSyncMessages&,const std::function<void()>&)const;
  bool submit_sync_message_locked(const CapellaSyncMessage&,const ForkCheckpointToken&,const std::function<void()>&);
  bool submit_sync_aggregate_locked(uint64_t,std::span<const uint8_t>,const ForkCheckpointToken&,const std::function<void()>&);
  void require_available()const;
@@ -58,7 +58,7 @@ public:
  // Verifies membership/domain/signature; merges disjoint positions, otherwise
  // retains the higher participation without double-counting overlap.
  // No durable mutation or local signing. RPC/P2P collection is separate.
- // Message.slot is the signed slot; accepted during the following proposal slot.
+ // Message.slot is the signed slot; accepted during its signed slot or the following proposal slot.
  // Adds only this validator's missing committee positions, retaining multiplicity.
  bool sync_message_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
  bool submit_sync_message(const CapellaSyncMessage&,const ForkCheckpointToken&,

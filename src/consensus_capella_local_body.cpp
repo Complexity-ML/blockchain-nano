@@ -31,7 +31,8 @@ bool CapellaDurableReactor::submit_sync_aggregate_locked(uint64_t slot,std::span
  const size_t bit_bytes=(uint64_t(c.state.sync_committee_size)+7)/8;
  if(!slot||aggregate.size()!=bit_bytes+96)return false;
  const auto& clock=state_->timed.clock;
- if((clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms!=slot)return false;
+ const auto current_slot=(clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms;
+ if(slot<current_slot||slot-current_slot>1)return false;
  if(check)check();
  const auto head=phase0_fork_choice_head(state_->timed.view,{c.epoch.ffg.slots_per_epoch,c.attestation.duties.effective_balance_increment,rules_.proposer_score_boost},check).head;
  const auto& parent=state_->blocks.at(head);if(parent.header.slot>=slot)return false;
@@ -40,18 +41,22 @@ bool CapellaDurableReactor::submit_sync_aggregate_locked(uint64_t slot,std::span
  if(!verify_altair_sync_aggregate(projected.common,aggregate,c.state,c.sync,check))return false;
  size_t participants=0;for(size_t i=0;i<bit_bytes;++i)participants+=std::popcount(aggregate[i]);
  PendingSyncAggregate candidate{slot,head,participants,Bytes(aggregate.begin(),aggregate.end())};
- if(pending_sync_&&pending_sync_->slot==slot&&pending_sync_->parent==head){
-  if(candidate.ssz==pending_sync_->ssz)return true;
-  bool overlap=false;for(size_t i=0;i<bit_bytes;++i)overlap|=bool(candidate.ssz[i]&pending_sync_->ssz[i]);
-  if(!overlap&&participants&&pending_sync_->participants){
-   const std::array<Bytes,2> signatures{Bytes(pending_sync_->ssz.begin()+bit_bytes,pending_sync_->ssz.end()),Bytes(aggregate.begin()+bit_bytes,aggregate.end())};
+ const auto found=pending_sync_.find(slot);const auto* pending=found==pending_sync_.end()?nullptr:&found->second;
+ if(pending&&pending->parent==head){
+  if(candidate.ssz==pending->ssz)return true;
+  bool overlap=false;for(size_t i=0;i<bit_bytes;++i)overlap|=bool(candidate.ssz[i]&pending->ssz[i]);
+  if(!overlap&&participants&&pending->participants){
+   const std::array<Bytes,2> signatures{Bytes(pending->ssz.begin()+bit_bytes,pending->ssz.end()),Bytes(aggregate.begin()+bit_bytes,aggregate.end())};
    const auto merged=aggregate_consensus_bls_signatures(signatures);if(!merged)return false;
-   for(size_t i=0;i<bit_bytes;++i)candidate.ssz[i]|=pending_sync_->ssz[i];
-   std::copy(merged->begin(),merged->end(),candidate.ssz.begin()+bit_bytes);candidate.participants+=pending_sync_->participants;
+   for(size_t i=0;i<bit_bytes;++i)candidate.ssz[i]|=pending->ssz[i];
+   std::copy(merged->begin(),merged->end(),candidate.ssz.begin()+bit_bytes);candidate.participants+=pending->participants;
    if(!verify_altair_sync_aggregate(projected.common,candidate.ssz,c.state,c.sync,check))return false;
-  }else if(participants<=pending_sync_->participants)return false;
+  }else if(participants<=pending->participants)return false;
  }
- if(check)check();pending_sync_=std::move(candidate);return true;
+ auto aggregates=pending_sync_;
+ std::erase_if(aggregates,[&](const auto& entry){return entry.first<current_slot||entry.first-current_slot>1;});
+ aggregates.insert_or_assign(slot,std::move(candidate));
+ if(check)check();pending_sync_.swap(aggregates);return true;
 }
 bool CapellaDurableReactor::submit_sync_message(const CapellaSyncMessage& message,
  const ForkCheckpointToken& expected,const std::function<void()>& check){
@@ -66,7 +71,7 @@ bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage&
  require_available();
  if(expected!=*token_)throw StaleCapellaDuty("Stale sync message submission");
  if(message.slot==UINT64_MAX)return false;const auto slot=message.slot+1;
- const auto& clock=state_->timed.clock;if((clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms!=slot)return false;
+ const auto& clock=state_->timed.clock;const auto current_slot=(clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms;if(slot<current_slot||slot-current_slot>1)return false;
  if(check)check();const auto& t=rules_.transition;const auto& c=t.consensus;const auto& l=c.state;
  const auto head=phase0_fork_choice_head(state_->timed.view,{c.epoch.ffg.slots_per_epoch,c.attestation.duties.effective_balance_increment,rules_.proposer_score_boost},check).head;
  const auto& parent=state_->blocks.at(head);if(parent.header.slot>=slot)return false;
@@ -86,24 +91,28 @@ bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage&
  const auto root=consensus_signing_root(message.beacon_block_root,consensus_domain({7,0,0,0},version,genesis));
  if(!verify_consensus_bls(key,root,message.signature))return false;
  const size_t bit_bytes=(uint64_t(l.sync_committee_size)+7)/8;Bytes aggregate(bit_bytes+96);
+ const auto found=pending_sync_.find(slot);const auto* pending=found==pending_sync_.end()?nullptr:&found->second;
  std::vector<Bytes> signatures;
  for(const auto position:positions){
-  if(pending_sync_&&pending_sync_->slot==slot&&pending_sync_->parent==head&&(pending_sync_->ssz[position/8]&(1u<<(position%8))))continue;
+  if(pending&&pending->parent==head&&(pending->ssz[position/8]&(1u<<(position%8))))continue;
   aggregate[position/8]|=uint8_t(1u<<(position%8));signatures.emplace_back(message.signature.begin(),message.signature.end());
  }
  // Prepare allocations before publishing either ephemeral cache. One message
- // per committee validator, one slot/head context; never persisted to RocksDB.
+ // per committee validator and context, at most two slots; never persisted.
  PendingSyncMessages messages{slot,head,{}};
- if(pending_sync_messages_&&pending_sync_messages_->slot==slot&&pending_sync_messages_->parent==head)messages=*pending_sync_messages_;
+ const auto saved=pending_sync_messages_.find(slot);if(saved!=pending_sync_messages_.end()&&saved->second.parent==head)messages=saved->second;
  messages.wires.insert_or_assign(message.validator_index,encode_capella_sync_message(message));
  if(messages.wires.size()>l.sync_committee_size)throw std::logic_error("Sync message committee bound");
+ auto retained=pending_sync_messages_;
+ std::erase_if(retained,[&](const auto& entry){return entry.first<current_slot||entry.first-current_slot>1;});
+ retained.insert_or_assign(slot,std::move(messages));
  if(check)check();
  if(!signatures.empty()){
   const auto signature=aggregate_consensus_bls_signatures(signatures);if(!signature)return false;
   std::copy(signature->begin(),signature->end(),aggregate.begin()+bit_bytes);
   if(!submit_sync_aggregate_locked(slot,aggregate,expected,check))return false;
  }
- pending_sync_messages_=std::move(messages);return true;
+ pending_sync_messages_.swap(retained);return true;
 }
 std::optional<Bytes> CapellaDurableReactor::prepare_local_body(uint64_t index,uint64_t slot,
  const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,
@@ -184,7 +193,7 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t i
   Bytes body(fixed);std::copy(reveal.begin(),reveal.end(),body.begin());std::copy(deposit_vote.begin(),deposit_vote.end(),body.begin()+96);
   // Empty sync participation is a valid aggregate (and incurs normal penalties).
   body[220+(uint64_t(t.state.sync_committee_size)+7)/8]=0xc0;
-  if(pending_sync_&&pending_sync_->slot==slot&&pending_sync_->parent==head)std::copy(pending_sync_->ssz.begin(),pending_sync_->ssz.end(),body.begin()+220);
+  const auto sync=pending_sync_.find(slot);if(sync!=pending_sync_.end()&&sync->second.parent==head)std::copy(sync->second.ssz.begin(),sync->second.ssz.end(),body.begin()+220);
   offset(body,200,fixed);offset(body,204,fixed);offset(body,208,fixed+slashings.size());
   offset(body,212,fixed+slashings.size()+attestations.size());offset(body,216,fixed+slashings.size()+attestations.size()+selected_deposits.size());offset(body,220+sync_bytes,fixed+slashings.size()+attestations.size()+selected_deposits.size()+selected_exits.size());
   offset(body,224+sync_bytes,fixed+slashings.size()+attestations.size()+selected_deposits.size()+selected_exits.size()+encoded.size());

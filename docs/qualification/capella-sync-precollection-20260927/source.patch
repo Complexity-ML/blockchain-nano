@@ -1,0 +1,142 @@
+diff --git a/include/nano/consensus_capella_reactor.hpp b/include/nano/consensus_capella_reactor.hpp
+index c25eff4..2adbbee 100644
+--- a/include/nano/consensus_capella_reactor.hpp
++++ b/include/nano/consensus_capella_reactor.hpp
+@@ -34 +34 @@ class CapellaDurableReactor {
+- std::optional<PendingSyncAggregate> pending_sync_;
++ std::map<uint64_t,PendingSyncAggregate> pending_sync_;
+@@ -36,2 +36,2 @@ class CapellaDurableReactor {
+- std::optional<PendingSyncMessages> pending_sync_messages_;
+- bool sync_messages_current_locked(const std::function<void()>&)const;
++ std::map<uint64_t,PendingSyncMessages> pending_sync_messages_;
++ bool sync_messages_current_locked(const PendingSyncMessages&,const std::function<void()>&)const;
+@@ -61 +61 @@ public:
+- // Message.slot is the signed slot; accepted during the following proposal slot.
++ // Message.slot is the signed slot; accepted during its signed slot or the following proposal slot.
+diff --git a/src/consensus_capella_local_body.cpp b/src/consensus_capella_local_body.cpp
+index afbeb60..b2e1a6c 100644
+--- a/src/consensus_capella_local_body.cpp
++++ b/src/consensus_capella_local_body.cpp
+@@ -34 +34,2 @@ bool CapellaDurableReactor::submit_sync_aggregate_locked(uint64_t slot,std::span
+- if((clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms!=slot)return false;
++ const auto current_slot=(clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms;
++ if(slot<current_slot||slot-current_slot>1)return false;
+@@ -43,5 +44,6 @@ bool CapellaDurableReactor::submit_sync_aggregate_locked(uint64_t slot,std::span
+- if(pending_sync_&&pending_sync_->slot==slot&&pending_sync_->parent==head){
+-  if(candidate.ssz==pending_sync_->ssz)return true;
+-  bool overlap=false;for(size_t i=0;i<bit_bytes;++i)overlap|=bool(candidate.ssz[i]&pending_sync_->ssz[i]);
+-  if(!overlap&&participants&&pending_sync_->participants){
+-   const std::array<Bytes,2> signatures{Bytes(pending_sync_->ssz.begin()+bit_bytes,pending_sync_->ssz.end()),Bytes(aggregate.begin()+bit_bytes,aggregate.end())};
++ const auto found=pending_sync_.find(slot);const auto* pending=found==pending_sync_.end()?nullptr:&found->second;
++ if(pending&&pending->parent==head){
++  if(candidate.ssz==pending->ssz)return true;
++  bool overlap=false;for(size_t i=0;i<bit_bytes;++i)overlap|=bool(candidate.ssz[i]&pending->ssz[i]);
++  if(!overlap&&participants&&pending->participants){
++   const std::array<Bytes,2> signatures{Bytes(pending->ssz.begin()+bit_bytes,pending->ssz.end()),Bytes(aggregate.begin()+bit_bytes,aggregate.end())};
+@@ -49,2 +51,2 @@ bool CapellaDurableReactor::submit_sync_aggregate_locked(uint64_t slot,std::span
+-   for(size_t i=0;i<bit_bytes;++i)candidate.ssz[i]|=pending_sync_->ssz[i];
+-   std::copy(merged->begin(),merged->end(),candidate.ssz.begin()+bit_bytes);candidate.participants+=pending_sync_->participants;
++   for(size_t i=0;i<bit_bytes;++i)candidate.ssz[i]|=pending->ssz[i];
++   std::copy(merged->begin(),merged->end(),candidate.ssz.begin()+bit_bytes);candidate.participants+=pending->participants;
+@@ -52 +54 @@ bool CapellaDurableReactor::submit_sync_aggregate_locked(uint64_t slot,std::span
+-  }else if(participants<=pending_sync_->participants)return false;
++  }else if(participants<=pending->participants)return false;
+@@ -54 +56,4 @@ bool CapellaDurableReactor::submit_sync_aggregate_locked(uint64_t slot,std::span
+- if(check)check();pending_sync_=std::move(candidate);return true;
++ auto aggregates=pending_sync_;
++ std::erase_if(aggregates,[&](const auto& entry){return entry.first<current_slot||entry.first-current_slot>1;});
++ aggregates.insert_or_assign(slot,std::move(candidate));
++ if(check)check();pending_sync_.swap(aggregates);return true;
+@@ -69 +74 @@ bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage&
+- const auto& clock=state_->timed.clock;if((clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms!=slot)return false;
++ const auto& clock=state_->timed.clock;const auto current_slot=(clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms;if(slot<current_slot||slot-current_slot>1)return false;
+@@ -88,0 +94 @@ bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage&
++ const auto found=pending_sync_.find(slot);const auto* pending=found==pending_sync_.end()?nullptr:&found->second;
+@@ -91 +97 @@ bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage&
+-  if(pending_sync_&&pending_sync_->slot==slot&&pending_sync_->parent==head&&(pending_sync_->ssz[position/8]&(1u<<(position%8))))continue;
++  if(pending&&pending->parent==head&&(pending->ssz[position/8]&(1u<<(position%8))))continue;
+@@ -95 +101 @@ bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage&
+- // per committee validator, one slot/head context; never persisted to RocksDB.
++ // per committee validator and context, at most two slots; never persisted.
+@@ -97 +103 @@ bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage&
+- if(pending_sync_messages_&&pending_sync_messages_->slot==slot&&pending_sync_messages_->parent==head)messages=*pending_sync_messages_;
++ const auto saved=pending_sync_messages_.find(slot);if(saved!=pending_sync_messages_.end()&&saved->second.parent==head)messages=saved->second;
+@@ -99,0 +106,3 @@ bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage&
++ auto retained=pending_sync_messages_;
++ std::erase_if(retained,[&](const auto& entry){return entry.first<current_slot||entry.first-current_slot>1;});
++ retained.insert_or_assign(slot,std::move(messages));
+@@ -106 +115 @@ bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage&
+- pending_sync_messages_=std::move(messages);return true;
++ pending_sync_messages_.swap(retained);return true;
+@@ -187 +196 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t i
+-  if(pending_sync_&&pending_sync_->slot==slot&&pending_sync_->parent==head)std::copy(pending_sync_->ssz.begin(),pending_sync_->ssz.end(),body.begin()+220);
++  const auto sync=pending_sync_.find(slot);if(sync!=pending_sync_.end()&&sync->second.parent==head)std::copy(sync->second.ssz.begin(),sync->second.ssz.end(),body.begin()+220);
+diff --git a/src/consensus_capella_reactor.cpp b/src/consensus_capella_reactor.cpp
+index aaccb46..06d03d3 100644
+--- a/src/consensus_capella_reactor.cpp
++++ b/src/consensus_capella_reactor.cpp
+@@ -284,2 +284 @@ std::vector<ConsensusRoot> CapellaDurableReactor::bls_change_roots_locked(const
+-bool CapellaDurableReactor::sync_messages_current_locked(const std::function<void()>& check)const{
+- if(!pending_sync_messages_)return false;
++bool CapellaDurableReactor::sync_messages_current_locked(const PendingSyncMessages& messages,const std::function<void()>& check)const{
+@@ -287 +286,2 @@ bool CapellaDurableReactor::sync_messages_current_locked(const std::function<voi
+- if((clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms!=pending_sync_messages_->slot)return false;
++ const auto slot=(clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms;
++ if(messages.slot<slot||messages.slot-slot>1)return false;
+@@ -290 +290 @@ bool CapellaDurableReactor::sync_messages_current_locked(const std::function<voi
+- return head==pending_sync_messages_->parent;
++ return head==messages.parent;
+@@ -296,2 +296,2 @@ std::shared_ptr<const CapellaInventorySnapshot> CapellaDurableReactor::capture_i
+- const bool sync=kind=="sync_committee_message";const bool current_sync=sync&&sync_messages_current_locked(check);
+- const auto count=sync?(current_sync?pending_sync_messages_->wires.size():0):kind=="block"?state_->blocks.size()-size_t(state_->blocks.contains(state_->timed.view.anchor)):kind=="attestation"?votes_.size():kind=="bls_to_execution_change"?bls_changes_.size():slashings_.size();
++ const bool sync=kind=="sync_committee_message";size_t sync_count=0;if(sync)for(const auto& [_,messages]:pending_sync_messages_)if(sync_messages_current_locked(messages,check)){if(messages.wires.size()>budget/sizeof(ConsensusRoot)-sync_count)throw std::length_error("Capella sync inventory exceeds root budget");sync_count+=messages.wires.size();}
++ const auto count=sync?sync_count:kind=="block"?state_->blocks.size()-size_t(state_->blocks.contains(state_->timed.view.anchor)):kind=="attestation"?votes_.size():kind=="bls_to_execution_change"?bls_changes_.size():slashings_.size();
+@@ -300 +300 @@ std::shared_ptr<const CapellaInventorySnapshot> CapellaDurableReactor::capture_i
+- if(sync){if(current_sync)for(const auto& [_,wire]:pending_sync_messages_->wires){if(check)check();snapshot->roots_.push_back(archive_array<32>(sha256(wire),0));}std::sort(snapshot->roots_.begin(),snapshot->roots_.end());}
++ if(sync){for(const auto& [_,messages]:pending_sync_messages_)if(sync_messages_current_locked(messages,check))for(const auto& [index,wire]:messages.wires){if(check)check();snapshot->roots_.push_back(archive_array<32>(sha256(wire),0));}std::sort(snapshot->roots_.begin(),snapshot->roots_.end());}
+@@ -343 +343 @@ Json CapellaDurableReactor::export_message(std::string_view kind,const Consensus
+- if(kind=="sync_committee_message"){if(sync_messages_current_locked(check))for(const auto& [_,wire]:pending_sync_messages_->wires){if(check)check();if(sha256(wire)==key){if(wire.size()>maximum)throw std::length_error("Capella export exceeds capacity");payload=wire;break;}}}
++ if(kind=="sync_committee_message"){for(const auto& [_,messages]:pending_sync_messages_)if(sync_messages_current_locked(messages,check))for(const auto& [index,wire]:messages.wires){if(check)check();if(sha256(wire)==key){if(wire.size()>maximum)throw std::length_error("Capella export exceeds capacity");payload=wire;break;}}}
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index 279ac48..b9bedd8 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -118,0 +119,18 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
++  Bytes precollected;
++  if(local_sync&&slot%4==3){
++   const auto before=nodes[0]->current();const auto& parent=capella_fork_head(*before.state,rules);const auto& l=t.consensus.state;const size_t bit_bytes=(l.sync_committee_size+7)/8;
++   const auto advanced=prepare_capella_slots(parent.state,{t.consensus.epoch,t.execution,t.maximum_state_bytes},l,slot,limits.replay_slots,limits.sync_trials);
++   CapellaSyncMessage message{};message.slot=slot-1;message.beacon_block_root=root_at(advanced.ssz,176+32*(message.slot%l.slots_per_historical_root));
++   ConsensusBytes4 version{};std::copy_n(advanced.ssz.begin()+(message.slot/slots<little(advanced.ssz,56,8)?48:52),4,version.begin());
++   const auto signing_root=consensus_signing_root(message.beacon_block_root,consensus_domain({7,0,0,0},version,genesis_root));
++   const size_t committee=272+64*l.slots_per_historical_root+32*l.epochs_per_historical_vector+8*l.epochs_per_slashings_vector+133;
++   precollected.resize(bit_bytes+96);blst_p2 sum{};bool first=true;
++   for(size_t position=0;position<l.sync_committee_size;++position){
++    size_t member=0;for(;member<64;++member){const auto key=Key(member).public_key;if(std::equal(key.begin(),key.end(),advanced.ssz.begin()+committee+48*position))break;}check(member<64,"early sync unknown committee member");
++    message.validator_index=member;const auto signature=Key(member).sign(signing_root);copy_to(message.signature,signature);
++    check(nodes[0]->submit_sync_message(message,before.token),"sync rejected during signed slot");
++    const auto bytes=encode_capella_sync_message(message);ConsensusRoot id{};copy_to(id,sha256(bytes));const auto exported=nodes[0]->export_message("sync_committee_message",id,144);check(exported["available"]==true,"early sync unavailable to relay");check(nodes[1]->sync_message_ssz(unhex(exported["envelope"]["ssz"].get<std::string>())),"early sync rejected by second reactor");
++    blst_p2_affine affine;check(blst_p2_uncompress(&affine,signature.data())==BLST_SUCCESS,"early sync signature invalid");blst_p2 point;blst_p2_from_affine(&point,&affine);if(first){sum=point;first=false;}else blst_p2_add_or_double(&sum,&sum,&point);precollected[position/8]|=uint8_t(1u<<(position%8));
++   }
++   blst_p2_compress(precollected.data()+bit_bytes,&sum);check(nodes[0]->current().token==before.token,"early collection changed durable clock");
++  }
+@@ -128 +146 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+-   expected_sync.resize(bit_bytes+96);expected_sync[bit_bytes]=0xc0;
++   expected_sync.resize(bit_bytes+96);expected_sync[bit_bytes]=0xc0;if(!precollected.empty()){expected_sync=precollected;check(!nodes[0]->capture_inventory("sync_committee_message",4096)->page({},64,16384)["entries"].empty(),"early sync lost at proposal slot boundary");}
+@@ -140 +158 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+-    check(!nodes[0]->submit_sync_aggregate(slot+1,expected_sync,current.token),"future sync aggregate accepted");
++    check(!nodes[0]->submit_sync_aggregate(slot+2,expected_sync,current.token),"future sync aggregate accepted");
+@@ -149 +167 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+-     bad_message=message;bad_message.slot=slot;check(!nodes[0]->submit_sync_message(bad_message,current.token),"future sync message accepted");
++     bad_message=message;bad_message.slot=slot+1;check(!nodes[0]->submit_sync_message(bad_message,current.token),"future sync message accepted");
+@@ -177,0 +196,7 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
++     if(slot==4){
++      // With no block yet at slot 4, both slot-3 and slot-4 signatures can
++      // reference the same parent. Collecting slot 4 must not erase slot 3.
++      auto next_message=message;next_message.slot=slot;check(nodes[0]->submit_sync_message(next_message,current.token),"next-slot sync context rejected");
++      const auto both=nodes[0]->capture_inventory("sync_committee_message",4096)->page({},64,16384);
++      check(both["entries"].size()==individual_signatures.size()+1,"two-slot sync contexts not retained independently");
++     }
+@@ -303 +328 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+- std::cout<<Json{{"scenario","capella-local-assembly-finality"},{"localSyncAggregates",local_sync},{"disjointSyncMerging",local_sync},{"individualSyncMessages",local_sync},{"syncWireWorker",local_sync},{"syncCatalogExport",local_sync},{"executionOwner",owner_mode},{"participationPercent",local_finality},{"blocks",blocks},{"votes",votes},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"justifiedEpoch",result.state->timed.view.justified.epoch},{"independentStores",2},{"storeReopens",restarts},{"signingJournalsReopened",reopened_journals},{"networkTransport",false},{"networkActivated",false}}.dump()<<std::endl;
++ std::cout<<Json{{"scenario","capella-local-assembly-finality"},{"localSyncAggregates",local_sync},{"disjointSyncMerging",local_sync},{"individualSyncMessages",local_sync},{"syncWireWorker",local_sync},{"syncCatalogExport",local_sync},{"syncPrecollection",local_sync},{"executionOwner",owner_mode},{"participationPercent",local_finality},{"blocks",blocks},{"votes",votes},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"justifiedEpoch",result.state->timed.view.justified.epoch},{"independentStores",2},{"storeReopens",restarts},{"signingJournalsReopened",reopened_journals},{"networkTransport",false},{"networkActivated",false}}.dump()<<std::endl;

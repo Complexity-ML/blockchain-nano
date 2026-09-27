@@ -491,3 +491,17 @@ de tête ; trois tests réseau passent. **Partiel** : aucune nouvelle preuve de
 transport libp2p réel ni de livraison avant échéance. Signature automatique,
 ordonnancement, sous-réseaux et performances restent ouverts ; aucune clôture EIP
 ou production. [Preuves](qualification/capella-sync-export-20260927/README.md).
+
+
+### Calendrier de précollecte sync — 27 septembre 2026
+
+Correction d’un écart découvert en préparant la signature automatique : les
+messages sont désormais admis et exportables pendant leur slot de signature,
+puis pendant le slot d’inclusion. Deux contextes bornés conservent séparément
+l’agrégat courant et le suivant. Test nouveau de diffusion anticipée vers un second
+réacteur, franchissement du slot et inclusion exacte ; coexistence des deux
+contextes vérifiée. 40 blocs / 272 votes / finalité 3 / deux réouvertures, 44,95 s.
+**Partiel** : signature automatique, calendrier réel, rotation de comité et livraison
+libp2p dans les délais restent ouverts. Cette correction remplace la rétention à
+un seul contexte de la tranche précédente, sans clôturer une EIP ni la production.
+[Spécification et preuves](qualification/capella-sync-precollection-20260927/README.md).
