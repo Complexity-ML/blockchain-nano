@@ -2,6 +2,7 @@
 #include "nano/http.hpp"
 #include "nano/consensus_altair_runtime.hpp"
 #include "nano/consensus_bellatrix_runtime.hpp"
+#include "nano/consensus_capella_runtime.hpp"
 #include <spawn.h>
 #include <sys/wait.h>
 #include <signal.h>
@@ -48,8 +49,14 @@ int run_node(Blockchain& chain,const std::filesystem::path& database,const std::
  auto directory=executable_directory(executable);auto binary=directory/"nano-p2p";if(!std::filesystem::exists(binary))binary=directory.parent_path()/"build-network/nano-p2p";
  binary=config.value("p2p_binary",binary.string());
  auto identity=config.value("p2p_identity",database.string()+".peerkey");auto listen=config.value("listen_addr",std::string("/ip4/")+config.value("p2p_host",std::string("0.0.0.0"))+"/tcp/"+std::to_string(p2p_port));
- BellatrixRuntime bellatrix;
- if(chain.genesis().consensus=="beacon"&&!config.contains("bellatrix"))throw std::invalid_argument("Beacon node requires Bellatrix runtime configuration");
+ BellatrixRuntime bellatrix;CapellaRuntime capella;
+ if(chain.genesis().consensus=="beacon"&&!config.contains("bellatrix")&&!config.contains("capella"))throw std::invalid_argument("Beacon node requires Bellatrix or Capella runtime configuration");
+ if(config.contains("capella")){
+  if(host!="127.0.0.1"||config.contains("bellatrix")||config.contains("altair")||config.contains("bft"))throw std::invalid_argument("Capella service requires local RPC and exclusive consensus configuration");
+  capella=start_capella_runtime(chain,config.at("capella"));
+  const auto current=capella.reactor->current();
+  std::cout<<Json{{"event","capella-runtime-ready"},{"sequence",quantity(Int(std::to_string(current.token.sequence)))},{"digest",hex(current.token.digest)},{"executionBound",true},{"networkProtocolActive",false}}.dump()<<std::endl;
+ }
  if(config.contains("bellatrix")){
   if(host!="127.0.0.1"||config.contains("altair")||config.contains("bft"))throw std::invalid_argument("Bellatrix service requires local RPC and exclusive consensus configuration");
   bellatrix=start_bellatrix_runtime(chain,config.at("bellatrix"));
@@ -65,8 +72,8 @@ int run_node(Blockchain& chain,const std::filesystem::path& database,const std::
   const auto state=altair.reactor->current();
   std::cout<<Json{{"event","altair-runtime-ready"},{"sequence",quantity(Int(std::to_string(state.token.sequence)))},{"digest",hex(state.token.digest)},{"executionBound",false},{"networkProtocolActive",false}}.dump()<<std::endl;
  }
- auto token=hex(generate_private_key());Rpc rpc(chain,token,AdmissionBudget::Clock::now,RpcSimulationLimits{},altair.rpc,bellatrix.rpc);rpc.set_beacon_sync_tracker(bellatrix.sync_tracker);rpc.load_wallets(config,host);auto server=std::make_unique<HttpServer>(rpc,host,uint16_t(port),std::chrono::seconds(4),bellatrix.beacon_read,bellatrix.beacon_events);
- std::vector<std::string> args{std::to_string(server->port()),identity,listen};auto peers=config.value("bootnodes",std::vector<std::string>{});args.insert(args.end(),peers.begin(),peers.end());std::vector<std::string> excluded;for(const auto& entry:config.value("wallets",Json::array()))excluded.push_back(entry.at("password_env"));if(config.contains("bft"))excluded.push_back(config.at("bft").at("key_env").get<std::string>());if(config.contains("bellatrix")&&config.at("bellatrix").contains("validator"))for(const auto& key:config.at("bellatrix").at("validator").at("keys"))excluded.push_back(key.at("keyEnv").get<std::string>());Child child(binary,args,token,excluded);
+ auto token=hex(generate_private_key());Rpc rpc(chain,token,AdmissionBudget::Clock::now,RpcSimulationLimits{},altair.rpc,bellatrix.rpc,capella.reactor?std::make_shared<CapellaRuntime>(capella):nullptr);rpc.set_beacon_sync_tracker(bellatrix.sync_tracker);rpc.load_wallets(config,host);auto server=std::make_unique<HttpServer>(rpc,host,uint16_t(port),std::chrono::seconds(4),capella.reactor?capella.beacon_read:bellatrix.beacon_read,bellatrix.beacon_events);
+ std::vector<std::string> args{std::to_string(server->port()),identity,listen};auto peers=config.value("bootnodes",std::vector<std::string>{});args.insert(args.end(),peers.begin(),peers.end());std::vector<std::string> excluded;for(const auto& entry:config.value("wallets",Json::array()))excluded.push_back(entry.at("password_env"));if(config.contains("bft"))excluded.push_back(config.at("bft").at("key_env").get<std::string>());for(const auto* profile:{"bellatrix","capella"})if(config.contains(profile)&&config.at(profile).contains("validator"))for(const auto& key:config.at(profile).at("validator").at("keys"))excluded.push_back(key.at("keyEnv").get<std::string>());Child child(binary,args,token,excluded);
  auto child_pid=child.pid();
  std::atomic<bool> stopping=false,failed=false;
  std::thread monitor([&]{while(!stopping){if(child.exited()){failed=true;server->stop();return;}std::this_thread::sleep_for(std::chrono::milliseconds(100));}});
@@ -74,6 +81,7 @@ int run_node(Blockchain& chain,const std::filesystem::path& database,const std::
  std::cout<<Json{{"event","p2p-process"},{"pid",child_pid}}.dump()<<std::endl;
  try{server->run();}catch(...){stopping=true;monitor.join();throw;}
  stopping=true;monitor.join();child.stop();
+ if(capella.reactor){server.reset();auto restart=stop_capella_runtime(capella);restart["event"]="capella-runtime-stopped";std::cout<<restart.dump()<<std::endl;}
  if(bellatrix.reactor){server.reset();auto restart=stop_bellatrix_runtime(bellatrix);restart["event"]="bellatrix-runtime-stopped";std::cout<<restart.dump()<<std::endl;}
  if(failed){std::cerr<<"Nano P2P process exited; node stopped\n";return 1;}return 0;
 }

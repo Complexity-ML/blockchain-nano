@@ -3035,3 +3035,14 @@ jobs. Test runtime passé en 21,57 s ; admission réseau explicitement désactiv
 [Preuves](qualification/capella-ipc-recovery-20260927/README.md).
 Le démon libp2p, le relais de catalogues et le démarrage réseau géré restent à
 raccorder ; cette preuve locale ne clôture pas la qualification réseau Capella.
+
+### Capella : cycle de vie du nœud géré
+
+`nano run` sélectionne le runtime Capella et ses handlers privés, retire les clés
+validateur de l’environnement enfant, arrête les workers et publie le reçu de
+reprise. Test du vrai binaire avec enfant de contrôle : trois démarrages, reprise
+avec témoins de chaîne/signature, refus de profils concurrents/RPC public et arrêt
+sur panne enfant (1,45 s). CLI serve et RPC existantes également vertes.
+[Preuves](qualification/capella-managed-node-20260927/README.md).
+L’enfant du test n’est pas libp2p : adaptation du démon Capella et relais des
+archives/catalogues encore ouverts. Aucun déploiement distribué Capella qualifié.
