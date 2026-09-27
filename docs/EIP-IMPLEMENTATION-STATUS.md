@@ -1987,3 +1987,13 @@ PUSH0 exécuté, quatre retraits, sept refus dont un paiement excessif
 EVM-valide, trois annulations et régression ciblée 6/6.
 Le bloc signé complet, slots/epochs Capella, l'activation et le commit
 durable restent ouverts ; aucun changement de profil réseau ni clôture EIP.
+
+### Capella : racine du corps de bloc
+
+`capella_beacon_body_root` engage le payload Shanghai et les changements
+BLS signés, avec limites et offsets canoniques. 30 racines officielles,
+330 refus locaux, 177 mutations et 60 annulations sont qualifiés ; les
+cinq suites structurelles ciblées passent.
+[Preuves](qualification/capella-body-20260927/README.md).
+Il ne s'agit pas encore de la transition signée complète : slots/epochs,
+composition, activation et persistance restent requis. Réseau inchangé.

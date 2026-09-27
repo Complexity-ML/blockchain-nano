@@ -1,4 +1,5 @@
 #include "nano/consensus_beacon_body.hpp"
+#include "nano/consensus_capella_bls_change.hpp"
 #include <algorithm>
 #include <bit>
 #include <stdexcept>
@@ -80,12 +81,13 @@ ConsensusRoot phase0_beacon_body_root(View b,const Phase0BodyLimits& limits){
   fixed_list(fields[3],1240,limits.deposits,deposit),fixed_list(fields[4],112,limits.voluntary_exits,exit)});
 }
 namespace {
-ConsensusRoot sync_beacon_body_root(View b,const Phase0BodyLimits& limits,uint64_t sync_size,const ExecutionPayloadLimits* execution,const std::function<void()>& check){
+ConsensusRoot sync_beacon_body_root(View b,const Phase0BodyLimits& limits,uint64_t sync_size,const ExecutionPayloadLimits* execution,const std::function<void()>& check,uint32_t withdrawals=0,uint32_t changes=0){
  if(check)check();
  require(limits.proposer_slashings&&limits.attester_slashings&&limits.attestations&&limits.deposits&&limits.voluntary_exits&&limits.validators_per_committee);
  require(sync_size&&sync_size<=UINT32_MAX&&b.size()<=UINT32_MAX);
- const size_t width=(sync_size+7)/8,fixed=316+width+(execution?4:0);
- auto fields=execution?variable_fields(b,fixed,{200,204,208,212,216,fixed-4}):variable_fields(b,fixed,{200,204,208,212,216});
+ const bool capella=changes!=0;require(!capella||(execution&&withdrawals));
+ const size_t width=(sync_size+7)/8,fixed=316+width+(execution?4:0)+(capella?4:0);
+ auto fields=capella?variable_fields(b,fixed,{200,204,208,212,216,fixed-8,fixed-4}):execution?variable_fields(b,fixed,{200,204,208,212,216,fixed-4}):variable_fields(b,fixed,{200,204,208,212,216});
  const auto bits=b.subspan(220,width);require(sync_size%8==0||(bits.back()>>(sync_size%8))==0);
  const auto sync=container({packed(bits,(sync_size+255)/256),vector_bytes(b.subspan(220+width,96),96)});
  std::vector<Root> roots{vector_bytes(b.first(96),96),container({scalar(b.subspan(96,32)),scalar(b.subspan(128,8)),scalar(b.subspan(136,32))}),scalar(b.subspan(168,32)),
@@ -93,12 +95,20 @@ ConsensusRoot sync_beacon_body_root(View b,const Phase0BodyLimits& limits,uint64
   variable_list(fields[1],limits.attester_slashings,[&](View v){if(check)check();return attester_slashing(v,limits.validators_per_committee);}),
   variable_list(fields[2],limits.attestations,[&](View v){if(check)check();return attestation(v,limits.validators_per_committee);}),
   fixed_list(fields[3],1240,limits.deposits,[&](View v){if(check)check();return deposit(v);}),fixed_list(fields[4],112,limits.voluntary_exits,[&](View v){if(check)check();return exit(v);}),sync};
- if(execution){auto payload=decode_bellatrix_execution_payload(fields[5],*execution,fields[5].size(),check);require(payload.has_value());roots.push_back(bellatrix_execution_payload_root(*payload,*execution,check));}
- const auto root=merkle(std::move(roots),execution?10:9);if(check)check();return root;
+ if(capella){
+  const auto payload=decode_capella_execution_payload(fields[5],*execution,withdrawals,fields[5].size(),check);require(payload.has_value());
+  roots.push_back(capella_execution_payload_root(*payload,*execution,withdrawals,check));
+  roots.push_back(fixed_list(fields[6],172,changes,[&](View v){if(check)check();const auto change=decode_capella_bls_change(v);require(change.has_value());return container({capella_bls_change_root(*change),vector_bytes(v.subspan(76),96)});}));
+ }else if(execution){auto payload=decode_bellatrix_execution_payload(fields[5],*execution,fields[5].size(),check);require(payload.has_value());roots.push_back(bellatrix_execution_payload_root(*payload,*execution,check));}
+ const auto root=merkle(std::move(roots),capella?11:execution?10:9);if(check)check();return root;
 }
 }
 ConsensusRoot altair_beacon_body_root(View b,const Phase0BodyLimits& l,uint64_t sync){return sync_beacon_body_root(b,l,sync,nullptr,{});}
 ConsensusRoot bellatrix_beacon_body_root(View b,const Phase0BodyLimits& l,uint64_t sync,const ExecutionPayloadLimits& e,size_t maximum_bytes,const std::function<void()>& check){
  require(b.size()<=maximum_bytes);return sync_beacon_body_root(b,l,sync,&e,check);
 }
+ConsensusRoot capella_beacon_body_root(View b,const Phase0BodyLimits& l,uint64_t sync,const ExecutionPayloadLimits& e,uint32_t withdrawals,uint32_t changes,size_t maximum_bytes,const std::function<void()>& check){
+ require(withdrawals&&changes&&b.size()<=maximum_bytes);return sync_beacon_body_root(b,l,sync,&e,check,withdrawals,changes);
+}
+
 }

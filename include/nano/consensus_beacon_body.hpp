@@ -20,4 +20,10 @@ ConsensusRoot altair_beacon_body_root(std::span<const uint8_t> bytes,const Phase
 ConsensusRoot bellatrix_beacon_body_root(std::span<const uint8_t>,const Phase0BodyLimits&,
  uint64_t sync_committee_size,const ExecutionPayloadLimits&,size_t maximum_bytes,
  const std::function<void()>& checkpoint={});
+// Capella adds the withdrawal-bearing payload and signed BLS credential changes.
+// Structural commitments only; does not authorize the operations or execute EVM.
+ConsensusRoot capella_beacon_body_root(std::span<const uint8_t>,const Phase0BodyLimits&,
+ uint64_t sync_committee_size,const ExecutionPayloadLimits&,uint32_t maximum_withdrawals,
+ uint32_t maximum_bls_changes,size_t maximum_bytes,const std::function<void()>& checkpoint={});
+
 }
