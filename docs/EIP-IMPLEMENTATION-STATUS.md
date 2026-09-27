@@ -2443,3 +2443,13 @@ Quatre contrôles négatifs ajoutés ; rattrapage de seize messages toujours con
 (test 5,80 s). [Preuves](qualification/capella-sync-order-20260927/README.md).
 La recherche réseau des parents manquants et la reprise sur pages élaguées restent
 à implémenter ; ce composant n’est pas le synchroniseur réseau complet.
+
+### Capella : récupération bornée des parents
+
+Collecteur itératif depuis les têtes demandées jusqu’aux racines locales connues,
+dépendances tirées du SSZ, ancêtres dédupliqués et budgets cumulés. Deux extrémités
+de branches suffisent à récupérer neuf blocs en neuf appels, puis l’admission
+normale converge avec votes/slashing. Indisponibilité, limite et annulation testées
+(5,73 s). [Preuves](qualification/capella-sync-dependencies-20260927/README.md).
+Le callback de récupération n’est pas encore un transport libp2p ; sélection des
+pairs, délais réseau et reprise après élagage restent à raccorder.

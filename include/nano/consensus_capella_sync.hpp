@@ -8,4 +8,11 @@ struct CapellaSyncBlock {ConsensusRoot root;Bytes ssz;};
 std::vector<size_t> order_capella_sync_blocks(std::span<const CapellaSyncBlock>,
  const std::set<ConsensusRoot>& known,const CapellaForkBlockRules&,size_t maximum_blocks,
  size_t maximum_payload_bytes,const std::function<void()>& checkpoint={});
+// Fetch must bound transport allocation to the supplied allowance and honor the
+// cancellation callback. Missing ancestors fail the batch without publishing.
+using CapellaSyncFetch=std::function<std::optional<Bytes>(const ConsensusRoot&,size_t,const std::function<void()>&)>;
+std::vector<CapellaSyncBlock> collect_capella_sync_blocks(std::span<const ConsensusRoot> targets,
+ const std::set<ConsensusRoot>& known,const CapellaForkBlockRules&,size_t maximum_blocks,
+ size_t maximum_payload_bytes,const CapellaSyncFetch&,const std::function<void()>& checkpoint={});
+
 }
