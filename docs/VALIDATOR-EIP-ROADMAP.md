@@ -3692,3 +3692,14 @@ partition réussies. Les catalogues d'attestations prennent jusqu'à27s près de
 l'arrêt ; cause précise à établir, sans relâcher les règles ni les échéances.
 La reprise sans retard n'a pas été qualifiée après cet échec. Ressources dédiées
 nettoyées et absence vérifiée. [Preuves](qualification/capella-asymmetric-delay-20260927/README.md).
+
+
+### Essai rejeté : livraison de deux votes simultanés — 27 septembre 2026
+
+Le candidat passe quatre suites ciblées, mais échoue au même scénario500ms :
+finalité commune3 sans atteindre4. Il introduit aussi des refus de concurrence
+bulk absents du témoin. Les modifications de production sont retirées ; leur
+patch, les nouveaux tests et toutes les traces sont conservés pour reproduction.
+Le blocage reste actif ; prochaine analyse : ordonnancement des catalogues et
+livraison des votes récents/dépendances, sans relâcher les limites.
+[Expérience rejetée](qualification/capella-vote-pipeline-20260927/README.md).

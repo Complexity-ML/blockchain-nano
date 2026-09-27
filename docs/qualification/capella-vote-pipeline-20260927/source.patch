@@ -1,0 +1,82 @@
+diff --git a/network/capella_catalog_relay.hpp b/network/capella_catalog_relay.hpp
+index 904464a..1971bf4 100644
+--- a/network/capella_catalog_relay.hpp
++++ b/network/capella_catalog_relay.hpp
+@@ -7 +7,2 @@
+-// One stable catalog, bounded pages and one payload/delivery in flight.
++// One stable catalog, bounded pages and at most two payloads/deliveries in flight.
++// Blocks remain serial; a page advances only after every delivery is admitted.
+@@ -18 +19 @@ private:
+- const size_t page_size_,maximum_;size_t delivered_=0,index_=0;Json entries_,next_;
++ const size_t page_size_,maximum_,parallel_;size_t delivered_=0,index_=0,in_flight_=0;Json entries_,next_;
+@@ -61 +62,7 @@ private:
+-  if(entries_.empty()){close(next_.is_null());return;}export_next();
++  if(entries_.empty()){close(next_.is_null());return;}pump();
++ }
++ void pump(){
++  if(finished_||closing_)return;
++  while(in_flight_<parallel_&&index_<entries_.size()){
++   const auto id=entries_.at(index_++).get<std::string>();++in_flight_;export_next(id);
++  }
+@@ -64,2 +71,5 @@ private:
+-  ++delivered_;cursor_=entries_.at(index_).get<std::string>();++index_;
+-  if(index_<entries_.size()){export_next();return;}
++  if(finished_||closing_)return;
++  ++delivered_;--in_flight_;
++  if(index_<entries_.size()){pump();return;}
++  if(in_flight_)return;
++  cursor_=entries_.back().get<std::string>();
+@@ -69,2 +79,2 @@ private:
+- void export_next(){
+-  stage_="export";const auto id=entries_.at(index_).get<std::string>();
++ void export_next(const std::string& id){
++  stage_="export";
+@@ -73,0 +84 @@ private:
++   if(self.closing_)return;
+@@ -83,0 +95 @@ private:
++    if(s.closing_)return;
+@@ -91,2 +103,2 @@ public:
+- CapellaCatalogRelay(asio::io_context& io,Call core,Deliver deliver,std::string token,std::string kind,std::shared_ptr<AltairMessageIngress> ingress,size_t page_size,size_t maximum,Reply done,Known known={}):io_(io),core_(std::move(core)),deliver_(std::move(deliver)),known_(std::move(known)),token_(std::move(token)),kind_(std::move(kind)),ingress_(std::move(ingress)),done_(std::move(done)),timer_(io),page_size_(page_size),maximum_(maximum){
+-  if(!core_||!deliver_||token_.empty()||!ingress_||!done_||!page_size_||!maximum_||page_size_>maximum_||(kind_!="block"&&kind_!="attestation"&&kind_!="attester_slashing"&&kind_!="bls_to_execution_change"&&kind_!="sync_committee_message"))throw std::invalid_argument("Invalid Capella catalog relay");
++ CapellaCatalogRelay(asio::io_context& io,Call core,Deliver deliver,std::string token,std::string kind,std::shared_ptr<AltairMessageIngress> ingress,size_t page_size,size_t maximum,Reply done,Known known={},size_t parallel=1):io_(io),core_(std::move(core)),deliver_(std::move(deliver)),known_(std::move(known)),token_(std::move(token)),kind_(std::move(kind)),ingress_(std::move(ingress)),done_(std::move(done)),timer_(io),page_size_(page_size),maximum_(maximum),parallel_(parallel){
++  if(!parallel_||parallel_>2||(kind_=="block"&&parallel_!=1)||!core_||!deliver_||token_.empty()||!ingress_||!done_||!page_size_||!maximum_||page_size_>maximum_||(kind_!="block"&&kind_!="attestation"&&kind_!="attester_slashing"&&kind_!="bls_to_execution_change"&&kind_!="sync_committee_message"))throw std::invalid_argument("Invalid Capella catalog relay");
+diff --git a/network/main.cpp b/network/main.cpp
+index 862fa3a..cc87a75 100644
+--- a/network/main.cpp
++++ b/network/main.cpp
+@@ -181 +181 @@ class Network {
+-    std::make_shared<CapellaCatalogRelay>(io_,core,deliver,report_token_,kind,altair_ingress_,capella_relay_.at("pageEntries").get<size_t>(),capella_relay_.at("maximumEntries").get<size_t>(),[this,id,kind,active,alive](Json result){*alive=false;if(*active)(*active)->cancel();altair_relay_budget_.release(id);if(trace_network_){result["event"]="test-capella-catalog-relay";result["peerId"]=id;result["kind"]=kind;std::cout<<result.dump()<<std::endl;}},[current,knowledge](const std::string& root){return current()&&knowledge->acknowledged(root);})->start();return;
++    std::make_shared<CapellaCatalogRelay>(io_,core,deliver,report_token_,kind,altair_ingress_,capella_relay_.at("pageEntries").get<size_t>(),capella_relay_.at("maximumEntries").get<size_t>(),[this,id,kind,active,alive](Json result){*alive=false;if(*active)(*active)->cancel();altair_relay_budget_.release(id);if(trace_network_){result["event"]="test-capella-catalog-relay";result["peerId"]=id;result["kind"]=kind;std::cout<<result.dump()<<std::endl;}},[current,knowledge](const std::string& root){return current()&&knowledge->acknowledged(root);},(kind=="attestation"||kind=="sync_committee_message")?2:1)->start();return;
+diff --git a/network/test_capella_catalog_relay.cpp b/network/test_capella_catalog_relay.cpp
+index 5069826..c1b8358 100644
+--- a/network/test_capella_catalog_relay.cpp
++++ b/network/test_capella_catalog_relay.cpp
+@@ -54,0 +55,28 @@ int main(){try{
++ // Two votes may be in flight; reversed ACKs must not advance the page early.
++ for(const std::string mode:{"reorder","reject","cancel"}){
++  asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);
++  std::vector<Reply> acks;unsigned pages=0,closed=0,done=0;Json result;
++  auto core=[&](std::string method,Json args,Reply cb){
++   if(method=="nano_capellaCatalogGeneration")cb(root('e'));
++   else if(method=="nano_capellaCatalogAcquire")cb(Json{{"handle",root('c')}});
++   else if(method=="nano_capellaCatalogRelease"){++closed;cb(true);}
++   else if(method=="nano_capellaCatalogPage"){
++    ++pages;check(pages==1||args[2]==root('3'),"parallel page skipped unacknowledged cursor");
++    cb(Json{{"kind","attestation"},{"sequence","0x1"},{"digest",root('d')},{"entries",pages==1?Json::array({root('1'),root('2'),root('3')}):Json::array({root('4')})},{"next",pages==1?Json(root('3')):Json(nullptr)}});
++   }else if(method=="nano_capellaExport")cb(Json{{"available",true},{"root",args[2]},{"envelope",{{"chainId",profile.chain_id},{"genesisHash",profile.genesis_hash},{"forkDigest",profile.fork_digest},{"consensusIdentity",profile.consensus_identity},{"kind","attestation"},{"ssz","0x0102"}}}});
++   else throw std::runtime_error("unexpected pipeline RPC");
++  };
++  auto relay=std::make_shared<CapellaCatalogRelay>(io,core,[&](auto,auto,Reply cb){acks.push_back(cb);},"token","attestation",ingress,3,4,[&](Json j){++done;result=j;},CapellaCatalogRelay::Known{},2);
++  auto drain=[&]{io.restart();io.poll();};relay->start(1s);drain();check(acks.size()==2&&pages==1&&done==0,"pipeline not bounded at two pending ACKs");
++  if(mode=="reorder"){
++   acks[1](Json{{"accepted",true}});drain();check(acks.size()==3&&pages==1,"out of order ACK advanced page");
++   acks[2](Json{{"accepted",true}});drain();check(pages==1&&done==0,"unacknowledged first message skipped");
++   acks[0](Json{{"accepted",true}});drain();check(pages==2&&acks.size()==4,"next page did not follow complete ACK set");
++   acks[3](Json{{"accepted",true}});acks[3](Json{{"accepted",true}});drain();check(done==1&&closed==1&&result["success"]==true&&result["delivered"]==4,"parallel success or duplicate ACK handling failed");
++  }else{
++   if(mode=="cancel")relay->cancel();else acks[1](Json{{"accepted",false}});drain();
++   acks[0](Json{{"accepted",true}});acks[1](Json{{"accepted",true}});drain();
++   check(done==1&&closed==1&&result["success"]==false&&acks.size()==2&&pages==1,"late ACK resurrected failed pipeline");
++  }
++  ++scenarios;
++ }
