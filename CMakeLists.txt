@@ -1514,6 +1514,12 @@ set_tests_properties(ethereum_official_capella_slots PROPERTIES TIMEOUT 180 LABE
 
 add_executable(nano-capella-transition-tests tests/test_capella_transition.cpp)
 target_link_libraries(nano-capella-transition-tests PRIVATE nano_core nano_ckzg)
+if(APPLE)
+ target_link_libraries(nano-capella-transition-tests PRIVATE nano-test-sync-fault)
+ target_compile_definitions(nano-capella-transition-tests PRIVATE NANO_SYNC_FAULT=1)
+ add_test(NAME consensus_capella_reactor_sync_failure COMMAND nano-capella-transition-tests --reactor-sync)
+ set_tests_properties(consensus_capella_reactor_sync_failure PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_ethereum")
+endif()
 target_compile_definitions(nano-capella-transition-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
 add_test(NAME consensus_capella_signed_transition COMMAND nano-capella-transition-tests)
 set_tests_properties(consensus_capella_signed_transition PROPERTIES TIMEOUT 120)

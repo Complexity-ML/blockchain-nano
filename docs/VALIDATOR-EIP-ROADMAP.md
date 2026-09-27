@@ -2699,6 +2699,17 @@ suffixe EVM dans un commit atomique CAS. Comparaison après événements,
 doublons sans réécriture, annulations et redémarrages qualifiés sur cinq
 chaînes ; trois suites réussies.
 [Preuves](qualification/capella-reactor-20260927/README.md).
-Restent les erreurs disque injectées du coordinateur, les archives/notifications,
+Les erreurs disque injectées sont désormais qualifiées localement (voir ci-dessous).
+Restent les archives/notifications,
 la signature locale, le propriétaire Blockchain et le réseau, ainsi que le
 Store vivant traversant les forks. Aucun profil réseau activé.
+
+### Capella : erreur WAL du coordinateur et reprise
+
+Injection EIO pendant la publication d'un bloc signé : cinq accès bloqués après
+écriture incertaine. Réouverture avec suffixe conservé ou perdu, snapshots et
+index canoniques vérifiés, rejeu identique dans les deux cas. Quatre suites
+passent ; le contrôle supplémentaire des index perdus est également vert.
+[Preuves et limites](qualification/capella-reactor-sync-20260927/README.md).
+Qualification macOS locale seulement ; authentification du token de reprise,
+raccordement réseau et migration du Store vivant restent à clôturer.

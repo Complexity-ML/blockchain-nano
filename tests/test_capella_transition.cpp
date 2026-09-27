@@ -24,6 +24,11 @@ struct Key {
 };
 }
 static std::string executable;
+static bool sync_scenario=false;
+#ifdef NANO_SYNC_FAULT
+extern "C" void nano_test_arm_sync_fault(const char*);
+extern "C" unsigned nano_test_sync_failures();
+#endif
 static const CapellaStoreSnapshotLimits crash_limits{16*1024*1024,64,1000,1000,4*1024*1024,8*1024*1024,64,100000};
 static int crash_writer(const fs::path& directory){
  const auto bundle=load(directory/"bundle.json");const auto profile=bundle.at("profile").get<std::string>();
@@ -38,6 +43,24 @@ static int crash_writer(const fs::path& directory){
  for(unsigned i=0;i<128;++i){const auto choice=disk.latest()->header.number==1?1:0;const auto token=disk.commit_execution_checkpoint(rules.transition.chain_id,genesis.header.hash(),record->token,disk.latest()->header.hash(),0,genesis.header.hash(),suffixes[choice],snapshots[choice],crash_limits.envelope_bytes,64);record->token=token;std::cout<<token.sequence<<std::endl;}
  return 0;
 }
+#ifdef NANO_SYNC_FAULT
+static int sync_writer(const fs::path& directory){
+ const auto bundle=load(directory/"bundle.json");const auto profile=bundle.at("profile").get<std::string>();
+ const auto rules=load_capella_fork_profile(profile,sha256(Bytes(profile.begin(),profile.end())),1024*1024);
+ const auto genesis=Block::from_json(bundle.at("genesis"));const auto chain=rules.transition.chain_id;
+ ChainStore disk(directory/"db");const auto initial=disk.fork_checkpoint(chain,genesis.header.hash(),crash_limits.envelope_bytes);check(bool(initial),"sync checkpoint missing");
+ CapellaDurableReactor reactor(disk,chain,genesis.header.hash(),rules,crash_limits,initial->token);
+ reactor.tick(bundle.at("time").get<uint64_t>());const auto before=reactor.current();const auto wire=unhex(bundle.at("wire").get<std::string>());
+ const auto next=prepare_capella_received_block(*before.state,wire,rules,crash_limits.replay_slots,crash_limits.sync_trials);check(bool(next),"sync candidate rejected");
+ save(directory/"expected.json",Json{{"old",capella_store_snapshot(*before.state,rules,crash_limits)},{"new",capella_store_snapshot(*next,rules,crash_limits)},{"sequence",before.token.sequence}});
+ fs::path wal;for(const auto& entry:fs::directory_iterator(directory/"db"))if(entry.path().extension()==".log"&&(wal.empty()||entry.path().filename()>wal.filename()))wal=entry.path();check(!wal.empty(),"sync WAL missing");const auto offset=fs::file_size(wal);
+ nano_test_arm_sync_fault(wal.c_str());bool failed=false;try{reactor.block(wire);}catch(const std::runtime_error&){failed=true;}check(failed&&nano_test_sync_failures()>0,"Capella sync fault not reached");
+ unsigned blocked=0;auto refuse=[&](auto action){try{action();}catch(const std::runtime_error&){++blocked;}};
+ refuse([&]{reactor.current();});refuse([&]{reactor.tick(bundle.at("time").get<uint64_t>());});refuse([&]{reactor.block(wire);});refuse([&]{disk.latest();});refuse([&]{disk.fork_checkpoint(chain,genesis.header.hash(),crash_limits.envelope_bytes);});
+ check(blocked==5,"uncertain Capella state still accessible");
+ std::cout<<Json{{"wal",wal.filename().string()},{"before",offset},{"after",fs::file_size(wal)},{"blocked",blocked}}.dump()<<std::endl;_exit(0);
+}
+#endif
 static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigned participation=100){
  const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-bellatrix-containers-official",source=fixtures/"consensus-capella-slots-official";
  const auto manifest=load(source/"manifest.json");check(manifest.at("commit")=="194a91fd9e6f97118156421aac4c80e6e47a9a7f","initial state revision");
@@ -79,7 +102,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
  const auto disk_genesis=parent;const auto disk_genesis_state=state;
  const CapellaForkBlockRules store_rules{r,seconds*1000,seconds*1000/3,40};
  Temp reactor_database;auto reactor_disk=std::make_unique<ChainStore>(reactor_database/"db");reactor_disk->bind_chain(r.chain_id,disk_genesis.header.hash(),"capella-reactor-test");reactor_disk->commit(disk_genesis,disk_genesis_state,{});std::unique_ptr<CapellaDurableReactor> reactor;
- std::optional<CapellaForkStore> store;std::string short_snapshot;
+ std::optional<CapellaForkStore> store;std::string short_snapshot;Bytes sync_wire;uint64_t sync_time=0;
  const CapellaStoreSnapshotLimits snapshot_limits{16*1024*1024,64,1000,1000,r.maximum_state_bytes,8*1024*1024,64,100000};
  auto roundtrip=[&](const CapellaForkStore& value){
   CapellaStoreSnapshotCache cache;size_t cold=0,warm=0;
@@ -134,7 +157,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
   auto receive=[&](const Bytes& b,const std::function<void()>& callback=std::function<void()>{}){
    return crossing?prepare_capella_fork_state_transition(before_fork,before_fork_root,schedule,b,r,parent.header,state,history,64,100000,callback):prepare_capella_state_transition(beacon,b,r,parent.header,state,history,64,100000,callback);
   };
-  const auto wire=sign_message(built->message_ssz);size_t calls=0;const auto received=receive(wire,[&]{++calls;});
+  const auto wire=sign_message(built->message_ssz);if(slot==first_slot+1){sync_wire=wire;sync_time=(genesis_time+slot*seconds)*1000;}size_t calls=0;const auto received=receive(wire,[&]{++calls;});
   check(received&&received->consensus==built->post.consensus&&received->execution.state.root()==expected.root(),"signed Capella transition differs");check(received->execution.receipts[0].success&&received->execution.state.get_storage(target,0)==42,"Shanghai write missing");
   auto deny=[&](const Bytes& b){bool refused=false;try{refused=!receive(b);}catch(const std::invalid_argument&){refused=true;}check(refused&&beacon==original&&state.root()==evm_before,"bad block mutated parent");++rejected;};
   if(crossing){
@@ -259,6 +282,27 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
  auto wrong_digest=profile_digest;wrong_digest[0]^=1;reject_profile(profile,wrong_digest,1024*1024);reject_profile(profile,profile_digest,profile.size()-1);
  for(const auto& field:{std::string("genesisVersion"),std::string("maximumBlsChanges")}){auto changed=Json::parse(profile);changed[field]=field=="genesisVersion"?"0xffffffff":"0x0";const auto text=changed.dump();reject_profile(text,sha256(Bytes(text.begin(),text.end())),1024*1024);}
  const auto restored_rules=load_capella_fork_profile(profile,profile_digest,1024*1024);check(capella_fork_profile(restored_rules)==capella_fork_profile(store_rules),"Capella profile roundtrip differs");
+#ifdef NANO_SYNC_FAULT
+ if(sync_scenario){
+  for(bool lose:{false,true}){Temp tmp;
+   {ChainStore disk(tmp/"db");disk.bind_chain(r.chain_id,disk_genesis.header.hash(),"capella-sync-test");disk.commit(disk_genesis,disk_genesis_state,{});auto first=capella_store_from_snapshot(short_snapshot,sha256(Bytes(short_snapshot.begin(),short_snapshot.end())),store_rules,snapshot_limits);CapellaDurableReactor initial(disk,r.chain_id,disk_genesis.header.hash(),store_rules,snapshot_limits,std::move(first));}
+   save(tmp/"bundle.json",Json{{"profile",profile},{"genesis",disk_genesis.to_json(true)},{"wire",hex(sync_wire)},{"time",sync_time}});
+   const auto result=success(run({executable,"--sync-writer",tmp.path.string()}));const auto wal=tmp/"db"/result.at("wal").get<std::string>();check(fs::file_size(wal)==result.at("after").get<uint64_t>()&&result.at("after")>result.at("before"),"sync WAL suffix missing");
+   if(lose){const int fd=open(wal.c_str(),O_WRONLY);check(fd>=0,"open owned WAL");const bool ok=ftruncate(fd,result.at("before").get<uint64_t>())==0&&fsync(fd)==0;close(fd);check(ok,"truncate owned WAL");}
+   const auto expected=load(tmp/"expected.json");ChainStore disk(tmp/"db");const auto record=disk.fork_checkpoint(r.chain_id,disk_genesis.header.hash(),snapshot_limits.envelope_bytes);
+   check(record&&record->snapshot==expected.at(lose?"old":"new").get<std::string>()&&record->token.sequence==expected.at("sequence").get<uint64_t>()+(lose?0:1),"mixed Capella recovery disposition");
+   // The test resolves both known outcomes; production must authenticate its restart token independently.
+   CapellaDurableReactor restored(disk,r.chain_id,disk_genesis.header.hash(),store_rules,snapshot_limits,record->token);const auto recovered=restored.current();const auto& head=capella_fork_head(*recovered.state,store_rules);const auto latest=disk.latest();
+   check(latest&&latest->header.hash()==head.execution_block.header.hash()&&latest->withdrawals==head.execution_block.withdrawals&&disk.state_at(latest->header.number)->root()==head.execution_state.root()&&disk.count()==latest->header.number+1,"Capella recovery paired state mismatch");
+   for(const auto& [id,b]:recovered.state->blocks)for(const auto& tx:b.execution_block.transactions)check(disk.receipt(tx.hash())&&disk.receipt(tx.hash())->block_hash==b.execution_block.header.hash()&&disk.transaction(tx.hash()),"Capella recovered transaction index missing");
+   const auto candidate_bytes=expected.at("new").get<std::string>();const auto candidate=capella_store_from_snapshot(candidate_bytes,sha256(Bytes(candidate_bytes.begin(),candidate_bytes.end())),store_rules,snapshot_limits);const auto& next_head=capella_fork_head(candidate,store_rules);
+   check(bool(disk.block_by_number(next_head.execution_block.header.number))==!lose,"lost Capella block remained indexed");for(const auto& tx:next_head.execution_block.transactions)check(bool(disk.receipt(tx.hash()))==!lose&&bool(disk.transaction(tx.hash()))==!lose,"lost Capella transaction remained indexed");
+   check(restored.block(sync_wire),"Capella replay after recovery rejected");const auto completed=restored.current();check(capella_store_snapshot(*completed.state,store_rules,snapshot_limits)==expected.at("new").get<std::string>(),"Capella recovery replay differs");
+   std::cout<<Json{{"scenario","capella-reactor-sync"},{"lostSuffix",lose},{"blockedOperations",result.at("blocked")},{"replay",true},{"physicalPowerLoss",false},{"networkActivated",false}}.dump()<<'\n';
+  }
+  return;
+ }
+#endif
  Temp database;ForkCheckpointToken token;std::map<Int,ExecutionCheckpointBlock> ordered;
  for(const auto& [id,record]:store->blocks)ordered.emplace(record.execution_block.header.number,ExecutionCheckpointBlock{record.execution_block,record.execution_state,record.receipts});
  std::vector<ExecutionCheckpointBlock> suffix;for(const auto& [number,record]:ordered)suffix.push_back(record);
@@ -279,5 +323,10 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
  }
  std::cout<<Json{{"scenario","capella-signed-transition"},{"migrated",migrate},{"finalityScenario",finality},{"participationPercent",participation},{"finalizedEpoch",store->timed.view.finalized.epoch},{"includedAttestations",included_attestations},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"storeBlocks",store->blocks.size()},{"snapshotReopened",true},{"durableReactor",true},{"storeSigkillReopens",2},{"storeVotes",votes},{"voteReorgs",vote_reorgs},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
 }
-int main(int argc,char** argv){try{executable=argv[0];if(argc==3&&std::string(argv[1])=="--crash-writer")return crash_writer(argv[2]);if(argc==2&&std::string(argv[1])=="--finality-half"){scenario(false,0,true,50);return 0;}if(argc==2&&std::string(argv[1])=="--finality"){scenario(false,0,true);return 0;}scenario(false);scenario(true);scenario(true,3);return 0;
+int main(int argc,char** argv){try{executable=argv[0];
+#ifdef NANO_SYNC_FAULT
+if(argc==3&&std::string(argv[1])=="--sync-writer")return sync_writer(argv[2]);
+if(argc==2&&std::string(argv[1])=="--reactor-sync"){sync_scenario=true;scenario(false);return 0;}
+#endif
+if(argc==3&&std::string(argv[1])=="--crash-writer")return crash_writer(argv[2]);if(argc==2&&std::string(argv[1])=="--finality-half"){scenario(false,0,true,50);return 0;}if(argc==2&&std::string(argv[1])=="--finality"){scenario(false,0,true);return 0;}scenario(false);scenario(true);scenario(true,3);return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
