@@ -14,6 +14,7 @@ class CapellaInventorySnapshot {
  friend class CapellaDurableReactor;
  ForkCheckpointToken token_;std::string kind_;std::vector<ConsensusRoot> roots_;
 public:
+ size_t root_bytes()const{return roots_.capacity()*sizeof(ConsensusRoot);}
  Json page(const std::optional<ConsensusRoot>& after,size_t maximum_entries,size_t maximum_json_bytes,const std::function<void()>& checkpoint={})const;
 };
 // Serialized local event coordinator. Initial anchor or restart token must be

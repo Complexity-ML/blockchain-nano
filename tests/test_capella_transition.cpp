@@ -18,6 +18,7 @@
 #include "../src/consensus_capella_projection.hpp"
 #include "../src/beacon_block_json.hpp"
 #include "../network/capella_consensus_service.hpp"
+#include "../network/capella_inventory_sessions.hpp"
 #include <future>
 #include "../src/consensus_bellatrix_projection.hpp"
 using namespace test;using namespace test::phase0_minimal;
@@ -494,6 +495,15 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
   const auto next_bytes=unhex(stable_first.at("next").get<std::string>());ConsensusRoot stable_cursor{};std::copy(next_bytes.begin(),next_bytes.end(),stable_cursor.begin());const auto stable_last=stable_inventory->page(stable_cursor,2,512);check(stable_last.at("entries").size()==2&&stable_last.at("next").is_null()&&stable_last.at("digest")==stable_first.at("digest")&&stable_last.at("digest")!=hex(reactor->current().token.digest),"stable inventory lost continuation");
   bool snapshot_refused=false;try{reactor->capture_inventory("block",1);}catch(const std::length_error&){snapshot_refused=true;}check(snapshot_refused,"snapshot root budget ignored");
   snapshot_refused=false;try{stable_inventory->page(ConsensusRoot{},2,512);}catch(const std::invalid_argument&){snapshot_refused=true;}check(snapshot_refused,"snapshot unknown cursor accepted");
+  auto catalog_now=std::chrono::steady_clock::time_point{};CapellaInventorySessions catalogs(*reactor,2,9*sizeof(ConsensusRoot),std::chrono::seconds(1),[&]{return catalog_now;});
+  const auto handle=catalogs.open("peer-a","block");check(catalogs.page("peer-a",handle,{},2,512).at("entries").size()==2,"catalog handle failed");
+  bool catalog_refused=false;try{catalogs.page("peer-b",handle,{},2,512);}catch(const std::invalid_argument&){catalog_refused=true;}check(catalog_refused,"foreign principal read catalog");
+  catalog_refused=false;try{catalogs.close("peer-b",handle);}catch(const std::invalid_argument&){catalog_refused=true;}check(catalog_refused,"foreign principal closed catalog");
+  catalog_refused=false;try{catalogs.open("peer-a","attestation");}catch(const std::length_error&){catalog_refused=true;}check(catalog_refused,"catalog aggregate byte quota ignored");
+  catalogs.close("peer-a",handle);const auto vote_handle=catalogs.open("peer-a","attestation");const auto slash_handle=catalogs.open("peer-b","attester_slashing");
+  catalog_refused=false;try{catalogs.open("peer-c","attester_slashing");}catch(const std::length_error&){catalog_refused=true;}check(catalog_refused,"catalog handle quota ignored");
+  catalog_now+=std::chrono::seconds(1);catalog_refused=false;try{catalogs.page("peer-a",vote_handle,{},2,512);}catch(const std::invalid_argument&){catalog_refused=true;}check(catalog_refused,"expired catalog readable");
+  const auto replacement=catalogs.open("peer-a","block");check(replacement!=handle&&catalogs.page("peer-a",replacement,{},2,512).at("entries").size()==2,"expired quota not reclaimed");catalogs.close("peer-a",replacement);
   const auto checkpoint=reactor->current();size_t exports=0;
   auto verify_export=[&](const char* kind,const ConsensusRoot& id,const Bytes& bytes){const auto result=reactor->export_message(kind,id,16*1024*1024,checkpoint.token);check(result.at("available")==true&&result.at("envelope").at("ssz")==hex(bytes)&&result.at("digest")==hex(checkpoint.token.digest),"Capella export changed bytes/checkpoint");auto decoded=service->decode(result.at("envelope").dump());check(decoded&&decoded->ssz==bytes,"Capella exported envelope cannot be admitted");++exports;};
   for(const auto& [id,wire]:signed_wires)verify_export("block",id,wire);

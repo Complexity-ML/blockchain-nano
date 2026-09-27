@@ -2358,3 +2358,13 @@ Budget insuffisant et curseur inconnu refusés ; test enrichi réussi en 5,30 s.
 La pagination locale ne dépend plus des ticks suivants. Restent quotas/expiration
 des handles RPC, ordonnancement des parents et transport authentifié. Le catalogue
 ne garantit pas la rétention future des payloads après élagage.
+
+### Capella : quotas des sessions d’inventaire
+
+Registre de catalogues avec handles aléatoires, propriétaire, expiration sans
+prolongation à la lecture, plafond de handles et budget agrégé des racines.
+Lecture/fermeture étrangères refusées ; saturation, libération et expiration
+qualifiées dans le test enrichi (5,35 s).
+[Preuves](qualification/capella-catalog-sessions-20260927/README.md).
+Le futur adaptateur doit fournir le propriétaire authentifié et les budgets
+de requête. Raccordement runtime/RPC et synchronisation distribuée restent ouverts.
