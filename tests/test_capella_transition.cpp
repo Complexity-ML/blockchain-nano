@@ -3,6 +3,8 @@
 #include "nano/consensus_capella_bls_change.hpp"
 #include "nano/consensus_proposer.hpp"
 #include "blst.h"
+#include "../src/consensus_capella_projection.hpp"
+#include "../src/consensus_bellatrix_projection.hpp"
 using namespace test;using namespace test::phase0_minimal;
 namespace {
 void put(Bytes& b,size_t at,uint64_t n,size_t width=8){for(size_t i=0;i<width;++i)b.at(at+i)=uint8_t(n>>(8*i));}
@@ -14,7 +16,7 @@ struct Key {
  Bytes sign(const ConsensusRoot& root)const{static constexpr char dst[]="BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_POP_";blst_p2 h,s;blst_hash_to_g2(&h,root.data(),32,reinterpret_cast<const uint8_t*>(dst),sizeof(dst)-1,nullptr,0);blst_sign_pk_in_g1(&s,&h,&secret);Bytes out(96);blst_p2_compress(out.data(),&s);return out;}
 };
 }
-int main(){try{
+static void scenario(bool migrate,uint64_t skipped=0){
  const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-bellatrix-containers-official",source=fixtures/"consensus-capella-slots-official";
  const auto manifest=load(source/"manifest.json");check(manifest.at("commit")=="194a91fd9e6f97118156421aac4c80e6e47a9a7f","initial state revision");
  for(const auto& row:manifest.at("cases"))if(row.at("name")=="slots_1")for(const auto& [path,info]:row.at("files").items())check(hex(sha256(binary(source/"slots_1"/path))).substr(2)==info.at("sha256").get<std::string>(),"initial state digest");
@@ -38,14 +40,25 @@ int main(){try{
  copy_to(change.signature,withdrawal_key.sign(consensus_signing_root(capella_bls_change_root(change),consensus_domain({10,0,0,0},r.genesis_version,genesis_root))));
  const auto key=bytes(Int(777),32);const std::string target="0x0000000000000000000000000000000000001234";Transaction tx;tx.type=2;tx.to=target;tx.gas=100000;tx.max_fee=2000000000;tx.priority_fee=100000000;
  State state;state.get(SignedTransaction::sign(tx,key).sender()).balance=Int("1000000000000000000");state.get(target).code=unhex("602a5f5500");
- Block parent;parent.header.difficulty=0;parent.header.timestamp=Int(std::to_string(genesis_time));parent.header.state_root=state.root();parent.header.withdrawals_root=withdrawals_root(Json::array());
+ Block parent;parent.header.difficulty=0;parent.header.timestamp=Int(std::to_string(genesis_time));parent.header.state_root=state.root();if(!migrate)parent.header.withdrawals_root=withdrawals_root(Json::array());
  const auto initial_header=encode_capella_execution_header(capella_execution_payload_header(payload(parent),r.execution,r.withdrawals.maximum_per_payload),r.execution.extra_data_bytes,r.maximum_state_bytes);
  beacon.ssz.resize(little(beacon.ssz,field,4));beacon.ssz.insert(beacon.ssz.end(),initial_header.begin(),initial_header.end());put(beacon.ssz,field+20,beacon.ssz.size(),4);
+ BellatrixSlotState before_fork;ConsensusRoot before_fork_root{};
+ CapellaForkSchedule schedule{1,{2,0,0,1},{3,0,0,1}};
+ if(migrate){
+  auto projection=capella_detail::project(beacon.ssz,l,r.execution,r.maximum_state_bytes,{});
+  std::copy(schedule.bellatrix_version.begin(),schedule.bellatrix_version.end(),projection.common.begin()+52);put(projection.common,56,0);
+  const auto header=encode_bellatrix_execution_header(static_cast<const BellatrixExecutionPayloadHeader&>(capella_execution_payload_header(payload(parent),r.execution,r.withdrawals.maximum_per_payload)),r.execution.extra_data_bytes,r.maximum_state_bytes);
+  before_fork.ssz=bellatrix_detail::restore(projection.common,header,l,r.execution,r.maximum_state_bytes,{});
+  before_fork_root=bellatrix_beacon_state_root(before_fork.ssz,l,r.execution,r.maximum_state_bytes);
+ }
+ const uint64_t first_slot=migrate?slots+skipped:1;
  std::map<Int,Bytes> hashes{{0,parent.header.hash()}};std::function<Bytes(const Int&)> history=[&](const Int& n){return hashes.at(n);};
  unsigned accepted=0,rejected=0,cancelled=0;uint64_t paid=0;
- for(uint64_t slot=1;slot<=slots+1;++slot){
+ for(uint64_t slot=first_slot;slot<=first_slot+slots;++slot){
+  const bool crossing=migrate&&slot==first_slot;
   const auto original=beacon;const auto evm_before=state.root();
-  const auto advanced=prepare_capella_slots(beacon,{r.consensus.epoch,r.execution,r.maximum_state_bytes},l,slot,64,100000);
+  const auto advanced=crossing?prepare_capella_fork_slots(before_fork,before_fork_root,{r.consensus.epoch,r.execution,r.maximum_state_bytes},l,schedule,slot,64,100000):prepare_capella_slots(beacon,{r.consensus.epoch,r.execution,r.maximum_state_bytes},l,slot,64,100000);
   const auto epoch=slot/slots;ConsensusRandaoState randomness;randomness.epoch=epoch;randomness.last_reveal_slot=little(advanced.ssz,64,8);
   for(size_t i=0;i<l.epochs_per_historical_vector;++i)randomness.mixes.push_back(root_at(advanced.ssz,randao+32*i));
   const auto validators=little(advanced.ssz,hist+88,4),balances=little(advanced.ssz,hist+92,4);std::vector<Phase0ProposerValidator> registry;
@@ -58,28 +71,44 @@ int main(){try{
   const ConsensusBeaconHeader previous{little(advanced.ssz,64,8),little(advanced.ssz,72,8),root_at(advanced.ssz,80),root_at(advanced.ssz,112),root_at(advanced.ssz,144)};
   const auto parent_root=consensus_beacon_header_root(previous);
   Block execution;execution.header.parent_hash=parent.header.hash();execution.header.number=parent.header.number+1;execution.header.timestamp=Int(std::to_string(genesis_time+slot*seconds));execution.header.difficulty=0;execution.header.base_fee=next_base_fee(parent.header);execution.header.mix_hash=Bytes(randomness.mixes[epoch%l.epochs_per_historical_vector].begin(),randomness.mixes[epoch%l.epochs_per_historical_vector].end());
-  tx.nonce=Int(std::to_string(slot-1));execution.transactions.push_back(SignedTransaction::sign(tx,key));
+  tx.nonce=Int(std::to_string(slot-first_slot));execution.transactions.push_back(SignedTransaction::sign(tx,key));
 
   CapellaWithdrawalState withdrawal_state;withdrawal_state.registry.epoch=epoch;withdrawal_state.next_withdrawal_index=little(advanced.ssz,field+4,8);withdrawal_state.next_validator_index=little(advanced.ssz,field+12,8);
   for(size_t i=0;i<registry.size();++i){ConsensusSlashingValidator v;const auto at=validators+121*i;v.balance=little(advanced.ssz,balances+8*i,8);v.effective_balance=little(advanced.ssz,at+80,8);v.withdrawable_epoch=little(advanced.ssz,at+113,8);std::copy_n(advanced.ssz.begin()+at+48,32,v.withdrawal_credentials.begin());withdrawal_state.registry.validators.emplace(i,v);}
   const auto withdrawals=expected_capella_withdrawals(withdrawal_state,r.withdrawals);for(const auto& w:withdrawals)execution.withdrawals.push_back(w.to_json());
-  if(slot==1)check(withdrawals.empty(),"credentials paid before change");if(slot==2)check(!withdrawals.empty(),"credentials not paid in next block");paid+=withdrawals.size();
+  if(slot==first_slot)check(withdrawals.empty(),"credentials paid before change");if(slot==first_slot+(migrate?4:1))check(!withdrawals.empty(),"credentials not paid at expected sweep");paid+=withdrawals.size();
   State expected=state;ExecutionEngine(r.chain_id,history,EvmRevision::Shanghai,r.replay_policy,ConsensusInputPolicy::EthereumValidated).execute_block(expected,execution,false);
   auto ep=payload(execution);ep.withdrawals=withdrawals;const auto encoded=encode_capella_execution_payload(ep,r.execution,r.withdrawals.maximum_per_payload,r.consensus.maximum_block_bytes);
   const size_t sync_bytes=(l.sync_committee_size+7)/8+96,fixed=228+sync_bytes;
   Bytes body(fixed,0);std::copy(reveal.begin(),reveal.end(),body.begin());std::copy_n(advanced.ssz.begin()+hist+4,72,body.begin()+96);body[220+(l.sync_committee_size+7)/8]=0xc0;
-  for(size_t at:std::array<size_t,6>{200,204,208,212,216,220+sync_bytes})put(body,at,fixed,4);put(body,224+sync_bytes,fixed+encoded.size(),4);body.insert(body.end(),encoded.begin(),encoded.end());if(slot==1){const auto wire=encode_capella_bls_change(change);body.insert(body.end(),wire.begin(),wire.end());}
-  const auto built=prepare_capella_unsigned_block(beacon,slot,proposer,parent_root,body,r,parent.header,state,history,64,100000);check(built.has_value(),"Capella unsigned block rejected");
+  for(size_t at:std::array<size_t,6>{200,204,208,212,216,220+sync_bytes})put(body,at,fixed,4);put(body,224+sync_bytes,fixed+encoded.size(),4);body.insert(body.end(),encoded.begin(),encoded.end());if(slot==first_slot){const auto wire=encode_capella_bls_change(change);body.insert(body.end(),wire.begin(),wire.end());}
+  const auto built=crossing?prepare_capella_fork_unsigned_block(before_fork,before_fork_root,schedule,slot,proposer,parent_root,body,r,parent.header,state,history,64,100000):prepare_capella_unsigned_block(beacon,slot,proposer,parent_root,body,r,parent.header,state,history,64,100000);check(built.has_value(),"Capella unsigned block rejected");
   auto sign_message=[&](Bytes message,uint64_t index=UINT64_MAX){const auto owner=index==UINT64_MAX?proposer:index;Key k(owner);const auto bytes=std::span<const uint8_t>(message);const ConsensusBeaconHeader h{little(message,0,8),little(message,8,8),root_at(message,16),root_at(message,48),capella_beacon_body_root(bytes.subspan(84),r.consensus.body,l.sync_committee_size,r.execution,r.withdrawals.maximum_per_payload,r.maximum_bls_changes,r.consensus.maximum_block_bytes)};const auto sig=k.sign(consensus_signing_root(consensus_beacon_header_root(h),consensus_domain({0,0,0,0},version,genesis_root)));Bytes wire(100,0);put(wire,0,100,4);std::copy(sig.begin(),sig.end(),wire.begin()+4);wire.insert(wire.end(),message.begin(),message.end());return wire;};
 
-  const auto wire=sign_message(built->message_ssz);size_t calls=0;const auto received=prepare_capella_state_transition(beacon,wire,r,parent.header,state,history,64,100000,[&]{++calls;});
+  auto receive=[&](const Bytes& b,const std::function<void()>& callback=std::function<void()>{}){
+   return crossing?prepare_capella_fork_state_transition(before_fork,before_fork_root,schedule,b,r,parent.header,state,history,64,100000,callback):prepare_capella_state_transition(beacon,b,r,parent.header,state,history,64,100000,callback);
+  };
+  const auto wire=sign_message(built->message_ssz);size_t calls=0;const auto received=receive(wire,[&]{++calls;});
   check(received&&received->consensus==built->post.consensus&&received->execution.state.root()==expected.root(),"signed Capella transition differs");check(received->execution.receipts[0].success&&received->execution.state.get_storage(target,0)==42,"Shanghai write missing");
-  auto deny=[&](const Bytes& b){bool refused=false;try{refused=!prepare_capella_state_transition(beacon,b,r,parent.header,state,history,64,100000);}catch(const std::invalid_argument&){refused=true;}check(refused&&beacon==original&&state.root()==evm_before,"bad block mutated parent");++rejected;};
+  auto deny=[&](const Bytes& b){bool refused=false;try{refused=!receive(b);}catch(const std::invalid_argument&){refused=true;}check(refused&&beacon==original&&state.root()==evm_before,"bad block mutated parent");++rejected;};
+  if(crossing){
+   auto rejected_context=[&](ConsensusRoot root,CapellaForkSchedule fork,uint64_t budget){bool refused=false;
+    try{refused=!prepare_capella_fork_state_transition(before_fork,root,fork,wire,r,parent.header,state,history,budget,100000);}
+    catch(const std::invalid_argument&){refused=true;}catch(const std::length_error&){refused=true;}
+    check(refused&&state.root()==evm_before&&bellatrix_beacon_state_root(before_fork.ssz,l,r.execution,r.maximum_state_bytes)==before_fork_root,"invalid scheduled admission");++rejected;
+   };
+   auto wrong=before_fork_root;wrong[0]^=1;rejected_context(wrong,schedule,64);
+   auto future=schedule;++future.epoch;rejected_context(before_fork_root,future,64);
+   rejected_context(before_fork_root,schedule,slot-1);
+   const auto current_version=version;version=schedule.bellatrix_version;auto old_signature=sign_message(built->message_ssz);version=current_version;deny(old_signature);
+  }
   auto bad=wire;bad[4]^=1;deny(bad);auto message=built->message_ssz;message[48]^=1;deny(sign_message(message));
-  if(slot==1){message=built->message_ssz;message.back()^=1;deny(sign_message(message));}
-  if(slot==2){message=built->message_ssz;const auto duplicate=encode_capella_bls_change(change);message.insert(message.end(),duplicate.begin(),duplicate.end());deny(sign_message(message));}
-  for(size_t stop:{size_t(1),calls}){size_t n=0;bool stopped=false;try{prepare_capella_state_transition(beacon,wire,r,parent.header,state,history,64,100000,[&]{if(++n==stop)throw ExecutionCancelled("stop");});}catch(const ExecutionCancelled&){stopped=true;}check(stopped&&beacon==original&&state.root()==evm_before,"cancelled block changed parents");++cancelled;}
+  if(slot==first_slot){message=built->message_ssz;message.back()^=1;deny(sign_message(message));}
+  if(slot==first_slot+(migrate?4:1)){message=built->message_ssz;const auto duplicate=encode_capella_bls_change(change);message.insert(message.end(),duplicate.begin(),duplicate.end());deny(sign_message(message));}
+  for(size_t stop:{size_t(1),calls}){size_t n=0;bool stopped=false;try{receive(wire,[&]{if(++n==stop)throw ExecutionCancelled("stop");});}catch(const ExecutionCancelled&){stopped=true;}check(stopped&&beacon==original&&state.root()==evm_before,"cancelled block changed parents");++cancelled;}
   beacon=received->consensus;state=received->execution.state;parent=received->execution.block;hashes[parent.header.number]=parent.header.hash();++accepted;
  }
- std::cout<<Json{{"scenario","capella-signed-transition"},{"blocks",accepted},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';return 0;
+ std::cout<<Json{{"scenario","capella-signed-transition"},{"migrated",migrate},{"skippedForkSlots",skipped},{"blocks",accepted},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
+}
+int main(){try{scenario(false);scenario(true);scenario(true,3);return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

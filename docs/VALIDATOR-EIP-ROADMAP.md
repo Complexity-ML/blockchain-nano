@@ -2612,3 +2612,14 @@ transaction PUSH0/SSTORE. Refus, annulations et régression 4/4 qualifiés.
 [Preuves](qualification/capella-first-payload-20260927/README.md).
 Restent le calendrier composé avec l'admission signée, Store/réacteur, commit
 durable et qualification réseau. Aucun profil actif ni statut EIP clos ne change.
+
+### Capella : calendrier composé avec les blocs signés
+
+Construction et admission depuis Bellatrix composent désormais migration
+programmée et transition Capella complète. Deux nouvelles chaînes de neuf
+blocs couvrent le slot exact et trois slots sans bloc à la frontière, avec
+parent EL Paris, signatures, retraits et PUSH0/SSTORE. 24 refus et 18 annulations
+par nouvelle chaîne ; régression Altair/Bellatrix/Capella/migration 4/4.
+[Preuves](qualification/capella-scheduled-block-20260927/README.md).
+Restent Store/réacteur, profil durable, commit atomique et qualification réseau.
+Les profils actifs et les statuts EIP partiels restent inchangés.

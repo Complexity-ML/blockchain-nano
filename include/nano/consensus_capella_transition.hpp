@@ -1,6 +1,7 @@
 #pragma once
 #include "nano/consensus_altair_transition.hpp"
 #include "nano/consensus_capella_slots.hpp"
+#include "nano/consensus_capella_fork.hpp"
 #include "nano/consensus_capella_execution.hpp"
 namespace nano {
 struct CapellaTransitionRules {
@@ -38,4 +39,18 @@ std::optional<CapellaUnsignedBlockCandidate> prepare_capella_unsigned_block(
  const CapellaTransitionRules&,const Header& execution_parent,const State& execution_state,
  const std::function<Bytes(const Int&)>& authenticated_block_hash,
  uint64_t maximum_slots,uint64_t maximum_sync_trials,const std::function<void()>& checkpoint={});
+// First Capella block from an authenticated Bellatrix state. These compose the
+// scheduled slot migration and the same signed admission/construction paths.
+std::optional<CapellaBlockCandidate> prepare_capella_fork_state_transition(
+ const BellatrixSlotState&,const ConsensusRoot&,const CapellaForkSchedule&,
+ std::span<const uint8_t>,const CapellaTransitionRules&,const Header&,const State&,
+ const std::function<Bytes(const Int&)>&,uint64_t maximum_slots,uint64_t maximum_sync_trials,
+ const std::function<void()>& checkpoint={});
+std::optional<CapellaUnsignedBlockCandidate> prepare_capella_fork_unsigned_block(
+ const BellatrixSlotState&,const ConsensusRoot&,const CapellaForkSchedule&,
+ uint64_t slot,uint64_t proposer_index,const ConsensusRoot& parent_root,std::span<const uint8_t> body,
+ const CapellaTransitionRules&,const Header&,const State&,
+ const std::function<Bytes(const Int&)>&,uint64_t maximum_slots,uint64_t maximum_sync_trials,
+ const std::function<void()>& checkpoint={});
+
 }

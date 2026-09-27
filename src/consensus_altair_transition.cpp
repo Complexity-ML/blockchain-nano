@@ -56,6 +56,8 @@ struct BellatrixContext {
  const State& state;
  const std::function<Bytes(const Int&)>& history;
  const CapellaTransitionRules* capella=nullptr;
+ const CapellaForkSchedule* fork_schedule=nullptr;
+ const ConsensusRoot* fork_parent_root=nullptr;
 };
 std::optional<AltairSlotState> transition(const AltairSlotState& input,
  View block,const AltairTransitionRules& r,uint64_t maximum_slots,uint64_t maximum_sync_trials,const std::function<void()>& checkpoint,BlockPurpose purpose,ConsensusRoot& computed_root,const BellatrixContext* bellatrix=nullptr,BellatrixExecutionCandidate* execution_result=nullptr){
@@ -73,9 +75,14 @@ std::optional<AltairSlotState> transition(const AltairSlotState& input,
  AltairSlotState out;Bytes execution_header,withdrawal_cursors,historical_summaries;std::optional<BellatrixExecutionCandidate> execution;
  const auto slot=number(block,100);const Layout l(r.state);
  if(cr){
-  capella_beacon_state_root(input.ssz,r.state,cr->execution,cr->maximum_state_bytes,checkpoint);
-  if(slot<=number(input.ssz,40))return std::nullopt;
-  auto advanced=prepare_capella_slots({input.ssz,input.last_processed_epoch},{r.epoch,cr->execution,cr->maximum_state_bytes},r.state,slot,maximum_slots,maximum_sync_trials,checkpoint);
+  CapellaSlotState advanced;
+  if(bellatrix->fork_schedule){
+   advanced=prepare_capella_fork_slots({input.ssz,input.last_processed_epoch},*bellatrix->fork_parent_root,{r.epoch,cr->execution,cr->maximum_state_bytes},r.state,*bellatrix->fork_schedule,slot,maximum_slots,maximum_sync_trials,checkpoint);
+  }else{
+   capella_beacon_state_root(input.ssz,r.state,cr->execution,cr->maximum_state_bytes,checkpoint);
+   if(slot<=number(input.ssz,40))return std::nullopt;
+   advanced=prepare_capella_slots({input.ssz,input.last_processed_epoch},{r.epoch,cr->execution,cr->maximum_state_bytes},r.state,slot,maximum_slots,maximum_sync_trials,checkpoint);
+  }
   auto projection=capella_detail::project(advanced.ssz,r.state,cr->execution,cr->maximum_state_bytes,checkpoint);
   out={std::move(projection.common),advanced.last_processed_epoch};execution_header=std::move(projection.execution_header);withdrawal_cursors=std::move(projection.cursors);historical_summaries=std::move(projection.summaries);
  }else if(bellatrix){
@@ -219,6 +226,33 @@ std::optional<CapellaUnsignedBlockCandidate> prepare_capella_unsigned_block(
  if(checkpoint)checkpoint();Bytes envelope(184,0);put(envelope,0,100,4);put(envelope,100,slot);put(envelope,108,proposer);put(envelope,116,parent_root);put(envelope,180,84,4);envelope.insert(envelope.end(),body.begin(),body.end());
  const BellatrixTransitionRules common{r.consensus,r.execution,r.maximum_state_bytes,r.seconds_per_slot,r.chain_id,r.replay_policy};
  const BellatrixContext context{common,parent,state,history,&r};ConsensusRoot computed{};BellatrixExecutionCandidate execution;
+ auto out=transition({input.ssz,input.last_processed_epoch},envelope,r.consensus,maximum_slots,trials,checkpoint,BlockPurpose::Construct,computed,&context,&execution);
+ if(!out)return std::nullopt;put(envelope,148,computed);
+ return CapellaUnsignedBlockCandidate{Bytes(envelope.begin()+100,envelope.end()),{{std::move(out->ssz),out->last_processed_epoch},std::move(execution)}};
+}
+
+std::optional<CapellaBlockCandidate> prepare_capella_fork_state_transition(
+ const BellatrixSlotState& input,const ConsensusRoot& authenticated_root,const CapellaForkSchedule& schedule,View block,const CapellaTransitionRules& r,
+ const Header& parent,const State& state,const std::function<Bytes(const Int&)>& history,
+ uint64_t maximum_slots,uint64_t trials,const std::function<void()>& checkpoint){
+ if(block.size()<184||block.size()>r.consensus.maximum_block_bytes)return std::nullopt;
+ if(input.ssz.size()>r.maximum_state_bytes)throw std::length_error("Bellatrix state budget exceeded");
+ const BellatrixTransitionRules common{r.consensus,r.execution,r.maximum_state_bytes,r.seconds_per_slot,r.chain_id,r.replay_policy};
+ const BellatrixContext context{common,parent,state,history,&r,&schedule,&authenticated_root};ConsensusRoot computed{};BellatrixExecutionCandidate execution;
+ auto out=transition({input.ssz,input.last_processed_epoch},block,r.consensus,maximum_slots,trials,checkpoint,BlockPurpose::Receive,computed,&context,&execution);
+ if(!out)return std::nullopt;
+ return CapellaBlockCandidate{{std::move(out->ssz),out->last_processed_epoch},std::move(execution)};
+}
+std::optional<CapellaUnsignedBlockCandidate> prepare_capella_fork_unsigned_block(
+ const BellatrixSlotState& input,const ConsensusRoot& authenticated_root,const CapellaForkSchedule& schedule,uint64_t slot,uint64_t proposer,const ConsensusRoot& parent_root,View body,
+ const CapellaTransitionRules& r,const Header& parent,const State& state,
+ const std::function<Bytes(const Int&)>& history,uint64_t maximum_slots,uint64_t trials,const std::function<void()>& checkpoint){
+ check_rules(r.consensus);
+ if(input.ssz.size()>r.maximum_state_bytes)throw std::length_error("Bellatrix state budget exceeded");
+ if(r.consensus.maximum_block_bytes<184||body.size()>r.consensus.maximum_block_bytes-184)return std::nullopt;
+ if(checkpoint)checkpoint();Bytes envelope(184,0);put(envelope,0,100,4);put(envelope,100,slot);put(envelope,108,proposer);put(envelope,116,parent_root);put(envelope,180,84,4);envelope.insert(envelope.end(),body.begin(),body.end());
+ const BellatrixTransitionRules common{r.consensus,r.execution,r.maximum_state_bytes,r.seconds_per_slot,r.chain_id,r.replay_policy};
+ const BellatrixContext context{common,parent,state,history,&r,&schedule,&authenticated_root};ConsensusRoot computed{};BellatrixExecutionCandidate execution;
  auto out=transition({input.ssz,input.last_processed_epoch},envelope,r.consensus,maximum_slots,trials,checkpoint,BlockPurpose::Construct,computed,&context,&execution);
  if(!out)return std::nullopt;put(envelope,148,computed);
  return CapellaUnsignedBlockCandidate{Bytes(envelope.begin()+100,envelope.end()),{{std::move(out->ssz),out->last_processed_epoch},std::move(execution)}};
