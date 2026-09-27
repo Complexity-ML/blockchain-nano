@@ -738,3 +738,15 @@ explicitement de l'amorçage à la reprise par témoin ; le redémarrage autonom
 sans changement de configuration, les pannes physiques, le WAN, les nombreux
 pairs et la production globale restent ouverts. Aucun nouveau statut EIP clos.
 [Correctifs, échecs, réussite et limites](qualification/reusable-stream-deadlines-20260927/README.md).
+
+### Reprise automatique Capella explicite — 27 septembre 2026
+
+Option `automaticRecovery: true` : conserver le snapshot initial dans la
+configuration, initialiser seulement si les deux stores sont vierges, sinon
+exiger la reprise vérifiée par témoin. Le témoin absent avec checkpoint primaire
+est refusé ; aucune réinitialisation silencieuse. Deux scénarios runtime passent
+(ancien mode explicite et nouveau mode automatique, 64 clés synthétiques).
+Le crash Docker sans modification de configuration reste à qualifier ; la perte
+ou le rollback conjoint des deux stores exige une frontière de confiance externe.
+Aucun EIP clôturé, aucune qualification globale de production.
+[Preuves et limites](qualification/capella-automatic-recovery-20260927/README.md).

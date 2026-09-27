@@ -1649,3 +1649,6 @@ set_tests_properties(consensus_capella_deposit_invalid_signature PROPERTIES TIME
 
 add_test(NAME consensus_capella_local_sync COMMAND nano-capella-transition-tests --local-sync)
 set_tests_properties(consensus_capella_local_sync PROPERTIES TIMEOUT 240 LABELS "qualification_consensus_runtime")
+
+add_test(NAME consensus_capella_automatic_recovery COMMAND nano-capella-transition-tests --automatic-recovery)
+set_tests_properties(consensus_capella_automatic_recovery PROPERTIES TIMEOUT 240 LABELS "qualification_consensus_runtime")

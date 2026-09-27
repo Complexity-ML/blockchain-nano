@@ -31,7 +31,7 @@ std::string read_bounded(const std::filesystem::path& path,size_t maximum,const 
 struct Owner {InboundBudget decoder_budget;std::unique_ptr<ChainStore> witness;std::unique_ptr<CapellaDurableReactor> reactor;std::unique_ptr<CapellaLocalClock> clock;std::unique_ptr<CapellaValidatorLoop> validator;std::unique_ptr<CapellaConsensusService> admission;std::unique_ptr<CapellaInventorySessions> catalogs;};
 }
 CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const std::function<void()>& checkpoint,std::function<uint64_t()> now){
- if(checkpoint)checkpoint();auto base=config;base.erase("validator");base.erase("admission");base.erase("catalogs");base.erase("recoveryWitness");base.erase("network");base.erase("automaticPruning");shape(base,{"profile","limits","initial","restart","clock"});
+ if(checkpoint)checkpoint();auto base=config;base.erase("validator");base.erase("admission");base.erase("catalogs");base.erase("recoveryWitness");base.erase("automaticRecovery");base.erase("network");base.erase("automaticPruning");shape(base,{"profile","limits","initial","restart","clock"});
  const auto& genesis=chain.genesis();
  if(genesis.consensus!="beacon"||genesis.evm_revision!=EvmRevision::Shanghai)throw std::invalid_argument("Capella runtime requires Beacon Shanghai chain");
  const auto& p=config.at("profile");shape(p,{"file","sha256","maximumBytes"});const auto maximum=number(p.at("maximumBytes"));
@@ -44,11 +44,24 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const 
  if(interval>uint64_t(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::duration::max()/2).count()))throw std::invalid_argument("Capella clock interval range");
  const bool restart=!config.at("restart").is_null();
  const bool witnessed=config.contains("recoveryWitness");
+ if(config.contains("automaticRecovery")&&!config.at("automaticRecovery").is_boolean())throw std::invalid_argument("Capella automaticRecovery must be boolean");
+ const bool automatic=config.value("automaticRecovery",false);
+ if(automatic&&(!witnessed||restart||config.at("initial").is_null()))throw std::invalid_argument("Automatic Capella recovery requires witness and bootstrap snapshot, without restart token");
  if(witnessed){if(restart)throw std::invalid_argument("Witness recovery cannot use a restart token");}
  else if(restart==!config.at("initial").is_null())throw std::invalid_argument("Choose exactly one Capella initial snapshot or restart token");
  auto owner=std::make_shared<Owner>();std::set<std::filesystem::path> paths;
  if(witnessed){const auto path=config.at("recoveryWitness").get<std::string>();if(path.empty())throw std::invalid_argument("Empty Capella recovery witness path");paths.insert(std::filesystem::weakly_canonical(path));owner->witness=std::make_unique<ChainStore>(path);}
- if(witnessed&&config.at("initial").is_null()){
+ bool recover=witnessed&&config.at("initial").is_null();
+ if(automatic){
+  owner->witness->bind_chain(genesis.chain_id,genesis.block.header.hash(),"nano-capella-recovery-v1");
+  if(limits.envelope_bytes>(SIZE_MAX-2048)/8)throw std::length_error("Capella witness size overflow");
+  // Either publication boundary forbids falling back to bootstrap. The reactor
+  // must verify the witness and its exact relationship to the primary store.
+  const auto primary=chain.store().fork_checkpoint(genesis.chain_id,genesis.block.header.hash(),limits.envelope_bytes);
+  const auto witness=owner->witness->fork_checkpoint(genesis.chain_id,genesis.block.header.hash(),2048+8*limits.envelope_bytes);
+  recover=bool(primary)||bool(witness);
+ }
+ if(recover){
   owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,*owner->witness,checkpoint);
  }else if(restart){
   const auto& r=config.at("restart");shape(r,{"sequence","digest"});const ForkCheckpointToken token{number(r.at("sequence")),digest(r.at("digest"))};
