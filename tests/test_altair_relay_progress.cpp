@@ -1,5 +1,6 @@
 #include "support/process.hpp"
 #include "../network/altair_archive_relay.hpp"
+#include "../network/altair_vote_delivery.hpp"
 using namespace test;
 int main(){try{
  asio::io_context io;InboundBudget budget;
@@ -104,5 +105,25 @@ int main(){try{
  missing_payload=false;catalogue_epoch="0x"+std::string(64,'5');
  check(!attempt()&&progress->cursor=="0x"&&inventory_calls==prune_calls+1,"stale cached page did not refresh catalogue");
  check(attempt()&&progress->cursor==backlog[1]&&sent==prune_sent+1,"refreshed page lost acknowledgement or successor");
+ // Inbound possession knowledge is gated by admission and session identity.
+ auto sender=std::make_shared<AltairRelayProgress>(),other=std::make_shared<AltairRelayProgress>();
+ AltairWork::Done admitted;bool enqueue_ok=true;unsigned completions=0;
+ auto receive=remember_vote_sender([&](AltairWireMessage,AltairWork::Cancellation,AltairWork::Done done){if(!enqueue_ok)return false;admitted=std::move(done);return true;},sender);
+ const auto inbound_root=nano::hex(nano::sha256(nano::Bytes{1,2}));
+ auto inbound=[&](AltairWireKind kind=AltairWireKind::attestation){AltairWireMessage message;message.kind=kind;message.ssz={1,2};return receive(std::move(message),std::make_shared<std::atomic<bool>>(false),[&](auto){++completions;});};
+ check(inbound()&&!sender->acknowledged(inbound_root),"unadmitted inbound vote became known");admitted(AltairWork::Decision::rejected);
+ check(!sender->acknowledged(inbound_root),"rejected inbound vote became known");
+ check(inbound(),"inbound retry refused");admitted(AltairWork::Decision::local_failure);
+ check(!sender->acknowledged(inbound_root),"failed inbound vote became known");
+ check(inbound(AltairWireKind::block),"block dispatch refused");admitted(AltairWork::Decision::accepted);
+ check(!sender->acknowledged(inbound_root),"block seeded vote cache");
+ enqueue_ok=false;check(!inbound()&&!sender->acknowledged(inbound_root),"failed enqueue seeded vote cache");enqueue_ok=true;
+ check(inbound(),"accepted vote dispatch refused");auto fresh_session=std::make_shared<AltairRelayProgress>();admitted(AltairWork::Decision::accepted);
+ check(sender->acknowledged(inbound_root)&&sender->cursor=="0x"&&!other->acknowledged(inbound_root)&&!fresh_session->acknowledged(inbound_root)&&completions==4,"inbound knowledge escaped its session or changed delivery progress");
+ // Run the actual outbound relay: possession suppresses only the echo,
+ // while an independent peer still receives and acknowledges this vote.
+ backlog={inbound_root};progress=sender;const auto echo_sent=sent;
+ check(attempt()&&sent==echo_sent,"accepted inbound vote echoed to its sender");
+ progress=other;check(attempt()&&sent==echo_sent+1&&other->acknowledged(inbound_root),"sender knowledge suppressed independent peer delivery");
  std::cout<<"Rejected votes do not starve eligible successors; deferred retry, lost response and block ordering checks passed\n";
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

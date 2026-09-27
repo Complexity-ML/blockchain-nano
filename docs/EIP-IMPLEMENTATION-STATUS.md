@@ -1930,3 +1930,12 @@ du poids de cible précédente est inclus ; quorum au slot 66. Le gain local
 de requêtes ne démontre pas un gain de finalité WAN. Trois boucles saines,
 preuves et échec conservés ; aucun statut EIP clôturé.
 [Campagne](qualification/multihost-20260927/page-cache-recovery/README.md).
+
+### Possession des votes par le pair émetteur
+
+Après admission durable d’un vote reçu, le relais retient sa possession
+par la session émettrice et évite de le lui renvoyer. Rejets, erreurs,
+refus de file, autres types et autres sessions sont isolés dans les nouveaux
+contrôles. Le relais injecté envoie toujours au pair indépendant.
+[Preuves locales](qualification/vote-sender-knowledge-20260927/README.md).
+Compilation réussie ; aucun gain WAN ni critère production encore revendiqué.

@@ -11,6 +11,7 @@
 #include "altair_stream.hpp"
 #include "altair_peer.hpp"
 #include "altair_archive_relay.hpp"
+#include "altair_vote_delivery.hpp"
 #include "peer_relay_budget.hpp"
 #include <sstream>
 #include <libp2p/network/impl/dnsaddr_resolver_impl.hpp>
@@ -213,7 +214,7 @@ class Network {
    if(!altair_ingress_||!altair_dispatch_||altair_dispatch_->blocked()||!peers_.contains(id)||!consensus_peer(peers_.at(id).status)){stream->reset();return;}
    // AltairStreamRequest owns the shared budget lease through durable worker
    // completion. Do not acquire the generic lease a second time below.
-   auto dispatch=altair_dispatch_->dispatcher();auto delivery=[this,stream,dispatch](auto message,auto cancel,auto done){const auto kind=message.kind;return dispatch(std::move(message),std::move(cancel),[this,stream,kind,done=std::move(done)](auto decision){const bool drop_vote=drop_altair_vote_reply_&&kind==AltairWireKind::attestation;if((drop_altair_reply_||drop_vote)&&decision==AltairWork::Decision::accepted){if(drop_vote)drop_altair_vote_reply_=false;else drop_altair_reply_=false;stream->reset();std::cout<<Json{{"event",drop_vote?"test-altair-vote-reply-dropped":"test-altair-reply-dropped"}}.dump()<<std::endl;}done(decision);});};
+   auto dispatch=remember_vote_sender(altair_dispatch_->dispatcher(),peers_.at(id).altair_vote_progress);auto delivery=[this,stream,dispatch](auto message,auto cancel,auto done){const auto kind=message.kind;return dispatch(std::move(message),std::move(cancel),[this,stream,kind,done=std::move(done)](auto decision){const bool drop_vote=drop_altair_vote_reply_&&kind==AltairWireKind::attestation;if((drop_altair_reply_||drop_vote)&&decision==AltairWork::Decision::accepted){if(drop_vote)drop_altair_vote_reply_=false;else drop_altair_reply_=false;stream->reset();std::cout<<Json{{"event",drop_vote?"test-altair-vote-reply-dropped":"test-altair-reply-dropped"}}.dump()<<std::endl;}done(decision);});};
    std::make_shared<AltairStreamRequest>(io_,std::move(stream),altair_ingress_,std::move(delivery))->start();return;
   }
   // Beacon blocks travel with signed consensus envelopes, never through the
