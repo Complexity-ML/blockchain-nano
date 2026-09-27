@@ -215,3 +215,15 @@ Aucun correctif de production nécessaire pour ces cas. **Partiel** : réorganis
 profondes, pruning du contexte, admissions concurrentes et pannes d'écriture
 restent à qualifier ; pas de nouvelle preuve réseau ni paiement après réinclusion.
 [Scénario, limites et preuves](qualification/capella-bls-reorg-20260927/README.md).
+
+### 2026-09-27 — Erreur de synchronisation pendant admission BLS
+
+Nouveau test macOS (6,21 s), quatre cas : erreur EIO sur WAL principal ou témoin,
+avec conservation ou suppression contrôlée du suffixe écrit. Fermeture du réacteur
+et des lectures owner/RPC, reprise cohérente, état de consensus inchangé et
+resoumission idempotente vérifiés. La demande revient via le témoin lorsqu'il la
+conserve ; si le témoin perd sa nouvelle écriture avant publication principale,
+la demande doit rester absente jusqu'à resoumission. Aucun correctif du moteur.
+**Partiel** : ce n'est pas une coupure physique ni une qualification Linux/VPS ;
+pruning, réorganisations profondes et charge restent ouverts.
+[Preuves, essai initial et portée](qualification/capella-bls-sync-20260927/README.md).

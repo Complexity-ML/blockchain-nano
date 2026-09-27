@@ -52,7 +52,7 @@ static bool configured_runtime=false;
 static bool capella_http=false;
 static std::string cli_binary;static Json cli_genesis;static bool managed_cli=false;static std::string daemon_binary;static bool network_cli=false;static bool multipeer_cli=false;static bool distributed_cli=false;static bool transport_outage_cli=false;static fs::path network_export;
 static bool beacon_reads=false;
-static bool queued_bls_reorg=false;static bool queued_bls_changes=false;static bool local_bls_changes=false;static bool wire_mode=false;static bool catalog_concurrency=false;
+static bool queued_bls_sync=false;static bool queued_bls_reorg=false;static bool queued_bls_changes=false;static bool local_bls_changes=false;static bool wire_mode=false;static bool catalog_concurrency=false;
 static size_t beacon_read_checks=0;
 #ifdef NANO_SYNC_FAULT
 extern "C" void nano_test_arm_sync_fault(const char*);
@@ -94,6 +94,7 @@ static int sync_writer(const fs::path& directory){
  std::cout<<Json{{"wal",wal.filename().string()},{"before",offset},{"after",fs::file_size(wal)},{"blocked",blocked}}.dump()<<std::endl;_exit(0);
 }
 #endif
+#include "support/capella_bls_sync.hpp"
 static void local_finality_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules,const Block& genesis,const State& genesis_state){
  Temp directory;const auto limits=crash_limits;const auto& t=rules.transition;const auto slots=t.consensus.epoch.ffg.slots_per_epoch;const auto genesis_root=root_at(initial.blocks.at(initial.timed.view.anchor).state.ssz,8);
  Genesis owner_genesis;owner_genesis.chain_id=t.chain_id;owner_genesis.consensus="beacon";owner_genesis.evm_revision=EvmRevision::Shanghai;owner_genesis.block=genesis;owner_genesis.state=genesis_state;
@@ -883,6 +884,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
  for(const auto& field:{std::string("genesisVersion"),std::string("maximumBlsChanges")}){auto changed=Json::parse(profile);changed[field]=field=="genesisVersion"?"0xffffffff":"0x0";const auto text=changed.dump();reject_profile(text,sha256(Bytes(text.begin(),text.end())),1024*1024);}
  const auto restored_rules=load_capella_fork_profile(profile,profile_digest,1024*1024);check(capella_fork_profile(restored_rules)==capella_fork_profile(store_rules),"Capella profile roundtrip differs");
 #ifdef NANO_SYNC_FAULT
+ if(queued_bls_sync){qualify_bls_sync(executable,store_rules,short_snapshot,disk_genesis,disk_genesis_state,sync_time,encode_capella_bls_change(local_change));return;}
  if(sync_scenario){
   Genesis owner_genesis;owner_genesis.chain_id=r.chain_id;owner_genesis.consensus="beacon";owner_genesis.evm_revision=EvmRevision::Shanghai;owner_genesis.block=disk_genesis;owner_genesis.state=disk_genesis_state;
   for(unsigned disposition=0;disposition<(owner_witness?3u:2u);++disposition){const bool lose=disposition==1,fault_witness=disposition==2;Temp tmp;
@@ -991,6 +993,8 @@ int main(int argc,char** argv){try{executable=argv[0];
  if(argc==3&&std::string(argv[1])=="--managed-cli"){managed_cli=true;cli_binary=argv[2];configured_runtime=true;scenario(false);return 0;}
 if(argc==3&&std::string(argv[1])=="--cli"){cli_binary=argv[2];configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--http"){configured_runtime=true;capella_http=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--catalog-concurrency"){wire_mode=true;catalog_concurrency=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-reorg"){queued_bls_reorg=true;queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-owner"){queued_bls_changes=true;local_bls_changes=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-rpc"){queued_bls_changes=true;local_bls_changes=true;configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-wire"){wire_mode=true;queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-changes"){queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--local-bls-changes"){local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--wire"){wire_mode=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--beacon-reads"){beacon_reads=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--configured-runtime"){configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler"){scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-reorg"){owner_reorg=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}
 #ifdef NANO_SYNC_FAULT
+if(argc==3&&std::string(argv[1])=="--bls-sync-writer")return bls_sync_writer(argv[2]);
+if(argc==2&&std::string(argv[1])=="--queued-bls-sync"){queued_bls_sync=true;local_bls_changes=true;scenario(false);return 0;}
 if(argc==3&&std::string(argv[1])=="--sync-writer")return sync_writer(argv[2]);
 if(argc==2&&std::string(argv[1])=="--owner-witness"){owner_witness=true;owner_sync=true;sync_scenario=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--owner-sync"){owner_sync=true;sync_scenario=true;scenario(false);return 0;}

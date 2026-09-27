@@ -66,7 +66,7 @@ reste à compléter. Le genesis réseau autorise actuellement Paris/Shanghai.
 | [6780](https://eips.ethereum.org/EIPS/eip-6780) | Partiel pour la production | Moteur Cancun présent ; pas de genesis réseau Cancun | src/evm.cpp ; src/chain.cpp ; docs/EVM-CONFORMANCE.md | Activation réseau cohérente du fork, admission, régressions et reprise | Avant activation Cancun |
 | [7702](https://eips.ethereum.org/EIPS/eip-7702) | Partiel pour la production | Autorisations et exécution Prague ; non activé sur réseau | src/authorization.cpp ; src/transaction.cpp ; src/engine.cpp | Mempool/P2P, admission type 4 et activation réseau Prague | Avant activation Prague |
 | [4844](https://eips.ethereum.org/EIPS/eip-4844) | Partiel | Blobs/KZG dans le moteur et les runners | src/kzg.cpp ; src/engine.cpp ; tests/test_blobs.cpp | Admission réseau type 3, sidecars, disponibilité, rétention et récupération | Avant service blobs |
-| [4895](https://eips.ethereum.org/EIPS/eip-4895) | Partiel | Retraits EVM/Capella, publication atomique et réseau local qualifiés dans des scénarios bornés ; file durable de changements BLS et sélection locale raccordée au constructeur de propositions | src/engine.cpp ; src/consensus_capella_withdrawals.cpp ; src/consensus_capella_bls_change.cpp ; src/consensus_capella_local_body.cpp ; tests/test_capella_transition.cpp | Pannes d’admission, pruning, réorganisations profondes et charge/WAN des changements BLS ; migration réseau et qualification complète du profil avant activation publique | Consensus cible |
+| [4895](https://eips.ethereum.org/EIPS/eip-4895) | Partiel | Retraits EVM/Capella, publication atomique et réseau local qualifiés dans des scénarios bornés ; file durable de changements BLS et sélection locale raccordée au constructeur de propositions | src/engine.cpp ; src/consensus_capella_withdrawals.cpp ; src/consensus_capella_bls_change.cpp ; src/consensus_capella_local_body.cpp ; tests/test_capella_transition.cpp | Reprise Linux/VPS, pruning, réorganisations profondes et charge/WAN des changements BLS ; migration réseau et qualification complète du profil avant activation publique | Consensus cible |
 | [4788](https://eips.ethereum.org/EIPS/eip-4788) | Partiel | Appel système côté exécution | src/engine.cpp ; tests/test_beacon.cpp | Provisionnement versionné du contrat (code, nonce, adresse) au genesis si fork actif dès le départ, sinon à la transition ; fourniture authentifiée des racines par le nouveau consensus | Consensus cible |
 | [6110](https://eips.ethereum.org/EIPS/eip-6110) | Partiel | Requêtes côté exécution ; cycle consensus non terminé | src/requests.cpp ; src/engine.cpp ; tests/test_requests.cpp | Registre BLS, dépôts, sorties, consolidations et application des requêtes dans le consensus | Consensus cible |
 | [7685](https://eips.ethereum.org/EIPS/eip-7685) | Partiel | Requêtes côté exécution ; cycle consensus non terminé | src/requests.cpp ; src/engine.cpp ; tests/test_requests.cpp | Qualifier encodage, ordre par type, omission des requêtes vides et requests_hash ; rejeter les engagements altérés ; appliquer dépôts/sorties/consolidations au consensus et vérifier reprise/rejeu | Consensus cible |
@@ -2670,3 +2670,15 @@ Aucun correctif de production nécessaire pour ces cas. **Partiel** : réorganis
 profondes, pruning du contexte, admissions concurrentes et pannes d'écriture
 restent à qualifier ; pas de nouvelle preuve réseau ni paiement après réinclusion.
 [Scénario, limites et preuves](qualification/capella-bls-reorg-20260927/README.md).
+
+### 2026-09-27 — Erreur de synchronisation pendant admission BLS
+
+Nouveau test macOS (6,21 s), quatre cas : erreur EIO sur WAL principal ou témoin,
+avec conservation ou suppression contrôlée du suffixe écrit. Fermeture du réacteur
+et des lectures owner/RPC, reprise cohérente, état de consensus inchangé et
+resoumission idempotente vérifiés. La demande revient via le témoin lorsqu'il la
+conserve ; si le témoin perd sa nouvelle écriture avant publication principale,
+la demande doit rester absente jusqu'à resoumission. Aucun correctif du moteur.
+**Partiel** : ce n'est pas une coupure physique ni une qualification Linux/VPS ;
+pruning, réorganisations profondes et charge restent ouverts.
+[Preuves, essai initial et portée](qualification/capella-bls-sync-20260927/README.md).
