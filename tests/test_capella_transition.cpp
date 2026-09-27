@@ -260,6 +260,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
  };
 
  std::vector<Bytes> pending_attestations;uint64_t included_attestations=0;
+ std::shared_ptr<const CapellaInventorySnapshot> stable_inventory;Json stable_first;
  InboundBudget ingress_budget;std::unique_ptr<CapellaConsensusService> service;size_t wire_messages=0;
  auto deliver=[&](const char* kind,const Bytes& bytes){Json envelope=reactor->network_identity();envelope["kind"]=kind;envelope["ssz"]=hex(bytes);auto promise=std::make_shared<std::promise<CapellaConsensusService::Decision>>();auto future=promise->get_future();check(service->submit(envelope.dump(),std::make_shared<std::atomic<bool>>(false),[promise](auto decision){promise->set_value(decision);}),"Capella wire enqueue refused");check(future.wait_for(std::chrono::seconds(10))==std::future_status::ready,"Capella worker deadline");++wire_messages;return future.get()==CapellaConsensusService::Decision::accepted;};
  unsigned accepted=0,rejected=0,cancelled=0,contexts=0,votes=0,vote_reorgs=0;uint64_t paid=0;
@@ -385,6 +386,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
    reactor->tick((genesis_time+slot*seconds)*1000);const auto before_publish=reactor->current();
    bool reactor_cancelled=false;try{reactor->block(wire,[]{throw ExecutionCancelled("reactor stop");});}catch(const ExecutionCancelled&){reactor_cancelled=true;}check(reactor_cancelled&&reactor->current().token==before_publish.token,"cancelled reactor published");
    check(wire_mode?deliver("block",wire):reactor->block(wire),"durable Capella block rejected");check(capella_store_snapshot(*reactor->current().state,store_rules,snapshot_limits)==capella_store_snapshot(*admitted_store,store_rules,snapshot_limits),"durable Store differs");
+   if(wire_mode&&slot==first_slot+4){stable_inventory=reactor->capture_inventory("block",4*sizeof(ConsensusRoot));stable_first=stable_inventory->page({},2,512);}
    const auto accepted_token=reactor->current().token;check(reactor->block(wire)&&reactor->current().token==accepted_token,"duplicate block rewrote checkpoint");
    const auto admitted_id=consensus_beacon_header_root(admitted);signed_wires.emplace(admitted_id,wire);
    check(reactor->signed_block(admitted_id)==std::optional<Bytes>(wire),"Capella signed archive differs");if(beacon_reads){verify_beacon_reads(*reactor,store_rules);const auto rendered=reactor->beacon_read("/eth/v2/beacon/blocks/head").body.at("data").at("message").at("body").at("bls_to_execution_changes");check(rendered.empty(),"Beacon repeated anchor BLS change");}
@@ -488,6 +490,10 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
  }
  if(finality){if(participation==100)check(store->timed.view.finalized.epoch>=2&&store->timed.view.justified.epoch>=3&&included_attestations>=128,"Capella participation did not advance finality");else check(store->timed.view.finalized.epoch==0&&store->timed.view.justified.epoch==0,"insufficient participation finalized a checkpoint");}
  if(wire_mode){
+  check(bool(stable_inventory)&&stable_inventory->page({},2,512)==stable_first,"inventory changed across block progression");
+  const auto next_bytes=unhex(stable_first.at("next").get<std::string>());ConsensusRoot stable_cursor{};std::copy(next_bytes.begin(),next_bytes.end(),stable_cursor.begin());const auto stable_last=stable_inventory->page(stable_cursor,2,512);check(stable_last.at("entries").size()==2&&stable_last.at("next").is_null()&&stable_last.at("digest")==stable_first.at("digest")&&stable_last.at("digest")!=hex(reactor->current().token.digest),"stable inventory lost continuation");
+  bool snapshot_refused=false;try{reactor->capture_inventory("block",1);}catch(const std::length_error&){snapshot_refused=true;}check(snapshot_refused,"snapshot root budget ignored");
+  snapshot_refused=false;try{stable_inventory->page(ConsensusRoot{},2,512);}catch(const std::invalid_argument&){snapshot_refused=true;}check(snapshot_refused,"snapshot unknown cursor accepted");
   const auto checkpoint=reactor->current();size_t exports=0;
   auto verify_export=[&](const char* kind,const ConsensusRoot& id,const Bytes& bytes){const auto result=reactor->export_message(kind,id,16*1024*1024,checkpoint.token);check(result.at("available")==true&&result.at("envelope").at("ssz")==hex(bytes)&&result.at("digest")==hex(checkpoint.token.digest),"Capella export changed bytes/checkpoint");auto decoded=service->decode(result.at("envelope").dump());check(decoded&&decoded->ssz==bytes,"Capella exported envelope cannot be admitted");++exports;};
   for(const auto& [id,wire]:signed_wires)verify_export("block",id,wire);

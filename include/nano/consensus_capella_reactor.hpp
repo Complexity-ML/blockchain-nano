@@ -9,6 +9,13 @@ class StaleCapellaDuty : public std::invalid_argument {public: using std::invali
 class ExpiredCapellaDuty : public std::runtime_error {public: using std::runtime_error::runtime_error;};
 using CapellaSignedVotes=std::map<Bytes,Bytes>;
 struct CapellaPublishedStore {std::shared_ptr<const CapellaForkStore> state;ForkCheckpointToken token;};
+// Immutable root-only inventory; does not pin EVM state or payload archives.
+class CapellaInventorySnapshot {
+ friend class CapellaDurableReactor;
+ ForkCheckpointToken token_;std::string kind_;std::vector<ConsensusRoot> roots_;
+public:
+ Json page(const std::optional<ConsensusRoot>& after,size_t maximum_entries,size_t maximum_json_bytes,const std::function<void()>& checkpoint={})const;
+};
 // Serialized local event coordinator. Initial anchor or restart token must be
 // independently trusted. Optional execution-cache binding; no scheduler, P2P or fork activation.
 // Own ChainStore for this object's lifetime; callbacks must not re-enter it.
@@ -57,6 +64,7 @@ public:
  // Atomic archive/checkpoint projection. maximum_bytes bounds raw SSZ; caller
  // must separately budget JSON/hex framing. An anchor has no fabricated signature.
  // Root-ordered candidates; export_message determines signed availability.
+ std::shared_ptr<const CapellaInventorySnapshot> capture_inventory(std::string_view kind,size_t maximum_root_bytes,const std::function<void()>& checkpoint={})const;
  Json inventory(std::string_view kind,const std::optional<ConsensusRoot>& after,size_t maximum_entries,size_t maximum_json_bytes,const std::optional<ForkCheckpointToken>& expected={},const std::function<void()>& checkpoint={})const;
  Json export_message(std::string_view kind,const ConsensusRoot&,size_t maximum_bytes,const std::optional<ForkCheckpointToken>& expected={},const std::function<void()>& checkpoint={})const;
  bool vote_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});

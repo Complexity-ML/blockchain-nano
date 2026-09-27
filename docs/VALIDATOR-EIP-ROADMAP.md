@@ -2919,3 +2919,14 @@ Les blocs listés sont des candidats connus, dont l’export vérifie la disponi
 signée. L’ordre par racine n’est pas l’ordre des parents. La pagination sous
 activité nécessite encore une stratégie de catalogue stable ; RPC/P2P et
 ordonnancement des dépendances restent ouverts avant synchronisation complète.
+
+### Capella : catalogue immuable pendant l’activité
+
+Capture bornée des seules racines avec checkpoint et type de message ; pagination
+sans retenir les états EVM ni les payloads. Un catalogue de quatre blocs capturé
+au slot 5 reste identique après production supplémentaire et deux réorganisations.
+Budget insuffisant et curseur inconnu refusés ; test enrichi réussi en 5,30 s.
+[Preuves](qualification/capella-stable-inventory-20260927/README.md).
+La pagination locale ne dépend plus des ticks suivants. Restent quotas/expiration
+des handles RPC, ordonnancement des parents et transport authentifié. Le catalogue
+ne garantit pas la rétention future des payloads après élagage.
