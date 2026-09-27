@@ -5,12 +5,15 @@
 #include "nano/consensus_capella_transition.hpp"
 namespace nano {
 struct CapellaForkBlock {ConsensusBeaconHeader header;CapellaSlotState state;Block execution_block;State execution_state;std::vector<Receipt> receipts;std::shared_ptr<const ExecutionDepositHistory> deposit_history;};
+struct CapellaDepositAncestor {ConsensusBeaconHeader beacon;Header execution;uint64_t count;ConsensusRoot root;};
 struct CapellaForkStore {
  Phase0ForkTimedView timed;
  // Original trusted anchor; storage pruning must not change network identity.
  std::optional<ConsensusRoot> network_anchor;
  // Authenticated newest-first execution ancestors of the anchor (up to 256).
  std::vector<Header> anchor_execution_ancestors;
+ // Canonical ancestors before the storage anchor, newest first; no EVM states.
+ std::vector<CapellaDepositAncestor> deposit_ancestors;
  std::map<ConsensusRoot,CapellaForkBlock> blocks;
  std::map<ConsensusRoot,bool> timely;
  std::map<ConsensusRoot,ConsensusCheckpoint> unrealized_justifications;
@@ -89,7 +92,7 @@ Bytes capella_execution_history(const CapellaForkStore&,const ConsensusRoot& par
 namespace nano {
 ConsensusRoot capella_network_anchor(const CapellaForkStore&);
 // Pure candidate transformation. Does not publish or delete persisted history.
-// Native deposit-vote history needs separate pinning and is currently rejected.
+// Native deposit ancestry is retained as authenticated commitments.
 CapellaForkStore prepare_capella_pruned_store(const CapellaForkStore&,
  const ConsensusRoot& new_anchor,const CapellaForkBlockRules&,
  const std::function<void()>& checkpoint={});

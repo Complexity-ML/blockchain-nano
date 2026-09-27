@@ -2735,3 +2735,19 @@ annulation sans mutation. Aucun nouveau profil réseau activé.
 d’ancêtres et de périodes, puis raccorder ces préfixes à la sélection des votes
 et aux preuves de dépôts obligatoires sans modifier les règles d’admission.
 [Code, justification et preuves](qualification/deposit-history-prefix-20260927/README.md).
+
+### 2026-09-27 — Références des dépôts antérieurs à l’ancre Capella
+
+Élagage natif raccordé à la conservation des en-têtes et engagements de dépôts
+historiques, sans leurs états EVM/Beacon complets. Lookup des anciens votes,
+sélection de période et preuves obligatoires utilisent ces références et les
+préfixes authentifiés. Format local v3 ajouté ; v1/v2 conservés.
+Tests passés : dix votes de période comparés, preuve obligatoire identique après
+deux élagages, rejet d’ancêtres altérés/manquants et d’une branche étrangère ;
+régression Capella BLS/élagage également verte (34,02 s).
+**Partiel** : le test natif utilise une ascendance Beacon synthétique sur des
+blocs d’exécution réellement exécutés. La transition Capella native complète,
+la reprise v3, les nouveaux dépôts après élagage et les pannes restent à qualifier.
+Les métadonnées d’ancêtres croissent encore avec l’historique ; aucun stockage
+indéfiniment borné ni déclenchement automatique n’est démontré.
+[Preuves et portée exacte](qualification/capella-native-deposit-pins-20260927/README.md).

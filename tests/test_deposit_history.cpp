@@ -1,5 +1,6 @@
 #include "nano/consensus_deposit_history.hpp"
 #include "blst.h"
+#include "nano/consensus_capella_deposits.hpp"
 #include <fstream>
 #include <iostream>
 using namespace nano;
@@ -82,5 +83,19 @@ int main(){try{
  refuses([&]{restored.authenticated_prefix(1,Bytes(31),ha.root());});
  auto bad_root=ha.root();bad_root[0]^=1;refuses([&]{restored.authenticated_prefix(1,ha.execution_hash(),bad_root);});
  bool prefix_cancelled=false;size_t visits=0;try{restored.authenticated_prefix(1,ha.execution_hash(),ha.root(),[&]{if(++visits==10)throw ExecutionCancelled("prefix interrupted");});}catch(const ExecutionCancelled&){prefix_cancelled=true;}check(prefix_cancelled&&restored.snapshot()==snapshot,"prefix failure mutated history");
- std::cout<<Json{{"scenario","execution-deposit-history"},{"profile","Paris"},{"branches",2},{"fundedAdmission",true},{"topup",true},{"invalidPoPIgnored",true},{"crossBranchProofRejected",true},{"duplicateCreditRejected",true},{"authenticatedRestore",true},{"runtimeConnected",false},{"authenticatedPrefixes",4},{"prefixProofsCompared",prefix_proofs}}.dump()<<'\n';return 0;
+ // Native voting keeps historical commitments even when old full records disappear.
+ CapellaForkStore full;std::vector<ConsensusRoot> ids;const std::array<const ExecutionDepositHistory*,5> histories{&empty,&ha,&ht,&hi,&he};const std::array<Header,5> headers{anchor,ba.header,bt.header,bi.header,be.header};
+ for(size_t i=0;i<histories.size();++i){ConsensusBeaconHeader header{};header.slot=i;if(i)header.parent_root=ids.back();const auto id=consensus_beacon_header_root(header);CapellaForkBlock record{};record.header=header;record.execution_block.header=headers[i];record.deposit_history=std::make_shared<const ExecutionDepositHistory>(*histories[i]);full.blocks.emplace(id,std::move(record));ids.push_back(id);}full.timed.view.anchor=ids[0];
+ auto pruned=full;pruned.network_anchor=ids[0];pruned.deposit_ancestors=capella_deposit_ancestors_before(full,ids[3]);pruned.timed.view.anchor=ids[3];for(size_t i=0;i<3;++i)pruned.blocks.erase(ids[i]);validate_capella_deposit_ancestors(pruned);
+ CapellaForkBlockRules native{};native.native_deposit_votes=true;native.transition.consensus.state.eth1_votes_limit=64;native.transition.consensus.body.deposits=16;native.transition.consensus.maximum_block_bytes=100000;
+ size_t vote_comparisons=0;for(uint64_t period:{2,64}){native.transition.consensus.state.eth1_votes_limit=period;for(uint64_t slot:{4,5,63,64,128}){check(capella_native_deposit_vote(full,ids[4],slot,native)==capella_native_deposit_vote(pruned,ids[4],slot,native),"pruning changed native period vote");++vote_comparisons;}}
+ native.transition.consensus.state.eth1_votes_limit=64;
+ auto vote_bytes=[](const ExecutionDepositHistory& history){const auto root=history.root();Bytes value(root.begin(),root.end());for(unsigned n=0;n<8;++n)value.push_back(uint8_t(history.count()>>(8*n)));value.insert(value.end(),history.execution_hash().begin(),history.execution_hash().end());return value;};
+ for(const auto* history:histories){const auto vote=vote_bytes(*history);check(capella_native_deposit_vote_known(pruned,ids[4],vote),"pruning lost historical native vote");}
+ check(!capella_native_deposit_vote_known(pruned,ids[4],vote_bytes(hb)),"pruned history accepted foreign branch vote");
+ Bytes advanced(272);const auto selected_vote=vote_bytes(ha);std::copy(selected_vote.begin(),selected_vote.end(),advanced.begin()+180);auto put=[&](size_t at,uint64_t value){for(unsigned n=0;n<4;++n)advanced[at+n]=uint8_t(value>>(8*n));};put(252,272);put(264,272);
+ const auto operation=capella_native_deposit_operations(full,ids[4],advanced,selected_vote,native);check(operation.size()==1240&&operation==capella_native_deposit_operations(pruned,ids[4],advanced,selected_vote,native),"pruning changed mandatory historical deposit proof");
+ auto twice=pruned;twice.deposit_ancestors=capella_deposit_ancestors_before(pruned,ids[4]);twice.timed.view.anchor=ids[4];twice.blocks.erase(ids[3]);validate_capella_deposit_ancestors(twice);check(twice.deposit_ancestors.size()==4&&capella_native_deposit_operations(twice,ids[4],advanced,selected_vote,native)==operation,"repeated pruning lost deposit references");
+ auto forged_pins=pruned;forged_pins.deposit_ancestors[0].root[0]^=1;refuses([&]{validate_capella_deposit_ancestors(forged_pins);});forged_pins=pruned;forged_pins.deposit_ancestors.pop_back();refuses([&]{validate_capella_deposit_ancestors(forged_pins);});forged_pins=pruned;std::swap(forged_pins.deposit_ancestors[0],forged_pins.deposit_ancestors[1]);refuses([&]{validate_capella_deposit_ancestors(forged_pins);});
+ std::cout<<Json{{"scenario","execution-deposit-history"},{"profile","Paris"},{"branches",2},{"fundedAdmission",true},{"topup",true},{"invalidPoPIgnored",true},{"crossBranchProofRejected",true},{"duplicateCreditRejected",true},{"authenticatedRestore",true},{"runtimeConnected",false},{"authenticatedPrefixes",4},{"prefixProofsCompared",prefix_proofs},{"nativePeriodVotesCompared",vote_comparisons},{"nativeMandatoryProofPreserved",true}}.dump()<<'\n';return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

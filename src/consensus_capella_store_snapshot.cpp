@@ -1,5 +1,6 @@
 #include "nano/consensus_capella_store_snapshot.hpp"
 #include <source_location>
+#include "nano/consensus_capella_deposits.hpp"
 #include "nano/consensus_bellatrix_store_snapshot.hpp"
 namespace nano {
 namespace {
@@ -70,12 +71,18 @@ std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBl
  {"clock",Json::array({num(c.genesis_time_ms),num(c.time_ms),cp(c.unrealized_justified),cp(c.unrealized_finalized)})},
  {"boost",v.proposer_boost?Json(root(*v.proposer_boost)):Json(nullptr)},{"blocks",blocks},{"messages",messages},{"equivocations",equiv},{"timely",timely},{"unrealized",unrealized}};
  if(s.network_anchor){require(*s.network_anchor!=v.anchor);j["format"]="nano-capella-store-v2";j["networkAnchor"]=root(*s.network_anchor);}
+ require(!r.native_deposit_votes||!s.network_anchor||!s.deposit_ancestors.empty());
+ if(!s.deposit_ancestors.empty()){
+  require(r.native_deposit_votes&&s.network_anchor.has_value());validate_capella_deposit_ancestors(s,cancel);Json pins=Json::array();
+  for(const auto& old:s.deposit_ancestors){if(cancel)cancel();const auto& h=old.beacon;pins.push_back(Json::array({Json::array({num(h.slot),num(h.proposer_index),root(h.parent_root),root(h.state_root),root(h.body_root)}),old.execution.to_json(),num(old.count),root(old.root)}));}
+  j["format"]="nano-capella-store-v3";j["depositAncestors"]=std::move(pins);
+ }
  auto encoded=j.dump();require(encoded.size()<=l.envelope_bytes);if(cancel)cancel();return encoded;
 }
 CapellaForkStore capella_store_from_snapshot(std::string_view bytes,const Bytes& digest,const CapellaForkBlockRules& r,
  const CapellaStoreSnapshotLimits& l,const std::function<void()>& cancel){
  require(bytes.size()<=l.envelope_bytes&&digest.size()==32);if(cancel)cancel();require(sha256(Bytes(bytes.begin(),bytes.end()))==digest);
- const auto j=Json::parse(bytes);require(j.is_object()&&j.contains("format")&&j.at("format").is_string());const bool pruned=j.value("format",std::string())=="nano-capella-store-v2";require(j.is_object()&&j.size()==(pruned?14:13)&&(pruned||j.at("format")=="nano-capella-store-v1")&&j.at("profile")==profile(r));
+ const auto j=Json::parse(bytes);require(j.is_object()&&j.contains("format")&&j.at("format").is_string());const bool pinned=j.value("format",std::string())=="nano-capella-store-v3";const bool pruned=pinned||j.value("format",std::string())=="nano-capella-store-v2";require(j.is_object()&&j.size()==(pinned?15:pruned?14:13)&&(pruned||j.at("format")=="nano-capella-store-v1")&&j.at("profile")==profile(r));
  require(j.at("blocks").is_array()&&j.at("blocks").size()<=l.blocks&&j.at("messages").is_array()&&j.at("messages").size()<=l.messages&&j.at("equivocations").is_array()&&j.at("equivocations").size()<=l.equivocations);
  require(j.at("timely").is_array()&&j.at("timely").size()<=l.blocks&&j.at("unrealized").is_array()&&j.at("unrealized").size()<=l.blocks);
  CapellaForkStore s;auto& v=s.timed.view;auto& c=s.timed.clock;
@@ -98,6 +105,9 @@ CapellaForkStore capella_store_from_snapshot(std::string_view bytes,const Bytes&
  for(const auto& t:j.at("timely")){require(t.is_array()&&t.size()==2&&t[1].is_boolean());require(s.timely.emplace(root(t[0]),t[1].get<bool>()).second);}
  for(const auto& p:j.at("unrealized")){require(p.is_array()&&p.size()==2);require(s.unrealized_justifications.emplace(root(p[0]),cp(p[1])).second);}
  require(j.at("ancestors").is_array()&&j.at("ancestors").size()<=256);for(const auto& header:j.at("ancestors"))s.anchor_execution_ancestors.push_back(Header::from_json(header));
+ if(pinned){require(r.native_deposit_votes&&j.at("depositAncestors").is_array()&&!j.at("depositAncestors").empty()&&j.at("depositAncestors").size()<=l.envelope_bytes/200);
+  for(const auto& row:j.at("depositAncestors")){if(cancel)cancel();require(row.is_array()&&row.size()==4);const auto& h=row[0];require(h.is_array()&&h.size()==5);s.deposit_ancestors.push_back({{number(h[0]),number(h[1]),root(h[2]),root(h[3]),root(h[4])},Header::from_json(row[1]),number(row[2]),root(row[3])});}
+ }
  v.justified_registry=registry(s,r,l,cancel);
  require(capella_store_snapshot(s,r,l,cancel)==bytes);return s;
 }

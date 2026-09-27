@@ -226,7 +226,6 @@ namespace nano {
 ConsensusRoot capella_network_anchor(const CapellaForkStore& store){return store.network_anchor.value_or(store.timed.view.anchor);}
 CapellaForkStore prepare_capella_pruned_store(const CapellaForkStore& input,const ConsensusRoot& anchor,const CapellaForkBlockRules& rules,const std::function<void()>& check){
  if(check)check();validate_rules(rules);const auto& view=input.timed.view;if(anchor==view.anchor)return input;
- if(rules.native_deposit_votes)throw std::invalid_argument("Capella pruning requires native deposit history pinning");
  const auto slots=rules.transition.consensus.epoch.ffg.slots_per_epoch,lookahead=rules.transition.consensus.attestation.duties.min_seed_lookahead;
  if(!slots||lookahead>=view.current_epoch||!input.blocks.contains(anchor))throw std::invalid_argument("Capella pruning anchor/context unavailable");
  const auto retained_epoch=view.current_epoch-lookahead-1;
@@ -235,6 +234,7 @@ CapellaForkStore prepare_capella_pruned_store(const CapellaForkStore& input,cons
  if(at!=anchor)throw std::invalid_argument("Capella pruning anchor is not finalized ancestry");
  const auto expected=consensus_beacon_header_root(capella_fork_head(input,rules,check).header);
  auto output=input;output.network_anchor=capella_network_anchor(input);output.timed.view.anchor=anchor;
+ if(rules.native_deposit_votes){output.deposit_ancestors=capella_deposit_ancestors_before(input,anchor,check);validate_capella_deposit_ancestors(output,check);}
  std::vector<std::pair<uint64_t,ConsensusRoot>> ordered;for(const auto& [id,record]:input.blocks)ordered.emplace_back(record.header.slot,id);std::sort(ordered.begin(),ordered.end());std::set<ConsensusRoot> retained{anchor};
  for(const auto& [slot,id]:ordered){if(check)check();if(id!=anchor&&retained.contains(input.blocks.at(id).header.parent_root))retained.insert(id);}
  for(const auto& required:{view.justified.root,view.finalized.root,input.timed.clock.unrealized_justified.root,input.timed.clock.unrealized_finalized.root})if(!retained.contains(required))throw std::invalid_argument("Capella pruning would remove checkpoint context");
