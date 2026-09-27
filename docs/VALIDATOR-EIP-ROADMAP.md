@@ -3323,3 +3323,17 @@ la reprise v3, les nouveaux dépôts après élagage et les pannes restent à qu
 Les métadonnées d’ancêtres croissent encore avec l’historique ; aucun stockage
 indéfiniment borné ni déclenchement automatique n’est démontré.
 [Preuves et portée exacte](qualification/capella-native-deposit-pins-20260927/README.md).
+
+### 2026-09-27 — Reprise native Capella du checkpoint v3
+
+Nouveau scénario natif passé en 41,85 s : contrat de dépôt présent au genesis,
+40 blocs signés, 272 votes, finalité époque 3, élagage puis vraie réouverture
+RocksDB/owner. Le checkpoint passe de 2 528 208 à 1 191 779 octets (41 → 18 états).
+Trois snapshots altérés sont refusés malgré recalcul du digest externe.
+Un nouveau dépôt signé après élagage produit le même historique et le même état
+sur les stores élagué/non élagué, puis survit à une seconde réouverture.
+**Partiel** : le registre initial contient 64 validateurs synthétiques ; le test
+n’attend pas la consommation du nouveau dépôt par une période de vote complète.
+Activation/top-up, pannes pendant élagage, preuves de slashing, scheduling et
+croissance prolongée restent ouverts. Aucun espace disque récupéré mesuré.
+[Scénario, empreintes et résultat](qualification/capella-native-v3-restart-20260927/README.md).
