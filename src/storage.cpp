@@ -485,6 +485,7 @@ ForkCheckpointToken ChainStore::commit_execution_checkpoint(const Int& chain_id,
  for(const auto& record:suffix){
   const auto& block=record.block;const auto& h=block.header;const auto& receipts=record.receipts;const auto hash=h.hash();
   if(h.number<0||h.number>Int("18446744073709551615")||h.number!=parent.number+1||h.parent_hash!=parent.hash()||record.state.root()!=h.state_root||receipts.size()!=block.transactions.size()||transactions_root(block.transactions)!=h.transactions_root||receipts_root(receipts)!=h.receipts_root)throw std::invalid_argument("execution checkpoint candidate binding");
+  if(!block.withdrawals.is_array()||(h.withdrawals_root?*h.withdrawals_root!=withdrawals_root(block.withdrawals):!block.withdrawals.empty()))throw std::invalid_argument("execution checkpoint withdrawal binding");
   Int cumulative=0;std::vector<Log> logs;
   for(size_t i=0;i<receipts.size();++i){const auto& receipt=receipts[i];cumulative+=receipt.gas_used;logs.insert(logs.end(),receipt.logs.begin(),receipt.logs.end());if(receipt.gas_used<0||receipt.transaction_hash!=block.transactions[i].hash()||receipt.block_hash!=hash||receipt.block_number!=h.number||receipt.index!=Int(i)||receipt.cumulative_gas_used!=cumulative)throw std::invalid_argument("execution checkpoint receipt binding");}
   if(cumulative!=h.gas_used||logs_bloom(logs)!=h.logs_bloom)throw std::invalid_argument("execution checkpoint gas/bloom binding");

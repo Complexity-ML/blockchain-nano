@@ -2051,3 +2051,13 @@ par nouvelle chaîne ; régression Altair/Bellatrix/Capella/migration 4/4.
 [Preuves](qualification/capella-scheduled-block-20260927/README.md).
 Restent Store/réacteur, profil durable, commit atomique et qualification réseau.
 Les profils actifs et les statuts EIP partiels restent inchangés.
+
+### Shanghai : intégrité et reprise du checkpoint d'exécution
+
+Le commit atomique contrôle maintenant le corps des retraits contre sa racine
+et refuse les retraits sans engagement. Qualification Shanghai : réorganisation,
+CAS, archives, quatre SIGKILL/réouvertures et faute sync WAL conservée/perdue ;
+montants restaurés contrôlés. Régression stockage Paris/Shanghai 4/4.
+[Preuves](qualification/shanghai-checkpoint-20260927/README.md).
+Le snapshot testé est synthétique : Store Capella, profil durable et réacteur
+restent à raccorder. Aucun statut EIP clos ni profil réseau modifié.
