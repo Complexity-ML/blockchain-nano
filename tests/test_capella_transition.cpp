@@ -48,7 +48,7 @@ static bool owner_witness=false;
 static bool scheduled=false;
 static bool configured_runtime=false;
 static bool capella_http=false;
-static std::string cli_binary;static Json cli_genesis;static bool managed_cli=false;static std::string daemon_binary;static bool network_cli=false;static bool distributed_cli=false;
+static std::string cli_binary;static Json cli_genesis;static bool managed_cli=false;static std::string daemon_binary;static bool network_cli=false;static bool distributed_cli=false;static bool transport_outage_cli=false;
 static bool beacon_reads=false;
 static bool wire_mode=false;
 static size_t beacon_read_checks=0;
@@ -189,13 +189,39 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
      Process a({cli_binary,"run",(directory/"genesis.json").string(),(directory/"left-db").string(),(directory/"left.json").string()},left_env);const auto ap=a.port();const auto address=a.event("listen").at("address");check(a.event("altair-ipc-ready").at("networkProtocolActive")==true,"left protocol inactive");right["bootnodes"]=Json::array({address});save(directory/"right.json",right);
      Process b({cli_binary,"run",(directory/"genesis.json").string(),(directory/"right-db").string(),(directory/"right.json").string()},right_env);const auto bp=b.port();check(b.event("altair-ipc-ready").at("networkProtocolActive")==true,"right protocol inactive");
      auto beacon=[](uint16_t port,const std::string& path){namespace http=boost::beast::http;asio::io_context io;boost::beast::tcp_stream stream(io);boost::beast::flat_buffer buffer;http::request<http::empty_body> request(http::verb::get,path,11);request.set(http::field::host,"127.0.0.1");request.set(http::field::accept,"application/json");http::response_parser<http::string_body> parser;parser.body_limit(1024*1024);boost::beast::error_code failure;stream.expires_after(std::chrono::seconds(5));stream.async_connect({asio::ip::make_address("127.0.0.1"),port},[&](auto error){if(error){failure=error;return;}http::async_write(stream,request,[&](auto error,size_t){if(error){failure=error;return;}http::async_read(stream,buffer,parser,[&](auto error,size_t){failure=error;});});});io.run();check(!failure,"Beacon HTTP transport failed");auto response=parser.release();check(response.result()==http::status::ok,"Beacon HTTP response failed");return Json::parse(response.body());};
-     bool complete=false;uint64_t previous=UINT64_MAX;unsigned stable=0;
-     try{const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(210);while(std::chrono::steady_clock::now()<deadline){a.pump(0);b.pump(0);check(a.running()&&b.running(),"distributed validator process exited");const auto fa=beacon(ap,"/eth/v1/beacon/states/head/finality_checkpoints").at("data").at("finalized"),fb=beacon(bp,"/eth/v1/beacon/states/head/finality_checkpoints").at("data").at("finalized");const auto ea=std::stoull(fa.at("epoch").get<std::string>()),eb=std::stoull(fb.at("epoch").get<std::string>());if(ea&&ea==eb)check(fa.at("root")==fb.at("root"),"conflicting finalized roots");
+     struct SuspendedTransport {
+      pid_t left=-1,right=-1;bool left_stopped=false,right_stopped=false;
+      void resume()noexcept{if(left_stopped){::kill(left,SIGCONT);left_stopped=false;}if(right_stopped){::kill(right,SIGCONT);right_stopped=false;}}
+      ~SuspendedTransport(){resume();}
+      void pause(){check(left>0&&right>0&&left!=right,"invalid child P2P identities");check(::kill(left,SIGSTOP)==0,"stop left transport");left_stopped=true;check(::kill(right,SIGSTOP)==0,"stop right transport");right_stopped=true;}
+     } transport;
+     transport.left=a.event("p2p-process").at("pid").get<pid_t>();transport.right=b.event("p2p-process").at("pid").get<pid_t>();
+     bool complete=false;uint64_t previous=UINT64_MAX,minimum_finalized=2;unsigned stable=0;
+     auto head=[&](uint16_t port){return beacon(port,"/eth/v1/beacon/headers/head").at("data");};
+     auto slot_of=[](const Json& value){return std::stoull(value.at("header").at("message").at("slot").get<std::string>());};
+
+     try{
+      if(transport_outage_cli){
+       // Suspend only the child daemons: validator duties, clocks and stores remain live.
+       // This qualifies a transport-process outage, not packet loss with running daemons.
+       until([&]{a.pump(0);b.pump(0);const auto ha=head(ap),hb=head(bp);return slot_of(ha)>=slots+2&&slot_of(hb)>=slots+2&&ha.at("root")==hb.at("root");},"distributed peers reached outage start",2*slots*t.seconds_per_slot);
+       transport.pause();const auto before_a=head(ap),before_b=head(bp);const auto cutoff=std::max(slot_of(before_a),slot_of(before_b))/slots;
+       std::cout<<Json{{"event","capella-transport-outage-start"},{"leftHead",before_a},{"rightHead",before_b},{"maximumFinalizedEpochDuringOutage",cutoff},{"durationSeconds",96}}.dump()<<std::endl;
+       const auto end=std::chrono::steady_clock::now()+std::chrono::seconds(96);
+       while(std::chrono::steady_clock::now()<end){a.pump(0);b.pump(0);check(a.running()&&b.running(),"validator exited during transport outage");
+        for(auto port:{ap,bp}){const auto cp=beacon(port,"/eth/v1/beacon/states/head/finality_checkpoints").at("data").at("finalized");check(std::stoull(cp.at("epoch").get<std::string>())<=cutoff,"isolated half-stake advanced finality beyond cutoff");}
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+       }
+       const auto after_a=head(ap),after_b=head(bp);check(slot_of(after_a)>slot_of(before_a)&&slot_of(after_b)>slot_of(before_b),"isolated validators did not continue proposing");check(after_a.at("root")!=after_b.at("root"),"outage did not produce distinct branches");
+       minimum_finalized=std::max(slot_of(after_a),slot_of(after_b))/slots;transport.resume();
+       std::cout<<Json{{"event","capella-transport-resumed"},{"leftHead",after_a},{"rightHead",after_b},{"minimumRecoveredFinalizedEpoch",minimum_finalized}}.dump()<<std::endl;
+      }
+      const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(transport_outage_cli?240:210);while(std::chrono::steady_clock::now()<deadline){a.pump(0);b.pump(0);check(a.running()&&b.running(),"distributed validator process exited");const auto fa=beacon(ap,"/eth/v1/beacon/states/head/finality_checkpoints").at("data").at("finalized"),fb=beacon(bp,"/eth/v1/beacon/states/head/finality_checkpoints").at("data").at("finalized");const auto ea=std::stoull(fa.at("epoch").get<std::string>()),eb=std::stoull(fb.at("epoch").get<std::string>());if(ea&&ea==eb)check(fa.at("root")==fb.at("root"),"conflicting finalized roots");
       if(std::min(ea,eb)!=previous){previous=std::min(ea,eb);std::cout<<Json{{"event","distributed-finality-observation"},{"left",fa},{"right",fb}}.dump()<<std::endl;}
-      if(ea>=2&&fa==fb){const auto ha=beacon(ap,"/eth/v1/beacon/headers/finalized"),hb=beacon(bp,"/eth/v1/beacon/headers/finalized");if(ha.at("finalized")==true&&hb.at("finalized")==true&&ha.at("data").at("root")==fa.at("root")&&hb.at("data").at("root")==fa.at("root")){if(++stable>=3){complete=true;break;}}else stable=0;}else stable=0;
-      std::this_thread::sleep_for(std::chrono::seconds(1));}check(complete,"distributed Capella finality did not reach common epoch 2");
-     }catch(...){const auto ar=a.stop(),br=b.stop();std::cerr<<ar.out<<ar.err<<br.out<<br.err;throw;}
-     const auto ar=a.stop(),br=b.stop();check(ar.code==0&&br.code==0,"distributed nodes did not stop cleanly");std::cout<<ar.out<<br.out<<Json{{"scenario","capella-distributed-finality"},{"validatorsPerNode",32},{"nodes",2},{"minimumFinalizedEpoch",2},{"stableObservations",stable},{"realLibp2p",true}}.dump()<<std::endl;return;
+      if(ea>=minimum_finalized&&fa==fb){const auto ha=beacon(ap,"/eth/v1/beacon/headers/finalized"),hb=beacon(bp,"/eth/v1/beacon/headers/finalized");if(ha.at("finalized")==true&&hb.at("finalized")==true&&ha.at("data").at("root")==fa.at("root")&&hb.at("data").at("root")==fa.at("root")){if(++stable>=3){complete=true;break;}}else stable=0;}else stable=0;
+      std::this_thread::sleep_for(std::chrono::seconds(1));}check(complete,"distributed Capella finality did not reach required common epoch");
+     }catch(...){transport.resume();const auto ar=a.stop(),br=b.stop();std::cerr<<ar.out<<ar.err<<br.out<<br.err;throw;}
+     const auto ar=a.stop(),br=b.stop();check(ar.code==0&&br.code==0,"distributed nodes did not stop cleanly");std::cout<<ar.out<<br.out<<Json{{"scenario",transport_outage_cli?"capella-transport-outage-recovery":"capella-distributed-finality"},{"validatorsPerNode",32},{"nodes",2},{"minimumFinalizedEpoch",minimum_finalized},{"stableObservations",stable},{"realLibp2p",true}}.dump()<<std::endl;return;
     }
     const auto source_config=directory/"source.json";save(source_config,node);Process source_node({cli_binary,"run",(directory/"genesis.json").string(),(directory/"source-db").string(),source_config.string()},env);const auto source_port=source_node.port();const auto source_address=source_node.event("listen").at("address").get<std::string>();check(source_node.event("altair-ipc-ready").at("networkProtocolActive")==true,"source network inactive");
     until([&]{source_node.pump(0);return quantity(rpc(source_port,"eth_blockNumber"))>=2;},"source produced before follower",40);
@@ -805,6 +831,7 @@ int main(int argc,char** argv){try{executable=argv[0];
   std::cout<<Json{{"event","capella-managed-child-ready"},{"executionBound",true},{"secretsExcluded",true}}.dump()<<std::endl;
   if(std::getenv("NANO_TEST_MANAGED_CHILD_EXIT"))return 7;for(;;)pause();
  }
+ if(argc==4&&std::string(argv[1])=="--transport-outage-cli"){transport_outage_cli=true;distributed_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--distributed-cli"){distributed_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--network-cli"){network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--daemon-cli"){managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}

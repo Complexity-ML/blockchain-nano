@@ -1,5 +1,7 @@
 # EIP et consensus : périmètre demandé pour Nano
 
+Qualification complémentaire : [panne P2P avec validateurs Capella actifs](qualification/capella-transport-outage-20260927/README.md). Après 96 secondes de suspension des seuls daemons, deux branches distinctes convergent vers une finalité commune d’époque 4. Test local passé ; partition de paquets avec daemons actifs et qualification de production toujours ouvertes.
+
 ### Correction du transport privé — 27 septembre 2026
 
 Le client RPC réutilise désormais ses connexions HTTP sans rejouer les requêtes ambiguës. **Deux runs locaux avec 32 validateurs par nœud atteignent une finalité commune d’époque 2**, dont une confirmation sur binaire propre. 17 tests réseau passent, six scénarios HTTP sont qualifiés et la reprise avec accusé perdu passe. [Preuves et limites](qualification/capella-core-keepalive-20260927/README.md). Les contre-exemples ci-dessous sont historiques ; les partitions, le WAN et la qualification de production restent ouverts.
