@@ -117,6 +117,16 @@ void CapellaDurableReactor::require_available()const{if(unavailable_||!state_||!
 void CapellaDurableReactor::publish(CapellaForkStore candidate,const std::function<void()>& check,const std::vector<CheckpointArchiveEntry>& archive,std::optional<CapellaSignedVotes> votes,std::optional<CapellaSignedVotes> slashings,std::optional<CapellaPendingBlsChanges> changes){
  if(unavailable_)throw std::runtime_error("Capella reactor unavailable; reopen required");
  if(chain_!=rules_.transition.chain_id||genesis_.size()!=32)throw std::invalid_argument("Capella reactor chain/profile mismatch");
+ // Only finalized sanctions retire evidence. An unfinalized inclusion can reorg.
+ if(!slashings)slashings=slashings_;
+ if(!slashings->empty()&&state_&&state_->timed.view.finalized.root!=candidate.timed.view.finalized.root){
+  const auto& finalized=candidate.blocks.at(candidate.timed.view.finalized.root);const auto& t=rules_.transition;
+  const auto context=capella_fork_block_context(finalized.state,finalized.header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state,check);
+  for(auto it=slashings->begin();it!=slashings->end();){if(check)check();const auto proof=decode_consensus_attester_slashing_ssz(it->second,t.consensus.body.validators_per_committee,check);if(!proof)throw std::logic_error("invalid retained Capella slashing");bool needed=false;
+   for(auto index:proof->first.indices){if(check)check();if(!std::binary_search(proof->second.indices.begin(),proof->second.indices.end(),index))continue;const auto member=context.registry.validators.find(index);if(member==context.registry.validators.end()||!member->second.slashed){needed=true;break;}}
+   if(needed)++it;else it=slashings->erase(it);
+  }
+ }
  if(!changes)changes=bls_changes_;
  if(!changes->empty()){
   const auto& finalized=candidate.blocks.at(candidate.timed.view.finalized.root);const auto& t=rules_.transition;

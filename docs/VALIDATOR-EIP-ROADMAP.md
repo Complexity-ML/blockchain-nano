@@ -3377,3 +3377,16 @@ archivée tant que son inclusion n’est pas finalisée. Aucun correctif moteur 
 **Partiel** : preuve livrée localement avec clés synthétiques ; pas de qualification
 de partition, réorganisation de l’inclusion ou retrait final de l’archive.
 [Scénario et preuves](qualification/capella-pruning-slashing-20260927/README.md).
+
+### 2026-09-27 — Retrait des preuves de slashing après finalisation
+
+Publication corrigée : une preuve est retirée seulement si tous les validateurs
+qu’elle incrimine sont marqués slashed dans l’état finalisé. Une inclusion sur
+la tête non finalisée ne suffit pas ; les indices équivoques restent conservés.
+Nouveau test passé en 69,18 s : 72 blocs, 519 votes, finalité époque 7, six élagages,
+conservation avant finalité puis retrait, resoumission sans recréer l’archive et
+réouverture des deux owners. Régression de preuve non finalisée également verte.
+**Partiel** : un seul validateur fautif testé ; preuves multi-validateur, sanctions
+partiellement finalisées, réorganisation et panne au retrait restent à qualifier.
+Aucun proposer refusé observé dans ce run ; pas de qualification de ce cas.
+[Implémentation et preuves](qualification/capella-slashing-retirement-20260927/README.md).

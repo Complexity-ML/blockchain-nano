@@ -1,0 +1,54 @@
+UpdateCTestConfiguration  from :/Users/boris/Dev/blockchain-nano/build-release/DartConfiguration.tcl
+Test project /Users/boris/Dev/blockchain-nano/build-release
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 380
+    Start 380: consensus_capella_pruning_slashing
+
+380: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests "--pruning-slashing"
+380: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+380: Test timeout computed to be: 180
+380: {"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+380: {"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+380: {"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+380: {"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+380: {"finalizedEpoch":3,"progressSlot":40,"signedVotes":264}
+380: {"finalizedEpoch":3,"progressSlot":41,"signedVotes":272}
+380: {"afterBlocks":18,"afterSnapshotBytes":1191784,"automaticPruning":false,"beforeBlocks":41,"beforeSnapshotBytes":2528213,"durablePruningRestart":true,"historyPreserved":true,"nativeCheckpointV3":true,"networkAnchorPreserved":true,"nextBlockEqual":true,"oldSlashingPreservedAndApplied":true,"pendingBlsReanchoredAndIncluded":false,"scenario":"capella-pruning-primitive"}
+380: {"blocks":40,"executionOwner":true,"finalizedEpoch":3,"independentStores":2,"justifiedEpoch":4,"networkActivated":false,"networkTransport":false,"participationPercent":100,"scenario":"capella-local-assembly-finality","signingJournalsReopened":64,"storeReopens":2,"votes":272}
+1/2 Test #380: consensus_capella_pruning_slashing ......   Passed   41.83 sec
+test 381
+    Start 381: consensus_capella_slashing_retirement
+
+381: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests "--slashing-retirement"
+381: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+381: Test timeout computed to be: 300
+381: {"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+381: {"finalizedEpoch":0,"progressSlot":16,"signedVotes":71}
+381: {"finalizedEpoch":0,"progressSlot":24,"signedVotes":133}
+381: {"finalizedEpoch":2,"progressSlot":32,"signedVotes":197}
+381: {"finalizedEpoch":3,"progressSlot":40,"signedVotes":259}
+381: {"finalizedEpoch":4,"progressSlot":48,"signedVotes":322}
+381: {"finalizedEpoch":5,"progressSlot":56,"signedVotes":385}
+381: {"finalizedEpoch":6,"progressSlot":64,"signedVotes":448}
+381: {"finalizedEpoch":7,"progressSlot":72,"signedVotes":511}
+381: {"finalizedEpoch":7,"progressSlot":73,"signedVotes":519}
+381: {"anchorMoves":6,"depositAncestorPins":55,"finalRetainedRecords":18,"finalizedEpoch":7,"maximumRetainedRecords":31,"nativeProfile":true,"reopenedBothOwners":true,"scenario":"capella-automatic-pruning"}
+381: {"finalizedEpoch":7,"reopenedWithoutProof":true,"replayDidNotRegrowArchive":true,"retainedUntilFinalized":true,"retiredAfterFinality":true,"scenario":"capella-slashing-retirement","skippedSlashedProposers":0}
+381: {"blocks":72,"executionOwner":true,"finalizedEpoch":7,"independentStores":2,"justifiedEpoch":8,"networkActivated":false,"networkTransport":false,"participationPercent":100,"scenario":"capella-local-assembly-finality","signingJournalsReopened":63,"storeReopens":2,"votes":519}
+2/2 Test #381: consensus_capella_slashing_retirement ...   Passed   69.18 sec
+
+The following tests passed:
+	consensus_capella_pruning_slashing
+	consensus_capella_slashing_retirement
+
+100% tests passed out of 2
+
+Label Time Summary:
+qualification_consensus_recovery    = 111.00 sec*proc (2 tests)
+
+Total Test time (real) = 111.01 sec
