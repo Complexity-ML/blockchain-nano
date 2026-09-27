@@ -152,6 +152,7 @@ bool Blockchain::restore(const Int& number,const Bytes& expected_hash){
  audited_certified_tip_.reset();store_.rewind(number);state_=std::move(*state);tip_=std::move(*block);pos_=std::move(registry);pool_.clear();events_.clear();emit("reset",nullptr);return true;
 }
 Block Blockchain::tip()const{std::lock_guard lock(mutex_);require_execution_ready_locked();return tip_;}
+Header Blockchain::tip_header()const{std::lock_guard lock(mutex_);require_execution_ready_locked();return tip_.header;}
 State Blockchain::state()const{std::lock_guard lock(mutex_);require_execution_ready_locked();return state_;}
 bool Blockchain::submit(const SignedTransaction& tx){
  std::lock_guard lock(mutex_);require_execution_ready_locked();

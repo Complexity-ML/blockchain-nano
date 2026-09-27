@@ -1,0 +1,52 @@
+{
+  "base_commit": "53ebba941df2f2e64c33ede4616270c9618aebf4",
+  "scope": "Base commit plus source hashes below; local macOS build, not VPS qualification",
+  "source_sha256": {
+    "CMakeLists.txt": "12e5a248b56e660184d14270bb403855b00377ba0de131f5fe82250642571243",
+    "include/nano/chain.hpp": "25c5483b0416a08233f7fc47a072fbabdf69f4e0b153422f031deab2cccc8d3f",
+    "include/nano/rpc.hpp": "8c197feff6832566db0d244c592e609c9edf4334f59dcaffe8d1aff11f9b1fcf",
+    "src/chain.cpp": "565d9b60fe68828446b6e0de0391db928722a450c6af798c380ff70f663837ef",
+    "src/rpc.cpp": "ac969a95de2e10bca9f605502eae12aac729a6040a409c49d7b5d7ddaa9bdce9",
+    "src/rpc_accounts.cpp": "dcdb57f9f5bbeb2e103b499496c4fe1bd48acfd39774d6eecc359bf19d9bddd1",
+    "src/rpc_fees.cpp": "76928b22d6e4a9e059a3b5548d1275e5b1f1ce73f54a8295f433fe0279d9e2c7",
+    "tests/test_rpc_fee_policy.cpp": "4b8f4a6a84daa2201891ed02987b6854583e3a80b1497324d32ed3bad32b08b0",
+    "docs/RPC-FEE-POLICY.md": "24d2ec8d68875682207e892c3eb7c23e2fe27dd8b039548e0a4ec1e14ff04c90"
+  },
+  "binary_sha256": {
+    "nano": "3d176d2b73a90cca723318f39da5326180d07833b4feb89d021cd04be13602dc",
+    "nano-rpc-fee-policy-tests": "9cf46af6c3a127b5728bca831e93b02ea1d966075670833e07de6bed2bface45",
+    "nano-rpc-tests": "4d8744dcf57f1f8a2c74824d928614a7b56f640f50e7666ff52d47bd9f18035d",
+    "nano-wallet-cli-tests": "47867d0ef9141ab0368b6a1498ed8ca29133b4ddd7abe119268f1b8270d1f2e4",
+    "nano-rpc-cli-tests": "cd8e25d0204213bf59b895ee7e3377eeeb2d563c40559e7bd71018937aad6606"
+  },
+  "commands": [
+    "cmake --build build-release --target nano-rpc-fee-policy-tests nano-rpc-tests nano-wallet-cli-tests nano-rpc-cli-tests nano -j 2",
+    "ctest --test-dir build-release -R '^(rpc_fee_policy|rpc|rpc_cli|wallet_cli)$' -j 1 --output-on-failure --output-junit /private/tmp/nano-rpc-fee-final-checks.xml"
+  ],
+  "results": [
+    {
+      "name": "rpc",
+      "classname": "rpc",
+      "time": "5.1418",
+      "status": "run"
+    },
+    {
+      "name": "rpc_fee_policy",
+      "classname": "rpc_fee_policy",
+      "time": "0.486095",
+      "status": "run"
+    },
+    {
+      "name": "wallet_cli",
+      "classname": "wallet_cli",
+      "time": "1.7735",
+      "status": "run"
+    },
+    {
+      "name": "rpc_cli",
+      "classname": "rpc_cli",
+      "time": "1.24095",
+      "status": "run"
+    }
+  ]
+}

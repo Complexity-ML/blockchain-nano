@@ -20,6 +20,13 @@ struct RpcSimulationLimits {
  std::function<std::chrono::steady_clock::time_point()> now=std::chrono::steady_clock::now;
 };
 struct RpcStream { std::string id,type;Json criteria;uint64_t cursor; };
+struct RpcFeePolicy {
+ size_t history_blocks=20,samples_per_block=3;
+ unsigned percentile=60;
+ Int fallback_tip=0;
+ std::optional<Int> maximum_tip;
+ static RpcFeePolicy from_json(const Json& config);
+};
 class Rpc {
  Blockchain& chain_;
  std::shared_ptr<::AltairRpcService> altair_;
@@ -54,6 +61,10 @@ class Rpc {
  Json network_status() const;
  Json network_block(const Block& block,bool full=true) const;
  Json fee_history(const Json& params) const;
+ RpcFeePolicy fee_policy_;
+ std::optional<Bytes> fee_head_;
+ Int fee_tip_=0;
+ Int suggested_tip(const Header& head);
  std::recursive_mutex mutex_;
  uint64_t next_filter_=0;
  std::map<std::string,RpcStream> filters_;

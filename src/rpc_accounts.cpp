@@ -3,6 +3,7 @@
 namespace nano {
 void Rpc::load_wallets(const Json& config,const std::string& bind){
  std::lock_guard lock(mutex_);auto entries=config.value("wallets",Json::array());
+ auto fees=RpcFeePolicy::from_json(config.value("fee_policy",Json::object()));
  if(!entries.is_array()||entries.size()>100)throw std::invalid_argument("wallets must be an array of at most 100 accounts");
  bool dev=config.value("dev_mode",false);
  if((dev||!entries.empty())&&bind!="127.0.0.1"&&bind!="::1"&&bind!="localhost")throw std::invalid_argument("development and unlocked wallet RPC require a loopback bind address");
@@ -21,6 +22,7 @@ void Rpc::load_wallets(const Json& config,const std::string& bind){
   bft=std::make_unique<BftReactor>(chain_,b.at("journal").get<std::string>(),unhex(key));
  }
  bft_=std::move(bft);
+ fee_policy_=std::move(fees);fee_head_.reset();
  validating_=false;validator_error_.clear();block_time_=interval;
  wallets_=std::move(candidate);dev_mode_=dev;coinbase_=coinbase;if(!dev_mode_){snapshots_.clear();time_offset_=0;next_timestamp_.reset();}
 }
@@ -46,8 +48,12 @@ Json Rpc::account_request(const std::string& method,const Json& params,const Est
  if(type>2)throw RpcError(-32602,"Unsupported transaction type");data["type"]=quantity(Int(std::to_string(type)));
  if(type==2){
   if(data.contains("gasPrice"))throw RpcError(-32602,"Type 2 cannot specify gasPrice");
-  if(!data.contains("maxPriorityFeePerGas"))data["maxPriorityFeePerGas"]="0x3b9aca00";
-  if(!data.contains("maxFeePerGas"))data["maxFeePerGas"]=quantity(Int(chain_.tip().header.base_fee.value_or(Int(0))*2+quantity(data["maxPriorityFeePerGas"])));
+  if(!data.contains("maxPriorityFeePerGas")){
+   Int tip=suggested_tip(chain_.tip_header());
+   if(data.contains("maxFeePerGas"))tip=std::min(tip,quantity(data["maxFeePerGas"]));
+   data["maxPriorityFeePerGas"]=quantity(tip);
+  }
+  if(!data.contains("maxFeePerGas"))data["maxFeePerGas"]=quantity(std::min(Int((Int(1)<<256)-1),Int(chain_.tip_header().base_fee.value_or(Int(0))*2+quantity(data["maxPriorityFeePerGas"]))));
   if(quantity(data["maxPriorityFeePerGas"])>quantity(data["maxFeePerGas"]))throw RpcError(-32602,"Priority fee exceeds fee cap");
  }else{
   if(data.contains("maxFeePerGas")||data.contains("maxPriorityFeePerGas"))throw RpcError(-32602,"Dynamic fees require type 2");

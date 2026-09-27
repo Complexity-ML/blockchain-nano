@@ -74,6 +74,7 @@ public:
  Json block_reference_page(uint64_t cursor,const std::string& epoch) const;
  bool restore(const Int& number,const Bytes& expected_hash);
  Block tip() const;
+ Header tip_header() const;
  std::optional<Block> finalized_block() const;
  Json audit() const;
  void recover_voting_progress(ChainStore& journal,const std::string& signer) const;

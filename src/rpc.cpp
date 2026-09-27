@@ -154,7 +154,10 @@ Json Rpc::dispatch(const std::string& method,const Json& p,const Estimate& estim
  if(method=="eth_feeHistory"){arity(p,2,3);return fee_history(p);}
  if(method=="eth_accounts"){arity(p,0,0);return wallets_.addresses();}
  if(method=="eth_coinbase"){arity(p,0,0);return coinbase_;}
- if(method=="eth_gasPrice"||method=="eth_maxPriorityFeePerGas"){arity(p,0,0);return quantity(method=="eth_gasPrice"?Int(chain_.tip().header.base_fee.value_or(Int(0))+1000000000):Int(1000000000));}
+ if(method=="eth_gasPrice"||method=="eth_maxPriorityFeePerGas"){
+  arity(p,0,0);const auto head=chain_.tip_header();const auto tip=suggested_tip(head);
+  return quantity(method=="eth_gasPrice"?std::min(Int((Int(1)<<256)-1),Int(head.base_fee.value_or(Int(0))+tip)):tip);
+ }
  if(method=="eth_getBalance"||method=="eth_getCode"||method=="eth_getTransactionCount"||method=="eth_getStorageAt"){
   bool storage=method=="eth_getStorageAt";arity(p,storage?2:1,storage?3:2);auto addr=address(p[0].get<std::string>());Json tag=p.size()>(storage?2:1)?p[storage?2:1]:Json("latest");
   if(method=="eth_getTransactionCount"&&tag=="pending")return quantity(chain_.pending_nonce(addr));

@@ -3909,3 +3909,15 @@ en 144,552 s. Avec la partition simple et Assertoor déjà rejoués, les trois
 reste 185/188 ; ne pas présenter l’ensemble comme un unique run 188/188. Aucun
 code de consensus ni seuil assoupli, aucune nouvelle clôture EIP/production.
 [Campagne et rejeux séparés](qualification/consensus-regression-20260927/README.md).
+
+## 2026-09-27 — Recommandation des frais RPC historique
+
+Le pourboire constant de 1 gwei est remplacé par une politique configurable :
+échantillons de frais effectifs récents, exclusion du producteur et cache par
+hash de tête. Le portefeuille partage cette recommandation ; les frais explicites
+restent inchangés et les valeurs implicites sont bornées à uint256. Quatre tests
+passent (8,65 s), dont le nouveau `rpc_fee_policy` ; les trois autres couvrent
+les parcours RPC/CLI existants. Aucun changement de formule consensus EIP-1559.
+Coût à froid, saturation et concurrence pendant une réorganisation restent à
+qualifier ; aucun statut global de production clôturé.
+[Politique](RPC-FEE-POLICY.md) et [preuves](qualification/rpc-fee-policy-20260927/README.md).

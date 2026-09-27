@@ -55,8 +55,8 @@ reste à compléter. Le genesis réseau autorise actuellement Paris/Shanghai.
 | [155](https://eips.ethereum.org/EIPS/eip-155) | Implémenté | Transactions et signatures | src/transaction.cpp ; tests/fixtures/ethereum-official.json | Conserver les régressions du profil activé et relier les cas exacts à chaque EIP | Socle |
 | [2718](https://eips.ethereum.org/EIPS/eip-2718) | Implémenté | Transactions et signatures | src/transaction.cpp ; tests/fixtures/ethereum-official.json | Conserver les régressions du profil activé et relier les cas exacts à chaque EIP | Socle |
 | [2930](https://eips.ethereum.org/EIPS/eip-2930) | Implémenté | Transactions et signatures | src/transaction.cpp ; tests/fixtures/ethereum-official.json | Conserver les régressions du profil activé et relier les cas exacts à chaque EIP | Socle |
-| [1559](https://eips.ethereum.org/EIPS/eip-1559) | Implémenté | Base fee et exécution | src/block.cpp ; src/engine.cpp ; src/evm.cpp | Recommandation RPC du pourboire encore fixe ; distinguer cet écart de la formule consensus | Socle |
-| [3198](https://eips.ethereum.org/EIPS/eip-3198) | Implémenté | Base fee et exécution | src/block.cpp ; src/engine.cpp ; src/evm.cpp | Recommandation RPC du pourboire encore fixe ; distinguer cet écart de la formule consensus | Socle |
+| [1559](https://eips.ethereum.org/EIPS/eip-1559) | Implémenté | Base fee et exécution | src/block.cpp ; src/engine.cpp ; src/evm.cpp | Recommandation RPC historique configurable et partagée avec le portefeuille ; qualifier coût à froid et saturation ; voir docs/RPC-FEE-POLICY.md | Socle |
+| [3198](https://eips.ethereum.org/EIPS/eip-3198) | Implémenté | Base fee et exécution | src/block.cpp ; src/engine.cpp ; src/evm.cpp | Recommandation RPC historique configurable et partagée avec le portefeuille ; qualifier coût à froid et saturation ; voir docs/RPC-FEE-POLICY.md | Socle |
 | [140](https://eips.ethereum.org/EIPS/eip-140) | Implémenté | Moteur EVM et règles d’état | src/evm.cpp ; src/engine.cpp ; tests/fixtures/ethereum-official.json | Maintenir la qualification et détailler les preuves par EIP ; pas une validation du réseau complet | Socle |
 | [150](https://eips.ethereum.org/EIPS/eip-150) | Implémenté | Moteur EVM et règles d’état | src/evm.cpp ; src/engine.cpp ; tests/fixtures/ethereum-official.json | Maintenir la qualification et détailler les preuves par EIP ; pas une validation du réseau complet | Socle |
 | [161](https://eips.ethereum.org/EIPS/eip-161) | Implémenté | Moteur EVM et règles d’état | src/evm.cpp ; src/engine.cpp ; tests/fixtures/ethereum-official.json | Maintenir la qualification et détailler les preuves par EIP ; pas une validation du réseau complet | Socle |
@@ -3346,3 +3346,15 @@ en 144,552 s. Avec la partition simple et Assertoor déjà rejoués, les trois
 reste 185/188 ; ne pas présenter l’ensemble comme un unique run 188/188. Aucun
 code de consensus ni seuil assoupli, aucune nouvelle clôture EIP/production.
 [Campagne et rejeux séparés](qualification/consensus-regression-20260927/README.md).
+
+## 2026-09-27 — Recommandation des frais RPC historique
+
+Le pourboire constant de 1 gwei est remplacé par une politique configurable :
+échantillons de frais effectifs récents, exclusion du producteur et cache par
+hash de tête. Le portefeuille partage cette recommandation ; les frais explicites
+restent inchangés et les valeurs implicites sont bornées à uint256. Quatre tests
+passent (8,65 s), dont le nouveau `rpc_fee_policy` ; les trois autres couvrent
+les parcours RPC/CLI existants. Aucun changement de formule consensus EIP-1559.
+Coût à froid, saturation et concurrence pendant une réorganisation restent à
+qualifier ; aucun statut global de production clôturé.
+[Politique](RPC-FEE-POLICY.md) et [preuves](qualification/rpc-fee-policy-20260927/README.md).
