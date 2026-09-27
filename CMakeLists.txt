@@ -1548,3 +1548,7 @@ set_tests_properties(consensus_capella_multiepoch_finality PROPERTIES TIMEOUT 18
 
 add_test(NAME consensus_capella_insufficient_finality COMMAND nano-capella-transition-tests --finality-half)
 set_tests_properties(consensus_capella_insufficient_finality PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_ethereum")
+
+add_test(NAME consensus_capella_local_assembly_finality COMMAND nano-capella-transition-tests --local-finality)
+add_test(NAME consensus_capella_local_assembly_insufficient COMMAND nano-capella-transition-tests --local-finality-half)
+set_tests_properties(consensus_capella_local_assembly_finality consensus_capella_local_assembly_insufficient PROPERTIES TIMEOUT 360 LABELS "qualification_consensus_ethereum")

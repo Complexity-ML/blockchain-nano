@@ -2777,5 +2777,16 @@ et votes archivés. Vingt-neuf corps assemblés puis admis sur cinq scénarios,
 reprise des cinq blocs supplémentaires et trois fautifs marqués slashed.
 Sept suites réussies, dont les contrôles de retraits directement affectés.
 [Preuves](qualification/capella-local-body-20260927/README.md).
+La finalité produite entièrement par l'assembleur est qualifiée ci-dessous.
 Restent mempool propriétaire, sorties/changements BLS, contributions sync,
-finalité entièrement produite par l'assembleur, ordonnanceur et réseau.
+ordonnanceur et réseau.
+
+### Capella : finalité issue de la boucle locale complète
+
+Deux Stores durables indépendants et production entièrement locale : 40 blocs,
+272 votes, epoch 3 finalisée. Contrôle avec moitié des identités participantes :
+40 blocs, 133 votes, aucune finalité. Stores et journaux réouverts au slot 24,
+production poursuivie jusqu'au slot 41 sans divergence.
+[Preuves et périmètre](qualification/capella-assembled-finality-20260927/README.md).
+Il s'agit de deux coordinateurs dans un processus, sans transport P2P : aucune
+qualification distribuée ni activation publique n'est déduite de ces résultats.
