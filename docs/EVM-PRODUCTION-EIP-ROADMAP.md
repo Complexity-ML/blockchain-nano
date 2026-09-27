@@ -179,3 +179,14 @@ son contexte d'admission, saturation et crash pendant admission restent à
 qualifier. Le test est local, sans transport ni activation publique ; il ne
 clôture pas EIP-4895 ou l'objectif production.
 [Code et preuves](qualification/capella-queued-bls-changes-20260927/README.md).
+
+### 2026-09-27 — Admission BLS Capella par message et RPC privé
+
+Message `bls_to_execution_change` de 172 octets, activé uniquement sous Capella,
+acheminé par la file bornée vers la validation cryptographique et le checkpoint.
+Tests : admission native et régression wire (2/2), dispatcher IPC (9 scénarios),
+RPC HTTP local réel avec refus du mauvais jeton et admission durable autorisée
+(17,17 s). Le daemon compile avec le nouveau type. **Partiel** : export/catalogue
+et relais automatique restent à implémenter ; trajet libp2p réel, réorganisations
+et pannes de cette file restent à qualifier. Aucun déploiement public.
+[Preuves et portée exacte](qualification/capella-bls-admission-20260927/README.md).

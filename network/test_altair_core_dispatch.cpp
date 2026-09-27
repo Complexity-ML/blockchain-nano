@@ -50,5 +50,14 @@ int main(){try{
   io.poll();check(calls==1&&done==0,"concurrent ticket admission");client->stop();held(Json{{"state","retired"}});io.restart();io.run();
   check(done==2&&calls==1&&client->pending()==0&&results==std::vector<D>(2,D::local_failure),"queued shutdown leaked work");++cases;
  }
+ {
+  asio::io_context io;auto capella=profile;capella.consensus_identity="0x"+std::string(64,'1');capella.bls_changes=true;
+  InboundBudget budget;AltairMessageIngress decoder(capella,budget);unsigned submitted=0,done=0;
+  auto call=[&](const std::string& method,Json args,Reply reply){if(method=="nano_altairSubmit"){const auto decoded=decoder.decode_compact(args.at(3));check(decoded&&decoded->kind==AltairWireKind::bls_to_execution_change&&decoded->ssz==std::vector<uint8_t>(172,7),"BLS dispatch changed payload");++submitted;reply(Json{{"state","completed"},{"sequence","0x1"},{"decision","accepted"}});}else if(method=="nano_altairForget")reply(Json{{"state","completed"},{"sequence","0x1"},{"decision","accepted"}});else throw std::runtime_error("unexpected BLS dispatch method");};
+  auto client=std::make_shared<AltairCoreDispatch>(io,call,capella,"token","session",0,2,3,std::chrono::milliseconds(1));auto cancel=std::make_shared<std::atomic<bool>>(false);auto finish=[&](D d){check(d==D::accepted,"BLS dispatch rejected");++done;};
+  check(!client->enqueue({AltairWireKind::bls_to_execution_change,std::vector<uint8_t>(171)},cancel,finish),"short BLS dispatch accepted");
+  check(client->enqueue({AltairWireKind::bls_to_execution_change,std::vector<uint8_t>(172,7)},cancel,finish),"BLS dispatch refused");io.run();check(submitted==1&&done==1,"BLS dispatch incomplete");
+  auto legacy=capella;legacy.bls_changes=false;auto other=std::make_shared<AltairCoreDispatch>(io,call,legacy,"token","session",0,2,3,std::chrono::milliseconds(1));check(!other->enqueue({AltairWireKind::bls_to_execution_change,std::vector<uint8_t>(172)},cancel,finish),"legacy profile admitted BLS change");++cases;
+ }
  std::cout<<Json{{"scenario","altair-core-ticket-dispatch"},{"cases",cases},{"realCoreConnection",false},{"unknownWorkRetainsCapacity",true}}.dump()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

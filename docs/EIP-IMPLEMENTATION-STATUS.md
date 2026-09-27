@@ -66,7 +66,7 @@ reste à compléter. Le genesis réseau autorise actuellement Paris/Shanghai.
 | [6780](https://eips.ethereum.org/EIPS/eip-6780) | Partiel pour la production | Moteur Cancun présent ; pas de genesis réseau Cancun | src/evm.cpp ; src/chain.cpp ; docs/EVM-CONFORMANCE.md | Activation réseau cohérente du fork, admission, régressions et reprise | Avant activation Cancun |
 | [7702](https://eips.ethereum.org/EIPS/eip-7702) | Partiel pour la production | Autorisations et exécution Prague ; non activé sur réseau | src/authorization.cpp ; src/transaction.cpp ; src/engine.cpp | Mempool/P2P, admission type 4 et activation réseau Prague | Avant activation Prague |
 | [4844](https://eips.ethereum.org/EIPS/eip-4844) | Partiel | Blobs/KZG dans le moteur et les runners | src/kzg.cpp ; src/engine.cpp ; tests/test_blobs.cpp | Admission réseau type 3, sidecars, disponibilité, rétention et récupération | Avant service blobs |
-| [4895](https://eips.ethereum.org/EIPS/eip-4895) | Partiel | Retraits EVM/Capella, publication atomique et réseau local qualifiés dans des scénarios bornés ; file durable de changements BLS et sélection locale raccordée au constructeur de propositions | src/engine.cpp ; src/consensus_capella_withdrawals.cpp ; src/consensus_capella_bls_change.cpp ; src/consensus_capella_local_body.cpp ; tests/test_capella_transition.cpp | Admission RPC/P2P et relais des changements BLS ; qualification des réorganisations de la file, migration réseau et qualification complète du profil avant activation publique | Consensus cible |
+| [4895](https://eips.ethereum.org/EIPS/eip-4895) | Partiel | Retraits EVM/Capella, publication atomique et réseau local qualifiés dans des scénarios bornés ; file durable de changements BLS et sélection locale raccordée au constructeur de propositions | src/engine.cpp ; src/consensus_capella_withdrawals.cpp ; src/consensus_capella_bls_change.cpp ; src/consensus_capella_local_body.cpp ; tests/test_capella_transition.cpp | Export/catalogue et relais des changements BLS, qualification libp2p ; réorganisations de la file, migration réseau et qualification complète du profil avant activation publique | Consensus cible |
 | [4788](https://eips.ethereum.org/EIPS/eip-4788) | Partiel | Appel système côté exécution | src/engine.cpp ; tests/test_beacon.cpp | Provisionnement versionné du contrat (code, nonce, adresse) au genesis si fork actif dès le départ, sinon à la transition ; fourniture authentifiée des racines par le nouveau consensus | Consensus cible |
 | [6110](https://eips.ethereum.org/EIPS/eip-6110) | Partiel | Requêtes côté exécution ; cycle consensus non terminé | src/requests.cpp ; src/engine.cpp ; tests/test_requests.cpp | Registre BLS, dépôts, sorties, consolidations et application des requêtes dans le consensus | Consensus cible |
 | [7685](https://eips.ethereum.org/EIPS/eip-7685) | Partiel | Requêtes côté exécution ; cycle consensus non terminé | src/requests.cpp ; src/engine.cpp ; tests/test_requests.cpp | Qualifier encodage, ordre par type, omission des requêtes vides et requests_hash ; rejeter les engagements altérés ; appliquer dépôts/sorties/consolidations au consensus et vérifier reprise/rejeu | Consensus cible |
@@ -2634,3 +2634,14 @@ son contexte d'admission, saturation et crash pendant admission restent à
 qualifier. Le test est local, sans transport ni activation publique ; il ne
 clôture pas EIP-4895 ou l'objectif production.
 [Code et preuves](qualification/capella-queued-bls-changes-20260927/README.md).
+
+### 2026-09-27 — Admission BLS Capella par message et RPC privé
+
+Message `bls_to_execution_change` de 172 octets, activé uniquement sous Capella,
+acheminé par la file bornée vers la validation cryptographique et le checkpoint.
+Tests : admission native et régression wire (2/2), dispatcher IPC (9 scénarios),
+RPC HTTP local réel avec refus du mauvais jeton et admission durable autorisée
+(17,17 s). Le daemon compile avec le nouveau type. **Partiel** : export/catalogue
+et relais automatique restent à implémenter ; trajet libp2p réel, réorganisations
+et pannes de cette file restent à qualifier. Aucun déploiement public.
+[Preuves et portée exacte](qualification/capella-bls-admission-20260927/README.md).

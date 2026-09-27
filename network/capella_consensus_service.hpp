@@ -14,7 +14,7 @@ class CapellaConsensusService {
  const nano::Json capacities_;
  AltairReceipts receipts_;
  AltairWorker worker_; // ordered transport-independent bounded queue
- static AltairWireProfile profile(nano::CapellaDurableReactor& reactor,size_t frame,size_t block,size_t vote,size_t slashing){const auto j=reactor.network_identity();return {j.at("chainId").get<std::string>(),j.at("genesisHash").get<std::string>(),j.at("forkDigest").get<std::string>(),frame,block,vote,slashing,j.at("consensusIdentity").get<std::string>()};}
+ static AltairWireProfile profile(nano::CapellaDurableReactor& reactor,size_t frame,size_t block,size_t vote,size_t slashing){const auto j=reactor.network_identity();return {j.at("chainId").get<std::string>(),j.at("genesisHash").get<std::string>(),j.at("forkDigest").get<std::string>(),frame,block,vote,slashing,j.at("consensusIdentity").get<std::string>(),true};}
 public:
  using Decision=AltairWork::Decision;
  using Cancellation=AltairWork::Cancellation;
@@ -24,7 +24,7 @@ public:
   size_t max_jobs,size_t max_bytes,std::function<void(const std::function<void()>&)> before_message={}):ingress_(profile(reactor,frame_bytes,block_bytes,vote_bytes,slashing_bytes),budget),capacities_{{"wire",{{"frameBytes",frame_bytes},{"blockBytes",block_bytes},{"attestationBytes",vote_bytes},{"slashingBytes",slashing_bytes}}},{"workerJobs",max_jobs}},receipts_(max_jobs),
   worker_(max_jobs,max_bytes,[&reactor,before_message=std::move(before_message)](const AltairWireMessage& message,const Cancellation& cancelled){
    const auto check=[&]{if(cancelled->load())throw std::runtime_error("Capella message cancelled");};check();if(before_message)before_message(check);check();bool accepted=false;
-   switch(message.kind){case AltairWireKind::block:accepted=reactor.block(message.ssz,check);break;case AltairWireKind::attestation:accepted=reactor.vote_ssz(message.ssz,check);break;case AltairWireKind::attester_slashing:accepted=reactor.slashing_ssz(message.ssz,check);break;default:return Decision::rejected;}
+   switch(message.kind){case AltairWireKind::block:accepted=reactor.block(message.ssz,check);break;case AltairWireKind::attestation:accepted=reactor.vote_ssz(message.ssz,check);break;case AltairWireKind::attester_slashing:accepted=reactor.slashing_ssz(message.ssz,check);break;case AltairWireKind::bls_to_execution_change:accepted=reactor.bls_change_ssz(message.ssz,check);break;default:return Decision::rejected;}
    // Commit is definitive: do not turn success into cancellation afterwards.
    return accepted?Decision::accepted:Decision::rejected;
   }){}

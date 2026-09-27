@@ -71,11 +71,12 @@ public:
  bool enqueue(AltairWireMessage message,AltairWork::Cancellation cancel,AltairWork::Done done){
   if(blocked_||closing_||!cancel||!done||cancel->load()||jobs_.size()>=maximum_||high_water_==UINT64_MAX)return false;
   const auto unissued=jobs_.size()-(!jobs_.empty()&&jobs_.front().sequence?1:0);if(unissued>=UINT64_MAX-high_water_)return false;
-  if(message.kind!=AltairWireKind::block&&message.kind!=AltairWireKind::attestation&&message.kind!=AltairWireKind::attester_slashing&&message.kind!=AltairWireKind::voluntary_exit)return false;
+  if(message.kind!=AltairWireKind::block&&message.kind!=AltairWireKind::attestation&&message.kind!=AltairWireKind::attester_slashing&&message.kind!=AltairWireKind::voluntary_exit&&message.kind!=AltairWireKind::bls_to_execution_change)return false;
   if(message.kind==AltairWireKind::voluntary_exit&&(profile_.consensus_identity.empty()||message.ssz.size()!=112))return false;
-  const auto bound=message.kind==AltairWireKind::block?profile_.block_bytes:message.kind==AltairWireKind::attestation?profile_.attestation_bytes:message.kind==AltairWireKind::voluntary_exit?size_t(112):profile_.slashing_bytes;
+  if(message.kind==AltairWireKind::bls_to_execution_change&&(!profile_.bls_changes||profile_.consensus_identity.empty()||message.ssz.size()!=172))return false;
+  const auto bound=message.kind==AltairWireKind::block?profile_.block_bytes:message.kind==AltairWireKind::attestation?profile_.attestation_bytes:message.kind==AltairWireKind::voluntary_exit?size_t(112):message.kind==AltairWireKind::bls_to_execution_change?size_t(172):profile_.slashing_bytes;
   if(message.ssz.size()>bound||message.ssz.size()>profile_.frame_bytes/2)return false;
-  const auto kind=message.kind==AltairWireKind::block?"block":message.kind==AltairWireKind::attestation?"attestation":message.kind==AltairWireKind::voluntary_exit?"voluntary_exit":"attester_slashing";
+  const auto kind=message.kind==AltairWireKind::block?"block":message.kind==AltairWireKind::attestation?"attestation":message.kind==AltairWireKind::voluntary_exit?"voluntary_exit":message.kind==AltairWireKind::bls_to_execution_change?"bls_to_execution_change":"attester_slashing";
   auto envelope=Json{{"chainId",profile_.chain_id},{"genesisHash",profile_.genesis_hash},{"forkDigest",profile_.fork_digest},{"kind",kind},{"ssz","0x"}};
   if(!profile_.consensus_identity.empty())envelope["consensusIdentity"]=profile_.consensus_identity;
   const auto overhead=envelope.dump().size();

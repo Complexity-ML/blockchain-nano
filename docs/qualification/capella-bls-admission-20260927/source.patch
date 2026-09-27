@@ -1,0 +1,108 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 3b434da..0919ce0 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1603,0 +1604,6 @@ set_tests_properties(consensus_capella_queued_bls_owner PROPERTIES TIMEOUT 180 L
++
++add_test(NAME consensus_capella_queued_bls_wire COMMAND nano-capella-transition-tests --queued-bls-wire)
++set_tests_properties(consensus_capella_queued_bls_wire PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_runtime")
++
++add_test(NAME consensus_capella_queued_bls_rpc COMMAND nano-capella-transition-tests --queued-bls-rpc)
++set_tests_properties(consensus_capella_queued_bls_rpc PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_runtime")
+diff --git a/network/altair_core_dispatch.hpp b/network/altair_core_dispatch.hpp
+index 151da80..be4d35c 100644
+--- a/network/altair_core_dispatch.hpp
++++ b/network/altair_core_dispatch.hpp
+@@ -74 +74 @@ public:
+-  if(message.kind!=AltairWireKind::block&&message.kind!=AltairWireKind::attestation&&message.kind!=AltairWireKind::attester_slashing&&message.kind!=AltairWireKind::voluntary_exit)return false;
++  if(message.kind!=AltairWireKind::block&&message.kind!=AltairWireKind::attestation&&message.kind!=AltairWireKind::attester_slashing&&message.kind!=AltairWireKind::voluntary_exit&&message.kind!=AltairWireKind::bls_to_execution_change)return false;
+@@ -76 +76,2 @@ public:
+-  const auto bound=message.kind==AltairWireKind::block?profile_.block_bytes:message.kind==AltairWireKind::attestation?profile_.attestation_bytes:message.kind==AltairWireKind::voluntary_exit?size_t(112):profile_.slashing_bytes;
++  if(message.kind==AltairWireKind::bls_to_execution_change&&(!profile_.bls_changes||profile_.consensus_identity.empty()||message.ssz.size()!=172))return false;
++  const auto bound=message.kind==AltairWireKind::block?profile_.block_bytes:message.kind==AltairWireKind::attestation?profile_.attestation_bytes:message.kind==AltairWireKind::voluntary_exit?size_t(112):message.kind==AltairWireKind::bls_to_execution_change?size_t(172):profile_.slashing_bytes;
+@@ -78 +79 @@ public:
+-  const auto kind=message.kind==AltairWireKind::block?"block":message.kind==AltairWireKind::attestation?"attestation":message.kind==AltairWireKind::voluntary_exit?"voluntary_exit":"attester_slashing";
++  const auto kind=message.kind==AltairWireKind::block?"block":message.kind==AltairWireKind::attestation?"attestation":message.kind==AltairWireKind::voluntary_exit?"voluntary_exit":message.kind==AltairWireKind::bls_to_execution_change?"bls_to_execution_change":"attester_slashing";
+diff --git a/network/altair_message.hpp b/network/altair_message.hpp
+index 348c04b..261ef1b 100644
+--- a/network/altair_message.hpp
++++ b/network/altair_message.hpp
+@@ -18,0 +19 @@ struct AltairWireProfile {
++ bool bls_changes=false;
+@@ -20 +21 @@ struct AltairWireProfile {
+-enum class AltairWireKind {block,attestation,attester_slashing,voluntary_exit};
++enum class AltairWireKind {block,attestation,attester_slashing,voluntary_exit,bls_to_execution_change};
+@@ -56,0 +58 @@ public:
++  else if(j.at("kind")=="bls_to_execution_change"&&profile_.bls_changes&&!profile_.consensus_identity.empty()){kind=AltairWireKind::bls_to_execution_change;maximum=172;}
+@@ -60 +62 @@ public:
+-  if(kind==AltairWireKind::voluntary_exit&&encoded.size()!=226)return std::nullopt;
++  if((kind==AltairWireKind::voluntary_exit&&encoded.size()!=226)||(kind==AltairWireKind::bls_to_execution_change&&encoded.size()!=346))return std::nullopt;
+@@ -75,0 +78 @@ public:
++  else if(j.at("kind")=="bls_to_execution_change"&&profile_.bls_changes&&!profile_.consensus_identity.empty()){kind=AltairWireKind::bls_to_execution_change;maximum=172;}
+@@ -81 +84 @@ public:
+-  auto bytes=altair_unbase64(j.at("sszBase64").get_ref<const std::string&>(),maximum);if(!bytes||(kind==AltairWireKind::voluntary_exit&&bytes->size()!=112))return std::nullopt;
++  auto bytes=altair_unbase64(j.at("sszBase64").get_ref<const std::string&>(),maximum);if(!bytes||(kind==AltairWireKind::voluntary_exit&&bytes->size()!=112)||(kind==AltairWireKind::bls_to_execution_change&&bytes->size()!=172))return std::nullopt;
+diff --git a/network/capella_consensus_service.hpp b/network/capella_consensus_service.hpp
+index aa4eba3..5e423b9 100644
+--- a/network/capella_consensus_service.hpp
++++ b/network/capella_consensus_service.hpp
+@@ -17 +17 @@ class CapellaConsensusService {
+- static AltairWireProfile profile(nano::CapellaDurableReactor& reactor,size_t frame,size_t block,size_t vote,size_t slashing){const auto j=reactor.network_identity();return {j.at("chainId").get<std::string>(),j.at("genesisHash").get<std::string>(),j.at("forkDigest").get<std::string>(),frame,block,vote,slashing,j.at("consensusIdentity").get<std::string>()};}
++ static AltairWireProfile profile(nano::CapellaDurableReactor& reactor,size_t frame,size_t block,size_t vote,size_t slashing){const auto j=reactor.network_identity();return {j.at("chainId").get<std::string>(),j.at("genesisHash").get<std::string>(),j.at("forkDigest").get<std::string>(),frame,block,vote,slashing,j.at("consensusIdentity").get<std::string>(),true};}
+@@ -27 +27 @@ public:
+-   switch(message.kind){case AltairWireKind::block:accepted=reactor.block(message.ssz,check);break;case AltairWireKind::attestation:accepted=reactor.vote_ssz(message.ssz,check);break;case AltairWireKind::attester_slashing:accepted=reactor.slashing_ssz(message.ssz,check);break;default:return Decision::rejected;}
++   switch(message.kind){case AltairWireKind::block:accepted=reactor.block(message.ssz,check);break;case AltairWireKind::attestation:accepted=reactor.vote_ssz(message.ssz,check);break;case AltairWireKind::attester_slashing:accepted=reactor.slashing_ssz(message.ssz,check);break;case AltairWireKind::bls_to_execution_change:accepted=reactor.bls_change_ssz(message.ssz,check);break;default:return Decision::rejected;}
+diff --git a/network/main.cpp b/network/main.cpp
+index d82c9d3..283abb0 100644
+--- a/network/main.cpp
++++ b/network/main.cpp
+@@ -82,0 +83 @@ class Network {
++    profile.bls_changes=capella_mode_;
+diff --git a/network/test_altair_core_dispatch.cpp b/network/test_altair_core_dispatch.cpp
+index cb60c10..f125fc5 100644
+--- a/network/test_altair_core_dispatch.cpp
++++ b/network/test_altair_core_dispatch.cpp
+@@ -52,0 +53,9 @@ int main(){try{
++ {
++  asio::io_context io;auto capella=profile;capella.consensus_identity="0x"+std::string(64,'1');capella.bls_changes=true;
++  InboundBudget budget;AltairMessageIngress decoder(capella,budget);unsigned submitted=0,done=0;
++  auto call=[&](const std::string& method,Json args,Reply reply){if(method=="nano_altairSubmit"){const auto decoded=decoder.decode_compact(args.at(3));check(decoded&&decoded->kind==AltairWireKind::bls_to_execution_change&&decoded->ssz==std::vector<uint8_t>(172,7),"BLS dispatch changed payload");++submitted;reply(Json{{"state","completed"},{"sequence","0x1"},{"decision","accepted"}});}else if(method=="nano_altairForget")reply(Json{{"state","completed"},{"sequence","0x1"},{"decision","accepted"}});else throw std::runtime_error("unexpected BLS dispatch method");};
++  auto client=std::make_shared<AltairCoreDispatch>(io,call,capella,"token","session",0,2,3,std::chrono::milliseconds(1));auto cancel=std::make_shared<std::atomic<bool>>(false);auto finish=[&](D d){check(d==D::accepted,"BLS dispatch rejected");++done;};
++  check(!client->enqueue({AltairWireKind::bls_to_execution_change,std::vector<uint8_t>(171)},cancel,finish),"short BLS dispatch accepted");
++  check(client->enqueue({AltairWireKind::bls_to_execution_change,std::vector<uint8_t>(172,7)},cancel,finish),"BLS dispatch refused");io.run();check(submitted==1&&done==1,"BLS dispatch incomplete");
++  auto legacy=capella;legacy.bls_changes=false;auto other=std::make_shared<AltairCoreDispatch>(io,call,legacy,"token","session",0,2,3,std::chrono::milliseconds(1));check(!other->enqueue({AltairWireKind::bls_to_execution_change,std::vector<uint8_t>(172)},cancel,finish),"legacy profile admitted BLS change");++cases;
++ }
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index cd76fde..4f1615e 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -386,0 +387,8 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
++ }
++ if(queued_bls_changes){
++  SignedCapellaBlsChange change;Key key(1001);change.validator_index=1;copy_to(change.from_bls_pubkey,key.public_key);change.to_execution_address[19]=43;const auto genesis_root=root_at(initial.blocks.at(initial.timed.view.anchor).state.ssz,8);copy_to(change.signature,key.sign(consensus_signing_root(capella_bls_change_root(change),consensus_domain({10,0,0,0},t.genesis_version,genesis_root))));
++  Rpc rpc(*owner,"capella-test-token",AdmissionBudget::Clock::now,{}, {}, {},std::make_shared<CapellaRuntime>(runtime));HttpServer server(rpc,"127.0.0.1",0);std::thread http_thread([&]{server.run();});struct StopHttp{HttpServer& server;std::thread& thread;~StopHttp(){server.stop();thread.join();}} stop{server,http_thread};PersistentRpc client(server.port());
++  const auto status=client.call("nano_capellaStatus",Json::array({"capella-test-token"}));const auto active=runtime.admission->receipts();const auto ticket=quantity(quantity(active.at("highWater"))+1);auto operation=runtime_identity;operation["kind"]="bls_to_execution_change";operation["sszBase64"]=altair_base64(encode_capella_bls_change(change));const auto before=runtime.reactor->current().token;
++  bool denied=false;try{client.call("nano_capellaSubmit",Json::array({"wrong-token",active.at("session"),ticket,operation}));}catch(const PersistentRpcError& e){denied=e.code==-32001;}check(denied&&runtime.reactor->current().token==before,"unauthorized BLS RPC admitted");
++  client.call("nano_capellaSubmit",Json::array({"capella-test-token",active.at("session"),ticket,operation}));Json receipt;const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(10);do{receipt=client.call("nano_capellaJob",Json::array({"capella-test-token",active.at("session"),ticket}));if(receipt.at("state")=="completed")break;std::this_thread::sleep_for(std::chrono::milliseconds(1));}while(std::chrono::steady_clock::now()<deadline);
++  check(receipt.value("decision",std::string())=="accepted"&&runtime.reactor->current().token.sequence==before.sequence+1&&runtime.reactor->pending_bls_changes().size()==1,"BLS HTTP request not durably queued");
+@@ -514 +522 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
+-    check(!reactor->bls_change_ssz(encode_capella_bls_change(invalid))&&reactor->current().token==before.token,"invalid queue change published");
++    check(!(wire_mode?deliver("bls_to_execution_change",encode_capella_bls_change(invalid)):reactor->bls_change_ssz(encode_capella_bls_change(invalid)))&&reactor->current().token==before.token,"invalid queue change published");
+@@ -516 +524 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
+-    check(reactor->bls_change_ssz(encode_capella_bls_change(local_change)),"valid queue change rejected");const auto committed=reactor->current();check(committed.token.sequence==before.token.sequence+1&&capella_fork_head(*committed.state,store_rules).state==capella_fork_head(*before.state,store_rules).state,"queue admission changed consensus state");
++    check(wire_mode?deliver("bls_to_execution_change",encode_capella_bls_change(local_change)):reactor->bls_change_ssz(encode_capella_bls_change(local_change)),"valid queue change rejected");const auto committed=reactor->current();check(committed.token.sequence==before.token.sequence+1&&capella_fork_head(*committed.state,store_rules).state==capella_fork_head(*before.state,store_rules).state,"queue admission changed consensus state");
+@@ -518,0 +527,9 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
++    if(wire_mode){
++     auto envelope=reactor->network_identity();envelope["kind"]="bls_to_execution_change";envelope["ssz"]=hex(encode_capella_bls_change(local_change));
++     for(size_t size:{size_t(171),size_t(173)}){auto bad=envelope;bad["ssz"]=hex(Bytes(size));check(!service->decode(bad.dump()),"wrong BLS wire size accepted");}
++     auto compact=envelope;compact.erase("ssz");compact["sszBase64"]=altair_base64(encode_capella_bls_change(local_change));check(bool(service->decode_compact(compact)),"compact BLS decoding failed");
++     const auto session=service->receipts().at("session").get<std::string>();bool wrong_session=false;try{service->submit_receipt("wrong-session",1,compact);}catch(const std::invalid_argument&){wrong_session=true;}check(wrong_session&&reactor->current().token==committed.token,"wrong session admitted BLS change");
++     service->submit_receipt(session,1,compact);Json receipt;const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(10);do{receipt=service->receipt(session,1);if(receipt.at("state")=="completed")break;std::this_thread::sleep_for(std::chrono::milliseconds(1));}while(std::chrono::steady_clock::now()<deadline);
++     check(receipt.value("decision",std::string())=="accepted"&&reactor->current().token==committed.token,"compact duplicate BLS admission changed checkpoint");
++    }
++    if(service){service->stop();service->join();service.reset();}
+@@ -519,0 +537 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
++    if(wire_mode)service=std::make_unique<CapellaConsensusService>(*reactor,ingress_budget,16*1024*1024,r.consensus.maximum_block_bytes,65536,65536,4,8*1024*1024);
+@@ -955 +973 @@ int main(int argc,char** argv){try{executable=argv[0];
+-if(argc==3&&std::string(argv[1])=="--cli"){cli_binary=argv[2];configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--http"){configured_runtime=true;capella_http=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--catalog-concurrency"){wire_mode=true;catalog_concurrency=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-owner"){queued_bls_changes=true;local_bls_changes=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-changes"){queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--local-bls-changes"){local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--wire"){wire_mode=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--beacon-reads"){beacon_reads=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--configured-runtime"){configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler"){scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-reorg"){owner_reorg=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}
++if(argc==3&&std::string(argv[1])=="--cli"){cli_binary=argv[2];configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--http"){configured_runtime=true;capella_http=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--catalog-concurrency"){wire_mode=true;catalog_concurrency=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-owner"){queued_bls_changes=true;local_bls_changes=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-rpc"){queued_bls_changes=true;local_bls_changes=true;configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-wire"){wire_mode=true;queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-changes"){queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--local-bls-changes"){local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--wire"){wire_mode=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--beacon-reads"){beacon_reads=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--configured-runtime"){configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler"){scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-reorg"){owner_reorg=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}

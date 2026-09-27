@@ -1601,3 +1601,9 @@ set_tests_properties(consensus_capella_queued_bls_changes PROPERTIES TIMEOUT 120
 
 add_test(NAME consensus_capella_queued_bls_owner COMMAND nano-capella-transition-tests --queued-bls-owner)
 set_tests_properties(consensus_capella_queued_bls_owner PROPERTIES TIMEOUT 180 LABELS qualification_consensus_runtime)
+
+add_test(NAME consensus_capella_queued_bls_wire COMMAND nano-capella-transition-tests --queued-bls-wire)
+set_tests_properties(consensus_capella_queued_bls_wire PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_runtime")
+
+add_test(NAME consensus_capella_queued_bls_rpc COMMAND nano-capella-transition-tests --queued-bls-rpc)
+set_tests_properties(consensus_capella_queued_bls_rpc PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_runtime")

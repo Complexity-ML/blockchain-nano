@@ -80,6 +80,7 @@ class Network {
    try{
     const auto& w=result.at("wire");AltairWireProfile profile{result.at("chainId").get<std::string>(),result.at("genesisHash").get<std::string>(),result.at("forkDigest").get<std::string>(),w.at("frameBytes").get<size_t>(),w.at("blockBytes").get<size_t>(),w.at("attestationBytes").get<size_t>(),w.at("slashingBytes").get<size_t>()};
     if(execution_consensus())profile.consensus_identity=result.at("consensusIdentity").get<std::string>();
+    profile.bls_changes=capella_mode_;
     altair_dispatch_=std::make_shared<AltairCoreDispatch>(io_,call,profile,report_token_,result.at("session").get<std::string>(),result.at("highWater").get<uint64_t>(),result.at("workerJobs").get<size_t>(),3,std::chrono::milliseconds(100));
     if(capella_mode_){capella_relay_=result.at("capellaRelay");capella_session_=result.at("session").get<std::string>();status_["capellaSession"]=capella_session_;}
     if(result.at("networkAdmissionEnabled")==true){
