@@ -1,5 +1,15 @@
 # EIP et consensus : périmètre demandé pour Nano
 
+### Blocage constaté : finalité Capella avec validateurs répartis — 27 septembre 2026
+
+**ÉCHEC** du test à deux vrais pairs libp2p, chacun avec 32 clés distinctes :
+aucun checkpoint finalisé commun d’epoch ≥2 en 210 secondes. Finalité bloquée
+à zéro, justification finale 1 contre 2 ; têtes de vote divergentes dès le slot 19.
+Les 64 derniers votes observés diffèrent entre nœuds malgré des relais réussis.
+[Contre-exemple et traces](qualification/capella-distributed-finality-20260927/README.md).
+Cause non établie : priorité au suivi des votes acquittés jusqu’à leur application
+différée/choix de branche. Le succès du rattrapage simple ne clôture pas ce blocage.
+
 Liste ajoutée au goal à la demande de l'utilisateur le 24 septembre 2026.
 Les statuts Ethereum ci-dessous sont ceux consultés sur eips.ethereum.org à
 cette date. Ils ne signifient ni implémentation ni activation dans Nano.

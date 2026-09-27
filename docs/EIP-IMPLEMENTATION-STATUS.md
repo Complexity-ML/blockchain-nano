@@ -1,5 +1,15 @@
 # Feuille de route EIP — état réel de Nano
 
+### Blocage constaté : finalité Capella avec validateurs répartis — 27 septembre 2026
+
+**ÉCHEC** du test à deux vrais pairs libp2p, chacun avec 32 clés distinctes :
+aucun checkpoint finalisé commun d’epoch ≥2 en 210 secondes. Finalité bloquée
+à zéro, justification finale 1 contre 2 ; têtes de vote divergentes dès le slot 19.
+Les 64 derniers votes observés diffèrent entre nœuds malgré des relais réussis.
+[Contre-exemple et traces](qualification/capella-distributed-finality-20260927/README.md).
+Cause non établie : priorité au suivi des votes acquittés jusqu’à leur application
+différée/choix de branche. Le succès du rattrapage simple ne clôture pas ce blocage.
+
 Dernière revue partielle : 26 septembre 2026 (intégration Bellatrix et reprise).
 Source de vérité : code actuel, tests et rapports. Les anciennes notes chronologiques ne remplacent pas cette matrice.
 

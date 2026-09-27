@@ -48,7 +48,7 @@ static bool owner_witness=false;
 static bool scheduled=false;
 static bool configured_runtime=false;
 static bool capella_http=false;
-static std::string cli_binary;static Json cli_genesis;static bool managed_cli=false;static std::string daemon_binary;static bool network_cli=false;
+static std::string cli_binary;static Json cli_genesis;static bool managed_cli=false;static std::string daemon_binary;static bool network_cli=false;static bool distributed_cli=false;
 static bool beacon_reads=false;
 static bool wire_mode=false;
 static size_t beacon_read_checks=0;
@@ -182,6 +182,21 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
     node["capella"]["clock"]["intervalMs"]="0x64";node["capella"]["validator"]["pollIntervalMs"]="0x64";node["capella"]["validator"]["keys"]=Json::array();
     Env env{{"NANO_TEST_NETWORK_TRACE","1"}};
     for(uint64_t i=0;i<64;++i){const auto name="NANO_TEST_CAPELLA_NETWORK_KEY_"+std::to_string(i);env[name]=hex(bytes(Int(std::to_string(i+1)),32));node["capella"]["validator"]["keys"].push_back({{"index",quantity(Int(std::to_string(i)))},{"feeRecipient",genesis.header.coinbase},{"keyEnv",name},{"journal",(directory/("network-key-"+std::to_string(i))).string()},{"restart",nullptr},{"recoveryWitness",(directory/("network-key-witness-"+std::to_string(i))).string()}});}
+    if(distributed_cli){
+     const auto all_keys=node["capella"]["validator"]["keys"];auto left=node,right=node;left["capella"]["validator"]["keys"]=Json::array();right["capella"]["validator"]["keys"]=Json::array();Env left_env{{"NANO_TEST_NETWORK_TRACE","1"}},right_env=left_env;
+     for(size_t i=0;i<all_keys.size();++i){auto& cfg=i<32?left:right;auto& secrets=i<32?left_env:right_env;cfg["capella"]["validator"]["keys"].push_back(all_keys[i]);const auto name=all_keys[i].at("keyEnv").get<std::string>();secrets[name]=env.at(name);}
+     right["capella"]["recoveryWitness"]=(directory/"right-witness").string();save(directory/"left.json",left);
+     Process a({cli_binary,"run",(directory/"genesis.json").string(),(directory/"left-db").string(),(directory/"left.json").string()},left_env);const auto ap=a.port();const auto address=a.event("listen").at("address");check(a.event("altair-ipc-ready").at("networkProtocolActive")==true,"left protocol inactive");right["bootnodes"]=Json::array({address});save(directory/"right.json",right);
+     Process b({cli_binary,"run",(directory/"genesis.json").string(),(directory/"right-db").string(),(directory/"right.json").string()},right_env);const auto bp=b.port();check(b.event("altair-ipc-ready").at("networkProtocolActive")==true,"right protocol inactive");
+     auto beacon=[](uint16_t port,const std::string& path){namespace http=boost::beast::http;asio::io_context io;boost::beast::tcp_stream stream(io);boost::beast::flat_buffer buffer;http::request<http::empty_body> request(http::verb::get,path,11);request.set(http::field::host,"127.0.0.1");request.set(http::field::accept,"application/json");http::response_parser<http::string_body> parser;parser.body_limit(1024*1024);boost::beast::error_code failure;stream.expires_after(std::chrono::seconds(5));stream.async_connect({asio::ip::make_address("127.0.0.1"),port},[&](auto error){if(error){failure=error;return;}http::async_write(stream,request,[&](auto error,size_t){if(error){failure=error;return;}http::async_read(stream,buffer,parser,[&](auto error,size_t){failure=error;});});});io.run();check(!failure,"Beacon HTTP transport failed");auto response=parser.release();check(response.result()==http::status::ok,"Beacon HTTP response failed");return Json::parse(response.body());};
+     bool complete=false;uint64_t previous=UINT64_MAX;unsigned stable=0;
+     try{const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(210);while(std::chrono::steady_clock::now()<deadline){a.pump(0);b.pump(0);check(a.running()&&b.running(),"distributed validator process exited");const auto fa=beacon(ap,"/eth/v1/beacon/states/head/finality_checkpoints").at("data").at("finalized"),fb=beacon(bp,"/eth/v1/beacon/states/head/finality_checkpoints").at("data").at("finalized");const auto ea=std::stoull(fa.at("epoch").get<std::string>()),eb=std::stoull(fb.at("epoch").get<std::string>());if(ea&&ea==eb)check(fa.at("root")==fb.at("root"),"conflicting finalized roots");
+      if(std::min(ea,eb)!=previous){previous=std::min(ea,eb);std::cout<<Json{{"event","distributed-finality-observation"},{"left",fa},{"right",fb}}.dump()<<std::endl;}
+      if(ea>=2&&fa==fb){const auto ha=beacon(ap,"/eth/v1/beacon/headers/finalized"),hb=beacon(bp,"/eth/v1/beacon/headers/finalized");if(ha.at("finalized")==true&&hb.at("finalized")==true&&ha.at("data").at("root")==fa.at("root")&&hb.at("data").at("root")==fa.at("root")){if(++stable>=3){complete=true;break;}}else stable=0;}else stable=0;
+      std::this_thread::sleep_for(std::chrono::seconds(1));}check(complete,"distributed Capella finality did not reach common epoch 2");
+     }catch(...){const auto ar=a.stop(),br=b.stop();std::cerr<<ar.out<<ar.err<<br.out<<br.err;throw;}
+     const auto ar=a.stop(),br=b.stop();check(ar.code==0&&br.code==0,"distributed nodes did not stop cleanly");std::cout<<ar.out<<br.out<<Json{{"scenario","capella-distributed-finality"},{"validatorsPerNode",32},{"nodes",2},{"minimumFinalizedEpoch",2},{"stableObservations",stable},{"realLibp2p",true}}.dump()<<std::endl;return;
+    }
     const auto source_config=directory/"source.json";save(source_config,node);Process source_node({cli_binary,"run",(directory/"genesis.json").string(),(directory/"source-db").string(),source_config.string()},env);const auto source_port=source_node.port();const auto source_address=source_node.event("listen").at("address").get<std::string>();check(source_node.event("altair-ipc-ready").at("networkProtocolActive")==true,"source network inactive");
     until([&]{source_node.pump(0);return quantity(rpc(source_port,"eth_blockNumber"))>=2;},"source produced before follower",40);
     auto follower_config=node;follower_config["capella"].erase("validator");follower_config["capella"]["recoveryWitness"]=(directory/"follower-witness").string();follower_config["bootnodes"]=Json::array({source_address});const auto follower_file=directory/"follower.json";save(follower_file,follower_config);
@@ -790,6 +805,7 @@ int main(int argc,char** argv){try{executable=argv[0];
   std::cout<<Json{{"event","capella-managed-child-ready"},{"executionBound",true},{"secretsExcluded",true}}.dump()<<std::endl;
   if(std::getenv("NANO_TEST_MANAGED_CHILD_EXIT"))return 7;for(;;)pause();
  }
+ if(argc==4&&std::string(argv[1])=="--distributed-cli"){distributed_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--network-cli"){network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--daemon-cli"){managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==3&&std::string(argv[1])=="--managed-cli"){managed_cli=true;cli_binary=argv[2];configured_runtime=true;scenario(false);return 0;}
