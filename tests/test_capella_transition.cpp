@@ -20,6 +20,21 @@ struct Key {
  Bytes sign(const ConsensusRoot& root)const{static constexpr char dst[]="BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_POP_";blst_p2 h,s;blst_hash_to_g2(&h,root.data(),32,reinterpret_cast<const uint8_t*>(dst),sizeof(dst)-1,nullptr,0);blst_sign_pk_in_g1(&s,&h,&secret);Bytes out(96);blst_p2_compress(out.data(),&s);return out;}
 };
 }
+static std::string executable;
+static const CapellaStoreSnapshotLimits crash_limits{16*1024*1024,64,1000,1000,4*1024*1024,8*1024*1024,64,100000};
+static int crash_writer(const fs::path& directory){
+ const auto bundle=load(directory/"bundle.json");const auto profile=bundle.at("profile").get<std::string>();
+ const auto rules=load_capella_fork_profile(profile,sha256(Bytes(profile.begin(),profile.end())),1024*1024);
+ const auto genesis=Block::from_json(bundle.at("genesis"));
+ std::array<std::string,2> snapshots;std::array<std::vector<ExecutionCheckpointBlock>,2> suffixes;
+ for(size_t i=0;i<2;++i){snapshots[i]=bundle.at("snapshots").at(i).get<std::string>();const auto store=capella_store_from_snapshot(snapshots[i],sha256(Bytes(snapshots[i].begin(),snapshots[i].end())),rules,crash_limits);std::map<Int,ExecutionCheckpointBlock> ordered;
+  for(const auto& [id,b]:store.blocks)ordered.emplace(b.execution_block.header.number,ExecutionCheckpointBlock{b.execution_block,b.execution_state,b.receipts});for(const auto& [height,b]:ordered)suffixes[i].push_back(b);
+ }
+ ChainStore disk(directory/"capella");auto record=disk.fork_checkpoint(rules.transition.chain_id,genesis.header.hash(),crash_limits.envelope_bytes);check(bool(record),"writer checkpoint missing");
+ std::cout<<"ready"<<std::endl;
+ for(unsigned i=0;i<128;++i){const auto choice=disk.latest()->header.number==1?1:0;const auto token=disk.commit_execution_checkpoint(rules.transition.chain_id,genesis.header.hash(),record->token,disk.latest()->header.hash(),0,genesis.header.hash(),suffixes[choice],snapshots[choice],crash_limits.envelope_bytes,64);record->token=token;std::cout<<token.sequence<<std::endl;}
+ return 0;
+}
 static void scenario(bool migrate,uint64_t skipped=0){
  const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-bellatrix-containers-official",source=fixtures/"consensus-capella-slots-official";
  const auto manifest=load(source/"manifest.json");check(manifest.at("commit")=="194a91fd9e6f97118156421aac4c80e6e47a9a7f","initial state revision");
@@ -60,7 +75,7 @@ static void scenario(bool migrate,uint64_t skipped=0){
  std::map<Int,Bytes> hashes{{0,parent.header.hash()}};std::function<Bytes(const Int&)> history=[&](const Int& n){return hashes.at(n);};
  const auto disk_genesis=parent;const auto disk_genesis_state=state;
  const CapellaForkBlockRules store_rules{r,seconds*1000,seconds*1000/3,40};
- std::optional<CapellaForkStore> store;
+ std::optional<CapellaForkStore> store;std::string short_snapshot;
  const CapellaStoreSnapshotLimits snapshot_limits{16*1024*1024,64,1000,1000,r.maximum_state_bytes,8*1024*1024,64,100000};
  auto roundtrip=[&](const CapellaForkStore& value){
   CapellaStoreSnapshotCache cache;size_t cold=0,warm=0;
@@ -175,6 +190,7 @@ static void scenario(bool migrate,uint64_t skipped=0){
     const auto duplicate=prepare_capella_received_block(*branch,wire,store_rules,64,100000);check(duplicate&&duplicate->blocks.size()==branch->blocks.size(),"duplicate changed Store cardinality");
    }
   }
+  if(slot==first_slot)short_snapshot=capella_store_snapshot(*store,store_rules,snapshot_limits);
   ++contexts;
   beacon=received->consensus;state=received->execution.state;parent=received->execution.block;hashes[parent.header.number]=parent.header.hash();++accepted;
  }
@@ -188,7 +204,20 @@ static void scenario(bool migrate,uint64_t skipped=0){
  std::vector<ExecutionCheckpointBlock> suffix;for(const auto& [number,record]:ordered)suffix.push_back(record);
  {ChainStore disk(database/"capella");disk.bind_chain(r.chain_id,disk_genesis.header.hash(),"capella-store-test");disk.commit(disk_genesis,disk_genesis_state,{});token=disk.commit_execution_checkpoint(r.chain_id,disk_genesis.header.hash(),{},disk_genesis.header.hash(),0,disk_genesis.header.hash(),suffix,snapshot,snapshot_limits.envelope_bytes,64);}
  {ChainStore disk(database/"capella");const auto record=disk.fork_checkpoint(r.chain_id,disk_genesis.header.hash(),snapshot_limits.envelope_bytes);check(record&&record->token==token,"Capella checkpoint token changed");const auto restored=capella_store_from_snapshot(record->snapshot,token.digest,restored_rules,snapshot_limits);const auto& head=capella_fork_head(restored,restored_rules);check(disk.latest()->header.hash()==head.execution_block.header.hash()&&disk.state_at(head.execution_block.header.number)->root()==head.execution_state.root(),"reopened Capella consensus and execution diverged");}
- std::cout<<Json{{"scenario","capella-signed-transition"},{"migrated",migrate},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"storeBlocks",store->blocks.size()},{"snapshotReopened",true},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
+ save(database/"bundle.json",Json{{"profile",profile},{"genesis",disk_genesis.to_json(true)},{"snapshots",Json::array({short_snapshot,snapshot})}});
+ for(unsigned kill=0;kill<2;++kill){
+  Process writer({executable,"--crash-writer",database.path.string()});writer.line([](const auto& line){return line=="ready";});
+  if(kill)writer.line([](const auto& line){return !line.empty()&&line[0]>='0'&&line[0]<='9';});
+  writer.signal(SIGKILL);const auto result=writer.wait(20);check(result.code==-SIGKILL,"Capella writer not killed");
+  uint64_t acknowledged=token.sequence;std::istringstream lines(result.out);std::string line;while(std::getline(lines,line))if(!line.empty()&&line[0]>='0'&&line[0]<='9')acknowledged=std::max(acknowledged,uint64_t(std::stoull(line)));
+  ChainStore disk(database/"capella");const auto record=disk.fork_checkpoint(r.chain_id,disk_genesis.header.hash(),snapshot_limits.envelope_bytes);check(record&&record->token.sequence>=acknowledged,"acknowledged Capella commit lost");
+  check(record->snapshot==short_snapshot||record->snapshot==snapshot,"partial Capella snapshot recovered");
+  const auto restored=capella_store_from_snapshot(record->snapshot,record->token.digest,restored_rules,snapshot_limits);const auto& head=capella_fork_head(restored,restored_rules);const auto latest=disk.latest();
+  check(latest&&latest->header.hash()==head.execution_block.header.hash()&&latest->withdrawals==head.execution_block.withdrawals&&disk.state_at(latest->header.number)->root()==head.execution_state.root()&&disk.count()==latest->header.number+1,"mixed Capella crash recovery");
+  for(const auto& [height,b]:ordered){const bool canonical=height<=latest->header.number;check(bool(disk.block_by_number(height))==canonical,"stale block after crash reorg");for(const auto& tx:b.block.transactions)check(bool(disk.receipt(tx.hash()))==canonical&&bool(disk.transaction(tx.hash()))==canonical,"stale transaction after crash reorg");}
+  token=record->token;
+ }
+ std::cout<<Json{{"scenario","capella-signed-transition"},{"migrated",migrate},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"storeBlocks",store->blocks.size()},{"snapshotReopened",true},{"storeSigkillReopens",2},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
 }
-int main(){try{scenario(false);scenario(true);scenario(true,3);return 0;
+int main(int argc,char** argv){try{executable=argv[0];if(argc==3&&std::string(argv[1])=="--crash-writer")return crash_writer(argv[2]);scenario(false);scenario(true);scenario(true,3);return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

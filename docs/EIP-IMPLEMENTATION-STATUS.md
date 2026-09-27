@@ -2090,3 +2090,13 @@ et réouverture RocksDB avec tête/racine EVM concordantes. Régression 3/3.
 [Preuves](qualification/capella-snapshot-20260927/README.md).
 Restent crash du vrai Store, votes/finalité, branches Bellatrix à travers le
 fork et intégration réseau. Checkpoint local authentifié uniquement.
+
+### Capella : crash et reprise du vrai Store
+
+Six SIGKILL/réouvertures sur trois scénarios signés, en alternant les vrais
+snapshots d'une chaîne courte et longue avec retrait. Cohérence du token,
+du Store restauré, des états EVM et des index canoniques vérifiée ; aucun
+commit acquitté perdu dans cette campagne.
+[Preuves](qualification/capella-store-crash-20260927/README.md).
+Crash de processus uniquement, pas panne électrique. Votes/finalité réseau,
+Store vivant traversant le fork et réacteur restent à qualifier/raccorder.
