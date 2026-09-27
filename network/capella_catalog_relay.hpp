@@ -2,6 +2,7 @@
 #include "altair_core_dispatch.hpp"
 #include <sstream>
 #include <openssl/rand.h>
+#include <openssl/sha.h>
 
 // One stable catalog, bounded pages and one payload/delivery in flight.
 // The delivery callback must resolve block dependencies and require consensus
@@ -59,8 +60,9 @@ private:
   call("nano_capellaExport",Json::array({token_,kind_,id}),callback([id](auto& self,Json value){
    if(!value.is_object()||value.value("available",Json())!=true||value.value("root",Json())!=id){self.close(false);return;}
    auto frame=value.at("envelope");const auto wire=frame.dump();auto message=self.ingress_->decode(wire);
-   const auto expected=self.kind_=="block"?AltairWireKind::block:self.kind_=="attestation"?AltairWireKind::attestation:AltairWireKind::attester_slashing;
+   const auto expected=self.kind_=="block"?AltairWireKind::block:self.kind_=="attestation"?AltairWireKind::attestation:self.kind_=="bls_to_execution_change"?AltairWireKind::bls_to_execution_change:AltairWireKind::attester_slashing;
    if(!message||message->kind!=expected){self.close(false);return;}
+   if(expected==AltairWireKind::bls_to_execution_change){unsigned char digest[32];SHA256(message->ssz.data(),message->ssz.size(),digest);std::string actual="0x";for(auto b:digest){actual+="0123456789abcdef"[b>>4];actual+="0123456789abcdef"[b&15];}if(actual!=id){self.close(false);return;}}
    self.stage_="delivery";
    auto reply=self.callback([](auto& s,Json ack){
     if(!ack.is_object()||ack.size()!=1||ack.value("accepted",Json())!=true){s.close(false);return;}
@@ -74,7 +76,7 @@ private:
  }
 public:
  CapellaCatalogRelay(asio::io_context& io,Call core,Deliver deliver,std::string token,std::string kind,std::shared_ptr<AltairMessageIngress> ingress,size_t page_size,size_t maximum,Reply done):io_(io),core_(std::move(core)),deliver_(std::move(deliver)),token_(std::move(token)),kind_(std::move(kind)),ingress_(std::move(ingress)),done_(std::move(done)),timer_(io),page_size_(page_size),maximum_(maximum){
-  if(!core_||!deliver_||token_.empty()||!ingress_||!done_||!page_size_||!maximum_||page_size_>maximum_||(kind_!="block"&&kind_!="attestation"&&kind_!="attester_slashing"))throw std::invalid_argument("Invalid Capella catalog relay");
+  if(!core_||!deliver_||token_.empty()||!ingress_||!done_||!page_size_||!maximum_||page_size_>maximum_||(kind_!="block"&&kind_!="attestation"&&kind_!="attester_slashing"&&kind_!="bls_to_execution_change"))throw std::invalid_argument("Invalid Capella catalog relay");
  }
  void start(std::chrono::steady_clock::duration timeout=std::chrono::seconds(30)){
   if(started_)throw std::logic_error("Capella catalog relay already started");if(timeout<=std::chrono::steady_clock::duration::zero())throw std::invalid_argument("Invalid Capella relay timeout");started_=true;

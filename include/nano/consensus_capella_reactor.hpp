@@ -36,6 +36,7 @@ class CapellaDurableReactor {
  void validate_execution_binding()const;
  void fail_closed();
  std::optional<Bytes> prepare_local_body_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,std::span<const SignedTransaction>,size_t,size_t,const std::function<void()>&,std::span<const SignedCapellaBlsChange> = {},size_t maximum_change_trials = 0);
+ std::vector<ConsensusRoot> bls_change_roots_locked(const std::function<void()>&)const;
  std::vector<SignedCapellaBlsChange> pending_bls_changes_locked(size_t,const std::function<void()>&)const;
  void tick_locked(uint64_t,const std::function<void()>&);
  std::optional<Phase0SignedAttestation> sign_attestation_locked(uint64_t,uint64_t,const std::function<uint64_t()>&,const ForkCheckpointToken&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>&);

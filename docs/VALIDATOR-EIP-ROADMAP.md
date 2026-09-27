@@ -3217,3 +3217,16 @@ RPC HTTP local réel avec refus du mauvais jeton et admission durable autorisée
 et relais automatique restent à implémenter ; trajet libp2p réel, réorganisations
 et pannes de cette file restent à qualifier. Aucun déploiement public.
 [Preuves et portée exacte](qualification/capella-bls-admission-20260927/README.md).
+
+### 2026-09-27 — Catalogue BLS et relais libp2p réel
+
+Inventaire trié des changements applicables, catalogue stable et export signé
+bornés ; rotation de quatre catégories par pair et contrôle du hash avant relais.
+Tests : catalogue natif (7,14 s), 22 scénarios de relais (0,35 s), puis deux vrais
+nœuds/daemons libp2p locaux. Une demande déposée uniquement sur le nœud sans
+validateur atteint le producteur, est incluse et permet un retrait constaté sur
+les deux nœuds. Rattrapage d'un état neuf sous la même identité et récupération
+d'une réponse perdue passent aussi. **Partiel** : finalité avec stake distribué,
+WAN, réorganisations de la file, saturation, pruning et panne pendant admission
+restent hors de cette preuve. Aucun déploiement public.
+[Rapport et artefacts](qualification/capella-bls-relay-20260927/README.md).

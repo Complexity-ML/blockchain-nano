@@ -259,13 +259,18 @@ std::optional<Bytes> CapellaDurableReactor::signed_block_locked(const ConsensusR
  archive_require(record->slot==state_->blocks.at(id).header.slot);verify_archived_block(id,record->payload,*state_,rules_,check);return record->payload;
 }
 
+std::vector<ConsensusRoot> CapellaDurableReactor::bls_change_roots_locked(const std::function<void()>& check)const{
+ std::vector<ConsensusRoot> roots;roots.reserve(bls_changes_.size());for(const auto& operation:pending_bls_changes_locked(limits_.messages,check)){if(check)check();const auto digest=sha256(encode_capella_bls_change(operation));roots.push_back(archive_array<32>(digest,0));}std::sort(roots.begin(),roots.end());return roots;
+}
+
 std::shared_ptr<const CapellaInventorySnapshot> CapellaDurableReactor::capture_inventory(std::string_view kind,size_t budget,const std::function<void()>& check)const{
  std::lock_guard lock(mutex_);require_available();if(check)check();
- if(kind!="block"&&kind!="attestation"&&kind!="attester_slashing")throw std::invalid_argument("Unsupported Capella inventory kind");
- const auto count=kind=="block"?state_->blocks.size()-size_t(state_->blocks.contains(state_->timed.view.anchor)):kind=="attestation"?votes_.size():slashings_.size();
+ if(kind!="block"&&kind!="attestation"&&kind!="attester_slashing"&&kind!="bls_to_execution_change")throw std::invalid_argument("Unsupported Capella inventory kind");
+ const auto count=kind=="block"?state_->blocks.size()-size_t(state_->blocks.contains(state_->timed.view.anchor)):kind=="attestation"?votes_.size():kind=="bls_to_execution_change"?bls_changes_.size():slashings_.size();
  if(count>budget/sizeof(ConsensusRoot))throw std::length_error("Capella inventory snapshot exceeds root budget");
  auto snapshot=std::make_shared<CapellaInventorySnapshot>();snapshot->token_=*token_;snapshot->kind_=kind;snapshot->roots_.reserve(count);
  if(kind=="block"){for(const auto& [root,_]:state_->blocks){if(check)check();if(root!=state_->timed.view.anchor)snapshot->roots_.push_back(root);}}
+ else if(kind=="bls_to_execution_change")snapshot->roots_=bls_change_roots_locked(check);
  else{for(const auto& [key,_]:kind=="attestation"?votes_:slashings_){if(check)check();ConsensusRoot root{};if(key.size()!=root.size())throw std::logic_error("Invalid Capella archive root");std::copy(key.begin(),key.end(),root.begin());snapshot->roots_.push_back(root);}}
  if(snapshot->roots_.capacity()>budget/sizeof(ConsensusRoot))throw std::length_error("Capella inventory allocation exceeds root budget");return snapshot;
 }
@@ -281,7 +286,7 @@ Json CapellaInventorySnapshot::page(const std::optional<ConsensusRoot>& after,si
 Json CapellaDurableReactor::inventory(std::string_view kind,const std::optional<ConsensusRoot>& after,size_t count,size_t budget,const std::optional<ForkCheckpointToken>& expected,const std::function<void()>& check)const{
  std::lock_guard lock(mutex_);require_available();if(check)check();
  if(!count||!budget)throw std::invalid_argument("Capella inventory capacity required");
- if(kind!="block"&&kind!="attestation"&&kind!="attester_slashing")throw std::invalid_argument("Unsupported Capella inventory kind");
+ if(kind!="block"&&kind!="attestation"&&kind!="attester_slashing"&&kind!="bls_to_execution_change")throw std::invalid_argument("Unsupported Capella inventory kind");
  if(after&&!expected)throw std::invalid_argument("Capella continuation needs checkpoint");
  if(expected&&*expected!=*token_)throw std::invalid_argument("Stale Capella inventory checkpoint");
  Json result{{"sequence",quantity(Int(std::to_string(token_->sequence)))},{"digest",hex(token_->digest)},{"kind",kind},{"entries",Json::array()},{"next",hex(Bytes(32,0))}};
@@ -291,6 +296,8 @@ Json CapellaDurableReactor::inventory(std::string_view kind,const std::optional<
  if(kind=="block"){
   if(after&&(!state_->blocks.contains(*after)||*after==state_->timed.view.anchor))throw std::invalid_argument("Unknown Capella inventory cursor");
   for(auto it=after?state_->blocks.upper_bound(*after):state_->blocks.begin();it!=state_->blocks.end();++it){if(check)check();if(it->first==state_->timed.view.anchor)continue;if(!append(Bytes(it->first.begin(),it->first.end())))break;}
+ }else if(kind=="bls_to_execution_change"){
+  const auto roots=bls_change_roots_locked(check);auto it=roots.begin();if(after){it=std::lower_bound(roots.begin(),roots.end(),*after);if(it==roots.end()||*it!=*after)throw std::invalid_argument("Unknown Capella inventory cursor");++it;}for(;it!=roots.end();++it)if(!append(Bytes(it->begin(),it->end())))break;
  }else{
   const auto& archive=kind=="attestation"?votes_:slashings_;Bytes cursor;if(after){cursor=Bytes(after->begin(),after->end());if(!archive.contains(cursor))throw std::invalid_argument("Unknown Capella inventory cursor");}
   for(auto it=after?archive.upper_bound(cursor):archive.begin();it!=archive.end();++it)if(!append(it->first))break;
@@ -301,10 +308,11 @@ Json CapellaDurableReactor::inventory(std::string_view kind,const std::optional<
 Json CapellaDurableReactor::export_message(std::string_view kind,const ConsensusRoot& id,size_t maximum,const std::optional<ForkCheckpointToken>& expected,const std::function<void()>& check)const{
  std::lock_guard lock(mutex_);require_available();if(check)check();
  if(!maximum)throw std::invalid_argument("Capella export capacity required");
- if(kind!="block"&&kind!="attestation"&&kind!="attester_slashing")throw std::invalid_argument("Unsupported Capella archive kind");
+ if(kind!="block"&&kind!="attestation"&&kind!="attester_slashing"&&kind!="bls_to_execution_change")throw std::invalid_argument("Unsupported Capella archive kind");
  if(expected&&*expected!=*token_)throw std::invalid_argument("Stale Capella export checkpoint");
  const Bytes key(id.begin(),id.end());std::optional<Bytes> payload;
  if(kind=="block")payload=signed_block_locked(id,check);
+ else if(kind=="bls_to_execution_change"){for(const auto& [index,record]:bls_changes_){if(check)check();if(sha256(record.wire)==key){if(record.wire.size()>maximum)throw std::length_error("Capella export exceeds capacity");payload=record.wire;break;}}}
  else{const auto& archive=kind=="attestation"?votes_:slashings_;const auto found=archive.find(key);if(found!=archive.end()){
   if(found->second.size()>maximum)throw std::length_error("Capella export exceeds capacity");
   if(sha256(found->second)!=key)throw std::runtime_error("Capella archive digest mismatch");payload=found->second;
