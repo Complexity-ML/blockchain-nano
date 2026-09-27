@@ -217,6 +217,26 @@ std::optional<Bytes> CapellaDurableReactor::signed_block_locked(const ConsensusR
  archive_require(record->slot==state_->blocks.at(id).header.slot);verify_archived_block(id,record->payload,*state_,rules_,check);return record->payload;
 }
 
+Json CapellaDurableReactor::inventory(std::string_view kind,const std::optional<ConsensusRoot>& after,size_t count,size_t budget,const std::optional<ForkCheckpointToken>& expected,const std::function<void()>& check)const{
+ std::lock_guard lock(mutex_);require_available();if(check)check();
+ if(!count||!budget)throw std::invalid_argument("Capella inventory capacity required");
+ if(kind!="block"&&kind!="attestation"&&kind!="attester_slashing")throw std::invalid_argument("Unsupported Capella inventory kind");
+ if(after&&!expected)throw std::invalid_argument("Capella continuation needs checkpoint");
+ if(expected&&*expected!=*token_)throw std::invalid_argument("Stale Capella inventory checkpoint");
+ Json result{{"sequence",quantity(Int(std::to_string(token_->sequence)))},{"digest",hex(token_->digest)},{"kind",kind},{"entries",Json::array()},{"next",hex(Bytes(32,0))}};
+ size_t used=result.dump().size();if(used>budget)throw std::length_error("Capella inventory framing exceeds capacity");
+ std::string last;bool more=false;
+ auto append=[&](const Bytes& key){if(check)check();if(result["entries"].size()>=count){more=true;return false;}Json item=hex(key);const auto size=item.dump().size()+(result["entries"].empty()?0:1);if(size>budget-used){if(result["entries"].empty())throw std::length_error("Capella inventory entry exceeds capacity");more=true;return false;}used+=size;last=item.get<std::string>();result["entries"].push_back(std::move(item));return true;};
+ if(kind=="block"){
+  if(after&&(!state_->blocks.contains(*after)||*after==state_->timed.view.anchor))throw std::invalid_argument("Unknown Capella inventory cursor");
+  for(auto it=after?state_->blocks.upper_bound(*after):state_->blocks.begin();it!=state_->blocks.end();++it){if(check)check();if(it->first==state_->timed.view.anchor)continue;if(!append(Bytes(it->first.begin(),it->first.end())))break;}
+ }else{
+  const auto& archive=kind=="attestation"?votes_:slashings_;Bytes cursor;if(after){cursor=Bytes(after->begin(),after->end());if(!archive.contains(cursor))throw std::invalid_argument("Unknown Capella inventory cursor");}
+  for(auto it=after?archive.upper_bound(cursor):archive.begin();it!=archive.end();++it)if(!append(it->first))break;
+ }
+ result["next"]=more?Json(last):Json(nullptr);if(check)check();return result;
+}
+
 Json CapellaDurableReactor::export_message(std::string_view kind,const ConsensusRoot& id,size_t maximum,const std::optional<ForkCheckpointToken>& expected,const std::function<void()>& check)const{
  std::lock_guard lock(mutex_);require_available();if(check)check();
  if(!maximum)throw std::invalid_argument("Capella export capacity required");

@@ -56,6 +56,8 @@ public:
  Json network_identity()const;
  // Atomic archive/checkpoint projection. maximum_bytes bounds raw SSZ; caller
  // must separately budget JSON/hex framing. An anchor has no fabricated signature.
+ // Root-ordered candidates; export_message determines signed availability.
+ Json inventory(std::string_view kind,const std::optional<ConsensusRoot>& after,size_t maximum_entries,size_t maximum_json_bytes,const std::optional<ForkCheckpointToken>& expected={},const std::function<void()>& checkpoint={})const;
  Json export_message(std::string_view kind,const ConsensusRoot&,size_t maximum_bytes,const std::optional<ForkCheckpointToken>& expected={},const std::function<void()>& checkpoint={})const;
  bool vote_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
  bool slashing_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});

@@ -2907,3 +2907,15 @@ checkpoint périmé et budget insuffisant refusés. Test enrichi réussi en 5,38
 [Preuves](qualification/capella-archive-export-20260927/README.md).
 Cette primitive C++ ne clôt pas la synchronisation : pagination d’inventaire,
 transport, authentification RPC et budgets réseau restent à raccorder.
+
+### Capella : inventaire paginé lié au checkpoint
+
+Parcours des racines ordonnées avec curseur, nombre d’entrées et taille JSON bornés.
+Continuation uniquement avec checkpoint inchangé ; curseurs inconnus refusés.
+Seize messages retrouvés sans doublons puis exportés après deux réorganisations,
+par pages de deux entrées maximum et 512 octets ; test enrichi réussi en 5,28 s.
+[Preuves](qualification/capella-inventory-20260927/README.md).
+Les blocs listés sont des candidats connus, dont l’export vérifie la disponibilité
+signée. L’ordre par racine n’est pas l’ordre des parents. La pagination sous
+activité nécessite encore une stratégie de catalogue stable ; RPC/P2P et
+ordonnancement des dépendances restent ouverts avant synchronisation complète.
