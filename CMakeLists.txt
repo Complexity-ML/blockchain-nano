@@ -1583,3 +1583,6 @@ set_tests_properties(consensus_capella_wire_admission PROPERTIES TIMEOUT 120 LAB
 
 add_test(NAME consensus_capella_private_http COMMAND nano-capella-transition-tests --http)
 set_tests_properties(consensus_capella_private_http PROPERTIES TIMEOUT 240 LABELS "qualification_consensus_runtime")
+
+add_test(NAME consensus_capella_cli_serve COMMAND nano-capella-transition-tests --cli $<TARGET_FILE:nano>)
+set_tests_properties(consensus_capella_cli_serve PROPERTIES TIMEOUT 240 LABELS "qualification_consensus_runtime")

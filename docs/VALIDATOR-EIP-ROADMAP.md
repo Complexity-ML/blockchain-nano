@@ -2983,3 +2983,14 @@ Tests `beacon_execution_gate` et `chain` verts en 4,28 s.
 [Preuves](qualification/capella-json-genesis-20260927/README.md).
 Ce changement est un prérequis du démarrage CLI : sélection du runtime dans
 `run_node`, transport P2P et migration d’une chaîne existante restent ouverts.
+
+### Capella : démarrage du binaire en mode serve
+
+`nano serve` charge le runtime depuis la section `capella` du fichier de service,
+exige un jeton privé hexadécimal de 32 octets et l’écoute loopback, puis raccorde
+RPC et lectures Beacon. Arrêt HTTP avant export des engagements du runtime.
+Nouveau test : deux démarrages réels avec reprise témoin et lectures HTTP, refus
+sans jeton et avec écoute publique (1,43 s). Régression CLI existante verte (0,89 s).
+[Configuration et preuves](qualification/capella-cli-serve-20260927/README.md).
+Ce scénario CLI ne produit pas de blocs et n’utilise pas de clés validateur.
+Le mode `run` avec P2P, la synchronisation et la migration inter-forks restent ouverts.
