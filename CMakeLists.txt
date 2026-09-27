@@ -1621,3 +1621,6 @@ set_tests_properties(consensus_capella_pruning_bls PROPERTIES TIMEOUT 180 LABELS
 
 add_test(NAME consensus_capella_pruning_native COMMAND nano-capella-transition-tests --pruning-native)
 set_tests_properties(consensus_capella_pruning_native PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_recovery")
+
+add_test(NAME consensus_capella_pruning_automatic COMMAND nano-capella-transition-tests --pruning-automatic)
+set_tests_properties(consensus_capella_pruning_automatic PROPERTIES TIMEOUT 300 LABELS "qualification_consensus_recovery")

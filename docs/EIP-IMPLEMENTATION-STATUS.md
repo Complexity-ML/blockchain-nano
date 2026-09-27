@@ -2765,3 +2765,18 @@ n’attend pas la consommation du nouveau dépôt par une période de vote compl
 Activation/top-up, pannes pendant élagage, preuves de slashing, scheduling et
 croissance prolongée restent ouverts. Aucun espace disque récupéré mesuré.
 [Scénario, empreintes et résultat](qualification/capella-native-v3-restart-20260927/README.md).
+
+### 2026-09-27 — Élagage automatique Capella
+
+Le runtime active désormais l’élagage aux ticks ; option locale booléenne
+`automaticPruning` (défaut true). Le réacteur attend le contexte d’époque requis
+et diffère si un vote signé référence un bloc qui serait supprimé. La publication
+utilise la validation complète de reprise et le checkpoint durable existants.
+Test natif passé en 67,87 s : 72 blocs, 528 votes, finalité époque 7, six mouvements
+d’ancre, maximum 31 états retenus puis 18 finaux ; réouverture des deux owners.
+La régression de configuration/runtime passe aussi en 21,75 s.
+**Partiel** : ce parcours ne qualifie pas encore le report sur vote de branche
+concurrente, les preuves de slashing ou les pannes entre tick et élagage. Les
+55 références de dépôts conservées, l’historique EVM et les archives croissent
+encore ; aucune borne globale du disque ni qualification WAN/production.
+[Implémentation et mesures](qualification/capella-automatic-pruning-20260927/README.md).

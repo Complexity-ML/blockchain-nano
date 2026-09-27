@@ -26,7 +26,7 @@ public:
 class CapellaDurableReactor {
  ChainStore& disk_;Blockchain* execution_=nullptr;Int chain_;Bytes genesis_;CapellaForkBlockRules rules_;CapellaStoreSnapshotLimits limits_;
  std::mutex& mutex_;std::shared_ptr<const CapellaForkStore> state_;std::optional<ForkCheckpointToken> token_;
- CapellaSignedVotes votes_,slashings_;CapellaPendingBlsChanges bls_changes_;CapellaStoreSnapshotCache cache_;bool unavailable_=false;
+ CapellaSignedVotes votes_,slashings_;CapellaPendingBlsChanges bls_changes_;CapellaStoreSnapshotCache cache_;bool unavailable_=false;bool automatic_pruning_=false;
  std::optional<Bytes> signed_block_locked(const ConsensusRoot&,const std::function<void()>&)const;
  Json network_identity_locked()const;
  void require_available()const;
@@ -38,6 +38,7 @@ class CapellaDurableReactor {
  std::optional<Bytes> prepare_local_body_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,std::span<const SignedTransaction>,size_t,size_t,const std::function<void()>&,std::span<const SignedCapellaBlsChange> = {},size_t maximum_change_trials = 0);
  std::vector<ConsensusRoot> bls_change_roots_locked(const std::function<void()>&)const;
  std::vector<SignedCapellaBlsChange> pending_bls_changes_locked(size_t,const std::function<void()>&)const;
+ void prune_if_ready_locked(const std::function<void()>&);
  void tick_locked(uint64_t,const std::function<void()>&);
  std::optional<Phase0SignedAttestation> sign_attestation_locked(uint64_t,uint64_t,const std::function<uint64_t()>&,const ForkCheckpointToken&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>&);
  std::optional<Bytes> sign_randao_locked(uint64_t,uint64_t,const std::function<uint64_t()>&,const ForkCheckpointToken&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>&);
@@ -68,6 +69,8 @@ public:
  // Local durable maintenance; preserves the selected head and authenticated archives.
  // Scheduling and native deposit-history pinning remain separate responsibilities.
  bool prune_finalized(const std::function<void()>& checkpoint={});
+ // Local maintenance policy, not a consensus/fork parameter. Runtime enables it.
+ void set_automatic_pruning(bool enabled);
  CapellaPublishedStore current()const;
  Json network_identity()const;
  // Atomic archive/checkpoint projection. maximum_bytes bounds raw SSZ; caller

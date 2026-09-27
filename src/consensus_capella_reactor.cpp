@@ -242,6 +242,7 @@ void CapellaDurableReactor::tick_locked(uint64_t time,const std::function<void()
   if(vote->data.target.epoch<(epoch?epoch-1:0))it=votes.erase(it);else ++it;
  }
  publish(std::move(next),check,{},std::move(votes));
+ if(automatic_pruning_)prune_if_ready_locked(check);
 }
 
 bool CapellaDurableReactor::block(std::span<const uint8_t> wire,const std::function<void()>& check){
@@ -366,5 +367,23 @@ bool CapellaDurableReactor::prune_finalized(const std::function<void()>& check){
  // publish reconciles pending BLS admission roots and verifies all retained
  // signed votes/proofs in the exact new envelope before committing it.
  publish(std::move(candidate),check);return true;
+}
+}
+
+namespace nano {
+void CapellaDurableReactor::set_automatic_pruning(bool enabled){std::lock_guard lock(mutex_);require_available();automatic_pruning_=enabled;}
+void CapellaDurableReactor::prune_if_ready_locked(const std::function<void()>& check){
+ const auto& view=state_->timed.view;const auto anchor=view.finalized.root;
+ if(anchor==view.anchor)return;
+ const auto lookahead=rules_.transition.consensus.attestation.duties.min_seed_lookahead;
+ const auto slots=rules_.transition.consensus.epoch.ffg.slots_per_epoch;
+ if(!slots||lookahead>=view.current_epoch)return;
+ const auto retained_epoch=view.current_epoch-lookahead-1;
+ if(retained_epoch>UINT64_MAX/slots||state_->blocks.at(anchor).header.slot>retained_epoch*slots)return;
+ auto candidate=prepare_capella_pruned_store(*state_,anchor,rules_,check);
+ // A recent vote on another branch can still be needed for authenticated replay.
+ // Wait for normal epoch expiry rather than silently discarding signed evidence.
+ for(const auto& [id,wire]:votes_){if(check)check();const auto vote=decode_consensus_attestation_ssz(wire,rules_.transition.consensus.body.validators_per_committee,check);if(!vote)throw std::logic_error("invalid retained Capella vote");if(!candidate.blocks.contains(vote->data.target.root)||!candidate.blocks.contains(vote->data.beacon_block_root))return;}
+ publish(std::move(candidate),check);
 }
 }

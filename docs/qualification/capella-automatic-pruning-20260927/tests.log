@@ -1,0 +1,47 @@
+UpdateCTestConfiguration  from :/Users/boris/Dev/blockchain-nano/build-release/DartConfiguration.tcl
+Test project /Users/boris/Dev/blockchain-nano/build-release
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 362
+    Start 362: consensus_capella_configured_runtime
+
+362: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests "--configured-runtime"
+362: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+362: Test timeout computed to be: 240
+362: {"admissionReceiptChecks":6,"blocks":16,"httpTransport":false,"invalidConfigurationsRejected":6,"keysLoaded":64,"networkTransport":false,"runtimeCatalogChecks":3,"scenario":"capella-configured-runtime","signerWitnessRestart":true,"witnessRestart":true,"workersStopped":true}
+1/2 Test #362: consensus_capella_configured_runtime ...   Passed   21.75 sec
+test 378
+    Start 378: consensus_capella_pruning_automatic
+
+378: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests "--pruning-automatic"
+378: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+378: Test timeout computed to be: 300
+378: {"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+378: {"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+378: {"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+378: {"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+378: {"finalizedEpoch":3,"progressSlot":40,"signedVotes":264}
+378: {"finalizedEpoch":4,"progressSlot":48,"signedVotes":328}
+378: {"finalizedEpoch":5,"progressSlot":56,"signedVotes":392}
+378: {"finalizedEpoch":6,"progressSlot":64,"signedVotes":456}
+378: {"finalizedEpoch":7,"progressSlot":72,"signedVotes":520}
+378: {"finalizedEpoch":7,"progressSlot":73,"signedVotes":528}
+378: {"anchorMoves":6,"depositAncestorPins":55,"finalRetainedRecords":18,"finalizedEpoch":7,"maximumRetainedRecords":31,"nativeProfile":true,"reopenedBothOwners":true,"scenario":"capella-automatic-pruning"}
+378: {"blocks":72,"executionOwner":true,"finalizedEpoch":7,"independentStores":2,"justifiedEpoch":8,"networkActivated":false,"networkTransport":false,"participationPercent":100,"scenario":"capella-local-assembly-finality","signingJournalsReopened":64,"storeReopens":2,"votes":528}
+2/2 Test #378: consensus_capella_pruning_automatic ....   Passed   67.87 sec
+
+The following tests passed:
+	consensus_capella_configured_runtime
+	consensus_capella_pruning_automatic
+
+100% tests passed out of 2
+
+Label Time Summary:
+qualification_consensus_recovery    =  67.87 sec*proc (1 test)
+qualification_consensus_runtime     =  21.75 sec*proc (1 test)
+
+Total Test time (real) =  89.63 sec

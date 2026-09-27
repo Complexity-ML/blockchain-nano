@@ -31,7 +31,7 @@ std::string read_bounded(const std::filesystem::path& path,size_t maximum,const 
 struct Owner {InboundBudget decoder_budget;std::unique_ptr<ChainStore> witness;std::unique_ptr<CapellaDurableReactor> reactor;std::unique_ptr<CapellaLocalClock> clock;std::unique_ptr<CapellaValidatorLoop> validator;std::unique_ptr<CapellaConsensusService> admission;std::unique_ptr<CapellaInventorySessions> catalogs;};
 }
 CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const std::function<void()>& checkpoint,std::function<uint64_t()> now){
- if(checkpoint)checkpoint();auto base=config;base.erase("validator");base.erase("admission");base.erase("catalogs");base.erase("recoveryWitness");base.erase("network");shape(base,{"profile","limits","initial","restart","clock"});
+ if(checkpoint)checkpoint();auto base=config;base.erase("validator");base.erase("admission");base.erase("catalogs");base.erase("recoveryWitness");base.erase("network");base.erase("automaticPruning");shape(base,{"profile","limits","initial","restart","clock"});
  const auto& genesis=chain.genesis();
  if(genesis.consensus!="beacon"||genesis.evm_revision!=EvmRevision::Shanghai)throw std::invalid_argument("Capella runtime requires Beacon Shanghai chain");
  const auto& p=config.at("profile");shape(p,{"file","sha256","maximumBytes"});const auto maximum=number(p.at("maximumBytes"));
@@ -59,6 +59,8 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const 
   auto initial=capella_store_from_snapshot(read_bounded(a.at("file").get<std::string>(),limits.envelope_bytes,checkpoint),digest(a.at("sha256")),rules,limits,checkpoint);
   owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,std::move(initial),checkpoint,owner->witness.get());
  }
+ if(config.contains("automaticPruning")&&!config.at("automaticPruning").is_boolean())throw std::invalid_argument("Capella automaticPruning must be boolean");
+ owner->reactor->set_automatic_pruning(config.value("automaticPruning",true));
  if(!now)now=[](){const auto ms=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();if(ms<0)throw std::runtime_error("Negative local time");return uint64_t(ms);};
  owner->clock=std::make_unique<CapellaLocalClock>(*owner->reactor,step,now);
  owner->clock->poll(checkpoint);chain.require_execution_ready();
