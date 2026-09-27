@@ -1,5 +1,5 @@
 #include "altair_worker.hpp"
-#include "altair_stream.hpp"
+#include "altair_stream_session.hpp"
 #include <future>
 #include <iostream>
 #include <thread>
@@ -7,13 +7,18 @@ class TestStream:public libp2p::connection::Stream {
  asio::io_context& io_;std::string input_;size_t offset_=0;ReadCallbackFunc pending_;
 public:
  size_t fragment=7;unsigned resets=0,closes=0;std::string written;bool authenticated=true,fail_write=false;
+ std::function<void()> after_write;
+ bool hold_write=false;WriteCallbackFunc waiting_write;size_t waiting_bytes=0;
+ void finish_write(){auto cb=std::exchange(waiting_write,WriteCallbackFunc{});if(cb)cb(waiting_bytes);}
+ void next_input(std::string input){check_no_pending();input_=std::move(input);offset_=0;}
+ void check_no_pending(){if(pending_)throw std::logic_error("test input must follow ACK before next read");}
  TestStream(asio::io_context& io,std::string input):io_(io),input_(std::move(input)){}
  void read(libp2p::BytesOut out,size_t bytes,ReadCallbackFunc cb)override{readSome(out,bytes,std::move(cb));}
  void readSome(libp2p::BytesOut out,size_t bytes,ReadCallbackFunc cb)override{
   if(offset_==input_.size()){pending_=std::move(cb);return;}
   const auto n=std::min({fragment,bytes,input_.size()-offset_});std::copy_n(input_.begin()+offset_,n,out.begin());offset_+=n;asio::post(io_,[cb=std::move(cb),n]{cb(n);});
  }
- void writeSome(libp2p::BytesIn in,size_t bytes,WriteCallbackFunc cb)override{if(fail_write){asio::post(io_,[cb=std::move(cb)]{cb(std::make_error_code(std::errc::broken_pipe));});return;}const auto n=std::min(fragment,bytes);written.append(reinterpret_cast<const char*>(in.data()),n);asio::post(io_,[cb=std::move(cb),n]{cb(n);});}
+ void writeSome(libp2p::BytesIn in,size_t bytes,WriteCallbackFunc cb)override{if(fail_write){asio::post(io_,[cb=std::move(cb)]{cb(std::make_error_code(std::errc::broken_pipe));});return;}const auto n=std::min(fragment,bytes);written.append(reinterpret_cast<const char*>(in.data()),n);if(after_write)after_write();if(hold_write){waiting_bytes=n;waiting_write=std::move(cb);return;}asio::post(io_,[cb=std::move(cb),n]{cb(n);});}
  void deferReadCallback(outcome::result<size_t> result,ReadCallbackFunc cb)override{asio::post(io_,[result,cb=std::move(cb)]{cb(result);});}
  void deferWriteCallback(std::error_code ec,WriteCallbackFunc cb)override{if(ec)asio::post(io_,[ec,cb=std::move(cb)]{cb(ec);});}
  void reset()override{++resets;if(auto cb=std::exchange(pending_,ReadCallbackFunc{}))deferReadCallback(std::make_error_code(std::errc::operation_canceled),std::move(cb));}
@@ -84,6 +89,91 @@ int main(){try{
   held.clear();check(budget.active()==0,"diagnostics leaked lease");
   if(mode=="observer-throws")check(Json::parse(stream->written)==Json{{"accepted",true}},"observer affected admission");
   ++cases;
+ }
+
+ // One stream, sequential frames offered only after a complete ACK. There is
+ // never more than one durable admission; a rejection also consumes a frame.
+ {
+  asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);
+  auto stream=std::make_shared<TestStream>(io,packet);stream->fragment=4096;
+  unsigned calls=0,acks=0;Request::Done done;
+  stream->after_write=[&]{++acks;stream->next_input(packet);};
+  auto session=std::make_shared<AltairStreamSession>(io,stream,ingress,[&](auto,auto,auto cb){check(budget.active()==1,"session admission bypassed lease");++calls;done=std::move(cb);return true;},Request::Observe{},3);
+  session->start();io.poll();
+  for(unsigned i=0;i<3;++i){
+   check(calls==i+1&&acks==i&&budget.active()==1,"session pipelined before durable completion");
+   auto finish=std::exchange(done,Request::Done{});finish(i==1?Decision::rejected:Decision::accepted);finish(Decision::accepted);
+   io.restart();io.poll();
+  }
+  io.restart();io.run();
+  check(calls==3&&acks==3&&stream->closes==1&&budget.active()==0,"session bound or duplicate completion failed");
+  check(stream->written=="{\"accepted\":true}{\"accepted\":false}{\"accepted\":true}","session changed per-message ACK");
+  std::weak_ptr<AltairStreamSession> weak=session;session.reset();check(weak.expired(),"completed session retained cycle");++cases;
+ }
+ for(unsigned mode=0;mode<5;++mode){
+  // second frame invalid / idle / cancelled worker / failed ACK / local failure
+  asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);
+  auto stream=std::make_shared<TestStream>(io,packet);stream->fragment=4096;
+  unsigned calls=0,acks=0;Request::Done done;Request::Cancellation cancelled;
+  stream->after_write=[&]{++acks;stream->next_input(mode==0?"{invalid}":mode==1?"":packet);if(mode==3)stream->fail_write=true;};
+  auto session=std::make_shared<AltairStreamSession>(io,stream,ingress,[&](auto,auto flag,auto cb){
+   ++calls;if(calls==1)cb(Decision::accepted);else if(mode==2){cancelled=flag;done=std::move(cb);}else cb(mode==4?Decision::local_failure:Decision::accepted);return true;
+  },Request::Observe{},3,std::chrono::milliseconds(50));
+  session->start();io.poll();
+  if(mode==2){session->cancel();check(cancelled->load()&&budget.active()==1,"session cancel released running worker");done(Decision::accepted);done(Decision::accepted);done={};}
+  io.restart();io.run();
+  if(!(calls==(mode<2?1U:2U)&&acks==1&&stream->resets>=1&&stream->closes==0&&budget.active()==0))throw std::runtime_error("failed session "+Json{{"mode",mode},{"calls",calls},{"acks",acks},{"resets",stream->resets},{"closes",stream->closes},{"active",budget.active()}}.dump());
+  std::weak_ptr<AltairStreamSession> weak=session;session.reset();check(weak.expired(),"failed session retained cycle");++cases;
+ }
+ {
+  // Cancellation in the ACK observer must reset even though the request has
+  // already marked itself finished. No queued continuation may dispatch.
+  asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);
+  auto stream=std::make_shared<TestStream>(io,packet);stream->fragment=4096;unsigned calls=0;
+  stream->after_write=[&]{stream->next_input(packet);};
+  std::shared_ptr<AltairStreamSession> session;
+  session=std::make_shared<AltairStreamSession>(io,stream,ingress,[&](auto,auto,auto cb){++calls;cb(Decision::accepted);return true;},[&](Json){session->cancel();});
+  session->start();io.run();check(calls==1&&stream->resets==1&&budget.active()==0,"ACK-boundary cancellation left open session");++cases;
+ }
+ {
+  // Every reuse re-enters the same peer bulk budget. Existing concurrent work
+  // may take the available permits between ACK and the next read.
+  asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);
+  auto stream=std::make_shared<TestStream>(io,packet);stream->fragment=4096;unsigned calls=0;std::vector<std::shared_ptr<InboundBudget::Lease>> held;std::string reason;
+  stream->after_write=[&]{stream->next_input(packet);};
+  auto session=std::make_shared<AltairStreamSession>(io,stream,ingress,[&](auto,auto,auto cb){++calls;cb(Decision::accepted);return true;},[&](Json report){
+   if(report["reason"]=="accepted-ack-written")asio::post(io,[&]{for(unsigned i=0;i<2;++i)held.push_back(ingress->acquire(stream->remotePeerId().value().toBase58()));});
+   else if(report["reason"]=="inbound-budget")reason=report["budgetReason"];
+  });
+  session->start();io.run();check(calls==1&&reason=="peer-bulk-concurrency"&&stream->resets==1&&budget.active()==2,"session bypassed reacquisition limits");held.clear();check(budget.active()==0,"external budget lease leak");++cases;
+ }
+
+ {
+  // No refill is possible: pre-create the peer bucket at a future monotonic
+  // instant, consuming one of its eight burst tokens. The session gets seven.
+  asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);
+  auto stream=std::make_shared<TestStream>(io,packet);stream->fragment=4096;
+  auto seed=ingress->acquire(stream->remotePeerId().value().toBase58(),InboundBudget::Clock::now()+std::chrono::hours(1));seed.reset();
+  unsigned calls=0;std::string reason;stream->after_write=[&]{stream->next_input(packet);};
+  auto session=std::make_shared<AltairStreamSession>(io,stream,ingress,[&](auto,auto,auto cb){++calls;cb(Decision::accepted);return true;},[&](Json report){if(report["reason"]=="inbound-budget")reason=report["budgetReason"];});
+  session->start();io.run();check(calls==7&&reason=="peer-bulk-rate"&&budget.active()==0&&stream->resets==1,"session bypassed per-message rate charge");++cases;
+ }
+ {
+  asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);
+  auto stream=std::make_shared<TestStream>(io,packet);stream->fragment=4096;unsigned calls=0;
+  auto wrong=Json::parse(packet);wrong["chainId"]="0x1";stream->after_write=[&]{stream->next_input(wrong.dump());};
+  auto session=std::make_shared<AltairStreamSession>(io,stream,ingress,[&](auto,auto,auto cb){++calls;cb(Decision::accepted);return true;});
+  session->start();io.run();check(calls==1&&stream->resets==1&&budget.active()==0,"session reused first frame domain validation");++cases;
+ }
+ {
+  // ACK completion arriving after the per-message deadline cannot resume a
+  // session, even if the underlying write eventually reports success.
+  asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);
+  auto stream=std::make_shared<TestStream>(io,packet);stream->fragment=4096;stream->hold_write=true;unsigned calls=0;
+  stream->after_write=[&]{stream->next_input(packet);};
+  auto session=std::make_shared<AltairStreamSession>(io,stream,ingress,[&](auto,auto,auto cb){++calls;cb(Decision::accepted);return true;},Request::Observe{},3,std::chrono::milliseconds(2));
+  session->start();io.run_for(std::chrono::milliseconds(10));check(bool(stream->waiting_write)&&stream->resets==1&&budget.active()==0,"ACK deadline did not abort session");
+  stream->finish_write();io.restart();io.run();check(calls==1&&stream->closes==0&&budget.active()==0,"late ACK resumed expired session");++cases;
  }
  std::cout<<Json{{"scenario","altair-async-stream"},{"cases",cases},{"workerThreadCompletion",true},{"expiredWorkerLeaseRetained",true},{"realPeerConnections",false}}.dump()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

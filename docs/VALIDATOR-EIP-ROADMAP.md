@@ -3716,3 +3716,13 @@ Prochaine correction : amortir négociation et accusés par réutilisation ou lo
 bornés, en préservant les décisions d'admission et les budgets. **Blocage actif**,
 aucune nouvelle conformité EVM ou disponibilité de production.
 [Mesures et limites](qualification/capella-send-timing-20260927/README.md).
+
+
+### Primitive de réception réutilisable — 27 septembre 2026
+
+Session séquentielle bornée à 16 messages, avec budget, validation du domaine et
+accusé distincts par message. Annulation à la frontière ACK corrigée ; **11 cas
+nouveaux**, 30 au total dans `altair_stream`, et `timed_reply` passent. Binaire
+P2P compilé. **Non raccordée au réseau** : négociation, émetteur et invalidation
+par génération restent à intégrer. Le contre-exemple de finalité à 500ms reste
+ouvert ; aucun statut EIP ou production clôturé. [Preuves et limites](qualification/consensus-stream-session-20260927/README.md).
