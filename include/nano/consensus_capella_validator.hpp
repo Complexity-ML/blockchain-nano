@@ -9,7 +9,7 @@ struct CapellaValidatorKey {
  std::string fee_recipient;
 };
 // One local duty scheduler. Does not supply registry weight or peer time.
-// Every signed result re-enters normal reactor admission and its durable archive.
+// Signed results re-enter normal admission; sync messages remain ephemeral.
 // Signing-provider/journal errors stop this scheduler, not consensus admission.
 class CapellaValidatorLoop {
  CapellaDurableReactor& reactor_;CapellaLocalClock& clock_;
@@ -20,7 +20,7 @@ class CapellaValidatorLoop {
  uint64_t polls_=0,poll_max_ms_=0,polls_over_slot_=0,proposal_attempts_=0,proposal_max_ms_=0,proposals_unavailable_=0,slot_exits_=0;
  size_t trace_limit_=0;uint64_t trace_failures_=0;std::deque<Json> duty_trace_;std::optional<uint64_t> traced_slot_;
  void record_duty(uint64_t,const Phase0SignedAttestation&);
- bool stopping_=false,failed_=false;uint64_t proposals_=0,votes_=0,stale_retries_=0;std::string failure_;
+ bool stopping_=false,failed_=false;uint64_t proposals_=0,votes_=0,sync_messages_=0,stale_retries_=0;std::string failure_;
 public:
  CapellaValidatorLoop(CapellaDurableReactor&,CapellaLocalClock&,uint64_t slot_ms,uint64_t slots_per_epoch,
   size_t maximum_transaction_trials,size_t maximum_vote_trials,std::vector<CapellaValidatorKey>,std::function<uint64_t()> local_clock);

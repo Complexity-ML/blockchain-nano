@@ -34,6 +34,9 @@ class CapellaDurableReactor {
  std::map<uint64_t,PendingSyncAggregate> pending_sync_;
  struct PendingSyncMessages { uint64_t slot; ConsensusRoot parent; std::map<uint64_t,Bytes> wires; };
  std::map<uint64_t,PendingSyncMessages> pending_sync_messages_;
+ struct SyncSigningContext {uint64_t slot;ConsensusRoot parent,block_root,genesis_root;ConsensusBytes4 version;std::map<uint64_t,Bytes> members;};
+ std::optional<SyncSigningContext> sync_signing_context_;
+ const SyncSigningContext& sync_signing_context_locked(uint64_t,const std::function<void()>&);
  bool sync_messages_current_locked(const PendingSyncMessages&,const std::function<void()>&)const;
  bool submit_sync_message_locked(const CapellaSyncMessage&,const ForkCheckpointToken&,const std::function<void()>&);
  bool submit_sync_aggregate_locked(uint64_t,std::span<const uint8_t>,const ForkCheckpointToken&,const std::function<void()>&);
@@ -54,12 +57,15 @@ class CapellaDurableReactor {
  std::optional<Bytes> prepare_local_body_from_pool_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,size_t,size_t,const std::function<void()>&);
  void publish(CapellaForkStore,const std::function<void()>&,const std::vector<CheckpointArchiveEntry>& archive={},std::optional<CapellaSignedVotes> votes=std::nullopt,std::optional<CapellaSignedVotes> slashings=std::nullopt,std::optional<CapellaPendingBlsChanges> changes=std::nullopt);
 public:
- // Ephemeral, bounded to one aggregate for the current proposal slot and head.
- // Verifies membership/domain/signature; merges disjoint positions, otherwise
- // retains the higher participation without double-counting overlap.
- // No durable mutation or local signing. RPC/P2P collection is separate.
- // Message.slot is the signed slot; accepted during its signed slot or the following proposal slot.
- // Adds only this validator's missing committee positions, retaining multiplicity.
+ // Local duties sign during the signed slot and enter normal admission.
+ // Returns only committee members whose current message is not already held.
+ std::set<uint64_t> current_sync_members(uint64_t signed_slot,const std::function<void()>& checkpoint={});
+ std::optional<CapellaSyncMessage> sync_current(uint64_t validator_index,uint64_t signed_slot,
+  const std::function<uint64_t()>& local_clock,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,
+  const std::function<void()>& checkpoint={});
+ // Ephemeral current/next proposal contexts, each bounded to one committee.
+ // Incoming messages verify membership/domain/signature without local signing.
+ // Disjoint aggregate positions merge; overlap is never double-counted.
  bool sync_message_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
  bool submit_sync_message(const CapellaSyncMessage&,const ForkCheckpointToken&,
   const std::function<void()>& checkpoint={});

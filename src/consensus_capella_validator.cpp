@@ -50,6 +50,12 @@ void CapellaValidatorLoop::poll(const std::function<void()>& checkpoint){
    const auto vote=reactor_.attest_current(key.index,slot,now_,*key.journal,key.signer,check);
    if(vote){record_duty(key.index,*vote);if(!reactor_.vote(*vote,check))throw std::runtime_error("Locally signed Capella attestation refused by admission");++votes_;}
   }
+  const auto sync_members=reactor_.current_sync_members(slot,check);
+  for(const auto& key:keys_){
+   if(!sync_members.contains(key.index))continue;
+   check();if(!same_slot()){++slot_exits_;return;}
+   if(reactor_.sync_current(key.index,slot,now_,*key.journal,key.signer,check))++sync_messages_;
+  }
  }catch(const ExpiredCapellaDuty&){
   if(cancelled)throw;
   ++slot_exits_;return;
@@ -82,7 +88,7 @@ void CapellaValidatorLoop::record_duty(uint64_t index,const Phase0SignedAttestat
   duty_trace_.push_back(std::move(entry));while(duty_trace_.size()>trace_limit_)duty_trace_.pop_front();traced_slot_=vote.data.slot;
  }catch(...){++trace_failures_;/* Consensus admission still follows. */}
 }
-Json CapellaValidatorLoop::status(bool include_trace){std::lock_guard lock(mutex_);Json result={{"healthy",!failed_},{"localKeys",keys_.size()},{"proposalsAdmitted",proposals_},{"attestationsAdmitted",votes_},{"staleDutyRetries",stale_retries_},{"timing",{{"polls",polls_},{"maxPollMs",poll_max_ms_},{"pollsOverSlot",polls_over_slot_},{"proposalAttempts",proposal_attempts_},{"maxProposalMs",proposal_max_ms_},{"proposalsUnavailable",proposals_unavailable_},{"slotBoundaryExits",slot_exits_}}},{"failure",failure_.empty()?Json(nullptr):Json(failure_)},{"dutyTraceFailures",trace_failures_}};if(include_trace)result["dutyTrace"]=duty_trace_;return result;}
+Json CapellaValidatorLoop::status(bool include_trace){std::lock_guard lock(mutex_);Json result={{"healthy",!failed_},{"localKeys",keys_.size()},{"proposalsAdmitted",proposals_},{"attestationsAdmitted",votes_},{"syncMessagesAdmitted",sync_messages_},{"staleDutyRetries",stale_retries_},{"timing",{{"polls",polls_},{"maxPollMs",poll_max_ms_},{"pollsOverSlot",polls_over_slot_},{"proposalAttempts",proposal_attempts_},{"maxProposalMs",proposal_max_ms_},{"proposalsUnavailable",proposals_unavailable_},{"slotBoundaryExits",slot_exits_}}},{"failure",failure_.empty()?Json(nullptr):Json(failure_)},{"dutyTraceFailures",trace_failures_}};if(include_trace)result["dutyTrace"]=duty_trace_;return result;}
 Json CapellaValidatorLoop::restart_commitments(){
  std::lock_guard lock(mutex_);Json out=Json::array();
  for(const auto& key:keys_){const auto token=key.journal->commitment();out.push_back({{"index",quantity(Int(std::to_string(key.index)))},{"restart",{{"sequence",quantity(Int(std::to_string(token.sequence)))},{"digest",hex(token.digest)}}}});}

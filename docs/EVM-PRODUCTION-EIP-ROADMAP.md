@@ -505,3 +505,18 @@ contextes vérifiée. 40 blocs / 272 votes / finalité 3 / deux réouvertures, 4
 libp2p dans les délais restent ouverts. Cette correction remplace la rétention à
 un seul contexte de la tranche précédente, sans clôturer une EIP ni la production.
 [Spécification et preuves](qualification/capella-sync-precollection-20260927/README.md).
+
+
+### Signature sync locale et planificateur — 27 septembre 2026
+
+`sync_current` authentifie comité/branche/domaine et journal de clé, contrôle la
+signature du fournisseur et l’échéance, puis repasse par l’admission normale.
+Le planificateur effectue ce devoir après les attestations et expose le compteur
+`syncMessagesAdmitted`. Les messages déjà collectés ne sont pas resignés.
+**1280 messages sync**, 40 blocs, 272 attestations et finalité 3 dans le scénario
+planifié, avec redémarrage et 64 journaux réouverts (38,21 s). Comparaison à des
+signatures indépendantes, mauvaise clé, annulation, signature invalide, dépassement
+de slot et seuil du tiers de slot qualifiés séparément (48,46 s).
+État **partiel réseau/consensus** : clocks synthétiques, livraison libp2p/WAN dans
+les délais, rotation de comité et performance restent à qualifier. Aucune clôture
+EIP ou production. [Preuves](qualification/capella-sync-local-signing-20260927/README.md).

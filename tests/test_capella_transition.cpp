@@ -124,11 +124,24 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
    ConsensusBytes4 version{};std::copy_n(advanced.ssz.begin()+(message.slot/slots<little(advanced.ssz,56,8)?48:52),4,version.begin());
    const auto signing_root=consensus_signing_root(message.beacon_block_root,consensus_domain({7,0,0,0},version,genesis_root));
    const size_t committee=272+64*l.slots_per_historical_root+32*l.epochs_per_historical_vector+8*l.epochs_per_slashings_vector+133;
-   precollected.resize(bit_bytes+96);blst_p2 sum{};bool first=true;
+   precollected.resize(bit_bytes+96);blst_p2 sum{};bool first=true;std::set<uint64_t> locally_signed;
    for(size_t position=0;position<l.sync_committee_size;++position){
     size_t member=0;for(;member<64;++member){const auto key=Key(member).public_key;if(std::equal(key.begin(),key.end(),advanced.ssz.begin()+committee+48*position))break;}check(member<64,"early sync unknown committee member");
     message.validator_index=member;const auto signature=Key(member).sign(signing_root);copy_to(message.signature,signature);
-    check(nodes[0]->submit_sync_message(message,before.token),"sync rejected during signed slot");
+    uint64_t signing_now=before.state->timed.clock.time_ms;auto signing_clock=[&]{return signing_now;};auto provider=[&](const ConsensusRoot& root){check(root==signing_root,"local sync signing domain/root differs");return Key(member).sign(root);};
+    if(locally_signed.insert(member).second){
+     if(slot==3&&first){
+      bool wrong=false;try{nodes[0]->sync_current(member,message.slot,signing_clock,journal((member+1)%64),provider);}catch(const std::invalid_argument&){wrong=true;}check(wrong,"sync accepted wrong signing journal");
+      bool cancelled=false;try{nodes[0]->sync_current(member,message.slot,signing_clock,journal(member),provider,[]{throw ExecutionCancelled("sync signing cancelled");});}catch(const ExecutionCancelled&){cancelled=true;}check(cancelled,"sync signer ignored cancellation");
+      bool invalid=false;try{nodes[0]->sync_current(member,message.slot,signing_clock,journal(member),[](const ConsensusRoot&){return Bytes(96);});}catch(const std::runtime_error&){invalid=true;}check(invalid,"sync signer accepted invalid provider signature");
+      bool expired=false;try{nodes[0]->sync_current(member,message.slot,signing_clock,journal(member),[&](const ConsensusRoot& root){signing_now+=rules.slot_duration_ms;return provider(root);});}catch(const ExpiredCapellaDuty&){expired=true;}check(expired,"sync signer published after deadline");signing_now=before.state->timed.clock.time_ms;
+      check(nodes[0]->capture_inventory("sync_committee_message",4096)->page({},64,16384)["entries"].empty(),"failed sync signing published a message");
+     }
+     check(nodes[0]->current_sync_members(message.slot).contains(member),"sync duty membership missing");const auto commitment=journal(member).commitment();
+     const auto produced=nodes[0]->sync_current(member,message.slot,signing_clock,journal(member),provider);check(produced&&encode_capella_sync_message(*produced)==encode_capella_sync_message(message),"local sync signing differs from independent vector");check(journal(member).commitment()==commitment,"sync fabricated a slashing reservation");
+     check(!nodes[0]->current_sync_members(message.slot).contains(member),"completed sync duty remained pending");
+    }
+    check(!nodes[0]->sync_current(member,message.slot,signing_clock,journal(member),[](const ConsensusRoot&)->Bytes{throw std::runtime_error("duplicate sync signing");}),"sync replay signed again");
     const auto bytes=encode_capella_sync_message(message);ConsensusRoot id{};copy_to(id,sha256(bytes));const auto exported=nodes[0]->export_message("sync_committee_message",id,144);check(exported["available"]==true,"early sync unavailable to relay");check(nodes[1]->sync_message_ssz(unhex(exported["envelope"]["ssz"].get<std::string>())),"early sync rejected by second reactor");
     blst_p2_affine affine;check(blst_p2_uncompress(&affine,signature.data())==BLST_SUCCESS,"early sync signature invalid");blst_p2 point;blst_p2_from_affine(&point,&affine);if(first){sum=point;first=false;}else blst_p2_add_or_double(&sum,&sum,&point);precollected[position/8]|=uint8_t(1u<<(position%8));
    }
@@ -138,6 +151,12 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
   const auto current=nodes[0]->current();const auto& head=capella_fork_head(*current.state,rules);const auto proposer=prepare_capella_proposer_identity(head.state,head.header,slot,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state,t.consensus.attestation.duties,limits.replay_slots,limits.sync_trials);if(slashing_retirement&&!proposer){++skipped_slashed_proposers;continue;}check(bool(proposer),"local loop proposer missing");
   auto provider=[&](const ConsensusRoot& root){return Key(proposer->index).sign(root);};auto& proposer_journal=journal(proposer->index);
   const auto reveal=nodes[0]->sign_randao(proposer->index,slot,[&]{return now;},current.token,proposer_journal,provider);check(bool(reveal),"local loop RANDAO missing");
+  if(local_sync&&slot==2){
+   const auto members=nodes[0]->current_sync_members(slot);check(!members.empty(),"missing skipped-slot sync members");const auto member=*members.begin();size_t calls=0;uint64_t wall=now;auto clock=[&]{return wall;};auto signer=[&](const ConsensusRoot& root){++calls;return Key(member).sign(root);};
+   check(!nodes[0]->sync_current(member,slot,clock,journal(member),signer)&&calls==0,"sync signed skipped head before one-third slot");
+   wall+=rules.slot_duration_ms/3+uint64_t(rules.slot_duration_ms%3!=0);check(bool(nodes[0]->sync_current(member,slot,clock,journal(member),signer))&&calls==1,"sync did not sign skipped head at one-third slot");
+  }
+
   tx.nonce=head.execution_state.get(sender).nonce;const std::vector<SignedTransaction> pending{SignedTransaction::sign(tx,sender_key)};
   if(owner_mode)for(auto& owner:owners)check(owner->submit(pending.front())&&owner->pending_count()==1,"Capella pool submission failed");
   Bytes expected_sync;std::vector<ConsensusRoot> exported_sync;
@@ -325,7 +344,7 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
  }
  if(queued_bls_changes){check(head.execution_state.get("0x000000000000000000000000000000000000002b").balance>0,"owner queued withdrawal unpaid");for(size_t i=0;i<2;++i){const auto& disk=owner_mode?owners[i]->store():*disks[i];const auto record=disk.fork_checkpoint(t.chain_id,genesis.header.hash(),limits.envelope_bytes,nodes[i]->current().token);check(record&&!Json::parse(record->snapshot).contains("blsChanges"),"finalized BLS queue not retired");}}
  if(owner_mode){Rpc rpc(*owners[0]);nodes[0]->invalidate();check(rpc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method","eth_blockNumber"},{"params",Json::array()}}).contains("error"),"invalidated owner still served block number");}
- std::cout<<Json{{"scenario","capella-local-assembly-finality"},{"localSyncAggregates",local_sync},{"disjointSyncMerging",local_sync},{"individualSyncMessages",local_sync},{"syncWireWorker",local_sync},{"syncCatalogExport",local_sync},{"syncPrecollection",local_sync},{"executionOwner",owner_mode},{"participationPercent",local_finality},{"blocks",blocks},{"votes",votes},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"justifiedEpoch",result.state->timed.view.justified.epoch},{"independentStores",2},{"storeReopens",restarts},{"signingJournalsReopened",reopened_journals},{"networkTransport",false},{"networkActivated",false}}.dump()<<std::endl;
+ std::cout<<Json{{"scenario","capella-local-assembly-finality"},{"localSyncAggregates",local_sync},{"disjointSyncMerging",local_sync},{"individualSyncMessages",local_sync},{"syncWireWorker",local_sync},{"syncCatalogExport",local_sync},{"syncPrecollection",local_sync},{"localSyncSigning",local_sync},{"executionOwner",owner_mode},{"participationPercent",local_finality},{"blocks",blocks},{"votes",votes},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"justifiedEpoch",result.state->timed.view.justified.epoch},{"independentStores",2},{"storeReopens",restarts},{"signingJournalsReopened",reopened_journals},{"networkTransport",false},{"networkActivated",false}}.dump()<<std::endl;
 }
 static void scheduler_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules,const Block& genesis,const State& genesis_state){
  Temp directory;const auto limits=crash_limits;const auto& t=rules.transition;const auto slots=t.consensus.epoch.ffg.slots_per_epoch;const auto validators=root_at(initial.blocks.at(initial.timed.view.anchor).state.ssz,8);
@@ -338,26 +357,27 @@ static void scheduler_loop(const CapellaForkStore& initial,const CapellaForkBloc
  bool wrong_timing=false;try{CapellaValidatorLoop invalid(*reactor,*clock,rules.slot_duration_ms,slots+1,16,64,keys,wall);}catch(const std::invalid_argument&){wrong_timing=true;}check(wrong_timing,"scheduler accepted wrong epoch duration");
  auto loop=std::make_unique<CapellaValidatorLoop>(*reactor,*clock,rules.slot_duration_ms,slots,16,64,keys,wall);
  const auto key=bytes(Int(777),32);Transaction tx;tx.type=2;tx.to="0x0000000000000000000000000000000000001234";tx.gas=100000;tx.max_fee=2000000000;tx.priority_fee=100000000;const auto sender=SignedTransaction::sign(tx,key).sender();
- uint64_t proposals=0,votes=0;
+ uint64_t proposals=0,votes=0,sync_messages=0;
  for(uint64_t slot=2;slot<=5*slots+1;++slot){
   now=initial.timed.clock.genesis_time_ms+slot*rules.slot_duration_ms;tx.nonce=owner->state().get(sender).nonce;check(owner->submit(SignedTransaction::sign(tx,key)),"scheduler mempool submit");
   loop->poll();const auto current=reactor->current();const auto& head=capella_fork_head(*current.state,rules);check(head.header.slot==slot&&head.execution_block.transactions.size()==1&&owner->pending_count()==0,"scheduler failed to produce mempool block");
+  check(!reactor->capture_inventory("sync_committee_message",4096)->page({},64,16384)["entries"].empty(),"scheduler did not publish sync messages");
   const auto count=signatures;const auto token=current.token;++now;loop->poll();check(signatures==count&&reactor->current().token==token,"same-phase scheduler repeated signing or publication");
   now=initial.timed.clock.genesis_time_ms+slot*rules.slot_duration_ms+rules.attestation_due_ms;loop->poll();check(loop->status().at("healthy")==true,"scheduler unhealthy");
   if(slot==3*slots){
-   proposals+=loop->status().at("proposalsAdmitted").get<uint64_t>();votes+=loop->status().at("attestationsAdmitted").get<uint64_t>();loop->stop();clock->stop();loop.reset();clock.reset();reactor.reset();owner.reset();
+   proposals+=loop->status().at("proposalsAdmitted").get<uint64_t>();votes+=loop->status().at("attestationsAdmitted").get<uint64_t>();sync_messages+=loop->status().at("syncMessagesAdmitted").get<uint64_t>();loop->stop();clock->stop();loop.reset();clock.reset();reactor.reset();owner.reset();
    std::map<uint64_t,ForkCheckpointToken> saved;for(const auto& [i,journal]:journals)saved.emplace(i,journal->commitment());keys.clear();journals.clear();disks.clear();load_keys(saved);
    owner=std::make_unique<Blockchain>(directory/"owner",g);reactor=std::make_unique<CapellaDurableReactor>(*owner,rules,limits,witness);clock=std::make_unique<CapellaLocalClock>(*reactor,2*rules.slot_duration_ms,wall);loop=std::make_unique<CapellaValidatorLoop>(*reactor,*clock,rules.slot_duration_ms,slots,16,64,keys,wall);
   }
  }
  const auto current=reactor->current();check(current.state->timed.view.finalized.epoch>=3&&owner->state().get(sender).nonce==41,"scheduled chain did not finalize all transactions");
  const auto finalized_header=reactor->beacon_read("/eth/v1/beacon/headers/finalized");const auto finalized_root=current.state->timed.view.finalized.root;check(finalized_header.status==200&&finalized_header.body.at("finalized")==true&&finalized_header.body.at("data").at("root")==hex(Bytes(finalized_root.begin(),finalized_root.end())),"scheduled finalized Beacon header mismatch");
- proposals+=loop->status().at("proposalsAdmitted").get<uint64_t>();votes+=loop->status().at("attestationsAdmitted").get<uint64_t>();check(proposals==40&&votes>0,"scheduler duty counters");
+ proposals+=loop->status().at("proposalsAdmitted").get<uint64_t>();votes+=loop->status().at("attestationsAdmitted").get<uint64_t>();sync_messages+=loop->status().at("syncMessagesAdmitted").get<uint64_t>();check(proposals==40&&votes>0&&sync_messages>0,"scheduler duty counters");
  bool cancelled=false;try{loop->poll([]{throw ExecutionCancelled("scheduler cancellation");});}catch(const ExecutionCancelled&){cancelled=true;}check(cancelled&&loop->status().at("healthy")==true&&clock->healthy(),"cancellation poisoned scheduler");
  // Exercise the real worker lifecycle with a stable clock and already completed duties.
  const auto prior=signatures;const auto polls_before=loop->status().at("timing").at("polls").get<uint64_t>();loop->start(std::chrono::milliseconds(1));std::this_thread::sleep_for(std::chrono::milliseconds(20));loop->stop();check(signatures==prior&&loop->status().at("healthy")==true&&loop->status().at("timing").at("polls").get<uint64_t>()>polls_before,"worker failed to poll or duplicated completed duty");
  now-=1;bool rejected=false;try{clock->poll();}catch(const std::runtime_error&){rejected=true;}check(rejected&&!clock->healthy(),"backward clock accepted");bool closed=false;try{owner->tip();}catch(const std::runtime_error&){closed=true;}check(closed,"clock failure left execution readable");bool beacon_closed=false;try{reactor->beacon_read("/eth/v1/beacon/headers/head");}catch(const std::runtime_error&){beacon_closed=true;}check(beacon_closed,"clock failure left Beacon readable");
- std::cout<<Json{{"scenario","capella-scheduled-finality"},{"blocks",proposals},{"votes",votes},{"finalizedEpoch",current.state->timed.view.finalized.epoch},{"witnessRestart",true},{"signingJournalsReopened",64},{"duplicatePollNoSignature",true},{"backwardsClockClosedOwner",true},{"networkTransport",false}}.dump()<<std::endl;
+ std::cout<<Json{{"scenario","capella-scheduled-finality"},{"syncMessages",sync_messages},{"blocks",proposals},{"votes",votes},{"finalizedEpoch",current.state->timed.view.finalized.epoch},{"witnessRestart",true},{"signingJournalsReopened",64},{"duplicatePollNoSignature",true},{"backwardsClockClosedOwner",true},{"networkTransport",false}}.dump()<<std::endl;
 }
 static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules,const Block& genesis,const State& genesis_state){
  Temp directory;const auto limits=crash_limits;const auto& t=rules.transition;const auto slots=t.consensus.epoch.ffg.slots_per_epoch;
