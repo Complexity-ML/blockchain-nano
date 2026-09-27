@@ -1004,3 +1004,14 @@ Test passé en 22,09 s. Échec initial du budget de 64 blocs du banc conservé,
 budget du scénario calculé à 98 sans changement de consensus. Activation après
 reorg, finalité, threads concurrents et WAN restent ouverts. Aucun EIP clôturé.
 [Preuves](qualification/capella-competing-deposit-reorg-20260927/README.md).
+
+## 2026-09-27 — Activation et finalité après la réindexation 64 vers 65
+
+Extension intégrée de la concurrence de dépôts : après sélection de BA, la
+boucle automatique retrouve A à l'index 65, attend l'activation époque 13 puis
+produit neuf attestations admises. Aucun appel au signataire avant activation.
+Le producteur et l'observateur finalisent le même checkpoint d'époque 20 ; les
+deux réouvertures conservent finalité et index. Test passé en 175,54 s, jusqu'au
+slot 177. Trois bases locales, appels orchestrés sans transport WAN, journal A
+resté ouvert, pas de crash au commit ni reorgs soutenues. Aucun EIP/profil ou
+objectif production clôturé. [Preuves](qualification/capella-reindexed-activation-20260927/README.md).

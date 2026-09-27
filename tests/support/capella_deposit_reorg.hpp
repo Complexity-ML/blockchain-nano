@@ -1,14 +1,14 @@
 // Isolated adversarial publishers deliberately sign competing blocks with separate
 // journals. Never run this fixture with real validator keys or public peers.
 static void deposit_reorg_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules,const Block& genesis,const State& genesis_state){
- Temp directory;const auto& t=rules.transition;auto limits=crash_limits;const auto period=t.consensus.state.eth1_votes_limit;check(period&&period<=64,"competing deposit period unbounded");const auto stop=period+period/2+1;limits.blocks=2*stop;const auto slots=t.consensus.epoch.ffg.slots_per_epoch;
+ Temp directory;const auto& t=rules.transition;const auto slots=t.consensus.epoch.ffg.slots_per_epoch;auto limits=crash_limits;const auto period=t.consensus.state.eth1_votes_limit;check(period&&period<=64,"competing deposit period unbounded");const auto stop=period+period/2+1;limits.blocks=2*stop+(deposit_reorg_activation?(t.consensus.exit.max_seed_lookahead+12)*slots:0);
  const auto validators=root_at(initial.blocks.at(initial.timed.view.anchor).state.ssz,8);
  Genesis g;g.chain_id=t.chain_id;g.consensus="beacon";g.evm_revision=EvmRevision::Shanghai;g.block=genesis;g.state=genesis_state;
  std::array<std::unique_ptr<Blockchain>,3> owners;std::array<std::unique_ptr<CapellaDurableReactor>,3> nodes;
  for(size_t n=0;n<3;++n){owners[n]=std::make_unique<Blockchain>(directory/("owner-"+std::to_string(n)),g);nodes[n]=std::make_unique<CapellaDurableReactor>(*owners[n],rules,limits,initial);}
  std::array<std::map<uint64_t,std::unique_ptr<ChainStore>>,2> disks;
  std::array<std::map<uint64_t,std::unique_ptr<BeaconSigningJournal>>,2> journals;
- auto journal=[&](size_t n,uint64_t i)->BeaconSigningJournal&{if(!journals[n].contains(i)){disks[n][i]=std::make_unique<ChainStore>(directory/("key-"+std::to_string(n)+"-"+std::to_string(i)));journals[n][i]=std::make_unique<BeaconSigningJournal>(*disks[n][i],t.chain_id,genesis.header.hash(),validators,Key(i).public_key,slots);}return *journals[n][i];};
+ auto journal=[&](size_t n,uint64_t i)->BeaconSigningJournal&{if(!journals[n].contains(i)){disks[n][i]=std::make_unique<ChainStore>(directory/("key-"+std::to_string(n)+"-"+std::to_string(i)));journals[n][i]=std::make_unique<BeaconSigningJournal>(*disks[n][i],t.chain_id,genesis.header.hash(),validators,Key(i<64||!n?i:129-i).public_key,slots);}return *journals[n][i];};
  auto data=[&](uint64_t index){Phase0Deposit d{};Key key(index);copy_to(d.message.public_key,key.public_key);d.message.withdrawal_credentials[0]=1;d.message.withdrawal_credentials[31]=44;d.message.amount_gwei=t.consensus.deposit.maximum_effective_balance;copy_to(d.signature,key.sign(consensus_signing_root(consensus_deposit_root(d.message),consensus_domain({3,0,0,0},t.genesis_version,{}))));
   const std::string method="deposit(bytes,bytes,bytes,bytes32)";auto out=keccak(Bytes(method.begin(),method.end()));out.resize(4);Bytes args(416);auto word=[&](size_t at,size_t n){const auto v=bytes(Int(n),32);std::copy(v.begin(),v.end(),args.begin()+at);};word(0,128);word(32,224);word(64,288);const auto root=consensus_deposit_data_root(d);std::copy(root.begin(),root.end(),args.begin()+96);word(128,48);std::copy(d.message.public_key.begin(),d.message.public_key.end(),args.begin()+160);word(224,32);std::copy(d.message.withdrawal_credentials.begin(),d.message.withdrawal_credentials.end(),args.begin()+256);word(288,96);std::copy(d.signature.begin(),d.signature.end(),args.begin()+320);out.insert(out.end(),args.begin(),args.end());return out;};
  Transaction tx;tx.type=2;tx.to=ethereum_deposit_contract;tx.gas=1000000;tx.max_fee=2000000000;tx.priority_fee=100000000;tx.value=Int(std::to_string(t.consensus.deposit.maximum_effective_balance))*1000000000;
@@ -40,4 +40,39 @@ static void deposit_reorg_loop(const CapellaForkStore& initial,const CapellaFork
   nodes[2].reset();owners[2].reset();owners[2]=std::make_unique<Blockchain>(directory/"owner-2",g);nodes[2]=std::make_unique<CapellaDurableReactor>(*owners[2],rules,limits,current.token);check(nodes[2]->current_validator_indices(requested)==expected,"reopen lost branch registry");++switches;
  }
  std::cout<<Json{{"scenario","capella-competing-deposit-reorg"},{"branches",2},{"depositsPerBranch",2},{"registrySize",66},{"selectedBranches",switches},{"observerReopens",switches},{"indexA",Json::array({64,65})},{"networkTransport",false},{"activationQualified",false},{"staleIndexRefused",stale_index_refused},{"providerCalls",provider_calls}}.dump()<<std::endl;
+ if(deposit_reorg_activation){
+  for(size_t n:{1,2})nodes[n]->set_automatic_pruning(true);
+  uint64_t local_clock=nodes[2]->current().state->timed.clock.time_ms;
+  auto clock=std::make_unique<CapellaLocalClock>(*nodes[2],2*rules.slot_duration_ms,[&]{return local_clock;});
+  auto shared_journal=std::shared_ptr<BeaconSigningJournal>(&local_journal,[](auto*){});
+  std::vector<CapellaValidatorKey> local{{0,shared_journal,[&](const ConsensusRoot& root){++provider_calls;return Key(64).sign(root);},genesis.header.coinbase,Key(64).public_key}};
+  auto loop=std::make_unique<CapellaValidatorLoop>(*nodes[2],*clock,rules.slot_duration_ms,slots,16,64,std::move(local),[&]{return local_clock;});
+  uint64_t activation=UINT64_MAX;size_t new_votes=0;const auto end=stop+(t.consensus.exit.max_seed_lookahead+12)*slots;
+  for(uint64_t slot=stop+1;slot<=end;++slot){
+   now=initial.timed.clock.genesis_time_ms+slot*rules.slot_duration_ms;for(size_t n:{1,2})nodes[n]->tick(now);
+   const auto proposer=nodes[1]->current_proposer(slot);check(bool(proposer),"post-reorg proposer absent");const auto signing_key=*proposer<64?*proposer:129-*proposer;
+   const auto wire=nodes[1]->propose_current(*proposer,slot,genesis.header.coinbase,16,64,[&]{return now;},journal(1,*proposer),[&](const ConsensusRoot& root){return Key(signing_key).sign(root);});check(wire&&nodes[1]->block(*wire)&&nodes[2]->block(*wire),"post-reorg block failed");
+   now+=rules.attestation_due_ms;for(size_t n:{1,2})nodes[n]->tick(now);
+   const auto current=nodes[1]->current();const auto& head=capella_fork_head(*current.state,rules);
+   const auto context=capella_fork_block_context(head.state,head.header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state);
+   activation=context.registry.validators.at(65).activation_epoch;
+   const auto assigned=prepare_capella_attestation_duties(*current.state,rules,slot,limits.replay_slots,limits.sync_trials);
+   for(const auto& [index,duty]:assigned){if(index==65)continue;const auto key=index<64?index:129-index;
+    const auto vote=nodes[1]->attest_current(index,slot,[&]{return now;},journal(1,index),[&](const ConsensusRoot& root){return Key(key).sign(root);});check(bool(vote)&&nodes[1]->vote(*vote)&&nodes[2]->vote(*vote),"post-reorg vote failed");
+   }
+   const auto archived=nodes[2]->signed_votes();local_clock=now;loop->poll();check(loop->status().at("healthy")==true,"reindexed automatic loop failed");
+   for(const auto& [id,wire]:nodes[2]->signed_votes())if(!archived.contains(id))check(nodes[1]->vote_ssz(wire),"reindexed automatic vote rejected by peer");
+   new_votes=loop->status().at("attestationsAdmitted").get<size_t>();
+   if(slot/slots<activation)check(provider_calls==0&&new_votes==0,"reindexed key signed before activation");
+   check(nodes[2]->current_validator_indices(requested).at(Key(64).public_key)==65,"post-reorg index reverted");
+   if(slot%slots==0)std::cout<<Json{{"scenario","deposit-reorg-activation-progress"},{"slot",slot},{"activationEpoch",activation},{"newVotes",new_votes},{"finalizedEpoch",nodes[2]->current().state->timed.view.finalized.epoch}}.dump()<<std::endl;
+  }
+  loop.reset();clock.reset();const auto left=nodes[1]->current(),right=nodes[2]->current();
+  check(activation!=UINT64_MAX&&new_votes>=2&&left.state->timed.view.finalized==right.state->timed.view.finalized&&left.state->timed.view.finalized.epoch>activation,"reindexed validator did not vote and finalize");
+  const auto journal_token=local_journal.commitment();const auto finalized=left.state->timed.view.finalized;
+  for(size_t n:{1,2}){const auto token=nodes[n]->current().token;nodes[n].reset();owners[n].reset();owners[n]=std::make_unique<Blockchain>(directory/("owner-"+std::to_string(n)),g);nodes[n]=std::make_unique<CapellaDurableReactor>(*owners[n],rules,limits,token);check(nodes[n]->current_validator_indices(requested).at(Key(64).public_key)==65&&nodes[n]->current().state->timed.view.finalized==finalized,"post-activation reopen lost finality or index");}
+  check(local_journal.commitment()==journal_token,"owner reopen mutated signing journal");
+  std::cout<<Json{{"scenario","capella-reindexed-validator-activation"},{"activationEpoch",activation},{"newValidatorVotes",new_votes},{"providerCalls",provider_calls},{"finalizedEpoch",finalized.epoch},{"finalizedRoot",hex(Bytes(finalized.root.begin(),finalized.root.end()))},{"bothOwnersReopened",true},{"index",65},{"networkTransport",false}}.dump()<<std::endl;
+ }
+
 }

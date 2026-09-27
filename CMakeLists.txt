@@ -1693,3 +1693,6 @@ set_tests_properties(consensus_capella_registration_signing_guard PROPERTIES TIM
 
 add_test(NAME consensus_capella_competing_deposit_reorg COMMAND nano-capella-transition-tests --deposit-reorg)
 set_tests_properties(consensus_capella_competing_deposit_reorg PROPERTIES TIMEOUT 360 LABELS "qualification_consensus_runtime")
+
+add_test(NAME consensus_capella_reindexed_validator_activation COMMAND nano-capella-transition-tests --deposit-reorg-activation)
+set_tests_properties(consensus_capella_reindexed_validator_activation PROPERTIES TIMEOUT 360 LABELS "qualification_consensus_runtime")

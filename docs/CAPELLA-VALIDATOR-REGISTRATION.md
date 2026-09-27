@@ -69,7 +69,10 @@ Le contrôle d'identité complet du devoir et le journal anti-slashing restent
 obligatoires. Une bascule locale entre deux branches à dépôts inversés est maintenant
 qualifiée : index 64 puis 65, deux réouvertures, ancien index refusé sans
 signature. [Preuves](qualification/capella-competing-deposit-reorg-20260927/README.md).
-La disponibilité sous reorgs soutenues, l'activation après cette bascule et le
+L'activation après cette bascule est qualifiée localement : époque 13, neuf
+attestations de A à l'index 65, finalité commune époque 20 conservée après
+réouverture des deux propriétaires. [Preuves](qualification/capella-reindexed-activation-20260927/README.md).
+La disponibilité sous reorgs soutenues, les crashes pendant transition et le
 transport distribué restent à qualifier.
 
 Ce mode concerne Capella natif Nano. Il ne déclare pas le cycle EIP-6110 Ethereum
