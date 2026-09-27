@@ -1563,3 +1563,8 @@ if(APPLE)
  add_test(NAME consensus_capella_execution_owner_sync COMMAND nano-capella-transition-tests --owner-sync)
  set_tests_properties(consensus_capella_execution_owner_sync PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_ethereum")
 endif()
+
+if(APPLE)
+ add_test(NAME consensus_capella_execution_owner_witness COMMAND nano-capella-transition-tests --owner-witness)
+ set_tests_properties(consensus_capella_execution_owner_witness PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_recovery")
+endif()

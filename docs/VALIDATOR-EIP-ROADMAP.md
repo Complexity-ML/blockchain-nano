@@ -2816,3 +2816,19 @@ fournit le jeton de reprise correspondant à l’issue connue ; l’authentifica
 indépendante de ce jeton reste requise pour le runtime de production.
 Restent migration inter-forks du Store vivant, ordonnanceur/transport Capella,
 files de sorties/changements BLS, contributions sync et qualification dépôts natifs.
+
+### Capella : reprise à partir d’un témoin séparé
+
+Le coordinateur peut écrire un journal témoin avant chaque commit principal :
+jetons précédent/suivant, snapshot et bloc signé nouvellement archivé. La reprise
+accepte exclusivement l’état précédent ou suivant attesté par ce témoin et termine
+la publication précédente si nécessaire, archive signée comprise.
+Trois cas qualifiés : erreur fsync principale avec suffixe conservé ou perdu,
+et erreur fsync du témoin avec intention conservée et principal inchangé.
+Témoin vide, signature d’archive corrompue et rollback trop ancien refusés.
+Cinq suites réussies en 62,04 s, dont finalité/reprise et réorganisations raccordées.
+[Preuves](qualification/capella-witness-recovery-20260927/README.md).
+Le témoin reste une source de confiance locale indépendante à provisionner ; deux
+répertoires sur le même disque ne protègent pas d’un rollback ou d’une perte commune.
+Perte du suffixe du témoin lui-même non qualifiée ici. Raccordement au runtime,
+migration du Store vivant, ordonnanceur et P2P Capella restent ouverts.

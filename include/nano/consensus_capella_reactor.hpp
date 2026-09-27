@@ -17,17 +17,22 @@ class CapellaDurableReactor {
  CapellaSignedVotes votes_,slashings_;CapellaStoreSnapshotCache cache_;bool unavailable_=false;
  std::optional<Bytes> signed_block_locked(const ConsensusRoot&,const std::function<void()>&)const;
  void require_available()const;
+ ChainStore* witness_=nullptr;std::optional<ForkCheckpointToken> witness_token_;
+ size_t witness_limit()const;
+ void witness_prepare(std::string_view,const std::vector<CheckpointArchiveEntry>&);
  void validate_execution_binding()const;
  void fail_closed();
  std::optional<Bytes> prepare_local_body_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,std::span<const SignedTransaction>,size_t,size_t,const std::function<void()>&);
  void publish(CapellaForkStore,const std::function<void()>&,const std::vector<CheckpointArchiveEntry>& archive={},std::optional<CapellaSignedVotes> votes=std::nullopt,std::optional<CapellaSignedVotes> slashings=std::nullopt);
 public:
- CapellaDurableReactor(ChainStore&,Int,Bytes,CapellaForkBlockRules,CapellaStoreSnapshotLimits,CapellaForkStore,const std::function<void()>& checkpoint={},Blockchain* owner=nullptr);
+ CapellaDurableReactor(ChainStore&,Int,Bytes,CapellaForkBlockRules,CapellaStoreSnapshotLimits,CapellaForkStore,const std::function<void()>& checkpoint={},Blockchain* owner=nullptr,ChainStore* witness=nullptr);
  CapellaDurableReactor(ChainStore&,Int,Bytes,CapellaForkBlockRules,CapellaStoreSnapshotLimits,const ForkCheckpointToken&,const std::function<void()>& checkpoint={},Blockchain* owner=nullptr);
- CapellaDurableReactor(Blockchain&,CapellaForkBlockRules,CapellaStoreSnapshotLimits,CapellaForkStore,const std::function<void()>& checkpoint={});
+ CapellaDurableReactor(Blockchain&,CapellaForkBlockRules,CapellaStoreSnapshotLimits,CapellaForkStore,const std::function<void()>& checkpoint={},ChainStore* witness=nullptr);
  CapellaDurableReactor(Blockchain&,CapellaForkBlockRules,CapellaStoreSnapshotLimits,const ForkCheckpointToken&,const std::function<void()>& checkpoint={});
  CapellaDurableReactor(const CapellaDurableReactor&)=delete;
  CapellaDurableReactor& operator=(const CapellaDurableReactor&)=delete;
+ // The separate witness is an explicitly trusted rollback boundary.
+ CapellaDurableReactor(Blockchain&,CapellaForkBlockRules,CapellaStoreSnapshotLimits,ChainStore& witness,const std::function<void()>& checkpoint={});
  ~CapellaDurableReactor();
  void invalidate();
  std::optional<Bytes> prepare_local_body_from_pool(uint64_t validator_index,uint64_t slot,

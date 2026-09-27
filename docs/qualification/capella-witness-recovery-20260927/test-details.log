@@ -1,0 +1,99 @@
+Start testing: Sep 27 04:43 CEST
+----------------------------------------------------------
+348/359 Testing: consensus_capella_signed_transition
+348/359 Test: consensus_capella_signed_transition
+Command: "/Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests"
+Directory: /Users/boris/Dev/blockchain-nano/build-release
+"consensus_capella_signed_transition" start time: Sep 27 04:43 CEST
+Output:
+----------------------------------------------------------
+{"assembledBodies":9,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":0,"includedAttestations":0,"localAttestations":0,"localProposals":8,"localRandao":8,"migrated":false,"networkActivated":false,"participationPercent":100,"rejected":20,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"withdrawals":1}
+{"assembledBodies":9,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":1,"includedAttestations":0,"localAttestations":0,"localProposals":8,"localRandao":8,"migrated":true,"networkActivated":false,"participationPercent":100,"rejected":24,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"withdrawals":1}
+{"assembledBodies":9,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":1,"includedAttestations":0,"localAttestations":0,"localProposals":8,"localRandao":8,"migrated":true,"networkActivated":false,"participationPercent":100,"rejected":24,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":3,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"withdrawals":1}
+<end of output>
+Test time =  15.33 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_signed_transition" end time: Sep 27 04:43 CEST
+"consensus_capella_signed_transition" time elapsed: 00:00:15
+----------------------------------------------------------
+
+356/359 Testing: consensus_capella_execution_owner
+356/359 Test: consensus_capella_execution_owner
+Command: "/Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests" "--owner-finality"
+Directory: /Users/boris/Dev/blockchain-nano/build-release
+"consensus_capella_execution_owner" start time: Sep 27 04:43 CEST
+Output:
+----------------------------------------------------------
+{"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+{"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+{"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+{"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+{"finalizedEpoch":3,"progressSlot":40,"signedVotes":264}
+{"finalizedEpoch":3,"progressSlot":41,"signedVotes":272}
+{"blocks":40,"executionOwner":true,"finalizedEpoch":3,"independentStores":2,"justifiedEpoch":4,"networkActivated":false,"networkTransport":false,"participationPercent":100,"scenario":"capella-local-assembly-finality","signingJournalsReopened":64,"storeReopens":2,"votes":272}
+<end of output>
+Test time =  31.38 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_execution_owner" end time: Sep 27 04:44 CEST
+"consensus_capella_execution_owner" time elapsed: 00:00:31
+----------------------------------------------------------
+
+357/359 Testing: consensus_capella_execution_owner_reorg
+357/359 Test: consensus_capella_execution_owner_reorg
+Command: "/Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests" "--owner-reorg"
+Directory: /Users/boris/Dev/blockchain-nano/build-release
+"consensus_capella_execution_owner_reorg" start time: Sep 27 04:44 CEST
+Output:
+----------------------------------------------------------
+{"branchSwitches":2,"networkTransport":false,"orphanReinserted":true,"receiptRpcChecked":true,"scenario":"capella-owner-reorg"}
+{"assembledBodies":9,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":0,"includedAttestations":0,"localAttestations":0,"localProposals":8,"localRandao":8,"migrated":false,"networkActivated":false,"participationPercent":100,"rejected":20,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"withdrawals":1}
+<end of output>
+Test time =   5.26 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_execution_owner_reorg" end time: Sep 27 04:44 CEST
+"consensus_capella_execution_owner_reorg" time elapsed: 00:00:05
+----------------------------------------------------------
+
+358/359 Testing: consensus_capella_execution_owner_sync
+358/359 Test: consensus_capella_execution_owner_sync
+Command: "/Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests" "--owner-sync"
+Directory: /Users/boris/Dev/blockchain-nano/build-release
+"consensus_capella_execution_owner_sync" start time: Sep 27 04:44 CEST
+Output:
+----------------------------------------------------------
+{"blockedOperations":8,"executionOwner":true,"lostSuffix":false,"networkActivated":false,"physicalPowerLoss":false,"replay":true,"scenario":"capella-reactor-sync"}
+{"blockedOperations":8,"executionOwner":true,"lostSuffix":true,"networkActivated":false,"physicalPowerLoss":false,"replay":true,"scenario":"capella-reactor-sync"}
+<end of output>
+Test time =   4.36 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_execution_owner_sync" end time: Sep 27 04:44 CEST
+"consensus_capella_execution_owner_sync" time elapsed: 00:00:04
+----------------------------------------------------------
+
+359/359 Testing: consensus_capella_execution_owner_witness
+359/359 Test: consensus_capella_execution_owner_witness
+Command: "/Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests" "--owner-witness"
+Directory: /Users/boris/Dev/blockchain-nano/build-release
+"consensus_capella_execution_owner_witness" start time: Sep 27 04:44 CEST
+Output:
+----------------------------------------------------------
+{"blockedOperations":8,"corruptArchiveRejected":true,"emptyWitnessRejected":true,"faultWitness":false,"lostSuffix":false,"networkActivated":false,"oldRollbackRejected":true,"physicalPowerLoss":false,"restoredSignedArchive":true,"scenario":"capella-owner-witness"}
+{"blockedOperations":8,"corruptArchiveRejected":true,"emptyWitnessRejected":true,"faultWitness":false,"lostSuffix":true,"networkActivated":false,"oldRollbackRejected":true,"physicalPowerLoss":false,"restoredSignedArchive":true,"scenario":"capella-owner-witness"}
+{"blockedOperations":6,"corruptArchiveRejected":true,"emptyWitnessRejected":true,"faultWitness":true,"lostSuffix":false,"networkActivated":false,"oldRollbackRejected":true,"physicalPowerLoss":false,"restoredSignedArchive":true,"scenario":"capella-owner-witness"}
+<end of output>
+Test time =   5.70 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_execution_owner_witness" end time: Sep 27 04:44 CEST
+"consensus_capella_execution_owner_witness" time elapsed: 00:00:05
+----------------------------------------------------------
+
+End testing: Sep 27 04:44 CEST
+
+qualification_consensus_ethereum =  41.00 sec*proc
+
+qualification_consensus_recovery =   5.70 sec*proc
