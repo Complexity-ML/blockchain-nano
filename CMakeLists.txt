@@ -1638,3 +1638,6 @@ set_tests_properties(consensus_capella_slashing_retirement PROPERTIES TIMEOUT 30
 
 add_test(NAME consensus_capella_deposit_consumption COMMAND nano-capella-transition-tests --deposit-consumption)
 set_tests_properties(consensus_capella_deposit_consumption PROPERTIES TIMEOUT 300 LABELS "qualification_consensus_runtime")
+
+add_test(NAME consensus_capella_deposit_activation COMMAND nano-capella-transition-tests --deposit-activation)
+set_tests_properties(consensus_capella_deposit_activation PROPERTIES TIMEOUT 360 LABELS "qualification_consensus_runtime")

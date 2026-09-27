@@ -3407,3 +3407,20 @@ Résultat : passé en 87,06 s ; consommation au slot 80, poursuite jusqu’au sl
 pénalité exacte de 11 180 gwei, solde attendu/observé de 33 007 719 982 gwei.
 Réouverture des deux bases et rejeu idempotent vérifiés.
 [Scénario et preuves](qualification/capella-deposit-consumption-20260927/README.md).
+
+### 2026-09-27 — Admission et activation d’une nouvelle clé native
+
+Nouveau scénario `consensus_capella_deposit_activation` : dépôt signé au seuil
+de solde effectif pour une clé absente du genesis, après élagage et réouverture.
+Le registre doit passer de 64 à 65 entrées seulement lors de la consommation du
+dépôt ; identité, credentials et solde initial sont vérifiés. La clé en attente
+ne doit pas signer ; son époque programmée doit rester stable, puis ses votes
+doivent être acceptés sur les deux owners et son activation survivre au restart.
+Passé en 159,63 s : dépôt consommé au slot 80, activation époque 17, trois
+votes de la nouvelle clé acceptés, finalité époque 18 au slot 161. Réouverture
+des deux bases vérifiée ; régression top-up passée (85,92 s). Aucun correctif
+du runtime requis. L’époque exacte n’est pas comparée à un client de référence.
+**Partiel** : scénario local à clés synthétiques ; pas churn massif, signature
+de dépôt invalide, partition, reorg ni panne au commit d’activation. Ne clôture
+pas EIP-6110 ni l’ensemble du consensus de production.
+[Scénario et preuves](qualification/capella-deposit-activation-20260927/README.md).
