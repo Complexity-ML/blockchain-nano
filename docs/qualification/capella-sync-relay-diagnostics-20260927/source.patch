@@ -1,0 +1,55 @@
+diff --git a/network/capella_catalog_relay.hpp b/network/capella_catalog_relay.hpp
+index 7be9509..1a05aa7 100644
+--- a/network/capella_catalog_relay.hpp
++++ b/network/capella_catalog_relay.hpp
+@@ -18,0 +19,3 @@ private:
++ std::string failure_stage_,reason_;std::chrono::steady_clock::time_point started_at_;
++ size_t exports_=0;std::optional<uint64_t> sync_slot_;
++ void failure(std::string reason){if(reason_.empty()){reason_=std::move(reason);failure_stage_=stage_;}close(false);}
+@@ -21 +24 @@ private:
+- void complete(bool success,bool closed){if(finished_)return;finished_=true;timer_.cancel();auto done=std::move(done_);done(Json{{"success",success},{"closed",closed},{"delivered",delivered_},{"stage",stage_}});}
++ void complete(bool success,bool closed){if(finished_)return;finished_=true;timer_.cancel();auto done=std::move(done_);done(Json{{"success",success},{"closed",closed},{"delivered",delivered_},{"stage",stage_},{"failureStage",failure_stage_.empty()?Json(nullptr):Json(failure_stage_)},{"reason",reason_.empty()?Json(nullptr):Json(reason_)},{"exports",exports_},{"syncSlot",sync_slot_?Json(*sync_slot_):Json(nullptr)},{"elapsedMs",std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-started_at_).count()}});}
+@@ -35 +38 @@ private:
+-   self.complete(self.desired_success_&&value==true,value==true);
++   if(value!=true&&self.reason_.empty()){self.reason_="release-unconfirmed";self.failure_stage_="close";}self.complete(self.desired_success_&&value==true,value==true);
+@@ -39,0 +43 @@ private:
++  if(!success&&reason_.empty()){reason_="invalid-response";failure_stage_=stage_;}
+@@ -59 +63 @@ private:
+-  stage_="export";const auto id=entries_.at(index_).get<std::string>();
++  stage_="export";++exports_;const auto id=entries_.at(index_).get<std::string>();
+@@ -61 +65,3 @@ private:
+-   if(!value.is_object()||value.value("available",Json())!=true||value.value("root",Json())!=id){self.close(false);return;}
++   if(value.is_null()){self.failure("export-unconfirmed");return;}
++   if(!value.is_object()||value.value("root",Json())!=id){self.failure("export-invalid-root");return;}
++   if(value.value("available",Json())!=true){self.failure("export-unavailable");return;}
+@@ -64,2 +70,3 @@ private:
+-   if(!message||message->kind!=expected){self.close(false);return;}
+-   if(expected==AltairWireKind::bls_to_execution_change||expected==AltairWireKind::sync_committee_message){unsigned char digest[32];SHA256(message->ssz.data(),message->ssz.size(),digest);std::string actual="0x";for(auto b:digest){actual+="0123456789abcdef"[b>>4];actual+="0123456789abcdef"[b&15];}if(actual!=id){self.close(false);return;}}
++   if(!message||message->kind!=expected){self.failure("invalid-envelope");return;}
++   if(expected==AltairWireKind::sync_committee_message){uint64_t slot=0;for(size_t i=0;i<8;++i)slot|=uint64_t(message->ssz[i])<<(8*i);self.sync_slot_=slot;}
++   if(expected==AltairWireKind::bls_to_execution_change||expected==AltairWireKind::sync_committee_message){unsigned char digest[32];SHA256(message->ssz.data(),message->ssz.size(),digest);std::string actual="0x";for(auto b:digest){actual+="0123456789abcdef"[b>>4];actual+="0123456789abcdef"[b&15];}if(actual!=id){self.failure("digest-mismatch");return;}}
+@@ -68 +75 @@ private:
+-    if(!ack.is_object()||ack.size()!=1||ack.value("accepted",Json())!=true){s.close(false);return;}
++    if(!ack.is_object()||ack.size()!=1||ack.value("accepted",Json())!=true){s.failure(ack.is_object()&&ack.size()==1&&ack.value("accepted",Json())==false?"admission-rejected":"delivery-unconfirmed");return;}
+@@ -72 +79 @@ private:
+-    if(s.delivered_==s.maximum_){s.close(false);return;}s.page();
++    if(s.delivered_==s.maximum_){s.failure("entry-limit");return;}s.page();
+@@ -82 +89 @@ public:
+-  if(started_)throw std::logic_error("Capella catalog relay already started");if(timeout<=std::chrono::steady_clock::duration::zero())throw std::invalid_argument("Invalid Capella relay timeout");started_=true;
++  if(started_)throw std::logic_error("Capella catalog relay already started");if(timeout<=std::chrono::steady_clock::duration::zero())throw std::invalid_argument("Invalid Capella relay timeout");started_=true;started_at_=std::chrono::steady_clock::now();
+@@ -93 +100 @@ public:
+- void cancel(){if(finished_)return;if(!request_.empty()&&!closing_)cleanup_request();stage_="cancelled";complete(false,false);}
++ void cancel(){if(finished_)return;if(reason_.empty()){reason_="cancelled-or-deadline";failure_stage_=stage_;}if(!request_.empty()&&!closing_)cleanup_request();stage_="cancelled";complete(false,false);}
+diff --git a/network/test_capella_catalog_relay.cpp b/network/test_capella_catalog_relay.cpp
+index 26a5e0d..67c6c63 100644
+--- a/network/test_capella_catalog_relay.cpp
++++ b/network/test_capella_catalog_relay.cpp
+@@ -28,0 +29,5 @@ int main(){try{
++  check(result.contains("elapsedMs")&&result["elapsedMs"].get<int64_t>()>=0,"missing relay elapsed time");
++  if(success)check(result["reason"].is_null()&&result["failureStage"].is_null(),"success has failure reason");
++  if(mode=="unavailable")check(result["reason"]=="export-unavailable"&&result["failureStage"]=="export","lost export failure reason");
++  if(mode=="rejected")check(result["reason"]=="admission-rejected"&&result["failureStage"]=="delivery","rejection confused with transport failure");
++  if(mode=="lost-ack")check(result["reason"]=="cancelled-or-deadline"&&result["failureStage"]=="delivery","unknown outcome reported as rejection");
+@@ -45 +50 @@ int main(){try{
+-  auto deliver=[&](std::string actual,Json frame,Reply reply){check(actual==id&&frame.at("ssz")==wire,"changed BLS catalog payload");++delivered;reply(Json{{"accepted",true}});};auto relay=std::make_shared<CapellaCatalogRelay>(io,core,deliver,"token",kind,ingress,1,1,[&](Json value){result=std::move(value);});relay->start(1s);io.run();check(result.at("success")==!wrong_id&&delivered==(wrong_id?0:1)&&closed==1,"BLS catalog identity or cleanup failed");++scenarios;
++  auto deliver=[&](std::string actual,Json frame,Reply reply){check(actual==id&&frame.at("ssz")==wire,"changed BLS catalog payload");++delivered;reply(Json{{"accepted",true}});};auto relay=std::make_shared<CapellaCatalogRelay>(io,core,deliver,"token",kind,ingress,1,1,[&](Json value){result=std::move(value);});relay->start(1s);io.run();check(result.at("success")==!wrong_id&&delivered==(wrong_id?0:1)&&closed==1,"BLS catalog identity or cleanup failed");if(wrong_id)check(result["reason"]=="digest-mismatch"&&result["failureStage"]=="export","digest failure reason lost");++scenarios;

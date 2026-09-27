@@ -3561,3 +3561,17 @@ Régression d’élagage passée (67,76 s), puis confirmation réseau réussie.
 incomplètes contre 11 complètes (pas un taux de perte par message). Priorité à
 l’efficacité de livraison ; WAN, adversité, rotation et production restent ouverts.
 [Preuves, échec conservé et limites](qualification/capella-sync-distributed-20260927/README.md).
+
+
+### Relais sync : suppression des échos — 27 septembre 2026
+
+Les admissions acceptées alimentent maintenant le bon cache de possession du pair
+pour les attestations et messages sync Capella. Les catalogues consultent ce cache
+avant l’export ; les limites de débit, délais et règles de consensus restent inchangés.
+Quatre tests réseau passent (33 cas pour le catalogue), dont rejet, changement de
+session, pagination et budgets. Sur deux vrais pairs locaux : finalité commune 2,
+**32/32 positions sync dans les 8 blocs finalisés contrôlés**, contre 21–30 avant.
+Exports blocs 5981→81, attestations 19863→237, sync 3736→1092 sur ces deux runs.
+**Partiel** : 119 livraisons sync sans accusé confirmé subsistent ; ces nombres ne
+sont pas des taux de perte ni une garantie générale. Attribution côté réception,
+rotation, WAN et adversité restent ouverts. [Preuves et limites](qualification/capella-sync-noecho-20260927/README.md).

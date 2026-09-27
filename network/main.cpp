@@ -171,7 +171,7 @@ class Network {
       *active=std::make_shared<CapellaBlockDelivery>(io_,core,send,report_token_,capella_relay_.at("anchorRoot").get<std::string>(),root,altair_ingress_,knowledge,capella_relay_.at("dependencyBlocks").get<size_t>(),capella_relay_.at("dependencyBytes").get<size_t>(),std::move(reply));(*active)->start();
      }else send(std::move(frame),[knowledge,root,reply=std::move(reply)](Json result)mutable{if(result.is_object()&&result.size()==1&&result.value("accepted",Json())==true)knowledge->acknowledge(root);reply(std::move(result));});
     };
-    std::make_shared<CapellaCatalogRelay>(io_,core,deliver,report_token_,kind,altair_ingress_,capella_relay_.at("pageEntries").get<size_t>(),capella_relay_.at("maximumEntries").get<size_t>(),[this,id,kind,active](Json result){if(*active)(*active)->cancel();altair_relay_budget_.release(id);if(trace_network_){result["event"]="test-capella-catalog-relay";result["peerId"]=id;result["kind"]=kind;std::cout<<result.dump()<<std::endl;}})->start();return;
+    std::make_shared<CapellaCatalogRelay>(io_,core,deliver,report_token_,kind,altair_ingress_,capella_relay_.at("pageEntries").get<size_t>(),capella_relay_.at("maximumEntries").get<size_t>(),[this,id,kind,active](Json result){if(*active)(*active)->cancel();altair_relay_budget_.release(id);if(trace_network_){result["event"]="test-capella-catalog-relay";result["peerId"]=id;result["kind"]=kind;std::cout<<result.dump()<<std::endl;}},[current,knowledge](const std::string& root){return current()&&knowledge->acknowledged(root);})->start();return;
    }
    if(++it==peers_.end())it=peers_.begin();
   }while(it!=start);
@@ -248,7 +248,10 @@ class Network {
    if(!altair_ingress_||!altair_dispatch_||altair_dispatch_->blocked()||!peers_.contains(id)||!consensus_peer(peers_.at(id).status)){stream->reset();return;}
    // AltairStreamRequest owns the shared budget lease through durable worker
    // completion. Do not acquire the generic lease a second time below.
-   auto dispatch=remember_vote_sender(altair_dispatch_->dispatcher(),peers_.at(id).altair_vote_progress);auto delivery=[this,stream,dispatch](auto message,auto cancel,auto done){const auto kind=message.kind;return dispatch(std::move(message),std::move(cancel),[this,stream,kind,done=std::move(done)](auto decision){const bool drop_vote=drop_altair_vote_reply_&&kind==AltairWireKind::attestation;if((drop_altair_reply_||drop_vote)&&decision==AltairWork::Decision::accepted){if(drop_vote)drop_altair_vote_reply_=false;else drop_altair_reply_=false;stream->reset();std::cout<<Json{{"event",drop_vote?"test-altair-vote-reply-dropped":"test-altair-reply-dropped"}}.dump()<<std::endl;}done(decision);});};
+   auto dispatch=altair_dispatch_->dispatcher();
+   if(capella_mode_){auto& peer=peers_.at(id);const auto capacity=capella_relay_.at("acknowledgedRoots").get<size_t>();if(!peer.capella_votes)peer.capella_votes=std::make_shared<AltairRelayProgress>(capacity);if(!peer.capella_sync_messages)peer.capella_sync_messages=std::make_shared<AltairRelayProgress>(capacity);dispatch=remember_message_sender(std::move(dispatch),peer.capella_votes,AltairWireKind::attestation);dispatch=remember_message_sender(std::move(dispatch),peer.capella_sync_messages,AltairWireKind::sync_committee_message);}
+   else dispatch=remember_vote_sender(std::move(dispatch),peers_.at(id).altair_vote_progress);
+   auto delivery=[this,stream,dispatch](auto message,auto cancel,auto done){const auto kind=message.kind;return dispatch(std::move(message),std::move(cancel),[this,stream,kind,done=std::move(done)](auto decision){const bool drop_vote=drop_altair_vote_reply_&&kind==AltairWireKind::attestation;if((drop_altair_reply_||drop_vote)&&decision==AltairWork::Decision::accepted){if(drop_vote)drop_altair_vote_reply_=false;else drop_altair_reply_=false;stream->reset();std::cout<<Json{{"event",drop_vote?"test-altair-vote-reply-dropped":"test-altair-reply-dropped"}}.dump()<<std::endl;}done(decision);});};
    std::make_shared<AltairStreamRequest>(io_,std::move(stream),altair_ingress_,std::move(delivery))->start();return;
   }
   // Beacon blocks travel with signed consensus envelopes, never through the

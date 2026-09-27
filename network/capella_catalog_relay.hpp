@@ -10,15 +10,19 @@
 class CapellaCatalogRelay:public std::enable_shared_from_this<CapellaCatalogRelay>{
 public:
  using Call=AltairCoreDispatch::Call;
+ using Known=std::function<bool(const std::string&)>;
  using Deliver=std::function<void(std::string,Json,Reply)>;
 private:
- asio::io_context& io_;Call core_;Deliver deliver_;std::string token_,kind_,handle_,cursor_,sequence_,digest_,stage_="open",generation_,request_;
+ asio::io_context& io_;Call core_;Deliver deliver_;Known known_;std::string token_,kind_,handle_,cursor_,sequence_,digest_,stage_="open",generation_,request_;
  std::shared_ptr<AltairMessageIngress> ingress_;Reply done_;asio::steady_timer timer_;
  const size_t page_size_,maximum_;size_t delivered_=0,index_=0;Json entries_,next_;
  bool started_=false,finished_=false,closing_=false;bool desired_success_=false;
+ std::string failure_stage_,reason_;std::chrono::steady_clock::time_point started_at_=std::chrono::steady_clock::now();
+ size_t exports_=0,skipped_known_=0;std::optional<uint64_t> sync_slot_;
+ void failure(std::string reason){if(reason_.empty()){reason_=std::move(reason);failure_stage_=stage_;}close(false);}
  static bool root(const Json& j){if(!j.is_string())return false;const auto& s=j.get_ref<const std::string&>();return s.size()==66&&s.starts_with("0x")&&std::all_of(s.begin()+2,s.end(),[](char c){return (c>='0'&&c<='9')||(c>='a'&&c<='f');});}
  static bool quantity(const Json& j){if(!j.is_string())return false;const auto& s=j.get_ref<const std::string&>();return s.size()>=3&&s.size()<=18&&s.starts_with("0x")&&(s.size()==3||s[2]!='0')&&std::all_of(s.begin()+2,s.end(),[](char c){return (c>='0'&&c<='9')||(c>='a'&&c<='f');});}
- void complete(bool success,bool closed){if(finished_)return;finished_=true;timer_.cancel();auto done=std::move(done_);done(Json{{"success",success},{"closed",closed},{"delivered",delivered_},{"stage",stage_}});}
+ void complete(bool success,bool closed){if(finished_)return;if(!success&&reason_.empty()){reason_="incomplete";failure_stage_=stage_;}finished_=true;timer_.cancel();auto done=std::move(done_);done(Json{{"success",success},{"closed",closed},{"delivered",delivered_},{"stage",stage_},{"failureStage",failure_stage_.empty()?Json(nullptr):Json(failure_stage_)},{"reason",reason_.empty()?Json(nullptr):Json(reason_)},{"exports",exports_},{"skippedKnown",skipped_known_},{"syncSlot",sync_slot_?Json(*sync_slot_):Json(nullptr)},{"elapsedMs",std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-started_at_).count()}});}
  Json release_params(){return Json::array({token_,generation_,request_});}
  void cleanup_request(){if(request_.empty())return;try{core_("nano_capellaCatalogRelease",release_params(),[](Json){});}catch(...){}}
  void cleanup(const std::string& handle){try{core_("nano_capellaCatalogClose",Json::array({token_,handle}),[](Json){});}catch(...){}}
@@ -32,11 +36,12 @@ private:
  void close_attempt(bool retry){
   call("nano_capellaCatalogRelease",release_params(),callback([retry](auto& self,Json value){
    if(value.is_null()&&retry){self.close_attempt(false);return;}
-   self.complete(self.desired_success_&&value==true,value==true);
+   if(value!=true&&self.reason_.empty()){self.reason_="release-unconfirmed";self.failure_stage_="close";}self.complete(self.desired_success_&&value==true,value==true);
   }));
  }
  void close(bool success){
   if(finished_||closing_)return;
+  if(!success&&reason_.empty()){reason_="invalid-response";failure_stage_=stage_;}
   if(request_.empty()){complete(false,false);return;}
   closing_=true;desired_success_=success;stage_="close";
   close_attempt(true);
@@ -55,31 +60,39 @@ private:
   entries_=std::move(value["entries"]);next_=next;index_=0;
   if(entries_.empty()){close(next_.is_null());return;}export_next();
  }
+ void advance(){
+  ++delivered_;cursor_=entries_.at(index_).get<std::string>();++index_;
+  if(index_<entries_.size()){export_next();return;}
+  if(next_.is_null()){close(true);return;}
+  if(delivered_==maximum_){failure("entry-limit");return;}page();
+ }
  void export_next(){
   stage_="export";const auto id=entries_.at(index_).get<std::string>();
+  if(known_&&known_(id)){++skipped_known_;auto next=callback([](auto& self,Json){self.advance();});next(nullptr);return;}
+  ++exports_;
   call("nano_capellaExport",Json::array({token_,kind_,id}),callback([id](auto& self,Json value){
-   if(!value.is_object()||value.value("available",Json())!=true||value.value("root",Json())!=id){self.close(false);return;}
+   if(value.is_null()){self.failure("export-unconfirmed");return;}
+   if(!value.is_object()||value.value("root",Json())!=id){self.failure("export-invalid-root");return;}
+   if(value.value("available",Json())!=true){self.failure("export-unavailable");return;}
    auto frame=value.at("envelope");const auto wire=frame.dump();auto message=self.ingress_->decode(wire);
    const auto expected=self.kind_=="sync_committee_message"?AltairWireKind::sync_committee_message:self.kind_=="block"?AltairWireKind::block:self.kind_=="attestation"?AltairWireKind::attestation:self.kind_=="bls_to_execution_change"?AltairWireKind::bls_to_execution_change:AltairWireKind::attester_slashing;
-   if(!message||message->kind!=expected){self.close(false);return;}
-   if(expected==AltairWireKind::bls_to_execution_change||expected==AltairWireKind::sync_committee_message){unsigned char digest[32];SHA256(message->ssz.data(),message->ssz.size(),digest);std::string actual="0x";for(auto b:digest){actual+="0123456789abcdef"[b>>4];actual+="0123456789abcdef"[b&15];}if(actual!=id){self.close(false);return;}}
+   if(!message||message->kind!=expected){self.failure("invalid-envelope");return;}
+   if(expected==AltairWireKind::sync_committee_message){uint64_t slot=0;for(size_t i=0;i<8;++i)slot|=uint64_t(message->ssz[i])<<(8*i);self.sync_slot_=slot;}
+   if(expected==AltairWireKind::bls_to_execution_change||expected==AltairWireKind::sync_committee_message){unsigned char digest[32];SHA256(message->ssz.data(),message->ssz.size(),digest);std::string actual="0x";for(auto b:digest){actual+="0123456789abcdef"[b>>4];actual+="0123456789abcdef"[b&15];}if(actual!=id){self.failure("digest-mismatch");return;}}
    self.stage_="delivery";
    auto reply=self.callback([](auto& s,Json ack){
-    if(!ack.is_object()||ack.size()!=1||ack.value("accepted",Json())!=true){s.close(false);return;}
-    ++s.delivered_;s.cursor_=s.entries_.at(s.index_).template get<std::string>();++s.index_;
-    if(s.index_<s.entries_.size()){s.export_next();return;}
-    if(s.next_.is_null()){s.close(true);return;}
-    if(s.delivered_==s.maximum_){s.close(false);return;}s.page();
+    if(!ack.is_object()||ack.size()!=1||ack.value("accepted",Json())!=true){s.failure(ack.is_object()&&ack.size()==1&&ack.value("accepted",Json())==false?"admission-rejected":"delivery-unconfirmed");return;}
+    s.advance();
    });
    try{self.deliver_(id,std::move(frame),reply);}catch(...){reply(nullptr);}
   }));
  }
 public:
- CapellaCatalogRelay(asio::io_context& io,Call core,Deliver deliver,std::string token,std::string kind,std::shared_ptr<AltairMessageIngress> ingress,size_t page_size,size_t maximum,Reply done):io_(io),core_(std::move(core)),deliver_(std::move(deliver)),token_(std::move(token)),kind_(std::move(kind)),ingress_(std::move(ingress)),done_(std::move(done)),timer_(io),page_size_(page_size),maximum_(maximum){
+ CapellaCatalogRelay(asio::io_context& io,Call core,Deliver deliver,std::string token,std::string kind,std::shared_ptr<AltairMessageIngress> ingress,size_t page_size,size_t maximum,Reply done,Known known={}):io_(io),core_(std::move(core)),deliver_(std::move(deliver)),known_(std::move(known)),token_(std::move(token)),kind_(std::move(kind)),ingress_(std::move(ingress)),done_(std::move(done)),timer_(io),page_size_(page_size),maximum_(maximum){
   if(!core_||!deliver_||token_.empty()||!ingress_||!done_||!page_size_||!maximum_||page_size_>maximum_||(kind_!="block"&&kind_!="attestation"&&kind_!="attester_slashing"&&kind_!="bls_to_execution_change"&&kind_!="sync_committee_message"))throw std::invalid_argument("Invalid Capella catalog relay");
  }
  void start(std::chrono::steady_clock::duration timeout=std::chrono::seconds(30)){
-  if(started_)throw std::logic_error("Capella catalog relay already started");if(timeout<=std::chrono::steady_clock::duration::zero())throw std::invalid_argument("Invalid Capella relay timeout");started_=true;
+  if(started_)throw std::logic_error("Capella catalog relay already started");if(timeout<=std::chrono::steady_clock::duration::zero())throw std::invalid_argument("Invalid Capella relay timeout");started_=true;started_at_=std::chrono::steady_clock::now();
   timer_.expires_after(timeout);timer_.async_wait([self=shared_from_this()](auto error){if(!error)self->cancel();});
   call("nano_capellaCatalogGeneration",Json::array({token_}),callback([](auto& self,Json generation){
    if(!root(generation)){self.complete(false,false);return;}self.generation_=generation.template get<std::string>();
@@ -90,5 +103,5 @@ public:
  }
  // Called on the same executor as start. In-flight delivery has unknown outcome
  // after cancellation; a late acknowledgement cannot turn it into success.
- void cancel(){if(finished_)return;if(!request_.empty()&&!closing_)cleanup_request();stage_="cancelled";complete(false,false);}
+ void cancel(){if(finished_)return;if(reason_.empty()){reason_="cancelled-or-deadline";failure_stage_=stage_;}if(!request_.empty()&&!closing_)cleanup_request();stage_="cancelled";complete(false,false);}
 };
