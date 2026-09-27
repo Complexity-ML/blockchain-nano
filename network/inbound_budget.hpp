@@ -30,22 +30,24 @@ public:
   ~Lease(){if(admitted_){--state_->active;--state_->peers.at(peer_).active;if(bulk_){--state_->bulk_active;--state_->peers.at(peer_).bulk_active;}}}
  };
  explicit InboundBudget(Clock::time_point now=Clock::now()):state_(std::make_shared<State>(now)){}
- std::shared_ptr<Lease> acquire(const std::string& peer,Clock::time_point now=Clock::now(),Traffic traffic=Traffic::control){
+ std::shared_ptr<Lease> acquire(const std::string& peer,Clock::time_point now=Clock::now(),Traffic traffic=Traffic::control,const char** rejection=nullptr){
+  if(rejection)*rejection=nullptr;auto reject=[&](const char* reason)->std::shared_ptr<Lease>{if(rejection)*rejection=reason;return {};};
   const bool bulk=traffic==Traffic::bulk;
   auto& state=*state_;refill(state.tokens,state.updated,now,64,128);
-  if(peer.empty()||peer.size()>128||state.active>=16||state.tokens<1)return {};
+  if(peer.empty()||peer.size()>128)return reject("invalid-peer");
+  if(state.active>=16)return reject("global-concurrency");if(state.tokens<1)return reject("global-rate");
   refill(state.bulk_tokens,state.bulk_updated,now,32,64);
-  if(bulk&&(state.bulk_active>=8||state.bulk_tokens<1))return {};
+  if(bulk&&state.bulk_active>=8)return reject("global-bulk-concurrency");if(bulk&&state.bulk_tokens<1)return reject("global-bulk-rate");
   auto found=state.peers.find(peer);
   if(found==state.peers.end()){
    if(state.peers.size()>=256){for(auto it=state.peers.begin();it!=state.peers.end();)if(!it->second.active&&now-it->second.used>=std::chrono::seconds(60))it=state.peers.erase(it);else ++it;}
-   if(state.peers.size()>=256)return {};
+   if(state.peers.size()>=256)return reject("peer-table");
    found=state.peers.emplace(peer,Bucket(now)).first;
   }
   auto& bucket=found->second;refill(bucket.tokens,bucket.updated,now,8,16);
-  if(bucket.active>=4||bucket.tokens<1)return {};
+  if(bucket.active>=4)return reject("peer-concurrency");if(bucket.tokens<1)return reject("peer-rate");
   refill(bucket.bulk_tokens,bucket.bulk_updated,now,4,8);
-  if(bulk&&(bucket.bulk_active>=2||bucket.bulk_tokens<1))return {};
+  if(bulk&&bucket.bulk_active>=2)return reject("peer-bulk-concurrency");if(bulk&&bucket.bulk_tokens<1)return reject("peer-bulk-rate");
   auto lease=std::shared_ptr<Lease>(new Lease(state_,peer));
   if(bulk){++bucket.bulk_active;++state.bulk_active;--bucket.bulk_tokens;--state.bulk_tokens;lease->bulk_=true;}
   ++bucket.active;++state.active;--bucket.tokens;--state.tokens;bucket.used=now;lease->admitted_=true;

@@ -1,4 +1,5 @@
 #include "inbound_budget.hpp"
+#include "capella_send_pacer.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <vector>
@@ -57,5 +58,15 @@ int main(){try{
  check(work.admit_transactions("first",1,now+std::chrono::milliseconds(125)),"peer work refills at eight transactions per second");
  first.reset();check(!work.admit_transactions("first",1,now+std::chrono::seconds(1)),"closed stream cannot forward work");
  first=work.acquire("first",now+std::chrono::seconds(1),Traffic::bulk);check(bool(first)&&!work.admit_transactions("first",8,now+std::chrono::seconds(1))&&work.admit_transactions("first",7,now+std::chrono::seconds(1)),"reopening stream preserves consumed transaction budget");
+ // Diagnostic attribution must preserve limits; pacing must fit unchanged bulk refill.
+ const char* reason=nullptr;InboundBudget measured(now);
+ check(!measured.acquire("",now,Traffic::bulk,&reason)&&std::string(reason)=="invalid-peer","invalid peer attribution");
+ auto m1=measured.acquire("p",now,Traffic::bulk,&reason);auto m2=measured.acquire("p",now,Traffic::bulk,&reason);
+ check(!measured.acquire("p",now,Traffic::bulk,&reason)&&std::string(reason)=="peer-bulk-concurrency","bulk concurrency attribution");m1.reset();m2.reset();
+ for(unsigned i=0;i<6;++i)check(bool(measured.acquire("p",now,Traffic::bulk,&reason)),"bulk burst changed");
+ check(!measured.acquire("p",now,Traffic::bulk,&reason)&&std::string(reason)=="peer-bulk-rate","bulk rate attribution");
+ CapellaSendPacer pacer;InboundBudget paced(now);auto due=now;
+ for(unsigned i=0;i<1000;++i){due=pacer.reserve(now);check(due==now+std::chrono::milliseconds(250*(i>3?i-3:0)),"pacing interval drift");check(bool(paced.acquire("paced",due,Traffic::bulk,&reason))&&reason==nullptr,"paced traffic exceeds unchanged receiver budget");}
+ const auto idle=due+std::chrono::seconds(10);check(pacer.reserve(idle)==idle,"idle pacing accumulates backlog");for(unsigned i=0;i<3;++i)check(pacer.reserve(idle)==idle,"idle burst credit missing");check(pacer.reserve(now)==idle+std::chrono::milliseconds(250),"backwards time bypasses spacing");
  std::cout<<"Inbound concurrency, rates, identity bounds and lease lifetime passed\n";
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

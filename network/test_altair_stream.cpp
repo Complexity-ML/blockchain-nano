@@ -78,6 +78,7 @@ int main(){try{
   auto request=std::make_shared<Request>(io,stream,ingress,[&](auto,auto,auto done){++calls;if(mode=="dispatch-unavailable")return false;const auto d=mode=="core-local-failure"?Decision::local_failure:mode=="rejected-ack-written"?Decision::rejected:Decision::accepted;done(d);done(d);return true;},[&](Json value){++reports;report=std::move(value);if(mode=="observer-throws")throw std::runtime_error("observer only");});
   request->start();io.run();request->cancel();
   check(reports==1&&report["reason"]==(mode=="observer-throws"?"accepted-ack-written":mode),"terminal attribution missing or duplicated");
+  if(mode=="inbound-budget")check(report["budgetReason"]=="peer-bulk-concurrency","stream lost budget cause");
   check(calls==(mode=="inbound-budget"?0U:1U),"budget rejection reached worker");
   check(report["kind"].is_null()==(mode=="inbound-budget"),"predecode rejection invented message kind");
   held.clear();check(budget.active()==0,"diagnostics leaked lease");

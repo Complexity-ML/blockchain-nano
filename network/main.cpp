@@ -10,6 +10,7 @@
 #include "timed_reply.hpp"
 #include "altair_core_recovery.hpp"
 #include "altair_stream.hpp"
+#include "capella_send_pacer.hpp"
 #include "altair_peer.hpp"
 #include "altair_archive_relay.hpp"
 #include "capella_catalog_relay.hpp"
@@ -103,7 +104,7 @@ class Network {
  std::map<std::string,uint64_t> budget_rejections_;uint64_t failed_status_=0;unsigned trace_ticks_=0;
  unsigned retry_trace_count_=0,periodic_trace_count_=0,vote_delta_trace_count_=0;
  std::map<std::string,std::shared_ptr<GossipProgress>> gossip_progress_;size_t gossip_active_=0;std::string gossip_last_;bool drop_gossip_reply_=std::getenv("NANO_TEST_DROP_GOSSIP_REPLY_ONCE")!=nullptr;
- struct Peer {PeerInfo info;Json status;std::shared_ptr<int> capella_generation=std::make_shared<int>(0);std::shared_ptr<AltairRelayProgress> capella_blocks,capella_votes,capella_slashings,capella_bls_changes,capella_sync_messages;std::shared_ptr<AltairRelayProgress> altair_progress=std::make_shared<AltairRelayProgress>(),altair_vote_progress=std::make_shared<AltairRelayProgress>();std::shared_ptr<AltairRelayProgress> slashing_progress=std::make_shared<AltairRelayProgress>(),exit_progress=std::make_shared<AltairRelayProgress>();std::chrono::steady_clock::time_point status_seen=std::chrono::steady_clock::now();unsigned next_bellatrix_kind=0;bool next_altair_vote=false;std::shared_ptr<BftVoteKnowledge> bft_known=std::make_shared<BftVoteKnowledge>();bool syncing=false;bool previous_bft_page=false;std::chrono::steady_clock::time_point fragment_retry{};};
+ struct Peer {PeerInfo info;Json status;CapellaSendPacer capella_pacer;std::shared_ptr<int> capella_generation=std::make_shared<int>(0);std::shared_ptr<AltairRelayProgress> capella_blocks,capella_votes,capella_slashings,capella_bls_changes,capella_sync_messages;std::shared_ptr<AltairRelayProgress> altair_progress=std::make_shared<AltairRelayProgress>(),altair_vote_progress=std::make_shared<AltairRelayProgress>();std::shared_ptr<AltairRelayProgress> slashing_progress=std::make_shared<AltairRelayProgress>(),exit_progress=std::make_shared<AltairRelayProgress>();std::chrono::steady_clock::time_point status_seen=std::chrono::steady_clock::now();unsigned next_bellatrix_kind=0;bool next_altair_vote=false;std::shared_ptr<BftVoteKnowledge> bft_known=std::make_shared<BftVoteKnowledge>();bool syncing=false;bool previous_bft_page=false;std::chrono::steady_clock::time_point fragment_retry{};};
  std::map<std::string,Peer> peers_;std::vector<PeerInfo> seeds_;std::set<std::string> connecting_,polling_,bft_polling_;
  std::vector<libp2p::multi::Multiaddress> bootstrap_;
  std::shared_ptr<libp2p::network::DnsaddrResolver> resolver_;
@@ -161,8 +162,14 @@ class Network {
     auto& cache=step==0?peer.capella_blocks:step==1?peer.capella_votes:step==2?peer.capella_slashings:step==3?peer.capella_bls_changes:peer.capella_sync_messages;
     if(!cache)cache=std::make_shared<AltairRelayProgress>(capella_relay_.at("acknowledgedRoots").get<size_t>());const auto knowledge=cache;
     if(!altair_relay_budget_.acquire(id))return;altair_last_peer_=id;
-    auto current=[this,id,generation]{const auto p=peers_.find(id);return p!=peers_.end()&&p->second.capella_generation==generation&&altair_ingress_&&altair_dispatch_&&!altair_dispatch_->blocked()&&consensus_peer(p->second.status);};
-    auto send=[this,info,current](Json frame,Reply reply){if(!current()){reply(nullptr);return;}send_altair(info,std::move(frame),[current,reply=std::move(reply)](Json result)mutable{reply(current()?std::move(result):Json(nullptr));});};
+    auto alive=std::make_shared<bool>(true);auto current=[this,id,generation,alive]{const auto p=peers_.find(id);return *alive&&p!=peers_.end()&&p->second.capella_generation==generation&&altair_ingress_&&altair_dispatch_&&!altair_dispatch_->blocked()&&consensus_peer(p->second.status);};
+    auto send=[this,id,info,current](Json frame,Reply reply){
+     if(!current()){reply(nullptr);return;}
+     auto timer=std::make_shared<asio::steady_timer>(io_);timer->expires_at(peers_.at(id).capella_pacer.reserve(std::chrono::steady_clock::now()));
+     timer->async_wait([this,timer,info,current,frame=std::move(frame),reply=std::move(reply)](auto error)mutable{
+      if(error||!current()){reply(nullptr);return;}send_altair(info,std::move(frame),[current,reply=std::move(reply)](Json result)mutable{reply(current()?std::move(result):Json(nullptr));});
+     });
+    };
     auto core=capella_peer_core([this](const std::string& method,Json params,Reply reply){core_.call(method,std::move(params),std::move(reply));},current);
     auto active=std::make_shared<std::shared_ptr<CapellaBlockDelivery>>();
     auto deliver=[this,core,send,current,knowledge,kind,active](std::string root,Json frame,Reply reply){
@@ -171,7 +178,7 @@ class Network {
       *active=std::make_shared<CapellaBlockDelivery>(io_,core,send,report_token_,capella_relay_.at("anchorRoot").get<std::string>(),root,altair_ingress_,knowledge,capella_relay_.at("dependencyBlocks").get<size_t>(),capella_relay_.at("dependencyBytes").get<size_t>(),std::move(reply));(*active)->start();
      }else send(std::move(frame),[knowledge,root,reply=std::move(reply)](Json result)mutable{if(result.is_object()&&result.size()==1&&result.value("accepted",Json())==true)knowledge->acknowledge(root);reply(std::move(result));});
     };
-    std::make_shared<CapellaCatalogRelay>(io_,core,deliver,report_token_,kind,altair_ingress_,capella_relay_.at("pageEntries").get<size_t>(),capella_relay_.at("maximumEntries").get<size_t>(),[this,id,kind,active](Json result){if(*active)(*active)->cancel();altair_relay_budget_.release(id);if(trace_network_){result["event"]="test-capella-catalog-relay";result["peerId"]=id;result["kind"]=kind;std::cout<<result.dump()<<std::endl;}},[current,knowledge](const std::string& root){return current()&&knowledge->acknowledged(root);})->start();return;
+    std::make_shared<CapellaCatalogRelay>(io_,core,deliver,report_token_,kind,altair_ingress_,capella_relay_.at("pageEntries").get<size_t>(),capella_relay_.at("maximumEntries").get<size_t>(),[this,id,kind,active,alive](Json result){*alive=false;if(*active)(*active)->cancel();altair_relay_budget_.release(id);if(trace_network_){result["event"]="test-capella-catalog-relay";result["peerId"]=id;result["kind"]=kind;std::cout<<result.dump()<<std::endl;}},[current,knowledge](const std::string& root){return current()&&knowledge->acknowledged(root);})->start();return;
    }
    if(++it==peers_.end())it=peers_.begin();
   }while(it!=start);

@@ -562,3 +562,18 @@ observe **169 refus du budget avant décodage**, sans erreur locale du cœur ni
 fine du budget non établies. Prochaine étape : attribution débit/concurrence puis
 ordonnancement sortant borné ; aucune hausse des limites. Rotation, WAN et
 production restent ouverts. [Preuves](qualification/capella-receive-attribution-20260927/README.md).
+
+
+### Régulation sortante Capella — 27 septembre 2026
+
+Les messages consensus utilisent le sous-budget bulk (4/s par pair, rafale 8),
+plus restrictif que le budget général. Les limites réceptrices restent inchangées.
+Les catalogues partagent maintenant un rythme sortant de 4/s avec rafale bornée
+à 4 ; envoi différé gardé par la session et la durée de vie du catalogue. Les refus
+récepteurs exposent leur cause précise. Cinq suites passent, dont 1000 envois
+simulés contre le vrai budget. Une première variante trop espacée réduisait la
+participation (28/32 minimum) : preuve conservée. Variante finale, deux pairs
+locaux : finalité commune 2, 32/32 dans huit blocs finalisés contrôlés, aucun refus
+de budget, une livraison sync non confirmée (132 auparavant), 18 refus explicites.
+**Partiel** : ces derniers refus restent à attribuer ; pas de garantie statistique,
+WAN, rotation ou grande population. [Preuves et limites](qualification/capella-send-pacing-20260927/README.md).

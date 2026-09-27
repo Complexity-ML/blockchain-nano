@@ -1,0 +1,92 @@
+diff --git a/network/altair_message.hpp b/network/altair_message.hpp
+index aec2598..e187e1e 100644
+--- a/network/altair_message.hpp
++++ b/network/altair_message.hpp
+@@ -43,2 +43,2 @@ public:
+- std::shared_ptr<InboundBudget::Lease> acquire(const std::string& peer,InboundBudget::Clock::time_point now=InboundBudget::Clock::now()){
+-  return budget_.acquire(peer,now,InboundBudget::Traffic::bulk);
++ std::shared_ptr<InboundBudget::Lease> acquire(const std::string& peer,InboundBudget::Clock::time_point now=InboundBudget::Clock::now(),const char** rejection=nullptr){
++  return budget_.acquire(peer,now,InboundBudget::Traffic::bulk,rejection);
+diff --git a/network/altair_stream.hpp b/network/altair_stream.hpp
+index ca01260..5dd4b4c 100644
+--- a/network/altair_stream.hpp
++++ b/network/altair_stream.hpp
+@@ -20 +20 @@ private:
+- asio::io_context& io_;Stream stream_;std::shared_ptr<AltairMessageIngress> ingress_;Dispatch dispatch_;Observe observe_;std::optional<AltairWireKind> kind_;
++ asio::io_context& io_;Stream stream_;std::shared_ptr<AltairMessageIngress> ingress_;Dispatch dispatch_;Observe observe_;const char* budget_reason_=nullptr;std::optional<AltairWireKind> kind_;
+@@ -25 +25 @@ private:
+- void report(const char* reason)noexcept{if(!observe_)return;try{observe_(Json{{"reason",reason},{"kind",kind_?Json(static_cast<unsigned>(*kind_)):Json(nullptr)},{"dispatched",dispatched_},{"workerDone",worker_done_}});}catch(...){} }
++ void report(const char* reason)noexcept{if(!observe_)return;try{observe_(Json{{"reason",reason},{"kind",kind_?Json(static_cast<unsigned>(*kind_)):Json(nullptr)},{"dispatched",dispatched_},{"workerDone",worker_done_},{"budgetReason",budget_reason_?Json(budget_reason_):Json(nullptr)}});}catch(...){} }
+@@ -45 +45 @@ public:
+-  lease_=ingress_->acquire(peer.value().toBase58());if(!lease_){abort("inbound-budget");return;}
++  lease_=ingress_->acquire(peer.value().toBase58(),InboundBudget::Clock::now(),&budget_reason_);if(!lease_){abort("inbound-budget");return;}
+diff --git a/network/inbound_budget.hpp b/network/inbound_budget.hpp
+index 593c53e..7655e55 100644
+--- a/network/inbound_budget.hpp
++++ b/network/inbound_budget.hpp
+@@ -33 +33,2 @@ public:
+- std::shared_ptr<Lease> acquire(const std::string& peer,Clock::time_point now=Clock::now(),Traffic traffic=Traffic::control){
++ std::shared_ptr<Lease> acquire(const std::string& peer,Clock::time_point now=Clock::now(),Traffic traffic=Traffic::control,const char** rejection=nullptr){
++  if(rejection)*rejection=nullptr;auto reject=[&](const char* reason)->std::shared_ptr<Lease>{if(rejection)*rejection=reason;return {};};
+@@ -36 +37,2 @@ public:
+-  if(peer.empty()||peer.size()>128||state.active>=16||state.tokens<1)return {};
++  if(peer.empty()||peer.size()>128)return reject("invalid-peer");
++  if(state.active>=16)return reject("global-concurrency");if(state.tokens<1)return reject("global-rate");
+@@ -38 +40 @@ public:
+-  if(bulk&&(state.bulk_active>=8||state.bulk_tokens<1))return {};
++  if(bulk&&state.bulk_active>=8)return reject("global-bulk-concurrency");if(bulk&&state.bulk_tokens<1)return reject("global-bulk-rate");
+@@ -42 +44 @@ public:
+-   if(state.peers.size()>=256)return {};
++   if(state.peers.size()>=256)return reject("peer-table");
+@@ -46 +48 @@ public:
+-  if(bucket.active>=4||bucket.tokens<1)return {};
++  if(bucket.active>=4)return reject("peer-concurrency");if(bucket.tokens<1)return reject("peer-rate");
+@@ -48 +50 @@ public:
+-  if(bulk&&(bucket.bulk_active>=2||bucket.bulk_tokens<1))return {};
++  if(bulk&&bucket.bulk_active>=2)return reject("peer-bulk-concurrency");if(bulk&&bucket.bulk_tokens<1)return reject("peer-bulk-rate");
+diff --git a/network/main.cpp b/network/main.cpp
+index d4004df..862fa3a 100644
+--- a/network/main.cpp
++++ b/network/main.cpp
+@@ -12,0 +13 @@
++#include "capella_send_pacer.hpp"
+@@ -106 +107 @@ class Network {
+- struct Peer {PeerInfo info;Json status;std::shared_ptr<int> capella_generation=std::make_shared<int>(0);std::shared_ptr<AltairRelayProgress> capella_blocks,capella_votes,capella_slashings,capella_bls_changes,capella_sync_messages;std::shared_ptr<AltairRelayProgress> altair_progress=std::make_shared<AltairRelayProgress>(),altair_vote_progress=std::make_shared<AltairRelayProgress>();std::shared_ptr<AltairRelayProgress> slashing_progress=std::make_shared<AltairRelayProgress>(),exit_progress=std::make_shared<AltairRelayProgress>();std::chrono::steady_clock::time_point status_seen=std::chrono::steady_clock::now();unsigned next_bellatrix_kind=0;bool next_altair_vote=false;std::shared_ptr<BftVoteKnowledge> bft_known=std::make_shared<BftVoteKnowledge>();bool syncing=false;bool previous_bft_page=false;std::chrono::steady_clock::time_point fragment_retry{};};
++ struct Peer {PeerInfo info;Json status;CapellaSendPacer capella_pacer;std::shared_ptr<int> capella_generation=std::make_shared<int>(0);std::shared_ptr<AltairRelayProgress> capella_blocks,capella_votes,capella_slashings,capella_bls_changes,capella_sync_messages;std::shared_ptr<AltairRelayProgress> altair_progress=std::make_shared<AltairRelayProgress>(),altair_vote_progress=std::make_shared<AltairRelayProgress>();std::shared_ptr<AltairRelayProgress> slashing_progress=std::make_shared<AltairRelayProgress>(),exit_progress=std::make_shared<AltairRelayProgress>();std::chrono::steady_clock::time_point status_seen=std::chrono::steady_clock::now();unsigned next_bellatrix_kind=0;bool next_altair_vote=false;std::shared_ptr<BftVoteKnowledge> bft_known=std::make_shared<BftVoteKnowledge>();bool syncing=false;bool previous_bft_page=false;std::chrono::steady_clock::time_point fragment_retry{};};
+@@ -164,2 +165,8 @@ class Network {
+-    auto current=[this,id,generation]{const auto p=peers_.find(id);return p!=peers_.end()&&p->second.capella_generation==generation&&altair_ingress_&&altair_dispatch_&&!altair_dispatch_->blocked()&&consensus_peer(p->second.status);};
+-    auto send=[this,info,current](Json frame,Reply reply){if(!current()){reply(nullptr);return;}send_altair(info,std::move(frame),[current,reply=std::move(reply)](Json result)mutable{reply(current()?std::move(result):Json(nullptr));});};
++    auto alive=std::make_shared<bool>(true);auto current=[this,id,generation,alive]{const auto p=peers_.find(id);return *alive&&p!=peers_.end()&&p->second.capella_generation==generation&&altair_ingress_&&altair_dispatch_&&!altair_dispatch_->blocked()&&consensus_peer(p->second.status);};
++    auto send=[this,id,info,current](Json frame,Reply reply){
++     if(!current()){reply(nullptr);return;}
++     auto timer=std::make_shared<asio::steady_timer>(io_);timer->expires_at(peers_.at(id).capella_pacer.reserve(std::chrono::steady_clock::now()));
++     timer->async_wait([this,timer,info,current,frame=std::move(frame),reply=std::move(reply)](auto error)mutable{
++      if(error||!current()){reply(nullptr);return;}send_altair(info,std::move(frame),[current,reply=std::move(reply)](Json result)mutable{reply(current()?std::move(result):Json(nullptr));});
++     });
++    };
+@@ -174 +181 @@ class Network {
+-    std::make_shared<CapellaCatalogRelay>(io_,core,deliver,report_token_,kind,altair_ingress_,capella_relay_.at("pageEntries").get<size_t>(),capella_relay_.at("maximumEntries").get<size_t>(),[this,id,kind,active](Json result){if(*active)(*active)->cancel();altair_relay_budget_.release(id);if(trace_network_){result["event"]="test-capella-catalog-relay";result["peerId"]=id;result["kind"]=kind;std::cout<<result.dump()<<std::endl;}},[current,knowledge](const std::string& root){return current()&&knowledge->acknowledged(root);})->start();return;
++    std::make_shared<CapellaCatalogRelay>(io_,core,deliver,report_token_,kind,altair_ingress_,capella_relay_.at("pageEntries").get<size_t>(),capella_relay_.at("maximumEntries").get<size_t>(),[this,id,kind,active,alive](Json result){*alive=false;if(*active)(*active)->cancel();altair_relay_budget_.release(id);if(trace_network_){result["event"]="test-capella-catalog-relay";result["peerId"]=id;result["kind"]=kind;std::cout<<result.dump()<<std::endl;}},[current,knowledge](const std::string& root){return current()&&knowledge->acknowledged(root);})->start();return;
+diff --git a/network/test_altair_stream.cpp b/network/test_altair_stream.cpp
+index 0c79578..cf1903b 100644
+--- a/network/test_altair_stream.cpp
++++ b/network/test_altair_stream.cpp
+@@ -80,0 +81 @@ int main(){try{
++  if(mode=="inbound-budget")check(report["budgetReason"]=="peer-bulk-concurrency","stream lost budget cause");
+diff --git a/network/test_inbound_budget.cpp b/network/test_inbound_budget.cpp
+index 300204e..8e77ba2 100644
+--- a/network/test_inbound_budget.cpp
++++ b/network/test_inbound_budget.cpp
+@@ -1,0 +2 @@
++#include "capella_send_pacer.hpp"
+@@ -59,0 +61,10 @@ int main(){try{
++ // Diagnostic attribution must preserve limits; pacing must fit unchanged bulk refill.
++ const char* reason=nullptr;InboundBudget measured(now);
++ check(!measured.acquire("",now,Traffic::bulk,&reason)&&std::string(reason)=="invalid-peer","invalid peer attribution");
++ auto m1=measured.acquire("p",now,Traffic::bulk,&reason);auto m2=measured.acquire("p",now,Traffic::bulk,&reason);
++ check(!measured.acquire("p",now,Traffic::bulk,&reason)&&std::string(reason)=="peer-bulk-concurrency","bulk concurrency attribution");m1.reset();m2.reset();
++ for(unsigned i=0;i<6;++i)check(bool(measured.acquire("p",now,Traffic::bulk,&reason)),"bulk burst changed");
++ check(!measured.acquire("p",now,Traffic::bulk,&reason)&&std::string(reason)=="peer-bulk-rate","bulk rate attribution");
++ CapellaSendPacer pacer;InboundBudget paced(now);auto due=now;
++ for(unsigned i=0;i<1000;++i){due=pacer.reserve(now);check(due==now+std::chrono::milliseconds(250*i),"pacing interval drift");check(bool(paced.acquire("paced",due,Traffic::bulk,&reason))&&reason==nullptr,"paced traffic exceeds unchanged receiver budget");}
++ const auto idle=due+std::chrono::seconds(10);check(pacer.reserve(idle)==idle,"idle pacing accumulates backlog");check(pacer.reserve(now)==idle+std::chrono::milliseconds(250),"backwards time bypasses spacing");

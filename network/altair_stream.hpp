@@ -17,12 +17,12 @@ public:
  using Dispatch=AltairWork::Dispatch;
  using Observe=std::function<void(Json)>;
 private:
- asio::io_context& io_;Stream stream_;std::shared_ptr<AltairMessageIngress> ingress_;Dispatch dispatch_;Observe observe_;std::optional<AltairWireKind> kind_;
+ asio::io_context& io_;Stream stream_;std::shared_ptr<AltairMessageIngress> ingress_;Dispatch dispatch_;Observe observe_;const char* budget_reason_=nullptr;std::optional<AltairWireKind> kind_;
  asio::steady_timer timer_;std::shared_ptr<InboundBudget::Lease> lease_;
  Cancellation cancelled_=std::make_shared<std::atomic<bool>>(false);
  bool dispatched_=false,worker_done_=false,finished_=false,started_=false;
  // Diagnostic callbacks cannot change admission, cleanup or acknowledgement.
- void report(const char* reason)noexcept{if(!observe_)return;try{observe_(Json{{"reason",reason},{"kind",kind_?Json(static_cast<unsigned>(*kind_)):Json(nullptr)},{"dispatched",dispatched_},{"workerDone",worker_done_}});}catch(...){} }
+ void report(const char* reason)noexcept{if(!observe_)return;try{observe_(Json{{"reason",reason},{"kind",kind_?Json(static_cast<unsigned>(*kind_)):Json(nullptr)},{"dispatched",dispatched_},{"workerDone",worker_done_},{"budgetReason",budget_reason_?Json(budget_reason_):Json(nullptr)}});}catch(...){} }
  void abort(const char* reason){if(finished_)return;finished_=true;report(reason);cancelled_->store(true);timer_.cancel();if(!stream_->isClosed())stream_->reset();if(!dispatched_||worker_done_)lease_.reset();}
  void completed(Decision decision){
   if(worker_done_)return;worker_done_=true;
@@ -42,7 +42,7 @@ public:
  void start(std::chrono::steady_clock::duration timeout=std::chrono::seconds(10)){
   if(started_||finished_)throw std::logic_error("Altair stream already started");started_=true;
   const auto peer=stream_->remotePeerId();if(!peer){abort("peer-unavailable");return;}
-  lease_=ingress_->acquire(peer.value().toBase58());if(!lease_){abort("inbound-budget");return;}
+  lease_=ingress_->acquire(peer.value().toBase58(),InboundBudget::Clock::now(),&budget_reason_);if(!lease_){abort("inbound-budget");return;}
   timer_.expires_after(timeout);timer_.async_wait([self=shared_from_this()](auto ec){if(!ec)self->abort("deadline");});
   read_json_frame(io_,stream_,ingress_->frame_limit(),[self=shared_from_this()](auto frame){
    if(self->finished_)return;if(!frame){self->abort("frame-read-failed");return;}

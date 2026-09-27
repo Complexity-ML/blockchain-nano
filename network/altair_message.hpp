@@ -40,8 +40,8 @@ public:
  // Serial io_context use, as InboundBudget. Lease spans validation and handler;
  // handler must finish its durable commit before returning and not re-enter.
  size_t frame_limit()const{return profile_.frame_bytes;}
- std::shared_ptr<InboundBudget::Lease> acquire(const std::string& peer,InboundBudget::Clock::time_point now=InboundBudget::Clock::now()){
-  return budget_.acquire(peer,now,InboundBudget::Traffic::bulk);
+ std::shared_ptr<InboundBudget::Lease> acquire(const std::string& peer,InboundBudget::Clock::time_point now=InboundBudget::Clock::now(),const char** rejection=nullptr){
+  return budget_.acquire(peer,now,InboundBudget::Traffic::bulk,rejection);
  }
  // Decode only. Async callers must already hold acquire() until processing ends.
  std::optional<AltairWireMessage> decode(std::string_view frame)const{
