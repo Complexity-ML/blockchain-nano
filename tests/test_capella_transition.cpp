@@ -2,6 +2,7 @@
 #include "nano/consensus_capella_transition.hpp"
 #include "nano/consensus_capella_bls_change.hpp"
 #include "nano/consensus_capella_fork_state.hpp"
+#include "nano/consensus_capella_fork_store.hpp"
 #include "nano/consensus_proposer.hpp"
 #include "blst.h"
 #include "../src/consensus_capella_projection.hpp"
@@ -55,6 +56,8 @@ static void scenario(bool migrate,uint64_t skipped=0){
  }
  const uint64_t first_slot=migrate?slots+skipped:1;
  std::map<Int,Bytes> hashes{{0,parent.header.hash()}};std::function<Bytes(const Int&)> history=[&](const Int& n){return hashes.at(n);};
+ const CapellaForkBlockRules store_rules{r,seconds*1000,seconds*1000/3,40};
+ std::optional<CapellaForkStore> store;
  unsigned accepted=0,rejected=0,cancelled=0,contexts=0;uint64_t paid=0;
  for(uint64_t slot=first_slot;slot<=first_slot+slots;++slot){
   const bool crossing=migrate&&slot==first_slot;
@@ -131,10 +134,33 @@ static void scenario(bool migrate,uint64_t skipped=0){
    }
 
   }
+  if(!store){
+   store=initialize_capella_fork_store(received->consensus,built->message_ssz,received->execution.block,received->execution.state,received->execution.receipts,{parent.header},store_rules);
+  }else{
+   auto timed=prepare_capella_store_tick(*store,(genesis_time+slot*seconds)*1000,store_rules,64,100000);
+   const auto admitted_store=prepare_capella_received_block(timed,wire,store_rules,64,100000);check(admitted_store.has_value(),"Capella Store rejected signed chain");
+   check(admitted_store->blocks.size()==store->blocks.size()+1,"Capella Store block missing");
+   const auto& head=capella_fork_head(*admitted_store,store_rules);
+   check(head.state==received->consensus&&head.execution_state.root()==expected.root(),"Store selected unpaired head");
+   if(!head.execution_block.withdrawals.empty()){
+    auto corrupted=head;corrupted.execution_block.withdrawals[0]["amount"]="0xffff";bool refused=false;
+    try{validate_capella_execution_record(corrupted,store_rules);}catch(const std::invalid_argument&){refused=true;}check(refused,"Store withdrawal body not bound");
+   }
+   bool cancelled_store=false;try{prepare_capella_received_block(timed,wire,store_rules,64,100000,[]{throw ExecutionCancelled("store stop");});}catch(const ExecutionCancelled&){cancelled_store=true;}check(cancelled_store&&timed.blocks.size()==store->blocks.size(),"Store cancellation leaked publication");
+   auto bad_signature=wire;bad_signature[4]^=1;check(!prepare_capella_received_block(timed,bad_signature,store_rules,64,100000),"Store admitted bad signature");
+   store=*admitted_store;
+   if(slot==first_slot+slots){
+    auto alternate_body=body;alternate_body[168]^=1;
+    const auto alternate=prepare_capella_unsigned_block(beacon,slot,proposer,parent_root,alternate_body,r,parent.header,state,history,64,100000);check(alternate.has_value(),"alternate construction failed");
+    const auto branch=prepare_capella_received_block(*store,sign_message(alternate->message_ssz),store_rules,64,100000);check(branch&&branch->blocks.size()==store->blocks.size()+1,"sibling branch lost");
+    const auto& branch_head=capella_fork_head(*branch,store_rules);check(branch_head.execution_state.root()==expected.root(),"sibling head execution mismatch");
+    const auto duplicate=prepare_capella_received_block(*branch,wire,store_rules,64,100000);check(duplicate&&duplicate->blocks.size()==branch->blocks.size(),"duplicate changed Store cardinality");
+   }
+  }
   ++contexts;
   beacon=received->consensus;state=received->execution.state;parent=received->execution.block;hashes[parent.header.number]=parent.header.hash();++accepted;
  }
- std::cout<<Json{{"scenario","capella-signed-transition"},{"migrated",migrate},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
+ std::cout<<Json{{"scenario","capella-signed-transition"},{"migrated",migrate},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"storeBlocks",store->blocks.size()},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
 }
 int main(){try{scenario(false);scenario(true);scenario(true,3);return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

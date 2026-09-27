@@ -2070,3 +2070,13 @@ contextes cibles, refus de headers non liés et de proposants sanctionnés ;
 régression ciblée 3/3.
 [Preuves](qualification/capella-fork-context-20260927/README.md).
 Le Store complet, son snapshot durable et le réacteur réseau restent ouverts.
+
+### Capella : Store de branches en mémoire
+
+Store Capella avec états consensus/EVM couplés, admission signée, horloge et
+sélection de tête. Trois chaînes de neuf blocs et trois branches concurrentes
+qualifiées, avec refus de signatures/retraits altérés et annulations ; régression
+3/3. [Preuves](qualification/capella-store-20260927/README.md).
+Qualification spécifique votes/slashing/dépôts, snapshot, conservation des
+branches à travers le fork, persistance et réacteur restent ouverts. Le Store
+testé démarre sur une ancre Capella authentifiée ; réseau inchangé.
