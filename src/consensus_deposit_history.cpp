@@ -31,6 +31,21 @@ std::shared_ptr<const ExecutionDepositHistory::Node> ExecutionDepositHistory::in
  if((index>>(depth-1))&1)right=insert(right,depth-1,index,deposit,check);else left=insert(left,depth-1,index,deposit,check);
  return std::make_shared<const Node>(Node{consensus_signing_root(left?left->hash:zeros()[depth-1],right?right->hash:zeros()[depth-1]),std::move(left),std::move(right),{}});
 }
+std::shared_ptr<const ExecutionDepositHistory::Node> ExecutionDepositHistory::prefix_tree(const std::shared_ptr<const Node>& node,unsigned depth,uint64_t count,const std::function<void()>& check){
+ if(check)check();if(!count)return {};const uint64_t capacity=uint64_t(1)<<depth;
+ if(count==capacity)return node;
+ if(!node||!depth||count>capacity)throw std::logic_error("invalid deposit prefix path");
+ const auto half=capacity/2;auto left=node->left;std::shared_ptr<const Node> right;
+ if(count<=half)left=prefix_tree(left,depth-1,count,check);
+ else right=prefix_tree(node->right,depth-1,count-half,check);
+ return std::make_shared<const Node>(Node{consensus_signing_root(left?left->hash:zeros()[depth-1],right?right->hash:zeros()[depth-1]),std::move(left),std::move(right),{}});
+}
+ExecutionDepositHistory ExecutionDepositHistory::authenticated_prefix(uint64_t count,const Bytes& hash,const ConsensusRoot& expected,const std::function<void()>& check)const{
+ if(check)check();if(count>count_)throw std::invalid_argument("deposit prefix count exceeds history");
+ ExecutionDepositHistory result(hash);result.count_=count;result.tree_=prefix_tree(tree_,32,count,check);
+ if(result.root()!=expected)throw std::invalid_argument("deposit prefix commitment mismatch");
+ if(check)check();return result;
+}
 Phase0Deposit ExecutionDepositHistory::proof(uint64_t index,const std::function<void()>& check)const{
  if(index>=count_)throw std::out_of_range("deposit proof index");Phase0Deposit out{};auto node=tree_;
  for(unsigned depth=32;depth;--depth){if(check)check();if(!node)throw std::logic_error("missing deposit path");const bool right=(index>>(depth-1))&1;const auto sibling=right?node->left:node->right;out.proof[depth-1]=sibling?sibling->hash:zeros()[depth-1];node=right?node->right:node->left;}

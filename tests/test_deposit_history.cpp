@@ -73,5 +73,14 @@ int main(){try{
  refuses([&]{ExecutionDepositHistory::from_snapshot(snapshot,bi.header,ri.state,bi.header.hash(),code_hash,2);});
  refuses([&]{ExecutionDepositHistory::from_snapshot(snapshot,bb.header,rb.state,bb.header.hash(),code_hash,3);});
  check(hi.snapshot()==snapshot,"rejected restore changed source history");
- std::cout<<Json{{"scenario","execution-deposit-history"},{"profile","Paris"},{"branches",2},{"fundedAdmission",true},{"topup",true},{"invalidPoPIgnored",true},{"crossBranchProofRejected",true},{"duplicateCreditRejected",true},{"authenticatedRestore",true},{"runtimeConnected",false}}.dump()<<'\n';return 0;
+ // Historical prefixes recover the original proofs without keeping old EVM states.
+ const std::array<const ExecutionDepositHistory*,4> originals{&empty,&ha,&ht,&hi};
+ size_t prefix_proofs=0;for(const auto* original:originals){size_t visits=0;const auto prefix=restored.authenticated_prefix(original->count(),original->execution_hash(),original->root(),[&]{++visits;});check(visits<=35,"prefix extraction traversed more than one tree boundary");check(prefix.snapshot()==original->snapshot(),"historical prefix contents differ");for(uint64_t i=0;i<prefix.count();++i){check(prefix.proof(i).proof==original->proof(i).proof,"historical prefix proof differs");++prefix_proofs;}}
+ const auto same_tree=he.authenticated_prefix(hi.count(),hi.execution_hash(),hi.root());check(same_tree.snapshot()==hi.snapshot(),"empty-block prefix recovery differs");
+ refuses([&]{restored.authenticated_prefix(hb.count(),hb.execution_hash(),hb.root());});
+ refuses([&]{restored.authenticated_prefix(4,hi.execution_hash(),hi.root());});
+ refuses([&]{restored.authenticated_prefix(1,Bytes(31),ha.root());});
+ auto bad_root=ha.root();bad_root[0]^=1;refuses([&]{restored.authenticated_prefix(1,ha.execution_hash(),bad_root);});
+ bool prefix_cancelled=false;size_t visits=0;try{restored.authenticated_prefix(1,ha.execution_hash(),ha.root(),[&]{if(++visits==10)throw ExecutionCancelled("prefix interrupted");});}catch(const ExecutionCancelled&){prefix_cancelled=true;}check(prefix_cancelled&&restored.snapshot()==snapshot,"prefix failure mutated history");
+ std::cout<<Json{{"scenario","execution-deposit-history"},{"profile","Paris"},{"branches",2},{"fundedAdmission",true},{"topup",true},{"invalidPoPIgnored",true},{"crossBranchProofRejected",true},{"duplicateCreditRejected",true},{"authenticatedRestore",true},{"runtimeConnected",false},{"authenticatedPrefixes",4},{"prefixProofsCompared",prefix_proofs}}.dump()<<'\n';return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

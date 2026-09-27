@@ -3294,3 +3294,16 @@ Aucun correctif du moteur requis. **Partiel** : paiement ultérieur, réorganisa
 après élagage, preuves de slashing, dépôts natifs, pannes et déclenchement
 automatique restent à qualifier dans ce contexte.
 [Scénario et preuves](qualification/capella-pruning-bls-20260927/README.md).
+
+### 2026-09-27 — Préfixes authentifiés d’historique des dépôts
+
+Nouvelle primitive C++ reconstruisant un ancien préfixe de l’arbre des dépôts,
+avec partage des sous-arbres et au plus 32 nouveaux nœuds. La racine et le compte
+sont vérifiés ; le tuple historique hash d’exécution/compte/racine doit être
+préalablement authentifié par l’appelant. Test passé en 0,39 s : quatre préfixes,
+six preuves identiques, rejet d’une autre branche et de commitments altérés,
+annulation sans mutation. Aucun nouveau profil réseau activé.
+**Partiel** : l’élagage natif reste refusé. Il faut conserver les références
+d’ancêtres et de périodes, puis raccorder ces préfixes à la sélection des votes
+et aux preuves de dépôts obligatoires sans modifier les règles d’admission.
+[Code, justification et preuves](qualification/deposit-history-prefix-20260927/README.md).

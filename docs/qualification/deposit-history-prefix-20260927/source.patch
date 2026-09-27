@@ -1,0 +1,49 @@
+diff --git a/include/nano/consensus_deposit_history.hpp b/include/nano/consensus_deposit_history.hpp
+index cc46001..f479e56 100644
+--- a/include/nano/consensus_deposit_history.hpp
++++ b/include/nano/consensus_deposit_history.hpp
+@@ -12,0 +13,2 @@ class ExecutionDepositHistory {
++ static std::shared_ptr<const Node> prefix_tree(const std::shared_ptr<const Node>&,
++  unsigned depth,uint64_t count,const std::function<void()>&);
+@@ -17,0 +20,5 @@ public:
++ // Rebuild an immutable earlier prefix using at most 32 boundary nodes.
++ // Caller MUST authenticate the old (execution hash, count, root) tuple from
++ // retained canonical ancestry. Root equality alone does not prove ancestry.
++ ExecutionDepositHistory authenticated_prefix(uint64_t count,const Bytes& trusted_execution_hash,
++  const ConsensusRoot& trusted_root,const std::function<void()>& checkpoint={})const;
+diff --git a/src/consensus_deposit_history.cpp b/src/consensus_deposit_history.cpp
+index a26fac1..2c6429b 100644
+--- a/src/consensus_deposit_history.cpp
++++ b/src/consensus_deposit_history.cpp
+@@ -33,0 +34,15 @@ std::shared_ptr<const ExecutionDepositHistory::Node> ExecutionDepositHistory::in
++std::shared_ptr<const ExecutionDepositHistory::Node> ExecutionDepositHistory::prefix_tree(const std::shared_ptr<const Node>& node,unsigned depth,uint64_t count,const std::function<void()>& check){
++ if(check)check();if(!count)return {};const uint64_t capacity=uint64_t(1)<<depth;
++ if(count==capacity)return node;
++ if(!node||!depth||count>capacity)throw std::logic_error("invalid deposit prefix path");
++ const auto half=capacity/2;auto left=node->left;std::shared_ptr<const Node> right;
++ if(count<=half)left=prefix_tree(left,depth-1,count,check);
++ else right=prefix_tree(node->right,depth-1,count-half,check);
++ return std::make_shared<const Node>(Node{consensus_signing_root(left?left->hash:zeros()[depth-1],right?right->hash:zeros()[depth-1]),std::move(left),std::move(right),{}});
++}
++ExecutionDepositHistory ExecutionDepositHistory::authenticated_prefix(uint64_t count,const Bytes& hash,const ConsensusRoot& expected,const std::function<void()>& check)const{
++ if(check)check();if(count>count_)throw std::invalid_argument("deposit prefix count exceeds history");
++ ExecutionDepositHistory result(hash);result.count_=count;result.tree_=prefix_tree(tree_,32,count,check);
++ if(result.root()!=expected)throw std::invalid_argument("deposit prefix commitment mismatch");
++ if(check)check();return result;
++}
+diff --git a/tests/test_deposit_history.cpp b/tests/test_deposit_history.cpp
+index 0e88855..450b93d 100644
+--- a/tests/test_deposit_history.cpp
++++ b/tests/test_deposit_history.cpp
+@@ -76 +76,10 @@ int main(){try{
+- std::cout<<Json{{"scenario","execution-deposit-history"},{"profile","Paris"},{"branches",2},{"fundedAdmission",true},{"topup",true},{"invalidPoPIgnored",true},{"crossBranchProofRejected",true},{"duplicateCreditRejected",true},{"authenticatedRestore",true},{"runtimeConnected",false}}.dump()<<'\n';return 0;
++ // Historical prefixes recover the original proofs without keeping old EVM states.
++ const std::array<const ExecutionDepositHistory*,4> originals{&empty,&ha,&ht,&hi};
++ size_t prefix_proofs=0;for(const auto* original:originals){size_t visits=0;const auto prefix=restored.authenticated_prefix(original->count(),original->execution_hash(),original->root(),[&]{++visits;});check(visits<=35,"prefix extraction traversed more than one tree boundary");check(prefix.snapshot()==original->snapshot(),"historical prefix contents differ");for(uint64_t i=0;i<prefix.count();++i){check(prefix.proof(i).proof==original->proof(i).proof,"historical prefix proof differs");++prefix_proofs;}}
++ const auto same_tree=he.authenticated_prefix(hi.count(),hi.execution_hash(),hi.root());check(same_tree.snapshot()==hi.snapshot(),"empty-block prefix recovery differs");
++ refuses([&]{restored.authenticated_prefix(hb.count(),hb.execution_hash(),hb.root());});
++ refuses([&]{restored.authenticated_prefix(4,hi.execution_hash(),hi.root());});
++ refuses([&]{restored.authenticated_prefix(1,Bytes(31),ha.root());});
++ auto bad_root=ha.root();bad_root[0]^=1;refuses([&]{restored.authenticated_prefix(1,ha.execution_hash(),bad_root);});
++ bool prefix_cancelled=false;size_t visits=0;try{restored.authenticated_prefix(1,ha.execution_hash(),ha.root(),[&]{if(++visits==10)throw ExecutionCancelled("prefix interrupted");});}catch(const ExecutionCancelled&){prefix_cancelled=true;}check(prefix_cancelled&&restored.snapshot()==snapshot,"prefix failure mutated history");
++ std::cout<<Json{{"scenario","execution-deposit-history"},{"profile","Paris"},{"branches",2},{"fundedAdmission",true},{"topup",true},{"invalidPoPIgnored",true},{"crossBranchProofRejected",true},{"duplicateCreditRejected",true},{"authenticatedRestore",true},{"runtimeConnected",false},{"authenticatedPrefixes",4},{"prefixProofsCompared",prefix_proofs}}.dump()<<'\n';return 0;

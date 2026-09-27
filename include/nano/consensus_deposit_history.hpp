@@ -10,11 +10,18 @@ class ExecutionDepositHistory {
  uint64_t count_=0;
  static std::shared_ptr<const Node> insert(const std::shared_ptr<const Node>&,
   unsigned depth,uint64_t index,const Phase0Deposit&,const std::function<void()>&);
+ static std::shared_ptr<const Node> prefix_tree(const std::shared_ptr<const Node>&,
+  unsigned depth,uint64_t count,const std::function<void()>&);
 public:
  explicit ExecutionDepositHistory(Bytes empty_anchor_hash);
  uint64_t count()const{return count_;}
  const Bytes& execution_hash()const{return execution_hash_;}
  ConsensusRoot root()const;
+ // Rebuild an immutable earlier prefix using at most 32 boundary nodes.
+ // Caller MUST authenticate the old (execution hash, count, root) tuple from
+ // retained canonical ancestry. Root equality alone does not prove ancestry.
+ ExecutionDepositHistory authenticated_prefix(uint64_t count,const Bytes& trusted_execution_hash,
+  const ConsensusRoot& trusted_root,const std::function<void()>& checkpoint={})const;
  Phase0Deposit proof(uint64_t index,const std::function<void()>& checkpoint={})const;
  void validate_execution(const Header&,const State&,const Bytes& pinned_code_hash,
   const std::function<void()>& checkpoint={})const;
