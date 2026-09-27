@@ -1,5 +1,7 @@
 # EIP et consensus : périmètre demandé pour Nano
 
+Diagnostic complémentaire du 27 septembre : [retards d’admission des votes Capella](qualification/capella-vote-propagation-20260927/README.md). Le même test distribué échoue encore ; des votes distants sont admis jusqu’à 12 slots après leur émission observée. Les préparations différées tracées réussissent. La cause du retard reste à isoler ; aucune clôture de la finalité ni de la production.
+
 ### Blocage constaté : finalité Capella avec validateurs répartis — 27 septembre 2026
 
 **ÉCHEC** du test à deux vrais pairs libp2p, chacun avec 32 clés distinctes :

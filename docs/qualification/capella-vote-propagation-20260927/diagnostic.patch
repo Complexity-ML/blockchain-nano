@@ -1,0 +1,20 @@
+--- a/src/consensus_capella_reactor.cpp
++++ b/src/consensus_capella_reactor.cpp
+@@ -0,0 +1,3 @@
++#include <cstdlib>
++#include <unistd.h>
++#include <atomic>
+@@ -6,0 +10,3 @@
++bool vote_tracing()noexcept{const auto* enabled=std::getenv("NANO_TEST_NETWORK_TRACE");return enabled&&std::string_view(enabled)=="1";}
++void vote_trace(Json event)noexcept{try{if(!vote_tracing())return;static std::atomic<size_t> count{0};if(count.fetch_add(1)>=4096)return;event["event"]="test-capella-vote-application";const auto line=event.dump()+"\n";(void)::write(STDOUT_FILENO,line.data(),line.size());}catch(...) {}}
++size_t changed_messages(const Phase0ForkChoiceView& before,const Phase0ForkChoiceView& after){size_t changed=0;for(const auto& [index,message]:after.latest_messages){const auto prior=before.latest_messages.find(index);if(prior==before.latest_messages.end()||prior->second.epoch!=message.epoch||prior->second.root!=message.root)++changed;}return changed;}
+@@ -192 +198 @@
+-  if(current>previous&&vote->data.slot==previous){auto applied=prepare_capella_store_vote(next,*vote,rules_,limits_.replay_slots,limits_.sync_trials,check);if(applied)next=std::move(*applied);}
++  if(current>previous&&vote->data.slot==previous){auto applied=prepare_capella_store_vote(next,*vote,rules_,limits_.replay_slots,limits_.sync_trials,check);if(vote_tracing())vote_trace({{"stage","deferred-preparation"},{"wireRoot",hex(it->first)},{"voteSlot",vote->data.slot},{"targetEpoch",vote->data.target.epoch},{"currentSlot",current},{"accepted",bool(applied)},{"changedMessages",applied?changed_messages(next.timed.view,applied->timed.view):0}});if(applied)next=std::move(*applied);}
+@@ -279,3 +285,3 @@
+- if(const auto found=votes_.find(id);found!=votes_.end()&&found->second==wire)return true;
+- auto next=checked_vote(*state_,vote,rules_,limits_,check);if(!next)return false;
+- if(votes_.size()>=limits_.messages)throw std::length_error("Capella signed vote capacity");auto votes=votes_;votes.emplace(std::move(id),std::move(wire));publish(std::move(*next),check,{},std::move(votes));return true;
++ if(const auto found=votes_.find(id);found!=votes_.end()&&found->second==wire){vote_trace({{"stage","duplicate"},{"wireRoot",hex(id)},{"voteSlot",vote.data.slot},{"targetEpoch",vote.data.target.epoch},{"currentSlot",(state_->timed.clock.time_ms-state_->timed.clock.genesis_time_ms)/rules_.slot_duration_ms}});return true;}
++ auto next=checked_vote(*state_,vote,rules_,limits_,check);if(!next){vote_trace({{"stage","rejected"},{"wireRoot",hex(id)},{"voteSlot",vote.data.slot},{"targetEpoch",vote.data.target.epoch},{"currentSlot",(state_->timed.clock.time_ms-state_->timed.clock.genesis_time_ms)/rules_.slot_duration_ms}});return false;}const auto changes=vote_tracing()?changed_messages(state_->timed.view,next->timed.view):0;const auto traced_id=vote_tracing()?hex(id):std::string{};
++ if(votes_.size()>=limits_.messages)throw std::length_error("Capella signed vote capacity");auto votes=votes_;votes.emplace(std::move(id),std::move(wire));publish(std::move(*next),check,{},std::move(votes));vote_trace({{"stage","committed"},{"wireRoot",traced_id},{"voteSlot",vote.data.slot},{"targetEpoch",vote.data.target.epoch},{"currentSlot",(state_->timed.clock.time_ms-state_->timed.clock.genesis_time_ms)/rules_.slot_duration_ms},{"changedMessages",changes}});return true;
