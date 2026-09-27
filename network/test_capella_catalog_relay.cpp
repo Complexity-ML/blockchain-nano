@@ -5,11 +5,15 @@ void check(bool ok,const char* text){if(!ok)throw std::runtime_error(text);}
 std::string root(char c){return "0x"+std::string(64,c);}
 int main(){try{
  const AltairWireProfile profile{"0x539",root('a'),"0x01020304",1024,256,256,256,root('b')};unsigned scenarios=0;
- for(const std::string mode:{"success","duplicate","empty","changed-snapshot","wrong-next","unsorted","unavailable","foreign","rejected","lost-ack","lost-close","limit","expired"}){
-  asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);unsigned pages=0,sends=0,closes=0,done=0;Json result;
+ for(const std::string mode:{"success","duplicate","empty","changed-snapshot","wrong-next","unsorted","unavailable","foreign","rejected","lost-ack","lost-close","close-applied-reply-lost","close-request-lost","close-unreachable","close-refused","limit","expired"}){
+  asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);unsigned pages=0,sends=0,closes=0,done=0;Json result;bool allocated=false;unsigned removals=0;
   auto core=[&](std::string method,Json p,Reply cb){check(p[0]=="token","missing authentication");Json value;
-   if(method=="nano_capellaCatalogOpen")value={{"handle",root('c')}};
-   else if(method=="nano_capellaCatalogClose"){++closes;check(p[1]==root('c'),"wrong close handle");if(mode=="lost-close")return;value=true;}
+   if(method=="nano_capellaCatalogOpen"){allocated=true;value={{"handle",root('c')}};}
+   else if(method=="nano_capellaCatalogClose"){++closes;check(p[1]==root('c'),"wrong close handle");if(mode=="lost-close")return;
+    if(mode=="close-unreachable"||(mode=="close-request-lost"&&closes==1)){cb(nullptr);return;}
+    if(mode=="close-refused"){cb(false);return;}
+    if(allocated){allocated=false;++removals;}
+    if(mode=="close-applied-reply-lost"&&closes==1){cb(nullptr);return;}value=true;}
    else if(method=="nano_capellaCatalogPage"){
     ++pages;check(p[1]==root('c'),"wrong page handle");if(mode=="expired"){cb(nullptr);return;}
     check((pages==1&&p[2].is_null())||(pages==2&&p[2]==root('2')),"cursor did not follow acknowledged page");
@@ -20,8 +24,10 @@ int main(){try{
   };
   auto deliver=[&](std::string id,Json envelope,Reply cb){++sends;check(id==root(char('0'+sends))&&envelope["ssz"]=="0x0102","wrong payload");if(mode=="lost-ack")return;cb(Json{{"accepted",mode!="rejected"}});if(mode=="duplicate")cb(Json{{"accepted",true}});};
   auto relay=std::make_shared<CapellaCatalogRelay>(io,core,deliver,"token","block",ingress,2,mode=="limit"?2:4,[&](Json value){++done;result=std::move(value);});relay->start(20ms);io.run();
-  const bool success=mode=="success"||mode=="duplicate"||mode=="empty";check(done==1&&result["success"]==success&&closes==1,"incorrect completion/cleanup");
+  const bool success=mode=="success"||mode=="duplicate"||mode=="empty"||mode=="close-applied-reply-lost"||mode=="close-request-lost";const bool retried=mode=="close-applied-reply-lost"||mode=="close-request-lost"||mode=="close-unreachable";check(done==1&&result["success"]==success&&closes==(retried?2:1),"incorrect completion/cleanup");
   if(mode=="success"||mode=="duplicate")check(sends==3&&pages==2&&result["closed"]==true,"pagination failed");
+  if(mode=="close-applied-reply-lost"||mode=="close-request-lost")check(removals==1&&!allocated&&result["closed"]==true&&sends==3,"close retry leaked or replayed delivery");
+  if(mode=="close-unreachable"||mode=="close-refused")check(allocated&&result["closed"]==false,"unconfirmed close reported success");
   if(mode=="limit")check(sends==2&&pages==1,"entry limit exceeded");if(mode=="lost-ack")check(result["delivered"]==0,"unacknowledged delivery counted");++scenarios;
  }
  // Open may allocate a handle after cancellation: close the late handle once.

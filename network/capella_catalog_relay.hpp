@@ -23,11 +23,19 @@ private:
    try{handler(*self,std::move(value));}catch(...){self->close(false);}
   });};}
  void call(std::string method,Json params,Reply reply){try{core_(std::move(method),std::move(params),reply);}catch(...){reply(nullptr);}}
+ // Only this idempotent operation may be retried; never retry delivery or open.
+ // A missing transport response remains bounded by the overall deadline.
+ void close_attempt(bool retry){
+  call("nano_capellaCatalogClose",Json::array({token_,handle_}),callback([retry](auto& self,Json value){
+   if(value.is_null()&&retry){self.close_attempt(false);return;}
+   self.complete(self.desired_success_&&value==true,value==true);
+  }));
+ }
  void close(bool success){
   if(finished_||closing_)return;
   if(handle_.empty()){complete(false,false);return;}
   closing_=true;desired_success_=success;stage_="close";
-  call("nano_capellaCatalogClose",Json::array({token_,handle_}),callback([](auto& self,Json value){self.complete(self.desired_success_&&value==true,value==true);}));
+  close_attempt(true);
  }
  void page(){
   stage_="page";std::ostringstream count;count<<"0x"<<std::hex<<std::min(page_size_,maximum_-delivered_);

@@ -2541,3 +2541,13 @@ d’un accusé. Hash de bloc et racine d’état communs sont enregistrés.
 [Preuves](qualification/capella-two-peer-network-20260927/README.md).
 Validateurs concentrés sur l’émetteur : finalité multi-validateur distribuée,
 partitions, WAN, charge durable et longues reprises après élagage restent ouverts.
+
+### 2026-09-27 — Reprise de fermeture des catalogues Capella
+
+Fermeture idempotente authentifiée et une seule reprise sur issue RPC inconnue :
+19 scénarios de relais, registre réel avec quotas/expiration, et RPC HTTP local
+passent. Aucun changement des règles EIP ou du consensus. L'ouverture dont la
+réponse est perdue reste **partielle** : quota conservé jusqu'au TTL ; clôture
+requise par identifiant de requête et tests de réordonnancement/annulation.
+Pas de qualification production ni de déploiement VPS pour cette tranche.
+[Preuves et limites](qualification/capella-catalog-close-20260927/README.md).

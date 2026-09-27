@@ -1,5 +1,6 @@
 #pragma once
 #include "nano/consensus_capella_reactor.hpp"
+#include <algorithm>
 #include <chrono>
 #include <openssl/rand.h>
 
@@ -29,5 +30,12 @@ public:
   std::lock_guard lock(mutex_);reap(now_());return find(owner,id)->second.snapshot->page(after,count,json_bytes,check);
  }
  void stop(){std::lock_guard lock(mutex_);stopped_=true;entries_.clear();bytes_=0;}
- void close(const std::string& owner,const std::string& id){std::lock_guard lock(mutex_);reap(now_());auto it=find(owner,id);bytes_-=it->second.snapshot->root_bytes();entries_.erase(it);}
+ // Closing is idempotent: a lost acknowledgement can be retried without
+ // retaining tombstones or extending leases. A live foreign handle is protected.
+ void close(const std::string& owner,const std::string& id){
+  if(owner.empty()||owner.size()>256||id.size()!=66||!id.starts_with("0x")||!std::all_of(id.begin()+2,id.end(),[](char c){return (c>='0'&&c<='9')||(c>='a'&&c<='f');}))throw std::invalid_argument("Invalid Capella inventory close");
+  std::lock_guard lock(mutex_);reap(now_());auto it=entries_.find(id);if(it==entries_.end())return;
+  if(it->second.owner!=owner)throw std::invalid_argument("Capella inventory handle unavailable");
+  bytes_-=it->second.snapshot->root_bytes();entries_.erase(it);
+ }
 };

@@ -1,0 +1,72 @@
+diff --git a/network/capella_catalog_relay.hpp b/network/capella_catalog_relay.hpp
+index 62468dc..c9f093f 100644
+--- a/network/capella_catalog_relay.hpp
++++ b/network/capella_catalog_relay.hpp
+@@ -25,0 +26,8 @@ private:
++ // Only this idempotent operation may be retried; never retry delivery or open.
++ // A missing transport response remains bounded by the overall deadline.
++ void close_attempt(bool retry){
++  call("nano_capellaCatalogClose",Json::array({token_,handle_}),callback([retry](auto& self,Json value){
++   if(value.is_null()&&retry){self.close_attempt(false);return;}
++   self.complete(self.desired_success_&&value==true,value==true);
++  }));
++ }
+@@ -30 +38 @@ private:
+-  call("nano_capellaCatalogClose",Json::array({token_,handle_}),callback([](auto& self,Json value){self.complete(self.desired_success_&&value==true,value==true);}));
++  close_attempt(true);
+diff --git a/network/capella_inventory_sessions.hpp b/network/capella_inventory_sessions.hpp
+index f908cd5..e25a055 100644
+--- a/network/capella_inventory_sessions.hpp
++++ b/network/capella_inventory_sessions.hpp
+@@ -2,0 +3 @@
++#include <algorithm>
+@@ -32 +33,8 @@ public:
+- void close(const std::string& owner,const std::string& id){std::lock_guard lock(mutex_);reap(now_());auto it=find(owner,id);bytes_-=it->second.snapshot->root_bytes();entries_.erase(it);}
++ // Closing is idempotent: a lost acknowledgement can be retried without
++ // retaining tombstones or extending leases. A live foreign handle is protected.
++ void close(const std::string& owner,const std::string& id){
++  if(owner.empty()||owner.size()>256||id.size()!=66||!id.starts_with("0x")||!std::all_of(id.begin()+2,id.end(),[](char c){return (c>='0'&&c<='9')||(c>='a'&&c<='f');}))throw std::invalid_argument("Invalid Capella inventory close");
++  std::lock_guard lock(mutex_);reap(now_());auto it=entries_.find(id);if(it==entries_.end())return;
++  if(it->second.owner!=owner)throw std::invalid_argument("Capella inventory handle unavailable");
++  bytes_-=it->second.snapshot->root_bytes();entries_.erase(it);
++ }
+diff --git a/network/test_capella_catalog_relay.cpp b/network/test_capella_catalog_relay.cpp
+index d060984..baafa2d 100644
+--- a/network/test_capella_catalog_relay.cpp
++++ b/network/test_capella_catalog_relay.cpp
+@@ -8,2 +8,2 @@ int main(){try{
+- for(const std::string mode:{"success","duplicate","empty","changed-snapshot","wrong-next","unsorted","unavailable","foreign","rejected","lost-ack","lost-close","limit","expired"}){
+-  asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);unsigned pages=0,sends=0,closes=0,done=0;Json result;
++ for(const std::string mode:{"success","duplicate","empty","changed-snapshot","wrong-next","unsorted","unavailable","foreign","rejected","lost-ack","lost-close","close-applied-reply-lost","close-request-lost","close-unreachable","close-refused","limit","expired"}){
++  asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);unsigned pages=0,sends=0,closes=0,done=0;Json result;bool allocated=false;unsigned removals=0;
+@@ -11,2 +11,6 @@ int main(){try{
+-   if(method=="nano_capellaCatalogOpen")value={{"handle",root('c')}};
+-   else if(method=="nano_capellaCatalogClose"){++closes;check(p[1]==root('c'),"wrong close handle");if(mode=="lost-close")return;value=true;}
++   if(method=="nano_capellaCatalogOpen"){allocated=true;value={{"handle",root('c')}};}
++   else if(method=="nano_capellaCatalogClose"){++closes;check(p[1]==root('c'),"wrong close handle");if(mode=="lost-close")return;
++    if(mode=="close-unreachable"||(mode=="close-request-lost"&&closes==1)){cb(nullptr);return;}
++    if(mode=="close-refused"){cb(false);return;}
++    if(allocated){allocated=false;++removals;}
++    if(mode=="close-applied-reply-lost"&&closes==1){cb(nullptr);return;}value=true;}
+@@ -23 +27 @@ int main(){try{
+-  const bool success=mode=="success"||mode=="duplicate"||mode=="empty";check(done==1&&result["success"]==success&&closes==1,"incorrect completion/cleanup");
++  const bool success=mode=="success"||mode=="duplicate"||mode=="empty"||mode=="close-applied-reply-lost"||mode=="close-request-lost";const bool retried=mode=="close-applied-reply-lost"||mode=="close-request-lost"||mode=="close-unreachable";check(done==1&&result["success"]==success&&closes==(retried?2:1),"incorrect completion/cleanup");
+@@ -24,0 +29,2 @@ int main(){try{
++  if(mode=="close-applied-reply-lost"||mode=="close-request-lost")check(removals==1&&!allocated&&result["closed"]==true&&sends==3,"close retry leaked or replayed delivery");
++  if(mode=="close-unreachable"||mode=="close-refused")check(allocated&&result["closed"]==false,"unconfirmed close reported success");
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index fa13500..2525118 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -302 +302 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
+-  const auto handle=call("nano_capellaCatalogOpen",Json::array({"capella-test-token","block"})).at("result").at("handle");check(call("nano_capellaCatalogPage",Json::array({"capella-test-token",handle,nullptr,"0x2"})).at("result").at("entries").size()==2,"Capella RPC page failed");check(call("nano_capellaCatalogClose",Json::array({"capella-test-token",handle})).at("result")==true,"Capella RPC close failed");
++  const auto handle=call("nano_capellaCatalogOpen",Json::array({"capella-test-token","block"})).at("result").at("handle");check(call("nano_capellaCatalogPage",Json::array({"capella-test-token",handle,nullptr,"0x2"})).at("result").at("entries").size()==2,"Capella RPC page failed");check(call("nano_capellaCatalogClose",Json::array({"capella-test-token",handle})).at("result")==true,"Capella RPC close failed");check(call("nano_capellaCatalogClose",Json::array({"capella-test-token",handle})).at("result")==true,"Capella RPC repeated close failed");
+@@ -652 +652,4 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
+-  catalogs.close("peer-a",handle);const auto vote_handle=catalogs.open("peer-a","attestation");const auto slash_handle=catalogs.open("peer-b","attester_slashing");
++  catalogs.close("peer-a",handle);catalogs.close("peer-a",handle); // lost close ACK: same request is safe
++  catalog_refused=false;try{catalogs.close("",handle);}catch(const std::invalid_argument&){catalog_refused=true;}check(catalog_refused,"anonymous idempotent close accepted");
++  catalog_refused=false;try{catalogs.close("peer-a","bad-handle");}catch(const std::invalid_argument&){catalog_refused=true;}check(catalog_refused,"malformed idempotent close accepted");
++  const auto vote_handle=catalogs.open("peer-a","attestation");const auto slash_handle=catalogs.open("peer-b","attester_slashing");
+@@ -654 +657 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
+-  catalog_now+=std::chrono::seconds(1);catalog_refused=false;try{catalogs.page("peer-a",vote_handle,{},2,512);}catch(const std::invalid_argument&){catalog_refused=true;}check(catalog_refused,"expired catalog readable");
++  catalog_now+=std::chrono::seconds(1);catalog_refused=false;try{catalogs.page("peer-a",vote_handle,{},2,512);}catch(const std::invalid_argument&){catalog_refused=true;}check(catalog_refused,"expired catalog readable");catalogs.close("peer-a",vote_handle);catalogs.close("peer-a",vote_handle);

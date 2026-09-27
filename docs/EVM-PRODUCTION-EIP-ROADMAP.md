@@ -86,3 +86,13 @@ Leur état réel est consigné dans EIP-IMPLEMENTATION-STATUS.md ; plusieurs
 sont déjà présents dans le moteur sans activation réseau. Ajouter comme
 critères le provisionnement versionné des contrats système et la couverture
 RPC eth_createAccessList ; préserver le traitement existant des frais dynamiques.
+
+### 2026-09-27 — Reprise de fermeture des catalogues Capella
+
+Fermeture idempotente authentifiée et une seule reprise sur issue RPC inconnue :
+19 scénarios de relais, registre réel avec quotas/expiration, et RPC HTTP local
+passent. Aucun changement des règles EIP ou du consensus. L'ouverture dont la
+réponse est perdue reste **partielle** : quota conservé jusqu'au TTL ; clôture
+requise par identifiant de requête et tests de réordonnancement/annulation.
+Pas de qualification production ni de déploiement VPS pour cette tranche.
+[Preuves et limites](qualification/capella-catalog-close-20260927/README.md).
