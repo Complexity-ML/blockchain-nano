@@ -1,0 +1,89 @@
+diff --git a/include/nano/consensus_bls.hpp b/include/nano/consensus_bls.hpp
+index a2ff249..23022bc 100644
+--- a/include/nano/consensus_bls.hpp
++++ b/include/nano/consensus_bls.hpp
+@@ -19,0 +20,5 @@ std::optional<std::vector<uint8_t>> aggregate_consensus_bls_keys(std::span<const
++// Sum nonempty compressed G2 signatures, retaining multiplicity. Rejects bad
++// encodings, non-subgroup points and infinity (including a cancelling sum).
++// Does not verify messages/membership; callers must authenticate each input.
++std::optional<std::vector<uint8_t>> aggregate_consensus_bls_signatures(std::span<const std::vector<uint8_t>> signatures);
++
+diff --git a/include/nano/consensus_capella_reactor.hpp b/include/nano/consensus_capella_reactor.hpp
+index 22f6630..cd30d72 100644
+--- a/include/nano/consensus_capella_reactor.hpp
++++ b/include/nano/consensus_capella_reactor.hpp
+@@ -52 +52,2 @@ public:
+- // Verifies membership/domain/signature; retains the highest participation.
++ // Verifies membership/domain/signature; merges disjoint positions, otherwise
++ // retains the higher participation without double-counting overlap.
+diff --git a/src/consensus_bls.cpp b/src/consensus_bls.cpp
+index 0f3bdf8..ff70c50 100644
+--- a/src/consensus_bls.cpp
++++ b/src/consensus_bls.cpp
+@@ -12,0 +13,10 @@ std::optional<std::vector<uint8_t>> aggregate_consensus_bls_keys(std::span<const
++std::optional<std::vector<uint8_t>> aggregate_consensus_bls_signatures(std::span<const std::vector<uint8_t>> signatures){
++ if(signatures.empty())return std::nullopt;blst_p2 sum{};bool first=true;
++ for(const auto& bytes:signatures){
++  if(bytes.size()!=96)return std::nullopt;blst_p2_affine signature;
++  if(blst_p2_uncompress(&signature,bytes.data())!=BLST_SUCCESS||blst_p2_affine_is_inf(&signature)||!blst_p2_affine_in_g2(&signature))return std::nullopt;
++  if(first){blst_p2_from_affine(&sum,&signature);first=false;}else blst_p2_add_or_double_affine(&sum,&sum,&signature);
++ }
++ if(blst_p2_is_inf(&sum))return std::nullopt;
++ std::vector<uint8_t> result(96);blst_p2_compress(result.data(),&sum);return result;
++}
+diff --git a/src/consensus_capella_local_body.cpp b/src/consensus_capella_local_body.cpp
+index 82b97c4..baf2cd2 100644
+--- a/src/consensus_capella_local_body.cpp
++++ b/src/consensus_capella_local_body.cpp
+@@ -7,0 +8 @@
++#include "nano/consensus_bls.hpp"
+@@ -36,0 +38 @@ bool CapellaDurableReactor::submit_sync_aggregate(uint64_t slot,std::span<const
++ PendingSyncAggregate candidate{slot,head,participants,Bytes(aggregate.begin(),aggregate.end())};
+@@ -38,2 +40,9 @@ bool CapellaDurableReactor::submit_sync_aggregate(uint64_t slot,std::span<const
+-  if(std::equal(aggregate.begin(),aggregate.end(),pending_sync_->ssz.begin(),pending_sync_->ssz.end()))return true;
+-  if(participants<=pending_sync_->participants)return false;
++  if(candidate.ssz==pending_sync_->ssz)return true;
++  bool overlap=false;for(size_t i=0;i<bit_bytes;++i)overlap|=bool(candidate.ssz[i]&pending_sync_->ssz[i]);
++  if(!overlap&&participants&&pending_sync_->participants){
++   const std::array<Bytes,2> signatures{Bytes(pending_sync_->ssz.begin()+bit_bytes,pending_sync_->ssz.end()),Bytes(aggregate.begin()+bit_bytes,aggregate.end())};
++   const auto merged=aggregate_consensus_bls_signatures(signatures);if(!merged)return false;
++   for(size_t i=0;i<bit_bytes;++i)candidate.ssz[i]|=pending_sync_->ssz[i];
++   std::copy(merged->begin(),merged->end(),candidate.ssz.begin()+bit_bytes);candidate.participants+=pending_sync_->participants;
++   if(!verify_altair_sync_aggregate(projected.common,candidate.ssz,c.state,c.sync,check))return false;
++  }else if(participants<=pending_sync_->participants)return false;
+@@ -41 +49,0 @@ bool CapellaDurableReactor::submit_sync_aggregate(uint64_t slot,std::span<const
+- PendingSyncAggregate candidate{slot,head,participants,Bytes(aggregate.begin(),aggregate.end())};
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index f3afa90..fe42a1f 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -133 +133 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+-    blst_p2 sum{};bool first=true;
++    blst_p2 sum{};bool first=true;std::array<blst_p2,2> partial_sums{};std::array<bool,2> partial_first{true,true};std::array<Bytes,2> partials{Bytes(bit_bytes+96),Bytes(bit_bytes+96)};
+@@ -135 +135 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+-     const auto signature=Key(member).sign(root);blst_p2_affine affine;check(blst_p2_uncompress(&affine,signature.data())==BLST_SUCCESS,"sync signature encoding");blst_p2 point;blst_p2_from_affine(&point,&affine);if(first){sum=point;first=false;}else blst_p2_add_or_double(&sum,&sum,&point);expected_sync[position/8]|=uint8_t(1u<<(position%8));
++     const auto signature=Key(member).sign(root);blst_p2_affine affine;check(blst_p2_uncompress(&affine,signature.data())==BLST_SUCCESS,"sync signature encoding");blst_p2 point;blst_p2_from_affine(&point,&affine);if(first){sum=point;first=false;}else blst_p2_add_or_double(&sum,&sum,&point);expected_sync[position/8]|=uint8_t(1u<<(position%8));const auto part=position%2;if(partial_first[part]){partial_sums[part]=point;partial_first[part]=false;}else blst_p2_add_or_double(&partial_sums[part],&partial_sums[part],&point);partials[part][position/8]|=uint8_t(1u<<(position%8));
+@@ -137 +137 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+-    blst_p2_compress(expected_sync.data()+bit_bytes,&sum);
++    blst_p2_compress(expected_sync.data()+bit_bytes,&sum);for(size_t part=0;part<2;++part)blst_p2_compress(partials[part].data()+bit_bytes,&partial_sums[part]);
+@@ -140,0 +141,5 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
++    const size_t first_part=(slot/2)%2;
++    check(nodes[0]->submit_sync_aggregate(slot,partials[first_part],current.token),"first partial sync rejected");
++    check(nodes[0]->submit_sync_aggregate(slot,partials[first_part],current.token),"duplicate partial sync not idempotent");
++    check(nodes[0]->submit_sync_aggregate(slot,partials[1-first_part],current.token),"disjoint partial sync rejected");
++    check(!nodes[0]->submit_sync_aggregate(slot,partials[first_part],current.token),"overlapping partial double counted");
+@@ -262 +267 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+- std::cout<<Json{{"scenario","capella-local-assembly-finality"},{"localSyncAggregates",local_sync},{"executionOwner",owner_mode},{"participationPercent",local_finality},{"blocks",blocks},{"votes",votes},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"justifiedEpoch",result.state->timed.view.justified.epoch},{"independentStores",2},{"storeReopens",restarts},{"signingJournalsReopened",reopened_journals},{"networkTransport",false},{"networkActivated",false}}.dump()<<std::endl;
++ std::cout<<Json{{"scenario","capella-local-assembly-finality"},{"localSyncAggregates",local_sync},{"disjointSyncMerging",local_sync},{"executionOwner",owner_mode},{"participationPercent",local_finality},{"blocks",blocks},{"votes",votes},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"justifiedEpoch",result.state->timed.view.justified.epoch},{"independentStores",2},{"storeReopens",restarts},{"signingJournalsReopened",reopened_journals},{"networkTransport",false},{"networkActivated",false}}.dump()<<std::endl;
+diff --git a/tests/test_consensus_bls_aggregate.cpp b/tests/test_consensus_bls_aggregate.cpp
+index 2c24d2e..c4abde4 100644
+--- a/tests/test_consensus_bls_aggregate.cpp
++++ b/tests/test_consensus_bls_aggregate.cpp
+@@ -10,0 +11,5 @@ int main(){try{
++  check(aggregate_consensus_bls_signatures(std::vector<Bytes>{signature})==std::optional<Bytes>(signature),"singleton signature aggregate changed");
++  const auto doubled=aggregate_consensus_bls_signatures(std::vector<Bytes>{signature,signature});auto doubled_keys=keys;doubled_keys.insert(doubled_keys.end(),keys.begin(),keys.end());check(doubled&&verify_consensus_bls_fast_aggregate(doubled_keys,message,*doubled),"signature multiplicity lost");
++  auto negative=signature;negative[0]^=0x20;check(!aggregate_consensus_bls_signatures(std::vector<Bytes>{signature,negative}),"cancelling signature sum accepted");
++  Bytes infinity_signature(96);infinity_signature[0]=0xc0;
++  for(const auto& bad_signature:std::vector<Bytes>{Bytes{},Bytes(95),Bytes(97),Bytes(96),infinity_signature})check(!aggregate_consensus_bls_signatures(std::vector<Bytes>{signature,bad_signature}),"invalid aggregate signature input accepted");
+@@ -20,0 +26 @@ int main(){try{
++ check(!aggregate_consensus_bls_signatures(std::vector<Bytes>{}),"empty signature set accepted");

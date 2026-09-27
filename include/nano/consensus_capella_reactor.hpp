@@ -49,7 +49,8 @@ class CapellaDurableReactor {
  void publish(CapellaForkStore,const std::function<void()>&,const std::vector<CheckpointArchiveEntry>& archive={},std::optional<CapellaSignedVotes> votes=std::nullopt,std::optional<CapellaSignedVotes> slashings=std::nullopt,std::optional<CapellaPendingBlsChanges> changes=std::nullopt);
 public:
  // Ephemeral, bounded to one aggregate for the current proposal slot and head.
- // Verifies membership/domain/signature; retains the highest participation.
+ // Verifies membership/domain/signature; merges disjoint positions, otherwise
+ // retains the higher participation without double-counting overlap.
  // No durable mutation or local signing. RPC/P2P collection is separate.
  bool submit_sync_aggregate(uint64_t proposal_slot,std::span<const uint8_t>,
   const ForkCheckpointToken&,const std::function<void()>& checkpoint={});

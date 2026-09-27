@@ -17,4 +17,9 @@ bool verify_consensus_bls_fast_aggregate(std::span<const std::vector<uint8_t>> p
 // Aggregate validated compressed G1 keys, retaining duplicates as required by
 // sync committees. Does not establish possession or authorize membership.
 std::optional<std::vector<uint8_t>> aggregate_consensus_bls_keys(std::span<const std::vector<uint8_t>> public_keys);
+// Sum nonempty compressed G2 signatures, retaining multiplicity. Rejects bad
+// encodings, non-subgroup points and infinity (including a cancelling sum).
+// Does not verify messages/membership; callers must authenticate each input.
+std::optional<std::vector<uint8_t>> aggregate_consensus_bls_signatures(std::span<const std::vector<uint8_t>> signatures);
+
 }

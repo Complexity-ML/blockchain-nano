@@ -5,6 +5,7 @@
 #include "nano/consensus_capella_deposits.hpp"
 #include "consensus_capella_projection.hpp"
 #include <bit>
+#include "nano/consensus_bls.hpp"
 namespace nano {
 namespace {
 uint64_t number(const Bytes& b,size_t at){uint64_t n=0;for(size_t i=0;i<8;++i)n|=uint64_t(b.at(at+i))<<(8*i);return n;}
@@ -34,11 +35,18 @@ bool CapellaDurableReactor::submit_sync_aggregate(uint64_t slot,std::span<const 
  const auto projected=capella_detail::project(advanced.ssz,c.state,t.execution,t.maximum_state_bytes,check);
  if(!verify_altair_sync_aggregate(projected.common,aggregate,c.state,c.sync,check))return false;
  size_t participants=0;for(size_t i=0;i<bit_bytes;++i)participants+=std::popcount(aggregate[i]);
- if(pending_sync_&&pending_sync_->slot==slot&&pending_sync_->parent==head){
-  if(std::equal(aggregate.begin(),aggregate.end(),pending_sync_->ssz.begin(),pending_sync_->ssz.end()))return true;
-  if(participants<=pending_sync_->participants)return false;
- }
  PendingSyncAggregate candidate{slot,head,participants,Bytes(aggregate.begin(),aggregate.end())};
+ if(pending_sync_&&pending_sync_->slot==slot&&pending_sync_->parent==head){
+  if(candidate.ssz==pending_sync_->ssz)return true;
+  bool overlap=false;for(size_t i=0;i<bit_bytes;++i)overlap|=bool(candidate.ssz[i]&pending_sync_->ssz[i]);
+  if(!overlap&&participants&&pending_sync_->participants){
+   const std::array<Bytes,2> signatures{Bytes(pending_sync_->ssz.begin()+bit_bytes,pending_sync_->ssz.end()),Bytes(aggregate.begin()+bit_bytes,aggregate.end())};
+   const auto merged=aggregate_consensus_bls_signatures(signatures);if(!merged)return false;
+   for(size_t i=0;i<bit_bytes;++i)candidate.ssz[i]|=pending_sync_->ssz[i];
+   std::copy(merged->begin(),merged->end(),candidate.ssz.begin()+bit_bytes);candidate.participants+=pending_sync_->participants;
+   if(!verify_altair_sync_aggregate(projected.common,candidate.ssz,c.state,c.sync,check))return false;
+  }else if(participants<=pending_sync_->participants)return false;
+ }
  if(check)check();pending_sync_=std::move(candidate);return true;
 }
 std::optional<Bytes> CapellaDurableReactor::prepare_local_body(uint64_t index,uint64_t slot,

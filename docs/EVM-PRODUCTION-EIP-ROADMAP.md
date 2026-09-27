@@ -430,3 +430,20 @@ deux réouvertures ; 16 fixtures officielles valides et 8 invalides conformes.
 agrégation de contributions partielles, transport RPC/P2P et raccordement au
 scheduler restent à implémenter ; invalidation par reorg à qualifier séparément.
 [Code et preuves](qualification/capella-local-sync-20260927/README.md).
+
+### 2026-09-27 — Fusion des participations sync disjointes
+
+Le cache d’agrégats du proposant fusionne désormais deux participations non vides
+et disjointes, vérifiées pour le même slot/parent. Les signatures G2 sont sommées,
+les bits réunis et l’agrégat résultant revalidé avant publication. Les chevauchements
+ne sont jamais sommés ; un sous-ensemble ne peut gonfler la participation.
+La primitive BLS rejette encodages invalides, mauvais sous-groupes et points à
+l’infini, y compris une somme qui s’annule. Test local renforcé avec deux moitiés,
+ordre alterné, doublons et sous-ensembles ; comparaison à une signature complète
+construite indépendamment. Passé en 36,01 s : 40 blocs, 20 agrégats fusionnés,
+272 votes, finalité époque 3 et deux réouvertures. Runner BLS : 12 cas officiels
+conformes, mutations existantes et nouvelles assertions de somme validées.
+**Partiel** : cache toujours borné à un agrégat, pas fusion optimale de recouvrements,
+ni collecte/signature individuelle, P2P ou scheduler. Les bascules de branche et
+redémarrages entre contributions restent à qualifier.
+[Implémentation et preuves](qualification/capella-sync-merge-20260927/README.md).
