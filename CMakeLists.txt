@@ -1629,3 +1629,6 @@ if(APPLE)
  add_test(NAME consensus_capella_pruning_sync COMMAND nano-capella-transition-tests --pruning-sync)
  set_tests_properties(consensus_capella_pruning_sync PROPERTIES TIMEOUT 240 LABELS "qualification_consensus_recovery")
 endif()
+
+add_test(NAME consensus_capella_pruning_slashing COMMAND nano-capella-transition-tests --pruning-slashing)
+set_tests_properties(consensus_capella_pruning_slashing PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_recovery")

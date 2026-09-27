@@ -2793,3 +2793,15 @@ et lecture RPC après reprise réussies. Aucun correctif du moteur nécessaire.
 entre le commit du tick et l’élagage automatique ; archives BLS/slashing en attente
 et branches concurrentes restent à qualifier dans ce scénario.
 [Quatre cas et preuves](qualification/capella-pruning-sync-20260927/README.md).
+
+### 2026-09-27 — Preuve de slashing après suppression de son ancien état
+
+Nouveau test natif passé en 41,98 s : preuve BLS de double vote conservée malgré
+la suppression de l’ancien état référencé, checkpoint v3 et réouverture RocksDB.
+L’index équivoque et les octets signés restent présents ; resoumission inversée
+sans nouvelle écriture. Le bloc suivant applique le flag `slashed` et produit
+les mêmes états Beacon/EVM sur les stores élagué et non élagué. La preuve reste
+archivée tant que son inclusion n’est pas finalisée. Aucun correctif moteur requis.
+**Partiel** : preuve livrée localement avec clés synthétiques ; pas de qualification
+de partition, réorganisation de l’inclusion ou retrait final de l’archive.
+[Scénario et preuves](qualification/capella-pruning-slashing-20260927/README.md).
