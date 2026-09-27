@@ -31,7 +31,7 @@ std::string read_bounded(const std::filesystem::path& path,size_t maximum,const 
 struct Owner {InboundBudget decoder_budget;std::unique_ptr<ChainStore> witness;std::unique_ptr<CapellaDurableReactor> reactor;std::unique_ptr<CapellaLocalClock> clock;std::unique_ptr<CapellaValidatorLoop> validator;std::unique_ptr<CapellaConsensusService> admission;std::unique_ptr<CapellaInventorySessions> catalogs;};
 }
 CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const std::function<void()>& checkpoint,std::function<uint64_t()> now){
- if(checkpoint)checkpoint();auto base=config;base.erase("validator");base.erase("admission");base.erase("catalogs");base.erase("recoveryWitness");shape(base,{"profile","limits","initial","restart","clock"});
+ if(checkpoint)checkpoint();auto base=config;base.erase("validator");base.erase("admission");base.erase("catalogs");base.erase("recoveryWitness");base.erase("network");shape(base,{"profile","limits","initial","restart","clock"});
  const auto& genesis=chain.genesis();
  if(genesis.consensus!="beacon"||genesis.evm_revision!=EvmRevision::Shanghai)throw std::invalid_argument("Capella runtime requires Beacon Shanghai chain");
  const auto& p=config.at("profile");shape(p,{"file","sha256","maximumBytes"});const auto maximum=number(p.at("maximumBytes"));
@@ -74,6 +74,15 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const 
   if(std::max({limits.blocks,limits.messages,limits.equivocations})>bytes/sizeof(ConsensusRoot))throw std::invalid_argument("Capella catalog budget below configured inventory capacity");
   if(ttl>uint64_t(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::duration::max()/2).count()))throw std::invalid_argument("Capella catalog TTL range");
   owner->catalogs=std::make_unique<CapellaInventorySessions>(*owner->reactor,handles,bytes,std::chrono::milliseconds(ttl));
+ }
+ Json network=Json::object();
+ if(config.contains("network")){
+  const auto& n=config.at("network");shape(n,{"enabled","pageEntries","maximumEntries","dependencyBlocks","dependencyBytes","acknowledgedRoots"});
+  if(!n.at("enabled").is_boolean())throw std::invalid_argument("Capella network enable flag");network["enabled"]=n.at("enabled");
+  for(const auto* field:{"pageEntries","maximumEntries","dependencyBlocks","dependencyBytes","acknowledgedRoots"})network[field]=number(n.at(field));
+  if(network.at("pageEntries")>network.at("maximumEntries"))throw std::invalid_argument("Capella network page exceeds scan budget");
+  if(n.at("enabled")==true&&(!owner->admission||!owner->catalogs))throw std::invalid_argument("Capella network requires admission and catalogs");
+  const auto& anchor=owner->reactor->current().state->timed.view.anchor;network["anchorRoot"]=hex(Bytes(anchor.begin(),anchor.end()));
  }
  if(config.contains("validator")){
   const auto& v=config.at("validator");shape(v,{"pollIntervalMs","maximumTransactionTrials","maximumVoteTrials","keys"});
@@ -123,7 +132,7 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const 
   owner->validator->start(std::chrono::milliseconds(poll));
  }
  owner->clock->start(std::chrono::milliseconds(interval));
- return {owner->validator?std::shared_ptr<CapellaValidatorLoop>(owner,owner->validator.get()):nullptr,std::shared_ptr<CapellaDurableReactor>(owner,owner->reactor.get()),std::shared_ptr<CapellaLocalClock>(owner,owner->clock.get()),[owner](std::string_view path,const std::function<void()>& check){if(!owner->clock->healthy())throw std::runtime_error("Capella clock unavailable");return owner->reactor->beacon_read(path,check);},owner->admission?std::shared_ptr<CapellaConsensusService>(owner,owner->admission.get()):nullptr,owner->catalogs?std::shared_ptr<CapellaInventorySessions>(owner,owner->catalogs.get()):nullptr};
+ return {owner->validator?std::shared_ptr<CapellaValidatorLoop>(owner,owner->validator.get()):nullptr,std::shared_ptr<CapellaDurableReactor>(owner,owner->reactor.get()),std::shared_ptr<CapellaLocalClock>(owner,owner->clock.get()),[owner](std::string_view path,const std::function<void()>& check){if(!owner->clock->healthy())throw std::runtime_error("Capella clock unavailable");return owner->reactor->beacon_read(path,check);},owner->admission?std::shared_ptr<CapellaConsensusService>(owner,owner->admission.get()):nullptr,owner->catalogs?std::shared_ptr<CapellaInventorySessions>(owner,owner->catalogs.get()):nullptr,std::move(network)};
 }
 Json stop_capella_runtime(CapellaRuntime& runtime){
  if(!runtime.reactor||!runtime.clock)throw std::invalid_argument("Missing Capella runtime");

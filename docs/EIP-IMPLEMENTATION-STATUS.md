@@ -2507,3 +2507,15 @@ votes/slashing, avec convergence tête/état/preuves (5,73 s).
 [Preuves](qualification/capella-block-delivery-20260927/README.md).
 Callbacks encore locaux ; cycle de vie des sessions pairs et raccordement au
 démon restent ouverts. Finalité à l’epoch zéro dans cette preuve de rattrapage.
+
+### Capella : rattrapage entre deux vrais pairs libp2p
+
+Le démon relie les catalogues, la livraison des ancêtres et les accusés issus du
+worker de consensus. Activation explicite et budgets configurés ; changements de
+session/epoch pair invalident les caches et les réponses d’anciennes tentatives.
+Deux vrais nœuds en loopback convergent après arrivée tardive, puis après remise
+à l’état initial du récepteur conservant son identité P2P et perte volontaire
+d’un accusé. Hash de bloc et racine d’état communs sont enregistrés.
+[Preuves](qualification/capella-two-peer-network-20260927/README.md).
+Validateurs concentrés sur l’émetteur : finalité multi-validateur distribuée,
+partitions, WAN, charge durable et longues reprises après élagage restent ouverts.

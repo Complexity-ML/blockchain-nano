@@ -27,7 +27,13 @@ class AltairCoreRecovery:public std::enable_shared_from_this<AltairCoreRecovery>
   const auto& w=value.at("wire");
   AltairWireProfile profile{chain_,genesis_,value.at("forkDigest").get<std::string>(),bound(w.at("frameBytes")),bound(w.at("blockBytes")),bound(w.at("attestationBytes")),bound(w.at("slashingBytes"))};
   InboundBudget budget;AltairMessageIngress validate(profile,budget);bound(value.at("workerJobs"));
-  return Json{{"chainId",chain_},{"genesisHash",genesis_},{"forkDigest",profile.fork_digest},{"consensusIdentity",value.at("consensusIdentity")},{"wire",w},{"workerJobs",value.at("workerJobs")},{"networkAdmissionEnabled",value.at("networkAdmissionEnabled")}};
+  auto result=Json{{"chainId",chain_},{"genesisHash",genesis_},{"forkDigest",profile.fork_digest},{"consensusIdentity",value.at("consensusIdentity")},{"wire",w},{"workerJobs",value.at("workerJobs")},{"networkAdmissionEnabled",value.at("networkAdmissionEnabled")}};
+  if(value.contains("capellaRelay")){
+   const auto& relay=value.at("capellaRelay");if(!relay.is_object())throw std::invalid_argument("Capella relay profile");
+   if(value.at("networkAdmissionEnabled")==true){if(relay.at("enabled")!=true||!hash(relay.at("anchorRoot")))throw std::invalid_argument("Capella relay anchor");for(const auto* key:{"pageEntries","maximumEntries","dependencyBlocks","dependencyBytes","acknowledgedRoots"})bound(relay.at(key));if(relay.at("pageEntries")>relay.at("maximumEntries"))throw std::invalid_argument("Capella relay page budget");}
+   result["capellaRelay"]=relay;
+  }
+  return result;
  }
  void finish(Json result){if(finished_)return;finished_=true;retry_timer_.cancel();deadline_.cancel();auto done=std::move(done_);done(std::move(result));}
  void schedule(){retry_timer_.expires_after(retry_);retry_timer_.async_wait([self=shared_from_this()](auto error){if(!error&&!self->finished_)self->request();});}

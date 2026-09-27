@@ -14,6 +14,7 @@ struct CapellaRuntime {
  BeaconReadHandler beacon_read;
  std::shared_ptr<::CapellaConsensusService> admission;
  std::shared_ptr<::CapellaInventorySessions> catalogs;
+ Json network=Json::object();
 };
 // Locally authenticated profile + initial snapshot, exact restart token, or
 // explicitly trusted recovery witness. This does not register P2P/HTTP/CLI.
