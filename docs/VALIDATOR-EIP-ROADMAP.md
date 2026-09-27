@@ -3230,3 +3230,15 @@ d'une réponse perdue passent aussi. **Partiel** : finalité avec stake distribu
 WAN, réorganisations de la file, saturation, pruning et panne pendant admission
 restent hors de cette preuve. Aucun déploiement public.
 [Rapport et artefacts](qualification/capella-bls-relay-20260927/README.md).
+
+### 2026-09-27 — Réorganisation et capacité de la file BLS
+
+Nouveau scénario natif (5,90 s) : deux changements de branche par votes signés,
+restauration du changement BLS abandonné dans les candidats/catalogue et dans une
+proposition valide, deux reconstructions depuis checkpoint, conservation de
+l'archive non finalisée. Une file configurée à une entrée refuse une seconde
+demande valide sans mutation du checkpoint et conserve l'idempotence du doublon.
+Aucun correctif de production nécessaire pour ces cas. **Partiel** : réorganisations
+profondes, pruning du contexte, admissions concurrentes et pannes d'écriture
+restent à qualifier ; pas de nouvelle preuve réseau ni paiement après réinclusion.
+[Scénario, limites et preuves](qualification/capella-bls-reorg-20260927/README.md).
