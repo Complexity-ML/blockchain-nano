@@ -1,10 +1,14 @@
 # EIP et consensus : périmètre demandé pour Nano
 
-Qualification complémentaire : [panne P2P avec validateurs Capella actifs](qualification/capella-transport-outage-20260927/README.md). Après 96 secondes de suspension des seuls daemons, deux branches distinctes convergent vers une finalité commune d’époque 4. Test local passé ; partition de paquets avec daemons actifs et qualification de production toujours ouvertes.
+### Partition Docker Capella qualifiée — 27 septembre 2026
+
+Deux daemons actifs, 32 validateurs chacun : après 96 secondes de coupure réseau demandées, finalité commune d’époque 7 retrouvée en 142,223 secondes. Le défaut de démarrage avec superviseur Linux PID 1 est corrigé. [Preuves, échecs initiaux et limites](qualification/capella-docker-partition-20260927/README.md). Une seule campagne locale ; WAN, partitions asymétriques, adversaires, charge et production complète restent ouverts.
+
+Qualification complémentaire : [panne P2P avec validateurs Capella actifs](qualification/capella-transport-outage-20260927/README.md). Après 96 secondes de suspension des seuls daemons, deux branches distinctes convergent vers une finalité commune d’époque 4. Test local passé ; la partition de paquets avec daemons actifs est qualifiée séparément ci-dessus. La production complète reste ouverte.
 
 ### Correction du transport privé — 27 septembre 2026
 
-Le client RPC réutilise désormais ses connexions HTTP sans rejouer les requêtes ambiguës. **Deux runs locaux avec 32 validateurs par nœud atteignent une finalité commune d’époque 2**, dont une confirmation sur binaire propre. 17 tests réseau passent, six scénarios HTTP sont qualifiés et la reprise avec accusé perdu passe. [Preuves et limites](qualification/capella-core-keepalive-20260927/README.md). Les contre-exemples ci-dessous sont historiques ; les partitions, le WAN et la qualification de production restent ouverts.
+Le client RPC réutilise désormais ses connexions HTTP sans rejouer les requêtes ambiguës. **Deux runs locaux avec 32 validateurs par nœud atteignent une finalité commune d’époque 2**, dont une confirmation sur binaire propre. 17 tests réseau passent, six scénarios HTTP sont qualifiés et la reprise avec accusé perdu passe. [Preuves et limites](qualification/capella-core-keepalive-20260927/README.md). Les contre-exemples ci-dessous sont historiques ; les partitions asymétriques, le WAN et la qualification de production restent ouverts.
 
 Diagnostic antérieur à la correction du transport, conservé comme contre-exemple : [retards d’admission des votes Capella](qualification/capella-vote-propagation-20260927/README.md). Le même test distribué échoue encore ; des votes distants sont admis jusqu’à 12 slots après leur émission observée. Les préparations différées tracées réussissent. La cause du retard reste à isoler ; aucune clôture de la finalité ni de la production.
 

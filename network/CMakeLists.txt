@@ -144,3 +144,7 @@ target_compile_definitions(nano-core-keepalive-tests PRIVATE FMT_CONSTEVAL=)
 target_link_libraries(nano-core-keepalive-tests PRIVATE p2p::p2p)
 add_test(NAME core_keepalive COMMAND nano-core-keepalive-tests)
 set_tests_properties(core_keepalive PROPERTIES TIMEOUT 20)
+
+add_executable(nano-supervisor-tests test_supervisor.cpp)
+add_test(NAME supervisor_identity COMMAND nano-supervisor-tests)
+set_tests_properties(supervisor_identity PROPERTIES TIMEOUT 10)

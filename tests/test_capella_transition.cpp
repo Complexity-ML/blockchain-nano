@@ -48,7 +48,7 @@ static bool owner_witness=false;
 static bool scheduled=false;
 static bool configured_runtime=false;
 static bool capella_http=false;
-static std::string cli_binary;static Json cli_genesis;static bool managed_cli=false;static std::string daemon_binary;static bool network_cli=false;static bool distributed_cli=false;static bool transport_outage_cli=false;
+static std::string cli_binary;static Json cli_genesis;static bool managed_cli=false;static std::string daemon_binary;static bool network_cli=false;static bool distributed_cli=false;static bool transport_outage_cli=false;static fs::path network_export;
 static bool beacon_reads=false;
 static bool wire_mode=false;
 static size_t beacon_read_checks=0;
@@ -182,6 +182,18 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
     node["capella"]["clock"]["intervalMs"]="0x64";node["capella"]["validator"]["pollIntervalMs"]="0x64";node["capella"]["validator"]["keys"]=Json::array();
     Env env{{"NANO_TEST_NETWORK_TRACE","1"}};
     for(uint64_t i=0;i<64;++i){const auto name="NANO_TEST_CAPELLA_NETWORK_KEY_"+std::to_string(i);env[name]=hex(bytes(Int(std::to_string(i+1)),32));node["capella"]["validator"]["keys"].push_back({{"index",quantity(Int(std::to_string(i)))},{"feeRecipient",genesis.header.coinbase},{"keyEnv",name},{"journal",(directory/("network-key-"+std::to_string(i))).string()},{"restart",nullptr},{"recoveryWitness",(directory/("network-key-witness-"+std::to_string(i))).string()}});}
+    if(!network_export.empty()){
+     check(!fs::exists(network_export),"network fixture destination exists");fs::create_directories(network_export);
+     fs::copy_file(directory/"profile.json",network_export/"profile.json");fs::copy_file(directory/"initial.json",network_export/"initial.json");save(network_export/"genesis.json",cli_genesis);
+     const auto all=node["capella"]["validator"]["keys"];
+     for(size_t n=0;n<2;++n){auto out=node;auto& c=out["capella"];c["limits"]["blocks"]="0x100";c["limits"]["messages"]="0x800";c["limits"]["totalStateBytes"]="0x4000000";c["limits"]["envelopeBytes"]="0x8000000";c["profile"]["file"]="/config/profile.json";c["initial"]["file"]="/config/initial.json";c["recoveryWitness"]="/var/lib/nano/witness";c["validator"]["keys"]=Json::array();Json variables={{"NANO_TEST_NETWORK_TRACE","1"}};
+      for(size_t i=n*32;i<(n+1)*32;++i){auto entry=all[i];entry["journal"]="/var/lib/nano/key-"+std::to_string(i);entry["recoveryWitness"]="/var/lib/nano/key-witness-"+std::to_string(i);c["validator"]["keys"].push_back(entry);const auto name=entry.at("keyEnv").get<std::string>();variables[name]=*env.at(name);}
+      out["rpc_host"]="127.0.0.1";out["rpc_port"]=8545;out["p2p_binary"]="/usr/local/bin/nano-p2p";out["listen_addr"]="/ip4/0.0.0.0/tcp/30303";out["p2p_identity"]="/var/lib/nano/peer.key";out["bootnodes"]=Json::array();
+      save(network_export/("node-"+std::to_string(n)+".json"),out);save(network_export/("env-"+std::to_string(n)+".json"),variables);
+     }
+     save(network_export/"fixture.json",Json{{"syntheticValidators",64},{"nodes",2},{"chainId",1337},{"fork","Capella/Shanghai"},{"secondsPerSlot",t.seconds_per_slot},{"slotsPerEpoch",slots}});
+     std::cout<<Json{{"event","capella-network-fixture-exported"},{"path",network_export.string()},{"syntheticValidators",64}}.dump()<<std::endl;return;
+    }
     if(distributed_cli){
      const auto all_keys=node["capella"]["validator"]["keys"];auto left=node,right=node;left["capella"]["validator"]["keys"]=Json::array();right["capella"]["validator"]["keys"]=Json::array();Env left_env{{"NANO_TEST_NETWORK_TRACE","1"}},right_env=left_env;
      for(size_t i=0;i<all_keys.size();++i){auto& cfg=i<32?left:right;auto& secrets=i<32?left_env:right_env;cfg["capella"]["validator"]["keys"].push_back(all_keys[i]);const auto name=all_keys[i].at("keyEnv").get<std::string>();secrets[name]=env.at(name);}
@@ -831,6 +843,7 @@ int main(int argc,char** argv){try{executable=argv[0];
   std::cout<<Json{{"event","capella-managed-child-ready"},{"executionBound",true},{"secretsExcluded",true}}.dump()<<std::endl;
   if(std::getenv("NANO_TEST_MANAGED_CHILD_EXIT"))return 7;for(;;)pause();
  }
+ if(argc==3&&std::string(argv[1])=="--export-network"){network_export=fs::absolute(argv[2]);network_cli=true;managed_cli=true;cli_binary="export-only";configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--transport-outage-cli"){transport_outage_cli=true;distributed_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--distributed-cli"){distributed_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--network-cli"){network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}

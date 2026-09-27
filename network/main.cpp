@@ -1,3 +1,4 @@
+#include "supervisor.hpp"
 #include "json_stream.hpp"
 #include "block_download.hpp"
 #include "block_reference.hpp"
@@ -402,9 +403,10 @@ int main(int argc,char** argv){try{
  // identity before opening listeners, including death between spawn and exec.
  pid_t supervisor=0;
  if(const char* raw=std::getenv("NANO_SUPERVISOR_PID")){
-  std::string value(raw);if(value.empty()||value.find_first_not_of("0123456789")!=std::string::npos)throw std::invalid_argument("Invalid supervisor PID");
-  auto parsed=std::stoll(value);if(parsed<=1||parsed>std::numeric_limits<pid_t>::max())throw std::invalid_argument("Invalid supervisor PID");supervisor=static_cast<pid_t>(parsed);
-  if(getppid()!=supervisor)throw std::runtime_error("Supervisor exited before relay startup");
+  // Linux containers can run the legitimate core as namespace PID 1. The
+  // kernel kills the namespace's remaining processes if that init exits.
+  // Other managed parents still use the same strict identity/liveness check.
+  supervisor=managed_supervisor(raw,getppid());
  }
  if(argc<4){std::cerr<<"Usage: nano-p2p <core-rpc-port> <identity-file> <listen-multiaddress> [peer-multiaddress ...]\n";return 1;}
  auto port=std::stoul(argv[1]);if(port<1||port>65535)throw std::invalid_argument("Invalid RPC port");

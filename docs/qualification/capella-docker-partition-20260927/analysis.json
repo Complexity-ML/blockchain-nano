@@ -1,0 +1,78 @@
+{
+  "image": {
+    "time": "2026-09-27T05:23:55.588Z",
+    "event": "image",
+    "id": "sha256:07b7c6a20ff2496543eacf31ada597a1c1a2f279a3c425be96df54869f0e0283",
+    "revision": "88f3d10beb744e3fa16fb93956b6bfe2f844a161",
+    "labels": {
+      "org.nanobees.source-dirty": "true",
+      "org.opencontainers.image.revision": "88f3d10beb744e3fa16fb93956b6bfe2f844a161",
+      "org.opencontainers.image.version": "24.04"
+    }
+  },
+  "start": {
+    "time": "2026-09-27T05:27:01.674Z",
+    "event": "partition-start",
+    "cutoffEpoch": "4",
+    "address": "172.18.0.3",
+    "durationSeconds": 96
+  },
+  "restored": {
+    "time": "2026-09-27T05:28:39.475Z",
+    "event": "partition-restored",
+    "minimumFinalizedEpoch": "6"
+  },
+  "qualified": {
+    "time": "2026-09-27T05:31:01.698Z",
+    "event": "partition-qualified",
+    "final": [
+      {
+        "node": 0,
+        "checkpoint": {
+          "epoch": "7",
+          "root": "0x2c1d051d76ca3a551a865f4967cd86f73ada19ed37466f0ae1ea684e27f15af5"
+        },
+        "headRoot": "0x06f84ec9aadfad04a657f9b3b621a67fc7894e66a5d69a9d2fae2a3a708630ae",
+        "slot": "73",
+        "peers": "0x1"
+      },
+      {
+        "node": 1,
+        "checkpoint": {
+          "epoch": "7",
+          "root": "0x2c1d051d76ca3a551a865f4967cd86f73ada19ed37466f0ae1ea684e27f15af5"
+        },
+        "headRoot": "0x3d585329391858ed4b363cca4511d1bc100b8c4d66a42420391e9c234dad966a",
+        "slot": "72",
+        "peers": "0x1"
+      }
+    ]
+  },
+  "recoverySeconds": 142.223,
+  "outageObservationSeconds": 97.801,
+  "duringPartitionObservations": 43,
+  "maximumFinalizedDuringPartition": 2,
+  "zeroPeersObservedBoth": true,
+  "lastIsolatedHeads": [
+    {
+      "node": 0,
+      "checkpoint": {
+        "epoch": "2",
+        "root": "0xcdc48bc73909162c3b9738de47551a6f15960f86efcba95f37f2e4befd524127"
+      },
+      "headRoot": "0xce6ba7d4ef0c3de83feb830f0c16bf7440e7b1cc86e7a0553d8aec3ccd80876d",
+      "slot": "49",
+      "peers": "0x0"
+    },
+    {
+      "node": 1,
+      "checkpoint": {
+        "epoch": "2",
+        "root": "0xcdc48bc73909162c3b9738de47551a6f15960f86efcba95f37f2e4befd524127"
+      },
+      "headRoot": "0xfdfcd532829b0fdb99893904f4539720c0eccda832d71fe6da807995f543684c",
+      "slot": "48",
+      "peers": "0x0"
+    }
+  ]
+}
