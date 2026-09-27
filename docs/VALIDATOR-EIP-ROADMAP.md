@@ -2713,3 +2713,14 @@ passent ; le contrôle supplémentaire des index perdus est également vert.
 [Preuves et limites](qualification/capella-reactor-sync-20260927/README.md).
 Qualification macOS locale seulement ; authentification du token de reprise,
 raccordement réseau et migration du Store vivant restent à clôturer.
+
+### Capella : archives atomiques des blocs signés
+
+Le coordinateur conserve désormais le bloc signé exact avec son Store et son
+suffixe EVM ; lecture vérifiée SSZ/BLS, doublons sans remplacement. Qualification
+locale : 91 archives retrouvées après reprise, branches alternatives conservées,
+WAL conservé/perdu cohérent et neuf archives altérées refusées.
+[Preuves](qualification/capella-signed-archive-20260927/README.md).
+Votes/sorties/preuves de slashing archivés, rétention, notifications, signature
+locale, raccordement Blockchain/RPC/P2P et Store inter-forks restent ouverts.
+Les checkpoints historiques ne sont pas rétroalimentés en blocs signés.
