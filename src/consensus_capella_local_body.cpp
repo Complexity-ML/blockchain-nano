@@ -21,6 +21,10 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body(uint64_t index,ui
  std::span<const SignedTransaction> transactions,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<void()>& check){
  std::lock_guard lock(mutex_);return prepare_local_body_locked(index,slot,reveal,recipient,expected,transactions,maximum_transaction_trials,maximum_vote_trials,check);
 }
+std::optional<Bytes> CapellaDurableReactor::prepare_local_body_with_bls_changes(uint64_t index,uint64_t slot,const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,std::span<const SignedTransaction> transactions,size_t maximum_transaction_trials,size_t maximum_vote_trials,std::span<const SignedCapellaBlsChange> changes,size_t maximum_change_trials,const std::function<void()>& check){
+ if(!maximum_change_trials)throw std::invalid_argument("Capella change trial budget required");
+ std::lock_guard lock(mutex_);return prepare_local_body_locked(index,slot,reveal,recipient,expected,transactions,maximum_transaction_trials,maximum_vote_trials,check,changes,maximum_change_trials);
+}
 std::optional<Bytes> CapellaDurableReactor::prepare_local_body_from_pool(uint64_t index,uint64_t slot,const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<void()>& check){
  std::lock_guard lock(mutex_);return prepare_local_body_from_pool_locked(index,slot,reveal,recipient,expected,maximum_transaction_trials,maximum_vote_trials,check);
 }
@@ -30,7 +34,7 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_from_pool_locked(
  {std::lock_guard chain_lock(execution_->mutex_);execution_->require_execution_ready_locked();transactions=execution_->pool_.pending_for_block(execution_->tip_.header.gas_limit);}
  return prepare_local_body_locked(index,slot,reveal,recipient,expected,transactions,maximum_transaction_trials,maximum_vote_trials,check);
 }
-std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t index,uint64_t slot,const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,std::span<const SignedTransaction> transactions,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<void()>& check){
+std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t index,uint64_t slot,const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,std::span<const SignedTransaction> transactions,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<void()>& check,std::span<const SignedCapellaBlsChange> changes,size_t maximum_change_trials){
  require_available();
  if(expected!=*token_)throw StaleCapellaDuty("Stale body preparation");
  if(!maximum_transaction_trials||!maximum_vote_trials||reveal.size()!=96)throw std::invalid_argument("Capella local body context");
@@ -69,6 +73,9 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t i
  reserved+=uint64_t(t.body.voluntary_exits)*112;
  if(selected_deposits.size()>UINT64_MAX-reserved)throw std::length_error("Capella deposit reserve overflow");
  reserved+=selected_deposits.size();
+ const auto change_capacity=std::min({changes.size(),size_t(rules_.transition.maximum_bls_changes),maximum_change_trials});
+ if(change_capacity>(UINT64_MAX-reserved)/172)throw std::length_error("Capella BLS change reserve overflow");
+ reserved+=uint64_t(change_capacity)*172;
  if(reserved>=t.maximum_block_bytes)throw std::length_error("Capella block capacity cannot hold configured attestation reserve");
  size_t remaining=t.maximum_block_bytes-reserved;
  std::erase_if(pending,[&](const auto& c){const auto n=c.transaction.raw().size();if(n>e.transaction_bytes||remaining<4||n>remaining-4)return true;remaining-=n+4;return false;});
@@ -78,7 +85,7 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t i
  auto built=Blockchain::execute_candidate(block,parent.execution_state,std::move(pending),engine.with_checkpoint(check),check,false);
  const auto encoded=encode_capella_execution_payload(payload(built.block,withdrawals),e,rules_.transition.withdrawals.maximum_per_payload,t.maximum_block_bytes,check);
  const size_t sync_bytes=(uint64_t(t.state.sync_committee_size)+7)/8+96,fixed=228+sync_bytes;
- std::vector<Bytes> selected_slashings;Bytes selected_exits;
+ std::vector<Bytes> selected_slashings;Bytes selected_exits,selected_changes;
  auto assemble=[&](const std::vector<Bytes>& votes){
   Bytes slashings(selected_slashings.size()*4);size_t proof_at=0;
   for(const auto& proof:selected_slashings){offset(slashings,proof_at,slashings.size());proof_at+=4;if(proof.size()>t.maximum_block_bytes-slashings.size())throw std::length_error("Capella slashings budget");slashings.insert(slashings.end(),proof.begin(),proof.end());}
@@ -95,7 +102,8 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t i
   if(attestations.size()>t.maximum_block_bytes-body.size())throw std::length_error("Capella body vote budget");body.insert(body.end(),attestations.begin(),attestations.end());
   if(selected_deposits.size()>t.maximum_block_bytes-body.size())throw std::length_error("Capella body deposit budget");body.insert(body.end(),selected_deposits.begin(),selected_deposits.end());
   if(selected_exits.size()>t.maximum_block_bytes-body.size())throw std::length_error("Capella body exit budget");body.insert(body.end(),selected_exits.begin(),selected_exits.end());
-  if(encoded.size()>t.maximum_block_bytes-body.size())throw std::length_error("Capella body payload budget");body.insert(body.end(),encoded.begin(),encoded.end());return body;
+  if(encoded.size()>t.maximum_block_bytes-body.size())throw std::length_error("Capella body payload budget");body.insert(body.end(),encoded.begin(),encoded.end());
+  if(selected_changes.size()>t.maximum_block_bytes-body.size())throw std::length_error("Capella body BLS change budget");body.insert(body.end(),selected_changes.begin(),selected_changes.end());return body;
  };
  auto valid=[&](const Bytes& body){return prepare_capella_unsigned_block(parent.state,slot,index,head,body,rules_.transition,parent.execution_block.header,parent.execution_state,history,limits_.replay_slots,limits_.sync_trials,check).has_value();};
  std::vector<Bytes> selected;auto body=assemble(selected);
@@ -111,6 +119,14 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t i
   if(!useful)continue;
   ++tried;selected_slashings.push_back(wire);auto candidate=assemble(selected);
   if(valid(candidate))body=std::move(candidate);else selected_slashings.pop_back();
+ }
+
+ // Keep rejected operations out of the candidate without changing live state.
+ // The transition checks credentials, genesis-domain signatures, duplicates and
+ // the required ordering after this block's withdrawal sweep.
+ for(size_t i=0;i<std::min(changes.size(),maximum_change_trials)&&selected_changes.size()/172<rules_.transition.maximum_bls_changes;++i){
+  if(check)check();const auto prior=selected_changes.size();const auto wire=encode_capella_bls_change(changes[i]);selected_changes.insert(selected_changes.end(),wire.begin(),wire.end());auto candidate=assemble(selected);
+  if(valid(candidate))body=std::move(candidate);else selected_changes.resize(prior);
  }
 
  // An identical attestation already included on this branch adds no new

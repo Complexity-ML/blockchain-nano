@@ -2,6 +2,7 @@
 #include "nano/consensus_capella_store_snapshot.hpp"
 #include "nano/storage.hpp"
 #include "nano/consensus_beacon_signer.hpp"
+#include "nano/consensus_capella_bls_change.hpp"
 namespace nano {
 class Blockchain;
 struct BeaconReadResponse;
@@ -32,7 +33,7 @@ class CapellaDurableReactor {
  void witness_prepare(std::string_view,const std::vector<CheckpointArchiveEntry>&);
  void validate_execution_binding()const;
  void fail_closed();
- std::optional<Bytes> prepare_local_body_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,std::span<const SignedTransaction>,size_t,size_t,const std::function<void()>&);
+ std::optional<Bytes> prepare_local_body_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,std::span<const SignedTransaction>,size_t,size_t,const std::function<void()>&,std::span<const SignedCapellaBlsChange> = {},size_t maximum_change_trials = 0);
  void tick_locked(uint64_t,const std::function<void()>&);
  std::optional<Phase0SignedAttestation> sign_attestation_locked(uint64_t,uint64_t,const std::function<uint64_t()>&,const ForkCheckpointToken&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>&);
  std::optional<Bytes> sign_randao_locked(uint64_t,uint64_t,const std::function<uint64_t()>&,const ForkCheckpointToken&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>&);
@@ -88,6 +89,12 @@ public:
   const Bytes& randao,const std::string& fee_recipient,const ForkCheckpointToken& expected,
   std::span<const SignedTransaction> pending,size_t maximum_transaction_trials,size_t maximum_vote_trials,
   const std::function<void()>& checkpoint={});
+ // Candidate operations remain untrusted: each accepted addition is checked by
+ // a complete block transition. This API does not persist a pending queue.
+ std::optional<Bytes> prepare_local_body_with_bls_changes(uint64_t validator_index,uint64_t slot,
+  const Bytes& randao,const std::string& fee_recipient,const ForkCheckpointToken& expected,
+  std::span<const SignedTransaction> pending,size_t maximum_transaction_trials,size_t maximum_vote_trials,
+  std::span<const SignedCapellaBlsChange> changes,size_t maximum_change_trials,const std::function<void()>& checkpoint={});
  // Authenticated recent gossip votes, including deferred current-slot votes.
  // Retained for current/previous epoch; copy is bounded by snapshot limits.
  CapellaSignedVotes signed_votes()const;

@@ -1,0 +1,91 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index bcb9a17..6b0618f 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1594,0 +1595,3 @@ set_tests_properties(consensus_capella_catalog_concurrency PROPERTIES TIMEOUT 12
++
++add_test(NAME consensus_capella_local_bls_changes COMMAND nano-capella-transition-tests --local-bls-changes)
++set_tests_properties(consensus_capella_local_bls_changes PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_runtime")
+diff --git a/include/nano/consensus_capella_reactor.hpp b/include/nano/consensus_capella_reactor.hpp
+index ccbf77f..2744404 100644
+--- a/include/nano/consensus_capella_reactor.hpp
++++ b/include/nano/consensus_capella_reactor.hpp
+@@ -4,0 +5 @@
++#include "nano/consensus_capella_bls_change.hpp"
+@@ -35 +36 @@ class CapellaDurableReactor {
+- std::optional<Bytes> prepare_local_body_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,std::span<const SignedTransaction>,size_t,size_t,const std::function<void()>&);
++ std::optional<Bytes> prepare_local_body_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,std::span<const SignedTransaction>,size_t,size_t,const std::function<void()>&,std::span<const SignedCapellaBlsChange> = {},size_t maximum_change_trials = 0);
+@@ -90,0 +92,6 @@ public:
++ // Candidate operations remain untrusted: each accepted addition is checked by
++ // a complete block transition. This API does not persist a pending queue.
++ std::optional<Bytes> prepare_local_body_with_bls_changes(uint64_t validator_index,uint64_t slot,
++  const Bytes& randao,const std::string& fee_recipient,const ForkCheckpointToken& expected,
++  std::span<const SignedTransaction> pending,size_t maximum_transaction_trials,size_t maximum_vote_trials,
++  std::span<const SignedCapellaBlsChange> changes,size_t maximum_change_trials,const std::function<void()>& checkpoint={});
+diff --git a/src/consensus_capella_local_body.cpp b/src/consensus_capella_local_body.cpp
+index 3c1183b..a64e63e 100644
+--- a/src/consensus_capella_local_body.cpp
++++ b/src/consensus_capella_local_body.cpp
+@@ -23,0 +24,4 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body(uint64_t index,ui
++std::optional<Bytes> CapellaDurableReactor::prepare_local_body_with_bls_changes(uint64_t index,uint64_t slot,const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,std::span<const SignedTransaction> transactions,size_t maximum_transaction_trials,size_t maximum_vote_trials,std::span<const SignedCapellaBlsChange> changes,size_t maximum_change_trials,const std::function<void()>& check){
++ if(!maximum_change_trials)throw std::invalid_argument("Capella change trial budget required");
++ std::lock_guard lock(mutex_);return prepare_local_body_locked(index,slot,reveal,recipient,expected,transactions,maximum_transaction_trials,maximum_vote_trials,check,changes,maximum_change_trials);
++}
+@@ -33 +37 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_from_pool_locked(
+-std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t index,uint64_t slot,const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,std::span<const SignedTransaction> transactions,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<void()>& check){
++std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t index,uint64_t slot,const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,std::span<const SignedTransaction> transactions,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<void()>& check,std::span<const SignedCapellaBlsChange> changes,size_t maximum_change_trials){
+@@ -71,0 +76,3 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t i
++ const auto change_capacity=std::min({changes.size(),size_t(rules_.transition.maximum_bls_changes),maximum_change_trials});
++ if(change_capacity>(UINT64_MAX-reserved)/172)throw std::length_error("Capella BLS change reserve overflow");
++ reserved+=uint64_t(change_capacity)*172;
+@@ -81 +88 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t i
+- std::vector<Bytes> selected_slashings;Bytes selected_exits;
++ std::vector<Bytes> selected_slashings;Bytes selected_exits,selected_changes;
+@@ -98 +105,2 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t i
+-  if(encoded.size()>t.maximum_block_bytes-body.size())throw std::length_error("Capella body payload budget");body.insert(body.end(),encoded.begin(),encoded.end());return body;
++  if(encoded.size()>t.maximum_block_bytes-body.size())throw std::length_error("Capella body payload budget");body.insert(body.end(),encoded.begin(),encoded.end());
++  if(selected_changes.size()>t.maximum_block_bytes-body.size())throw std::length_error("Capella body BLS change budget");body.insert(body.end(),selected_changes.begin(),selected_changes.end());return body;
+@@ -115,0 +124,8 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t i
++ // Keep rejected operations out of the candidate without changing live state.
++ // The transition checks credentials, genesis-domain signatures, duplicates and
++ // the required ordering after this block's withdrawal sweep.
++ for(size_t i=0;i<std::min(changes.size(),maximum_change_trials)&&selected_changes.size()/172<rules_.transition.maximum_bls_changes;++i){
++  if(check)check();const auto prior=selected_changes.size();const auto wire=encode_capella_bls_change(changes[i]);selected_changes.insert(selected_changes.end(),wire.begin(),wire.end());auto candidate=assemble(selected);
++  if(valid(candidate))body=std::move(candidate);else selected_changes.resize(prior);
++ }
++
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index a80903d..b6db7f6 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -55 +55 @@ static bool beacon_reads=false;
+-static bool wire_mode=false;static bool catalog_concurrency=false;
++static bool local_bls_changes=false;static bool wire_mode=false;static bool catalog_concurrency=false;
+@@ -423,0 +424,2 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
++ SignedCapellaBlsChange local_change;Key local_withdrawal_key(1001);
++ if(local_bls_changes){put(beacon.ssz,balances_at+8,r.withdrawals.maximum_effective_balance+1000000000);auto credential=sha256(local_withdrawal_key.public_key);credential[0]=0;std::copy(credential.begin(),credential.end(),beacon.ssz.begin()+validators_at+121+48);local_change.validator_index=1;copy_to(local_change.from_bls_pubkey,local_withdrawal_key.public_key);local_change.to_execution_address[19]=43;copy_to(local_change.signature,local_withdrawal_key.sign(consensus_signing_root(capella_bls_change_root(local_change),consensus_domain({10,0,0,0},r.genesis_version,genesis_root))));}
+@@ -489 +491 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
+-  if(slot==first_slot)check(withdrawals.empty(),"credentials paid before change");if(slot==first_slot+(migrate?4:1))check(!withdrawals.empty(),"credentials not paid at expected sweep");paid+=withdrawals.size();
++  if(slot==first_slot)check(withdrawals.empty(),"credentials paid before change");if(slot==first_slot+(migrate?4:1))check(!withdrawals.empty(),"credentials not paid at expected sweep");if(local_bls_changes&&slot==first_slot+1)for(const auto& withdrawal:withdrawals)check(withdrawal.validator_index!=1,"local credential change paid in same block");paid+=withdrawals.size();
+@@ -494 +496 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
+-  for(size_t at:std::array<size_t,6>{200,204,208,212,216,220+sync_bytes})put(body,at,fixed,4);put(body,224+sync_bytes,fixed+encoded.size(),4);body.insert(body.end(),encoded.begin(),encoded.end());if(slot==first_slot){const auto wire=encode_capella_bls_change(change);body.insert(body.end(),wire.begin(),wire.end());}
++  for(size_t at:std::array<size_t,6>{200,204,208,212,216,220+sync_bytes})put(body,at,fixed,4);put(body,224+sync_bytes,fixed+encoded.size(),4);body.insert(body.end(),encoded.begin(),encoded.end());if(slot==first_slot){const auto wire=encode_capella_bls_change(change);body.insert(body.end(),wire.begin(),wire.end());}if(local_bls_changes&&slot==first_slot+1){const auto operation=encode_capella_bls_change(local_change);body.insert(body.end(),operation.begin(),operation.end());}
+@@ -515 +517,10 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
+-   if(!finality){const auto automatic=reactor->prepare_local_body(proposer,slot,*reveal,execution.header.coinbase,current.token,execution.transactions,16,64);check(automatic&&*automatic==body,"assembled body differs from independent construction");body=*automatic;++assembled_bodies;}
++   if(!finality){std::optional<Bytes> automatic;
++    if(local_bls_changes&&slot==first_slot+1){
++     auto invalid=local_change;invalid.signature[0]^=1;const std::array<SignedCapellaBlsChange,3> candidates{invalid,local_change,local_change};
++     automatic=reactor->prepare_local_body_with_bls_changes(proposer,slot,*reveal,execution.header.coinbase,current.token,execution.transactions,16,64,candidates,3);
++     check(reactor->current().token==current.token,"BLS change selection published state");
++     const auto limited=reactor->prepare_local_body_with_bls_changes(proposer,slot,*reveal,execution.header.coinbase,current.token,execution.transactions,16,64,candidates,1);
++     check(limited&&limited->size()+172==body.size(),"BLS selection ignored trial limit");
++     bool stopped=false;try{reactor->prepare_local_body_with_bls_changes(proposer,slot,*reveal,execution.header.coinbase,current.token,execution.transactions,16,64,candidates,3,[]{throw ExecutionCancelled("change selection stopped");});}catch(const ExecutionCancelled&){stopped=true;}check(stopped&&reactor->current().token==current.token,"BLS selection cancellation published");
++    }else automatic=reactor->prepare_local_body(proposer,slot,*reveal,execution.header.coinbase,current.token,execution.transactions,16,64);
++    check(automatic&&*automatic==body,"assembled body differs from independent construction");body=*automatic;++assembled_bodies;}
+@@ -912 +923,2 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
+- std::cout<<Json{{"wireMessages",wire_messages},{"beaconReadChecks",beacon_read_checks},{"scenario","capella-signed-transition"},{"migrated",migrate},{"finalityScenario",finality},{"participationPercent",participation},{"finalizedEpoch",store->timed.view.finalized.epoch},{"includedAttestations",included_attestations},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"storeBlocks",store->blocks.size()},{"snapshotReopened",true},{"durableReactor",true},{"signedArchives",signed_wires.size()},{"signedVotes",durable_votes.size()},{"signedSlashings",durable_proofs.size()},{"deferredVotes",deferred_votes.size()},{"localAttestations",local_signatures},{"localProposals",local_proposals},{"localRandao",local_randao},{"assembledBodies",assembled_bodies},{"storeSigkillReopens",2},{"storeVotes",votes},{"voteReorgs",vote_reorgs},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
++ if(local_bls_changes)check(paid>=2&&state.get("0x000000000000000000000000000000000000002b").balance>0,"locally selected credential change never paid recipient");
++ std::cout<<Json{{"localBlsChangeSelection",local_bls_changes},{"wireMessages",wire_messages},{"beaconReadChecks",beacon_read_checks},{"scenario","capella-signed-transition"},{"migrated",migrate},{"finalityScenario",finality},{"participationPercent",participation},{"finalizedEpoch",store->timed.view.finalized.epoch},{"includedAttestations",included_attestations},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"storeBlocks",store->blocks.size()},{"snapshotReopened",true},{"durableReactor",true},{"signedArchives",signed_wires.size()},{"signedVotes",durable_votes.size()},{"signedSlashings",durable_proofs.size()},{"deferredVotes",deferred_votes.size()},{"localAttestations",local_signatures},{"localProposals",local_proposals},{"localRandao",local_randao},{"assembledBodies",assembled_bodies},{"storeSigkillReopens",2},{"storeVotes",votes},{"voteReorgs",vote_reorgs},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
+@@ -930 +942 @@ int main(int argc,char** argv){try{executable=argv[0];
+-if(argc==3&&std::string(argv[1])=="--cli"){cli_binary=argv[2];configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--http"){configured_runtime=true;capella_http=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--catalog-concurrency"){wire_mode=true;catalog_concurrency=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--wire"){wire_mode=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--beacon-reads"){beacon_reads=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--configured-runtime"){configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler"){scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-reorg"){owner_reorg=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}
++if(argc==3&&std::string(argv[1])=="--cli"){cli_binary=argv[2];configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--http"){configured_runtime=true;capella_http=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--catalog-concurrency"){wire_mode=true;catalog_concurrency=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--local-bls-changes"){local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--wire"){wire_mode=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--beacon-reads"){beacon_reads=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--configured-runtime"){configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler"){scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-reorg"){owner_reorg=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}

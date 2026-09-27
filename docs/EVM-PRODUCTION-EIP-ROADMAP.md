@@ -150,3 +150,16 @@ Ce résultat borne un cas d'équité réseau locale ; ni équité générale, ni
 avec stake distribué, ni qualification WAN. Le premier essai moins strict est
 conservé séparément. Aucun changement du moteur ni nouveau statut EIP.
 [Preuves et périmètre](qualification/capella-competing-peers-20260927/README.md).
+
+### 2026-09-27 — Sélection locale des changements BLS de retrait
+
+Nouvelle API du constructeur Capella : candidats signés, budget d'essais,
+réservation de place avant transactions, validation complète par ajout. Cas
+signature invalide/valide/doublon, limite d'essais, annulation, égalité SSZ avec
+construction indépendante, signature et publication testés. Le retrait vers la
+nouvelle adresse survient lors d'un balayage ultérieur, jamais dans le bloc du
+changement ; deux retraits observés, test final 5,47 s.
+**Partiel** : file durable, RPC/gossip et raccordement à `propose_current` restent
+à faire ; le scheduler ne fournit pas encore ces opérations. Aucune activation
+publique ni clôture complète EIP-4895.
+[Code, référence Capella et preuves](qualification/capella-local-bls-changes-20260927/README.md).

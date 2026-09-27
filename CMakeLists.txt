@@ -1592,3 +1592,6 @@ set_tests_properties(consensus_capella_managed_node PROPERTIES TIMEOUT 240 LABEL
 
 add_test(NAME consensus_capella_catalog_concurrency COMMAND nano-capella-transition-tests --catalog-concurrency)
 set_tests_properties(consensus_capella_catalog_concurrency PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_runtime")
+
+add_test(NAME consensus_capella_local_bls_changes COMMAND nano-capella-transition-tests --local-bls-changes)
+set_tests_properties(consensus_capella_local_bls_changes PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_runtime")

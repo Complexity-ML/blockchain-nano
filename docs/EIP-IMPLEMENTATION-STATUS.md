@@ -66,7 +66,7 @@ reste à compléter. Le genesis réseau autorise actuellement Paris/Shanghai.
 | [6780](https://eips.ethereum.org/EIPS/eip-6780) | Partiel pour la production | Moteur Cancun présent ; pas de genesis réseau Cancun | src/evm.cpp ; src/chain.cpp ; docs/EVM-CONFORMANCE.md | Activation réseau cohérente du fork, admission, régressions et reprise | Avant activation Cancun |
 | [7702](https://eips.ethereum.org/EIPS/eip-7702) | Partiel pour la production | Autorisations et exécution Prague ; non activé sur réseau | src/authorization.cpp ; src/transaction.cpp ; src/engine.cpp | Mempool/P2P, admission type 4 et activation réseau Prague | Avant activation Prague |
 | [4844](https://eips.ethereum.org/EIPS/eip-4844) | Partiel | Blobs/KZG dans le moteur et les runners | src/kzg.cpp ; src/engine.cpp ; tests/test_blobs.cpp | Admission réseau type 3, sidecars, disponibilité, rétention et récupération | Avant service blobs |
-| [4895](https://eips.ethereum.org/EIPS/eip-4895) | Partiel | Retraits EVM, candidats de balayage et changement signé des credentials Capella ; non activé réseau | src/engine.cpp ; src/consensus_capella_withdrawals.cpp ; src/consensus_capella_bls_change.cpp ; tests/test_capella_bls_change.cpp | Composition des blocs Capella, activation et publication atomique consensus/exécution | Consensus cible |
+| [4895](https://eips.ethereum.org/EIPS/eip-4895) | Partiel | Retraits EVM/Capella, publication atomique et réseau local qualifiés dans des scénarios bornés ; sélection locale de changements BLS par API, pas encore par le scheduler autonome | src/engine.cpp ; src/consensus_capella_withdrawals.cpp ; src/consensus_capella_bls_change.cpp ; src/consensus_capella_local_body.cpp ; tests/test_capella_transition.cpp | File durable des changements BLS, admission/relais et alimentation du scheduler ; migration réseau et qualification complète du profil avant activation publique | Consensus cible |
 | [4788](https://eips.ethereum.org/EIPS/eip-4788) | Partiel | Appel système côté exécution | src/engine.cpp ; tests/test_beacon.cpp | Provisionnement versionné du contrat (code, nonce, adresse) au genesis si fork actif dès le départ, sinon à la transition ; fourniture authentifiée des racines par le nouveau consensus | Consensus cible |
 | [6110](https://eips.ethereum.org/EIPS/eip-6110) | Partiel | Requêtes côté exécution ; cycle consensus non terminé | src/requests.cpp ; src/engine.cpp ; tests/test_requests.cpp | Registre BLS, dépôts, sorties, consolidations et application des requêtes dans le consensus | Consensus cible |
 | [7685](https://eips.ethereum.org/EIPS/eip-7685) | Partiel | Requêtes côté exécution ; cycle consensus non terminé | src/requests.cpp ; src/engine.cpp ; tests/test_requests.cpp | Qualifier encodage, ordre par type, omission des requêtes vides et requests_hash ; rejeter les engagements altérés ; appliquer dépôts/sorties/consolidations au consensus et vérifier reprise/rejeu | Consensus cible |
@@ -2605,3 +2605,16 @@ Ce résultat borne un cas d'équité réseau locale ; ni équité générale, ni
 avec stake distribué, ni qualification WAN. Le premier essai moins strict est
 conservé séparément. Aucun changement du moteur ni nouveau statut EIP.
 [Preuves et périmètre](qualification/capella-competing-peers-20260927/README.md).
+
+### 2026-09-27 — Sélection locale des changements BLS de retrait
+
+Nouvelle API du constructeur Capella : candidats signés, budget d'essais,
+réservation de place avant transactions, validation complète par ajout. Cas
+signature invalide/valide/doublon, limite d'essais, annulation, égalité SSZ avec
+construction indépendante, signature et publication testés. Le retrait vers la
+nouvelle adresse survient lors d'un balayage ultérieur, jamais dans le bloc du
+changement ; deux retraits observés, test final 5,47 s.
+**Partiel** : file durable, RPC/gossip et raccordement à `propose_current` restent
+à faire ; le scheduler ne fournit pas encore ces opérations. Aucune activation
+publique ni clôture complète EIP-4895.
+[Code, référence Capella et preuves](qualification/capella-local-bls-changes-20260927/README.md).
