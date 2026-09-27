@@ -1,0 +1,127 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile.netem
+#1 transferring dockerfile: 295B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/blockchain-nano:capella-asymmetric
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 843B done
+#3 DONE 0.0s
+
+#4 [1/2] FROM docker.io/library/blockchain-nano:capella-asymmetric@sha256:d31b48199f99772fa194a24b520a483aee17b97b84c73ef9c802bd883aa77673
+#4 resolve docker.io/library/blockchain-nano:capella-asymmetric@sha256:d31b48199f99772fa194a24b520a483aee17b97b84c73ef9c802bd883aa77673 done
+#4 DONE 0.0s
+
+#5 [2/2] RUN apt-get update && apt-get install -y --no-install-recommends iproute2  && rm -rf /var/lib/apt/lists/*
+#5 0.308 Get:1 http://ports.ubuntu.com/ubuntu-ports noble InRelease [256 kB]
+#5 0.816 Get:2 http://ports.ubuntu.com/ubuntu-ports noble-updates InRelease [126 kB]
+#5 0.945 Get:3 http://ports.ubuntu.com/ubuntu-ports noble-backports InRelease [126 kB]
+#5 1.075 Get:4 http://ports.ubuntu.com/ubuntu-ports noble-security InRelease [126 kB]
+#5 1.209 Get:5 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 Packages [1776 kB]
+#5 1.556 Get:6 http://ports.ubuntu.com/ubuntu-ports noble/multiverse arm64 Packages [274 kB]
+#5 1.567 Get:7 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 Packages [19.0 MB]
+#5 2.278 Get:8 http://ports.ubuntu.com/ubuntu-ports noble/restricted arm64 Packages [113 kB]
+#5 2.279 Get:9 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 Packages [1692 kB]
+#5 2.314 Get:10 http://ports.ubuntu.com/ubuntu-ports noble-updates/restricted arm64 Packages [2996 kB]
+#5 2.389 Get:11 http://ports.ubuntu.com/ubuntu-ports noble-updates/multiverse arm64 Packages [94.8 kB]
+#5 2.391 Get:12 http://ports.ubuntu.com/ubuntu-ports noble-updates/universe arm64 Packages [2198 kB]
+#5 2.442 Get:13 http://ports.ubuntu.com/ubuntu-ports noble-backports/main arm64 Packages [49.0 kB]
+#5 2.444 Get:14 http://ports.ubuntu.com/ubuntu-ports noble-backports/multiverse arm64 Packages [671 B]
+#5 2.444 Get:15 http://ports.ubuntu.com/ubuntu-ports noble-backports/universe arm64 Packages [36.3 kB]
+#5 2.444 Get:16 http://ports.ubuntu.com/ubuntu-ports noble-security/multiverse arm64 Packages [89.7 kB]
+#5 2.445 Get:17 http://ports.ubuntu.com/ubuntu-ports noble-security/main arm64 Packages [1356 kB]
+#5 2.482 Get:18 http://ports.ubuntu.com/ubuntu-ports noble-security/restricted arm64 Packages [2811 kB]
+#5 2.552 Get:19 http://ports.ubuntu.com/ubuntu-ports noble-security/universe arm64 Packages [1635 kB]
+#5 2.937 Fetched 34.8 MB in 3s (12.2 MB/s)
+#5 2.937 Reading package lists...
+#5 3.311 Reading package lists...
+#5 3.680 Building dependency tree...
+#5 3.782 Reading state information...
+#5 3.892 The following additional packages will be installed:
+#5 3.892   libbpf1 libcap2-bin libelf1t64 libmnl0 libxtables12
+#5 3.893 Suggested packages:
+#5 3.893   iproute2-doc python3:any
+#5 3.893 Recommended packages:
+#5 3.893   libatm1t64 libpam-cap
+#5 3.907 The following NEW packages will be installed:
+#5 3.907   iproute2 libbpf1 libcap2-bin libelf1t64 libmnl0 libxtables12
+#5 4.103 0 upgraded, 6 newly installed, 0 to remove and 3 not upgraded.
+#5 4.103 Need to get 1433 kB of archives.
+#5 4.103 After this operation, 4887 kB of additional disk space will be used.
+#5 4.103 Get:1 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libelf1t64 arm64 0.190-1.1ubuntu0.1 [58.4 kB]
+#5 4.400 Get:2 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libbpf1 arm64 1:1.3.0-2build2 [168 kB]
+#5 4.575 Get:3 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libmnl0 arm64 1.0.5-2build1 [12.4 kB]
+#5 4.583 Get:4 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libxtables12 arm64 1.8.10-3ubuntu2 [35.9 kB]
+#5 4.598 Get:5 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libcap2-bin arm64 1:2.66-5ubuntu2.4 [33.5 kB]
+#5 4.614 Get:6 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 iproute2 arm64 6.1.0-1ubuntu6.4 [1126 kB]
+#5 4.953 debconf: delaying package configuration, since apt-utils is not installed
+#5 4.970 Fetched 1433 kB in 1s (1541 kB/s)
+#5 4.981 Selecting previously unselected package libelf1t64:arm64.
+#5 4.981 (Reading database ...
+(Reading database ... 5%
+(Reading database ... 10%
+(Reading database ... 15%
+(Reading database ... 20%
+(Reading database ... 25%
+(Reading database ... 30%
+(Reading database ... 35%
+(Reading database ... 40%
+(Reading database ... 45%
+(Reading database ... 50%
+(Reading database ... 55%
+(Reading database ... 60%
+(Reading database ... 65%
+(Reading database ... 70%
+(Reading database ... 75%
+(Reading database ... 80%
+(Reading database ... 85%
+(Reading database ... 90%
+(Reading database ... 95%
+(Reading database ... 100%
+(Reading database ... 4980 files and directories currently installed.)
+#5 4.998 Preparing to unpack .../0-libelf1t64_0.190-1.1ubuntu0.1_arm64.deb ...
+#5 5.000 Unpacking libelf1t64:arm64 (0.190-1.1ubuntu0.1) ...
+#5 5.010 Selecting previously unselected package libbpf1:arm64.
+#5 5.011 Preparing to unpack .../1-libbpf1_1%3a1.3.0-2build2_arm64.deb ...
+#5 5.012 Unpacking libbpf1:arm64 (1:1.3.0-2build2) ...
+#5 5.022 Selecting previously unselected package libmnl0:arm64.
+#5 5.022 Preparing to unpack .../2-libmnl0_1.0.5-2build1_arm64.deb ...
+#5 5.024 Unpacking libmnl0:arm64 (1.0.5-2build1) ...
+#5 5.033 Selecting previously unselected package libxtables12:arm64.
+#5 5.033 Preparing to unpack .../3-libxtables12_1.8.10-3ubuntu2_arm64.deb ...
+#5 5.034 Unpacking libxtables12:arm64 (1.8.10-3ubuntu2) ...
+#5 5.042 Selecting previously unselected package libcap2-bin.
+#5 5.043 Preparing to unpack .../4-libcap2-bin_1%3a2.66-5ubuntu2.4_arm64.deb ...
+#5 5.044 Unpacking libcap2-bin (1:2.66-5ubuntu2.4) ...
+#5 5.054 Selecting previously unselected package iproute2.
+#5 5.054 Preparing to unpack .../5-iproute2_6.1.0-1ubuntu6.4_arm64.deb ...
+#5 5.055 Unpacking iproute2 (6.1.0-1ubuntu6.4) ...
+#5 5.078 Setting up libelf1t64:arm64 (0.190-1.1ubuntu0.1) ...
+#5 5.081 Setting up libcap2-bin (1:2.66-5ubuntu2.4) ...
+#5 5.084 Setting up libmnl0:arm64 (1.0.5-2build1) ...
+#5 5.086 Setting up libxtables12:arm64 (1.8.10-3ubuntu2) ...
+#5 5.089 Setting up libbpf1:arm64 (1:1.3.0-2build2) ...
+#5 5.092 Setting up iproute2 (6.1.0-1ubuntu6.4) ...
+#5 5.125 debconf: unable to initialize frontend: Dialog
+#5 5.125 debconf: (TERM is not set, so the dialog frontend is not usable.)
+#5 5.125 debconf: falling back to frontend: Readline
+#5 5.125 debconf: unable to initialize frontend: Readline
+#5 5.125 debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC entries checked: /etc/perl /usr/local/lib/aarch64-linux-gnu/perl/5.38.2 /usr/local/share/perl/5.38.2 /usr/lib/aarch64-linux-gnu/perl5/5.38 /usr/share/perl5 /usr/lib/aarch64-linux-gnu/perl-base /usr/lib/aarch64-linux-gnu/perl/5.38 /usr/share/perl/5.38 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 8.)
+#5 5.125 debconf: falling back to frontend: Teletype
+#5 5.134 Processing triggers for libc-bin (2.39-0ubuntu8.9) ...
+#5 DONE 5.2s
+
+#6 exporting to image
+#6 exporting layers 0.1s done
+#6 exporting manifest sha256:0cd9e4cbb3f0140687097988c344914dd3be6156ad66f6c436b5fec5856b7424 done
+#6 exporting config sha256:5c914b92808eeb8ab78befac834be4b40391c2aeb8dc049b174a7b76ca28e385 done
+#6 exporting attestation manifest sha256:6df4b7aff69400be629cc14ba01fde516d174c280a9ddc70c29ee70c7b13d45a done
+#6 exporting manifest list sha256:abeb7c1f5140e35f7a0d64aa7e49675b31c663d9d4726b7c04503ccfd63415e4 done
+#6 naming to docker.io/library/blockchain-nano:capella-netem done
+#6 unpacking to docker.io/library/blockchain-nano:capella-netem 0.0s done
+#6 DONE 0.2s
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/khag2so3zxvlzwh4p28hj8m47

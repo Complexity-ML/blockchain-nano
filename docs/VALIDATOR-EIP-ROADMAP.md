@@ -3703,3 +3703,16 @@ patch, les nouveaux tests et toutes les traces sont conservés pour reproduction
 Le blocage reste actif ; prochaine analyse : ordonnancement des catalogues et
 livraison des votes récents/dépendances, sans relâcher les limites.
 [Expérience rejetée](qualification/capella-vote-pipeline-20260927/README.md).
+
+
+### Diagnostic mesuré du retard — 27 septembre 2026
+
+Le scénario500ms échoue encore à la finalité3, avec instrumentation seule.
+Pour les attestations, la médiane d'envoi passe de213–219ms à2893–3019ms :
+environ1,4–1,5s d'ouverture du flux, puis1,5s après écriture (écriture médiane0ms).
+Les traces distinguent admission/refus/issue inconnue et conservent les échecs.
+Le temps post-écriture inclut transport et travail distant, pas seulement RTT.
+Prochaine correction : amortir négociation et accusés par réutilisation ou lots
+bornés, en préservant les décisions d'admission et les budgets. **Blocage actif**,
+aucune nouvelle conformité EVM ou disponibilité de production.
+[Mesures et limites](qualification/capella-send-timing-20260927/README.md).

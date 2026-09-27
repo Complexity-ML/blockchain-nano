@@ -1,0 +1,1229 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 2.00kB done
+#1 DONE 0.0s
+
+#2 resolve image config for docker-image://docker.io/docker/dockerfile:1
+#2 DONE 0.7s
+
+#3 docker-image://docker.io/docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
+#3 resolve docker.io/docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32 done
+#3 CACHED
+
+#4 [internal] load metadata for docker.io/library/ubuntu:24.04
+#4 DONE 0.5s
+
+#5 [internal] load .dockerignore
+#5 transferring context: 843B done
+#5 DONE 0.0s
+
+#6 [dependencies 1/6] FROM docker.io/library/ubuntu:24.04@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3
+#6 resolve docker.io/library/ubuntu:24.04@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 done
+#6 DONE 0.0s
+
+#7 [internal] load build context
+#7 transferring context: 3.95MB 0.3s done
+#7 DONE 0.4s
+
+#8 [dependencies 2/6] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential clang cmake git curl ca-certificates pkg-config     libssl-dev libicu-dev libboost-dev librocksdb-dev libgmp-dev     autoconf automake libtool && rm -rf /var/lib/apt/lists/*
+#8 CACHED
+
+#9 [dependencies 3/6] WORKDIR /src
+#9 CACHED
+
+#10 [dependencies 4/6] COPY cmake/ cmake/
+#10 CACHED
+
+#11 [dependencies 5/6] COPY scripts/build-libp2p.sh scripts/build-libp2p.sh
+#11 CACHED
+
+#12 [dependencies 6/6] RUN JOBS=4 sh scripts/build-libp2p.sh
+#12 CACHED
+
+#13 [builder 1/2] COPY . .
+#13 DONE 1.1s
+
+#14 [builder 2/2] RUN cmake -S network -B build-network -DCMAKE_BUILD_TYPE=Release       -DNANO_DEPS_DIR=/src/.deps  && cmake --build build-network --target nano-p2p --parallel 4  && cmake -S . -B build-container -DCMAKE_BUILD_TYPE=Release       -DNANO_NETWORK_EXECUTABLE=/src/build-network/nano-p2p  && cmake --build build-container --target nano --parallel 4  && cmake --install build-container --prefix /out
+#14 0.166 -- The C compiler identification is Clang 18.1.3
+#14 0.213 -- The CXX compiler identification is Clang 18.1.3
+#14 0.227 -- Detecting C compiler ABI info
+#14 0.283 -- Detecting C compiler ABI info - done
+#14 0.285 -- Check for working C compiler: /usr/bin/clang - skipped
+#14 0.285 -- Detecting C compile features
+#14 0.286 -- Detecting C compile features - done
+#14 0.296 -- Detecting CXX compiler ABI info
+#14 0.367 -- Detecting CXX compiler ABI info - done
+#14 0.370 -- Check for working CXX compiler: /usr/bin/clang++ - skipped
+#14 0.370 -- Detecting CXX compile features
+#14 0.370 -- Detecting CXX compile features - done
+#14 0.379 Boost find config
+#14 0.387 CMake Warning at /usr/share/cmake-3.28/Modules/FindBoost.cmake:1398 (message):
+#14 0.387   New Boost version may have incorrect or missing dependencies and imported
+#14 0.387   targets
+#14 0.387 Call Stack (most recent call first):
+#14 0.387   /usr/share/cmake-3.28/Modules/FindBoost.cmake:1523 (_Boost_COMPONENT_DEPENDENCIES)
+#14 0.387   /usr/share/cmake-3.28/Modules/FindBoost.cmake:2135 (_Boost_MISSING_DEPENDENCIES)
+#14 0.387   /src/.deps/hunter/_Base/15ca502/dff9242/9613f97/Install/lib/cmake/Boost/BoostConfig.cmake:51 (find_package)
+#14 0.387   /usr/share/cmake-3.28/Modules/CMakeFindDependencyMacro.cmake:76 (find_package)
+#14 0.387   /src/.deps/install/lib/cmake/libp2p/libp2pConfig.cmake:29 (find_dependency)
+#14 0.387   CMakeLists.txt:29 (find_package)
+#14 0.387
+#14 0.387
+#14 0.387 CMake Warning at /usr/share/cmake-3.28/Modules/FindBoost.cmake:1398 (message):
+#14 0.387   New Boost version may have incorrect or missing dependencies and imported
+#14 0.387   targets
+#14 0.387 Call Stack (most recent call first):
+#14 0.387   /usr/share/cmake-3.28/Modules/FindBoost.cmake:1523 (_Boost_COMPONENT_DEPENDENCIES)
+#14 0.387   /usr/share/cmake-3.28/Modules/FindBoost.cmake:2135 (_Boost_MISSING_DEPENDENCIES)
+#14 0.387   /src/.deps/hunter/_Base/15ca502/dff9242/9613f97/Install/lib/cmake/Boost/BoostConfig.cmake:51 (find_package)
+#14 0.387   /usr/share/cmake-3.28/Modules/CMakeFindDependencyMacro.cmake:76 (find_package)
+#14 0.387   /src/.deps/install/lib/cmake/libp2p/libp2pConfig.cmake:29 (find_dependency)
+#14 0.387   CMakeLists.txt:29 (find_package)
+#14 0.387
+#14 0.387
+#14 0.387 CMake Warning at /usr/share/cmake-3.28/Modules/FindBoost.cmake:1398 (message):
+#14 0.387   New Boost version may have incorrect or missing dependencies and imported
+#14 0.387   targets
+#14 0.387 Call Stack (most recent call first):
+#14 0.387   /usr/share/cmake-3.28/Modules/FindBoost.cmake:1523 (_Boost_COMPONENT_DEPENDENCIES)
+#14 0.387   /usr/share/cmake-3.28/Modules/FindBoost.cmake:2135 (_Boost_MISSING_DEPENDENCIES)
+#14 0.387   /src/.deps/hunter/_Base/15ca502/dff9242/9613f97/Install/lib/cmake/Boost/BoostConfig.cmake:51 (find_package)
+#14 0.387   /usr/share/cmake-3.28/Modules/CMakeFindDependencyMacro.cmake:76 (find_package)
+#14 0.387   /src/.deps/install/lib/cmake/libp2p/libp2pConfig.cmake:29 (find_dependency)
+#14 0.387   CMakeLists.txt:29 (find_package)
+#14 0.387
+#14 0.387
+#14 0.388 -- Found Boost: /src/.deps/hunter/_Base/15ca502/dff9242/9613f97/Install/include (found version "1.87.0") found components: random filesystem program_options
+#14 0.392 -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+#14 0.437 -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+#14 0.438 -- Found Threads: TRUE
+#14 0.447 -- Configuring done (0.3s)
+#14 0.468 -- Generating done (0.0s)
+#14 0.470 -- Build files have been written to: /src/build-network
+#14 0.492 [ 50%] Building CXX object CMakeFiles/nano-p2p.dir/main.cpp.o
+#14 15.50 [100%] Linking CXX executable nano-p2p
+#14 15.84 [100%] Built target nano-p2p
+#14 15.88 -- The C compiler identification is Clang 18.1.3
+#14 15.92 -- The CXX compiler identification is Clang 18.1.3
+#14 15.95 -- The ASM compiler identification is Clang with GNU-like command-line
+#14 15.95 -- Found assembler: /usr/bin/clang
+#14 15.97 -- Detecting C compiler ABI info
+#14 16.02 -- Detecting C compiler ABI info - done
+#14 16.02 -- Check for working C compiler: /usr/bin/clang - skipped
+#14 16.02 -- Detecting C compile features
+#14 16.02 -- Detecting C compile features - done
+#14 16.03 -- Detecting CXX compiler ABI info
+#14 16.09 -- Detecting CXX compiler ABI info - done
+#14 16.10 -- Check for working CXX compiler: /usr/bin/clang++ - skipped
+#14 16.10 -- Detecting CXX compile features
+#14 16.10 -- Detecting CXX compile features - done
+#14 16.12 -- Found OpenSSL: /usr/lib/aarch64-linux-gnu/libcrypto.so (found version "3.0.13")
+#14 16.12 -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+#14 16.17 -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+#14 16.17 -- Found Threads: TRUE
+#14 16.17 -- Found the following ICU libraries:
+#14 16.17 --   uc (required): /usr/lib/aarch64-linux-gnu/libicuuc.so
+#14 16.17 -- Found ICU: /usr/include (found version "74.2")
+#14 16.36 -- Performing Test HAVE_X86_64_ASM
+#14 16.39 -- Performing Test HAVE_X86_64_ASM - Failed
+#14 16.39 -- Could NOT find Valgrind (missing: Valgrind_INCLUDE_DIR Valgrind_WORKS)
+#14 16.39 -- Performing Test C_SUPPORTS__WALL
+#14 16.43 -- Performing Test C_SUPPORTS__WALL - Success
+#14 16.43 -- Performing Test C_SUPPORTS__PEDANTIC
+#14 16.48 -- Performing Test C_SUPPORTS__PEDANTIC - Success
+#14 16.48 -- Performing Test C_SUPPORTS__WCAST_ALIGN
+#14 16.52 -- Performing Test C_SUPPORTS__WCAST_ALIGN - Success
+#14 16.52 -- Performing Test C_SUPPORTS__WCAST_ALIGN_STRICT
+#14 16.54 -- Performing Test C_SUPPORTS__WCAST_ALIGN_STRICT - Failed
+#14 16.54 -- Performing Test C_SUPPORTS__WCONDITIONAL_UNINITIALIZED
+#14 16.58 -- Performing Test C_SUPPORTS__WCONDITIONAL_UNINITIALIZED - Success
+#14 16.58 -- Performing Test C_SUPPORTS__WEXTRA
+#14 16.62 -- Performing Test C_SUPPORTS__WEXTRA - Success
+#14 16.62 -- Performing Test C_SUPPORTS__WNESTED_EXTERNS
+#14 16.66 -- Performing Test C_SUPPORTS__WNESTED_EXTERNS - Success
+#14 16.66 -- Performing Test C_SUPPORTS__WNO_LONG_LONG
+#14 16.71 -- Performing Test C_SUPPORTS__WNO_LONG_LONG - Success
+#14 16.71 -- Performing Test C_SUPPORTS__WNO_OVERLENGTH_STRINGS
+#14 16.75 -- Performing Test C_SUPPORTS__WNO_OVERLENGTH_STRINGS - Success
+#14 16.75 -- Performing Test C_SUPPORTS__WNO_UNUSED_FUNCTION
+#14 16.79 -- Performing Test C_SUPPORTS__WNO_UNUSED_FUNCTION - Success
+#14 16.79 -- Performing Test C_SUPPORTS__WRESERVED_IDENTIFIER
+#14 16.83 -- Performing Test C_SUPPORTS__WRESERVED_IDENTIFIER - Success
+#14 16.83 -- Performing Test C_SUPPORTS__WSHADOW
+#14 16.87 -- Performing Test C_SUPPORTS__WSHADOW - Success
+#14 16.87 -- Performing Test C_SUPPORTS__WSTRICT_PROTOTYPES
+#14 16.91 -- Performing Test C_SUPPORTS__WSTRICT_PROTOTYPES - Success
+#14 16.91 -- Performing Test C_SUPPORTS__WUNDEF
+#14 16.96 -- Performing Test C_SUPPORTS__WUNDEF - Success
+#14 16.96
+#14 16.96
+#14 16.96 secp256k1 configure summary
+#14 16.96 ===========================
+#14 16.96 Build artifacts:
+#14 16.96   library type ........................ Static
+#14 16.96 Optional modules:
+#14 16.96   ECDH ................................ OFF
+#14 16.96   ECDSA pubkey recovery ............... ON
+#14 16.96   extrakeys ........................... OFF
+#14 16.96   schnorrsig .......................... OFF
+#14 16.96   musig ............................... OFF
+#14 16.96   ElligatorSwift ...................... OFF
+#14 16.96 Parameters:
+#14 16.96   ecmult window size .................. 15
+#14 16.96   ecmult gen table size ............... 86 KiB
+#14 16.96 Optional features:
+#14 16.96   assembly ............................ OFF
+#14 16.96   external callbacks .................. OFF
+#14 16.96 Optional binaries:
+#14 16.96   benchmark ........................... OFF
+#14 16.96   noverify_tests ...................... OFF
+#14 16.96   tests ............................... OFF
+#14 16.96   exhaustive tests .................... OFF
+#14 16.96   ctime_tests ......................... OFF
+#14 16.96   examples ............................ OFF
+#14 16.96
+#14 16.96 Cross compiling ....................... FALSE
+#14 16.96 API visibility attributes ............. ON
+#14 16.96 Valgrind .............................. OFF
+#14 16.96 Preprocessor defined macros ........... ECMULT_WINDOW_SIZE=15 COMB_BLOCKS=43 COMB_TEETH=6
+#14 16.96 C compiler ............................ Clang 18.1.3, /usr/bin/clang
+#14 16.96 CFLAGS ................................
+#14 16.96 Compile options ....................... -Wall -pedantic -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef
+#14 16.96 Build type:
+#14 16.96  - CMAKE_BUILD_TYPE ................... Release
+#14 16.96  - CFLAGS ............................. -O2
+#14 16.96  - LDFLAGS for executables ............
+#14 16.96  - LDFLAGS for shared libraries .......
+#14 16.96
+#14 16.96 bint_obj=/src/build-container/third_party/mcl/bint64.o
+#14 16.96 base_obj=/src/build-container/third_party/mcl/base64.o
+#14 16.96 -- Configuring done (1.1s)
+#14 17.17 -- Generating done (0.2s)
+#14 17.18 -- Build files have been written to: /src/build-container
+#14 17.22 [  0%] Generating base64.o
+#14 17.22 [  0%] Generating bint64.o
+#14 17.22 [  0%] Building C object third_party/secp256k1/src/CMakeFiles/secp256k1_precomputed.dir/precomputed_ecmult.c.o
+#14 17.23 [  0%] Building C object third_party/ckzg/CMakeFiles/nano_blst.dir/blst/src/server.c.o
+#14 17.23 warning: overriding the module target triple with aarch64-unknown-linux-gnu [-Woverride-module]
+#14 17.24 warning: overriding the module target triple with aarch64-unknown-linux-gnu [-Woverride-module]
+#14 17.36 1 warning generated.
+#14 17.37 [  0%] Built target gen_bint.o
+#14 17.37 [  0%] Building ASM object third_party/ckzg/CMakeFiles/nano_blst.dir/blst/build/assembly.S.o
+#14 17.42 [  3%] Building C object third_party/secp256k1/src/CMakeFiles/secp256k1_precomputed.dir/precomputed_ecmult_gen.c.o
+#14 17.72 1 warning generated.
+#14 17.73 [  3%] Built target gen_base.o
+#14 17.73 [  3%] Building CXX object third_party/mcl/CMakeFiles/mcl_st.dir/src/fp.cpp.o
+#14 17.74 [  3%] Built target secp256k1_precomputed
+#14 17.74 [  3%] Building C object third_party/secp256k1/src/CMakeFiles/secp256k1.dir/secp256k1.c.o
+#14 17.75 [  3%] Linking C static library libnano_blst.a
+#14 17.77 [  3%] Built target nano_blst
+#14 17.78 [  3%] Building C object third_party/ckzg/CMakeFiles/nano_ckzg.dir/src/ckzg.c.o
+#14 17.92 [  6%] Linking C static library libnano_ckzg.a
+#14 17.95 [  6%] Built target nano_ckzg
+#14 19.03 [  6%] Linking C static library ../lib/libsecp256k1.a
+#14 19.06 [  6%] Built target secp256k1
+#14 19.78 [  6%] Linking CXX static library ../../lib/libmcl.a
+#14 19.80 [ 10%] Built target mcl_st
+#14 19.81 [ 10%] Building CXX object CMakeFiles/nano_core.dir/src/audit.cpp.o
+#14 19.81 [ 10%] Building CXX object CMakeFiles/nano_core.dir/src/authorization.cpp.o
+#14 19.81 [ 10%] Building CXX object CMakeFiles/nano_core.dir/src/beacon_api.cpp.o
+#14 19.81 [ 10%] Building CXX object CMakeFiles/nano_core.dir/src/beacon_block_json.cpp.o
+#14 20.53 /src/src/beacon_api.cpp:12:89: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+#14 20.53    12 |  if(path=="/eth/v1/node/version")return {200,{{"data",{{"version","Nano/0.1.0/c++20"}}}}};
+#14 20.53       |                                                                                         ^
+#14 20.53 /src/src/beacon_api.cpp:18:118: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+#14 20.53    18 |  if(!root&&!fork&&!finality&&!genesis&&!spec)return {404,{{"code",404},{"message","Beacon endpoint not implemented"}}};
+#14 20.53       |                                                                                                                      ^
+#14 20.54 /src/src/beacon_api.cpp:26:166: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+#14 20.54    26 |  if(genesis)return {200,{{"data",{{"genesis_time",std::to_string(number(b,0))},{"genesis_validators_root",octets(b,8,32)},{"genesis_fork_version",genesis_version}}}}};
+#14 20.54       |                                                                                                                                                                      ^
+#14 20.55 /src/src/beacon_api.cpp:63:70: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+#14 20.55    63 |   if(checkpoint)checkpoint();return {200,{{"data",std::move(values)}}};
+#14 20.55       |                                                                      ^
+#14 20.56 /src/src/beacon_api.cpp:77:160: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+#14 20.56    77 |  return {200,{{"execution_optimistic",false},{"finalized",consensus_beacon_header_root(head.header)==store.timed.view.finalized.root},{"data",std::move(data)}}};
+#14 20.56       |                                                                                                                                                                ^
+#14 20.57 /src/src/beacon_api.cpp:88:117: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+#14 20.57    88 |  auto error=[](unsigned code,const char* message){return BeaconReadResponse{code,{{"code",code},{"message",message}}};};
+#14 20.57       |                                                                                                                     ^
+#14 20.58 /src/src/beacon_api.cpp:132:99: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+#14 20.58   132 |    {"header",{{"message",std::move(message)},{"signature",octets(*signed_block->second,4,96)}}}}}}};
+#14 20.58       |                                                                                                   ^
+#14 20.79 [ 13%] Building CXX object CMakeFiles/nano_core.dir/src/beacon_journal_cli.cpp.o
+#14 21.42 [ 13%] Building CXX object CMakeFiles/nano_core.dir/src/bft_reactor.cpp.o
+#14 21.44 7 warnings generated.
+#14 21.45 [ 13%] Building CXX object CMakeFiles/nano_core.dir/src/block.cpp.o
+#14 21.47 [ 13%] Building CXX object CMakeFiles/nano_core.dir/src/block_auth.cpp.o
+#14 22.23 [ 13%] Building CXX object CMakeFiles/nano_core.dir/src/block_import.cpp.o
+#14 22.89 [ 17%] Building CXX object CMakeFiles/nano_core.dir/src/bls.cpp.o
+#14 23.20 [ 17%] Building CXX object CMakeFiles/nano_core.dir/src/bn_pairing.cpp.o
+#14 23.40 [ 17%] Building CXX object CMakeFiles/nano_core.dir/src/capella_beacon_api.cpp.o
+#14 23.73 [ 17%] Building CXX object CMakeFiles/nano_core.dir/src/capella_beacon_block_json.cpp.o
+#14 23.75 [ 17%] Building CXX object CMakeFiles/nano_core.dir/src/chain.cpp.o
+#14 24.00 [ 20%] Building CXX object CMakeFiles/nano_core.dir/src/chain_beacon.cpp.o
+#14 24.14 /src/src/capella_beacon_api.cpp:12:89: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+#14 24.14    12 |  if(path=="/eth/v1/node/version")return {200,{{"data",{{"version","Nano/0.1.0/c++20"}}}}};
+#14 24.14       |                                                                                         ^
+#14 24.14 /src/src/capella_beacon_api.cpp:18:118: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+#14 24.14    18 |  if(!root&&!fork&&!finality&&!genesis&&!spec)return {404,{{"code",404},{"message","Beacon endpoint not implemented"}}};
+#14 24.14       |                                                                                                                      ^
+#14 24.15 /src/src/capella_beacon_api.cpp:26:166: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+#14 24.15    26 |  if(genesis)return {200,{{"data",{{"genesis_time",std::to_string(number(b,0))},{"genesis_validators_root",octets(b,8,32)},{"genesis_fork_version",genesis_version}}}}};
+#14 24.15       |                                                                                                                                                                      ^
+#14 24.16 /src/src/capella_beacon_api.cpp:64:70: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+#14 24.16    64 |   if(checkpoint)checkpoint();return {200,{{"data",std::move(values)}}};
+#14 24.16       |                                                                      ^
+#14 24.17 /src/src/capella_beacon_api.cpp:78:160: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+#14 24.17    78 |  return {200,{{"execution_optimistic",false},{"finalized",consensus_beacon_header_root(head.header)==store.timed.view.finalized.root},{"data",std::move(data)}}};
+#14 24.17       |                                                                                                                                                                ^
+#14 24.18 /src/src/capella_beacon_api.cpp:88:117: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+#14 24.18    88 |  auto error=[](unsigned code,const char* message){return BeaconReadResponse{code,{{"code",code},{"message",message}}};};
+#14 24.18       |                                                                                                                     ^
+#14 24.19 /src/src/capella_beacon_api.cpp:129:91: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+#14 24.19   129 |    {"header",{{"message",std::move(message)},{"signature",octets(*signed_block,4,96)}}}}}}};
+#14 24.19       |                                                                                           ^
+#14 25.08 7 warnings generated.
+#14 25.09 [ 20%] Building CXX object CMakeFiles/nano_core.dir/src/cli_client.cpp.o
+#14 25.52 [ 20%] Building CXX object CMakeFiles/nano_core.dir/src/client.cpp.o
+#14 25.54 [ 20%] Building CXX object CMakeFiles/nano_core.dir/src/committee.cpp.o
+#14 25.72 [ 20%] Building CXX object CMakeFiles/nano_core.dir/src/consensus.cpp.o
+#14 26.76 [ 24%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_anchor.cpp.o
+#14 26.84 [ 24%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_attestation.cpp.o
+#14 26.96 [ 24%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_clock.cpp.o
+#14 27.59 [ 24%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_deposit.cpp.o
+#14 27.67 [ 24%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_duty.cpp.o
+#14 27.96 [ 24%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_epoch.cpp.o
+#14 28.38 [ 27%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_fork_state.cpp.o
+#14 28.49 [ 27%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_fork_store.cpp.o
+#14 28.81 [ 27%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_profile.cpp.o
+#14 29.22 [ 27%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_proposer.cpp.o
+#14 29.59 [ 27%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_reactor.cpp.o
+#14 30.06 [ 31%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_runtime.cpp.o
+#14 30.23 [ 31%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_slashing.cpp.o
+#14 31.05 [ 31%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_slots.cpp.o
+#14 31.95 [ 31%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_snapshot.cpp.o
+#14 32.20 [ 31%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_store_snapshot.cpp.o
+#14 32.70 [ 34%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_sync.cpp.o
+#14 33.27 [ 34%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_sync_aggregate.cpp.o
+#14 33.50 [ 34%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_transition.cpp.o
+#14 34.18 [ 34%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_attestation.cpp.o
+#14 34.22 [ 34%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_attestation_inclusion.cpp.o
+#14 34.23 [ 37%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_beacon_body.cpp.o
+#14 34.95 [ 37%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_beacon_header.cpp.o
+#14 35.03 [ 37%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_beacon_signer.cpp.o
+#14 35.05 [ 37%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_beacon_state.cpp.o
+#14 35.13 [ 37%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_clock.cpp.o
+#14 35.53 /src/src/consensus_beacon_state.cpp:21:29: warning: comparison of integers of different signs: 'unsigned int' and 'const _If_is_unsigned_integer<unsigned long, int>' (aka 'const int') [-Wsign-compare]
+#14 35.53    21 |   for(unsigned level=0;level<depth;++level){
+#14 35.53       |                        ~~~~~^~~~~~
+#14 35.86 1 warning generated.
+#14 35.87 [ 41%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_deposits.cpp.o
+#14 36.21 [ 41%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_duty.cpp.o
+#14 36.71 [ 41%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_execution.cpp.o
+#14 37.07 [ 41%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_exit_identity.cpp.o
+#14 37.56 [ 41%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_fork_state.cpp.o
+#14 37.61 [ 44%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_fork_store.cpp.o
+#14 38.09 [ 44%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_local_body.cpp.o
+#14 38.44 [ 44%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_profile.cpp.o
+#14 39.19 [ 44%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_reactor.cpp.o
+#14 39.87 [ 44%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_runtime.cpp.o
+#14 39.91 [ 44%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_slots.cpp.o
+#14 40.02 [ 48%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_store_snapshot.cpp.o
+#14 40.71 [ 48%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_validator.cpp.o
+#14 41.12 /src/src/consensus_bellatrix_runtime.cpp:132:147: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+#14 41.12   132 |    if(!observation||observation->peer_slots.empty())return BeaconReadResponse{503,{{"code",503},{"message","Beacon peer observation unavailable"}}};
+#14 41.12       |                                                                                                                                                   ^
+#14 41.12 /src/src/consensus_bellatrix_runtime.cpp:140:235: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+#14 41.12   140 |    return BeaconReadResponse{200,{{"data",{{"head_slot",std::to_string(head.header.slot)},{"sync_distance",std::to_string(target-head.header.slot)},{"is_syncing",target>head.header.slot},{"is_optimistic",false},{"el_offline",false}}}}};
+#14 41.12       |                                                                                                                                                                                                                                           ^
+#14 42.33 [ 48%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_block_auth.cpp.o
+#14 42.38 [ 48%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_block_operations.cpp.o
+#14 42.69 2 warnings generated.
+#14 42.71 [ 48%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bls.cpp.o
+#14 42.82 [ 51%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_bls_change.cpp.o
+#14 43.03 [ 51%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_clock.cpp.o
+#14 43.07 [ 51%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_deposits.cpp.o
+#14 43.13 [ 51%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_duty.cpp.o
+#14 43.57 [ 51%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_execution.cpp.o
+#14 43.97 [ 55%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_fork.cpp.o
+#14 44.01 [ 55%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_fork_state.cpp.o
+#14 44.05 [ 55%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_fork_store.cpp.o
+#14 44.43 [ 55%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_local_body.cpp.o
+#14 44.75 [ 55%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_profile.cpp.o
+#14 44.89 [ 58%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_reactor.cpp.o
+#14 45.88 [ 58%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_runtime.cpp.o
+#14 46.23 [ 58%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_signing.cpp.o
+#14 46.46 [ 58%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_slots.cpp.o
+#14 47.27 [ 58%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_store_snapshot.cpp.o
+#14 47.46 [ 62%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_sync.cpp.o
+#14 48.36 [ 62%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_sync_signing.cpp.o
+#14 48.65 [ 62%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_validator.cpp.o
+#14 48.72 [ 62%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_withdrawals.cpp.o
+#14 49.48 [ 62%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_committee.cpp.o
+#14 49.75 [ 62%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_deposit.cpp.o
+#14 49.83 [ 65%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_deposit_history.cpp.o
+#14 49.87 [ 65%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_deposit_transition.cpp.o
+#14 50.28 [ 65%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_effective_balance.cpp.o
+#14 50.28 [ 65%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_epoch.cpp.o
+#14 50.97 [ 65%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_epoch_maintenance.cpp.o
+#14 51.07 [ 68%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_execution_bridge.cpp.o
+#14 51.11 [ 68%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_execution_deposit.cpp.o
+#14 51.20 [ 68%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_execution_payload.cpp.o
+#14 51.73 [ 68%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_ffg.cpp.o
+#14 51.90 [ 68%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_fork_choice.cpp.o
+#14 52.11 [ 72%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_fork_clock.cpp.o
+#14 52.13 [ 72%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_fork_store.cpp.o
+#14 52.53 [ 72%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_fork_vote.cpp.o
+#14 52.87 [ 72%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_message_ssz.cpp.o
+#14 52.90 [ 72%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_proposer.cpp.o
+#14 53.10 [ 75%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_randao.cpp.o
+#14 53.37 [ 75%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_registry_operations.cpp.o
+#14 53.64 [ 75%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_rewards.cpp.o
+#14 53.67 [ 75%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_round.cpp.o
+#14 53.79 [ 75%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_signing.cpp.o
+#14 53.87 [ 79%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_slashing.cpp.o
+#14 54.26 [ 79%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_slots.cpp.o
+#14 54.46 [ 79%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_snapshot.cpp.o
+#14 55.08 [ 79%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_sync_message.cpp.o
+#14 55.34 [ 79%] Building CXX object CMakeFiles/nano_core.dir/src/crypto.cpp.o
+#14 55.50 [ 82%] Building CXX object CMakeFiles/nano_core.dir/src/engine.cpp.o
+#14 55.71 [ 82%] Building CXX object CMakeFiles/nano_core.dir/src/evm.cpp.o
+#14 55.76 [ 82%] Building CXX object CMakeFiles/nano_core.dir/src/finality.cpp.o
+#14 56.67 [ 82%] Building CXX object CMakeFiles/nano_core.dir/src/hdwallet.cpp.o
+#14 56.80 [ 82%] Building CXX object CMakeFiles/nano_core.dir/src/http.cpp.o
+#14 57.35 [ 82%] Building CXX object CMakeFiles/nano_core.dir/src/kzg.cpp.o
+#14 57.60 [ 86%] Building CXX object CMakeFiles/nano_core.dir/src/migration.cpp.o
+#14 58.14 [ 86%] Building CXX object CMakeFiles/nano_core.dir/src/node.cpp.o
+#14 58.27 [ 86%] Building CXX object CMakeFiles/nano_core.dir/src/p256.cpp.o
+#14 59.00 [ 86%] Building CXX object CMakeFiles/nano_core.dir/src/pos.cpp.o
+#14 59.62 [ 86%] Building CXX object CMakeFiles/nano_core.dir/src/precompiles.cpp.o
+#14 60.37 [ 89%] Building CXX object CMakeFiles/nano_core.dir/src/receipt.cpp.o
+#14 60.52 [ 89%] Building CXX object CMakeFiles/nano_core.dir/src/requests.cpp.o
+#14 60.52 [ 89%] Building CXX object CMakeFiles/nano_core.dir/src/rlp.cpp.o
+#14 61.31 [ 89%] Building CXX object CMakeFiles/nano_core.dir/src/rpc.cpp.o
+#14 61.33 [ 89%] Building CXX object CMakeFiles/nano_core.dir/src/rpc_accounts.cpp.o
+#14 61.69 [ 93%] Building CXX object CMakeFiles/nano_core.dir/src/rpc_fees.cpp.o
+#14 63.11 [ 93%] Building CXX object CMakeFiles/nano_core.dir/src/rpc_filters.cpp.o
+#14 63.25 [ 93%] Building CXX object CMakeFiles/nano_core.dir/src/staking.cpp.o
+#14 64.65 [ 93%] Building CXX object CMakeFiles/nano_core.dir/src/state.cpp.o
+#14 64.77 [ 93%] Building CXX object CMakeFiles/nano_core.dir/src/storage.cpp.o
+#14 65.94 [ 96%] Building CXX object CMakeFiles/nano_core.dir/src/transaction.cpp.o
+#14 67.27 [ 96%] Building CXX object CMakeFiles/nano_core.dir/src/txpool.cpp.o
+#14 67.40 [ 96%] Building CXX object CMakeFiles/nano_core.dir/src/typed_data.cpp.o
+#14 67.56 [ 96%] Building CXX object CMakeFiles/nano_core.dir/src/types.cpp.o
+#14 68.48 [ 96%] Building CXX object CMakeFiles/nano_core.dir/src/wallet.cpp.o
+#14 68.92 [100%] Building CXX object CMakeFiles/nano_core.dir/src/websocket.cpp.o
+#14 78.58 [100%] Linking CXX static library libnano_core.a
+#14 78.73 [100%] Built target nano_core
+#14 78.74 [100%] Building CXX object CMakeFiles/nano.dir/src/main.cpp.o
+#14 80.81 [100%] Linking CXX executable nano
+#14 81.03 [100%] Built target nano
+#14 81.04 -- Install configuration: "Release"
+#14 81.04 -- Installing: /out/bin/nano
+#14 81.05 -- Installing: /out/bin/nano-p2p
+#14 81.06 -- Installing: /out/share/nano/genesis
+#14 81.06 -- Installing: /out/share/nano/genesis/mainnet.json
+#14 81.06 -- Installing: /out/share/nano/genesis/legacy
+#14 81.06 -- Installing: /out/share/nano/genesis/legacy/testnet-unsigned.json
+#14 81.06 -- Installing: /out/share/nano/genesis/legacy/mainnet-unsigned.json
+#14 81.06 -- Installing: /out/share/nano/genesis/testnet.json
+#14 81.06 -- Installing: /out/share/nano/docs/README.md
+#14 81.06 -- Installing: /out/share/nano/docs/dependencies.lock.json
+#14 81.06 -- Up-to-date: /out/share/nano/docs
+#14 81.06 -- Installing: /out/share/nano/docs/ALTAIR-BLOCK-CONSTRUCTION.md
+#14 81.06 -- Installing: /out/share/nano/docs/BRIDGE-SECURITY-REQUIREMENTS.md
+#14 81.06 -- Installing: /out/share/nano/docs/BELLATRIX-TRANSITION.md
+#14 81.06 -- Installing: /out/share/nano/docs/qualification
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/capella-signed-archive-20260927
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/capella-signed-archive-20260927/sources.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/capella-signed-archive-20260927/README.md
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/capella-body-20260927
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/capella-body-20260927/result.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/capella-body-20260927/README.md
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/graduation-v3-20260926
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/graduation-v3-20260926/full-range
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/graduation-v3-20260926/full-range/roundtrip-prices.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/graduation-v3-20260926/full-range/README.md
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/graduation-v3-20260926/README.md
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/capella-competing-peers-20260927
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/capella-competing-peers-20260927/summary.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/capella-competing-peers-20260927/manifest.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/capella-competing-peers-20260927/initial-manifest.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/capella-competing-peers-20260927/README.md
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/bellatrix-crash-20260926.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/instrumented-runs.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/after-probe-fix-run-1.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/relay-timings.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/release-binaries.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/instrumented-run-1.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/before-probe-fix-run-1.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/observer-offline-imports.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/after-restart
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/after-restart/finality.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/after-restart/stability-samples.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/after-restart/finality-attempts.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/after-restart/run-1.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/after-restart/runs.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/after-restart/clients.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/after-restart/summary.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/after-restart/config.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/after-restart/stability-result.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/instrumented-failure-observations.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/stopped-snapshot-summary.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/before-probe-fix-runs.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/before-restart
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/before-restart/finality.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/before-restart/stability-samples.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/before-restart/finality-attempts.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/before-restart/run-1.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/before-restart/runs.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/before-restart/clients.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/before-restart/summary.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/before-restart/config.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/before-restart/stability-result.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/after-probe-fix-failure-observations.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/after-probe-fix-runs.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/before-probe-fix-clients.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/before-probe-fix-failure-observations.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/validator-offline-imports.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/README.md
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/assertoor-native-finality-20260926/final-binaries.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/capella-catalog-close-20260927
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/capella-catalog-close-20260927/manifest.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/capella-catalog-close-20260927/README.md
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/capella-sync-dependencies-20260927
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/capella-sync-dependencies-20260927/manifest.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/capella-sync-dependencies-20260927/README.md
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/capella-sync-message-20260927
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/capella-sync-message-20260927/README.md
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/capella-sync-message-20260927/provenance.json
+#14 81.06 -- Installing: /out/share/nano/docs/qualification/bellatrix-exit-lifecycle-20260926.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-invalid-deposit-signature-20260927
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-invalid-deposit-signature-20260927/README.md
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-invalid-deposit-signature-20260927/provenance.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/bellatrix-deposit-activation-20260926.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-native-v3-restart-20260927
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-native-v3-restart-20260927/README.md
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-native-v3-restart-20260927/provenance.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/late-observation-20260927
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/late-observation-20260927/README.md
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/beacon-headers-20260926
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/beacon-headers-20260926/README.md
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-fork-20260927
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-fork-20260927/result.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-fork-20260927/README.md
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-fork-20260927/provenance.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/bellatrix-deposit-store-20260926.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-queued-bls-changes-20260927
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-queued-bls-changes-20260927/README.md
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-queued-bls-changes-20260927/provenance.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-sync-local-signing-20260927
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-sync-local-signing-20260927/README.md
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-sync-local-signing-20260927/provenance.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-reactor-20260927
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-reactor-20260927/result.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-reactor-20260927/README.md
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-reactor-20260927/provenance.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/execution-deposit-source-20260926.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-sync-wire-20260927
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-sync-wire-20260927/README.md
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-sync-wire-20260927/provenance.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-inventory-20260927
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-inventory-20260927/manifest.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/capella-inventory-20260927/README.md
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/bellatrix-slashing-partition-20260926.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-expiry
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-expiry/observers.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-expiry/topology.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-expiry/relay-summary.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-expiry/observations
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-expiry/observations/result.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-expiry/README.md
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/wan-partition
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/wan-partition/observers.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/wan-partition/duty-targets.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/wan-partition/vote-visibility.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/wan-partition/native-participation.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/wan-partition/topology.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/wan-partition/relay-summary.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/wan-partition/README.md
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/startup-without-init
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/startup-without-init/topology.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-phases
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-phases/observers.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-phases/topology.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-phases/relay-summary.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-phases/observations
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-phases/observations/result.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/proposal-expiry
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/proposal-expiry/README.md
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/vps-build.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-init
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-init/observers.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-init/summary.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-init/participation-diagnostic.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-init/inclusion-diagnostic.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-init/topology.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-init/observations
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/proposal-batch
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/proposal-batch/README.md
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-trace
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-trace/observers.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-trace/topology.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-trace/observations
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-trace/observations/result.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/duty-expiry
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/duty-expiry/README.md
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/duty-expiry/inputs.json
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/relay-timing
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/relay-timing/README.md
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/relay-pages
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/relay-pages/README.md
+#14 81.07 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-batch
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-batch/observers.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-batch/validator-gate.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-batch/topology.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-batch/relay-summary.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-batch/observations
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-batch/observations/result.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/with-batch/README.md
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/README.md
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/wan-pages
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/wan-pages/observers.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/wan-pages/vote-visibility.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/wan-pages/summary.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/wan-pages/topology.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/multihost-20260926/wan-pages/README.md
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-bls-reorg-20260927
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-bls-reorg-20260927/README.md
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-bls-reorg-20260927/provenance.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/beacon-sync-20260926
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/beacon-sync-20260926/README.md
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/bellatrix-slashing-relay-20260926.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-two-peer-network-20260927
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-two-peer-network-20260927/manifest.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-two-peer-network-20260927/README.md
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-native-deposit-pins-20260927
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-native-deposit-pins-20260927/README.md
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-native-deposit-pins-20260927/provenance.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-inventory-catchup-20260927
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-inventory-catchup-20260927/manifest.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-inventory-catchup-20260927/README.md
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/vote-retry-20260927
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/vote-retry-20260927/README.md
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-local-bls-changes-20260927
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-local-bls-changes-20260927/manifest.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-local-bls-changes-20260927/README.md
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-private-http-20260927
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-private-http-20260927/manifest.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-private-http-20260927/README.md
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-store-crash-20260927
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-store-crash-20260927/result.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-store-crash-20260927/README.md
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-store-crash-20260927/provenance.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-signed-transition-20260927
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-signed-transition-20260927/result.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-signed-transition-20260927/README.md
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/assertoor-native-20260926
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/assertoor-native-20260926/ctest-clients.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/assertoor-native-20260926/run-1.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/assertoor-native-20260926/runs.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/assertoor-native-20260926/clients.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/assertoor-native-20260926/ctest-run-1.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/assertoor-native-20260926/config.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/assertoor-native-20260926/ctest-config.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/assertoor-native-20260926/ctest-runs.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/assertoor-native-20260926/README.md
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/late-recovery-stage-20260927
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/late-recovery-stage-20260927/README.md
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-local-body-20260927
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-local-body-20260927/sources.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-local-body-20260927/README.md
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/kurtosis-20260926
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/kurtosis-20260926/summary.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/kurtosis-20260926/rpc-snapshot.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/checkpoint-archive-20260926
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/checkpoint-archive-20260926/manifest.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/checkpoint-archive-20260926/README.md
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-bls-change-20260927
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-bls-change-20260927/result.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-bls-change-20260927/README.md
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-scheduled-block-20260927
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-scheduled-block-20260927/result.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-scheduled-block-20260927/README.md
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-scheduled-block-20260927/provenance.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/peer-relay-20260927
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/peer-relay-20260927/README.md
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-catalog-sessions-20260927
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-catalog-sessions-20260927/manifest.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-catalog-sessions-20260927/README.md
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/vote-sender-knowledge-20260927
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/vote-sender-knowledge-20260927/README.md
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-sync-export-20260927
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-sync-export-20260927/README.md
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/capella-sync-export-20260927/provenance.json
+#14 81.08 -- Installing: /out/share/nano/docs/qualification/multihost-20260927
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/noecho-recovery
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/noecho-recovery/history-audit.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/noecho-recovery/observers.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/noecho-recovery/topology.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/noecho-recovery/relay-summary.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/noecho-recovery/observations
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/noecho-recovery/observations/result.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/noecho-recovery/README.md
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/noecho-recovery/inclusion-timing.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/sustained-recovery
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/sustained-recovery/history-audit.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/sustained-recovery/observers.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/sustained-recovery/topology.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/sustained-recovery/relay-summary.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/sustained-recovery/observations
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/sustained-recovery/observations/result.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/sustained-recovery/README.md
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/late-observer-premature
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/late-observer-premature/observers.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/late-observer-premature/observations
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/late-observer-premature/README.md
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/peer-relay
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/peer-relay/observers.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/peer-relay/vote-visibility.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/peer-relay/topology.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/peer-relay/relay-summary.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/peer-relay/late-recovery-samples.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/peer-relay/README.md
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/vote-retry
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/vote-retry/observers.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/vote-retry/final-checkpoints.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/vote-retry/vote-visibility.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/vote-retry/topology.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/vote-retry/relay-summary.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/vote-retry/README.md
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/ffg-recovery-analysis
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/ffg-recovery-analysis/inclusion.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/ffg-recovery-analysis/analysis.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/ffg-recovery-analysis/README.md
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/page-cache-recovery
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/page-cache-recovery/history-audit.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/page-cache-recovery/observers.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/page-cache-recovery/topology.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/page-cache-recovery/relay-summary.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/page-cache-recovery/ffg-analysis.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/page-cache-recovery/observations
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/page-cache-recovery/observations/result.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/page-cache-recovery/README.md
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/page-cache-recovery/inclusion-timing.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/timed-recovery
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/timed-recovery/history-audit.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/timed-recovery/observers.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/timed-recovery/forwarding-examples.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/timed-recovery/topology.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/timed-recovery/relay-summary.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/timed-recovery/observations
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/timed-recovery/observations/result.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/timed-recovery/README.md
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/multihost-20260927/timed-recovery/inclusion-timing.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/capella-local-sync-20260927
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/capella-local-sync-20260927/initial-provenance.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/capella-local-sync-20260927/README.md
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/capella-local-sync-20260927/provenance.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/capella-automatic-pruning-20260927
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/capella-automatic-pruning-20260927/README.md
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/capella-automatic-pruning-20260927/provenance.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/capella-distributed-finality-20260927
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/capella-distributed-finality-20260927/analysis.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/capella-distributed-finality-20260927/manifest.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/capella-distributed-finality-20260927/README.md
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/capella-configured-runtime-20260927
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/capella-configured-runtime-20260927/source-manifest.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/capella-configured-runtime-20260927/README.md
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/bellatrix-slashing-network-20260926.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/bellatrix-slashing-dedup-20260926.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/capella-paired-execution-20260927
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/capella-paired-execution-20260927/result.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/capella-paired-execution-20260927/README.md
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/capella-deposit-activation-20260927
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/capella-deposit-activation-20260927/README.md
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/capella-deposit-activation-20260927/provenance.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/capella-payload-20260927
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/capella-payload-20260927/result.json
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/capella-payload-20260927/README.md
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/capella-distributed-sync-rotation-20260927
+#14 81.09 -- Installing: /out/share/nano/docs/qualification/capella-distributed-sync-rotation-20260927/summary.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-distributed-sync-rotation-20260927/README.md
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-distributed-sync-rotation-20260927/provenance.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-sync-merge-20260927
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-sync-merge-20260927/README.md
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-sync-merge-20260927/provenance.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-stable-inventory-20260927
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-stable-inventory-20260927/manifest.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-stable-inventory-20260927/README.md
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-archive-export-20260927
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-archive-export-20260927/manifest.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-archive-export-20260927/README.md
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-runtime-catalogs-20260927
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-runtime-catalogs-20260927/manifest.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-runtime-catalogs-20260927/README.md
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/validator-eip-sources-20260927
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/validator-eip-sources-20260927/sources.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/validator-eip-sources-20260927/README.md
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-vote-propagation-20260927
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-vote-propagation-20260927/analysis.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-vote-propagation-20260927/manifest.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-vote-propagation-20260927/README.md
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-finality-20260927
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-finality-20260927/result.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-finality-20260927/README.md
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-finality-20260927/provenance.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/bellatrix-witness-runtime-20260926.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-sync-outage-recovery-20260927
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-sync-outage-recovery-20260927/summary.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-sync-outage-recovery-20260927/README.md
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-sync-outage-recovery-20260927/provenance.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-sync-distributed-20260927
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-sync-distributed-20260927/analysis.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-sync-distributed-20260927/initial-provenance.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-sync-distributed-20260927/README.md
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-sync-distributed-20260927/provenance.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/shanghai-checkpoint-20260927
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/shanghai-checkpoint-20260927/result.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/shanghai-checkpoint-20260927/README.md
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/shanghai-checkpoint-20260927/provenance.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-send-pacing-20260927
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-send-pacing-20260927/summary.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-send-pacing-20260927/strict
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-send-pacing-20260927/strict/summary.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-send-pacing-20260927/strict/provenance.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-send-pacing-20260927/README.md
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-send-pacing-20260927/provenance.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/bellatrix-voluntary-exit-core-20260926.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/bellatrix-exit-shared-20260926.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-daemon-ipc-20260927
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-daemon-ipc-20260927/manifest.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-daemon-ipc-20260927/README.md
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-local-proposal-20260927
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-local-proposal-20260927/sources.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-local-proposal-20260927/README.md
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/beacon-reads-20260926
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/beacon-reads-20260926/README.md
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/bellatrix-shared-20260926.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-catalog-concurrency-20260927
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-catalog-concurrency-20260927/summary.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-catalog-concurrency-20260927/manifest.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/capella-catalog-concurrency-20260927/README.md
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/crash
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/crash/result.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/partition
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/validator-timing
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/validator-timing/manifest.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/validator-timing/isolated-resume.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/crash-current
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/crash-current/result.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/crash-current/manifest.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/crash-current/README.md
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/bounded-sweep-manifest.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/clock-coalescing
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/clock-coalescing/resume.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/clock-coalescing/manifest.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/clock-coalescing/attestations.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/clock-coalescing/attestation-summary.json
+#14 81.10 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/cached-scan
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/cached-scan/manifest.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/cached-scan/observer-report.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/cached-scan/source-report.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/cached-scan/README.md
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/direct-delivery
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/direct-delivery/manifest.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/manifest.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/consistent-sampling
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/consistent-sampling/observer-beacon.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/consistent-sampling/source-beacon.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/consistent-sampling/manifest.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/consistent-sampling/README.md
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/partition-highest-slot-ancestry.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/duty-trace
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/duty-trace/manifest.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/duty-trace/observer-report.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/duty-trace/source-report.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/duty-trace/README.md
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/partition-stopped-summary.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/recovery-bound
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/recovery-bound/result.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/recovery-bound/summary.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/recovery-bound/manifest.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/recovery-bound/README.md
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/bounded-sweep
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/bounded-sweep/summary.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/ack-cache
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/ack-cache/result.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/ack-cache/final-manifest.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/ack-cache/manifest.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/attestations
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/attestations/bounded-sweep.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/attestations/summary.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/attestations/validator.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/attestations/observer.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/README.md
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/recovery-sustained-20260926/raw-log.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-durable-slashings-20260927
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-durable-slashings-20260927/sources.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-durable-slashings-20260927/README.md
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-asymmetric-delay-20260927
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-asymmetric-delay-20260927/analysis.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-asymmetric-delay-20260927/failed
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-asymmetric-delay-20260927/failed/summary.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-asymmetric-delay-20260927/failed/fixture
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-asymmetric-delay-20260927/failed/fixture/profile.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-asymmetric-delay-20260927/failed/fixture/node-1.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-asymmetric-delay-20260927/failed/fixture/genesis.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-asymmetric-delay-20260927/failed/fixture/env-1.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-asymmetric-delay-20260927/failed/fixture/fixture.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-asymmetric-delay-20260927/failed/fixture/initial.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-asymmetric-delay-20260927/failed/fixture/node-0.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-asymmetric-delay-20260927/failed/fixture/env-0.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-asymmetric-delay-20260927/README.md
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-asymmetric-delay-20260927/provenance.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-bls-sync-20260927
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-bls-sync-20260927/README.md
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-bls-sync-20260927/provenance.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-slots-20260927
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-slots-20260927/result.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-slots-20260927/README.md
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-sync-relay-diagnostics-20260927
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-sync-relay-diagnostics-20260927/diagnostic-summary.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-sync-relay-diagnostics-20260927/README.md
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-sync-relay-diagnostics-20260927/provenance.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-reactor-sync-20260927
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-reactor-sync-20260927/sources.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-reactor-sync-20260927/README.md
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-json-genesis-20260927
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-json-genesis-20260927/manifest.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-json-genesis-20260927/README.md
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/beacon-events-20260926
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/beacon-events-20260926/README.md
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/bellatrix-slashing-pruning-20260926.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/bellatrix-exit-reorg-20260926.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-sync-noecho-20260927
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-sync-noecho-20260927/comparison.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-sync-noecho-20260927/README.md
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-sync-noecho-20260927/provenance.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-cli-serve-20260927
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-cli-serve-20260927/manifest.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-cli-serve-20260927/README.md
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/eest-v5.4.0-20260926.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-durable-pruning-20260927
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-durable-pruning-20260927/README.md
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-durable-pruning-20260927/provenance.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-pruning-primitive-20260927
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-pruning-primitive-20260927/README.md
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/capella-pruning-primitive-20260927/provenance.json
+#14 81.11 -- Installing: /out/share/nano/docs/qualification/rocksdb-allocation-20260926
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/rocksdb-allocation-20260926/README.md
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-local-scheduler-20260927
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-local-scheduler-20260927/source-manifest.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-local-scheduler-20260927/README.md
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-peer-cleanup-20260927
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-peer-cleanup-20260927/manifest.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-peer-cleanup-20260927/README.md
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-store-20260927
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-store-20260927/result.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-store-20260927/README.md
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-store-20260927/provenance.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-pruning-bls-20260927
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-pruning-bls-20260927/README.md
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-pruning-bls-20260927/provenance.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/history-audit-20260927
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/history-audit-20260927/historical-result.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/history-audit-20260927/README.md
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/bellatrix-native-deposit-20260926.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-ipc-recovery-20260927
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-ipc-recovery-20260927/manifest.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-ipc-recovery-20260927/README.md
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-local-attestation-20260927
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-local-attestation-20260927/sources.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-local-attestation-20260927/README.md
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-pruning-sync-20260927
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-pruning-sync-20260927/README.md
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-pruning-sync-20260927/provenance.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-pruning-slashing-20260927
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-pruning-slashing-20260927/README.md
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-pruning-slashing-20260927/provenance.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/deposit-history-prefix-20260927
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/deposit-history-prefix-20260927/README.md
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/deposit-history-prefix-20260927/provenance.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/kurtosis-crash-20260926
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/kurtosis-crash-20260926/result.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/kurtosis-crash-20260926/disk-usage.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-beacon-reads-20260927
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-beacon-reads-20260927/source-manifest.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-beacon-reads-20260927/README.md
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/bellatrix-exit-identity-20260926.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-first-payload-20260927
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-first-payload-20260927/result.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-first-payload-20260927/README.md
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-first-payload-20260927/provenance.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/kurtosis-allocation-20260926
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/kurtosis-allocation-20260926/result.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/kurtosis-allocation-20260926/comparison.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/bellatrix-relay-scheduling-20260926
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/bellatrix-relay-scheduling-20260926/after-runs.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/bellatrix-relay-scheduling-20260926/after-run-1.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/bellatrix-relay-scheduling-20260926/after-config.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/bellatrix-relay-scheduling-20260926/README.md
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-admission-receipts-20260927
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-admission-receipts-20260927/manifest.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-admission-receipts-20260927/README.md
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/bellatrix-execution-recovery-20260926.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/secp256k1-capella-20260926.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/beacon-blocks-20260926
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/beacon-blocks-20260926/README.md
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/relay-page-cache-20260927
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/relay-page-cache-20260927/README.md
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-transport-outage-20260927
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-transport-outage-20260927/analysis.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-transport-outage-20260927/manifest.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-transport-outage-20260927/preflight-manifest.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-transport-outage-20260927/README.md
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/bellatrix-voluntary-exit-network-20260926.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-sync-order-20260927
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-sync-order-20260927/manifest.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-sync-order-20260927/README.md
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-snapshot-20260927
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-snapshot-20260927/result.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-snapshot-20260927/README.md
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-snapshot-20260927/provenance.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-witness-recovery-20260927
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-witness-recovery-20260927/source-manifest.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-witness-recovery-20260927/README.md
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-votes-20260927
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-votes-20260927/result.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-votes-20260927/README.md
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-votes-20260927/provenance.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-execution-owner-20260927
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-execution-owner-20260927/source-manifest.json
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-execution-owner-20260927/README.md
+#14 81.12 -- Installing: /out/share/nano/docs/qualification/capella-vote-pipeline-20260927
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-vote-pipeline-20260927/restored-binaries.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-vote-pipeline-20260927/analysis.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-vote-pipeline-20260927/failed
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-vote-pipeline-20260927/failed/summary.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-vote-pipeline-20260927/failed/fixture
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-vote-pipeline-20260927/failed/fixture/profile.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-vote-pipeline-20260927/failed/fixture/node-1.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-vote-pipeline-20260927/failed/fixture/genesis.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-vote-pipeline-20260927/failed/fixture/env-1.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-vote-pipeline-20260927/failed/fixture/fixture.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-vote-pipeline-20260927/failed/fixture/initial.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-vote-pipeline-20260927/failed/fixture/node-0.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-vote-pipeline-20260927/failed/fixture/env-0.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-vote-pipeline-20260927/README.md
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-vote-pipeline-20260927/provenance.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-owner-resilience-20260927
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-owner-resilience-20260927/source-manifest.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-owner-resilience-20260927/README.md
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-bls-admission-20260927
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-bls-admission-20260927/README.md
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-bls-admission-20260927/provenance.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-assembled-finality-20260927
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-assembled-finality-20260927/sources.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-assembled-finality-20260927/README.md
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-core-keepalive-20260927
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-core-keepalive-20260927/analysis.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-core-keepalive-20260927/manifest.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-core-keepalive-20260927/README.md
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-sync-precollection-20260927
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-sync-precollection-20260927/README.md
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-sync-precollection-20260927/provenance.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-slashing-retirement-20260927
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-slashing-retirement-20260927/README.md
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-slashing-retirement-20260927/provenance.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-deposit-consumption-20260927
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-deposit-consumption-20260927/initial-provenance.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-deposit-consumption-20260927/README.md
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-deposit-consumption-20260927/provenance.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-block-delivery-20260927
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-block-delivery-20260927/manifest.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-block-delivery-20260927/README.md
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/bellatrix-partition-20260926.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-sync-admission-causes-20260927
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-sync-admission-causes-20260927/summary.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-sync-admission-causes-20260927/README.md
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-sync-admission-causes-20260927/provenance.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-private-rpc-20260927
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-private-rpc-20260927/manifest.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-private-rpc-20260927/README.md
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-receive-attribution-20260927
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-receive-attribution-20260927/summary.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-receive-attribution-20260927/README.md
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-receive-attribution-20260927/provenance.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-sync-rotation-outage-20260927
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-sync-rotation-outage-20260927/summary.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-sync-rotation-outage-20260927/README.md
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-sync-rotation-outage-20260927/provenance.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-docker-partition-20260927
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-docker-partition-20260927/qualified
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-docker-partition-20260927/qualified/summary.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-docker-partition-20260927/analysis.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-docker-partition-20260927/startup-pid1-failed
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-docker-partition-20260927/startup-pid1-failed/summary.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-docker-partition-20260927/manifest.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-docker-partition-20260927/fixture
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-docker-partition-20260927/fixture/profile.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-docker-partition-20260927/fixture/node-1.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-docker-partition-20260927/fixture/genesis.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-docker-partition-20260927/fixture/env-1.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-docker-partition-20260927/fixture/fixture.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-docker-partition-20260927/fixture/initial.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-docker-partition-20260927/fixture/node-0.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-docker-partition-20260927/fixture/env-0.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-docker-partition-20260927/startup-header-failed
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-docker-partition-20260927/startup-header-failed/summary.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-docker-partition-20260927/README.md
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/beacon-witness-20260926.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-managed-node-20260927
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-managed-node-20260927/manifest.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-managed-node-20260927/README.md
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/eest-v5.4.0-20260926
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/execution-deposit-history-20260926.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-bls-relay-20260927
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-bls-relay-20260927/README.md
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-bls-relay-20260927/provenance.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-catalog-relay-20260927
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-catalog-relay-20260927/manifest.json
+#14 81.13 -- Installing: /out/share/nano/docs/qualification/capella-catalog-relay-20260927/README.md
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/bellatrix-local-slashing-20260926.json
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/capella-sync-rotation-20260927
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/capella-sync-rotation-20260927/initial
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/capella-sync-rotation-20260927/initial/provenance.json
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/capella-sync-rotation-20260927/README.md
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/capella-sync-rotation-20260927/provenance.json
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/capella-fork-context-20260927
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/capella-fork-context-20260927/result.json
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/capella-fork-context-20260927/README.md
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/capella-fork-context-20260927/provenance.json
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/assertoor-finality-20260926
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/assertoor-finality-20260926/run-1.json
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/assertoor-finality-20260926/runs.json
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/assertoor-finality-20260926/config.json
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/assertoor-finality-20260926/README.md
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/capella-catalog-acquire-20260927
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/capella-catalog-acquire-20260927/distributed-summary.json
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/capella-catalog-acquire-20260927/manifest.json
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/capella-catalog-acquire-20260927/README.md
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/capella-durable-votes-20260927
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/capella-durable-votes-20260927/sources.json
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/capella-durable-votes-20260927/README.md
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/beacon-metadata-20260926
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/beacon-metadata-20260926/README.md
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/capella-wire-admission-20260927
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/capella-wire-admission-20260927/manifest.json
+#14 81.14 -- Installing: /out/share/nano/docs/qualification/capella-wire-admission-20260927/README.md
+#14 81.14 -- Installing: /out/share/nano/docs/RPC-BEHAVIOR.md
+#14 81.14 -- Installing: /out/share/nano/docs/GENESIS-VERSIONS.md
+#14 81.14 -- Installing: /out/share/nano/docs/ALTAIR-RUNTIME.md
+#14 81.14 -- Installing: /out/share/nano/docs/PRODUCTION-GOAL.md
+#14 81.14 -- Installing: /out/share/nano/docs/EEST.md
+#14 81.14 -- Installing: /out/share/nano/docs/rpc-port-map.json
+#14 81.14 -- Installing: /out/share/nano/docs/SYSTEM-TEST-PLAN.md
+#14 81.14 -- Installing: /out/share/nano/docs/EIP-IMPLEMENTATION-STATUS.md
+#14 81.14 -- Installing: /out/share/nano/docs/STORAGE-AUDIT.md
+#14 81.14 -- Installing: /out/share/nano/docs/BELLATRIX-EXECUTION-PAYLOAD.md
+#14 81.14 -- Installing: /out/share/nano/docs/BELLATRIX-SLOTS.md
+#14 81.14 -- Installing: /out/share/nano/docs/ASSERTOOR-INTEGRATION.md
+#14 81.14 -- Installing: /out/share/nano/docs/FINALITY.md
+#14 81.14 -- Installing: /out/share/nano/docs/source-inventory.json
+#14 81.14 -- Installing: /out/share/nano/docs/LOAD-TESTS.md
+#14 81.14 -- Installing: /out/share/nano/docs/EXECUTION-CHECKPOINT.md
+#14 81.14 -- Installing: /out/share/nano/docs/BLOCK-SIGNATURES.md
+#14 81.14 -- Installing: /out/share/nano/docs/BEACON-JOURNAL-CLI.md
+#14 81.14 -- Installing: /out/share/nano/docs/BEACON-SIGNING-JOURNAL.md
+#14 81.14 -- Installing: /out/share/nano/docs/VALIDATOR-EIP-ROADMAP.md
+#14 81.14 -- Installing: /out/share/nano/docs/MIGRATION.md
+#14 81.14 -- Installing: /out/share/nano/docs/BELLATRIX-FORK-STORE.md
+#14 81.14 -- Installing: /out/share/nano/docs/ALTAIR-LOCAL-FINALITY.md
+#14 81.14 -- Installing: /out/share/nano/docs/BELLATRIX-DURABLE-REACTOR.md
+#14 81.14 -- Installing: /out/share/nano/docs/STAKING-QUERY-RULES.md
+#14 81.14 -- Installing: /out/share/nano/docs/BELLATRIX-LOCAL-SIGNING.md
+#14 81.14 -- Installing: /out/share/nano/docs/QUALIFICATION-FAILURES.md
+#14 81.14 -- Installing: /out/share/nano/docs/EVM-CONFORMANCE.md
+#14 81.14 -- Installing: /out/share/nano/docs/BELLATRIX-STORE-RECOVERY.md
+#14 81.14 -- Installing: /out/share/nano/docs/PARTICIPATION.md
+#14 81.14 -- Installing: /out/share/nano/docs/ALTAIR-ATTESTER-DUTIES.md
+#14 81.14 -- Installing: /out/share/nano/docs/NETWORK-ROBUSTNESS.md
+#14 81.14 -- Installing: /out/share/nano/docs/MIGRATION-HISTORY.md
+#14 81.14 -- Installing: /out/share/nano/docs/EVM-PRODUCTION-EIP-ROADMAP.md
+#14 81.14 -- Installing: /out/share/nano/docs/BLOCK-TRANSPORT.md
+#14 81.14 -- Installing: /out/share/nano/docs/DOCKER.md
+#14 81.14 -- Installing: /out/share/nano/docs/COMPLETION-AUDIT.md
+#14 81.14 -- Installing: /out/share/nano/docs/OPENZEPPELIN-QUALIFICATION.md
+#14 81.14 -- Installing: /out/share/nano/licenses/mcl-COPYRIGHT
+#14 81.14 -- Installing: /out/share/nano/licenses/bip39-LICENSE
+#14 81.14 -- Installing: /out/share/nano/licenses/LICENSE.ethereumjs
+#14 81.14 -- Installing: /out/share/nano/licenses/LICENSE.evm-codes
+#14 81.14 -- Installing: /out/share/nano/contracts
+#14 81.14 -- Installing: /out/share/nano/contracts/FAIR-LAUNCH.md
+#14 81.14 -- Installing: /out/share/nano/contracts/POOL.md
+#14 81.14 -- Installing: /out/share/nano/contracts/NanoStaking.sol
+#14 81.14 -- Installing: /out/share/nano/contracts/NanoStaking.json
+#14 81.14 -- Installing: /out/share/nano/contracts/WrappedNano.json
+#14 81.14 -- Installing: /out/share/nano/contracts/NanoStaking.hex
+#14 81.14 -- Installing: /out/share/nano/contracts/WrappedNano.sol
+#14 81.14 -- Installing: /out/share/nano/contracts/README.md
+#14 81.14 -- Installing: /out/share/nano/contracts/WRAPPED-NANO.md
+#14 81.14 -- Installing: /out/share/nano/licenses/secp256k1-LICENSE
+#14 81.14 -- Installing: /out/share/nano/licenses/ckzg-LICENSE
+#14 81.14 -- Installing: /out/share/nano/licenses/blst-LICENSE
+#14 DONE 81.2s
+
+#15 [runtime 2/6] RUN apt-get update && apt-get install -y --no-install-recommends     ca-certificates curl libssl3t64 libicu74 librocksdb8.9 libgmp10 libgmpxx4ldbl  && rm -rf /var/lib/apt/lists/*  && groupadd --gid 10001 nano  && useradd --uid 10001 --gid nano --no-create-home --shell /usr/sbin/nologin nano  && mkdir -p /var/lib/nano /etc/nano  && chown nano:nano /var/lib/nano
+#15 CACHED
+
+#16 [runtime 3/6] COPY --from=builder /out/ /usr/local/
+#16 DONE 0.1s
+
+#17 [runtime 4/6] COPY deploy/docker/node.json /etc/nano/node.json
+#17 DONE 0.0s
+
+#18 [runtime 5/6] RUN ldd /usr/local/bin/nano > /tmp/nano.libs  && ldd /usr/local/bin/nano-p2p > /tmp/p2p.libs  && ! grep -q 'not found' /tmp/nano.libs /tmp/p2p.libs  && rm /tmp/nano.libs /tmp/p2p.libs  && nano --help
+#18 0.098 Nano local chain tools
+#18 0.098 Usage: nano <init|status|audit|mine|validate|import|serve|run> <genesis.json> <database-directory> [arguments]
+#18 0.098   wallet <create|import|address|sign-message|sign-transaction|sign-typed-data> <keyfile> [data]
+#18 0.098   wallet deployment-address <keyfile> [nonce]
+#18 0.098   wallet create-many <new-directory> [count] (default: 10)
+#18 0.098   wallet hd-create <mnemonic-file> [word-count]; wallet hd-derive <keyfile> [index]
+#18 0.098   rpc <URL> <info|nodes|network|balance|send|deploy|receipt|mine> [arguments]
+#18 0.098   rpc <URL> <stake-register|stake-add> <keyfile> <contract> <amountNano>
+#18 0.098   rpc <URL> stake-withdraw <keyfile> <contract>
+#18 0.098   rpc <URL> deploy <keyfile> <bytecode-file> [timeout] [valueNano]
+#18 0.098   validator <config.json> [--once] (separate client)
+#18 0.098   init/status: show canonical chain status
+#18 0.098   mine/validate: <coinbase> <timestamp> [signed-raw-transactions.json]
+#18 0.098   beacon-journal init <identity.json> <new-database> <new-receipt-directory>
+#18 0.098   beacon-journal status <identity.json> <database> <expected-commitment.json>
+#18 0.098   beacon-journal export <identity.json> <database> <expected-commitment.json> <new-receipt-directory>
+#18 0.098   beacon-journal import <identity.json> <database> <expected-commitment.json> <interchange.json> <max-bytes> <new-receipt-directory>
+#18 0.098   migrate: <genesis.json> <python-chaindb-directory> <new-database-directory>
+#18 0.098   import: <block.json> <current-timestamp>
+#18 0.098   run: [node-config.json] (RPC and P2P together)
+#18 0.098   serve: [port] [bind-address] [wallet-config.json] (defaults: 8545, 127.0.0.1)
+#18 DONE 0.1s
+
+#19 [runtime 6/6] WORKDIR /var/lib/nano
+#19 DONE 0.0s
+
+#20 exporting to image
+#20 exporting layers
+#20 exporting layers 0.5s done
+#20 exporting manifest sha256:2b614cbc214053750b0de9b2a380d209ba6b33d29bd0ae26518cbdd1d87cd449 done
+#20 exporting config sha256:3cb4d97b338fbf4c0ffa60019c8141c2187668c742a718d8369c498924912046 done
+#20 exporting attestation manifest sha256:2fe1bb8a46dc04f3c2733e10c7b82b70a95648a4626520e947b62be9d211e832 done
+#20 exporting manifest list sha256:d31b48199f99772fa194a24b520a483aee17b97b84c73ef9c802bd883aa77673 done
+#20 naming to docker.io/library/blockchain-nano:capella-asymmetric done
+#20 unpacking to docker.io/library/blockchain-nano:capella-asymmetric
+#20 unpacking to docker.io/library/blockchain-nano:capella-asymmetric 0.2s done
+#20 DONE 0.7s
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/n0cd3t6a06twsrkutmu8s8f2y

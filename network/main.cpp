@@ -143,15 +143,25 @@ class Network {
  }
 
  void send_altair(PeerInfo peer,Json frame,Reply reply){
-  auto pending=std::make_shared<TimedReply>(io_,std::move(reply));pending->start();
+  // Diagnostics only: timestamps never affect admission, pacing or deadlines.
+  const auto start=std::chrono::steady_clock::now();
+  const auto phases=trace_network_?std::make_shared<std::array<int64_t,2>>(std::array<int64_t,2>{-1,-1}):nullptr;
+  const auto elapsed=[start]{return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-start).count();};
+  const auto kind=phases?frame.value("kind",std::string{}):std::string{};
+  const auto peer_id=phases?peer.id.toBase58():std::string{};
+  auto pending=std::make_shared<TimedReply>(io_,[phases,elapsed,kind,peer_id,reply=std::move(reply)](Json value)mutable{
+   if(phases)try{std::cout<<Json{{"event","test-consensus-send-completion"},{"timeMs",std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()},{"peerId",peer_id},{"kind",kind},{"streamOpenMs",(*phases)[0]},{"writeCompletedMs",(*phases)[1]},{"elapsedMs",elapsed()},{"outcome",value.is_object()&&value.size()==1&&value.value("accepted",Json())==true?"accepted":value.is_object()&&value.size()==1&&value.value("accepted",Json())==false?"rejected":"unconfirmed"}}.dump()<<std::endl;}catch(...){/* Observability must not alter delivery. */}
+   reply(std::move(value));
+  });pending->start();
   const auto maximum=altair_ingress_->frame_limit();
-  host_->newStream(peer,{consensus_protocol()},[this,pending,maximum,frame=std::move(frame)](auto result){
-   if(!result){pending->finish(nullptr);return;}auto stream=result.value().stream;if(!pending->on_cancel([stream]{stream->reset();}))return;
-   std::make_shared<JsonWrite>(io_,stream,frame,[this,stream,pending](bool ok){if(!pending->active())return;if(!ok){stream->reset();pending->finish(nullptr);return;}
+  host_->newStream(peer,{consensus_protocol()},[this,pending,maximum,phases,elapsed,frame=std::move(frame)](auto result){
+   if(!result){pending->finish(nullptr);return;}if(phases)(*phases)[0]=elapsed();auto stream=result.value().stream;if(!pending->on_cancel([stream]{stream->reset();}))return;
+   std::make_shared<JsonWrite>(io_,stream,frame,[this,stream,pending,phases,elapsed](bool ok){if(!pending->active())return;if(!ok){stream->reset();pending->finish(nullptr);return;}if(phases)(*phases)[1]=elapsed();
     read_json_frame(io_,stream,256,[stream,pending](auto raw){close_stream(stream);auto result=raw?Json::parse(*raw,nullptr,false):Json(nullptr);pending->finish(result.is_discarded()?Json(nullptr):std::move(result));});
    },maximum)->start();
   });
  }
+
  void poll_capella_archives(){
   if(!altair_relay_budget_.available()||!altair_ingress_||!altair_dispatch_||altair_dispatch_->blocked()||peers_.empty())return;
   auto it=peers_.upper_bound(altair_last_peer_);if(it==peers_.end())it=peers_.begin();const auto start=it;
