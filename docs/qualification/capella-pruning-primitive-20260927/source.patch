@@ -1,0 +1,104 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 98bf43f..5d7cfe4 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1614,0 +1615,3 @@ set_tests_properties(consensus_capella_queued_bls_reorg PROPERTIES TIMEOUT 120 L
++
++add_test(NAME consensus_capella_pruning_primitive COMMAND nano-capella-transition-tests --pruning-primitive)
++set_tests_properties(consensus_capella_pruning_primitive PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_recovery")
+diff --git a/include/nano/consensus_capella_fork_store.hpp b/include/nano/consensus_capella_fork_store.hpp
+index 3e8792e..4c3a37c 100644
+--- a/include/nano/consensus_capella_fork_store.hpp
++++ b/include/nano/consensus_capella_fork_store.hpp
+@@ -9,0 +10,2 @@ struct CapellaForkStore {
++ // Original trusted anchor; storage pruning must not change network identity.
++ std::optional<ConsensusRoot> network_anchor;
+@@ -85,0 +88,9 @@ Bytes capella_execution_history(const CapellaForkStore&,const ConsensusRoot& par
++
++namespace nano {
++ConsensusRoot capella_network_anchor(const CapellaForkStore&);
++// Pure candidate transformation. Does not publish or delete persisted history.
++// Native deposit-vote history needs separate pinning and is currently rejected.
++CapellaForkStore prepare_capella_pruned_store(const CapellaForkStore&,
++ const ConsensusRoot& new_anchor,const CapellaForkBlockRules&,
++ const std::function<void()>& checkpoint={});
++}
+diff --git a/src/consensus_capella_fork_store.cpp b/src/consensus_capella_fork_store.cpp
+index 1e43178..37ebce0 100644
+--- a/src/consensus_capella_fork_store.cpp
++++ b/src/consensus_capella_fork_store.cpp
+@@ -223,0 +224,27 @@ Bytes capella_execution_history(const CapellaForkStore& s,const ConsensusRoot& p
++
++namespace nano {
++ConsensusRoot capella_network_anchor(const CapellaForkStore& store){return store.network_anchor.value_or(store.timed.view.anchor);}
++CapellaForkStore prepare_capella_pruned_store(const CapellaForkStore& input,const ConsensusRoot& anchor,const CapellaForkBlockRules& rules,const std::function<void()>& check){
++ if(check)check();validate_rules(rules);const auto& view=input.timed.view;if(anchor==view.anchor)return input;
++ if(rules.native_deposit_votes)throw std::invalid_argument("Capella pruning requires native deposit history pinning");
++ const auto slots=rules.transition.consensus.epoch.ffg.slots_per_epoch,lookahead=rules.transition.consensus.attestation.duties.min_seed_lookahead;
++ if(!slots||lookahead>=view.current_epoch||!input.blocks.contains(anchor))throw std::invalid_argument("Capella pruning anchor/context unavailable");
++ const auto retained_epoch=view.current_epoch-lookahead-1;
++ if(retained_epoch>UINT64_MAX/slots||input.blocks.at(anchor).header.slot>retained_epoch*slots)throw std::invalid_argument("Capella pruning would remove recent fork context");
++ auto at=view.finalized.root;while(at!=anchor&&at!=view.anchor){if(check)check();at=input.blocks.at(at).header.parent_root;}
++ if(at!=anchor)throw std::invalid_argument("Capella pruning anchor is not finalized ancestry");
++ const auto expected=consensus_beacon_header_root(capella_fork_head(input,rules,check).header);
++ auto output=input;output.network_anchor=capella_network_anchor(input);output.timed.view.anchor=anchor;
++ std::vector<std::pair<uint64_t,ConsensusRoot>> ordered;for(const auto& [id,record]:input.blocks)ordered.emplace_back(record.header.slot,id);std::sort(ordered.begin(),ordered.end());std::set<ConsensusRoot> retained{anchor};
++ for(const auto& [slot,id]:ordered){if(check)check();if(id!=anchor&&retained.contains(input.blocks.at(id).header.parent_root))retained.insert(id);}
++ for(const auto& required:{view.justified.root,view.finalized.root,input.timed.clock.unrealized_justified.root,input.timed.clock.unrealized_finalized.root})if(!retained.contains(required))throw std::invalid_argument("Capella pruning would remove checkpoint context");
++ output.anchor_execution_ancestors.clear();at=anchor;
++ while(at!=view.anchor&&output.anchor_execution_ancestors.size()<256){if(check)check();at=input.blocks.at(at).header.parent_root;output.anchor_execution_ancestors.push_back(input.blocks.at(at).execution_block.header);}
++ for(const auto& header:input.anchor_execution_ancestors){if(output.anchor_execution_ancestors.size()==256)break;output.anchor_execution_ancestors.push_back(header);}
++ std::erase_if(output.blocks,[&](const auto& item){if(check)check();return !retained.contains(item.first);});std::erase_if(output.timed.view.nodes,[&](const auto& item){return !retained.contains(item.first);});std::erase_if(output.timely,[&](const auto& item){return item.first==anchor||!retained.contains(item.first);});std::erase_if(output.unrealized_justifications,[&](const auto& item){return !retained.contains(item.first);});
++ // Preserve epoch watermarks: erasing messages could admit older replayed votes.
++ for(auto& [index,message]:output.timed.view.latest_messages)if(!retained.contains(message.root))message.root=anchor;
++ if(output.timed.view.proposer_boost&&!retained.contains(*output.timed.view.proposer_boost))output.timed.view.proposer_boost.reset();
++ if(consensus_beacon_header_root(capella_fork_head(output,rules,check).header)!=expected)throw std::invalid_argument("Capella pruning changed fork choice");if(check)check();return output;
++}
++}
+diff --git a/src/consensus_capella_reactor.cpp b/src/consensus_capella_reactor.cpp
+index a960747..e56ba47 100644
+--- a/src/consensus_capella_reactor.cpp
++++ b/src/consensus_capella_reactor.cpp
+@@ -137 +137 @@ void CapellaDurableReactor::publish(CapellaForkStore candidate,const std::functi
+-  if(view.anchor!=old.anchor||view.finalized.epoch<old.finalized.epoch||view.justified.epoch<old.justified.epoch||next->timed.clock.genesis_time_ms!=state_->timed.clock.genesis_time_ms||next->timed.clock.time_ms<state_->timed.clock.time_ms)throw std::invalid_argument("Capella checkpoint regression");
++  if(capella_network_anchor(*next)!=capella_network_anchor(*state_)||view.anchor!=old.anchor||view.finalized.epoch<old.finalized.epoch||view.justified.epoch<old.justified.epoch||next->timed.clock.genesis_time_ms!=state_->timed.clock.genesis_time_ms||next->timed.clock.time_ms<state_->timed.clock.time_ms)throw std::invalid_argument("Capella checkpoint regression");
+@@ -198 +198 @@ Json CapellaDurableReactor::network_identity_locked()const{
+- require_available();const auto& anchor=state_->timed.view.anchor;const auto encoded=Json::array({"nano-capella-network-v1",quantity(chain_),hex(genesis_),hex(Bytes(anchor.begin(),anchor.end())),capella_fork_profile(rules_)}).dump();const auto digest=sha256(Bytes(encoded.begin(),encoded.end()));
++ require_available();const auto anchor=capella_network_anchor(*state_);const auto encoded=Json::array({"nano-capella-network-v1",quantity(chain_),hex(genesis_),hex(Bytes(anchor.begin(),anchor.end())),capella_fork_profile(rules_)}).dump();const auto digest=sha256(Bytes(encoded.begin(),encoded.end()));
+diff --git a/src/consensus_capella_store_snapshot.cpp b/src/consensus_capella_store_snapshot.cpp
+index 32e39ab..1abd4a4 100644
+--- a/src/consensus_capella_store_snapshot.cpp
++++ b/src/consensus_capella_store_snapshot.cpp
+@@ -71,0 +72 @@ std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBl
++ if(s.network_anchor){require(*s.network_anchor!=v.anchor);j["format"]="nano-capella-store-v2";j["networkAnchor"]=root(*s.network_anchor);}
+@@ -77 +78 @@ CapellaForkStore capella_store_from_snapshot(std::string_view bytes,const Bytes&
+- const auto j=Json::parse(bytes);require(j.is_object()&&j.size()==13&&j.at("format")=="nano-capella-store-v1"&&j.at("profile")==profile(r));
++ const auto j=Json::parse(bytes);require(j.is_object()&&j.contains("format")&&j.at("format").is_string());const bool pruned=j.value("format",std::string())=="nano-capella-store-v2";require(j.is_object()&&j.size()==(pruned?14:13)&&(pruned||j.at("format")=="nano-capella-store-v1")&&j.at("profile")==profile(r));
+@@ -80,0 +82 @@ CapellaForkStore capella_store_from_snapshot(std::string_view bytes,const Bytes&
++ if(pruned)s.network_anchor=root(j.at("networkAnchor"));
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index 33d3c0f..20140cc 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -55 +55 @@ static bool beacon_reads=false;
+-static bool queued_bls_sync=false;static bool queued_bls_reorg=false;static bool queued_bls_changes=false;static bool local_bls_changes=false;static bool wire_mode=false;static bool catalog_concurrency=false;
++static bool pruning_primitive=false;static bool queued_bls_sync=false;static bool queued_bls_reorg=false;static bool queued_bls_changes=false;static bool local_bls_changes=false;static bool wire_mode=false;static bool catalog_concurrency=false;
+@@ -134,0 +135,15 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
++ if(pruning_primitive){
++  const auto old=*result.state;const auto anchor=old.timed.view.finalized.root;const auto pruned=prepare_capella_pruned_store(old,anchor,rules);check(pruned.blocks.size()<old.blocks.size()&&capella_network_anchor(pruned)==capella_network_anchor(old),"pruning failed to reduce state or changed identity");check(pruned.timed.view.finalized==old.timed.view.finalized&&pruned.timed.view.justified==old.timed.view.justified,"pruning changed checkpoints");
++  const auto encoded=capella_store_snapshot(pruned,rules,limits),original=capella_store_snapshot(old,rules,limits);check(encoded.size()<original.size(),"pruned snapshot did not shrink");const auto restored=capella_store_from_snapshot(encoded,sha256(Bytes(encoded.begin(),encoded.end())),rules,limits);check(capella_store_snapshot(restored,rules,limits)==encoded&&capella_network_anchor(restored)==capella_network_anchor(old),"pruned snapshot restart differs");
++  const auto head_id=consensus_beacon_header_root(head.header);for(Int height=0;height<head.execution_block.header.number;++height)check(capella_execution_history(pruned,head_id,height)==capella_execution_history(old,head_id,height),"pruning changed BLOCKHASH history");
++  for(const auto& [index,message]:old.timed.view.latest_messages)check(pruned.timed.view.latest_messages.at(index).epoch==message.epoch,"pruning lost vote replay watermark");
++  auto dormant=old;dormant.timed.view.latest_messages[0]={0,old.timed.view.anchor};const auto rebased=prepare_capella_pruned_store(dormant,anchor,rules);check(rebased.timed.view.latest_messages.at(0).epoch==0&&rebased.timed.view.latest_messages.at(0).root==anchor,"pruning failed to retain old vote watermark at new anchor");check(capella_store_snapshot(prepare_capella_pruned_store(pruned,anchor,rules),rules,limits)==encoded,"repeat pruning not idempotent");
++  auto unsupported=rules;unsupported.native_deposit_votes=true;unsupported.deposit_contract_code_hash=Bytes(32,1);bool deposit_refused=false;try{prepare_capella_pruned_store(old,anchor,unsupported);}catch(const std::invalid_argument&){deposit_refused=true;}check(deposit_refused,"unqualified native deposit history pruned");
++
++  bool refused=false;try{prepare_capella_pruned_store(old,head_id,rules);}catch(const std::invalid_argument&){refused=true;}check(refused,"unfinalized pruning anchor accepted");bool cancelled=false;try{prepare_capella_pruned_store(old,anchor,rules,[]{throw ExecutionCancelled("prune stopped");});}catch(const ExecutionCancelled&){cancelled=true;}check(cancelled&&capella_store_snapshot(old,rules,limits)==original,"cancelled pruning changed input");
++  Temp pruned_directory;{ChainStore disk(pruned_directory/"db");disk.bind_chain(t.chain_id,genesis.header.hash(),"capella-pruned-test");disk.commit(genesis,genesis_state,{});std::map<Int,const CapellaForkBlock*> records;for(const auto& [id,record]:old.blocks)records.emplace(record.execution_block.header.number,&record);for(const auto& [height,record]:records)disk.commit(record->execution_block,record->execution_state,record->receipts);auto reactor=std::make_unique<CapellaDurableReactor>(disk,t.chain_id,genesis.header.hash(),rules,limits,pruned);check(reactor->network_identity()==nodes[0]->network_identity(),"pruned reactor network identity changed");const auto token=reactor->current().token;reactor.reset();reactor=std::make_unique<CapellaDurableReactor>(disk,t.chain_id,genesis.header.hash(),rules,limits,token);check(reactor->network_identity()==nodes[0]->network_identity(),"pruned restart identity changed");}
++
++  const auto next_slot=end+1,now=old.timed.clock.genesis_time_ms+next_slot*rules.slot_duration_ms;nodes[0]->tick(now);const auto selected=nodes[0]->current_proposer(next_slot);check(bool(selected),"next proposer missing after pruning");const auto wire=nodes[0]->propose_current(*selected,next_slot,head.execution_block.header.coinbase,16,64,[&]{return now;},journal(*selected),[&](const ConsensusRoot& root){return Key(*selected).sign(root);});check(bool(wire),"next proposal missing");
++  const auto before=prepare_capella_store_tick(old,now,rules,limits.replay_slots,limits.sync_trials),after=prepare_capella_store_tick(restored,now,rules,limits.replay_slots,limits.sync_trials);const auto reference=prepare_capella_received_block(before,*wire,rules,limits.replay_slots,limits.sync_trials),candidate=prepare_capella_received_block(after,*wire,rules,limits.replay_slots,limits.sync_trials);check(reference&&candidate,"pruned store rejected next valid block");const auto& a=capella_fork_head(*reference,rules);const auto& b=capella_fork_head(*candidate,rules);check(a.state==b.state&&a.execution_state.root()==b.execution_state.root()&&a.execution_block.header.hash()==b.execution_block.header.hash(),"pruned continuation differs");
++  std::cout<<Json{{"scenario","capella-pruning-primitive"},{"beforeBlocks",old.blocks.size()},{"afterBlocks",pruned.blocks.size()},{"beforeSnapshotBytes",original.size()},{"afterSnapshotBytes",encoded.size()},{"networkAnchorPreserved",true},{"historyPreserved",true},{"nextBlockEqual",true},{"automaticPruning",false}}.dump()<<std::endl;
++ }
+@@ -994 +1009 @@ int main(int argc,char** argv){try{executable=argv[0];
+-if(argc==3&&std::string(argv[1])=="--cli"){cli_binary=argv[2];configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--http"){configured_runtime=true;capella_http=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--catalog-concurrency"){wire_mode=true;catalog_concurrency=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-reorg"){queued_bls_reorg=true;queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-owner"){queued_bls_changes=true;local_bls_changes=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-rpc"){queued_bls_changes=true;local_bls_changes=true;configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-wire"){wire_mode=true;queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-changes"){queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--local-bls-changes"){local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--wire"){wire_mode=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--beacon-reads"){beacon_reads=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--configured-runtime"){configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler"){scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-reorg"){owner_reorg=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}
++if(argc==3&&std::string(argv[1])=="--cli"){cli_binary=argv[2];configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--http"){configured_runtime=true;capella_http=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--catalog-concurrency"){wire_mode=true;catalog_concurrency=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-reorg"){queued_bls_reorg=true;queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-primitive"){pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-owner"){queued_bls_changes=true;local_bls_changes=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-rpc"){queued_bls_changes=true;local_bls_changes=true;configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-wire"){wire_mode=true;queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-changes"){queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--local-bls-changes"){local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--wire"){wire_mode=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--beacon-reads"){beacon_reads=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--configured-runtime"){configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler"){scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-reorg"){owner_reorg=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}

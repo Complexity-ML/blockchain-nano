@@ -3254,3 +3254,17 @@ la demande doit rester absente jusqu'à resoumission. Aucun correctif du moteur.
 **Partiel** : ce n'est pas une coupure physique ni une qualification Linux/VPS ;
 pruning, réorganisations profondes et charge restent ouverts.
 [Preuves, essai initial et portée](qualification/capella-bls-sync-20260927/README.md).
+
+### 2026-09-27 — Primitive d’élagage Capella et identité réseau stable
+
+Séparation de l’ancre réseau initiale et de l’ancre de stockage, snapshot v2 pour
+les états élagués et conservation du format v1 existant. Le candidat pur réduit
+41 états de blocs à 18 (1 893 314 → 873 602 octets sérialisés), sans changer la
+finalité, les watermarks de votes, l’identité réseau après réouverture ni le
+résultat du bloc signé suivant. Test final : 32,88 s ; régression de transition
+signée également passée lors du premier essai.
+**Partiel** : pas d’élagage automatique en fonctionnement ni de récupération
+d’espace RocksDB démontrée. Restent la publication durable, la réconciliation
+des archives et opérations en attente, la conservation du contexte des dépôts
+natifs, puis les tests prolongés et de panne pendant l’élagage. Aucun EIP clos.
+[Code, empreintes et résultats](qualification/capella-pruning-primitive-20260927/README.md).

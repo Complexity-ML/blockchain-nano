@@ -7,6 +7,8 @@ namespace nano {
 struct CapellaForkBlock {ConsensusBeaconHeader header;CapellaSlotState state;Block execution_block;State execution_state;std::vector<Receipt> receipts;std::shared_ptr<const ExecutionDepositHistory> deposit_history;};
 struct CapellaForkStore {
  Phase0ForkTimedView timed;
+ // Original trusted anchor; storage pruning must not change network identity.
+ std::optional<ConsensusRoot> network_anchor;
  // Authenticated newest-first execution ancestors of the anchor (up to 256).
  std::vector<Header> anchor_execution_ancestors;
  std::map<ConsensusRoot,CapellaForkBlock> blocks;
@@ -82,4 +84,13 @@ namespace nano {
 // Branch-bound history for local execution; Store and parent must be authenticated.
 Bytes capella_execution_history(const CapellaForkStore&,const ConsensusRoot& parent,
  const Int& height,const std::function<void()>& checkpoint={});
+}
+
+namespace nano {
+ConsensusRoot capella_network_anchor(const CapellaForkStore&);
+// Pure candidate transformation. Does not publish or delete persisted history.
+// Native deposit-vote history needs separate pinning and is currently rejected.
+CapellaForkStore prepare_capella_pruned_store(const CapellaForkStore&,
+ const ConsensusRoot& new_anchor,const CapellaForkBlockRules&,
+ const std::function<void()>& checkpoint={});
 }
