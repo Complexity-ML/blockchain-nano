@@ -559,3 +559,14 @@ indépendant identique, quatre candidats invalides/doublons exclus, deux reorgs
 et réouvertures. Test 4,42 s ; régression BLS 4,87 s. Échec initial du banc conservé.
 La file persistante, RPC/P2P et le cycle jusqu'au retrait restent à raccorder ;
 aucune clôture EIP/production. [Preuves](qualification/capella-local-exits-20260927/README.md).
+
+## 2026-09-27 — File durable de sorties volontaires Capella
+
+Admission authentifiée par clé/index et état de branche, format durable v4
+avec revalidation à la reprise, doublons idempotents et sélection automatique.
+Nouveau scénario : admission sans modifier le consensus, capacité pleine,
+réouverture et deux reorgs rendant la sortie applicable puis non applicable.
+3/3 tests passent en 13,98 s ; nouveau test 4,72 s. Le retrait après finalité et
+le réancrage à l'élagage sont codés mais restent à qualifier ; RPC/P2P, pannes
+WAL, réindexation de dépôts et retrait complet restent ouverts.
+[Preuves et limites](qualification/capella-queued-exits-20260927/README.md).

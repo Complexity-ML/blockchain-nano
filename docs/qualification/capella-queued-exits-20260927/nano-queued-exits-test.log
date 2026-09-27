@@ -1,0 +1,50 @@
+UpdateCTestConfiguration  from :/Users/boris/Dev/blockchain-nano/build-release/DartConfiguration.tcl
+Test project /Users/boris/Dev/blockchain-nano/build-release
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 374
+    Start 374: consensus_capella_queued_bls_changes
+
+374: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests "--queued-bls-changes"
+374: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+374: Test timeout computed to be: 120
+374: {"assembledBodies":9,"beaconReadChecks":0,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":0,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":true,"localProposals":8,"localRandao":8,"migrated":false,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":true,"rejected":20,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"wireMessages":0,"withdrawals":2}
+1/3 Test #374: consensus_capella_queued_bls_changes ...   Passed    4.84 sec
+test 401
+    Start 401: consensus_capella_local_exits
+
+401: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests "--local-exits"
+401: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+401: Test timeout computed to be: 180
+401: {"cancellationChecked":true,"invalidOrDuplicateRejected":4,"scenario":"capella-local-exits","selected":1,"trialBudgetChecked":true}
+401: {"assembledBodies":9,"beaconReadChecks":0,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":0,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":false,"localProposals":8,"localRandao":8,"migrated":false,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":false,"rejected":20,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"wireMessages":0,"withdrawals":1}
+2/3 Test #401: consensus_capella_local_exits ..........   Passed    4.41 sec
+test 402
+    Start 402: consensus_capella_queued_exits
+
+402: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests "--queued-exits"
+402: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+402: Test timeout computed to be: 180
+402: {"capacityChecked":true,"consensusUnchangedOnAdmission":true,"duplicateIdempotent":true,"invalidRejected":true,"reopened":true,"scenario":"capella-queued-exits"}
+402: {"applicable":false,"reopened":false,"retained":true,"scenario":"capella-exit-reorg"}
+402: {"applicable":true,"reopened":true,"retained":true,"scenario":"capella-exit-reorg"}
+402: {"applicable":false,"reopened":true,"retained":true,"scenario":"capella-exit-reorg"}
+402: {"assembledBodies":9,"beaconReadChecks":0,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":0,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":false,"localProposals":8,"localRandao":8,"migrated":false,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":false,"rejected":20,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"wireMessages":0,"withdrawals":1}
+3/3 Test #402: consensus_capella_queued_exits .........   Passed    4.72 sec
+
+The following tests passed:
+	consensus_capella_queued_bls_changes
+	consensus_capella_local_exits
+	consensus_capella_queued_exits
+
+100% tests passed out of 3
+
+Label Time Summary:
+qualification_consensus_operations    =   9.13 sec*proc (2 tests)
+qualification_consensus_runtime       =   4.84 sec*proc (1 test)
+
+Total Test time (real) =  13.98 sec

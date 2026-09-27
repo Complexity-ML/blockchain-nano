@@ -1709,3 +1709,6 @@ endif()
 
 add_test(NAME consensus_capella_local_exits COMMAND nano-capella-transition-tests --local-exits)
 set_tests_properties(consensus_capella_local_exits PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_operations")
+
+add_test(NAME consensus_capella_queued_exits COMMAND nano-capella-transition-tests --queued-exits)
+set_tests_properties(consensus_capella_queued_exits PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_operations")

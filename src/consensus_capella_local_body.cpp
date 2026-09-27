@@ -126,11 +126,11 @@ bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage&
 std::optional<Bytes> CapellaDurableReactor::prepare_local_body(uint64_t index,uint64_t slot,
  const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,
  std::span<const SignedTransaction> transactions,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<void()>& check){
- std::lock_guard lock(mutex_);const auto changes=pending_bls_changes_locked(maximum_vote_trials,check);return prepare_local_body_locked(index,slot,reveal,recipient,expected,transactions,maximum_transaction_trials,maximum_vote_trials,check,changes,maximum_vote_trials);
+ std::lock_guard lock(mutex_);const auto changes=pending_bls_changes_locked(maximum_vote_trials,check);const auto exits=pending_exits_locked(maximum_vote_trials,check);return prepare_local_body_locked(index,slot,reveal,recipient,expected,transactions,maximum_transaction_trials,maximum_vote_trials,check,changes,maximum_vote_trials,exits,maximum_vote_trials);
 }
 std::optional<Bytes> CapellaDurableReactor::prepare_local_body_with_bls_changes(uint64_t index,uint64_t slot,const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,std::span<const SignedTransaction> transactions,size_t maximum_transaction_trials,size_t maximum_vote_trials,std::span<const SignedCapellaBlsChange> changes,size_t maximum_change_trials,const std::function<void()>& check){
  if(!maximum_change_trials)throw std::invalid_argument("Capella change trial budget required");
- std::lock_guard lock(mutex_);return prepare_local_body_locked(index,slot,reveal,recipient,expected,transactions,maximum_transaction_trials,maximum_vote_trials,check,changes,maximum_change_trials);
+ std::lock_guard lock(mutex_);const auto exits=pending_exits_locked(maximum_vote_trials,check);return prepare_local_body_locked(index,slot,reveal,recipient,expected,transactions,maximum_transaction_trials,maximum_vote_trials,check,changes,maximum_change_trials,exits,maximum_vote_trials);
 }
 std::optional<Bytes> CapellaDurableReactor::prepare_local_body_with_exits(uint64_t index,uint64_t slot,const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,std::span<const SignedTransaction> transactions,size_t maximum_transaction_trials,size_t maximum_vote_trials,std::span<const SignedConsensusVoluntaryExit> exits,size_t maximum_exit_trials,const std::function<void()>& check){
  if(!maximum_exit_trials)throw std::invalid_argument("Capella exit trial limit");
@@ -144,7 +144,7 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_from_pool_locked(
  require_available();if(!execution_)throw std::invalid_argument("Capella execution owner required");if(expected!=*token_)throw StaleCapellaDuty("Stale pool body preparation");
  std::vector<SignedTransaction> transactions;
  {std::lock_guard chain_lock(execution_->mutex_);execution_->require_execution_ready_locked();transactions=execution_->pool_.pending_for_block(execution_->tip_.header.gas_limit);}
- const auto changes=pending_bls_changes_locked(maximum_vote_trials,check);return prepare_local_body_locked(index,slot,reveal,recipient,expected,transactions,maximum_transaction_trials,maximum_vote_trials,check,changes,maximum_vote_trials);
+ const auto changes=pending_bls_changes_locked(maximum_vote_trials,check);const auto exits=pending_exits_locked(maximum_vote_trials,check);return prepare_local_body_locked(index,slot,reveal,recipient,expected,transactions,maximum_transaction_trials,maximum_vote_trials,check,changes,maximum_vote_trials,exits,maximum_vote_trials);
 }
 std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t index,uint64_t slot,const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,std::span<const SignedTransaction> transactions,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<void()>& check,std::span<const SignedCapellaBlsChange> changes,size_t maximum_change_trials,std::span<const SignedConsensusVoluntaryExit> exits,size_t maximum_exit_trials){
  require_available();

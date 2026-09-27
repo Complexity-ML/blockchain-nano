@@ -12,6 +12,8 @@ class ExpiredCapellaDuty : public std::runtime_error {public: using std::runtime
 using CapellaSignedVotes=std::map<Bytes,Bytes>;
 struct CapellaPendingBlsChange {ConsensusRoot admission_root;Bytes wire;};
 using CapellaPendingBlsChanges=std::map<uint64_t,CapellaPendingBlsChange>;
+struct CapellaPendingExit {ConsensusRoot admission_root;std::array<uint8_t,48> public_key;Bytes wire;};
+using CapellaPendingExits=std::map<Bytes,CapellaPendingExit>;
 struct CapellaPublishedStore {std::shared_ptr<const CapellaForkStore> state;ForkCheckpointToken token;};
 // Immutable root-only inventory; does not pin EVM state or payload archives.
 class CapellaInventorySnapshot {
@@ -27,7 +29,7 @@ public:
 class CapellaDurableReactor {
  ChainStore& disk_;Blockchain* execution_=nullptr;Int chain_;Bytes genesis_;CapellaForkBlockRules rules_;CapellaStoreSnapshotLimits limits_;
  std::mutex& mutex_;std::shared_ptr<const CapellaForkStore> state_;std::optional<ForkCheckpointToken> token_;
- CapellaSignedVotes votes_,slashings_;CapellaPendingBlsChanges bls_changes_;CapellaStoreSnapshotCache cache_;bool unavailable_=false;bool automatic_pruning_=false;
+ CapellaSignedVotes votes_,slashings_;CapellaPendingBlsChanges bls_changes_;CapellaPendingExits exits_;CapellaStoreSnapshotCache cache_;bool unavailable_=false;bool automatic_pruning_=false;
  // Only populated from this reactor's immutable, admitted head under mutex_.
  // Single-entry cache: no retained state snapshots or old-branch registry maps.
  struct ValidatorIndexCache {ConsensusRoot root;std::set<Bytes> keys;std::map<Bytes,uint64_t> indices;};
@@ -57,14 +59,17 @@ class CapellaDurableReactor {
  std::optional<Bytes> prepare_local_body_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,std::span<const SignedTransaction>,size_t,size_t,const std::function<void()>&,std::span<const SignedCapellaBlsChange> = {},size_t maximum_change_trials = 0,std::span<const SignedConsensusVoluntaryExit> = {},size_t maximum_exit_trials = 0);
  std::vector<ConsensusRoot> bls_change_roots_locked(const std::function<void()>&)const;
  std::vector<SignedCapellaBlsChange> pending_bls_changes_locked(size_t,const std::function<void()>&)const;
+ std::vector<SignedConsensusVoluntaryExit> pending_exits_locked(size_t,const std::function<void()>&)const;
  void prune_if_ready_locked(const std::function<void()>&);
  void tick_locked(uint64_t,const std::function<void()>&);
  std::optional<Phase0SignedAttestation> sign_attestation_locked(uint64_t,uint64_t,const std::function<uint64_t()>&,const ForkCheckpointToken&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>&);
  std::optional<Bytes> sign_randao_locked(uint64_t,uint64_t,const std::function<uint64_t()>&,const ForkCheckpointToken&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>&);
  std::optional<Bytes> sign_proposal_locked(uint64_t,uint64_t,std::span<const uint8_t>,const std::function<uint64_t()>&,const ForkCheckpointToken&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>&);
  std::optional<Bytes> prepare_local_body_from_pool_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,size_t,size_t,const std::function<void()>&);
- void publish(CapellaForkStore,const std::function<void()>&,const std::vector<CheckpointArchiveEntry>& archive={},std::optional<CapellaSignedVotes> votes=std::nullopt,std::optional<CapellaSignedVotes> slashings=std::nullopt,std::optional<CapellaPendingBlsChanges> changes=std::nullopt);
+ void publish(CapellaForkStore,const std::function<void()>&,const std::vector<CheckpointArchiveEntry>& archive={},std::optional<CapellaSignedVotes> votes=std::nullopt,std::optional<CapellaSignedVotes> slashings=std::nullopt,std::optional<CapellaPendingBlsChanges> changes=std::nullopt,std::optional<CapellaPendingExits> exits=std::nullopt);
 public:
+ bool voluntary_exit_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
+ std::vector<SignedConsensusVoluntaryExit> pending_exits()const;
  // Ephemeral bounded diagnostic counters; never part of consensus state.
  Json sync_admission_stats()const;
  // Local duties sign during the signed slot and enter normal admission.
