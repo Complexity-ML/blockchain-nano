@@ -5,6 +5,7 @@
 #include "nano/consensus_capella_fork_store.hpp"
 #include "nano/consensus_capella_store_snapshot.hpp"
 #include "nano/storage.hpp"
+#include "nano/consensus_capella_reactor.hpp"
 #include "nano/committee.hpp"
 #include "nano/consensus_message_ssz.hpp"
 #include "nano/consensus_proposer.hpp"
@@ -77,6 +78,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
  std::map<Int,Bytes> hashes{{0,parent.header.hash()}};std::function<Bytes(const Int&)> history=[&](const Int& n){return hashes.at(n);};
  const auto disk_genesis=parent;const auto disk_genesis_state=state;
  const CapellaForkBlockRules store_rules{r,seconds*1000,seconds*1000/3,40};
+ Temp reactor_database;auto reactor_disk=std::make_unique<ChainStore>(reactor_database/"db");reactor_disk->bind_chain(r.chain_id,disk_genesis.header.hash(),"capella-reactor-test");reactor_disk->commit(disk_genesis,disk_genesis_state,{});std::unique_ptr<CapellaDurableReactor> reactor;
  std::optional<CapellaForkStore> store;std::string short_snapshot;
  const CapellaStoreSnapshotLimits snapshot_limits{16*1024*1024,64,1000,1000,r.maximum_state_bytes,8*1024*1024,64,100000};
  auto roundtrip=[&](const CapellaForkStore& value){
@@ -176,6 +178,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
   }
   if(!store){
    store=initialize_capella_fork_store(received->consensus,built->message_ssz,received->execution.block,received->execution.state,received->execution.receipts,{parent.header},store_rules);
+   reactor=std::make_unique<CapellaDurableReactor>(*reactor_disk,r.chain_id,disk_genesis.header.hash(),store_rules,snapshot_limits,*store);
   }else{
    auto timed=prepare_capella_store_tick(*store,(genesis_time+slot*seconds)*1000,store_rules,64,100000);
    const auto admitted_store=prepare_capella_received_block(timed,wire,store_rules,64,100000);check(admitted_store.has_value(),"Capella Store rejected signed chain");
@@ -188,6 +191,10 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
    }
    bool cancelled_store=false;try{prepare_capella_received_block(timed,wire,store_rules,64,100000,[]{throw ExecutionCancelled("store stop");});}catch(const ExecutionCancelled&){cancelled_store=true;}check(cancelled_store&&timed.blocks.size()==store->blocks.size(),"Store cancellation leaked publication");
    auto bad_signature=wire;bad_signature[4]^=1;check(!prepare_capella_received_block(timed,bad_signature,store_rules,64,100000),"Store admitted bad signature");
+   reactor->tick((genesis_time+slot*seconds)*1000);const auto before_publish=reactor->current();
+   bool reactor_cancelled=false;try{reactor->block(wire,[]{throw ExecutionCancelled("reactor stop");});}catch(const ExecutionCancelled&){reactor_cancelled=true;}check(reactor_cancelled&&reactor->current().token==before_publish.token,"cancelled reactor published");
+   check(reactor->block(wire),"durable Capella block rejected");check(capella_store_snapshot(*reactor->current().state,store_rules,snapshot_limits)==capella_store_snapshot(*admitted_store,store_rules,snapshot_limits),"durable Store differs");
+   const auto accepted_token=reactor->current().token;check(reactor->block(wire)&&reactor->current().token==accepted_token,"duplicate block rewrote checkpoint");
    store=*admitted_store;
    if(!finality&&slot==first_slot+slots){
     auto alternate_execution=execution;auto alternative_tx=tx;alternative_tx.value=1;alternate_execution.transactions[0]=SignedTransaction::sign(alternative_tx,key);
@@ -198,6 +205,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
     const auto alternate=prepare_capella_unsigned_block(beacon,slot,proposer,parent_root,alternate_body,r,parent.header,state,history,64,100000);check(alternate.has_value(),"alternate construction failed");
     const auto branch=prepare_capella_received_block(*store,sign_message(alternate->message_ssz),store_rules,64,100000);check(branch&&branch->blocks.size()==store->blocks.size()+1,"sibling branch lost");
     const auto& branch_head=capella_fork_head(*branch,store_rules);check(branch_head.execution_state.root()==expected.root()||branch_head.execution_state.root()==alternate_state.root(),"sibling head execution mismatch");
+    check(reactor->block(sign_message(alternate->message_ssz)),"durable alternate block rejected");reactor->tick((genesis_time+(slot+1)*seconds)*1000);
     auto voting=prepare_capella_store_tick(*branch,(genesis_time+(slot+1)*seconds)*1000,store_rules,64,100000);
     const auto canonical=consensus_beacon_header_root(admitted);
     const ConsensusBeaconHeader alternate_header{slot,proposer,parent_root,root_at(alternate->message_ssz,48),capella_beacon_body_root(alternate_body,r.consensus.body,l.sync_committee_size,r.execution,r.withdrawals.maximum_per_payload,r.maximum_bls_changes,r.consensus.maximum_block_bytes)};
@@ -212,7 +220,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
      Phase0SignedAttestation vote{{slot,committee_index,head,{},target_checkpoint},std::vector<bool>(members.size()),{}};vote.aggregation_bits[position]=true;Key voter(members[position]);
      vote.signature=voter.sign(consensus_signing_root(consensus_attestation_root(vote.data),consensus_domain({1,0,0,0},context.target.fork.current_version,context.target.genesis_root)));
      auto invalid=vote;invalid.signature[0]^=1;check(!prepare_capella_store_vote(voting,invalid,store_rules,64,100000),"invalid Capella vote signature accepted");
-     const auto next=prepare_capella_store_vote(voting,vote,store_rules,64,100000);check(next.has_value(),"Capella branch vote rejected");voting=*next;++votes;return std::pair{members[position],vote};
+     const auto next=prepare_capella_store_vote(voting,vote,store_rules,64,100000);check(next.has_value(),"Capella branch vote rejected");voting=*next;check(reactor->vote(vote)&&capella_store_snapshot(*reactor->current().state,store_rules,snapshot_limits)==capella_store_snapshot(voting,store_rules,snapshot_limits),"durable Capella vote differs");++votes;return std::pair{members[position],vote};
     };
     const auto first_vote=vote_for(0,canonical);check(capella_fork_head(voting,store_rules).execution_state.root()==expected.root(),"canonical vote head mismatch");
     vote_for(1,alternate_root);vote_for(2,alternate_root);check(capella_fork_head(voting,store_rules).execution_state.root()==alternate_state.root(),"votes did not select alternate EVM state");++vote_reorgs;
@@ -220,7 +228,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
     auto conflicting=first_vote.second;conflicting.data.beacon_block_root=alternate_root;if(slot%slots==0)conflicting.data.target.root=alternate_root;
     conflicting.signature=Key(first_vote.first).sign(consensus_signing_root(consensus_attestation_root(conflicting.data),consensus_domain({1,0,0,0},version,genesis_root)));
     const auto slashed=prepare_capella_store_slashing(voting,{first_vote.second.data,{first_vote.first},first_vote.second.signature},{conflicting.data,{first_vote.first},conflicting.signature},store_rules);
-    check(slashed&&slashed->timed.view.equivocating_indices.contains(first_vote.first),"Capella equivocation evidence rejected");roundtrip(*slashed);
+    check(slashed&&slashed->timed.view.equivocating_indices.contains(first_vote.first),"Capella equivocation evidence rejected");roundtrip(*slashed);check(reactor->slashing({first_vote.second.data,{first_vote.first},first_vote.second.signature},{conflicting.data,{first_vote.first},conflicting.signature})&&capella_store_snapshot(*reactor->current().state,store_rules,snapshot_limits)==capella_store_snapshot(*slashed,store_rules,snapshot_limits),"durable Capella slashing differs");
     roundtrip(*branch);
     const auto duplicate=prepare_capella_received_block(*branch,wire,store_rules,64,100000);check(duplicate&&duplicate->blocks.size()==branch->blocks.size(),"duplicate changed Store cardinality");
    }
@@ -243,6 +251,9 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
   beacon=received->consensus;state=received->execution.state;parent=received->execution.block;hashes[parent.header.number]=parent.header.hash();++accepted;
  }
  if(finality){if(participation==100)check(store->timed.view.finalized.epoch>=2&&store->timed.view.justified.epoch>=3&&included_attestations>=128,"Capella participation did not advance finality");else check(store->timed.view.finalized.epoch==0&&store->timed.view.justified.epoch==0,"insufficient participation finalized a checkpoint");}
+ const auto durable=reactor->current();const auto durable_bytes=capella_store_snapshot(*durable.state,store_rules,snapshot_limits);reactor.reset();reactor_disk.reset();reactor_disk=std::make_unique<ChainStore>(reactor_database/"db");
+ reactor=std::make_unique<CapellaDurableReactor>(*reactor_disk,r.chain_id,disk_genesis.header.hash(),store_rules,snapshot_limits,durable.token);
+ check(capella_store_snapshot(*reactor->current().state,store_rules,snapshot_limits)==durable_bytes&&reactor_disk->latest()->header.hash()==capella_fork_head(*durable.state,store_rules).execution_block.header.hash(),"reactor restart diverged");
  const auto snapshot=roundtrip(*store);const auto profile=capella_fork_profile(store_rules).dump();const auto profile_digest=sha256(Bytes(profile.begin(),profile.end()));
  auto reject_profile=[&](const std::string& value,const Bytes& digest,size_t budget){bool refused=false;try{load_capella_fork_profile(value,digest,budget);}catch(const std::exception&){refused=true;}check(refused,"invalid Capella profile accepted");};
  auto wrong_digest=profile_digest;wrong_digest[0]^=1;reject_profile(profile,wrong_digest,1024*1024);reject_profile(profile,profile_digest,profile.size()-1);
@@ -266,7 +277,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
   for(const auto& [height,b]:ordered){const bool canonical=height<=latest->header.number;check(bool(disk.block_by_number(height))==canonical,"stale block after crash reorg");for(const auto& tx:b.block.transactions)check(bool(disk.receipt(tx.hash()))==canonical&&bool(disk.transaction(tx.hash()))==canonical,"stale transaction after crash reorg");}
   token=record->token;
  }
- std::cout<<Json{{"scenario","capella-signed-transition"},{"migrated",migrate},{"finalityScenario",finality},{"participationPercent",participation},{"finalizedEpoch",store->timed.view.finalized.epoch},{"includedAttestations",included_attestations},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"storeBlocks",store->blocks.size()},{"snapshotReopened",true},{"storeSigkillReopens",2},{"storeVotes",votes},{"voteReorgs",vote_reorgs},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
+ std::cout<<Json{{"scenario","capella-signed-transition"},{"migrated",migrate},{"finalityScenario",finality},{"participationPercent",participation},{"finalizedEpoch",store->timed.view.finalized.epoch},{"includedAttestations",included_attestations},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"storeBlocks",store->blocks.size()},{"snapshotReopened",true},{"durableReactor",true},{"storeSigkillReopens",2},{"storeVotes",votes},{"voteReorgs",vote_reorgs},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
 }
 int main(int argc,char** argv){try{executable=argv[0];if(argc==3&&std::string(argv[1])=="--crash-writer")return crash_writer(argv[2]);if(argc==2&&std::string(argv[1])=="--finality-half"){scenario(false,0,true,50);return 0;}if(argc==2&&std::string(argv[1])=="--finality"){scenario(false,0,true);return 0;}scenario(false);scenario(true);scenario(true,3);return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

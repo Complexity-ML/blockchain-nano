@@ -2691,3 +2691,14 @@ aucune progression de justification/finalité. Restauration et crashs conservés
 régression 3/3. [Preuves](qualification/capella-finality-20260927/README.md).
 Preuve locale au Store, pas de réseau multi-hôte. Réacteur, activation du Store
 à travers les forks et qualification distribuée restent ouverts.
+
+### Capella : coordinateur de publication durable
+
+Blocs, votes, équivoques et ticks peuvent maintenant publier le Store et le
+suffixe EVM dans un commit atomique CAS. Comparaison après événements,
+doublons sans réécriture, annulations et redémarrages qualifiés sur cinq
+chaînes ; trois suites réussies.
+[Preuves](qualification/capella-reactor-20260927/README.md).
+Restent les erreurs disque injectées du coordinateur, les archives/notifications,
+la signature locale, le propriétaire Blockchain et le réseau, ainsi que le
+Store vivant traversant les forks. Aucun profil réseau activé.
