@@ -5,9 +5,9 @@ import {resolve,join} from 'node:path';
 import {randomBytes} from 'node:crypto';
 import {setTimeout as wait} from 'node:timers/promises';
 const [exporter,outArg,image,revision,mode="partition"]=process.argv.slice(2);
-if(!["partition","asymmetric-delay"].includes(mode))throw Error("Unknown network fault mode");
-const asymmetric=mode==="asymmetric-delay";
-if(!exporter||!outArg||!image||!/^([a-f0-9]{40})$/.test(revision??''))throw Error('Usage: docker-partition.mjs exporter NEW-output-directory image revision [partition|asymmetric-delay]');
+if(!["partition","asymmetric-delay","crash-restart"].includes(mode))throw Error("Unknown network fault mode");
+const asymmetric=mode==="asymmetric-delay",crash=mode==="crash-restart";
+if(!exporter||!outArg||!image||!/^([a-f0-9]{40})$/.test(revision??''))throw Error('Usage: docker-partition.mjs exporter NEW-output-directory image revision [partition|asymmetric-delay|crash-restart]');
 const out=resolve(outArg),fixture=join(out,'fixture'),campaign='nano-capella-partition-'+randomBytes(6).toString('hex'),network=campaign+'-net',names=[campaign+'-0',campaign+'-1'];
 await mkdir(out);const label='nano.qualification=capella-partition';
 function run(bin,args,timeout=30000){return new Promise((ok,no)=>{const child=spawn(bin,args,{stdio:['ignore','pipe','pipe']});let stdout='',stderr='',done=false;const timer=setTimeout(()=>child.kill('SIGKILL'),timeout);child.stdout.on('data',x=>{stdout+=x;if(stdout.length>16*1024*1024)child.kill('SIGKILL');});child.stderr.on('data',x=>{stderr+=x;});child.on('error',e=>{clearTimeout(timer);if(!done){done=true;no(e);}});child.on('close',code=>{clearTimeout(timer);if(done)return;done=true;code===0?ok(bin==='docker'&&args[0]==='logs'?stdout+stderr:stdout):no(Error(`${bin} ${args[0]} failed (${code}): ${stderr.slice(-2000)}`));});});}
@@ -27,7 +27,7 @@ try{
  const meta=JSON.parse(await readFile(join(fixture,'fixture.json'),'utf8'));check(meta.chainId===1337&&meta.nodes===2&&meta.syntheticValidators===64&&meta.fork==='Capella/Shanghai','Unexpected fixture');
  await docker(['network','create','--internal','--label',label,network]);networkCreated=true;
  for(let i=0;i<2;++i){
-  if(i===1){const logs=await docker(['logs',names[0]]);const listen=logs.split('\n').map(x=>{try{return JSON.parse(x);}catch{return {};}}).find(x=>x.event==='listen');check(listen,'Missing peer listen address');const left=await provenance(names[0]);const ip=left.NetworkSettings.Networks[network].IPAddress;const cfg=JSON.parse(await readFile(join(fixture,'node-1.json'),'utf8'));cfg.bootnodes=[listen.address.replace('/ip4/0.0.0.0/','/ip4/'+ip+'/')];await writeFile(join(fixture,'node-1.json'),JSON.stringify(cfg));}
+  if(i===1){const logs=await docker(['logs',names[0]]);const listen=logs.split('\n').map(x=>{try{return JSON.parse(x);}catch{return {};}}).find(x=>x.event==='listen');check(listen,'Missing peer listen address');const left=await provenance(names[0]);const ip=left.NetworkSettings.Networks[network].IPAddress;const cfg=JSON.parse(await readFile(join(fixture,'node-1.json'),'utf8'));cfg.bootnodes=[listen.address.replace('/ip4/0.0.0.0/','/ip4/'+ip+'/')];if(crash)cfg.capella.recoveryWitness='/var/lib/nano/recovery-witness';await writeFile(join(fixture,'node-1.json'),JSON.stringify(cfg));}
   const env=JSON.parse(await readFile(join(fixture,`env-${i}.json`),'utf8')),file=join(out,`fixture-${i}.env`);await writeFile(file,Object.entries(env).map(([k,v])=>k+'='+v).join('\n')+'\n');
   await docker(['create','--name',names[i],'--label',label,'--label','org.opencontainers.image.revision='+revision,'--network',network,...(asymmetric?['--cap-add','NET_ADMIN']:[]),'--env-file',file,'--mount','type=bind,src='+fixture+',dst=/config,readonly',image,'run','/config/genesis.json','/var/lib/nano/chain',`/config/node-${i}.json`]);created.push(names[i]);await docker(['start',names[i]]);
   const until=Date.now()+30000;let ready=false;while(Date.now()<until){const logs=await docker(['logs',names[i]]);const events=logs.split('\n').map(x=>{try{return JSON.parse(x);}catch{return {};}}),pid=events.find(x=>x.event==='p2p-process')?.pid;if(events.some(x=>x.event==='altair-ipc-ready'&&x.networkProtocolActive===true)&&Number.isInteger(pid)&&pid>0){daemonPids[i]=pid;ready=true;break;}check((await provenance(names[i])).State.Running,'Node exited during startup');await wait(500);}check(ready,'Node startup deadline');
@@ -58,6 +58,54 @@ try{
   await record({event:'asymmetric-delay-restored'});
   const final=await commonFinality(BigInt(impaired[0].checkpoint.epoch)+1n,240);
   result='PASSED';await record({event:'asymmetric-delay-qualified',final});
+ }else if(crash){
+  const original=await provenance(names[1]);
+  const logsBefore=await docker(['logs',names[1]]);
+  const parseEvents=text=>text.split('\n').flatMap(line=>{try{return [JSON.parse(line)];}catch{return [];}});
+  const listenBefore=parseEvents(logsBefore).filter(x=>x.event==='listen').at(-1);
+  const startsBefore=parseEvents(logsBefore).filter(x=>x.event==='altair-ipc-ready'&&x.networkProtocolActive===true).length;
+  check(listenBefore&&startsBefore>0,'Missing pre-crash daemon identity');
+  const volume=original.Mounts.find(x=>x.Destination==='/var/lib/nano');
+  check(volume?.Type==='volume'&&volume.Name,'Missing persistent node volume');
+  await docker(['kill','--signal','KILL',names[1]]);
+  const killed=await provenance(names[1]);check(!killed.State.Running&&killed.State.ExitCode===137,'SIGKILL did not stop the complete node');
+  await record({event:'crash-start',node:1,containerId:original.Id,volume:volume.Name,cutoffEpoch:String(cutoff),durationSeconds:96});
+  const until=Date.now()+96000;let survivingHead;
+  while(Date.now()<until){
+   check(!(await provenance(names[1])).State.Running,'Killed node restarted unexpectedly');
+   check((await provenance(names[0])).State.Running,'Surviving node stopped');
+   const checkpoint=(await get(0,'/eth/v1/beacon/states/head/finality_checkpoints')).data.finalized;
+   const epoch=BigInt(checkpoint.epoch);check(epoch>=epochs.get(0)&&epoch<=cutoff,'Surviving half-stake finalized beyond pre-crash bound or regressed');
+   check(!roots.has(String(epoch))||roots.get(String(epoch))===checkpoint.root,'Conflicting finality during crash');roots.set(String(epoch),checkpoint.root);epochs.set(0,epoch);
+   survivingHead=(await get(0,'/eth/v1/beacon/headers/head')).data;
+   await record({event:'crash-offline-observation',checkpoint,headRoot:survivingHead.root,slot:survivingHead.header.message.slot});await wait(2000);
+  }
+  check(BigInt(survivingHead.header.message.slot)>BigInt(before[0].slot),'Surviving chain did not advance');
+  // Explicit operator transition from initial bootstrap to witnessed recovery.
+  // The witness was written throughout the first run, not inferred after crash.
+  const restartConfig=JSON.parse(await readFile(join(fixture,'node-1.json'),'utf8'));
+  check(restartConfig.capella.recoveryWitness==='/var/lib/nano/recovery-witness'&&restartConfig.capella.restart===null,'Unexpected recovery policy');
+  restartConfig.capella.initial=null;await writeFile(join(fixture,'node-1.json'),JSON.stringify(restartConfig));
+  await record({event:'crash-recovery-configured',mode:'existing-witness',bootstrapInitialCleared:true});
+  await docker(['start',names[1]]);const deadline=Date.now()+60000;let ready=false;
+  while(Date.now()<deadline){
+   const state=await provenance(names[1]);check(state.State.Running,'Restarted node exited');
+   check(state.Id===original.Id&&state.State.StartedAt!==original.State.StartedAt&&state.Mounts.some(x=>x.Destination==='/var/lib/nano'&&x.Name===volume.Name),'Restart replaced identity or persistent volume');
+   const events=parseEvents(await docker(['logs',names[1]]));
+   if(events.filter(x=>x.event==='altair-ipc-ready'&&x.networkProtocolActive===true).length>startsBefore){
+    const listenAfter=events.filter(x=>x.event==='listen').at(-1);check(listenAfter?.address.split('/p2p/')[1]===listenBefore.address.split('/p2p/')[1],'Restart changed persisted P2P identity');ready=true;break;
+   }
+   await wait(500);
+  }
+  check(ready,'Restart admission readiness deadline');
+  const recovered=(await get(1,'/eth/v1/beacon/states/head/finality_checkpoints')).data.finalized;
+  check(BigInt(recovered.epoch)>=BigInt(before[1].checkpoint.epoch),'Persisted finality lost after SIGKILL');
+  const oldHeader=await get(1,'/eth/v1/beacon/headers/'+before[1].checkpoint.root);
+  check(oldHeader.data.root===before[1].checkpoint.root,'Pre-crash finalized header lost');
+  const minimum=BigInt(survivingHead.header.message.slot)/BigInt(meta.slotsPerEpoch);
+  await record({event:'crash-restarted',recovered,minimumFinalizedEpoch:String(minimum),persistedFinalizedRoot:oldHeader.data.root});
+  const final=await commonFinality(minimum,240);
+  result='PASSED';await record({event:'crash-restart-qualified',final});
  }else{
  const remote=await provenance(names[1]);check(Object.keys(remote.NetworkSettings.Networks).length===1,'Unexpected extra container network');address=remote.NetworkSettings.Networks[network].IPAddress;
  isolated=true;await docker(['network','disconnect',network,names[1]]);await record({event:'partition-start',cutoffEpoch:String(cutoff),address,durationSeconds:96});const cutEnd=Date.now()+96000;let sawZero=false;
@@ -75,6 +123,6 @@ finally{
  if(isolated){try{await provenance(names[1]);await docker(['network','connect','--ip',address,network,names[1]]);}catch(e){failure??=e;result='FAILED';await record({event:'restore-failed',message:e.message});}}
  for(const name of created){try{await provenance(name);await writeFile(join(out,name+'.log'),await docker(['logs',name]));await docker(['stop','-t','10',name]);await writeFile(join(out,name+'.log'),await docker(['logs',name]));await docker(['rm','-v',name]);}catch(e){failure??=e;result='FAILED';await record({event:'cleanup-failed',name,message:e.message});}}
  if(networkCreated){try{await docker(['network','rm',network]);}catch(e){failure??=e;result='FAILED';}}
- await writeFile(join(out,'summary.json'),JSON.stringify({result,revision,image,campaign,scope:asymmetric?'Docker one-peer 500ms egress delay; two running Capella daemons, 32 validators each':'Docker packet partition; two running native Capella daemons, 32 validators each',failure:failure?.message??null},null,2)+'\n');
+ await writeFile(join(out,'summary.json'),JSON.stringify({result,revision,image,campaign,scope:crash?'Docker whole-node SIGKILL, 96s offline, persistent-volume restart and renewed common finality':asymmetric?'Docker one-peer 500ms egress delay; two running Capella daemons, 32 validators each':'Docker packet partition; two running native Capella daemons, 32 validators each',failure:failure?.message??null},null,2)+'\n');
 }
 if(failure)throw failure;

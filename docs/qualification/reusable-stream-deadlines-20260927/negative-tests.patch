@@ -1,0 +1,54 @@
+diff --git a/network/test_altair_stream.cpp b/network/test_altair_stream.cpp
+index 280990a..4fc986c 100644
+--- a/network/test_altair_stream.cpp
++++ b/network/test_altair_stream.cpp
+@@ -10 +10 @@ public:
+- size_t fragment=7;unsigned resets=0,closes=0;std::string written;bool authenticated=true,fail_write=false;
++ size_t fragment=7;unsigned resets=0,closes=0;std::string written;bool authenticated=true,fail_write=false,inline_io=false;
+@@ -20 +20 @@ public:
+-  const auto n=std::min({fragment,bytes,input_.size()-offset_});std::copy_n(input_.begin()+offset_,n,out.begin());offset_+=n;asio::post(io_,[cb=std::move(cb),n]{cb(n);});
++  const auto n=std::min({fragment,bytes,input_.size()-offset_});std::copy_n(input_.begin()+offset_,n,out.begin());offset_+=n;if(inline_io){cb(n);return;}asio::post(io_,[cb=std::move(cb),n]{cb(n);});
+@@ -22 +22 @@ public:
+- void writeSome(libp2p::BytesIn in,size_t bytes,WriteCallbackFunc cb)override{if(fail_write){asio::post(io_,[cb=std::move(cb)]{cb(std::make_error_code(std::errc::broken_pipe));});return;}const auto n=std::min(fragment,bytes);written.append(reinterpret_cast<const char*>(in.data()),n);if(after_write)after_write();if(hold_write){waiting_bytes=n;waiting_write=std::move(cb);return;}asio::post(io_,[cb=std::move(cb),n]{cb(n);});}
++ void writeSome(libp2p::BytesIn in,size_t bytes,WriteCallbackFunc cb)override{if(fail_write){asio::post(io_,[cb=std::move(cb)]{cb(std::make_error_code(std::errc::broken_pipe));});return;}const auto n=std::min(fragment,bytes);written.append(reinterpret_cast<const char*>(in.data()),n);if(after_write)after_write();if(hold_write){waiting_bytes=n;waiting_write=std::move(cb);return;}if(inline_io){cb(n);return;}asio::post(io_,[cb=std::move(cb),n]{cb(n);});}
+@@ -219,0 +220,12 @@ int main(){try{
++
++ {
++  asio::io_context io;unsigned replies=0,opens=0;auto stream=std::make_shared<TestStream>(io,"");stream->fragment=4096;stream->inline_io=true;
++  stream->after_write=[&]{stream->next_input("{\"accepted\":true}");};
++  auto sender=std::make_shared<AltairStreamSender>(io,[&](auto done){++opens;done(stream);},[]{return true;},4096,std::chrono::seconds(1),std::chrono::milliseconds(2));
++  auto send=[&]{sender->send(Json{},[&](Json ack){check(ack==Json{{"accepted",true}},"synchronous session ACK failed");++replies;});};
++  send();check(replies==1,"first synchronous exchange did not finish");
++  asio::steady_timer earlier(io);earlier.expires_at(std::chrono::steady_clock::now()-std::chrono::seconds(1));
++  earlier.async_wait([&](auto ec){check(!ec,"reuse trigger cancelled");send();});
++  std::this_thread::sleep_for(std::chrono::milliseconds(4));io.poll();
++  check(replies==2&&opens==1&&stream->resets==0,"old queued idle deadline reset newly reused stream");sender->stop();io.restart();io.run();++cases;
++ }
+diff --git a/network/test_json_stream.cpp b/network/test_json_stream.cpp
+index 2a415dc..e1beb59 100644
+--- a/network/test_json_stream.cpp
++++ b/network/test_json_stream.cpp
+@@ -6 +6 @@ class DelayedStream:public libp2p::connection::Stream {
+- ReadCallbackFunc read_;WriteCallbackFunc write_;
++ ReadCallbackFunc read_;WriteCallbackFunc write_;libp2p::BytesOut read_buffer_;size_t write_bytes_=0;
+@@ -11,2 +11,4 @@ public:
+- void readSome(libp2p::BytesOut,size_t,ReadCallbackFunc cb)override{read_=std::move(cb);}
+- void writeSome(libp2p::BytesIn,size_t,WriteCallbackFunc cb)override{write_=std::move(cb);}
++ void readSome(libp2p::BytesOut out,size_t,ReadCallbackFunc cb)override{read_buffer_=out;read_=std::move(cb);}
++ void complete_read(const std::string& input){auto cb=std::exchange(read_,ReadCallbackFunc{});if(!cb)throw std::logic_error("missing test read");std::copy(input.begin(),input.end(),read_buffer_.begin());cb(input.size());}
++ void complete_write(){auto cb=std::exchange(write_,WriteCallbackFunc{});if(!cb)throw std::logic_error("missing test write");cb(write_bytes_);}
++ void writeSome(libp2p::BytesIn,size_t bytes,WriteCallbackFunc cb)override{write_bytes_=bytes;write_=std::move(cb);}
+@@ -39,0 +42,13 @@ int main(){try{
++
++ // Both deadlines are expired when the reactor queues them. The earlier
++ // timer delivers I/O successfully; cancelling the later, already queued
++ // timeout cannot revoke its callback. It must check operation completion.
++ for(unsigned mode=0;mode<3;++mode){
++  asio::io_context test;auto reused=std::make_shared<DelayedStream>(test);unsigned completed=0;
++  asio::steady_timer delivered(test);delivered.expires_at(std::chrono::steady_clock::time_point::min());
++  delivered.async_wait([&](auto ec){check(!ec,"completion timer cancelled");if(mode==2)reused->complete_write();else reused->complete_read("{\"ok\":true}");});
++  if(mode==2){auto write=std::make_shared<JsonWrite>(test,reused,Json{{"ok",true}},[&](bool ok){check(ok,"queued write completion failed");++completed;});write->start(std::chrono::steady_clock::duration::zero());}
++  else if(mode==1){auto read=std::make_shared<JsonRead>(test,reused,RawJsonReply([&](auto raw){check(raw&&*raw=="{\"ok\":true}","queued raw read completion failed");++completed;}),1024);read->start(std::chrono::steady_clock::duration::zero());}
++  else{auto read=std::make_shared<JsonRead>(test,reused,[&](Json value){check(value==Json{{"ok",true}},"queued read completion failed");++completed;});read->start(std::chrono::steady_clock::duration::zero());}
++  test.run();check(completed==1&&reused->resets==0,"already queued timeout reset completed reusable stream");
++ }

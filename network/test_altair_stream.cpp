@@ -7,7 +7,8 @@
 class TestStream:public libp2p::connection::Stream {
  asio::io_context& io_;std::string input_;size_t offset_=0;ReadCallbackFunc pending_;
 public:
- size_t fragment=7;unsigned resets=0,closes=0;std::string written;bool authenticated=true,fail_write=false;
+ size_t fragment=7;unsigned resets=0,closes=0;std::string written;bool authenticated=true,fail_write=false,inline_io=false;
+ std::string peer_id="QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN";
  std::function<void()> after_write;
  bool hold_write=false;WriteCallbackFunc waiting_write;size_t waiting_bytes=0;
  void finish_write(){auto cb=std::exchange(waiting_write,WriteCallbackFunc{});if(cb)cb(waiting_bytes);}
@@ -17,9 +18,9 @@ public:
  void read(libp2p::BytesOut out,size_t bytes,ReadCallbackFunc cb)override{readSome(out,bytes,std::move(cb));}
  void readSome(libp2p::BytesOut out,size_t bytes,ReadCallbackFunc cb)override{
   if(offset_==input_.size()){pending_=std::move(cb);return;}
-  const auto n=std::min({fragment,bytes,input_.size()-offset_});std::copy_n(input_.begin()+offset_,n,out.begin());offset_+=n;asio::post(io_,[cb=std::move(cb),n]{cb(n);});
+  const auto n=std::min({fragment,bytes,input_.size()-offset_});std::copy_n(input_.begin()+offset_,n,out.begin());offset_+=n;if(inline_io){cb(n);return;}asio::post(io_,[cb=std::move(cb),n]{cb(n);});
  }
- void writeSome(libp2p::BytesIn in,size_t bytes,WriteCallbackFunc cb)override{if(fail_write){asio::post(io_,[cb=std::move(cb)]{cb(std::make_error_code(std::errc::broken_pipe));});return;}const auto n=std::min(fragment,bytes);written.append(reinterpret_cast<const char*>(in.data()),n);if(after_write)after_write();if(hold_write){waiting_bytes=n;waiting_write=std::move(cb);return;}asio::post(io_,[cb=std::move(cb),n]{cb(n);});}
+ void writeSome(libp2p::BytesIn in,size_t bytes,WriteCallbackFunc cb)override{if(fail_write){asio::post(io_,[cb=std::move(cb)]{cb(std::make_error_code(std::errc::broken_pipe));});return;}const auto n=std::min(fragment,bytes);written.append(reinterpret_cast<const char*>(in.data()),n);if(after_write)after_write();if(hold_write){waiting_bytes=n;waiting_write=std::move(cb);return;}if(inline_io){cb(n);return;}asio::post(io_,[cb=std::move(cb),n]{cb(n);});}
  void deferReadCallback(outcome::result<size_t> result,ReadCallbackFunc cb)override{asio::post(io_,[result,cb=std::move(cb)]{cb(result);});}
  void deferWriteCallback(std::error_code ec,WriteCallbackFunc cb)override{if(ec)asio::post(io_,[ec,cb=std::move(cb)]{cb(ec);});}
  void reset()override{++resets;if(auto cb=std::exchange(pending_,ReadCallbackFunc{}))deferReadCallback(std::make_error_code(std::errc::operation_canceled),std::move(cb));}
@@ -27,7 +28,7 @@ public:
  void close(VoidResultHandlerFunc cb)override{++closes;asio::post(io_,[cb=std::move(cb)]{cb(outcome::success());});}
  void adjustWindowSize(uint32_t,VoidResultHandlerFunc cb)override{cb(outcome::success());}
  outcome::result<bool> isInitiator()const override{return false;}
- outcome::result<libp2p::peer::PeerId> remotePeerId()const override{if(!authenticated)return std::make_error_code(std::errc::not_supported);return libp2p::peer::PeerId::fromBase58("QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN");}
+ outcome::result<libp2p::peer::PeerId> remotePeerId()const override{if(!authenticated)return std::make_error_code(std::errc::not_supported);return libp2p::peer::PeerId::fromBase58(peer_id);}
  outcome::result<libp2p::multi::Multiaddress> localMultiaddr()const override{return std::make_error_code(std::errc::not_supported);}
  outcome::result<libp2p::multi::Multiaddress> remoteMultiaddr()const override{return std::make_error_code(std::errc::not_supported);}
 };
@@ -216,6 +217,40 @@ int main(){try{
   auto sender=std::make_shared<AltairStreamSender>(io,[&](auto done){++opens;auto stream=std::make_shared<TestStream>(io,"{\"accepted\":true}");stream->fragment=4096;streams.push_back(stream);done(stream);},[]{return true;},4096,std::chrono::seconds(1),std::chrono::milliseconds(2));
   auto send=[&]{sender->send(Json{},[&](Json ack){check(ack==Json{{"accepted",true}},"idle rollover failed");++replies;});};
   send();io.run();check(streams[0]->resets==1,"idle stream did not expire");io.restart();send();io.run();check(opens==2&&replies==2,"sender reused expired stream");++cases;
+ }
+
+ {
+  asio::io_context io;unsigned replies=0,opens=0;auto stream=std::make_shared<TestStream>(io,"");stream->fragment=4096;stream->inline_io=true;
+  stream->after_write=[&]{stream->next_input("{\"accepted\":true}");};
+  auto sender=std::make_shared<AltairStreamSender>(io,[&](auto done){++opens;done(stream);},[]{return true;},4096,std::chrono::seconds(1),std::chrono::milliseconds(2));
+  auto send=[&]{sender->send(Json{},[&](Json ack){check(ack==Json{{"accepted",true}},"synchronous session ACK failed");++replies;});};
+  send();check(replies==1,"first synchronous exchange did not finish");
+  asio::steady_timer earlier(io);earlier.expires_at(std::chrono::steady_clock::now()-std::chrono::seconds(1));
+  bool checked=false;
+  earlier.async_wait([&](auto ec){check(!ec,"reuse trigger cancelled");send();
+   // This barrier follows the already queued old timer, but precedes any
+   // subsequently queued new idle expiration, even on a slow test host.
+   asio::post(io,[&]{check(replies==2&&opens==1&&stream->resets==0,"old queued idle deadline reset newly reused stream");checked=true;sender->stop();});
+  });
+  std::this_thread::sleep_for(std::chrono::milliseconds(4));io.run();
+  check(checked,"queued idle barrier not executed");++cases;
+ }
+
+ {
+  // Nine distinct authenticated synthetic peers share the eight bulk permits.
+  // Idle sessions must not bypass the cap; control traffic remains admissible.
+  asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);
+  std::vector<std::shared_ptr<AltairStreamSession>> sessions;std::vector<std::shared_ptr<TestStream>> streams;unsigned calls=0;std::string refusal;
+  auto make_stream=[&](unsigned index){auto stream=std::make_shared<TestStream>(io,packet);stream->fragment=4096;stream->peer_id.back()="123456789"[index];check(bool(stream->remotePeerId()),"invalid synthetic peer id");return stream;};
+  for(unsigned i=0;i<8;++i){auto stream=make_stream(i);streams.push_back(stream);auto session=std::make_shared<AltairStreamSession>(io,stream,ingress,[&](auto,auto,auto done){++calls;done(Decision::accepted);return true;});sessions.push_back(session);session->start();}
+  io.poll();check(calls==8&&budget.active()==8,"idle peer sessions escaped global budget");
+  auto control=budget.acquire("control-peer");check(bool(control),"idle bulk sessions starved control capacity");control.reset();
+  auto ninth=make_stream(8);auto rejected=std::make_shared<AltairStreamSession>(io,ninth,ingress,[&](auto,auto,auto){++calls;return false;},[&](Json report){if(report["reason"]=="inbound-budget")refusal=report["budgetReason"];});rejected->start();
+  check(refusal=="global-bulk-concurrency"&&calls==8&&ninth->resets==1,"ninth peer bypassed active limit");
+  sessions[0]->cancel();check(budget.active()==7,"idle cancellation retained permit");
+  Request::Done held;auto replacement=make_stream(8);auto resumed=std::make_shared<AltairStreamSession>(io,replacement,ingress,[&](auto,auto,auto done){++calls;held=std::move(done);return true;});resumed->start();io.restart();io.poll();
+  check(calls==9&&budget.active()==8&&bool(held),"released capacity not available to another peer");
+  for(auto& session:sessions)session->cancel();resumed->cancel();check(budget.active()==1,"cancel released active worker permit early");held(Decision::accepted);held={};io.restart();io.run();check(budget.active()==0&&replacement->written.empty(),"cancelled worker leaked or acknowledged");++cases;
  }
  std::cout<<Json{{"scenario","altair-async-stream"},{"cases",cases},{"workerThreadCompletion",true},{"expiredWorkerLeaseRetained",true},{"realPeerConnections",false}}.dump()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

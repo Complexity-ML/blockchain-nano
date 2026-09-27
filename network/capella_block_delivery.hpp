@@ -21,7 +21,16 @@ class CapellaBlockDelivery:public std::enable_shared_from_this<CapellaBlockDeliv
   try{core_("nano_capellaExport",Json::array({token_,"block",id}),reply);}catch(...){reply(nullptr);}
  }
  void exported(const std::string& id,Json value){
-  if(!value.is_object()||value.value("available",Json())!=true||value.value("root",Json())!=id){finish(false);return;}
+  if(!value.is_object()||value.value("root",Json())!=id){finish(false);return;}
+  // The authenticated local core can have pruned to a newer anchor since the
+  // daemon started. Its anchor need not have an exportable signed envelope.
+  // Stop only an ancestor walk: never claim remote admission of the anchor
+  // itself. Every retained descendant still requires the peer's actual ACK.
+  if(value.value("anchor",Json())==true){
+   if(value.value("known",Json())!=true||pending_.empty()){finish(false);return;}
+   deliver();return;
+  }
+  if(value.value("available",Json())!=true){finish(false);return;}
   auto wire=value.at("envelope").dump();if(wire.capacity()>budget_-bytes_){finish(false);return;}
   const auto message=ingress_->decode(wire);if(!message||message->kind!=AltairWireKind::block||message->ssz.size()<184){finish(false);return;}
   const auto& b=message->ssz;auto number=[&](size_t at,size_t n){uint64_t result=0;for(size_t i=0;i<n;++i)result|=uint64_t(b.at(at+i))<<(8*i);return result;};

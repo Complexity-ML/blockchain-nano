@@ -13,8 +13,8 @@ private:
  asio::io_context& io_;Open open_;Current current_;size_t frame_limit_;
  std::chrono::steady_clock::duration timeout_,idle_timeout_;
  asio::steady_timer idle_;Stream stream_;unsigned sent_=0;bool stopped_=false;
- std::shared_ptr<TimedReply> pending_;
- void discard(){idle_.cancel();if(stream_&&!stream_->isClosed())stream_->reset();stream_.reset();sent_=0;}
+ std::shared_ptr<TimedReply> pending_;std::shared_ptr<int> idle_generation_;
+ void discard(){idle_generation_.reset();idle_.cancel();if(stream_&&!stream_->isClosed())stream_->reset();stream_.reset();sent_=0;}
  void exchange(Json frame,Phase phase){
   auto pending=pending_;auto stream=stream_;
   if(!pending||!pending->active())return;
@@ -33,8 +33,10 @@ private:
     else{
      // Receiver's idle read expires at 10s. Retire locally at 5s rather than
      // knowingly reuse a stale stream; network failure is still ambiguous.
+     self->idle_generation_=std::make_shared<int>(0);
+     const auto generation=self->idle_generation_;
      self->idle_.expires_after(self->idle_timeout_);
-     self->idle_.async_wait([weak=std::weak_ptr<AltairStreamSender>(self),stream](auto ec){if(!ec)if(auto owner=weak.lock())if(!owner->pending_&&owner->stream_==stream)owner->discard();});
+     self->idle_.async_wait([weak=std::weak_ptr<AltairStreamSender>(self),stream,generation](auto ec){if(!ec)if(auto owner=weak.lock())if(owner->idle_generation_==generation&&!owner->pending_&&owner->stream_==stream)owner->discard();});
     }
     pending->finish(std::move(ack));
    });
@@ -46,7 +48,7 @@ public:
  void stop(){if(stopped_)return;stopped_=true;discard();if(auto pending=pending_)pending->finish(nullptr);}
  void send(Json frame,Reply reply,Phase phase={}){
   if(stopped_||pending_||!current_()){reply(nullptr);return;}
-  idle_.cancel();
+  idle_generation_.reset();idle_.cancel();
   pending_=std::make_shared<TimedReply>(io_,[self=shared_from_this(),reply=std::move(reply)](Json value)mutable{if(value.is_null())self->discard();self->pending_.reset();reply(std::move(value));});
   auto pending=pending_;pending->start(timeout_);
   if(stream_&&!stream_->isClosed()){exchange(std::move(frame),std::move(phase));return;}

@@ -1,0 +1,57 @@
+diff --git a/tests/capella/docker-partition.mjs b/tests/capella/docker-partition.mjs
+index a0f2a23..7cffb5b 100644
+--- a/tests/capella/docker-partition.mjs
++++ b/tests/capella/docker-partition.mjs
+@@ -8,3 +8,3 @@ const [exporter,outArg,image,revision,mode="partition"]=process.argv.slice(2);
+-if(!["partition","asymmetric-delay"].includes(mode))throw Error("Unknown network fault mode");
+-const asymmetric=mode==="asymmetric-delay";
+-if(!exporter||!outArg||!image||!/^([a-f0-9]{40})$/.test(revision??''))throw Error('Usage: docker-partition.mjs exporter NEW-output-directory image revision [partition|asymmetric-delay]');
++if(!["partition","asymmetric-delay","crash-restart"].includes(mode))throw Error("Unknown network fault mode");
++const asymmetric=mode==="asymmetric-delay",crash=mode==="crash-restart";
++if(!exporter||!outArg||!image||!/^([a-f0-9]{40})$/.test(revision??''))throw Error('Usage: docker-partition.mjs exporter NEW-output-directory image revision [partition|asymmetric-delay|crash-restart]');
+@@ -60,0 +61,42 @@ try{
++ }else if(crash){
++  const original=await provenance(names[1]);
++  const logsBefore=await docker(['logs',names[1]]);
++  const parseEvents=text=>text.split('\n').flatMap(line=>{try{return [JSON.parse(line)];}catch{return [];}});
++  const listenBefore=parseEvents(logsBefore).filter(x=>x.event==='listen').at(-1);
++  const startsBefore=parseEvents(logsBefore).filter(x=>x.event==='altair-ipc-ready'&&x.networkProtocolActive===true).length;
++  check(listenBefore&&startsBefore>0,'Missing pre-crash daemon identity');
++  const volume=original.Mounts.find(x=>x.Destination==='/var/lib/nano');
++  check(volume?.Type==='volume'&&volume.Name,'Missing persistent node volume');
++  await docker(['kill','--signal','KILL',names[1]]);
++  const killed=await provenance(names[1]);check(!killed.State.Running&&killed.State.ExitCode===137,'SIGKILL did not stop the complete node');
++  await record({event:'crash-start',node:1,containerId:original.Id,volume:volume.Name,cutoffEpoch:String(cutoff),durationSeconds:96});
++  const until=Date.now()+96000;let survivingHead;
++  while(Date.now()<until){
++   check(!(await provenance(names[1])).State.Running,'Killed node restarted unexpectedly');
++   check((await provenance(names[0])).State.Running,'Surviving node stopped');
++   const checkpoint=(await get(0,'/eth/v1/beacon/states/head/finality_checkpoints')).data.finalized;
++   const epoch=BigInt(checkpoint.epoch);check(epoch>=epochs.get(0)&&epoch<=cutoff,'Surviving half-stake finalized beyond pre-crash bound or regressed');
++   check(!roots.has(String(epoch))||roots.get(String(epoch))===checkpoint.root,'Conflicting finality during crash');roots.set(String(epoch),checkpoint.root);epochs.set(0,epoch);
++   survivingHead=(await get(0,'/eth/v1/beacon/headers/head')).data;
++   await record({event:'crash-offline-observation',checkpoint,headRoot:survivingHead.root,slot:survivingHead.header.message.slot});await wait(2000);
++  }
++  check(BigInt(survivingHead.header.message.slot)>BigInt(before[0].slot),'Surviving chain did not advance');
++  await docker(['start',names[1]]);const deadline=Date.now()+60000;let ready=false;
++  while(Date.now()<deadline){
++   const state=await provenance(names[1]);check(state.State.Running,'Restarted node exited');
++   check(state.Id===original.Id&&state.State.StartedAt!==original.State.StartedAt&&state.Mounts.some(x=>x.Destination==='/var/lib/nano'&&x.Name===volume.Name),'Restart replaced identity or persistent volume');
++   const events=parseEvents(await docker(['logs',names[1]]));
++   if(events.filter(x=>x.event==='altair-ipc-ready'&&x.networkProtocolActive===true).length>startsBefore){
++    const listenAfter=events.filter(x=>x.event==='listen').at(-1);check(listenAfter?.address.split('/p2p/')[1]===listenBefore.address.split('/p2p/')[1],'Restart changed persisted P2P identity');ready=true;break;
++   }
++   await wait(500);
++  }
++  check(ready,'Restart admission readiness deadline');
++  const recovered=(await get(1,'/eth/v1/beacon/states/head/finality_checkpoints')).data.finalized;
++  check(BigInt(recovered.epoch)>=BigInt(before[1].checkpoint.epoch),'Persisted finality lost after SIGKILL');
++  const oldHeader=await get(1,'/eth/v1/beacon/headers/'+before[1].checkpoint.root);
++  check(oldHeader.data.root===before[1].checkpoint.root,'Pre-crash finalized header lost');
++  const minimum=BigInt(survivingHead.header.message.slot)/BigInt(meta.slotsPerEpoch);
++  await record({event:'crash-restarted',recovered,minimumFinalizedEpoch:String(minimum),persistedFinalizedRoot:oldHeader.data.root});
++  const final=await commonFinality(minimum,240);
++  result='PASSED';await record({event:'crash-restart-qualified',final});
+@@ -78 +120 @@ finally{
+- await writeFile(join(out,'summary.json'),JSON.stringify({result,revision,image,campaign,scope:asymmetric?'Docker one-peer 500ms egress delay; two running Capella daemons, 32 validators each':'Docker packet partition; two running native Capella daemons, 32 validators each',failure:failure?.message??null},null,2)+'\n');
++ await writeFile(join(out,'summary.json'),JSON.stringify({result,revision,image,campaign,scope:crash?'Docker whole-node SIGKILL, 96s offline, persistent-volume restart and renewed common finality':asymmetric?'Docker one-peer 500ms egress delay; two running Capella daemons, 32 validators each':'Docker packet partition; two running native Capella daemons, 32 validators each',failure:failure?.message??null},null,2)+'\n');

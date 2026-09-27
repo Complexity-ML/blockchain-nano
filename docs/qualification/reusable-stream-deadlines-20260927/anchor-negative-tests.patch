@@ -1,0 +1,17 @@
+diff --git a/network/test_capella_block_delivery.cpp b/network/test_capella_block_delivery.cpp
+index 434de16..5fde264 100644
+--- a/network/test_capella_block_delivery.cpp
++++ b/network/test_capella_block_delivery.cpp
+@@ -8 +8 @@ int main(){try{
+- for(const std::string mode:{"normal","cached","duplicate","missing","bad-parent","backward-slot","bad-offset","foreign","depth","bytes","reject","lost-ack","cancel"}){
++ for(const std::string mode:{"normal","cached","duplicate","missing","bad-parent","backward-slot","bad-offset","foreign","depth","bytes","reject","lost-ack","cancel","new-anchor","anchor-data-present","unknown-anchor","anchor-root-mismatch","anchor-refused","anchor-target"}){
+@@ -11,0 +12,3 @@ int main(){try{
++   if((n==2&&(mode=="new-anchor"||mode=="anchor-data-present"||mode=="unknown-anchor"||mode=="anchor-root-mismatch"||mode=="anchor-refused"))||(n==3&&mode=="anchor-target")){
++    cb(Json{{"available",mode=="anchor-data-present"},{"root",mode=="anchor-root-mismatch"?root('f'):id},{"known",mode!="unknown-anchor"},{"anchor",true}});return;
++   }
+@@ -17 +20 @@ int main(){try{
+-  auto send=[&](Json frame,Reply cb){++sends;const auto encoded=frame.at("ssz").get<std::string>();const unsigned slot=std::stoul(encoded.substr(202,2),nullptr,16);check(slot==(mode=="cached"?3:sends),"child delivered before ancestor");if(mode=="lost-ack"||mode=="cancel"){late=cb;return;}cb(Json{{"accepted",mode!="reject"}});if(mode=="duplicate")cb(Json{{"accepted",true}});};
++  auto send=[&](Json frame,Reply cb){++sends;const auto encoded=frame.at("ssz").get<std::string>();const unsigned slot=std::stoul(encoded.substr(202,2),nullptr,16);check(slot==((mode=="cached"||mode=="new-anchor"||mode=="anchor-data-present"||mode=="anchor-refused")?3:sends),"child delivered before ancestor");if(mode=="lost-ack"||mode=="cancel"){late=cb;return;}cb(Json{{"accepted",mode!="reject"&&mode!="anchor-refused"}});if(mode=="duplicate")cb(Json{{"accepted",true}});};
+@@ -20 +23 @@ int main(){try{
+-  const bool ok=mode=="normal"||mode=="cached"||mode=="duplicate";check(done==1&&result.at("accepted")==ok,"wrong completion");check(knowledge->acknowledged(root('3'))==ok,"cached unconfirmed target");if(ok)check(sends==(mode=="cached"?1:3),"wrong deliveries");if(mode=="missing"||mode=="depth"||mode=="bytes")check(sends==0,"partial send before preparation failure");++cases;
++  const bool ok=mode=="normal"||mode=="cached"||mode=="duplicate"||mode=="new-anchor"||mode=="anchor-data-present";check(done==1&&result.at("accepted")==ok,"wrong completion");check(knowledge->acknowledged(root('3'))==ok,"cached unconfirmed target");if(ok)check(sends==((mode=="cached"||mode=="new-anchor"||mode=="anchor-data-present")?1:3),"wrong deliveries");if(mode=="missing"||mode=="depth"||mode=="bytes")check(sends==0,"partial send before preparation failure");if(mode=="new-anchor"||mode=="anchor-data-present"){check(exports==2&&!knowledge->acknowledged(root('2')),"inferred remote acknowledgement for local anchor");}++cases;

@@ -1,0 +1,207 @@
+diff --git a/network/altair_stream_sender.hpp b/network/altair_stream_sender.hpp
+index f9ab503..60fac80 100644
+--- a/network/altair_stream_sender.hpp
++++ b/network/altair_stream_sender.hpp
+@@ -16,2 +16,2 @@ private:
+- std::shared_ptr<TimedReply> pending_;
+- void discard(){idle_.cancel();if(stream_&&!stream_->isClosed())stream_->reset();stream_.reset();sent_=0;}
++ std::shared_ptr<TimedReply> pending_;std::shared_ptr<int> idle_generation_;
++ void discard(){idle_generation_.reset();idle_.cancel();if(stream_&&!stream_->isClosed())stream_->reset();stream_.reset();sent_=0;}
+@@ -35,0 +36,2 @@ private:
++     self->idle_generation_=std::make_shared<int>(0);
++     const auto generation=self->idle_generation_;
+@@ -37 +39 @@ private:
+-     self->idle_.async_wait([weak=std::weak_ptr<AltairStreamSender>(self),stream](auto ec){if(!ec)if(auto owner=weak.lock())if(!owner->pending_&&owner->stream_==stream)owner->discard();});
++     self->idle_.async_wait([weak=std::weak_ptr<AltairStreamSender>(self),stream,generation](auto ec){if(!ec)if(auto owner=weak.lock())if(owner->idle_generation_==generation&&!owner->pending_&&owner->stream_==stream)owner->discard();});
+@@ -49 +51 @@ public:
+-  idle_.cancel();
++  idle_generation_.reset();idle_.cancel();
+diff --git a/network/capella_block_delivery.hpp b/network/capella_block_delivery.hpp
+index af793ac..edf8df8 100644
+--- a/network/capella_block_delivery.hpp
++++ b/network/capella_block_delivery.hpp
+@@ -24 +24,10 @@ class CapellaBlockDelivery:public std::enable_shared_from_this<CapellaBlockDeliv
+-  if(!value.is_object()||value.value("available",Json())!=true||value.value("root",Json())!=id){finish(false);return;}
++  if(!value.is_object()||value.value("root",Json())!=id){finish(false);return;}
++  // The authenticated local core can have pruned to a newer anchor since the
++  // daemon started. Its anchor need not have an exportable signed envelope.
++  // Stop only an ancestor walk: never claim remote admission of the anchor
++  // itself. Every retained descendant still requires the peer's actual ACK.
++  if(value.value("anchor",Json())==true){
++   if(value.value("known",Json())!=true||pending_.empty()){finish(false);return;}
++   deliver();return;
++  }
++  if(value.value("available",Json())!=true){finish(false);return;}
+diff --git a/network/json_stream.hpp b/network/json_stream.hpp
+index a09e062..f168115 100644
+--- a/network/json_stream.hpp
++++ b/network/json_stream.hpp
+@@ -32 +32 @@ public:
+- void start(std::chrono::steady_clock::duration timeout=std::chrono::seconds(10)){timer_.expires_after(timeout);timer_.async_wait([self=shared_from_this()](auto ec){if(!ec){self->stream_->reset();self->fail();}});next();}
++ void start(std::chrono::steady_clock::duration timeout=std::chrono::seconds(10)){timer_.expires_after(timeout);timer_.async_wait([self=shared_from_this()](auto ec){if(!ec&&self->active()){self->stream_->reset();self->fail();}});next();}
+@@ -43 +43 @@ public:
+- void start(std::chrono::steady_clock::duration timeout=std::chrono::seconds(10)){if(data_.size()>maximum_){stream_->reset();finish(false);return;}timer_.expires_after(timeout);timer_.async_wait([self=shared_from_this()](auto ec){if(!ec){self->stream_->reset();self->finish(false);}});libp2p::write(stream_,libp2p::BytesIn(reinterpret_cast<const uint8_t*>(data_.data()),data_.size()),[self=shared_from_this()](auto result){self->finish(bool(result));});}
++ void start(std::chrono::steady_clock::duration timeout=std::chrono::seconds(10)){if(data_.size()>maximum_){stream_->reset();finish(false);return;}timer_.expires_after(timeout);timer_.async_wait([self=shared_from_this()](auto ec){if(!ec&&self->done_){self->stream_->reset();self->finish(false);}});libp2p::write(stream_,libp2p::BytesIn(reinterpret_cast<const uint8_t*>(data_.data()),data_.size()),[self=shared_from_this()](auto result){self->finish(bool(result));});}
+diff --git a/network/test_altair_stream.cpp b/network/test_altair_stream.cpp
+index 280990a..ce8c68e 100644
+--- a/network/test_altair_stream.cpp
++++ b/network/test_altair_stream.cpp
+@@ -10 +10,2 @@ public:
+- size_t fragment=7;unsigned resets=0,closes=0;std::string written;bool authenticated=true,fail_write=false;
++ size_t fragment=7;unsigned resets=0,closes=0;std::string written;bool authenticated=true,fail_write=false,inline_io=false;
++ std::string peer_id="QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN";
+@@ -20 +21 @@ public:
+-  const auto n=std::min({fragment,bytes,input_.size()-offset_});std::copy_n(input_.begin()+offset_,n,out.begin());offset_+=n;asio::post(io_,[cb=std::move(cb),n]{cb(n);});
++  const auto n=std::min({fragment,bytes,input_.size()-offset_});std::copy_n(input_.begin()+offset_,n,out.begin());offset_+=n;if(inline_io){cb(n);return;}asio::post(io_,[cb=std::move(cb),n]{cb(n);});
+@@ -22 +23 @@ public:
+- void writeSome(libp2p::BytesIn in,size_t bytes,WriteCallbackFunc cb)override{if(fail_write){asio::post(io_,[cb=std::move(cb)]{cb(std::make_error_code(std::errc::broken_pipe));});return;}const auto n=std::min(fragment,bytes);written.append(reinterpret_cast<const char*>(in.data()),n);if(after_write)after_write();if(hold_write){waiting_bytes=n;waiting_write=std::move(cb);return;}asio::post(io_,[cb=std::move(cb),n]{cb(n);});}
++ void writeSome(libp2p::BytesIn in,size_t bytes,WriteCallbackFunc cb)override{if(fail_write){asio::post(io_,[cb=std::move(cb)]{cb(std::make_error_code(std::errc::broken_pipe));});return;}const auto n=std::min(fragment,bytes);written.append(reinterpret_cast<const char*>(in.data()),n);if(after_write)after_write();if(hold_write){waiting_bytes=n;waiting_write=std::move(cb);return;}if(inline_io){cb(n);return;}asio::post(io_,[cb=std::move(cb),n]{cb(n);});}
+@@ -30 +31 @@ public:
+- outcome::result<libp2p::peer::PeerId> remotePeerId()const override{if(!authenticated)return std::make_error_code(std::errc::not_supported);return libp2p::peer::PeerId::fromBase58("QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN");}
++ outcome::result<libp2p::peer::PeerId> remotePeerId()const override{if(!authenticated)return std::make_error_code(std::errc::not_supported);return libp2p::peer::PeerId::fromBase58(peer_id);}
+@@ -219,0 +221,34 @@ int main(){try{
++
++ {
++  asio::io_context io;unsigned replies=0,opens=0;auto stream=std::make_shared<TestStream>(io,"");stream->fragment=4096;stream->inline_io=true;
++  stream->after_write=[&]{stream->next_input("{\"accepted\":true}");};
++  auto sender=std::make_shared<AltairStreamSender>(io,[&](auto done){++opens;done(stream);},[]{return true;},4096,std::chrono::seconds(1),std::chrono::milliseconds(2));
++  auto send=[&]{sender->send(Json{},[&](Json ack){check(ack==Json{{"accepted",true}},"synchronous session ACK failed");++replies;});};
++  send();check(replies==1,"first synchronous exchange did not finish");
++  asio::steady_timer earlier(io);earlier.expires_at(std::chrono::steady_clock::now()-std::chrono::seconds(1));
++  bool checked=false;
++  earlier.async_wait([&](auto ec){check(!ec,"reuse trigger cancelled");send();
++   // This barrier follows the already queued old timer, but precedes any
++   // subsequently queued new idle expiration, even on a slow test host.
++   asio::post(io,[&]{check(replies==2&&opens==1&&stream->resets==0,"old queued idle deadline reset newly reused stream");checked=true;sender->stop();});
++  });
++  std::this_thread::sleep_for(std::chrono::milliseconds(4));io.run();
++  check(checked,"queued idle barrier not executed");++cases;
++ }
++
++ {
++  // Nine distinct authenticated synthetic peers share the eight bulk permits.
++  // Idle sessions must not bypass the cap; control traffic remains admissible.
++  asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);
++  std::vector<std::shared_ptr<AltairStreamSession>> sessions;std::vector<std::shared_ptr<TestStream>> streams;unsigned calls=0;std::string refusal;
++  auto make_stream=[&](unsigned index){auto stream=std::make_shared<TestStream>(io,packet);stream->fragment=4096;stream->peer_id.back()="123456789"[index];check(bool(stream->remotePeerId()),"invalid synthetic peer id");return stream;};
++  for(unsigned i=0;i<8;++i){auto stream=make_stream(i);streams.push_back(stream);auto session=std::make_shared<AltairStreamSession>(io,stream,ingress,[&](auto,auto,auto done){++calls;done(Decision::accepted);return true;});sessions.push_back(session);session->start();}
++  io.poll();check(calls==8&&budget.active()==8,"idle peer sessions escaped global budget");
++  auto control=budget.acquire("control-peer");check(bool(control),"idle bulk sessions starved control capacity");control.reset();
++  auto ninth=make_stream(8);auto rejected=std::make_shared<AltairStreamSession>(io,ninth,ingress,[&](auto,auto,auto){++calls;return false;},[&](Json report){if(report["reason"]=="inbound-budget")refusal=report["budgetReason"];});rejected->start();
++  check(refusal=="global-bulk-concurrency"&&calls==8&&ninth->resets==1,"ninth peer bypassed active limit");
++  sessions[0]->cancel();check(budget.active()==7,"idle cancellation retained permit");
++  Request::Done held;auto replacement=make_stream(8);auto resumed=std::make_shared<AltairStreamSession>(io,replacement,ingress,[&](auto,auto,auto done){++calls;held=std::move(done);return true;});resumed->start();io.restart();io.poll();
++  check(calls==9&&budget.active()==8&&bool(held),"released capacity not available to another peer");
++  for(auto& session:sessions)session->cancel();resumed->cancel();check(budget.active()==1,"cancel released active worker permit early");held(Decision::accepted);held={};io.restart();io.run();check(budget.active()==0&&replacement->written.empty(),"cancelled worker leaked or acknowledged");++cases;
++ }
+diff --git a/network/test_capella_block_delivery.cpp b/network/test_capella_block_delivery.cpp
+index 434de16..5fde264 100644
+--- a/network/test_capella_block_delivery.cpp
++++ b/network/test_capella_block_delivery.cpp
+@@ -8 +8 @@ int main(){try{
+- for(const std::string mode:{"normal","cached","duplicate","missing","bad-parent","backward-slot","bad-offset","foreign","depth","bytes","reject","lost-ack","cancel"}){
++ for(const std::string mode:{"normal","cached","duplicate","missing","bad-parent","backward-slot","bad-offset","foreign","depth","bytes","reject","lost-ack","cancel","new-anchor","anchor-data-present","unknown-anchor","anchor-root-mismatch","anchor-refused","anchor-target"}){
+@@ -11,0 +12,3 @@ int main(){try{
++   if((n==2&&(mode=="new-anchor"||mode=="anchor-data-present"||mode=="unknown-anchor"||mode=="anchor-root-mismatch"||mode=="anchor-refused"))||(n==3&&mode=="anchor-target")){
++    cb(Json{{"available",mode=="anchor-data-present"},{"root",mode=="anchor-root-mismatch"?root('f'):id},{"known",mode!="unknown-anchor"},{"anchor",true}});return;
++   }
+@@ -17 +20 @@ int main(){try{
+-  auto send=[&](Json frame,Reply cb){++sends;const auto encoded=frame.at("ssz").get<std::string>();const unsigned slot=std::stoul(encoded.substr(202,2),nullptr,16);check(slot==(mode=="cached"?3:sends),"child delivered before ancestor");if(mode=="lost-ack"||mode=="cancel"){late=cb;return;}cb(Json{{"accepted",mode!="reject"}});if(mode=="duplicate")cb(Json{{"accepted",true}});};
++  auto send=[&](Json frame,Reply cb){++sends;const auto encoded=frame.at("ssz").get<std::string>();const unsigned slot=std::stoul(encoded.substr(202,2),nullptr,16);check(slot==((mode=="cached"||mode=="new-anchor"||mode=="anchor-data-present"||mode=="anchor-refused")?3:sends),"child delivered before ancestor");if(mode=="lost-ack"||mode=="cancel"){late=cb;return;}cb(Json{{"accepted",mode!="reject"&&mode!="anchor-refused"}});if(mode=="duplicate")cb(Json{{"accepted",true}});};
+@@ -20 +23 @@ int main(){try{
+-  const bool ok=mode=="normal"||mode=="cached"||mode=="duplicate";check(done==1&&result.at("accepted")==ok,"wrong completion");check(knowledge->acknowledged(root('3'))==ok,"cached unconfirmed target");if(ok)check(sends==(mode=="cached"?1:3),"wrong deliveries");if(mode=="missing"||mode=="depth"||mode=="bytes")check(sends==0,"partial send before preparation failure");++cases;
++  const bool ok=mode=="normal"||mode=="cached"||mode=="duplicate"||mode=="new-anchor"||mode=="anchor-data-present";check(done==1&&result.at("accepted")==ok,"wrong completion");check(knowledge->acknowledged(root('3'))==ok,"cached unconfirmed target");if(ok)check(sends==((mode=="cached"||mode=="new-anchor"||mode=="anchor-data-present")?1:3),"wrong deliveries");if(mode=="missing"||mode=="depth"||mode=="bytes")check(sends==0,"partial send before preparation failure");if(mode=="new-anchor"||mode=="anchor-data-present"){check(exports==2&&!knowledge->acknowledged(root('2')),"inferred remote acknowledgement for local anchor");}++cases;
+diff --git a/network/test_json_stream.cpp b/network/test_json_stream.cpp
+index 2a415dc..e1beb59 100644
+--- a/network/test_json_stream.cpp
++++ b/network/test_json_stream.cpp
+@@ -6 +6 @@ class DelayedStream:public libp2p::connection::Stream {
+- ReadCallbackFunc read_;WriteCallbackFunc write_;
++ ReadCallbackFunc read_;WriteCallbackFunc write_;libp2p::BytesOut read_buffer_;size_t write_bytes_=0;
+@@ -11,2 +11,4 @@ public:
+- void readSome(libp2p::BytesOut,size_t,ReadCallbackFunc cb)override{read_=std::move(cb);}
+- void writeSome(libp2p::BytesIn,size_t,WriteCallbackFunc cb)override{write_=std::move(cb);}
++ void readSome(libp2p::BytesOut out,size_t,ReadCallbackFunc cb)override{read_buffer_=out;read_=std::move(cb);}
++ void complete_read(const std::string& input){auto cb=std::exchange(read_,ReadCallbackFunc{});if(!cb)throw std::logic_error("missing test read");std::copy(input.begin(),input.end(),read_buffer_.begin());cb(input.size());}
++ void complete_write(){auto cb=std::exchange(write_,WriteCallbackFunc{});if(!cb)throw std::logic_error("missing test write");cb(write_bytes_);}
++ void writeSome(libp2p::BytesIn,size_t bytes,WriteCallbackFunc cb)override{write_bytes_=bytes;write_=std::move(cb);}
+@@ -39,0 +42,13 @@ int main(){try{
++
++ // Both deadlines are expired when the reactor queues them. The earlier
++ // timer delivers I/O successfully; cancelling the later, already queued
++ // timeout cannot revoke its callback. It must check operation completion.
++ for(unsigned mode=0;mode<3;++mode){
++  asio::io_context test;auto reused=std::make_shared<DelayedStream>(test);unsigned completed=0;
++  asio::steady_timer delivered(test);delivered.expires_at(std::chrono::steady_clock::time_point::min());
++  delivered.async_wait([&](auto ec){check(!ec,"completion timer cancelled");if(mode==2)reused->complete_write();else reused->complete_read("{\"ok\":true}");});
++  if(mode==2){auto write=std::make_shared<JsonWrite>(test,reused,Json{{"ok",true}},[&](bool ok){check(ok,"queued write completion failed");++completed;});write->start(std::chrono::steady_clock::duration::zero());}
++  else if(mode==1){auto read=std::make_shared<JsonRead>(test,reused,RawJsonReply([&](auto raw){check(raw&&*raw=="{\"ok\":true}","queued raw read completion failed");++completed;}),1024);read->start(std::chrono::steady_clock::duration::zero());}
++  else{auto read=std::make_shared<JsonRead>(test,reused,[&](Json value){check(value==Json{{"ok",true}},"queued read completion failed");++completed;});read->start(std::chrono::steady_clock::duration::zero());}
++  test.run();check(completed==1&&reused->resets==0,"already queued timeout reset completed reusable stream");
++ }
+diff --git a/tests/capella/docker-partition.mjs b/tests/capella/docker-partition.mjs
+index a0f2a23..f2b2203 100644
+--- a/tests/capella/docker-partition.mjs
++++ b/tests/capella/docker-partition.mjs
+@@ -8,3 +8,3 @@ const [exporter,outArg,image,revision,mode="partition"]=process.argv.slice(2);
+-if(!["partition","asymmetric-delay"].includes(mode))throw Error("Unknown network fault mode");
+-const asymmetric=mode==="asymmetric-delay";
+-if(!exporter||!outArg||!image||!/^([a-f0-9]{40})$/.test(revision??''))throw Error('Usage: docker-partition.mjs exporter NEW-output-directory image revision [partition|asymmetric-delay]');
++if(!["partition","asymmetric-delay","crash-restart"].includes(mode))throw Error("Unknown network fault mode");
++const asymmetric=mode==="asymmetric-delay",crash=mode==="crash-restart";
++if(!exporter||!outArg||!image||!/^([a-f0-9]{40})$/.test(revision??''))throw Error('Usage: docker-partition.mjs exporter NEW-output-directory image revision [partition|asymmetric-delay|crash-restart]');
+@@ -30 +30 @@ try{
+-  if(i===1){const logs=await docker(['logs',names[0]]);const listen=logs.split('\n').map(x=>{try{return JSON.parse(x);}catch{return {};}}).find(x=>x.event==='listen');check(listen,'Missing peer listen address');const left=await provenance(names[0]);const ip=left.NetworkSettings.Networks[network].IPAddress;const cfg=JSON.parse(await readFile(join(fixture,'node-1.json'),'utf8'));cfg.bootnodes=[listen.address.replace('/ip4/0.0.0.0/','/ip4/'+ip+'/')];await writeFile(join(fixture,'node-1.json'),JSON.stringify(cfg));}
++  if(i===1){const logs=await docker(['logs',names[0]]);const listen=logs.split('\n').map(x=>{try{return JSON.parse(x);}catch{return {};}}).find(x=>x.event==='listen');check(listen,'Missing peer listen address');const left=await provenance(names[0]);const ip=left.NetworkSettings.Networks[network].IPAddress;const cfg=JSON.parse(await readFile(join(fixture,'node-1.json'),'utf8'));cfg.bootnodes=[listen.address.replace('/ip4/0.0.0.0/','/ip4/'+ip+'/')];if(crash)cfg.capella.recoveryWitness='/var/lib/nano/recovery-witness';await writeFile(join(fixture,'node-1.json'),JSON.stringify(cfg));}
+@@ -60,0 +61,48 @@ try{
++ }else if(crash){
++  const original=await provenance(names[1]);
++  const logsBefore=await docker(['logs',names[1]]);
++  const parseEvents=text=>text.split('\n').flatMap(line=>{try{return [JSON.parse(line)];}catch{return [];}});
++  const listenBefore=parseEvents(logsBefore).filter(x=>x.event==='listen').at(-1);
++  const startsBefore=parseEvents(logsBefore).filter(x=>x.event==='altair-ipc-ready'&&x.networkProtocolActive===true).length;
++  check(listenBefore&&startsBefore>0,'Missing pre-crash daemon identity');
++  const volume=original.Mounts.find(x=>x.Destination==='/var/lib/nano');
++  check(volume?.Type==='volume'&&volume.Name,'Missing persistent node volume');
++  await docker(['kill','--signal','KILL',names[1]]);
++  const killed=await provenance(names[1]);check(!killed.State.Running&&killed.State.ExitCode===137,'SIGKILL did not stop the complete node');
++  await record({event:'crash-start',node:1,containerId:original.Id,volume:volume.Name,cutoffEpoch:String(cutoff),durationSeconds:96});
++  const until=Date.now()+96000;let survivingHead;
++  while(Date.now()<until){
++   check(!(await provenance(names[1])).State.Running,'Killed node restarted unexpectedly');
++   check((await provenance(names[0])).State.Running,'Surviving node stopped');
++   const checkpoint=(await get(0,'/eth/v1/beacon/states/head/finality_checkpoints')).data.finalized;
++   const epoch=BigInt(checkpoint.epoch);check(epoch>=epochs.get(0)&&epoch<=cutoff,'Surviving half-stake finalized beyond pre-crash bound or regressed');
++   check(!roots.has(String(epoch))||roots.get(String(epoch))===checkpoint.root,'Conflicting finality during crash');roots.set(String(epoch),checkpoint.root);epochs.set(0,epoch);
++   survivingHead=(await get(0,'/eth/v1/beacon/headers/head')).data;
++   await record({event:'crash-offline-observation',checkpoint,headRoot:survivingHead.root,slot:survivingHead.header.message.slot});await wait(2000);
++  }
++  check(BigInt(survivingHead.header.message.slot)>BigInt(before[0].slot),'Surviving chain did not advance');
++  // Explicit operator transition from initial bootstrap to witnessed recovery.
++  // The witness was written throughout the first run, not inferred after crash.
++  const restartConfig=JSON.parse(await readFile(join(fixture,'node-1.json'),'utf8'));
++  check(restartConfig.capella.recoveryWitness==='/var/lib/nano/recovery-witness'&&restartConfig.capella.restart===null,'Unexpected recovery policy');
++  restartConfig.capella.initial=null;await writeFile(join(fixture,'node-1.json'),JSON.stringify(restartConfig));
++  await record({event:'crash-recovery-configured',mode:'existing-witness',bootstrapInitialCleared:true});
++  await docker(['start',names[1]]);const deadline=Date.now()+60000;let ready=false;
++  while(Date.now()<deadline){
++   const state=await provenance(names[1]);check(state.State.Running,'Restarted node exited');
++   check(state.Id===original.Id&&state.State.StartedAt!==original.State.StartedAt&&state.Mounts.some(x=>x.Destination==='/var/lib/nano'&&x.Name===volume.Name),'Restart replaced identity or persistent volume');
++   const events=parseEvents(await docker(['logs',names[1]]));
++   if(events.filter(x=>x.event==='altair-ipc-ready'&&x.networkProtocolActive===true).length>startsBefore){
++    const listenAfter=events.filter(x=>x.event==='listen').at(-1);check(listenAfter?.address.split('/p2p/')[1]===listenBefore.address.split('/p2p/')[1],'Restart changed persisted P2P identity');ready=true;break;
++   }
++   await wait(500);
++  }
++  check(ready,'Restart admission readiness deadline');
++  const recovered=(await get(1,'/eth/v1/beacon/states/head/finality_checkpoints')).data.finalized;
++  check(BigInt(recovered.epoch)>=BigInt(before[1].checkpoint.epoch),'Persisted finality lost after SIGKILL');
++  const oldHeader=await get(1,'/eth/v1/beacon/headers/'+before[1].checkpoint.root);
++  check(oldHeader.data.root===before[1].checkpoint.root,'Pre-crash finalized header lost');
++  const minimum=BigInt(survivingHead.header.message.slot)/BigInt(meta.slotsPerEpoch);
++  await record({event:'crash-restarted',recovered,minimumFinalizedEpoch:String(minimum),persistedFinalizedRoot:oldHeader.data.root});
++  const final=await commonFinality(minimum,240);
++  result='PASSED';await record({event:'crash-restart-qualified',final});
+@@ -78 +126 @@ finally{
+- await writeFile(join(out,'summary.json'),JSON.stringify({result,revision,image,campaign,scope:asymmetric?'Docker one-peer 500ms egress delay; two running Capella daemons, 32 validators each':'Docker packet partition; two running native Capella daemons, 32 validators each',failure:failure?.message??null},null,2)+'\n');
++ await writeFile(join(out,'summary.json'),JSON.stringify({result,revision,image,campaign,scope:crash?'Docker whole-node SIGKILL, 96s offline, persistent-volume restart and renewed common finality':asymmetric?'Docker one-peer 500ms egress delay; two running Capella daemons, 32 validators each':'Docker packet partition; two running native Capella daemons, 32 validators each',failure:failure?.message??null},null,2)+'\n');

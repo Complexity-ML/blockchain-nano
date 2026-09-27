@@ -3168,3 +3168,28 @@ entrant journalisé. Refus d'admission, un échec d'ACK et deux envois d'attesta
 non confirmés restent dans les preuves. Ce contre-exemple local est couvert ;
 WAN géographique, nombreux pairs, adversaires, charge et production globale
 restent ouverts. Aucun nouveau statut EIP clôturé. [Code, mesures et limites](qualification/capella-stream-reuse-20260927/README.md).
+
+
+### Crash complet, reprise avec témoin et ancre après élagage — 27 septembre 2026
+
+Deux courses de délais sont reproduites puis corrigées : une expiration JSON déjà
+en file fermait un flux terminé ; un ancien délai d'inactivité pouvait fermer le
+flux réutilisé. La concurrence de neuf pairs synthétiques respecte les huit
+permis bulk globaux et conserve la capacité de contrôle (pas un réseau de neuf
+nœuds qualifié). 40 cas de flux et cinq cas JSON passent.
+
+Le nouveau SIGKILL Docker révèle d'abord une configuration de reprise absente
+(refus explicite du checkpoint), puis une finalité bloquée à 2 malgré le témoin.
+Le relais conservait l'ancre du démarrage après élagage. Il reconnaît désormais
+l'ancre actuelle renvoyée par le cœur authentifié pour terminer une recherche
+d'ancêtres, sans inventer d'ACK du pair. Six cas nouveaux portent la livraison
+ancestrale à 19 scénarios ; les descendants exigent toujours leur admission réelle.
+
+**Rejeu passé** : deux nœuds, 32 clés synthétiques chacun ; SIGKILL de 96,801s,
+identité/volume/checkpoint conservés, puis finalité commune 7 en 141,703s depuis
+la configuration de reprise (139,655s après disponibilité vérifiée). Les trois
+campagnes et les tests négatifs sont conservés. La configuration passe
+explicitement de l'amorçage à la reprise par témoin ; le redémarrage autonome
+sans changement de configuration, les pannes physiques, le WAN, les nombreux
+pairs et la production globale restent ouverts. Aucun nouveau statut EIP clos.
+[Correctifs, échecs, réussite et limites](qualification/reusable-stream-deadlines-20260927/README.md).
