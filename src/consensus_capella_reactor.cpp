@@ -134,10 +134,17 @@ void CapellaDurableReactor::publish(CapellaForkStore candidate,const std::functi
  if(state_){
   if(tip->header.hash()!=capella_fork_head(*state_,rules_,check).execution_block.header.hash()){fail_closed();throw std::runtime_error("Capella execution tip changed outside reactor");}
   const auto& old=state_->timed.view;const auto& view=next->timed.view;
-  if(capella_network_anchor(*next)!=capella_network_anchor(*state_)||view.anchor!=old.anchor||view.finalized.epoch<old.finalized.epoch||view.justified.epoch<old.justified.epoch||next->timed.clock.genesis_time_ms!=state_->timed.clock.genesis_time_ms||next->timed.clock.time_ms<state_->timed.clock.time_ms)throw std::invalid_argument("Capella checkpoint regression");
+  if(capella_network_anchor(*next)!=capella_network_anchor(*state_)||view.finalized.epoch<old.finalized.epoch||view.justified.epoch<old.justified.epoch||next->timed.clock.genesis_time_ms!=state_->timed.clock.genesis_time_ms||next->timed.clock.time_ms<state_->timed.clock.time_ms)throw std::invalid_argument("Capella checkpoint regression");
   auto at=consensus_beacon_header_root(head.header);const auto final_slot=state_->blocks.at(old.finalized.root).header.slot;
   while(next->blocks.at(at).header.slot>final_slot){if(check)check();at=next->blocks.at(at).header.parent_root;}
   if(at!=old.finalized.root||(view.finalized.epoch==old.finalized.epoch&&view.finalized.root!=old.finalized.root))throw std::invalid_argument("Capella finalized branch changed");
+ }
+ // An anchor change must be the qualified transformation of the current store,
+ // and the exact durable envelope must remain fully restart-verifiable before I/O.
+ if(state_&&next->timed.view.anchor!=state_->timed.view.anchor){
+  const auto expected=prepare_capella_pruned_store(*state_,next->timed.view.anchor,rules_,check);
+  if(capella_store_snapshot(expected,rules_,limits_,check)!=capella_store_snapshot(*next,rules_,limits_,check))throw std::invalid_argument("Capella pruning changed live state");
+  (void)restore_durable(encoded,sha256(Bytes(encoded.begin(),encoded.end())),rules_,limits_,check);
  }
  const auto digest=sha256(Bytes(encoded.begin(),encoded.end()));
  if(token_&&digest==token_->digest){if(check)check();try{if(witness_)archive_require(bool(witness_->fork_checkpoint(chain_,genesis_,witness_limit(),witness_token_)));if(!disk_.fork_checkpoint(chain_,genesis_,limits_.envelope_bytes,token_))throw std::runtime_error("missing Capella checkpoint");}catch(...){fail_closed();throw;}return;}
@@ -347,5 +354,17 @@ bool CapellaDurableReactor::slashing(const IndexedConsensusAttestation& first,co
   if(!uncovered.empty()){if(proofs.size()>=limits_.equivocations)throw std::length_error("Capella slashing capacity");proofs.emplace(id,std::move(wire));}
  }
  publish(std::move(*next),check,{},std::nullopt,std::move(proofs));return true;
+}
+}
+
+namespace nano {
+bool CapellaDurableReactor::prune_finalized(const std::function<void()>& check){
+ std::lock_guard lock(mutex_);require_available();if(check)check();
+ const auto anchor=state_->timed.view.finalized.root;
+ if(anchor==state_->timed.view.anchor)return false;
+ auto candidate=prepare_capella_pruned_store(*state_,anchor,rules_,check);
+ // publish reconciles pending BLS admission roots and verifies all retained
+ // signed votes/proofs in the exact new envelope before committing it.
+ publish(std::move(candidate),check);return true;
 }
 }

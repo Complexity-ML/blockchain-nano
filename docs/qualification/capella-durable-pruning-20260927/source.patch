@@ -1,0 +1,48 @@
+diff --git a/include/nano/consensus_capella_reactor.hpp b/include/nano/consensus_capella_reactor.hpp
+index 19adf7f..d9f5e1a 100644
+--- a/include/nano/consensus_capella_reactor.hpp
++++ b/include/nano/consensus_capella_reactor.hpp
+@@ -67,0 +68,3 @@ public:
++ // Local durable maintenance; preserves the selected head and authenticated archives.
++ // Scheduling and native deposit-history pinning remain separate responsibilities.
++ bool prune_finalized(const std::function<void()>& checkpoint={});
+diff --git a/src/consensus_capella_reactor.cpp b/src/consensus_capella_reactor.cpp
+index e56ba47..e72d1b5 100644
+--- a/src/consensus_capella_reactor.cpp
++++ b/src/consensus_capella_reactor.cpp
+@@ -137 +137 @@ void CapellaDurableReactor::publish(CapellaForkStore candidate,const std::functi
+-  if(capella_network_anchor(*next)!=capella_network_anchor(*state_)||view.anchor!=old.anchor||view.finalized.epoch<old.finalized.epoch||view.justified.epoch<old.justified.epoch||next->timed.clock.genesis_time_ms!=state_->timed.clock.genesis_time_ms||next->timed.clock.time_ms<state_->timed.clock.time_ms)throw std::invalid_argument("Capella checkpoint regression");
++  if(capella_network_anchor(*next)!=capella_network_anchor(*state_)||view.finalized.epoch<old.finalized.epoch||view.justified.epoch<old.justified.epoch||next->timed.clock.genesis_time_ms!=state_->timed.clock.genesis_time_ms||next->timed.clock.time_ms<state_->timed.clock.time_ms)throw std::invalid_argument("Capella checkpoint regression");
+@@ -141,0 +142,7 @@ void CapellaDurableReactor::publish(CapellaForkStore candidate,const std::functi
++ // An anchor change must be the qualified transformation of the current store,
++ // and the exact durable envelope must remain fully restart-verifiable before I/O.
++ if(state_&&next->timed.view.anchor!=state_->timed.view.anchor){
++  const auto expected=prepare_capella_pruned_store(*state_,next->timed.view.anchor,rules_,check);
++  if(capella_store_snapshot(expected,rules_,limits_,check)!=capella_store_snapshot(*next,rules_,limits_,check))throw std::invalid_argument("Capella pruning changed live state");
++  (void)restore_durable(encoded,sha256(Bytes(encoded.begin(),encoded.end())),rules_,limits_,check);
++ }
+@@ -351,0 +359,12 @@ bool CapellaDurableReactor::slashing(const IndexedConsensusAttestation& first,co
++
++namespace nano {
++bool CapellaDurableReactor::prune_finalized(const std::function<void()>& check){
++ std::lock_guard lock(mutex_);require_available();if(check)check();
++ const auto anchor=state_->timed.view.finalized.root;
++ if(anchor==state_->timed.view.anchor)return false;
++ auto candidate=prepare_capella_pruned_store(*state_,anchor,rules_,check);
++ // publish reconciles pending BLS admission roots and verifies all retained
++ // signed votes/proofs in the exact new envelope before committing it.
++ publish(std::move(candidate),check);return true;
++}
++}
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index 20140cc..7abae4f 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -145,0 +146,3 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
++  const auto before_prune=nodes[1]->current().token;bool live_cancelled=false;try{nodes[1]->prune_finalized([]{throw ExecutionCancelled("durable prune stopped");});}catch(const ExecutionCancelled&){live_cancelled=true;}check(live_cancelled&&nodes[1]->current().token==before_prune,"cancelled durable prune changed checkpoint");
++  const auto identity=nodes[1]->network_identity();check(nodes[1]->prune_finalized(),"durable pruning did not run");const auto pruned_token=nodes[1]->current().token;check(pruned_token.sequence==before_prune.sequence+1&&nodes[1]->network_identity()==identity&&capella_store_snapshot(*nodes[1]->current().state,rules,limits)==encoded,"durable pruning differs from candidate");check(!nodes[1]->prune_finalized()&&nodes[1]->current().token==pruned_token,"duplicate pruning wrote checkpoint");
++  nodes[1].reset();owners[1].reset();owners[1]=std::make_unique<Blockchain>(directory/"node-1",owner_genesis);nodes[1]=std::make_unique<CapellaDurableReactor>(*owners[1],rules,limits,pruned_token);check(nodes[1]->network_identity()==identity&&nodes[1]->signed_votes()==nodes[0]->signed_votes(),"durable pruning restart lost identity or signed votes");
+@@ -148 +151,2 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+-  std::cout<<Json{{"scenario","capella-pruning-primitive"},{"beforeBlocks",old.blocks.size()},{"afterBlocks",pruned.blocks.size()},{"beforeSnapshotBytes",original.size()},{"afterSnapshotBytes",encoded.size()},{"networkAnchorPreserved",true},{"historyPreserved",true},{"nextBlockEqual",true},{"automaticPruning",false}}.dump()<<std::endl;
++  nodes[1]->tick(now);check(nodes[1]->block(*wire),"durably pruned owner rejected next block");check(owners[1]->tip().header.hash()==a.execution_block.header.hash()&&owners[1]->state().root()==a.execution_state.root(),"durably pruned owner continuation differs");
++  std::cout<<Json{{"scenario","capella-pruning-primitive"},{"beforeBlocks",old.blocks.size()},{"afterBlocks",pruned.blocks.size()},{"beforeSnapshotBytes",original.size()},{"afterSnapshotBytes",encoded.size()},{"networkAnchorPreserved",true},{"historyPreserved",true},{"nextBlockEqual",true},{"automaticPruning",false},{"durablePruningRestart",true}}.dump()<<std::endl;

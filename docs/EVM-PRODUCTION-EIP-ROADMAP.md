@@ -241,3 +241,16 @@ d’espace RocksDB démontrée. Restent la publication durable, la réconciliati
 des archives et opérations en attente, la conservation du contexte des dépôts
 natifs, puis les tests prolongés et de panne pendant l’élagage. Aucun EIP clos.
 [Code, empreintes et résultats](qualification/capella-pruning-primitive-20260927/README.md).
+
+### 2026-09-27 — Publication durable de l’élagage Capella
+
+API locale `prune_finalized` raccordée au checkpoint du réacteur/owner. Avant
+écriture, le candidat doit correspondre exactement à la transformation qualifiée,
+puis son enveloppe complète doit passer la validation de reprise (votes, preuves,
+changements BLS). Test étendu passé en 34,25 s : annulation sans mutation,
+écriture unique, doublon sans écriture, fermeture/réouverture réelle de RocksDB,
+votes et identité conservés, même bloc et racine d’état au bloc suivant.
+**Partiel** : scheduling automatique, contexte des dépôts natifs, scénarios avec
+changements BLS/preuves en attente et pannes pendant l’élagage restent ouverts.
+Pas de récupération d’espace disque ni de production démontrée par ce seul test.
+[Preuves et portée](qualification/capella-durable-pruning-20260927/README.md).

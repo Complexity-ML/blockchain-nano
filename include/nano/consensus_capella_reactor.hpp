@@ -65,6 +65,9 @@ public:
  std::set<uint64_t> current_attesters(uint64_t,const std::function<void()>& checkpoint={});
  std::optional<Phase0SignedAttestation> attest_current(uint64_t,uint64_t,const std::function<uint64_t()>&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={});
  std::optional<Bytes> propose_current(uint64_t,uint64_t,const std::string&,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<uint64_t()>&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={});
+ // Local durable maintenance; preserves the selected head and authenticated archives.
+ // Scheduling and native deposit-history pinning remain separate responsibilities.
+ bool prune_finalized(const std::function<void()>& checkpoint={});
  CapellaPublishedStore current()const;
  Json network_identity()const;
  // Atomic archive/checkpoint projection. maximum_bytes bounds raw SSZ; caller
