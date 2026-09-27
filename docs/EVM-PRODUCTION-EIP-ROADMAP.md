@@ -592,3 +592,17 @@ Zéro refus de budget ; deux livraisons sans accusé confirmé restent ouvertes.
 **Partiel** : attribution agrégée, pas causalité réseau par message ; ne pas relâcher
 ces contrôles. Prochaine qualification : rotation des comités et réseau asymétrique.
 [Preuves](qualification/capella-sync-admission-causes-20260927/README.md).
+
+
+### Rotation sync native avec reprise — 27 septembre 2026
+
+Nouveau scénario du planificateur sur le preset minimal inchangé : **216 blocs,
+trois frontières (64/128/192), deux changements de composition et 215 agrégats BLS
+vérifiés à 32/32 positions**. Redémarrage propriétaire/réacteur et 64 journaux au
+slot 127, puis inclusion complète au slot 128. Finalité époque 25 ; élagage actif,
+maximum 31 états de blocs retenus. Deux CTests passent (209,76 s), dont le scénario
+court existant. L’échec initial, dû à l’hypothèse erronée que les deux comités
+initiaux de la fixture différaient, est conservé ; le test étendu exige bien deux
+changements réels. **Partiel** : horloge simulée, un processus natif, pas de transport
+réseau ni de crash physique. Rotation distribuée, asymétrie et partitions restent
+à qualifier. [Preuves et référence](qualification/capella-sync-rotation-20260927/README.md).

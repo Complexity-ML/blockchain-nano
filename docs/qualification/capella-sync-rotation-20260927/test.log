@@ -1,0 +1,38 @@
+UpdateCTestConfiguration  from :/Users/boris/Dev/blockchain-nano/build-release/DartConfiguration.tcl
+Test project /Users/boris/Dev/blockchain-nano/build-release
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 361
+    Start 361: consensus_capella_scheduled_sync_rotation
+
+361: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests "--scheduler-sync-rotation"
+361: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+361: Test timeout computed to be: 600
+361: {"currentCommitteeHash":"0x65958d612a4fe6a024e4efb1be78b0cebf8b1796dc5b94fb3e3d4038a2641934","event":"scheduled-sync-rotation","nextCommitteeHash":"0x7c360e025188726167aaa2b7d80083e916309abe41e8f133e50afb6934d515e4","slot":64}
+361: {"currentCommitteeHash":"0x7c360e025188726167aaa2b7d80083e916309abe41e8f133e50afb6934d515e4","event":"scheduled-sync-rotation","nextCommitteeHash":"0x97f99a2b9df66f0f03cc5ce7004fa0f6a3419630df79949a05a42ccd9f3d0c34","slot":128}
+361: {"currentCommitteeHash":"0x97f99a2b9df66f0f03cc5ce7004fa0f6a3419630df79949a05a42ccd9f3d0c34","event":"scheduled-sync-rotation","nextCommitteeHash":"0xa5ff26eaed94ec408fd3e49b5478bbfaa64ace606cafebcc0138e4b2e10ccd2c","slot":192}
+361: {"backwardsClockClosedOwner":true,"blocks":216,"committeeChanges":2,"duplicatePollNoSignature":true,"finalizedEpoch":25,"maximumRetainedRecords":31,"networkTransport":false,"restartSlot":127,"rotations":3,"scenario":"capella-scheduled-sync-rotation","signingJournalsReopened":64,"syncMessages":6944,"verifiedSyncAggregates":215,"votes":1680,"witnessRestart":true}
+1/2 Test #361: consensus_capella_scheduled_sync_rotation ...   Passed  175.04 sec
+test 362
+    Start 362: consensus_capella_scheduled_finality
+
+362: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests "--scheduler"
+362: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+362: Test timeout computed to be: 360
+362: {"backwardsClockClosedOwner":true,"blocks":40,"committeeChanges":0,"duplicatePollNoSignature":true,"finalizedEpoch":3,"maximumRetainedRecords":0,"networkTransport":false,"restartSlot":24,"rotations":0,"scenario":"capella-scheduled-finality","signingJournalsReopened":64,"syncMessages":1280,"verifiedSyncAggregates":0,"votes":272,"witnessRestart":true}
+2/2 Test #362: consensus_capella_scheduled_finality ........   Passed   34.72 sec
+
+The following tests passed:
+	consensus_capella_scheduled_sync_rotation
+	consensus_capella_scheduled_finality
+
+100% tests passed out of 2
+
+Label Time Summary:
+qualification_consensus_runtime    = 209.75 sec*proc (2 tests)
+
+Total Test time (real) = 209.76 sec
