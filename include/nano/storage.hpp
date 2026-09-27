@@ -14,6 +14,7 @@ class ChainStore {
  friend class BeaconSigningJournal;
  friend class AltairDurableReactor;
  friend class BellatrixDurableReactor;
+ friend class CapellaDurableReactor;
  mutable std::mutex altair_reactor_mutex_;
  // Dedicated signing databases serialize all journal users through this gate,
  // including callbacks, independently of the short RocksDB operation mutex.

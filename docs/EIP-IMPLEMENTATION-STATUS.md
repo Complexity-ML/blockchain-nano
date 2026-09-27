@@ -2206,7 +2206,7 @@ reprise des cinq blocs supplémentaires et trois fautifs marqués slashed.
 Sept suites réussies, dont les contrôles de retraits directement affectés.
 [Preuves](qualification/capella-local-body-20260927/README.md).
 La finalité produite entièrement par l'assembleur est qualifiée ci-dessous.
-Restent mempool propriétaire, sorties/changements BLS, contributions sync,
+Le raccordement mempool propriétaire est qualifié ci-dessous. Restent sorties/changements BLS, contributions sync,
 ordonnanceur et réseau.
 
 ### Capella : finalité issue de la boucle locale complète
@@ -2218,3 +2218,15 @@ production poursuivie jusqu'au slot 41 sans divergence.
 [Preuves et périmètre](qualification/capella-assembled-finality-20260927/README.md).
 Il s'agit de deux coordinateurs dans un processus, sans transport P2P : aucune
 qualification distribuée ni activation publique n'est déduite de ces résultats.
+
+### Capella : raccordement au propriétaire d’exécution
+
+Le coordinateur durable publie désormais état, tête, finalité, mempool et événements
+via le commit Beacon atomique du propriétaire `Blockchain`. Assemblage depuis
+la mempool ; lectures fermées avant attachement et après invalidation/détachement.
+Deux propriétaires indépendants : 40 blocs, 272 votes, époque 3 finalisée,
+réouverture au slot 24 et contrôles directs des RPC latest/finalized/nonce.
+[Preuves et limites](qualification/capella-execution-owner-20260927/README.md).
+Le Genesis Shanghai est construit dans le test ; le démarrage public reste Paris.
+Restent migration du Store vivant, ordonnanceur/P2P/services Beacon, réorganisations
+et pannes d’écriture avec propriétaire, sorties/changements BLS et contributions sync.

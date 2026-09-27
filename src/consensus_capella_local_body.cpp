@@ -19,7 +19,15 @@ CapellaExecutionPayload payload(const Block& b,const std::vector<CapellaWithdraw
 std::optional<Bytes> CapellaDurableReactor::prepare_local_body(uint64_t index,uint64_t slot,
  const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,
  std::span<const SignedTransaction> transactions,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<void()>& check){
- std::lock_guard lock(mutex_);
+ std::lock_guard lock(mutex_);return prepare_local_body_locked(index,slot,reveal,recipient,expected,transactions,maximum_transaction_trials,maximum_vote_trials,check);
+}
+std::optional<Bytes> CapellaDurableReactor::prepare_local_body_from_pool(uint64_t index,uint64_t slot,const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<void()>& check){
+ std::lock_guard lock(mutex_);require_available();if(!execution_)throw std::invalid_argument("Capella execution owner required");if(expected!=*token_)throw StaleCapellaDuty("Stale pool body preparation");
+ std::vector<SignedTransaction> transactions;
+ {std::lock_guard chain_lock(execution_->mutex_);execution_->require_execution_ready_locked();transactions=execution_->pool_.pending_for_block(execution_->tip_.header.gas_limit);}
+ return prepare_local_body_locked(index,slot,reveal,recipient,expected,transactions,maximum_transaction_trials,maximum_vote_trials,check);
+}
+std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t index,uint64_t slot,const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,std::span<const SignedTransaction> transactions,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<void()>& check){
  require_available();
  if(expected!=*token_)throw StaleCapellaDuty("Stale body preparation");
  if(!maximum_transaction_trials||!maximum_vote_trials||reveal.size()!=96)throw std::invalid_argument("Capella local body context");

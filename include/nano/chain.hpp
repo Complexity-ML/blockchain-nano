@@ -56,7 +56,7 @@ class Blockchain {
  static Prepared execute_candidate(Block block,const State& initial,std::vector<TxPool::Candidate> pending,const ExecutionEngine& engine,const std::function<void()>& checkpoint,bool reward=true);
  Prepared prepare(const std::string& coinbase,const Int& timestamp,uint64_t round=0,const std::function<void()>& checkpoint={}) const;
  Block produce(const std::string& coinbase,const Int& timestamp,bool pow,std::chrono::milliseconds timeout);
- // Reserved for the Bellatrix coordinator: validated candidate, same database.
+ // Reserved for the authenticated Beacon coordinators: validated candidate, same database.
  // Memory/pool/event preparation precedes the atomic write; readers remain
  // excluded until the canonical head and state have been published.
  ForkCheckpointToken commit_beacon_checkpoint(const std::optional<ForkCheckpointToken>& expected,

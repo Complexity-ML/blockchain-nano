@@ -3,23 +3,36 @@
 #include "nano/storage.hpp"
 #include "nano/consensus_beacon_signer.hpp"
 namespace nano {
+class Blockchain;
 class StaleCapellaDuty : public std::invalid_argument {public: using std::invalid_argument::invalid_argument;};
 class ExpiredCapellaDuty : public std::runtime_error {public: using std::runtime_error::runtime_error;};
 using CapellaSignedVotes=std::map<Bytes,Bytes>;
 struct CapellaPublishedStore {std::shared_ptr<const CapellaForkStore> state;ForkCheckpointToken token;};
 // Serialized local event coordinator. Initial anchor or restart token must be
-// independently trusted. No scheduler, P2P, RPC cache or fork activation.
+// independently trusted. Optional execution-cache binding; no scheduler, P2P or fork activation.
 // Own ChainStore for this object's lifetime; callbacks must not re-enter it.
 class CapellaDurableReactor {
- ChainStore& disk_;Int chain_;Bytes genesis_;CapellaForkBlockRules rules_;CapellaStoreSnapshotLimits limits_;
- mutable std::mutex mutex_;std::shared_ptr<const CapellaForkStore> state_;std::optional<ForkCheckpointToken> token_;
+ ChainStore& disk_;Blockchain* execution_=nullptr;Int chain_;Bytes genesis_;CapellaForkBlockRules rules_;CapellaStoreSnapshotLimits limits_;
+ std::mutex& mutex_;std::shared_ptr<const CapellaForkStore> state_;std::optional<ForkCheckpointToken> token_;
  CapellaSignedVotes votes_,slashings_;CapellaStoreSnapshotCache cache_;bool unavailable_=false;
  std::optional<Bytes> signed_block_locked(const ConsensusRoot&,const std::function<void()>&)const;
  void require_available()const;
+ void validate_execution_binding()const;
+ void fail_closed();
+ std::optional<Bytes> prepare_local_body_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,std::span<const SignedTransaction>,size_t,size_t,const std::function<void()>&);
  void publish(CapellaForkStore,const std::function<void()>&,const std::vector<CheckpointArchiveEntry>& archive={},std::optional<CapellaSignedVotes> votes=std::nullopt,std::optional<CapellaSignedVotes> slashings=std::nullopt);
 public:
- CapellaDurableReactor(ChainStore&,Int,Bytes,CapellaForkBlockRules,CapellaStoreSnapshotLimits,CapellaForkStore,const std::function<void()>& checkpoint={});
- CapellaDurableReactor(ChainStore&,Int,Bytes,CapellaForkBlockRules,CapellaStoreSnapshotLimits,const ForkCheckpointToken&,const std::function<void()>& checkpoint={});
+ CapellaDurableReactor(ChainStore&,Int,Bytes,CapellaForkBlockRules,CapellaStoreSnapshotLimits,CapellaForkStore,const std::function<void()>& checkpoint={},Blockchain* owner=nullptr);
+ CapellaDurableReactor(ChainStore&,Int,Bytes,CapellaForkBlockRules,CapellaStoreSnapshotLimits,const ForkCheckpointToken&,const std::function<void()>& checkpoint={},Blockchain* owner=nullptr);
+ CapellaDurableReactor(Blockchain&,CapellaForkBlockRules,CapellaStoreSnapshotLimits,CapellaForkStore,const std::function<void()>& checkpoint={});
+ CapellaDurableReactor(Blockchain&,CapellaForkBlockRules,CapellaStoreSnapshotLimits,const ForkCheckpointToken&,const std::function<void()>& checkpoint={});
+ CapellaDurableReactor(const CapellaDurableReactor&)=delete;
+ CapellaDurableReactor& operator=(const CapellaDurableReactor&)=delete;
+ ~CapellaDurableReactor();
+ void invalidate();
+ std::optional<Bytes> prepare_local_body_from_pool(uint64_t validator_index,uint64_t slot,
+  const Bytes& randao,const std::string& fee_recipient,const ForkCheckpointToken& expected,
+  size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<void()>& checkpoint={});
  CapellaPublishedStore current()const;
  // Caller supplies identity and an independent clock, never unsigned vote data.
  // Signature reservations live in a separate durable journal and survive expiry.

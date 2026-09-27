@@ -20,11 +20,11 @@ ForkCheckpointToken Blockchain::commit_beacon_checkpoint(const std::optional<For
  const Bytes& expected_tip,const Int& common_height,const Bytes& common_hash,
  const std::vector<ExecutionCheckpointBlock>& suffix,Block finalized,std::string_view snapshot,size_t maximum_bytes,size_t maximum_blocks,const std::vector<CheckpointArchiveEntry>& archive){
  std::lock_guard lock(mutex_);
- if(genesis_.consensus!="beacon"||genesis_.evm_revision!=EvmRevision::Paris||tip_.header.hash()!=expected_tip)
-  throw std::invalid_argument("Bellatrix canonical publication context mismatch");
- if(common_height<0||common_height>tip_.header.number||tip_.header.number-common_height>Int(std::to_string(maximum_blocks)))throw std::invalid_argument("Bellatrix canonical replacement bounds");
+ if(genesis_.consensus!="beacon"||(genesis_.evm_revision!=EvmRevision::Paris&&genesis_.evm_revision!=EvmRevision::Shanghai)||tip_.header.hash()!=expected_tip)
+  throw std::invalid_argument("Beacon canonical publication context mismatch");
+ if(common_height<0||common_height>tip_.header.number||tip_.header.number-common_height>Int(std::to_string(maximum_blocks)))throw std::invalid_argument("Beacon canonical replacement bounds");
  Block next;State state;
- if(suffix.empty()){const auto block=store_.block_by_number(common_height);const auto persisted=store_.state_at(common_height);if(!block||!persisted||block->header.hash()!=common_hash)throw std::invalid_argument("Bellatrix common ancestor missing");next=*block;state=*persisted;}
+ if(suffix.empty()){const auto block=store_.block_by_number(common_height);const auto persisted=store_.state_at(common_height);if(!block||!persisted||block->header.hash()!=common_hash)throw std::invalid_argument("Beacon common ancestor missing");next=*block;state=*persisted;}
  else{next=suffix.back().block;state=suffix.back().state;}
  if(finalized.header.number<0||finalized.header.number>next.header.number)throw std::invalid_argument("Finalized execution height outside canonical chain");
  if(beacon_finalized_&&(finalized.header.number<beacon_finalized_->header.number||(finalized.header.number==beacon_finalized_->header.number&&finalized.header.hash()!=beacon_finalized_->header.hash())))throw std::invalid_argument("Finalized execution checkpoint regressed");
@@ -35,7 +35,7 @@ ForkCheckpointToken Blockchain::commit_beacon_checkpoint(const std::optional<For
  std::function<void()> publish_pool;auto events=events_;auto sequence=event_sequence_;
  if(changed){
   std::vector<SignedTransaction> orphaned,included;
-  for(Int at=common_height+1;at<=tip_.header.number;++at){const auto old=store_.block_by_number(at);if(!old)throw std::runtime_error("Bellatrix orphan missing");orphaned.insert(orphaned.end(),old->transactions.begin(),old->transactions.end());}
+  for(Int at=common_height+1;at<=tip_.header.number;++at){const auto old=store_.block_by_number(at);if(!old)throw std::runtime_error("Beacon orphan missing");orphaned.insert(orphaned.end(),old->transactions.begin(),old->transactions.end());}
   for(const auto& record:suffix)included.insert(included.end(),record.block.transactions.begin(),record.block.transactions.end());
   publish_pool=pool_.prepare_canonical_change(state,included,orphaned);
   auto event=[&](const char* type,Json value){if(sequence==UINT64_MAX)throw std::overflow_error("chain event sequence exhausted");events.push_back({++sequence,type,std::move(value)});if(events.size()>10000)events.pop_front();};

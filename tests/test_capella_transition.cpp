@@ -7,6 +7,7 @@
 #include "nano/storage.hpp"
 #include "nano/consensus_capella_reactor.hpp"
 #include "nano/consensus_capella_duty.hpp"
+#include "nano/rpc.hpp"
 #include "nano/committee.hpp"
 #include "nano/consensus_message_ssz.hpp"
 #include "nano/consensus_proposer.hpp"
@@ -27,6 +28,7 @@ struct Key {
 static std::string executable;
 static bool sync_scenario=false;
 static unsigned local_finality=0;
+static bool owner_mode=false;
 #ifdef NANO_SYNC_FAULT
 extern "C" void nano_test_arm_sync_fault(const char*);
 extern "C" unsigned nano_test_sync_failures();
@@ -65,20 +67,24 @@ static int sync_writer(const fs::path& directory){
 #endif
 static void local_finality_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules,const Block& genesis,const State& genesis_state){
  Temp directory;const auto limits=crash_limits;const auto& t=rules.transition;const auto slots=t.consensus.epoch.ffg.slots_per_epoch;const auto genesis_root=root_at(initial.blocks.at(initial.timed.view.anchor).state.ssz,8);
- std::array<std::unique_ptr<ChainStore>,2> disks;std::array<std::unique_ptr<CapellaDurableReactor>,2> nodes;
- for(size_t i=0;i<2;++i){disks[i]=std::make_unique<ChainStore>(directory/("node-"+std::to_string(i)));disks[i]->bind_chain(t.chain_id,genesis.header.hash(),"capella-local-loop");disks[i]->commit(genesis,genesis_state,{});nodes[i]=std::make_unique<CapellaDurableReactor>(*disks[i],t.chain_id,genesis.header.hash(),rules,limits,initial);}
+ Genesis owner_genesis;owner_genesis.chain_id=t.chain_id;owner_genesis.consensus="beacon";owner_genesis.evm_revision=EvmRevision::Shanghai;owner_genesis.block=genesis;owner_genesis.state=genesis_state;
+ std::array<std::unique_ptr<ChainStore>,2> disks;std::array<std::unique_ptr<Blockchain>,2> owners;std::array<std::unique_ptr<CapellaDurableReactor>,2> nodes;
+ for(size_t i=0;i<2;++i){if(owner_mode){owners[i]=std::make_unique<Blockchain>(directory/("node-"+std::to_string(i)),owner_genesis);bool blocked=false;try{owners[i]->tip();}catch(const std::runtime_error&){blocked=true;}check(blocked,"unattached Capella owner readable");nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,initial);continue;}disks[i]=std::make_unique<ChainStore>(directory/("node-"+std::to_string(i)));disks[i]->bind_chain(t.chain_id,genesis.header.hash(),"capella-local-loop");disks[i]->commit(genesis,genesis_state,{});nodes[i]=std::make_unique<CapellaDurableReactor>(*disks[i],t.chain_id,genesis.header.hash(),rules,limits,initial);}
  std::map<uint64_t,std::unique_ptr<ChainStore>> key_disks;std::map<uint64_t,std::unique_ptr<BeaconSigningJournal>> journals;
  auto journal=[&](uint64_t index)->BeaconSigningJournal&{if(!journals.contains(index)){key_disks[index]=std::make_unique<ChainStore>(directory/("key-"+std::to_string(index)));journals[index]=std::make_unique<BeaconSigningJournal>(*key_disks[index],t.chain_id,genesis.header.hash(),genesis_root,Key(index).public_key,slots);}return *journals.at(index);};
  const auto sender_key=bytes(Int(777),32);Transaction tx;tx.type=2;tx.to="0x0000000000000000000000000000000000001234";tx.gas=100000;tx.max_fee=2000000000;tx.priority_fee=100000000;const auto sender=SignedTransaction::sign(tx,sender_key).sender();
  size_t blocks=0,votes=0,restarts=0,reopened_journals=0;uint64_t previous_finalized=0;const uint64_t end=5*slots+1;
- auto equal=[&]{const auto a=nodes[0]->current(),b=nodes[1]->current();check(a.token==b.token&&capella_store_snapshot(*a.state,rules,limits)==capella_store_snapshot(*b.state,rules,limits)&&nodes[0]->signed_votes()==nodes[1]->signed_votes(),"local loop nodes diverged");const auto& head=capella_fork_head(*a.state,rules);for(size_t i=0;i<2;++i)check(disks[i]->latest()->header.hash()==head.execution_block.header.hash()&&disks[i]->state_at(head.execution_block.header.number)->root()==head.execution_state.root(),"local loop disk/state diverged");};
+ auto equal=[&]{const auto a=nodes[0]->current(),b=nodes[1]->current();check(a.token==b.token&&capella_store_snapshot(*a.state,rules,limits)==capella_store_snapshot(*b.state,rules,limits)&&nodes[0]->signed_votes()==nodes[1]->signed_votes(),"local loop nodes diverged");const auto& head=capella_fork_head(*a.state,rules);for(size_t i=0;i<2;++i){const auto& disk=owner_mode?owners[i]->store():*disks[i];check(disk.latest()->header.hash()==head.execution_block.header.hash()&&disk.state_at(head.execution_block.header.number)->root()==head.execution_state.root(),"local loop disk/state diverged");
+   if(owner_mode){check(owners[i]->tip().header.hash()==head.execution_block.header.hash()&&owners[i]->state().root()==head.execution_state.root()&&owners[i]->pending_count()==0,"Capella owner cache/pool diverged");const auto finalized=a.state->blocks.at(a.state->timed.view.finalized.root).execution_block;check(owners[i]->finalized_block()->header.hash()==finalized.header.hash(),"Capella finalized cache mismatch");Rpc rpc(*owners[i]);auto call=[&](const char* method,const Json& params){const auto response=rpc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",params}});check(!response.contains("error"),"Capella owner RPC error");return response.at("result");};check(call("eth_getBlockByNumber",Json::array({"latest",false})).at("hash")==hex(head.execution_block.header.hash()),"latest RPC mismatch");check(call("eth_getBlockByNumber",Json::array({"finalized",false})).at("hash")==hex(finalized.header.hash()),"finalized RPC mismatch");check(call("eth_getTransactionCount",Json::array({sender,"latest"}))==quantity(head.execution_state.get(sender).nonce),"nonce RPC mismatch");}
+  }};
  for(uint64_t slot=2;slot<=end;++slot){
   const auto now=initial.timed.clock.genesis_time_ms+slot*rules.slot_duration_ms;for(auto& node:nodes)node->tick(now);
   const auto current=nodes[0]->current();const auto& head=capella_fork_head(*current.state,rules);const auto proposer=prepare_capella_proposer_identity(head.state,head.header,slot,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state,t.consensus.attestation.duties,limits.replay_slots,limits.sync_trials);check(bool(proposer),"local loop proposer missing");
   auto provider=[&](const ConsensusRoot& root){return Key(proposer->index).sign(root);};auto& proposer_journal=journal(proposer->index);
   const auto reveal=nodes[0]->sign_randao(proposer->index,slot,[&]{return now;},current.token,proposer_journal,provider);check(bool(reveal),"local loop RANDAO missing");
   tx.nonce=head.execution_state.get(sender).nonce;const std::vector<SignedTransaction> pending{SignedTransaction::sign(tx,sender_key)};
-  const auto body=nodes[0]->prepare_local_body(proposer->index,slot,*reveal,head.execution_block.header.coinbase,current.token,pending,16,64);check(bool(body),"local loop body missing");
+  if(owner_mode)for(auto& owner:owners)check(owner->submit(pending.front())&&owner->pending_count()==1,"Capella pool submission failed");
+  const auto body=owner_mode?nodes[0]->prepare_local_body_from_pool(proposer->index,slot,*reveal,head.execution_block.header.coinbase,current.token,16,64):nodes[0]->prepare_local_body(proposer->index,slot,*reveal,head.execution_block.header.coinbase,current.token,pending,16,64);check(bool(body),"local loop body missing");
   const auto wire=nodes[0]->sign_proposal(proposer->index,slot,*body,[&]{return now;},current.token,proposer_journal,provider);check(bool(wire),"local loop signed block missing");
   for(auto& node:nodes)check(node->block(*wire),"local loop block admission failed");++blocks;
   const auto admitted=nodes[0]->current();const auto duties=prepare_capella_attestation_duties(*admitted.state,rules,slot,limits.replay_slots,limits.sync_trials);
@@ -88,14 +94,15 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
   const auto finalized=nodes[0]->current().state->timed.view.finalized.epoch;check(finalized>=previous_finalized,"local loop finality regressed");previous_finalized=finalized;
   if(slot%slots==0||slot==end){equal();std::cout<<Json{{"progressSlot",slot},{"finalizedEpoch",finalized},{"signedVotes",votes}}.dump()<<std::endl;}
   if(slot==3*slots){
-   for(size_t i=0;i<2;++i){const auto saved=nodes[i]->current().token;nodes[i].reset();disks[i].reset();disks[i]=std::make_unique<ChainStore>(directory/("node-"+std::to_string(i)));nodes[i]=std::make_unique<CapellaDurableReactor>(*disks[i],t.chain_id,genesis.header.hash(),rules,limits,saved);++restarts;}
+   for(size_t i=0;i<2;++i){const auto saved=nodes[i]->current().token;nodes[i].reset();if(owner_mode){bool blocked=false;try{owners[i]->tip();}catch(const std::runtime_error&){blocked=true;}check(blocked,"detached Capella owner remained readable");owners[i].reset();owners[i]=std::make_unique<Blockchain>(directory/("node-"+std::to_string(i)),owner_genesis);nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,saved);}else{disks[i].reset();disks[i]=std::make_unique<ChainStore>(directory/("node-"+std::to_string(i)));nodes[i]=std::make_unique<CapellaDurableReactor>(*disks[i],t.chain_id,genesis.header.hash(),rules,limits,saved);}++restarts;}
    reopened_journals=journals.size();for(auto& [index,value]:journals){const auto saved=value->commitment();value.reset();key_disks[index].reset();key_disks[index]=std::make_unique<ChainStore>(directory/("key-"+std::to_string(index)));value=std::make_unique<BeaconSigningJournal>(*key_disks[index],t.chain_id,genesis.header.hash(),genesis_root,Key(index).public_key,slots,saved);}
    equal();
   }
  }
  const auto result=nodes[0]->current();const auto& head=capella_fork_head(*result.state,rules);check(head.execution_state.get(sender).nonce==Int(std::to_string(blocks+1)),"local loop execution transactions missing");
  if(local_finality==100)check(result.state->timed.view.finalized.epoch>=2&&result.state->timed.view.justified.epoch>=3,"assembled local chain did not finalize");else check(result.state->timed.view.finalized.epoch==0,"half-participation local chain finalized");
- std::cout<<Json{{"scenario","capella-local-assembly-finality"},{"participationPercent",local_finality},{"blocks",blocks},{"votes",votes},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"justifiedEpoch",result.state->timed.view.justified.epoch},{"independentStores",2},{"storeReopens",restarts},{"signingJournalsReopened",reopened_journals},{"networkTransport",false},{"networkActivated",false}}.dump()<<std::endl;
+ if(owner_mode){Rpc rpc(*owners[0]);nodes[0]->invalidate();check(rpc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method","eth_blockNumber"},{"params",Json::array()}}).contains("error"),"invalidated owner still served block number");}
+ std::cout<<Json{{"scenario","capella-local-assembly-finality"},{"executionOwner",owner_mode},{"participationPercent",local_finality},{"blocks",blocks},{"votes",votes},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"justifiedEpoch",result.state->timed.view.justified.epoch},{"independentStores",2},{"storeReopens",restarts},{"signingJournalsReopened",reopened_journals},{"networkTransport",false},{"networkActivated",false}}.dump()<<std::endl;
 }
 static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigned participation=100){
  const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-bellatrix-containers-official",source=fixtures/"consensus-capella-slots-official";
@@ -469,7 +476,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
  }
  std::cout<<Json{{"scenario","capella-signed-transition"},{"migrated",migrate},{"finalityScenario",finality},{"participationPercent",participation},{"finalizedEpoch",store->timed.view.finalized.epoch},{"includedAttestations",included_attestations},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"storeBlocks",store->blocks.size()},{"snapshotReopened",true},{"durableReactor",true},{"signedArchives",signed_wires.size()},{"signedVotes",durable_votes.size()},{"signedSlashings",durable_proofs.size()},{"deferredVotes",deferred_votes.size()},{"localAttestations",local_signatures},{"localProposals",local_proposals},{"localRandao",local_randao},{"assembledBodies",assembled_bodies},{"storeSigkillReopens",2},{"storeVotes",votes},{"voteReorgs",vote_reorgs},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
 }
-int main(int argc,char** argv){try{executable=argv[0];if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}
+int main(int argc,char** argv){try{executable=argv[0];if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}
 #ifdef NANO_SYNC_FAULT
 if(argc==3&&std::string(argv[1])=="--sync-writer")return sync_writer(argv[2]);
 if(argc==2&&std::string(argv[1])=="--reactor-sync"){sync_scenario=true;scenario(false);return 0;}

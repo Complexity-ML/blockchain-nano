@@ -1,0 +1,45 @@
+Start testing: Sep 27 04:33 CEST
+----------------------------------------------------------
+321/356 Testing: consensus_bellatrix_signed_execution_chain
+321/356 Test: consensus_bellatrix_signed_execution_chain
+Command: "/Users/boris/Dev/blockchain-nano/build-release/nano-bellatrix-transition-tests"
+Directory: /Users/boris/Dev/blockchain-nano/build-release
+"consensus_bellatrix_signed_execution_chain" start time: Sep 27 04:33 CEST
+Output:
+----------------------------------------------------------
+vote retry batch: 18 retries, 126 checkpoints, 5726 us (including negative signatures)
+vote retry batch: 18 retries, 126 checkpoints, 5669 us (including negative signatures)
+{"blocks":9,"cachedSnapshotCallbacks":3898,"cancellations":7,"doubleProposalSlashed":true,"durableCommit":true,"durableReactor":true,"forkBlocks":10,"invalidSignedBlocks":7,"localAttestations":1,"localProposals":8,"localSignatureRefusals":8,"networkActive":false,"pairedCheckpointReopens":3,"pairedExecutionReorgs":2,"reactorCancellations":3,"reactorSyncErrorTested":true,"scenario":"signed-bellatrix-evm-chain","snapshotCacheMutationRefusals":4,"snapshotRefusals":6,"snapshotValidationCallbacks":163630,"storeCancellations":3,"validators":64,"wireMessages":15,"wireRefusals":6}
+<end of output>
+Test time =   3.52 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_signed_execution_chain" end time: Sep 27 04:34 CEST
+"consensus_bellatrix_signed_execution_chain" time elapsed: 00:00:03
+----------------------------------------------------------
+
+356/356 Testing: consensus_capella_execution_owner
+356/356 Test: consensus_capella_execution_owner
+Command: "/Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests" "--owner-finality"
+Directory: /Users/boris/Dev/blockchain-nano/build-release
+"consensus_capella_execution_owner" start time: Sep 27 04:34 CEST
+Output:
+----------------------------------------------------------
+{"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+{"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+{"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+{"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+{"finalizedEpoch":3,"progressSlot":40,"signedVotes":264}
+{"finalizedEpoch":3,"progressSlot":41,"signedVotes":272}
+{"blocks":40,"executionOwner":true,"finalizedEpoch":3,"independentStores":2,"justifiedEpoch":4,"networkActivated":false,"networkTransport":false,"participationPercent":100,"scenario":"capella-local-assembly-finality","signingJournalsReopened":64,"storeReopens":2,"votes":272}
+<end of output>
+Test time =  32.19 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_execution_owner" end time: Sep 27 04:34 CEST
+"consensus_capella_execution_owner" time elapsed: 00:00:32
+----------------------------------------------------------
+
+End testing: Sep 27 04:34 CEST
+
+qualification_consensus_ethereum =  35.71 sec*proc
