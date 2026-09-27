@@ -2940,3 +2940,14 @@ qualifiées dans le test enrichi (5,35 s).
 [Preuves](qualification/capella-catalog-sessions-20260927/README.md).
 Le futur adaptateur doit fournir le propriétaire authentifié et les budgets
 de requête. Raccordement runtime/RPC et synchronisation distribuée restent ouverts.
+
+### Capella : cycle de vie des catalogues dans le runtime
+
+Configuration optionnelle `catalogs` (handles, rootBytes, ttlMs), validée avant
+les signataires ; propriétaire partagé avec le coordinateur. L’arrêt invalide
+les catalogues et interdit leur réouverture. Runtime : seize blocs avec reprise,
+six configurations invalides refusées et trois contrôles de catalogue réussis.
+Régression du registre également verte : deux suites en 26,52 s.
+[Preuves](qualification/capella-runtime-catalogs-20260927/README.md).
+Les services sont raccordés au runtime C++, pas encore aux méthodes HTTP privées
+ni au dispatch CLI/P2P. Ces raccordements restent des critères ouverts.
