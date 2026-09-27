@@ -103,7 +103,9 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
  const auto disk_genesis=parent;const auto disk_genesis_state=state;
  const CapellaForkBlockRules store_rules{r,seconds*1000,seconds*1000/3,40};
  Temp reactor_database;auto reactor_disk=std::make_unique<ChainStore>(reactor_database/"db");reactor_disk->bind_chain(r.chain_id,disk_genesis.header.hash(),"capella-reactor-test");reactor_disk->commit(disk_genesis,disk_genesis_state,{});std::unique_ptr<CapellaDurableReactor> reactor;
- unsigned local_signatures=0;std::vector<Phase0SignedAttestation> deferred_votes;std::map<ConsensusRoot,Bytes> signed_wires;std::optional<CapellaForkStore> store;std::string short_snapshot;Bytes sync_wire;uint64_t sync_time=0;
+ Temp proposal_location;std::map<uint64_t,std::unique_ptr<ChainStore>> proposal_disks;std::map<uint64_t,std::unique_ptr<BeaconSigningJournal>> proposal_journals;
+ auto journal_for=[&](uint64_t index)->BeaconSigningJournal&{if(!proposal_journals.contains(index)){proposal_disks[index]=std::make_unique<ChainStore>(proposal_location/std::to_string(index));proposal_journals[index]=std::make_unique<BeaconSigningJournal>(*proposal_disks[index],r.chain_id,disk_genesis.header.hash(),genesis_root,Key(index).public_key,slots);}return *proposal_journals.at(index);};
+ unsigned local_proposals=0,local_randao=0;unsigned local_signatures=0;std::vector<Phase0SignedAttestation> deferred_votes;std::map<ConsensusRoot,Bytes> signed_wires;std::optional<CapellaForkStore> store;std::string short_snapshot;Bytes sync_wire;uint64_t sync_time=0;
  const CapellaStoreSnapshotLimits snapshot_limits{16*1024*1024,64,1000,1000,r.maximum_state_bytes,8*1024*1024,64,100000};
  auto roundtrip=[&](const CapellaForkStore& value){
   CapellaStoreSnapshotCache cache;size_t cold=0,warm=0;
@@ -158,7 +160,27 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
   auto receive=[&](const Bytes& b,const std::function<void()>& callback=std::function<void()>{}){
    return crossing?prepare_capella_fork_state_transition(before_fork,before_fork_root,schedule,b,r,parent.header,state,history,64,100000,callback):prepare_capella_state_transition(beacon,b,r,parent.header,state,history,64,100000,callback);
   };
-  const auto wire=sign_message(built->message_ssz);if(slot==first_slot+1){sync_wire=wire;sync_time=(genesis_time+slot*seconds)*1000;}size_t calls=0;const auto received=receive(wire,[&]{++calls;});
+  auto wire=sign_message(built->message_ssz);
+  if(reactor){
+   const auto now=(genesis_time+slot*seconds)*1000;reactor->tick(now);const auto current=reactor->current();auto& journal=journal_for(proposer);unsigned calls=0;auto provider=[&](const ConsensusRoot& root){++calls;return Key(proposer).sign(root);};
+   check(!reactor->sign_randao(UINT64_MAX,slot,[&]{return now;},current.token,journal,provider)&&calls==0,"unassigned RANDAO signer invoked");
+   const auto reveal=reactor->sign_randao(proposer,slot,[&]{return now;},current.token,journal,provider);check(reveal&&*reveal==Bytes(body.begin(),body.begin()+96)&&calls==1,"local RANDAO differs");++local_randao;
+   if(slot==first_slot+1){
+    auto stale=current.token;++stale.sequence;bool rejected=false;try{reactor->sign_proposal(proposer,slot,body,[&]{return now;},stale,journal,provider);}catch(const StaleCapellaDuty&){rejected=true;}check(rejected&&calls==1,"stale proposal reached signer");
+    auto invalid=body;invalid[0]^=1;check(!reactor->sign_proposal(proposer,slot,invalid,[&]{return now;},current.token,journal,provider)&&calls==1,"invalid RANDAO body reached signer");
+    bool cancelled=false;try{reactor->sign_proposal(proposer,slot,body,[&]{return now;},current.token,journal,provider,[]{throw ExecutionCancelled("proposal stop");});}catch(const ExecutionCancelled&){cancelled=true;}check(cancelled&&calls==1,"cancelled proposal reached signer");
+   }
+   const auto local=reactor->sign_proposal(proposer,slot,body,[&]{return now;},current.token,journal,provider);check(local&&*local==wire&&calls==2,"local Capella proposal differs");wire=*local;++local_proposals;
+   if(slot==first_slot+1){
+    const auto saved=journal.commitment();proposal_journals.erase(proposer);proposal_disks.erase(proposer);proposal_disks[proposer]=std::make_unique<ChainStore>(proposal_location/std::to_string(proposer));proposal_journals[proposer]=std::make_unique<BeaconSigningJournal>(*proposal_disks[proposer],r.chain_id,disk_genesis.header.hash(),genesis_root,Key(proposer).public_key,slots,saved);auto& reopened=*proposal_journals.at(proposer);
+    check(reactor->sign_proposal(proposer,slot,body,[&]{return now;},current.token,reopened,provider)==local&&reopened.commitment()==saved&&calls==3,"proposal retry changed reservation");
+    auto conflict=body;conflict[168]^=1;bool rejected=false;try{reactor->sign_proposal(proposer,slot,conflict,[&]{return now;},current.token,reopened,provider);}catch(const std::runtime_error&){rejected=true;}check(rejected&&calls==3,"double proposal reached signer");
+    Temp expiry;ChainStore disk(expiry/"journal");BeaconSigningJournal expiring(disk,r.chain_id,disk_genesis.header.hash(),genesis_root,Key(proposer).public_key,slots);auto wall=now;bool expired=false;
+    try{reactor->sign_proposal(proposer,slot,body,[&]{return wall;},current.token,expiring,[&](const ConsensusRoot& root){wall+=store_rules.slot_duration_ms;return Key(proposer).sign(root);});}catch(const ExpiredCapellaDuty&){expired=true;}check(expired&&expiring.latest_proposal_slot()==slot,"expired proposal lost reservation");
+    rejected=false;try{reactor->sign_proposal(proposer,slot,conflict,[&]{return now;},current.token,expiring,provider);}catch(const std::runtime_error&){rejected=true;}check(rejected&&calls==3,"expired proposal allowed conflict");
+   }
+  }
+  if(slot==first_slot+1){sync_wire=wire;sync_time=(genesis_time+slot*seconds)*1000;}size_t calls=0;const auto received=receive(wire,[&]{++calls;});
   check(received&&received->consensus==built->post.consensus&&received->execution.state.root()==expected.root(),"signed Capella transition differs");check(received->execution.receipts[0].success&&received->execution.state.get_storage(target,0)==42,"Shanghai write missing");
   auto deny=[&](const Bytes& b){bool refused=false;try{refused=!receive(b);}catch(const std::invalid_argument&){refused=true;}check(refused&&beacon==original&&state.root()==evm_before,"bad block mutated parent");++rejected;};
   if(crossing){
@@ -394,7 +416,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
   for(const auto& [height,b]:ordered){const bool canonical=height<=latest->header.number;check(bool(disk.block_by_number(height))==canonical,"stale block after crash reorg");for(const auto& tx:b.block.transactions)check(bool(disk.receipt(tx.hash()))==canonical&&bool(disk.transaction(tx.hash()))==canonical,"stale transaction after crash reorg");}
   token=record->token;
  }
- std::cout<<Json{{"scenario","capella-signed-transition"},{"migrated",migrate},{"finalityScenario",finality},{"participationPercent",participation},{"finalizedEpoch",store->timed.view.finalized.epoch},{"includedAttestations",included_attestations},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"storeBlocks",store->blocks.size()},{"snapshotReopened",true},{"durableReactor",true},{"signedArchives",signed_wires.size()},{"signedVotes",durable_votes.size()},{"signedSlashings",durable_proofs.size()},{"deferredVotes",deferred_votes.size()},{"localAttestations",local_signatures},{"storeSigkillReopens",2},{"storeVotes",votes},{"voteReorgs",vote_reorgs},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
+ std::cout<<Json{{"scenario","capella-signed-transition"},{"migrated",migrate},{"finalityScenario",finality},{"participationPercent",participation},{"finalizedEpoch",store->timed.view.finalized.epoch},{"includedAttestations",included_attestations},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"storeBlocks",store->blocks.size()},{"snapshotReopened",true},{"durableReactor",true},{"signedArchives",signed_wires.size()},{"signedVotes",durable_votes.size()},{"signedSlashings",durable_proofs.size()},{"deferredVotes",deferred_votes.size()},{"localAttestations",local_signatures},{"localProposals",local_proposals},{"localRandao",local_randao},{"storeSigkillReopens",2},{"storeVotes",votes},{"voteReorgs",vote_reorgs},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
 }
 int main(int argc,char** argv){try{executable=argv[0];
 #ifdef NANO_SYNC_FAULT

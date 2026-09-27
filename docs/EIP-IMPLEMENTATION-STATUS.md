@@ -2185,3 +2185,14 @@ journaux d'une autre chaîne et résultats expirés rejetés.
 [Preuves et correction d'une attente de test](qualification/capella-local-attestation-20260927/README.md).
 Restent RANDAO/propositions locales, ordonnanceur, diffusion réseau, exploitation
 des journaux et migration inter-forks. Aucune activation réseau Capella.
+
+### Capella : RANDAO et propositions locales protégées
+
+Proposant/domaine dérivés du Store ; corps exécuté avant réservation du header
+dans le journal anti-slashing. Quatre suites réussies, 88 révélations RANDAO et
+88 blocs signés localement comparés puis reçus sur cinq chaînes. Doubles
+propositions après réouverture, corps invalides et signatures expirées refusés.
+[Preuves](qualification/capella-local-proposal-20260927/README.md).
+Restent assemblage automatique des corps, ordonnanceur, diffusion réseau,
+qualification dépôts natifs et première proposition lors de la migration du
+Store vivant. Les descendants d'une ancre Capella sont seuls qualifiés ici.

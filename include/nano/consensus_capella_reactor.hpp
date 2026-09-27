@@ -8,7 +8,7 @@ class ExpiredCapellaDuty : public std::runtime_error {public: using std::runtime
 using CapellaSignedVotes=std::map<Bytes,Bytes>;
 struct CapellaPublishedStore {std::shared_ptr<const CapellaForkStore> state;ForkCheckpointToken token;};
 // Serialized local event coordinator. Initial anchor or restart token must be
-// independently trusted. No local signing, P2P, RPC cache or fork activation.
+// independently trusted. No scheduler, P2P, RPC cache or fork activation.
 // Own ChainStore for this object's lifetime; callbacks must not re-enter it.
 class CapellaDurableReactor {
  ChainStore& disk_;Int chain_;Bytes genesis_;CapellaForkBlockRules rules_;CapellaStoreSnapshotLimits limits_;
@@ -24,6 +24,13 @@ public:
  // Signature reservations live in a separate durable journal and survive expiry.
  std::optional<Phase0SignedAttestation> sign_attestation(uint64_t validator_index,
   uint64_t slot,const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected,
+  BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={});
+ std::optional<Bytes> sign_randao(uint64_t validator_index,uint64_t slot,
+  const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected,
+  BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={});
+ // Body is fully executed/validated on the current parent before reservation.
+ std::optional<Bytes> sign_proposal(uint64_t validator_index,uint64_t slot,
+  std::span<const uint8_t> body,const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected,
   BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={});
  // Authenticated recent gossip votes, including deferred current-slot votes.
  // Retained for current/previous epoch; copy is bounded by snapshot limits.
