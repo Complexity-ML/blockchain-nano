@@ -44,7 +44,7 @@ reste à compléter. Le genesis réseau autorise actuellement Paris/Shanghai.
 | [6780](https://eips.ethereum.org/EIPS/eip-6780) | Partiel pour la production | Moteur Cancun présent ; pas de genesis réseau Cancun | src/evm.cpp ; src/chain.cpp ; docs/EVM-CONFORMANCE.md | Activation réseau cohérente du fork, admission, régressions et reprise | Avant activation Cancun |
 | [7702](https://eips.ethereum.org/EIPS/eip-7702) | Partiel pour la production | Autorisations et exécution Prague ; non activé sur réseau | src/authorization.cpp ; src/transaction.cpp ; src/engine.cpp | Mempool/P2P, admission type 4 et activation réseau Prague | Avant activation Prague |
 | [4844](https://eips.ethereum.org/EIPS/eip-4844) | Partiel | Blobs/KZG dans le moteur et les runners | src/kzg.cpp ; src/engine.cpp ; tests/test_blobs.cpp | Admission réseau type 3, sidecars, disponibilité, rétention et récupération | Avant service blobs |
-| [4895](https://eips.ethereum.org/EIPS/eip-4895) | Partiel | Traitement des retraits dans exécution | src/engine.cpp ; tests/test_withdrawals.cpp | Origine et autorisation des retraits par le nouveau consensus Nano | Consensus cible |
+| [4895](https://eips.ethereum.org/EIPS/eip-4895) | Partiel | Retraits EVM, candidats de balayage et changement signé des credentials Capella ; non activé réseau | src/engine.cpp ; src/consensus_capella_withdrawals.cpp ; src/consensus_capella_bls_change.cpp ; tests/test_capella_bls_change.cpp | Composition des blocs Capella, activation et publication atomique consensus/exécution | Consensus cible |
 | [4788](https://eips.ethereum.org/EIPS/eip-4788) | Partiel | Appel système côté exécution | src/engine.cpp ; tests/test_beacon.cpp | Provisionnement versionné du contrat (code, nonce, adresse) au genesis si fork actif dès le départ, sinon à la transition ; fourniture authentifiée des racines par le nouveau consensus | Consensus cible |
 | [6110](https://eips.ethereum.org/EIPS/eip-6110) | Partiel | Requêtes côté exécution ; cycle consensus non terminé | src/requests.cpp ; src/engine.cpp ; tests/test_requests.cpp | Registre BLS, dépôts, sorties, consolidations et application des requêtes dans le consensus | Consensus cible |
 | [7685](https://eips.ethereum.org/EIPS/eip-7685) | Partiel | Requêtes côté exécution ; cycle consensus non terminé | src/requests.cpp ; src/engine.cpp ; tests/test_requests.cpp | Qualifier encodage, ordre par type, omission des requêtes vides et requests_hash ; rejeter les engagements altérés ; appliquer dépôts/sorties/consolidations au consensus et vérifier reprise/rejeu | Consensus cible |
@@ -1951,3 +1951,15 @@ synthétiques, coupure 96 s ; trois boucles saines, sortie globale 0.
 Les échecs précédents sont conservés. Une campagne ne prouve pas le gain
 causal statistique, l'endurance, la charge ou les autres topologies ; aucun
 EIP supplémentaire ni la production globale n'est déclaré achevé.
+
+### Capella : changements des clés de retrait qualifiés
+
+`consensus_capella_bls_change` implémente l'opération signée et sa transition
+sur état SSZ authentifié : domaine genesis, autorité de la clé de retrait,
+mutation atomique des credentials, rejet des doublons et annulation.
+14 cas officiels épinglés (7 valides avec état complet identique, 7 invalides),
+63 rejets locaux, 7 rejeux et 14 annulations. Contrôle négatif de signature
+effectivement détecté ; régression Capella ciblée 3/3.
+[Preuves](qualification/capella-bls-change-20260927/README.md).
+L'ordre des opérations du bloc, l'activation, le réacteur et le transport
+restent à raccorder. EIP-4895 demeure partiel, sans activation réseau.

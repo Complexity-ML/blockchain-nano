@@ -1481,3 +1481,9 @@ add_executable(nano-proposal-vote-selection-tests tests/test_proposal_vote_selec
 target_compile_features(nano-proposal-vote-selection-tests PRIVATE cxx_std_20)
 add_test(NAME consensus_proposal_vote_selection COMMAND nano-proposal-vote-selection-tests)
 set_tests_properties(consensus_proposal_vote_selection PROPERTIES TIMEOUT 10 LABELS "qualification_consensus_ethereum")
+
+add_executable(nano-capella-bls-change-tests tests/test_capella_bls_change.cpp)
+target_link_libraries(nano-capella-bls-change-tests PRIVATE nano_core)
+target_compile_definitions(nano-capella-bls-change-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+add_test(NAME ethereum_official_capella_bls_changes COMMAND nano-capella-bls-change-tests)
+set_tests_properties(ethereum_official_capella_bls_changes PROPERTIES TIMEOUT 90 LABELS "qualification_consensus_ethereum")

@@ -1,0 +1,27 @@
+{
+  "cancellations": 14,
+  "localRejections": 63,
+  "networkActivated": false,
+  "officialInvalid": 7,
+  "officialValid": 7,
+  "replays": 7,
+  "scenario": "capella-bls-to-execution-change",
+  "wholeStateCompared": true,
+  "spec": {
+    "url": "https://raw.githubusercontent.com/ethereum/consensus-specs/v1.4.0/specs/capella/beacon-chain.md",
+    "sha256": "707cf7f901424ba49b1f1b024159752cd538c1890d82b9644b897674604ea9bb"
+  },
+  "fixtureCommit": "194a91fd9e6f97118156421aac4c80e6e47a9a7f",
+  "negativeControl": {
+    "mutation": "omit signature verification",
+    "exitCode": 1,
+    "observed": "mutation accepted",
+    "restored": true
+  },
+  "sourceHashes": {
+    "include/nano/consensus_capella_bls_change.hpp": "e3a7c2938dc2b988ac3cba7378e2c8456f548bd89b835038f0b69472c5f8b247",
+    "src/consensus_capella_bls_change.cpp": "6ada5f6f793b5ea8c04cfe4e291d4e341549500ef9e426fafa1714124d56318b",
+    "tests/test_capella_bls_change.cpp": "62390cd752f37c48697bafd952da8e7d3109a5893826ab2dc295a5416b6365da",
+    "tests/fixtures/consensus-capella-bls-change-official/manifest.json": "f961a255800ecd9bfc0447ba0f618d20998a16160784ca52fa2e2115dac47525"
+  }
+}

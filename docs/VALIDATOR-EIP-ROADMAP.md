@@ -2523,3 +2523,15 @@ synthétiques, coupure 96 s ; trois boucles saines, sortie globale 0.
 Les échecs précédents sont conservés. Une campagne ne prouve pas le gain
 causal statistique, l'endurance, la charge ou les autres topologies ; aucun
 EIP supplémentaire ni la production globale n'est déclaré achevé.
+
+### Capella : changements des clés de retrait qualifiés
+
+`consensus_capella_bls_change` implémente l'opération signée et sa transition
+sur état SSZ authentifié : domaine genesis, autorité de la clé de retrait,
+mutation atomique des credentials, rejet des doublons et annulation.
+14 cas officiels épinglés (7 valides avec état complet identique, 7 invalides),
+63 rejets locaux, 7 rejeux et 14 annulations. Contrôle négatif de signature
+effectivement détecté ; régression Capella ciblée 3/3.
+[Preuves](qualification/capella-bls-change-20260927/README.md).
+L'ordre des opérations du bloc, l'activation, le réacteur et le transport
+restent à raccorder. EIP-4895 demeure partiel, sans activation réseau.

@@ -1,0 +1,393 @@
+{
+  "repository": "https://github.com/ethereum/consensus-spec-tests",
+  "commit": "194a91fd9e6f97118156421aac4c80e6e47a9a7f",
+  "path": "tests/minimal/capella/operations/bls_to_execution_change/pyspec_tests",
+  "cases": [
+    {
+      "name": "genesis_fork_version",
+      "valid": true,
+      "files": {
+        "pre.ssz_snappy": {
+          "bytes": 6638,
+          "sha256": "ffdf6425c022674e2b5f49d88ae8ad7d5bcb19bc1e2e1f33a803b5548b318098"
+        },
+        "pre.ssz": {
+          "bytes": 19717,
+          "sha256": "f5a464175565a8ed6a74790a60b84477c16a5b1bf71ece55736f192142cbca3d"
+        },
+        "address_change.ssz_snappy": {
+          "bytes": 159,
+          "sha256": "ca478c61578659cde3e5a3ce1c448f4bd083d0729e68fd7ab2c7f8b7694cd07f"
+        },
+        "address_change.ssz": {
+          "bytes": 172,
+          "sha256": "2b8c2a44191504e71e9cb1e343ebb0c49bd4735ebaf2a9bd7083bd8d61810b76"
+        },
+        "post.ssz_snappy": {
+          "bytes": 6602,
+          "sha256": "51f9ca745fd784d6883d6f6e53c53613afd1dab7693a6d74c7b3592e31843e0f"
+        },
+        "post.ssz": {
+          "bytes": 19717,
+          "sha256": "a43c96ec618ac4154e9acbb2a3bc29ff582d62908806781984a47faf0db0fa88"
+        }
+      }
+    },
+    {
+      "name": "invalid_already_0x01",
+      "valid": false,
+      "files": {
+        "pre.ssz_snappy": {
+          "bytes": 6616,
+          "sha256": "97ab765154f26560f9285d3d8e523595c4ef95a05b9f9e4aa5a03ecc8b8a5675"
+        },
+        "pre.ssz": {
+          "bytes": 19717,
+          "sha256": "78dab6e5ecb142dbf019114e03762f85e99140e59a81080012ed6a6ceb01500f"
+        },
+        "address_change.ssz_snappy": {
+          "bytes": 160,
+          "sha256": "75a68988e75b48bb7eb1a566fe810735f03895a2a17d58c8976007285f6ba393"
+        },
+        "address_change.ssz": {
+          "bytes": 172,
+          "sha256": "a8b6868ed7a07525988bef7c9c5162203681bec3a6587af910aa09fb390fa72f"
+        }
+      }
+    },
+    {
+      "name": "invalid_bad_signature",
+      "valid": false,
+      "files": {
+        "pre.ssz_snappy": {
+          "bytes": 6638,
+          "sha256": "ffdf6425c022674e2b5f49d88ae8ad7d5bcb19bc1e2e1f33a803b5548b318098"
+        },
+        "pre.ssz": {
+          "bytes": 19717,
+          "sha256": "f5a464175565a8ed6a74790a60b84477c16a5b1bf71ece55736f192142cbca3d"
+        },
+        "address_change.ssz_snappy": {
+          "bytes": 64,
+          "sha256": "851ccd134c2a0f7d782febc2d22140da9979aa21aa15dcfdf67d6442634aa33e"
+        },
+        "address_change.ssz": {
+          "bytes": 172,
+          "sha256": "0f2836c0a2700db7eb944c4b61760795f2cfc2d7adba3b3ad90d88b97d030c05"
+        }
+      }
+    },
+    {
+      "name": "invalid_current_fork_version",
+      "valid": false,
+      "files": {
+        "pre.ssz_snappy": {
+          "bytes": 6638,
+          "sha256": "ffdf6425c022674e2b5f49d88ae8ad7d5bcb19bc1e2e1f33a803b5548b318098"
+        },
+        "pre.ssz": {
+          "bytes": 19717,
+          "sha256": "f5a464175565a8ed6a74790a60b84477c16a5b1bf71ece55736f192142cbca3d"
+        },
+        "address_change.ssz_snappy": {
+          "bytes": 159,
+          "sha256": "427e82dd212a781b7ab12ad79af84048cc52cd82475c64bcaab4040020c25e92"
+        },
+        "address_change.ssz": {
+          "bytes": 172,
+          "sha256": "a2d6e581d5e569566f711151412f1b33872587e03318b7cae43c56da22e5c314"
+        }
+      }
+    },
+    {
+      "name": "invalid_genesis_validators_root",
+      "valid": false,
+      "files": {
+        "pre.ssz_snappy": {
+          "bytes": 6638,
+          "sha256": "ffdf6425c022674e2b5f49d88ae8ad7d5bcb19bc1e2e1f33a803b5548b318098"
+        },
+        "pre.ssz": {
+          "bytes": 19717,
+          "sha256": "f5a464175565a8ed6a74790a60b84477c16a5b1bf71ece55736f192142cbca3d"
+        },
+        "address_change.ssz_snappy": {
+          "bytes": 159,
+          "sha256": "de6609e92497850df2d60453556383e1131688cdfbdb956a0773db9be7695c28"
+        },
+        "address_change.ssz": {
+          "bytes": 172,
+          "sha256": "5b0f75a328106e460488e1e9ee657af820fd788bd4f9bae5bf0a7c48cf7bdf81"
+        }
+      }
+    },
+    {
+      "name": "invalid_incorrect_from_bls_pubkey",
+      "valid": false,
+      "files": {
+        "pre.ssz_snappy": {
+          "bytes": 6638,
+          "sha256": "ffdf6425c022674e2b5f49d88ae8ad7d5bcb19bc1e2e1f33a803b5548b318098"
+        },
+        "pre.ssz": {
+          "bytes": 19717,
+          "sha256": "f5a464175565a8ed6a74790a60b84477c16a5b1bf71ece55736f192142cbca3d"
+        },
+        "address_change.ssz_snappy": {
+          "bytes": 160,
+          "sha256": "25184d76a62704e9f6da8152e7d1f3702c0453d027b4e016ff1320129694d05d"
+        },
+        "address_change.ssz": {
+          "bytes": 172,
+          "sha256": "5cfc818d085e8ed3bc38b6bcc388a6b269fe4b470a76b5a07457fb4b0bf81381"
+        }
+      }
+    },
+    {
+      "name": "invalid_previous_fork_version",
+      "valid": false,
+      "files": {
+        "pre.ssz_snappy": {
+          "bytes": 6638,
+          "sha256": "ffdf6425c022674e2b5f49d88ae8ad7d5bcb19bc1e2e1f33a803b5548b318098"
+        },
+        "pre.ssz": {
+          "bytes": 19717,
+          "sha256": "f5a464175565a8ed6a74790a60b84477c16a5b1bf71ece55736f192142cbca3d"
+        },
+        "address_change.ssz_snappy": {
+          "bytes": 159,
+          "sha256": "6715a6032d15aad9fd4844e996971934d34c71ef67ecbfbd7f488cbda06bc655"
+        },
+        "address_change.ssz": {
+          "bytes": 172,
+          "sha256": "96f8ec842f11a3f4a4260ba5fdea736acdfa01d3908b17aaa60f6aa43ea06348"
+        }
+      }
+    },
+    {
+      "name": "invalid_val_index_out_of_range",
+      "valid": false,
+      "files": {
+        "pre.ssz_snappy": {
+          "bytes": 6638,
+          "sha256": "ffdf6425c022674e2b5f49d88ae8ad7d5bcb19bc1e2e1f33a803b5548b318098"
+        },
+        "pre.ssz": {
+          "bytes": 19717,
+          "sha256": "f5a464175565a8ed6a74790a60b84477c16a5b1bf71ece55736f192142cbca3d"
+        },
+        "address_change.ssz_snappy": {
+          "bytes": 160,
+          "sha256": "ad7b73d56a742ca2ccf4e73d0da6ba90e56e188d725e0b60d6f7fc5d438b27bf"
+        },
+        "address_change.ssz": {
+          "bytes": 172,
+          "sha256": "ef66b30c3ff4c2c911ecfc15263d474cc7701591ad6665b4b63f1f760cca1064"
+        }
+      }
+    },
+    {
+      "name": "success",
+      "valid": true,
+      "files": {
+        "pre.ssz_snappy": {
+          "bytes": 6638,
+          "sha256": "ffdf6425c022674e2b5f49d88ae8ad7d5bcb19bc1e2e1f33a803b5548b318098"
+        },
+        "pre.ssz": {
+          "bytes": 19717,
+          "sha256": "f5a464175565a8ed6a74790a60b84477c16a5b1bf71ece55736f192142cbca3d"
+        },
+        "address_change.ssz_snappy": {
+          "bytes": 159,
+          "sha256": "ca478c61578659cde3e5a3ce1c448f4bd083d0729e68fd7ab2c7f8b7694cd07f"
+        },
+        "address_change.ssz": {
+          "bytes": 172,
+          "sha256": "2b8c2a44191504e71e9cb1e343ebb0c49bd4735ebaf2a9bd7083bd8d61810b76"
+        },
+        "post.ssz_snappy": {
+          "bytes": 6602,
+          "sha256": "51f9ca745fd784d6883d6f6e53c53613afd1dab7693a6d74c7b3592e31843e0f"
+        },
+        "post.ssz": {
+          "bytes": 19717,
+          "sha256": "a43c96ec618ac4154e9acbb2a3bc29ff582d62908806781984a47faf0db0fa88"
+        }
+      }
+    },
+    {
+      "name": "success_exited",
+      "valid": true,
+      "files": {
+        "pre.ssz_snappy": {
+          "bytes": 6646,
+          "sha256": "b5c991bc51c4cb338b1d753fe9ebb5897532658ddc44bd3278bc0036643b06de"
+        },
+        "pre.ssz": {
+          "bytes": 19717,
+          "sha256": "79c7bf8c0dd2e1d5df9abd12785102870fb04c00974607cf8baf2704778c233c"
+        },
+        "address_change.ssz_snappy": {
+          "bytes": 158,
+          "sha256": "98449f90ba6ddc4733e9cde1e4264a6fe958b66676ea112fc508962eae31de25"
+        },
+        "address_change.ssz": {
+          "bytes": 172,
+          "sha256": "c6d093a19b4687fee08c96b4b9c7fb7d01232a97abb8aaa3541e02ff8de7c17e"
+        },
+        "post.ssz_snappy": {
+          "bytes": 6619,
+          "sha256": "4606a542a6a165ee65caac3f3cbba0300678318e5a4d1e31429c78753859d634"
+        },
+        "post.ssz": {
+          "bytes": 19717,
+          "sha256": "8618ee916cf8ced51fb7aa458cb92651ed0869b3cca93461c0688b787badb20d"
+        }
+      }
+    },
+    {
+      "name": "success_in_activation_queue",
+      "valid": true,
+      "files": {
+        "pre.ssz_snappy": {
+          "bytes": 6661,
+          "sha256": "f0119a01dbc21f9a6b073746e459ee7d4c3d2843a455f988beb88a736eaf04b7"
+        },
+        "pre.ssz": {
+          "bytes": 19717,
+          "sha256": "ec7d6fb3db1f3a2f69a2f40631c0c9c7cebef8f0e92100265f9284d372a17c0f"
+        },
+        "address_change.ssz_snappy": {
+          "bytes": 159,
+          "sha256": "ca478c61578659cde3e5a3ce1c448f4bd083d0729e68fd7ab2c7f8b7694cd07f"
+        },
+        "address_change.ssz": {
+          "bytes": 172,
+          "sha256": "2b8c2a44191504e71e9cb1e343ebb0c49bd4735ebaf2a9bd7083bd8d61810b76"
+        },
+        "post.ssz_snappy": {
+          "bytes": 6617,
+          "sha256": "e3a541668cb0259e1474f161472bc600bf10ee4affbfdd0902b3c31ca13d9453"
+        },
+        "post.ssz": {
+          "bytes": 19717,
+          "sha256": "ca37d2243dd02a22f44b01457bc082e356746fa151bb3355357fa2f574fa8563"
+        }
+      }
+    },
+    {
+      "name": "success_in_exit_queue",
+      "valid": true,
+      "files": {
+        "pre.ssz_snappy": {
+          "bytes": 6655,
+          "sha256": "eca22355b2730820da31c82db5a92cc6b2657f8cf8e8e713539ab3c7cd5f126f"
+        },
+        "pre.ssz": {
+          "bytes": 19717,
+          "sha256": "c2df6250497f1fba34207a85ecb3444598df120af796517a638007149180d807"
+        },
+        "address_change.ssz_snappy": {
+          "bytes": 160,
+          "sha256": "6a69f1517e7a3c00f5b09921bcac277612025315b6983556663a2597978c4ae3"
+        },
+        "address_change.ssz": {
+          "bytes": 172,
+          "sha256": "f6e20487435dc59cba0af9f98e4c54ea9a99a68ed723e3ccc8ff20c02c428936"
+        },
+        "post.ssz_snappy": {
+          "bytes": 6628,
+          "sha256": "40ecdaa60c877256c676cc82971562b0797c54f983425c9b20effd727f734140"
+        },
+        "post.ssz": {
+          "bytes": 19717,
+          "sha256": "aaf2ea662281944a084399fae3ae4daa5bc9fc75e618977ca2f2d6edbd81b0e0"
+        }
+      }
+    },
+    {
+      "name": "success_not_activated",
+      "valid": true,
+      "files": {
+        "pre.ssz_snappy": {
+          "bytes": 6652,
+          "sha256": "1e1ad5aa518c7e0f64d4330dc2f3b654644c9de0dcb9958ab2ecf4b2097e5223"
+        },
+        "pre.ssz": {
+          "bytes": 19717,
+          "sha256": "8f224ab93aa39ba7d62c54a61235050ce36345df90ad03d196a7dc077b3a7809"
+        },
+        "address_change.ssz_snappy": {
+          "bytes": 159,
+          "sha256": "ca478c61578659cde3e5a3ce1c448f4bd083d0729e68fd7ab2c7f8b7694cd07f"
+        },
+        "address_change.ssz": {
+          "bytes": 172,
+          "sha256": "2b8c2a44191504e71e9cb1e343ebb0c49bd4735ebaf2a9bd7083bd8d61810b76"
+        },
+        "post.ssz_snappy": {
+          "bytes": 6616,
+          "sha256": "39eb00e1c6899bd6ba0794105d059b06800ace998c6d98be05ede3e04d6fde7c"
+        },
+        "post.ssz": {
+          "bytes": 19717,
+          "sha256": "d28eb7c72e2f0ecfdf436ebf913882077b520a22e41a9ebe5389b43aa99e219a"
+        }
+      }
+    },
+    {
+      "name": "success_withdrawable",
+      "valid": true,
+      "files": {
+        "pre.ssz_snappy": {
+          "bytes": 6645,
+          "sha256": "c04260cb0e3125e498d6912c362896d2c3f5d2f1cf609fd153dd18e9e9cf7517"
+        },
+        "pre.ssz": {
+          "bytes": 19717,
+          "sha256": "1344cda741ef3c7a1b3e4cc55baa2cef73bb371f05cbdf985a89ea0bd7db44bc"
+        },
+        "address_change.ssz_snappy": {
+          "bytes": 158,
+          "sha256": "98449f90ba6ddc4733e9cde1e4264a6fe958b66676ea112fc508962eae31de25"
+        },
+        "address_change.ssz": {
+          "bytes": 172,
+          "sha256": "c6d093a19b4687fee08c96b4b9c7fb7d01232a97abb8aaa3541e02ff8de7c17e"
+        },
+        "post.ssz_snappy": {
+          "bytes": 6618,
+          "sha256": "67c32c812b4997567f31bf569ae6591ed68576116205cb4dc28493d8b1a6e32c"
+        },
+        "post.ssz": {
+          "bytes": 19717,
+          "sha256": "413ece184b609529162562d34f01803621400bea43ce72c65103974c589f9ec3"
+        }
+      }
+    }
+  ],
+  "referenceFiles": {
+    "consensus-bellatrix-containers-official/minimal-phase0.yaml": {
+      "bytes": 2447,
+      "sha256": "e5adcabf45a9c7d5cbaecd42893dcaff7ada826f3e55c176bccc5aa7418710cc"
+    },
+    "consensus-bellatrix-containers-official/minimal-altair.yaml": {
+      "bytes": 754,
+      "sha256": "b22a2eab9ae1ac23cf79c42f209d607a1d763d4a309f43de2e6be303b8e249b9"
+    },
+    "consensus-bellatrix-containers-official/minimal-bellatrix.yaml": {
+      "bytes": 613,
+      "sha256": "96b8fbfa1a4af173be05f0dc5563af3b9df9e8327277d8f1957a4fdfa49b7cd9"
+    },
+    "consensus-slashing-official/minimal-config.yaml": {
+      "bytes": 6933,
+      "sha256": "91074cbc6d3faf0d3edb528c1b01dd214c42912a151bbf09065a0eec2c250d4c"
+    },
+    "consensus-capella-withdrawals-official/minimal-capella.yaml": {
+      "bytes": 506,
+      "sha256": "23fa8aeb37009976ba3f88959f91024f6dd19bde3c999011d7d6eff4ab61e523"
+    }
+  }
+}
