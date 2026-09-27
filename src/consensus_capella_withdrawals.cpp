@@ -58,9 +58,7 @@ CapellaWithdrawalExecutionCandidate verify_capella_withdrawal_execution(const Ca
 namespace {
 uint64_t ssz_number(std::span<const uint8_t> state,size_t at,size_t width=8){uint64_t n=0;for(size_t i=0;i<width;++i)n|=uint64_t(state[at+i])<<(8*i);return n;}
 struct WithdrawalLayout {size_t start,balances,count,execution_field;};
-WithdrawalLayout authenticated_layout(std::span<const uint8_t> state,const ConsensusRoot& authenticated_root,const AltairStateLimits& l,const ExecutionPayloadLimits& execution,size_t budget,uint64_t slots,const std::function<void()>& check){
- if(!slots)throw std::invalid_argument("invalid Capella epoch length");
- if(capella_beacon_state_root(state,l,execution,budget,check)!=authenticated_root)throw std::invalid_argument("Capella withdrawal state authentication failed");
+WithdrawalLayout checked_layout(std::span<const uint8_t> state,const AltairStateLimits& l){
  auto number=[&](size_t at,size_t width=8){return ssz_number(state,at,width);};
  const size_t historical=176+64*l.slots_per_historical_root,randao=historical+96;
  const size_t slashings=randao+32*l.epochs_per_historical_vector,previous=slashings+8*l.epochs_per_slashings_vector;
@@ -75,7 +73,9 @@ WithdrawalLayout authenticated_layout(std::span<const uint8_t> state,const Conse
 CapellaWithdrawalState read_capella_withdrawal_state(std::span<const uint8_t> state,
  const ConsensusRoot& authenticated_root,const AltairStateLimits& l,const ExecutionPayloadLimits& execution,
  size_t budget,uint64_t slots,const std::function<void()>& check){
- const auto [start,balances,count,execution_field]=authenticated_layout(state,authenticated_root,l,execution,budget,slots,check);
+ if(!slots)throw std::invalid_argument("invalid Capella epoch length");
+ if(capella_beacon_state_root(state,l,execution,budget,check)!=authenticated_root)throw std::invalid_argument("Capella withdrawal state authentication failed");
+ const auto [start,balances,count,execution_field]=checked_layout(state,l);
  auto number=[&](size_t at,size_t width=8){return ssz_number(state,at,width);};
  CapellaWithdrawalState projected;projected.registry.epoch=number(40)/slots;
  projected.next_withdrawal_index=number(execution_field+4);projected.next_validator_index=number(execution_field+12);
@@ -91,7 +91,9 @@ std::optional<CapellaWithdrawalSszCandidate> prepare_capella_withdrawal_state(
  const AltairStateLimits& l,const ExecutionPayloadLimits& execution,size_t budget,
  uint64_t slots,const CapellaWithdrawalRules& rules,const std::vector<CapellaWithdrawal>& advertised,
  const std::function<void()>& check){
- const auto [start,balances,count,execution_field]=authenticated_layout(state,authenticated_root,l,execution,budget,slots,check);
+ if(!slots)throw std::invalid_argument("invalid Capella epoch length");
+ auto transformed=transform_capella_beacon_state(state,authenticated_root,l,execution,budget,[&](std::span<const uint8_t> state)->std::optional<Bytes>{
+ const auto [start,balances,count,execution_field]=checked_layout(state,l);
  auto number=[&](size_t at){return ssz_number(state,at);};
  const auto cursor=number(execution_field+12),index=number(execution_field+4);
  // The full SSZ root and list cardinalities were checked above. Read only the
@@ -106,6 +108,8 @@ std::optional<CapellaWithdrawalSszCandidate> prepare_capella_withdrawal_state(
  for(const auto& w:expected){if(check)check();put(balances+8*w.validator_index,number(balances+8*w.validator_index)-w.amount_gwei);}
  put(execution_field+4,expected.empty()?index:expected.back().index+1);
  put(execution_field+12,expected.size()==rules.maximum_per_payload?advance(expected.back().validator_index,1,count):advance(cursor,rules.maximum_validators_per_sweep,count));
- const auto root=capella_beacon_state_root(post,l,execution,budget,check);if(check)check();return CapellaWithdrawalSszCandidate{std::move(post),root};
+ return post;
+ },check);
+ if(!transformed)return std::nullopt;return CapellaWithdrawalSszCandidate{std::move(transformed->state),transformed->root};
 }
 }

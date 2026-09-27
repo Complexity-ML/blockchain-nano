@@ -34,4 +34,14 @@ ConsensusRoot bellatrix_beacon_state_root(std::span<const uint8_t>,const AltairS
 // it does not validate lifecycle coherence, execute blocks or activate a fork.
 ConsensusRoot capella_beacon_state_root(std::span<const uint8_t>,const AltairStateLimits&,
  const ExecutionPayloadLimits&,size_t maximum_bytes,const std::function<void()>& checkpoint={});
+// Authenticate an owned input snapshot, transform it privately, then hash output.
+// Variable-field roots are reused only on exact byte equality within this call.
+// No reusable cache or caller-provided field roots cross the trust boundary.
+struct CapellaSszTransform {Bytes state;ConsensusRoot root;};
+std::optional<CapellaSszTransform> transform_capella_beacon_state(
+ std::span<const uint8_t>,const ConsensusRoot&,const AltairStateLimits&,
+ const ExecutionPayloadLimits&,size_t maximum_bytes,
+ const std::function<std::optional<Bytes>(std::span<const uint8_t>)>&,
+ const std::function<void()>& checkpoint={});
+
 }

@@ -71,7 +71,8 @@ struct Hasher {
 };
 }
 namespace {
-ConsensusRoot beacon_state_root(View b,const Phase0StateLimits& limits,uint64_t sync_size,const std::function<void()>& checkpoint,const ExecutionPayloadLimits* execution=nullptr,bool capella=false){
+struct FieldCache {std::array<View,28> values{};std::array<Root,28> roots{};};
+ConsensusRoot beacon_state_root(View b,const Phase0StateLimits& limits,uint64_t sync_size,const std::function<void()>& checkpoint,const ExecutionPayloadLimits* execution=nullptr,bool capella=false,FieldCache* capture=nullptr,const FieldCache* reuse=nullptr){
  require(b.size()<=UINT32_MAX&&limits.slots_per_historical_root&&limits.epochs_per_historical_vector&&limits.epochs_per_slashings_vector&&limits.historical_roots_limit&&limits.eth1_votes_limit&&limits.validator_registry_limit&&limits.pending_attestations_limit&&limits.validators_per_committee);
  Hasher h{checkpoint};h.tick();size_t cursor=0;
  auto take=[&](size_t n){auto v=part(b,cursor,n);cursor+=n;return v;};
@@ -101,6 +102,7 @@ ConsensusRoot beacon_state_root(View b,const Phase0StateLimits& limits,uint64_t 
  if(capella){require(execution);fields[25]=scalar(take(8));fields[26]=scalar(take(8));offset(27);}
  require(variable.front().second==cursor);
  for(size_t i=0;i<variable.size();++i){h.tick();const auto [field,start]=variable[i];const auto end=i+1==variable.size()?b.size():variable[i+1].second;require(start<=end&&end<=b.size());const auto value=b.subspan(start,end-start);
+  if(reuse&&value.size()==reuse->values[field].size()&&std::equal(value.begin(),value.end(),reuse->values[field].begin())){fields[field]=reuse->roots[field];continue;}
   switch(field){
    case 7:require(value.size()%32==0&&value.size()/32<=limits.historical_roots_limit);fields[field]=h.mix(h.packed(value,limits.historical_roots_limit),value.size()/32);break;
    case 9:fields[field]=h.fixed_list(value,72,limits.eth1_votes_limit,[&](View v){return h.eth1(v);});break;
@@ -117,6 +119,7 @@ ConsensusRoot beacon_state_root(View b,const Phase0StateLimits& limits,uint64_t 
     break;
   }
  }
+ if(capture){for(size_t i=0;i<variable.size();++i){const auto [field,start]=variable[i];const auto end=i+1==variable.size()?b.size():variable[i+1].second;capture->values[field]=b.subspan(start,end-start);capture->roots[field]=fields[field];}}
  const auto result=h.merkle(std::move(fields),field_count);h.tick();return result;
 }
 }
@@ -135,4 +138,16 @@ ConsensusRoot capella_beacon_state_root(View b,const AltairStateLimits& l,const 
  require(l.sync_committee_size&&b.size()<=maximum_bytes);
  return beacon_state_root(b,{l.slots_per_historical_root,l.epochs_per_historical_vector,l.epochs_per_slashings_vector,l.historical_roots_limit,l.eth1_votes_limit,l.validator_registry_limit,1,1},l.sync_committee_size,checkpoint,&e,true);
 }
+std::optional<CapellaSszTransform> transform_capella_beacon_state(View input,const ConsensusRoot& expected,const AltairStateLimits& l,const ExecutionPayloadLimits& e,size_t maximum_bytes,const std::function<std::optional<Bytes>(View)>& transform,const std::function<void()>& checkpoint){
+ require(l.sync_committee_size&&input.size()<=maximum_bytes&&input.size()<=UINT32_MAX);
+ if(checkpoint)checkpoint();const Bytes owned(input.begin(),input.end());
+ const Phase0StateLimits limits{l.slots_per_historical_root,l.epochs_per_historical_vector,l.epochs_per_slashings_vector,l.historical_roots_limit,l.eth1_votes_limit,l.validator_registry_limit,1,1};
+ FieldCache cache;
+ if(beacon_state_root(owned,limits,l.sync_committee_size,checkpoint,&e,true,&cache)!=expected)throw std::invalid_argument("Capella withdrawal state authentication failed");
+ auto post=transform(owned);if(!post)return std::nullopt;
+ require(post->size()<=maximum_bytes);
+ const auto root=beacon_state_root(*post,limits,l.sync_committee_size,checkpoint,&e,true,nullptr,&cache);
+ if(checkpoint)checkpoint();return CapellaSszTransform{std::move(*post),root};
+}
+
 }

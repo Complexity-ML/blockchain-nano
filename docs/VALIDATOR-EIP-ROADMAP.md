@@ -3837,3 +3837,15 @@ RSS maximal du benchmark de 854 589 440 à 639 205 376 octets ; temps mesuré de
 3 029 580 à 2 911 148 µs. Racines identiques. Les autres projections et le coût
 runtime complet restent ouverts ; aucune clôture EIP ou production.
 [Preuves](qualification/ssz-withdrawal-direct-sweep-20260927/README.md).
+
+### Réutilisation SSZ confinée à une transformation — 27 septembre 2026
+
+Entrée copiée et intégralement authentifiée avant transformation ; racines des
+champs variables réutilisées uniquement après égalité exacte des octets et
+longueurs, au sein du même appel. Champs changés et offsets revérifiés, aucun
+cache externe fourni ou persistant. Sept suites passent, dont nouveaux contrôles
+sur les huit états Capella officiels (modifications de champs, entrée non
+authentifiée, sortie malformée, isolation et abandon). À un million, préparation
+de 2 911 148 à 1 525 469 µs ; RSS 639 090 688 octets, racines identiques.
+Mesures locales uniques hors runtime complet ; aucune clôture EIP/production.
+[Preuves et frontière de confiance](qualification/ssz-scoped-field-reuse-20260927/README.md).

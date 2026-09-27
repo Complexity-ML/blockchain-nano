@@ -32,6 +32,20 @@ int main(){try{
    const size_t previous=randao+32*limits.epochs_per_historical_vector+8*limits.epochs_per_slashings_vector;
    const size_t header_field=previous+229+96*limits.sync_committee_size;
    const size_t header_at=little(data,header_field,4),history_at=little(data,header_field+20,4);
+   const auto unchanged=transform_capella_beacon_state(data,actual,limits,execution,budget,[](auto owned)->std::optional<Bytes>{return Bytes(owned.begin(),owned.end());});
+   check(unchanged&&unchanged->state==data&&unchanged->root==actual,"unchanged transform root mismatch");
+   const size_t historical_field=randao-96;
+   const std::vector<size_t> variable_fields{historical_field,historical_field+76,historical_field+88,historical_field+92,previous,previous+4,previous+129,header_field,header_field+20};
+   for(size_t f=0;f<variable_fields.size();++f){const auto begin=little(data,variable_fields[f],4),end=f+1<variable_fields.size()?little(data,variable_fields[f+1],4):data.size();if(begin==end)continue;
+    auto changed=data;changed.at(begin)^=1;const auto expected_changed=capella_beacon_state_root(changed,limits,execution,budget);
+    const auto transformed=transform_capella_beacon_state(data,actual,limits,execution,budget,[&](auto)->std::optional<Bytes>{return changed;});
+    check(transformed&&transformed->state==changed&&transformed->root==expected_changed&&transformed->root!=actual,"changed variable field reused stale root");++mutations;
+   }
+   bool invoked=false;auto wrong=actual;wrong[0]^=1;refuse([&]{transform_capella_beacon_state(data,wrong,limits,execution,budget,[&](auto)->std::optional<Bytes>{invoked=true;return data;});});check(!invoked,"transform invoked before authentication");
+   check(!transform_capella_beacon_state(data,actual,limits,execution,budget,[](auto)->std::optional<Bytes>{return std::nullopt;}),"rejected transformation published state");
+   refuse([&]{transform_capella_beacon_state(data,actual,limits,execution,budget,[&](auto)->std::optional<Bytes>{auto bad=data;for(size_t k=0;k<4;++k)bad.at(header_field+20+k)=0;return bad;});});
+   auto external=data;const auto isolated=transform_capella_beacon_state(external,actual,limits,execution,budget,[&](auto owned)->std::optional<Bytes>{external.at(0)^=1;return Bytes(owned.begin(),owned.end());});check(isolated&&isolated->state==data&&isolated->root==actual,"transform snapshot aliased mutable input");
+
    for(size_t at:{header_field+4,header_field+12,header_at+536}){auto changed=data;changed.at(at)^=1;check(capella_beacon_state_root(changed,limits,execution,budget)!=actual,"Capella field omitted from root");++mutations;}
    if(history_at<data.size()){auto changed=data;changed.at(history_at)^=1;check(capella_beacon_state_root(changed,limits,execution,budget)!=actual,"historical summary omitted");++historical;++mutations;}
    refuse([&]{bellatrix_beacon_state_root(data,limits,execution,budget);});

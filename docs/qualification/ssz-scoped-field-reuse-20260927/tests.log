@@ -1,0 +1,83 @@
+UpdateCTestConfiguration  from :/Users/boris/Dev/blockchain-nano/build-release/DartConfiguration.tcl
+Test project /Users/boris/Dev/blockchain-nano/build-release
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 229
+    Start 229: ethereum_official_beacon_state_root
+
+229: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-beacon-state-root-tests
+229: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+229: Test timeout computed to be: 120
+229: {"activeInConsensus":false,"cancellations":585,"cases":123,"decodedBytes":1194781,"fieldMutations":38,"fullStateTransition":false,"groups":7,"malformedRejections":33,"scenario":"official-phase0-beacon-state-root"}
+1/7 Test #229: ethereum_official_beacon_state_root ......   Passed    0.47 sec
+test 239
+    Start 239: ethereum_official_altair_state_root
+
+239: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-altair-state-root-tests
+239: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+239: Test timeout computed to be: 120
+239: {"cancellations":7,"cases":123,"decodedBytes":1401532,"fullStateTransition":false,"groups":7,"mutations":7,"networkActive":false,"rejections":25,"scenario":"official-altair-beacon-state-root"}
+2/7 Test #239: ethereum_official_altair_state_root ......   Passed    0.34 sec
+test 296
+    Start 296: ethereum_official_bellatrix_containers
+
+296: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-bellatrix-containers-tests
+296: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+296: Test timeout computed to be: 60
+296: {"cancellations":9,"malformedRejections":20,"nestedCommitmentMutations":2,"networkActive":false,"officialCases":{"BeaconBlockBody":8,"BeaconState":8,"ExecutionPayloadHeader":8},"scenario":"bellatrix-consensus-containers","sszBytes":218565}
+3/7 Test #296: ethereum_official_bellatrix_containers ...   Passed    0.25 sec
+test 337
+    Start 337: ethereum_official_capella_containers
+
+337: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-containers-tests
+337: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+337: Test timeout computed to be: 60
+337: {"cancellations":16,"commitmentMutations":105,"historicalSummaryMutations":6,"malformedRejections":88,"networkActivated":false,"officialHeaders":8,"officialStates":8}
+4/7 Test #337: ethereum_official_capella_containers .....   Passed    0.28 sec
+test 343
+    Start 343: ethereum_official_capella_payload
+
+343: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-payload-tests
+343: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+343: Test timeout computed to be: 60
+343: {"cancellations":62,"networkActivated":false,"officialRoots":30,"rejections":271,"scenario":"capella-execution-payload","withdrawalInvalidRejected":19,"withdrawalMutations":30,"withdrawalStatesMatched":35}
+5/7 Test #343: ethereum_official_capella_payload ........   Passed    0.38 sec
+test 344
+    Start 344: consensus_capella_payload_paired_state
+
+344: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-execution-tests
+344: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+344: Test timeout computed to be: 60
+344: {"cancellations":3,"firstCapella":false,"historicalSummariesPreserved":true,"networkActivated":false,"rejected":7,"scenario":"capella-payload-paired-state","withdrawals":4}
+344: {"cancellations":3,"firstCapella":true,"historicalSummariesPreserved":true,"networkActivated":false,"rejected":8,"scenario":"capella-payload-paired-state","withdrawals":4}
+6/7 Test #344: consensus_capella_payload_paired_state ...   Passed    0.32 sec
+test 389
+    Start 389: consensus_capella_withdrawal_ssz_scale
+
+389: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-withdrawal-ssz-scale-tests
+389: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+389: Test timeout computed to be: 180
+389: {"distributedNodes":0,"fullStateCompared":true,"includesBls":false,"includesSszAuthentication":true,"inputRoot":"0x2efda5e1774bf097307f3c56ff304e7b4bfb3627a060cefa0d1b2029560a5035","outputRoot":"0xf0906bc31271e4942fe8494cfe553e1c81685aa5ec2dcc7ad1d73964fe38f3d3","prepareMicroseconds":148627,"processPeakRssBytes":68681728,"rootMicroseconds":160491,"scenario":"capella-withdrawal-ssz-scale","stateBytes":13910821,"syntheticRegistry":true,"validators":100000,"wrongRootRejected":true}
+389: {"distributedNodes":0,"fullStateCompared":true,"includesBls":false,"includesSszAuthentication":true,"inputRoot":"0x7068492564dc6a5cc1e632b051ae11144bf9156db70b340ff2a10be8366ae52c","outputRoot":"0xab408e5e905fa3747f9d78982e33f5b4ce91c1ead7169f4b1611a62542cacdcd","prepareMicroseconds":1525469,"processPeakRssBytes":639090688,"rootMicroseconds":1433438,"scenario":"capella-withdrawal-ssz-scale","stateBytes":139010821,"syntheticRegistry":true,"validators":1000000,"wrongRootRejected":true}
+7/7 Test #389: consensus_capella_withdrawal_ssz_scale ...   Passed    6.84 sec
+
+The following tests passed:
+	ethereum_official_beacon_state_root
+	ethereum_official_altair_state_root
+	ethereum_official_bellatrix_containers
+	ethereum_official_capella_containers
+	ethereum_official_capella_payload
+	consensus_capella_payload_paired_state
+	consensus_capella_withdrawal_ssz_scale
+
+100% tests passed out of 7
+
+Label Time Summary:
+qualification_consensus_ethereum    =   1.71 sec*proc (5 tests)
+qualification_consensus_scale       =   6.84 sec*proc (1 test)
+
+Total Test time (real) =   8.88 sec
