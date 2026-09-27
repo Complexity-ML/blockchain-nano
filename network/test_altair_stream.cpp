@@ -1,5 +1,6 @@
 #include "altair_worker.hpp"
 #include "altair_stream_session.hpp"
+#include "altair_stream_sender.hpp"
 #include <future>
 #include <iostream>
 #include <thread>
@@ -174,6 +175,47 @@ int main(){try{
   auto session=std::make_shared<AltairStreamSession>(io,stream,ingress,[&](auto,auto,auto cb){++calls;cb(Decision::accepted);return true;},Request::Observe{},3,std::chrono::milliseconds(2));
   session->start();io.run_for(std::chrono::milliseconds(10));check(bool(stream->waiting_write)&&stream->resets==1&&budget.active()==0,"ACK deadline did not abort session");
   stream->finish_write();io.restart();io.run();check(calls==1&&stream->closes==0&&budget.active()==0,"late ACK resumed expired session");++cases;
+ }
+
+ {
+  asio::io_context io;unsigned opens=0,replies=0;std::vector<std::shared_ptr<TestStream>> streams;
+  auto sender=std::make_shared<AltairStreamSender>(io,[&](auto done){++opens;auto stream=std::make_shared<TestStream>(io,"");stream->fragment=4096;auto raw=stream.get();stream->after_write=[raw,&replies]{raw->next_input(replies==1?"{\"accepted\":false}":"{\"accepted\":true}");};streams.push_back(stream);done(stream);},[]{return true;},4096);
+  std::function<void()> send;
+  send=[&]{sender->send(Json{{"test",replies}},[&](Json ack){check(ack==Json{{"accepted",replies!=1}},"sender changed rejection ACK");if(++replies<17)send();});};
+  send();io.poll();check(replies==17&&opens==2&&streams[0]->closes==1,"sender failed reuse or sixteen-frame cap");sender->stop();io.restart();io.run();check(streams[1]->resets==1,"sender retained idle stream after stop");++cases;
+ }
+ for(unsigned mode=0;mode<4;++mode){
+  // malformed ACK / EOF-like empty reply timeout / generation loss / write failure
+  asio::io_context io;unsigned opens=0,replies=0;bool current=true;auto stream=std::make_shared<TestStream>(io,mode==0?"{\"accepted\":1}":mode==1?"":"{\"accepted\":true}");stream->fragment=4096;stream->fail_write=mode==3;
+  if(mode==2)stream->after_write=[&]{current=false;};
+  auto sender=std::make_shared<AltairStreamSender>(io,[&](auto done){++opens;done(stream);},[&]{return current;},4096,std::chrono::milliseconds(5));
+  sender->send(Json{{"test",true}},[&](Json result){++replies;check(result.is_null(),"invalid session delivery reported acceptance");});io.run();
+  check(opens==1&&replies==1&&stream->resets>=1,"sender retried ambiguous delivery");++cases;
+ }
+ {
+  asio::io_context io;std::function<void(Stream)> opened;unsigned replies=0,opens=0;
+  auto sender=std::make_shared<AltairStreamSender>(io,[&](auto done){++opens;opened=std::move(done);},[]{return true;},4096);
+  sender->send(Json{},[&](Json r){check(r.is_null(),"stopped open replied success");++replies;});
+  sender->send(Json{},[&](Json r){check(r.is_null(),"busy sender queued work");++replies;});sender->stop();
+  auto late=std::make_shared<TestStream>(io,"{\"accepted\":true}");opened(late);opened={};io.run();
+  check(opens==1&&replies==2&&late->resets==1&&late->written.empty(),"late open survived cancellation");++cases;
+ }
+ {
+  // An expired open completes after a new request has already started. Its
+  // callback must neither reset the new stream nor deliver another reply.
+  asio::io_context io;std::function<void(Stream)> old_open;unsigned opens=0,replies=0;
+  auto stream=std::make_shared<TestStream>(io,"{\"accepted\":true}");stream->fragment=4096;
+  std::shared_ptr<AltairStreamSender> sender;
+  sender=std::make_shared<AltairStreamSender>(io,[&](auto done){if(++opens==1)old_open=std::move(done);else done(stream);},[]{return true;},4096,std::chrono::milliseconds(5));
+  sender->send(Json{},[&](Json r){check(r.is_null(),"opening deadline not applied");++replies;sender->send(Json{},[&](Json ack){check(ack==Json{{"accepted",true}},"old timeout cancelled new delivery");++replies;});});
+  io.run_for(std::chrono::milliseconds(20));auto late=std::make_shared<TestStream>(io,"");old_open(late);old_open={};
+  check(replies==2&&opens==2&&late->resets==1&&stream->resets==0,"late open changed current request");sender->stop();io.restart();io.run();++cases;
+ }
+ {
+  asio::io_context io;unsigned opens=0,replies=0;std::vector<std::shared_ptr<TestStream>> streams;
+  auto sender=std::make_shared<AltairStreamSender>(io,[&](auto done){++opens;auto stream=std::make_shared<TestStream>(io,"{\"accepted\":true}");stream->fragment=4096;streams.push_back(stream);done(stream);},[]{return true;},4096,std::chrono::seconds(1),std::chrono::milliseconds(2));
+  auto send=[&]{sender->send(Json{},[&](Json ack){check(ack==Json{{"accepted",true}},"idle rollover failed");++replies;});};
+  send();io.run();check(streams[0]->resets==1,"idle stream did not expire");io.restart();send();io.run();check(opens==2&&replies==2,"sender reused expired stream");++cases;
  }
  std::cout<<Json{{"scenario","altair-async-stream"},{"cases",cases},{"workerThreadCompletion",true},{"expiredWorkerLeaseRetained",true},{"realPeerConnections",false}}.dump()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

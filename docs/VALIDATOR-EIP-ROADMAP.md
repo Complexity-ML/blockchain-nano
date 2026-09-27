@@ -3726,3 +3726,17 @@ nouveaux**, 30 au total dans `altair_stream`, et `timed_reply` passent. Binaire
 P2P compilé. **Non raccordée au réseau** : négociation, émetteur et invalidation
 par génération restent à intégrer. Le contre-exemple de finalité à 500ms reste
 ouvert ; aucun statut EIP ou production clôturé. [Preuves et limites](qualification/consensus-stream-session-20260927/README.md).
+
+
+### Finalité sous retard asymétrique : scénario passé — 27 septembre 2026
+
+Le transport Capella réutilise des flux négociés séparément, bornés à 16 messages,
+avec un accusé et une admission par message. Huit nouveaux cas émetteur portent
+la suite de flux à 38 ; compatibilité/quota/relais vérifiés. **Le même scénario
+Docker 500ms passe désormais** : finalité commune 2 → 4 pendant 147,985s de retard,
+puis 5 après retrait (43,826s pour la qualification de reprise). Médiane des
+attestations sous retard ≈1,5s, contre ≈3s précédemment ; aucun refus de budget
+entrant journalisé. Refus d'admission, un échec d'ACK et deux envois d'attestation
+non confirmés restent dans les preuves. Ce contre-exemple local est couvert ;
+WAN géographique, nombreux pairs, adversaires, charge et production globale
+restent ouverts. Aucun nouveau statut EIP clôturé. [Code, mesures et limites](qualification/capella-stream-reuse-20260927/README.md).

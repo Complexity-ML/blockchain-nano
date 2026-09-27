@@ -28,6 +28,8 @@ int main(){try{
  check(!valid_peer_status(Json::object(),Json::object()),"two absent identities do not match");
  auto advertised=local;advertised["altair"]={{"protocol",altair_protocol},{"consensusIdentity","0x"+std::string(64,'c')},{"forkDigest","0x01020304"}};
  check(compatible_altair_peer(advertised,advertised),"matching Altair profile refused");
+ auto session_advertised=advertised;session_advertised["capellaStreamProtocol"]="/nano/capella/session/1.0.0";
+ check(compatible_altair_peer(session_advertised,advertised)&&compatible_altair_peer(advertised,session_advertised),"optional stream capability broke legacy profile compatibility");
  check(!compatible_altair_peer(local,advertised)&&!compatible_altair_peer(advertised,local),"absent Altair profile accepted");
  for(const auto& key:{"protocol","consensusIdentity","forkDigest"}){auto different=advertised;different["altair"][key]="wrong";check(!compatible_altair_peer(different,advertised)&&!compatible_altair_peer(advertised,different),"incompatible Altair profile accepted");}
  auto other=advertised;other["altair"]["consensusIdentity"]="0x"+std::string(64,'d');check(!compatible_altair_peer(other,advertised),"same fork digest hid different consensus rules");
