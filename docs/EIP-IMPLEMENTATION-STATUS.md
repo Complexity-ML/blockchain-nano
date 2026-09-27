@@ -2422,3 +2422,14 @@ sans jeton et avec écoute publique (1,43 s). Régression CLI existante verte (0
 [Configuration et preuves](qualification/capella-cli-serve-20260927/README.md).
 Ce scénario CLI ne produit pas de blocs et n’utilise pas de clés validateur.
 Le mode `run` avec P2P, la synchronisation et la migration inter-forks restent ouverts.
+
+### Capella : rattrapage piloté par inventaire/export
+
+L’export de bloc fournit slot et parent sous le verrou du checkpoint. Nouveau
+scénario : second coordinateur et stockage indépendants depuis l’ancre initiale,
+inventaire paginé puis seize messages admis normalement. Tête, état EVM et preuves
+retenues convergent après les deux réorganisations de la source (test 5,76 s).
+[Preuves](qualification/capella-inventory-catchup-20260927/README.md).
+Le checkpoint finalisé reste à l’epoch zéro dans ce scénario ; ce n’est pas une
+preuve de progression de finalité. La boucle de récupération est un banc de test
+local, pas encore le synchroniseur réseau de production.
