@@ -1,6 +1,9 @@
 #include "nano/consensus_altair_transition.hpp"
 #include "nano/consensus_bellatrix_transition.hpp"
 #include "consensus_bellatrix_projection.hpp"
+#include "nano/consensus_capella_transition.hpp"
+#include "nano/consensus_capella_bls_change.hpp"
+#include "consensus_capella_projection.hpp"
 #include <exception>
 #include "nano/consensus_proposer.hpp"
 #include <algorithm>
@@ -52,21 +55,30 @@ struct BellatrixContext {
  const Header& parent;
  const State& state;
  const std::function<Bytes(const Int&)>& history;
+ const CapellaTransitionRules* capella=nullptr;
 };
 std::optional<AltairSlotState> transition(const AltairSlotState& input,
  View block,const AltairTransitionRules& r,uint64_t maximum_slots,uint64_t maximum_sync_trials,const std::function<void()>& checkpoint,BlockPurpose purpose,ConsensusRoot& computed_root,const BellatrixContext* bellatrix=nullptr,BellatrixExecutionCandidate* execution_result=nullptr){
+ const auto* cr=bellatrix?bellatrix->capella:nullptr;
  check_rules(r);const auto& d=r.attestation.duties;const auto sync_bytes=(r.state.sync_committee_size+7)/8+96;
  if(bellatrix){const auto& br=bellatrix->rules;if(!br.seconds_per_slot||br.chain_id<0||!br.execution.extra_data_bytes||!br.execution.transaction_bytes||!br.execution.transactions||br.execution.transactions>UINT32_MAX/4)throw std::invalid_argument("invalid Bellatrix execution rules");}
+ if(cr&&(!cr->maximum_bls_changes||cr->withdrawals.maximum_per_payload>UINT32_MAX/44||cr->genesis_version!=r.deposit.genesis_fork_version||cr->withdrawals.maximum_effective_balance!=d.maximum_effective_balance))throw std::invalid_argument("invalid Capella block rules");
  if(block.size()<404+sync_bytes+(bellatrix?512:0)||block.size()>r.maximum_block_bytes)return std::nullopt;
  if(number(block,0,4)!=100||number(block,180,4)!=84)return std::nullopt;
  ConsensusRoot body_root;const auto body=block.subspan(184);
  std::exception_ptr body_interrupted;
  auto body_checkpoint=[&]{try{if(checkpoint)checkpoint();}catch(...){body_interrupted=std::current_exception();throw;}};
- try{body_root=bellatrix?bellatrix_beacon_body_root(body,r.body,r.state.sync_committee_size,bellatrix->rules.execution,r.maximum_block_bytes,body_checkpoint):altair_beacon_body_root(body,r.body,r.state.sync_committee_size);}
+ try{body_root=cr?capella_beacon_body_root(body,r.body,r.state.sync_committee_size,cr->execution,cr->withdrawals.maximum_per_payload,cr->maximum_bls_changes,r.maximum_block_bytes,body_checkpoint):bellatrix?bellatrix_beacon_body_root(body,r.body,r.state.sync_committee_size,bellatrix->rules.execution,r.maximum_block_bytes,body_checkpoint):altair_beacon_body_root(body,r.body,r.state.sync_committee_size);}
  catch(const std::invalid_argument&){if(body_interrupted)std::rethrow_exception(body_interrupted);return std::nullopt;}
- AltairSlotState out;Bytes execution_header;std::optional<BellatrixExecutionCandidate> execution;
+ AltairSlotState out;Bytes execution_header,withdrawal_cursors,historical_summaries;std::optional<BellatrixExecutionCandidate> execution;
  const auto slot=number(block,100);const Layout l(r.state);
- if(bellatrix){
+ if(cr){
+  capella_beacon_state_root(input.ssz,r.state,cr->execution,cr->maximum_state_bytes,checkpoint);
+  if(slot<=number(input.ssz,40))return std::nullopt;
+  auto advanced=prepare_capella_slots({input.ssz,input.last_processed_epoch},{r.epoch,cr->execution,cr->maximum_state_bytes},r.state,slot,maximum_slots,maximum_sync_trials,checkpoint);
+  auto projection=capella_detail::project(advanced.ssz,r.state,cr->execution,cr->maximum_state_bytes,checkpoint);
+  out={std::move(projection.common),advanced.last_processed_epoch};execution_header=std::move(projection.execution_header);withdrawal_cursors=std::move(projection.cursors);historical_summaries=std::move(projection.summaries);
+ }else if(bellatrix){
   const auto& br=bellatrix->rules;
   bellatrix_beacon_state_root(input.ssz,r.state,br.execution,br.maximum_state_bytes,checkpoint);
   if(slot<=number(input.ssz,40))return std::nullopt;
@@ -89,7 +101,14 @@ std::optional<AltairSlotState> transition(const AltairSlotState& input,
  put(out.ssz,64,h.slot);put(out.ssz,72,h.proposer_index);put(out.ssz,80,h.parent_root);put(out.ssz,112,ConsensusRoot{});put(out.ssz,144,h.body_root);
  // RANDAO was verified on a private candidate above, but its update is applied
  // only after execution has used the previous mix from the authenticated state.
- if(bellatrix){
+ if(cr){
+  auto before_execution=capella_detail::restore(out.ssz,execution_header,withdrawal_cursors,historical_summaries,r.state,cr->execution,cr->maximum_state_bytes,checkpoint);
+  const auto authenticated=capella_beacon_state_root(before_execution,r.state,cr->execution,cr->maximum_state_bytes,checkpoint);
+  const auto start=number(body,220+sync_bytes,4),end=number(body,224+sync_bytes,4);
+  auto paired=prepare_capella_payload_state(before_execution,authenticated,r.state,cr->execution,cr->maximum_state_bytes,d.slots_per_epoch,cr->seconds_per_slot,cr->withdrawals,body.subspan(start,end-start),r.maximum_block_bytes,bellatrix->parent,bellatrix->state,cr->chain_id,cr->replay_policy,bellatrix->history,checkpoint);
+  auto projection=capella_detail::project(paired.consensus_state,r.state,cr->execution,cr->maximum_state_bytes,checkpoint);
+  out.ssz=std::move(projection.common);execution_header=std::move(projection.execution_header);withdrawal_cursors=std::move(projection.cursors);historical_summaries=std::move(projection.summaries);execution=std::move(paired.execution);
+ }else if(bellatrix){
   const auto& br=bellatrix->rules;
   auto before_execution=bellatrix_detail::restore(out.ssz,execution_header,r.state,br.execution,br.maximum_state_bytes,checkpoint);
   const auto authenticated=bellatrix_beacon_state_root(before_execution,r.state,br.execution,br.maximum_state_bytes,checkpoint);
@@ -117,8 +136,17 @@ std::optional<AltairSlotState> transition(const AltairSlotState& input,
   for(size_t i=0;i<ops[4].size();i+=112){if(checkpoint)checkpoint();const auto op=ops[4].subspan(i,112);const SignedConsensusVoluntaryExit exit{number(op,0),number(op,8),Bytes(op.begin()+16,op.end())};if(!process_phase0_voluntary_exit(exits,r.exit,exit,version(exit.epoch),genesis))return std::nullopt;}
   const auto start=number(out.ssz,l.fields[2],4);for(const auto& [i,v]:exits.validators){put(out.ssz,start+121*i+105,v.exit_epoch);put(out.ssz,start+121*i+113,v.withdrawable_epoch);}
  }
+ if(cr){
+  auto full=capella_detail::restore(out.ssz,execution_header,withdrawal_cursors,historical_summaries,r.state,cr->execution,cr->maximum_state_bytes,checkpoint);
+  const auto root=capella_beacon_state_root(full,r.state,cr->execution,cr->maximum_state_bytes,checkpoint);
+  std::vector<SignedCapellaBlsChange> changes;const auto list=body.subspan(number(body,224+sync_bytes,4));
+  for(size_t i=0;i<list.size();i+=172){if(checkpoint)checkpoint();changes.push_back(*decode_capella_bls_change(list.subspan(i,172)));}
+  auto changed=prepare_capella_bls_changes(full,root,r.state,cr->execution,cr->maximum_state_bytes,cr->genesis_version,cr->maximum_bls_changes,changes,checkpoint);if(!changed)return std::nullopt;
+  out.ssz=capella_detail::project(changed->state,r.state,cr->execution,cr->maximum_state_bytes,checkpoint).common;
+ }
  auto sync=prepare_altair_sync_aggregate(out.ssz,body.subspan(220,sync_bytes),r.state,r.sync,checkpoint);if(!sync)return std::nullopt;out.ssz=std::move(*sync);
- if(bellatrix){const auto& br=bellatrix->rules;out.ssz=bellatrix_detail::restore(out.ssz,execution_header,r.state,br.execution,br.maximum_state_bytes,checkpoint);computed_root=bellatrix_beacon_state_root(out.ssz,r.state,br.execution,br.maximum_state_bytes,checkpoint);}
+ if(cr){out.ssz=capella_detail::restore(out.ssz,execution_header,withdrawal_cursors,historical_summaries,r.state,cr->execution,cr->maximum_state_bytes,checkpoint);computed_root=capella_beacon_state_root(out.ssz,r.state,cr->execution,cr->maximum_state_bytes,checkpoint);}
+ else if(bellatrix){const auto& br=bellatrix->rules;out.ssz=bellatrix_detail::restore(out.ssz,execution_header,r.state,br.execution,br.maximum_state_bytes,checkpoint);computed_root=bellatrix_beacon_state_root(out.ssz,r.state,br.execution,br.maximum_state_bytes,checkpoint);}
  else computed_root=altair_beacon_state_root(out.ssz,r.state,checkpoint);
  if(purpose==BlockPurpose::Receive&&computed_root!=h.state_root)return std::nullopt;
  if(checkpoint)checkpoint();if(bellatrix)*execution_result=std::move(*execution);return out;
@@ -168,6 +196,32 @@ std::optional<BellatrixUnsignedBlockCandidate> prepare_bellatrix_unsigned_block(
  auto out=transition({input.ssz,input.last_processed_epoch},envelope,r.consensus,maximum_slots,trials,checkpoint,BlockPurpose::Construct,computed,&context,&execution);
  if(!out)return std::nullopt;put(envelope,148,computed);
  return BellatrixUnsignedBlockCandidate{Bytes(envelope.begin()+100,envelope.end()),{{std::move(out->ssz),out->last_processed_epoch},std::move(execution)}};
+}
+std::optional<CapellaBlockCandidate> prepare_capella_state_transition(
+ const CapellaSlotState& input,View block,const CapellaTransitionRules& r,
+ const Header& parent,const State& state,const std::function<Bytes(const Int&)>& history,
+ uint64_t maximum_slots,uint64_t trials,const std::function<void()>& checkpoint){
+ if(block.size()<184||block.size()>r.consensus.maximum_block_bytes)return std::nullopt;
+ if(input.ssz.size()>r.maximum_state_bytes)throw std::length_error("Bellatrix state budget exceeded");
+ const BellatrixTransitionRules common{r.consensus,r.execution,r.maximum_state_bytes,r.seconds_per_slot,r.chain_id,r.replay_policy};
+ const BellatrixContext context{common,parent,state,history,&r};ConsensusRoot computed{};BellatrixExecutionCandidate execution;
+ auto out=transition({input.ssz,input.last_processed_epoch},block,r.consensus,maximum_slots,trials,checkpoint,BlockPurpose::Receive,computed,&context,&execution);
+ if(!out)return std::nullopt;
+ return CapellaBlockCandidate{{std::move(out->ssz),out->last_processed_epoch},std::move(execution)};
+}
+std::optional<CapellaUnsignedBlockCandidate> prepare_capella_unsigned_block(
+ const CapellaSlotState& input,uint64_t slot,uint64_t proposer,const ConsensusRoot& parent_root,View body,
+ const CapellaTransitionRules& r,const Header& parent,const State& state,
+ const std::function<Bytes(const Int&)>& history,uint64_t maximum_slots,uint64_t trials,const std::function<void()>& checkpoint){
+ check_rules(r.consensus);
+ if(input.ssz.size()>r.maximum_state_bytes)throw std::length_error("Bellatrix state budget exceeded");
+ if(r.consensus.maximum_block_bytes<184||body.size()>r.consensus.maximum_block_bytes-184)return std::nullopt;
+ if(checkpoint)checkpoint();Bytes envelope(184,0);put(envelope,0,100,4);put(envelope,100,slot);put(envelope,108,proposer);put(envelope,116,parent_root);put(envelope,180,84,4);envelope.insert(envelope.end(),body.begin(),body.end());
+ const BellatrixTransitionRules common{r.consensus,r.execution,r.maximum_state_bytes,r.seconds_per_slot,r.chain_id,r.replay_policy};
+ const BellatrixContext context{common,parent,state,history,&r};ConsensusRoot computed{};BellatrixExecutionCandidate execution;
+ auto out=transition({input.ssz,input.last_processed_epoch},envelope,r.consensus,maximum_slots,trials,checkpoint,BlockPurpose::Construct,computed,&context,&execution);
+ if(!out)return std::nullopt;put(envelope,148,computed);
+ return CapellaUnsignedBlockCandidate{Bytes(envelope.begin()+100,envelope.end()),{{std::move(out->ssz),out->last_processed_epoch},std::move(execution)}};
 }
 
 }

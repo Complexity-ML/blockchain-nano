@@ -2580,3 +2580,15 @@ Headers et curseurs non nuls sont conservés. Régression Altair/Bellatrix/
 Capella 3/3. [Preuves](qualification/capella-slots-20260927/README.md).
 La transition signée complète, l'activation et la publication durable restent
 à raccorder. EIP-4895 et le réseau demeurent partiels.
+
+### Capella : composition du bloc signé
+
+La construction et l'admission Capella composent désormais les composants
+qualifiés : slots/epochs, signature/proposant, retraits/Shanghai, opérations,
+changements BLS, sync aggregate et racine postérieure. Neuf blocs synthétiques
+signés franchissent une époque, changent une clé et versent un retrait au
+balayage suivant ; 20 refus et 18 annulations conservent les parents.
+[Preuves](qualification/capella-signed-transition-20260927/README.md).
+Régression des transitions Altair/Bellatrix/Capella 3/3. Ce scénario ne vaut
+pas corpus complet Capella. Activation, Store/réacteur, réseau et commit
+durable restent ouverts ; aucun EIP ni objectif production n'est clôturé.
