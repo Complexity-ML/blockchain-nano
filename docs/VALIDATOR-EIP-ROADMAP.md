@@ -2724,3 +2724,15 @@ WAL conservé/perdu cohérent et neuf archives altérées refusées.
 Votes/sorties/preuves de slashing archivés, rétention, notifications, signature
 locale, raccordement Blockchain/RPC/P2P et Store inter-forks restent ouverts.
 Les checkpoints historiques ne sont pas rétroalimentés en blocs signés.
+
+### Capella : votes gossip durables et application différée
+
+Enveloppe locale versionnée : votes signés et Store engagés atomiquement,
+validation SSZ/BLS à la reprise. Les votes du slot courant sont conservés avant
+acquittement, appliqués au slot suivant ; doublons sans réécriture et rétention
+sur epoch courante/précédente. Dix-huit votes immédiats et douze différés
+retrouvés après réouverture ; signatures altérées et entrées dupliquées refusées.
+[Preuves](qualification/capella-durable-votes-20260927/README.md).
+Restent notamment archives sorties/slashings, file des parents inconnus,
+signature locale, notifications, intégration réseau et Store vivant inter-forks.
+Aucune activation publique ni conformité réseau complète revendiquée.

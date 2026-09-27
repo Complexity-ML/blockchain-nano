@@ -102,7 +102,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
  const auto disk_genesis=parent;const auto disk_genesis_state=state;
  const CapellaForkBlockRules store_rules{r,seconds*1000,seconds*1000/3,40};
  Temp reactor_database;auto reactor_disk=std::make_unique<ChainStore>(reactor_database/"db");reactor_disk->bind_chain(r.chain_id,disk_genesis.header.hash(),"capella-reactor-test");reactor_disk->commit(disk_genesis,disk_genesis_state,{});std::unique_ptr<CapellaDurableReactor> reactor;
- std::map<ConsensusRoot,Bytes> signed_wires;std::optional<CapellaForkStore> store;std::string short_snapshot;Bytes sync_wire;uint64_t sync_time=0;
+ std::vector<Phase0SignedAttestation> deferred_votes;std::map<ConsensusRoot,Bytes> signed_wires;std::optional<CapellaForkStore> store;std::string short_snapshot;Bytes sync_wire;uint64_t sync_time=0;
  const CapellaStoreSnapshotLimits snapshot_limits{16*1024*1024,64,1000,1000,r.maximum_state_bytes,8*1024*1024,64,100000};
  auto roundtrip=[&](const CapellaForkStore& value){
   CapellaStoreSnapshotCache cache;size_t cold=0,warm=0;
@@ -269,6 +269,12 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
     for(size_t position=0;position<members.size()&&position*100<members.size()*participation;++position){Phase0SignedAttestation vote{{slot,committee_index,consensus_beacon_header_root(admitted),checkpoints.realized.current_justified,{epoch,target_root}},std::vector<bool>(members.size()),{}};vote.aggregation_bits[position]=true;
      vote.signature=Key(members[position]).sign(consensus_signing_root(consensus_attestation_root(vote.data),consensus_domain({1,0,0,0},version,genesis_root)));
      pending_attestations.push_back(encode_consensus_attestation_ssz(vote,r.consensus.body.validators_per_committee));
+     if(slot==4*slots+1){
+      const auto before=reactor->current();auto bad=vote;bad.signature[0]^=1;check(!reactor->vote(bad)&&reactor->current().token==before.token,"invalid deferred vote persisted");
+      bool stopped=false;try{reactor->vote(vote,[]{throw ExecutionCancelled("vote stop");});}catch(const ExecutionCancelled&){stopped=true;}check(stopped&&reactor->current().token==before.token,"cancelled deferred vote persisted");
+      check(reactor->vote(vote)&&capella_store_snapshot(*reactor->current().state,store_rules,snapshot_limits)==capella_store_snapshot(*before.state,store_rules,snapshot_limits),"current-slot vote changed fork choice");
+      const auto accepted=reactor->current().token;check(accepted!=before.token&&reactor->vote(vote)&&reactor->current().token==accepted,"deferred duplicate rewrote checkpoint");deferred_votes.push_back(vote);
+     }
     }
    }
   }
@@ -277,9 +283,16 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
   beacon=received->consensus;state=received->execution.state;parent=received->execution.block;hashes[parent.header.number]=parent.header.hash();++accepted;
  }
  if(finality){if(participation==100)check(store->timed.view.finalized.epoch>=2&&store->timed.view.justified.epoch>=3&&included_attestations>=128,"Capella participation did not advance finality");else check(store->timed.view.finalized.epoch==0&&store->timed.view.justified.epoch==0,"insufficient participation finalized a checkpoint");}
- const auto durable=reactor->current();const auto durable_bytes=capella_store_snapshot(*durable.state,store_rules,snapshot_limits);reactor.reset();reactor_disk.reset();reactor_disk=std::make_unique<ChainStore>(reactor_database/"db");
+ const auto durable_envelope=reactor_disk->fork_checkpoint(r.chain_id,disk_genesis.header.hash(),snapshot_limits.envelope_bytes)->snapshot;const auto durable_votes=reactor->signed_votes();const auto durable=reactor->current();const auto durable_bytes=capella_store_snapshot(*durable.state,store_rules,snapshot_limits);reactor.reset();reactor_disk.reset();reactor_disk=std::make_unique<ChainStore>(reactor_database/"db");
  reactor=std::make_unique<CapellaDurableReactor>(*reactor_disk,r.chain_id,disk_genesis.header.hash(),store_rules,snapshot_limits,durable.token);
  check(capella_store_snapshot(*reactor->current().state,store_rules,snapshot_limits)==durable_bytes&&reactor_disk->latest()->header.hash()==capella_fork_head(*durable.state,store_rules).execution_block.header.hash(),"reactor restart diverged");
+ check(reactor->signed_votes()==durable_votes,"signed votes lost on restart");
+ if(!deferred_votes.empty()){
+  const auto next_time=durable.state->timed.clock.time_ms+store_rules.slot_duration_ms;auto expected=prepare_capella_store_tick(*durable.state,next_time,store_rules,64,100000);
+  for(const auto& vote:deferred_votes){auto applied=prepare_capella_store_vote(expected,vote,store_rules,64,100000);check(bool(applied),"deferred expected vote rejected");expected=std::move(*applied);}
+  reactor->tick(next_time);check(capella_store_snapshot(*reactor->current().state,store_rules,snapshot_limits)==capella_store_snapshot(expected,store_rules,snapshot_limits),"restored deferred votes not applied on next slot");
+  reactor->tick(next_time+3*slots*store_rules.slot_duration_ms);check(reactor->signed_votes().empty(),"expired vote archive retained");
+ }
  for(const auto& [id,wire]:signed_wires)check(reactor->signed_block(id)==std::optional<Bytes>(wire),"Capella archive lost on restart or reorg");
  check(!reactor->signed_block(durable.state->timed.view.anchor)&&!reactor->signed_block(ConsensusRoot{}),"unsigned anchor or unknown block fabricated");
  bool archive_cancelled=false;try{reactor->signed_block(signed_wires.begin()->first,[]{throw ExecutionCancelled("archive stop");});}catch(const ExecutionCancelled&){archive_cancelled=true;}check(archive_cancelled,"archive read cancellation swallowed");
@@ -313,6 +326,15 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
  Temp database;ForkCheckpointToken token;std::map<Int,ExecutionCheckpointBlock> ordered;
  for(const auto& [id,record]:store->blocks)ordered.emplace(record.execution_block.header.number,ExecutionCheckpointBlock{record.execution_block,record.execution_state,record.receipts});
  std::vector<ExecutionCheckpointBlock> suffix;for(const auto& [number,record]:ordered)suffix.push_back(record);
+ if(finality&&participation==100){
+  for(unsigned mutation=0;mutation<3;++mutation){Temp tmp;ChainStore disk(tmp/"db");disk.bind_chain(r.chain_id,disk_genesis.header.hash(),"capella-vote-restore");disk.commit(disk_genesis,disk_genesis_state,{});auto envelope=Json::parse(durable_envelope);
+   if(mutation==1){auto wire=unhex(envelope["signedVotes"][0][1].get<std::string>());wire[132]^=1;envelope["signedVotes"][0]=Json::array({hex(sha256(wire)),hex(wire)});}
+   if(mutation==2)envelope["signedVotes"].push_back(envelope["signedVotes"][0]);
+   const auto token=disk.commit_execution_checkpoint(r.chain_id,disk_genesis.header.hash(),{},disk_genesis.header.hash(),0,disk_genesis.header.hash(),suffix,envelope.dump(),snapshot_limits.envelope_bytes,64);
+   bool refused=false;try{CapellaDurableReactor restored(disk,r.chain_id,disk_genesis.header.hash(),store_rules,snapshot_limits,token);check(restored.signed_votes()==durable_votes,"restored control votes differ");}catch(const std::invalid_argument&){refused=true;}
+   check(refused==(mutation!=0),"tampered vote envelope admission wrong");
+  }
+ }
  if(!finality){
   const auto& head=capella_fork_head(*store,store_rules);const auto id=consensus_beacon_header_root(head.header);
   for(unsigned mutation=0;mutation<3;++mutation){Temp corrupt;ChainStore disk(corrupt/"db");disk.bind_chain(r.chain_id,disk_genesis.header.hash(),"capella-archive-negative");disk.commit(disk_genesis,disk_genesis_state,{});
@@ -336,7 +358,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
   for(const auto& [height,b]:ordered){const bool canonical=height<=latest->header.number;check(bool(disk.block_by_number(height))==canonical,"stale block after crash reorg");for(const auto& tx:b.block.transactions)check(bool(disk.receipt(tx.hash()))==canonical&&bool(disk.transaction(tx.hash()))==canonical,"stale transaction after crash reorg");}
   token=record->token;
  }
- std::cout<<Json{{"scenario","capella-signed-transition"},{"migrated",migrate},{"finalityScenario",finality},{"participationPercent",participation},{"finalizedEpoch",store->timed.view.finalized.epoch},{"includedAttestations",included_attestations},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"storeBlocks",store->blocks.size()},{"snapshotReopened",true},{"durableReactor",true},{"signedArchives",signed_wires.size()},{"storeSigkillReopens",2},{"storeVotes",votes},{"voteReorgs",vote_reorgs},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
+ std::cout<<Json{{"scenario","capella-signed-transition"},{"migrated",migrate},{"finalityScenario",finality},{"participationPercent",participation},{"finalizedEpoch",store->timed.view.finalized.epoch},{"includedAttestations",included_attestations},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"storeBlocks",store->blocks.size()},{"snapshotReopened",true},{"durableReactor",true},{"signedArchives",signed_wires.size()},{"signedVotes",durable_votes.size()},{"deferredVotes",deferred_votes.size()},{"storeSigkillReopens",2},{"storeVotes",votes},{"voteReorgs",vote_reorgs},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
 }
 int main(int argc,char** argv){try{executable=argv[0];
 #ifdef NANO_SYNC_FAULT
