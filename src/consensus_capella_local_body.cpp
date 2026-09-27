@@ -132,6 +132,11 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_with_bls_changes(
  if(!maximum_change_trials)throw std::invalid_argument("Capella change trial budget required");
  std::lock_guard lock(mutex_);return prepare_local_body_locked(index,slot,reveal,recipient,expected,transactions,maximum_transaction_trials,maximum_vote_trials,check,changes,maximum_change_trials);
 }
+std::optional<Bytes> CapellaDurableReactor::prepare_local_body_with_exits(uint64_t index,uint64_t slot,const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,std::span<const SignedTransaction> transactions,size_t maximum_transaction_trials,size_t maximum_vote_trials,std::span<const SignedConsensusVoluntaryExit> exits,size_t maximum_exit_trials,const std::function<void()>& check){
+ if(!maximum_exit_trials)throw std::invalid_argument("Capella exit trial limit");
+ std::lock_guard lock(mutex_);const auto changes=pending_bls_changes_locked(maximum_vote_trials,check);
+ return prepare_local_body_locked(index,slot,reveal,recipient,expected,transactions,maximum_transaction_trials,maximum_vote_trials,check,changes,maximum_vote_trials,exits,maximum_exit_trials);
+}
 std::optional<Bytes> CapellaDurableReactor::prepare_local_body_from_pool(uint64_t index,uint64_t slot,const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<void()>& check){
  std::lock_guard lock(mutex_);return prepare_local_body_from_pool_locked(index,slot,reveal,recipient,expected,maximum_transaction_trials,maximum_vote_trials,check);
 }
@@ -141,7 +146,7 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_from_pool_locked(
  {std::lock_guard chain_lock(execution_->mutex_);execution_->require_execution_ready_locked();transactions=execution_->pool_.pending_for_block(execution_->tip_.header.gas_limit);}
  const auto changes=pending_bls_changes_locked(maximum_vote_trials,check);return prepare_local_body_locked(index,slot,reveal,recipient,expected,transactions,maximum_transaction_trials,maximum_vote_trials,check,changes,maximum_vote_trials);
 }
-std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t index,uint64_t slot,const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,std::span<const SignedTransaction> transactions,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<void()>& check,std::span<const SignedCapellaBlsChange> changes,size_t maximum_change_trials){
+std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t index,uint64_t slot,const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,std::span<const SignedTransaction> transactions,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<void()>& check,std::span<const SignedCapellaBlsChange> changes,size_t maximum_change_trials,std::span<const SignedConsensusVoluntaryExit> exits,size_t maximum_exit_trials){
  require_available();
  if(expected!=*token_)throw StaleCapellaDuty("Stale body preparation");
  if(!maximum_transaction_trials||!maximum_vote_trials||reveal.size()!=96)throw std::invalid_argument("Capella local body context");
@@ -227,6 +232,15 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t i
   if(!useful)continue;
   ++tried;selected_slashings.push_back(wire);auto candidate=assemble(selected);
   if(valid(candidate))body=std::move(candidate);else selected_slashings.pop_back();
+ }
+
+ // The transition validates the selected-branch identity, signature domain,
+ // eligibility, churn and duplicates. Never mutate the live registry here.
+ for(size_t i=0;i<std::min(exits.size(),maximum_exit_trials)&&selected_exits.size()/112<t.body.voluntary_exits;++i){
+  if(check)check();if(exits[i].signature.size()!=96)continue;
+  const auto prior=selected_exits.size();const auto wire=encode_consensus_voluntary_exit_ssz(exits[i]);
+  selected_exits.insert(selected_exits.end(),wire.begin(),wire.end());auto candidate=assemble(selected);
+  if(valid(candidate))body=std::move(candidate);else selected_exits.resize(prior);
  }
 
  // Keep rejected operations out of the candidate without changing live state.

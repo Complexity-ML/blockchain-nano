@@ -1706,3 +1706,6 @@ if(TARGET nano-test-sync-fault)
  add_test(NAME consensus_capella_deposit_reorg_sync COMMAND nano-capella-transition-tests --deposit-reorg-sync)
  set_tests_properties(consensus_capella_deposit_reorg_sync PROPERTIES TIMEOUT 180 LABELS "qualification_storage_sync_local")
 endif()
+
+add_test(NAME consensus_capella_local_exits COMMAND nano-capella-transition-tests --local-exits)
+set_tests_properties(consensus_capella_local_exits PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_operations")

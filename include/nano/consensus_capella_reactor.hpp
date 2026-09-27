@@ -54,7 +54,7 @@ class CapellaDurableReactor {
  void witness_prepare(std::string_view,const std::vector<CheckpointArchiveEntry>&);
  void validate_execution_binding()const;
  void fail_closed();
- std::optional<Bytes> prepare_local_body_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,std::span<const SignedTransaction>,size_t,size_t,const std::function<void()>&,std::span<const SignedCapellaBlsChange> = {},size_t maximum_change_trials = 0);
+ std::optional<Bytes> prepare_local_body_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,std::span<const SignedTransaction>,size_t,size_t,const std::function<void()>&,std::span<const SignedCapellaBlsChange> = {},size_t maximum_change_trials = 0,std::span<const SignedConsensusVoluntaryExit> = {},size_t maximum_exit_trials = 0);
  std::vector<ConsensusRoot> bls_change_roots_locked(const std::function<void()>&)const;
  std::vector<SignedCapellaBlsChange> pending_bls_changes_locked(size_t,const std::function<void()>&)const;
  void prune_if_ready_locked(const std::function<void()>&);
@@ -146,6 +146,12 @@ public:
   const Bytes& randao,const std::string& fee_recipient,const ForkCheckpointToken& expected,
   std::span<const SignedTransaction> pending,size_t maximum_transaction_trials,size_t maximum_vote_trials,
   std::span<const SignedCapellaBlsChange> changes,size_t maximum_change_trials,const std::function<void()>& checkpoint={});
+ // Untrusted voluntary exits are selected by full block transition, in order.
+ // Trial and body limits apply independently; no queue is persisted by this API.
+ std::optional<Bytes> prepare_local_body_with_exits(uint64_t validator_index,uint64_t slot,
+  const Bytes& randao,const std::string& fee_recipient,const ForkCheckpointToken& expected,
+  std::span<const SignedTransaction> pending,size_t maximum_transaction_trials,size_t maximum_vote_trials,
+  std::span<const SignedConsensusVoluntaryExit> exits,size_t maximum_exit_trials,const std::function<void()>& checkpoint={});
  // Authenticated recent gossip votes, including deferred current-slot votes.
  // Retained for current/previous epoch; copy is bounded by snapshot limits.
  CapellaSignedVotes signed_votes()const;

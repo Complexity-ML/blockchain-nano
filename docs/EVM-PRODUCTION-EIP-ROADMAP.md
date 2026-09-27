@@ -1045,3 +1045,12 @@ puis rejeu cohérent vers 65. Sources propres, empreintes et journaux archivés.
 Test local isolé sur le VPS, pas WAN ni panne physique ; autres points de panne,
 charge, témoins indépendants et qualification globale restent ouverts.
 [Preuves et limites](qualification/vps-deposit-reorg-sync-20260927/README.md).
+
+## 2026-09-27 — Sélection locale des sorties Capella
+
+Le constructeur peut désormais sélectionner des sorties volontaires candidates
+par transition complète, avec budgets et annulation. Nouveau scénario : bloc
+indépendant identique, quatre candidats invalides/doublons exclus, deux reorgs
+et réouvertures. Test 4,42 s ; régression BLS 4,87 s. Échec initial du banc conservé.
+La file persistante, RPC/P2P et le cycle jusqu'au retrait restent à raccorder ;
+aucune clôture EIP/production. [Preuves](qualification/capella-local-exits-20260927/README.md).

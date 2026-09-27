@@ -550,3 +550,12 @@ et la clôture production restent ouvertes.
   de traitement des engagements et modèle de confiance à définir avant fonds.
   Références : https://ethereum.org/developers/docs/consensus-mechanisms/pos/faqs
   et https://docs.base.org/base-chain/specs/protocol/consensus/derivation.
+
+## 2026-09-27 — Sélection locale des sorties Capella
+
+Le constructeur peut désormais sélectionner des sorties volontaires candidates
+par transition complète, avec budgets et annulation. Nouveau scénario : bloc
+indépendant identique, quatre candidats invalides/doublons exclus, deux reorgs
+et réouvertures. Test 4,42 s ; régression BLS 4,87 s. Échec initial du banc conservé.
+La file persistante, RPC/P2P et le cycle jusqu'au retrait restent à raccorder ;
+aucune clôture EIP/production. [Preuves](qualification/capella-local-exits-20260927/README.md).
