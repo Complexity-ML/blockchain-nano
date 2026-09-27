@@ -2433,3 +2433,13 @@ retenues convergent après les deux réorganisations de la source (test 5,76 s).
 Le checkpoint finalisé reste à l’epoch zéro dans ce scénario ; ce n’est pas une
 preuve de progression de finalité. La boucle de récupération est un banc de test
 local, pas encore le synchroniseur réseau de production.
+
+### Capella : ordonnancement structurel du rattrapage
+
+Primitive C++ bornée : contrôle SSZ, recalcul des racines, refus des doublons et
+parents absents, ordre parents avant enfants. Les métadonnées JSON ne déterminent
+plus seules l’ordre. Validation BLS/EVM toujours effectuée à l’admission normale.
+Quatre contrôles négatifs ajoutés ; rattrapage de seize messages toujours convergent
+(test 5,80 s). [Preuves](qualification/capella-sync-order-20260927/README.md).
+La recherche réseau des parents manquants et la reprise sur pages élaguées restent
+à implémenter ; ce composant n’est pas le synchroniseur réseau complet.

@@ -12,6 +12,7 @@
 #include "support/persistent_rpc.hpp"
 #include "nano/consensus_capella_validator.hpp"
 #include "nano/consensus_capella_runtime.hpp"
+#include "nano/consensus_capella_sync.hpp"
 #include <atomic>
 #include "nano/committee.hpp"
 #include "nano/consensus_message_ssz.hpp"
@@ -571,7 +572,16 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
   for(const auto* kind:{"block","attestation","attester_slashing"}){
    const auto catalog=reactor->capture_inventory(kind,1000*sizeof(ConsensusRoot));std::optional<ConsensusRoot> cursor;std::vector<Json> messages;size_t buffered=0;
    for(;;){const auto page=catalog->page(cursor,2,512);for(const auto& entry:page.at("entries")){const auto bytes=unhex(entry.get<std::string>());ConsensusRoot root{};std::copy(bytes.begin(),bytes.end(),root.begin());auto message=reactor->export_message(kind,root,8*1024*1024,source.token);check(message.at("available")==true,"catchup archive unavailable");buffered+=message.dump().size();check(messages.size()<1000&&buffered<=16*1024*1024,"catchup batch exceeds budget");messages.push_back(std::move(message));}if(page.at("next").is_null())break;const auto bytes=unhex(page.at("next").get<std::string>());ConsensusRoot root{};std::copy(bytes.begin(),bytes.end(),root.begin());cursor=root;}
-   if(std::string_view(kind)=="block")std::sort(messages.begin(),messages.end(),[](const Json& a,const Json& b){return quantity(a.at("slot"))!=quantity(b.at("slot"))?quantity(a.at("slot"))<quantity(b.at("slot")):a.at("root").get<std::string>()<b.at("root").get<std::string>();});
+   if(std::string_view(kind)=="block"){
+    std::vector<CapellaSyncBlock> batch;for(const auto& message:messages){const auto bytes=unhex(message.at("root").get<std::string>());ConsensusRoot root{};std::copy(bytes.begin(),bytes.end(),root.begin());batch.push_back({root,unhex(message.at("envelope").at("ssz").get<std::string>())});}
+    const std::set<ConsensusRoot> known{catchup_anchor->timed.view.anchor};const auto order=order_capella_sync_blocks(batch,known,store_rules,1000,16*1024*1024);
+    auto bad=batch;bad[0].root[0]^=1;bool refused=false;try{order_capella_sync_blocks(bad,known,store_rules,1000,16*1024*1024);}catch(const std::invalid_argument&){refused=true;}check(refused,"sync root claim trusted");
+    bad=batch;bad.push_back(batch[0]);refused=false;try{order_capella_sync_blocks(bad,known,store_rules,1000,16*1024*1024);}catch(const std::invalid_argument&){refused=true;}check(refused,"sync duplicate accepted");
+    refused=false;try{order_capella_sync_blocks(batch,{},store_rules,1000,16*1024*1024);}catch(const std::invalid_argument&){refused=true;}check(refused,"sync missing anchor accepted");
+    refused=false;try{order_capella_sync_blocks(batch,known,store_rules,1000,1);}catch(const std::length_error&){refused=true;}check(refused,"sync payload budget ignored");
+    std::vector<Json> sorted;for(auto index:order)sorted.push_back(std::move(messages[index]));messages=std::move(sorted);
+   }
+
    for(const auto& message:messages){auto promise=std::make_shared<std::promise<CapellaConsensusService::Decision>>();auto result=promise->get_future();check(follower_service.submit(message.at("envelope").dump(),std::make_shared<std::atomic<bool>>(false),[promise](auto d){promise->set_value(d);}),"catchup enqueue refused");check(result.wait_for(std::chrono::seconds(10))==std::future_status::ready&&result.get()==CapellaConsensusService::Decision::accepted,"catchup message rejected");++fetched;}
   }
   follower_service.stop();follower_service.join();const auto recovered=follower.current();const auto& expected_head=capella_fork_head(*source.state,store_rules);const auto& recovered_head=capella_fork_head(*recovered.state,store_rules);
