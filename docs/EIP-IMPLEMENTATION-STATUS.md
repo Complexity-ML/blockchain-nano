@@ -3075,3 +3075,19 @@ avec **28–32 positions sur 32**, et non 100 % partout. Zéro refus de budget o
 confirmé et neuf exports indisponibles restent tracés. **Partiel** : deux pairs
 sur un hôte, réseau stable ; asymétrie, partitions à la rotation, reprise après
 crash et grande population restent ouverts. [Preuves](qualification/capella-distributed-sync-rotation-20260927/README.md).
+
+
+### Reprise sync après coupure du transport — 27 septembre 2026
+
+Le nouveau mode `--sync-transport-outage-cli` passe sur deux pairs libp2p réels
+(32 clés distinctes chacun). Après 96 s de SIGSTOP des seuls démons P2P,
+les branches divergent sans finaliser au-delà de la borne pré-coupure, puis
+retrouvent une finalité commune époque 4. Quatre blocs finalisés aux slots 29–32
+contiennent des signatures distantes BLS vérifiées pour des slots supérieurs
+aux têtes observées à la reconnexion (pas une preuve horaire d’émission) ;
+le slot 28 n'en contient aucune. Participation observée : 15–31/32 positions,
+pas une reprise complète instantanée. Zéro refus de budget observé ; 29 refus
+sync du cœur (19 racines, 10 inclusions déjà atteintes) et un ACK sync non confirmé
+restent tracés. **Partiel** : coupure de processus transport sur un seul hôte,
+sans rotation pendant la partition ni crash disque. Aucun nouveau statut de
+conformité EVM/EIP ni validation de production. [Preuves](qualification/capella-sync-outage-recovery-20260927/README.md).

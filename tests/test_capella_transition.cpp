@@ -450,7 +450,7 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
      } transport;
      transport.left=a.event("p2p-process").at("pid").get<pid_t>();transport.right=b.event("p2p-process").at("pid").get<pid_t>();
      const auto sync_period=t.consensus.epoch.sync.epochs_per_sync_committee_period;check(sync_period&&sync_period<=16,"distributed rotation fixture period unbounded");
-     bool complete=false;uint64_t previous=UINT64_MAX,minimum_finalized=distributed_sync_rotation?2*sync_period+1:2;unsigned stable=0;
+     bool complete=false;uint64_t previous=UINT64_MAX,minimum_finalized=distributed_sync_rotation?2*sync_period+1:2;unsigned stable=0;uint64_t sync_after_slot=0;
      std::optional<Bytes> rotation_state;std::string qualified_finalized_root;
      std::set<std::string> sync_checked,remote_sync_blocks;std::map<std::string,Json> observed_sync_blocks;std::map<std::string,unsigned> sync_observers;
      auto qualify_sync=[&](const std::string& finalized_root){
@@ -462,6 +462,7 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
        const auto& message=found->second.at("message");const auto id=root;root=message.at("parent_root").get<std::string>();if(sync_observers[id]!=3||!sync_checked.insert(id).second)continue;
        const auto slot=std::stoull(message.at("slot").get<std::string>()),proposer=std::stoull(message.at("proposer_index").get<std::string>());
        const auto period=t.consensus.epoch.sync.epochs_per_sync_committee_period;
+       if(transport_outage_cli&&slot<=sync_after_slot)continue;
        if(slot/slots/period!=little(seed,40,8)/slots/period)continue; // Committee must come from an authenticated state in the same period.
        const auto& aggregate=message.at("body").at("sync_aggregate");const auto bits=unhex(aggregate.at("sync_committee_bits").get<std::string>()),signature=unhex(aggregate.at("sync_committee_signature").get<std::string>());check(bits.size()==(l.sync_committee_size+7)/8,"sync bitvector width");
        std::vector<Bytes> keys;size_t remote=0;
@@ -488,8 +489,8 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
         std::this_thread::sleep_for(std::chrono::seconds(1));
        }
        const auto after_a=head(ap),after_b=head(bp);check(slot_of(after_a)>slot_of(before_a)&&slot_of(after_b)>slot_of(before_b),"isolated validators did not continue proposing");check(after_a.at("root")!=after_b.at("root"),"outage did not produce distinct branches");
-       minimum_finalized=std::max(slot_of(after_a),slot_of(after_b))/slots;transport.resume();
-       std::cout<<Json{{"event","capella-transport-resumed"},{"leftHead",after_a},{"rightHead",after_b},{"minimumRecoveredFinalizedEpoch",minimum_finalized}}.dump()<<std::endl;
+       sync_after_slot=std::max(slot_of(after_a),slot_of(after_b))+1;minimum_finalized=std::max(slot_of(after_a),slot_of(after_b))/slots;transport.resume();
+       std::cout<<Json{{"event","capella-transport-resumed"},{"leftHead",after_a},{"rightHead",after_b},{"minimumRecoveredFinalizedEpoch",minimum_finalized},{"syncInclusionMustExceedSlot",sync_after_slot}}.dump()<<std::endl;
       }
       const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(distributed_sync_rotation?(2*sync_period+4)*slots*t.seconds_per_slot+120:transport_outage_cli?240:210);while(std::chrono::steady_clock::now()<deadline){a.pump(0);b.pump(0);check(a.running()&&b.running(),"distributed validator process exited");const auto fa=beacon(ap,"/eth/v1/beacon/states/head/finality_checkpoints").at("data").at("finalized"),fb=beacon(bp,"/eth/v1/beacon/states/head/finality_checkpoints").at("data").at("finalized");const auto ea=std::stoull(fa.at("epoch").get<std::string>()),eb=std::stoull(fb.at("epoch").get<std::string>());if(ea&&ea==eb)check(fa.at("root")==fb.at("root"),"conflicting finalized roots");
       if(sync_distributed_cli)for(auto port:{ap,bp}){const auto h=beacon(port,"/eth/v1/beacon/headers/head").at("data");const auto root=h.at("root").get<std::string>();const unsigned observer=port==ap?1:2;if(!(sync_observers[root]&observer)){const auto block=beacon(port,"/eth/v2/beacon/blocks/"+root).at("data");const auto& m=block.at("message");const auto& header=h.at("header").at("message");for(const auto field:{"slot","proposer_index","parent_root","state_root"})check(m.at(field)==header.at(field),"observed sync block/header mismatch");if(observed_sync_blocks.contains(root))check(observed_sync_blocks.at(root)==block,"peers disagree on signed sync block");else observed_sync_blocks.emplace(root,block);sync_observers[root]|=observer;}}
@@ -511,7 +512,7 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
       check(little(*rotation_state,40,8)/slots/sync_period>=2,"rotation state predates composition change");qualify_sync(qualified_finalized_root);check(remote_sync_blocks.size()>=3,"rotated finalized blocks lack verified remote sync");
       std::cout<<Json{{"event","distributed-sync-rotation-verified"},{"finalizedRoot",qualified_finalized_root},{"stateSlot",little(*rotation_state,40,8)},{"committeeHash",hex(sha256(committee))},{"initialCommitteeHash",hex(sha256(original))},{"bothStoresReopened",true}}.dump()<<std::endl;
      }
-     std::cout<<Json{{"scenario",transport_outage_cli?"capella-transport-outage-recovery":"capella-distributed-finality"},{"validatorsPerNode",32},{"nodes",2},{"minimumFinalizedEpoch",minimum_finalized},{"stableObservations",stable},{"syncQualification",sync_distributed_cli},{"syncRotation",distributed_sync_rotation},{"finalizedBlocksWithRemoteSync",remote_sync_blocks.size()},{"realLibp2p",true}}.dump()<<std::endl;return;
+     std::cout<<Json{{"scenario",transport_outage_cli?"capella-transport-outage-recovery":"capella-distributed-finality"},{"validatorsPerNode",32},{"nodes",2},{"minimumFinalizedEpoch",minimum_finalized},{"stableObservations",stable},{"syncQualification",sync_distributed_cli},{"syncRotation",distributed_sync_rotation},{"syncInclusionMustExceedSlot",sync_after_slot},{"finalizedBlocksWithRemoteSync",remote_sync_blocks.size()},{"realLibp2p",true}}.dump()<<std::endl;return;
     }
     const auto source_config=directory/"source.json";save(source_config,node);Process source_node({cli_binary,"run",(directory/"genesis.json").string(),(directory/"source-db").string(),source_config.string()},env);const auto source_port=source_node.port();const auto source_address=source_node.event("listen").at("address").get<std::string>();check(source_node.event("altair-ipc-ready").at("networkProtocolActive")==true,"source network inactive");
     until([&]{source_node.pump(0);return quantity(rpc(source_port,"eth_blockNumber"))>=2;},"source produced before follower",40);
@@ -1259,6 +1260,7 @@ int main(int argc,char** argv){try{executable=argv[0];
   if(std::getenv("NANO_TEST_MANAGED_CHILD_EXIT"))return 7;for(;;)pause();
  }
  if(argc==3&&std::string(argv[1])=="--export-network"){network_export=fs::absolute(argv[2]);network_cli=true;managed_cli=true;cli_binary="export-only";configured_runtime=true;scenario(false);return 0;}
+ if(argc==4&&std::string(argv[1])=="--sync-transport-outage-cli"){sync_distributed_cli=true;transport_outage_cli=true;distributed_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--transport-outage-cli"){transport_outage_cli=true;distributed_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--sync-rotation-distributed-cli"){distributed_sync_rotation=true;sync_distributed_cli=true;distributed_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--sync-distributed-cli"){sync_distributed_cli=true;distributed_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}

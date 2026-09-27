@@ -1,0 +1,19 @@
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index f280dde..5569d41 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -453 +453 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
+-     bool complete=false;uint64_t previous=UINT64_MAX,minimum_finalized=distributed_sync_rotation?2*sync_period+1:2;unsigned stable=0;
++     bool complete=false;uint64_t previous=UINT64_MAX,minimum_finalized=distributed_sync_rotation?2*sync_period+1:2;unsigned stable=0;uint64_t sync_after_slot=0;
+@@ -464,0 +465 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
++       if(transport_outage_cli&&slot<=sync_after_slot)continue;
+@@ -491,2 +492,2 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
+-       minimum_finalized=std::max(slot_of(after_a),slot_of(after_b))/slots;transport.resume();
+-       std::cout<<Json{{"event","capella-transport-resumed"},{"leftHead",after_a},{"rightHead",after_b},{"minimumRecoveredFinalizedEpoch",minimum_finalized}}.dump()<<std::endl;
++       sync_after_slot=std::max(slot_of(after_a),slot_of(after_b))+1;minimum_finalized=std::max(slot_of(after_a),slot_of(after_b))/slots;transport.resume();
++       std::cout<<Json{{"event","capella-transport-resumed"},{"leftHead",after_a},{"rightHead",after_b},{"minimumRecoveredFinalizedEpoch",minimum_finalized},{"syncInclusionMustExceedSlot",sync_after_slot}}.dump()<<std::endl;
+@@ -514 +515 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
+-     std::cout<<Json{{"scenario",transport_outage_cli?"capella-transport-outage-recovery":"capella-distributed-finality"},{"validatorsPerNode",32},{"nodes",2},{"minimumFinalizedEpoch",minimum_finalized},{"stableObservations",stable},{"syncQualification",sync_distributed_cli},{"syncRotation",distributed_sync_rotation},{"finalizedBlocksWithRemoteSync",remote_sync_blocks.size()},{"realLibp2p",true}}.dump()<<std::endl;return;
++     std::cout<<Json{{"scenario",transport_outage_cli?"capella-transport-outage-recovery":"capella-distributed-finality"},{"validatorsPerNode",32},{"nodes",2},{"minimumFinalizedEpoch",minimum_finalized},{"stableObservations",stable},{"syncQualification",sync_distributed_cli},{"syncRotation",distributed_sync_rotation},{"syncInclusionMustExceedSlot",sync_after_slot},{"finalizedBlocksWithRemoteSync",remote_sync_blocks.size()},{"realLibp2p",true}}.dump()<<std::endl;return;
+@@ -1261,0 +1263 @@ int main(int argc,char** argv){try{executable=argv[0];
++ if(argc==4&&std::string(argv[1])=="--sync-transport-outage-cli"){sync_distributed_cli=true;transport_outage_cli=true;distributed_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
