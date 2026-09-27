@@ -32,6 +32,7 @@ class CapellaDurableReactor {
  // Single-entry cache: no retained state snapshots or old-branch registry maps.
  struct ValidatorIndexCache {ConsensusRoot root;std::set<Bytes> keys;std::map<Bytes,uint64_t> indices;};
  std::optional<ValidatorIndexCache> validator_index_cache_;
+ void check_registered_index_locked(uint64_t,const Bytes&,const BeaconSigningJournal&,const std::function<void()>&);
  std::optional<Bytes> signed_block_locked(const ConsensusRoot&,const std::function<void()>&)const;
  Json network_identity_locked()const;
  struct PendingSyncAggregate {uint64_t slot;ConsensusRoot parent;size_t participants;Bytes ssz;};
@@ -71,7 +72,7 @@ public:
  std::set<uint64_t> current_sync_members(uint64_t signed_slot,const std::function<void()>& checkpoint={});
  std::optional<CapellaSyncMessage> sync_current(uint64_t validator_index,uint64_t signed_slot,
   const std::function<uint64_t()>& local_clock,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,
-  const std::function<void()>& checkpoint={});
+  const std::function<void()>& checkpoint={},const Bytes& registration_public_key={});
  // Ephemeral current/next proposal contexts, each bounded to one committee.
  // Incoming messages verify membership/domain/signature without local signing.
  // Disjoint aggregate positions merge; overlap is never double-counted.
@@ -101,8 +102,8 @@ public:
  std::optional<uint64_t> current_proposer(uint64_t,const std::function<void()>& checkpoint={});
  std::map<Bytes,uint64_t> current_validator_indices(const std::set<Bytes>&,const std::function<void()>& checkpoint={});
  std::set<uint64_t> current_attesters(uint64_t,const std::function<void()>& checkpoint={});
- std::optional<Phase0SignedAttestation> attest_current(uint64_t,uint64_t,const std::function<uint64_t()>&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={});
- std::optional<Bytes> propose_current(uint64_t,uint64_t,const std::string&,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<uint64_t()>&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={});
+ std::optional<Phase0SignedAttestation> attest_current(uint64_t,uint64_t,const std::function<uint64_t()>&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={},const Bytes& registration_public_key={});
+ std::optional<Bytes> propose_current(uint64_t,uint64_t,const std::string&,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<uint64_t()>&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={},const Bytes& registration_public_key={});
  // Local durable maintenance; preserves the selected head and authenticated archives.
  // Scheduling and native deposit-history pinning remain separate responsibilities.
  bool prune_finalized(const std::function<void()>& checkpoint={});

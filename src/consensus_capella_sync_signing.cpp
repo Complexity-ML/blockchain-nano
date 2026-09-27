@@ -27,8 +27,8 @@ std::set<uint64_t> CapellaDurableReactor::current_sync_members(uint64_t slot,con
  const auto saved=pending_sync_messages_.find(slot+1);
  for(const auto& [index,key]:context.members){if(check)check();if(saved!=pending_sync_messages_.end()&&saved->second.parent==context.parent&&saved->second.wires.contains(index))continue;result.insert(index);}return result;
 }
-std::optional<CapellaSyncMessage> CapellaDurableReactor::sync_current(uint64_t index,uint64_t slot,const std::function<uint64_t()>& local_clock,BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& check){
- std::lock_guard lock(mutex_);require_available();
+std::optional<CapellaSyncMessage> CapellaDurableReactor::sync_current(uint64_t index,uint64_t slot,const std::function<uint64_t()>& local_clock,BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& check,const Bytes& registration_public_key){
+ std::lock_guard lock(mutex_);require_available();check_registered_index_locked(index,registration_public_key,journal,check);
  if(!local_clock||!signer)throw std::invalid_argument("Missing sync duty clock or signer");
  const auto& clock=state_->timed.clock;if(slot==UINT64_MAX||(clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms!=slot)return std::nullopt;
  uint64_t last=clock.time_ms;

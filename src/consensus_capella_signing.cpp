@@ -170,14 +170,28 @@ std::map<Bytes,uint64_t> CapellaDurableReactor::current_validator_indices(const 
  validator_index_cache_=std::move(candidate);
  return validator_index_cache_->indices;
 }
+void CapellaDurableReactor::check_registered_index_locked(uint64_t index,const Bytes& public_key,const BeaconSigningJournal& journal,const std::function<void()>& check){
+ require_available();
+ if(public_key.empty())return; // Fixed-index configuration retains strict identity errors.
+ if(public_key.size()!=48||public_key!=journal.public_key_)throw std::invalid_argument("Automatic registration key differs from signing journal");
+ const auto& head=capella_fork_head(*state_,rules_,check);const auto& t=rules_.transition;
+ if(check)check();
+ if(!validator_index_cache_||validator_index_cache_->root!=head.header.state_root||!validator_index_cache_->keys.contains(public_key)){
+  const auto keys=validator_index_cache_&&validator_index_cache_->keys.contains(public_key)?validator_index_cache_->keys:std::set<Bytes>{public_key};
+  ValidatorIndexCache candidate{head.header.state_root,keys,capella_validator_indices(head.state.ssz,head.header.state_root,t.consensus.state,t.execution,t.maximum_state_bytes,keys,check)};
+  if(check)check();validator_index_cache_=std::move(candidate);
+ }
+ const auto found=validator_index_cache_->indices.find(public_key);
+ if(found==validator_index_cache_->indices.end()||found->second!=index)throw StaleCapellaDuty("Automatic validator index changed before signing");
+}
 std::set<uint64_t> CapellaDurableReactor::current_attesters(uint64_t slot,const std::function<void()>& check){
  std::lock_guard lock(mutex_);require_available();const auto duties=prepare_capella_attestation_duties(*state_,rules_,slot,limits_.replay_slots,limits_.sync_trials,check);std::set<uint64_t> result;for(const auto& [index,duty]:duties)result.insert(index);return result;
 }
-std::optional<Phase0SignedAttestation> CapellaDurableReactor::attest_current(uint64_t index,uint64_t slot,const std::function<uint64_t()>& clock,BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& check){
- std::lock_guard lock(mutex_);require_available();return sign_attestation_locked(index,slot,clock,*token_,journal,signer,check);
+std::optional<Phase0SignedAttestation> CapellaDurableReactor::attest_current(uint64_t index,uint64_t slot,const std::function<uint64_t()>& clock,BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& check,const Bytes& registration_public_key){
+ std::lock_guard lock(mutex_);check_registered_index_locked(index,registration_public_key,journal,check);require_available();return sign_attestation_locked(index,slot,clock,*token_,journal,signer,check);
 }
-std::optional<Bytes> CapellaDurableReactor::propose_current(uint64_t index,uint64_t slot,const std::string& recipient,size_t tx_trials,size_t vote_trials,const std::function<uint64_t()>& clock,BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& check){
- std::lock_guard lock(mutex_);require_available();const auto reveal=sign_randao_locked(index,slot,clock,*token_,journal,signer,check);if(!reveal)return std::nullopt;
+std::optional<Bytes> CapellaDurableReactor::propose_current(uint64_t index,uint64_t slot,const std::string& recipient,size_t tx_trials,size_t vote_trials,const std::function<uint64_t()>& clock,BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& check,const Bytes& registration_public_key){
+ std::lock_guard lock(mutex_);check_registered_index_locked(index,registration_public_key,journal,check);require_available();const auto reveal=sign_randao_locked(index,slot,clock,*token_,journal,signer,check);if(!reveal)return std::nullopt;
  const auto body=prepare_local_body_from_pool_locked(index,slot,*reveal,recipient,*token_,tx_trials,vote_trials,check);if(!body)return std::nullopt;
  return sign_proposal_locked(index,slot,*body,clock,*token_,journal,signer,check);
 }

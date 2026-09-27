@@ -47,7 +47,7 @@ void CapellaValidatorLoop::poll(const std::function<void()>& checkpoint){
    const auto previous=key.journal->latest_proposal_slot();
    if(!previous||*previous<slot){
     ++proposal_attempts_;DutyWallTiming proposal_timing{DutyWallTiming::Clock::now(),proposal_max_ms_};
-    const auto signed_block=reactor_.propose_current(key.index,slot,key.fee_recipient,transaction_trials_,vote_trials_,now_,*key.journal,key.signer,check);
+    const auto signed_block=reactor_.propose_current(key.index,slot,key.fee_recipient,transaction_trials_,vote_trials_,now_,*key.journal,key.signer,check,key.registration_public_key);
     if(signed_block){if(!reactor_.block(*signed_block,check))throw std::runtime_error("Locally signed Capella proposal refused by admission");++proposals_;}else ++proposals_unavailable_;
 
    }
@@ -58,14 +58,14 @@ void CapellaValidatorLoop::poll(const std::function<void()>& checkpoint){
    if(!attesters.contains(key.index))continue;
    check();if(!same_slot()){++slot_exits_;return;}
    const auto previous=key.journal->latest_attestation_target();if(previous&&*previous>=epoch)continue;
-   const auto vote=reactor_.attest_current(key.index,slot,now_,*key.journal,key.signer,check);
+   const auto vote=reactor_.attest_current(key.index,slot,now_,*key.journal,key.signer,check,key.registration_public_key);
    if(vote){record_duty(key.index,*vote);if(!reactor_.vote(*vote,check))throw std::runtime_error("Locally signed Capella attestation refused by admission");++votes_;}
   }
   const auto sync_members=reactor_.current_sync_members(slot,check);
   for(const auto& key:eligible){
    if(!sync_members.contains(key.index))continue;
    check();if(!same_slot()){++slot_exits_;return;}
-   if(reactor_.sync_current(key.index,slot,now_,*key.journal,key.signer,check))++sync_messages_;
+   if(reactor_.sync_current(key.index,slot,now_,*key.journal,key.signer,check,key.registration_public_key))++sync_messages_;
   }
  }catch(const ExpiredCapellaDuty&){
   if(cancelled)throw;

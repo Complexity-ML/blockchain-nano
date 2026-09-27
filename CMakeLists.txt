@@ -1687,3 +1687,6 @@ target_link_libraries(nano-capella-registration-scale-tests PRIVATE nano_core)
 target_compile_definitions(nano-capella-registration-scale-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
 add_test(NAME consensus_capella_registration_scale COMMAND nano-capella-registration-scale-tests)
 set_tests_properties(consensus_capella_registration_scale PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_scale")
+
+add_test(NAME consensus_capella_registration_signing_guard COMMAND nano-capella-transition-tests --scheduler-registration)
+set_tests_properties(consensus_capella_registration_signing_guard PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_runtime")

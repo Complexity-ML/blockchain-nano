@@ -967,3 +967,16 @@ changement des clés contrôlés. Runtime et dépôt/activation passent aussi :
 Le coût froid à chaque nouvel état, les indices divergents après dépôts concurrents
 et la charge distribuée restent ouverts. Aucun EIP/production clôturé.
 [Preuves et limites](qualification/capella-registration-cache-20260927/README.md).
+
+## 2026-09-27 — Index automatique revérifié sous verrou de signature
+
+Les propositions, attestations et messages sync revérifient la paire clé/index
+sur la tête admise avant le signataire. Un index périmé devient un devoir à
+retenter (`StaleCapellaDuty`), sans masquer une mauvaise association au journal.
+Nouveau test : trois refus d'index et trois refus de configuration, zéro appel
+au signataire et checkpoint/journal inchangés, puis 40 blocs et finalité époque 3
+avec les clés automatiques. Régressions index fixe et dépôt/activation passent :
+**3/3 en 160,16 s**. Deux dépôts concurrents réattribuant un index et disponibilité
+WAN restent ouverts ; le test injecte directement un index périmé, pas un thread
+concurrent. Aucun EIP/production clôturé.
+[Preuves](qualification/capella-registration-signing-guard-20260927/README.md).

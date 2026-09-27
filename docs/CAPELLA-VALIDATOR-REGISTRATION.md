@@ -58,11 +58,21 @@ Une nouvelle racine ou une demande différente impose un recalcul. Le cache ne
 retient aucun snapshot, n'est pas persistant, et le contrôle d'annulation reste
 actif sur un hit. Il réduit les polls répétés, pas le coût de chaque nouvel état.
 
-Une réorganisation concurrente entre résolution et signature reste
-soumise au contrôle d’identité du reactor : une erreur peut arrêter la boucle
-locale, elle ne permet pas de signer pour une autre clé.
+Avant toute proposition, attestation ou signature sync automatique, le reactor
+revérifie la paire clé/index contre sa tête courante, sous le même verrou que
+la signature. Une clé disparue ou un index modifié déclenche `StaleCapellaDuty` :
+la boucle abandonne ce poll et résout de nouveau au prochain, sans appeler le
+signataire. Une clé configurée différente de celle du journal reste une erreur
+bloquante ; elle n'est pas masquée comme simple changement de branche.
+
+Le contrôle d'identité complet du devoir et le journal anti-slashing restent
+obligatoires. La disponibilité sous des réorganisations soutenues et deux dépôts
+concurrents attribuant des indices différents demandent encore une qualification
+distribuée ; le refus d'un index périmé n'en constitue pas la preuve.
 
 Ce mode concerne Capella natif Nano. Il ne déclare pas le cycle EIP-6110 Ethereum
 complet ni l’activation publique du réseau.
 
 [Qualification du cache et régression d’activation](qualification/capella-registration-cache-20260927/README.md) : 3/3 tests passent ; changement de racine et de clés contrôlé.
+
+[Qualification des index périmés avant signature](qualification/capella-registration-signing-guard-20260927/README.md).
