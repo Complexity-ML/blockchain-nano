@@ -520,3 +520,17 @@ de slot et seuil du tiers de slot qualifiés séparément (48,46 s).
 État **partiel réseau/consensus** : clocks synthétiques, livraison libp2p/WAN dans
 les délais, rotation de comité et performance restent à qualifier. Aucune clôture
 EIP ou production. [Preuves](qualification/capella-sync-local-signing-20260927/README.md).
+
+
+### Sync entre vrais pairs et lecture après élagage — 27 septembre 2026
+
+Deux nœuds libp2p locaux (32 clés distinctes chacun) atteignent une finalité commune
+d’époque 2. **8 blocs finalisés** contiennent chacun 6–10 positions sync distantes,
+avec égalité des blocs observés sur les deux pairs et vérification BLS indépendante.
+Le premier run échouait sur une lecture Beacon ; correction de l’exclusion
+systématique de l’ancrage dans l’archive signée, sans fabriquer de signature.
+Régression d’élagage passée (67,76 s), puis confirmation réseau réussie.
+**Partiel** : seulement 21–27/32 positions incluses, 365 tentatives de relais sync
+incomplètes contre 11 complètes (pas un taux de perte par message). Priorité à
+l’efficacité de livraison ; WAN, adversité, rotation et production restent ouverts.
+[Preuves, échec conservé et limites](qualification/capella-sync-distributed-20260927/README.md).

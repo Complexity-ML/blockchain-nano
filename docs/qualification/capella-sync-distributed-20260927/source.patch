@@ -1,0 +1,56 @@
+diff --git a/src/consensus_capella_reactor.cpp b/src/consensus_capella_reactor.cpp
+index 06d03d3..1ef87fd 100644
+--- a/src/consensus_capella_reactor.cpp
++++ b/src/consensus_capella_reactor.cpp
+@@ -12 +12 @@ void verify_archived_block(const ConsensusRoot& id,const Bytes& wire,const Capel
+- archive_require(id!=store.timed.view.anchor&&store.blocks.contains(id)&&wire.size()>=404&&wire.size()<=r.consensus.maximum_block_bytes);
++ archive_require(store.blocks.contains(id)&&wire.size()>=404&&wire.size()<=r.consensus.maximum_block_bytes);
+@@ -275 +275 @@ std::optional<Bytes> CapellaDurableReactor::signed_block_locked(const ConsensusR
+- if(id==state_->timed.view.anchor||!state_->blocks.contains(id))return std::nullopt;
++ if(!state_->blocks.contains(id))return std::nullopt;
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index eb649ba..4e1d30f 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -0,0 +1 @@
++#include "nano/consensus_bls.hpp"
+@@ -53 +54 @@ static bool capella_http=false;
+-static std::string cli_binary;static Json cli_genesis;static bool managed_cli=false;static std::string daemon_binary;static bool network_cli=false;static bool multipeer_cli=false;static bool distributed_cli=false;static bool transport_outage_cli=false;static fs::path network_export;
++static std::string cli_binary;static Json cli_genesis;static bool managed_cli=false;static std::string daemon_binary;static bool network_cli=false;static bool multipeer_cli=false;static bool distributed_cli=false;static bool sync_distributed_cli=false;static bool transport_outage_cli=false;static fs::path network_export;
+@@ -239 +240 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+-  if(pruning_automatic){const auto current=nodes[0]->current();maximum_records=std::max(maximum_records,current.state->blocks.size());if(current.state->timed.view.anchor!=last_anchor){++automatic_moves;last_anchor=current.state->timed.view.anchor;}check(nodes[0]->network_identity()==nodes[1]->network_identity(),"automatic pruning changed network identity");}
++  if(pruning_automatic){const auto current=nodes[0]->current();maximum_records=std::max(maximum_records,current.state->blocks.size());if(current.state->timed.view.anchor!=last_anchor){++automatic_moves;last_anchor=current.state->timed.view.anchor;const auto id=hex(Bytes(last_anchor.begin(),last_anchor.end()));for(auto& node:nodes){const auto header=node->beacon_read("/eth/v1/beacon/headers/"+id),full=node->beacon_read("/eth/v2/beacon/blocks/"+id);check(header.status==200&&full.status==200&&header.body.at("finalized")==true&&full.body.at("finalized")==true,"pruned signed anchor unavailable to Beacon API");}}check(nodes[0]->network_identity()==nodes[1]->network_identity(),"automatic pruning changed network identity");}
+@@ -419 +420 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
+-     auto beacon=[](uint16_t port,const std::string& path){namespace http=boost::beast::http;asio::io_context io;boost::beast::tcp_stream stream(io);boost::beast::flat_buffer buffer;http::request<http::empty_body> request(http::verb::get,path,11);request.set(http::field::host,"127.0.0.1");request.set(http::field::accept,"application/json");http::response_parser<http::string_body> parser;parser.body_limit(1024*1024);boost::beast::error_code failure;stream.expires_after(std::chrono::seconds(5));stream.async_connect({asio::ip::make_address("127.0.0.1"),port},[&](auto error){if(error){failure=error;return;}http::async_write(stream,request,[&](auto error,size_t){if(error){failure=error;return;}http::async_read(stream,buffer,parser,[&](auto error,size_t){failure=error;});});});io.run();check(!failure,"Beacon HTTP transport failed");auto response=parser.release();check(response.result()==http::status::ok,"Beacon HTTP response failed");return Json::parse(response.body());};
++     auto beacon=[](uint16_t port,const std::string& path){namespace http=boost::beast::http;asio::io_context io;boost::beast::tcp_stream stream(io);boost::beast::flat_buffer buffer;http::request<http::empty_body> request(http::verb::get,path,11);request.set(http::field::host,"127.0.0.1");request.set(http::field::accept,"application/json");http::response_parser<http::string_body> parser;parser.body_limit(1024*1024);boost::beast::error_code failure;stream.expires_after(std::chrono::seconds(5));stream.async_connect({asio::ip::make_address("127.0.0.1"),port},[&](auto error){if(error){failure=error;return;}http::async_write(stream,request,[&](auto error,size_t){if(error){failure=error;return;}http::async_read(stream,buffer,parser,[&](auto error,size_t){failure=error;});});});io.run();check(!failure,"Beacon HTTP transport failed");auto response=parser.release();if(response.result()!=http::status::ok)throw std::runtime_error("Beacon HTTP response "+std::to_string(response.result_int())+" for "+path);return Json::parse(response.body());};
+@@ -427,0 +429,20 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
++     std::set<std::string> sync_checked,remote_sync_blocks;std::map<std::string,Json> observed_sync_blocks;std::map<std::string,unsigned> sync_observers;
++     auto qualify_sync=[&](const std::string& finalized_root){
++      const auto& l=t.consensus.state;const auto& seed=initial.blocks.at(initial.timed.view.anchor).state.ssz;
++      const size_t committee=272+64*l.slots_per_historical_root+32*l.epochs_per_historical_vector+8*l.epochs_per_slashings_vector+133;
++      auto root=finalized_root;
++      for(size_t depth=0;depth<8&&root!=hex(Bytes(initial.timed.view.anchor.begin(),initial.timed.view.anchor.end()));++depth){
++       const auto found=observed_sync_blocks.find(root);if(found==observed_sync_blocks.end())break;
++       const auto& message=found->second.at("message");const auto id=root;root=message.at("parent_root").get<std::string>();if(sync_observers[id]!=3||!sync_checked.insert(id).second)continue;
++       const auto slot=std::stoull(message.at("slot").get<std::string>()),proposer=std::stoull(message.at("proposer_index").get<std::string>());
++       const auto period=t.consensus.epoch.sync.epochs_per_sync_committee_period;
++       if(slot/slots/period!=little(seed,40,8)/slots/period)continue; // Only the authenticated initial committee period.
++       const auto& aggregate=message.at("body").at("sync_aggregate");const auto bits=unhex(aggregate.at("sync_committee_bits").get<std::string>()),signature=unhex(aggregate.at("sync_committee_signature").get<std::string>());check(bits.size()==(l.sync_committee_size+7)/8,"sync bitvector width");
++       std::vector<Bytes> keys;size_t remote=0;
++       for(size_t position=0;position<l.sync_committee_size;++position)if(bits[position/8]&(1u<<(position%8))){Bytes key(seed.begin()+committee+48*position,seed.begin()+committee+48*(position+1));size_t member=0;for(;member<64&&Key(member).public_key!=key;++member){}check(member<64,"unknown distributed sync fixture key");remote+=(member<32)!=(proposer<32);keys.push_back(std::move(key));}
++       if(!keys.empty()){ConsensusBytes4 version{};std::copy_n(seed.begin()+((slot-1)/slots<little(seed,56,8)?48:52),4,version.begin());ConsensusRoot parent{};copy_to(parent,unhex(root));const auto signing=consensus_signing_root(parent,consensus_domain({7,0,0,0},version,root_at(seed,8)));check(verify_consensus_bls_fast_aggregate(keys,signing,signature),"distributed sync signature invalid");}
++       if(remote)remote_sync_blocks.insert(id);
++       std::cout<<Json{{"event","distributed-sync-finalized"},{"root",id},{"slot",slot},{"proposer",proposer},{"participants",keys.size()},{"remotePositions",remote}}.dump()<<std::endl;
++      }
++     };
++
+@@ -447,0 +469 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
++      if(sync_distributed_cli)for(auto port:{ap,bp}){const auto h=beacon(port,"/eth/v1/beacon/headers/head").at("data");const auto root=h.at("root").get<std::string>();const unsigned observer=port==ap?1:2;if(!(sync_observers[root]&observer)){const auto block=beacon(port,"/eth/v2/beacon/blocks/"+root).at("data");const auto& m=block.at("message");const auto& header=h.at("header").at("message");for(const auto field:{"slot","proposer_index","parent_root","state_root"})check(m.at(field)==header.at(field),"observed sync block/header mismatch");if(observed_sync_blocks.contains(root))check(observed_sync_blocks.at(root)==block,"peers disagree on signed sync block");else observed_sync_blocks.emplace(root,block);sync_observers[root]|=observer;}}
+@@ -449 +471 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
+-      if(ea>=minimum_finalized&&fa==fb){const auto ha=beacon(ap,"/eth/v1/beacon/headers/finalized"),hb=beacon(bp,"/eth/v1/beacon/headers/finalized");if(ha.at("finalized")==true&&hb.at("finalized")==true&&ha.at("data").at("root")==fa.at("root")&&hb.at("data").at("root")==fa.at("root")){if(++stable>=3){complete=true;break;}}else stable=0;}else stable=0;
++      if(ea>=minimum_finalized&&fa==fb){const auto ha=beacon(ap,"/eth/v1/beacon/headers/finalized"),hb=beacon(bp,"/eth/v1/beacon/headers/finalized");if(ha.at("finalized")==true&&hb.at("finalized")==true&&ha.at("data").at("root")==fa.at("root")&&hb.at("data").at("root")==fa.at("root")){if(sync_distributed_cli)qualify_sync(fa.at("root").get<std::string>());if(++stable>=3&&(!sync_distributed_cli||remote_sync_blocks.size()>=3)){complete=true;break;}}else stable=0;}else stable=0;
+@@ -452 +474 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
+-     const auto ar=a.stop(),br=b.stop();check(ar.code==0&&br.code==0,"distributed nodes did not stop cleanly");std::cout<<ar.out<<br.out<<Json{{"scenario",transport_outage_cli?"capella-transport-outage-recovery":"capella-distributed-finality"},{"validatorsPerNode",32},{"nodes",2},{"minimumFinalizedEpoch",minimum_finalized},{"stableObservations",stable},{"realLibp2p",true}}.dump()<<std::endl;return;
++     const auto ar=a.stop(),br=b.stop();check(ar.code==0&&br.code==0,"distributed nodes did not stop cleanly");std::cout<<ar.out<<br.out<<Json{{"scenario",transport_outage_cli?"capella-transport-outage-recovery":"capella-distributed-finality"},{"validatorsPerNode",32},{"nodes",2},{"minimumFinalizedEpoch",minimum_finalized},{"stableObservations",stable},{"syncQualification",sync_distributed_cli},{"finalizedBlocksWithRemoteSync",remote_sync_blocks.size()},{"realLibp2p",true}}.dump()<<std::endl;return;
+@@ -1200,0 +1223 @@ int main(int argc,char** argv){try{executable=argv[0];
++ if(argc==4&&std::string(argv[1])=="--sync-distributed-cli"){sync_distributed_cli=true;distributed_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
