@@ -1,0 +1,34 @@
+#include "capella_catalog_relay.hpp"
+#include <iostream>
+using namespace std::chrono_literals;
+void check(bool ok,const char* text){if(!ok)throw std::runtime_error(text);}
+std::string root(char c){return "0x"+std::string(64,c);}
+int main(){try{
+ const AltairWireProfile profile{"0x539",root('a'),"0x01020304",1024,256,256,256,root('b')};unsigned scenarios=0;
+ for(const std::string mode:{"success","duplicate","empty","changed-snapshot","wrong-next","unsorted","unavailable","foreign","rejected","lost-ack","lost-close","limit","expired"}){
+  asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);unsigned pages=0,sends=0,closes=0,done=0;Json result;
+  auto core=[&](std::string method,Json p,Reply cb){check(p[0]=="token","missing authentication");Json value;
+   if(method=="nano_capellaCatalogOpen")value={{"handle",root('c')}};
+   else if(method=="nano_capellaCatalogClose"){++closes;check(p[1]==root('c'),"wrong close handle");if(mode=="lost-close")return;value=true;}
+   else if(method=="nano_capellaCatalogPage"){
+    ++pages;check(p[1]==root('c'),"wrong page handle");if(mode=="expired"){cb(nullptr);return;}
+    check((pages==1&&p[2].is_null())||(pages==2&&p[2]==root('2')),"cursor did not follow acknowledged page");
+    value={{"sequence",mode=="changed-snapshot"&&pages==2?"0x2":"0x1"},{"digest",root('d')},{"kind","block"},{"entries",pages==1?Json::array({root('1'),root('2')}):Json::array({root('3')})},{"next",pages==1?Json(root('2')):Json(nullptr)}};
+    if(mode=="empty"){value["entries"]=Json::array();value["next"]=nullptr;}if(mode=="wrong-next")value["next"]=root('4');if(mode=="unsorted")value["entries"]=Json::array({root('2'),root('1')});
+   }else if(method=="nano_capellaExport")value={{"available",mode!="unavailable"},{"root",p[2]},{"envelope",{{"chainId",mode=="foreign"?"0x1":profile.chain_id},{"genesisHash",profile.genesis_hash},{"forkDigest",profile.fork_digest},{"consensusIdentity",profile.consensus_identity},{"kind","block"},{"ssz","0x0102"}}}};
+   else throw std::runtime_error("unexpected RPC");cb(value);if(mode=="duplicate")cb(value);
+  };
+  auto deliver=[&](std::string id,Json envelope,Reply cb){++sends;check(id==root(char('0'+sends))&&envelope["ssz"]=="0x0102","wrong payload");if(mode=="lost-ack")return;cb(Json{{"accepted",mode!="rejected"}});if(mode=="duplicate")cb(Json{{"accepted",true}});};
+  auto relay=std::make_shared<CapellaCatalogRelay>(io,core,deliver,"token","block",ingress,2,mode=="limit"?2:4,[&](Json value){++done;result=std::move(value);});relay->start(20ms);io.run();
+  const bool success=mode=="success"||mode=="duplicate"||mode=="empty";check(done==1&&result["success"]==success&&closes==1,"incorrect completion/cleanup");
+  if(mode=="success"||mode=="duplicate")check(sends==3&&pages==2&&result["closed"]==true,"pagination failed");
+  if(mode=="limit")check(sends==2&&pages==1,"entry limit exceeded");if(mode=="lost-ack")check(result["delivered"]==0,"unacknowledged delivery counted");++scenarios;
+ }
+ // Open may allocate a handle after cancellation: close the late handle once.
+ for(const bool late_open:{true,false}){
+  asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);Reply delayed;unsigned closes=0,done=0;Json result;
+  auto core=[&](std::string method,Json,Reply cb){if(method=="nano_capellaCatalogOpen"){if(late_open)delayed=cb;else cb(Json{{"handle",root('c')}});}else if(method=="nano_capellaCatalogClose"){++closes;cb(true);}else delayed=cb;};
+  auto relay=std::make_shared<CapellaCatalogRelay>(io,core,[](auto,auto,auto){throw std::runtime_error("delivery after cancellation");},"token","block",ingress,1,2,[&](Json value){++done;result=value;});relay->start(20ms);if(!late_open)io.poll();relay->cancel();check(bool(delayed),"missing delayed call");delayed(Json{{"handle",root('c')}});delayed(Json{{"handle",root('c')}});io.restart();io.run();check(done==1&&result["success"]==false&&closes==1,"late callback resurrected/leaked catalog");++scenarios;
+ }
+ std::cout<<scenarios<<" Capella catalog relay scenarios passed; no consensus validity inferred from mocked ACKs\n";
+}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

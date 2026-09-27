@@ -2485,3 +2485,14 @@ profil ; le relais d’archives ancien ne lui est pas appliqué. Deux démarrage
 Admission Capella toujours désactivée : aucun échange de blocs ni progression de
 finalité distribuée prouvés. Relais de catalogues, recherche de parents via pairs
 et critères d’activation restent ouverts.
+
+### Capella : relais borné des catalogues
+
+Relais asynchrone de catalogue stable, export unitaire, progression sur accusé
+positif, clôture et traitement des réponses tardives. Budgets de pages/entrées et
+délai global ; quinze scénarios adverses/succès passent (0,32 s). Intégration via
+les vrais RPC et worker : réadmission des archives déjà connues sans changement
+du checkpoint, catalogues fermés (21,87 s).
+[Preuves](qualification/capella-catalog-relay-20260927/README.md).
+L’ordre des racines ne garantit pas l’ordre des parents. Raccordement aux pairs,
+collecte des dépendances et reprise après expiration restent requis avant activation.

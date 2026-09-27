@@ -23,6 +23,7 @@
 #include "../network/capella_consensus_service.hpp"
 #include "../network/capella_inventory_sessions.hpp"
 #include "../network/altair_core_recovery.hpp"
+#include "../network/capella_catalog_relay.hpp"
 #include <future>
 #include "../src/consensus_bellatrix_projection.hpp"
 using namespace test;using namespace test::phase0_minimal;
@@ -250,6 +251,16 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
   boost::asio::io_context io;Json recovered;auto call=[&](std::string method,Json params,auto reply){check(method.starts_with("nano_altair"),"unexpected recovery method");method.replace(0,11,"nano_capella");auto response=ipc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",std::move(params)}});reply(response.contains("result")?response.at("result"):Json(nullptr));};
   auto recovery=std::make_shared<AltairCoreRecovery>(io,call,"capella-ipc-test",runtime_identity.at("chainId").get<std::string>(),runtime_identity.at("genesisHash").get<std::string>(),2,std::chrono::milliseconds(1),std::chrono::seconds(10),[&](Json result){recovered=std::move(result);});recovery->start();io.run();
   check(recovered.is_object()&&recovered.at("session")!=old_session&&recovered.at("highWater")==3&&recovered.at("networkAdmissionEnabled")==false&&runtime.admission->receipts().at("jobs").empty(),"Capella IPC recovery failed to fence/drain");
+  InboundBudget catalog_budget;auto ingress=std::make_shared<AltairMessageIngress>(AltairWireProfile{runtime_identity.at("chainId").get<std::string>(),runtime_identity.at("genesisHash").get<std::string>(),runtime_identity.at("forkDigest").get<std::string>(),size_t(1024+2*largest),size_t(block_budget),size_t(vote_budget),size_t(slash_budget),runtime_identity.at("consensusIdentity").get<std::string>()},catalog_budget);
+  size_t relayed=0;for(const auto* kind:{"block","attestation","attester_slashing"}){
+   io.restart();Json result;
+   auto catalog_call=[&](std::string method,Json params,Reply reply){const auto response=ipc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",std::move(params)}});reply(response.contains("result")?response.at("result"):Json(nullptr));};
+   auto deliver=[&](std::string,Json frame,Reply reply){const bool submitted=runtime.admission->submit(frame.dump(),std::make_shared<std::atomic<bool>>(false),[reply](auto decision){reply(Json{{"accepted",decision==CapellaConsensusService::Decision::accepted}});});if(!submitted)reply(nullptr);};
+   auto relay=std::make_shared<CapellaCatalogRelay>(io,catalog_call,deliver,"capella-ipc-test",kind,ingress,2,limits.blocks+limits.messages+limits.equivocations,[&](Json value){result=std::move(value);});relay->start(std::chrono::seconds(10));io.run();
+   check(result.at("success")==true&&result.at("closed")==true,"real Capella catalog relay failed");relayed+=result.at("delivered").get<size_t>();
+  }
+  check(relayed>=proposals&&runtime.reactor->current().token==saved.token,"catalog relay mutated duplicate checkpoint or omitted blocks");
+
  }
  const auto final=stop_capella_runtime(runtime);bool catalog_closed=false;try{runtime.catalogs->page("authenticated-test-peer",runtime_catalog,{},2,512);}catch(const std::invalid_argument&){catalog_closed=true;}check(catalog_closed,"stopped runtime retained catalog");catalog_closed=false;try{runtime.catalogs->open("authenticated-test-peer","block");}catch(const std::runtime_error&){catalog_closed=true;}check(catalog_closed,"stopped runtime opened catalog");check(!runtime.admission->submit(envelope.dump(),std::make_shared<std::atomic<bool>>(false),[](auto){}),"stopped runtime accepted admission");proposals+=final.at("validator").at("proposalsAdmitted").get<uint64_t>();check(proposals==2*slots&&final.at("clockHealthy")==true,"runtime proposal total differs");runtime={};closed=false;try{owner->tip();}catch(const std::runtime_error&){closed=true;}check(closed,"released runtime left execution readable");
  std::cout<<Json{{"scenario","capella-configured-runtime"},{"blocks",proposals},{"keysLoaded",64},{"witnessRestart",true},{"signerWitnessRestart",true},{"admissionReceiptChecks",6},{"httpTransport",capella_http},{"runtimeCatalogChecks",3},{"invalidConfigurationsRejected",6},{"workersStopped",true},{"networkTransport",false}}.dump()<<std::endl;
