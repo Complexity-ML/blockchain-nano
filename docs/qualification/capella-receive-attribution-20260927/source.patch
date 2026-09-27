@@ -1,0 +1,81 @@
+diff --git a/network/altair_stream.hpp b/network/altair_stream.hpp
+index 875f11d..ca01260 100644
+--- a/network/altair_stream.hpp
++++ b/network/altair_stream.hpp
+@@ -17,0 +18 @@ public:
++ using Observe=std::function<void(Json)>;
+@@ -19 +20 @@ private:
+- asio::io_context& io_;Stream stream_;std::shared_ptr<AltairMessageIngress> ingress_;Dispatch dispatch_;
++ asio::io_context& io_;Stream stream_;std::shared_ptr<AltairMessageIngress> ingress_;Dispatch dispatch_;Observe observe_;std::optional<AltairWireKind> kind_;
+@@ -23 +24,3 @@ private:
+- void abort(){if(finished_)return;finished_=true;cancelled_->store(true);timer_.cancel();if(!stream_->isClosed())stream_->reset();if(!dispatched_||worker_done_)lease_.reset();}
++ // Diagnostic callbacks cannot change admission, cleanup or acknowledgement.
++ void report(const char* reason)noexcept{if(!observe_)return;try{observe_(Json{{"reason",reason},{"kind",kind_?Json(static_cast<unsigned>(*kind_)):Json(nullptr)},{"dispatched",dispatched_},{"workerDone",worker_done_}});}catch(...){} }
++ void abort(const char* reason){if(finished_)return;finished_=true;report(reason);cancelled_->store(true);timer_.cancel();if(!stream_->isClosed())stream_->reset();if(!dispatched_||worker_done_)lease_.reset();}
+@@ -27,3 +30,3 @@ private:
+-  if(decision==Decision::local_failure){abort();return;}
+-  write_json(io_,stream_,Json{{"accepted",decision==Decision::accepted}},[self=shared_from_this()](bool ok){
+-   if(!self->finished_){self->finished_=true;self->timer_.cancel();if(ok)close_stream(self->stream_);else if(!self->stream_->isClosed())self->stream_->reset();}
++  if(decision==Decision::local_failure){abort("core-local-failure");return;}
++  write_json(io_,stream_,Json{{"accepted",decision==Decision::accepted}},[self=shared_from_this(),decision](bool ok){
++   if(!self->finished_){self->finished_=true;self->report(ok?(decision==Decision::accepted?"accepted-ack-written":"rejected-ack-written"):"ack-write-failed");self->timer_.cancel();if(ok)close_stream(self->stream_);else if(!self->stream_->isClosed())self->stream_->reset();}
+@@ -34,2 +37,2 @@ public:
+- AltairStreamRequest(asio::io_context& io,Stream stream,std::shared_ptr<AltairMessageIngress> ingress,Dispatch dispatch):
+- io_(io),stream_(std::move(stream)),ingress_(std::move(ingress)),dispatch_(std::move(dispatch)),timer_(io){if(!stream_||!ingress_||!dispatch_)throw std::invalid_argument("invalid Altair stream handler");}
++ AltairStreamRequest(asio::io_context& io,Stream stream,std::shared_ptr<AltairMessageIngress> ingress,Dispatch dispatch,Observe observe={}):
++ io_(io),stream_(std::move(stream)),ingress_(std::move(ingress)),dispatch_(std::move(dispatch)),observe_(std::move(observe)),timer_(io){if(!stream_||!ingress_||!dispatch_)throw std::invalid_argument("invalid Altair stream handler");}
+@@ -38 +41 @@ public:
+- void cancel(){abort();}
++ void cancel(){abort("cancelled");}
+@@ -41,3 +44,3 @@ public:
+-  const auto peer=stream_->remotePeerId();if(!peer){abort();return;}
+-  lease_=ingress_->acquire(peer.value().toBase58());if(!lease_){abort();return;}
+-  timer_.expires_after(timeout);timer_.async_wait([self=shared_from_this()](auto ec){if(!ec)self->abort();});
++  const auto peer=stream_->remotePeerId();if(!peer){abort("peer-unavailable");return;}
++  lease_=ingress_->acquire(peer.value().toBase58());if(!lease_){abort("inbound-budget");return;}
++  timer_.expires_after(timeout);timer_.async_wait([self=shared_from_this()](auto ec){if(!ec)self->abort("deadline");});
+@@ -45 +48 @@ public:
+-   if(self->finished_)return;if(!frame){self->abort();return;}
++   if(self->finished_)return;if(!frame){self->abort("frame-read-failed");return;}
+@@ -47,3 +50,3 @@ public:
+-   try{message=self->ingress_->decode(*frame);}catch(...){self->abort();return;}
+-   if(!message){self->abort();return;}
+-   self->dispatched_=true;
++   try{message=self->ingress_->decode(*frame);}catch(...){self->abort("decode-exception");return;}
++   if(!message){self->abort("invalid-envelope");return;}
++   self->kind_=message->kind;self->dispatched_=true;
+@@ -52 +55 @@ public:
+-   self->dispatched_=false;self->abort();
++   self->dispatched_=false;self->abort("dispatch-unavailable");
+diff --git a/network/main.cpp b/network/main.cpp
+index 759279f..d4004df 100644
+--- a/network/main.cpp
++++ b/network/main.cpp
+@@ -255 +255 @@ class Network {
+-   std::make_shared<AltairStreamRequest>(io_,std::move(stream),altair_ingress_,std::move(delivery))->start();return;
++   std::make_shared<AltairStreamRequest>(io_,std::move(stream),altair_ingress_,std::move(delivery),[this,id](Json result){if(trace_network_){result["event"]="test-consensus-stream-completion";result["peerId"]=id;std::cout<<result.dump()<<std::endl;}})->start();return;
+diff --git a/network/test_altair_stream.cpp b/network/test_altair_stream.cpp
+index aa1f97f..0c79578 100644
+--- a/network/test_altair_stream.cpp
++++ b/network/test_altair_stream.cpp
+@@ -9 +9 @@ public:
+- size_t fragment=7;unsigned resets=0,closes=0;std::string written;bool authenticated=true;
++ size_t fragment=7;unsigned resets=0,closes=0;std::string written;bool authenticated=true,fail_write=false;
+@@ -16 +16 @@ public:
+- void writeSome(libp2p::BytesIn in,size_t bytes,WriteCallbackFunc cb)override{const auto n=std::min(fragment,bytes);written.append(reinterpret_cast<const char*>(in.data()),n);asio::post(io_,[cb=std::move(cb),n]{cb(n);});}
++ void writeSome(libp2p::BytesIn in,size_t bytes,WriteCallbackFunc cb)override{if(fail_write){asio::post(io_,[cb=std::move(cb)]{cb(std::make_error_code(std::errc::broken_pipe));});return;}const auto n=std::min(fragment,bytes);written.append(reinterpret_cast<const char*>(in.data()),n);asio::post(io_,[cb=std::move(cb),n]{cb(n);});}
+@@ -72,0 +73,14 @@ int main(){try{
++ for(const std::string mode:{"accepted-ack-written","rejected-ack-written","ack-write-failed","inbound-budget","dispatch-unavailable","core-local-failure","observer-throws"}){
++  asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);auto stream=std::make_shared<TestStream>(io,packet);stream->fail_write=mode=="ack-write-failed";
++  std::vector<std::shared_ptr<InboundBudget::Lease>> held;
++  if(mode=="inbound-budget")for(unsigned i=0;i<4;++i)held.push_back(ingress->acquire(stream->remotePeerId().value().toBase58()));
++  unsigned reports=0,calls=0;Json report;
++  auto request=std::make_shared<Request>(io,stream,ingress,[&](auto,auto,auto done){++calls;if(mode=="dispatch-unavailable")return false;const auto d=mode=="core-local-failure"?Decision::local_failure:mode=="rejected-ack-written"?Decision::rejected:Decision::accepted;done(d);done(d);return true;},[&](Json value){++reports;report=std::move(value);if(mode=="observer-throws")throw std::runtime_error("observer only");});
++  request->start();io.run();request->cancel();
++  check(reports==1&&report["reason"]==(mode=="observer-throws"?"accepted-ack-written":mode),"terminal attribution missing or duplicated");
++  check(calls==(mode=="inbound-budget"?0U:1U),"budget rejection reached worker");
++  check(report["kind"].is_null()==(mode=="inbound-budget"),"predecode rejection invented message kind");
++  held.clear();check(budget.active()==0,"diagnostics leaked lease");
++  if(mode=="observer-throws")check(Json::parse(stream->written)==Json{{"accepted",true}},"observer affected admission");
++  ++cases;
++ }

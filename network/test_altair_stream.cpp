@@ -6,14 +6,14 @@
 class TestStream:public libp2p::connection::Stream {
  asio::io_context& io_;std::string input_;size_t offset_=0;ReadCallbackFunc pending_;
 public:
- size_t fragment=7;unsigned resets=0,closes=0;std::string written;bool authenticated=true;
+ size_t fragment=7;unsigned resets=0,closes=0;std::string written;bool authenticated=true,fail_write=false;
  TestStream(asio::io_context& io,std::string input):io_(io),input_(std::move(input)){}
  void read(libp2p::BytesOut out,size_t bytes,ReadCallbackFunc cb)override{readSome(out,bytes,std::move(cb));}
  void readSome(libp2p::BytesOut out,size_t bytes,ReadCallbackFunc cb)override{
   if(offset_==input_.size()){pending_=std::move(cb);return;}
   const auto n=std::min({fragment,bytes,input_.size()-offset_});std::copy_n(input_.begin()+offset_,n,out.begin());offset_+=n;asio::post(io_,[cb=std::move(cb),n]{cb(n);});
  }
- void writeSome(libp2p::BytesIn in,size_t bytes,WriteCallbackFunc cb)override{const auto n=std::min(fragment,bytes);written.append(reinterpret_cast<const char*>(in.data()),n);asio::post(io_,[cb=std::move(cb),n]{cb(n);});}
+ void writeSome(libp2p::BytesIn in,size_t bytes,WriteCallbackFunc cb)override{if(fail_write){asio::post(io_,[cb=std::move(cb)]{cb(std::make_error_code(std::errc::broken_pipe));});return;}const auto n=std::min(fragment,bytes);written.append(reinterpret_cast<const char*>(in.data()),n);asio::post(io_,[cb=std::move(cb),n]{cb(n);});}
  void deferReadCallback(outcome::result<size_t> result,ReadCallbackFunc cb)override{asio::post(io_,[result,cb=std::move(cb)]{cb(result);});}
  void deferWriteCallback(std::error_code ec,WriteCallbackFunc cb)override{if(ec)asio::post(io_,[ec,cb=std::move(cb)]{cb(ec);});}
  void reset()override{++resets;if(auto cb=std::exchange(pending_,ReadCallbackFunc{}))deferReadCallback(std::make_error_code(std::errc::operation_canceled),std::move(cb));}
@@ -68,6 +68,20 @@ int main(){try{
   check(budget.active()==0,"real worker completion leaked admission");
   if(expire)check(stream->written.empty(),"real worker acknowledged cancelled stream");
   else check(Json::parse(stream->written)==Json{{"accepted",true}},"real worker failed acknowledgement");
+  ++cases;
+ }
+ for(const std::string mode:{"accepted-ack-written","rejected-ack-written","ack-write-failed","inbound-budget","dispatch-unavailable","core-local-failure","observer-throws"}){
+  asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);auto stream=std::make_shared<TestStream>(io,packet);stream->fail_write=mode=="ack-write-failed";
+  std::vector<std::shared_ptr<InboundBudget::Lease>> held;
+  if(mode=="inbound-budget")for(unsigned i=0;i<4;++i)held.push_back(ingress->acquire(stream->remotePeerId().value().toBase58()));
+  unsigned reports=0,calls=0;Json report;
+  auto request=std::make_shared<Request>(io,stream,ingress,[&](auto,auto,auto done){++calls;if(mode=="dispatch-unavailable")return false;const auto d=mode=="core-local-failure"?Decision::local_failure:mode=="rejected-ack-written"?Decision::rejected:Decision::accepted;done(d);done(d);return true;},[&](Json value){++reports;report=std::move(value);if(mode=="observer-throws")throw std::runtime_error("observer only");});
+  request->start();io.run();request->cancel();
+  check(reports==1&&report["reason"]==(mode=="observer-throws"?"accepted-ack-written":mode),"terminal attribution missing or duplicated");
+  check(calls==(mode=="inbound-budget"?0U:1U),"budget rejection reached worker");
+  check(report["kind"].is_null()==(mode=="inbound-budget"),"predecode rejection invented message kind");
+  held.clear();check(budget.active()==0,"diagnostics leaked lease");
+  if(mode=="observer-throws")check(Json::parse(stream->written)==Json{{"accepted",true}},"observer affected admission");
   ++cases;
  }
  std::cout<<Json{{"scenario","altair-async-stream"},{"cases",cases},{"workerThreadCompletion",true},{"expiredWorkerLeaseRetained",true},{"realPeerConnections",false}}.dump()<<'\n';

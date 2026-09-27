@@ -548,3 +548,17 @@ Exports blocs 5981→81, attestations 19863→237, sync 3736→1092 sur ces deux
 **Partiel** : 119 livraisons sync sans accusé confirmé subsistent ; ces nombres ne
 sont pas des taux de perte ni une garantie générale. Attribution côté réception,
 rotation, WAN et adversité restent ouverts. [Preuves et limites](qualification/capella-sync-noecho-20260927/README.md).
+
+
+### Attribution des interruptions réseau — 27 septembre 2026
+
+Instrumentation optionnelle de la réception : fin unique, cause, type si décodé,
+état du worker ; erreurs du diagnostic sans effet sur l’admission. Sept nouveaux
+cas dans la suite stream ; quatre CTests passent. Deux pairs locaux : finalité
+commune 2 et 32/32 positions sync sur huit blocs finalisés vérifiés. Le récepteur
+observe **169 refus du budget avant décodage**, sans erreur locale du cœur ni
+échec d’écriture d’ACK. L’émetteur observe 132 livraisons sync non confirmées.
+**Partiel** : pression d’admission prouvée, correspondance individuelle et cause
+fine du budget non établies. Prochaine étape : attribution débit/concurrence puis
+ordonnancement sortant borné ; aucune hausse des limites. Rotation, WAN et
+production restent ouverts. [Preuves](qualification/capella-receive-attribution-20260927/README.md).
