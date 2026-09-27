@@ -2846,3 +2846,15 @@ des polls répétés ; annulation et arrêt du worker contrôlés.
 [Preuves et limites](qualification/capella-local-scheduler-20260927/README.md).
 Il s’agit de l’ordonnanceur local : démarrage CLI/configuration, chargement des clés,
 service RPC/Beacon, transport P2P et migration du Store inter-forks restent à raccorder.
+
+### Capella : démarrage local par configuration
+
+`start_capella_runtime` charge profil/snapshot authentifiés, limites, horloge,
+clés BLS vérifiées contre le registre, journaux et témoins de reprise ; arrêt propre
+avec export des engagements. Seize blocs produits via mempool après chargement de
+64 clés synthétiques, avec arrêt/réouverture intermédiaire depuis les témoins du
+consensus et des signataires. Quatre configurations invalides refusées.
+[Preuves](qualification/capella-configured-runtime-20260927/README.md), nouveau test
+réussi en 21,43 s. Aucun changement Bellatrix ni répétition des suites inchangées.
+Cette factory C++ ne constitue pas encore le branchement CLI : dispatch CLI,
+services RPC/Beacon, transport P2P et migration inter-forks restent ouverts.

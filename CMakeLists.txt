@@ -1571,3 +1571,6 @@ endif()
 
 add_test(NAME consensus_capella_scheduled_finality COMMAND nano-capella-transition-tests --scheduler)
 set_tests_properties(consensus_capella_scheduled_finality PROPERTIES TIMEOUT 360 LABELS "qualification_consensus_runtime")
+
+add_test(NAME consensus_capella_configured_runtime COMMAND nano-capella-transition-tests --configured-runtime)
+set_tests_properties(consensus_capella_configured_runtime PROPERTIES TIMEOUT 240 LABELS "qualification_consensus_runtime")
