@@ -1,6 +1,7 @@
 #include "support/altair_transition_rules.hpp"
 #include "nano/consensus_capella_transition.hpp"
 #include "nano/consensus_capella_bls_change.hpp"
+#include "nano/consensus_capella_fork_state.hpp"
 #include "nano/consensus_proposer.hpp"
 #include "blst.h"
 #include "../src/consensus_capella_projection.hpp"
@@ -54,7 +55,7 @@ static void scenario(bool migrate,uint64_t skipped=0){
  }
  const uint64_t first_slot=migrate?slots+skipped:1;
  std::map<Int,Bytes> hashes{{0,parent.header.hash()}};std::function<Bytes(const Int&)> history=[&](const Int& n){return hashes.at(n);};
- unsigned accepted=0,rejected=0,cancelled=0;uint64_t paid=0;
+ unsigned accepted=0,rejected=0,cancelled=0,contexts=0;uint64_t paid=0;
  for(uint64_t slot=first_slot;slot<=first_slot+slots;++slot){
   const bool crossing=migrate&&slot==first_slot;
   const auto original=beacon;const auto evm_before=state.root();
@@ -106,9 +107,34 @@ static void scenario(bool migrate,uint64_t skipped=0){
   if(slot==first_slot){message=built->message_ssz;message.back()^=1;deny(sign_message(message));}
   if(slot==first_slot+(migrate?4:1)){message=built->message_ssz;const auto duplicate=encode_capella_bls_change(change);message.insert(message.end(),duplicate.begin(),duplicate.end());deny(sign_message(message));}
   for(size_t stop:{size_t(1),calls}){size_t n=0;bool stopped=false;try{receive(wire,[&]{if(++n==stop)throw ExecutionCancelled("stop");});}catch(const ExecutionCancelled&){stopped=true;}check(stopped&&beacon==original&&state.root()==evm_before,"cancelled block changed parents");++cancelled;}
+  const ConsensusBeaconHeader admitted{slot,proposer,parent_root,root_at(built->message_ssz,48),capella_beacon_body_root(std::span<const uint8_t>(body),r.consensus.body,l.sync_committee_size,r.execution,r.withdrawals.maximum_per_payload,r.maximum_bls_changes,r.consensus.maximum_block_bytes)};
+  const CapellaEpochRules epoch_rules{r.consensus.epoch,r.execution,r.maximum_state_bytes};
+  const auto context=capella_fork_block_context(received->consensus,admitted,epoch_rules,l);
+  const auto& validator=context.registry.validators.at(0);
+  check(context.block_root==consensus_beacon_header_root(admitted)&&validator.balance==little(received->consensus.ssz,little(received->consensus.ssz,hist+92,4),8)&&validator.withdrawal_credentials[0]==1,"Capella registry context lost withdrawal or credentials");
+  const auto checkpoints=capella_fork_checkpoints(received->consensus,epoch_rules,l);
+  const size_t checkpoint_fields=randao+32*l.epochs_per_historical_vector+8*l.epochs_per_slashings_vector;
+  check(checkpoints.realized.current_justified.epoch==little(received->consensus.ssz,checkpoint_fields+49,8)&&checkpoints.realized.finalized.root==root_at(received->consensus.ssz,checkpoint_fields+97),"Capella checkpoints differ");
+  auto wrong_header=admitted;wrong_header.state_root[0]^=1;bool refused=false;try{capella_fork_block_context(received->consensus,wrong_header,epoch_rules,l);}catch(const std::invalid_argument&){refused=true;}check(refused,"unbound Capella context accepted");
+  if(slot==first_slot||slot==first_slot+slots){
+   const ConsensusCheckpoint target_checkpoint{(slot+slots-1)/slots,consensus_beacon_header_root(admitted)};
+   const auto projected=prepare_capella_fork_state_contexts(received->consensus,admitted,target_checkpoint,epoch_rules,l,slots,100000);
+   check(little(projected.target_state.ssz,40,8)==target_checkpoint.epoch*slots&&projected.target.registry.epoch==target_checkpoint.epoch,"target context uses wrong epoch");
+   const auto selected=prepare_capella_proposer_identity(received->consensus,admitted,slot+1,epoch_rules,l,duties,slots,100000);
+   check(selected&&selected->fork_version==version&&selected->genesis_root==genesis_root,"proposer fork context differs");
+   check(!prepare_capella_proposer_identity(received->consensus,admitted,slot,epoch_rules,l,duties,slots,100000),"past proposer duty accepted");
+   if(slot==first_slot){
+    auto slashed=received->consensus;const auto validator_start=little(slashed.ssz,hist+88,4);slashed.ssz.at(validator_start+121*selected->index+88)=1;
+    auto slashed_header=admitted;slashed_header.state_root=capella_beacon_state_root(slashed.ssz,l,r.execution,r.maximum_state_bytes);
+    check(!prepare_capella_proposer_identity(slashed,slashed_header,slot+1,epoch_rules,l,duties,slots,100000),"slashed proposer rerolled or accepted");
+    bool interrupted=false;try{capella_fork_checkpoints(received->consensus,epoch_rules,l,[]{throw ExecutionCancelled("context stop");});}catch(const ExecutionCancelled&){interrupted=true;}check(interrupted,"context cancellation swallowed");
+   }
+
+  }
+  ++contexts;
   beacon=received->consensus;state=received->execution.state;parent=received->execution.block;hashes[parent.header.number]=parent.header.hash();++accepted;
  }
- std::cout<<Json{{"scenario","capella-signed-transition"},{"migrated",migrate},{"skippedForkSlots",skipped},{"blocks",accepted},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
+ std::cout<<Json{{"scenario","capella-signed-transition"},{"migrated",migrate},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
 }
 int main(){try{scenario(false);scenario(true);scenario(true,3);return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

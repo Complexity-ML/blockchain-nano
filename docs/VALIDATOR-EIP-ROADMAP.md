@@ -2633,3 +2633,12 @@ montants restaurés contrôlés. Régression stockage Paris/Shanghai 4/4.
 [Preuves](qualification/shanghai-checkpoint-20260927/README.md).
 Le snapshot testé est synthétique : Store Capella, profil durable et réacteur
 restent à raccorder. Aucun statut EIP clos ni profil réseau modifié.
+
+### Capella : contextes du choix de branche
+
+Helpers Capella pour registre lié au bloc, checkpoints réalisés/unrealized,
+état cible et identité du proposant. Vingt-sept blocs signés contrôlés, six
+contextes cibles, refus de headers non liés et de proposants sanctionnés ;
+régression ciblée 3/3.
+[Preuves](qualification/capella-fork-context-20260927/README.md).
+Le Store complet, son snapshot durable et le réacteur réseau restent ouverts.
