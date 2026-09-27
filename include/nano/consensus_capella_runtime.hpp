@@ -2,6 +2,7 @@
 #include "nano/chain.hpp"
 #include "nano/beacon_api.hpp"
 #include "nano/consensus_capella_validator.hpp"
+class CapellaConsensusService;
 namespace nano {
 // Shared lifetime: workers stop before coordinator, journals and witness close.
 // Caller owns Blockchain for the lifetime of all returned aliases.
@@ -10,6 +11,7 @@ struct CapellaRuntime {
  std::shared_ptr<CapellaDurableReactor> reactor;
  std::shared_ptr<CapellaLocalClock> clock;
  BeaconReadHandler beacon_read;
+ std::shared_ptr<::CapellaConsensusService> admission;
 };
 // Locally authenticated profile + initial snapshot, exact restart token, or
 // explicitly trusted recovery witness. This does not register P2P/HTTP/CLI.

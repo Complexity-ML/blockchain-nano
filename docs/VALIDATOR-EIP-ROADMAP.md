@@ -2871,3 +2871,17 @@ sur seize blocs/reprise et en-tête finalisé contrôlé après la boucle de qua
 Cinq suites distinctes réussies, dont les régressions Beacon Bellatrix.
 La lecture Capella est raccordée au runtime C++ ; serveur HTTP/dispatch CLI,
 worker d’admission privé, observations de pairs, P2P et migration inter-forks restent ouverts.
+
+### Capella : admission bornée des messages
+
+Service local pour blocs signés, attestations et preuves de slashing, avec identité
+liée à la chaîne, au genesis, à l’ancre et au profil complet. File ordonnée bornée
+en tâches et octets, annulation avant commit, arrêt avant export des engagements.
+Capacités validées avant démarrage des signataires. Dix-sept messages exercés,
+deux réorganisations, enveloppes étrangères et saturations rejetées ; runtime
+qualifié sur seize blocs avec reprise et cinq configurations invalides refusées.
+[Preuves et périmètre](qualification/capella-wire-admission-20260927/README.md).
+Deux suites initiales réussies ; seule la suite runtime modifiée a été rejouée.
+Il reste à raccorder reçus RPC privés, inventaire/export/synchronisation, serveur
+HTTP/CLI et libp2p avec budgets par pair authentifié, puis migration inter-forks.
+Ce worker C++ ne constitue pas une qualification réseau ni une activation publique.

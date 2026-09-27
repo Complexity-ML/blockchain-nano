@@ -52,6 +52,9 @@ public:
  std::optional<Phase0SignedAttestation> attest_current(uint64_t,uint64_t,const std::function<uint64_t()>&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={});
  std::optional<Bytes> propose_current(uint64_t,uint64_t,const std::string&,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<uint64_t()>&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={});
  CapellaPublishedStore current()const;
+ Json network_identity()const;
+ bool vote_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
+ bool slashing_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
  BeaconReadResponse beacon_read(std::string_view,const std::function<void()>& checkpoint={})const;
  // Caller supplies identity and an independent clock, never unsigned vote data.
  // Signature reservations live in a separate durable journal and survive expiry.
