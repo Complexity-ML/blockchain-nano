@@ -23,6 +23,11 @@ class CapellaDurableReactor {
  void validate_execution_binding()const;
  void fail_closed();
  std::optional<Bytes> prepare_local_body_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,std::span<const SignedTransaction>,size_t,size_t,const std::function<void()>&);
+ void tick_locked(uint64_t,const std::function<void()>&);
+ std::optional<Phase0SignedAttestation> sign_attestation_locked(uint64_t,uint64_t,const std::function<uint64_t()>&,const ForkCheckpointToken&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>&);
+ std::optional<Bytes> sign_randao_locked(uint64_t,uint64_t,const std::function<uint64_t()>&,const ForkCheckpointToken&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>&);
+ std::optional<Bytes> sign_proposal_locked(uint64_t,uint64_t,std::span<const uint8_t>,const std::function<uint64_t()>&,const ForkCheckpointToken&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>&);
+ std::optional<Bytes> prepare_local_body_from_pool_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,size_t,size_t,const std::function<void()>&);
  void publish(CapellaForkStore,const std::function<void()>&,const std::vector<CheckpointArchiveEntry>& archive={},std::optional<CapellaSignedVotes> votes=std::nullopt,std::optional<CapellaSignedVotes> slashings=std::nullopt);
 public:
  CapellaDurableReactor(ChainStore&,Int,Bytes,CapellaForkBlockRules,CapellaStoreSnapshotLimits,CapellaForkStore,const std::function<void()>& checkpoint={},Blockchain* owner=nullptr,ChainStore* witness=nullptr);
@@ -38,6 +43,13 @@ public:
  std::optional<Bytes> prepare_local_body_from_pool(uint64_t validator_index,uint64_t slot,
   const Bytes& randao,const std::string& fee_recipient,const ForkCheckpointToken& expected,
   size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<void()>& checkpoint={});
+ bool execution_bound()const{return execution_!=nullptr;}
+ std::pair<uint64_t,uint64_t> local_duty_timing()const{return {rules_.slot_duration_ms,rules_.transition.consensus.epoch.ffg.slots_per_epoch};}
+ bool tick_if_needed(uint64_t,const std::function<void()>& checkpoint={});
+ std::optional<uint64_t> current_proposer(uint64_t,const std::function<void()>& checkpoint={});
+ std::set<uint64_t> current_attesters(uint64_t,const std::function<void()>& checkpoint={});
+ std::optional<Phase0SignedAttestation> attest_current(uint64_t,uint64_t,const std::function<uint64_t()>&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={});
+ std::optional<Bytes> propose_current(uint64_t,uint64_t,const std::string&,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<uint64_t()>&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={});
  CapellaPublishedStore current()const;
  // Caller supplies identity and an independent clock, never unsigned vote data.
  // Signature reservations live in a separate durable journal and survive expiry.

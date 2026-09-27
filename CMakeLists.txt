@@ -1568,3 +1568,6 @@ if(APPLE)
  add_test(NAME consensus_capella_execution_owner_witness COMMAND nano-capella-transition-tests --owner-witness)
  set_tests_properties(consensus_capella_execution_owner_witness PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_recovery")
 endif()
+
+add_test(NAME consensus_capella_scheduled_finality COMMAND nano-capella-transition-tests --scheduler)
+set_tests_properties(consensus_capella_scheduled_finality PROPERTIES TIMEOUT 360 LABELS "qualification_consensus_runtime")

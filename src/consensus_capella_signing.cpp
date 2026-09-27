@@ -9,7 +9,12 @@ template<size_t N>std::array<uint8_t,N> signing_array(std::span<const uint8_t> b
 std::optional<Phase0SignedAttestation> CapellaDurableReactor::sign_attestation(uint64_t index,
  uint64_t slot,const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected,BeaconSigningJournal& journal,
  const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint){
- std::lock_guard lock(mutex_);require_available();
+ std::lock_guard lock(mutex_);return sign_attestation_locked(index,slot,local_clock,expected,journal,signer,checkpoint);
+}
+std::optional<Phase0SignedAttestation> CapellaDurableReactor::sign_attestation_locked(uint64_t index,
+ uint64_t slot,const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected,BeaconSigningJournal& journal,
+ const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint){
+ require_available();
  if(expected!=*token_)throw StaleCapellaDuty("Stale attestation duty request");
  if(!local_clock||!signer)throw std::invalid_argument("Missing duty clock or signing provider");
  const auto& clock=state_->timed.clock;
@@ -49,7 +54,13 @@ std::optional<Bytes> CapellaDurableReactor::sign_proposal(uint64_t index,uint64_
  std::span<const uint8_t> body,const std::function<uint64_t()>& local_clock,
  const ForkCheckpointToken& expected,BeaconSigningJournal& journal,
  const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint){
- std::lock_guard lock(mutex_);require_available();
+ std::lock_guard lock(mutex_);return sign_proposal_locked(index,slot,body,local_clock,expected,journal,signer,checkpoint);
+}
+std::optional<Bytes> CapellaDurableReactor::sign_proposal_locked(uint64_t index,uint64_t slot,
+ std::span<const uint8_t> body,const std::function<uint64_t()>& local_clock,
+ const ForkCheckpointToken& expected,BeaconSigningJournal& journal,
+ const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint){
+ require_available();
  if(expected!=*token_)throw StaleCapellaDuty("Stale proposal duty request");
  disk_.fork_checkpoint(chain_,genesis_,limits_.envelope_bytes,token_);
  if(!local_clock||!signer)throw std::invalid_argument("Missing proposal clock or signing provider");
@@ -97,7 +108,12 @@ std::optional<Bytes> CapellaDurableReactor::sign_proposal(uint64_t index,uint64_
 std::optional<Bytes> CapellaDurableReactor::sign_randao(uint64_t index,uint64_t slot,
  const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected,
  BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint){
- std::lock_guard lock(mutex_);require_available();
+ std::lock_guard lock(mutex_);return sign_randao_locked(index,slot,local_clock,expected,journal,signer,checkpoint);
+}
+std::optional<Bytes> CapellaDurableReactor::sign_randao_locked(uint64_t index,uint64_t slot,
+ const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected,
+ BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint){
+ require_available();
  if(expected!=*token_)throw StaleCapellaDuty("Stale RANDAO duty request");
  if(!local_clock||!signer)throw std::invalid_argument("Missing RANDAO clock or signing provider");
  const auto& clock=state_->timed.clock;const auto& t=rules_.transition.consensus;validate_altair_transition_rules(t);
@@ -135,4 +151,21 @@ std::optional<Bytes> CapellaDurableReactor::sign_randao(uint64_t index,uint64_t 
  return signature;
 }
 
+std::optional<uint64_t> CapellaDurableReactor::current_proposer(uint64_t slot,const std::function<void()>& check){
+ std::lock_guard lock(mutex_);require_available();const auto& t=rules_.transition.consensus;const auto& c=state_->timed.clock;
+ if((c.time_ms-c.genesis_time_ms)/rules_.slot_duration_ms!=slot)return std::nullopt;
+ const auto& parent=capella_fork_head(*state_,rules_,check);const auto identity=prepare_capella_proposer_identity(parent.state,parent.header,slot,{t.epoch,rules_.transition.execution,rules_.transition.maximum_state_bytes},t.state,t.attestation.duties,limits_.replay_slots,limits_.sync_trials,check);
+ if(!identity||state_->timed.view.equivocating_indices.contains(identity->index))return std::nullopt;return identity->index;
+}
+std::set<uint64_t> CapellaDurableReactor::current_attesters(uint64_t slot,const std::function<void()>& check){
+ std::lock_guard lock(mutex_);require_available();const auto duties=prepare_capella_attestation_duties(*state_,rules_,slot,limits_.replay_slots,limits_.sync_trials,check);std::set<uint64_t> result;for(const auto& [index,duty]:duties)result.insert(index);return result;
+}
+std::optional<Phase0SignedAttestation> CapellaDurableReactor::attest_current(uint64_t index,uint64_t slot,const std::function<uint64_t()>& clock,BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& check){
+ std::lock_guard lock(mutex_);require_available();return sign_attestation_locked(index,slot,clock,*token_,journal,signer,check);
+}
+std::optional<Bytes> CapellaDurableReactor::propose_current(uint64_t index,uint64_t slot,const std::string& recipient,size_t tx_trials,size_t vote_trials,const std::function<uint64_t()>& clock,BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& check){
+ std::lock_guard lock(mutex_);require_available();const auto reveal=sign_randao_locked(index,slot,clock,*token_,journal,signer,check);if(!reveal)return std::nullopt;
+ const auto body=prepare_local_body_from_pool_locked(index,slot,*reveal,recipient,*token_,tx_trials,vote_trials,check);if(!body)return std::nullopt;
+ return sign_proposal_locked(index,slot,*body,clock,*token_,journal,signer,check);
+}
 }

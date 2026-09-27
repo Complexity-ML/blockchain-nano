@@ -8,6 +8,7 @@
 #include "nano/consensus_capella_reactor.hpp"
 #include "nano/consensus_capella_duty.hpp"
 #include "nano/rpc.hpp"
+#include "nano/consensus_capella_validator.hpp"
 #include "nano/committee.hpp"
 #include "nano/consensus_message_ssz.hpp"
 #include "nano/consensus_proposer.hpp"
@@ -32,6 +33,7 @@ static bool owner_mode=false;
 static bool owner_reorg=false;
 static bool owner_sync=false;
 static bool owner_witness=false;
+static bool scheduled=false;
 #ifdef NANO_SYNC_FAULT
 extern "C" void nano_test_arm_sync_fault(const char*);
 extern "C" unsigned nano_test_sync_failures();
@@ -110,6 +112,37 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
  if(local_finality==100)check(result.state->timed.view.finalized.epoch>=2&&result.state->timed.view.justified.epoch>=3,"assembled local chain did not finalize");else check(result.state->timed.view.finalized.epoch==0,"half-participation local chain finalized");
  if(owner_mode){Rpc rpc(*owners[0]);nodes[0]->invalidate();check(rpc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method","eth_blockNumber"},{"params",Json::array()}}).contains("error"),"invalidated owner still served block number");}
  std::cout<<Json{{"scenario","capella-local-assembly-finality"},{"executionOwner",owner_mode},{"participationPercent",local_finality},{"blocks",blocks},{"votes",votes},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"justifiedEpoch",result.state->timed.view.justified.epoch},{"independentStores",2},{"storeReopens",restarts},{"signingJournalsReopened",reopened_journals},{"networkTransport",false},{"networkActivated",false}}.dump()<<std::endl;
+}
+static void scheduler_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules,const Block& genesis,const State& genesis_state){
+ Temp directory;const auto limits=crash_limits;const auto& t=rules.transition;const auto slots=t.consensus.epoch.ffg.slots_per_epoch;const auto validators=root_at(initial.blocks.at(initial.timed.view.anchor).state.ssz,8);
+ Genesis g;g.chain_id=t.chain_id;g.consensus="beacon";g.evm_revision=EvmRevision::Shanghai;g.block=genesis;g.state=genesis_state;
+ ChainStore witness(directory/"witness");auto owner=std::make_unique<Blockchain>(directory/"owner",g);auto reactor=std::make_unique<CapellaDurableReactor>(*owner,rules,limits,initial,std::function<void()>{},&witness);
+ uint64_t now=initial.timed.clock.time_ms;auto wall=[&]{return now;};auto clock=std::make_unique<CapellaLocalClock>(*reactor,2*rules.slot_duration_ms,wall);
+ std::map<uint64_t,std::unique_ptr<ChainStore>> disks;std::map<uint64_t,std::shared_ptr<BeaconSigningJournal>> journals;
+ uint64_t signatures=0;std::vector<CapellaValidatorKey> keys;
+ auto load_keys=[&](const std::map<uint64_t,ForkCheckpointToken>& saved){for(uint64_t i=0;i<64;++i){disks[i]=std::make_unique<ChainStore>(directory/("key-"+std::to_string(i)));journals[i]=std::make_shared<BeaconSigningJournal>(*disks[i],t.chain_id,genesis.header.hash(),validators,Key(i).public_key,slots,saved.contains(i)?std::optional<ForkCheckpointToken>(saved.at(i)):std::nullopt);keys.push_back({i,journals[i],[&,i](const ConsensusRoot& root){++signatures;return Key(i).sign(root);},genesis.header.coinbase});}};load_keys({});
+ bool wrong_timing=false;try{CapellaValidatorLoop invalid(*reactor,*clock,rules.slot_duration_ms,slots+1,16,64,keys,wall);}catch(const std::invalid_argument&){wrong_timing=true;}check(wrong_timing,"scheduler accepted wrong epoch duration");
+ auto loop=std::make_unique<CapellaValidatorLoop>(*reactor,*clock,rules.slot_duration_ms,slots,16,64,keys,wall);
+ const auto key=bytes(Int(777),32);Transaction tx;tx.type=2;tx.to="0x0000000000000000000000000000000000001234";tx.gas=100000;tx.max_fee=2000000000;tx.priority_fee=100000000;const auto sender=SignedTransaction::sign(tx,key).sender();
+ uint64_t proposals=0,votes=0;
+ for(uint64_t slot=2;slot<=5*slots+1;++slot){
+  now=initial.timed.clock.genesis_time_ms+slot*rules.slot_duration_ms;tx.nonce=owner->state().get(sender).nonce;check(owner->submit(SignedTransaction::sign(tx,key)),"scheduler mempool submit");
+  loop->poll();const auto current=reactor->current();const auto& head=capella_fork_head(*current.state,rules);check(head.header.slot==slot&&head.execution_block.transactions.size()==1&&owner->pending_count()==0,"scheduler failed to produce mempool block");
+  const auto count=signatures;const auto token=current.token;++now;loop->poll();check(signatures==count&&reactor->current().token==token,"same-phase scheduler repeated signing or publication");
+  now=initial.timed.clock.genesis_time_ms+slot*rules.slot_duration_ms+rules.attestation_due_ms;loop->poll();check(loop->status().at("healthy")==true,"scheduler unhealthy");
+  if(slot==3*slots){
+   proposals+=loop->status().at("proposalsAdmitted").get<uint64_t>();votes+=loop->status().at("attestationsAdmitted").get<uint64_t>();loop->stop();clock->stop();loop.reset();clock.reset();reactor.reset();owner.reset();
+   std::map<uint64_t,ForkCheckpointToken> saved;for(const auto& [i,journal]:journals)saved.emplace(i,journal->commitment());keys.clear();journals.clear();disks.clear();load_keys(saved);
+   owner=std::make_unique<Blockchain>(directory/"owner",g);reactor=std::make_unique<CapellaDurableReactor>(*owner,rules,limits,witness);clock=std::make_unique<CapellaLocalClock>(*reactor,2*rules.slot_duration_ms,wall);loop=std::make_unique<CapellaValidatorLoop>(*reactor,*clock,rules.slot_duration_ms,slots,16,64,keys,wall);
+  }
+ }
+ const auto current=reactor->current();check(current.state->timed.view.finalized.epoch>=3&&owner->state().get(sender).nonce==41,"scheduled chain did not finalize all transactions");
+ proposals+=loop->status().at("proposalsAdmitted").get<uint64_t>();votes+=loop->status().at("attestationsAdmitted").get<uint64_t>();check(proposals==40&&votes>0,"scheduler duty counters");
+ bool cancelled=false;try{loop->poll([]{throw ExecutionCancelled("scheduler cancellation");});}catch(const ExecutionCancelled&){cancelled=true;}check(cancelled&&loop->status().at("healthy")==true&&clock->healthy(),"cancellation poisoned scheduler");
+ // Exercise the real worker lifecycle with a stable clock and already completed duties.
+ const auto prior=signatures;const auto polls_before=loop->status().at("timing").at("polls").get<uint64_t>();loop->start(std::chrono::milliseconds(1));std::this_thread::sleep_for(std::chrono::milliseconds(20));loop->stop();check(signatures==prior&&loop->status().at("healthy")==true&&loop->status().at("timing").at("polls").get<uint64_t>()>polls_before,"worker failed to poll or duplicated completed duty");
+ now-=1;bool rejected=false;try{clock->poll();}catch(const std::runtime_error&){rejected=true;}check(rejected&&!clock->healthy(),"backward clock accepted");bool closed=false;try{owner->tip();}catch(const std::runtime_error&){closed=true;}check(closed,"clock failure left execution readable");
+ std::cout<<Json{{"scenario","capella-scheduled-finality"},{"blocks",proposals},{"votes",votes},{"finalizedEpoch",current.state->timed.view.finalized.epoch},{"witnessRestart",true},{"signingJournalsReopened",64},{"duplicatePollNoSignature",true},{"backwardsClockClosedOwner",true},{"networkTransport",false}}.dump()<<std::endl;
 }
 static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigned participation=100){
  const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-bellatrix-containers-official",source=fixtures/"consensus-capella-slots-official";
@@ -385,7 +418,8 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
     }
    }
   }
-  if(slot==first_slot){short_snapshot=capella_store_snapshot(*store,store_rules,snapshot_limits);if(local_finality){local_finality_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}}
+  if(slot==first_slot){short_snapshot=capella_store_snapshot(*store,store_rules,snapshot_limits);if(scheduled){scheduler_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}
+  if(local_finality){local_finality_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}}
   ++contexts;
   beacon=received->consensus;state=received->execution.state;parent=received->execution.block;hashes[parent.header.number]=parent.header.hash();++accepted;
  }
@@ -508,7 +542,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
  }
  std::cout<<Json{{"scenario","capella-signed-transition"},{"migrated",migrate},{"finalityScenario",finality},{"participationPercent",participation},{"finalizedEpoch",store->timed.view.finalized.epoch},{"includedAttestations",included_attestations},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"storeBlocks",store->blocks.size()},{"snapshotReopened",true},{"durableReactor",true},{"signedArchives",signed_wires.size()},{"signedVotes",durable_votes.size()},{"signedSlashings",durable_proofs.size()},{"deferredVotes",deferred_votes.size()},{"localAttestations",local_signatures},{"localProposals",local_proposals},{"localRandao",local_randao},{"assembledBodies",assembled_bodies},{"storeSigkillReopens",2},{"storeVotes",votes},{"voteReorgs",vote_reorgs},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
 }
-int main(int argc,char** argv){try{executable=argv[0];if(argc==2&&std::string(argv[1])=="--owner-reorg"){owner_reorg=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}
+int main(int argc,char** argv){try{executable=argv[0];if(argc==2&&std::string(argv[1])=="--scheduler"){scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-reorg"){owner_reorg=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}
 #ifdef NANO_SYNC_FAULT
 if(argc==3&&std::string(argv[1])=="--sync-writer")return sync_writer(argv[2]);
 if(argc==2&&std::string(argv[1])=="--owner-witness"){owner_witness=true;owner_sync=true;sync_scenario=true;scenario(false);return 0;}

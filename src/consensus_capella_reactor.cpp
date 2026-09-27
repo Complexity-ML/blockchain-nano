@@ -165,7 +165,17 @@ CapellaPublishedStore CapellaDurableReactor::current()const{std::lock_guard lock
 CapellaSignedVotes CapellaDurableReactor::signed_votes()const{std::lock_guard lock(mutex_);require_available();return votes_;}
 CapellaSignedVotes CapellaDurableReactor::signed_slashings()const{std::lock_guard lock(mutex_);require_available();return slashings_;}
 void CapellaDurableReactor::tick(uint64_t time,const std::function<void()>& check){
- std::lock_guard lock(mutex_);require_available();auto next=prepare_capella_store_tick(*state_,time,rules_,limits_.replay_slots,limits_.sync_trials,check);auto votes=votes_;
+ std::lock_guard lock(mutex_);require_available();tick_locked(time,check);
+}
+bool CapellaDurableReactor::tick_if_needed(uint64_t time,const std::function<void()>& check){
+ std::lock_guard lock(mutex_);require_available();if(check)check();const auto& c=state_->timed.clock;
+ if(time<c.time_ms||c.time_ms<c.genesis_time_ms)throw std::invalid_argument("Capella clock moved backwards");
+ const auto previous=c.time_ms-c.genesis_time_ms,current=time-c.genesis_time_ms;
+ if(previous/rules_.slot_duration_ms==current/rules_.slot_duration_ms&&(previous%rules_.slot_duration_ms<rules_.attestation_due_ms)==(current%rules_.slot_duration_ms<rules_.attestation_due_ms))return false;
+ tick_locked(time,check);return true;
+}
+void CapellaDurableReactor::tick_locked(uint64_t time,const std::function<void()>& check){
+ auto next=prepare_capella_store_tick(*state_,time,rules_,limits_.replay_slots,limits_.sync_trials,check);auto votes=votes_;
  const auto previous=(state_->timed.clock.time_ms-state_->timed.clock.genesis_time_ms)/rules_.slot_duration_ms;
  const auto current=(time-state_->timed.clock.genesis_time_ms)/rules_.slot_duration_ms;const auto epoch=current/rules_.transition.consensus.epoch.history.slots_per_epoch;
  for(auto it=votes.begin();it!=votes.end();){

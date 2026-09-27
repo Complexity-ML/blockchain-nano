@@ -2260,3 +2260,17 @@ Le témoin reste une source de confiance locale indépendante à provisionner ; 
 répertoires sur le même disque ne protègent pas d’un rollback ou d’une perte commune.
 Perte du suffixe du témoin lui-même non qualifiée ici. Raccordement au runtime,
 migration du Store vivant, ordonnanceur et P2P Capella restent ouverts.
+
+### Capella : horloge et ordonnanceur des validateurs locaux
+
+Ajout de `CapellaLocalClock` et `CapellaValidatorLoop` : sélection des devoirs depuis
+le Store, proposition depuis la mempool, attestation et admission normale des résultats.
+Préparation/signature de proposition sérialisées sous le verrou du coordinateur.
+Horloge indépendante, regroupement des polls par phase et fermeture de l’exécution
+sur discontinuité ; timings d’epoch vérifiés contre le profil de consensus.
+Le nouveau scénario produit 40 blocs et 272 votes, finalise l’epoch 3 et reprend
+au slot 24 avec témoin et 64 journaux réouverts. Aucun doublon de signature lors
+des polls répétés ; annulation et arrêt du worker contrôlés.
+[Preuves et limites](qualification/capella-local-scheduler-20260927/README.md).
+Il s’agit de l’ordonnanceur local : démarrage CLI/configuration, chargement des clés,
+service RPC/Beacon, transport P2P et migration du Store inter-forks restent à raccorder.
