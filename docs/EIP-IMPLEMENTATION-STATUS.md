@@ -1,5 +1,15 @@
 # Feuille de route EIP — état réel de Nano
 
+## Rotation WAN : nouveau banc préparé — 29 septembre 2026
+
+Le [collecteur et l’auditeur de rotation](qualification/capella-wan-rotation-harness-20260929/README.md)
+sont raccordés au scénario Mac/Docker/VPS : partition traversant le slot 128,
+capture SSZ avant élagage et vérification des agrégats après reprise sur les
+bases rouvertes. Compilation native, 13 tests nouveaux du collecteur et contrôle
+négatif d’une ancienne base passés. **Campagne WAN et chemin positif de l’audit
+encore à exécuter** ; aucun statut EIP ni critère de production fermé par ce seul
+outillage. Le cœur reste inchangé.
+
 ## WAN asymétrique qualifié avec lecture immuable — 29 septembre 2026
 
 La [campagne sur `940736f`](qualification/capella-wan-pinned-20260929/README.md)

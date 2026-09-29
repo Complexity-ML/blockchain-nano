@@ -12,6 +12,7 @@ import {partitionRemote} from './partition.mjs';
 import {asymmetricRemote,createRemoteTc} from './asymmetric.mjs';
 import {observeRecovery} from './recovery-observation.mjs';
 import {sampleClock} from './clock-sample.mjs';
+import {createRotationCapture,ownership,rotationNodes,waitRotationWindow} from './rotation.mjs';
 const exec=promisify(execFile),[target,revision,outputArg]=process.argv.slice(2);
 const fork=process.env.NANO_TEST_CONSENSUS_PROFILE??'bellatrix';
 if(!['bellatrix','capella'].includes(fork))throw Error('Unsupported consensus profile');
@@ -24,10 +25,12 @@ const traceArgs=process.env.NANO_TEST_NETWORK_TRACE==='1'?['--env','NANO_TEST_NE
 const id=Date.now().toString(36),local=`nano-qualification-mac-${id}`,remote=`nano-qualification-vps-${id}`;
 const partition=process.env.NANO_TEST_WAN_PARTITION==='1',asymmetric=process.env.NANO_TEST_WAN_ASYMMETRIC==='1',testNetwork=remote+'-net';
 if(partition&&asymmetric)throw Error('Select only one WAN fault');
+const rotation=process.env.NANO_TEST_WAN_ROTATION==='1';
+if(rotation&&(fork!=='capella'||!partition||!buildVolume))throw Error('Rotation requires Capella, the isolated partition and build volumes');
 const remoteRoot=`/home/${target.split('@')[0]}/nano-qualification-${id}`,ip=target.split('@')[1];
 const quote=s=>"'"+String(s).replaceAll("'","'\\''")+"'";
-const sh=async args=>(await exec('ssh',['-o','BatchMode=yes','-o','ConnectTimeout=8',target,args.map(quote).join(' ')],{timeout:30000,maxBuffer:8*1024*1024})).stdout;
-const docker=async(args,onRemote=false)=>onRemote?sh(['sudo','-n','docker',...args]):(await exec('docker',args,{timeout:30000,maxBuffer:8*1024*1024})).stdout;
+const sh=async (args,timeout=30000)=>(await exec('ssh',['-o','BatchMode=yes','-o','ConnectTimeout=8',target,args.map(quote).join(' ')],{timeout,maxBuffer:8*1024*1024})).stdout;
+const docker=async(args,onRemote=false,timeout=30000)=>onRemote?sh(['sudo','-n','docker',...args],timeout):(await exec('docker',args,{timeout,maxBuffer:8*1024*1024})).stdout;
 const captureLogs=async(name,onRemote)=>{
  const args=onRemote?['ssh','-o','BatchMode=yes',target,['sudo','-n','docker','logs',name].map(quote).join(' ')+' 2>&1']:['docker','logs',name];
  const result=await exec(args[0],args.slice(1),{timeout:30000,maxBuffer:8*1024*1024});
@@ -44,13 +47,15 @@ for(const onRemote of [false,true]){
  if(buildVolume){
   const built=(await docker(['run','--rm','--network','none',...artifactMount,image,'cat','/build/production-source-revision.txt'],onRemote)).trim();
   if(built!==revision)throw Error('Build volume source revision mismatch');
-  const hashes=await docker(['run','--rm','--network','none',...artifactMount,image,'sha256sum','/build/nano','/build/network/nano-p2p'],onRemote);
+  const hashes=await docker(['run','--rm','--network','none',...artifactMount,image,'sha256sum','/build/nano','/build/network/nano-p2p',...(rotation?['/build/nano-capella-rotation-audit']:[])],onRemote);
   artifacts.push({host:onRemote?'vps':'docker-mac',imageId:info.Id,revision:built,sha256:hashes});
  }
 }
 await mkdir(output);
 const log=async event=>appendFile(join(output,'run.jsonl'),JSON.stringify({time:Date.now(),...event})+'\n');
 let native,tunnel,localStarted=false,remoteStarted=false;
+let rotationTask,rotationStop=false,rotationFailure,rotationProof,rotationCutoff;
+const rotationCapture=rotation?createRotationCapture():null;
 const clockSamples=async phase=>{
  for(const [host,remoteClock] of [['vps',()=>sh(['date','+%s%3N'])],['docker-mac',()=>docker(['exec',local,'date','+%s%3N'])]]){
   try{await log({event:'clock-sample',phase,host,...await sampleClock(remoteClock)});}
@@ -69,8 +74,9 @@ const rpc=async(kind,method,params=[])=>{
 };
 try{
  const binary=join(repo,'build-release/nano'),p2p=join(repo,'build-network/nano-p2p');
- const harness={};for(const name of ['run.mjs','partition.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','prepare.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
- await log({event:'harness',partition,asymmetric,fork,buildVolume,artifacts,sha256:harness});
+ if(rotation)await log({event:'rotation-audit-binary',sha256:createHash('sha256').update(await readFile(join(repo,'build-release/nano-capella-rotation-audit'))).digest('hex')});
+ const harness={};for(const name of ['run.mjs','partition.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','prepare.mjs','rotation.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
+ await log({event:'harness',partition,asymmetric,rotation,fork,buildVolume,artifacts,sha256:harness});
  await log({event:'binaries',revision,nanoSha256:createHash('sha256').update(await readFile(binary)).digest('hex'),p2pSha256:createHash('sha256').update(await readFile(p2p)).digest('hex')});
  const assets=join(output,'assets'),prepared=join(output,'prepared');
  await exec(join(repo,`build-release/nano-${fork}-transition-tests`),[fork==='capella'?'--export-network':'--export-kurtosis',assets],{timeout:30000});
@@ -123,11 +129,62 @@ try{
  const genesis=await rpc('native','eth_getBlockByNumber',['0x0',false]);
  const observers={revision,pinnedStateRoots:fork==='capella',settleRecoveryGaps:partition||asymmetric,genesisHash:genesis.hash,nodes:[{name:'mac-native',kind:'native',url:'http://127.0.0.1:18545'},{name:'mac-docker',kind:'docker',container:local,url:'http://127.0.0.1:8545'},{name:'vps-docker',kind:'ssh-docker',ssh:target,container:remote,url:'http://127.0.0.1:8545'}]};
  await writeFile(join(output,'observers.json'),JSON.stringify(observers,null,2));
- const faultSample=()=>Promise.all(['native','local','remote'].map(async(kind,i)=>({name:observers.nodes[i].name,
-  peers:await rpc(kind,'net_peerCount'),checkpoint:(await request(kind,'/eth/v1/beacon/states/head/finality_checkpoints')).data.finalized})));
+ const previousFinality=new Map();
+ const faultSample=async()=>{
+  const rows=await Promise.all(['native','local','remote'].map(async(kind,i)=>({name:observers.nodes[i].name,
+   peers:await rpc(kind,'net_peerCount'),checkpoint:(await request(kind,'/eth/v1/beacon/states/head/finality_checkpoints')).data.finalized})));
+  for(const row of rows){
+   const epoch=BigInt(row.checkpoint.epoch),key=String(epoch),root=row.checkpoint.root;
+   if(observedRoots.has(key)&&observedRoots.get(key)!==root)throw Error('Conflicting finalized roots across campaign');
+   if(previousFinality.has(row.name)&&epoch<previousFinality.get(row.name))throw Error('Finality regressed across campaign');
+   observedRoots.set(key,root);previousFinality.set(row.name,epoch);
+  }
+  return rows;
+ };
+ const rotationHeads=()=>Promise.all(['native','local','remote'].map(async(kind,i)=>{
+  const h=(await request(kind,'/eth/v1/beacon/headers/head')).data;
+  return {name:rotationNodes[i],root:h.root,slot:Number(h.header.message.slot)};
+ }));
+ const captureRotation=async()=>{
+  const heads=await rotationHeads();
+  for(let i=0;i<heads.length;++i){
+   let tip=heads[i].root;
+   for(let depth=0;depth<32&&!rotationCapture.has(rotationNodes[i],tip);++depth){
+    const args=['-fsS','--max-time','5','-H','Accept: application/octet-stream',(i===0?'http://127.0.0.1:18545':'http://127.0.0.1:8545')+'/eth/v2/beacon/blocks/'+tip];
+    let command='curl',argv=args;
+    if(i===1){command='docker';argv=['exec',local,'curl',...args];}
+    if(i===2){command='ssh';argv=['-o','BatchMode=yes','-o','ConnectTimeout=8',target,['sudo','-n','docker','exec',remote,'curl',...args].map(quote).join(' ')];}
+    const wire=(await exec(command,argv,{encoding:'buffer',timeout:15000,maxBuffer:8*1024*1024})).stdout;
+    rotationCapture.add(rotationNodes[i],tip,wire);
+    if(wire.readBigUInt64LE(100)<=112n)break;
+    tip=rotationCapture.parent(tip);
+   }
+  }
+  await log({event:'rotation-capture',heads,...rotationCapture.stats()});return heads;
+ };
+ if(rotation){
+  await waitRotationWindow({sample:async()=>{await faultSample();return rotationHeads();},record:log});
+  // One writer; await shutdown before assembling proof. A failed capture remains
+  // fatal even if the network subsequently reaches finality.
+  rotationTask=(async()=>{while(!rotationStop){await captureRotation();await delay(3000);}})().catch(error=>{rotationFailure=error;});
+ }
+ const faultRecord=async event=>{
+  await log(event);
+  if(rotation&&event.event==='partition-disconnected'){
+   const heads=await rotationHeads();
+   await log({event:'rotation-fault-start',heads});
+   if(heads.some(h=>h.slot>=128))throw Error('Rotation boundary passed before effective partition');
+  }
+  if(rotation&&event.event==='partition-reconnected'){
+   const heads=await rotationHeads();
+   if(heads.some(h=>h.slot<128))throw Error('Partition did not cross the rotation on all nodes');
+   rotationCutoff=Math.max(...heads.map(h=>h.slot));
+   await log({event:'rotation-recovery-cutoff',heads,minimumInclusionSlot:rotationCutoff});
+  }
+ };
  await clockSamples('before-fault');
  await observeRecovery({record:log,partition:async()=>{
-  if(partition)await partitionRemote({docker:args=>docker(args,true),container:remote,network:testNetwork,revision,record:log,sample:faultSample});
+  if(partition)await partitionRemote({docker:args=>docker(args,true),container:remote,network:testNetwork,revision,record:faultRecord,sample:faultSample});
   if(asymmetric){
    const tc=await createRemoteTc({docker:args=>docker(args,true),sh,container:remote,network:testNetwork,revision});
    await asymmetricRemote({tc,sample:faultSample,record:log});
@@ -135,8 +192,20 @@ try{
  },
  observe:()=>exec(process.execPath,['tests/multihost/observe.mjs',join(output,'observers.json'),join(output,'observations')],{timeout:480000,maxBuffer:8*1024*1024})});
  await log({event:'finality-passed'});
+ if(rotation){
+  rotationStop=true;await rotationTask;if(rotationFailure)throw rotationFailure;
+  await captureRotation();
+  const checkpoints=await faultSample(),first=checkpoints[0].checkpoint;
+  if(!checkpoints.every(r=>r.checkpoint.root===first.root&&r.checkpoint.epoch===first.epoch))throw Error('No common rotation checkpoint at capture');
+  rotationProof={...rotationCapture.proof(first.root,rotationCutoff),owners:ownership(await json(join(prepared,'manifest.json')))};
+  await writeFile(join(output,'rotation-capture.json'),JSON.stringify(rotationProof));
+  await log({event:'rotation-captured-awaiting-offline-audit',finalized:first,minimumInclusionSlot:rotationCutoff});
+ }
 }catch(error){await log({event:'failed',message:error.stack});process.exitCode=1;}
 finally{
+ rotationStop=true;if(rotationTask)await rotationTask;
+ if(rotationCapture)await writeFile(join(output,'rotation-raw-captures.json'),JSON.stringify(rotationCapture.dump()));
+ if(rotationFailure){await log({event:'rotation-capture-failed',message:rotationFailure.stack});process.exitCode=1;}
  if(localStarted&&remoteStarted)await clockSamples('before-stop');
  if(native&&native.exitCode===null&&native.signalCode===null){native.kill('SIGTERM');for(let i=0;i<30&&native.exitCode===null&&native.signalCode===null;i++)await delay(1000);if(native.exitCode===null&&native.signalCode===null)native.kill('SIGKILL');}
  for(const [name,onRemote,started] of [[local,false,localStarted],[remote,true,remoteStarted]])if(started){
@@ -146,6 +215,32 @@ finally{
  // Retain stopped containers/volumes and native DBs for inspection; no pruning.
 }
 if(native&&localStarted&&remoteStarted){
- try{const validators=await validateStoppedValidators(output,fork);await log({event:process.exitCode?'validators-healthy-after-failed-campaign':'passed',validators});}
+ try{
+  const validators=await validateStoppedValidators(output,fork);
+  if(rotation&&!process.exitCode){
+   const expectedTokens={};
+   for(const [i,file] of ['native.log','docker-mac.log','vps.log'].entries()){
+    const receipts=(await readFile(join(output,file),'utf8')).split('\n').flatMap(line=>{try{const r=JSON.parse(line);return r.event==='capella-runtime-stopped'?[r]:[];}catch{return [];}});
+    if(receipts.length!==1)throw Error('Missing stopped rotation receipt');expectedTokens[rotationNodes[i]]=receipts[0].restart;
+   }
+   const proofFile=join(output,'rotation-proof.json');await writeFile(proofFile,JSON.stringify({...rotationProof,expectedTokens}));
+   // Public proof only. Executables were built from Git on each host.
+   await exec('scp',['-q',proofFile,`${target}:${remoteRoot}/rotation-proof.json`],{timeout:30000});
+   const audits=[];
+   const nd=join(output,'prepared/mac-native');
+   audits.push(JSON.parse((await exec(join(repo,'build-release/nano-capella-rotation-audit'),[join(nd,'genesis.json'),join(nd,'node.json'),join(nd,'data/chain'),proofFile,rotationNodes[0]],{timeout:120000,maxBuffer:1024*1024})).stdout));
+   await writeFile(join(output,'rotation-audits.json'),JSON.stringify(audits,null,2));
+   for(const [name,onRemote,index] of [[local,false,1],[remote,true,2]]){
+    const config=onRemote?remoteRoot+'/config':join(output,'prepared/mac-docker');
+    const proof=onRemote?remoteRoot+'/rotation-proof.json':proofFile;
+    audits.push(JSON.parse(await docker(['run','--rm','--network','none',...artifactMount,'--mount',`type=bind,src=${config},dst=/config,readonly`,'--mount',`type=bind,src=${proof},dst=/proof.json,readonly`,'--mount',`type=volume,src=${name}-data,dst=/var/lib/nano`,image,'/build/nano-capella-rotation-audit','/config/genesis.json','/config/node.json','/var/lib/nano/chain','/proof.json',rotationNodes[index]],onRemote,120000)));
+    await writeFile(join(output,'rotation-audits.json'),JSON.stringify(audits,null,2));
+   }
+   for(const audit of audits)if(audit.stateSha256!==audits[0].stateSha256||audit.finalizedRoot!==audits[0].finalizedRoot||audit.committeeHash!==audits[0].committeeHash)throw Error('Reopened rotation audits disagree');
+   await writeFile(join(output,'rotation-audits.json'),JSON.stringify(audits,null,2));
+   await log({event:'rotation-offline-audits-passed',audits});
+  }
+  await log({event:process.exitCode?'validators-healthy-after-failed-campaign':'passed',validators});
+ }
  catch(error){await log({event:'failed',message:error.stack});process.exitCode=1;}
 }
