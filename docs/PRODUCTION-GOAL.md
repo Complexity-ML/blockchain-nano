@@ -1,5 +1,37 @@
 # Objectif : Nano C++ de niveau production
 
+## Objectif prioritaire fixé le 29 septembre 2026
+
+**Livrer et démontrer le parcours complet de sortie d'un validateur sur le
+réseau Nano : soumission signée → propagation → inclusion → finalité → retrait.**
+Ce jalon fait partie de l'objectif production existant ; il ne remplace aucun
+critère EVM, consensus, exploitation, bridge ou lancement économique.
+
+État de départ vérifié : `c1606fd`. La sélection locale et la file durable des
+sorties sont implémentées et qualifiées sur des scénarios locaux. Le parcours
+RPC/P2P, la finalisation et le retrait complet ne sont pas encore démontrés.
+
+### Critères de clôture du jalon
+
+1. Soumission via RPC/service réseau avec authentification de chaîne, clé/index,
+   domaine BLS et éligibilité ; rejets invalides sans mutation et ressources bornées.
+2. Diffusion par le vrai P2P vers d'autres nœuds, inclusion automatique,
+   idempotence et reprise des envois après déconnexion.
+3. Conservation de la demande avant finalité, réinclusion si son bloc est
+   réorganisé, absence d'application au mauvais validateur après réindexation.
+4. Finalité commune de la sortie ; retrait exact vers les credentials autorisés,
+   conservation comptable, aucun double paiement ni signature après inéligibilité.
+5. Reprise cohérente après arrêt brutal ou erreur d'écriture, avec vérification
+   du registre, de la file et de l'état EVM ; élagage sans perte d'opération utile.
+6. Preuve de bout en bout Mac/VPS avec sources et binaires identifiés, puis
+   régression pertinente sur cette même version. Conserver les échecs initiaux,
+   résultats, limites et commandes de reproduction dans la matrice EIP.
+
+Les sous-étapes ne valent pas clôture du jalon. Aucun délai ou pourcentage
+arbitraire annoncé, aucun fonds réel ni déploiement public autorisé par ce jalon.
+La qualification globale de production reste nécessaire après sa réussite.
+
+
 ## Mise à jour de l'objectif — 27 septembre 2026
 
 **Statut : actif, production non démontrée.** Le périmètre complet de l'objectif
