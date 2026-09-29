@@ -1,5 +1,18 @@
 # Objectif candidat production — état de départ audité
 
+## WAN asymétrique : défaut testé, stabilité encore ouverte — 29 septembre 2026
+
+La [nouvelle campagne réelle Mac/Docker/VPS](../capella-wan-asymmetric-20260929/README.md)
+applique 500 ms de retard sortant au seul conteneur VPS. Les trois nœuds
+progressent de la finalité 2 à 4 en 159,156 s sous défaut (2 092 paquets mesurés).
+Après retrait, le moniteur échoue sur le saut 4 → 6 avant ses trois avancées
+consécutives : **campagne globale en échec**, malgré les trois validateurs sains.
+Les traces internes confirment les observations 4 aux slots 56–71 puis 6 aux
+slots 72–73 ; cause à reconstruire depuis justification/participation, aucun
+seuil relâché. 15 nouveaux cas de sécurité du banc, 41 cas au total, passent.
+Rotation WAN, charge, exploitation, bridge et production restent ouverts ;
+les preuves de rotation locale existantes sont référencées dans l'audit candidat.
+
 **Mise à jour : la première campagne Capella WAN est réussie.**
 [Preuves et limites](../capella-wan-partition-20260929/README.md) : reprise
 en 136,691 s, progression 7→10 et trois validateurs sains. Les sections
@@ -63,3 +76,17 @@ Les scripts exacts exécutés sont copiés dans `executed-harness` du run.
 
 Aucune modification du cœur depuis les preuves de sorties. Le build ARM64
 et la vérification incrémentale x86-64 sont terminés ; aucune nouvelle image.
+
+## Audit des acquis de rotation — 29 septembre
+
+La rotation n'est pas un chantier vierge : les preuves existantes couvrent
+[216 blocs et trois frontières avec reprise](../capella-sync-rotation-20260927/README.md),
+[deux vrais pairs locaux et huit agrégats finalisés authentifiés](../capella-distributed-sync-rotation-20260927/README.md),
+puis [une interruption de transport de 96 s traversant le slot 128](../capella-sync-rotation-outage-20260927/README.md).
+Cette dernière atteint la finalité 18 et vérifie cinq agrégats avec positions
+signées par l'autre pair après récupération. Ces résultats restent historiques,
+avec leurs sources et limites ; ils ne justifient ni un rejeu aveugle ni une
+clôture WAN. La tranche encore manquante est la rotation authentifiée entre
+hôtes distincts, avec défaut réseau traversant la frontière et contrôle des
+agrégats depuis l'état finalisé rouvert. La campagne WAN courte actuelle ne
+prétend pas couvrir cette frontière.

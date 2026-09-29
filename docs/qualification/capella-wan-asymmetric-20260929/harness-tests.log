@@ -1,0 +1,74 @@
+UpdateCTestConfiguration  from :/Users/boris/Dev/blockchain-nano/build-release/DartConfiguration.tcl
+Test project /Users/boris/Dev/blockchain-nano/build-release
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 304
+    Start 304: consensus_multihost_fault_harness
+
+304: Test command: /opt/homebrew/bin/node "--test" "/Users/boris/Dev/blockchain-nano/tests/multihost/asymmetric.test.mjs" "/Users/boris/Dev/blockchain-nano/tests/multihost/partition.test.mjs" "/Users/boris/Dev/blockchain-nano/tests/multihost/recovery-observation.test.mjs" "/Users/boris/Dev/blockchain-nano/tests/multihost/validator-gate.test.mjs"
+304: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+304: Test timeout computed to be: 15
+304: ✔ delay carries packets and advances common finality before restoration (1.02975ms)
+304: ✔ lost-response fails and removes the delay (0.251833ms)
+304: ✔ rpc-fails fails and removes the delay (0.103ms)
+304: ✔ regression fails and removes the delay (0.095333ms)
+304: ✔ conflict fails and removes the delay (0.439333ms)
+304: ✔ stalled fails and removes the delay (0.145791ms)
+304: ✔ no-packets fails and removes the delay (0.258875ms)
+304: ✔ existing delay is untouched (0.112417ms)
+304: ✔ cleanup failure cannot pass (0.227209ms)
+304: ✔ remote tc command only enters validated container namespace (0.849583ms)
+304: ✔ unsafe target host refuses tc (0.164167ms)
+304: ✔ unsafe target label refuses tc (0.064ms)
+304: ✔ unsafe target paused refuses tc (0.034833ms)
+304: ✔ unsafe target extra-network refuses tc (0.047792ms)
+304: ✔ container restart cannot redirect subsequent tc calls (0.071792ms)
+304: ✔ cut leaves node queryable, restores original IP, requires later common finality (1.0815ms)
+304: ✔ lost-response rejects and restores (0.4775ms)
+304: ✔ rpc-fails rejects and restores (0.198292ms)
+304: ✔ conflict rejects and restores (0.128666ms)
+304: ✔ no-recovery rejects and restores (0.587375ms)
+304: ✔ restoration failure cannot become success (0.136125ms)
+304: ✔ wrong provenance refuses mutation (0.079167ms)
+304: ✔ peer isolation must be observed, not inferred from Docker success (0.157541ms)
+304: ✔ finality regression after reconnection is rejected (0.191458ms)
+304: ✔ late recovery reuses history without another network cut (0.188167ms)
+304: ✔ late conflict remains fatal (0.200208ms)
+304: ✔ late regression remains fatal (0.136541ms)
+304: ✔ late recovery is bounded too (0.118709ms)
+304: ✔ normal recovery completes its observation (1.089875ms)
+304: ✔ late stable finality preserves original deadline failure (0.3395ms)
+304: ✔ restoration, RPC and safety errors never extend the campaign (0.212167ms)
+304: ✔ late observer failure remains a failure and retains both diagnostics (0.17325ms)
+304: ✔ late recovery must complete before stability observation (0.179417ms)
+304: ✔ missing late recovery observer cannot skip the recovery stage (0.10375ms)
+304: ✔ all validators healthy (5.397708ms)
+304: ✔ missing terminal status (2.046916ms)
+304: ✔ ambiguous repeated status (1.707875ms)
+304: ✔ follower without local votes (1.554666ms)
+304: ✔ validator failed but follower finalized (1.630416ms)
+304: ✔ missing health fields (1.370458ms)
+304: ✔ Capella status is required when Capella is selected (1.560334ms)
+304: ℹ tests 41
+304: ℹ suites 0
+304: ℹ pass 41
+304: ℹ fail 0
+304: ℹ cancelled 0
+304: ℹ skipped 0
+304: ℹ todo 0
+304: ℹ duration_ms 77.641375
+1/1 Test #304: consensus_multihost_fault_harness ...   Passed    0.13 sec
+
+The following tests passed:
+	consensus_multihost_fault_harness
+
+100% tests passed out of 1
+
+Label Time Summary:
+qualification_consensus_harness    =   0.13 sec*proc (1 test)
+
+Total Test time (real) =   0.14 sec

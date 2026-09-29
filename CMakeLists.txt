@@ -1334,6 +1334,12 @@ if(NANO_NETWORK_EXECUTABLE)
  set_tests_properties(consensus_bellatrix_managed_runtime PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_runtime")
  find_program(NANO_RECOVERY_NODEJS_EXECUTABLE NAMES node)
  if(NANO_RECOVERY_NODEJS_EXECUTABLE)
+  add_test(NAME consensus_multihost_fault_harness COMMAND ${NANO_RECOVERY_NODEJS_EXECUTABLE} --test
+   ${CMAKE_CURRENT_SOURCE_DIR}/tests/multihost/asymmetric.test.mjs
+   ${CMAKE_CURRENT_SOURCE_DIR}/tests/multihost/partition.test.mjs
+   ${CMAKE_CURRENT_SOURCE_DIR}/tests/multihost/recovery-observation.test.mjs
+   ${CMAKE_CURRENT_SOURCE_DIR}/tests/multihost/validator-gate.test.mjs)
+  set_tests_properties(consensus_multihost_fault_harness PROPERTIES TIMEOUT 15 LABELS "qualification_consensus_harness")
   foreach(scenario IN ITEMS partition crash)
    if(scenario STREQUAL "partition")
     set(recovery_mode --partition-recovery)

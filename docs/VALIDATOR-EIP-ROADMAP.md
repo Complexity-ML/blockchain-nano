@@ -1,5 +1,18 @@
 # EIP et consensus : périmètre demandé pour Nano
 
+## WAN asymétrique : défaut testé, stabilité encore ouverte — 29 septembre 2026
+
+La [nouvelle campagne réelle Mac/Docker/VPS](qualification/capella-wan-asymmetric-20260929/README.md)
+applique 500 ms de retard sortant au seul conteneur VPS. Les trois nœuds
+progressent de la finalité 2 à 4 en 159,156 s sous défaut (2 092 paquets mesurés).
+Après retrait, le moniteur échoue sur le saut 4 → 6 avant ses trois avancées
+consécutives : **campagne globale en échec**, malgré les trois validateurs sains.
+Les traces internes confirment les observations 4 aux slots 56–71 puis 6 aux
+slots 72–73 ; cause à reconstruire depuis justification/participation, aucun
+seuil relâché. 15 nouveaux cas de sécurité du banc, 41 cas au total, passent.
+Rotation WAN, charge, exploitation, bridge et production restent ouverts ;
+les preuves de rotation locale existantes sont référencées dans l'audit candidat.
+
 ## Nouvel objectif : candidat production — 29 septembre 2026
 
 L'[audit de départ](qualification/production-candidate-20260929/README.md)
