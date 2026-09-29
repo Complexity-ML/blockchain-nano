@@ -1,0 +1,54 @@
+Internal ctest changing into directory: /build
+UpdateCTestConfiguration  from :/build/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/build/DartConfiguration.tcl
+Test project /build
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 367
+    Start 367: consensus_capella_new_validator_slashing
+
+367: Test command: /build/nano-capella-transition-tests "--new-validator-slashing"
+367: Working Directory: /build
+367: Test timeout computed to be: 600
+367: {"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+367: {"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+367: {"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+367: {"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+367: {"finalizedEpoch":3,"progressSlot":40,"signedVotes":264}
+367: {"finalizedEpoch":3,"progressSlot":41,"signedVotes":272}
+367: {"depositIndex":0,"depositProgressSlot":48,"finalizedEpoch":4}
+367: {"depositIndex":0,"depositProgressSlot":56,"finalizedEpoch":5}
+367: {"depositIndex":0,"depositProgressSlot":64,"finalizedEpoch":6}
+367: {"depositIndex":0,"depositProgressSlot":72,"finalizedEpoch":7}
+367: {"depositIndex":1,"depositProgressSlot":80,"finalizedEpoch":8}
+367: {"bothOwnersReopened":true,"finalizedEpoch":9,"justifiedEpoch":10,"scenario":"new-validator-proof-admission","slot":88,"unknownFinalizedMember":true}
+367: {"depositIndex":1,"depositProgressSlot":88,"finalizedEpoch":9}
+367: {"depositIndex":1,"depositProgressSlot":96,"finalizedEpoch":10}
+367: {"depositIndex":1,"depositProgressSlot":104,"finalizedEpoch":11}
+367: {"depositIndex":1,"depositProgressSlot":112,"finalizedEpoch":12}
+367: {"depositIndex":1,"depositProgressSlot":120,"finalizedEpoch":13}
+367: {"depositIndex":1,"depositProgressSlot":128,"finalizedEpoch":14}
+367: {"depositIndex":1,"depositProgressSlot":136,"finalizedEpoch":15}
+367: {"depositIndex":1,"depositProgressSlot":144,"finalizedEpoch":16}
+367: {"depositIndex":1,"depositProgressSlot":152,"finalizedEpoch":17}
+367: {"depositIndex":1,"depositProgressSlot":160,"finalizedEpoch":18}
+367: {"depositIndex":1,"depositProgressSlot":161,"finalizedEpoch":18}
+367: {"finalizedSanctionRetired":true,"networkTransport":false,"proofReopenedBeforeFinalizedRegistration":true,"scenario":"capella-new-validator-slashing","skippedOffenderProposals":1,"unknownFinalityAdvances":0,"unknownFinalizedObservations":32}
+367: {"activationEpoch":17,"blockReplayIdempotent":true,"bothOwnersReopened":true,"consumedAtSlot":80,"consumptionTransitions":1,"continuedThroughSlot":161,"existingValidatorTopup":false,"invalidSignatureConsumedWithoutAdmission":false,"newValidatorVotes":0,"scenario":"capella-native-deposit-activation","votingPeriodSlots":32}
+367: {"afterBlocks":18,"afterSnapshotBytes":1191797,"automaticPruning":false,"beforeBlocks":41,"beforeSnapshotBytes":2528249,"durablePruningRestart":true,"historyPreserved":true,"nativeCheckpointV3":true,"networkAnchorPreserved":true,"nextBlockEqual":true,"oldSlashingPreservedAndApplied":false,"pendingBlsReanchoredAndIncluded":false,"scenario":"capella-pruning-primitive"}
+367: {"blocks":40,"disjointSyncMerging":false,"executionOwner":true,"finalizedEpoch":3,"independentStores":2,"individualSyncMessages":false,"justifiedEpoch":4,"localSyncAggregates":false,"localSyncSigning":false,"networkActivated":false,"networkTransport":false,"participationPercent":100,"scenario":"capella-local-assembly-finality","signingJournalsReopened":64,"storeReopens":2,"syncCatalogExport":false,"syncPrecollection":false,"syncWireWorker":false,"votes":272}
+1/1 Test #367: consensus_capella_new_validator_slashing ...   Passed  151.55 sec
+
+The following tests passed:
+	consensus_capella_new_validator_slashing
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+qualification_consensus_recovery    = 151.55 sec*proc (1 test)
+
+Total Test time (real) = 151.56 sec

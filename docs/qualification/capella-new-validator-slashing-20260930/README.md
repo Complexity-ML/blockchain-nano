@@ -1,6 +1,6 @@
 # Slashing proof across new validator registration — 2026-09-30
 
-New `consensus_capella_new_validator_slashing` test; native Mac PASS in 162.25 s. Parent revision `e365fbac01e230539ac93c19fc5043473f210057`. Runtime sources unchanged from `940736fd2078eb058289434cfefa2c2147df690d`. Linux qualification and the shared deposit-activation regression are pending.
+New `consensus_capella_new_validator_slashing` test; native Mac PASS in 162.25 s. Parent revision `e365fbac01e230539ac93c19fc5043473f210057`. Runtime sources unchanged from `940736fd2078eb058289434cfefa2c2147df690d`. Linux ARM64 PASS in 151.55 s; VPS x86-64 PASS in 532.84 s. Both containers exited 0 without OOM. The unchanged deposit-activation path passes its native regression in 160.07 s. Test revision: `fd8d02e6aae6808b59bc686ddf6cb9cf2138af30`.
 
 ## Actual sequence
 
@@ -13,3 +13,5 @@ The normal native lifecycle continues: activation epoch 17, automatic proof incl
 ## Limits
 
 `unknownFinalityAdvances` is **0**: the finalized root does not advance while membership is absent after proof admission in this run. This proves admission and durable retention across that registry gap, not execution of the missing-member cleanup branch during a different finalized-root advancement. That exact branch-coverage gap remains explicit. No WAN transport or physical power-loss test is implied. The earlier WAL campaign and reorg campaign remain separate evidence. No additional EVM fork or overall production readiness is claimed.
+
+Archived logs were checked for matching admission/registration epochs, 32 missing-finalized-member observations, exact scope limits, activation epoch 17 and final epoch 18. See `verified-results.json` and artifact hashes in `manifest.json`. Existing images/volumes were reused.

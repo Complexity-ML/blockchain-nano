@@ -3,11 +3,12 @@
 ## Nouveau validateur : preuve conservée avant enregistrement finalisé — 30 septembre 2026
 
 Le [nouveau parcours dépôt/sanction](qualification/capella-new-validator-slashing-20260930/README.md)
-passe sur Mac : dépôt consommé au slot 80, preuve admise au slot 88 quand le
+passe sur Mac (162,25 s), ARM64 (151,55 s) et VPS (532,84 s) : dépôt consommé
+au slot 80, preuve admise au slot 88 quand le
 registre justifié connaît le validateur mais pas le registre finalisé, puis
 réouverture des deux bases avec preuve intacte. Activation à l’époque 17,
-sanction et retrait après finalisation ; époque finale 18. Linux et régression
-en cours. Aucun avancement de finalité pendant l’absence du membre n’est observé
+sanction et retrait après finalisation ; époque finale 18. Régression native du
+dépôt/activation passée (160,07 s). Aucun avancement de finalité pendant l’absence du membre n’est observé
 ici : cette branche précise du nettoyage reste non couverte. Production globale ouverte.
 
 ## Sanctions multi-validateurs et pannes d’écriture — 30 septembre 2026
