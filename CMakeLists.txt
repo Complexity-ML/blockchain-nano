@@ -1728,3 +1728,6 @@ set_tests_properties(consensus_capella_exit_retirement PROPERTIES TIMEOUT 300 LA
 
 add_test(NAME consensus_capella_exit_reindex COMMAND nano-capella-transition-tests --exit-reindex)
 set_tests_properties(consensus_capella_exit_reindex PROPERTIES TIMEOUT 480 LABELS "qualification_consensus_recovery")
+
+add_test(NAME consensus_capella_exit_pending_pruning COMMAND nano-capella-transition-tests --exit-pending-pruning)
+set_tests_properties(consensus_capella_exit_pending_pruning PROPERTIES TIMEOUT 300 LABELS "qualification_consensus_recovery")

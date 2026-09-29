@@ -1,5 +1,24 @@
 # Feuille de route EIP — état réel de Nano
 
+## Sortie entre Mac et VPS qualifiée — 29 septembre 2026
+
+Le [scénario Mac/VPS](qualification/capella-exit-multihost-20260929/README.md)
+passe avec 32 validateurs par hôte et le vrai cpp-libp2p dans un tunnel SSH
+privé : soumission sur le VPS, propagation, inclusion, SIGKILL avant finalité,
+reconnexion et retrait finalisé identique au bloc 55 (époque 8). Un seul paiement
+du capital ; comptabilité exacte comparée sur les deux RPC. La réouverture du
+Mac confirme l’archive retirée, la cohérence EVM/consensus et l’absence de
+proposition/attestation après l’époque de sortie. Les deux échecs du banc sont
+conservés. La réouverture hors ligne du propriétaire VPS reste ouverte.
+
+Le [nouveau cas d’élagage d’une sortie jamais incluse](qualification/capella-exit-pending-pruning-20260929/README.md)
+passe (32,56 s), avec réancrage, réouverture, doublon idempotent et inclusion
+automatique. Les régressions élagage BLS/retrait d’archive passent également
+(2/2, 99,92 s). Les points de coupure précis au paiement/finalisation/retrait
+d’archive et la consolidation finale du jalon restent à qualifier.
+**Le jalon complet et la production ne sont pas déclarés terminés.**
+
+
 ## Qualification réseau des sorties — locale (29 septembre 2026)
 
 Le scénario RPC/libp2p avec deux vrais nœuds locaux passe : retrait complet,
@@ -10,7 +29,7 @@ entre hôtes indépendants. Les [quatre cas WAL de l’admission](qualification/
 La [campagne WAL Linux/VPS](qualification/vps-exit-wal-20260929/README.md)
 passe sur `ebe1d16` (2/2, 26,48 s). Le [contrôle direct de l'archive](qualification/capella-exit-retirement-20260929/README.md)
 passe sur Mac : conservation avant finalité, retrait après finalité, puis
-élagage et réouvertures (64,81 s). Le [cas après réindexation](qualification/capella-exit-reindex-20260929/README.md) passe également (174,47 s) : ancien index refusé, bon index admis et inclus, autre validateur inchangé. Le bout en bout Mac/VPS reste ouvert.
+élagage et réouvertures (64,81 s). Le [cas après réindexation](qualification/capella-exit-reindex-20260929/README.md) passe également (174,47 s) : ancien index refusé, bon index admis et inclus, autre validateur inchangé. La preuve Mac/VPS acquise ensuite est décrite ci-dessus.
 Voir les [preuves, échecs et limites](qualification/capella-exit-network-20260929/README.md).
 La production et le jalon complet restent non démontrés.
 
