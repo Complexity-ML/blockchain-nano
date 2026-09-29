@@ -41,9 +41,11 @@ dont quatre nouveaux cas de concurrence/restauration. Un vérificateur des preuv
 de la campagne ajoute 15 contrôles contre les soumissions hors coupure, preuves
 manquantes, état divergent, reprise tardive et identités de validateurs dupliquées.
 
-Étape suivante : qualifier le diagnostic natif, construire les mêmes sources
-sur les deux Linux avec les images/volumes existants, puis rejouer le scénario
-borné pour établir la cause. Ne pas remplacer le résultat initial par ce rejeu.
+Les mêmes tests passent sur ARM64 (2,96 s et 24,46 s) et VPS x86-64
+(12,61 s et 94,80 s), à la révision `406227f` (`diagnostic-linux/`). Les deux
+conteneurs de build sortent à 0 sans OOM. Le rejeu borné est lancé dans
+`/tmp/nano-partition-load-20260930-b` ; il est en cours et ne remplace pas
+l’échec initial. La cause reste non établie.
 
 ## Preuves
 

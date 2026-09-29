@@ -8,6 +8,8 @@ unavailable; reopen required », sortie 1 sans OOM. La coupure a été restauré
 après 49,570 s, avant les 96 s prévues. La cause initiale n'était pas conservée ;
 le diagnostic est renforcé sans assouplir les règles. Aucun succès de charge sous
 partition n'est revendiqué. Les preuves et bases initiales restent conservées.
+Le diagnostic passe les tests ciblés sur Mac, Linux ARM64 et VPS x86-64 ;
+le rejeu sous partition avec `406227f` est en cours, sans résultat acquis.
 
 ## Charge applicative WAN bornée — qualifiée le 30 septembre 2026
 
