@@ -1,0 +1,68 @@
+{
+  "scope": "Sampled observations of this campaign only. Peaks between samples are unknown. No throughput, disk-occupancy, endurance or production-readiness claim.",
+  "collectionStartDelayMs": 119706,
+  "firstTimeMs": 1790716159703,
+  "lastTimeMs": 1790717144192,
+  "records": 47,
+  "nodes": {
+    "mac-native": {
+      "samples": 46,
+      "unavailable": [
+        {
+          "timeMs": 1790717144192,
+          "error": "",
+          "exitCode": 1
+        }
+      ],
+      "identity": "4437",
+      "firstTimeMs": 1790716159703,
+      "lastTimeMs": 1790717123801,
+      "maximumSampleGapMs": 21780,
+      "maxObservedMemoryBytes": 483459072,
+      "maxObservedCpuPercent": 77.9,
+      "measurement": "ps RSS and %CPU for the main process only, excluding its P2P child; sampling differs from Docker"
+    },
+    "mac-docker": {
+      "samples": 46,
+      "unavailable": [
+        {
+          "timeMs": 1790717144192,
+          "error": "Docker stats inactive or unavailable (zero limit)"
+        }
+      ],
+      "identity": "c3df3050718b",
+      "firstTimeMs": 1790716159703,
+      "lastTimeMs": 1790717123801,
+      "maximumSampleGapMs": 21780,
+      "maxObservedMemoryBytes": 433691034,
+      "maxObservedCpuPercent": 54.78,
+      "memoryLimitBytes": 3221225472,
+      "lastBlockIoBytes": {
+        "read": 1420000,
+        "written": 4700000000
+      },
+      "measurement": "docker stats memory accounting and sampled CPU; BlockIO is cumulative I/O, not disk usage"
+    },
+    "vps-docker": {
+      "samples": 46,
+      "unavailable": [
+        {
+          "timeMs": 1790717144192,
+          "error": "Docker stats inactive or unavailable (zero limit)"
+        }
+      ],
+      "identity": "70e8942ab76d",
+      "firstTimeMs": 1790716159703,
+      "lastTimeMs": 1790717123801,
+      "maximumSampleGapMs": 21780,
+      "maxObservedMemoryBytes": 382101094,
+      "maxObservedCpuPercent": 104.97,
+      "memoryLimitBytes": 3221225472,
+      "lastBlockIoBytes": {
+        "read": 0,
+        "written": 4720000000
+      },
+      "measurement": "docker stats memory accounting and sampled CPU; BlockIO is cumulative I/O, not disk usage"
+    }
+  }
+}

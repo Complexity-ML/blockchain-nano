@@ -1,5 +1,18 @@
 # Objectif : Nano C++ de niveau production
 
+## Rotation WAN qualifiée avec audit corrigé — 29 septembre 2026
+
+La [campagne de rotation](qualification/capella-wan-rotation-20260929/README.md)
+traverse le slot 128 sous partition : coupure 97,460 s, reprise commune en
+131,132 s puis finalité **18 → 19 → 20 → 21**. Les trois bases rouvertes donnent
+le même état et le nouveau comité ; **19 blocs finalisés** portent des agrégats
+BLS valides avec contributions distantes. L'échec du premier auditeur, qui
+refusait les agrégats vides canoniques, reste conservé ; son correctif est validé
+sur les mêmes données Mac/ARM64/VPS, sans modifier le cœur ni rejouer le réseau.
+Ce scénario borné ferme l'écart de rotation WAN correspondant. Ressources
+échantillonnées et limites sont documentées ; sanctions/cycle complet, charge,
+exploitation, EVM/RPC, bridge et revue indépendante restent ouverts.
+
 ## Rotation WAN : nouveau banc préparé — 29 septembre 2026
 
 Le [collecteur et l’auditeur de rotation](qualification/capella-wan-rotation-harness-20260929/README.md)

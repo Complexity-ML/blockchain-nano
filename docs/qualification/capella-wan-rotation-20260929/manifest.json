@@ -1,0 +1,89 @@
+{
+  "scope": "Three instances on two hosts; 64 public synthetic validator keys; Capella rotation across a 96-second partition; no application load.",
+  "originalDriverExitCode": 1,
+  "originalFailure": {
+    "time": 1790717141222,
+    "event": "failed",
+    "message": "Error: Command failed: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-rotation-audit /tmp/nano-production-wan-rotation-20260929/prepared/mac-native/genesis.json /tmp/nano-production-wan-rotation-20260929/prepared/mac-native/node.json /tmp/nano-production-wan-rotation-20260929/prepared/mac-native/data/chain /tmp/nano-production-wan-rotation-20260929/rotation-proof.json mac-native\nsync aggregate signature invalid\n\n    at genericNodeError (node:internal/errors:998:15)\n    at wrappedFn (node:internal/errors:543:14)\n    at ChildProcess.exithandler (node:child_process:417:12)\n    at ChildProcess.emit (node:events:509:20)\n    at maybeClose (node:internal/child_process:1108:16)\n    at ChildProcess._handle.onexit (node:internal/child_process:305:5)"
+  },
+  "networkStability": {
+    "epochs": 3,
+    "firstEpoch": "18",
+    "lastEpoch": "21",
+    "elapsedMs": 143855,
+    "nodes": [
+      "mac-native",
+      "mac-docker",
+      "vps-docker"
+    ],
+    "revision": "940736fd2078eb058289434cfefa2c2147df690d"
+  },
+  "correctedOfflineAudits": "rotation-audits-corrected.json",
+  "status": "BOUNDED_SCENARIO_QUALIFIED_AFTER_OFFLINE_AUDITOR_CORRECTION",
+  "coreRevision": "940736fd2078eb058289434cfefa2c2147df690d",
+  "executedHarnessRevision": "830f0eca871004fd9f2e69d089a557d926134ec7",
+  "correctedAuditorRevision": "bb3c9b7d46c7cd8f6fb4b844b30e5ef0052ca05a",
+  "cutElapsedMs": 97460,
+  "recoveryElapsedMs": 131132,
+  "cutoff": {
+    "time": 1790716855928,
+    "event": "rotation-recovery-cutoff",
+    "heads": [
+      {
+        "name": "mac-native",
+        "root": "0x18a86270f394f24dfc4672682602fd5ee929ab0deabfa6fd7dc8e75734417908",
+        "slot": 137
+      },
+      {
+        "name": "mac-docker",
+        "root": "0xd18d40787994c3e61287779790a89a47476f95a499b32e9f3957a7f2f02e5cb9",
+        "slot": 136
+      },
+      {
+        "name": "vps-docker",
+        "root": "0x8ca06fdbd77552cac7564ae4a1b8866c9e8551cce67483dc84a9f292528ef8b6",
+        "slot": 136
+      }
+    ],
+    "minimumInclusionSlot": 137
+  },
+  "runtimeBinaries": {
+    "time": 1790716034348,
+    "event": "binaries",
+    "revision": "940736fd2078eb058289434cfefa2c2147df690d",
+    "nanoSha256": "b2eb7fc65d79eaf16e46b6447349f11c3d47666958241ae734d7700233da8763",
+    "p2pSha256": "41137db430a83881f297e2fd3d3b140eee20ababb3c2c9fae7b921e10b3638a8"
+  },
+  "dockerBinaries": [
+    {
+      "host": "docker-mac",
+      "imageId": "sha256:6116669430b02b7e8012af8c8bd515a5a7dcd1dd2034649f9b45ae5b9e70a3a4",
+      "revision": "940736fd2078eb058289434cfefa2c2147df690d",
+      "sha256": "2b59be8887ad32c947cc11f497d6adcef84d1bea5f45e5247dd20d59134e1a7b  /build/nano\n36d746690eb35e5a92b21d3cd5b04603a09693bae42a9a50cd45921e27cf88d5  /build/network/nano-p2p\n888fd328b77eb26b7199853a2b2f345d6e0cdeaf5ebd54759e2b5e8d08bb6404  /build/nano-capella-rotation-audit\n"
+    },
+    {
+      "host": "vps",
+      "imageId": "sha256:0fa8a608c09ff5ad1e804afc160c04d4964898bed149fcb47a2b587a0a9c194c",
+      "revision": "940736fd2078eb058289434cfefa2c2147df690d",
+      "sha256": "bc03f9181cab4704c5e4513bc2aa77d0b69c29fb2251d50a11f015806b93196b  /build/nano\n094b0c32e82cad52c8964534341bd792fba56824a105ec71cccad88f304a15a5  /build/network/nano-p2p\nfa920ccf073b9f33cd059d76b5f37177aa3aeea960e7ae1b1dd7b2fcf1f486e5  /build/nano-capella-rotation-audit\n"
+    }
+  ],
+  "stoppedValidators": [
+    {
+      "file": "native.log",
+      "healthy": true,
+      "attestationsAdmitted": 486
+    },
+    {
+      "file": "docker-mac.log",
+      "healthy": true,
+      "attestationsAdmitted": 466
+    },
+    {
+      "file": "vps.log",
+      "healthy": true,
+      "attestationsAdmitted": 468
+    }
+  ],
+  "noCoreChanges": true
+}
