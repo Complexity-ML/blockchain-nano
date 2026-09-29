@@ -602,3 +602,12 @@ réouverture et deux reorgs rendant la sortie applicable puis non applicable.
 le réancrage à l'élagage sont codés mais restent à qualifier ; RPC/P2P, pannes
 WAL, réindexation de dépôts et retrait complet restent ouverts.
 [Preuves et limites](qualification/capella-queued-exits-20260927/README.md).
+
+## 2026-09-29 — Sorties Capella raccordées au service et au relais
+
+Admission des sorties par le worker et les reçus RPC privés, catalogue/export
+bornés, vérification d'empreinte et rotation de diffusion du daemon P2P ajoutés.
+3 tests cœur passent en 14,92 s ; 35 scénarios de relais simulé passent en 0,45 s.
+Le daemon compile. La propagation réelle Mac/VPS, HTTP, le retrait final et les
+pannes du parcours complet restent à démontrer ; aucun objectif clôturé.
+[Preuves et limites](qualification/capella-exit-wire-20260929/README.md).

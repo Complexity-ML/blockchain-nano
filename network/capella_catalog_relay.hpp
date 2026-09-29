@@ -75,10 +75,10 @@ private:
    if(!value.is_object()||value.value("root",Json())!=id){self.failure("export-invalid-root");return;}
    if(value.value("available",Json())!=true){self.failure("export-unavailable");return;}
    auto frame=value.at("envelope");const auto wire=frame.dump();auto message=self.ingress_->decode(wire);
-   const auto expected=self.kind_=="sync_committee_message"?AltairWireKind::sync_committee_message:self.kind_=="block"?AltairWireKind::block:self.kind_=="attestation"?AltairWireKind::attestation:self.kind_=="bls_to_execution_change"?AltairWireKind::bls_to_execution_change:AltairWireKind::attester_slashing;
+   const auto expected=self.kind_=="sync_committee_message"?AltairWireKind::sync_committee_message:self.kind_=="block"?AltairWireKind::block:self.kind_=="attestation"?AltairWireKind::attestation:self.kind_=="voluntary_exit"?AltairWireKind::voluntary_exit:self.kind_=="bls_to_execution_change"?AltairWireKind::bls_to_execution_change:AltairWireKind::attester_slashing;
    if(!message||message->kind!=expected){self.failure("invalid-envelope");return;}
    if(expected==AltairWireKind::sync_committee_message){uint64_t slot=0;for(size_t i=0;i<8;++i)slot|=uint64_t(message->ssz[i])<<(8*i);self.sync_slot_=slot;}
-   if(expected==AltairWireKind::bls_to_execution_change||expected==AltairWireKind::sync_committee_message){unsigned char digest[32];SHA256(message->ssz.data(),message->ssz.size(),digest);std::string actual="0x";for(auto b:digest){actual+="0123456789abcdef"[b>>4];actual+="0123456789abcdef"[b&15];}if(actual!=id){self.failure("digest-mismatch");return;}}
+   if(expected==AltairWireKind::voluntary_exit||expected==AltairWireKind::bls_to_execution_change||expected==AltairWireKind::sync_committee_message){unsigned char digest[32];SHA256(message->ssz.data(),message->ssz.size(),digest);std::string actual="0x";for(auto b:digest){actual+="0123456789abcdef"[b>>4];actual+="0123456789abcdef"[b&15];}if(actual!=id){self.failure("digest-mismatch");return;}}
    self.stage_="delivery";
    auto reply=self.callback([](auto& s,Json ack){
     if(!ack.is_object()||ack.size()!=1||ack.value("accepted",Json())!=true){s.failure(ack.is_object()&&ack.size()==1&&ack.value("accepted",Json())==false?"admission-rejected":"delivery-unconfirmed");return;}
@@ -89,7 +89,7 @@ private:
  }
 public:
  CapellaCatalogRelay(asio::io_context& io,Call core,Deliver deliver,std::string token,std::string kind,std::shared_ptr<AltairMessageIngress> ingress,size_t page_size,size_t maximum,Reply done,Known known={}):io_(io),core_(std::move(core)),deliver_(std::move(deliver)),known_(std::move(known)),token_(std::move(token)),kind_(std::move(kind)),ingress_(std::move(ingress)),done_(std::move(done)),timer_(io),page_size_(page_size),maximum_(maximum){
-  if(!core_||!deliver_||token_.empty()||!ingress_||!done_||!page_size_||!maximum_||page_size_>maximum_||(kind_!="block"&&kind_!="attestation"&&kind_!="attester_slashing"&&kind_!="bls_to_execution_change"&&kind_!="sync_committee_message"))throw std::invalid_argument("Invalid Capella catalog relay");
+  if(!core_||!deliver_||token_.empty()||!ingress_||!done_||!page_size_||!maximum_||page_size_>maximum_||(kind_!="block"&&kind_!="attestation"&&kind_!="attester_slashing"&&kind_!="voluntary_exit"&&kind_!="bls_to_execution_change"&&kind_!="sync_committee_message"))throw std::invalid_argument("Invalid Capella catalog relay");
  }
  void start(std::chrono::steady_clock::duration timeout=std::chrono::seconds(30)){
   if(started_)throw std::logic_error("Capella catalog relay already started");if(timeout<=std::chrono::steady_clock::duration::zero())throw std::invalid_argument("Invalid Capella relay timeout");started_=true;started_at_=std::chrono::steady_clock::now();

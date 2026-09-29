@@ -24,12 +24,12 @@ public:
   size_t max_jobs,size_t max_bytes,std::function<void(const std::function<void()>&)> before_message={}):ingress_(profile(reactor,frame_bytes,block_bytes,vote_bytes,slashing_bytes),budget),capacities_{{"wire",{{"frameBytes",frame_bytes},{"blockBytes",block_bytes},{"attestationBytes",vote_bytes},{"slashingBytes",slashing_bytes}}},{"workerJobs",max_jobs}},receipts_(max_jobs),
   worker_(max_jobs,max_bytes,[&reactor,before_message=std::move(before_message)](const AltairWireMessage& message,const Cancellation& cancelled){
    const auto check=[&]{if(cancelled->load())throw std::runtime_error("Capella message cancelled");};check();if(before_message)before_message(check);check();bool accepted=false;
-   switch(message.kind){case AltairWireKind::block:accepted=reactor.block(message.ssz,check);break;case AltairWireKind::attestation:accepted=reactor.vote_ssz(message.ssz,check);break;case AltairWireKind::attester_slashing:accepted=reactor.slashing_ssz(message.ssz,check);break;case AltairWireKind::sync_committee_message:accepted=reactor.sync_message_ssz(message.ssz,check);break;case AltairWireKind::bls_to_execution_change:accepted=reactor.bls_change_ssz(message.ssz,check);break;default:return Decision::rejected;}
+   switch(message.kind){case AltairWireKind::voluntary_exit:accepted=reactor.voluntary_exit_ssz(message.ssz,check);break;case AltairWireKind::block:accepted=reactor.block(message.ssz,check);break;case AltairWireKind::attestation:accepted=reactor.vote_ssz(message.ssz,check);break;case AltairWireKind::attester_slashing:accepted=reactor.slashing_ssz(message.ssz,check);break;case AltairWireKind::sync_committee_message:accepted=reactor.sync_message_ssz(message.ssz,check);break;case AltairWireKind::bls_to_execution_change:accepted=reactor.bls_change_ssz(message.ssz,check);break;default:return Decision::rejected;}
    // Commit is definitive: do not turn success into cancellation afterwards.
    return accepted?Decision::accepted:Decision::rejected;
   }){}
  std::optional<AltairWireMessage> decode(std::string_view frame)const{
-  auto message=ingress_.decode(frame);if(message&&message->kind==AltairWireKind::voluntary_exit)return std::nullopt;return message;
+  return ingress_.decode(frame);
  }
  // False means no job was admitted and Done will not run. Decode happens before
  // enqueue; invalid identity, frames and kinds never enter the consensus worker.
@@ -41,7 +41,7 @@ public:
  // complete identity is checked before typed messages enter the worker.
  AltairWork::Dispatch dispatcher(){return worker_.dispatcher();}
  std::optional<AltairWireMessage> decode_compact(const nano::Json& frame)const{
-  auto message=ingress_.decode_compact(frame);if(message&&message->kind==AltairWireKind::voluntary_exit)return std::nullopt;return message;
+  return ingress_.decode_compact(frame);
  }
  // Private RPC adapter uses the same ordered worker, not a second queue.
  // Receipts are process-local: session loss means unknown outcome, not rejection.
