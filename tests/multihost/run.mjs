@@ -12,8 +12,13 @@ import {partitionRemote} from './partition.mjs';
 import {observeRecovery} from './recovery-observation.mjs';
 import {sampleClock} from './clock-sample.mjs';
 const exec=promisify(execFile),[target,revision,outputArg]=process.argv.slice(2);
+const fork=process.env.NANO_TEST_CONSENSUS_PROFILE??'bellatrix';
+if(!['bellatrix','capella'].includes(fork))throw Error('Unsupported consensus profile');
 if(!/^[a-z_][a-z0-9_-]*@[0-9.]+$/.test(target??'')||!(/^[0-9a-f]{40}$/).test(revision??'')||!outputArg)throw Error('Usage: run.mjs user@IPv4 core-revision fresh-output');
-const output=resolve(outputArg),repo=process.cwd(),image=`blockchain-nano:${revision.slice(0,7)}`;
+const buildVolume=process.env.NANO_TEST_BUILD_VOLUME==='1';
+const output=resolve(outputArg),repo=process.cwd(),image=buildVolume?'nano-build-dependencies:local':`blockchain-nano:${revision.slice(0,7)}`;
+const artifactMount=buildVolume?['--mount','type=volume,src=nano-linux-sync-build,dst=/build,readonly']:[];
+const runtimeCommand=buildVolume?['/build/nano']:[];
 const traceArgs=process.env.NANO_TEST_NETWORK_TRACE==='1'?['--env','NANO_TEST_NETWORK_TRACE=1']:[];
 const id=Date.now().toString(36),local=`nano-qualification-mac-${id}`,remote=`nano-qualification-vps-${id}`;
 const partition=process.env.NANO_TEST_WAN_PARTITION==='1',testNetwork=remote+'-net';
@@ -28,13 +33,22 @@ const captureLogs=async(name,onRemote)=>{
 };
 const json=async p=>JSON.parse(await readFile(p,'utf8'));
 // Preflight before creating fixtures, so compilation cannot age the genesis.
+const artifacts=[];
+await exec('git',['diff','--quiet',revision,'--','src','include','network','third_party']);
+await sh(['git','-C',`/home/${target.split('@')[0]}/blockchain-nano-git`,'diff','--quiet',revision,'--','src','include','network','third_party']);
 for(const onRemote of [false,true]){
  const info=JSON.parse(await docker(['image','inspect',image,'--format','{{json .}}'],onRemote));
- if(info.Config.Labels?.['org.opencontainers.image.revision']!==revision||info.Architecture!==(onRemote?'amd64':'arm64'))throw Error('Build revision/architecture mismatch');
+ if((!buildVolume&&info.Config.Labels?.['org.opencontainers.image.revision']!==revision)||info.Architecture!==(onRemote?'amd64':'arm64'))throw Error('Build revision/architecture mismatch');
+ if(buildVolume){
+  const built=(await docker(['run','--rm','--network','none',...artifactMount,image,'cat','/build/production-source-revision.txt'],onRemote)).trim();
+  if(built!==revision)throw Error('Build volume source revision mismatch');
+  const hashes=await docker(['run','--rm','--network','none',...artifactMount,image,'sha256sum','/build/nano','/build/network/nano-p2p'],onRemote);
+  artifacts.push({host:onRemote?'vps':'docker-mac',imageId:info.Id,revision:built,sha256:hashes});
+ }
 }
 await mkdir(output);
 const log=async event=>appendFile(join(output,'run.jsonl'),JSON.stringify({time:Date.now(),...event})+'\n');
-let native,localStarted=false,remoteStarted=false;
+let native,tunnel,localStarted=false,remoteStarted=false;
 const clockSamples=async phase=>{
  for(const [host,remoteClock] of [['vps',()=>sh(['date','+%s%3N'])],['docker-mac',()=>docker(['exec',local,'date','+%s%3N'])]]){
   try{await log({event:'clock-sample',phase,host,...await sampleClock(remoteClock)});}
@@ -53,25 +67,31 @@ const rpc=async(kind,method,params=[])=>{
 };
 try{
  const binary=join(repo,'build-release/nano'),p2p=join(repo,'build-network/nano-p2p');
- const harness={};for(const name of ['run.mjs','partition.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
- await log({event:'harness',partition,sha256:harness});
+ const harness={};for(const name of ['run.mjs','partition.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','prepare.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
+ await log({event:'harness',partition,fork,buildVolume,artifacts,sha256:harness});
  await log({event:'binaries',revision,nanoSha256:createHash('sha256').update(await readFile(binary)).digest('hex'),p2pSha256:createHash('sha256').update(await readFile(p2p)).digest('hex')});
  const assets=join(output,'assets'),prepared=join(output,'prepared');
- await exec(join(repo,'build-release/nano-bellatrix-transition-tests'),['--export-kurtosis',assets],{timeout:30000});
+ await exec(join(repo,`build-release/nano-${fork}-transition-tests`),[fork==='capella'?'--export-network':'--export-kurtosis',assets],{timeout:30000});
  const topology=[{name:'mac-native',host:'mac',mode:'native',rpcPort:18545,p2pPort:30305,p2pBinary:p2p,runtimeDirectory:join(prepared,'mac-native')},{name:'mac-docker',host:'mac',mode:'docker',rpcPort:8545,p2pPort:30303},{name:'vps-docker',host:target,mode:'docker',rpcPort:8545,p2pPort:30303}];
  await writeFile(join(output,'topology.json'),JSON.stringify(topology));
  await exec(process.execPath,['tests/multihost/prepare.mjs',assets,prepared,join(output,'topology.json')]);
+ if(buildVolume)for(const name of ['mac-docker','vps-docker']){const path=join(prepared,name,'node.json'),c=await json(path);c.p2p_binary='/build/network/nano-p2p';await writeFile(path,JSON.stringify(c));}
  await sh(['mkdir',remoteRoot]);
  // Only newly generated PUBLIC fixtures cross SSH; software arrived via Git.
  await exec('scp',['-q','-r',join(prepared,'vps-docker'),`${target}:${remoteRoot}/config`],{timeout:30000});
  if(partition)await docker(['network','create','--label','nano.qualification=multihost',testNetwork],true);
- await docker(['run','--init',...(partition?['--network',testNetwork]:[]),...traceArgs,'-d','--name',remote,'--label','nano.qualification=multihost','--memory','3g','--cpus','2','-p','30307:30303','--mount',`type=bind,src=${remoteRoot}/config,dst=/config,readonly`,'--mount',`type=volume,src=${remote}-data,dst=/var/lib/nano`,'--env-file',`${remoteRoot}/config/fixture.env`,image,'run','/config/genesis.json','/var/lib/nano/chain','/config/node.json'],true);remoteStarted=true;
+ await docker(['run','--init',...(partition?['--network',testNetwork]:[]),...traceArgs,'-d','--name',remote,'--label','nano.qualification=multihost','--label','org.opencontainers.image.revision='+revision,...artifactMount,'--memory','3g','--cpus','2','-p',buildVolume?'127.0.0.1:30307:30303':'30307:30303','--mount',`type=bind,src=${remoteRoot}/config,dst=/config,readonly`,'--mount',`type=volume,src=${remote}-data,dst=/var/lib/nano`,'--env-file',`${remoteRoot}/config/fixture.env`,image,...runtimeCommand,'run','/config/genesis.json','/var/lib/nano/chain','/config/node.json'],true);remoteStarted=true;
  let peer;
  for(let i=0;i<30;i++){try{peer=(await rpc('remote','nno_getNetworkInfo')).node?.peerId;if(peer)break;}catch{}await delay(1000);}
  if(!peer||!/^[A-Za-z0-9]+$/.test(peer))throw Error('Remote peer ID unavailable');
- const boot=`/ip4/${ip}/tcp/30307/p2p/${peer}`;
- for(const name of ['mac-native','mac-docker']){const path=join(prepared,name,'node.json'),c=await json(path);c.bootnodes=[boot];await writeFile(path,JSON.stringify(c,null,2));}
- await docker(['run','--init',...traceArgs,'-d','--name',local,'--label','nano.qualification=multihost','--memory','3g','--cpus','2','--mount',`type=bind,src=${join(prepared,'mac-docker')},dst=/config,readonly`,'--mount',`type=volume,src=${local}-data,dst=/var/lib/nano`,'--env-file',join(prepared,'mac-docker','fixture.env'),image,'run','/config/genesis.json','/var/lib/nano/chain','/config/node.json']);localStarted=true;
+ if(buildVolume){
+  const fd=openSync(join(output,'tunnel.log'),'a');tunnel=spawn('ssh',['-N','-o','BatchMode=yes','-o','ExitOnForwardFailure=yes','-o','ServerAliveInterval=15','-L','127.0.0.1:30307:127.0.0.1:30307',target],{stdio:['ignore',fd,fd]});closeSync(fd);
+  tunnel.on('error',error=>log({event:'tunnel-error',message:error.message}));await delay(1000);
+  if(tunnel.exitCode!==null||tunnel.signalCode!==null)throw Error('Private SSH tunnel failed');
+ }
+ const boot=buildVolume?`/ip4/127.0.0.1/tcp/30307/p2p/${peer}`:`/ip4/${ip}/tcp/30307/p2p/${peer}`;
+ for(const name of ['mac-native','mac-docker']){const path=join(prepared,name,'node.json'),c=await json(path);c.bootnodes=[buildVolume&&name==='mac-docker'?`/dns4/host.docker.internal/tcp/30307/p2p/${peer}`:boot];await writeFile(path,JSON.stringify(c,null,2));}
+ await docker(['run','--init',...traceArgs,'-d','--name',local,'--label','nano.qualification=multihost','--label','org.opencontainers.image.revision='+revision,...artifactMount,'--memory','3g','--cpus','2','--mount',`type=bind,src=${join(prepared,'mac-docker')},dst=/config,readonly`,'--mount',`type=volume,src=${local}-data,dst=/var/lib/nano`,'--env-file',join(prepared,'mac-docker','fixture.env'),image,...runtimeCommand,'run','/config/genesis.json','/var/lib/nano/chain','/config/node.json']);localStarted=true;
  const nd=join(prepared,'mac-native');await mkdir(join(nd,'data'));
  const environment=Object.fromEntries((await readFile(join(nd,'fixture.env'),'utf8')).trim().split('\n').map(line=>{const at=line.indexOf('=');return [line.slice(0,at),line.slice(at+1)];}));
  const fd=openSync(join(output,'native.log'),'a');native=spawn(binary,['run',join(nd,'genesis.json'),join(nd,'data/chain'),join(nd,'node.json')],{env:{...process.env,...environment},stdio:['ignore',fd,fd]});closeSync(fd);
@@ -115,9 +135,10 @@ finally{
  for(const [name,onRemote,started] of [[local,false,localStarted],[remote,true,remoteStarted]])if(started){
   try{await docker(['stop','--time','20',name],onRemote);await writeFile(join(output,onRemote?'vps.log':'docker-mac.log'),await captureLogs(name,onRemote));}catch(error){await log({event:'cleanup-error',name,message:error.message});process.exitCode=1;}
  }
+ if(tunnel&&tunnel.exitCode===null&&tunnel.signalCode===null){tunnel.kill('SIGTERM');for(let i=0;i<30&&tunnel.exitCode===null&&tunnel.signalCode===null;i++)await delay(100);if(tunnel.exitCode===null&&tunnel.signalCode===null)tunnel.kill('SIGKILL');}
  // Retain stopped containers/volumes and native DBs for inspection; no pruning.
 }
 if(native&&localStarted&&remoteStarted){
- try{const validators=await validateStoppedValidators(output);await log({event:process.exitCode?'validators-healthy-after-failed-campaign':'passed',validators});}
+ try{const validators=await validateStoppedValidators(output,fork);await log({event:process.exitCode?'validators-healthy-after-failed-campaign':'passed',validators});}
  catch(error){await log({event:'failed',message:error.stack});process.exitCode=1;}
 }

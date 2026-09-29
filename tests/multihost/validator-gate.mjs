@@ -2,13 +2,14 @@ import {readFile} from 'node:fs/promises';
 import {join} from 'node:path';
 
 // Finality alone can pass with one validator loop permanently stopped.
-export async function validateStoppedValidators(directory) {
+export async function validateStoppedValidators(directory, fork='bellatrix') {
+ if(!['bellatrix','capella'].includes(fork))throw Error('Unsupported validator profile');
  const results=[];
  for(const file of ['native.log','docker-mac.log','vps.log']) {
   const statuses=[];
   for(const line of (await readFile(join(directory,file),'utf8')).split('\n')) {
    let event;try{event=JSON.parse(line);}catch{continue;}
-   if(event.event==='bellatrix-runtime-stopped')statuses.push(event.validator);
+   if(event.event===`${fork}-runtime-stopped`)statuses.push(event.validator);
   }
   if(statuses.length!==1)throw Error(`${file}: expected one terminal validator status`);
   const v=statuses[0];

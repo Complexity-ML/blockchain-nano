@@ -23,3 +23,14 @@ for(const [name,records,accepted] of [
   else await assert.rejects(validateStoppedValidators(directory));
  }finally{await rm(directory,{recursive:true,force:true});}
 });
+test('Capella status is required when Capella is selected',async()=>{
+ const directory=await mkdtemp(join(tmpdir(),'nano-capella-validator-gate-'));
+ try{
+  const record={...healthy,event:'capella-runtime-stopped'};
+  for(const file of ['native.log','docker-mac.log','vps.log'])await writeFile(join(directory,file),JSON.stringify(record)+'\n');
+  assert.equal((await validateStoppedValidators(directory,'capella')).length,3);
+  await assert.rejects(validateStoppedValidators(directory,'bellatrix'));
+  await writeFile(join(directory,'vps.log'),JSON.stringify({...record,validator:{...record.validator,healthy:false,failure:'stopped'}}));
+  await assert.rejects(validateStoppedValidators(directory,'capella'));
+ }finally{await rm(directory,{recursive:true,force:true});}
+});

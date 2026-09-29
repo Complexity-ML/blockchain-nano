@@ -1,5 +1,17 @@
 # EIP et consensus : périmètre demandé pour Nano
 
+## Nouvel objectif : candidat production — 29 septembre 2026
+
+L'[audit de départ](qualification/production-candidate-20260929/README.md)
+conserve les acquis et cible d'abord la finalité WAN sous partition. Le cas
+local à 500 ms est déjà passé ; l'ancien WAN à 189,2 s reste un échec face au
+seuil de 180 s. Le préparateur de topologie prend désormais en charge Capella
+avec trois instances et 22/21/21 clés synthétiques. Configuration et 26 tests du banc vérifiés. La [campagne Capella WAN](qualification/capella-wan-partition-20260929/README.md)
+passe : coupure observée 97,239 s, reprise commune en 136,691 s (seuil 180 s),
+puis trois avancées 7 → 8 → 9 → 10 avec accord des blocs d’exécution. Trois
+groupes de validateurs sains à l’arrêt. Les anciens échecs sont conservés ;
+asymétrie WAN, charge et qualification globale de production restent ouvertes.
+
 ## Jalon sorties : qualification technique acquise — 29 septembre 2026
 
 L'[audit des six critères](qualification/capella-exit-audit-20260929/README.md)
