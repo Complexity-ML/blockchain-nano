@@ -33,8 +33,11 @@ Après arrêt, le vérificateur C++ rouvre le propriétaire du Mac avec son tém
 RocksDB. Il contrôle la comptabilité, la cohérence propriétaire/consensus,
 l’archive effectivement retirée, et le journal du validateur 0 : aucune
 proposition ni attestation après son époque de sortie (6).
-La réouverture hors ligne du propriétaire VPS reste à exécuter avec ce nouveau
-vérificateur. Le redémarrage réel du VPS avant finalité, lui, fait partie du run.
+La réouverture hors ligne du VPS passe également sur `24971b8` : tous les
+champs comptables, de finalité et d’archive correspondent exactement au Mac.
+Le journal du validateur 0 est contrôlé sur le Mac seulement, qui détient sa
+clé dans le banc. Le test d’élagage d’une sortie en attente passe sur ce même
+binaire Linux (1/1, 89,17 s). Voir `vps-reopened/` pour les preuves.
 
 ## Échecs conservés
 

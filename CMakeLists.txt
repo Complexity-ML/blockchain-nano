@@ -1731,3 +1731,8 @@ set_tests_properties(consensus_capella_exit_reindex PROPERTIES TIMEOUT 480 LABEL
 
 add_test(NAME consensus_capella_exit_pending_pruning COMMAND nano-capella-transition-tests --exit-pending-pruning)
 set_tests_properties(consensus_capella_exit_pending_pruning PROPERTIES TIMEOUT 300 LABELS "qualification_consensus_recovery")
+
+if(TARGET nano-test-sync-fault)
+add_test(NAME consensus_capella_exit_lifecycle_sync COMMAND nano-capella-transition-tests --exit-lifecycle-sync)
+set_tests_properties(consensus_capella_exit_lifecycle_sync PROPERTIES TIMEOUT 600 LABELS "qualification_consensus_recovery")
+endif()

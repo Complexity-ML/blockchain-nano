@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="6"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="121"
+	timestamp="2026-09-29T21:14:18"
+	>
+	<testcase name="consensus_capella_queued_exit_sync" classname="consensus_capella_queued_exit_sync" time="4.92457" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_recovery"/>
+		</properties>
+		<system-out>{"blockedOperations":8,"consensusStateUnchanged":true,"faultWitness":false,"lostSuffix":false,"physicalPowerLoss":false,"recoveredPendingBeforeResubmit":true,"resubmissionIdempotent":true,"scenario":"capella-exit-sync-recovery"}
+{"blockedOperations":8,"consensusStateUnchanged":true,"faultWitness":false,"lostSuffix":true,"physicalPowerLoss":false,"recoveredPendingBeforeResubmit":true,"resubmissionIdempotent":true,"scenario":"capella-exit-sync-recovery"}
+{"blockedOperations":6,"consensusStateUnchanged":true,"faultWitness":true,"lostSuffix":false,"physicalPowerLoss":false,"recoveredPendingBeforeResubmit":true,"resubmissionIdempotent":true,"scenario":"capella-exit-sync-recovery"}
+{"blockedOperations":6,"consensusStateUnchanged":true,"faultWitness":true,"lostSuffix":true,"physicalPowerLoss":false,"recoveredPendingBeforeResubmit":false,"resubmissionIdempotent":true,"scenario":"capella-exit-sync-recovery"}
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_local_exits" classname="consensus_capella_local_exits" time="4.6635" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_operations"/>
+		</properties>
+		<system-out>{"cancellationChecked":true,"invalidOrDuplicateRejected":4,"scenario":"capella-local-exits","selected":1,"trialBudgetChecked":true}
+{"assembledBodies":9,"beaconReadChecks":0,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":0,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":false,"localProposals":8,"localRandao":8,"migrated":false,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":false,"rejected":20,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"wireMessages":0,"withdrawals":1}
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_queued_exits" classname="consensus_capella_queued_exits" time="5.19708" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_operations"/>
+		</properties>
+		<system-out>{"capacityChecked":true,"consensusUnchangedOnAdmission":true,"duplicateIdempotent":true,"invalidRejected":true,"reopened":true,"scenario":"capella-queued-exits"}
+{"applicable":false,"reopened":false,"retained":true,"scenario":"capella-exit-reorg"}
+{"applicable":true,"reopened":true,"retained":true,"scenario":"capella-exit-reorg"}
+{"applicable":false,"reopened":true,"retained":true,"scenario":"capella-exit-reorg"}
+{"assembledBodies":9,"beaconReadChecks":0,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":0,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":false,"localProposals":8,"localRandao":8,"migrated":false,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":false,"rejected":20,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_exit_wire" classname="consensus_capella_exit_wire" time="5.09903" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_network"/>
+		</properties>
+		<system-out>{"capacityChecked":true,"consensusUnchangedOnAdmission":true,"duplicateIdempotent":true,"invalidRejected":true,"reopened":true,"scenario":"capella-queued-exits"}
+{"applicable":false,"reopened":false,"retained":true,"scenario":"capella-exit-reorg"}
+{"applicable":true,"reopened":true,"retained":true,"scenario":"capella-exit-reorg"}
+{"applicable":false,"reopened":true,"retained":true,"scenario":"capella-exit-reorg"}
+{"assembledBodies":9,"beaconReadChecks":0,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":0,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":false,"localProposals":8,"localRandao":8,"migrated":false,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":false,"rejected":20,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_exit_retirement" classname="consensus_capella_exit_retirement" time="69.1353" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_recovery"/>
+		</properties>
+		<system-out>{"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+{"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+{"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+{"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+{"finalizedEpoch":3,"progressSlot":40,"signedVotes":264}
+{"finalizedEpoch":4,"progressSlot":48,"signedVotes":327}
+{"finalizedEpoch":5,"progressSlot":56,"signedVotes":390}
+{"finalizedEpoch":6,"progressSlot":64,"signedVotes":453}
+{"finalizedEpoch":7,"progressSlot":72,"signedVotes":516}
+{"finalizedEpoch":7,"progressSlot":73,"signedVotes":524}
+{"anchorMoves":6,"depositAncestorPins":55,"finalRetainedRecords":18,"finalizedEpoch":7,"maximumRetainedRecords":31,"nativeProfile":true,"reopenedBothOwners":true,"scenario":"capella-automatic-pruning"}
+{"admissionOriginPruned":true,"bothOwnersReopened":true,"networkTransport":false,"observedFinalizedEpoch":7,"replayDidNotRegrowArchive":true,"retainedAfterUnfinalizedInclusion":true,"retiredAtFinality":true,"scenario":"capella-exit-archive-retirement"}
+{"b...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_exit_pending_pruning" classname="consensus_capella_exit_pending_pruning" time="32.7853" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_recovery"/>
+		</properties>
+		<system-out>{"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+{"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+{"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+{"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+{"finalizedEpoch":3,"progressSlot":40,"signedVotes":264}
+{"finalizedEpoch":3,"progressSlot":41,"signedVotes":272}
+{"admissionOriginRemoved":true,"automaticallyIncludedAfterReopen":true,"duplicateIdempotent":true,"exactBytesAfterReopen":true,"networkTransport":false,"neverIncludedBeforePruning":true,"reanchoredAtFinality":true,"scenario":"capella-pending-exit-pruning","unfinalizedArchiveRetained":true}
+{"afterBlocks":18,"afterSnapshotBytes":873601,"automaticPruning":false,"beforeBlocks":41,"beforeSnapshotBytes":1893313,"durablePruningRestart":true,"historyPreserved":true,"nativeCheckpointV3":false,"networkAnchorPreserved":true,"nextBlockEqual":true,"oldSlashingPreservedAndApplied":false,"pendingBlsReanchoredAndIncluded":false,"scenario":"capella-pruning-primitive"}
+{"blocks":40,"disjointSyn...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+</testsuite>

@@ -9,13 +9,18 @@ reconnexion et retrait finalisé identique au bloc 55 (époque 8). Un seul paiem
 du capital ; comptabilité exacte comparée sur les deux RPC. La réouverture du
 Mac confirme l’archive retirée, la cohérence EVM/consensus et l’absence de
 proposition/attestation après l’époque de sortie. Les deux échecs du banc sont
-conservés. La réouverture hors ligne du propriétaire VPS reste ouverte.
+conservés. La réouverture hors ligne du VPS passe sur `24971b8`, avec les
+mêmes montants, finalité et archive que le Mac ; le nouveau test d’élagage
+passe également sur Linux (1/1, 89,17 s).
 
 Le [nouveau cas d’élagage d’une sortie jamais incluse](qualification/capella-exit-pending-pruning-20260929/README.md)
 passe (32,56 s), avec réancrage, réouverture, doublon idempotent et inclusion
 automatique. Les régressions élagage BLS/retrait d’archive passent également
-(2/2, 99,92 s). Les points de coupure précis au paiement/finalisation/retrait
-d’archive et la consolidation finale du jalon restent à qualifier.
+(2/2, 99,92 s). La [campagne aux transitions de sortie](qualification/capella-exit-lifecycle-sync-20260929/README.md)
+passe maintenant sur Mac : 16 cas WAL aux publications d’inclusion,
+retrait d’archive, paiement et finalisation du paiement (130,29 s), puis
+6/6 régressions ciblées (121,81 s). Son exécution Linux/VPS et l’audit final
+de couverture du jalon restent ouverts.
 **Le jalon complet et la production ne sont pas déclarés terminés.**
 
 

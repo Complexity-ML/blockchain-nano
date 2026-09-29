@@ -1,0 +1,260 @@
+[
+    {
+        "Id": "093f9a8044b72fd1125dc2fc87f7fb1c6f4b452f85b6e449e0cbaca2a62b53ad",
+        "Created": "2026-09-29T18:57:46.363394847Z",
+        "Path": "sh",
+        "Args": [
+            "-c",
+            "set -e; cmake -S /work -B /build -DCMAKE_BUILD_TYPE=Release > /build/exit-owner-configure.log 2>&1; cmake --build /build --target nano-capella-transition-tests -j2 > /build/exit-owner-build.log 2>&1; sha256sum /build/nano-capella-transition-tests; /build/nano-capella-transition-tests --verify-exit-owner /config/genesis.json /config/node-1.json /var/lib/nano/chain > /build/exit-owner-reopened.json; cat /build/exit-owner-reopened.json; ctest --test-dir /build -R \"^consensus_capella_exit_pending_pruning$\" --output-on-failure --output-junit /build/exit-pending-vps.xml > /build/exit-pending-vps.log 2>&1; cat /build/exit-pending-vps.log"
+        ],
+        "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2026-09-29T18:57:46.408301438Z",
+            "FinishedAt": "2026-09-29T19:01:35.873835054Z"
+        },
+        "Image": "sha256:0fa8a608c09ff5ad1e804afc160c04d4964898bed149fcb47a2b587a0a9c194c",
+        "ResolvConfPath": "/var/lib/docker/containers/093f9a8044b72fd1125dc2fc87f7fb1c6f4b452f85b6e449e0cbaca2a62b53ad/resolv.conf",
+        "HostnamePath": "/var/lib/docker/containers/093f9a8044b72fd1125dc2fc87f7fb1c6f4b452f85b6e449e0cbaca2a62b53ad/hostname",
+        "HostsPath": "/var/lib/docker/containers/093f9a8044b72fd1125dc2fc87f7fb1c6f4b452f85b6e449e0cbaca2a62b53ad/hosts",
+        "LogPath": "/var/lib/docker/containers/093f9a8044b72fd1125dc2fc87f7fb1c6f4b452f85b6e449e0cbaca2a62b53ad/093f9a8044b72fd1125dc2fc87f7fb1c6f4b452f85b6e449e0cbaca2a62b53ad-json.log",
+        "Name": "/nano-exit-owner-verify-20260929",
+        "RestartCount": 0,
+        "Driver": "overlayfs",
+        "Platform": "linux",
+        "MountLabel": "",
+        "ProcessLabel": "",
+        "AppArmorProfile": "docker-default",
+        "ExecIDs": null,
+        "HostConfig": {
+            "Binds": null,
+            "ContainerIDFile": "",
+            "LogConfig": {
+                "Type": "json-file",
+                "Config": {}
+            },
+            "NetworkMode": "none",
+            "PortBindings": {},
+            "RestartPolicy": {
+                "Name": "no",
+                "MaximumRetryCount": 0
+            },
+            "AutoRemove": false,
+            "VolumeDriver": "",
+            "VolumesFrom": null,
+            "ConsoleSize": [
+                0,
+                0
+            ],
+            "CapAdd": null,
+            "CapDrop": null,
+            "CgroupnsMode": "private",
+            "Dns": null,
+            "DnsOptions": [],
+            "DnsSearch": [],
+            "ExtraHosts": null,
+            "GroupAdd": null,
+            "IpcMode": "private",
+            "Cgroup": "",
+            "Links": null,
+            "OomScoreAdj": 0,
+            "PidMode": "",
+            "Privileged": false,
+            "PublishAllPorts": false,
+            "ReadonlyRootfs": false,
+            "SecurityOpt": null,
+            "UTSMode": "",
+            "UsernsMode": "",
+            "ShmSize": 67108864,
+            "Runtime": "runc",
+            "Isolation": "",
+            "CpuShares": 0,
+            "Memory": 4294967296,
+            "NanoCpus": 2000000000,
+            "CgroupParent": "",
+            "BlkioWeight": 0,
+            "BlkioWeightDevice": [],
+            "BlkioDeviceReadBps": [],
+            "BlkioDeviceWriteBps": [],
+            "BlkioDeviceReadIOps": [],
+            "BlkioDeviceWriteIOps": [],
+            "CpuPeriod": 0,
+            "CpuQuota": 0,
+            "CpuRealtimePeriod": 0,
+            "CpuRealtimeRuntime": 0,
+            "CpusetCpus": "",
+            "CpusetMems": "",
+            "Devices": [],
+            "DeviceCgroupRules": null,
+            "DeviceRequests": null,
+            "MemoryReservation": 0,
+            "MemorySwap": 8589934592,
+            "MemorySwappiness": null,
+            "OomKillDisable": null,
+            "PidsLimit": null,
+            "Ulimits": null,
+            "CpuCount": 0,
+            "CpuPercent": 0,
+            "IOMaximumIOps": 0,
+            "IOMaximumBandwidth": 0,
+            "Mounts": [
+                {
+                    "Type": "bind",
+                    "Source": "/home/ubuntu/blockchain-nano-git",
+                    "Target": "/work",
+                    "ReadOnly": true
+                },
+                {
+                    "Type": "volume",
+                    "Source": "nano-linux-sync-build",
+                    "Target": "/build"
+                },
+                {
+                    "Type": "bind",
+                    "Source": "/tmp/nano-exit-wan-638ac1185e54/config",
+                    "Target": "/config",
+                    "ReadOnly": true
+                },
+                {
+                    "Type": "volume",
+                    "Source": "nano-exit-wan-638ac1185e54-data",
+                    "Target": "/var/lib/nano"
+                }
+            ],
+            "MaskedPaths": [
+                "/proc/acpi",
+                "/proc/asound",
+                "/proc/interrupts",
+                "/proc/kcore",
+                "/proc/keys",
+                "/proc/latency_stats",
+                "/proc/sched_debug",
+                "/proc/scsi",
+                "/proc/timer_list",
+                "/proc/timer_stats",
+                "/sys/devices/virtual/powercap",
+                "/sys/firmware"
+            ],
+            "ReadonlyPaths": [
+                "/proc/bus",
+                "/proc/fs",
+                "/proc/irq",
+                "/proc/sys",
+                "/proc/sysrq-trigger"
+            ]
+        },
+        "Storage": {
+            "RootFS": {
+                "Snapshot": {
+                    "Name": "overlayfs"
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Type": "volume",
+                "Name": "nano-linux-sync-build",
+                "Source": "/var/lib/docker/volumes/nano-linux-sync-build/_data",
+                "Destination": "/build",
+                "Driver": "local",
+                "Mode": "z",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Type": "bind",
+                "Source": "/tmp/nano-exit-wan-638ac1185e54/config",
+                "Destination": "/config",
+                "Mode": "",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/home/ubuntu/blockchain-nano-git",
+                "Destination": "/work",
+                "Mode": "",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "volume",
+                "Name": "nano-exit-wan-638ac1185e54-data",
+                "Source": "/var/lib/docker/volumes/nano-exit-wan-638ac1185e54-data/_data",
+                "Destination": "/var/lib/nano",
+                "Driver": "local",
+                "Mode": "z",
+                "RW": true,
+                "Propagation": ""
+            }
+        ],
+        "Config": {
+            "Hostname": "093f9a8044b7",
+            "Domainname": "",
+            "User": "",
+            "AttachStdin": false,
+            "AttachStdout": false,
+            "AttachStderr": false,
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "CC=clang",
+                "CXX=clang++"
+            ],
+            "Cmd": [
+                "sh",
+                "-c",
+                "set -e; cmake -S /work -B /build -DCMAKE_BUILD_TYPE=Release > /build/exit-owner-configure.log 2>&1; cmake --build /build --target nano-capella-transition-tests -j2 > /build/exit-owner-build.log 2>&1; sha256sum /build/nano-capella-transition-tests; /build/nano-capella-transition-tests --verify-exit-owner /config/genesis.json /config/node-1.json /var/lib/nano/chain > /build/exit-owner-reopened.json; cat /build/exit-owner-reopened.json; ctest --test-dir /build -R \"^consensus_capella_exit_pending_pruning$\" --output-on-failure --output-junit /build/exit-pending-vps.xml > /build/exit-pending-vps.log 2>&1; cat /build/exit-pending-vps.log"
+            ],
+            "Image": "nano-build-dependencies:local",
+            "Volumes": null,
+            "WorkingDir": "/src",
+            "Entrypoint": null,
+            "Labels": {
+                "org.opencontainers.image.version": "24.04"
+            }
+        },
+        "NetworkSettings": {
+            "SandboxID": "",
+            "SandboxKey": "",
+            "Ports": {},
+            "Networks": {
+                "none": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "DriverOpts": null,
+                    "GwPriority": 0,
+                    "NetworkID": "b81ba5405b1ae9d16532df488313570b0982caf8ce88cec23c2c7c05554c3e15",
+                    "EndpointID": "",
+                    "Gateway": "",
+                    "IPAddress": "",
+                    "MacAddress": "",
+                    "IPPrefixLen": 0,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "DNSNames": null
+                }
+            }
+        },
+        "ImageManifestDescriptor": {
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "digest": "sha256:2b1c10dc37e2da085523178fdd676400eade94de7034cc29ba2a519fcdf8b539",
+            "size": 1433,
+            "platform": {
+                "architecture": "amd64",
+                "os": "linux"
+            }
+        }
+    }
+]
