@@ -43,6 +43,7 @@ struct Key {
 }
 static std::string executable;
 static bool sync_scenario=false;
+static bool slashing_reorg=false;
 static unsigned local_finality=0;
 static bool owner_mode=false;
 static bool owner_reorg=false;
@@ -906,6 +907,7 @@ static void verify_beacon_reads(CapellaDurableReactor& reactor,const CapellaFork
  check(reactor.beacon_read("/eth/v1/beacon/headers/0x12").status==400&&reactor.beacon_read("/eth/v1/beacon/headers/genesis").status==404&&reactor.beacon_read("/eth/v1/node/syncing").status==404,"Beacon unsupported selector behavior");
  bool cancelled=false;try{reactor.beacon_read("/eth/v2/beacon/blocks/head",[]{throw ExecutionCancelled("Beacon read cancelled");});}catch(const ExecutionCancelled&){cancelled=true;}check(cancelled&&reactor.current().token==snapshot.token,"Beacon read cancellation changed checkpoint");++beacon_read_checks;
 }
+#include "support/capella_slashing_reorg.hpp"
 static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigned participation=100){
  const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-bellatrix-containers-official",source=fixtures/"consensus-capella-slots-official";
  const auto manifest=load(source/"manifest.json");check(manifest.at("commit")=="194a91fd9e6f97118156421aac4c80e6e47a9a7f","initial state revision");
@@ -1280,6 +1282,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
     bool proof_cancelled=false;try{reactor->slashing(proof_a,proof_b,[]{throw ExecutionCancelled("proof stop");});}catch(const ExecutionCancelled&){proof_cancelled=true;}check(proof_cancelled&&reactor->current().token==before_proof,"cancelled slashing persisted");
     check(slashed&&slashed->timed.view.equivocating_indices.contains(first_vote.first),"Capella equivocation evidence rejected");roundtrip(*slashed);check((wire_mode?deliver("attester_slashing",encode_consensus_attester_slashing_ssz(proof_a,proof_b,r.consensus.body.validators_per_committee)):reactor->slashing(proof_a,proof_b))&&capella_store_snapshot(*reactor->current().state,store_rules,snapshot_limits)==capella_store_snapshot(*slashed,store_rules,snapshot_limits),"durable Capella slashing differs");
     const auto proof_token=reactor->current().token;check(reactor->signed_slashings().size()==1,"missing slashing archive");
+    if(slashing_reorg){qualify_slashing_reorg(*reactor->current().state,store_rules,snapshot_limits,disk_genesis,disk_genesis_state,proof_a,proof_b);return;}
     check(reactor->slashing(proof_a,proof_b)&&reactor->slashing(proof_b,proof_a)&&reactor->current().token==proof_token,"duplicate/reversed slashing rewrote checkpoint");
     for(unsigned variant=1;variant<=4;++variant){auto alternative=proof_b;alternative.data.beacon_block_root[0]^=uint8_t(variant);alternative.signature=Key(first_vote.first).sign(consensus_signing_root(consensus_attestation_root(alternative.data),consensus_domain({1,0,0,0},version,genesis_root)));check(reactor->slashing(proof_a,alternative)&&reactor->signed_slashings().size()==1&&reactor->current().token==proof_token,"equivalent offender grew archive");}
     if(bound){check(registration_misses>=2&&registration_hits>=3,"registration cache branch coverage missing");std::cout<<Json{{"scenario","capella-registration-cache-reorg"},{"rootMisses",registration_misses},{"warmHits",registration_hits},{"cancelledHitRejected",true},{"requestChangeChecked",true}}.dump()<<std::endl;}
@@ -1557,6 +1560,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
 }
 #include "support/capella_exit_owner.hpp"
 int main(int argc,char** argv){try{executable=argv[0];
+if(argc==2&&std::string(argv[1])=="--slashing-reorg"){slashing_reorg=true;scenario(false);return 0;}
  if(argc==5&&std::string(argv[1])=="--verify-exit-owner"){verify_external_exit_owner(argv[2],argv[3],argv[4]);return 0;}
  if(argc>=4&&(std::getenv("NANO_TEST_BLS_BOOTSTRAP")||std::getenv("NANO_TEST_EXIT_BOOTSTRAP"))){
   const auto* token=std::getenv("NANO_NETWORK_TOKEN");const auto* daemon=std::getenv("NANO_TEST_BLS_DAEMON");check(token&&daemon,"BLS test shim missing supervisor context");PersistentRpc client(std::stoi(argv[1]));const auto status=client.call("nano_capellaStatus",Json::array({token}));Json envelope;for(const auto* key:{"chainId","genesisHash","forkDigest","consensusIdentity"})envelope[key]=status.at(key);const auto* exit=std::getenv("NANO_TEST_EXIT_BOOTSTRAP");envelope["kind"]=exit?"voluntary_exit":"bls_to_execution_change";envelope["ssz"]=exit?exit:std::getenv("NANO_TEST_BLS_BOOTSTRAP");const auto session=status.at("admissionSession");client.call("nano_capellaSubmit",Json::array({token,session,"0x1",envelope.dump()}));Json receipt;const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(10);do{receipt=client.call("nano_capellaJob",Json::array({token,session,"0x1"}));if(receipt.at("state")=="completed")break;std::this_thread::sleep_for(std::chrono::milliseconds(1));}while(std::chrono::steady_clock::now()<deadline);check(receipt.value("decision",std::string())=="accepted","BLS test shim admission failed");client.call("nano_capellaForget",Json::array({token,session,"0x1"}));

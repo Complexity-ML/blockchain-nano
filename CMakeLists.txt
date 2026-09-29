@@ -1669,6 +1669,9 @@ endif()
 add_test(NAME consensus_capella_pruning_slashing COMMAND nano-capella-transition-tests --pruning-slashing)
 set_tests_properties(consensus_capella_pruning_slashing PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_recovery")
 
+add_test(NAME consensus_capella_slashing_reorg COMMAND nano-capella-transition-tests --slashing-reorg)
+set_tests_properties(consensus_capella_slashing_reorg PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_recovery")
+
 add_test(NAME consensus_capella_slashing_retirement COMMAND nano-capella-transition-tests --slashing-retirement)
 set_tests_properties(consensus_capella_slashing_retirement PROPERTIES TIMEOUT 300 LABELS "qualification_consensus_recovery")
 

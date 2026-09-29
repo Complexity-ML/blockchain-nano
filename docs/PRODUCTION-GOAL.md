@@ -1,5 +1,15 @@
 # Objectif : Nano C++ de niveau production
 
+## Sanctions après réorganisation : qualification native — 29 septembre 2026
+
+Le [nouveau scénario](qualification/capella-slashing-reorg-20260929/README.md)
+passe sur Mac : deux changements de branche signés, preuve conservée puis
+réincluse automatiquement, sept réouvertures avec état exact et absence de double
+pénalité. Le premier échec du scénario (horloge non avancée avant proposition)
+est conservé et corrigé uniquement dans le test. Qualification Linux en cours.
+Multi-auteurs, finalisation partielle et échecs d’écriture restent ouverts ;
+aucun statut EIP ni critère global de production n’est déclaré acquis.
+
 ## Rotation WAN qualifiée avec audit corrigé — 29 septembre 2026
 
 La [campagne de rotation](qualification/capella-wan-rotation-20260929/README.md)
