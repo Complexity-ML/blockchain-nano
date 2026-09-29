@@ -1,5 +1,16 @@
 # Objectif candidat production — état de départ audité
 
+## Lecture Beacon cohérente encore manquante — 29 septembre 2026
+
+La [nouvelle campagne WAN](../capella-wan-asymmetric-settle-20260929/README.md)
+atteint 2 → 4 sous retard en 159,741 s, puis échoue : le head VPS alterne entre
+deux branches pendant les trois lectures, malgré un checkpoint finalisé identique.
+Les validateurs restent sains, mais la stabilité n'est pas qualifiée. L'API ne
+fournit actuellement cette finalité que sous `states/head` ; prochaine correction :
+lecture par state root identifié, tests de concurrence/élagage/engagement, puis
+nouvelle qualification. Aucun retry supplémentaire ou seuil assoupli. Les deux
+runs restent en échec dans leurs preuves ; le cœur n'a pas été modifié.
+
 ## WAN asymétrique : défaut testé, stabilité encore ouverte — 29 septembre 2026
 
 La [nouvelle campagne réelle Mac/Docker/VPS](../capella-wan-asymmetric-20260929/README.md)

@@ -1,7 +1,7 @@
 // Native-node checks complement Assertoor's shared cache. No automatic retry
 // can erase a conflicting finalized root or a finality regression.
 import {setTimeout as delay} from 'node:timers/promises';
-export async function observeStableFinality(endpoints, epochs, record, {clock=Date.now, wait=delay, request=fetch}={}) {
+export async function observeStableFinality(endpoints, epochs, record, {clock=Date.now, wait=delay, request=fetch, settleRecoveryGaps=false}={}) {
   if (!Array.isArray(endpoints) || endpoints.length < 2 || new Set(endpoints).size !== endpoints.length) throw Error('At least two distinct endpoints required');
   if (!Number.isInteger(epochs) || epochs < 2 || epochs > 16) throw Error('Stability window must be 2..16 epochs');
   const read = async (url, path) => {
@@ -51,7 +51,8 @@ export async function observeStableFinality(endpoints, epochs, record, {clock=Da
       const epoch = BigInt(samples[0].checkpoint.epoch);
       if (epoch >= 2n && baseline === undefined) {baseline = epoch; commonEpoch = epoch; commonChanged = clock();}
       else if (baseline !== undefined && epoch > commonEpoch) {
-        if (epoch !== commonEpoch + 1n) throw Error('Skipped common finalized epoch in stability window');
+        const gap = epoch !== commonEpoch + 1n;
+        if (gap && !settleRecoveryGaps) throw Error('Skipped common finalized epoch in stability window');
         // Bind every advancing checkpoint to execution on both nodes.
         const blocks = await Promise.all(endpoints.map(async url => {
           const block = (await read(url, '/eth/v2/beacon/blocks/' + samples[0].checkpoint.root)).data.message;
@@ -61,7 +62,14 @@ export async function observeStableFinality(endpoints, epochs, record, {clock=Da
           return execution.hash;
         }));
         if (blocks.some(hash => hash !== blocks[0])) throw Error('Finalized execution hashes differ');
-        commonEpoch = epoch; commonChanged = clock(); ++advances;
+        if (gap) {
+          // FFG may finalize a later justified checkpoint after delayed votes.
+          // A gap earns no credit: restart the consecutive window, retaining
+          // all safety history and the original absolute deadline.
+          await record({event:'recovery-gap-window-reset',time:clock(),fromEpoch:String(commonEpoch),toEpoch:String(epoch),discardedAdvances:advances,executionHash:blocks[0]});
+          baseline=epoch;advances=0;
+        } else ++advances;
+        commonEpoch = epoch; commonChanged = clock();
         await record({time:clock(), commonEpoch:String(epoch), executionHash:blocks[0], advances});
         if (advances === epochs) return {epochs:advances, firstEpoch:String(baseline), lastEpoch:String(commonEpoch), elapsedMs:clock()-start};
       }

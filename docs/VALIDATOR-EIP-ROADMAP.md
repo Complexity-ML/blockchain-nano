@@ -1,5 +1,28 @@
 # EIP et consensus : périmètre demandé pour Nano
 
+## Lecture Beacon cohérente encore manquante — 29 septembre 2026
+
+La [nouvelle campagne WAN](qualification/capella-wan-asymmetric-settle-20260929/README.md)
+atteint 2 → 4 sous retard en 159,741 s, puis échoue : le head VPS alterne entre
+deux branches pendant les trois lectures, malgré un checkpoint finalisé identique.
+Les validateurs restent sains, mais la stabilité n'est pas qualifiée. L'API ne
+fournit actuellement cette finalité que sous `states/head` ; prochaine correction :
+lecture par state root identifié, tests de concurrence/élagage/engagement, puis
+nouvelle qualification. Aucun retry supplémentaire ou seuil assoupli. Les deux
+runs restent en échec dans leurs preuves ; le cœur n'a pas été modifié.
+
+## Saut FFG expliqué, moniteur de récupération corrigé — 29 septembre 2026
+
+Le [rejeu du checkpoint réel](qualification/capella-wan-ffg-analysis-20260929/README.md)
+authentifie la base par le digest du reçu terminal et reproduit exactement
+4 → 6 au passage du slot 71 à 72. Les poids de cibles 54/64 et 47/64 satisfont
+les conditions FFG ; le saut n'est pas en lui-même une erreur de consensus.
+Le mode de récupération du moniteur recommence sa fenêtre après un saut sans
+lui donner de crédit, sans effacer l'historique de sécurité et sans prolonger
+le délai absolu. Les trois avancées consécutives liées à l'exécution restent
+exigées. 19 tests du moniteur passent, dont six nouveaux. Le cœur est inchangé ;
+l'échec historique reste conservé et une campagne distincte qualifie le correctif.
+
 ## WAN asymétrique : défaut testé, stabilité encore ouverte — 29 septembre 2026
 
 La [nouvelle campagne réelle Mac/Docker/VPS](qualification/capella-wan-asymmetric-20260929/README.md)

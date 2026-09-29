@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {observeStableFinality} from './stability.mjs';
-function fixture(change = () => {}, crossBoundary = false, unstableHead = false, endpoints = ['http://a','http://b']) {
+function fixture(change = () => {}, crossBoundary = false, unstableHead = false, endpoints = ['http://a','http://b'], settleRecoveryGaps = false) {
   let time = 0, headReads = 0;
   const records = [];
   const request = async (url, options) => {
@@ -19,7 +19,7 @@ function fixture(change = () => {}, crossBoundary = false, unstableHead = false,
     if(crossBoundary && time === 0 && url.endsWith('/finality_checkpoints')) time=4000;
     return {ok:true,json:async()=>body};
   };
-  return {records,run:()=>observeStableFinality(endpoints,4,async r=>records.push(r),{request,clock:()=>time,wait:async ms=>{time+=ms;}})};
+  return {records,run:()=>observeStableFinality(endpoints,4,async r=>records.push(r),{request,settleRecoveryGaps,clock:()=>time,wait:async ms=>{time+=ms;}})};
 }
 test('four consecutive common checkpoints bind to execution',async()=>{
   const f=fixture(),result=await f.run();assert.equal(result.epochs,4);assert.equal(result.firstEpoch,'2');assert.equal(result.lastEpoch,'6');assert.equal(f.records.filter(r=>r.advances).length,4);
@@ -65,4 +65,35 @@ test('a third node execution mismatch fails',async()=>{
 });
 test('duplicate endpoints do not represent distinct nodes',async()=>{
  await assert.rejects(fixture(()=>{},false,false,['http://a','http://a']).run(),/distinct endpoints/);
+});
+
+
+test('recovery gap resets consecutive credit without rejecting valid FFG progress',async()=>{
+ const f=fixture((s,i,t)=>{if(t>=4000)s.epoch++;},false,false,three,true);
+ const r=await f.run();assert.equal(r.firstEpoch,'4');assert.equal(r.lastEpoch,'8');assert.equal(r.epochs,4);
+ assert.equal(f.records.filter(r=>r.event==='recovery-gap-window-reset').length,1);
+ assert.equal(f.records.filter(r=>r.advances>0).length,4);
+});
+test('repeated recovery gaps never extend the absolute deadline',async()=>{
+ const f=fixture((s,i,t)=>{s.epoch=2+2*Math.floor(t/4000);},false,false,three,true);
+ await assert.rejects(f.run(),/window deadline/);
+ assert.equal(f.records.filter(r=>r.event==='recovery-gap-window-reset').length,6);
+});
+test('a gap discards advances earned before it',async()=>{
+ const f=fixture((s,i,t)=>{if(t>=8000)s.epoch++;},false,false,three,true);
+ const r=await f.run();assert.equal(r.firstEpoch,'5');assert.equal(r.lastEpoch,'9');
+ assert.equal(f.records.find(r=>r.event==='recovery-gap-window-reset').discardedAdvances,1);
+});
+test('execution mismatch on the jump is still fatal',async()=>{
+ const f=fixture((s,i,t)=>{if(t>=4000){s.epoch++;if(i)s.hash='0xbad';}},false,false,three,true);
+ await assert.rejects(f.run(),/execution block unavailable/);
+});
+test('safety history survives recovery window reset',async()=>{
+ const f=fixture((s,i,t)=>{if(t>=4000)s.epoch++;if(t>=5000&&i===2)s.epoch=2;},false,false,three,true);
+ await assert.rejects(f.run(),/regressed/);
+ assert.equal(f.records.filter(r=>r.event==='recovery-gap-window-reset').length,1);
+});
+test('conflict after a recovery gap remains fatal',async()=>{
+ const f=fixture((s,i,t)=>{if(t>=4000)s.epoch++;if(t>=5000&&i===2)s.root='0xbad';},false,false,three,true);
+ await assert.rejects(f.run(),/Conflicting finalized roots/);
 });

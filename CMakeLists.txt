@@ -1338,7 +1338,8 @@ if(NANO_NETWORK_EXECUTABLE)
    ${CMAKE_CURRENT_SOURCE_DIR}/tests/multihost/asymmetric.test.mjs
    ${CMAKE_CURRENT_SOURCE_DIR}/tests/multihost/partition.test.mjs
    ${CMAKE_CURRENT_SOURCE_DIR}/tests/multihost/recovery-observation.test.mjs
-   ${CMAKE_CURRENT_SOURCE_DIR}/tests/multihost/validator-gate.test.mjs)
+   ${CMAKE_CURRENT_SOURCE_DIR}/tests/multihost/validator-gate.test.mjs
+   ${CMAKE_CURRENT_SOURCE_DIR}/tests/assertoor/stability.test.mjs)
   set_tests_properties(consensus_multihost_fault_harness PROPERTIES TIMEOUT 15 LABELS "qualification_consensus_harness")
   foreach(scenario IN ITEMS partition crash)
    if(scenario STREQUAL "partition")

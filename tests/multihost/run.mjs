@@ -121,7 +121,7 @@ try{
  }
  if(!ready)throw Error('Three-node startup/finality deadline exceeded');
  const genesis=await rpc('native','eth_getBlockByNumber',['0x0',false]);
- const observers={revision,genesisHash:genesis.hash,nodes:[{name:'mac-native',kind:'native',url:'http://127.0.0.1:18545'},{name:'mac-docker',kind:'docker',container:local,url:'http://127.0.0.1:8545'},{name:'vps-docker',kind:'ssh-docker',ssh:target,container:remote,url:'http://127.0.0.1:8545'}]};
+ const observers={revision,settleRecoveryGaps:partition||asymmetric,genesisHash:genesis.hash,nodes:[{name:'mac-native',kind:'native',url:'http://127.0.0.1:18545'},{name:'mac-docker',kind:'docker',container:local,url:'http://127.0.0.1:8545'},{name:'vps-docker',kind:'ssh-docker',ssh:target,container:remote,url:'http://127.0.0.1:8545'}]};
  await writeFile(join(output,'observers.json'),JSON.stringify(observers,null,2));
  const faultSample=()=>Promise.all(['native','local','remote'].map(async(kind,i)=>({name:observers.nodes[i].name,
   peers:await rpc(kind,'net_peerCount'),checkpoint:(await request(kind,'/eth/v1/beacon/states/head/finality_checkpoints')).data.finalized})));

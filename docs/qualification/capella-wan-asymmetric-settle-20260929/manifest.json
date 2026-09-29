@@ -1,0 +1,175 @@
+{
+  "status": "FAILED",
+  "coreRevision": "8d1cc1769e9a3e9299dbd73de4dfd7a57f75bb5e",
+  "harness": {
+    "time": 1790713213557,
+    "event": "harness",
+    "partition": false,
+    "asymmetric": true,
+    "fork": "capella",
+    "buildVolume": true,
+    "artifacts": [
+      {
+        "host": "docker-mac",
+        "imageId": "sha256:6116669430b02b7e8012af8c8bd515a5a7dcd1dd2034649f9b45ae5b9e70a3a4",
+        "revision": "8d1cc1769e9a3e9299dbd73de4dfd7a57f75bb5e",
+        "sha256": "6390f4a4475fc44c384ff65a68bb2b1713a3c24cf0520965d86ebef7721b84bb  /build/nano\n36d746690eb35e5a92b21d3cd5b04603a09693bae42a9a50cd45921e27cf88d5  /build/network/nano-p2p\n"
+      },
+      {
+        "host": "vps",
+        "imageId": "sha256:0fa8a608c09ff5ad1e804afc160c04d4964898bed149fcb47a2b587a0a9c194c",
+        "revision": "8d1cc1769e9a3e9299dbd73de4dfd7a57f75bb5e",
+        "sha256": "01217d6953f46afadb09a05d68867743e7cd6490eb8584e47b4ee0e6cc519db3  /build/nano\n094b0c32e82cad52c8964534341bd792fba56824a105ec71cccad88f304a15a5  /build/network/nano-p2p\n"
+      }
+    ],
+    "sha256": {
+      "run.mjs": "33a9172b17c87b0557bb59f0399e29b51ea2db5f893ab10f84fb30ca20ba4a90",
+      "partition.mjs": "d113cf9eb961676f5a32bde61fc06b0af7febde2a6bf4753349cad0d476697ee",
+      "asymmetric.mjs": "226e1a56c14da7a19a98fe9ab1a3f81ba63d6772117c16bf23e939110e3b7fd3",
+      "observe.mjs": "977497f9756c32a51fa6d2db61aed70bd72ae95ba2643ed3ff5c599127108735",
+      "validator-gate.mjs": "01db216db8af88a227d3f6b65984615317253ca261381156d3c607c9459de086",
+      "recovery-observation.mjs": "5234af8f765605260bae6cdf1fe8c00284274a4c1205c0004ef28089d852309a",
+      "clock-sample.mjs": "ab88c1df3995100da3e3c1f737c214611deab41613337913cd3e751d1483d64c",
+      "prepare.mjs": "8b2e20a62fc3d28184ce3a2908a0270d7731a6b38f2dbb2b3faacf88809a75f6"
+    }
+  },
+  "nativeBinaries": {
+    "time": 1790713213576,
+    "event": "binaries",
+    "revision": "8d1cc1769e9a3e9299dbd73de4dfd7a57f75bb5e",
+    "nanoSha256": "f6b98381dbde2aadcbcaac623edbb2470deff2dad7558efa2035bf17fbb87d1d",
+    "p2pSha256": "41137db430a83881f297e2fd3d3b140eee20ababb3c2c9fae7b921e10b3638a8"
+  },
+  "delayStart": {
+    "time": 1790713405340,
+    "event": "asymmetric-delay-start",
+    "egressMilliseconds": 500,
+    "holdMs": 96000,
+    "progressMs": 144000
+  },
+  "delayFinality": {
+    "time": 1790713565081,
+    "event": "asymmetric-delay-finality",
+    "rows": [
+      {
+        "name": "mac-native",
+        "peers": "0x1",
+        "checkpoint": {
+          "epoch": "4",
+          "root": "0x94339e027c3a3ee07c17ebc87ad9884ed4ff518083f92b6b2f0085dbb856fd76"
+        }
+      },
+      {
+        "name": "mac-docker",
+        "peers": "0x1",
+        "checkpoint": {
+          "epoch": "4",
+          "root": "0x94339e027c3a3ee07c17ebc87ad9884ed4ff518083f92b6b2f0085dbb856fd76"
+        }
+      },
+      {
+        "name": "vps-docker",
+        "peers": "0x2",
+        "checkpoint": {
+          "epoch": "4",
+          "root": "0x94339e027c3a3ee07c17ebc87ad9884ed4ff518083f92b6b2f0085dbb856fd76"
+        }
+      }
+    ],
+    "qdiscs": [
+      {
+        "kind": "netem",
+        "handle": "7a00:",
+        "root": true,
+        "refcnt": 5,
+        "options": {
+          "limit": 1000,
+          "delay": {
+            "delay": 0.5,
+            "jitter": 0,
+            "correlation": 0
+          },
+          "ecn": false,
+          "gap": 0
+        },
+        "bytes": 1068348,
+        "packets": 2107,
+        "drops": 0,
+        "overlimits": 0,
+        "requeues": 0,
+        "backlog": 7266,
+        "qlen": 7
+      }
+    ]
+  },
+  "delayMs": 159741,
+  "restored": {
+    "time": 1790713569557,
+    "event": "asymmetric-delay-restored"
+  },
+  "validatorStatuses": [
+    {
+      "file": "native.log",
+      "healthy": true,
+      "attestationsAdmitted": 154
+    },
+    {
+      "file": "docker-mac.log",
+      "healthy": true,
+      "attestationsAdmitted": 147
+    },
+    {
+      "file": "vps.log",
+      "healthy": true,
+      "attestationsAdmitted": 144
+    }
+  ],
+  "failure": {
+    "time": 1790713584324,
+    "event": "failed",
+    "message": "Error: Command failed: /opt/homebrew/Cellar/node/25.9.0_2/bin/node tests/multihost/observe.mjs /tmp/nano-production-wan-asymmetric-settle-20260929/observers.json /tmp/nano-production-wan-asymmetric-settle-20260929/observations\nnode:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nError: Consistent finality sample unavailable\n    at file:///Users/boris/Dev/blockchain-nano/tests/assertoor/stability.mjs:39:24\n    at async Promise.all (index 2)\n    at async observeStableFinality (file:///Users/boris/Dev/blockchain-nano/tests/assertoor/stability.mjs:20:21)\n    at async file:///Users/boris/Dev/blockchain-nano/tests/multihost/observe.mjs:68:15\n\nNode.js v25.9.0\n\n    at genericNodeError (node:internal/errors:998:15)\n    at wrappedFn (node:internal/errors:543:14)\n    at ChildProcess.exithandler (node:child_process:417:12)\n    at ChildProcess.emit (node:events:509:20)\n    at maybeClose (node:internal/child_process:1108:16)\n    at ChildProcess._handle.onexit (node:internal/child_process:305:5)"
+  },
+  "sha256": {
+    "assets/env-0.json": "603653780cb2d82ed627d1c0130dded53fc8e987b589bd82e930c14ce64f2580",
+    "assets/env-1.json": "5ee80e83d15758579ae30c35afac2fa5b8e580f37b50ec49557a188278a9fff6",
+    "assets/fixture.json": "3777aac73b722eaba3ed0cf67015b6594cd5ef3893a4aed25c08c254ce1f38c0",
+    "assets/genesis.json": "7222dbcabb616fb7fc74efdce095f12d82f253674cb73c0e6912c821299ce7af",
+    "assets/initial.json": "8e40bd68538bd3e39d864c9ba083c32c2e7bb72d6c29a687bb0ef97950e97a2a",
+    "assets/node-0.json": "905e884147ec75bab201aec2b69098e0774f2d1f9efcf4e151299468b77d0131",
+    "assets/node-1.json": "58a8a15c0cce27cbb4b0452ce4cb1e66d88e760ada02d0484b7355526638ec8c",
+    "assets/profile.json": "c9d115373e63eea3332aadd86611d1fe6f9d129d61b80d6af883cf16ad176467",
+    "docker-mac.log.gz": "ac9d473cc5f0f9907c2a7c69242831f9d375ec0f8b561a2b39b7a84ddbad6acf",
+    "executed-harness/assertoor/stability-probe.mjs": "f7a8cf28b63ab55be855676541fa88bdebf7fddca11f957ec84f768db735eb4c",
+    "executed-harness/assertoor/stability.mjs": "d6b2aacdfd5eace56964755a9c9006cab6d61cf3fd1d47299bc0e96260582a91",
+    "executed-harness/assertoor/stability.test.mjs": "be7e89bbaaf05b20d47d8af2ab2ab4c9c7a8e87238733c503fa319016bd12575",
+    "executed-harness/asymmetric.mjs": "226e1a56c14da7a19a98fe9ab1a3f81ba63d6772117c16bf23e939110e3b7fd3",
+    "executed-harness/asymmetric.test.mjs": "a722c6562f2d9c52d73050225d16dcf30aeee3e3303baf1dd76098742652432c",
+    "executed-harness/audit-history.mjs": "c3f88f0f6b5aa544c96633917ee48efb28639c6c6a1bda9a2e93e8ba04963ab4",
+    "executed-harness/audit-history.test.mjs": "0cbf775b35890a6bf8bba8c65e6f4ac3b7d9917977692affb3d20e2d9ff13e3b",
+    "executed-harness/clock-sample.mjs": "ab88c1df3995100da3e3c1f737c214611deab41613337913cd3e751d1483d64c",
+    "executed-harness/clock-sample.test.mjs": "bac3d38592a0dde7494e9d2a11acdfee22bceab6a3b1e95c2196959b4aa77a04",
+    "executed-harness/inclusion-timing.mjs": "9bb4a096bfa3b13b39142460837e0c7201a78e0a3ad1eb135574d48537086e52",
+    "executed-harness/observe-config.test.mjs": "1053faa5483ee14219faec02e43f8540f9fbf1d3eda116cfbc68d790dd2abd94",
+    "executed-harness/observe.mjs": "977497f9756c32a51fa6d2db61aed70bd72ae95ba2643ed3ff5c599127108735",
+    "executed-harness/partition.mjs": "d113cf9eb961676f5a32bde61fc06b0af7febde2a6bf4753349cad0d476697ee",
+    "executed-harness/partition.test.mjs": "ac46e14beb5fea4891734dc7ff73f7625df96bfd5e0e2d26bf3cc7e37f56f4a5",
+    "executed-harness/prepare.mjs": "8b2e20a62fc3d28184ce3a2908a0270d7731a6b38f2dbb2b3faacf88809a75f6",
+    "executed-harness/recovery-observation.mjs": "5234af8f765605260bae6cdf1fe8c00284274a4c1205c0004ef28089d852309a",
+    "executed-harness/recovery-observation.test.mjs": "2644ae75c7e13bd4f8a5adc11d0791366598a81711a974c68fffdfe7498e83ec",
+    "executed-harness/relay-summary.mjs": "1b3747ee2d3fa708cf76323408e52fc0aa0009aed6de0a02310843843e43cc2f",
+    "executed-harness/run.mjs": "33a9172b17c87b0557bb59f0399e29b51ea2db5f893ab10f84fb30ca20ba4a90",
+    "executed-harness/validator-gate.mjs": "01db216db8af88a227d3f6b65984615317253ca261381156d3c607c9459de086",
+    "executed-harness/validator-gate.test.mjs": "d1deaae03777001c2b4fde99c0c3608f7f540a36121c89eb1ab1cfe15df22220",
+    "mac-container.json": "33c3a294b53f6ac8f2022f50486d1f6eb4ee383737c82c4eead726fc056e42d0",
+    "nano-stability-recovery-tests.log": "6c13f6efb8affa680b8dc85fbc43ca74ab9783f4b2c032d4d5d929906e625498",
+    "native.log.gz": "ccac219dae8ce9eec85cc74e45385b46f7ddf036f822a70b42741c1940f540fd",
+    "observations/failure.txt": "4d07f32c2cadc7e0a176eb6b2430e1f23adb6c4605db8ecf510eb785f992cec0",
+    "observations/samples.jsonl": "9130daa1a2014b226ac4ccd4efc9c646f6eb448d4cc4e6007a9feb2bbe216c36",
+    "observers.json": "9e4903a8826d2257754f6800726702cc8912164f1a17f76028b0a93feaf0fc57",
+    "run.jsonl": "b0a6ca354579d1d9ceb2f241265306cfa003f6f64ba5e2623cec749a4ba76a95",
+    "topology.json": "4df62a2f5044cf8618d4c53eecf8cb06546930a453b8edbaa5f0b868f51fc0ae",
+    "tunnel.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "vps-container.json": "9d0b3542496576f460df062a70a745ad0ded4ff4b4e1d535f7a9a87dc4426067",
+    "vps.log.gz": "4daa8655359dc45347fa21f74ce83b6ee3f64395c5ae9061973fd1733fb78910"
+  }
+}

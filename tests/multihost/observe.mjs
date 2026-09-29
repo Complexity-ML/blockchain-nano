@@ -65,7 +65,7 @@ try{
   peerIds.add(peerId);
   await record({event:'observer-bound',name:node.name,kind:node.kind,chain,genesisHash:genesis.hash,peerId});
  }
- const result=await observeStableFinality(config.nodes.map(n=>`http://${n.name}`),3,record,{request});
+ const result=await observeStableFinality(config.nodes.map(n=>`http://${n.name}`),3,record,{request,settleRecoveryGaps:config.settleRecoveryGaps===true});
  await writeFile(join(output,'result.json'),JSON.stringify({...result,nodes:config.nodes.map(n=>n.name),revision:config.revision},null,2)+'\n');
  console.log(JSON.stringify(result));
 }catch(error){await writeFile(join(output,'failure.txt'),error.stack+'\n');throw error;}
