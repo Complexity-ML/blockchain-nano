@@ -1,0 +1,231 @@
+[
+    {
+        "Id": "fe6e2ceebafdd9ca27131c813226dde0d9e9210086d7d9ce771d8365fb3c788a",
+        "Created": "2026-09-29T19:17:43.595613539Z",
+        "Path": "sh",
+        "Args": [
+            "-c",
+            "set -e; cmake -S /work -B /build -DCMAKE_BUILD_TYPE=Release > /build/exit-lifecycle-configure.log 2>&1; cmake --build /build --target nano-capella-transition-tests -j2 > /build/exit-lifecycle-build.log 2>&1; sha256sum /build/nano-capella-transition-tests; ctest --test-dir /build -R \"^consensus_capella_(exit_lifecycle_sync|queued_exit_sync|exit_wire)$\" -V --output-junit /build/exit-lifecycle-vps.xml > /build/exit-lifecycle-vps.log 2>&1; cat /build/exit-lifecycle-vps.log"
+        ],
+        "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2026-09-29T19:17:43.632835892Z",
+            "FinishedAt": "2026-09-29T19:27:58.030024689Z"
+        },
+        "Image": "sha256:0fa8a608c09ff5ad1e804afc160c04d4964898bed149fcb47a2b587a0a9c194c",
+        "ResolvConfPath": "/var/lib/docker/containers/fe6e2ceebafdd9ca27131c813226dde0d9e9210086d7d9ce771d8365fb3c788a/resolv.conf",
+        "HostnamePath": "/var/lib/docker/containers/fe6e2ceebafdd9ca27131c813226dde0d9e9210086d7d9ce771d8365fb3c788a/hostname",
+        "HostsPath": "/var/lib/docker/containers/fe6e2ceebafdd9ca27131c813226dde0d9e9210086d7d9ce771d8365fb3c788a/hosts",
+        "LogPath": "/var/lib/docker/containers/fe6e2ceebafdd9ca27131c813226dde0d9e9210086d7d9ce771d8365fb3c788a/fe6e2ceebafdd9ca27131c813226dde0d9e9210086d7d9ce771d8365fb3c788a-json.log",
+        "Name": "/nano-exit-lifecycle-20260929",
+        "RestartCount": 0,
+        "Driver": "overlayfs",
+        "Platform": "linux",
+        "MountLabel": "",
+        "ProcessLabel": "",
+        "AppArmorProfile": "docker-default",
+        "ExecIDs": null,
+        "HostConfig": {
+            "Binds": null,
+            "ContainerIDFile": "",
+            "LogConfig": {
+                "Type": "json-file",
+                "Config": {}
+            },
+            "NetworkMode": "none",
+            "PortBindings": {},
+            "RestartPolicy": {
+                "Name": "no",
+                "MaximumRetryCount": 0
+            },
+            "AutoRemove": false,
+            "VolumeDriver": "",
+            "VolumesFrom": null,
+            "ConsoleSize": [
+                0,
+                0
+            ],
+            "CapAdd": null,
+            "CapDrop": null,
+            "CgroupnsMode": "private",
+            "Dns": null,
+            "DnsOptions": [],
+            "DnsSearch": [],
+            "ExtraHosts": null,
+            "GroupAdd": null,
+            "IpcMode": "private",
+            "Cgroup": "",
+            "Links": null,
+            "OomScoreAdj": 0,
+            "PidMode": "",
+            "Privileged": false,
+            "PublishAllPorts": false,
+            "ReadonlyRootfs": false,
+            "SecurityOpt": null,
+            "UTSMode": "",
+            "UsernsMode": "",
+            "ShmSize": 67108864,
+            "Runtime": "runc",
+            "Isolation": "",
+            "CpuShares": 0,
+            "Memory": 4294967296,
+            "NanoCpus": 2000000000,
+            "CgroupParent": "",
+            "BlkioWeight": 0,
+            "BlkioWeightDevice": [],
+            "BlkioDeviceReadBps": [],
+            "BlkioDeviceWriteBps": [],
+            "BlkioDeviceReadIOps": [],
+            "BlkioDeviceWriteIOps": [],
+            "CpuPeriod": 0,
+            "CpuQuota": 0,
+            "CpuRealtimePeriod": 0,
+            "CpuRealtimeRuntime": 0,
+            "CpusetCpus": "",
+            "CpusetMems": "",
+            "Devices": [],
+            "DeviceCgroupRules": null,
+            "DeviceRequests": null,
+            "MemoryReservation": 0,
+            "MemorySwap": 8589934592,
+            "MemorySwappiness": null,
+            "OomKillDisable": null,
+            "PidsLimit": null,
+            "Ulimits": null,
+            "CpuCount": 0,
+            "CpuPercent": 0,
+            "IOMaximumIOps": 0,
+            "IOMaximumBandwidth": 0,
+            "Mounts": [
+                {
+                    "Type": "bind",
+                    "Source": "/home/ubuntu/blockchain-nano-git",
+                    "Target": "/work",
+                    "ReadOnly": true
+                },
+                {
+                    "Type": "volume",
+                    "Source": "nano-linux-sync-build",
+                    "Target": "/build"
+                }
+            ],
+            "MaskedPaths": [
+                "/proc/acpi",
+                "/proc/asound",
+                "/proc/interrupts",
+                "/proc/kcore",
+                "/proc/keys",
+                "/proc/latency_stats",
+                "/proc/sched_debug",
+                "/proc/scsi",
+                "/proc/timer_list",
+                "/proc/timer_stats",
+                "/sys/devices/virtual/powercap",
+                "/sys/firmware"
+            ],
+            "ReadonlyPaths": [
+                "/proc/bus",
+                "/proc/fs",
+                "/proc/irq",
+                "/proc/sys",
+                "/proc/sysrq-trigger"
+            ]
+        },
+        "Storage": {
+            "RootFS": {
+                "Snapshot": {
+                    "Name": "overlayfs"
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Type": "volume",
+                "Name": "nano-linux-sync-build",
+                "Source": "/var/lib/docker/volumes/nano-linux-sync-build/_data",
+                "Destination": "/build",
+                "Driver": "local",
+                "Mode": "z",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Type": "bind",
+                "Source": "/home/ubuntu/blockchain-nano-git",
+                "Destination": "/work",
+                "Mode": "",
+                "RW": false,
+                "Propagation": "rprivate"
+            }
+        ],
+        "Config": {
+            "Hostname": "fe6e2ceebafd",
+            "Domainname": "",
+            "User": "",
+            "AttachStdin": false,
+            "AttachStdout": false,
+            "AttachStderr": false,
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "CC=clang",
+                "CXX=clang++"
+            ],
+            "Cmd": [
+                "sh",
+                "-c",
+                "set -e; cmake -S /work -B /build -DCMAKE_BUILD_TYPE=Release > /build/exit-lifecycle-configure.log 2>&1; cmake --build /build --target nano-capella-transition-tests -j2 > /build/exit-lifecycle-build.log 2>&1; sha256sum /build/nano-capella-transition-tests; ctest --test-dir /build -R \"^consensus_capella_(exit_lifecycle_sync|queued_exit_sync|exit_wire)$\" -V --output-junit /build/exit-lifecycle-vps.xml > /build/exit-lifecycle-vps.log 2>&1; cat /build/exit-lifecycle-vps.log"
+            ],
+            "Image": "nano-build-dependencies:local",
+            "Volumes": null,
+            "WorkingDir": "/src",
+            "Entrypoint": null,
+            "Labels": {
+                "org.opencontainers.image.version": "24.04"
+            }
+        },
+        "NetworkSettings": {
+            "SandboxID": "",
+            "SandboxKey": "",
+            "Ports": {},
+            "Networks": {
+                "none": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "DriverOpts": null,
+                    "GwPriority": 0,
+                    "NetworkID": "b81ba5405b1ae9d16532df488313570b0982caf8ce88cec23c2c7c05554c3e15",
+                    "EndpointID": "",
+                    "Gateway": "",
+                    "IPAddress": "",
+                    "MacAddress": "",
+                    "IPPrefixLen": 0,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "DNSNames": null
+                }
+            }
+        },
+        "ImageManifestDescriptor": {
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "digest": "sha256:2b1c10dc37e2da085523178fdd676400eade94de7034cc29ba2a519fcdf8b539",
+            "size": 1433,
+            "platform": {
+                "architecture": "amd64",
+                "os": "linux"
+            }
+        }
+    }
+]

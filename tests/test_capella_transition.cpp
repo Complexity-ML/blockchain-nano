@@ -694,6 +694,17 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
      operation.signature=Key(0).sign(consensus_signing_root(consensus_voluntary_exit_root(0,0),consensus_domain({4,0,0,0},version,root_at(seed,8))));
      follower_env["NANO_TEST_EXIT_BOOTSTRAP"]=hex(encode_consensus_voluntary_exit_ssz(operation));follower_env["NANO_TEST_BLS_DAEMON"]=daemon_binary;
      follower_config["p2p_binary"]=fs::absolute(executable).string();save(follower_file,follower_config);
+     // Admit with no peer, close the owner, then reconnect without re-submission.
+     // This distinguishes durable operation delivery from learning an exit in a block.
+     auto offline=follower_config;offline["bootnodes"]=Json::array();save(follower_file,offline);
+     Process disconnected({cli_binary,"run",(directory/"genesis.json").string(),(directory/"follower-db").string(),follower_file.string()},follower_env);
+     const auto offline_port=disconnected.port();check(disconnected.event("altair-ipc-ready").at("networkProtocolActive")==true,"offline exit admission did not start real daemon");
+     check(quantity(rpc(offline_port,"net_peerCount"))==0,"offline exit unexpectedly had peers");
+     const auto stopped=disconnected.stop();std::cout<<stopped.out<<stopped.err;check(stopped.code==0,"offline exit owner did not stop cleanly");
+     {Blockchain reopened(directory/"follower-db",g);ChainStore witness(directory/"follower-witness");CapellaDurableReactor recovered(reopened,rules,limits,witness);const auto pending=recovered.pending_exits();check(pending.size()==1&&encode_consensus_voluntary_exit_ssz(pending.front())==encode_consensus_voluntary_exit_ssz(operation),"offline exit not preserved exactly");}
+     follower_env.erase("NANO_TEST_EXIT_BOOTSTRAP");follower_env.erase("NANO_TEST_BLS_DAEMON");
+     follower_config["p2p_binary"]=daemon_binary;follower_config["capella"]["automaticRecovery"]=true;save(follower_file,follower_config);
+     std::cout<<Json{{"event","capella-exit-offline-reopened"},{"pendingBytesVerified",true},{"resubmitted",false},{"peersBeforeStop",0}}.dump()<<std::endl;
     }
     Process follower_node({cli_binary,"run",(directory/"genesis.json").string(),(directory/"follower-db").string(),follower_file.string()},follower_env);const auto follower_port=follower_node.port();const auto follower_address=follower_node.event("listen").at("address").get<std::string>();check(follower_node.event("altair-ipc-ready").at("networkProtocolActive")==true,"follower network inactive");
     until([&]{source_node.pump(0);follower_node.pump(0);const auto a=rpc(source_port,"eth_getBlockByNumber",Json::array({"latest",false}));const auto b=rpc(follower_port,"eth_getBlockByNumber",Json::array({"latest",false}));return quantity(a.at("number"))>=2&&a.at("hash")==b.at("hash")&&a.at("stateRoot")==b.at("stateRoot");},"two real Capella peers converged",50);
@@ -719,6 +730,9 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
       },"exit withdrawal finalized identically on both peers",180);
      }catch(...){const auto a=source_node.stop(),b=follower_node.stop();std::cerr<<a.out<<a.err<<b.out<<b.err;throw;}
      const auto a=source_node.stop(),b=follower_node.stop();std::cout<<a.out<<a.err<<b.out<<b.err;check(a.code==0&&b.code==0,"exit peers did not stop cleanly");
+     bool delivered=false;std::istringstream relay_events(b.out);std::string relay_line;
+     while(std::getline(relay_events,relay_line)){const auto event=Json::parse(relay_line,nullptr,false);if(event.is_object()&&event.value("event","")=="test-capella-catalog-relay"&&event.value("kind","")=="voluntary_exit"&&event.value("delivered",uint64_t(0))>0)delivered=true;}
+     check(delivered,"reconnected exit was not delivered as a standalone libp2p operation");
      // Reopen both durable owners and account for every canonical payout, including
      // the initial partial withdrawal. Only index 0 owns this fixture recipient.
      for(const auto& [db,witness]:std::array<std::pair<std::string,std::string>,2>{{{"source-db","witness"},{"follower-db","follower-witness"}}}){
@@ -1001,6 +1015,20 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
    if(queued_exits&&slot==first_slot+slots){
     const auto before=reactor->current();const auto operation=encode_consensus_voluntary_exit_ssz(selected_exit);auto invalid=operation;invalid.back()^=1;
     check(!reactor->voluntary_exit_ssz(invalid)&&reactor->current().token==before.token,"invalid exit queue admission mutated state");
+    const auto& exit_head=capella_fork_head(*before.state,store_rules);const auto exit_context=capella_fork_block_context(exit_head.state,exit_head.header,{r.consensus.epoch,r.execution,r.maximum_state_bytes},r.consensus.state);
+    auto signed_request=[&](uint64_t requested_epoch,uint64_t index,uint64_t signer,ConsensusBytes4 domain,ConsensusBytes4 fork,ConsensusRoot genesis){SignedConsensusVoluntaryExit request{requested_epoch,index,{}};request.signature=Key(signer).sign(consensus_signing_root(consensus_voluntary_exit_root(requested_epoch,index),consensus_domain(domain,fork,genesis)));return encode_consensus_voluntary_exit_ssz(request);};
+    auto wrong_fork=version;wrong_fork[0]^=1;auto wrong_genesis=genesis_root;wrong_genesis[0]^=1;
+    const std::vector<std::pair<std::string,Bytes>> invalid_contexts{
+     {"wrong-domain",signed_request(selected_exit.epoch,2,2,{1,0,0,0},version,genesis_root)},
+     {"wrong-fork",signed_request(selected_exit.epoch,2,2,{4,0,0,0},wrong_fork,genesis_root)},
+     {"wrong-genesis",signed_request(selected_exit.epoch,2,2,{4,0,0,0},version,wrong_genesis)},
+     {"wrong-index",signed_request(selected_exit.epoch,3,2,{4,0,0,0},version,genesis_root)},
+     {"wrong-key",signed_request(selected_exit.epoch,2,3,{4,0,0,0},version,genesis_root)},
+     {"future-epoch",signed_request(exit_context.registry.epoch+1,2,2,{4,0,0,0},version,genesis_root)},
+     {"unknown-index",signed_request(selected_exit.epoch,UINT64_MAX,2,{4,0,0,0},version,genesis_root)}};
+    Json rejected=Json::array();for(const auto& [name,bytes]:invalid_contexts){check(!reactor->voluntary_exit_ssz(bytes)&&reactor->current().token==before.token&&reactor->pending_exits().empty(),"exit context rejection mutated state: "+name);rejected.push_back(name);}
+    {Temp immature_dir;ChainStore disk(immature_dir/"queue");disk.bind_chain(r.chain_id,disk_genesis.header.hash(),"capella-exit-tenure");disk.commit(disk_genesis,disk_genesis_state,{});auto immature_rules=store_rules;immature_rules.transition.consensus.exit.shard_committee_period=exit_context.registry.epoch+1;CapellaDurableReactor immature(disk,r.chain_id,disk_genesis.header.hash(),immature_rules,snapshot_limits,*before.state);const auto token=immature.current().token;check(!immature.voluntary_exit_ssz(operation)&&immature.current().token==token&&immature.pending_exits().empty(),"immature exit changed checkpoint");rejected.push_back("insufficient-tenure");}
+    std::cout<<Json{{"scenario","capella-exit-authentication-rejections"},{"rejected",rejected},{"checkpointUnchanged",true},{"queueEmpty",true}}.dump()<<std::endl;
     bool cancelled=false;try{reactor->voluntary_exit_ssz(operation,[]{throw ExecutionCancelled("exit admission cancelled");});}catch(const ExecutionCancelled&){cancelled=true;}check(cancelled&&reactor->current().token==before.token,"cancelled exit admission mutated state");
     {Temp bounded_dir;ChainStore disk(bounded_dir/"queue");disk.bind_chain(r.chain_id,disk_genesis.header.hash(),"capella-exit-capacity");disk.commit(disk_genesis,disk_genesis_state,{});auto limits=snapshot_limits;limits.messages=1;CapellaDurableReactor bounded(disk,r.chain_id,disk_genesis.header.hash(),store_rules,limits,*before.state);
      check(bounded.voluntary_exit_ssz(operation),"bounded exit admission refused");const auto full=bounded.current().token;auto second=selected_exit;second.validator_index=3;second.signature=Key(3).sign(consensus_signing_root(consensus_voluntary_exit_root(second.epoch,3),consensus_domain({4,0,0,0},version,genesis_root)));bool saturated=false;try{bounded.voluntary_exit_ssz(encode_consensus_voluntary_exit_ssz(second));}catch(const std::length_error&){saturated=true;}
@@ -1205,6 +1233,18 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
      if(queued_exits){const auto saved=reactor->current().token;if(reopen){reactor.reset();reactor=std::make_unique<CapellaDurableReactor>(*reactor_disk,r.chain_id,disk_genesis.header.hash(),store_rules,snapshot_limits,saved);}
       const auto pending=reactor->pending_exits();check(pending.size()==size_t(applicable),"exit applicability differs after reorg");if(applicable)check(encode_consensus_voluntary_exit_ssz(pending.front())==encode_consensus_voluntary_exit_ssz(selected_exit),"reorg exit bytes changed");
       const auto record=reactor_disk->fork_checkpoint(r.chain_id,disk_genesis.header.hash(),snapshot_limits.envelope_bytes,saved);check(record&&Json::parse(record->snapshot).at("signedExits").size()==1,"unfinalized exit erased from queue");
+      if(applicable){
+       const auto current=reactor->current();const auto& head=capella_fork_head(*current.state,store_rules);const auto root=consensus_beacon_header_root(head.header);const auto next_slot=slot+1;
+       const auto identity=prepare_capella_proposer_identity(head.state,head.header,next_slot,epoch_rules,l,duties,64,100000);check(bool(identity),"exit reorg proposer missing");
+       ConsensusRoot next_epoch{};for(unsigned i=0;i<8;++i)next_epoch[i]=uint8_t((next_slot/slots)>>(8*i));
+       const auto reveal=Key(identity->index).sign(consensus_signing_root(next_epoch,consensus_domain({2,0,0,0},version,genesis_root)));
+       const auto body=reactor->prepare_local_body(identity->index,next_slot,reveal,head.execution_block.header.coinbase,current.token,{},16,64);check(bool(body),"orphaned exit proposal missing");
+       const auto candidate=prepare_capella_unsigned_block(head.state,next_slot,identity->index,root,*body,r,head.execution_block.header,head.execution_state,[&](const Int& n){return capella_execution_history(*current.state,root,n);},64,100000);check(bool(candidate),"orphaned exit proposal invalid");
+       const auto wire=sign_message(candidate->message_ssz,identity->index);const auto included=prepare_capella_received_block(*current.state,wire,store_rules,64,100000);check(bool(included),"orphaned exit signed block rejected");
+       const auto& state=candidate->post.consensus.ssz;const auto registry=little(state,hist+88,4);check(little(state,registry+121*selected_exit.validator_index+105,8)!=UINT64_MAX,"orphaned exit not included after reorg");
+       check(reactor->current().token==current.token,"reorg preparation changed live checkpoint");
+       std::cout<<Json{{"scenario","capella-exit-reincluded"},{"automaticSelection",true},{"signedBlockAccepted",true},{"liveCheckpointUnchanged",true}}.dump()<<std::endl;
+      }
       std::cout<<Json{{"scenario","capella-exit-reorg"},{"applicable",applicable},{"reopened",reopen},{"retained",true}}.dump()<<std::endl;
      }
      if(!queued_bls_reorg)return;

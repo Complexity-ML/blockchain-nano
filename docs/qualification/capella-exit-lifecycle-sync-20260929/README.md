@@ -51,7 +51,10 @@ pas des domaines de panne physiques indépendants.
    différées du slot courant. L’injection est maintenant située au tick où
    elles sont traitées et où les checkpoints de finalité avancent.
 
-La campagne Linux/VPS de ces 16 nouveaux cas reste à exécuter. La régression
+La campagne Linux/VPS passe sur `2d7c6da` : 16/16 cas, 447,33 s ;
+avec les régressions admission WAL et transport signé, 3/3 tests en 476,02 s.
+[Logs, JUnit, cas et provenance](vps/manifest.json). Le conteneur termine
+avec code 0, sans OOM. La régression
 ciblée du même binaire passe : 6/6 en 121,81 secondes (admission WAL, sorties
 locales, file durable/reorg, transport signé, retrait d’archive et élagage
 d’une sortie en attente).

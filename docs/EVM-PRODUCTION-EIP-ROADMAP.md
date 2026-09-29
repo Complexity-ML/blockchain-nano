@@ -1,5 +1,34 @@
 # EIP pour l’EVM et la production Nano
 
+## Jalon sorties : qualification technique acquise — 29 septembre 2026
+
+L'[audit des six critères](qualification/capella-exit-audit-20260929/README.md)
+relie chaque exigence à ses sources, tests et limites : admission authentifiée,
+livraison autonome après redémarrage, inclusion/réinclusion, finalité et paiement
+sur Mac/VPS, cohérence après WAL/SIGKILL, retrait des archives et élagage.
+La dernière sélection passe (3/3, 16,45 s), le réseau local après reprise passe
+(1/1, 427,44 s), et les seize cas WAL passent aussi sur Linux (3/3 tests,
+476,02 s). Les échecs initiaux et les versions exactes des bancs sont conservés.
+
+**Cela termine la qualification technique de ce jalon, pas la production de
+Nanobees.** Les étapes globales EVM/RPC, consensus sous partitions/charge,
+exploitation, bridge et lancement économique restent ouvertes. La publication
+Git du livrable est contrôlée séparément avant clôture de l'objectif actif.
+Les sections suivantes sont le journal historique des étapes et de leurs
+limites à la date du run ; l'audit ci-dessus fixe l'état consolidé du jalon.
+
+## Audit des sorties en cours — 29 septembre 2026
+
+Les [huit rejets explicites de contexte BLS](qualification/capella-exit-authentication-20260929/README.md)
+passent sur Mac (deux tests, 10,92 s), sans mutation du checkpoint ni de la file.
+La qualification WAN existante démontre la propagation de la sortie dans les
+blocs ; ses journaux ne démontrent pas une livraison autonome `voluntary_exit`.
+Cette livraison autonome est prouvée dans le scénario local RPC/libp2p. Son
+[extension hors connexion](qualification/capella-exit-offline-relay-20260929/README.md)
+passe en 427,44 s : redémarrage sans nouvelle soumission, livraison autonome,
+retrait finalisé et contrôle des deux bases rouvertes. Ne pas confondre
+ces deux portées ni assimiler cette extension à une partition WAN.
+
 ## Sortie entre Mac et VPS qualifiée — 29 septembre 2026
 
 Le [scénario Mac/VPS](qualification/capella-exit-multihost-20260929/README.md)
@@ -19,8 +48,9 @@ automatique. Les régressions élagage BLS/retrait d’archive passent égalemen
 (2/2, 99,92 s). La [campagne aux transitions de sortie](qualification/capella-exit-lifecycle-sync-20260929/README.md)
 passe maintenant sur Mac : 16 cas WAL aux publications d’inclusion,
 retrait d’archive, paiement et finalisation du paiement (130,29 s), puis
-6/6 régressions ciblées (121,81 s). Son exécution Linux/VPS et l’audit final
-de couverture du jalon restent ouverts.
+6/6 régressions ciblées (121,81 s). La campagne Linux/VPS passe également sur `2d7c6da` : 16/16 cas
+(447,33 s), avec 3/3 tests au total (476,02 s). L’audit final de couverture
+du jalon reste ouvert.
 **Le jalon complet et la production ne sont pas déclarés terminés.**
 
 

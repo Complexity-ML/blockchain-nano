@@ -1,0 +1,61 @@
+UpdateCTestConfiguration  from :/Users/boris/Dev/blockchain-nano/build-release/DartConfiguration.tcl
+Test project /Users/boris/Dev/blockchain-nano/build-release
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 350
+    Start 350: consensus_capella_queued_exit_sync
+
+350: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests "--queued-exit-sync"
+350: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+350: Test timeout computed to be: 120
+350: {"blockedOperations":8,"consensusStateUnchanged":true,"faultWitness":false,"lostSuffix":false,"physicalPowerLoss":false,"recoveredPendingBeforeResubmit":true,"resubmissionIdempotent":true,"scenario":"capella-exit-sync-recovery"}
+350: {"blockedOperations":8,"consensusStateUnchanged":true,"faultWitness":false,"lostSuffix":true,"physicalPowerLoss":false,"recoveredPendingBeforeResubmit":true,"resubmissionIdempotent":true,"scenario":"capella-exit-sync-recovery"}
+350: {"blockedOperations":6,"consensusStateUnchanged":true,"faultWitness":true,"lostSuffix":false,"physicalPowerLoss":false,"recoveredPendingBeforeResubmit":true,"resubmissionIdempotent":true,"scenario":"capella-exit-sync-recovery"}
+350: {"blockedOperations":6,"consensusStateUnchanged":true,"faultWitness":true,"lostSuffix":true,"physicalPowerLoss":false,"recoveredPendingBeforeResubmit":false,"resubmissionIdempotent":true,"scenario":"capella-exit-sync-recovery"}
+1/3 Test #350: consensus_capella_queued_exit_sync ...   Passed    5.51 sec
+test 403
+    Start 403: consensus_capella_queued_exits
+
+403: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests "--queued-exits"
+403: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+403: Test timeout computed to be: 180
+403: {"checkpointUnchanged":true,"queueEmpty":true,"rejected":["wrong-domain","wrong-fork","wrong-genesis","wrong-index","wrong-key","future-epoch","unknown-index","insufficient-tenure"],"scenario":"capella-exit-authentication-rejections"}
+403: {"capacityChecked":true,"consensusUnchangedOnAdmission":true,"duplicateIdempotent":true,"invalidRejected":true,"reopened":true,"scenario":"capella-queued-exits"}
+403: {"applicable":false,"reopened":false,"retained":true,"scenario":"capella-exit-reorg"}
+403: {"automaticSelection":true,"liveCheckpointUnchanged":true,"scenario":"capella-exit-reincluded","signedBlockAccepted":true}
+403: {"applicable":true,"reopened":true,"retained":true,"scenario":"capella-exit-reorg"}
+403: {"applicable":false,"reopened":true,"retained":true,"scenario":"capella-exit-reorg"}
+403: {"assembledBodies":9,"beaconReadChecks":0,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":0,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":false,"localProposals":8,"localRandao":8,"migrated":false,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":false,"rejected":20,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"wireMessages":0,"withdrawals":1}
+2/3 Test #403: consensus_capella_queued_exits .......   Passed    5.47 sec
+test 404
+    Start 404: consensus_capella_exit_wire
+
+404: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests "--exit-wire"
+404: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+404: Test timeout computed to be: 180
+404: {"checkpointUnchanged":true,"queueEmpty":true,"rejected":["wrong-domain","wrong-fork","wrong-genesis","wrong-index","wrong-key","future-epoch","unknown-index","insufficient-tenure"],"scenario":"capella-exit-authentication-rejections"}
+404: {"capacityChecked":true,"consensusUnchangedOnAdmission":true,"duplicateIdempotent":true,"invalidRejected":true,"reopened":true,"scenario":"capella-queued-exits"}
+404: {"applicable":false,"reopened":false,"retained":true,"scenario":"capella-exit-reorg"}
+404: {"automaticSelection":true,"liveCheckpointUnchanged":true,"scenario":"capella-exit-reincluded","signedBlockAccepted":true}
+404: {"applicable":true,"reopened":true,"retained":true,"scenario":"capella-exit-reorg"}
+404: {"applicable":false,"reopened":true,"retained":true,"scenario":"capella-exit-reorg"}
+404: {"assembledBodies":9,"beaconReadChecks":0,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":0,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":false,"localProposals":8,"localRandao":8,"migrated":false,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":false,"rejected":20,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"wireMessages":0,"withdrawals":1}
+3/3 Test #404: consensus_capella_exit_wire ..........   Passed    5.46 sec
+
+The following tests passed:
+	consensus_capella_queued_exit_sync
+	consensus_capella_queued_exits
+	consensus_capella_exit_wire
+
+100% tests passed out of 3
+
+Label Time Summary:
+qualification_consensus_network       =   5.46 sec*proc (1 test)
+qualification_consensus_operations    =   5.47 sec*proc (1 test)
+qualification_consensus_recovery      =   5.51 sec*proc (1 test)
+
+Total Test time (real) =  16.45 sec

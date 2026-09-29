@@ -1,0 +1,83 @@
+4089e9a97a48c7183c50c824ad69ad08e8956f89808ea644aa66d1a28ff2e710  /build/nano-capella-transition-tests
+Internal ctest changing into directory: /build
+UpdateCTestConfiguration  from :/build/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/build/DartConfiguration.tcl
+Test project /build
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 239
+    Start 239: consensus_capella_queued_exit_sync
+
+239: Test command: /build/nano-capella-transition-tests "--queued-exit-sync"
+239: Working Directory: /build
+239: Test timeout computed to be: 120
+239: {"blockedOperations":8,"consensusStateUnchanged":true,"faultWitness":false,"lostSuffix":false,"physicalPowerLoss":false,"recoveredPendingBeforeResubmit":true,"resubmissionIdempotent":true,"scenario":"capella-exit-sync-recovery"}
+239: {"blockedOperations":8,"consensusStateUnchanged":true,"faultWitness":false,"lostSuffix":true,"physicalPowerLoss":false,"recoveredPendingBeforeResubmit":true,"resubmissionIdempotent":true,"scenario":"capella-exit-sync-recovery"}
+239: {"blockedOperations":6,"consensusStateUnchanged":true,"faultWitness":true,"lostSuffix":false,"physicalPowerLoss":false,"recoveredPendingBeforeResubmit":true,"resubmissionIdempotent":true,"scenario":"capella-exit-sync-recovery"}
+239: {"blockedOperations":6,"consensusStateUnchanged":true,"faultWitness":true,"lostSuffix":true,"physicalPowerLoss":false,"recoveredPendingBeforeResubmit":false,"resubmissionIdempotent":true,"scenario":"capella-exit-sync-recovery"}
+1/3 Test #239: consensus_capella_queued_exit_sync ......   Passed   12.81 sec
+test 289
+    Start 289: consensus_capella_exit_wire
+
+289: Test command: /build/nano-capella-transition-tests "--exit-wire"
+289: Working Directory: /build
+289: Test timeout computed to be: 180
+289: {"capacityChecked":true,"consensusUnchangedOnAdmission":true,"duplicateIdempotent":true,"invalidRejected":true,"reopened":true,"scenario":"capella-queued-exits"}
+289: {"applicable":false,"reopened":false,"retained":true,"scenario":"capella-exit-reorg"}
+289: {"applicable":true,"reopened":true,"retained":true,"scenario":"capella-exit-reorg"}
+289: {"applicable":false,"reopened":true,"retained":true,"scenario":"capella-exit-reorg"}
+289: {"assembledBodies":9,"beaconReadChecks":0,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":0,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":false,"localProposals":8,"localRandao":8,"migrated":false,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":false,"rejected":20,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"wireMessages":0,"withdrawals":1}
+2/3 Test #289: consensus_capella_exit_wire .............   Passed   15.86 sec
+test 293
+    Start 293: consensus_capella_exit_lifecycle_sync
+
+293: Test command: /build/nano-capella-transition-tests "--exit-lifecycle-sync"
+293: Working Directory: /build
+293: Test timeout computed to be: 600
+293: {"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+293: {"archiveSize":1,"blockedOperations":8,"capitalPayments":0,"exactRecovery":true,"faultWitness":false,"finalizedCapitalPayments":0,"lostSuffix":false,"operation":"block","physicalPowerLoss":false,"retryIdempotent":true,"scenario":"capella-exit-lifecycle-sync","stage":"inclusion"}
+293: {"archiveSize":1,"blockedOperations":8,"capitalPayments":0,"exactRecovery":true,"faultWitness":false,"finalizedCapitalPayments":0,"lostSuffix":true,"operation":"block","physicalPowerLoss":false,"retryIdempotent":true,"scenario":"capella-exit-lifecycle-sync","stage":"inclusion"}
+293: {"archiveSize":1,"blockedOperations":6,"capitalPayments":0,"exactRecovery":true,"faultWitness":true,"finalizedCapitalPayments":0,"lostSuffix":false,"operation":"block","physicalPowerLoss":false,"retryIdempotent":true,"scenario":"capella-exit-lifecycle-sync","stage":"inclusion"}
+293: {"archiveSize":1,"blockedOperations":6,"capitalPayments":0,"exactRecovery":true,"faultWitness":true,"finalizedCapitalPayments":0,"lostSuffix":true,"operation":"block","physicalPowerLoss":false,"retryIdempotent":true,"scenario":"capella-exit-lifecycle-sync","stage":"inclusion"}
+293: {"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+293: {"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+293: {"archiveSize":0,"blockedOperations":8,"capitalPayments":0,"exactRecovery":true,"faultWitness":false,"finalizedCapitalPayments":0,"lostSuffix":false,"operation":"clock-tick","physicalPowerLoss":false,"retryIdempotent":true,"scenario":"capella-exit-lifecycle-sync","stage":"archive-retirement"}
+293: {"archiveSize":0,"blockedOperations":8,"capitalPayments":0,"exactRecovery":true,"faultWitness":false,"finalizedCapitalPayments":0,"lostSuffix":true,"operation":"clock-tick","physicalPowerLoss":false,"retryIdempotent":true,"scenario":"capella-exit-lifecycle-sync","stage":"archive-retirement"}
+293: {"archiveSize":0,"blockedOperations":6,"capitalPayments":0,"exactRecovery":true,"faultWitness":true,"finalizedCapitalPayments":0,"lostSuffix":false,"operation":"clock-tick","physicalPowerLoss":false,"retryIdempotent":true,"scenario":"capella-exit-lifecycle-sync","stage":"archive-retirement"}
+293: {"archiveSize":0,"blockedOperations":6,"capitalPayments":0,"exactRecovery":true,"faultWitness":true,"finalizedCapitalPayments":0,"lostSuffix":true,"operation":"clock-tick","physicalPowerLoss":false,"retryIdempotent":true,"scenario":"capella-exit-lifecycle-sync","stage":"archive-retirement"}
+293: {"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+293: {"finalizedEpoch":3,"progressSlot":40,"signedVotes":264}
+293: {"finalizedEpoch":4,"progressSlot":48,"signedVotes":327}
+293: {"finalizedEpoch":5,"progressSlot":56,"signedVotes":390}
+293: {"archiveSize":0,"blockedOperations":8,"capitalPayments":1,"exactRecovery":true,"faultWitness":false,"finalizedCapitalPayments":0,"lostSuffix":false,"operation":"block","physicalPowerLoss":false,"retryIdempotent":true,"scenario":"capella-exit-lifecycle-sync","stage":"payment"}
+293: {"archiveSize":0,"blockedOperations":8,"capitalPayments":1,"exactRecovery":true,"faultWitness":false,"finalizedCapitalPayments":0,"lostSuffix":true,"operation":"block","physicalPowerLoss":false,"retryIdempotent":true,"scenario":"capella-exit-lifecycle-sync","stage":"payment"}
+293: {"archiveSize":0,"blockedOperations":6,"capitalPayments":1,"exactRecovery":true,"faultWitness":true,"finalizedCapitalPayments":0,"lostSuffix":false,"operation":"block","physicalPowerLoss":false,"retryIdempotent":true,"scenario":"capella-exit-lifecycle-sync","stage":"payment"}
+293: {"archiveSize":0,"blockedOperations":6,"capitalPayments":1,"exactRecovery":true,"faultWitness":true,"finalizedCapitalPayments":0,"lostSuffix":true,"operation":"block","physicalPowerLoss":false,"retryIdempotent":true,"scenario":"capella-exit-lifecycle-sync","stage":"payment"}
+293: {"finalizedEpoch":6,"progressSlot":64,"signedVotes":453}
+293: {"finalizedEpoch":7,"progressSlot":72,"signedVotes":516}
+293: {"archiveSize":0,"blockedOperations":8,"capitalPayments":1,"exactRecovery":true,"faultWitness":false,"finalizedCapitalPayments":1,"lostSuffix":false,"operation":"clock-tick","physicalPowerLoss":false,"retryIdempotent":true,"scenario":"capella-exit-lifecycle-sync","stage":"payment-finality"}
+293: {"archiveSize":0,"blockedOperations":8,"capitalPayments":1,"exactRecovery":true,"faultWitness":false,"finalizedCapitalPayments":1,"lostSuffix":true,"operation":"clock-tick","physicalPowerLoss":false,"retryIdempotent":true,"scenario":"capella-exit-lifecycle-sync","stage":"payment-finality"}
+293: {"archiveSize":0,"blockedOperations":6,"capitalPayments":1,"exactRecovery":true,"faultWitness":true,"finalizedCapitalPayments":1,"lostSuffix":false,"operation":"clock-tick","physicalPowerLoss":false,"retryIdempotent":true,"scenario":"capella-exit-lifecycle-sync","stage":"payment-finality"}
+293: {"archiveSize":0,"blockedOperations":6,"capitalPayments":1,"exactRecovery":true,"faultWitness":true,"finalizedCapitalPayments":1,"lostSuffix":true,"operation":"clock-tick","physicalPowerLoss":false,"retryIdempotent":true,"scenario":"capella-exit-lifecycle-sync","stage":"payment-finality"}
+293: {"finalizedEpoch":8,"progressSlot":80,"signedVotes":579}
+293: {"finalizedEpoch":8,"progressSlot":81,"signedVotes":587}
+293: {"boundaries":["archive-retirement","inclusion","payment","payment-finality"],"scenario":"capella-exit-lifecycle-complete","walCases":16}
+293: {"blocks":80,"disjointSyncMerging":false,"executionOwner":true,"finalizedEpoch":8,"independentStores":2,"individualSyncMessages":false,"justifiedEpoch":9,"localSyncAggregates":false,"localSyncSigning":false,"networkActivated":false,"networkTransport":false,"participationPercent":100,"scenario":"capella-local-assembly-finality","signingJournalsReopened":64,"storeReopens":2,"syncCatalogExport":false,"syncPrecollection":false,"syncWireWorker":false,"votes":587}
+3/3 Test #293: consensus_capella_exit_lifecycle_sync ...   Passed  447.33 sec
+
+The following tests passed:
+	consensus_capella_queued_exit_sync
+	consensus_capella_exit_wire
+	consensus_capella_exit_lifecycle_sync
+
+100% tests passed, 0 tests failed out of 3
+
+Label Time Summary:
+qualification_consensus_network     =  15.86 sec*proc (1 test)
+qualification_consensus_recovery    = 460.14 sec*proc (2 tests)
+
+Total Test time (real) = 476.02 sec
