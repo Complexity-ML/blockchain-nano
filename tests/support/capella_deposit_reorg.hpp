@@ -111,6 +111,31 @@ static void deposit_reorg_loop(const CapellaForkStore& initial,const CapellaFork
   const auto journal_token=local_journal.commitment();const auto finalized=left.state->timed.view.finalized;
   for(size_t n:{1,2}){const auto token=nodes[n]->current().token;nodes[n].reset();owners[n].reset();owners[n]=std::make_unique<Blockchain>(directory/("owner-"+std::to_string(n)),g);nodes[n]=std::make_unique<CapellaDurableReactor>(*owners[n],rules,limits,token);check(nodes[n]->current_validator_indices(requested).at(Key(64).public_key)==65&&nodes[n]->current().state->timed.view.finalized==finalized,"post-activation reopen lost finality or index");}
   check(local_journal.commitment()==journal_token,"owner reopen mutated signing journal");
+  if(exit_reindex){
+   const auto current=nodes[2]->current();const auto& head=capella_fork_head(*current.state,rules);
+   const auto context=capella_fork_block_context(head.state,head.header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state);
+   check(context.registry.epoch>=activation+t.consensus.exit.shard_committee_period,"reindexed validator has not completed exit tenure");
+   const auto version=context.registry.epoch<context.fork.epoch?context.fork.previous_version:context.fork.current_version;
+   auto request=[&](uint64_t index){SignedConsensusVoluntaryExit operation{context.registry.epoch,index,{}};operation.signature=Key(64).sign(consensus_signing_root(consensus_voluntary_exit_root(operation.epoch,index),consensus_domain({4,0,0,0},version,context.genesis_root)));return encode_consensus_voluntary_exit_ssz(operation);};
+   const auto stale=request(64),correct=request(65);auto bad=correct;bad.back()^=1;
+   for(size_t n:{1,2}){const auto token=nodes[n]->current().token;
+    check(!nodes[n]->voluntary_exit_ssz(stale)&&!nodes[n]->voluntary_exit_ssz(bad)&&nodes[n]->current().token==token&&nodes[n]->pending_exits().empty(),"stale index or malformed signature admitted after reindex");
+    check(nodes[n]->voluntary_exit_ssz(correct),"correct reindexed exit rejected");const auto saved=nodes[n]->current().token;
+    check(nodes[n]->voluntary_exit_ssz(correct)&&nodes[n]->current().token==saved,"reindexed exit duplicate republished");
+    nodes[n].reset();owners[n].reset();owners[n]=std::make_unique<Blockchain>(directory/("owner-"+std::to_string(n)),g);nodes[n]=std::make_unique<CapellaDurableReactor>(*owners[n],rules,limits,saved);
+    const auto pending=nodes[n]->pending_exits();check(pending.size()==1&&encode_consensus_voluntary_exit_ssz(pending.front())==correct&&pending.front().validator_index==65,"reindexed exit lost identity on reopen");
+   }
+   const auto slot=end+1;now=initial.timed.clock.genesis_time_ms+slot*rules.slot_duration_ms;for(size_t n:{1,2})nodes[n]->tick(now);
+   const auto proposer=nodes[1]->current_proposer(slot);check(bool(proposer),"reindexed exit proposer missing");const auto signing_key=*proposer<64?*proposer:129-*proposer;
+   const auto wire=nodes[1]->propose_current(*proposer,slot,genesis.header.coinbase,16,64,[&]{return now;},journal(1,*proposer),[&](const ConsensusRoot& root){return Key(signing_key).sign(root);});
+   check(wire&&nodes[1]->block(*wire)&&nodes[2]->block(*wire),"reindexed exit automatic inclusion failed");
+   for(size_t n:{1,2}){const auto current=nodes[n]->current();const auto& head=capella_fork_head(*current.state,rules);const auto after=capella_fork_block_context(head.state,head.header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state);
+    check(after.registry.validators.at(64).exit_epoch==UINT64_MAX&&after.registry.validators.at(65).exit_epoch!=UINT64_MAX,"exit applied to wrong reindexed validator");
+    check(after.registry.validators.at(64).public_key==context.registry.validators.at(64).public_key&&after.registry.validators.at(65).public_key==context.registry.validators.at(65).public_key,"exit changed registered public keys");
+   }
+   std::cout<<Json{{"scenario","capella-reindexed-validator-exit"},{"oldIndex",64},{"newIndex",65},{"oldIndexSignatureRejected",true},{"invalidSignatureRejected",true},{"bothOwnersReopenedWithExactExit",true},{"automaticInclusion",true},{"otherValidatorUnchanged",true},{"networkTransport",false}}.dump()<<std::endl;
+  }
+
   std::cout<<Json{{"scenario","capella-reindexed-validator-activation"},{"activationEpoch",activation},{"newValidatorVotes",new_votes},{"providerCalls",provider_calls},{"finalizedEpoch",finalized.epoch},{"finalizedRoot",hex(Bytes(finalized.root.begin(),finalized.root.end()))},{"bothOwnersReopened",true},{"index",65},{"networkTransport",false}}.dump()<<std::endl;
  }
 

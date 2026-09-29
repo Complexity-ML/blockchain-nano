@@ -1722,3 +1722,9 @@ if(NANO_NETWORK_EXECUTABLE)
  add_test(NAME consensus_capella_exit_network COMMAND nano-capella-transition-tests --exit-network-cli $<TARGET_FILE:nano> ${NANO_NETWORK_EXECUTABLE})
  set_tests_properties(consensus_capella_exit_network PROPERTIES TIMEOUT 720 RUN_SERIAL TRUE LABELS "qualification_consensus_network")
 endif()
+
+add_test(NAME consensus_capella_exit_retirement COMMAND nano-capella-transition-tests --exit-retirement)
+set_tests_properties(consensus_capella_exit_retirement PROPERTIES TIMEOUT 300 LABELS "qualification_consensus_recovery")
+
+add_test(NAME consensus_capella_exit_reindex COMMAND nano-capella-transition-tests --exit-reindex)
+set_tests_properties(consensus_capella_exit_reindex PROPERTIES TIMEOUT 480 LABELS "qualification_consensus_recovery")

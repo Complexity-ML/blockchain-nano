@@ -7,6 +7,10 @@ finalité commune au bloc 56, comptabilité des paiements après réouverture et
 contrôle des dernières propositions/attestations du validateur sorti. Un seul
 processus possède les clés des validateurs ; cela ne qualifie pas un consensus
 entre hôtes indépendants. Les [quatre cas WAL de l’admission](qualification/capella-exit-wal-20260929/README.md) passent aussi sur Mac, avec la régression BLS du banc partagé (2/2 tests).
+La [campagne WAL Linux/VPS](qualification/vps-exit-wal-20260929/README.md)
+passe sur `ebe1d16` (2/2, 26,48 s). Le [contrôle direct de l'archive](qualification/capella-exit-retirement-20260929/README.md)
+passe sur Mac : conservation avant finalité, retrait après finalité, puis
+élagage et réouvertures (64,81 s). Le [cas après réindexation](qualification/capella-exit-reindex-20260929/README.md) passe également (174,47 s) : ancien index refusé, bon index admis et inclus, autre validateur inchangé. Le bout en bout Mac/VPS reste ouvert.
 Voir les [preuves, échecs et limites](qualification/capella-exit-network-20260929/README.md).
 La production et le jalon complet restent non démontrés.
 
