@@ -1,0 +1,10 @@
+Initial offline resource-summary invocation failed with:
+Error: Native resource identity mismatch
+at summarize (tests/multihost/resource-summary.mjs:27)
+
+Cause verified on the captured first ps stdout: the original regular expression
+did not accept its trailing newline. Historical Python collector stripped it;
+the new in-run JavaScript collector preserves raw command output.
+Fix: trimEnd before parsing; a new negative case still rejects a second process.
+All 9 resource-summary tests passed. The same raw campaign samples were then
+summarized successfully. No network rerun and no runtime/core change for this fix.

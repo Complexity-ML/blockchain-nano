@@ -23,7 +23,7 @@ export function summarize(records,binding){
    if(s.exitCode!==0||s.error){n.unavailable.push({timeMs:row.timeMs,error:s.error??s.stderr??'command failed',exitCode:s.exitCode??null});continue;}
    let memory,cpu,id;
    if(s.host==='mac-native'){
-    const m=/^\s*(\d+)\s+(\d+)\s+([\d.]+)\s+(\S+)\s+(.+)$/.exec(s.stdout);
+    const m=/^\s*(\d+)\s+(\d+)\s+([\d.]+)\s+(\S+)\s+(.+)$/.exec(s.stdout.trimEnd());
     if(!m||Number(m[1])!==binding.nativePid||!m[5].includes(binding.directory+'/prepared/mac-native/'))throw Error('Native resource identity mismatch');
     id=String(binding.nativePid);memory=Number(m[2])*1024;cpu=Number(m[3]);
     if(!Number.isSafeInteger(memory)||!Number.isFinite(cpu))throw Error('Invalid native resource quantity');

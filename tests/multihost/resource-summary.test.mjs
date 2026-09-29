@@ -3,6 +3,12 @@ import assert from 'node:assert/strict';
 import {bytes,summarize} from './resource-summary.mjs';
 const binding={nativePid:42,directory:'/tmp/run',localContainer:'nano-qualification-mac-test',remoteContainer:'nano-qualification-vps-test'};
 const record=timeMs=>({timeMs,samples:[{host:'mac-native',exitCode:0,stdout:'42 1024 25.0 00:30 nano run /tmp/run/prepared/mac-native/genesis.json'},...['mac','vps'].map(host=>({host:host+'-docker',exitCode:0,stdout:JSON.stringify({ID:host,Name:'nano-qualification-'+host+'-test',MemUsage:'2MiB / 3GiB',CPUPerc:'140.25%',BlockIO:'1MB / 2GB'})}))]});
+test('raw ps output may end with a newline but cannot contain a second process',()=>{
+ const r=record(1);r.samples[0].stdout+='\n';
+ assert.equal(summarize([r],binding).nodes['mac-native'].samples,1);
+ r.samples[0].stdout+='43 1024 25.0 00:30 nano run /tmp/run/prepared/mac-native/genesis.json\n';
+ assert.throws(()=>summarize([r],binding),/identity/);
+});
 test('SI and binary units remain distinct',()=>{assert.equal(bytes('1MB'),1000000);assert.equal(bytes('1MiB'),1048576);assert.throws(()=>bytes('1 PB'),/Unknown/);});
 test('summary reports sampled maxima, intervals and I/O separately',()=>{const s=summarize([record(1),record(20001)],binding);assert.equal(s.nodes['mac-native'].maxObservedMemoryBytes,1048576);assert.equal(s.nodes['vps-docker'].maxObservedCpuPercent,140.25);assert.equal(s.nodes['vps-docker'].maximumSampleGapMs,20000);assert.equal(s.nodes['vps-docker'].lastBlockIoBytes.written,2e9);assert.equal(s.passed,undefined);});
 test('observation gaps stay visible',()=>{const rows=[record(1),record(2),record(3)];rows[1].samples[0]={host:'mac-native',exitCode:1,stderr:'gone'};const n=summarize(rows,binding).nodes['mac-native'];assert.equal(n.samples,2);assert.equal(n.unavailable.length,1);assert.equal(n.maximumSampleGapMs,2);});

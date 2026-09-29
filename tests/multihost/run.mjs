@@ -13,6 +13,7 @@ import {asymmetricRemote,createRemoteTc} from './asymmetric.mjs';
 import {observeRecovery} from './recovery-observation.mjs';
 import {sampleClock} from './clock-sample.mjs';
 import {createRotationCapture,ownership,rotationNodes,waitRotationWindow} from './rotation.mjs';
+import {runBoundedLoad} from './bounded-load.mjs';
 const exec=promisify(execFile),[target,revision,outputArg]=process.argv.slice(2);
 const fork=process.env.NANO_TEST_CONSENSUS_PROFILE??'bellatrix';
 if(!['bellatrix','capella'].includes(fork))throw Error('Unsupported consensus profile');
@@ -26,6 +27,8 @@ const id=Date.now().toString(36),local=`nano-qualification-mac-${id}`,remote=`na
 const partition=process.env.NANO_TEST_WAN_PARTITION==='1',asymmetric=process.env.NANO_TEST_WAN_ASYMMETRIC==='1',testNetwork=remote+'-net';
 if(partition&&asymmetric)throw Error('Select only one WAN fault');
 const rotation=process.env.NANO_TEST_WAN_ROTATION==='1';
+const boundedLoad=process.env.NANO_TEST_BOUNDED_LOAD==='1';
+if(boundedLoad&&(fork!=='capella'||partition||asymmetric||rotation))throw Error('First bounded load scope requires Capella without injected network faults');
 if(rotation&&(fork!=='capella'||!partition||!buildVolume))throw Error('Rotation requires Capella, the isolated partition and build volumes');
 const remoteRoot=`/home/${target.split('@')[0]}/nano-qualification-${id}`,ip=target.split('@')[1];
 const quote=s=>"'"+String(s).replaceAll("'","'\\''")+"'";
@@ -54,6 +57,7 @@ for(const onRemote of [false,true]){
 await mkdir(output);
 const log=async event=>appendFile(join(output,'run.jsonl'),JSON.stringify({time:Date.now(),...event})+'\n');
 let native,tunnel,localStarted=false,remoteStarted=false;
+let resourceTask,resourceStop=false,resourceFailure;
 let rotationTask,rotationStop=false,rotationFailure,rotationProof,rotationCutoff;
 const rotationCapture=rotation?createRotationCapture():null;
 const clockSamples=async phase=>{
@@ -75,8 +79,8 @@ const rpc=async(kind,method,params=[])=>{
 try{
  const binary=join(repo,'build-release/nano'),p2p=join(repo,'build-network/nano-p2p');
  if(rotation)await log({event:'rotation-audit-binary',sha256:createHash('sha256').update(await readFile(join(repo,'build-release/nano-capella-rotation-audit'))).digest('hex')});
- const harness={};for(const name of ['run.mjs','partition.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','prepare.mjs','rotation.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
- await log({event:'harness',partition,asymmetric,rotation,fork,buildVolume,artifacts,sha256:harness});
+ const harness={};for(const name of ['run.mjs','partition.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','prepare.mjs','rotation.mjs','bounded-load.mjs','load-receipts.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
+ await log({event:'harness',partition,asymmetric,rotation,boundedLoad,fork,buildVolume,artifacts,sha256:harness});
  await log({event:'binaries',revision,nanoSha256:createHash('sha256').update(await readFile(binary)).digest('hex'),p2pSha256:createHash('sha256').update(await readFile(p2p)).digest('hex')});
  const assets=join(output,'assets'),prepared=join(output,'prepared');
  await exec(join(repo,`build-release/nano-${fork}-transition-tests`),[fork==='capella'?'--export-network':'--export-kurtosis',assets],{timeout:30000});
@@ -105,6 +109,20 @@ try{
  const fd=openSync(join(output,'native.log'),'a');native=spawn(binary,['run',join(nd,'genesis.json'),join(nd,'data/chain'),join(nd,'node.json')],{env:{...process.env,...environment},stdio:['ignore',fd,fd]});closeSync(fd);
  native.on('error',error=>log({event:'native-spawn-error',message:error.message}));
  await log({event:'started',nativePid:native.pid,localContainer:local,remoteContainer:remote,bootnode:boot,physicalHosts:2,validatorKeys:64});
+ if(boundedLoad)resourceTask=(async()=>{
+  while(!resourceStop){
+   const timeMs=Date.now();
+   const probes=[['mac-native',async()=>(await exec('ps',['-p',String(native.pid),'-o','pid=,rss=,%cpu=,etime=,command='],{timeout:20000})).stdout],
+    ['mac-docker',()=>docker(['stats','--no-stream','--format','{{json .}}',local],false,20000)],
+    ['vps-docker',()=>docker(['stats','--no-stream','--format','{{json .}}',remote],true,20000)]];
+   const samples=await Promise.all(probes.map(async([host,probe])=>{
+    try{return {host,exitCode:0,stdout:await probe(),stderr:''};}
+    catch(error){return {host,error:error.message};}
+   }));
+   await appendFile(join(output,'resources.jsonl'),JSON.stringify({timeMs,samples})+'\n');
+   while(!resourceStop&&Date.now()-timeMs<20000)await delay(1000);
+  }
+ })().catch(error=>{resourceFailure=error;});
  const deadline=Date.now()+300000;let ready=false;const observedRoots=new Map();
  while(Date.now()<deadline){
   try{
@@ -141,6 +159,7 @@ try{
   }
   return rows;
  };
+ if(boundedLoad)await runBoundedLoad({rpc,genesisHash:genesis.hash,output,sampleFinality:faultSample});
  const rotationHeads=()=>Promise.all(['native','local','remote'].map(async(kind,i)=>{
   const h=(await request(kind,'/eth/v1/beacon/headers/head')).data;
   return {name:rotationNodes[i],root:h.root,slot:Number(h.header.message.slot)};
@@ -203,6 +222,8 @@ try{
  }
 }catch(error){await log({event:'failed',message:error.stack});process.exitCode=1;}
 finally{
+ resourceStop=true;if(resourceTask)await resourceTask;
+ if(resourceFailure){await log({event:'resource-collection-failed',message:resourceFailure.stack});process.exitCode=1;}
  rotationStop=true;if(rotationTask)await rotationTask;
  if(rotationCapture)await writeFile(join(output,'rotation-raw-captures.json'),JSON.stringify(rotationCapture.dump()));
  if(rotationFailure){await log({event:'rotation-capture-failed',message:rotationFailure.stack});process.exitCode=1;}

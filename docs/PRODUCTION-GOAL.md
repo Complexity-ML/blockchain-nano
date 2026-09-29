@@ -1,5 +1,16 @@
 # Objectif : Nano C++ de niveau production
 
+## Charge applicative WAN bornée — qualifiée le 30 septembre 2026
+
+Le [nouveau scénario multihôte](qualification/capella-bounded-load-20260930/README.md)
+passe : 96 transactions type 2 finalisées sur les trois nœuds, reçus identiques,
+nonce/solde/stockage vérifiés, puis finalité commune des époques 8 à 11. Le lot
+est vérifié en 290,781 s et la stabilité post-charge en 131,089 s. Les 31 mesures
+par nœud ne présentent aucun manque ; les conteneurs sortent à 0 sans OOM.
+C'est une charge finie de transferts et SSTORE constant, sans partition injectée,
+ni croissance du stockage, ni mesure de capacité maximale. Le cœur est inchangé ;
+aucun fork supplémentaire ni critère global de production n'est déclaré clôturé.
+
 ## Nouveau validateur : preuve conservée avant enregistrement finalisé — 30 septembre 2026
 
 Le [nouveau parcours dépôt/sanction](qualification/capella-new-validator-slashing-20260930/README.md)
