@@ -1,5 +1,17 @@
 # Feuille de route EIP — état réel de Nano
 
+## WAN asymétrique qualifié avec lecture immuable — 29 septembre 2026
+
+La [campagne sur `940736f`](qualification/capella-wan-pinned-20260929/README.md)
+passe sur Mac natif, Docker ARM64 et Docker VPS x86-64 : 500 ms sortants,
+finalité 2 → 4 en 146,980 s sous défaut, puis rattrapages 4 → 6 → 8 et fenêtre
+**8 → 9 → 10 → 11**. Observation après restauration 271,743 s sous la borne
+inchangée de 288 s ; 114 lectures par état, trois validateurs sains à l'arrêt.
+Le correctif Beacon passe aussi en tests natifs sur les trois plateformes.
+Les deux échecs précédents restent conservés. Ce scénario borné est qualifié ;
+rotation WAN, sanctions/cycle complet à consolider, charge, exploitation,
+écarts EVM/RPC, bridge et revue indépendante restent dans l'objectif global.
+
 ## Lecture Capella par état implémentée — 29 septembre 2026
 
 Le [correctif de lecture immuable](qualification/capella-pinned-beacon-20260929/README.md)

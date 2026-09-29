@@ -31,3 +31,15 @@ et son journal conservé. Build natif final réussi. Sources/binaires identifié
 dans `manifest.json`. Ni conformité Beacon API complète ni production prête.
 
 Référence : [Beacon API, finality checkpoints par state_id](https://github.com/ethereum/beacon-APIs/blob/master/apis/beacon/states/finality_checkpoints.yaml).
+
+
+## Linux qualifié pour cette lecture
+
+Sur le même commit `940736f`, le build et le test Beacon passent aussi en
+Linux ARM64 (3,72 s) et Linux x86-64 sur VPS (15,61 s). Les conteneurs de build
+terminent avec code 0, sans OOM. Images/volumes existants réutilisés, deux CPU
+et 4 Go maximum pour chaque build. `linux/` conserve journaux, statuts et hashes.
+La campagne WAN avec ces nouveaux binaires est distincte des tests directs.
+
+La [campagne WAN avec lecture par état](../capella-wan-pinned-20260929/README.md)
+passe désormais ; ses mesures et limites restent distinctes de ces tests directs.
