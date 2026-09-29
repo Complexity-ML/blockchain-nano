@@ -1,14 +1,15 @@
 # EIP pour l’EVM et la production Nano
 
-## Sanctions après réorganisation : qualification native — 29 septembre 2026
+## Sanctions après réorganisation qualifiées — 29 septembre 2026
 
 Le [nouveau scénario](qualification/capella-slashing-reorg-20260929/README.md)
-passe sur Mac : deux changements de branche signés, preuve conservée puis
-réincluse automatiquement, sept réouvertures avec état exact et absence de double
-pénalité. Le premier échec du scénario (horloge non avancée avant proposition)
-est conservé et corrigé uniquement dans le test. Qualification Linux en cours.
-Multi-auteurs, finalisation partielle et échecs d’écriture restent ouverts ;
-aucun statut EIP ni critère global de production n’est déclaré acquis.
+passe sur Mac (5,14 s), Docker ARM64 (3,99 s) et VPS x86-64 (16,87 s) : deux
+changements de branche signés, preuve conservée puis réincluse automatiquement,
+sept réouvertures avec état exact et absence de double pénalité. La régression
+du scénario partagé passe sur les trois plateformes. L’échec initial du test
+(horloge non avancée) est conservé ; aucun code du cœur n’a changé.
+Le critère borné mono-auteur est fermé. Multi-auteurs, finalisation partielle et
+échecs d’écriture restent ouverts, ainsi que l’objectif global de production.
 
 ## Rotation WAN qualifiée avec audit corrigé — 29 septembre 2026
 

@@ -1,0 +1,39 @@
+Internal ctest changing into directory: /build
+UpdateCTestConfiguration  from :/build/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/build/DartConfiguration.tcl
+Test project /build
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 337
+    Start 337: consensus_capella_signed_transition
+
+337: Test command: /build/nano-capella-transition-tests
+337: Working Directory: /build
+337: Test timeout computed to be: 120
+337: {"assembledBodies":9,"beaconReadChecks":0,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":0,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":false,"localProposals":8,"localRandao":8,"migrated":false,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":false,"rejected":20,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"wireMessages":0,"withdrawals":1}
+337: {"assembledBodies":9,"beaconReadChecks":0,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":1,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":false,"localProposals":8,"localRandao":8,"migrated":true,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":false,"rejected":24,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"wireMessages":0,"withdrawals":1}
+337: {"assembledBodies":9,"beaconReadChecks":0,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":1,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":false,"localProposals":8,"localRandao":8,"migrated":true,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":false,"rejected":24,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":3,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"wireMessages":0,"withdrawals":1}
+1/2 Test #337: consensus_capella_signed_transition ...   Passed    9.94 sec
+test 366
+    Start 366: consensus_capella_slashing_reorg
+
+366: Test command: /build/nano-capella-transition-tests "--slashing-reorg"
+366: Working Directory: /build
+366: Test timeout computed to be: 120
+366: {"automaticReinclusion":true,"branchSwitches":2,"duplicateDidNotReapply":true,"injectedWriteFailure":false,"networkTransport":false,"offender":49,"ownerReopens":7,"owners":2,"penaltyGwei":1000000000,"proofRetained":true,"scenario":"capella-slashing-reorg"}
+2/2 Test #366: consensus_capella_slashing_reorg ......   Passed    3.99 sec
+
+The following tests passed:
+	consensus_capella_signed_transition
+	consensus_capella_slashing_reorg
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+qualification_consensus_recovery    =   3.99 sec*proc (1 test)
+
+Total Test time (real) =  13.93 sec
