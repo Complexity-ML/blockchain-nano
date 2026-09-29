@@ -16,9 +16,26 @@ uint64_t number(std::span<const uint8_t>b,size_t at,size_t n=8){require(at<=b.si
 ConsensusRoot root(std::span<const uint8_t>b,size_t at=0){require(at<=b.size()&&32<=b.size()-at,"root bounds");ConsensusRoot r{};std::copy_n(b.begin()+at,32,r.begin());return r;}
 std::string text(const ConsensusRoot&r){return hex(Bytes(r.begin(),r.end()));}
 Bytes cut(const Bytes&b,size_t at,size_t n){require(at<=b.size()&&n<=b.size()-at,"byte bounds");return {b.begin()+at,b.begin()+at+n};}
+// Ethereum's sync aggregate wrapper admits the canonical G2 infinity only
+// when there are no participants. Such an aggregate earns no remote credit.
+bool verify_sync(const std::vector<Bytes>& keys,const ConsensusRoot& signing,std::span<const uint8_t> signature){
+ if(keys.empty())return signature.size()==96&&signature[0]==0xc0&&std::all_of(signature.begin()+1,signature.end(),[](uint8_t b){return b==0;});
+ return verify_consensus_bls_fast_aggregate(keys,signing,signature);
+}
 ConsensusBytes4 version(const Bytes&b,uint64_t epoch){ConsensusBytes4 v{};std::copy_n(b.begin()+(epoch<number(b,56)?48:52),4,v.begin());return v;}
 }
 int main(int argc,char**argv){try{
+ if(argc==2&&std::string(argv[1])=="--self-test"){
+  const ConsensusRoot message{};Bytes infinity(96);infinity[0]=0xc0;
+  require(verify_sync({},message,infinity),"canonical empty sync rejected");
+  auto malformed=infinity;malformed.back()=1;require(!verify_sync({},message,malformed),"noncanonical empty sync accepted");
+  require(!verify_sync({},message,Bytes(96)),"zero bytes accepted as infinity");
+  require(!verify_sync({},message,std::span<const uint8_t>(infinity).first(95)),"short infinity accepted");
+  infinity.push_back(0);require(!verify_sync({},message,infinity),"long infinity accepted");infinity.pop_back();
+  require(!verify_sync({Bytes(48)},message,infinity),"nonempty participant list accepted infinity");
+  std::cout<<"6 empty-aggregate checks passed; no network qualification\n";return 0;
+ }
+
  require(argc==6,"usage: rotation-audit genesis node-config stopped-db proof node-name");
  auto g=Genesis::from_json(Json::parse(read(argv[1],1048576)));require(g.chain_id==1337,"synthetic chain only");
  auto c=Json::parse(read(argv[2],1048576)).at("capella");auto p=c.at("profile");
@@ -65,7 +82,7 @@ int main(int argc,char**argv){try{
    require(member<count,"unknown committee member");remote+=owners[member]!=owners[h.proposer_index];keys.push_back(std::move(key));
   }
   const auto signing=consensus_signing_root(h.parent_root,consensus_domain({7,0,0,0},version(b,(h.slot-1)/slots),root(b,8)));
-  require(!keys.empty()&&verify_consensus_bls_fast_aggregate(keys,signing,body.subspan(220+bit_bytes,96)),"sync aggregate signature invalid");
+  if(!verify_sync(keys,signing,body.subspan(220+bit_bytes,96)))throw std::runtime_error("sync aggregate signature invalid at slot "+std::to_string(h.slot)+", participants "+std::to_string(keys.size()));
   if(remote)++remote_blocks;samples.push_back({{"slot",h.slot},{"participants",keys.size()},{"remotePositions",remote}});
  }
  require(remote_blocks>=3,"fewer than three finalized post-recovery aggregates with remote positions");

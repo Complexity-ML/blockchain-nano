@@ -47,6 +47,8 @@ add_executable(nano src/main.cpp)
 target_link_libraries(nano PRIVATE nano_core)
 add_executable(nano-capella-rotation-audit tests/multihost/rotation_audit.cpp)
 target_link_libraries(nano-capella-rotation-audit PRIVATE nano_core)
+add_test(NAME consensus_rotation_audit_empty_aggregate COMMAND nano-capella-rotation-audit --self-test)
+set_tests_properties(consensus_rotation_audit_empty_aggregate PROPERTIES TIMEOUT 15 LABELS "qualification_consensus_harness")
 add_executable(nano-chain-tests tests/test_chain.cpp)
 target_link_libraries(nano-chain-tests PRIVATE nano_core)
 add_test(NAME chain COMMAND nano-chain-tests)
@@ -1336,6 +1338,9 @@ if(NANO_NETWORK_EXECUTABLE)
  set_tests_properties(consensus_bellatrix_managed_runtime PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_runtime")
  find_program(NANO_RECOVERY_NODEJS_EXECUTABLE NAMES node)
  if(NANO_RECOVERY_NODEJS_EXECUTABLE)
+  add_test(NAME consensus_multihost_resource_summary COMMAND ${NANO_RECOVERY_NODEJS_EXECUTABLE} --test
+   ${CMAKE_CURRENT_SOURCE_DIR}/tests/multihost/resource-summary.test.mjs)
+  set_tests_properties(consensus_multihost_resource_summary PROPERTIES TIMEOUT 15 LABELS "qualification_consensus_harness")
   add_test(NAME consensus_multihost_fault_harness COMMAND ${NANO_RECOVERY_NODEJS_EXECUTABLE} --test
    ${CMAKE_CURRENT_SOURCE_DIR}/tests/multihost/rotation.test.mjs
    ${CMAKE_CURRENT_SOURCE_DIR}/tests/multihost/asymmetric.test.mjs

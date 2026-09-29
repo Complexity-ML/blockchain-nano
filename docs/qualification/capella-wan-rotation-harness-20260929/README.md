@@ -57,3 +57,22 @@ Compiler le nouvel auditeur dans les volumes Linux existants, puis exécuter le
 scénario réel et vérifier ses preuves positives. Les tests du collecteur ne sont
 pas des tests réseau, et le contrôle négatif ne valide pas encore le chemin
 positif cryptographique du nouvel auditeur. Pas de lancement public ni de fonds.
+
+## Première exécution : défaut de l'auditeur isolé
+
+La campagne `/tmp/nano-production-wan-rotation-20260929` a terminé son contrôle
+réseau (partition traversant 128, reprise et finalité 18→21), puis est sortie 1 :
+l'auditeur refusait tous les agrégats vides. Les blocs 147 et 149 portent zéro
+participant et la signature canonique `c0` suivie de 95 octets nuls, identique au
+fixture officiel `consensus-altair-sync-aggregate-official/`
+`sync_committee_rewards_empty_participants/sync_aggregate.ssz` et au traitement
+existant dans `src/consensus_altair_sync_aggregate.cpp`.
+
+Le correctif concerne uniquement l'auditeur : cet encodage exact est accepté
+pour zéro participant, sans crédit distant. Tous les agrégats non vides doivent
+toujours passer FastAggregateVerify ; le minimum de trois blocs distants reste
+inchangé. Six contrôles du cas vide passent. Sur les données capturées, l'audit
+Mac corrigé vérifie 19 blocs avec participants distants, deux agrégats vides et
+trois agrégats uniquement locaux. L'échec initial reste conservé dans `run.jsonl`.
+La vérification corrigée sur les deux Linux est encore à effectuer ; ce texte
+n'en anticipe pas le résultat. Le cœur de consensus n'a pas changé.

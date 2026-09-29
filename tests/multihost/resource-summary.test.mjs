@@ -1,0 +1,14 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {bytes,summarize} from './resource-summary.mjs';
+const binding={nativePid:42,directory:'/tmp/run',localContainer:'nano-qualification-mac-test',remoteContainer:'nano-qualification-vps-test'};
+const record=timeMs=>({timeMs,samples:[{host:'mac-native',exitCode:0,stdout:'42 1024 25.0 00:30 nano run /tmp/run/prepared/mac-native/genesis.json'},...['mac','vps'].map(host=>({host:host+'-docker',exitCode:0,stdout:JSON.stringify({ID:host,Name:'nano-qualification-'+host+'-test',MemUsage:'2MiB / 3GiB',CPUPerc:'140.25%',BlockIO:'1MB / 2GB'})}))]});
+test('SI and binary units remain distinct',()=>{assert.equal(bytes('1MB'),1000000);assert.equal(bytes('1MiB'),1048576);assert.throws(()=>bytes('1 PB'),/Unknown/);});
+test('summary reports sampled maxima, intervals and I/O separately',()=>{const s=summarize([record(1),record(20001)],binding);assert.equal(s.nodes['mac-native'].maxObservedMemoryBytes,1048576);assert.equal(s.nodes['vps-docker'].maxObservedCpuPercent,140.25);assert.equal(s.nodes['vps-docker'].maximumSampleGapMs,20000);assert.equal(s.nodes['vps-docker'].lastBlockIoBytes.written,2e9);assert.equal(s.passed,undefined);});
+test('observation gaps stay visible',()=>{const rows=[record(1),record(2),record(3)];rows[1].samples[0]={host:'mac-native',exitCode:1,stderr:'gone'};const n=summarize(rows,binding).nodes['mac-native'];assert.equal(n.samples,2);assert.equal(n.unavailable.length,1);assert.equal(n.maximumSampleGapMs,2);});
+test('different process or container cannot contribute',()=>{for(const kind of ['pid','container','replacement']){const rows=[record(1),record(2)];if(kind==='pid')rows[1].samples[0].stdout=rows[1].samples[0].stdout.replace('42','43');else{const d=JSON.parse(rows[1].samples[1].stdout);if(kind==='container')d.Name='other';else d.ID='replacement';rows[1].samples[1].stdout=JSON.stringify(d);}assert.throws(()=>summarize(rows,binding),/identity/);}});
+test('duplicate hosts and timestamps fail',()=>{const r=record(1);r.samples[1].host='mac-native';assert.throws(()=>summarize([r],binding),/timeline/);assert.throws(()=>summarize([record(1),record(1)],binding),/timeline/);});
+test('absence of all data for a node fails',()=>{const r=record(1);r.samples[0].exitCode=1;assert.throws(()=>summarize([r],binding),/no usable/);});
+test('changed limits are not silently pooled',()=>{const rows=[record(1),record(2)];rows[1].samples[1].stdout=rows[1].samples[1].stdout.replace('3GiB','4GiB');assert.throws(()=>summarize(rows,binding),/limit changed/);});
+
+test('stopped-container zero stats remain unavailable rather than a low resource sample',()=>{const rows=[record(1),record(2)];const d=JSON.parse(rows[1].samples[1].stdout);d.MemUsage='0B / 0B';rows[1].samples[1].stdout=JSON.stringify(d);const n=summarize(rows,binding).nodes['mac-docker'];assert.equal(n.samples,1);assert.equal(n.unavailable.length,1);});
