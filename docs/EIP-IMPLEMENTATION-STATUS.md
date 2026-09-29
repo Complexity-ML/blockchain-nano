@@ -8,7 +8,10 @@ restent en mempool : échec applicatif à 617,977 s. Le budget de 16 candidats �
 appliqué avant la résolution des nonces, pouvant exclure leur préfixe indéfiniment.
 La sélection corrigée respecte les dépendances de nonce sans augmenter ce budget.
 Tests natifs réussis : mempool (0,36 s), 32 transactions reçues en ordre inverse et
-finalisées par Capella (34,44 s). Qualification Linux et rejeu WAN encore requis.
+finalisées par Capella (34,44 s). Qualification Linux réussie sur ARM64 (25,58 s) et VPS x86-64 (97,36 s),
+avec le cœur `22b4b65`, journaux et empreintes archivés dans
+`qualification/capella-partition-load-20260930/nonce-ready-linux/`.
+Le rejeu WAN C est lancé ; son résultat reste à qualifier.
 L'arrêt du réacteur en tentative A reste distinct et non expliqué ; aucune clôture
 globale de production n'est revendiquée.
 

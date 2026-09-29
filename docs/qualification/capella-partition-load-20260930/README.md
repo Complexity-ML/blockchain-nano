@@ -32,8 +32,12 @@ en 34,44 s, avec reprise et journaux de signature. Un premier échec de ce test
 (35,07 s) est conservé : son assertion finale supposait encore une transaction
 par bloc. Le comptage est maintenant fondé sur les transactions réellement admises.
 
-**Le correctif de sélection reste à qualifier sur Linux et par un nouveau rejeu
-WAN. L'arrêt du réacteur en tentative A reste une anomalie distincte, non expliquée
+Qualification Linux du cœur `22b4b65` réussie (`nonce-ready-linux/`) :
+mempool et scénario Capella passent sur ARM64 (0,01 / 25,57 s) et VPS x86-64
+(0,03 / 97,33 s). Les conteneurs sortent à zéro sans OOM ; journaux, états,
+révision et empreintes des binaires sont archivés. La tentative WAN C a été lancée.
+
+**Le correctif de sélection reste à qualifier par ce nouveau rejeu WAN. L'arrêt du réacteur en tentative A reste une anomalie distincte, non expliquée
 et non reproduite en B. La production globale demeure ouverte.**
 
 ## Tentative A : arrêt du réacteur

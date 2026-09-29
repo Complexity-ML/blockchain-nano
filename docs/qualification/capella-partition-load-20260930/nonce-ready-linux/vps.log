@@ -1,0 +1,72 @@
+[  3%] Built target nano_blst
+[  6%] Built target mcl_st
+[ 10%] Built target secp256k1_precomputed
+[ 10%] Built target nano_ckzg
+[ 10%] Built target secp256k1
+[ 13%] Building CXX object CMakeFiles/nano_core.dir/src/audit.cpp.o
+[ 16%] Building CXX object CMakeFiles/nano_core.dir/src/bft_reactor.cpp.o
+[ 16%] Building CXX object CMakeFiles/nano_core.dir/src/chain.cpp.o
+[ 16%] Building CXX object CMakeFiles/nano_core.dir/src/chain_beacon.cpp.o
+[ 16%] Building CXX object CMakeFiles/nano_core.dir/src/cli_client.cpp.o
+[ 20%] Building CXX object CMakeFiles/nano_core.dir/src/client.cpp.o
+[ 20%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_runtime.cpp.o
+[ 20%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_local_body.cpp.o
+[ 20%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_reactor.cpp.o
+[ 23%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_runtime.cpp.o
+/work/src/consensus_bellatrix_runtime.cpp:132:147: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  132 |    if(!observation||observation->peer_slots.empty())return BeaconReadResponse{503,{{"code",503},{"message","Beacon peer observation unavailable"}}};
+      |                                                                                                                                                   ^
+/work/src/consensus_bellatrix_runtime.cpp:140:235: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  140 |    return BeaconReadResponse{200,{{"data",{{"head_slot",std::to_string(head.header.slot)},{"sync_distance",std::to_string(target-head.header.slot)},{"is_syncing",target>head.header.slot},{"is_optimistic",false},{"el_offline",false}}}}};
+      |                                                                                                                                                                                                                                           ^
+2 warnings generated.
+[ 23%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_local_body.cpp.o
+[ 23%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_reactor.cpp.o
+[ 23%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_runtime.cpp.o
+[ 23%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_round.cpp.o
+[ 23%] Building CXX object CMakeFiles/nano_core.dir/src/http.cpp.o
+[ 23%] Building CXX object CMakeFiles/nano_core.dir/src/migration.cpp.o
+[ 23%] Building CXX object CMakeFiles/nano_core.dir/src/node.cpp.o
+[ 23%] Building CXX object CMakeFiles/nano_core.dir/src/rpc.cpp.o
+[ 26%] Building CXX object CMakeFiles/nano_core.dir/src/rpc_accounts.cpp.o
+[ 26%] Building CXX object CMakeFiles/nano_core.dir/src/rpc_fees.cpp.o
+[ 26%] Building CXX object CMakeFiles/nano_core.dir/src/rpc_filters.cpp.o
+[ 26%] Building CXX object CMakeFiles/nano_core.dir/src/txpool.cpp.o
+[ 30%] Building CXX object CMakeFiles/nano_core.dir/src/websocket.cpp.o
+[ 30%] Linking CXX static library libnano_core.a
+[ 96%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano.dir/src/main.cpp.o
+[100%] Linking CXX executable nano
+[100%] Built target nano
+[  6%] Built target mcl_st
+[  6%] Built target nano_blst
+[ 13%] Built target secp256k1_precomputed
+[ 13%] Built target nano-test-sync-fault
+[ 13%] Built target nano_ckzg
+[ 13%] Built target secp256k1
+[100%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-capella-transition-tests.dir/tests/test_capella_transition.cpp.o
+[100%] Linking CXX executable nano-capella-transition-tests
+[100%] Built target nano-capella-transition-tests
+[  6%] Built target mcl_st
+[  6%] Built target nano_blst
+[ 10%] Built target secp256k1_precomputed
+[ 10%] Built target nano_ckzg
+[ 10%] Built target secp256k1
+[ 96%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-txpool-canonical-tests.dir/tests/test_txpool_canonical.cpp.o
+[100%] Linking CXX executable nano-txpool-canonical-tests
+[100%] Built target nano-txpool-canonical-tests
+Internal ctest changing into directory: /build
+Test project /build
+    Start 134: txpool_canonical
+1/2 Test #134: txpool_canonical .......................   Passed    0.03 sec
+    Start 347: consensus_capella_scheduled_finality
+2/2 Test #347: consensus_capella_scheduled_finality ...   Passed   97.33 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+qualification_consensus_runtime    =  97.33 sec*proc (1 test)
+
+Total Test time (real) =  97.36 sec
