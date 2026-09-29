@@ -886,6 +886,22 @@ static void verify_beacon_reads(CapellaDurableReactor& reactor,const CapellaFork
  const auto& withdrawals=payload.at("withdrawals");check(withdrawals.size()==head.execution_block.withdrawals.size(),"Beacon withdrawal count differs");for(size_t i=0;i<withdrawals.size();++i){const auto& expected=head.execution_block.withdrawals[i];check(withdrawals[i].at("index")==quantity(expected.at("index")).get_str()&&withdrawals[i].at("validator_index")==quantity(expected.at("validatorIndex")).get_str()&&withdrawals[i].at("amount")==quantity(expected.at("amount")).get_str()&&withdrawals[i].at("address")==expected.at("address"),"Beacon withdrawal fields differ");}
  check(reactor.beacon_read("/eth/v1/beacon/states/head/root").body.at("data").at("root")==text(head.header.state_root),"Beacon state root differs");
  const auto checkpoints=capella_fork_checkpoints(head.state,{rules.transition.consensus.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},rules.transition.consensus.state);const auto finality=reactor.beacon_read("/eth/v1/beacon/states/head/finality_checkpoints");check(finality.body.at("data").at("finalized").at("epoch")==std::to_string(checkpoints.realized.finalized.epoch)&&finality.body.at("data").at("finalized").at("root")==text(checkpoints.realized.finalized.root),"Beacon finalized state checkpoint differs");
+ const auto state_path="/eth/v1/beacon/states/"+text(head.header.state_root);
+ check(reactor.beacon_read(state_path+"/finality_checkpoints").body==finality.body,"Pinned head finality differs");
+ check(reactor.beacon_read(state_path+"/root").body.at("data").at("root")==text(head.header.state_root),"Pinned state root differs");
+ check(reactor.beacon_read(state_path+"/fork").body==reactor.beacon_read("/eth/v1/beacon/states/head/fork").body,"Pinned fork differs");
+ check(reactor.beacon_read("/eth/v1/beacon/states/0x12/finality_checkpoints").status==400,"Short state root accepted");
+ check(reactor.beacon_read("/eth/v1/beacon/states/0x"+std::string(64,'g')+"/finality_checkpoints").status==400,"Non-hex state root accepted");
+ check(reactor.beacon_read("/eth/v1/beacon/states/0x"+std::string(64,'f')+"/finality_checkpoints").status==404,"Unknown state fell back to head");
+ check(reactor.beacon_read("/eth/v1/beacon/states/"+text(id)+"/finality_checkpoints").status==404,"Block root accepted as state root");
+ for(const auto& [older_id,older]:snapshot.state->blocks)if(older.header.slot<head.header.slot){
+  const auto path="/eth/v1/beacon/states/"+text(older.header.state_root)+"/finality_checkpoints";
+  const auto expected=capella_fork_checkpoints(older.state,{rules.transition.consensus.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},rules.transition.consensus.state).realized;
+  const auto pinned=reactor.beacon_read(path);check(pinned.status==200&&pinned.body.at("data").at("finalized").at("epoch")==std::to_string(expected.finalized.epoch)&&pinned.body.at("data").at("finalized").at("root")==text(expected.finalized.root),"Old state selector followed newer head");
+  auto pruned=*snapshot.state;pruned.blocks.erase(older_id);check(capella_beacon_read(pruned,rules,path).status==404,"Pruned state fell back to head");
+  auto corrupt=*snapshot.state;corrupt.blocks.at(older_id).state.ssz[0]^=1;bool rejected=false;try{capella_beacon_read(corrupt,rules,path);}catch(const std::invalid_argument&){rejected=true;}check(rejected,"Pinned state commitment mismatch accepted");break;
+ }
+ check(reactor.current().token==snapshot.token,"Pinned reads mutated checkpoint");
  const auto spec=reactor.beacon_read("/eth/v1/config/spec");check(spec.body.at("data").at("MAX_WITHDRAWALS_PER_PAYLOAD")==std::to_string(rules.transition.withdrawals.maximum_per_payload),"Beacon Capella spec differs");
  check(reactor.beacon_read("/eth/v1/beacon/headers/0x12").status==400&&reactor.beacon_read("/eth/v1/beacon/headers/genesis").status==404&&reactor.beacon_read("/eth/v1/node/syncing").status==404,"Beacon unsupported selector behavior");
  bool cancelled=false;try{reactor.beacon_read("/eth/v2/beacon/blocks/head",[]{throw ExecutionCancelled("Beacon read cancelled");});}catch(const ExecutionCancelled&){cancelled=true;}check(cancelled&&reactor.current().token==snapshot.token,"Beacon read cancellation changed checkpoint");++beacon_read_checks;

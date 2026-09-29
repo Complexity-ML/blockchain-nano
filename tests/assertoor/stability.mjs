@@ -1,7 +1,7 @@
 // Native-node checks complement Assertoor's shared cache. No automatic retry
 // can erase a conflicting finalized root or a finality regression.
 import {setTimeout as delay} from 'node:timers/promises';
-export async function observeStableFinality(endpoints, epochs, record, {clock=Date.now, wait=delay, request=fetch, settleRecoveryGaps=false}={}) {
+export async function observeStableFinality(endpoints, epochs, record, {clock=Date.now, wait=delay, request=fetch, settleRecoveryGaps=false,pinnedStateRoots=false}={}) {
   if (!Array.isArray(endpoints) || endpoints.length < 2 || new Set(endpoints).size !== endpoints.length) throw Error('At least two distinct endpoints required');
   if (!Number.isInteger(epochs) || epochs < 2 || epochs > 16) throw Error('Stability window must be 2..16 epochs');
   const read = async (url, path) => {
@@ -24,13 +24,22 @@ export async function observeStableFinality(endpoints, epochs, record, {clock=Da
       // from the old head with a newly published head across an epoch boundary.
       for (let attempt=0; attempt<3; ++attempt) {
         const before = (await read(url, '/eth/v1/beacon/headers/head')).data;
-        checkpoint = (await read(url, '/eth/v1/beacon/states/head/finality_checkpoints')).data.finalized;
+        const stateRoot=before.header?.message?.state_root;
+        if(pinnedStateRoots && !/^0x[0-9a-fA-F]{64}$/.test(stateRoot??''))throw Error('Missing or invalid Beacon state root');
+        if(pinnedStateRoots && !/^0x[0-9a-fA-F]{64}$/.test(before.root??''))throw Error('Missing or invalid Beacon head root');
+        checkpoint = (await read(url, '/eth/v1/beacon/states/'+(pinnedStateRoots?stateRoot:'head')+'/finality_checkpoints')).data.finalized;
         const observed = BigInt(checkpoint.epoch), known = roots.get(checkpoint.epoch);
         // Finality conflicts/regressions do not depend on the head's slot and
         // must remain fatal even when this sampling attempt races an update.
         if (observed < observedEpoch) throw Error('Native progress regressed');
         if (known && known !== checkpoint.root) throw Error('Conflicting finalized roots');
         roots.set(checkpoint.epoch, checkpoint.root);observedEpoch=observed;
+        if(pinnedStateRoots){
+          // The state selector is immutable even if fork choice moves while
+          // these HTTP calls are in flight. Unknown/pruned roots remain fatal.
+          head=before.header.message;
+          await record({event:'finality-state-bound',endpoint:url,headRoot:before.root,stateRoot,checkpoint});break;
+        }
         const after = (await read(url, '/eth/v1/beacon/headers/head')).data;
         if (typeof before.root !== 'string' || typeof after.root !== 'string') throw Error('Missing Beacon head root');
         if (before.root === after.root) {head=after.header.message;break;}

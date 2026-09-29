@@ -12,12 +12,32 @@ BeaconReadResponse capella_beacon_read(const CapellaForkStore& store,
  if(path=="/eth/v1/node/version")return {200,{{"data",{{"version","Nano/0.1.0/c++20"}}}}};
  const bool genesis=path=="/eth/v1/beacon/genesis";
  const bool spec=path=="/eth/v1/config/spec";
- const bool root=path=="/eth/v1/beacon/states/head/root";
- const bool fork=path=="/eth/v1/beacon/states/head/fork";
- const bool finality=path=="/eth/v1/beacon/states/head/finality_checkpoints";
+ const std::string_view prefix="/eth/v1/beacon/states/";
+ std::string_view selector,operation;
+ if(path.starts_with(prefix)){
+  const auto tail=path.substr(prefix.size());const auto slash=tail.find('/');
+  if(slash!=std::string_view::npos){selector=tail.substr(0,slash);operation=tail.substr(slash+1);}
+ }
+ const bool root=operation=="root",fork=operation=="fork",finality=operation=="finality_checkpoints";
  if(!root&&!fork&&!finality&&!genesis&&!spec)return {404,{{"code",404},{"message","Beacon endpoint not implemented"}}};
  if(checkpoint)checkpoint();
- const auto& head=capella_fork_head(store,rules,checkpoint);
+ const CapellaForkBlock* selected=nullptr;
+ if(root||fork||finality){
+  if(selector=="head")selected=&capella_fork_head(store,rules,checkpoint);
+  else{
+   ConsensusRoot state_root{};
+   try{
+    if(!selector.starts_with("0x")||selector.size()!=66)throw std::invalid_argument("Invalid state root");
+    const auto raw=unhex(std::string(selector));if(raw.size()!=32)throw std::invalid_argument("Invalid state root");
+    std::copy(raw.begin(),raw.end(),state_root.begin());
+   }catch(const std::invalid_argument&){return {400,{{"code",400},{"message","Expected head or 32-byte state root"}}};}
+   // Only retained, authenticated post-states are served. Never fall back to
+   // head when an immutable state was pruned or is unknown.
+   for(const auto& [id,block]:store.blocks){if(checkpoint)checkpoint();if(block.header.state_root==state_root){selected=&block;break;}}
+   if(!selected)return {404,{{"code",404},{"message","State root not retained"}}};
+  }
+ }else selected=&capella_fork_head(store,rules,checkpoint);
+ const auto& head=*selected;
  const auto& b=head.state.ssz;const auto& l=rules.transition.consensus.state;
  if(capella_beacon_state_root(b,l,rules.transition.execution,rules.transition.maximum_state_bytes,checkpoint)!=head.header.state_root)
   throw std::invalid_argument("Beacon state commitment mismatch");
@@ -75,7 +95,13 @@ BeaconReadResponse capella_beacon_read(const CapellaForkStore& store,
   data={{"previous_justified",cp(at)},{"current_justified",cp(at+40)},{"finalized",cp(at+80)}};
  }
  if(checkpoint)checkpoint();
- return {200,{{"execution_optimistic",false},{"finalized",consensus_beacon_header_root(head.header)==store.timed.view.finalized.root},{"data",std::move(data)}}};
+ const auto selected_id=consensus_beacon_header_root(head.header);auto tip=store.timed.view.finalized.root;bool is_finalized=false;
+ for(size_t i=0;i<=store.blocks.size();++i){
+  if(checkpoint)checkpoint();if(tip==selected_id){is_finalized=true;break;}
+  const auto it=store.blocks.find(tip);if(it==store.blocks.end()||tip==store.timed.view.anchor)break;
+  tip=it->second.header.parent_root;
+ }
+ return {200,{{"execution_optimistic",false},{"finalized",is_finalized},{"data",std::move(data)}}};
 }
 }
 

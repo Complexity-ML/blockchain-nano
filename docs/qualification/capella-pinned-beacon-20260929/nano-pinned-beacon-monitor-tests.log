@@ -1,0 +1,32 @@
+✔ four consecutive common checkpoints bind to execution (3.104459ms)
+✔ conflicting finalized roots cannot be retried away (0.245166ms)
+✔ a previous success cannot hide stopped finality (0.626959ms)
+✔ finalized epoch regression fails (0.235ms)
+✔ execution mismatch fails despite common Beacon finality (0.162833ms)
+✔ missed checkpoints do not count as consecutive advances (0.154292ms)
+✔ an epoch transition between checkpoint and head reads is sampled consistently (0.738458ms)
+✔ head churn cannot cause unbounded sampling retries (0.180125ms)
+✔ a finality conflict remains fatal during a head change (0.083125ms)
+✔ all three nodes must advance together (0.718167ms)
+✔ a lagging third node cannot be ignored (0.37875ms)
+✔ a third node execution mismatch fails (0.242375ms)
+✔ duplicate endpoints do not represent distinct nodes (0.223208ms)
+✔ recovery gap resets consecutive credit without rejecting valid FFG progress (1.291917ms)
+✔ repeated recovery gaps never extend the absolute deadline (0.780291ms)
+✔ a gap discards advances earned before it (3.899917ms)
+✔ execution mismatch on the jump is still fatal (0.201083ms)
+✔ safety history survives recovery window reset (0.218375ms)
+✔ conflict after a recovery gap remains fatal (0.206542ms)
+✔ immutable state selector survives continuous head changes (0.652417ms)
+✔ pinned reads reject malformed state roots before requesting finality (0.08125ms)
+✔ pinned reads still reject finalized root conflicts (0.057542ms)
+✔ pinned reads still reject finalized regression (0.157833ms)
+✔ unknown or pruned pinned state fails without falling back to head (0.078291ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 86.290625

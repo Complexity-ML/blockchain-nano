@@ -1,5 +1,15 @@
 # Feuille de route EIP — état réel de Nano
 
+## Lecture Capella par état implémentée — 29 septembre 2026
+
+Le [correctif de lecture immuable](qualification/capella-pinned-beacon-20260929/README.md)
+sert root/fork/finalité par state root retenu et vérifie l'engagement SSZ. Le
+moniteur associe le header à cet état, sans exiger un head immobile. Racines
+invalides, inconnues/élaguées, conflits et régressions restent des erreurs.
+Test natif passé (5,42 s), 24 tests du moniteur passés ; compilation native
+réussie. La qualification Linux/WAN du nouveau binaire reste à faire. Aucun
+quorum ni délai assoupli ; les échecs précédents et l'objectif global restent ouverts.
+
 ## Lecture Beacon cohérente encore manquante — 29 septembre 2026
 
 La [nouvelle campagne WAN](qualification/capella-wan-asymmetric-settle-20260929/README.md)

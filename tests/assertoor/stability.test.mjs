@@ -1,25 +1,26 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {observeStableFinality} from './stability.mjs';
-function fixture(change = () => {}, crossBoundary = false, unstableHead = false, endpoints = ['http://a','http://b'], settleRecoveryGaps = false) {
+function fixture(change = () => {}, crossBoundary = false, unstableHead = false, endpoints = ['http://a','http://b'], settleRecoveryGaps = false, pinnedStateRoots = false) {
   let time = 0, headReads = 0;
   const records = [];
   const request = async (url, options) => {
     const endpoint = endpoints.findIndex(endpoint => url === endpoint || url.startsWith(endpoint + '/'));
     const state = {epoch:2 + Math.floor(time/4000), slot:16 + Math.floor(time/1000), root:null, hash:'0x1234'};
     change(state, endpoint, time);
+    if(state.pruned && url.includes('/states/0x'))return {ok:false,status:404,json:async()=>({code:404})};
     if(crossBoundary && time === 0) state.epoch = 0;
     state.root ??= '0x'+String(state.epoch).padStart(64,'0');
     let body;
     if (options.method === 'POST') body = {result:{hash:state.hash}};
     else if (url.endsWith('/spec')) body = {data:{SLOTS_PER_EPOCH:'4',SECONDS_PER_SLOT:'1'}};
     else if (url.endsWith('/finality_checkpoints')) body = {data:{finalized:{epoch:String(state.epoch),root:state.root}}};
-    else if (url.endsWith('/headers/head')) body = {data:{root:'0x'+String(unstableHead ? ++headReads : state.slot).padStart(64,'0'),header:{message:{slot:String(state.slot)}}}};
+    else if (url.endsWith('/headers/head')) body = {data:{root:'0x'+String(unstableHead ? ++headReads : state.slot).padStart(64,'0'),header:{message:{slot:String(state.slot),state_root:state.stateRoot??('0x'+String(state.slot+100).padStart(64,'0'))}}}};
     else body = {data:{message:{body:{execution_payload:{block_hash:'0x1234',block_number:'16'}}}}};
     if(crossBoundary && time === 0 && url.endsWith('/finality_checkpoints')) time=4000;
     return {ok:true,json:async()=>body};
   };
-  return {records,run:()=>observeStableFinality(endpoints,4,async r=>records.push(r),{request,settleRecoveryGaps,clock:()=>time,wait:async ms=>{time+=ms;}})};
+  return {records,run:()=>observeStableFinality(endpoints,4,async r=>records.push(r),{request,settleRecoveryGaps,pinnedStateRoots,clock:()=>time,wait:async ms=>{time+=ms;}})};
 }
 test('four consecutive common checkpoints bind to execution',async()=>{
   const f=fixture(),result=await f.run();assert.equal(result.epochs,4);assert.equal(result.firstEpoch,'2');assert.equal(result.lastEpoch,'6');assert.equal(f.records.filter(r=>r.advances).length,4);
@@ -96,4 +97,24 @@ test('safety history survives recovery window reset',async()=>{
 test('conflict after a recovery gap remains fatal',async()=>{
  const f=fixture((s,i,t)=>{if(t>=4000)s.epoch++;if(t>=5000&&i===2)s.root='0xbad';},false,false,three,true);
  await assert.rejects(f.run(),/Conflicting finalized roots/);
+});
+
+
+test('immutable state selector survives continuous head changes',async()=>{
+ const f=fixture(()=>{},false,true,three,true,true),r=await f.run();
+ assert.equal(r.epochs,4);assert.ok(f.records.some(r=>r.event==='finality-state-bound'));
+ assert.ok(!f.records.some(r=>r.event==='head-changed-during-finality-read'));
+});
+test('pinned reads reject malformed state roots before requesting finality',async()=>{
+ await assert.rejects(fixture(s=>{s.stateRoot='0x12';},false,false,three,true,true).run(),/invalid Beacon state root/);
+});
+test('pinned reads still reject finalized root conflicts',async()=>{
+ await assert.rejects(fixture((s,i)=>{if(i)s.root='0xbad';},false,true,three,true,true).run(),/Conflicting finalized roots/);
+});
+test('pinned reads still reject finalized regression',async()=>{
+ await assert.rejects(fixture((s,i,t)=>{if(i&&t>=5000)s.epoch=1;},false,true,three,true,true).run(),/regressed/);
+});
+
+test('unknown or pruned pinned state fails without falling back to head',async()=>{
+ await assert.rejects(fixture(s=>{s.pruned=true;},false,true,three,true,true).run(),/REST 404/);
 });
