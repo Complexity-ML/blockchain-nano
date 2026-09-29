@@ -5,9 +5,11 @@
 La [finalisation partielle des preuves](qualification/capella-slashing-multi-20260929/README.md)
 est qualifiée sur Mac, Docker ARM64 et VPS x86-64, avec la régression mono-auteur.
 Le [nouveau test de panne WAL](qualification/capella-slashing-sync-20260930/README.md)
-passe sur Mac : huit cas, retrait individuel puis agrégé, WAL principal/témoin,
-suffixe conservé/perdu, reprise exacte et rejeu idempotent. Linux reste à exécuter
-pour ce nouveau test. Aucun code du cœur n’a changé. Les validateurs absents du
+passe sur Mac (137,75 s), ARM64 (119,86 s) et VPS (447,12 s) : huit cas par
+plateforme, retrait individuel puis agrégé, WAL principal/témoin, suffixe
+conservé/perdu, reprise exacte et rejeu idempotent. Les 24 cas sont vérifiés et
+archivés ; époque finalisée 8 sur les trois plateformes. Aucun code du cœur
+n’a changé. Les validateurs absents du
 registre finalisé et les autres critères de production restent ouverts.
 
 ## Sanctions après réorganisation qualifiées — 29 septembre 2026
