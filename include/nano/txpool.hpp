@@ -26,6 +26,8 @@ public:
  struct Candidate {SignedTransaction transaction;std::string sender;};
  std::vector<Candidate> candidates_for_block(const Int& gas_limit) const;
  std::vector<SignedTransaction> pending_for_block(const Int& gas_limit) const;
+ // Bound execution trials only after selecting contiguous sender nonce chains.
+ std::vector<SignedTransaction> ready_for_block(const State&,const Int& gas_limit,size_t maximum,const std::function<void()>& checkpoint={}) const;
  std::vector<SignedTransaction> by_sender(const std::string& addr) const;
  Int reserved_cost(const std::string& sender,const Int& replacing_nonce,const Int& canonical_nonce) const;
  Int pending_nonce(const std::string& addr) const;

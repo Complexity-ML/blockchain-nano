@@ -48,6 +48,28 @@ void TxPool::remove_mined(const std::vector<SignedTransaction>& txs){
 }
 std::vector<TxPool::Candidate> TxPool::candidates_for_block(const Int& gas_limit)const{if(gas_limit<0)throw std::invalid_argument("negative gas limit");std::lock_guard lock(mutex_);std::vector<const Entry*> ordered;for(const auto& [h,e]:entries_)ordered.push_back(&e);std::sort(ordered.begin(),ordered.end(),[](const Entry* a,const Entry* b){Int pa=price(a->tx.tx),pb=price(b->tx.tx);return pa==pb?a->arrival<b->arrival:pa>pb;});Int used=0;std::vector<Candidate> out;for(const auto* entry:ordered)if(used+entry->tx.tx.gas<=gas_limit){out.push_back({entry->tx,entry->sender});used+=entry->tx.tx.gas;}return out;}
 std::vector<SignedTransaction> TxPool::pending_for_block(const Int& gas_limit)const{auto candidates=candidates_for_block(gas_limit);std::vector<SignedTransaction> out;out.reserve(candidates.size());for(auto& candidate:candidates)out.push_back(std::move(candidate.transaction));return out;}
+std::vector<SignedTransaction> TxPool::ready_for_block(const State& state,const Int& gas_limit,size_t maximum,const std::function<void()>& checkpoint)const{
+ if(gas_limit<0||!maximum)throw std::invalid_argument("invalid ready transaction budget");
+ std::lock_guard lock(mutex_);
+ std::map<std::string,std::deque<const Entry*>> accounts;
+ for(const auto& [hash,entry]:entries_){if(checkpoint)checkpoint();if(entry.tx.tx.nonce>=state.get(entry.sender).nonce)accounts[entry.sender].push_back(&entry);}
+ auto priority=[](const Entry* a,const Entry* b){const auto pa=price(a->tx.tx),pb=price(b->tx.tx);if(pa!=pb)return pa>pb;if(a->arrival!=b->arrival)return a->arrival<b->arrival;return a->sender<b->sender;};
+ std::set<const Entry*,decltype(priority)> ready(priority);
+ for(auto& [sender,entries]:accounts){
+  if(checkpoint)checkpoint();std::sort(entries.begin(),entries.end(),[](const Entry* a,const Entry* b){return a->tx.tx.nonce<b->tx.tx.nonce;});
+  if(entries.front()->tx.tx.nonce==state.get(sender).nonce)ready.insert(entries.front());
+ }
+ Int used=0;std::vector<SignedTransaction> result;
+ while(!ready.empty()&&result.size()<maximum){
+  if(checkpoint)checkpoint();const auto* entry=*ready.begin();ready.erase(ready.begin());
+  // An account cannot advance past a head transaction that does not fit.
+  if(entry->tx.tx.gas>gas_limit-used)continue;
+  result.push_back(entry->tx);used+=entry->tx.tx.gas;
+  auto& account=accounts.at(entry->sender);account.pop_front();
+  if(!account.empty()&&account.front()->tx.tx.nonce==entry->tx.tx.nonce+1)ready.insert(account.front());
+ }
+ return result;
+}
 std::vector<SignedTransaction> TxPool::by_sender(const std::string& addr)const{auto normalized=address(addr);std::lock_guard lock(mutex_);std::vector<SignedTransaction> out;for(const auto& [h,e]:entries_)if(e.sender==normalized)out.push_back(e.tx);std::sort(out.begin(),out.end(),[](const auto& a,const auto& b){return a.tx.nonce<b.tx.nonce;});return out;}
 Int TxPool::reserved_cost(const std::string& sender,const Int& replacing_nonce,const Int& canonical_nonce)const{
  auto normalized=address(sender);std::lock_guard lock(mutex_);Int total=0,next=canonical_nonce;std::vector<const Entry*> ordered;

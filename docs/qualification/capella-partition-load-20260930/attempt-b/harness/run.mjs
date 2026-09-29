@@ -1,0 +1,269 @@
+#!/usr/bin/env node
+// Authorized isolated devnet only; code is deployed through Git, not this script.
+import {execFile,spawn} from 'node:child_process';
+import {promisify} from 'node:util';
+import {mkdir,writeFile,readFile,appendFile} from 'node:fs/promises';
+import {openSync,closeSync} from 'node:fs';
+import {resolve,join} from 'node:path';
+import {setTimeout as delay} from 'node:timers/promises';
+import {createHash} from 'node:crypto';
+import {validateStoppedValidators} from './validator-gate.mjs';
+import {partitionRemote} from './partition.mjs';
+import {asymmetricRemote,createRemoteTc} from './asymmetric.mjs';
+import {observeRecovery} from './recovery-observation.mjs';
+import {sampleClock} from './clock-sample.mjs';
+import {createRotationCapture,ownership,rotationNodes,waitRotationWindow} from './rotation.mjs';
+import {runBoundedLoad} from './bounded-load.mjs';
+const exec=promisify(execFile),[target,revision,outputArg]=process.argv.slice(2);
+const fork=process.env.NANO_TEST_CONSENSUS_PROFILE??'bellatrix';
+if(!['bellatrix','capella'].includes(fork))throw Error('Unsupported consensus profile');
+if(!/^[a-z_][a-z0-9_-]*@[0-9.]+$/.test(target??'')||!(/^[0-9a-f]{40}$/).test(revision??'')||!outputArg)throw Error('Usage: run.mjs user@IPv4 core-revision fresh-output');
+const buildVolume=process.env.NANO_TEST_BUILD_VOLUME==='1';
+const output=resolve(outputArg),repo=process.cwd(),image=buildVolume?'nano-build-dependencies:local':`blockchain-nano:${revision.slice(0,7)}`;
+const artifactMount=buildVolume?['--mount','type=volume,src=nano-linux-sync-build,dst=/build,readonly']:[];
+const runtimeCommand=buildVolume?['/build/nano']:[];
+const traceArgs=process.env.NANO_TEST_NETWORK_TRACE==='1'?['--env','NANO_TEST_NETWORK_TRACE=1']:[];
+const id=Date.now().toString(36),local=`nano-qualification-mac-${id}`,remote=`nano-qualification-vps-${id}`;
+const partition=process.env.NANO_TEST_WAN_PARTITION==='1',asymmetric=process.env.NANO_TEST_WAN_ASYMMETRIC==='1',testNetwork=remote+'-net';
+if(partition&&asymmetric)throw Error('Select only one WAN fault');
+const rotation=process.env.NANO_TEST_WAN_ROTATION==='1';
+const boundedLoad=process.env.NANO_TEST_BOUNDED_LOAD==='1';
+if(boundedLoad&&(fork!=='capella'||asymmetric||rotation))throw Error('Bounded load requires Capella; asymmetric/rotation combinations are not qualified yet');
+if(rotation&&(fork!=='capella'||!partition||!buildVolume))throw Error('Rotation requires Capella, the isolated partition and build volumes');
+const remoteRoot=`/home/${target.split('@')[0]}/nano-qualification-${id}`,ip=target.split('@')[1];
+const quote=s=>"'"+String(s).replaceAll("'","'\\''")+"'";
+const sh=async (args,timeout=30000)=>(await exec('ssh',['-o','BatchMode=yes','-o','ConnectTimeout=8',target,args.map(quote).join(' ')],{timeout,maxBuffer:8*1024*1024})).stdout;
+const docker=async(args,onRemote=false,timeout=30000)=>onRemote?sh(['sudo','-n','docker',...args],timeout):(await exec('docker',args,{timeout,maxBuffer:8*1024*1024})).stdout;
+const captureLogs=async(name,onRemote)=>{
+ const args=onRemote?['ssh','-o','BatchMode=yes',target,['sudo','-n','docker','logs',name].map(quote).join(' ')+' 2>&1']:['docker','logs',name];
+ const result=await exec(args[0],args.slice(1),{timeout:30000,maxBuffer:8*1024*1024});
+ return result.stdout+result.stderr;
+};
+const json=async p=>JSON.parse(await readFile(p,'utf8'));
+// Preflight before creating fixtures, so compilation cannot age the genesis.
+const artifacts=[];
+await exec('git',['diff','--quiet',revision,'--','src','include','network','third_party']);
+await sh(['git','-C',`/home/${target.split('@')[0]}/blockchain-nano-git`,'diff','--quiet',revision,'--','src','include','network','third_party']);
+for(const onRemote of [false,true]){
+ const info=JSON.parse(await docker(['image','inspect',image,'--format','{{json .}}'],onRemote));
+ if((!buildVolume&&info.Config.Labels?.['org.opencontainers.image.revision']!==revision)||info.Architecture!==(onRemote?'amd64':'arm64'))throw Error('Build revision/architecture mismatch');
+ if(buildVolume){
+  const built=(await docker(['run','--rm','--network','none',...artifactMount,image,'cat','/build/production-source-revision.txt'],onRemote)).trim();
+  if(built!==revision)throw Error('Build volume source revision mismatch');
+  const hashes=await docker(['run','--rm','--network','none',...artifactMount,image,'sha256sum','/build/nano','/build/network/nano-p2p',...(rotation?['/build/nano-capella-rotation-audit']:[])],onRemote);
+  artifacts.push({host:onRemote?'vps':'docker-mac',imageId:info.Id,revision:built,sha256:hashes});
+ }
+}
+await mkdir(output);
+const log=async event=>appendFile(join(output,'run.jsonl'),JSON.stringify({time:Date.now(),...event})+'\n');
+let native,tunnel,localStarted=false,remoteStarted=false;
+let resourceTask,resourceStop=false,resourceFailure;
+let rotationTask,rotationStop=false,rotationFailure,rotationProof,rotationCutoff;
+const rotationCapture=rotation?createRotationCapture():null;
+const clockSamples=async phase=>{
+ for(const [host,remoteClock] of [['vps',()=>sh(['date','+%s%3N'])],['docker-mac',()=>docker(['exec',local,'date','+%s%3N'])]]){
+  try{await log({event:'clock-sample',phase,host,...await sampleClock(remoteClock)});}
+  catch(error){await log({event:'clock-sample-unavailable',phase,host,message:error.message});}
+ }
+};
+const request=async(kind,path,body)=>{
+ const args=['-fsS','--max-time','5','-H','Accept: application/json'];
+ if(body)args.push('-H','Content-Type: application/json','--data',JSON.stringify(body));
+ args.push((kind==='native'?'http://127.0.0.1:18545':'http://127.0.0.1:8545')+path);
+ const text=kind==='native'?(await exec('curl',args,{timeout:8000})).stdout:await docker(['exec',kind==='remote'?remote:local,'curl',...args],kind==='remote');
+ return JSON.parse(text);
+};
+const rpc=async(kind,method,params=[])=>{
+ const r=await request(kind,'/',{jsonrpc:'2.0',id:1,method,params});if(r.error)throw Error(JSON.stringify(r.error));return r.result;
+};
+try{
+ const binary=join(repo,'build-release/nano'),p2p=join(repo,'build-network/nano-p2p');
+ if(rotation)await log({event:'rotation-audit-binary',sha256:createHash('sha256').update(await readFile(join(repo,'build-release/nano-capella-rotation-audit'))).digest('hex')});
+ const harness={};for(const name of ['run.mjs','partition.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','prepare.mjs','rotation.mjs','bounded-load.mjs','load-receipts.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
+ await log({event:'harness',partition,asymmetric,rotation,boundedLoad,fork,buildVolume,artifacts,sha256:harness});
+ await log({event:'binaries',revision,nanoSha256:createHash('sha256').update(await readFile(binary)).digest('hex'),p2pSha256:createHash('sha256').update(await readFile(p2p)).digest('hex')});
+ const assets=join(output,'assets'),prepared=join(output,'prepared');
+ await exec(join(repo,`build-release/nano-${fork}-transition-tests`),[fork==='capella'?'--export-network':'--export-kurtosis',assets],{timeout:30000});
+ const topology=[{name:'mac-native',host:'mac',mode:'native',rpcPort:18545,p2pPort:30305,p2pBinary:p2p,runtimeDirectory:join(prepared,'mac-native')},{name:'mac-docker',host:'mac',mode:'docker',rpcPort:8545,p2pPort:30303},{name:'vps-docker',host:target,mode:'docker',rpcPort:8545,p2pPort:30303}];
+ await writeFile(join(output,'topology.json'),JSON.stringify(topology));
+ await exec(process.execPath,['tests/multihost/prepare.mjs',assets,prepared,join(output,'topology.json')]);
+ if(buildVolume)for(const name of ['mac-docker','vps-docker']){const path=join(prepared,name,'node.json'),c=await json(path);c.p2p_binary='/build/network/nano-p2p';await writeFile(path,JSON.stringify(c));}
+ await sh(['mkdir',remoteRoot]);
+ // Only newly generated PUBLIC fixtures cross SSH; software arrived via Git.
+ await exec('scp',['-q','-r',join(prepared,'vps-docker'),`${target}:${remoteRoot}/config`],{timeout:30000});
+ if(partition||asymmetric)await docker(['network','create','--label','nano.qualification=multihost',testNetwork],true);
+ await docker(['run','--init',...((partition||asymmetric)?['--network',testNetwork]:[]),...traceArgs,'-d','--name',remote,'--label','nano.qualification=multihost','--label','org.opencontainers.image.revision='+revision,...artifactMount,'--memory','3g','--cpus','2','-p',buildVolume?'127.0.0.1:30307:30303':'30307:30303','--mount',`type=bind,src=${remoteRoot}/config,dst=/config,readonly`,'--mount',`type=volume,src=${remote}-data,dst=/var/lib/nano`,'--env-file',`${remoteRoot}/config/fixture.env`,image,...runtimeCommand,'run','/config/genesis.json','/var/lib/nano/chain','/config/node.json'],true);remoteStarted=true;
+ let peer;
+ for(let i=0;i<30;i++){try{peer=(await rpc('remote','nno_getNetworkInfo')).node?.peerId;if(peer)break;}catch{}await delay(1000);}
+ if(!peer||!/^[A-Za-z0-9]+$/.test(peer))throw Error('Remote peer ID unavailable');
+ if(buildVolume){
+  const fd=openSync(join(output,'tunnel.log'),'a');tunnel=spawn('ssh',['-N','-o','BatchMode=yes','-o','ExitOnForwardFailure=yes','-o','ServerAliveInterval=15','-L','127.0.0.1:30307:127.0.0.1:30307',target],{stdio:['ignore',fd,fd]});closeSync(fd);
+  tunnel.on('error',error=>log({event:'tunnel-error',message:error.message}));await delay(1000);
+  if(tunnel.exitCode!==null||tunnel.signalCode!==null)throw Error('Private SSH tunnel failed');
+ }
+ const boot=buildVolume?`/ip4/127.0.0.1/tcp/30307/p2p/${peer}`:`/ip4/${ip}/tcp/30307/p2p/${peer}`;
+ for(const name of ['mac-native','mac-docker']){const path=join(prepared,name,'node.json'),c=await json(path);c.bootnodes=[buildVolume&&name==='mac-docker'?`/dns4/host.docker.internal/tcp/30307/p2p/${peer}`:boot];await writeFile(path,JSON.stringify(c,null,2));}
+ await docker(['run','--init',...traceArgs,'-d','--name',local,'--label','nano.qualification=multihost','--label','org.opencontainers.image.revision='+revision,...artifactMount,'--memory','3g','--cpus','2','--mount',`type=bind,src=${join(prepared,'mac-docker')},dst=/config,readonly`,'--mount',`type=volume,src=${local}-data,dst=/var/lib/nano`,'--env-file',join(prepared,'mac-docker','fixture.env'),image,...runtimeCommand,'run','/config/genesis.json','/var/lib/nano/chain','/config/node.json']);localStarted=true;
+ const nd=join(prepared,'mac-native');await mkdir(join(nd,'data'));
+ const environment=Object.fromEntries((await readFile(join(nd,'fixture.env'),'utf8')).trim().split('\n').map(line=>{const at=line.indexOf('=');return [line.slice(0,at),line.slice(at+1)];}));
+ const fd=openSync(join(output,'native.log'),'a');native=spawn(binary,['run',join(nd,'genesis.json'),join(nd,'data/chain'),join(nd,'node.json')],{env:{...process.env,...environment},stdio:['ignore',fd,fd]});closeSync(fd);
+ native.on('error',error=>log({event:'native-spawn-error',message:error.message}));
+ await log({event:'started',nativePid:native.pid,localContainer:local,remoteContainer:remote,bootnode:boot,physicalHosts:2,validatorKeys:64});
+ if(boundedLoad)resourceTask=(async()=>{
+  while(!resourceStop){
+   const timeMs=Date.now();
+   const probes=[['mac-native',async()=>(await exec('ps',['-p',String(native.pid),'-o','pid=,rss=,%cpu=,etime=,command='],{timeout:20000})).stdout],
+    ['mac-docker',()=>docker(['stats','--no-stream','--format','{{json .}}',local],false,20000)],
+    ['vps-docker',()=>docker(['stats','--no-stream','--format','{{json .}}',remote],true,20000)]];
+   const samples=await Promise.all(probes.map(async([host,probe])=>{
+    try{return {host,exitCode:0,stdout:await probe(),stderr:''};}
+    catch(error){return {host,error:error.message};}
+   }));
+   await appendFile(join(output,'resources.jsonl'),JSON.stringify({timeMs,samples})+'\n');
+   while(!resourceStop&&Date.now()-timeMs<20000)await delay(1000);
+  }
+ })().catch(error=>{resourceFailure=error;});
+ const deadline=Date.now()+300000;let ready=false;const observedRoots=new Map();
+ while(Date.now()<deadline){
+  try{
+   const heads=await Promise.all(['native','local','remote'].map(kind=>rpc(kind,'eth_getBlockByNumber',['finalized',false])));
+   const peers=await Promise.all(['native','local','remote'].map(kind=>rpc(kind,'net_peerCount')));
+   await log({event:'warming',heads:heads.map(h=>h&&({number:h.number,hash:h.hash})),peers});
+   const kinds=['native','local','remote'];
+   const checkpoints=await Promise.all(kinds.map(async kind=>(await request(kind,'/eth/v1/beacon/states/head/finality_checkpoints')).data.finalized));
+   for(const c of checkpoints){
+    const known=observedRoots.get(c.epoch);
+    if(known&&known!==c.root){const error=Error('Conflicting finalized roots during startup');error.fatal=true;throw error;}
+    observedRoots.set(c.epoch,c.root);
+   }
+   if(heads.every(h=>h&&h.hash===heads[0].hash)&&peers.every(n=>BigInt(n)>0n)&&checkpoints.every(c=>BigInt(c.epoch)>=2n&&c.epoch===checkpoints[0].epoch&&c.root===checkpoints[0].root)){
+    const blocks=await Promise.all(kinds.map(async kind=>(await request(kind,'/eth/v2/beacon/blocks/'+checkpoints[0].root)).data.message));
+    if(blocks.every(b=>b.body.execution_payload.block_hash===heads[0].hash)){ready=true;await log({event:'startup-finality-bound',checkpoint:checkpoints[0],execution:heads[0].hash});break;}
+   }
+  }catch(error){if(error.fatal)throw error;await log({event:'warming-error',message:error.message});}
+  await delay(3000);
+ }
+ if(!ready)throw Error('Three-node startup/finality deadline exceeded');
+ const genesis=await rpc('native','eth_getBlockByNumber',['0x0',false]);
+ const observers={revision,pinnedStateRoots:fork==='capella',settleRecoveryGaps:partition||asymmetric,genesisHash:genesis.hash,nodes:[{name:'mac-native',kind:'native',url:'http://127.0.0.1:18545'},{name:'mac-docker',kind:'docker',container:local,url:'http://127.0.0.1:8545'},{name:'vps-docker',kind:'ssh-docker',ssh:target,container:remote,url:'http://127.0.0.1:8545'}]};
+ await writeFile(join(output,'observers.json'),JSON.stringify(observers,null,2));
+ const previousFinality=new Map();
+ const faultSample=async()=>{
+  const rows=await Promise.all(['native','local','remote'].map(async(kind,i)=>({name:observers.nodes[i].name,
+   peers:await rpc(kind,'net_peerCount'),checkpoint:(await request(kind,'/eth/v1/beacon/states/head/finality_checkpoints')).data.finalized})));
+  for(const row of rows){
+   const epoch=BigInt(row.checkpoint.epoch),key=String(epoch),root=row.checkpoint.root;
+   if(observedRoots.has(key)&&observedRoots.get(key)!==root)throw Error('Conflicting finalized roots across campaign');
+   if(previousFinality.has(row.name)&&epoch<previousFinality.get(row.name))throw Error('Finality regressed across campaign');
+   observedRoots.set(key,root);previousFinality.set(row.name,epoch);
+  }
+  return rows;
+ };
+ const rotationHeads=()=>Promise.all(['native','local','remote'].map(async(kind,i)=>{
+  const h=(await request(kind,'/eth/v1/beacon/headers/head')).data;
+  return {name:rotationNodes[i],root:h.root,slot:Number(h.header.message.slot)};
+ }));
+ const captureRotation=async()=>{
+  const heads=await rotationHeads();
+  for(let i=0;i<heads.length;++i){
+   let tip=heads[i].root;
+   for(let depth=0;depth<32&&!rotationCapture.has(rotationNodes[i],tip);++depth){
+    const args=['-fsS','--max-time','5','-H','Accept: application/octet-stream',(i===0?'http://127.0.0.1:18545':'http://127.0.0.1:8545')+'/eth/v2/beacon/blocks/'+tip];
+    let command='curl',argv=args;
+    if(i===1){command='docker';argv=['exec',local,'curl',...args];}
+    if(i===2){command='ssh';argv=['-o','BatchMode=yes','-o','ConnectTimeout=8',target,['sudo','-n','docker','exec',remote,'curl',...args].map(quote).join(' ')];}
+    const wire=(await exec(command,argv,{encoding:'buffer',timeout:15000,maxBuffer:8*1024*1024})).stdout;
+    rotationCapture.add(rotationNodes[i],tip,wire);
+    if(wire.readBigUInt64LE(100)<=112n)break;
+    tip=rotationCapture.parent(tip);
+   }
+  }
+  await log({event:'rotation-capture',heads,...rotationCapture.stats()});return heads;
+ };
+ if(rotation){
+  await waitRotationWindow({sample:async()=>{await faultSample();return rotationHeads();},record:log});
+  // One writer; await shutdown before assembling proof. A failed capture remains
+  // fatal even if the network subsequently reaches finality.
+  rotationTask=(async()=>{while(!rotationStop){await captureRotation();await delay(3000);}})().catch(error=>{rotationFailure=error;});
+ }
+ const faultRecord=async event=>{
+  await log(event);
+  if(rotation&&event.event==='partition-disconnected'){
+   const heads=await rotationHeads();
+   await log({event:'rotation-fault-start',heads});
+   if(heads.some(h=>h.slot>=128))throw Error('Rotation boundary passed before effective partition');
+  }
+  if(rotation&&event.event==='partition-reconnected'){
+   const heads=await rotationHeads();
+   if(heads.some(h=>h.slot<128))throw Error('Partition did not cross the rotation on all nodes');
+   rotationCutoff=Math.max(...heads.map(h=>h.slot));
+   await log({event:'rotation-recovery-cutoff',heads,minimumInclusionSlot:rotationCutoff});
+  }
+ };
+ await clockSamples('before-fault');
+ if(boundedLoad)await runBoundedLoad({rpc,genesisHash:genesis.hash,output,sampleFinality:faultSample,
+  ...(partition?{duringSubmit:submit=>partitionRemote({docker:args=>docker(args,true),container:remote,
+   network:testNetwork,revision,record:faultRecord,sample:faultSample,duringCut:submit})}:{})});
+ await observeRecovery({record:log,partition:async()=>{
+  if(partition&&!boundedLoad)await partitionRemote({docker:args=>docker(args,true),container:remote,network:testNetwork,revision,record:faultRecord,sample:faultSample});
+  if(asymmetric){
+   const tc=await createRemoteTc({docker:args=>docker(args,true),sh,container:remote,network:testNetwork,revision});
+   await asymmetricRemote({tc,sample:faultSample,record:log});
+  }
+ },
+ observe:()=>exec(process.execPath,['tests/multihost/observe.mjs',join(output,'observers.json'),join(output,'observations')],{timeout:480000,maxBuffer:8*1024*1024})});
+ await log({event:'finality-passed'});
+ if(rotation){
+  rotationStop=true;await rotationTask;if(rotationFailure)throw rotationFailure;
+  await captureRotation();
+  const checkpoints=await faultSample(),first=checkpoints[0].checkpoint;
+  if(!checkpoints.every(r=>r.checkpoint.root===first.root&&r.checkpoint.epoch===first.epoch))throw Error('No common rotation checkpoint at capture');
+  rotationProof={...rotationCapture.proof(first.root,rotationCutoff),owners:ownership(await json(join(prepared,'manifest.json')))};
+  await writeFile(join(output,'rotation-capture.json'),JSON.stringify(rotationProof));
+  await log({event:'rotation-captured-awaiting-offline-audit',finalized:first,minimumInclusionSlot:rotationCutoff});
+ }
+}catch(error){await log({event:'failed',message:error.stack});process.exitCode=1;}
+finally{
+ resourceStop=true;if(resourceTask)await resourceTask;
+ if(resourceFailure){await log({event:'resource-collection-failed',message:resourceFailure.stack});process.exitCode=1;}
+ rotationStop=true;if(rotationTask)await rotationTask;
+ if(rotationCapture)await writeFile(join(output,'rotation-raw-captures.json'),JSON.stringify(rotationCapture.dump()));
+ if(rotationFailure){await log({event:'rotation-capture-failed',message:rotationFailure.stack});process.exitCode=1;}
+ if(localStarted&&remoteStarted)await clockSamples('before-stop');
+ if(native&&native.exitCode===null&&native.signalCode===null){native.kill('SIGTERM');for(let i=0;i<30&&native.exitCode===null&&native.signalCode===null;i++)await delay(1000);if(native.exitCode===null&&native.signalCode===null)native.kill('SIGKILL');}
+ for(const [name,onRemote,started] of [[local,false,localStarted],[remote,true,remoteStarted]])if(started){
+  try{await docker(['stop','--time','20',name],onRemote);await writeFile(join(output,onRemote?'vps.log':'docker-mac.log'),await captureLogs(name,onRemote));}catch(error){await log({event:'cleanup-error',name,message:error.message});process.exitCode=1;}
+ }
+ if(tunnel&&tunnel.exitCode===null&&tunnel.signalCode===null){tunnel.kill('SIGTERM');for(let i=0;i<30&&tunnel.exitCode===null&&tunnel.signalCode===null;i++)await delay(100);if(tunnel.exitCode===null&&tunnel.signalCode===null)tunnel.kill('SIGKILL');}
+ // Retain stopped containers/volumes and native DBs for inspection; no pruning.
+}
+if(native&&localStarted&&remoteStarted){
+ try{
+  const validators=await validateStoppedValidators(output,fork);
+  if(rotation&&!process.exitCode){
+   const expectedTokens={};
+   for(const [i,file] of ['native.log','docker-mac.log','vps.log'].entries()){
+    const receipts=(await readFile(join(output,file),'utf8')).split('\n').flatMap(line=>{try{const r=JSON.parse(line);return r.event==='capella-runtime-stopped'?[r]:[];}catch{return [];}});
+    if(receipts.length!==1)throw Error('Missing stopped rotation receipt');expectedTokens[rotationNodes[i]]=receipts[0].restart;
+   }
+   const proofFile=join(output,'rotation-proof.json');await writeFile(proofFile,JSON.stringify({...rotationProof,expectedTokens}));
+   // Public proof only. Executables were built from Git on each host.
+   await exec('scp',['-q',proofFile,`${target}:${remoteRoot}/rotation-proof.json`],{timeout:30000});
+   const audits=[];
+   const nd=join(output,'prepared/mac-native');
+   audits.push(JSON.parse((await exec(join(repo,'build-release/nano-capella-rotation-audit'),[join(nd,'genesis.json'),join(nd,'node.json'),join(nd,'data/chain'),proofFile,rotationNodes[0]],{timeout:120000,maxBuffer:1024*1024})).stdout));
+   await writeFile(join(output,'rotation-audits.json'),JSON.stringify(audits,null,2));
+   for(const [name,onRemote,index] of [[local,false,1],[remote,true,2]]){
+    const config=onRemote?remoteRoot+'/config':join(output,'prepared/mac-docker');
+    const proof=onRemote?remoteRoot+'/rotation-proof.json':proofFile;
+    audits.push(JSON.parse(await docker(['run','--rm','--network','none',...artifactMount,'--mount',`type=bind,src=${config},dst=/config,readonly`,'--mount',`type=bind,src=${proof},dst=/proof.json,readonly`,'--mount',`type=volume,src=${name}-data,dst=/var/lib/nano`,image,'/build/nano-capella-rotation-audit','/config/genesis.json','/config/node.json','/var/lib/nano/chain','/proof.json',rotationNodes[index]],onRemote,120000)));
+    await writeFile(join(output,'rotation-audits.json'),JSON.stringify(audits,null,2));
+   }
+   for(const audit of audits)if(audit.stateSha256!==audits[0].stateSha256||audit.finalizedRoot!==audits[0].finalizedRoot||audit.committeeHash!==audits[0].committeeHash)throw Error('Reopened rotation audits disagree');
+   await writeFile(join(output,'rotation-audits.json'),JSON.stringify(audits,null,2));
+   await log({event:'rotation-offline-audits-passed',audits});
+  }
+  await log({event:process.exitCode?'validators-healthy-after-failed-campaign':'passed',validators});
+ }
+ catch(error){await log({event:'failed',message:error.stack});process.exitCode=1;}
+}

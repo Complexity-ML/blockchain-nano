@@ -513,13 +513,21 @@ static void scheduler_loop(const CapellaForkStore& initial,const CapellaForkBloc
   std::cout<<Json{{"scenario","capella-automatic-index-signing-guard"},{"staleIndicesRejected",stale},{"journalMismatchesRejected",misconfigured},{"providerCalls",signatures-calls},{"durableStateUnchanged",true}}.dump()<<std::endl;
  }
  const auto key=bytes(Int(777),32);Transaction tx;tx.type=2;tx.to="0x0000000000000000000000000000000000001234";tx.gas=100000;tx.max_fee=2000000000;tx.priority_fee=100000000;const auto sender=SignedTransaction::sign(tx,key).sender();
+ const Int sender_start_nonce=owner->state().get(sender).nonce;uint64_t admitted_transactions=0;
  uint64_t proposals=0,votes=0,sync_messages=0;
  const auto period=t.consensus.epoch.sync.epochs_per_sync_committee_period;check(period&&period<=16,"rotation fixture period must remain bounded");const auto boundary=period*slots;
  const uint64_t stop_slot=sync_rotation?(3*period+3)*slots+1:5*slots+1;
  Bytes previous_committee,previous_next;unsigned rotations=0,committee_changes=0,verified_aggregates=0;size_t maximum_records=0;
  for(uint64_t slot=2;slot<=stop_slot;++slot){
-  now=initial.timed.clock.genesis_time_ms+slot*rules.slot_duration_ms;tx.nonce=owner->state().get(sender).nonce;check(owner->submit(SignedTransaction::sign(tx,key)),"scheduler mempool submit");
-  loop->poll();const auto current=reactor->current();const auto& head=capella_fork_head(*current.state,rules);check(head.header.slot==slot&&head.execution_block.transactions.size()==1&&owner->pending_count()==0,"scheduler failed to produce mempool block");
+  now=initial.timed.clock.genesis_time_ms+slot*rules.slot_duration_ms;const auto initial_nonce=owner->state().get(sender).nonce;
+  if(slot==2){
+   // Exceeds the 16-trial budget; network/reorg arrival order is not nonce order.
+   for(unsigned i=32;i>0;--i){tx.nonce=initial_nonce+i-1;check(owner->submit(SignedTransaction::sign(tx,key)),"out-of-order scheduler submission");}
+   admitted_transactions+=32;
+  }else if(!owner->pending_count()){tx.nonce=initial_nonce;check(owner->submit(SignedTransaction::sign(tx,key)),"scheduler mempool submit");++admitted_transactions;}
+  const auto pending_before=owner->pending_count(),expected_transactions=std::min<size_t>(16,pending_before);
+  loop->poll();const auto current=reactor->current();const auto& head=capella_fork_head(*current.state,rules);check(head.header.slot==slot&&head.execution_block.transactions.size()==expected_transactions&&owner->pending_count()==pending_before-expected_transactions,"scheduler failed to drain nonce-ready mempool prefix");
+  for(size_t i=0;i<expected_transactions;++i)check(head.execution_block.transactions[i].tx.nonce==initial_nonce+Int(std::to_string(i)),"scheduler included transactions out of nonce order");
   if(sync_rotation){
    const auto& l=t.consensus.state;const size_t at=272+64*l.slots_per_historical_root+32*l.epochs_per_historical_vector+8*l.epochs_per_slashings_vector+133;
    const size_t width=48*(l.sync_committee_size+1);const auto& state=head.state.ssz;
@@ -541,7 +549,8 @@ static void scheduler_loop(const CapellaForkStore& initial,const CapellaForkBloc
    owner=std::make_unique<Blockchain>(directory/"owner",g);reactor=std::make_unique<CapellaDurableReactor>(*owner,rules,limits,witness);clock=std::make_unique<CapellaLocalClock>(*reactor,2*rules.slot_duration_ms,wall);loop=std::make_unique<CapellaValidatorLoop>(*reactor,*clock,rules.slot_duration_ms,slots,16,64,keys,wall);if(sync_rotation){reactor->set_automatic_pruning(true);loop->poll();check(!reactor->capture_inventory("sync_committee_message",4096)->page({},64,16384)["entries"].empty(),"restart before rotation lost sync duties");}
   }
  }
- const auto current=reactor->current();check(current.state->timed.view.finalized.epoch>=3&&owner->state().get(sender).nonce==Int(std::to_string(stop_slot)),"scheduled chain did not finalize all transactions");
+ const auto current=reactor->current();check(current.state->timed.view.finalized.epoch>=3&&owner->state().get(sender).nonce==sender_start_nonce+Int(std::to_string(admitted_transactions)),"scheduled canonical nonce or finality differs");
+ check(current.state->blocks.at(current.state->timed.view.finalized.root).execution_state.get(sender).nonce>=sender_start_nonce+32,"out-of-order nonce batch not finalized");
  const auto finalized_header=reactor->beacon_read("/eth/v1/beacon/headers/finalized");const auto finalized_root=current.state->timed.view.finalized.root;check(finalized_header.status==200&&finalized_header.body.at("finalized")==true&&finalized_header.body.at("data").at("root")==hex(Bytes(finalized_root.begin(),finalized_root.end())),"scheduled finalized Beacon header mismatch");
  proposals+=loop->status().at("proposalsAdmitted").get<uint64_t>();votes+=loop->status().at("attestationsAdmitted").get<uint64_t>();sync_messages+=loop->status().at("syncMessagesAdmitted").get<uint64_t>();check(proposals==stop_slot-1&&votes>0&&sync_messages>0,"scheduler duty counters");
  if(sync_rotation)check(rotations==3&&committee_changes>=2&&verified_aggregates==stop_slot-2&&maximum_records<=5*slots&&current.state->timed.view.finalized.epoch>=3*period,"rotation/finality/pruning qualification incomplete");

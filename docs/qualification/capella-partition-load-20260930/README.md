@@ -1,5 +1,43 @@
 # Charge applicative pendant partition — 30 septembre 2026
 
+## Tentative B : reprise du consensus, blocage des transactions
+
+Le rejeu sur `406227f` (`attempt-b/`) échoue également, pour une raison différente
+et observable. Les 96 transactions ont toutes été soumises pendant une coupure
+de 97,607 s. La finalité commune reprend à l'époque 7 en 129,867 s après
+reconnexion, mais aucun des 96 reçus n'apparaît. Une capture RPC sur les trois
+nœuds montre 96 transactions `pending`, le nonce canonique inchangé à 1 et des
+têtes de chaîne aux hauteurs 99/100/100. Le lot est déclaré en échec à 617,977 s
+(limite de 600 s vérifiée après une collecte). Les trois validateurs restent sains
+à l'arrêt, les deux conteneurs sortent à 0 sans OOM. Cela ne transforme pas
+l'échec applicatif en réussite.
+
+La sélection Capella prenait les 16 premiers candidats classés par frais et
+ordre d'arrivée, avant la résolution des dépendances de nonce. Un préfixe de
+transactions futures pouvait ainsi exclure le nonce initial après réorganisation
+ou réception hors ordre. Le test ciblé reproduit ce contre-exemple avec 96
+transactions, dont le nonce 0 reçu en dernier.
+
+Le correctif ajoute une sélection fondée sur le nonce canonique de chaque compte :
+seule sa première transaction exécutable concurrence les autres comptes par frais,
+puis les nonces contigus deviennent éligibles. Le budget reste à 16, les trous de
+nonce et les transactions dépassant le gaz disponible ne sont pas contournés.
+L'exécution EVM continue de valider les transactions sélectionnées.
+
+Qualification native (`nonce-ready-native/`) : test du mempool réussi en 0,36 s,
+avec réintégration d'orphelines, trous de nonce, priorité entre comptes, gaz et
+annulation sans mutation. Le test Capella signé reçoit 32 transactions dans
+l'ordre inverse, les inclut par lots de 16 et vérifie leur finalisation : réussite
+en 34,44 s, avec reprise et journaux de signature. Un premier échec de ce test
+(35,07 s) est conservé : son assertion finale supposait encore une transaction
+par bloc. Le comptage est maintenant fondé sur les transactions réellement admises.
+
+**Le correctif de sélection reste à qualifier sur Linux et par un nouveau rejeu
+WAN. L'arrêt du réacteur en tentative A reste une anomalie distincte, non expliquée
+et non reproduite en B. La production globale demeure ouverte.**
+
+## Tentative A : arrêt du réacteur
+
 **Échec conservé, qualification ouverte.** La campagne `attempt-a` a accepté
 64 transactions sur les 96 prévues avant de s'arrêter. Le nœud Docker ARM64 du
 Mac est sorti à 1, sans OOM, avec :
@@ -44,8 +82,8 @@ manquantes, état divergent, reprise tardive et identités de validateurs dupliq
 Les mêmes tests passent sur ARM64 (2,96 s et 24,46 s) et VPS x86-64
 (12,61 s et 94,80 s), à la révision `406227f` (`diagnostic-linux/`). Les deux
 conteneurs de build sortent à 0 sans OOM. Le rejeu borné est lancé dans
-`/tmp/nano-partition-load-20260930-b` ; il est en cours et ne remplace pas
-l’échec initial. La cause reste non établie.
+`/tmp/nano-partition-load-20260930-b` ; son résultat est détaillé ci-dessus et ne
+remplace pas l’échec initial. La cause de l'arrêt en A reste non établie.
 
 ## Preuves
 

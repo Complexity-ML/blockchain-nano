@@ -1,5 +1,17 @@
 # Objectif : Nano C++ de niveau production
 
+## Charge sous partition : transactions bloquées, correctif natif — 30 septembre 2026
+
+Le [rejeu B](qualification/capella-partition-load-20260930/README.md) rétablit la
+finalité commune en 129,867 s après une coupure de 97,607 s, mais les 96 transactions
+restent en mempool : échec applicatif à 617,977 s. Le budget de 16 candidats était
+appliqué avant la résolution des nonces, pouvant exclure leur préfixe indéfiniment.
+La sélection corrigée respecte les dépendances de nonce sans augmenter ce budget.
+Tests natifs réussis : mempool (0,36 s), 32 transactions reçues en ordre inverse et
+finalisées par Capella (34,44 s). Qualification Linux et rejeu WAN encore requis.
+L'arrêt du réacteur en tentative A reste distinct et non expliqué ; aucune clôture
+globale de production n'est revendiquée.
+
 ## Charge pendant partition WAN — échec à corriger, 30 septembre 2026
 
 La [campagne combinée](qualification/capella-partition-load-20260930/README.md)
@@ -9,7 +21,7 @@ après 49,570 s, avant les 96 s prévues. La cause initiale n'était pas conserv
 le diagnostic est renforcé sans assouplir les règles. Aucun succès de charge sous
 partition n'est revendiqué. Les preuves et bases initiales restent conservées.
 Le diagnostic passe les tests ciblés sur Mac, Linux ARM64 et VPS x86-64 ;
-le rejeu sous partition avec `406227f` est en cours, sans résultat acquis.
+le rejeu sous partition avec `406227f` a échoué par blocage d’inclusion (voir ci-dessus).
 
 ## Charge applicative WAN bornée — qualifiée le 30 septembre 2026
 
