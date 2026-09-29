@@ -1,5 +1,16 @@
 # Feuille de route EIP — état réel de Nano
 
+## Qualification réseau des sorties — locale (29 septembre 2026)
+
+Le scénario RPC/libp2p avec deux vrais nœuds locaux passe : retrait complet,
+finalité commune au bloc 56, comptabilité des paiements après réouverture et
+contrôle des dernières propositions/attestations du validateur sorti. Un seul
+processus possède les clés des validateurs ; cela ne qualifie pas un consensus
+entre hôtes indépendants. Les [quatre cas WAL de l’admission](qualification/capella-exit-wal-20260929/README.md) passent aussi sur Mac, avec la régression BLS du banc partagé (2/2 tests).
+Voir les [preuves, échecs et limites](qualification/capella-exit-network-20260929/README.md).
+La production et le jalon complet restent non démontrés.
+
+
 ### Régression locale et rejeux — 27 septembre 2026
 
 Sur `af7f99e`, 185 des 188 tests sélectionnés passent ; trois échecs du banc

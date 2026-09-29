@@ -1,0 +1,60 @@
+[  0%] Built target gen_base.o
+[  0%] Built target gen_bint.o
+[  0%] Built target nano_blst
+[  3%] Built target secp256k1_precomputed
+[  3%] Built target nano-test-sync-fault
+[  7%] Built target mcl_st
+[ 10%] Built target nano_ckzg
+[ 10%] Built target secp256k1
+[100%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-capella-transition-tests.dir/tests/test_capella_transition.cpp.o
+In file included from /Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/altair_transition_rules.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_transition_rules.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_epoch_ssz.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_ffg_ssz.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_minimal_ssz.hpp:2:
+/Users/boris/Dev/blockchain-nano/tests/support/process.hpp:39:19: warning: 'posix_spawn_file_actions_addchdir_np' is deprecated: first deprecated in macOS 26.0 - posix_spawn_file_actions_addchdir(3) has replaced posix_spawn_file_actions_addchdir_np(3) [-Wdeprecated-declarations]
+   39 |   if(!cwd.empty())posix_spawn_file_actions_addchdir_np(&actions,cwd.c_str());
+      |                   ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/spawn.h:184:9: note: 'posix_spawn_file_actions_addchdir_np' has been explicitly marked deprecated here
+  184 | int     posix_spawn_file_actions_addchdir_np(posix_spawn_file_actions_t *,
+      |         ^
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:653:61: error: use of overloaded operator '<' is ambiguous (with operand types 'Int' (aka '__gmp_expr<__mpz_struct[1], __mpz_struct[1]>') and 'uint64_t' (aka 'unsigned long long'))
+  653 |        if(a.is_null()||b.is_null()||quantity(a.at("number"))<paid_height||a.at("hash")!=b.at("hash"))return false;
+      |                                     ~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
+/opt/homebrew/include/gmpxx.h:3341:41: note: candidate function [with T = __mpz_struct[1], U = __mpz_struct[1]]
+ 3341 | __GMP_DEFINE_BINARY_TYPE_FUNCTION(bool, operator<, __gmp_binary_less)
+      |                                         ^
+/opt/homebrew/include/gmpxx.h:3341:41: note: candidate function [with T = __mpz_struct[1], U = __mpz_struct[1]]
+/opt/homebrew/include/gmpxx.h:3341:41: note: candidate function [with T = __mpz_struct[1], U = __mpz_struct[1]]
+/opt/homebrew/include/gmpxx.h:3341:41: note: candidate function [with T = __mpz_struct[1], U = __mpz_struct[1]]
+/opt/homebrew/include/gmpxx.h:3341:41: note: candidate function [with T = __mpz_struct[1], U = __mpz_struct[1]]
+/opt/homebrew/include/gmpxx.h:3341:41: note: candidate function [with T = __mpz_struct[1], U = __mpz_struct[1]]
+/opt/homebrew/include/gmpxx.h:3341:41: note: candidate function [with T = __mpz_struct[1], U = __mpz_struct[1]]
+/opt/homebrew/include/gmpxx.h:3341:41: note: candidate function [with T = __mpz_struct[1], U = __mpz_struct[1]]
+/opt/homebrew/include/gmpxx.h:3341:41: note: candidate function [with T = __mpz_struct[1], U = __mpz_struct[1]]
+/opt/homebrew/include/gmpxx.h:3341:41: note: candidate function [with T = __mpz_struct[1], U = __mpz_struct[1]]
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:670:35: error: use of overloaded operator '<=' is ambiguous (with operand types 'uint64_t' (aka 'unsigned long long') and 'const Int' (aka 'const __gmp_expr<__mpz_struct[1], __mpz_struct[1]>'))
+  670 |       for(uint64_t height=0;height<=head.execution_block.header.number;++height){const auto block=reopened.block_by_number(height);check(bool(block),"canonical payout history missing");for(const auto& w:block->withdrawals)if(w.validator_index==0){check(w.address==recipient,"withdrawal paid wrong credentials");total+=Int(std::to_string(w.amount))*1000000000;++payments;}}
+      |                             ~~~~~~^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/opt/homebrew/include/gmpxx.h:3342:41: note: candidate function [with T = __mpz_struct[1], U = __mpz_struct[1]]
+ 3342 | __GMP_DEFINE_BINARY_TYPE_FUNCTION(bool, operator<=, ! __gmp_binary_greater)
+      |                                         ^
+/opt/homebrew/include/gmpxx.h:3342:41: note: candidate function [with T = __mpz_struct[1], U = __mpz_struct[1]]
+/opt/homebrew/include/gmpxx.h:3342:41: note: candidate function [with T = __mpz_struct[1], U = __mpz_struct[1]]
+/opt/homebrew/include/gmpxx.h:3342:41: note: candidate function [with T = __mpz_struct[1], U = __mpz_struct[1]]
+/opt/homebrew/include/gmpxx.h:3342:41: note: candidate function [with T = __mpz_struct[1], U = __mpz_struct[1]]
+/opt/homebrew/include/gmpxx.h:3342:41: note: candidate function [with T = __mpz_struct[1], U = __mpz_struct[1]]
+/opt/homebrew/include/gmpxx.h:3342:41: note: candidate function [with T = __mpz_struct[1], U = __mpz_struct[1]]
+/opt/homebrew/include/gmpxx.h:3342:41: note: candidate function [with T = __mpz_struct[1], U = __mpz_struct[1]]
+/opt/homebrew/include/gmpxx.h:3342:41: note: candidate function [with T = __mpz_struct[1], U = __mpz_struct[1]]
+/opt/homebrew/include/gmpxx.h:3342:41: note: candidate function [with T = __mpz_struct[1], U = __mpz_struct[1]]
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:670:108: error: no member named 'block_by_number' in 'nano::Blockchain'
+  670 |       for(uint64_t height=0;height<=head.execution_block.header.number;++height){const auto block=reopened.block_by_number(height);check(bool(block),"canonical payout history missing");for(const auto& w:block->withdrawals)if(w.validator_index==0){check(w.address==recipient,"withdrawal paid wrong credentials");total+=Int(std::to_string(w.amount))*1000000000;++payments;}}
+      |                                                                                                   ~~~~~~~~ ^
+1 warning and 3 errors generated.
+gmake[3]: *** [CMakeFiles/nano-capella-transition-tests.dir/build.make:79: CMakeFiles/nano-capella-transition-tests.dir/tests/test_capella_transition.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:7613: CMakeFiles/nano-capella-transition-tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:7620: CMakeFiles/nano-capella-transition-tests.dir/rule] Error 2
+gmake: *** [Makefile:2650: nano-capella-transition-tests] Error 2

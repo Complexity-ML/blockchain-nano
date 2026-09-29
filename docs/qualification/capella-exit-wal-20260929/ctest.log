@@ -1,0 +1,41 @@
+UpdateCTestConfiguration  from :/Users/boris/Dev/blockchain-nano/build-release/DartConfiguration.tcl
+Test project /Users/boris/Dev/blockchain-nano/build-release
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 350
+    Start 350: consensus_capella_queued_exit_sync
+
+350: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests "--queued-exit-sync"
+350: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+350: Test timeout computed to be: 120
+350: {"blockedOperations":8,"consensusStateUnchanged":true,"faultWitness":false,"lostSuffix":false,"physicalPowerLoss":false,"recoveredPendingBeforeResubmit":true,"resubmissionIdempotent":true,"scenario":"capella-exit-sync-recovery"}
+350: {"blockedOperations":8,"consensusStateUnchanged":true,"faultWitness":false,"lostSuffix":true,"physicalPowerLoss":false,"recoveredPendingBeforeResubmit":true,"resubmissionIdempotent":true,"scenario":"capella-exit-sync-recovery"}
+350: {"blockedOperations":6,"consensusStateUnchanged":true,"faultWitness":true,"lostSuffix":false,"physicalPowerLoss":false,"recoveredPendingBeforeResubmit":true,"resubmissionIdempotent":true,"scenario":"capella-exit-sync-recovery"}
+350: {"blockedOperations":6,"consensusStateUnchanged":true,"faultWitness":true,"lostSuffix":true,"physicalPowerLoss":false,"recoveredPendingBeforeResubmit":false,"resubmissionIdempotent":true,"scenario":"capella-exit-sync-recovery"}
+1/2 Test #350: consensus_capella_queued_exit_sync ...   Passed    4.74 sec
+test 351
+    Start 351: consensus_capella_queued_bls_sync
+
+351: Test command: /Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests "--queued-bls-sync"
+351: Working Directory: /Users/boris/Dev/blockchain-nano/build-release
+351: Test timeout computed to be: 120
+351: {"blockedOperations":8,"consensusStateUnchanged":true,"faultWitness":false,"lostSuffix":false,"physicalPowerLoss":false,"recoveredPendingBeforeResubmit":true,"resubmissionIdempotent":true,"scenario":"capella-bls-sync-recovery"}
+351: {"blockedOperations":8,"consensusStateUnchanged":true,"faultWitness":false,"lostSuffix":true,"physicalPowerLoss":false,"recoveredPendingBeforeResubmit":true,"resubmissionIdempotent":true,"scenario":"capella-bls-sync-recovery"}
+351: {"blockedOperations":6,"consensusStateUnchanged":true,"faultWitness":true,"lostSuffix":false,"physicalPowerLoss":false,"recoveredPendingBeforeResubmit":true,"resubmissionIdempotent":true,"scenario":"capella-bls-sync-recovery"}
+351: {"blockedOperations":6,"consensusStateUnchanged":true,"faultWitness":true,"lostSuffix":true,"physicalPowerLoss":false,"recoveredPendingBeforeResubmit":false,"resubmissionIdempotent":true,"scenario":"capella-bls-sync-recovery"}
+2/2 Test #351: consensus_capella_queued_bls_sync ....   Passed    4.56 sec
+
+The following tests passed:
+	consensus_capella_queued_exit_sync
+	consensus_capella_queued_bls_sync
+
+100% tests passed out of 2
+
+Label Time Summary:
+qualification_consensus_recovery    =   9.30 sec*proc (2 tests)
+
+Total Test time (real) =   9.30 sec

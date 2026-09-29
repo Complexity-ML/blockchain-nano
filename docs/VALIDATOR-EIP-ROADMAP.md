@@ -1,5 +1,16 @@
 # EIP et consensus : périmètre demandé pour Nano
 
+## Qualification réseau des sorties — locale (29 septembre 2026)
+
+Le scénario RPC/libp2p avec deux vrais nœuds locaux passe : retrait complet,
+finalité commune au bloc 56, comptabilité des paiements après réouverture et
+contrôle des dernières propositions/attestations du validateur sorti. Un seul
+processus possède les clés des validateurs ; cela ne qualifie pas un consensus
+entre hôtes indépendants. Les [quatre cas WAL de l’admission](qualification/capella-exit-wal-20260929/README.md) passent aussi sur Mac, avec la régression BLS du banc partagé (2/2 tests).
+Voir les [preuves, échecs et limites](qualification/capella-exit-network-20260929/README.md).
+La production et le jalon complet restent non démontrés.
+
+
 ### Partition Docker Capella qualifiée — 27 septembre 2026
 
 Deux daemons actifs, 32 validateurs chacun : après 96 secondes de coupure réseau demandées, finalité commune d’époque 7 retrouvée en 142,223 secondes. Le défaut de démarrage avec superviseur Linux PID 1 est corrigé. [Preuves, échecs initiaux et limites](qualification/capella-docker-partition-20260927/README.md). Une seule campagne locale ; WAN, partitions asymétriques, adversaires, charge et production complète restent ouverts.

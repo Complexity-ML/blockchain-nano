@@ -54,7 +54,7 @@ static bool automatic_recovery=false;
 static bool capella_http=false;
 static std::string cli_binary;static Json cli_genesis;static bool managed_cli=false;static std::string daemon_binary;static bool network_cli=false;static bool multipeer_cli=false;static bool distributed_cli=false;static bool sync_distributed_cli=false,distributed_sync_rotation=false;static bool transport_outage_cli=false;static fs::path network_export;
 static bool beacon_reads=false;
-static bool exit_wire=false;static bool queued_exits=false;static bool local_exits=false;static bool deposit_reorg_sync=false;static bool deposit_reorg_activation=false;static bool deposit_reorg=false;static bool automatic_registration=false;static bool deposit_activation_restart=false;static bool local_sync=false;static bool deposit_invalid_signature=false;static bool deposit_activation=false;static bool deposit_consumption=false;static bool slashing_retirement=false;static bool pruning_slashing=false;static bool pruning_sync=false;static bool pruning_automatic=false;static bool pruning_native=false;static bool pruning_bls=false;static bool pruning_primitive=false;static bool queued_bls_sync=false;static bool queued_bls_reorg=false;static bool queued_bls_changes=false;static bool local_bls_changes=false;static bool wire_mode=false;static bool catalog_concurrency=false;
+static bool exit_sync=false;static bool exit_network=false;static bool exit_wire=false;static bool queued_exits=false;static bool local_exits=false;static bool deposit_reorg_sync=false;static bool deposit_reorg_activation=false;static bool deposit_reorg=false;static bool automatic_registration=false;static bool deposit_activation_restart=false;static bool local_sync=false;static bool deposit_invalid_signature=false;static bool deposit_activation=false;static bool deposit_consumption=false;static bool slashing_retirement=false;static bool pruning_slashing=false;static bool pruning_sync=false;static bool pruning_automatic=false;static bool pruning_native=false;static bool pruning_bls=false;static bool pruning_primitive=false;static bool queued_bls_sync=false;static bool queued_bls_reorg=false;static bool queued_bls_changes=false;static bool local_bls_changes=false;static bool wire_mode=false;static bool catalog_concurrency=false;
 static size_t beacon_read_checks=0;
 #ifdef NANO_SYNC_FAULT
 extern "C" void nano_test_arm_sync_fault(const char*);
@@ -626,9 +626,61 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
     auto follower_config=node;follower_config["capella"].erase("validator");follower_config["capella"]["recoveryWitness"]=(directory/"follower-witness").string();follower_config["bootnodes"]=Json::array({source_address});const auto follower_file=directory/"follower.json";save(follower_file,follower_config);
     Env follower_env{{"NANO_TEST_NETWORK_TRACE","1"}};
     if(queued_bls_changes){SignedCapellaBlsChange change;Key withdrawal_key(1001);change.validator_index=1;copy_to(change.from_bls_pubkey,withdrawal_key.public_key);change.to_execution_address[19]=43;const auto validators_root=root_at(initial.blocks.at(initial.timed.view.anchor).state.ssz,8);copy_to(change.signature,withdrawal_key.sign(consensus_signing_root(capella_bls_change_root(change),consensus_domain({10,0,0,0},t.genesis_version,validators_root))));follower_env["NANO_TEST_BLS_BOOTSTRAP"]=hex(encode_capella_bls_change(change));follower_env["NANO_TEST_BLS_DAEMON"]=daemon_binary;follower_config["p2p_binary"]=fs::absolute(executable).string();save(follower_file,follower_config);}
+    if(exit_network){
+     // Test-only supervisor child submits to the non-validator before execing the real daemon.
+     // The producer can only learn this operation over libp2p; no direct DB injection.
+     const auto& seed=initial.blocks.at(initial.timed.view.anchor).state.ssz;
+     SignedConsensusVoluntaryExit operation;operation.epoch=0;operation.validator_index=0;ConsensusBytes4 version{};
+     std::copy_n(seed.begin()+(operation.epoch<little(seed,56,8)?48:52),4,version.begin());
+     operation.signature=Key(0).sign(consensus_signing_root(consensus_voluntary_exit_root(0,0),consensus_domain({4,0,0,0},version,root_at(seed,8))));
+     follower_env["NANO_TEST_EXIT_BOOTSTRAP"]=hex(encode_consensus_voluntary_exit_ssz(operation));follower_env["NANO_TEST_BLS_DAEMON"]=daemon_binary;
+     follower_config["p2p_binary"]=fs::absolute(executable).string();save(follower_file,follower_config);
+    }
     Process follower_node({cli_binary,"run",(directory/"genesis.json").string(),(directory/"follower-db").string(),follower_file.string()},follower_env);const auto follower_port=follower_node.port();const auto follower_address=follower_node.event("listen").at("address").get<std::string>();check(follower_node.event("altair-ipc-ready").at("networkProtocolActive")==true,"follower network inactive");
     until([&]{source_node.pump(0);follower_node.pump(0);const auto a=rpc(source_port,"eth_getBlockByNumber",Json::array({"latest",false}));const auto b=rpc(follower_port,"eth_getBlockByNumber",Json::array({"latest",false}));return quantity(a.at("number"))>=2&&a.at("hash")==b.at("hash")&&a.at("stateRoot")==b.at("stateRoot");},"two real Capella peers converged",50);
     if(queued_bls_changes){until([&]{source_node.pump(0);follower_node.pump(0);const auto params=Json::array({"0x000000000000000000000000000000000000002b","latest"});return quantity(rpc(source_port,"eth_getBalance",params))>0&&quantity(rpc(follower_port,"eth_getBalance",params))>0;},"BLS change relayed from non-validator and withdrawn on both peers",60);std::cout<<Json{{"event","capella-bls-network-withdrawal"},{"submittedOnlyToFollower",true},{"bothPeersPaid",true},{"realLibp2p",true}}.dump()<<std::endl;follower_config["p2p_binary"]=daemon_binary;}
+    if(exit_network){
+     const std::string recipient="0x000000000000000000000000000000000000002a";
+     uint64_t paid_height=0;Int paid_balance=0;Json finalized;
+     try{
+      until([&]{source_node.pump(0);follower_node.pump(0);check(source_node.running()&&follower_node.running(),"exit network node stopped");
+       const auto balance=quantity(rpc(source_port,"eth_getBalance",Json::array({recipient,"latest"})));
+       if(balance<=Int("30000000000000000000"))return false;
+       paid_balance=balance;paid_height=u64(quantity(rpc(source_port,"eth_blockNumber")));return true;
+      },"full exit withdrawal observed on producer",480);
+      until([&]{source_node.pump(0);follower_node.pump(0);
+       const auto a=rpc(source_port,"eth_getBlockByNumber",Json::array({"finalized",false})),b=rpc(follower_port,"eth_getBlockByNumber",Json::array({"finalized",false}));
+       if(a.is_null()||b.is_null()||u64(quantity(a.at("number")))<paid_height||a.at("hash")!=b.at("hash"))return false;
+       check(a.at("stateRoot")==b.at("stateRoot"),"exit finality state mismatch");
+       const auto final_balance=quantity(rpc(source_port,"eth_getBalance",Json::array({recipient,a.at("number")})));
+       check(final_balance>=paid_balance,"finalized balance lost withdrawal");
+       check(quantity(rpc(follower_port,"eth_getBalance",Json::array({recipient,a.at("number")})))==final_balance,"peers disagree on finalized withdrawal balance");
+       std::cout<<Json{{"event","capella-exit-finalized-payment"},{"firstObservedBalance",quantity(paid_balance)},{"finalizedBalance",quantity(final_balance)},{"number",a.at("number")}}.dump()<<std::endl;paid_balance=final_balance;
+       finalized=a;return true;
+      },"exit withdrawal finalized identically on both peers",180);
+     }catch(...){const auto a=source_node.stop(),b=follower_node.stop();std::cerr<<a.out<<a.err<<b.out<<b.err;throw;}
+     const auto a=source_node.stop(),b=follower_node.stop();std::cout<<a.out<<a.err<<b.out<<b.err;check(a.code==0&&b.code==0,"exit peers did not stop cleanly");
+     // Reopen both durable owners and account for every canonical payout, including
+     // the initial partial withdrawal. Only index 0 owns this fixture recipient.
+     for(const auto& [db,witness]:std::array<std::pair<std::string,std::string>,2>{{{"source-db","witness"},{"follower-db","follower-witness"}}}){
+      Blockchain reopened(directory/db,g);ChainStore recovered_witness(directory/witness);CapellaDurableReactor recovered(reopened,rules,limits,recovered_witness);
+      const auto current=recovered.current();const auto& head=capella_fork_head(*current.state,rules);const auto& state=head.state.ssz;
+      const auto& layout=t.consensus.state;const size_t hist=176+64*layout.slots_per_historical_root;
+      const auto registry=little(state,hist+88,4),balances=little(state,hist+92,4);
+      const auto exit_epoch=little(state,registry+105,8),residual=little(state,balances,8);check(exit_epoch<=little(state,40,8)/slots,"validator still active after withdrawal");
+      check(recovered.pending_exits().empty(),"finalized exit remained pending");
+      Int total=0,finalized_total=0;size_t payments=0,capital_payments=0;const auto final_height=u64(quantity(finalized.at("number")));
+      for(uint64_t height=0;height<=u64(head.execution_block.header.number);++height){const auto block=reopened.store().block_by_number(Int(std::to_string(height)));check(bool(block),"canonical payout history missing");for(const auto& w:block->withdrawals)if(quantity(w.at("validatorIndex"))==0){check(w.at("address")==recipient,"withdrawal paid wrong credentials");const auto amount=quantity(w.at("amount"));total+=amount*1000000000;if(height<=final_height)finalized_total+=amount*1000000000;if(amount>Int("30000000000"))++capital_payments;++payments;
+       std::cout<<Json{{"event","capella-exit-payout"},{"owner",db},{"height",height},{"withdrawal",w}}.dump()<<std::endl;}}
+      check(capital_payments==1&&finalized_total==paid_balance&&head.execution_state.get(recipient).balance==total,"withdrawal accounting or duplicate capital payout mismatch");
+      // A withdrawn validator can still earn sync rewards until its assigned
+      // committee expires. Compare exact payouts, not a permanently frozen balance.
+      ChainStore signer_disk(directory/"network-key-0"),signer_witness(directory/"network-key-witness-0");
+      if(db=="source-db"){BeaconSigningJournal journal(signer_disk,t.chain_id,genesis.header.hash(),root_at(state,8),Key(0).public_key,slots,std::nullopt,&signer_witness);const auto proposal=journal.latest_proposal_slot(),vote=journal.latest_attestation_target();check((!proposal||*proposal/slots<exit_epoch)&&(!vote||*vote<exit_epoch),"proposal or attestation after validator exit");}
+      std::cout<<Json{{"event","capella-exit-owner-reopened"},{"owner",db},{"payments",payments},{"balance",quantity(total)},{"validatorBalanceGwei",residual},{"capitalPayments",capital_payments},{"exitEpoch",exit_epoch},{"finalizedExitRetired",true}}.dump()<<std::endl;
+     }
+     std::cout<<Json{{"scenario","capella-exit-network"},{"submittedOnlyToNonValidator",true},{"realLibp2p",true},{"recipient",recipient},{"paidBalance",quantity(paid_balance)},{"finalizedHash",finalized.at("hash")},{"finalizedNumber",finalized.at("number")},{"shortenedTestTenure",true},{"testWithdrawalDelayEpochs",1},{"independentValidatorHosts",false}}.dump()<<std::endl;return;
+    }
     const auto follower_result=follower_node.stop();check(follower_result.code==0,"first follower failed shutdown");
     follower_config["p2p_identity"]=(directory/"follower-db.peerkey").string();follower_config["capella"]["recoveryWitness"]=(directory/"fresh-follower-witness").string();save(follower_file,follower_config);
     Process restarted({cli_binary,"run",(directory/"genesis.json").string(),(directory/"fresh-follower-db").string(),follower_file.string()},{{"NANO_TEST_NETWORK_TRACE","1"},{"NANO_TEST_DROP_ALTAIR_REPLY_ONCE","1"}});const auto restarted_port=restarted.port();const auto restarted_address=restarted.event("listen").at("address").get<std::string>();check(follower_address.substr(follower_address.rfind("/p2p/"))==restarted_address.substr(restarted_address.rfind("/p2p/")),"restarted peer identity changed");check(restarted.event("altair-ipc-ready").at("networkProtocolActive")==true,"restarted follower network inactive");
@@ -769,7 +821,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
  const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-bellatrix-containers-official",source=fixtures/"consensus-capella-slots-official";
  const auto manifest=load(source/"manifest.json");check(manifest.at("commit")=="194a91fd9e6f97118156421aac4c80e6e47a9a7f","initial state revision");
  for(const auto& row:manifest.at("cases"))if(row.at("name")=="slots_1")for(const auto& [path,info]:row.at("files").items())check(hex(sha256(binary(source/"slots_1"/path))).substr(2)==info.at("sha256").get<std::string>(),"initial state digest");
- auto common=altair_transition_rules(fixtures);if(local_exits)common.exit.shard_committee_period=1;const auto preset=read(refs/"minimal-bellatrix.yaml");auto p=[&](const char* k){return parameter(preset,k);};
+ auto common=altair_transition_rules(fixtures);if(local_exits)common.exit.shard_committee_period=1;if(exit_network){common.exit.shard_committee_period=1;common.exit.minimum_withdrawability_delay=1;common.epoch.registry.minimum_withdrawability_delay=1;common.epoch.slashing.minimum_withdrawability_delay=1;}const auto preset=read(refs/"minimal-bellatrix.yaml");auto p=[&](const char* k){return parameter(preset,k);};
  const auto container_manifest=load(refs/"manifest.json");
  for(const auto& row:container_manifest.at("presets"))check(hex(sha256(binary(refs/row.at("name").get<std::string>()))).substr(2)==row.at("sha256").get<std::string>(),"Bellatrix preset digest");
  common.epoch.rewards.inactivity_penalty_quotient=p("INACTIVITY_PENALTY_QUOTIENT_BELLATRIX");common.epoch.slashing.minimum_penalty_quotient=p("MIN_SLASHING_PENALTY_QUOTIENT_BELLATRIX");common.epoch.slashing.proportional_slashing_multiplier=p("PROPORTIONAL_SLASHING_MULTIPLIER_BELLATRIX");
@@ -782,7 +834,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
  const CapellaTransitionRules r{common,{uint32_t(p("MAX_EXTRA_DATA_BYTES")),uint32_t(p("MAX_BYTES_PER_TRANSACTION")),uint32_t(p("MAX_TRANSACTIONS_PER_PAYLOAD"))},4*1024*1024,seconds,{common.deposit.maximum_effective_balance,parameter(cp,"MAX_WITHDRAWALS_PER_PAYLOAD"),parameter(cp,"MAX_VALIDATORS_PER_WITHDRAWALS_SWEEP")},common.deposit.genesis_fork_version,uint32_t(parameter(cp,"MAX_BLS_TO_EXECUTION_CHANGES")),1337,ReplayPolicy::RequireChainId};
  const auto& l=r.consensus.state;const auto& duties=r.consensus.attestation.duties;const uint64_t slots=duties.slots_per_epoch;
  const size_t hist=176+64*l.slots_per_historical_root,randao=hist+96,field=randao+32*l.epochs_per_historical_vector+8*l.epochs_per_slashings_vector+229+96*l.sync_committee_size;
- CapellaSlotState beacon{binary(source/"slots_1/pre.ssz"),std::nullopt};put(beacon.ssz,field+12,48);if(!cli_binary.empty())put(beacon.ssz,0,uint64_t(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count())-2*seconds);const auto genesis_time=little(beacon.ssz,0,8);const auto genesis_root=root_at(beacon.ssz,8);
+ CapellaSlotState beacon{binary(source/"slots_1/pre.ssz"),std::nullopt};put(beacon.ssz,field+12,48);if(!cli_binary.empty())put(beacon.ssz,0,uint64_t(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count())-(exit_network?slots+1:2)*seconds);const auto genesis_time=little(beacon.ssz,0,8);const auto genesis_root=root_at(beacon.ssz,8);
  Key withdrawal_key(1000);auto credentials=sha256(withdrawal_key.public_key);credentials[0]=0;const auto validators_at=little(beacon.ssz,hist+88,4),balances_at=little(beacon.ssz,hist+92,4);
  std::copy(credentials.begin(),credentials.end(),beacon.ssz.begin()+validators_at+48);put(beacon.ssz,balances_at,r.withdrawals.maximum_effective_balance+1000000000);
  SignedCapellaBlsChange change;change.validator_index=0;copy_to(change.from_bls_pubkey,withdrawal_key.public_key);change.to_execution_address[19]=42;
@@ -807,7 +859,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
   before_fork.ssz=bellatrix_detail::restore(projection.common,header,l,r.execution,r.maximum_state_bytes,{});
   before_fork_root=bellatrix_beacon_state_root(before_fork.ssz,l,r.execution,r.maximum_state_bytes);
  }
- const uint64_t first_slot=migrate?slots+skipped:1;
+ const uint64_t first_slot=migrate?slots+skipped:exit_network?slots:1;
  std::map<Int,Bytes> hashes{{0,parent.header.hash()}};std::function<Bytes(const Int&)> history=[&](const Int& n){return hashes.at(n);};
  const auto disk_genesis=parent;const auto disk_genesis_state=state;
  CapellaForkBlockRules store_rules{r,seconds*1000,seconds*1000/3,40};if(pruning_native){store_rules.native_deposit_votes=true;store_rules.deposit_contract_code_hash=keccak(state.get(ethereum_deposit_contract).code);}
@@ -868,6 +920,9 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
   if(local_exits&&slot==first_slot+slots){
    selected_exit.signature=Key(2).sign(consensus_signing_root(consensus_voluntary_exit_root(epoch,2),consensus_domain({4,0,0,0},version,genesis_root)));
    const auto operation=encode_consensus_voluntary_exit_ssz(selected_exit);
+#ifdef NANO_SYNC_FAULT
+   if(exit_sync){const auto current=reactor->current();qualify_bls_sync(executable,store_rules,capella_store_snapshot(*current.state,store_rules,crash_limits),disk_genesis,disk_genesis_state,current.state->timed.clock.time_ms,operation,true);return;}
+#endif
    body.insert(body.begin()+fixed,operation.begin(),operation.end());
    put(body,220+sync_bytes,fixed+operation.size(),4);put(body,224+sync_bytes,fixed+operation.size()+encoded.size(),4);
   }
@@ -1386,9 +1441,9 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
  std::cout<<Json{{"queuedBlsChangeSelection",queued_bls_changes},{"localBlsChangeSelection",local_bls_changes},{"wireMessages",wire_messages},{"beaconReadChecks",beacon_read_checks},{"scenario","capella-signed-transition"},{"migrated",migrate},{"finalityScenario",finality},{"participationPercent",participation},{"finalizedEpoch",store->timed.view.finalized.epoch},{"includedAttestations",included_attestations},{"skippedForkSlots",skipped},{"blocks",accepted},{"contexts",contexts},{"storeBlocks",store->blocks.size()},{"snapshotReopened",true},{"durableReactor",true},{"signedArchives",signed_wires.size()},{"signedVotes",durable_votes.size()},{"signedSlashings",durable_proofs.size()},{"deferredVotes",deferred_votes.size()},{"localAttestations",local_signatures},{"localProposals",local_proposals},{"localRandao",local_randao},{"assembledBodies",assembled_bodies},{"storeSigkillReopens",2},{"storeVotes",votes},{"voteReorgs",vote_reorgs},{"withdrawals",paid},{"rejected",rejected},{"cancellations",cancelled},{"networkActivated",false}}.dump()<<'\n';
 }
 int main(int argc,char** argv){try{executable=argv[0];
- if(argc>=4&&std::getenv("NANO_TEST_BLS_BOOTSTRAP")){
-  const auto* token=std::getenv("NANO_NETWORK_TOKEN");const auto* daemon=std::getenv("NANO_TEST_BLS_DAEMON");check(token&&daemon,"BLS test shim missing supervisor context");PersistentRpc client(std::stoi(argv[1]));const auto status=client.call("nano_capellaStatus",Json::array({token}));Json envelope;for(const auto* key:{"chainId","genesisHash","forkDigest","consensusIdentity"})envelope[key]=status.at(key);envelope["kind"]="bls_to_execution_change";envelope["ssz"]=std::getenv("NANO_TEST_BLS_BOOTSTRAP");const auto session=status.at("admissionSession");client.call("nano_capellaSubmit",Json::array({token,session,"0x1",envelope.dump()}));Json receipt;const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(10);do{receipt=client.call("nano_capellaJob",Json::array({token,session,"0x1"}));if(receipt.at("state")=="completed")break;std::this_thread::sleep_for(std::chrono::milliseconds(1));}while(std::chrono::steady_clock::now()<deadline);check(receipt.value("decision",std::string())=="accepted","BLS test shim admission failed");client.call("nano_capellaForget",Json::array({token,session,"0x1"}));
-  std::string path=daemon;unsetenv("NANO_TEST_BLS_BOOTSTRAP");unsetenv("NANO_TEST_BLS_DAEMON");std::vector<char*> args;args.push_back(path.data());for(int i=1;i<argc;++i)args.push_back(argv[i]);args.push_back(nullptr);execv(path.c_str(),args.data());throw std::runtime_error("BLS test shim could not exec daemon");
+ if(argc>=4&&(std::getenv("NANO_TEST_BLS_BOOTSTRAP")||std::getenv("NANO_TEST_EXIT_BOOTSTRAP"))){
+  const auto* token=std::getenv("NANO_NETWORK_TOKEN");const auto* daemon=std::getenv("NANO_TEST_BLS_DAEMON");check(token&&daemon,"BLS test shim missing supervisor context");PersistentRpc client(std::stoi(argv[1]));const auto status=client.call("nano_capellaStatus",Json::array({token}));Json envelope;for(const auto* key:{"chainId","genesisHash","forkDigest","consensusIdentity"})envelope[key]=status.at(key);const auto* exit=std::getenv("NANO_TEST_EXIT_BOOTSTRAP");envelope["kind"]=exit?"voluntary_exit":"bls_to_execution_change";envelope["ssz"]=exit?exit:std::getenv("NANO_TEST_BLS_BOOTSTRAP");const auto session=status.at("admissionSession");client.call("nano_capellaSubmit",Json::array({token,session,"0x1",envelope.dump()}));Json receipt;const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(10);do{receipt=client.call("nano_capellaJob",Json::array({token,session,"0x1"}));if(receipt.at("state")=="completed")break;std::this_thread::sleep_for(std::chrono::milliseconds(1));}while(std::chrono::steady_clock::now()<deadline);check(receipt.value("decision",std::string())=="accepted","BLS test shim admission failed");client.call("nano_capellaForget",Json::array({token,session,"0x1"}));
+  std::string path=daemon;unsetenv("NANO_TEST_EXIT_BOOTSTRAP");unsetenv("NANO_TEST_BLS_BOOTSTRAP");unsetenv("NANO_TEST_BLS_DAEMON");std::vector<char*> args;args.push_back(path.data());for(int i=1;i<argc;++i)args.push_back(argv[i]);args.push_back(nullptr);execv(path.c_str(),args.data());throw std::runtime_error("BLS test shim could not exec daemon");
  }
  if(argc==4&&std::getenv("NANO_TEST_MANAGED_CHILD")){
   check(!std::getenv("NANO_TEST_MANAGED_CAPELLA_KEY")&&!std::getenv("NANO_PRIVATE_KEY"),"supervisor leaked private keys");
@@ -1406,6 +1461,7 @@ int main(int argc,char** argv){try{executable=argv[0];
  if(argc==4&&std::string(argv[1])=="--sync-distributed-cli"){sync_distributed_cli=true;distributed_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--distributed-cli"){distributed_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--multipeer-cli"){multipeer_cli=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
+ if(argc==4&&std::string(argv[1])=="--exit-network-cli"){exit_network=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--bls-network-cli"){queued_bls_changes=true;local_bls_changes=true;network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--network-cli"){network_cli=true;managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
  if(argc==4&&std::string(argv[1])=="--daemon-cli"){managed_cli=true;cli_binary=argv[2];daemon_binary=fs::absolute(argv[3]).string();configured_runtime=true;scenario(false);return 0;}
@@ -1416,6 +1472,8 @@ if(argc==3&&std::string(argv[1])=="--deposit-vote-sync-writer")return deposit_vo
 if(argc==2&&std::string(argv[1])=="--deposit-reorg-sync"){deposit_reorg_sync=true;deposit_reorg=true;pruning_native=true;scenario(false);return 0;}
 if(argc==3&&std::string(argv[1])=="--pruning-sync-writer")return pruning_sync_writer(argv[2]);
 if(argc==2&&std::string(argv[1])=="--pruning-sync"){pruning_sync=true;pruning_native=true;owner_mode=true;local_finality=100;scenario(false);return 0;}
+if(argc==3&&std::string(argv[1])=="--exit-sync-writer")return bls_sync_writer(argv[2],true);
+if(argc==2&&std::string(argv[1])=="--queued-exit-sync"){exit_sync=true;local_exits=true;scenario(false);return 0;}
 if(argc==3&&std::string(argv[1])=="--bls-sync-writer")return bls_sync_writer(argv[2]);
 if(argc==2&&std::string(argv[1])=="--queued-bls-sync"){queued_bls_sync=true;local_bls_changes=true;scenario(false);return 0;}
 if(argc==3&&std::string(argv[1])=="--sync-writer")return sync_writer(argv[2]);

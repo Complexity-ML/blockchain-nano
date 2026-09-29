@@ -1534,6 +1534,8 @@ target_link_libraries(nano-capella-transition-tests PRIVATE nano_core nano_ckzg)
 if(TARGET nano-test-sync-fault)
  target_link_libraries(nano-capella-transition-tests PRIVATE nano-test-sync-fault)
  target_compile_definitions(nano-capella-transition-tests PRIVATE NANO_SYNC_FAULT=1)
+ add_test(NAME consensus_capella_queued_exit_sync COMMAND nano-capella-transition-tests --queued-exit-sync)
+ set_tests_properties(consensus_capella_queued_exit_sync PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_recovery")
  add_test(NAME consensus_capella_queued_bls_sync COMMAND nano-capella-transition-tests --queued-bls-sync)
  set_tests_properties(consensus_capella_queued_bls_sync PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_recovery")
  add_test(NAME consensus_capella_reactor_sync_failure COMMAND nano-capella-transition-tests --reactor-sync)
@@ -1715,3 +1717,8 @@ set_tests_properties(consensus_capella_queued_exits PROPERTIES TIMEOUT 180 LABEL
 
 add_test(NAME consensus_capella_exit_wire COMMAND nano-capella-transition-tests --exit-wire)
 set_tests_properties(consensus_capella_exit_wire PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_network")
+
+if(NANO_NETWORK_EXECUTABLE)
+ add_test(NAME consensus_capella_exit_network COMMAND nano-capella-transition-tests --exit-network-cli $<TARGET_FILE:nano> ${NANO_NETWORK_EXECUTABLE})
+ set_tests_properties(consensus_capella_exit_network PROPERTIES TIMEOUT 720 RUN_SERIAL TRUE LABELS "qualification_consensus_network")
+endif()

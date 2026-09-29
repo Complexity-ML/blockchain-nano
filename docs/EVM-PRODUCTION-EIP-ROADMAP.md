@@ -1,5 +1,16 @@
 # EIP pour l’EVM et la production Nano
 
+## Qualification réseau des sorties — locale (29 septembre 2026)
+
+Le scénario RPC/libp2p avec deux vrais nœuds locaux passe : retrait complet,
+finalité commune au bloc 56, comptabilité des paiements après réouverture et
+contrôle des dernières propositions/attestations du validateur sorti. Un seul
+processus possède les clés des validateurs ; cela ne qualifie pas un consensus
+entre hôtes indépendants. Les [quatre cas WAL de l’admission](qualification/capella-exit-wal-20260929/README.md) passent aussi sur Mac, avec la régression BLS du banc partagé (2/2 tests).
+Voir les [preuves, échecs et limites](qualification/capella-exit-network-20260929/README.md).
+La production et le jalon complet restent non démontrés.
+
+
 Sélection priorisée à partir des spécifications officielles, consultées le
 24 septembre 2026. Cette liste complète le goal ; elle ne prétend ni épuiser
 toutes les EIP d’un fork ni prouver leur implémentation actuelle dans Nano.
