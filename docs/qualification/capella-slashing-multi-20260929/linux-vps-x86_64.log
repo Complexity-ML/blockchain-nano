@@ -1,0 +1,62 @@
+exited exit=0 oom=false
+Internal ctest changing into directory: /build
+UpdateCTestConfiguration  from :/build/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/build/DartConfiguration.tcl
+Test project /build
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 366
+    Start 366: consensus_capella_slashing_multi
+
+366: Test command: /build/nano-capella-transition-tests "--slashing-multi"
+366: Working Directory: /build
+366: Test timeout computed to be: 300
+366: {"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+366: {"finalizedEpoch":0,"progressSlot":16,"signedVotes":70}
+366: {"finalizedEpoch":0,"progressSlot":24,"signedVotes":125}
+366: {"finalizedEpoch":2,"progressSlot":32,"signedVotes":187}
+366: {"finalizedEpoch":3,"progressSlot":40,"signedVotes":248}
+366: {"finalizedEpoch":4,"progressSlot":48,"signedVotes":310}
+366: {"finalizedEpoch":5,"progressSlot":56,"signedVotes":372}
+366: {"finalizedEpoch":6,"progressSlot":64,"signedVotes":433}
+366: {"finalizedEpoch":7,"progressSlot":72,"signedVotes":496}
+366: {"finalizedEpoch":7,"progressSlot":73,"signedVotes":504}
+366: {"anchorMoves":6,"depositAncestorPins":53,"finalRetainedRecords":18,"finalizedEpoch":7,"maximumRetainedRecords":29,"nativeProfile":true,"reopenedBothOwners":true,"scenario":"capella-automatic-pruning"}
+366: {"aggregateProofVerified":true,"completeFinalityRetired":true,"networkTransport":false,"partialFinalityRetained":true,"reopenedBothOwners":true,"scenario":"capella-slashing-multi"}
+366: {"blocks":70,"disjointSyncMerging":false,"executionOwner":true,"finalizedEpoch":7,"independentStores":2,"individualSyncMessages":false,"justifiedEpoch":8,"localSyncAggregates":false,"localSyncSigning":false,"networkActivated":false,"networkTransport":false,"participationPercent":100,"scenario":"capella-local-assembly-finality","signingJournalsReopened":62,"storeReopens":2,"syncCatalogExport":false,"syncPrecollection":false,"syncWireWorker":false,"votes":504}
+1/2 Test #366: consensus_capella_slashing_multi ........   Passed  198.99 sec
+test 368
+    Start 368: consensus_capella_slashing_retirement
+
+368: Test command: /build/nano-capella-transition-tests "--slashing-retirement"
+368: Working Directory: /build
+368: Test timeout computed to be: 300
+368: {"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+368: {"finalizedEpoch":0,"progressSlot":16,"signedVotes":71}
+368: {"finalizedEpoch":0,"progressSlot":24,"signedVotes":133}
+368: {"finalizedEpoch":2,"progressSlot":32,"signedVotes":197}
+368: {"finalizedEpoch":3,"progressSlot":40,"signedVotes":259}
+368: {"finalizedEpoch":4,"progressSlot":48,"signedVotes":322}
+368: {"finalizedEpoch":5,"progressSlot":56,"signedVotes":385}
+368: {"finalizedEpoch":6,"progressSlot":64,"signedVotes":448}
+368: {"finalizedEpoch":7,"progressSlot":72,"signedVotes":511}
+368: {"finalizedEpoch":7,"progressSlot":73,"signedVotes":519}
+368: {"anchorMoves":6,"depositAncestorPins":55,"finalRetainedRecords":18,"finalizedEpoch":7,"maximumRetainedRecords":31,"nativeProfile":true,"reopenedBothOwners":true,"scenario":"capella-automatic-pruning"}
+368: {"finalizedEpoch":7,"reopenedWithoutProof":true,"replayDidNotRegrowArchive":true,"retainedUntilFinalized":true,"retiredAfterFinality":true,"scenario":"capella-slashing-retirement","skippedSlashedProposers":0}
+368: {"blocks":72,"disjointSyncMerging":false,"executionOwner":true,"finalizedEpoch":7,"independentStores":2,"individualSyncMessages":false,"justifiedEpoch":8,"localSyncAggregates":false,"localSyncSigning":false,"networkActivated":false,"networkTransport":false,"participationPercent":100,"scenario":"capella-local-assembly-finality","signingJournalsReopened":63,"storeReopens":2,"syncCatalogExport":false,"syncPrecollection":false,"syncWireWorker":false,"votes":519}
+2/2 Test #368: consensus_capella_slashing_retirement ...   Passed  200.90 sec
+
+The following tests passed:
+	consensus_capella_slashing_multi
+	consensus_capella_slashing_retirement
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+qualification_consensus_recovery    = 399.88 sec*proc (2 tests)
+
+Total Test time (real) = 399.89 sec

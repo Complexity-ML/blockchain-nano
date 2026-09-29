@@ -45,6 +45,7 @@ static std::string executable;
 static bool sync_scenario=false;
 static bool slashing_reorg=false;
 static bool slashing_multi=false;
+static bool slashing_sync=false;
 static unsigned local_finality=0;
 static bool owner_mode=false;
 static bool owner_reorg=false;
@@ -100,22 +101,23 @@ static int sync_writer(const fs::path& directory){
 #endif
 #include "support/capella_bls_sync.hpp"
 #include "support/capella_exit_lifecycle_sync.hpp"
+#include "support/capella_slashing_sync.hpp"
 #include "support/capella_pruning_sync.hpp"
 #include "support/capella_deposit_reorg.hpp"
 static void local_finality_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules,const Block& genesis,const State& genesis_state){
  if(local_sync){CapellaSyncMessage golden{};golden.slot=0x0807060504030201ULL;golden.validator_index=0x1817161514131211ULL;golden.beacon_block_root.fill(0xaa);golden.signature.fill(0xbb);const auto expected=unhex("0102030405060708"+std::string(64,'a')+"1112131415161718"+std::string(192,'b'));check(encode_capella_sync_message(golden)==expected,"sync SSZ field ordering/endian mismatch");const auto decoded=decode_capella_sync_message(expected);check(decoded&&decoded->slot==golden.slot&&decoded->validator_index==golden.validator_index,"sync SSZ golden decode mismatch");}
- Temp directory;auto limits=crash_limits;if(exit_lifecycle_sync)limits.blocks=128;const auto& t=rules.transition;const auto slots=t.consensus.epoch.ffg.slots_per_epoch;const auto genesis_root=root_at(initial.blocks.at(initial.timed.view.anchor).state.ssz,8);
+ Temp directory;auto limits=crash_limits;if(exit_lifecycle_sync||slashing_sync)limits.blocks=128;const auto& t=rules.transition;const auto slots=t.consensus.epoch.ffg.slots_per_epoch;const auto genesis_root=root_at(initial.blocks.at(initial.timed.view.anchor).state.ssz,8);
  Genesis owner_genesis;owner_genesis.chain_id=t.chain_id;owner_genesis.consensus="beacon";owner_genesis.evm_revision=EvmRevision::Shanghai;owner_genesis.block=genesis;owner_genesis.state=genesis_state;
  std::array<std::unique_ptr<ChainStore>,2> lifecycle_witnesses;
  std::array<std::unique_ptr<ChainStore>,2> disks;std::array<std::unique_ptr<Blockchain>,2> owners;std::array<std::unique_ptr<CapellaDurableReactor>,2> nodes;
- for(size_t i=0;i<2;++i){if(owner_mode){owners[i]=std::make_unique<Blockchain>(directory/("node-"+std::to_string(i)),owner_genesis);bool blocked=false;try{owners[i]->tip();}catch(const std::runtime_error&){blocked=true;}check(blocked,"unattached Capella owner readable");if(exit_lifecycle_sync)lifecycle_witnesses[i]=std::make_unique<ChainStore>(directory/("exit-witness-"+std::to_string(i)));nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,initial,std::function<void()>{},lifecycle_witnesses[i].get());continue;}disks[i]=std::make_unique<ChainStore>(directory/("node-"+std::to_string(i)));disks[i]->bind_chain(t.chain_id,genesis.header.hash(),"capella-local-loop");disks[i]->commit(genesis,genesis_state,{});nodes[i]=std::make_unique<CapellaDurableReactor>(*disks[i],t.chain_id,genesis.header.hash(),rules,limits,initial);}
+ for(size_t i=0;i<2;++i){if(owner_mode){owners[i]=std::make_unique<Blockchain>(directory/("node-"+std::to_string(i)),owner_genesis);bool blocked=false;try{owners[i]->tip();}catch(const std::runtime_error&){blocked=true;}check(blocked,"unattached Capella owner readable");if(exit_lifecycle_sync||slashing_sync)lifecycle_witnesses[i]=std::make_unique<ChainStore>(directory/("exit-witness-"+std::to_string(i)));nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,initial,std::function<void()>{},lifecycle_witnesses[i].get());continue;}disks[i]=std::make_unique<ChainStore>(directory/("node-"+std::to_string(i)));disks[i]->bind_chain(t.chain_id,genesis.header.hash(),"capella-local-loop");disks[i]->commit(genesis,genesis_state,{});nodes[i]=std::make_unique<CapellaDurableReactor>(*disks[i],t.chain_id,genesis.header.hash(),rules,limits,initial);}
  if(pruning_automatic)for(auto& node:nodes)node->set_automatic_pruning(true);
  if(queued_bls_changes){SignedCapellaBlsChange change;Key withdrawal_key(1001);change.validator_index=1;copy_to(change.from_bls_pubkey,withdrawal_key.public_key);change.to_execution_address[19]=43;copy_to(change.signature,withdrawal_key.sign(consensus_signing_root(capella_bls_change_root(change),consensus_domain({10,0,0,0},t.genesis_version,genesis_root))));for(auto& node:nodes)check(node->bls_change_ssz(encode_capella_bls_change(change)),"owner queue admission rejected");}
  if(pruning_bls){SignedCapellaBlsChange change;Key key(1001);change.validator_index=1;copy_to(change.from_bls_pubkey,key.public_key);change.to_execution_address[19]=43;copy_to(change.signature,key.sign(consensus_signing_root(capella_bls_change_root(change),consensus_domain({10,0,0,0},t.genesis_version,genesis_root))));check(nodes[1]->bls_change_ssz(encode_capella_bls_change(change)),"pruning BLS admission failed");}
  std::map<uint64_t,std::unique_ptr<ChainStore>> key_disks;std::map<uint64_t,std::unique_ptr<BeaconSigningJournal>> journals;
  auto journal=[&](uint64_t index)->BeaconSigningJournal&{if(!journals.contains(index)){key_disks[index]=std::make_unique<ChainStore>(directory/("key-"+std::to_string(index)));journals[index]=std::make_unique<BeaconSigningJournal>(*key_disks[index],t.chain_id,genesis.header.hash(),genesis_root,Key(index).public_key,slots);}return *journals.at(index);};
  const auto sender_key=bytes(Int(777),32);Transaction tx;tx.type=2;tx.to="0x0000000000000000000000000000000000001234";tx.gas=100000;tx.max_fee=2000000000;tx.priority_fee=100000000;const auto sender=SignedTransaction::sign(tx,sender_key).sender();
- size_t blocks=0,votes=0,restarts=0,reopened_journals=0;uint64_t previous_finalized=0;const uint64_t end=(exit_lifecycle_sync?10:pruning_automatic?9:5)*slots+1;size_t automatic_moves=0,maximum_records=0;auto last_anchor=initial.timed.view.anchor;
+ size_t blocks=0,votes=0,restarts=0,reopened_journals=0;uint64_t previous_finalized=0;const uint64_t end=((exit_lifecycle_sync||slashing_sync)?10:pruning_automatic?9:5)*slots+1;size_t automatic_moves=0,maximum_records=0;auto last_anchor=initial.timed.view.anchor;
  auto equal=[&]{const auto a=nodes[0]->current(),b=nodes[1]->current();check((pruning_bls||exit_pending_pruning||a.token==b.token)&&capella_store_snapshot(*a.state,rules,limits)==capella_store_snapshot(*b.state,rules,limits)&&nodes[0]->signed_votes()==nodes[1]->signed_votes(),"local loop nodes diverged");const auto& head=capella_fork_head(*a.state,rules);for(size_t i=0;i<2;++i){const auto& disk=owner_mode?owners[i]->store():*disks[i];check(disk.latest()->header.hash()==head.execution_block.header.hash()&&disk.state_at(head.execution_block.header.number)->root()==head.execution_state.root(),"local loop disk/state diverged");
    if(owner_mode){check(owners[i]->tip().header.hash()==head.execution_block.header.hash()&&owners[i]->state().root()==head.execution_state.root()&&owners[i]->pending_count()==0,"Capella owner cache/pool diverged");const auto finalized=a.state->blocks.at(a.state->timed.view.finalized.root).execution_block;check(owners[i]->finalized_block()->header.hash()==finalized.header.hash(),"Capella finalized cache mismatch");Rpc rpc(*owners[i]);auto call=[&](const char* method,const Json& params){const auto response=rpc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",params}});check(!response.contains("error"),"Capella owner RPC error");return response.at("result");};check(call("eth_getBlockByNumber",Json::array({"latest",false})).at("hash")==hex(head.execution_block.header.hash()),"latest RPC mismatch");check(call("eth_getBlockByNumber",Json::array({"finalized",false})).at("hash")==hex(finalized.header.hash()),"finalized RPC mismatch");check(call("eth_getTransactionCount",Json::array({sender,"latest"}))==quantity(head.execution_state.get(sender).nonce),"nonce RPC mismatch");}
   }};
@@ -142,6 +144,18 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
  };
 
 #ifdef NANO_SYNC_FAULT
+ std::set<unsigned> slashing_fault_stages;
+ auto qualify_slashing_transition=[&](const Bytes& operation,bool is_tick,uint64_t time){
+  if(!slashing_sync||slashing_fault_stages.size()==2)return;
+  const auto before=nodes[1]->current();const auto next=is_tick?std::optional<CapellaForkStore>(prepare_capella_store_tick(*before.state,time,rules,limits.replay_slots,limits.sync_trials)):prepare_capella_received_block(*before.state,operation,rules,limits.replay_slots,limits.sync_trials);check(bool(next),"slashing fault candidate missing");
+  auto registry=[&](const CapellaForkStore& store){const auto& b=store.blocks.at(store.timed.view.finalized.root);return capella_fork_block_context(b.state,b.header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state).registry;};
+  const auto old_registry=registry(*before.state),new_registry=registry(*next);
+  for(unsigned offender=0;offender<2;++offender)if(!slashing_fault_stages.contains(offender)&&!old_registry.validators.at(offender).slashed&&new_registry.validators.at(offender).slashed){
+   nodes[1].reset();owners[1].reset();lifecycle_witnesses[1].reset();
+   qualify_slashing_sync(directory/"node-1",directory/"exit-witness-1",rules,limits,owner_genesis,operation,offender,is_tick,time);
+   lifecycle_witnesses[1]=std::make_unique<ChainStore>(directory/"exit-witness-1");owners[1]=std::make_unique<Blockchain>(directory/"node-1",owner_genesis);nodes[1]=std::make_unique<CapellaDurableReactor>(*owners[1],rules,limits,*lifecycle_witnesses[1]);check(nodes[1]->current().token==before.token,"slashing fault changed original owner");slashing_fault_stages.insert(offender);
+  }
+ };
  auto qualify_lifecycle_transition=[&](const Bytes& operation,bool is_tick,uint64_t time){if(!exit_lifecycle_sync||lifecycle_stages.size()==4)return;const auto before=nodes[1]->current();const auto next=is_tick?std::optional<CapellaForkStore>(prepare_capella_store_tick(*before.state,time,rules,limits.replay_slots,limits.sync_trials)):prepare_capella_received_block(*before.state,operation,rules,limits.replay_slots,limits.sync_trials);check(bool(next),"exit lifecycle candidate missing");
    const auto& old_head=capella_fork_head(*before.state,rules);const auto& new_head=capella_fork_head(*next,rules);auto context=[&](const CapellaForkBlock& b){return capella_fork_block_context(b.state,b.header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state);};std::vector<std::string> stages;
    if(context(old_head).registry.validators.at(0).exit_epoch==UINT64_MAX&&context(new_head).registry.validators.at(0).exit_epoch!=UINT64_MAX)stages.push_back("inclusion");
@@ -186,6 +200,7 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
   }
   const auto now=initial.timed.clock.genesis_time_ms+slot*rules.slot_duration_ms;
 #ifdef NANO_SYNC_FAULT
+  qualify_slashing_transition({},true,now);
   qualify_lifecycle_transition({},true,now);
 #endif
   for(auto& node:nodes)node->tick(now);
@@ -284,6 +299,7 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
   if(slashing_multi)filter_slashing_body(*body);
   const auto wire=(queued_bls_changes||local_sync)?nodes[0]->propose_current(proposer->index,slot,head.execution_block.header.coinbase,16,64,[&]{return now;},proposer_journal,provider):nodes[0]->sign_proposal(proposer->index,slot,*body,[&]{return now;},current.token,proposer_journal,provider);check(bool(wire),"local loop signed block missing");
 #ifdef NANO_SYNC_FAULT
+  qualify_slashing_transition(*wire,false,0);
   qualify_lifecycle_transition(*wire,false,0);
 #endif
   for(auto& node:nodes)check(node->block(*wire),"local loop block admission failed");++blocks;
@@ -301,7 +317,7 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
   const auto finalized=nodes[0]->current().state->timed.view.finalized.epoch;check(finalized>=previous_finalized,"local loop finality regressed");previous_finalized=finalized;
   if(slot%slots==0||slot==end){equal();std::cout<<Json{{"progressSlot",slot},{"finalizedEpoch",finalized},{"signedVotes",votes}}.dump()<<std::endl;}
   if(slot==3*slots||(exit_retirement&&slot==slots+1)){
-   for(size_t i=0;i<2;++i){const auto saved=nodes[i]->current().token;nodes[i].reset();if(owner_mode){bool blocked=false;try{owners[i]->tip();}catch(const std::runtime_error&){blocked=true;}check(blocked,"detached Capella owner remained readable");owners[i].reset();owners[i]=std::make_unique<Blockchain>(directory/("node-"+std::to_string(i)),owner_genesis);if(exit_lifecycle_sync)nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,*lifecycle_witnesses[i]);else nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,saved);}else{disks[i].reset();disks[i]=std::make_unique<ChainStore>(directory/("node-"+std::to_string(i)));nodes[i]=std::make_unique<CapellaDurableReactor>(*disks[i],t.chain_id,genesis.header.hash(),rules,limits,saved);}if(pruning_automatic)nodes[i]->set_automatic_pruning(true);++restarts;}
+   for(size_t i=0;i<2;++i){const auto saved=nodes[i]->current().token;nodes[i].reset();if(owner_mode){bool blocked=false;try{owners[i]->tip();}catch(const std::runtime_error&){blocked=true;}check(blocked,"detached Capella owner remained readable");owners[i].reset();owners[i]=std::make_unique<Blockchain>(directory/("node-"+std::to_string(i)),owner_genesis);if(exit_lifecycle_sync||slashing_sync)nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,*lifecycle_witnesses[i]);else nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,saved);}else{disks[i].reset();disks[i]=std::make_unique<ChainStore>(directory/("node-"+std::to_string(i)));nodes[i]=std::make_unique<CapellaDurableReactor>(*disks[i],t.chain_id,genesis.header.hash(),rules,limits,saved);}if(pruning_automatic)nodes[i]->set_automatic_pruning(true);++restarts;}
    reopened_journals=journals.size();for(auto& [index,value]:journals){const auto saved=value->commitment();value.reset();key_disks[index].reset();key_disks[index]=std::make_unique<ChainStore>(directory/("key-"+std::to_string(index)));value=std::make_unique<BeaconSigningJournal>(*key_disks[index],t.chain_id,genesis.header.hash(),genesis_root,Key(index).public_key,slots,saved);}
    equal();verify_exit_archive();
   }
@@ -311,6 +327,7 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
  const auto result=nodes[0]->current();const auto& head=capella_fork_head(*result.state,rules);check(head.execution_state.get(sender).nonce==Int(std::to_string(blocks+1)),"local loop execution transactions missing");
  if(local_finality==100)check(result.state->timed.view.finalized.epoch>=2&&result.state->timed.view.justified.epoch>=3,"assembled local chain did not finalize");else check(result.state->timed.view.finalized.epoch==0,"half-participation local chain finalized");
 #ifdef NANO_SYNC_FAULT
+ if(slashing_sync)check(slashing_fault_stages.size()==2,"slashing fault boundaries not covered");
  if(pruning_sync)qualify_pruning_sync(*result.state,nodes[0]->signed_votes(),rules,owner_genesis);
 #endif
  if(pruning_automatic){check(automatic_moves>=3&&maximum_records<=5*slots&&result.state->blocks.size()<5*slots,"automatic pruning did not bound retained block states");for(size_t i=0;i<2;++i){const auto token=nodes[i]->current().token;nodes[i].reset();owners[i].reset();owners[i]=std::make_unique<Blockchain>(directory/("node-"+std::to_string(i)),owner_genesis);nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,token);nodes[i]->set_automatic_pruning(true);}equal();std::cout<<Json{{"scenario","capella-automatic-pruning"},{"anchorMoves",automatic_moves},{"maximumRetainedRecords",maximum_records},{"finalRetainedRecords",result.state->blocks.size()},{"depositAncestorPins",result.state->deposit_ancestors.size()},{"nativeProfile",pruning_native},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"reopenedBothOwners",true}}.dump()<<std::endl;}
@@ -1596,6 +1613,8 @@ if(argc==2&&std::string(argv[1])=="--slashing-reorg"){slashing_reorg=true;scenar
  if(argc==3&&std::string(argv[1])=="--managed-cli"){managed_cli=true;cli_binary=argv[2];configured_runtime=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--exit-reindex"){exit_reindex=true;deposit_reorg_activation=true;deposit_reorg=true;pruning_native=true;scenario(false);return 0;}
 #ifdef NANO_SYNC_FAULT
+if(argc==3&&std::string(argv[1])=="--slashing-sync-writer")return slashing_sync_writer(argv[2]);
+if(argc==2&&std::string(argv[1])=="--slashing-sync"){slashing_sync=true;slashing_multi=true;slashing_retirement=true;pruning_native=true;owner_mode=true;local_finality=100;scenario(false);return 0;}
 if(argc==3&&std::string(argv[1])=="--exit-lifecycle-writer")return exit_lifecycle_writer(argv[2]);
 if(argc==2&&std::string(argv[1])=="--exit-lifecycle-sync"){exit_lifecycle_sync=true;local_exits=true;owner_mode=true;local_finality=100;scenario(false);return 0;}
 #endif

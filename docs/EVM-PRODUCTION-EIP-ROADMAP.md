@@ -1,14 +1,14 @@
 # EIP pour l’EVM et la production Nano
 
-## Preuves de sanctions multi-validateurs : qualification native — 29 septembre 2026
+## Sanctions multi-validateurs et pannes d’écriture — 30 septembre 2026
 
-Le [scénario de finalisation partielle](qualification/capella-slashing-multi-20260929/README.md)
-passe sur Mac : preuve BLS agrégée conservée tant que le second validateur n’est
-pas finalisé sanctionné, retrait après finalisation complète et réouverture des
-deux bases. 70 blocs, 504 votes, époque finalisée 7. Échec initial du scénario
-conservé ; protection du signataire inchangée. Linux et régression en cours.
-Échecs d’écriture au retrait des preuves et validateurs absents du registre
-finalisé restent à qualifier ; l’objectif global reste ouvert.
+La [finalisation partielle des preuves](qualification/capella-slashing-multi-20260929/README.md)
+est qualifiée sur Mac, Docker ARM64 et VPS x86-64, avec la régression mono-auteur.
+Le [nouveau test de panne WAL](qualification/capella-slashing-sync-20260930/README.md)
+passe sur Mac : huit cas, retrait individuel puis agrégé, WAL principal/témoin,
+suffixe conservé/perdu, reprise exacte et rejeu idempotent. Linux reste à exécuter
+pour ce nouveau test. Aucun code du cœur n’a changé. Les validateurs absents du
+registre finalisé et les autres critères de production restent ouverts.
 
 ## Sanctions après réorganisation qualifiées — 29 septembre 2026
 

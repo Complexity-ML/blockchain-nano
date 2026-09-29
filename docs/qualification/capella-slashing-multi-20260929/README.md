@@ -6,7 +6,7 @@
 
 The proposer deliberately includes only the single-offender proof until validator 0 is finalized slashed. Blocks pass normal signing and admission; no registry/state mutation or transition bypass is used. The archive must retain the aggregate proof while validator 1 remains unslashed in the finalized state. Normal body selection then includes the remaining sanction. Both proofs must disappear only when their respective offenders are finalized slashed. Archive contents/counts are checked after every produced block and after the final reopening; aggregate replay must not republish or regrow it.
 
-Native PASS in 65.46 s: 70 blocks, 504 votes, finalized epoch 7, six pruning anchor moves, 62 reopened signing journals and both execution stores reopened. Linux qualification and the existing single-offender regression are pending. Runtime sources remain unchanged from `940736fd2078eb058289434cfefa2c2147df690d`.
+Native PASS in 65.46 s: 70 blocks, 504 votes, finalized epoch 7, six pruning anchor moves, 62 reopened signing journals and both execution stores reopened. Linux ARM64 passes in 55.56 s, VPS x86-64 in 198.99 s. The single-offender regression passes on Mac (68.60 s), ARM64 (55.49 s) and VPS (200.90 s). Both Linux containers exited 0 without OOM. Test revision: `ef12f7aabbe097e1c7288807ccb3e3a420f069f1`. Runtime sources remain unchanged from `940736fd2078eb058289434cfefa2c2147df690d`.
 
 ## Retained failure
 
