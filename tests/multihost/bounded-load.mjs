@@ -13,6 +13,7 @@ const target = '0x0000000000000000000000000000000000001234';
 const count = 96, maxFee = 2000000000n, gas = 100000n;
 
 export async function runBoundedLoad({rpc, genesisHash, output, sampleFinality,
+  duringSubmit=submit=>submit(),
   cast = '/Users/boris/.foundry/bin/cast'}) {
   const record = e => appendFile(join(output,'load.jsonl'),JSON.stringify({time:Date.now(),...e})+'\n');
   const castCommand = async args => (await exec(cast,args,{timeout:15000,maxBuffer:1024*1024})).stdout.trim();
@@ -52,6 +53,7 @@ export async function runBoundedLoad({rpc, genesisHash, output, sampleFinality,
   const started=Date.now(), deadline=started+600000;
   const checkDeadline=()=>assert.ok(Date.now()<deadline,'Bounded workload deadline exceeded');
   try {
+    await duringSubmit(async()=>{
     for(let i=0;i<count;i++) {
       checkDeadline();
       const begin=Date.now(), tx=transactions[i];
@@ -59,28 +61,33 @@ export async function runBoundedLoad({rpc, genesisHash, output, sampleFinality,
       assert.equal(result,tx.hash,'RPC changed signed transaction hash');
       await record({event:'submitted',index:i,hash:tx.hash,elapsedMs:Date.now()-begin});
       // A finite ramp; achieved submission rates are measured, not assumed.
-      if((i+1)%16===0) await sampleFinality();
+      if((i+1)%16===0) await record({event:'load-finality-sample',rows:await sampleFinality()});
       await delay(Math.max(0,[1000,500,250][Math.floor(i/32)]-(Date.now()-begin)));
     }
+    });
     for(;;) {
       checkDeadline();
-      await sampleFinality();
+      await record({event:'load-finality-sample',rows:await sampleFinality()});
       const result=await collectLoadReceipts(transactions.map(t=>t.hash),rpc);
       checkDeadline();
       await record({event:'receipt-observation',...result});
       if(result.verdict.complete) {
         const tag=result.verdict.anchor.number;
+        const states={};
         for(const node of loadNodes) {
-          assert.equal(BigInt(await rpc(node,'eth_getTransactionCount',[sender,tag])),
+          states[node]={nonce:await rpc(node,'eth_getTransactionCount',[sender,tag]),
+            balance:await rpc(node,'eth_getBalance',[target,tag]),
+            storage:await rpc(node,'eth_getStorageAt',[target,'0x0',tag])};
+          assert.equal(BigInt(states[node].nonce),
             BigInt(baseline.native.nonce)+BigInt(count),'Finalized sender nonce mismatch');
-          assert.equal(BigInt(await rpc(node,'eth_getBalance',[target,tag])),
+          assert.equal(BigInt(states[node].balance),
             BigInt(baseline.native.balance)+BigInt(count),'Finalized target balance mismatch');
-          assert.equal(BigInt(await rpc(node,'eth_getStorageAt',[target,'0x0',tag])),42n,'Finalized storage mismatch');
+          assert.equal(BigInt(states[node].storage),42n,'Finalized storage mismatch');
           assert.equal((await rpc(node,'eth_getBlockByNumber',[tag,false])).hash,
             result.verdict.anchor.hash,'Finalized state anchor changed');
         }
         checkDeadline();
-        await record({event:'load-passed',count,elapsedMs:Date.now()-started,anchor:result.verdict.anchor});
+        await record({event:'load-passed',count,elapsedMs:Date.now()-started,anchor:result.verdict.anchor,states});
         return;
       }
       await delay(3000);

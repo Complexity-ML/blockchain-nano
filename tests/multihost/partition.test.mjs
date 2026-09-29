@@ -21,6 +21,29 @@ test('cut leaves node queryable, restores original IP, requires later common fin
  assert.ok(f.calls.some(c=>c.join(' ')==='network connect --ip 172.30.0.2 nano-qualification-vps-test-net nano-qualification-vps-test'));
  assert.equal(f.events.at(-1).event,'partition-recovery-bound');
 });
+test('workload runs only while isolated and settles before restoration',async()=>{
+ const f=fixture();let completed=false;
+ f.args.duringCut=async()=>{assert.equal(f.attached(),false);await Promise.resolve();assert.equal(f.attached(),false);completed=true;};
+ await partitionRemote(f.args);assert.equal(completed,true);assert.equal(f.attached(),true);
+ const names=f.events.map(e=>e.event);
+ assert.ok(names.indexOf('partition-disconnected')<names.indexOf('partition-workload-start'));
+ assert.ok(names.indexOf('partition-workload-finished')<names.indexOf('partition-reconnected'));
+});
+test('failed workload restores the network without reporting recovery success',async()=>{
+ const f=fixture();f.args.duringCut=async()=>{throw Error('Transaction rejected');};
+ await assert.rejects(partitionRemote(f.args),/Transaction rejected/);
+ assert.equal(f.attached(),true);assert.ok(!f.events.some(e=>e.event==='partition-recovery-bound'));
+});
+test('observer and workload failures are both retained and restored',async()=>{
+ const f=fixture('rpc-fails');f.args.duringCut=async()=>{throw Error('Transaction rejected');};
+ await assert.rejects(partitionRemote(f.args),e=>e instanceof AggregateError&&e.errors.length===2);
+ assert.equal(f.attached(),true);
+});
+test('lost disconnect response never starts the workload',async()=>{
+ const f=fixture('lost-response');let called=false;f.args.duringCut=async()=>{called=true;};
+ await assert.rejects(partitionRemote(f.args),/SSH response lost/);
+ assert.equal(called,false);assert.equal(f.attached(),true);
+});
 for(const [mode,error] of [['lost-response',/SSH response lost/],['rpc-fails',/RPC unavailable/],['conflict',/Conflicting finalized/],['no-recovery',/recovery deadline/]])test(mode+' rejects and restores',async()=>{
  const f=fixture(mode);await assert.rejects(partitionRemote(f.args),error);assert.equal(f.attached(),true);
 });

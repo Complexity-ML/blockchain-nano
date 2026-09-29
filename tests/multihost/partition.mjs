@@ -7,7 +7,7 @@ export class PartitionRecoveryDeadline extends Error {
 // Docker commands operate only on the fresh, labelled test container. No host
 // firewall changes; loopback RPC remains reachable via docker exec while cut.
 export async function partitionRemote({docker, container, network, revision, sample, record,
- clock=Date.now, wait=delay, cutMs=96000, recoveryMs=180000}) {
+ clock=Date.now, wait=delay, cutMs=96000, recoveryMs=180000, duringCut}) {
  if(!/^nano-qualification-vps-[a-z0-9]+$/.test(container)||network!==container+'-net')
   throw Error('Unexpected partition target');
  const inspect=async()=>JSON.parse(await docker(['inspect','--format','{{json .}}',container]));
@@ -40,6 +40,9 @@ export async function partitionRemote({docker, container, network, revision, sam
   await docker(['network','disconnect',network,container]);
   const start=clock();let sawZeroPeers=false;
   await record({event:'partition-disconnected',container,network,address,cutMs});
+  // Both branches must settle before reconnecting; no detached submitter may
+  // survive a failed observer or submit transactions after test cleanup.
+  const monitor=async()=>{
   while(clock()-start<cutMs){
    const state=await inspect();
    if(!state.State.Running||Object.keys(state.NetworkSettings.Networks).length!==0)throw Error('Partition not effective');
@@ -50,6 +53,20 @@ export async function partitionRemote({docker, container, network, revision, sam
    await wait(Math.max(0,Math.min(5000,cutMs-(clock()-start))));
   }
   if(!sawZeroPeers)throw Error('No zero-peer observation during partition');
+  };
+  const tasks=[monitor()];
+  if(duringCut)tasks.push(Promise.resolve().then(async()=>{
+   const state=await inspect();
+   if(!state.State.Running||Object.keys(state.NetworkSettings.Networks).length!==0)throw Error('Workload requires effective partition');
+   await record({event:'partition-workload-start'});
+   await duringCut();
+   await record({event:'partition-workload-finished'});
+  }));
+  const results=await Promise.allSettled(tasks);
+  const failures=results.filter(r=>r.status==='rejected').map(r=>r.reason);
+  if(failures.length)await record({event:'partition-task-failed',errors:failures.map(error=>({name:error.name,message:error.message,stack:error.stack}))});
+  if(failures.length===1)throw failures[0];
+  if(failures.length>1)throw new AggregateError(failures,'Partition observation and workload failed');
  }finally{
   if(disconnected){
    const state=await inspect();

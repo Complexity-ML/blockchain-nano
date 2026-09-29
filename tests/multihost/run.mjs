@@ -28,7 +28,7 @@ const partition=process.env.NANO_TEST_WAN_PARTITION==='1',asymmetric=process.env
 if(partition&&asymmetric)throw Error('Select only one WAN fault');
 const rotation=process.env.NANO_TEST_WAN_ROTATION==='1';
 const boundedLoad=process.env.NANO_TEST_BOUNDED_LOAD==='1';
-if(boundedLoad&&(fork!=='capella'||partition||asymmetric||rotation))throw Error('First bounded load scope requires Capella without injected network faults');
+if(boundedLoad&&(fork!=='capella'||asymmetric||rotation))throw Error('Bounded load requires Capella; asymmetric/rotation combinations are not qualified yet');
 if(rotation&&(fork!=='capella'||!partition||!buildVolume))throw Error('Rotation requires Capella, the isolated partition and build volumes');
 const remoteRoot=`/home/${target.split('@')[0]}/nano-qualification-${id}`,ip=target.split('@')[1];
 const quote=s=>"'"+String(s).replaceAll("'","'\\''")+"'";
@@ -159,7 +159,6 @@ try{
   }
   return rows;
  };
- if(boundedLoad)await runBoundedLoad({rpc,genesisHash:genesis.hash,output,sampleFinality:faultSample});
  const rotationHeads=()=>Promise.all(['native','local','remote'].map(async(kind,i)=>{
   const h=(await request(kind,'/eth/v1/beacon/headers/head')).data;
   return {name:rotationNodes[i],root:h.root,slot:Number(h.header.message.slot)};
@@ -202,8 +201,11 @@ try{
   }
  };
  await clockSamples('before-fault');
+ if(boundedLoad)await runBoundedLoad({rpc,genesisHash:genesis.hash,output,sampleFinality:faultSample,
+  ...(partition?{duringSubmit:submit=>partitionRemote({docker:args=>docker(args,true),container:remote,
+   network:testNetwork,revision,record:faultRecord,sample:faultSample,duringCut:submit})}:{})});
  await observeRecovery({record:log,partition:async()=>{
-  if(partition)await partitionRemote({docker:args=>docker(args,true),container:remote,network:testNetwork,revision,record:faultRecord,sample:faultSample});
+  if(partition&&!boundedLoad)await partitionRemote({docker:args=>docker(args,true),container:remote,network:testNetwork,revision,record:faultRecord,sample:faultSample});
   if(asymmetric){
    const tc=await createRemoteTc({docker:args=>docker(args,true),sh,container:remote,network:testNetwork,revision});
    await asymmetricRemote({tc,sample:faultSample,record:log});

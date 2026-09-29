@@ -1,0 +1,31 @@
+✔ cut leaves node queryable, restores original IP, requires later common finality (1.707458ms)
+✔ workload runs only while isolated and settles before restoration (0.303291ms)
+✔ failed workload restores the network without reporting recovery success (1.034417ms)
+✔ observer and workload failures are both retained and restored (0.178833ms)
+✔ lost disconnect response never starts the workload (0.08975ms)
+✔ lost-response rejects and restores (0.066125ms)
+✔ rpc-fails rejects and restores (0.241125ms)
+✔ conflict rejects and restores (0.125583ms)
+✔ no-recovery rejects and restores (0.151459ms)
+✔ restoration failure cannot become success (0.152125ms)
+✔ wrong provenance refuses mutation (0.082041ms)
+✔ peer isolation must be observed, not inferred from Docker success (0.146208ms)
+✔ finality regression after reconnection is rejected (0.117791ms)
+✔ late recovery reuses history without another network cut (0.14175ms)
+✔ late conflict remains fatal (0.128333ms)
+✔ late regression remains fatal (0.104625ms)
+✔ late recovery is bounded too (0.090709ms)
+✔ normal recovery completes its observation (1.320625ms)
+✔ late stable finality preserves original deadline failure (0.275834ms)
+✔ restoration, RPC and safety errors never extend the campaign (0.13075ms)
+✔ late observer failure remains a failure and retains both diagnostics (0.085791ms)
+✔ late recovery must complete before stability observation (0.080167ms)
+✔ missing late recovery observer cannot skip the recovery stage (0.083583ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 76.442167

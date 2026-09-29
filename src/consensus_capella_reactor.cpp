@@ -134,12 +134,18 @@ void CapellaDurableReactor::validate_execution_binding()const{
  if(&execution_->store_!=&disk_||g.consensus!="beacon"||g.evm_revision!=EvmRevision::Shanghai||g.chain_id!=chain_||g.block.header.hash()!=genesis_)throw std::invalid_argument("Capella execution owner/profile mismatch");
  const auto tip=disk_.latest();if(!tip||tip->header.hash()!=execution_->tip_.header.hash()||execution_->state_.root()!=tip->header.state_root)throw std::invalid_argument("Capella execution cache mismatch");
 }
-void CapellaDurableReactor::fail_closed(){unavailable_=true;if(execution_){std::lock_guard lock(execution_->mutex_);execution_->beacon_ready_=false;}}
+void CapellaDurableReactor::fail_closed(){if(!failure_)failure_=std::current_exception();unavailable_=true;if(execution_){std::lock_guard lock(execution_->mutex_);execution_->beacon_ready_=false;}}
 CapellaDurableReactor::~CapellaDurableReactor(){if(execution_){std::lock_guard lock(execution_->mutex_);execution_->beacon_ready_=false;}}
 void CapellaDurableReactor::invalidate(){std::lock_guard lock(mutex_);fail_closed();}
-void CapellaDurableReactor::require_available()const{if(unavailable_||!state_||!token_)throw std::runtime_error("Capella reactor unavailable; reopen required");}
+void CapellaDurableReactor::require_available()const{
+ if(unavailable_||!state_||!token_){
+  std::string message="Capella reactor unavailable; reopen required";
+  if(failure_)try{std::rethrow_exception(failure_);}catch(const std::exception& error){message+="; initial failure: ";message+=error.what();}catch(...){message+="; initial failure: unknown exception";}
+  throw std::runtime_error(message);
+ }
+}
 void CapellaDurableReactor::publish(CapellaForkStore candidate,const std::function<void()>& check,const std::vector<CheckpointArchiveEntry>& archive,std::optional<CapellaSignedVotes> votes,std::optional<CapellaSignedVotes> slashings,std::optional<CapellaPendingBlsChanges> changes,std::optional<CapellaPendingExits> exits){
- if(unavailable_)throw std::runtime_error("Capella reactor unavailable; reopen required");
+ if(unavailable_)require_available();
  if(chain_!=rules_.transition.chain_id||genesis_.size()!=32)throw std::invalid_argument("Capella reactor chain/profile mismatch");
  // Only finalized sanctions retire evidence. An unfinalized inclusion can reorg.
  if(!slashings)slashings=slashings_;

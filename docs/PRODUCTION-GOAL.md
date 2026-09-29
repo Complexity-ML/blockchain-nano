@@ -1,5 +1,14 @@
 # Objectif : Nano C++ de niveau production
 
+## Charge pendant partition WAN — échec à corriger, 30 septembre 2026
+
+La [campagne combinée](qualification/capella-partition-load-20260930/README.md)
+a échoué après 64 soumissions : Docker Mac s'est fermé avec « Capella reactor
+unavailable; reopen required », sortie 1 sans OOM. La coupure a été restaurée
+après 49,570 s, avant les 96 s prévues. La cause initiale n'était pas conservée ;
+le diagnostic est renforcé sans assouplir les règles. Aucun succès de charge sous
+partition n'est revendiqué. Les preuves et bases initiales restent conservées.
+
 ## Charge applicative WAN bornée — qualifiée le 30 septembre 2026
 
 Le [nouveau scénario multihôte](qualification/capella-bounded-load-20260930/README.md)
