@@ -1,0 +1,39 @@
+{
+  "exitCode": 1,
+  "runtimeRevision": "10e2f9e2c618cea7e96f36abc9114812fb1beec1",
+  "harnessRevision": "9f4e344",
+  "overallPassed": false,
+  "failure": "Second partition recovery exceeded 180 seconds",
+  "lateStability": {
+    "epochs": 3,
+    "firstEpoch": "15",
+    "lastEpoch": "18",
+    "elapsedMs": 140482,
+    "nodes": [
+      "mac-native",
+      "mac-docker",
+      "vps-docker"
+    ],
+    "revision": "10e2f9e2c618cea7e96f36abc9114812fb1beec1"
+  },
+  "validatorReceipt": [
+    {
+      "file": "native.log",
+      "healthy": true,
+      "attestationsAdmitted": 425
+    },
+    {
+      "file": "docker-mac.log",
+      "healthy": true,
+      "attestationsAdmitted": 395
+    },
+    {
+      "file": "vps.log",
+      "healthy": true,
+      "attestationsAdmitted": 401
+    }
+  ],
+  "clockFaultReproduced": false,
+  "clockFaultCauseResolved": false,
+  "productionQualified": false
+}
