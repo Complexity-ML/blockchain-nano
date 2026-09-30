@@ -1,0 +1,12 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {selectCandidates,verifyPackagedImage} from './candidate-images.mjs';
+const revision='a'.repeat(40),digest='b'.repeat(64),p2p='c'.repeat(64);
+const spec=arch=>({integrityVerified:true,image:'sha256:'+(arch==='arm64'?'d':'e').repeat(64),architecture:arch,sourceRevision:revision,executables:{nano:digest,'nano-p2p':p2p}});
+const manifest=()=>({images:{arm64:spec('arm64'),amd64:spec('amd64')}});
+const info=s=>({Id:s.image,Architecture:s.architecture,Config:{User:'10001:10001',Labels:{'org.opencontainers.image.revision':revision}}});
+const text=`${digest}  /usr/local/bin/nano\n${p2p}  /usr/local/bin/nano-p2p\n`;
+test('select exact architecture images and validate final packaged bytes',()=>{const s=selectCandidates(manifest(),revision);assert.deepEqual(verifyPackagedImage(s.amd64,info(s.amd64),text),s.amd64.executables);});
+test('refuse unreviewed, mutable, mismatched revision or architecture selection',()=>{for(const patch of [{integrityVerified:false},{image:'blockchain-nano:local'},{sourceRevision:'f'.repeat(40)},{architecture:'amd64'},{executables:{nano:digest}}]){const m=manifest();Object.assign(m.images.arm64,patch);assert.throws(()=>selectCandidates(m,revision));}});
+test('refuse wrong actual identity, revision, architecture or root user',()=>{const s=spec('arm64');for(const change of [{Id:'sha256:'+'f'.repeat(64)},{Architecture:'amd64'},{Config:{User:'0',Labels:{'org.opencontainers.image.revision':revision}}},{Config:{User:'10001:10001',Labels:{'org.opencontainers.image.revision':'f'.repeat(40)}}}])assert.throws(()=>verifyPackagedImage(s,{...info(s),...change},text));});
+test('refuse omitted, changed or duplicated executable checksums',()=>{const s=spec('arm64');for(const t of [text.split('\n')[0],text.replace(p2p,'f'.repeat(64)),text+text,text+'unexpected\n'])assert.throws(()=>verifyPackagedImage(s,info(s),t));});

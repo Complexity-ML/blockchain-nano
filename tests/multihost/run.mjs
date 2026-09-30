@@ -17,13 +17,18 @@ import {runBoundedLoad} from './bounded-load.mjs';
 import {stoppedReceipt,pinnedRestoreConfiguration,restoreAuditRequest,validateRestoredFinality} from './restore-config.mjs';
 import {waitRestoredRecovery} from './restore-recovery.mjs';
 import {startFinalityMonitor} from './monitor.mjs';
+import {selectCandidates,verifyPackagedImage} from './candidate-images.mjs';
 const exec=promisify(execFile),[target,revision,outputArg]=process.argv.slice(2);
 const fork=process.env.NANO_TEST_CONSENSUS_PROFILE??'bellatrix';
 if(!['bellatrix','capella'].includes(fork))throw Error('Unsupported consensus profile');
 if(!/^[a-z_][a-z0-9_-]*@[0-9.]+$/.test(target??'')||!(/^[0-9a-f]{40}$/).test(revision??'')||!outputArg)throw Error('Usage: run.mjs user@IPv4 core-revision fresh-output');
 const monitor=process.env.NANO_TEST_FINALITY_MONITOR==='1';
 const buildVolume=process.env.NANO_TEST_BUILD_VOLUME==='1';
-const output=resolve(outputArg),repo=process.cwd(),image=buildVolume?'nano-build-dependencies:local':`blockchain-nano:${revision.slice(0,7)}`;
+const candidateFile=process.env.NANO_TEST_CANDIDATE_MANIFEST;
+if(candidateFile&&buildVolume)throw Error('Select packaged images or build volume, not both');
+const candidates=candidateFile?selectCandidates(JSON.parse(await readFile(resolve(candidateFile),'utf8')),revision):null;
+const privateTransport=buildVolume||Boolean(candidates);
+const output=resolve(outputArg),repo=process.cwd(),image=candidates?.arm64.image??(buildVolume?'nano-build-dependencies:local':`blockchain-nano:${revision.slice(0,7)}`),remoteImage=candidates?.amd64.image??image;
 const nofile=process.env.NANO_DOCKER_NOFILE??'65536';
 if(!/^[1-9]\d*$/.test(nofile)||!Number.isSafeInteger(Number(nofile)))throw Error('NANO_DOCKER_NOFILE requires a positive safe integer');
 const descriptorArgs=['--ulimit',`nofile=${nofile}:${nofile}`];
@@ -42,7 +47,7 @@ if(rotation&&(fork!=='capella'||!partition||!buildVolume))throw Error('Rotation 
 const remoteRoot=`/home/${target.split('@')[0]}/nano-qualification-${id}`,ip=target.split('@')[1];
 const quote=s=>"'"+String(s).replaceAll("'","'\\''")+"'";
 const sh=async (args,timeout=30000)=>(await exec('ssh',['-o','BatchMode=yes','-o','ConnectTimeout=8',target,args.map(quote).join(' ')],{timeout,maxBuffer:8*1024*1024})).stdout;
-const docker=async(args,onRemote=false,timeout=30000)=>onRemote?sh(['sudo','-n','docker',...args],timeout):(await exec('docker',args,{timeout,maxBuffer:8*1024*1024})).stdout;
+const docker=async(args,onRemote=false,timeout=30000)=>onRemote?sh(['sudo','-n','docker',...args.map(a=>a===image?remoteImage:a)],timeout):(await exec('docker',args,{timeout,maxBuffer:8*1024*1024})).stdout;
 const captureLogs=async(name,onRemote)=>{
  const args=onRemote?['ssh','-o','BatchMode=yes',target,['sudo','-n','docker','logs',name].map(quote).join(' ')+' 2>&1']:['docker','logs',name];
  const result=await exec(args[0],args.slice(1),{timeout:30000,maxBuffer:8*1024*1024});
@@ -56,6 +61,11 @@ await sh(['git','-C',`/home/${target.split('@')[0]}/blockchain-nano-git`,'diff',
 for(const onRemote of [false,true]){
  const info=JSON.parse(await docker(['image','inspect',image,'--format','{{json .}}'],onRemote));
  if((!buildVolume&&info.Config.Labels?.['org.opencontainers.image.revision']!==revision)||info.Architecture!==(onRemote?'amd64':'arm64'))throw Error('Build revision/architecture mismatch');
+ if(candidates){
+  const spec=candidates[onRemote?'amd64':'arm64'];
+  const hashes=await docker(['run','--rm','--network','none','--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--entrypoint','/usr/bin/sha256sum',image,'/usr/local/bin/nano','/usr/local/bin/nano-p2p'],onRemote);
+  artifacts.push({host:onRemote?'vps':'docker-mac',imageId:info.Id,revision,executables:verifyPackagedImage(spec,info,hashes),packaged:true});
+ }
  if(buildVolume){
   const built=(await docker(['run','--rm','--network','none',...artifactMount,image,'cat','/build/production-source-revision.txt'],onRemote)).trim();
   if(built!==revision)throw Error('Build volume source revision mismatch');
@@ -89,9 +99,9 @@ const rpc=async(kind,method,params=[])=>{
 try{
  const binary=join(repo,'build-release/nano'),p2p=join(repo,'build-network/nano-p2p');
  if(rotation)await log({event:'rotation-audit-binary',sha256:createHash('sha256').update(await readFile(join(repo,'build-release/nano-capella-rotation-audit'))).digest('hex')});
- const harness={};for(const name of ['run.mjs','partition.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','prepare.mjs','rotation.mjs','bounded-load.mjs','load-receipts.mjs','restore-config.mjs','restore-recovery.mjs','backup-restore.sh','monitor.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
- if(monitor&&(fork!=='capella'||!buildVolume||partition||asymmetric||backupRestore||rotation||boundedLoad))throw Error('Monitor qualification requires standalone Capella build-volume campaign');
- await log({event:'harness',monitor,partition,asymmetric,rotation,boundedLoad,backupRestore,fork,buildVolume,artifacts,sha256:harness});
+ const harness={};for(const name of ['run.mjs','partition.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','prepare.mjs','rotation.mjs','bounded-load.mjs','load-receipts.mjs','restore-config.mjs','restore-recovery.mjs','backup-restore.sh','monitor.mjs','candidate-images.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
+ if(monitor&&(fork!=='capella'||!privateTransport||partition||asymmetric||backupRestore||rotation||boundedLoad))throw Error('Monitor qualification requires standalone private Capella campaign');
+ await log({event:'harness',monitor,partition,asymmetric,rotation,boundedLoad,backupRestore,fork,buildVolume,packagedImages:Boolean(candidates),artifacts,sha256:harness});
  await log({event:'binaries',revision,nanoSha256:createHash('sha256').update(await readFile(binary)).digest('hex'),p2pSha256:createHash('sha256').update(await readFile(p2p)).digest('hex')});
  const assets=join(output,'assets'),prepared=join(output,'prepared');
  await exec(join(repo,`build-release/nano-${fork}-transition-tests`),[fork==='capella'?'--export-network':'--export-kurtosis',assets],{timeout:30000});
@@ -103,17 +113,17 @@ try{
  // Only newly generated PUBLIC fixtures cross SSH; software arrived via Git.
  await exec('scp',['-q','-r',join(prepared,'vps-docker'),`${target}:${remoteRoot}/config`],{timeout:30000});
  if(partition||asymmetric)await docker(['network','create','--label','nano.qualification=multihost',testNetwork],true);
- await docker(['run','--init',...descriptorArgs,...((partition||asymmetric)?['--network',testNetwork]:[]),...traceArgs,'-d','--name',remote,'--label','nano.qualification=multihost','--label','org.opencontainers.image.revision='+revision,...artifactMount,'--memory','3g','--cpus','2','-p',buildVolume?'127.0.0.1:30307:30303':'30307:30303','--mount',`type=bind,src=${remoteRoot}/config,dst=/config,readonly`,'--mount',`type=volume,src=${remote}-data,dst=/var/lib/nano`,'--env-file',`${remoteRoot}/config/fixture.env`,image,...runtimeCommand,'run','/config/genesis.json','/var/lib/nano/chain','/config/node.json'],true);remoteStarted=true;
+ await docker(['run','--init',...descriptorArgs,...((partition||asymmetric)?['--network',testNetwork]:[]),...traceArgs,'-d','--name',remote,'--label','nano.qualification=multihost','--label','org.opencontainers.image.revision='+revision,...artifactMount,'--memory','3g','--cpus','2','-p',privateTransport?'127.0.0.1:30307:30303':'30307:30303','--mount',`type=bind,src=${remoteRoot}/config,dst=/config,readonly`,'--mount',`type=volume,src=${remote}-data,dst=/var/lib/nano`,'--env-file',`${remoteRoot}/config/fixture.env`,image,...runtimeCommand,'run','/config/genesis.json','/var/lib/nano/chain','/config/node.json'],true);remoteStarted=true;
  let peer;
  for(let i=0;i<30;i++){try{peer=(await rpc('remote','nno_getNetworkInfo')).node?.peerId;if(peer)break;}catch{}await delay(1000);}
  if(!peer||!/^[A-Za-z0-9]+$/.test(peer))throw Error('Remote peer ID unavailable');
- if(buildVolume){
+ if(privateTransport){
   const fd=openSync(join(output,'tunnel.log'),'a');tunnel=spawn('ssh',['-N','-o','BatchMode=yes','-o','ExitOnForwardFailure=yes','-o','ServerAliveInterval=15','-L','127.0.0.1:30307:127.0.0.1:30307',target],{stdio:['ignore',fd,fd]});closeSync(fd);
   tunnel.on('error',error=>log({event:'tunnel-error',message:error.message}));await delay(1000);
   if(tunnel.exitCode!==null||tunnel.signalCode!==null)throw Error('Private SSH tunnel failed');
  }
- const boot=buildVolume?`/ip4/127.0.0.1/tcp/30307/p2p/${peer}`:`/ip4/${ip}/tcp/30307/p2p/${peer}`;
- for(const name of ['mac-native','mac-docker']){const path=join(prepared,name,'node.json'),c=await json(path);c.bootnodes=[buildVolume&&name==='mac-docker'?`/dns4/host.docker.internal/tcp/30307/p2p/${peer}`:boot];await writeFile(path,JSON.stringify(c,null,2));}
+ const boot=privateTransport?`/ip4/127.0.0.1/tcp/30307/p2p/${peer}`:`/ip4/${ip}/tcp/30307/p2p/${peer}`;
+ for(const name of ['mac-native','mac-docker']){const path=join(prepared,name,'node.json'),c=await json(path);c.bootnodes=[privateTransport&&name==='mac-docker'?`/dns4/host.docker.internal/tcp/30307/p2p/${peer}`:boot];await writeFile(path,JSON.stringify(c,null,2));}
  await docker(['run','--init',...descriptorArgs,...traceArgs,'-d','--name',local,'--label','nano.qualification=multihost','--label','org.opencontainers.image.revision='+revision,...artifactMount,'--memory','3g','--cpus','2','--mount',`type=bind,src=${join(prepared,'mac-docker')},dst=/config,readonly`,'--mount',`type=volume,src=${local}-data,dst=/var/lib/nano`,'--env-file',join(prepared,'mac-docker','fixture.env'),image,...runtimeCommand,'run','/config/genesis.json','/var/lib/nano/chain','/config/node.json']);localStarted=true;
  const nd=join(prepared,'mac-native');await mkdir(join(nd,'data'));
  const environment=Object.fromEntries((await readFile(join(nd,'fixture.env'),'utf8')).trim().split('\n').map(line=>{const at=line.indexOf('=');return [line.slice(0,at),line.slice(at+1)];}));
