@@ -59,5 +59,32 @@ int main(){try{
   check(old->retained()==0,"unadmitted sender seeded knowledge");knowledge=std::make_shared<AltairRelayProgress>(2);pending(decision);
   check(completed&&old->retained()==size_t(decision==AltairWork::Decision::accepted)&&knowledge->retained()==0,"rejected or old-session sender polluted cache");++scenarios;
  }
+ // A payload-bearing page yields fairly, while acknowledged pages are skipped
+ // on the next stable snapshot. Never count an unknown delivery outcome.
+ for(const std::string mode:{"resume","all-known","rejected","lost-ack"}){
+  std::set<std::string> known;if(mode=="all-known")for(char c='1';c<='6';++c)known.insert(root(c));
+  unsigned total_sends=0,total_pages=0;
+  for(unsigned attempt=0;attempt<(mode=="resume"?3u:1u);++attempt){
+   asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);unsigned closes=0,completions=0;Json result;
+   auto core=[&](std::string method,Json params,Reply cb){
+    if(method=="nano_capellaCatalogGeneration")cb(root('e'));
+    else if(method=="nano_capellaCatalogAcquire")cb(Json{{"handle",root('c')}});
+    else if(method=="nano_capellaCatalogRelease"){++closes;cb(true);}
+    else if(method=="nano_capellaCatalogPage"){
+     ++total_pages;const char first=params[2].is_null()?'1':params[2]==root('2')?'3':'5';
+     cb(Json{{"kind","block"},{"sequence","0x1"},{"digest",root('d')},{"entries",Json::array({root(first),root(first+1)})},{"next",first=='5'?Json(nullptr):Json(root(first+1))}});
+    }else if(method=="nano_capellaExport")cb(Json{{"available",true},{"root",params[2]},{"envelope",{{"chainId",profile.chain_id},{"genesisHash",profile.genesis_hash},{"forkDigest",profile.fork_digest},{"consensusIdentity",profile.consensus_identity},{"kind","block"},{"ssz","0x0102"}}}});
+    else throw std::runtime_error("unexpected yielding relay method");
+   };
+   auto deliver=[&](std::string id,Json,Reply cb){++total_sends;check(!known.contains(id),"yield resend bypassed acknowledged cache");if(mode=="lost-ack")return;if(mode!="rejected")known.insert(id);cb(Json{{"accepted",mode!="rejected"}});};
+   auto relay=std::make_shared<CapellaCatalogRelay>(io,core,deliver,"token","block",ingress,2,6,[&](Json r){++completions;result=std::move(r);},[&](const std::string& id){return known.contains(id);},true);
+   relay->start(20ms);io.run();check(completions==1&&closes==1,"yielding relay leaked or duplicated completion");
+   if(mode=="resume"&&attempt<2)check(result["reason"]=="delivery-page-yield"&&result["closed"]==true&&result["delivered"]==2*(attempt+1)&&known.size()==2*(attempt+1),"yield lost admission/cursor bounds");
+   else if(mode=="resume"||mode=="all-known")check(result["success"]==true&&result["delivered"]==6&&known.size()==6,"yielded inventory failed to complete");
+   else check(result["success"]==false&&result["delivered"]==0&&known.empty()&&result["reason"]==(mode=="rejected"?"admission-rejected":"cancelled-or-deadline"),"yield credited rejected/unknown delivery");
+  }
+  if(mode=="resume")check(total_sends==6&&total_pages==6,"yield repeated payloads or blocked cached-page scan");
+  if(mode=="all-known")check(total_sends==0&&total_pages==3,"cached pages consumed payload quantum");++scenarios;
+ }
  std::cout<<scenarios<<" Capella catalog relay scenarios passed; no consensus validity inferred from mocked ACKs\n";
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

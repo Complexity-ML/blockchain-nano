@@ -16,7 +16,7 @@ private:
  asio::io_context& io_;Call core_;Deliver deliver_;Known known_;std::string token_,kind_,handle_,cursor_,sequence_,digest_,stage_="open",generation_,request_;
  std::shared_ptr<AltairMessageIngress> ingress_;Reply done_;asio::steady_timer timer_;
  const size_t page_size_,maximum_;size_t delivered_=0,index_=0;Json entries_,next_;
- bool started_=false,finished_=false,closing_=false;bool desired_success_=false;
+ bool started_=false,finished_=false,closing_=false;bool desired_success_=false;const bool yield_after_delivery_page_;size_t page_exports_=0;
  std::string failure_stage_,reason_;std::chrono::steady_clock::time_point started_at_=std::chrono::steady_clock::now();
  size_t exports_=0,skipped_known_=0;std::optional<uint64_t> sync_slot_;
  void failure(std::string reason){if(reason_.empty()){reason_=std::move(reason);failure_stage_=stage_;}close(false);}
@@ -57,19 +57,23 @@ private:
   std::string previous=cursor_;
   for(const auto& item:value.at("entries")){if(!root(item)||(!previous.empty()&&item.get_ref<const std::string&>()<=previous)){close(false);return;}previous=item.get<std::string>();}
   const auto& next=value.at("next");if(!next.is_null()&&(!root(next)||value.at("entries").empty()||next!=previous)){close(false);return;}
-  entries_=std::move(value["entries"]);next_=next;index_=0;
+  entries_=std::move(value["entries"]);next_=next;index_=0;page_exports_=0;
   if(entries_.empty()){close(next_.is_null());return;}export_next();
  }
  void advance(){
   ++delivered_;cursor_=entries_.at(index_).get<std::string>();++index_;
   if(index_<entries_.size()){export_next();return;}
   if(next_.is_null()){close(true);return;}
-  if(delivered_==maximum_){failure("entry-limit");return;}page();
+  if(delivered_==maximum_){failure("entry-limit");return;}
+  // Release the stable snapshot after a payload-bearing page. The peer scheduler
+  // can serve another category; admitted-root knowledge survives this yield.
+  // Purely cached pages keep scanning without consuming a payload quantum.
+  if(yield_after_delivery_page_&&page_exports_){failure("delivery-page-yield");return;}page();
  }
  void export_next(){
   stage_="export";const auto id=entries_.at(index_).get<std::string>();
   if(known_&&known_(id)){++skipped_known_;auto next=callback([](auto& self,Json){self.advance();});next(nullptr);return;}
-  ++exports_;
+  ++exports_;++page_exports_;
   call("nano_capellaExport",Json::array({token_,kind_,id}),callback([id](auto& self,Json value){
    if(value.is_null()){self.failure("export-unconfirmed");return;}
    if(!value.is_object()||value.value("root",Json())!=id){self.failure("export-invalid-root");return;}
@@ -88,7 +92,7 @@ private:
   }));
  }
 public:
- CapellaCatalogRelay(asio::io_context& io,Call core,Deliver deliver,std::string token,std::string kind,std::shared_ptr<AltairMessageIngress> ingress,size_t page_size,size_t maximum,Reply done,Known known={}):io_(io),core_(std::move(core)),deliver_(std::move(deliver)),known_(std::move(known)),token_(std::move(token)),kind_(std::move(kind)),ingress_(std::move(ingress)),done_(std::move(done)),timer_(io),page_size_(page_size),maximum_(maximum){
+ CapellaCatalogRelay(asio::io_context& io,Call core,Deliver deliver,std::string token,std::string kind,std::shared_ptr<AltairMessageIngress> ingress,size_t page_size,size_t maximum,Reply done,Known known={},bool yield_after_delivery_page=false):io_(io),core_(std::move(core)),deliver_(std::move(deliver)),known_(std::move(known)),token_(std::move(token)),kind_(std::move(kind)),ingress_(std::move(ingress)),done_(std::move(done)),timer_(io),page_size_(page_size),maximum_(maximum),yield_after_delivery_page_(yield_after_delivery_page){
   if(!core_||!deliver_||token_.empty()||!ingress_||!done_||!page_size_||!maximum_||page_size_>maximum_||(kind_!="block"&&kind_!="attestation"&&kind_!="attester_slashing"&&kind_!="voluntary_exit"&&kind_!="bls_to_execution_change"&&kind_!="sync_committee_message"))throw std::invalid_argument("Invalid Capella catalog relay");
  }
  void start(std::chrono::steady_clock::duration timeout=std::chrono::seconds(30)){
