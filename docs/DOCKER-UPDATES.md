@@ -119,3 +119,14 @@ de service ni d’image en service. Son image démarre sur `--help`. Les fichier
 genesis/node historiques hérités de la base ne sont pas des entrées approuvées :
 monter explicitement la configuration réseau qualifiée avant une campagne.
 [Assemblage des deux architectures et limites](qualification/candidate-images-20260930/README.md).
+
+## Limite vérifiée du retour arrière
+
+L’image VPS historique `c2ec4d7` refuse la fixture Beacon Shanghai actuelle
+(exige Paris). Ne pas la sélectionner comme cible de retour. Le remplacement
+à image candidate identique est qualifié avec engagements de chaîne et de
+21 journaux, reprise de duties et trois avancées communes. L’ancienne
+configuration de reprise échoue sur une copie du nouvel état après signature ;
+conserver les derniers engagements indépendants et les derniers journaux.
+Un vrai retour entre versions demande encore une cible compatible qualifiée.
+[Preuves et limites](qualification/pinned-replacement-20260930/manifest.json).

@@ -1,5 +1,21 @@
 # Objectif : Nano C++ de niveau production
 
+## Remplacement avec engagements indépendants qualifié — 30 septembre 2026
+
+Le conteneur VPS est remplacé avec la même image candidate, le même volume et
+peer ID, en 6,355 s. Engagement de chaîne et 21 journaux conservés séparément ;
+la réconciliation commune reprend en 41,535 s. Trois avancées strictes de 3 à 6
+passent en 146,812 s avec rattachement à l’exécution. Après reprise, 87
+attestations VPS et nouvelles propositions admises ; ses 21 pins avancent.
+L’ancienne configuration est ensuite refusée sur une copie arrêtée du nouvel
+état, avant signatures ; journaux copiés et source originale inchangés octet
+pour octet. Les conteneurs finissent à zéro sans OOM. L’image historique c2ec4d7
+refuse le genesis Shanghai sur fixture isolée : elle n’est pas une cible de
+retour pour ce profil. Retour entre versions différentes, autres pannes/charge,
+écarts historiques et revue indépendante restent ouverts. Aucune qualification
+de production globale ni d’un nouveau fork EVM.
+[Preuves](qualification/pinned-replacement-20260930/manifest.json).
+
 ## Réseau des images finales qualifié — 30 septembre 2026
 
 Les deux images candidates finales, sans volume de compilation, passent avec

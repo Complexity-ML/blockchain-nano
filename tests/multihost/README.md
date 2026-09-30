@@ -154,3 +154,15 @@ L’extension tardive attend d’abord une nouvelle finalité commune, au maximu
 180 s supplémentaires, en conservant les contrôles de conflits et régressions
 de la partition. Elle démarre ensuite la fenêtre de stabilité habituelle. Le
 critère initial de 180 s reste échoué, même si ces phases ultérieures passent.
+
+## Remplacement du conteneur avec pins indépendants
+
+`NANO_TEST_PINNED_RESTART=1` exige des images candidates Capella et un scénario
+autonome (sans moniteur, restauration, charge, partition ou rotation). Le VPS
+est arrêté sainement ; son reçu est conservé indépendamment et le conteneur
+remplacé sur le même volume avec tous les pins. Aucune ancienne sauvegarde
+n’est remise en service. Même peer ID, nouvelles duties et trois avancées
+communes sont exigés. Les engagements finaux doivent avancer sans régresser
+pour aucun signataire. Cela qualifie le remplacement à version identique,
+pas une migration de schéma ni un retour entre versions différentes.
+[Campagne qualifiée](../../docs/qualification/pinned-replacement-20260930/manifest.json).

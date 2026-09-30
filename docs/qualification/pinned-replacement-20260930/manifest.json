@@ -1,0 +1,103 @@
+{
+  "harnessRevision": "4fff304c3c90db73d783d3b0a3656008b1638074",
+  "compiledRevision": "ca780d5002c72b2486833f8dbe881649787a6c4f",
+  "scope": "Same candidate image container replacement on VPS, keeping same volume/identity and independent chain plus 21 journal commitments. Three nodes on two hosts, 64 synthetic keys, Capella/Shanghai. Older configuration rejected on isolated post-signing copy; source/journals byte equivalence verified. No different-version rollback, public launch, load/power-loss/full production qualification.",
+  "replacement": {
+    "time": 1790796009993,
+    "event": "pinned-replacement-online",
+    "peerId": "12D3KooWD4F6p4eRpeRboezYNNuH3cmPwMf2T2SLXRTLocgsWHgm",
+    "elapsedMs": 6355,
+    "chainCommitment": {
+      "digest": "0x3e5a4a12a9afa3215b49619ab29ef79cc9fd321c3f581c00c9cbc235bf98ab74",
+      "sequence": "0x125"
+    },
+    "independentSignerPins": 21,
+    "sameImage": true,
+    "dataRestored": false
+  },
+  "reconciliation": {
+    "time": 1790796051529,
+    "event": "backup-restore-recovery-bound",
+    "elapsedMs": 41535,
+    "recoveryMs": 180000,
+    "checkpoint": {
+      "epoch": "3",
+      "root": "0x8d99b09277dc73eea23333dd5d7629b5ff57f2d3f1cd83884047b6f71b69ec0d"
+    }
+  },
+  "strictFinality": {
+    "epochs": 3,
+    "firstEpoch": "3",
+    "lastEpoch": "6",
+    "elapsedMs": 146812,
+    "nodes": [
+      "mac-native",
+      "mac-docker",
+      "vps-docker"
+    ],
+    "revision": "ca780d5002c72b2486833f8dbe881649787a6c4f"
+  },
+  "pinAdvancement": {
+    "time": 1790796204486,
+    "event": "pinned-replacement-passed",
+    "advancedSignerPins": 21,
+    "prior": {
+      "digest": "0x3e5a4a12a9afa3215b49619ab29ef79cc9fd321c3f581c00c9cbc235bf98ab74",
+      "sequence": "0x125"
+    },
+    "current": {
+      "digest": "0xf333b86c8ae7014636dcd0062c35ab008d0b0704c2a99bf7d9882b70cbb8bbef",
+      "sequence": "0x294"
+    },
+    "rollbackToDifferentVersionQualified": false
+  },
+  "validators": [
+    {
+      "file": "native.log",
+      "healthy": true,
+      "attestationsAdmitted": 158
+    },
+    {
+      "file": "docker-mac.log",
+      "healthy": true,
+      "attestationsAdmitted": 153
+    },
+    {
+      "file": "vps.log",
+      "healthy": true,
+      "attestationsAdmitted": 87
+    }
+  ],
+  "stalePinsRejected": true,
+  "sourceUnchanged": true,
+  "copiedSigningJournalsUnchanged": true,
+  "productionQualified": false,
+  "filesSha256": {
+    "keys-after.sha256": "221f1f19bdce9ae29b3ad9ec24ec04b8e2e6d9c0bcc4ccd50a9f9068fbc4cfc6",
+    "vps-state.json": "43610d5992471935fa59cf4001b6bfa4a8f49c89257e56a93facc8eeaf444485",
+    "stale-pins-refusal.log": "abf29063a16858c0221e835a1b40ea8aff2dde3e95191342a40dfe07f6d8cdf2",
+    "prepared-genesis.json": "0d2654c832d90475861b14dd6998d6f62bded055f0d32ec0374f808f8a824774",
+    "replacement-independent-stop-receipt.json": "4066b4a9ec3685890fafeb9b21df860eeda32184f50fdfaa9b790f249b59a4d3",
+    "old-image-refusal.log": "a7774b1a5744e00b1c93e9d99adcda86aeae5e944bc5e73a18cb0518b51b1bf9",
+    "replacement-before-state.json": "738d5176d1abd97702d94323c0db2e3356489a7874c301310d33e07bb481d8fd",
+    "run.jsonl.gz": "229e306bb2f4aaf1c7ee1736f4a2f18b0fde723ee8b9e3a008bcc63df4458def",
+    "observations-samples.jsonl.gz": "93a755b6fb426448fdb45030d12f724ae0d2b9f82f848fc9a83b3b9aa103712a",
+    "vps.log.gz": "a09699da2b320f93f9d06cf0c22ed9823308b08680bd707b2af8df7d8ee72179",
+    "prepared-profile.json": "c9d115373e63eea3332aadd86611d1fe6f9d129d61b80d6af883cf16ad176467",
+    "native.log.gz": "deccfbf29cf4374ca9da3c353ce0c1fa4c173e636fb28c7df2dfea7ef3cdf6c3",
+    "old-image-state.json": "31bd1ce731629202044152034645c4820598f7fd9eb348d32fc6fe2f33d3a7fa",
+    "prepared-initial.json.gz": "1f5874eca538c8448bc4092944711cc818d52acd2d84c4226a2308baf7117c70",
+    "observations-result.json": "4e7116e4f42552a134bbaae4161e68d50cdb30146f283d104d1f8e81f5f717b3",
+    "source-after.sha256": "be40075ad5c49adfe8b085b7f0c18913368dc6e6a8b8143efdbea86b5e946b89",
+    "keys-before.sha256": "221f1f19bdce9ae29b3ad9ec24ec04b8e2e6d9c0bcc4ccd50a9f9068fbc4cfc6",
+    "old-image-scope.json": "58067ee55f4d07de110ff0ccd05d22f658d93ddb46be4bcc640ed55cc0ae75a9",
+    "source-before.sha256": "be40075ad5c49adfe8b085b7f0c18913368dc6e6a8b8143efdbea86b5e946b89",
+    "topology.json": "461138b4f6a3b7740fcad84144697bf6a7f5f1810d04b450aaee898f0641f9e5",
+    "pin-tests.log": "3603efb6da22a35ffc6e24512edd2947643d6d0a617805bb1ef60ec4c8962129",
+    "replacement-current-stop-receipt.json": "c9ae0951adabec6ef8995bad8d5cd50069d6992b51f6b13c1c083a601c614cab",
+    "stale-pins-state.json": "7593a5d3a38f1c7b08780f42cdcc8af19b8402e1a01a5dff64bfd431c47ebe2e",
+    "docker-mac.log.gz": "4a0c653e32f69d98a242805173599aeb8ca7edb5abedf35930456355ebd3ca29",
+    "mac-state.json": "341e9c9fb718c75376cd1c141da0a8c10e2adba867892f10e81fe53c6f424420",
+    "replacement-before.log.gz": "a556cbc1026f0ae098fa9e105511219b2828e5d2e07e50d548a0dea630c4cbac"
+  }
+}
