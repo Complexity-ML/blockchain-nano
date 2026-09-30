@@ -166,3 +166,18 @@ communes sont exigés. Les engagements finaux doivent avancer sans régresser
 pour aucun signataire. Cela qualifie le remplacement à version identique,
 pas une migration de schéma ni un retour entre versions différentes.
 [Campagne qualifiée](../../docs/qualification/pinned-replacement-20260930/manifest.json).
+
+## Programme fini de partitions répétées
+
+`NANO_TEST_PARTITION_SCHEDULE_MS=96000,192000`, avec
+`NANO_TEST_WAN_PARTITION=1`, exige un scénario autonome Capella sur images
+candidates (pas de charge, rotation, moniteur, restauration ou remplacement).
+L’historique de sécurité est partagé entre cycles ; chaque reprise doit être
+connectée et finaliser plus haut que son point de départ. Le premier échec
+arrête les coupures suivantes. La fenêtre stricte de trois avancées est
+toujours exigée après le programme, sans effacer une échéance ratée.
+Les ressources sont relevées toutes les 20 secondes, et une erreur de collecte
+reste fatale. Le programme est borné à 2–4 coupures de 1–300 secondes, avec
+600 secondes de coupure cumulée maximum : budgets de test uniquement.
+La campagne 96/192 secondes est en cours au moment de cette documentation ;
+aucune réussite réseau n’est encore revendiquée.

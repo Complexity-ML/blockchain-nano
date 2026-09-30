@@ -1,5 +1,18 @@
 # Objectif : Nano C++ de niveau production
 
+## Partitions répétées et prolongées : campagne en cours — 30 septembre 2026
+
+Un programme fini de deux coupures (96 puis 192 s) est ajouté au lanceur des
+images finales. Chaque cycle exige une finalité commune plus récente et des
+pairs reconnectés. L’historique des racines et des progressions reste commun
+aux deux cycles ; un échec interdit la coupure suivante. Sept tests locaux
+passent, dont conflit/recul entre cycles et reprise sans progrès à refuser.
+Les ressources des trois nœuds sont échantillonnées ; une collecte incomplète
+fait échouer la qualification. La campagne réelle est démarrée, pas encore
+qualifiée. Les budgets du scénario ne limitent pas les validateurs du protocole.
+[Preuves préparatoires](qualification/partition-cycles-20260930/manifest.json).
+Aucun écart global, résultat réseau, revue indépendante ou production clôturé.
+
 ## Latence WAN asymétrique des images finales qualifiée — 30 septembre 2026
 
 500 ms de retard sortant sont appliquées au seul conteneur VPS. Les trois nœuds
