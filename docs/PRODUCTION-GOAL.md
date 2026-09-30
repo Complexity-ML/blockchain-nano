@@ -1,5 +1,18 @@
 # Objectif : Nano C++ de niveau production
 
+## Diagnostic WAN B : reprise lente et panne d’horloge — 30 septembre 2026
+
+Premier cycle : reprise commune en 135,381 s. Second : head commun observé
+à 105,612 s, justification plus récente à 142,005 s, finalité à 191,767 s :
+le délai initial de 180 s manque à nouveau. La fenêtre tardive échoue ensuite
+sur Beacon HTTP 503, Docker Mac : `Capella local clock discontinuity`.
+Ce conteneur sort à 1 sans OOM et sans reçu terminal de validateur ; le VPS
+sort à 0 sans OOM. La branche exacte et l’amplitude du défaut d’horloge ne sont
+pas enregistrées. Elles doivent être distinguées avant correction, sans
+contourner le fail-closed. Les deux échecs restent ouverts ; WAN A n’est pas
+rétroactivement expliqué. Binaires, profils et budgets inchangés.
+[Diagnostic et journaux complets](qualification/partition-cycles-20260930/attempt-b/manifest.json).
+
 ## Diagnostic de la reprise préparé — 30 septembre 2026
 
 Les relevés de la tentative A ne permettent pas de séparer rattrapage du head

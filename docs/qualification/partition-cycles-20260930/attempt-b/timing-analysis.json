@@ -1,0 +1,138 @@
+{
+  "stage": "terminal failed campaign with additional clock discontinuity",
+  "runtimeRevision": "ca780d5002c72b2486833f8dbe881649787a6c4f",
+  "harnessRevision": "1a8674860967284be1dee4c42defdebf577dd9e9",
+  "slotMs": 6000,
+  "slotsPerEpoch": 8,
+  "epochMs": 48000,
+  "cycles": [
+    {
+      "cycle": 1,
+      "requestedCutMs": 96000,
+      "actualCutMs": 97679,
+      "milestones": {
+        "commonHead": {
+          "observedAfterReconnectMs": 87027,
+          "headSlots": [
+            "64",
+            "64",
+            "64"
+          ],
+          "justifiedEpochs": [
+            "7",
+            "7",
+            "7"
+          ],
+          "finalizedEpochs": [
+            "2",
+            "2",
+            "2"
+          ]
+        },
+        "newerJustified": {
+          "observedAfterReconnectMs": 87027,
+          "headSlots": [
+            "64",
+            "64",
+            "64"
+          ],
+          "justifiedEpochs": [
+            "7",
+            "7",
+            "7"
+          ],
+          "finalizedEpochs": [
+            "2",
+            "2",
+            "2"
+          ]
+        },
+        "newerFinalized": {
+          "observedAfterReconnectMs": 135381,
+          "headSlots": [
+            "72",
+            "72",
+            "72"
+          ],
+          "justifiedEpochs": [
+            "8",
+            "8",
+            "8"
+          ],
+          "finalizedEpochs": [
+            "7",
+            "7",
+            "7"
+          ]
+        }
+      },
+      "withinOriginal180SecondRecoveryBudget": true
+    },
+    {
+      "cycle": 2,
+      "requestedCutMs": 192000,
+      "actualCutMs": 193199,
+      "milestones": {
+        "commonHead": {
+          "observedAfterReconnectMs": 105612,
+          "headSlots": [
+            "123",
+            "123",
+            "123"
+          ],
+          "justifiedEpochs": [
+            "8",
+            "8",
+            "8"
+          ],
+          "finalizedEpochs": [
+            "7",
+            "7",
+            "7"
+          ]
+        },
+        "newerJustified": {
+          "observedAfterReconnectMs": 142005,
+          "headSlots": [
+            "129",
+            "129",
+            "129"
+          ],
+          "justifiedEpochs": [
+            "15",
+            "15",
+            "15"
+          ],
+          "finalizedEpochs": [
+            "7",
+            "7",
+            "7"
+          ]
+        },
+        "newerFinalized": {
+          "observedAfterReconnectMs": 191767,
+          "headSlots": [
+            "137",
+            "137",
+            "137"
+          ],
+          "justifiedEpochs": [
+            "16",
+            "16",
+            "16"
+          ],
+          "finalizedEpochs": [
+            "15",
+            "15",
+            "15"
+          ]
+        }
+      },
+      "withinOriginal180SecondRecoveryBudget": false
+    }
+  ],
+  "causalRootEstablished": false,
+  "interpretation": "observed head reconciliation precedes realized justification/finality; exact scheduling, branch selection and missing-vote causes not yet proven",
+  "qualificationPassed": false,
+  "productionQualified": false
+}

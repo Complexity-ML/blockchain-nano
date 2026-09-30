@@ -1,0 +1,34 @@
+{
+  "terminalExitCode": 1,
+  "secondRecoveryMs": 191767,
+  "originalRecoveryBudgetMs": 180000,
+  "lateStabilityPassed": false,
+  "additionalFailure": "Beacon head HTTP 503 on mac-docker; reactor initial failure: Capella local clock discontinuity",
+  "terminalValidatorReceipts": {
+    "native.log": {
+      "terminalReceipts": 1,
+      "healthy": true,
+      "clockHealthy": true
+    },
+    "docker-mac.log": {
+      "terminalReceipts": 0,
+      "healthy": null,
+      "clockHealthy": null
+    },
+    "vps.log": {
+      "terminalReceipts": 1,
+      "healthy": true,
+      "clockHealthy": true
+    }
+  },
+  "resourceSamplesPerHost": 45,
+  "resourceCollectionErrors": 0,
+  "macDockerClockConfiguration": {
+    "intervalMs": "0x64",
+    "maximumForwardStepMs": "0x1d4c0"
+  },
+  "exactClockDiscontinuityBranchAndMagnitudeKnown": false,
+  "historicalWanACauseProven": false,
+  "networkQualified": false,
+  "productionQualified": false
+}
