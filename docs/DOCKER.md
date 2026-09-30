@@ -51,9 +51,12 @@ pas la signature BFT ; elle n'est pas une configuration de validateur prête à 
 ```sh
 docker compose stop                 # arrêt avec délai de 60 secondes
 # Sauvegarder le volume arrêté avant une mise à jour.
-docker compose build
-docker compose up -d
+# Pour une image candidate déjà qualifiée, suivre DOCKER-UPDATES.md.
+# Sélection explicite d'image : NANO_IMAGE=sha256:... ; aucun build implicite.
 ```
+
+Voir [la procédure de mise à jour et de retour logiciel](DOCKER-UPDATES.md).
+Le retour ne doit jamais remettre des journaux anti-double-signature anciens.
 
 `docker compose down` conserve le volume ; `docker compose down -v` le supprime.
 Sauvegarder aussi l'identité P2P. Ne pas faire fonctionner deux instances avec
@@ -106,9 +109,9 @@ Après nettoyage : une image, aucun conteneur ou volume de test, zéro cache de
 build. Aucun service Nano permanent n'a été lancé par cette qualification.
 
 Sur ce VPS, conserver un seul conteneur Nano et une seule image de déploiement.
-Exécuter un seul build à la fois. Après qualification, `docker builder prune
---all --force` supprime le cache de compilation ; cela rallonge le prochain
-build à froid. Aux mises à jour, retirer explicitement l'ancienne image après
+Exécuter un seul build à la fois et réutiliser les caches pour les itérations.
+Une suppression explicite du cache rallonge le prochain build à froid ; elle ne
+remplace pas la sélection d’une image qualifiée. Aux mises à jour, retirer explicitement l'ancienne image après
 vérification du remplacement, sans supprimer le volume de la chaîne.
 
 ## Budget des fichiers ouverts

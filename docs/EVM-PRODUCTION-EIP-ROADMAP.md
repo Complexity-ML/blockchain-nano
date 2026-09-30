@@ -1,5 +1,17 @@
 # EIP pour l’EVM et la production Nano
 
+## Livraison : précontrôle d’intégrité et procédure Docker — 30 septembre 2026
+
+La sélection Compose accepte `NANO_IMAGE` explicite. Le précontrôle refuse tags
+mutables, plateforme/source divergentes, fichiers/binaires altérés et dépendances
+manquantes ; aucune base ni clé n’est montée. Onze tests passent et une image
+locale de dépendances est effectivement refusée avant les probes. La
+[procédure](DOCKER-UPDATES.md) protège les engagements et interdit le retour à
+d’anciens journaux après signature. L’image candidate actuelle, son cycle de
+promotion/retour, la régression complète et la revue indépendante restent ouverts.
+Une vérification d’intégrité ne constitue pas une qualification de production.
+[Preuves](qualification/candidate-integrity-20260930/manifest.json).
+
 ## Supervision du réseau vivant qualifiée — 30 septembre 2026
 
 Le vrai CLI effectue 25 observations sur Mac natif, Docker ARM64 et Docker VPS,

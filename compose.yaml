@@ -4,7 +4,7 @@ services:
       context: .
       args:
         JOBS: "${NANO_BUILD_JOBS:-2}"
-    image: blockchain-nano:local
+    image: "${NANO_IMAGE:-blockchain-nano:local}"
     init: true
     restart: unless-stopped
     stop_grace_period: 60s
