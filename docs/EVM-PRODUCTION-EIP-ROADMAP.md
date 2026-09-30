@@ -1,5 +1,20 @@
 # EIP pour l’EVM et la production Nano
 
+## Images candidates assemblées, qualification réseau ouverte — 30 septembre 2026
+
+Les images finales ARM64 et x86-64 embarquent les deux binaires attendus issus
+du volume existant, sans recompilation. Le précontrôle réel valide identité,
+révision, architecture, empreintes et bibliothèques ; `productionQualified`
+reste faux. Nano démarre sur `--help` en utilisateur 10001, sans réseau ni base.
+Les sources runtime suivies sont identiques à la révision compilée ca780d5.
+Le premier essai BuildKit échoué reste conservé ; l’assemblage corrigé utilise
+la base locale résolue par son digest. Les manifestes de smoke utilisent des
+fixtures publiques et un exemple node sans validateurs : aucune configuration
+Capella de production n’est validée ici. Qualification réseau des images,
+cycle mise à jour/retour, régression pertinente, provenance complète des
+dépendances et revue indépendante restent ouverts.
+[Preuves et limites](qualification/candidate-images-20260930/manifest.json).
+
 ## Livraison : précontrôle d’intégrité et procédure Docker — 30 septembre 2026
 
 La sélection Compose accepte `NANO_IMAGE` explicite. Le précontrôle refuse tags

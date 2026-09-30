@@ -1,0 +1,26 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from candidate.Dockerfile
+#1 transferring dockerfile: 823B done
+#1 WARN: InvalidDefaultArgInFrom: Default value for ARG ${NANO_RUNTIME_BASE} results in empty or invalid base image name (line 3)
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/sha256:159aaf4882d01f4992d6b7359120e6fc1e10fc5e018695b21a18919581ac271f
+#2 ERROR: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed
+------
+ > [internal] load metadata for docker.io/library/sha256:159aaf4882d01f4992d6b7359120e6fc1e10fc5e018695b21a18919581ac271f:
+------
+
+ [33m1 warning found (use docker --debug to expand):
+[0m - InvalidDefaultArgInFrom: Default value for ARG ${NANO_RUNTIME_BASE} results in empty or invalid base image name (line 3)
+candidate.Dockerfile:3
+--------------------
+   1 |     # Package already qualified binaries; no compiler or dependency download.
+   2 |     ARG NANO_RUNTIME_BASE
+   3 | >>> FROM ${NANO_RUNTIME_BASE}
+   4 |     USER root
+   5 |     ARG SOURCE_REVISION
+--------------------
+ERROR: failed to build: failed to solve: sha256:159aaf4882d01f4992d6b7359120e6fc1e10fc5e018695b21a18919581ac271f: failed to resolve source metadata for docker.io/library/sha256:159aaf4882d01f4992d6b7359120e6fc1e10fc5e018695b21a18919581ac271f: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/rvdrwr4ni0w6axq74utm6h9v0

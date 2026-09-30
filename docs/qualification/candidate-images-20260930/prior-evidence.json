@@ -1,0 +1,72 @@
+{
+  "harnessSourceRevision": "e4a0f219e717f6eefff657b68cfa7a3a9ba8c3d5",
+  "buildSourceRevision": "ca780d5002c72b2486833f8dbe881649787a6c4f",
+  "scope": "64 synthetic validators, three processes on two physical hosts; real CLI ordinary restarts with persisted state; wrong genesis refusal; strict common finality and separate execution binding. No fault injection, external alert delivery, physical power loss or complete production qualification.",
+  "monitor": {
+    "observations": 25,
+    "firstEpochs": [
+      "2",
+      "2",
+      "2"
+    ],
+    "lastEpochs": [
+      "5",
+      "5",
+      "5"
+    ],
+    "wrongGenesisRejected": true,
+    "transport": "native HTTP, local Docker exec, remote SSH Docker exec",
+    "independentFixtureGenesis": true,
+    "executionBindingVerifiedBySeparateStabilityGate": true
+  },
+  "strictFinality": {
+    "epochs": 3,
+    "firstEpoch": "2",
+    "lastEpoch": "5",
+    "elapsedMs": 142076,
+    "nodes": [
+      "mac-native",
+      "mac-docker",
+      "vps-docker"
+    ],
+    "revision": "ca780d5002c72b2486833f8dbe881649787a6c4f"
+  },
+  "validators": [
+    {
+      "file": "native.log",
+      "healthy": true,
+      "attestationsAdmitted": 137
+    },
+    {
+      "file": "docker-mac.log",
+      "healthy": true,
+      "attestationsAdmitted": 134
+    },
+    {
+      "file": "vps.log",
+      "healthy": true,
+      "attestationsAdmitted": 137
+    }
+  ],
+  "sha256": {
+    "docker-mac.log.gz": "b31ac281a8f7513b3742d363e78961dd38dffce2471e28870e8afbd412073cb5",
+    "mac-state.json": "6a2e84b3a3a748b67657e8e2ba22fcb5f9a277e5bde9bb34d756413666b4905c",
+    "monitor-config.json": "83a9188ea60afd3b10174e38892b60e032e369e28c1826023d69bc9361a2f8de",
+    "monitor-result.json": "13332b5d7522ce79dd271649a0aac85c524bb242720c665cae4f01d7f2b529b3",
+    "monitor-samples.jsonl.gz": "190bab2e54f9be2b672e2a0d9d20c557a5aa306759293376aa1cc8ebca413206",
+    "monitor-state.json": "17d52b3dfe01c408ffdced081ab0aaa557a27453fb6fbc5c77a63afc8fd873bb",
+    "monitor-wrong-genesis-result.json": "f5eb383339716a04f3d70fcad5593d7a2417a8eed909d7ac77b495fdbad646ef",
+    "monitor-wrong-genesis-state.json": "f903f3c6ddd01c50de30dd813e90db10daf9dec945e9a58312b3b3fbfc81c77c",
+    "monitor-wrong-genesis.json": "887feb708acd1bbfbdbc822d6eade8f90aecf9f4f20dfd259d8c381281bb0f56",
+    "native.log.gz": "dce254fe3d93bbd04c5264036e847f68d8645da0006beb0181da2dc28b5f7dbe",
+    "observations-result.json": "645c94fd2c697a605ee56630ec2d4e4348078e0d16cea8d42ebe29d1163c4086",
+    "observations-samples.jsonl.gz": "41f8976aea8e86f3f62ee7dceb5db7ae23391c55d2fd871097656793bfd48f7e",
+    "prepared-mac-native-genesis.json": "e5291d8336395169abdbb164a3feb7a25102b472fe8b9a432ce44c5af77ea446",
+    "prepared-mac-native-initial.json.gz": "d02a78d07010ef26d81f88cc32f3296b23d12911c8c140f6b11b10f39108f2a2",
+    "prepared-mac-native-profile.json": "c9d115373e63eea3332aadd86611d1fe6f9d129d61b80d6af883cf16ad176467",
+    "run.jsonl.gz": "abe580de23c5b5e2e6db625071b28a37482000ae089a2661dd247c4a560e1460",
+    "topology.json": "8e2e9846bf05392ef85d80b7cefb0fde8d28be48636bb4cd7bb13474e0595dea",
+    "vps-state.json": "76fef1827a04819cfa3f081c2b885d84105906d1f880fe84b4696292bc37883e",
+    "vps.log.gz": "97bedb5e33fe2791848accc884f33c71b7597ec8ea8b8c3992d3c217e4f6ee8e"
+  }
+}

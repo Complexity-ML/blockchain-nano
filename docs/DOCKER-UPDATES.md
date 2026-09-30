@@ -101,3 +101,21 @@ l'identité immuable sélectionnée dans sa configuration rendue. Aucun cycle de
 promotion/retour arrière d'une image candidate actuelle n'est encore qualifié.
 Packaging courant, régression complète, livraison des alertes, compatibilité
 future des formats et revue indépendante restent ouverts.
+
+## Assembler depuis les binaires déjà compilés
+
+`scripts/operations/package-candidate.sh` reçoit six arguments : ID immuable de
+la base runtime locale, ID de l’image locale de compilation, volume compilé,
+révision compilée complète et SHA-256 de chacun des deux exécutables. Les
+empreintes doivent provenir d’une preuve conservée et revue séparément. Le
+script exporte uniquement les deux binaires et leur marqueur depuis un volume
+en lecture seule, contrôle le marqueur et les architectures, puis vérifie les
+empreintes dans l’image assemblée. Le marqueur seul ne prouve pas la provenance.
+
+BuildKit exige un nom dans FROM : une référence locale dérivée de l’ID est
+contrôlée avant/après, et le log doit confirmer sa résolution vers cet ID.
+Le script ne lance ni apt ni compilation. Il imprime l’ID final, sans remplacer
+de service ni d’image en service. Son image démarre sur `--help`. Les fichiers
+genesis/node historiques hérités de la base ne sont pas des entrées approuvées :
+monter explicitement la configuration réseau qualifiée avant une campagne.
+[Assemblage des deux architectures et limites](qualification/candidate-images-20260930/README.md).
