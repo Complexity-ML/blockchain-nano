@@ -1,0 +1,86 @@
+[  0%] Built target gen_bint.o
+[  0%] Built target gen_base.o
+[  3%] Built target secp256k1_precomputed
+[  6%] Built target nano_blst
+[  6%] Built target secp256k1
+[ 10%] Built target mcl_st
+[ 10%] Built target nano_ckzg
+[ 10%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_audit.cpp.o
+[ 10%] Linking CXX static library libnano_core.a
+[100%] Built target nano_core
+[100%] Linking CXX executable nano
+[100%] Built target nano
+[  0%] Built target gen_bint.o
+[  0%] Built target gen_base.o
+[  3%] Built target secp256k1_precomputed
+[  6%] Built target nano_blst
+[  9%] Built target nano-test-sync-fault
+[ 12%] Built target mcl_st
+[ 12%] Built target secp256k1
+[ 12%] Built target nano_ckzg
+[ 96%] Built target nano_core
+[ 96%] Linking CXX executable nano-capella-transition-tests
+[100%] Built target nano-capella-transition-tests
+[  0%] Built target gen_base.o
+[  0%] Built target gen_bint.o
+[  3%] Built target secp256k1_precomputed
+[  6%] Built target nano_blst
+[  6%] Built target secp256k1
+[ 10%] Built target mcl_st
+[ 10%] Built target nano_ckzg
+[100%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-capella-audit-corruption-tests.dir/tests/test_capella_audit_corruption.cpp.o
+[100%] Linking CXX executable nano-capella-audit-corruption-tests
+[100%] Built target nano-capella-audit-corruption-tests
+{
+  "baseline": {
+    "archiveBytes": 283315,
+    "blocksIncludingTrustedAnchor": 99,
+    "canonicalHistoryVerified": true,
+    "checkpointDigest": "0x89a622679ab2817050fe4283d40b91d262ea2ef51b938dcd54e7d2352b431d9d",
+    "checkpointSequence": 1147,
+    "firstExecutionBlock": "0x1",
+    "head": "0x4585e50ec1194a31fbf0c5144e93ae87f5ed01ac7a5175fe566c4f8f1528f181",
+    "historicalForkChoiceVerified": false,
+    "historicalStandaloneVotesReplayed": false,
+    "lastExecutionBlock": "0x63",
+    "transactions": 97,
+    "trustedAnchor": "0xe84ecadf72d756692e45c1ed486554cf3846841b070e6bb3ef7b69da700655ed"
+  },
+  "cases": [
+    {
+      "case": "missing-archive",
+      "error": "Capella canonical audit: signed archive missing",
+      "filesUnchanged": true,
+      "rejected": true
+    },
+    {
+      "case": "invalid-signature",
+      "error": "Capella canonical audit: signed transition rejected",
+      "filesUnchanged": true,
+      "rejected": true
+    },
+    {
+      "case": "receipt",
+      "error": "Capella canonical audit: receipt mismatch",
+      "filesUnchanged": true,
+      "rejected": true
+    },
+    {
+      "case": "transaction-index",
+      "error": "Capella canonical audit: transaction index mismatch",
+      "filesUnchanged": true,
+      "rejected": true
+    },
+    {
+      "case": "archive-slot",
+      "error": "Capella canonical audit: archive slot differs from signed header",
+      "filesUnchanged": true,
+      "rejected": true
+    }
+  ],
+  "sourceFilesUnchanged": true
+}
+36c7107eccd622ac1e90b1ea2b8a53131d7f5fb9551992e4eccdd652dced9539  /build/nano
+18fc99cde1a00c9b45780378a78437fe18f333f4ba389fa21d21ea94d51a57d9  /build/nano-capella-transition-tests
+ac730e77478f3fa5ab83d1d572d36df36bfce9486cb0b75a20bce681d879e398  /build/nano-capella-audit-corruption-tests

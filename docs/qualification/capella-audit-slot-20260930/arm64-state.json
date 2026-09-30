@@ -1,0 +1,53 @@
+{
+  "State": {
+    "Status": "exited",
+    "Running": false,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 0,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "2026-09-30T17:59:04.746623549Z",
+    "FinishedAt": "2026-09-30T17:59:19.552665583Z"
+  },
+  "Image": "sha256:6116669430b02b7e8012af8c8bd515a5a7dcd1dd2034649f9b45ae5b9e70a3a4",
+  "Mounts": [
+    {
+      "Type": "volume",
+      "Name": "nano-linux-sync-build",
+      "Source": "/var/lib/docker/volumes/nano-linux-sync-build/_data",
+      "Destination": "/build",
+      "Driver": "local",
+      "Mode": "z",
+      "RW": true,
+      "Propagation": ""
+    },
+    {
+      "Type": "volume",
+      "Name": "nano-qualification-mac-munc2kc7-data",
+      "Source": "/var/lib/docker/volumes/nano-qualification-mac-munc2kc7-data/_data",
+      "Destination": "/fixture",
+      "Driver": "local",
+      "Mode": "ro",
+      "RW": false,
+      "Propagation": ""
+    },
+    {
+      "Type": "bind",
+      "Source": "/host_mnt/Users/boris/Dev/blockchain-nano",
+      "Destination": "/work",
+      "Mode": "ro",
+      "RW": false,
+      "Propagation": "rprivate"
+    }
+  ],
+  "Ulimits": [
+    {
+      "Name": "nofile",
+      "Hard": 65536,
+      "Soft": 65536
+    }
+  ]
+}

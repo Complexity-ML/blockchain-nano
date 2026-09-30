@@ -6,7 +6,8 @@ Un nouveau cas de corruption sur copie arrêtée montre que l’audit acceptait 
 slot d’archive RocksDB augmenté de un, sans modification du bloc signé. Le
 correctif impose l’égalité avec le slot de l’en-tête vérifié. En natif, les cinq
 cas sont refusés ; la base source et chaque copie restent inchangées. Docker
-ARM64 et VPS restent à qualifier pour ce changement. Cela ne prouve ni une
+ARM64 et VPS x86-64 passent également les cinq cas, sans OOM ; les fixtures
+canoniques comportent respectivement 99 et 100 blocs, avec 97 transactions. Cela ne prouve ni une
 faille du consensus actif ni la correction des anomalies réseau historiques.
 [Preuves](qualification/capella-audit-slot-20260930/native-fixed-result.json).
 

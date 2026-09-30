@@ -1,0 +1,53 @@
+{
+  "State": {
+    "Status": "exited",
+    "Running": false,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 0,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "2026-09-30T17:59:07.683793275Z",
+    "FinishedAt": "2026-09-30T18:00:10.41276413Z"
+  },
+  "Image": "sha256:0fa8a608c09ff5ad1e804afc160c04d4964898bed149fcb47a2b587a0a9c194c",
+  "Mounts": [
+    {
+      "Type": "volume",
+      "Name": "nano-linux-sync-build",
+      "Source": "/var/lib/docker/volumes/nano-linux-sync-build/_data",
+      "Destination": "/build",
+      "Driver": "local",
+      "Mode": "z",
+      "RW": true,
+      "Propagation": ""
+    },
+    {
+      "Type": "volume",
+      "Name": "nano-qualification-vps-munc2kc7-data",
+      "Source": "/var/lib/docker/volumes/nano-qualification-vps-munc2kc7-data/_data",
+      "Destination": "/fixture",
+      "Driver": "local",
+      "Mode": "ro",
+      "RW": false,
+      "Propagation": ""
+    },
+    {
+      "Type": "bind",
+      "Source": "/home/ubuntu/blockchain-nano-git",
+      "Destination": "/work",
+      "Mode": "ro",
+      "RW": false,
+      "Propagation": "rprivate"
+    }
+  ],
+  "Ulimits": [
+    {
+      "Name": "nofile",
+      "Hard": 65536,
+      "Soft": 65536
+    }
+  ]
+}
