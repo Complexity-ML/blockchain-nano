@@ -9,7 +9,8 @@ SHA-256 de tous les fichiers restent identiques après lecture, refus et réouve
 Une réouverture ReadWrite réussit le commit suivant. Un chemin absent n'est pas créé.
 
 La base doit être arrêtée ou provenir d'un snapshot cohérent : ce test ne qualifie
-pas une inspection concurrente avec un nœud actif. Pas encore qualifié sur Linux.
+pas une inspection concurrente avec un nœud actif. Qualifié également sur Linux ARM64 (0,03 s) et VPS x86-64 (0,04 s) ;
+voir `../capella-offline-audit-20260930/linux/manifest.json`.
 Cette API est un préalable à l'audit Beacon ; elle ne réalise pas son rejeu.
 Le premier appel de build a trouvé la nouvelle cible inconnue ; après régénération
 CMake, compilation et test réussis. Aucun résultat de test n'a été remplacé.

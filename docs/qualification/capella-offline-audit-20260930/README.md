@@ -45,3 +45,17 @@ le test utilise désormais une ouverture ReadOnly distincte. Ce log est conserv�
 Une préparation de requête a aussi rencontré une ligne non JSON dans le log :
 la sélection du reçu d'arrêt ignore maintenant les lignes texte. Aucun test réussi
 n'est attribué à ces tentatives de préparation.
+
+## Audit canonique qualifié sur Linux ARM64 et VPS — 30 septembre 2026
+
+Le cœur `6cace64` passe le scénario Capella avec rejeu canonique et le test
+lecture seule sur ARM64 (26,93 / 0,03 s) et VPS x86-64 (104,18 / 0,04 s).
+L'audit des bases arrêtées de C vérifie 99 blocs sur ARM64, 100 sur VPS et
+97 transactions sur chacune. Leurs têtes terminales diffèrent car les arrêts
+étaient successifs ; aucune nouvelle preuve de finalité commune n'en est déduite.
+Les quatre corruptions sont refusées sur chaque architecture, sans mutation des
+bases ni des copies. Conteneurs sortis à zéro sans OOM, empreintes archivées.
+[Preuves](linux/manifest.json).
+Les limites restent celles de l'audit canonique : pas de rejeu de l'historique
+complet des votes autonomes et du choix de chaîne. Sauvegarde/restauration,
+anomalie A et autres critères globaux restent ouverts.

@@ -1,5 +1,19 @@
 # Objectif : Nano C++ de niveau production
 
+## Audit canonique qualifié sur Linux ARM64 et VPS — 30 septembre 2026
+
+Le cœur `6cace64` passe le scénario Capella avec rejeu canonique et le test
+lecture seule sur ARM64 (26,93 / 0,03 s) et VPS x86-64 (104,18 / 0,04 s).
+L'audit des bases arrêtées de C vérifie 99 blocs sur ARM64, 100 sur VPS et
+97 transactions sur chacune. Leurs têtes terminales diffèrent car les arrêts
+étaient successifs ; aucune nouvelle preuve de finalité commune n'en est déduite.
+Les quatre corruptions sont refusées sur chaque architecture, sans mutation des
+bases ni des copies. Conteneurs sortis à zéro sans OOM, empreintes archivées.
+[Preuves](qualification/capella-offline-audit-20260930/linux/manifest.json).
+Les limites restent celles de l'audit canonique : pas de rejeu de l'historique
+complet des votes autonomes et du choix de chaîne. Sauvegarde/restauration,
+anomalie A et autres critères globaux restent ouverts.
+
 ## Rejeu canonique Capella hors ligne implémenté — 30 septembre 2026
 
 La commande `audit-capella` vérifie les archives depuis une ancre explicite, sans

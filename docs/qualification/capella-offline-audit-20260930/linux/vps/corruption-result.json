@@ -1,0 +1,43 @@
+{
+  "baseline": {
+    "archiveBytes": 286203,
+    "blocksIncludingTrustedAnchor": 100,
+    "canonicalHistoryVerified": true,
+    "checkpointDigest": "0x5746324ce97fda9496e1450eaccbfc42a21ce9bc9c6ffe1dd5685d36c43a48ee",
+    "checkpointSequence": 1149,
+    "firstExecutionBlock": "0x1",
+    "head": "0x210623cca62542a99f15ace81e6d097b0cf9d472b08d73b9319dc2ff84724ad4",
+    "historicalForkChoiceVerified": false,
+    "historicalStandaloneVotesReplayed": false,
+    "lastExecutionBlock": "0x64",
+    "transactions": 97,
+    "trustedAnchor": "0xe84ecadf72d756692e45c1ed486554cf3846841b070e6bb3ef7b69da700655ed"
+  },
+  "cases": [
+    {
+      "case": "missing-archive",
+      "error": "Capella canonical audit: signed archive missing",
+      "filesUnchanged": true,
+      "rejected": true
+    },
+    {
+      "case": "invalid-signature",
+      "error": "Capella canonical audit: signed transition rejected",
+      "filesUnchanged": true,
+      "rejected": true
+    },
+    {
+      "case": "receipt",
+      "error": "Capella canonical audit: receipt mismatch",
+      "filesUnchanged": true,
+      "rejected": true
+    },
+    {
+      "case": "transaction-index",
+      "error": "Capella canonical audit: transaction index mismatch",
+      "filesUnchanged": true,
+      "rejected": true
+    }
+  ],
+  "sourceFilesUnchanged": true
+}
