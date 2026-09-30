@@ -1,5 +1,9 @@
 # Feuille de route EIP — état réel de Nano
 
+## Images du diagnostic d’horloge — 30 septembre 2026
+
+Les binaires Nano ont été reconstruits dans les volumes Docker ARM64 et amd64 depuis `10e2f9e`; les deux images portent cette révision et leurs empreintes ont été vérifiées après assemblage. Le P2P conserve ses empreintes précédentes. Les quatre cas d’horloge passent également en natif Mac. Preuves : `qualification/clock-runtime-images-20260930/`. Il s’agit du diagnostic, pas d’une correction de la cause WAN B ni d’une qualification réseau. La reprise >180 s, l’anomalie WAN A et tous les autres critères de production restent ouverts.
+
 ## Diagnostic C++ d’horloge qualifié sur les deux architectures — 30 septembre 2026
 
 La garde indique désormais temps lu, temps durable, dernière observation et
