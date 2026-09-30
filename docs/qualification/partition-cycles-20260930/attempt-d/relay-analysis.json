@@ -1,0 +1,213 @@
+{
+  "scope": "all completed runtime trace catalogs; no per-fault causal attribution; trace overhead and fixture variability are not controlled",
+  "nodes": {
+    "native.log": {
+      "completedCatalogs": 1955,
+      "pageYields": 431,
+      "yieldExportCounts": {
+        "1": 252,
+        "2": 44,
+        "3": 21,
+        "4": 23,
+        "5": 13,
+        "6": 17,
+        "7": 11,
+        "8": 50
+      },
+      "yieldsBelowConfiguredPage8": 381,
+      "categories": {
+        "block": {
+          "attempts": 327,
+          "maxElapsedMs": 5642,
+          "reasons": {
+            "None": 259,
+            "delivery-page-yield": 67,
+            "admission-rejected": 1
+          }
+        },
+        "attestation": {
+          "attempts": 326,
+          "maxElapsedMs": 1989,
+          "reasons": {
+            "None": 132,
+            "delivery-page-yield": 191,
+            "admission-rejected": 3
+          }
+        },
+        "attester_slashing": {
+          "attempts": 326,
+          "maxElapsedMs": 195,
+          "reasons": {
+            "None": 326
+          }
+        },
+        "bls_to_execution_change": {
+          "attempts": 326,
+          "maxElapsedMs": 107,
+          "reasons": {
+            "None": 326
+          }
+        },
+        "sync_committee_message": {
+          "attempts": 325,
+          "maxElapsedMs": 3160,
+          "reasons": {
+            "delivery-unconfirmed": 2,
+            "delivery-page-yield": 173,
+            "admission-rejected": 57,
+            "None": 80,
+            "export-unavailable": 13
+          }
+        },
+        "voluntary_exit": {
+          "attempts": 325,
+          "maxElapsedMs": 230,
+          "reasons": {
+            "None": 325
+          }
+        }
+      }
+    },
+    "docker-mac.log": {
+      "completedCatalogs": 2600,
+      "pageYields": 326,
+      "yieldExportCounts": {
+        "1": 272,
+        "2": 20,
+        "3": 3,
+        "4": 2,
+        "5": 7,
+        "6": 7,
+        "7": 11,
+        "8": 4
+      },
+      "yieldsBelowConfiguredPage8": 322,
+      "categories": {
+        "block": {
+          "attempts": 434,
+          "maxElapsedMs": 9767,
+          "reasons": {
+            "admission-rejected": 2,
+            "None": 366,
+            "delivery-page-yield": 66
+          }
+        },
+        "attestation": {
+          "attempts": 434,
+          "maxElapsedMs": 3610,
+          "reasons": {
+            "None": 240,
+            "delivery-page-yield": 190,
+            "admission-rejected": 4
+          }
+        },
+        "attester_slashing": {
+          "attempts": 434,
+          "maxElapsedMs": 160,
+          "reasons": {
+            "None": 434
+          }
+        },
+        "bls_to_execution_change": {
+          "attempts": 433,
+          "maxElapsedMs": 161,
+          "reasons": {
+            "None": 433
+          }
+        },
+        "sync_committee_message": {
+          "attempts": 433,
+          "maxElapsedMs": 3220,
+          "reasons": {
+            "delivery-unconfirmed": 1,
+            "admission-rejected": 27,
+            "None": 334,
+            "delivery-page-yield": 70,
+            "export-unavailable": 1
+          }
+        },
+        "voluntary_exit": {
+          "attempts": 432,
+          "maxElapsedMs": 372,
+          "reasons": {
+            "None": 432
+          }
+        }
+      }
+    },
+    "vps.log": {
+      "completedCatalogs": 2975,
+      "pageYields": 930,
+      "yieldExportCounts": {
+        "1": 484,
+        "2": 119,
+        "3": 68,
+        "4": 55,
+        "5": 49,
+        "6": 47,
+        "7": 27,
+        "8": 81
+      },
+      "yieldsBelowConfiguredPage8": 849,
+      "categories": {
+        "block": {
+          "attempts": 498,
+          "maxElapsedMs": 5668,
+          "reasons": {
+            "None": 365,
+            "delivery-page-yield": 131,
+            "invalid-response": 2
+          }
+        },
+        "attestation": {
+          "attempts": 497,
+          "maxElapsedMs": 3255,
+          "reasons": {
+            "None": 50,
+            "delivery-page-yield": 435,
+            "admission-rejected": 7,
+            "invalid-response": 1,
+            "export-unavailable": 1,
+            "delivery-unconfirmed": 3
+          }
+        },
+        "attester_slashing": {
+          "attempts": 496,
+          "maxElapsedMs": 1974,
+          "reasons": {
+            "None": 494,
+            "invalid-response": 2
+          }
+        },
+        "bls_to_execution_change": {
+          "attempts": 496,
+          "maxElapsedMs": 946,
+          "reasons": {
+            "None": 495,
+            "invalid-response": 1
+          }
+        },
+        "sync_committee_message": {
+          "attempts": 494,
+          "maxElapsedMs": 2635,
+          "reasons": {
+            "admission-rejected": 90,
+            "delivery-page-yield": 364,
+            "None": 13,
+            "export-unavailable": 23,
+            "invalid-response": 2,
+            "delivery-unconfirmed": 2
+          }
+        },
+        "voluntary_exit": {
+          "attempts": 494,
+          "maxElapsedMs": 1099,
+          "reasons": {
+            "None": 493,
+            "invalid-response": 1
+          }
+        }
+      }
+    }
+  }
+}

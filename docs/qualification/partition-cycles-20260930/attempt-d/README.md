@@ -1,0 +1,5 @@
+# Page yielding WAN attempt D — terminal failed
+
+Runtime d0cc038, harness 26b0cb9, three processes on Mac native, Mac Docker ARM64 and VPS Docker amd64. The two-cut schedule stops after its first failed cycle: only the requested 96-second cut ran. Reconnection-to-common-finality was observed after 189,055 ms, over the unchanged 180-second deadline. Late strict stability 8→11 passed in 139,944 ms. All validator/clock terminal receipts were healthy; Docker exits were 0 without OOM. Clock fault B was not reproduced and remains unexplained.
+
+Network tracing was enabled. Completed catalog traces show frequent yielding after fewer than the configured eight exports, because the policy yielded after any payload-bearing page, including pages mostly already acknowledged. This is a concrete policy inefficiency to correct, not proof it caused the missed deadline. Attempt C and D also differ in fixture timing/identity and tracing; no controlled performance gain/loss is inferred. Full compressed traces and resources are retained; chain volumes are preserved. The second cut and successful overall schedule are unqualified. No production readiness claimed.

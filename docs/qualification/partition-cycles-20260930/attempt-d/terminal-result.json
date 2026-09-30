@@ -1,0 +1,44 @@
+{
+  "exitCode": 1,
+  "runtimeRevision": "d0cc038f7019f4861908c305e9ad361825634769",
+  "harnessRevision": "26b0cb9",
+  "traceEnabled": true,
+  "overallPassed": false,
+  "requestedCutMs": 96000,
+  "actualCutMs": 98025,
+  "recoveryObservedMs": 189055,
+  "deadlineMs": 180000,
+  "cyclesExecuted": 1,
+  "secondCutExecuted": false,
+  "lateStability": {
+    "epochs": 3,
+    "firstEpoch": "8",
+    "lastEpoch": "11",
+    "elapsedMs": 139944,
+    "nodes": [
+      "mac-native",
+      "mac-docker",
+      "vps-docker"
+    ],
+    "revision": "d0cc038f7019f4861908c305e9ad361825634769"
+  },
+  "validatorReceipts": [
+    {
+      "file": "native.log",
+      "healthy": true,
+      "attestationsAdmitted": 270
+    },
+    {
+      "file": "docker-mac.log",
+      "healthy": true,
+      "attestationsAdmitted": 252
+    },
+    {
+      "file": "vps.log",
+      "healthy": true,
+      "attestationsAdmitted": 258
+    }
+  ],
+  "clockFaultReproduced": false,
+  "productionQualified": false
+}
