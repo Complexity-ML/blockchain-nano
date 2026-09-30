@@ -34,6 +34,40 @@ pour contourner un refus. Conserver aussi l'identité P2P. Les clés de validati
 restent propres à chaque opérateur ; les clés publiques des fixtures de test ne
 conviennent pas à un réseau public.
 
+## Engagement externe pour une restauration
+
+Le champ optionnel `capella.recoveryCommitment` permet d'exiger un checkpoint
+exact conservé indépendamment de la sauvegarde :
+
+```json
+{
+  "recoveryCommitment": {
+    "sequence": "<quantité hexadécimale canonique positive>",
+    "digest": "<empreinte 0x de 32 octets>"
+  }
+}
+```
+
+Il nécessite `recoveryWitness` et interdit le bootstrap. Le réacteur compare cet
+engagement au champ `next` de l'intention du témoin avant toute restauration,
+publication manquante, lecture d'horloge ou ouverture des signataires. Une paire
+base/témoin cohérente mais ancienne est refusée si elle diffère de l'engagement.
+L'intention et la relation primaire/témoin restent intégralement vérifiées.
+
+L'engagement est exact, pas un minimum de séquence : un témoin plus récent est
+également refusé. Après progression du nœud, il faut conserver un nouvel
+engagement approuvé pour sa prochaine restauration. Le reçu d'arrêt fournit le
+checkpoint, mais sa copie hors du répertoire restauré et sa protection relèvent
+de l'opérateur. Ne pas reconstruire ce champ depuis la sauvegarde suspecte ni
+l'effacer automatiquement après un refus. En cas de publication interrompue,
+un engagement sur le `next` durable peut autoriser sa complétion ; un ancien
+engagement sur `previous` ne la valide pas.
+
+Ce champ protège le checkpoint de chaîne. Les journaux anti-double-signature
+ont leurs propres engagements (`validator.keys[].restart`) et témoins : leur
+conservation indépendante et leur restauration cohérente restent nécessaires.
+Un engagement absent conserve le modèle de confiance historique par témoin.
+
 ## Après un redémarrage
 
 Vérifier l'identité P2P, le checkpoint finalisé conservé, puis l'avancement d'une

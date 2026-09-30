@@ -1,5 +1,17 @@
 # Objectif : Nano C++ de niveau production
 
+## Engagement externe de reprise implémenté et qualifié en natif — 30 septembre 2026
+
+`capella.recoveryCommitment` vérifie le checkpoint exact attendu dans le témoin
+avant récupération, horloge et signataires. Une paire base/témoin ancienne mais
+cohérente est refusée avec l'engagement récent ; aucun checkpoint primaire n'est
+publié lors du refus. Reprise avec engagement correct et interruptions de
+publication qualifiées en natif (23,82 / 5,21 s), régression runtime 19,37 s.
+[Preuves et limites](qualification/capella-recovery-commitment-20260930/README.md).
+L'engagement doit être conservé indépendamment et actualisé explicitement ;
+les journaux des signataires ont leurs propres engagements. Linux, reprise des
+signataires restaurés, finalité commune et autres critères restent ouverts.
+
 ## Sauvegarde/restauration hors ligne qualifiée — 30 septembre 2026
 
 Sur ARM64 et VPS, le répertoire complet d'un nœud arrêté de C est archivé puis

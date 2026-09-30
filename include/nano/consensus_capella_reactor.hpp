@@ -98,7 +98,7 @@ public:
  CapellaDurableReactor(const CapellaDurableReactor&)=delete;
  CapellaDurableReactor& operator=(const CapellaDurableReactor&)=delete;
  // The separate witness is an explicitly trusted rollback boundary.
- CapellaDurableReactor(Blockchain&,CapellaForkBlockRules,CapellaStoreSnapshotLimits,ChainStore& witness,const std::function<void()>& checkpoint={});
+ CapellaDurableReactor(Blockchain&,CapellaForkBlockRules,CapellaStoreSnapshotLimits,ChainStore& witness,const std::function<void()>& checkpoint={},std::optional<ForkCheckpointToken> recovery_commitment=std::nullopt);
  ~CapellaDurableReactor();
  void invalidate();
  std::optional<Bytes> prepare_local_body_from_pool(uint64_t validator_index,uint64_t slot,

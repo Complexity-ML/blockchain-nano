@@ -1,0 +1,42 @@
+Start testing: Sep 30 18:56 CEST
+----------------------------------------------------------
+367/417 Testing: consensus_capella_execution_owner_witness
+367/417 Test: consensus_capella_execution_owner_witness
+Command: "/Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests" "--owner-witness"
+Directory: /Users/boris/Dev/blockchain-nano/build-release
+"consensus_capella_execution_owner_witness" start time: Sep 30 18:56 CEST
+Output:
+----------------------------------------------------------
+{"blockedOperations":8,"corruptArchiveRejected":true,"emptyWitnessRejected":true,"externalCommitmentVerified":true,"faultWitness":false,"lostSuffix":false,"networkActivated":false,"oldRollbackRejected":true,"physicalPowerLoss":false,"restoredSignedArchive":true,"scenario":"capella-owner-witness"}
+{"blockedOperations":8,"corruptArchiveRejected":true,"emptyWitnessRejected":true,"externalCommitmentVerified":true,"faultWitness":false,"lostSuffix":true,"networkActivated":false,"oldRollbackRejected":true,"physicalPowerLoss":false,"restoredSignedArchive":true,"scenario":"capella-owner-witness"}
+{"blockedOperations":6,"corruptArchiveRejected":true,"emptyWitnessRejected":true,"externalCommitmentVerified":true,"faultWitness":true,"lostSuffix":false,"networkActivated":false,"oldRollbackRejected":true,"physicalPowerLoss":false,"restoredSignedArchive":true,"scenario":"capella-owner-witness"}
+<end of output>
+Test time =   5.21 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_execution_owner_witness" end time: Sep 30 18:56 CEST
+"consensus_capella_execution_owner_witness" time elapsed: 00:00:05
+----------------------------------------------------------
+
+401/417 Testing: consensus_capella_automatic_recovery
+401/417 Test: consensus_capella_automatic_recovery
+Command: "/Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests" "--automatic-recovery"
+Directory: /Users/boris/Dev/blockchain-nano/build-release
+"consensus_capella_automatic_recovery" start time: Sep 30 18:56 CEST
+Output:
+----------------------------------------------------------
+{"admissionReceiptChecks":6,"automaticRecovery":true,"automaticRegistration":false,"blocks":16,"externalRecoveryCommitmentChecks":9,"httpTransport":false,"invalidConfigurationsRejected":6,"keysLoaded":64,"networkTransport":false,"runtimeCatalogChecks":3,"scenario":"capella-configured-runtime","signerWitnessRestart":true,"witnessRestart":true,"workersStopped":true}
+<end of output>
+Test time =  23.82 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_automatic_recovery" end time: Sep 30 18:56 CEST
+"consensus_capella_automatic_recovery" time elapsed: 00:00:23
+----------------------------------------------------------
+
+End testing: Sep 30 18:56 CEST
+
+qualification_consensus_recovery =   5.21 sec*proc
+
+qualification_consensus_runtime =  23.82 sec*proc
+
