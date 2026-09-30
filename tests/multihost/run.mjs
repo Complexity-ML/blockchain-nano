@@ -9,6 +9,7 @@ import {setTimeout as delay} from 'node:timers/promises';
 import {createHash} from 'node:crypto';
 import {validateStoppedValidators} from './validator-gate.mjs';
 import {partitionRemote} from './partition.mjs';
+import {partitionSchedule,runPartitionCycles} from './partition-cycles.mjs';
 import {asymmetricRemote,createRemoteTc} from './asymmetric.mjs';
 import {observeRecovery} from './recovery-observation.mjs';
 import {sampleClock} from './clock-sample.mjs';
@@ -41,8 +42,10 @@ const partition=process.env.NANO_TEST_WAN_PARTITION==='1',asymmetric=process.env
 if(partition&&asymmetric)throw Error('Select only one WAN fault');
 const rotation=process.env.NANO_TEST_WAN_ROTATION==='1';
 const boundedLoad=process.env.NANO_TEST_BOUNDED_LOAD==='1';
+const partitionCuts=partitionSchedule(process.env.NANO_TEST_PARTITION_SCHEDULE_MS);
 const backupRestore=process.env.NANO_TEST_BACKUP_RESTORE==='1';
 const pinnedRestart=process.env.NANO_TEST_PINNED_RESTART==='1';
+if(partitionCuts&&(!candidates||fork!=='capella'||!partition||asymmetric||rotation||boundedLoad||backupRestore||pinnedRestart||monitor))throw Error('Repeated partitions require standalone packaged Capella partition campaign');
 if(pinnedRestart&&(!candidates||fork!=='capella'||monitor||backupRestore||partition||asymmetric||rotation||boundedLoad))throw Error('Pinned container replacement requires standalone packaged Capella images');
 if(backupRestore&&(fork!=='capella'||!buildVolume||partition||asymmetric||rotation||boundedLoad))throw Error('Backup restore requires standalone Capella build-volume campaign');
 if(boundedLoad&&(fork!=='capella'||asymmetric||rotation))throw Error('Bounded load requires Capella; asymmetric/rotation combinations are not qualified yet');
@@ -102,9 +105,9 @@ const rpc=async(kind,method,params=[])=>{
 try{
  const binary=join(repo,'build-release/nano'),p2p=join(repo,'build-network/nano-p2p');
  if(rotation)await log({event:'rotation-audit-binary',sha256:createHash('sha256').update(await readFile(join(repo,'build-release/nano-capella-rotation-audit'))).digest('hex')});
- const harness={};for(const name of ['run.mjs','partition.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','prepare.mjs','rotation.mjs','bounded-load.mjs','load-receipts.mjs','restore-config.mjs','restore-recovery.mjs','backup-restore.sh','monitor.mjs','candidate-images.mjs','restart-pins.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
+ const harness={};for(const name of ['run.mjs','partition.mjs','partition-cycles.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','prepare.mjs','rotation.mjs','bounded-load.mjs','load-receipts.mjs','restore-config.mjs','restore-recovery.mjs','backup-restore.sh','monitor.mjs','candidate-images.mjs','restart-pins.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
  if(monitor&&(fork!=='capella'||!privateTransport||partition||asymmetric||backupRestore||rotation||boundedLoad))throw Error('Monitor qualification requires standalone private Capella campaign');
- await log({event:'harness',monitor,partition,asymmetric,rotation,boundedLoad,backupRestore,pinnedRestart,fork,buildVolume,packagedImages:Boolean(candidates),artifacts,sha256:harness});
+ await log({event:'harness',monitor,partition,asymmetric,rotation,boundedLoad,backupRestore,pinnedRestart,partitionCuts,fork,buildVolume,packagedImages:Boolean(candidates),artifacts,sha256:harness});
  await log({event:'binaries',revision,nanoSha256:createHash('sha256').update(await readFile(binary)).digest('hex'),p2pSha256:createHash('sha256').update(await readFile(p2p)).digest('hex')});
  const assets=join(output,'assets'),prepared=join(output,'prepared');
  await exec(join(repo,`build-release/nano-${fork}-transition-tests`),[fork==='capella'?'--export-network':'--export-kurtosis',assets],{timeout:30000});
@@ -133,7 +136,7 @@ try{
  const fd=openSync(join(output,'native.log'),'a');native=spawn(binary,['run',join(nd,'genesis.json'),join(nd,'data/chain'),join(nd,'node.json')],{env:{...process.env,...environment},stdio:['ignore',fd,fd]});closeSync(fd);
  native.on('error',error=>log({event:'native-spawn-error',message:error.message}));
  await log({event:'started',nativePid:native.pid,localContainer:local,remoteContainer:remote,bootnode:boot,physicalHosts:2,validatorKeys:64});
- if(boundedLoad)resourceTask=(async()=>{
+ if(boundedLoad||partitionCuts)resourceTask=(async()=>{
   while(!resourceStop){
    const timeMs=Date.now();
    const probes=[['mac-native',async()=>(await exec('ps',['-p',String(native.pid),'-o','pid=,rss=,%cpu=,etime=,command='],{timeout:20000})).stdout],
@@ -143,6 +146,7 @@ try{
     try{return {host,exitCode:0,stdout:await probe(),stderr:''};}
     catch(error){return {host,error:error.message};}
    }));
+   if(samples.some(s=>s.error))throw Error('Resource collection incomplete: '+JSON.stringify(samples));
    await appendFile(join(output,'resources.jsonl'),JSON.stringify({timeMs,samples})+'\n');
    while(!resourceStop&&Date.now()-timeMs<20000)await delay(1000);
   }
@@ -292,7 +296,11 @@ try{
    network:testNetwork,revision,record:faultRecord,sample:faultSample,duringCut:submit})}:{})});
  if(monitor)monitorTask=await startFinalityMonitor({repo,output,prepared,local,remote,target,record:log});
  await observeRecovery({record:log,partition:async()=>{
-  if(partition&&!boundedLoad)await partitionRemote({docker:args=>docker(args,true),container:remote,network:testNetwork,revision,record:faultRecord,sample:faultSample});
+  if(partitionCuts){
+   const result=await runPartitionCycles({cuts:partitionCuts,sample:faultSample,record:log,
+    partition:({cutMs,sample,record})=>partitionRemote({docker:args=>docker(args,true),container:remote,network:testNetwork,revision,record,sample,cutMs})});
+   await log({event:'partition-schedule-passed',...result});
+  }else if(partition&&!boundedLoad)await partitionRemote({docker:args=>docker(args,true),container:remote,network:testNetwork,revision,record:faultRecord,sample:faultSample});
   if(asymmetric){
    const tc=await createRemoteTc({docker:args=>docker(args,true),sh,container:remote,network:testNetwork,revision});
    await asymmetricRemote({tc,sample:faultSample,record:log});
@@ -335,7 +343,8 @@ finally{
 if(native&&localStarted&&remoteStarted){
  try{
   const validators=await validateStoppedValidators(output,fork);
-  if(pinnedRestart&&!process.exitCode){
+  if(partitionCuts&&(!candidates||fork!=='capella'||!partition||asymmetric||rotation||boundedLoad||backupRestore||pinnedRestart||monitor))throw Error('Repeated partitions require standalone packaged Capella partition campaign');
+if(pinnedRestart&&!process.exitCode){
    const finalText=await readFile(join(output,'vps.log'),'utf8'),terminal=stoppedReceipt(finalText);
    validateRestoredFinality(restartReceipt,await json(join(output,'observations/result.json')),terminal);
    const advanced=advanceRestartConfiguration(restartOriginal,restartPriorText,finalText);
