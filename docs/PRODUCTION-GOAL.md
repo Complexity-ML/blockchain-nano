@@ -1,5 +1,21 @@
 # Objectif : Nano C++ de niveau production
 
+## Latence WAN asymétrique des images finales qualifiée — 30 septembre 2026
+
+500 ms de retard sortant sont appliquées au seul conteneur VPS. Les trois nœuds
+finalisent ensemble de 2 à 4 sous défaut en 168.754 s ; 2 102 paquets,
+aucun drop dans le relevé NetEm. Le retrait est vérifié. Après deux sauts FFG
+4→6 et 6→8, sans crédit et sans prolonger le délai, la fenêtre consécutive
+8→9→10→11 passe avec rattachement commun à l’exécution en
+250.540 s depuis le début de l’observation stricte. Les signataires finissent
+sains (273/255/256 attestations) ; conteneurs sortis à zéro sans OOM.
+Profil Capella/Shanghai, trois processus sur deux hôtes, 64 clés synthétiques.
+Les anciens échecs de lecture restent archivés. Cette campagne ferme ce défaut
+borné sur les images finales ; cycles prolongés/répétés, perte de paquets,
+charge/ressources, nettoyage avec membre absent lors d’une nouvelle finalité,
+origine WAN A, autres critères et revue indépendante restent ouverts.
+[Preuves](qualification/packaged-asymmetric-20260930/manifest.json).
+
 ## Remplacement avec engagements indépendants qualifié — 30 septembre 2026
 
 Le conteneur VPS est remplacé avec la même image candidate, le même volume et

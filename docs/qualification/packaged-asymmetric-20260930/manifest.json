@@ -1,0 +1,179 @@
+{
+  "harnessSourceRevision": "91f9ed9bb5a8371e1cf26197ae0631e7c92308fc",
+  "compiledSourceRevision": "ca780d5002c72b2486833f8dbe881649787a6c4f",
+  "scope": "Packaged ARM64/x86-64 plus native Mac; 64 synthetic keys, three nodes on two hosts; 500 ms VPS egress delay followed by strict three consecutive common finalized advances bound to execution. No packet loss injected, extended repeated fault cycles, full load/resource qualification, unknown-member cleanup test, WAN A root cause, different-version rollback or global production qualification.",
+  "imageArtifacts": [
+    {
+      "host": "docker-mac",
+      "imageId": "sha256:c61ab5d3ab8783ce5cb709a674b34fb0401f10a17508b84c7a570dccb776a15a",
+      "revision": "ca780d5002c72b2486833f8dbe881649787a6c4f",
+      "executables": {
+        "nano": "36c7107eccd622ac1e90b1ea2b8a53131d7f5fb9551992e4eccdd652dced9539",
+        "nano-p2p": "36d746690eb35e5a92b21d3cd5b04603a09693bae42a9a50cd45921e27cf88d5"
+      },
+      "packaged": true
+    },
+    {
+      "host": "vps",
+      "imageId": "sha256:ee9d7d86a981d26bbe9a827bdbefc71335787d2d94d68dd27388cc1e1b9ad6c7",
+      "revision": "ca780d5002c72b2486833f8dbe881649787a6c4f",
+      "executables": {
+        "nano": "81d3eebec55719229e9b5b2ec4dd5dde8f9c98e5c1aaaed8473780d131d676f6",
+        "nano-p2p": "094b0c32e82cad52c8964534341bd792fba56824a105ec71cccad88f304a15a5"
+      },
+      "packaged": true
+    }
+  ],
+  "fault": {
+    "start": {
+      "time": 1790796775824,
+      "event": "asymmetric-delay-start",
+      "egressMilliseconds": 500,
+      "holdMs": 96000,
+      "progressMs": 144000
+    },
+    "underDelay": {
+      "time": 1790796944578,
+      "event": "asymmetric-delay-finality",
+      "rows": [
+        {
+          "name": "mac-native",
+          "peers": "0x1",
+          "checkpoint": {
+            "epoch": "4",
+            "root": "0xcb40330ad2b438fe6e8064e740cd6f882e949835cd67a7fad092275c3062b805"
+          }
+        },
+        {
+          "name": "mac-docker",
+          "peers": "0x1",
+          "checkpoint": {
+            "epoch": "4",
+            "root": "0xcb40330ad2b438fe6e8064e740cd6f882e949835cd67a7fad092275c3062b805"
+          }
+        },
+        {
+          "name": "vps-docker",
+          "peers": "0x2",
+          "checkpoint": {
+            "epoch": "4",
+            "root": "0xcb40330ad2b438fe6e8064e740cd6f882e949835cd67a7fad092275c3062b805"
+          }
+        }
+      ],
+      "qdiscs": [
+        {
+          "kind": "netem",
+          "handle": "7a00:",
+          "root": true,
+          "refcnt": 5,
+          "options": {
+            "limit": 1000,
+            "delay": {
+              "delay": 0.5,
+              "jitter": 0,
+              "correlation": 0
+            },
+            "ecn": false,
+            "gap": 0
+          },
+          "bytes": 1108358,
+          "packets": 2102,
+          "drops": 0,
+          "overlimits": 0,
+          "requeues": 0,
+          "backlog": 2400,
+          "qlen": 4
+        }
+      ]
+    },
+    "restored": {
+      "time": 1790796949822,
+      "event": "asymmetric-delay-restored"
+    },
+    "commonAdvanceUnderDelayMs": 168754
+  },
+  "strictFinality": {
+    "epochs": 3,
+    "firstEpoch": "8",
+    "lastEpoch": "11",
+    "elapsedMs": 250540,
+    "nodes": [
+      "mac-native",
+      "mac-docker",
+      "vps-docker"
+    ],
+    "revision": "ca780d5002c72b2486833f8dbe881649787a6c4f"
+  },
+  "gapResets": [
+    {
+      "event": "recovery-gap-window-reset",
+      "time": 1790797009906,
+      "fromEpoch": "4",
+      "toEpoch": "6",
+      "discardedAdvances": 0,
+      "executionHash": "0x71d3793e1bac86e07276d3537fb4e41ba0d28a78e91795687d64709099d00b45"
+    },
+    {
+      "event": "recovery-gap-window-reset",
+      "time": 1790797060934,
+      "fromEpoch": "6",
+      "toEpoch": "8",
+      "discardedAdvances": 0,
+      "executionHash": "0x7e24c99986876155d4536a216d88d1e9bbd571e6d6cbd7d54340fb5721dd1c2b"
+    }
+  ],
+  "lastConsecutiveAdvances": [
+    {
+      "time": 1790797106815,
+      "commonEpoch": "9",
+      "executionHash": "0x99fd4857b1a45d99507d929c1bf4795d441d01e12b9b83a8ae385849241b881f",
+      "advances": 1
+    },
+    {
+      "time": 1790797151255,
+      "commonEpoch": "10",
+      "executionHash": "0xad75f3dd7bddc2868be24ee9c6356000bd06a6a22d2a0f01f3b73f0735d4a49f",
+      "advances": 2
+    },
+    {
+      "time": 1790797203180,
+      "commonEpoch": "11",
+      "executionHash": "0xe71dc3385189f63ca0e85d58ce0539b180b1db6987d55bd1816b499eedc39481",
+      "advances": 3
+    }
+  ],
+  "validators": [
+    {
+      "file": "native.log",
+      "healthy": true,
+      "attestationsAdmitted": 273
+    },
+    {
+      "file": "docker-mac.log",
+      "healthy": true,
+      "attestationsAdmitted": 255
+    },
+    {
+      "file": "vps.log",
+      "healthy": true,
+      "attestationsAdmitted": 256
+    }
+  ],
+  "productionQualified": false,
+  "filesSha256": {
+    "vps-state.json": "df6724f1745f395d3f4d42fde833a3f881da9c56c87d1003fe4209753f66dcf9",
+    "prepared-genesis.json": "5ed1a930f9157550ce7a28815c04e7ffaff8396779e98132a28aff0a193ae09b",
+    "run.jsonl.gz": "100a202c38408e8c2448c4fb89311408383b63b1acd09513798b964c5e2528da",
+    "observations-samples.jsonl.gz": "e93a837ae58fdedd5de629916a5fae86a83789350da360e338b9ab7a18f8624d",
+    "vps.log.gz": "72e3990856b01ddd55876fbfe409bcd02a201fe4343265e1ea7cccdee498aa90",
+    "prepared-profile.json": "c9d115373e63eea3332aadd86611d1fe6f9d129d61b80d6af883cf16ad176467",
+    "native.log.gz": "6c9958b1c9d00cd4873236c2a9bacd609f4d8ed6ee677e750ce7b9f497578a66",
+    "prepared-initial.json.gz": "b701a4185a600241af39fc63e271394617d3ef7832a1a0935e6641d98ba322fb",
+    "observations-result.json": "d7d781beca1b84a5db4e95e2690f1802c59125fe2e1a4cd617a247099204cf29",
+    "topology.json": "c5cfa177dadef90f8f8d62321b74343e534058340876768bd5f0d1e1ce177a39",
+    "docker-mac.log.gz": "cb724713f357d763809e3acb2b5fffcc16de66e2edcc356be01e1eb23a8d6588",
+    "mac-state.json": "9bfd82f3644279fd951789c9e423136a87c47f99919480d502104efe17b112cc",
+    "README.md": "83f3e0bcdeaeaf5b959c5a94966b37c7405a93d8062beea8610ff90cb36d8ff3"
+  }
+}
