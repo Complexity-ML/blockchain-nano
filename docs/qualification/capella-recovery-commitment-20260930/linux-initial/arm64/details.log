@@ -1,0 +1,38 @@
+Start testing: Sep 30 17:00 UTC
+----------------------------------------------------------
+348/394 Testing: consensus_capella_configured_runtime
+348/394 Test: consensus_capella_configured_runtime
+Command: "/build/nano-capella-transition-tests" "--configured-runtime"
+Directory: /build
+"consensus_capella_configured_runtime" start time: Sep 30 17:00 UTC
+Output:
+----------------------------------------------------------
+{"admissionReceiptChecks":6,"automaticRecovery":false,"automaticRegistration":false,"blocks":16,"externalRecoveryCommitmentChecks":0,"httpTransport":false,"invalidConfigurationsRejected":6,"keysLoaded":64,"networkTransport":false,"runtimeCatalogChecks":3,"scenario":"capella-configured-runtime","signerWitnessRestart":true,"witnessRestart":true,"workersStopped":true}
+<end of output>
+Test time =   9.09 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_configured_runtime" end time: Sep 30 17:00 UTC
+"consensus_capella_configured_runtime" time elapsed: 00:00:09
+----------------------------------------------------------
+
+378/394 Testing: consensus_capella_automatic_recovery
+378/394 Test: consensus_capella_automatic_recovery
+Command: "/build/nano-capella-transition-tests" "--automatic-recovery"
+Directory: /build
+"consensus_capella_automatic_recovery" start time: Sep 30 17:00 UTC
+Output:
+----------------------------------------------------------
+{"admissionReceiptChecks":6,"automaticRecovery":true,"automaticRegistration":false,"blocks":16,"externalRecoveryCommitmentChecks":9,"httpTransport":false,"invalidConfigurationsRejected":6,"keysLoaded":64,"networkTransport":false,"runtimeCatalogChecks":3,"scenario":"capella-configured-runtime","signerWitnessRestart":true,"witnessRestart":true,"workersStopped":true}
+<end of output>
+Test time =  10.15 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_automatic_recovery" end time: Sep 30 17:01 UTC
+"consensus_capella_automatic_recovery" time elapsed: 00:00:10
+----------------------------------------------------------
+
+End testing: Sep 30 17:01 UTC
+
+qualification_consensus_runtime =  19.23 sec*proc
+

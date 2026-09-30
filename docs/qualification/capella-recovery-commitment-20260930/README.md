@@ -27,3 +27,18 @@ fault coverage is controlled WAL interruption, not physical power-loss proof.
 Open: Linux ARM64/x86-64 qualification, restored signer/journal protection,
 common finality after whole-node restore, externally protected commitment
 storage, offsite backups, unexplained WAN attempt A and global production gates.
+
+## Initial Linux attempt and fixture correction
+
+Core commit `172b245` passed the two runtime gates on ARM64 (9.09 / 10.15 s).
+VPS configured runtime passed (33.90 s), automatic recovery failed (35.37 s):
+`RocksDB: IO error: While opendir: .../key-62: Too many open files`.
+Container exit 8, no OOM; logs/state are preserved under `linux-initial`.
+The VPS image's unchanged default soft/hard nofile limits are 1024 / 524288.
+
+The stale restore fixture kept its runtime and Blockchain alive while opening
+current signers. The test now ends that fixture's scope first. Production code
+and descriptor limits are unchanged. Corrected native automatic gate passes;
+Linux validation of the corrected fixture remains pending. The configured
+native gate was also bound to the final initial harness (19.04 s); its earlier
+19.37 s output is retained rather than treated as the final test binary.
