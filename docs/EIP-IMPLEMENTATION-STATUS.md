@@ -1,5 +1,16 @@
 # Feuille de route EIP — état réel de Nano
 
+## Intégrité des archives contrôlée — 30 septembre 2026
+
+Un contrôle indépendant compare cinq manifestes ancrés dans les objets Git
+aux 78 fichiers qu’ils référencent : toutes les empreintes correspondent.
+Huit tests ciblés passent, notamment altérations, liens symboliques et budgets
+de lecture. Cela ferme ce contrôle d’intégrité des archives sélectionnées ;
+aucune sémantique de test, provenance binaire, EIP ou production globale n’est
+qualifiée par ce seul contrôle. La campagne de partitions continue sans
+modification de ses dépendances.
+[Preuves](qualification/evidence-integrity-20260930/manifest.json).
+
 ## Partitions répétées et prolongées : campagne en cours — 30 septembre 2026
 
 Un programme fini de deux coupures (96 puis 192 s) est ajouté au lanceur des
