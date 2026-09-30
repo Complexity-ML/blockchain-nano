@@ -24,6 +24,17 @@ std::unique_ptr<Database> open_database(const rocksdb::Options& options,const st
  }
  return opened;
 }
+template<class Database=rocksdb::DB>
+std::unique_ptr<Database> open_read_only_database(const rocksdb::Options& options,const std::string& path){
+ std::unique_ptr<Database> opened;
+ if constexpr(requires { Database::OpenForReadOnly(options,path,&opened); }){
+  require_ok(Database::OpenForReadOnly(options,path,&opened));
+ }else{
+  Database* raw=nullptr;auto status=Database::OpenForReadOnly(options,path,&raw);
+  opened.reset(raw);require_ok(status);
+ }
+ return opened;
+}
 std::string vote_slot(const FinalityVote& vote){return height_key(Int(std::to_string(vote.height)))+"/"+height_key(Int(std::to_string(vote.round)))+"/"+hex(bytes(Int(static_cast<unsigned>(vote.step)),1));}
 Json vote_fields(const FinalityVote& vote){return {{"height",quantity(Int(std::to_string(vote.height)))},{"round",quantity(Int(std::to_string(vote.round)))},
  {"step",static_cast<unsigned>(vote.step)},{"validatorSetHash",hex(vote.validator_set_hash)},
@@ -75,18 +86,20 @@ std::optional<std::string> ChainStore::proposal_data_impl(const std::string& key
  for(uint64_t i=0;i<count;++i){auto chunk=get(proposal_chunk_key(key,static_cast<size_t>(i)));const auto expected=std::min<uint64_t>(proposal_chunk_size,total-i*proposal_chunk_size);if(!chunk||chunk->size()!=expected)throw std::runtime_error("missing or truncated voting proposal chunk");result.append(*chunk);}
  if(result.size()!=total||proposal_digest(result)!=digest)throw std::runtime_error("voting proposal chunk digest mismatch");return result;
 }
-ChainStore::ChainStore(const std::filesystem::path& path){
- if(path.has_parent_path())std::filesystem::create_directories(path.parent_path());
- rocksdb::Options options;options.create_if_missing=true;options.paranoid_checks=true;
+ChainStore::ChainStore(const std::filesystem::path& path,OpenMode mode){
+ const bool read_only=mode==OpenMode::ReadOnly;
+ if(!read_only&&path.has_parent_path())std::filesystem::create_directories(path.parent_path());
+ rocksdb::Options options;options.create_if_missing=!read_only;options.paranoid_checks=true;
  // A validator opens separate signing journals and recovery witnesses. RocksDB's
  // default file preallocation multiplies reserved disk space across these tiny
  // databases. Allocate on demand; keep WAL and synchronous durability unchanged.
  options.allow_fallocate=false;
- db_=open_database(options,path.string()).release();
+ db_=(read_only?open_read_only_database(options,path.string()):open_database(options,path.string())).release();
  try{
   auto schema=get("meta/schema");
   if(schema&&*schema!="nano/1")throw std::runtime_error("unsupported Nano database schema");
   if(!schema){
+   if(read_only)throw std::runtime_error("read-only database has no Nano schema");
    std::unique_ptr<rocksdb::Iterator> iterator(db_->NewIterator(rocksdb::ReadOptions()));iterator->SeekToFirst();require_ok(iterator->status());
    if(iterator->Valid())throw std::runtime_error("database has no Nano schema");
    require_ok(db_->Put(durable_write(),"meta/schema","nano/1"));

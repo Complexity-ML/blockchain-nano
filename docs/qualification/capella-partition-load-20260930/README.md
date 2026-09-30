@@ -145,4 +145,3 @@ cas négatifs de corruption et preuve de non-mutation de la source. Ne pas assim
 une réouverture de checkpoint à un audit complet depuis le genesis.
 Preuves : [forensique A](attempt-a-forensics/manifest.json).
 L'arrêt A reste non expliqué ; aucun résultat de production n'est déduit de cette recherche.
-

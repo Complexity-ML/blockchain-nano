@@ -1765,3 +1765,8 @@ if(TARGET nano-test-sync-fault)
 add_test(NAME consensus_capella_exit_lifecycle_sync COMMAND nano-capella-transition-tests --exit-lifecycle-sync)
 set_tests_properties(consensus_capella_exit_lifecycle_sync PROPERTIES TIMEOUT 600 LABELS "qualification_consensus_recovery")
 endif()
+
+add_executable(nano-storage-read-only-tests tests/test_storage_read_only.cpp)
+target_link_libraries(nano-storage-read-only-tests PRIVATE nano_core)
+add_test(NAME storage_read_only COMMAND nano-storage-read-only-tests)
+set_tests_properties(storage_read_only PROPERTIES TIMEOUT 60 LABELS "qualification_storage_local")

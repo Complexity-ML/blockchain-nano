@@ -34,7 +34,9 @@ class ChainStore {
  void commit_impl(const Block& block,const State& state,const std::vector<Receipt>& receipts,const std::optional<Json>& consensus,const BlockCertificate* certificate);
  void reserve_vote_impl(const FinalityVote& vote,const Int& chain_id,const Bytes& genesis_hash,const VotingSet* validators,const std::vector<FinalityVote>& justification,const Block* proposal=nullptr);
 public:
- explicit ChainStore(const std::filesystem::path& path);
+ enum class OpenMode { ReadWrite, ReadOnly };
+ // Offline inspection only: no creation, migration, WAL flush or writes.
+ explicit ChainStore(const std::filesystem::path& path,OpenMode mode=OpenMode::ReadWrite);
  ~ChainStore();
  ChainStore(const ChainStore&)=delete;
  ChainStore& operator=(const ChainStore&)=delete;

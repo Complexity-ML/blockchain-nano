@@ -1,5 +1,14 @@
 # EIP et consensus : périmètre demandé pour Nano
 
+## Préalable à l'audit Beacon : stockage en lecture seule — 30 septembre 2026
+
+Le mode `ChainStore::OpenMode::ReadOnly` est implémenté. Son nouveau test natif
+passe (0,47 s) : récupération WAL après `_exit`, checkpoint lu, écritures refusées,
+identité vérifiée, empreintes de tous les fichiers inchangées ; mode écriture
+réouvert avec succès. [Preuves](qualification/storage-read-only-20260930/README.md).
+Qualification Linux et raccordement du rejeu complet Beacon/Capella encore requis.
+L'API de lecture seule ne constitue pas à elle seule l'audit ni une qualification de production.
+
 ## Audit hors ligne du profil Beacon : écart confirmé — 30 septembre 2026
 
 L'examen en lecture seule des 44 journaux RocksDB de la tentative A ne trouve
