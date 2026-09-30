@@ -53,6 +53,7 @@ Json audit_capella_canonical_history(ChainStore& disk,const Int& chain,const Byt
   replay=prepare_capella_store_tick(replay,replay.timed.clock.genesis_time_ms+entry->slot*rules.slot_duration_ms,rules,limits.replay_slots,limits.sync_trials,check);
   auto next=prepare_capella_fork_block(replay,entry->payload,rules,limits.replay_slots,limits.sync_trials,check);
   require(next&&next->blocks.contains(id)&&next->blocks.size()==replay.blocks.size()+1,"signed transition rejected");
+  require(next->blocks.at(id).header.slot==entry->slot,"archive slot differs from signed header");
   replay=std::move(*next);verify_disk(replay.blocks.at(id));
  }
  require(replay.blocks.contains(head)&&replay.blocks.contains(saved.state->timed.view.finalized.root),"head/finalized checkpoint outside replayed chain");

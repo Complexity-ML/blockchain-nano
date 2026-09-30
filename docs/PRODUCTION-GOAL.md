@@ -1,5 +1,15 @@
 # Objectif : Nano C++ de niveau production
 
+## Audit de sauvegarde : slot d’archive signé vérifié — 30 septembre 2026
+
+Un nouveau cas de corruption sur copie arrêtée montre que l’audit acceptait un
+slot d’archive RocksDB augmenté de un, sans modification du bloc signé. Le
+correctif impose l’égalité avec le slot de l’en-tête vérifié. En natif, les cinq
+cas sont refusés ; la base source et chaque copie restent inchangées. Docker
+ARM64 et VPS restent à qualifier pour ce changement. Cela ne prouve ni une
+faille du consensus actif ni la correction des anomalies réseau historiques.
+[Preuves](qualification/capella-audit-slot-20260930/native-fixed-result.json).
+
 ## Restauration complète avec finalité commune qualifiée — 30 septembre 2026
 
 La tentative B passe : restauration du VPS, engagements de chaîne et de journaux

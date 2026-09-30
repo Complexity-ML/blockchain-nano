@@ -22,7 +22,7 @@ int main(int argc,char** argv){try{
  check(!historical_tx.empty(),"fixture needs non-anchor non-tip transaction");
  char pattern[]="/tmp/nano-audit-corruption-XXXXXX";auto root=mkdtemp(pattern);check(root,"temporary directory");struct Cleanup{std::filesystem::path p;~Cleanup(){std::error_code e;std::filesystem::remove_all(p,e);}}cleanup{root};
  Json results=Json::array();
- for(const std::string mode:{"missing-archive","invalid-signature","receipt","transaction-index"}){
+ for(const std::string mode:{"missing-archive","invalid-signature","receipt","transaction-index","archive-slot"}){
   const auto copy=cleanup.p/mode;std::filesystem::copy(source,copy,std::filesystem::copy_options::recursive);
   {
    auto db=open(copy);rocksdb::WriteOptions options;options.sync=true;
@@ -34,7 +34,8 @@ int main(int argc,char** argv){try{
     if(mode=="invalid-signature"){
      auto bytes=unhex(changed.at("payload").get<std::string>());check(bytes.size()>100,"archive too short");bytes[4]^=1;
      changed["payload"]=hex(bytes);changed["digest"]=hex(sha256(bytes));
-    }else if(mode=="receipt")changed["gasUsed"]="0x0";
+    }else if(mode=="archive-slot")changed["slot"]=quantity(quantity(changed.at("slot"))+1);
+    else if(mode=="receipt")changed["gasUsed"]="0x0";
     else changed["blockNumber"]="0x0";
     check(db->Put(options,key,changed.dump()).ok(),"write mutation");
    }
