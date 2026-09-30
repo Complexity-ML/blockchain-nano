@@ -58,3 +58,13 @@ reprise avec configuration conservée et refus d'un témoin manquant qualifiés.
 SIGKILL, 96 secondes hors ligne, reprise sans changer la configuration et
 finalité commune d’époque 7 qualifiés sur deux nœuds locaux.
 Aucune qualification générale de production ni modification du VPS n'est impliquée.
+
+## Sauvegarde/restauration hors ligne qualifiée — 30 septembre 2026
+
+Sur ARM64 et VPS, le répertoire complet d'un nœud arrêté de C est archivé puis
+restauré : tous les fichiers et SHA-256 concordent (chaîne, témoins, journaux,
+identité P2P). Audit canonique restauré réussi, source et copie inchangées.
+[Preuves et procédure](qualification/capella-backup-restore-20260930/README.md).
+Cette preuve reste hors ligne et locale : reprise effective des signataires,
+refus de sauvegardes anciennes/incomplètes, finalité commune après restauration,
+stockage hors site et résistance de l'archive à une coupure restent ouverts.
