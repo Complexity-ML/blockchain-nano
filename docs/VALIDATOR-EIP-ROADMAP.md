@@ -1,5 +1,19 @@
 # EIP et consensus : périmètre demandé pour Nano
 
+## Reprise avec engagement externe et budget Docker qualifiés — 30 septembre 2026
+
+Le cœur `172b245`, fixture `cfbf057` et configuration `e7a4c1f` passent les deux
+gates runtime Docker : ARM64 8,88 / 10,33 s, VPS 32,88 / 35,54 s. Neuf contrôles
+d'engagement externe, dont refus d'une paire base/témoin ancienne, passent sur
+les deux architectures. Même binaire VPS : deux échecs à 1024 descripteurs,
+puis succès à `nofile=65536`; les échecs et empreintes sont conservés.
+Le budget est explicite et configurable dans Compose, smoke et multi-hôte ;
+il ne plafonne pas le registre de validateurs. Conteneurs sortis à zéro sans OOM.
+[Preuves et limites](qualification/capella-recovery-commitment-20260930/README.md).
+La complétion d'une publication interrompue avec engagement est qualifiée en
+natif seulement. Conservation indépendante des engagements, restauration des
+signataires avec finalité commune, anomalie A et critères globaux restent ouverts.
+
 ## Engagement externe de reprise implémenté et qualifié en natif — 30 septembre 2026
 
 `capella.recoveryCommitment` vérifie le checkpoint exact attendu dans le témoin

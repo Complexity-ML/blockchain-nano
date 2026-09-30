@@ -1,0 +1,109 @@
+{
+  "name": "blockchain-nano",
+  "networks": {
+    "default": {
+      "name": "blockchain-nano_default",
+      "ipam": {}
+    }
+  },
+  "services": {
+    "nano": {
+      "build": {
+        "context": "/Users/boris/Dev/blockchain-nano",
+        "dockerfile": "Dockerfile",
+        "args": {
+          "JOBS": "2"
+        }
+      },
+      "cap_drop": [
+        "ALL"
+      ],
+      "command": [
+        "run",
+        "/etc/nano/genesis.json",
+        "/var/lib/nano/chain",
+        "/etc/nano/node.json"
+      ],
+      "entrypoint": null,
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "curl --fail --silent --max-time 5 -H 'Content-Type: application/json' --data '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_chainId\",\"params\":[]}' http://127.0.0.1:8545 | grep -q '\"result\"'"
+        ],
+        "timeout": "10s",
+        "interval": "30s",
+        "retries": 3,
+        "start_period": "30s"
+      },
+      "image": "blockchain-nano:local",
+      "init": true,
+      "logging": {
+        "driver": "json-file",
+        "options": {
+          "max-file": "3",
+          "max-size": "10m"
+        }
+      },
+      "networks": {
+        "default": null
+      },
+      "ports": [
+        {
+          "mode": "ingress",
+          "host_ip": "127.0.0.1",
+          "target": 8545,
+          "published": "8545",
+          "protocol": "tcp"
+        },
+        {
+          "mode": "ingress",
+          "target": 30303,
+          "published": "30303",
+          "protocol": "tcp"
+        }
+      ],
+      "read_only": true,
+      "restart": "unless-stopped",
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "stop_grace_period": "1m0s",
+      "tmpfs": [
+        "/tmp:size=64m,mode=1777"
+      ],
+      "ulimits": {
+        "nofile": {
+          "soft": 65536,
+          "hard": 65536
+        }
+      },
+      "volumes": [
+        {
+          "type": "volume",
+          "source": "nano-data",
+          "target": "/var/lib/nano",
+          "volume": {}
+        },
+        {
+          "type": "bind",
+          "source": "/Users/boris/Dev/blockchain-nano/deploy/docker/node.json",
+          "target": "/etc/nano/node.json",
+          "read_only": true,
+          "bind": {}
+        },
+        {
+          "type": "bind",
+          "source": "/Users/boris/Dev/blockchain-nano/genesis/testnet.json",
+          "target": "/etc/nano/genesis.json",
+          "read_only": true,
+          "bind": {}
+        }
+      ]
+    }
+  },
+  "volumes": {
+    "nano-data": {
+      "name": "blockchain-nano_nano-data"
+    }
+  }
+}

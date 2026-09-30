@@ -1,0 +1,57 @@
+{
+  "deploymentRevision": "e7a4c1f3fe14372ddf589d08a9f83f34ffefa7cb",
+  "buildRevision": "cfbf0572f494956608d0be17845ce11d44bfc9e1",
+  "coreRevision": "172b24563f0f9af3186e6c2c0c0b1ea442c5508d",
+  "sourceSha256": {
+    "include/nano/consensus_capella_reactor.hpp": "27d307bde49f2faf730a088dfa4474ee4e0e0e87f1f679bfde8c39bf80ebbc48",
+    "src/consensus_capella_reactor.cpp": "515265159331fc24fe67a88c2dfd3f4c70b679480ce1615d848feab9d5897e58",
+    "src/consensus_capella_runtime.cpp": "935f1f327f2a31bf45b9aba2bfe3ad7bad17fb7168e237e4ff291fb7cf2b336c",
+    "tests/test_capella_transition.cpp": "97dc7451e22d4f03f443c46def202f33a023c48838d8a32b45e60d731d213ece",
+    "compose.yaml": "dcb4ca78c0d3f7be5bf54332bf6bdf6569e44a68d2a1a2eb3fe23faaf427a92e",
+    "tests/multihost/run.mjs": "223bd4f262523d210dbd12ab0413a5fc3e55fc774f9b8bd6e14189b9e213dc44",
+    "scripts/test-docker.sh": "ddf196eb4614d10350c13360e95b0808b219b50188c3d72521b6a5e59374b84d"
+  },
+  "qualification": {
+    "arm64": {
+      "timingsSeconds": {
+        "consensus_capella_configured_runtime": 8.88,
+        "consensus_capella_automatic_recovery": 10.33
+      },
+      "binariesSha256": {
+        "/build/nano": "aa9747aeafc6d43a97b330414d32bb7f65e7a9ca4541e3685c0c988ca82a6fa7",
+        "/build/nano-capella-transition-tests": "e41e044aebc84903c33128a45782d55174ede25122a0e4af52a3460ea749248e"
+      },
+      "nofile": 65536,
+      "exitCode": 0,
+      "oomKilled": false
+    },
+    "vps": {
+      "timingsSeconds": {
+        "consensus_capella_configured_runtime": 32.88,
+        "consensus_capella_automatic_recovery": 35.54
+      },
+      "binariesSha256": {
+        "/build/nano": "c009c07979c78b1985eccc9ff431c0624c30de70a6555c4fd6a62d1eaec7c81c",
+        "/build/nano-capella-transition-tests": "b9a53b27d74b52cdf3bec2684319cba7f0fd50bdee90b931c137b315fff56945"
+      },
+      "nofile": 65536,
+      "exitCode": 0,
+      "oomKilled": false
+    }
+  },
+  "artifactsSha256": {
+    "qualified-linux/compose-config.json": "de35234809025258016a817769df5121cab9f51d8881b6f3447f7bb7dad8f866",
+    "qualified-linux/vps/state.json": "753023bb7b3acaa7c4c613c62a76aaf43ba9e92f800e9f4c631254300554021e",
+    "qualified-linux/vps/ulimits.json": "61d2c2008db21a7b2f4258a81e71bf03b732936b2bac60c2baf88415e9801fca",
+    "qualified-linux/vps/console.log": "936cd2ea7624c4059370db8929ee7b5d1dd2dca1f1a943a1963a7514eceff15d",
+    "qualified-linux/vps/tests.log": "936cd2ea7624c4059370db8929ee7b5d1dd2dca1f1a943a1963a7514eceff15d",
+    "qualified-linux/vps/details.log": "6206897c6e1c17a166b322ba58b6a6f0d9e12283277204491b2b892bece0445e",
+    "qualified-linux/arm64/state.json": "e95f7469d06890b584a570e874f158ed3063b1e43acfcf6fbd09f76386c5407c",
+    "qualified-linux/arm64/ulimits.json": "61d2c2008db21a7b2f4258a81e71bf03b732936b2bac60c2baf88415e9801fca",
+    "qualified-linux/arm64/tests.log": "1a20ffdb848215e31985f67fe23c793d172470cb30ecbac0700fe1153efb8f25",
+    "qualified-linux/arm64/details.log": "5b43892064e9d3a55873f8a6dd6085a1b616169129d58927c35c0da2de153f07"
+  },
+  "interruptedPublicationWithCommitment": "native only",
+  "wholeRestoredNodeCommonFinality": false,
+  "productionReady": false
+}

@@ -54,3 +54,20 @@ Deployment Compose, smoke and multi-host launchers now explicitly set a
 configurable nofile budget (65536 by default). This is an OS resource policy,
 not a validator cap or consensus change. Qualification with that budget is
 pending; runtime code and corrected fixture remain unchanged.
+
+## Qualified deployment descriptor budget
+
+On deployment commit `e7a4c1f`, C++ sources/test are unchanged from fixture
+commit `cfbf057`; core remains `172b245`. The existing binaries are reused,
+with hashes and build revision printed before testing. Under explicit
+nofile=65536:65536, configured/automatic runtime gates pass ARM64 (8.88 / 10.33 s)
+and VPS (32.88 / 35.54 s). Containers exit 0 without OOM. Nine external
+commitment checks pass on both architectures. Corrected native automatic
+recovery passes in 23.91 s. The same VPS binaries failed under soft 1024 and
+passed under 65536; no further source change or recompilation occurred.
+
+Compose JSON resolves the same descriptor budget; shell and Node launchers
+pass syntax checks. Full multi-host/flood/network tests were not rerun for
+this operational policy change. Interrupted WAL publication with commitment
+remains native-only; signing from a whole restored backup with common finality,
+independent commitment retention and full production closure remain open.
