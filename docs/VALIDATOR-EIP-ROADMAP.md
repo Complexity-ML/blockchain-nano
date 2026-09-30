@@ -1,5 +1,16 @@
 # EIP et consensus : périmètre demandé pour Nano
 
+## Objectif persistant relancé : restauration des signataires — 30 septembre 2026
+
+Le lancement réel en production reste la cible, avec tous les critères et
+échecs historiques conservés. Le banc multi-hôte ajoute une restauration complète
+du VPS arrêté : données et identité P2P, audit canonique, engagements de chaîne
+et de chaque journal conservés séparément, reprise de duties et trois avancées
+de finalité commune exigées. Neuf contrôles de configuration passent ; aucune
+réussite réseau n'est encore revendiquée pour ce nouveau scénario.
+Les binaires qualifiés sont réutilisés, sans reconstruction d'image Docker.
+Production globale, anomalie A et revue indépendante restent ouvertes.
+
 ## Reprise avec engagement externe et budget Docker qualifiés — 30 septembre 2026
 
 Le cœur `172b245`, fixture `cfbf057` et configuration `e7a4c1f` passent les deux

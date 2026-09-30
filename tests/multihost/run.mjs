@@ -14,6 +14,7 @@ import {observeRecovery} from './recovery-observation.mjs';
 import {sampleClock} from './clock-sample.mjs';
 import {createRotationCapture,ownership,rotationNodes,waitRotationWindow} from './rotation.mjs';
 import {runBoundedLoad} from './bounded-load.mjs';
+import {stoppedReceipt,pinnedRestoreConfiguration,restoreAuditRequest,validateRestoredFinality} from './restore-config.mjs';
 const exec=promisify(execFile),[target,revision,outputArg]=process.argv.slice(2);
 const fork=process.env.NANO_TEST_CONSENSUS_PROFILE??'bellatrix';
 if(!['bellatrix','capella'].includes(fork))throw Error('Unsupported consensus profile');
@@ -31,6 +32,8 @@ const partition=process.env.NANO_TEST_WAN_PARTITION==='1',asymmetric=process.env
 if(partition&&asymmetric)throw Error('Select only one WAN fault');
 const rotation=process.env.NANO_TEST_WAN_ROTATION==='1';
 const boundedLoad=process.env.NANO_TEST_BOUNDED_LOAD==='1';
+const backupRestore=process.env.NANO_TEST_BACKUP_RESTORE==='1';
+if(backupRestore&&(fork!=='capella'||!buildVolume||partition||asymmetric||rotation||boundedLoad))throw Error('Backup restore requires standalone Capella build-volume campaign');
 if(boundedLoad&&(fork!=='capella'||asymmetric||rotation))throw Error('Bounded load requires Capella; asymmetric/rotation combinations are not qualified yet');
 if(rotation&&(fork!=='capella'||!partition||!buildVolume))throw Error('Rotation requires Capella, the isolated partition and build volumes');
 const remoteRoot=`/home/${target.split('@')[0]}/nano-qualification-${id}`,ip=target.split('@')[1];
@@ -59,7 +62,7 @@ for(const onRemote of [false,true]){
 }
 await mkdir(output);
 const log=async event=>appendFile(join(output,'run.jsonl'),JSON.stringify({time:Date.now(),...event})+'\n');
-let native,tunnel,localStarted=false,remoteStarted=false;
+let native,tunnel,localStarted=false,remoteStarted=false,restoreReceipt,restoreStartedMs,restoreProof;
 let resourceTask,resourceStop=false,resourceFailure;
 let rotationTask,rotationStop=false,rotationFailure,rotationProof,rotationCutoff;
 const rotationCapture=rotation?createRotationCapture():null;
@@ -82,8 +85,8 @@ const rpc=async(kind,method,params=[])=>{
 try{
  const binary=join(repo,'build-release/nano'),p2p=join(repo,'build-network/nano-p2p');
  if(rotation)await log({event:'rotation-audit-binary',sha256:createHash('sha256').update(await readFile(join(repo,'build-release/nano-capella-rotation-audit'))).digest('hex')});
- const harness={};for(const name of ['run.mjs','partition.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','prepare.mjs','rotation.mjs','bounded-load.mjs','load-receipts.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
- await log({event:'harness',partition,asymmetric,rotation,boundedLoad,fork,buildVolume,artifacts,sha256:harness});
+ const harness={};for(const name of ['run.mjs','partition.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','prepare.mjs','rotation.mjs','bounded-load.mjs','load-receipts.mjs','restore-config.mjs','backup-restore.sh'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
+ await log({event:'harness',partition,asymmetric,rotation,boundedLoad,backupRestore,fork,buildVolume,artifacts,sha256:harness});
  await log({event:'binaries',revision,nanoSha256:createHash('sha256').update(await readFile(binary)).digest('hex'),p2pSha256:createHash('sha256').update(await readFile(p2p)).digest('hex')});
  const assets=join(output,'assets'),prepared=join(output,'prepared');
  await exec(join(repo,`build-release/nano-${fork}-transition-tests`),[fork==='capella'?'--export-network':'--export-kurtosis',assets],{timeout:30000});
@@ -148,7 +151,7 @@ try{
  }
  if(!ready)throw Error('Three-node startup/finality deadline exceeded');
  const genesis=await rpc('native','eth_getBlockByNumber',['0x0',false]);
- const observers={revision,pinnedStateRoots:fork==='capella',settleRecoveryGaps:partition||asymmetric,genesisHash:genesis.hash,nodes:[{name:'mac-native',kind:'native',url:'http://127.0.0.1:18545'},{name:'mac-docker',kind:'docker',container:local,url:'http://127.0.0.1:8545'},{name:'vps-docker',kind:'ssh-docker',ssh:target,container:remote,url:'http://127.0.0.1:8545'}]};
+ const observers={revision,pinnedStateRoots:fork==='capella',settleRecoveryGaps:partition||asymmetric||backupRestore,genesisHash:genesis.hash,nodes:[{name:'mac-native',kind:'native',url:'http://127.0.0.1:18545'},{name:'mac-docker',kind:'docker',container:local,url:'http://127.0.0.1:8545'},{name:'vps-docker',kind:'ssh-docker',ssh:target,container:remote,url:'http://127.0.0.1:8545'}]};
  await writeFile(join(output,'observers.json'),JSON.stringify(observers,null,2));
  const previousFinality=new Map();
  const faultSample=async()=>{
@@ -203,6 +206,39 @@ try{
    await log({event:'rotation-recovery-cutoff',heads,minimumInclusionSlot:rotationCutoff});
   }
  };
+ if(backupRestore){
+  await log({event:'backup-restore-stopping',container:remote,sourceVolume:remote+'-data'});
+  await docker(['stop','--time','20',remote],true);restoreStartedMs=Date.now();
+  const stopped=JSON.parse(await docker(['inspect',remote,'--format','{{json .State}}'],true));
+  if(stopped.Running||stopped.ExitCode!==0||stopped.OOMKilled)throw Error('Backup source did not stop cleanly');
+  const priorLogs=await captureLogs(remote,true);await writeFile(join(output,'vps-before-restore.log'),priorLogs);restoreReceipt=stoppedReceipt(priorLogs);
+  const restoreDirectory=join(output,'restore');await mkdir(restoreDirectory);
+  await writeFile(join(restoreDirectory,'stop-receipt.json'),JSON.stringify(restoreReceipt,null,2));
+  await writeFile(join(restoreDirectory,'source-state.json'),JSON.stringify(stopped));
+  const original=await json(join(prepared,'vps-docker/node.json'));
+  await writeFile(join(restoreDirectory,'node.json'),JSON.stringify(pinnedRestoreConfiguration(original,restoreReceipt),null,2));
+  await writeFile(join(restoreDirectory,'audit-request.json'),JSON.stringify(restoreAuditRequest(original,restoreReceipt),null,2));
+  // Configuration and stop commitments travel separately from the archive.
+  restoreProof=remoteRoot+'/restore-proof';
+  await sh(['mkdir',restoreProof]);await sh(['cp','-a',remoteRoot+'/config',remoteRoot+'/restore-config']);
+  await exec('scp',['-q',join(restoreDirectory,'node.json'),`${target}:${remoteRoot}/restore-config/node.json`],{timeout:10000});
+  await exec('scp',['-q',join(restoreDirectory,'audit-request.json'),join(restoreDirectory,'stop-receipt.json'),`${target}:${restoreProof}/`],{timeout:10000});
+  const active=(await docker(['ps','--filter','volume='+remote+'-data','--format','{{.Names}}'],true)).trim();if(active)throw Error('Backup source volume still used by a running container');
+  await docker(['run','--rm','--network','none',...descriptorArgs,...artifactMount,'--cpus','2','--memory','3g','--mount',`type=volume,src=${remote}-data,dst=/source,readonly`,'--mount',`type=bind,src=${remoteRoot}/config,dst=/config,readonly`,'--mount',`type=bind,src=${restoreProof},dst=/proof`,'--mount',`type=bind,src=/home/${target.split('@')[0]}/blockchain-nano-git,dst=/work,readonly`,image,'bash','/work/tests/multihost/backup-restore.sh','/source','/proof/backup','/config/genesis.json','/proof/audit-request.json','/build/nano'],true,90000);
+  const audit=JSON.parse(await sh(['sudo','-n','cat',restoreProof+'/backup/audit.json']));if(audit.canonicalHistoryVerified!==true)throw Error('Restored canonical audit not verified');
+  const metadata=['source-before.sha256','source-after.sha256','restored-before.sha256','restored-after.sha256','archive.sha256','inputs.sha256','audit.json','passed.txt'];
+  for(const name of metadata)await writeFile(join(restoreDirectory,name),await sh(['sudo','-n','cat',restoreProof+'/backup/'+name]));
+  const elapsedMs=Date.now()-restoreStartedMs,step=Number(BigInt(original.capella.clock.maximumForwardStepMs));
+  if(elapsedMs>=step-10000)throw Error('Offline restore used the configured clock-recovery budget');
+  await log({event:'backup-restore-audit-passed',elapsedMs,maximumForwardStepMs:step,audit,archive:restoreProof+'/backup/data.tar.gz'});
+  // Original volume stays offline. Replace only the container; same saved peer ID.
+  await docker(['rm',remote],true);remoteStarted=false;
+  await docker(['run','--init',...descriptorArgs,...traceArgs,'-d','--name',remote,'--label','nano.qualification=multihost','--label','org.opencontainers.image.revision='+revision,...artifactMount,'--memory','3g','--cpus','2','-p','127.0.0.1:30307:30303','--mount',`type=bind,src=${remoteRoot}/restore-config,dst=/config,readonly`,'--mount',`type=bind,src=${restoreProof}/backup/restored,dst=/var/lib/nano`,'--env-file',`${remoteRoot}/restore-config/fixture.env`,image,...runtimeCommand,'run','/config/genesis.json','/var/lib/nano/chain','/config/node.json'],true);remoteStarted=true;
+  let restoredPeer;const onlineDeadline=Date.now()+60000;
+  while(Date.now()<onlineDeadline){try{restoredPeer=(await rpc('remote','nno_getNetworkInfo')).node?.peerId;if(restoredPeer)break;}catch{}await delay(1000);}
+  if(restoredPeer!==peer)throw Error('Restored node did not retain its P2P identity');
+  await log({event:'backup-restore-online',elapsedMs:Date.now()-restoreStartedMs,peerId:restoredPeer,restoredData:restoreProof+'/backup/restored',independentSignerPins:restoreReceipt.validatorKeys.length});
+ }
  await clockSamples('before-fault');
  if(boundedLoad)await runBoundedLoad({rpc,genesisHash:genesis.hash,output,sampleFinality:faultSample,
   ...(partition?{duringSubmit:submit=>partitionRemote({docker:args=>docker(args,true),container:remote,
@@ -216,6 +252,12 @@ try{
  },
  observe:()=>exec(process.execPath,['tests/multihost/observe.mjs',join(output,'observers.json'),join(output,'observations')],{timeout:480000,maxBuffer:8*1024*1024})});
  await log({event:'finality-passed'});
+ if(backupRestore){
+  const stable=await json(join(output,'observations/result.json'));
+  if(BigInt(stable.firstEpoch)<BigInt(restoreReceipt.finalized.epoch)||BigInt(stable.lastEpoch)<BigInt(restoreReceipt.finalized.epoch)+3n)throw Error('Restored finality window did not advance beyond saved checkpoint');
+  await log({event:'backup-restore-common-finality',savedFinalized:restoreReceipt.finalized,stable});
+ }
+
  if(rotation){
   rotationStop=true;await rotationTask;if(rotationFailure)throw rotationFailure;
   await captureRotation();
@@ -243,6 +285,13 @@ finally{
 if(native&&localStarted&&remoteStarted){
  try{
   const validators=await validateStoppedValidators(output,fork);
+  if(backupRestore&&!process.exitCode){
+   const restored=stoppedReceipt(await readFile(join(output,'vps.log'),'utf8')),stable=await json(join(output,'observations/result.json'));
+   validateRestoredFinality(restoreReceipt,stable,restored);
+   await docker(['run','--rm','--network','none','--mount',`type=volume,src=${remote}-data,dst=/source,readonly`,'--mount',`type=bind,src=${restoreProof},dst=/proof,readonly`,image,'bash','-lc','set -e; cd /source; find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | cmp /proof/backup/source-before.sha256 -'],true);
+   await log({event:'backup-restore-passed',sourceStillUnchanged:true,restoredSignerStatus:restored.validator,stable});
+  }
+
   if(rotation&&!process.exitCode){
    const expectedTokens={};
    for(const [i,file] of ['native.log','docker-mac.log','vps.log'].entries()){
