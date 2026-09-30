@@ -1,5 +1,17 @@
 # Feuille de route EIP — état réel de Nano
 
+## Première restauration réelle : audit et signatures repris, finalité non qualifiée — 30 septembre 2026
+
+Tentative A : copie complète et audit canonique (32 blocs, 1 transaction) passent.
+VPS en ligne en 19,123 s, identité P2P conservée, 21 engagements de journaux fournis
+séparément ; 9 nouvelles attestations et 3 propositions admises. La campagne
+échoue ensuite : `Native head stalled for three slots`. Les trois horloges et
+boucles de validation terminent saines, sans nouvelle finalité commune démontrée.
+[Échec conservé](qualification/capella-restored-validators-20260930/attempt-a/manifest.json).
+Une phase de réconciliation bornée à 180 s, avec pairs et slots observés, précède
+désormais la fenêtre stricte de stabilité inchangée. Son résultat reste à vérifier ;
+aucun assouplissement du verdict A ni de qualification de production.
+
 ## Objectif persistant relancé : restauration des signataires — 30 septembre 2026
 
 Le lancement réel en production reste la cible, avec tous les critères et

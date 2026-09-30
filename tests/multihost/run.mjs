@@ -15,6 +15,7 @@ import {sampleClock} from './clock-sample.mjs';
 import {createRotationCapture,ownership,rotationNodes,waitRotationWindow} from './rotation.mjs';
 import {runBoundedLoad} from './bounded-load.mjs';
 import {stoppedReceipt,pinnedRestoreConfiguration,restoreAuditRequest,validateRestoredFinality} from './restore-config.mjs';
+import {waitRestoredRecovery} from './restore-recovery.mjs';
 const exec=promisify(execFile),[target,revision,outputArg]=process.argv.slice(2);
 const fork=process.env.NANO_TEST_CONSENSUS_PROFILE??'bellatrix';
 if(!['bellatrix','capella'].includes(fork))throw Error('Unsupported consensus profile');
@@ -85,7 +86,7 @@ const rpc=async(kind,method,params=[])=>{
 try{
  const binary=join(repo,'build-release/nano'),p2p=join(repo,'build-network/nano-p2p');
  if(rotation)await log({event:'rotation-audit-binary',sha256:createHash('sha256').update(await readFile(join(repo,'build-release/nano-capella-rotation-audit'))).digest('hex')});
- const harness={};for(const name of ['run.mjs','partition.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','prepare.mjs','rotation.mjs','bounded-load.mjs','load-receipts.mjs','restore-config.mjs','backup-restore.sh'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
+ const harness={};for(const name of ['run.mjs','partition.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','prepare.mjs','rotation.mjs','bounded-load.mjs','load-receipts.mjs','restore-config.mjs','restore-recovery.mjs','backup-restore.sh'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
  await log({event:'harness',partition,asymmetric,rotation,boundedLoad,backupRestore,fork,buildVolume,artifacts,sha256:harness});
  await log({event:'binaries',revision,nanoSha256:createHash('sha256').update(await readFile(binary)).digest('hex'),p2pSha256:createHash('sha256').update(await readFile(p2p)).digest('hex')});
  const assets=join(output,'assets'),prepared=join(output,'prepared');
@@ -238,6 +239,11 @@ try{
   while(Date.now()<onlineDeadline){try{restoredPeer=(await rpc('remote','nno_getNetworkInfo')).node?.peerId;if(restoredPeer)break;}catch{}await delay(1000);}
   if(restoredPeer!==peer)throw Error('Restored node did not retain its P2P identity');
   await log({event:'backup-restore-online',elapsedMs:Date.now()-restoreStartedMs,peerId:restoredPeer,restoredData:restoreProof+'/backup/restored',independentSignerPins:restoreReceipt.validatorKeys.length});
+  await waitRestoredRecovery({saved:restoreReceipt.finalized,record:log,sample:async()=>{
+   const rows=await faultSample(),heads=await rotationHeads();
+   return rows.map((r,i)=>({...r,headSlot:heads[i].slot}));
+  }});
+
  }
  await clockSamples('before-fault');
  if(boundedLoad)await runBoundedLoad({rpc,genesisHash:genesis.hash,output,sampleFinality:faultSample,
