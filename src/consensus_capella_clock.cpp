@@ -11,7 +11,14 @@ bool CapellaLocalClock::poll(const std::function<void()>& checkpoint){
  try{
   check();const auto now=now_();const auto previous=reactor_.current().state->timed.clock.time_ms;
   const auto observed=last_observed_.value_or(previous);
-  if(now<previous||now<observed||now-observed>maximum_step_)throw std::runtime_error("Capella local clock discontinuity");
+  const bool before_durable=now<previous,before_observed=now<observed;
+  const bool forward_exceeded=now>=observed&&now-observed>maximum_step_;
+  if(before_durable||before_observed||forward_exceeded)
+   throw std::runtime_error("Capella local clock discontinuity: nowMs="+std::to_string(now)+
+    ", durableMs="+std::to_string(previous)+", observedMs="+std::to_string(observed)+
+    ", maximumForwardStepMs="+std::to_string(maximum_step_)+
+    ", beforeDurable="+std::to_string(before_durable)+", beforeObserved="+std::to_string(before_observed)+
+    ", forwardStepExceeded="+std::to_string(forward_exceeded));
   const bool changed=reactor_.tick_if_needed(now,check);
   // Still observe every poll: coalescing must not hide backward/oversized steps
   // within an otherwise unchanged consensus phase.

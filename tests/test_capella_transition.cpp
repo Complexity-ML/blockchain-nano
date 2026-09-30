@@ -53,7 +53,7 @@ static bool owner_mode=false;
 static bool owner_reorg=false;
 static bool owner_sync=false;
 static bool owner_witness=false;
-static bool scheduled=false,sync_rotation=false;
+static bool scheduled=false,sync_rotation=false,clock_diagnostics=false;
 static bool configured_runtime=false;
 static bool automatic_recovery=false;
 static bool capella_http=false;
@@ -485,6 +485,36 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
  }
  if(owner_mode){Rpc rpc(*owners[0]);nodes[0]->invalidate();check(rpc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method","eth_blockNumber"},{"params",Json::array()}}).contains("error"),"invalidated owner still served block number");}
  std::cout<<Json{{"scenario","capella-local-assembly-finality"},{"localSyncAggregates",local_sync},{"disjointSyncMerging",local_sync},{"individualSyncMessages",local_sync},{"syncWireWorker",local_sync},{"syncCatalogExport",local_sync},{"syncPrecollection",local_sync},{"localSyncSigning",local_sync},{"executionOwner",owner_mode},{"participationPercent",local_finality},{"blocks",blocks},{"votes",votes},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"justifiedEpoch",result.state->timed.view.justified.epoch},{"independentStores",2},{"storeReopens",restarts},{"signingJournalsReopened",reopened_journals},{"networkTransport",false},{"networkActivated",false}}.dump()<<std::endl;
+}
+static void clock_diagnostics_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules,const Block& genesis,const State& genesis_state){
+ const auto limits=crash_limits;const auto& t=rules.transition;unsigned passed=0;
+ for(unsigned mode=0;mode<4;++mode){
+  Temp directory;Genesis g;g.chain_id=t.chain_id;g.consensus="beacon";g.evm_revision=EvmRevision::Shanghai;g.block=genesis;g.state=genesis_state;
+  Blockchain owner(directory/"owner",g);ChainStore witness(directory/"witness");
+  CapellaDurableReactor reactor(owner,rules,limits,initial,std::function<void()>{},&witness);
+  const auto base=initial.timed.clock.time_ms;uint64_t now=base;const uint64_t bound=mode==3?1:rules.slot_duration_ms;
+  CapellaLocalClock clock(reactor,bound,[&]{return now;});clock.poll();
+  // Polls within a phase update the observation without publishing a checkpoint.
+  if(mode!=3){now=base+2;check(!clock.poll(),"diagnostic fixture did not coalesce");}
+  const auto saved=reactor.current();const auto record=owner.store().fork_checkpoint(t.chain_id,genesis.header.hash(),limits.envelope_bytes,saved.token);
+  check(bool(record),"missing diagnostic checkpoint");const auto observed=now;
+  now=mode==0?base-1:mode==1?base+1:mode==2?observed+bound+1:base+1;
+  std::string failure;try{clock.poll();}catch(const std::runtime_error& error){failure=error.what();}
+  if(mode==3){check(failure.empty()&&clock.healthy()&&reactor.current().token==saved.token,"inclusive forward bound rejected or published unchanged phase");}
+  else{
+   const bool before_durable=now<saved.state->timed.clock.time_ms,before_observed=now<observed;
+   const bool exceeded=now>=observed&&now-observed>bound;
+   for(const auto& value:{std::string("Capella local clock discontinuity"),"nowMs="+std::to_string(now),"durableMs="+std::to_string(saved.state->timed.clock.time_ms),"observedMs="+std::to_string(observed),"maximumForwardStepMs="+std::to_string(bound),"beforeDurable="+std::to_string(before_durable),"beforeObserved="+std::to_string(before_observed),"forwardStepExceeded="+std::to_string(exceeded)})
+    check(failure.find(value)!=std::string::npos,"clock failure lost measured discriminator");
+   check(!clock.healthy(),"clock fault did not latch");bool closed=false;
+   try{owner.tip();}catch(const std::runtime_error&){closed=true;}check(closed,"clock fault left execution owner available");
+   closed=false;try{reactor.beacon_read("/eth/v1/beacon/headers/head");}catch(const std::runtime_error& error){closed=std::string(error.what()).find(failure)!=std::string::npos;}check(closed,"Beacon did not preserve exact initial clock failure");
+   reactor.invalidate();closed=false;try{reactor.current();}catch(const std::runtime_error& error){closed=std::string(error.what()).find(failure)!=std::string::npos;}check(closed,"subsequent invalidation replaced initial clock diagnosis");
+  }
+  const auto after=owner.store().fork_checkpoint(t.chain_id,genesis.header.hash(),limits.envelope_bytes,saved.token);
+  check(after&&after->snapshot==record->snapshot&&after->token==record->token,"clock fault changed durable checkpoint");++passed;
+ }
+ std::cout<<Json{{"scenario","capella-clock-diagnostics"},{"scenarios",passed},{"failClosedPreserved",true},{"checkpointUnchanged",true},{"networkTransport",false}}.dump()<<std::endl;
 }
 static void scheduler_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules,const Block& genesis,const State& genesis_state){
  Temp directory;const auto limits=crash_limits;const auto& t=rules.transition;const auto slots=t.consensus.epoch.ffg.slots_per_epoch;const auto validators=root_at(initial.blocks.at(initial.timed.view.anchor).state.ssz,8);
@@ -1382,7 +1412,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
     }
    }
   }
-  if(slot==first_slot){short_snapshot=capella_store_snapshot(*store,store_rules,snapshot_limits);if(deposit_reorg){deposit_reorg_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(configured_runtime){runtime_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(scheduled){scheduler_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}
+  if(slot==first_slot){short_snapshot=capella_store_snapshot(*store,store_rules,snapshot_limits);if(clock_diagnostics){clock_diagnostics_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(deposit_reorg){deposit_reorg_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(configured_runtime){runtime_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(scheduled){scheduler_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}
   if(local_finality){local_finality_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}}
   ++contexts;
   beacon=received->consensus;state=received->execution.state;parent=received->execution.block;hashes[parent.header.number]=parent.header.hash();++accepted;
@@ -1616,6 +1646,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
 }
 #include "support/capella_exit_owner.hpp"
 int main(int argc,char** argv){try{executable=argv[0];
+if(argc==2&&std::string(argv[1])=="--clock-diagnostics"){clock_diagnostics=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--new-validator-slashing"){slashing_new_validator=true;deposit_activation=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--slashing-multi"){slashing_multi=true;slashing_retirement=true;pruning_automatic=true;pruning_native=true;owner_mode=true;local_finality=100;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--slashing-reorg"){slashing_reorg=true;scenario(false);return 0;}
