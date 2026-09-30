@@ -3,6 +3,7 @@
 import {createHash} from 'node:crypto';
 import {readFile,writeFile,rename,open,unlink} from 'node:fs/promises';
 import {pathToFileURL} from 'node:url';
+import {transportRequest} from './monitor-transport.mjs';
 const root=v=>typeof v==='string'&&/^0x[0-9a-f]{64}$/.test(v);
 const integer=v=>{if(typeof v!=='string'||v.length>78||! /^(0|[1-9][0-9]*|0x[0-9a-f]+)$/.test(v))throw Error('Invalid unsigned quantity');return BigInt(v);};
 export function configuration(c){
@@ -12,8 +13,12 @@ export function configuration(c){
  if(!Number.isSafeInteger(c.minimumPeers)||c.minimumPeers<0)throw Error('Invalid minimumPeers');
  const names=new Set(),urls=new Set(),nodes=c.nodes.map(n=>{
   if(!/^[a-z0-9-]+$/.test(n.name)||names.has(n.name))throw Error('Duplicate/invalid name');names.add(n.name);
-  const u=new URL(n.url);if(u.protocol!=='http:'||u.hostname!=='127.0.0.1'||u.username||u.password||u.pathname!=='/'||u.hash||u.search||urls.has(u.origin))throw Error('Distinct loopback RPC required');urls.add(u.origin);
-  return {name:n.name,url:u.origin};
+  const u=new URL(n.url);if(u.protocol!=='http:'||u.hostname!=='127.0.0.1'||u.username||u.password||u.pathname!=='/'||u.hash||u.search)throw Error('Loopback RPC required');
+  const kind=n.kind??'http';if(!['http','docker','ssh-docker'].includes(kind))throw Error('Invalid monitor transport');
+  if(kind!=='http'&&!/^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/.test(n.container??''))throw Error('Invalid monitor container');
+  if(kind==='ssh-docker'&&!/^[a-z_][a-z0-9_-]*@[a-zA-Z0-9.-]+$/.test(n.ssh??''))throw Error('Invalid monitor SSH target');
+  const transport=kind+':'+(n.ssh??'local')+':'+(n.container??'')+':'+u.origin;if(urls.has(transport))throw Error('Duplicate monitor transport');urls.add(transport);
+  return {name:n.name,url:u.origin,kind,...(kind!=='http'?{container:n.container}:{}),...(kind==='ssh-docker'?{ssh:n.ssh}:{})};
  });
  return {chainId,genesisHash:c.genesisHash,configName:c.configName,staleMs:c.staleMs,timeoutMs:c.timeoutMs,maximumResponseBytes:c.maximumResponseBytes,maximumEpochs:c.maximumEpochs,minimumPeers:c.minimumPeers,nodes};
 }
@@ -51,9 +56,10 @@ export function evaluate(config,samples,time,previous){
  const common=c.nodes.every(n=>state.nodes[n.name])&&accepted.size===c.nodes.length&&c.nodes.every(n=>state.nodes[n.name].epoch===state.nodes[c.nodes[0].name].epoch&&state.nodes[n.name].root===state.nodes[c.nodes[0].name].root);
  return {state,report:{time,healthy:!alerts.length&&!state.safetyFaults.length,commonFinality:common,alerts,safetyFaults:state.safetyFaults,samples}};
 }
-export async function sample(config,node,request=fetch){
+export async function sample(config,node,request){
  const c=configuration(config),endpoint=c.nodes.find(n=>n.name===node.name);
  if(!endpoint||new URL(node.url).origin!==endpoint.url)throw Error('Unconfigured monitor endpoint');
+ request??=endpoint.kind==='http'?fetch:transportRequest(endpoint,c);
  const read=async(path,options={})=>{
   const signal=AbortSignal.timeout(c.timeoutMs),r=await request(endpoint.url+path,{...options,signal,headers:{Accept:'application/json',...options.headers}});
   if(!r.ok)throw Error('HTTP '+r.status);const chunks=[];let bytes=0;

@@ -16,10 +16,12 @@ import {createRotationCapture,ownership,rotationNodes,waitRotationWindow} from '
 import {runBoundedLoad} from './bounded-load.mjs';
 import {stoppedReceipt,pinnedRestoreConfiguration,restoreAuditRequest,validateRestoredFinality} from './restore-config.mjs';
 import {waitRestoredRecovery} from './restore-recovery.mjs';
+import {startFinalityMonitor} from './monitor.mjs';
 const exec=promisify(execFile),[target,revision,outputArg]=process.argv.slice(2);
 const fork=process.env.NANO_TEST_CONSENSUS_PROFILE??'bellatrix';
 if(!['bellatrix','capella'].includes(fork))throw Error('Unsupported consensus profile');
 if(!/^[a-z_][a-z0-9_-]*@[0-9.]+$/.test(target??'')||!(/^[0-9a-f]{40}$/).test(revision??'')||!outputArg)throw Error('Usage: run.mjs user@IPv4 core-revision fresh-output');
+const monitor=process.env.NANO_TEST_FINALITY_MONITOR==='1';
 const buildVolume=process.env.NANO_TEST_BUILD_VOLUME==='1';
 const output=resolve(outputArg),repo=process.cwd(),image=buildVolume?'nano-build-dependencies:local':`blockchain-nano:${revision.slice(0,7)}`;
 const nofile=process.env.NANO_DOCKER_NOFILE??'65536';
@@ -63,6 +65,7 @@ for(const onRemote of [false,true]){
 }
 await mkdir(output);
 const log=async event=>appendFile(join(output,'run.jsonl'),JSON.stringify({time:Date.now(),...event})+'\n');
+let monitorTask;
 let native,tunnel,localStarted=false,remoteStarted=false,restoreReceipt,restoreStartedMs,restoreProof;
 let resourceTask,resourceStop=false,resourceFailure;
 let rotationTask,rotationStop=false,rotationFailure,rotationProof,rotationCutoff;
@@ -86,8 +89,9 @@ const rpc=async(kind,method,params=[])=>{
 try{
  const binary=join(repo,'build-release/nano'),p2p=join(repo,'build-network/nano-p2p');
  if(rotation)await log({event:'rotation-audit-binary',sha256:createHash('sha256').update(await readFile(join(repo,'build-release/nano-capella-rotation-audit'))).digest('hex')});
- const harness={};for(const name of ['run.mjs','partition.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','prepare.mjs','rotation.mjs','bounded-load.mjs','load-receipts.mjs','restore-config.mjs','restore-recovery.mjs','backup-restore.sh'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
- await log({event:'harness',partition,asymmetric,rotation,boundedLoad,backupRestore,fork,buildVolume,artifacts,sha256:harness});
+ const harness={};for(const name of ['run.mjs','partition.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','prepare.mjs','rotation.mjs','bounded-load.mjs','load-receipts.mjs','restore-config.mjs','restore-recovery.mjs','backup-restore.sh','monitor.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
+ if(monitor&&(fork!=='capella'||!buildVolume||partition||asymmetric||backupRestore||rotation||boundedLoad))throw Error('Monitor qualification requires standalone Capella build-volume campaign');
+ await log({event:'harness',monitor,partition,asymmetric,rotation,boundedLoad,backupRestore,fork,buildVolume,artifacts,sha256:harness});
  await log({event:'binaries',revision,nanoSha256:createHash('sha256').update(await readFile(binary)).digest('hex'),p2pSha256:createHash('sha256').update(await readFile(p2p)).digest('hex')});
  const assets=join(output,'assets'),prepared=join(output,'prepared');
  await exec(join(repo,`build-release/nano-${fork}-transition-tests`),[fork==='capella'?'--export-network':'--export-kurtosis',assets],{timeout:30000});
@@ -249,6 +253,7 @@ try{
  if(boundedLoad)await runBoundedLoad({rpc,genesisHash:genesis.hash,output,sampleFinality:faultSample,
   ...(partition?{duringSubmit:submit=>partitionRemote({docker:args=>docker(args,true),container:remote,
    network:testNetwork,revision,record:faultRecord,sample:faultSample,duringCut:submit})}:{})});
+ if(monitor)monitorTask=await startFinalityMonitor({repo,output,prepared,local,remote,target,record:log});
  await observeRecovery({record:log,partition:async()=>{
   if(partition&&!boundedLoad)await partitionRemote({docker:args=>docker(args,true),container:remote,network:testNetwork,revision,record:faultRecord,sample:faultSample});
   if(asymmetric){
@@ -258,6 +263,7 @@ try{
  },
  observe:()=>exec(process.execPath,['tests/multihost/observe.mjs',join(output,'observers.json'),join(output,'observations')],{timeout:480000,maxBuffer:8*1024*1024})});
  await log({event:'finality-passed'});
+ if(monitorTask){await monitorTask.stop(true);monitorTask=undefined;}
  if(backupRestore){
   const stable=await json(join(output,'observations/result.json'));
   if(BigInt(stable.firstEpoch)<BigInt(restoreReceipt.finalized.epoch)||BigInt(stable.lastEpoch)<BigInt(restoreReceipt.finalized.epoch)+3n)throw Error('Restored finality window did not advance beyond saved checkpoint');
@@ -275,6 +281,7 @@ try{
  }
 }catch(error){await log({event:'failed',message:error.stack});process.exitCode=1;}
 finally{
+ if(monitorTask){try{await monitorTask.stop();}catch(e){await log({event:'monitor-stop-failed',message:e.message});process.exitCode=1;}}
  resourceStop=true;if(resourceTask)await resourceTask;
  if(resourceFailure){await log({event:'resource-collection-failed',message:resourceFailure.stack});process.exitCode=1;}
  rotationStop=true;if(rotationTask)await rotationTask;

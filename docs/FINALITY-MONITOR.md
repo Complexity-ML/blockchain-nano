@@ -30,9 +30,13 @@ Ces seuils illustratifs doivent être ajustés au profil et au déploiement rée
 `maximumEpochs` borne les racines retenues si un observateur tarde à avancer ;
 prévoir au moins deux entrées et la marge de retard autorisée. Ce budget de
 supervision ne limite pas le registre des validateurs. Un seul observateur est
-possible, mais ne vérifie aucune concordance entre nœuds. Les URLs distinctes
-restent en loopback : pour un hôte distant, préparer un tunnel SSH privé ou
-exécuter l'outil localement sur cet hôte. Aucune exposition publique du RPC.
+possible, mais ne vérifie aucune concordance entre nœuds. Les URLs restent en loopback. Par défaut `kind: "http"` interroge directement
+l'endpoint local. Avec `kind: "docker"` et `container: "nano-node"`, le lecteur
+utilise `docker exec` et curl. Avec `kind: "ssh-docker"`, ajouter par exemple
+`ssh: "ubuntu@145.239.199.166"` : il utilise SSH BatchMode puis sudo Docker exec.
+Deux conteneurs distincts peuvent ainsi utiliser le même port local sans être
+confondus ; aucun port RPC n'est publié. L'opérateur doit disposer des droits
+Docker/sudo correspondants. Un tunnel privé reste possible avec le mode HTTP. Aucune exposition publique du RPC.
 
 Depuis la racine du checkout, avec un répertoire d'état privé appartenant à
 l'opérateur :
@@ -69,9 +73,18 @@ sans qualification de perte d'alimentation ou de falsification locale.
 
 ## Qualification actuelle
 
-Dix-sept tests locaux passent, dont cinq exécutions réelles du CLI face à deux
+Vingt et un tests locaux passent, dont cinq exécutions réelles du CLI face à deux
 serveurs HTTP synthétiques : panne/stagnation, reprise, conflit et conservation
 de l'alerte. Les tests vérifient aussi identité, lecture par état immuable,
 budget de réponses et d'historique, régression, verrou et horloge. Cela qualifie
 l'outil et son lecteur, **pas** la supervision d'un réseau Nano vivant. Cette
 intégration et la livraison effective des alertes restent ouvertes.
+
+
+Le banc multihôte accepte `NANO_TEST_FINALITY_MONITOR=1` avec Capella et les
+volumes de compilation existants, sans autre injection de panne. Il attend la
+finalité de démarrage, exécute le vrai CLI avec une identité genesis incorrecte
+(dont le refus est obligatoire), puis observe la configuration correcte en
+parallèle de la fenêtre stricte de trois époques. Genesis et profil proviennent
+de la fixture locale exportée avant démarrage. Ce scénario n'est pas encore
+qualifié ; sa réussite doit être conservée avant toute revendication réseau.

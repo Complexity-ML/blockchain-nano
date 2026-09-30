@@ -1,5 +1,15 @@
 # Objectif : Nano C++ de niveau production
 
+## Supervision privée multihôte : intégration prête, qualification en attente — 30 septembre 2026
+
+Le lecteur ajoute Docker exec et SSH Docker exec, sans port RPC supplémentaire.
+Vingt et un tests locaux passent (identités distinctes, arguments et quoting).
+Le nouveau scénario fini utilise le vrai CLI : mauvaise identité genesis à
+refuser sur les trois nœuds, puis configuration issue de la fixture indépendante,
+historique persistant et observation parallèle aux trois époques strictes.
+Aucune réussite réseau n’est encore revendiquée pour le moniteur.
+[Implémentation et limites](FINALITY-MONITOR.md).
+
 ## Supervision de finalité implémentée, intégration réseau ouverte — 30 septembre 2026
 
 Le [moniteur local](FINALITY-MONITOR.md) vérifie chaîne/genesis et profil,
