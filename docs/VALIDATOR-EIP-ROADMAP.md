@@ -1,5 +1,22 @@
 # EIP et consensus : périmètre demandé pour Nano
 
+## Audit hors ligne du profil Beacon : écart confirmé — 30 septembre 2026
+
+L'examen en lecture seule des 44 journaux RocksDB de la tentative A ne trouve
+aucune ligne correspondant aux motifs ERROR/FATAL, IO error, Corruption,
+No space left on device ou Background Error ; les 44 enregistrent une fermeture
+terminée. Cela ne prouve ni l'intégrité historique ni la cause de l'arrêt.
+L'appel `nano audit` sur une copie de sa base sort à 1 :
+`Beacon audit requires consensus archive replay, not legacy block replay`.
+Le refus est intentionnel (`src/audit.cpp`, test `test_beacon_execution_gate.cpp`).
+**Critère ouvert : fournir et qualifier un audit hors ligne Beacon/Capella**,
+avec profil et ancre de confiance explicites, archives/pruning pris en compte,
+rejeu des transitions de consensus et d'exécution, contrôle des index et reçus,
+cas négatifs de corruption et preuve de non-mutation de la source. Ne pas assimiler
+une réouverture de checkpoint à un audit complet depuis le genesis.
+Preuves : [forensique A](qualification/capella-partition-load-20260930/attempt-a-forensics/manifest.json).
+L'arrêt A reste non expliqué ; aucun résultat de production n'est déduit de cette recherche.
+
 ## Charge pendant partition WAN qualifiée — 30 septembre 2026
 
 La tentative C sur `22b4b65` réussit : 96 transactions admises pendant une coupure

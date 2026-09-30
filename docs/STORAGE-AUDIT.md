@@ -1,5 +1,10 @@
 # Audit explicite de la chaîne stockée
 
+> Périmètre : la commande ci-dessous audite le parcours historique, pas le
+> consensus Beacon/Capella. Pour `consensus=beacon`, elle refuse explicitement
+> avec `Beacon audit requires consensus archive replay, not legacy block replay`.
+> L'audit hors ligne du profil Beacon actif reste un critère de production ouvert.
+
 Après arrêt du nœud qui utilise la base :
 
 ```sh
