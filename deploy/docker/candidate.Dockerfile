@@ -1,11 +1,13 @@
 # Package already qualified binaries; no compiler or dependency download.
-ARG NANO_RUNTIME_BASE
+ARG NANO_RUNTIME_BASE=nano-candidate-base:required
 FROM ${NANO_RUNTIME_BASE}
 USER root
 ARG SOURCE_REVISION
+ARG RUNTIME_BASE_ID
 ARG NANO_SHA256
 ARG P2P_SHA256
 LABEL org.opencontainers.image.revision=${SOURCE_REVISION}
+LABEL org.nanobees.runtime-base-id=${RUNTIME_BASE_ID}
 COPY nano nano-p2p /usr/local/bin/
 RUN printf '%s  /usr/local/bin/nano\n%s  /usr/local/bin/nano-p2p\n' "$NANO_SHA256" "$P2P_SHA256" | sha256sum -c - \
  && ldd /usr/local/bin/nano > /tmp/nano-candidate.libs \

@@ -36,9 +36,15 @@ tar -xf "$context/artifacts.tar" -C "$context"
 [ "$(cat "$context/production-source-revision.txt")" = "$revision" ] || { echo 'Build revision mismatch' >&2; exit 1; }
 mv "$context/network/nano-p2p" "$context/nano-p2p"
 rm -rf "$context/network" "$context/artifacts.tar" "$context/production-source-revision.txt"
-# Runtime base is immutable and local. No source compilation or apt step occurs.
+# BuildKit FROM needs a named local reference, not a bare image ID.
+# Pin the reference to the reviewed ID and check it again after assembly.
+base_ref="nano-candidate-base:${base#sha256:}"
+docker tag "$base" "$base_ref"
+[ "$(docker image inspect "$base_ref" --format '{{.Id}}')" = "$base" ] || exit 1
+# No source compilation or apt step occurs.
 docker build --network none --pull=false --progress plain --iidfile "$context/image-id" \
-  --build-arg "NANO_RUNTIME_BASE=$base" --build-arg "SOURCE_REVISION=$revision" \
+  --build-arg "NANO_RUNTIME_BASE=$base_ref" --build-arg "RUNTIME_BASE_ID=$base" --build-arg "SOURCE_REVISION=$revision" \
   --build-arg "NANO_SHA256=$nano_hash" --build-arg "P2P_SHA256=$p2p_hash" \
   -f "$recipe" "$context"
+[ "$(docker image inspect "$base_ref" --format '{{.Id}}')" = "$base" ] || { echo 'Base reference changed' >&2; exit 1; }
 cat "$context/image-id"
