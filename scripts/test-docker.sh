@@ -14,6 +14,7 @@ trap 'exit 143' TERM
 docker volume create "$volume" >/dev/null
 docker run -d --name "$name" --init --network none --read-only \
     --cap-drop ALL --security-opt no-new-privileges:true \
+    --ulimit "nofile=${NANO_DOCKER_NOFILE:-65536}:${NANO_DOCKER_NOFILE:-65536}" \
     --tmpfs /tmp:rw,size=64m,mode=1777 \
     -v "$volume:/var/lib/nano" "$image" >/dev/null
 ready() {

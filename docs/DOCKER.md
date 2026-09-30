@@ -110,3 +110,20 @@ Exécuter un seul build à la fois. Après qualification, `docker builder prune
 --all --force` supprime le cache de compilation ; cela rallonge le prochain
 build à froid. Aux mises à jour, retirer explicitement l'ancienne image après
 vérification du remplacement, sans supprimer le volume de la chaîne.
+
+## Budget des fichiers ouverts
+
+Compose, le smoke test et la qualification multi-hôte définissent explicitement
+`nofile=65536:65536`. La valeur est configurable par `NANO_DOCKER_NOFILE` selon
+la machine, le nombre de clés locales et les connexions ; ce budget ne limite
+pas le registre de validateurs du protocole. Pour un lancement `docker run`
+manuel, ajouter `--ulimit nofile=65536:65536`. Pour systemd, définir
+`LimitNOFILE=65536` dans le service équivalent.
+
+Le défaut Docker du VPS (soft 1024) a refusé l'ouverture des journaux d'une
+fixture à 64 clés locales avec témoin par clé. L'échec est conservé dans
+`qualification/capella-recovery-commitment-20260930`. La fermeture des anciennes
+fixtures réduit les descripteurs, mais ne remplace pas le budget opérationnel.
+Vérifier la limite réelle avec `docker exec <conteneur> sh -c 'ulimit -n'`.
+Une limite configurée ne prouve pas une capacité de 100 000 validateurs ni une
+résilience générale sous charge ; mesurer les ressources sur chaque campagne.

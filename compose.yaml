@@ -8,6 +8,10 @@ services:
     init: true
     restart: unless-stopped
     stop_grace_period: 60s
+    ulimits:
+      nofile:
+        soft: ${NANO_DOCKER_NOFILE:-65536}
+        hard: ${NANO_DOCKER_NOFILE:-65536}
     read_only: true
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]

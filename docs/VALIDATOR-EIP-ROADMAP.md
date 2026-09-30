@@ -10,7 +10,8 @@ publication qualifiées en natif (23,82 / 5,21 s), régression runtime 19,37 s.
 [Preuves et limites](qualification/capella-recovery-commitment-20260930/README.md).
 Première tentative Linux : ARM64 vert, VPS échoué (`Too many open files`).
 La fixture ferme désormais sa copie restaurée avant les signataires courants ;
-qualification Linux du correctif en attente, échec conservé.
+VPS toujours en échec à 1024 descripteurs. Budget Docker explicite et configurable
+à 65536 ajouté ; qualification sous ce budget en attente, deux échecs conservés.
 L'engagement doit être conservé indépendamment et actualisé explicitement ;
 les journaux des signataires ont leurs propres engagements. Linux, reprise des
 signataires restaurés, finalité commune et autres critères restent ouverts.

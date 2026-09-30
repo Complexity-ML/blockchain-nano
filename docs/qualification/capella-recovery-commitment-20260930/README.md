@@ -42,3 +42,15 @@ and descriptor limits are unchanged. Corrected native automatic gate passes;
 Linux validation of the corrected fixture remains pending. The configured
 native gate was also bound to the final initial harness (19.04 s); its earlier
 19.37 s output is retained rather than treated as the final test binary.
+
+## Corrected fixture under default descriptor budget
+
+Corrected automatic recovery passes ARM64 (10.76 s), but VPS still fails
+(35.75 s) opening `key-63`: too many open files. The improved scope lifetime
+alone is insufficient under soft nofile=1024. Both results are preserved under
+`fixture-fix`. No successful VPS qualification is claimed for this attempt.
+
+Deployment Compose, smoke and multi-host launchers now explicitly set a
+configurable nofile budget (65536 by default). This is an OS resource policy,
+not a validator cap or consensus change. Qualification with that budget is
+pending; runtime code and corrected fixture remain unchanged.
