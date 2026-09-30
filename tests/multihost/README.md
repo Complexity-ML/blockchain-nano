@@ -1,5 +1,36 @@
 # Qualification Mac natif + Docker Mac + Docker VPS
 
+## Images candidates identifiées — 30 septembre 2026
+
+`NANO_TEST_CANDIDATE_MANIFEST` sélectionne deux identités Docker immuables
+revues, une par architecture. Le lanceur refuse de combiner cette option avec
+`NANO_TEST_BUILD_VOLUME=1`, vérifie révision/architecture/utilisateur 10001 et
+les deux empreintes depuis chaque image avant de créer les fixtures. Quatre
+tests couvrent sélection invalide, provenance divergente et binaires altérés.
+Le volume `/build` n’est pas monté et les exécutables `/usr/local/bin` sont
+utilisés. Le relais P2P VPS reste en loopback derrière le tunnel SSH ; aucun
+RPC public. Exemple borné depuis la racine du dépôt, sortie obligatoirement
+nouvelle :
+
+```sh
+NANO_TEST_CONSENSUS_PROFILE=capella \
+NANO_TEST_FINALITY_MONITOR=1 \
+NANO_TEST_CANDIDATE_MANIFEST=docs/qualification/candidate-images-20260930/manifest.json \
+node tests/multihost/run.mjs ubuntu@145.239.199.166 \
+  ca780d5002c72b2486833f8dbe881649787a6c4f /tmp/nano-packaged-network-fresh
+```
+
+Cette sélection permet le test de réseau/moniteur autonome. Les modes de
+restauration et d’audit de rotation nécessitent encore le volume de compilation
+et refusent cette combinaison. Les manifestes d’intégrité ne constituent pas
+une configuration de production : le lanceur génère les fixtures synthétiques
+64 clés juste avant démarrage et les répartit 22/21/21. Les trois nœuds
+représentent deux hôtes physiques. Tout résultat reste borné au profil activé.
+Les exemples et résultats historiques ci-dessous restent conservés par révision.
+La première campagne des images finales passe : finalité commune 2→5 en
+142,963 s, 24 observations saines et trois signataires terminés sains.
+[Preuves bornées](../../docs/qualification/packaged-network-20260930/manifest.json).
+
 Cette campagne utilise trois processus de nœud sur deux machines physiques.
 Elle n’est pas une qualification à trois domaines de panne indépendants.
 Les images ARM64 et x86-64 sont construites depuis le commit Git `b7e2748` ;

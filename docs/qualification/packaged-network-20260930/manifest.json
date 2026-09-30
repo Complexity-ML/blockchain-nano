@@ -1,0 +1,103 @@
+{
+  "harnessSourceRevision": "b79b286f4b17f18929601a76bbf0f43d38384ab4",
+  "compiledSourceRevision": "ca780d5002c72b2486833f8dbe881649787a6c4f",
+  "scope": "Final packaged ARM64/x86-64 images plus native Mac; three nodes on two physical hosts, 64 synthetic validators, Capella/Shanghai; strict common finality bound to execution and finite monitor. No fault injection, upgrade/rollback, public deployment, external alerts, power loss or full production qualification.",
+  "imageArtifacts": [
+    {
+      "host": "docker-mac",
+      "imageId": "sha256:c61ab5d3ab8783ce5cb709a674b34fb0401f10a17508b84c7a570dccb776a15a",
+      "revision": "ca780d5002c72b2486833f8dbe881649787a6c4f",
+      "executables": {
+        "nano": "36c7107eccd622ac1e90b1ea2b8a53131d7f5fb9551992e4eccdd652dced9539",
+        "nano-p2p": "36d746690eb35e5a92b21d3cd5b04603a09693bae42a9a50cd45921e27cf88d5"
+      },
+      "packaged": true
+    },
+    {
+      "host": "vps",
+      "imageId": "sha256:ee9d7d86a981d26bbe9a827bdbefc71335787d2d94d68dd27388cc1e1b9ad6c7",
+      "revision": "ca780d5002c72b2486833f8dbe881649787a6c4f",
+      "executables": {
+        "nano": "81d3eebec55719229e9b5b2ec4dd5dde8f9c98e5c1aaaed8473780d131d676f6",
+        "nano-p2p": "094b0c32e82cad52c8964534341bd792fba56824a105ec71cccad88f304a15a5"
+      },
+      "packaged": true
+    }
+  ],
+  "nativeBinaries": {
+    "time": 1790795166062,
+    "event": "binaries",
+    "revision": "ca780d5002c72b2486833f8dbe881649787a6c4f",
+    "nanoSha256": "304c9cb855bfb48661e13e26bdae762e48c857b997d5786dcf1307ae22982827",
+    "p2pSha256": "41137db430a83881f297e2fd3d3b140eee20ababb3c2c9fae7b921e10b3638a8"
+  },
+  "strictFinality": {
+    "epochs": 3,
+    "firstEpoch": "2",
+    "lastEpoch": "5",
+    "elapsedMs": 142963,
+    "nodes": [
+      "mac-native",
+      "mac-docker",
+      "vps-docker"
+    ],
+    "revision": "ca780d5002c72b2486833f8dbe881649787a6c4f"
+  },
+  "monitor": {
+    "observations": 24,
+    "firstEpochs": [
+      "2",
+      "2",
+      "2"
+    ],
+    "lastEpochs": [
+      "5",
+      "5",
+      "5"
+    ],
+    "wrongGenesisRejected": true,
+    "transport": "native HTTP, local Docker exec, remote SSH Docker exec",
+    "independentFixtureGenesis": true,
+    "executionBindingVerifiedBySeparateStabilityGate": true
+  },
+  "validators": [
+    {
+      "file": "native.log",
+      "healthy": true,
+      "attestationsAdmitted": 137
+    },
+    {
+      "file": "docker-mac.log",
+      "healthy": true,
+      "attestationsAdmitted": 134
+    },
+    {
+      "file": "vps.log",
+      "healthy": true,
+      "attestationsAdmitted": 137
+    }
+  ],
+  "productionQualified": false,
+  "filesSha256": {
+    "prepared-mac-native-initial.json.gz": "9988ec8bd6b9377930efec1b239ababe2a59b5d901991d3b8de33865082a3b0c",
+    "prepared-mac-native-genesis.json": "efd9aeb9772af66bd818b3105f1c54e5e52e9d9116d2bc2aae0000cb64ee2441",
+    "monitor-result.json": "3ca1facfc5d6f4ef31d36381adbd4e6d2c0f075755ebb6126f3f438a8ffe25ed",
+    "selection-tests.log": "ecad501a9eafeb9fe807682a22b7a27e9d74b0666372cd183ee02cc27fd875e6",
+    "vps-state.json": "549c40d6062ed43b193e5dcb7f7b52455691a123d62882bb1c7a253636219c47",
+    "monitor-config.json": "712ab469a20bf6cfe933b62e5bb54777d8fd76e8ef5617ce7df3cd7e29d7af3c",
+    "run.jsonl.gz": "9e36ad03a98e481b8fb8d7b535a2fb1b9c2525b5bfe1d98f908782172b6fdeac",
+    "observations-samples.jsonl.gz": "2bdb539e00efa44827ecafa75c5f5f660396d270460399cd01bd782cb5c8125c",
+    "vps.log.gz": "1da15d0473689f98abadd1becdcc76c4424babad624e76091d85839ae2e217fb",
+    "monitor-samples.jsonl.gz": "569ee251dfff803c992c5454926e94e99859e168a51cca5c4f9c8db58a7fe28d",
+    "native.log.gz": "7ee47f08bafe18b4c8c732d04606cac22b1a8a4de845c1649ff8829dd2ac25df",
+    "monitor-wrong-genesis.json": "011547645ff998aae311f1039b03e4afb9be632a42a590e3febae37d2aeba4a9",
+    "observations-result.json": "f3e9f015edc481669dcd320b43831e05aabe4ec9920e477cfe7a7bbcde2ed68b",
+    "topology.json": "939f2ae45f3d99f71c31c613ef3671413e532e74502b84637702d8cd437cda68",
+    "monitor-state.json": "ccbb743f43ed01d8120757825f339e5c2a212d3287a4595208f373a7d1a7b441",
+    "monitor-wrong-genesis-state.json": "5f0317a7af28ec7e4b177d55b11f80f80f7c9e7fcd78abf018f2e3a4d8881109",
+    "prepared-mac-native-profile.json": "c9d115373e63eea3332aadd86611d1fe6f9d129d61b80d6af883cf16ad176467",
+    "docker-mac.log.gz": "0fcdc0154b05f8f8744f509d01cb191f67a8fdd074efc9f685e69d02689aa328",
+    "mac-state.json": "340118436d7c274b7c8374ca25ea0d1064e2262eecaeb88af05fd513586c4522",
+    "monitor-wrong-genesis-result.json": "286e1b4e2662ca326b48db37ee8dccba15a27bc1b94da8c234383ea6ec9ea1f7"
+  }
+}

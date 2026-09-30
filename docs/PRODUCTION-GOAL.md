@@ -1,5 +1,20 @@
 # Objectif : Nano C++ de niveau production
 
+## Réseau des images finales qualifié — 30 septembre 2026
+
+Les deux images candidates finales, sans volume de compilation, passent avec
+Mac natif : trois avancées communes de finalité de 2 à 5, liées aux mêmes blocs
+d’exécution, en 142,963 s. Le vrai moniteur effectue 24 observations saines et
+refuse le faux genesis sur les trois endpoints. Les signataires terminent sains
+avec 137/134/137 attestations admises ; conteneurs sortis à zéro sans OOM.
+Identités/empreintes des images vérifiées avant génération des fixtures.
+64 clés synthétiques, trois processus sur deux hôtes ; profil Capella/Shanghai.
+Cette campagne valide le réseau stable des images finales. Mise à jour/retour,
+pannes des images, charge/ressources, écarts historiques, alertes externes,
+provenance complète et revue indépendante restent ouverts. Aucun fork plus
+récent ni aucune production globale ne sont déduits de ce résultat.
+[Preuves](qualification/packaged-network-20260930/manifest.json).
+
 ## Images candidates assemblées, qualification réseau ouverte — 30 septembre 2026
 
 Les images finales ARM64 et x86-64 embarquent les deux binaires attendus issus
