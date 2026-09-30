@@ -1,3 +1,4 @@
+#include "nano/consensus_capella_audit.hpp"
 #include "nano/chain.hpp"
 #include "nano/migration.hpp"
 #include "nano/http.hpp"
@@ -14,6 +15,7 @@ int main(int argc,char** argv){try{
  if(argc<2||std::string(argv[1])=="--help"){
   std::cout<<"Nano local chain tools\nUsage: nano <init|status|audit|mine|validate|import|serve|run> <genesis.json> <database-directory> [arguments]\n"
     "  wallet <create|import|address|sign-message|sign-transaction|sign-typed-data> <keyfile> [data]\n  wallet deployment-address <keyfile> [nonce]\n  wallet create-many <new-directory> [count] (default: 10)\n  wallet hd-create <mnemonic-file> [word-count]; wallet hd-derive <keyfile> [index]\n  rpc <URL> <info|nodes|network|balance|send|deploy|receipt|mine> [arguments]\n  rpc <URL> <stake-register|stake-add> <keyfile> <contract> <amountNano>\n  rpc <URL> stake-withdraw <keyfile> <contract>\n  rpc <URL> deploy <keyfile> <bytecode-file> [timeout] [valueNano]\n  validator <config.json> [--once] (separate client)\n  init/status: show canonical chain status\n  mine/validate: <coinbase> <timestamp> [signed-raw-transactions.json]\n"
+    "  audit-capella <genesis.json> <existing-database-directory> <audit-request.json> (offline canonical replay)\n"
     "  beacon-journal init <identity.json> <new-database> <new-receipt-directory>\n"
     "  beacon-journal status <identity.json> <database> <expected-commitment.json>\n"
     "  beacon-journal export <identity.json> <database> <expected-commitment.json> <new-receipt-directory>\n"
@@ -22,6 +24,10 @@ int main(int argc,char** argv){try{
  }
  std::string command=argv[1];
  if(command=="beacon-journal")return beacon_journal_command(argc,argv);
+ if(command=="audit-capella"){
+  if(argc!=5)throw std::invalid_argument("audit-capella requires genesis.json existing-database-directory audit-request.json");
+  std::cout<<audit_capella_database(Genesis::from_json(load(argv[2])),argv[3],load(argv[4])).dump(2)<<"\n";return 0;
+ }
  if(command=="audit"){
   if(argc!=4)throw std::invalid_argument("audit requires genesis.json existing-database-directory");
   if(!std::filesystem::is_regular_file(std::filesystem::path(argv[3])/"CURRENT"))throw std::invalid_argument("audit requires an existing RocksDB database");

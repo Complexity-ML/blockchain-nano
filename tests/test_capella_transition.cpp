@@ -1,3 +1,4 @@
+#include "nano/consensus_capella_audit.hpp"
 #include "nano/consensus_bls.hpp"
 #include "support/altair_transition_rules.hpp"
 #include "nano/consensus_capella_transition.hpp"
@@ -554,6 +555,12 @@ static void scheduler_loop(const CapellaForkStore& initial,const CapellaForkBloc
  const auto finalized_header=reactor->beacon_read("/eth/v1/beacon/headers/finalized");const auto finalized_root=current.state->timed.view.finalized.root;check(finalized_header.status==200&&finalized_header.body.at("finalized")==true&&finalized_header.body.at("data").at("root")==hex(Bytes(finalized_root.begin(),finalized_root.end())),"scheduled finalized Beacon header mismatch");
  proposals+=loop->status().at("proposalsAdmitted").get<uint64_t>();votes+=loop->status().at("attestationsAdmitted").get<uint64_t>();sync_messages+=loop->status().at("syncMessagesAdmitted").get<uint64_t>();check(proposals==stop_slot-1&&votes>0&&sync_messages>0,"scheduler duty counters");
  if(sync_rotation)check(rotations==3&&committee_changes>=2&&verified_aggregates==stop_slot-2&&maximum_records<=5*slots&&current.state->timed.view.finalized.epoch>=3*period,"rotation/finality/pruning qualification incomplete");
+ {ChainStore audit_disk(directory/"owner",ChainStore::OpenMode::ReadOnly);
+ const auto audited=audit_capella_canonical_history(audit_disk,t.chain_id,genesis.header.hash(),rules,limits,initial,current.token,stop_slot,512*1024*1024);
+ check(audited.at("canonicalHistoryVerified")==true&&audited.at("historicalForkChoiceVerified")==false&&audited.at("blocksIncludingTrustedAnchor")==stop_slot,"canonical history audit scope/count");
+ bool audit_rejected=false;try{audit_capella_canonical_history(audit_disk,t.chain_id,genesis.header.hash(),rules,limits,initial,current.token,1,512*1024*1024);}catch(const std::exception&){audit_rejected=true;}check(audit_rejected,"audit ignored block budget");
+ auto wrong_commitment=current.token;wrong_commitment.digest[0]^=1;audit_rejected=false;try{audit_capella_canonical_history(audit_disk,t.chain_id,genesis.header.hash(),rules,limits,initial,wrong_commitment,stop_slot,512*1024*1024);}catch(const std::exception&){audit_rejected=true;}check(audit_rejected,"audit accepted wrong external checkpoint");
+ std::cout<<audited.dump()<<std::endl;}
  bool cancelled=false;try{loop->poll([]{throw ExecutionCancelled("scheduler cancellation");});}catch(const ExecutionCancelled&){cancelled=true;}check(cancelled&&loop->status().at("healthy")==true&&clock->healthy(),"cancellation poisoned scheduler");
  // Exercise the real worker lifecycle with a stable clock and already completed duties.
  const auto prior=signatures;const auto polls_before=loop->status().at("timing").at("polls").get<uint64_t>();loop->start(std::chrono::milliseconds(1));std::this_thread::sleep_for(std::chrono::milliseconds(20));loop->stop();check(signatures==prior&&loop->status().at("healthy")==true&&loop->status().at("timing").at("polls").get<uint64_t>()>polls_before,"worker failed to poll or duplicated completed duty");

@@ -1,5 +1,16 @@
 # EIP pour l’EVM et la production Nano
 
+## Rejeu canonique Capella hors ligne implémenté — 30 septembre 2026
+
+La commande `audit-capella` vérifie les archives depuis une ancre explicite, sans
+modifier la base. Qualification native : scénario signé avec audit (33,76 s),
+base WAN C auditée (99 blocs, 97 transactions), quatre corruptions refusées
+(archive, signature, reçu, index), empreintes des fichiers inchangées.
+[Preuves et limites](qualification/capella-offline-audit-20260930/README.md).
+L'audit canonique est implémenté ; les votes historiques autonomes et le choix
+de chaîne historique ne sont pas rejoués. Linux, sauvegarde/restauration et ces
+compléments restent ouverts, ainsi que l'anomalie A et la production globale.
+
 ## Préalable à l'audit Beacon : stockage en lecture seule — 30 septembre 2026
 
 Le mode `ChainStore::OpenMode::ReadOnly` est implémenté. Son nouveau test natif

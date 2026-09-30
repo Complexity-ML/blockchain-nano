@@ -1,0 +1,99 @@
+-- GLOB mismatch!
+The following files were added:
+  +/Users/boris/Dev/blockchain-nano/src/consensus_capella_audit.cpp
+-- Could NOT find Valgrind (missing: Valgrind_INCLUDE_DIR Valgrind_WORKS) 
+
+
+secp256k1 configure summary
+===========================
+Build artifacts:
+  library type ........................ Static
+Optional modules:
+  ECDH ................................ OFF
+  ECDSA pubkey recovery ............... ON
+  extrakeys ........................... OFF
+  schnorrsig .......................... OFF
+  musig ............................... OFF
+  ElligatorSwift ...................... OFF
+Parameters:
+  ecmult window size .................. 15
+  ecmult gen table size ............... 86 KiB
+Optional features:
+  assembly ............................ OFF
+  external callbacks .................. OFF
+Optional binaries:
+  benchmark ........................... OFF
+  noverify_tests ...................... OFF
+  tests ............................... OFF
+  exhaustive tests .................... OFF
+  ctime_tests ......................... OFF
+  examples ............................ OFF
+
+Cross compiling ....................... FALSE
+API visibility attributes ............. ON
+Valgrind .............................. OFF
+Preprocessor defined macros ........... ECMULT_WINDOW_SIZE=15 COMB_BLOCKS=43 COMB_TEETH=6
+C compiler ............................ AppleClang 21.0.0.21000334, /usr/bin/cc
+CFLAGS ................................ 
+Compile options ....................... -Wall -pedantic -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef
+Build type:
+ - CMAKE_BUILD_TYPE ................... Release
+ - CFLAGS ............................. -O2 
+ - LDFLAGS for executables ............ 
+ - LDFLAGS for shared libraries ....... 
+
+bint_obj=/Users/boris/Dev/blockchain-nano/build-release/third_party/mcl/bint64.o
+base_obj=/Users/boris/Dev/blockchain-nano/build-release/third_party/mcl/base64.o
+-- Configuring done (0.4s)
+-- Generating done (0.4s)
+-- Build files have been written to: /Users/boris/Dev/blockchain-nano/build-release
+[  0%] Built target gen_base.o
+[  0%] Built target gen_bint.o
+[  3%] Built target secp256k1_precomputed
+[  7%] Built target nano_blst
+[  7%] Built target secp256k1
+[  7%] Built target nano_ckzg
+[  7%] Building CXX object CMakeFiles/nano-test-sync-fault.dir/tests/support/sync_fault_macos.cpp.o
+[ 10%] Built target mcl_st
+[ 10%] Linking CXX shared library libnano-test-sync-fault.dylib
+[ 10%] Built target nano-test-sync-fault
+[ 10%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_audit.cpp.o
+[ 10%] Building CXX object CMakeFiles/nano_core.dir/src/kzg.cpp.o
+[ 10%] Linking CXX static library libnano_core.a
+[100%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-capella-transition-tests.dir/tests/test_capella_transition.cpp.o
+In file included from /Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:3:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/altair_transition_rules.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_transition_rules.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_epoch_ssz.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_ffg_ssz.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_minimal_ssz.hpp:2:
+/Users/boris/Dev/blockchain-nano/tests/support/process.hpp:39:19: warning: 'posix_spawn_file_actions_addchdir_np' is deprecated: first deprecated in macOS 26.0 - posix_spawn_file_actions_addchdir(3) has replaced posix_spawn_file_actions_addchdir_np(3) [-Wdeprecated-declarations]
+   39 |   if(!cwd.empty())posix_spawn_file_actions_addchdir_np(&actions,cwd.c_str());
+      |                   ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/spawn.h:184:9: note: 'posix_spawn_file_actions_addchdir_np' has been explicitly marked deprecated here
+  184 | int     posix_spawn_file_actions_addchdir_np(posix_spawn_file_actions_t *,
+      |         ^
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:558:21: error: no matching function for call to 'audit_capella_canonical_history'
+  558 |  const auto audited=audit_capella_canonical_history(owner->store(),t.chain_id,genesis.header.hash(),rules,limits,initial,current.token,stop_slot,512*1024*1024);
+      |                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/include/nano/consensus_capella_audit.hpp:7:6: note: candidate function not viable: 1st argument ('const ChainStore') would lose const qualifier
+    7 | Json audit_capella_canonical_history(ChainStore&,const Int& chain,const Bytes& genesis,
+      |      ^                               ~~~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:560:32: error: no matching function for call to 'audit_capella_canonical_history'
+  560 |  bool audit_rejected=false;try{audit_capella_canonical_history(owner->store(),t.chain_id,genesis.header.hash(),rules,limits,initial,current.token,1,512*1024*1024);}catch(const std::exception&){audit_rejected=true;}check(audit_rejected,"audit ignored block budget");
+      |                                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/include/nano/consensus_capella_audit.hpp:7:6: note: candidate function not viable: 1st argument ('const ChainStore') would lose const qualifier
+    7 | Json audit_capella_canonical_history(ChainStore&,const Int& chain,const Bytes& genesis,
+      |      ^                               ~~~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:561:93: error: no matching function for call to 'audit_capella_canonical_history'
+  561 |  auto wrong_commitment=current.token;wrong_commitment.digest[0]^=1;audit_rejected=false;try{audit_capella_canonical_history(owner->store(),t.chain_id,genesis.header.hash(),rules,limits,initial,wrong_commitment,stop_slot,512*1024*1024);}catch(const std::exception&){audit_rejected=true;}check(audit_rejected,"audit accepted wrong external checkpoint");
+      |                                                                                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/include/nano/consensus_capella_audit.hpp:7:6: note: candidate function not viable: 1st argument ('const ChainStore') would lose const qualifier
+    7 | Json audit_capella_canonical_history(ChainStore&,const Int& chain,const Bytes& genesis,
+      |      ^                               ~~~~~~~~~~~
+1 warning and 3 errors generated.
+gmake[3]: *** [CMakeFiles/nano-capella-transition-tests.dir/build.make:79: CMakeFiles/nano-capella-transition-tests.dir/tests/test_capella_transition.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:7655: CMakeFiles/nano-capella-transition-tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:7662: CMakeFiles/nano-capella-transition-tests.dir/rule] Error 2
+gmake: *** [Makefile:2663: nano-capella-transition-tests] Error 2

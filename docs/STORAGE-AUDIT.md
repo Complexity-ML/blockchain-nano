@@ -61,3 +61,12 @@ La suite `block_auth` altère les index pour qu’ils désignent un autre bloc
 correctement formé et signé. Les lectures concernées échouent explicitement,
 au lieu de renvoyer ce bloc comme s’il était celui demandé. Ces contrôles ne
 prouvent pas la finalité et ne remplacent pas le rejeu de l’historique.
+
+## Profil Capella : commande distincte
+
+`nano audit-capella genesis.json base-arretee audit-request.json` fournit le rejeu
+canonique depuis une ancre et un engagement externes. Consulter le
+[rapport et le format de requête](qualification/capella-offline-audit-20260930/README.md).
+La qualification native couvre les corruptions documentées. Les votes autonomes
+et le choix de chaîne historiques ne sont pas rejoués ; cette commande ne
+constitue pas encore un audit complet du consensus.

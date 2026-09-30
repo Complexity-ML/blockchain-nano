@@ -1770,3 +1770,8 @@ add_executable(nano-storage-read-only-tests tests/test_storage_read_only.cpp)
 target_link_libraries(nano-storage-read-only-tests PRIVATE nano_core)
 add_test(NAME storage_read_only COMMAND nano-storage-read-only-tests)
 set_tests_properties(storage_read_only PROPERTIES TIMEOUT 60 LABELS "qualification_storage_local")
+
+# Offline integration tool: requires a stopped, signed Capella fixture with
+# historical transactions and an independently recorded checkpoint commitment.
+add_executable(nano-capella-audit-corruption-tests tests/test_capella_audit_corruption.cpp)
+target_link_libraries(nano-capella-audit-corruption-tests PRIVATE nano_core)
