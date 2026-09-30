@@ -1,5 +1,16 @@
 # Feuille de route EIP — état réel de Nano
 
+## Diagnostic C++ d’horloge qualifié sur les deux architectures — 30 septembre 2026
+
+La garde indique désormais temps lu, temps durable, dernière observation et
+borne, avec trois prédicats séparés. Quatre nouveaux scénarios passent dans
+Docker ARM64 et x86-64 : retours avant temps durable/observation coalescée,
+saut excessif et limite exacte acceptée. Les défauts ferment les accès et
+conservent le checkpoint et la première erreur. Aucun seuil relâché.
+Cela qualifie le diagnostic ; cause physique WAN B, reprise >180 s et WAN A
+restent ouverts. Les images réseau historiques sont encore à `ca780d5`.
+[Preuves ciblées](qualification/capella-clock-diagnostics-20260930/manifest.json).
+
 ## Diagnostic WAN B : reprise lente et panne d’horloge — 30 septembre 2026
 
 Premier cycle : reprise commune en 135,381 s. Second : head commun observé
