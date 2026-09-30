@@ -1,0 +1,50 @@
+{
+  "terminalExitCode": 1,
+  "failure": "second partition exceeded original 180 second recovery deadline",
+  "lateFinalityStable": {
+    "epochs": 3,
+    "firstEpoch": "15",
+    "lastEpoch": "18",
+    "elapsedMs": 138883,
+    "nodes": [
+      "mac-native",
+      "mac-docker",
+      "vps-docker"
+    ],
+    "revision": "ca780d5002c72b2486833f8dbe881649787a6c4f"
+  },
+  "validators": [
+    {
+      "file": "native.log",
+      "healthy": true,
+      "attestationsAdmitted": 420
+    },
+    {
+      "file": "docker-mac.log",
+      "healthy": true,
+      "attestationsAdmitted": 396
+    },
+    {
+      "file": "vps.log",
+      "healthy": true,
+      "attestationsAdmitted": 401
+    }
+  ],
+  "resourceSamplesPerHost": 47,
+  "resourceCollectionErrors": 0,
+  "observedPeaks": {
+    "mac-native": {
+      "cpuPercent": 82.5,
+      "rssKiB": 515168
+    },
+    "mac-docker": {
+      "cpuPercent": 49.21
+    },
+    "vps-docker": {
+      "cpuPercent": 106.77
+    }
+  },
+  "peakScope": "sampled values, not continuous maxima; CPU percent may exceed 100 for multiple cores",
+  "networkQualified": false,
+  "productionQualified": false
+}

@@ -5,10 +5,11 @@
 La coupure de 96 s passe. Après celle de 192 s, les pairs se reconnectent mais
 la finalité commune plus récente arrive après le budget initial de 180 s.
 L’observation tardive retrouve l’époque 15 sur les trois nœuds ; elle ne
-transforme pas le dépassement en réussite. La fenêtre finale de stabilité est
-encore en cours. La cause du retard reste à analyser ; aucun changement de
-runtime ou de budget n’est appliqué pendant cette campagne.
-[Verdict et captures intermédiaires](qualification/partition-cycles-20260930/attempt-a/manifest.json).
+transforme pas le dépassement en réussite. La fenêtre tardive 15→18
+passe en 138,883 s ; signataires sains, conteneurs arrêtés sans OOM. Le lanceur
+termine en échec (exit 1). La cause du retard reste à analyser ; aucun
+changement de runtime ou de budget n’a été appliqué pendant la campagne.
+[Verdict terminal et journaux](qualification/partition-cycles-20260930/attempt-a/manifest.json).
 Le critère de partitions répétées reste ouvert.
 
 ## Intégrité des archives contrôlée — 30 septembre 2026
@@ -22,7 +23,7 @@ qualifiée par ce seul contrôle. La campagne de partitions continue sans
 modification de ses dépendances.
 [Preuves](qualification/evidence-integrity-20260930/manifest.json).
 
-## Partitions répétées et prolongées : campagne en cours — 30 septembre 2026
+## Partitions répétées et prolongées : préparation historique — 30 septembre 2026
 
 Un programme fini de deux coupures (96 puis 192 s) est ajouté au lanceur des
 images finales. Chaque cycle exige une finalité commune plus récente et des
