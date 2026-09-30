@@ -1,5 +1,16 @@
 # EIP pour l’EVM et la production Nano
 
+## Second cycle de partition : délai de reprise dépassé — 30 septembre 2026
+
+La coupure de 96 s passe. Après celle de 192 s, les pairs se reconnectent mais
+la finalité commune plus récente arrive après le budget initial de 180 s.
+L’observation tardive retrouve l’époque 15 sur les trois nœuds ; elle ne
+transforme pas le dépassement en réussite. La fenêtre finale de stabilité est
+encore en cours. La cause du retard reste à analyser ; aucun changement de
+runtime ou de budget n’est appliqué pendant cette campagne.
+[Verdict et captures intermédiaires](qualification/partition-cycles-20260930/attempt-a/manifest.json).
+Le critère de partitions répétées reste ouvert.
+
 ## Intégrité des archives contrôlée — 30 septembre 2026
 
 Un contrôle indépendant compare cinq manifestes ancrés dans les objets Git

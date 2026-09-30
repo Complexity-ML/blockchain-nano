@@ -1,0 +1,91 @@
+{
+  "stage": "deadline verdict captured; final stable observation still running",
+  "cycles": [
+    {
+      "cycle": 1,
+      "requestedCutMs": 96000,
+      "actualCutMs": 97880,
+      "recoveryObservedMs": 142925,
+      "within180SecondDeadline": true
+    },
+    {
+      "cycle": 2,
+      "requestedCutMs": 192000,
+      "actualCutMs": 193193,
+      "recoveryObservedMs": 187621,
+      "within180SecondDeadline": false
+    }
+  ],
+  "deadlineMissed": true,
+  "networkQualified": false,
+  "productionQualified": false,
+  "events": [
+    {
+      "time": 1790797730316,
+      "event": "partition-disconnected",
+      "container": "nano-qualification-vps-muoima7f",
+      "network": "nano-qualification-vps-muoima7f-net",
+      "address": "172.27.0.2",
+      "cutMs": 96000,
+      "cycle": 1
+    },
+    {
+      "time": 1790797828196,
+      "event": "partition-reconnected",
+      "container": "nano-qualification-vps-muoima7f",
+      "network": "nano-qualification-vps-muoima7f-net",
+      "address": "172.27.0.2",
+      "cycle": 1
+    },
+    {
+      "time": 1790797971121,
+      "event": "partition-recovery-bound",
+      "checkpoint": {
+        "epoch": "7",
+        "root": "0xcfe4dba00435864818defef78008547d92196ca89c1f18a77ace0ee2914ef426"
+      },
+      "cycle": 1
+    },
+    {
+      "time": 1790797972030,
+      "event": "partition-cycle-passed",
+      "cycle": 1,
+      "cutMs": 96000,
+      "checkpoint": {
+        "epoch": "7",
+        "root": "0xcfe4dba00435864818defef78008547d92196ca89c1f18a77ace0ee2914ef426"
+      }
+    },
+    {
+      "time": 1790797974635,
+      "event": "partition-disconnected",
+      "container": "nano-qualification-vps-muoima7f",
+      "network": "nano-qualification-vps-muoima7f-net",
+      "address": "172.27.0.2",
+      "cutMs": 192000,
+      "cycle": 2
+    },
+    {
+      "time": 1790798167828,
+      "event": "partition-reconnected",
+      "container": "nano-qualification-vps-muoima7f",
+      "network": "nano-qualification-vps-muoima7f-net",
+      "address": "172.27.0.2",
+      "cycle": 2
+    },
+    {
+      "time": 1790798348354,
+      "event": "partition-recovery-deadline-missed",
+      "message": "Partition recovery deadline exceeded"
+    },
+    {
+      "time": 1790798355449,
+      "event": "late-partition-recovery-bound",
+      "checkpoint": {
+        "epoch": "15",
+        "root": "0xfd7e5238aeb2c5966fd883f550e75bfb10254492cbb669ab3272c4ecbe657fed"
+      },
+      "cycle": 2
+    }
+  ]
+}
