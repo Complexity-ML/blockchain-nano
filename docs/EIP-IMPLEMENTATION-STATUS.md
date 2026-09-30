@@ -1,5 +1,17 @@
 # Feuille de route EIP — état réel de Nano
 
+## Supervision de finalité implémentée, intégration réseau ouverte — 30 septembre 2026
+
+Le [moniteur local](FINALITY-MONITOR.md) vérifie chaîne/genesis et profil,
+checkpoint finalisé par état immuable, pairs, stagnation, conflits et régressions.
+Les alertes de sécurité persistent entre exécutions ; seuils et budgets sont
+configurables, RPC en loopback, aucune signature ni reprise automatique.
+Dix-sept tests passent, dont cinq processus CLI face à deux serveurs synthétiques.
+Qualification sur réseau Nano vivant, rattachement à l’exécution, ressources,
+duties et livraison externe des alertes restent ouverts. Aucun critère global
+de production n’est clôturé par ces tests de l’outil.
+[Preuves](qualification/finality-monitor-20260930/manifest.json).
+
 ## Preuves de sanction falsifiées : nouveau scénario — 30 septembre 2026
 
 Seize refus adversariaux passent en natif : signature altérée, mauvaise clé,

@@ -1,0 +1,25 @@
+✔ common finality is observed, zero peers are unhealthy (1.073791ms)
+✔ stall deadline persists across serialization and recovers on progress (0.259416ms)
+✔ conflicting finality is latched across later healthy observations (0.103458ms)
+✔ regression cannot be erased by advancing the other observer (0.072417ms)
+✔ lagging observer keeps safety root history, retention trims only below minimum (0.5475ms)
+✔ unavailable observer and corrupt observation never earn healthy status (0.065375ms)
+✔ state cannot be reused with another profile or time reversal (0.117708ms)
+✔ reject public RPC, duplicate endpoint and duplicate samples (0.083916ms)
+✔ reader pins finality to immutable head state and verifies chain/profile (2.202125ms)
+✔ RPC errors and profile mismatch are unavailable (0.439708ms)
+✔ response body resource budget enforced (0.180334ms)
+✔ missing persisted safety root is rejected, not silently re-established (0.08ms)
+✔ invalid samples cannot report historical common finality as current (0.059792ms)
+✔ overlapping CLI invocations fail before reading or modifying monitor state (3.448125ms)
+✔ lagging observer cannot make root history exceed operator resource policy (0.108334ms)
+✔ CLI samples HTTP, persists safety fault and releases lock across five processes (467.972ms)
+✔ oversized remote epoch and unconfigured endpoint are rejected before trust (0.190167ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 552.692583
