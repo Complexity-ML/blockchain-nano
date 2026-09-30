@@ -1,5 +1,18 @@
 # EIP pour l’EVM et la production Nano
 
+## Restauration complète avec finalité commune qualifiée — 30 septembre 2026
+
+La tentative B passe : restauration du VPS, engagements de chaîne et de journaux
+conservés séparément, reprise de 117 attestations et 24 propositions, puis trois
+avancées communes de finalité (époques 5 à 8, fenêtre stricte de 185,140 s).
+Les données sources restent inchangées. Les trois signataires terminent sains.
+Le périmètre comprend 64 validateurs synthétiques, trois processus et deux hôtes
+physiques. Une réconciliation bornée précède la fenêtre stricte inchangée ;
+l'échec de la tentative A est conservé et sa cause n'est pas déclarée corrigée.
+[Preuves B](qualification/capella-restored-validators-20260930/attempt-b/manifest.json).
+La régression complète du candidat, les anomalies historiques et la revue de
+sécurité indépendante restent des critères ouverts de production.
+
 ## Première restauration réelle : audit et signatures repris, finalité non qualifiée — 30 septembre 2026
 
 Tentative A : copie complète et audit canonique (32 blocs, 1 transaction) passent.

@@ -1,0 +1,108 @@
+{
+  "harnessRevision": "28469c7",
+  "buildRevision": "cfbf0572f494956608d0be17845ce11d44bfc9e1",
+  "runtimeCoreRevision": "172b24563f0f9af3186e6c2c0c0b1ea442c5508d",
+  "scope": "64 synthetic validators, three processes, two physical hosts; stopped whole-node VPS restoration with independently retained commitments, bounded reconciliation, unchanged strict three-epoch observation",
+  "productionReady": false,
+  "priorFailureUnresolved": true,
+  "results": [
+    {
+      "time": 1790790743465,
+      "event": "backup-restore-common-finality",
+      "savedFinalized": {
+        "epoch": "0x2",
+        "root": "0xff935f05773c7b83a57a9ca1fffd78d41aebc493f680ebb41e141e0b8b673f0d"
+      },
+      "stable": {
+        "epochs": 3,
+        "firstEpoch": "5",
+        "lastEpoch": "8",
+        "elapsedMs": 185140,
+        "nodes": [
+          "mac-native",
+          "mac-docker",
+          "vps-docker"
+        ],
+        "revision": "cfbf0572f494956608d0be17845ce11d44bfc9e1"
+      }
+    },
+    {
+      "time": 1790790747510,
+      "event": "backup-restore-passed",
+      "sourceStillUnchanged": true,
+      "restoredSignerStatus": {
+        "attestationsAdmitted": 117,
+        "awaitingRegistration": 0,
+        "dutyTraceFailures": 0,
+        "failure": null,
+        "healthy": true,
+        "localKeys": 21,
+        "proposalsAdmitted": 24,
+        "staleDutyRetries": 0,
+        "syncMessagesAdmitted": 435,
+        "timing": {
+          "maxPollMs": 5040,
+          "maxProposalMs": 1284,
+          "polls": 1303,
+          "pollsOverSlot": 0,
+          "proposalAttempts": 24,
+          "proposalsUnavailable": 0,
+          "slotBoundaryExits": 15
+        }
+      },
+      "stable": {
+        "epochs": 3,
+        "firstEpoch": "5",
+        "lastEpoch": "8",
+        "elapsedMs": 185140,
+        "nodes": [
+          "mac-native",
+          "mac-docker",
+          "vps-docker"
+        ],
+        "revision": "cfbf0572f494956608d0be17845ce11d44bfc9e1"
+      }
+    },
+    {
+      "time": 1790790747511,
+      "event": "passed",
+      "validators": [
+        {
+          "file": "native.log",
+          "healthy": true,
+          "attestationsAdmitted": 204
+        },
+        {
+          "file": "docker-mac.log",
+          "healthy": true,
+          "attestationsAdmitted": 195
+        },
+        {
+          "file": "vps.log",
+          "healthy": true,
+          "attestationsAdmitted": 117
+        }
+      ]
+    }
+  ],
+  "sha256": {
+    "docker-mac.log.gz": "6396c39ada559d38e111e168b919abb84b375cdb3bcee839a1411d28070c374f",
+    "native.log.gz": "38650796df3eaeffa2ca9f65118090cb3cf401db6db3b15a2cccc5a1b442d3c8",
+    "restore/archive.sha256": "95dd7380c53e0cc23ca3afc70c6df873c6d6c35414842cac64e236f10a38af09",
+    "restore/audit-request.json": "be5d56d61cb04e71cca76fe7dc1d8b3d6f07d384288ac37d099f136f4098fb7d",
+    "restore/audit.json": "a3bec0bcf08f7a3bbce54c185840b00ced3d10d6815d10c8749a05088fbebf41",
+    "restore/inputs.sha256": "f0f7c46c98c1a4fbadbce030bf98bc05cf36146a7a9b326c19ae3773eac7e3ba",
+    "restore/node.json": "2e57e12d7c7f3b7eb20d7533d8e478b7ea53a0b889a5ca287d24cedf1c0b0be0",
+    "restore/passed.txt": "b8a8074db0e7fcfc9f22fb5f1c6946c0475418ee41c5419f3fa60d182886e4df",
+    "restore/restored-after.sha256": "eb8aae669f74e242f4d8d29b14a22f7184c1076b9a5a32f4e9b118d3a5ab93c9",
+    "restore/restored-before.sha256": "eb8aae669f74e242f4d8d29b14a22f7184c1076b9a5a32f4e9b118d3a5ab93c9",
+    "restore/source-after.sha256": "eb8aae669f74e242f4d8d29b14a22f7184c1076b9a5a32f4e9b118d3a5ab93c9",
+    "restore/source-before.sha256": "eb8aae669f74e242f4d8d29b14a22f7184c1076b9a5a32f4e9b118d3a5ab93c9",
+    "restore/source-state.json": "d913f456c8269209581ec244e05bc3741e005a8710fa38a9ffd19bc657f8d1f8",
+    "restore/stop-receipt.json": "2373cb9df05ff76f1fe7e74e0b3d02515d9c88a156585bb5ec8664a6e526df79",
+    "run.jsonl.gz": "216a060392ba9ff9d5370a5b804b105f1c9889da97c4f06117f7290a81b1a61c",
+    "topology.json.gz": "7cc916f466855c25e5c8ee26bf45a5e2cfccebe035308140a6eff100ead83d35",
+    "vps-before-restore.log.gz": "ef8897c75a742a442649a8c8f7e42b88944a59d01a082bd9e136a5b0edf01b41",
+    "vps.log.gz": "84d5476b98ae0e248fd597e57ea1064b5feeba3ceac74981a2dd05574470bbb3"
+  }
+}
