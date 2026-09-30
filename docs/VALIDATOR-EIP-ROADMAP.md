@@ -1,5 +1,17 @@
 # EIP et consensus : périmètre demandé pour Nano
 
+## Charge pendant partition WAN qualifiée — 30 septembre 2026
+
+La tentative C sur `22b4b65` réussit : 96 transactions admises pendant une coupure
+réelle de 97,882 s, finalité commune reprise en 136,834 s ; reçus finalisés et
+états identiques vérifiés en 350,273 s, puis époques communes 9 à 12 en 124,230 s.
+Les trois validateurs terminent sains, les deux conteneurs sortent à zéro sans OOM.
+Les 33 mesures par nœud sont complètes. Preuves et vérification hors ligne :
+[rapport](qualification/capella-partition-load-20260930/README.md).
+Cette charge est bornée (SSTORE constant), sur trois instances et deux machines ;
+aucune capacité maximale ni endurance prolongée n'est démontrée.
+L'arrêt du réacteur de la tentative A reste inexpliqué ; la production globale reste ouverte.
+
 ## Charge sous partition : transactions bloquées, correctif natif — 30 septembre 2026
 
 Le [rejeu B](qualification/capella-partition-load-20260930/README.md) rétablit la
@@ -11,7 +23,7 @@ Tests natifs réussis : mempool (0,36 s), 32 transactions reçues en ordre inver
 finalisées par Capella (34,44 s). Qualification Linux réussie sur ARM64 (25,58 s) et VPS x86-64 (97,36 s),
 avec le cœur `22b4b65`, journaux et empreintes archivés dans
 `qualification/capella-partition-load-20260930/nonce-ready-linux/`.
-Le rejeu WAN C est lancé ; son résultat reste à qualifier.
+Le rejeu WAN C est réussi dans le périmètre détaillé ci-dessus.
 L'arrêt du réacteur en tentative A reste distinct et non expliqué ; aucune clôture
 globale de production n'est revendiquée.
 

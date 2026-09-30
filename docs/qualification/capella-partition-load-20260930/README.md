@@ -1,5 +1,26 @@
 # Charge applicative pendant partition — 30 septembre 2026
 
+## Charge pendant partition WAN qualifiée — 30 septembre 2026
+
+La tentative C sur `22b4b65` réussit : 96 transactions admises pendant une coupure
+réelle de 97,882 s, finalité commune reprise en 136,834 s ; reçus finalisés et
+états identiques vérifiés en 350,273 s, puis époques communes 9 à 12 en 124,230 s.
+Les trois validateurs terminent sains, les deux conteneurs sortent à zéro sans OOM.
+Les 33 mesures par nœud sont complètes. Preuves et vérification hors ligne :
+`attempt-c/verified-result.json` et `attempt-c/manifest.json`.
+Cette charge est bornée (SSTORE constant), sur trois instances et deux machines ;
+aucune capacité maximale ni endurance prolongée n'est démontrée.
+L'arrêt du réacteur de la tentative A reste inexpliqué ; la production globale reste ouverte.
+
+Le nonce final vaut 97, le solde de la cible 96 wei et son stockage 42 sur
+les trois nœuds. L'ancre commune des reçus est le bloc 50. Les maxima observés
+sont 405,58 MiB / 68,6 % CPU pour le processus natif, 369,9 MiB / 59,9 % pour
+Docker Mac et 406,9 MiB / 100,48 % pour le VPS. Ce sont des échantillons,
+non des maxima continus ; le RSS natif exclut son enfant P2P. BlockIO mesure
+des écritures cumulées, pas l'occupation disque. Un premier appel au résumeur
+hors ligne a reçu un chemin de fichier au lieu du dossier attendu (ENOTDIR) ;
+l'appel corrigé a produit le rapport, sans relancer la campagne.
+
 ## Tentative B : reprise du consensus, blocage des transactions
 
 Le rejeu sur `406227f` (`attempt-b/`) échoue également, pour une raison différente
@@ -35,9 +56,9 @@ par bloc. Le comptage est maintenant fondé sur les transactions réellement adm
 Qualification Linux du cœur `22b4b65` réussie (`nonce-ready-linux/`) :
 mempool et scénario Capella passent sur ARM64 (0,01 / 25,57 s) et VPS x86-64
 (0,03 / 97,33 s). Les conteneurs sortent à zéro sans OOM ; journaux, états,
-révision et empreintes des binaires sont archivés. La tentative WAN C a été lancée.
+révision et empreintes des binaires sont archivés. La tentative WAN C est réussie (voir ci-dessus).
 
-**Le correctif de sélection reste à qualifier par ce nouveau rejeu WAN. L'arrêt du réacteur en tentative A reste une anomalie distincte, non expliquée
+**Le correctif de sélection est qualifié par la tentative C dans ce périmètre. L'arrêt du réacteur en tentative A reste une anomalie distincte, non expliquée
 et non reproduite en B. La production globale demeure ouverte.**
 
 ## Tentative A : arrêt du réacteur

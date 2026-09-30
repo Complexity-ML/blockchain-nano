@@ -1,0 +1,52 @@
+{
+  "scope": "Sampled observations of this campaign only. Peaks between samples are unknown. No throughput, disk-occupancy, endurance or production-readiness claim.",
+  "collectionStartDelayMs": 0,
+  "firstTimeMs": 1790726085519,
+  "lastTimeMs": 1790726741007,
+  "records": 33,
+  "nodes": {
+    "mac-native": {
+      "samples": 33,
+      "unavailable": [],
+      "identity": "28137",
+      "firstTimeMs": 1790726085519,
+      "lastTimeMs": 1790726741007,
+      "maximumSampleGapMs": 20838,
+      "maxObservedMemoryBytes": 425279488,
+      "maxObservedCpuPercent": 68.6,
+      "measurement": "ps RSS and %CPU for the main process only, excluding its P2P child; sampling differs from Docker"
+    },
+    "mac-docker": {
+      "samples": 33,
+      "unavailable": [],
+      "identity": "0052f69d77d1",
+      "firstTimeMs": 1790726085519,
+      "lastTimeMs": 1790726741007,
+      "maximumSampleGapMs": 20838,
+      "maxObservedMemoryBytes": 387868262,
+      "maxObservedCpuPercent": 59.9,
+      "memoryLimitBytes": 3221225472,
+      "lastBlockIoBytes": {
+        "read": 16400,
+        "written": 2960000000
+      },
+      "measurement": "docker stats memory accounting and sampled CPU; BlockIO is cumulative I/O, not disk usage"
+    },
+    "vps-docker": {
+      "samples": 33,
+      "unavailable": [],
+      "identity": "d25b1ea702b5",
+      "firstTimeMs": 1790726085519,
+      "lastTimeMs": 1790726741007,
+      "maximumSampleGapMs": 20838,
+      "maxObservedMemoryBytes": 426665574,
+      "maxObservedCpuPercent": 100.48,
+      "memoryLimitBytes": 3221225472,
+      "lastBlockIoBytes": {
+        "read": 0,
+        "written": 2980000000
+      },
+      "measurement": "docker stats memory accounting and sampled CPU; BlockIO is cumulative I/O, not disk usage"
+    }
+  }
+}
