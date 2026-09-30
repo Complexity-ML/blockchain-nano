@@ -6,8 +6,8 @@ Seize refus adversariaux passent en natif : signature altérée, mauvaise clé,
 index inconnu et index dupliqué, chacun sur deux propriétaires durables avant
 admission valide puis après leur réouverture. Checkpoint et archive restent
 inchangés après chaque refus ; la preuve valide demeure conservée jusqu’à la
-sanction finalisée. Le cycle complet dépôt/activation/sanction passe. Docker
-ARM64 est en cours, VPS à qualifier. Le compteur `unknownFinalityAdvances` reste
+sanction finalisée. Le cycle complet dépôt/activation/sanction passe en natif et
+Docker ARM64 (sortie zéro, sans OOM). VPS x86-64 est en cours. Le compteur `unknownFinalityAdvances` reste
 zéro : la branche de nettoyage avec membre absent et nouvelle finalité demeure
 ouverte, sans assimilation à ces contrôles de falsification.
 [Preuves natives](qualification/capella-forged-slashing-20260930/native-result.json).
