@@ -77,8 +77,8 @@ Vingt et un tests locaux passent, dont cinq exécutions réelles du CLI face à 
 serveurs HTTP synthétiques : panne/stagnation, reprise, conflit et conservation
 de l'alerte. Les tests vérifient aussi identité, lecture par état immuable,
 budget de réponses et d'historique, régression, verrou et horloge. Cela qualifie
-l'outil et son lecteur, **pas** la supervision d'un réseau Nano vivant. Cette
-intégration et la livraison effective des alertes restent ouvertes.
+l'outil et son lecteur. La qualification sur réseau vivant est désormais
+conservée ci-dessous ; la livraison effective des alertes reste ouverte.
 
 
 Le banc multihôte accepte `NANO_TEST_FINALITY_MONITOR=1` avec Capella et les
@@ -86,5 +86,7 @@ volumes de compilation existants, sans autre injection de panne. Il attend la
 finalité de démarrage, exécute le vrai CLI avec une identité genesis incorrecte
 (dont le refus est obligatoire), puis observe la configuration correcte en
 parallèle de la fenêtre stricte de trois époques. Genesis et profil proviennent
-de la fixture locale exportée avant démarrage. Ce scénario n'est pas encore
-qualifié ; sa réussite doit être conservée avant toute revendication réseau.
+de la fixture locale exportée avant démarrage. Ce scénario passe sur les trois environnements : 25 observations et trois
+avancées communes des époques 2 à 5, avec refus du mauvais genesis.
+[Preuves et limites](qualification/finality-monitor-live-20260930/manifest.json).
+La disponibilité sous panne et l'exploitation complète restent à qualifier.

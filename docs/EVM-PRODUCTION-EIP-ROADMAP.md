@@ -1,5 +1,18 @@
 # EIP pour l’EVM et la production Nano
 
+## Supervision du réseau vivant qualifiée — 30 septembre 2026
+
+Le vrai CLI effectue 25 observations sur Mac natif, Docker ARM64 et Docker VPS,
+avec état conservé entre processus. Le genesis incorrect est refusé sur les trois
+nœuds. Avec le genesis/profil de la fixture indépendante, aucune alerte ; chaque
+nœud avance de l’époque 2 à 5. La fenêtre stricte confirme trois avancées communes
+avec rattachement aux blocs d’exécution (142,076 s). Signataires terminés sains,
+conteneurs sortis à zéro sans OOM ; 64 clés synthétiques, deux hôtes physiques.
+[Preuves](qualification/finality-monitor-live-20260930/manifest.json).
+Qualification d’exploitation complète, livraison externe des alertes, disque,
+ressources, duties, anomalies historiques et revue indépendante restent ouverts.
+Aucune disponibilité sous panne ni production globale n’est déduite de ce run.
+
 ## Supervision privée multihôte : intégration prête, qualification en attente — 30 septembre 2026
 
 Le lecteur ajoute Docker exec et SSH Docker exec, sans port RPC supplémentaire.
