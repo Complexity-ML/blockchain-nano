@@ -18,6 +18,7 @@ import {stoppedReceipt,pinnedRestoreConfiguration,restoreAuditRequest,validateRe
 import {waitRestoredRecovery} from './restore-recovery.mjs';
 import {startFinalityMonitor} from './monitor.mjs';
 import {selectCandidates,verifyPackagedImage} from './candidate-images.mjs';
+import {advanceRestartConfiguration} from './restart-pins.mjs';
 const exec=promisify(execFile),[target,revision,outputArg]=process.argv.slice(2);
 const fork=process.env.NANO_TEST_CONSENSUS_PROFILE??'bellatrix';
 if(!['bellatrix','capella'].includes(fork))throw Error('Unsupported consensus profile');
@@ -41,6 +42,8 @@ if(partition&&asymmetric)throw Error('Select only one WAN fault');
 const rotation=process.env.NANO_TEST_WAN_ROTATION==='1';
 const boundedLoad=process.env.NANO_TEST_BOUNDED_LOAD==='1';
 const backupRestore=process.env.NANO_TEST_BACKUP_RESTORE==='1';
+const pinnedRestart=process.env.NANO_TEST_PINNED_RESTART==='1';
+if(pinnedRestart&&(!candidates||fork!=='capella'||monitor||backupRestore||partition||asymmetric||rotation||boundedLoad))throw Error('Pinned container replacement requires standalone packaged Capella images');
 if(backupRestore&&(fork!=='capella'||!buildVolume||partition||asymmetric||rotation||boundedLoad))throw Error('Backup restore requires standalone Capella build-volume campaign');
 if(boundedLoad&&(fork!=='capella'||asymmetric||rotation))throw Error('Bounded load requires Capella; asymmetric/rotation combinations are not qualified yet');
 if(rotation&&(fork!=='capella'||!partition||!buildVolume))throw Error('Rotation requires Capella, the isolated partition and build volumes');
@@ -75,7 +78,7 @@ for(const onRemote of [false,true]){
 }
 await mkdir(output);
 const log=async event=>appendFile(join(output,'run.jsonl'),JSON.stringify({time:Date.now(),...event})+'\n');
-let monitorTask;
+let monitorTask,restartReceipt,restartPriorText,restartOriginal;
 let native,tunnel,localStarted=false,remoteStarted=false,restoreReceipt,restoreStartedMs,restoreProof;
 let resourceTask,resourceStop=false,resourceFailure;
 let rotationTask,rotationStop=false,rotationFailure,rotationProof,rotationCutoff;
@@ -99,9 +102,9 @@ const rpc=async(kind,method,params=[])=>{
 try{
  const binary=join(repo,'build-release/nano'),p2p=join(repo,'build-network/nano-p2p');
  if(rotation)await log({event:'rotation-audit-binary',sha256:createHash('sha256').update(await readFile(join(repo,'build-release/nano-capella-rotation-audit'))).digest('hex')});
- const harness={};for(const name of ['run.mjs','partition.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','prepare.mjs','rotation.mjs','bounded-load.mjs','load-receipts.mjs','restore-config.mjs','restore-recovery.mjs','backup-restore.sh','monitor.mjs','candidate-images.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
+ const harness={};for(const name of ['run.mjs','partition.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','prepare.mjs','rotation.mjs','bounded-load.mjs','load-receipts.mjs','restore-config.mjs','restore-recovery.mjs','backup-restore.sh','monitor.mjs','candidate-images.mjs','restart-pins.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
  if(monitor&&(fork!=='capella'||!privateTransport||partition||asymmetric||backupRestore||rotation||boundedLoad))throw Error('Monitor qualification requires standalone private Capella campaign');
- await log({event:'harness',monitor,partition,asymmetric,rotation,boundedLoad,backupRestore,fork,buildVolume,packagedImages:Boolean(candidates),artifacts,sha256:harness});
+ await log({event:'harness',monitor,partition,asymmetric,rotation,boundedLoad,backupRestore,pinnedRestart,fork,buildVolume,packagedImages:Boolean(candidates),artifacts,sha256:harness});
  await log({event:'binaries',revision,nanoSha256:createHash('sha256').update(await readFile(binary)).digest('hex'),p2pSha256:createHash('sha256').update(await readFile(p2p)).digest('hex')});
  const assets=join(output,'assets'),prepared=join(output,'prepared');
  await exec(join(repo,`build-release/nano-${fork}-transition-tests`),[fork==='capella'?'--export-network':'--export-kurtosis',assets],{timeout:30000});
@@ -166,7 +169,7 @@ try{
  }
  if(!ready)throw Error('Three-node startup/finality deadline exceeded');
  const genesis=await rpc('native','eth_getBlockByNumber',['0x0',false]);
- const observers={revision,pinnedStateRoots:fork==='capella',settleRecoveryGaps:partition||asymmetric||backupRestore,genesisHash:genesis.hash,nodes:[{name:'mac-native',kind:'native',url:'http://127.0.0.1:18545'},{name:'mac-docker',kind:'docker',container:local,url:'http://127.0.0.1:8545'},{name:'vps-docker',kind:'ssh-docker',ssh:target,container:remote,url:'http://127.0.0.1:8545'}]};
+ const observers={revision,pinnedStateRoots:fork==='capella',settleRecoveryGaps:partition||asymmetric||backupRestore||pinnedRestart,genesisHash:genesis.hash,nodes:[{name:'mac-native',kind:'native',url:'http://127.0.0.1:18545'},{name:'mac-docker',kind:'docker',container:local,url:'http://127.0.0.1:8545'},{name:'vps-docker',kind:'ssh-docker',ssh:target,container:remote,url:'http://127.0.0.1:8545'}]};
  await writeFile(join(output,'observers.json'),JSON.stringify(observers,null,2));
  const previousFinality=new Map();
  const faultSample=async()=>{
@@ -259,6 +262,30 @@ try{
   }});
 
  }
+ if(pinnedRestart){
+  await log({event:'pinned-replacement-stopping',container:remote,image:remoteImage});
+  await docker(['stop','--time','20',remote],true);const stoppedAt=Date.now();
+  const state=JSON.parse(await docker(['inspect',remote,'--format','{{json .State}}'],true));
+  if(state.Running||state.ExitCode!==0||state.OOMKilled)throw Error('Replacement source did not stop cleanly');
+  restartPriorText=await captureLogs(remote,true);restartReceipt=stoppedReceipt(restartPriorText);
+  restartOriginal=await json(join(prepared,'vps-docker/node.json'));
+  const dir=join(output,'replacement');await mkdir(dir);
+  await writeFile(join(dir,'before.log'),restartPriorText);
+  await writeFile(join(dir,'before-state.json'),JSON.stringify(state));
+  await writeFile(join(dir,'independent-stop-receipt.json'),JSON.stringify(restartReceipt,null,2));
+  const pinned=pinnedRestoreConfiguration(restartOriginal,restartReceipt);
+  await writeFile(join(dir,'pinned-node.json'),JSON.stringify(pinned,null,2));
+  await sh(['cp','-a',remoteRoot+'/config',remoteRoot+'/replacement-config']);
+  await exec('scp',['-q',join(dir,'pinned-node.json'),`${target}:${remoteRoot}/replacement-config/node.json`],{timeout:10000});
+  if(Date.now()-stoppedAt>=Number(BigInt(restartOriginal.capella.clock.maximumForwardStepMs))-10000)throw Error('Replacement exhausted clock recovery budget');
+  await docker(['rm',remote],true);remoteStarted=false;
+  await docker(['run','--init',...descriptorArgs,...traceArgs,'-d','--name',remote,'--label','nano.qualification=multihost','--label','org.opencontainers.image.revision='+revision,'--memory','3g','--cpus','2','-p','127.0.0.1:30307:30303','--mount',`type=bind,src=${remoteRoot}/replacement-config,dst=/config,readonly`,'--mount',`type=volume,src=${remote}-data,dst=/var/lib/nano`,'--env-file',`${remoteRoot}/replacement-config/fixture.env`,image,'run','/config/genesis.json','/var/lib/nano/chain','/config/node.json'],true);remoteStarted=true;
+  let freshPeer;const deadline=Date.now()+60000;
+  while(Date.now()<deadline){try{freshPeer=(await rpc('remote','nno_getNetworkInfo')).node?.peerId;if(freshPeer)break;}catch{}await delay(1000);}
+  if(freshPeer!==peer)throw Error('Replacement lost P2P identity');
+  await log({event:'pinned-replacement-online',peerId:freshPeer,elapsedMs:Date.now()-stoppedAt,chainCommitment:restartReceipt.restart,independentSignerPins:restartReceipt.validatorKeys.length,sameImage:true,dataRestored:false});
+  await waitRestoredRecovery({saved:restartReceipt.finalized,record:log,sample:async()=>{const rows=await faultSample(),heads=await rotationHeads();return rows.map((r,i)=>({...r,headSlot:heads[i].slot}));}});
+ }
  await clockSamples('before-fault');
  if(boundedLoad)await runBoundedLoad({rpc,genesisHash:genesis.hash,output,sampleFinality:faultSample,
   ...(partition?{duringSubmit:submit=>partitionRemote({docker:args=>docker(args,true),container:remote,
@@ -308,6 +335,15 @@ finally{
 if(native&&localStarted&&remoteStarted){
  try{
   const validators=await validateStoppedValidators(output,fork);
+  if(pinnedRestart&&!process.exitCode){
+   const finalText=await readFile(join(output,'vps.log'),'utf8'),terminal=stoppedReceipt(finalText);
+   validateRestoredFinality(restartReceipt,await json(join(output,'observations/result.json')),terminal);
+   const advanced=advanceRestartConfiguration(restartOriginal,restartPriorText,finalText);
+   await writeFile(join(output,'replacement/current-pinned-node.json'),JSON.stringify(advanced.configuration,null,2));
+   await writeFile(join(output,'replacement/current-stop-receipt.json'),JSON.stringify(terminal,null,2));
+   await log({event:'pinned-replacement-passed',advancedSignerPins:advanced.advancedSignerPins,prior:advanced.prior,current:advanced.current,rollbackToDifferentVersionQualified:false});
+  }
+
   if(backupRestore&&!process.exitCode){
    const restored=stoppedReceipt(await readFile(join(output,'vps.log'),'utf8')),stable=await json(join(output,'observations/result.json'));
    validateRestoredFinality(restoreReceipt,stable,restored);
