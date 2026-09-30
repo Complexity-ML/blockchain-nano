@@ -181,3 +181,15 @@ reste fatale. Le programme est borné à 2–4 coupures de 1–300 secondes, ave
 600 secondes de coupure cumulée maximum : budgets de test uniquement.
 La campagne 96/192 secondes est en cours au moment de cette documentation ;
 aucune réussite réseau n’est encore revendiquée.
+
+## Diagnostic de reprise après partition
+
+`NANO_TEST_FAULT_PROGRESS=1` ajoute à chaque observation de partition Capella
+le head/slot, l’état immuable sélectionné, ses checkpoints justifié/finalisé
+et les bornes temporelles des deux lectures. Les contrôles de sécurité utilisent
+toujours les observations de finalité du lanceur ; les diagnostics ne changent
+ni le délai de 180 s ni le verdict. Une lecture manquante, un état élagué ou
+un format invalide échoue explicitement. Quatre tests ciblés couvrent le head
+qui change, les réponses invalides et les erreurs de lecture/horloge.
+La tentative A sans ces relevés a dépassé son second délai ; la cause reste
+ouverte. Ce mode sert à distinguer rattrapage du head et attente de finalité.

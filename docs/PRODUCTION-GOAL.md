@@ -1,5 +1,15 @@
 # Objectif : Nano C++ de niveau production
 
+## Diagnostic de la reprise préparé — 30 septembre 2026
+
+Les relevés de la tentative A ne permettent pas de séparer rattrapage du head
+et attente FFG. Un mode optionnel collecte maintenant head/slot/état immuable,
+checkpoints justifié/finalisé et durée de lecture, sans changer les budgets,
+le verdict ou le cœur C++. Quatre nouveaux tests ciblés passent. Les échecs de
+lecture restent explicites. La cause du dépassement et la qualification des
+partitions répétées restent ouvertes.
+[Préparation](qualification/fault-progress-20260930/manifest.json).
+
 ## Second cycle de partition : délai de reprise dépassé — 30 septembre 2026
 
 La coupure de 96 s passe. Après celle de 192 s, les pairs se reconnectent mais

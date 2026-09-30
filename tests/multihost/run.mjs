@@ -13,6 +13,7 @@ import {partitionSchedule,runPartitionCycles} from './partition-cycles.mjs';
 import {asymmetricRemote,createRemoteTc} from './asymmetric.mjs';
 import {observeRecovery} from './recovery-observation.mjs';
 import {sampleClock} from './clock-sample.mjs';
+import {captureFaultProgress} from './fault-progress.mjs';
 import {createRotationCapture,ownership,rotationNodes,waitRotationWindow} from './rotation.mjs';
 import {runBoundedLoad} from './bounded-load.mjs';
 import {stoppedReceipt,pinnedRestoreConfiguration,restoreAuditRequest,validateRestoredFinality} from './restore-config.mjs';
@@ -43,6 +44,8 @@ if(partition&&asymmetric)throw Error('Select only one WAN fault');
 const rotation=process.env.NANO_TEST_WAN_ROTATION==='1';
 const boundedLoad=process.env.NANO_TEST_BOUNDED_LOAD==='1';
 const partitionCuts=partitionSchedule(process.env.NANO_TEST_PARTITION_SCHEDULE_MS);
+const faultProgress=process.env.NANO_TEST_FAULT_PROGRESS==='1';
+if(faultProgress&&(fork!=='capella'||!partition))throw Error('Fault progress diagnostics require Capella partition campaign');
 const backupRestore=process.env.NANO_TEST_BACKUP_RESTORE==='1';
 const pinnedRestart=process.env.NANO_TEST_PINNED_RESTART==='1';
 if(partitionCuts&&(!candidates||fork!=='capella'||!partition||asymmetric||rotation||boundedLoad||backupRestore||pinnedRestart||monitor))throw Error('Repeated partitions require standalone packaged Capella partition campaign');
@@ -105,9 +108,9 @@ const rpc=async(kind,method,params=[])=>{
 try{
  const binary=join(repo,'build-release/nano'),p2p=join(repo,'build-network/nano-p2p');
  if(rotation)await log({event:'rotation-audit-binary',sha256:createHash('sha256').update(await readFile(join(repo,'build-release/nano-capella-rotation-audit'))).digest('hex')});
- const harness={};for(const name of ['run.mjs','partition.mjs','partition-cycles.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','prepare.mjs','rotation.mjs','bounded-load.mjs','load-receipts.mjs','restore-config.mjs','restore-recovery.mjs','backup-restore.sh','monitor.mjs','candidate-images.mjs','restart-pins.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
+ const harness={};for(const name of ['run.mjs','partition.mjs','partition-cycles.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','fault-progress.mjs','prepare.mjs','rotation.mjs','bounded-load.mjs','load-receipts.mjs','restore-config.mjs','restore-recovery.mjs','backup-restore.sh','monitor.mjs','candidate-images.mjs','restart-pins.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
  if(monitor&&(fork!=='capella'||!privateTransport||partition||asymmetric||backupRestore||rotation||boundedLoad))throw Error('Monitor qualification requires standalone private Capella campaign');
- await log({event:'harness',monitor,partition,asymmetric,rotation,boundedLoad,backupRestore,pinnedRestart,partitionCuts,fork,buildVolume,packagedImages:Boolean(candidates),artifacts,sha256:harness});
+ await log({event:'harness',monitor,partition,asymmetric,rotation,boundedLoad,backupRestore,pinnedRestart,partitionCuts,faultProgress,fork,buildVolume,packagedImages:Boolean(candidates),artifacts,sha256:harness});
  await log({event:'binaries',revision,nanoSha256:createHash('sha256').update(await readFile(binary)).digest('hex'),p2pSha256:createHash('sha256').update(await readFile(p2p)).digest('hex')});
  const assets=join(output,'assets'),prepared=join(output,'prepared');
  await exec(join(repo,`build-release/nano-${fork}-transition-tests`),[fork==='capella'?'--export-network':'--export-kurtosis',assets],{timeout:30000});
@@ -177,8 +180,12 @@ try{
  await writeFile(join(output,'observers.json'),JSON.stringify(observers,null,2));
  const previousFinality=new Map();
  const faultSample=async()=>{
-  const rows=await Promise.all(['native','local','remote'].map(async(kind,i)=>({name:observers.nodes[i].name,
-   peers:await rpc(kind,'net_peerCount'),checkpoint:(await request(kind,'/eth/v1/beacon/states/head/finality_checkpoints')).data.finalized})));
+  const rows=await Promise.all(['native','local','remote'].map(async(kind,i)=>{
+   const peers=await rpc(kind,'net_peerCount');
+   const cp=await request(kind,'/eth/v1/beacon/states/head/finality_checkpoints');
+   const progress=faultProgress?await captureFaultProgress(path=>request(kind,path)):null;
+   return {name:observers.nodes[i].name,peers,checkpoint:cp.data.finalized,...(progress?{progress}:{})};
+  }));
   for(const row of rows){
    const epoch=BigInt(row.checkpoint.epoch),key=String(epoch),root=row.checkpoint.root;
    if(observedRoots.has(key)&&observedRoots.get(key)!==root)throw Error('Conflicting finalized roots across campaign');
