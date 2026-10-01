@@ -284,3 +284,11 @@ prêts. Conserver le visuel et le brouillon ; aucune création de token, signatu
 collecte ou publication n'est autorisée par cette préparation. Priorité actuelle :
 reprise WAN, définition et qualification de l'adossement Base/NANO, puis vente
 et migration de liquidité. La date provisoire n'est pas un calendrier de lancement.
+
+## 2026-10-02 — Vérification du parcours token Dynamic
+
+L'inspection du SDK officiel constate une configuration de token et une
+factory personnalisable ; cela ne qualifie pas l'import d'un ERC-20 existant
+ni l'adossement au NANO natif. La disponibilité d'une factory adaptée dans
+l'application reste à vérifier avant la vente.
+[Sources, constats et limites](../docs/qualification/doppler-token-path-20261002/README.md).
