@@ -2908,3 +2908,19 @@ Les 19 cas du correctif RPC/Bellatrix sur 1ac57e25 attendent la fin du conteneur
 initial et ses résultats/empreintes avant compilation. Ils ne couvrent pas ces
 deux nouveaux échecs. Régression terminale, candidat cohérent, gates WAN et
 production globale restent ouverts ; matrices EIP inchangées.
+
+### 2026-10-02 — Manifeste des programmes auxiliaires renforcé
+
+L'ancien manifeste ARM64 c10426b2 vérifie 197 empreintes avant/après, mais
+omet nano, nano-altair-probe et nano-finality-crash-fixture fournis en arguments.
+Le nouveau collecteur les inclut et permet de déclarer explicitement nano ;
+cinq contrôles macOS passent, et l'inspection Docker Linux en lecture seule
+retrouve les 197 empreintes inchangées plus ces trois programmes. Les fichiers
+de données marqués exécutables sont distingués par leur en-tête.
+[Preuves et limites du collecteur](qualification/executable-arguments-manifest-20261002/README.md).
+Aucune intégrité avant/après des auxiliaires anciens n'est prouvée rétroactivement.
+Les campagnes en cours gardent leurs sources figées ; leur périmètre historique
+reste exact. Les prochains runs complets utiliseront le manifeste renforcé.
+Il ne découvre pas toutes les bibliothèques ou les programmes dont le chemin
+est incorporé dans le code compilé. Gates de runtime/production et matrices EIP
+inchangées ; aucune réussite globale déduite de ces contrôles d'outillage.
