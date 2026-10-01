@@ -35,3 +35,15 @@ records, modified license bytes and missing JSON copyrights even after their
 file hash is updated. First manual control fixture omitted json.hpp and was
 refused with ENOENT; the corrected fixture copied the actual header. No
 implementation bypass or test relaxation was needed.
+
+AMD64 assembly now succeeded after Git pull of 930bf00, using the existing
+74784c4 binaries, without apt or compilation:
+sha256:6eb8175cd8507d260b51501e64f16aff5f23456e0b68b117f4c1c10314874f3f.
+Actual image rechecked with network disabled/read-only, uid/gid 10001, all
+eleven notices, CLI help and unchanged nano/P2P hashes. Both architectures
+are qualified for this delivery-only correction, not for a new WAN run.
+
+GitHub run 36892286298 at 930bf00: operations completed/success, 232 tests
+passed with zero skips/failures (5926.333331 ms); the new notice report confirms
+eleven hashes and five copyright entries. Core was still in progress at the
+archived snapshot; no terminal/full-run success is claimed here.

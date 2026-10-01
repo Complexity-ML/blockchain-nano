@@ -60,3 +60,17 @@ reproductibilité et critères restants de production toujours ouverts.
 [Preuves](qualification/ci-20261001/automatic-core-success/README.md).
 
 Le contrôle rapide `check-notices.mjs` vérifie les onze notices directes et tous les copyrights SPDX du header JSON ; son rapport est archivé par le job operations. Validation GitHub de cet ajout encore requise.
+
+
+### 2026-10-01 — livraison des notices sur les deux architectures
+
+Après push/pull de `930bf00`, assemblage AMD64 réel réussi sur VPS sans
+compilation, téléchargements ou données de chaîne. Image `6eb8175c...` :
+onze notices vérifiées, UID/GID 10001, CLI help réussi, deux binaires
+strictement inchangés. ARM64 déjà vérifié (`7b3db08d...`).
+Le job operations GitHub `36892286298` réussit : 232 contrôles, aucune
+erreur/skip, rapport notices réel (11 empreintes/5 copyrights). Job core
+encore en cours au relevé : aucun succès terminal de ce run revendiqué.
+Correction de livraison qualifiée ; Dockerfile complet, SBOM transitif,
+reproductibilité, régression complète et production globale restent ouverts.
+[Preuves](qualification/runtime-notices-20261001/README.md).
