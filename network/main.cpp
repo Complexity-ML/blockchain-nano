@@ -196,10 +196,12 @@ class Network {
     };
     auto core=capella_peer_core([this](const std::string& method,Json params,Reply reply){core_.call(method,std::move(params),std::move(reply));},current);
     auto active=std::make_shared<std::shared_ptr<CapellaBlockDelivery>>();
-    auto deliver=[this,core,send,current,knowledge,kind,active](std::string root,Json frame,Reply reply){
+    const bool fair=capella_relay_.at("acknowledgedRoots").get<size_t>()>=capella_relay_.at("maximumEntries").get<size_t>();
+    auto quantum=kind=="block"&&fair?std::make_shared<CapellaDeliveryQuantum>(CapellaDeliveryQuantum{capella_relay_.at("pageEntries").get<size_t>()}):nullptr;
+    auto deliver=[this,core,send,current,knowledge,kind,active,quantum](std::string root,Json frame,Reply reply){
      if(!current()){reply(nullptr);return;}if(knowledge->acknowledged(root)){reply(Json{{"accepted",true}});return;}
      if(kind=="block"){
-      *active=std::make_shared<CapellaBlockDelivery>(io_,core,send,report_token_,capella_relay_.at("anchorRoot").get<std::string>(),root,altair_ingress_,knowledge,capella_relay_.at("dependencyBlocks").get<size_t>(),capella_relay_.at("dependencyBytes").get<size_t>(),std::move(reply));(*active)->start();
+      *active=std::make_shared<CapellaBlockDelivery>(io_,core,send,report_token_,capella_relay_.at("anchorRoot").get<std::string>(),root,altair_ingress_,knowledge,capella_relay_.at("dependencyBlocks").get<size_t>(),capella_relay_.at("dependencyBytes").get<size_t>(),std::move(reply),quantum);(*active)->start();
      }else send(std::move(frame),[knowledge,root,reply=std::move(reply)](Json result)mutable{if(result.is_object()&&result.size()==1&&result.value("accepted",Json())==true)knowledge->acknowledge(root);reply(std::move(result));});
     };
     std::make_shared<CapellaCatalogRelay>(io_,core,deliver,report_token_,kind,altair_ingress_,capella_relay_.at("pageEntries").get<size_t>(),capella_relay_.at("maximumEntries").get<size_t>(),[this,id,kind,active,alive](Json result){*alive=false;if(*active)(*active)->cancel();altair_relay_budget_.release(id);if(trace_network_){result["event"]="test-capella-catalog-relay";result["peerId"]=id;result["kind"]=kind;std::cout<<result.dump()<<std::endl;}},[current,knowledge](const std::string& root){return current()&&knowledge->acknowledged(root);},capella_relay_.at("acknowledgedRoots").get<size_t>()>=capella_relay_.at("maximumEntries").get<size_t>())->start();return;

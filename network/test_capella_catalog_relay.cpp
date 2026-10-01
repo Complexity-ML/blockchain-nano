@@ -6,7 +6,7 @@ void check(bool ok,const char* text){if(!ok)throw std::runtime_error(text);}
 std::string root(char c){return "0x"+std::string(64,c);}
 int main(){try{
  const AltairWireProfile profile{"0x539",root('a'),"0x01020304",1024,256,256,256,root('b')};unsigned scenarios=0;
- for(const std::string mode:{"success","lost-open","duplicate","empty","changed-snapshot","wrong-next","unsorted","unavailable","foreign","rejected","lost-ack","lost-close","close-applied-reply-lost","close-request-lost","close-unreachable","close-refused","limit","expired","known","known-all","known-limit"}){
+ for(const std::string mode:{"success","lost-open","duplicate","empty","changed-snapshot","wrong-next","unsorted","unavailable","foreign","rejected","dependency-yield","lost-ack","lost-close","close-applied-reply-lost","close-request-lost","close-unreachable","close-refused","limit","expired","known","known-all","known-limit"}){
   asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);unsigned pages=0,sends=0,closes=0,done=0;Json result;bool allocated=false;unsigned removals=0;
   auto core=[&](std::string method,Json p,Reply cb){check(p[0]=="token","missing authentication");Json value;
    if(method=="nano_capellaCatalogGeneration"){cb(root('e'));return;}
@@ -24,12 +24,13 @@ int main(){try{
    }else if(method=="nano_capellaExport"){check(!(mode=="known-all"||((mode=="known"||mode=="known-limit")&&p[2]!=root('3'))),"known root was unnecessarily exported");value={{"available",mode!="unavailable"},{"root",p[2]},{"envelope",{{"chainId",mode=="foreign"?"0x1":profile.chain_id},{"genesisHash",profile.genesis_hash},{"forkDigest",profile.fork_digest},{"consensusIdentity",profile.consensus_identity},{"kind","block"},{"ssz","0x0102"}}}};}
    else throw std::runtime_error("unexpected RPC");cb(value);if(mode=="duplicate")cb(value);
   };
-  auto deliver=[&](std::string id,Json envelope,Reply cb){++sends;check(id==root(mode=="known"?'3':char('0'+sends))&&envelope["ssz"]=="0x0102","wrong payload");if(mode=="lost-ack")return;cb(Json{{"accepted",mode!="rejected"}});if(mode=="duplicate")cb(Json{{"accepted",true}});};
+  auto deliver=[&](std::string id,Json envelope,Reply cb){++sends;check(id==root(mode=="known"?'3':char('0'+sends))&&envelope["ssz"]=="0x0102","wrong payload");if(mode=="lost-ack")return;if(mode=="dependency-yield"){cb(Json{{"yielded",true}});return;}cb(Json{{"accepted",mode!="rejected"}});if(mode=="duplicate")cb(Json{{"accepted",true}});};
   auto relay=std::make_shared<CapellaCatalogRelay>(io,core,deliver,"token","block",ingress,2,(mode=="limit"||mode=="known-limit")?2:4,[&](Json value){++done;result=std::move(value);},[&](const std::string& id){return mode=="known-all"||((mode=="known"||mode=="known-limit")&&id!=root('3'));});relay->start(20ms);io.run();
   const bool success=mode=="known"||mode=="known-all"||mode=="success"||mode=="duplicate"||mode=="empty"||mode=="close-applied-reply-lost"||mode=="close-request-lost";const bool retried=mode=="close-applied-reply-lost"||mode=="close-request-lost"||mode=="close-unreachable";check(done==1&&result["success"]==success&&closes==(retried?2:1),"incorrect completion/cleanup");
   check(result.contains("elapsedMs")&&result["elapsedMs"].get<int64_t>()>=0,"missing relay elapsed time");
   if(success)check(result["reason"].is_null()&&result["failureStage"].is_null(),"success has failure reason");
   if(mode=="unavailable")check(result["reason"]=="export-unavailable"&&result["failureStage"]=="export","lost export failure reason");
+  if(mode=="dependency-yield")check(result["reason"]=="dependency-quantum-yield"&&result["delivered"]==0&&result["payloadsAdmitted"]==0&&result["closed"]==true,"dependency yield counted as admission or rejection");
   if(mode=="rejected")check(result["reason"]=="admission-rejected"&&result["failureStage"]=="delivery","rejection confused with transport failure");
   if(mode=="lost-ack")check(result["reason"]=="cancelled-or-deadline"&&result["failureStage"]=="delivery","unknown outcome reported as rejection");
   if(mode=="known"||mode=="known-all")check(result["delivered"]==3&&result["skippedKnown"]==(mode=="known"?2:3)&&result["exports"]==(mode=="known"?1:0)&&sends==(mode=="known"?1:0),"known roots bypass lost cursor/count bounds");

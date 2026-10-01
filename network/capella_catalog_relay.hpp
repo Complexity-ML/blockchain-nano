@@ -86,6 +86,7 @@ private:
    if(expected==AltairWireKind::voluntary_exit||expected==AltairWireKind::bls_to_execution_change||expected==AltairWireKind::sync_committee_message){unsigned char digest[32];SHA256(message->ssz.data(),message->ssz.size(),digest);std::string actual="0x";for(auto b:digest){actual+="0123456789abcdef"[b>>4];actual+="0123456789abcdef"[b&15];}if(actual!=id){self.failure("digest-mismatch");return;}}
    self.stage_="delivery";
    auto reply=self.callback([](auto& s,Json ack){
+    if(ack.is_object()&&ack.size()==1&&ack.value("yielded",Json())==true){s.failure("dependency-quantum-yield");return;}
     if(!ack.is_object()||ack.size()!=1||ack.value("accepted",Json())!=true){s.failure(ack.is_object()&&ack.size()==1&&ack.value("accepted",Json())==false?"admission-rejected":"delivery-unconfirmed");return;}
     ++s.payloads_admitted_;s.advance();
    });
