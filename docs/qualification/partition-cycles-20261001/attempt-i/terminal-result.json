@@ -1,0 +1,114 @@
+{
+  "processExitCode": 1,
+  "compiledSourceRevision": "67c4103c2c6fc0726fba1f21d467445bdc608ff5",
+  "harnessRevision": "de8f89294e63852bc8277ed7f6dc53cbddd0e894",
+  "firstRecovery": {
+    "time": 1790839030358,
+    "event": "partition-recovery-bound",
+    "checkpoint": {
+      "epoch": "7",
+      "root": "0x9bd4bd5ee66bf8cebb556255ea6b619e6741e3119b260bcaf91713893e6ae0b8"
+    },
+    "recoveryElapsedMs": 140656.670958,
+    "recoveryLimitMs": 180000,
+    "cycle": 1
+  },
+  "failure": {
+    "time": 1790839257192,
+    "event": "failed",
+    "message": "Error: Command failed: ssh -o BatchMode=yes -o ConnectTimeout=8 ubuntu@145.239.199.166 'sudo' '-n' 'docker' 'exec' 'nano-qualification-vps-mup72a8z' 'curl' '-fsS' '--max-time' '5' '-H' 'Accept: application/json' 'http://127.0.0.1:8545/eth/v1/beacon/headers/head'\ncurl: (22) The requested URL returned error: 503\n\n    at genericNodeError (node:internal/errors:998:15)\n    at wrappedFn (node:internal/errors:543:14)\n    at ChildProcess.exithandler (node:child_process:417:12)\n    at ChildProcess.emit (node:events:509:20)\n    at maybeClose (node:internal/child_process:1108:16)\n    at ChildProcess._handle.onexit (node:internal/child_process:305:5)"
+  },
+  "secondRecoveryQualified": false,
+  "secondRecoveryStatus": "Observer aborted on HTTP 503 before deadline outcome",
+  "stabilityQualified": false,
+  "stoppedValidators": [
+    {
+      "node": "native.log",
+      "clockHealthy": true,
+      "validator": {
+        "healthy": true,
+        "failure": null,
+        "attestationsAdmitted": 285,
+        "syncMessagesAdmitted": 1725
+      },
+      "finalized": {
+        "epoch": "0x7",
+        "root": "0x9bd4bd5ee66bf8cebb556255ea6b619e6741e3119b260bcaf91713893e6ae0b8"
+      },
+      "syncAdmission": {
+        "accepted": 2432,
+        "aggregation-failed": 0,
+        "contextBuilds": 129,
+        "contextHits": 4749,
+        "expired-slot": 0,
+        "future-slot": 0,
+        "head-at-or-after-inclusion": 22,
+        "invalid-signature": 0,
+        "invalid-width": 0,
+        "not-in-committee": 0,
+        "root-mismatch": 18,
+        "slot-overflow": 0,
+        "unknown-validator": 0
+      }
+    },
+    {
+      "node": "docker-mac.log",
+      "clockHealthy": true,
+      "validator": {
+        "healthy": true,
+        "failure": null,
+        "attestationsAdmitted": 272,
+        "syncMessagesAdmitted": 928
+      },
+      "finalized": {
+        "epoch": "0x7",
+        "root": "0x9bd4bd5ee66bf8cebb556255ea6b619e6741e3119b260bcaf91713893e6ae0b8"
+      },
+      "syncAdmission": {
+        "accepted": 1675,
+        "aggregation-failed": 0,
+        "contextBuilds": 119,
+        "contextHits": 3243,
+        "expired-slot": 0,
+        "future-slot": 0,
+        "head-at-or-after-inclusion": 12,
+        "invalid-signature": 0,
+        "invalid-width": 0,
+        "not-in-committee": 0,
+        "root-mismatch": 13,
+        "slot-overflow": 0,
+        "unknown-validator": 0
+      }
+    },
+    {
+      "node": "vps.log",
+      "clockHealthy": true,
+      "validator": {
+        "healthy": true,
+        "failure": null,
+        "attestationsAdmitted": 268,
+        "syncMessagesAdmitted": 1026
+      },
+      "finalized": {
+        "epoch": "0x7",
+        "root": "0x9bd4bd5ee66bf8cebb556255ea6b619e6741e3119b260bcaf91713893e6ae0b8"
+      },
+      "syncAdmission": {
+        "accepted": 2242,
+        "aggregation-failed": 0,
+        "contextBuilds": 134,
+        "contextHits": 4288,
+        "expired-slot": 1,
+        "future-slot": 0,
+        "head-at-or-after-inclusion": 6,
+        "invalid-signature": 0,
+        "invalid-width": 0,
+        "not-in-committee": 0,
+        "root-mismatch": 25,
+        "slot-overflow": 0,
+        "unknown-validator": 0
+      }
+    }
+  ],
+  "productionQualified": false
+}

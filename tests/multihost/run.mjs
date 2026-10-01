@@ -21,6 +21,7 @@ import {waitRestoredRecovery} from './restore-recovery.mjs';
 import {startFinalityMonitor} from './monitor.mjs';
 import {selectCandidates,verifyPackagedImage} from './candidate-images.mjs';
 import {advanceRestartConfiguration} from './restart-pins.mjs';
+import {decodeHttpResponse,httpStatusTrailer} from './http-response.mjs';
 const exec=promisify(execFile),[target,revision,outputArg]=process.argv.slice(2);
 const fork=process.env.NANO_TEST_CONSENSUS_PROFILE??'bellatrix';
 if(!['bellatrix','capella'].includes(fork))throw Error('Unsupported consensus profile');
@@ -96,11 +97,11 @@ const clockSamples=async phase=>{
  }
 };
 const request=async(kind,path,body)=>{
- const args=['-fsS','--max-time','5','-H','Accept: application/json'];
+ const args=['-sS','--max-time','5','-H','Accept: application/json','--write-out',httpStatusTrailer];
  if(body)args.push('-H','Content-Type: application/json','--data',JSON.stringify(body));
  args.push((kind==='native'?'http://127.0.0.1:18545':'http://127.0.0.1:8545')+path);
  const text=kind==='native'?(await exec('curl',args,{timeout:8000})).stdout:await docker(['exec',kind==='remote'?remote:local,'curl',...args],kind==='remote');
- return JSON.parse(text);
+ return decodeHttpResponse(text,kind,path);
 };
 const rpc=async(kind,method,params=[])=>{
  const r=await request(kind,'/',{jsonrpc:'2.0',id:1,method,params});if(r.error)throw Error(JSON.stringify(r.error));return r.result;
@@ -108,7 +109,7 @@ const rpc=async(kind,method,params=[])=>{
 try{
  const binary=join(repo,'build-release/nano'),p2p=join(repo,'build-network/nano-p2p');
  if(rotation)await log({event:'rotation-audit-binary',sha256:createHash('sha256').update(await readFile(join(repo,'build-release/nano-capella-rotation-audit'))).digest('hex')});
- const harness={};for(const name of ['run.mjs','partition.mjs','partition-cycles.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','fault-progress.mjs','prepare.mjs','rotation.mjs','bounded-load.mjs','load-receipts.mjs','restore-config.mjs','restore-recovery.mjs','backup-restore.sh','monitor.mjs','candidate-images.mjs','restart-pins.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
+ const harness={};for(const name of ['run.mjs','partition.mjs','partition-cycles.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','fault-progress.mjs','prepare.mjs','rotation.mjs','bounded-load.mjs','load-receipts.mjs','restore-config.mjs','restore-recovery.mjs','backup-restore.sh','monitor.mjs','candidate-images.mjs','restart-pins.mjs','http-response.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
  if(monitor&&(fork!=='capella'||!privateTransport||partition||asymmetric||backupRestore||rotation||boundedLoad))throw Error('Monitor qualification requires standalone private Capella campaign');
  await log({event:'harness',monitor,partition,asymmetric,rotation,boundedLoad,backupRestore,pinnedRestart,partitionCuts,faultProgress,fork,buildVolume,packagedImages:Boolean(candidates),artifacts,sha256:harness});
  await log({event:'binaries',revision,nanoSha256:createHash('sha256').update(await readFile(binary)).digest('hex'),p2pSha256:createHash('sha256').update(await readFile(p2p)).digest('hex')});

@@ -1,0 +1,5 @@
+# WAN I — terminal failure, 2026-10-01
+
+Frozen runtime 67c4103, harness de8f892; Mac native, Docker ARM64 and VPS Docker amd64, two physical hosts, 64 synthetic BLS keys. New sync admission cache candidates. First 96 s partition recovered common finality 2→7 in 140656.670958 ms within the unchanged 180000 ms monotonic deadline. Second 192 s partition reconnected, but observer aborted on HTTP 503 reading VPS /eth/v1/beacon/headers/head before measuring recovery. The HTTP body was discarded by curl -f: capacity, queue expiry and state-unavailable causes cannot yet be distinguished. No successful second recovery or stability result exists.
+
+All three stopped validators and clocks are healthy. Docker processes exited 0 without OOM. Cache counters prove use, not WAN speedup. Full public runtime and observation logs are preserved; no fixture.env, keys, databases or journals are archived here. Original data and witnesses remain retained. All prior failures and production gates stay open. Do not relabel the interrupted observation as a passed network test.
