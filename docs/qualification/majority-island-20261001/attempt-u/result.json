@@ -1,0 +1,67 @@
+{
+  "runtimeRevision": "74784c499cc904eba1d766933bc2017d3e2be9a0",
+  "harnessRevision": "3ab9c163fef158eb34069d9b54e192154c8be487",
+  "exitCode": 0,
+  "physicalHosts": 2,
+  "processes": 3,
+  "validatorKeys": 64,
+  "consensusProfile": "capella",
+  "executionProfile": "shanghai",
+  "cutMs": 384000,
+  "majorityCutPassed": true,
+  "highestMajorityEpoch": "8",
+  "preCutFinalityCeiling": "5",
+  "recoveryQualified": true,
+  "recoveryLimitMs": 180000,
+  "recoveryElapsedMs": 105915.17520900001,
+  "recoveredCheckpoint": {
+    "epoch": "10",
+    "root": "0xc85f6e204a8fca0ab6f1303d8d74a472b34c4c115f3f41408370c6ff5114cdb5"
+  },
+  "stabilityQualified": true,
+  "stability": {
+    "epochs": 3,
+    "firstEpoch": "15",
+    "lastEpoch": "18",
+    "elapsedMs": 266875,
+    "nodes": [
+      "mac-native",
+      "mac-docker",
+      "vps-docker"
+    ],
+    "revision": "74784c499cc904eba1d766933bc2017d3e2be9a0"
+  },
+  "stabilityWindowResets": [
+    {
+      "event": "recovery-gap-window-reset",
+      "time": 1790865227293,
+      "fromEpoch": "11",
+      "toEpoch": "13",
+      "discardedAdvances": 1,
+      "executionHash": "0xf49f193c6755e74e0772d44e9b027abbac15c531f68cba044f0327d2626ec1d0"
+    },
+    {
+      "event": "recovery-gap-window-reset",
+      "time": 1790865276461,
+      "fromEpoch": "13",
+      "toEpoch": "15",
+      "discardedAdvances": 0,
+      "executionHash": "0xe2c85bd297367cc226c21eb6b9edd692caa1f8100f4580280333c3f787890e2f"
+    }
+  ],
+  "finalizedAtStop": {
+    "native": {
+      "epoch": "0x12",
+      "root": "0xc1b6c49858ebc113dc8d076d95d85077a479dcd2a2a5938a235799ef51bc8be3"
+    },
+    "docker-mac": {
+      "epoch": "0x12",
+      "root": "0xc1b6c49858ebc113dc8d076d95d85077a479dcd2a2a5938a235799ef51bc8be3"
+    },
+    "vps": {
+      "epoch": "0x12",
+      "root": "0xc1b6c49858ebc113dc8d076d95d85077a479dcd2a2a5938a235799ef51bc8be3"
+    }
+  },
+  "productionReady": false
+}

@@ -2125,3 +2125,23 @@ Le premier échec AMD64 et les échecs WAN S/T restent conservés. Aucun gain
 de reprise WAN ni état production n’est encore démontré par ces tests.
 [Preuves ARM64](qualification/capella-http-queue-20261001/arm64-clock-latch/README.md)
 et [AMD64](qualification/capella-http-queue-20261001/amd64-clock-latch/README.md).
+
+
+### 2026-10-01 — WAN U : majorité connectée et reprise bornée réussies
+
+Candidat `74784c4` (Capella/Shanghai), harness `3ab9c16`, deux hôtes /
+trois processus / 64 clés synthétiques. Même coupure de 384 s, limite de
+reprise 180 s et ressources que S/T. Mac natif + Docker, réellement reliés
+et >2/3 du stake, finalisent jusqu’à 8 au-delà de la borne 5 ; VPS isolé à 2.
+Après restauration du réseau, finalité commune 10 en **105,915 s**.
+Les lectures Beacon par racine immuable restent disponibles.
+Fenêtre de stabilité : les sauts 11→13 puis 13→15 restent enregistrés et
+remettent le compteur à zéro ; trois avancées consécutives 15→18 passent
+ensuite en 266,875 s sous le délai absolu inchangé de 288 s. Hashes
+d’exécution finalisés communs, trois boucles/horloges saines ; conteneurs
+arrêtés 0 sans OOM, processus natif absent.
+Ce scénario de majorité connectée/reconnexion est qualifié pour ce candidat.
+Cela ne qualifie ni tous les scénarios asymétriques, ni le cycle complet et
+l’échelle des validateurs, ni la totalité des critères initiaux de production.
+S/T conservés ; pas de cause exclusive affirmée ni de lancement financier.
+[Preuves WAN U](qualification/majority-island-20261001/attempt-u/README.md).
