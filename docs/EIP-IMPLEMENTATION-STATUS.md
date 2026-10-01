@@ -5200,3 +5200,16 @@ CI GitHub 36908337763 sur bef03980 est in_progress ; aucun vert final déduit.
 VPS main récupéré par Git, service/image déployés inchangés. Rapport original
 400 terminal (314/86/0 skip), tous échecs et huit critères initiaux préservés.
 Production non qualifiée.
+
+
+### 2026-10-01 — registre candidat entier prêt, CTest actif
+
+Préparation ARM64 aacc56da réussie : 416/416 tests sélectionnés, aucun exécutable
+manquant, TIMEOUT explicite partout, aucun skip property. 195 exécutables
+mesurés ; manifests sources avant/après build et binaires avant tests identiques.
+Container nano-full-rpc-positional-client-20261001-test vivant (exec 62528),
+aucun résultat terminal global déduit. Outils/corpus optionnels absents restent
+distincts. CI opérations bef03980 réussie : 246 contrôles, zéro skip ; volets
+cœur/réseau encore actifs. Original 314/86 conservé, tous critères initiaux ouverts.
+[Préparation candidat](qualification/full-candidate-20261001/launch/README.md) ;
+[opérations CI](qualification/ci-20261001/operations-bef03980/README.md).

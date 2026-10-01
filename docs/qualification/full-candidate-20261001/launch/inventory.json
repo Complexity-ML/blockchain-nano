@@ -1,0 +1,4930 @@
+{
+  "schemaVersion": 1,
+  "qualification": "inventory-only",
+  "runtimeTestsExecuted": 0,
+  "totalTests": 416,
+  "selectedTests": 416,
+  "completeSelection": true,
+  "unselectedTests": [],
+  "missingExecutables": [],
+  "withoutExplicitTimeout": [],
+  "sumExplicitTimeoutSeconds": 65310,
+  "uniqueExecutables": 195,
+  "labels": {
+    "qualification_evm": 19,
+    "qualification_consensus_harness": 1,
+    "qualification_rpc_admission": 1,
+    "qualification_rpc_load": 1,
+    "qualification_rpc_load_local": 14,
+    "qualification_recovery_audit_local": 7,
+    "qualification_bft_network_local": 8,
+    "qualification_bft_rpc_admission_local": 2,
+    "qualification_bft_rpc_cost_local": 2,
+    "qualification_bft_rpc_cost_sustained_local": 2,
+    "qualification_bft_rpc_cost_all_local": 2,
+    "qualification_bft_rpc_cost_many_local": 2,
+    "qualification_bft_rpc_websocket_local": 2,
+    "qualification_bft_rpc_overload_local": 2,
+    "qualification_bft_rpc_default_overload_local": 2,
+    "qualification_bft_large_block_local": 22,
+    "qualification_bft_pool_local": 2,
+    "qualification_bft_load_crash_local": 2,
+    "qualification_bft_load_local": 4,
+    "qualification_bft_departure_local": 2,
+    "qualification_bft_stake_change_local": 2,
+    "qualification_bft_stake_change_crash_local": 2,
+    "qualification_bft_weighted_local": 4,
+    "qualification_bft_membership_local": 4,
+    "qualification_storage_sync_local": 11,
+    "qualification_storage_local": 5,
+    "qualification_bft_local": 2,
+    "controlled_load": 1,
+    "qualification_bft_scaling": 2,
+    "qualification_bft_large_block_download_crash_local": 2,
+    "qualification_bft_large_block_processes_local": 2,
+    "qualification_bft_liveness": 2,
+    "qualification_bft_assembly_crash_local": 2,
+    "qualification_bft_managed_large_crash_local": 2,
+    "qualification_validator_scaling_local": 5,
+    "qualification_consensus_ethereum": 112,
+    "qualification_consensus_scale": 4,
+    "qualification_consensus_local": 5,
+    "qualification_consensus_transport": 1,
+    "qualification_consensus_partition": 1,
+    "qualification_consensus_distributed": 1,
+    "qualification_consensus_runtime": 30,
+    "qualification_consensus_local_network": 6,
+    "qualification_consensus_local_validator": 1,
+    "qualification_consensus_simulation": 1,
+    "qualification_consensus_recovery": 24,
+    "qualification_consensus_operations": 4,
+    "qualification_consensus_deposits": 3,
+    "qualification_consensus_api": 3,
+    "qualification_consensus_network": 2
+  },
+  "tests": [
+    {
+      "name": "authorization",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-authorization-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [
+        "qualification_evm"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "beacon",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-beacon-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [
+        "qualification_evm"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "beacon_execution_gate",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-beacon-execution-gate-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "beacon_http_error_diagnostics",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-beacon-http-errors-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "bellatrix_wire_identity",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-wire-identity-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_assembly_crash_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-large-envelope-tests"
+      ],
+      "timeoutSeconds": 240,
+      "labels": [
+        "qualification_bft_assembly_crash_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_assembly_crash_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-large-envelope-tests"
+      ],
+      "timeoutSeconds": 240,
+      "labels": [
+        "qualification_bft_assembly_crash_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_departing_paris_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--departing"
+      ],
+      "timeoutSeconds": 550,
+      "labels": [
+        "qualification_bft_departure_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_departing_shanghai_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--departing"
+      ],
+      "timeoutSeconds": 550,
+      "labels": [
+        "qualification_bft_departure_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_fragment_download_crash_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-fragment-network-tests",
+        "/build/network/nano-p2p",
+        "--crash-download"
+      ],
+      "timeoutSeconds": 260,
+      "labels": [
+        "qualification_bft_large_block_download_crash_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_fragment_download_crash_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-fragment-network-tests",
+        "/build/network/nano-p2p",
+        "--crash-download"
+      ],
+      "timeoutSeconds": 260,
+      "labels": [
+        "qualification_bft_large_block_download_crash_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_fragment_network_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-fragment-network-tests",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_bft_large_block_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_fragment_network_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-fragment-network-tests",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_bft_large_block_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_fragment_processes_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-fragment-network-tests",
+        "/build/network/nano-p2p",
+        "--processes"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_bft_large_block_processes_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_fragment_processes_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-fragment-network-tests",
+        "/build/network/nano-p2p",
+        "--processes"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_bft_large_block_processes_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_joining_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--joining"
+      ],
+      "timeoutSeconds": 140,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_joining_paris_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--joining"
+      ],
+      "timeoutSeconds": 140,
+      "labels": [
+        "qualification_bft_membership_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_joining_shanghai_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--joining"
+      ],
+      "timeoutSeconds": 140,
+      "labels": [
+        "qualification_bft_membership_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_lagging_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--lagging"
+      ],
+      "timeoutSeconds": 200,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_lagging_paris_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--lagging"
+      ],
+      "timeoutSeconds": 200,
+      "labels": [
+        "qualification_bft_membership_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_lagging_shanghai_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--lagging"
+      ],
+      "timeoutSeconds": 200,
+      "labels": [
+        "qualification_bft_membership_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_large_block_paris_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--large-block"
+      ],
+      "timeoutSeconds": 240,
+      "labels": [
+        "qualification_bft_large_block_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_large_block_shanghai_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--large-block"
+      ],
+      "timeoutSeconds": 240,
+      "labels": [
+        "qualification_bft_large_block_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_large_envelope_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-large-envelope-tests"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_bft_large_block_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_large_envelope_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-large-envelope-tests"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_bft_large_block_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_line_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--line"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_load_crash_paris_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--load-crash"
+      ],
+      "timeoutSeconds": 220,
+      "labels": [
+        "qualification_bft_load_crash_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_load_crash_shanghai_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--load-crash"
+      ],
+      "timeoutSeconds": 220,
+      "labels": [
+        "qualification_bft_load_crash_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_load_paris_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--load"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_bft_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_load_shanghai_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--load"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_bft_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_load_short_paris_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--load-short"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_bft_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_load_short_shanghai_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--load-short"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_bft_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_managed_large_crash_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-managed-large-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 360,
+      "labels": [
+        "qualification_bft_managed_large_crash_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_managed_large_crash_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-managed-large-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 360,
+      "labels": [
+        "qualification_bft_managed_large_crash_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--bft"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_partition_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--partition"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_pool_balance_paris_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--pool-balance"
+      ],
+      "timeoutSeconds": 150,
+      "labels": [
+        "qualification_bft_pool_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_pool_balance_shanghai_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--pool-balance"
+      ],
+      "timeoutSeconds": 150,
+      "labels": [
+        "qualification_bft_pool_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_proposal_fragments_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-large-envelope-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_bft_large_block_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_proposal_fragments_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-large-envelope-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_bft_large_block_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_proposal_ingress_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-large-envelope-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_bft_large_block_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_proposal_ingress_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-large-envelope-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_bft_large_block_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_proposer_cycle_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-large-envelope-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [
+        "qualification_bft_liveness"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_proposer_cycle_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-large-envelope-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [
+        "qualification_bft_liveness"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_reconcile_paris_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--load-reconcile"
+      ],
+      "timeoutSeconds": 300,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_reconcile_shanghai_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--load-reconcile"
+      ],
+      "timeoutSeconds": 300,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_restart_flood_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--restart-flood"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_restart_flood_paris_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--restart-flood"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_bft_rpc_admission_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_restart_flood_shanghai_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--restart-flood"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_bft_rpc_admission_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_restart_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--restart"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_restart_paris_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--restart"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_bft_network_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_restart_shanghai_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--restart"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_bft_network_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_rpc_cost_all_paris_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--rpc-cost-all"
+      ],
+      "timeoutSeconds": 480,
+      "labels": [
+        "qualification_bft_rpc_cost_all_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_rpc_cost_all_shanghai_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--rpc-cost-all"
+      ],
+      "timeoutSeconds": 480,
+      "labels": [
+        "qualification_bft_rpc_cost_all_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_rpc_cost_many_paris_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--rpc-cost-many"
+      ],
+      "timeoutSeconds": 480,
+      "labels": [
+        "qualification_bft_rpc_cost_many_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_rpc_cost_many_shanghai_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--rpc-cost-many"
+      ],
+      "timeoutSeconds": 480,
+      "labels": [
+        "qualification_bft_rpc_cost_many_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_rpc_cost_paris_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--rpc-cost"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_bft_rpc_cost_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_rpc_cost_shanghai_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--rpc-cost"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_bft_rpc_cost_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_rpc_cost_sustained_paris_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--rpc-cost-sustained"
+      ],
+      "timeoutSeconds": 480,
+      "labels": [
+        "qualification_bft_rpc_cost_sustained_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_rpc_cost_sustained_shanghai_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--rpc-cost-sustained"
+      ],
+      "timeoutSeconds": 480,
+      "labels": [
+        "qualification_bft_rpc_cost_sustained_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_rpc_cost_websocket_paris_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--rpc-cost-websocket"
+      ],
+      "timeoutSeconds": 480,
+      "labels": [
+        "qualification_bft_rpc_websocket_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_rpc_cost_websocket_shanghai_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--rpc-cost-websocket"
+      ],
+      "timeoutSeconds": 480,
+      "labels": [
+        "qualification_bft_rpc_websocket_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_rpc_default_overload_paris_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--rpc-default-overload"
+      ],
+      "timeoutSeconds": 480,
+      "labels": [
+        "qualification_bft_rpc_default_overload_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_rpc_default_overload_shanghai_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--rpc-default-overload"
+      ],
+      "timeoutSeconds": 480,
+      "labels": [
+        "qualification_bft_rpc_default_overload_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_rpc_overload_paris_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--rpc-overload"
+      ],
+      "timeoutSeconds": 480,
+      "labels": [
+        "qualification_bft_rpc_overload_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_rpc_overload_shanghai_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--rpc-overload"
+      ],
+      "timeoutSeconds": 480,
+      "labels": [
+        "qualification_bft_rpc_overload_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_signing_sync_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-signing-sync-tests",
+        "Paris"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_storage_sync_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_signing_sync_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-signing-sync-tests",
+        "Shanghai"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_storage_sync_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_silent_proposer_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--silent-proposer"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_snapshot_cache_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-large-envelope-tests"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_bft_scaling"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_snapshot_cache_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-large-envelope-tests"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_bft_scaling"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_stake_change_crash_paris_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--stake-change-crash"
+      ],
+      "timeoutSeconds": 200,
+      "labels": [
+        "qualification_bft_stake_change_crash_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_stake_change_crash_shanghai_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--stake-change-crash"
+      ],
+      "timeoutSeconds": 200,
+      "labels": [
+        "qualification_bft_stake_change_crash_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_stake_change_paris_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--stake-change"
+      ],
+      "timeoutSeconds": 160,
+      "labels": [
+        "qualification_bft_stake_change_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_stake_change_shanghai_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--stake-change"
+      ],
+      "timeoutSeconds": 160,
+      "labels": [
+        "qualification_bft_stake_change_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_star_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--star"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_two_thirds_paris_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--two-thirds"
+      ],
+      "timeoutSeconds": 140,
+      "labels": [
+        "qualification_bft_weighted_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_two_thirds_shanghai_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--two-thirds"
+      ],
+      "timeoutSeconds": 140,
+      "labels": [
+        "qualification_bft_weighted_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_validators_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_validators_paris_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_bft_network_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_validators_shanghai_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_bft_network_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_weighted_paris_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--weighted"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_bft_weighted_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_weighted_shanghai_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bft-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--weighted"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_bft_weighted_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "blobs",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-blob-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [
+        "qualification_evm"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "block_auth",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-block-auth-tests"
+      ],
+      "timeoutSeconds": 15,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "block_event_references_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-block-event-reference-tests",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_bft_large_block_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "block_event_references_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-block-event-reference-tests",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_bft_large_block_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "block_fragment_export_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-block-fragment-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_bft_large_block_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "block_fragment_export_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-block-fragment-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_bft_large_block_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "block_fragment_ingress_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-block-ingress-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_bft_large_block_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "block_fragment_ingress_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-block-ingress-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_bft_large_block_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "block_import_budget",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-block-import-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_rpc_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "block_transport_codec",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-block-transport-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_recovery_audit_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bls",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bls-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [
+        "qualification_evm"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bootstrap",
+      "command": [
+        "/build/network/nano-bootstrap-tests"
+      ],
+      "timeoutSeconds": 20,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "chain",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-chain-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_evm"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "chunked_proposal_crash_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-finality-crash-tests",
+        "/build/rpc-positional-client-20261001/nano-finality-crash-fixture",
+        "Paris"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_recovery_audit_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "chunked_proposal_crash_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-finality-crash-tests",
+        "/build/rpc-positional-client-20261001/nano-finality-crash-fixture",
+        "Shanghai"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_recovery_audit_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "chunked_proposal_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-chunked-proposal-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_recovery_audit_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "chunked_proposal_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-chunked-proposal-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_recovery_audit_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_adversarial_finality",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-local-finality-tests",
+        "adversarial-finality"
+      ],
+      "timeoutSeconds": 300,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_archive",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-archive-tests"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_attester_duty",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-attester-duty-tests"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_core_client",
+      "command": [
+        "/usr/bin/cmake",
+        "-E",
+        "env",
+        "NANO_TEST_ALTAIR_CORE_CLIENT=1",
+        "/build/rpc-positional-client-20261001/nano-altair-wire-tests"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_durable_reactor_head",
+      "command": [
+        "/usr/bin/cmake",
+        "-E",
+        "env",
+        "NANO_TEST_DURABLE_REACTOR=1",
+        "/build/rpc-positional-client-20261001/nano-altair-fork-head-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_durable_reactor_reorg",
+      "command": [
+        "/usr/bin/cmake",
+        "-E",
+        "env",
+        "NANO_TEST_DURABLE_REACTOR=1",
+        "/build/rpc-positional-client-20261001/nano-altair-fork-head-tests",
+        "/work/tests/fixtures/consensus-altair-fork-reorg-official",
+        "8"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_durable_worker_head",
+      "command": [
+        "/usr/bin/cmake",
+        "-E",
+        "env",
+        "NANO_TEST_DURABLE_WORKER=1",
+        "/build/rpc-positional-client-20261001/nano-altair-fork-head-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_durable_worker_reorg",
+      "command": [
+        "/usr/bin/cmake",
+        "-E",
+        "env",
+        "NANO_TEST_DURABLE_WORKER=1",
+        "/build/rpc-positional-client-20261001/nano-altair-fork-head-tests",
+        "/work/tests/fixtures/consensus-altair-fork-reorg-official",
+        "8"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_explicit_profile",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-profile-tests"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_generated_chain_libp2p",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-local-finality-tests",
+        "p2p",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 240,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_generated_chain_libp2p_restart",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-local-finality-tests",
+        "p2p-restart",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 300,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_libp2p",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-p2p-tests",
+        "/build/network/nano-p2p",
+        "/build/network/nano-altair-probe"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_local_generated_finality",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-local-finality-tests"
+      ],
+      "timeoutSeconds": 300,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_local_minority_votes",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-local-finality-tests",
+        "minority-votes"
+      ],
+      "timeoutSeconds": 300,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_local_without_votes",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-local-finality-tests",
+        "without-votes"
+      ],
+      "timeoutSeconds": 300,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_managed_runtime",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-runtime-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_private_http",
+      "command": [
+        "/usr/bin/cmake",
+        "-E",
+        "env",
+        "NANO_TEST_ALTAIR_HTTP=1",
+        "/build/rpc-positional-client-20261001/nano-altair-wire-tests"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_propagation",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-propagation-tests",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 150,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_reactor_publication",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-reactor-tests"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_receipts",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-receipts-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_restart_libp2p",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-restart-p2p-tests",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 150,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_runtime",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-runtime-tests"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_snapshot_recovery",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-snapshot-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_store_snapshot_head",
+      "command": [
+        "/usr/bin/cmake",
+        "-E",
+        "env",
+        "NANO_TEST_STORE_SNAPSHOTS=1",
+        "/build/rpc-positional-client-20261001/nano-altair-fork-head-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_store_snapshot_reorg",
+      "command": [
+        "/usr/bin/cmake",
+        "-E",
+        "env",
+        "NANO_TEST_STORE_SNAPSHOTS=1",
+        "/build/rpc-positional-client-20261001/nano-altair-fork-head-tests",
+        "/work/tests/fixtures/consensus-altair-fork-reorg-official",
+        "8"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_trusted_anchor",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-anchor-tests"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_vote_archive",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-vote-archive-tests"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_vote_propagation",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-vote-propagation-tests",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 150,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_altair_wire_admission",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-wire-tests"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_attestation_conflicts",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-attestation-conflict-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_authenticated_randao",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-consensus-randao-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_authenticated_slashing",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-consensus-slashing-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_beacon_journal_cli",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-beacon-journal-cli-tests",
+        "/build/rpc-positional-client-20261001/nano"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_beacon_signing_journal",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-beacon-signer-tests"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_beacon_witness_recovery",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-beacon-recovery-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [
+        "qualification_consensus_recovery"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_attestation_expiry",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--attestation-expiry-loop"
+      ],
+      "timeoutSeconds": 240,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_beacon_headers",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--beacon-headers"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_api"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_beacon_headers_reorg",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--beacon-headers-reorg"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_consensus_api"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_beacon_reads",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--beacon-api"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_api"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_clock_coalescing",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--clock-coalescing"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_crash_runtime",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--crash-runtime",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 150,
+      "labels": [
+        "qualification_consensus_recovery"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_deposit_activation",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--deposit-activation"
+      ],
+      "timeoutSeconds": 600,
+      "labels": [
+        "qualification_consensus_deposits"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_deposit_store",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--deposit-store"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_deposits"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_distributed_finality",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--distributed-finality",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 360,
+      "labels": [
+        "qualification_consensus_distributed"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_duty_trace",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--duty-trace"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_execution_candidate",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-execution-bridge-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_exit_identity",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-exit-identity-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_local_slashing",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--runtime-slashing"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_operations"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_managed_runtime",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--managed-runtime",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_native_deposit_admission",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--deposit-loop"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_deposits"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_partition_recovery",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--partition-recovery",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 720,
+      "labels": [
+        "qualification_consensus_partition"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_partition_simulation",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--partition-simulation"
+      ],
+      "timeoutSeconds": 240,
+      "labels": [
+        "qualification_consensus_simulation"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_proposal_expiry",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--proposal-expiry-loop"
+      ],
+      "timeoutSeconds": 240,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_randao_expiry",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--randao-expiry-loop"
+      ],
+      "timeoutSeconds": 240,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_runtime_restart",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--runtime"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_signed_execution_chain",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_slashing_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--slashing-network",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_local_network"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_slashing_pruning",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--slashing-pruning",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 240,
+      "labels": [
+        "qualification_consensus_local_network"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_validator_loop",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--validator-loop"
+      ],
+      "timeoutSeconds": 240,
+      "labels": [
+        "qualification_consensus_local_validator"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_validator_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--validator-network",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 360,
+      "labels": [
+        "qualification_consensus_local_network"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_voluntary_exit",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--exit-loop"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_operations"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_voluntary_exit_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--exit-network",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_local_network"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_voluntary_exit_pruning",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--exit-pruning",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 240,
+      "labels": [
+        "qualification_consensus_local_network"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_voluntary_exit_reorg",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--exit-reorg",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_local_network"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_witness_runtime",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-transition-tests",
+        "--runtime-recovery"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_recovery"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_block_proposer_operations",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-block-proposer-operations-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_automatic_recovery",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--automatic-recovery"
+      ],
+      "timeoutSeconds": 240,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_automatic_registration",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--automatic-registration"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_beacon_reads",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--beacon-reads"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_catalog_concurrency",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--catalog-concurrency"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_cli_serve",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--cli",
+        "/build/rpc-positional-client-20261001/nano"
+      ],
+      "timeoutSeconds": 240,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_clock_diagnostics",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--clock-diagnostics"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_competing_deposit_reorg",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--deposit-reorg"
+      ],
+      "timeoutSeconds": 360,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_configured_runtime",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--configured-runtime"
+      ],
+      "timeoutSeconds": 240,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_deposit_activation",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--deposit-activation"
+      ],
+      "timeoutSeconds": 360,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_deposit_activation_restart",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--deposit-activation-restart"
+      ],
+      "timeoutSeconds": 360,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_deposit_auto_registration",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--deposit-auto-registration"
+      ],
+      "timeoutSeconds": 360,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_deposit_consumption",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--deposit-consumption"
+      ],
+      "timeoutSeconds": 300,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_deposit_invalid_signature",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--deposit-invalid-signature"
+      ],
+      "timeoutSeconds": 300,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_deposit_reorg_sync",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--deposit-reorg-sync"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_storage_sync_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_execution_owner",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--owner-finality"
+      ],
+      "timeoutSeconds": 360,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_execution_owner_reorg",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--owner-reorg"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_execution_owner_sync",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--owner-sync"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_execution_owner_witness",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--owner-witness"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_recovery"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_exit_lifecycle_sync",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--exit-lifecycle-sync"
+      ],
+      "timeoutSeconds": 600,
+      "labels": [
+        "qualification_consensus_recovery"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_exit_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--exit-network-cli",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 720,
+      "labels": [
+        "qualification_consensus_network"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_exit_pending_pruning",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--exit-pending-pruning"
+      ],
+      "timeoutSeconds": 300,
+      "labels": [
+        "qualification_consensus_recovery"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_exit_reindex",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--exit-reindex"
+      ],
+      "timeoutSeconds": 480,
+      "labels": [
+        "qualification_consensus_recovery"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_exit_retirement",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--exit-retirement"
+      ],
+      "timeoutSeconds": 300,
+      "labels": [
+        "qualification_consensus_recovery"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_exit_wire",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--exit-wire"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_network"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_historical_export",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--historical-export"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_recovery"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_http_admission_queue",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--http-queue"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_recovery"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_insufficient_finality",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--finality-half"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_local_assembly_finality",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--local-finality"
+      ],
+      "timeoutSeconds": 360,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_local_assembly_insufficient",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--local-finality-half"
+      ],
+      "timeoutSeconds": 360,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_local_bls_changes",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--local-bls-changes"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_local_exits",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--local-exits"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_operations"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_local_sync",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--local-sync"
+      ],
+      "timeoutSeconds": 240,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_managed_node",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--managed-cli",
+        "/build/rpc-positional-client-20261001/nano"
+      ],
+      "timeoutSeconds": 240,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_multiepoch_finality",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--finality"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_new_validator_slashing",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--new-validator-slashing"
+      ],
+      "timeoutSeconds": 600,
+      "labels": [
+        "qualification_consensus_recovery"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_payload_paired_state",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-execution-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_private_http",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--http"
+      ],
+      "timeoutSeconds": 240,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_pruning_automatic",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--pruning-automatic"
+      ],
+      "timeoutSeconds": 300,
+      "labels": [
+        "qualification_consensus_recovery"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_pruning_bls",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--pruning-bls"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_recovery"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_pruning_native",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--pruning-native"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_recovery"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_pruning_primitive",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--pruning-primitive"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_recovery"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_pruning_slashing",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--pruning-slashing"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_recovery"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_pruning_sync",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--pruning-sync"
+      ],
+      "timeoutSeconds": 240,
+      "labels": [
+        "qualification_consensus_recovery"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_queued_bls_changes",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--queued-bls-changes"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_queued_bls_owner",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--queued-bls-owner"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_queued_bls_reorg",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--queued-bls-reorg"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_queued_bls_rpc",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--queued-bls-rpc"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_queued_bls_sync",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--queued-bls-sync"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_recovery"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_queued_bls_wire",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--queued-bls-wire"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_queued_exit_sync",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--queued-exit-sync"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_recovery"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_queued_exits",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--queued-exits"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_operations"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_reactor_sync_failure",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--reactor-sync"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_registration_scale",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-registration-scale-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_scale"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_registration_signing_guard",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--scheduler-registration"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_reindexed_validator_activation",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--deposit-reorg-activation"
+      ],
+      "timeoutSeconds": 360,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_scheduled_finality",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--scheduler"
+      ],
+      "timeoutSeconds": 360,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_scheduled_sync_rotation",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--scheduler-sync-rotation"
+      ],
+      "timeoutSeconds": 600,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_signed_transition",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_slashing_multi",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--slashing-multi"
+      ],
+      "timeoutSeconds": 300,
+      "labels": [
+        "qualification_consensus_recovery"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_slashing_reorg",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--slashing-reorg"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_recovery"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_slashing_retirement",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--slashing-retirement"
+      ],
+      "timeoutSeconds": 300,
+      "labels": [
+        "qualification_consensus_recovery"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_slashing_sync",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--slashing-sync"
+      ],
+      "timeoutSeconds": 600,
+      "labels": [
+        "qualification_consensus_recovery"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_unknown_finality_slashing",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--unknown-finality-slashing"
+      ],
+      "timeoutSeconds": 600,
+      "labels": [
+        "qualification_consensus_recovery"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_wire_admission",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-transition-tests",
+        "--wire"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_withdrawal_execution",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-withdrawal-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_withdrawal_scale",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-withdrawal-scale-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_scale"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_capella_withdrawal_ssz_scale",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-withdrawal-ssz-scale-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_scale"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_committee_participation",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-consensus-committee-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_execution_deposit_history",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-deposit-history-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_execution_deposit_source",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-execution-deposit-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_fork_checkpoint_commit",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-fork-checkpoint-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_fork_checkpoint_sync_failure",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-fork-checkpoint-sync-tests"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_storage_sync_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_message_ssz",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-consensus-message-ssz-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_phase0_block_authentication",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-consensus-block-auth-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_phase0_fork_choice",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-fork-choice-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_phase0_fork_clock",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-fork-clock-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_phase0_fork_state",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-fork-state-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_phase0_fork_store",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-fork-store-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_phase0_fork_vote",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-fork-vote-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_phase0_ordered_epoch",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-epoch-transition-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_phase0_proposer",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-consensus-proposer-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_phase0_registry_operations",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-registry-operations-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_phase0_snapshot_recovery",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-consensus-snapshot-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_phase0_snapshot_sync_failure",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-snapshot-sync-failure-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_storage_sync_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_proposal_vote_selection",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-proposal-vote-selection-tests"
+      ],
+      "timeoutSeconds": 10,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_registry_epoch_scale",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-registry-epoch-scale-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_scale"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_relay_peer_concurrency",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-peer-relay-concurrency-tests"
+      ],
+      "timeoutSeconds": 10,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_relay_rejected_vote_progress",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-relay-progress-tests"
+      ],
+      "timeoutSeconds": 10,
+      "labels": [
+        "qualification_consensus_transport"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_rotation_audit_empty_aggregate",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-rotation-audit",
+        "--self-test"
+      ],
+      "timeoutSeconds": 15,
+      "labels": [
+        "qualification_consensus_harness"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_round",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-consensus-round-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_selected_randao",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-selected-randao-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_slashing_epoch",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-slashing-epoch-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_slashing_recovery",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-slashing-recovery-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_slashing_transition",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-slashing-transition-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "core",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_evm"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "erc20",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-erc20-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_evm"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_block_regressions",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-ethereum-block-runner",
+        "/work/tests/fixtures/ethereum-blocks"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_evm"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_committee_primitive",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-committee-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_consensus_attestation_root",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-consensus-attestation-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_consensus_beacon_body",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-beacon-body-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_consensus_beacon_header",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-beacon-header-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_consensus_bls_fast_aggregate",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-consensus-bls-aggregate-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_consensus_bls_verify",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-consensus-bls-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_consensus_deposit_signature",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-consensus-deposit-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_consensus_signing_roots",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-consensus-signing-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_altair_attestation",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-attestation-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_altair_deposit",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-deposit-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_altair_ffg",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-ffg-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_altair_fork_block",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-fork-head-tests",
+        "/work/tests/fixtures/consensus-altair-fork-block-official",
+        "23"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_altair_fork_ex_ante",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-fork-head-tests",
+        "/work/tests/fixtures/consensus-altair-fork-ex_ante-official",
+        "3"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_altair_fork_head",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-fork-head-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_altair_fork_proposer",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-fork-head-tests",
+        "/work/tests/fixtures/consensus-altair-fork-proposer-official",
+        "2"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_altair_fork_reorg",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-fork-head-tests",
+        "/work/tests/fixtures/consensus-altair-fork-reorg-official",
+        "8"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_altair_fork_withholding",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-fork-head-tests",
+        "/work/tests/fixtures/consensus-altair-fork-withholding-official",
+        "2"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_altair_full_blocks",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-full-blocks-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_altair_full_slots",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-slots-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_altair_inactivity",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-inactivity-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_altair_participation",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-participation-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_altair_rewards",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-rewards-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_altair_slashing",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-slashing-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_altair_state_root",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-state-root-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_altair_sync",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-sync-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_altair_sync_aggregate",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-altair-sync-aggregate-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_attestation_inclusion",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-attestation-inclusion-official-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_attester_block_operations",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-attester-blocks-official-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_attester_slashing",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-attester-slashing-official-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_beacon_state_root",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-beacon-state-root-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_bellatrix_containers",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-containers-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_bellatrix_execution_payload",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-execution-payload-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_bellatrix_full_slots",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-bellatrix-slots-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_block_proposer_operations",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-block-operations-official-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_capella_bls_changes",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-bls-change-tests"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_capella_body",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-body-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_capella_containers",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-containers-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_capella_fork",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-fork-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_capella_payload",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-payload-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_capella_slots",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-capella-slots-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_deneb_voluntary_exit",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-deneb-exit-official-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_deposit_transition",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-deposit-transition-official-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_effective_balance_updates",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-effective-balance-official-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_epoch_maintenance",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-epoch-maintenance-official-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_full_blocks",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-full-blocks-official-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_full_slots",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-slots-official-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_phase0_ffg",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-ffg-official-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_phase0_rewards",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-rewards-official-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_proposer_slashing",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-proposer-slashing-official-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_randao_projection",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-randao-official-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_registry_block_operations",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-registry-blocks-official-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_registry_epoch_updates",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-registry-epoch-official-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_regressions",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-ethereum-state-runner",
+        "/work/tests/fixtures/ethereum-official"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [
+        "qualification_evm"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_slashings",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-slashing-official-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_official_voluntary_exit",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-voluntary-exit-official-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_ethereum"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "ethereum_transaction_regressions",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-ethereum-transaction-runner",
+        "/work/tests/fixtures/ethereum-transactions"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [
+        "qualification_evm"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "events",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-event-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "evm_readonly_state",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-static-state-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "evm_small_stack",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-evm-stack-tests",
+        "/work/tests/fixtures/ethereum-official/cancun-ported_static--stCallCreateCallCodeTest--call1024_balance_too_low--call1024_balance_too_low.json"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [
+        "qualification_evm"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "execution_requests",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-request-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [
+        "qualification_evm"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "finality",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-finality-tests"
+      ],
+      "timeoutSeconds": 15,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "finality_crash",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-finality-crash-tests",
+        "/build/rpc-positional-client-20261001/nano-finality-crash-fixture"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "finality_crash_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-finality-crash-tests",
+        "/build/rpc-positional-client-20261001/nano-finality-crash-fixture",
+        "Paris"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_bft_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "finality_crash_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-finality-crash-tests",
+        "/build/rpc-positional-client-20261001/nano-finality-crash-fixture",
+        "Shanghai"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_bft_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "gossip_capacity_recovery",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-gossip-capacity-tests",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 140,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "gossip_recovery",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-gossip-recovery-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "gossip_remote_restart",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-gossip-restart-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "gossip_remote_restart_live_pages",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-gossip-restart-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--live-pages"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "gossip_temporary_rejection",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-gossip-retry-tests",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "http",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-http-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "http_disconnect",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-http-disconnect-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "installed_node",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-install-tests",
+        "/usr/bin/cmake",
+        "/build/rpc-positional-client-20261001"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "kzg",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-kzg-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [
+        "qualification_evm"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "large_block_sync_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-large-block-sync-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_bft_network_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "large_block_sync_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-large-block-sync-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_bft_network_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "large_block_vote_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-large-block-sync-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_bft_network_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "large_block_vote_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-large-block-sync-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_bft_network_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "libp2p_fragment_faults_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-fragment-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--faults"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_bft_large_block_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "libp2p_fragment_faults_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-fragment-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--faults"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_bft_large_block_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "libp2p_fragment_sync_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-fragment-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_bft_large_block_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "libp2p_fragment_sync_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-fragment-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_bft_large_block_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "load",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-load-tests",
+        "4",
+        "25"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "controlled_load"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "migration",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-migration-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "migration_cli",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-migration_cli-tests",
+        "/build/rpc-positional-client-20261001/nano"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "miner",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-miner-tests"
+      ],
+      "timeoutSeconds": 15,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "openzeppelin_eip1559",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-erc20-tests",
+        "1337",
+        "2"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_evm"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "openzeppelin_isolation",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-erc20-tests",
+        "7331",
+        "0"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "openzeppelin_isolation_eip1559",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-erc20-tests",
+        "7331",
+        "2"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "osaka",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-osaka-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [
+        "qualification_evm"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "oversized_block_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-oversized-block-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_bft_large_block_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "oversized_block_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-oversized-block-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_bft_large_block_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "prevrandao",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-prevrandao-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [
+        "qualification_evm"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "process_trace_backpressure",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-process-backpressure-tests"
+      ],
+      "timeoutSeconds": 20,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "recovery_audit_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-recovery-audit-tests",
+        "Paris"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_recovery_audit_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "recovery_audit_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-recovery-audit-tests",
+        "Shanghai"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_recovery_audit_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-rpc-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_evm"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_cli",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-rpc-cli-tests",
+        "/build/rpc-positional-client-20261001/nano"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_cost_nested_1_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-rpc-cost-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_rpc_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_cost_nested_1_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-rpc-cost-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_rpc_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_cost_nested_4_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-rpc-cost-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_rpc_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_cost_nested_4_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-rpc-cost-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_rpc_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_cost_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-rpc-cost-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_rpc_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_cost_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-rpc-cost-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_rpc_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_cost_success_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-rpc-cost-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_rpc_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_cost_success_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-rpc-cost-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_rpc_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_disconnect",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-rpc-disconnect-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_fee_load",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-rpc-fee-load-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_rpc_load"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_fee_policy",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-rpc-fee-policy-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_foreign_chain_admission_isolation",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-rpc-foreign-admission-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [
+        "qualification_rpc_admission"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_load_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-load-tests",
+        "8",
+        "50",
+        "0"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_rpc_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_load_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-load-tests",
+        "8",
+        "50",
+        "0"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_rpc_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_pending_load_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-pending-load-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_rpc_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_pending_load_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-pending-load-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_rpc_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_queue_expiry",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-rpc-queue-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_shutdown",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-rpc-shutdown-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "secp256k1_ethereum_compatibility",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-secp256k1-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "signed_network",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-network-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--signed"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "signed_validator_cli",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-signed-validator-cli-tests",
+        "/build/rpc-positional-client-20261001/nano"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "staking",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-staking-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "staking_cli",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-staking_cli-tests",
+        "/build/rpc-positional-client-20261001/nano"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "staking_pagination",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-staking-pagination-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "staking_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-staking-tests",
+        "--paris"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "staking_query_rules",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-staking-rules-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "storage_execution_checkpoint",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-execution-checkpoint-tests"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_storage_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "storage_execution_checkpoint_sync",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-execution-checkpoint-sync-tests"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_storage_sync_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "storage_read_only",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-storage-read-only-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_storage_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "storage_shanghai_checkpoint",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-shanghai-checkpoint-tests"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_storage_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "storage_shanghai_checkpoint_sync",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-shanghai-checkpoint-sync-tests"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [
+        "qualification_storage_sync_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "storage_sync_failure_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-storage-sync-failure-tests",
+        "Paris"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_storage_sync_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "storage_sync_failure_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-storage-sync-failure-tests",
+        "Shanghai"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_storage_sync_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "storage_sync_retry_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-storage-sync-failure-tests",
+        "Paris",
+        "--retry"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_storage_sync_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "storage_sync_retry_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-storage-sync-failure-tests",
+        "Shanghai",
+        "--retry"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_storage_sync_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "storage_write_failure_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-storage-write-failure-tests",
+        "Paris"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_storage_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "storage_write_failure_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-storage-write-failure-tests",
+        "Shanghai"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_storage_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "supervisor",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-supervisor-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "supervisor_parent_crash",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-supervisor-tests",
+        "/build/rpc-positional-client-20261001/nano",
+        "/build/network/nano-p2p",
+        "--parent-crash"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "txpool_bytes",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-txpool-bytes-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "txpool_canonical",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-txpool-canonical-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "txpool_history",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-txpool-history-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "uncles",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-uncle-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [
+        "qualification_evm"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "validator",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-validator-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "validator_open_admission_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-validator-admission-tests"
+      ],
+      "timeoutSeconds": 600,
+      "labels": [
+        "qualification_validator_scaling_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "validator_open_admission_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-validator-admission-tests"
+      ],
+      "timeoutSeconds": 600,
+      "labels": [
+        "qualification_validator_scaling_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "validator_paged_admission_paris",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-validator-admission-tests",
+        "--paged"
+      ],
+      "timeoutSeconds": 600,
+      "labels": [
+        "qualification_validator_scaling_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "validator_paged_admission_shanghai",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-validator-admission-tests",
+        "--paged"
+      ],
+      "timeoutSeconds": 600,
+      "labels": [
+        "qualification_validator_scaling_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "vote_collector_scaling",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-vote-scaling-tests"
+      ],
+      "timeoutSeconds": 240,
+      "labels": [
+        "qualification_validator_scaling_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "vote_participation_model",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-vote-participation-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "wallet_cli",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-wallet-cli-tests",
+        "/build/rpc-positional-client-20261001/nano"
+      ],
+      "timeoutSeconds": 90,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "wallet_http_disconnect",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-http-disconnect-tests",
+        "--wallet"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "wallet_websocket_disconnect",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-rpc-disconnect-tests",
+        "--wallet"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [],
+      "executablePresent": true
+    },
+    {
+      "name": "websocket_output_budget",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-websocket-output-tests"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_rpc_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "withdrawals",
+      "command": [
+        "/build/rpc-positional-client-20261001/nano-withdrawal-tests"
+      ],
+      "timeoutSeconds": 30,
+      "labels": [
+        "qualification_evm"
+      ],
+      "executablePresent": true
+    }
+  ]
+}
