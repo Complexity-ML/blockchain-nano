@@ -21,6 +21,15 @@ void check(bool yes,const char* name){++checks;if(!yes)throw std::runtime_error(
 template<class F>void rejects(F f,const char* name){bool threw=false;try{f();}catch(const std::exception&){threw=true;}check(threw,name);}
 int main(){try{
  {
+  check(u64(Int(0))==0,"u64 zero");
+  check(u64(Int("18446744073709551615"))==UINT64_MAX,"u64 exact maximum");
+  for(unsigned bit=0;bit<64;++bit){Int n=Int(1)<<bit;check(u64(n)==(uint64_t(1)<<bit),"u64 single-bit boundary");check(u64(n-1)==((uint64_t(1)<<bit)-1),"u64 below each bit boundary");}
+  for(const auto& n:std::vector<Int>{Int(-1),-Int("18446744073709551615"),Int(1)<<64,(Int(1)<<64)+1,Int(1)<<256,Int(1)<<4096}){
+   bool overflow=false;try{(void)u64(n);}catch(const std::overflow_error&){overflow=true;}check(overflow,"u64 rejects negative or wide input before narrowing");
+  }
+ }
+
+ {
   State state;auto key=bytes(Int(1),32);auto sender=public_address(public_key(key));state.get(sender).balance=Int("1000000000000000000");
   Transaction tx;tx.chain_id=0;tx.to="0x3000000000000000000000000000000000000000";
   auto sig=sign_hash(key,tx.signing_hash(false));SignedTransaction legacy{tx,Int(sig.v+27),sig.r,sig.s};Header block;
