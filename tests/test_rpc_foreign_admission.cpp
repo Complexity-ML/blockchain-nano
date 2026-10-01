@@ -27,6 +27,19 @@ int main(){try{
  check(limited.contains("error")&&limited.at("error").at("code")==-32005,"local signature work escaped the admission bound");
  check(chain.state().root()==original&&chain.pending_count()==1,"invalid signatures or rate refusal mutated canonical state or pool");
  now+=1s;check(send(second).contains("result")&&chain.pending_count()==2,"local admission did not recover after refill");
+ // Unknown envelopes are bounded local work, including failures before the
+ // full decoder. A foreign envelope remains distinguishable at exhaustion.
+ Blockchain malformed_chain(root/"malformed",genesis);auto malformed_now=AdmissionBudget::Clock::time_point{};
+ Rpc malformed(malformed_chain,{},[&]{return malformed_now;});
+ auto malformed_send=[&](const std::string& raw){return malformed.handle(Json{{"jsonrpc","2.0"},{"id",++id},{"method","eth_sendRawTransaction"},{"params",Json::array({raw})}});};
+ for(const auto& raw:{"0xzz","0x00","0x02f8ff","0xc0"})for(unsigned i=0;i<32;++i){
+  auto response=malformed_send(raw);check(response.contains("error")&&response.at("error").at("code")!=-32005,"malformed burst refused before its bounded capacity");
+ }
+ check(malformed_send(hex(healthy.raw())).at("error").at("code")==-32005,"malformed raw envelopes escaped local admission budget");
+ check(malformed_send(hex(foreign_nested)).at("error").at("message")=="wrong chain ID","exhausted malformed budget rejected proven foreign envelope");
+ check(malformed_send("0xzz").at("error").at("code")==-32005,"malformed hex bypasses exhausted local admission");
+ check(malformed_chain.state().root()==original&&malformed_chain.pending_count()==0&&malformed_chain.event_cursor()==0,"malformed admission changed canonical state events or pool");
+ malformed_now+=1s;check(malformed_send(hex(healthy.raw())).contains("result")&&malformed_chain.pending_count()==1,"malformed raw admission did not recover on refill");
  // Gossip must reserve the entire local portion before changing the pool.
  // Foreign items preserve their result positions without spending local work.
  Blockchain gossip_chain(root/"gossip",genesis);auto gossip_now=AdmissionBudget::Clock::time_point{};
