@@ -2,18 +2,18 @@
 
 Le workflow `Nano qualification checks` ne déploie rien, ne publie aucune image et n'accède ni au VPS ni aux clés de validation. Il utilise des actions officielles épinglées par commit complet et `contents: read`, conformément aux [recommandations GitHub](https://docs.github.com/en/actions/reference/security/secure-use). Checkout ne conserve pas les credentials.
 
-Sur push main/PR touchant scripts, harness multi-hôte ou workflow, il exécute tous les tests autonomes de `scripts/operations/*.test.mjs` et `tests/multihost/*.test.mjs`. Node est fixé à 25.9.0, version déjà qualifiée par les campagnes locales. Aucun daemon, Docker ou SSH vivant dans ce job. Logs et révision sont archivés sept jours, y compris en cas d'échec.
+Sur push main/PR touchant sources, dépendances, recettes de build, tests, scripts ou workflow, il exécute les tests autonomes de `scripts/operations/*.test.mjs`, `scripts/ci/*.test.mjs` et `tests/multihost/*.test.mjs`. Node est fixé à 25.9.0, version déjà qualifiée par les campagnes locales. Aucun daemon, Docker ou SSH vivant dans ce job. Logs et révision sont archivés sept jours, y compris en cas d'échec.
 
-Le déclenchement manuel avec `core=true` compile Nano et les exécutables de neuf contrôles C++ : core, chain, expiration de file RPC, vérification/agrégation BLS, checkpoint de stockage, état/payload Capella couplés, transition signée et horloge Capella. Le registre CTest doit contenir exactement les neuf noms attendus ; aucun résultat vide ou test manquant ne vaut réussite. Dans un conteneur Ubuntu 24.04 épinglé par digest (2 CPU/3 GiB), sans construire une image Nano supplémentaire. Build deux tâches, tests série, budgets CTest inchangés, job limité à 30 minutes. JUnit, liste des tests, versions et logs conservés. Pas de nouvelle image Docker à chaque push.
+Le classement des changements par diff Git déclenche automatiquement le job C++ pour les sources, headers, réseau, fixtures, tests C++, dépendances, recettes et workflows. Un changement de documentation seul ne déclenche pas le workflow ; un changement du harness JS seul évite la compilation C++ inchangée. Une baseline invalide ou un checkout non lié au SHA attendu échoue explicitement. Le déclenchement manuel avec `core=true` reste disponible. Le job compile Nano et les exécutables de neuf contrôles C++ : core, chain, expiration de file RPC, vérification/agrégation BLS, checkpoint de stockage, état/payload Capella couplés, transition signée et horloge Capella. Le registre CTest doit contenir exactement les neuf noms attendus ; aucun résultat vide ou test manquant ne vaut réussite. Dans un conteneur Ubuntu 24.04 épinglé par digest (2 CPU/3 GiB), sans construire une image Nano supplémentaire. Build deux tâches, tests série, budgets CTest inchangés, job limité à 30 minutes. JUnit, liste des tests, versions et logs conservés. Pas de nouvelle image Docker à chaque push.
 
 Commandes locales depuis un checkout :
 
 ```sh
 sh scripts/ci/operations.sh
-CC=clang CXX=clang++ sh scripts/ci/core.sh build-ci
+CC=clang CXX=clang++ bash scripts/ci/core.sh build-ci
 ```
 
-Ces contrôles ne sont pas la CI complète de production : P2P compilé avec cpp-libp2p, matrice Linux ARM64/AMD64 complète, EEST exhaustif, release reproductible, campagnes WAN/restauration/charge longues et revue indépendante restent des gates séparés. Apt, runner et outils système ne sont pas figés en snapshots : la version compilée est identifiable, pas prouvée reproductible bit à bit. Le job core manuel n'est pas un contrôle obligatoire sur chaque changement C++. Les paramètres de protection de branche et le statut obligatoire des checks ne sont pas configurés par ce fichier.
+Ces contrôles ne sont pas la CI complète de production : P2P compilé avec cpp-libp2p, matrice Linux ARM64/AMD64 complète, EEST exhaustif, release reproductible, campagnes WAN/restauration/charge longues et revue indépendante restent des gates séparés. Apt, runner et outils système ne sont pas figés en snapshots : la version compilée est identifiable, pas prouvée reproductible bit à bit. Les logs de configuration, compilation et tests sont diffusés en direct avec `tee` et `pipefail` : un échec ne peut pas être masqué par l’archivage. Les SHA-256 des neuf exécutables et les versions des paquets de build sont conservés. Le routage automatique ne remplace pas une protection de branche. Les paramètres de protection de branche et le statut obligatoire des checks ne sont pas configurés par ce fichier.
 
 État initial : 227 tests autonomes passent localement. Exécution réelle du workflow GitHub et build C++ restent non qualifiés jusqu'à leurs résultats terminaux. Aucun workflow vert ne déclare `productionReady=true`.
 
@@ -43,3 +43,7 @@ Le workflow avec upload-artifact v6 a terminé avec succès, run
 227 tests autonomes passés et artefacts effectivement récupérés.
 [Preuves](qualification/ci-20261001/artifact-node24-success/README.md).
 Aucun rebuild C++ pour ce changement CI seul ; CI globale toujours ouverte.
+
+### Routage automatique — validation locale
+
+232 contrôles autonomes passent localement, sans échec ni skip. Cinq nouveaux contrôles vérifient le diff réel, les renommages, les baselines, le déclenchement manuel et la propagation d’un échec de configuration à travers `tee`. La validation GitHub du nouveau routage et de ses artefacts reste requise. La sélection C++ demeure les neuf tests déjà documentés ; aucune nouvelle couverture du runtime n’est revendiquée.

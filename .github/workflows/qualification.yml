@@ -2,9 +2,9 @@ name: Nano qualification checks
 on:
   push:
     branches: [main]
-    paths: ['scripts/**', 'tests/multihost/**', '.github/workflows/**']
+    paths: ['scripts/**', 'tests/**', '.github/workflows/**', 'src/**', 'include/**', 'network/**', 'cmake/**', 'third_party/**', 'genesis/**', 'CMakeLists.txt', 'Dockerfile', 'dependencies.lock.json']
   pull_request:
-    paths: ['scripts/**', 'tests/multihost/**', '.github/workflows/**']
+    paths: ['scripts/**', 'tests/**', '.github/workflows/**', 'src/**', 'include/**', 'network/**', 'cmake/**', 'third_party/**', 'genesis/**', 'CMakeLists.txt', 'Dockerfile', 'dependencies.lock.json']
   workflow_dispatch:
     inputs:
       core:
@@ -17,6 +17,18 @@ concurrency:
   group: nano-checks-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      core: ${{ steps.scope.outputs.core }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - id: scope
+        run: node scripts/ci/changes.mjs
   operations:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -37,7 +49,8 @@ jobs:
           retention-days: 7
           if-no-files-found: error
   core:
-    if: github.event_name == 'workflow_dispatch' && inputs.core
+    needs: changes
+    if: needs.changes.outputs.core == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     container:
@@ -54,7 +67,7 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
-      - run: sh scripts/ci/core.sh
+      - run: bash scripts/ci/core.sh
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         if: always()
         with:

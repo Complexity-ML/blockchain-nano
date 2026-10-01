@@ -1864,3 +1864,16 @@ avec succès et artefacts récupérés. Job core volontairement skipped ;
 aucune nouvelle compilation/image C++ pour ce changement CI seul.
 Le succès C++ distinct `ee565c1` et les gates globaux restants sont conservés.
 [Preuves](qualification/ci-20261001/artifact-node24-success/README.md).
+
+
+### 2026-10-01 — déclenchement automatique de la CI C++ en qualification
+
+Le diff Git sélectionne désormais automatiquement le job Docker C++ sur les
+changements de sources, dépendances, recettes, fixtures et workflows. Les
+logs deviennent visibles en direct, avec conservation du statut d’échec ;
+les neuf exécutables sont hashés et les paquets de build inventoriés.
+232 contrôles autonomes réussis localement, dont cinq nouveaux contrôles
+du routage et de la propagation d’échec. Validation GitHub encore requise.
+Les neuf tests C++ sélectionnés restent le même sous-ensemble ; P2P, EEST
+global, reproductibilité, qualification globale et bridge/fair launch restent
+ouverts. Aucun runtime Nano ni image de chaîne modifié.
