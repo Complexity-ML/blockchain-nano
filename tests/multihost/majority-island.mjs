@@ -2,6 +2,12 @@ import {createHash} from 'node:crypto';
 
 // Read only the versioned public Capella exporter fixture. This is not an SSZ
 // decoder for arbitrary Beacon forks, and key counts never substitute for stake.
+export function majorityCutDuration(text){
+ if(text===undefined)return 192000;
+ if(typeof text!=='string'||!/^\d+$/.test(text))throw Error('Invalid finite majority cut');
+ const ms=Number(text);if(!Number.isSafeInteger(ms)||ms<192000||ms>600000)throw Error('Majority cut exceeds qualification budget');return ms;
+}
+
 export function fixtureStake({profileBytes,initialBytes,configuration,manifest}) {
  const hash=b=>'0x'+createHash('sha256').update(b).digest('hex');
  if(hash(profileBytes)!==configuration.profile.sha256||hash(initialBytes)!==configuration.initial.sha256)throw Error('Majority fixture hash mismatch');
@@ -63,7 +69,7 @@ export function majorityIslandPolicy({stake,peerIds,record}) {
     highest=BigInt(a.epoch);await record({event:'majority-island-finality-advanced',checkpoint:a,minority:remote.checkpoint,finalityCeiling:String(cutoff)});
    }
   },
-  async finish(){if(!sawIsolation||highest===null)throw Error('No new majority finality during isolation');await record({event:'majority-island-cut-passed',highestMajorityEpoch:String(highest),finalityCeiling:String(cutoff)});},
+  async finish(){if(!sawIsolation||highest===null)throw Error('No majority finality beyond pre-cut ceiling during isolation');await record({event:'majority-island-cut-passed',highestMajorityEpoch:String(highest),finalityCeiling:String(cutoff)});},
   recoveryFloor(){return highest;}
  };
 }

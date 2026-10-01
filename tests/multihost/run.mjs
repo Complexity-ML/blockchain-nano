@@ -9,7 +9,7 @@ import {setTimeout as delay} from 'node:timers/promises';
 import {createHash} from 'node:crypto';
 import {validateStoppedValidators} from './validator-gate.mjs';
 import {partitionRemote} from './partition.mjs';
-import {fixtureStake,majorityIslandPolicy} from './majority-island.mjs';
+import {fixtureStake,majorityIslandPolicy,majorityCutDuration} from './majority-island.mjs';
 import {partitionSchedule,runPartitionCycles} from './partition-cycles.mjs';
 import {asymmetricRemote,createRemoteTc} from './asymmetric.mjs';
 import {observeRecovery} from './recovery-observation.mjs';
@@ -47,6 +47,8 @@ const rotation=process.env.NANO_TEST_WAN_ROTATION==='1';
 const boundedLoad=process.env.NANO_TEST_BOUNDED_LOAD==='1';
 const partitionCuts=partitionSchedule(process.env.NANO_TEST_PARTITION_SCHEDULE_MS);
 const majorityIsland=process.env.NANO_TEST_MAJORITY_ISLAND==='1';
+if(process.env.NANO_TEST_MAJORITY_CUT_MS!==undefined&&!majorityIsland)throw Error('Majority cut duration requires majority island mode');
+const majorityCutMs=majorityIsland?majorityCutDuration(process.env.NANO_TEST_MAJORITY_CUT_MS):null;
 const faultProgress=majorityIsland||process.env.NANO_TEST_FAULT_PROGRESS==='1';
 if(faultProgress&&(fork!=='capella'||!partition))throw Error('Fault progress diagnostics require Capella partition campaign');
 const backupRestore=process.env.NANO_TEST_BACKUP_RESTORE==='1';
@@ -114,7 +116,7 @@ try{
  if(rotation)await log({event:'rotation-audit-binary',sha256:createHash('sha256').update(await readFile(join(repo,'build-release/nano-capella-rotation-audit'))).digest('hex')});
  const harness={};for(const name of ['run.mjs','majority-island.mjs','partition.mjs','partition-cycles.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','fault-progress.mjs','prepare.mjs','rotation.mjs','bounded-load.mjs','load-receipts.mjs','restore-config.mjs','restore-recovery.mjs','backup-restore.sh','monitor.mjs','candidate-images.mjs','restart-pins.mjs','http-response.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
  if(monitor&&(fork!=='capella'||!privateTransport||partition||asymmetric||backupRestore||rotation||boundedLoad))throw Error('Monitor qualification requires standalone private Capella campaign');
- await log({event:'harness',monitor,partition,asymmetric,rotation,boundedLoad,backupRestore,pinnedRestart,partitionCuts,majorityIsland,faultProgress,fork,buildVolume,packagedImages:Boolean(candidates),artifacts,sha256:harness});
+ await log({event:'harness',monitor,partition,asymmetric,rotation,boundedLoad,backupRestore,pinnedRestart,partitionCuts,majorityIsland,majorityCutMs,faultProgress,fork,buildVolume,packagedImages:Boolean(candidates),artifacts,sha256:harness});
  await log({event:'binaries',revision,nanoSha256:createHash('sha256').update(await readFile(binary)).digest('hex'),p2pSha256:createHash('sha256').update(await readFile(p2p)).digest('hex')});
  const assets=join(output,'assets'),prepared=join(output,'prepared');
  await exec(join(repo,`build-release/nano-${fork}-transition-tests`),[fork==='capella'?'--export-network':'--export-kurtosis',assets],{timeout:30000});
@@ -325,7 +327,7 @@ try{
    const result=await runPartitionCycles({cuts:partitionCuts,sample:faultSample,record:log,
     partition:({cutMs,sample,record})=>partitionRemote({docker:args=>docker(args,true),container:remote,network:testNetwork,revision,record,sample,cutMs})});
    await log({event:'partition-schedule-passed',...result});
-  }else if(partition&&!boundedLoad)await partitionRemote({docker:args=>docker(args,true),container:remote,network:testNetwork,revision,record:faultRecord,sample:faultSample,...(majorityIsland?{cutMs:192000,policy:islandPolicy}:{})});
+  }else if(partition&&!boundedLoad)await partitionRemote({docker:args=>docker(args,true),container:remote,network:testNetwork,revision,record:faultRecord,sample:faultSample,...(majorityIsland?{cutMs:majorityCutMs,policy:islandPolicy}:{})});
   if(asymmetric){
    const tc=await createRemoteTc({docker:args=>docker(args,true),sh,container:remote,network:testNetwork,revision});
    await asymmetricRemote({tc,sample:faultSample,record:log});

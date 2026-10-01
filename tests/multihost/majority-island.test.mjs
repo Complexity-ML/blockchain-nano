@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {fixtureStake,majorityIslandPolicy} from './majority-island.mjs';
+import {fixtureStake,majorityIslandPolicy,majorityCutDuration} from './majority-island.mjs';
 import {partitionRemote} from './partition.mjs';
 const root='0x'+'a'.repeat(64),names=['mac-native','mac-docker','vps-docker'];
 function fixture(){
@@ -35,7 +35,7 @@ function policyFixture(){
  return {events,policy,rows};
 }
 test('majority must finalize beyond conservative received-commitment ceiling',async()=>{
- const f=policyFixture();await f.policy.before(f.rows());await f.policy.observe(f.rows('5','3',true));await assert.rejects(f.policy.finish(),/No new majority/);
+ const f=policyFixture();await f.policy.before(f.rows());await f.policy.observe(f.rows('5','3',true));await assert.rejects(f.policy.finish(),/No majority finality/);
  await f.policy.observe(f.rows('6','3',true));await f.policy.finish();assert.equal(f.policy.recoveryFloor(),6n);
 });
 test('minority cannot raise its own ceiling on later reads',async()=>{
@@ -49,6 +49,13 @@ for(const mode of ['no-progress','minority','pass'])test(mode+' integration rest
  const docker=async args=>{if(args[0]==='inspect')return JSON.stringify({State:{Running:true},Config:{Labels:{'nano.qualification':'multihost','org.opencontainers.image.revision':revision}},NetworkSettings:{Networks:attached?{[network]:{IPAddress:'172.30.0.2'}}:{}}});if(args[1]==='disconnect'){attached=false;cut=true;}if(args[1]==='connect')attached=true;};
  const sample=async()=>!cut?f.rows():!attached?f.rows(mode==='no-progress'?'5':'6',mode==='minority'?'6':'3',true):f.rows('7','7');
  const call=partitionRemote({docker,container,network,revision,sample,record:async e=>events.push(e),policy:f.policy,clock:()=>time,wait:async ms=>{time+=ms;},cutMs:10000,recoveryMs:10000});
- if(mode==='pass'){await call;assert.equal(events.at(-1).event,'partition-recovery-bound');}else await assert.rejects(call,/No new majority|Minority finalized/);
+ if(mode==='pass'){await call;assert.equal(events.at(-1).event,'partition-recovery-bound');}else await assert.rejects(call,/No majority finality|Minority finalized/);
  assert.equal(attached,true);
+});
+
+test('longer sustained cut is explicit and never changes recovery budget',()=>{
+ assert.equal(majorityCutDuration(),192000);assert.equal(majorityCutDuration('384000'),384000);
+});
+test('invalid or unbounded majority cut refuses before execution',()=>{
+ for(const value of ['0','191999','600001','Infinity','1e9','-1','192000,384000'])assert.throws(()=>majorityCutDuration(value));
 });

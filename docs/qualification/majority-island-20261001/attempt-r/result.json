@@ -1,0 +1,153 @@
+{
+  "runtimeRevision": "418aceb8d72cda7836957bfd2308cbf34376cf66",
+  "harnessRevision": "a994bed7664cbbcc92a853765ff2815578efb35f",
+  "exitCode": 1,
+  "majorityIslandQualified": false,
+  "recoveryQualified": false,
+  "stabilityQualified": false,
+  "networkQualified": false,
+  "productionQualified": false,
+  "reason": "Majority finality did not exceed conservative pre-cut ceiling 5 during the 192-second cut.",
+  "requestedCutMs": 192000,
+  "observedCutWallMs": 193241,
+  "stake": {
+    "slotsPerEpoch": "8",
+    "totalStake": "2048000000000",
+    "majorityStake": "1376000000000",
+    "minorityStake": "672000000000",
+    "weights": {
+      "mac-native": "704000000000",
+      "mac-docker": "672000000000",
+      "vps-docker": "672000000000"
+    },
+    "initialSha256": "0x038f3ee9205b221040d18dbd638020776eb3ded22418d105b6b28c03b21c5ea4",
+    "profileSha256": "0xc9d115373e63eea3332aadd86611d1fe6f9d129d61b80d6af883cf16ad176467"
+  },
+  "lastCutObservation": {
+    "time": 1790858164658,
+    "event": "partition-observation",
+    "rows": [
+      {
+        "name": "mac-native",
+        "peers": "0x1",
+        "peerId": "12D3KooWJSDdq2nh1Nr8Xc4f2A8QzhTpFFrhvvNas8SQ5b5szu1F",
+        "connectedPeerIds": [
+          "12D3KooWSn6wCHsjNfQ8Lw8bxZcegSy1dLa78TUGjFcLuAU5hLnp"
+        ],
+        "checkpoint": {
+          "epoch": "4",
+          "root": "0xa9053bc5ff5659c0245694e8d273b23e6c3d62db903e3b8da843cabd3523b319"
+        },
+        "progress": {
+          "headRoot": "0x120a235629eebf7259170176b68fc1d600df408b1b7363463b7b7ce26fcbf287",
+          "headSlot": "64",
+          "stateRoot": "0x694f7d7bd7d490808cc665c4ec2f4dfe9489efaa95cf9fc99c5349f81b5e5d0c",
+          "justified": {
+            "epoch": "6",
+            "root": "0x41a185210b3512b24bf413a348ee4eda866f4fd98c3419d5eeb21da03511670a"
+          },
+          "finalized": {
+            "epoch": "4",
+            "root": "0xa9053bc5ff5659c0245694e8d273b23e6c3d62db903e3b8da843cabd3523b319"
+          },
+          "beforeMs": 1790858162607,
+          "afterMs": 1790858162626
+        }
+      },
+      {
+        "name": "mac-docker",
+        "peers": "0x1",
+        "peerId": "12D3KooWSn6wCHsjNfQ8Lw8bxZcegSy1dLa78TUGjFcLuAU5hLnp",
+        "connectedPeerIds": [
+          "12D3KooWJSDdq2nh1Nr8Xc4f2A8QzhTpFFrhvvNas8SQ5b5szu1F"
+        ],
+        "checkpoint": {
+          "epoch": "4",
+          "root": "0xa9053bc5ff5659c0245694e8d273b23e6c3d62db903e3b8da843cabd3523b319"
+        },
+        "progress": {
+          "headRoot": "0x120a235629eebf7259170176b68fc1d600df408b1b7363463b7b7ce26fcbf287",
+          "headSlot": "64",
+          "stateRoot": "0x694f7d7bd7d490808cc665c4ec2f4dfe9489efaa95cf9fc99c5349f81b5e5d0c",
+          "justified": {
+            "epoch": "6",
+            "root": "0x41a185210b3512b24bf413a348ee4eda866f4fd98c3419d5eeb21da03511670a"
+          },
+          "finalized": {
+            "epoch": "4",
+            "root": "0xa9053bc5ff5659c0245694e8d273b23e6c3d62db903e3b8da843cabd3523b319"
+          },
+          "beforeMs": 1790858162691,
+          "afterMs": 1790858162761
+        }
+      },
+      {
+        "name": "vps-docker",
+        "peers": "0x0",
+        "peerId": "12D3KooWLeixgxy5whvngiAYrGu8yypvzyuF2gZ49gWTWNpdcY8Q",
+        "connectedPeerIds": [],
+        "checkpoint": {
+          "epoch": "2",
+          "root": "0xd6bcdcf52f196c44e0f7438666bcebf7cf2b6c39686bcc89c1e98e61891938bc"
+        },
+        "progress": {
+          "headRoot": "0xaa622daab6287679c4c3e7122440cf465156877d8090365317f6aaddf824ed5b",
+          "headSlot": "65",
+          "stateRoot": "0xa197144d8f15c2b938d301ddc2a642b258eed15a92f731251657614fe568be5f",
+          "justified": {
+            "epoch": "3",
+            "root": "0xeb0c136cdac86c05302ab03acee1a31fbee2474bd079c3ca897ca2dbabc21cad"
+          },
+          "finalized": {
+            "epoch": "2",
+            "root": "0xd6bcdcf52f196c44e0f7438666bcebf7cf2b6c39686bcc89c1e98e61891938bc"
+          },
+          "beforeMs": 1790858163813,
+          "afterMs": 1790858164658
+        }
+      }
+    ]
+  },
+  "observationsDuringCut": 26,
+  "signerHealth": {
+    "time": 1790858169664,
+    "event": "validators-healthy-after-failed-campaign",
+    "validators": [
+      {
+        "file": "native.log",
+        "healthy": true,
+        "attestationsAdmitted": 159
+      },
+      {
+        "file": "docker-mac.log",
+        "healthy": true,
+        "attestationsAdmitted": 153
+      },
+      {
+        "file": "vps.log",
+        "healthy": true,
+        "attestationsAdmitted": 155
+      }
+    ]
+  },
+  "canonicalAudit": {
+    "archiveBytes": 143296,
+    "blocksIncludingTrustedAnchor": 54,
+    "canonicalHistoryVerified": true,
+    "checkpointDigest": "0x78fe30c733c62d29ed17387243a45fd3f1da9ebc4965b63518f5bc31f878dc5e",
+    "checkpointSequence": 568,
+    "firstExecutionBlock": "0x1",
+    "head": "0x6b76f22932553d1189841db228ed2d8e91c179ed975f88c99342886ff6871d5b",
+    "historicalForkChoiceVerified": false,
+    "historicalStandaloneVotesReplayed": false,
+    "lastExecutionBlock": "0x36",
+    "transactions": 1,
+    "trustedAnchor": "0xb0d5adb995c4a94f8e8183ac9326d797afc809065e476e771dab4e2c9b786b9a"
+  },
+  "identifiedIndividualVotesEpochs4To7": 180,
+  "inspectorExecutableSha256": "03db38ecf78f51046b49dd72e384ce22b333a82c18e2acad7a7b5aaff13fb958",
+  "runtimeExecutableSha256": "a4f27991e154cfd4130515aae2813c77e6f97bbc291052c6f1ea30fd48bcf033",
+  "resourceSampleCount": 19,
+  "sourcesFrozenDuringCampaign": true,
+  "physicalHosts": 2
+}

@@ -4992,3 +4992,21 @@ restauration. Ce résultat ne qualifie pas encore la progression WAN majoritaire
 Aucun changement de moteur, EIP, image ou seuil de consensus ; candidats
 418aceb réutilisés. Les échecs historiques et tous les autres critères de
 production restent ouverts. Voir `tests/multihost/README.md`.
+
+## 2026-10-01 — Îlot majoritaire R : critère strict non atteint
+
+Candidats 418aceb, banc a994bed, sortie 1. Pendant la coupure VPS de 192 s,
+les deux Mac restent mutuellement connectés et finalisent 2→4 ; le VPS sans
+pairs reste à 2. Le critère exigeait >5 pour exclure les engagements reçus
+avant coupure : échec conservé. IP restaurée, trois signers sains, conteneurs
+arrêtés sans OOM. Reprise commune et stabilité non exécutées après cet échec.
+
+Rejeu canonique arrêté lié au checkpoint externe : 54 blocs, 143296 octets,
+1 transaction. Identification BLS de 180 votes des époques 4–7. Aux époques
+5/6/7, les 43 clés majoritaires sont incluses, mais seulement 38/35/39 avant
+la frontière suivante ; source 4/4/5. Pas de preuve de blocage permanent ou
+d'une cause unique, ni de raison de changer le quorum. Une nouvelle coupure
+soutenue de 384 s doit distinguer retard et blocage, sans clôturer le critère
+192 s ni modifier la reprise stricte de 180 s. Aucun nouveau build réseau.
+Tous les autres critères de production et échecs historiques restent ouverts.
+[Preuves et limites](qualification/majority-island-20261001/attempt-r/README.md).

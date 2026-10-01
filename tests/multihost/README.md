@@ -214,3 +214,8 @@ than the cut's highest observed majority epoch within the unchanged 180-second
 budget. The standard stability, healthy signer and clock gates follow.
 This fixed-fixture decoder does not qualify arbitrary fork schemas, validator
 scales, asynchronous cross-chain bridges or production readiness.
+
+`NANO_TEST_MAJORITY_CUT_MS=384000` selects a distinct sustained eight-epoch
+cut. The default remains 192000 ms, allowed finite range 192000–600000 ms.
+A longer-cut result cannot close an earlier failed shorter-cut criterion;
+the reconnection deadline remains 180000 ms.
