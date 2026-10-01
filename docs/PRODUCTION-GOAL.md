@@ -2417,3 +2417,19 @@ Les six échecs de durée RPC et l'élagage des sorties Bellatrix restent à
 corriger/qualifier ; le moteur n'est pas promu dans main. Campagne AMD64
 encore active ; nouvelles qualifications réseau et exigences de production
 inchangées. Les observations partielles précédentes restent historiques.
+
+### 2026-10-02 — Correctif RPC qualifié sur une sélection ARM64 ; cause Bellatrix révélée
+
+La révision isolée a00ff7d0 a exécuté les 16 cas enregistrés : 15 réussites,
+un échec, zéro ignoré, CTest exit 8. Les six scénarios de durée RPC auparavant
+échoués passent, avec les contrôles RPC réussis/imbriqués, le cœur, la fenêtre
+de charge et le rejet des discontinuités d'horloge. Sources et exécutables
+inchangés avant/après. Ce résultat ne remplace pas la régression intégrale
+c10426b2 ni une qualification AMD64/WAN du correctif.
+[Résultats et diagnostic conservés](qualification/bellatrix-pruning-clock-barrier-20261002/README.md).
+L'observateur Bellatrix échoue sur un saut simulé de 12 000 ms avec une limite
+de 6 000 ms : le scénario omet la synchronisation du slot d'inclusion de la
+sortie. Le correctif b0eb5ba1 ajoute cette barrière ; sa validation d'exécution
+est en cours, sans augmentation de la tolérance ni changement des règles.
+Les matrices EIP et tous les critères de production restent inchangés.
+Le moteur et les correctifs demeurent sur leurs branches de qualification.
