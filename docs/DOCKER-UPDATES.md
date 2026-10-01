@@ -104,9 +104,14 @@ future des formats et revue indépendante restent ouverts.
 
 ## Assembler depuis les binaires déjà compilés
 
-`scripts/operations/package-candidate.sh` reçoit six arguments : ID immuable de
+`scripts/operations/package-candidate.sh` reçoit six arguments obligatoires : ID immuable de
 la base runtime locale, ID de l’image locale de compilation, volume compilé,
-révision compilée complète et SHA-256 de chacun des deux exécutables. Les
+révision compilée complète et SHA-256 de chacun des deux exécutables. Un septième
+argument facultatif sélectionne le sous-répertoire qualifié du volume (par exemple
+`production-evm-c10426b2-20261001`) ; sans cet argument, le chemin historique
+`/build` est conservé. Le binaire `nano` et `production-source-revision.txt` doivent
+se trouver dans ce répertoire ; `nano-p2p` reste dans `/build/network/`. Ne créer
+le marqueur qu’après qualification et liaison vérifiée des sources/binaires. Les
 empreintes doivent provenir d’une preuve conservée et revue séparément. Le
 script exporte uniquement les deux binaires et leur marqueur depuis un volume
 en lecture seule, contrôle le marqueur et les architectures, puis vérifie les

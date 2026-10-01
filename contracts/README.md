@@ -1,12 +1,19 @@
 # NanoStaking
 
+Ce guide concerne le profil PoS historique (`consensus=pos`). Le profil Beacon
+utilise son registre et ses transitions de consensus propres ; son genesis
+refuse le paramètre historique `stakingContract`. Ce contrat ne remplace donc
+pas les dépôts, sorties et sanctions du profil Beacon.
+
 Les dépôts et retraits sont des transactions signées, exécutées dans un bloc.
 Le registre PoS est ensuite recalculé depuis le contrat. Aucun appel de staking
 RPC ne modifie immédiatement les soldes ou le registre local.
 
 ## Règles
 
-- Dépôt minimal : 10 000 Nano ; maximum 1 000 validateurs.
+- Dépôt minimal : 10 000 Nano ; aucun plafond fixe de nombre de validateurs.
+  `getValidatorCount()` et `getValidatorEntries(start, limit)` permettent une
+  lecture paginée sans charger tout le registre en un seul appel.
 - Le constructeur payable inscrit le déployeur comme premier validateur.
 - `registerValidator()` inscrit uniquement l'émetteur, avec le montant envoyé.
 - `addStake()` augmente son dépôt et renouvelle le verrouillage.
