@@ -1,0 +1,104 @@
+{
+  "runtimeRevision": "86af5f8015a1d721ab044f23d9a5c2f439b87d79",
+  "harnessRevision": "cddea6c0a11f33d0fc30d793d482f0506e2519fa",
+  "exitCode": 1,
+  "firstCycleQualified": true,
+  "secondCycleQualified": false,
+  "lateStabilityQualified": true,
+  "networkQualified": false,
+  "productionQualified": false,
+  "firstRecovery": {
+    "time": 1790854563314,
+    "event": "partition-recovery-bound",
+    "checkpoint": {
+      "epoch": "7",
+      "root": "0x886a82b273b6908e5d7fd368d9284470decda31d412e7f4ce30d84c27aa2bc84"
+    },
+    "recoveryElapsedMs": 137847.11162500002,
+    "recoveryLimitMs": 180000,
+    "completeReadElapsedMs": 1739.578375000041,
+    "cycle": 1
+  },
+  "secondDeadlineFailure": {
+    "time": 1790854942918,
+    "event": "partition-recovery-deadline-missed",
+    "message": "Partition recovery deadline exceeded",
+    "recoveryObservation": {
+      "window": "partition-recovery-bound",
+      "recoveryElapsedMs": 180245.18670800002,
+      "recoveryLimitMs": 180000,
+      "deadlineExceededByMs": 245.18670800002292,
+      "lastRead": {
+        "completeReadElapsedMs": 1718.3009999999776,
+        "recoveryElapsedMs": 180245.18670800002,
+        "checkpoint": {
+          "epoch": "7",
+          "root": "0x886a82b273b6908e5d7fd368d9284470decda31d412e7f4ce30d84c27aa2bc84"
+        },
+        "advancedCommonFinality": false
+      }
+    }
+  },
+  "lateRecovery": {
+    "time": 1790854953261,
+    "event": "late-partition-recovery-bound",
+    "checkpoint": {
+      "epoch": "15",
+      "root": "0x3105c70e804d6a2d98fe4dc7edb419a461cdbd277b1a7d2519117752ad376ade"
+    },
+    "recoveryElapsedMs": 10342.188708000001,
+    "recoveryLimitMs": 180000,
+    "completeReadElapsedMs": 1688.3635830000276,
+    "cycle": 2
+  },
+  "lateRecoveryWallElapsedMs": 190589,
+  "stability": {
+    "epochs": 3,
+    "firstEpoch": "15",
+    "lastEpoch": "18",
+    "elapsedMs": 137729,
+    "nodes": [
+      "mac-native",
+      "mac-docker",
+      "vps-docker"
+    ],
+    "revision": "86af5f8015a1d721ab044f23d9a5c2f439b87d79"
+  },
+  "stopHealth": [
+    {
+      "name": "native",
+      "healthy": true,
+      "clockHealthy": true,
+      "attestationsAdmitted": 423,
+      "finalized": {
+        "epoch": "0x12",
+        "root": "0xee9b94c7459105afcad23c86b2a9504852af36c3fa7c35fa026f13e9f897c002"
+      }
+    },
+    {
+      "name": "docker-mac",
+      "healthy": true,
+      "clockHealthy": true,
+      "attestationsAdmitted": 399,
+      "finalized": {
+        "epoch": "0x12",
+        "root": "0xee9b94c7459105afcad23c86b2a9504852af36c3fa7c35fa026f13e9f897c002"
+      }
+    },
+    {
+      "name": "vps",
+      "healthy": true,
+      "clockHealthy": true,
+      "attestationsAdmitted": 395,
+      "finalized": {
+        "epoch": "0x12",
+        "root": "0xee9b94c7459105afcad23c86b2a9504852af36c3fa7c35fa026f13e9f897c002"
+      }
+    }
+  ],
+  "physicalHosts": 2,
+  "processes": 3,
+  "syntheticKeys": 64,
+  "candidateEvidenceManifest": "../../capella-head-priority-portable-20261001/manifest.json",
+  "candidateEvidenceManifestSha256": "76a8553655fce9d37806d2d125734064b1f468f92af35fdc2e4ed903be8e7d1e"
+}
