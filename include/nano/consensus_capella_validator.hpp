@@ -1,6 +1,7 @@
 #pragma once
 #include "nano/consensus_capella_clock.hpp"
 #include <deque>
+#include <atomic>
 namespace nano {
 struct CapellaValidatorKey {
  uint64_t index;
@@ -23,12 +24,14 @@ class CapellaValidatorLoop {
  size_t awaiting_registration_=0;std::set<uint64_t> resolved_indices_;
  size_t trace_limit_=0;uint64_t trace_failures_=0;std::deque<Json> duty_trace_;std::optional<uint64_t> traced_slot_;
  void record_duty(uint64_t,const Phase0SignedAttestation&);
- bool stopping_=false,failed_=false;uint64_t proposals_=0,votes_=0,sync_messages_=0,stale_retries_=0;std::string failure_;
+ bool stopping_=false;std::atomic<bool> failed_{false};uint64_t proposals_=0,votes_=0,sync_messages_=0,stale_retries_=0;std::string failure_;
 public:
  CapellaValidatorLoop(CapellaDurableReactor&,CapellaLocalClock&,uint64_t slot_ms,uint64_t slots_per_epoch,
   size_t maximum_transaction_trials,size_t maximum_vote_trials,std::vector<CapellaValidatorKey>,std::function<uint64_t()> local_clock);
  ~CapellaValidatorLoop();
  void poll(const std::function<void()>& checkpoint={});
+ // Nonblocking health observation; private failure text stays under mutex_.
+ bool healthy()const noexcept{return !failed_.load(std::memory_order_acquire);}
  Json status(bool include_trace=false);
  // Opt-in diagnostics: one successful local attestation per slot, bounded history.
  // This records a post-signing observation, not an atomic fork-choice decision.

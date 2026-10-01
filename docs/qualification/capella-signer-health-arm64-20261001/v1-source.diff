@@ -1,0 +1,187 @@
+diff --git a/include/nano/consensus_capella_validator.hpp b/include/nano/consensus_capella_validator.hpp
+index 8cdcb94..0eae515 100644
+--- a/include/nano/consensus_capella_validator.hpp
++++ b/include/nano/consensus_capella_validator.hpp
+@@ -1,6 +1,7 @@
+ #pragma once
+ #include "nano/consensus_capella_clock.hpp"
+ #include <deque>
++#include <atomic>
+ namespace nano {
+ struct CapellaValidatorKey {
+  uint64_t index;
+@@ -23,12 +24,14 @@ class CapellaValidatorLoop {
+  size_t awaiting_registration_=0;std::set<uint64_t> resolved_indices_;
+  size_t trace_limit_=0;uint64_t trace_failures_=0;std::deque<Json> duty_trace_;std::optional<uint64_t> traced_slot_;
+  void record_duty(uint64_t,const Phase0SignedAttestation&);
+- bool stopping_=false,failed_=false;uint64_t proposals_=0,votes_=0,sync_messages_=0,stale_retries_=0;std::string failure_;
++ bool stopping_=false;std::atomic<bool> failed_{false};uint64_t proposals_=0,votes_=0,sync_messages_=0,stale_retries_=0;std::string failure_;
+ public:
+  CapellaValidatorLoop(CapellaDurableReactor&,CapellaLocalClock&,uint64_t slot_ms,uint64_t slots_per_epoch,
+   size_t maximum_transaction_trials,size_t maximum_vote_trials,std::vector<CapellaValidatorKey>,std::function<uint64_t()> local_clock);
+  ~CapellaValidatorLoop();
+  void poll(const std::function<void()>& checkpoint={});
++ // Nonblocking health observation; private failure text stays under mutex_.
++ bool healthy()const noexcept{return !failed_.load(std::memory_order_acquire);}
+  Json status(bool include_trace=false);
+  // Opt-in diagnostics: one successful local attestation per slot, bounded history.
+  // This records a post-signing observation, not an atomic fork-choice decision.
+diff --git a/src/consensus_capella_validator.cpp b/src/consensus_capella_validator.cpp
+index a51679a..5cc1a15 100644
+--- a/src/consensus_capella_validator.cpp
++++ b/src/consensus_capella_validator.cpp
+@@ -53,8 +53,8 @@ void CapellaValidatorLoop::poll(const std::function<void()>& checkpoint){
+    }
+   }
+   // All locally owned proposals are admitted before choosing attestation heads.
+-  // Attestation duties already enforce this phase; apply the same configured
+-  // deadline to sync messages, which otherwise sign an old head immediately.
++  // Final attestation/sync signing paths already enforce their timing guards.
++  // Skip premature duty enumeration/context work using the profile deadline.
+   // No sleep under a lock. https://github.com/ethereum/consensus-specs/blob/v1.3.0/specs/altair/validator.md#sync-committee-messages
+   const auto duty_time=now_();if(duty_time<genesis)throw std::runtime_error("Validator clock precedes genesis");
+   if((duty_time-genesis)/slot_ms_!=slot){++slot_exits_;return;}
+diff --git a/src/node.cpp b/src/node.cpp
+index 0d74e2f..e4a6e16 100644
+--- a/src/node.cpp
++++ b/src/node.cpp
+@@ -3,6 +3,7 @@
+ #include "nano/consensus_altair_runtime.hpp"
+ #include "nano/consensus_bellatrix_runtime.hpp"
+ #include "nano/consensus_capella_runtime.hpp"
++#include "nano/consensus_capella_health.hpp"
+ #include <spawn.h>
+ #include <sys/wait.h>
+ #include <signal.h>
+@@ -76,7 +77,7 @@ int run_node(Blockchain& chain,const std::filesystem::path& database,const std::
+  std::vector<std::string> args{std::to_string(server->port()),identity,listen};auto peers=config.value("bootnodes",std::vector<std::string>{});args.insert(args.end(),peers.begin(),peers.end());std::vector<std::string> excluded;for(const auto& entry:config.value("wallets",Json::array()))excluded.push_back(entry.at("password_env"));if(config.contains("bft"))excluded.push_back(config.at("bft").at("key_env").get<std::string>());for(const auto* profile:{"bellatrix","capella"})if(config.contains(profile)&&config.at(profile).contains("validator"))for(const auto& key:config.at(profile).at("validator").at("keys"))excluded.push_back(key.at("keyEnv").get<std::string>());Child child(binary,args,token,excluded);
+  auto child_pid=child.pid();
+  std::atomic<bool> stopping=false,failed=false;
+- std::thread monitor([&]{while(!stopping){if(child.exited()){failed=true;server->stop();return;}std::this_thread::sleep_for(std::chrono::milliseconds(100));}});
++ std::thread monitor([&]{CapellaValidatorFailureAlert signer_alert;while(!stopping){if(auto alert=signer_alert.poll(capella.validator.get()))std::cerr<<alert->dump()<<std::endl;if(child.exited()){failed=true;server->stop();return;}std::this_thread::sleep_for(std::chrono::milliseconds(100));}});
+  std::cout<<"Nano JSON-RPC listening on "<<host<<":"<<server->port()<<std::endl;
+  std::cout<<Json{{"event","p2p-process"},{"pid",child_pid}}.dump()<<std::endl;
+  try{server->run();}catch(...){stopping=true;monitor.join();throw;}
+diff --git a/src/rpc.cpp b/src/rpc.cpp
+index b866056..8d97382 100644
+--- a/src/rpc.cpp
++++ b/src/rpc.cpp
+@@ -523,7 +523,7 @@ Json Rpc::one(const Json& request,const std::function<void()>& cancelled){
+    auto runtime=capella_;lock.unlock();if(cancelled)cancelled();if(!runtime->clock->healthy())throw RpcError(-32603,"Capella clock unavailable");
+    auto root=[](const Json& value){if(!value.is_string())throw RpcError(-32602,"Expected Capella root");const auto text=value.get<std::string>();const auto bytes=unhex(text);if(bytes.size()!=32||hex(bytes)!=text)throw RpcError(-32602,"Invalid Capella root");ConsensusRoot id{};std::copy(bytes.begin(),bytes.end(),id.begin());return id;};
+    auto positive=[](const Json& value){const auto n=u64(quantity(value));if(!n||!value.is_string()||quantity(Int(std::to_string(n)))!=value.get<std::string>())throw RpcError(-32602,"Invalid Capella quantity");return n;};
+-   if(method=="nano_capellaStatus"){result=runtime->reactor->network_identity();result["syncAdmission"]=runtime->reactor->sync_admission_stats();result["clockHealthy"]=true;result["networkProtocolActive"]=runtime->network.value("enabled",false)?Json(nullptr):Json(false);result["networkAdmissionEnabled"]=runtime->network.value("enabled",false);result["capellaRelay"]=runtime->network;result["executionBound"]=runtime->reactor->execution_bound();if(runtime->admission)result.update(runtime->admission->capacities());result["admissionSession"]=runtime->admission?runtime->admission->receipts().at("session"):Json(nullptr);}
++   if(method=="nano_capellaStatus"){result=runtime->reactor->network_identity();result["syncAdmission"]=runtime->reactor->sync_admission_stats();result["clockHealthy"]=true;result["validatorHealthy"]=runtime->validator?Json(runtime->validator->healthy()):Json(nullptr);result["networkProtocolActive"]=runtime->network.value("enabled",false)?Json(nullptr):Json(false);result["networkAdmissionEnabled"]=runtime->network.value("enabled",false);result["capellaRelay"]=runtime->network;result["executionBound"]=runtime->reactor->execution_bound();if(runtime->admission)result.update(runtime->admission->capacities());result["admissionSession"]=runtime->admission?runtime->admission->receipts().at("session"):Json(nullptr);}
+    else if(method=="nano_capellaExport")result=runtime->reactor->export_message(params[1].get<std::string>(),root(params[2]),(16*1024*1024-4096)/2,{},cancelled);
+    else if(method=="nano_capellaCatalogGeneration"||method=="nano_capellaCatalogAcquire"||method=="nano_capellaCatalogRelease"||method=="nano_capellaCatalogOpen"||method=="nano_capellaCatalogPage"||method=="nano_capellaCatalogClose"){
+     if(!runtime->catalogs)throw RpcError(-32601,"Capella catalogs unavailable");
+diff --git a/tests/support/persistent_rpc.hpp b/tests/support/persistent_rpc.hpp
+index 872fada..0b6432f 100644
+--- a/tests/support/persistent_rpc.hpp
++++ b/tests/support/persistent_rpc.hpp
+@@ -17,10 +17,10 @@ class PersistentRpc {
+  uint64_t id_=0;
+ public:
+  explicit PersistentRpc(uint16_t port):port_(port){}
+- nano::Json call(const std::string& method,nano::Json params=nano::Json::array()){
++ nano::Json call(const std::string& method,nano::Json params=nano::Json::array(),const std::string& origin={}){
+   namespace http=boost::beast::http;
+   if(!stream_.socket().is_open())stream_.connect({boost::asio::ip::make_address("127.0.0.1"),port_});
+-  http::request<http::string_body> request(http::verb::post,"/",11);request.set(http::field::host,"127.0.0.1");request.keep_alive(true);
++  http::request<http::string_body> request(http::verb::post,"/",11);request.set(http::field::host,"127.0.0.1");request.keep_alive(true);if(!origin.empty())request.set(http::field::origin,origin);
+   request.body()=nano::Json{{"jsonrpc","2.0"},{"id",++id_},{"method",method},{"params",params}}.dump();request.prepare_payload();
+   http::response_parser<http::string_body> parser;parser.body_limit(16*1024*1024);boost::beast::error_code failure;
+   context_.restart();stream_.expires_after(std::chrono::seconds(10));
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index 7352d05..9697429 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -13,6 +13,7 @@
+ #include "nano/http.hpp"
+ #include "support/persistent_rpc.hpp"
+ #include "nano/consensus_capella_validator.hpp"
++#include "nano/consensus_capella_health.hpp"
+ #include "nano/consensus_capella_runtime.hpp"
+ #include "nano/consensus_capella_sync.hpp"
+ #include <atomic>
+@@ -53,7 +54,7 @@ static bool owner_mode=false;
+ static bool owner_reorg=false;
+ static bool owner_sync=false;
+ static bool owner_witness=false;
+-static bool scheduled=false,sync_rotation=false,clock_diagnostics=false,duty_timing=false;
++static bool scheduled=false,sync_rotation=false,clock_diagnostics=false,duty_timing=false,signer_health=false;
+ static bool configured_runtime=false;
+ static bool automatic_recovery=false;
+ static bool capella_http=false;
+@@ -517,6 +518,54 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+  if(owner_mode){Rpc rpc(*owners[0]);nodes[0]->invalidate();check(rpc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method","eth_blockNumber"},{"params",Json::array()}}).contains("error"),"invalidated owner still served block number");}
+  std::cout<<Json{{"scenario","capella-local-assembly-finality"},{"localSyncAggregates",local_sync},{"disjointSyncMerging",local_sync},{"individualSyncMessages",local_sync},{"syncWireWorker",local_sync},{"syncCatalogExport",local_sync},{"syncPrecollection",local_sync},{"localSyncSigning",local_sync},{"executionOwner",owner_mode},{"participationPercent",local_finality},{"blocks",blocks},{"votes",votes},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"justifiedEpoch",result.state->timed.view.justified.epoch},{"independentStores",2},{"storeReopens",restarts},{"signingJournalsReopened",reopened_journals},{"networkTransport",false},{"networkActivated",false}}.dump()<<std::endl;
+ }
++static void signer_health_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules,const Block& genesis,const State& genesis_state){
++ const auto& t=rules.transition;const auto slots=t.consensus.epoch.ffg.slots_per_epoch;
++ const auto validators=root_at(initial.blocks.at(initial.timed.view.anchor).state.ssz,8);
++ for(unsigned mode=0;mode<2;++mode){
++  Temp directory;Genesis g;g.chain_id=t.chain_id;g.consensus="beacon";g.evm_revision=EvmRevision::Shanghai;g.block=genesis;g.state=genesis_state;
++  Blockchain owner(directory/"owner",g);ChainStore witness(directory/"witness");
++  auto reactor=std::make_shared<CapellaDurableReactor>(owner,rules,crash_limits,initial,std::function<void()>{},&witness);
++  std::atomic<uint64_t> now{initial.timed.clock.genesis_time_ms+2*rules.slot_duration_ms};auto wall=[&]{return now.load();};
++  auto clock=std::make_shared<CapellaLocalClock>(*reactor,2*rules.slot_duration_ms,wall);clock->poll();
++  const auto proposer=reactor->current_proposer(2);check(bool(proposer),"health fixture proposer missing");
++  std::map<uint64_t,std::unique_ptr<ChainStore>> disks,key_witnesses;
++  std::map<uint64_t,std::shared_ptr<BeaconSigningJournal>> journals;std::vector<CapellaValidatorKey> keys;
++  uint64_t valid_calls=0,provider_calls=0;
++  for(uint64_t i=0;i<64;++i){disks[i]=std::make_unique<ChainStore>(directory/("key-"+std::to_string(i)));key_witnesses[i]=std::make_unique<ChainStore>(directory/("witness-"+std::to_string(i)));journals[i]=std::make_shared<BeaconSigningJournal>(*disks[i],t.chain_id,genesis.header.hash(),validators,Key(i).public_key,slots,std::nullopt,key_witnesses[i].get());keys.push_back({i,journals[i],[&,i](const ConsensusRoot& root){++valid_calls;return Key(i).sign(root);},genesis.header.coinbase,{}});}
++  auto faulty_keys=keys;for(auto& key:faulty_keys){const auto i=key.index;key.signer=[&,i](const ConsensusRoot& root)->Bytes{if(++provider_calls==mode+1)throw std::runtime_error("private provider sentinel");return Key(i).sign(root);};}
++  auto faulty=std::make_shared<CapellaValidatorLoop>(*reactor,*clock,rules.slot_duration_ms,slots,16,64,faulty_keys,wall);
++  const auto before=reactor->current().token,journal_before=journals.at(*proposer)->commitment();
++  bool cancelled=false;try{faulty->poll([]{throw ExecutionCancelled("health test cancellation");});}catch(const ExecutionCancelled&){cancelled=true;}
++  check(cancelled&&faulty->healthy()&&provider_calls==0&&reactor->current().token==before&&journals.at(*proposer)->commitment()==journal_before,"cancellation poisoned health or reservation");
++  auto runtime=std::make_shared<CapellaRuntime>();runtime->reactor=reactor;runtime->clock=clock;runtime->validator=faulty;
++  Rpc rpc(owner,"health-test-token",AdmissionBudget::Clock::now,{}, {}, {},runtime);HttpServer server(rpc,"127.0.0.1",0);
++  struct RunningHttp{HttpServer& server;std::thread thread;explicit RunningHttp(HttpServer& s):server(s),thread([&s]{s.run();}){}~RunningHttp(){server.stop();thread.join();}} http(server);
++  PersistentRpc client(server.port());auto status=[&]{return client.call("nano_capellaStatus",Json::array({"health-test-token"}));};
++  bool unauthorized=false;try{client.call("nano_capellaStatus",Json::array({"wrong-token"}));}catch(const PersistentRpcError& e){unauthorized=e.code==-32001;}check(unauthorized&&status().at("validatorHealthy")==true,"private health authentication or initial status failed");
++  CapellaValidatorFailureAlert alert;check(!alert.poll(nullptr)&&!alert.poll(faulty.get()),"healthy/unconfigured signer generated an alert");
++  faulty->start(std::chrono::milliseconds(1));const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(5);
++  while(faulty->healthy()&&std::chrono::steady_clock::now()<deadline)std::this_thread::sleep_for(std::chrono::milliseconds(1));faulty->stop();
++  check(provider_calls==mode+1&&!faulty->healthy()&&clock->healthy(),"provider fault did not isolate the signer");
++  const auto pinned=journals.at(*proposer)->commitment(),after_failure=reactor->current().token;
++  check(mode?journals.at(*proposer)->latest_proposal_slot()==2&&pinned.sequence>journal_before.sequence:!journals.at(*proposer)->latest_proposal_slot()&&pinned==journal_before,"proposal reservation boundary differs");
++  const auto report=alert.poll(faulty.get());check(report&&*report==Json{{"event","capella-validator-unavailable"},{"nodeShutdownRequested",false}}&&!alert.poll(faulty.get()),"shared daemon alert was missing, repeated or leaked details");
++  auto failed_status=status();check(failed_status.at("validatorHealthy")==false&&failed_status.at("clockHealthy")==true&&failed_status.dump().find("private provider sentinel")==std::string::npos,"HTTP status masked failure or leaked provider detail");
++  bool origin_refused=false;try{client.call("nano_capellaStatus",Json::array({"health-test-token"}),"https://untrusted.invalid");}catch(const std::runtime_error& e){const std::string message=e.what();origin_refused=message.find("HTTP failure (403)")!=std::string::npos&&message.find("validatorHealthy")==std::string::npos&&message.find("private provider sentinel")==std::string::npos;}check(origin_refused,"Origin request exposed signer status");
++  bool refused=false;try{faulty->poll();}catch(const std::runtime_error&){refused=true;}check(refused&&provider_calls==mode+1&&reactor->current().token==after_failure,"failed worker retried or mutated admission");
++  {
++   CapellaValidatorLoop alternate(*reactor,*clock,rules.slot_duration_ms,slots,16,64,keys,wall);
++   if(mode){alternate.poll();check(valid_calls==0&&journals.at(*proposer)->commitment()==pinned,"alternate provider retried a reserved slot");}
++   now=initial.timed.clock.genesis_time_ms+3*rules.slot_duration_ms;alternate.poll();
++   check(alternate.healthy()&&capella_fork_head(*reactor->current().state,rules).header.slot==3&&owner.tip().header.number>genesis.header.number&&!faulty->healthy(),"provider fault poisoned next-slot admission");
++  }
++  runtime->validator.reset();check(status().at("validatorHealthy").is_null(),"observer fabricated configured signer health");
++  std::map<uint64_t,ForkCheckpointToken> pins;std::map<uint64_t,std::optional<uint64_t>> proposal_slots;
++  for(const auto& [i,journal]:journals){pins[i]=journal->commitment();proposal_slots[i]=journal->latest_proposal_slot();}
++  faulty.reset();faulty_keys.clear();keys.clear();journals.clear();disks.clear();key_witnesses.clear();
++  for(uint64_t i=0;i<64;++i){ChainStore disk(directory/("key-"+std::to_string(i))),key_witness(directory/("witness-"+std::to_string(i)));BeaconSigningJournal reopened(disk,t.chain_id,genesis.header.hash(),validators,Key(i).public_key,slots,pins.at(i),&key_witness);check(reopened.commitment()==pins.at(i)&&reopened.latest_proposal_slot()==proposal_slots.at(i),"retained signer/witness history did not reopen");}
++ }
++ std::cout<<Json{{"scenario","capella-signer-health"},{"failureCases",2},{"realWorker",true},{"httpTransport",true},{"originRejected",true},{"wrongTokenRejected",true},{"cancelledWorkerHealthy",true},{"reservedSlotNotRetried",true},{"sameJournalsNextSlot",true},{"journalsReopenedPerCase",64},{"sharedDaemonAlertOnce",true},{"privateFailureRedacted",true},{"networkTransport",false}}.dump()<<std::endl;
++}
+ static void duty_timing_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules,const Block& genesis,const State& genesis_state){
+  const auto& t=rules.transition;const auto slots=t.consensus.epoch.ffg.slots_per_epoch;const auto test_slot=slots+1;
+  for(unsigned mode=0;mode<4;++mode){
+@@ -1524,7 +1573,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
+     }
+    }
+   }
+-  if(slot==first_slot){short_snapshot=capella_store_snapshot(*store,store_rules,snapshot_limits);if(duty_timing){duty_timing_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(clock_diagnostics){clock_diagnostics_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(deposit_reorg){deposit_reorg_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(configured_runtime){runtime_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(scheduled){scheduler_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}
++  if(slot==first_slot){short_snapshot=capella_store_snapshot(*store,store_rules,snapshot_limits);if(signer_health){signer_health_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(duty_timing){duty_timing_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(clock_diagnostics){clock_diagnostics_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(deposit_reorg){deposit_reorg_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(configured_runtime){runtime_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(scheduled){scheduler_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}
+   if(local_finality){local_finality_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}}
+   ++contexts;
+   beacon=received->consensus;state=received->execution.state;parent=received->execution.block;hashes[parent.header.number]=parent.header.hash();++accepted;
+@@ -1758,6 +1807,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
+ }
+ #include "support/capella_exit_owner.hpp"
+ int main(int argc,char** argv){try{executable=argv[0];
++if(argc==2&&std::string(argv[1])=="--signer-health"){signer_health=true;scenario(false);return 0;}
+ if(argc==2&&std::string(argv[1])=="--duty-timing"){duty_timing=true;scenario(false);return 0;}
+ if(argc==2&&std::string(argv[1])=="--clock-diagnostics"){clock_diagnostics=true;scenario(false);return 0;}
+ if(argc==2&&std::string(argv[1])=="--new-validator-slashing"){slashing_new_validator=true;deposit_activation=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}

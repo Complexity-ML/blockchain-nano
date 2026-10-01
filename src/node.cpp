@@ -3,6 +3,7 @@
 #include "nano/consensus_altair_runtime.hpp"
 #include "nano/consensus_bellatrix_runtime.hpp"
 #include "nano/consensus_capella_runtime.hpp"
+#include "nano/consensus_capella_health.hpp"
 #include <spawn.h>
 #include <sys/wait.h>
 #include <signal.h>
@@ -76,7 +77,7 @@ int run_node(Blockchain& chain,const std::filesystem::path& database,const std::
  std::vector<std::string> args{std::to_string(server->port()),identity,listen};auto peers=config.value("bootnodes",std::vector<std::string>{});args.insert(args.end(),peers.begin(),peers.end());std::vector<std::string> excluded;for(const auto& entry:config.value("wallets",Json::array()))excluded.push_back(entry.at("password_env"));if(config.contains("bft"))excluded.push_back(config.at("bft").at("key_env").get<std::string>());for(const auto* profile:{"bellatrix","capella"})if(config.contains(profile)&&config.at(profile).contains("validator"))for(const auto& key:config.at(profile).at("validator").at("keys"))excluded.push_back(key.at("keyEnv").get<std::string>());Child child(binary,args,token,excluded);
  auto child_pid=child.pid();
  std::atomic<bool> stopping=false,failed=false;
- std::thread monitor([&]{while(!stopping){if(child.exited()){failed=true;server->stop();return;}std::this_thread::sleep_for(std::chrono::milliseconds(100));}});
+ std::thread monitor([&]{CapellaValidatorFailureAlert signer_alert;while(!stopping){try{if(auto alert=signer_alert.poll(capella.validator.get()))std::cerr<<alert->dump()<<std::endl;}catch(...){/* Best-effort telemetry must not stop consensus admission. */}if(child.exited()){failed=true;server->stop();return;}std::this_thread::sleep_for(std::chrono::milliseconds(100));}});
  std::cout<<"Nano JSON-RPC listening on "<<host<<":"<<server->port()<<std::endl;
  std::cout<<Json{{"event","p2p-process"},{"pid",child_pid}}.dump()<<std::endl;
  try{server->run();}catch(...){stopping=true;monitor.join();throw;}

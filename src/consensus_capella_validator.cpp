@@ -53,8 +53,8 @@ void CapellaValidatorLoop::poll(const std::function<void()>& checkpoint){
    }
   }
   // All locally owned proposals are admitted before choosing attestation heads.
-  // Attestation duties already enforce this phase; apply the same configured
-  // deadline to sync messages, which otherwise sign an old head immediately.
+  // Final attestation/sync signing paths already enforce their timing guards.
+  // Skip premature duty enumeration/context work using the profile deadline.
   // No sleep under a lock. https://github.com/ethereum/consensus-specs/blob/v1.3.0/specs/altair/validator.md#sync-committee-messages
   const auto duty_time=now_();if(duty_time<genesis)throw std::runtime_error("Validator clock precedes genesis");
   if((duty_time-genesis)/slot_ms_!=slot){++slot_exits_;return;}
