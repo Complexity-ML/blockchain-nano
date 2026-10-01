@@ -2413,3 +2413,29 @@ vente, financement ni transfert réel autorisé par ce choix de plateforme.
 Le gate réseau refuse aussi les propriétés CTest de désactivation/saut.
 Vérificateur final appliqué au registre réel sauvegardé, puis huit contrôles
 de routage/gate réussis ; aucun rejeu des 21 tests inchangés pour cette garde.
+
+
+### 2026-10-01 — CI de la correction de notices terminée
+
+Run `36892286298`, source `930bf00`, completed/success : 232 contrôles
+autonomes et neuf tests C++ passés sans échec/skip (26,91 s). Rapport réel
+11 notices/5 copyrights vérifié. Neuf empreintes de binaires identiques
+au run `dad9a14` : répétabilité bornée de deux builds CI, pas encore une
+release entièrement figée. P2P CI du commit `85a4a7c` reste à qualifier.
+Production globale et ses autres critères conservés ouverts.
+[Preuves terminales](qualification/ci-20261001/notices-core-success/README.md).
+
+
+### 2026-10-01 — recette transport Docker AMD64 qualifiée
+
+Après push/pull `85a4a7c`, registre complet de 21 tests réseau vérifié,
+21 tests passés sans skip sur VPS Docker AMD64 (1,24 s), binaire nano-p2p
+inchangé. Builder/dépendances/volume réutilisés, aucune nouvelle image.
+Deux refus d’environnement avant tests conservés : point de montage puis
+propriétaire du répertoire temporaire de rapports. Protections Docker
+conservées. ARM64 et AMD64 réutilisés qualifiés ; construction fraîche
+GitHub encore requise. Son job operations réussit avec 235 contrôles
+autonomes, dont trois nouveaux contrôles du job réseau ; core/network
+encore en cours au relevé. Pas de gate WAN ou production globale clos.
+[AMD64](qualification/network-ci-20261001/amd64-prebuilt/README.md),
+[contrôles GitHub](qualification/network-ci-20261001/github-operations/README.md).
