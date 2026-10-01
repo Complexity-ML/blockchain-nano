@@ -496,7 +496,12 @@ int main(int argc,char** argv){try{
        loop.poll();peers->sync(chain.tip().header.hash());
        check(context().registry.validators.at(0).exit_epoch!=UINT64_MAX,"pending exit not reincluded after reorg");
        std::cout<<Json{{"scenario","bellatrix-exit-reorg"},{"syntheticEquivocatingProposer",true},{"exitRolledBack",true},{"pendingRequestRetained",true},{"reincluded",true}}.dump()<<'\n';
-      }else{wall=(genesis_time+(slots+1)*seconds)*1000;loop.poll();}
+      }else{
+       wall=(genesis_time+(slots+1)*seconds)*1000;loop.poll();
+       // Observe the exit-inclusion slot before advancing the shared synthetic
+       // clock again. The peer retains its one-slot discontinuity guard.
+       if(peers)peers->sync(chain.tip().header.hash());
+      }
       const auto member=context().registry.validators.at(0);
       check(member.exit_epoch!=UINT64_MAX&&!member.slashed,"block did not schedule voluntary exit");
       check(bound.current().signed_exits->size()==1,"unfinalized exit proof prematurely dropped");
