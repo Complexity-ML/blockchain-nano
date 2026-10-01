@@ -1,0 +1,7 @@
+# Relay admitted-payload quantum — 1 October 2026
+
+WAN D showed many yielded catalogs with fewer than the configured eight exports. The new sparse-known fixture first failed against the prior policy with "sparse cached page yielded before payload quantum"; its build/failure logs are retained. That temporary pre-fix test variant was not separately committed, so these logs are regression evidence, not complete pre-fix provenance.
+
+At d9575aa, a new counter advances only after a validated accepted ACK. Cached entries, refused and unconfirmed deliveries do not consume the quantum. Yield remains at page boundaries, once admitted payloads reach the configured pageEntries. Overshoot is bounded by pageEntries minus one; overall inventory limits still apply. A naturally completed smaller inventory remains successful. The new scenario covers a half-cached first page, bounded overshoot on the next page, and resumption without retransmission. Existing rejection, absent/duplicate ACK, cache, cleanup, digest and timeout scenarios remain included.
+
+All 40 mocked-transport relay scenarios pass on Docker ARM64 and VPS amd64, and both P2P executables compile. No finality, WAN performance or production qualification inferred. Clock/consensus/admission/deadline rules are unchanged. Runtime images and native P2P still require refresh before another finite network test; build-volume revision markers must not be relabelled without validating all runtime targets.
