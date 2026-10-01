@@ -1,0 +1,9 @@
+# Régression complète ARM64 aacc56da — terminale
+
+416 tests enregistrés et exécutés : **405 réussites / onze échecs / zéro ignoré**, exit CTest 8, 7 454 secondes. Registre et XML concordent exactement. Les onze échecs sont HTTP (admission malformed), huit scénarios RPC de charge Paris/Shanghai et les deux anciennes attentes de bloc volumineux dans une trame dépassant la limite. Aucun nouvel échec. Les réparations sont qualifiées séparément selon leur révision ; ce résultat reste un échec complet historique, pas un résultat vert rétroactif.
+
+Le conteneur d’origine s’est terminé et a été supprimé par son script (`--rm`). Le script d’origine pouvait s’arrêter après l’audit XML négatif, avant l’observation finale des sources. Une observation indépendante après terminaison a donc recalculé les 196 empreintes exécutables via le volume monté en lecture seule : toutes identiques aux empreintes avant tests. Les fichiers suivis du worktree figé sont aussi identiques au manifeste initial. Ces observations sont explicitement postérieures à la terminaison, pas des assertions supplémentaires effectuées par l’ancien script.
+
+Le journal EEST complet est vérifié sans rejeu : 5 387 correspondances = 4 882 exécutions et 505 validations, 317 fichiers, aucune catégorie d’échec EEST, `forkConformanceProven=false`. Tous les logs originaux sont compressés sans modification ; `raw-input-sha256.json` donne les empreintes des octets décompressés. Registre, XML, manifestes et inventaire restent directement lisibles. La comparaison de cette campagne aux 314/400 réussites initiales ne prouve pas une cause unique pour tous les anciens échecs ; les rapports et limitations antérieurs sont conservés.
+
+La régression complète du candidat d’intégration c10426b2 est une campagne distincte, préparée après validation terminale des 20 contrôles AMD64 du candidat moteur 082143a2. Tous les critères de production globaux, WAN et revue indépendante restent ouverts.
