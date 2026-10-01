@@ -1,0 +1,115 @@
+[  0%] Built target gen_base.o
+[  0%] Built target gen_bint.o
+[  3%] Built target secp256k1_precomputed
+[  3%] Built target nano_blst
+[  3%] Built target secp256k1
+[  7%] Built target mcl_st
+[  7%] Built target nano_ckzg
+[  7%] Building CXX object CMakeFiles/nano_core.dir/src/beacon_block_json.cpp.o
+[  7%] Building CXX object CMakeFiles/nano_core.dir/src/beacon_api.cpp.o
+/work/src/beacon_api.cpp:12:89: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   12 |  if(path=="/eth/v1/node/version")return {200,{{"data",{{"version","Nano/0.1.0/c++20"}}}}};
+      |                                                                                         ^
+/work/src/beacon_api.cpp:18:118: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   18 |  if(!root&&!fork&&!finality&&!genesis&&!spec)return {404,{{"code",404},{"message","Beacon endpoint not implemented"}}};
+      |                                                                                                                      ^
+/work/src/beacon_api.cpp:26:166: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   26 |  if(genesis)return {200,{{"data",{{"genesis_time",std::to_string(number(b,0))},{"genesis_validators_root",octets(b,8,32)},{"genesis_fork_version",genesis_version}}}}};
+      |                                                                                                                                                                      ^
+/work/src/beacon_api.cpp:63:70: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   63 |   if(checkpoint)checkpoint();return {200,{{"data",std::move(values)}}};
+      |                                                                      ^
+/work/src/beacon_api.cpp:77:160: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   77 |  return {200,{{"execution_optimistic",false},{"finalized",consensus_beacon_header_root(head.header)==store.timed.view.finalized.root},{"data",std::move(data)}}};
+      |                                                                                                                                                                ^
+/work/src/beacon_api.cpp:88:117: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   88 |  auto error=[](unsigned code,const char* message){return BeaconReadResponse{code,{{"code",code},{"message",message}}};};
+      |                                                                                                                     ^
+/work/src/beacon_api.cpp:132:99: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  132 |    {"header",{{"message",std::move(message)},{"signature",octets(*signed_block->second,4,96)}}}}}}};
+      |                                                                                                   ^
+[  7%] Building CXX object CMakeFiles/nano_core.dir/src/capella_beacon_api.cpp.o
+7 warnings generated.
+[  7%] Building CXX object CMakeFiles/nano_core.dir/src/capella_beacon_block_json.cpp.o
+/work/src/capella_beacon_api.cpp:15:89: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   15 |  if(path=="/eth/v1/node/version")return {200,{{"data",{{"version","Nano/0.1.0/c++20"}}}}};
+      |                                                                                         ^
+/work/src/capella_beacon_api.cpp:25:118: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   25 |  if(!root&&!fork&&!finality&&!genesis&&!spec)return {404,{{"code",404},{"message","Beacon endpoint not implemented"}}};
+      |                                                                                                                      ^
+/work/src/capella_beacon_api.cpp:36:117: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   36 |    }catch(const std::invalid_argument&){return {400,{{"code",400},{"message","Expected head or 32-byte state root"}}};}
+      |                                                                                                                     ^
+/work/src/capella_beacon_api.cpp:40:81: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   40 |    if(!selected)return {404,{{"code",404},{"message","State root not retained"}}};
+      |                                                                                 ^
+/work/src/capella_beacon_api.cpp:51:166: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   51 |  if(genesis)return {200,{{"data",{{"genesis_time",std::to_string(number(b,0))},{"genesis_validators_root",octets(b,8,32)},{"genesis_fork_version",genesis_version}}}}};
+      |                                                                                                                                                                      ^
+/work/src/capella_beacon_api.cpp:89:70: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   89 |   if(checkpoint)checkpoint();return {200,{{"data",std::move(values)}}};
+      |                                                                      ^
+/work/src/capella_beacon_api.cpp:110:98: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  110 |  return {200,{{"execution_optimistic",false},{"finalized",is_finalized},{"data",std::move(data)}}};
+      |                                                                                                  ^
+/work/src/capella_beacon_api.cpp:125:117: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  125 |  auto error=[](unsigned code,const char* message){return BeaconReadResponse{code,{{"code",code},{"message",message}}};};
+      |                                                                                                                     ^
+/work/src/capella_beacon_api.cpp:172:91: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  172 |    {"header",{{"message",std::move(message)},{"signature",octets(*signed_block,4,96)}}}}}}};
+      |                                                                                           ^
+9 warnings generated.
+[ 10%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_runtime.cpp.o
+[ 10%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_audit.cpp.o
+/work/src/consensus_bellatrix_runtime.cpp:132:147: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  132 |    if(!observation||observation->peer_slots.empty())return BeaconReadResponse{503,{{"code",503},{"message","Beacon peer observation unavailable"}}};
+      |                                                                                                                                                   ^
+/work/src/consensus_bellatrix_runtime.cpp:140:235: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  140 |    return BeaconReadResponse{200,{{"data",{{"head_slot",std::to_string(head.header.slot)},{"sync_distance",std::to_string(target-head.header.slot)},{"is_syncing",target>head.header.slot},{"is_optimistic",false},{"el_offline",false}}}}};
+      |                                                                                                                                                                                                                                           ^
+[ 10%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_clock.cpp.o
+2 warnings generated.
+[ 14%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_local_body.cpp.o
+[ 14%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_reactor.cpp.o
+[ 14%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_runtime.cpp.o
+[ 17%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_signing.cpp.o
+[ 17%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_sync_signing.cpp.o
+[ 17%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_validator.cpp.o
+[ 21%] Building CXX object CMakeFiles/nano_core.dir/src/http.cpp.o
+[ 21%] Building CXX object CMakeFiles/nano_core.dir/src/node.cpp.o
+[ 21%] Building CXX object CMakeFiles/nano_core.dir/src/rpc.cpp.o
+[ 21%] Linking CXX static library libnano_core.a
+[100%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano.dir/src/main.cpp.o
+[100%] Linking CXX executable nano
+[100%] Built target nano
+[  0%] Built target gen_base.o
+[  0%] Built target gen_bint.o
+[  3%] Built target secp256k1_precomputed
+[  3%] Built target nano_blst
+[  6%] Built target nano-test-sync-fault
+[ 10%] Built target mcl_st
+[ 10%] Built target nano_ckzg
+[ 10%] Built target secp256k1
+[100%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-capella-transition-tests.dir/tests/test_capella_transition.cpp.o
+[100%] Linking CXX executable nano-capella-transition-tests
+[100%] Built target nano-capella-transition-tests
+[  0%] Built target gen_base.o
+[  0%] Built target gen_bint.o
+[  3%] Built target secp256k1_precomputed
+[  3%] Built target nano_blst
+[  7%] Built target mcl_st
+[  7%] Built target secp256k1
+[  7%] Built target nano_ckzg
+[100%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-beacon-http-errors-tests.dir/tests/test_beacon_http_errors.cpp.o
+[100%] Linking CXX executable nano-beacon-http-errors-tests
+[100%] Built target nano-beacon-http-errors-tests
+{"checkpointUnchanged":true,"commitmentCancellationQualified":true,"privateExceptionRedacted":true,"publicationCancellationQualified":true,"scenario":"beacon-read-phase-diagnostics"}
+{"archiveReadCompleted":true,"cancelledWriterUnpublished":true,"oldPublicationPreserved":true,"publicationReadCompleted":true,"scenario":"beacon-read-during-held-admission"}
+{"admissionWhileReaderPaused":true,"headAdvanced":true,"oldPublicationPreserved":true,"scenario":"beacon-read-concurrent-admission"}
+{"assembledBodies":9,"beaconReadChecks":14,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":0,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":false,"localProposals":8,"localRandao":8,"migrated":false,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":false,"rejected":20,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"wireMessages":0,"withdrawals":1}
+{"executionDeadlinePreserved":true,"phaseDiagnosticQualified":true,"privateExceptionRedacted":true,"queueCapacityReused":true,"scenario":"beacon-http-error-diagnostics"}
+{"checkpointUnchanged":true,"failClosedPreserved":true,"networkTransport":false,"scenario":"capella-clock-diagnostics","scenarios":4}
+{"admissionReceiptChecks":6,"automaticRecovery":true,"automaticRegistration":false,"blocks":16,"externalRecoveryCommitmentChecks":9,"httpTransport":false,"invalidConfigurationsRejected":6,"keysLoaded":64,"networkTransport":false,"runtimeCatalogChecks":3,"scenario":"capella-configured-runtime","signerWitnessRestart":true,"witnessRestart":true,"workersStopped":true}

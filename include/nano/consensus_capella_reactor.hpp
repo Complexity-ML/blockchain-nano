@@ -32,7 +32,9 @@ class CapellaDurableReactor {
  ChainStore& disk_;Blockchain* execution_=nullptr;Int chain_;Bytes genesis_;CapellaForkBlockRules rules_;CapellaStoreSnapshotLimits limits_;
  std::mutex& mutex_;std::shared_ptr<const CapellaForkStore> state_;std::optional<ForkCheckpointToken> token_;
  // Coherent immutable state/token, installed only after durable publication.
- std::atomic<std::shared_ptr<const CapellaPublishedStore>> beacon_publication_;
+ // Use shared_ptr atomic free functions for Apple libc++ compatibility.
+ // Every access must remain atomic, including invalidation and restoration.
+ std::shared_ptr<const CapellaPublishedStore> beacon_publication_;
  CapellaPublishedStore beacon_snapshot()const;
  std::optional<Bytes> beacon_signed_block(const CapellaPublishedStore&,const ConsensusRoot&,const std::function<void()>&)const;
  CapellaSignedVotes votes_,slashings_;CapellaPendingBlsChanges bls_changes_;CapellaPendingExits exits_;CapellaStoreSnapshotCache cache_;bool unavailable_=false;bool automatic_pruning_=false;
