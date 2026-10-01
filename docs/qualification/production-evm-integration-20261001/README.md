@@ -1,0 +1,5 @@
+# Candidat d’intégration — préparé, non qualifié globalement
+
+Branche `qualification/production-evm-integration-20261001`, commit c10426b2eab0aff7eaada3e4b57460f15cf7e90c, construit depuis main 47ba41a1. Onze fichiers de moteur/test/CMake sont identiques octet pour octet au candidat isolé 082143a2 ; la correction du compteur EEST de main est conservée. Empreintes dans `source-equivalence.json`. La branche est poussée et récupérable par Git sur le VPS ; elle n’est pas intégrée à main.
+
+Une régression complète ARM64 est mise en attente : elle ne démarrera qu’après terminaison du candidat AMD64 082143a2, sélection/XML exacts avec aucun échec, empreintes exécutables identiques et révision attendue. Elle attend aussi la fin de la campagne ARM64 aacc56da et vérifie les 416 résultats sans ignoré ; un échec supplémentaire au-delà des onze écarts déjà traités arrête cette préparation pour revue. Le build utilisera un répertoire distinct, l’image/volume existants et le script intégrant les audits après échec. Aucune campagne intégrée complète n’est encore réussie, aucun gate global fermé.

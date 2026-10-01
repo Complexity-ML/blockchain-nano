@@ -2813,3 +2813,9 @@ Nouvelle couverture du candidat figé 082143a2 : le backend BN128 portable const
 ### Intégrité des campagnes complètes après échec — 2026-10-01
 
 Les scripts de qualification capturent et comparent désormais les binaires après CTest, contrôlent les sources, et conservent tous les audits même lorsqu’un test échoue. Nouveau vérificateur EEST sur `LastTest.log` complet ; onze nouveaux contrôles (dont mutations de source/binaire et exit CTest 8) passent, 22 avec les contrôles précédents. Aucun moteur modifié ni campagne complète rejouée ; la campagne aacc56da en cours reste figée sur son script d’origine. [Correction et limites](qualification/full-postrun-audit-20261001/README.md).
+
+### CI terminale et candidat d’intégration préparé — 2026-10-01
+
+CI f62236a4 : 257 contrôles opérations et neuf tests C++ sélectionnés passent sans ignoré ; CI 47ba41a1 : 268 contrôles opérations passent sans ignoré. Les jobs non demandés ne sont pas des preuves réseau ou C++. [Archives exactes](qualification/ci-20261001/terminal-f62236a4-and-47ba41a1/README.md).
+
+Branche isolée c10426b2 : onze fichiers moteur/test/CMake identiques au candidat 082143a2, rapporteur EEST corrigé conservé. Régression complète ARM64 préparée conditionnellement à la réussite terminale des 20 tests AMD64 et à la fin contrôlée de l’ancienne campagne 416. Aucun moteur promu sur main ni régression intégrée complète revendiquée. [Préparation et empreintes](qualification/production-evm-integration-20261001/README.md). Tous les critères originaux restent ouverts.
