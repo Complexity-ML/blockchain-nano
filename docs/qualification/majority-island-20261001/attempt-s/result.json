@@ -1,0 +1,214 @@
+{
+  "runtimeRevision": "418aceb8d72cda7836957bfd2308cbf34376cf66",
+  "harnessRevision": "3e210dcac2f65bc4a9998c100181c0fc69fdb7f8",
+  "exitCode": 1,
+  "connectedMajorityCutQualified": true,
+  "recoveryQualified": false,
+  "stabilityQualified": false,
+  "networkQualified": false,
+  "productionQualified": false,
+  "requestedCutMs": 384000,
+  "observedCutWallMs": 385300,
+  "stake": {
+    "slotsPerEpoch": "8",
+    "totalStake": "2048000000000",
+    "majorityStake": "1376000000000",
+    "minorityStake": "672000000000",
+    "weights": {
+      "mac-native": "704000000000",
+      "mac-docker": "672000000000",
+      "vps-docker": "672000000000"
+    },
+    "initialSha256": "0xcc6349fc554fe4864a9c628c057ec938ba08da44761c48fefa6216b77e983e05",
+    "profileSha256": "0xc9d115373e63eea3332aadd86611d1fe6f9d129d61b80d6af883cf16ad176467"
+  },
+  "majorityNewFinality": [
+    {
+      "time": 1790858913171,
+      "event": "majority-island-finality-advanced",
+      "checkpoint": {
+        "epoch": "6",
+        "root": "0xf59b5c35fcd16a2de2d45bd96c539c171a821427551ef71965c3fd1ec958ccf0"
+      },
+      "minority": {
+        "epoch": "2",
+        "root": "0x94e25b19b78a573f46c6fe5c26d9eaca7190a61309443ee8f94122843dd02640"
+      },
+      "finalityCeiling": "5"
+    },
+    {
+      "time": 1790858960622,
+      "event": "majority-island-finality-advanced",
+      "checkpoint": {
+        "epoch": "7",
+        "root": "0x119515d1f123304440e4cb96fbfd5c4a4c56a535161de25100df277c6fc30a3e"
+      },
+      "minority": {
+        "epoch": "2",
+        "root": "0x94e25b19b78a573f46c6fe5c26d9eaca7190a61309443ee8f94122843dd02640"
+      },
+      "finalityCeiling": "5"
+    }
+  ],
+  "strictRecoveryObservation": {
+    "window": "partition-recovery-bound",
+    "recoveryElapsedMs": 182905.931291,
+    "recoveryLimitMs": 180000,
+    "deadlineExceededByMs": 2905.9312909999862,
+    "lastRead": {
+      "completeReadElapsedMs": 2906.3474160000915,
+      "recoveryElapsedMs": 182905.931291,
+      "checkpoint": {
+        "epoch": "11",
+        "root": "0x1e2ec00efa04e1acb6fe63667328a697046addf4e9281036cb2ad68c2b68361e"
+      },
+      "advancedCommonFinality": false
+    }
+  },
+  "lateRecoveryAlsoFailed": true,
+  "lastObservation": {
+    "time": 1790859373647,
+    "event": "partition-observation",
+    "rows": [
+      {
+        "name": "mac-native",
+        "peers": "0x2",
+        "peerId": "12D3KooWEDb6Bj6UuQ1fNLoNgT6e8HsQJteDZxrRrchNvD5h5YPJ",
+        "connectedPeerIds": [
+          "12D3KooWAaqD4NRxScaALZ9RjH9AYqNnThaMqV83V58B6HYfmBdp",
+          "12D3KooWHTRQRX4SZWryx5aD9CiXHENChFd23aa2YopgSbtUZFov"
+        ],
+        "checkpoint": {
+          "epoch": "15",
+          "root": "0x6411c03b8a5f9fa2965a0ccca14442eaad575aa011e0daf8c7d43bbc76740dbb"
+        },
+        "progress": {
+          "headRoot": "0x4d71cc5c806fee9c05ccde2a7bbe4cd7024c20978621b30168769ed88645bb66",
+          "headSlot": "156",
+          "stateRoot": "0x9d9723fdd2baeb31697cf240c703abb8bce913f999971ed649948c0784184bab",
+          "justified": {
+            "epoch": "17",
+            "root": "0xcddf848209a87284b7ddcb60aef6483faab531cf6c92c58705b9d9ed4c05679a"
+          },
+          "finalized": {
+            "epoch": "15",
+            "root": "0x6411c03b8a5f9fa2965a0ccca14442eaad575aa011e0daf8c7d43bbc76740dbb"
+          },
+          "beforeMs": 1790859370650,
+          "afterMs": 1790859370668
+        }
+      },
+      {
+        "name": "mac-docker",
+        "peers": "0x2",
+        "peerId": "12D3KooWHTRQRX4SZWryx5aD9CiXHENChFd23aa2YopgSbtUZFov",
+        "connectedPeerIds": [
+          "12D3KooWAaqD4NRxScaALZ9RjH9AYqNnThaMqV83V58B6HYfmBdp",
+          "12D3KooWEDb6Bj6UuQ1fNLoNgT6e8HsQJteDZxrRrchNvD5h5YPJ"
+        ],
+        "checkpoint": {
+          "epoch": "15",
+          "root": "0x6411c03b8a5f9fa2965a0ccca14442eaad575aa011e0daf8c7d43bbc76740dbb"
+        },
+        "progress": {
+          "headRoot": "0x4d71cc5c806fee9c05ccde2a7bbe4cd7024c20978621b30168769ed88645bb66",
+          "headSlot": "156",
+          "stateRoot": "0x9d9723fdd2baeb31697cf240c703abb8bce913f999971ed649948c0784184bab",
+          "justified": {
+            "epoch": "17",
+            "root": "0xcddf848209a87284b7ddcb60aef6483faab531cf6c92c58705b9d9ed4c05679a"
+          },
+          "finalized": {
+            "epoch": "15",
+            "root": "0x6411c03b8a5f9fa2965a0ccca14442eaad575aa011e0daf8c7d43bbc76740dbb"
+          },
+          "beforeMs": 1790859370737,
+          "afterMs": 1790859370804
+        }
+      },
+      {
+        "name": "vps-docker",
+        "peers": "0x2",
+        "peerId": "12D3KooWAaqD4NRxScaALZ9RjH9AYqNnThaMqV83V58B6HYfmBdp",
+        "connectedPeerIds": [
+          "12D3KooWEDb6Bj6UuQ1fNLoNgT6e8HsQJteDZxrRrchNvD5h5YPJ",
+          "12D3KooWHTRQRX4SZWryx5aD9CiXHENChFd23aa2YopgSbtUZFov"
+        ],
+        "checkpoint": {
+          "epoch": "2",
+          "root": "0x94e25b19b78a573f46c6fe5c26d9eaca7190a61309443ee8f94122843dd02640"
+        },
+        "progress": {
+          "headRoot": "0x0401a47ce868770b31898149bf8e8d35d917a3f9fbcf847835208d90c9beee98",
+          "headSlot": "158",
+          "stateRoot": "0xa6c4e0f2d63b75ddb625d72bba0b126179320727bb00f861d88f80bc56a7d3ec",
+          "justified": {
+            "epoch": "3",
+            "root": "0x15294f7132d788dbaae52f853fde5b37d088b78571726e994973b49ac38a081f"
+          },
+          "finalized": {
+            "epoch": "2",
+            "root": "0x94e25b19b78a573f46c6fe5c26d9eaca7190a61309443ee8f94122843dd02640"
+          },
+          "beforeMs": 1790859372787,
+          "afterMs": 1790859373647
+        }
+      }
+    ]
+  },
+  "signerHealth": {
+    "time": 1790859378880,
+    "event": "validators-healthy-after-failed-campaign",
+    "validators": [
+      {
+        "file": "native.log",
+        "healthy": true,
+        "attestationsAdmitted": 414
+      },
+      {
+        "file": "docker-mac.log",
+        "healthy": true,
+        "attestationsAdmitted": 397
+      },
+      {
+        "file": "vps.log",
+        "healthy": true,
+        "attestationsAdmitted": 399
+      }
+    ]
+  },
+  "nativeCanonicalReplay": {
+    "archiveBytes": 314134,
+    "blocksIncludingTrustedAnchor": 108,
+    "canonicalHistoryVerified": true,
+    "checkpointDigest": "0x4edcad97db2dcfeae2c8845357c3f3c0f878c9b43e956783c6ca1aca65bb1a1a",
+    "checkpointSequence": 1315,
+    "firstExecutionBlock": "0x1",
+    "head": "0x2dac126bfcb5e4cc239497051ccc3d658a4ab118f66f98e5e7c4468b27d07ccb",
+    "historicalForkChoiceVerified": false,
+    "historicalStandaloneVotesReplayed": false,
+    "lastExecutionBlock": "0x6c",
+    "transactions": 1,
+    "trustedAnchor": "0xb2a78d12c35c02f47158df2b54f1784bdc1f4b84f917039a11b61646f39656c8"
+  },
+  "vpsCanonicalReplay": {
+    "archiveBytes": 199854,
+    "blocksIncludingTrustedAnchor": 79,
+    "canonicalHistoryVerified": true,
+    "checkpointDigest": "0x30f58e61c1ba5f65cdf8a5f8b1465f8142b935aa9042acf023c120b0aeaf8cc1",
+    "checkpointSequence": 931,
+    "firstExecutionBlock": "0x1",
+    "head": "0x204df19cae4190c0e15f5ccd1daeb337dda26425a6e8242e17e9212ec7df9e3d",
+    "historicalForkChoiceVerified": false,
+    "historicalStandaloneVotesReplayed": false,
+    "lastExecutionBlock": "0x4f",
+    "transactions": 1,
+    "trustedAnchor": "0xb2a78d12c35c02f47158df2b54f1784bdc1f4b84f917039a11b61646f39656c8"
+  },
+  "stoppedProbeExecutableSha256": "79b5a576a9a3fddf8abf8db985c616905469c1993df59754525987c24ab4ae34",
+  "runtimeExecutableSha256": "a4f27991e154cfd4130515aae2813c77e6f97bbc291052c6f1ea30fd48bcf033",
+  "copiedStoppedVpsDatabaseOnly": true,
+  "privateKeysJournalsWitnessesCopied": false,
+  "sourcesFrozenDuringCampaign": true,
+  "soleRootCauseProven": false
+}

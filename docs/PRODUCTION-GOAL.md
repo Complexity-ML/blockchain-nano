@@ -1520,3 +1520,33 @@ soutenue de 384 s doit distinguer retard et blocage, sans clôturer le critère
 192 s ni modifier la reprise stricte de 180 s. Aucun nouveau build réseau.
 Tous les autres critères de production et échecs historiques restent ouverts.
 [Preuves et limites](qualification/majority-island-20261001/attempt-r/README.md).
+
+## 2026-10-01 — Îlot majoritaire S : progression qualifiée, reprise en échec
+
+Essai soutenu distinct de 384 s, candidats 418aceb, banc 3e210dc, sortie 1.
+Les deux Mac restent connectés et finalisent ensemble 6 puis 7 au-delà du
+plafond pré-coupure 5 ; le VPS sans pairs reste à 2. Cette progression
+majoritaire bornée passe. Le critère R de 192 s demeure en échec conservé.
+
+Reprise commune : échec au budget strict de 180 s, lecture complète observée
+à 182905,931291 ms (ce n'est pas un temps de reprise). La fenêtre diagnostique
+supplémentaire de 180 s échoue aussi : finalité 15 sur les Mac contre 2 sur
+le VPS, malgré reconnexion. Stabilité commune non exécutée. Signers et
+horloges sains ; conteneurs arrêtés 0 sans OOM.
+
+Les deux historiques arrêtés se rejouent avec checkpoints externes : Mac
+108 blocs / 314134 octets, VPS 79 / 199854 octets, 1 transaction chacun.
+Sur 107 enveloppes canoniques Mac, le VPS n'en archive que 31 identiques
+(slots 3–33). Il manque 76 enveloppes suivantes ; la présence a été vérifiée
+dans les archives, pas seulement dans l'état actif élagué.
+
+Manque confirmé : après élagage, le fournisseur refuse 85 blocs canoniques
+archivés des slots 3–119 ; son ancre signée 120 est exportable mais le
+parcours de dépendances s'arrête avant de l'envoyer. Le VPS ignore cette
+nouvelle ancre. L'ascendance requise pour admettre les descendants n'est
+donc pas fournie. Ce manque précis reste à corriger avec export historique
+authentifié et livraison bornée, sans saut de confiance ni relâchement
+d'admission. Une cause unique de tout l'échec n'est pas démontrée.
+Aucune correction livrée dans cette tranche ; tous les autres critères de
+production et historiques demeurent ouverts.
+[Preuves et limites](qualification/majority-island-20261001/attempt-s/README.md).
