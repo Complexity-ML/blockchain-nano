@@ -189,3 +189,8 @@ Quatre nouveaux tests de raccordement, dont un vrai SIGKILL du superviseur,
 passent en natif et ARM64 (35 tests totaux). Les endpoints RPC sont
 synthétiques ; la campagne depuis de vrais daemons et AMD64 restent ouverts.
 [Preuves](qualification/monitor-handoff-20261001/native/README.md).
+
+Les mêmes 35 tests passent aussi dans le Docker AMD64 du VPS (3 116,09 ms).
+Le gate de portabilité du raccordement décrit ci-dessus est clos ;
+les limites de daemon vivant, destination et alimentation restent ouvertes.
+[Preuves AMD64](qualification/monitor-handoff-20261001/amd64/README.md).

@@ -1,0 +1,68 @@
+From github.com:Complexity-ML/blockchain-nano
+   329a7e4..fafd9ec  main       -> origin/main
+Updating 329a7e4..fafd9ec
+Fast-forward
+ docs/EIP-IMPLEMENTATION-STATUS.md                  | 13 ++++++
+ docs/EVM-PRODUCTION-EIP-ROADMAP.md                 | 13 ++++++
+ docs/FINALITY-MONITOR.md                           | 32 +++++++++++++++
+ docs/PRODUCTION-GOAL.md                            | 13 ++++++
+ docs/VALIDATOR-EIP-ROADMAP.md                      | 13 ++++++
+ .../monitor-handoff-20261001/arm64/README.md       |  5 +++
+ .../monitor-handoff-20261001/arm64/tests.log       | 43 +++++++++++++++++++
+ .../monitor-handoff-20261001/native/README.md      |  5 +++
+ .../monitor-handoff-20261001/native/tests.log      | 43 +++++++++++++++++++
+ .../monitor-handoff-20261001/source-hashes.json    |  7 ++++
+ scripts/operations/finality-monitor.mjs            |  1 +
+ scripts/operations/monitor-and-deliver.mjs         | 34 +++++++++++++++
+ scripts/operations/monitor-and-deliver.test.mjs    | 48 ++++++++++++++++++++++
+ 13 files changed, 270 insertions(+)
+ create mode 100644 docs/qualification/monitor-handoff-20261001/arm64/README.md
+ create mode 100644 docs/qualification/monitor-handoff-20261001/arm64/tests.log
+ create mode 100644 docs/qualification/monitor-handoff-20261001/native/README.md
+ create mode 100644 docs/qualification/monitor-handoff-20261001/native/tests.log
+ create mode 100644 docs/qualification/monitor-handoff-20261001/source-hashes.json
+ create mode 100644 scripts/operations/monitor-and-deliver.mjs
+ create mode 100644 scripts/operations/monitor-and-deliver.test.mjs
+✔ real HTTP failure survives process restart; retry uses same id; unchanged fault deduplicates and recovery delivers (428.291086ms)
+✔ acceptance followed by failed durable ACK replays identical identifier without duplicate receiver effect (46.567903ms)
+✔ redirect is refused and event remains pending (14.755501ms)
+✔ oversized response preserves pending event (10.357162ms)
+✔ queue corruption and cross-monitor report rejected before transmission (5.011015ms)
+✔ queue capacity fails closed without dropping already pending events (0.570878ms)
+✔ initial healthy observations are quiet, public cleartext and embedded credentials rejected (0.440509ms)
+✔ timeout preserves durable pending event (1007.723185ms)
+✔ explicit drain frees a full queue without inventing a new monitor observation (20.769412ms)
+✔ delivery pin derives from reviewed local monitor configuration (0.579981ms)
+✔ common finality is observed, zero peers are unhealthy (3.091638ms)
+✔ stall deadline persists across serialization and recovers on progress (1.240199ms)
+✔ conflicting finality is latched across later healthy observations (0.496695ms)
+✔ regression cannot be erased by advancing the other observer (0.369231ms)
+✔ lagging observer keeps safety root history, retention trims only below minimum (2.174245ms)
+✔ unavailable observer and corrupt observation never earn healthy status (0.424767ms)
+✔ state cannot be reused with another profile or time reversal (0.692411ms)
+✔ reject public RPC, duplicate endpoint and duplicate samples (0.389012ms)
+✔ reader pins finality to immutable head state and verifies chain/profile (7.682306ms)
+✔ RPC errors and profile mismatch are unavailable (2.274249ms)
+✔ response body resource budget enforced (0.956167ms)
+✔ missing persisted safety root is rejected, not silently re-established (0.382041ms)
+✔ invalid samples cannot report historical common finality as current (0.336466ms)
+✔ overlapping CLI invocations fail before reading or modifying monitor state (14.756017ms)
+✔ lagging observer cannot make root history exceed operator resource policy (0.448597ms)
+✔ CLI samples HTTP, persists safety fault and releases lock across five processes (900.727471ms)
+✔ oversized remote epoch and unconfigured endpoint are rejected before trust (0.602185ms)
+✔ same loopback port is distinct only for distinct containers/hosts (0.463168ms)
+✔ container and SSH identities cannot inject commands (0.431551ms)
+✔ Docker reader uses argv and validates HTTP status/body budget (1.451004ms)
+✔ SSH reader quotes each remote argument including POST data (0.387136ms)
+✔ SIGKILL after observation commit retains fault; verified operator lock removal resumes handoff before healthy observation (228.716575ms)
+✔ failed receiver leaves durable queue while monitor continues; later recovery keeps same event identifier (60.78325ms)
+✔ identity mismatch and corrupted persisted monitor stop before sampling or sending (24.940231ms)
+✔ path aliases and lock collisions are rejected before any state write (22.36895ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 35
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3116.086161

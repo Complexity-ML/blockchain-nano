@@ -2222,3 +2222,14 @@ passent en natif et ARM64 : 35 tests totaux, aucun échec/ignoré. Endpoints RPC
 synthétiques ; campagne daemon Nano vivant, destinataire opérateur, AMD64 et
 perte électrique restent ouverts. Cœur C++ et images inchangés.
 [Preuves](qualification/monitor-handoff-20261001/native/README.md).
+
+
+### 2026-10-01 — reprise du superviseur : qualification AMD64 achevée
+
+Même source `fafd9ec` récupérée par Git : 35 tests réussis sur le VPS
+Docker AMD64, 3 116,09 ms, aucun échec/ignoré, sous 2 CPU/512 MiB.
+Les quatre nouveaux cas de raccordement durable sont désormais qualifiés
+en natif/ARM64/AMD64. SIGKILL du superviseur réel, RPC synthétiques ;
+aucune revendication de panne d'un daemon Nano ou de perte électrique.
+Campagne vivante, destination/ordonnanceur et gates globales restent ouverts.
+[Preuves](qualification/monitor-handoff-20261001/amd64/README.md).
