@@ -1,0 +1,9 @@
+# WAN Q: both repeated-partition recovery windows pass
+
+Runtime 418aceb8; harness dd17cad. Terminal exit 0. Three processes on two physical hosts, 64 synthetic keys (22/21/21), Capella/Shanghai, slots 6 s, epochs 8 slots. Reviewed packaged ARM64/amd64 candidates, existing builders/volumes reused. Optional network trace disabled, nofile 65536, Docker 2 CPUs/3 GiB. Finite cuts 96/192 s; original monotonic recovery limit 180 s unchanged.
+
+First cut: common finality 2→7 in 135281.342375 ms (complete read 1728.149917 ms). Second cut: common finality 7→14 in 133180.60875 ms (complete read 1656.553583 ms). Both original windows pass; no late window or verdict relaxation. Subsequent common finality 14→17 across three advances passes in 143339 ms. Signers/clocks healthy at stop; local admitted attestations 397/379/380. Both containers stopped exit 0, without OOM. Exact roots, diagnostics, states, resources and logs retained.
+
+This qualifies this bounded repeated-partition scenario for this revision and topology. It does not establish full network or production readiness. Both peerless cuts isolate all three nodes; connected-majority-island liveness is not tested. No sync-inclusion/rotation, validator scale, adversarial load, sustained/asymmetric partitions, upgrade/rollback or full lifecycle qualification inferred. Earlier failed P/O/N/M and all other failures remain retained. New scheduler service shares are not a controlled proof of a sole root cause.
+
+Sources stayed frozen, no build or pull during campaign. Resource samples are descriptive; native RSS excludes P2P child, Docker BlockIO is cumulative I/O and not disk usage. DBs, fixture.env, keys and private journal files excluded. Next: canonical replay and timely participation inspection, then connected-majority-island qualification and remaining original gates.

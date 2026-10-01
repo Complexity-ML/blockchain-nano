@@ -1,0 +1,86 @@
+{
+  "runtimeRevision": "418aceb8d72cda7836957bfd2308cbf34376cf66",
+  "harnessRevision": "dd17cad7742a93c0450d4267bd96c6352e4a19fb",
+  "exitCode": 0,
+  "firstCycleQualified": true,
+  "secondCycleQualified": true,
+  "repeatedPartitionScenarioQualified": true,
+  "stabilityQualified": true,
+  "networkQualified": false,
+  "productionQualified": false,
+  "recoveries": [
+    {
+      "time": 1790856689869,
+      "event": "partition-recovery-bound",
+      "checkpoint": {
+        "epoch": "7",
+        "root": "0xa2780c97236ee8e765d0a1c7bb9abec1a4aec59c513e6b54071405d4d3404dd4"
+      },
+      "recoveryElapsedMs": 135281.342375,
+      "recoveryLimitMs": 180000,
+      "completeReadElapsedMs": 1728.1499170000316,
+      "cycle": 1
+    },
+    {
+      "time": 1790857024645,
+      "event": "partition-recovery-bound",
+      "checkpoint": {
+        "epoch": "14",
+        "root": "0x9781051cb50ac4f57c6d32b5cf50bf9bf8083611d884236395711032042602cb"
+      },
+      "recoveryElapsedMs": 133180.60875,
+      "recoveryLimitMs": 180000,
+      "completeReadElapsedMs": 1656.553583000088,
+      "cycle": 2
+    }
+  ],
+  "stability": {
+    "epochs": 3,
+    "firstEpoch": "14",
+    "lastEpoch": "17",
+    "elapsedMs": 143339,
+    "nodes": [
+      "mac-native",
+      "mac-docker",
+      "vps-docker"
+    ],
+    "revision": "418aceb8d72cda7836957bfd2308cbf34376cf66"
+  },
+  "stopHealth": [
+    {
+      "name": "native",
+      "healthy": true,
+      "clockHealthy": true,
+      "attestationsAdmitted": 397,
+      "finalized": {
+        "epoch": "0x11",
+        "root": "0x5450eb2eb7c7a5b1ec5a33a897490254d5636cbe7a7f14c1c851b2e33a92401e"
+      }
+    },
+    {
+      "name": "docker-mac",
+      "healthy": true,
+      "clockHealthy": true,
+      "attestationsAdmitted": 379,
+      "finalized": {
+        "epoch": "0x11",
+        "root": "0x5450eb2eb7c7a5b1ec5a33a897490254d5636cbe7a7f14c1c851b2e33a92401e"
+      }
+    },
+    {
+      "name": "vps",
+      "healthy": true,
+      "clockHealthy": true,
+      "attestationsAdmitted": 380,
+      "finalized": {
+        "epoch": "0x11",
+        "root": "0x5450eb2eb7c7a5b1ec5a33a897490254d5636cbe7a7f14c1c851b2e33a92401e"
+      }
+    }
+  ],
+  "physicalHosts": 2,
+  "processes": 3,
+  "syntheticKeys": 64,
+  "candidateEvidenceManifest": "../../capella-attestation-schedule-portable-20261001/manifest.json",
+  "candidateEvidenceManifestSha256": "53fd6d45e1d1876bb7205bda409ad347e78c31ced62fe74d767b1ce585e12e63"
+}
