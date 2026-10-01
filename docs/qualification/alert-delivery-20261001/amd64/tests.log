@@ -1,0 +1,40 @@
+7fd113446e9171a28885227b3c275ff965b2fd1f45ccf1fb3a1c20308f34e627  /tmp/nano-alert-node-tools/node
+✔ real HTTP failure survives process restart; retry uses same id; unchanged fault deduplicates and recovery delivers (409.412083ms)
+✔ acceptance followed by failed durable ACK replays identical identifier without duplicate receiver effect (47.142148ms)
+✔ redirect is refused and event remains pending (10.316269ms)
+✔ oversized response preserves pending event (9.777037ms)
+✔ queue corruption and cross-monitor report rejected before transmission (5.044995ms)
+✔ queue capacity fails closed without dropping already pending events (0.545659ms)
+✔ initial healthy observations are quiet, public cleartext and embedded credentials rejected (0.550614ms)
+✔ timeout preserves durable pending event (1006.471297ms)
+✔ explicit drain frees a full queue without inventing a new monitor observation (24.077162ms)
+✔ delivery pin derives from reviewed local monitor configuration (0.721802ms)
+✔ common finality is observed, zero peers are unhealthy (2.932501ms)
+✔ stall deadline persists across serialization and recovers on progress (1.011808ms)
+✔ conflicting finality is latched across later healthy observations (0.47569ms)
+✔ regression cannot be erased by advancing the other observer (0.359162ms)
+✔ lagging observer keeps safety root history, retention trims only below minimum (2.224799ms)
+✔ unavailable observer and corrupt observation never earn healthy status (0.414272ms)
+✔ state cannot be reused with another profile or time reversal (0.645664ms)
+✔ reject public RPC, duplicate endpoint and duplicate samples (0.388439ms)
+✔ reader pins finality to immutable head state and verifies chain/profile (7.695115ms)
+✔ RPC errors and profile mismatch are unavailable (2.179441ms)
+✔ response body resource budget enforced (0.87972ms)
+✔ missing persisted safety root is rejected, not silently re-established (0.387606ms)
+✔ invalid samples cannot report historical common finality as current (0.337742ms)
+✔ overlapping CLI invocations fail before reading or modifying monitor state (15.204826ms)
+✔ lagging observer cannot make root history exceed operator resource policy (0.560819ms)
+✔ CLI samples HTTP, persists safety fault and releases lock across five processes (899.121382ms)
+✔ oversized remote epoch and unconfigured endpoint are rejected before trust (0.608156ms)
+✔ same loopback port is distinct only for distinct containers/hosts (0.522728ms)
+✔ container and SSH identities cannot inject commands (0.458695ms)
+✔ Docker reader uses argv and validates HTTP status/body budget (1.447353ms)
+✔ SSH reader quotes each remote argument including POST data (0.389001ms)
+ℹ tests 31
+ℹ suites 0
+ℹ pass 31
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2680.215804

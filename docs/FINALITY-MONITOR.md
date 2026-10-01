@@ -151,3 +151,9 @@ corruption : refus, migration explicite après analyse. Ce mécanisme ne provisi
 ni service d'alertes, ni authentification/mTLS du récepteur, ni minuteur d'exploitation.
 La perte physique d'alimentation et le parcours depuis un daemon Nano en panne
 jusqu'à un récepteur d'exploitation réel restent à qualifier.
+
+Qualification de la livraison : 31 tests passent sur Mac natif, Docker ARM64
+et VPS Docker AMD64, dont 10 nouveaux cas de file/livraison et 21 du monitor.
+Voir les [preuves AMD64](qualification/alert-delivery-20261001/amd64/README.md).
+Les récepteurs sont locaux et les rapports de livraison synthétiques ; cela
+ne ferme pas le raccordement à un daemon vivant et au destinataire opérateur.

@@ -2197,3 +2197,15 @@ pas encore de campagne daemon Nano vers destinataire réel. Docker AMD64,
 ordonnanceur/destination opérateur, panne électrique et qualification globale
 restent ouverts. Cœur C++ et images de chaîne inchangés.
 [Preuves](qualification/alert-delivery-20261001/native/README.md).
+
+
+### 2026-10-01 — alertes : qualification portable de la file achevée
+
+La même source `cb6790d` récupérée par Git sur le VPS passe les 31 tests dans
+le Docker AMD64 existant (2 CPU, 512 MiB, réseau externe désactivé),
+2 680,22 ms, aucun échec ni test ignoré. Empreinte Node Linux vérifiée avant
+exécution. Natif, ARM64 et AMD64 qualifient les cas de file/reprise décrits
+ci-dessus ; aucun daemon ou destinataire opérateur réel dans cette campagne.
+Le raccordement vivant, la planification et les autres gates globales restent
+ouverts. Pas de nouvelle image, de fonds ou de production déclarée.
+[Preuves AMD64](qualification/alert-delivery-20261001/amd64/README.md).
