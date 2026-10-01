@@ -1,0 +1,103 @@
+{
+  "runtimeRevision": "1e1e73208a96268e060c9ac92a871ec0eadab4f1",
+  "harnessRevision": "06004e27967a31aa6c93177a426d9de7f62e7419",
+  "firstCycleMonotonicRecoveryMs": 140894.71916700003,
+  "secondReconnectWallMs": 1790847525106,
+  "secondFirstCompleteCommonReadWallMs": 1790847705233,
+  "secondWallDifferenceMs": 180127,
+  "secondOriginalCompleteMonotonicDurationLogged": false,
+  "secondStrictRecoveryPassed": false,
+  "secondLateWindowElapsedMs": 2257.0347079999046,
+  "lateWindowIsOriginalRecovery": false,
+  "networkQualified": false,
+  "productionQualified": false,
+  "terminal": true,
+  "stableResultExists": true,
+  "exitCode": 1,
+  "stability": {
+    "epochs": 3,
+    "firstEpoch": "15",
+    "lastEpoch": "18",
+    "elapsedMs": 144311,
+    "nodes": [
+      "mac-native",
+      "mac-docker",
+      "vps-docker"
+    ],
+    "revision": "1e1e73208a96268e060c9ac92a871ec0eadab4f1"
+  },
+  "containersWithoutOom": true,
+  "networkTrace": false,
+  "syntheticKeys": 64,
+  "physicalHosts": 2,
+  "profile": {
+    "secondsPerSlot": 6,
+    "slotsPerEpoch": 8,
+    "attestationDueMs": 2000
+  },
+  "validators": [
+    {
+      "file": "native.log",
+      "clockHealthy": true,
+      "healthy": true,
+      "finalized": {
+        "epoch": "0x12",
+        "root": "0x9a485645bd3cf1f0422cd0ef180e052ae1cbb749ec3cc517bebd73cdca643192"
+      },
+      "attestationsAdmitted": 425,
+      "syncMessagesAdmitted": 2502,
+      "timing": {
+        "awaitingSlotBlock": 1655,
+        "maxPollMs": 2196,
+        "maxProposalMs": 1847,
+        "polls": 7296,
+        "pollsOverSlot": 0,
+        "proposalAttempts": 48,
+        "proposalsUnavailable": 0,
+        "slotBoundaryExits": 21
+      }
+    },
+    {
+      "file": "docker-mac.log",
+      "clockHealthy": true,
+      "healthy": true,
+      "finalized": {
+        "epoch": "0x12",
+        "root": "0x9a485645bd3cf1f0422cd0ef180e052ae1cbb749ec3cc517bebd73cdca643192"
+      },
+      "attestationsAdmitted": 402,
+      "syncMessagesAdmitted": 1555,
+      "timing": {
+        "awaitingSlotBlock": 1594,
+        "maxPollMs": 861,
+        "maxProposalMs": 465,
+        "polls": 7527,
+        "pollsOverSlot": 0,
+        "proposalAttempts": 57,
+        "proposalsUnavailable": 0,
+        "slotBoundaryExits": 27
+      }
+    },
+    {
+      "file": "vps.log",
+      "clockHealthy": true,
+      "healthy": true,
+      "finalized": {
+        "epoch": "0x12",
+        "root": "0x9a485645bd3cf1f0422cd0ef180e052ae1cbb749ec3cc517bebd73cdca643192"
+      },
+      "attestationsAdmitted": 401,
+      "syncMessagesAdmitted": 1648,
+      "timing": {
+        "awaitingSlotBlock": 900,
+        "maxPollMs": 3630,
+        "maxProposalMs": 2601,
+        "polls": 5156,
+        "pollsOverSlot": 0,
+        "proposalAttempts": 52,
+        "proposalsUnavailable": 0,
+        "slotBoundaryExits": 51
+      }
+    }
+  ]
+}
