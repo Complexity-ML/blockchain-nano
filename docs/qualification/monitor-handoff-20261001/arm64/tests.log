@@ -1,0 +1,43 @@
+✔ real HTTP failure survives process restart; retry uses same id; unchanged fault deduplicates and recovery delivers (225.735791ms)
+✔ acceptance followed by failed durable ACK replays identical identifier without duplicate receiver effect (19.650792ms)
+✔ redirect is refused and event remains pending (4.628125ms)
+✔ oversized response preserves pending event (3.67425ms)
+✔ queue corruption and cross-monitor report rejected before transmission (1.602083ms)
+✔ queue capacity fails closed without dropping already pending events (0.131417ms)
+✔ initial healthy observations are quiet, public cleartext and embedded credentials rejected (0.097958ms)
+✔ timeout preserves durable pending event (1006.230376ms)
+✔ explicit drain frees a full queue without inventing a new monitor observation (23.168833ms)
+✔ delivery pin derives from reviewed local monitor configuration (0.360125ms)
+✔ common finality is observed, zero peers are unhealthy (1.042209ms)
+✔ stall deadline persists across serialization and recovers on progress (0.28775ms)
+✔ conflicting finality is latched across later healthy observations (0.123834ms)
+✔ regression cannot be erased by advancing the other observer (0.086291ms)
+✔ lagging observer keeps safety root history, retention trims only below minimum (0.620084ms)
+✔ unavailable observer and corrupt observation never earn healthy status (0.09625ms)
+✔ state cannot be reused with another profile or time reversal (0.146416ms)
+✔ reject public RPC, duplicate endpoint and duplicate samples (0.083792ms)
+✔ reader pins finality to immutable head state and verifies chain/profile (2.165625ms)
+✔ RPC errors and profile mismatch are unavailable (0.59525ms)
+✔ response body resource budget enforced (0.177042ms)
+✔ missing persisted safety root is rejected, not silently re-established (0.084542ms)
+✔ invalid samples cannot report historical common finality as current (0.087792ms)
+✔ overlapping CLI invocations fail before reading or modifying monitor state (4.831917ms)
+✔ lagging observer cannot make root history exceed operator resource policy (0.105334ms)
+✔ CLI samples HTTP, persists safety fault and releases lock across five processes (414.929792ms)
+✔ oversized remote epoch and unconfigured endpoint are rejected before trust (0.258708ms)
+✔ same loopback port is distinct only for distinct containers/hosts (0.136167ms)
+✔ container and SSH identities cannot inject commands (0.0905ms)
+✔ Docker reader uses argv and validates HTTP status/body budget (0.350167ms)
+✔ SSH reader quotes each remote argument including POST data (0.072084ms)
+✔ SIGKILL after observation commit retains fault; verified operator lock removal resumes handoff before healthy observation (103.93375ms)
+✔ failed receiver leaves durable queue while monitor continues; later recovery keeps same event identifier (27.271083ms)
+✔ identity mismatch and corrupted persisted monitor stop before sampling or sending (8.108917ms)
+✔ path aliases and lock collisions are rejected before any state write (8.746125ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 35
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2027.829668

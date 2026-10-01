@@ -157,3 +157,35 @@ et VPS Docker AMD64, dont 10 nouveaux cas de file/livraison et 21 du monitor.
 Voir les [preuves AMD64](qualification/alert-delivery-20261001/amd64/README.md).
 Les récepteurs sont locaux et les rapports de livraison synthétiques ; cela
 ne ferme pas le raccordement à un daemon vivant et au destinataire opérateur.
+
+## Raccordement durable du monitor à la file
+
+Pour l'exploitation avec livraison, utiliser le cycle intégré :
+
+```sh
+node scripts/operations/monitor-and-deliver.mjs monitor.json delivery.json state.json queue.json
+```
+
+Il effectue une seule observation. L'identité du destinataire doit correspondre
+à la configuration revue du monitor ; état et file restent deux fichiers privés
+distincts. Les alias symlink et collisions entre file/état/verrous sont refusés.
+Le rapport à livrer est enregistré comme `pendingDelivery` dans le même commit
+durable que l'état du monitor, avant la remise à la file. Au prochain cycle,
+ce rapport est remis avant toute nouvelle observation ; il est retiré seulement
+après la remise durable. Une panne HTTP laisse le message dans la file.
+Une erreur locale de remise conserve le rapport dans l'outbox et bloque son
+remplacement. Une file pleine demande un drain explicite avant reprise.
+Le CLI de monitor seul refuse un état avec remise en attente.
+
+Code 0 : observation saine et remise sans échec HTTP ; code 2 : observation
+en alerte ou remise HTTP échouée ; code 1 : erreur locale/configuration.
+Après SIGKILL, vérifier le processus terminé avant retrait du verrou ; ne pas
+effacer l'outbox, la file ni les fautes de sécurité. Aucun service ou minuteur
+n'est installé. Cette méthode ferme la fenêtre de perte entre observation et
+remise ; une observation jamais effectuée ou non encore commitée n'est pas
+couverte. Le récepteur doit toujours dédupliquer durablement l'eventId.
+
+Quatre nouveaux tests de raccordement, dont un vrai SIGKILL du superviseur,
+passent en natif et ARM64 (35 tests totaux). Les endpoints RPC sont
+synthétiques ; la campagne depuis de vrais daemons et AMD64 restent ouverts.
+[Preuves](qualification/monitor-handoff-20261001/native/README.md).

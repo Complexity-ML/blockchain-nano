@@ -85,6 +85,7 @@ export async function run(configFile,stateFile){
  try{
   const config=configuration(JSON.parse(await readFile(configFile,'utf8')));let prior;
   try{prior=JSON.parse(await readFile(stateFile,'utf8'));}catch(e){if(e.code!=='ENOENT')throw e;}
+  if(prior?.pendingDelivery)throw Error('Pending delivery requires monitor-and-deliver recovery');
   const samples=await Promise.all(config.nodes.map(n=>sample(config,n)));const result=evaluate(config,samples,Date.now(),prior);
   await durableJson(stateFile,result.state);
   console.log(JSON.stringify(result.report));return result.report.healthy?0:2;

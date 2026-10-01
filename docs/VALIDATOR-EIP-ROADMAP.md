@@ -5236,3 +5236,16 @@ ci-dessus ; aucun daemon ou destinataire opérateur réel dans cette campagne.
 Le raccordement vivant, la planification et les autres gates globales restent
 ouverts. Pas de nouvelle image, de fonds ou de production déclarée.
 [Preuves AMD64](qualification/alert-delivery-20261001/amd64/README.md).
+
+
+### 2026-10-01 — outbox durable entre monitor et file d'alertes
+
+Le cycle `monitor-and-deliver` persiste rapport et état ensemble avant remise,
+reprend le rapport en attente avant toute nouvelle observation et refuse
+identités incompatibles/collisions de fichiers. Le monitor seul ne peut plus
+écraser un rapport en attente. Quatre nouveaux tests d'intégration, dont un
+SIGKILL réel du superviseur suivi d'une reprise ordonnée défaut/retour sain,
+passent en natif et ARM64 : 35 tests totaux, aucun échec/ignoré. Endpoints RPC
+synthétiques ; campagne daemon Nano vivant, destinataire opérateur, AMD64 et
+perte électrique restent ouverts. Cœur C++ et images inchangés.
+[Preuves](qualification/monitor-handoff-20261001/native/README.md).
