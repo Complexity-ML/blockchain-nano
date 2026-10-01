@@ -46,6 +46,12 @@ class CapellaDurableReactor {
  enum class SyncOutcome {accepted,invalid_width,slot_overflow,expired_slot,future_slot,head_at_or_after_inclusion,unknown_validator,root_mismatch,not_in_committee,invalid_signature,aggregation_failed,count};
  std::array<uint64_t,static_cast<size_t>(SyncOutcome::count)> sync_outcomes_{};
  bool record_sync_outcome(SyncOutcome)noexcept;
+ // Derived only from an admitted immutable parent under mutex_. One entry,
+ // keyed by parent root and inclusion slot; never persisted or peer supplied.
+ struct SyncAdmissionContext {uint64_t slot;ConsensusRoot parent;Bytes ssz,common;};
+ std::optional<SyncAdmissionContext> sync_admission_context_;
+ uint64_t sync_context_builds_=0,sync_context_hits_=0;
+ const SyncAdmissionContext& sync_admission_context_locked(const ConsensusRoot&,uint64_t,const std::function<void()>&);
  struct SyncSigningContext {uint64_t slot;ConsensusRoot parent,block_root,genesis_root;ConsensusBytes4 version;std::map<uint64_t,Bytes> members;};
  std::optional<SyncSigningContext> sync_signing_context_;
  const SyncSigningContext& sync_signing_context_locked(uint64_t,const std::function<void()>&);

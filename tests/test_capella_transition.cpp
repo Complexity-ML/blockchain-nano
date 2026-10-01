@@ -237,7 +237,7 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
 
   tx.nonce=head.execution_state.get(sender).nonce;const std::vector<SignedTransaction> pending{SignedTransaction::sign(tx,sender_key)};
   if(owner_mode)for(auto& owner:owners)check(owner->submit(pending.front())&&owner->pending_count()==1,"Capella pool submission failed");
-  Bytes expected_sync;std::vector<ConsensusRoot> exported_sync;
+  Bytes expected_sync;std::vector<ConsensusRoot> exported_sync;std::optional<CapellaSyncMessage> cached_old_parent_message;std::optional<uint64_t> cached_before_parent_change;
   if(local_sync){
    const auto& l=t.consensus.state;const size_t bit_bytes=(l.sync_committee_size+7)/8;
    expected_sync.resize(bit_bytes+96);expected_sync[bit_bytes]=0xc0;if(!precollected.empty()){expected_sync=precollected;check(!nodes[0]->capture_inventory("sync_committee_message",4096)->page({},64,16384)["entries"].empty(),"early sync lost at proposal slot boundary");}
@@ -256,7 +256,10 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
     auto stale=current.token;++stale.sequence;bool stale_refused=false;try{nodes[0]->submit_sync_aggregate(slot,expected_sync,stale);}catch(const StaleCapellaDuty&){stale_refused=true;}check(stale_refused,"stale sync checkpoint accepted");
     const size_t first_part=(slot/2)%2;
     check(nodes[0]->submit_sync_aggregate(slot,partials[first_part],current.token),"first partial sync rejected");
+    const auto warm_context=nodes[0]->sync_admission_stats();
     check(nodes[0]->submit_sync_aggregate(slot,partials[first_part],current.token),"duplicate partial sync not idempotent");
+    const auto reused_context=nodes[0]->sync_admission_stats();
+    check(reused_context.at("contextBuilds")==warm_context.at("contextBuilds")&&reused_context.at("contextHits").get<uint64_t>()==warm_context.at("contextHits").get<uint64_t>()+1,"same parent/slot rebuilt sync state");
     if(slot%4==0){
      CapellaSyncMessage message{};message.slot=slot-1;message.beacon_block_root=root_at(advanced.ssz,176+32*((slot-1)%l.slots_per_historical_root));message.validator_index=individual_signatures.begin()->first;copy_to(message.signature,individual_signatures.begin()->second);
      const auto outcomes_before=nodes[0]->sync_admission_stats();
@@ -289,6 +292,9 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
       check(nodes[0]->sync_message_ssz(encoded),"individual sync SSZ replay rejected");
      }
      sync_service.stop();sync_service.join();
+     check(nodes[0]->sync_admission_stats().at("contextBuilds")==warm_context.at("contextBuilds"),"individual sync messages rebuilt warmed aggregate context");
+     auto forged_cached=message;forged_cached.signature[95]^=1;
+     check(!nodes[0]->submit_sync_message(forged_cached,current.token)&&nodes[0]->sync_admission_stats().at("contextBuilds")==warm_context.at("contextBuilds"),"cache bypassed individual signature verification");
      check(empty_catalog->page({},64,16384)["entries"].empty(),"pinned sync catalog changed");
      const auto catalog=nodes[0]->capture_inventory("sync_committee_message",4096)->page({},64,16384);
      check(catalog["entries"].size()==individual_signatures.size(),"sync replay duplicated or lost exported members");
@@ -299,7 +305,12 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
      if(slot==4){
       // With no block yet at slot 4, both slot-3 and slot-4 signatures can
       // reference the same parent. Collecting slot 4 must not erase slot 3.
+      const auto before_next=nodes[0]->sync_admission_stats().at("contextBuilds").get<uint64_t>();
       auto next_message=message;next_message.slot=slot;check(nodes[0]->submit_sync_message(next_message,current.token),"next-slot sync context rejected");
+      check(nodes[0]->sync_admission_stats().at("contextBuilds").get<uint64_t>()==before_next+1,"same parent/new slot reused wrong context");
+      check(nodes[0]->submit_sync_message(message,current.token)&&nodes[0]->sync_admission_stats().at("contextBuilds").get<uint64_t>()==before_next+2,"single-entry cache failed to restore previous slot context");
+      cached_old_parent_message=next_message;
+      std::cout<<Json{{"scenario","sync-admission-context-cache"},{"sameParentSlotReused",true},{"individualAndAggregateShared",true},{"forgedSignatureRejected",true},{"twoSlotReplacement",true},{"durableCheckpointUnchanged",nodes[0]->current().token==current.token}}.dump()<<std::endl;
       const auto both=nodes[0]->capture_inventory("sync_committee_message",4096)->page({},64,16384);
       check(both["entries"].size()==individual_signatures.size()+1,"two-slot sync contexts not retained independently");
      }
@@ -318,7 +329,13 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
   qualify_slashing_transition(*wire,false,0);
   qualify_lifecycle_transition(*wire,false,0);
 #endif
+  if(cached_old_parent_message){check(nodes[0]->submit_sync_message(*cached_old_parent_message,current.token),"cache rewarm for parent change failed");cached_before_parent_change=nodes[0]->sync_admission_stats().at("contextBuilds").get<uint64_t>();}
   for(auto& node:nodes)check(node->block(*wire),"local loop block admission failed");++blocks;
+  if(cached_old_parent_message){const auto published=nodes[0]->current();const auto before=nodes[0]->sync_admission_stats();
+   check(!nodes[0]->submit_sync_message(*cached_old_parent_message,published.token),"new parent accepted cached old-parent sync root");
+   const auto after=nodes[0]->sync_admission_stats();check(after.at("contextBuilds").get<uint64_t>()==*cached_before_parent_change+1&&after.at("root-mismatch").get<uint64_t>()==before.at("root-mismatch").get<uint64_t>()+1&&nodes[0]->current().token==published.token,"same slot/changed parent did not rebuild or changed checkpoint");
+   std::cout<<Json{{"scenario","sync-admission-context-parent-change"},{"sameSlotNewParentRebuilt",true},{"oldParentRootRejected",true},{"durableCheckpointUnchanged",true}}.dump()<<std::endl;
+  }
   if(local_sync){CapellaSyncMessage obsolete;obsolete.slot=slot-1;const auto stats=nodes[0]->sync_admission_stats();const auto published=nodes[0]->current();check(!nodes[0]->submit_sync_message(obsolete,published.token),"old-parent sync accepted after proposal");check(nodes[0]->sync_admission_stats().at("head-at-or-after-inclusion").get<uint64_t>()==stats.at("head-at-or-after-inclusion").get<uint64_t>()+1&&nodes[0]->current().token==published.token,"obsolete sync changed checkpoint or wrong cause");}
   if(local_sync){check(nodes[0]->capture_inventory("sync_committee_message",4096)->page({},64,16384)["entries"].empty(),"changed head retained sync catalog");for(const auto& id:exported_sync)check(nodes[0]->export_message("sync_committee_message",id,144)["available"]==false,"changed head exported stale sync");}
   const auto admitted=nodes[0]->current();const auto duties=prepare_capella_attestation_duties(*admitted.state,rules,slot,limits.replay_slots,limits.sync_trials);
