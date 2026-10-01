@@ -1,0 +1,4 @@
+#include "nano/evm.hpp"
+#include <chrono>
+#include <iostream>
+int main(){nano::Json runs=nano::Json::array();for(unsigned sample=0;sample<3;++sample){nano::State state;nano::ExecutionContext ctx;ctx.revision=nano::EvmRevision::Paris;ctx.address="0x00000000000000000000000000000000000040ad";ctx.caller=ctx.origin=ctx.address;ctx.gas=30000000;ctx.code=nano::unhex("0x60016000556000355b8015601557600190036008565b50602a60005260206000f3");ctx.data=nano::bytes(nano::Int(600000),32);auto start=std::chrono::steady_clock::now();auto result=nano::EVM(state).execute(ctx);auto ms=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count();if(!result.success||nano::integer(result.return_data)!=42)return 1;runs.push_back({{"sample",sample},{"milliseconds",ms},{"gasUsed",result.gas_used},{"returnData",nano::hex(result.return_data)},{"stateRoot",nano::hex(state.root())}});}std::cout<<nano::Json{{"iterationsPerCall",600000},{"runs",runs}}.dump()<<'\n';}

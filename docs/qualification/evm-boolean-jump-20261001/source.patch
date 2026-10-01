@@ -1,0 +1,66 @@
+diff --git a/src/evm.cpp b/src/evm.cpp
+index 968a74e2..64ddbb4c 100644
+--- a/src/evm.cpp
++++ b/src/evm.cpp
+@@ -12,6 +12,7 @@ struct Frame {
+  // Own the operand so normalization can reuse its GMP allocation. The same
+  // floor remainder handles negative and oversized operands modulo 2^256.
+  void push(Int value){if(stack.size()>=1024)throw std::runtime_error("Stack overflow");mpz_fdiv_r_2exp(value.get_mpz_t(),value.get_mpz_t(),256);stack.push_back(std::move(value));}
++ void iszero(){if(stack.empty())throw std::runtime_error("Stack underflow");auto& value=stack.back();mpz_set_ui(value.get_mpz_t(),mpz_sgn(value.get_mpz_t())==0);}
+  Int pop(){if(stack.empty())throw std::runtime_error("Stack underflow");Int value=std::move(stack.back());stack.pop_back();return value;}
+  void reduce(void (*operation)(mpz_ptr,mpz_srcptr,mpz_srcptr)){
+   Int a=pop();if(stack.empty())throw std::runtime_error("Stack underflow");
+@@ -82,7 +83,7 @@ EvmTask EVM::run(const ExecutionContext& ctx, unsigned depth){
+  case NanoOpCodes::SLT:{Int a=signed_word(f.pop()),b=signed_word(f.pop());f.push(Int(a<b));break;}
+  case NanoOpCodes::SGT:{Int a=signed_word(f.pop()),b=signed_word(f.pop());f.push(Int(a>b));break;}
+  case NanoOpCodes::EQ:{Int a=f.pop(),b=f.pop();f.push(Int(a==b));break;}
+- case NanoOpCodes::ISZERO:f.push(Int(f.pop()==0));break;
++ case NanoOpCodes::ISZERO:f.iszero();break;
+  case NanoOpCodes::AND:{Int a=f.pop(),b=f.pop();f.push(a&b);break;}
+  case NanoOpCodes::OR:{Int a=f.pop(),b=f.pop();f.push(a|b);break;}
+  case NanoOpCodes::XOR:{Int a=f.pop(),b=f.pop();f.push(a^b);break;}
+@@ -154,7 +155,7 @@ EvmTask EVM::run(const ExecutionContext& ctx, unsigned depth){
+  case NanoOpCodes::TSTORE:{if(ctx.is_static)throw std::runtime_error("TSTORE in static context");Int key=f.pop(),value=f.pop();transient_storage_[{address(ctx.address),key}]=value;break;}
+  case NanoOpCodes::MCOPY:{Int dest=f.pop(),source=f.pop(),size=f.pop();if(size!=0){auto data=f.read(source,size);auto region=f.region(dest,size);f.charge(3*((region.second+31)/32));f.write(dest,data);}break;}
+  case NanoOpCodes::JUMP:
+- case NanoOpCodes::JUMPI:{Int dest=f.pop(),condition=op==0x57?f.pop():Int(1);if(condition!=0){if(dest>=Int(ctx.code.size())||!jumpdests.contains(dest.get_ui()))throw std::runtime_error("Invalid jump destination");pc=dest.get_ui()-1;}break;}
++ case NanoOpCodes::JUMPI:{Int dest=f.pop();bool taken=op!=0x57||f.pop()!=0;if(taken){if(dest>=Int(ctx.code.size())||!jumpdests.contains(dest.get_ui()))throw std::runtime_error("Invalid jump destination");pc=dest.get_ui()-1;}break;}
+  case NanoOpCodes::PC:f.push(Int(pc));break;
+  case NanoOpCodes::MSIZE:f.push(Int(f.memory.size()));break;
+  case NanoOpCodes::GAS:f.push(Int(std::to_string(f.gas)));break;
+diff --git a/src/types.cpp b/src/types.cpp
+index 7de6d2d8..5abc2c32 100644
+--- a/src/types.cpp
++++ b/src/types.cpp
+@@ -17,7 +17,7 @@ std::string address(std::string s) { auto b=unhex(s); if(b.size()!=20) throw std
+ Bytes concat(Bytes a,const Bytes& b) { a.insert(a.end(),b.begin(),b.end()); return a; }
+ uint64_t u64(const Int& n) {
+  // Base 2 reports the exact width. Validate before conversion, without
+- // rebuilding the decimal maximum at every EVM jump or memory operation.
++ // rebuilding the decimal maximum at each checked conversion.
+  if(mpz_sgn(n.get_mpz_t())<0||mpz_sizeinbase(n.get_mpz_t(),2)>64)throw std::overflow_error("uint64 overflow");
+  if constexpr(sizeof(unsigned long)>=sizeof(uint64_t))return n.get_ui();
+  else{uint64_t result=0;mpz_export(&result,nullptr,1,sizeof(result),0,0,n.get_mpz_t());return result;}
+diff --git a/tests/test_core.cpp b/tests/test_core.cpp
+index 2097d291..d7a6e2f4 100644
+--- a/tests/test_core.cpp
++++ b/tests/test_core.cpp
+@@ -20,6 +20,18 @@ static int checks=0;
+ void check(bool yes,const char* name){++checks;if(!yes)throw std::runtime_error(name);}
+ template<class F>void rejects(F f,const char* name){bool threw=false;try{f();}catch(const std::exception&){threw=true;}check(threw,name);}
+ int main(){try{
++ {
++  State state;ExecutionContext ctx;ctx.revision=EvmRevision::Paris;ctx.address="0x1000000000000000000000000000000000000000";ctx.gas=1000;
++  for(const auto& value:std::vector<Int>{Int(0),Int(1),Int(1)<<255,(Int(1)<<256)-1}){
++   ctx.code=concat(concat(Bytes{0x7f},bytes(value,32)),unhex("0x801560005260205260406000f3"));auto result=EVM(state).execute(ctx);
++   check(result.success&&result.return_data.size()==64,"ISZERO executes for all word widths");check(integer(Bytes(result.return_data.begin(),result.return_data.begin()+32))==Int(value==0),"ISZERO exact boolean");check(integer(Bytes(result.return_data.begin()+32,result.return_data.end()))==value,"ISZERO preserves independent duplicated operand");
++  }
++  ctx.code=unhex("0x15");auto underflow=EVM(state).execute(ctx);check(!underflow.success&&underflow.gas_used==ctx.gas,"ISZERO underflow consumes exceptional frame gas");
++  ctx.code=unhex("0x6003565b00");ctx.gas=12;auto exact=EVM(state).execute(ctx);check(exact.success&&exact.gas_used==12,"unconditional JUMP exact gas boundary");ctx.gas=11;auto short_gas=EVM(state).execute(ctx);check(!short_gas.success&&short_gas.gas_used==11,"JUMPDEST one-gas-short fails exceptionally");
++  ctx.gas=1000;ctx.code=concat(concat(unhex("0x60007f"),bytes((Int(1)<<256)-1,32)),unhex("0x5700"));auto untaken=EVM(state).execute(ctx);check(untaken.success&&untaken.gas_used==16,"untaken JUMPI ignores huge invalid destination");
++  for(const auto& code:std::vector<Bytes>{unhex("0x600456605b00"),concat(concat(Bytes{0x7f},bytes((Int(1)<<256)-1,32)),Bytes{0x56}),unhex("0x600157"),unhex("0x56")}){ctx.code=code;auto invalid=EVM(state).execute(ctx);check(!invalid.success&&invalid.gas_used==ctx.gas,"invalid or underflowed jump retains exceptional semantics");}
++ }
++
+  {
+   check(u64(Int(0))==0,"u64 zero");
+   check(u64(Int("18446744073709551615"))==UINT64_MAX,"u64 exact maximum");

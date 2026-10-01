@@ -11,3 +11,7 @@ Branche qualification/oversized-lifecycle-20261001, commit b39a0122 : dix transa
 Première préparation arrêtée avant exécution : Python absent de l’image. Script/log conservés dans preparation-a ; préparation corrigée avec les outils existants, sans installation. Les anciens échecs des tests volumineux restent dans la campagne complète aacc56da ; cette preuve ne les réécrit pas. Le transfert P2P distribué et la régression complète restent à qualifier sur le candidat final.
 
 Le nouveau parcours volumineux local b39a0122 passe aussi sur AMD64 : Paris/Shanghai exit 0, 40 fragments, état audité exact, empreintes bibliothèques avant/après identiques. Sources obtenues par Git. Cela ne ferme pas le transport P2P distribué.
+
+## AMD64 terminal — ea9667f6
+
+14 tests exactement sélectionnés, 6 réussis / 8 échecs / zéro ignoré, exit CTest 8, empreintes des neuf exécutables avant/après identiques. Tous les huit scénarios RPC de charge échouent ; cœur/RPC/HTTP/admission, BN128 à froid et EEST réussissent. EEST : 317 fichiers, 5 387 cas d’exécution correspondants, 505 validations correspondantes, zéro divergence/non supporté/erreur ; forkConformanceProven=false. Les trois divergences BN128 de l’ancienne révision 8a8b080e sont absentes de ce sous-ensemble sur le VPS Haswell sans ADX. Cela ne ferme ni le débit AMD64 ni la conformité universelle. Journaux/XML/sélection disponibles dans amd64-terminal.
