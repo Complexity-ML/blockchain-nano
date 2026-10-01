@@ -4,7 +4,7 @@ Le workflow `Nano qualification checks` ne déploie rien, ne publie aucune image
 
 Sur push main/PR touchant scripts, harness multi-hôte ou workflow, il exécute tous les tests autonomes de `scripts/operations/*.test.mjs` et `tests/multihost/*.test.mjs`. Node est fixé à 25.9.0, version déjà qualifiée par les campagnes locales. Aucun daemon, Docker ou SSH vivant dans ce job. Logs et révision sont archivés sept jours, y compris en cas d'échec.
 
-Le déclenchement manuel avec `core=true` compile Nano et les exécutables de neuf contrôles C++ : core, chain, expiration de file RPC, vérification/agrégation BLS, checkpoint de stockage, état/payload Capella couplés, transition signée et horloge Capella. Le registre CTest doit contenir exactement les neuf noms attendus ; aucun résultat vide ou test manquant ne vaut réussite. Build deux tâches, tests série, budgets CTest inchangés, job limité à 30 minutes. JUnit, liste des tests, versions et logs conservés. Pas de nouvelle image Docker à chaque push.
+Le déclenchement manuel avec `core=true` compile Nano et les exécutables de neuf contrôles C++ : core, chain, expiration de file RPC, vérification/agrégation BLS, checkpoint de stockage, état/payload Capella couplés, transition signée et horloge Capella. Le registre CTest doit contenir exactement les neuf noms attendus ; aucun résultat vide ou test manquant ne vaut réussite. Dans un conteneur Ubuntu 24.04 épinglé par digest (2 CPU/3 GiB), sans construire une image Nano supplémentaire. Build deux tâches, tests série, budgets CTest inchangés, job limité à 30 minutes. JUnit, liste des tests, versions et logs conservés. Pas de nouvelle image Docker à chaque push.
 
 Commandes locales depuis un checkout :
 
@@ -16,3 +16,5 @@ CC=clang CXX=clang++ sh scripts/ci/core.sh build-ci
 Ces contrôles ne sont pas la CI complète de production : P2P compilé avec cpp-libp2p, matrice Linux ARM64/AMD64 complète, EEST exhaustif, release reproductible, campagnes WAN/restauration/charge longues et revue indépendante restent des gates séparés. Apt, runner et outils système ne sont pas figés en snapshots : la version compilée est identifiable, pas prouvée reproductible bit à bit. Le job core manuel n'est pas un contrôle obligatoire sur chaque changement C++. Les paramètres de protection de branche et le statut obligatoire des checks ne sont pas configurés par ce fichier.
 
 État initial : 227 tests autonomes passent localement. Exécution réelle du workflow GitHub et build C++ restent non qualifiés jusqu'à leurs résultats terminaux. Aucun workflow vert ne déclare `productionReady=true`.
+
+Premier déclenchement C++ sans conteneur annulé avant qualification (run 36886165867), recette remplacée pour respecter le build Docker demandé. Aucun succès C++ revendiqué pour ce run.
