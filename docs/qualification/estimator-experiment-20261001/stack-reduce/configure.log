@@ -1,0 +1,48 @@
+-- Found the following ICU libraries:
+--   uc (required): /usr/lib/aarch64-linux-gnu/libicuuc.so
+-- Could NOT find Valgrind (missing: Valgrind_INCLUDE_DIR Valgrind_WORKS) 
+
+
+secp256k1 configure summary
+===========================
+Build artifacts:
+  library type ........................ Static
+Optional modules:
+  ECDH ................................ OFF
+  ECDSA pubkey recovery ............... ON
+  extrakeys ........................... OFF
+  schnorrsig .......................... OFF
+  musig ............................... OFF
+  ElligatorSwift ...................... OFF
+Parameters:
+  ecmult window size .................. 15
+  ecmult gen table size ............... 86 KiB
+Optional features:
+  assembly ............................ OFF
+  external callbacks .................. OFF
+Optional binaries:
+  benchmark ........................... OFF
+  noverify_tests ...................... OFF
+  tests ............................... OFF
+  exhaustive tests .................... OFF
+  ctime_tests ......................... OFF
+  examples ............................ OFF
+
+Cross compiling ....................... FALSE
+API visibility attributes ............. ON
+Valgrind .............................. OFF
+Preprocessor defined macros ........... ECMULT_WINDOW_SIZE=15 COMB_BLOCKS=43 COMB_TEETH=6
+C compiler ............................ Clang 18.1.3, /usr/bin/clang
+CFLAGS ................................ 
+Compile options ....................... -Wall -pedantic -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef
+Build type:
+ - CMAKE_BUILD_TYPE ................... Release
+ - CFLAGS ............................. -O2 
+ - LDFLAGS for executables ............ 
+ - LDFLAGS for shared libraries ....... 
+
+bint_obj=/build/estimator-depth-20261001/third_party/mcl/bint64.o
+base_obj=/build/estimator-depth-20261001/third_party/mcl/base64.o
+-- Configuring done (0.2s)
+-- Generating done (0.1s)
+-- Build files have been written to: /build/estimator-depth-20261001

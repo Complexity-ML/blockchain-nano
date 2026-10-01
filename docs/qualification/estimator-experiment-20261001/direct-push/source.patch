@@ -1,0 +1,38 @@
+diff --git a/src/evm.cpp b/src/evm.cpp
+index 47d02838..ade5f387 100644
+--- a/src/evm.cpp
++++ b/src/evm.cpp
+@@ -46,7 +46,14 @@ EvmTask EVM::run(const ExecutionContext& ctx, unsigned depth){
+  if(ctx.revision<EvmRevision::Osaka&&op==0x1e)throw std::runtime_error("Opcode unavailable in selected EVM revision");
+  if(ctx.revision<EvmRevision::Cancun&&((op>=0x5c&&op<=0x5e)||op==0x49||op==0x4a))throw std::runtime_error("Opcode unavailable in selected EVM revision");
+  f.charge(opcode_gas(op));
+- if(op>=0x60&&op<=0x7f){size_t n=op-0x5f;f.push(integer(slice(ctx.code,Int(pc+1),n)));pc+=n;continue;}
++ if(op>=0x60&&op<=0x7f){
++  const size_t n=op-0x5f,available=std::min(n,ctx.code.size()-pc-1);
++  // Import directly from immutable bytecode instead of allocating a Bytes
++  // slice on every PUSH. Missing immediate bytes are trailing zeroes (EVM EOF).
++  Int value;if(available)mpz_import(value.get_mpz_t(),available,1,1,1,0,ctx.code.data()+pc+1);
++  if(available<n)mpz_mul_2exp(value.get_mpz_t(),value.get_mpz_t(),8*(n-available));
++  f.push(std::move(value));pc+=n;continue;
++ }
+  if(op>=0x80&&op<=0x8f){size_t depth=op-0x7f;if(f.stack.size()<depth)throw std::runtime_error("Stack underflow");Int value=f.stack[f.stack.size()-depth];f.push(std::move(value));continue;}
+  if(op>=0x90&&op<=0x9f){size_t depth=op-0x8f;if(f.stack.size()<=depth)throw std::runtime_error("Stack underflow");std::swap(f.stack.back(),f.stack[f.stack.size()-depth-1]);continue;}
+  if(op>=0xa0&&op<=0xa4){if(ctx.is_static)throw std::runtime_error("LOG in static context");Int off=f.pop(),size=f.pop();Log log{ctx.address,{}, {}};for(unsigned i=0;i<unsigned(op-0xa0);++i)log.topics.push_back(bytes(f.pop(),32));log.data=f.read(off,size);f.charge(log.data.size()*8);result.logs.push_back(std::move(log));continue;}
+diff --git a/tests/test_core.cpp b/tests/test_core.cpp
+index 77a3d684..45be857f 100644
+--- a/tests/test_core.cpp
++++ b/tests/test_core.cpp
+@@ -392,6 +392,13 @@ int main(){try{
+  ctx.code.clear();for(unsigned i=0;i<1024;++i)ctx.code=concat(ctx.code,Bytes{0x60,0x01});
+  check(vm.execute(ctx).success,"owned EVM stack accepts exactly 1024 operands");ctx.code.push_back(0x80);
+  result=vm.execute(ctx);check(!result.success&&result.error=="Stack overflow","owned EVM stack rejects the 1025th operand");
++ for(unsigned width=1;width<=32;++width){
++  Bytes immediate(width,0xff),expected(32-width,0);expected.insert(expected.end(),immediate.begin(),immediate.end());
++  ctx.code=concat(Bytes{uint8_t(0x5f+width)},immediate);ctx.code=concat(ctx.code,unhex("0x60005260206000f3"));
++  result=vm.execute(ctx);check(result.success&&result.return_data==expected&&result.gas_used==18,"PUSH widths preserve unsigned big-endian output and gas");
++  ctx.gas=17;result=vm.execute(ctx);check(!result.success&&result.gas_used==17,"PUSH memory return still exhausts one-short gas");ctx.gas=1000000;
++  for(unsigned available:{0u,width-1}){ctx.code=concat(Bytes{uint8_t(0x5f+width)},Bytes(available,0xff));result=vm.execute(ctx);check(result.success&&result.gas_used==3,"truncated PUSH is padded rather than rejected");}
++ }
+  ctx.code=unhex("0x602a60005560005460005260206000f3");result=vm.execute(ctx);check(result.success&&integer(result.return_data)==42&&state.get_storage(bob,0)==42,"EVM storage");
+  auto before=state.root();ctx.code=unhex("0x600160005560006000fd");result=vm.execute(ctx);check(!result.success&&state.root()==before&&result.logs.empty(),"EVM revert rolls back storage");
+  ctx.is_static=true;ctx.code=unhex("0x6001600055");check(!vm.execute(ctx).success&&state.root()==before,"EVM static rejects storage");ctx.is_static=false;

@@ -1,0 +1,257 @@
+[  0%] Generating msm_avx.o
+[  3%] Building C object third_party/ckzg/CMakeFiles/nano_blst.dir/blst/src/server.c.o
+[  3%] Building ASM object third_party/ckzg/CMakeFiles/nano_blst.dir/blst/build/assembly.S.o
+[  3%] Linking C static library libnano_blst.a
+[  3%] Built target nano_blst
+[  3%] Building C object third_party/secp256k1/src/CMakeFiles/secp256k1_precomputed.dir/precomputed_ecmult.c.o
+[  6%] Building CXX object third_party/mcl/CMakeFiles/mcl_st.dir/src/fp.cpp.o
+[ 10%] Building C object third_party/secp256k1/src/CMakeFiles/secp256k1_precomputed.dir/precomputed_ecmult_gen.c.o
+[ 10%] Built target secp256k1_precomputed
+[ 10%] Building C object third_party/ckzg/CMakeFiles/nano_ckzg.dir/src/ckzg.c.o
+[ 10%] Linking C static library libnano_ckzg.a
+[ 10%] Built target nano_ckzg
+[ 10%] Building C object third_party/secp256k1/src/CMakeFiles/secp256k1.dir/secp256k1.c.o
+[ 10%] Linking C static library ../lib/libsecp256k1.a
+[ 10%] Built target secp256k1
+[ 10%] Building ASM object third_party/mcl/CMakeFiles/mcl_st.dir/src/asm/bint-x64-amd64.S.o
+[ 10%] Building ASM object third_party/mcl/CMakeFiles/mcl_st.dir/src/asm/x86-64.S.o
+[ 10%] Linking CXX static library ../../lib/libmcl.a
+[ 10%] Built target mcl_st
+[ 13%] Building CXX object CMakeFiles/nano_core.dir/src/audit.cpp.o
+[ 13%] Building CXX object CMakeFiles/nano_core.dir/src/authorization.cpp.o
+[ 13%] Building CXX object CMakeFiles/nano_core.dir/src/beacon_api.cpp.o
+[ 13%] Building CXX object CMakeFiles/nano_core.dir/src/beacon_block_json.cpp.o
+/work/src/beacon_api.cpp:12:89: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   12 |  if(path=="/eth/v1/node/version")return {200,{{"data",{{"version","Nano/0.1.0/c++20"}}}}};
+      |                                                                                         ^
+/work/src/beacon_api.cpp:18:118: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   18 |  if(!root&&!fork&&!finality&&!genesis&&!spec)return {404,{{"code",404},{"message","Beacon endpoint not implemented"}}};
+      |                                                                                                                      ^
+/work/src/beacon_api.cpp:26:166: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   26 |  if(genesis)return {200,{{"data",{{"genesis_time",std::to_string(number(b,0))},{"genesis_validators_root",octets(b,8,32)},{"genesis_fork_version",genesis_version}}}}};
+      |                                                                                                                                                                      ^
+/work/src/beacon_api.cpp:63:70: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   63 |   if(checkpoint)checkpoint();return {200,{{"data",std::move(values)}}};
+      |                                                                      ^
+/work/src/beacon_api.cpp:77:160: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   77 |  return {200,{{"execution_optimistic",false},{"finalized",consensus_beacon_header_root(head.header)==store.timed.view.finalized.root},{"data",std::move(data)}}};
+      |                                                                                                                                                                ^
+/work/src/beacon_api.cpp:88:117: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   88 |  auto error=[](unsigned code,const char* message){return BeaconReadResponse{code,{{"code",code},{"message",message}}};};
+      |                                                                                                                     ^
+/work/src/beacon_api.cpp:132:99: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  132 |    {"header",{{"message",std::move(message)},{"signature",octets(*signed_block->second,4,96)}}}}}}};
+      |                                                                                                   ^
+7 warnings generated.
+[ 13%] Building CXX object CMakeFiles/nano_core.dir/src/beacon_journal_cli.cpp.o
+[ 13%] Building CXX object CMakeFiles/nano_core.dir/src/bft_reactor.cpp.o
+[ 13%] Building CXX object CMakeFiles/nano_core.dir/src/block.cpp.o
+[ 17%] Building CXX object CMakeFiles/nano_core.dir/src/block_auth.cpp.o
+[ 17%] Building CXX object CMakeFiles/nano_core.dir/src/block_import.cpp.o
+[ 17%] Building CXX object CMakeFiles/nano_core.dir/src/bls.cpp.o
+[ 17%] Building CXX object CMakeFiles/nano_core.dir/src/bn_pairing.cpp.o
+[ 17%] Building CXX object CMakeFiles/nano_core.dir/src/capella_beacon_api.cpp.o
+[ 20%] Building CXX object CMakeFiles/nano_core.dir/src/capella_beacon_block_json.cpp.o
+/work/src/capella_beacon_api.cpp:15:89: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   15 |  if(path=="/eth/v1/node/version")return {200,{{"data",{{"version","Nano/0.1.0/c++20"}}}}};
+      |                                                                                         ^
+/work/src/capella_beacon_api.cpp:25:118: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   25 |  if(!root&&!fork&&!finality&&!genesis&&!spec)return {404,{{"code",404},{"message","Beacon endpoint not implemented"}}};
+      |                                                                                                                      ^
+/work/src/capella_beacon_api.cpp:36:117: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   36 |    }catch(const std::invalid_argument&){return {400,{{"code",400},{"message","Expected head or 32-byte state root"}}};}
+      |                                                                                                                     ^
+/work/src/capella_beacon_api.cpp:40:81: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   40 |    if(!selected)return {404,{{"code",404},{"message","State root not retained"}}};
+      |                                                                                 ^
+/work/src/capella_beacon_api.cpp:51:166: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   51 |  if(genesis)return {200,{{"data",{{"genesis_time",std::to_string(number(b,0))},{"genesis_validators_root",octets(b,8,32)},{"genesis_fork_version",genesis_version}}}}};
+      |                                                                                                                                                                      ^
+/work/src/capella_beacon_api.cpp:89:70: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   89 |   if(checkpoint)checkpoint();return {200,{{"data",std::move(values)}}};
+      |                                                                      ^
+/work/src/capella_beacon_api.cpp:110:98: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  110 |  return {200,{{"execution_optimistic",false},{"finalized",is_finalized},{"data",std::move(data)}}};
+      |                                                                                                  ^
+/work/src/capella_beacon_api.cpp:125:117: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  125 |  auto error=[](unsigned code,const char* message){return BeaconReadResponse{code,{{"code",code},{"message",message}}};};
+      |                                                                                                                     ^
+/work/src/capella_beacon_api.cpp:172:91: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  172 |    {"header",{{"message",std::move(message)},{"signature",octets(*signed_block,4,96)}}}}}}};
+      |                                                                                           ^
+[ 20%] Building CXX object CMakeFiles/nano_core.dir/src/chain.cpp.o
+9 warnings generated.
+[ 20%] Building CXX object CMakeFiles/nano_core.dir/src/chain_beacon.cpp.o
+[ 20%] Building CXX object CMakeFiles/nano_core.dir/src/cli_client.cpp.o
+[ 20%] Building CXX object CMakeFiles/nano_core.dir/src/client.cpp.o
+[ 20%] Building CXX object CMakeFiles/nano_core.dir/src/committee.cpp.o
+[ 24%] Building CXX object CMakeFiles/nano_core.dir/src/consensus.cpp.o
+[ 24%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_anchor.cpp.o
+[ 24%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_attestation.cpp.o
+[ 24%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_clock.cpp.o
+[ 24%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_deposit.cpp.o
+[ 27%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_duty.cpp.o
+[ 27%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_epoch.cpp.o
+[ 27%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_fork_state.cpp.o
+[ 27%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_fork_store.cpp.o
+[ 27%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_profile.cpp.o
+[ 27%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_proposer.cpp.o
+[ 31%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_reactor.cpp.o
+[ 31%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_runtime.cpp.o
+[ 31%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_slashing.cpp.o
+[ 31%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_slots.cpp.o
+[ 31%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_snapshot.cpp.o
+[ 34%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_store_snapshot.cpp.o
+[ 34%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_sync.cpp.o
+[ 34%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_sync_aggregate.cpp.o
+[ 34%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_transition.cpp.o
+[ 34%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_attestation.cpp.o
+[ 34%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_attestation_inclusion.cpp.o
+[ 37%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_beacon_body.cpp.o
+[ 37%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_beacon_header.cpp.o
+[ 37%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_beacon_signer.cpp.o
+[ 37%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_beacon_state.cpp.o
+/work/src/consensus_beacon_state.cpp:21:29: warning: comparison of integers of different signs: 'unsigned int' and 'const _If_is_unsigned_integer<unsigned long, int>' (aka 'const int') [-Wsign-compare]
+   21 |   for(unsigned level=0;level<depth;++level){
+      |                        ~~~~~^~~~~~
+1 warning generated.
+[ 37%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_clock.cpp.o
+[ 37%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_deposits.cpp.o
+[ 41%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_duty.cpp.o
+[ 41%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_execution.cpp.o
+[ 41%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_exit_identity.cpp.o
+[ 41%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_fork_state.cpp.o
+[ 41%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_fork_store.cpp.o
+[ 44%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_local_body.cpp.o
+[ 44%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_profile.cpp.o
+[ 44%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_reactor.cpp.o
+[ 44%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_runtime.cpp.o
+/work/src/consensus_bellatrix_runtime.cpp:132:147: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  132 |    if(!observation||observation->peer_slots.empty())return BeaconReadResponse{503,{{"code",503},{"message","Beacon peer observation unavailable"}}};
+      |                                                                                                                                                   ^
+/work/src/consensus_bellatrix_runtime.cpp:140:235: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  140 |    return BeaconReadResponse{200,{{"data",{{"head_slot",std::to_string(head.header.slot)},{"sync_distance",std::to_string(target-head.header.slot)},{"is_syncing",target>head.header.slot},{"is_optimistic",false},{"el_offline",false}}}}};
+      |                                                                                                                                                                                                                                           ^
+2 warnings generated.
+[ 44%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_slots.cpp.o
+[ 44%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_store_snapshot.cpp.o
+[ 48%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_validator.cpp.o
+[ 48%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_block_auth.cpp.o
+[ 48%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_block_operations.cpp.o
+[ 48%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bls.cpp.o
+[ 48%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_audit.cpp.o
+[ 51%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_bls_change.cpp.o
+[ 51%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_clock.cpp.o
+[ 51%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_deposits.cpp.o
+[ 51%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_duty.cpp.o
+[ 51%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_execution.cpp.o
+[ 51%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_fork.cpp.o
+[ 55%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_fork_state.cpp.o
+[ 55%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_fork_store.cpp.o
+[ 55%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_local_body.cpp.o
+[ 55%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_profile.cpp.o
+[ 55%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_reactor.cpp.o
+[ 55%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_registration.cpp.o
+[ 58%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_runtime.cpp.o
+[ 58%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_signing.cpp.o
+[ 58%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_slots.cpp.o
+[ 58%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_store_snapshot.cpp.o
+[ 58%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_sync.cpp.o
+[ 62%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_sync_signing.cpp.o
+[ 62%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_validator.cpp.o
+[ 62%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_withdrawals.cpp.o
+[ 62%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_committee.cpp.o
+[ 62%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_deposit.cpp.o
+[ 62%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_deposit_history.cpp.o
+[ 65%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_deposit_transition.cpp.o
+[ 65%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_effective_balance.cpp.o
+[ 65%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_epoch.cpp.o
+[ 65%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_epoch_maintenance.cpp.o
+[ 65%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_execution_bridge.cpp.o
+[ 68%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_execution_deposit.cpp.o
+[ 68%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_execution_payload.cpp.o
+[ 68%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_ffg.cpp.o
+[ 68%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_fork_choice.cpp.o
+[ 68%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_fork_clock.cpp.o
+[ 68%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_fork_store.cpp.o
+[ 72%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_fork_vote.cpp.o
+[ 72%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_message_ssz.cpp.o
+[ 72%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_proposer.cpp.o
+[ 72%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_randao.cpp.o
+[ 72%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_registry_operations.cpp.o
+[ 75%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_rewards.cpp.o
+[ 75%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_round.cpp.o
+[ 75%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_signing.cpp.o
+[ 75%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_slashing.cpp.o
+[ 75%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_slots.cpp.o
+[ 75%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_snapshot.cpp.o
+[ 79%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_sync_message.cpp.o
+[ 79%] Building CXX object CMakeFiles/nano_core.dir/src/crypto.cpp.o
+[ 79%] Building CXX object CMakeFiles/nano_core.dir/src/engine.cpp.o
+[ 79%] Building CXX object CMakeFiles/nano_core.dir/src/evm.cpp.o
+[ 79%] Building CXX object CMakeFiles/nano_core.dir/src/finality.cpp.o
+[ 79%] Building CXX object CMakeFiles/nano_core.dir/src/hdwallet.cpp.o
+[ 82%] Building CXX object CMakeFiles/nano_core.dir/src/http.cpp.o
+[ 82%] Building CXX object CMakeFiles/nano_core.dir/src/kzg.cpp.o
+[ 82%] Building CXX object CMakeFiles/nano_core.dir/src/migration.cpp.o
+[ 82%] Building CXX object CMakeFiles/nano_core.dir/src/node.cpp.o
+[ 82%] Building CXX object CMakeFiles/nano_core.dir/src/p256.cpp.o
+[ 86%] Building CXX object CMakeFiles/nano_core.dir/src/pos.cpp.o
+[ 86%] Building CXX object CMakeFiles/nano_core.dir/src/precompiles.cpp.o
+[ 86%] Building CXX object CMakeFiles/nano_core.dir/src/receipt.cpp.o
+[ 86%] Building CXX object CMakeFiles/nano_core.dir/src/requests.cpp.o
+[ 86%] Building CXX object CMakeFiles/nano_core.dir/src/rlp.cpp.o
+[ 86%] Building CXX object CMakeFiles/nano_core.dir/src/rpc.cpp.o
+[ 89%] Building CXX object CMakeFiles/nano_core.dir/src/rpc_accounts.cpp.o
+[ 89%] Building CXX object CMakeFiles/nano_core.dir/src/rpc_fees.cpp.o
+[ 89%] Building CXX object CMakeFiles/nano_core.dir/src/rpc_filters.cpp.o
+[ 89%] Building CXX object CMakeFiles/nano_core.dir/src/staking.cpp.o
+[ 89%] Building CXX object CMakeFiles/nano_core.dir/src/state.cpp.o
+[ 93%] Building CXX object CMakeFiles/nano_core.dir/src/storage.cpp.o
+[ 93%] Building CXX object CMakeFiles/nano_core.dir/src/transaction.cpp.o
+[ 93%] Building CXX object CMakeFiles/nano_core.dir/src/txpool.cpp.o
+[ 93%] Building CXX object CMakeFiles/nano_core.dir/src/typed_data.cpp.o
+[ 93%] Building CXX object CMakeFiles/nano_core.dir/src/types.cpp.o
+[ 93%] Building CXX object CMakeFiles/nano_core.dir/src/wallet.cpp.o
+[ 96%] Building CXX object CMakeFiles/nano_core.dir/src/websocket.cpp.o
+[ 96%] Linking CXX static library libnano_core.a
+[ 96%] Built target nano_core
+[ 96%] Building CXX object CMakeFiles/nano.dir/src/main.cpp.o
+[100%] Linking CXX executable nano
+[100%] Built target nano
+[  3%] Built target nano_blst
+[  7%] Built target mcl_st
+[ 10%] Built target nano_ckzg
+[ 10%] Built target secp256k1_precomputed
+[ 10%] Built target secp256k1
+[100%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-tests.dir/tests/test_core.cpp.o
+[100%] Linking CXX executable nano-tests
+[100%] Built target nano-tests
+[  3%] Built target nano_blst
+[  6%] Built target mcl_st
+[ 10%] Built target secp256k1_precomputed
+[ 10%] Built target nano_ckzg
+[ 10%] Built target secp256k1
+[ 96%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-rpc-tests.dir/tests/test_rpc.cpp.o
+[100%] Linking CXX executable nano-rpc-tests
+[100%] Built target nano-rpc-tests
+[  3%] Built target nano_blst
+[  7%] Built target mcl_st
+[ 10%] Built target secp256k1_precomputed
+[ 10%] Built target nano_ckzg
+[ 10%] Built target secp256k1
+[100%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-bft-network-tests.dir/tests/test_bft_network.cpp.o
+[100%] Linking CXX executable nano-bft-network-tests
+[100%] Built target nano-bft-network-tests
+[  7%] Built target mcl_st
+[  7%] Built target nano_blst
+[  7%] Built target nano_ckzg
+[ 10%] Built target secp256k1_precomputed
+[ 10%] Built target secp256k1
+[100%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-ethereum-state-runner.dir/tests/ethereum_state_runner.cpp.o
+[100%] Linking CXX executable nano-ethereum-state-runner
+[100%] Built target nano-ethereum-state-runner

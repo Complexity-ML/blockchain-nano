@@ -1,0 +1,129 @@
+{
+  "tests": [
+    {
+      "name": "core",
+      "seconds": "0.0279704",
+      "failed": true
+    },
+    {
+      "name": "rpc",
+      "seconds": "2.94176",
+      "failed": false
+    },
+    {
+      "name": "bft_rpc_cost_many_paris_network",
+      "seconds": "54.7484",
+      "failed": true
+    },
+    {
+      "name": "bft_rpc_cost_many_shanghai_network",
+      "seconds": "56.9204",
+      "failed": true
+    },
+    {
+      "name": "ethereum_official_regressions",
+      "seconds": "9.12312",
+      "failed": true
+    }
+  ],
+  "scenarios": [
+    {
+      "fork": "Paris",
+      "controlError": "",
+      "workerErrors": {
+        "RPC simulation execution timeout": 8,
+        "persistent RPC HTTP failure (503): RPC simulation queue wait exceeded": 5
+      },
+      "activeWorkersWhenCertified": 16
+    },
+    {
+      "fork": "Shanghai",
+      "controlError": "",
+      "workerErrors": {
+        "persistent RPC HTTP failure (503): RPC simulation queue wait exceeded": 4,
+        "RPC simulation execution timeout": 9
+      },
+      "activeWorkersWhenCertified": 16
+    }
+  ],
+  "fixtureMismatches": [
+    {
+      "case": "tests/ported_static/stStaticFlagEnabled/test_callcode_to_precompile_from_called_contract.py::test_callcode_to_precompile_from_called_contract[fork_Cancun-state_test]",
+      "engine": "Nano explicit Cancun rules (partial implementation)",
+      "expectedGasUsed": "0x349091",
+      "file": "/work/tests/fixtures/ethereum-official/cancun-ported_static--stStaticFlagEnabled--callcode_to_precompile_from_called_contract--callcode_to_precompile_from_called_contract.json",
+      "fork": "Cancun",
+      "gasUsed": "0x95b2df",
+      "gasUsedMatches": false,
+      "logsHash": {
+        "actual": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+        "expected": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
+      },
+      "receiptMatches": false,
+      "replayPolicy": "Ethereum historical signatures allowed; Nano network policy unchanged",
+      "stateRoot": {
+        "actual": "0xc339f8c4db6e932664dd97cf3bce425274c48905714206d3e7ce8c389f25a7db",
+        "expected": "0xa3fb834a256f5beaf37d6d17ab74e364b89386e798ba7101308bd64626ef706e"
+      },
+      "status": "mismatch",
+      "transactionHash": "0x6e8b41d41349facfac5f7fcb0157226a8aa07c44562c31661cf9820f5b701ec9",
+      "transactionHashMatches": true,
+      "variant": 0
+    },
+    {
+      "case": "tests/ported_static/stStaticFlagEnabled/test_callcode_to_precompile_from_contract_initialization.py::test_callcode_to_precompile_from_contract_initialization[fork_Cancun-state_test]",
+      "engine": "Nano explicit Cancun rules (partial implementation)",
+      "expectedGasUsed": "0x35fb54",
+      "file": "/work/tests/fixtures/ethereum-official/cancun-ported_static--stStaticFlagEnabled--callcode_to_precompile_from_contract_initialization--callcode_to_precompile_from_contract_initialization.json",
+      "fork": "Cancun",
+      "gasUsed": "0x965178",
+      "gasUsedMatches": false,
+      "logsHash": {
+        "actual": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+        "expected": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
+      },
+      "receiptMatches": false,
+      "replayPolicy": "Ethereum historical signatures allowed; Nano network policy unchanged",
+      "stateRoot": {
+        "actual": "0x1ea536ab08f685b2c1caa593631f09d659d82bcafd74715678082f279af8c2cc",
+        "expected": "0x8ff4130f90c3462985a9cecc99127a63cbaf570a0ec0bd35f7cc7e75a8d6b1ba"
+      },
+      "status": "mismatch",
+      "transactionHash": "0xeaf04546111dbf290056c56c55941ab8b68c21f15b234e73c0074ea00831a28a",
+      "transactionHashMatches": true,
+      "variant": 0
+    },
+    {
+      "case": "tests/ported_static/stStaticFlagEnabled/test_callcode_to_precompile_from_transaction.py::test_callcode_to_precompile_from_transaction[fork_Cancun-state_test]",
+      "engine": "Nano explicit Cancun rules (partial implementation)",
+      "expectedGasUsed": "0x345f37",
+      "file": "/work/tests/fixtures/ethereum-official/cancun-ported_static--stStaticFlagEnabled--callcode_to_precompile_from_transaction--callcode_to_precompile_from_transaction.json",
+      "fork": "Cancun",
+      "gasUsed": "0x97f5ef",
+      "gasUsedMatches": false,
+      "logsHash": {
+        "actual": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+        "expected": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
+      },
+      "receiptMatches": false,
+      "replayPolicy": "Ethereum historical signatures allowed; Nano network policy unchanged",
+      "stateRoot": {
+        "actual": "0xe3da53eb924d901e9436d502c6785101f51c719b41707210afeea9c9894b96f1",
+        "expected": "0xd300713de72639d59c6c3ebfe0e79268a12652fb54253d7d77a96de87c66f23d"
+      },
+      "status": "mismatch",
+      "transactionHash": "0xde134371a10be59b685cfd25625778bf2b5c03d867e46b78ae77d05c974264a1",
+      "transactionHashMatches": true,
+      "variant": 0
+    }
+  ],
+  "fixtureSummary": {
+    "errors": 0,
+    "files": 317,
+    "forkConformanceProven": false,
+    "matched": 5384,
+    "mismatched": 3,
+    "unsupported": 0,
+    "validationMatched": 505
+  }
+}

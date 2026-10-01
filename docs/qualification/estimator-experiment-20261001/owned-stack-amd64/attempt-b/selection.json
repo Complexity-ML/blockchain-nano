@@ -1,0 +1,229 @@
+{
+  "backtraceGraph" : 
+  {
+    "commands" : 
+    [
+      "add_test"
+    ],
+    "files" : 
+    [
+      "/work/CMakeLists.txt"
+    ],
+    "nodes" : 
+    [
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 43,
+        "parent" : 0
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 60,
+        "parent" : 2
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 184,
+        "parent" : 4
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 184,
+        "parent" : 6
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 412,
+        "parent" : 8
+      }
+    ]
+  },
+  "kind" : "ctestInfo",
+  "tests" : 
+  [
+    {
+      "backtrace" : 1,
+      "command" : 
+      [
+        "/build/estimator-owned-stack-20261001/nano-tests"
+      ],
+      "name" : "core",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_evm"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 120.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/work"
+        }
+      ]
+    },
+    {
+      "backtrace" : 3,
+      "command" : 
+      [
+        "/build/estimator-owned-stack-20261001/nano-rpc-tests"
+      ],
+      "name" : "rpc",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_evm"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 120.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/work"
+        }
+      ]
+    },
+    {
+      "backtrace" : 5,
+      "command" : 
+      [
+        "/build/estimator-owned-stack-20261001/nano-bft-network-tests",
+        "/build/estimator-owned-stack-20261001/nano",
+        "/build/network/nano-p2p",
+        "--rpc-cost-many"
+      ],
+      "name" : "bft_rpc_cost_many_paris_network",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "NANO_TEST_EVM_FORK=Paris"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_bft_rpc_cost_many_local"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 480.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/estimator-owned-stack-20261001"
+        }
+      ]
+    },
+    {
+      "backtrace" : 7,
+      "command" : 
+      [
+        "/build/estimator-owned-stack-20261001/nano-bft-network-tests",
+        "/build/estimator-owned-stack-20261001/nano",
+        "/build/network/nano-p2p",
+        "--rpc-cost-many"
+      ],
+      "name" : "bft_rpc_cost_many_shanghai_network",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "NANO_TEST_EVM_FORK=Shanghai"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_bft_rpc_cost_many_local"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 480.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/estimator-owned-stack-20261001"
+        }
+      ]
+    },
+    {
+      "backtrace" : 9,
+      "command" : 
+      [
+        "/build/estimator-owned-stack-20261001/nano-ethereum-state-runner",
+        "/work/tests/fixtures/ethereum-official"
+      ],
+      "name" : "ethereum_official_regressions",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_evm"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 30.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/estimator-owned-stack-20261001"
+        }
+      ]
+    }
+  ],
+  "version" : 
+  {
+    "major" : 1,
+    "minor" : 0
+  }
+}

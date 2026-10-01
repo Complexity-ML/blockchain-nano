@@ -1,0 +1,22 @@
+[  0%] Generating base64.o
+[  0%] Generating bint64.o
+warning: overriding the module target triple with aarch64-unknown-linux-gnu [-Woverride-module]
+warning: overriding the module target triple with aarch64-unknown-linux-gnu [-Woverride-module]
+1 warning generated.
+[  0%] Built target gen_bint.o
+1 warning generated.
+[  0%] Built target gen_base.o
+[  0%] Building CXX object third_party/mcl/CMakeFiles/mcl_st.dir/src/fp.cpp.o
+[  0%] Linking CXX static library ../../lib/libmcl.a
+[100%] Built target mcl_st
+[100%] Building CXX object CMakeFiles/nano-bn-pairing-tests.dir/tests/test_bn_pairing.cpp.o
+[100%] Building CXX object CMakeFiles/nano-bn-pairing-tests.dir/src/bn_pairing.cpp.o
+/work/tests/test_bn_pairing.cpp:1:10: fatal error: 'nlohmann/json.hpp' file not found
+    1 | #include <nlohmann/json.hpp>
+      |          ^~~~~~~~~~~~~~~~~~~
+1 error generated.
+gmake[3]: *** [CMakeFiles/nano-bn-pairing-tests.dir/build.make:76: CMakeFiles/nano-bn-pairing-tests.dir/tests/test_bn_pairing.cpp.o] Error 1
+gmake[3]: *** Waiting for unfinished jobs....
+gmake[2]: *** [CMakeFiles/Makefile2:587: CMakeFiles/nano-bn-pairing-tests.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:594: CMakeFiles/nano-bn-pairing-tests.dir/rule] Error 2
+gmake: *** [Makefile:193: nano-bn-pairing-tests] Error 2

@@ -1,0 +1,110 @@
+{
+  "tests": [
+    {
+      "name": "bft_rpc_cost_many_paris_network",
+      "seconds": "83.5771",
+      "failed": false
+    },
+    {
+      "name": "bft_rpc_cost_many_shanghai_network",
+      "seconds": "92.018",
+      "failed": false
+    }
+  ],
+  "scenarios": [
+    {
+      "fork": "Paris",
+      "controlError": "",
+      "workerErrors": {},
+      "activeWorkersWhenCertified": 16,
+      "completedRounds": [
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24
+      ],
+      "methods": {
+        "eth_call": {
+          "count": 384,
+          "failed": 0,
+          "minMs": 239.185375,
+          "medianMs": 1314.722542,
+          "maxMs": 2997.120877
+        },
+        "eth_chainId": {
+          "count": 384,
+          "failed": 0,
+          "minMs": 0.05,
+          "medianMs": 0.121166,
+          "maxMs": 105.611625
+        },
+        "eth_estimateGas": {
+          "count": 192,
+          "failed": 0,
+          "minMs": 1712.239792,
+          "medianMs": 2789.495876,
+          "maxMs": 4797.751502
+        }
+      }
+    },
+    {
+      "fork": "Shanghai",
+      "controlError": "",
+      "workerErrors": {},
+      "activeWorkersWhenCertified": 16,
+      "completedRounds": [
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24
+      ],
+      "methods": {
+        "eth_call": {
+          "count": 384,
+          "failed": 0,
+          "minMs": 180.931209,
+          "medianMs": 1390.414209,
+          "maxMs": 3787.87071
+        },
+        "eth_chainId": {
+          "count": 384,
+          "failed": 0,
+          "minMs": 0.044084,
+          "medianMs": 0.120125,
+          "maxMs": 112.0285
+        },
+        "eth_estimateGas": {
+          "count": 192,
+          "failed": 0,
+          "minMs": 554.968708,
+          "medianMs": 3205.384044,
+          "maxMs": 5387.909044
+        }
+      }
+    }
+  ]
+}
