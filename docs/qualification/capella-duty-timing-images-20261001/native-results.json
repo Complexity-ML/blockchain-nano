@@ -1,0 +1,15 @@
+{
+  "revision": "1e1e73208a96268e060c9ac92a871ec0eadab4f1",
+  "exitCode": 0,
+  "sourceHashesMatchArm64Archive": true,
+  "commands": [
+    "cmake --build build-release --target nano-capella-transition-tests -j 2",
+    "build-release/nano-capella-transition-tests --duty-timing",
+    "build-release/nano-capella-transition-tests --scheduler",
+    "build-release/nano-capella-transition-tests --automatic-recovery"
+  ],
+  "testBinarySha256": "7e4a728641a9347202ee1fc017772ff8b56195148fd4e02ddd29edf2f10b4885",
+  "outputExcerpt": "/tmp/nano-duty-timing-native-v4-excerpt.log",
+  "networkQualified": false,
+  "productionQualified": false
+}
