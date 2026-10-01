@@ -21,6 +21,27 @@ void check(bool yes,const char* name){++checks;if(!yes)throw std::runtime_error(
 template<class F>void rejects(F f,const char* name){bool threw=false;try{f();}catch(const std::exception&){threw=true;}check(threw,name);}
 int main(){try{
  {
+  State state;ExecutionContext ctx;ctx.revision=EvmRevision::Shanghai;ctx.address="0x1000000000000000000000000000000000000000";ctx.gas=100000;
+  Bytes high_water;for(unsigned i=0;i<1024;++i)high_water.insert(high_water.end(),{0x60,0xff});high_water.insert(high_water.end(),1024,0x50);
+  ctx.code=high_water;for(unsigned i=0;i<1024;++i)ctx.code.insert(ctx.code.end(),{0x60,0x01});auto full=EVM(state).execute(ctx);check(full.success&&full.gas_used==8192,"retired slots do not count toward live stack limit");
+  ctx.code.insert(ctx.code.end(),{0x60,0x01});auto overflow=EVM(state).execute(ctx);check(!overflow.success&&overflow.gas_used==ctx.gas,"live stack still rejects element 1025 after reuse");
+  for(auto opcode:{uint8_t(0x8f),uint8_t(0x9f)}){ctx.code=high_water;ctx.code.insert(ctx.code.end(),{0x60,0x01,0x60,0x02,opcode});auto result=EVM(state).execute(ctx);check(!result.success&&result.gas_used==ctx.gas,"DUP16 and SWAP16 cannot read retained inactive slots");}
+  Bytes retired;for(unsigned i=0;i<32;++i){retired.push_back(0x7f);auto word=bytes((Int(i+1)<<192)+(i+7),32);retired.insert(retired.end(),word.begin(),word.end());}retired.insert(retired.end(),32,0x50);
+  std::vector<Int> words;Bytes live;for(unsigned i=0;i<17;++i){words.push_back((Int(i+1)<<200)+i);live.push_back(0x7f);auto word=bytes(words.back(),32);live.insert(live.end(),word.begin(),word.end());}
+  for(unsigned distance=1;distance<=16;++distance){
+   ctx.code=concat(retired,live);ctx.code.push_back(uint8_t(0x7f+distance));ctx.code=concat(ctx.code,unhex("0x60005260205260406000f3"));auto duplicate=EVM(state).execute(ctx);
+   check(duplicate.success&&duplicate.return_data.size()==64&&integer(Bytes(duplicate.return_data.begin(),duplicate.return_data.begin()+32))==words[17-distance]&&integer(Bytes(duplicate.return_data.begin()+32,duplicate.return_data.end()))==words[16],"all DUP depths copy independent live values after slot reuse");
+   ctx.code=concat(retired,live);ctx.code.push_back(uint8_t(0x8f+distance));ctx.code=concat(ctx.code,unhex("0x600052"));ctx.code.insert(ctx.code.end(),distance-1,0x50);ctx.code=concat(ctx.code,unhex("0x60205260406000f3"));auto swapped=EVM(state).execute(ctx);
+   check(swapped.success&&swapped.return_data.size()==64&&integer(Bytes(swapped.return_data.begin(),swapped.return_data.begin()+32))==words[16-distance]&&integer(Bytes(swapped.return_data.begin()+32,swapped.return_data.end()))==words[16],"all SWAP depths exchange live values after slot reuse");
+  }
+  ctx.code=Bytes{0x80};check(!EVM(state).execute(ctx).success,"DUP cannot read an empty stack");ctx.code=high_water;for(unsigned i=0;i<1024;++i)ctx.code.push_back(0x5f);ctx.code.push_back(0x80);auto dup_overflow=EVM(state).execute(ctx);check(!dup_overflow.success&&dup_overflow.gas_used==ctx.gas,"DUP cannot exceed active 1024 limit after reuse");
+  for(auto value:std::vector<Int>{Int(0),Int(1)<<255,(Int(1)<<256)-1}){
+   ctx.code=concat(concat(Bytes{0x7f},bytes(value,32)),unhex("0x805060071860005260206000f3"));auto result=EVM(state).execute(ctx);check(result.success&&integer(result.return_data)==Int(value^7),"reused PUSH slot cannot alias live DUP source");
+   ctx.code=concat(concat(Bytes{0x7f},bytes(value,32)),unhex("0x505f60005260206000f3"));auto zero=EVM(state).execute(ctx);check(zero.success&&integer(zero.return_data)==0,"PUSH0 clears retained wide operand");
+  }
+ }
+
+ {
   State state;ExecutionContext ctx;ctx.revision=EvmRevision::Paris;ctx.address="0x1000000000000000000000000000000000000000";ctx.gas=1000;
   for(const auto& value:std::vector<Int>{Int(0),Int(1),Int(1)<<255,(Int(1)<<256)-1}){
    ctx.code=concat(concat(Bytes{0x7f},bytes(value,32)),unhex("0x801560005260205260406000f3"));auto result=EVM(state).execute(ctx);

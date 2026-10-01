@@ -6,20 +6,24 @@ struct Revert { Bytes data; };
 struct Frame {
  uint64_t gas;
  std::vector<Int> stack;
+ size_t used=0;
  Bytes memory;
  explicit Frame(uint64_t budget):gas(budget){}
  void charge(uint64_t cost){if(cost>gas)throw std::runtime_error("Out of gas");gas-=cost;}
- // Own the operand so normalization can reuse its GMP allocation. The same
- // floor remainder handles negative and oversized operands modulo 2^256.
- void push(Int value){if(stack.size()>=1024)throw std::runtime_error("Stack overflow");mpz_fdiv_r_2exp(value.get_mpz_t(),value.get_mpz_t(),256);stack.push_back(std::move(value));}
- void iszero(){if(stack.empty())throw std::runtime_error("Stack underflow");auto& value=stack.back();mpz_set_ui(value.get_mpz_t(),mpz_sgn(value.get_mpz_t())==0);}
- Int pop(){if(stack.empty())throw std::runtime_error("Stack underflow");Int value=std::move(stack.back());stack.pop_back();return value;}
+ // Retain at most 1024 initialized GMP slots. Only used counts as live
+ // stack depth; consumed slots have no authority and are overwritten on push.
+ Int& next(){if(used>=1024)throw std::runtime_error("Stack overflow");if(used==stack.size())stack.emplace_back();return stack[used++];}
+ const Int& peek(size_t distance=0)const{if(used<=distance)throw std::runtime_error("Stack underflow");return stack[used-1-distance];}
+ void drop(size_t count=1){if(used<count)throw std::runtime_error("Stack underflow");used-=count;}
+ void push(Int value){if(used>=1024)throw std::runtime_error("Stack overflow");mpz_fdiv_r_2exp(value.get_mpz_t(),value.get_mpz_t(),256);next()=std::move(value);}
+ void duplicate(size_t distance){if(used<distance)throw std::runtime_error("Stack underflow");const auto index=used-distance;auto& out=next();mpz_set(out.get_mpz_t(),stack[index].get_mpz_t());}
+ void swap(size_t distance){if(used<=distance)throw std::runtime_error("Stack underflow");std::swap(stack[used-1],stack[used-1-distance]);}
+ void iszero(){(void)peek();auto& value=stack[used-1];mpz_set_ui(value.get_mpz_t(),mpz_sgn(value.get_mpz_t())==0);}
+ Int pop(){(void)peek();return std::move(stack[--used]);}
  void reduce(void (*operation)(mpz_ptr,mpz_srcptr,mpz_srcptr)){
-  Int a=pop();if(stack.empty())throw std::runtime_error("Stack underflow");
-  // Retain the second operand's GMP storage for the result. Argument order
-  // remains top-of-stack first, including noncommutative SUB.
-  auto& b=stack.back();operation(b.get_mpz_t(),a.get_mpz_t(),b.get_mpz_t());
-  mpz_fdiv_r_2exp(b.get_mpz_t(),b.get_mpz_t(),256);
+  (void)peek(1);auto& a=stack[used-1];auto& b=stack[used-2];
+  operation(b.get_mpz_t(),a.get_mpz_t(),b.get_mpz_t());
+  mpz_fdiv_r_2exp(b.get_mpz_t(),b.get_mpz_t(),256);--used;
  }
  std::pair<size_t,size_t> region(const Int& start,const Int& size){
   if(size==0)return {0,0};
@@ -58,12 +62,12 @@ EvmTask EVM::run(const ExecutionContext& ctx, unsigned depth){
   const size_t n=op-0x5f,available=std::min(n,ctx.code.size()-pc-1);
   // Import directly from immutable bytecode instead of allocating a Bytes
   // slice on every PUSH. Missing immediate bytes are trailing zeroes (EVM EOF).
-  Int value;if(available)mpz_import(value.get_mpz_t(),available,1,1,1,0,ctx.code.data()+pc+1);
+  auto& value=f.next();if(available)mpz_import(value.get_mpz_t(),available,1,1,1,0,ctx.code.data()+pc+1);else mpz_set_ui(value.get_mpz_t(),0);
   if(available<n)mpz_mul_2exp(value.get_mpz_t(),value.get_mpz_t(),8*(n-available));
-  f.push(std::move(value));pc+=n;continue;
+  pc+=n;continue;
  }
- if(op>=0x80&&op<=0x8f){size_t depth=op-0x7f;if(f.stack.size()<depth)throw std::runtime_error("Stack underflow");Int value=f.stack[f.stack.size()-depth];f.push(std::move(value));continue;}
- if(op>=0x90&&op<=0x9f){size_t depth=op-0x8f;if(f.stack.size()<=depth)throw std::runtime_error("Stack underflow");std::swap(f.stack.back(),f.stack[f.stack.size()-depth-1]);continue;}
+ if(op>=0x80&&op<=0x8f){f.duplicate(op-0x7f);continue;}
+ if(op>=0x90&&op<=0x9f){f.swap(op-0x8f);continue;}
  if(op>=0xa0&&op<=0xa4){if(ctx.is_static)throw std::runtime_error("LOG in static context");Int off=f.pop(),size=f.pop();Log log{ctx.address,{}, {}};for(unsigned i=0;i<unsigned(op-0xa0);++i)log.topics.push_back(bytes(f.pop(),32));log.data=f.read(off,size);f.charge(log.data.size()*8);result.logs.push_back(std::move(log));continue;}
  switch(static_cast<NanoOpCodes>(op)){
  case NanoOpCodes::STOP:done=true;break;
@@ -126,7 +130,7 @@ EvmTask EVM::run(const ExecutionContext& ctx, unsigned depth){
  case NanoOpCodes::BASEFEE:f.push(ctx.base_fee);break;
  case NanoOpCodes::BLOBHASH:{auto index=f.pop();f.push(index<Int(ctx.blob_hashes.size())?integer(ctx.blob_hashes[index.get_ui()]):Int(0));break;}
  case NanoOpCodes::BLOBBASEFEE:f.push(ctx.blob_base_fee);break;
- case NanoOpCodes::POP:f.pop();break;
+ case NanoOpCodes::POP:f.drop();break;
  case NanoOpCodes::MLOAD:{auto off=f.pop();f.push(integer(f.read(off,Int(32))));break;}
  case NanoOpCodes::MSTORE:{Int off=f.pop(),value=f.pop();f.write(off,bytes(value,32));break;}
  case NanoOpCodes::MSTORE8:{Int off=f.pop(),value=f.pop();f.write(off,Bytes{uint8_t(value.get_ui()&255)});break;}
@@ -155,12 +159,12 @@ EvmTask EVM::run(const ExecutionContext& ctx, unsigned depth){
  case NanoOpCodes::TSTORE:{if(ctx.is_static)throw std::runtime_error("TSTORE in static context");Int key=f.pop(),value=f.pop();transient_storage_[{address(ctx.address),key}]=value;break;}
  case NanoOpCodes::MCOPY:{Int dest=f.pop(),source=f.pop(),size=f.pop();if(size!=0){auto data=f.read(source,size);auto region=f.region(dest,size);f.charge(3*((region.second+31)/32));f.write(dest,data);}break;}
  case NanoOpCodes::JUMP:
- case NanoOpCodes::JUMPI:{Int dest=f.pop();bool taken=op!=0x57||f.pop()!=0;if(taken){if(dest>=Int(ctx.code.size())||!jumpdests.contains(dest.get_ui()))throw std::runtime_error("Invalid jump destination");pc=dest.get_ui()-1;}break;}
+ case NanoOpCodes::JUMPI:{const auto& dest=f.peek();bool taken=op!=0x57||f.peek(1)!=0;f.drop(op==0x57?2:1);if(taken){if(dest>=Int(ctx.code.size())||!jumpdests.contains(dest.get_ui()))throw std::runtime_error("Invalid jump destination");pc=dest.get_ui()-1;}break;}
  case NanoOpCodes::PC:f.push(Int(pc));break;
  case NanoOpCodes::MSIZE:f.push(Int(f.memory.size()));break;
  case NanoOpCodes::GAS:f.push(Int(std::to_string(f.gas)));break;
  case NanoOpCodes::JUMPDEST:break;
- case NanoOpCodes::PUSH0:f.push(Int(0));break;
+ case NanoOpCodes::PUSH0:mpz_set_ui(f.next().get_mpz_t(),0);break;
  case NanoOpCodes::CALL:
  case NanoOpCodes::CALLCODE:
  case NanoOpCodes::DELEGATECALL:
