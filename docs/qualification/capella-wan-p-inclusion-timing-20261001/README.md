@@ -1,0 +1,11 @@
+# WAN P: canonical participation reaches quorum after the first epoch transition
+
+Stopped native P database inspected read-only, bound to its externally captured checkpoint. Canonical replay passes: 123 blocks with trusted anchor, 340748 archived bytes, one transaction. Inspector covers 122 signed archived blocks; counts/bytes match replay. Every individual included vote identified for epochs 12–15 has exactly one matching BLS fixture key using the fork domain/genesis root. The separate canonical replay validates committee membership and transitions; key identification alone is not admission authorization.
+
+Epoch 14: canonical boundary has 56 distinct included signers (native 16, Docker Mac 21, VPS 19), competing target 8 (native 6, VPS 2). These sets cover all 64 fixture keys. Only 40 canonical signers are included in blocks before slot 120; 16 arrive in blocks 120/121, after the first epoch-14 processing boundary. The fixture requires 43 equal-weight signers, so 40 cannot justify that target at that first boundary. This establishes late canonical inclusion, not a unique cause in transport, signing or block selection. Votes in later blocks cannot retroactively change the already processed boundary.
+
+Epoch 15: canonical target has 58 distinct signers, 50 included before slot 128; six signers target another boundary. First timely target justification is consistent with the observed epoch-15 justification and later finality. This does not replay historical fork choice, all off-chain votes, relay arrival times or validator duty timing.
+
+The earlier O distribution differed; no controlled causal gain is claimed between campaigns. Next investigate attestation relay cadence, arrival before proposal selection and selection budgets. Do not rerun an unchanged WAN campaign or raise its 180-second gate to relabel success.
+
+Initial request preparation used nonexistent node field anchor instead of initial; the first audit request also copied profile.maximumBytes and failed exact reference-shape validation before replay. Errors are retained in initial-errors.txt; corrected read-only audit exited 0. Inspector source/executable hash retained; no runtime rebuild or new network campaign. No keys, private journals or database copied to Git.
