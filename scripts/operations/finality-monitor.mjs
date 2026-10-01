@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 // Local read-only monitoring. Never signs, restarts a node or sends notifications.
 import {createHash} from 'node:crypto';
-import {readFile,writeFile,rename,open,unlink} from 'node:fs/promises';
+import {readFile,open,unlink} from 'node:fs/promises';
 import {pathToFileURL} from 'node:url';
+import {durableJson} from './durable-json.mjs';
 import {transportRequest} from './monitor-transport.mjs';
 const root=v=>typeof v==='string'&&/^0x[0-9a-f]{64}$/.test(v);
 const integer=v=>{if(typeof v!=='string'||v.length>78||! /^(0|[1-9][0-9]*|0x[0-9a-f]+)$/.test(v))throw Error('Invalid unsigned quantity');return BigInt(v);};
@@ -23,6 +24,7 @@ export function configuration(c){
  return {chainId,genesisHash:c.genesisHash,configName:c.configName,staleMs:c.staleMs,timeoutMs:c.timeoutMs,maximumResponseBytes:c.maximumResponseBytes,maximumEpochs:c.maximumEpochs,minimumPeers:c.minimumPeers,nodes};
 }
 const identity=c=>createHash('sha256').update(JSON.stringify(c)).digest('hex');
+export const monitorIdentity=config=>identity(configuration(config));
 export function evaluate(config,samples,time,previous){
  const c=configuration(config);if(!Number.isSafeInteger(time)||time<0)throw Error('Invalid observation time');
  const state=previous?structuredClone(previous):{version:1,identity:identity(c),time,nodes:{},roots:{},safetyFaults:[]};
@@ -54,7 +56,7 @@ export function evaluate(config,samples,time,previous){
  }
  state.time=time;
  const common=c.nodes.every(n=>state.nodes[n.name])&&accepted.size===c.nodes.length&&c.nodes.every(n=>state.nodes[n.name].epoch===state.nodes[c.nodes[0].name].epoch&&state.nodes[n.name].root===state.nodes[c.nodes[0].name].root);
- return {state,report:{time,healthy:!alerts.length&&!state.safetyFaults.length,commonFinality:common,alerts,safetyFaults:state.safetyFaults,samples}};
+ return {state,report:{identity:state.identity,time,healthy:!alerts.length&&!state.safetyFaults.length,commonFinality:common,alerts,safetyFaults:state.safetyFaults,samples}};
 }
 export async function sample(config,node,request){
  const c=configuration(config),endpoint=c.nodes.find(n=>n.name===node.name);
@@ -79,14 +81,14 @@ export async function sample(config,node,request){
  }catch(error){return {name:node.name,error:String(error.message).slice(0,300)};}
 }
 export async function run(configFile,stateFile){
- const lockFile=stateFile+'.lock',lock=await open(lockFile,'wx',0o600);let temp;
+ const lockFile=stateFile+'.lock',lock=await open(lockFile,'wx',0o600);
  try{
   const config=configuration(JSON.parse(await readFile(configFile,'utf8')));let prior;
   try{prior=JSON.parse(await readFile(stateFile,'utf8'));}catch(e){if(e.code!=='ENOENT')throw e;}
   const samples=await Promise.all(config.nodes.map(n=>sample(config,n)));const result=evaluate(config,samples,Date.now(),prior);
-  temp=stateFile+'.'+process.pid+'.tmp';await writeFile(temp,JSON.stringify(result.state)+'\n',{mode:0o600,flag:'wx'});await rename(temp,stateFile);temp=undefined;
+  await durableJson(stateFile,result.state);
   console.log(JSON.stringify(result.report));return result.report.healthy?0:2;
- }finally{if(temp)await unlink(temp).catch(()=>{});await lock.close();await unlink(lockFile);}
+ }finally{await lock.close();await unlink(lockFile);}
 }
 
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){

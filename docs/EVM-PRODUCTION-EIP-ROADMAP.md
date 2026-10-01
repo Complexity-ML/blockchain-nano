@@ -2182,3 +2182,18 @@ globales de cycle/scalabilité, version complète, exploitation, revue et
 bridge/lancement restent ouvertes ; aucun fonds réel ni production déclarée.
 [ARM64](qualification/capella-unknown-finality-slashing-20261001/arm64/README.md)
 et [AMD64](qualification/capella-unknown-finality-slashing-20261001/amd64/README.md).
+
+
+### 2026-10-01 — livraison durable des alertes, qualification locale
+
+Implémenté : file privée fsync fichier/répertoire avant émission, identité du
+monitor épinglée depuis sa configuration revue, reprise et identifiant
+idempotent conservé après acceptation HTTP suivie d'un échec du commit local.
+Déduplication des défauts, notification de retour sain, refus des redirections,
+bornes de réponse/temps/file et vidage explicite sans perte des anciens événements.
+31 tests réussis en natif et Docker ARM64 : 10 nouveaux cas de livraison
+et 21 cas existants du monitor. Receveurs HTTP locaux et rapports synthétiques ;
+pas encore de campagne daemon Nano vers destinataire réel. Docker AMD64,
+ordonnanceur/destination opérateur, panne électrique et qualification globale
+restent ouverts. Cœur C++ et images de chaîne inchangés.
+[Preuves](qualification/alert-delivery-20261001/native/README.md).

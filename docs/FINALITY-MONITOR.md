@@ -90,3 +90,64 @@ de la fixture locale exportée avant démarrage. Ce scénario passe sur les troi
 avancées communes des époques 2 à 5, avec refus du mauvais genesis.
 [Preuves et limites](qualification/finality-monitor-live-20260930/manifest.json).
 La disponibilité sous panne et l'exploitation complète restent à qualifier.
+
+## File persistante de livraison — 1 octobre 2026
+
+`alert-delivery.mjs` est un outil séparé, activé seulement avec un récepteur
+explicitement configuré. Le monitor lui-même continue de faire des lectures
+seules. Aucun récepteur public n'a été contacté pendant la qualification.
+
+Les nouveaux rapports contiennent `identity`, dérivée de la configuration
+canonique du monitor. Calculer le champ attendu depuis la configuration locale
+revue, via `monitorIdentity(configuration)` exportée par `finality-monitor.mjs` ;
+ne pas apprendre cette identité depuis un nœud distant. Configuration de livraison :
+
+```json
+{
+  "monitorIdentity": "REMPLACER_PAR_64_CHIFFRES_HEXA_DE_L_IDENTITE_REVUE",
+  "url": "https://RECEPTEUR_EXPLICITEMENT_CONFIGURE/alerts",
+  "timeoutMs": 5000,
+  "maximumResponseBytes": 4096,
+  "maximumPending": 64
+}
+```
+
+HTTPS est requis, sauf HTTP vers 127.0.0.1 pour les tests. Pas de redirection,
+ni identifiant/mot de passe dans l'URL. Ces valeurs sont des paramètres
+d'exploitation à revoir, pas des limites du registre des validateurs.
+
+Avec `umask 077`, conserver la sortie JSON du monitor dans un fichier privé
+et ne l'envoyer au consommateur que si le monitor a terminé avec code 0 ou 2.
+Un code 1 représente une erreur d'outil/état, pas un rapport valide. Publier
+le fichier par renommage pour éviter une lecture concurrente partielle.
+
+```sh
+node scripts/operations/alert-delivery.mjs delivery.json report.json queue.json
+node scripts/operations/alert-delivery.mjs delivery.json --drain queue.json
+```
+
+L'état de supervision et la file utilisent écriture temporaire exclusive,
+fsync du fichier, renommage atomique et fsync du répertoire. Une alerte est
+persistée avant le POST, retirée après une réponse HTTP 2xx et un commit durable.
+Un échec conserve le message. Le code 2 indique une livraison échouée, le code 1
+une erreur locale/configuration, le code 0 une file livrée ou silencieuse.
+Le drain reprend les messages existants sans créer d'observation fictive ;
+il permet de libérer une file pleine. Une file saturée refuse le nouvel événement
+sans supprimer les anciens : surveiller également ces erreurs locales.
+
+Le corps et l'en-tête `Idempotency-Key` portent le même `eventId`. Une interruption
+après acceptation et avant commit local peut répéter le POST avec ce même identifiant.
+Le récepteur doit dédupliquer durablement cet identifiant ; il ne s'agit pas d'une
+garantie universelle d'exécution exactement une fois. Un 2xx est l'accusé de réception
+convenu, pas une preuve que l'opérateur a lu la notification. La reprise garde l'ordre
+des événements. Une panne persistante n'est pas effacée ; le retour à une santé sans
+faute produit un événement distinct. Le progrès normal et les observations identiques
+ne génèrent pas de spam. Les fautes de sécurité verrouillées restent verrouillées.
+
+Conserver file et configuration privées et leur sauvegarde cohérente. Un SIGKILL
+peut laisser le verrou : confirmer l'absence de l'ancien processus avant retrait,
+sans effacer la file ni l'état de sécurité. Changement d'identité/configuration ou
+corruption : refus, migration explicite après analyse. Ce mécanisme ne provisionne
+ni service d'alertes, ni authentification/mTLS du récepteur, ni minuteur d'exploitation.
+La perte physique d'alimentation et le parcours depuis un daemon Nano en panne
+jusqu'à un récepteur d'exploitation réel restent à qualifier.
