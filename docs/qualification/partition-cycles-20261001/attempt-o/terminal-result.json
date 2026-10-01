@@ -1,0 +1,181 @@
+{
+  "terminal": true,
+  "exitCode": 1,
+  "runtimeRevision": "9513ee9f9f0aabc1a331e457e5437b867b793fb9",
+  "harnessRevision": "eb3cf649de2fc5647201111da5d1385e9cfd2f8c",
+  "firstCycleQualified": true,
+  "secondCycleQualified": false,
+  "networkQualified": false,
+  "productionQualified": false,
+  "firstRecovery": {
+    "time": 1790850987100,
+    "event": "partition-recovery-bound",
+    "checkpoint": {
+      "epoch": "7",
+      "root": "0x2145bec8e3fbf8d6d01cb949a1b1324d7d8700168e7a9e3c13f1094ba5ae3d09"
+    },
+    "recoveryElapsedMs": 139500.76870900003,
+    "recoveryLimitMs": 180000,
+    "completeReadElapsedMs": 1721.2960000000312,
+    "cycle": 1
+  },
+  "deadlineFailure": {
+    "time": 1790851366419,
+    "event": "partition-recovery-deadline-missed",
+    "message": "Partition recovery deadline exceeded",
+    "recoveryObservation": {
+      "window": "partition-recovery-bound",
+      "recoveryElapsedMs": 180001.60575,
+      "recoveryLimitMs": 180000,
+      "deadlineExceededByMs": 1.6057499999878928,
+      "lastRead": {
+        "completeReadElapsedMs": 3043.5157500000205,
+        "recoveryElapsedMs": 179243.46733300004,
+        "checkpoint": {
+          "epoch": "7",
+          "root": "0x2145bec8e3fbf8d6d01cb949a1b1324d7d8700168e7a9e3c13f1094ba5ae3d09"
+        },
+        "advancedCommonFinality": false
+      }
+    }
+  },
+  "lateRecovery": {
+    "time": 1790851368360,
+    "event": "late-partition-recovery-bound",
+    "checkpoint": {
+      "epoch": "15",
+      "root": "0xd029541173eacba2bdc5bcff0440956e4ef5aeb298085654c2684088b2a6afa0"
+    },
+    "recoveryElapsedMs": 1940.812707999954,
+    "recoveryLimitMs": 180000,
+    "completeReadElapsedMs": 1940.8115409999155,
+    "cycle": 2
+  },
+  "lateWindowIsOriginalRecovery": false,
+  "stability": {
+    "epochs": 3,
+    "firstEpoch": "15",
+    "lastEpoch": "18",
+    "elapsedMs": 141746,
+    "nodes": [
+      "mac-native",
+      "mac-docker",
+      "vps-docker"
+    ],
+    "revision": "9513ee9f9f0aabc1a331e457e5437b867b793fb9"
+  },
+  "receipts": [
+    {
+      "file": "native.log",
+      "clockHealthy": true,
+      "validator": {
+        "attestationsAdmitted": 418,
+        "awaitingRegistration": 0,
+        "dutyTrace": [],
+        "dutyTraceFailures": 0,
+        "failure": null,
+        "healthy": true,
+        "localKeys": 22,
+        "proposalsAdmitted": 54,
+        "staleDutyRetries": 0,
+        "syncMessagesAdmitted": 2503,
+        "timing": {
+          "awaitingSlotBlock": 1533,
+          "maxPollMs": 1152,
+          "maxProposalMs": 830,
+          "polls": 7399,
+          "pollsOverSlot": 0,
+          "proposalAttempts": 54,
+          "proposalsUnavailable": 0,
+          "slotBoundaryExits": 20
+        }
+      },
+      "finalized": {
+        "epoch": "0x12",
+        "root": "0xcab90c3d4c88b935d667553907edf17970b2a9bcbf00e53ce0d4cb00ddd2407a"
+      },
+      "restart": {
+        "digest": "0xb4df5460e52ba96973ad48d21e945455a519c09c04771e2513cb9e8f680855ae",
+        "sequence": "0x5d3"
+      }
+    },
+    {
+      "file": "docker-mac.log",
+      "clockHealthy": true,
+      "validator": {
+        "attestationsAdmitted": 399,
+        "awaitingRegistration": 0,
+        "dutyTrace": [],
+        "dutyTraceFailures": 0,
+        "failure": null,
+        "healthy": true,
+        "localKeys": 21,
+        "proposalsAdmitted": 45,
+        "staleDutyRetries": 0,
+        "syncMessagesAdmitted": 1590,
+        "timing": {
+          "awaitingSlotBlock": 1709,
+          "maxPollMs": 865,
+          "maxProposalMs": 749,
+          "polls": 7471,
+          "pollsOverSlot": 0,
+          "proposalAttempts": 45,
+          "proposalsUnavailable": 0,
+          "slotBoundaryExits": 29
+        }
+      },
+      "finalized": {
+        "epoch": "0x12",
+        "root": "0xcab90c3d4c88b935d667553907edf17970b2a9bcbf00e53ce0d4cb00ddd2407a"
+      },
+      "restart": {
+        "digest": "0xe9b9722b97a2260d3bebb52bf4f0c3f22a4d55e10e5c86b0deb191703d347733",
+        "sequence": "0x5dc"
+      }
+    },
+    {
+      "file": "vps.log",
+      "clockHealthy": true,
+      "validator": {
+        "attestationsAdmitted": 397,
+        "awaitingRegistration": 0,
+        "dutyTrace": [],
+        "dutyTraceFailures": 0,
+        "failure": null,
+        "healthy": true,
+        "localKeys": 21,
+        "proposalsAdmitted": 55,
+        "staleDutyRetries": 0,
+        "syncMessagesAdmitted": 1529,
+        "timing": {
+          "awaitingSlotBlock": 840,
+          "maxPollMs": 4561,
+          "maxProposalMs": 2902,
+          "polls": 5225,
+          "pollsOverSlot": 0,
+          "proposalAttempts": 55,
+          "proposalsUnavailable": 0,
+          "slotBoundaryExits": 39
+        }
+      },
+      "finalized": {
+        "epoch": "0x12",
+        "root": "0xcab90c3d4c88b935d667553907edf17970b2a9bcbf00e53ce0d4cb00ddd2407a"
+      },
+      "restart": {
+        "digest": "0x09a9674d37669651eea4198ec09c18dff60c4b859e2fc277dcbd0127136fbba6",
+        "sequence": "0x5d7"
+      }
+    }
+  ],
+  "candidateManifest": "../../capella-attestation-portable-images-20261001/manifest.json",
+  "candidateManifestSha256": "efc4b2ea76126a98eb507aac1fa13a9fd5e8d69d49a93f3deec659ccc5b937d3",
+  "syntheticKeys": 64,
+  "physicalHosts": 2,
+  "processes": 3,
+  "profile": {
+    "secondsPerSlot": 6,
+    "slotsPerEpoch": 8
+  },
+  "networkTrace": false
+}
