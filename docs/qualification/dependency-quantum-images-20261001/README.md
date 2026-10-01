@@ -1,0 +1,5 @@
+# Dependency quantum runtime candidates — 1 October 2026
+
+Source 9859768 is recorded only after Nano and nano-p2p targets succeeded in each existing Docker build volume. Core executables retain previous hashes; the P2P executables changed for dependency-aware fairness. Candidate images reuse the existing reviewed ARM64/amd64 runtime bases, verify exact binary hashes, dynamic dependencies and --help, and retain user 10001:10001. Post-assembly image identity and binary hashes were independently inspected. Native P2P compiled from the same source; native core sources and hash remain equivalent to 5165e51.
+
+No chain data or private keys were packaged. No dependency fetch or full image compilation. This is artifact preparation and integrity evidence, not WAN recovery or production qualification. Next finite campaign reuses the corrected strict-deadline harness and unchanged 96/192-second cut schedule and 180-second recovery budget. All original production criteria remain open unless separately evidenced.
