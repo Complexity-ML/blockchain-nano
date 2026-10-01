@@ -5136,3 +5136,19 @@ T reste un échec. Rejeux canoniques arrêtés T : Mac 78 blocs / 216556 octets,
 VPS 36 / 96407, une transaction chacun, checkpoints externes exacts.
 Pas de rejeu des votes hors bloc ni de qualification du fork choice historique.
 [Preuves et limites](qualification/capella-http-queue-20261001/native-clock-latch/README.md).
+
+
+### 2026-10-01 — correction horloge/HTTP qualifiée sur les deux architectures
+
+Source compilée `74784c499cc904eba1d766933bc2017d3e2be9a0`. Le cas
+de contention forcée passe sur Docker ARM64 (8,00 s) et AMD64 (26,93 s) :
+Beacon et identité publique répondent avant libération du verrou d’admission,
+pendant que poll et requête privée attendent. Fenêtres 500 ms inchangées.
+Quatre diagnostics d’horloge et expiration de file passent aussi sur les deux
+plateformes. Une image candidate par architecture, utilisateur 10001:10001,
+révision et empreintes des deux binaires vérifiées. P2P réutilisé par égalité
+des sources network/third_party et de son empreinte antérieure.
+Le premier échec AMD64 et les échecs WAN S/T restent conservés. Aucun gain
+de reprise WAN ni état production n’est encore démontré par ces tests.
+[Preuves ARM64](qualification/capella-http-queue-20261001/arm64-clock-latch/README.md)
+et [AMD64](qualification/capella-http-queue-20261001/amd64-clock-latch/README.md).
