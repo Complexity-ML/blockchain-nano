@@ -1,0 +1,139 @@
+{
+  "exitCode": 1,
+  "runtimeRevision": "b76cc1d3ccf4f074fbc0df3d0834743e177c2cd9",
+  "harnessRevision": "6e37b20637f041304ebe77de6e27d88d60fffaef",
+  "cycles": [
+    {
+      "cycle": 1,
+      "requestedCutMs": 96000,
+      "actualCutWallMs": 97518,
+      "strictRecoveryPassed": true,
+      "acceptedMonotonicRecoveryMs": 135741.556667,
+      "lateCommonFinalityReadWallMs": null,
+      "nominalLimitMs": 180000
+    },
+    {
+      "cycle": 2,
+      "requestedCutMs": 192000,
+      "actualCutWallMs": 194040,
+      "strictRecoveryPassed": false,
+      "acceptedMonotonicRecoveryMs": null,
+      "lateCommonFinalityReadWallMs": 183474,
+      "nominalLimitMs": 180000
+    }
+  ],
+  "recoveryMilestonesCycle2": {
+    "firstCommonHead": {
+      "wallMsAfterReconnect": 81246,
+      "headSlots": [
+        "118",
+        "118",
+        "118"
+      ],
+      "justified": [
+        "8",
+        "8",
+        "8"
+      ],
+      "finalized": [
+        "7",
+        "7",
+        "7"
+      ]
+    },
+    "firstNewCommonJustification": {
+      "wallMsAfterReconnect": 133978,
+      "headSlots": [
+        "128",
+        "128",
+        "128"
+      ],
+      "justified": [
+        "15",
+        "15",
+        "15"
+      ],
+      "finalized": [
+        "7",
+        "7",
+        "7"
+      ]
+    },
+    "firstNewCommonFinalityRead": {
+      "wallMsAfterReconnect": 181780,
+      "headSlots": [
+        "136",
+        "136",
+        "136"
+      ],
+      "justified": [
+        "16",
+        "16",
+        "16"
+      ],
+      "finalized": [
+        "15",
+        "15",
+        "15"
+      ]
+    }
+  },
+  "milestoneMeasurement": "Completed serial observation event wall timestamps; exact physical finalization instant unknown. Late observer elapsed is a separate budget.",
+  "lateStableFinalityPassed": true,
+  "stable": {
+    "epochs": 3,
+    "firstEpoch": "15",
+    "lastEpoch": "18",
+    "elapsedMs": 145204,
+    "nodes": [
+      "mac-native",
+      "mac-docker",
+      "vps-docker"
+    ],
+    "revision": "b76cc1d3ccf4f074fbc0df3d0834743e177c2cd9"
+  },
+  "validators": [
+    {
+      "file": "native.log",
+      "clockHealthy": true,
+      "healthy": true,
+      "failure": null,
+      "attestationsAdmitted": 422,
+      "proposalsAdmitted": 49,
+      "syncMessagesAdmitted": 2151,
+      "finalized": {
+        "epoch": "0x12",
+        "root": "0xc4f3a3653718635edecea4ca119330602f0389f7f78cea80cf6b45bdd7926063"
+      }
+    },
+    {
+      "file": "docker-mac.log",
+      "clockHealthy": true,
+      "healthy": true,
+      "failure": null,
+      "attestationsAdmitted": 396,
+      "proposalsAdmitted": 59,
+      "syncMessagesAdmitted": 1962,
+      "finalized": {
+        "epoch": "0x12",
+        "root": "0xc4f3a3653718635edecea4ca119330602f0389f7f78cea80cf6b45bdd7926063"
+      }
+    },
+    {
+      "file": "vps.log",
+      "clockHealthy": true,
+      "healthy": true,
+      "failure": null,
+      "attestationsAdmitted": 390,
+      "proposalsAdmitted": 52,
+      "syncMessagesAdmitted": 1561,
+      "finalized": {
+        "epoch": "0x12",
+        "root": "0xc4f3a3653718635edecea4ca119330602f0389f7f78cea80cf6b45bdd7926063"
+      }
+    }
+  ],
+  "validatorGatePassed": true,
+  "historicalClockCausesResolved": false,
+  "productionQualified": false
+}

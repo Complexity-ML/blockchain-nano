@@ -1,0 +1,7 @@
+# WAN H : délai strict non qualifié, stabilité et signataires sains
+
+Runtime `b76cc1d`, harnais `6e37b20`, trois processus sur deux hôtes et 64 clés synthétiques, Capella/Shanghai. Campagne terminée exit 1. Premier cycle : finalité commune acceptée en 135,742 s. Second cycle : la première observation complète d’une nouvelle finalité commune est enregistrée à 181,780 s après reconnexion (horloge murale des événements), hors seuil strict 180 s ; la lecture diagnostique tardive suivante est à 183,474 s. L’instant physique exact de finalisation reste inconnu. Le temps monotone de l’observateur tardif est son propre budget, pas celui de la reprise initiale.
+
+Stabilité tardive commune 15→18 réussie en 145,204 s. Les trois signataires et services d’horloge sont sains à l’arrêt, 422/396/390 attestations admises. Conteneurs arrêtés exit 0 sans OOM ; données/journaux/témoins conservés. L’arrêt d’horloge de G n’a pas été reproduit, sa cause reste inconnue, comme les causes WAN A/B.
+
+Chronologie du second cycle : première tête commune lue à 81,246 s (slot 118), première justification commune supérieure à 8 à 133,978 s (justifié 15, slot 128), puis finalité 15 au slot 136. Il s’agit des premières observations dans les échantillons, pas de l’instant physique des transitions. Ces étapes localisent le rattrapage et les frontières d’époque ; elles ne prouvent pas encore sa cause ni une correction. Aucun gain causal par comparaison de fixtures différentes, seuil relâché ou qualification production revendiqué.
