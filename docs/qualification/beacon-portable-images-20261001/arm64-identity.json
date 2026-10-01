@@ -1,0 +1,70 @@
+[
+    {
+        "Id": "sha256:685947325be6b5bce9d9123c1286b402eb1ff44d691d6948f69ff87d28e8f78e",
+        "RepoTags": [],
+        "RepoDigests": [],
+        "Comment": "buildkit.dockerfile.v0",
+        "Created": "2026-10-01T08:40:06.582788795Z",
+        "Config": {
+            "User": "10001:10001",
+            "ExposedPorts": {
+                "30303/tcp": {},
+                "8545/tcp": {}
+            },
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            ],
+            "Entrypoint": [
+                "/usr/local/bin/nano"
+            ],
+            "Cmd": [
+                "--help"
+            ],
+            "Volumes": {
+                "/var/lib/nano": {}
+            },
+            "WorkingDir": "/var/lib/nano",
+            "Labels": {
+                "org.nanobees.runtime-base-id": "sha256:c61ab5d3ab8783ce5cb709a674b34fb0401f10a17508b84c7a570dccb776a15a",
+                "org.nanobees.source-dirty": "true",
+                "org.opencontainers.image.revision": "4343023232424a584e79cad4f4879d052afdc977",
+                "org.opencontainers.image.version": "24.04"
+            },
+            "ArgsEscaped": true
+        },
+        "Architecture": "arm64",
+        "Os": "linux",
+        "Size": 361992304,
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:8edaba05454265cd17270d38ec146446c640d1d25637413c3da64a3eff296c36",
+                "sha256:e26bbb982487893c57878331c3433b2a0e075b082e1843976dbbc74c1e18d738",
+                "sha256:3217226c48b8db0dc9111021da05057ae51111bb9ba3323ba7a1dd6add7eb13b",
+                "sha256:b1010ca4156497040f418e40336755a9faf22fcd08926dca352aa6df194d2e88",
+                "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+                "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+                "sha256:4da58f6f3d65e517fff9a68e1eceef848bf0aa24a704f30fe8c5a9bee31e0815",
+                "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+                "sha256:ae217ffdc8604a7cd59e1d2103f40875c9ae9013713c12ebf95607b0574a08d1",
+                "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "2026-10-01T08:40:07.049752795Z"
+        },
+        "Descriptor": {
+            "mediaType": "application/vnd.oci.image.index.v1+json",
+            "digest": "sha256:685947325be6b5bce9d9123c1286b402eb1ff44d691d6948f69ff87d28e8f78e",
+            "size": 856
+        },
+        "Identity": {
+            "Build": [
+                {
+                    "Ref": "kx2xuzje633ynjl1qww3elp4b",
+                    "CreatedAt": "2026-10-01T08:40:07.135896545Z"
+                }
+            ]
+        }
+    }
+]

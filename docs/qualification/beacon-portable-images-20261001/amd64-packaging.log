@@ -1,0 +1,66 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from candidate.Dockerfile
+#1 transferring dockerfile: 926B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/nano-candidate-base:ee9d7d86a981d26bbe9a827bdbefc71335787d2d94d68dd27388cc1e1b9ad6c7
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/3] FROM docker.io/library/nano-candidate-base:ee9d7d86a981d26bbe9a827bdbefc71335787d2d94d68dd27388cc1e1b9ad6c7@sha256:ee9d7d86a981d26bbe9a827bdbefc71335787d2d94d68dd27388cc1e1b9ad6c7
+#4 resolve docker.io/library/nano-candidate-base:ee9d7d86a981d26bbe9a827bdbefc71335787d2d94d68dd27388cc1e1b9ad6c7@sha256:ee9d7d86a981d26bbe9a827bdbefc71335787d2d94d68dd27388cc1e1b9ad6c7 0.0s done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 32.34MB 0.3s done
+#5 DONE 0.3s
+
+#4 [1/3] FROM docker.io/library/nano-candidate-base:ee9d7d86a981d26bbe9a827bdbefc71335787d2d94d68dd27388cc1e1b9ad6c7@sha256:ee9d7d86a981d26bbe9a827bdbefc71335787d2d94d68dd27388cc1e1b9ad6c7
+#4 CACHED
+
+#6 [2/3] COPY nano nano-p2p /usr/local/bin/
+#6 DONE 0.1s
+
+#7 [3/3] RUN printf '%s  /usr/local/bin/nano\n%s  /usr/local/bin/nano-p2p\n' "02fb086fb8dfb40dbb222d3b21590595abbe09251223497f509c5179bbd7300a" "372f51e4063cccef735bb21554b9afc7dd427ac699d1a302ba712797e7901d74" | sha256sum -c -  && ldd /usr/local/bin/nano > /tmp/nano-candidate.libs  && ldd /usr/local/bin/nano-p2p >> /tmp/nano-candidate.libs  && ! grep -q 'not found' /tmp/nano-candidate.libs  && rm /tmp/nano-candidate.libs  && /usr/local/bin/nano --help
+#7 0.100 /usr/local/bin/nano: OK
+#7 0.145 /usr/local/bin/nano-p2p: OK
+#7 0.167 Nano local chain tools
+#7 0.167 Usage: nano <init|status|audit|mine|validate|import|serve|run> <genesis.json> <database-directory> [arguments]
+#7 0.167   wallet <create|import|address|sign-message|sign-transaction|sign-typed-data> <keyfile> [data]
+#7 0.167   wallet deployment-address <keyfile> [nonce]
+#7 0.167   wallet create-many <new-directory> [count] (default: 10)
+#7 0.167   wallet hd-create <mnemonic-file> [word-count]; wallet hd-derive <keyfile> [index]
+#7 0.167   rpc <URL> <info|nodes|network|balance|send|deploy|receipt|mine> [arguments]
+#7 0.167   rpc <URL> <stake-register|stake-add> <keyfile> <contract> <amountNano>
+#7 0.167   rpc <URL> stake-withdraw <keyfile> <contract>
+#7 0.167   rpc <URL> deploy <keyfile> <bytecode-file> [timeout] [valueNano]
+#7 0.167   validator <config.json> [--once] (separate client)
+#7 0.167   init/status: show canonical chain status
+#7 0.167   mine/validate: <coinbase> <timestamp> [signed-raw-transactions.json]
+#7 0.167   audit-capella <genesis.json> <existing-database-directory> <audit-request.json> (offline canonical replay)
+#7 0.167   beacon-journal init <identity.json> <new-database> <new-receipt-directory>
+#7 0.167   beacon-journal status <identity.json> <database> <expected-commitment.json>
+#7 0.167   beacon-journal export <identity.json> <database> <expected-commitment.json> <new-receipt-directory>
+#7 0.167   beacon-journal import <identity.json> <database> <expected-commitment.json> <interchange.json> <max-bytes> <new-receipt-directory>
+#7 0.167   migrate: <genesis.json> <python-chaindb-directory> <new-database-directory>
+#7 0.167   import: <block.json> <current-timestamp>
+#7 0.167   run: [node-config.json] (RPC and P2P together)
+#7 0.167   serve: [port] [bind-address] [wallet-config.json] (defaults: 8545, 127.0.0.1)
+#7 DONE 0.2s
+
+#8 exporting to image
+#8 exporting layers
+#8 exporting layers 1.4s done
+#8 exporting manifest sha256:820981534a4534caa735eed6c2a16997f04c817ed0b74f045c6cc163b56ed865 done
+#8 exporting config sha256:e7decfb449f74fc0dd0193172a16bad17500a6bb4b569036fd65106697e9f3ef done
+#8 exporting attestation manifest sha256:3bbf8b16bfddfbd3d702c5dc4211a2c9e7fbcb4166942b3735e2edfca06b4317 done
+#8 exporting manifest list sha256:e571a21ff744ac6b15200602853ba3f2332b17ca5045add03747e2c33c6433c3 done
+#8 naming to moby-dangling@sha256:e571a21ff744ac6b15200602853ba3f2332b17ca5045add03747e2c33c6433c3 done
+#8 unpacking to moby-dangling@sha256:e571a21ff744ac6b15200602853ba3f2332b17ca5045add03747e2c33c6433c3
+#8 unpacking to moby-dangling@sha256:e571a21ff744ac6b15200602853ba3f2332b17ca5045add03747e2c33c6433c3 0.2s done
+#8 DONE 1.6s
+sha256:e571a21ff744ac6b15200602853ba3f2332b17ca5045add03747e2c33c6433c3
