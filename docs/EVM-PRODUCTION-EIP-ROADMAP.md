@@ -2721,3 +2721,18 @@ Pas de full candidat encore réussi ni déploiement. Nouveau passage complet
 sur disque à lancer depuis checkout immuable, builders/volumes existants.
 Tous les critères initiaux, problèmes de charge et revue indépendante ouverts.
 [Rapport original terminal](qualification/full-regression-original-20261001/README.md).
+
+
+### 2026-10-01 — nouveau passage complet ARM64 et CI réellement actifs
+
+Après intégration/revue et publication main bef03980, Docker prepare du
+candidat immuable aacc56da est vivant : exec 62528, container
+nano-full-rpc-positional-client-20261001-prepare, scratch disque, volume et
+builder existants. Sources pertinentes identiques à main ; seule documentation
+diffère. Tous les targets compilés puis registre configuré entier contrôlé
+avant CTest, aucun résultat terminal candidat encore acquis. Logs Mac :
+/tmp/nano-full-candidate-arm64-20261001/prepare.log puis tests.log.
+CI GitHub 36908337763 sur bef03980 est in_progress ; aucun vert final déduit.
+VPS main récupéré par Git, service/image déployés inchangés. Rapport original
+400 terminal (314/86/0 skip), tous échecs et huit critères initiaux préservés.
+Production non qualifiée.
