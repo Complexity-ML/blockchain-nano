@@ -379,6 +379,19 @@ int main(){try{
  State state;std::string alice="0x"+std::string(40,'a'),bob="0x"+std::string(40,'b');state.get(alice).balance=100;auto initial=state.root();auto snap=state.snapshot();check(state.transfer(alice,bob,30),"transfer");state.set_storage(bob,0,123);state.revert(snap);check(state.root()==initial&&state.get(bob).balance==0,"snapshot restores all state");check(!state.transfer(alice,bob,101),"insufficient balance");rejects([&]{state.transfer(alice,bob,-1);},"negative transfer");
  check(create2_address("0x"+std::string(40,'0'),Bytes(32),keccak(Bytes{0}))=="0x4d1a2e2bb4f88f0250f26ffff098b0b30b26bf38","EIP1014 vector");
  EVM vm(state);ExecutionContext ctx;ctx.address=bob;ctx.code=unhex("0x600260030160005260206000f3");auto result=vm.execute(ctx);check(result.success&&integer(result.return_data)==5,"EVM add and return");check(result.gas_used==24,"EVM arithmetic gas");
+ // Exercise owned stack operands: subtraction wraps negative results, products
+ // exceed 256 bits, and DUP must preserve an independent original operand.
+ for(unsigned i=0;i<64;++i)for(uint8_t opcode:{uint8_t(0x03),uint8_t(0x02)}){
+  Int a=(Int(1)<<256)-1-i,b=(Int(1)<<255)+i;
+  ctx.code=concat(Bytes{0x7f},bytes(a,32));ctx.code=concat(ctx.code,Bytes{0x7f});ctx.code=concat(ctx.code,bytes(b,32));
+  ctx.code=concat(ctx.code,Bytes{opcode,0x80,0x01});ctx.code=concat(ctx.code,unhex("0x60005260206000f3"));
+  Int operand=opcode==0x03?Int(b-a):Int(a*b);Int expected=word(2*word(operand));result=vm.execute(ctx);
+  check(result.success&&integer(result.return_data)==expected,"owned EVM stack wraps and duplicates 256-bit operands");
+  check(result.gas_used==(opcode==0x03?30u:32u),"owned EVM stack preserves arithmetic gas");
+ }
+ ctx.code.clear();for(unsigned i=0;i<1024;++i)ctx.code=concat(ctx.code,Bytes{0x60,0x01});
+ check(vm.execute(ctx).success,"owned EVM stack accepts exactly 1024 operands");ctx.code.push_back(0x80);
+ result=vm.execute(ctx);check(!result.success&&result.error=="Stack overflow","owned EVM stack rejects the 1025th operand");
  ctx.code=unhex("0x602a60005560005460005260206000f3");result=vm.execute(ctx);check(result.success&&integer(result.return_data)==42&&state.get_storage(bob,0)==42,"EVM storage");
  auto before=state.root();ctx.code=unhex("0x600160005560006000fd");result=vm.execute(ctx);check(!result.success&&state.root()==before&&result.logs.empty(),"EVM revert rolls back storage");
  ctx.is_static=true;ctx.code=unhex("0x6001600055");check(!vm.execute(ctx).success&&state.root()==before,"EVM static rejects storage");ctx.is_static=false;

@@ -9,8 +9,10 @@ struct Frame {
  Bytes memory;
  explicit Frame(uint64_t budget):gas(budget){}
  void charge(uint64_t cost){if(cost>gas)throw std::runtime_error("Out of gas");gas-=cost;}
- void push(const Int& value){if(stack.size()>=1024)throw std::runtime_error("Stack overflow");stack.push_back(word(value));}
- Int pop(){if(stack.empty())throw std::runtime_error("Stack underflow");Int value=stack.back();stack.pop_back();return value;}
+ // Own the operand so normalization can reuse its GMP allocation. The same
+ // floor remainder handles negative and oversized operands modulo 2^256.
+ void push(Int value){if(stack.size()>=1024)throw std::runtime_error("Stack overflow");mpz_fdiv_r_2exp(value.get_mpz_t(),value.get_mpz_t(),256);stack.push_back(std::move(value));}
+ Int pop(){if(stack.empty())throw std::runtime_error("Stack underflow");Int value=std::move(stack.back());stack.pop_back();return value;}
  std::pair<size_t,size_t> region(const Int& start,const Int& size){
   if(size==0)return {0,0};
   // Compute the quadratic expansion price before converting offsets or allocating.
@@ -45,7 +47,7 @@ EvmTask EVM::run(const ExecutionContext& ctx, unsigned depth){
  if(ctx.revision<EvmRevision::Cancun&&((op>=0x5c&&op<=0x5e)||op==0x49||op==0x4a))throw std::runtime_error("Opcode unavailable in selected EVM revision");
  f.charge(opcode_gas(op));
  if(op>=0x60&&op<=0x7f){size_t n=op-0x5f;f.push(integer(slice(ctx.code,Int(pc+1),n)));pc+=n;continue;}
- if(op>=0x80&&op<=0x8f){size_t depth=op-0x7f;if(f.stack.size()<depth)throw std::runtime_error("Stack underflow");Int value=f.stack[f.stack.size()-depth];f.push(value);continue;}
+ if(op>=0x80&&op<=0x8f){size_t depth=op-0x7f;if(f.stack.size()<depth)throw std::runtime_error("Stack underflow");Int value=f.stack[f.stack.size()-depth];f.push(std::move(value));continue;}
  if(op>=0x90&&op<=0x9f){size_t depth=op-0x8f;if(f.stack.size()<=depth)throw std::runtime_error("Stack underflow");std::swap(f.stack.back(),f.stack[f.stack.size()-depth-1]);continue;}
  if(op>=0xa0&&op<=0xa4){if(ctx.is_static)throw std::runtime_error("LOG in static context");Int off=f.pop(),size=f.pop();Log log{ctx.address,{}, {}};for(unsigned i=0;i<unsigned(op-0xa0);++i)log.topics.push_back(bytes(f.pop(),32));log.data=f.read(off,size);f.charge(log.data.size()*8);result.logs.push_back(std::move(log));continue;}
  switch(static_cast<NanoOpCodes>(op)){
@@ -170,6 +172,7 @@ EvmTask EVM::run(const ExecutionContext& ctx, unsigned depth){
   std::optional<size_t> transfer_snap;if(!child.is_static)transfer_snap=mutable_state().snapshot();auto previous_addresses=warm_addresses_;auto previous_slots=warm_slots_;auto previous_deletions=pending_deletions_;auto previous_created=created_accounts_;auto previous_transient=transient_storage_;
   if(!delegate&&!callcode&&!static_call&&value!=0)mutable_state().transfer(ctx.address,target,value);
   f.charge(budget);warm_addresses_.insert(child.address);auto output=co_await run(child,depth+1);
+  result.max_call_depth=std::max(result.max_call_depth,1+output.max_call_depth);
   f.gas+=child.gas-output.gas_used;last_return=output.return_data;
   if(output.success){if(transfer_snap)mutable_state().commit(*transfer_snap);result.logs.insert(result.logs.end(),output.logs.begin(),output.logs.end());result.gas_refund+=output.gas_refund;}
   else{if(transfer_snap)mutable_state().revert(*transfer_snap);warm_addresses_=std::move(previous_addresses);warm_slots_=std::move(previous_slots);pending_deletions_=std::move(previous_deletions);created_accounts_=std::move(previous_created);transient_storage_=std::move(previous_transient);}
@@ -192,6 +195,7 @@ EvmTask EVM::run(const ExecutionContext& ctx, unsigned depth){
   created_accounts_.insert(address(target));mutable_state().get(target).nonce=1;mutable_state().transfer(ctx.address,target,value);
   ExecutionContext child=ctx;child.address=target;child.caller=ctx.address;child.value=value;child.data.clear();child.code=init;child.code_address=target;child.gas=f.gas-f.gas/64;
   warm_addresses_.insert(target);auto output=co_await run(child,depth+1);f.charge(output.gas_used);last_return=output.return_data;
+  result.max_call_depth=std::max(result.max_call_depth,1+output.max_call_depth);
   uint64_t deposit=output.return_data.size()*200;
   if(output.success&&(output.return_data.size()>24576||deposit>child.gas-output.gas_used||((ctx.revision==EvmRevision::Paris||ctx.revision>=EvmRevision::Shanghai)&&!output.return_data.empty()&&output.return_data[0]==0xef))){
    // Code deposit belongs to the child budget; preserve the parent's 1/64 reserve.

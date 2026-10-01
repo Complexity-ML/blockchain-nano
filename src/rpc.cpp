@@ -509,10 +509,24 @@ std::function<Json()> Rpc::prepare_simulation(const std::string& method,const Js
   }
   // Try a headroom candidate, but never exceed the caller/balance/block cap.
   // Use arbitrary-precision arithmetic before converting back to uint64.
-  Int optimistic=(Int(std::to_string(result.gas_used))+2300)*64/63;
+  Int optimistic=Int(std::to_string(result.gas_used))+2300;
+  // One forwarding allowance per observed CALL/CREATE layer avoids starting
+  // far below nested EIP-150 headroom. This is only a probe: successful
+  // execution, caller/balance/block cap and the same binary fallback govern it.
+  for(unsigned level=0;level<std::max(1u,result.max_call_depth)&&optimistic<Int(std::to_string(high));++level)optimistic=(optimistic*64+62)/63;
   if(optimistic>Int(std::to_string(low))&&optimistic<Int(std::to_string(high))){
    auto gas=u64(optimistic);auto trial=simulate(*state,b->header,chain_id,p[0],gas,ancestors,revision,checkpoint);
-   if(trial.success)high=gas;else low=gas;
+   if(trial.success){
+    high=gas;
+    // With several forwarding layers the successful depth allowance often
+    // lies close to the required budget. Tighten once near that upper bound,
+    // then retain the ordinary binary fallback and verified-success invariant.
+    if(result.max_call_depth>1&&high-low>1&&Int(std::to_string(high-low))*1000>Int(std::to_string(high))*15){
+     auto near=high-std::max(uint64_t(1),(high-low)/4);
+     auto verified=simulate(*state,b->header,chain_id,p[0],near,ancestors,revision,checkpoint);
+     if(verified.success)high=near;else low=near;
+    }
+   }else low=gas;
   }
   // Stop with a verified successful upper bound once the search interval is
   // within 1.5% of the quote. An RPC estimate need not be the exact minimum.
