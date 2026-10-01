@@ -1,0 +1,67 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from candidate.Dockerfile
+#1 transferring dockerfile: 926B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/nano-candidate-base:c61ab5d3ab8783ce5cb709a674b34fb0401f10a17508b84c7a570dccb776a15a
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/3] FROM docker.io/library/nano-candidate-base:c61ab5d3ab8783ce5cb709a674b34fb0401f10a17508b84c7a570dccb776a15a@sha256:c61ab5d3ab8783ce5cb709a674b34fb0401f10a17508b84c7a570dccb776a15a
+#4 resolve docker.io/library/nano-candidate-base:c61ab5d3ab8783ce5cb709a674b34fb0401f10a17508b84c7a570dccb776a15a@sha256:c61ab5d3ab8783ce5cb709a674b34fb0401f10a17508b84c7a570dccb776a15a done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 31.63MB 0.2s done
+#5 DONE 0.2s
+
+#4 [1/3] FROM docker.io/library/nano-candidate-base:c61ab5d3ab8783ce5cb709a674b34fb0401f10a17508b84c7a570dccb776a15a@sha256:c61ab5d3ab8783ce5cb709a674b34fb0401f10a17508b84c7a570dccb776a15a
+#4 CACHED
+
+#6 [2/3] COPY nano nano-p2p /usr/local/bin/
+#6 DONE 0.0s
+
+#7 [3/3] RUN printf '%s  /usr/local/bin/nano\n%s  /usr/local/bin/nano-p2p\n' "02cdf8e1d2d3471203bc477664db93718fc646475fe61a4a3e113150d180b429" "6d46deb4abd6ec4a5efb3841e36c7ce36afc2ff01f2f988e662d6608f8a79746" | sha256sum -c -  && ldd /usr/local/bin/nano > /tmp/nano-candidate.libs  && ldd /usr/local/bin/nano-p2p >> /tmp/nano-candidate.libs  && ! grep -q 'not found' /tmp/nano-candidate.libs  && rm /tmp/nano-candidate.libs  && /usr/local/bin/nano --help
+#7 0.034 /usr/local/bin/nano: OK
+#7 0.041 /usr/local/bin/nano-p2p: OK
+#7 0.057 Nano local chain tools
+#7 0.057 Usage: nano <init|status|audit|mine|validate|import|serve|run> <genesis.json> <database-directory> [arguments]
+#7 0.057   wallet <create|import|address|sign-message|sign-transaction|sign-typed-data> <keyfile> [data]
+#7 0.057   wallet deployment-address <keyfile> [nonce]
+#7 0.057   wallet create-many <new-directory> [count] (default: 10)
+#7 0.057   wallet hd-create <mnemonic-file> [word-count]; wallet hd-derive <keyfile> [index]
+#7 0.057   rpc <URL> <info|nodes|network|balance|send|deploy|receipt|mine> [arguments]
+#7 0.057   rpc <URL> <stake-register|stake-add> <keyfile> <contract> <amountNano>
+#7 0.057   rpc <URL> stake-withdraw <keyfile> <contract>
+#7 0.057   rpc <URL> deploy <keyfile> <bytecode-file> [timeout] [valueNano]
+#7 0.057   validator <config.json> [--once] (separate client)
+#7 0.057   init/status: show canonical chain status
+#7 0.057   mine/validate: <coinbase> <timestamp> [signed-raw-transactions.json]
+#7 0.057   audit-capella <genesis.json> <existing-database-directory> <audit-request.json> (offline canonical replay)
+#7 0.057   beacon-journal init <identity.json> <new-database> <new-receipt-directory>
+#7 0.057   beacon-journal status <identity.json> <database> <expected-commitment.json>
+#7 0.057   beacon-journal export <identity.json> <database> <expected-commitment.json> <new-receipt-directory>
+#7 0.057   beacon-journal import <identity.json> <database> <expected-commitment.json> <interchange.json> <max-bytes> <new-receipt-directory>
+#7 0.057   migrate: <genesis.json> <python-chaindb-directory> <new-database-directory>
+#7 0.057   import: <block.json> <current-timestamp>
+#7 0.057   run: [node-config.json] (RPC and P2P together)
+#7 0.057   serve: [port] [bind-address] [wallet-config.json] (defaults: 8545, 127.0.0.1)
+#7 DONE 0.1s
+
+#8 exporting to image
+#8 exporting layers
+#8 exporting layers 0.4s done
+#8 exporting manifest sha256:afad654cdfced6c0113671f8fdb302535ebbc823fc00a85c6c5f478e56f6fbbf done
+#8 exporting config sha256:c7d55a8314670f6c8dc955237c93bda5e5bc472f291383508695dd46132df73f done
+#8 exporting attestation manifest sha256:824b5e9561c791982b3f3c13d5773ef06ed5d3b8299a1937bb225dee0ddb3421 done
+#8 exporting manifest list sha256:ce3cabd0fa6af0d62111f15f4f226ee1b95fbfa6bb23a45d3e19f8ed99d5b1e6 done
+#8 naming to moby-dangling@sha256:ce3cabd0fa6af0d62111f15f4f226ee1b95fbfa6bb23a45d3e19f8ed99d5b1e6 done
+#8 unpacking to moby-dangling@sha256:ce3cabd0fa6af0d62111f15f4f226ee1b95fbfa6bb23a45d3e19f8ed99d5b1e6 0.1s done
+#8 DONE 0.5s
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/vcjz2pyl8p8mci0na05lxr74e
+sha256:ce3cabd0fa6af0d62111f15f4f226ee1b95fbfa6bb23a45d3e19f8ed99d5b1e6
