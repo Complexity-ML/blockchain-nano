@@ -1,0 +1,21 @@
+{
+  "tests": [
+    "bft_restart_flood_paris_network",
+    "bft_restart_flood_shanghai_network",
+    "rpc",
+    "rpc_foreign_chain_admission_isolation"
+  ],
+  "failures": 0,
+  "skips": 0,
+  "admissionProof": {
+    "canonicalStateUnchanged": true,
+    "foreignNestedRejectedBeforeDecode": 128,
+    "foreignRejected": 512,
+    "healthyAdmissionPreserved": true,
+    "localHighSRejectedWithinBudget": 63,
+    "localNestedRejectedWithinBudget": 64,
+    "localSignatureBudgetBounded": true,
+    "refillVerified": true
+  },
+  "scope": "ARM64 bounded local RPC and legacy BFT Paris/Shanghai; not Beacon WAN or full production"
+}

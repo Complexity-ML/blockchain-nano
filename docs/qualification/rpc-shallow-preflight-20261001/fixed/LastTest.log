@@ -1,0 +1,92 @@
+Start testing: Oct 01 18:12 UTC
+----------------------------------------------------------
+5/416 Testing: rpc
+5/416 Test: rpc
+Command: "/build/rpc-positional-client-20261001/nano-rpc-tests"
+Directory: /work
+"rpc" start time: Oct 01 18:12 UTC
+Output:
+----------------------------------------------------------
+993 RPC checks passed
+<end of output>
+Test time =   1.27 sec
+----------------------------------------------------------
+Test Passed.
+"rpc" end time: Oct 01 18:12 UTC
+"rpc" time elapsed: 00:00:01
+----------------------------------------------------------
+
+6/416 Testing: rpc_foreign_chain_admission_isolation
+6/416 Test: rpc_foreign_chain_admission_isolation
+Command: "/build/rpc-positional-client-20261001/nano-rpc-foreign-admission-tests"
+Directory: /build/rpc-positional-client-20261001
+"rpc_foreign_chain_admission_isolation" start time: Oct 01 18:12 UTC
+Output:
+----------------------------------------------------------
+{"canonicalStateUnchanged":true,"foreignNestedRejectedBeforeDecode":128,"foreignRejected":512,"healthyAdmissionPreserved":true,"localHighSRejectedWithinBudget":63,"localNestedRejectedWithinBudget":64,"localSignatureBudgetBounded":true,"refillVerified":true}
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"rpc_foreign_chain_admission_isolation" end time: Oct 01 18:12 UTC
+"rpc_foreign_chain_admission_isolation" time elapsed: 00:00:00
+----------------------------------------------------------
+
+37/416 Testing: bft_restart_flood_paris_network
+37/416 Test: bft_restart_flood_paris_network
+Command: "/build/rpc-positional-client-20261001/nano-bft-network-tests" "/build/rpc-positional-client-20261001/nano" "/build/network/nano-p2p" "--restart-flood"
+Directory: /build/rpc-positional-client-20261001
+"bft_restart_flood_paris_network" start time: Oct 01 18:12 UTC
+Output:
+----------------------------------------------------------
+Two isolated halves cannot finalize
+Restart reproduces exact reserved vote
+Restart reproduces exact reserved vote
+Restart reproduces exact reserved vote
+Restart reproduces exact reserved vote
+Four networked validators finalize a block
+Healthy transaction finalized on every validator under continuing flood
+{"crashTransportFailures":1,"foreignRejections":171664,"healthyReads":343330,"malformedBftRejections":171666,"unexpectedResponses":0}
+{"blockHash":"0x0aa83131faeed15bbe599d1f0bfacc6c135c6171ca4097da254b51f3f87e9a2e","fork":"Paris","heightVerified":"0x1","partitioned":true,"restarted":true,"stateRoot":"0x1ab8d5980ea655359de14effcb0d5adf5de051bfa94fe8bd2006bc567fd7eb04","validators":4}
+Distributed BFT proposal and vote exchange passed
+<end of output>
+Test time =  23.57 sec
+----------------------------------------------------------
+Test Passed.
+"bft_restart_flood_paris_network" end time: Oct 01 18:13 UTC
+"bft_restart_flood_paris_network" time elapsed: 00:00:23
+----------------------------------------------------------
+
+59/416 Testing: bft_restart_flood_shanghai_network
+59/416 Test: bft_restart_flood_shanghai_network
+Command: "/build/rpc-positional-client-20261001/nano-bft-network-tests" "/build/rpc-positional-client-20261001/nano" "/build/network/nano-p2p" "--restart-flood"
+Directory: /build/rpc-positional-client-20261001
+"bft_restart_flood_shanghai_network" start time: Oct 01 18:13 UTC
+Output:
+----------------------------------------------------------
+Two isolated halves cannot finalize
+Restart reproduces exact reserved vote
+Restart reproduces exact reserved vote
+Restart reproduces exact reserved vote
+Restart reproduces exact reserved vote
+Four networked validators finalize a block
+Healthy transaction finalized on every validator under continuing flood
+{"crashTransportFailures":2,"foreignRejections":156033,"healthyReads":312067,"malformedBftRejections":156036,"unexpectedResponses":0}
+{"blockHash":"0xf957f77ebd0c71f30e0942c62a4321a4122d90c05f14866aa4fbb0442ba788a5","fork":"Shanghai","heightVerified":"0x1","partitioned":true,"restarted":true,"stateRoot":"0x31bb395093cb322ce4027cb15b535ea410814a7f5d3a991f7dc8018ed2a1bf4b","validators":4}
+Distributed BFT proposal and vote exchange passed
+<end of output>
+Test time =  22.10 sec
+----------------------------------------------------------
+Test Passed.
+"bft_restart_flood_shanghai_network" end time: Oct 01 18:13 UTC
+"bft_restart_flood_shanghai_network" time elapsed: 00:00:22
+----------------------------------------------------------
+
+End testing: Oct 01 18:13 UTC
+
+qualification_bft_rpc_admission_local =  45.67 sec*proc
+
+qualification_evm =   1.27 sec*proc
+
+qualification_rpc_admission =   0.04 sec*proc
+

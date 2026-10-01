@@ -1,0 +1,61 @@
+[  0%] Built target gen_base.o
+[  0%] Built target gen_bint.o
+[  3%] Built target secp256k1_precomputed
+[  7%] Built target nano_blst
+[ 10%] Built target mcl_st
+[  7%] Built target secp256k1
+[ 10%] Built target nano_ckzg
+[ 10%] Building CXX object CMakeFiles/nano_core.dir/src/rpc.cpp.o
+[ 10%] Linking CXX static library libnano_core.a
+[100%] Built target nano_core
+[100%] Linking CXX executable nano
+[100%] Built target nano
+[  0%] Built target gen_base.o
+[  0%] Built target gen_bint.o
+[  3%] Built target secp256k1_precomputed
+[  6%] Built target nano_blst
+[ 10%] Built target mcl_st
+[ 10%] Built target secp256k1
+[ 10%] Built target nano_ckzg
+[ 96%] Built target nano_core
+[100%] Linking CXX executable nano-rpc-tests
+[100%] Built target nano-rpc-tests
+[  0%] Built target gen_base.o
+[  0%] Built target gen_bint.o
+[  6%] Built target nano_blst
+[  6%] Built target secp256k1_precomputed
+[  6%] Built target nano_ckzg
+[ 10%] Built target mcl_st
+[ 10%] Built target secp256k1
+[ 96%] Built target nano_core
+[100%] Linking CXX executable nano-rpc-foreign-admission-tests
+[100%] Built target nano-rpc-foreign-admission-tests
+[  0%] Built target gen_bint.o
+[  0%] Built target gen_base.o
+[  6%] Built target nano_blst
+[  6%] Built target secp256k1_precomputed
+[ 10%] Built target mcl_st
+[ 10%] Built target nano_ckzg
+[ 10%] Built target secp256k1
+[ 96%] Built target nano_core
+[ 96%] Linking CXX executable nano-bft-network-tests
+[100%] Built target nano-bft-network-tests
+Internal ctest changing into directory: /build/rpc-positional-client-20261001
+Test project /build/rpc-positional-client-20261001
+    Start  5: rpc
+1/4 Test  #5: rpc .....................................   Passed    1.27 sec
+    Start  6: rpc_foreign_chain_admission_isolation
+2/4 Test  #6: rpc_foreign_chain_admission_isolation ...   Passed    0.04 sec
+    Start 37: bft_restart_flood_paris_network
+3/4 Test #37: bft_restart_flood_paris_network .........   Passed   23.57 sec
+    Start 59: bft_restart_flood_shanghai_network
+4/4 Test #59: bft_restart_flood_shanghai_network ......   Passed   22.10 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+qualification_bft_rpc_admission_local    =  45.67 sec*proc (2 tests)
+qualification_evm                        =   1.27 sec*proc (1 test)
+qualification_rpc_admission              =   0.04 sec*proc (1 test)
+
+Total Test time (real) =  46.98 sec

@@ -2143,3 +2143,18 @@ ouverts. Git fetch/worktree puis compilation Docker AMD64 du même candidat
 lancés sur VPS, sans déploiement ; résultat terminal encore attendu.
 Sources main et binaires originaux de la campagne 400 gelés et préservés.
 [Preuves et échecs initiaux](qualification/rpc-admission-isolation-20261001/README.md).
+
+
+### 2026-10-01 — prélecture RPC sans parcours récursif avant budget
+
+Candidate isolée bf173958 : au plus quatorze en-têtes RLP inspectés ; chainId
+extrait sans descendre/copier les charges imbriquées. Le nouveau cas échoue
+avant correction, puis quatre tests ARM64 passent sans skip (46.98 s) : RPC,
+isolation étrangère, restart/charge legacy BFT Paris et Shanghai. 512 rejets
+étrangers, dont 128 imbriqués ; 63 high-s et 64 payloads imbriqués locaux
+restent contrôlés par le budget puis le décodeur canonique. ECDSA complet,
+quotas, délais, quorum et gas préservés. AMD64 de ce nouveau candidat encore
+à qualifier ; campagne originale et ses échecs conservés. Ce périmètre ne
+qualifie pas Beacon/WAN, gossip, charge arbitraire ou la production.
+Tous les critères initiaux et la revue indépendante restent ouverts.
+[Sources et preuves avant/après](qualification/rpc-shallow-preflight-20261001/README.md).
