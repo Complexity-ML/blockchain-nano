@@ -9,6 +9,7 @@ import {setTimeout as delay} from 'node:timers/promises';
 import {createHash} from 'node:crypto';
 import {validateStoppedValidators} from './validator-gate.mjs';
 import {partitionRemote} from './partition.mjs';
+import {fixtureStake,majorityIslandPolicy} from './majority-island.mjs';
 import {partitionSchedule,runPartitionCycles} from './partition-cycles.mjs';
 import {asymmetricRemote,createRemoteTc} from './asymmetric.mjs';
 import {observeRecovery} from './recovery-observation.mjs';
@@ -45,11 +46,13 @@ if(partition&&asymmetric)throw Error('Select only one WAN fault');
 const rotation=process.env.NANO_TEST_WAN_ROTATION==='1';
 const boundedLoad=process.env.NANO_TEST_BOUNDED_LOAD==='1';
 const partitionCuts=partitionSchedule(process.env.NANO_TEST_PARTITION_SCHEDULE_MS);
-const faultProgress=process.env.NANO_TEST_FAULT_PROGRESS==='1';
+const majorityIsland=process.env.NANO_TEST_MAJORITY_ISLAND==='1';
+const faultProgress=majorityIsland||process.env.NANO_TEST_FAULT_PROGRESS==='1';
 if(faultProgress&&(fork!=='capella'||!partition))throw Error('Fault progress diagnostics require Capella partition campaign');
 const backupRestore=process.env.NANO_TEST_BACKUP_RESTORE==='1';
 const pinnedRestart=process.env.NANO_TEST_PINNED_RESTART==='1';
 if(partitionCuts&&(!candidates||fork!=='capella'||!partition||asymmetric||rotation||boundedLoad||backupRestore||pinnedRestart||monitor))throw Error('Repeated partitions require standalone packaged Capella partition campaign');
+if(majorityIsland&&(!candidates||fork!=='capella'||!partition||asymmetric||rotation||boundedLoad||backupRestore||pinnedRestart||monitor||partitionCuts))throw Error('Majority island requires standalone packaged Capella partition campaign');
 if(pinnedRestart&&(!candidates||fork!=='capella'||monitor||backupRestore||partition||asymmetric||rotation||boundedLoad))throw Error('Pinned container replacement requires standalone packaged Capella images');
 if(backupRestore&&(fork!=='capella'||!buildVolume||partition||asymmetric||rotation||boundedLoad))throw Error('Backup restore requires standalone Capella build-volume campaign');
 if(boundedLoad&&(fork!=='capella'||asymmetric||rotation))throw Error('Bounded load requires Capella; asymmetric/rotation combinations are not qualified yet');
@@ -109,9 +112,9 @@ const rpc=async(kind,method,params=[])=>{
 try{
  const binary=join(repo,'build-release/nano'),p2p=join(repo,'build-network/nano-p2p');
  if(rotation)await log({event:'rotation-audit-binary',sha256:createHash('sha256').update(await readFile(join(repo,'build-release/nano-capella-rotation-audit'))).digest('hex')});
- const harness={};for(const name of ['run.mjs','partition.mjs','partition-cycles.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','fault-progress.mjs','prepare.mjs','rotation.mjs','bounded-load.mjs','load-receipts.mjs','restore-config.mjs','restore-recovery.mjs','backup-restore.sh','monitor.mjs','candidate-images.mjs','restart-pins.mjs','http-response.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
+ const harness={};for(const name of ['run.mjs','majority-island.mjs','partition.mjs','partition-cycles.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','fault-progress.mjs','prepare.mjs','rotation.mjs','bounded-load.mjs','load-receipts.mjs','restore-config.mjs','restore-recovery.mjs','backup-restore.sh','monitor.mjs','candidate-images.mjs','restart-pins.mjs','http-response.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
  if(monitor&&(fork!=='capella'||!privateTransport||partition||asymmetric||backupRestore||rotation||boundedLoad))throw Error('Monitor qualification requires standalone private Capella campaign');
- await log({event:'harness',monitor,partition,asymmetric,rotation,boundedLoad,backupRestore,pinnedRestart,partitionCuts,faultProgress,fork,buildVolume,packagedImages:Boolean(candidates),artifacts,sha256:harness});
+ await log({event:'harness',monitor,partition,asymmetric,rotation,boundedLoad,backupRestore,pinnedRestart,partitionCuts,majorityIsland,faultProgress,fork,buildVolume,packagedImages:Boolean(candidates),artifacts,sha256:harness});
  await log({event:'binaries',revision,nanoSha256:createHash('sha256').update(await readFile(binary)).digest('hex'),p2pSha256:createHash('sha256').update(await readFile(p2p)).digest('hex')});
  const assets=join(output,'assets'),prepared=join(output,'prepared');
  await exec(join(repo,`build-release/nano-${fork}-transition-tests`),[fork==='capella'?'--export-network':'--export-kurtosis',assets],{timeout:30000});
@@ -134,13 +137,21 @@ try{
  }
  const boot=privateTransport?`/ip4/127.0.0.1/tcp/30307/p2p/${peer}`:`/ip4/${ip}/tcp/30307/p2p/${peer}`;
  for(const name of ['mac-native','mac-docker']){const path=join(prepared,name,'node.json'),c=await json(path);c.bootnodes=[privateTransport&&name==='mac-docker'?`/dns4/host.docker.internal/tcp/30307/p2p/${peer}`:boot];await writeFile(path,JSON.stringify(c,null,2));}
- await docker(['run','--init',...descriptorArgs,...traceArgs,'-d','--name',local,'--label','nano.qualification=multihost','--label','org.opencontainers.image.revision='+revision,...artifactMount,'--memory','3g','--cpus','2','--mount',`type=bind,src=${join(prepared,'mac-docker')},dst=/config,readonly`,'--mount',`type=volume,src=${local}-data,dst=/var/lib/nano`,'--env-file',join(prepared,'mac-docker','fixture.env'),image,...runtimeCommand,'run','/config/genesis.json','/var/lib/nano/chain','/config/node.json']);localStarted=true;
+ await docker(['run','--init',...descriptorArgs,...(majorityIsland?['-p','127.0.0.1:30306:30303']:[]),...traceArgs,'-d','--name',local,'--label','nano.qualification=multihost','--label','org.opencontainers.image.revision='+revision,...artifactMount,'--memory','3g','--cpus','2','--mount',`type=bind,src=${join(prepared,'mac-docker')},dst=/config,readonly`,'--mount',`type=volume,src=${local}-data,dst=/var/lib/nano`,'--env-file',join(prepared,'mac-docker','fixture.env'),image,...runtimeCommand,'run','/config/genesis.json','/var/lib/nano/chain','/config/node.json']);localStarted=true;
+ if(majorityIsland){
+  let localPeer;
+  for(let i=0;i<30;i++){try{localPeer=(await rpc('local','nno_getNetworkInfo')).node?.peerId;if(localPeer)break;}catch{}await delay(1000);}
+  if(!localPeer||!/^[A-Za-z0-9]+$/.test(localPeer))throw Error('Majority Docker peer ID unavailable');
+  const path=join(prepared,'mac-native','node.json'),c=await json(path);
+  c.bootnodes.push(`/ip4/127.0.0.1/tcp/30306/p2p/${localPeer}`);await writeFile(path,JSON.stringify(c,null,2));
+  await log({event:'majority-direct-bootstrap',peerId:localPeer,address:c.bootnodes.at(-1)});
+ }
  const nd=join(prepared,'mac-native');await mkdir(join(nd,'data'));
  const environment=Object.fromEntries((await readFile(join(nd,'fixture.env'),'utf8')).trim().split('\n').map(line=>{const at=line.indexOf('=');return [line.slice(0,at),line.slice(at+1)];}));
  const fd=openSync(join(output,'native.log'),'a');native=spawn(binary,['run',join(nd,'genesis.json'),join(nd,'data/chain'),join(nd,'node.json')],{env:{...process.env,...environment},stdio:['ignore',fd,fd]});closeSync(fd);
  native.on('error',error=>log({event:'native-spawn-error',message:error.message}));
  await log({event:'started',nativePid:native.pid,localContainer:local,remoteContainer:remote,bootnode:boot,physicalHosts:2,validatorKeys:64});
- if(boundedLoad||partitionCuts)resourceTask=(async()=>{
+ if(boundedLoad||partitionCuts||majorityIsland)resourceTask=(async()=>{
   while(!resourceStop){
    const timeMs=Date.now();
    const probes=[['mac-native',async()=>(await exec('ps',['-p',String(native.pid),'-o','pid=,rss=,%cpu=,etime=,command='],{timeout:20000})).stdout],
@@ -182,10 +193,11 @@ try{
  const previousFinality=new Map();
  const faultSample=async()=>{
   const rows=await Promise.all(['native','local','remote'].map(async(kind,i)=>{
+   const info=majorityIsland?await rpc(kind,'nno_getNetworkInfo'):null;
    const peers=await rpc(kind,'net_peerCount');
    const cp=await request(kind,'/eth/v1/beacon/states/head/finality_checkpoints');
    const progress=faultProgress?await captureFaultProgress(path=>request(kind,path)):null;
-   return {name:observers.nodes[i].name,peers,checkpoint:cp.data.finalized,...(progress?{progress}:{})};
+   return {name:observers.nodes[i].name,peers,...(info?{peerId:info.node.peerId,connectedPeerIds:info.peers.connected.map(p=>p.peerId)}:{}),checkpoint:cp.data.finalized,...(progress?{progress}:{})};
   }));
   for(const row of rows){
    const epoch=BigInt(row.checkpoint.epoch),key=String(epoch),root=row.checkpoint.root;
@@ -303,12 +315,17 @@ try{
   ...(partition?{duringSubmit:submit=>partitionRemote({docker:args=>docker(args,true),container:remote,
    network:testNetwork,revision,record:faultRecord,sample:faultSample,duringCut:submit})}:{})});
  if(monitor)monitorTask=await startFinalityMonitor({repo,output,prepared,local,remote,target,record:log});
+ let islandPolicy;
+ if(majorityIsland){
+  const stake=fixtureStake({profileBytes:await readFile(join(prepared,'mac-native','profile.json')),initialBytes:await readFile(join(prepared,'mac-native','initial.json')),configuration:(await json(join(prepared,'mac-native','node.json'))).capella,manifest:await json(join(prepared,'manifest.json'))});
+  const rows=await faultSample();islandPolicy=majorityIslandPolicy({stake,peerIds:Object.fromEntries(rows.map(r=>[r.name,r.peerId])),record:log});
+ }
  await observeRecovery({record:log,partition:async()=>{
   if(partitionCuts){
    const result=await runPartitionCycles({cuts:partitionCuts,sample:faultSample,record:log,
     partition:({cutMs,sample,record})=>partitionRemote({docker:args=>docker(args,true),container:remote,network:testNetwork,revision,record,sample,cutMs})});
    await log({event:'partition-schedule-passed',...result});
-  }else if(partition&&!boundedLoad)await partitionRemote({docker:args=>docker(args,true),container:remote,network:testNetwork,revision,record:faultRecord,sample:faultSample});
+  }else if(partition&&!boundedLoad)await partitionRemote({docker:args=>docker(args,true),container:remote,network:testNetwork,revision,record:faultRecord,sample:faultSample,...(majorityIsland?{cutMs:192000,policy:islandPolicy}:{})});
   if(asymmetric){
    const tc=await createRemoteTc({docker:args=>docker(args,true),sh,container:remote,network:testNetwork,revision});
    await asymmetricRemote({tc,sample:faultSample,record:log});

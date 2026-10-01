@@ -8,7 +8,7 @@ export class PartitionRecoveryDeadline extends Error {
 // Docker commands operate only on the fresh, labelled test container. No host
 // firewall changes; loopback RPC remains reachable via docker exec while cut.
 export async function partitionRemote({docker, container, network, revision, sample, record,
- clock=()=>performance.now(), wait=delay, cutMs=96000, recoveryMs=180000, duringCut}) {
+ clock=()=>performance.now(), wait=delay, cutMs=96000, recoveryMs=180000, duringCut, policy}) {
  if(!/^nano-qualification-vps-[a-z0-9]+$/.test(container)||network!==container+'-net')
   throw Error('Unexpected partition target');
  const inspect=async()=>JSON.parse(await docker(['inspect','--format','{{json .}}',container]));
@@ -34,6 +34,7 @@ export async function partitionRemote({docker, container, network, revision, sam
  const before=await read();
  if(!before.every(r=>r.checkpoint.epoch===before[0].checkpoint.epoch&&r.checkpoint.root===before[0].checkpoint.root))throw Error('Common checkpoint required before partition');
  const baseline=BigInt(before[0].checkpoint.epoch);
+ if(policy)await policy.before(before);
  let disconnected=false,reconnectedAt=null;
  try{
   // Mark before dispatch: an SSH response can be lost after Docker applied it.
@@ -51,9 +52,11 @@ export async function partitionRemote({docker, container, network, revision, sam
    if(!remote)throw Error('Missing isolated observer');
    if(BigInt(remote.peers)===0n)sawZeroPeers=true;
    else if(sawZeroPeers||clock()-start>=30000)throw Error('Isolated node still has peers');
+   if(policy)await policy.observe(rows);
    await wait(Math.max(0,Math.min(5000,cutMs-(clock()-start))));
   }
   if(!sawZeroPeers)throw Error('No zero-peer observation during partition');
+  if(policy)await policy.finish();
   };
   const tasks=[monitor()];
   if(duringCut)tasks.push(Promise.resolve().then(async()=>{
@@ -88,7 +91,7 @@ export async function partitionRemote({docker, container, network, revision, sam
   let lastRead=null;
   while(clock()<deadline){
    const readStart=clock(),rows=await read(),observedAt=clock(),first=rows[0].checkpoint;
-   const advancedCommonFinality=rows.every(r=>BigInt(r.peers)>0n&&r.checkpoint.epoch===first.epoch&&r.checkpoint.root===first.root)&&BigInt(first.epoch)>baseline;
+   const advancedCommonFinality=rows.every(r=>BigInt(r.peers)>0n&&r.checkpoint.epoch===first.epoch&&r.checkpoint.root===first.root)&&BigInt(first.epoch)>baseline&&(!policy||BigInt(first.epoch)>policy.recoveryFloor());
    // Includes sample validation and partition-observation logging, as does the
    // existing gate. Capture before any additional diagnostic logging.
    lastRead={completeReadElapsedMs:observedAt-readStart,recoveryElapsedMs:observedAt-start,checkpoint:first,advancedCommonFinality};

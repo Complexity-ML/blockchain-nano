@@ -1484,3 +1484,21 @@ bornés, vérification d'empreinte et rotation de diffusion du daemon P2P ajout�
 Le daemon compile. La propagation réelle Mac/VPS, HTTP, le retrait final et les
 pannes du parcours complet restent à démontrer ; aucun objectif clôturé.
 [Preuves et limites](qualification/capella-exit-wire-20260929/README.md).
+
+## 2026-10-01 — Nouveau scénario : majorité connectée pendant partition
+
+Banc ajouté, exécution WAN encore à qualifier : liaison directe privée entre
+Mac natif et Docker Mac, coupure VPS de 192 s. Le poids est lu dans les
+balances effectives SSZ de la fixture initiale liée par SHA-256 :
+1 376 000 000 000 / 2 048 000 000 000 gwei pour les deux Mac, strictement
+plus des deux tiers ; 672 000 000 000 pour le VPS. Le nombre de clés ne
+remplace pas la vérification du stake. La majorité doit finaliser au-delà
+des engagements reçus avant la coupure ; le VPS isolé ne doit pas dépasser
+ce plafond conservateur. Reconnexion : finalité commune plus récente que
+celle observée dans la majorité, budget strict inchangé de 180 s.
+
+47 tests du banc passent, dont 13 nouveaux cas de stake, faux positifs et
+restauration. Ce résultat ne qualifie pas encore la progression WAN majoritaire.
+Aucun changement de moteur, EIP, image ou seuil de consensus ; candidats
+418aceb réutilisés. Les échecs historiques et tous les autres critères de
+production restent ouverts. Voir `tests/multihost/README.md`.

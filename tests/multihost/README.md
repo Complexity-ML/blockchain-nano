@@ -193,3 +193,24 @@ un format invalide échoue explicitement. Quatre tests ciblés couvrent le head
 qui change, les réponses invalides et les erreurs de lecture/horloge.
 La tentative A sans ces relevés a dépassé son second délai ; la cause reste
 ouverte. Ce mode sert à distinguer rattrapage du head et attente de finalité.
+
+### Connected majority island (public Capella fixture only)
+
+Set `NANO_TEST_MAJORITY_ISLAND=1` with `NANO_TEST_WAN_PARTITION=1`,
+`NANO_TEST_CONSENSUS_PROFILE=capella` and the qualified packaged candidate manifest.
+This standalone finite campaign keeps Mac native and Mac Docker directly linked
+through loopback port 30306 while disconnecting only the dedicated VPS test
+network for 192 seconds. No runtime build is necessary for this harness change.
+
+The gate decodes effective balances of the 64 active, unslashed validators from
+hash-bound initial Capella SSZ and checks complete, non-overlapping ownership.
+It requires the Mac island to hold strictly more than two thirds of total stake.
+Both Mac peer IDs must remain reciprocally connected. Minority finality must
+not exceed a conservative pre-cut commitment ceiling, frozen at the first
+zero-peer observation; already received votes are allowed. Majority finality
+must advance beyond that ceiling while the cut is effective. Reconnection
+restores the original IP even on failure and must produce common finality newer
+than the cut's highest observed majority epoch within the unchanged 180-second
+budget. The standard stability, healthy signer and clock gates follow.
+This fixed-fixture decoder does not qualify arbitrary fork schemas, validator
+scales, asynchronous cross-chain bridges or production readiness.
