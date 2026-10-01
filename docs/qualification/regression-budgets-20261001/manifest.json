@@ -1,0 +1,48 @@
+{
+  "baselineRevision": "21a6b67",
+  "runtimeSourceChanged": false,
+  "dockerConfiguredTests": 400,
+  "dockerTestsWithoutTimeout": 0,
+  "nativeRegistrationsAbsentInDocker": [
+    "storage_sync_failure_paris",
+    "storage_sync_retry_paris",
+    "storage_sync_failure_shanghai",
+    "storage_sync_retry_shanghai",
+    "bft_signing_sync_paris",
+    "bft_signing_sync_shanghai",
+    "consensus_phase0_snapshot_sync_failure",
+    "consensus_fork_checkpoint_sync_failure",
+    "consensus_beacon_interchange_official",
+    "consensus_multihost_resource_summary",
+    "consensus_multihost_fault_harness",
+    "consensus_bellatrix_partition_sustained",
+    "consensus_bellatrix_crash_sustained",
+    "consensus_assertoor_stability_monitor",
+    "consensus_bellatrix_assertoor",
+    "consensus_bellatrix_assertoor_finality",
+    "consensus_bellatrix_assertoor_sustained",
+    "storage_execution_checkpoint_sync",
+    "storage_shanghai_checkpoint_sync",
+    "consensus_capella_execution_owner_sync",
+    "consensus_capella_execution_owner_witness",
+    "consensus_capella_pruning_sync"
+  ],
+  "boundedTestsFirstAttempt": {
+    "total": 15,
+    "pass": 14,
+    "fail": [
+      "rpc"
+    ]
+  },
+  "correctedRpc": {
+    "pass": 1,
+    "checks": 993,
+    "newChecks": 2,
+    "seconds": 0.58
+  },
+  "completeRegressionExecuted": false,
+  "sourceHashes": {
+    "CMakeLists.txt": "338b1452f83da880d028139f896c44c31ac5658838f4564e044893ecc4f3e926",
+    "tests/test_rpc.cpp": "a8605230210c7a99b1cc21d179d8dab1008ac16e605d3b5e241f1a8c8ef76f5d"
+  }
+}

@@ -134,3 +134,9 @@ selection, missing command file or missing explicit timeout. Invalid/duplicate
 registrations and CTest skip properties always fail. This is inventory evidence,
 not a runtime result or EEST/WAN qualification. See the
 [422-scenario inventory](qualification/regression-inventory-20261001/README.md).
+
+The 15 previously unbounded core registrations now have explicit CTest budgets.
+ARM64 Docker's configured registry has 400 names, all bounded; 22 native-only
+optional registrations remain separately required. The RPC helper was fixed
+to emit actual positional arrays, preserving strict runtime rejection of
+malformed parameters. [Qualification](qualification/regression-budgets-20261001/README.md).

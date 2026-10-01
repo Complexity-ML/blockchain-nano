@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="15"
+	failures="1"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="3"
+	timestamp="2026-10-01T17:04:17"
+	>
+	<testcase name="core" classname="core" time="0.298446" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_evm"/>
+		</properties>
+		<system-out>3483 checks passed
+</system-out>
+	</testcase>
+	<testcase name="chain" classname="chain" time="0.14118" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_evm"/>
+		</properties>
+		<system-out>185 chain checks passed
+</system-out>
+	</testcase>
+	<testcase name="rpc" classname="rpc" time="0.02247" status="fail">
+		<failure message="Failed"/>
+		<properties>
+			<property name="cmake_labels" value="qualification_evm"/>
+		</properties>
+		<system-out>{"error":{"code":-32602,"message":"Expected positional parameters"},"id":7,"jsonrpc":"2.0"}
+</system-out>
+	</testcase>
+	<testcase name="beacon_http_error_diagnostics" classname="beacon_http_error_diagnostics" time="2.11275" status="run">
+		<properties/>
+		<system-out>{"executionDeadlinePreserved":true,"phaseDiagnosticQualified":true,"privateExceptionRedacted":true,"queueCapacityReused":true,"scenario":"beacon-http-error-diagnostics"}
+</system-out>
+	</testcase>
+	<testcase name="bootstrap" classname="bootstrap" time="0.00307304" status="run">
+		<properties/>
+		<system-out>20 bootstrap discovery checks passed
+</system-out>
+	</testcase>
+	<testcase name="migration" classname="migration" time="0.032875" status="run">
+		<properties/>
+		<system-out>42 migration checks passed
+</system-out>
+	</testcase>
+	<testcase name="uncles" classname="uncles" time="0.0203175" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_evm"/>
+		</properties>
+		<system-out>30 uncle validation checks passed
+</system-out>
+	</testcase>
+	<testcase name="consensus_bellatrix_proposal_expiry" classname="consensus_bellatrix_proposal_expiry" time="0.203185" status="run">
+		<properties/>
+		<system-out>{"providerFailureFatal":true,"recoveredLoop":{"attestationsAdmitted":0,"dutyTraceFailures":0,"failure":null,"healthy":true,"localKeys":64,"proposalsAdmitted":1,"staleDutyRetries":0,"timing":{"maxPollMs":43,"maxProposalMs":36,"polls":2,"pollsOverSlot":0,"proposalAttempts":2,"proposalsUnavailable":0,"slotBoundaryExits":1}},"reopenedConflictRefused":true,"reservationRetained":true,"scenario":"proposal-expiry-loop"}
+</system-out>
+	</testcase>
+	<testcase name="consensus_bellatrix_randao_expiry" classname="consensus_bellatrix_randao_expiry" time="0.177394" status="run">
+		<properties/>
+		<system-out>{"providerFailureFatal":true,"recoveredLoop":{"attestationsAdmitted":0,"dutyTraceFailures":0,"failure":null,"healthy":true,"localKeys":64,"proposalsAdmitted":1,"staleDutyRetries":0,"timing":{"maxPollMs":41,"maxProposalMs":34,"polls":2,"pollsOverSlot":0,"proposalAttempts":2,"proposalsUnavailable":0,"slotBoundaryExits":1}},"reopenedConflictRefused":false,"reservationRetained":false,"scenario":"randao-expiry-loop"}
+</system-out>
+	</testcase>
+	<testcase name="consensus_bellatrix_attestation_expiry" classname="consensus_bellatrix_attestation_expiry" time="0.411295" status="run">
+		<properties/>
+		<system-out>{"providerFailureFatal":true,"recoveredLoop":{"attestationsAdmitted":8,"dutyTraceFailures":0,"failure":null,"healthy":true,"localKeys":64,"proposalsAdmitted":2,"staleDutyRetries":0,"timing":{"maxPollMs":140,"maxProposalMs":79,"polls":2,"pollsOverSlot":0,"proposalAttempts":2,"proposalsUnavailable":0,"slotBoundaryExits":1}},"reopenedConflictRefused":false,"reservationRetained":true,"scenario":"attestation-expiry-loop"}
+</system-out>
+	</testcase>
+	<testcase name="consensus_execution_deposit_source" classname="consensus_execution_deposit_source" time="0.349593" status="run">
+		<properties/>
+		<system-out>{"allMerkleProofsVerified":true,"beaconAdmission":false,"deposits":680,"officialCases":35,"scenario":"execution-deposit-source","zeroDepositCases":13}
+</system-out>
+	</testcase>
+	<testcase name="consensus_execution_deposit_history" classname="consensus_execution_deposit_history" time="0.0593012" status="run">
+		<properties/>
+		<system-out>{"beaconForkChoice":false,"bothHistoriesRestored":true,"depositsPerBranch":2,"foreignProofsRejected":4,"fundedBranches":2,"replayedPositionsRejected":4,"runtimeConnected":false,"sameKeyIndices":[0,1],"scenario":"competing-deposit-order"}
+{"foreignSelectedHistoryRejected":true,"mandatoryOperationsChecked":4,"retainedBranches":2,"runtimeConnected":false,"scenario":"competing-native-deposit-selection","siblingVotesRejected":true,"syntheticBeaconEnvelope":true}
+{"authenticatedPrefixes":4,"authenticatedRestore":true,"branches":2,"crossBranchProofRejected":true,"duplicateCreditRejected":true,"fundedAdmission":true,"invalidPoPIgnored":true,"nativeMandatoryProofPreserved":true,"nativePeriodVotesCompared":10,"prefixProofsCompared":6,"profile":"Paris","runtimeConnected":false,"scenario":"execution-deposit-history","topup":true}
+</system-out>
+	</testcase>
+	<testcase name="consensus_bellatrix_exit_identity" classname="consensus_bellatrix_exit_identity" time="0.00700092" status="run">
+		<properties/>
+		<system-out>BLS exit identities, index reuse and registry membership passed; synthetic contexts, not conflicting finalized histories
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_withdrawal_execution" classname="consensus_capella_withdrawal_execution" time="0.00306171" status="run">
+		<properties/>
+		<system-out>Capella sweep, debit/credit, ordering, cursor wrap, duplicate, malformed and rollback checks passed; runtime not activated
+</system-out>
+	</testcase>
+	<testcase name="secp256k1_ethereum_compatibility" classname="secp256k1_ethereum_compatibility" time="0.00841271" status="run">
+		<properties/>
+		<system-out>18 ethers boundary vectors, high-s recovery, invalid inputs and 8 concurrent context users passed
+</system-out>
+	</testcase>
+</testsuite>

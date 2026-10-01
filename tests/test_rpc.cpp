@@ -45,10 +45,12 @@ int main(){try{
  }std::filesystem::remove_all(gossip_path);}
  std::optional<Block> reopened_tip;Bytes reopened_root;
  {Blockchain chain(path,genesis);Rpc rpc(chain);
- auto request=[](const std::string& method,Json params=Json::array()){return Json{{"jsonrpc","2.0"},{"id",7},{"method",method},{"params",params}};};
- auto call=[&](const std::string& method,Json params=Json::array()){auto r=rpc.handle(request(method,params));if(r.contains("error"))throw std::runtime_error(r.dump());return r["result"];};
+ auto request=[](const std::string& method,Json::initializer_list_t params={}){return Json{{"jsonrpc","2.0"},{"id",7},{"method",method},{"params",Json::array(params)}};};
+ auto call=[&](const std::string& method,Json::initializer_list_t params={}){auto r=rpc.handle(request(method,params));if(r.contains("error"))throw std::runtime_error(method+": "+r.dump());return r["result"];};
  check(call("txpool_status")==Json{{"pending","0x0"},{"queued","0x0"}},"empty txpool status uses RPC quantities");
  Json context_call={{"from",sender},{"to",context_contract}};
+ check(request("eth_call",{context_call})["params"]==Json::array({context_call}),"request builder preserves a single object as one positional parameter");
+ check(request("eth_chainId")["params"]==Json::array(),"request builder emits an empty positional array");
  auto context_root=chain.state().root();
  auto default_quote=call("eth_estimateGas",{context_call});
  auto pending_quote=call("eth_estimateGas",{context_call,"pending"});
@@ -162,8 +164,10 @@ int main(){try{
  check(history["reward"][1]==Json::array({quantity(tip),quantity(tip),quantity(tip)})&&history["baseFeePerGas"][2]==quantity(next_base_fee(mined.header)),"fee history uses effective tip and projects next base fee");
  check(history["gasUsedRatio"][1].get<double>()==mined.header.gas_used.get_d()/mined.header.gas_limit.get_d(),"fee history reports actual gas utilization");
  check(!call("eth_feeHistory",{"0x1","earliest"}).contains("reward"),"omitted percentiles omit reward field");
- for(const auto& invalid:Json::array({Json::array({"0x0","latest"}),Json::array({"0x401","latest"}),Json::array({"0x1","latest",Json::array({50,10})}),Json::array({"0x1","latest",Json::array({101})}),Json::array({"0x1","latest",Json::array({"50"})})}))
-  check(rpc.handle(request("eth_feeHistory",invalid))["error"]["code"]==-32602,"invalid fee history parameters rejected");
+ for(const auto& invalid:Json::array({Json::array({"0x0","latest"}),Json::array({"0x401","latest"}),Json::array({"0x1","latest",Json::array({50,10})}),Json::array({"0x1","latest",Json::array({101})}),Json::array({"0x1","latest",Json::array({"50"})})})){
+  auto invalid_request=request("eth_feeHistory");invalid_request["params"]=invalid;
+  check(rpc.handle(invalid_request)["error"]["code"]==-32602,"invalid fee history parameters rejected");
+ }
  check(rpc.handle(request("eth_feeHistory",{"0x1","0x99"}))["error"]["code"]==-32000,"unknown fee history block rejected");
  Transaction cheap=tx;cheap.nonce=1;cheap.gas_price=2000000000;
  Transaction costly=tx;costly.nonce=2;costly.to=sender;costly.gas_price=3000000000;costly.type=2;costly.max_fee=3000000000;costly.priority_fee=2000000000;

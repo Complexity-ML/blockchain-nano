@@ -1991,3 +1991,20 @@ contrôles passent ; le gate complet refuse la sélection réelle de neuf tests
 revendiquée. Budgets manquants, régression complète du candidat et critères
 originaux de production restent ouverts. CI fraîche existante non interrompue.
 [Inventaire et preuves](qualification/regression-inventory-20261001/README.md).
+
+
+### 2026-10-01 — délais CTest explicites et harness RPC corrigé
+
+Quinze délais manquants ajoutés individuellement sans changer les budgets
+existants. Docker ARM64 existant : 14 scénarios réussis et un échec `rpc`
+(-32602), conservé. Diagnostic : le helper du test envoyait un objet au lieu
+d’un tableau pour un paramètre JSON unique. Helper corrigé, validation runtime
+inchangée, deux nouveaux contrôles de forme. Seul RPC modifié rejoué :
+993 vérifications réussies (0,58 s), aucune erreur/skip ; erreur intermédiaire
+de compilation également conservée. Binaires nano/p2p inchangés.
+Registre Docker : 400 noms, tous bornés ; 22 noms natifs absents de cette
+configuration sont explicitement recensés, pas qualifiés par Linux.
+Régression complète, AMD64 et tous les critères originaux restent ouverts.
+Le job core GitHub `36894479093` passe neuf tests, empreintes identiques au
+run précédent ; job transport encore en cours au relevé.
+[Preuves et limites](qualification/regression-budgets-20261001/README.md).
