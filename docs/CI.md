@@ -47,3 +47,16 @@ Aucun rebuild C++ pour ce changement CI seul ; CI globale toujours ouverte.
 ### Routage automatique — validation locale
 
 232 contrôles autonomes passent localement, sans échec ni skip. Cinq nouveaux contrôles vérifient le diff réel, les renommages, les baselines, le déclenchement manuel et la propagation d’un échec de configuration à travers `tee`. La validation GitHub du nouveau routage et de ses artefacts reste requise. La sélection C++ demeure les neuf tests déjà documentés ; aucune nouvelle couverture du runtime n’est revendiquée.
+
+
+### 2026-10-01 — CI C++ automatique et provenance qualifiées
+
+Run `36890479029`, source `dad9a14`, completed/success. Routage push réel
+vers Docker, 232 contrôles autonomes réussis, neuf tests C++ réussis sans
+skip (27,44 s), neuf empreintes de binaires et paquets de build récupérés
+et vérifiés. Job core 12m06s. Portée C++ inchangée : nouveau gate CI/provenance,
+pas une nouvelle qualification complète du runtime. P2P/EEST global,
+reproductibilité et critères restants de production toujours ouverts.
+[Preuves](qualification/ci-20261001/automatic-core-success/README.md).
+
+Le contrôle rapide `check-notices.mjs` vérifie les onze notices directes et tous les copyrights SPDX du header JSON ; son rapport est archivé par le job operations. Validation GitHub de cet ajout encore requise.

@@ -5367,3 +5367,32 @@ du routage et de la propagation d’échec. Validation GitHub encore requise.
 Les neuf tests C++ sélectionnés restent le même sous-ensemble ; P2P, EEST
 global, reproductibilité, qualification globale et bridge/fair launch restent
 ouverts. Aucun runtime Nano ni image de chaîne modifié.
+
+
+### 2026-10-01 — notices de livraison préparées et contrôlées
+
+Les sept notices existantes sont complétées par les licences JSON/cpp-libp2p
+et les cinq copyrights SPDX distincts du header JSON. Les chemins CMake et
+Docker sont corrigés, avec vérification des onze empreintes. Contrôles en
+lecture seule réussis sur les bases ARM64/AMD64 existantes et refus d’une
+notice altérée. Installation réelle et assemblage des images encore requis ;
+aucune recompilation runtime ni nouvelle image dans cette vérification.
+Le SBOM transitif, la revue et la reproductibilité restent ouverts.
+[Portée et traces](qualification/runtime-notices-20261001/README.md).
+
+Installation CMake native ensuite réussie sans compilation, onze notices
+vérifiées et binaire inchangé. Assemblage Docker ARM64 réel réussi
+(`7b3db08d...`), utilisateur 10001, onze notices et les deux binaires
+inchangés revérifiés. Assemblage AMD64 et Dockerfile complet restent requis.
+Cette image de livraison ne remplace pas les images des preuves WAN.
+
+
+### 2026-10-01 — CI C++ automatique et provenance qualifiées
+
+Run `36890479029`, source `dad9a14`, completed/success. Routage push réel
+vers Docker, 232 contrôles autonomes réussis, neuf tests C++ réussis sans
+skip (27,44 s), neuf empreintes de binaires et paquets de build récupérés
+et vérifiés. Job core 12m06s. Portée C++ inchangée : nouveau gate CI/provenance,
+pas une nouvelle qualification complète du runtime. P2P/EEST global,
+reproductibilité et critères restants de production toujours ouverts.
+[Preuves](qualification/ci-20261001/automatic-core-success/README.md).

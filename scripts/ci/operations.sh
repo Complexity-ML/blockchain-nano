@@ -9,3 +9,6 @@ node --test scripts/operations/*.test.mjs scripts/ci/*.test.mjs tests/multihost/
  exit 1
 }
 cat ci-reports/operations.log
+
+# Check direct-dependency notice integrity without compiling the runtime.
+node scripts/operations/check-notices.mjs > ci-reports/notices.json

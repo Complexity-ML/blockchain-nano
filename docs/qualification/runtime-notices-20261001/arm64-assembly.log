@@ -1,0 +1,80 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from candidate.Dockerfile
+#1 transferring dockerfile: 1.04kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/nano-candidate-base:99810019c0e155fd4ed1a35cc6c9dcc7935457d3e94bc1636f94cddded074729
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/5] FROM docker.io/library/nano-candidate-base:99810019c0e155fd4ed1a35cc6c9dcc7935457d3e94bc1636f94cddded074729@sha256:99810019c0e155fd4ed1a35cc6c9dcc7935457d3e94bc1636f94cddded074729
+#4 resolve docker.io/library/nano-candidate-base:99810019c0e155fd4ed1a35cc6c9dcc7935457d3e94bc1636f94cddded074729@sha256:99810019c0e155fd4ed1a35cc6c9dcc7935457d3e94bc1636f94cddded074729 done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 31.76MB 0.2s done
+#5 DONE 0.2s
+
+#6 [2/5] COPY nano nano-p2p /usr/local/bin/
+#6 DONE 0.0s
+
+#7 [3/5] COPY notices/ /usr/local/share/nano/licenses/
+#7 DONE 0.0s
+
+#8 [4/5] RUN cd /usr/local/share/nano/licenses && sha256sum -c notices.sha256
+#8 0.024 LICENSE.ethereumjs: OK
+#8 0.024 LICENSE.evm-codes: OK
+#8 0.025 bip39-LICENSE: OK
+#8 0.025 blst-LICENSE: OK
+#8 0.025 ckzg-LICENSE: OK
+#8 0.025 json-COPYRIGHTS: OK
+#8 0.025 json-LICENSE.MIT: OK
+#8 0.025 libp2p-LICENSE-APACHE: OK
+#8 0.025 libp2p-LICENSE-MIT: OK
+#8 0.025 mcl-COPYRIGHT: OK
+#8 0.025 secp256k1-LICENSE: OK
+#8 DONE 0.0s
+
+#9 [5/5] RUN printf '%s  /usr/local/bin/nano\n%s  /usr/local/bin/nano-p2p\n' "bbe09460d4ff5815a3849a58710ef740ad9cd9a8994d60ec3631699275b56ce5" "ae567df0787a6d64e72a126b4d8b00bbc8ed761c4d7fe308d42c61a878ee2d75" | sha256sum -c -  && ldd /usr/local/bin/nano > /tmp/nano-candidate.libs  && ldd /usr/local/bin/nano-p2p >> /tmp/nano-candidate.libs  && ! grep -q 'not found' /tmp/nano-candidate.libs  && rm /tmp/nano-candidate.libs  && /usr/local/bin/nano --help
+#9 0.031 /usr/local/bin/nano: OK
+#9 0.038 /usr/local/bin/nano-p2p: OK
+#9 0.050 Nano local chain tools
+#9 0.050 Usage: nano <init|status|audit|mine|validate|import|serve|run> <genesis.json> <database-directory> [arguments]
+#9 0.050   wallet <create|import|address|sign-message|sign-transaction|sign-typed-data> <keyfile> [data]
+#9 0.050   wallet deployment-address <keyfile> [nonce]
+#9 0.050   wallet create-many <new-directory> [count] (default: 10)
+#9 0.050   wallet hd-create <mnemonic-file> [word-count]; wallet hd-derive <keyfile> [index]
+#9 0.050   rpc <URL> <info|nodes|network|balance|send|deploy|receipt|mine> [arguments]
+#9 0.050   rpc <URL> <stake-register|stake-add> <keyfile> <contract> <amountNano>
+#9 0.050   rpc <URL> stake-withdraw <keyfile> <contract>
+#9 0.050   rpc <URL> deploy <keyfile> <bytecode-file> [timeout] [valueNano]
+#9 0.050   validator <config.json> [--once] (separate client)
+#9 0.050   init/status: show canonical chain status
+#9 0.050   mine/validate: <coinbase> <timestamp> [signed-raw-transactions.json]
+#9 0.050   audit-capella <genesis.json> <existing-database-directory> <audit-request.json> (offline canonical replay)
+#9 0.050   beacon-journal init <identity.json> <new-database> <new-receipt-directory>
+#9 0.050   beacon-journal status <identity.json> <database> <expected-commitment.json>
+#9 0.050   beacon-journal export <identity.json> <database> <expected-commitment.json> <new-receipt-directory>
+#9 0.050   beacon-journal import <identity.json> <database> <expected-commitment.json> <interchange.json> <max-bytes> <new-receipt-directory>
+#9 0.050   migrate: <genesis.json> <python-chaindb-directory> <new-database-directory>
+#9 0.050   import: <block.json> <current-timestamp>
+#9 0.050   run: [node-config.json] (RPC and P2P together)
+#9 0.050   serve: [port] [bind-address] [wallet-config.json] (defaults: 8545, 127.0.0.1)
+#9 DONE 0.1s
+
+#10 exporting to image
+#10 exporting layers 0.0s done
+#10 exporting manifest sha256:4461391db523b76d0127c109271db8ca6cb844fa7cdec76b9adb42b504e417de done
+#10 exporting config sha256:8eb68d6ebcd5a8579954fb6eb501c57f32757ef2d8846a1195df8f3945a520f4 done
+#10 exporting attestation manifest sha256:0ab850bcee7467f478e49ff07833aa16dea7c444887b978d07007cfaa5a4a307 done
+#10 exporting manifest list sha256:7b3db08d4076cca560a7d599a9601cc8ce02f8614274bf5a72679969e45568bf done
+#10 naming to moby-dangling@sha256:7b3db08d4076cca560a7d599a9601cc8ce02f8614274bf5a72679969e45568bf done
+#10 unpacking to moby-dangling@sha256:7b3db08d4076cca560a7d599a9601cc8ce02f8614274bf5a72679969e45568bf 0.0s done
+#10 DONE 0.1s
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/lwizg0c6bhhaqtmxfnqr4xzk4
+sha256:7b3db08d4076cca560a7d599a9601cc8ce02f8614274bf5a72679969e45568bf

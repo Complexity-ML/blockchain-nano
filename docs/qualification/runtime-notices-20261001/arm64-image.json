@@ -1,0 +1,32 @@
+{
+  "Id": "sha256:7b3db08d4076cca560a7d599a9601cc8ce02f8614274bf5a72679969e45568bf",
+  "Architecture": "arm64",
+  "Os": "linux",
+  "Config": {
+    "User": "10001:10001",
+    "ExposedPorts": {
+      "30303/tcp": {},
+      "8545/tcp": {}
+    },
+    "Env": [
+      "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+    ],
+    "Entrypoint": [
+      "/usr/local/bin/nano"
+    ],
+    "Cmd": [
+      "--help"
+    ],
+    "Volumes": {
+      "/var/lib/nano": {}
+    },
+    "WorkingDir": "/var/lib/nano",
+    "Labels": {
+      "org.nanobees.runtime-base-id": "sha256:99810019c0e155fd4ed1a35cc6c9dcc7935457d3e94bc1636f94cddded074729",
+      "org.nanobees.source-dirty": "true",
+      "org.opencontainers.image.revision": "74784c499cc904eba1d766933bc2017d3e2be9a0",
+      "org.opencontainers.image.version": "24.04"
+    },
+    "ArgsEscaped": true
+  }
+}

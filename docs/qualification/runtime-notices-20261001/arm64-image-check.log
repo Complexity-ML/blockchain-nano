@@ -1,0 +1,36 @@
+uid=10001(nano) gid=10001(nano) groups=10001(nano)
+LICENSE.ethereumjs: OK
+LICENSE.evm-codes: OK
+bip39-LICENSE: OK
+blst-LICENSE: OK
+ckzg-LICENSE: OK
+json-COPYRIGHTS: OK
+json-LICENSE.MIT: OK
+libp2p-LICENSE-APACHE: OK
+libp2p-LICENSE-MIT: OK
+mcl-COPYRIGHT: OK
+secp256k1-LICENSE: OK
+bbe09460d4ff5815a3849a58710ef740ad9cd9a8994d60ec3631699275b56ce5  /usr/local/bin/nano
+ae567df0787a6d64e72a126b4d8b00bbc8ed761c4d7fe308d42c61a878ee2d75  /usr/local/bin/nano-p2p
+Nano local chain tools
+Usage: nano <init|status|audit|mine|validate|import|serve|run> <genesis.json> <database-directory> [arguments]
+  wallet <create|import|address|sign-message|sign-transaction|sign-typed-data> <keyfile> [data]
+  wallet deployment-address <keyfile> [nonce]
+  wallet create-many <new-directory> [count] (default: 10)
+  wallet hd-create <mnemonic-file> [word-count]; wallet hd-derive <keyfile> [index]
+  rpc <URL> <info|nodes|network|balance|send|deploy|receipt|mine> [arguments]
+  rpc <URL> <stake-register|stake-add> <keyfile> <contract> <amountNano>
+  rpc <URL> stake-withdraw <keyfile> <contract>
+  rpc <URL> deploy <keyfile> <bytecode-file> [timeout] [valueNano]
+  validator <config.json> [--once] (separate client)
+  init/status: show canonical chain status
+  mine/validate: <coinbase> <timestamp> [signed-raw-transactions.json]
+  audit-capella <genesis.json> <existing-database-directory> <audit-request.json> (offline canonical replay)
+  beacon-journal init <identity.json> <new-database> <new-receipt-directory>
+  beacon-journal status <identity.json> <database> <expected-commitment.json>
+  beacon-journal export <identity.json> <database> <expected-commitment.json> <new-receipt-directory>
+  beacon-journal import <identity.json> <database> <expected-commitment.json> <interchange.json> <max-bytes> <new-receipt-directory>
+  migrate: <genesis.json> <python-chaindb-directory> <new-database-directory>
+  import: <block.json> <current-timestamp>
+  run: [node-config.json] (RPC and P2P together)
+  serve: [port] [bind-address] [wallet-config.json] (defaults: 8545, 127.0.0.1)

@@ -258,6 +258,7 @@ install(DIRECTORY docs/ DESTINATION ${CMAKE_INSTALL_DATADIR}/nano/docs FILES_MAT
 install(FILES third_party/mcl/COPYRIGHT DESTINATION ${CMAKE_INSTALL_DATADIR}/nano/licenses RENAME mcl-COPYRIGHT)
 install(FILES third_party/bip39/LICENSE DESTINATION ${CMAKE_INSTALL_DATADIR}/nano/licenses RENAME bip39-LICENSE)
 install(FILES third_party/opcodes/LICENSE.ethereumjs third_party/opcodes/LICENSE.evm-codes DESTINATION ${CMAKE_INSTALL_DATADIR}/nano/licenses)
+install(FILES third_party/notices/json-LICENSE.MIT third_party/notices/json-COPYRIGHTS third_party/notices/libp2p-LICENSE-APACHE third_party/notices/libp2p-LICENSE-MIT deploy/docker/notices.sha256 DESTINATION ${CMAKE_INSTALL_DATADIR}/nano/licenses)
 if(NANO_NETWORK_EXECUTABLE)
  add_executable(nano-install-tests tests/test_install.cpp)
  target_link_libraries(nano-install-tests PRIVATE nano_core)

@@ -33,7 +33,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder /out/ /usr/local/
 COPY deploy/docker/node.json /etc/nano/node.json
 # Fail the build if either executable has an unresolved shared library.
-RUN ldd /usr/local/bin/nano > /tmp/nano.libs \
+RUN (cd /usr/local/share/nano/licenses && sha256sum -c notices.sha256) \
+ && ldd /usr/local/bin/nano > /tmp/nano.libs \
  && ldd /usr/local/bin/nano-p2p > /tmp/p2p.libs \
  && ! grep -q 'not found' /tmp/nano.libs /tmp/p2p.libs \
  && rm /tmp/nano.libs /tmp/p2p.libs \

@@ -1,0 +1,26 @@
+[
+  {
+    "case": "exact prepared sources",
+    "exitCode": 0,
+    "stdout": "{\"notices\":11,\"jsonCopyrights\":5,\"verified\":true}",
+    "stderr": ""
+  },
+  {
+    "case": "duplicate manifest entry",
+    "exitCode": 1,
+    "stdout": "",
+    "stderr": "Invalid or duplicate notice record"
+  },
+  {
+    "case": "altered notice",
+    "exitCode": 1,
+    "stdout": "",
+    "stderr": "Notice hash mismatch: json-LICENSE.MIT"
+  },
+  {
+    "case": "missing copyright despite matching hash",
+    "exitCode": 1,
+    "stdout": "",
+    "stderr": "JSON copyrights differ from the bundled source"
+  }
+]

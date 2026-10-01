@@ -27,7 +27,13 @@ build_arch=$(docker image inspect "$builder" --format '{{.Architecture}}')
 [ "$base_arch" = "$build_arch" ] || { echo 'Architecture mismatch' >&2; exit 1; }
 context=$(mktemp -d)
 trap 'rm -rf "$context"' EXIT HUP INT TERM
-recipe=$(CDPATH= cd -- "$(dirname -- "$0")/../../deploy/docker" && pwd)/candidate.Dockerfile
+repo=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
+recipe="$repo/deploy/docker/candidate.Dockerfile"
+mkdir "$context/notices"
+for notice in json-LICENSE.MIT json-COPYRIGHTS libp2p-LICENSE-APACHE libp2p-LICENSE-MIT; do
+  cp "$repo/third_party/notices/$notice" "$context/notices/$notice"
+done
+cp "$repo/deploy/docker/notices.sha256" "$context/notices/notices.sha256"
 # The named volume is read-only; export exactly the two executables and provenance.
 docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges \
   --entrypoint tar -v "$volume:/build:ro" "$builder" \
