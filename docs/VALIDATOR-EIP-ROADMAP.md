@@ -5293,3 +5293,15 @@ opérateur provisionnée, ordonnanceur, panne longue/SIGKILL daemon ou
 perte électrique. Les autres gates initiales, revue et bridge/lancement
 restent ouvertes. Aucune nouvelle image ni fonds ni production déclarée.
 [Preuves](qualification/alert-live-20261001/attempt-a/README.md).
+
+
+### 2026-10-01 — CI de qualification ajoutée, exécution GitHub ouverte
+
+Premier workflow du dépôt : tests autonomes des outils/harness sur changements
+concernés, actions officielles épinglées, permissions contents read, logs/révision
+conservés, aucun déploiement ni accès VPS/clés. 227 tests autonomes passent
+localement. Job manuel de compilation et neuf contrôles C++ avec vérification
+exacte des inscriptions CTest, budgets inchangés. Workflow GitHub réel et job
+C++ non encore qualifiés. Ce socle n'est ni la CI complète ni une preuve de
+reproductibilité bit à bit ; matrice portable/P2P, gates WAN/EEST/régression
+globale et protections de branche restent ouverts. [Portée](CI.md).

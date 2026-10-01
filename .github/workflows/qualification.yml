@@ -1,0 +1,61 @@
+name: Nano qualification checks
+on:
+  push:
+    branches: [main]
+    paths: ['scripts/**', 'tests/multihost/**', '.github/workflows/**']
+  pull_request:
+    paths: ['scripts/**', 'tests/multihost/**', '.github/workflows/**']
+  workflow_dispatch:
+    inputs:
+      core:
+        description: 'Also build and run the reviewed C++ core subset (not full production qualification)'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: nano-checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  operations:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '25.9.0'
+          package-manager-cache: false
+      - run: sh scripts/ci/operations.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: operations-${{ github.sha }}
+          path: ci-reports/
+          retention-days: 7
+          if-no-files-found: error
+  core:
+    if: github.event_name == 'workflow_dispatch' && inputs.core
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CC: clang
+      CXX: clang++
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang cmake python3 libssl-dev libicu-dev libboost-dev librocksdb-dev libgmp-dev
+      - run: sh scripts/ci/core.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: core-${{ github.sha }}
+          path: ci-reports/
+          retention-days: 7
+          if-no-files-found: error
