@@ -39,6 +39,8 @@ struct ExecutionResult {
  std::vector<Log> logs;
  std::set<std::string> deleted_accounts;
  std::string error;
+ // Observed forwarding depth is an RPC probe hint, never serialized state/gas.
+ unsigned max_call_depth=0;
 };
 // Symmetric coroutine transfer keeps nested EVM frames off the native stack.
 // Tasks execute synchronously; there are no worker threads or scheduler races.

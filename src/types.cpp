@@ -15,7 +15,13 @@ Int quantity(const Json& j) { std::string s; if(j.is_string()) s=j.get<std::stri
 std::string quantity(const Int& n) { if(n<0) throw std::invalid_argument("negative quantity"); return "0x"+n.get_str(16); }
 std::string address(std::string s) { auto b=unhex(s); if(b.size()!=20) throw std::invalid_argument("address must be 20 bytes"); return hex(b); }
 Bytes concat(Bytes a,const Bytes& b) { a.insert(a.end(),b.begin(),b.end()); return a; }
-uint64_t u64(const Int& n) { if(n<0 || n>Int("18446744073709551615")) throw std::overflow_error("uint64 overflow"); return n.get_ui(); }
+uint64_t u64(const Int& n) {
+ // Base 2 reports the exact width. Validate before conversion, without
+ // rebuilding the decimal maximum at each checked conversion.
+ if(mpz_sgn(n.get_mpz_t())<0||mpz_sizeinbase(n.get_mpz_t(),2)>64)throw std::overflow_error("uint64 overflow");
+ if constexpr(sizeof(unsigned long)>=sizeof(uint64_t))return n.get_ui();
+ else{uint64_t result=0;mpz_export(&result,nullptr,1,sizeof(result),0,0,n.get_mpz_t());return result;}
+}
 static uint64_t rol(uint64_t x,unsigned n) { return n ? (x<<n)|(x>>(64-n)) : x; }
 Bytes keccak(const Bytes& input) {
  constexpr uint64_t rc[]={0x1ULL,0x8082ULL,0x800000000000808aULL,0x8000000080008000ULL,0x808bULL,0x80000001ULL,0x8000000080008081ULL,0x8000000000008009ULL,0x8aULL,0x88ULL,0x80008009ULL,0x8000000aULL,0x8000808bULL,0x800000000000008bULL,0x8000000000008089ULL,0x8000000000008003ULL,0x8000000000008002ULL,0x8000000000000080ULL,0x800aULL,0x800000008000000aULL,0x8000000080008081ULL,0x8000000000008080ULL,0x80000001ULL,0x8000000080008008ULL};
