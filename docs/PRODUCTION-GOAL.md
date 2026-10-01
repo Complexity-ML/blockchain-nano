@@ -2186,3 +2186,16 @@ Campagne complète originale active, sources main gelées ; estimation sous
 charge, admission gossip/même chaîne, Beacon/WAN, matrice complète et tous
 les critères originaux restent ouverts. Production non qualifiée.
 [Preuves AMD64 du nouveau candidat](qualification/rpc-shallow-preflight-20261001/amd64/README.md).
+
+
+### 2026-10-01 — assemblage après SIGKILL qualifié sur scratch disque
+
+Deux tests originaux rejoués sans recompilation ni changement de délai :
+Paris 30.71 s, Shanghai 27.34 s, aucun skip. Six frontières 1/20/40 fragments
+vérifient absence de votes fantômes, sessions obsolètes refusées, redownload,
+quorum, dix reçus/transferts exacts et audit après seconde réouverture.
+Journal CTest séparé, volume disque ; les échecs originaux et l’erreur de
+montage readonly du premier diagnostic restent conservés, sans cause unique
+ENOSPC attribuée. Ces fixtures legacy BFT ne couvrent pas libp2p, Beacon/WAN
+ou une panne physique. Tous les critères initiaux restent requis.
+[Preuves et périmètre](qualification/bft-assembly-crash-disk-20261001/README.md).

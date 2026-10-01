@@ -1,0 +1,77 @@
+{
+  "backtraceGraph" : 
+  {
+    "commands" : [],
+    "files" : [],
+    "nodes" : []
+  },
+  "kind" : "ctestInfo",
+  "tests" : 
+  [
+    {
+      "command" : 
+      [
+        "/build/nano-bft-large-envelope-tests"
+      ],
+      "name" : "bft_assembly_crash_paris",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "NANO_TEST_EVM_FORK=Paris",
+            "NANO_TEST_BFT_ASSEMBLY_CRASH=1"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 240.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/assembly-crash-disk-journal-20261001"
+        }
+      ]
+    },
+    {
+      "command" : 
+      [
+        "/build/nano-bft-large-envelope-tests"
+      ],
+      "name" : "bft_assembly_crash_shanghai",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "NANO_TEST_EVM_FORK=Shanghai",
+            "NANO_TEST_BFT_ASSEMBLY_CRASH=1"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 240.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/assembly-crash-disk-journal-20261001"
+        }
+      ]
+    }
+  ],
+  "version" : 
+  {
+    "major" : 1,
+    "minor" : 0
+  }
+}
