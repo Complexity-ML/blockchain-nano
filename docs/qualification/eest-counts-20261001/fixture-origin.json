@@ -1,0 +1,45 @@
+{
+  "execution": {
+    "case": "tests/berlin/eip2930_access_list/test_acl.py::test_account_storage_warm_cold_state[fork_Berlin-state_test-account_warm_False-storage_key_warm_False]",
+    "engine": "Nano explicit Berlin rules (partial implementation)",
+    "expectedGasUsed": "0xcbc3",
+    "file": "/work/tests/fixtures/ethereum-official/account_storage_warm_cold_state.json",
+    "fork": "Berlin",
+    "gasUsed": "0xcbc3",
+    "gasUsedMatches": true,
+    "logsHash": {
+      "actual": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+      "expected": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
+    },
+    "receiptMatches": true,
+    "replayPolicy": "Ethereum historical signatures allowed; Nano network policy unchanged",
+    "stateRoot": {
+      "actual": "0x8b7e2bf1a0c2a04185a51485b7778d4af4cd5123015489aef7e947007577670b",
+      "expected": "0x8b7e2bf1a0c2a04185a51485b7778d4af4cd5123015489aef7e947007577670b"
+    },
+    "status": "matched",
+    "transactionHash": "0x45780f6f24ae4433f79849401a6ee6a964f6c66aa2e30214d2a19bb11e943c39",
+    "transactionHashMatches": true,
+    "variant": 0
+  },
+  "validation": {
+    "case": "tests/frontier/validation/test_transaction.py::test_bad_v_r_s[fork_Berlin-tx_type_0-state_test-s=SECP256K1N//2+1]",
+    "engine": "Nano explicit Berlin rules (partial implementation)",
+    "file": "/work/tests/fixtures/ethereum-official/bad_v_r_s.json",
+    "fork": "Berlin",
+    "replayPolicy": "Ethereum historical signatures allowed; Nano network policy unchanged",
+    "stateRoot": {
+      "actual": "0x94f17be47be2e27f90e110c9c2d405b7c70a9910f766f0af7c8c2ffc521c4667",
+      "expected": "0x94f17be47be2e27f90e110c9c2d405b7c70a9910f766f0af7c8c2ffc521c4667"
+    },
+    "status": "matched",
+    "validation": {
+      "actual": "TransactionException.INVALID_SIGNATURE_VRS",
+      "expected": "TransactionException.INVALID_SIGNATURE_VRS",
+      "nativeError": "noncanonical high-s signature",
+      "stateUnchanged": true,
+      "transactionExecuted": false
+    },
+    "variant": 0
+  }
+}

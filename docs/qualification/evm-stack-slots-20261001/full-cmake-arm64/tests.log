@@ -1,0 +1,56 @@
+Internal ctest changing into directory: /build/evm-stack-slots-20261001
+Test project /build/evm-stack-slots-20261001
+      Start   1: bn_pairing_cold_vectors
+ 1/20 Test   #1: bn_pairing_cold_vectors .....................   Passed    0.02 sec
+      Start   3: core
+ 2/20 Test   #3: core ........................................   Passed    0.30 sec
+      Start   6: rpc
+ 3/20 Test   #6: rpc .........................................   Passed    1.13 sec
+      Start   7: rpc_foreign_chain_admission_isolation
+ 4/20 Test   #7: rpc_foreign_chain_admission_isolation .......   Passed    0.06 sec
+      Start  10: http
+ 5/20 Test  #10: http ........................................   Passed    0.41 sec
+      Start  42: bft_rpc_cost_many_paris_network
+ 6/20 Test  #42: bft_rpc_cost_many_paris_network .............   Passed   35.73 sec
+      Start  43: bft_rpc_cost_websocket_paris_network
+ 7/20 Test  #43: bft_rpc_cost_websocket_paris_network ........   Passed   34.80 sec
+      Start  44: bft_rpc_overload_paris_network
+ 8/20 Test  #44: bft_rpc_overload_paris_network ..............   Passed   34.64 sec
+      Start  45: bft_rpc_default_overload_paris_network
+ 9/20 Test  #45: bft_rpc_default_overload_paris_network ......   Passed   30.35 sec
+      Start  64: bft_rpc_cost_many_shanghai_network
+10/20 Test  #64: bft_rpc_cost_many_shanghai_network ..........   Passed   35.51 sec
+      Start  65: bft_rpc_cost_websocket_shanghai_network
+11/20 Test  #65: bft_rpc_cost_websocket_shanghai_network .....   Passed   34.71 sec
+      Start  66: bft_rpc_overload_shanghai_network
+12/20 Test  #66: bft_rpc_overload_shanghai_network ...........   Passed   31.31 sec
+      Start  67: bft_rpc_default_overload_shanghai_network
+13/20 Test  #67: bft_rpc_default_overload_shanghai_network ...   Passed   33.36 sec
+      Start 125: ethereum_official_regressions
+14/20 Test #125: ethereum_official_regressions ...............   Passed    3.56 sec
+      Start 156: oversized_block_paris
+15/20 Test #156: oversized_block_paris .......................   Passed    7.19 sec
+      Start 157: oversized_block_shanghai
+16/20 Test #157: oversized_block_shanghai ....................   Passed    7.20 sec
+      Start 167: libp2p_fragment_sync_paris
+17/20 Test #167: libp2p_fragment_sync_paris ..................   Passed   31.85 sec
+      Start 168: libp2p_fragment_sync_shanghai
+18/20 Test #168: libp2p_fragment_sync_shanghai ...............   Passed   32.03 sec
+      Start 169: libp2p_fragment_faults_paris
+19/20 Test #169: libp2p_fragment_faults_paris ................   Passed   34.78 sec
+      Start 170: libp2p_fragment_faults_shanghai
+20/20 Test #170: libp2p_fragment_faults_shanghai .............   Passed   34.08 sec
+
+100% tests passed, 0 tests failed out of 20
+
+Label Time Summary:
+qualification_bft_large_block_local             = 147.12 sec*proc (6 tests)
+qualification_bft_rpc_cost_many_local           =  71.23 sec*proc (2 tests)
+qualification_bft_rpc_default_overload_local    =  63.71 sec*proc (2 tests)
+qualification_bft_rpc_overload_local            =  65.95 sec*proc (2 tests)
+qualification_bft_rpc_websocket_local           =  69.50 sec*proc (2 tests)
+qualification_crypto                            =   0.02 sec*proc (1 test)
+qualification_evm                               =   4.99 sec*proc (3 tests)
+qualification_rpc_admission                     =   0.06 sec*proc (1 test)
+
+Total Test time (real) = 423.00 sec
