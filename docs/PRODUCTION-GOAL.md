@@ -2403,3 +2403,17 @@ La branche `qualification/bellatrix-failure-diagnostics-20261002` prépare la
 conservation de la première erreur Bellatrix et son exposition dans le banc :
 contrôles syntaxiques ARM64 seulement, aucune exécution qualifiée ni intégration
 du moteur dans main. Aucun gate de production, profil réseau ou statut EIP clos.
+
+### 2026-10-02 — Régression intégrée ARM64 terminale : 410/417, sept échecs
+
+Candidat isolé c10426b2 : 417 résultats sur 417 enregistrés, 410 réussites,
+sept échecs, zéro ignoré ; CTest exit 8 conservé, durée 6 959,14 s.
+197 empreintes exécutables et manifestes de sources inchangés avant/après.
+EEST : 4 882 exécutions + 505 validations, 5 387 résultats sur 317 fichiers ;
+conformité complète de fork non prouvée. Audit global exit 1 conservé :
+les sept tests échoués sont bloquants, les autres audits ont réussi.
+[Preuves terminales et empreintes](qualification/production-evm-integration-20261001/full-arm64-terminal/README.md).
+Les six échecs de durée RPC et l'élagage des sorties Bellatrix restent à
+corriger/qualifier ; le moteur n'est pas promu dans main. Campagne AMD64
+encore active ; nouvelles qualifications réseau et exigences de production
+inchangées. Les observations partielles précédentes restent historiques.
