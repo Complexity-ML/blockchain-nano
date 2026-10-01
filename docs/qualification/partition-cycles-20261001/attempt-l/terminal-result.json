@@ -1,0 +1,114 @@
+{
+  "processExitCode": 1,
+  "compiledSourceRevision": "72ea2eddbc162918db449b7ea35aa73f5d6c68de",
+  "harnessRevision": "989c85a",
+  "firstRecovery": {
+    "time": 1790842829187,
+    "event": "partition-recovery-bound",
+    "checkpoint": {
+      "epoch": "7",
+      "root": "0x5eeef5a2e519f7fc091db87e57a51d683a94e137a57c87bf758afda5f318fab7"
+    },
+    "recoveryElapsedMs": 140184.83316699998,
+    "recoveryLimitMs": 180000,
+    "cycle": 1
+  },
+  "failure": {
+    "time": 1790843111049,
+    "event": "failed",
+    "message": "HttpReadError: HTTP 503 from remote/eth/v1/beacon/headers/head: Beacon read cancelled or execution budget expired [phase=publication-pin, elapsedMs=3102]\n    at decodeHttpResponse (file:///Users/boris/Dev/blockchain-nano/tests/multihost/http-response.mjs:17:15)\n    at request (file:///Users/boris/Dev/blockchain-nano/tests/multihost/run.mjs:104:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async captureFaultProgress (file:///Users/boris/Dev/blockchain-nano/tests/multihost/fault-progress.mjs:7:11)\n    at async file:///Users/boris/Dev/blockchain-nano/tests/multihost/run.mjs:187:33\n    at async Promise.all (index 2)\n    at async faultSample (file:///Users/boris/Dev/blockchain-nano/tests/multihost/run.mjs:184:14)\n    at async guarded (file:///Users/boris/Dev/blockchain-nano/tests/multihost/partition-cycles.mjs:13:14)\n    at async read (file:///Users/boris/Dev/blockchain-nano/tests/multihost/partition.mjs:23:14)\n    at async waitRecovery (file:///Users/boris/Dev/blockchain-nano/tests/multihost/partition.mjs:88:15)"
+  },
+  "secondRecoveryQualified": false,
+  "stabilityQualified": false,
+  "stoppedValidators": [
+    {
+      "node": "native.log",
+      "clockHealthy": true,
+      "validator": {
+        "healthy": true,
+        "failure": null,
+        "attestationsAdmitted": 307,
+        "syncMessagesAdmitted": 1995
+      },
+      "finalized": {
+        "epoch": "0x7",
+        "root": "0x5eeef5a2e519f7fc091db87e57a51d683a94e137a57c87bf758afda5f318fab7"
+      },
+      "syncAdmission": {
+        "accepted": 2727,
+        "aggregation-failed": 0,
+        "contextBuilds": 142,
+        "contextHits": 5329,
+        "expired-slot": 0,
+        "future-slot": 0,
+        "head-at-or-after-inclusion": 12,
+        "invalid-signature": 0,
+        "invalid-width": 0,
+        "not-in-committee": 0,
+        "root-mismatch": 19,
+        "slot-overflow": 0,
+        "unknown-validator": 0
+      }
+    },
+    {
+      "node": "docker-mac.log",
+      "clockHealthy": true,
+      "validator": {
+        "healthy": true,
+        "failure": null,
+        "attestationsAdmitted": 292,
+        "syncMessagesAdmitted": 1040
+      },
+      "finalized": {
+        "epoch": "0x7",
+        "root": "0x5eeef5a2e519f7fc091db87e57a51d683a94e137a57c87bf758afda5f318fab7"
+      },
+      "syncAdmission": {
+        "accepted": 1755,
+        "aggregation-failed": 0,
+        "contextBuilds": 134,
+        "contextHits": 3391,
+        "expired-slot": 0,
+        "future-slot": 0,
+        "head-at-or-after-inclusion": 27,
+        "invalid-signature": 0,
+        "invalid-width": 0,
+        "not-in-committee": 0,
+        "root-mismatch": 17,
+        "slot-overflow": 0,
+        "unknown-validator": 0
+      }
+    },
+    {
+      "node": "vps.log",
+      "clockHealthy": true,
+      "validator": {
+        "healthy": true,
+        "failure": null,
+        "attestationsAdmitted": 280,
+        "syncMessagesAdmitted": 1125
+      },
+      "finalized": {
+        "epoch": "0x7",
+        "root": "0x5eeef5a2e519f7fc091db87e57a51d683a94e137a57c87bf758afda5f318fab7"
+      },
+      "syncAdmission": {
+        "accepted": 2334,
+        "aggregation-failed": 0,
+        "contextBuilds": 165,
+        "contextHits": 4487,
+        "expired-slot": 0,
+        "future-slot": 0,
+        "head-at-or-after-inclusion": 17,
+        "invalid-signature": 0,
+        "invalid-width": 0,
+        "not-in-committee": 0,
+        "root-mismatch": 54,
+        "slot-overflow": 0,
+        "unknown-validator": 0
+      }
+    }
+  ],
+  "networkQualified": false,
+  "productionQualified": false
+}
