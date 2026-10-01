@@ -2523,3 +2523,24 @@ passe, patch non appliqué pendant la campagne gelée. Collecter tous les
 échecs, appliquer/corriger en une passe et qualifier le candidat modifié.
 Aucun succès complet ni nouvelle qualification runtime revendiqué.
 [Diagnostic et patch non appliqué](qualification/rpc-positional-client-audit-20261001/README.md).
+
+
+### 2026-10-01 — correctif RPC qualifié séparément ; CI transport en échec conservé
+
+Run GitHub `36894479093` completed/failure : dépendances/transport compilent,
+20/21 tests passent, altair_core_dispatch échoue (concurrent ticket admission).
+Core neuf tests et operations 235 passent. Ne pas transformer ce run en succès.
+Checkout isolé 0836378, mêmes builder/volume, sous-répertoires distincts :
+correctif RpcClient/std::initializer_list<Json> qualifié sur validator, network,
+signed_network et bft_network, quatre réussites sans skip en 31,26 s. Garde
+négative paramètres objet/état-pool-événements intacte ; première surcharge
+Json::initializer_list_t insuffisante conservée en échec. Events corrigé passe
+séparément (0,21 s), pas de nouveau run des cinq. Nouveau nano d5c40202...,
+P2P inchangé ; candidat non fusionné et régression complète/AMD64 encore requis.
+Fixture dispatcher attend un handler via run_one, assertions conservées :
+scénario modifié passe (0,01 s), runtime dispatcher inchangé. Provenance CI
+déplacée avant CTest ; nouvelle qualification fraîche requise. Campagne des
+400 anciens scénarios poursuit la collecte, dont échecs de charge RPC distincts.
+Tous les autres critères originaux restent ouverts.
+[Transport en échec](qualification/network-ci-20261001/github-network-failure/README.md),
+[correctifs isolés](qualification/rpc-positional-isolated-20261001/README.md).
