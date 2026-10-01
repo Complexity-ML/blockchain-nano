@@ -1,0 +1,94 @@
+{
+  "sourceParentRevision": "967a0dc2299da0a756e152c8d93e61dcfbfd3d5b",
+  "modelsPerEnvironment": 17,
+  "localDistributedNative": true,
+  "localDistributedArm64": true,
+  "coherentHeadCoreAmd64": true,
+  "headPriorityAmd64": false,
+  "wanQualified": false,
+  "productionQualified": false,
+  "native": {
+    "arch": "native",
+    "priorities": {
+      "admitted": 57,
+      "already-acknowledged": 177,
+      "selected": 1
+    },
+    "distributed": [
+      {
+        "finalizedBlocksWithRemoteSync": 0,
+        "minimumFinalizedEpoch": 2,
+        "nodes": 2,
+        "realLibp2p": true,
+        "scenario": "capella-distributed-finality",
+        "stableObservations": 3,
+        "syncInclusionMustExceedSlot": 0,
+        "syncQualification": false,
+        "syncRotation": false,
+        "validatorsPerNode": 32
+      }
+    ],
+    "stops": [
+      {
+        "healthy": true,
+        "clockHealthy": true,
+        "attestations": 100,
+        "finalized": {
+          "epoch": "0x2",
+          "root": "0xe2fb10b9c28957088f3646f5d95fa6ca28ff51631e41466a480babd9f3fca2be"
+        }
+      },
+      {
+        "healthy": true,
+        "clockHealthy": true,
+        "attestations": 100,
+        "finalized": {
+          "epoch": "0x2",
+          "root": "0xe2fb10b9c28957088f3646f5d95fa6ca28ff51631e41466a480babd9f3fca2be"
+        }
+      }
+    ]
+  },
+  "arm64": {
+    "arch": "arm64",
+    "priorities": {
+      "admitted": 61,
+      "already-acknowledged": 175,
+      "anchor": 2
+    },
+    "distributed": [
+      {
+        "finalizedBlocksWithRemoteSync": 0,
+        "minimumFinalizedEpoch": 2,
+        "nodes": 2,
+        "realLibp2p": true,
+        "scenario": "capella-distributed-finality",
+        "stableObservations": 3,
+        "syncInclusionMustExceedSlot": 0,
+        "syncQualification": false,
+        "syncRotation": false,
+        "validatorsPerNode": 32
+      }
+    ],
+    "stops": [
+      {
+        "healthy": true,
+        "clockHealthy": true,
+        "attestations": 98,
+        "finalized": {
+          "epoch": "0x2",
+          "root": "0x1d4d848a0f04150a63ccc687d10382c8e10fb5284e14cc5f596bd9e26fcce8cb"
+        }
+      },
+      {
+        "healthy": true,
+        "clockHealthy": true,
+        "attestations": 102,
+        "finalized": {
+          "epoch": "0x2",
+          "root": "0x1d4d848a0f04150a63ccc687d10382c8e10fb5284e14cc5f596bd9e26fcce8cb"
+        }
+      }
+    ]
+  }
+}

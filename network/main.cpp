@@ -16,6 +16,7 @@
 #include "altair_archive_relay.hpp"
 #include "capella_catalog_relay.hpp"
 #include "capella_attestation_delivery.hpp"
+#include "capella_head_catalog_relay.hpp"
 #include "capella_peer_core.hpp"
 #include "capella_block_delivery.hpp"
 #include "altair_vote_delivery.hpp"
@@ -198,6 +199,7 @@ class Network {
     auto core=capella_peer_core([this](const std::string& method,Json params,Reply reply){core_.call(method,std::move(params),std::move(reply));},current);
     auto active=std::make_shared<std::shared_ptr<CapellaBlockDelivery>>();
     auto active_vote=std::make_shared<std::shared_ptr<CapellaAttestationDelivery>>();
+    auto active_head=std::make_shared<std::shared_ptr<CapellaHeadCatalogRelay>>();
     if(kind=="attestation"&&!peer.capella_blocks)peer.capella_blocks=std::make_shared<AltairRelayProgress>(capella_relay_.at("acknowledgedRoots").get<size_t>());
     const auto block_knowledge=peer.capella_blocks;
     const bool fair=capella_relay_.at("acknowledgedRoots").get<size_t>()>=capella_relay_.at("maximumEntries").get<size_t>();
@@ -210,7 +212,11 @@ class Network {
       *active_vote=std::make_shared<CapellaAttestationDelivery>(io_,core,send,report_token_,capella_relay_.at("anchorRoot").get<std::string>(),std::move(frame),altair_ingress_,block_knowledge,capella_relay_.at("dependencyBlocks").get<size_t>(),capella_relay_.at("dependencyBytes").get<size_t>(),[knowledge,root,reply=std::move(reply)](Json result)mutable{if(result==Json{{"accepted",true}})knowledge->acknowledge(root);reply(std::move(result));},quantum);(*active_vote)->start();
      }else send(std::move(frame),[knowledge,root,reply=std::move(reply)](Json result)mutable{if(result.is_object()&&result.size()==1&&result.value("accepted",Json())==true)knowledge->acknowledge(root);reply(std::move(result));});
     };
-    std::make_shared<CapellaCatalogRelay>(io_,core,deliver,report_token_,kind,altair_ingress_,capella_relay_.at("pageEntries").get<size_t>(),capella_relay_.at("maximumEntries").get<size_t>(),[this,id,kind,active,active_vote,alive](Json result){*alive=false;if(*active)(*active)->cancel();if(*active_vote)(*active_vote)->cancel();altair_relay_budget_.release(id);if(trace_network_){result["event"]="test-capella-catalog-relay";result["peerId"]=id;result["kind"]=kind;std::cout<<result.dump()<<std::endl;}},[current,knowledge](const std::string& root){return current()&&knowledge->acknowledged(root);},capella_relay_.at("acknowledgedRoots").get<size_t>()>=capella_relay_.at("maximumEntries").get<size_t>())->start();return;
+    auto complete=[this,id,kind,active,active_vote,active_head,alive](Json result){*alive=false;if(*active)(*active)->cancel();if(*active_vote)(*active_vote)->cancel();if(*active_head)(*active_head)->cancel();altair_relay_budget_.release(id);if(trace_network_){result["event"]="test-capella-catalog-relay";result["peerId"]=id;result["kind"]=kind;std::cout<<result.dump()<<std::endl;}};
+    auto known=[current,knowledge](const std::string& root){return current()&&knowledge->acknowledged(root);};
+    if(kind=="block"){
+     *active_head=std::make_shared<CapellaHeadCatalogRelay>(io_,core,deliver,send,report_token_,capella_relay_.at("anchorRoot").get<std::string>(),altair_ingress_,knowledge,capella_relay_.at("dependencyBlocks").get<size_t>(),capella_relay_.at("dependencyBytes").get<size_t>(),capella_relay_.at("pageEntries").get<size_t>(),capella_relay_.at("maximumEntries").get<size_t>(),std::move(complete),std::move(known),quantum,fair);(*active_head)->start();
+    }else std::make_shared<CapellaCatalogRelay>(io_,core,deliver,report_token_,kind,altair_ingress_,capella_relay_.at("pageEntries").get<size_t>(),capella_relay_.at("maximumEntries").get<size_t>(),std::move(complete),std::move(known),fair)->start();return;
    }
    if(++it==peers_.end())it=peers_.begin();
   }while(it!=start);

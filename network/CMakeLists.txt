@@ -155,3 +155,10 @@ target_compile_definitions(nano-capella-attestation-delivery-tests PRIVATE FMT_C
 target_link_libraries(nano-capella-attestation-delivery-tests PRIVATE p2p::p2p)
 add_test(NAME capella_attestation_delivery COMMAND nano-capella-attestation-delivery-tests)
 set_tests_properties(capella_attestation_delivery PROPERTIES TIMEOUT 20)
+
+add_executable(nano-capella-head-catalog-tests test_capella_head_catalog_relay.cpp)
+target_include_directories(nano-capella-head-catalog-tests PRIVATE ../third_party)
+target_compile_definitions(nano-capella-head-catalog-tests PRIVATE FMT_CONSTEVAL=)
+target_link_libraries(nano-capella-head-catalog-tests PRIVATE p2p::p2p)
+add_test(NAME capella_head_catalog COMMAND nano-capella-head-catalog-tests)
+set_tests_properties(capella_head_catalog PROPERTIES TIMEOUT 20)

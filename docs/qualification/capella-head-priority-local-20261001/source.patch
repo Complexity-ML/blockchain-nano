@@ -1,0 +1,147 @@
+diff --git a/network/CMakeLists.txt b/network/CMakeLists.txt
+index f8e8d26..49cfe0a 100644
+--- a/network/CMakeLists.txt
++++ b/network/CMakeLists.txt
+@@ -155,3 +155,10 @@ target_compile_definitions(nano-capella-attestation-delivery-tests PRIVATE FMT_C
+ target_link_libraries(nano-capella-attestation-delivery-tests PRIVATE p2p::p2p)
+ add_test(NAME capella_attestation_delivery COMMAND nano-capella-attestation-delivery-tests)
+ set_tests_properties(capella_attestation_delivery PROPERTIES TIMEOUT 20)
++
++add_executable(nano-capella-head-catalog-tests test_capella_head_catalog_relay.cpp)
++target_include_directories(nano-capella-head-catalog-tests PRIVATE ../third_party)
++target_compile_definitions(nano-capella-head-catalog-tests PRIVATE FMT_CONSTEVAL=)
++target_link_libraries(nano-capella-head-catalog-tests PRIVATE p2p::p2p)
++add_test(NAME capella_head_catalog COMMAND nano-capella-head-catalog-tests)
++set_tests_properties(capella_head_catalog PROPERTIES TIMEOUT 20)
+diff --git a/network/main.cpp b/network/main.cpp
+index e6297ee..466184c 100644
+--- a/network/main.cpp
++++ b/network/main.cpp
+@@ -16,6 +16,7 @@
+ #include "altair_archive_relay.hpp"
+ #include "capella_catalog_relay.hpp"
+ #include "capella_attestation_delivery.hpp"
++#include "capella_head_catalog_relay.hpp"
+ #include "capella_peer_core.hpp"
+ #include "capella_block_delivery.hpp"
+ #include "altair_vote_delivery.hpp"
+@@ -198,6 +199,7 @@ class Network {
+     auto core=capella_peer_core([this](const std::string& method,Json params,Reply reply){core_.call(method,std::move(params),std::move(reply));},current);
+     auto active=std::make_shared<std::shared_ptr<CapellaBlockDelivery>>();
+     auto active_vote=std::make_shared<std::shared_ptr<CapellaAttestationDelivery>>();
++    auto active_head=std::make_shared<std::shared_ptr<CapellaHeadCatalogRelay>>();
+     if(kind=="attestation"&&!peer.capella_blocks)peer.capella_blocks=std::make_shared<AltairRelayProgress>(capella_relay_.at("acknowledgedRoots").get<size_t>());
+     const auto block_knowledge=peer.capella_blocks;
+     const bool fair=capella_relay_.at("acknowledgedRoots").get<size_t>()>=capella_relay_.at("maximumEntries").get<size_t>();
+@@ -210,7 +212,11 @@ class Network {
+       *active_vote=std::make_shared<CapellaAttestationDelivery>(io_,core,send,report_token_,capella_relay_.at("anchorRoot").get<std::string>(),std::move(frame),altair_ingress_,block_knowledge,capella_relay_.at("dependencyBlocks").get<size_t>(),capella_relay_.at("dependencyBytes").get<size_t>(),[knowledge,root,reply=std::move(reply)](Json result)mutable{if(result==Json{{"accepted",true}})knowledge->acknowledge(root);reply(std::move(result));},quantum);(*active_vote)->start();
+      }else send(std::move(frame),[knowledge,root,reply=std::move(reply)](Json result)mutable{if(result.is_object()&&result.size()==1&&result.value("accepted",Json())==true)knowledge->acknowledge(root);reply(std::move(result));});
+     };
+-    std::make_shared<CapellaCatalogRelay>(io_,core,deliver,report_token_,kind,altair_ingress_,capella_relay_.at("pageEntries").get<size_t>(),capella_relay_.at("maximumEntries").get<size_t>(),[this,id,kind,active,active_vote,alive](Json result){*alive=false;if(*active)(*active)->cancel();if(*active_vote)(*active_vote)->cancel();altair_relay_budget_.release(id);if(trace_network_){result["event"]="test-capella-catalog-relay";result["peerId"]=id;result["kind"]=kind;std::cout<<result.dump()<<std::endl;}},[current,knowledge](const std::string& root){return current()&&knowledge->acknowledged(root);},capella_relay_.at("acknowledgedRoots").get<size_t>()>=capella_relay_.at("maximumEntries").get<size_t>())->start();return;
++    auto complete=[this,id,kind,active,active_vote,active_head,alive](Json result){*alive=false;if(*active)(*active)->cancel();if(*active_vote)(*active_vote)->cancel();if(*active_head)(*active_head)->cancel();altair_relay_budget_.release(id);if(trace_network_){result["event"]="test-capella-catalog-relay";result["peerId"]=id;result["kind"]=kind;std::cout<<result.dump()<<std::endl;}};
++    auto known=[current,knowledge](const std::string& root){return current()&&knowledge->acknowledged(root);};
++    if(kind=="block"){
++     *active_head=std::make_shared<CapellaHeadCatalogRelay>(io_,core,deliver,send,report_token_,capella_relay_.at("anchorRoot").get<std::string>(),altair_ingress_,knowledge,capella_relay_.at("dependencyBlocks").get<size_t>(),capella_relay_.at("dependencyBytes").get<size_t>(),capella_relay_.at("pageEntries").get<size_t>(),capella_relay_.at("maximumEntries").get<size_t>(),std::move(complete),std::move(known),quantum,fair);(*active_head)->start();
++    }else std::make_shared<CapellaCatalogRelay>(io_,core,deliver,report_token_,kind,altair_ingress_,capella_relay_.at("pageEntries").get<size_t>(),capella_relay_.at("maximumEntries").get<size_t>(),std::move(complete),std::move(known),fair)->start();return;
+    }
+    if(++it==peers_.end())it=peers_.begin();
+   }while(it!=start);
+diff --git a/network/capella_head_catalog_relay.hpp b/network/capella_head_catalog_relay.hpp
+new file mode 100644
+index 0000000..c506c69
+--- /dev/null
++++ b/network/capella_head_catalog_relay.hpp
+@@ -0,0 +1,44 @@
++#pragma once
++#include "capella_block_delivery.hpp"
++#include "capella_catalog_relay.hpp"
++
++// Prioritize the local authenticated LMD-GHOST head, then preserve the complete
++// historical block catalog. One total deadline and shared dependency quantum.
++// The remote receiver still validates every block; a status hint is not an ACK.
++class CapellaHeadCatalogRelay:public std::enable_shared_from_this<CapellaHeadCatalogRelay>{
++ asio::io_context& io_;AltairCoreDispatch::Call core_;CapellaCatalogRelay::Deliver deliver_;
++ std::function<void(Json,Reply)> send_;std::string token_,anchor_;
++ std::shared_ptr<AltairMessageIngress> ingress_;std::shared_ptr<AltairRelayProgress> knowledge_;
++ size_t dependency_blocks_,dependency_bytes_,page_,maximum_;Reply done_;CapellaCatalogRelay::Known known_;
++ std::shared_ptr<CapellaDeliveryQuantum> quantum_;bool fair_,started_=false,finished_=false;
++ asio::steady_timer timer_;std::chrono::steady_clock::time_point deadline_,began_;
++ std::shared_ptr<CapellaBlockDelivery> head_;std::shared_ptr<CapellaCatalogRelay> catalog_;
++ std::string priority_="unselected";
++ void finish(Json result){if(finished_)return;if(result.value("success",false)&&std::chrono::steady_clock::now()>deadline_){result["success"]=false;result["reason"]="head-or-catalog-deadline";result["failureStage"]="catalog";}finished_=true;timer_.cancel();if(head_)head_->cancel();if(catalog_)catalog_->cancel();result["headPriority"]=priority_;if(result.contains("elapsedMs"))result["catalogElapsedMs"]=result["elapsedMs"];result["elapsedMs"]=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-began_).count();auto done=std::move(done_);done(std::move(result));}
++ void fail(const char* reason){finish(Json{{"success",false},{"reason",reason},{"stage",catalog_?"catalog":"head"},{"failureStage",catalog_?"catalog":"head"},{"closed",!catalog_}});}
++ Reply callback(std::function<void(Json)> handler){auto once=std::make_shared<std::atomic<bool>>(false);return [self=shared_from_this(),once,handler=std::move(handler)](Json value){if(once->exchange(true))return;asio::post(self->io_,[self,handler,value=std::move(value)]()mutable{if(self->finished_)return;try{handler(std::move(value));}catch(...){self->fail("invalid-head-response");}});};}
++ void catalog(){
++  const auto remaining=deadline_-std::chrono::steady_clock::now();if(remaining<=std::chrono::steady_clock::duration::zero()){fail("head-or-catalog-deadline");return;}
++  catalog_=std::make_shared<CapellaCatalogRelay>(io_,core_,deliver_,token_,"block",ingress_,page_,maximum_,callback([self=shared_from_this()](Json result){self->finish(std::move(result));}),known_,fair_);catalog_->start(remaining);
++ }
++ void selected(Json status){
++  if(!status.is_object()||!status.contains("headRoot")||!status["headRoot"].is_string()||!status.contains("headSlot")||!status["headSlot"].is_number_unsigned()){fail("head-reference-unavailable");return;}
++  const auto id=status["headRoot"].get<std::string>();
++  if(id.size()!=66||!id.starts_with("0x")||!std::all_of(id.begin()+2,id.end(),[](char c){return (c>='0'&&c<='9')||(c>='a'&&c<='f');})){fail("invalid-head-reference");return;}
++  if(id==anchor_){priority_="anchor";catalog();return;}
++  if(knowledge_->acknowledged(id)){priority_="already-acknowledged";catalog();return;}
++  priority_="selected";const auto remaining=deadline_-std::chrono::steady_clock::now();if(remaining<=std::chrono::steady_clock::duration::zero()){fail("head-or-catalog-deadline");return;}
++  head_=std::make_shared<CapellaBlockDelivery>(io_,core_,send_,token_,anchor_,id,ingress_,knowledge_,dependency_blocks_,dependency_bytes_,callback([self=shared_from_this()](Json ack){
++   if(ack==Json{{"yielded",true}}){self->priority_="dependency-quantum-yield";self->fail("dependency-quantum-yield");return;}
++   if(ack!=Json{{"accepted",true}}){self->fail("head-admission-unconfirmed");return;}
++   self->priority_="admitted";self->catalog();
++  }),quantum_);head_->start(remaining);
++ }
++public:
++ CapellaHeadCatalogRelay(asio::io_context& io,AltairCoreDispatch::Call core,CapellaCatalogRelay::Deliver deliver,std::function<void(Json,Reply)> send,std::string token,std::string anchor,std::shared_ptr<AltairMessageIngress> ingress,std::shared_ptr<AltairRelayProgress> knowledge,size_t dependency_blocks,size_t dependency_bytes,size_t page,size_t maximum,Reply done,CapellaCatalogRelay::Known known,std::shared_ptr<CapellaDeliveryQuantum> quantum={},bool fair=false):io_(io),core_(std::move(core)),deliver_(std::move(deliver)),send_(std::move(send)),token_(std::move(token)),anchor_(std::move(anchor)),ingress_(std::move(ingress)),knowledge_(std::move(knowledge)),dependency_blocks_(dependency_blocks),dependency_bytes_(dependency_bytes),page_(page),maximum_(maximum),done_(std::move(done)),known_(std::move(known)),quantum_(std::move(quantum)),fair_(fair),timer_(io){if(!core_||!deliver_||!send_||token_.empty()||!ingress_||!knowledge_||!dependency_blocks_||!dependency_bytes_||!page_||page_>maximum_||!done_)throw std::invalid_argument("Invalid Capella head catalog relay");}
++ void start(std::chrono::steady_clock::duration timeout=std::chrono::seconds(30)){
++  if(started_||finished_||timeout<=std::chrono::steady_clock::duration::zero())throw std::logic_error("Invalid Capella head relay start");started_=true;began_=std::chrono::steady_clock::now();deadline_=began_+timeout;timer_.expires_at(deadline_);timer_.async_wait([self=shared_from_this()](auto e){if(!e)self->fail("head-or-catalog-deadline");});
++  auto reply=callback([self=shared_from_this()](Json status){self->selected(std::move(status));});try{core_("nano_capellaStatus",Json::array({token_}),reply);}catch(...){reply(nullptr);}
++ }
++ void cancel(){if(!finished_)fail("cancelled");}
++};
+diff --git a/network/test_capella_head_catalog_relay.cpp b/network/test_capella_head_catalog_relay.cpp
+new file mode 100644
+index 0000000..967af4b
+--- /dev/null
++++ b/network/test_capella_head_catalog_relay.cpp
+@@ -0,0 +1,43 @@
++#include "capella_head_catalog_relay.hpp"
++#include <iostream>
++#include <thread>
++using namespace std::chrono_literals;
++void check(bool b,const char* m){if(!b)throw std::runtime_error(m);}
++std::string root(char c){return "0x"+std::string(64,c);}
++std::string encode(const std::vector<uint8_t>& b){std::string s="0x";for(auto v:b){s+="0123456789abcdef"[v>>4];s+="0123456789abcdef"[v&15];}return s;}
++int main(){try{
++ const AltairWireProfile p{"0x539",root('a'),"0x01020304",2048,512,256,256,root('b')};unsigned cases=0;
++ for(const std::string mode:{"normal","cached","anchor","invalid-root","bad-slot","status-null","missing-export","reject-head","yield","cancel-status","cancel-head","timeout-status","timeout-head","timeout-catalog","shared-quantum","late-completion","duplicate"}){
++  asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(p,budget);auto knowledge=std::make_shared<AltairRelayProgress>(8);if(mode=="cached")knowledge->acknowledge(root('3'));
++  unsigned done=0,pages=0,head_sends=0,historical_sends=0;Json result;Reply late;
++  auto frame=[&](unsigned n){std::vector<uint8_t> b(404,0);b[0]=100;b[180]=84;b[100]=n;const auto parent=n==4?0:n-1;std::fill(b.begin()+116,b.begin()+148,uint8_t(parent*17));return Json{{"chainId",p.chain_id},{"genesisHash",p.genesis_hash},{"forkDigest",p.fork_digest},{"consensusIdentity",p.consensus_identity},{"kind","block"},{"ssz",encode(b)}};};
++  auto core=[&](std::string method,Json params,Reply reply){check(params[0]=="token","authentication missing");Json value;
++   if(method=="nano_capellaStatus"){
++    if(mode=="cancel-status"||mode=="timeout-status"){late=reply;return;}
++    value=mode=="status-null"?Json(nullptr):Json{{"headRoot",mode=="invalid-root"?"0xBAD":mode=="anchor"?root('0'):root('3')},{"headSlot",uint64_t(3)}};if(mode=="bad-slot")value["headSlot"]=-1;
++   }else if(method=="nano_capellaExport"){
++    const auto id=params[2].get<std::string>();const unsigned n=id[2]-'0';check(n>0&&n<5,"invalid export root");value={{"root",id},{"available",mode!="missing-export"},{"parentRoot",root(char('0'+(n==4?0:n-1)))},{"envelope",frame(n)}};
++   }else if(method=="nano_capellaCatalogGeneration"){check(mode=="anchor"||knowledge->acknowledged(root('3')),"history opened before head ACK");value=root('e');}
++   else if(method=="nano_capellaCatalogAcquire")value={{"handle",root('c')}};
++   else if(method=="nano_capellaCatalogPage"){++pages;value={{"kind","block"},{"sequence","0x1"},{"digest",root('d')},{"entries",Json::array({root('1'),root('2'),root('3'),root('4')})},{"next",nullptr}};}
++   else if(method=="nano_capellaCatalogRelease"||method=="nano_capellaCatalogClose")value=true;
++   else throw std::runtime_error("unexpected core method");reply(value);if(mode=="duplicate")reply(value);
++  };
++  auto send=[&](Json wire,Reply reply){++head_sends;check(pages==0,"priority dependency sent after history");if(mode=="cancel-head"||mode=="timeout-head"){late=reply;return;}reply(Json{{"accepted",mode!="reject-head"}});if(mode=="duplicate")reply(Json{{"accepted",true}});};
++  std::shared_ptr<CapellaDeliveryQuantum> q;
++  auto deliver=[&](std::string id,Json,Reply reply){++historical_sends;if(mode=="shared-quantum"){auto historical=std::make_shared<CapellaBlockDelivery>(io,core,send,"token",root('0'),id,ingress,knowledge,4,8192,std::move(reply),q);historical->start(20ms);return;}if(mode=="timeout-catalog"){late=reply;return;}if(mode=="late-completion")std::this_thread::sleep_for(25ms);knowledge->acknowledge(id);reply(Json{{"accepted",true}});};
++  q=std::make_shared<CapellaDeliveryQuantum>(CapellaDeliveryQuantum{mode=="yield"?2u:mode=="shared-quantum"?3u:8u});
++  auto d=std::make_shared<CapellaHeadCatalogRelay>(io,core,deliver,send,"token",root('0'),ingress,knowledge,4,8192,4,8,[&](Json r){++done;result=std::move(r);},[&](const std::string& id){return knowledge->acknowledged(id);},q,true);d->start(20ms);
++  if(mode=="cancel-status"||mode=="cancel-head"){io.poll();check(bool(late),"cancel fixture not reached");d->cancel();late(Json{{"accepted",true}});io.restart();}io.run();
++  const bool success=mode=="normal"||mode=="cached"||mode=="anchor"||mode=="duplicate";check(done==1&&result["success"]==success,"wrong completion");
++  if(mode=="normal"||mode=="duplicate")check(head_sends==3&&historical_sends==1&&pages==1&&result["headPriority"]=="admitted","head-first delivery lost history or real ACKs");
++  if(mode=="cached")check(head_sends==0&&historical_sends==3&&result["headPriority"]=="already-acknowledged","cached head retransmitted or history skipped");
++  if(mode=="yield")check(head_sends==2&&pages==0&&knowledge->acknowledged(root('2'))&&!knowledge->acknowledged(root('3'))&&result["reason"]=="dependency-quantum-yield","quantum bypass or fake head ACK");
++  if(mode=="late-completion")check(result["reason"]=="head-or-catalog-deadline","late completion bypassed total deadline");
++  if(mode=="shared-quantum")check(head_sends==3&&historical_sends==1&&pages==1&&!knowledge->acknowledged(root('4'))&&result["headPriority"]=="admitted"&&result["reason"]=="dependency-quantum-yield","history reset shared head quota");
++  if(mode=="reject-head"||mode=="cancel-head"||mode=="timeout-head")check(pages==0&&!knowledge->acknowledged(root('1')),"unconfirmed head authorized history");
++  if(mode=="timeout-status"||mode=="timeout-head"||mode=="timeout-catalog"){check(result["reason"]=="head-or-catalog-deadline","total deadline changed by phase");if(late){late(Json{{"accepted",true}});io.restart();io.run();check(done==1,"late callback completed again");}}
++  ++cases;
++ }
++ std::cout<<cases<<" head-priority scenarios passed; modeled transport is not WAN qualification\n";
++}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
