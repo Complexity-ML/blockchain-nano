@@ -2370,3 +2370,14 @@ Les préconditions exactes sont satisfaites et la reconstruction/régression com
 ### Assemblage depuis le répertoire qualifié — 2026-10-01
 
 Le script de livraison sélectionne désormais le sous-répertoire du build qualifié sans écraser les anciens exécutables ; six arguments conservent le chemin historique. Huit nouveaux contrôles passent, ainsi que deux exports réels Docker sur fichiers factices : trois fichiers réguliers attendus et lien symbolique refusé. Aucun nouveau runtime assemblé ou service déployé. Le README du staking historique est rectifié (plafond 1 000 déjà supprimé du contrat, pagination existante, distinction Beacon). [Preuves et limites](qualification/candidate-build-path-20261001/README.md). Les campagnes intégrées c10426b2 restent figées ; aucune clôture de gate global.
+
+### 2026-10-01 — Préparation WAN du candidat compilé en isolation
+
+Le banc multihost accepte `NANO_TEST_BUILD_SUBDIRECTORY` en mode volume
+pour lire Nano, le marqueur et l'auditeur de rotation depuis le build isolé,
+y compris pour le backup/audit. Le volume reste en lecture seule ; aucun
+binaire historique n'est écrasé. Quatre nouveaux contrôles et les contrôles
+d'images passent (8/8 ciblés), la suite opérationnelle locale passe 280/280.
+Preuves : `docs/qualification/wan-build-paths-20261001/`. Cela prépare la
+qualification réseau du même candidat après les régressions ; aucune campagne
+WAN n'est lancée ni déclarée réussie ici, aucun gate de production clos.

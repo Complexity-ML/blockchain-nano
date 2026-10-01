@@ -22,6 +22,7 @@ import {waitRestoredRecovery} from './restore-recovery.mjs';
 import {startFinalityMonitor} from './monitor.mjs';
 import {qualifyAlertFault} from './alert-fault.mjs';
 import {selectCandidates,verifyPackagedImage} from './candidate-images.mjs';
+import {selectBuildPaths} from './build-paths.mjs';
 import {advanceRestartConfiguration} from './restart-pins.mjs';
 import {decodeHttpResponse,httpStatusTrailer} from './http-response.mjs';
 const exec=promisify(execFile),[target,revision,outputArg]=process.argv.slice(2);
@@ -31,6 +32,7 @@ if(!/^[a-z_][a-z0-9_-]*@[0-9.]+$/.test(target??'')||!(/^[0-9a-f]{40}$/).test(rev
 const monitor=process.env.NANO_TEST_FINALITY_MONITOR==='1';
 const alertDelivery=process.env.NANO_TEST_ALERT_DELIVERY==='1';
 const buildVolume=process.env.NANO_TEST_BUILD_VOLUME==='1';
+const buildPaths=selectBuildPaths(buildVolume,process.env.NANO_TEST_BUILD_SUBDIRECTORY);
 const candidateFile=process.env.NANO_TEST_CANDIDATE_MANIFEST;
 if(candidateFile&&buildVolume)throw Error('Select packaged images or build volume, not both');
 const candidates=candidateFile?selectCandidates(JSON.parse(await readFile(resolve(candidateFile),'utf8')),revision):null;
@@ -40,7 +42,7 @@ const nofile=process.env.NANO_DOCKER_NOFILE??'65536';
 if(!/^[1-9]\d*$/.test(nofile)||!Number.isSafeInteger(Number(nofile)))throw Error('NANO_DOCKER_NOFILE requires a positive safe integer');
 const descriptorArgs=['--ulimit',`nofile=${nofile}:${nofile}`];
 const artifactMount=buildVolume?['--mount','type=volume,src=nano-linux-sync-build,dst=/build,readonly']:[];
-const runtimeCommand=buildVolume?['/build/nano']:[];
+const runtimeCommand=buildVolume?[buildPaths.nano]:[];
 const traceArgs=process.env.NANO_TEST_NETWORK_TRACE==='1'?['--env','NANO_TEST_NETWORK_TRACE=1']:[];
 const id=Date.now().toString(36),local=`nano-qualification-mac-${id}`,remote=`nano-qualification-vps-${id}`;
 const partition=process.env.NANO_TEST_WAN_PARTITION==='1',asymmetric=process.env.NANO_TEST_WAN_ASYMMETRIC==='1',testNetwork=remote+'-net';
@@ -85,9 +87,9 @@ for(const onRemote of [false,true]){
   artifacts.push({host:onRemote?'vps':'docker-mac',imageId:info.Id,revision,executables:verifyPackagedImage(spec,info,hashes),packaged:true});
  }
  if(buildVolume){
-  const built=(await docker(['run','--rm','--network','none',...artifactMount,image,'cat','/build/production-source-revision.txt'],onRemote)).trim();
+  const built=(await docker(['run','--rm','--network','none',...artifactMount,image,'cat',buildPaths.revision],onRemote)).trim();
   if(built!==revision)throw Error('Build volume source revision mismatch');
-  const hashes=await docker(['run','--rm','--network','none',...artifactMount,image,'sha256sum','/build/nano','/build/network/nano-p2p',...(rotation?['/build/nano-capella-rotation-audit']:[])],onRemote);
+  const hashes=await docker(['run','--rm','--network','none',...artifactMount,image,'sha256sum',buildPaths.nano,buildPaths.p2p,...(rotation?[buildPaths.rotationAudit]:[])],onRemote);
   artifacts.push({host:onRemote?'vps':'docker-mac',imageId:info.Id,revision:built,sha256:hashes});
  }
 }
@@ -117,16 +119,16 @@ const rpc=async(kind,method,params=[])=>{
 try{
  const binary=join(repo,'build-release/nano'),p2p=join(repo,'build-network/nano-p2p');
  if(rotation)await log({event:'rotation-audit-binary',sha256:createHash('sha256').update(await readFile(join(repo,'build-release/nano-capella-rotation-audit'))).digest('hex')});
- const harness={};for(const name of ['run.mjs','majority-island.mjs','partition.mjs','partition-cycles.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','fault-progress.mjs','prepare.mjs','rotation.mjs','bounded-load.mjs','load-receipts.mjs','restore-config.mjs','restore-recovery.mjs','backup-restore.sh','monitor.mjs','alert-fault.mjs','candidate-images.mjs','restart-pins.mjs','http-response.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
+ const harness={};for(const name of ['run.mjs','majority-island.mjs','partition.mjs','partition-cycles.mjs','asymmetric.mjs','observe.mjs','validator-gate.mjs','recovery-observation.mjs','clock-sample.mjs','fault-progress.mjs','prepare.mjs','rotation.mjs','bounded-load.mjs','load-receipts.mjs','restore-config.mjs','restore-recovery.mjs','backup-restore.sh','monitor.mjs','alert-fault.mjs','candidate-images.mjs','build-paths.mjs','restart-pins.mjs','http-response.mjs'])harness[name]=createHash('sha256').update(await readFile(join(repo,'tests/multihost',name))).digest('hex');
  if(monitor&&(fork!=='capella'||!privateTransport||partition||asymmetric||backupRestore||rotation||boundedLoad))throw Error('Monitor qualification requires standalone private Capella campaign');
- await log({event:'harness',monitor,alertDelivery,partition,asymmetric,rotation,boundedLoad,backupRestore,pinnedRestart,partitionCuts,majorityIsland,majorityCutMs,faultProgress,fork,buildVolume,packagedImages:Boolean(candidates),artifacts,sha256:harness});
+ await log({event:'harness',monitor,alertDelivery,partition,asymmetric,rotation,boundedLoad,backupRestore,pinnedRestart,partitionCuts,majorityIsland,majorityCutMs,faultProgress,fork,buildVolume,buildPaths:buildVolume?buildPaths:null,packagedImages:Boolean(candidates),artifacts,sha256:harness});
  await log({event:'binaries',revision,nanoSha256:createHash('sha256').update(await readFile(binary)).digest('hex'),p2pSha256:createHash('sha256').update(await readFile(p2p)).digest('hex')});
  const assets=join(output,'assets'),prepared=join(output,'prepared');
  await exec(join(repo,`build-release/nano-${fork}-transition-tests`),[fork==='capella'?'--export-network':'--export-kurtosis',assets],{timeout:30000});
  const topology=[{name:'mac-native',host:'mac',mode:'native',rpcPort:18545,p2pPort:30305,p2pBinary:p2p,runtimeDirectory:join(prepared,'mac-native')},{name:'mac-docker',host:'mac',mode:'docker',rpcPort:8545,p2pPort:30303},{name:'vps-docker',host:target,mode:'docker',rpcPort:8545,p2pPort:30303}];
  await writeFile(join(output,'topology.json'),JSON.stringify(topology));
  await exec(process.execPath,['tests/multihost/prepare.mjs',assets,prepared,join(output,'topology.json')]);
- if(buildVolume)for(const name of ['mac-docker','vps-docker']){const path=join(prepared,name,'node.json'),c=await json(path);c.p2p_binary='/build/network/nano-p2p';await writeFile(path,JSON.stringify(c));}
+ if(buildVolume)for(const name of ['mac-docker','vps-docker']){const path=join(prepared,name,'node.json'),c=await json(path);c.p2p_binary=buildPaths.p2p;await writeFile(path,JSON.stringify(c));}
  await sh(['mkdir',remoteRoot]);
  // Only newly generated PUBLIC fixtures cross SSH; software arrived via Git.
  await exec('scp',['-q','-r',join(prepared,'vps-docker'),`${target}:${remoteRoot}/config`],{timeout:30000});
@@ -271,7 +273,7 @@ try{
   await exec('scp',['-q',join(restoreDirectory,'node.json'),`${target}:${remoteRoot}/restore-config/node.json`],{timeout:10000});
   await exec('scp',['-q',join(restoreDirectory,'audit-request.json'),join(restoreDirectory,'stop-receipt.json'),`${target}:${restoreProof}/`],{timeout:10000});
   const active=(await docker(['ps','--filter','volume='+remote+'-data','--format','{{.Names}}'],true)).trim();if(active)throw Error('Backup source volume still used by a running container');
-  await docker(['run','--rm','--network','none',...descriptorArgs,...artifactMount,'--cpus','2','--memory','3g','--mount',`type=volume,src=${remote}-data,dst=/source,readonly`,'--mount',`type=bind,src=${remoteRoot}/config,dst=/config,readonly`,'--mount',`type=bind,src=${restoreProof},dst=/proof`,'--mount',`type=bind,src=/home/${target.split('@')[0]}/blockchain-nano-git,dst=/work,readonly`,image,'bash','/work/tests/multihost/backup-restore.sh','/source','/proof/backup','/config/genesis.json','/proof/audit-request.json','/build/nano'],true,90000);
+  await docker(['run','--rm','--network','none',...descriptorArgs,...artifactMount,'--cpus','2','--memory','3g','--mount',`type=volume,src=${remote}-data,dst=/source,readonly`,'--mount',`type=bind,src=${remoteRoot}/config,dst=/config,readonly`,'--mount',`type=bind,src=${restoreProof},dst=/proof`,'--mount',`type=bind,src=/home/${target.split('@')[0]}/blockchain-nano-git,dst=/work,readonly`,image,'bash','/work/tests/multihost/backup-restore.sh','/source','/proof/backup','/config/genesis.json','/proof/audit-request.json',buildPaths.nano],true,90000);
   const audit=JSON.parse(await sh(['sudo','-n','cat',restoreProof+'/backup/audit.json']));if(audit.canonicalHistoryVerified!==true)throw Error('Restored canonical audit not verified');
   const metadata=['source-before.sha256','source-after.sha256','restored-before.sha256','restored-after.sha256','archive.sha256','inputs.sha256','audit.json','passed.txt'];
   for(const name of metadata)await writeFile(join(restoreDirectory,name),await sh(['sudo','-n','cat',restoreProof+'/backup/'+name]));
@@ -407,7 +409,7 @@ if(pinnedRestart&&!process.exitCode){
    for(const [name,onRemote,index] of [[local,false,1],[remote,true,2]]){
     const config=onRemote?remoteRoot+'/config':join(output,'prepared/mac-docker');
     const proof=onRemote?remoteRoot+'/rotation-proof.json':proofFile;
-    audits.push(JSON.parse(await docker(['run','--rm','--network','none',...artifactMount,'--mount',`type=bind,src=${config},dst=/config,readonly`,'--mount',`type=bind,src=${proof},dst=/proof.json,readonly`,'--mount',`type=volume,src=${name}-data,dst=/var/lib/nano`,image,'/build/nano-capella-rotation-audit','/config/genesis.json','/config/node.json','/var/lib/nano/chain','/proof.json',rotationNodes[index]],onRemote,120000)));
+    audits.push(JSON.parse(await docker(['run','--rm','--network','none',...artifactMount,'--mount',`type=bind,src=${config},dst=/config,readonly`,'--mount',`type=bind,src=${proof},dst=/proof.json,readonly`,'--mount',`type=volume,src=${name}-data,dst=/var/lib/nano`,image,buildPaths.rotationAudit,'/config/genesis.json','/config/node.json','/var/lib/nano/chain','/proof.json',rotationNodes[index]],onRemote,120000)));
     await writeFile(join(output,'rotation-audits.json'),JSON.stringify(audits,null,2));
    }
    for(const audit of audits)if(audit.stateSha256!==audits[0].stateSha256||audit.finalizedRoot!==audits[0].finalizedRoot||audit.committeeHash!==audits[0].committeeHash)throw Error('Reopened rotation audits disagree');
