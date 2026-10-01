@@ -1,0 +1,153 @@
+Updating 59ac33e..a3bd216
+Fast-forward
+ CMakeLists.txt                                     |   3 +
+ docs/EIP-IMPLEMENTATION-STATUS.md                  |   6 ++
+ docs/EVM-PRODUCTION-EIP-ROADMAP.md                 |   6 ++
+ docs/PRODUCTION-GOAL.md                            |   6 ++
+ docs/VALIDATOR-EIP-ROADMAP.md                      |   6 ++
+ .../beacon-publication-arm64-20261001/README.md    |   7 ++
+ .../draft-head-selection.log                       | 104 +++++++++++++++++++
+ .../draft-parent-selection.log                     |  13 +++
+ .../manifest.json                                  |  18 ++++
+ .../beacon-publication-arm64-20261001/results.json |  50 +++++++++
+ .../beacon-publication-arm64-20261001/source.json  |  11 ++
+ .../test_beacon_http_errors.cpp                    |  32 ++++++
+ .../beacon-publication-arm64-20261001/tests.log    |  26 +++++
+ .../tracked-source.diff                            |  94 +++++++++++++++++
+ .../partition-cycles-20261001/attempt-j/README.md  |   5 +
+ .../attempt-j/containerstates.json                 |  28 +++++
+ .../attempt-j/docker-mac.log.gz                    | Bin 0 -> 36072 bytes
+ .../attempt-j/manifest.json                        |  15 +++
+ .../attempt-j/native.log.gz                        | Bin 0 -> 37099 bytes
+ .../attempt-j/partition-harness.mjs                | 103 +++++++++++++++++++
+ .../attempt-j/resources.jsonl.gz                   | Bin 0 -> 2530 bytes
+ .../attempt-j/run.jsonl.gz                         | Bin 0 -> 12647 bytes
+ .../attempt-j/terminal-result.json                 | 113 +++++++++++++++++++++
+ .../partition-cycles-20261001/attempt-j/vps.log.gz | Bin 0 -> 54914 bytes
+ src/capella_beacon_api.cpp                         |   9 +-
+ src/http.cpp                                       |   3 +-
+ tests/test_beacon_http_errors.cpp                  |  32 ++++++
+ tests/test_capella_transition.cpp                  |  21 ++++
+ 28 files changed, 708 insertions(+), 3 deletions(-)
+ create mode 100644 docs/qualification/beacon-publication-arm64-20261001/README.md
+ create mode 100644 docs/qualification/beacon-publication-arm64-20261001/draft-head-selection.log
+ create mode 100644 docs/qualification/beacon-publication-arm64-20261001/draft-parent-selection.log
+ create mode 100644 docs/qualification/beacon-publication-arm64-20261001/manifest.json
+ create mode 100644 docs/qualification/beacon-publication-arm64-20261001/results.json
+ create mode 100644 docs/qualification/beacon-publication-arm64-20261001/source.json
+ create mode 100644 docs/qualification/beacon-publication-arm64-20261001/test_beacon_http_errors.cpp
+ create mode 100644 docs/qualification/beacon-publication-arm64-20261001/tests.log
+ create mode 100644 docs/qualification/beacon-publication-arm64-20261001/tracked-source.diff
+ create mode 100644 docs/qualification/partition-cycles-20261001/attempt-j/README.md
+ create mode 100644 docs/qualification/partition-cycles-20261001/attempt-j/containerstates.json
+ create mode 100644 docs/qualification/partition-cycles-20261001/attempt-j/docker-mac.log.gz
+ create mode 100644 docs/qualification/partition-cycles-20261001/attempt-j/manifest.json
+ create mode 100644 docs/qualification/partition-cycles-20261001/attempt-j/native.log.gz
+ create mode 100644 docs/qualification/partition-cycles-20261001/attempt-j/partition-harness.mjs
+ create mode 100644 docs/qualification/partition-cycles-20261001/attempt-j/resources.jsonl.gz
+ create mode 100644 docs/qualification/partition-cycles-20261001/attempt-j/run.jsonl.gz
+ create mode 100644 docs/qualification/partition-cycles-20261001/attempt-j/terminal-result.json
+ create mode 100644 docs/qualification/partition-cycles-20261001/attempt-j/vps.log.gz
+ create mode 100644 tests/test_beacon_http_errors.cpp
+From github.com:Complexity-ML/blockchain-nano
+   59ac33e..a3bd216  main       -> origin/main
+-- Found the following ICU libraries:
+--   uc (required): /usr/lib/x86_64-linux-gnu/libicuuc.so
+-- Could NOT find Valgrind (missing: Valgrind_INCLUDE_DIR Valgrind_WORKS) 
+
+
+secp256k1 configure summary
+===========================
+Build artifacts:
+  library type ........................ Static
+Optional modules:
+  ECDH ................................ OFF
+  ECDSA pubkey recovery ............... ON
+  extrakeys ........................... OFF
+  schnorrsig .......................... OFF
+  musig ............................... OFF
+  ElligatorSwift ...................... OFF
+Parameters:
+  ecmult window size .................. 15
+  ecmult gen table size ............... 86 KiB
+Optional features:
+  assembly ............................ x86_64
+  external callbacks .................. OFF
+Optional binaries:
+  benchmark ........................... OFF
+  noverify_tests ...................... OFF
+  tests ............................... OFF
+  exhaustive tests .................... OFF
+  ctime_tests ......................... OFF
+  examples ............................ OFF
+
+Cross compiling ....................... FALSE
+API visibility attributes ............. ON
+Valgrind .............................. OFF
+Preprocessor defined macros ........... ECMULT_WINDOW_SIZE=15 COMB_BLOCKS=43 COMB_TEETH=6 USE_ASM_X86_64=1
+C compiler ............................ Clang 18.1.3, /usr/bin/clang
+CFLAGS ................................ 
+Compile options ....................... -Wall -pedantic -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef
+Build type:
+ - CMAKE_BUILD_TYPE ................... Release
+ - CFLAGS ............................. -O2 
+ - LDFLAGS for executables ............ 
+ - LDFLAGS for shared libraries ....... 
+
+-- Configuring done (0.6s)
+-- Generating done (0.6s)
+-- Build files have been written to: /build
+[  0%] Built target nano_blst
+[  3%] Built target mcl_st
+[  7%] Built target secp256k1_precomputed
+[  7%] Built target nano-test-sync-fault
+[ 10%] Built target nano_ckzg
+[ 10%] Built target secp256k1
+[ 10%] Building CXX object CMakeFiles/nano_core.dir/src/capella_beacon_api.cpp.o
+[ 14%] Building CXX object CMakeFiles/nano_core.dir/src/http.cpp.o
+/work/src/capella_beacon_api.cpp:12:89: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   12 |  if(path=="/eth/v1/node/version")return {200,{{"data",{{"version","Nano/0.1.0/c++20"}}}}};
+      |                                                                                         ^
+/work/src/capella_beacon_api.cpp:22:118: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   22 |  if(!root&&!fork&&!finality&&!genesis&&!spec)return {404,{{"code",404},{"message","Beacon endpoint not implemented"}}};
+      |                                                                                                                      ^
+/work/src/capella_beacon_api.cpp:33:117: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   33 |    }catch(const std::invalid_argument&){return {400,{{"code",400},{"message","Expected head or 32-byte state root"}}};}
+      |                                                                                                                     ^
+/work/src/capella_beacon_api.cpp:37:81: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   37 |    if(!selected)return {404,{{"code",404},{"message","State root not retained"}}};
+      |                                                                                 ^
+/work/src/capella_beacon_api.cpp:46:166: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   46 |  if(genesis)return {200,{{"data",{{"genesis_time",std::to_string(number(b,0))},{"genesis_validators_root",octets(b,8,32)},{"genesis_fork_version",genesis_version}}}}};
+      |                                                                                                                                                                      ^
+/work/src/capella_beacon_api.cpp:84:70: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   84 |   if(checkpoint)checkpoint();return {200,{{"data",std::move(values)}}};
+      |                                                                      ^
+/work/src/capella_beacon_api.cpp:104:98: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  104 |  return {200,{{"execution_optimistic",false},{"finalized",is_finalized},{"data",std::move(data)}}};
+      |                                                                                                  ^
+/work/src/capella_beacon_api.cpp:117:117: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  117 |  auto error=[](unsigned code,const char* message){return BeaconReadResponse{code,{{"code",code},{"message",message}}};};
+      |                                                                                                                     ^
+/work/src/capella_beacon_api.cpp:160:91: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  160 |    {"header",{{"message",std::move(message)},{"signature",octets(*signed_block,4,96)}}}}}}};
+      |                                                                                           ^
+[ 14%] Building CXX object CMakeFiles/nano_core.dir/src/kzg.cpp.o
+9 warnings generated.
+[ 14%] Linking CXX static library libnano_core.a
+[100%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-capella-transition-tests.dir/tests/test_capella_transition.cpp.o
+[100%] Linking CXX executable nano-capella-transition-tests
+[100%] Built target nano-capella-transition-tests
+[  0%] Built target nano_blst
+[  3%] Built target mcl_st
+[ 10%] Built target nano_ckzg
+[ 10%] Built target secp256k1_precomputed
+[ 10%] Built target secp256k1
+[ 96%] Built target nano_core
+[ 96%] Building CXX object CMakeFiles/nano-beacon-http-errors-tests.dir/tests/test_beacon_http_errors.cpp.o
+[100%] Linking CXX executable nano-beacon-http-errors-tests
+[100%] Built target nano-beacon-http-errors-tests
+{"admissionWhileReaderPaused":true,"headAdvanced":true,"oldPublicationPreserved":true,"scenario":"beacon-read-concurrent-admission"}
+{"assembledBodies":9,"beaconReadChecks":14,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":0,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":false,"localProposals":8,"localRandao":8,"migrated":false,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":false,"rejected":20,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"wireMessages":0,"withdrawals":1}
+{"executionDeadlinePreserved":true,"privateExceptionRedacted":true,"queueCapacityReused":true,"scenario":"beacon-http-error-diagnostics"}
