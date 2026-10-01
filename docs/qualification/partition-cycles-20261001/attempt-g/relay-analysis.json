@@ -1,0 +1,37 @@
+{
+  "scope": "Complete stopped logs, per-peer block send completions between block catalog completions; not causal attribution of the WAN recovery delay",
+  "nodes": {
+    "native.log": {
+      "blockCatalogs": 414,
+      "maximumAcceptedBlockACKs": 8,
+      "catalogsAboveConfiguredQuota": 0,
+      "reasons": {
+        "success": 406,
+        "dependency-quantum-yield": 8
+      },
+      "unpairedSendCompletions": 0
+    },
+    "docker-mac.log": {
+      "blockCatalogs": 789,
+      "maximumAcceptedBlockACKs": 8,
+      "catalogsAboveConfiguredQuota": 0,
+      "reasons": {
+        "admission-rejected": 3,
+        "success": 783,
+        "dependency-quantum-yield": 3
+      },
+      "unpairedSendCompletions": 0
+    },
+    "vps.log": {
+      "blockCatalogs": 544,
+      "maximumAcceptedBlockACKs": 8,
+      "catalogsAboveConfiguredQuota": 0,
+      "reasons": {
+        "success": 528,
+        "invalid-response": 4,
+        "dependency-quantum-yield": 12
+      },
+      "unpairedSendCompletions": 0
+    }
+  }
+}

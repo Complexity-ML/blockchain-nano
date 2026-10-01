@@ -1,0 +1,74 @@
+{
+  "exitCode": 1,
+  "runtimeRevision": "9859768983944f6a8ca3188d08dd9825c6165ec0",
+  "harnessRevision": "686cb9f63845dc88cb9386e08be21f582059a9fb",
+  "cycles": [
+    {
+      "cycle": 1,
+      "requestedCutMs": 96000,
+      "actualCutWallMs": 97110,
+      "strictRecoveryPassed": true,
+      "acceptedMonotonicRecoveryMs": 138965.14591700002,
+      "lateCommonFinalityReadWallMs": null,
+      "nominalLimitMs": 180000
+    },
+    {
+      "cycle": 2,
+      "requestedCutMs": 192000,
+      "actualCutWallMs": 194174,
+      "strictRecoveryPassed": false,
+      "acceptedMonotonicRecoveryMs": null,
+      "lateCommonFinalityReadWallMs": 281270,
+      "nominalLimitMs": 180000
+    }
+  ],
+  "lateStableFinalityPassed": false,
+  "lateStabilityFailure": "Finality lag exceeds four epochs",
+  "validators": [
+    {
+      "file": "native.log",
+      "clockHealthy": true,
+      "healthy": true,
+      "failure": null,
+      "attestationsAdmitted": 439,
+      "proposalsAdmitted": 52,
+      "syncMessagesAdmitted": 2674,
+      "lastAttestationTraceSlot": 168,
+      "finalized": {
+        "epoch": "0x10",
+        "root": "0x0257255cd62e1894d175a594ef49ee04809389829eb50c92b46dec3e5859ade9"
+      }
+    },
+    {
+      "file": "docker-mac.log",
+      "clockHealthy": true,
+      "healthy": false,
+      "failure": "Sync duty clock regressed",
+      "attestationsAdmitted": 164,
+      "proposalsAdmitted": 24,
+      "syncMessagesAdmitted": 608,
+      "lastAttestationTraceSlot": 70,
+      "finalized": {
+        "epoch": "0x10",
+        "root": "0x0257255cd62e1894d175a594ef49ee04809389829eb50c92b46dec3e5859ade9"
+      }
+    },
+    {
+      "file": "vps.log",
+      "clockHealthy": true,
+      "healthy": true,
+      "failure": null,
+      "attestationsAdmitted": 419,
+      "proposalsAdmitted": 51,
+      "syncMessagesAdmitted": 1563,
+      "lastAttestationTraceSlot": 169,
+      "finalized": {
+        "epoch": "0x10",
+        "root": "0x0257255cd62e1894d175a594ef49ee04809389829eb50c92b46dec3e5859ade9"
+      }
+    }
+  ],
+  "validatorGatePassed": false,
+  "signingClockFailureCause": "Unknown: exact clock samples absent from sync signing failure",
+  "productionQualified": false
+}
