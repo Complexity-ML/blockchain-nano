@@ -2590,3 +2590,19 @@ quorum ou règle EVM assoupli. Build isolé à reconstruire après retrait avant
 réutilisation ; sources main et binaires originaux de campagne inchangés.
 Les critères initiaux et toutes les exigences restantes demeurent ouverts.
 [Diagnostics et expérience retirée](qualification/load-capacity-diagnostics-20261001/README.md).
+
+
+### 2026-10-01 — admission RPC étrangère corrigée, qualification AMD64 en cours
+
+Branche isolée 9861d94c : prélecture RLP du chainId avant débit du budget local,
+sans aucune admission ni suppression de l'ECDSA complet. Test nouveau échoue
+avant correction, puis passe : 384 enveloppes étrangères types 0/1/2 rejetées,
+admission saine préservée, signatures locales toujours limitées et refill testé.
+RPC et restart/charge legacy BFT passent ; profils Paris/Shanghai explicitement
+ajoutés, 22.56/22.60 s. Quatre CLI passent aussi sur le nouveau nano c6197c3e….
+Aucun quorum, délai ou gas modifié. Consensus Beacon Capella, gossip admission,
+charge arbitraire de même chaîne, estimation RPC et régression complète restent
+ouverts. Git fetch/worktree puis compilation Docker AMD64 du même candidat
+lancés sur VPS, sans déploiement ; résultat terminal encore attendu.
+Sources main et binaires originaux de la campagne 400 gelés et préservés.
+[Preuves et échecs initiaux](qualification/rpc-admission-isolation-20261001/README.md).
