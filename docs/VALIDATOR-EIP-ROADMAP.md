@@ -5328,3 +5328,19 @@ de build-essential ajoutée également (omission distincte, pas cause démontré
 du refus Git). Requalification nécessaire. Échec et annulation terminale
 du premier dispatch non Docker conservés. Gates C++/CI globale ouverts.
 [Échec](qualification/ci-20261001/core-first-docker-failure/README.md).
+
+
+### 2026-10-01 — compilation C++ CI Docker effectivement qualifiée
+
+Run `36887129414`, source `ee565c1`, completed/success. Checkout frais
+GitHub, Docker Ubuntu épinglé, 2 CPU/3 GiB, Clang 18.1.3, job 14m21s.
+Neuf inscriptions CTest vérifiées exactement et neuf tests JUnit exécutés
+réussis sans skip, 26,56 s. Nano et les exécutables sélectionnés compilés.
+Ce gate est clos pour ce sous-ensemble ; P2P, matrice complète, EEST global,
+reproductibilité bit à bit et production restent ouverts. Échecs conservés.
+Relevé read-only des deux images runtime : mêmes versions GMP/ICU/RocksDB/
+OpenSSL, aucun ldd introuvable ; inventaire de sources/notices partiel, pas
+SBOM exhaustif. Action d'archivage CI actualisée vers v6 Node24 épinglée pour
+éliminer l'annotation observée ; validation du workflow modifié requise.
+[CI C++](qualification/ci-20261001/core-docker-success/README.md),
+[inventaire](qualification/dependency-inventory-20261001/README.md).

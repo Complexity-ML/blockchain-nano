@@ -29,3 +29,11 @@ run 36886531310 terminé en échec. Lecture de révision corrigée avec
 exception de confiance limitée au checkout, toolchain make explicite.
 [Diagnostic conservé](qualification/ci-20261001/core-first-docker-failure/README.md).
 Requalification C++ toujours requise.
+
+Le build C++ Docker corrigé a réussi : neuf tests exécutés, aucun échec/skip,
+run [36887129414](https://github.com/Complexity-ML/blockchain-nano/actions/runs/36887129414).
+[Artefacts réels](qualification/ci-20261001/core-docker-success/README.md).
+Le sous-ensemble documenté est qualifié, pas la CI complète ni la reproductibilité.
+L'archivage passe à [upload-artifact v6 Node24](https://github.com/actions/upload-artifact/tree/b7c566a772e6b6bfb58ed0dc250532a479d7789f)
+épinglé, pour supprimer l'annotation de runtime obsolète ; aucun C++ runtime
+ne change et aucune nouvelle image de chaîne n'est nécessaire.
