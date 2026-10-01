@@ -1,0 +1,21 @@
+{
+  "revision": "c10426b2eab0aff7eaada3e4b57460f15cf7e90c",
+  "architecture": "arm64",
+  "test": "consensus_bellatrix_voluntary_exit_pruning",
+  "terminalTestResult": "failed",
+  "campaignTerminal": false,
+  "elapsedSeconds": 4.69,
+  "output": "310/417 Test #310: consensus_bellatrix_voluntary_exit_pruning .........***Failed    4.69 sec\nBellatrix observer canonical sync\nBellatrix observer canonical sync\nBellatrix observer canonical sync\nBellatrix observer canonical sync\nBellatrix observer canonical sync\nBellatrix observer canonical sync\nBellatrix observer canonical sync\nvoluntary exit received before block\nBeacon execution unavailable until checkpoint verification\n\n        ",
+  "exceptionGuard": "src/chain_beacon.cpp:6",
+  "causeEstablished": false,
+  "nextInvestigation": "Identify the exact call and readiness transition; compare AMD64 terminal result before changing the guarded execution-read contract.",
+  "sourceInspection": {
+    "clockMaximumStep": "one slot in BellatrixNetworkPair",
+    "possibleMissedBarrier": "Non-reorg exit inclusion advances to slots+1 without peer sync; pruning loop immediately advances to slots+2. RPC-triggered observer clock polling can therefore miss the intermediate slot.",
+    "failClosedPaths": [
+      "BellatrixLocalClock::poll catches non-cancellation exception and calls reactor.invalidate",
+      "BellatrixDurableReactor::publish marks execution unavailable after commit exception"
+    ],
+    "diagnosisLimitation": "Original failure does not preserve the triggering clock/commit exception. Missing barrier is a hypothesis, not an established runtime defect."
+  }
+}

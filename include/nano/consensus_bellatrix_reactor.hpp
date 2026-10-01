@@ -3,6 +3,7 @@
 #include "nano/storage.hpp"
 #include "nano/beacon_events.hpp"
 #include <memory>
+#include <exception>
 #include "nano/consensus_beacon_signer.hpp"
 namespace nano {
 class Blockchain;
@@ -57,6 +58,8 @@ class BellatrixDurableReactor {
  std::shared_ptr<const BellatrixSignedExitArchive> signed_exits_=std::make_shared<const BellatrixSignedExitArchive>();
  std::shared_ptr<const BeaconEventJournal> events_=std::make_shared<const BeaconEventJournal>();
  bool unavailable_=false;
+ std::exception_ptr failure_;
+ void fail_closed();
  void require_available() const;
  void publish(BellatrixForkStore,std::shared_ptr<const BellatrixSignedBlockArchive>,std::shared_ptr<const BellatrixSignedVoteArchive>,const std::function<void()>&,std::shared_ptr<const BellatrixSignedVoteArchive> slashings={},std::shared_ptr<const BellatrixSignedExitArchive> exits={});
 std::optional<Bytes> prepare_local_body_locked(uint64_t index,uint64_t slot,

@@ -266,6 +266,12 @@ int main(int argc,char** argv){try{
     check(cancelled&&fine.healthy()&&bound.current().token==unchanged,"cancelled unchanged tick corrupted clock");
     --wall;bool rejected=false;try{fine.poll();}catch(const std::runtime_error&){rejected=true;}
     check(rejected&&!fine.healthy(),"coalescing hid a backwards sub-phase clock step");
+    auto first_clock_failure=[&]{try{bound.current();}catch(const std::runtime_error& error){return std::string(error.what());}return std::string();};
+    const auto first_failure=first_clock_failure();
+    check(first_failure.find("initial failure: Bellatrix local clock discontinuity")!=std::string::npos&&first_failure.find("beforeObserved=1")!=std::string::npos,"Bellatrix lost original backward-clock diagnosis");
+    bound.invalidate();check(first_clock_failure()==first_failure,"repeated invalidation overwrote initial Bellatrix failure");
+    bool execution_closed=false;try{chain.tip();}catch(const std::runtime_error&){execution_closed=true;}
+    check(execution_closed,"diagnostic preservation reopened execution after clock failure");
     Blockchain jump_chain(live/"jump",g);BellatrixDurableReactor jump_bound(jump_chain,fork_rules,reactor_limits,*store);
     uint64_t jump_wall=start;BellatrixLocalClock jump(jump_bound,1,[&]{return jump_wall;});
     ++jump_wall;check(!jump.poll(),"sub-phase observation unexpectedly published");

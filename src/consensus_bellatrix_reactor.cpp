@@ -177,11 +177,19 @@ void BellatrixDurableReactor::validate_execution_binding()const{
 BellatrixDurableReactor::~BellatrixDurableReactor(){
  if(execution_){std::lock_guard lock(execution_->mutex_);execution_->beacon_ready_=false;}
 }
-void BellatrixDurableReactor::invalidate(){
- std::lock_guard lock(mutex_);unavailable_=true;
+void BellatrixDurableReactor::fail_closed(){
+ if(!failure_)failure_=std::current_exception();
+ unavailable_=true;
  if(execution_){std::lock_guard chain_lock(execution_->mutex_);execution_->beacon_ready_=false;}
 }
-void BellatrixDurableReactor::require_available()const{if(unavailable_||!state_||!token_)throw std::runtime_error("Bellatrix reactor unavailable; reopen and resolve checkpoint required");}
+void BellatrixDurableReactor::invalidate(){std::lock_guard lock(mutex_);fail_closed();}
+void BellatrixDurableReactor::require_available()const{
+ if(unavailable_||!state_||!token_){
+  std::string message="Bellatrix reactor unavailable; reopen and resolve checkpoint required";
+  if(failure_)try{std::rethrow_exception(failure_);}catch(const std::exception& error){message+="; initial failure: ";message+=error.what();}catch(...){message+="; initial failure: unknown exception";}
+  throw std::runtime_error(message);
+ }
+}
 void BellatrixDurableReactor::publish(BellatrixForkStore candidate,std::shared_ptr<const BellatrixSignedBlockArchive> archive,std::shared_ptr<const BellatrixSignedVoteArchive> votes,const std::function<void()>& checkpoint,std::shared_ptr<const BellatrixSignedVoteArchive> slashings,std::shared_ptr<const BellatrixSignedExitArchive> exits){
  if(!slashings)slashings=signed_slashings_;
  if(!exits)exits=signed_exits_;
@@ -225,7 +233,7 @@ void BellatrixDurableReactor::publish(BellatrixForkStore candidate,std::shared_p
  // merely because another peer returned a block/vote we already retained.
  if(token_&&sha256(Bytes(encoded.begin(),encoded.end()))==token_->digest){
   try{if(witness_)witness_->fork_checkpoint(chain_id_,genesis_,witness_limit(),witness_token_);if(!disk_.fork_checkpoint(chain_id_,genesis_,limits_.envelope_bytes,token_))throw std::runtime_error("Missing duplicate checkpoint");}
-  catch(...){unavailable_=true;if(execution_){std::lock_guard lock(execution_->mutex_);execution_->beacon_ready_=false;}throw;}
+  catch(...){fail_closed();throw;}
   return;
  }
 
@@ -290,7 +298,7 @@ void BellatrixDurableReactor::publish(BellatrixForkStore candidate,std::shared_p
   if(execution_)committed=execution_->commit_beacon_checkpoint(token_,tip->header.hash(),common_height,common_hash,suffix,next->blocks.at(next->timed.view.finalized.root).execution_block,encoded,limits_.envelope_bytes,limits_.blocks,archived);
   else committed=disk_.commit_execution_checkpoint(chain_id_,genesis_,token_,tip->header.hash(),common_height,common_hash,suffix,encoded,limits_.envelope_bytes,limits_.blocks,archived);
  }
- catch(...){unavailable_=true;if(execution_){std::lock_guard lock(execution_->mutex_);execution_->beacon_ready_=false;}throw;}
+ catch(...){fail_closed();throw;}
  events_=std::move(notifications);token_=std::move(committed);state_=std::move(next);signed_blocks_=std::move(archive);signed_votes_=std::move(votes);signed_slashings_=std::move(slashings);signed_exits_=std::move(exits);
 }
 BellatrixDurableReactor::BellatrixDurableReactor(Blockchain& execution,BellatrixForkBlockRules rules,
