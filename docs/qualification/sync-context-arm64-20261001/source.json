@@ -1,0 +1,17 @@
+{
+  "sourceRevision": "7bba333aa429c64f6cb167f4cf063bc1cf4f43bc",
+  "architecture": "arm64",
+  "commands": [
+    "cmake --build /build --target nano-capella-transition-tests -j2 && /build/nano-capella-transition-tests --local-sync",
+    "/build/nano-capella-transition-tests --scheduler-sync-rotation"
+  ],
+  "interruptedBuild": {
+    "exitCode": 137,
+    "reason": "Explicitly stopped to correct test ordering before qualifying the same-slot changed-parent case; not an OOM claim."
+  },
+  "filesSha256": {
+    "src/consensus_capella_local_body.cpp": "25037d783fbcb416c0abc910952f5aea226c03fbef50a52d54037a87ae007487",
+    "include/nano/consensus_capella_reactor.hpp": "39e4c330645203ac9c49fe35af3757a975332c369799539745c1ce58bbfa060d",
+    "tests/test_capella_transition.cpp": "eb529c3caec305ea324615f1212b58eed5852ca9605120af0143f52e8d912470"
+  }
+}
