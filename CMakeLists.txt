@@ -1783,3 +1783,6 @@ set_tests_properties(storage_read_only PROPERTIES TIMEOUT 60 LABELS "qualificati
 # historical transactions and an independently recorded checkpoint commitment.
 add_executable(nano-capella-audit-corruption-tests tests/test_capella_audit_corruption.cpp)
 target_link_libraries(nano-capella-audit-corruption-tests PRIVATE nano_core)
+
+add_test(NAME consensus_capella_http_admission_queue COMMAND nano-capella-transition-tests --http-queue)
+set_tests_properties(consensus_capella_http_admission_queue PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_recovery")

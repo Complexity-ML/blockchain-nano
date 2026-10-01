@@ -5102,3 +5102,18 @@ HTTP, y compris export historique et attentes du verrou d’admission. Manque
 concret de dispatch borné à corriger et qualifier ; cause exclusive du timeout
 non démontrée. Aucun délai ni quorum assoupli ; S et les autres gates conservés.
 [Preuves et sources T](qualification/majority-island-20261001/attempt-t/README.md).
+
+
+### 2026-10-01 — RPC Capella hors boucle HTTP : qualification native
+
+Les 14 méthodes privées Capella passent désormais dans la file bornée
+existante, notifications et lots compris. Aucun worker, budget de file,
+délai Beacon ou critère WAN augmenté. Nouveau test HTTP avec verrou
+d’admission réel : échec avant correction, réussite après (20,45 s).
+Identité publique et finalité Beacon répondent pendant l’attente du RPC
+privé, checkpoint inchangé. Régression d’expiration/capacité HTTP et
+WebSocket passe aussi (1,84 s). Erreur initiale de compilation du test
+conservée, corrigée sans modifier le critère.
+Docker et effet WAN restent à qualifier ; T/S et toutes les gates de
+production restent ouvertes. Cause exclusive de T non démontrée.
+[Preuves natives](qualification/capella-http-queue-20261001/native/README.md).
