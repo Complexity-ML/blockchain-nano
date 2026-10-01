@@ -5919,3 +5919,19 @@ une réussite ciblée ARM64, mais la qualification AMD64 et la régression du
 candidat final cohérent restent ouvertes, ainsi que les exigences WAN et de
 production. Aucun moteur/correctif n'est encore promu dans main et aucun
 statut global EIP n'est relevé sur la seule base de ces résultats.
+
+### 2026-10-02 — Deux échecs AMD64 supplémentaires restent ouverts
+
+La campagne complète c10426b2 est encore active. Outre les deux cas RPC
+soutenus, elle observe un échec consensus_altair_libp2p au payload maximal et
+un timeout consensus_bellatrix_partition_simulation à 240,03 s. Cette dernière
+trace atteint une finalité commune 9 au slot 88, sans finir les 14 époques
+prévues : ni récupération complète qualifiée, ni blocage de protocole démontré.
+[Observation partielle et diagnostic](qualification/altair-bound-diagnostics-20261002/README.md).
+La branche de diagnostic f92533e9 conserve réponse, tailles, admission,
+checkpoint et huit raisons de fin de flux au maximum. Syntaxe ARM64 Release
+validée, exécution AMD64 en attente ; aucun seuil relevé ni règle assouplie.
+Les 19 cas du correctif RPC/Bellatrix sur 1ac57e25 attendent la fin du conteneur
+initial et ses résultats/empreintes avant compilation. Ils ne couvrent pas ces
+deux nouveaux échecs. Régression terminale, candidat cohérent, gates WAN et
+production globale restent ouverts ; matrices EIP inchangées.
