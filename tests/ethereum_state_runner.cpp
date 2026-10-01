@@ -116,6 +116,6 @@ int main(int argc,char** argv){
    }catch(const std::exception& e){++errors;std::cout<<Json{{"file",file.string()},{"status","fixture-error"},{"error",e.what()}}.dump()<<'\n';}
   }
  }catch(const std::exception& e){++errors;std::cerr<<e.what()<<'\n';}
- std::cout<<Json{{"summary",{{"files",files.size()},{"matched",matched},{"mismatched",mismatched},{"unsupported",unsupported},{"errors",errors},{"validationMatched",validation_matched},{"forkConformanceProven",false}}}}.dump()<<'\n';
+ std::cout<<Json{{"summary",{{"files",files.size()},{"matched",matched},{"executionMatched",matched-validation_matched},{"mismatched",mismatched},{"unsupported",unsupported},{"errors",errors},{"validationMatched",validation_matched},{"forkConformanceProven",false}}}}.dump()<<'\n';
  return matched>0&&!mismatched&&!unsupported&&!errors?0:1;
 }

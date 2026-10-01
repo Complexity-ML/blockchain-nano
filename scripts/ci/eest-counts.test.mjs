@@ -1,0 +1,16 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {createEestCountsVerifier} from './eest-counts.mjs';
+const rows=()=>[{file:'fixture.json',case:'execution',fork:'Berlin',variant:0,status:'matched'},{file:'fixture.json',case:'validation',fork:'Berlin',variant:0,status:'matched',validation:{transactionExecuted:false,stateUnchanged:true}},{summary:{files:1,matched:2,executionMatched:1,validationMatched:1,mismatched:0,unsupported:0,errors:0,forkConformanceProven:false}}];
+const verify=items=>{const v=createEestCountsVerifier();for(const r of items)v.consume(r);return v.finish();};
+test('counts executions and pre-execution rejections without double counting',()=>assert.deepEqual(verify(rows()),{totalMatched:2,executionMatched:1,validationMatched:1,files:1,legacySummary:false,forkConformanceProven:false}));
+test('old reports are independently classified',()=>{const r=rows();delete r[2].summary.executionMatched;assert.equal(verify(r).executionMatched,1);assert.equal(verify(r).legacySummary,true);});
+test('double counted total is rejected',()=>{const r=rows();r[2].summary.matched=3;assert.throws(()=>verify(r),/aggregate/);});
+test('wrong explicit execution count is rejected',()=>{const r=rows();r[2].summary.executionMatched=2;assert.throws(()=>verify(r),/execution counter/);});
+test('executed or state-mutating rejection is not qualified',()=>{for(const key of ['transactionExecuted','stateUnchanged']){const r=rows();r[1].validation[key]=!r[1].validation[key];assert.throws(()=>verify(r),/executed or mutated/);}});
+test('duplicate case identity is rejected',()=>assert.throws(()=>verify([rows()[0],rows()[0],rows()[2]]),/Duplicate/));
+test('missing terminal summary is rejected',()=>assert.throws(()=>verify(rows().slice(0,2)),/Missing/));
+test('duplicate summary or trailing case is rejected',()=>{for(const extra of [rows()[0],rows()[2]])assert.throws(()=>verify([...rows(),extra]),/after terminal/);});
+test('unsupported mismatched and error reports cannot qualify',()=>{for(const status of ['unsupported-fork','mismatch','error']){const r=rows();r[0].status=status;assert.throws(()=>verify(r),/Non-matching/);}});
+test('nonzero failure counters cannot qualify',()=>{for(const key of ['mismatched','unsupported','errors']){const r=rows();r[2].summary[key]=1;assert.throws(()=>verify(r),/nonzero/);}});
+test('empty or invalid counters cannot qualify',()=>{for(const value of [-1,NaN,1.5,'2']){const r=rows();r[2].summary.matched=value;assert.throws(()=>verify(r),/Invalid/);}assert.throws(()=>verify([{summary:{files:0,matched:0,validationMatched:0,mismatched:0,unsupported:0,errors:0}}]),/Empty/);});
