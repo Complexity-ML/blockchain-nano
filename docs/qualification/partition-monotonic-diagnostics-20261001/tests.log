@@ -1,0 +1,45 @@
+✔ finite schedule rejects unbounded or malformed requested work (1.090875ms)
+✔ both cycles require newer finality and retain one security history (0.361ms)
+✔ first cycle failure stops all following network mutations (0.162209ms)
+✔ successful transport alone earns no recovery credit (0.07325ms)
+✔ regressed checkpoint after first cycle cannot reset history for the next (0.098209ms)
+✔ conflicting old root after cycle cannot be forgotten (0.09725ms)
+✔ observer replacement and disconnected pre-cycle sample are refused (0.607ms)
+✔ cut leaves node queryable, restores original IP, requires later common finality (1.067292ms)
+✔ workload runs only while isolated and settles before restoration (0.5685ms)
+✔ failed workload restores the network without reporting recovery success (0.523ms)
+✔ observer and workload failures are both retained and restored (0.163041ms)
+✔ lost disconnect response never starts the workload (0.096083ms)
+✔ lost-response rejects and restores (0.068709ms)
+✔ rpc-fails rejects and restores (0.07ms)
+✔ conflict rejects and restores (0.072833ms)
+✔ no-recovery rejects and restores (0.132208ms)
+✔ restoration failure cannot become success (0.250583ms)
+✔ wrong provenance refuses mutation (0.149875ms)
+✔ peer isolation must be observed, not inferred from Docker success (0.305ms)
+✔ finality regression after reconnection is rejected (0.117834ms)
+✔ late recovery reuses history without another network cut (0.23525ms)
+✔ late conflict remains fatal (0.14525ms)
+✔ late regression remains fatal (0.121041ms)
+✔ late recovery is bounded too (0.101417ms)
+✔ recovery read completed at 10000ms observes the inclusive deadline (0.782958ms)
+✔ recovery read completed at 10001ms observes the inclusive deadline (0.106167ms)
+✔ reconnection record latency cannot extend the recovery budget (0.108083ms)
+✔ slow common-finality read retains exact overrun and original window after late recovery (0.536167ms)
+✔ reconnection logging exhausts budget without inventing a recovery read (0.1035ms)
+✔ stalled finality records the last unsuccessful read at the unchanged deadline (0.0855ms)
+✔ normal recovery completes its observation (0.993708ms)
+✔ late stable finality preserves original deadline failure (0.240291ms)
+✔ restoration, RPC and safety errors never extend the campaign (0.106916ms)
+✔ late observer failure remains a failure and retains both diagnostics (0.079667ms)
+✔ late recovery must complete before stability observation (0.073917ms)
+✔ missing late recovery observer cannot skip the recovery stage (0.081375ms)
+✔ deadline event retains original monotonic evidence when late stability succeeds (0.085917ms)
+ℹ tests 37
+ℹ suites 0
+ℹ pass 37
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 67.25775

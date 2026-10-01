@@ -1,0 +1,7 @@
+# Santé du signataire : trois environnements
+
+Révision eb8d3edbbe56532ed895d33fdc2a0c17c933ca08. Les commandes `nano-capella-transition-tests --signer-health` puis `nano-capella-transition-tests --managed-cli <nano>` se terminent avec exit 0 sur Mac natif, Docker ARM64 et Docker amd64 VPS. Journaux complets et empreintes des binaires conservés. Les sept fichiers sources correspondent à ceux de la qualification ARM64 précédente, vérifiés aussi sur le VPS ; les preuves antérieures restent immuables.
+
+Deux pannes du fournisseur réel dans le worker : avant réservation et après réservation durable. RPC HTTP privé authentifié, rejet du mauvais token et Origin, erreur privée non divulguée, alerte unique via le point partagé du monitor, refus de réessayer le slot réservé, admission du slot suivant avec les mêmes journaux et réouverture de 64 couples journal/témoin par cas. La régression CLI utilise un enfant P2P simulé : arrêt sur panne de cet enfant, reprise des témoins, exclusion de la clé validateur.
+
+Limites : le test de panne est en processus, pas une injection dans un daemon distribué ; l'enfant CLI n'est pas cpp-libp2p. Ni livraison externe d'alerte, ni fournisseur bloqué, ni finalité WAN ne sont qualifiés ici. Aucun conteneur runtime n'a été reconstruit. Les images WAN précédentes restent celles de 1e1e732 ; les volumes de build contiennent eb8d3ed mais leurs marqueurs antérieurs ne doivent pas servir de provenance de packaging. La santé observe une panne mémorisée, pas toute la liveness. Production non qualifiée.

@@ -7,7 +7,7 @@ export async function observeRecovery({partition,observe,record}) {
  try{await partition();}
  catch(error){
   if(!(error instanceof PartitionRecoveryDeadline))throw error;
-  late=error;await record({event:'partition-recovery-deadline-missed',message:error.message});
+  late=error;await record({event:'partition-recovery-deadline-missed',message:error.message,...(error.recoveryObservation?{recoveryObservation:error.recoveryObservation}:{})});
  }
  try{
   if(late){

@@ -2,7 +2,7 @@ import {setTimeout as delay} from 'node:timers/promises';
 import {performance} from 'node:perf_hooks';
 
 export class PartitionRecoveryDeadline extends Error {
- constructor(waitForRecovery){super('Partition recovery deadline exceeded');this.name='PartitionRecoveryDeadline';this.waitForRecovery=waitForRecovery;}
+ constructor(waitForRecovery,recoveryObservation=null){super('Partition recovery deadline exceeded');this.name='PartitionRecoveryDeadline';this.waitForRecovery=waitForRecovery;this.recoveryObservation=recoveryObservation;}
 }
 
 // Docker commands operate only on the fresh, labelled test container. No host
@@ -78,20 +78,30 @@ export async function partitionRemote({docker, container, network, revision, sam
    await record({event:'partition-reconnected',container,network,address,recoveryLimitMs:recoveryMs});
   }
  }
+ let failedObservation=null;
  const waitRecovery=async(event)=>{
   // Anchor the first budget before asynchronous logging; wall-clock adjustment
   // and a slow successful read must never manufacture deadline compliance.
   const start=event==='partition-recovery-bound'?reconnectedAt:clock();
   if(start===null)throw Error('Recovery requires verified reconnection');
   const deadline=start+recoveryMs;
+  let lastRead=null;
   while(clock()<deadline){
-   const rows=await read(),observedAt=clock(),first=rows[0].checkpoint;
-   if(observedAt>deadline)return false;
-   if(rows.every(r=>BigInt(r.peers)>0n&&r.checkpoint.epoch===first.epoch&&r.checkpoint.root===first.root)&&BigInt(first.epoch)>baseline){
-    await record({event,checkpoint:first,recoveryElapsedMs:observedAt-start,recoveryLimitMs:recoveryMs});return true;
+   const readStart=clock(),rows=await read(),observedAt=clock(),first=rows[0].checkpoint;
+   const advancedCommonFinality=rows.every(r=>BigInt(r.peers)>0n&&r.checkpoint.epoch===first.epoch&&r.checkpoint.root===first.root)&&BigInt(first.epoch)>baseline;
+   // Includes sample validation and partition-observation logging, as does the
+   // existing gate. Capture before any additional diagnostic logging.
+   lastRead={completeReadElapsedMs:observedAt-readStart,recoveryElapsedMs:observedAt-start,checkpoint:first,advancedCommonFinality};
+   if(observedAt>deadline){
+    failedObservation={window:event,recoveryElapsedMs:observedAt-start,recoveryLimitMs:recoveryMs,deadlineExceededByMs:observedAt-deadline,lastRead};return false;
+   }
+   if(advancedCommonFinality){
+    await record({event,checkpoint:first,recoveryElapsedMs:observedAt-start,recoveryLimitMs:recoveryMs,completeReadElapsedMs:lastRead.completeReadElapsedMs});return true;
    }
    await wait(Math.max(0,Math.min(5000,deadline-clock())));
   }
+  const observedAt=clock();
+  failedObservation={window:event,recoveryElapsedMs:observedAt-start,recoveryLimitMs:recoveryMs,deadlineExceededByMs:Math.max(0,observedAt-deadline),lastRead};
   return false;
  };
  if(await waitRecovery('partition-recovery-bound'))return;
@@ -99,5 +109,5 @@ export async function partitionRemote({docker, container, network, revision, sam
  // No second partition, baseline reset or relaxation of the original verdict.
  throw new PartitionRecoveryDeadline(async()=>{
   if(!await waitRecovery('late-partition-recovery-bound'))throw Error('Late recovery observation deadline exceeded');
- });
+ },failedObservation);
 }

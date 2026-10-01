@@ -35,3 +35,10 @@ test('missing late recovery observer cannot skip the recovery stage',async()=>{
  await assert.rejects(observeRecovery({partition:async()=>{throw new PartitionRecoveryDeadline();},observe:async()=>{observed=true;},record:async()=>{}}),/unavailable/);
  assert.equal(observed,false);
 });
+test('deadline event retains original monotonic evidence when late stability succeeds',async()=>{
+ const evidence={window:'partition-recovery-bound',recoveryElapsedMs:180127.25,recoveryLimitMs:180000,deadlineExceededByMs:127.25,lastRead:{completeReadElapsedMs:1706.5,advancedCommonFinality:true}};
+ const events=[],original=new PartitionRecoveryDeadline(async()=>{},evidence);
+ await assert.rejects(observeRecovery({partition:async()=>{throw original;},observe:async()=>{},record:async e=>events.push(e)}),e=>e===original);
+ assert.deepEqual(events[0].recoveryObservation,evidence);
+ assert.equal(events.at(-1).deadlineStillFailed,true);
+});

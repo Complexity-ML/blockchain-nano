@@ -94,3 +94,35 @@ test('reconnection record latency cannot extend the recovery budget',async()=>{
  await assert.rejects(partitionRemote(f.args),/recovery deadline/);assert.equal(f.attached(),true);
  assert.ok(!f.events.some(e=>e.event==='partition-recovery-bound'));
 });
+
+// Preserve exact monotonic failure evidence without a second read or a larger budget.
+test('slow common-finality read retains exact overrun and original window after late recovery',async()=>{
+ const f=fixture(),original=f.args.sample;let slow=true,failure;
+ f.args.sample=async()=>{const rows=await original();if(slow&&f.calls.some(c=>c[1]==='connect'))await f.args.wait(10001);return rows;};
+ await assert.rejects(partitionRemote(f.args),error=>{failure=error;return error.name==='PartitionRecoveryDeadline';});
+ const evidence=failure.recoveryObservation;
+ assert.equal(evidence.window,'partition-recovery-bound');
+ assert.equal(evidence.recoveryElapsedMs,10001);assert.equal(evidence.recoveryLimitMs,10000);
+ assert.equal(evidence.deadlineExceededByMs,1);assert.equal(evidence.lastRead.completeReadElapsedMs,10001);
+ assert.equal(evidence.lastRead.advancedCommonFinality,true);assert.equal(evidence.lastRead.checkpoint.epoch,'3');
+ slow=false;await failure.waitForRecovery();
+ assert.deepEqual(failure.recoveryObservation,evidence);
+ assert.equal(f.events.at(-1).event,'late-partition-recovery-bound');
+ assert.equal(f.calls.filter(c=>c[1]==='disconnect').length,1);
+});
+test('reconnection logging exhausts budget without inventing a recovery read',async()=>{
+ const f=fixture(),original=f.args.record;
+ f.args.record=async e=>{await original(e);if(e.event==='partition-reconnected')await f.args.wait(10001);};
+ await assert.rejects(partitionRemote(f.args),error=>{
+  const e=error.recoveryObservation;assert.equal(e.recoveryElapsedMs,10001);
+  assert.equal(e.deadlineExceededByMs,1);assert.equal(e.lastRead,null);return true;
+ });
+});
+test('stalled finality records the last unsuccessful read at the unchanged deadline',async()=>{
+ const f=fixture('no-recovery');
+ await assert.rejects(partitionRemote(f.args),error=>{
+  const e=error.recoveryObservation;assert.equal(e.recoveryElapsedMs,10000);
+  assert.equal(e.deadlineExceededByMs,0);assert.equal(e.lastRead.advancedCommonFinality,false);
+  assert.equal(e.lastRead.recoveryElapsedMs,5000);assert.equal(e.lastRead.completeReadElapsedMs,0);return true;
+ });
+});
