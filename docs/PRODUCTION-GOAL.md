@@ -2230,3 +2230,17 @@ revendiquée. Campagne originale encore active, sources main préservées.
 Tous les huit critères initiaux et échecs restent ouverts.
 [AMD64 terminal](qualification/gossip-admission-isolation-20261001/amd64/README.md) ;
 [contrôles et prérequis du lanceur](qualification/full-runner-controls-20261001/README.md).
+
+
+### 2026-10-01 — lanceur complet Docker sans outils supplémentaires
+
+Candidate outils aacc56da : Docker compile/exécute dans le builder existant,
+inventaire et audit sur hôte ; Node/Python ne sont plus requis dans l’image.
+Sources propres/empreintes stables, scratch disque exécutable, tout le registre,
+TIMEOUT/executables/skips vérifiés avant tests, exactitude des résultats après.
+Contrôles Docker vrais success/failure/missing-timeout passent ; aucun test
+Nano global déduit. 246 contrôles opérations réussis, dont sept nouveaux ;
+EPERM loopback de l’essai sandbox conservé puis execution autorisée réussie.
+Campagne originale encore active et échecs préservés ; nouveau full run après
+fin réelle seulement. Tous les critères initiaux demeurent ouverts.
+[Contrôles et usage du lanceur Docker](qualification/full-docker-runner-controls-20261001/README.md).

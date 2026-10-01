@@ -1,0 +1,323 @@
+✔ actual Git history: docs-only skips C++ but code renamed into docs still triggers it (375.425625ms)
+✔ initial push and actual PR merge base catch core changes; manual false stays quiet (274.9515ms)
+✔ invalid baselines or unrelated checkout fail closed, without executing injected Git arguments (0.955334ms)
+✔ fixture, build recipe and dependency changes require C++; harness-only changes avoid rebuilding unchanged core (0.09975ms)
+✔ live build log cannot mask compiler/configuration failure behind tee (427.4205ms)
+✔ actual Git history: transport rename triggers network; docs and core-only fixture changes skip it (252.877667ms)
+✔ network dependencies, shared headers and workflow changes trigger network; manual dispatch stays explicit (102.266ms)
+✔ actual CMake gate rejects empty or duplicate network registrations and a foreign dependency revision (68.514166ms)
+✔ container-only executable paths are checked against measured manifest (89.348958ms)
+✔ missing executable or timeout refuses full qualification before execution (152.497792ms)
+✔ invalid provenance, duplicate registrations and skipped tests fail closed (448.895708ms)
+✔ inventory exposes every unselected test and never claims runtime qualification (18.370375ms)
+✔ missing, duplicated and foreign registrations fail closed (0.226375ms)
+✔ all CTest mechanisms that permit skipped tests are rejected (0.986958ms)
+✔ full selection still reports missing binaries and invalid execution budgets (0.155084ms)
+✔ exact successful registry produces a terminal complete audit (81.007625ms)
+✔ missing, duplicate and foreign results cannot produce a green gate (143.806875ms)
+✔ skipped, disabled and non-executed cases fail even with green summary (189.822042ms)
+✔ real failures remain visible and malformed/inconsistent reports fail closed (190.440666ms)
+
+  #  /opt/homebrew/Cellar/node/25.9.0_2/bin/node[99097]: void node::InternalCallbackScope::Close() at ../src/api/callback.cc:185
+  #  Assertion failed: (env_->execution_async_id()) == (0)
+
+----- Native stack trace -----
+
+ 1: 0x10a1f690c node::Assert(node::AssertionInfo const&) [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+ 2: 0x10a1c1850 node::InternalCallbackScope::Close() (.cold.1) [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+ 3: 0x1091c7fb0 node::InternalCallbackScope::Close() [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+ 4: 0x1091c7ca8 node::InternalCallbackScope::~InternalCallbackScope() [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+ 5: 0x1092bce80 node::PerIsolatePlatformData::RunForegroundTask(std::__1::unique_ptr<v8::Task, std::__1::default_delete<v8::Task>>) [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+ 6: 0x1092bc018 node::PerIsolatePlatformData::FlushForegroundTasksInternal() [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+ 7: 0x104e9a3cc uv__async_io [/opt/homebrew/Cellar/libuv/1.52.1/lib/libuv.1.0.0.dylib]
+ 8: 0x104ea91b0 uv__io_poll [/opt/homebrew/Cellar/libuv/1.52.1/lib/libuv.1.0.0.dylib]
+ 9: 0x104e9ab64 uv_run [/opt/homebrew/Cellar/libuv/1.52.1/lib/libuv.1.0.0.dylib]
+10: 0x1091c8ed0 node::SpinEventLoopInternal(node::Environment*) [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+11: 0x10929a37c node::NodeMainInstance::Run(node::ExitCode*, node::Environment*) [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+12: 0x10929a0b0 node::NodeMainInstance::Run() [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+13: 0x10923db98 node::Start(int, char**) [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+14: 0x188b884e4 start [/usr/lib/dyld]
+✖ scripts/operations/alert-delivery.test.mjs (404.164708ms)
+✔ matching identity, artifacts and binaries prove integrity only (1.307375ms)
+✔ mutable image tags cannot be candidates (0.176291ms)
+✔ required roles and unique config/artifact references enforced (0.107333ms)
+✔ tampered genesis is refused before any container inspection (0.208291ms)
+✔ artifact growth exceeds reviewed resource budget (0.1085ms)
+✔ architecture or source mismatch rejected before executable probes (0.177792ms)
+✔ image returned under another ID cannot impersonate candidate (0.10025ms)
+✔ changed binary rejected before dependency loader invocation (0.109708ms)
+✔ missing libraries cannot pass integrity gate (0.103458ms)
+✔ emulated or non-Linux target is refused by deployment gate (0.220792ms)
+✔ missing dependency report cannot silently pass (0.111834ms)
+✔ common finality is observed, zero peers are unhealthy (1.534416ms)
+✔ stall deadline persists across serialization and recovers on progress (0.42825ms)
+✔ conflicting finality is latched across later healthy observations (0.171958ms)
+✔ regression cannot be erased by advancing the other observer (0.125042ms)
+✔ lagging observer keeps safety root history, retention trims only below minimum (0.811ms)
+✔ unavailable observer and corrupt observation never earn healthy status (1.460792ms)
+✔ state cannot be reused with another profile or time reversal (0.394042ms)
+✔ reject public RPC, duplicate endpoint and duplicate samples (0.968125ms)
+✔ reader pins finality to immutable head state and verifies chain/profile (4.909917ms)
+✔ RPC errors and profile mismatch are unavailable (0.742708ms)
+✔ response body resource budget enforced (0.26025ms)
+✔ missing persisted safety root is rejected, not silently re-established (0.144208ms)
+✔ invalid samples cannot report historical common finality as current (0.096792ms)
+✔ overlapping CLI invocations fail before reading or modifying monitor state (15.098166ms)
+✔ lagging observer cannot make root history exceed operator resource policy (0.249292ms)
+
+  #  /opt/homebrew/Cellar/node/25.9.0_2/bin/node[99099]: void node::InternalCallbackScope::Close() at ../src/api/callback.cc:185
+  #  Assertion failed: (env_->execution_async_id()) == (0)
+
+----- Native stack trace -----
+
+ 1: 0x109dbe90c node::Assert(node::AssertionInfo const&) [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+ 2: 0x109d89850 node::InternalCallbackScope::Close() (.cold.1) [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+ 3: 0x108d8ffb0 node::InternalCallbackScope::Close() [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+ 4: 0x108d8fca8 node::InternalCallbackScope::~InternalCallbackScope() [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+ 5: 0x109da1b30 node::Environment::RunAndClearNativeImmediates(bool) [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+ 6: 0x109da15a4 node::Environment::CheckImmediate(uv_check_s*) [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+ 7: 0x104bb424c uv__run_check [/opt/homebrew/Cellar/libuv/1.52.1/lib/libuv.1.0.0.dylib]
+ 8: 0x104baeb94 uv_run [/opt/homebrew/Cellar/libuv/1.52.1/lib/libuv.1.0.0.dylib]
+ 9: 0x108d90ed0 node::SpinEventLoopInternal(node::Environment*) [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+10: 0x108e6237c node::NodeMainInstance::Run(node::ExitCode*, node::Environment*) [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+11: 0x108e620b0 node::NodeMainInstance::Run() [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+12: 0x108e05b98 node::Start(int, char**) [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+13: 0x188b884e4 start [/usr/lib/dyld]
+✖ scripts/operations/finality-monitor.test.mjs (502.491375ms)
+
+  #  /opt/homebrew/Cellar/node/25.9.0_2/bin/node[99100]: void node::InternalCallbackScope::Close() at ../src/api/callback.cc:185
+  #  Assertion failed: (env_->execution_async_id()) == (0)
+
+----- Native stack trace -----
+
+ 1: 0x109c2e90c node::Assert(node::AssertionInfo const&) [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+ 2: 0x109bf9850 node::InternalCallbackScope::Close() (.cold.1) [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+ 3: 0x108bfffb0 node::InternalCallbackScope::Close() [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+ 4: 0x108bffca8 node::InternalCallbackScope::~InternalCallbackScope() [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+ 5: 0x108cf4e80 node::PerIsolatePlatformData::RunForegroundTask(std::__1::unique_ptr<v8::Task, std::__1::default_delete<v8::Task>>) [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+ 6: 0x108cf4018 node::PerIsolatePlatformData::FlushForegroundTasksInternal() [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+ 7: 0x1049663cc uv__async_io [/opt/homebrew/Cellar/libuv/1.52.1/lib/libuv.1.0.0.dylib]
+ 8: 0x1049751b0 uv__io_poll [/opt/homebrew/Cellar/libuv/1.52.1/lib/libuv.1.0.0.dylib]
+ 9: 0x104966b64 uv_run [/opt/homebrew/Cellar/libuv/1.52.1/lib/libuv.1.0.0.dylib]
+10: 0x108c00ed0 node::SpinEventLoopInternal(node::Environment*) [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+11: 0x108cd237c node::NodeMainInstance::Run(node::ExitCode*, node::Environment*) [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+12: 0x108cd20b0 node::NodeMainInstance::Run() [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+13: 0x108c75b98 node::Start(int, char**) [/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib]
+14: 0x188b884e4 start [/usr/lib/dyld]
+✖ scripts/operations/monitor-and-deliver.test.mjs (299.374625ms)
+✔ verify actual files without promoting their semantics or source claims (15.454209ms)
+✔ tampered child log cannot pass an unchanged manifest (7.155541ms)
+✔ rewritten manifest requires independent hash review (2.901458ms)
+✔ missing file and symbolic link are refused (6.17025ms)
+✔ path traversal, absolute entries and malformed hashes are refused (8.500792ms)
+✔ total read budget includes the reviewed manifest itself (3.237958ms)
+✔ symlink manifest itself cannot become an independently anchored archive (2.058208ms)
+✔ oversized content returned by a read adapter exceeds the total budget (1.281583ms)
+✔ delay carries packets and advances common finality before restoration (1.256417ms)
+✔ lost-response fails and removes the delay (0.351834ms)
+✔ rpc-fails fails and removes the delay (0.122834ms)
+✔ regression fails and removes the delay (0.119084ms)
+✔ conflict fails and removes the delay (0.10225ms)
+✔ stalled fails and removes the delay (1.050666ms)
+✔ no-packets fails and removes the delay (0.253334ms)
+✔ existing delay is untouched (0.106875ms)
+✔ cleanup failure cannot pass (0.146334ms)
+✔ remote tc command only enters validated container namespace (1.917708ms)
+✔ unsafe target host refuses tc (0.345584ms)
+✔ unsafe target label refuses tc (0.087167ms)
+✔ unsafe target paused refuses tc (0.049084ms)
+✔ unsafe target extra-network refuses tc (0.062834ms)
+✔ container restart cannot redirect subsequent tc calls (0.103958ms)
+✔ consistent checkpoints span all phases (0.968083ms)
+✔ new observer baseline cannot hide a regression (0.720833ms)
+✔ same epoch conflict at phase boundary is fatal (0.279459ms)
+✔ raced read does not erase a conflicting root (0.122583ms)
+✔ incomplete or unknown observers do not pass (0.238ms)
+✔ equivalent epoch encodings cannot hide conflicts (0.07475ms)
+✔ select exact architecture images and validate final packaged bytes (3.516167ms)
+✔ refuse unreviewed, mutable, mismatched revision or architecture selection (0.247875ms)
+✔ refuse wrong actual identity, revision, architecture or root user (0.09925ms)
+✔ refuse omitted, changed or duplicated executable checksums (0.15925ms)
+✔ asymmetric transport remains an interval, not a midpoint offset (1.350459ms)
+✔ invalid timestamps and backwards local clocks are rejected (0.223291ms)
+✔ transport failure is preserved (0.20625ms)
+✔ bind finality to the selected state despite a subsequent head change (1.484375ms)
+✔ invalid head/state identity or noncanonical slot prevents a diagnostic claim (0.28375ms)
+✔ missing, malformed or pruned checkpoint is not silently ignored (0.234916ms)
+✔ failed reads and a backward sampling clock remain fatal (0.118875ms)
+✔ Beacon 503 diagnostics remain failures and distinguish capacity, queue and state (1.356583ms)
+✔ successful Beacon and JSON-RPC error bodies keep their original semantics (0.778666ms)
+✔ malformed transport output fails closed and non-JSON HTTP errors expose no raw body (0.1ms)
+✔ server diagnostics are bounded and control characters removed (0.094625ms)
+✖ real curl preserves a 503 JSON body instead of discarding it (6.84975ms)
+✔ Beacon cancellation phase and duration survive the fatal campaign error (0.132917ms)
+✔ untrusted phase labels and malformed durations are not echoed (0.21525ms)
+✔ all three nodes must finalize the identical canonical successful receipt (2.497334ms)
+✔ failed execution cannot pass (0.8725ms)
+✔ wrong transaction cannot pass (0.195834ms)
+✔ orphaned receipt cannot pass (0.140667ms)
+✔ divergent gas cannot pass (0.72825ms)
+✔ divergent logs cannot pass (0.909834ms)
+✔ conflicting finality cannot pass (0.245833ms)
+✔ unfinalized anchor cannot pass (0.203125ms)
+✔ missing node cannot pass (0.149458ms)
+✔ missing receipt key cannot pass (0.2305ms)
+✔ malformed gas cannot pass (0.1415ms)
+✔ missing receipt and unfinalized receipt remain pending (0.117125ms)
+✔ empty and duplicate workloads cannot pass (0.205ms)
+✔ collector uses the lowest finalized height and checks canonical blocks (0.288083ms)
+✔ collector rejects a finalized anchor changing during observation (0.2205ms)
+✔ stake comes from hash-bound SSZ effective balances and exact ownership (1.799375ms)
+✔ 43 keys with insufficient stake cannot create a majority (0.5005ms)
+✔ hash fixture rejects before network mutation (0.323333ms)
+✔ duplicate fixture rejects before network mutation (0.290958ms)
+✔ inactive fixture rejects before network mutation (0.460458ms)
+✔ slashed fixture rejects before network mutation (0.765625ms)
+✔ bounds fixture rejects before network mutation (0.38175ms)
+✔ majority must finalize beyond conservative received-commitment ceiling (0.77025ms)
+✔ minority cannot raise its own ceiling on later reads (0.447792ms)
+✔ peer count alone does not prove a connected majority (0.401375ms)
+✔ no-progress integration restores IP and requires newer common finality (1.296167ms)
+✔ minority integration restores IP and requires newer common finality (0.558291ms)
+✔ pass integration restores IP and requires newer common finality (0.645166ms)
+✔ longer sustained cut is explicit and never changes recovery budget (0.07475ms)
+✔ invalid or unbounded majority cut refuses before execution (0.109708ms)
+✔ native: aliases cannot count as distinct observers (91.517167ms)
+✔ docker: aliases cannot count as distinct observers (79.968875ms)
+✔ ssh-docker: aliases cannot count as distinct observers (81.64575ms)
+✔ finite schedule rejects unbounded or malformed requested work (1.8755ms)
+✔ both cycles require newer finality and retain one security history (1.124209ms)
+✔ first cycle failure stops all following network mutations (0.5945ms)
+✔ successful transport alone earns no recovery credit (0.13975ms)
+✔ regressed checkpoint after first cycle cannot reset history for the next (0.141125ms)
+✔ conflicting old root after cycle cannot be forgotten (0.161917ms)
+✔ observer replacement and disconnected pre-cycle sample are refused (1.698375ms)
+✔ complete partition workload evidence passes (5.372417ms)
+✔ submission before cut is rejected (0.741208ms)
+✔ missing transaction is rejected (1.5605ms)
+✔ wrong submitted hash is rejected (1.197875ms)
+✔ short cut is rejected (0.461ms)
+✔ no isolation is rejected (0.327167ms)
+✔ retained failure is rejected (0.250083ms)
+✔ late recovery is rejected (0.196166ms)
+✔ wrong balance is rejected (2.249375ms)
+✔ wrong nonce is rejected (1.026708ms)
+✔ wrong storage is rejected (1.01575ms)
+✔ missing state evidence is rejected (0.68375ms)
+✔ insufficient stability is rejected (0.716625ms)
+✔ unhealthy validator is rejected (0.959917ms)
+✔ duplicate validator is rejected (1.488667ms)
+✔ cut leaves node queryable, restores original IP, requires later common finality (1.591875ms)
+✔ workload runs only while isolated and settles before restoration (1.27725ms)
+✔ failed workload restores the network without reporting recovery success (0.764292ms)
+✔ observer and workload failures are both retained and restored (0.25525ms)
+✔ lost disconnect response never starts the workload (0.150541ms)
+✔ lost-response rejects and restores (0.103125ms)
+✔ rpc-fails rejects and restores (0.11125ms)
+✔ conflict rejects and restores (0.099834ms)
+✔ no-recovery rejects and restores (0.178875ms)
+✔ restoration failure cannot become success (0.420416ms)
+✔ wrong provenance refuses mutation (0.11775ms)
+✔ peer isolation must be observed, not inferred from Docker success (0.219917ms)
+✔ finality regression after reconnection is rejected (0.118208ms)
+✔ late recovery reuses history without another network cut (0.157334ms)
+✔ late conflict remains fatal (0.129875ms)
+✔ late regression remains fatal (0.156792ms)
+✔ late recovery is bounded too (0.117958ms)
+✔ recovery read completed at 10000ms observes the inclusive deadline (0.886459ms)
+✔ recovery read completed at 10001ms observes the inclusive deadline (0.193291ms)
+✔ reconnection record latency cannot extend the recovery budget (0.136125ms)
+✔ slow common-finality read retains exact overrun and original window after late recovery (0.711833ms)
+✔ reconnection logging exhausts budget without inventing a recovery read (0.146875ms)
+✔ stalled finality records the last unsuccessful read at the unchanged deadline (0.111292ms)
+✔ normal recovery completes its observation (1.559084ms)
+✔ late stable finality preserves original deadline failure (0.488584ms)
+✔ restoration, RPC and safety errors never extend the campaign (0.16625ms)
+✔ late observer failure remains a failure and retains both diagnostics (0.115042ms)
+✔ late recovery must complete before stability observation (0.105625ms)
+✔ missing late recovery observer cannot skip the recovery stage (0.109791ms)
+✔ deadline event retains original monotonic evidence when late stability succeeds (0.146625ms)
+✔ raw ps output may end with a newline but cannot contain a second process (2.02625ms)
+✔ SI and binary units remain distinct (0.111209ms)
+✔ summary reports sampled maxima, intervals and I/O separately (0.236375ms)
+✔ observation gaps stay visible (0.135792ms)
+✔ different process or container cannot contribute (0.315791ms)
+✔ duplicate hosts and timestamps fail (0.138166ms)
+✔ absence of all data for a node fails (0.134458ms)
+✔ changed limits are not silently pooled (0.079916ms)
+✔ stopped-container zero stats remain unavailable rather than a low resource sample (0.238125ms)
+✔ advance independent pins by identity while preserving current paths (1.713ms)
+✔ refuse reused or regressed chain commitment (0.404375ms)
+✔ refuse signer regression and same-sequence digest substitution (0.176708ms)
+✔ refuse absent signer advancement, foreign inventory or unhealthy terminal (0.188584ms)
+✔ refuse conflicting or regressed finality even with newer core and signer pins (0.256667ms)
+✔ independent pins bind by signer identity despite receipt permutation (1.722625ms)
+✔ refuses missing signer pin (0.187667ms)
+✔ refuses duplicate signer pin (0.0865ms)
+✔ refuses foreign signer pin (0.06825ms)
+✔ refuses malformed signer pin (0.071125ms)
+✔ refuses duplicate receipt (0.120708ms)
+✔ refuses inactive signer (0.076792ms)
+✔ refuses unhealthy clock (0.063125ms)
+✔ three common advances plus fresh duties required (0.132833ms)
+✔ requires reconnect and strictly newer common finality before stability (1.105084ms)
+✔ unchanged baseline cannot pass (0.325709ms)
+✔ disconnected observers cannot pass (0.139959ms)
+✔ conflicting finality is fatal without waiting out deadline (0.079333ms)
+✔ regression is fatal (0.083667ms)
+✔ duplicate transports do not prove three-node recovery (0.088167ms)
+✔ proof requires three independent observations of every ancestor (2.310084ms)
+✔ different signed bytes under the same advertised root fail (0.348084ms)
+✔ one-node observations cannot qualify (0.089083ms)
+✔ a captured head is not enough without a complete ancestry (0.147292ms)
+✔ pre-recovery blocks receive no credit (0.146ms)
+✔ cycles and increasing slots fail (0.093125ms)
+✔ block and byte budgets fail closed (0.091083ms)
+✔ invalid offsets and untrusted observer names fail (0.860875ms)
+✔ ownership comes from the prepared key partitions (0.960833ms)
+✔ missing and duplicate keys cannot manufacture remote participation (0.244041ms)
+✔ fault starts only with a common head before the boundary (0.177875ms)
+✔ missed boundary is a failure rather than silently rescheduled (0.111541ms)
+✔ stalled network hits the absolute deadline (0.088208ms)
+✔ all validators healthy (8.662417ms)
+✔ missing terminal status (3.714959ms)
+✔ ambiguous repeated status (3.713459ms)
+✔ follower without local votes (2.861333ms)
+✔ validator failed but follower finalized (3.5335ms)
+✔ missing health fields (2.164333ms)
+✔ Capella status is required when Capella is selected (4.528708ms)
+ℹ tests 229
+ℹ suites 0
+ℹ pass 225
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1639.11525
+
+✖ failing tests:
+
+test at scripts/operations/alert-delivery.test.mjs:1:1
+✖ scripts/operations/alert-delivery.test.mjs (404.164708ms)
+  'test failed'
+
+test at scripts/operations/finality-monitor.test.mjs:1:1
+✖ scripts/operations/finality-monitor.test.mjs (502.491375ms)
+  'test failed'
+
+test at scripts/operations/monitor-and-deliver.test.mjs:1:1
+✖ scripts/operations/monitor-and-deliver.test.mjs (299.374625ms)
+  'test failed'
+
+test at tests/multihost/http-response.test.mjs:23:1
+✖ real curl preserves a 503 JSON body instead of discarding it (6.84975ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:1986:21)
+      at listenInCluster (node:net:2065:12)
+      at node:net:2274:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
