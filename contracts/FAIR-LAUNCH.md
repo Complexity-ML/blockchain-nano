@@ -241,9 +241,10 @@ consultée n'établit à elle seule son indexation DexScreener à l'ouverture.
 Sources : https://docs.flaunch.gg/protocol/frequently-asked-questions et
 https://docs.flaunch.gg/references/api.
 
-Doppler est un candidat technique supplémentaire : la documentation décrit des
-modules de création de tokens, des courbes configurables et des déploiements sur
-Base/Base Sepolia. Cela justifie une étude, pas une sélection. Restent à vérifier
+Lors de cette comparaison initiale, Doppler était un candidat technique : la
+documentation décrivait des modules de création de tokens, des courbes
+configurables et des déploiements sur Base/Base Sepolia. Le choix utilisateur du
+1 octobre 2026, consigné en tête de document, retient désormais Doppler. Restent à vérifier
 l'indexation avant migration, l'utilisation de l'actif USDC retenu, l'import ou
 l'adossement de l'offre NANO, les modules canoniques autorisés et la destination
 des liquidités. Sources : https://docs.doppler.lol/explainer et
