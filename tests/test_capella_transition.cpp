@@ -217,6 +217,20 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
   const auto reveal=nodes[0]->sign_randao(proposer->index,slot,[&]{return now;},current.token,proposer_journal,provider);check(bool(reveal),"local loop RANDAO missing");
   if(local_sync&&slot==2){
    const auto members=nodes[0]->current_sync_members(slot);check(!members.empty(),"missing skipped-slot sync members");const auto member=*members.begin();size_t calls=0;uint64_t wall=now;auto clock=[&]{return wall;};auto signer=[&](const ConsensusRoot& root){++calls;return Key(member).sign(root);};
+   // Regressions before and inside the provider must leave both durable
+   // commitments and the ephemeral sync catalog untouched.
+   for(const std::string mode:{"entry","before-provider","after-provider"}){
+    const auto token=nodes[0]->current().token,reservation=journal(member).commitment();unsigned reads=0,providers=0;
+    const auto baseline=now+rules.slot_duration_ms/3+uint64_t(rules.slot_duration_ms%3!=0);uint64_t observed=baseline;
+    auto fault_clock=[&]{++reads;if(mode=="entry")return now-1;if(mode=="before-provider"&&reads>1)return baseline-1;return observed;};
+    auto fault_provider=[&](const ConsensusRoot& root){++providers;observed=baseline-1;return Key(member).sign(root);};
+    std::string failure;try{nodes[0]->sync_current(member,slot,fault_clock,journal(member),fault_provider);}catch(const std::runtime_error& e){failure=e.what();}
+    const auto expected_now=mode=="entry"?now-1:baseline-1,expected_last=mode=="entry"?now:baseline;
+    check(failure.starts_with("Sync duty clock regressed:")&&failure.find("nowMs="+std::to_string(expected_now)+",")!=std::string::npos&&failure.find("lastMs="+std::to_string(expected_last)+",")!=std::string::npos&&failure.find("durableMs="+std::to_string(now)+",")!=std::string::npos&&failure.find("phase="+mode+",")!=std::string::npos&&failure.find("beforeLast=1")!=std::string::npos,"sync clock diagnostic lost values or phase");
+    check(providers==(mode=="after-provider"?1u:0u)&&nodes[0]->current().token==token&&journal(member).commitment()==reservation,"sync clock regression reached provider early or changed durable commitments");
+    check(nodes[0]->capture_inventory("sync_committee_message",4096)->page({},64,16384)["entries"].empty(),"regressed sync duty published a message");
+    std::cout<<Json{{"scenario","sync-signing-clock-regression"},{"phase",mode},{"providerCalls",providers},{"failure",failure},{"durableCommitmentsUnchanged",true},{"messagePublished",false}}.dump()<<std::endl;
+   }
    check(!nodes[0]->sync_current(member,slot,clock,journal(member),signer)&&calls==0,"sync signed skipped head before one-third slot");
    wall+=rules.slot_duration_ms/3+uint64_t(rules.slot_duration_ms%3!=0);check(bool(nodes[0]->sync_current(member,slot,clock,journal(member),signer))&&calls==1,"sync did not sign skipped head at one-third slot");
   }

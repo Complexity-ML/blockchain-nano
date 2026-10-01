@@ -31,8 +31,17 @@ std::optional<CapellaSyncMessage> CapellaDurableReactor::sync_current(uint64_t i
  std::lock_guard lock(mutex_);require_available();check_registered_index_locked(index,registration_public_key,journal,check);
  if(!local_clock||!signer)throw std::invalid_argument("Missing sync duty clock or signer");
  const auto& clock=state_->timed.clock;if(slot==UINT64_MAX||(clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms!=slot)return std::nullopt;
- uint64_t last=clock.time_ms;
- auto timely=[&]{const auto now=local_clock();if(now<last||now<clock.genesis_time_ms)throw std::runtime_error("Sync duty clock regressed");if((now-clock.genesis_time_ms)/rules_.slot_duration_ms!=slot)throw ExpiredCapellaDuty("Sync duty slot expired");last=now;};
+ uint64_t last=clock.time_ms;size_t reads=0;const char* phase="entry";
+ auto timely=[&]{
+  const auto now=local_clock();++reads;
+  const bool before_last=now<last,before_genesis=now<clock.genesis_time_ms;
+  if(before_last||before_genesis)throw std::runtime_error("Sync duty clock regressed: nowMs="+std::to_string(now)+
+   ", lastMs="+std::to_string(last)+", durableMs="+std::to_string(clock.time_ms)+
+   ", genesisMs="+std::to_string(clock.genesis_time_ms)+", slot="+std::to_string(slot)+
+   ", phase="+phase+", read="+std::to_string(reads)+
+   ", beforeLast="+std::to_string(before_last)+", beforeGenesis="+std::to_string(before_genesis));
+  if((now-clock.genesis_time_ms)/rules_.slot_duration_ms!=slot)throw ExpiredCapellaDuty("Sync duty slot expired");last=now;
+ };
  timely();const auto& context=sync_signing_context_locked(slot,check);
  const auto member=context.members.find(index);if(member==context.members.end())return std::nullopt;
  const auto& parent=state_->blocks.at(context.parent);
@@ -43,13 +52,13 @@ std::optional<CapellaSyncMessage> CapellaDurableReactor::sync_current(uint64_t i
  if(journal.chain_!=chain_||journal.execution_genesis_!=genesis_||journal.validators_genesis_!=context.genesis_root||journal.public_key_!=member->second||journal.slots_per_epoch_!=rules_.transition.consensus.epoch.ffg.slots_per_epoch||&journal.disk_==&disk_)throw std::invalid_argument("Signing journal does not match authenticated sync duty");
  CapellaSyncMessage message{};message.slot=slot;message.validator_index=index;message.beacon_block_root=context.block_root;
  const auto root=consensus_signing_root(message.beacon_block_root,consensus_domain({7,0,0,0},context.version,context.genesis_root));
- auto guarded=[&]{if(check)check();timely();};guarded();
+ auto guarded=[&]{if(check)check();timely();};phase="before-provider";guarded();
  {
   // Sync signatures have no proposal/attestation slashing reservation. Still
   // serialize key retirement/import and authenticate the provider's signature.
   std::lock_guard signing_lock(journal.mutex_);journal.ready();if(journal.retired_)throw std::runtime_error("Beacon signing journal permanently retired");guarded();
-  const auto signature=journal.sign(root,[&](const ConsensusRoot& r){auto result=signer(r);guarded();return result;});std::copy(signature.begin(),signature.end(),message.signature.begin());
+  const auto signature=journal.sign(root,[&](const ConsensusRoot& r){auto result=signer(r);phase="after-provider";guarded();return result;});std::copy(signature.begin(),signature.end(),message.signature.begin());
  }
- guarded();if(!submit_sync_message_locked(message,*token_,guarded))throw std::runtime_error("Locally signed sync message refused by admission");return message;
+ phase="after-verification";guarded();phase="admission";if(!submit_sync_message_locked(message,*token_,guarded))throw std::runtime_error("Locally signed sync message refused by admission");return message;
 }
 }
