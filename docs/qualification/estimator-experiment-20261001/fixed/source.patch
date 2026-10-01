@@ -1,0 +1,86 @@
+diff --git a/include/nano/evm.hpp b/include/nano/evm.hpp
+index 73d9bcde..a600f89d 100644
+--- a/include/nano/evm.hpp
++++ b/include/nano/evm.hpp
+@@ -39,6 +39,8 @@ struct ExecutionResult {
+  std::vector<Log> logs;
+  std::set<std::string> deleted_accounts;
+  std::string error;
++ // Observed forwarding depth is an RPC probe hint, never serialized state/gas.
++ unsigned max_call_depth=0;
+ };
+ // Symmetric coroutine transfer keeps nested EVM frames off the native stack.
+ // Tasks execute synchronously; there are no worker threads or scheduler races.
+diff --git a/src/evm.cpp b/src/evm.cpp
+index 4dee28e9..6389d1e9 100644
+--- a/src/evm.cpp
++++ b/src/evm.cpp
+@@ -170,6 +170,7 @@ EvmTask EVM::run(const ExecutionContext& ctx, unsigned depth){
+   std::optional<size_t> transfer_snap;if(!child.is_static)transfer_snap=mutable_state().snapshot();auto previous_addresses=warm_addresses_;auto previous_slots=warm_slots_;auto previous_deletions=pending_deletions_;auto previous_created=created_accounts_;auto previous_transient=transient_storage_;
+   if(!delegate&&!callcode&&!static_call&&value!=0)mutable_state().transfer(ctx.address,target,value);
+   f.charge(budget);warm_addresses_.insert(child.address);auto output=co_await run(child,depth+1);
++  result.max_call_depth=std::max(result.max_call_depth,1+output.max_call_depth);
+   f.gas+=child.gas-output.gas_used;last_return=output.return_data;
+   if(output.success){if(transfer_snap)mutable_state().commit(*transfer_snap);result.logs.insert(result.logs.end(),output.logs.begin(),output.logs.end());result.gas_refund+=output.gas_refund;}
+   else{if(transfer_snap)mutable_state().revert(*transfer_snap);warm_addresses_=std::move(previous_addresses);warm_slots_=std::move(previous_slots);pending_deletions_=std::move(previous_deletions);created_accounts_=std::move(previous_created);transient_storage_=std::move(previous_transient);}
+@@ -192,6 +193,7 @@ EvmTask EVM::run(const ExecutionContext& ctx, unsigned depth){
+   created_accounts_.insert(address(target));mutable_state().get(target).nonce=1;mutable_state().transfer(ctx.address,target,value);
+   ExecutionContext child=ctx;child.address=target;child.caller=ctx.address;child.value=value;child.data.clear();child.code=init;child.code_address=target;child.gas=f.gas-f.gas/64;
+   warm_addresses_.insert(target);auto output=co_await run(child,depth+1);f.charge(output.gas_used);last_return=output.return_data;
++  result.max_call_depth=std::max(result.max_call_depth,1+output.max_call_depth);
+   uint64_t deposit=output.return_data.size()*200;
+   if(output.success&&(output.return_data.size()>24576||deposit>child.gas-output.gas_used||((ctx.revision==EvmRevision::Paris||ctx.revision>=EvmRevision::Shanghai)&&!output.return_data.empty()&&output.return_data[0]==0xef))){
+    // Code deposit belongs to the child budget; preserve the parent's 1/64 reserve.
+diff --git a/src/rpc.cpp b/src/rpc.cpp
+index 451f997d..b6c6c932 100644
+--- a/src/rpc.cpp
++++ b/src/rpc.cpp
+@@ -509,7 +509,11 @@ std::function<Json()> Rpc::prepare_simulation(const std::string& method,const Js
+   }
+   // Try a headroom candidate, but never exceed the caller/balance/block cap.
+   // Use arbitrary-precision arithmetic before converting back to uint64.
+-  Int optimistic=(Int(std::to_string(result.gas_used))+2300)*64/63;
++  Int optimistic=Int(std::to_string(result.gas_used))+2300;
++  // One forwarding allowance per observed CALL/CREATE layer avoids starting
++  // far below nested EIP-150 headroom. This is only a probe: successful
++  // execution, caller/balance/block cap and the same binary fallback govern it.
++  for(unsigned level=0;level<std::max(1u,result.max_call_depth)&&optimistic<Int(std::to_string(high));++level)optimistic=(optimistic*64+62)/63;
+   if(optimistic>Int(std::to_string(low))&&optimistic<Int(std::to_string(high))){
+    auto gas=u64(optimistic);auto trial=simulate(*state,b->header,chain_id,p[0],gas,ancestors,revision,checkpoint);
+    if(trial.success)high=gas;else low=gas;
+diff --git a/tests/test_rpc.cpp b/tests/test_rpc.cpp
+index 6007d669..affc2104 100644
+--- a/tests/test_rpc.cpp
++++ b/tests/test_rpc.cpp
+@@ -670,5 +670,31 @@ int main(){try{
+   }
+   std::filesystem::remove_all(cancel_path);
+  }
++ // Four nested EIP-150 forwarding layers should not repeatedly execute a
++ // costly leaf merely to find headroom. Count deterministic checkpoints,
++ // not wall time, while independently verifying the returned quote.
++ for(const auto* fork:{"Paris","Shanghai"}){
++  Json allocations={{sender,{{"balance","0x100000000000000000"}}}};
++  std::string leaf="0x00000000000000000000000000000000000080ad",target=leaf;
++  allocations[leaf]={{"code","0x60016000556000355b8015601557600190036008565b50602a60005260206000f3"}};
++  for(unsigned level=1;level<=4;++level){auto outer=hex(bytes(Int(0x80ad+level),20));allocations[outer]={{"code","0x3660006000376020600060206000600073"+target.substr(2)+"5af1602f5760006000fd5b60206000f3"}};target=outer;}
++  auto g=Genesis::from_json({{"config",{{"chainId",1337},{"evmFork",fork}}},{"alloc",allocations}});
++  auto probe_path=path.string()+"-depth-estimate";
++  {Blockchain chain(probe_path,g);auto original=chain.state().root();size_t clock_reads=0;
++   RpcSimulationLimits limits;limits.now=[&]{++clock_reads;return std::chrono::steady_clock::time_point{};};Rpc rpc(chain,{},AdmissionBudget::Clock::now,limits);
++   Json args={{"from",sender},{"to",target},{"gas","0x1c9c380"},{"data",hex(bytes(Int(40000),32))}};
++   auto invoke=[&](const char* method){return rpc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",Json::array({args,"latest"})}});};
++   auto called=invoke("eth_call");check(called.at("result")==hex(bytes(Int(42),32)),"deep estimate control executes");auto call_reads=clock_reads;clock_reads=0;
++   auto quote=invoke("eth_estimateGas");check(quote.contains("result"),"deep estimate succeeds");auto estimate_reads=clock_reads;
++   std::cout<<Json{{"scenario","deep-estimate-probe-count"},{"fork",fork},{"callCheckpoints",call_reads},{"estimateCheckpoints",estimate_reads}}.dump()<<std::endl;
++   check(estimate_reads*2<=call_reads*11,"deep estimation repeats costly execution beyond bounded probe budget");
++   auto gas=quantity(quote.at("result"));args["gas"]=quote.at("result");check(invoke("eth_call").at("result")==called.at("result"),"deep quote independently executes");
++   Transaction tx;tx.chain_id=1337;tx.to=target;tx.gas=gas;tx.gas_price=2000000000;tx.data=bytes(Int(40000),32);auto state=g.state;ExecutionEngine engine(g.chain_id,{},g.evm_revision);auto receipt=engine.apply_transaction(state,SignedTransaction::sign(tx,key),g.block.header,0,0);
++   check(receipt.success&&state.get_storage(leaf,0)==1&&chain.state().root()==original,"deep quote executes signed transaction without committing RPC writes");
++   Int low=receipt.gas_used-1,high=gas;while(high-low>1){Int mid=(high+low)/2;args["gas"]=quantity(mid);if(invoke("eth_call").contains("error"))low=mid;else high=mid;}
++   check((gas-high)*1000<=gas*15,"deep quote exceeds 1.5 percent of independently found boundary");
++   std::cout<<Json{{"scenario","deep-estimate-checkpoints"},{"fork",fork},{"callCheckpoints",call_reads},{"estimateCheckpoints",estimate_reads},{"gasQuote",quantity(gas)},{"minimumVerified",quantity(high)}}.dump()<<'\n';
++  }std::filesystem::remove_all(probe_path);
++ }
+  std::cout<<checks<<" RPC checks passed\n";return 0;
+ }catch(const std::exception& e){std::cerr<<e.what()<<"\n";return 1;}}

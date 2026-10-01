@@ -1,0 +1,105 @@
+{
+  "tests": [
+    {
+      "name": "core",
+      "seconds": "0.333078",
+      "failed": false
+    },
+    {
+      "name": "rpc",
+      "seconds": "1.90136",
+      "failed": false
+    },
+    {
+      "name": "bft_rpc_cost_many_paris_network",
+      "seconds": "94.0471",
+      "failed": true
+    },
+    {
+      "name": "bft_rpc_cost_many_shanghai_network",
+      "seconds": "86.8703",
+      "failed": true
+    }
+  ],
+  "scenarios": [
+    {
+      "fork": "Paris",
+      "activeWorkersWhenCertified": 16,
+      "controlError": "",
+      "workerErrors": {
+        "persistent RPC HTTP failure (503): RPC simulation queue wait exceeded": 6,
+        "RPC simulation execution timeout": 2
+      },
+      "methods": {
+        "eth_call": {
+          "count": 211,
+          "failed": 6,
+          "errors": {
+            "persistent RPC HTTP failure (503): RPC simulation queue wait exceeded": 6
+          },
+          "minMs": 214.908083,
+          "medianMs": 910.813334,
+          "maxMs": 4504.731043
+        },
+        "eth_chainId": {
+          "count": 205,
+          "failed": 0,
+          "errors": {},
+          "minMs": 0.04525,
+          "medianMs": 0.132125,
+          "maxMs": 86.609333
+        },
+        "eth_estimateGas": {
+          "count": 105,
+          "failed": 2,
+          "errors": {
+            "RPC simulation execution timeout": 2
+          },
+          "minMs": 1174.39675,
+          "medianMs": 4615.85521,
+          "maxMs": 8583.636254
+        }
+      }
+    },
+    {
+      "fork": "Shanghai",
+      "activeWorkersWhenCertified": 16,
+      "controlError": "",
+      "workerErrors": {
+        "persistent RPC HTTP failure (503): RPC simulation queue wait exceeded": 7,
+        "RPC simulation execution timeout": 2
+      },
+      "methods": {
+        "eth_call": {
+          "count": 192,
+          "failed": 4,
+          "errors": {
+            "persistent RPC HTTP failure (503): RPC simulation queue wait exceeded": 4
+          },
+          "minMs": 208.406125,
+          "medianMs": 899.838917,
+          "maxMs": 4290.478918
+        },
+        "eth_chainId": {
+          "count": 188,
+          "failed": 0,
+          "errors": {},
+          "minMs": 0.052375,
+          "medianMs": 0.114875,
+          "maxMs": 73.279209
+        },
+        "eth_estimateGas": {
+          "count": 99,
+          "failed": 5,
+          "errors": {
+            "persistent RPC HTTP failure (503): RPC simulation queue wait exceeded": 3,
+            "RPC simulation execution timeout": 2
+          },
+          "minMs": 1156.210209,
+          "medianMs": 4408.231377,
+          "maxMs": 8604.416629
+        }
+      }
+    }
+  ]
+}

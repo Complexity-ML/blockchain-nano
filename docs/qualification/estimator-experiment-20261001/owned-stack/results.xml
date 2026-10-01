@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="3"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="6"
+	timestamp="2026-10-01T18:59:53"
+	>
+	<testcase name="core" classname="core" time="0.33316" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_evm"/>
+		</properties>
+		<system-out>3741 checks passed
+</system-out>
+	</testcase>
+	<testcase name="rpc" classname="rpc" time="1.88297" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_evm"/>
+		</properties>
+		<system-out>{"callCheckpoints":415,"estimateCheckpoints":2013,"fork":"Paris","scenario":"deep-estimate-probe-count"}
+{"callCheckpoints":415,"estimateCheckpoints":2013,"fork":"Paris","gasQuote":"0x1aea53","minimumVerified":"0x1ad959","scenario":"deep-estimate-checkpoints"}
+{"callCheckpoints":415,"estimateCheckpoints":2013,"fork":"Shanghai","scenario":"deep-estimate-probe-count"}
+{"callCheckpoints":415,"estimateCheckpoints":2013,"fork":"Shanghai","gasQuote":"0x1aea53","minimumVerified":"0x1ad959","scenario":"deep-estimate-checkpoints"}
+1007 RPC checks passed
+</system-out>
+	</testcase>
+	<testcase name="ethereum_official_regressions" classname="ethereum_official_regressions" time="3.88566" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_evm"/>
+		</properties>
+		<system-out>{"case":"tests/berlin/eip2930_access_list/test_acl.py::test_account_storage_warm_cold_state[fork_Berlin-state_test-account_warm_False-storage_key_warm_False]","engine":"Nano explicit Berlin rules (partial implementation)","expectedGasUsed":"0xcbc3","file":"/work/tests/fixtures/ethereum-official/account_storage_warm_cold_state.json","fork":"Berlin","gasUsed":"0xcbc3","gasUsedMatches":true,"logsHash":{"actual":"0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347","expected":"0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"},"receiptMatches":true,"replayPolicy":"Ethereum historical signatures allowed; Nano network policy unchanged","stateRoot":{"actual":"0x8b7e2bf1a0c2a04185a51485b7778d4af4cd5123015489aef7e947007577670b","expected":"0x8b7e2bf1a0c2a04185a51485b7778d4af4cd5123015489aef7e947007577670b"},"status":"matched","transactionHash":"0x45780f6f24ae4433f79849401a6ee6a964f6c66aa2e30214d2a19bb11e943c39","transactionHashMatches":true,"variant":0}
+{"case":"tests/berlin/eip2930_ac...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+</testsuite>

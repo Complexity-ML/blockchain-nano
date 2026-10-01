@@ -5776,3 +5776,9 @@ distincts. CI opérations bef03980 réussie : 246 contrôles, zéro skip ; volet
 cœur/réseau encore actifs. Original 314/86 conservé, tous critères initiaux ouverts.
 [Préparation candidat](qualification/full-candidate-20261001/launch/README.md) ;
 [opérations CI](qualification/ci-20261001/operations-bef03980/README.md).
+
+### 2026-10-01 — Estimation profonde : gain mesuré, charge encore en échec
+
+L'expérience isolée conserve toutes ses phases dans `docs/qualification/estimator-experiment-20261001/`. Sur une fixture de quatre CALL imbriqués, les lectures d'horloge de l'estimation passent de 5689 à 2013 (Paris, comparatif direct) ; le devis est vérifié par exécution et respecte la précision de 1,5 %. Les deux scénarios de charge 16 clients/quatre nœuds échouent encore avec expirations de file et d'exécution, malgré un marqueur finalisé pendant la charge. Les limites RPC restent inchangées ; cet écart de production reste ouvert.
+
+La phase supplémentaire pile GMP passe 3741 contrôles cœur, 1007 RPC et le corpus enregistré (5387 exécutions + 505 validations), avec nouveaux contrôles de normalisation/DUP/gas/frontière de pile. Aucun succès de charge n'est revendiqué pour cette phase, ni conformité intégrale des forks ; les profils réseau activés ne changent pas. La branche expérimentale n'est pas intégrée à main. CI core bef03980 : neuf tests réussis sans skipped, journal archivé séparément ; CI réseau et régression complète restent à terminer. Le défaut distinct d'admission brut révélé par le test HTTP est traité dans une autre copie isolée.
