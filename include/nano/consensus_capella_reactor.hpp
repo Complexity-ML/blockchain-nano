@@ -1,5 +1,6 @@
 #pragma once
 #include <exception>
+#include <atomic>
 #include "nano/consensus_capella_store_snapshot.hpp"
 #include "nano/storage.hpp"
 #include "nano/consensus_beacon_signer.hpp"
@@ -30,6 +31,10 @@ public:
 class CapellaDurableReactor {
  ChainStore& disk_;Blockchain* execution_=nullptr;Int chain_;Bytes genesis_;CapellaForkBlockRules rules_;CapellaStoreSnapshotLimits limits_;
  std::mutex& mutex_;std::shared_ptr<const CapellaForkStore> state_;std::optional<ForkCheckpointToken> token_;
+ // Coherent immutable state/token, installed only after durable publication.
+ std::atomic<std::shared_ptr<const CapellaPublishedStore>> beacon_publication_;
+ CapellaPublishedStore beacon_snapshot()const;
+ std::optional<Bytes> beacon_signed_block(const CapellaPublishedStore&,const ConsensusRoot&,const std::function<void()>&)const;
  CapellaSignedVotes votes_,slashings_;CapellaPendingBlsChanges bls_changes_;CapellaPendingExits exits_;CapellaStoreSnapshotCache cache_;bool unavailable_=false;bool automatic_pruning_=false;
  std::exception_ptr failure_;
  // Only populated from this reactor's immutable, admitted head under mutex_.

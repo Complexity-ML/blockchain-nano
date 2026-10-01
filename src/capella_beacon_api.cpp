@@ -117,7 +117,7 @@ BeaconReadResponse CapellaDurableReactor::beacon_read(std::string_view path,cons
  try{
  // Pin one authenticated publication; SSZ/ancestry projection must not hold
  // the admission mutex. The shared const store survives concurrent publishes.
- const auto snapshot=current();const auto& rules=rules_;const auto& store=*snapshot.state;
+ const auto snapshot=beacon_snapshot();const auto& rules=rules_;const auto& store=*snapshot.state;
  if(check)check();
  const bool full=path.starts_with("/eth/v2/beacon/blocks/");
  const std::string_view prefix=full?"/eth/v2/beacon/blocks/":"/eth/v1/beacon/headers/";
@@ -157,10 +157,10 @@ BeaconReadResponse CapellaDurableReactor::beacon_read(std::string_view path,cons
   if(!found)return error(404,"Block slot not retained on canonical branch");
  }
  const auto block=store.blocks.find(id);if(block==store.blocks.end())return error(404,"Block not retained");
- // Archive access still authenticates under its own lock. If maintenance has
+ // Archive access still authenticates under the DB lock. If maintenance has
  // removed this root meanwhile, fail rather than fall back to the newer head.
  phase=BeaconReadPhase::archive;
- const auto signed_block=this->signed_block(id,check);if(!signed_block)return error(404,"Signed block not retained");
+ const auto signed_block=beacon_signed_block(snapshot,id,check);if(!signed_block)return error(404,"Signed block not retained");
  phase=BeaconReadPhase::projection;
  if(full){const auto finalized=ancestor(store.timed.view.finalized.root,id);phase=BeaconReadPhase::projection;return {200,{{"version","capella"},{"execution_optimistic",false},{"finalized",finalized},{"data",beacon_block_json(*signed_block,rules,check)}},*signed_block,"capella"};}
  const auto& h=block->second.header;auto root=[](const ConsensusRoot& r){return hex(Bytes(r.begin(),r.end()));};

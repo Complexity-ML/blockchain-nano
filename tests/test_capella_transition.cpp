@@ -999,6 +999,20 @@ static void verify_beacon_read_admission(CapellaDurableReactor& reactor,const By
  // captured publication's canonical/finalized flags during admission.
  const auto path="/eth/v1/beacon/headers/"+hex(Bytes(parent.begin(),parent.end()));
  const auto before=reactor.beacon_read(path);check(before.status==200,"Concurrent Beacon signed parent missing");
+ {
+  const auto before_state=reactor.beacon_read("/eth/v1/beacon/states/head/finality_checkpoints");const auto token=reactor.current().token;
+  std::promise<void> held,unblock;auto held_future=held.get_future();auto gate=unblock.get_future().share();
+  auto blocked_writer=std::async(std::launch::async,[&]{bool paused=false;try{return reactor.block(wire,[&]{if(!paused){paused=true;held.set_value();gate.wait();throw ExecutionCancelled("held writer cancelled");}});}catch(const ExecutionCancelled&){return false;}});
+  const bool locked=held_future.wait_for(std::chrono::seconds(5))==std::future_status::ready;
+  if(!locked){unblock.set_value();blocked_writer.get();check(false,"Admission lock fixture not reached");}
+  auto concurrent=std::async(std::launch::async,[&]{return Json::array({reactor.beacon_read(path).body,reactor.beacon_read("/eth/v1/beacon/states/head/finality_checkpoints").body});});
+  const bool completed=concurrent.wait_for(std::chrono::seconds(5))==std::future_status::ready;
+  // Release before all assertions so the old locking path fails without hanging.
+  unblock.set_value();const auto bodies=concurrent.get();const auto admitted=blocked_writer.get();
+  check(completed&&!admitted&&bodies==Json::array({before.body,before_state.body})&&reactor.current().token==token,"Beacon reads waited on admission or mixed unpublished state");
+  std::cout<<Json{{"scenario","beacon-read-during-held-admission"},{"publicationReadCompleted",true},{"archiveReadCompleted",true},{"oldPublicationPreserved",true},{"cancelledWriterUnpublished",true}}.dump()<<std::endl;
+ }
+
  std::promise<void> entered,release;auto entered_future=entered.get_future();auto gate=release.get_future().share();
  auto reader=std::async(std::launch::async,[&]{bool paused=false;return reactor.beacon_read(path,[&]{if(!paused){paused=true;entered.set_value();gate.wait();}});});
  const bool captured=entered_future.wait_for(std::chrono::seconds(5))==std::future_status::ready;
