@@ -2244,3 +2244,17 @@ EPERM loopback de l’essai sandbox conservé puis execution autorisée réussie
 Campagne originale encore active et échecs préservés ; nouveau full run après
 fin réelle seulement. Tous les critères initiaux demeurent ouverts.
 [Contrôles et usage du lanceur Docker](qualification/full-docker-runner-controls-20261001/README.md).
+
+
+### 2026-10-01 — passage original terminé, candidat intégré
+
+Campagne originale terminale exit 8 : 400 résultats exacts, 314 réussites,
+86 échecs, aucun skip. 46 échecs avec trace directe de manque d’espace
+sont distingués ; aucune cause disque déduite pour les autres. Exécutables
+originaux vérifiés inchangés après fin, rapports/échecs conservés intégralement.
+Après fin seulement, merge 23204db2 intègre les correctifs qualifiés et outils
+(aacc56da, runtime ff53e4d1) ; sources runtime équivalentes au checkout candidat.
+Pas de full candidat encore réussi ni déploiement. Nouveau passage complet
+sur disque à lancer depuis checkout immuable, builders/volumes existants.
+Tous les critères initiaux, problèmes de charge et revue indépendante ouverts.
+[Rapport original terminal](qualification/full-regression-original-20261001/README.md).

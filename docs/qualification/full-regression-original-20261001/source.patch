@@ -1,0 +1,207 @@
+diff --git a/tests/test_bft_large_envelope.cpp b/tests/test_bft_large_envelope.cpp
+index 467eaca..cf15663 100644
+--- a/tests/test_bft_large_envelope.cpp
++++ b/tests/test_bft_large_envelope.cpp
+@@ -1,3 +1,4 @@
++#include "support/rocksdb.hpp"
+ #include "support/process.hpp"
+ #include "nano/bft_reactor.hpp"
+ #include "nano/block_auth.hpp"
+@@ -52,7 +53,7 @@ int main(int argc,char** argv){try{
+   {ChainStore store(root/"legacy-incomplete");store.reserve_signature(1337,genesis.block.header.hash(),addresses[proposer],1,block_signing_hash(original,1337,genesis.block.header.hash()));reject([&]{reserve(store,block,4);});reject([&]{store.signing_proposal(1337,genesis.block.header.hash(),addresses[proposer],1,4);});}
+   for(unsigned mode=0;mode<5;++mode){auto path=root/("corrupt-slot-"+std::to_string(mode));{ChainStore store(path);reserve(store,block,4);}
+    const auto base="signing/v1/"+hex(bytes(Int(1337),32))+"/"+hex(genesis.block.header.hash())+"/"+address(addresses[proposer])+"/"+hex(bytes(Int(1),8));const auto slot=base+"/round/v1/"+hex(bytes(Int(4),8));
+-   {std::unique_ptr<rocksdb::DB> db;rocksdb::Options options;check(rocksdb::DB::Open(options,path.string(),&db).ok(),"open corruption fixture");rocksdb::WriteOptions durable;durable.sync=true;rocksdb::Status result;
++   {std::unique_ptr<rocksdb::DB> db;rocksdb::Options options;check(test::open_rocksdb(options,path.string(),db).ok(),"open corruption fixture");rocksdb::WriteOptions durable;durable.sync=true;rocksdb::Status result;
+     if(mode==0)result=db->Delete(durable,base);if(mode==1)result=db->Delete(durable,slot+"/proposal");if(mode==2)result=db->Put(durable,slot,hex(Bytes(32,0)));if(mode==3){auto changed=block;changed.header.timestamp+=1;result=db->Put(durable,slot+"/proposal",changed.to_json(true).dump());}if(mode==4)result=db->Delete(durable,slot);check(result.ok(),"apply corruption fixture");}
+    {ChainStore store(path);reject([&]{store.signing_proposal(1337,genesis.block.header.hash(),addresses[proposer],1,4);});reject([&]{reserve(store,block,4);});}
+   }
+diff --git a/tests/test_bft_signing_sync_failure.cpp b/tests/test_bft_signing_sync_failure.cpp
+index c2aa7dc..2e6b285 100644
+--- a/tests/test_bft_signing_sync_failure.cpp
++++ b/tests/test_bft_signing_sync_failure.cpp
+@@ -1,3 +1,4 @@
++#include "support/rocksdb.hpp"
+ #include "support/process.hpp"
+ #include "nano/chain.hpp"
+ #include "nano/block_auth.hpp"
+@@ -26,7 +27,7 @@ int main(int argc,char** argv){try{
+   std::cout<<Json{{"walName",wal.filename().string()},{"walBytesBefore",before},{"walAppendedBytes",fs::file_size(wal)-before},{"syncFailures",faults},{"signatureEmpty",true},{"retryRejected",true},{"conflictRejected",true},{"blockHash",hex(block.header.hash())},{"error",error}}.dump()<<std::endl;_exit(0);
+  }
+  const auto base="signing/v1/"+hex(bytes(Int(1337),32))+"/"+hex(domain)+"/"+address(signer)+"/"+hex(bytes(Int(1),8));const auto slot=base+"/round/v1/"+hex(bytes(Int(4),8));bool retained=false;
+- {std::unique_ptr<rocksdb::DB> db;rocksdb::Options options;check(rocksdb::DB::Open(options,(root/"journal").string(),&db).ok(),"reopen failed WAL");auto read=[&](const std::string& name)->std::optional<std::string>{std::string value;auto status=db->Get(rocksdb::ReadOptions(),name,&value);if(status.IsNotFound())return std::nullopt;check(status.ok(),"read raw journal");return value;};auto guard=read(base),reserved=read(slot),body=read(slot+"/proposal");retained=reserved.has_value();check(body.has_value()==retained,"round digest and proposal recover atomically");if(legacy)check(guard==std::optional<std::string>(hex(old_digest))&&read(base+"/proposal")==std::optional<std::string>(original.to_json(true).dump()),"prior durable legacy reservation survives");else check(guard.has_value()==retained&&(!guard||*guard=="nano/bft-round-signing/v1"),"downgrade guard and reservation recover atomically");if(retained)check(*reserved==hex(digest)&&*body==block.to_json(true).dump(),"retained exact round proposal");}
++ {std::unique_ptr<rocksdb::DB> db;rocksdb::Options options;check(test::open_rocksdb(options,(root/"journal").string(),db).ok(),"reopen failed WAL");auto read=[&](const std::string& name)->std::optional<std::string>{std::string value;auto status=db->Get(rocksdb::ReadOptions(),name,&value);if(status.IsNotFound())return std::nullopt;check(status.ok(),"read raw journal");return value;};auto guard=read(base),reserved=read(slot),body=read(slot+"/proposal");retained=reserved.has_value();check(body.has_value()==retained,"round digest and proposal recover atomically");if(legacy)check(guard==std::optional<std::string>(hex(old_digest))&&read(base+"/proposal")==std::optional<std::string>(original.to_json(true).dump()),"prior durable legacy reservation survives");else check(guard.has_value()==retained&&(!guard||*guard=="nano/bft-round-signing/v1"),"downgrade guard and reservation recover atomically");if(retained)check(*reserved==hex(digest)&&*body==block.to_json(true).dump(),"retained exact round proposal");}
+  {ChainStore journal(root/"journal");auto saved=journal.signing_proposal(1337,domain,signer,1,4);check(saved.has_value()==retained,"public recovery agrees with raw batch");if(retained){auto conflicting=block;conflicting.header.timestamp+=1;bool refused=false;try{reserve(journal,conflicting);}catch(const std::runtime_error&){refused=true;}check(refused,"retained reservation rejects conflicting digest");}reserve(journal,block);sign_block(block,key,1337,domain);check(verify_block_signature(block,1337,domain),"signature only after successful durable reservation");}
+  {ChainStore journal(root/"journal");auto saved=journal.signing_proposal(1337,domain,signer,1,4);check(saved&&saved->header.hash()==block.header.hash(),"successful retry survives second reopen");bool refused=false;try{journal.reserve_signature(1337,domain,signer,1,digest,block);}catch(const std::runtime_error&){refused=true;}check(refused,"height-only signer cannot bypass round reservation");}
+  check(chain.tip().header.number==0&&chain.audit().at("verified")==true,"signature recovery never fabricates canonical commit");std::cout<<Json{{"reservationRetained",retained},{"blockHash",hex(block.header.hash())},{"signatureVerified",true},{"batchAtomic",true},{"secondReopenVerified",true},{"downgradeRefused",true},{"canonicalHeight",0}}.dump()<<std::endl;return 0;
+diff --git a/tests/test_block_auth.cpp b/tests/test_block_auth.cpp
+index 2371a89..0de3325 100644
+--- a/tests/test_block_auth.cpp
++++ b/tests/test_block_auth.cpp
+@@ -1,3 +1,4 @@
++#include "support/rocksdb.hpp"
+ #include "nano/block_auth.hpp"
+ #include "nano/crypto.hpp"
+ #include "nano/rpc.hpp"
+@@ -70,7 +71,7 @@ int main(){try{
+  }
+  {Blockchain clean(root/"corrupt-history",genesis_config);clean.validate_signed(key,12);clean.validate_signed(key,24);
+   auto before=clean.tip().header.hash();auto result=clean.audit();check(result.at("verified")==true&&result.at("blocks")==3&&clean.tip().header.hash()==before,"audit replays full signed chain without changing its tip");}
+- {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,(root/"corrupt-history").string(),&db).ok(),"open corruption fixture");
++ {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,(root/"corrupt-history").string(),db).ok(),"open corruption fixture");
+   auto storage_key="block/"+hex(bytes(Int(1),8));std::string value;check(db->Get(rocksdb::ReadOptions(),storage_key,&value).ok(),"read historical corruption fixture");
+   auto historical=Json::parse(value);auto signature=unhex(historical["producerProof"]["signature"]);signature[0]^=1;historical["producerProof"]["signature"]=hex(signature);
+   rocksdb::WriteOptions write;write.sync=true;check(db->Put(write,storage_key,historical.dump()).ok(),"persist historical proof corruption");}
+@@ -80,14 +81,14 @@ int main(){try{
+  auto funded=Genesis::from_json({{"config",{{"chainId",1337},{"consensus","pos"},{"posSignatureVersion",1},{"bootstrapValidator",block.header.coinbase}}},{"alloc",{{block.header.coinbase,{{"balance","0x100000000000000000"}}}}}});
+  Transaction transfer;transfer.to=public_address(public_key(bytes(Int(2),32)));transfer.value=7;transfer.gas_price=2000000000;auto signed_transfer=SignedTransaction::sign(transfer,key);
+  {Blockchain clean(root/"receipt-audit",funded);check(clean.submit(signed_transfer),"audit transaction fixture accepted");clean.validate_signed(key,12);check(clean.audit().at("transactions")=="0x1","audit verifies transaction and receipt indices");}
+- {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,(root/"receipt-audit").string(),&db).ok(),"open receipt corruption fixture");auto storage_key="receipt/"+hex(signed_transfer.hash());std::string value;check(db->Get(rocksdb::ReadOptions(),storage_key,&value).ok(),"read audit receipt");auto receipt=Json::parse(value);receipt["gasUsed"]="0x1";rocksdb::WriteOptions write;write.sync=true;check(db->Put(write,storage_key,receipt.dump()).ok(),"persist receipt corruption");}
++ {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,(root/"receipt-audit").string(),db).ok(),"open receipt corruption fixture");auto storage_key="receipt/"+hex(signed_transfer.hash());std::string value;check(db->Get(rocksdb::ReadOptions(),storage_key,&value).ok(),"read audit receipt");auto receipt=Json::parse(value);receipt["gasUsed"]="0x1";rocksdb::WriteOptions write;write.sync=true;check(db->Put(write,storage_key,receipt.dump()).ok(),"persist receipt corruption");}
+  {Blockchain corrupted(root/"receipt-audit",funded);bool detected=false;try{corrupted.audit();}catch(const std::exception& e){detected=std::string(e.what()).find("receipt differs")!=std::string::npos;}check(detected,"audit detects receipt inconsistent with reexecution");}
+  {Blockchain clean(root/"index-audit",genesis_config);clean.validate_signed(key,12);clean.validate_signed(key,24);}
+- {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,(root/"index-audit").string(),&db).ok(),"open hash index fixture");
++ {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,(root/"index-audit").string(),db).ok(),"open hash index fixture");
+   rocksdb::WriteOptions write;write.sync=true;check(db->Put(write,"hash/"+hex(accepted.header.hash()),hex(bytes(Int(0),8))).ok(),"redirect hash index to another valid block");}
+  {ChainStore store(root/"index-audit");bool detected=false;try{store.block_by_hash(accepted.header.hash());}catch(const std::exception& e){detected=std::string(e.what()).find("block hash index mismatch")!=std::string::npos;}
+   check(detected&&store.block_by_number(1)->header.hash()==accepted.header.hash(),"hash lookup rejects redirected index while canonical block remains readable");}
+- {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,(root/"index-audit").string(),&db).ok(),"open height index fixture");
++ {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,(root/"index-audit").string(),db).ok(),"open height index fixture");
+   std::string first;check(db->Get(rocksdb::ReadOptions(),"block/"+hex(bytes(Int(1),8)),&first).ok(),"read original height fixture");
+   rocksdb::WriteOptions write;write.sync=true;check(db->Put(write,"block/"+hex(bytes(Int(2),8)),first).ok(),"redirect height to a valid earlier signed block");}
+  {ChainStore store(root/"index-audit");bool height_rejected=false,tip_rejected=false;
+diff --git a/tests/test_block_transport.cpp b/tests/test_block_transport.cpp
+index 825eb9d..8687b30 100644
+--- a/tests/test_block_transport.cpp
++++ b/tests/test_block_transport.cpp
+@@ -1,3 +1,4 @@
++#include "support/rocksdb.hpp"
+ #include "nano/consensus_round.hpp"
+ #include "nano/block_auth.hpp"
+ #include "support/process.hpp"
+@@ -34,7 +35,7 @@ int main(){try{
+  {ChainStore journal(root/"journal");reserved=chain.vote_for_block(journal,signing_key,proposal,0,VoteStep::prevote,{},12);}
+  const auto proposal_key="voting/v1/"+hex(bytes(Int(1337),32))+"/"+hex(genesis.block.header.hash())+"/"+address(signer)+"/proposal/"+hex(bytes(Int(1),8))+"/"+hex(proposal.header.hash());
+  auto raw_value=[&](std::optional<std::string> replacement=std::nullopt){
+-  std::unique_ptr<rocksdb::DB> db;rocksdb::Options options;auto opened=rocksdb::DB::Open(options,(root/"journal").string(),&db);check(opened.ok(),"open journal for legacy-format fixture");
++  std::unique_ptr<rocksdb::DB> db;rocksdb::Options options;auto opened=test::open_rocksdb(options,(root/"journal").string(),db);check(opened.ok(),"open journal for legacy-format fixture");
+   if(replacement){rocksdb::WriteOptions writes;writes.sync=true;check(db->Put(writes,proposal_key,*replacement).ok(),"write legacy-format fixture");}
+   std::string value;check(db->Get(rocksdb::ReadOptions(),proposal_key,&value).ok(),"read proposal fixture bytes");return value;
+  };
+diff --git a/tests/test_chunked_proposal.cpp b/tests/test_chunked_proposal.cpp
+index c79af79..6cc640d 100644
+--- a/tests/test_chunked_proposal.cpp
++++ b/tests/test_chunked_proposal.cpp
+@@ -1,3 +1,4 @@
++#include "support/rocksdb.hpp"
+ #include "support/process.hpp"
+ #include "nano/rpc.hpp"
+ #include "nano/consensus_round.hpp"
+@@ -19,7 +20,7 @@ int main(){try{
+  const auto prefix="voting/v1/"+hex(bytes(Int(1337),32))+"/"+hex(genesis.block.header.hash())+"/"+address(signer)+"/";
+  const auto proposal_key=prefix+"proposal/"+hex(bytes(Int(1),8))+"/"+hex(block.header.hash());
+  const std::string tag="nano/proposal/chunks-v1\n";
+- auto edit=[&](const std::function<void(rocksdb::DB&)>& callback){std::unique_ptr<rocksdb::DB> db;rocksdb::Options options;check(rocksdb::DB::Open(options,(root/"journal").string(),&db).ok(),"raw journal open");callback(*db);};
++ auto edit=[&](const std::function<void(rocksdb::DB&)>& callback){std::unique_ptr<rocksdb::DB> db;rocksdb::Options options;check(test::open_rocksdb(options,(root/"journal").string(),db).ok(),"raw journal open");callback(*db);};
+  auto read_raw=[](rocksdb::DB& db,const std::string& name){std::string value;check(db.Get(rocksdb::ReadOptions(),name,&value).ok(),"raw journal key exists");return value;};
+  std::string manifest,watermark;std::vector<std::string> chunks;
+  edit([&](rocksdb::DB& db){manifest=read_raw(db,proposal_key);watermark=read_raw(db,prefix+"watermark");check(manifest.starts_with(tag),"large proposal uses chunk manifest");auto metadata=Json::parse(manifest.substr(tag.size()));auto count=metadata.at("chunks").get<size_t>();check(count==18,"expected bounded chunk count");size_t total=0;for(size_t i=0;i<count;++i){auto value=read_raw(db,proposal_key+"/chunks/"+std::to_string(i));check(value.size()<=1024*1024,"chunk byte limit");total+=value.size();chunks.push_back(std::move(value));}check(total==metadata.at("bytes")&&total>16*1024*1024,"complete oversized payload is stored");});
+diff --git a/tests/test_finality.cpp b/tests/test_finality.cpp
+index 9f52506..f6c4613 100644
+--- a/tests/test_finality.cpp
++++ b/tests/test_finality.cpp
+@@ -1,3 +1,4 @@
++#include "support/rocksdb.hpp"
+ #include "nano/finality.hpp"
+ #include "nano/crypto.hpp"
+ #include <iostream>
+@@ -195,7 +196,7 @@ int main(){try{
+  }
+  auto observer_path=path.string()+"-observer";
+  {ChainStore journal(observer_path);journal.advance_voting_height(first_vote.validator,1,2,block,certificate,members,next_members,1337,genesis);}
+- {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,observer_path,&db).ok(),"open observer corruption fixture");
++ {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,observer_path,db).ok(),"open observer corruption fixture");
+   auto active_key="voting/v1/"+hex(bytes(Int(1337),32))+"/"+hex(genesis)+"/"+address(first_vote.validator)+"/active";
+   rocksdb::WriteOptions write;write.sync=true;check(db->Delete(write,active_key).ok(),"remove active height metadata fixture");}
+  {ChainStore journal(observer_path);bool refused=false;try{journal.reserve_consensus_vote(first_vote,members,first_prevotes,1337,genesis);}catch(const std::exception&){refused=true;}check(refused,"missing active metadata cannot restart certified observer at height one");
+@@ -207,9 +208,9 @@ int main(){try{
+  auto prefix="voting/v1/"+hex(bytes(Int(1337),32))+"/"+hex(genesis)+"/"+address(first_vote.validator)+"/";
+  const auto fields_key=prefix+"reserved/"+hex(bytes(Int(1),8))+"/"+hex(bytes(Int(2),8))+"/0x01";
+  std::string original_fields;
+- {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,recovery_path,&db).ok(),"open recovery fixture");check(db->Get(rocksdb::ReadOptions(),fields_key,&original_fields).ok(),"read reservation fixture");}
++ {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,recovery_path,db).ok(),"open recovery fixture");check(db->Get(rocksdb::ReadOptions(),fields_key,&original_fields).ok(),"read reservation fixture");}
+  for(unsigned fault=0;fault<3;++fault){
+-  {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,recovery_path,&db).ok(),"open recovery corruption fixture");rocksdb::WriteOptions write;write.sync=true;
++  {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,recovery_path,db).ok(),"open recovery corruption fixture");rocksdb::WriteOptions write;write.sync=true;
+    auto changed=Json::parse(original_fields);changed["blockHash"]=hex(block);
+    if(fault==1)changed["step"]=257;
+    check((fault==2?db->Delete(write,fields_key):db->Put(write,fields_key,changed.dump())).ok(),"mutate reserved fields fixture");}
+@@ -221,10 +222,10 @@ int main(){try{
+   auto reserve=[&](ChainStore& journal,const FinalityVote& value){if(locked)journal.reserve_consensus_vote(value,members,{},1337,genesis);else journal.reserve_vote(value,1337,genesis);};
+   {ChainStore journal(damaged);reserve(journal,initial);}
+   std::string old_watermark;
+-  {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,damaged,&db).ok(),"open watermark fixture");check(db->Get(rocksdb::ReadOptions(),prefix+"watermark",&old_watermark).ok(),"read original watermark");}
++  {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,damaged,db).ok(),"open watermark fixture");check(db->Get(rocksdb::ReadOptions(),prefix+"watermark",&old_watermark).ok(),"read original watermark");}
+   {ChainStore journal(damaged);reserve(journal,next);}
+   for(bool missing:{false,true}){
+-   {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,damaged,&db).ok(),"open damaged watermark fixture");rocksdb::WriteOptions write;write.sync=true;check((missing?db->Delete(write,prefix+"watermark"):db->Put(write,prefix+"watermark",old_watermark)).ok(),"damage watermark");}
++   {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,damaged,db).ok(),"open damaged watermark fixture");rocksdb::WriteOptions write;write.sync=true;check((missing?db->Delete(write,prefix+"watermark"):db->Put(write,prefix+"watermark",old_watermark)).ok(),"damage watermark");}
+    {ChainStore journal(damaged);auto later=next;later.round=4;bool refused=false;try{reserve(journal,later);}catch(const std::exception&){refused=true;}check(refused,"missing or regressed watermark cannot authorize a new slot");
+     if(locked){refused=false;try{journal.latest_consensus_vote(initial.validator,1337,genesis);}catch(const std::exception&){refused=true;}check(refused,"damaged watermark cannot report fresh or obsolete vote");
+      refused=false;try{journal.voting_position(initial.validator,1337,genesis);}catch(const std::exception&){refused=true;}check(refused,"damaged watermark blocks voting recovery position");
+@@ -238,7 +239,7 @@ int main(){try{
+  auto lock_key=prefix+"lock/"+hex(bytes(Int(1),8));
+  Json original_lock={{"validatorSetHash",hex(voting_set_hash(members))},{"round","0x2"},{"blockHash",hex(block)}};
+  for(unsigned fault=0;fault<5;++fault){
+-  {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,bad_lock_path,&db).ok(),"open lock corruption fixture");auto changed=original_lock;
++  {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,bad_lock_path,db).ok(),"open lock corruption fixture");auto changed=original_lock;
+    if(fault==0)changed["validatorSetHash"]=hex(keccak(Bytes{99}));
+    if(fault==1)changed["round"]="0x3";
+    if(fault==2)changed["blockHash"]=nullptr;
+diff --git a/tests/test_recovery_audit.cpp b/tests/test_recovery_audit.cpp
+index 1857c36..cab1bf7 100644
+--- a/tests/test_recovery_audit.cpp
++++ b/tests/test_recovery_audit.cpp
+@@ -1,3 +1,4 @@
++#include "support/rocksdb.hpp"
+ #include "support/process.hpp"
+ #include "nano/chain.hpp"
+ #include "nano/block_auth.hpp"
+@@ -18,7 +19,7 @@ int main(int argc,char** argv){try{
+   {Blockchain chain(path,genesis);chain.import_certified_block(blocks[0],0,certificates[0],12);if(scenario=="reopen"){ChainStore journal(root/"old-journal");chain.recover_voting_progress(journal,signer);chain.import_certified_block(blocks[1],0,certificates[1],24);chain.recover_voting_progress(journal,signer);}}
+   // Keep a valid certified tip while corrupting an older receipt, which only
+   // complete replay can detect. The original DB owner is already destroyed.
+-  {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,path.string(),&db).ok(),"open closed corruption fixture");std::string value;auto storage_key="receipt/"+hex(first_tx);check(db->Get(rocksdb::ReadOptions(),storage_key,&value).ok(),"read historical receipt");auto receipt=Json::parse(value);receipt["gasUsed"]="0x1";rocksdb::WriteOptions durable;durable.sync=true;check(db->Put(durable,storage_key,receipt.dump()).ok(),"persist historical receipt corruption");}
++  {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,path.string(),db).ok(),"open closed corruption fixture");std::string value;auto storage_key="receipt/"+hex(first_tx);check(db->Get(rocksdb::ReadOptions(),storage_key,&value).ok(),"read historical receipt");auto receipt=Json::parse(value);receipt["gasUsed"]="0x1";rocksdb::WriteOptions durable;durable.sync=true;check(db->Put(durable,storage_key,receipt.dump()).ok(),"persist historical receipt corruption");}
+   {Blockchain reopened(path,genesis);if(scenario=="unverified-extension")reopened.import_certified_block(blocks[1],0,certificates[1],24);
+    ChainStore journal(root/(scenario+"-journal"));bool refused=false;try{reopened.recover_voting_progress(journal,signer);}catch(const std::runtime_error& e){refused=std::string(e.what()).find("receipt differs from replay")!=std::string::npos;}
+    check(refused,"recovery authorized corrupted historical prefix");check(!journal.voting_position(signer,1337,genesis.block.header.hash()),"failed audit advanced fresh voting journal");
+diff --git a/tests/test_staking.cpp b/tests/test_staking.cpp
+index 8227aa5..f6ee5d7 100644
+--- a/tests/test_staking.cpp
++++ b/tests/test_staking.cpp
+@@ -1,3 +1,4 @@
++#include "support/rocksdb.hpp"
+ #include <rocksdb/db.h>
+ #include "nano/rpc.hpp"
+ #include "nano/staking.hpp"
+@@ -118,16 +119,16 @@ int main(int argc,char** argv){try{
+  // Each single-key deletion must fail closed, including direct storage rewind.
+  for(const auto& key:std::vector<std::string>{"meta/certified-tip","meta/tip","certificate/"+hex(bytes(Int(10),8))}){
+   std::string saved;
+-  {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,(root/"signed-peer").string(),&db).ok(),"open metadata fault fixture");
++  {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,(root/"signed-peer").string(),db).ok(),"open metadata fault fixture");
+    check(db->Get(rocksdb::ReadOptions(),key,&saved).ok(),"save metadata fixture");rocksdb::WriteOptions write;write.sync=true;check(db->Delete(write,key).ok(),"delete single certified metadata key");}
+   {ChainStore store(root/"signed-peer");bool refused=false;try{store.latest();}catch(const std::exception&){refused=true;}check(refused,"missing certified metadata refuses latest rather than downgrading");
+    refused=false;try{store.rewind(0);}catch(const std::exception&){refused=true;}check(refused&&store.block_by_number(10).has_value(),"missing metadata cannot permit deletion of certified history");
+    refused=false;try{store.certificate_at(10);}catch(const std::exception&){refused=true;}check(refused,"certificate reader rejects incomplete metadata");}
+   {bool refused=false;try{Blockchain reopened(root/"signed-peer",signed_genesis);}catch(const std::exception&){refused=true;}check(refused,"chain reopen fails closed on incomplete certified metadata");}
+-  {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,(root/"signed-peer").string(),&db).ok(),"restore metadata fixture");rocksdb::WriteOptions write;write.sync=true;check(db->Put(write,key,saved).ok(),"restore exact metadata value");}
++  {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,(root/"signed-peer").string(),db).ok(),"restore metadata fixture");rocksdb::WriteOptions write;write.sync=true;check(db->Put(write,key,saved).ok(),"restore exact metadata value");}
+  }
+  {Blockchain reopened(root/"signed-peer",signed_genesis);check(reopened.audit().at("verified")==true,"refused rewind left all canonical data intact");}
+- {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,(root/"signed-peer").string(),&db).ok(),"open canonical certificate corruption fixture");
++ {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,(root/"signed-peer").string(),db).ok(),"open canonical certificate corruption fixture");
+   auto key="certificate/"+hex(bytes(Int(10),8));std::string encoded;check(db->Get(rocksdb::ReadOptions(),key,&encoded).ok(),"read certificate fixture");auto record=Json::parse(encoded);
+   record["precommits"][0]["signature"]=hex(Bytes(65,0));rocksdb::WriteOptions write;write.sync=true;check(db->Put(write,key,record.dump()).ok(),"corrupt persisted certificate signature");}
+  {bool refused=false;try{Blockchain reopened(root/"signed-peer",signed_genesis);}catch(const std::exception&){refused=true;}check(refused,"reopen rejects corrupted certified tip signature");}
