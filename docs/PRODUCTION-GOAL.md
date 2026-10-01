@@ -2381,3 +2381,11 @@ d'images passent (8/8 ciblés), la suite opérationnelle locale passe 280/280.
 Preuves : `docs/qualification/wan-build-paths-20261001/`. Cela prépare la
 qualification réseau du même candidat après les régressions ; aucune campagne
 WAN n'est lancée ni déclarée réussie ici, aucun gate de production clos.
+
+### 2026-10-02 — CI opérationnelle terminale ae3d5e06
+
+Le run 36927821703 confirme 280/280 contrôles opérationnels, zéro échec,
+annulation ou test ignoré. Core et network sont skipped par le filtre ;
+aucune qualification moteur/réseau supplémentaire n'en découle.
+[Preuves brutes et empreintes](qualification/ci-20261001/terminal-ae3d5e06/README.md).
+Les régressions Docker c10426b2 et les échecs RPC restent distincts et ouverts.
