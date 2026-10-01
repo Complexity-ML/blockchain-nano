@@ -18,3 +18,8 @@ Ces contrôles ne sont pas la CI complète de production : P2P compilé avec cpp
 État initial : 227 tests autonomes passent localement. Exécution réelle du workflow GitHub et build C++ restent non qualifiés jusqu'à leurs résultats terminaux. Aucun workflow vert ne déclare `productionReady=true`.
 
 Premier déclenchement C++ sans conteneur annulé avant qualification (run 36886165867), recette remplacée pour respecter le build Docker demandé. Aucun succès C++ revendiqué pour ce run.
+
+Première exécution GitHub réelle : 227 tests autonomes réussis, run
+[36885989682](https://github.com/Complexity-ML/blockchain-nano/actions/runs/36885989682).
+[Preuves récupérées de GitHub](qualification/ci-20261001/operations-github/README.md).
+Le job C++ et la CI globale ne sont pas qualifiés par ce résultat.

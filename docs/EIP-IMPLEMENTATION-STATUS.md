@@ -4742,3 +4742,14 @@ exacte des inscriptions CTest, budgets inchangés. Workflow GitHub réel et job
 C++ non encore qualifiés. Ce socle n'est ni la CI complète ni une preuve de
 reproductibilité bit à bit ; matrice portable/P2P, gates WAN/EEST/régression
 globale et protections de branche restent ouverts. [Portée](CI.md).
+
+
+### 2026-10-01 — première CI GitHub effectivement réussie
+
+Run GitHub `36885989682`, source `d8fa839`, completed/success :
+227 tests autonomes réussis, zéro échec/ignoré, artefacts récupérés de GitHub.
+Le job C++ était volontairement skipped sur ce push. Premier dispatch C++
+non conteneurisé annulé sur demande avant toute qualification ; recette
+corrigée `ec5e48b` avec Ubuntu Docker épinglé, 2 CPU/3 GiB.
+Qualification C++ CI et CI globale restent ouvertes ; pas de déploiement
+ou de production déclaré. [Preuves](qualification/ci-20261001/operations-github/README.md).
