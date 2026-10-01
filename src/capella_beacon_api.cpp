@@ -1,6 +1,7 @@
 #include "nano/beacon_api.hpp"
 #include "nano/consensus_beacon_state.hpp"
 #include <charconv>
+#include <chrono>
 #include "beacon_block_json.hpp"
 namespace nano {
 namespace {
@@ -8,7 +9,9 @@ uint64_t number(const Bytes& b,size_t at){uint64_t n=0;for(unsigned i=0;i<8;++i)
 std::string octets(const Bytes& b,size_t at,size_t count){if(at>b.size()||count>b.size()-at)throw std::invalid_argument("Beacon field outside state");return hex(Bytes(b.begin()+at,b.begin()+at+count));}
 }
 BeaconReadResponse capella_beacon_read(const CapellaForkStore& store,
- const CapellaForkBlockRules& rules,std::string_view path,const std::function<void()>& checkpoint){
+ const CapellaForkBlockRules& rules,std::string_view path,const std::function<void()>& checkpoint,
+ const std::function<void(BeaconReadPhase)>& phase){
+ auto stage=[&](BeaconReadPhase value){if(phase)phase(value);};
  if(path=="/eth/v1/node/version")return {200,{{"data",{{"version","Nano/0.1.0/c++20"}}}}};
  const bool genesis=path=="/eth/v1/beacon/genesis";
  const bool spec=path=="/eth/v1/config/spec";
@@ -20,10 +23,10 @@ BeaconReadResponse capella_beacon_read(const CapellaForkStore& store,
  }
  const bool root=operation=="root",fork=operation=="fork",finality=operation=="finality_checkpoints";
  if(!root&&!fork&&!finality&&!genesis&&!spec)return {404,{{"code",404},{"message","Beacon endpoint not implemented"}}};
- if(checkpoint)checkpoint();
+ stage(BeaconReadPhase::selection);if(checkpoint)checkpoint();
  const CapellaForkBlock* selected=nullptr;
  if(root||fork||finality){
-  if(selector=="head")selected=&capella_fork_head(store,rules,checkpoint);
+  if(selector=="head"){stage(BeaconReadPhase::fork_choice);selected=&capella_fork_head(store,rules,checkpoint);}
   else{
    ConsensusRoot state_root{};
    try{
@@ -36,11 +39,13 @@ BeaconReadResponse capella_beacon_read(const CapellaForkStore& store,
    for(const auto& [id,block]:store.blocks){if(checkpoint)checkpoint();if(block.header.state_root==state_root){selected=&block;break;}}
    if(!selected)return {404,{{"code",404},{"message","State root not retained"}}};
   }
- }else selected=&capella_fork_head(store,rules,checkpoint);
+ }else {stage(BeaconReadPhase::fork_choice);selected=&capella_fork_head(store,rules,checkpoint);}
  const auto& head=*selected;
  const auto& b=head.state.ssz;const auto& l=rules.transition.consensus.state;
+ stage(BeaconReadPhase::state_commitment);
  if(capella_beacon_state_root(b,l,rules.transition.execution,rules.transition.maximum_state_bytes,checkpoint)!=head.header.state_root)
   throw std::invalid_argument("Beacon state commitment mismatch");
+ stage(BeaconReadPhase::projection);
  const auto& c=rules.transition.consensus;
  const auto genesis_version=hex(Bytes(rules.transition.genesis_version.begin(),rules.transition.genesis_version.end()));
  if(genesis)return {200,{{"data",{{"genesis_time",std::to_string(number(b,0))},{"genesis_validators_root",octets(b,8,32)},{"genesis_fork_version",genesis_version}}}}};
@@ -95,6 +100,7 @@ BeaconReadResponse capella_beacon_read(const CapellaForkStore& store,
   data={{"previous_justified",cp(at)},{"current_justified",cp(at+40)},{"finalized",cp(at+80)}};
  }
  if(checkpoint)checkpoint();
+ stage(BeaconReadPhase::ancestry);
  const auto selected_id=consensus_beacon_header_root(head.header);auto tip=store.timed.view.finalized.root;bool is_finalized=false;
  for(size_t i=0;i<=store.blocks.size();++i){
   if(checkpoint)checkpoint();if(tip==selected_id){is_finalized=true;break;}
@@ -107,19 +113,23 @@ BeaconReadResponse capella_beacon_read(const CapellaForkStore& store,
 
 namespace nano {
 BeaconReadResponse CapellaDurableReactor::beacon_read(std::string_view path,const std::function<void()>& check)const{
+ const auto started=std::chrono::steady_clock::now();BeaconReadPhase phase=BeaconReadPhase::publication;
+ try{
  // Pin one authenticated publication; SSZ/ancestry projection must not hold
  // the admission mutex. The shared const store survives concurrent publishes.
  const auto snapshot=current();const auto& rules=rules_;const auto& store=*snapshot.state;
  if(check)check();
  const bool full=path.starts_with("/eth/v2/beacon/blocks/");
  const std::string_view prefix=full?"/eth/v2/beacon/blocks/":"/eth/v1/beacon/headers/";
- if(!path.starts_with(prefix))return capella_beacon_read(store,rules,path,check);
+ if(!path.starts_with(prefix))return capella_beacon_read(store,rules,path,check,[&](auto next){phase=next;});
  auto error=[](unsigned code,const char* message){return BeaconReadResponse{code,{{"code",code},{"message",message}}};};
  const auto selector=path.substr(prefix.size());
+ phase=BeaconReadPhase::fork_choice;
  const auto& head=capella_fork_head(store,rules,check);const auto head_id=consensus_beacon_header_root(head.header);
  // Traversal stops at retained history. Never infer ancestry across missing
  // records or use execution block numbers as Beacon slots.
  auto ancestor=[&](ConsensusRoot tip,const ConsensusRoot& candidate){
+  phase=BeaconReadPhase::ancestry;
   for(size_t i=0;i<=store.blocks.size();++i){
    if(check)check();if(tip==candidate)return true;
    const auto it=store.blocks.find(tip);if(it==store.blocks.end()||tip==store.timed.view.anchor)return false;
@@ -149,8 +159,10 @@ BeaconReadResponse CapellaDurableReactor::beacon_read(std::string_view path,cons
  const auto block=store.blocks.find(id);if(block==store.blocks.end())return error(404,"Block not retained");
  // Archive access still authenticates under its own lock. If maintenance has
  // removed this root meanwhile, fail rather than fall back to the newer head.
+ phase=BeaconReadPhase::archive;
  const auto signed_block=this->signed_block(id,check);if(!signed_block)return error(404,"Signed block not retained");
- if(full)return {200,{{"version","capella"},{"execution_optimistic",false},{"finalized",ancestor(store.timed.view.finalized.root,id)},{"data",beacon_block_json(*signed_block,rules,check)}},*signed_block,"capella"};
+ phase=BeaconReadPhase::projection;
+ if(full){const auto finalized=ancestor(store.timed.view.finalized.root,id);phase=BeaconReadPhase::projection;return {200,{{"version","capella"},{"execution_optimistic",false},{"finalized",finalized},{"data",beacon_block_json(*signed_block,rules,check)}},*signed_block,"capella"};}
  const auto& h=block->second.header;auto root=[](const ConsensusRoot& r){return hex(Bytes(r.begin(),r.end()));};
  Json message={{"slot",std::to_string(h.slot)},{"proposer_index",std::to_string(h.proposer_index)},
   {"parent_root",root(h.parent_root)},{"state_root",root(h.state_root)},{"body_root",root(h.body_root)}};
@@ -158,5 +170,6 @@ BeaconReadResponse CapellaDurableReactor::beacon_read(std::string_view path,cons
  return {200,{{"execution_optimistic",false},{"finalized",ancestor(store.timed.view.finalized.root,id)},
   {"data",{{"root",root(id)},{"canonical",ancestor(head_id,id)},
    {"header",{{"message",std::move(message)},{"signature",octets(*signed_block,4,96)}}}}}}};
+ }catch(const ExecutionCancelled&){throw BeaconReadCancelled(phase,uint64_t(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-started).count()));}
 }
 }

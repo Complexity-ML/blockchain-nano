@@ -10,7 +10,12 @@ export function decodeHttpResponse(text,host,path){
  }
  if(status<200||status>=300){
   const message=typeof result?.message==='string'?result.message.replace(/[\x00-\x1f\x7f]/g,' ').slice(0,256):'No JSON server diagnostic';
-  const error=Error(`HTTP ${status} from ${host}${path}: ${message}`);
+  const phases=['publication-pin','state-selection','fork-choice','state-commitment','response-projection','signed-archive','ancestry'];
+  const phase=phases.includes(result?.phase)?result.phase:null;
+  const elapsedMs=Number.isSafeInteger(result?.elapsedMs)&&result.elapsedMs>=0?result.elapsedMs:null;
+  const suffix=phase&&elapsedMs!==null?` [phase=${phase}, elapsedMs=${elapsedMs}]`:'';
+  const error=Error(`HTTP ${status} from ${host}${path}: ${message}${suffix}`);
+  error.phase=phase;error.elapsedMs=elapsedMs;
   error.name='HttpReadError';error.status=status;
   error.serverCode=typeof result?.code==='number'?result.code:null;
   error.serverMessage=message;throw error;

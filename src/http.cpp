@@ -97,7 +97,8 @@ public:
         if(!result.version.empty())out["version"]=result.version;
        }
        return out;
-      }catch(const ExecutionCancelled&){return Json{{"status",503},{"body",{{"code",503},{"message","Beacon read cancelled or execution budget expired"}}}};}
+      }catch(const BeaconReadCancelled& error){return Json{{"status",503},{"body",{{"code",503},{"message","Beacon read cancelled or execution budget expired"},{"phase",beacon_read_phase_name(error.phase)},{"elapsedMs",error.elapsed_ms}}}};}
+      catch(const ExecutionCancelled&){return Json{{"status",503},{"body",{{"code",503},{"message","Beacon read cancelled or execution budget expired"}}}};}
        catch(const std::exception&){return Json{{"status",503},{"body",{{"code",503},{"message","Beacon state unavailable"}}}};}
      },[self=shared_from_this(),keep_alive](std::optional<Json> result){
       self->response_.result(static_cast<http::status>(result?result->at("status").get<unsigned>():503));

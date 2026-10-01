@@ -1,0 +1,228 @@
+diff --git a/include/nano/beacon_api.hpp b/include/nano/beacon_api.hpp
+index 3f5c0f2..0918926 100644
+--- a/include/nano/beacon_api.hpp
++++ b/include/nano/beacon_api.hpp
+@@ -3,6 +3,14 @@
+ #include "nano/consensus_capella_reactor.hpp"
+ #include <string_view>
+ namespace nano {
++enum class BeaconReadPhase {publication,selection,fork_choice,state_commitment,projection,archive,ancestry};
++inline const char* beacon_read_phase_name(BeaconReadPhase phase){
++ switch(phase){case BeaconReadPhase::publication:return "publication-pin";case BeaconReadPhase::selection:return "state-selection";case BeaconReadPhase::fork_choice:return "fork-choice";case BeaconReadPhase::state_commitment:return "state-commitment";case BeaconReadPhase::projection:return "response-projection";case BeaconReadPhase::archive:return "signed-archive";case BeaconReadPhase::ancestry:return "ancestry";}return "unknown";
++}
++struct BeaconReadCancelled : ExecutionCancelled {
++ BeaconReadPhase phase;uint64_t elapsed_ms;
++ BeaconReadCancelled(BeaconReadPhase p,uint64_t elapsed):ExecutionCancelled("Beacon read cancelled"),phase(p),elapsed_ms(elapsed){}
++};
+ struct BeaconReadResponse {unsigned status;Json body;Bytes ssz;std::string version;};
+ using BeaconReadHandler=std::function<BeaconReadResponse(std::string_view,const std::function<void()>&)>;
+ // Read-only projection of one authenticated published store. Unsupported routes
+@@ -12,5 +20,6 @@ BeaconReadResponse bellatrix_beacon_read(const BellatrixForkStore&,
+ BeaconReadResponse bellatrix_beacon_read(const BellatrixPublishedStore&,
+  const BellatrixForkBlockRules&,std::string_view,const std::function<void()>& checkpoint={});
+ BeaconReadResponse capella_beacon_read(const CapellaForkStore&,
+- const CapellaForkBlockRules&,std::string_view,const std::function<void()>& checkpoint={});
++ const CapellaForkBlockRules&,std::string_view,const std::function<void()>& checkpoint={},
++ const std::function<void(BeaconReadPhase)>& phase={});
+ }
+diff --git a/src/capella_beacon_api.cpp b/src/capella_beacon_api.cpp
+index d5af699..26bfdaa 100644
+--- a/src/capella_beacon_api.cpp
++++ b/src/capella_beacon_api.cpp
+@@ -1,6 +1,7 @@
+ #include "nano/beacon_api.hpp"
+ #include "nano/consensus_beacon_state.hpp"
+ #include <charconv>
++#include <chrono>
+ #include "beacon_block_json.hpp"
+ namespace nano {
+ namespace {
+@@ -8,7 +9,9 @@ uint64_t number(const Bytes& b,size_t at){uint64_t n=0;for(unsigned i=0;i<8;++i)
+ std::string octets(const Bytes& b,size_t at,size_t count){if(at>b.size()||count>b.size()-at)throw std::invalid_argument("Beacon field outside state");return hex(Bytes(b.begin()+at,b.begin()+at+count));}
+ }
+ BeaconReadResponse capella_beacon_read(const CapellaForkStore& store,
+- const CapellaForkBlockRules& rules,std::string_view path,const std::function<void()>& checkpoint){
++ const CapellaForkBlockRules& rules,std::string_view path,const std::function<void()>& checkpoint,
++ const std::function<void(BeaconReadPhase)>& phase){
++ auto stage=[&](BeaconReadPhase value){if(phase)phase(value);};
+  if(path=="/eth/v1/node/version")return {200,{{"data",{{"version","Nano/0.1.0/c++20"}}}}};
+  const bool genesis=path=="/eth/v1/beacon/genesis";
+  const bool spec=path=="/eth/v1/config/spec";
+@@ -20,10 +23,10 @@ BeaconReadResponse capella_beacon_read(const CapellaForkStore& store,
+  }
+  const bool root=operation=="root",fork=operation=="fork",finality=operation=="finality_checkpoints";
+  if(!root&&!fork&&!finality&&!genesis&&!spec)return {404,{{"code",404},{"message","Beacon endpoint not implemented"}}};
+- if(checkpoint)checkpoint();
++ stage(BeaconReadPhase::selection);if(checkpoint)checkpoint();
+  const CapellaForkBlock* selected=nullptr;
+  if(root||fork||finality){
+-  if(selector=="head")selected=&capella_fork_head(store,rules,checkpoint);
++  if(selector=="head"){stage(BeaconReadPhase::fork_choice);selected=&capella_fork_head(store,rules,checkpoint);}
+   else{
+    ConsensusRoot state_root{};
+    try{
+@@ -36,11 +39,13 @@ BeaconReadResponse capella_beacon_read(const CapellaForkStore& store,
+    for(const auto& [id,block]:store.blocks){if(checkpoint)checkpoint();if(block.header.state_root==state_root){selected=&block;break;}}
+    if(!selected)return {404,{{"code",404},{"message","State root not retained"}}};
+   }
+- }else selected=&capella_fork_head(store,rules,checkpoint);
++ }else {stage(BeaconReadPhase::fork_choice);selected=&capella_fork_head(store,rules,checkpoint);}
+  const auto& head=*selected;
+  const auto& b=head.state.ssz;const auto& l=rules.transition.consensus.state;
++ stage(BeaconReadPhase::state_commitment);
+  if(capella_beacon_state_root(b,l,rules.transition.execution,rules.transition.maximum_state_bytes,checkpoint)!=head.header.state_root)
+   throw std::invalid_argument("Beacon state commitment mismatch");
++ stage(BeaconReadPhase::projection);
+  const auto& c=rules.transition.consensus;
+  const auto genesis_version=hex(Bytes(rules.transition.genesis_version.begin(),rules.transition.genesis_version.end()));
+  if(genesis)return {200,{{"data",{{"genesis_time",std::to_string(number(b,0))},{"genesis_validators_root",octets(b,8,32)},{"genesis_fork_version",genesis_version}}}}};
+@@ -95,6 +100,7 @@ BeaconReadResponse capella_beacon_read(const CapellaForkStore& store,
+   data={{"previous_justified",cp(at)},{"current_justified",cp(at+40)},{"finalized",cp(at+80)}};
+  }
+  if(checkpoint)checkpoint();
++ stage(BeaconReadPhase::ancestry);
+  const auto selected_id=consensus_beacon_header_root(head.header);auto tip=store.timed.view.finalized.root;bool is_finalized=false;
+  for(size_t i=0;i<=store.blocks.size();++i){
+   if(checkpoint)checkpoint();if(tip==selected_id){is_finalized=true;break;}
+@@ -107,19 +113,23 @@ BeaconReadResponse capella_beacon_read(const CapellaForkStore& store,
+ 
+ namespace nano {
+ BeaconReadResponse CapellaDurableReactor::beacon_read(std::string_view path,const std::function<void()>& check)const{
++ const auto started=std::chrono::steady_clock::now();BeaconReadPhase phase=BeaconReadPhase::publication;
++ try{
+  // Pin one authenticated publication; SSZ/ancestry projection must not hold
+  // the admission mutex. The shared const store survives concurrent publishes.
+  const auto snapshot=current();const auto& rules=rules_;const auto& store=*snapshot.state;
+  if(check)check();
+  const bool full=path.starts_with("/eth/v2/beacon/blocks/");
+  const std::string_view prefix=full?"/eth/v2/beacon/blocks/":"/eth/v1/beacon/headers/";
+- if(!path.starts_with(prefix))return capella_beacon_read(store,rules,path,check);
++ if(!path.starts_with(prefix))return capella_beacon_read(store,rules,path,check,[&](auto next){phase=next;});
+  auto error=[](unsigned code,const char* message){return BeaconReadResponse{code,{{"code",code},{"message",message}}};};
+  const auto selector=path.substr(prefix.size());
++ phase=BeaconReadPhase::fork_choice;
+  const auto& head=capella_fork_head(store,rules,check);const auto head_id=consensus_beacon_header_root(head.header);
+  // Traversal stops at retained history. Never infer ancestry across missing
+  // records or use execution block numbers as Beacon slots.
+  auto ancestor=[&](ConsensusRoot tip,const ConsensusRoot& candidate){
++  phase=BeaconReadPhase::ancestry;
+   for(size_t i=0;i<=store.blocks.size();++i){
+    if(check)check();if(tip==candidate)return true;
+    const auto it=store.blocks.find(tip);if(it==store.blocks.end()||tip==store.timed.view.anchor)return false;
+@@ -149,8 +159,10 @@ BeaconReadResponse CapellaDurableReactor::beacon_read(std::string_view path,cons
+  const auto block=store.blocks.find(id);if(block==store.blocks.end())return error(404,"Block not retained");
+  // Archive access still authenticates under its own lock. If maintenance has
+  // removed this root meanwhile, fail rather than fall back to the newer head.
++ phase=BeaconReadPhase::archive;
+  const auto signed_block=this->signed_block(id,check);if(!signed_block)return error(404,"Signed block not retained");
+- if(full)return {200,{{"version","capella"},{"execution_optimistic",false},{"finalized",ancestor(store.timed.view.finalized.root,id)},{"data",beacon_block_json(*signed_block,rules,check)}},*signed_block,"capella"};
++ phase=BeaconReadPhase::projection;
++ if(full){const auto finalized=ancestor(store.timed.view.finalized.root,id);phase=BeaconReadPhase::projection;return {200,{{"version","capella"},{"execution_optimistic",false},{"finalized",finalized},{"data",beacon_block_json(*signed_block,rules,check)}},*signed_block,"capella"};}
+  const auto& h=block->second.header;auto root=[](const ConsensusRoot& r){return hex(Bytes(r.begin(),r.end()));};
+  Json message={{"slot",std::to_string(h.slot)},{"proposer_index",std::to_string(h.proposer_index)},
+   {"parent_root",root(h.parent_root)},{"state_root",root(h.state_root)},{"body_root",root(h.body_root)}};
+@@ -158,5 +170,6 @@ BeaconReadResponse CapellaDurableReactor::beacon_read(std::string_view path,cons
+  return {200,{{"execution_optimistic",false},{"finalized",ancestor(store.timed.view.finalized.root,id)},
+   {"data",{{"root",root(id)},{"canonical",ancestor(head_id,id)},
+    {"header",{{"message",std::move(message)},{"signature",octets(*signed_block,4,96)}}}}}}};
++ }catch(const ExecutionCancelled&){throw BeaconReadCancelled(phase,uint64_t(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-started).count()));}
+ }
+ }
+diff --git a/src/http.cpp b/src/http.cpp
+index e24a4d2..0e6e318 100644
+--- a/src/http.cpp
++++ b/src/http.cpp
+@@ -97,7 +97,8 @@ public:
+         if(!result.version.empty())out["version"]=result.version;
+        }
+        return out;
+-      }catch(const ExecutionCancelled&){return Json{{"status",503},{"body",{{"code",503},{"message","Beacon read cancelled or execution budget expired"}}}};}
++      }catch(const BeaconReadCancelled& error){return Json{{"status",503},{"body",{{"code",503},{"message","Beacon read cancelled or execution budget expired"},{"phase",beacon_read_phase_name(error.phase)},{"elapsedMs",error.elapsed_ms}}}};}
++      catch(const ExecutionCancelled&){return Json{{"status",503},{"body",{{"code",503},{"message","Beacon read cancelled or execution budget expired"}}}};}
+        catch(const std::exception&){return Json{{"status",503},{"body",{{"code",503},{"message","Beacon state unavailable"}}}};}
+      },[self=shared_from_this(),keep_alive](std::optional<Json> result){
+       self->response_.result(static_cast<http::status>(result?result->at("status").get<unsigned>():503));
+diff --git a/tests/multihost/http-response.mjs b/tests/multihost/http-response.mjs
+index 0e0f55b..b30b81f 100644
+--- a/tests/multihost/http-response.mjs
++++ b/tests/multihost/http-response.mjs
+@@ -10,7 +10,12 @@ export function decodeHttpResponse(text,host,path){
+  }
+  if(status<200||status>=300){
+   const message=typeof result?.message==='string'?result.message.replace(/[\x00-\x1f\x7f]/g,' ').slice(0,256):'No JSON server diagnostic';
+-  const error=Error(`HTTP ${status} from ${host}${path}: ${message}`);
++  const phases=['publication-pin','state-selection','fork-choice','state-commitment','response-projection','signed-archive','ancestry'];
++  const phase=phases.includes(result?.phase)?result.phase:null;
++  const elapsedMs=Number.isSafeInteger(result?.elapsedMs)&&result.elapsedMs>=0?result.elapsedMs:null;
++  const suffix=phase&&elapsedMs!==null?` [phase=${phase}, elapsedMs=${elapsedMs}]`:'';
++  const error=Error(`HTTP ${status} from ${host}${path}: ${message}${suffix}`);
++  error.phase=phase;error.elapsedMs=elapsedMs;
+   error.name='HttpReadError';error.status=status;
+   error.serverCode=typeof result?.code==='number'?result.code:null;
+   error.serverMessage=message;throw error;
+diff --git a/tests/multihost/http-response.test.mjs b/tests/multihost/http-response.test.mjs
+index b0d6a2b..280cb28 100644
+--- a/tests/multihost/http-response.test.mjs
++++ b/tests/multihost/http-response.test.mjs
+@@ -28,3 +28,10 @@ test('real curl preserves a 503 JSON body instead of discarding it',async()=>{
+   assert.throws(()=>decodeHttpResponse(stdout,'vps','/eth/v1/beacon/headers/head'),error=>error.status===503&&error.serverMessage==='Beacon read queue expired');
+  }finally{await new Promise(resolve=>server.close(resolve));}
+ });
++
++test('Beacon cancellation phase and duration survive the fatal campaign error',()=>{
++ assert.throws(()=>decodeHttpResponse(response({code:503,message:'Beacon read cancelled or execution budget expired',phase:'publication-pin',elapsedMs:2345},503),'vps','/eth/v1/beacon/states/head/finality_checkpoints'),error=>error.status===503&&error.phase==='publication-pin'&&error.elapsedMs===2345&&error.message.includes('[phase=publication-pin, elapsedMs=2345]'));
++});
++test('untrusted phase labels and malformed durations are not echoed',()=>{
++ for(const [phase,elapsedMs] of [['private-secret',12],['publication-pin',-1],['publication-pin','private-secret'],['publication-pin',Number.MAX_SAFE_INTEGER+1]])assert.throws(()=>decodeHttpResponse(response({code:503,message:'Unavailable',phase,elapsedMs},503),'vps','/'),error=>!error.message.includes('private-secret')&&!error.message.includes('[phase='));
++});
+diff --git a/tests/test_beacon_http_errors.cpp b/tests/test_beacon_http_errors.cpp
+index fa94299..d76a7ba 100644
+--- a/tests/test_beacon_http_errors.cpp
++++ b/tests/test_beacon_http_errors.cpp
+@@ -11,7 +11,8 @@ int main(){try{
+  {
+  Blockchain chain(directory,Genesis::from_json(Json::object()));Rpc rpc(chain);
+  BeaconReadHandler handler=[](std::string_view path,const std::function<void()>& check)->BeaconReadResponse{
+-  if(path=="/eth/deadline"){std::this_thread::sleep_for(std::chrono::milliseconds(2100));check();}
++  if(path=="/eth/deadline"){std::this_thread::sleep_for(std::chrono::milliseconds(2100));try{check();}catch(const ExecutionCancelled&){throw BeaconReadCancelled(BeaconReadPhase::state_commitment,2100);}}
++  if(path=="/eth/phase")throw BeaconReadCancelled(BeaconReadPhase::state_commitment,2100);
+   if(path=="/eth/unavailable")throw std::runtime_error("private failure detail");
+   return {200,{{"data",{{"version","test"}}}}};
+  };
+@@ -20,13 +21,15 @@ int main(){try{
+  struct Stop{HttpServer& server;~Stop(){server.stop();}} stop{server};
+  auto request=[&](const char* path){asio::io_context context;beast::tcp_stream stream(context);stream.expires_after(std::chrono::seconds(5));stream.connect({asio::ip::make_address("127.0.0.1"),server.port()});http::request<http::empty_body> req(http::verb::get,path,11);req.set(http::field::host,"localhost");req.set(http::field::accept,"application/json");http::write(stream,req);beast::flat_buffer buffer;http::response<http::string_body> response;http::read(stream,buffer,response);return response;};
+  const auto expired=request("/eth/deadline");
+- if(expired.result_int()!=503||Json::parse(expired.body()).at("message")!="Beacon read cancelled or execution budget expired")throw std::runtime_error("Beacon execution deadline diagnostic lost");
++ if(expired.result_int()!=503||Json::parse(expired.body()).at("message")!="Beacon read cancelled or execution budget expired"||Json::parse(expired.body()).at("phase")!="state-commitment")throw std::runtime_error("Beacon execution deadline diagnostic lost");
++ const auto phased=request("/eth/phase");const auto detail=Json::parse(phased.body());
++ if(phased.result_int()!=503||detail.at("phase")!="state-commitment"||detail.at("elapsedMs")!=2100||phased.body().find("private")!=std::string::npos)throw std::runtime_error("Beacon phase diagnostic lost");
+  // Exceed the shared queue's reservation count across completed failures: a
+  // leaked reservation would eventually report capacity instead of this error.
+  for(unsigned i=0;i<12;++i){const auto unavailable=request("/eth/unavailable");if(unavailable.result_int()!=503||Json::parse(unavailable.body()).at("message")!="Beacon state unavailable"||unavailable.body().find("private failure detail")!=std::string::npos)throw std::runtime_error("Beacon exception diagnostic leaked or capacity was not released");}
+  const auto reused=request("/eth/ok");
+  if(reused.result_int()!=200)throw std::runtime_error("Beacon failed reads leaked queue capacity");
+- std::cout<<Json{{"scenario","beacon-http-error-diagnostics"},{"executionDeadlinePreserved",true},{"privateExceptionRedacted",true},{"queueCapacityReused",true}}.dump()<<std::endl;
++ std::cout<<Json{{"scenario","beacon-http-error-diagnostics"},{"executionDeadlinePreserved",true},{"phaseDiagnosticQualified",true},{"privateExceptionRedacted",true},{"queueCapacityReused",true}}.dump()<<std::endl;
+  }
+  std::filesystem::remove_all(directory);return 0;
+  }catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}}
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index c053f99..6d6e6e6 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -1015,6 +1015,14 @@ static void verify_beacon_read_admission(CapellaDurableReactor& reactor,const By
+ }
+ static void verify_beacon_reads(CapellaDurableReactor& reactor,const CapellaForkBlockRules& rules){
+  const auto snapshot=reactor.current();const auto& head=capella_fork_head(*snapshot.state,rules);const auto id=consensus_beacon_header_root(head.header);auto text=[](const ConsensusRoot& r){return hex(Bytes(r.begin(),r.end()));};
++ if(beacon_read_checks==0){
++  BeaconReadPhase phase=BeaconReadPhase::publication;bool stopped=false;
++  try{capella_beacon_read(*snapshot.state,rules,"/eth/v1/beacon/states/head/finality_checkpoints",[&]{if(phase==BeaconReadPhase::state_commitment)throw ExecutionCancelled("private checkpoint detail");},[&](auto next){phase=next;});}catch(const ExecutionCancelled&){stopped=true;}
++  check(stopped&&phase==BeaconReadPhase::state_commitment&&reactor.current().token==snapshot.token,"Beacon commitment phase/cancellation lost");
++  bool pin=false;try{reactor.beacon_read("/eth/v1/beacon/states/head/finality_checkpoints",[]{throw ExecutionCancelled("private checkpoint detail");});}catch(const BeaconReadCancelled& error){pin=error.phase==BeaconReadPhase::publication&&std::string(error.what()).find("private")==std::string::npos;}
++  check(pin&&reactor.current().token==snapshot.token,"Beacon publication phase diagnostic leaked or changed state");
++  std::cout<<Json{{"scenario","beacon-read-phase-diagnostics"},{"publicationCancellationQualified",true},{"commitmentCancellationQualified",true},{"checkpointUnchanged",true},{"privateExceptionRedacted",true}}.dump()<<std::endl;
++ }
+  const auto header=reactor.beacon_read("/eth/v1/beacon/headers/head");check(header.status==200&&header.body.at("data").at("root")==text(id)&&header.body.at("data").at("canonical")==true,"Capella Beacon head header differs");
+  check(reactor.beacon_read("/eth/v1/beacon/headers/"+std::to_string(head.header.slot)).body==header.body&&reactor.beacon_read("/eth/v1/beacon/headers/"+text(id)).body==header.body,"Capella Beacon header selectors differ");
+  const auto full=reactor.beacon_read("/eth/v2/beacon/blocks/head");check(full.status==200&&full.version=="capella"&&full.body.at("version")=="capella"&&full.ssz==*reactor.signed_block(id),"Capella Beacon signed bytes differ");const auto& body=full.body.at("data").at("message").at("body");const auto& payload=body.at("execution_payload");

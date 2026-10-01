@@ -28,3 +28,10 @@ test('real curl preserves a 503 JSON body instead of discarding it',async()=>{
   assert.throws(()=>decodeHttpResponse(stdout,'vps','/eth/v1/beacon/headers/head'),error=>error.status===503&&error.serverMessage==='Beacon read queue expired');
  }finally{await new Promise(resolve=>server.close(resolve));}
 });
+
+test('Beacon cancellation phase and duration survive the fatal campaign error',()=>{
+ assert.throws(()=>decodeHttpResponse(response({code:503,message:'Beacon read cancelled or execution budget expired',phase:'publication-pin',elapsedMs:2345},503),'vps','/eth/v1/beacon/states/head/finality_checkpoints'),error=>error.status===503&&error.phase==='publication-pin'&&error.elapsedMs===2345&&error.message.includes('[phase=publication-pin, elapsedMs=2345]'));
+});
+test('untrusted phase labels and malformed durations are not echoed',()=>{
+ for(const [phase,elapsedMs] of [['private-secret',12],['publication-pin',-1],['publication-pin','private-secret'],['publication-pin',Number.MAX_SAFE_INTEGER+1]])assert.throws(()=>decodeHttpResponse(response({code:503,message:'Unavailable',phase,elapsedMs},503),'vps','/'),error=>!error.message.includes('private-secret')&&!error.message.includes('[phase='));
+});

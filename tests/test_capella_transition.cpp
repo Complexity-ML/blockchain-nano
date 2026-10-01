@@ -1015,6 +1015,14 @@ static void verify_beacon_read_admission(CapellaDurableReactor& reactor,const By
 }
 static void verify_beacon_reads(CapellaDurableReactor& reactor,const CapellaForkBlockRules& rules){
  const auto snapshot=reactor.current();const auto& head=capella_fork_head(*snapshot.state,rules);const auto id=consensus_beacon_header_root(head.header);auto text=[](const ConsensusRoot& r){return hex(Bytes(r.begin(),r.end()));};
+ if(beacon_read_checks==0){
+  BeaconReadPhase phase=BeaconReadPhase::publication;bool stopped=false;
+  try{capella_beacon_read(*snapshot.state,rules,"/eth/v1/beacon/states/head/finality_checkpoints",[&]{if(phase==BeaconReadPhase::state_commitment)throw ExecutionCancelled("private checkpoint detail");},[&](auto next){phase=next;});}catch(const ExecutionCancelled&){stopped=true;}
+  check(stopped&&phase==BeaconReadPhase::state_commitment&&reactor.current().token==snapshot.token,"Beacon commitment phase/cancellation lost");
+  bool pin=false;try{reactor.beacon_read("/eth/v1/beacon/states/head/finality_checkpoints",[]{throw ExecutionCancelled("private checkpoint detail");});}catch(const BeaconReadCancelled& error){pin=error.phase==BeaconReadPhase::publication&&std::string(error.what()).find("private")==std::string::npos;}
+  check(pin&&reactor.current().token==snapshot.token,"Beacon publication phase diagnostic leaked or changed state");
+  std::cout<<Json{{"scenario","beacon-read-phase-diagnostics"},{"publicationCancellationQualified",true},{"commitmentCancellationQualified",true},{"checkpointUnchanged",true},{"privateExceptionRedacted",true}}.dump()<<std::endl;
+ }
  const auto header=reactor.beacon_read("/eth/v1/beacon/headers/head");check(header.status==200&&header.body.at("data").at("root")==text(id)&&header.body.at("data").at("canonical")==true,"Capella Beacon head header differs");
  check(reactor.beacon_read("/eth/v1/beacon/headers/"+std::to_string(head.header.slot)).body==header.body&&reactor.beacon_read("/eth/v1/beacon/headers/"+text(id)).body==header.body,"Capella Beacon header selectors differ");
  const auto full=reactor.beacon_read("/eth/v2/beacon/blocks/head");check(full.status==200&&full.version=="capella"&&full.body.at("version")=="capella"&&full.ssz==*reactor.signed_block(id),"Capella Beacon signed bytes differ");const auto& body=full.body.at("data").at("message").at("body");const auto& payload=body.at("execution_payload");
