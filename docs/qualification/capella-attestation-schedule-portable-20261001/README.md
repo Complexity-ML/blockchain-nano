@@ -1,0 +1,7 @@
+# Interleaved attestations: amd64 and portable candidates
+
+Source revision 418aceb8d72cda7836957bfd2308cbf34376cf66. AMD64 job exited 0: four new scheduler scenarios and real distributed-cli (two daemons, 32 keys each, three stable observations of common finalized epoch 2). Healthy signers/clocks, clean stops; all background categories appear in completion events, alongside interleaved attestations. Exact roots, event counts and 98/102 local admissions in the summary. Native/ARM64 bounded evidence: ../capella-attestation-schedule-local-20261001.
+
+Core 967a0dc reused with unchanged core sources/build inputs; P2P rebuilt at 418aceb. Exact hashes checked before advancing markers. One runtime image assembled per architecture using existing bases, without compiling or downloading dependencies. verifyPackagedImage verifies both IDs, architecture, revision label, user 10001:10001 and the two executable hashes; selectCandidates accepts this distinct pair. Candidate file: nano-attestation-schedule-candidates.json. Image identity is not behavioral qualification.
+
+Next: new WAN campaign with unchanged 96/192-second cuts and 180-second monotonic recovery bound. No WAN improvement yet established. P/O/N/M and all production gates remain open, including connected-majority-island behavior, lifecycle, recovery, operations and independent review. No sync inclusion/rotation, scale, adversarial load or production claim.
