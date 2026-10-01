@@ -1,0 +1,215 @@
+{
+  "schemaVersion": 1,
+  "qualification": "inventory-only",
+  "runtimeTestsExecuted": 0,
+  "totalTests": 16,
+  "selectedTests": 16,
+  "completeSelection": true,
+  "unselectedTests": [],
+  "missingExecutables": [],
+  "withoutExplicitTimeout": [],
+  "sumExplicitTimeoutSeconds": 3190,
+  "uniqueExecutables": 5,
+  "labels": {
+    "qualification_evm": 1,
+    "qualification_bft_rpc_cost_local": 2,
+    "qualification_bft_rpc_cost_sustained_local": 2,
+    "qualification_rpc_load_local": 8,
+    "qualification_consensus_local_network": 1,
+    "qualification_consensus_runtime": 1,
+    "qualification_rpc_load_control": 1
+  },
+  "tests": [
+    {
+      "name": "bft_rpc_cost_paris_network",
+      "command": [
+        "/build/diagnostics-a00ff7d0-20261002/nano-bft-network-tests",
+        "/build/diagnostics-a00ff7d0-20261002/nano",
+        "/build/network/nano-p2p",
+        "--rpc-cost"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_bft_rpc_cost_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_rpc_cost_shanghai_network",
+      "command": [
+        "/build/diagnostics-a00ff7d0-20261002/nano-bft-network-tests",
+        "/build/diagnostics-a00ff7d0-20261002/nano",
+        "/build/network/nano-p2p",
+        "--rpc-cost"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_bft_rpc_cost_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_rpc_cost_sustained_paris_network",
+      "command": [
+        "/build/diagnostics-a00ff7d0-20261002/nano-bft-network-tests",
+        "/build/diagnostics-a00ff7d0-20261002/nano",
+        "/build/network/nano-p2p",
+        "--rpc-cost-sustained"
+      ],
+      "timeoutSeconds": 480,
+      "labels": [
+        "qualification_bft_rpc_cost_sustained_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "bft_rpc_cost_sustained_shanghai_network",
+      "command": [
+        "/build/diagnostics-a00ff7d0-20261002/nano-bft-network-tests",
+        "/build/diagnostics-a00ff7d0-20261002/nano",
+        "/build/network/nano-p2p",
+        "--rpc-cost-sustained"
+      ],
+      "timeoutSeconds": 480,
+      "labels": [
+        "qualification_bft_rpc_cost_sustained_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_clock_coalescing",
+      "command": [
+        "/build/diagnostics-a00ff7d0-20261002/nano-bellatrix-transition-tests",
+        "--clock-coalescing"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_voluntary_exit_pruning",
+      "command": [
+        "/build/diagnostics-a00ff7d0-20261002/nano-bellatrix-transition-tests",
+        "--exit-pruning",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 240,
+      "labels": [
+        "qualification_consensus_local_network"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "core",
+      "command": [
+        "/build/diagnostics-a00ff7d0-20261002/nano-tests"
+      ],
+      "timeoutSeconds": 120,
+      "labels": [
+        "qualification_evm"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_cost_nested_1_paris",
+      "command": [
+        "/build/diagnostics-a00ff7d0-20261002/nano-rpc-cost-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_rpc_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_cost_nested_1_shanghai",
+      "command": [
+        "/build/diagnostics-a00ff7d0-20261002/nano-rpc-cost-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_rpc_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_cost_nested_4_paris",
+      "command": [
+        "/build/diagnostics-a00ff7d0-20261002/nano-rpc-cost-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_rpc_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_cost_nested_4_shanghai",
+      "command": [
+        "/build/diagnostics-a00ff7d0-20261002/nano-rpc-cost-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_rpc_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_cost_paris",
+      "command": [
+        "/build/diagnostics-a00ff7d0-20261002/nano-rpc-cost-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_rpc_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_cost_shanghai",
+      "command": [
+        "/build/diagnostics-a00ff7d0-20261002/nano-rpc-cost-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_rpc_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_cost_success_paris",
+      "command": [
+        "/build/diagnostics-a00ff7d0-20261002/nano-rpc-cost-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_rpc_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_cost_success_shanghai",
+      "command": [
+        "/build/diagnostics-a00ff7d0-20261002/nano-rpc-cost-tests"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_rpc_load_local"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "rpc_load_window",
+      "command": [
+        "/build/diagnostics-a00ff7d0-20261002/nano-rpc-load-window-tests"
+      ],
+      "timeoutSeconds": 10,
+      "labels": [
+        "qualification_rpc_load_control"
+      ],
+      "executablePresent": true
+    }
+  ]
+}
