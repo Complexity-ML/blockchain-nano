@@ -1,4 +1,5 @@
 #include "support/process.hpp"
+#include "support/rpc_load_window.hpp"
 #include "support/persistent_rpc.hpp"
 #include "support/persistent_websocket_rpc.hpp"
 #include "nano/chain.hpp"
@@ -243,6 +244,11 @@ int main(int argc,char** argv){try{
  if(rpc_cost_load){
   const unsigned rpc_workers=rpc_overload?48:rpc_cost_many?16:4;
   const unsigned rpc_rounds=rpc_overload?12:rpc_cost_many?24:rpc_cost_all?96:rpc_cost_sustained?24:3;
+  // Only the basic and sustained single-node workloads require this window.
+  // Faster execution must not make the traffic end before finality can be read.
+  const bool observation_window=!rpc_cost_all;
+  const auto workload_deadline=rpc_cost_sustained?80s:45s;
+  std::atomic<bool> observation_done=false;
   const std::string recipient="0x00000000000000000000000000000000000000b0";
   Transaction marker;marker.nonce=quantity(rpc(ports[1],"eth_getTransactionCount",{addresses[1],"latest"}));marker.to=recipient;marker.value=7;marker.gas_price=2000000000;
   auto during=SignedTransaction::sign(marker,keys[1]);auto during_hash=hex(during.hash());
@@ -254,7 +260,9 @@ int main(int argc,char** argv){try{
    Json trace={{"method",method},{"tag",params.size()>1?params[1]:Json(nullptr)},{"request",requests[w].size()},{"startedMs",std::chrono::duration<double,std::milli>(request_start-began).count()}};
    try{auto result=ws_client?ws_client->call(method,std::move(params)):http_client.call(method,std::move(params));trace["success"]=true;trace["durationMs"]=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-request_start).count();requests[w].push_back(std::move(trace));return result;}
    catch(const std::exception& error){trace["success"]=false;trace["error"]=error.what();if(auto rpc_error=dynamic_cast<const PersistentRpcError*>(&error))trace["rpcCode"]=rpc_error->code;trace["durationMs"]=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-request_start).count();requests[w].push_back(std::move(trace));throw;}
-  };for(unsigned round=0;round<rpc_rounds;++round){
+  };for(unsigned round=0;continue_rpc_load(round,rpc_rounds,observation_window,observation_done.load(),
+     std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-began),
+     std::chrono::duration_cast<std::chrono::milliseconds>(workload_deadline));++round){
    auto start=std::chrono::steady_clock::now();const unsigned mode=rpc_cost_all?(w+round)%4:w;const char* method=mode%2?"eth_estimateGas":"eth_call";const bool omitted_block=default_estimates&&mode==1;const char* tag=omitted_block?"pending":mode<2?"latest":"pending";
    Json result=nullptr;bool overloaded=false;
    try{
@@ -281,9 +289,13 @@ int main(int argc,char** argv){try{
   check(rpc(ports[1],"eth_sendRawTransaction",{hex(during.raw())})==during_hash,"marker admitted during bounded simulation load");
   until([&]{auto value=rpc(ports[1],"eth_getTransactionReceipt",{during_hash});auto done=completed.load();if(!value.is_null()&&done<rpc_workers){observed=value;active_when_certified=rpc_workers-done;return true;}check(done<rpc_workers,"no marker finality observed while RPC workers active");return false;},"Marker finalized while expensive RPC clients remain active",40);
   if(rpc_cost_sustained){
-   while(completed.load()<rpc_workers){auto height=rpc(ports[1],"eth_blockNumber");auto active=rpc_workers-completed.load();if(active)progress.push_back({{"height",height},{"activeWorkers",active},{"elapsedSeconds",std::chrono::duration<double>(std::chrono::steady_clock::now()-began).count()}});std::this_thread::sleep_for(1s);}
+   while(completed.load()<rpc_workers){auto height=rpc(ports[1],"eth_blockNumber");auto active=rpc_workers-completed.load();if(active)progress.push_back({{"height",height},{"activeWorkers",active},{"elapsedSeconds",std::chrono::duration<double>(std::chrono::steady_clock::now()-began).count()}});
+    if(observation_window&&progress.size()>=20&&quantity(height)>=quantity(progress.front().at("height"))+5)break;
+    std::this_thread::sleep_for(1s);
+   }
   }
   }catch(const std::exception& e){control_error=e.what();}
+  observation_done=true;
   for(auto& client:clients)client.join();
   std::cout<<Json{{"stage",rpc_overload?"rpc-overload-clients-finished":"rpc-cost-clients-finished"},{"fork",fork},{"defaultEstimates",default_estimates},{"progress",progress},{"controlError",control_error},{"errors",errors},{"samples",samples},{"requests",requests},{"activeWorkersWhenCertified",active_when_certified}}.dump()<<std::endl;
   if(!control_error.empty()){
@@ -293,6 +305,10 @@ int main(int argc,char** argv){try{
   check(control_error.empty(),"RPC control failed under load: "+control_error);
   for(const auto& error:errors)check(error.empty(),"bounded distributed RPC client failed: "+error);
   if(rpc_cost_sustained){check(progress.size()>=(rpc_overload?5u:20u),"RPC load did not span the required observations");check(quantity(progress.back().at("height"))>=quantity(progress.front().at("height"))+5,"BFT did not advance five blocks during sustained RPC load");}
+  Json actual_rounds=Json::array();size_t actual_estimates=0,actual_calls=0,actual_identity=0;
+  for(unsigned w=0;w<rpc_workers;++w){actual_rounds.push_back(samples[w].size());for(const auto& request:requests[w]){
+   auto method=request.at("method").get<std::string>();if(method=="eth_estimateGas")++actual_estimates;else if(method=="eth_call")++actual_calls;else if(method=="eth_chainId")++actual_identity;
+  }}
   size_t capacity_rejections=0,queue_expirations=0,deferred_verified=0;Json recovery_probes=Json::array();
   if(rpc_overload){
    for(const auto& worker:requests)for(const auto& request:worker)if(request.value("rpcCode",0)==-32005){
@@ -335,7 +351,7 @@ int main(int argc,char** argv){try{
   }
   for(auto& relay:relays)relay->stop();for(auto& core:cores)core->stop();
   for(unsigned i=0;i<4;++i){Blockchain reopened(root/("node-"+std::to_string(i)),Genesis::from_json(load(genesis)));auto state=reopened.store().state_at(final_height);check(state&&hex(state->root())==final.at("stateRoot").get<std::string>(),"RPC-load persisted snapshot differs");check(reopened.audit().at("verified")==true,"RPC-load reopened history audit failed");}
-  std::cout<<Json{{"scenario",rpc_overload?"bft-rpc-overload":"bft-rpc-cost"},{"fork",fork},{"defaultEstimates",default_estimates},{"loadedNodes",rpc_cost_all?Json::array({0,1,2,3}):Json::array({0})},{"loadedValidators",rpc_cost_all?Json(addresses):Json::array({addresses[0]})},{"transport",rpc_cost_websocket?"websocket":"http"},{"workers",rpc_workers},{"sustained",rpc_cost_sustained},{"progress",progress},{"roundsPerWorker",rpc_rounds},{"overloadRejections",capacity_rejections},{"queueExpirations",queue_expirations},{"deferredQuotesVerified",deferred_verified},{"recoveryProbes",recovery_probes},{rpc_overload?"attemptedEstimateRounds":"expensiveEstimates",rpc_workers/2*rpc_rounds},{rpc_overload?"maximumExpensiveCallAttempts":"expensiveCalls",rpc_workers*rpc_rounds},{"identityReads",rpc_workers*rpc_rounds},{"activeWorkersWhenCertified",active_when_certified},{"certificates",certificates},{"markerHash",during_hash},{"markerBlockHash",observed.at("blockHash")},{"postLoadHash",after_hash},{"finalHeight",quantity(final_height)},{"stateRoot",final.at("stateRoot")},{"reopenedPeers",4},{"elapsedSeconds",std::chrono::duration<double>(std::chrono::steady_clock::now()-began).count()}}.dump()<<std::endl;return 0;
+  std::cout<<Json{{"scenario",rpc_overload?"bft-rpc-overload":"bft-rpc-cost"},{"fork",fork},{"defaultEstimates",default_estimates},{"loadedNodes",rpc_cost_all?Json::array({0,1,2,3}):Json::array({0})},{"loadedValidators",rpc_cost_all?Json(addresses):Json::array({addresses[0]})},{"transport",rpc_cost_websocket?"websocket":"http"},{"workers",rpc_workers},{"sustained",rpc_cost_sustained},{"progress",progress},{"roundsPerWorker",rpc_rounds},{"actualRoundsPerWorker",actual_rounds},{"observationWindow",observation_window},{"maximumWorkloadMs",observation_window?Json(std::chrono::duration_cast<std::chrono::milliseconds>(workload_deadline).count()):Json(nullptr)},{"overloadRejections",capacity_rejections},{"queueExpirations",queue_expirations},{"deferredQuotesVerified",deferred_verified},{"recoveryProbes",recovery_probes},{rpc_overload?"attemptedEstimateRounds":"expensiveEstimates",actual_estimates},{rpc_overload?"maximumExpensiveCallAttempts":"expensiveCalls",actual_calls},{"identityReads",actual_identity},{"activeWorkersWhenCertified",active_when_certified},{"certificates",certificates},{"markerHash",during_hash},{"markerBlockHash",observed.at("blockHash")},{"postLoadHash",after_hash},{"finalHeight",quantity(final_height)},{"stateRoot",final.at("stateRoot")},{"reopenedPeers",4},{"elapsedSeconds",std::chrono::duration<double>(std::chrono::steady_clock::now()-began).count()}}.dump()<<std::endl;return 0;
  }
  if(pool_balance){
   until([&]{for(auto port:ports)for(const auto& txs:pool_cases)if(rpc(port,"eth_getTransactionReceipt",{hex(txs[2].hash())}).is_null())return false;return true;},"All peers execute funded prefix",35);

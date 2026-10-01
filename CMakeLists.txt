@@ -1827,3 +1827,7 @@ target_link_libraries(nano-capella-audit-corruption-tests PRIVATE nano_core)
 
 add_test(NAME consensus_capella_http_admission_queue COMMAND nano-capella-transition-tests --http-queue)
 set_tests_properties(consensus_capella_http_admission_queue PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_recovery")
+
+add_executable(nano-rpc-load-window-tests tests/test_rpc_load_window.cpp)
+add_test(NAME rpc_load_window COMMAND nano-rpc-load-window-tests)
+set_tests_properties(rpc_load_window PROPERTIES TIMEOUT 10 LABELS "qualification_rpc_load_control")
