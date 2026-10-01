@@ -46,7 +46,14 @@ EvmTask EVM::run(const ExecutionContext& ctx, unsigned depth){
  if(ctx.revision<EvmRevision::Osaka&&op==0x1e)throw std::runtime_error("Opcode unavailable in selected EVM revision");
  if(ctx.revision<EvmRevision::Cancun&&((op>=0x5c&&op<=0x5e)||op==0x49||op==0x4a))throw std::runtime_error("Opcode unavailable in selected EVM revision");
  f.charge(opcode_gas(op));
- if(op>=0x60&&op<=0x7f){size_t n=op-0x5f;f.push(integer(slice(ctx.code,Int(pc+1),n)));pc+=n;continue;}
+ if(op>=0x60&&op<=0x7f){
+  const size_t n=op-0x5f,available=std::min(n,ctx.code.size()-pc-1);
+  // Import directly from immutable bytecode instead of allocating a Bytes
+  // slice on every PUSH. Missing immediate bytes are trailing zeroes (EVM EOF).
+  Int value;if(available)mpz_import(value.get_mpz_t(),available,1,1,1,0,ctx.code.data()+pc+1);
+  if(available<n)mpz_mul_2exp(value.get_mpz_t(),value.get_mpz_t(),8*(n-available));
+  f.push(std::move(value));pc+=n;continue;
+ }
  if(op>=0x80&&op<=0x8f){size_t depth=op-0x7f;if(f.stack.size()<depth)throw std::runtime_error("Stack underflow");Int value=f.stack[f.stack.size()-depth];f.push(std::move(value));continue;}
  if(op>=0x90&&op<=0x9f){size_t depth=op-0x8f;if(f.stack.size()<=depth)throw std::runtime_error("Stack underflow");std::swap(f.stack.back(),f.stack[f.stack.size()-depth-1]);continue;}
  if(op>=0xa0&&op<=0xa4){if(ctx.is_static)throw std::runtime_error("LOG in static context");Int off=f.pop(),size=f.pop();Log log{ctx.address,{}, {}};for(unsigned i=0;i<unsigned(op-0xa0);++i)log.topics.push_back(bytes(f.pop(),32));log.data=f.read(off,size);f.charge(log.data.size()*8);result.logs.push_back(std::move(log));continue;}
