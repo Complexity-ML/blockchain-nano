@@ -2,6 +2,7 @@
 #include "nano/consensus_altair_runtime.hpp"
 #include "../network/altair_rpc_service.hpp"
 #include "nano/http.hpp"
+#include <sstream>
 using namespace test;using namespace test::phase0_minimal;
 struct RunningAltair {HttpServer& server;std::thread thread;explicit RunningAltair(HttpServer& s):server(s),thread([&s]{s.run();}){}~RunningAltair(){server.stop();thread.join();}};
 int main(int argc,char** argv){try{
@@ -22,7 +23,7 @@ int main(int argc,char** argv){try{
  // transport/commit integration, not host UTC synchronisation or live finality.
  auto endpoint=std::make_shared<AltairRpcService>(reactor,profile,4,2*transition.maximum_block_bytes,10s,[&](const auto& check){if(check)check();if(!healthy.load())throw std::runtime_error("fixture local clock unavailable");},[&]{return healthy.load();},identity,true);
  Blockchain execution(root/"execution",genesis);Rpc rpc_service(execution,"fixture-token",AdmissionBudget::Clock::now,RpcSimulationLimits{},endpoint);HttpServer server(rpc_service,"127.0.0.1",0);RunningAltair running(server);
- Process daemon({argv[1],std::to_string(server.port()),(root/"peer-key").string(),"/ip4/127.0.0.1/tcp/0"},{{"NANO_NETWORK_TOKEN","fixture-token"}});
+ Process daemon({argv[1],std::to_string(server.port()),(root/"peer-key").string(),"/ip4/127.0.0.1/tcp/0"},{{"NANO_NETWORK_TOKEN","fixture-token"},{"NANO_TEST_NETWORK_TRACE","1"}});
  const auto address=daemon.event("listen").at("address").get<std::string>();daemon.event("ready");check(daemon.event("altair-ingress-ready").at("consensusIdentity")==identity,"daemon enabled different profile");
  auto status=rpc(server.port(),"nano_networkStatus");status["altair"]={{"protocol","/nano/altair/1.0.0"},{"consensusIdentity",identity},{"forkDigest",profile.fork_digest}};
  unsigned probes=0;std::set<std::string> peer_ids;
@@ -45,12 +46,20 @@ int main(int argc,char** argv){try{
  const auto bound_token=reactor.current().token;
  const auto bound_reply=probe(status,{bound_frame});
  if(bound_reply!=Json::array({Json{{"accepted",false}}})){
+  Json completions=Json::array();std::istringstream trace(daemon.output());std::string line;
+  while(std::getline(trace,line)){
+   auto entry=Json::parse(line,nullptr,false);
+   if(entry.is_object()&&entry.value("event",std::string{})=="test-consensus-stream-completion"){
+    if(completions.size()==8)completions.erase(completions.begin());
+    completions.push_back(std::move(entry));
+   }
+  }
   std::cerr<<Json{{"scenario","altair-full-block-bound-failure"},
    {"payloadBytes",transition.maximum_block_bytes},{"frameBytes",bound_frame.size()},
    {"reply",bound_reply},{"highWaterBefore",bound_watermark},
    {"highWaterAfter",endpoint->jobs().at("highWater")},
    {"checkpointUnchanged",reactor.current().token==bound_token},
-   {"clockHealthy",healthy.load()}}.dump()<<std::endl;
+   {"clockHealthy",healthy.load()},{"recentStreamCompletions",completions}}.dump()<<std::endl;
  }
  check(bound_reply==Json::array({Json{{"accepted",false}}}),"full configured block bound failed before core validation");
  unsigned blocks=0;
