@@ -5008,3 +5008,34 @@ déplacée avant CTest ; nouvelle qualification fraîche requise. Campagne des
 Tous les autres critères originaux restent ouverts.
 [Transport en échec](qualification/network-ci-20261001/github-network-failure/README.md),
 [correctifs isolés](qualification/rpc-positional-isolated-20261001/README.md).
+
+
+### 2026-10-01 — nouvelles injections Linux en qualification isolée
+
+Le checkout isolé 886eac8 reçoit le raccordement de treize tests de panne
+fsync/fdatasync auparavant exclus du registre Linux. Configuration Docker :
+413 noms, exactement treize ajouts et aucun retrait face au registre 400.
+Les branches EIO Altair, témoin Beacon et Bellatrix sont également activées.
+Compilation/exécution en cours, aucune réussite terminale revendiquée.
+Les hooks restent réservés aux fixtures ; pas de liaison au binaire nano.
+Le conteneur complet 400 continue séparément, avec ses échecs conservés :
+paramètres RPC, refus/timeouts sous charge et gros bloc hors délai.
+La CI operations bd25461 passe 239 tests sans skip ; ni ce résultat ni le
+registre étendu ne clôturent les critères de production. Sources main gelées
+pendant la campagne complète ; candidat RPC corrigé non déployé.
+[Preuve CI exploitation](qualification/ci-20261001/operations-bd25461/README.md).
+
+
+### 2026-10-01 — treize injections Linux manquantes qualifiées en isolation
+
+Registre 400→413 : treize ajouts exacts, zéro retrait ; trois branches EIO
+existantes renforcées (Altair, témoin Beacon, Bellatrix). Première exécution
+15/16 réussites, exit 8 ; élagage arrêté par ENOSPC sur tmpfs 128 Mio avant
+injection, échec conservé. Rejeu du seul élagage sur volume disque existant :
+exit 0, 63.11 s, mêmes binaires/délai/assertions. Union vérifiée : seize noms
+passent, sans skip. Les quatre dispositions primaire/témoin × suffixe
+conservé/perdu sont vérifiées, votes signés préservés et retry idempotent.
+Patch 97f4a19d dans checkout isolé seulement. Pas de nouvelle qualification
+WAN, panne physique, release, fork EVM ou bridge ; régression complète main
+encore active avec échecs ouverts. Tous les critères originaux restent requis.
+[Preuves terminales et échec initial](qualification/linux-sync-registration-20261001/README.md).
