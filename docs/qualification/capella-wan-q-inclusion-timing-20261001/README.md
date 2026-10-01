@@ -1,0 +1,7 @@
+# WAN Q: timely canonical inclusion and stopped-state replay
+
+Native stopped Q database read-only, exact external checkpoint bound. Canonical replay succeeds: 118 blocks including trusted anchor, 322989 archive bytes, one transaction; inspector signed-block count and bytes match. Every individual included vote for target epochs 12–15 has exactly one matching BLS fixture key with the fork domain/genesis root. Replay separately validates eligibility/committee/transitions. Identification is not admission authorization.
+
+Epoch 14: canonical target has 62 distinct included keys (native 22, Mac Docker 19, VPS 21), with 50 included before slot 120. Two Mac Docker keys target another boundary. Sets are disjoint and cover the 64 equal-weight fixture keys. Thus timely canonical participation exceeds the required 43, consistent with observed epoch-14 justification and successful recovery. P had only 40 before that boundary. Epoch 15 has 59 canonical keys, 51 before slot 128; five keys target a different boundary, disjoint sets also cover all 64.
+
+This is an observed difference between campaign samples, not a controlled causal proof of scheduler efficacy or exclusive root cause. Historical fork choice, off-chain votes, arrival times and proposal selection timing are not replayed. No full-network/production claim. Inspector is reused read-only with its exact source and executable hash; no new runtime build or unchanged campaign rerun. Prior P/O/N/M failures remain preserved.
