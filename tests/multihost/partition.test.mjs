@@ -80,3 +80,17 @@ test('late recovery is bounded too',async()=>{
  await assert.rejects(deadline.waitForRecovery(),/Late recovery observation deadline/);
  assert.equal(f.args.clock(),30000);
 });
+
+for(const [latency,reject] of [[10000,false],[10001,true]])test(`recovery read completed at ${latency}ms observes the inclusive deadline`,async()=>{
+ const f=fixture(),original=f.args.sample;
+ f.args.sample=async()=>{const rows=await original();if(f.calls.some(c=>c[1]==='connect'))await f.args.wait(latency);return rows;};
+ if(reject){await assert.rejects(partitionRemote(f.args),/recovery deadline/);assert.ok(!f.events.some(e=>e.event==='partition-recovery-bound'));}
+ else await partitionRemote(f.args);
+ assert.equal(f.attached(),true);
+});
+test('reconnection record latency cannot extend the recovery budget',async()=>{
+ const f=fixture(),original=f.args.record;
+ f.args.record=async e=>{await original(e);if(e.event==='partition-reconnected')await f.args.wait(10001);};
+ await assert.rejects(partitionRemote(f.args),/recovery deadline/);assert.equal(f.attached(),true);
+ assert.ok(!f.events.some(e=>e.event==='partition-recovery-bound'));
+});

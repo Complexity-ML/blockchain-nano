@@ -1,4 +1,5 @@
 import {setTimeout as delay} from 'node:timers/promises';
+import {performance} from 'node:perf_hooks';
 
 export class PartitionRecoveryDeadline extends Error {
  constructor(waitForRecovery){super('Partition recovery deadline exceeded');this.name='PartitionRecoveryDeadline';this.waitForRecovery=waitForRecovery;}
@@ -7,7 +8,7 @@ export class PartitionRecoveryDeadline extends Error {
 // Docker commands operate only on the fresh, labelled test container. No host
 // firewall changes; loopback RPC remains reachable via docker exec while cut.
 export async function partitionRemote({docker, container, network, revision, sample, record,
- clock=Date.now, wait=delay, cutMs=96000, recoveryMs=180000, duringCut}) {
+ clock=()=>performance.now(), wait=delay, cutMs=96000, recoveryMs=180000, duringCut}) {
  if(!/^nano-qualification-vps-[a-z0-9]+$/.test(container)||network!==container+'-net')
   throw Error('Unexpected partition target');
  const inspect=async()=>JSON.parse(await docker(['inspect','--format','{{json .}}',container]));
@@ -33,7 +34,7 @@ export async function partitionRemote({docker, container, network, revision, sam
  const before=await read();
  if(!before.every(r=>r.checkpoint.epoch===before[0].checkpoint.epoch&&r.checkpoint.root===before[0].checkpoint.root))throw Error('Common checkpoint required before partition');
  const baseline=BigInt(before[0].checkpoint.epoch);
- let disconnected=false;
+ let disconnected=false,reconnectedAt=null;
  try{
   // Mark before dispatch: an SSH response can be lost after Docker applied it.
   disconnected=true;
@@ -73,17 +74,23 @@ export async function partitionRemote({docker, container, network, revision, sam
    if(!state.NetworkSettings.Networks[network])await docker(['network','connect','--ip',address,network,container]);
    const restored=await inspect();
    if(!restored.State.Running||restored.NetworkSettings.Networks[network]?.IPAddress!==address)throw Error('Partition restoration failed');
-   await record({event:'partition-reconnected',container,network,address});
+   reconnectedAt=clock();
+   await record({event:'partition-reconnected',container,network,address,recoveryLimitMs:recoveryMs});
   }
  }
  const waitRecovery=async(event)=>{
-  const deadline=clock()+recoveryMs;
+  // Anchor the first budget before asynchronous logging; wall-clock adjustment
+  // and a slow successful read must never manufacture deadline compliance.
+  const start=event==='partition-recovery-bound'?reconnectedAt:clock();
+  if(start===null)throw Error('Recovery requires verified reconnection');
+  const deadline=start+recoveryMs;
   while(clock()<deadline){
-   const rows=await read(),first=rows[0].checkpoint;
+   const rows=await read(),observedAt=clock(),first=rows[0].checkpoint;
+   if(observedAt>deadline)return false;
    if(rows.every(r=>BigInt(r.peers)>0n&&r.checkpoint.epoch===first.epoch&&r.checkpoint.root===first.root)&&BigInt(first.epoch)>baseline){
-    await record({event,checkpoint:first});return true;
+    await record({event,checkpoint:first,recoveryElapsedMs:observedAt-start,recoveryLimitMs:recoveryMs});return true;
    }
-   await wait(5000);
+   await wait(Math.max(0,Math.min(5000,deadline-clock())));
   }
   return false;
  };
