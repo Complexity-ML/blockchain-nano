@@ -11,6 +11,10 @@ on:
         description: 'Also build and run the reviewed C++ core subset (not full production qualification)'
         type: boolean
         default: false
+      network:
+        description: 'Build and test the transport in Docker (not WAN or full production qualification)'
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -22,6 +26,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       core: ${{ steps.scope.outputs.core }}
+      network: ${{ steps.scope.outputs.network }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
@@ -72,6 +77,34 @@ jobs:
         if: always()
         with:
           name: core-${{ github.sha }}
+          path: ci-reports/
+          retention-days: 7
+          if-no-files-found: error
+
+  network:
+    needs: changes
+    if: needs.changes.outputs.network == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    container:
+      image: ubuntu@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 # 24.04 manifest
+      options: --cpus 2 --memory 3g
+    env:
+      CC: clang
+      CXX: clang++
+    steps:
+      - name: Install transport build dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends git ca-certificates build-essential clang cmake python3 curl pkg-config libssl-dev libicu-dev libboost-dev librocksdb-dev libgmp-dev autoconf automake libtool
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - run: bash scripts/ci/network.sh
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        if: always()
+        with:
+          name: network-${{ github.sha }}
           path: ci-reports/
           retention-days: 7
           if-no-files-found: error

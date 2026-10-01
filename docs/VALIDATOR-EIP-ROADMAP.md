@@ -5410,3 +5410,33 @@ encore en cours au relevé : aucun succès terminal de ce run revendiqué.
 Correction de livraison qualifiée ; Dockerfile complet, SBOM transitif,
 reproductibilité, régression complète et production globale restent ouverts.
 [Preuves](qualification/runtime-notices-20261001/README.md).
+
+
+### 2026-10-01 — job CI transport ajouté, recette ARM64 qualifiée
+
+Routage réseau automatique et manuel séparé ; Docker Ubuntu épinglé,
+2 CPU/3 GiB, builds deux tâches, registre exact des 21 tests réseau,
+CTest série avec budgets existants (60 s pour un test sans budget explicite),
+logs live, JUnit, révision cpp-libp2p et empreinte nano-p2p archivés.
+Recette Docker ARM64 avec dépendances/volume réutilisés : 21 tests passés
+sans skip, 1,02 s, binaire inchangé. Huit contrôles de routage/gate passent
+localement, dont trois nouveaux. Premier refus pour Python absent conservé ;
+contrôles JSON déplacés vers CMake déjà présent, sans nouvelle dépendance.
+Construction fraîche GitHub et recette AMD64 restent requises. Ce gate
+ne qualifie pas le WAN, la matrice EEST globale ou la production complète.
+[Preuves bornées](qualification/network-ci-20261001/arm64-prebuilt/README.md).
+
+
+### 2026-10-01 — Doppler choisi pour le lancement
+
+Choix utilisateur explicite : Doppler sur Base, numéraire USDC souhaité.
+Le fair launch ne doit plus prévoir une courbe maison ni imposer une graduation
+V3 : protocole/migrateur et paramètres effectifs à vérifier dans Doppler.
+Le lien du token Base avec NANO natif, le bridge, les droits sur la liquidité
+et l’indexation à T0 restent des gates distincts. Pas de création, signature,
+vente, financement ni transfert réel autorisé par ce choix de plateforme.
+[Cadrage actualisé](../contracts/FAIR-LAUNCH.md).
+
+Le gate réseau refuse aussi les propriétés CTest de désactivation/saut.
+Vérificateur final appliqué au registre réel sauvegardé, puis huit contrôles
+de routage/gate réussis ; aucun rejeu des 21 tests inchangés pour cette garde.

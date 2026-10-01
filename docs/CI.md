@@ -13,7 +13,7 @@ sh scripts/ci/operations.sh
 CC=clang CXX=clang++ bash scripts/ci/core.sh build-ci
 ```
 
-Ces contrôles ne sont pas la CI complète de production : P2P compilé avec cpp-libp2p, matrice Linux ARM64/AMD64 complète, EEST exhaustif, release reproductible, campagnes WAN/restauration/charge longues et revue indépendante restent des gates séparés. Apt, runner et outils système ne sont pas figés en snapshots : la version compilée est identifiable, pas prouvée reproductible bit à bit. Les logs de configuration, compilation et tests sont diffusés en direct avec `tee` et `pipefail` : un échec ne peut pas être masqué par l’archivage. Les SHA-256 des neuf exécutables et les versions des paquets de build sont conservés. Le routage automatique ne remplace pas une protection de branche. Les paramètres de protection de branche et le statut obligatoire des checks ne sont pas configurés par ce fichier.
+Ces contrôles ne sont pas la CI complète de production : job P2P frais encore à qualifier, matrice Linux ARM64/AMD64 complète, EEST exhaustif, release reproductible, campagnes WAN/restauration/charge longues et revue indépendante restent des gates séparés. Apt, runner et outils système ne sont pas figés en snapshots : la version compilée est identifiable, pas prouvée reproductible bit à bit. Les logs de configuration, compilation et tests sont diffusés en direct avec `tee` et `pipefail` : un échec ne peut pas être masqué par l’archivage. Les SHA-256 des neuf exécutables et les versions des paquets de build sont conservés. Le routage automatique ne remplace pas une protection de branche. Les paramètres de protection de branche et le statut obligatoire des checks ne sont pas configurés par ce fichier.
 
 État initial : 227 tests autonomes passent localement. Exécution réelle du workflow GitHub et build C++ restent non qualifiés jusqu'à leurs résultats terminaux. Aucun workflow vert ne déclare `productionReady=true`.
 
@@ -74,3 +74,26 @@ encore en cours au relevé : aucun succès terminal de ce run revendiqué.
 Correction de livraison qualifiée ; Dockerfile complet, SBOM transitif,
 reproductibilité, régression complète et production globale restent ouverts.
 [Preuves](qualification/runtime-notices-20261001/README.md).
+
+
+### 2026-10-01 — job CI transport ajouté, recette ARM64 qualifiée
+
+Routage réseau automatique et manuel séparé ; Docker Ubuntu épinglé,
+2 CPU/3 GiB, builds deux tâches, registre exact des 21 tests réseau,
+CTest série avec budgets existants (60 s pour un test sans budget explicite),
+logs live, JUnit, révision cpp-libp2p et empreinte nano-p2p archivés.
+Recette Docker ARM64 avec dépendances/volume réutilisés : 21 tests passés
+sans skip, 1,02 s, binaire inchangé. Huit contrôles de routage/gate passent
+localement, dont trois nouveaux. Premier refus pour Python absent conservé ;
+contrôles JSON déplacés vers CMake déjà présent, sans nouvelle dépendance.
+Construction fraîche GitHub et recette AMD64 restent requises. Ce gate
+ne qualifie pas le WAN, la matrice EEST globale ou la production complète.
+[Preuves bornées](qualification/network-ci-20261001/arm64-prebuilt/README.md).
+
+Le job `network` compile cpp-libp2p depuis le pin contrôlé et les targets de `network/`, puis exécute ses 21 tests. Les changements de sources/headers partagés, réseau, toolchain, JSON, dépendances, recettes réseau et workflows le déclenchent ; un changement de docs ou de fixture du cœur seul évite ce build. `workflow_dispatch` permet `network=true` indépendamment de `core`.
+
+Qualification locale avec un builder existant : `NANO_CI_REUSE_DEPS=1 NANO_DEPS_DIR=/src/.deps bash scripts/ci/network.sh /build/network`. Le mode réutilisé exige le préfixe installé et le cache CMake, vérifie le pin et l’indique dans le rapport. GitHub utilise le mode frais par défaut. Aucun cache binaire partagé ni image publiée par le job.
+
+Le gate réseau refuse aussi les propriétés CTest de désactivation/saut.
+Vérificateur final appliqué au registre réel sauvegardé, puis huit contrôles
+de routage/gate réussis ; aucun rejeu des 21 tests inchangés pour cette garde.
