@@ -37,3 +37,9 @@ Le sous-ensemble documenté est qualifié, pas la CI complète ni la reproductib
 L'archivage passe à [upload-artifact v6 Node24](https://github.com/actions/upload-artifact/tree/b7c566a772e6b6bfb58ed0dc250532a479d7789f)
 épinglé, pour supprimer l'annotation de runtime obsolète ; aucun C++ runtime
 ne change et aucune nouvelle image de chaîne n'est nécessaire.
+
+Le workflow avec upload-artifact v6 a terminé avec succès, run
+[36889258299](https://github.com/Complexity-ML/blockchain-nano/actions/runs/36889258299),
+227 tests autonomes passés et artefacts effectivement récupérés.
+[Preuves](qualification/ci-20261001/artifact-node24-success/README.md).
+Aucun rebuild C++ pour ce changement CI seul ; CI globale toujours ouverte.

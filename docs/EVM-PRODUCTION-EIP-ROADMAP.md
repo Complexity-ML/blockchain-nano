@@ -2317,3 +2317,13 @@ SBOM exhaustif. Action d'archivage CI actualisée vers v6 Node24 épinglée pour
 éliminer l'annotation observée ; validation du workflow modifié requise.
 [CI C++](qualification/ci-20261001/core-docker-success/README.md),
 [inventaire](qualification/dependency-inventory-20261001/README.md).
+
+
+### 2026-10-01 — archivage CI actualisé qualifié sans rebuild Nano
+
+Run `36889258299`, source `734a289`, completed/success : 227 tests
+autonomes réussis, aucun échec/skip, upload-artifact v6 épinglé exécuté
+avec succès et artefacts récupérés. Job core volontairement skipped ;
+aucune nouvelle compilation/image C++ pour ce changement CI seul.
+Le succès C++ distinct `ee565c1` et les gates globaux restants sont conservés.
+[Preuves](qualification/ci-20261001/artifact-node24-success/README.md).
