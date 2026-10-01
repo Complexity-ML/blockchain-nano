@@ -2233,3 +2233,16 @@ en natif/ARM64/AMD64. SIGKILL du superviseur réel, RPC synthétiques ;
 aucune revendication de panne d'un daemon Nano ou de perte électrique.
 Campagne vivante, destination/ordonnanceur et gates globales restent ouverts.
 [Preuves](qualification/monitor-handoff-20261001/amd64/README.md).
+
+
+### 2026-10-01 — campagne d'alertes depuis daemon vivant préparée
+
+Nouveau mode privé `NANO_TEST_ALERT_DELIVERY=1` associé au monitor et aux
+images Capella épinglées. Le harness impose une référence saine, pause le
+conteneur VPS réel, vérifie `unavailable`, refuse le premier POST par HTTP503,
+vérifie la file durable et le même eventId au retry, reprend le daemon et
+exige réception du retour sain sous 60 secondes. La fenêtre stricte de
+finalité commune et les statuts terminaux des validateurs suivent séparément.
+Receveur local de qualification, pas de destination opérateur provisionnée.
+Implémentation préparée, campagne non encore qualifiée ; aucun gate fermé
+par la simple présence du script. Cœur et images inchangés.

@@ -5,8 +5,7 @@ import {join} from 'node:path';
 import {createHash} from 'node:crypto';
 import {setTimeout as delay} from 'node:timers/promises';
 const exec=promisify(execFile);
-export async function startFinalityMonitor({repo,output,prepared,local,remote,target,record}){
- const directory=join(output,'monitor');await mkdir(directory);
+export async function monitorConfiguration({prepared,local,remote,target}){
  const initial=JSON.parse(await readFile(join(prepared,'mac-native/initial.json'),'utf8'));
  const genesis=initial.ancestors.find(b=>BigInt(b.number)===0n)?.hash;
  if(!/^0x[0-9a-f]{64}$/.test(genesis??''))throw Error('Trusted fixture genesis missing');
@@ -16,6 +15,11 @@ export async function startFinalityMonitor({repo,output,prepared,local,remote,ta
   {name:'mac-native',kind:'http',url:'http://127.0.0.1:18545/'},
   {name:'mac-docker',kind:'docker',container:local,url:'http://127.0.0.1:8545/'},
   {name:'vps-docker',kind:'ssh-docker',container:remote,ssh:target,url:'http://127.0.0.1:8545/'}]};
+ return config;
+}
+export async function startFinalityMonitor({repo,output,prepared,local,remote,target,record}){
+ const directory=join(output,'monitor');await mkdir(directory);
+ const config=await monitorConfiguration({prepared,local,remote,target});
  const configFile=join(directory,'config.json'),stateFile=join(directory,'state.json');
  await writeFile(configFile,JSON.stringify(config,null,2)+'\n');
  const invoke=async(file,state)=>{

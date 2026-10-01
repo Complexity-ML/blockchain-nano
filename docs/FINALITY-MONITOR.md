@@ -194,3 +194,9 @@ Les mêmes 35 tests passent aussi dans le Docker AMD64 du VPS (3 116,09 ms).
 Le gate de portabilité du raccordement décrit ci-dessus est clos ;
 les limites de daemon vivant, destination et alimentation restent ouvertes.
 [Preuves AMD64](qualification/monitor-handoff-20261001/amd64/README.md).
+
+Campagne daemon vivant préparée : `NANO_TEST_ALERT_DELIVERY=1` et
+`NANO_TEST_FINALITY_MONITOR=1` dans le harness privé multi-hôte Capella,
+avec candidats épinglés. Pause réelle du VPS, premier POST HTTP503, retry
+idempotent et retour sain ; finalité commune testée ensuite indépendamment.
+Ce mode reste non qualifié tant que le run complet n'a pas terminé.
