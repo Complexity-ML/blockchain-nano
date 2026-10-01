@@ -2,7 +2,7 @@
 set -eu
 build_dir=${1:-build-ci}
 mkdir -p ci-reports
-git rev-parse HEAD > ci-reports/source-revision.txt
+git -c safe.directory="$PWD" rev-parse HEAD > ci-reports/source-revision.txt
 cmake --version > ci-reports/cmake-version.txt
 "${CXX:-c++}" --version > ci-reports/compiler-version.txt
 cmake -S . -B "$build_dir" -DCMAKE_BUILD_TYPE=Release > ci-reports/configure.log 2>&1

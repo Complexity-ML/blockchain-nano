@@ -23,3 +23,9 @@ Première exécution GitHub réelle : 227 tests autonomes réussis, run
 [36885989682](https://github.com/Complexity-ML/blockchain-nano/actions/runs/36885989682).
 [Preuves récupérées de GitHub](qualification/ci-20261001/operations-github/README.md).
 Le job C++ et la CI globale ne sont pas qualifiés par ce résultat.
+
+Premier Docker core : refus Git avant CMake (ownership du checkout),
+run 36886531310 terminé en échec. Lecture de révision corrigée avec
+exception de confiance limitée au checkout, toolchain make explicite.
+[Diagnostic conservé](qualification/ci-20261001/core-first-docker-failure/README.md).
+Requalification C++ toujours requise.

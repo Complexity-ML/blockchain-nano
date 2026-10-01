@@ -1826,3 +1826,15 @@ non conteneurisé annulé sur demande avant toute qualification ; recette
 corrigée `ec5e48b` avec Ubuntu Docker épinglé, 2 CPU/3 GiB.
 Qualification C++ CI et CI globale restent ouvertes ; pas de déploiement
 ou de production déclaré. [Preuves](qualification/ci-20261001/operations-github/README.md).
+
+
+### 2026-10-01 — premier build CI Docker : refus Git identifié
+
+Run `36886531310`, source `43e449d`, completed/failure : ownership du
+checkout dans le conteneur refusé par Git avant CMake. Aucun build/test C++
+n'a exécuté. Exception safe.directory limitée au checkout courant pour la
+seule lecture de révision ; aucun wildcard global. Installation explicite
+de build-essential ajoutée également (omission distincte, pas cause démontrée
+du refus Git). Requalification nécessaire. Échec et annulation terminale
+du premier dispatch non Docker conservés. Gates C++/CI globale ouverts.
+[Échec](qualification/ci-20261001/core-first-docker-failure/README.md).
