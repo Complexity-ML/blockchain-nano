@@ -1,0 +1,58 @@
+Start testing: Oct 01 19:04 UTC
+----------------------------------------------------------
+5/416 Testing: rpc
+5/416 Test: rpc
+Command: "/build/raw-admission-20261001/nano-rpc-tests"
+Directory: /work
+"rpc" start time: Oct 01 19:04 UTC
+Output:
+----------------------------------------------------------
+993 RPC checks passed
+<end of output>
+Test time =   1.02 sec
+----------------------------------------------------------
+Test Passed.
+"rpc" end time: Oct 01 19:04 UTC
+"rpc" time elapsed: 00:00:01
+----------------------------------------------------------
+
+6/416 Testing: rpc_foreign_chain_admission_isolation
+6/416 Test: rpc_foreign_chain_admission_isolation
+Command: "/build/raw-admission-20261001/nano-rpc-foreign-admission-tests"
+Directory: /build/raw-admission-20261001
+"rpc_foreign_chain_admission_isolation" start time: Oct 01 19:04 UTC
+Output:
+----------------------------------------------------------
+{"canonicalStateUnchanged":true,"foreignGossipRejected":550,"foreignNestedRejectedBeforeDecode":128,"foreignRejected":512,"gossipRefillVerified":true,"gossipReservationAtomic":true,"healthyAdmissionPreserved":true,"localHighSRejectedWithinBudget":63,"localNestedRejectedWithinBudget":64,"localSignatureBudgetBounded":true,"malformedGossipBudgetBounded":true,"mixedGossipOrderPreserved":true,"refillVerified":true}
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"rpc_foreign_chain_admission_isolation" end time: Oct 01 19:04 UTC
+"rpc_foreign_chain_admission_isolation" time elapsed: 00:00:00
+----------------------------------------------------------
+
+9/416 Testing: http
+9/416 Test: http
+Command: "/build/raw-admission-20261001/nano-http-tests"
+Directory: /build/raw-admission-20261001
+"http" start time: Oct 01 19:04 UTC
+Output:
+----------------------------------------------------------
+Simulation queue accepted=2 rejected=14 controlMs=0.13525
+HTTP/WebSocket cancellation errors=12 capacity reused
+HTTP integration checks passed
+<end of output>
+Test time =   1.51 sec
+----------------------------------------------------------
+Test Passed.
+"http" end time: Oct 01 19:04 UTC
+"http" time elapsed: 00:00:01
+----------------------------------------------------------
+
+End testing: Oct 01 19:04 UTC
+
+qualification_evm =   1.02 sec*proc
+
+qualification_rpc_admission =   0.06 sec*proc
+

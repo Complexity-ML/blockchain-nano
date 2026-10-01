@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="3"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="2"
+	timestamp="2026-10-01T19:04:32"
+	>
+	<testcase name="rpc" classname="rpc" time="1.01785" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_evm"/>
+		</properties>
+		<system-out>993 RPC checks passed
+</system-out>
+	</testcase>
+	<testcase name="rpc_foreign_chain_admission_isolation" classname="rpc_foreign_chain_admission_isolation" time="0.0551481" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_rpc_admission"/>
+		</properties>
+		<system-out>{"canonicalStateUnchanged":true,"foreignGossipRejected":550,"foreignNestedRejectedBeforeDecode":128,"foreignRejected":512,"gossipRefillVerified":true,"gossipReservationAtomic":true,"healthyAdmissionPreserved":true,"localHighSRejectedWithinBudget":63,"localNestedRejectedWithinBudget":64,"localSignatureBudgetBounded":true,"malformedGossipBudgetBounded":true,"mixedGossipOrderPreserved":true,"refillVerified":true}
+</system-out>
+	</testcase>
+	<testcase name="http" classname="http" time="1.51249" status="run">
+		<properties/>
+		<system-out>Simulation queue accepted=2 rejected=14 controlMs=0.13525
+HTTP/WebSocket cancellation errors=12 capacity reused
+HTTP integration checks passed
+</system-out>
+	</testcase>
+</testsuite>
