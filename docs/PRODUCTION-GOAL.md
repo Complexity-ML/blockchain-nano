@@ -2389,3 +2389,17 @@ annulation ou test ignoré. Core et network sont skipped par le filtre ;
 aucune qualification moteur/réseau supplémentaire n'en découle.
 [Preuves brutes et empreintes](qualification/ci-20261001/terminal-ae3d5e06/README.md).
 Les régressions Docker c10426b2 et les échecs RPC restent distincts et ouverts.
+
+### 2026-10-02 — Échecs ouverts du candidat intégré, campagnes en cours
+
+La campagne ARM64 c10426b2 révèle six échecs de durée RPC et un échec
+`consensus_bellatrix_voluntary_exit_pruning` : accès à l'exécution refusé avant
+vérification du checkpoint. Le saut d'une barrière de synchronisation du banc
+est une hypothèse, pas une cause établie.
+[Observation partielle conservée](qualification/production-evm-integration-20261001/in-progress-failures-20261002.json).
+Les campagnes ARM64/AMD64 restent actives et figées ; le bilan terminal,
+les audits de sources/binaires et les résultats AMD64 restent requis.
+La branche `qualification/bellatrix-failure-diagnostics-20261002` prépare la
+conservation de la première erreur Bellatrix et son exposition dans le banc :
+contrôles syntaxiques ARM64 seulement, aucune exécution qualifiée ni intégration
+du moteur dans main. Aucun gate de production, profil réseau ou statut EIP clos.

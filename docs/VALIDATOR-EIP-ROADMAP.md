@@ -5860,3 +5860,17 @@ Les préconditions exactes sont satisfaites et la reconstruction/régression com
 ### Assemblage depuis le répertoire qualifié — 2026-10-01
 
 Le script de livraison sélectionne désormais le sous-répertoire du build qualifié sans écraser les anciens exécutables ; six arguments conservent le chemin historique. Huit nouveaux contrôles passent, ainsi que deux exports réels Docker sur fichiers factices : trois fichiers réguliers attendus et lien symbolique refusé. Aucun nouveau runtime assemblé ou service déployé. Le README du staking historique est rectifié (plafond 1 000 déjà supprimé du contrat, pagination existante, distinction Beacon). [Preuves et limites](qualification/candidate-build-path-20261001/README.md). Les campagnes intégrées c10426b2 restent figées ; aucune clôture de gate global.
+
+### 2026-10-02 — Échecs ouverts du candidat intégré, campagnes en cours
+
+La campagne ARM64 c10426b2 révèle six échecs de durée RPC et un échec
+`consensus_bellatrix_voluntary_exit_pruning` : accès à l'exécution refusé avant
+vérification du checkpoint. Le saut d'une barrière de synchronisation du banc
+est une hypothèse, pas une cause établie.
+[Observation partielle conservée](qualification/production-evm-integration-20261001/in-progress-failures-20261002.json).
+Les campagnes ARM64/AMD64 restent actives et figées ; le bilan terminal,
+les audits de sources/binaires et les résultats AMD64 restent requis.
+La branche `qualification/bellatrix-failure-diagnostics-20261002` prépare la
+conservation de la première erreur Bellatrix et son exposition dans le banc :
+contrôles syntaxiques ARM64 seulement, aucune exécution qualifiée ni intégration
+du moteur dans main. Aucun gate de production, profil réseau ou statut EIP clos.
