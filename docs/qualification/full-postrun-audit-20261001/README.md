@@ -1,0 +1,11 @@
+# Audits après régression complète — 2026-10-01
+
+Correction des scripts hôtes de qualification, aucun changement EVM/consensus. `full-docker.sh` recalcule désormais le manifeste des exécutables dans le conteneur après CTest. L’hôte compare les manifests avant/après et les sources, puis vérifie le XML et le corpus EEST indépendamment. Un échec CTest ou un échec d’audit n’empêche plus les autres audits de produire leur rapport ; le code CTest original reste dans `ctest-exit.txt`, et un `audit-exit.txt` non nul interdit la qualification.
+
+`full.sh` contrôle également les empreintes sources et binaires après les tests. Il exige un checkout propre avant de créer les sorties et un répertoire de rapports vide pour conserver les essais antérieurs. Sa destination par défaut est `ci-reports/full`, déjà ignorée par Git. Les commandes et budgets CTest sont inchangés.
+
+Le nouveau `scripts/ci/audit-eest-ctest.mjs` lit le bloc complet de `LastTest.log`, jamais le `system-out` JUnit potentiellement tronqué. Il refuse bloc absent, inachevé, doublonné, JSON tronqué, résumé absent, catégorie d’échec ou données après le résumé. Il réutilise le vérificateur de comptes EEST indépendant.
+
+Onze nouveaux contrôles : sept du bloc CTest et quatre intégrations du script `full.sh` avec outils factices isolés. Ils injectent un exit CTest 8, une mutation de binaire, une mutation de source et un parcours sans mutation. Tous les audits finaux existent malgré l’échec initial ; un CTest vert avec mutation est refusé. Avec les onze contrôles de compte précédents : 22/22 passent sans ignoré. L’erreur initiale de fixture (scripts symlinkés, empêchant leur CLI de produire l’inventaire) est conservée ; la fixture copie maintenant les scripts réels. Aucun test du moteur n’a échoué dans ce diagnostic de harnais.
+
+Le vérificateur audite aussi le journal réel de la reconstruction CMake ARM64 082143a2 : 5 387 correspondances = 4 882 exécutions + 505 validations, 317 fichiers, `forkConformanceProven=false`, sans nouveau rejeu. Les contrôles d’intégration du script Docker restent limités à la syntaxe Bash et à la revue du chemin de capture ; aucune nouvelle régression Docker complète n’est revendiquée. La campagne complète aacc56da déjà lancée garde ses scripts figés et ne reçoit pas rétroactivement cette correction. Tous les critères globaux restent ouverts.

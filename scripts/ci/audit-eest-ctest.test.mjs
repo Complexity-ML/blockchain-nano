@@ -1,0 +1,13 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {auditEestCtest} from './audit-eest-ctest.mjs';
+const row={file:'official.json',case:'execution',fork:'Berlin',variant:0,status:'matched'};
+const summary={summary:{files:1,matched:1,executionMatched:1,validationMatched:0,mismatched:0,unsupported:0,errors:0}};
+const block=()=>['99/417 Testing: ethereum_official_regressions','Output:',JSON.stringify(row),JSON.stringify(summary),'Test time = 1 sec'];
+test('audits complete EEST block surrounded by other CTest output',async()=>assert.equal((await auditEestCtest(['header','1/417 Testing: core',...block(),'100/417 Testing: rpc'])).executionMatched,1));
+test('missing EEST test or closing boundary fails',async()=>{await assert.rejects(auditEestCtest(['unrelated']),/Missing/);await assert.rejects(auditEestCtest(block().slice(0,-1)),/incomplete/);});
+test('duplicate EEST block fails instead of combining runs',async()=>assert.rejects(auditEestCtest([...block(),...block()]),/Duplicate/));
+test('new test before EEST completion fails',async()=>assert.rejects(auditEestCtest([...block().slice(0,-1),'100/417 Testing: rpc']),/Unterminated/));
+test('truncated JSON or absent summary cannot qualify',async()=>{await assert.rejects(auditEestCtest([block()[0],'{"file":"truncated','Test time = 1 sec']));await assert.rejects(auditEestCtest([block()[0],JSON.stringify(row),'Test time = 1 sec']),/Missing terminal/);});
+test('mismatch is retained and rejected',async()=>assert.rejects(auditEestCtest([block()[0],JSON.stringify({...row,status:'mismatch'}),JSON.stringify(summary),'Test time = 1 sec']),/Non-matching/));
+test('JSON after terminal summary cannot be hidden inside block',async()=>assert.rejects(auditEestCtest([...block().slice(0,-1),JSON.stringify(row),'Test time = 1 sec']),/after terminal/));

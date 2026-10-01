@@ -57,12 +57,22 @@ ctest --test-dir "$build" --no-tests=error --parallel 1 --output-on-failure --ou
 status=${PIPESTATUS[0]}
 cp "$build/Testing/Temporary/LastTest.log" /reports/LastTest.log
 printf '%s\n' "$status" > /reports/ctest-exit.txt
+cmake -DREGISTRY=/reports/registry.json -DOUTPUT=/reports/executables-after-tests.json -DNETWORK_EXECUTABLE=/build/network/nano-p2p -P scripts/ci/docker-manifest.cmake
+manifest_status=$?
+printf '%s\n' "$manifest_status" > /reports/post-test-manifest-exit.txt
+if (( manifest_status != 0 )); then exit 1; fi
 exit "$status"
 SH
 status=${PIPESTATUS[0]}
 set -e
-bash scripts/ci/verify-results.sh "$reports/registry.json" "$reports/results.xml" > "$reports/result-audit.json"
+# Preserve all post-run audits even when CTest or an earlier audit failed.
+audit_status=0
+if ! bash scripts/ci/verify-results.sh "$reports/registry.json" "$reports/results.xml" > "$reports/result-audit.json" 2> "$reports/result-audit.error"; then audit_status=1; fi
+if ! node scripts/ci/audit-eest-ctest.mjs "$reports/LastTest.log" > "$reports/eest-counts.json" 2> "$reports/eest-counts.error"; then audit_status=1; fi
 snapshot_sources > "$reports/source-manifest-after-tests.json"
-cmp "$reports/source-manifest.json" "$reports/source-manifest-after-tests.json"
-test "$(git rev-parse HEAD)" = "$revision"
+if ! cmp "$reports/source-manifest.json" "$reports/source-manifest-after-tests.json" > "$reports/source-compare.log" 2>&1; then audit_status=1; fi
+if ! cmp "$reports/executables-before-tests.json" "$reports/executables-after-tests.json" > "$reports/executable-compare.log" 2>&1; then audit_status=1; fi
+if ! test "$(git rev-parse HEAD)" = "$revision"; then audit_status=1; fi
+printf '%s\n' "$audit_status" > "$reports/audit-exit.txt"
+if (( audit_status != 0 )); then exit 1; fi
 exit "$status"

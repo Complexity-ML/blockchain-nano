@@ -1,0 +1,76 @@
+✔ audits complete EEST block surrounded by other CTest output (0.961833ms)
+✔ missing EEST test or closing boundary fails (0.235292ms)
+✔ duplicate EEST block fails instead of combining runs (0.083667ms)
+✔ new test before EEST completion fails (0.070833ms)
+✔ truncated JSON or absent summary cannot qualify (0.085709ms)
+✔ mismatch is retained and rejected (0.390084ms)
+✔ JSON after terminal summary cannot be hidden inside block (0.068792ms)
+✔ counts executions and pre-execution rejections without double counting (1.435625ms)
+✔ old reports are independently classified (0.075208ms)
+✔ double counted total is rejected (0.159042ms)
+✔ wrong explicit execution count is rejected (0.063666ms)
+✔ executed or state-mutating rejection is not qualified (0.076709ms)
+✔ duplicate case identity is rejected (0.052875ms)
+✔ missing terminal summary is rejected (0.042042ms)
+✔ duplicate summary or trailing case is rejected (0.051458ms)
+✔ unsupported mismatched and error reports cannot qualify (0.069042ms)
+✔ nonzero failure counters cannot qualify (0.48225ms)
+✔ empty or invalid counters cannot qualify (0.108125ms)
+✖ full runner preserves post-run evidence after a CTest failure (1411.360333ms)
+✖ successful CTest cannot qualify a binary mutated during tests (848.748083ms)
+✖ unchanged binaries and complete reports preserve successful exit (807.707167ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 18
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3129.49475
+
+✖ failing tests:
+
+test at scripts/ci/full-postrun.test.mjs:26:1
+✖ full runner preserves post-run evidence after a CTest failure (1411.360333ms)
+  Error: ENOENT: no such file or directory, open '/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-full-postrun-kZRWkF/reports/ctest-exit.txt'
+      at async open (node:internal/fs/promises:1281:25)
+      at async readFile (node:internal/fs/promises:1929:14)
+      at async exercise (file:///Users/boris/Dev/blockchain-nano/scripts/ci/full-postrun.test.mjs:23:27)
+      at async TestContext.<anonymous> (file:///Users/boris/Dev/blockchain-nano/scripts/ci/full-postrun.test.mjs:26:88)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: '/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-full-postrun-kZRWkF/reports/ctest-exit.txt'
+  }
+
+test at scripts/ci/full-postrun.test.mjs:27:1
+✖ successful CTest cannot qualify a binary mutated during tests (848.748083ms)
+  Error: ENOENT: no such file or directory, open '/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-full-postrun-OcniqW/reports/ctest-exit.txt'
+      at async open (node:internal/fs/promises:1281:25)
+      at async readFile (node:internal/fs/promises:1929:14)
+      at async exercise (file:///Users/boris/Dev/blockchain-nano/scripts/ci/full-postrun.test.mjs:23:27)
+      at async TestContext.<anonymous> (file:///Users/boris/Dev/blockchain-nano/scripts/ci/full-postrun.test.mjs:27:88)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: '/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-full-postrun-OcniqW/reports/ctest-exit.txt'
+  }
+
+test at scripts/ci/full-postrun.test.mjs:28:1
+✖ unchanged binaries and complete reports preserve successful exit (807.707167ms)
+  Error: ENOENT: no such file or directory, open '/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-full-postrun-eBREgp/reports/ctest-exit.txt'
+      at async open (node:internal/fs/promises:1281:25)
+      at async readFile (node:internal/fs/promises:1929:14)
+      at async exercise (file:///Users/boris/Dev/blockchain-nano/scripts/ci/full-postrun.test.mjs:23:27)
+      at async TestContext.<anonymous> (file:///Users/boris/Dev/blockchain-nano/scripts/ci/full-postrun.test.mjs:28:91)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: '/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-full-postrun-eBREgp/reports/ctest-exit.txt'
+  }

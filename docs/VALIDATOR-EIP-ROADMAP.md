@@ -5836,3 +5836,7 @@ Le candidat de pile 082143a2 termine sa reconstruction CMake ARM64 avec 20/20 r�
 ### Compilation cryptographique GNU — 2026-10-01
 
 Nouvelle couverture du candidat figé 082143a2 : le backend BN128 portable construit avec GNU C++ 13.3.0 (Clang pour les IR LLVM uniquement) passe ses 14 vecteurs à froid dans Docker Linux ARM64, sans test ignoré et avec empreintes inchangées. Cela réduit l’écart de toolchain précédemment explicitement non qualifié ; la variante AMD64 est mise en attente derrière la campagne RPC afin de préserver les mesures. Un nœud complet GCC n’est pas qualifié. [Preuves de compilation](qualification/bn-pairing-portability-20261001/README.md).
+
+### Intégrité des campagnes complètes après échec — 2026-10-01
+
+Les scripts de qualification capturent et comparent désormais les binaires après CTest, contrôlent les sources, et conservent tous les audits même lorsqu’un test échoue. Nouveau vérificateur EEST sur `LastTest.log` complet ; onze nouveaux contrôles (dont mutations de source/binaire et exit CTest 8) passent, 22 avec les contrôles précédents. Aucun moteur modifié ni campagne complète rejouée ; la campagne aacc56da en cours reste figée sur son script d’origine. [Correction et limites](qualification/full-postrun-audit-20261001/README.md).
