@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "qualification": "inventory-only",
+  "runtimeTestsExecuted": 0,
+  "totalTests": 5,
+  "selectedTests": 5,
+  "completeSelection": true,
+  "unselectedTests": [],
+  "missingExecutables": [],
+  "withoutExplicitTimeout": [],
+  "sumExplicitTimeoutSeconds": 840,
+  "uniqueExecutables": 1,
+  "labels": {
+    "qualification_consensus_local_network": 3,
+    "qualification_consensus_runtime": 1,
+    "qualification_consensus_operations": 1
+  },
+  "tests": [
+    {
+      "name": "consensus_bellatrix_clock_coalescing",
+      "command": [
+        "/build/bellatrix-barrier-1ac57e25-20261002/nano-bellatrix-transition-tests",
+        "--clock-coalescing"
+      ],
+      "timeoutSeconds": 60,
+      "labels": [
+        "qualification_consensus_runtime"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_voluntary_exit",
+      "command": [
+        "/build/bellatrix-barrier-1ac57e25-20261002/nano-bellatrix-transition-tests",
+        "--exit-loop"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_operations"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_voluntary_exit_network",
+      "command": [
+        "/build/bellatrix-barrier-1ac57e25-20261002/nano-bellatrix-transition-tests",
+        "--exit-network",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_local_network"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_voluntary_exit_pruning",
+      "command": [
+        "/build/bellatrix-barrier-1ac57e25-20261002/nano-bellatrix-transition-tests",
+        "--exit-pruning",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 240,
+      "labels": [
+        "qualification_consensus_local_network"
+      ],
+      "executablePresent": true
+    },
+    {
+      "name": "consensus_bellatrix_voluntary_exit_reorg",
+      "command": [
+        "/build/bellatrix-barrier-1ac57e25-20261002/nano-bellatrix-transition-tests",
+        "--exit-reorg",
+        "/build/network/nano-p2p"
+      ],
+      "timeoutSeconds": 180,
+      "labels": [
+        "qualification_consensus_local_network"
+      ],
+      "executablePresent": true
+    }
+  ]
+}

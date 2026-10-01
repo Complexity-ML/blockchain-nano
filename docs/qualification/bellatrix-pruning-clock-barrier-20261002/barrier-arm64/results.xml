@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="5"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="31"
+	timestamp="2026-10-01T23:10:09"
+	>
+	<testcase name="consensus_bellatrix_voluntary_exit_reorg" classname="consensus_bellatrix_voluntary_exit_reorg" time="5.92048" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_local_network"/>
+		</properties>
+		<system-out>Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+voluntary exit received before block
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+{"exitRolledBack":true,"pendingRequestRetained":true,"reincluded":true,"scenario":"bellatrix-exit-reorg","syntheticEquivocatingProposer":true}
+Bellatrix observer canonical sync
+{"cores":2,"p2pDaemons":2,"receivedBeforeInclusion":true,"reopened":true,"scenario":"bellatrix-network-voluntary-exit","scheduledExitEpoch":6}
+{"duplicateDidNotPublish":true,"durableArchive":true,"exitEpoch":6,"futureEpochRejected":true,"invalidSignatureRejected":true,"networkAdmissionQualified":true,"payoutImplemented":false,"scenario":"bellatrix-local-voluntary-exit","scheduledByBlock":true,"syntheticTenureEpochs":1,"withdrawableEpoch":262}
+</system-out>
+	</testcase>
+	<testcase name="consensus_bellatrix_voluntary_exit_pruning" classname="consensus_bellatrix_voluntary_exit_pruning" time="19.6865" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_local_network"/>
+		</properties>
+		<system-out>Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+voluntary exit received before block
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+B...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="consensus_bellatrix_voluntary_exit_network" classname="consensus_bellatrix_voluntary_exit_network" time="4.57877" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_local_network"/>
+		</properties>
+		<system-out>Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+voluntary exit received before block
+Bellatrix observer canonical sync
+Bellatrix observer canonical sync
+{"cores":2,"p2pDaemons":2,"receivedBeforeInclusion":true,"reopened":true,"scenario":"bellatrix-network-voluntary-exit","scheduledExitEpoch":6}
+{"duplicateDidNotPublish":true,"durableArchive":true,"exitEpoch":6,"futureEpochRejected":true,"invalidSignatureRejected":true,"networkAdmissionQualified":true,"payoutImplemented":false,"scenario":"bellatrix-local-voluntary-exit","scheduledByBlock":true,"syntheticTenureEpochs":1,"withdrawableEpoch":262}
+</system-out>
+	</testcase>
+	<testcase name="consensus_bellatrix_clock_coalescing" classname="consensus_bellatrix_clock_coalescing" time="0.288245" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_runtime"/>
+		</properties>
+		<system-out>{"backwardsStepRejected":true,"cancellationPreserved":true,"observations":45,"oversizedStepRejected":true,"publications":17,"scenario":"clock-phase-coalescing","stateEquivalent":true}
+</system-out>
+	</testcase>
+	<testcase name="consensus_bellatrix_voluntary_exit" classname="consensus_bellatrix_voluntary_exit" time="1.20972" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_operations"/>
+		</properties>
+		<system-out>{"duplicateDidNotPublish":true,"durableArchive":true,"exitEpoch":6,"futureEpochRejected":true,"invalidSignatureRejected":true,"networkAdmissionQualified":false,"payoutImplemented":false,"scenario":"bellatrix-local-voluntary-exit","scheduledByBlock":true,"syntheticTenureEpochs":1,"withdrawableEpoch":262}
+</system-out>
+	</testcase>
+</testsuite>

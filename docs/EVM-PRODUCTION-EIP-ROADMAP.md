@@ -2877,3 +2877,18 @@ sortie. Le correctif b0eb5ba1 ajoute cette barrière ; sa validation d'exécutio
 est en cours, sans augmentation de la tolérance ni changement des règles.
 Les matrices EIP et tous les critères de production restent inchangés.
 Le moteur et les correctifs demeurent sur leurs branches de qualification.
+
+### 2026-10-02 — Barrière d'horloge Bellatrix qualifiée sur cinq cas ARM64
+
+Le correctif b0eb5ba1, testé dans la source propre 1ac57e25, passe les cinq
+scénarios enregistrés : sortie locale, propagation P2P locale, réorganisation,
+élagage après finalité et garde d'horloge. CTest exit 0, zéro ignoré, 31,69 s ;
+sources et empreintes exécutables inchangées, audits de résultats/inventaire
+réussis. La limite d'un slot est conservée ; seule la synchronisation du
+scénario à l'inclusion de la sortie est ajoutée.
+[Preuves du correctif ARM64](qualification/bellatrix-pruning-clock-barrier-20261002/barrier-arm64/README.md).
+L'échec initial reste archivé. Les six cas RPC et ce correctif ont désormais
+une réussite ciblée ARM64, mais la qualification AMD64 et la régression du
+candidat final cohérent restent ouvertes, ainsi que les exigences WAN et de
+production. Aucun moteur/correctif n'est encore promu dans main et aucun
+statut global EIP n'est relevé sur la seule base de ces résultats.
