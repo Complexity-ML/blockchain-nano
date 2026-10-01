@@ -60,6 +60,8 @@ int main(){try{
  check(block["transactions"].size()==1&&block["coinbase"]==address(validator)&&block["blockNumber"]=="0x1","block template includes selected transactions");
  check(chain.state().root()==before&&chain.tip().header.number==0&&chain.pending_count()==1&&chain.event_cursor()==cursor,"template leaves state pool and events unchanged");
  rejects([&]{client.call("validator_getBlockTemplate",{sender});},"template rejects wrong producer");
+ bool malformed_params=false;try{client.call("validator_submitBlock",block);}catch(const RpcError& e){malformed_params=e.code==-32602;}
+ check(malformed_params&&chain.state().root()==before&&chain.tip().header.number==0&&chain.pending_count()==1&&chain.event_cursor()==cursor,"explicit object params are rejected without mutating chain pool or events");
  auto corrupt=block;corrupt["stateRoot"]=hex(Bytes(32));corrupt.erase("hash");check(client.call("validator_submitBlock",{corrupt})["success"]==false,"submission rejects false commitments");
  check(chain.tip().header.number==0&&chain.state().root()==before,"rejected submission leaves state intact");
  auto result=client.call("validator_submitBlock",{block});check(result["success"]==true&&result["blockNumber"]=="0x1"&&result["transactionCount"]==1,"HTTP validator produces block");
