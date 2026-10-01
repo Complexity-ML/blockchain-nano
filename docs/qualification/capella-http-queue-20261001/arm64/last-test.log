@@ -1,0 +1,48 @@
+Start testing: Oct 01 14:02 UTC
+----------------------------------------------------------
+21/398 Testing: rpc_queue_expiry
+21/398 Test: rpc_queue_expiry
+Command: "/build/nano-rpc-queue-tests"
+Directory: /build
+"rpc_queue_expiry" start time: Oct 01 14:02 UTC
+Output:
+----------------------------------------------------------
+{"drained":1,"lateWork":0,"replies":1,"scenario":"delayed-event-loop"}
+{"capacityRecovered":true,"capacityRetainedUntilDrain":true,"concurrentWorkers":2,"expiryMs":58.786792,"lateMutationSkipped":true,"notifications":false,"runningWorkCompleted":true,"transport":"http","wallet":false}
+{"capacityRecovered":true,"capacityRetainedUntilDrain":true,"concurrentWorkers":2,"expiryMs":50.45225,"lateMutationSkipped":true,"notifications":false,"runningWorkCompleted":true,"transport":"http","wallet":true}
+{"capacityRecovered":true,"capacityRetainedUntilDrain":true,"concurrentWorkers":2,"expiryMs":58.884459,"lateMutationSkipped":true,"notifications":true,"runningWorkCompleted":true,"transport":"http","wallet":false}
+{"capacityRecovered":true,"capacityRetainedUntilDrain":true,"concurrentWorkers":2,"expiryMs":50.584917,"lateMutationSkipped":true,"notifications":true,"runningWorkCompleted":true,"transport":"http","wallet":true}
+{"capacityRecovered":true,"capacityRetainedUntilDrain":true,"concurrentWorkers":2,"expiryMs":50.372667,"lateMutationSkipped":true,"notifications":false,"runningWorkCompleted":true,"transport":"websocket","wallet":false}
+{"capacityRecovered":true,"capacityRetainedUntilDrain":true,"concurrentWorkers":2,"expiryMs":50.647042,"lateMutationSkipped":true,"notifications":false,"runningWorkCompleted":true,"transport":"websocket","wallet":true}
+{"capacityRecovered":true,"capacityRetainedUntilDrain":true,"concurrentWorkers":2,"expiryMs":150.596209,"lateMutationSkipped":true,"notifications":true,"runningWorkCompleted":true,"transport":"websocket","wallet":false}
+{"capacityRecovered":true,"capacityRetainedUntilDrain":true,"concurrentWorkers":2,"expiryMs":151.062334,"lateMutationSkipped":true,"notifications":true,"runningWorkCompleted":true,"transport":"websocket","wallet":true}
+<end of output>
+Test time =   1.04 sec
+----------------------------------------------------------
+Test Passed.
+"rpc_queue_expiry" end time: Oct 01 14:02 UTC
+"rpc_queue_expiry" time elapsed: 00:00:01
+----------------------------------------------------------
+
+398/398 Testing: consensus_capella_http_admission_queue
+398/398 Test: consensus_capella_http_admission_queue
+Command: "/build/nano-capella-transition-tests" "--http-queue"
+Directory: /build
+"consensus_capella_http_admission_queue" start time: Oct 01 14:02 UTC
+Output:
+----------------------------------------------------------
+{"beaconReady":true,"checkpointUnchanged":true,"event":"capella-http-queue-observation","privatePending":true,"publicReady":true}
+{"beaconBeforeRelease":true,"checkpointUnchanged":true,"networkTransport":false,"privatePending":true,"publicIdentityBeforeRelease":true,"realAdmissionMutexHeld":true,"scenario":"capella-http-admission-queue"}
+{"admissionReceiptChecks":6,"automaticRecovery":false,"automaticRegistration":false,"blocks":16,"externalRecoveryCommitmentChecks":0,"httpTransport":true,"invalidConfigurationsRejected":6,"keysLoaded":64,"networkTransport":false,"runtimeCatalogChecks":3,"scenario":"capella-configured-runtime","signerWitnessRestart":true,"witnessRestart":true,"workersStopped":true}
+<end of output>
+Test time =   8.15 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_http_admission_queue" end time: Oct 01 14:02 UTC
+"consensus_capella_http_admission_queue" time elapsed: 00:00:08
+----------------------------------------------------------
+
+End testing: Oct 01 14:02 UTC
+
+qualification_consensus_recovery =   8.15 sec*proc
+

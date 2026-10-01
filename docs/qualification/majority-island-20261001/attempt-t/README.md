@@ -7,3 +7,5 @@ Campaign exits 1: after 30,993 s wall time from reconnect a captured immutable-r
 Code inspection finds Capella private RPC methods missing from simulation_item: HTTP executes these calls synchronously on its event loop, including newly costly historical export and operations acquiring the admission mutex. This is a concrete scheduling gap; exact exclusive causation of T's timeout is not proved. No changed deadline, manufactured ACK, relaxed finality or unchanged campaign rerun. Prior S and all production gates preserved.
 
 Only public stop commitments, public fixture/state, source snapshots and logs are archived. No database, private key, env, signing journal or recovery witness.
+
+Stopped native and VPS canonical histories replay successfully, matched to their external stop commitments; snapshots opened read-only. This does not replay historical fork choice or standalone votes. First native audit request included an unsupported maximumBytes field and was refused before replay; corrected request and refusal retained. Private database copy stays in /tmp, not Git.

@@ -6,7 +6,7 @@ CapellaLocalClock::CapellaLocalClock(CapellaDurableReactor& reactor,uint64_t max
 }
 CapellaLocalClock::~CapellaLocalClock(){stop();}
 bool CapellaLocalClock::poll(const std::function<void()>& checkpoint){
- std::lock_guard lock(mutex_);if(failed_)throw std::runtime_error("Capella local clock unavailable; restart required");
+ std::lock_guard lock(mutex_);if(failed_.load(std::memory_order_acquire))throw std::runtime_error("Capella local clock unavailable; restart required");
  bool cancelled=false;auto check=[&]{if(checkpoint)try{checkpoint();}catch(...){cancelled=true;throw;}};
  try{
   check();const auto now=now_();const auto previous=reactor_.current().state->timed.clock.time_ms;
@@ -23,7 +23,7 @@ bool CapellaLocalClock::poll(const std::function<void()>& checkpoint){
   // Still observe every poll: coalescing must not hide backward/oversized steps
   // within an otherwise unchanged consensus phase.
   last_observed_=now;return changed;
- }catch(...){if(!cancelled){failed_=true;reactor_.invalidate();}throw;}
+ }catch(...){if(!cancelled){failed_.store(true,std::memory_order_release);reactor_.invalidate();}throw;}
 }
 void CapellaLocalClock::start(std::chrono::milliseconds interval){
  if(interval<=std::chrono::milliseconds::zero())throw std::invalid_argument("Capella clock interval required");

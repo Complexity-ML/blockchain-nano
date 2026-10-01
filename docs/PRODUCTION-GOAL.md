@@ -1627,3 +1627,22 @@ conservée, corrigée sans modifier le critère.
 Docker et effet WAN restent à qualifier ; T/S et toutes les gates de
 production restent ouvertes. Cause exclusive de T non démontrée.
 [Preuves natives](qualification/capella-http-queue-20261001/native/README.md).
+
+
+### 2026-10-01 — attente de santé d’horloge : correction et cas déterministe
+
+Première qualification AMD64 du dispatch : échec conservé, identité prête
+mais Beacon non prêt, RPC privé en attente et checkpoint intact. healthy()
+prenait le mutex de poll, lequel attendait l’admission. Le défaut irréversible
+d’horloge est désormais lu atomiquement ; ordre des polls, bornes de saut,
+invalidation sur défaut et annulation inchangés. Cela ne garantit pas la
+fraîcheur d’une observation ni la progression de finalité.
+Le test force maintenant un poll réel de la même horloge pendant le verrou
+d’admission : Beacon et identité répondent dans les fenêtres 500 ms inchangées.
+Natif : nouveau cas 18,83 s, quatre diagnostics fail-closed 0,99 s, expiration
+de file 1,88 s. Docker et gain WAN restent à qualifier ; anciennes réussites
+locales sans contention d’horloge forcée ne ferment pas cette nouvelle gate.
+T reste un échec. Rejeux canoniques arrêtés T : Mac 78 blocs / 216556 octets,
+VPS 36 / 96407, une transaction chacun, checkpoints externes exacts.
+Pas de rejeu des votes hors bloc ni de qualification du fork choice historique.
+[Preuves et limites](qualification/capella-http-queue-20261001/native-clock-latch/README.md).

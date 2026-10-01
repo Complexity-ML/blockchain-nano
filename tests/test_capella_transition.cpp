@@ -1048,11 +1048,15 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
     check(simulation_count(Json{{"method",method}})==1,"Capella notification bypasses worker reservation");private_batch.push_back(Json{{"method",method}});
    }
    check(simulation_count(private_batch)==SimulationQueue::limit+1,"oversized private batch bypasses capacity");
+   runtime.clock->stop(); // Drive the same clock explicitly for deterministic contention.
    const auto before=runtime.reactor->current().token;
    std::promise<void> held,release;auto ready=held.get_future();auto gate=release.get_future().share();std::atomic<bool> paused=false;
    auto holder=std::async(std::launch::async,[&]{return runtime.reactor->signed_block(root,[&]{if(!paused.exchange(true)){held.set_value();gate.wait();}});});
    const bool acquired=ready.wait_for(std::chrono::seconds(2))==std::future_status::ready;
    if(!acquired){release.set_value();holder.get();check(false,"queue fixture did not hold real admission mutex");}
+   std::promise<void> clock_entered;auto clock_ready=clock_entered.get_future();std::atomic<bool> clock_signaled=false;
+   auto clock_waiter=std::async(std::launch::async,[&]{return runtime.clock->poll([&]{if(!clock_signaled.exchange(true))clock_entered.set_value();});});
+   if(clock_ready.wait_for(std::chrono::seconds(2))!=std::future_status::ready){release.set_value();holder.get();clock_waiter.get();check(false,"clock poll did not enter while admission held");}
    auto blocked=std::async(std::launch::async,[&]{PersistentRpc client(http_server->port());return client.call("nano_capellaStatus",Json::array({"capella-test-token"}));});
    std::this_thread::sleep_for(std::chrono::milliseconds(50));
    auto identity=std::async(std::launch::async,[&]{PersistentRpc client(http_server->port());return client.call("eth_chainId");});
@@ -1060,11 +1064,12 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
    const bool identity_ready=identity.wait_for(std::chrono::milliseconds(500))==std::future_status::ready;
    const bool beacon_ready=beacon.wait_for(std::chrono::milliseconds(500))==std::future_status::ready;
    const bool private_pending=blocked.wait_for(std::chrono::milliseconds(0))!=std::future_status::ready;
-   release.set_value();const auto archive=holder.get();const auto status=blocked.get(),chain_id=identity.get(),read=beacon.get();
+   const bool clock_pending=clock_waiter.wait_for(std::chrono::milliseconds(0))!=std::future_status::ready;
+   release.set_value();clock_waiter.get();const auto archive=holder.get();const auto status=blocked.get(),chain_id=identity.get(),read=beacon.get();
    check(archive&&status.at("executionBound")==true&&chain_id==quantity(t.chain_id)&&read.at("status")==200,"queue fixture did not finish valid authenticated work");
    std::cout<<Json{{"event","capella-http-queue-observation"},{"publicReady",identity_ready},{"beaconReady",beacon_ready},{"privatePending",private_pending},{"checkpointUnchanged",runtime.reactor->current().token==before}}.dump()<<std::endl;
-   check(identity_ready&&beacon_ready&&private_pending&&runtime.reactor->current().token==before,"blocked Capella private RPC stalled public HTTP or changed checkpoint");
-   std::cout<<Json{{"scenario","capella-http-admission-queue"},{"realAdmissionMutexHeld",true},{"privatePending",true},{"publicIdentityBeforeRelease",identity_ready},{"beaconBeforeRelease",beacon_ready},{"checkpointUnchanged",true},{"networkTransport",false}}.dump()<<std::endl;
+   check(identity_ready&&beacon_ready&&private_pending&&clock_pending&&runtime.clock->healthy()&&runtime.reactor->current().token==before,"blocked Capella private RPC stalled public HTTP or changed checkpoint");
+   std::cout<<Json{{"scenario","capella-http-admission-queue"},{"realAdmissionMutexHeld",true},{"clockPollPending",clock_pending},{"privatePending",true},{"publicIdentityBeforeRelease",identity_ready},{"beaconBeforeRelease",beacon_ready},{"checkpointUnchanged",true},{"networkTransport",false}}.dump()<<std::endl;
   }
 
   for(const auto* method:{"nano_capellaStatus","nano_capellaJobs","nano_capellaCatalogGeneration"})check(call(method,Json::array({"wrong-token"})).at("error").at("code")==-32001,"unauthorized Capella read accepted");

@@ -1,0 +1,87 @@
+diff --git a/include/nano/consensus_capella_clock.hpp b/include/nano/consensus_capella_clock.hpp
+index 6128779..fbbb7cd 100644
+--- a/include/nano/consensus_capella_clock.hpp
++++ b/include/nano/consensus_capella_clock.hpp
+@@ -1,6 +1,7 @@
+ #pragma once
+ #include "nano/consensus_capella_reactor.hpp"
+ #include <condition_variable>
++#include <atomic>
+ #include <thread>
+ namespace nano {
+ // Single local clock authority. No peer timestamps. Backwards/oversized jumps
+@@ -10,12 +11,14 @@ class CapellaLocalClock {
+  uint64_t maximum_step_;std::optional<uint64_t> last_observed_;
+  std::function<uint64_t()> now_;
+  std::mutex mutex_,wait_mutex_;std::condition_variable wake_;
+- std::thread thread_;bool stopping_=false,failed_=false;
++ std::thread thread_;bool stopping_=false;std::atomic<bool> failed_{false};
+ public:
+  CapellaLocalClock(CapellaDurableReactor&,uint64_t maximum_forward_step_ms,std::function<uint64_t()> now={});
+  ~CapellaLocalClock();
+  bool poll(const std::function<void()>& checkpoint={});
+- bool healthy(){std::lock_guard lock(mutex_);return !failed_;}
++ // Health reports the latched fault, without waiting for a poll blocked on
++ // admission. Poll ordering / last_observed_ remain protected by mutex_.
++ bool healthy()const noexcept{return !failed_.load(std::memory_order_acquire);}
+  void start(std::chrono::milliseconds interval);
+  void stop();
+ };
+diff --git a/src/consensus_capella_clock.cpp b/src/consensus_capella_clock.cpp
+index 1eaba9a..e2ef203 100644
+--- a/src/consensus_capella_clock.cpp
++++ b/src/consensus_capella_clock.cpp
+@@ -6,7 +6,7 @@ CapellaLocalClock::CapellaLocalClock(CapellaDurableReactor& reactor,uint64_t max
+ }
+ CapellaLocalClock::~CapellaLocalClock(){stop();}
+ bool CapellaLocalClock::poll(const std::function<void()>& checkpoint){
+- std::lock_guard lock(mutex_);if(failed_)throw std::runtime_error("Capella local clock unavailable; restart required");
++ std::lock_guard lock(mutex_);if(failed_.load(std::memory_order_acquire))throw std::runtime_error("Capella local clock unavailable; restart required");
+  bool cancelled=false;auto check=[&]{if(checkpoint)try{checkpoint();}catch(...){cancelled=true;throw;}};
+  try{
+   check();const auto now=now_();const auto previous=reactor_.current().state->timed.clock.time_ms;
+@@ -23,7 +23,7 @@ bool CapellaLocalClock::poll(const std::function<void()>& checkpoint){
+   // Still observe every poll: coalescing must not hide backward/oversized steps
+   // within an otherwise unchanged consensus phase.
+   last_observed_=now;return changed;
+- }catch(...){if(!cancelled){failed_=true;reactor_.invalidate();}throw;}
++ }catch(...){if(!cancelled){failed_.store(true,std::memory_order_release);reactor_.invalidate();}throw;}
+ }
+ void CapellaLocalClock::start(std::chrono::milliseconds interval){
+  if(interval<=std::chrono::milliseconds::zero())throw std::invalid_argument("Capella clock interval required");
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index fc92dbb..443570e 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -1048,11 +1048,15 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
+     check(simulation_count(Json{{"method",method}})==1,"Capella notification bypasses worker reservation");private_batch.push_back(Json{{"method",method}});
+    }
+    check(simulation_count(private_batch)==SimulationQueue::limit+1,"oversized private batch bypasses capacity");
++   runtime.clock->stop(); // Drive the same clock explicitly for deterministic contention.
+    const auto before=runtime.reactor->current().token;
+    std::promise<void> held,release;auto ready=held.get_future();auto gate=release.get_future().share();std::atomic<bool> paused=false;
+    auto holder=std::async(std::launch::async,[&]{return runtime.reactor->signed_block(root,[&]{if(!paused.exchange(true)){held.set_value();gate.wait();}});});
+    const bool acquired=ready.wait_for(std::chrono::seconds(2))==std::future_status::ready;
+    if(!acquired){release.set_value();holder.get();check(false,"queue fixture did not hold real admission mutex");}
++   std::promise<void> clock_entered;auto clock_ready=clock_entered.get_future();std::atomic<bool> clock_signaled=false;
++   auto clock_waiter=std::async(std::launch::async,[&]{return runtime.clock->poll([&]{if(!clock_signaled.exchange(true))clock_entered.set_value();});});
++   if(clock_ready.wait_for(std::chrono::seconds(2))!=std::future_status::ready){release.set_value();holder.get();clock_waiter.get();check(false,"clock poll did not enter while admission held");}
+    auto blocked=std::async(std::launch::async,[&]{PersistentRpc client(http_server->port());return client.call("nano_capellaStatus",Json::array({"capella-test-token"}));});
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    auto identity=std::async(std::launch::async,[&]{PersistentRpc client(http_server->port());return client.call("eth_chainId");});
+@@ -1060,11 +1064,12 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
+    const bool identity_ready=identity.wait_for(std::chrono::milliseconds(500))==std::future_status::ready;
+    const bool beacon_ready=beacon.wait_for(std::chrono::milliseconds(500))==std::future_status::ready;
+    const bool private_pending=blocked.wait_for(std::chrono::milliseconds(0))!=std::future_status::ready;
+-   release.set_value();const auto archive=holder.get();const auto status=blocked.get(),chain_id=identity.get(),read=beacon.get();
++   const bool clock_pending=clock_waiter.wait_for(std::chrono::milliseconds(0))!=std::future_status::ready;
++   release.set_value();clock_waiter.get();const auto archive=holder.get();const auto status=blocked.get(),chain_id=identity.get(),read=beacon.get();
+    check(archive&&status.at("executionBound")==true&&chain_id==quantity(t.chain_id)&&read.at("status")==200,"queue fixture did not finish valid authenticated work");
+    std::cout<<Json{{"event","capella-http-queue-observation"},{"publicReady",identity_ready},{"beaconReady",beacon_ready},{"privatePending",private_pending},{"checkpointUnchanged",runtime.reactor->current().token==before}}.dump()<<std::endl;
+-   check(identity_ready&&beacon_ready&&private_pending&&runtime.reactor->current().token==before,"blocked Capella private RPC stalled public HTTP or changed checkpoint");
+-   std::cout<<Json{{"scenario","capella-http-admission-queue"},{"realAdmissionMutexHeld",true},{"privatePending",true},{"publicIdentityBeforeRelease",identity_ready},{"beaconBeforeRelease",beacon_ready},{"checkpointUnchanged",true},{"networkTransport",false}}.dump()<<std::endl;
++   check(identity_ready&&beacon_ready&&private_pending&&clock_pending&&runtime.clock->healthy()&&runtime.reactor->current().token==before,"blocked Capella private RPC stalled public HTTP or changed checkpoint");
++   std::cout<<Json{{"scenario","capella-http-admission-queue"},{"realAdmissionMutexHeld",true},{"clockPollPending",clock_pending},{"privatePending",true},{"publicIdentityBeforeRelease",identity_ready},{"beaconBeforeRelease",beacon_ready},{"checkpointUnchanged",true},{"networkTransport",false}}.dump()<<std::endl;
+   }
+ 
+   for(const auto* method:{"nano_capellaStatus","nano_capellaJobs","nano_capellaCatalogGeneration"})check(call(method,Json::array({"wrong-token"})).at("error").at("code")==-32001,"unauthorized Capella read accepted");
