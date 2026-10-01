@@ -2480,3 +2480,14 @@ reste exact. Les prochains runs complets utiliseront le manifeste renforcé.
 Il ne découvre pas toutes les bibliothèques ou les programmes dont le chemin
 est incorporé dans le code compilé. Gates de runtime/production et matrices EIP
 inchangées ; aucune réussite globale déduite de ces contrôles d'outillage.
+
+### 2026-10-02 — CI du collecteur terminale, 285/285 contrôles
+
+Run GitHub 36941560281, source daab685d : opérations 285/285 réussies,
+zéro échec/annulation/ignoré, incluant les cinq nouveaux contrôles du manifeste.
+Révision de l'artifact et du run concordantes ; rapports bruts et empreintes
+[archivés](qualification/ci-20261002/terminal-daab685d/README.md).
+Jobs cœur/réseau non demandés par le filtre et ignorés : aucune qualification
+du runtime, d'un fork ou de la production déduite. La régression AMD64 c10426b2
+poursuit ses cas Capella avec ses sources figées et son périmètre de manifeste
+historique ; les quatre échecs connus et les critères originaux restent ouverts.
