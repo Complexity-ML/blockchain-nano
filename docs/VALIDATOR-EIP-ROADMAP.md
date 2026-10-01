@@ -5689,3 +5689,18 @@ montage readonly du premier diagnostic restent conservés, sans cause unique
 ENOSPC attribuée. Ces fixtures legacy BFT ne couvrent pas libp2p, Beacon/WAN
 ou une panne physique. Tous les critères initiaux restent requis.
 [Preuves et périmètre](qualification/bft-assembly-crash-disk-20261001/README.md).
+
+
+### 2026-10-01 — budget gossip isolé et réservé atomiquement
+
+Candidate ff53e4d1 : enveloppes étrangères exclues du budget local après
+prélecture bornée ; éléments locaux/malformés toujours facturés, lot réservé
+avant ECDSA/submit. Nouveau test échoue avant correction puis passe : 550
+refus étrangers en lots, ordre mixte, refus sans écritures faute de capacité,
+malformed limité et refill. Quatre tests ARM64 RPC/BFT passent sans skip
+(46.13 s), puis trois parcours transport (27.94 s). Limites, quotas, délais,
+quorum et gas inchangés. Onze contrôles AMD64 en cours sur le même candidat,
+source transférée par Git ; main/source de campagne originale préservée.
+Charge générale, estimation RPC, Beacon/WAN et huit critères initiaux restent
+ouverts ; production non qualifiée.
+[Sources et preuves avant/après](qualification/gossip-admission-isolation-20261001/README.md).

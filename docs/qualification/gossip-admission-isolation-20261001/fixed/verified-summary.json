@@ -1,0 +1,25 @@
+{
+  "tests": [
+    "bft_restart_flood_paris_network",
+    "bft_restart_flood_shanghai_network",
+    "rpc",
+    "rpc_foreign_chain_admission_isolation"
+  ],
+  "passed": 4,
+  "skips": 0,
+  "proof": {
+    "canonicalStateUnchanged": true,
+    "foreignGossipRejected": 550,
+    "foreignNestedRejectedBeforeDecode": 128,
+    "foreignRejected": 512,
+    "gossipRefillVerified": true,
+    "gossipReservationAtomic": true,
+    "healthyAdmissionPreserved": true,
+    "localHighSRejectedWithinBudget": 63,
+    "localNestedRejectedWithinBudget": 64,
+    "localSignatureBudgetBounded": true,
+    "malformedGossipBudgetBounded": true,
+    "mixedGossipOrderPreserved": true,
+    "refillVerified": true
+  }
+}
