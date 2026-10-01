@@ -16,3 +16,12 @@ l'accès à l'exécution toujours fermé.
 La compilation et l'exécution de ces contrôles restent à qualifier. Ni cette
 préparation ni une vérification syntaxique ne résolvent l'échec d'élagage.
 Rejouer après les campagnes figées, avec ces diagnostics, avant correction.
+
+Contrôle syntaxique ARM64 terminal sur l'image existante
+`sha256:6116669430b02b7e8012af8c8bd515a5a7dcd1dd2034649f9b45ae5b9e70a3a4`,
+source 5fe1a43e, clang++ Release/NDDEBUG : horloge, réacteur et test passent.
+La première invocation du test omettait le chemin blst/bindings ; son erreur
+est conservée. Seul ce fichier a été revérifié avec le chemin corrigé, exit 0.
+Pas d'édition de liens ni d'exécution du scénario ; qualification toujours
+ouverte. Source montée en lecture seule, aucune connexion réseau, 0,25 CPU,
+1 GiB, aucun volume de build partagé ni image reconstruite.
