@@ -117,6 +117,8 @@ public:
  std::optional<Bytes> prepare_local_body_from_pool(uint64_t validator_index,uint64_t slot,
   const Bytes& randao,const std::string& fee_recipient,const ForkCheckpointToken& expected,
   size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<void()>& checkpoint={});
+ // Head hint from one authenticated immutable publication; never remote input.
+ Json relay_head(const std::function<void()>& checkpoint={})const;
  bool execution_bound()const{return execution_!=nullptr;}
  std::pair<uint64_t,uint64_t> local_duty_timing()const{return {rules_.slot_duration_ms,rules_.transition.consensus.epoch.ffg.slots_per_epoch};}
  bool tick_if_needed(uint64_t,const std::function<void()>& checkpoint={});

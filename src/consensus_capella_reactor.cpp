@@ -295,6 +295,12 @@ bool CapellaDurableReactor::bls_change_ssz(std::span<const uint8_t> wire,const s
 }
 bool CapellaDurableReactor::vote_ssz(std::span<const uint8_t> wire,const std::function<void()>& check){const auto decoded=decode_consensus_attestation_ssz(wire,rules_.transition.consensus.body.validators_per_committee,check);return decoded&&vote(*decoded,check);}
 bool CapellaDurableReactor::slashing_ssz(std::span<const uint8_t> wire,const std::function<void()>& check){const auto decoded=decode_consensus_attester_slashing_ssz(wire,rules_.transition.consensus.body.validators_per_committee,check);return decoded&&slashing(decoded->first,decoded->second,check);}
+Json CapellaDurableReactor::relay_head(const std::function<void()>& check)const{
+ if(check)check();const auto published=beacon_snapshot();
+ const auto& head=capella_fork_head(*published.state,rules_,check);
+ const auto root=consensus_beacon_header_root(head.header);if(check)check();
+ return {{"headRoot",hex(Bytes(root.begin(),root.end()))},{"headSlot",head.header.slot}};
+}
 CapellaPublishedStore CapellaDurableReactor::beacon_snapshot()const{
  if(const auto published=std::atomic_load_explicit(&beacon_publication_,std::memory_order_acquire))return *published;
  // Preserve the original latched failure diagnostic when unavailable. This

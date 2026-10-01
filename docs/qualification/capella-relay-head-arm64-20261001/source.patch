@@ -1,0 +1,85 @@
+diff --git a/include/nano/consensus_capella_reactor.hpp b/include/nano/consensus_capella_reactor.hpp
+index f005e70..10a522e 100644
+--- a/include/nano/consensus_capella_reactor.hpp
++++ b/include/nano/consensus_capella_reactor.hpp
+@@ -117,6 +117,8 @@ public:
+  std::optional<Bytes> prepare_local_body_from_pool(uint64_t validator_index,uint64_t slot,
+   const Bytes& randao,const std::string& fee_recipient,const ForkCheckpointToken& expected,
+   size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<void()>& checkpoint={});
++ // Head hint from one authenticated immutable publication; never remote input.
++ Json relay_head(const std::function<void()>& checkpoint={})const;
+  bool execution_bound()const{return execution_!=nullptr;}
+  std::pair<uint64_t,uint64_t> local_duty_timing()const{return {rules_.slot_duration_ms,rules_.transition.consensus.epoch.ffg.slots_per_epoch};}
+  bool tick_if_needed(uint64_t,const std::function<void()>& checkpoint={});
+diff --git a/src/consensus_capella_reactor.cpp b/src/consensus_capella_reactor.cpp
+index 53dc045..4811ac7 100644
+--- a/src/consensus_capella_reactor.cpp
++++ b/src/consensus_capella_reactor.cpp
+@@ -295,6 +295,12 @@ bool CapellaDurableReactor::bls_change_ssz(std::span<const uint8_t> wire,const s
+ }
+ bool CapellaDurableReactor::vote_ssz(std::span<const uint8_t> wire,const std::function<void()>& check){const auto decoded=decode_consensus_attestation_ssz(wire,rules_.transition.consensus.body.validators_per_committee,check);return decoded&&vote(*decoded,check);}
+ bool CapellaDurableReactor::slashing_ssz(std::span<const uint8_t> wire,const std::function<void()>& check){const auto decoded=decode_consensus_attester_slashing_ssz(wire,rules_.transition.consensus.body.validators_per_committee,check);return decoded&&slashing(decoded->first,decoded->second,check);}
++Json CapellaDurableReactor::relay_head(const std::function<void()>& check)const{
++ if(check)check();const auto published=beacon_snapshot();
++ const auto& head=capella_fork_head(*published.state,rules_,check);
++ const auto root=consensus_beacon_header_root(head.header);if(check)check();
++ return {{"headRoot",hex(Bytes(root.begin(),root.end()))},{"headSlot",head.header.slot}};
++}
+ CapellaPublishedStore CapellaDurableReactor::beacon_snapshot()const{
+  if(const auto published=std::atomic_load_explicit(&beacon_publication_,std::memory_order_acquire))return *published;
+  // Preserve the original latched failure diagnostic when unavailable. This
+diff --git a/src/rpc.cpp b/src/rpc.cpp
+index 8d97382..78d7416 100644
+--- a/src/rpc.cpp
++++ b/src/rpc.cpp
+@@ -523,7 +523,7 @@ Json Rpc::one(const Json& request,const std::function<void()>& cancelled){
+    auto runtime=capella_;lock.unlock();if(cancelled)cancelled();if(!runtime->clock->healthy())throw RpcError(-32603,"Capella clock unavailable");
+    auto root=[](const Json& value){if(!value.is_string())throw RpcError(-32602,"Expected Capella root");const auto text=value.get<std::string>();const auto bytes=unhex(text);if(bytes.size()!=32||hex(bytes)!=text)throw RpcError(-32602,"Invalid Capella root");ConsensusRoot id{};std::copy(bytes.begin(),bytes.end(),id.begin());return id;};
+    auto positive=[](const Json& value){const auto n=u64(quantity(value));if(!n||!value.is_string()||quantity(Int(std::to_string(n)))!=value.get<std::string>())throw RpcError(-32602,"Invalid Capella quantity");return n;};
+-   if(method=="nano_capellaStatus"){result=runtime->reactor->network_identity();result["syncAdmission"]=runtime->reactor->sync_admission_stats();result["clockHealthy"]=true;result["validatorHealthy"]=runtime->validator?Json(runtime->validator->healthy()):Json(nullptr);result["networkProtocolActive"]=runtime->network.value("enabled",false)?Json(nullptr):Json(false);result["networkAdmissionEnabled"]=runtime->network.value("enabled",false);result["capellaRelay"]=runtime->network;result["executionBound"]=runtime->reactor->execution_bound();if(runtime->admission)result.update(runtime->admission->capacities());result["admissionSession"]=runtime->admission?runtime->admission->receipts().at("session"):Json(nullptr);}
++   if(method=="nano_capellaStatus"){result=runtime->reactor->network_identity();result.update(runtime->reactor->relay_head(cancelled));result["syncAdmission"]=runtime->reactor->sync_admission_stats();result["clockHealthy"]=true;result["validatorHealthy"]=runtime->validator?Json(runtime->validator->healthy()):Json(nullptr);result["networkProtocolActive"]=runtime->network.value("enabled",false)?Json(nullptr):Json(false);result["networkAdmissionEnabled"]=runtime->network.value("enabled",false);result["capellaRelay"]=runtime->network;result["executionBound"]=runtime->reactor->execution_bound();if(runtime->admission)result.update(runtime->admission->capacities());result["admissionSession"]=runtime->admission?runtime->admission->receipts().at("session"):Json(nullptr);}
+    else if(method=="nano_capellaExport")result=runtime->reactor->export_message(params[1].get<std::string>(),root(params[2]),(16*1024*1024-4096)/2,{},cancelled);
+    else if(method=="nano_capellaCatalogGeneration"||method=="nano_capellaCatalogAcquire"||method=="nano_capellaCatalogRelease"||method=="nano_capellaCatalogOpen"||method=="nano_capellaCatalogPage"||method=="nano_capellaCatalogClose"){
+     if(!runtime->catalogs)throw RpcError(-32601,"Capella catalogs unavailable");
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index 9697429..44e15e1 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -549,7 +549,7 @@ static void signer_health_loop(const CapellaForkStore& initial,const CapellaFork
+   const auto pinned=journals.at(*proposer)->commitment(),after_failure=reactor->current().token;
+   check(mode?journals.at(*proposer)->latest_proposal_slot()==2&&pinned.sequence>journal_before.sequence:!journals.at(*proposer)->latest_proposal_slot()&&pinned==journal_before,"proposal reservation boundary differs");
+   const auto report=alert.poll(faulty.get());check(report&&*report==Json{{"event","capella-validator-unavailable"},{"nodeShutdownRequested",false}}&&!alert.poll(faulty.get()),"shared daemon alert was missing, repeated or leaked details");
+-  auto failed_status=status();check(failed_status.at("validatorHealthy")==false&&failed_status.at("clockHealthy")==true&&failed_status.dump().find("private provider sentinel")==std::string::npos,"HTTP status masked failure or leaked provider detail");
++  auto failed_status=status();const auto relay_status=reactor->relay_head();check(failed_status.at("headRoot")==relay_status.at("headRoot")&&failed_status.at("headSlot")==relay_status.at("headSlot")&&failed_status.at("headSlot").is_number_unsigned(),"Private RPC omitted coherent relay head");check(failed_status.at("validatorHealthy")==false&&failed_status.at("clockHealthy")==true&&failed_status.dump().find("private provider sentinel")==std::string::npos,"HTTP status masked failure or leaked provider detail");
+   bool origin_refused=false;try{client.call("nano_capellaStatus",Json::array({"health-test-token"}),"https://untrusted.invalid");}catch(const std::runtime_error& e){const std::string message=e.what();origin_refused=message.find("HTTP failure (403)")!=std::string::npos&&message.find("validatorHealthy")==std::string::npos&&message.find("private provider sentinel")==std::string::npos;}check(origin_refused,"Origin request exposed signer status");
+   bool refused=false;try{faulty->poll();}catch(const std::runtime_error&){refused=true;}check(refused&&provider_calls==mode+1&&reactor->current().token==after_failure,"failed worker retried or mutated admission");
+   {
+@@ -1087,16 +1087,16 @@ static void verify_beacon_read_admission(CapellaDurableReactor& reactor,const By
+  const auto path="/eth/v1/beacon/headers/"+hex(Bytes(parent.begin(),parent.end()));
+  const auto before=reactor.beacon_read(path);check(before.status==200,"Concurrent Beacon signed parent missing");
+  {
+-  const auto before_state=reactor.beacon_read("/eth/v1/beacon/states/head/finality_checkpoints");const auto token=reactor.current().token;
++  const auto before_state=reactor.beacon_read("/eth/v1/beacon/states/head/finality_checkpoints");const auto token=reactor.current().token;const auto before_head=reactor.relay_head();
+   std::promise<void> held,unblock;auto held_future=held.get_future();auto gate=unblock.get_future().share();
+   auto blocked_writer=std::async(std::launch::async,[&]{bool paused=false;try{return reactor.block(wire,[&]{if(!paused){paused=true;held.set_value();gate.wait();throw ExecutionCancelled("held writer cancelled");}});}catch(const ExecutionCancelled&){return false;}});
+   const bool locked=held_future.wait_for(std::chrono::seconds(5))==std::future_status::ready;
+   if(!locked){unblock.set_value();blocked_writer.get();check(false,"Admission lock fixture not reached");}
+-  auto concurrent=std::async(std::launch::async,[&]{return Json::array({reactor.beacon_read(path).body,reactor.beacon_read("/eth/v1/beacon/states/head/finality_checkpoints").body});});
++  auto concurrent=std::async(std::launch::async,[&]{return Json::array({reactor.beacon_read(path).body,reactor.beacon_read("/eth/v1/beacon/states/head/finality_checkpoints").body,reactor.relay_head()});});
+   const bool completed=concurrent.wait_for(std::chrono::seconds(5))==std::future_status::ready;
+   // Release before all assertions so the old locking path fails without hanging.
+   unblock.set_value();const auto bodies=concurrent.get();const auto admitted=blocked_writer.get();
+-  check(completed&&!admitted&&bodies==Json::array({before.body,before_state.body})&&reactor.current().token==token,"Beacon reads waited on admission or mixed unpublished state");
++  check(completed&&!admitted&&bodies==Json::array({before.body,before_state.body,before_head})&&reactor.current().token==token,"Beacon reads waited on admission or mixed unpublished state");
+   std::cout<<Json{{"scenario","beacon-read-during-held-admission"},{"publicationReadCompleted",true},{"archiveReadCompleted",true},{"oldPublicationPreserved",true},{"cancelledWriterUnpublished",true}}.dump()<<std::endl;
+  }
+ 
+@@ -1124,7 +1124,7 @@ static void verify_beacon_reads(CapellaDurableReactor& reactor,const CapellaFork
+   check(pin&&reactor.current().token==snapshot.token,"Beacon publication phase diagnostic leaked or changed state");
+   std::cout<<Json{{"scenario","beacon-read-phase-diagnostics"},{"publicationCancellationQualified",true},{"commitmentCancellationQualified",true},{"checkpointUnchanged",true},{"privateExceptionRedacted",true}}.dump()<<std::endl;
+  }
+- const auto header=reactor.beacon_read("/eth/v1/beacon/headers/head");check(header.status==200&&header.body.at("data").at("root")==text(id)&&header.body.at("data").at("canonical")==true,"Capella Beacon head header differs");
++ const auto header=reactor.beacon_read("/eth/v1/beacon/headers/head");const auto hint=reactor.relay_head();check(hint.at("headRoot")==text(id)&&hint.at("headSlot")==head.header.slot,"Relay hint differs from authenticated head");bool hint_cancelled=false;try{reactor.relay_head([]{throw ExecutionCancelled("relay hint cancelled");});}catch(const ExecutionCancelled&){hint_cancelled=true;}check(hint_cancelled&&reactor.current().token==snapshot.token,"Cancelled relay hint changed checkpoint");check(header.status==200&&header.body.at("data").at("root")==text(id)&&header.body.at("data").at("canonical")==true,"Capella Beacon head header differs");
+  check(reactor.beacon_read("/eth/v1/beacon/headers/"+std::to_string(head.header.slot)).body==header.body&&reactor.beacon_read("/eth/v1/beacon/headers/"+text(id)).body==header.body,"Capella Beacon header selectors differ");
+  const auto full=reactor.beacon_read("/eth/v2/beacon/blocks/head");check(full.status==200&&full.version=="capella"&&full.body.at("version")=="capella"&&full.ssz==*reactor.signed_block(id),"Capella Beacon signed bytes differ");const auto& body=full.body.at("data").at("message").at("body");const auto& payload=body.at("execution_payload");
+  check(payload.at("block_hash")==hex(head.execution_block.header.hash())&&payload.at("state_root")==hex(head.execution_state.root())&&payload.at("transactions").size()==head.execution_block.transactions.size(),"Capella Beacon execution projection differs");

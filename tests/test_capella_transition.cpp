@@ -549,7 +549,7 @@ static void signer_health_loop(const CapellaForkStore& initial,const CapellaFork
   const auto pinned=journals.at(*proposer)->commitment(),after_failure=reactor->current().token;
   check(mode?journals.at(*proposer)->latest_proposal_slot()==2&&pinned.sequence>journal_before.sequence:!journals.at(*proposer)->latest_proposal_slot()&&pinned==journal_before,"proposal reservation boundary differs");
   const auto report=alert.poll(faulty.get());check(report&&*report==Json{{"event","capella-validator-unavailable"},{"nodeShutdownRequested",false}}&&!alert.poll(faulty.get()),"shared daemon alert was missing, repeated or leaked details");
-  auto failed_status=status();check(failed_status.at("validatorHealthy")==false&&failed_status.at("clockHealthy")==true&&failed_status.dump().find("private provider sentinel")==std::string::npos,"HTTP status masked failure or leaked provider detail");
+  auto failed_status=status();const auto relay_status=reactor->relay_head();check(failed_status.at("headRoot")==relay_status.at("headRoot")&&failed_status.at("headSlot")==relay_status.at("headSlot")&&failed_status.at("headSlot").is_number_unsigned(),"Private RPC omitted coherent relay head");check(failed_status.at("validatorHealthy")==false&&failed_status.at("clockHealthy")==true&&failed_status.dump().find("private provider sentinel")==std::string::npos,"HTTP status masked failure or leaked provider detail");
   bool origin_refused=false;try{client.call("nano_capellaStatus",Json::array({"health-test-token"}),"https://untrusted.invalid");}catch(const std::runtime_error& e){const std::string message=e.what();origin_refused=message.find("HTTP failure (403)")!=std::string::npos&&message.find("validatorHealthy")==std::string::npos&&message.find("private provider sentinel")==std::string::npos;}check(origin_refused,"Origin request exposed signer status");
   bool refused=false;try{faulty->poll();}catch(const std::runtime_error&){refused=true;}check(refused&&provider_calls==mode+1&&reactor->current().token==after_failure,"failed worker retried or mutated admission");
   {
@@ -1087,16 +1087,16 @@ static void verify_beacon_read_admission(CapellaDurableReactor& reactor,const By
  const auto path="/eth/v1/beacon/headers/"+hex(Bytes(parent.begin(),parent.end()));
  const auto before=reactor.beacon_read(path);check(before.status==200,"Concurrent Beacon signed parent missing");
  {
-  const auto before_state=reactor.beacon_read("/eth/v1/beacon/states/head/finality_checkpoints");const auto token=reactor.current().token;
+  const auto before_state=reactor.beacon_read("/eth/v1/beacon/states/head/finality_checkpoints");const auto token=reactor.current().token;const auto before_head=reactor.relay_head();
   std::promise<void> held,unblock;auto held_future=held.get_future();auto gate=unblock.get_future().share();
   auto blocked_writer=std::async(std::launch::async,[&]{bool paused=false;try{return reactor.block(wire,[&]{if(!paused){paused=true;held.set_value();gate.wait();throw ExecutionCancelled("held writer cancelled");}});}catch(const ExecutionCancelled&){return false;}});
   const bool locked=held_future.wait_for(std::chrono::seconds(5))==std::future_status::ready;
   if(!locked){unblock.set_value();blocked_writer.get();check(false,"Admission lock fixture not reached");}
-  auto concurrent=std::async(std::launch::async,[&]{return Json::array({reactor.beacon_read(path).body,reactor.beacon_read("/eth/v1/beacon/states/head/finality_checkpoints").body});});
+  auto concurrent=std::async(std::launch::async,[&]{return Json::array({reactor.beacon_read(path).body,reactor.beacon_read("/eth/v1/beacon/states/head/finality_checkpoints").body,reactor.relay_head()});});
   const bool completed=concurrent.wait_for(std::chrono::seconds(5))==std::future_status::ready;
   // Release before all assertions so the old locking path fails without hanging.
   unblock.set_value();const auto bodies=concurrent.get();const auto admitted=blocked_writer.get();
-  check(completed&&!admitted&&bodies==Json::array({before.body,before_state.body})&&reactor.current().token==token,"Beacon reads waited on admission or mixed unpublished state");
+  check(completed&&!admitted&&bodies==Json::array({before.body,before_state.body,before_head})&&reactor.current().token==token,"Beacon reads waited on admission or mixed unpublished state");
   std::cout<<Json{{"scenario","beacon-read-during-held-admission"},{"publicationReadCompleted",true},{"archiveReadCompleted",true},{"oldPublicationPreserved",true},{"cancelledWriterUnpublished",true}}.dump()<<std::endl;
  }
 
@@ -1124,7 +1124,7 @@ static void verify_beacon_reads(CapellaDurableReactor& reactor,const CapellaFork
   check(pin&&reactor.current().token==snapshot.token,"Beacon publication phase diagnostic leaked or changed state");
   std::cout<<Json{{"scenario","beacon-read-phase-diagnostics"},{"publicationCancellationQualified",true},{"commitmentCancellationQualified",true},{"checkpointUnchanged",true},{"privateExceptionRedacted",true}}.dump()<<std::endl;
  }
- const auto header=reactor.beacon_read("/eth/v1/beacon/headers/head");check(header.status==200&&header.body.at("data").at("root")==text(id)&&header.body.at("data").at("canonical")==true,"Capella Beacon head header differs");
+ const auto header=reactor.beacon_read("/eth/v1/beacon/headers/head");const auto hint=reactor.relay_head();check(hint.at("headRoot")==text(id)&&hint.at("headSlot")==head.header.slot,"Relay hint differs from authenticated head");bool hint_cancelled=false;try{reactor.relay_head([]{throw ExecutionCancelled("relay hint cancelled");});}catch(const ExecutionCancelled&){hint_cancelled=true;}check(hint_cancelled&&reactor.current().token==snapshot.token,"Cancelled relay hint changed checkpoint");check(header.status==200&&header.body.at("data").at("root")==text(id)&&header.body.at("data").at("canonical")==true,"Capella Beacon head header differs");
  check(reactor.beacon_read("/eth/v1/beacon/headers/"+std::to_string(head.header.slot)).body==header.body&&reactor.beacon_read("/eth/v1/beacon/headers/"+text(id)).body==header.body,"Capella Beacon header selectors differ");
  const auto full=reactor.beacon_read("/eth/v2/beacon/blocks/head");check(full.status==200&&full.version=="capella"&&full.body.at("version")=="capella"&&full.ssz==*reactor.signed_block(id),"Capella Beacon signed bytes differ");const auto& body=full.body.at("data").at("message").at("body");const auto& payload=body.at("execution_payload");
  check(payload.at("block_hash")==hex(head.execution_block.header.hash())&&payload.at("state_root")==hex(head.execution_state.root())&&payload.at("transactions").size()==head.execution_block.transactions.size(),"Capella Beacon execution projection differs");
