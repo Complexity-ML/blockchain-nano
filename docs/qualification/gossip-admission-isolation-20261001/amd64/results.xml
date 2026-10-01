@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="11"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="88"
+	timestamp="2026-10-01T18:25:51"
+	>
+	<testcase name="rpc" classname="rpc" time="1.7669" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_evm"/>
+		</properties>
+		<system-out>993 RPC checks passed
+</system-out>
+	</testcase>
+	<testcase name="rpc_foreign_chain_admission_isolation" classname="rpc_foreign_chain_admission_isolation" time="0.0998218" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_rpc_admission"/>
+		</properties>
+		<system-out>{"canonicalStateUnchanged":true,"foreignGossipRejected":550,"foreignNestedRejectedBeforeDecode":128,"foreignRejected":512,"gossipRefillVerified":true,"gossipReservationAtomic":true,"healthyAdmissionPreserved":true,"localHighSRejectedWithinBudget":63,"localNestedRejectedWithinBudget":64,"localSignatureBudgetBounded":true,"malformedGossipBudgetBounded":true,"mixedGossipOrderPreserved":true,"refillVerified":true}
+</system-out>
+	</testcase>
+	<testcase name="network" classname="network" time="9.19452" status="run">
+		<properties/>
+		<system-out>History synchronized through DNS bootstrap
+Transaction propagated
+Block announcement imported
+Native network integration passed
+</system-out>
+	</testcase>
+	<testcase name="signed_network" classname="signed_network" time="9.40874" status="run">
+		<properties/>
+		<system-out>History synchronized through DNS bootstrap
+Transaction propagated
+Block announcement imported
+Native network integration passed
+</system-out>
+	</testcase>
+	<testcase name="bft_network" classname="bft_network" time="9.24953" status="run">
+		<properties/>
+		<system-out>History synchronized through DNS bootstrap
+Transaction propagated
+Block announcement imported
+Native network integration passed
+</system-out>
+	</testcase>
+	<testcase name="bft_restart_flood_paris_network" classname="bft_restart_flood_paris_network" time="23.9796" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_bft_rpc_admission_local"/>
+		</properties>
+		<system-out>Two isolated halves cannot finalize
+Restart reproduces exact reserved vote
+Restart reproduces exact reserved vote
+Restart reproduces exact reserved vote
+Restart reproduces exact reserved vote
+Four networked validators finalize a block
+Healthy transaction finalized on every validator under continuing flood
+{"crashTransportFailures":3,"foreignRejections":72821,"healthyReads":145642,"malformedBftRejections":72824,"unexpectedResponses":0}
+{"blockHash":"0xd6a1f156d74cba47cf2c6e98156760b450afcad791614525e6b92b11ae38d99b","fork":"Paris","heightVerified":"0x1","partitioned":true,"restarted":true,"stateRoot":"0x1ab8d5980ea655359de14effcb0d5adf5de051bfa94fe8bd2006bc567fd7eb04","validators":4}
+Distributed BFT proposal and vote exchange passed
+</system-out>
+	</testcase>
+	<testcase name="bft_restart_flood_shanghai_network" classname="bft_restart_flood_shanghai_network" time="22.5301" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_bft_rpc_admission_local"/>
+		</properties>
+		<system-out>Two isolated halves cannot finalize
+Restart reproduces exact reserved vote
+Restart reproduces exact reserved vote
+Restart reproduces exact reserved vote
+Restart reproduces exact reserved vote
+Four networked validators finalize a block
+Healthy transaction finalized on every validator under continuing flood
+{"crashTransportFailures":2,"foreignRejections":68528,"healthyReads":137056,"malformedBftRejections":68530,"unexpectedResponses":0}
+{"blockHash":"0xbf5d845dd9ef73e70797cbdc92c99425d1cc2a3439839c5f62a0a49f6cb0d759","fork":"Shanghai","heightVerified":"0x1","partitioned":true,"restarted":true,"stateRoot":"0x31bb395093cb322ce4027cb15b535ea410814a7f5d3a991f7dc8018ed2a1bf4b","validators":4}
+Distributed BFT proposal and vote exchange passed
+</system-out>
+	</testcase>
+	<testcase name="supervisor" classname="supervisor" time="6.28531" status="run">
+		<properties/>
+		<system-out>transport listening
+connected peers visible
+managed history synchronized
+P2P child reaped
+peer removed from telemetry
+Native supervisor scenarios passed
+</system-out>
+	</testcase>
+	<testcase name="rpc_cli" classname="rpc_cli" time="0.616283" status="run">
+		<properties/>
+		<system-out>Native RPC CLI scenarios passed
+</system-out>
+	</testcase>
+	<testcase name="staking_cli" classname="staking_cli" time="3.06314" status="run">
+		<properties/>
+		<system-out>Native staking CLI and registration recovery passed
+</system-out>
+	</testcase>
+	<testcase name="signed_validator_cli" classname="signed_validator_cli" time="2.43982" status="run">
+		<properties/>
+		<system-out>continuous validator progresses
+wallet producer advances
+Native signed validator adversarial scenarios passed
+</system-out>
+	</testcase>
+</testsuite>

@@ -2677,3 +2677,19 @@ source transférée par Git ; main/source de campagne originale préservée.
 Charge générale, estimation RPC, Beacon/WAN et huit critères initiaux restent
 ouverts ; production non qualifiée.
 [Sources et preuves avant/après](qualification/gossip-admission-isolation-20261001/README.md).
+
+
+### 2026-10-01 — gossip portable et lanceur complet préparé
+
+Candidate runtime ff53e4d1 : onze tests exacts AMD64 réussis sans skip
+(88.65 s), mêmes contrôles de budget/mixte/atomicité/refill que les sept
+ARM64. Preuves terminales conservées ; pas de qualification globale.
+Lanceur complet ajouté sur branche isolée : scratch disque exécutable,
+inventaire complet, empreintes avant tests et audit exact des résultats.
+Quatre gardes Node et deux contrôles vrais CMake/CTest passent ; ce sont
+les contrôles du lanceur. Node/Python manquent dans les builders actuels :
+usage Docker du lanceur reste à préparer, aucune matrice complète nouvelle
+revendiquée. Campagne originale encore active, sources main préservées.
+Tous les huit critères initiaux et échecs restent ouverts.
+[AMD64 terminal](qualification/gossip-admission-isolation-20261001/amd64/README.md) ;
+[contrôles et prérequis du lanceur](qualification/full-runner-controls-20261001/README.md).
