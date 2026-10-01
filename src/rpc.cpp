@@ -11,17 +11,44 @@ Json error_response(const Json& id,int code,const std::string& message,const Jso
 void arity(const Json& p,size_t min,size_t max){if(p.size()<min||p.size()>max)throw RpcError(-32602,"Invalid parameter count");}
 Bytes hash_arg(const Json& j){auto value=unhex(j.get<std::string>());if(value.size()!=32)throw RpcError(-32602,"Expected 32-byte hash");return value;}
 // Reject an envelope for another chain before spending local signature-work
-// capacity. RLP parsing remains byte/depth bounded; this preflight never admits
-// a transaction. The normal decoder still verifies the complete signature.
+// capacity. Inspect at most fourteen top-level field headers, without copying
+// or recursively parsing nested payloads. This never admits a transaction:
+// canonical nested data and the signature are checked after budget admission.
 Int envelope_chain_id(const Bytes& input){
  if(input.empty())throw std::invalid_argument("invalid transaction size");
- unsigned type=0;Rlp fields;
- if(input[0]<128){type=input[0];if(type<1||type>4)throw std::invalid_argument("unsupported transaction type");fields=Rlp::decode(Bytes(input.begin()+1,input.end()));}
- else fields=Rlp::decode(input);
+ struct Field {bool list;size_t begin,end;};
+ auto field=[&](size_t& position,size_t limit)->Field{
+  if(position>=limit)throw std::invalid_argument("invalid RLP nesting/length");
+  const auto begin=position;const uint8_t tag=input[position++];
+  if(tag<128)return {false,begin,position};
+  const bool list=tag>=192;size_t length=0;
+  if(tag<184)length=tag-128;
+  else if(tag>=192&&tag<248)length=tag-192;
+  else{
+   const size_t width=tag<192?tag-183:tag-247;
+   if(width>sizeof(size_t)||width>limit-position||input[position]==0)throw std::invalid_argument("bad RLP length");
+   for(size_t i=0;i<width;++i)length=(length<<8)|input[position++];
+   if(length<56)throw std::invalid_argument("noncanonical RLP");
+  }
+  if(length>limit-position)throw std::invalid_argument("truncated RLP");
+  if(!list&&length==1&&input[position]<128)throw std::invalid_argument("noncanonical RLP byte");
+  const auto payload=position;position+=length;return {list,payload,position};
+ };
+ unsigned type=0;size_t position=0;
+ if(input[0]<128){type=input[0];if(type<1||type>4)throw std::invalid_argument("unsupported transaction type");++position;}
+ const auto root=field(position,input.size());
+ if(!root.list||position!=input.size())throw std::invalid_argument("invalid transaction fields");
  const size_t expected=type==0?9:type==1?11:type==2?12:type==3?14:13;
- if(!fields.list||fields.items.size()!=expected)throw std::invalid_argument("invalid transaction fields");
- if(type)return fields[0].number();
- const auto v=fields[6].number();
+ position=root.begin;Int chain_value;
+ for(size_t i=0;i<expected;++i){const auto item=field(position,root.end);
+  if(i==(type?0u:6u)){
+   if(item.list||item.end-item.begin>32||(item.end>item.begin&&input[item.begin]==0))throw std::invalid_argument("noncanonical RLP integer");
+   chain_value=integer(Bytes(input.begin()+item.begin,input.begin()+item.end));
+  }
+ }
+ if(position!=root.end)throw std::invalid_argument("invalid transaction fields");
+ if(type)return chain_value;
+ const auto& v=chain_value;
  if(v==27||v==28)return 0;
  if(v<35)throw std::invalid_argument("invalid legacy v");
  return Int((v-35)/2);
