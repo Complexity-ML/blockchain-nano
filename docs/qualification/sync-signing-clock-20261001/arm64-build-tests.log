@@ -1,0 +1,24 @@
+[  0%] Built target gen_bint.o
+[  0%] Built target gen_base.o
+[  3%] Built target secp256k1_precomputed
+[  6%] Built target nano_blst
+[  9%] Built target nano-test-sync-fault
+[ 12%] Built target mcl_st
+[ 12%] Built target nano_ckzg
+[ 12%] Built target secp256k1
+[ 12%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_sync_signing.cpp.o
+[ 12%] Linking CXX static library libnano_core.a
+[ 96%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-capella-transition-tests.dir/tests/test_capella_transition.cpp.o
+[100%] Linking CXX executable nano-capella-transition-tests
+[100%] Built target nano-capella-transition-tests
+{"durableCommitmentsUnchanged":true,"failure":"Sync duty clock regressed: nowMs=11999, lastMs=12000, durableMs=12000, genesisMs=0, slot=2, phase=entry, read=1, beforeLast=1, beforeGenesis=0","messagePublished":false,"phase":"entry","providerCalls":0,"scenario":"sync-signing-clock-regression"}
+{"durableCommitmentsUnchanged":true,"failure":"Sync duty clock regressed: nowMs=13999, lastMs=14000, durableMs=12000, genesisMs=0, slot=2, phase=before-provider, read=2, beforeLast=1, beforeGenesis=0","messagePublished":false,"phase":"before-provider","providerCalls":0,"scenario":"sync-signing-clock-regression"}
+{"durableCommitmentsUnchanged":true,"failure":"Sync duty clock regressed: nowMs=13999, lastMs=14000, durableMs=12000, genesisMs=0, slot=2, phase=after-provider, read=4, beforeLast=1, beforeGenesis=0","messagePublished":false,"phase":"after-provider","providerCalls":1,"scenario":"sync-signing-clock-regression"}
+{"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+{"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+{"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+{"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+{"finalizedEpoch":3,"progressSlot":40,"signedVotes":264}
+{"finalizedEpoch":3,"progressSlot":41,"signedVotes":272}
+{"blocks":40,"disjointSyncMerging":true,"executionOwner":true,"finalizedEpoch":3,"independentStores":2,"individualSyncMessages":true,"justifiedEpoch":4,"localSyncAggregates":true,"localSyncSigning":true,"networkActivated":false,"networkTransport":false,"participationPercent":100,"scenario":"capella-local-assembly-finality","signingJournalsReopened":64,"storeReopens":2,"syncCatalogExport":true,"syncPrecollection":true,"syncWireWorker":true,"votes":272}
