@@ -69,6 +69,9 @@ set_tests_properties(rpc_fee_load PROPERTIES TIMEOUT 180 LABELS "qualification_r
 add_executable(nano-http-tests tests/test_http.cpp)
 target_link_libraries(nano-http-tests PRIVATE nano_core)
 add_test(NAME http COMMAND nano-http-tests)
+add_executable(nano-beacon-http-errors-tests tests/test_beacon_http_errors.cpp)
+target_link_libraries(nano-beacon-http-errors-tests PRIVATE nano_core)
+add_test(NAME beacon_http_error_diagnostics COMMAND nano-beacon-http-errors-tests)
 set_tests_properties(http PROPERTIES TIMEOUT 30)
 
 add_executable(nano-websocket-output-tests tests/test_websocket_output.cpp)

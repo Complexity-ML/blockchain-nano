@@ -107,7 +107,10 @@ BeaconReadResponse capella_beacon_read(const CapellaForkStore& store,
 
 namespace nano {
 BeaconReadResponse CapellaDurableReactor::beacon_read(std::string_view path,const std::function<void()>& check)const{
- std::lock_guard lock(mutex_);require_available();const auto& rules=rules_;const auto& store=*state_;
+ // Pin one authenticated publication; SSZ/ancestry projection must not hold
+ // the admission mutex. The shared const store survives concurrent publishes.
+ const auto snapshot=current();const auto& rules=rules_;const auto& store=*snapshot.state;
+ if(check)check();
  const bool full=path.starts_with("/eth/v2/beacon/blocks/");
  const std::string_view prefix=full?"/eth/v2/beacon/blocks/":"/eth/v1/beacon/headers/";
  if(!path.starts_with(prefix))return capella_beacon_read(store,rules,path,check);
@@ -144,7 +147,9 @@ BeaconReadResponse CapellaDurableReactor::beacon_read(std::string_view path,cons
   if(!found)return error(404,"Block slot not retained on canonical branch");
  }
  const auto block=store.blocks.find(id);if(block==store.blocks.end())return error(404,"Block not retained");
- const auto signed_block=signed_block_locked(id,check);if(!signed_block)return error(404,"Signed block not retained");
+ // Archive access still authenticates under its own lock. If maintenance has
+ // removed this root meanwhile, fail rather than fall back to the newer head.
+ const auto signed_block=this->signed_block(id,check);if(!signed_block)return error(404,"Signed block not retained");
  if(full)return {200,{{"version","capella"},{"execution_optimistic",false},{"finalized",ancestor(store.timed.view.finalized.root,id)},{"data",beacon_block_json(*signed_block,rules,check)}},*signed_block,"capella"};
  const auto& h=block->second.header;auto root=[](const ConsensusRoot& r){return hex(Bytes(r.begin(),r.end()));};
  Json message={{"slot",std::to_string(h.slot)},{"proposer_index",std::to_string(h.proposer_index)},

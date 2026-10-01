@@ -993,6 +993,26 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
   auto resumed=start_capella_runtime(*owner,pinned,{},wall);check(resumed.reactor->current().token==saved.token,"pinned recovery changed retained checkpoint");stop_capella_runtime(resumed);}
  std::cout<<Json{{"externalRecoveryCommitmentChecks",automatic_recovery?9:0},{"automaticRecovery",automatic_recovery},{"scenario","capella-configured-runtime"},{"blocks",proposals},{"keysLoaded",automatic_registration?65:64},{"automaticRegistration",automatic_registration},{"witnessRestart",true},{"signerWitnessRestart",true},{"admissionReceiptChecks",6},{"httpTransport",capella_http},{"runtimeCatalogChecks",3},{"invalidConfigurationsRejected",6},{"workersStopped",true},{"networkTransport",false}}.dump()<<std::endl;
 }
+static void verify_beacon_read_admission(CapellaDurableReactor& reactor,const Bytes& wire,const ConsensusRoot& parent){
+ // The current head can still be an unsigned bootstrap anchor before this
+ // proposal. Select its already archived parent explicitly, preserving the
+ // captured publication's canonical/finalized flags during admission.
+ const auto path="/eth/v1/beacon/headers/"+hex(Bytes(parent.begin(),parent.end()));
+ const auto before=reactor.beacon_read(path);check(before.status==200,"Concurrent Beacon signed parent missing");
+ std::promise<void> entered,release;auto entered_future=entered.get_future();auto gate=release.get_future().share();
+ auto reader=std::async(std::launch::async,[&]{bool paused=false;return reactor.beacon_read(path,[&]{if(!paused){paused=true;entered.set_value();gate.wait();}});});
+ const bool captured=entered_future.wait_for(std::chrono::seconds(5))==std::future_status::ready;
+ if(!captured){release.set_value();reader.get();check(false,"Concurrent Beacon reader never captured publication");}
+ auto writer=std::async(std::launch::async,[&]{return reactor.block(wire);});
+ const bool progressed=writer.wait_for(std::chrono::seconds(5))==std::future_status::ready;
+ // Always release before checking: a regression must fail, not deadlock cleanup.
+ release.set_value();const auto response=reader.get();const bool admitted=writer.get();
+ check(progressed&&admitted,"Paused Beacon projection blocked block admission");
+ check(response.status==200&&response.body==before.body,"Concurrent Beacon read mixed publications");
+ const auto after=reactor.beacon_read("/eth/v1/beacon/headers/head");
+ check(after.status==200&&after.body.at("data").at("root")!=before.body.at("data").at("root"),"Concurrent Beacon test did not advance head");
+ std::cout<<Json{{"scenario","beacon-read-concurrent-admission"},{"admissionWhileReaderPaused",true},{"oldPublicationPreserved",true},{"headAdvanced",true}}.dump()<<std::endl;
+}
 static void verify_beacon_reads(CapellaDurableReactor& reactor,const CapellaForkBlockRules& rules){
  const auto snapshot=reactor.current();const auto& head=capella_fork_head(*snapshot.state,rules);const auto id=consensus_beacon_header_root(head.header);auto text=[](const ConsensusRoot& r){return hex(Bytes(r.begin(),r.end()));};
  const auto header=reactor.beacon_read("/eth/v1/beacon/headers/head");check(header.status==200&&header.body.at("data").at("root")==text(id)&&header.body.at("data").at("canonical")==true,"Capella Beacon head header differs");
@@ -1307,6 +1327,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
    auto bad_signature=wire;bad_signature[4]^=1;check(!prepare_capella_received_block(timed,bad_signature,store_rules,64,100000),"Store admitted bad signature");
    reactor->tick((genesis_time+slot*seconds)*1000);const auto before_publish=reactor->current();
    bool reactor_cancelled=false;try{reactor->block(wire,[]{throw ExecutionCancelled("reactor stop");});}catch(const ExecutionCancelled&){reactor_cancelled=true;}check(reactor_cancelled&&reactor->current().token==before_publish.token,"cancelled reactor published");
+   if(beacon_reads&&slot==first_slot+2)verify_beacon_read_admission(*reactor,wire,parent_root);
    check(wire_mode?deliver("block",wire):reactor->block(wire),"durable Capella block rejected");check(capella_store_snapshot(*reactor->current().state,store_rules,snapshot_limits)==capella_store_snapshot(*admitted_store,store_rules,snapshot_limits),"durable Store differs");
    if(wire_mode&&slot==first_slot+4){stable_inventory=reactor->capture_inventory("block",4*sizeof(ConsensusRoot));stable_first=stable_inventory->page({},2,512);}
    const auto accepted_token=reactor->current().token;check(reactor->block(wire)&&reactor->current().token==accepted_token,"duplicate block rewrote checkpoint");

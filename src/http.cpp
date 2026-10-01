@@ -97,7 +97,8 @@ public:
         if(!result.version.empty())out["version"]=result.version;
        }
        return out;
-      }catch(const std::exception&){return Json{{"status",503},{"body",{{"code",503},{"message","Beacon state unavailable"}}}};}
+      }catch(const ExecutionCancelled&){return Json{{"status",503},{"body",{{"code",503},{"message","Beacon read cancelled or execution budget expired"}}}};}
+       catch(const std::exception&){return Json{{"status",503},{"body",{{"code",503},{"message","Beacon state unavailable"}}}};}
      },[self=shared_from_this(),keep_alive](std::optional<Json> result){
       self->response_.result(static_cast<http::status>(result?result->at("status").get<unsigned>():503));
       if(result&&result->contains("binary")){const auto& bytes=result->at("binary").get_binary();self->response_.body().assign(bytes.begin(),bytes.end());self->response_.set(http::field::content_type,"application/octet-stream");}
