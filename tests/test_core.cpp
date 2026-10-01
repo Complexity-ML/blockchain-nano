@@ -21,6 +21,18 @@ void check(bool yes,const char* name){++checks;if(!yes)throw std::runtime_error(
 template<class F>void rejects(F f,const char* name){bool threw=false;try{f();}catch(const std::exception&){threw=true;}check(threw,name);}
 int main(){try{
  {
+  State state;ExecutionContext ctx;ctx.revision=EvmRevision::Paris;ctx.address="0x1000000000000000000000000000000000000000";ctx.gas=1000;
+  for(const auto& value:std::vector<Int>{Int(0),Int(1),Int(1)<<255,(Int(1)<<256)-1}){
+   ctx.code=concat(concat(Bytes{0x7f},bytes(value,32)),unhex("0x801560005260205260406000f3"));auto result=EVM(state).execute(ctx);
+   check(result.success&&result.return_data.size()==64,"ISZERO executes for all word widths");check(integer(Bytes(result.return_data.begin(),result.return_data.begin()+32))==Int(value==0),"ISZERO exact boolean");check(integer(Bytes(result.return_data.begin()+32,result.return_data.end()))==value,"ISZERO preserves independent duplicated operand");
+  }
+  ctx.code=unhex("0x15");auto underflow=EVM(state).execute(ctx);check(!underflow.success&&underflow.gas_used==ctx.gas,"ISZERO underflow consumes exceptional frame gas");
+  ctx.code=unhex("0x6003565b00");ctx.gas=12;auto exact=EVM(state).execute(ctx);check(exact.success&&exact.gas_used==12,"unconditional JUMP exact gas boundary");ctx.gas=11;auto short_gas=EVM(state).execute(ctx);check(!short_gas.success&&short_gas.gas_used==11,"JUMPDEST one-gas-short fails exceptionally");
+  ctx.gas=1000;ctx.code=concat(concat(unhex("0x60007f"),bytes((Int(1)<<256)-1,32)),unhex("0x5700"));auto untaken=EVM(state).execute(ctx);check(untaken.success&&untaken.gas_used==16,"untaken JUMPI ignores huge invalid destination");
+  for(const auto& code:std::vector<Bytes>{unhex("0x600456605b00"),concat(concat(Bytes{0x7f},bytes((Int(1)<<256)-1,32)),Bytes{0x56}),unhex("0x600157"),unhex("0x56")}){ctx.code=code;auto invalid=EVM(state).execute(ctx);check(!invalid.success&&invalid.gas_used==ctx.gas,"invalid or underflowed jump retains exceptional semantics");}
+ }
+
+ {
   check(u64(Int(0))==0,"u64 zero");
   check(u64(Int("18446744073709551615"))==UINT64_MAX,"u64 exact maximum");
   for(unsigned bit=0;bit<64;++bit){Int n=Int(1)<<bit;check(u64(n)==(uint64_t(1)<<bit),"u64 single-bit boundary");check(u64(n-1)==((uint64_t(1)<<bit)-1),"u64 below each bit boundary");}

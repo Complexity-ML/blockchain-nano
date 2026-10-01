@@ -12,6 +12,7 @@ struct Frame {
  // Own the operand so normalization can reuse its GMP allocation. The same
  // floor remainder handles negative and oversized operands modulo 2^256.
  void push(Int value){if(stack.size()>=1024)throw std::runtime_error("Stack overflow");mpz_fdiv_r_2exp(value.get_mpz_t(),value.get_mpz_t(),256);stack.push_back(std::move(value));}
+ void iszero(){if(stack.empty())throw std::runtime_error("Stack underflow");auto& value=stack.back();mpz_set_ui(value.get_mpz_t(),mpz_sgn(value.get_mpz_t())==0);}
  Int pop(){if(stack.empty())throw std::runtime_error("Stack underflow");Int value=std::move(stack.back());stack.pop_back();return value;}
  void reduce(void (*operation)(mpz_ptr,mpz_srcptr,mpz_srcptr)){
   Int a=pop();if(stack.empty())throw std::runtime_error("Stack underflow");
@@ -82,7 +83,7 @@ EvmTask EVM::run(const ExecutionContext& ctx, unsigned depth){
  case NanoOpCodes::SLT:{Int a=signed_word(f.pop()),b=signed_word(f.pop());f.push(Int(a<b));break;}
  case NanoOpCodes::SGT:{Int a=signed_word(f.pop()),b=signed_word(f.pop());f.push(Int(a>b));break;}
  case NanoOpCodes::EQ:{Int a=f.pop(),b=f.pop();f.push(Int(a==b));break;}
- case NanoOpCodes::ISZERO:f.push(Int(f.pop()==0));break;
+ case NanoOpCodes::ISZERO:f.iszero();break;
  case NanoOpCodes::AND:{Int a=f.pop(),b=f.pop();f.push(a&b);break;}
  case NanoOpCodes::OR:{Int a=f.pop(),b=f.pop();f.push(a|b);break;}
  case NanoOpCodes::XOR:{Int a=f.pop(),b=f.pop();f.push(a^b);break;}
@@ -154,7 +155,7 @@ EvmTask EVM::run(const ExecutionContext& ctx, unsigned depth){
  case NanoOpCodes::TSTORE:{if(ctx.is_static)throw std::runtime_error("TSTORE in static context");Int key=f.pop(),value=f.pop();transient_storage_[{address(ctx.address),key}]=value;break;}
  case NanoOpCodes::MCOPY:{Int dest=f.pop(),source=f.pop(),size=f.pop();if(size!=0){auto data=f.read(source,size);auto region=f.region(dest,size);f.charge(3*((region.second+31)/32));f.write(dest,data);}break;}
  case NanoOpCodes::JUMP:
- case NanoOpCodes::JUMPI:{Int dest=f.pop(),condition=op==0x57?f.pop():Int(1);if(condition!=0){if(dest>=Int(ctx.code.size())||!jumpdests.contains(dest.get_ui()))throw std::runtime_error("Invalid jump destination");pc=dest.get_ui()-1;}break;}
+ case NanoOpCodes::JUMPI:{Int dest=f.pop();bool taken=op!=0x57||f.pop()!=0;if(taken){if(dest>=Int(ctx.code.size())||!jumpdests.contains(dest.get_ui()))throw std::runtime_error("Invalid jump destination");pc=dest.get_ui()-1;}break;}
  case NanoOpCodes::PC:f.push(Int(pc));break;
  case NanoOpCodes::MSIZE:f.push(Int(f.memory.size()));break;
  case NanoOpCodes::GAS:f.push(Int(std::to_string(f.gas)));break;

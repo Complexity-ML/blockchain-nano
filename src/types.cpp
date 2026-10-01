@@ -17,7 +17,7 @@ std::string address(std::string s) { auto b=unhex(s); if(b.size()!=20) throw std
 Bytes concat(Bytes a,const Bytes& b) { a.insert(a.end(),b.begin(),b.end()); return a; }
 uint64_t u64(const Int& n) {
  // Base 2 reports the exact width. Validate before conversion, without
- // rebuilding the decimal maximum at every EVM jump or memory operation.
+ // rebuilding the decimal maximum at each checked conversion.
  if(mpz_sgn(n.get_mpz_t())<0||mpz_sizeinbase(n.get_mpz_t(),2)>64)throw std::overflow_error("uint64 overflow");
  if constexpr(sizeof(unsigned long)>=sizeof(uint64_t))return n.get_ui();
  else{uint64_t result=0;mpz_export(&result,nullptr,1,sizeof(result),0,0,n.get_mpz_t());return result;}
