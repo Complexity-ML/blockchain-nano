@@ -1,0 +1,230 @@
+{
+  "processExitCode": 1,
+  "compiledSourceRevision": "4343023232424a584e79cad4f4879d052afdc977",
+  "harnessRevision": "21142f11dcd1925d62e7c6ed6517922d40e0fe9a",
+  "firstRecovery": {
+    "time": 1790844852650,
+    "event": "partition-recovery-bound",
+    "checkpoint": {
+      "epoch": "7",
+      "root": "0x4865a8fce9675dc2db215305d88d3be80f8f1111141c18b9dcaa915f34f5c28b"
+    },
+    "recoveryElapsedMs": 138377.14120799996,
+    "recoveryLimitMs": 180000,
+    "cycle": 1
+  },
+  "secondReconnect": {
+    "time": 1790845052330,
+    "event": "partition-reconnected",
+    "container": "nano-qualification-vps-mupaj2y0",
+    "network": "nano-qualification-vps-mupaj2y0-net",
+    "address": "192.168.96.2",
+    "recoveryLimitMs": 180000,
+    "cycle": 2
+  },
+  "firstCompleteSecondRecoveryRead": {
+    "time": 1790845232370,
+    "event": "partition-observation",
+    "rows": [
+      {
+        "name": "mac-native",
+        "peers": "0x1",
+        "checkpoint": {
+          "epoch": "15",
+          "root": "0x32966c080a452418dcdd46a56229dd1c1752d8696f3c3effc5590a2c58b773d4"
+        },
+        "progress": {
+          "headRoot": "0xe7a69afbd505acf09afae72e828ddfa5a90efd0002117a8f76e08309082d88b6",
+          "headSlot": "136",
+          "stateRoot": "0xf30e75df9c9a1a9cf4f20572903bcb1bac7eed527b94626ef2a2f40972d12a16",
+          "justified": {
+            "epoch": "16",
+            "root": "0x7ab4d8d9f9533fec4460e6a7add08f48aff4ecf833ecd3402b153c8801d12522"
+          },
+          "finalized": {
+            "epoch": "15",
+            "root": "0x32966c080a452418dcdd46a56229dd1c1752d8696f3c3effc5590a2c58b773d4"
+          },
+          "beforeMs": 1790845230761,
+          "afterMs": 1790845230779
+        }
+      },
+      {
+        "name": "mac-docker",
+        "peers": "0x1",
+        "checkpoint": {
+          "epoch": "15",
+          "root": "0x32966c080a452418dcdd46a56229dd1c1752d8696f3c3effc5590a2c58b773d4"
+        },
+        "progress": {
+          "headRoot": "0xe7a69afbd505acf09afae72e828ddfa5a90efd0002117a8f76e08309082d88b6",
+          "headSlot": "136",
+          "stateRoot": "0xf30e75df9c9a1a9cf4f20572903bcb1bac7eed527b94626ef2a2f40972d12a16",
+          "justified": {
+            "epoch": "16",
+            "root": "0x7ab4d8d9f9533fec4460e6a7add08f48aff4ecf833ecd3402b153c8801d12522"
+          },
+          "finalized": {
+            "epoch": "15",
+            "root": "0x32966c080a452418dcdd46a56229dd1c1752d8696f3c3effc5590a2c58b773d4"
+          },
+          "beforeMs": 1790845230816,
+          "afterMs": 1790845230884
+        }
+      },
+      {
+        "name": "vps-docker",
+        "peers": "0x2",
+        "checkpoint": {
+          "epoch": "15",
+          "root": "0x32966c080a452418dcdd46a56229dd1c1752d8696f3c3effc5590a2c58b773d4"
+        },
+        "progress": {
+          "headRoot": "0xe7a69afbd505acf09afae72e828ddfa5a90efd0002117a8f76e08309082d88b6",
+          "headSlot": "136",
+          "stateRoot": "0xf30e75df9c9a1a9cf4f20572903bcb1bac7eed527b94626ef2a2f40972d12a16",
+          "justified": {
+            "epoch": "16",
+            "root": "0x7ab4d8d9f9533fec4460e6a7add08f48aff4ecf833ecd3402b153c8801d12522"
+          },
+          "finalized": {
+            "epoch": "15",
+            "root": "0x32966c080a452418dcdd46a56229dd1c1752d8696f3c3effc5590a2c58b773d4"
+          },
+          "beforeMs": 1790845231557,
+          "afterMs": 1790845232370
+        }
+      }
+    ],
+    "cycle": 2
+  },
+  "secondReadWallElapsedMs": 180040,
+  "secondCompleteMonotonicDurationRecorded": false,
+  "deadlineFailure": {
+    "time": 1790845232371,
+    "event": "partition-recovery-deadline-missed",
+    "message": "Partition recovery deadline exceeded"
+  },
+  "lateDiagnostic": {
+    "time": 1790845234259,
+    "event": "late-partition-recovery-bound",
+    "checkpoint": {
+      "epoch": "15",
+      "root": "0x32966c080a452418dcdd46a56229dd1c1752d8696f3c3effc5590a2c58b773d4"
+    },
+    "recoveryElapsedMs": 1888.1207500000019,
+    "recoveryLimitMs": 180000,
+    "cycle": 2
+  },
+  "lateDiagnosticDurationIsNewObservationWindow": true,
+  "failure": {
+    "time": 1790845380657,
+    "event": "failed",
+    "message": "PartitionRecoveryDeadline: Partition recovery deadline exceeded\n    at partitionRemote (file:///Users/boris/Dev/blockchain-nano/tests/multihost/partition.mjs:100:8)\n    at async runPartitionCycles (file:///Users/boris/Dev/blockchain-nano/tests/multihost/partition-cycles.mjs:31:3)\n    at async partition (file:///Users/boris/Dev/blockchain-nano/tests/multihost/run.mjs:308:17)\n    at async observeRecovery (file:///Users/boris/Dev/blockchain-nano/tests/multihost/recovery-observation.mjs:7:6)\n    at async file:///Users/boris/Dev/blockchain-nano/tests/multihost/run.mjs:306:2"
+  },
+  "secondRecoveryQualified": false,
+  "stability": {
+    "epochs": 3,
+    "firstEpoch": "15",
+    "lastEpoch": "18",
+    "elapsedMs": 144145,
+    "nodes": [
+      "mac-native",
+      "mac-docker",
+      "vps-docker"
+    ],
+    "revision": "4343023232424a584e79cad4f4879d052afdc977"
+  },
+  "stabilityQualified": true,
+  "stoppedValidators": [
+    {
+      "node": "native.log",
+      "clockHealthy": true,
+      "validator": {
+        "healthy": true,
+        "failure": null,
+        "attestationsAdmitted": 422,
+        "syncMessagesAdmitted": 2405
+      },
+      "finalized": {
+        "epoch": "0x12",
+        "root": "0x9737426100bd5125c3b20db1bd81362d7b8663d7b289bc6ca7c39905b237f41b"
+      },
+      "syncAdmission": {
+        "accepted": 3665,
+        "aggregation-failed": 0,
+        "contextBuilds": 188,
+        "contextHits": 7168,
+        "expired-slot": 0,
+        "future-slot": 0,
+        "head-at-or-after-inclusion": 30,
+        "invalid-signature": 0,
+        "invalid-width": 0,
+        "not-in-committee": 0,
+        "root-mismatch": 27,
+        "slot-overflow": 0,
+        "unknown-validator": 0
+      }
+    },
+    {
+      "node": "docker-mac.log",
+      "clockHealthy": true,
+      "validator": {
+        "healthy": true,
+        "failure": null,
+        "attestationsAdmitted": 399,
+        "syncMessagesAdmitted": 1684
+      },
+      "finalized": {
+        "epoch": "0x12",
+        "root": "0x9737426100bd5125c3b20db1bd81362d7b8663d7b289bc6ca7c39905b237f41b"
+      },
+      "syncAdmission": {
+        "accepted": 2950,
+        "aggregation-failed": 0,
+        "contextBuilds": 187,
+        "contextHits": 5727,
+        "expired-slot": 0,
+        "future-slot": 0,
+        "head-at-or-after-inclusion": 23,
+        "invalid-signature": 0,
+        "invalid-width": 0,
+        "not-in-committee": 0,
+        "root-mismatch": 17,
+        "slot-overflow": 0,
+        "unknown-validator": 0
+      }
+    },
+    {
+      "node": "vps.log",
+      "clockHealthy": true,
+      "validator": {
+        "healthy": true,
+        "failure": null,
+        "attestationsAdmitted": 396,
+        "syncMessagesAdmitted": 1593
+      },
+      "finalized": {
+        "epoch": "0x12",
+        "root": "0x9737426100bd5125c3b20db1bd81362d7b8663d7b289bc6ca7c39905b237f41b"
+      },
+      "syncAdmission": {
+        "accepted": 3745,
+        "aggregation-failed": 0,
+        "contextBuilds": 217,
+        "contextHits": 7214,
+        "expired-slot": 0,
+        "future-slot": 0,
+        "head-at-or-after-inclusion": 30,
+        "invalid-signature": 0,
+        "invalid-width": 0,
+        "not-in-committee": 0,
+        "root-mismatch": 57,
+        "slot-overflow": 0,
+        "unknown-validator": 0
+      }
+    }
+  ],
+  "networkQualified": false,
+  "productionQualified": false
+}
