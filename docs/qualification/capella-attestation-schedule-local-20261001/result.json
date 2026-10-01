@@ -1,0 +1,99 @@
+{
+  "sourceParentRevision": "0c09ca2f429f20a79d420b00929ed4aab3543a0a",
+  "modelsPerEnvironment": 4,
+  "nativeExitCode": 0,
+  "arm64ExitCode": 0,
+  "environments": {
+    "native": {
+      "distributed": [
+        {
+          "finalizedBlocksWithRemoteSync": 0,
+          "minimumFinalizedEpoch": 2,
+          "nodes": 2,
+          "realLibp2p": true,
+          "scenario": "capella-distributed-finality",
+          "stableObservations": 3,
+          "syncInclusionMustExceedSlot": 0,
+          "syncQualification": false,
+          "syncRotation": false,
+          "validatorsPerNode": 32
+        }
+      ],
+      "stops": [
+        {
+          "healthy": true,
+          "clockHealthy": true,
+          "attestations": 102,
+          "finalized": {
+            "epoch": "0x2",
+            "root": "0xb257b150575aee0588ff1c126eecb81cf3ce0d413ece092bd42cba17080bfbc4"
+          }
+        },
+        {
+          "healthy": true,
+          "clockHealthy": true,
+          "attestations": 98,
+          "finalized": {
+            "epoch": "0x2",
+            "root": "0xb257b150575aee0588ff1c126eecb81cf3ce0d413ece092bd42cba17080bfbc4"
+          }
+        }
+      ],
+      "categoryCompletionEvents": {
+        "block": 160,
+        "attestation": 798,
+        "attester_slashing": 160,
+        "bls_to_execution_change": 160,
+        "sync_committee_message": 159,
+        "voluntary_exit": 159
+      }
+    },
+    "arm64": {
+      "distributed": [
+        {
+          "finalizedBlocksWithRemoteSync": 0,
+          "minimumFinalizedEpoch": 2,
+          "nodes": 2,
+          "realLibp2p": true,
+          "scenario": "capella-distributed-finality",
+          "stableObservations": 3,
+          "syncInclusionMustExceedSlot": 0,
+          "syncQualification": false,
+          "syncRotation": false,
+          "validatorsPerNode": 32
+        }
+      ],
+      "stops": [
+        {
+          "healthy": true,
+          "clockHealthy": true,
+          "attestations": 98,
+          "finalized": {
+            "epoch": "0x2",
+            "root": "0xc9e836ff31e8609641d2b5ea1197a1096e3ef1e7526d3f3f20a3884a49164cdc"
+          }
+        },
+        {
+          "healthy": true,
+          "clockHealthy": true,
+          "attestations": 102,
+          "finalized": {
+            "epoch": "0x2",
+            "root": "0xc9e836ff31e8609641d2b5ea1197a1096e3ef1e7526d3f3f20a3884a49164cdc"
+          }
+        }
+      ],
+      "categoryCompletionEvents": {
+        "block": 157,
+        "attestation": 781,
+        "attester_slashing": 157,
+        "bls_to_execution_change": 157,
+        "sync_committee_message": 156,
+        "voluntary_exit": 156
+      }
+    }
+  },
+  "amd64Qualified": false,
+  "wanQualified": false,
+  "productionQualified": false
+}

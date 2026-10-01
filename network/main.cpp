@@ -17,6 +17,7 @@
 #include "capella_catalog_relay.hpp"
 #include "capella_attestation_delivery.hpp"
 #include "capella_head_catalog_relay.hpp"
+#include "capella_relay_schedule.hpp"
 #include "capella_peer_core.hpp"
 #include "capella_block_delivery.hpp"
 #include "altair_vote_delivery.hpp"
@@ -110,7 +111,7 @@ class Network {
  std::map<std::string,uint64_t> budget_rejections_;uint64_t failed_status_=0;unsigned trace_ticks_=0;
  unsigned retry_trace_count_=0,periodic_trace_count_=0,vote_delta_trace_count_=0;
  std::map<std::string,std::shared_ptr<GossipProgress>> gossip_progress_;size_t gossip_active_=0;std::string gossip_last_;bool drop_gossip_reply_=std::getenv("NANO_TEST_DROP_GOSSIP_REPLY_ONCE")!=nullptr;
- struct Peer {PeerInfo info;Json status;CapellaSendPacer capella_pacer;std::shared_ptr<AltairStreamSender> capella_sender;std::shared_ptr<int> capella_generation=std::make_shared<int>(0);std::shared_ptr<AltairRelayProgress> capella_blocks,capella_votes,capella_slashings,capella_bls_changes,capella_sync_messages,capella_exits;std::shared_ptr<AltairRelayProgress> altair_progress=std::make_shared<AltairRelayProgress>(),altair_vote_progress=std::make_shared<AltairRelayProgress>();std::shared_ptr<AltairRelayProgress> slashing_progress=std::make_shared<AltairRelayProgress>(),exit_progress=std::make_shared<AltairRelayProgress>();std::chrono::steady_clock::time_point status_seen=std::chrono::steady_clock::now();unsigned next_bellatrix_kind=0;bool next_altair_vote=false;std::shared_ptr<BftVoteKnowledge> bft_known=std::make_shared<BftVoteKnowledge>();bool syncing=false;bool previous_bft_page=false;std::chrono::steady_clock::time_point fragment_retry{};};
+ struct Peer {PeerInfo info;Json status;CapellaRelaySchedule capella_schedule;CapellaSendPacer capella_pacer;std::shared_ptr<AltairStreamSender> capella_sender;std::shared_ptr<int> capella_generation=std::make_shared<int>(0);std::shared_ptr<AltairRelayProgress> capella_blocks,capella_votes,capella_slashings,capella_bls_changes,capella_sync_messages,capella_exits;std::shared_ptr<AltairRelayProgress> altair_progress=std::make_shared<AltairRelayProgress>(),altair_vote_progress=std::make_shared<AltairRelayProgress>();std::shared_ptr<AltairRelayProgress> slashing_progress=std::make_shared<AltairRelayProgress>(),exit_progress=std::make_shared<AltairRelayProgress>();std::chrono::steady_clock::time_point status_seen=std::chrono::steady_clock::now();unsigned next_bellatrix_kind=0;bool next_altair_vote=false;std::shared_ptr<BftVoteKnowledge> bft_known=std::make_shared<BftVoteKnowledge>();bool syncing=false;bool previous_bft_page=false;std::chrono::steady_clock::time_point fragment_retry{};};
  std::map<std::string,Peer> peers_;std::vector<PeerInfo> seeds_;std::set<std::string> connecting_,polling_,bft_polling_;
  std::vector<libp2p::multi::Multiaddress> bootstrap_;
  std::shared_ptr<libp2p::network::DnsaddrResolver> resolver_;
@@ -184,7 +185,7 @@ class Network {
   do{
    if(consensus_peer(it->second.status)&&!altair_relay_budget_.busy(it->first)){
     auto& peer=it->second;const auto id=it->first;const auto info=peer.info;const auto generation=peer.capella_generation;
-    const auto step=peer.next_bellatrix_kind++%6;const std::string kind=step==0?"block":step==1?"attestation":step==2?"attester_slashing":step==3?"bls_to_execution_change":step==4?"sync_committee_message":"voluntary_exit";
+    const auto step=peer.capella_schedule.next();const std::string kind=step==0?"block":step==1?"attestation":step==2?"attester_slashing":step==3?"bls_to_execution_change":step==4?"sync_committee_message":"voluntary_exit";
     auto& cache=step==0?peer.capella_blocks:step==1?peer.capella_votes:step==2?peer.capella_slashings:step==3?peer.capella_bls_changes:step==4?peer.capella_sync_messages:peer.capella_exits;
     if(!cache)cache=std::make_shared<AltairRelayProgress>(capella_relay_.at("acknowledgedRoots").get<size_t>());const auto knowledge=cache;
     if(!altair_relay_budget_.acquire(id))return;altair_last_peer_=id;

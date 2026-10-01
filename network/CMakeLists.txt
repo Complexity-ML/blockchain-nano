@@ -162,3 +162,7 @@ target_compile_definitions(nano-capella-head-catalog-tests PRIVATE FMT_CONSTEVAL
 target_link_libraries(nano-capella-head-catalog-tests PRIVATE p2p::p2p)
 add_test(NAME capella_head_catalog COMMAND nano-capella-head-catalog-tests)
 set_tests_properties(capella_head_catalog PROPERTIES TIMEOUT 20)
+
+add_executable(nano-capella-relay-schedule-tests test_capella_relay_schedule.cpp)
+add_test(NAME capella_relay_schedule COMMAND nano-capella-relay-schedule-tests)
+set_tests_properties(capella_relay_schedule PROPERTIES TIMEOUT 10)

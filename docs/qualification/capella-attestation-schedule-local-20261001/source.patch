@@ -1,0 +1,96 @@
+diff --git a/network/CMakeLists.txt b/network/CMakeLists.txt
+index 49cfe0a..e14c7e6 100644
+--- a/network/CMakeLists.txt
++++ b/network/CMakeLists.txt
+@@ -162,3 +162,7 @@ target_compile_definitions(nano-capella-head-catalog-tests PRIVATE FMT_CONSTEVAL
+ target_link_libraries(nano-capella-head-catalog-tests PRIVATE p2p::p2p)
+ add_test(NAME capella_head_catalog COMMAND nano-capella-head-catalog-tests)
+ set_tests_properties(capella_head_catalog PROPERTIES TIMEOUT 20)
++
++add_executable(nano-capella-relay-schedule-tests test_capella_relay_schedule.cpp)
++add_test(NAME capella_relay_schedule COMMAND nano-capella-relay-schedule-tests)
++set_tests_properties(capella_relay_schedule PROPERTIES TIMEOUT 10)
+diff --git a/network/main.cpp b/network/main.cpp
+index 466184c..6b150e8 100644
+--- a/network/main.cpp
++++ b/network/main.cpp
+@@ -17,6 +17,7 @@
+ #include "capella_catalog_relay.hpp"
+ #include "capella_attestation_delivery.hpp"
+ #include "capella_head_catalog_relay.hpp"
++#include "capella_relay_schedule.hpp"
+ #include "capella_peer_core.hpp"
+ #include "capella_block_delivery.hpp"
+ #include "altair_vote_delivery.hpp"
+@@ -110,7 +111,7 @@ class Network {
+  std::map<std::string,uint64_t> budget_rejections_;uint64_t failed_status_=0;unsigned trace_ticks_=0;
+  unsigned retry_trace_count_=0,periodic_trace_count_=0,vote_delta_trace_count_=0;
+  std::map<std::string,std::shared_ptr<GossipProgress>> gossip_progress_;size_t gossip_active_=0;std::string gossip_last_;bool drop_gossip_reply_=std::getenv("NANO_TEST_DROP_GOSSIP_REPLY_ONCE")!=nullptr;
+- struct Peer {PeerInfo info;Json status;CapellaSendPacer capella_pacer;std::shared_ptr<AltairStreamSender> capella_sender;std::shared_ptr<int> capella_generation=std::make_shared<int>(0);std::shared_ptr<AltairRelayProgress> capella_blocks,capella_votes,capella_slashings,capella_bls_changes,capella_sync_messages,capella_exits;std::shared_ptr<AltairRelayProgress> altair_progress=std::make_shared<AltairRelayProgress>(),altair_vote_progress=std::make_shared<AltairRelayProgress>();std::shared_ptr<AltairRelayProgress> slashing_progress=std::make_shared<AltairRelayProgress>(),exit_progress=std::make_shared<AltairRelayProgress>();std::chrono::steady_clock::time_point status_seen=std::chrono::steady_clock::now();unsigned next_bellatrix_kind=0;bool next_altair_vote=false;std::shared_ptr<BftVoteKnowledge> bft_known=std::make_shared<BftVoteKnowledge>();bool syncing=false;bool previous_bft_page=false;std::chrono::steady_clock::time_point fragment_retry{};};
++ struct Peer {PeerInfo info;Json status;CapellaRelaySchedule capella_schedule;CapellaSendPacer capella_pacer;std::shared_ptr<AltairStreamSender> capella_sender;std::shared_ptr<int> capella_generation=std::make_shared<int>(0);std::shared_ptr<AltairRelayProgress> capella_blocks,capella_votes,capella_slashings,capella_bls_changes,capella_sync_messages,capella_exits;std::shared_ptr<AltairRelayProgress> altair_progress=std::make_shared<AltairRelayProgress>(),altair_vote_progress=std::make_shared<AltairRelayProgress>();std::shared_ptr<AltairRelayProgress> slashing_progress=std::make_shared<AltairRelayProgress>(),exit_progress=std::make_shared<AltairRelayProgress>();std::chrono::steady_clock::time_point status_seen=std::chrono::steady_clock::now();unsigned next_bellatrix_kind=0;bool next_altair_vote=false;std::shared_ptr<BftVoteKnowledge> bft_known=std::make_shared<BftVoteKnowledge>();bool syncing=false;bool previous_bft_page=false;std::chrono::steady_clock::time_point fragment_retry{};};
+  std::map<std::string,Peer> peers_;std::vector<PeerInfo> seeds_;std::set<std::string> connecting_,polling_,bft_polling_;
+  std::vector<libp2p::multi::Multiaddress> bootstrap_;
+  std::shared_ptr<libp2p::network::DnsaddrResolver> resolver_;
+@@ -184,7 +185,7 @@ class Network {
+   do{
+    if(consensus_peer(it->second.status)&&!altair_relay_budget_.busy(it->first)){
+     auto& peer=it->second;const auto id=it->first;const auto info=peer.info;const auto generation=peer.capella_generation;
+-    const auto step=peer.next_bellatrix_kind++%6;const std::string kind=step==0?"block":step==1?"attestation":step==2?"attester_slashing":step==3?"bls_to_execution_change":step==4?"sync_committee_message":"voluntary_exit";
++    const auto step=peer.capella_schedule.next();const std::string kind=step==0?"block":step==1?"attestation":step==2?"attester_slashing":step==3?"bls_to_execution_change":step==4?"sync_committee_message":"voluntary_exit";
+     auto& cache=step==0?peer.capella_blocks:step==1?peer.capella_votes:step==2?peer.capella_slashings:step==3?peer.capella_bls_changes:step==4?peer.capella_sync_messages:peer.capella_exits;
+     if(!cache)cache=std::make_shared<AltairRelayProgress>(capella_relay_.at("acknowledgedRoots").get<size_t>());const auto knowledge=cache;
+     if(!altair_relay_budget_.acquire(id))return;altair_last_peer_=id;
+diff --git a/network/capella_relay_schedule.hpp b/network/capella_relay_schedule.hpp
+new file mode 100644
+index 0000000..490f42a
+--- /dev/null
++++ b/network/capella_relay_schedule.hpp
+@@ -0,0 +1,19 @@
++#pragma once
++#include <array>
++#include <cstddef>
++
++// One catalog per peer still owns the existing relay budget and send pacer.
++// Interleave time-sensitive attestations with every background category;
++// keep head delivery, sync, slashing, credential changes and exits non-starving.
++// State is bounded (no ever-growing counter) and belongs to one peer session.
++class CapellaRelaySchedule {
++ std::size_t background_=0;
++ bool attestation_=false;
++public:
++ unsigned next(){
++  if(attestation_){attestation_=false;return 1;}
++  static constexpr std::array<unsigned,5> background{0,2,3,4,5};
++  const auto kind=background[background_];
++  background_=(background_+1)%background.size();attestation_=true;return kind;
++ }
++};
+diff --git a/network/test_capella_relay_schedule.cpp b/network/test_capella_relay_schedule.cpp
+new file mode 100644
+index 0000000..e704329
+--- /dev/null
++++ b/network/test_capella_relay_schedule.cpp
+@@ -0,0 +1,23 @@
++#include "capella_relay_schedule.hpp"
++#include <array>
++#include <iostream>
++#include <stdexcept>
++void check(bool value,const char* message){if(!value)throw std::runtime_error(message);}
++int main(){try{
++ // Every background catalog is followed by an attestation opportunity. Large
++ // histories or failed/empty categories cannot queue four other kinds first.
++ CapellaRelaySchedule schedule;std::array<unsigned,6> count{};
++ for(unsigned i=0;i<10000;++i){const auto kind=schedule.next();check(kind<6,"unknown category");++count[kind];if(i%2)check(kind==1,"attestation starved behind background categories");else check(kind!=1,"background category starved");}
++ check(count[1]==5000,"attestation service share");for(unsigned i:{0,2,3,4,5})check(count[i]==1000,"background service share");
++ // Check the starvation bound across all starting phases, including wrap.
++ for(unsigned phase=0;phase<10;++phase){CapellaRelaySchedule q;for(unsigned i=0;i<phase;++i)q.next();std::array<bool,6> seen{};for(unsigned i=0;i<10;++i)seen[q.next()]=true;for(bool s:seen)check(s,"category missing from bounded service window");}
++ // Different peers/sessions advance independently, even after one stalls.
++ CapellaRelaySchedule slow,fast;check(slow.next()==0,"fresh session head first");for(unsigned i=0;i<93;++i)fast.next();check(slow.next()==1,"another peer changed schedule");CapellaRelaySchedule replacement;check(replacement.next()==0&&replacement.next()==1,"replacement session inherited old phase");
++ // A simulated catalog completion delay does not accumulate delay from all
++ // other categories before the next attestation. This is a scheduling model,
++ // not a measurement of transport or a claim about WAN finality.
++ CapellaRelaySchedule model;unsigned clock=0,last_vote=0,votes=0;constexpr std::array<unsigned,6> cost{3000,1500,5000,4000,2000,6000};
++ for(unsigned i=0;i<100;++i){auto kind=model.next();clock+=cost[kind];if(kind==1){if(votes)check(clock-last_vote<=7500,"multiple background catalogs delayed next vote");last_vote=clock;++votes;}}
++ check(votes==50,"modeled attestation opportunities");
++ std::cout<<"4 scheduler scenarios passed: bounded fairness, every starting phase, peer/session independence, modeled catalog delays; not WAN qualification\n";
++}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
