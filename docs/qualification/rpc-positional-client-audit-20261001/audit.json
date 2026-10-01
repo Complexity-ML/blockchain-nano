@@ -1,0 +1,16 @@
+{
+  "status": "prepared-not-applied",
+  "baselineFiles": {
+    "include/nano/client.hpp": "34a49b499fe47028cc628610865db30335200e3d8fd5814094d7956e1a7b3271",
+    "tests/support/process.hpp": "96a8595c5c4c603272ed4a450d399f2d1e4025dac0fdef904ab9252139c3b909",
+    "tests/support/persistent_rpc.hpp": "74226762738cefa0a3a4f1a18df78890c4d6cc87a168443ca84e2b1056c99a0d",
+    "tests/support/persistent_websocket_rpc.hpp": "7a33f30d6b6efde686391860e34dd64523676a530c69382a4c29d1d43e857c5a",
+    "tests/test_events.cpp": "cd6d8529876c05a57c80f32c780100307f5151a1c2e627654dfb9398c7b0f20b",
+    "tests/test_validator.cpp": "acccde3f1f5697ca3aa91da4d7c3ffbb41955e2e9a840b06f8c5d45c2beee134"
+  },
+  "patchSha256": "ab9da619cf4d48cbff975fb65f08d65a4342f2d0161c4c44745088c890537e93",
+  "runtimeAffected": "RpcClient overload and legacy validator_submitBlock call",
+  "doesNotNormalizeInvalidJsonObjects": true,
+  "liveCampaignStillUsesOldRuntime": true,
+  "nextValidation": "validator/events/network signed and BFT positive paths, explicit malformed-object rejection and unchanged state; then full regression of changed candidate"
+}

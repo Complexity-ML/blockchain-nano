@@ -1,0 +1,68 @@
+--- a/include/nano/client.hpp
++++ b/include/nano/client.hpp
+@@ -14,6 +14,8 @@
+  RpcClient(std::vector<std::string> nodes,std::chrono::milliseconds timeout=std::chrono::seconds(10),unsigned retries=3);
+  void pin_chain(const Int& chain_id,const Bytes& genesis_hash);
+  Json call(const std::string& method,Json params=Json::array());
++ // Braced arguments must stay positional, including a single JSON object.
++ Json call(const std::string& method,Json::initializer_list_t params){return call(method,Json::array(params));}
+  std::string current_node() const {std::lock_guard lock(mutex_);return nodes_.at(current_);}
+ };
+ class ValidatorStats {
+--- a/tests/support/process.hpp
++++ b/tests/support/process.hpp
+@@ -67,6 +67,7 @@
+ inline Json success(const Result& result){check(result.code==0,result.err+result.out);return Json::parse(result.out);}
+ inline std::string url(int port){return "http://127.0.0.1:"+std::to_string(port);}
+ inline Json rpc(int port,const std::string& method,Json params=Json::array()){RpcClient client({url(port)},5s,1);return client.call(method,std::move(params));}
++inline Json rpc(int port,const std::string& method,Json::initializer_list_t params){return rpc(port,method,Json::array(params));}
+ inline void until(const std::function<bool()>& predicate,const std::string& label,int seconds=25){auto end=std::chrono::steady_clock::now()+std::chrono::seconds(seconds);while(std::chrono::steady_clock::now()<end){if(predicate()){std::cout<<label<<std::endl;return;}std::this_thread::sleep_for(100ms);}throw std::runtime_error("timeout: "+label);}
+ inline std::string key(unsigned n=1){return hex(bytes(Int(n),32));}
+ inline const std::string account="0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf";
+--- a/tests/support/persistent_rpc.hpp
++++ b/tests/support/persistent_rpc.hpp
+@@ -17,6 +17,7 @@
+  uint64_t id_=0;
+ public:
+  explicit PersistentRpc(uint16_t port):port_(port){}
++ nano::Json call(const std::string& method,nano::Json::initializer_list_t params,const std::string& origin={}){return call(method,nano::Json::array(params),origin);}
+  nano::Json call(const std::string& method,nano::Json params=nano::Json::array(),const std::string& origin={}){
+   namespace http=boost::beast::http;
+   if(!stream_.socket().is_open())stream_.connect({boost::asio::ip::make_address("127.0.0.1"),port_});
+--- a/tests/support/persistent_websocket_rpc.hpp
++++ b/tests/support/persistent_websocket_rpc.hpp
+@@ -13,6 +13,7 @@
+   boost::beast::get_lowest_layer(socket_).connect({boost::asio::ip::make_address("127.0.0.1"),port});
+   socket_.handshake("127.0.0.1","/");socket_.read_message_max(16*1024*1024);
+  }
++ nano::Json call(const std::string& method,nano::Json::initializer_list_t params){return call(method,nano::Json::array(params));}
+  nano::Json call(const std::string& method,nano::Json params=nano::Json::array()){
+   auto body=nano::Json{{"jsonrpc","2.0"},{"id",++id_},{"method",method},{"params",params}}.dump();
+   context_.restart();boost::beast::error_code failure;bool expired=false;
+--- a/tests/test_events.cpp
++++ b/tests/test_events.cpp
+@@ -17,10 +17,11 @@
+  alloc[multi]={{"code","0x6008600760006000a260006000a000"}};
+  alloc[reverter]={{"code","0x600760006000a160006000fd"}};
+  {Blockchain chain(path,Genesis::from_json({{"alloc",alloc}}));Rpc rpc(chain);
+- auto request=[](std::string method,Json p=Json::array()){return Json{{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",p}};};
+- auto call=[&](std::string method,Json p=Json::array()){auto response=rpc.handle(request(method,p));if(response.contains("error"))throw std::runtime_error(response.dump());return response["result"];};
++ auto request=[](std::string method,Json::initializer_list_t p={}){return Json{{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",Json::array(p)}};};
++ auto call=[&](std::string method,Json::initializer_list_t p={}){auto response=rpc.handle(request(method,p));if(response.contains("error"))throw std::runtime_error(response.dump());return response["result"];};
+  auto pending=call("eth_newPendingTransactionFilter");auto heads=call("eth_newBlockFilter");
+  Json criterion={{"address",contract},{"topics",Json::array({Json::array({topic,hex(bytes(Int(8),32))})})}};
++ check(request("eth_newFilter",{criterion})["params"]==Json::array({criterion}),"single filter object remains positional");
+  auto filter=call("eth_newFilter",{criterion});
+  Transaction tx;tx.to=contract;tx.gas=100000;tx.gas_price=2000000000;auto signed_tx=SignedTransaction::sign(tx,key);chain.submit(signed_tx);auto first=chain.mine(sender,24);
+  check(call("eth_getFilterChanges",{pending})==Json::array({hex(signed_tx.hash())}),"pending event survives mining before poll");
+--- a/tests/test_validator.cpp
++++ b/tests/test_validator.cpp
+@@ -60,6 +60,8 @@
+  check(block["transactions"].size()==1&&block["coinbase"]==address(validator)&&block["blockNumber"]=="0x1","block template includes selected transactions");
+  check(chain.state().root()==before&&chain.tip().header.number==0&&chain.pending_count()==1&&chain.event_cursor()==cursor,"template leaves state pool and events unchanged");
+  rejects([&]{client.call("validator_getBlockTemplate",{sender});},"template rejects wrong producer");
++ bool malformed_params=false;try{client.call("validator_submitBlock",block);}catch(const RpcError& e){malformed_params=e.code==-32602;}
++ check(malformed_params&&chain.state().root()==before&&chain.tip().header.number==0&&chain.pending_count()==1&&chain.event_cursor()==cursor,"explicit object params are rejected without mutating chain pool or events");
+  auto corrupt=block;corrupt["stateRoot"]=hex(Bytes(32));corrupt.erase("hash");check(client.call("validator_submitBlock",{corrupt})["success"]==false,"submission rejects false commitments");
+  check(chain.tip().header.number==0&&chain.state().root()==before,"rejected submission leaves state intact");
+  auto result=client.call("validator_submitBlock",{block});check(result["success"]==true&&result["blockNumber"]=="0x1"&&result["transactionCount"]==1,"HTTP validator produces block");

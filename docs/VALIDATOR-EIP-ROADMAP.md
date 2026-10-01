@@ -5536,3 +5536,17 @@ instantané archivé, pas de réussite terminale globale revendiquée.
 Les 13 injections Linux non enregistrées et 9 gates outils/corpus restent
 ouverts ; patch préparé non appliqué durant cette campagne.
 [Compilation et snapshot](qualification/full-regression-arm64-20261001/build-complete-tests-running/README.md).
+
+
+### 2026-10-01 — régression complète : défaut de paramètres RPC client identifié
+
+Snapshot non terminal : events/validator/network/signed_network/bft_network
+échouent avec -32602. La signature RpcClient::call(Json params) permet la copie
+d’un objet JSON unique passé entre accolades ; le chemin CLI de validation
+legacy appelle aussi validator_submitBlock de cette façon. Défaut réel du
+client, serveur strict correct. Surcharge de liste construisant explicitement
+un tableau et garde négative de non-mutation préparées ; git apply --check
+passe, patch non appliqué pendant la campagne gelée. Collecter tous les
+échecs, appliquer/corriger en une passe et qualifier le candidat modifié.
+Aucun succès complet ni nouvelle qualification runtime revendiqué.
+[Diagnostic et patch non appliqué](qualification/rpc-positional-client-audit-20261001/README.md).
