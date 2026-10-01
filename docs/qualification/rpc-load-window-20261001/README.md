@@ -27,3 +27,13 @@ Onze contrôles du helper passent via clang++ -DNDEBUG -std=c++20 -Wall
 deadline exacte et plafond de tours. Ce n'est pas un succès du réseau réel.
 Le banc C++ complet et ses quatre scénarios sont à compiler et qualifier dans
 Docker après les campagnes c10426b2 actuellement figées et en cours.
+
+La campagne initiale a ensuite révélé deux échecs locaux supplémentaires
+`rpc_cost_paris` et `rpc_cost_shanghai` : une seule simulation OOG par worker
+se termine en environ 50–100 ms, avant la première avancée BFT. Le banc local
+répète ces simulations OOG jusqu'à une hauteur positive observée, sous le
+même plafond de 45 secondes / 1024 tours. Chaque tour vérifie toujours OOG
+et l'identité RPC ; la certification du transfert, le rollback, l'audit et
+la réouverture restent requis. Les scénarios successful/nested gardent leur
+unique simulation et leur exécution signée à la quote. Le nombre réel de tours
+est consigné. Les six scénarios corrigés restent à qualifier dans Docker.

@@ -1,5 +1,6 @@
 #include "nano/http.hpp"
 #include "support/persistent_rpc.hpp"
+#include "support/rpc_load_window.hpp"
 #include <thread>
 #include <barrier>
 #include <iostream>
@@ -31,12 +32,14 @@ int main(){try{
   Transaction tx;tx.to=recipient;tx.value=1;tx.gas_price=2000000000;auto signed_tx=SignedTransaction::sign(tx,sender_key);require(chain.submit(signed_tx),"fixture transfer rejected");
   setenv("NANO_RPC_COST_BFT_KEY",hex(key).c_str(),1);rpc.load_wallets({{"bft",{{"key_env","NANO_RPC_COST_BFT_KEY"},{"journal",(path/"votes").string()}}}},"127.0.0.1");
   HttpServer server(rpc,"127.0.0.1",0);Running running(server);std::barrier gate(5);std::vector<std::thread> workers;std::vector<Json> samples(4);std::vector<std::string> failures(4);
-  for(unsigned w=0;w<4;++w)workers.emplace_back([&,w]{gate.arrive_and_wait();try{PersistentRpc client(server.port());const char* method=w%2?"eth_estimateGas":"eth_call";const char* tag=w<2?"latest":"pending";auto begin=std::chrono::steady_clock::now();bool rejected=false;
-   Json response;
+  for(unsigned w=0;w<4;++w)workers.emplace_back([&,w]{gate.arrive_and_wait();try{PersistentRpc client(server.port());const char* method=w%2?"eth_estimateGas":"eth_call";const char* tag=w<2?"latest":"pending";auto begin=std::chrono::steady_clock::now();unsigned round=0;bool observed=false;
+   while(continue_rpc_load(round,1,!successful,observed,std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-begin),std::chrono::seconds(45))){
+   bool rejected=false;Json response;
    try{response=client.call(method,Json::array({args,tag}));}catch(const PersistentRpcError& e){rejected=e.code==3&&std::string(e.what()).find("Out of gas")!=std::string::npos;}
    if(successful){require(!rejected&&!response.is_null(),"successful expensive simulation failed");if(w%2){auto estimate=quantity(response);require(estimate>23000000&&estimate<=30000000,"expensive estimate outside expected gas range");auto trial=args;trial["gas"]=response;require(client.call("eth_call",Json::array({trial,tag}))==hex(bytes(Int(42),32)),"estimated gas cannot execute expensive contract");}else require(response==hex(bytes(Int(42),32)),"expensive call returns wrong value");}
    else require(rejected,"expensive simulation returned wrong result");require(client.call("eth_chainId")=="0x539","identity read failed after expensive simulation");auto height=quantity(client.call("eth_blockNumber"));
-   samples[w]={{"method",method},{"tag",tag},{"response",response},{"durationMs",std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-begin).count()},{"heightDuringWorkload",quantity(height)}};
+   samples[w]={{"method",method},{"tag",tag},{"response",response},{"durationMs",std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-begin).count()},{"heightDuringWorkload",quantity(height)},{"rounds",++round}};observed=height>0;
+   }
   }catch(const std::exception& e){failures[w]=e.what();}});
   gate.arrive_and_wait();for(auto& worker:workers)worker.join();
   Json signed_probe=nullptr;
