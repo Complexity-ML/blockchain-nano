@@ -2575,3 +2575,18 @@ Patch 97f4a19d dans checkout isolé seulement. Pas de nouvelle qualification
 WAN, panne physique, release, fork EVM ou bridge ; régression complète main
 encore active avec échecs ouverts. Tous les critères originaux restent requis.
 [Preuves terminales et échec initial](qualification/linux-sync-registration-20261001/README.md).
+
+
+### 2026-10-01 — diagnostics de capacité et échec RPC maintenu
+
+Sur volume disque existant, exécutables originaux inchangés : gros blocs
+Paris/Shanghai réussis en 22.68/22.50 s, installation relocalisée réussie.
+/tmp de la campagne complète était noexec et limité à 128 Mio ; ces replays
+ne suppriment pas ses échecs historiques ni ne qualifient la production.
+Le RPC multi-nœud échoue aussi sur disque : préparation/verrou <1.5 ms,
+mais estimations atteignent la limite de 5 s. Expérience de déplacement GMP
+qualifiée cœur/RPC mais insuffisante sous charge, donc retirée. Aucun délai,
+quorum ou règle EVM assoupli. Build isolé à reconstruire après retrait avant
+réutilisation ; sources main et binaires originaux de campagne inchangés.
+Les critères initiaux et toutes les exigences restantes demeurent ouverts.
+[Diagnostics et expérience retirée](qualification/load-capacity-diagnostics-20261001/README.md).
