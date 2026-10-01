@@ -1,16 +1,33 @@
-# Fair launch Base–Nano — proposition, non déployée
+# Fair launch Doppler / Base–Nano — préparé, non déployé
 
 Statut : cadrage technique. Aucun contrat de vente ni bridge de lancement n'est
 implémenté par ce document. Aucun financement réel n'est ouvert. La cible de
 10 000 USDC vient de l'exemple utilisateur ; elle reste un paramètre à confirmer.
 
-## Choix utilisateur courant
+## Choix utilisateur courant — Doppler retenu le 1 octobre 2026
 
-Fair launch sur bonding curve, sans pool initiale financée avec 100 USDC.
-La pool V3 intervient après la graduation. Les variantes de petite pool restent
-ci-dessous comme historique et leurs tests comme qualification du DEX ; elles
-ne constituent plus la stratégie de lancement. Un graphique propriétaire est
-prévu, sans dépendance à une reconnaissance automatique par DexScreener.
+Plateforme retenue explicitement par l’utilisateur : https://www.doppler.lol/.
+Le lancement est préparé sur Base, avec USDC comme numéraire souhaité, sans
+petite pool initiale financée par 100 USDC. Le parcours Dynamic a été exploré ;
+aucune configuration finale ni transaction de création n'est approuvée ici.
+
+Employer le protocole et l’application Doppler pour la découverte du prix et
+la migration de liquidité, plutôt que développer une courbe de vente maison.
+Leur site et leur documentation officiels confirment Base et une interface/SDK.
+Le mode, les contrats effectivement utilisés, le numéraire USDC disponible,
+les paramètres économiques, frais et droits de migration devront être vérifiés
+sur la configuration finale. Le site décrit des migrations vers Uniswap v2/v4 :
+la graduation V3 de l’ancien cadrage n’est donc pas une contrainte retenue.
+
+L’intégration à Doppler ne transforme pas le token Base en NANO natif et ne
+constitue pas un bridge. Sa relation avec l’actif Nano reste à définir et tester.
+La visibilité du marché Doppler et l’indexation externe à T0 sont deux critères
+séparés : vérifier les intégrations effectivement disponibles, sans garantir
+DexScreener par le seul déploiement. Aucune vente ni dépense ouverte ici.
+
+Sources officielles consultées le 2026-10-01 :
+- https://www.doppler.lol/
+- https://docs.doppler.lol/
 
 ## Actif et compatibilité
 
@@ -41,13 +58,13 @@ Les interfaces doivent afficher « en attente » jusqu'au règlement, sans prome
 un prix distant immédiat. L'arbitrage n'est ni une primitive de consensus ni une
 garantie de convergence sans bridge fonctionnel.
 
-## Courbe et réserves
+## Réserves et ancien prototype de courbe
 
-Prototype proposé : prix marginal p(s) = p0 + k*s, s étant l'offre nette vendue.
+Ancien prototype maison, écarté au profit du protocole Doppler : prix marginal p(s) = p0 + k*s, s étant l'offre nette vendue.
 Acheter q coûte C(s+q)-C(s), avec C(s)=p0*s+k*s²/2. Vendre q rembourse
 C(s)-C(s-q). Le code devra utiliser des entiers et un arrondi conservateur
 (achats vers le haut, ventes vers le bas), avec unités explicites 18/6 décimales.
-Ce choix mathématique n'est pas encore implémenté ou validé.
+Ce prototype n’est pas implémenté et ne décrit pas l’algorithme de Doppler ; ne pas en faire la spécification du lancement retenu.
 
 Les réserves restent dans le contrat, disponibles pour les ventes autorisées.
 « Séquestrées » ne signifie pas « aucun remboursement ». Les achats bruts cumulés
@@ -56,12 +73,18 @@ La graduation dépend des réserves nettes comptabilisées, sans compter deux fo
 USDC canonique et sa représentation bridgée ni les transferts non sollicités.
 Aucun retrait administrateur de cette réserve pendant la vente.
 
-Il reste à fixer p0, k, l'allocation, le seuil, la date limite, la politique de
+Il reste à fixer les paramètres de l’enchère Doppler, l’allocation, le seuil, la date limite, la politique de
 frais, le sort des invendus et le mécanisme de sortie si le seuil n'est jamais
 atteint. Un remboursement au prix initial de chaque achat n'est pas équivalent
 à une revente sur courbe, notamment si les jetons sont transférables.
 
 ## Graduation
+
+La destination DEX et les droits sur les réserves suivent le migrateur Doppler
+retenu et ses contrats vérifiés. Les contraintes V3 ci-dessous ne s’appliquent
+que si une position V3 est effectivement prévue ; aucun retrait libre d’USDC
+pour financer Nano ne doit être présumé à partir du terme « migration ».
+
 
 La clôture canonique bloque les nouveaux règlements et émet un identifiant de
 graduation unique. Les ordres en vol doivent être réglés ou remboursables avant
@@ -152,11 +175,11 @@ Référence : https://developers.uniswap.org/docs/protocols/v3/guides/managing-l
 
 1. Réserve canonique NANO et représentation Base : preuve d'adossement, émission
    limitée, retrait unique, finalité et gestion d'une finalité contradictoire.
-2. Courbe locale : conservation des réserves, limites d'offre, slippage, échéance,
+2. Configuration/protocole Doppler : conservation des réserves, limites d'offre, slippage, échéance,
    réentrance, décimales, arrondis, tokens refusant les transferts et faillite de vente.
 3. Accès distant : messages forgés, doublons, désordre, reorg, perte de relais,
    expiration concurrente à l'exécution et impossibilité de double remboursement.
-4. Graduation V3 : seuil net, saturation d'offre, achats concurrents au seuil,
+4. Graduation selon le migrateur Doppler choisi : seuil net, saturation d'offre, achats concurrents au seuil,
    transaction échouée puis rejouée, prix initial, pool préexistante et position verrouillée.
 5. Banc Base-compatible + Nano réel : mêmes séquences d'ordres, conservation
    globale de l'offre et des fonds ; coupure du bridge au milieu de chaque étape.
