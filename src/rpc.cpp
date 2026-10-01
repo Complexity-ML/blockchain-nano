@@ -225,7 +225,21 @@ Json Rpc::dispatch(const std::string& method,const Json& p,const Estimate& estim
   result["effectiveGasPrice"]=quantity(b->transactions.at(size_t(u64(receipt->index))).tx.effective_gas_price(b->header.base_fee.value_or(Int(0))));return result;
  }
  if(method=="eth_sign"||method=="personal_sign"||method=="eth_signTypedData"||method=="eth_signTypedData_v4"||method=="eth_signTransaction"||method=="eth_sendTransaction")return account_request(method,p,estimate);
- if(method=="eth_sendRawTransaction"){arity(p,1,1);const auto& raw=p[0].get_ref<const std::string&>();if(raw.size()>2*1024*1024+2)throw RpcError(-32000,"transaction exceeds Nano pool byte limit");auto bytes=unhex(raw);if(envelope_chain_id(bytes)!=chain_.genesis().chain_id)throw std::invalid_argument("wrong chain ID");charge_transactions(1);auto tx=SignedTransaction::decode(bytes);if(!chain_.submit(tx))throw RpcError(-32000,"Transaction rejected by pool");return hex(tx.hash());}
+ if(method=="eth_sendRawTransaction"){
+  arity(p,1,1);const auto& raw=p[0].get_ref<const std::string&>();
+  if(raw.size()>2*1024*1024+2)throw RpcError(-32000,"transaction exceeds Nano pool byte limit");
+  Bytes bytes;Int chain_id;
+  try{bytes=unhex(raw);chain_id=envelope_chain_id(bytes);}
+  catch(const std::invalid_argument&){
+   // Only a proven foreign envelope bypasses local work admission. Malformed
+   // hex/RLP has no authenticated chain ID and shares the same bounded budget
+   // as malformed gossip, across connections, batches and transports.
+   charge_transactions(1);throw;
+  }
+  if(chain_id!=chain_.genesis().chain_id)throw std::invalid_argument("wrong chain ID");
+  charge_transactions(1);auto tx=SignedTransaction::decode(bytes);
+  if(!chain_.submit(tx))throw RpcError(-32000,"Transaction rejected by pool");return hex(tx.hash());
+ }
  if(method=="txpool_content"||method=="txpool_status"){arity(p,0,0);auto result=chain_.pool_info(method=="txpool_content");if(method=="txpool_status")for(const auto* field:{"pending","queued"})result[field]=quantity(Int(std::to_string(result.at(field).get<uint64_t>())));return result;}
  if(method=="nno_startValidating"||method=="nno_stopValidating"){
   arity(p,0,0);
