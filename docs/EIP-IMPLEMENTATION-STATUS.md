@@ -4518,3 +4518,24 @@ Prochaine gate : îlot majoritaire connecté 384 s et retour à une finalité
 commune sous 180 s. Cette reprise WAN reste non acquise ; toutes les gates
 antérieures de production restent ouvertes.
 [Candidates et preuves](qualification/capella-historical-export-20261001/amd64/README.md).
+
+
+### 2026-10-01 — WAN T : majorité vivante, timeout Beacon à la reprise
+
+Runtime 5bd6f95, banc 9b694ef, sortie 1. La majorité Mac connectée
+finalise 2→8 pendant la coupure 384 s ; plafond pré-coupure 5 dépassé,
+VPS isolé à 2. Adresse réseau restaurée, puis deux pairs sur chaque nœud.
+
+Une lecture Beacon de finalité sur une racine immuable du VPS dépasse
+5 s sans réponse, 30,993 s murales après reconnexion. Ce nombre n’est
+ni une durée de reprise réussie ni un échec de la fenêtre entière 180 s :
+la campagne s’arrête sur l’indisponibilité de lecture. Stabilité non exécutée.
+À l’arrêt : Mac finalité 9, VPS 3 ; progrès partiel, reprise commune non acquise.
+Signataires/horloges sains ; deux conteneurs arrêtés 0 sans OOM, natif absent.
+
+Inspection : les méthodes privées Capella sont absentes de simulation_item,
+contrairement à Bellatrix. Elles s’exécutent synchroniquement dans la boucle
+HTTP, y compris export historique et attentes du verrou d’admission. Manque
+concret de dispatch borné à corriger et qualifier ; cause exclusive du timeout
+non démontrée. Aucun délai ni quorum assoupli ; S et les autres gates conservés.
+[Preuves et sources T](qualification/majority-island-20261001/attempt-t/README.md).

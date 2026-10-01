@@ -1,0 +1,31 @@
+{
+  "runtimeRevision": "5bd6f959bf3c773269d59eeda6792db6c450324e",
+  "harnessRevision": "9b694efd6a92ab8ca1b4bc95654e5849556368d3",
+  "exitCode": 1,
+  "cutMs": 384000,
+  "majorityCutPassed": true,
+  "highestMajorityEpoch": "8",
+  "preCutFinalityCeiling": "5",
+  "recoveryLimitMs": 180000,
+  "failedAfterReconnectWallMs": 30993,
+  "failure": "Error: Command failed: ssh -o BatchMode=yes -o ConnectTimeout=8 ubuntu@145.239.199.166 'sudo' '-n' 'docker' 'exec' 'nano-qualification-vps-mupl0x8q' 'curl' '-sS' '--max-time' '5' '-H' 'Accept: application/json' '--write-out' '\nNANO_HTTP_STATUS:%{http_code}' 'http://127.0.0.1:8545/eth/v1/beacon/states/0x54cdfd1bd3819608b97162e10f191178938ac882715e2c5cac38067ecd9b8329/finality_checkpoints'\ncurl: (28) Operation timed out after 5002 milliseconds with 0 bytes received\n\n    at genericNodeError (node:internal/errors:998:15)\n    at wrappedFn (node:internal/errors:543:14)\n    at ChildProcess.exithandler (node:child_process:417:12)\n    at ChildProcess.emit (node:events:509:20)\n    at maybeClose (node:internal/child_process:1108:16)\n    at ChildProcess._handle.onexit (node:internal/child_process:305:5)",
+  "recoveryQualified": false,
+  "recoveryDeadlineReached": false,
+  "stabilityExecuted": false,
+  "finalizedAtStop": {
+    "native.log": {
+      "epoch": "0x9",
+      "root": "0x94f2a354cf7bcf5cbdaa79f2c96540b82ba148883242f6feef292b2647e3a095"
+    },
+    "docker-mac.log": {
+      "epoch": "0x9",
+      "root": "0x94f2a354cf7bcf5cbdaa79f2c96540b82ba148883242f6feef292b2647e3a095"
+    },
+    "vps.log": {
+      "epoch": "0x3",
+      "root": "0x0381e5dd0986220e4f63668b838a33f9f08161613f4ba491e646edf2199d6689"
+    }
+  },
+  "productionReady": false,
+  "soleRootCauseProven": false
+}
