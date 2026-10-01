@@ -13,6 +13,13 @@ struct Frame {
  // floor remainder handles negative and oversized operands modulo 2^256.
  void push(Int value){if(stack.size()>=1024)throw std::runtime_error("Stack overflow");mpz_fdiv_r_2exp(value.get_mpz_t(),value.get_mpz_t(),256);stack.push_back(std::move(value));}
  Int pop(){if(stack.empty())throw std::runtime_error("Stack underflow");Int value=std::move(stack.back());stack.pop_back();return value;}
+ void reduce(void (*operation)(mpz_ptr,mpz_srcptr,mpz_srcptr)){
+  Int a=pop();if(stack.empty())throw std::runtime_error("Stack underflow");
+  // Retain the second operand's GMP storage for the result. Argument order
+  // remains top-of-stack first, including noncommutative SUB.
+  auto& b=stack.back();operation(b.get_mpz_t(),a.get_mpz_t(),b.get_mpz_t());
+  mpz_fdiv_r_2exp(b.get_mpz_t(),b.get_mpz_t(),256);
+ }
  std::pair<size_t,size_t> region(const Int& start,const Int& size){
   if(size==0)return {0,0};
   // Compute the quadratic expansion price before converting offsets or allocating.
@@ -59,9 +66,9 @@ EvmTask EVM::run(const ExecutionContext& ctx, unsigned depth){
  if(op>=0xa0&&op<=0xa4){if(ctx.is_static)throw std::runtime_error("LOG in static context");Int off=f.pop(),size=f.pop();Log log{ctx.address,{}, {}};for(unsigned i=0;i<unsigned(op-0xa0);++i)log.topics.push_back(bytes(f.pop(),32));log.data=f.read(off,size);f.charge(log.data.size()*8);result.logs.push_back(std::move(log));continue;}
  switch(static_cast<NanoOpCodes>(op)){
  case NanoOpCodes::STOP:done=true;break;
- case NanoOpCodes::ADD:{Int a=f.pop(),b=f.pop();f.push(a+b);break;}
- case NanoOpCodes::MUL:{Int a=f.pop(),b=f.pop();f.push(a*b);break;}
- case NanoOpCodes::SUB:{Int a=f.pop(),b=f.pop();f.push(a-b);break;}
+ case NanoOpCodes::ADD:f.reduce(mpz_add);break;
+ case NanoOpCodes::MUL:f.reduce(mpz_mul);break;
+ case NanoOpCodes::SUB:f.reduce(mpz_sub);break;
  case NanoOpCodes::DIV:{Int a=f.pop(),b=f.pop();f.push(b==0?Int(0):Int(a/b));break;}
  case NanoOpCodes::SDIV:{Int a=signed_word(f.pop()),b=signed_word(f.pop());f.push(b==0?Int(0):Int(a/b));break;}
  case NanoOpCodes::MOD:{Int a=f.pop(),b=f.pop();f.push(b==0?Int(0):Int(a%b));break;}
