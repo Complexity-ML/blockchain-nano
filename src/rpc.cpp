@@ -364,8 +364,20 @@ Json Rpc::dispatch(const std::string& method,const Json& p,const Estimate& estim
  if(method=="nano_receiveTransactions"){
   arity(p,1,1);const auto& batch=p[0];if(!batch.is_array()||batch.size()>50)throw RpcError(-32602,"gossip batch exceeds 50 transactions");
   size_t total=0;for(const auto& raw:batch){if(!raw.is_string()||raw.get_ref<const std::string&>().size()>2*1024*1024+2)throw RpcError(-32602,"invalid gossip transaction size");total+=raw.get_ref<const std::string&>().size();if(total>8*1024*1024)throw RpcError(-32602,"gossip batch exceeds byte limit");}
-  charge_transactions(batch.size());
-  Json accepted=Json::array();for(const auto& raw:batch){try{auto tx=SignedTransaction::decode(unhex(raw.get_ref<const std::string&>()));bool known=chain_.pending_transaction(tx.hash()).has_value()||chain_.store().transaction(tx.hash()).has_value();accepted.push_back(known||chain_.submit(tx));}catch(const std::invalid_argument&){accepted.push_back(false);}}
+  // Shape/aggregate limits above remain atomic. Exclude only envelopes with
+  // a proven foreign chain ID; malformed items still reserve local work.
+  // Reserve the complete local portion before decoding signatures or submitting.
+  std::vector<Bytes> payloads(batch.size());std::vector<bool> local(batch.size(),false);size_t work=0;
+  for(size_t i=0;i<batch.size();++i){try{
+   auto raw=unhex(batch[i].get_ref<const std::string&>());
+   if(envelope_chain_id(raw)!=chain_.genesis().chain_id)continue;
+   payloads[i]=std::move(raw);local[i]=true;++work;
+  }catch(const std::invalid_argument&){++work;}}
+  charge_transactions(work);
+  Json accepted=Json::array();for(size_t i=0;i<batch.size();++i){
+   if(!local[i]){accepted.push_back(false);continue;}
+   try{auto tx=SignedTransaction::decode(payloads[i]);bool known=chain_.pending_transaction(tx.hash()).has_value()||chain_.store().transaction(tx.hash()).has_value();accepted.push_back(known||chain_.submit(tx));}catch(const std::invalid_argument&){accepted.push_back(false);}
+  }
   return Json{{"processed",batch.size()},{"accepted",accepted}};
  }
  if(method=="nano_networkEventRefs"){

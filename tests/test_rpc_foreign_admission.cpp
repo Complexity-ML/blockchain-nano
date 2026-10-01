@@ -27,5 +27,25 @@ int main(){try{
  check(limited.contains("error")&&limited.at("error").at("code")==-32005,"local signature work escaped the admission bound");
  check(chain.state().root()==original&&chain.pending_count()==1,"invalid signatures or rate refusal mutated canonical state or pool");
  now+=1s;check(send(second).contains("result")&&chain.pending_count()==2,"local admission did not recover after refill");
- std::cout<<Json{{"foreignRejected",foreign},{"foreignNestedRejectedBeforeDecode",128},{"localNestedRejectedWithinBudget",64},{"localHighSRejectedWithinBudget",63},{"healthyAdmissionPreserved",true},{"localSignatureBudgetBounded",true},{"refillVerified",true},{"canonicalStateUnchanged",chain.state().root()==original}}.dump()<<'\n';return 0;
+ // Gossip must reserve the entire local portion before changing the pool.
+ // Foreign items preserve their result positions without spending local work.
+ Blockchain gossip_chain(root/"gossip",genesis);auto gossip_now=AdmissionBudget::Clock::time_point{};
+ Rpc gossip(gossip_chain,{},[&]{return gossip_now;});
+ auto receive=[&](const Json& batch){return gossip.handle(Json{{"jsonrpc","2.0"},{"id",++id},{"method","nano_receiveTransactions"},{"params",Json::array({batch})}});};
+ tx.nonce=0;tx.chain_id=7331;auto foreign_raw=hex(SignedTransaction::sign(tx,secret).raw());
+ Json foreign_batch=Json::array();for(unsigned i=0;i<50;++i)foreign_batch.push_back(i%2?hex(foreign_nested):foreign_raw);
+ for(unsigned i=0;i<10;++i){auto result=receive(foreign_batch);check(result.contains("result")&&result.at("result").at("accepted")==Json(std::vector<bool>(50,false)),"foreign gossip consumed local admission budget");}
+ check(gossip_chain.pending_count()==0&&gossip_chain.event_cursor()==0&&gossip_chain.state().root()==original,"foreign gossip mutated canonical state or events");
+ check(receive(Json::array({hex(healthy.raw()),7})).contains("error")&&gossip_chain.pending_count()==0,"mixed gossip shape partially admitted");
+ auto mixed=receive(Json::array({foreign_raw,hex(healthy.raw()),hex(foreign_nested),hex(bad.raw()),hex(local_nested)}));
+ check(mixed.contains("result")&&mixed.at("result").at("processed")==5&&mixed.at("result").at("accepted")==Json::array({false,true,false,false,false}),"mixed gossip lost order or local validation");
+ for(unsigned i=0;i<124;++i){auto result=receive(Json::array({hex(bad.raw())}));check(result.contains("result")&&result.at("result").at("accepted")==Json::array({false}),"invalid local gossip bypassed bounded signature work");}
+ tx.chain_id=1337;tx.nonce=2;auto third=SignedTransaction::sign(tx,secret);auto before=gossip_chain.event_cursor();
+ auto refused=receive(Json::array({foreign_raw,hex(second.raw()),hex(third.raw())}));
+ check(refused.contains("error")&&refused.at("error").at("code")==-32005&&gossip_chain.pending_count()==1&&gossip_chain.event_cursor()==before,"insufficient gossip batch budget partially mutated pool or events");
+ check(receive(Json::array({hex(second.raw())})).at("result").at("accepted")==Json::array({true}),"rejected gossip reservation consumed remaining local capacity");
+ check(receive(foreign_batch).contains("result"),"foreign gossip rejected by exhausted local budget");
+ check(receive(Json::array({"0x00"})).at("error").at("code")==-32005,"malformed gossip escaped local budget");
+ gossip_now+=1s;check(receive(Json::array({hex(third.raw())})).at("result").at("accepted")==Json::array({true})&&gossip_chain.pending_count()==3&&gossip_chain.state().root()==original,"gossip refill or canonical isolation failed");
+ std::cout<<Json{{"foreignRejected",foreign},{"foreignNestedRejectedBeforeDecode",128},{"localNestedRejectedWithinBudget",64},{"localHighSRejectedWithinBudget",63},{"healthyAdmissionPreserved",true},{"localSignatureBudgetBounded",true},{"refillVerified",true},{"canonicalStateUnchanged",chain.state().root()==original},{"foreignGossipRejected",550},{"mixedGossipOrderPreserved",true},{"gossipReservationAtomic",true},{"malformedGossipBudgetBounded",true},{"gossipRefillVerified",true}}.dump()<<'\n';return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
