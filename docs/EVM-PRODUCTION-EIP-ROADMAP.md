@@ -2036,3 +2036,21 @@ en lecture seule sur la base WAN S exporte désormais les 85 archives auparavant
 refusées (107/107 disponibles), checkpoint externe vérifié. Cela qualifie
 la fourniture locale, pas la reprise réseau. AMD64 et WAN restent ouverts.
 [Preuves ARM64](qualification/capella-historical-export-20261001/arm64/README.md).
+
+
+### 2026-10-01 — correction historique : candidates portables
+
+Les quatre régressions ciblées passent désormais sur AMD64 aussi : export
+historique 116,84 s, transition signée 42,52 s, livraison de blocs et
+catalogue. Sur ARM64, deux vrais démons / 64 validateurs atteignent une
+finalité commune 2 stable sur trois observations. Inclusion sync et rotation
+ne sont pas qualifiées par ce scénario.
+
+Une seule image runtime par architecture est assemblée à partir des
+binaires de 5bd6f95 et vérifiée (révision, utilisateur non root, architecture,
+empreintes). Le refus initial d’un marqueur AMD64 mal formaté, avant tout
+build d’image, est conservé. Sources et limites consensus inchangées.
+Prochaine gate : îlot majoritaire connecté 384 s et retour à une finalité
+commune sous 180 s. Cette reprise WAN reste non acquise ; toutes les gates
+antérieures de production restent ouvertes.
+[Candidates et preuves](qualification/capella-historical-export-20261001/amd64/README.md).
