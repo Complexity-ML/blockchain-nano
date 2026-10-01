@@ -17,10 +17,11 @@ int main(){try{
  alloc[multi]={{"code","0x6008600760006000a260006000a000"}};
  alloc[reverter]={{"code","0x600760006000a160006000fd"}};
  {Blockchain chain(path,Genesis::from_json({{"alloc",alloc}}));Rpc rpc(chain);
- auto request=[](std::string method,Json p=Json::array()){return Json{{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",p}};};
- auto call=[&](std::string method,Json p=Json::array()){auto response=rpc.handle(request(method,p));if(response.contains("error"))throw std::runtime_error(response.dump());return response["result"];};
+ auto request=[](std::string method,Json::initializer_list_t p={}){return Json{{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",Json::array(p)}};};
+ auto call=[&](std::string method,Json::initializer_list_t p={}){auto response=rpc.handle(request(method,p));if(response.contains("error"))throw std::runtime_error(response.dump());return response["result"];};
  auto pending=call("eth_newPendingTransactionFilter");auto heads=call("eth_newBlockFilter");
  Json criterion={{"address",contract},{"topics",Json::array({Json::array({topic,hex(bytes(Int(8),32))})})}};
+ check(request("eth_newFilter",{criterion})["params"]==Json::array({criterion}),"single filter object remains positional");
  auto filter=call("eth_newFilter",{criterion});
  Transaction tx;tx.to=contract;tx.gas=100000;tx.gas_price=2000000000;auto signed_tx=SignedTransaction::sign(tx,key);chain.submit(signed_tx);auto first=chain.mine(sender,24);
  check(call("eth_getFilterChanges",{pending})==Json::array({hex(signed_tx.hash())}),"pending event survives mining before poll");

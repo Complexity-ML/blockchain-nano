@@ -13,6 +13,7 @@ public:
   boost::beast::get_lowest_layer(socket_).connect({boost::asio::ip::make_address("127.0.0.1"),port});
   socket_.handshake("127.0.0.1","/");socket_.read_message_max(16*1024*1024);
  }
+ nano::Json call(const std::string& method,std::initializer_list<nano::Json> params){auto array=nano::Json::array();for(const auto& value:params)array.push_back(value);return call(method,std::move(array));}
  nano::Json call(const std::string& method,nano::Json params=nano::Json::array()){
   auto body=nano::Json{{"jsonrpc","2.0"},{"id",++id_},{"method",method},{"params",params}}.dump();
   context_.restart();boost::beast::error_code failure;bool expired=false;

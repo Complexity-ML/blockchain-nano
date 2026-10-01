@@ -14,6 +14,8 @@ public:
  RpcClient(std::vector<std::string> nodes,std::chrono::milliseconds timeout=std::chrono::seconds(10),unsigned retries=3);
  void pin_chain(const Int& chain_id,const Bytes& genesis_hash);
  Json call(const std::string& method,Json params=Json::array());
+ // Braced arguments must stay positional, including a single JSON object.
+ Json call(const std::string& method,std::initializer_list<Json> params){auto array=Json::array();for(const auto& value:params)array.push_back(value);return call(method,std::move(array));}
  std::string current_node() const {std::lock_guard lock(mutex_);return nodes_.at(current_);}
 };
 class ValidatorStats {

@@ -47,7 +47,7 @@ int main(){try{
   auto client=std::make_shared<AltairCoreDispatch>(io,[&](const auto&,auto,Reply cb){++calls;held=std::move(cb);},profile,"token","session",0,2,3,std::chrono::milliseconds(1));
   auto first=std::make_shared<std::atomic<bool>>(false),second=std::make_shared<std::atomic<bool>>(false);
   auto finish=[&](D d){++done;results.push_back(d);};check(client->enqueue(message(),first,finish)&&client->enqueue(message(),second,finish),"two local jobs");
-  io.poll();check(calls==1&&done==0,"concurrent ticket admission");client->stop();held(Json{{"state","retired"}});io.restart();io.run();
+  const auto serviced=io.run_one();check(serviced==1&&calls==1&&done==0,"concurrent ticket admission");client->stop();held(Json{{"state","retired"}});io.restart();io.run();
   check(done==2&&calls==1&&client->pending()==0&&results==std::vector<D>(2,D::local_failure),"queued shutdown leaked work");++cases;
  }
  {

@@ -67,6 +67,7 @@ inline Result run(const std::vector<std::string>& args,const Env& env={},const f
 inline Json success(const Result& result){check(result.code==0,result.err+result.out);return Json::parse(result.out);}
 inline std::string url(int port){return "http://127.0.0.1:"+std::to_string(port);}
 inline Json rpc(int port,const std::string& method,Json params=Json::array()){RpcClient client({url(port)},5s,1);return client.call(method,std::move(params));}
+inline Json rpc(int port,const std::string& method,std::initializer_list<Json> params){auto array=Json::array();for(const auto& value:params)array.push_back(value);return rpc(port,method,std::move(array));}
 inline void until(const std::function<bool()>& predicate,const std::string& label,int seconds=25){auto end=std::chrono::steady_clock::now()+std::chrono::seconds(seconds);while(std::chrono::steady_clock::now()<end){if(predicate()){std::cout<<label<<std::endl;return;}std::this_thread::sleep_for(100ms);}throw std::runtime_error("timeout: "+label);}
 inline std::string key(unsigned n=1){return hex(bytes(Int(n),32));}
 inline const std::string account="0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf";

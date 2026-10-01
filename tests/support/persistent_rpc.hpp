@@ -17,6 +17,7 @@ class PersistentRpc {
  uint64_t id_=0;
 public:
  explicit PersistentRpc(uint16_t port):port_(port){}
+ nano::Json call(const std::string& method,std::initializer_list<nano::Json> params,const std::string& origin={}){auto array=nano::Json::array();for(const auto& value:params)array.push_back(value);return call(method,std::move(array),origin);}
  nano::Json call(const std::string& method,nano::Json params=nano::Json::array(),const std::string& origin={}){
   namespace http=boost::beast::http;
   if(!stream_.socket().is_open())stream_.connect({boost::asio::ip::make_address("127.0.0.1"),port_});
