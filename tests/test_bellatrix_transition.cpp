@@ -70,7 +70,15 @@ struct BellatrixNetworkPair {
   sender=std::make_unique<Process>(std::vector<std::string>{daemon.string(),std::to_string(sa->port()),(path/"source-peer").string(),"/ip4/127.0.0.1/tcp/0",address},Env{{"NANO_NETWORK_TOKEN","fixture-token"}});
   sender->event("altair-ingress-ready");sender->event("peer");
  }
- void sync(const Bytes& hash){until([&]{return observer->tip().header.hash()==hash;},"Bellatrix observer canonical sync",20);}
+ void sync(const Bytes& hash){
+  try{until([&]{return observer->tip().header.hash()==hash;},"Bellatrix observer canonical sync",20);}
+  catch(const std::exception& error){
+   Json diagnosis={{"scenario","bellatrix-observer-sync-failure"},{"failure",error.what()},{"clockHealthy",clock->healthy()},{"expectedExecutionHash",hex(hash)}};
+   try{const auto view=reactor->current();diagnosis["checkpointSequence"]=view.token.sequence;}
+   catch(const std::exception& initial){diagnosis["reactorFailure"]=initial.what();}
+   std::cerr<<diagnosis.dump()<<std::endl;throw;
+  }
+ }
  void stop(){check(sender->stop().code==0&&receiver->stop().code==0,"Bellatrix daemon shutdown");ea->stop();eb->stop();ea->join();eb->join();}
 };
 void check_finalized_rpc(Blockchain& chain,const BellatrixDurableReactor& reactor,const std::string& account,const std::string& contract){
