@@ -1,3 +1,4 @@
+#include "support/rocksdb.hpp"
 #include "nano/block_auth.hpp"
 #include "nano/crypto.hpp"
 #include "nano/rpc.hpp"
@@ -70,7 +71,7 @@ int main(){try{
  }
  {Blockchain clean(root/"corrupt-history",genesis_config);clean.validate_signed(key,12);clean.validate_signed(key,24);
   auto before=clean.tip().header.hash();auto result=clean.audit();check(result.at("verified")==true&&result.at("blocks")==3&&clean.tip().header.hash()==before,"audit replays full signed chain without changing its tip");}
- {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,(root/"corrupt-history").string(),&db).ok(),"open corruption fixture");
+ {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,(root/"corrupt-history").string(),db).ok(),"open corruption fixture");
   auto storage_key="block/"+hex(bytes(Int(1),8));std::string value;check(db->Get(rocksdb::ReadOptions(),storage_key,&value).ok(),"read historical corruption fixture");
   auto historical=Json::parse(value);auto signature=unhex(historical["producerProof"]["signature"]);signature[0]^=1;historical["producerProof"]["signature"]=hex(signature);
   rocksdb::WriteOptions write;write.sync=true;check(db->Put(write,storage_key,historical.dump()).ok(),"persist historical proof corruption");}
@@ -80,14 +81,14 @@ int main(){try{
  auto funded=Genesis::from_json({{"config",{{"chainId",1337},{"consensus","pos"},{"posSignatureVersion",1},{"bootstrapValidator",block.header.coinbase}}},{"alloc",{{block.header.coinbase,{{"balance","0x100000000000000000"}}}}}});
  Transaction transfer;transfer.to=public_address(public_key(bytes(Int(2),32)));transfer.value=7;transfer.gas_price=2000000000;auto signed_transfer=SignedTransaction::sign(transfer,key);
  {Blockchain clean(root/"receipt-audit",funded);check(clean.submit(signed_transfer),"audit transaction fixture accepted");clean.validate_signed(key,12);check(clean.audit().at("transactions")=="0x1","audit verifies transaction and receipt indices");}
- {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,(root/"receipt-audit").string(),&db).ok(),"open receipt corruption fixture");auto storage_key="receipt/"+hex(signed_transfer.hash());std::string value;check(db->Get(rocksdb::ReadOptions(),storage_key,&value).ok(),"read audit receipt");auto receipt=Json::parse(value);receipt["gasUsed"]="0x1";rocksdb::WriteOptions write;write.sync=true;check(db->Put(write,storage_key,receipt.dump()).ok(),"persist receipt corruption");}
+ {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,(root/"receipt-audit").string(),db).ok(),"open receipt corruption fixture");auto storage_key="receipt/"+hex(signed_transfer.hash());std::string value;check(db->Get(rocksdb::ReadOptions(),storage_key,&value).ok(),"read audit receipt");auto receipt=Json::parse(value);receipt["gasUsed"]="0x1";rocksdb::WriteOptions write;write.sync=true;check(db->Put(write,storage_key,receipt.dump()).ok(),"persist receipt corruption");}
  {Blockchain corrupted(root/"receipt-audit",funded);bool detected=false;try{corrupted.audit();}catch(const std::exception& e){detected=std::string(e.what()).find("receipt differs")!=std::string::npos;}check(detected,"audit detects receipt inconsistent with reexecution");}
  {Blockchain clean(root/"index-audit",genesis_config);clean.validate_signed(key,12);clean.validate_signed(key,24);}
- {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,(root/"index-audit").string(),&db).ok(),"open hash index fixture");
+ {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,(root/"index-audit").string(),db).ok(),"open hash index fixture");
   rocksdb::WriteOptions write;write.sync=true;check(db->Put(write,"hash/"+hex(accepted.header.hash()),hex(bytes(Int(0),8))).ok(),"redirect hash index to another valid block");}
  {ChainStore store(root/"index-audit");bool detected=false;try{store.block_by_hash(accepted.header.hash());}catch(const std::exception& e){detected=std::string(e.what()).find("block hash index mismatch")!=std::string::npos;}
   check(detected&&store.block_by_number(1)->header.hash()==accepted.header.hash(),"hash lookup rejects redirected index while canonical block remains readable");}
- {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,(root/"index-audit").string(),&db).ok(),"open height index fixture");
+ {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,(root/"index-audit").string(),db).ok(),"open height index fixture");
   std::string first;check(db->Get(rocksdb::ReadOptions(),"block/"+hex(bytes(Int(1),8)),&first).ok(),"read original height fixture");
   rocksdb::WriteOptions write;write.sync=true;check(db->Put(write,"block/"+hex(bytes(Int(2),8)),first).ok(),"redirect height to a valid earlier signed block");}
  {ChainStore store(root/"index-audit");bool height_rejected=false,tip_rejected=false;

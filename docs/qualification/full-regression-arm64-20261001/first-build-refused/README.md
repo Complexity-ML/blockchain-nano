@@ -1,0 +1,1 @@
+Full default-target compilation at 78fd880 failed, exit 2, before CTest. RocksDB 8.9.1 has DB** Open, not the unique_ptr overload used by test_block_transport.cpp. No 400-test success is claimed. Logs and exact run/check recipe retained.

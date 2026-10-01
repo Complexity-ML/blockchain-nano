@@ -1,3 +1,4 @@
+#include "support/rocksdb.hpp"
 #include "support/process.hpp"
 #include "nano/rpc.hpp"
 #include "nano/consensus_round.hpp"
@@ -19,7 +20,7 @@ int main(){try{
  const auto prefix="voting/v1/"+hex(bytes(Int(1337),32))+"/"+hex(genesis.block.header.hash())+"/"+address(signer)+"/";
  const auto proposal_key=prefix+"proposal/"+hex(bytes(Int(1),8))+"/"+hex(block.header.hash());
  const std::string tag="nano/proposal/chunks-v1\n";
- auto edit=[&](const std::function<void(rocksdb::DB&)>& callback){std::unique_ptr<rocksdb::DB> db;rocksdb::Options options;check(rocksdb::DB::Open(options,(root/"journal").string(),&db).ok(),"raw journal open");callback(*db);};
+ auto edit=[&](const std::function<void(rocksdb::DB&)>& callback){std::unique_ptr<rocksdb::DB> db;rocksdb::Options options;check(test::open_rocksdb(options,(root/"journal").string(),db).ok(),"raw journal open");callback(*db);};
  auto read_raw=[](rocksdb::DB& db,const std::string& name){std::string value;check(db.Get(rocksdb::ReadOptions(),name,&value).ok(),"raw journal key exists");return value;};
  std::string manifest,watermark;std::vector<std::string> chunks;
  edit([&](rocksdb::DB& db){manifest=read_raw(db,proposal_key);watermark=read_raw(db,prefix+"watermark");check(manifest.starts_with(tag),"large proposal uses chunk manifest");auto metadata=Json::parse(manifest.substr(tag.size()));auto count=metadata.at("chunks").get<size_t>();check(count==18,"expected bounded chunk count");size_t total=0;for(size_t i=0;i<count;++i){auto value=read_raw(db,proposal_key+"/chunks/"+std::to_string(i));check(value.size()<=1024*1024,"chunk byte limit");total+=value.size();chunks.push_back(std::move(value));}check(total==metadata.at("bytes")&&total>16*1024*1024,"complete oversized payload is stored");});

@@ -1,3 +1,4 @@
+#include "support/rocksdb.hpp"
 #include "nano/consensus_round.hpp"
 #include "nano/block_auth.hpp"
 #include "support/process.hpp"
@@ -34,7 +35,7 @@ int main(){try{
  {ChainStore journal(root/"journal");reserved=chain.vote_for_block(journal,signing_key,proposal,0,VoteStep::prevote,{},12);}
  const auto proposal_key="voting/v1/"+hex(bytes(Int(1337),32))+"/"+hex(genesis.block.header.hash())+"/"+address(signer)+"/proposal/"+hex(bytes(Int(1),8))+"/"+hex(proposal.header.hash());
  auto raw_value=[&](std::optional<std::string> replacement=std::nullopt){
-  std::unique_ptr<rocksdb::DB> db;rocksdb::Options options;auto opened=rocksdb::DB::Open(options,(root/"journal").string(),&db);check(opened.ok(),"open journal for legacy-format fixture");
+  std::unique_ptr<rocksdb::DB> db;rocksdb::Options options;auto opened=test::open_rocksdb(options,(root/"journal").string(),db);check(opened.ok(),"open journal for legacy-format fixture");
   if(replacement){rocksdb::WriteOptions writes;writes.sync=true;check(db->Put(writes,proposal_key,*replacement).ok(),"write legacy-format fixture");}
   std::string value;check(db->Get(rocksdb::ReadOptions(),proposal_key,&value).ok(),"read proposal fixture bytes");return value;
  };

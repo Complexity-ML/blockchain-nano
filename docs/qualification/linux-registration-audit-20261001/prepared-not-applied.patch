@@ -1,0 +1,130 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -317,6 +317,9 @@
+ 
+ if(APPLE)
+  add_library(nano-test-sync-fault SHARED tests/support/sync_fault_macos.cpp)
++endif()
++
++if(TARGET nano-test-sync-fault)
+  add_executable(nano-storage-sync-failure-tests tests/test_storage_sync_failure.cpp)
+  target_link_libraries(nano-storage-sync-failure-tests PRIVATE nano_core nano-test-sync-fault)
+  foreach(fork IN ITEMS Paris Shanghai)
+@@ -669,7 +672,7 @@
+  set_tests_properties(bft_proposer_cycle_${fork_lower} PROPERTIES RUN_SERIAL TRUE TIMEOUT 30 ENVIRONMENT "NANO_TEST_EVM_FORK=${fork};NANO_TEST_BFT_PROPOSER_CYCLE=1" LABELS "qualification_bft_liveness")
+ endforeach()
+ 
+-if(APPLE)
++if(TARGET nano-test-sync-fault)
+  add_executable(nano-bft-signing-sync-tests tests/test_bft_signing_sync_failure.cpp)
+  target_link_libraries(nano-bft-signing-sync-tests PRIVATE nano_core nano-test-sync-fault)
+  foreach(fork Paris Shanghai)
+@@ -982,7 +985,7 @@
+ add_test(NAME consensus_phase0_snapshot_recovery COMMAND nano-consensus-snapshot-tests)
+ set_tests_properties(consensus_phase0_snapshot_recovery PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_ethereum")
+ 
+-if(APPLE)
++if(TARGET nano-test-sync-fault)
+  add_executable(nano-snapshot-sync-failure-tests tests/test_snapshot_sync_failure.cpp)
+  target_link_libraries(nano-snapshot-sync-failure-tests PRIVATE nano_core nano-test-sync-fault)
+  target_compile_definitions(nano-snapshot-sync-failure-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+@@ -1121,7 +1124,7 @@
+ add_test(NAME consensus_fork_checkpoint_commit COMMAND nano-fork-checkpoint-tests)
+ set_tests_properties(consensus_fork_checkpoint_commit PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_ethereum")
+ 
+-if(APPLE)
++if(TARGET nano-test-sync-fault)
+  add_executable(nano-fork-checkpoint-sync-tests tests/test_fork_checkpoint_sync.cpp)
+  target_link_libraries(nano-fork-checkpoint-sync-tests PRIVATE nano_core nano-test-sync-fault)
+  add_test(NAME consensus_fork_checkpoint_sync_failure COMMAND nano-fork-checkpoint-sync-tests)
+@@ -1136,7 +1139,7 @@
+ add_executable(nano-altair-reactor-tests tests/test_altair_reactor.cpp)
+ target_link_libraries(nano-altair-reactor-tests PRIVATE nano_core)
+ target_compile_definitions(nano-altair-reactor-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+-if(APPLE)
++if(TARGET nano-test-sync-fault)
+  target_link_libraries(nano-altair-reactor-tests PRIVATE nano-test-sync-fault)
+  target_compile_definitions(nano-altair-reactor-tests PRIVATE NANO_TEST_SYNC_FAULT=1)
+ endif()
+@@ -1435,7 +1438,7 @@
+ target_link_libraries(nano-execution-checkpoint-tests PRIVATE nano_core)
+ add_test(NAME storage_execution_checkpoint COMMAND nano-execution-checkpoint-tests)
+ set_tests_properties(storage_execution_checkpoint PROPERTIES TIMEOUT 90 LABELS "qualification_storage_local")
+-if(APPLE)
++if(TARGET nano-test-sync-fault)
+  add_executable(nano-execution-checkpoint-sync-tests tests/test_execution_checkpoint.cpp)
+  target_compile_definitions(nano-execution-checkpoint-sync-tests PRIVATE NANO_SYNC_FAULT=1)
+  target_link_libraries(nano-execution-checkpoint-sync-tests PRIVATE nano_core nano-test-sync-fault)
+@@ -1443,8 +1446,9 @@
+  set_tests_properties(storage_execution_checkpoint_sync PROPERTIES TIMEOUT 90 LABELS "qualification_storage_sync_local")
+ endif()
+ 
+-if(APPLE)
++if(TARGET nano-test-sync-fault)
+  target_link_libraries(nano-bellatrix-transition-tests PRIVATE nano-test-sync-fault)
++ target_compile_definitions(nano-bellatrix-transition-tests PRIVATE NANO_TEST_SYNC_FAULT=1)
+ endif()
+ 
+ # Evidence utility for copied synthetic databases. Explicit fixture replay
+@@ -1457,7 +1461,7 @@
+ add_test(NAME consensus_beacon_witness_recovery COMMAND nano-beacon-recovery-tests)
+ set_tests_properties(consensus_beacon_witness_recovery PROPERTIES TIMEOUT 30 LABELS "qualification_consensus_recovery")
+ 
+-if(APPLE)
++if(TARGET nano-test-sync-fault)
+  target_link_libraries(nano-beacon-recovery-tests PRIVATE nano-test-sync-fault)
+  target_compile_definitions(nano-beacon-recovery-tests PRIVATE NANO_TEST_SYNC_FAULT=1)
+ endif()
+@@ -1590,7 +1594,7 @@
+ target_link_libraries(nano-shanghai-checkpoint-tests PRIVATE nano_core)
+ add_test(NAME storage_shanghai_checkpoint COMMAND nano-shanghai-checkpoint-tests)
+ set_tests_properties(storage_shanghai_checkpoint PROPERTIES TIMEOUT 90 LABELS "qualification_storage_local")
+-if(APPLE)
++if(TARGET nano-test-sync-fault)
+  add_executable(nano-shanghai-checkpoint-sync-tests tests/test_execution_checkpoint.cpp)
+  target_compile_definitions(nano-shanghai-checkpoint-sync-tests PRIVATE NANO_SHANGHAI_CHECKPOINT=1 NANO_SYNC_FAULT=1)
+  target_link_libraries(nano-shanghai-checkpoint-sync-tests PRIVATE nano_core nano-test-sync-fault)
+@@ -1614,12 +1618,12 @@
+ add_test(NAME consensus_capella_execution_owner_reorg COMMAND nano-capella-transition-tests --owner-reorg)
+ set_tests_properties(consensus_capella_execution_owner_reorg PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_ethereum")
+ 
+-if(APPLE)
++if(TARGET nano-test-sync-fault)
+  add_test(NAME consensus_capella_execution_owner_sync COMMAND nano-capella-transition-tests --owner-sync)
+  set_tests_properties(consensus_capella_execution_owner_sync PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_ethereum")
+ endif()
+ 
+-if(APPLE)
++if(TARGET nano-test-sync-fault)
+  add_test(NAME consensus_capella_execution_owner_witness COMMAND nano-capella-transition-tests --owner-witness)
+  set_tests_properties(consensus_capella_execution_owner_witness PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_recovery")
+ endif()
+@@ -1685,7 +1689,7 @@
+ add_test(NAME consensus_capella_pruning_automatic COMMAND nano-capella-transition-tests --pruning-automatic)
+ set_tests_properties(consensus_capella_pruning_automatic PROPERTIES TIMEOUT 300 LABELS "qualification_consensus_recovery")
+ 
+-if(APPLE)
++if(TARGET nano-test-sync-fault)
+  add_test(NAME consensus_capella_pruning_sync COMMAND nano-capella-transition-tests --pruning-sync)
+  set_tests_properties(consensus_capella_pruning_sync PROPERTIES TIMEOUT 240 LABELS "qualification_consensus_recovery")
+ endif()
+--- a/tests/test_bellatrix_transition.cpp
++++ b/tests/test_bellatrix_transition.cpp
+@@ -18,7 +18,7 @@
+ #include "nano/consensus_message_ssz.hpp"
+ #include <future>
+ #include "blst.h"
+-#ifdef __APPLE__
++#ifdef NANO_TEST_SYNC_FAULT
+ extern "C" void nano_test_arm_sync_fault(const char*);
+ extern "C" unsigned nano_test_sync_failures();
+ extern "C" void nano_test_disarm_sync_fault();
+@@ -815,7 +815,7 @@
+  BellatrixDurableReactor competing(*reactor_disk,1337,execution_genesis.header.hash(),fork_rules,reactor_limits,before_cancel);competing.tick(clock_ms+2);bool stale=false;try{reactor->tick(clock_ms+1);}catch(const std::runtime_error& e){stale=std::string(e.what())=="fork checkpoint differs from external commitment";}check(stale&&reactor_disk->fork_checkpoint(1337,execution_genesis.header.hash(),reactor_limits.envelope_bytes)->token==competing.current().token,"stale reactor overwrote checkpoint");bool unavailable=false;try{reactor->current();}catch(const std::runtime_error&){unavailable=true;}check(unavailable,"stale reactor remained publishable");
+ 
+  bool reactor_sync_error=false;
+-#ifdef __APPLE__
++#ifdef NANO_TEST_SYNC_FAULT
+  const auto stable=competing.current();fs::path wal;for(const auto& entry:fs::directory_iterator(reactor_location/"chain"))if(entry.path().extension()==".log"&&(wal.empty()||entry.path().filename()>wal.filename()))wal=entry.path();check(!wal.empty(),"reactor WAL missing");nano_test_arm_sync_fault(wal.c_str());bool failed=false;try{competing.tick(clock_ms+3);}catch(const std::runtime_error&){failed=true;}bool closed=false;try{competing.current();}catch(const std::runtime_error&){closed=true;}nano_test_disarm_sync_fault();check(failed&&closed&&nano_test_sync_failures()>0&&stable.state->timed.clock.time_ms==clock_ms+2,"uncertain reactor published new state");reactor_sync_error=true;
+ #endif
+  const BellatrixStoreSnapshotLimits limits{16*1024*1024,32,128,128,4*1024*1024,8*1024*1024,64,100000};

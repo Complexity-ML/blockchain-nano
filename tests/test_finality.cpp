@@ -1,3 +1,4 @@
+#include "support/rocksdb.hpp"
 #include "nano/finality.hpp"
 #include "nano/crypto.hpp"
 #include <iostream>
@@ -195,7 +196,7 @@ int main(){try{
  }
  auto observer_path=path.string()+"-observer";
  {ChainStore journal(observer_path);journal.advance_voting_height(first_vote.validator,1,2,block,certificate,members,next_members,1337,genesis);}
- {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,observer_path,&db).ok(),"open observer corruption fixture");
+ {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,observer_path,db).ok(),"open observer corruption fixture");
   auto active_key="voting/v1/"+hex(bytes(Int(1337),32))+"/"+hex(genesis)+"/"+address(first_vote.validator)+"/active";
   rocksdb::WriteOptions write;write.sync=true;check(db->Delete(write,active_key).ok(),"remove active height metadata fixture");}
  {ChainStore journal(observer_path);bool refused=false;try{journal.reserve_consensus_vote(first_vote,members,first_prevotes,1337,genesis);}catch(const std::exception&){refused=true;}check(refused,"missing active metadata cannot restart certified observer at height one");
@@ -207,9 +208,9 @@ int main(){try{
  auto prefix="voting/v1/"+hex(bytes(Int(1337),32))+"/"+hex(genesis)+"/"+address(first_vote.validator)+"/";
  const auto fields_key=prefix+"reserved/"+hex(bytes(Int(1),8))+"/"+hex(bytes(Int(2),8))+"/0x01";
  std::string original_fields;
- {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,recovery_path,&db).ok(),"open recovery fixture");check(db->Get(rocksdb::ReadOptions(),fields_key,&original_fields).ok(),"read reservation fixture");}
+ {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,recovery_path,db).ok(),"open recovery fixture");check(db->Get(rocksdb::ReadOptions(),fields_key,&original_fields).ok(),"read reservation fixture");}
  for(unsigned fault=0;fault<3;++fault){
-  {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,recovery_path,&db).ok(),"open recovery corruption fixture");rocksdb::WriteOptions write;write.sync=true;
+  {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,recovery_path,db).ok(),"open recovery corruption fixture");rocksdb::WriteOptions write;write.sync=true;
    auto changed=Json::parse(original_fields);changed["blockHash"]=hex(block);
    if(fault==1)changed["step"]=257;
    check((fault==2?db->Delete(write,fields_key):db->Put(write,fields_key,changed.dump())).ok(),"mutate reserved fields fixture");}
@@ -221,10 +222,10 @@ int main(){try{
   auto reserve=[&](ChainStore& journal,const FinalityVote& value){if(locked)journal.reserve_consensus_vote(value,members,{},1337,genesis);else journal.reserve_vote(value,1337,genesis);};
   {ChainStore journal(damaged);reserve(journal,initial);}
   std::string old_watermark;
-  {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,damaged,&db).ok(),"open watermark fixture");check(db->Get(rocksdb::ReadOptions(),prefix+"watermark",&old_watermark).ok(),"read original watermark");}
+  {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,damaged,db).ok(),"open watermark fixture");check(db->Get(rocksdb::ReadOptions(),prefix+"watermark",&old_watermark).ok(),"read original watermark");}
   {ChainStore journal(damaged);reserve(journal,next);}
   for(bool missing:{false,true}){
-   {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,damaged,&db).ok(),"open damaged watermark fixture");rocksdb::WriteOptions write;write.sync=true;check((missing?db->Delete(write,prefix+"watermark"):db->Put(write,prefix+"watermark",old_watermark)).ok(),"damage watermark");}
+   {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,damaged,db).ok(),"open damaged watermark fixture");rocksdb::WriteOptions write;write.sync=true;check((missing?db->Delete(write,prefix+"watermark"):db->Put(write,prefix+"watermark",old_watermark)).ok(),"damage watermark");}
    {ChainStore journal(damaged);auto later=next;later.round=4;bool refused=false;try{reserve(journal,later);}catch(const std::exception&){refused=true;}check(refused,"missing or regressed watermark cannot authorize a new slot");
     if(locked){refused=false;try{journal.latest_consensus_vote(initial.validator,1337,genesis);}catch(const std::exception&){refused=true;}check(refused,"damaged watermark cannot report fresh or obsolete vote");
      refused=false;try{journal.voting_position(initial.validator,1337,genesis);}catch(const std::exception&){refused=true;}check(refused,"damaged watermark blocks voting recovery position");
@@ -238,7 +239,7 @@ int main(){try{
  auto lock_key=prefix+"lock/"+hex(bytes(Int(1),8));
  Json original_lock={{"validatorSetHash",hex(voting_set_hash(members))},{"round","0x2"},{"blockHash",hex(block)}};
  for(unsigned fault=0;fault<5;++fault){
-  {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,bad_lock_path,&db).ok(),"open lock corruption fixture");auto changed=original_lock;
+  {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,bad_lock_path,db).ok(),"open lock corruption fixture");auto changed=original_lock;
    if(fault==0)changed["validatorSetHash"]=hex(keccak(Bytes{99}));
    if(fault==1)changed["round"]="0x3";
    if(fault==2)changed["blockHash"]=nullptr;

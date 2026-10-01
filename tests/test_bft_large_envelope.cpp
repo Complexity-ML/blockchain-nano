@@ -1,3 +1,4 @@
+#include "support/rocksdb.hpp"
 #include "support/process.hpp"
 #include "nano/bft_reactor.hpp"
 #include "nano/block_auth.hpp"
@@ -52,7 +53,7 @@ int main(int argc,char** argv){try{
   {ChainStore store(root/"legacy-incomplete");store.reserve_signature(1337,genesis.block.header.hash(),addresses[proposer],1,block_signing_hash(original,1337,genesis.block.header.hash()));reject([&]{reserve(store,block,4);});reject([&]{store.signing_proposal(1337,genesis.block.header.hash(),addresses[proposer],1,4);});}
   for(unsigned mode=0;mode<5;++mode){auto path=root/("corrupt-slot-"+std::to_string(mode));{ChainStore store(path);reserve(store,block,4);}
    const auto base="signing/v1/"+hex(bytes(Int(1337),32))+"/"+hex(genesis.block.header.hash())+"/"+address(addresses[proposer])+"/"+hex(bytes(Int(1),8));const auto slot=base+"/round/v1/"+hex(bytes(Int(4),8));
-   {std::unique_ptr<rocksdb::DB> db;rocksdb::Options options;check(rocksdb::DB::Open(options,path.string(),&db).ok(),"open corruption fixture");rocksdb::WriteOptions durable;durable.sync=true;rocksdb::Status result;
+   {std::unique_ptr<rocksdb::DB> db;rocksdb::Options options;check(test::open_rocksdb(options,path.string(),db).ok(),"open corruption fixture");rocksdb::WriteOptions durable;durable.sync=true;rocksdb::Status result;
     if(mode==0)result=db->Delete(durable,base);if(mode==1)result=db->Delete(durable,slot+"/proposal");if(mode==2)result=db->Put(durable,slot,hex(Bytes(32,0)));if(mode==3){auto changed=block;changed.header.timestamp+=1;result=db->Put(durable,slot+"/proposal",changed.to_json(true).dump());}if(mode==4)result=db->Delete(durable,slot);check(result.ok(),"apply corruption fixture");}
    {ChainStore store(path);reject([&]{store.signing_proposal(1337,genesis.block.header.hash(),addresses[proposer],1,4);});reject([&]{reserve(store,block,4);});}
   }

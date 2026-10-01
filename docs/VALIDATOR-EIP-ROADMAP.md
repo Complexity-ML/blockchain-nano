@@ -5498,3 +5498,41 @@ Régression complète, AMD64 et tous les critères originaux restent ouverts.
 Le job core GitHub `36894479093` passe neuf tests, empreintes identiques au
 run précédent ; job transport encore en cours au relevé.
 [Preuves et limites](qualification/regression-budgets-20261001/README.md).
+
+
+### 2026-10-01 — régression Docker complète engagée, défaut de portabilité identifié
+
+Compilation de toutes les cibles, puis registre Docker complet de 400 noms
+prévu en série, budgets individuels et garde exhaustive (noms, exécutables,
+absence de skip). Premier build à `78fd880` arrêté exit 2 avant CTest : fixtures
+utilisant la surcharge RocksDB Open(unique_ptr*) absente de Linux 8.9.1.
+Échec conservé. Dix-huit appels dans huit fixtures sont adaptés via un helper
+RAII utilisant l’API DB** commune ; code de stockage runtime inchangé.
+Compilation complète corrigée en cours, aucune réussite globale revendiquée.
+Les 22 registrations natives absentes restent un gate séparé.
+[Premier refus et recette](qualification/full-regression-arm64-20261001/first-build-refused/README.md).
+
+
+### 2026-10-01 — écart des registrations Linux expliqué
+
+Les 22 omissions du registre Docker sont classées depuis CMake/cache :
+13 scénarios d’erreur disque restent conditionnés à APPLE malgré l’injecteur
+Linux existant ; 9 noms requièrent Node, Assertoor ou corpus interchange.
+Deux branches Bellatrix d’erreur disque sont aussi réservées à __APPLE__.
+Patch de raccordement portable préparé et git apply --check réussi, non appliqué
+pendant le build complet gelé. Compilations et véritables injections EIO restent
+requises avant toute qualification ; aucun compteur de test absent converti
+en réussite. Critères originaux inchangés.
+[Audit et patch non appliqué](qualification/linux-registration-audit-20261001/README.md).
+
+
+### 2026-10-01 — compilation Linux complète réussie, 400 scénarios en cours
+
+Les cibles par défaut compilent après réparation des appels RocksDB des
+fixtures. Garde exacte : 400 noms, exécutables présents, délais positifs,
+aucun skip. Empreintes nano/nano-p2p identiques au candidat ARM64 précédent.
+Campagne des 400 scénarios en série démarrée dans le Docker existant ; journal
+instantané archivé, pas de réussite terminale globale revendiquée.
+Les 13 injections Linux non enregistrées et 9 gates outils/corpus restent
+ouverts ; patch préparé non appliqué durant cette campagne.
+[Compilation et snapshot](qualification/full-regression-arm64-20261001/build-complete-tests-running/README.md).

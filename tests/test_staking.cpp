@@ -1,3 +1,4 @@
+#include "support/rocksdb.hpp"
 #include <rocksdb/db.h>
 #include "nano/rpc.hpp"
 #include "nano/staking.hpp"
@@ -118,16 +119,16 @@ int main(int argc,char** argv){try{
  // Each single-key deletion must fail closed, including direct storage rewind.
  for(const auto& key:std::vector<std::string>{"meta/certified-tip","meta/tip","certificate/"+hex(bytes(Int(10),8))}){
   std::string saved;
-  {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,(root/"signed-peer").string(),&db).ok(),"open metadata fault fixture");
+  {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,(root/"signed-peer").string(),db).ok(),"open metadata fault fixture");
    check(db->Get(rocksdb::ReadOptions(),key,&saved).ok(),"save metadata fixture");rocksdb::WriteOptions write;write.sync=true;check(db->Delete(write,key).ok(),"delete single certified metadata key");}
   {ChainStore store(root/"signed-peer");bool refused=false;try{store.latest();}catch(const std::exception&){refused=true;}check(refused,"missing certified metadata refuses latest rather than downgrading");
    refused=false;try{store.rewind(0);}catch(const std::exception&){refused=true;}check(refused&&store.block_by_number(10).has_value(),"missing metadata cannot permit deletion of certified history");
    refused=false;try{store.certificate_at(10);}catch(const std::exception&){refused=true;}check(refused,"certificate reader rejects incomplete metadata");}
   {bool refused=false;try{Blockchain reopened(root/"signed-peer",signed_genesis);}catch(const std::exception&){refused=true;}check(refused,"chain reopen fails closed on incomplete certified metadata");}
-  {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,(root/"signed-peer").string(),&db).ok(),"restore metadata fixture");rocksdb::WriteOptions write;write.sync=true;check(db->Put(write,key,saved).ok(),"restore exact metadata value");}
+  {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,(root/"signed-peer").string(),db).ok(),"restore metadata fixture");rocksdb::WriteOptions write;write.sync=true;check(db->Put(write,key,saved).ok(),"restore exact metadata value");}
  }
  {Blockchain reopened(root/"signed-peer",signed_genesis);check(reopened.audit().at("verified")==true,"refused rewind left all canonical data intact");}
- {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,(root/"signed-peer").string(),&db).ok(),"open canonical certificate corruption fixture");
+ {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,(root/"signed-peer").string(),db).ok(),"open canonical certificate corruption fixture");
   auto key="certificate/"+hex(bytes(Int(10),8));std::string encoded;check(db->Get(rocksdb::ReadOptions(),key,&encoded).ok(),"read certificate fixture");auto record=Json::parse(encoded);
   record["precommits"][0]["signature"]=hex(Bytes(65,0));rocksdb::WriteOptions write;write.sync=true;check(db->Put(write,key,record.dump()).ok(),"corrupt persisted certificate signature");}
  {bool refused=false;try{Blockchain reopened(root/"signed-peer",signed_genesis);}catch(const std::exception&){refused=true;}check(refused,"reopen rejects corrupted certified tip signature");}

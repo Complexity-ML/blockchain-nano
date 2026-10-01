@@ -1,3 +1,4 @@
+#include "support/rocksdb.hpp"
 #include "support/process.hpp"
 #include "nano/chain.hpp"
 #include "nano/block_auth.hpp"
@@ -18,7 +19,7 @@ int main(int argc,char** argv){try{
   {Blockchain chain(path,genesis);chain.import_certified_block(blocks[0],0,certificates[0],12);if(scenario=="reopen"){ChainStore journal(root/"old-journal");chain.recover_voting_progress(journal,signer);chain.import_certified_block(blocks[1],0,certificates[1],24);chain.recover_voting_progress(journal,signer);}}
   // Keep a valid certified tip while corrupting an older receipt, which only
   // complete replay can detect. The original DB owner is already destroyed.
-  {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(rocksdb::DB::Open(options,path.string(),&db).ok(),"open closed corruption fixture");std::string value;auto storage_key="receipt/"+hex(first_tx);check(db->Get(rocksdb::ReadOptions(),storage_key,&value).ok(),"read historical receipt");auto receipt=Json::parse(value);receipt["gasUsed"]="0x1";rocksdb::WriteOptions durable;durable.sync=true;check(db->Put(durable,storage_key,receipt.dump()).ok(),"persist historical receipt corruption");}
+  {rocksdb::Options options;std::unique_ptr<rocksdb::DB> db;check(test::open_rocksdb(options,path.string(),db).ok(),"open closed corruption fixture");std::string value;auto storage_key="receipt/"+hex(first_tx);check(db->Get(rocksdb::ReadOptions(),storage_key,&value).ok(),"read historical receipt");auto receipt=Json::parse(value);receipt["gasUsed"]="0x1";rocksdb::WriteOptions durable;durable.sync=true;check(db->Put(durable,storage_key,receipt.dump()).ok(),"persist historical receipt corruption");}
   {Blockchain reopened(path,genesis);if(scenario=="unverified-extension")reopened.import_certified_block(blocks[1],0,certificates[1],24);
    ChainStore journal(root/(scenario+"-journal"));bool refused=false;try{reopened.recover_voting_progress(journal,signer);}catch(const std::runtime_error& e){refused=std::string(e.what()).find("receipt differs from replay")!=std::string::npos;}
    check(refused,"recovery authorized corrupted historical prefix");check(!journal.voting_position(signer,1337,genesis.block.header.hash()),"failed audit advanced fresh voting journal");
