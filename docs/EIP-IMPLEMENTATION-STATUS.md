@@ -4903,3 +4903,18 @@ autonomes, dont trois nouveaux contrôles du job réseau ; core/network
 encore en cours au relevé. Pas de gate WAN ou production globale clos.
 [AMD64](qualification/network-ci-20261001/amd64-prebuilt/README.md),
 [contrôles GitHub](qualification/network-ci-20261001/github-operations/README.md).
+
+
+### 2026-10-01 — couverture de régression C++ complète inventoriée
+
+Registre natif configuré : 422 scénarios, 196 exécutables présents. La sélection
+CI core de neuf noms laisse 413 scénarios hors de ce job ; le job transport
+possède un registre distinct de 21 noms. Quinze scénarios sans TIMEOUT explicite
+sont identifiés ; somme des budgets existants 68 215 s, pas une durée mesurée.
+Nouveau outil vérifiable de couverture exacte : refuse registres vides/doublons,
+propriétés de skip, sélections étrangères et budgets invalides. Quatre nouveaux
+contrôles passent ; le gate complet refuse la sélection réelle de neuf tests
+(exit 1). Aucun test runtime C++ rejoué et aucune qualification complète
+revendiquée. Budgets manquants, régression complète du candidat et critères
+originaux de production restent ouverts. CI fraîche existante non interrompue.
+[Inventaire et preuves](qualification/regression-inventory-20261001/README.md).

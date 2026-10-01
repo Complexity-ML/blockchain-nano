@@ -123,3 +123,14 @@ autonomes, dont trois nouveaux contrôles du job réseau ; core/network
 encore en cours au relevé. Pas de gate WAN ou production globale clos.
 [AMD64](qualification/network-ci-20261001/amd64-prebuilt/README.md),
 [contrôles GitHub](qualification/network-ci-20261001/github-operations/README.md).
+
+
+## Complete-regression coverage gate
+
+`scripts/ci/regression-inventory.mjs REGISTRY.json SELECTION.json` compares
+exact configured test names and reports all omissions, executable presence,
+labels and existing budgets. `--require-complete` returns failure for a partial
+selection, missing command file or missing explicit timeout. Invalid/duplicate
+registrations and CTest skip properties always fail. This is inventory evidence,
+not a runtime result or EEST/WAN qualification. See the
+[422-scenario inventory](qualification/regression-inventory-20261001/README.md).
