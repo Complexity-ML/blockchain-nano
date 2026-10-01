@@ -1682,6 +1682,9 @@ if(TARGET nano-test-sync-fault)
  set_tests_properties(consensus_capella_slashing_sync PROPERTIES TIMEOUT 600 LABELS "qualification_consensus_recovery")
 endif()
 
+add_test(NAME consensus_capella_unknown_finality_slashing COMMAND nano-capella-transition-tests --unknown-finality-slashing)
+set_tests_properties(consensus_capella_unknown_finality_slashing PROPERTIES TIMEOUT 600 LABELS "qualification_consensus_recovery")
+
 add_test(NAME consensus_capella_new_validator_slashing COMMAND nano-capella-transition-tests --new-validator-slashing)
 set_tests_properties(consensus_capella_new_validator_slashing PROPERTIES TIMEOUT 600 LABELS "qualification_consensus_recovery")
 

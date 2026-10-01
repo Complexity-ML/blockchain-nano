@@ -1,7 +1,7 @@
 // Included inside the real native deposit/activation fixture.
 std::optional<std::pair<IndexedConsensusAttestation,IndexedConsensusAttestation>> new_validator_proof;
 CapellaSignedVotes new_validator_archive;
-bool new_validator_unknown_reopened=false,new_validator_finalized_slash=false;
+bool new_validator_unknown_reopened=false,new_validator_finalized_slash=false,new_validator_unknown_advance_reopened=false;
 size_t new_validator_unknown_observations=0,new_validator_unknown_finality_advances=0,new_validator_skipped_proposals=0;
 ConsensusRoot new_validator_last_final{};
 size_t new_validator_forged_checks=0;
@@ -43,14 +43,16 @@ auto observe_new_validator_slashing=[&](uint64_t slot){
   const auto before=nodes[i]->current();const auto final=context(*before.state,before.state->timed.view.finalized.root);const auto member=final.registry.validators.find(64);const bool unknown=member==final.registry.validators.end(),retired=!unknown&&member->second.slashed;
   check(nodes[i]->signed_slashings()==(retired?CapellaSignedVotes{}:new_validator_archive),"new validator proof retired prematurely or retained after finalized slashing");
   check(nodes[i]->slashing(new_validator_proof->second,new_validator_proof->first)&&nodes[i]->current().token==before.token,"new validator reverse replay changed checkpoint");
-  if(unknown){++new_validator_unknown_observations;if(i==0&&new_validator_last_final!=ConsensusRoot{}&&new_validator_last_final!=before.state->timed.view.finalized.root)++new_validator_unknown_finality_advances;}
+  if(unknown){++new_validator_unknown_observations;if(i==0&&new_validator_last_final!=ConsensusRoot{}&&new_validator_last_final!=before.state->timed.view.finalized.root){++new_validator_unknown_finality_advances;std::cout<<Json{{"scenario","new-validator-unknown-finality-advance"},{"slot",slot},{"finalizedEpoch",before.state->timed.view.finalized.epoch},{"proofRetained",true},{"unknownFinalizedMember",true}}.dump()<<std::endl;}}
   new_validator_finalized_slash|=retired;
  }
- if(!new_validator_unknown_reopened){
+ const bool reopen_unknown_advance=slashing_unknown_finality&&new_validator_unknown_finality_advances>0&&!new_validator_unknown_advance_reopened;
+ if(!new_validator_unknown_reopened||reopen_unknown_advance){
   for(size_t i=0;i<2;++i){const auto before=nodes[i]->current();const auto& h=capella_fork_head(*before.state,rules);const auto state=h.state;nodes[i].reset();owners[i].reset();owners[i]=std::make_unique<Blockchain>(directory/("node-"+std::to_string(i)),owner_genesis);nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,before.token);nodes[i]->set_automatic_pruning(true);const auto after=nodes[i]->current();check(after.token==before.token&&capella_fork_head(*after.state,rules).state==state&&nodes[i]->signed_slashings()==new_validator_archive,"unknown finalized validator proof lost on restart");check(!context(*after.state,after.state->timed.view.finalized.root).registry.validators.contains(64),"restart did not cover missing finalized member");}
-  reject_forged_new_validator_proofs(new_validator_proof->first,new_validator_proof->second,"after-both-owners-reopened");
+  if(!reopen_unknown_advance)reject_forged_new_validator_proofs(new_validator_proof->first,new_validator_proof->second,"after-both-owners-reopened");
+  if(reopen_unknown_advance)new_validator_unknown_advance_reopened=true;
   new_validator_unknown_reopened=true;
-  std::cout<<Json{{"scenario","new-validator-proof-admission"},{"slot",slot},{"justifiedEpoch",current.state->timed.view.justified.epoch},{"finalizedEpoch",current.state->timed.view.finalized.epoch},{"unknownFinalizedMember",true},{"bothOwnersReopened",true}}.dump()<<std::endl;
+  std::cout<<Json{{"scenario","new-validator-proof-admission"},{"slot",slot},{"justifiedEpoch",current.state->timed.view.justified.epoch},{"finalizedEpoch",current.state->timed.view.finalized.epoch},{"unknownFinalizedMember",true},{"bothOwnersReopened",true},{"afterUnknownFinalityAdvance",reopen_unknown_advance}}.dump()<<std::endl;
  }
  new_validator_last_final=nodes[0]->current().state->timed.view.finalized.root;
 };

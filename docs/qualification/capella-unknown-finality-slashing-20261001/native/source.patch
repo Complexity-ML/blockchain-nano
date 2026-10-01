@@ -1,0 +1,101 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 639dc06..4d47145 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1682,6 +1682,9 @@ if(TARGET nano-test-sync-fault)
+  set_tests_properties(consensus_capella_slashing_sync PROPERTIES TIMEOUT 600 LABELS "qualification_consensus_recovery")
+ endif()
+ 
++add_test(NAME consensus_capella_unknown_finality_slashing COMMAND nano-capella-transition-tests --unknown-finality-slashing)
++set_tests_properties(consensus_capella_unknown_finality_slashing PROPERTIES TIMEOUT 600 LABELS "qualification_consensus_recovery")
++
+ add_test(NAME consensus_capella_new_validator_slashing COMMAND nano-capella-transition-tests --new-validator-slashing)
+ set_tests_properties(consensus_capella_new_validator_slashing PROPERTIES TIMEOUT 600 LABELS "qualification_consensus_recovery")
+ 
+diff --git a/tests/support/capella_new_validator_slashing.hpp b/tests/support/capella_new_validator_slashing.hpp
+index 237f851..68678f5 100644
+--- a/tests/support/capella_new_validator_slashing.hpp
++++ b/tests/support/capella_new_validator_slashing.hpp
+@@ -1,7 +1,7 @@
+ // Included inside the real native deposit/activation fixture.
+ std::optional<std::pair<IndexedConsensusAttestation,IndexedConsensusAttestation>> new_validator_proof;
+ CapellaSignedVotes new_validator_archive;
+-bool new_validator_unknown_reopened=false,new_validator_finalized_slash=false;
++bool new_validator_unknown_reopened=false,new_validator_finalized_slash=false,new_validator_unknown_advance_reopened=false;
+ size_t new_validator_unknown_observations=0,new_validator_unknown_finality_advances=0,new_validator_skipped_proposals=0;
+ ConsensusRoot new_validator_last_final{};
+ size_t new_validator_forged_checks=0;
+@@ -43,14 +43,16 @@ auto observe_new_validator_slashing=[&](uint64_t slot){
+   const auto before=nodes[i]->current();const auto final=context(*before.state,before.state->timed.view.finalized.root);const auto member=final.registry.validators.find(64);const bool unknown=member==final.registry.validators.end(),retired=!unknown&&member->second.slashed;
+   check(nodes[i]->signed_slashings()==(retired?CapellaSignedVotes{}:new_validator_archive),"new validator proof retired prematurely or retained after finalized slashing");
+   check(nodes[i]->slashing(new_validator_proof->second,new_validator_proof->first)&&nodes[i]->current().token==before.token,"new validator reverse replay changed checkpoint");
+-  if(unknown){++new_validator_unknown_observations;if(i==0&&new_validator_last_final!=ConsensusRoot{}&&new_validator_last_final!=before.state->timed.view.finalized.root)++new_validator_unknown_finality_advances;}
++  if(unknown){++new_validator_unknown_observations;if(i==0&&new_validator_last_final!=ConsensusRoot{}&&new_validator_last_final!=before.state->timed.view.finalized.root){++new_validator_unknown_finality_advances;std::cout<<Json{{"scenario","new-validator-unknown-finality-advance"},{"slot",slot},{"finalizedEpoch",before.state->timed.view.finalized.epoch},{"proofRetained",true},{"unknownFinalizedMember",true}}.dump()<<std::endl;}}
+   new_validator_finalized_slash|=retired;
+  }
+- if(!new_validator_unknown_reopened){
++ const bool reopen_unknown_advance=slashing_unknown_finality&&new_validator_unknown_finality_advances>0&&!new_validator_unknown_advance_reopened;
++ if(!new_validator_unknown_reopened||reopen_unknown_advance){
+   for(size_t i=0;i<2;++i){const auto before=nodes[i]->current();const auto& h=capella_fork_head(*before.state,rules);const auto state=h.state;nodes[i].reset();owners[i].reset();owners[i]=std::make_unique<Blockchain>(directory/("node-"+std::to_string(i)),owner_genesis);nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,before.token);nodes[i]->set_automatic_pruning(true);const auto after=nodes[i]->current();check(after.token==before.token&&capella_fork_head(*after.state,rules).state==state&&nodes[i]->signed_slashings()==new_validator_archive,"unknown finalized validator proof lost on restart");check(!context(*after.state,after.state->timed.view.finalized.root).registry.validators.contains(64),"restart did not cover missing finalized member");}
+-  reject_forged_new_validator_proofs(new_validator_proof->first,new_validator_proof->second,"after-both-owners-reopened");
++  if(!reopen_unknown_advance)reject_forged_new_validator_proofs(new_validator_proof->first,new_validator_proof->second,"after-both-owners-reopened");
++  if(reopen_unknown_advance)new_validator_unknown_advance_reopened=true;
+   new_validator_unknown_reopened=true;
+-  std::cout<<Json{{"scenario","new-validator-proof-admission"},{"slot",slot},{"justifiedEpoch",current.state->timed.view.justified.epoch},{"finalizedEpoch",current.state->timed.view.finalized.epoch},{"unknownFinalizedMember",true},{"bothOwnersReopened",true}}.dump()<<std::endl;
++  std::cout<<Json{{"scenario","new-validator-proof-admission"},{"slot",slot},{"justifiedEpoch",current.state->timed.view.justified.epoch},{"finalizedEpoch",current.state->timed.view.finalized.epoch},{"unknownFinalizedMember",true},{"bothOwnersReopened",true},{"afterUnknownFinalityAdvance",reopen_unknown_advance}}.dump()<<std::endl;
+  }
+  new_validator_last_final=nodes[0]->current().state->timed.view.finalized.root;
+ };
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index 443570e..b5439a3 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -50,6 +50,7 @@ static bool slashing_reorg=false;
+ static bool slashing_multi=false;
+ static bool slashing_sync=false;
+ static bool slashing_new_validator=false;
++static bool slashing_unknown_finality=false;
+ static unsigned local_finality=0;
+ static bool owner_mode=false;
+ static bool owner_reorg=false;
+@@ -457,7 +458,15 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+     check(journal(64).commitment()==journal_token&&journal(64).latest_attestation_target()==signed_target,"activation restart lost signing reservation");
+     std::cout<<Json{{"activationRestartPhase",phase},{"slot",slot},{"owner",node_index},{"signedTarget",signed_target?Json(*signed_target):Json(nullptr)}}.dump()<<std::endl;
+    };
++   // Delay inclusion of four epochs' genuinely signed duties, not checkpoints.
++   // The next boundary admits these still-valid previous-epoch attestations.
++   std::vector<Phase0SignedAttestation> delayed_slashing_votes;size_t delayed_slashing_admissions=0;
++   const auto delayed_slashing_epoch=(next_period+period/2)/slots-1;
+    for(uint64_t slot=next_slot+1;slot<=stop;++slot){const auto clock=old.timed.clock.genesis_time_ms+slot*rules.slot_duration_ms;for(auto& node:nodes)node->tick(clock);const auto prior=nodes[0]->current();const auto& parent=capella_fork_head(*prior.state,rules);const auto prior_index=little(parent.state.ssz,eth1+80,8);const auto advanced=prepare_capella_slots(parent.state,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state,slot,limits.replay_slots,limits.sync_trials);const auto balances=little(advanced.ssz,eth1+92,4);const auto balance_before=little(advanced.ssz,balances+16,8);
++    if(slashing_unknown_finality&&slot%slots==0&&!delayed_slashing_votes.empty()){
++     for(const auto& vote:delayed_slashing_votes){check(vote.data.target.epoch+1==slot/slots,"delayed slashing duty not previous epoch");for(auto& node:nodes)check(node->vote(vote),"delayed valid attestation rejected");++delayed_slashing_admissions;}
++     std::cout<<Json{{"scenario","new-validator-delayed-inclusion"},{"slot",slot},{"attestations",delayed_slashing_votes.size()}}.dump()<<std::endl;delayed_slashing_votes.clear();
++    }
+     observe_new_validator_slashing(slot);
+     const auto proposer=nodes[0]->current_proposer(slot);if(slashing_new_validator&&(!proposer||(*proposer==64&&new_validator_proof))){++new_validator_skipped_proposals;continue;}check(bool(proposer),"deposit cycle proposer missing");const auto next=nodes[0]->propose_current(*proposer,slot,fee,16,64,[&]{return clock;},journal(*proposer),[&](const ConsensusRoot& root){return Key(*proposer).sign(root);});check(bool(next),"deposit cycle proposal missing");for(auto& node:nodes)check(node->block(*next),"deposit cycle block rejected");const auto left=nodes[0]->current(),right=nodes[1]->current();const auto& left_head=capella_fork_head(*left.state,rules);const auto& right_head=capella_fork_head(*right.state,rules);check(left_head.state==right_head.state&&left_head.execution_block.header.hash()==right_head.execution_block.header.hash()&&owners[0]->state().root()==owners[1]->state().root(),"deposit cycle nodes diverged");const auto index=little(left_head.state.ssz,eth1+80,8);check(index<=1&&index>=prior_index,"deposit cursor regressed or advanced twice");
+     if(index>prior_index&&!deposit_activation&&!deposit_invalid_signature){
+@@ -508,7 +517,7 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+       check(!signer_called&&node->current().token==token,"unregistered key reached signer or changed checkpoint");
+      }
+     }
+-    const auto replay_token=nodes[1]->current().token;check(nodes[1]->block(*next)&&nodes[1]->current().token==replay_token,"deposit block replay changed checkpoint");const auto duties=prepare_capella_attestation_duties(*left.state,rules,slot,limits.replay_slots,limits.sync_trials);for(const auto& [index,duty]:duties){if((automatic_registration||slashing_new_validator)&&index==64)continue;const auto vote=nodes[0]->sign_attestation(index,slot,[&]{return clock;},nodes[0]->current().token,journal(index),[&](const ConsensusRoot& root){return Key(index).sign(root);});check(bool(vote),"deposit cycle vote missing");for(auto& node:nodes)check(node->vote(*vote),"deposit cycle vote rejected");if(deposit_activation&&index==64){check(slot/slots>=activation_epoch,"new validator voted before activation");++new_votes;
++    const auto replay_token=nodes[1]->current().token;check(nodes[1]->block(*next)&&nodes[1]->current().token==replay_token,"deposit block replay changed checkpoint");const auto duties=prepare_capella_attestation_duties(*left.state,rules,slot,limits.replay_slots,limits.sync_trials);for(const auto& [index,duty]:duties){if((automatic_registration||slashing_new_validator)&&index==64)continue;const auto vote=nodes[0]->sign_attestation(index,slot,[&]{return clock;},nodes[0]->current().token,journal(index),[&](const ConsensusRoot& root){return Key(index).sign(root);});check(bool(vote),"deposit cycle vote missing");if(slashing_unknown_finality&&slot/slots>=delayed_slashing_epoch&&slot/slots<delayed_slashing_epoch+4)delayed_slashing_votes.push_back(*vote);else for(auto& node:nodes)check(node->vote(*vote),"deposit cycle vote rejected");if(deposit_activation&&index==64){check(slot/slots>=activation_epoch,"new validator voted before activation");++new_votes;
+       if(deposit_activation_restart&&!active_restarted){
+        check(pending_restarted,"first new vote preceded pending restart");reopen_new_validator(1,slot,"first-vote");active_restarted=true;
+        auto contradictory=vote->data;contradictory.beacon_block_root[0]^=1;
+@@ -534,6 +543,7 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+    if(registration_loop){const auto receipt=registration_loop->restart_commitments();check(receipt.size()==1&&receipt[0].at("index").is_null()&&receipt[0].at("publicKey")==hex(Key(64).public_key)&&new_votes>0,"automatic registration receipt or duties missing");std::cout<<Json{{"scenario","capella-automatic-registration"},{"newValidatorVotes",new_votes},{"signatures",registration_signatures},{"publicKeyBound",true}}.dump()<<std::endl;registration_loop.reset();registration_time.reset();}
+    check(consumed==1&&consumed_slot>=next_period&&consumed_slot<=next_period+period/2,"deposit not consumed at native majority");for(size_t i=0;i<2;++i){const auto token=nodes[i]->current().token;nodes[i].reset();owners[i].reset();owners[i]=std::make_unique<Blockchain>(directory/("node-"+std::to_string(i)),owner_genesis);nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,token);check(little(capella_fork_head(*nodes[i]->current().state,rules).state.ssz,eth1+80,8)==1,"consumed cursor lost on restart");}
+    if(deposit_activation){check(observed_pending&&observed_active&&(slashing_new_validator||new_votes>0),"new validator never completed activation and voting");for(auto& node:nodes){const auto current=node->current();const auto& h=capella_fork_head(*current.state,rules);const auto context=capella_fork_block_context(h.state,h.header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state);check(context.registry.validators.size()==65&&context.registry.validators.at(64).activation_epoch==activation_epoch,"activation lost after restart");}}
++   if(slashing_unknown_finality)check(delayed_slashing_votes.empty()&&delayed_slashing_admissions>0&&new_validator_unknown_finality_advances>0&&new_validator_unknown_advance_reopened,"missing unknown-member finality advancement/restart coverage");
+    if(slashing_new_validator){observe_new_validator_slashing(stop);check(new_validator_unknown_reopened&&new_validator_unknown_observations>0&&new_validator_finalized_slash&&new_validator_forged_checks==16,"new validator slashing lifecycle incomplete");std::cout<<Json{{"scenario","capella-new-validator-slashing"},{"unknownFinalizedObservations",new_validator_unknown_observations},{"unknownFinalityAdvances",new_validator_unknown_finality_advances},{"forgedProofChecks",new_validator_forged_checks},{"proofReopenedBeforeFinalizedRegistration",true},{"finalizedSanctionRetired",true},{"skippedOffenderProposals",new_validator_skipped_proposals},{"networkTransport",false}}.dump()<<std::endl;}
+    if(deposit_invalid_signature)for(auto& node:nodes){const auto current=node->current();const auto& h=capella_fork_head(*current.state,rules);const auto context=capella_fork_block_context(h.state,h.header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state);check(context.registry.validators.size()==64,"invalid deposit created validator after restart");}
+    if(deposit_activation_restart){check(pending_restarted&&active_restarted&&conflict_refused&&new_votes>=2,"activation restart did not resume safe later duties");std::cout<<Json{{"scenario","capella-deposit-activation-restart"},{"pendingRestart",pending_restarted},{"firstVoteRestart",active_restarted},{"conflictingVoteRejectedBeforeSigner",conflict_refused},{"newValidatorVotes",new_votes},{"finalizedEpoch",nodes[0]->current().state->timed.view.finalized.epoch}}.dump()<<std::endl;}
+@@ -1875,6 +1885,7 @@ int main(int argc,char** argv){try{executable=argv[0];
+ if(argc==2&&std::string(argv[1])=="--signer-health"){signer_health=true;scenario(false);return 0;}
+ if(argc==2&&std::string(argv[1])=="--duty-timing"){duty_timing=true;scenario(false);return 0;}
+ if(argc==2&&std::string(argv[1])=="--clock-diagnostics"){clock_diagnostics=true;scenario(false);return 0;}
++if(argc==2&&std::string(argv[1])=="--unknown-finality-slashing"){slashing_unknown_finality=true;slashing_new_validator=true;deposit_activation=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}
+ if(argc==2&&std::string(argv[1])=="--new-validator-slashing"){slashing_new_validator=true;deposit_activation=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}
+ if(argc==2&&std::string(argv[1])=="--slashing-multi"){slashing_multi=true;slashing_retirement=true;pruning_automatic=true;pruning_native=true;owner_mode=true;local_finality=100;scenario(false);return 0;}
+ if(argc==2&&std::string(argv[1])=="--slashing-reorg"){slashing_reorg=true;scenario(false);return 0;}

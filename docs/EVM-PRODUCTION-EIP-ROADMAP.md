@@ -2145,3 +2145,21 @@ Cela ne qualifie ni tous les scénarios asymétriques, ni le cycle complet et
 l’échelle des validateurs, ni la totalité des critères initiaux de production.
 S/T conservés ; pas de cause exclusive affirmée ni de lancement financier.
 [Preuves WAN U](qualification/majority-island-20261001/attempt-u/README.md).
+
+
+### 2026-10-01 — nouvelle couverture : preuve et finalité sans membre enregistré
+
+Le nouveau scénario natif `consensus_capella_unknown_finality_slashing` passe
+en 176,14 s. Quatre époques de duties réellement signées sont admises à la
+frontière suivante ; aucun checkpoint injecté, règle ou seuil changé.
+Preuve admise avec justification 10 / finalité 8, puis **finalité 9 alors
+que le membre reste absent**. Archive et checkpoint conservés, rejouabilité
+sans mutation, deux propriétaires durables réouverts avant et après cette
+avance ; retrait de preuve seulement après sanction finalisée.
+`unknownFinalityAdvances=1`, 64 observations sans membre et 16 contrôles
+falsifiés refusés. La branche jusque-là non atteinte est couverte en natif.
+Premier fixture à deux époques : échec de couverture conservé, aucune
+corruption runtime démontrée. Qualification Docker ARM64/AMD64 encore ouverte.
+Cœur runtime inchangé ; ce résultat ne ferme pas le cycle global ni les
+autres critères initiaux de production.
+[Preuves natives](qualification/capella-unknown-finality-slashing-20261001/native/README.md).

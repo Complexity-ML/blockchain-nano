@@ -1,0 +1,49 @@
+Start testing: Oct 01 16:42 CEST
+----------------------------------------------------------
+393/422 Testing: consensus_capella_unknown_finality_slashing
+393/422 Test: consensus_capella_unknown_finality_slashing
+Command: "/Users/boris/Dev/blockchain-nano/build-release/nano-capella-transition-tests" "--unknown-finality-slashing"
+Directory: /Users/boris/Dev/blockchain-nano/build-release
+"consensus_capella_unknown_finality_slashing" start time: Oct 01 16:42 CEST
+Output:
+----------------------------------------------------------
+{"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+{"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+{"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+{"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+{"finalizedEpoch":3,"progressSlot":40,"signedVotes":264}
+{"finalizedEpoch":3,"progressSlot":41,"signedVotes":272}
+{"depositIndex":0,"depositProgressSlot":48,"finalizedEpoch":4}
+{"depositIndex":0,"depositProgressSlot":56,"finalizedEpoch":5}
+{"depositIndex":0,"depositProgressSlot":64,"finalizedEpoch":6}
+{"depositIndex":0,"depositProgressSlot":72,"finalizedEpoch":7}
+{"depositIndex":1,"depositProgressSlot":80,"finalizedEpoch":8}
+{"attestations":64,"scenario":"new-validator-delayed-inclusion","slot":88}
+{"depositIndex":1,"depositProgressSlot":88,"finalizedEpoch":8}
+{"attestations":64,"scenario":"new-validator-delayed-inclusion","slot":96}
+{"cases":4,"checks":8,"owners":2,"phase":"before-valid-admission","scenario":"new-validator-forged-proofs"}
+{"cases":4,"checks":16,"owners":2,"phase":"after-both-owners-reopened","scenario":"new-validator-forged-proofs"}
+{"afterUnknownFinalityAdvance":false,"bothOwnersReopened":true,"finalizedEpoch":9,"justifiedEpoch":10,"scenario":"new-validator-proof-admission","slot":96,"unknownFinalizedMember":true}
+{"depositIndex":1,"depositProgressSlot":96,"finalizedEpoch":9}
+{"depositIndex":1,"depositProgressSlot":104,"finalizedEpoch":10}
+{"depositIndex":1,"depositProgressSlot":112,"finalizedEpoch":12}
+{"depositIndex":1,"depositProgressSlot":120,"finalizedEpoch":13}
+{"depositIndex":1,"depositProgressSlot":128,"finalizedEpoch":14}
+{"depositIndex":1,"depositProgressSlot":136,"finalizedEpoch":15}
+{"depositIndex":1,"depositProgressSlot":144,"finalizedEpoch":16}
+{"depositIndex":1,"depositProgressSlot":152,"finalizedEpoch":17}
+{"depositIndex":1,"depositProgressSlot":160,"finalizedEpoch":18}
+{"depositIndex":1,"depositProgressSlot":161,"finalizedEpoch":18}
+missing unknown-member finality advancement/restart coverage
+<end of output>
+Test time = 167.82 sec
+----------------------------------------------------------
+Test Failed.
+"consensus_capella_unknown_finality_slashing" end time: Oct 01 16:45 CEST
+"consensus_capella_unknown_finality_slashing" time elapsed: 00:02:47
+----------------------------------------------------------
+
+End testing: Oct 01 16:45 CEST
+
+qualification_consensus_recovery = 167.82 sec*proc
+
