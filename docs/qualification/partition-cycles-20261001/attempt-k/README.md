@@ -1,0 +1,5 @@
+# WAN K — Beacon cancellation/budget error, 2026-10-01
+
+Source a3bd216, harness 4d93202. First recovery passes in 142371.618334 ms, common finality 2→7, strict limit 180000 ms unchanged. After the second partition (192 s requested), the VPS states/head/finality_checkpoints read returns HTTP 503: "Beacon read cancelled or execution budget expired". The observer aborts before second recovery/deadline outcome or stability qualification. This identifies the ExecutionCancelled branch, rather than a generic state exception. The response does not distinguish cancellation from budget expiry or identify the expensive phase.
+
+Three signers and clocks healthy at shutdown. Docker exit states and public runtime/observation logs retained. The immutable-publication concurrency fix is locally qualified on both architectures, but did not eliminate fatal WAN reads. No WAN speedup, second recovery or production qualification claimed. Databases, journals and witnesses retained separately; no keys archived. Previous failures remain open.
