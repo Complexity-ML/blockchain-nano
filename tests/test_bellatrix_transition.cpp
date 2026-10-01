@@ -18,7 +18,7 @@
 #include "nano/consensus_message_ssz.hpp"
 #include <future>
 #include "blst.h"
-#ifdef __APPLE__
+#ifdef NANO_TEST_SYNC_FAULT
 extern "C" void nano_test_arm_sync_fault(const char*);
 extern "C" unsigned nano_test_sync_failures();
 extern "C" void nano_test_disarm_sync_fault();
@@ -815,7 +815,7 @@ int main(int argc,char** argv){try{
  BellatrixDurableReactor competing(*reactor_disk,1337,execution_genesis.header.hash(),fork_rules,reactor_limits,before_cancel);competing.tick(clock_ms+2);bool stale=false;try{reactor->tick(clock_ms+1);}catch(const std::runtime_error& e){stale=std::string(e.what())=="fork checkpoint differs from external commitment";}check(stale&&reactor_disk->fork_checkpoint(1337,execution_genesis.header.hash(),reactor_limits.envelope_bytes)->token==competing.current().token,"stale reactor overwrote checkpoint");bool unavailable=false;try{reactor->current();}catch(const std::runtime_error&){unavailable=true;}check(unavailable,"stale reactor remained publishable");
 
  bool reactor_sync_error=false;
-#ifdef __APPLE__
+#ifdef NANO_TEST_SYNC_FAULT
  const auto stable=competing.current();fs::path wal;for(const auto& entry:fs::directory_iterator(reactor_location/"chain"))if(entry.path().extension()==".log"&&(wal.empty()||entry.path().filename()>wal.filename()))wal=entry.path();check(!wal.empty(),"reactor WAL missing");nano_test_arm_sync_fault(wal.c_str());bool failed=false;try{competing.tick(clock_ms+3);}catch(const std::runtime_error&){failed=true;}bool closed=false;try{competing.current();}catch(const std::runtime_error&){closed=true;}nano_test_disarm_sync_fault();check(failed&&closed&&nano_test_sync_failures()>0&&stable.state->timed.clock.time_ms==clock_ms+2,"uncertain reactor published new state");reactor_sync_error=true;
 #endif
  const BellatrixStoreSnapshotLimits limits{16*1024*1024,32,128,128,4*1024*1024,8*1024*1024,64,100000};
