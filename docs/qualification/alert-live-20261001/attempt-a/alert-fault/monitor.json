@@ -1,0 +1,30 @@
+{
+  "chainId": "1337",
+  "genesisHash": "0x0489080ad6999efc19d1e48f275c4f32fecf94405aa4598b92b57eb1bd23ca08",
+  "configName": "nano-capella-c9d115373e63eea3332aadd86611d1fe6f9d129d61b80d6af883cf16ad176467",
+  "staleMs": 96000,
+  "timeoutMs": 5000,
+  "maximumResponseBytes": 1048576,
+  "maximumEpochs": 256,
+  "minimumPeers": 1,
+  "nodes": [
+    {
+      "name": "mac-native",
+      "kind": "http",
+      "url": "http://127.0.0.1:18545/"
+    },
+    {
+      "name": "mac-docker",
+      "kind": "docker",
+      "container": "nano-qualification-mac-mupovbib",
+      "url": "http://127.0.0.1:8545/"
+    },
+    {
+      "name": "vps-docker",
+      "kind": "ssh-docker",
+      "container": "nano-qualification-vps-mupovbib",
+      "ssh": "ubuntu@145.239.199.166",
+      "url": "http://127.0.0.1:8545/"
+    }
+  ]
+}

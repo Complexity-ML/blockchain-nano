@@ -4710,3 +4710,23 @@ finalité commune et les statuts terminaux des validateurs suivent séparément.
 Receveur local de qualification, pas de destination opérateur provisionnée.
 Implémentation préparée, campagne non encore qualifiée ; aucun gate fermé
 par la simple présence du script. Cœur et images inchangés.
+
+
+### 2026-10-01 — alertes depuis Nano vivant : campagne bornée réussie
+
+Run complet `e32dce4`, candidats runtime `74784c4` inchangés, terminal 0.
+Mac natif + Docker ARM64 Mac + Docker AMD64 VPS, deux hôtes/64 clés.
+Pause réelle du process tree Nano/P2P du VPS (1 892 ms observés),
+`unavailable` détecté ; premier POST HTTP503 refusé, message conservé,
+retry avec même eventId accepté, retour sain reçu après reprise. Trois
+POST, deux notifications logiques acceptées par le récepteur local de test.
+Ensuite fenêtre stricte indépendante liée à l'exécution : finalité commune
+2 → 5, trois avancées en 134 283 ms ; monitor 23 observations saines,
+mauvais genesis refusé. Trois validateurs sains à l'arrêt (137/134/137
+attestations admises), conteneurs sortis 0 sans OOM/pause, PID natif absent.
+Ce scénario ferme la couverture de panne brève/alerte/retry/retour sain
+pour un daemon réel avec récepteur de qualification ; pas destination
+opérateur provisionnée, ordonnanceur, panne longue/SIGKILL daemon ou
+perte électrique. Les autres gates initiales, revue et bridge/lancement
+restent ouvertes. Aucune nouvelle image ni fonds ni production déclarée.
+[Preuves](qualification/alert-live-20261001/attempt-a/README.md).

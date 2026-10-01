@@ -200,3 +200,11 @@ Campagne daemon vivant préparée : `NANO_TEST_ALERT_DELIVERY=1` et
 avec candidats épinglés. Pause réelle du VPS, premier POST HTTP503, retry
 idempotent et retour sain ; finalité commune testée ensuite indépendamment.
 Ce mode reste non qualifié tant que le run complet n'a pas terminé.
+
+La campagne vivante préparée ci-dessus a terminé avec succès : VPS
+réel en pause, réception de l'alerte, retry HTTP503 avec même eventId,
+réception du retour sain. La fenêtre indépendante suivante prouve trois
+avancées communes 2 → 5, avec trois validateurs sains à l'arrêt.
+La pause observée est brève (1 892 ms) et le récepteur HTTP local reste
+un outil de qualification ; pas d'ordonnanceur/destination opérateur.
+[Preuves vivantes](qualification/alert-live-20261001/attempt-a/README.md).
