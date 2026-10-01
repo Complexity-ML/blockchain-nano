@@ -1,0 +1,310 @@
+{
+  "backtraceGraph" : 
+  {
+    "commands" : 
+    [
+      "add_test"
+    ],
+    "files" : 
+    [
+      "/work/CMakeLists.txt"
+    ],
+    "nodes" : 
+    [
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 60,
+        "parent" : 0
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 65,
+        "parent" : 2
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 174,
+        "parent" : 4
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 174,
+        "parent" : 6
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 225,
+        "parent" : 8
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 239,
+        "parent" : 10
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 293,
+        "parent" : 12
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 310,
+        "parent" : 14
+      }
+    ]
+  },
+  "kind" : "ctestInfo",
+  "tests" : 
+  [
+    {
+      "backtrace" : 1,
+      "command" : 
+      [
+        "/build/rpc-admission-amd64-20261001/nano-rpc-tests"
+      ],
+      "name" : "rpc",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_evm"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 120.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/work"
+        }
+      ]
+    },
+    {
+      "backtrace" : 3,
+      "command" : 
+      [
+        "/build/rpc-admission-amd64-20261001/nano-rpc-foreign-admission-tests"
+      ],
+      "name" : "rpc_foreign_chain_admission_isolation",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_rpc_admission"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 30.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/rpc-admission-amd64-20261001"
+        }
+      ]
+    },
+    {
+      "backtrace" : 5,
+      "command" : 
+      [
+        "/build/rpc-admission-amd64-20261001/nano-bft-network-tests",
+        "/build/rpc-admission-amd64-20261001/nano",
+        "/build/network/nano-p2p",
+        "--restart-flood"
+      ],
+      "name" : "bft_restart_flood_paris_network",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "NANO_TEST_EVM_FORK=Paris"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_bft_rpc_admission_local"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 120.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/rpc-admission-amd64-20261001"
+        }
+      ]
+    },
+    {
+      "backtrace" : 7,
+      "command" : 
+      [
+        "/build/rpc-admission-amd64-20261001/nano-bft-network-tests",
+        "/build/rpc-admission-amd64-20261001/nano",
+        "/build/network/nano-p2p",
+        "--restart-flood"
+      ],
+      "name" : "bft_restart_flood_shanghai_network",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "NANO_TEST_EVM_FORK=Shanghai"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_bft_rpc_admission_local"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 120.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/rpc-admission-amd64-20261001"
+        }
+      ]
+    },
+    {
+      "backtrace" : 9,
+      "command" : 
+      [
+        "/build/rpc-admission-amd64-20261001/nano-supervisor-tests",
+        "/build/rpc-admission-amd64-20261001/nano",
+        "/build/network/nano-p2p"
+      ],
+      "name" : "supervisor",
+      "properties" : 
+      [
+        {
+          "name" : "TIMEOUT",
+          "value" : 90.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/rpc-admission-amd64-20261001"
+        }
+      ]
+    },
+    {
+      "backtrace" : 11,
+      "command" : 
+      [
+        "/build/rpc-admission-amd64-20261001/nano-rpc-cli-tests",
+        "/build/rpc-admission-amd64-20261001/nano"
+      ],
+      "name" : "rpc_cli",
+      "properties" : 
+      [
+        {
+          "name" : "TIMEOUT",
+          "value" : 90.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/rpc-admission-amd64-20261001"
+        }
+      ]
+    },
+    {
+      "backtrace" : 13,
+      "command" : 
+      [
+        "/build/rpc-admission-amd64-20261001/nano-staking_cli-tests",
+        "/build/rpc-admission-amd64-20261001/nano"
+      ],
+      "name" : "staking_cli",
+      "properties" : 
+      [
+        {
+          "name" : "TIMEOUT",
+          "value" : 120.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/rpc-admission-amd64-20261001"
+        }
+      ]
+    },
+    {
+      "backtrace" : 15,
+      "command" : 
+      [
+        "/build/rpc-admission-amd64-20261001/nano-signed-validator-cli-tests",
+        "/build/rpc-admission-amd64-20261001/nano"
+      ],
+      "name" : "signed_validator_cli",
+      "properties" : 
+      [
+        {
+          "name" : "TIMEOUT",
+          "value" : 90.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/rpc-admission-amd64-20261001"
+        }
+      ]
+    }
+  ],
+  "version" : 
+  {
+    "major" : 1,
+    "minor" : 0
+  }
+}

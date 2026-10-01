@@ -5662,3 +5662,17 @@ CI 36900339735 terminale annulée : opérations réussies, cœur annulé, résea
 skipped ; aucun résultat complet CI déduit. Tous les échecs et huit exigences
 originales restent ouverts, production non qualifiée.
 [Preuves AMD64 terminales et périmètre](qualification/rpc-admission-isolation-20261001/amd64-9861d94c/README.md).
+
+
+### 2026-10-01 — nouvelle prélecture RPC qualifiée sur AMD64
+
+Candidate bf173958 : huit noms exacts réussis sans skip sur le VPS (59.90 s),
+avec 512 rejets étrangers dont 128 profondément imbriqués, 63 high-s et
+64 payloads imbriqués locaux limités, admission saine/refill/état inchangé.
+Les quatre tests ARM64 du même correctif sont déjà qualifiés ; leurs quatre
+CLI restent une qualification du candidat précédent. Aucun nouveau build
+d'image ni déploiement ; récupération Git et compilation incrémentale.
+Campagne complète originale active, sources main gelées ; estimation sous
+charge, admission gossip/même chaîne, Beacon/WAN, matrice complète et tous
+les critères originaux restent ouverts. Production non qualifiée.
+[Preuves AMD64 du nouveau candidat](qualification/rpc-shallow-preflight-20261001/amd64/README.md).
