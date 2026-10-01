@@ -1,0 +1,59 @@
+{
+  "exitCode": 1,
+  "runtimeRevision": "5165e518af9da7e503747a16d76819f0b147a240",
+  "harnessRevision": "b158628394732f8a4bcdbdf31601cedcc9cb3f89",
+  "strictEndToEndDeadlineQualified": false,
+  "cycles": [
+    {
+      "cycle": 1,
+      "requestedCutMs": 96000,
+      "actualCutMs": 97499,
+      "nominalLimitMs": 180000,
+      "strictRecoveryPassed": true,
+      "acceptedMonotonicElapsedMs": 141559.22091700003,
+      "firstCommonFinalityReadWallElapsedMs": 141561,
+      "physicalFinalityInstantKnown": false
+    },
+    {
+      "cycle": 2,
+      "requestedCutMs": 192000,
+      "actualCutMs": 193134,
+      "nominalLimitMs": 180000,
+      "strictRecoveryPassed": false,
+      "acceptedMonotonicElapsedMs": null,
+      "firstCommonFinalityReadWallElapsedMs": 180183,
+      "physicalFinalityInstantKnown": false
+    }
+  ],
+  "stableFinality": {
+    "epochs": 3,
+    "firstEpoch": "15",
+    "lastEpoch": "18",
+    "elapsedMs": 144742,
+    "nodes": [
+      "mac-native",
+      "mac-docker",
+      "vps-docker"
+    ],
+    "revision": "5165e518af9da7e503747a16d76819f0b147a240"
+  },
+  "validators": [
+    {
+      "file": "native.log",
+      "healthy": true,
+      "attestationsAdmitted": 422
+    },
+    {
+      "file": "docker-mac.log",
+      "healthy": true,
+      "attestationsAdmitted": 403
+    },
+    {
+      "file": "vps.log",
+      "healthy": true,
+      "attestationsAdmitted": 394
+    }
+  ],
+  "clockFaultReproduced": false,
+  "productionQualified": false
+}
