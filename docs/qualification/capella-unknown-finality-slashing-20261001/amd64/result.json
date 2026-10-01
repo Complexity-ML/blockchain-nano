@@ -1,0 +1,71 @@
+[
+  {
+    "attestations": 64,
+    "scenario": "new-validator-delayed-inclusion",
+    "slot": 80
+  },
+  {
+    "attestations": 64,
+    "scenario": "new-validator-delayed-inclusion",
+    "slot": 88
+  },
+  {
+    "attestations": 64,
+    "scenario": "new-validator-delayed-inclusion",
+    "slot": 96
+  },
+  {
+    "cases": 4,
+    "checks": 8,
+    "owners": 2,
+    "phase": "before-valid-admission",
+    "scenario": "new-validator-forged-proofs"
+  },
+  {
+    "cases": 4,
+    "checks": 16,
+    "owners": 2,
+    "phase": "after-both-owners-reopened",
+    "scenario": "new-validator-forged-proofs"
+  },
+  {
+    "afterUnknownFinalityAdvance": false,
+    "bothOwnersReopened": true,
+    "finalizedEpoch": 8,
+    "justifiedEpoch": 10,
+    "scenario": "new-validator-proof-admission",
+    "slot": 96,
+    "unknownFinalizedMember": true
+  },
+  {
+    "attestations": 64,
+    "scenario": "new-validator-delayed-inclusion",
+    "slot": 104
+  },
+  {
+    "finalizedEpoch": 9,
+    "proofRetained": true,
+    "scenario": "new-validator-unknown-finality-advance",
+    "slot": 104,
+    "unknownFinalizedMember": true
+  },
+  {
+    "afterUnknownFinalityAdvance": true,
+    "bothOwnersReopened": true,
+    "finalizedEpoch": 9,
+    "justifiedEpoch": 11,
+    "scenario": "new-validator-proof-admission",
+    "slot": 104,
+    "unknownFinalizedMember": true
+  },
+  {
+    "finalizedSanctionRetired": true,
+    "forgedProofChecks": 16,
+    "networkTransport": false,
+    "proofReopenedBeforeFinalizedRegistration": true,
+    "scenario": "capella-new-validator-slashing",
+    "skippedOffenderProposals": 0,
+    "unknownFinalityAdvances": 1,
+    "unknownFinalizedObservations": 64
+  }
+]

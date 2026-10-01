@@ -1,0 +1,56 @@
+Start testing: Oct 01 14:52 UTC
+----------------------------------------------------------
+370/399 Testing: consensus_capella_unknown_finality_slashing
+370/399 Test: consensus_capella_unknown_finality_slashing
+Command: "/build/nano-capella-transition-tests" "--unknown-finality-slashing"
+Directory: /build
+"consensus_capella_unknown_finality_slashing" start time: Oct 01 14:52 UTC
+Output:
+----------------------------------------------------------
+{"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+{"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+{"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+{"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+{"finalizedEpoch":3,"progressSlot":40,"signedVotes":264}
+{"finalizedEpoch":3,"progressSlot":41,"signedVotes":272}
+{"depositIndex":0,"depositProgressSlot":48,"finalizedEpoch":4}
+{"depositIndex":0,"depositProgressSlot":56,"finalizedEpoch":5}
+{"depositIndex":0,"depositProgressSlot":64,"finalizedEpoch":6}
+{"depositIndex":0,"depositProgressSlot":72,"finalizedEpoch":7}
+{"attestations":64,"scenario":"new-validator-delayed-inclusion","slot":80}
+{"depositIndex":1,"depositProgressSlot":80,"finalizedEpoch":7}
+{"attestations":64,"scenario":"new-validator-delayed-inclusion","slot":88}
+{"depositIndex":1,"depositProgressSlot":88,"finalizedEpoch":8}
+{"attestations":64,"scenario":"new-validator-delayed-inclusion","slot":96}
+{"cases":4,"checks":8,"owners":2,"phase":"before-valid-admission","scenario":"new-validator-forged-proofs"}
+{"cases":4,"checks":16,"owners":2,"phase":"after-both-owners-reopened","scenario":"new-validator-forged-proofs"}
+{"afterUnknownFinalityAdvance":false,"bothOwnersReopened":true,"finalizedEpoch":8,"justifiedEpoch":10,"scenario":"new-validator-proof-admission","slot":96,"unknownFinalizedMember":true}
+{"depositIndex":1,"depositProgressSlot":96,"finalizedEpoch":8}
+{"attestations":64,"scenario":"new-validator-delayed-inclusion","slot":104}
+{"finalizedEpoch":9,"proofRetained":true,"scenario":"new-validator-unknown-finality-advance","slot":104,"unknownFinalizedMember":true}
+{"afterUnknownFinalityAdvance":true,"bothOwnersReopened":true,"finalizedEpoch":9,"justifiedEpoch":11,"scenario":"new-validator-proof-admission","slot":104,"unknownFinalizedMember":true}
+{"depositIndex":1,"depositProgressSlot":104,"finalizedEpoch":9}
+{"depositIndex":1,"depositProgressSlot":112,"finalizedEpoch":11}
+{"depositIndex":1,"depositProgressSlot":120,"finalizedEpoch":13}
+{"depositIndex":1,"depositProgressSlot":128,"finalizedEpoch":14}
+{"depositIndex":1,"depositProgressSlot":136,"finalizedEpoch":15}
+{"depositIndex":1,"depositProgressSlot":144,"finalizedEpoch":16}
+{"depositIndex":1,"depositProgressSlot":152,"finalizedEpoch":17}
+{"depositIndex":1,"depositProgressSlot":160,"finalizedEpoch":18}
+{"depositIndex":1,"depositProgressSlot":161,"finalizedEpoch":18}
+{"finalizedSanctionRetired":true,"forgedProofChecks":16,"networkTransport":false,"proofReopenedBeforeFinalizedRegistration":true,"scenario":"capella-new-validator-slashing","skippedOffenderProposals":0,"unknownFinalityAdvances":1,"unknownFinalizedObservations":64}
+{"activationEpoch":18,"blockReplayIdempotent":true,"bothOwnersReopened":true,"consumedAtSlot":80,"consumptionTransitions":1,"continuedThroughSlot":161,"existingValidatorTopup":false,"invalidSignatureConsumedWithoutAdmission":false,"newValidatorVotes":0,"scenario":"capella-native-deposit-activation","votingPeriodSlots":32}
+{"afterBlocks":18,"afterSnapshotBytes":1191797,"automaticPruning":false,"beforeBlocks":41,"beforeSnapshotBytes":2528249,"durablePruningRestart":true,"historyPreserved":true,"nativeCheckpointV3":true,"networkAnchorPreserved":true,"nextBlockEqual":true,"oldSlashingPreservedAndApplied":false,"pendingBlsReanchoredAndIncluded":false,"scenario":"capella-pruning-primitive"}
+{"blocks":40,"disjointSyncMerging":false,"executionOwner":true,"finalizedEpoch":3,"independentStores":2,"individualSyncMessages":false,"justifiedEpoch":4,"localSyncAggregates":false,"localSyncSigning":false,"networkActivated":false,"networkTransport":false,"participationPercent":100,"scenario":"capella-local-assembly-finality","signingJournalsReopened":64,"storeReopens":2,"syncCatalogExport":false,"syncPrecollection":false,"syncWireWorker":false,"votes":272}
+<end of output>
+Test time = 163.22 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_unknown_finality_slashing" end time: Oct 01 14:55 UTC
+"consensus_capella_unknown_finality_slashing" time elapsed: 00:02:43
+----------------------------------------------------------
+
+End testing: Oct 01 14:55 UTC
+
+qualification_consensus_recovery = 163.22 sec*proc
+

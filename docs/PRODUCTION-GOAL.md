@@ -1700,3 +1700,22 @@ corruption runtime démontrée. Qualification Docker ARM64/AMD64 encore ouverte.
 Cœur runtime inchangé ; ce résultat ne ferme pas le cycle global ni les
 autres critères initiaux de production.
 [Preuves natives](qualification/capella-unknown-finality-slashing-20261001/native/README.md).
+
+
+### 2026-10-01 — rétention sans membre : qualification portable achevée
+
+Même nouveau scénario de test `c2e9e26` réussi en natif 176,14 s, Docker
+ARM64 163,22 s et VPS Docker AMD64 **585,94 s** sous la limite inchangée
+de 600 s. Une avance réelle de finalité avec membre absent, preuve retenue,
+réouverture des deux propriétaires avant/après cette avance, rejeu sans
+mutation et retrait après sanction finalisée ; 16 refus falsifiés sur chaque
+plateforme. Cette branche auparavant `unknownFinalityAdvances=0` est désormais
+couverte et qualifiée pour le cœur courant. Premier fixture négatif conservé.
+Le temps AMD64 est celui de ce fixture comprimé à deux propriétaires durables,
+pas une latence de finalité ou de reprise WAN.
+Sources runtime identiques à `74784c4` et empreintes core/P2P identiques
+aux candidats WAN U : aucune nouvelle image ni relabellisation. Les gates
+globales de cycle/scalabilité, version complète, exploitation, revue et
+bridge/lancement restent ouvertes ; aucun fonds réel ni production déclarée.
+[ARM64](qualification/capella-unknown-finality-slashing-20261001/arm64/README.md)
+et [AMD64](qualification/capella-unknown-finality-slashing-20261001/amd64/README.md).
