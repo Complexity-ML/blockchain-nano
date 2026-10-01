@@ -171,6 +171,8 @@ if(NANO_NETWORK_EXECUTABLE)
   add_test(NAME bft_validators_${fork_lower}_network COMMAND nano-bft-network-tests $<TARGET_FILE:nano> ${NANO_NETWORK_EXECUTABLE})
   add_test(NAME bft_restart_${fork_lower}_network COMMAND nano-bft-network-tests $<TARGET_FILE:nano> ${NANO_NETWORK_EXECUTABLE} --restart)
   set_tests_properties(bft_validators_${fork_lower}_network bft_restart_${fork_lower}_network PROPERTIES TIMEOUT 90 ENVIRONMENT "NANO_TEST_EVM_FORK=${fork}" LABELS "qualification_bft_network_local")
+  add_test(NAME bft_restart_flood_${fork_lower}_network COMMAND nano-bft-network-tests $<TARGET_FILE:nano> ${NANO_NETWORK_EXECUTABLE} --restart-flood)
+  set_tests_properties(bft_restart_flood_${fork_lower}_network PROPERTIES RUN_SERIAL TRUE TIMEOUT 120 ENVIRONMENT "NANO_TEST_EVM_FORK=${fork}" LABELS "qualification_bft_rpc_admission_local")
   # These wall-clock qualification gates already create concurrent clients.
   # Keep their host CPU budget exclusive within CTest; do not relax RPC deadlines.
   add_test(NAME bft_rpc_cost_${fork_lower}_network COMMAND nano-bft-network-tests $<TARGET_FILE:nano> ${NANO_NETWORK_EXECUTABLE} --rpc-cost)
