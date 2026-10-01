@@ -184,6 +184,12 @@ void CapellaDurableReactor::check_registered_index_locked(uint64_t index,const B
  const auto found=validator_index_cache_->indices.find(public_key);
  if(found==validator_index_cache_->indices.end()||found->second!=index)throw StaleCapellaDuty("Automatic validator index changed before signing");
 }
+bool CapellaDurableReactor::current_duties_ready(uint64_t slot,const std::function<void()>& check){
+ std::lock_guard lock(mutex_);require_available();const auto& c=state_->timed.clock;
+ if((c.time_ms-c.genesis_time_ms)/rules_.slot_duration_ms!=slot)return false;
+ if((c.time_ms-c.genesis_time_ms)%rules_.slot_duration_ms>=rules_.attestation_due_ms)return true;
+ return capella_fork_head(*state_,rules_,check).header.slot==slot;
+}
 std::set<uint64_t> CapellaDurableReactor::current_attesters(uint64_t slot,const std::function<void()>& check){
  std::lock_guard lock(mutex_);require_available();const auto duties=prepare_capella_attestation_duties(*state_,rules_,slot,limits_.replay_slots,limits_.sync_trials,check);std::set<uint64_t> result;for(const auto& [index,duty]:duties)result.insert(index);return result;
 }

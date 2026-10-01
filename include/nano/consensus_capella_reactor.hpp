@@ -122,6 +122,9 @@ public:
  bool tick_if_needed(uint64_t,const std::function<void()>& checkpoint={});
  std::optional<uint64_t> current_proposer(uint64_t,const std::function<void()>& checkpoint={});
  std::map<Bytes,uint64_t> current_validator_indices(const std::set<Bytes>&,const std::function<void()>& checkpoint={});
+ // Scheduler eligibility: admitted slot block or authenticated profile deadline.
+ uint64_t local_duty_due_ms()const{return rules_.attestation_due_ms;}
+ bool current_duties_ready(uint64_t,const std::function<void()>& checkpoint={});
  std::set<uint64_t> current_attesters(uint64_t,const std::function<void()>& checkpoint={});
  std::optional<Phase0SignedAttestation> attest_current(uint64_t,uint64_t,const std::function<uint64_t()>&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={},const Bytes& registration_public_key={});
  std::optional<Bytes> propose_current(uint64_t,uint64_t,const std::string&,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<uint64_t()>&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={},const Bytes& registration_public_key={});

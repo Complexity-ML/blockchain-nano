@@ -1,0 +1,154 @@
+diff --git a/include/nano/consensus_capella_reactor.hpp b/include/nano/consensus_capella_reactor.hpp
+index 9890944..f005e70 100644
+--- a/include/nano/consensus_capella_reactor.hpp
++++ b/include/nano/consensus_capella_reactor.hpp
+@@ -122,6 +122,9 @@ public:
+  bool tick_if_needed(uint64_t,const std::function<void()>& checkpoint={});
+  std::optional<uint64_t> current_proposer(uint64_t,const std::function<void()>& checkpoint={});
+  std::map<Bytes,uint64_t> current_validator_indices(const std::set<Bytes>&,const std::function<void()>& checkpoint={});
++ // Scheduler eligibility: admitted slot block or authenticated profile deadline.
++ uint64_t local_duty_due_ms()const{return rules_.attestation_due_ms;}
++ bool current_duties_ready(uint64_t,const std::function<void()>& checkpoint={});
+  std::set<uint64_t> current_attesters(uint64_t,const std::function<void()>& checkpoint={});
+  std::optional<Phase0SignedAttestation> attest_current(uint64_t,uint64_t,const std::function<uint64_t()>&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={},const Bytes& registration_public_key={});
+  std::optional<Bytes> propose_current(uint64_t,uint64_t,const std::string&,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<uint64_t()>&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={},const Bytes& registration_public_key={});
+diff --git a/include/nano/consensus_capella_validator.hpp b/include/nano/consensus_capella_validator.hpp
+index 62abda8..8cdcb94 100644
+--- a/include/nano/consensus_capella_validator.hpp
++++ b/include/nano/consensus_capella_validator.hpp
+@@ -19,7 +19,7 @@ class CapellaValidatorLoop {
+  const std::vector<CapellaValidatorKey> keys_;
+  const std::function<uint64_t()> now_;
+  std::mutex mutex_,wait_mutex_;std::condition_variable wake_;std::thread thread_;
+- uint64_t polls_=0,poll_max_ms_=0,polls_over_slot_=0,proposal_attempts_=0,proposal_max_ms_=0,proposals_unavailable_=0,slot_exits_=0;
++ uint64_t polls_=0,poll_max_ms_=0,polls_over_slot_=0,proposal_attempts_=0,proposal_max_ms_=0,proposals_unavailable_=0,slot_exits_=0,duty_waits_=0;
+  size_t awaiting_registration_=0;std::set<uint64_t> resolved_indices_;
+  size_t trace_limit_=0;uint64_t trace_failures_=0;std::deque<Json> duty_trace_;std::optional<uint64_t> traced_slot_;
+  void record_duty(uint64_t,const Phase0SignedAttestation&);
+diff --git a/src/consensus_capella_signing.cpp b/src/consensus_capella_signing.cpp
+index bba15ae..428f61d 100644
+--- a/src/consensus_capella_signing.cpp
++++ b/src/consensus_capella_signing.cpp
+@@ -184,6 +184,12 @@ void CapellaDurableReactor::check_registered_index_locked(uint64_t index,const B
+  const auto found=validator_index_cache_->indices.find(public_key);
+  if(found==validator_index_cache_->indices.end()||found->second!=index)throw StaleCapellaDuty("Automatic validator index changed before signing");
+ }
++bool CapellaDurableReactor::current_duties_ready(uint64_t slot,const std::function<void()>& check){
++ std::lock_guard lock(mutex_);require_available();const auto& c=state_->timed.clock;
++ if((c.time_ms-c.genesis_time_ms)/rules_.slot_duration_ms!=slot)return false;
++ if((c.time_ms-c.genesis_time_ms)%rules_.slot_duration_ms>=rules_.attestation_due_ms)return true;
++ return capella_fork_head(*state_,rules_,check).header.slot==slot;
++}
+ std::set<uint64_t> CapellaDurableReactor::current_attesters(uint64_t slot,const std::function<void()>& check){
+  std::lock_guard lock(mutex_);require_available();const auto duties=prepare_capella_attestation_duties(*state_,rules_,slot,limits_.replay_slots,limits_.sync_trials,check);std::set<uint64_t> result;for(const auto& [index,duty]:duties)result.insert(index);return result;
+ }
+diff --git a/src/consensus_capella_validator.cpp b/src/consensus_capella_validator.cpp
+index fa3df7f..a51679a 100644
+--- a/src/consensus_capella_validator.cpp
++++ b/src/consensus_capella_validator.cpp
+@@ -53,6 +53,12 @@ void CapellaValidatorLoop::poll(const std::function<void()>& checkpoint){
+    }
+   }
+   // All locally owned proposals are admitted before choosing attestation heads.
++  // Attestation duties already enforce this phase; apply the same configured
++  // deadline to sync messages, which otherwise sign an old head immediately.
++  // No sleep under a lock. https://github.com/ethereum/consensus-specs/blob/v1.3.0/specs/altair/validator.md#sync-committee-messages
++  const auto duty_time=now_();if(duty_time<genesis)throw std::runtime_error("Validator clock precedes genesis");
++  if((duty_time-genesis)/slot_ms_!=slot){++slot_exits_;return;}
++  if(!reactor_.current_duties_ready(slot,check)){++duty_waits_;return;}
+   const auto attesters=reactor_.current_attesters(slot,check);
+   for(const auto& key:eligible){
+    if(!attesters.contains(key.index))continue;
+@@ -99,7 +105,7 @@ void CapellaValidatorLoop::record_duty(uint64_t index,const Phase0SignedAttestat
+   duty_trace_.push_back(std::move(entry));while(duty_trace_.size()>trace_limit_)duty_trace_.pop_front();traced_slot_=vote.data.slot;
+  }catch(...){++trace_failures_;/* Consensus admission still follows. */}
+ }
+-Json CapellaValidatorLoop::status(bool include_trace){std::lock_guard lock(mutex_);Json result={{"healthy",!failed_},{"localKeys",keys_.size()},{"awaitingRegistration",awaiting_registration_},{"proposalsAdmitted",proposals_},{"attestationsAdmitted",votes_},{"syncMessagesAdmitted",sync_messages_},{"staleDutyRetries",stale_retries_},{"timing",{{"polls",polls_},{"maxPollMs",poll_max_ms_},{"pollsOverSlot",polls_over_slot_},{"proposalAttempts",proposal_attempts_},{"maxProposalMs",proposal_max_ms_},{"proposalsUnavailable",proposals_unavailable_},{"slotBoundaryExits",slot_exits_}}},{"failure",failure_.empty()?Json(nullptr):Json(failure_)},{"dutyTraceFailures",trace_failures_}};if(include_trace)result["dutyTrace"]=duty_trace_;return result;}
++Json CapellaValidatorLoop::status(bool include_trace){std::lock_guard lock(mutex_);Json result={{"healthy",!failed_},{"localKeys",keys_.size()},{"awaitingRegistration",awaiting_registration_},{"proposalsAdmitted",proposals_},{"attestationsAdmitted",votes_},{"syncMessagesAdmitted",sync_messages_},{"staleDutyRetries",stale_retries_},{"timing",{{"polls",polls_},{"maxPollMs",poll_max_ms_},{"pollsOverSlot",polls_over_slot_},{"proposalAttempts",proposal_attempts_},{"maxProposalMs",proposal_max_ms_},{"proposalsUnavailable",proposals_unavailable_},{"slotBoundaryExits",slot_exits_},{"awaitingSlotBlock",duty_waits_}}},{"failure",failure_.empty()?Json(nullptr):Json(failure_)},{"dutyTraceFailures",trace_failures_}};if(include_trace)result["dutyTrace"]=duty_trace_;return result;}
+ Json CapellaValidatorLoop::restart_commitments(){
+  std::lock_guard lock(mutex_);Json out=Json::array();
+  for(const auto& key:keys_){const auto token=key.journal->commitment();Json item={{"index",key.registration_public_key.empty()?Json(quantity(Int(std::to_string(key.index)))):Json(nullptr)},{"restart",{{"sequence",quantity(Int(std::to_string(token.sequence)))},{"digest",hex(token.digest)}}}};if(!key.registration_public_key.empty())item["publicKey"]=hex(key.registration_public_key);out.push_back(std::move(item));}
+@@ -107,6 +113,8 @@ Json CapellaValidatorLoop::restart_commitments(){
+ }
+ void CapellaValidatorLoop::start(std::chrono::milliseconds interval){
+  if(interval<=std::chrono::milliseconds::zero())throw std::invalid_argument("Validator poll interval required");
++ // Even a configured full-slot polling interval must revisit deferred duties.
++ interval=std::min(interval,std::chrono::milliseconds(std::max<uint64_t>(1,reactor_.local_duty_due_ms())));
+  std::lock_guard lock(wait_mutex_);if(thread_.joinable()||stopping_)throw std::logic_error("Validator loop already started/stopped");
+  thread_=std::thread([this,interval]{std::unique_lock lock(wait_mutex_);while(!wake_.wait_for(lock,interval,[&]{return stopping_;})){lock.unlock();try{poll([this]{std::lock_guard guard(wait_mutex_);if(stopping_)throw std::runtime_error("Validator stopping");});}catch(...){return;}lock.lock();}});
+ }
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index c4082fd..7352d05 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -53,7 +53,7 @@ static bool owner_mode=false;
+ static bool owner_reorg=false;
+ static bool owner_sync=false;
+ static bool owner_witness=false;
+-static bool scheduled=false,sync_rotation=false,clock_diagnostics=false;
++static bool scheduled=false,sync_rotation=false,clock_diagnostics=false,duty_timing=false;
+ static bool configured_runtime=false;
+ static bool automatic_recovery=false;
+ static bool capella_http=false;
+@@ -517,6 +517,44 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+  if(owner_mode){Rpc rpc(*owners[0]);nodes[0]->invalidate();check(rpc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method","eth_blockNumber"},{"params",Json::array()}}).contains("error"),"invalidated owner still served block number");}
+  std::cout<<Json{{"scenario","capella-local-assembly-finality"},{"localSyncAggregates",local_sync},{"disjointSyncMerging",local_sync},{"individualSyncMessages",local_sync},{"syncWireWorker",local_sync},{"syncCatalogExport",local_sync},{"syncPrecollection",local_sync},{"localSyncSigning",local_sync},{"executionOwner",owner_mode},{"participationPercent",local_finality},{"blocks",blocks},{"votes",votes},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"justifiedEpoch",result.state->timed.view.justified.epoch},{"independentStores",2},{"storeReopens",restarts},{"signingJournalsReopened",reopened_journals},{"networkTransport",false},{"networkActivated",false}}.dump()<<std::endl;
+ }
++static void duty_timing_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules,const Block& genesis,const State& genesis_state){
++ const auto& t=rules.transition;const auto slots=t.consensus.epoch.ffg.slots_per_epoch;const auto test_slot=slots+1;
++ for(unsigned mode=0;mode<4;++mode){
++  Temp directory;Genesis g;g.chain_id=t.chain_id;g.consensus="beacon";g.evm_revision=EvmRevision::Shanghai;g.block=genesis;g.state=genesis_state;
++  Blockchain owner(directory/"owner",g);ChainStore witness(directory/"witness");CapellaDurableReactor reactor(owner,rules,crash_limits,initial,std::function<void()>{},&witness);
++  uint64_t now=initial.timed.clock.genesis_time_ms+2*rules.slot_duration_ms;auto wall=[&]{return now;};CapellaLocalClock clock(reactor,2*rules.slot_duration_ms,wall);clock.poll();
++  const auto validators=root_at(initial.blocks.at(initial.timed.view.anchor).state.ssz,8);
++  std::map<uint64_t,std::unique_ptr<ChainStore>> disks;std::map<uint64_t,std::shared_ptr<BeaconSigningJournal>> journals;uint64_t observer_calls=0;
++  auto key_for=[&](uint64_t i,bool observer){disks[i]=std::make_unique<ChainStore>(directory/("key-"+std::to_string(i)));journals[i]=std::make_shared<BeaconSigningJournal>(*disks[i],t.chain_id,genesis.header.hash(),validators,Key(i).public_key,slots);return CapellaValidatorKey{i,journals[i],[&,i,observer](const ConsensusRoot& root){if(observer)++observer_calls;return Key(i).sign(root);},genesis.header.coinbase,{}};};
++  std::vector<CapellaValidatorKey> all_keys;for(uint64_t i=0;i<64;++i)all_keys.push_back(key_for(i,false));
++  {CapellaValidatorLoop warm(reactor,clock,rules.slot_duration_ms,slots,16,64,all_keys,wall);for(uint64_t slot=2;slot<=slots;++slot){now=initial.timed.clock.genesis_time_ms+slot*rules.slot_duration_ms;warm.poll();check(capella_fork_head(*reactor.current().state,rules).header.slot==slot,"timing warmup block missing");}}
++  now=initial.timed.clock.genesis_time_ms+test_slot*rules.slot_duration_ms;clock.poll();const auto proposer=reactor.current_proposer(test_slot);check(bool(proposer),"timing fixture proposer missing");
++  std::vector<CapellaValidatorKey> observer_keys;for(auto key:all_keys)if(key.index!=*proposer){const auto i=key.index;key.signer=[&,i](const ConsensusRoot& root){++observer_calls;return Key(i).sign(root);};observer_keys.push_back(std::move(key));}
++  const auto producer_key=all_keys.at(*proposer);CapellaValidatorLoop observer(reactor,clock,rules.slot_duration_ms,slots,16,64,observer_keys,wall);
++  const auto old_head=consensus_beacon_header_root(capella_fork_head(*reactor.current().state,rules).header);
++  observer.poll();check(observer_calls==0&&observer.status().at("attestationsAdmitted")==0&&!reactor.current_duties_ready(test_slot),"observer signed old head at slot start");
++  const auto before=reactor.current().token;bool rejected=false;try{rejected=!reactor.block(Bytes(184,0));}catch(const std::invalid_argument&){rejected=true;}check(rejected&&reactor.current().token==before,"invalid block changed timing readiness");
++  const auto due=rules.attestation_due_ms;now+=due-1;observer.poll();check(observer_calls==0,"observer signed before block/deadline");
++  check(due>0,"timing fixture deadline missing");
++  if(mode==0){CapellaValidatorLoop producer(reactor,clock,rules.slot_duration_ms,slots,16,64,{producer_key},wall);producer.poll();check(reactor.current_duties_ready(test_slot),"valid delayed block unavailable");observer.poll();const auto head=consensus_beacon_header_root(capella_fork_head(*reactor.current().state,rules).header);check(head!=old_head&&observer.status().at("attestationsAdmitted").get<uint64_t>()>0,"observer did not vote after valid block");for(const auto& [id,wire]:reactor.signed_votes()){const auto vote=decode_consensus_attestation_ssz(wire,t.consensus.body.validators_per_committee);check(vote&&(vote->data.slot!=test_slot||vote->data.beacon_block_root==head),"delayed observer voted for old head");}}
++  else if(mode==1){++now;observer.poll();check(observer.status().at("attestationsAdmitted").get<uint64_t>()>0,"missing block suppressed deadline fallback");for(const auto& [id,wire]:reactor.signed_votes()){const auto vote=decode_consensus_attestation_ssz(wire,t.consensus.body.validators_per_committee);check(vote&&(vote->data.slot!=test_slot||vote->data.beacon_block_root==old_head),"fallback changed selected head");}}
++  else if(mode==2){
++   // The observer may own the NEXT proposer. New-slot signatures are legitimate;
++   // the missed slot must never be backfilled, including its sync messages.
++   now=initial.timed.clock.genesis_time_ms+(test_slot+1)*rules.slot_duration_ms;clock.poll();
++   const auto next_proposer=reactor.current_proposer(test_slot+1);check(next_proposer&&*next_proposer!=*proposer,"timing fixture needs distinct next proposer");
++   observer.poll();check(observer.status().at("proposalsAdmitted")==1&&capella_fork_head(*reactor.current().state,rules).header.slot==test_slot+1,"next-slot proposal was suppressed");
++   check(!reactor.current_duties_ready(test_slot),"missed slot became eligible after boundary");
++   for(const auto& [index,journal]:journals)check(journal->latest_proposal_slot()!=test_slot,"missed-slot proposal signed late");
++   for(const auto& [id,wire]:reactor.signed_votes()){const auto vote=decode_consensus_attestation_ssz(wire,t.consensus.body.validators_per_committee);check(vote&&vote->data.slot!=test_slot,"missed-slot attestation signed late");}
++   const auto sync=reactor.capture_inventory("sync_committee_message",4096)->page({},128,32768);
++   for(const auto& entry:sync.at("entries")){const auto id=root_at(unhex(entry.get<std::string>()),0);const auto exported=reactor.export_message("sync_committee_message",id,1024);const auto message=decode_capella_sync_message(unhex(exported.at("envelope").at("ssz").get<std::string>()));check(message&&message->slot!=test_slot,"missed-slot sync message signed late");}
++  }
++  else{++now;const auto began=std::chrono::steady_clock::now();observer.start(std::chrono::milliseconds(rules.slot_duration_ms));const auto deadline=began+std::chrono::milliseconds(3*rules.slot_duration_ms/4);while(observer.status().at("attestationsAdmitted")==0&&std::chrono::steady_clock::now()<deadline)std::this_thread::sleep_for(std::chrono::milliseconds(10));observer.stop();check(observer.status().at("attestationsAdmitted").get<uint64_t>()>0&&std::chrono::steady_clock::now()-began<std::chrono::milliseconds(rules.slot_duration_ms),"full-slot worker interval starved deferred duties");}
++  const auto calls=observer_calls;observer.poll();check(observer_calls==calls,"duplicate poll repeated provider signatures");
++ }
++ std::cout<<Json{{"scenario","capella-duty-timing"},{"cases",4},{"earlyOldHeadPrevented",true},{"validBlockBeforeDeadline",true},{"invalidBlockNoRelease",true},{"deadlineFallback",true},{"missedSlotNoLateSignature",true},{"duplicatePollNoResign",true},{"fullSlotWorkerInterval",true},{"networkTransport",false}}.dump()<<std::endl;
++}
+ static void clock_diagnostics_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules,const Block& genesis,const State& genesis_state){
+  const auto limits=crash_limits;const auto& t=rules.transition;unsigned passed=0;
+  for(unsigned mode=0;mode<4;++mode){
+@@ -1486,7 +1524,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
+     }
+    }
+   }
+-  if(slot==first_slot){short_snapshot=capella_store_snapshot(*store,store_rules,snapshot_limits);if(clock_diagnostics){clock_diagnostics_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(deposit_reorg){deposit_reorg_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(configured_runtime){runtime_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(scheduled){scheduler_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}
++  if(slot==first_slot){short_snapshot=capella_store_snapshot(*store,store_rules,snapshot_limits);if(duty_timing){duty_timing_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(clock_diagnostics){clock_diagnostics_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(deposit_reorg){deposit_reorg_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(configured_runtime){runtime_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(scheduled){scheduler_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}
+   if(local_finality){local_finality_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}}
+   ++contexts;
+   beacon=received->consensus;state=received->execution.state;parent=received->execution.block;hashes[parent.header.number]=parent.header.hash();++accepted;
+@@ -1720,6 +1758,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
+ }
+ #include "support/capella_exit_owner.hpp"
+ int main(int argc,char** argv){try{executable=argv[0];
++if(argc==2&&std::string(argv[1])=="--duty-timing"){duty_timing=true;scenario(false);return 0;}
+ if(argc==2&&std::string(argv[1])=="--clock-diagnostics"){clock_diagnostics=true;scenario(false);return 0;}
+ if(argc==2&&std::string(argv[1])=="--new-validator-slashing"){slashing_new_validator=true;deposit_activation=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}
+ if(argc==2&&std::string(argv[1])=="--slashing-multi"){slashing_multi=true;slashing_retirement=true;pruning_automatic=true;pruning_native=true;owner_mode=true;local_finality=100;scenario(false);return 0;}

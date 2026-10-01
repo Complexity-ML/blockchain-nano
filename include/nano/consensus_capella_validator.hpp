@@ -19,7 +19,7 @@ class CapellaValidatorLoop {
  const std::vector<CapellaValidatorKey> keys_;
  const std::function<uint64_t()> now_;
  std::mutex mutex_,wait_mutex_;std::condition_variable wake_;std::thread thread_;
- uint64_t polls_=0,poll_max_ms_=0,polls_over_slot_=0,proposal_attempts_=0,proposal_max_ms_=0,proposals_unavailable_=0,slot_exits_=0;
+ uint64_t polls_=0,poll_max_ms_=0,polls_over_slot_=0,proposal_attempts_=0,proposal_max_ms_=0,proposals_unavailable_=0,slot_exits_=0,duty_waits_=0;
  size_t awaiting_registration_=0;std::set<uint64_t> resolved_indices_;
  size_t trace_limit_=0;uint64_t trace_failures_=0;std::deque<Json> duty_trace_;std::optional<uint64_t> traced_slot_;
  void record_duty(uint64_t,const Phase0SignedAttestation&);

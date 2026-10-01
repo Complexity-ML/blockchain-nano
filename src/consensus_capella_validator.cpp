@@ -53,6 +53,12 @@ void CapellaValidatorLoop::poll(const std::function<void()>& checkpoint){
    }
   }
   // All locally owned proposals are admitted before choosing attestation heads.
+  // Attestation duties already enforce this phase; apply the same configured
+  // deadline to sync messages, which otherwise sign an old head immediately.
+  // No sleep under a lock. https://github.com/ethereum/consensus-specs/blob/v1.3.0/specs/altair/validator.md#sync-committee-messages
+  const auto duty_time=now_();if(duty_time<genesis)throw std::runtime_error("Validator clock precedes genesis");
+  if((duty_time-genesis)/slot_ms_!=slot){++slot_exits_;return;}
+  if(!reactor_.current_duties_ready(slot,check)){++duty_waits_;return;}
   const auto attesters=reactor_.current_attesters(slot,check);
   for(const auto& key:eligible){
    if(!attesters.contains(key.index))continue;
@@ -99,7 +105,7 @@ void CapellaValidatorLoop::record_duty(uint64_t index,const Phase0SignedAttestat
   duty_trace_.push_back(std::move(entry));while(duty_trace_.size()>trace_limit_)duty_trace_.pop_front();traced_slot_=vote.data.slot;
  }catch(...){++trace_failures_;/* Consensus admission still follows. */}
 }
-Json CapellaValidatorLoop::status(bool include_trace){std::lock_guard lock(mutex_);Json result={{"healthy",!failed_},{"localKeys",keys_.size()},{"awaitingRegistration",awaiting_registration_},{"proposalsAdmitted",proposals_},{"attestationsAdmitted",votes_},{"syncMessagesAdmitted",sync_messages_},{"staleDutyRetries",stale_retries_},{"timing",{{"polls",polls_},{"maxPollMs",poll_max_ms_},{"pollsOverSlot",polls_over_slot_},{"proposalAttempts",proposal_attempts_},{"maxProposalMs",proposal_max_ms_},{"proposalsUnavailable",proposals_unavailable_},{"slotBoundaryExits",slot_exits_}}},{"failure",failure_.empty()?Json(nullptr):Json(failure_)},{"dutyTraceFailures",trace_failures_}};if(include_trace)result["dutyTrace"]=duty_trace_;return result;}
+Json CapellaValidatorLoop::status(bool include_trace){std::lock_guard lock(mutex_);Json result={{"healthy",!failed_},{"localKeys",keys_.size()},{"awaitingRegistration",awaiting_registration_},{"proposalsAdmitted",proposals_},{"attestationsAdmitted",votes_},{"syncMessagesAdmitted",sync_messages_},{"staleDutyRetries",stale_retries_},{"timing",{{"polls",polls_},{"maxPollMs",poll_max_ms_},{"pollsOverSlot",polls_over_slot_},{"proposalAttempts",proposal_attempts_},{"maxProposalMs",proposal_max_ms_},{"proposalsUnavailable",proposals_unavailable_},{"slotBoundaryExits",slot_exits_},{"awaitingSlotBlock",duty_waits_}}},{"failure",failure_.empty()?Json(nullptr):Json(failure_)},{"dutyTraceFailures",trace_failures_}};if(include_trace)result["dutyTrace"]=duty_trace_;return result;}
 Json CapellaValidatorLoop::restart_commitments(){
  std::lock_guard lock(mutex_);Json out=Json::array();
  for(const auto& key:keys_){const auto token=key.journal->commitment();Json item={{"index",key.registration_public_key.empty()?Json(quantity(Int(std::to_string(key.index)))):Json(nullptr)},{"restart",{{"sequence",quantity(Int(std::to_string(token.sequence)))},{"digest",hex(token.digest)}}}};if(!key.registration_public_key.empty())item["publicKey"]=hex(key.registration_public_key);out.push_back(std::move(item));}
@@ -107,6 +113,8 @@ Json CapellaValidatorLoop::restart_commitments(){
 }
 void CapellaValidatorLoop::start(std::chrono::milliseconds interval){
  if(interval<=std::chrono::milliseconds::zero())throw std::invalid_argument("Validator poll interval required");
+ // Even a configured full-slot polling interval must revisit deferred duties.
+ interval=std::min(interval,std::chrono::milliseconds(std::max<uint64_t>(1,reactor_.local_duty_due_ms())));
  std::lock_guard lock(wait_mutex_);if(thread_.joinable()||stopping_)throw std::logic_error("Validator loop already started/stopped");
  thread_=std::thread([this,interval]{std::unique_lock lock(wait_mutex_);while(!wake_.wait_for(lock,interval,[&]{return stopping_;})){lock.unlock();try{poll([this]{std::lock_guard guard(wait_mutex_);if(stopping_)throw std::runtime_error("Validator stopping");});}catch(...){return;}lock.lock();}});
 }
