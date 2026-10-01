@@ -5085,3 +5085,17 @@ quotas, délais, quorum et gas préservés. AMD64 de ce nouveau candidat encore
 qualifie pas Beacon/WAN, gossip, charge arbitraire ou la production.
 Tous les critères initiaux et la revue indépendante restent ouverts.
 [Sources et preuves avant/après](qualification/rpc-shallow-preflight-20261001/README.md).
+
+
+### 2026-10-01 — précédent candidat RPC portable, nouveau parcours AMD64 en cours
+
+La qualification AMD64 9861d94c est terminale : huit noms exacts passent,
+aucun skip, 60.76 s (RPC, admission étrangère, quatre CLI, deux scénarios
+legacy BFT Paris/Shanghai). Ce résultat ne couvre pas la nouvelle prélecture
+bf173958. Après arrêt du banc, checkout isolé actualisé par Git ; qualification
+AMD64 du nouveau candidat lancée avec le même builder et volume, sans image
+neuve ni déploiement. Sources main restent gelées pour la campagne 400.
+CI 36900339735 terminale annulée : opérations réussies, cœur annulé, réseau
+skipped ; aucun résultat complet CI déduit. Tous les échecs et huit exigences
+originales restent ouverts, production non qualifiée.
+[Preuves AMD64 terminales et périmètre](qualification/rpc-admission-isolation-20261001/amd64-9861d94c/README.md).
