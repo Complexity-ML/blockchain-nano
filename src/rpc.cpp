@@ -10,6 +10,22 @@ namespace {
 Json error_response(const Json& id,int code,const std::string& message,const Json& data=nullptr){Json error={{"code",code},{"message",message}};if(!data.is_null())error["data"]=data;return {{"jsonrpc","2.0"},{"id",id},{"error",error}};}
 void arity(const Json& p,size_t min,size_t max){if(p.size()<min||p.size()>max)throw RpcError(-32602,"Invalid parameter count");}
 Bytes hash_arg(const Json& j){auto value=unhex(j.get<std::string>());if(value.size()!=32)throw RpcError(-32602,"Expected 32-byte hash");return value;}
+// Reject an envelope for another chain before spending local signature-work
+// capacity. RLP parsing remains byte/depth bounded; this preflight never admits
+// a transaction. The normal decoder still verifies the complete signature.
+Int envelope_chain_id(const Bytes& input){
+ if(input.empty())throw std::invalid_argument("invalid transaction size");
+ unsigned type=0;Rlp fields;
+ if(input[0]<128){type=input[0];if(type<1||type>4)throw std::invalid_argument("unsupported transaction type");fields=Rlp::decode(Bytes(input.begin()+1,input.end()));}
+ else fields=Rlp::decode(input);
+ const size_t expected=type==0?9:type==1?11:type==2?12:type==3?14:13;
+ if(!fields.list||fields.items.size()!=expected)throw std::invalid_argument("invalid transaction fields");
+ if(type)return fields[0].number();
+ const auto v=fields[6].number();
+ if(v==27||v==28)return 0;
+ if(v<35)throw std::invalid_argument("invalid legacy v");
+ return Int((v-35)/2);
+}
 Json tx_json(const SignedTransaction& tx,const Block* block=nullptr,size_t index=0){auto result=tx.to_json();result["blockHash"]=block?Json(hex(block->header.hash())):Json(nullptr);result["blockNumber"]=block?Json(quantity(block->header.number)):Json(nullptr);result["transactionIndex"]=block?Json(quantity(Int(index))):Json(nullptr);return result;}
 Json block_json(const Block& b,bool full){auto result=b.to_json(full);if(full)for(size_t i=0;i<b.transactions.size();++i)result["transactions"][i]=tx_json(b.transactions[i],&b,i);return result;}
 Transaction simulation_transaction(Json call){
@@ -182,7 +198,7 @@ Json Rpc::dispatch(const std::string& method,const Json& p,const Estimate& estim
   result["effectiveGasPrice"]=quantity(b->transactions.at(size_t(u64(receipt->index))).tx.effective_gas_price(b->header.base_fee.value_or(Int(0))));return result;
  }
  if(method=="eth_sign"||method=="personal_sign"||method=="eth_signTypedData"||method=="eth_signTypedData_v4"||method=="eth_signTransaction"||method=="eth_sendTransaction")return account_request(method,p,estimate);
- if(method=="eth_sendRawTransaction"){arity(p,1,1);const auto& raw=p[0].get_ref<const std::string&>();if(raw.size()>2*1024*1024+2)throw RpcError(-32000,"transaction exceeds Nano pool byte limit");charge_transactions(1);auto tx=SignedTransaction::decode(unhex(raw));if(!chain_.submit(tx))throw RpcError(-32000,"Transaction rejected by pool");return hex(tx.hash());}
+ if(method=="eth_sendRawTransaction"){arity(p,1,1);const auto& raw=p[0].get_ref<const std::string&>();if(raw.size()>2*1024*1024+2)throw RpcError(-32000,"transaction exceeds Nano pool byte limit");auto bytes=unhex(raw);if(envelope_chain_id(bytes)!=chain_.genesis().chain_id)throw std::invalid_argument("wrong chain ID");charge_transactions(1);auto tx=SignedTransaction::decode(bytes);if(!chain_.submit(tx))throw RpcError(-32000,"Transaction rejected by pool");return hex(tx.hash());}
  if(method=="txpool_content"||method=="txpool_status"){arity(p,0,0);auto result=chain_.pool_info(method=="txpool_content");if(method=="txpool_status")for(const auto* field:{"pending","queued"})result[field]=quantity(Int(std::to_string(result.at(field).get<uint64_t>())));return result;}
  if(method=="nno_startValidating"||method=="nno_stopValidating"){
   arity(p,0,0);
