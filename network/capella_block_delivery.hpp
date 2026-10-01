@@ -30,9 +30,10 @@ class CapellaBlockDelivery:public std::enable_shared_from_this<CapellaBlockDeliv
   if(!value.is_object()||value.value("root",Json())!=id){finish(false);return;}
   // The authenticated local core can have pruned to a newer anchor since the
   // daemon started. Its anchor need not have an exportable signed envelope.
-  // Stop only an ancestor walk: never claim remote admission of the anchor
+  // A signed, available anchor must be delivered with its historical parents.
+  // Stop only an unavailable anchor walk: never claim remote admission of the anchor
   // itself. Every retained descendant still requires the peer's actual ACK.
-  if(value.value("anchor",Json())==true){
+  if(value.value("anchor",Json())==true&&value.value("available",Json())!=true){
    if(value.value("known",Json())!=true||pending_.empty()){finish(false);return;}
    deliver();return;
   }

@@ -7,11 +7,14 @@ namespace {
 void archive_require(bool value){if(!value)throw std::invalid_argument("Invalid Capella durable archive");}
 uint64_t archive_number(std::span<const uint8_t> bytes,size_t at,size_t width=8){uint64_t value=0;for(size_t i=0;i<width;++i)value|=uint64_t(bytes[at+i])<<(8*i);return value;}
 template<size_t N>std::array<uint8_t,N> archive_array(std::span<const uint8_t> bytes,size_t at){std::array<uint8_t,N> out{};std::copy_n(bytes.begin()+at,N,out.begin());return out;}
-void verify_archived_block(const ConsensusRoot& id,const Bytes& wire,const CapellaForkStore& store,const CapellaForkBlockRules& rules,const std::function<void()>& check){
+ConsensusBeaconHeader archived_header(std::span<const uint8_t> wire,const CapellaForkBlockRules& rules,const std::function<void()>& check){
  const auto& r=rules.transition;
- archive_require(store.blocks.contains(id)&&wire.size()>=404&&wire.size()<=r.consensus.maximum_block_bytes);
+ archive_require(wire.size()>=404&&wire.size()<=r.consensus.maximum_block_bytes);
  archive_require(archive_number(wire,0,4)==100&&archive_number(wire,180,4)==84);
- const ConsensusBeaconHeader header{archive_number(wire,100),archive_number(wire,108),archive_array<32>(wire,116),archive_array<32>(wire,148),capella_beacon_body_root(std::span(wire).subspan(184),r.consensus.body,r.consensus.state.sync_committee_size,r.execution,r.withdrawals.maximum_per_payload,r.maximum_bls_changes,r.consensus.maximum_block_bytes,check)};
+ return {archive_number(wire,100),archive_number(wire,108),archive_array<32>(wire,116),archive_array<32>(wire,148),capella_beacon_body_root(std::span(wire).subspan(184),r.consensus.body,r.consensus.state.sync_committee_size,r.execution,r.withdrawals.maximum_per_payload,r.maximum_bls_changes,r.consensus.maximum_block_bytes,check)};
+}
+void verify_archived_block(const ConsensusRoot& id,const Bytes& wire,const CapellaForkStore& store,const CapellaForkBlockRules& rules,const std::function<void()>& check){
+ const auto& r=rules.transition;archive_require(store.blocks.contains(id));const auto header=archived_header(wire,rules,check);
  const auto& block=store.blocks.at(id);archive_require(header==block.header&&consensus_beacon_header_root(header)==id);
  const auto context=capella_fork_block_context(block.state,header,CapellaEpochRules{r.consensus.epoch,r.execution,r.maximum_state_bytes},r.consensus.state,check);
  const auto proposer=context.registry.validators.find(header.proposer_index);archive_require(proposer!=context.registry.validators.end());
@@ -341,7 +344,18 @@ void CapellaDurableReactor::tick_locked(uint64_t time,const std::function<void()
 }
 
 bool CapellaDurableReactor::block(std::span<const uint8_t> wire,const std::function<void()>& check){
- std::lock_guard lock(mutex_);require_available();auto next=prepare_capella_received_block(*state_,wire,rules_,limits_.replay_slots,limits_.sync_trials,check);if(!next)return false;
+ std::lock_guard lock(mutex_);require_available();if(check)check();
+ // Reconnection may lose the sender's ACK cache. A pruned historical duplicate
+ // is acknowledged only from our OWN authenticated finalized archive; it never
+ // installs a peer checkpoint or changes the current execution/fork state.
+ if(wire.size()>=404&&wire.size()<=rules_.transition.consensus.maximum_block_bytes&&archive_number(wire,100)<state_->blocks.at(state_->timed.view.anchor).header.slot){
+  std::exception_ptr interrupted;auto guard=[&]{try{if(check)check();}catch(...){interrupted=std::current_exception();throw;}};
+  ConsensusBeaconHeader header;
+  try{header=archived_header(wire,rules_,guard);}catch(const std::invalid_argument&){if(interrupted)std::rethrow_exception(interrupted);return false;}
+  const auto id=consensus_beacon_header_root(header);
+  if(!state_->blocks.contains(id)){const auto prior=signed_block_locked(id,check);return prior&&std::equal(wire.begin(),wire.end(),prior->begin(),prior->end());}
+ }
+ auto next=prepare_capella_received_block(*state_,wire,rules_,limits_.replay_slots,limits_.sync_trials,check);if(!next)return false;
  std::vector<CheckpointArchiveEntry> archive;
  if(next->blocks.size()!=state_->blocks.size()){
   if(next->blocks.size()!=state_->blocks.size()+1)throw std::logic_error("Capella admission changed multiple blocks");
@@ -357,9 +371,44 @@ std::optional<Bytes> CapellaDurableReactor::signed_block(const ConsensusRoot& id
 }
 std::optional<Bytes> CapellaDurableReactor::signed_block_locked(const ConsensusRoot& id,const std::function<void()>& check)const{
  require_available();if(check)check();
- if(!state_->blocks.contains(id))return std::nullopt;
  const auto record=disk_.checkpoint_archive(Bytes(id.begin(),id.end()),limits_.envelope_bytes);if(!record)return std::nullopt;
- archive_require(record->slot==state_->blocks.at(id).header.slot);verify_archived_block(id,record->payload,*state_,rules_,check);return record->payload;
+ if(state_->blocks.contains(id)){
+  archive_require(record->slot==state_->blocks.at(id).header.slot);verify_archived_block(id,record->payload,*state_,rules_,check);return record->payload;
+ }
+ // Historical serving is anchored in the current authenticated FINALIZED
+ // ancestry, not in a peer's hint or an arbitrary signed archive key. Registry
+ // entries/public keys are append-only; the receiver still replays admission.
+ const auto& anchor=state_->blocks.at(state_->timed.view.anchor);
+ const auto header=archived_header(record->payload,rules_,check);
+ archive_require(record->slot==header.slot&&consensus_beacon_header_root(header)==id);
+ if(header.slot>=anchor.header.slot)return std::nullopt;
+ bool proven=false;
+ if(const auto cached=historical_headers_.find(id);cached!=historical_headers_.end()){archive_require(cached->second==header);proven=true;}
+ auto parent=anchor.header.parent_root;auto previous_slot=anchor.header.slot;
+ // Pick the closest already authenticated ancestor. A finalized prefix cannot
+ // reorg. Each cached header came from a hash-linked walk under mutex_, and the
+ // current record's body/signature is always checked again before export.
+ for(const auto& [root,known]:historical_headers_)if(known.slot>header.slot&&known.slot<previous_slot){parent=known.parent_root;previous_slot=known.slot;}
+ size_t used=0;
+ for(size_t count=0;!proven&&count<limits_.blocks;++count){
+  if(check)check();const auto item=parent==id?record:disk_.checkpoint_archive(Bytes(parent.begin(),parent.end()),limits_.envelope_bytes);
+  if(!item||item->payload.size()>limits_.envelope_bytes-used)return std::nullopt;used+=item->payload.size();
+  const auto candidate=parent==id?header:archived_header(item->payload,rules_,check);
+  archive_require(item->slot==candidate.slot&&candidate.slot<previous_slot&&consensus_beacon_header_root(candidate)==parent);
+  // A verified finalized prefix remains safe even if this request exhausts
+  // its budget. Later bounded requests can resume without trusting a peer.
+  historical_headers_.insert_or_assign(parent,candidate);
+  if(historical_headers_.size()>limits_.blocks){const auto oldest=std::min_element(historical_headers_.begin(),historical_headers_.end(),[](const auto& a,const auto& b){return a.second.slot<b.second.slot;});historical_headers_.erase(oldest);}
+  if(parent==id){proven=true;break;}
+  if(candidate.slot<=header.slot)return std::nullopt;
+  parent=candidate.parent_root;previous_slot=candidate.slot;
+ }
+ if(!proven)return std::nullopt;
+ const auto& r=rules_.transition;const auto context=capella_fork_block_context(anchor.state,anchor.header,CapellaEpochRules{r.consensus.epoch,r.execution,r.maximum_state_bytes},r.consensus.state,check);
+ const auto proposer=context.registry.validators.find(header.proposer_index);archive_require(proposer!=context.registry.validators.end());
+ const auto epoch=header.slot/r.consensus.epoch.ffg.slots_per_epoch;
+ const auto version=archive_array<4>(anchor.state.ssz,epoch<archive_number(anchor.state.ssz,56)?48:52);
+ archive_require(verify_consensus_beacon_header(header,version,archive_array<32>(anchor.state.ssz,8),proposer->second.public_key,std::span(record->payload).subspan(4,96)));if(check)check();return record->payload;
 }
 
 std::vector<ConsensusRoot> CapellaDurableReactor::exit_roots_locked(const std::function<void()>& check)const{
@@ -440,6 +489,7 @@ Json CapellaDurableReactor::export_message(std::string_view kind,const Consensus
  Json result{{"available",bool(payload)},{"root",hex(key)},{"sequence",quantity(Int(std::to_string(token_->sequence)))},{"digest",hex(token_->digest)},
   {"known",kind=="block"&&state_->blocks.contains(id)},{"anchor",kind=="block"&&id==state_->timed.view.anchor}};
  if(kind=="block"&&state_->blocks.contains(id)){const auto& header=state_->blocks.at(id).header;result["parentRoot"]=hex(Bytes(header.parent_root.begin(),header.parent_root.end()));result["slot"]=quantity(Int(std::to_string(header.slot)));}
+ if(kind=="block"&&payload&&!state_->blocks.contains(id)){const auto header=archived_header(*payload,rules_,check);result["parentRoot"]=hex(Bytes(header.parent_root.begin(),header.parent_root.end()));result["slot"]=quantity(Int(std::to_string(header.slot)));result["historical"]=true;}
  if(payload){if(payload->size()>maximum)throw std::length_error("Capella export exceeds capacity");auto envelope=network_identity_locked();envelope["kind"]=kind;envelope["ssz"]=hex(*payload);result["envelope"]=std::move(envelope);}
  if(check)check();return result;
 }

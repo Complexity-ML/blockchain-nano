@@ -44,6 +44,9 @@ class CapellaDurableReactor {
  struct ValidatorIndexCache {ConsensusRoot root;std::set<Bytes> keys;std::map<Bytes,uint64_t> indices;};
  std::optional<ValidatorIndexCache> validator_index_cache_;
  void check_registered_index_locked(uint64_t,const Bytes&,const BeaconSigningJournal&,const std::function<void()>&);
+ // Bounded header-only proof cache, derived from finalized hash-linked
+ // ancestry under mutex_. No states, peer claims or unverified ACKs retained.
+ mutable std::map<ConsensusRoot,ConsensusBeaconHeader> historical_headers_;
  std::optional<Bytes> signed_block_locked(const ConsensusRoot&,const std::function<void()>&)const;
  Json network_identity_locked()const;
  struct PendingSyncAggregate {uint64_t slot;ConsensusRoot parent;size_t participants;Bytes ssz;};

@@ -5040,3 +5040,26 @@ d'admission. Une cause unique de tout l'échec n'est pas démontrée.
 Aucune correction livrée dans cette tranche ; tous les autres critères de
 production et historiques demeurent ouverts.
 [Preuves et limites](qualification/majority-island-20261001/attempt-s/README.md).
+
+
+### 2026-10-01 — export historique Capella : correction, qualification native
+
+L’export suit désormais les archives canoniques depuis l’ancre finalisée,
+avec vérification des racines et signatures, budget par requête et cache
+de préfixes authentifiés. Une ancre signée exportable est livrée avec ses
+parents ; les doublons historiques ne sont acquittés que sur égalité avec
+l’archive locale authentifiée, sans mutation du checkpoint.
+
+Nouveau test natif : 22 blocs historiques, cinq cas négatifs, reprise
+bornée du parcours et refus de signature différente. Régression de
+transition signée et modèles réseau pertinents passent. Les erreurs de
+cible de build et d’hypothèse initiale sur le budget sont conservées.
+Docker ARM64 en cours ; AMD64, rattrapage réel et reprise WAN sous 180 s
+restent ouverts. Les critères de production antérieurs sont conservés.
+[Preuves natives](qualification/capella-historical-export-20261001/native/README.md).
+
+Qualification ARM64 Docker terminée : quatre tests ciblés passent. La sonde
+en lecture seule sur la base WAN S exporte désormais les 85 archives auparavant
+refusées (107/107 disponibles), checkpoint externe vérifié. Cela qualifie
+la fourniture locale, pas la reprise réseau. AMD64 et WAN restent ouverts.
+[Preuves ARM64](qualification/capella-historical-export-20261001/arm64/README.md).

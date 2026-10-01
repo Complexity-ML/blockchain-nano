@@ -1,0 +1,237 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 18e2cff..4e52105 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1660,6 +1660,9 @@ set_tests_properties(consensus_capella_pruning_primitive PROPERTIES TIMEOUT 180
+ add_test(NAME consensus_capella_pruning_bls COMMAND nano-capella-transition-tests --pruning-bls)
+ set_tests_properties(consensus_capella_pruning_bls PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_recovery")
+ 
++add_test(NAME consensus_capella_historical_export COMMAND nano-capella-transition-tests --historical-export)
++set_tests_properties(consensus_capella_historical_export PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_recovery")
++
+ add_test(NAME consensus_capella_pruning_native COMMAND nano-capella-transition-tests --pruning-native)
+ set_tests_properties(consensus_capella_pruning_native PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_recovery")
+ 
+diff --git a/include/nano/consensus_capella_reactor.hpp b/include/nano/consensus_capella_reactor.hpp
+index 10a522e..a01252a 100644
+--- a/include/nano/consensus_capella_reactor.hpp
++++ b/include/nano/consensus_capella_reactor.hpp
+@@ -44,6 +44,9 @@ class CapellaDurableReactor {
+  struct ValidatorIndexCache {ConsensusRoot root;std::set<Bytes> keys;std::map<Bytes,uint64_t> indices;};
+  std::optional<ValidatorIndexCache> validator_index_cache_;
+  void check_registered_index_locked(uint64_t,const Bytes&,const BeaconSigningJournal&,const std::function<void()>&);
++ // Bounded header-only proof cache, derived from finalized hash-linked
++ // ancestry under mutex_. No states, peer claims or unverified ACKs retained.
++ mutable std::map<ConsensusRoot,ConsensusBeaconHeader> historical_headers_;
+  std::optional<Bytes> signed_block_locked(const ConsensusRoot&,const std::function<void()>&)const;
+  Json network_identity_locked()const;
+  struct PendingSyncAggregate {uint64_t slot;ConsensusRoot parent;size_t participants;Bytes ssz;};
+diff --git a/network/capella_block_delivery.hpp b/network/capella_block_delivery.hpp
+index 3f39af5..4acd5e9 100644
+--- a/network/capella_block_delivery.hpp
++++ b/network/capella_block_delivery.hpp
+@@ -30,9 +30,10 @@ class CapellaBlockDelivery:public std::enable_shared_from_this<CapellaBlockDeliv
+   if(!value.is_object()||value.value("root",Json())!=id){finish(false);return;}
+   // The authenticated local core can have pruned to a newer anchor since the
+   // daemon started. Its anchor need not have an exportable signed envelope.
+-  // Stop only an ancestor walk: never claim remote admission of the anchor
++  // A signed, available anchor must be delivered with its historical parents.
++  // Stop only an unavailable anchor walk: never claim remote admission of the anchor
+   // itself. Every retained descendant still requires the peer's actual ACK.
+-  if(value.value("anchor",Json())==true){
++  if(value.value("anchor",Json())==true&&value.value("available",Json())!=true){
+    if(value.value("known",Json())!=true||pending_.empty()){finish(false);return;}
+    deliver();return;
+   }
+diff --git a/network/test_capella_block_delivery.cpp b/network/test_capella_block_delivery.cpp
+index f3d6332..8803aee 100644
+--- a/network/test_capella_block_delivery.cpp
++++ b/network/test_capella_block_delivery.cpp
+@@ -5,22 +5,23 @@ void check(bool ok,const char* message){if(!ok)throw std::runtime_error(message)
+ std::string root(char c){return "0x"+std::string(64,c);}
+ int main(){try{
+  const AltairWireProfile profile{"0x539",root('a'),"0x01020304",2048,512,256,256,root('b')};unsigned cases=0;
+- for(const std::string mode:{"normal","cached","duplicate","missing","bad-parent","backward-slot","bad-offset","foreign","depth","bytes","reject","lost-ack","cancel","new-anchor","anchor-data-present","unknown-anchor","anchor-root-mismatch","anchor-refused","anchor-target"}){
++ for(const std::string mode:{"normal","cached","duplicate","missing","bad-parent","backward-slot","bad-offset","foreign","depth","bytes","reject","lost-ack","cancel","new-anchor","anchor-data-present","anchor-historical-reject","anchor-historical-missing-parent","anchor-data-malformed","unknown-anchor","anchor-root-mismatch","anchor-refused","anchor-target"}){
+   asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);auto knowledge=std::make_shared<AltairRelayProgress>(8);if(mode=="cached")knowledge->acknowledge(root('2'));
+   unsigned exports=0,sends=0,done=0;Json result;Reply late;
+   auto core=[&](std::string method,Json params,Reply cb){check(method=="nano_capellaExport"&&params[0]=="token"&&params[1]=="block","bad export request");++exports;const auto id=params[2].get<std::string>();const unsigned n=unsigned(id[2]-'0');check(n>=1&&n<=3,"walk outside chain");
+-   if((n==2&&(mode=="new-anchor"||mode=="anchor-data-present"||mode=="unknown-anchor"||mode=="anchor-root-mismatch"||mode=="anchor-refused"))||(n==3&&mode=="anchor-target")){
+-    cb(Json{{"available",mode=="anchor-data-present"},{"root",mode=="anchor-root-mismatch"?root('f'):id},{"known",mode!="unknown-anchor"},{"anchor",true}});return;
++   if((n==2&&(mode=="new-anchor"||mode=="anchor-data-malformed"||mode=="unknown-anchor"||mode=="anchor-root-mismatch"||mode=="anchor-refused"))||(n==3&&mode=="anchor-target")){
++    cb(Json{{"available",mode=="anchor-data-malformed"},{"root",mode=="anchor-root-mismatch"?root('f'):id},{"known",mode!="unknown-anchor"},{"anchor",true}});return;
+    }
+-   if(mode=="missing"&&n==2){cb(Json{{"available",false},{"root",id}});return;}
++   if((mode=="missing"&&n==2)||(mode=="anchor-historical-missing-parent"&&n==1)){cb(Json{{"available",false},{"root",id}});return;}
+    std::vector<uint8_t> bytes(404,0);bytes[0]=mode=="bad-offset"?99:100;bytes[180]=84;bytes[100]=mode=="backward-slot"?3:n;std::fill(bytes.begin()+116,bytes.begin()+148,uint8_t((n-1)*17));std::string wire="0x";const char* h="0123456789abcdef";for(auto b:bytes){wire+=h[b>>4];wire+=h[b&15];}
+    Json value{{"available",true},{"root",id},{"parentRoot",root(mode=="bad-parent"?'f':char('0'+n-1))},{"envelope",{{"chainId",mode=="foreign"?"0x1":profile.chain_id},{"genesisHash",profile.genesis_hash},{"forkDigest",profile.fork_digest},{"consensusIdentity",profile.consensus_identity},{"kind","block"},{"ssz",wire}}}};
++   if(n==2&&(mode=="anchor-data-present"||mode=="anchor-historical-reject"||mode=="anchor-historical-missing-parent")){value["anchor"]=true;value["known"]=true;}
+    cb(value);if(mode=="duplicate")cb(value);
+   };
+-  auto send=[&](Json frame,Reply cb){++sends;const auto encoded=frame.at("ssz").get<std::string>();const unsigned slot=std::stoul(encoded.substr(202,2),nullptr,16);check(slot==((mode=="cached"||mode=="new-anchor"||mode=="anchor-data-present"||mode=="anchor-refused")?3:sends),"child delivered before ancestor");if(mode=="lost-ack"||mode=="cancel"){late=cb;return;}cb(Json{{"accepted",mode!="reject"&&mode!="anchor-refused"}});if(mode=="duplicate")cb(Json{{"accepted",true}});};
++  auto send=[&](Json frame,Reply cb){++sends;const auto encoded=frame.at("ssz").get<std::string>();const unsigned slot=std::stoul(encoded.substr(202,2),nullptr,16);check(slot==((mode=="cached"||mode=="new-anchor"||mode=="anchor-refused")?3:sends),"child delivered before ancestor");if(mode=="lost-ack"||mode=="cancel"){late=cb;return;}cb(Json{{"accepted",mode!="reject"&&mode!="anchor-refused"&&!(mode=="anchor-historical-reject"&&slot==2)}});if(mode=="duplicate")cb(Json{{"accepted",true}});};
+   auto delivery=std::make_shared<CapellaBlockDelivery>(io,core,send,"token",root('0'),root('3'),ingress,knowledge,mode=="depth"?2:4,mode=="bytes"?32:8192,[&](Json value){++done;result=value;});delivery->start(20ms);
+   if(mode=="cancel"){io.poll();check(bool(late),"missing delayed ACK");delivery->cancel();late(Json{{"accepted",true}});io.restart();}io.run();
+-  const bool ok=mode=="normal"||mode=="cached"||mode=="duplicate"||mode=="new-anchor"||mode=="anchor-data-present";check(done==1&&result.at("accepted")==ok,"wrong completion");check(knowledge->acknowledged(root('3'))==ok,"cached unconfirmed target");if(ok)check(sends==((mode=="cached"||mode=="new-anchor"||mode=="anchor-data-present")?1:3),"wrong deliveries");if(mode=="missing"||mode=="depth"||mode=="bytes")check(sends==0,"partial send before preparation failure");if(mode=="new-anchor"||mode=="anchor-data-present"){check(exports==2&&!knowledge->acknowledged(root('2')),"inferred remote acknowledgement for local anchor");}++cases;
++  const bool ok=mode=="normal"||mode=="cached"||mode=="duplicate"||mode=="new-anchor"||mode=="anchor-data-present";check(done==1&&result.at("accepted")==ok,"wrong completion");check(knowledge->acknowledged(root('3'))==ok,"cached unconfirmed target");if(ok)check(sends==((mode=="cached"||mode=="new-anchor" )?1:3),"wrong deliveries");if(mode=="missing"||mode=="depth"||mode=="bytes")check(sends==0,"partial send before preparation failure");if(mode=="new-anchor"){check(exports==2&&!knowledge->acknowledged(root('2')),"inferred remote acknowledgement for local anchor");}if(mode=="anchor-data-present")check(sends==3&&knowledge->acknowledged(root('2')),"signed anchor was skipped instead of admitted");if(mode=="anchor-historical-reject")check(sends==2&&!knowledge->acknowledged(root('2'))&&!knowledge->acknowledged(root('3')),"rejected anchor manufactured child admission");if(mode=="anchor-historical-missing-parent")check(sends==0,"anchor sent without preparing historical parent");++cases;
+  }
+  // Dependencies share the catalog budget; a local yield is not a target ACK.
+  for(const std::string mode:{"resume","shared-targets","exact-boundary","rejected","lost-ack","cancel-late"}){
+diff --git a/src/consensus_capella_reactor.cpp b/src/consensus_capella_reactor.cpp
+index 4811ac7..7e2a93a 100644
+--- a/src/consensus_capella_reactor.cpp
++++ b/src/consensus_capella_reactor.cpp
+@@ -7,11 +7,14 @@ namespace {
+ void archive_require(bool value){if(!value)throw std::invalid_argument("Invalid Capella durable archive");}
+ uint64_t archive_number(std::span<const uint8_t> bytes,size_t at,size_t width=8){uint64_t value=0;for(size_t i=0;i<width;++i)value|=uint64_t(bytes[at+i])<<(8*i);return value;}
+ template<size_t N>std::array<uint8_t,N> archive_array(std::span<const uint8_t> bytes,size_t at){std::array<uint8_t,N> out{};std::copy_n(bytes.begin()+at,N,out.begin());return out;}
+-void verify_archived_block(const ConsensusRoot& id,const Bytes& wire,const CapellaForkStore& store,const CapellaForkBlockRules& rules,const std::function<void()>& check){
++ConsensusBeaconHeader archived_header(std::span<const uint8_t> wire,const CapellaForkBlockRules& rules,const std::function<void()>& check){
+  const auto& r=rules.transition;
+- archive_require(store.blocks.contains(id)&&wire.size()>=404&&wire.size()<=r.consensus.maximum_block_bytes);
++ archive_require(wire.size()>=404&&wire.size()<=r.consensus.maximum_block_bytes);
+  archive_require(archive_number(wire,0,4)==100&&archive_number(wire,180,4)==84);
+- const ConsensusBeaconHeader header{archive_number(wire,100),archive_number(wire,108),archive_array<32>(wire,116),archive_array<32>(wire,148),capella_beacon_body_root(std::span(wire).subspan(184),r.consensus.body,r.consensus.state.sync_committee_size,r.execution,r.withdrawals.maximum_per_payload,r.maximum_bls_changes,r.consensus.maximum_block_bytes,check)};
++ return {archive_number(wire,100),archive_number(wire,108),archive_array<32>(wire,116),archive_array<32>(wire,148),capella_beacon_body_root(std::span(wire).subspan(184),r.consensus.body,r.consensus.state.sync_committee_size,r.execution,r.withdrawals.maximum_per_payload,r.maximum_bls_changes,r.consensus.maximum_block_bytes,check)};
++}
++void verify_archived_block(const ConsensusRoot& id,const Bytes& wire,const CapellaForkStore& store,const CapellaForkBlockRules& rules,const std::function<void()>& check){
++ const auto& r=rules.transition;archive_require(store.blocks.contains(id));const auto header=archived_header(wire,rules,check);
+  const auto& block=store.blocks.at(id);archive_require(header==block.header&&consensus_beacon_header_root(header)==id);
+  const auto context=capella_fork_block_context(block.state,header,CapellaEpochRules{r.consensus.epoch,r.execution,r.maximum_state_bytes},r.consensus.state,check);
+  const auto proposer=context.registry.validators.find(header.proposer_index);archive_require(proposer!=context.registry.validators.end());
+@@ -341,7 +344,18 @@ void CapellaDurableReactor::tick_locked(uint64_t time,const std::function<void()
+ }
+ 
+ bool CapellaDurableReactor::block(std::span<const uint8_t> wire,const std::function<void()>& check){
+- std::lock_guard lock(mutex_);require_available();auto next=prepare_capella_received_block(*state_,wire,rules_,limits_.replay_slots,limits_.sync_trials,check);if(!next)return false;
++ std::lock_guard lock(mutex_);require_available();if(check)check();
++ // Reconnection may lose the sender's ACK cache. A pruned historical duplicate
++ // is acknowledged only from our OWN authenticated finalized archive; it never
++ // installs a peer checkpoint or changes the current execution/fork state.
++ if(wire.size()>=404&&wire.size()<=rules_.transition.consensus.maximum_block_bytes&&archive_number(wire,100)<state_->blocks.at(state_->timed.view.anchor).header.slot){
++  std::exception_ptr interrupted;auto guard=[&]{try{if(check)check();}catch(...){interrupted=std::current_exception();throw;}};
++  ConsensusBeaconHeader header;
++  try{header=archived_header(wire,rules_,guard);}catch(const std::invalid_argument&){if(interrupted)std::rethrow_exception(interrupted);return false;}
++  const auto id=consensus_beacon_header_root(header);
++  if(!state_->blocks.contains(id)){const auto prior=signed_block_locked(id,check);return prior&&std::equal(wire.begin(),wire.end(),prior->begin(),prior->end());}
++ }
++ auto next=prepare_capella_received_block(*state_,wire,rules_,limits_.replay_slots,limits_.sync_trials,check);if(!next)return false;
+  std::vector<CheckpointArchiveEntry> archive;
+  if(next->blocks.size()!=state_->blocks.size()){
+   if(next->blocks.size()!=state_->blocks.size()+1)throw std::logic_error("Capella admission changed multiple blocks");
+@@ -357,9 +371,44 @@ std::optional<Bytes> CapellaDurableReactor::signed_block(const ConsensusRoot& id
+ }
+ std::optional<Bytes> CapellaDurableReactor::signed_block_locked(const ConsensusRoot& id,const std::function<void()>& check)const{
+  require_available();if(check)check();
+- if(!state_->blocks.contains(id))return std::nullopt;
+  const auto record=disk_.checkpoint_archive(Bytes(id.begin(),id.end()),limits_.envelope_bytes);if(!record)return std::nullopt;
+- archive_require(record->slot==state_->blocks.at(id).header.slot);verify_archived_block(id,record->payload,*state_,rules_,check);return record->payload;
++ if(state_->blocks.contains(id)){
++  archive_require(record->slot==state_->blocks.at(id).header.slot);verify_archived_block(id,record->payload,*state_,rules_,check);return record->payload;
++ }
++ // Historical serving is anchored in the current authenticated FINALIZED
++ // ancestry, not in a peer's hint or an arbitrary signed archive key. Registry
++ // entries/public keys are append-only; the receiver still replays admission.
++ const auto& anchor=state_->blocks.at(state_->timed.view.anchor);
++ const auto header=archived_header(record->payload,rules_,check);
++ archive_require(record->slot==header.slot&&consensus_beacon_header_root(header)==id);
++ if(header.slot>=anchor.header.slot)return std::nullopt;
++ bool proven=false;
++ if(const auto cached=historical_headers_.find(id);cached!=historical_headers_.end()){archive_require(cached->second==header);proven=true;}
++ auto parent=anchor.header.parent_root;auto previous_slot=anchor.header.slot;
++ // Pick the closest already authenticated ancestor. A finalized prefix cannot
++ // reorg. Each cached header came from a hash-linked walk under mutex_, and the
++ // current record's body/signature is always checked again before export.
++ for(const auto& [root,known]:historical_headers_)if(known.slot>header.slot&&known.slot<previous_slot){parent=known.parent_root;previous_slot=known.slot;}
++ size_t used=0;
++ for(size_t count=0;!proven&&count<limits_.blocks;++count){
++  if(check)check();const auto item=parent==id?record:disk_.checkpoint_archive(Bytes(parent.begin(),parent.end()),limits_.envelope_bytes);
++  if(!item||item->payload.size()>limits_.envelope_bytes-used)return std::nullopt;used+=item->payload.size();
++  const auto candidate=parent==id?header:archived_header(item->payload,rules_,check);
++  archive_require(item->slot==candidate.slot&&candidate.slot<previous_slot&&consensus_beacon_header_root(candidate)==parent);
++  // A verified finalized prefix remains safe even if this request exhausts
++  // its budget. Later bounded requests can resume without trusting a peer.
++  historical_headers_.insert_or_assign(parent,candidate);
++  if(historical_headers_.size()>limits_.blocks){const auto oldest=std::min_element(historical_headers_.begin(),historical_headers_.end(),[](const auto& a,const auto& b){return a.second.slot<b.second.slot;});historical_headers_.erase(oldest);}
++  if(parent==id){proven=true;break;}
++  if(candidate.slot<=header.slot)return std::nullopt;
++  parent=candidate.parent_root;previous_slot=candidate.slot;
++ }
++ if(!proven)return std::nullopt;
++ const auto& r=rules_.transition;const auto context=capella_fork_block_context(anchor.state,anchor.header,CapellaEpochRules{r.consensus.epoch,r.execution,r.maximum_state_bytes},r.consensus.state,check);
++ const auto proposer=context.registry.validators.find(header.proposer_index);archive_require(proposer!=context.registry.validators.end());
++ const auto epoch=header.slot/r.consensus.epoch.ffg.slots_per_epoch;
++ const auto version=archive_array<4>(anchor.state.ssz,epoch<archive_number(anchor.state.ssz,56)?48:52);
++ archive_require(verify_consensus_beacon_header(header,version,archive_array<32>(anchor.state.ssz,8),proposer->second.public_key,std::span(record->payload).subspan(4,96)));if(check)check();return record->payload;
+ }
+ 
+ std::vector<ConsensusRoot> CapellaDurableReactor::exit_roots_locked(const std::function<void()>& check)const{
+@@ -440,6 +489,7 @@ Json CapellaDurableReactor::export_message(std::string_view kind,const Consensus
+  Json result{{"available",bool(payload)},{"root",hex(key)},{"sequence",quantity(Int(std::to_string(token_->sequence)))},{"digest",hex(token_->digest)},
+   {"known",kind=="block"&&state_->blocks.contains(id)},{"anchor",kind=="block"&&id==state_->timed.view.anchor}};
+  if(kind=="block"&&state_->blocks.contains(id)){const auto& header=state_->blocks.at(id).header;result["parentRoot"]=hex(Bytes(header.parent_root.begin(),header.parent_root.end()));result["slot"]=quantity(Int(std::to_string(header.slot)));}
++ if(kind=="block"&&payload&&!state_->blocks.contains(id)){const auto header=archived_header(*payload,rules_,check);result["parentRoot"]=hex(Bytes(header.parent_root.begin(),header.parent_root.end()));result["slot"]=quantity(Int(std::to_string(header.slot)));result["historical"]=true;}
+  if(payload){if(payload->size()>maximum)throw std::length_error("Capella export exceeds capacity");auto envelope=network_identity_locked();envelope["kind"]=kind;envelope["ssz"]=hex(*payload);result["envelope"]=std::move(envelope);}
+  if(check)check();return result;
+ }
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index 44e15e1..8fdc512 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -60,7 +60,7 @@ static bool automatic_recovery=false;
+ static bool capella_http=false;
+ static std::string cli_binary;static Json cli_genesis;static bool managed_cli=false;static std::string daemon_binary;static bool network_cli=false;static bool multipeer_cli=false;static bool distributed_cli=false;static bool sync_distributed_cli=false,distributed_sync_rotation=false;static bool transport_outage_cli=false;static fs::path network_export;
+ static bool beacon_reads=false;
+-static bool exit_lifecycle_sync=false;static bool exit_pending_pruning=false;static bool exit_reindex=false;static bool exit_retirement=false;static bool exit_sync=false;static bool exit_network=false;static bool exit_wire=false;static bool queued_exits=false;static bool local_exits=false;static bool deposit_reorg_sync=false;static bool deposit_reorg_activation=false;static bool deposit_reorg=false;static bool automatic_registration=false;static bool deposit_activation_restart=false;static bool local_sync=false;static bool deposit_invalid_signature=false;static bool deposit_activation=false;static bool deposit_consumption=false;static bool slashing_retirement=false;static bool pruning_slashing=false;static bool pruning_sync=false;static bool pruning_automatic=false;static bool pruning_native=false;static bool pruning_bls=false;static bool pruning_primitive=false;static bool queued_bls_sync=false;static bool queued_bls_reorg=false;static bool queued_bls_changes=false;static bool local_bls_changes=false;static bool wire_mode=false;static bool catalog_concurrency=false;
++static bool historical_export=false;static bool exit_lifecycle_sync=false;static bool exit_pending_pruning=false;static bool exit_reindex=false;static bool exit_retirement=false;static bool exit_sync=false;static bool exit_network=false;static bool exit_wire=false;static bool queued_exits=false;static bool local_exits=false;static bool deposit_reorg_sync=false;static bool deposit_reorg_activation=false;static bool deposit_reorg=false;static bool automatic_registration=false;static bool deposit_activation_restart=false;static bool local_sync=false;static bool deposit_invalid_signature=false;static bool deposit_activation=false;static bool deposit_consumption=false;static bool slashing_retirement=false;static bool pruning_slashing=false;static bool pruning_sync=false;static bool pruning_automatic=false;static bool pruning_native=false;static bool pruning_bls=false;static bool pruning_primitive=false;static bool queued_bls_sync=false;static bool queued_bls_reorg=false;static bool queued_bls_changes=false;static bool local_bls_changes=false;static bool wire_mode=false;static bool catalog_concurrency=false;
+ static size_t beacon_read_checks=0;
+ #ifdef NANO_SYNC_FAULT
+ extern "C" void nano_test_arm_sync_fault(const char*);
+@@ -389,6 +389,38 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+   if(pruning_slashing){check(nodes[1]->signed_slashings()==pruning_proofs&&nodes[1]->current().state->timed.view.equivocating_indices.contains(0),"slashing evidence lost after pruning restart");const auto proof=decode_consensus_attester_slashing_ssz(pruning_proofs.begin()->second,t.consensus.body.validators_per_committee);check(proof&&nodes[1]->slashing(proof->second,proof->first)&&nodes[1]->current().token==pruned_token,"reversed old proof changed checkpoint after pruning");}
+   if(pruning_bls){const auto pending=nodes[1]->pending_bls_changes();check(pending.size()==1&&encode_capella_bls_change(pending.front())==pending_wire,"pruning/restart lost signed BLS operation");const auto record=owners[1]->store().fork_checkpoint(t.chain_id,genesis.header.hash(),limits.envelope_bytes,pruned_token);const auto data=Json::parse(record->snapshot);check(data.at("blsChanges")[0][1]==hex(Bytes(anchor.begin(),anchor.end())),"BLS origin not re-anchored at finalized state");check(nodes[1]->bls_change_ssz(pending_wire)&&nodes[1]->current().token==pruned_token,"replayed BLS request duplicated checkpoint");}
+   if(pruning_native){Phase0Deposit deposit{};Key depositor((deposit_activation||deposit_invalid_signature)?64:2);copy_to(deposit.message.public_key,depositor.public_key);deposit.message.withdrawal_credentials[0]=1;deposit.message.withdrawal_credentials[31]=44;deposit.message.amount_gwei=(deposit_activation||deposit_invalid_signature)?t.consensus.deposit.maximum_effective_balance:1000000000;copy_to(deposit.signature,depositor.sign(consensus_signing_root(consensus_deposit_root(deposit.message),consensus_domain({3,0,0,0},t.genesis_version,{}))));if(deposit_invalid_signature){check(verify_consensus_deposit_signature(deposit.message,deposit.signature,t.genesis_version),"valid deposit control failed");copy_to(deposit.signature,Key(65).sign(consensus_signing_root(consensus_deposit_root(deposit.message),consensus_domain({3,0,0,0},t.genesis_version,{}))));check(!verify_consensus_deposit_signature(deposit.message,deposit.signature,t.genesis_version),"wrong-key deposit control accepted");}const std::string method="deposit(bytes,bytes,bytes,bytes32)";auto data=keccak(Bytes(method.begin(),method.end()));data.resize(4);Bytes args(416);auto word=[&](size_t at,size_t n){const auto encoded=bytes(Int(n),32);std::copy(encoded.begin(),encoded.end(),args.begin()+at);};word(0,128);word(32,224);word(64,288);const auto root=consensus_deposit_data_root(deposit);std::copy(root.begin(),root.end(),args.begin()+96);word(128,48);std::copy(deposit.message.public_key.begin(),deposit.message.public_key.end(),args.begin()+160);word(224,32);std::copy(deposit.message.withdrawal_credentials.begin(),deposit.message.withdrawal_credentials.end(),args.begin()+256);word(288,96);std::copy(deposit.signature.begin(),deposit.signature.end(),args.begin()+320);data.insert(data.end(),args.begin(),args.end());auto request=tx;request.nonce=head.execution_state.get(sender).nonce;request.to=ethereum_deposit_contract;request.value=Int(std::to_string(deposit.message.amount_gwei))*1000000000;request.gas=1000000;request.data=std::move(data);check(owners[0]->submit(SignedTransaction::sign(request,sender_key)),"post-pruning deposit submission failed");}
++  if(historical_export){
++   const auto saved=nodes[1]->current().token;size_t exported_count=0;auto cursor=old.blocks.at(anchor).header.parent_root;
++   std::vector<CheckpointArchiveEntry> archived;std::vector<ExecutionCheckpointBlock> suffix;
++   auto chain=consensus_beacon_header_root(head.header);
++   for(;;){const auto& b=old.blocks.at(chain);suffix.push_back({b.execution_block,b.execution_state,b.receipts});if(chain==old.timed.view.anchor)break;const auto wire=nodes[0]->signed_block(chain);check(bool(wire),"source historical archive absent");archived.push_back({Bytes(chain.begin(),chain.end()),b.header.slot,*wire});chain=b.header.parent_root;}
++   std::reverse(suffix.begin(),suffix.end());
++   ConsensusRoot oldest{};
++   while(cursor!=old.timed.view.anchor){const auto expected=nodes[0]->signed_block(cursor);check(expected&&nodes[1]->signed_block(cursor)==expected,"pruned historical signed export differs");const auto info=nodes[1]->export_message("block",cursor,limits.envelope_bytes);check(info.at("available")==true&&info.at("historical")==true&&info.at("known")==false&&info.at("envelope").at("ssz")==hex(*expected)&&info.at("parentRoot")==hex(Bytes(old.blocks.at(cursor).header.parent_root.begin(),old.blocks.at(cursor).header.parent_root.end())),"historical export metadata differs");oldest=cursor;cursor=old.blocks.at(cursor).header.parent_root;++exported_count;}
++   check(exported_count>0&&nodes[1]->current().token==saved,"historical reads changed durable state");const auto duplicate=*nodes[0]->signed_block(oldest);check(nodes[1]->block(duplicate)&&nodes[1]->current().token==saved,"pruned duplicate lost real admission ACK or changed state");auto wrong_signature=duplicate;wrong_signature[4]^=1;check(!nodes[1]->block(wrong_signature)&&nodes[1]->current().token==saved,"historical duplicate accepted different signature");bool cancelled=false;try{nodes[1]->signed_block(oldest,[]{throw ExecutionCancelled("historical read cancelled");});}catch(const ExecutionCancelled&){cancelled=true;}check(cancelled&&nodes[1]->current().token==saved,"historical cancellation changed checkpoint");
++   const auto source=owners[1]->store().fork_checkpoint(t.chain_id,genesis.header.hash(),limits.envelope_bytes,saved);check(bool(source),"pruned checkpoint missing");
++   auto fork_wire=*nodes[0]->signed_block(oldest);auto fork_header=old.blocks.at(oldest).header;fork_header.state_root[0]^=1;std::copy(fork_header.state_root.begin(),fork_header.state_root.end(),fork_wire.begin()+148);
++   const auto& historical_state=old.blocks.at(oldest).state.ssz;const auto context=capella_fork_block_context(old.blocks.at(oldest).state,old.blocks.at(oldest).header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state);
++   ConsensusBytes4 version{};std::copy_n(historical_state.begin()+(context.registry.epoch<little(historical_state,56,8)?48:52),4,version.begin());
++   const auto signature=Key(fork_header.proposer_index).sign(consensus_signing_root(consensus_beacon_header_root(fork_header),consensus_domain({0,0,0,0},version,genesis_root)));std::copy(signature.begin(),signature.end(),fork_wire.begin()+4);const auto foreign=consensus_beacon_header_root(fork_header);
++   for(unsigned mutation=0;mutation<6;++mutation){
++    Temp corrupt;ChainStore disk(corrupt/"db");disk.bind_chain(t.chain_id,genesis.header.hash(),"capella-historical-export-negative");disk.commit(genesis,genesis_state,{});auto entries=archived;
++    if(mutation<3)for(auto& entry:entries)if(entry.root==Bytes(oldest.begin(),oldest.end())){if(mutation==0)entry.payload[4]^=1;else if(mutation==1)entry.payload.back()^=1;else ++entry.slot;}
++    if(mutation==3)entries.push_back({Bytes(foreign.begin(),foreign.end()),fork_header.slot,fork_wire});
++    if(mutation==4){const auto parent=old.blocks.at(anchor).header.parent_root;std::erase_if(entries,[&](const auto& entry){return entry.root==Bytes(parent.begin(),parent.end());});}
++    const auto token=disk.commit_execution_checkpoint(t.chain_id,genesis.header.hash(),{},genesis.header.hash(),genesis.header.number,genesis.header.hash(),suffix,source->snapshot,limits.envelope_bytes,limits.blocks,entries);
++    auto bounded=limits;if(mutation==5)bounded.blocks=pruned.blocks.size()+1;
++    CapellaDurableReactor probe(disk,t.chain_id,genesis.header.hash(),rules,bounded,token);
++    for(unsigned repeat=0;repeat<2;++repeat){
++     if(mutation==5&&repeat==1){check(probe.signed_block(oldest)==nodes[0]->signed_block(oldest),"bounded proof did not resume from authenticated prefix");continue;}
++     bool rejected=false;try{const auto wire=probe.signed_block(mutation==3?foreign:oldest);rejected=!wire;}catch(const std::invalid_argument&){rejected=true;}
++     if(!rejected)std::cerr<<Json{{"failedHistoricalCase",mutation},{"repeat",repeat}}.dump()<<std::endl;
++     check(rejected,"corrupt, foreign, incomplete or over-budget historical archive exported");
++    }
++    check(probe.current().token==token,"negative historical export changed checkpoint");
++   }
++   std::cout<<Json{{"scenario","capella-historical-export"},{"historicalBlocks",exported_count},{"negativeCases",5},{"boundedProofResumed",true},{"historicalDuplicateAck",true},{"differentSignatureRejected",true},{"depthBudgetEnforced",true},{"cachedSignatureRechecked",true},{"reopenedPrunedOwner",true},{"cancellationPreservedCheckpoint",true},{"networkTransport",false}}.dump()<<std::endl;
++  }
+   const auto next_slot=end+1,now=old.timed.clock.genesis_time_ms+next_slot*rules.slot_duration_ms;auto& proposer_node=nodes[(pruning_bls||exit_pending_pruning)?1:0];proposer_node->tick(now);const auto selected=proposer_node->current_proposer(next_slot);check(bool(selected),"next proposer missing after pruning");const auto wire=proposer_node->propose_current(*selected,next_slot,head.execution_block.header.coinbase,16,64,[&]{return now;},journal(*selected),[&](const ConsensusRoot& root){return Key(*selected).sign(root);});check(bool(wire),"next proposal missing");
+   const auto before=prepare_capella_store_tick(old,now,rules,limits.replay_slots,limits.sync_trials),after=prepare_capella_store_tick(restored,now,rules,limits.replay_slots,limits.sync_trials);const auto reference=prepare_capella_received_block(before,*wire,rules,limits.replay_slots,limits.sync_trials),candidate=prepare_capella_received_block(after,*wire,rules,limits.replay_slots,limits.sync_trials);check(reference&&candidate,"pruned store rejected next valid block");const auto& a=capella_fork_head(*reference,rules);const auto& b=capella_fork_head(*candidate,rules);check(a.state==b.state&&a.execution_state.root()==b.execution_state.root()&&a.execution_block.header.hash()==b.execution_block.header.hash(),"pruned continuation differs");
+   nodes[1]->tick(now);check(nodes[1]->block(*wire),"durably pruned owner rejected next block");check(owners[1]->tip().header.hash()==a.execution_block.header.hash()&&owners[1]->state().root()==a.execution_state.root(),"durably pruned owner continuation differs");
+@@ -1849,7 +1881,7 @@ if(argc==2&&std::string(argv[1])=="--exit-lifecycle-sync"){exit_lifecycle_sync=t
+ #endif
+ if(argc==2&&std::string(argv[1])=="--exit-pending-pruning"){exit_pending_pruning=true;local_exits=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}
+ if(argc==2&&std::string(argv[1])=="--exit-retirement"){exit_retirement=true;local_exits=true;pruning_automatic=true;pruning_native=true;owner_mode=true;local_finality=100;scenario(false);return 0;}
+-if(argc==3&&std::string(argv[1])=="--cli"){cli_binary=argv[2];configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--http"){configured_runtime=true;capella_http=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--catalog-concurrency"){wire_mode=true;catalog_concurrency=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-reorg"){queued_bls_reorg=true;queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-automatic"){pruning_automatic=true;pruning_native=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--slashing-retirement"){slashing_retirement=true;pruning_automatic=true;pruning_native=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-slashing"){pruning_slashing=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--local-sync"){local_sync=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-invalid-signature"){deposit_invalid_signature=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--automatic-registration"){automatic_registration=true;configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-auto-registration"){automatic_registration=true;deposit_activation=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-activation-restart"){deposit_activation_restart=true;deposit_activation=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-activation"){deposit_activation=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-consumption"){deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-native"){pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-bls"){pruning_bls=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-primitive"){pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-owner"){queued_bls_changes=true;local_bls_changes=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-rpc"){queued_bls_changes=true;local_bls_changes=true;configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-wire"){wire_mode=true;queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-changes"){queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--exit-wire"){exit_wire=true;queued_exits=true;local_exits=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-exits"){queued_exits=true;local_exits=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--local-exits"){local_exits=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--local-bls-changes"){local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--wire"){wire_mode=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--beacon-reads"){beacon_reads=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--automatic-recovery"){automatic_recovery=true;configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--configured-runtime"){configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler-sync-rotation"){scheduled=true;sync_rotation=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-reorg-activation"){deposit_reorg_activation=true;deposit_reorg=true;pruning_native=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-reorg"){deposit_reorg=true;pruning_native=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler-registration"){automatic_registration=true;scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler"){scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-reorg"){owner_reorg=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}
++if(argc==2&&std::string(argv[1])=="--historical-export"){historical_export=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==3&&std::string(argv[1])=="--cli"){cli_binary=argv[2];configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--http"){configured_runtime=true;capella_http=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--catalog-concurrency"){wire_mode=true;catalog_concurrency=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-reorg"){queued_bls_reorg=true;queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-automatic"){pruning_automatic=true;pruning_native=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--slashing-retirement"){slashing_retirement=true;pruning_automatic=true;pruning_native=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-slashing"){pruning_slashing=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--local-sync"){local_sync=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-invalid-signature"){deposit_invalid_signature=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--automatic-registration"){automatic_registration=true;configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-auto-registration"){automatic_registration=true;deposit_activation=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-activation-restart"){deposit_activation_restart=true;deposit_activation=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-activation"){deposit_activation=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-consumption"){deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-native"){pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-bls"){pruning_bls=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-primitive"){pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-owner"){queued_bls_changes=true;local_bls_changes=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-rpc"){queued_bls_changes=true;local_bls_changes=true;configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-wire"){wire_mode=true;queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-changes"){queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--exit-wire"){exit_wire=true;queued_exits=true;local_exits=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-exits"){queued_exits=true;local_exits=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--local-exits"){local_exits=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--local-bls-changes"){local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--wire"){wire_mode=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--beacon-reads"){beacon_reads=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--automatic-recovery"){automatic_recovery=true;configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--configured-runtime"){configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler-sync-rotation"){scheduled=true;sync_rotation=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-reorg-activation"){deposit_reorg_activation=true;deposit_reorg=true;pruning_native=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-reorg"){deposit_reorg=true;pruning_native=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler-registration"){automatic_registration=true;scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler"){scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-reorg"){owner_reorg=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}
+ #ifdef NANO_SYNC_FAULT
+ if(argc==3&&std::string(argv[1])=="--deposit-vote-sync-writer")return deposit_vote_sync_writer(argv[2]);
+ if(argc==2&&std::string(argv[1])=="--deposit-reorg-sync"){deposit_reorg_sync=true;deposit_reorg=true;pruning_native=true;scenario(false);return 0;}
