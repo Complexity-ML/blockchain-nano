@@ -1,0 +1,7 @@
+# Queued corrective AMD64 control
+
+Runtime source remains clean 1ac57e25ff04f1d79b5c605acc2ae8ff1d73dcc9. Nineteen named cases must be registered exactly; missing, duplicated or foreign cases block execution. The existing AMD64 builder and build volume are reused in a new isolated build directory. The driver waits for the original c10426b2 container to finish and for all 417 terminal results and unchanged historical executable hashes before compiling.
+
+The collector from daab685d6c1485bc89143f1edd4208dd2bf41686, qualified by CI 285/285, is embedded verbatim in the control script. Its own source and SHA256 are saved separately in the report directory. It explicitly hashes nano plus primary commands, nano-p2p and executable helper arguments before/after testing. This is tooling provenance separate from the frozen runtime source; it does not alter or retroactively extend the original c10426b2 manifest. The remote control script hash matched the local pinned script while the original test container was still active and the corrective container had not started.
+
+At preparation, compilation/execution remained pending. This document is not a successful test result. The two newly observed Altair/full-block and Bellatrix/partition failures remain outside these nineteen cases; their diagnosis and qualification are still required. All production gates and historical failures are preserved.
