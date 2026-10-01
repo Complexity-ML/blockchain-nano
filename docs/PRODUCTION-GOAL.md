@@ -2316,3 +2316,7 @@ Candidate cohérente ea9667f6 (admission corrigée + estimation/allocations + ba
 ### 2026-10-01 — CI caeb8d17 terminée et portée vérifiée
 
 Les trois suites CI sont terminales : core 9/9, réseau 21/21, exploitation 246/246, zéro échec/ignoré. Les sélections core/réseau correspondent exactement aux cas XML et ne contiennent aucun doublon. La révision couvre l’admission malformée corrigée ; elle ne couvre pas les nouvelles optimisations EVM ni le backend MCL portable du candidat ea9667f6. Régression complète, consensus WAN, gates de production et échecs historiques restent ouverts. [Preuves](qualification/ci-20261001/terminal-caeb8d17/README.md).
+
+### 2026-10-01 — Candidat portable ARM64 et nouveau parcours volumineux
+
+Candidat ea9667f6 : 14/14 tests ARM64, zéro ignoré, sélection/XML exacts et empreintes exécutables avant/après identiques ; AMD64 reste en cours. Nouvelle couverture locale b39a0122 : blocs de 18 Mo finalisés avec journal réel, annoncés par référence puis importés en 40 fragments avec racine d’état identique, Paris/Shanghai réussis. Les refus des anciennes routes agrégées et la limite de 16 Mo sont conservés. Première préparation sans Python conservée ; aucune preuve P2P distribuée ou production ajoutée. Les échecs historiques et tous les gates ouverts demeurent. [Preuves](qualification/evm-rpc-portable-20261001/README.md).

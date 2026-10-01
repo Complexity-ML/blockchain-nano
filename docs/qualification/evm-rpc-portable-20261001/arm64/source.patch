@@ -1,0 +1,360 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 26a5e764..4a401f2f 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -31,9 +31,21 @@ target_include_directories(nano_core SYSTEM PUBLIC ${GMP_INCLUDE_DIR} ${ROCKSDB_
+ target_link_libraries(nano_core PUBLIC ${GMPXX_LIBRARY} ${GMP_LIBRARY} OpenSSL::SSL OpenSSL::Crypto ICU::uc ${ROCKSDB_LIBRARY} Threads::Threads)
+ target_compile_options(nano_core PRIVATE -Wall -Wextra -Wpedantic)
+ set(CMAKE_EXPORT_NO_PACKAGE_REGISTRY ON)
++set(NANO_MCL_PORTABLE_DEFAULT OFF)
++if(UNIX)
++ set(NANO_MCL_PORTABLE_DEFAULT ON)
++endif()
++option(MCL_PORTABLE "Use portable LLVM BN128 arithmetic without an ADX/JIT requirement" ${NANO_MCL_PORTABLE_DEFAULT})
+ add_subdirectory(third_party/mcl EXCLUDE_FROM_ALL)
+ target_link_libraries(nano_core PUBLIC mcl::mcl_st)
+ enable_testing()
++# Exercise the BN128 integration in a fresh process without the EVM, RocksDB
++# or prior cryptographic calls. Keep its failure separate from the core suite.
++add_executable(nano-bn-pairing-tests tests/test_bn_pairing.cpp src/bn_pairing.cpp)
++target_include_directories(nano-bn-pairing-tests PRIVATE third_party)
++target_link_libraries(nano-bn-pairing-tests PRIVATE mcl::mcl_st Threads::Threads)
++add_test(NAME bn_pairing_cold_vectors COMMAND nano-bn-pairing-tests "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/bn256Pairing.json")
++set_tests_properties(bn_pairing_cold_vectors PROPERTIES TIMEOUT 30 LABELS qualification_crypto)
+ add_executable(nano-process-backpressure-tests tests/test_process_backpressure.cpp)
+ target_link_libraries(nano-process-backpressure-tests PRIVATE nano_core)
+ add_test(NAME process_trace_backpressure COMMAND nano-process-backpressure-tests)
+diff --git a/include/nano/evm.hpp b/include/nano/evm.hpp
+index 73d9bcde..a600f89d 100644
+--- a/include/nano/evm.hpp
++++ b/include/nano/evm.hpp
+@@ -39,6 +39,8 @@ struct ExecutionResult {
+  std::vector<Log> logs;
+  std::set<std::string> deleted_accounts;
+  std::string error;
++ // Observed forwarding depth is an RPC probe hint, never serialized state/gas.
++ unsigned max_call_depth=0;
+ };
+ // Symmetric coroutine transfer keeps nested EVM frames off the native stack.
+ // Tasks execute synchronously; there are no worker threads or scheduler races.
+diff --git a/src/evm.cpp b/src/evm.cpp
+index 4dee28e9..968a74e2 100644
+--- a/src/evm.cpp
++++ b/src/evm.cpp
+@@ -9,8 +9,17 @@ struct Frame {
+  Bytes memory;
+  explicit Frame(uint64_t budget):gas(budget){}
+  void charge(uint64_t cost){if(cost>gas)throw std::runtime_error("Out of gas");gas-=cost;}
+- void push(const Int& value){if(stack.size()>=1024)throw std::runtime_error("Stack overflow");stack.push_back(word(value));}
+- Int pop(){if(stack.empty())throw std::runtime_error("Stack underflow");Int value=stack.back();stack.pop_back();return value;}
++ // Own the operand so normalization can reuse its GMP allocation. The same
++ // floor remainder handles negative and oversized operands modulo 2^256.
++ void push(Int value){if(stack.size()>=1024)throw std::runtime_error("Stack overflow");mpz_fdiv_r_2exp(value.get_mpz_t(),value.get_mpz_t(),256);stack.push_back(std::move(value));}
++ Int pop(){if(stack.empty())throw std::runtime_error("Stack underflow");Int value=std::move(stack.back());stack.pop_back();return value;}
++ void reduce(void (*operation)(mpz_ptr,mpz_srcptr,mpz_srcptr)){
++  Int a=pop();if(stack.empty())throw std::runtime_error("Stack underflow");
++  // Retain the second operand's GMP storage for the result. Argument order
++  // remains top-of-stack first, including noncommutative SUB.
++  auto& b=stack.back();operation(b.get_mpz_t(),a.get_mpz_t(),b.get_mpz_t());
++  mpz_fdiv_r_2exp(b.get_mpz_t(),b.get_mpz_t(),256);
++ }
+  std::pair<size_t,size_t> region(const Int& start,const Int& size){
+   if(size==0)return {0,0};
+   // Compute the quadratic expansion price before converting offsets or allocating.
+@@ -44,15 +53,22 @@ EvmTask EVM::run(const ExecutionContext& ctx, unsigned depth){
+  if(ctx.revision<EvmRevision::Osaka&&op==0x1e)throw std::runtime_error("Opcode unavailable in selected EVM revision");
+  if(ctx.revision<EvmRevision::Cancun&&((op>=0x5c&&op<=0x5e)||op==0x49||op==0x4a))throw std::runtime_error("Opcode unavailable in selected EVM revision");
+  f.charge(opcode_gas(op));
+- if(op>=0x60&&op<=0x7f){size_t n=op-0x5f;f.push(integer(slice(ctx.code,Int(pc+1),n)));pc+=n;continue;}
+- if(op>=0x80&&op<=0x8f){size_t depth=op-0x7f;if(f.stack.size()<depth)throw std::runtime_error("Stack underflow");Int value=f.stack[f.stack.size()-depth];f.push(value);continue;}
++ if(op>=0x60&&op<=0x7f){
++  const size_t n=op-0x5f,available=std::min(n,ctx.code.size()-pc-1);
++  // Import directly from immutable bytecode instead of allocating a Bytes
++  // slice on every PUSH. Missing immediate bytes are trailing zeroes (EVM EOF).
++  Int value;if(available)mpz_import(value.get_mpz_t(),available,1,1,1,0,ctx.code.data()+pc+1);
++  if(available<n)mpz_mul_2exp(value.get_mpz_t(),value.get_mpz_t(),8*(n-available));
++  f.push(std::move(value));pc+=n;continue;
++ }
++ if(op>=0x80&&op<=0x8f){size_t depth=op-0x7f;if(f.stack.size()<depth)throw std::runtime_error("Stack underflow");Int value=f.stack[f.stack.size()-depth];f.push(std::move(value));continue;}
+  if(op>=0x90&&op<=0x9f){size_t depth=op-0x8f;if(f.stack.size()<=depth)throw std::runtime_error("Stack underflow");std::swap(f.stack.back(),f.stack[f.stack.size()-depth-1]);continue;}
+  if(op>=0xa0&&op<=0xa4){if(ctx.is_static)throw std::runtime_error("LOG in static context");Int off=f.pop(),size=f.pop();Log log{ctx.address,{}, {}};for(unsigned i=0;i<unsigned(op-0xa0);++i)log.topics.push_back(bytes(f.pop(),32));log.data=f.read(off,size);f.charge(log.data.size()*8);result.logs.push_back(std::move(log));continue;}
+  switch(static_cast<NanoOpCodes>(op)){
+  case NanoOpCodes::STOP:done=true;break;
+- case NanoOpCodes::ADD:{Int a=f.pop(),b=f.pop();f.push(a+b);break;}
+- case NanoOpCodes::MUL:{Int a=f.pop(),b=f.pop();f.push(a*b);break;}
+- case NanoOpCodes::SUB:{Int a=f.pop(),b=f.pop();f.push(a-b);break;}
++ case NanoOpCodes::ADD:f.reduce(mpz_add);break;
++ case NanoOpCodes::MUL:f.reduce(mpz_mul);break;
++ case NanoOpCodes::SUB:f.reduce(mpz_sub);break;
+  case NanoOpCodes::DIV:{Int a=f.pop(),b=f.pop();f.push(b==0?Int(0):Int(a/b));break;}
+  case NanoOpCodes::SDIV:{Int a=signed_word(f.pop()),b=signed_word(f.pop());f.push(b==0?Int(0):Int(a/b));break;}
+  case NanoOpCodes::MOD:{Int a=f.pop(),b=f.pop();f.push(b==0?Int(0):Int(a%b));break;}
+@@ -170,6 +186,7 @@ EvmTask EVM::run(const ExecutionContext& ctx, unsigned depth){
+   std::optional<size_t> transfer_snap;if(!child.is_static)transfer_snap=mutable_state().snapshot();auto previous_addresses=warm_addresses_;auto previous_slots=warm_slots_;auto previous_deletions=pending_deletions_;auto previous_created=created_accounts_;auto previous_transient=transient_storage_;
+   if(!delegate&&!callcode&&!static_call&&value!=0)mutable_state().transfer(ctx.address,target,value);
+   f.charge(budget);warm_addresses_.insert(child.address);auto output=co_await run(child,depth+1);
++  result.max_call_depth=std::max(result.max_call_depth,1+output.max_call_depth);
+   f.gas+=child.gas-output.gas_used;last_return=output.return_data;
+   if(output.success){if(transfer_snap)mutable_state().commit(*transfer_snap);result.logs.insert(result.logs.end(),output.logs.begin(),output.logs.end());result.gas_refund+=output.gas_refund;}
+   else{if(transfer_snap)mutable_state().revert(*transfer_snap);warm_addresses_=std::move(previous_addresses);warm_slots_=std::move(previous_slots);pending_deletions_=std::move(previous_deletions);created_accounts_=std::move(previous_created);transient_storage_=std::move(previous_transient);}
+@@ -192,6 +209,7 @@ EvmTask EVM::run(const ExecutionContext& ctx, unsigned depth){
+   created_accounts_.insert(address(target));mutable_state().get(target).nonce=1;mutable_state().transfer(ctx.address,target,value);
+   ExecutionContext child=ctx;child.address=target;child.caller=ctx.address;child.value=value;child.data.clear();child.code=init;child.code_address=target;child.gas=f.gas-f.gas/64;
+   warm_addresses_.insert(target);auto output=co_await run(child,depth+1);f.charge(output.gas_used);last_return=output.return_data;
++  result.max_call_depth=std::max(result.max_call_depth,1+output.max_call_depth);
+   uint64_t deposit=output.return_data.size()*200;
+   if(output.success&&(output.return_data.size()>24576||deposit>child.gas-output.gas_used||((ctx.revision==EvmRevision::Paris||ctx.revision>=EvmRevision::Shanghai)&&!output.return_data.empty()&&output.return_data[0]==0xef))){
+    // Code deposit belongs to the child budget; preserve the parent's 1/64 reserve.
+diff --git a/src/rpc.cpp b/src/rpc.cpp
+index ac69a8fb..f3180ca4 100644
+--- a/src/rpc.cpp
++++ b/src/rpc.cpp
+@@ -523,10 +523,24 @@ std::function<Json()> Rpc::prepare_simulation(const std::string& method,const Js
+   }
+   // Try a headroom candidate, but never exceed the caller/balance/block cap.
+   // Use arbitrary-precision arithmetic before converting back to uint64.
+-  Int optimistic=(Int(std::to_string(result.gas_used))+2300)*64/63;
++  Int optimistic=Int(std::to_string(result.gas_used))+2300;
++  // One forwarding allowance per observed CALL/CREATE layer avoids starting
++  // far below nested EIP-150 headroom. This is only a probe: successful
++  // execution, caller/balance/block cap and the same binary fallback govern it.
++  for(unsigned level=0;level<std::max(1u,result.max_call_depth)&&optimistic<Int(std::to_string(high));++level)optimistic=(optimistic*64+62)/63;
+   if(optimistic>Int(std::to_string(low))&&optimistic<Int(std::to_string(high))){
+    auto gas=u64(optimistic);auto trial=simulate(*state,b->header,chain_id,p[0],gas,ancestors,revision,checkpoint);
+-   if(trial.success)high=gas;else low=gas;
++   if(trial.success){
++    high=gas;
++    // With several forwarding layers the successful depth allowance often
++    // lies close to the required budget. Tighten once near that upper bound,
++    // then retain the ordinary binary fallback and verified-success invariant.
++    if(result.max_call_depth>1&&high-low>1&&Int(std::to_string(high-low))*1000>Int(std::to_string(high))*15){
++     auto near=high-std::max(uint64_t(1),(high-low)/4);
++     auto verified=simulate(*state,b->header,chain_id,p[0],near,ancestors,revision,checkpoint);
++     if(verified.success)high=near;else low=near;
++    }
++   }else low=gas;
+   }
+   // Stop with a verified successful upper bound once the search interval is
+   // within 1.5% of the quote. An RPC estimate need not be the exact minimum.
+diff --git a/tests/test_bn_pairing.cpp b/tests/test_bn_pairing.cpp
+new file mode 100644
+index 00000000..0d47386a
+--- /dev/null
++++ b/tests/test_bn_pairing.cpp
+@@ -0,0 +1,27 @@
++#include "json.hpp"
++#include <charconv>
++#include <cstdint>
++#include <fstream>
++#include <iostream>
++#include <string>
++#include <vector>
++namespace nano { bool bn_pairing_check(const std::vector<uint8_t>& input); }
++int main(int argc,char** argv){try{
++ if(argc!=2)throw std::invalid_argument("expected pairing fixture path");
++ std::ifstream file(argv[1]);nlohmann::json vectors;file>>vectors;
++ if(!vectors.is_array()||vectors.empty())throw std::invalid_argument("empty pairing fixtures");
++ size_t index=0,failures=0;
++ for(const auto& vector:vectors){
++  const auto input=vector.at("Input").get<std::string>();
++  if(input.size()%2)throw std::invalid_argument("odd fixture hex length");
++  std::vector<uint8_t> bytes(input.size()/2);
++  for(size_t i=0;i<bytes.size();++i){unsigned value=0;auto part=std::from_chars(input.data()+2*i,input.data()+2*i+2,value,16);if(part.ec!=std::errc{}||part.ptr!=input.data()+2*i+2)throw std::invalid_argument("invalid fixture hex");bytes[i]=uint8_t(value);}
++  auto expected=vector.at("Expected").get<std::string>();
++  if(expected!=std::string(64,'0')&&expected!=std::string(63,'0')+"1")throw std::invalid_argument("invalid pairing expectation");
++  bool actual=false;std::string error;
++  try{actual=nano::bn_pairing_check(bytes);}catch(const std::exception& e){error=e.what();}
++  bool matched=error.empty()&&actual==(expected.back()=='1');if(!matched)++failures;
++  std::cout<<nlohmann::json{{"vector",index++},{"inputBytes",bytes.size()},{"expected",expected.back()=='1'},{"actual",actual},{"error",error},{"matched",matched}}.dump()<<'\n';
++ }
++ std::cout<<nlohmann::json{{"vectors",index},{"failed",failures},{"coldProcess",true}}.dump()<<'\n';return failures?1:0;
++}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+diff --git a/tests/test_core.cpp b/tests/test_core.cpp
+index 468da490..45be857f 100644
+--- a/tests/test_core.cpp
++++ b/tests/test_core.cpp
+@@ -379,6 +379,26 @@ int main(){try{
+  State state;std::string alice="0x"+std::string(40,'a'),bob="0x"+std::string(40,'b');state.get(alice).balance=100;auto initial=state.root();auto snap=state.snapshot();check(state.transfer(alice,bob,30),"transfer");state.set_storage(bob,0,123);state.revert(snap);check(state.root()==initial&&state.get(bob).balance==0,"snapshot restores all state");check(!state.transfer(alice,bob,101),"insufficient balance");rejects([&]{state.transfer(alice,bob,-1);},"negative transfer");
+  check(create2_address("0x"+std::string(40,'0'),Bytes(32),keccak(Bytes{0}))=="0x4d1a2e2bb4f88f0250f26ffff098b0b30b26bf38","EIP1014 vector");
+  EVM vm(state);ExecutionContext ctx;ctx.address=bob;ctx.code=unhex("0x600260030160005260206000f3");auto result=vm.execute(ctx);check(result.success&&integer(result.return_data)==5,"EVM add and return");check(result.gas_used==24,"EVM arithmetic gas");
++ // Exercise owned stack operands: subtraction wraps negative results, products
++ // exceed 256 bits, and DUP must preserve an independent original operand.
++ for(unsigned i=0;i<64;++i)for(uint8_t opcode:{uint8_t(0x03),uint8_t(0x02)}){
++  Int a=(Int(1)<<256)-1-i,b=(Int(1)<<255)+i;
++  ctx.code=concat(Bytes{0x7f},bytes(a,32));ctx.code=concat(ctx.code,Bytes{0x7f});ctx.code=concat(ctx.code,bytes(b,32));
++  ctx.code=concat(ctx.code,Bytes{opcode,0x80,0x01});ctx.code=concat(ctx.code,unhex("0x60005260206000f3"));
++  Int operand=opcode==0x03?Int(b-a):Int(a*b);Int expected=word(2*word(operand));result=vm.execute(ctx);
++  check(result.success&&integer(result.return_data)==expected,"owned EVM stack wraps and duplicates 256-bit operands");
++  check(result.gas_used==(opcode==0x03?30u:32u),"owned EVM stack preserves arithmetic gas");
++ }
++ ctx.code.clear();for(unsigned i=0;i<1024;++i)ctx.code=concat(ctx.code,Bytes{0x60,0x01});
++ check(vm.execute(ctx).success,"owned EVM stack accepts exactly 1024 operands");ctx.code.push_back(0x80);
++ result=vm.execute(ctx);check(!result.success&&result.error=="Stack overflow","owned EVM stack rejects the 1025th operand");
++ for(unsigned width=1;width<=32;++width){
++  Bytes immediate(width,0xff),expected(32-width,0);expected.insert(expected.end(),immediate.begin(),immediate.end());
++  ctx.code=concat(Bytes{uint8_t(0x5f+width)},immediate);ctx.code=concat(ctx.code,unhex("0x60005260206000f3"));
++  result=vm.execute(ctx);check(result.success&&result.return_data==expected&&result.gas_used==18,"PUSH widths preserve unsigned big-endian output and gas");
++  ctx.gas=17;result=vm.execute(ctx);check(!result.success&&result.gas_used==17,"PUSH memory return still exhausts one-short gas");ctx.gas=1000000;
++  for(unsigned available:{0u,width-1}){ctx.code=concat(Bytes{uint8_t(0x5f+width)},Bytes(available,0xff));result=vm.execute(ctx);check(result.success&&result.gas_used==3,"truncated PUSH is padded rather than rejected");}
++ }
+  ctx.code=unhex("0x602a60005560005460005260206000f3");result=vm.execute(ctx);check(result.success&&integer(result.return_data)==42&&state.get_storage(bob,0)==42,"EVM storage");
+  auto before=state.root();ctx.code=unhex("0x600160005560006000fd");result=vm.execute(ctx);check(!result.success&&state.root()==before&&result.logs.empty(),"EVM revert rolls back storage");
+  ctx.is_static=true;ctx.code=unhex("0x6001600055");check(!vm.execute(ctx).success&&state.root()==before,"EVM static rejects storage");ctx.is_static=false;
+diff --git a/tests/test_rpc.cpp b/tests/test_rpc.cpp
+index 6007d669..90c8251f 100644
+--- a/tests/test_rpc.cpp
++++ b/tests/test_rpc.cpp
+@@ -670,5 +670,36 @@ int main(){try{
+   }
+   std::filesystem::remove_all(cancel_path);
+  }
++ // Four nested EIP-150 forwarding layers should not repeatedly execute a
++ // costly leaf merely to find headroom. Count deterministic checkpoints,
++ // not wall time, while independently verifying the returned quote.
++ for(const auto* fork:{"Paris","Shanghai"}){
++  Json allocations={{sender,{{"balance","0x100000000000000000"}}}};
++  std::string leaf="0x00000000000000000000000000000000000080ad",target=leaf;
++  allocations[leaf]={{"code","0x60016000556000355b8015601557600190036008565b50602a60005260206000f3"}};
++  for(unsigned level=1;level<=4;++level){auto outer=hex(bytes(Int(0x80ad+level),20));allocations[outer]={{"code","0x3660006000376020600060206000600073"+target.substr(2)+"5af1602f5760006000fd5b60206000f3"}};target=outer;}
++  auto g=Genesis::from_json({{"config",{{"chainId",1337},{"evmFork",fork}}},{"alloc",allocations}});
++  auto probe_path=path.string()+"-depth-estimate";
++  {Blockchain chain(probe_path,g);auto original=chain.state().root();size_t clock_reads=0;
++   RpcSimulationLimits limits;limits.now=[&]{++clock_reads;return std::chrono::steady_clock::time_point{};};Rpc rpc(chain,{},AdmissionBudget::Clock::now,limits);
++   Json args={{"from",sender},{"to",target},{"gas","0x1c9c380"},{"data",hex(bytes(Int(40000),32))}};
++   auto invoke=[&](const char* method){return rpc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",Json::array({args,"latest"})}});};
++   auto called=invoke("eth_call");check(called.at("result")==hex(bytes(Int(42),32)),"deep estimate control executes");auto call_reads=clock_reads;clock_reads=0;
++   auto quote=invoke("eth_estimateGas");check(quote.contains("result"),"deep estimate succeeds");auto estimate_reads=clock_reads;
++   std::cout<<Json{{"scenario","deep-estimate-probe-count"},{"fork",fork},{"callCheckpoints",call_reads},{"estimateCheckpoints",estimate_reads}}.dump()<<std::endl;
++   check(estimate_reads*2<=call_reads*11,"deep estimation repeats costly execution beyond bounded probe budget");
++   auto gas=quantity(quote.at("result"));args["gas"]=quote.at("result");check(invoke("eth_call").at("result")==called.at("result"),"deep quote independently executes");
++   Transaction tx;tx.chain_id=1337;tx.to=target;tx.gas=gas;tx.gas_price=2000000000;tx.data=bytes(Int(40000),32);auto state=g.state;ExecutionEngine engine(g.chain_id,{},g.evm_revision);auto receipt=engine.apply_transaction(state,SignedTransaction::sign(tx,key),g.block.header,0,0);
++   check(receipt.success&&state.get_storage(leaf,0)==1&&chain.state().root()==original,"deep quote executes signed transaction without committing RPC writes");
++   Int low=receipt.gas_used-1,high=gas;while(high-low>1){Int mid=(high+low)/2;args["gas"]=quantity(mid);if(invoke("eth_call").contains("error"))low=mid;else high=mid;}
++   check((gas-high)*1000<=gas*15,"deep quote exceeds 1.5 percent of independently found boundary");
++   State created_state=g.state;ExecutionContext creation;creation.origin=sender;creation.caller=sender;creation.address=target;creation.revision=g.evm_revision;creation.gas=300000;
++   creation.code=unhex("0x3660006000373660006000f05060006000f3");
++   creation.data=unhex("0x6000600060006000600073"+leaf.substr(2)+"5af15060006000f3");
++   EVM created_vm(created_state);auto created=created_vm.execute(creation);
++   check(created.success&&created.max_call_depth==2&&created_state.get_storage(leaf,0)==1,"observed depth includes CREATE constructor CALL without changing execution");
++   std::cout<<Json{{"scenario","deep-estimate-checkpoints"},{"fork",fork},{"callCheckpoints",call_reads},{"estimateCheckpoints",estimate_reads},{"gasQuote",quantity(gas)},{"minimumVerified",quantity(high)}}.dump()<<'\n';
++  }std::filesystem::remove_all(probe_path);
++ }
+  std::cout<<checks<<" RPC checks passed\n";return 0;
+ }catch(const std::exception& e){std::cerr<<e.what()<<"\n";return 1;}}
+diff --git a/third_party/mcl/CMakeLists.txt b/third_party/mcl/CMakeLists.txt
+index 18a55f10..0a877ba5 100644
+--- a/third_party/mcl/CMakeLists.txt
++++ b/third_party/mcl/CMakeLists.txt
+@@ -27,6 +27,10 @@ endif()
+ 
+ set(MCL_FP_BIT 384 CACHE STRING "max bit size for Fp")
+ set(MCL_FR_BIT 256 CACHE STRING "max bit size for Fr")
++option(MCL_PORTABLE "Use portable LLVM arithmetic instead of x86 ADX/JIT assembly" OFF)
++if(MCL_PORTABLE AND MSVC)
++ message(FATAL_ERROR "MCL_PORTABLE is currently qualified only with Unix toolchains")
++endif()
+ 
+ option(
+ 	MCL_USE_GMP
+@@ -138,6 +142,10 @@ set_target_properties(mcl_st PROPERTIES
+ 
+ target_compile_definitions(mcl PUBLIC MCL_FP_BIT=${MCL_FP_BIT} MCL_FR_BIT=${MCL_FR_BIT})
+ target_compile_definitions(mcl_st PUBLIC MCL_FP_BIT=${MCL_FP_BIT} MCL_FR_BIT=${MCL_FR_BIT})
++if(MCL_PORTABLE)
++ target_compile_definitions(mcl PUBLIC MCL_PORTABLE=1 MCL_DONT_USE_XBYAK MCL_MSM=0)
++ target_compile_definitions(mcl_st PUBLIC MCL_PORTABLE=1 MCL_DONT_USE_XBYAK MCL_MSM=0)
++endif()
+ 
+ # Compiler and linker settings
+ if(MCL_WIN_ARM64)
+@@ -180,7 +188,7 @@ else()
+ 	set(MCL_COMPILE_OPTIONS -Wall -Wextra -Wformat=2 -Wcast-qual -Wcast-align
+ 		-Wwrite-strings -Wfloat-equal -Wpointer-arith -DNDEBUG -O3 -fPIC)
+ 	# bmi2 (mulx) and adx (adcx/adox) are required on x86/x64 (same as common.mk)
+-	if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64|AMD64|i[3-6]86|x86)$")
++	if(NOT MCL_PORTABLE AND CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64|AMD64|i[3-6]86|x86)$")
+ 		list(APPEND MCL_COMPILE_OPTIONS -mbmi2 -madx)
+ 	endif()
+ endif()
+@@ -205,6 +213,11 @@ endif()
+ if(CMAKE_CXX_COMPILER_ARG1)
+ 	list(APPEND _cxx_cmd ${CMAKE_CXX_COMPILER_ARG1})
+ endif()
++set(_llvm_cmd ${_cxx_cmd})
++if(MCL_PORTABLE AND NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
++ find_program(MCL_PORTABLE_CLANG NAMES clang++ clang REQUIRED)
++ set(_llvm_cmd ${MCL_PORTABLE_CLANG})
++endif()
+ 
+ # use bint-x64 on x64, bint${BIT}.ll on the other CPU
+ if(MCL_WIN_ARM64)
+@@ -292,7 +305,7 @@ elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "AMD64") # Win64
+ 	target_sources(mcl PRIVATE ${BINT_X64_OBJ})
+ 	add_dependencies(mcl_st gen_bint-x64-win.obj)
+ 	target_sources(mcl_st PRIVATE ${BINT_X64_OBJ})
+-elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT APPLE)
++elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT APPLE AND NOT MCL_PORTABLE)
+ 	if (CMAKE_SYSTEM_NAME STREQUAL "MSYS")
+ 		target_sources(mcl PRIVATE src/asm/bint-x64-mingw.S)
+ 		target_sources(mcl_st PRIVATE src/asm/bint-x64-mingw.S)
+@@ -301,7 +314,7 @@ elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT APPLE)
+ 		target_sources(mcl_st PRIVATE src/asm/bint-x64-amd64.S)
+ 	endif()
+ else()
+-	if(NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
++	if(NOT MCL_PORTABLE AND NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+ 		message(FATAL_ERROR "requiring clang++. cmake -DCMAKE_CXX_COMPILER=clang++ ..")
+ 	endif()
+ 	set(BINT_OBJ "${CMAKE_CURRENT_BINARY_DIR}/bint${BIT}.o")
+@@ -310,7 +323,7 @@ else()
+ 	target_compile_definitions(mcl_st PUBLIC MCL_BINT_ASM_X64=0)
+ 
+ 	add_custom_command(OUTPUT ${BINT_OBJ}
+-		COMMAND ${_cxx_cmd} -c -o ${BINT_OBJ} ${CMAKE_CURRENT_SOURCE_DIR}/src/bint${BIT}.ll -O3 -fPIC -fno-ident
++		COMMAND ${_llvm_cmd} -c -o ${BINT_OBJ} ${CMAKE_CURRENT_SOURCE_DIR}/src/bint${BIT}.ll -O3 -fPIC -fno-ident
+ 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+ 	add_custom_target(gen_bint.o
+ 		SOURCES ${BINT_OBJ})
+@@ -323,7 +336,7 @@ endif()
+ 
+ # use generated asm or compile base${BIT}.ll by clang
+ 
+-if (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT APPLE AND NOT CMAKE_SYSTEM_NAME STREQUAL "MSYS")
++if (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT APPLE AND NOT CMAKE_SYSTEM_NAME STREQUAL "MSYS" AND NOT MCL_PORTABLE)
+   set(X86_64_LINUX TRUE)
+ else()
+   set(X86_64_LINUX FALSE)
+@@ -345,7 +358,7 @@ elseif(${MCL_USE_LLVM})
+ 	target_compile_definitions(mcl_st PUBLIC MCL_USE_LLVM=1)
+ 
+ 	add_custom_command(OUTPUT ${BASE_OBJ}
+-		COMMAND ${_cxx_cmd} -c -o ${BASE_OBJ} ${CMAKE_CURRENT_SOURCE_DIR}/src/base${BIT}.ll -O3 -fPIC -fno-ident
++		COMMAND ${_llvm_cmd} -c -o ${BASE_OBJ} ${CMAKE_CURRENT_SOURCE_DIR}/src/base${BIT}.ll -O3 -fPIC -fno-ident
+ 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+ 	add_custom_target(gen_base.o
+ 		SOURCES ${BASE_OBJ})
+@@ -374,7 +387,7 @@ if(CMAKE_SYSTEM_PROCESSOR STREQUAL "AMD64") # Win64
+ elseif(MCL_WIN_ARM64)
+ 	# ARM64 doesn't use AVX instructions, so skip MSM optimization
+ 	message(STATUS "Skipping MSM AVX optimization for ARM64")
+-elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT APPLE)
++elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT APPLE AND NOT MCL_PORTABLE)
+ 	set(MSM_OBJ "${CMAKE_CURRENT_BINARY_DIR}/msm_avx.o")
+ 
+ 	add_custom_command(OUTPUT ${MSM_OBJ}
+diff --git a/third_party/mcl/src/fp.cpp b/third_party/mcl/src/fp.cpp
+index b25c2cac..0576be13 100644
+--- a/third_party/mcl/src/fp.cpp
++++ b/third_party/mcl/src/fp.cpp
+@@ -458,8 +458,9 @@ bool Op::init(const mpz_class& _p, int _u, int _xi_a, int tag, size_t sizeofF)
+ 	case FrTag: if (sizeofF != sizeof(Fr)) return false; break;
+ 	default: break;
+ 	}
+-#if CYBOZU_HOST == CYBOZU_HOST_INTEL && MCL_SIZEOF_UNIT == 8
+-	// x64 requires BMI2 (mulx) and ADX (adox, adcx)
++#if CYBOZU_HOST == CYBOZU_HOST_INTEL && MCL_SIZEOF_UNIT == 8 && !defined(MCL_PORTABLE)
++	// The optimized x64 assembly requires BMI2 (mulx) and ADX (adox, adcx).
++	// Portable builds use generic LLVM objects with Xbyak/MSM assembly disabled.
+ 	if ((getCpuType() & tAVX_BMI2_ADX) == 0) return false;
+ #endif
+ 	if (_p <= 0) return false;
