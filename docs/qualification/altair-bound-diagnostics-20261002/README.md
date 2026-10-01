@@ -1,0 +1,7 @@
+# Altair full-block boundary diagnostic
+
+The still-running c10426b2 AMD64 full campaign reports a failure at the configured block maximum before core validation. The assertion previously omitted its received reply. This test-only diagnostic now records payload/frame sizes, reply, admission high-water values, unchanged checkpoint and clock health when that same assertion fails. No limit, acceptance rule, timeout or protocol behavior is changed. Linked execution qualification is pending.
+
+Docker ARM64 Clang C++20 Release syntax check passed using the existing builder digest 6116669430b02b7e8012af8c8bd515a5a7dcd1dd2034649f9b45ae5b9e70a3a4, network disabled and read-only source. The first command omitted the third_party include and failed to find json.hpp; its error is retained. The corrected command adds that include; this is compilation-only evidence.
+
+The partial observation also retains the Bellatrix partition simulation timeout at the original 240-second limit. It shows common finality at epoch 9 before timeout, not completed recovery qualification or proof of a protocol stall. The campaign and its remaining results must still be audited at termination. The corrective 19-case campaign on source 1ac57e25 is separately waiting for completion of the original container. It does not include this new diagnostic or close these newly observed failures.

@@ -40,7 +40,19 @@ int main(int argc,char** argv){try{
  check(probe(status,{bad.dump(),duplicate,frame("attestation",Bytes(513,0))})==Json::array({nullptr,nullptr,nullptr}),"invalid frame reached consensus");
  check(endpoint->jobs().at("highWater")==watermark&&reactor.current().token==start,"rejected peer/frame changed core admission");
  check(probe(status,{invalid})==Json::array({Json{{"accepted",false}}}),"core rejection not returned to compatible peer");
- check(probe(status,{frame("block",Bytes(transition.maximum_block_bytes,0))})==Json::array({Json{{"accepted",false}}}),"full configured block bound failed before core validation");
+ const auto bound_frame=frame("block",Bytes(transition.maximum_block_bytes,0));
+ const auto bound_watermark=endpoint->jobs().at("highWater");
+ const auto bound_token=reactor.current().token;
+ const auto bound_reply=probe(status,{bound_frame});
+ if(bound_reply!=Json::array({Json{{"accepted",false}}})){
+  std::cerr<<Json{{"scenario","altair-full-block-bound-failure"},
+   {"payloadBytes",transition.maximum_block_bytes},{"frameBytes",bound_frame.size()},
+   {"reply",bound_reply},{"highWaterBefore",bound_watermark},
+   {"highWaterAfter",endpoint->jobs().at("highWater")},
+   {"checkpointUnchanged",reactor.current().token==bound_token},
+   {"clockHealthy",healthy.load()}}.dump()<<std::endl;
+ }
+ check(bound_reply==Json::array({Json{{"accepted",false}}}),"full configured block bound failed before core validation");
  unsigned blocks=0;
  for(const auto& step:load(dir/"steps.json")){
   if(step.contains("tick"))reactor.tick(step.at("tick").get<uint64_t>()*1000);
