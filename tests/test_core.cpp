@@ -392,6 +392,13 @@ int main(){try{
  ctx.code.clear();for(unsigned i=0;i<1024;++i)ctx.code=concat(ctx.code,Bytes{0x60,0x01});
  check(vm.execute(ctx).success,"owned EVM stack accepts exactly 1024 operands");ctx.code.push_back(0x80);
  result=vm.execute(ctx);check(!result.success&&result.error=="Stack overflow","owned EVM stack rejects the 1025th operand");
+ for(unsigned width=1;width<=32;++width){
+  Bytes immediate(width,0xff),expected(32-width,0);expected.insert(expected.end(),immediate.begin(),immediate.end());
+  ctx.code=concat(Bytes{uint8_t(0x5f+width)},immediate);ctx.code=concat(ctx.code,unhex("0x60005260206000f3"));
+  result=vm.execute(ctx);check(result.success&&result.return_data==expected&&result.gas_used==18,"PUSH widths preserve unsigned big-endian output and gas");
+  ctx.gas=17;result=vm.execute(ctx);check(!result.success&&result.gas_used==17,"PUSH memory return still exhausts one-short gas");ctx.gas=1000000;
+  for(unsigned available:{0u,width-1}){ctx.code=concat(Bytes{uint8_t(0x5f+width)},Bytes(available,0xff));result=vm.execute(ctx);check(result.success&&result.gas_used==3,"truncated PUSH is padded rather than rejected");}
+ }
  ctx.code=unhex("0x602a60005560005460005260206000f3");result=vm.execute(ctx);check(result.success&&integer(result.return_data)==42&&state.get_storage(bob,0)==42,"EVM storage");
  auto before=state.root();ctx.code=unhex("0x600160005560006000fd");result=vm.execute(ctx);check(!result.success&&state.root()==before&&result.logs.empty(),"EVM revert rolls back storage");
  ctx.is_static=true;ctx.code=unhex("0x6001600055");check(!vm.execute(ctx).success&&state.root()==before,"EVM static rejects storage");ctx.is_static=false;
