@@ -1,0 +1,58 @@
+✔ cut leaves node queryable, restores original IP, requires later common finality (0.983125ms)
+✔ workload runs only while isolated and settles before restoration (0.233542ms)
+✔ failed workload restores the network without reporting recovery success (0.924791ms)
+✔ observer and workload failures are both retained and restored (0.156333ms)
+✔ lost disconnect response never starts the workload (0.08775ms)
+✔ lost-response rejects and restores (0.067875ms)
+✔ rpc-fails rejects and restores (0.072334ms)
+✔ conflict rejects and restores (0.067541ms)
+✔ no-recovery rejects and restores (0.117333ms)
+✔ restoration failure cannot become success (0.196958ms)
+✔ wrong provenance refuses mutation (0.055ms)
+✔ peer isolation must be observed, not inferred from Docker success (0.175916ms)
+✔ finality regression after reconnection is rejected (0.102333ms)
+✔ late recovery reuses history without another network cut (0.118292ms)
+✔ late conflict remains fatal (0.118292ms)
+✔ late regression remains fatal (0.099125ms)
+✔ late recovery is bounded too (0.076209ms)
+✔ recovery read completed at 10000ms observes the inclusive deadline (0.07275ms)
+✖ recovery read completed at 10001ms observes the inclusive deadline (0.51325ms)
+✖ reconnection record latency cannot extend the recovery budget (0.082917ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 18
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 62.863125
+
+✖ failing tests:
+
+test at tests/multihost/partition.test.mjs:84:60
+✖ recovery read completed at 10001ms observes the inclusive deadline (0.51325ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (file:///Users/boris/Dev/blockchain-nano/tests/multihost/partition.test.mjs:87:13)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /recovery deadline/,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at tests/multihost/partition.test.mjs:91:1
+✖ reconnection record latency cannot extend the recovery budget (0.082917ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (file:///Users/boris/Dev/blockchain-nano/tests/multihost/partition.test.mjs:94:2)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /recovery deadline/,
+    operator: 'rejects',
+    diff: 'simple'
+  }

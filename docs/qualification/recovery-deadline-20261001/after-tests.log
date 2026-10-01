@@ -1,0 +1,41 @@
+✔ finite schedule rejects unbounded or malformed requested work (1.4145ms)
+✔ both cycles require newer finality and retain one security history (0.404958ms)
+✔ first cycle failure stops all following network mutations (0.16775ms)
+✔ successful transport alone earns no recovery credit (0.075917ms)
+✔ regressed checkpoint after first cycle cannot reset history for the next (0.094083ms)
+✔ conflicting old root after cycle cannot be forgotten (0.105625ms)
+✔ observer replacement and disconnected pre-cycle sample are refused (0.536375ms)
+✔ cut leaves node queryable, restores original IP, requires later common finality (1.086875ms)
+✔ workload runs only while isolated and settles before restoration (0.494458ms)
+✔ failed workload restores the network without reporting recovery success (0.449666ms)
+✔ observer and workload failures are both retained and restored (0.158375ms)
+✔ lost disconnect response never starts the workload (0.104916ms)
+✔ lost-response rejects and restores (0.080458ms)
+✔ rpc-fails rejects and restores (0.077417ms)
+✔ conflict rejects and restores (0.070125ms)
+✔ no-recovery rejects and restores (0.136458ms)
+✔ restoration failure cannot become success (0.270416ms)
+✔ wrong provenance refuses mutation (0.108ms)
+✔ peer isolation must be observed, not inferred from Docker success (0.210333ms)
+✔ finality regression after reconnection is rejected (0.132042ms)
+✔ late recovery reuses history without another network cut (0.122417ms)
+✔ late conflict remains fatal (0.128709ms)
+✔ late regression remains fatal (0.159958ms)
+✔ late recovery is bounded too (0.08525ms)
+✔ recovery read completed at 10000ms observes the inclusive deadline (0.145375ms)
+✔ recovery read completed at 10001ms observes the inclusive deadline (0.467166ms)
+✔ reconnection record latency cannot extend the recovery budget (0.094625ms)
+✔ normal recovery completes its observation (1.160625ms)
+✔ late stable finality preserves original deadline failure (0.256417ms)
+✔ restoration, RPC and safety errors never extend the campaign (0.110791ms)
+✔ late observer failure remains a failure and retains both diagnostics (0.07925ms)
+✔ late recovery must complete before stability observation (0.076125ms)
+✔ missing late recovery observer cannot skip the recovery stage (0.072ms)
+ℹ tests 33
+ℹ suites 0
+ℹ pass 33
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 67.976042

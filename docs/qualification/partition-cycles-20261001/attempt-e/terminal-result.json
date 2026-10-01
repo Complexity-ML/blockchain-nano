@@ -1,0 +1,57 @@
+{
+  "exitCode": 0,
+  "runtimeRevision": "5165e518af9da7e503747a16d76819f0b147a240",
+  "harnessRevision": "c25cc31",
+  "rawHarnessPassed": true,
+  "strictEndToEndDeadlineQualified": false,
+  "reason": "Second recovery record occurred 181001 ms after verified reconnection; old harness checked only before its asynchronous read. Actual finality time inside the sampling interval is not known.",
+  "cycles": [
+    {
+      "cycle": 1,
+      "requestedCutMs": 96000,
+      "actualCutMs": 97128,
+      "observedRecoveryAfterReconnectMs": 140186,
+      "rawHarnessPassed": true,
+      "nominalLimitMs": 180000
+    },
+    {
+      "cycle": 2,
+      "requestedCutMs": 192000,
+      "actualCutMs": 193159,
+      "observedRecoveryAfterReconnectMs": 181001,
+      "rawHarnessPassed": true,
+      "nominalLimitMs": 180000
+    }
+  ],
+  "stableFinality": {
+    "epochs": 3,
+    "firstEpoch": "15",
+    "lastEpoch": "18",
+    "elapsedMs": 143649,
+    "nodes": [
+      "mac-native",
+      "mac-docker",
+      "vps-docker"
+    ],
+    "revision": "5165e518af9da7e503747a16d76819f0b147a240"
+  },
+  "validators": [
+    {
+      "file": "native.log",
+      "healthy": true,
+      "attestationsAdmitted": 424
+    },
+    {
+      "file": "docker-mac.log",
+      "healthy": true,
+      "attestationsAdmitted": 400
+    },
+    {
+      "file": "vps.log",
+      "healthy": true,
+      "attestationsAdmitted": 403
+    }
+  ],
+  "clockFaultReproduced": false,
+  "productionQualified": false
+}
