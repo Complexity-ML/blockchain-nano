@@ -6543,3 +6543,8 @@ Candidate séparée `3fa8b805` : seules les mesures opt-in des simulations de l'
 ### 2026-10-02 — Coût des sondes RPC mesuré, optimisation non qualifiée
 
 Candidate de diagnostic `3fa8b805`, compilation incrémentale Docker AMD64 sans nouvelle image, cas Paris WebSocket original PASS 82.05 s. Les 192 estimations effectuent cinq simulations chacune ; médiane totale 2103.730 ms, simulations individuelles environ 394–416 ms en médiane. Préparation médiane 3.713 ms ; attente WebSocket maximum 3197.998 ms. Source et trois programmes stables audités. Coût des sondes identifié pour ce scénario, cause de l'expiration historique non démontrée ; aucune optimisation promue sur main, régression complète ou production qualifiée. Le volume actuel contient désormais la candidate instrumentée. [Preuves et portée](qualification/rpc-probe-diagnostic-20261002/README.md).
+
+
+### 2026-10-02 — Optimisation de l'intervalle de gaz préparée
+
+Candidate séparée `d1597d9a` : sonde proche de la borne haute limitée par la tolérance existante 1,5 %, avec succès réellement vérifié et fallback conservé. Nouveaux cas Paris/Shanghai 2/4/8 profondeurs et plafonds serrés, contrôle négatif contre l'algorithme précédent. [Contrôleur Docker incrémental](qualification/rpc-headroom-control-20261002/README.md) syntaxiquement vérifié ; résultats non acquis. Aucune optimisation promue sur main, clôture de l'échec historique, régression complète, WAN ou production revendiquée.
