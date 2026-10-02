@@ -40,7 +40,13 @@ int main(int argc,char** argv){try{
  check(probe(status,{bad.dump(),duplicate,frame("attestation",Bytes(513,0))})==Json::array({nullptr,nullptr,nullptr}),"invalid frame reached consensus");
  check(endpoint->jobs().at("highWater")==watermark&&reactor.current().token==start,"rejected peer/frame changed core admission");
  check(probe(status,{invalid})==Json::array({Json{{"accepted",false}}}),"core rejection not returned to compatible peer");
- check(probe(status,{frame("block",Bytes(transition.maximum_block_bytes,0))})==Json::array({Json{{"accepted",false}}}),"full configured block bound failed before core validation");
+ const auto maximum_block_reply=probe(status,{frame("block",Bytes(transition.maximum_block_bytes,0))});
+ const auto maximum_block_expected=Json::array({Json{{"accepted",false}}});
+ if(maximum_block_reply!=maximum_block_expected){
+  // Record bounded metadata only: no payload, peer keys or secret material.
+  std::cerr<<Json{{"scenario","altair-maximum-block-rejection"},{"maximumPayloadBytes",transition.maximum_block_bytes},{"maximumFrameBytes",profile.frame_bytes},{"actualReply",maximum_block_reply},{"expectedReply",maximum_block_expected},{"coreJobs",endpoint->jobs()},{"coreSequence",reactor.current().token.sequence},{"healthy",healthy.load()}}.dump()<<'\n';
+ }
+ check(maximum_block_reply==maximum_block_expected,"full configured block bound failed before core validation");
  unsigned blocks=0;
  for(const auto& step:load(dir/"steps.json")){
   if(step.contains("tick"))reactor.tick(step.at("tick").get<uint64_t>()*1000);
