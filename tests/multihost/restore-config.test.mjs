@@ -14,3 +14,18 @@ for(const value of [undefined,null,NaN,Infinity,0.5,-1,0,Number.MAX_SAFE_INTEGER
 test('same-epoch terminal root must match the independently observed checkpoint',()=>{const f=completion();f.terminal.finalized.root='0x'+'e'.repeat(64);assert.throws(()=>validateRestoredFinality(f.saved,f.result,f.terminal),/conflicts/);});
 for(const [name,alter] of [['missing checkpoint',f=>delete f.result.lastCheckpoint],['missing terminal root',f=>delete f.terminal.finalized.root],['different checkpoint epoch',f=>f.result.lastCheckpoint.epoch='6'],['noncanonical result epoch',f=>f.result.lastEpoch='05']])test('refuses '+name,()=>{const f=completion();alter(f);assert.throws(()=>validateRestoredFinality(f.saved,f.result,f.terminal),/malformed restored finality/);});
 test('matching terminal checkpoint accepts safe fresh duties; later epoch retains audit requirement',()=>{const f=completion();validateRestoredFinality(f.saved,f.result,f.terminal);f.terminal.finalized.epoch='0x6';validateRestoredFinality(f.saved,f.result,f.terminal);});
+
+// Initial offline restore must use the independently stopped finality before duties.
+test('restore audit binds the stopped finalized checkpoint without aliasing it',()=>{
+ const r=receipt(),request=restoreAuditRequest(node(),r);
+ assert.deepEqual(request.requiredFinalized,r.finalized);
+ r.finalized.root='0x'+'e'.repeat(64);
+ assert.equal(request.requiredFinalized.root,'0x'+'a'.repeat(64));
+});
+for(const [name,alter] of [
+ ['absent finality',r=>delete r.finalized],
+ ['leading-zero epoch',r=>r.finalized.epoch='0x02'],
+ ['decimal epoch',r=>r.finalized.epoch='2'],
+ ['short root',r=>r.finalized.root='0xaa'],
+ ['absent root',r=>delete r.finalized.root]
+])test('restore audit refuses '+name,()=>{const r=receipt();alter(r);assert.throws(()=>restoreAuditRequest(node(),r),/stopped finalized checkpoint/);});

@@ -29,8 +29,10 @@ export function pinnedRestoreConfiguration(node, receipt) {
  return result;
 }
 export function restoreAuditRequest(original,receipt) {
+ const finalized=receipt?.finalized;
+ if(!/^0x(?:0|[1-9a-f][0-9a-f]*)$/.test(finalized?.epoch)||!/^0x[0-9a-f]{64}$/.test(finalized?.root))throw Error('Independent stopped finalized checkpoint required');
  const c=original.capella;if(!c?.initial?.file||!c.initial.sha256||!c.profile?.sha256)throw Error('Independent profile/anchor required');
- return {profile:{file:c.profile.file,sha256:c.profile.sha256},anchor:structuredClone(c.initial),limits:structuredClone(c.limits),expectedCheckpoint:token(receipt.restart),maximumBlocks:'0x400',maximumArchiveBytes:'0x20000000'};
+ return {profile:{file:c.profile.file,sha256:c.profile.sha256},anchor:structuredClone(c.initial),limits:structuredClone(c.limits),expectedCheckpoint:token(receipt.restart),requiredFinalized:structuredClone(finalized),maximumBlocks:'0x400',maximumArchiveBytes:'0x20000000'};
 }
 export function validateRestoredFinality(receipt,result,terminal) {
  const decimal=value=>typeof value==='string'&&/^(?:0|[1-9][0-9]*)$/.test(value);
