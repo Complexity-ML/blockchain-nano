@@ -5985,3 +5985,8 @@ Candidate de diagnostic `3fa8b805`, compilation incrémentale Docker AMD64 sans 
 ### 2026-10-02 — Optimisation de l'intervalle de gaz préparée
 
 Candidate séparée `d1597d9a` : sonde proche de la borne haute limitée par la tolérance existante 1,5 %, avec succès réellement vérifié et fallback conservé. Nouveaux cas Paris/Shanghai 2/4/8 profondeurs et plafonds serrés, contrôle négatif contre l'algorithme précédent. [Contrôleur Docker incrémental](qualification/rpc-headroom-control-20261002/README.md) syntaxiquement vérifié ; résultats non acquis. Aucune optimisation promue sur main, clôture de l'échec historique, régression complète, WAN ou production revendiquée.
+
+
+### 2026-10-02 — Optimisation RPC qualifiée sur tranche AMD64
+
+Candidate `d1597d9a` : contrôle négatif de performance rejette l'ancien algorithme ; RPC optimisé PASS 2.90 s / 1053 vérifications, nouvelles profondeurs Paris/Shanghai 2/4/8, gaz minimal indépendant et plafonds serrés. Cas réseau WebSocket Paris original PASS 71.03 s : 192 estimations, quatre simulations chacune contre cinq auparavant, médiane observée 1620.740 ms, file maximum 2595.770 ms (limite 4000 ms conservée). Sources et quatre programmes stables audités, image/volume réutilisés. Qualification bornée instrumentée, candidate non promue sur main ; origine de l'expiration historique, régression complète sans instrumentation, deux architectures, restauration des duties, WAN et production encore ouverts. [Preuves et limites](qualification/rpc-headroom-result-20261002/README.md).
