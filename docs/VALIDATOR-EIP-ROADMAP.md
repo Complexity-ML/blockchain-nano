@@ -6199,3 +6199,7 @@ une dépendance. Cœur/daemon read-only ; aucune règle d’admission assouplie.
 ### 2026-10-02 — Parent Capella VPS terminal, candidat corrigé AMD64 actif
 
 [Parent cac8d719](qualification/sha-provider-candidate-20261002/README.md) : cinq timeouts terminaux (quatre à 360 s, sortie à 480 s), zéro skip, exit 8/post-manifest 0 ; sources/programmes/libs avant/après identiques. Rapports négatifs conservés, sampling CPU registration distingué d’un benchmark contrôlé. Contrôleur a vérifié la fin réelle puis démarré le build AMD64 de 3030b799, image/volume existants et checkout séparé ; mêmes dix cas et limites originales, aucun succès nouveau déduit. Régression ARM64 entière encore active, 44 premiers cas passent à l’observation ; résultat global et toutes autres gates encore ouverts.
+
+### 2026-10-02 — Régression complète AMD64 préparée et gardée par Capella
+
+[Contrôleur AMD64 3030b799](qualification/full-candidate-3030b799-20261002/README.md) confirmé actif en attente des dix cas Capella actuels. Exige 10/10 terminaux, zéro skip et manifestes inchangés avant compilation P2P/cœur complète. Audit Node du registre depuis Mac, aucun outil installé sur VPS ; CTest complet refusé sans inventaire complet validé. Manifestes stricts des helpers comme contrôles séparés identifiés, runtime figé ; images/volumes réutilisés. Scripts syntaxiquement vérifiés, exécution complète pas encore acquise. ARM64 continue avec 53 premiers cas réussis à l’observation, pas de résultat global. Tous critères initiaux et échecs restent ouverts.

@@ -30,3 +30,21 @@ source/program evidence in network-preflight-arm64. Tests are confirmed active;
 no terminal suite result or after-test helper comparison yet. The observed
 registry during build remains separate and cannot substitute for this final
 complete registry. Other production gates remain open.
+
+## AMD64 complete-regression controller queued
+
+Controller is confirmed alive on the authorized VPS, waiting for the currently
+active ten-case Capella candidate campaign. It requires all ten pass, zero skips,
+terminal exit codes and unchanged sources/programs/libraries. Then it rebuilds
+all P2P and core targets in the existing image/volume. No extra concurrent load.
+Manifest uses the strengthened main tooling (explicit node and executable
+arguments) mounted separately as versioned control data, not over runtime source.
+
+Registry and executable metadata are transferred to the Mac; existing Node
+inventory validates complete selection, explicit timeouts and no missing
+commands. Only a successful host inventory allows full remote CTest. After
+terminal results the host verifies exact case coverage and full EEST log, with
+source/program/library comparisons. No Node installation on VPS, new image,
+funds, public deployment or source mutation. Control scripts syntax checked;
+actual full candidate preparation/execution not reached yet. This is prepared
+orchestration, not a qualification result.
