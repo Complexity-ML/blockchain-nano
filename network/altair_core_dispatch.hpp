@@ -3,6 +3,8 @@
 #include "altair_work.hpp"
 #include <deque>
 #include <limits>
+#include <cstdlib>
+#include <iostream>
 
 // I/O-executor-confined client. Core::call is injectable for qualification.
 // Tickets are admitted in order, with one RPC round trip at a time. Caller must
@@ -69,19 +71,20 @@ public:
   if(!call_||token_.empty()||session_.empty()||!maximum_||!failure_limit_||retry_<=std::chrono::milliseconds::zero())throw std::invalid_argument("Invalid Altair core dispatch configuration");
  }
  bool enqueue(AltairWireMessage message,AltairWork::Cancellation cancel,AltairWork::Done done){
-  if(blocked_||closing_||!cancel||!done||cancel->load()||jobs_.size()>=maximum_||high_water_==UINT64_MAX)return false;
-  const auto unissued=jobs_.size()-(!jobs_.empty()&&jobs_.front().sequence?1:0);if(unissued>=UINT64_MAX-high_water_)return false;
-  if(message.kind!=AltairWireKind::block&&message.kind!=AltairWireKind::attestation&&message.kind!=AltairWireKind::attester_slashing&&message.kind!=AltairWireKind::voluntary_exit&&message.kind!=AltairWireKind::bls_to_execution_change&&message.kind!=AltairWireKind::sync_committee_message)return false;
-  if(message.kind==AltairWireKind::voluntary_exit&&(profile_.consensus_identity.empty()||message.ssz.size()!=112))return false;
-  if(message.kind==AltairWireKind::bls_to_execution_change&&(!profile_.bls_changes||profile_.consensus_identity.empty()||message.ssz.size()!=172))return false;
-  if(message.kind==AltairWireKind::sync_committee_message&&(!profile_.sync_messages||profile_.consensus_identity.empty()||message.ssz.size()!=144))return false;
+  auto reject=[&](const char* reason){if(std::getenv("NANO_TEST_NETWORK_TRACE"))std::cout<<Json{{"event","test-consensus-dispatch-guard"},{"reason",reason},{"kind",static_cast<unsigned>(message.kind)},{"payloadBytes",message.ssz.size()},{"frameBytes",profile_.frame_bytes},{"pending",jobs_.size()},{"blocked",blocked_},{"closing",closing_}}.dump()<<std::endl;return false;};
+  if(blocked_||closing_||!cancel||!done||cancel->load()||jobs_.size()>=maximum_||high_water_==UINT64_MAX)return reject("queue-or-cancellation");
+  const auto unissued=jobs_.size()-(!jobs_.empty()&&jobs_.front().sequence?1:0);if(unissued>=UINT64_MAX-high_water_)return reject("ticket-overflow");
+  if(message.kind!=AltairWireKind::block&&message.kind!=AltairWireKind::attestation&&message.kind!=AltairWireKind::attester_slashing&&message.kind!=AltairWireKind::voluntary_exit&&message.kind!=AltairWireKind::bls_to_execution_change&&message.kind!=AltairWireKind::sync_committee_message)return reject("unsupported-kind");
+  if(message.kind==AltairWireKind::voluntary_exit&&(profile_.consensus_identity.empty()||message.ssz.size()!=112))return reject("exit-profile");
+  if(message.kind==AltairWireKind::bls_to_execution_change&&(!profile_.bls_changes||profile_.consensus_identity.empty()||message.ssz.size()!=172))return reject("bls-profile");
+  if(message.kind==AltairWireKind::sync_committee_message&&(!profile_.sync_messages||profile_.consensus_identity.empty()||message.ssz.size()!=144))return reject("sync-profile");
   const auto bound=message.kind==AltairWireKind::block?profile_.block_bytes:message.kind==AltairWireKind::attestation?profile_.attestation_bytes:message.kind==AltairWireKind::voluntary_exit?size_t(112):message.kind==AltairWireKind::bls_to_execution_change?size_t(172):message.kind==AltairWireKind::sync_committee_message?size_t(144):profile_.slashing_bytes;
-  if(message.ssz.size()>bound||message.ssz.size()>profile_.frame_bytes/2)return false;
+  if(message.ssz.size()>bound||message.ssz.size()>profile_.frame_bytes/2)return reject("payload-bound");
   const auto kind=message.kind==AltairWireKind::block?"block":message.kind==AltairWireKind::attestation?"attestation":message.kind==AltairWireKind::voluntary_exit?"voluntary_exit":message.kind==AltairWireKind::bls_to_execution_change?"bls_to_execution_change":message.kind==AltairWireKind::sync_committee_message?"sync_committee_message":"attester_slashing";
   auto envelope=Json{{"chainId",profile_.chain_id},{"genesisHash",profile_.genesis_hash},{"forkDigest",profile_.fork_digest},{"kind",kind},{"ssz","0x"}};
   if(!profile_.consensus_identity.empty())envelope["consensusIdentity"]=profile_.consensus_identity;
   const auto overhead=envelope.dump().size();
-  if(overhead>profile_.frame_bytes||message.ssz.size()>(profile_.frame_bytes-overhead)/2)return false;
+  if(overhead>profile_.frame_bytes||message.ssz.size()>(profile_.frame_bytes-overhead)/2)return reject("envelope-bound");
   auto frame=Json{{"chainId",profile_.chain_id},{"genesisHash",profile_.genesis_hash},{"forkDigest",profile_.fork_digest},{"kind",kind},{"sszBase64",altair_base64(message.ssz)}};
   if(!profile_.consensus_identity.empty())frame["consensusIdentity"]=profile_.consensus_identity;
   jobs_.push_back(Job{std::move(frame),std::move(cancel),std::move(done)});

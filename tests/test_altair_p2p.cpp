@@ -47,9 +47,9 @@ int main(int argc,char** argv){try{
   Json stream_diagnostics=Json::array();std::istringstream diagnostics(daemon.output());std::string line;
   while(std::getline(diagnostics,line)){
    const auto event=Json::parse(line,nullptr,false);
-   if(event.is_object()&&event.value("event","")=="test-consensus-stream-completion"){
+   if(event.is_object()&&(event.value("event","")=="test-consensus-stream-completion"||event.value("event","")=="test-consensus-dispatch-guard")){
     if(stream_diagnostics.size()==32)stream_diagnostics.erase(stream_diagnostics.begin());
-    Json metadata=Json::object();for(const auto* field:{"reason","kind","dispatched","workerDone","budgetReason"})if(event.contains(field))metadata[field]=event.at(field);
+    Json metadata=Json::object();for(const auto* field:{"event","reason","kind","dispatched","workerDone","budgetReason","payloadBytes","frameBytes","pending","blocked","closing"})if(event.contains(field))metadata[field]=event.at(field);
     stream_diagnostics.push_back(std::move(metadata));
    }
   }
