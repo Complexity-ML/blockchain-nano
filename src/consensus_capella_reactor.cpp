@@ -2,6 +2,7 @@
 #include "nano/chain.hpp"
 #include "nano/consensus_bls.hpp"
 #include "nano/consensus_message_ssz.hpp"
+#include "consensus_checkpoint_json.hpp"
 namespace nano {
 namespace {
 void archive_require(bool value){if(!value)throw std::invalid_argument("Invalid Capella durable archive");}
@@ -48,7 +49,7 @@ std::string durable_snapshot(const CapellaForkStore& store,const CapellaSignedVo
  const auto encoded=capella_store_snapshot(store,rules,limits,check,cache);if(votes.empty()&&slashings.empty()&&changes.empty()&&exits.empty())return encoded;
  if(votes.size()>limits.messages)throw std::length_error("Capella signed vote capacity");Json list=Json::array();size_t total=0;
  for(const auto& [id,wire]:votes){if(check)check();if(wire.size()>limits.envelope_bytes/2-total)throw std::length_error("Capella signed vote bytes");total+=wire.size();list.push_back(Json::array({hex(id),hex(wire)}));}
- Json document{{"format","nano-capella-durable-v1"},{"store",Json::parse(encoded)},{"signedVotes",list}};
+ Json document{{"format","nano-capella-durable-v1"},{"signedVotes",std::move(list)}};
  if(!slashings.empty()||!changes.empty()||!exits.empty()){
   if(slashings.size()>limits.equivocations)throw std::length_error("Capella slashing capacity");Json proofs=Json::array();
   for(const auto& [id,wire]:slashings){if(check)check();if(wire.size()>limits.envelope_bytes/2-total)throw std::length_error("Capella slashing bytes");total+=wire.size();proofs.push_back(Json::array({hex(id),hex(wire)}));}
@@ -64,8 +65,10 @@ std::string durable_snapshot(const CapellaForkStore& store,const CapellaSignedVo
   for(const auto& [id,record]:exits){if(check)check();if(id.size()!=32||record.wire.size()!=112||144>limits.envelope_bytes/2-total)throw std::length_error("Capella exit bytes");total+=144;operations.push_back(Json::array({hex(id),hex(Bytes(record.admission_root.begin(),record.admission_root.end())),hex(record.wire)}));}
   document["format"]="nano-capella-durable-v4";document["signedExits"]=std::move(operations);
  }
- const auto result=document.dump();
- if(result.size()>limits.envelope_bytes)throw std::length_error("Capella durable envelope");return result;
+ // encoded is the validated canonical store above, never a peer-provided value.
+ // Preserve the existing Capella envelope exception type.
+ try{return checkpoint_detail::durable_json(std::move(document),encoded,limits.envelope_bytes);}
+ catch(const std::invalid_argument&){throw std::length_error("Capella durable envelope");}
 }
 std::tuple<CapellaForkStore,CapellaSignedVotes,CapellaSignedVotes,CapellaPendingBlsChanges,CapellaPendingExits> restore_durable(std::string_view encoded,const Bytes& digest,const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits,const std::function<void()>& check){
  if(check)check();archive_require(encoded.size()<=limits.envelope_bytes&&digest.size()==32&&sha256(Bytes(encoded.begin(),encoded.end()))==digest);
