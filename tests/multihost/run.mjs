@@ -23,7 +23,7 @@ import {restoredFinalityAuditRequest,verifyRestoredFinalityAudit} from './restor
 import {startFinalityMonitor} from './monitor.mjs';
 import {qualifyAlertFault} from './alert-fault.mjs';
 import {selectCandidates,verifyPackagedImage} from './candidate-images.mjs';
-import {selectHostBuildPaths,selectRemoteSourceRepository,remoteDockerArgument} from './build-paths.mjs';
+import {selectHostBuildPaths,selectRemoteSourceRepository,remoteDockerArgument,selectNativeBuildPaths} from './build-paths.mjs';
 import {advanceRestartConfiguration} from './restart-pins.mjs';
 import {decodeHttpResponse,httpStatusTrailer} from './http-response.mjs';
 import {hashHarness} from './harness-manifest.mjs';
@@ -34,7 +34,8 @@ if(!/^[a-z_][a-z0-9_-]*@[0-9.]+$/.test(target??'')||!(/^[0-9a-f]{40}$/).test(rev
 const monitor=process.env.NANO_TEST_FINALITY_MONITOR==='1';
 const alertDelivery=process.env.NANO_TEST_ALERT_DELIVERY==='1';
 const buildVolume=process.env.NANO_TEST_BUILD_VOLUME==='1';
-const hostBuildPaths=selectHostBuildPaths(buildVolume,process.env.NANO_TEST_BUILD_SUBDIRECTORY,process.env.NANO_TEST_BUILD_SUBDIRECTORY_ARM64,process.env.NANO_TEST_BUILD_SUBDIRECTORY_AMD64);
+if(process.env.NANO_TEST_NETWORK_WITH_CORE!==undefined&&!['0','1'].includes(process.env.NANO_TEST_NETWORK_WITH_CORE))throw Error('Invalid network build selector');
+const hostBuildPaths=selectHostBuildPaths(buildVolume,process.env.NANO_TEST_BUILD_SUBDIRECTORY,process.env.NANO_TEST_BUILD_SUBDIRECTORY_ARM64,process.env.NANO_TEST_BUILD_SUBDIRECTORY_AMD64,process.env.NANO_TEST_NETWORK_WITH_CORE==='1');
 const buildPaths=hostBuildPaths.arm64;
 const remoteRepository=selectRemoteSourceRepository(target.split('@')[0],process.env.NANO_TEST_REMOTE_SOURCE_REPOSITORY);
 const candidateFile=process.env.NANO_TEST_CANDIDATE_MANIFEST;
@@ -42,6 +43,7 @@ if(candidateFile&&buildVolume)throw Error('Select packaged images or build volum
 const candidates=candidateFile?selectCandidates(JSON.parse(await readFile(resolve(candidateFile),'utf8')),revision):null;
 const privateTransport=buildVolume||Boolean(candidates);
 const output=resolve(outputArg),repo=process.cwd(),image=candidates?.arm64.image??(buildVolume?'nano-build-dependencies:local':`blockchain-nano:${revision.slice(0,7)}`),remoteImage=candidates?.amd64.image??image;
+const nativePaths=selectNativeBuildPaths(repo,process.env.NANO_TEST_NATIVE_BUILD_DIRECTORY,process.env.NANO_TEST_NATIVE_NETWORK_DIRECTORY);
 const nofile=process.env.NANO_DOCKER_NOFILE??'65536';
 if(!/^[1-9]\d*$/.test(nofile)||!Number.isSafeInteger(Number(nofile)))throw Error('NANO_DOCKER_NOFILE requires a positive safe integer');
 const descriptorArgs=['--ulimit',`nofile=${nofile}:${nofile}`];
@@ -122,18 +124,18 @@ const rpc=async(kind,method,params=[])=>{
  const r=await request(kind,'/',{jsonrpc:'2.0',id:1,method,params});if(r.error)throw Error(JSON.stringify(r.error));return r.result;
 };
 try{
- const binary=join(repo,'build-release/nano'),p2p=join(repo,'build-network/nano-p2p');
- if(rotation)await log({event:'rotation-audit-binary',sha256:createHash('sha256').update(await readFile(join(repo,'build-release/nano-capella-rotation-audit'))).digest('hex')});
+ const {nano:binary,p2p}=nativePaths;
+ if(rotation)await log({event:'rotation-audit-binary',sha256:createHash('sha256').update(await readFile(nativePaths.rotationAudit)).digest('hex')});
  const harness=await hashHarness(repo);
  if(monitor&&(fork!=='capella'||!privateTransport||partition||asymmetric||backupRestore||rotation||boundedLoad))throw Error('Monitor qualification requires standalone private Capella campaign');
- await log({event:'harness',monitor,alertDelivery,partition,asymmetric,rotation,boundedLoad,backupRestore,pinnedRestart,partitionCuts,majorityIsland,majorityCutMs,faultProgress,fork,buildVolume,buildPaths:buildVolume?hostBuildPaths:null,remoteRepository,packagedImages:Boolean(candidates),artifacts,sha256:harness});
+ await log({event:'harness',monitor,alertDelivery,partition,asymmetric,rotation,boundedLoad,backupRestore,pinnedRestart,partitionCuts,majorityIsland,majorityCutMs,faultProgress,fork,buildVolume,buildPaths:buildVolume?hostBuildPaths:null,nativePaths,remoteRepository,packagedImages:Boolean(candidates),artifacts,sha256:harness});
  await log({event:'binaries',revision,nanoSha256:createHash('sha256').update(await readFile(binary)).digest('hex'),p2pSha256:createHash('sha256').update(await readFile(p2p)).digest('hex')});
  const assets=join(output,'assets'),prepared=join(output,'prepared');
- await exec(join(repo,`build-release/nano-${fork}-transition-tests`),[fork==='capella'?'--export-network':'--export-kurtosis',assets],{timeout:30000});
+ await exec(nativePaths.transitionTests[fork],[fork==='capella'?'--export-network':'--export-kurtosis',assets],{timeout:30000});
  const topology=[{name:'mac-native',host:'mac',mode:'native',rpcPort:18545,p2pPort:30305,p2pBinary:p2p,runtimeDirectory:join(prepared,'mac-native')},{name:'mac-docker',host:'mac',mode:'docker',rpcPort:8545,p2pPort:30303},{name:'vps-docker',host:target,mode:'docker',rpcPort:8545,p2pPort:30303}];
  await writeFile(join(output,'topology.json'),JSON.stringify(topology));
  await exec(process.execPath,['tests/multihost/prepare.mjs',assets,prepared,join(output,'topology.json')]);
- if(buildVolume)for(const name of ['mac-docker','vps-docker']){const path=join(prepared,name,'node.json'),c=await json(path);c.p2p_binary=buildPaths.p2p;await writeFile(path,JSON.stringify(c));}
+ if(buildVolume)for(const name of ['mac-docker','vps-docker']){const path=join(prepared,name,'node.json'),c=await json(path);c.p2p_binary=hostBuildPaths[name==='vps-docker'?'amd64':'arm64'].p2p;await writeFile(path,JSON.stringify(c));}
  await sh(['mkdir',remoteRoot]);
  // Only newly generated PUBLIC fixtures cross SSH; software arrived via Git.
  await exec('scp',['-q','-r',join(prepared,'vps-docker'),`${target}:${remoteRoot}/config`],{timeout:30000});
@@ -418,7 +420,7 @@ if(pinnedRestart&&!process.exitCode){
    await exec('scp',['-q',proofFile,`${target}:${remoteRoot}/rotation-proof.json`],{timeout:30000});
    const audits=[];
    const nd=join(output,'prepared/mac-native');
-   audits.push(JSON.parse((await exec(join(repo,'build-release/nano-capella-rotation-audit'),[join(nd,'genesis.json'),join(nd,'node.json'),join(nd,'data/chain'),proofFile,rotationNodes[0]],{timeout:120000,maxBuffer:1024*1024})).stdout));
+   audits.push(JSON.parse((await exec(nativePaths.rotationAudit,[join(nd,'genesis.json'),join(nd,'node.json'),join(nd,'data/chain'),proofFile,rotationNodes[0]],{timeout:120000,maxBuffer:1024*1024})).stdout));
    await writeFile(join(output,'rotation-audits.json'),JSON.stringify(audits,null,2));
    for(const [name,onRemote,index] of [[local,false,1],[remote,true,2]]){
     const config=onRemote?remoteRoot+'/config':join(output,'prepared/mac-docker');
