@@ -1,0 +1,9 @@
+# Added SHA256 error-path coverage, ARM terminal / AMD queued
+
+No candidate source mutation: f7e46437 remains frozen while AMD CMake build runs. This separate public harness links the actual frozen consensus_signing.cpp with GNU --wrap for EVP_MD_CTX_new/free, Init_ex2, Update, Final_ex. Only the requested stage is forced to return failure. Real OpenSSL functions handle every successful operation.
+
+ARM Docker direct build terminated0: allocation failure refuses before Init/Update/Final; each Init/Update/Final failure throws, frees the dirty context, short-circuits subsequent stages as appropriate; the next operation allocates independently and produces the fixed SHA256 of 64 zeros. 388 recovery known-vector checks include 128 repeated operations per stage; allocation counters prove reuse after recovery. Does not simulate provider implementation faults/internal corruption, wrong digest length, OOM kill, process crash or arbitrary reentrant providers. Not full CMake/consensus/WAN qualification.
+
+AMD equivalent is queued after the original build+360s reindex scenario, to prevent resource competition. DriverPID572183, script after-reindex.sh; actual terminal reports must be inspected, never inferred from this queue. No rerun/restart of reindex; its result remains authoritative whether pass or failure. audit.py independently checks the three-case registry, preserved deadlines, zero skips, exact before/after sources and programs, and exit/JUnit consistency. Verifier is prepared, not yet exercised on the pending terminal results.
+
+The README one level above stated allocation/finalization injection not qualified when written. This later ARM bounded coverage supplements that historical statement; AMD and whole-node qualification remain open. Full production goal and historical failures retained.
