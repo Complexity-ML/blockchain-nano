@@ -62,6 +62,7 @@ Json audit_capella_canonical_history(ChainStore& disk,const Int& chain,const Byt
  const auto tip=disk.latest();require(tip&&tip->header.hash()==target.execution_block.header.hash(),"tip changed during audit");
  require(bool(disk.fork_checkpoint(chain,genesis,limits.envelope_bytes,expected)),"checkpoint disappeared");
  return {{"canonicalHistoryVerified",true},{"externalFinalizedAncestorVerified",bool(required_finalized)},
+  {"requiredFinalized",required_finalized?Json{{"epoch",quantity(Int(std::to_string(required_finalized->epoch)))},{"root",hex(Bytes(required_finalized->root.begin(),required_finalized->root.end()))}}:Json(nullptr)},
   {"finalized",{{"epoch",quantity(Int(std::to_string(saved.state->timed.view.finalized.epoch)))},{"root",hex(Bytes(saved.state->timed.view.finalized.root.begin(),saved.state->timed.view.finalized.root.end()))}}},{"historicalForkChoiceVerified",false},{"historicalStandaloneVotesReplayed",false},
   {"trustedAnchor",hex(Bytes(anchor.begin(),anchor.end()))},{"firstExecutionBlock",quantity(first.execution_block.header.number)},
   {"lastExecutionBlock",quantity(target.execution_block.header.number)},{"blocksIncludingTrustedAnchor",blocks},{"transactions",transactions},
