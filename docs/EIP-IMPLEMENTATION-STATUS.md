@@ -5888,3 +5888,8 @@ Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régr
 ## Terminal AMD64 et diagnostic ingress — 2 octobre 2026
 
 Révision runtime `0f53b42d` : **426/427**, aucun skip ; `consensus_altair_libp2p` échoue. Audit intégral : refus (exit 1), sources/binaires/entrées de linkage stables. Diagnostic séparé `e8efb812` : compilation réussie, échec reproduit, bloc maximal refusé avant nouvelle admission cœur (`dispatch-unavailable`), cause précise encore ouverte. Aucun profil EIP ni gate WAN/production clos. [Rapports et limites](qualification/amd-terminal-and-ingress-diagnostic-20261002/README.md).
+
+
+## Cause du refus Altair — 2 octobre 2026
+
+Diagnostic : `peer-missing` après échec du sondage de statut. Le pair de qualification réutilisé était périmé : son binaire ne contenait pas le handler présent dans la source. Recompiler uniquement ce pair depuis `0f53b42d` fait réussir le même cas, daemon/cœur originaux inchangés : bloc maximal 8 Mio, 2 blocs officiels, 9 pairs distincts. Aucun assouplissement runtime. La campagne originale demeure **426/427** ; la cohérence sources/binaires réseau doit être corrigée puis qualifiée sur les deux architectures. [Preuves et portée](qualification/altair-stale-probe-cause-20261002/README.md). Aucun gate EIP/WAN/production global clos.
