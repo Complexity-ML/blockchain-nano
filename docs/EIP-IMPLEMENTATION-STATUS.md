@@ -6005,3 +6005,8 @@ Candidate `d1597d9a` : PID VPS 1440584 et conteneur de préparation vérifiés e
 ### 2026-10-02 — Enchaînement ARM64 vers régression complète préparé
 
 [Contrôleur Mac](qualification/rpc-full-arm64-control-20261002/README.md) syntaxiquement vérifié : attend le PID réel du build de dépendances, refuse sa réutilisation, exige une image ARM64 finale identifiable et les 15 315 sources inchangées, puis compile/qualifie la candidate `d1597d9a` avec le script complet Git sans instrumentation RPC. Une image/un volume requis après reset Mac ; aucun résultat de régression complète ou production encore acquis, tous les autres gates conservés.
+
+
+### 2026-10-02 — Image ARM64 disponible, compilation cohérente démarrée
+
+Image Mac figée `sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb`, ARM64/Linux ; export/tag/unpack terminés et 15 315 sources inchangées vérifiés. PID dépendances absent ; code de retour direct non capturé, aucune supposition de statut. Contrôleur 84088 et conteneur de préparation ARM64 vérifiés en vie sur la candidate `d1597d9a` : P2P/helpers compilés, cœur en compilation, régression complète non encore acquise. [Preuves](qualification/rpc-arm64-dependency-result-20261002/README.md). Compilation VPS parallèle active ; autres gates de production toujours ouverts.
