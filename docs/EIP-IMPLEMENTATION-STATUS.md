@@ -5632,3 +5632,7 @@ une dépendance. Cœur/daemon read-only ; aucune règle d’admission assouplie.
 ### 2026-10-02 — Préparation complète terminée, 422 CTest réellement actifs
 
 [Préflight 3030b799 ARM64](qualification/full-candidate-3030b799-20261002/README.md) : tous targets P2P puis cœur compilés, sources avant/après build identiques. Registre final 422 cas complet, toutes commandes présentes et TIMEOUT explicite ; 200 exécutables principaux/réseau + trois helpers externes mesurés avant tests. Registre/manifestes principaux inchangés entre préparation et lancement. Container de test confirmé actif et premiers cas passent ; résultat terminal et comparaisons après tests non acquis. Ancien registre observé pendant compilation distingué du registre final. Aucun gain WAN, égalité globale de roots, clôture EIP ou production déduit ; AMD64 et autres gates ouverts.
+
+### 2026-10-02 — Parent Capella VPS terminal, candidat corrigé AMD64 actif
+
+[Parent cac8d719](qualification/sha-provider-candidate-20261002/README.md) : cinq timeouts terminaux (quatre à 360 s, sortie à 480 s), zéro skip, exit 8/post-manifest 0 ; sources/programmes/libs avant/après identiques. Rapports négatifs conservés, sampling CPU registration distingué d’un benchmark contrôlé. Contrôleur a vérifié la fin réelle puis démarré le build AMD64 de 3030b799, image/volume existants et checkout séparé ; mêmes dix cas et limites originales, aucun succès nouveau déduit. Régression ARM64 entière encore active, 44 premiers cas passent à l’observation ; résultat global et toutes autres gates encore ouverts.

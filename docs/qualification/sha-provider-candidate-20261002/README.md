@@ -23,3 +23,18 @@ Cinq gates Capella précédemment en timeout démarrent sur le même cœur VPS, 
 6/6, zéro skip, CTest/container/post-manifeste 0. Racines officielles, premier appel concurrent, indisponibilité/reprise, chaîne signée et stale-writer passent. Partition passe 58,372 s sous sa limite originale 240 s. Manifeste source byte à byte identique à celui de la campagne AMD64 ; programmes et bibliothèques inchangés avant/après sur chaque architecture. Le cœur et nano ont bien été recompilés avec la source cac8d719 sur ARM64.
 
 Ces deux campagnes utilisent les mêmes six noms et cas d’entrée, mais n’établissent ni l’endurance, ni le WAN, ni une régression globale. Les sorties finales ne publient pas le root de finalité : aucune égalité de root final entre architectures déduite des seules époques. Une vraie convergence multi-nœud sur la nouvelle version restera nécessaire. Résultats dans `terminal-arm64/` ; les cinq Capella VPS continuent séparément, sans promesse de réussite ou hausse des timeouts.
+
+## Five Capella AMD64 cases terminal on parent cac8d719
+
+0/5 pass, five original timeouts, zero skips; CTest/container exit 8, post-test
+manifest exit 0; source/program/library inputs unchanged. Activation/restart/
+auto-registration/reindexed activation each reach the original 360 s bound;
+reindexed exit reaches original 480 s bound. Raw terminal artifacts retained in
+terminal-capella-amd64. Thirty-second CPU sampling took place during
+registration; do not use this campaign as a controlled before/after benchmark.
+
+The guarded controller verified terminal results and manifest equality, then
+started AMD64 compilation of 3030b799 in the existing image and build volume.
+Its separate source checkout matches ARM64. Same ten cases/original limits;
+no new result acquired yet. Parent failure remains open until new qualification,
+without erasing history. The full ARM64 registry is independently still active.
