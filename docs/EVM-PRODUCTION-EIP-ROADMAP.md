@@ -3100,3 +3100,7 @@ une dépendance. Cœur/daemon read-only ; aucune règle d’admission assouplie.
 ### 2026-10-02 — Sérialisation candidate : équivalence et gain partiel
 
 [Contrôles archivés](qualification/bellatrix-snapshot-splice-20261002/README.md) : ARM64, 2 048 comparaisons byte à byte des formats v2-v5, 3 072 rejets de limites et 1 024 annulations ; portée limitée à l’assemblage extrait. AMD64, timeout conservé 240,022 s, slot observé 96 contre 88. Aux mêmes 1 792 appels, encodage 44,416 contre 70,948 s, publication inclusive 109,663 contre 137,117 s. Échec terminal toujours ouvert, pas de promotion runtime ni conformité globale ; autres critères historiques conservés.
+
+### 2026-10-02 — Snapshot : transfert des temporaires, délai encore dépassé
+
+[Contrôle conservé](qualification/bellatrix-snapshot-move-20261002/README.md) : 512 comparaisons ciblées ARM64 passent ; AMD64 expire à 240,025 s, dernier slot 96. Aux mêmes 1 792 appels, encodage 42,678 s et publication inclusive 107,889 s : petit écart descriptif, pas de résolution du cas. Manifestes inchangés, zéro skip. Prochain diagnostic : témoin/commit/lecture authentifiée/Write synchrone séparés, sans retirer de protection. Aucune promotion runtime, autres critères conservés.

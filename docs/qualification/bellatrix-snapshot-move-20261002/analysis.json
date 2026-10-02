@@ -1,0 +1,51 @@
+{
+  "case": {
+    "name": "consensus_bellatrix_partition_simulation",
+    "classname": "consensus_bellatrix_partition_simulation",
+    "time": "240.025",
+    "status": "fail"
+  },
+  "lastSlot": 96,
+  "matching1792Calls": {
+    "store-copy": {
+      "event": "reactor-inner-profile",
+      "phase": "store-copy",
+      "calls": 1792,
+      "totalUs": 397152,
+      "maximumUs": 683
+    },
+    "vote-context": {
+      "event": "reactor-inner-profile",
+      "phase": "vote-context",
+      "calls": 1792,
+      "totalUs": 9674198,
+      "maximumUs": 31039
+    },
+    "vote-verify-choice": {
+      "event": "reactor-inner-profile",
+      "phase": "vote-verify-choice",
+      "calls": 1792,
+      "totalUs": 3637558,
+      "maximumUs": 5175
+    },
+    "snapshot-encode": {
+      "event": "reactor-inner-profile",
+      "phase": "snapshot-encode",
+      "calls": 1792,
+      "totalUs": 42678249,
+      "maximumUs": 75063
+    },
+    "reactor-publish": {
+      "event": "reactor-inner-profile",
+      "phase": "reactor-publish",
+      "calls": 1792,
+      "totalUs": 107889236,
+      "maximumUs": 158487
+    }
+  },
+  "priorSnapshotUs": 44415944,
+  "priorPublishUs": 109663248,
+  "noRepeatedBenchmark": true,
+  "nestedDoNotSum": true,
+  "noRuntimePromotion": true
+}
