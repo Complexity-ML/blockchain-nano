@@ -5588,3 +5588,7 @@ une dépendance. Cœur/daemon read-only ; aucune règle d’admission assouplie.
 ### 2026-10-02 — Cache publié : nouveau contrôle stale-writer réussi
 
 [Rapport bad3e0c0](qualification/published-snapshot-bytes-candidate-20261002/README.md) : un seul nouveau scénario, 1/1 passe en 0,833 s ; trois retransmissions idempotentes puis changement disque détecté et réacteur fermé. Aucun skip, sorties/entrées vérifiées, pas de rejeu des dix autres réussites 090e95df. Partition demeure en timeout au slot 96, aucune promotion runtime main ni clôture de production. Prochaine correction ciblée : retirer les copies JSON inutiles à la comparaison du cache en conservant tous les champs et gardes de validation. Les exigences et échecs historiques restent ouverts.
+
+### 2026-10-02 — Cache JSON sans copie : gardes passent, partition toujours lente
+
+[Contrôle 2db1840c](qualification/snapshot-cache-row-20261002/README.md), hors main : AMD64 3 cas exacts, 2 passent, partition timeout 240,047 s/dernier slot 96, aucun skip, entrées avant/après inchangées. Égalité complète du cache, mutations, règles/annulation et stale-writer qualifiés dans ces limites. Aucun gain terminal observé, délai non clôturé. Recompilation ARM64 cohérente de la même source figée dans Docker existant et 13 cas en cours ; résultats non acquis. Prochaine analyse : profil CPU isolé, sans retirer validation/WAL/sync. Aucun runtime main promu ni production globale ; tous les critères et échecs conservés.
