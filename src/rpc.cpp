@@ -509,7 +509,13 @@ std::function<Json()> Rpc::prepare_simulation(const std::string& method,const Js
     if(limit<std::max(transaction_intrinsic_gas(tx,revision),transaction_floor_gas(tx,revision)))throw RpcError(-32000,"Gas required exceeds available funds or gas limit");
    }
   }
-  uint64_t high=u64(limit);auto result=simulate(*state,b->header,chain_id,p[0],high,ancestors,revision,checkpoint);
+  // Opt-in phase measurements separate the estimator's verified probes.
+  // Preserve their order, budgets, cancellation and return values.
+  auto probe=[&](const char* phase,uint64_t gas){
+   rpc_timing::Span timing(phase);
+   return simulate(*state,b->header,chain_id,p[0],gas,ancestors,revision,checkpoint);
+  };
+  uint64_t high=u64(limit);auto result=probe(method=="eth_call"?"call_initial":"estimate_initial",high);
   if(!result.success)throw RpcError(3,"Execution failed: "+result.error,hex(result.return_data));
   if(method=="eth_call")return hex(result.return_data);
   auto tx=simulation_transaction(p[0]);
@@ -517,7 +523,7 @@ std::function<Json()> Rpc::prepare_simulation(const std::string& method,const Js
   // A measured budget is returned only after a successful verification.
   // Nested EIP-150 calls can need headroom above their actual consumption.
   if(result.gas_used>low&&result.gas_used<high){
-   auto trial=simulate(*state,b->header,chain_id,p[0],result.gas_used,ancestors,revision,checkpoint);
+   auto trial=probe("estimate_measured",result.gas_used);
    if(trial.success)return quantity(Int(std::to_string(result.gas_used)));
    low=result.gas_used;
   }
@@ -529,7 +535,7 @@ std::function<Json()> Rpc::prepare_simulation(const std::string& method,const Js
   // execution, caller/balance/block cap and the same binary fallback govern it.
   for(unsigned level=0;level<std::max(1u,result.max_call_depth)&&optimistic<Int(std::to_string(high));++level)optimistic=(optimistic*64+62)/63;
   if(optimistic>Int(std::to_string(low))&&optimistic<Int(std::to_string(high))){
-   auto gas=u64(optimistic);auto trial=simulate(*state,b->header,chain_id,p[0],gas,ancestors,revision,checkpoint);
+   auto gas=u64(optimistic);auto trial=probe("estimate_headroom",gas);
    if(trial.success){
     high=gas;
     // With several forwarding layers the successful depth allowance often
@@ -537,7 +543,7 @@ std::function<Json()> Rpc::prepare_simulation(const std::string& method,const Js
     // then retain the ordinary binary fallback and verified-success invariant.
     if(result.max_call_depth>1&&high-low>1&&Int(std::to_string(high-low))*1000>Int(std::to_string(high))*15){
      auto near=high-std::max(uint64_t(1),(high-low)/4);
-     auto verified=simulate(*state,b->header,chain_id,p[0],near,ancestors,revision,checkpoint);
+     auto verified=probe("estimate_near",near);
      if(verified.success)high=near;else low=near;
     }
    }else low=gas;
@@ -546,7 +552,7 @@ std::function<Json()> Rpc::prepare_simulation(const std::string& method,const Js
   // within 1.5% of the quote. An RPC estimate need not be the exact minimum.
   while(high-low>1){
    if(Int(std::to_string(high-low))*1000<=Int(std::to_string(high))*15)break;
-   auto mid=low+(high-low)/2;auto trial=simulate(*state,b->header,chain_id,p[0],mid,ancestors,revision,checkpoint);
+   auto mid=low+(high-low)/2;auto trial=probe("estimate_binary",mid);
    if(trial.success)high=mid;else low=mid;
   }
   return quantity(Int(std::to_string(high)));
