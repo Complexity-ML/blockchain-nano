@@ -6419,3 +6419,7 @@ Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régr
 ### 2026-10-02 — Audit EEST lié aux fixtures exactes
 
 [Auditeur et contrôles adverses](qualification/runtime-wan-evidence-gate-20261002/README.md) : 317 SHA-256 de fixtures, 5 387 identités exactes et racines/logs/erreurs/gas disponibles liés au corpus, au-delà des compteurs. Rapport historique exercé sans relancer l’EVM, sept altérations refusées ; aucune qualification courante par héritage. Gate des campagnes complètes renforcé, exit 2 faute de preuves terminales actuelles. Campagnes continuent ; toutes les limites de conformité/forks/WAN/production restent ouvertes.
+
+### 2026-10-02 — Deux builds complets réussis, registres ARM64/AMD64 comparés
+
+[Contrôle réel des registres](qualification/full-crossarch-registry-20261002/README.md) : deux builds exit 0, 427 cas distincts avec mêmes commandes/délais originaux, aucune propriété skip/disabled et mêmes 15 315 sources avant. AMD64 entre en régression complète ; ARM64 continue. Résultats terminaux et invariance après tests non acquis ; audit signé VPS en attente et gate WAN fermé. Aucun critère/EIP de production clôturé par ces builds.
