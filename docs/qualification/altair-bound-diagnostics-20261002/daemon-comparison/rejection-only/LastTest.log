@@ -1,0 +1,30 @@
+Start testing: Oct 02 02:21 UTC
+----------------------------------------------------------
+1/1 Testing: consensus_altair_libp2p
+1/1 Test: consensus_altair_libp2p
+Command: "/home/prior/nano-altair-p2p-diagnostic" "/reports/nano-p2p-diagnostic" "/home/probe/nano-altair-probe-diagnostic"
+Directory: /reports/ctest
+"consensus_altair_libp2p" start time: Oct 02 02:21 UTC
+Output:
+----------------------------------------------------------
+{"error":"Stream: reset by remote peer","event":"altair-probe-transport-failure","frameBytes":164,"stage":"write-frame"}
+{"error":"Stream: reset by remote peer","event":"altair-probe-transport-failure","frameBytes":164,"stage":"write-frame"}
+{"error":"Stream: reset by remote peer","event":"altair-probe-transport-failure","frameBytes":164,"stage":"write-frame"}
+{"error":"null reply after successful write","event":"altair-probe-transport-failure","frameBytes":164,"stage":"read-ack"}
+{"error":"Stream: reset by remote peer","event":"altair-probe-transport-failure","frameBytes":182,"stage":"write-frame"}
+{"error":"Stream: reset by remote peer","event":"altair-probe-transport-failure","frameBytes":1186,"stage":"write-frame"}
+{"error":"Stream: reset by remote peer","event":"altair-probe-transport-failure","frameBytes":16777370,"stage":"write-frame"}
+{"checkpointUnchanged":true,"clockHealthy":true,"frameBytes":16777370,"highWaterAfter":"0x1","highWaterBefore":"0x1","payloadBytes":8388608,"recentStreamCompletions":[{"event":"test-consensus-stream-precheck-rejection","peerId":"12D3KooWLK8pwk8isStnBCWNBHGbb8myoiS7rKGzCycfnpzaeUSj","protocol":"/nano/altair/1.0.0","reason":"unknown-peer"},{"event":"test-consensus-stream-precheck-rejection","peerId":"12D3KooWRdnM75QyxQjFHV4YXJgK4wLDLkRS6PVxzWcCyu7VpjSJ","protocol":"/nano/altair/1.0.0","reason":"incompatible-peer"},{"event":"test-consensus-stream-precheck-rejection","peerId":"12D3KooWEds8ZxyJpBGsfbrWiy1UPyKEq4n7vtXng5ufvWeqG7qj","protocol":"/nano/altair/1.0.0","reason":"incompatible-peer"},{"budgetReason":null,"dispatched":false,"event":"test-consensus-stream-completion","kind":null,"peerId":"12D3KooWQxbDdZVKG5y96qp9Ju69jJ1Kw2LdGhYMUtTsYNJQFKPj","reason":"invalid-envelope","workerDone":false},{"event":"test-consensus-stream-precheck-rejection","peerId":"12D3KooWQxbDdZVKG5y96qp9Ju69jJ1Kw2LdGhYMUtTsYNJQFKPj","protocol":"/nano/altair/1.0.0","reason":"unknown-peer"},{"event":"test-consensus-stream-precheck-rejection","peerId":"12D3KooWQxbDdZVKG5y96qp9Ju69jJ1Kw2LdGhYMUtTsYNJQFKPj","protocol":"/nano/altair/1.0.0","reason":"unknown-peer"},{"budgetReason":null,"dispatched":true,"event":"test-consensus-stream-completion","kind":1,"peerId":"12D3KooWKSRqBsxTajRgbRTd4ivEr8Nxi4QLLvKJLpgAXANL5ToD","reason":"rejected-ack-written","workerDone":true},{"event":"test-consensus-stream-precheck-rejection","peerId":"12D3KooWKfYhCgqcHBQtiZqC9wUCo6vSrXtMrbgi7x7LvjnmTFRf","protocol":"/nano/altair/1.0.0","reason":"unknown-peer"}],"reply":[null],"scenario":"altair-full-block-bound-failure"}
+full configured block bound failed before core validation
+<end of output>
+Test time =   2.17 sec
+----------------------------------------------------------
+Test Failed.
+"consensus_altair_libp2p" end time: Oct 02 02:21 UTC
+"consensus_altair_libp2p" time elapsed: 00:00:02
+----------------------------------------------------------
+
+End testing: Oct 02 02:21 UTC
+
+qualification_consensus_ethereum =   2.17 sec*proc
+

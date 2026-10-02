@@ -12,7 +12,13 @@ int main(int argc,char** argv){try{
  Json scenario;std::ifstream(argv[2])>>scenario;
  auto logging=std::make_shared<soralog::LoggingSystem>(std::make_shared<libp2p::log::Configurator>());auto configured=logging->configure();if(configured.has_error)throw std::runtime_error(configured.message);libp2p::log::setLoggingSystem(logging);
  auto injector=libp2p::injector::makeHostInjector(libp2p::injector::useSecurityAdaptors<libp2p::security::Noise>(),libp2p::injector::useTransportAdaptors<libp2p::transport::TcpTransport>());
- auto host=injector.create<std::shared_ptr<libp2p::Host>>();auto io=injector.create<std::shared_ptr<asio::io_context>>();host->start();
+ auto host=injector.create<std::shared_ptr<libp2p::Host>>();auto io=injector.create<std::shared_ptr<asio::io_context>>();
+ // Answer periodic status polls with the exact handshake advertisement.
+ // Negative compatibility scenarios retain their original advertised status.
+ if(!scenario.at("status").is_null())host->setProtocolHandler({"/nanopy/chainsync/1.0.0"},[io,status=scenario.at("status")](libp2p::StreamAndProtocol incoming){
+  auto stream=std::move(incoming.stream);read_json(*io,stream,[io,stream,status](Json request){if(request.is_null()){stream->reset();return;}write_json(*io,stream,status,[stream](bool){close_stream(stream);});});
+ });
+ host->start();
  auto address=libp2p::multi::Multiaddress::create(argv[1]).value();auto id=address.getPeerId();if(!id)throw std::invalid_argument("remote peer identity required");libp2p::peer::PeerInfo peer{libp2p::peer::PeerId::fromBase58(*id).value(),{address}};
  Json results=Json::array();size_t index=0;bool finished=false;asio::steady_timer deadline(*io);deadline.expires_after(std::chrono::seconds(25));
  auto finish=[&]{if(finished)return;finished=true;deadline.cancel();host->stop();io->stop();};deadline.async_wait([&](auto error){if(!error)finish();});

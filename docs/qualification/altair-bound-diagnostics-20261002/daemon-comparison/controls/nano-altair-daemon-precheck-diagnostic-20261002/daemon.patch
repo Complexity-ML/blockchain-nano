@@ -1,0 +1,15 @@
+--- a/network/main.cpp
++++ b/network/main.cpp
+@@ -291,7 +291,11 @@
+  void inbound(const std::string& protocol,Stream stream){
+   auto remote=stream->remotePeerId();if(!remote||!initialized_){stream->reset();return;}auto id=remote.value().toBase58();
+   if(protocol==consensus_protocol()||(capella_mode_&&protocol==session_protocol)){
+-   if(!altair_ingress_||!altair_dispatch_||altair_dispatch_->blocked()||!peers_.contains(id)||!consensus_peer(peers_.at(id).status)){stream->reset();return;}
++   if(!altair_ingress_||!altair_dispatch_||altair_dispatch_->blocked()||!peers_.contains(id)||!consensus_peer(peers_.at(id).status)){
++    if(trace_network_)std::cout<<Json{{"event","test-consensus-stream-precheck-rejection"},{"peerId",id},{"protocol",protocol},{"reason",!altair_ingress_?"no-ingress":!altair_dispatch_?"no-dispatch":altair_dispatch_->blocked()?"dispatch-blocked":!peers_.contains(id)?"unknown-peer":"incompatible-peer"}}.dump()<<std::endl;
++    stream->reset();return;
++   }
++   if(trace_network_)std::cout<<Json{{"event","test-consensus-stream-open"},{"peerId",id},{"protocol",protocol},{"frameLimit",altair_ingress_->frame_limit()}}.dump()<<std::endl;
+    // AltairStreamRequest owns the shared budget lease through durable worker
+    // completion. Do not acquire the generic lease a second time below.
+    const bool reusable=protocol==session_protocol;

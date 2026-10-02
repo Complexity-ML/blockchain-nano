@@ -3080,3 +3080,11 @@ saine. Le garde distant ou défaut transport précis reste à identifier.
 Sources, programmes, entrées de lien cœur/probe inchangés. Essai initial arrêté
 avant compilation faute de Python conservé ; contrôle corrigé sans installer
 une dépendance. Cœur/daemon read-only ; aucune règle d’admission assouplie.
+
+### 2026-10-02 — Altair AMD64 : succès instrumenté, contrôle original en échec
+
+[Comparaison conservée](qualification/altair-bound-diagnostics-20261002/daemon-comparison/README.md) : traces préadmission/ouverture, 1/1 passe (3,91398 s) ; recompilation sans nouvelles traces, 1/1 échoue (2,19625 s), reset distant sur écriture pleine. Sources/programmes/bibliothèques inchangés avant/après. Effet du diagnostic à isoler ; aucune correction ou conformité supplémentaire revendiquée. Délais, échecs historiques, critères de production et revue indépendante restent conservés.
+
+### 2026-10-02 — Pair de qualification Altair : sondes de statut
+
+[Contrôle AMD64](qualification/altair-bound-diagnostics-20261002/status-peer-control/README.md) : 1/1 passe en 4.36831 s, zéro skip, daemon original inchangé. Le pair de test répond désormais aux sondes périodiques avec son annonce exacte ; la trace précédente localisait le reset à `unknown-peer`. Aucun contrôle d’admission ni délai relâché. Correction du test intégrée ; ancienne campagne et échecs conservés, régression candidat globale et exigences de production toujours ouvertes.
