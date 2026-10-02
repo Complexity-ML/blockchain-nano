@@ -64,3 +64,13 @@ full-docker runner rebuilds the core and runs the complete configured registry.
 It reuses the image/build volume. Network/core preparation and full regression
 are not yet terminal. The AMD64 serializer qualification remains queued behind
 its still-active parent; no cross-architecture final-root equality inferred.
+
+## AMD64 build completed, ten-case qualification active
+
+Preflight confirms source hashes identical to ARM64 and exactly ten matching
+case names/command modes/timeouts/labels; only build working directory differs.
+First queued-BLS case passes (9.08 s); activation is confirmed active on the VPS.
+Before-test registry/program manifest archived in preflight-amd64. No terminal
+AMD64 result or cross-architecture final-root equality acquired. Separate guarded
+full-regression controller still waits for all ten cases to pass and manifests
+to remain unchanged before touching the build volume again.

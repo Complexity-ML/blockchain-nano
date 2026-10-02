@@ -5640,3 +5640,7 @@ une dépendance. Cœur/daemon read-only ; aucune règle d’admission assouplie.
 ### 2026-10-02 — Régression complète AMD64 préparée et gardée par Capella
 
 [Contrôleur AMD64 3030b799](qualification/full-candidate-3030b799-20261002/README.md) confirmé actif en attente des dix cas Capella actuels. Exige 10/10 terminaux, zéro skip et manifestes inchangés avant compilation P2P/cœur complète. Audit Node du registre depuis Mac, aucun outil installé sur VPS ; CTest complet refusé sans inventaire complet validé. Manifestes stricts des helpers comme contrôles séparés identifiés, runtime figé ; images/volumes réutilisés. Scripts syntaxiquement vérifiés, exécution complète pas encore acquise. ARM64 continue avec 53 premiers cas réussis à l’observation, pas de résultat global. Tous critères initiaux et échecs restent ouverts.
+
+### 2026-10-02 — Préflight Capella AMD64 identique, tests réellement actifs
+
+[3030b799 AMD64](qualification/capella-serialization-candidate-20261002/README.md) : build terminé, sources identiques ARM64 ; dix noms/modes/délais/labels identiques, seule WORKING_DIRECTORY diffère. Premier queued-BLS passe 9,08 s, activation confirmée active ; avant-tests programmes/registre archivés. Résultat terminal, égalité des roots entre architectures et régression entière AMD64 non acquis ; contrôleur complet attend 10/10 et manifestes inchangés. ARM64 entier toujours actif, aucun autre gate de production fermé ni échec supprimé.
