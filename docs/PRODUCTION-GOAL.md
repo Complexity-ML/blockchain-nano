@@ -2992,3 +2992,8 @@ Le contrôleur `scripts/ci/full-docker.sh` compile désormais tous les binaires 
 ## Campagne réseau cohérente lancée — 2 octobre 2026
 
 Candidat isolé `9e9ebed3` : runtime `0f53b42d`, correction de portabilité native, contrôleur compilant daemon/helpers depuis ce même checkout. Docker ARM (UID 501:20) : réseau compilé, cœur en compilation ; Docker VPS AMD (UID 1000:1000) : réseau en compilation. Images/volumes réutilisés, répertoires neufs ; aucune réussite de régression encore annoncée. Sélection réseau autonome, audits EEST complets, reprise WAN et autres critères restent ouverts. [Contrôleurs, sources figées et observations initiales](qualification/coherent-network-campaign-start-20261002/README.md).
+
+
+## Réseau natif et complément Docker — 2 octobre 2026
+
+Candidat `9e9ebed3` : **21/21 tests réseau autonomes natifs qualifiés**, 23 hashes d’exécutables stables, sélection nommée conforme et timeouts explicites conservés. L’essai précédent avait réussi ses tests mais son audit BSD était invalide (capture vide) ; il reste refusé et archivé. Le cœur natif existant (13 cas + 4 restaurations signées) a été réaudité, sans rejouer ces tests ; seul le contrôleur CI diffère entre ses sources et le candidat. Deux suppléments Docker de 21 tests attendent les résultats/audits complets des campagnes de 427. Aucun test WAN/finalité distribuée ni gate production global clos. [Preuves, refus et contrôleurs](qualification/coherent-native-network-and-supplement-20261002/README.md).
