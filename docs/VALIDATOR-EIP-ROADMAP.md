@@ -6407,3 +6407,7 @@ Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régr
 ### 2026-10-02 — Raccordement explicite des preuves au scénario WAN
 
 [Contrôleur exécuté, refus exit 2](qualification/runtime-wan-evidence-gate-20261002/README.md) : delta exact du seul test entre Docker `0f53b42d` et Mac `016ab243`, et audit natif indépendant réexécuté avec succès. Les régressions complètes 427 cas ARM64/AMD64 et l’audit signé du binaire AMD64 exact restent requis ; campagnes actives, résultats globaux non acquis. Aucune nouvelle instance WAN, aucune fausse identité de révision complète ni qualification production déduite. Attestation matérielle des binaires, reprise des duties/finalité commune et tous les autres critères restent ouverts.
+
+### 2026-10-02 — Audit signé du binaire AMD64 complet mis en attente
+
+[Contrôleur réel confirmé vivant](qualification/full-amd-signed-offline-queue-20261002/README.md) : PID VPS 587064, attente du processus Docker complet 582618. Aucun audit ni rebuild lancé ; les 427 résultats, manifestes et hash exact du binaire complet sont requis avant quatre requêtes signées en lecture seule. Régression ARM64/compilation AMD64 existantes continuent, résultats globaux non acquis. Tous les critères de production, WAN, bridge et statuts EIP restent ouverts.
