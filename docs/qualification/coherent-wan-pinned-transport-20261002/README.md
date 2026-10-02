@@ -1,0 +1,7 @@
+# Transport WAN IPv6 à empreinte conservée
+
+Le contrôleur SSH/SCP local transforme uniquement l’adresse logique autorisée `ubuntu@145.239.199.166` en IPv6 OVH `2001:41d0:404:200::9c34`. Il impose `StrictHostKeyChecking=yes`, `BatchMode=yes` et `HostKeyAlias=145.239.199.166` : l’empreinte existante reste vérifiée. Il refuse un autre hôte, plusieurs endpoints, un fichier de configuration ou un proxy injecté et les options qui changeraient la vérification d’empreinte. Aucun shell n’interprète les arguments transmis à SSH/SCP.
+
+12 contrôles passent. Deux invocations réelles des wrappers refusent un autre hôte et une désactivation d’empreinte (exit 64). Les essais réels autorisés SSH et SCP passent (exit 0) : lecture de la révision distante et du PID de campagne, puis copie d’un fichier public de provenance. Aucun logiciel n’a été transféré par SCP, aucun nœud supplémentaire n’a démarré. Les connexions sans IPv4 intermittente utilisent toujours l’identité connue.
+
+Pour le pilote WAN, ajouter le sous-dossier `bin` à PATH. Le target logique reste celui déjà validé par le pilote ; le transport réel doit être conservé dans les preuves. Les tunnels SSH gardent leur argument `-L` ; ils ne sont pas ouverts par cette qualification. La régression terminale des deux architectures, les audits signés et la restauration/finalité WAN restent des gates séparées et ouvertes. Ce contrôleur ne promeut aucun runtime.

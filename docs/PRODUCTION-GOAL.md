@@ -3007,3 +3007,8 @@ Pilote uniquement : sélection explicite du daemon depuis le build de chaque arc
 ### 2026-10-02 — Contrôle terminal du build réseau cohérent préparé
 
 [Contrôleur et preuves de refus](qualification/coherent-terminal-review-controls-20261002/README.md) : 15 contrôles synthétiques passent (1 positif, 14 refus), avec comparaison des commandes/timeouts des 427 cas, manifests source/programmes, helpers réseau et résultats JUnit. Le contrôle réel refuse la campagne ARM encore active faute de manifeste terminal. Le parcours terminal préparé ajoute les fixtures EEST exactes, les 21 tests réseau et une relecture des SHA du volume en lecture seule. Aucun résultat terminal acquis, aucune couverture runtime ajoutée par ces contrôles, aucun WAN lancé ni runtime promu. Les deux processus de campagne et les deux files réseau ont été confirmés actifs. Tous les critères de production précédents restent ouverts.
+
+
+### 2026-10-02 — Transport WAN IPv6 avec identité VPS conservée
+
+[Contrôleur SSH/SCP et essais](qualification/coherent-wan-pinned-transport-20261002/README.md) : 12 contrôles passent, deux refus réels de configuration non autorisée (exit 64), lectures SSH et SCP réelles réussies (exit 0). Le seul endpoint autorisé passe en IPv6 en conservant `HostKeyAlias` et la vérification stricte de l’empreinte connue. Aucun logiciel transféré par SCP, aucun nœud WAN lancé, aucun runtime promu. La finalité/restauration WAN, les campagnes terminales et tous les autres critères de production restent ouverts.
