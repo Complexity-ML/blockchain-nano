@@ -1,0 +1,9 @@
+# Engagements indépendants de la sauvegarde complète conservée
+
+Le reçu d’arrêt de `docs/qualification/capella-partition-load-20260930/attempt-c/docker-mac.log`, ligne 10, correspond exactement à la requête d’audit ARM64 conservée séparément : séquence `0x47b`, digest `89a62267…`. Il contient les 21 engagements des clés, un signataire sain avec attestations admises et le checkpoint finalisé epoch `0xc`, root `af6a0f3a…`.
+
+Le parseur existant `stoppedReceipt` accepte ce reçu unique ; `pinnedRestoreConfiguration` valide l’inventaire de la configuration préservée hors Docker, et `restoreAuditRequest` retrouve les mêmes profil, ancre, limites et engagement cœur que la requête externe originale. Les SHA des fichiers profil/ancre hôte correspondent. Les 21 indices correspondent aux noms de journaux et témoins dans la restauration complète ; `CURRENT` existe pour chaque paire. Aucun engagement n’a été dérivé du contenu de RocksDB. Les empreintes des sources du reçu et de la configuration sont conservées.
+
+La requête préparée ajoute le checkpoint finalisé du reçu comme exigence explicite à l’audit canonique. Elle conserve les chemins de montage `/work` de la requête originale et nécessite encore un conteneur correctement monté, le binaire qualifié de la nouvelle candidate et une base arrêtée en lecture seule. Aucun réseau, aucun signataire ni audit C++ lancé dans cette préparation.
+
+Cela prouve la disponibilité et la concordance des entrées indépendantes. Les contenus des journaux n’ont pas été confrontés à leurs engagements par le runtime ; reprise des duties, avancement commun sur trois nœuds et qualification production restent faux. La sauvegarde et les clés restent hors Git ; aucun secret n’est imprimé ou copié dans ces preuves. La fixture historique est un support d’audit, pas un réseau WAN déjà qualifié avec `d1597d9a`.

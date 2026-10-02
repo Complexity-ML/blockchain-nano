@@ -6588,3 +6588,8 @@ Fixture locale hors Docker : 313 fichiers / 121 445 250 octets, empreintes ident
 ### 2026-10-02 — Supplément réseau préparé, garde du chemin corrigé
 
 [Supplément](qualification/rpc-network-supplement-control-20261002/README.md) lié aux images/volumes existants de `d1597d9a`, conditionné à la réussite terminale stricte des 427 cas et à la relecture des programmes. Préflight du rapport réel incomplet refusé avant Docker ; aucun supplément lancé. Wrapper de revue corrigé : chemin de build courant et refus explicite des anciens chemins sous Bash Mac ; 17 contrôles passent. Aucun gate WAN/production fermé, preuves et échecs historiques conservés.
+
+
+### 2026-10-02 — Engagements indépendants de la sauvegarde retrouvés
+
+[Entrées vérifiées](qualification/surviving-full-backup-pins-20261002/README.md) : reçu d’arrêt original correspondant à la sauvegarde complète ARM64, engagement cœur identique à la requête externe, 21 pins de clés compatibles avec la configuration conservée et les paires journal/témoin. Profil/ancre et limites correspondants ; requête préparée exige le checkpoint finalisé sauvegardé. Aucun pin dérivé de RocksDB, aucun secret publié. Contenu des journaux non encore audité par la nouvelle candidate, duties et finalité WAN non repris ; tous les gates restent ouverts.
