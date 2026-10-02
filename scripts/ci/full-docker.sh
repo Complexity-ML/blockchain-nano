@@ -21,7 +21,12 @@ case "$reports/" in "$source_dir/"*) echo 'Reports must be outside source checko
 printf '%s\n' "$revision" > "$reports/source-revision.txt"
 snapshot_sources(){ git ls-files -z | python3 -c 'import sys,hashlib,json; paths=sys.stdin.buffer.read().split(b"\0"); print(json.dumps({p.decode():hashlib.sha256(open(p,"rb").read()).hexdigest() for p in paths if p},sort_keys=True))'; }
 snapshot_sources > "$reports/source-manifest.json"
-args=(-i --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges --cpus 2 --memory 3g --ulimit nofile=65536:65536 --tmpfs /tmp:rw,nosuid,nodev,noexec,size=128m --mount "type=bind,src=$source_dir,dst=/work,readonly" --mount "type=bind,src=$reports,dst=/reports" --mount "type=volume,src=$NANO_BUILD_VOLUME,dst=/build" --workdir /work --env "NANO_BUILD_SUBDIR=$subdir" --env "NANO_DEPS_DIR=${NANO_DOCKER_DEPS_DIR:-/src/.deps}")
+build_uid=$(id -u)
+build_gid=$(id -g)
+# Only the new campaign directory is owned by the host user. Previously
+# qualified directories in the reused volume are never chowned or overwritten.
+docker run --rm --network none --read-only --user 0:0 --cap-drop ALL --cap-add CHOWN --security-opt no-new-privileges --mount "type=volume,src=$NANO_BUILD_VOLUME,dst=/build" "$NANO_BUILDER_IMAGE" sh -c 'set -eu; mkdir "/build/$1"; chown "$2:$3" "/build/$1"' sh "$subdir" "$build_uid" "$build_gid"
+args=(-i --rm --user "$build_uid:$build_gid" --network none --read-only --cap-drop ALL --security-opt no-new-privileges --cpus 2 --memory 3g --ulimit nofile=65536:65536 --tmpfs /tmp:rw,nosuid,nodev,noexec,size=128m --mount "type=bind,src=$source_dir,dst=/work,readonly" --mount "type=bind,src=$reports,dst=/reports" --mount "type=volume,src=$NANO_BUILD_VOLUME,dst=/build" --workdir /work --env "NANO_BUILD_SUBDIR=$subdir" --env "NANO_DEPS_DIR=${NANO_DOCKER_DEPS_DIR:-/src/.deps}")
 docker run --name "nano-full-$subdir-prepare" "${args[@]}" "$NANO_BUILDER_IMAGE" bash -s <<'SH' 2>&1 | tee "$reports/prepare.log"
 set -euo pipefail
 build=/build/$NANO_BUILD_SUBDIR
@@ -37,12 +42,12 @@ trap 'rm -f "$probe"' EXIT
 printf '#!/bin/sh\nexit 0\n' > "$probe"; chmod 700 "$probe"; "$probe"; rm -f "$probe"
 df -Pk "$TMPDIR" > /reports/scratch-filesystem.txt
 cmake --version > /reports/cmake-version.txt
-c++ --version > /reports/compiler-version.txt
+clang++ --version > /reports/compiler-version.txt
 dpkg-query -W > /reports/build-packages.txt
-cmake -S /work/network -B "$build/network" -DCMAKE_BUILD_TYPE=Release -DNANO_DEPS_DIR="$NANO_DEPS_DIR"
+cmake -S /work/network -B "$build/network" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DNANO_DEPS_DIR="$NANO_DEPS_DIR"
 cmake --build "$build/network" --parallel 2
 cp "$build/network/CMakeCache.txt" /reports/network-cmake-cache.txt
-cmake -S /work -B "$build" -DCMAKE_BUILD_TYPE=Release -DNANO_NETWORK_EXECUTABLE="$build/network/nano-p2p"
+cmake -S /work -B "$build" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DNANO_NETWORK_EXECUTABLE="$build/network/nano-p2p"
 cmake --build "$build" --parallel 2
 ctest --test-dir "$build" --show-only=json-v1 > /reports/registry.json
 cmake -DREGISTRY=/reports/registry.json -DOUTPUT=/reports/executables.json -DNETWORK_EXECUTABLE="$build/network/nano-p2p" -DNODE_EXECUTABLE="$build/nano" -P scripts/ci/docker-manifest.cmake
