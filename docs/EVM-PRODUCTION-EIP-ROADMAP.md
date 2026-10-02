@@ -3264,3 +3264,7 @@ Les huit cibles AMD64 **2d2764de** terminent ensuite leur compilation ; sélecti
 ### 2026-10-02 — Compilation cohérente de la correction sur les deux architectures
 
 [Candidat0275b1af / contrôles](qualification/coherent-row-candidate-0275b1af-20261002/README.md) : runtime identique à f9a3ee1a, contrôleurs WAN réunis, **15 313 sources / hash manifeste identique Mac/VPS**. Neuf cibles Release en compilation Docker dans répertoires distincts, images/volume réutilisés. Seize cas pertinents préparés avec limites d’origine et intégrité ; AMD attend son build, ARM attend aussi l’ancienne régression pour éviter la concurrence des scénarios. **Aucun résultat terminal de cet ensemble acquis**, réindexation360 s toujours à fermer. Ancien14/15, porte WAN, mémoire cache, régressions, exigences production/revue indépendante restent ouverts ; runtime main inchangé.
+
+### 2026-10-02 — Compilation ARM64 cohérente terminale
+
+[Build0275b1af terminal](qualification/coherent-row-candidate-0275b1af-20261002/README.md) : neuf programmes, sorties build/container/source-compare0, sources avant/après inchangées. **426 cas enregistrés** (sans Node), seize noms/délais d’origine vérifiés. Aucun cas de ce nouveau build encore exécuté ; ARM attend l’ancienne régression, AMD compile encore. Aucun runtime main promu, aucune porte production fermée.

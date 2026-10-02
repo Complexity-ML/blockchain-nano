@@ -11,3 +11,7 @@ Sélection **16 cas** préparée (15 parent + nouveau sérialiseur), exact regis
 Résultats attendus : Mac `/tmp/nano-coherent-0275b1af-arm64-{build,test}-reports-20261002`, VPS `/home/ubuntu/nano-coherent-0275b1af-amd64-{build,test}-reports-20261002`. Contrôles archivés, bash -n passé ; aucun résultat terminal de ces builds/tests acquis ici. Linux builder sans Node n'enregistre pas les contrôles Node facultatifs ; aucune réussite de ceux-ci attribuée à ces campagnes.
 
 Ancien AMD14/15 et son timeout360,05 conservés. Réindexation originale360 s doit passer sur le candidat cohérent avant régression AMD64 complète/porte WAN. Mémoire du cache, reprise/journaux/finalité WAN, autres exigences de production et revue indépendante restent ouverts. Aucun fonds, vente, nouvel hôte ni exposition publique.
+
+## Suite terminale ARM64
+
+Build/controller/source-compare **0**, neuf programmes identifiés, sources avant/après identiques. Registre **426** (builder sans Node), sélection exacte de seize noms et TIMEOUT originaux vérifiée contre le registre. Rapports archivés. Aucun test de ce nouvel ensemble encore exécuté ; sélection ARM reste en attente de l'ancienne régression. AMD64 compilation encore active.
