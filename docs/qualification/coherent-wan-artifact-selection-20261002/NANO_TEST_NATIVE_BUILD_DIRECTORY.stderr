@@ -1,0 +1,10 @@
+file:///private/tmp/nano-coherent-wan-harness-candidate-20261002/tests/multihost/build-paths.mjs:29
+  if(typeof path!=='string'||!path.startsWith('/')||path==='/'||path.split('/').some(x=>x==='.'||x==='..')||/[^a-zA-Z0-9_./-]/.test(path)||path.includes('//'))throw Error('Invalid native build directory');
+                                                                                                                                                                     ^
+
+Error: Invalid native build directory
+    at check (file:///private/tmp/nano-coherent-wan-harness-candidate-20261002/tests/multihost/build-paths.mjs:29:166)
+    at selectNativeBuildPaths (file:///private/tmp/nano-coherent-wan-harness-candidate-20261002/tests/multihost/build-paths.mjs:32:13)
+    at file:///private/tmp/nano-coherent-wan-harness-candidate-20261002/tests/multihost/run.mjs:46:19
+
+Node.js v25.9.0

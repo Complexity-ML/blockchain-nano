@@ -6468,3 +6468,8 @@ Candidat isolé `9e9ebed3` : runtime `0f53b42d`, correction de portabilité nati
 ## Réseau natif et complément Docker — 2 octobre 2026
 
 Candidat `9e9ebed3` : **21/21 tests réseau autonomes natifs qualifiés**, 23 hashes d’exécutables stables, sélection nommée conforme et timeouts explicites conservés. L’essai précédent avait réussi ses tests mais son audit BSD était invalide (capture vide) ; il reste refusé et archivé. Le cœur natif existant (13 cas + 4 restaurations signées) a été réaudité, sans rejouer ces tests ; seul le contrôleur CI diffère entre ses sources et le candidat. Deux suppléments Docker de 21 tests attendent les résultats/audits complets des campagnes de 427. Aucun test WAN/finalité distribuée ni gate production global clos. [Preuves, refus et contrôleurs](qualification/coherent-native-network-and-supplement-20261002/README.md).
+
+
+## Sélection des artefacts WAN corrigée — 2 octobre 2026
+
+Pilote uniquement : sélection explicite du daemon depuis le build de chaque architecture, traduction des argv et du JSON VPS, chemins natifs indépendants et validés avant appels outils. **15 tests de chemins réussis**, dont 4 nouveaux ; 2 exécutions de refus avant Git/SSH/Docker vérifiées. Runtime C++ inchangé. [Preuves et paramètres préparés](qualification/coherent-wan-artifact-selection-20261002/README.md). Campagnes 427/21, audits EEST exacts, rejeu signé AMD4 et attestation des binaires encore requis avant lancement de la restauration WAN ; aucune finalité/duty nouvelle ni production globale qualifiée.
