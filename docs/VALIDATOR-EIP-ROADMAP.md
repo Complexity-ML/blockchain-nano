@@ -6006,3 +6006,14 @@ ARM64 c104 : 139,204 s réussi, sans cause AMD64 identifiée. Le cas #396
 `automatic_registration` a réussi en 29,71 s : 396 résultats, 390 réussis,
 six échecs/timeouts. #397 reste en cours. Les contrôles correctifs déjà en attente
 ne couvrent pas ces deux timeouts Capella ; aucun statut EIP/production clôturé.
+
+### 2026-10-02 — Septième échec AMD64 : dépôt/enregistrement automatique
+
+Cas #397 `consensus_capella_deposit_auto_registration` : timeout 360,03 s
+sous la limite originale de 360 s. [Traces complémentaires](qualification/production-evm-integration-20261001/capella-activation-amd64-partial/README.md) :
+index de dépôt 1, slot 120 et finalité époque 13, sans qualification des
+assertions terminales d'activation/vote. L'enregistrement seul #396 réussi ne
+couvre pas ce scénario complet. ARM64 c104 : 137,396 s réussi ; cause AMD64
+non identifiée. 397 résultats observés, 390 réussis et sept échecs/timeouts.
+Le cutoff commun des trois cas est une observation, pas une cause démontrée.
+Aucune limite relâchée, aucun critère EIP ou production clôturé.
