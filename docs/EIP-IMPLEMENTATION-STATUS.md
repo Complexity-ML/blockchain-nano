@@ -5883,3 +5883,8 @@ Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régr
 ### 2026-10-02 — Collecte diagnostique AMD64 en attente vérifiée
 
 [Contrôleur et périmètre](qualification/altair-ingress-diagnostic-queue-20261002/README.md) : candidat e8efb812, diagnostic de test uniquement, mêmes assertions/limites/délais. PID VPS 750324 confirmé vivant, attendant le conteneur full 582618 et ses manifestes terminaux. Une seule compilation directe/exécution ciblée sera réalisée ensuite contre les bibliothèques et programmes réseau existants en lecture seule, sans nouvelle image. Réponse exacte et raisons de fin de flux bornées ajoutées ; aucun diagnostic exécuté ni cause prouvée à ce stade. La restauration reste refusée sur la campagne échouée ; toutes les qualifications globales restent ouvertes.
+
+
+## Terminal AMD64 et diagnostic ingress — 2 octobre 2026
+
+Révision runtime `0f53b42d` : **426/427**, aucun skip ; `consensus_altair_libp2p` échoue. Audit intégral : refus (exit 1), sources/binaires/entrées de linkage stables. Diagnostic séparé `e8efb812` : compilation réussie, échec reproduit, bloc maximal refusé avant nouvelle admission cœur (`dispatch-unavailable`), cause précise encore ouverte. Aucun profil EIP ni gate WAN/production clos. [Rapports et limites](qualification/amd-terminal-and-ingress-diagnostic-20261002/README.md).
