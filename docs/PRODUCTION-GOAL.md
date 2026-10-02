@@ -3127,3 +3127,8 @@ Fixture locale hors Docker : 313 fichiers / 121 445 250 octets, empreintes ident
 ### 2026-10-02 — Préparation du propriétaire natif Mac de la candidate RPC
 
 [Contrôleur](qualification/rpc-native-control-20261002/README.md) syntaxiquement vérifié pour `d1597d9a` : build natif neuf, helpers cohérents, dépendances existantes, deux jobs, 14 cas natifs (13 antérieurs + RPC modifié) et 21 cas réseau avec délais d’origine. Manifests sources et entrées de liaison/dépendances disponibles contrôlés ; dyld système non intégralement audité. Aucun résultat acquis ni lancement WAN, gates de production et échecs historiques conservés.
+
+
+### 2026-10-02 — Nouveau natif qualifié et fixture signée auditée
+
+[Preuves](qualification/rpc-native-result-20261002/README.md) pour `d1597d9a` : 14 cas natifs + 21 réseau réussis sans skip, délais originaux ; relecture indépendante des 15 315 sources et 598 entrées stables. Audit signé en sandbox : 99 blocs / 97 transactions, checkpoint finalisé et engagement cœur externes correspondants ; trois requêtes invalides refusées, 313 fichiers de la fixture inchangés. Pas de régression native complète/dyld intégral, ni audit du contenu des journaux des signataires, reprise des duties, historique complet votes/fork-choice ou WAN. Régressions Docker en cours ; tous les gates et échecs historiques conservés.
