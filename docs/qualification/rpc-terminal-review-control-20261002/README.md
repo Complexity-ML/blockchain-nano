@@ -7,3 +7,5 @@ Les contrôles synthétiques utilisent la sélection et le manifest avant tests 
 La campagne en cours n'est pas terminale. Aucun lancement WAN ou statut production ne découle de cette préparation ; `staticLinkInputsAudited`, `productionQualified` et autres limites historiques restent explicitement distincts. Les contrôles et leur résultat seront enregistrés séparément.
 
 Contrôles : 15 réussites (14 mutations refusées, un positif synthétique). Le rapport ARM64 réel incomplet est refusé pour absence du manifest après tests ; ce refus est une vérification du garde, pas un échec de la campagne. Journaux conservés dans ce dossier.
+
+Correction du wrapper : chemin courant d159 sur les deux architectures et refus explicites `|| exit 2`, nécessaires pour que le Bash du Mac refuse les anciens chemins avant la création du rapport. Deux contrôles supplémentaires vérifient ces cas : 17 contrôles passent. Le contrôle négatif a initialement révélé un refus non exécuté sous `set -e` seul ; défaut corrigé, aucune campagne réelle affectée.

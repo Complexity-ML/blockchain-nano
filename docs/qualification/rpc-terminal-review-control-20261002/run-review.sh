@@ -3,9 +3,9 @@
 set -euo pipefail
 control=$(cd "$(dirname "$0")" && pwd -P)
 source_dir=${1:?source checkout}; reports=${2:?full reports}; output=${3:?fresh audit output}; prefix=${4:?build path}; image=${5:?frozen builder image}; volume=${6:?existing build volume}; supplement=${7:?network supplement reports}
-[[ "$prefix" =~ ^/build/full-network-9e9ebed3-(arm64|amd64)-20261002$ ]]
-[[ "$image" =~ ^sha256:[a-f0-9]{64}$ ]]
-[[ "$volume" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]]
+[[ "$prefix" =~ ^/build/rpc-full-d1597d9a-(arm64|amd64)$ ]] || exit 2
+[[ "$image" =~ ^sha256:[a-f0-9]{64}$ ]] || exit 2
+[[ "$volume" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]] || exit 2
 mkdir "$output"
 output=$(cd "$output" && pwd -P)
 # Each review is immutable and preserves its real failure code.

@@ -1,4 +1,4 @@
-import copy, importlib.util, json, tempfile, unittest, xml.etree.ElementTree as E
+import subprocess, copy, importlib.util, json, tempfile, unittest, xml.etree.ElementTree as E
 from pathlib import Path
 spec=importlib.util.spec_from_file_location('review',Path(__file__).with_name('review.py')); m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
 REPO=Path('/Users/boris/Dev/blockchain-nano')
@@ -56,4 +56,17 @@ class ReviewControls(unittest.TestCase):
         r=E.parse(self.p/'results.xml');E.SubElement(r.getroot().find('testcase'),'failure');r.write(self.p/'results.xml');self.reject()
     def test_nonzero_ctest(self):self.write('ctest-exit.txt','8\n');self.reject()
     def test_registry_changed(self):self.mutate_json('registry-before-tests.json',lambda v:v['tests'].pop());self.reject()
+class ShellPrefixControls(unittest.TestCase):
+    def invoke(self,prefix):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);output=root/'audit'
+            result=subprocess.run(['bash',str(Path(__file__).with_name('run-review.sh')),tmp,tmp,str(output),prefix,'sha256:'+'a'*64,'existing-volume',tmp],capture_output=True,text=True)
+            return result.returncode,output.exists(),result.stderr
+    def test_current_paths_reach_full_report_gate(self):
+        for arch in ['arm64','amd64']:
+            code,created,error=self.invoke('/build/rpc-full-d1597d9a-'+arch)
+            self.assertEqual(code,1);self.assertTrue(created)
+    def test_old_path_refused_before_review(self):
+        code,created,_=self.invoke('/build/full-network-9e9ebed3-arm64-20261002')
+        self.assertNotEqual(code,0);self.assertFalse(created)
 if __name__=='__main__':unittest.main(verbosity=2)

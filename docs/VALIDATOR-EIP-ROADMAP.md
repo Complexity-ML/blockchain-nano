@@ -6583,3 +6583,8 @@ Fixture locale hors Docker : 313 fichiers / 121 445 250 octets, empreintes ident
 ### 2026-10-02 — Contrôle terminal de la candidate RPC préparé
 
 [Contrôle indépendant](qualification/rpc-terminal-review-control-20261002/README.md) adapté à `d1597d9a` avec référence exacte des 15 315 sources et critères inchangés : 427 cas uniques exécutés, aucun échec/skip, délais originaux, sources et programmes stables. 15 contrôles synthétiques passent ; le rapport ARM64 réel incomplet est refusé comme attendu. Aucun résultat terminal, supplément réseau ou lancement WAN encore acquis ; tous les gates et échecs historiques restent ouverts.
+
+
+### 2026-10-02 — Supplément réseau préparé, garde du chemin corrigé
+
+[Supplément](qualification/rpc-network-supplement-control-20261002/README.md) lié aux images/volumes existants de `d1597d9a`, conditionné à la réussite terminale stricte des 427 cas et à la relecture des programmes. Préflight du rapport réel incomplet refusé avant Docker ; aucun supplément lancé. Wrapper de revue corrigé : chemin de build courant et refus explicite des anciens chemins sous Bash Mac ; 17 contrôles passent. Aucun gate WAN/production fermé, preuves et échecs historiques conservés.
