@@ -1,0 +1,43 @@
+{
+  "runtimeRevision": "0f53b42d3e78da85aa9a2c2f2993472747aabe8a",
+  "nativeSourceRevision": "016ab2438e9fbfef28f6526290c3de008a44b6ff",
+  "readyForArtifactAttestation": false,
+  "newWanNodesStarted": false,
+  "completeSameRevisionRegressionClaimed": false,
+  "checks": [
+    {
+      "gate": "exact-source-delta",
+      "verified": true,
+      "details": {
+        "dockerSourceRevision": "0f53b42d3e78da85aa9a2c2f2993472747aabe8a",
+        "nativeSourceRevision": "016ab2438e9fbfef28f6526290c3de008a44b6ff",
+        "onlyChangedSource": "tests/test_capella_snapshot_accounts.cpp",
+        "allOther15314SourcesIdentical": true,
+        "sameFullRevisionClaimed": false
+      }
+    },
+    {
+      "gate": "native13-and-signed-offline4",
+      "verified": true,
+      "details": {
+        "independentAuditPassed": true,
+        "auditOutput": "{\n  \"revision\": \"016ab2438e9fbfef28f6526290c3de008a44b6ff\",\n  \"nativePassed\": 13,\n  \"skipped\": 0,\n  \"sourceFiles\": 15315,\n  \"materializedInputs\": 205,\n  \"sourceAndInputsUnchanged\": true,\n  \"onlyTestSourceChanged\": true,\n  \"parentLinuxResultsAutomaticallyInherited\": false,\n  \"wanProven\": false\n}\n{\n  \"signedOfflineCasesPassed\": 4,\n  \"realBlocks\": 99,\n  \"transactions\": 97,\n  \"readOnlySandbox\": {\n    \"deadlineSecondsPerCase\": 180,\n    \"profile\": \"(version 1)(allow default)(deny network*)(deny file-write*)\"\n  },\n  \"fixtureSourceBinaryAnd205InputsUnchanged\": true,\n  \"newWanRun\": false,\n  \"dutyResumptionVerified\": false\n}\n"
+      }
+    },
+    {
+      "gate": "arm-full427-and-bounded-EEST",
+      "verified": false,
+      "reason": "python3.14 exit 1: Traceback (most recent call last):\n  File \"/private/tmp/nano-0f53-runtime-wan-gate-20261002/full-audit.py\", line 7, in <module>\n    before=json.loads((p/'source-before.json').read_text());after=json.loads((p/'source-after.json').read_text())\n                                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py\", line 787, in read_"
+    },
+    {
+      "gate": "amd-full427-and-bounded-EEST",
+      "verified": false,
+      "reason": "[Errno 2] No such file or directory: '/tmp/nano-full-coherent-0f53b42d-amd64-host-reports-20261002/terminal-copy-complete.txt'"
+    },
+    {
+      "gate": "amd-signed-offline4-bound-to-full-binary",
+      "verified": false,
+      "reason": "[Errno 2] No such file or directory: '/tmp/nano-full-coherent-0f53b42d-amd64-offline-host-reports-20261002/terminal-copy-complete.txt'"
+    }
+  ]
+}

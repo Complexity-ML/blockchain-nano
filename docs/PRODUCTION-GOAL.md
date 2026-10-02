@@ -2940,3 +2940,7 @@ Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régr
 ### 2026-10-02 — Audit signé du binaire AMD64 complet mis en attente
 
 [Contrôleur réel confirmé vivant](qualification/full-amd-signed-offline-queue-20261002/README.md) : PID VPS 587064, attente du processus Docker complet 582618. Aucun audit ni rebuild lancé ; les 427 résultats, manifestes et hash exact du binaire complet sont requis avant quatre requêtes signées en lecture seule. Régression ARM64/compilation AMD64 existantes continuent, résultats globaux non acquis. Tous les critères de production, WAN, bridge et statuts EIP restent ouverts.
+
+### 2026-10-02 — Lanceur de restauration raccordé aux builds courants
+
+[Lanceur et refus réel](qualification/runtime-wan-evidence-gate-20261002/README.md) : nouveaux chemins complets ARM64/AMD64, source native `016ab243` et Docker `0f53b42d` enregistrées séparément, manifests exacts et 205 inputs natifs exigés. Exécution exit 2 avant création de nœuds : preuves terminales encore manquantes. Voie positive/attestation/restauration WAN non qualifiées ; campagnes existantes continuent. Aucun critère de production ni statut EIP clôturé.
