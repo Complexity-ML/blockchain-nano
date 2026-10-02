@@ -1,0 +1,77 @@
+Start testing: Oct 02 08:58 UTC
+----------------------------------------------------------
+406/426 Testing: consensus_capella_reindexed_validator_activation
+406/426 Test: consensus_capella_reindexed_validator_activation
+Command: "/build/sha-context-f7e46437-amd64-20261002/nano-capella-transition-tests" "--deposit-reorg-activation"
+Directory: /build/sha-context-f7e46437-amd64-20261002
+"consensus_capella_reindexed_validator_activation" start time: Oct 02 08:58 UTC
+Output:
+----------------------------------------------------------
+{"observerRecords":15,"scenario":"deposit-reorg-progress","slot":8}
+{"observerRecords":31,"scenario":"deposit-reorg-progress","slot":16}
+{"observerRecords":47,"scenario":"deposit-reorg-progress","slot":24}
+{"observerRecords":63,"scenario":"deposit-reorg-progress","slot":32}
+{"observerRecords":79,"scenario":"deposit-reorg-progress","slot":40}
+{"observerRecords":95,"scenario":"deposit-reorg-progress","slot":48}
+{"activationQualified":false,"branches":2,"depositsPerBranch":2,"indexA":[64,65],"networkTransport":false,"observerReopens":2,"providerCalls":0,"registrySize":66,"scenario":"capella-competing-deposit-reorg","selectedBranches":2,"staleIndexRefused":true}
+{"activationEpoch":18446744073709551615,"finalizedEpoch":0,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":56}
+{"activationEpoch":18446744073709551615,"finalizedEpoch":0,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":64}
+{"activationEpoch":13,"finalizedEpoch":7,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":72}
+{"activationEpoch":13,"finalizedEpoch":8,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":80}
+{"activationEpoch":13,"finalizedEpoch":9,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":88}
+{"activationEpoch":13,"finalizedEpoch":10,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":96}
+{"activationEpoch":13,"finalizedEpoch":11,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":104}
+{"activationEpoch":13,"finalizedEpoch":12,"newVotes":1,"scenario":"deposit-reorg-activation-progress","slot":112}
+{"activationEpoch":13,"finalizedEpoch":13,"newVotes":2,"scenario":"deposit-reorg-activation-progress","slot":120}
+{"activationEpoch":13,"finalizedEpoch":14,"newVotes":3,"scenario":"deposit-reorg-activation-progress","slot":128}
+{"activationEpoch":13,"finalizedEpoch":15,"newVotes":4,"scenario":"deposit-reorg-activation-progress","slot":136}
+{"activationEpoch":13,"finalizedEpoch":16,"newVotes":5,"scenario":"deposit-reorg-activation-progress","slot":144}
+{"activationEpoch":13,"finalizedEpoch":17,"newVotes":6,"scenario":"deposit-reorg-activation-progress","slot":152}
+{"activationEpoch":13,"finalizedEpoch":18,"newVotes":7,"scenario":"deposit-reorg-activation-progress","slot":160}
+{"activationEpoch":13,"finalizedEpoch":19,"newVotes":8,"scenario":"deposit-reorg-activation-progress","slot":168}
+<end of output>
+Test time = 360.04 sec
+----------------------------------------------------------
+Test Failed.
+"consensus_capella_reindexed_validator_activation" end time: Oct 02 09:04 UTC
+"consensus_capella_reindexed_validator_activation" time elapsed: 00:06:00
+----------------------------------------------------------
+
+422/426 Testing: consensus_hash_provider_parallel
+422/426 Test: consensus_hash_provider_parallel
+Command: "/build/sha-context-f7e46437-amd64-20261002/nano-consensus-hash-provider-tests"
+Directory: /build/sha-context-f7e46437-amd64-20261002
+"consensus_hash_provider_parallel" start time: Oct 02 09:04 UTC
+Output:
+----------------------------------------------------------
+parallelWorkers=16 independentDigestComparisons=5634 knownVectorChecks=513 completeInputBitMutations=512 replacementThreads=8 concurrentFirstUse=true
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_hash_provider_parallel" end time: Oct 02 09:04 UTC
+"consensus_hash_provider_parallel" time elapsed: 00:00:00
+----------------------------------------------------------
+
+423/426 Testing: consensus_hash_provider_unavailable
+423/426 Test: consensus_hash_provider_unavailable
+Command: "/build/sha-context-f7e46437-amd64-20261002/nano-consensus-hash-provider-tests" "--provider-unavailable"
+Directory: /build/sha-context-f7e46437-amd64-20261002
+"consensus_hash_provider_unavailable" start time: Oct 02 09:04 UTC
+Output:
+----------------------------------------------------------
+providerFailureRejected=true initializationRetried=true
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_hash_provider_unavailable" end time: Oct 02 09:04 UTC
+"consensus_hash_provider_unavailable" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 02 09:04 UTC
+
+qualification_consensus_crypto =   0.02 sec*proc
+
+qualification_consensus_runtime = 360.04 sec*proc
+

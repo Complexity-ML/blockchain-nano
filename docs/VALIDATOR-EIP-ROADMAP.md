@@ -6379,3 +6379,7 @@ Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régr
 ### 2026-10-02 — build AMD SHA256 terminal, scénario bloquant démarré
 
 [Build réel et registre](qualification/consensus-sha-context-20261002/amd-build-terminal/README.md) : deux cibles CMake fraîches `f7e46437`, dépendances recompilées, build0 ; registre3 exact/délais360/30/30/sans désactivation vérifiés. Réindexation réellement démarrée PID573453 puis deux testsSHA256 prévus ; résultats/intégrité après exécution encore en attente. Ni build complet du nœud, régression globale, reprise native/WAN ni critère EIP/production/lancement clôturé.803AMD15/16 et anciens échecs conservés.
+
+### 2026-10-02 — f7SHA256 terminal AMD2/3 : réindexation toujours hors délai
+
+[Résultat exact](qualification/consensus-sha-context-20261002/amd-reindex-terminal/README.md) : réindexationTimeout360,04s ; tests fournisseur2/2 passent ; total360,06s,aucun skip,source15313 et deux programmes inchangés,délais360/30/30 préservés,exits8. Dernier progrès slot168/finalité19/huit votes, sans revendication de gain causal ; scénario non terminé. InjectionsAMD post-scénario0/quatre erreurs refusées/388 reprises vérifiées, complétant ARM. Le gain microSHA256 ne clôture pas la reprise. Examiner ensuite la sérialisation répétée des comptes à partir du profilCPU, avec comparaison exhaustive aux seuls caches privés validés et oracle non caché ; correctif suivant non implémenté. Aucun full/WAN actuel lancé,runtime promu,statut EIP/production/lancement clôturé ; anciens échecs conservés.
