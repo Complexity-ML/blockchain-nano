@@ -3400,3 +3400,7 @@ Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régr
 ### 2026-10-02 — Suite réelle des campagnes vers le scénario de restauration
 
 [Contrôleur vivant PID Mac 60971/session 3141](qualification/current-release-pipeline-20261002/README.md) : observation des deux campagnes existantes, audits terminaux/copies vérifiées puis audit signé VPS et lanceur privé conditionnel. Scripts figés ; staging frais et tous les hashes source/copie/source comparés avant consumption. Aucun nouveau build, campagne ou nœud WAN démarré. Résultats complets et voie positive/restauration/duties/finalité commune non acquis ; tous les critères et statuts restent ouverts.
+
+### 2026-10-02 — Bloc EEST courant ARM64 audité, contrôleur CLI corrigé
+
+[Bloc EEST terminé du candidat `0f53b42d`](qualification/current-arm-eest-partial-20261002/README.md) : 3,45/30 s ; 5 387 variantes exactes/317 fixtures, 4 882 exécution/505 validation, sources actuelles et runner liés au manifeste. Snapshot provisoire de la campagne complète, invariance terminale/AMD64/WAN non acquis. [Contrôleur v2](qualification/current-release-pipeline-v2-20261002/README.md) : corrige le caller CLI Node `/tmp` → chemin canonique après résultat vide réel ; ancien contrôleur seul arrêté exit 143, nouveau PID 61450/session 34463 vivant. Campagnes et audit VPS inchangés, aucun test relancé, aucun critère/EIP global clôturé.
