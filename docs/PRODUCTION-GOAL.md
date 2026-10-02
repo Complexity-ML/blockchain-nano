@@ -2904,3 +2904,7 @@ Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régr
 ### 2026-10-02 — erreurs SHA256 : nouvelle couverture ARM acquise
 
 [Injections bornées](qualification/consensus-sha-context-20261002/fault-paths-arm-terminal/README.md) : compilation directe du runtime figé `f7e46437`, allocation/Init/Update/Final forcés en erreur ; refus, court-circuit, destruction du contexte et388 vecteurs de reprise passent sur DockerARM. Compteurs vérifient la réutilisation après reprise. Cette preuve complète l'absence d'injection du rapport précédent ; ni crash matériel ni qualification complète. ÉquivalentAMD en attente du build/réindexation actuels pour éviter une concurrence de ressources ; auditeur3cas/registres/délais/intégrité préparé, pas encore exercé. Aucun runtime promu, échec effacé, critère EIP/production/lancement clôturé.
+
+### 2026-10-02 — build AMD SHA256 terminal, scénario bloquant démarré
+
+[Build réel et registre](qualification/consensus-sha-context-20261002/amd-build-terminal/README.md) : deux cibles CMake fraîches `f7e46437`, dépendances recompilées, build0 ; registre3 exact/délais360/30/30/sans désactivation vérifiés. Réindexation réellement démarrée PID573453 puis deux testsSHA256 prévus ; résultats/intégrité après exécution encore en attente. Ni build complet du nœud, régression globale, reprise native/WAN ni critère EIP/production/lancement clôturé.803AMD15/16 et anciens échecs conservés.
