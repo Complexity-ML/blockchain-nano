@@ -2880,3 +2880,7 @@ Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régr
 ### 2026-10-02 — reprise privée : intégrité post-exécution préparée
 
 [Lanceur et gate actuels](qualification/coherent-80373152-release-gates-20261002/README.md) : contrôle des sources/200 entrées natives/deux couples de programmesDocker avant-après WAN ajouté, mais non encore exercé sur le réseau. Gate réexécuté :5/8 vérifiés, trois preuvesAMD manquantes, exit2/aucun nœud lancé. TestAMD et queues précis toujours actifs ; aucun runtime ou délai modifié, aucune clôture EIP/production/lancement.
+
+### 2026-10-02 — reprise privée : sources des deux propriétaires liées
+
+[Collecte réelle et contrôles](qualification/coherent-80373152-release-gates-20261002/README.md) :15313 fichiers identiques Mac/VPS, manifestes avant/après des deux sources ajoutés au lanceur préparé ; aucun WAN exercé. AMD restart335,42/360 passe, sélection encore active. Observation partielle : pic499560448octets sous3GiB, zéro OOM/max/throttling ; ni qualification de charge ni gain causal. Tous les critères terminauxAMD/WAN/production et statuts EIP restent ouverts.

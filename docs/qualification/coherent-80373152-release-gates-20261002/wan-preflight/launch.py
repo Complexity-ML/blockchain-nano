@@ -57,7 +57,12 @@ def native_manifest():
  actual={name:hashlib.sha256((Path(name) if Path(name).is_absolute() else source/name).read_bytes()).hexdigest() for name in expected}
  assert actual==expected,'Native qualified inputs changed before WAN'
  return actual
-source_before=source_manifest();native_before=native_manifest()
+def remote_manifest():
+ script="import json,hashlib,subprocess,sys;from pathlib import Path;p=Path(sys.argv[1]);names=subprocess.check_output(['git','ls-files','-z'],cwd=p).split(b'\\0');print(json.dumps({n.decode():hashlib.sha256((p/n.decode()).read_bytes()).hexdigest() for n in names if n},sort_keys=True))"
+ return json.loads(get(['python3','-c',script,remote_source],True))
+source_before=source_manifest();native_before=native_manifest();remote_before=remote_manifest()
+assert remote_before==source_before,'Qualified source trees differ before WAN'
+save(control/'wan-remote-source-before.json',remote_before)
 save(control/'wan-source-before.json',source_before);save(control/'wan-native-inputs-before.json',native_before)
 
 env=os.environ.copy();env.update({'NANO_TEST_CONSENSUS_PROFILE':'capella','NANO_TEST_BUILD_VOLUME':'1','NANO_TEST_BUILD_SUBDIRECTORY_ARM64':artifacts[0]['build'],'NANO_TEST_BUILD_SUBDIRECTORY_AMD64':artifacts[1]['build'],'NANO_TEST_REMOTE_SOURCE_REPOSITORY':remote_source,'NANO_TEST_BACKUP_RESTORE':'1','NANO_DOCKER_NOFILE':'65536'})
@@ -67,6 +72,9 @@ with (control/'wan-driver.log').open('w') as log:
 try:
  source_after=source_manifest();save(control/'wan-source-after.json',source_after)
  assert source_after==source_before,'Source changed during WAN'
+ remote_after=remote_manifest();save(control/'wan-remote-source-after.json',remote_after)
+ assert remote_after==remote_before==source_after,'Remote source changed during WAN'
+ assert not get(['git','-C',remote_source,'status','--porcelain'],True)
  assert not get(['git','-C',str(source),'status','--porcelain'])
  native_after=native_manifest();save(control/'wan-native-inputs-after.json',native_after)
  assert native_after==native_before
@@ -75,7 +83,7 @@ try:
   args=docker+['run','--rm','--network','none','--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--mount','type=volume,src=nano-linux-sync-build,dst=/build,readonly',artifact['image'],'sha256sum','/build/'+artifact['build']+'/nano','/build/network/nano-p2p']
   values={line.split()[1]:line.split()[0] for line in get(args,remote).splitlines()}
   assert values==artifact['programs'],'Docker programs changed during WAN'
- save(control/'wan-artifact-integrity.json',{'sourceAndProgramsUnchanged':True,'nativeInputs':len(native_after),'dockerOwners':2,'runtimeRevision':revision,'wanExit':r.returncode})
+ save(control/'wan-artifact-integrity.json',{'sourceAndProgramsUnchanged':True,'nativeInputs':len(native_after),'dockerOwners':2,'sourceOwners':2,'runtimeRevision':revision,'wanExit':r.returncode})
 except Exception as error:
  save(state,{'phase':'artifact-integrity-failed','reason':str(error),'wanExit':r.returncode,'output':str(output),'runtimeRevision':revision,'wanHarnessInvoked':True,'nodesStartedProvenByThisController':False})
  raise

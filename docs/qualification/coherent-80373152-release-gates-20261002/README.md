@@ -38,3 +38,9 @@ Contrôleur queued-after-full effectivement lancé, en attente du driver complet
 Le lanceur contrôlera désormais, après le retour du harness (succès ou échec), l'égalité du manifeste complet des sources, des200 entrées natives matérialisées et des deux couples de programmesDocker avec les hashes vérifiés avant lancement. Les bases et journaux de consensus qui doivent avancer sont exclus du manifeste des programmes. Une différence produit artifact-integrity-failed ; l'exit du harness ne suffit pas à revendiquer une qualification. Contrôleur Python syntaxiquement vérifié, **branche d'exécution WAN non encore exercée**. Aucun code runtime du candidat ou test actif modifié.
 
 Gate réévalué effectivement : **5/8 critères vérifiés** (sources, parentARM425, candidatARM16, natif9, auditnatif4). Les trois preuvesAMD16/full426/audit4 restent absentes ; exit2, ready=false, aucun nouveau nœudWAN. Les handles des processusAMD et des queues sont observés actifs, aucune relance.
+
+## Intégrité des deux sources et observation de ressources
+
+Le contrôle WAN préparé couvre aussi les sources du VPS avant/après ; manifeste distant collecté via Python hôte, sans dépendre de Python dans l'image builder. Collecte réelle en lecture seule vérifiée sur les deux worktrees : **15313 fichiers identiques**, aucun lancement WAN. L'exécution complète et la fermeture post-WAN restent non exercées.
+
+Observation intermédiaire horodatée du conteneurAMD actif : limite2CPU/3GiB, pic499560448octets depuis le démarrage, max/oom/oom_kill et périodes de throttlingCPU0. Ce n'est ni une mesure terminale, ni la mémoire du cache seul, ni un test de charge ; stade exact non capturé atomiquement. À la lecture suivante, restart passe **335,42/360s**, auto-registration en cours. Ces observations ne prouvent aucun gain causal ou tenue de production et ne ferment pas les gates.
