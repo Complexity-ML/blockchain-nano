@@ -670,35 +670,39 @@ int main(){try{
   }
   std::filesystem::remove_all(cancel_path);
  }
- // Four nested EIP-150 forwarding layers should not repeatedly execute a
+ // Multiple nested EIP-150 forwarding layers should not repeatedly execute a
  // costly leaf merely to find headroom. Count deterministic checkpoints,
  // not wall time, while independently verifying the returned quote.
- for(const auto* fork:{"Paris","Shanghai"}){
+ for(const auto* fork:{"Paris","Shanghai"})for(unsigned depth:{2u,4u,8u}){
   Json allocations={{sender,{{"balance","0x100000000000000000"}}}};
   std::string leaf="0x00000000000000000000000000000000000080ad",target=leaf;
   allocations[leaf]={{"code","0x60016000556000355b8015601557600190036008565b50602a60005260206000f3"}};
-  for(unsigned level=1;level<=4;++level){auto outer=hex(bytes(Int(0x80ad+level),20));allocations[outer]={{"code","0x3660006000376020600060206000600073"+target.substr(2)+"5af1602f5760006000fd5b60206000f3"}};target=outer;}
+  for(unsigned level=1;level<=depth;++level){auto outer=hex(bytes(Int(0x80ad+level),20));allocations[outer]={{"code","0x3660006000376020600060206000600073"+target.substr(2)+"5af1602f5760006000fd5b60206000f3"}};target=outer;}
   auto g=Genesis::from_json({{"config",{{"chainId",1337},{"evmFork",fork}}},{"alloc",allocations}});
-  auto probe_path=path.string()+"-depth-estimate";
+  auto probe_path=path.string()+"-depth-estimate-"+std::to_string(depth);
   {Blockchain chain(probe_path,g);auto original=chain.state().root();size_t clock_reads=0;
    RpcSimulationLimits limits;limits.now=[&]{++clock_reads;return std::chrono::steady_clock::time_point{};};Rpc rpc(chain,{},AdmissionBudget::Clock::now,limits);
    Json args={{"from",sender},{"to",target},{"gas","0x1c9c380"},{"data",hex(bytes(Int(40000),32))}};
    auto invoke=[&](const char* method){return rpc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",Json::array({args,"latest"})}});};
    auto called=invoke("eth_call");check(called.at("result")==hex(bytes(Int(42),32)),"deep estimate control executes");auto call_reads=clock_reads;clock_reads=0;
    auto quote=invoke("eth_estimateGas");check(quote.contains("result"),"deep estimate succeeds");auto estimate_reads=clock_reads;
-   std::cout<<Json{{"scenario","deep-estimate-probe-count"},{"fork",fork},{"callCheckpoints",call_reads},{"estimateCheckpoints",estimate_reads}}.dump()<<std::endl;
-   check(estimate_reads*2<=call_reads*11,"deep estimation repeats costly execution beyond bounded probe budget");
+   std::cout<<Json{{"scenario","deep-estimate-probe-count"},{"fork",fork},{"depth",depth},{"callCheckpoints",call_reads},{"estimateCheckpoints",estimate_reads}}.dump()<<std::endl;
+   check(estimate_reads*2<=call_reads*9,"deep estimation repeats costly execution beyond four-probe budget");
    auto gas=quantity(quote.at("result"));args["gas"]=quote.at("result");check(invoke("eth_call").at("result")==called.at("result"),"deep quote independently executes");
    Transaction tx;tx.chain_id=1337;tx.to=target;tx.gas=gas;tx.gas_price=2000000000;tx.data=bytes(Int(40000),32);auto state=g.state;ExecutionEngine engine(g.chain_id,{},g.evm_revision);auto receipt=engine.apply_transaction(state,SignedTransaction::sign(tx,key),g.block.header,0,0);
    check(receipt.success&&state.get_storage(leaf,0)==1&&chain.state().root()==original,"deep quote executes signed transaction without committing RPC writes");
    Int low=receipt.gas_used-1,high=gas;while(high-low>1){Int mid=(high+low)/2;args["gas"]=quantity(mid);if(invoke("eth_call").contains("error"))low=mid;else high=mid;}
    check((gas-high)*1000<=gas*15,"deep quote exceeds 1.5 percent of independently found boundary");
+   args["gas"]=quantity(high);auto tight=invoke("eth_estimateGas");
+   check(tight.contains("result")&&quantity(tight.at("result"))<=high,"deep estimate exceeds a tight successful caller cap");
+   args["gas"]=tight.at("result");check(invoke("eth_call").at("result")==called.at("result"),"tight deep estimate does not execute");
+   args["gas"]=quantity(Int(high-1));check(invoke("eth_estimateGas").contains("error"),"deep estimator accepts cap below independent success boundary");
    State created_state=g.state;ExecutionContext creation;creation.origin=sender;creation.caller=sender;creation.address=target;creation.revision=g.evm_revision;creation.gas=300000;
    creation.code=unhex("0x3660006000373660006000f05060006000f3");
    creation.data=unhex("0x6000600060006000600073"+leaf.substr(2)+"5af15060006000f3");
    EVM created_vm(created_state);auto created=created_vm.execute(creation);
    check(created.success&&created.max_call_depth==2&&created_state.get_storage(leaf,0)==1,"observed depth includes CREATE constructor CALL without changing execution");
-   std::cout<<Json{{"scenario","deep-estimate-checkpoints"},{"fork",fork},{"callCheckpoints",call_reads},{"estimateCheckpoints",estimate_reads},{"gasQuote",quantity(gas)},{"minimumVerified",quantity(high)}}.dump()<<'\n';
+   std::cout<<Json{{"scenario","deep-estimate-checkpoints"},{"fork",fork},{"depth",depth},{"callCheckpoints",call_reads},{"estimateCheckpoints",estimate_reads},{"gasQuote",quantity(gas)},{"minimumVerified",quantity(high)}}.dump()<<'\n';
   }std::filesystem::remove_all(probe_path);
  }
  std::cout<<checks<<" RPC checks passed\n";return 0;
