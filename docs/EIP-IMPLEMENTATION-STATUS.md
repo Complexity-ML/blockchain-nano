@@ -6010,3 +6010,8 @@ Candidate `d1597d9a` : PID VPS 1440584 et conteneur de préparation vérifiés e
 ### 2026-10-02 — Image ARM64 disponible, compilation cohérente démarrée
 
 Image Mac figée `sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb`, ARM64/Linux ; export/tag/unpack terminés et 15 315 sources inchangées vérifiés. PID dépendances absent ; code de retour direct non capturé, aucune supposition de statut. Contrôleur 84088 et conteneur de préparation ARM64 vérifiés en vie sur la candidate `d1597d9a` : P2P/helpers compilés, cœur en compilation, régression complète non encore acquise. [Preuves](qualification/rpc-arm64-dependency-result-20261002/README.md). Compilation VPS parallèle active ; autres gates de production toujours ouverts.
+
+
+### 2026-10-02 — Matériel de restauration complet conservé et re-vérifié
+
+Fixture locale hors Docker : 313 fichiers / 121 445 250 octets, empreintes identiques aux manifests arrêtés source/restore historiques ; archive complète vérifiée. Chaîne, témoin cœur, 21 paires journal/témoin et clé P2P présents. Genesis et requête externe séparée retrouvés sur hôte et empreintes originales correspondantes ; anciens chemins/binaire Docker disparus après reset. [Inventaire](qualification/surviving-full-backup-inventory-20261002/README.md). Conservation des bytes prouvée, pas une restauration contre la nouvelle candidate, concordance de tous les engagements indépendants, reprise des duties ou finalité WAN. Tous les gates restants maintenus.
