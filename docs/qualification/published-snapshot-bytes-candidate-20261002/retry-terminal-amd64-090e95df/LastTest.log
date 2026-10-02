@@ -1,0 +1,224 @@
+Start testing: Oct 02 03:18 UTC
+----------------------------------------------------------
+321/420 Testing: consensus_bellatrix_clock_coalescing
+321/420 Test: consensus_bellatrix_clock_coalescing
+Command: "/build/published-bytes-fa390c3b-20261002/nano-bellatrix-transition-tests" "--clock-coalescing"
+Directory: /build/published-bytes-fa390c3b-20261002
+"consensus_bellatrix_clock_coalescing" start time: Oct 02 03:18 UTC
+Output:
+----------------------------------------------------------
+{"backwardsStepRejected":true,"cancellationPreserved":true,"observations":45,"oversizedStepRejected":true,"publications":17,"scenario":"clock-phase-coalescing","stateEquivalent":true}
+<end of output>
+Test time =   1.12 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_clock_coalescing" end time: Oct 02 03:18 UTC
+"consensus_bellatrix_clock_coalescing" time elapsed: 00:00:01
+----------------------------------------------------------
+
+322/420 Testing: consensus_bellatrix_partition_simulation
+322/420 Test: consensus_bellatrix_partition_simulation
+Command: "/build/published-bytes-fa390c3b-20261002/nano-bellatrix-transition-tests" "--partition-simulation"
+Directory: /build/published-bytes-fa390c3b-20261002
+"consensus_bellatrix_partition_simulation" start time: Oct 02 03:18 UTC
+Output:
+----------------------------------------------------------
+{"consecutive":0,"event":"simulation-epoch","finalizedA":0,"finalizedB":0,"sameHead":true,"slot":8}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":0,"finalizedB":0,"sameHead":true,"slot":16}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":0,"finalizedB":0,"sameHead":true,"slot":24}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":2,"finalizedB":2,"sameHead":true,"slot":32}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":2,"finalizedB":2,"sameHead":false,"slot":40}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":2,"finalizedB":2,"sameHead":false,"slot":48}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":2,"finalizedB":2,"sameHead":true,"slot":56}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":6,"finalizedB":6,"sameHead":true,"slot":64}
+{"consecutive":1,"event":"simulation-epoch","finalizedA":7,"finalizedB":7,"sameHead":true,"slot":72}
+{"consecutive":2,"event":"simulation-epoch","finalizedA":8,"finalizedB":8,"sameHead":true,"slot":80}
+{"consecutive":3,"event":"simulation-epoch","finalizedA":9,"finalizedB":9,"sameHead":true,"slot":88}
+{"consecutive":4,"event":"simulation-epoch","finalizedA":10,"finalizedB":10,"sameHead":true,"slot":96}
+<end of output>
+Test time = 240.05 sec
+----------------------------------------------------------
+Test Failed.
+"consensus_bellatrix_partition_simulation" end time: Oct 02 03:22 UTC
+"consensus_bellatrix_partition_simulation" time elapsed: 00:04:00
+----------------------------------------------------------
+
+324/420 Testing: storage_execution_checkpoint
+324/420 Test: storage_execution_checkpoint
+Command: "/build/published-bytes-fa390c3b-20261002/nano-execution-checkpoint-tests"
+Directory: /build/published-bytes-fa390c3b-20261002
+"storage_execution_checkpoint" start time: Oct 02 03:22 UTC
+Output:
+----------------------------------------------------------
+{"archiveAtomicRecovery":true,"archiveSurvivesReorg":true,"bellatrixReactor":false,"concurrentCAS":true,"rejections":14,"scenario":"atomic-execution-checkpoint","shanghai":false,"shorterReorg":true,"sigkillReopens":4,"unchangedHeadCheckpoint":true}
+<end of output>
+Test time =   0.86 sec
+----------------------------------------------------------
+Test Passed.
+"storage_execution_checkpoint" end time: Oct 02 03:23 UTC
+"storage_execution_checkpoint" time elapsed: 00:00:00
+----------------------------------------------------------
+
+325/420 Testing: storage_execution_checkpoint_sync
+325/420 Test: storage_execution_checkpoint_sync
+Command: "/build/published-bytes-fa390c3b-20261002/nano-execution-checkpoint-sync-tests"
+Directory: /build/published-bytes-fa390c3b-20261002
+"storage_execution_checkpoint_sync" start time: Oct 02 03:23 UTC
+Output:
+----------------------------------------------------------
+{"physicalPowerLoss":false,"retainedAndLostSuffix":true,"scenario":"atomic-execution-checkpoint-sync","shanghai":false}
+<end of output>
+Test time =   0.23 sec
+----------------------------------------------------------
+Test Passed.
+"storage_execution_checkpoint_sync" end time: Oct 02 03:23 UTC
+"storage_execution_checkpoint_sync" time elapsed: 00:00:00
+----------------------------------------------------------
+
+326/420 Testing: consensus_beacon_witness_recovery
+326/420 Test: consensus_beacon_witness_recovery
+Command: "/build/published-bytes-fa390c3b-20261002/nano-beacon-recovery-tests"
+Directory: /build/published-bytes-fa390c3b-20261002
+"consensus_beacon_witness_recovery" start time: Oct 02 03:23 UTC
+Output:
+----------------------------------------------------------
+Witness crash recovery, exact roll-forward, rollback refusal, identity and stale writer checks passed
+<end of output>
+Test time =   0.22 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_beacon_witness_recovery" end time: Oct 02 03:23 UTC
+"consensus_beacon_witness_recovery" time elapsed: 00:00:00
+----------------------------------------------------------
+
+327/420 Testing: consensus_bellatrix_witness_runtime
+327/420 Test: consensus_bellatrix_witness_runtime
+Command: "/build/published-bytes-fa390c3b-20261002/nano-bellatrix-transition-tests" "--runtime-recovery"
+Directory: /build/published-bytes-fa390c3b-20261002
+"consensus_bellatrix_witness_runtime" start time: Oct 02 03:23 UTC
+Output:
+----------------------------------------------------------
+{"clockRegressionGated":true,"configuredKeys":64,"independentProcesses":false,"invalidConfigCases":4,"proposalsAcrossRestart":2,"repeatedDutySuppressed":true,"scenario":"bellatrix-runtime-config-restart","slashingIncludedAfterRestart":false,"staleCheckpointRejected":true,"witnessed":true}
+Bellatrix witnessed core roll-forward and rollback admission checks passed
+<end of output>
+Test time =   3.43 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_witness_runtime" end time: Oct 02 03:23 UTC
+"consensus_bellatrix_witness_runtime" time elapsed: 00:00:03
+----------------------------------------------------------
+
+329/420 Testing: consensus_bellatrix_local_slashing
+329/420 Test: consensus_bellatrix_local_slashing
+Command: "/build/published-bytes-fa390c3b-20261002/nano-bellatrix-transition-tests" "--runtime-slashing"
+Directory: /build/published-bytes-fa390c3b-20261002
+"consensus_bellatrix_local_slashing" start time: Oct 02 03:23 UTC
+Output:
+----------------------------------------------------------
+{"clockRegressionGated":true,"configuredKeys":64,"independentProcesses":false,"invalidConfigCases":4,"proposalsAcrossRestart":2,"repeatedDutySuppressed":true,"scenario":"bellatrix-runtime-config-restart","slashingIncludedAfterRestart":true,"staleCheckpointRejected":true,"witnessed":false}
+<end of output>
+Test time =   2.00 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_local_slashing" end time: Oct 02 03:23 UTC
+"consensus_bellatrix_local_slashing" time elapsed: 00:00:02
+----------------------------------------------------------
+
+330/420 Testing: consensus_bellatrix_voluntary_exit
+330/420 Test: consensus_bellatrix_voluntary_exit
+Command: "/build/published-bytes-fa390c3b-20261002/nano-bellatrix-transition-tests" "--exit-loop"
+Directory: /build/published-bytes-fa390c3b-20261002
+"consensus_bellatrix_voluntary_exit" start time: Oct 02 03:23 UTC
+Output:
+----------------------------------------------------------
+{"duplicateDidNotPublish":true,"durableArchive":true,"exitEpoch":6,"futureEpochRejected":true,"invalidSignatureRejected":true,"networkAdmissionQualified":false,"payoutImplemented":false,"scenario":"bellatrix-local-voluntary-exit","scheduledByBlock":true,"syntheticTenureEpochs":1,"withdrawableEpoch":262}
+<end of output>
+Test time =   3.47 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_voluntary_exit" end time: Oct 02 03:23 UTC
+"consensus_bellatrix_voluntary_exit" time elapsed: 00:00:03
+----------------------------------------------------------
+
+333/420 Testing: consensus_bellatrix_deposit_store
+333/420 Test: consensus_bellatrix_deposit_store
+Command: "/build/published-bytes-fa390c3b-20261002/nano-bellatrix-transition-tests" "--deposit-store"
+Directory: /build/published-bytes-fa390c3b-20261002
+"consensus_bellatrix_deposit_store" start time: Oct 02 03:23 UTC
+Output:
+----------------------------------------------------------
+{"atomicExecutionReopen":true,"beaconAdmission":false,"competingBranches":true,"fundedDeposits":2,"scenario":"bellatrix-deposit-store","snapshotTamperingRejected":true}
+<end of output>
+Test time =   1.65 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_deposit_store" end time: Oct 02 03:23 UTC
+"consensus_bellatrix_deposit_store" time elapsed: 00:00:01
+----------------------------------------------------------
+
+342/420 Testing: consensus_bellatrix_beacon_headers_reorg
+342/420 Test: consensus_bellatrix_beacon_headers_reorg
+Command: "/build/published-bytes-fa390c3b-20261002/nano-bellatrix-transition-tests" "--beacon-headers-reorg"
+Directory: /build/published-bytes-fa390c3b-20261002
+"consensus_bellatrix_beacon_headers_reorg" start time: Oct 02 03:23 UTC
+Output:
+----------------------------------------------------------
+{"assertoorQualified":false,"beaconHeaderReorgs":2,"frozenSnapshotPreserved":true}
+<end of output>
+Test time =   5.24 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_beacon_headers_reorg" end time: Oct 02 03:23 UTC
+"consensus_bellatrix_beacon_headers_reorg" time elapsed: 00:00:05
+----------------------------------------------------------
+
+419/420 Testing: consensus_checkpoint_json_canonical
+419/420 Test: consensus_checkpoint_json_canonical
+Command: "/build/published-bytes-fa390c3b-20261002/nano-checkpoint-json-tests"
+Directory: /build/published-bytes-fa390c3b-20261002
+"consensus_checkpoint_json_canonical" start time: Oct 02 03:23 UTC
+Output:
+----------------------------------------------------------
+{"boundRejections":3076,"byteComparisons":2048,"cancellations":1024,"passed":true,"versions":[2,3,4,5]}
+<end of output>
+Test time =   0.21 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_checkpoint_json_canonical" end time: Oct 02 03:23 UTC
+"consensus_checkpoint_json_canonical" time elapsed: 00:00:00
+----------------------------------------------------------
+
+420/420 Testing: consensus_bellatrix_publication_cache
+420/420 Test: consensus_bellatrix_publication_cache
+Command: "/build/published-bytes-fa390c3b-20261002/nano-bellatrix-transition-tests" "--publication-cache"
+Directory: /build/published-bytes-fa390c3b-20261002
+"consensus_bellatrix_publication_cache" start time: Oct 02 03:23 UTC
+Output:
+----------------------------------------------------------
+unknown Bellatrix qualification arguments
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Failed.
+"consensus_bellatrix_publication_cache" end time: Oct 02 03:23 UTC
+"consensus_bellatrix_publication_cache" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 02 03:23 UTC
+
+qualification_consensus_api =   5.24 sec*proc
+
+qualification_consensus_deposits =   1.65 sec*proc
+
+qualification_consensus_operations =   5.47 sec*proc
+
+qualification_consensus_recovery =   3.66 sec*proc
+
+qualification_consensus_runtime =   1.12 sec*proc
+
+qualification_consensus_simulation = 240.05 sec*proc
+
+qualification_storage_local =   1.07 sec*proc
+
+qualification_storage_sync_local =   0.23 sec*proc
+

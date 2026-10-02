@@ -6143,3 +6143,7 @@ une dépendance. Cœur/daemon read-only ; aucune règle d’admission assouplie.
 ### 2026-10-02 — Cache : échec de compilation du test conservé, reprise test seule
 
 [Candidat](qualification/published-snapshot-bytes-candidate-20261002/README.md) fa390c3b : cœur compilé, nouveau test ne compile pas (champ inexistant), code 2, aucun CTest exécuté. Rapports conservés ; aucun résultat runtime inventé. Correction 090e95df du champ `snapshot` seulement, récupérée par Git ; headers/runtime inchangés, objets du cœur réutilisés. Reprise Docker identifiée en cours avec douze cas et délais originaux ; pas de promotion main ni de clôture de production. Tous les critères et échecs antérieurs demeurent ouverts.
+
+### 2026-10-02 — Cache : qualification AMD64 terminale, partition non résolue
+
+[Rapports conservés](qualification/published-snapshot-bytes-candidate-20261002/README.md) : 090e95df, 12 cas exacts, 10 passent, 2 échouent, zéro skip ; sources/programmes/bibliothèques avant/après identiques. Partition timeout 240,053 s, dernière observation slot 96, finalité commune 10 ; pas de clôture. Nouveau scénario cache arrêté au contrôle des arguments : assertions non exécutées. Correction test seule bad3e0c0 publiée/récupérée par Git, rejeu de ce seul cas en cours avec délai original 90 s. Atomicité/sync/témoin/slashing/sortie/dépôt/reorg/encodage passent dans leurs portées exactes. Aucune promotion runtime main ni qualification globale ; toutes les exigences et anciens échecs conservés.

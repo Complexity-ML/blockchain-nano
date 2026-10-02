@@ -15,3 +15,13 @@ Compilation réellement active constatée dans `nano-published-bytes-candidate-c
 Le build fa390c3b termine avec code 2 : cœur et binaire nano compilés, mais nouveau test incorrect (`record->payload` au lieu de `record->snapshot`). Aucun cas CTest exécuté ; aucune réussite ou échec runtime à déduire. Sources inchangées avant/après. Rapports complets conservés dans `build-failure-fa390c3b/`.
 
 Correction test seulement 090e95df publiée sur la branche et récupérée par Git sur le VPS. `git diff --name-only fa390c3b HEAD` limité à `tests/test_bellatrix_transition.cpp`. Runtime et headers identiques : reprise dans le même répertoire de build, sans refaire les objets du cœur ni une image. Contrôleur et rapports distincts : `retry-control-090e95df/` et `/home/ubuntu/nano-published-bytes-candidate-retry-control-20261002-reports`. Container `nano-published-bytes-candidate-retry-amd64-test` observé actif, compilation du test en cours. Résultats des douze cas encore non acquis ; limites d’origine conservées.
+
+## Résultats terminaux 090e95df
+
+Douze cas exacts, dix réussites, deux échecs, aucun skip ; CTest et container code 8, contrôle post-manifeste 0. Sources, programmes (nano et P2P explicitement inclus) et bibliothèques identiques avant/après. Sources figées et cœur entièrement recompilé après changement de layout, puis test corrigé seulement ; aucune combinaison avec les anciens headers.
+
+Passent : coalescence de l’horloge, checkpoint atomique couplé, erreur de synchronisation disque, reprise avec témoin, runtime avec témoin, slashing local, sortie volontaire, dépôt, reorg des headers Beacon et encodage canonique. Portées exactes du registre et sorties conservées dans `retry-terminal-amd64-090e95df/`.
+
+Partition : timeout 240,053 s ; dernier slot 96, finalité commune epoch 10, quatre avancements consécutifs. Assertions finales non atteintes, même dernier slot que le parent : gain insuffisant pour clôturer le délai. Scénario du cache : arrêt en 0,008 s sur `unknown Bellatrix qualification arguments`, donc assertions du cache non exécutées. Ce défaut de harness est corrigé par bad3e0c0 (admission de son flag uniquement) ; aucun runtime/header modifié.
+
+Rejeu limité à `consensus_bellatrix_publication_cache`, délai original 90 s, contrôleur `case-control-bad3e0c0/`, rapports `/home/ubuntu/nano-publication-cache-case-control-20261002-reports`. Container `nano-publication-cache-case-amd64-test` démarré ; résultat encore en attente. Pas de rejeu des dix succès, pas de nouvelle image. La production et tous les autres écarts historiques demeurent ouverts.
