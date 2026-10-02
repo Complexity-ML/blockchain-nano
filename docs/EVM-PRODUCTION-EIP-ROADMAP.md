@@ -3280,3 +3280,7 @@ Neuf programmes macOS construits depuis les mêmes sources Docker : **9/9** cont
 ### 2026-10-02 — régression AMD64 complète conditionnée au candidat 0275b1af
 
 Contrôleur vivant Mac/VPS en attente de la sélection **16/16** avec délais originaux et entrées inchangées ; ensuite build séparé et registre complet **426** exigés, sans reconstruire image ni P2P ou modifier sorties déjà qualifiées. Audits de registre/JUnit/EEST sur Mac puisque builder et VPS sans Node. [Contrôles et scope](qualification/full-coherent-0275b1af-amd64-queue-20261002/README.md). Aucun résultat complet nouveau encore acquis, aucun échec historique/critère de production/EIP clôturé.
+
+### 2026-10-02 — prérequis WAN du candidat contrôlés sans lancement
+
+Nouveau préflight réellement exécuté : sources Mac/VPS, natif9/200 entrées et audit signé natif4 vérifiés ; résultats Docker terminaux et audit AMD4 encore requis, sortie2 attendue, aucun nœud WAN démarré. Régression ARM parent425 explicitement séparée du delta snapshot actuel (deux fichiers runtime modifiés) et de la régression AMD426 attendue. Audit AMD4 préparé sans concurrence avec tests/builds chronométrés. Observation mémoire intermédiaire et activation337,35/360 conservées, sans qualification de charge/mémoire finale. [Contrôles et limites](qualification/coherent-0275b1af-wan-preflight-20261002/README.md). Aucun critère final/EIP ni échec historique clôturé.
