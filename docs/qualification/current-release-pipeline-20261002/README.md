@@ -1,0 +1,9 @@
+# Suite des campagnes existantes vers la restauration WAN — 2026-10-02
+
+Contrôleur lancé réellement en foreground persistant : session exec 3141, PID Mac 60971, `/tmp/nano-current-release-pipeline-control-20261002/pipeline.py`. Processus vivant confirmé ; observations Docker ARM64 PID 80870 / AMD64 PID 582618, tous deux running sans OOM. État `waiting-existing-campaigns`, aucune architecture encore qualifiée au niveau campagne terminale, aucun nouveau nœud WAN.
+
+Scripts figés liés par hashes ; aucune mutation des sources/runtime/binaries ni rebuild d’image. Le contrôleur observe les mêmes handles et marqueurs terminaux, tous les appels d’observation bornés et espacés de 15 s. Une erreur d’observation sans preuve terminale ne remplace aucune campagne. Délai d’observation 24 h, sans extension des timeouts des tests.
+
+Après terme : audit indépendant des résultats ARM64 ; copie AMD64 terminée réellement dans un dossier staging frais, comparaison de tous les fichiers aux hashes source avant/après, rename et marqueur de copie complète seulement alors. Toute copie partielle/ancienne est conservée et refusée, jamais consommée ni écrasée. Audit complet AMD64 ; échec conservé et sortie sans lancement WAN. Ensuite attente du contrôleur signé VPS existant PID 587064, même contrôle de copie terminale de ses rapports.
+
+Le lanceur revalide tous les gates, y compris EEST lié au corpus exact et audit signé/99 blocs/97 transactions, atteste les binaires présents, distingue source native `016ab243` et Docker `0f53b42d` (seul test différent), puis invoque le scénario privé existant de restauration intégrale à trois propriétaires. Aucun succès futur anticipé : copies terminales, voie positive du lanceur, restauration, reprise des duties et finalité commune non exercées à cette observation. Le contrôleur est syntaxiquement validé et sa voie d’attente réelle est observée ; toutes les exigences globales de production restent ouvertes.

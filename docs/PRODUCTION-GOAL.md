@@ -2952,3 +2952,7 @@ Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régr
 ### 2026-10-02 — Deux builds complets réussis, registres ARM64/AMD64 comparés
 
 [Contrôle réel des registres](qualification/full-crossarch-registry-20261002/README.md) : deux builds exit 0, 427 cas distincts avec mêmes commandes/délais originaux, aucune propriété skip/disabled et mêmes 15 315 sources avant. AMD64 entre en régression complète ; ARM64 continue. Résultats terminaux et invariance après tests non acquis ; audit signé VPS en attente et gate WAN fermé. Aucun critère/EIP de production clôturé par ces builds.
+
+### 2026-10-02 — Suite réelle des campagnes vers le scénario de restauration
+
+[Contrôleur vivant PID Mac 60971/session 3141](qualification/current-release-pipeline-20261002/README.md) : observation des deux campagnes existantes, audits terminaux/copies vérifiées puis audit signé VPS et lanceur privé conditionnel. Scripts figés ; staging frais et tous les hashes source/copie/source comparés avant consumption. Aucun nouveau build, campagne ou nœud WAN démarré. Résultats complets et voie positive/restauration/duties/finalité commune non acquis ; tous les critères et statuts restent ouverts.
