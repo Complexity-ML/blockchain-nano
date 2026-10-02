@@ -19,3 +19,9 @@ Sélection terminale **2/3**, zéro skip, **réindexation timeout 360,03 s**. De
 ## Suite
 
 Après terme et archivage de 12ad9eb5, build AMD64 du candidat **2d2764de** démarré dans /build/coherent-2d2764de-amd64-20261002, image/volume existants, deux CPU/3 GiB, huit cibles, aucune modification des artefacts précédents. Le candidat inclut l’allocation hex bornée précédemment mesurée ; son intégration AMD64 et le respect du délai restent à démontrer. Journal : /home/ubuntu/nano-coherent-2d2764de-amd64-build-reports-20261002/build.log. Main runtime toujours inchangé. Régression complète sur le candidat final/des deux architectures, restauration et finalité WAN, partitions/rotation/cycle/sanctions, anomalie WAN A, profil EVM réellement activé, opérations, bridge/Doppler et revue indépendante restent ouverts.
+
+### Campagnes suivantes confirmées actives
+
+Le build AMD64 2d2764de des huit cibles termine avec succès et contrôles de sources ; les quinze mêmes tests démarrent, deux CPU/3 GiB, délais d’origine et mêmes comparaisons source/programmes/entrées statiques. Core, rotation self-test et queued BLS passent déjà, activation encore active : aucun résultat terminal de la sélection annoncé.
+
+Après les quinze réussites ARM64, une seule régression complète de **2d2764de** est lancée par le runner full-docker révisé, dans le **même** sous-répertoire de build. Il complète les cibles manquantes puis teste le registre exact. Cette reprise complète est motivée par le changement global de types.cpp depuis la régression 3030b799 ; ni image reconstruite ni répétition d’un run inchangé. Préparation confirmée active. Contrôles joints ; logs /tmp/nano-full-2d2764de-arm64-reports-20261002/prepare.log puis tests.log. Node absent/non enregistré n’est pas qualifié par ce registre C++ ; contrôles Node locaux documentés séparément.
