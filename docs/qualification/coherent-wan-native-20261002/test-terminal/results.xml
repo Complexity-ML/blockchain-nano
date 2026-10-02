@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="8"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="2"
+	timestamp="2026-10-02T08:24:51"
+	>
+	<testcase name="core" classname="core" time="0.835036" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_evm"/>
+		</properties>
+		<system-out>4069 checks passed
+</system-out>
+	</testcase>
+	<testcase name="consensus_rotation_audit_empty_aggregate" classname="consensus_rotation_audit_empty_aggregate" time="0.340065" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_harness"/>
+		</properties>
+		<system-out>6 empty-aggregate checks passed; no network qualification
+</system-out>
+	</testcase>
+	<testcase name="consensus_multihost_build_paths" classname="consensus_multihost_build_paths" time="0.167069" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_harness"/>
+		</properties>
+		<system-out>✔ legacy read-only volume paths remain available (0.551167ms)
+✔ isolated runtime, provenance and rotation auditor share the selected build (0.077709ms)
+✔ packaged/default mode cannot silently ignore a requested build (0.178083ms)
+✔ escape, whitespace, empty and multiline build selectors are rejected (0.1045ms)
+✔ architecture-specific paths select separate existing builds (0.054458ms)
+✔ common selector remains backward compatible and supports explicit override (0.518917ms)
+✔ one missing architecture without fallback cannot silently use the legacy binary (0.0545ms)
+✔ per-architecture selectors preserve packaged and path validation (0.057083ms)
+✔ remote source can select a Git candidate without changing the main checkout (0.087167ms)
+✔ remote source rejects traversal, relative paths and mount injection (0.105875ms)
+✔ remote Docker invocations translate provenance, native audit, restore and rotation executables (0.079958ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="consensus_multihost_harness_manifest" classname="consensus_multihost_harness_manifest" time="0.132937" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_harness"/>
+		</properties>
+		<system-out>✔ actual runner inventory covers restored audit and transitive finality/monitor dependencies (17.308375ms)
+✔ dependency-only edit changes its hash while entry hash remains identical (2.502584ms)
+✔ multiline imports, side effects and cycles are included once (1.524209ms)
+✔ missing imported dependency fails rather than making a partial manifest (1.07375ms)
+✔ import outside repository is rejected (3.4315ms)
+✔ symlink to external source is rejected (1.431625ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 86.885125
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_audit_finalized_ancestry" classname="consensus_capella_audit_finalized_ancestry" time="0.251442" status="run">
+		<properties>
+			<property name="cmake_labels" value="audit;capella;consensus"/>
+		</properties>
+		<system-out>12 actual ancestry-helper cases passed; no signature or full replay qualification
+</system-out>
+	</testcase>
+	<testcase name="consensus_checkpoint_json_canonical" classname="consensus_checkpoint_json_canonical" time="0.387328" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_local"/>
+		</properties>
+		<system-out>{"bellatrixVersions":[2,3,4,5],"boundRejections":3844,"byteComparisons":3584,"cancellations":1024,"capellaStoreSchemas":[1,2,3],"capellaVersions":[1,2,3,4],"passed":true}
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_snapshot_canonical_hex" classname="consensus_capella_snapshot_canonical_hex" time="0.253197" status="run">
+		<properties>
+			<property name="cmake_labels" value="capella;consensus;snapshot"/>
+		</properties>
+		<system-out>773 mutation/format refusals; all byte values, empty input and bounded cancellation passed
+</system-out>
+	</testcase>
+	<testcase name="core_hex_encoding_differential" classname="core_hex_encoding_differential" time="0.337268" status="run">
+		<properties>
+			<property name="cmake_labels" value="core;encoding"/>
+		</properties>
+		<system-out>{"allocationBoundVerified":true,"differentialCases":1031,"endToEndQualification":false,"microbenchmark":[]}
+</system-out>
+	</testcase>
+</testsuite>

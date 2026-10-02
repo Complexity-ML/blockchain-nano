@@ -1,0 +1,401 @@
+Start testing: Oct 02 06:10 UTC
+----------------------------------------------------------
+3/425 Testing: core
+3/425 Test: core
+Command: "/build/coherent-2d2764de-amd64-20261002/nano-tests"
+Directory: /work
+"core" start time: Oct 02 06:10 UTC
+Output:
+----------------------------------------------------------
+4069 checks passed
+<end of output>
+Test time =   0.55 sec
+----------------------------------------------------------
+Test Passed.
+"core" end time: Oct 02 06:10 UTC
+"core" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/425 Testing: consensus_rotation_audit_empty_aggregate
+4/425 Test: consensus_rotation_audit_empty_aggregate
+Command: "/build/coherent-2d2764de-amd64-20261002/nano-capella-rotation-audit" "--self-test"
+Directory: /build/coherent-2d2764de-amd64-20261002
+"consensus_rotation_audit_empty_aggregate" start time: Oct 02 06:10 UTC
+Output:
+----------------------------------------------------------
+6 empty-aggregate checks passed; no network qualification
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_rotation_audit_empty_aggregate" end time: Oct 02 06:10 UTC
+"consensus_rotation_audit_empty_aggregate" time elapsed: 00:00:00
+----------------------------------------------------------
+
+375/425 Testing: consensus_capella_queued_bls_changes
+375/425 Test: consensus_capella_queued_bls_changes
+Command: "/build/coherent-2d2764de-amd64-20261002/nano-capella-transition-tests" "--queued-bls-changes"
+Directory: /build/coherent-2d2764de-amd64-20261002
+"consensus_capella_queued_bls_changes" start time: Oct 02 06:10 UTC
+Output:
+----------------------------------------------------------
+{"assembledBodies":9,"beaconReadChecks":0,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":0,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":true,"localProposals":8,"localRandao":8,"migrated":false,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":true,"rejected":20,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"wireMessages":0,"withdrawals":2}
+<end of output>
+Test time =   9.50 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_queued_bls_changes" end time: Oct 02 06:10 UTC
+"consensus_capella_queued_bls_changes" time elapsed: 00:00:09
+----------------------------------------------------------
+
+394/425 Testing: consensus_capella_deposit_activation
+394/425 Test: consensus_capella_deposit_activation
+Command: "/build/coherent-2d2764de-amd64-20261002/nano-capella-transition-tests" "--deposit-activation"
+Directory: /build/coherent-2d2764de-amd64-20261002
+"consensus_capella_deposit_activation" start time: Oct 02 06:10 UTC
+Output:
+----------------------------------------------------------
+{"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+{"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+{"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+{"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+{"finalizedEpoch":3,"progressSlot":40,"signedVotes":264}
+{"finalizedEpoch":3,"progressSlot":41,"signedVotes":272}
+{"depositIndex":0,"depositProgressSlot":48,"finalizedEpoch":4}
+{"depositIndex":0,"depositProgressSlot":56,"finalizedEpoch":5}
+{"depositIndex":0,"depositProgressSlot":64,"finalizedEpoch":6}
+{"depositIndex":0,"depositProgressSlot":72,"finalizedEpoch":7}
+{"depositIndex":1,"depositProgressSlot":80,"finalizedEpoch":8}
+{"depositIndex":1,"depositProgressSlot":88,"finalizedEpoch":9}
+{"depositIndex":1,"depositProgressSlot":96,"finalizedEpoch":10}
+{"depositIndex":1,"depositProgressSlot":104,"finalizedEpoch":11}
+{"depositIndex":1,"depositProgressSlot":112,"finalizedEpoch":12}
+{"depositIndex":1,"depositProgressSlot":120,"finalizedEpoch":13}
+{"depositIndex":1,"depositProgressSlot":128,"finalizedEpoch":14}
+{"depositIndex":1,"depositProgressSlot":136,"finalizedEpoch":15}
+{"depositIndex":1,"depositProgressSlot":144,"finalizedEpoch":16}
+{"depositIndex":1,"depositProgressSlot":152,"finalizedEpoch":17}
+{"depositIndex":1,"depositProgressSlot":160,"finalizedEpoch":18}
+{"depositIndex":1,"depositProgressSlot":161,"finalizedEpoch":18}
+{"activationEpoch":17,"blockReplayIdempotent":true,"bothOwnersReopened":true,"consumedAtSlot":80,"consumptionTransitions":1,"continuedThroughSlot":161,"existingValidatorTopup":false,"invalidSignatureConsumedWithoutAdmission":false,"newValidatorVotes":3,"scenario":"capella-native-deposit-activation","votingPeriodSlots":32}
+{"afterBlocks":18,"afterSnapshotBytes":1191797,"automaticPruning":false,"beforeBlocks":41,"beforeSnapshotBytes":2528249,"durablePruningRestart":true,"historyPreserved":true,"nativeCheckpointV3":true,"networkAnchorPreserved":true,"nextBlockEqual":true,"oldSlashingPreservedAndApplied":false,"pendingBlsReanchoredAndIncluded":false,"scenario":"capella-pruning-primitive"}
+{"blocks":40,"disjointSyncMerging":false,"executionOwner":true,"finalizedEpoch":3,"independentStores":2,"individualSyncMessages":false,"justifiedEpoch":4,"localSyncAggregates":false,"localSyncSigning":false,"networkActivated":false,"networkTransport":false,"participationPercent":100,"scenario":"capella-local-assembly-finality","signingJournalsReopened":64,"storeReopens":2,"syncCatalogExport":false,"syncPrecollection":false,"syncWireWorker":false,"votes":272}
+<end of output>
+Test time = 346.72 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_deposit_activation" end time: Oct 02 06:16 UTC
+"consensus_capella_deposit_activation" time elapsed: 00:05:46
+----------------------------------------------------------
+
+395/425 Testing: consensus_capella_deposit_activation_restart
+395/425 Test: consensus_capella_deposit_activation_restart
+Command: "/build/coherent-2d2764de-amd64-20261002/nano-capella-transition-tests" "--deposit-activation-restart"
+Directory: /build/coherent-2d2764de-amd64-20261002
+"consensus_capella_deposit_activation_restart" start time: Oct 02 06:16 UTC
+Output:
+----------------------------------------------------------
+{"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+{"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+{"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+{"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+{"finalizedEpoch":3,"progressSlot":40,"signedVotes":264}
+{"finalizedEpoch":3,"progressSlot":41,"signedVotes":272}
+{"depositIndex":0,"depositProgressSlot":48,"finalizedEpoch":4}
+{"depositIndex":0,"depositProgressSlot":56,"finalizedEpoch":5}
+{"depositIndex":0,"depositProgressSlot":64,"finalizedEpoch":6}
+{"depositIndex":0,"depositProgressSlot":72,"finalizedEpoch":7}
+{"depositIndex":1,"depositProgressSlot":80,"finalizedEpoch":8}
+{"depositIndex":1,"depositProgressSlot":88,"finalizedEpoch":9}
+{"depositIndex":1,"depositProgressSlot":96,"finalizedEpoch":10}
+{"activationRestartPhase":"scheduled-pending","owner":0,"signedTarget":null,"slot":104}
+{"depositIndex":1,"depositProgressSlot":104,"finalizedEpoch":11}
+{"depositIndex":1,"depositProgressSlot":112,"finalizedEpoch":12}
+{"depositIndex":1,"depositProgressSlot":120,"finalizedEpoch":13}
+{"depositIndex":1,"depositProgressSlot":128,"finalizedEpoch":14}
+{"depositIndex":1,"depositProgressSlot":136,"finalizedEpoch":15}
+{"activationRestartPhase":"first-vote","owner":1,"signedTarget":17,"slot":142}
+{"activationConflictRejected":true,"signerCalled":false,"slot":142}
+{"depositIndex":1,"depositProgressSlot":144,"finalizedEpoch":16}
+{"depositIndex":1,"depositProgressSlot":152,"finalizedEpoch":17}
+{"depositIndex":1,"depositProgressSlot":160,"finalizedEpoch":18}
+{"depositIndex":1,"depositProgressSlot":161,"finalizedEpoch":18}
+{"conflictingVoteRejectedBeforeSigner":true,"finalizedEpoch":18,"firstVoteRestart":true,"newValidatorVotes":3,"pendingRestart":true,"scenario":"capella-deposit-activation-restart"}
+{"activationEpoch":17,"blockReplayIdempotent":true,"bothOwnersReopened":true,"consumedAtSlot":80,"consumptionTransitions":1,"continuedThroughSlot":161,"existingValidatorTopup":false,"invalidSignatureConsumedWithoutAdmission":false,"newValidatorVotes":3,"scenario":"capella-native-deposit-activation","votingPeriodSlots":32}
+{"afterBlocks":18,"afterSnapshotBytes":1191797,"automaticPruning":false,"beforeBlocks":41,"beforeSnapshotBytes":2528249,"durablePruningRestart":true,"historyPreserved":true,"nativeCheckpointV3":true,"networkAnchorPreserved":true,"nextBlockEqual":true,"oldSlashingPreservedAndApplied":false,"pendingBlsReanchoredAndIncluded":false,"scenario":"capella-pruning-primitive"}
+{"blocks":40,"disjointSyncMerging":false,"executionOwner":true,"finalizedEpoch":3,"independentStores":2,"individualSyncMessages":false,"justifiedEpoch":4,"localSyncAggregates":false,"localSyncSigning":false,"networkActivated":false,"networkTransport":false,"participationPercent":100,"scenario":"capella-local-assembly-finality","signingJournalsReopened":64,"storeReopens":2,"syncCatalogExport":false,"syncPrecollection":false,"syncWireWorker":false,"votes":272}
+<end of output>
+Test time = 350.86 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_deposit_activation_restart" end time: Oct 02 06:22 UTC
+"consensus_capella_deposit_activation_restart" time elapsed: 00:05:50
+----------------------------------------------------------
+
+397/425 Testing: consensus_capella_deposit_auto_registration
+397/425 Test: consensus_capella_deposit_auto_registration
+Command: "/build/coherent-2d2764de-amd64-20261002/nano-capella-transition-tests" "--deposit-auto-registration"
+Directory: /build/coherent-2d2764de-amd64-20261002
+"consensus_capella_deposit_auto_registration" start time: Oct 02 06:22 UTC
+Output:
+----------------------------------------------------------
+{"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+{"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+{"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+{"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+{"finalizedEpoch":3,"progressSlot":40,"signedVotes":264}
+{"finalizedEpoch":3,"progressSlot":41,"signedVotes":272}
+{"depositIndex":0,"depositProgressSlot":48,"finalizedEpoch":4}
+{"depositIndex":0,"depositProgressSlot":56,"finalizedEpoch":5}
+{"depositIndex":0,"depositProgressSlot":64,"finalizedEpoch":6}
+{"depositIndex":0,"depositProgressSlot":72,"finalizedEpoch":7}
+{"depositIndex":1,"depositProgressSlot":80,"finalizedEpoch":8}
+{"depositIndex":1,"depositProgressSlot":88,"finalizedEpoch":9}
+{"depositIndex":1,"depositProgressSlot":96,"finalizedEpoch":10}
+{"depositIndex":1,"depositProgressSlot":104,"finalizedEpoch":11}
+{"depositIndex":1,"depositProgressSlot":112,"finalizedEpoch":12}
+{"depositIndex":1,"depositProgressSlot":120,"finalizedEpoch":13}
+{"depositIndex":1,"depositProgressSlot":128,"finalizedEpoch":14}
+{"depositIndex":1,"depositProgressSlot":136,"finalizedEpoch":15}
+{"depositIndex":1,"depositProgressSlot":144,"finalizedEpoch":16}
+{"depositIndex":1,"depositProgressSlot":152,"finalizedEpoch":17}
+{"depositIndex":1,"depositProgressSlot":160,"finalizedEpoch":18}
+{"depositIndex":1,"depositProgressSlot":161,"finalizedEpoch":18}
+{"newValidatorVotes":3,"publicKeyBound":true,"scenario":"capella-automatic-registration","signatures":3}
+{"activationEpoch":17,"blockReplayIdempotent":true,"bothOwnersReopened":true,"consumedAtSlot":80,"consumptionTransitions":1,"continuedThroughSlot":161,"existingValidatorTopup":false,"invalidSignatureConsumedWithoutAdmission":false,"newValidatorVotes":3,"scenario":"capella-native-deposit-activation","votingPeriodSlots":32}
+{"afterBlocks":18,"afterSnapshotBytes":1191797,"automaticPruning":false,"beforeBlocks":41,"beforeSnapshotBytes":2528249,"durablePruningRestart":true,"historyPreserved":true,"nativeCheckpointV3":true,"networkAnchorPreserved":true,"nextBlockEqual":true,"oldSlashingPreservedAndApplied":false,"pendingBlsReanchoredAndIncluded":false,"scenario":"capella-pruning-primitive"}
+{"blocks":40,"disjointSyncMerging":false,"executionOwner":true,"finalizedEpoch":3,"independentStores":2,"individualSyncMessages":false,"justifiedEpoch":4,"localSyncAggregates":false,"localSyncSigning":false,"networkActivated":false,"networkTransport":false,"participationPercent":100,"scenario":"capella-local-assembly-finality","signingJournalsReopened":64,"storeReopens":2,"syncCatalogExport":false,"syncPrecollection":false,"syncWireWorker":false,"votes":272}
+<end of output>
+Test time = 347.50 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_deposit_auto_registration" end time: Oct 02 06:27 UTC
+"consensus_capella_deposit_auto_registration" time elapsed: 00:05:47
+----------------------------------------------------------
+
+405/425 Testing: consensus_capella_competing_deposit_reorg
+405/425 Test: consensus_capella_competing_deposit_reorg
+Command: "/build/coherent-2d2764de-amd64-20261002/nano-capella-transition-tests" "--deposit-reorg"
+Directory: /build/coherent-2d2764de-amd64-20261002
+"consensus_capella_competing_deposit_reorg" start time: Oct 02 06:27 UTC
+Output:
+----------------------------------------------------------
+{"observerRecords":15,"scenario":"deposit-reorg-progress","slot":8}
+{"observerRecords":31,"scenario":"deposit-reorg-progress","slot":16}
+{"observerRecords":47,"scenario":"deposit-reorg-progress","slot":24}
+{"observerRecords":63,"scenario":"deposit-reorg-progress","slot":32}
+{"observerRecords":79,"scenario":"deposit-reorg-progress","slot":40}
+{"observerRecords":95,"scenario":"deposit-reorg-progress","slot":48}
+{"activationQualified":false,"branches":2,"depositsPerBranch":2,"indexA":[64,65],"networkTransport":false,"observerReopens":2,"providerCalls":0,"registrySize":66,"scenario":"capella-competing-deposit-reorg","selectedBranches":2,"staleIndexRefused":true}
+<end of output>
+Test time =  48.04 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_competing_deposit_reorg" end time: Oct 02 06:28 UTC
+"consensus_capella_competing_deposit_reorg" time elapsed: 00:00:48
+----------------------------------------------------------
+
+406/425 Testing: consensus_capella_reindexed_validator_activation
+406/425 Test: consensus_capella_reindexed_validator_activation
+Command: "/build/coherent-2d2764de-amd64-20261002/nano-capella-transition-tests" "--deposit-reorg-activation"
+Directory: /build/coherent-2d2764de-amd64-20261002
+"consensus_capella_reindexed_validator_activation" start time: Oct 02 06:28 UTC
+Output:
+----------------------------------------------------------
+{"observerRecords":15,"scenario":"deposit-reorg-progress","slot":8}
+{"observerRecords":31,"scenario":"deposit-reorg-progress","slot":16}
+{"observerRecords":47,"scenario":"deposit-reorg-progress","slot":24}
+{"observerRecords":63,"scenario":"deposit-reorg-progress","slot":32}
+{"observerRecords":79,"scenario":"deposit-reorg-progress","slot":40}
+{"observerRecords":95,"scenario":"deposit-reorg-progress","slot":48}
+{"activationQualified":false,"branches":2,"depositsPerBranch":2,"indexA":[64,65],"networkTransport":false,"observerReopens":2,"providerCalls":0,"registrySize":66,"scenario":"capella-competing-deposit-reorg","selectedBranches":2,"staleIndexRefused":true}
+{"activationEpoch":18446744073709551615,"finalizedEpoch":0,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":56}
+{"activationEpoch":18446744073709551615,"finalizedEpoch":0,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":64}
+{"activationEpoch":13,"finalizedEpoch":7,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":72}
+{"activationEpoch":13,"finalizedEpoch":8,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":80}
+{"activationEpoch":13,"finalizedEpoch":9,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":88}
+{"activationEpoch":13,"finalizedEpoch":10,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":96}
+{"activationEpoch":13,"finalizedEpoch":11,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":104}
+{"activationEpoch":13,"finalizedEpoch":12,"newVotes":1,"scenario":"deposit-reorg-activation-progress","slot":112}
+{"activationEpoch":13,"finalizedEpoch":13,"newVotes":2,"scenario":"deposit-reorg-activation-progress","slot":120}
+{"activationEpoch":13,"finalizedEpoch":14,"newVotes":3,"scenario":"deposit-reorg-activation-progress","slot":128}
+{"activationEpoch":13,"finalizedEpoch":15,"newVotes":4,"scenario":"deposit-reorg-activation-progress","slot":136}
+{"activationEpoch":13,"finalizedEpoch":16,"newVotes":5,"scenario":"deposit-reorg-activation-progress","slot":144}
+{"activationEpoch":13,"finalizedEpoch":17,"newVotes":6,"scenario":"deposit-reorg-activation-progress","slot":152}
+<end of output>
+Test time = 360.05 sec
+----------------------------------------------------------
+Test Failed.
+"consensus_capella_reindexed_validator_activation" end time: Oct 02 06:34 UTC
+"consensus_capella_reindexed_validator_activation" time elapsed: 00:06:00
+----------------------------------------------------------
+
+408/425 Testing: consensus_capella_local_exits
+408/425 Test: consensus_capella_local_exits
+Command: "/build/coherent-2d2764de-amd64-20261002/nano-capella-transition-tests" "--local-exits"
+Directory: /build/coherent-2d2764de-amd64-20261002
+"consensus_capella_local_exits" start time: Oct 02 06:34 UTC
+Output:
+----------------------------------------------------------
+{"cancellationChecked":true,"invalidOrDuplicateRejected":4,"scenario":"capella-local-exits","selected":1,"trialBudgetChecked":true}
+{"assembledBodies":9,"beaconReadChecks":0,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":0,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":false,"localProposals":8,"localRandao":8,"migrated":false,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":false,"rejected":20,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"wireMessages":0,"withdrawals":1}
+<end of output>
+Test time =   9.08 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_local_exits" end time: Oct 02 06:34 UTC
+"consensus_capella_local_exits" time elapsed: 00:00:09
+----------------------------------------------------------
+
+409/425 Testing: consensus_capella_queued_exits
+409/425 Test: consensus_capella_queued_exits
+Command: "/build/coherent-2d2764de-amd64-20261002/nano-capella-transition-tests" "--queued-exits"
+Directory: /build/coherent-2d2764de-amd64-20261002
+"consensus_capella_queued_exits" start time: Oct 02 06:34 UTC
+Output:
+----------------------------------------------------------
+{"checkpointUnchanged":true,"queueEmpty":true,"rejected":["wrong-domain","wrong-fork","wrong-genesis","wrong-index","wrong-key","future-epoch","unknown-index","insufficient-tenure"],"scenario":"capella-exit-authentication-rejections"}
+{"capacityChecked":true,"consensusUnchangedOnAdmission":true,"duplicateIdempotent":true,"invalidRejected":true,"reopened":true,"scenario":"capella-queued-exits"}
+{"applicable":false,"reopened":false,"retained":true,"scenario":"capella-exit-reorg"}
+{"automaticSelection":true,"liveCheckpointUnchanged":true,"scenario":"capella-exit-reincluded","signedBlockAccepted":true}
+{"applicable":true,"reopened":true,"retained":true,"scenario":"capella-exit-reorg"}
+{"applicable":false,"reopened":true,"retained":true,"scenario":"capella-exit-reorg"}
+{"assembledBodies":9,"beaconReadChecks":0,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":0,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":false,"localProposals":8,"localRandao":8,"migrated":false,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":false,"rejected":20,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"wireMessages":0,"withdrawals":1}
+<end of output>
+Test time =  10.34 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_queued_exits" end time: Oct 02 06:34 UTC
+"consensus_capella_queued_exits" time elapsed: 00:00:10
+----------------------------------------------------------
+
+413/425 Testing: consensus_capella_exit_reindex
+413/425 Test: consensus_capella_exit_reindex
+Command: "/build/coherent-2d2764de-amd64-20261002/nano-capella-transition-tests" "--exit-reindex"
+Directory: /build/coherent-2d2764de-amd64-20261002
+"consensus_capella_exit_reindex" start time: Oct 02 06:34 UTC
+Output:
+----------------------------------------------------------
+{"observerRecords":15,"scenario":"deposit-reorg-progress","slot":8}
+{"observerRecords":31,"scenario":"deposit-reorg-progress","slot":16}
+{"observerRecords":47,"scenario":"deposit-reorg-progress","slot":24}
+{"observerRecords":63,"scenario":"deposit-reorg-progress","slot":32}
+{"observerRecords":79,"scenario":"deposit-reorg-progress","slot":40}
+{"observerRecords":95,"scenario":"deposit-reorg-progress","slot":48}
+{"activationQualified":false,"branches":2,"depositsPerBranch":2,"indexA":[64,65],"networkTransport":false,"observerReopens":2,"providerCalls":0,"registrySize":66,"scenario":"capella-competing-deposit-reorg","selectedBranches":2,"staleIndexRefused":true}
+{"activationEpoch":18446744073709551615,"finalizedEpoch":0,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":56}
+{"activationEpoch":18446744073709551615,"finalizedEpoch":0,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":64}
+{"activationEpoch":13,"finalizedEpoch":7,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":72}
+{"activationEpoch":13,"finalizedEpoch":8,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":80}
+{"activationEpoch":13,"finalizedEpoch":9,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":88}
+{"activationEpoch":13,"finalizedEpoch":10,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":96}
+{"activationEpoch":13,"finalizedEpoch":11,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":104}
+{"activationEpoch":13,"finalizedEpoch":12,"newVotes":1,"scenario":"deposit-reorg-activation-progress","slot":112}
+{"activationEpoch":13,"finalizedEpoch":13,"newVotes":2,"scenario":"deposit-reorg-activation-progress","slot":120}
+{"activationEpoch":13,"finalizedEpoch":14,"newVotes":3,"scenario":"deposit-reorg-activation-progress","slot":128}
+{"activationEpoch":13,"finalizedEpoch":15,"newVotes":4,"scenario":"deposit-reorg-activation-progress","slot":136}
+{"activationEpoch":13,"finalizedEpoch":16,"newVotes":5,"scenario":"deposit-reorg-activation-progress","slot":144}
+{"activationEpoch":13,"finalizedEpoch":17,"newVotes":6,"scenario":"deposit-reorg-activation-progress","slot":152}
+{"activationEpoch":13,"finalizedEpoch":18,"newVotes":7,"scenario":"deposit-reorg-activation-progress","slot":160}
+{"activationEpoch":13,"finalizedEpoch":19,"newVotes":8,"scenario":"deposit-reorg-activation-progress","slot":168}
+{"activationEpoch":13,"finalizedEpoch":20,"newVotes":9,"scenario":"deposit-reorg-activation-progress","slot":176}
+{"automaticInclusion":true,"bothOwnersReopenedWithExactExit":true,"invalidSignatureRejected":true,"networkTransport":false,"newIndex":65,"oldIndex":64,"oldIndexSignatureRejected":true,"otherValidatorUnchanged":true,"scenario":"capella-reindexed-validator-exit"}
+{"activationEpoch":13,"bothOwnersReopened":true,"finalizedEpoch":20,"finalizedRoot":"0xf345c36fd1615d05920d8d23bf5fd03c5dd59ecef1777b2ecaf05097fc88f5ec","index":65,"networkTransport":false,"newValidatorVotes":9,"providerCalls":9,"scenario":"capella-reindexed-validator-activation"}
+<end of output>
+Test time = 413.30 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_exit_reindex" end time: Oct 02 06:41 UTC
+"consensus_capella_exit_reindex" time elapsed: 00:06:53
+----------------------------------------------------------
+
+417/425 Testing: consensus_capella_audit_finalized_ancestry
+417/425 Test: consensus_capella_audit_finalized_ancestry
+Command: "/build/coherent-2d2764de-amd64-20261002/nano-capella-audit-ancestry-tests"
+Directory: /build/coherent-2d2764de-amd64-20261002
+"consensus_capella_audit_finalized_ancestry" start time: Oct 02 06:41 UTC
+Output:
+----------------------------------------------------------
+12 actual ancestry-helper cases passed; no signature or full replay qualification
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_audit_finalized_ancestry" end time: Oct 02 06:41 UTC
+"consensus_capella_audit_finalized_ancestry" time elapsed: 00:00:00
+----------------------------------------------------------
+
+420/425 Testing: consensus_checkpoint_json_canonical
+420/425 Test: consensus_checkpoint_json_canonical
+Command: "/build/coherent-2d2764de-amd64-20261002/nano-checkpoint-json-tests"
+Directory: /build/coherent-2d2764de-amd64-20261002
+"consensus_checkpoint_json_canonical" start time: Oct 02 06:41 UTC
+Output:
+----------------------------------------------------------
+{"bellatrixVersions":[2,3,4,5],"boundRejections":3844,"byteComparisons":3584,"cancellations":1024,"capellaStoreSchemas":[1,2,3],"capellaVersions":[1,2,3,4],"passed":true}
+<end of output>
+Test time =   0.27 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_checkpoint_json_canonical" end time: Oct 02 06:41 UTC
+"consensus_checkpoint_json_canonical" time elapsed: 00:00:00
+----------------------------------------------------------
+
+424/425 Testing: consensus_capella_snapshot_canonical_hex
+424/425 Test: consensus_capella_snapshot_canonical_hex
+Command: "/build/coherent-2d2764de-amd64-20261002/nano-capella-snapshot-hex-tests"
+Directory: /build/coherent-2d2764de-amd64-20261002
+"consensus_capella_snapshot_canonical_hex" start time: Oct 02 06:41 UTC
+Output:
+----------------------------------------------------------
+773 mutation/format refusals; all byte values, empty input and bounded cancellation passed
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_snapshot_canonical_hex" end time: Oct 02 06:41 UTC
+"consensus_capella_snapshot_canonical_hex" time elapsed: 00:00:00
+----------------------------------------------------------
+
+425/425 Testing: core_hex_encoding_differential
+425/425 Test: core_hex_encoding_differential
+Command: "/build/coherent-2d2764de-amd64-20261002/nano-hex-encoding-tests"
+Directory: /build/coherent-2d2764de-amd64-20261002
+"core_hex_encoding_differential" start time: Oct 02 06:41 UTC
+Output:
+----------------------------------------------------------
+{"allocationBoundVerified":true,"differentialCases":1031,"endToEndQualification":false,"microbenchmark":[]}
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"core_hex_encoding_differential" end time: Oct 02 06:41 UTC
+"core_hex_encoding_differential" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 02 06:41 UTC
+
+audit =   0.01 sec*proc
+
+capella =   0.01 sec*proc
+
+consensus =   0.01 sec*proc
+
+core =   0.05 sec*proc
+
+encoding =   0.05 sec*proc
+
+qualification_consensus_harness =   0.01 sec*proc
+
+qualification_consensus_operations =  19.42 sec*proc
+
+qualification_consensus_recovery = 413.30 sec*proc
+
+qualification_consensus_runtime = 1462.67 sec*proc
+
+qualification_evm =   0.55 sec*proc
+
+qualification_storage_local =   0.27 sec*proc
+
+snapshot =   0.00 sec*proc
+

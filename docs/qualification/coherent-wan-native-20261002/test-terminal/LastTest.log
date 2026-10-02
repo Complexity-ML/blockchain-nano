@@ -1,0 +1,181 @@
+Start testing: Oct 02 08:24 CEST
+----------------------------------------------------------
+3/431 Testing: core
+3/431 Test: core
+Command: "/tmp/nano-coherent-wan-paths-20261002/build-release/nano-tests"
+Directory: /tmp/nano-coherent-wan-paths-20261002
+"core" start time: Oct 02 08:24 CEST
+Output:
+----------------------------------------------------------
+4069 checks passed
+<end of output>
+Test time =   0.84 sec
+----------------------------------------------------------
+Test Passed.
+"core" end time: Oct 02 08:24 CEST
+"core" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/431 Testing: consensus_rotation_audit_empty_aggregate
+4/431 Test: consensus_rotation_audit_empty_aggregate
+Command: "/tmp/nano-coherent-wan-paths-20261002/build-release/nano-capella-rotation-audit" "--self-test"
+Directory: /tmp/nano-coherent-wan-paths-20261002/build-release
+"consensus_rotation_audit_empty_aggregate" start time: Oct 02 08:24 CEST
+Output:
+----------------------------------------------------------
+6 empty-aggregate checks passed; no network qualification
+<end of output>
+Test time =   0.34 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_rotation_audit_empty_aggregate" end time: Oct 02 08:24 CEST
+"consensus_rotation_audit_empty_aggregate" time elapsed: 00:00:00
+----------------------------------------------------------
+
+309/431 Testing: consensus_multihost_build_paths
+309/431 Test: consensus_multihost_build_paths
+Command: "/opt/homebrew/bin/node" "--test" "/tmp/nano-coherent-wan-paths-20261002/tests/multihost/build-paths.test.mjs"
+Directory: /tmp/nano-coherent-wan-paths-20261002/build-release
+"consensus_multihost_build_paths" start time: Oct 02 08:24 CEST
+Output:
+----------------------------------------------------------
+✔ legacy read-only volume paths remain available (0.551167ms)
+✔ isolated runtime, provenance and rotation auditor share the selected build (0.077709ms)
+✔ packaged/default mode cannot silently ignore a requested build (0.178083ms)
+✔ escape, whitespace, empty and multiline build selectors are rejected (0.1045ms)
+✔ architecture-specific paths select separate existing builds (0.054458ms)
+✔ common selector remains backward compatible and supports explicit override (0.518917ms)
+✔ one missing architecture without fallback cannot silently use the legacy binary (0.0545ms)
+✔ per-architecture selectors preserve packaged and path validation (0.057083ms)
+✔ remote source can select a Git candidate without changing the main checkout (0.087167ms)
+✔ remote source rejects traversal, relative paths and mount injection (0.105875ms)
+✔ remote Docker invocations translate provenance, native audit, restore and rotation executables (0.079958ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 61.879667
+<end of output>
+Test time =   0.17 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_multihost_build_paths" end time: Oct 02 08:24 CEST
+"consensus_multihost_build_paths" time elapsed: 00:00:00
+----------------------------------------------------------
+
+310/431 Testing: consensus_multihost_harness_manifest
+310/431 Test: consensus_multihost_harness_manifest
+Command: "/opt/homebrew/bin/node" "--test" "/tmp/nano-coherent-wan-paths-20261002/tests/multihost/harness-manifest.test.mjs"
+Directory: /tmp/nano-coherent-wan-paths-20261002/build-release
+"consensus_multihost_harness_manifest" start time: Oct 02 08:24 CEST
+Output:
+----------------------------------------------------------
+✔ actual runner inventory covers restored audit and transitive finality/monitor dependencies (17.308375ms)
+✔ dependency-only edit changes its hash while entry hash remains identical (2.502584ms)
+✔ multiline imports, side effects and cycles are included once (1.524209ms)
+✔ missing imported dependency fails rather than making a partial manifest (1.07375ms)
+✔ import outside repository is rejected (3.4315ms)
+✔ symlink to external source is rejected (1.431625ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 86.885125
+<end of output>
+Test time =   0.13 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_multihost_harness_manifest" end time: Oct 02 08:24 CEST
+"consensus_multihost_harness_manifest" time elapsed: 00:00:00
+----------------------------------------------------------
+
+423/431 Testing: consensus_capella_audit_finalized_ancestry
+423/431 Test: consensus_capella_audit_finalized_ancestry
+Command: "/tmp/nano-coherent-wan-paths-20261002/build-release/nano-capella-audit-ancestry-tests"
+Directory: /tmp/nano-coherent-wan-paths-20261002/build-release
+"consensus_capella_audit_finalized_ancestry" start time: Oct 02 08:24 CEST
+Output:
+----------------------------------------------------------
+12 actual ancestry-helper cases passed; no signature or full replay qualification
+<end of output>
+Test time =   0.25 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_audit_finalized_ancestry" end time: Oct 02 08:24 CEST
+"consensus_capella_audit_finalized_ancestry" time elapsed: 00:00:00
+----------------------------------------------------------
+
+426/431 Testing: consensus_checkpoint_json_canonical
+426/431 Test: consensus_checkpoint_json_canonical
+Command: "/tmp/nano-coherent-wan-paths-20261002/build-release/nano-checkpoint-json-tests"
+Directory: /tmp/nano-coherent-wan-paths-20261002/build-release
+"consensus_checkpoint_json_canonical" start time: Oct 02 08:24 CEST
+Output:
+----------------------------------------------------------
+{"bellatrixVersions":[2,3,4,5],"boundRejections":3844,"byteComparisons":3584,"cancellations":1024,"capellaStoreSchemas":[1,2,3],"capellaVersions":[1,2,3,4],"passed":true}
+<end of output>
+Test time =   0.39 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_checkpoint_json_canonical" end time: Oct 02 08:24 CEST
+"consensus_checkpoint_json_canonical" time elapsed: 00:00:00
+----------------------------------------------------------
+
+430/431 Testing: consensus_capella_snapshot_canonical_hex
+430/431 Test: consensus_capella_snapshot_canonical_hex
+Command: "/tmp/nano-coherent-wan-paths-20261002/build-release/nano-capella-snapshot-hex-tests"
+Directory: /tmp/nano-coherent-wan-paths-20261002/build-release
+"consensus_capella_snapshot_canonical_hex" start time: Oct 02 08:24 CEST
+Output:
+----------------------------------------------------------
+773 mutation/format refusals; all byte values, empty input and bounded cancellation passed
+<end of output>
+Test time =   0.25 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_snapshot_canonical_hex" end time: Oct 02 08:24 CEST
+"consensus_capella_snapshot_canonical_hex" time elapsed: 00:00:00
+----------------------------------------------------------
+
+431/431 Testing: core_hex_encoding_differential
+431/431 Test: core_hex_encoding_differential
+Command: "/tmp/nano-coherent-wan-paths-20261002/build-release/nano-hex-encoding-tests"
+Directory: /tmp/nano-coherent-wan-paths-20261002/build-release
+"core_hex_encoding_differential" start time: Oct 02 08:24 CEST
+Output:
+----------------------------------------------------------
+{"allocationBoundVerified":true,"differentialCases":1031,"endToEndQualification":false,"microbenchmark":[]}
+<end of output>
+Test time =   0.34 sec
+----------------------------------------------------------
+Test Passed.
+"core_hex_encoding_differential" end time: Oct 02 08:24 CEST
+"core_hex_encoding_differential" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 02 08:24 CEST
+
+audit =   0.25 sec*proc
+
+capella =   0.50 sec*proc
+
+consensus =   0.50 sec*proc
+
+core =   0.34 sec*proc
+
+encoding =   0.34 sec*proc
+
+qualification_consensus_harness =   0.64 sec*proc
+
+qualification_evm =   0.84 sec*proc
+
+qualification_storage_local =   0.39 sec*proc
+
+snapshot =   0.25 sec*proc
+

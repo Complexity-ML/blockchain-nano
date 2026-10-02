@@ -1,0 +1,905 @@
+Internal ctest changing into directory: /build/snapshot-cache-row-2db1840c-arm64-20261002
+Test project /build/snapshot-cache-row-2db1840c-arm64-20261002
+        Start   1: bn_pairing_cold_vectors
+  1/422 Test   #1: bn_pairing_cold_vectors ............................   Passed    0.03 sec
+        Start   2: process_trace_backpressure
+  2/422 Test   #2: process_trace_backpressure .........................   Passed    0.34 sec
+        Start   3: core
+  3/422 Test   #3: core ...............................................   Passed    0.30 sec
+        Start   4: consensus_rotation_audit_empty_aggregate
+  4/422 Test   #4: consensus_rotation_audit_empty_aggregate ...........   Passed    0.00 sec
+        Start   5: chain
+  5/422 Test   #5: chain ..............................................   Passed    0.42 sec
+        Start   6: rpc
+  6/422 Test   #6: rpc ................................................   Passed    1.13 sec
+        Start   7: rpc_foreign_chain_admission_isolation
+  7/422 Test   #7: rpc_foreign_chain_admission_isolation ..............   Passed    0.06 sec
+        Start   8: rpc_fee_policy
+  8/422 Test   #8: rpc_fee_policy .....................................   Passed    0.10 sec
+        Start   9: rpc_fee_load
+  9/422 Test   #9: rpc_fee_load .......................................   Passed    1.08 sec
+        Start  10: http
+ 10/422 Test  #10: http ...............................................   Passed    0.42 sec
+        Start  11: beacon_http_error_diagnostics
+ 11/422 Test  #11: beacon_http_error_diagnostics ......................   Passed    2.13 sec
+        Start  12: websocket_output_budget
+ 12/422 Test  #12: websocket_output_budget ............................   Passed    0.15 sec
+        Start  13: block_transport_codec
+ 13/422 Test  #13: block_transport_codec ..............................   Passed    0.06 sec
+        Start  14: large_block_sync_paris
+ 14/422 Test  #14: large_block_sync_paris .............................   Passed    1.75 sec
+        Start  15: large_block_vote_paris
+ 15/422 Test  #15: large_block_vote_paris .............................   Passed    3.48 sec
+        Start  16: large_block_sync_shanghai
+ 16/422 Test  #16: large_block_sync_shanghai ..........................   Passed    1.77 sec
+        Start  17: large_block_vote_shanghai
+ 17/422 Test  #17: large_block_vote_shanghai ..........................   Passed    3.47 sec
+        Start  18: rpc_shutdown
+ 18/422 Test  #18: rpc_shutdown .......................................   Passed    0.03 sec
+        Start  19: rpc_disconnect
+ 19/422 Test  #19: rpc_disconnect .....................................   Passed    0.13 sec
+        Start  20: http_disconnect
+ 20/422 Test  #20: http_disconnect ....................................   Passed    0.89 sec
+        Start  21: wallet_websocket_disconnect
+ 21/422 Test  #21: wallet_websocket_disconnect ........................   Passed    0.91 sec
+        Start  22: wallet_http_disconnect
+ 22/422 Test  #22: wallet_http_disconnect .............................   Passed    2.93 sec
+        Start  23: rpc_queue_expiry
+ 23/422 Test  #23: rpc_queue_expiry ...................................   Passed    1.02 sec
+        Start  24: events
+ 24/422 Test  #24: events .............................................   Passed    0.24 sec
+        Start  25: validator
+ 25/422 Test  #25: validator ..........................................   Passed    3.66 sec
+        Start  26: bootstrap
+ 26/422 Test  #26: bootstrap ..........................................   Passed    0.00 sec
+        Start  27: network
+ 27/422 Test  #27: network ............................................   Passed    9.29 sec
+        Start  28: signed_network
+ 28/422 Test  #28: signed_network .....................................   Passed    9.37 sec
+        Start  29: bft_network
+ 29/422 Test  #29: bft_network ........................................   Passed    9.46 sec
+        Start  30: bft_validators_network
+ 30/422 Test  #30: bft_validators_network .............................   Passed    2.22 sec
+        Start  31: bft_silent_proposer_network
+ 31/422 Test  #31: bft_silent_proposer_network ........................   Passed    8.15 sec
+        Start  32: bft_star_network
+ 32/422 Test  #32: bft_star_network ...................................   Passed    2.33 sec
+        Start  33: bft_line_network
+ 33/422 Test  #33: bft_line_network ...................................   Passed    2.19 sec
+        Start  34: bft_partition_network
+ 34/422 Test  #34: bft_partition_network ..............................   Passed   19.90 sec
+        Start  35: bft_restart_network
+ 35/422 Test  #35: bft_restart_network ................................   Passed   19.96 sec
+        Start  36: bft_validators_paris_network
+ 36/422 Test  #36: bft_validators_paris_network .......................   Passed    1.37 sec
+        Start  37: bft_restart_paris_network
+ 37/422 Test  #37: bft_restart_paris_network ..........................   Passed   20.07 sec
+        Start  38: bft_restart_flood_paris_network
+ 38/422 Test  #38: bft_restart_flood_paris_network ....................   Passed   22.13 sec
+        Start  39: bft_rpc_cost_paris_network
+ 39/422 Test  #39: bft_rpc_cost_paris_network .........................   Passed    6.36 sec
+        Start  40: bft_rpc_cost_sustained_paris_network
+ 40/422 Test  #40: bft_rpc_cost_sustained_paris_network ...............   Passed   25.49 sec
+        Start  41: bft_rpc_cost_all_paris_network
+ 41/422 Test  #41: bft_rpc_cost_all_paris_network .....................   Passed   33.27 sec
+        Start  42: bft_rpc_cost_many_paris_network
+ 42/422 Test  #42: bft_rpc_cost_many_paris_network ....................   Passed   43.81 sec
+        Start  43: bft_rpc_cost_websocket_paris_network
+ 43/422 Test  #43: bft_rpc_cost_websocket_paris_network ...............   Passed   45.99 sec
+        Start  44: bft_rpc_overload_paris_network
+ 44/422 Test  #44: bft_rpc_overload_paris_network .....................   Passed   39.71 sec
+        Start  45: bft_rpc_default_overload_paris_network
+ 45/422 Test  #45: bft_rpc_default_overload_paris_network .............   Passed   40.90 sec
+        Start  46: bft_large_block_paris_network
+ 46/422 Test  #46: bft_large_block_paris_network ......................   Passed   20.83 sec
+        Start  47: bft_pool_balance_paris_network
+ 47/422 Test  #47: bft_pool_balance_paris_network .....................   Passed    4.35 sec
+        Start  48: bft_load_crash_paris_network
+ 48/422 Test  #48: bft_load_crash_paris_network .......................   Passed   32.25 sec
+        Start  49: bft_load_short_paris_network
+ 49/422 Test  #49: bft_load_short_paris_network .......................   Passed    8.99 sec
+        Start  50: bft_load_paris_network
+ 50/422 Test  #50: bft_load_paris_network .............................   Passed   22.14 sec
+        Start  51: bft_departing_paris_network
+ 51/422 Test  #51: bft_departing_paris_network ........................   Passed  110.66 sec
+        Start  52: bft_stake_change_paris_network
+ 52/422 Test  #52: bft_stake_change_paris_network .....................   Passed   39.21 sec
+        Start  53: bft_stake_change_crash_paris_network
+ 53/422 Test  #53: bft_stake_change_crash_paris_network ...............   Passed   37.20 sec
+        Start  54: bft_two_thirds_paris_network
+ 54/422 Test  #54: bft_two_thirds_paris_network .......................   Passed   33.54 sec
+        Start  55: bft_weighted_paris_network
+ 55/422 Test  #55: bft_weighted_paris_network .........................   Passed   31.66 sec
+        Start  56: bft_lagging_paris_network
+ 56/422 Test  #56: bft_lagging_paris_network ..........................   Passed   29.53 sec
+        Start  57: bft_joining_paris_network
+ 57/422 Test  #57: bft_joining_paris_network ..........................   Passed    8.24 sec
+        Start  58: bft_validators_shanghai_network
+ 58/422 Test  #58: bft_validators_shanghai_network ....................   Passed    1.26 sec
+        Start  59: bft_restart_shanghai_network
+ 59/422 Test  #59: bft_restart_shanghai_network .......................   Passed   20.24 sec
+        Start  60: bft_restart_flood_shanghai_network
+ 60/422 Test  #60: bft_restart_flood_shanghai_network .................   Passed   22.58 sec
+        Start  61: bft_rpc_cost_shanghai_network
+ 61/422 Test  #61: bft_rpc_cost_shanghai_network ......................   Passed    7.42 sec
+        Start  62: bft_rpc_cost_sustained_shanghai_network
+ 62/422 Test  #62: bft_rpc_cost_sustained_shanghai_network ............   Passed   24.64 sec
+        Start  63: bft_rpc_cost_all_shanghai_network
+ 63/422 Test  #63: bft_rpc_cost_all_shanghai_network ..................   Passed   34.65 sec
+        Start  64: bft_rpc_cost_many_shanghai_network
+ 64/422 Test  #64: bft_rpc_cost_many_shanghai_network .................   Passed   46.90 sec
+        Start  65: bft_rpc_cost_websocket_shanghai_network
+ 65/422 Test  #65: bft_rpc_cost_websocket_shanghai_network ............   Passed   44.89 sec
+        Start  66: bft_rpc_overload_shanghai_network
+ 66/422 Test  #66: bft_rpc_overload_shanghai_network ..................   Passed   44.99 sec
+        Start  67: bft_rpc_default_overload_shanghai_network
+ 67/422 Test  #67: bft_rpc_default_overload_shanghai_network ..........   Passed   41.77 sec
+        Start  68: bft_large_block_shanghai_network
+ 68/422 Test  #68: bft_large_block_shanghai_network ...................   Passed   19.18 sec
+        Start  69: bft_pool_balance_shanghai_network
+ 69/422 Test  #69: bft_pool_balance_shanghai_network ..................   Passed    3.54 sec
+        Start  70: bft_load_crash_shanghai_network
+ 70/422 Test  #70: bft_load_crash_shanghai_network ....................   Passed   34.21 sec
+        Start  71: bft_load_short_shanghai_network
+ 71/422 Test  #71: bft_load_short_shanghai_network ....................   Passed    9.60 sec
+        Start  72: bft_load_shanghai_network
+ 72/422 Test  #72: bft_load_shanghai_network ..........................   Passed   22.77 sec
+        Start  73: bft_departing_shanghai_network
+ 73/422 Test  #73: bft_departing_shanghai_network .....................   Passed  107.56 sec
+        Start  74: bft_stake_change_shanghai_network
+ 74/422 Test  #74: bft_stake_change_shanghai_network ..................   Passed   22.30 sec
+        Start  75: bft_stake_change_crash_shanghai_network
+ 75/422 Test  #75: bft_stake_change_crash_shanghai_network ............   Passed   37.24 sec
+        Start  76: bft_two_thirds_shanghai_network
+ 76/422 Test  #76: bft_two_thirds_shanghai_network ....................   Passed   33.73 sec
+        Start  77: bft_weighted_shanghai_network
+ 77/422 Test  #77: bft_weighted_shanghai_network ......................   Passed   31.60 sec
+        Start  78: bft_lagging_shanghai_network
+ 78/422 Test  #78: bft_lagging_shanghai_network .......................   Passed   13.64 sec
+        Start  79: bft_joining_shanghai_network
+ 79/422 Test  #79: bft_joining_shanghai_network .......................   Passed    7.74 sec
+        Start  80: bft_restart_flood_network
+ 80/422 Test  #80: bft_restart_flood_network ..........................   Passed   23.45 sec
+        Start  81: bft_lagging_network
+ 81/422 Test  #81: bft_lagging_network ................................   Passed   15.53 sec
+        Start  82: bft_joining_network
+ 82/422 Test  #82: bft_joining_network ................................   Passed    8.25 sec
+        Start  83: supervisor
+ 83/422 Test  #83: supervisor .........................................   Passed    6.44 sec
+        Start  84: supervisor_parent_crash
+ 84/422 Test  #84: supervisor_parent_crash ............................   Passed    0.51 sec
+        Start  85: wallet_cli
+ 85/422 Test  #85: wallet_cli .........................................   Passed    0.88 sec
+        Start  86: rpc_cli
+ 86/422 Test  #86: rpc_cli ............................................   Passed    0.41 sec
+        Start  87: migration
+ 87/422 Test  #87: migration ..........................................   Passed    0.09 sec
+        Start  88: migration_cli
+ 88/422 Test  #88: migration_cli ......................................   Passed    0.04 sec
+        Start  89: uncles
+ 89/422 Test  #89: uncles .............................................   Passed    0.05 sec
+        Start  90: installed_node
+ 90/422 Test  #90: installed_node .....................................   Passed    1.51 sec
+        Start  91: staking
+ 91/422 Test  #91: staking ............................................   Passed    0.87 sec
+        Start  92: staking_paris
+ 92/422 Test  #92: staking_paris ......................................   Passed    0.89 sec
+        Start  93: staking_cli
+ 93/422 Test  #93: staking_cli ........................................   Passed    2.20 sec
+        Start  94: miner
+ 94/422 Test  #94: miner ..............................................   Passed    0.00 sec
+        Start  95: block_auth
+ 95/422 Test  #95: block_auth .........................................   Passed    0.21 sec
+        Start  96: signed_validator_cli
+ 96/422 Test  #96: signed_validator_cli ...............................   Passed    2.25 sec
+        Start  97: finality
+ 97/422 Test  #97: finality ...........................................   Passed    0.25 sec
+        Start  98: storage_sync_failure_paris
+ 98/422 Test  #98: storage_sync_failure_paris .........................   Passed    0.28 sec
+        Start  99: storage_sync_retry_paris
+ 99/422 Test  #99: storage_sync_retry_paris ...........................   Passed    0.27 sec
+        Start 100: storage_sync_failure_shanghai
+100/422 Test #100: storage_sync_failure_shanghai ......................   Passed    0.25 sec
+        Start 101: storage_sync_retry_shanghai
+101/422 Test #101: storage_sync_retry_shanghai ........................   Passed    0.27 sec
+        Start 102: storage_write_failure_paris
+102/422 Test #102: storage_write_failure_paris ........................   Passed    0.58 sec
+        Start 103: storage_write_failure_shanghai
+103/422 Test #103: storage_write_failure_shanghai .....................   Passed    0.61 sec
+        Start 104: finality_crash
+104/422 Test #104: finality_crash .....................................   Passed    0.11 sec
+        Start 105: finality_crash_paris
+105/422 Test #105: finality_crash_paris ...............................   Passed    0.09 sec
+        Start 106: finality_crash_shanghai
+106/422 Test #106: finality_crash_shanghai ............................   Passed    0.09 sec
+        Start 107: erc20
+107/422 Test #107: erc20 ..............................................   Passed    0.73 sec
+        Start 108: openzeppelin_isolation
+108/422 Test #108: openzeppelin_isolation .............................   Passed    0.71 sec
+        Start 109: openzeppelin_eip1559
+109/422 Test #109: openzeppelin_eip1559 ...............................   Passed    0.72 sec
+        Start 110: openzeppelin_isolation_eip1559
+110/422 Test #110: openzeppelin_isolation_eip1559 .....................   Passed    0.69 sec
+        Start 111: load
+111/422 Test #111: load ...............................................   Passed    0.15 sec
+        Start 112: rpc_load_paris
+112/422 Test #112: rpc_load_paris .....................................   Passed    4.77 sec
+        Start 113: rpc_load_shanghai
+113/422 Test #113: rpc_load_shanghai ..................................   Passed    4.70 sec
+        Start 114: rpc_pending_load_paris
+114/422 Test #114: rpc_pending_load_paris .............................   Passed    2.59 sec
+        Start 115: rpc_pending_load_shanghai
+115/422 Test #115: rpc_pending_load_shanghai ..........................   Passed    2.80 sec
+        Start 116: rpc_cost_paris
+116/422 Test #116: rpc_cost_paris .....................................   Passed    0.29 sec
+        Start 117: rpc_cost_success_paris
+117/422 Test #117: rpc_cost_success_paris .............................   Passed    1.42 sec
+        Start 118: rpc_cost_nested_1_paris
+118/422 Test #118: rpc_cost_nested_1_paris ............................   Passed    0.99 sec
+        Start 119: rpc_cost_nested_4_paris
+119/422 Test #119: rpc_cost_nested_4_paris ............................   Passed    0.99 sec
+        Start 120: rpc_cost_shanghai
+120/422 Test #120: rpc_cost_shanghai ..................................   Passed    0.28 sec
+        Start 121: rpc_cost_success_shanghai
+121/422 Test #121: rpc_cost_success_shanghai ..........................   Passed    0.68 sec
+        Start 122: rpc_cost_nested_1_shanghai
+122/422 Test #122: rpc_cost_nested_1_shanghai .........................   Passed    1.01 sec
+        Start 123: rpc_cost_nested_4_shanghai
+123/422 Test #123: rpc_cost_nested_4_shanghai .........................   Passed    0.98 sec
+        Start 124: consensus_round
+124/422 Test #124: consensus_round ....................................   Passed    2.42 sec
+        Start 125: ethereum_official_regressions
+125/422 Test #125: ethereum_official_regressions ......................   Passed    3.53 sec
+        Start 126: evm_small_stack
+126/422 Test #126: evm_small_stack ....................................   Passed    0.02 sec
+        Start 127: blobs
+127/422 Test #127: blobs ..............................................   Passed    0.05 sec
+        Start 128: kzg
+128/422 Test #128: kzg ................................................   Passed    1.00 sec
+        Start 129: bls
+129/422 Test #129: bls ................................................   Passed    0.01 sec
+        Start 130: authorization
+130/422 Test #130: authorization ......................................   Passed    0.01 sec
+        Start 131: osaka
+131/422 Test #131: osaka ..............................................   Passed    0.03 sec
+        Start 132: ethereum_transaction_regressions
+132/422 Test #132: ethereum_transaction_regressions ...................   Passed    0.01 sec
+        Start 133: ethereum_block_regressions
+133/422 Test #133: ethereum_block_regressions .........................   Passed    3.82 sec
+        Start 134: withdrawals
+134/422 Test #134: withdrawals ........................................   Passed    0.00 sec
+        Start 135: beacon
+135/422 Test #135: beacon .............................................   Passed    0.00 sec
+        Start 136: prevrandao
+136/422 Test #136: prevrandao .........................................   Passed    0.03 sec
+        Start 137: execution_requests
+137/422 Test #137: execution_requests .................................   Passed    0.01 sec
+        Start 138: recovery_audit_paris
+138/422 Test #138: recovery_audit_paris ...............................   Passed    0.15 sec
+        Start 139: recovery_audit_shanghai
+139/422 Test #139: recovery_audit_shanghai ............................   Passed    0.14 sec
+        Start 140: gossip_recovery
+140/422 Test #140: gossip_recovery ....................................   Passed    2.16 sec
+        Start 141: txpool_history
+141/422 Test #141: txpool_history .....................................   Passed    0.02 sec
+        Start 142: bellatrix_wire_identity
+142/422 Test #142: bellatrix_wire_identity ............................   Passed    0.00 sec
+        Start 143: beacon_execution_gate
+143/422 Test #143: beacon_execution_gate ..............................   Passed    0.04 sec
+        Start 144: txpool_canonical
+144/422 Test #144: txpool_canonical ...................................   Passed    0.01 sec
+        Start 145: txpool_bytes
+145/422 Test #145: txpool_bytes .......................................   Passed    1.21 sec
+        Start 146: gossip_remote_restart
+146/422 Test #146: gossip_remote_restart ..............................   Passed    4.09 sec
+        Start 147: gossip_remote_restart_live_pages
+147/422 Test #147: gossip_remote_restart_live_pages ...................   Passed   12.21 sec
+        Start 148: gossip_temporary_rejection
+148/422 Test #148: gossip_temporary_rejection .........................   Passed   61.45 sec
+        Start 149: gossip_capacity_recovery
+149/422 Test #149: gossip_capacity_recovery ...........................   Passed   62.59 sec
+        Start 150: bft_reconcile_paris_network
+150/422 Test #150: bft_reconcile_paris_network ........................   Passed  102.33 sec
+        Start 151: bft_reconcile_shanghai_network
+151/422 Test #151: bft_reconcile_shanghai_network .....................   Passed  102.30 sec
+        Start 152: bft_snapshot_cache_paris
+152/422 Test #152: bft_snapshot_cache_paris ...........................   Passed   15.87 sec
+        Start 153: bft_large_envelope_paris
+153/422 Test #153: bft_large_envelope_paris ...........................   Passed    3.29 sec
+        Start 154: bft_snapshot_cache_shanghai
+154/422 Test #154: bft_snapshot_cache_shanghai ........................   Passed   15.91 sec
+        Start 155: bft_large_envelope_shanghai
+155/422 Test #155: bft_large_envelope_shanghai ........................   Passed    2.82 sec
+        Start 156: oversized_block_paris
+156/422 Test #156: oversized_block_paris ..............................   Passed    6.94 sec
+        Start 157: oversized_block_shanghai
+157/422 Test #157: oversized_block_shanghai ...........................   Passed    6.91 sec
+        Start 158: chunked_proposal_paris
+158/422 Test #158: chunked_proposal_paris .............................   Passed    5.01 sec
+        Start 159: chunked_proposal_shanghai
+159/422 Test #159: chunked_proposal_shanghai ..........................   Passed    4.94 sec
+        Start 160: chunked_proposal_crash_paris
+160/422 Test #160: chunked_proposal_crash_paris .......................   Passed   10.89 sec
+        Start 161: chunked_proposal_crash_shanghai
+161/422 Test #161: chunked_proposal_crash_shanghai ....................   Passed   11.02 sec
+        Start 162: block_fragment_export_paris
+162/422 Test #162: block_fragment_export_paris ........................   Passed    7.10 sec
+        Start 163: block_fragment_export_shanghai
+163/422 Test #163: block_fragment_export_shanghai .....................   Passed    8.12 sec
+        Start 164: block_import_budget
+164/422 Test #164: block_import_budget ................................   Passed    0.03 sec
+        Start 165: block_fragment_ingress_paris
+165/422 Test #165: block_fragment_ingress_paris .......................   Passed    7.61 sec
+        Start 166: block_fragment_ingress_shanghai
+166/422 Test #166: block_fragment_ingress_shanghai ....................   Passed    7.58 sec
+        Start 167: libp2p_fragment_sync_paris
+167/422 Test #167: libp2p_fragment_sync_paris .........................   Passed   32.71 sec
+        Start 168: libp2p_fragment_sync_shanghai
+168/422 Test #168: libp2p_fragment_sync_shanghai ......................   Passed   32.49 sec
+        Start 169: libp2p_fragment_faults_paris
+169/422 Test #169: libp2p_fragment_faults_paris .......................   Passed   34.58 sec
+        Start 170: libp2p_fragment_faults_shanghai
+170/422 Test #170: libp2p_fragment_faults_shanghai ....................   Passed   34.50 sec
+        Start 171: bft_proposal_fragments_paris
+171/422 Test #171: bft_proposal_fragments_paris .......................   Passed    8.84 sec
+        Start 172: bft_proposal_fragments_shanghai
+172/422 Test #172: bft_proposal_fragments_shanghai ....................   Passed    8.72 sec
+        Start 173: bft_proposal_ingress_paris
+173/422 Test #173: bft_proposal_ingress_paris .........................   Passed   18.25 sec
+        Start 174: bft_proposal_ingress_shanghai
+174/422 Test #174: bft_proposal_ingress_shanghai ......................   Passed   15.96 sec
+        Start 175: bft_fragment_network_paris
+175/422 Test #175: bft_fragment_network_paris .........................   Passed  110.50 sec
+        Start 176: bft_fragment_download_crash_paris
+176/422 Test #176: bft_fragment_download_crash_paris ..................   Passed   85.81 sec
+        Start 177: bft_fragment_processes_paris
+177/422 Test #177: bft_fragment_processes_paris .......................   Passed   84.49 sec
+        Start 178: bft_fragment_network_shanghai
+178/422 Test #178: bft_fragment_network_shanghai ......................   Passed   85.20 sec
+        Start 179: bft_fragment_download_crash_shanghai
+179/422 Test #179: bft_fragment_download_crash_shanghai ...............   Passed   86.25 sec
+        Start 180: bft_fragment_processes_shanghai
+180/422 Test #180: bft_fragment_processes_shanghai ....................   Passed   82.86 sec
+        Start 181: block_event_references_paris
+181/422 Test #181: block_event_references_paris .......................   Passed   49.58 sec
+        Start 182: block_event_references_shanghai
+182/422 Test #182: block_event_references_shanghai ....................   Passed   49.69 sec
+        Start 183: bft_proposer_cycle_paris
+183/422 Test #183: bft_proposer_cycle_paris ...........................   Passed    0.21 sec
+        Start 184: bft_proposer_cycle_shanghai
+184/422 Test #184: bft_proposer_cycle_shanghai ........................   Passed    0.25 sec
+        Start 185: bft_signing_sync_paris
+185/422 Test #185: bft_signing_sync_paris .............................   Passed    0.19 sec
+        Start 186: bft_signing_sync_shanghai
+186/422 Test #186: bft_signing_sync_shanghai ..........................   Passed    0.18 sec
+        Start 187: bft_assembly_crash_paris
+187/422 Test #187: bft_assembly_crash_paris ...........................   Passed   25.48 sec
+        Start 188: bft_assembly_crash_shanghai
+188/422 Test #188: bft_assembly_crash_shanghai ........................   Passed   25.32 sec
+        Start 189: bft_managed_large_crash_paris
+189/422 Test #189: bft_managed_large_crash_paris ......................   Passed  118.28 sec
+        Start 190: bft_managed_large_crash_shanghai
+190/422 Test #190: bft_managed_large_crash_shanghai ...................   Passed   92.23 sec
+        Start 191: vote_collector_scaling
+191/422 Test #191: vote_collector_scaling .............................   Passed    0.88 sec
+        Start 192: vote_participation_model
+192/422 Test #192: vote_participation_model ...........................   Passed    0.02 sec
+        Start 193: validator_open_admission_paris
+193/422 Test #193: validator_open_admission_paris .....................   Passed   21.79 sec
+        Start 194: validator_open_admission_shanghai
+194/422 Test #194: validator_open_admission_shanghai ..................   Passed   21.75 sec
+        Start 195: ethereum_committee_primitive
+195/422 Test #195: ethereum_committee_primitive .......................   Passed    1.40 sec
+        Start 196: ethereum_consensus_bls_verify
+196/422 Test #196: ethereum_consensus_bls_verify ......................   Passed    0.02 sec
+        Start 197: ethereum_consensus_signing_roots
+197/422 Test #197: ethereum_consensus_signing_roots ...................   Passed    0.00 sec
+        Start 198: ethereum_consensus_bls_fast_aggregate
+198/422 Test #198: ethereum_consensus_bls_fast_aggregate ..............   Passed    0.02 sec
+        Start 199: ethereum_consensus_deposit_signature
+199/422 Test #199: ethereum_consensus_deposit_signature ...............   Passed    0.02 sec
+        Start 200: staking_query_rules
+200/422 Test #200: staking_query_rules ................................   Passed    0.02 sec
+        Start 201: staking_pagination
+201/422 Test #201: staking_pagination .................................   Passed    0.09 sec
+        Start 202: validator_paged_admission_paris
+202/422 Test #202: validator_paged_admission_paris ....................   Passed   21.35 sec
+        Start 203: validator_paged_admission_shanghai
+203/422 Test #203: validator_paged_admission_shanghai .................   Passed   21.49 sec
+        Start 204: evm_readonly_state
+204/422 Test #204: evm_readonly_state .................................   Passed    0.01 sec
+        Start 205: consensus_committee_participation
+205/422 Test #205: consensus_committee_participation ..................   Passed    0.03 sec
+        Start 206: ethereum_consensus_attestation_root
+206/422 Test #206: ethereum_consensus_attestation_root ................   Passed    0.00 sec
+        Start 207: consensus_attestation_conflicts
+207/422 Test #207: consensus_attestation_conflicts ....................   Passed    0.00 sec
+        Start 208: consensus_authenticated_slashing
+208/422 Test #208: consensus_authenticated_slashing ...................   Passed    0.02 sec
+        Start 209: consensus_slashing_transition
+209/422 Test #209: consensus_slashing_transition ......................   Passed    0.04 sec
+        Start 210: consensus_slashing_recovery
+210/422 Test #210: consensus_slashing_recovery ........................   Passed    0.04 sec
+        Start 211: consensus_slashing_epoch
+211/422 Test #211: consensus_slashing_epoch ...........................   Passed    0.01 sec
+        Start 212: ethereum_official_slashings
+212/422 Test #212: ethereum_official_slashings ........................   Passed    0.01 sec
+        Start 213: consensus_authenticated_randao
+213/422 Test #213: consensus_authenticated_randao .....................   Passed    0.01 sec
+        Start 214: ethereum_official_randao_projection
+214/422 Test #214: ethereum_official_randao_projection ................   Passed    0.02 sec
+        Start 215: consensus_phase0_proposer
+215/422 Test #215: consensus_phase0_proposer ..........................   Passed    0.02 sec
+        Start 216: consensus_selected_randao
+216/422 Test #216: consensus_selected_randao ..........................   Passed    0.01 sec
+        Start 217: ethereum_consensus_beacon_header
+217/422 Test #217: ethereum_consensus_beacon_header ...................   Passed    0.03 sec
+        Start 218: ethereum_consensus_beacon_body
+218/422 Test #218: ethereum_consensus_beacon_body .....................   Passed    0.03 sec
+        Start 219: consensus_phase0_block_authentication
+219/422 Test #219: consensus_phase0_block_authentication ..............   Passed    0.05 sec
+        Start 220: ethereum_official_proposer_slashing
+220/422 Test #220: ethereum_official_proposer_slashing ................   Passed    0.05 sec
+        Start 221: consensus_block_proposer_operations
+221/422 Test #221: consensus_block_proposer_operations ................   Passed    0.06 sec
+        Start 222: ethereum_official_block_proposer_operations
+222/422 Test #222: ethereum_official_block_proposer_operations ........   Passed    0.04 sec
+        Start 223: ethereum_official_voluntary_exit
+223/422 Test #223: ethereum_official_voluntary_exit ...................   Passed    0.03 sec
+        Start 224: ethereum_official_deneb_voluntary_exit
+224/422 Test #224: ethereum_official_deneb_voluntary_exit .............   Passed    0.05 sec
+        Start 225: ethereum_official_deposit_transition
+225/422 Test #225: ethereum_official_deposit_transition ...............   Passed    0.06 sec
+        Start 226: consensus_phase0_registry_operations
+226/422 Test #226: consensus_phase0_registry_operations ...............   Passed    0.34 sec
+        Start 227: ethereum_official_registry_block_operations
+227/422 Test #227: ethereum_official_registry_block_operations ........   Passed    0.04 sec
+        Start 228: ethereum_official_registry_epoch_updates
+228/422 Test #228: ethereum_official_registry_epoch_updates ...........   Passed    0.04 sec
+        Start 229: consensus_registry_epoch_scale
+229/422 Test #229: consensus_registry_epoch_scale .....................   Passed    0.47 sec
+        Start 230: ethereum_official_phase0_ffg
+230/422 Test #230: ethereum_official_phase0_ffg .......................   Passed    0.03 sec
+        Start 231: ethereum_official_attestation_inclusion
+231/422 Test #231: ethereum_official_attestation_inclusion ............   Passed    0.12 sec
+        Start 232: ethereum_official_attester_slashing
+232/422 Test #232: ethereum_official_attester_slashing ................   Passed    0.19 sec
+        Start 233: ethereum_official_attester_block_operations
+233/422 Test #233: ethereum_official_attester_block_operations ........   Passed    0.03 sec
+        Start 234: ethereum_official_effective_balance_updates
+234/422 Test #234: ethereum_official_effective_balance_updates ........   Passed    0.01 sec
+        Start 235: ethereum_official_epoch_maintenance
+235/422 Test #235: ethereum_official_epoch_maintenance ................   Passed    0.01 sec
+        Start 236: ethereum_official_phase0_rewards
+236/422 Test #236: ethereum_official_phase0_rewards ...................   Passed    0.04 sec
+        Start 237: consensus_phase0_ordered_epoch
+237/422 Test #237: consensus_phase0_ordered_epoch .....................   Passed    0.04 sec
+        Start 238: ethereum_official_beacon_state_root
+238/422 Test #238: ethereum_official_beacon_state_root ................   Passed    0.19 sec
+        Start 239: ethereum_official_full_slots
+239/422 Test #239: ethereum_official_full_slots .......................   Passed    0.08 sec
+        Start 240: ethereum_official_full_blocks
+240/422 Test #240: ethereum_official_full_blocks ......................   Passed    0.73 sec
+        Start 241: consensus_phase0_snapshot_recovery
+241/422 Test #241: consensus_phase0_snapshot_recovery .................   Passed    0.05 sec
+        Start 242: consensus_phase0_snapshot_sync_failure
+242/422 Test #242: consensus_phase0_snapshot_sync_failure .............   Passed    0.13 sec
+        Start 243: consensus_phase0_fork_choice
+243/422 Test #243: consensus_phase0_fork_choice .......................   Passed    0.08 sec
+        Start 244: consensus_phase0_fork_vote
+244/422 Test #244: consensus_phase0_fork_vote .........................   Passed    0.03 sec
+        Start 245: consensus_phase0_fork_state
+245/422 Test #245: consensus_phase0_fork_state ........................   Passed    0.64 sec
+        Start 246: consensus_phase0_fork_clock
+246/422 Test #246: consensus_phase0_fork_clock ........................   Passed    0.01 sec
+        Start 247: consensus_phase0_fork_store
+247/422 Test #247: consensus_phase0_fork_store ........................   Passed    0.16 sec
+        Start 248: ethereum_official_altair_state_root
+248/422 Test #248: ethereum_official_altair_state_root ................   Passed    0.13 sec
+        Start 249: ethereum_official_altair_inactivity
+249/422 Test #249: ethereum_official_altair_inactivity ................   Passed    0.04 sec
+        Start 250: ethereum_official_altair_rewards
+250/422 Test #250: ethereum_official_altair_rewards ...................   Passed    0.03 sec
+        Start 251: ethereum_official_altair_ffg
+251/422 Test #251: ethereum_official_altair_ffg .......................   Passed    0.02 sec
+        Start 252: ethereum_official_altair_sync
+252/422 Test #252: ethereum_official_altair_sync ......................   Passed    0.02 sec
+        Start 253: ethereum_official_altair_participation
+253/422 Test #253: ethereum_official_altair_participation .............   Passed    0.03 sec
+        Start 254: ethereum_official_altair_full_slots
+254/422 Test #254: ethereum_official_altair_full_slots ................   Passed    0.11 sec
+        Start 255: ethereum_official_altair_sync_aggregate
+255/422 Test #255: ethereum_official_altair_sync_aggregate ............   Passed    0.12 sec
+        Start 256: ethereum_official_altair_attestation
+256/422 Test #256: ethereum_official_altair_attestation ...............   Passed    0.13 sec
+        Start 257: ethereum_official_altair_deposit
+257/422 Test #257: ethereum_official_altair_deposit ...................   Passed    0.07 sec
+        Start 258: ethereum_official_altair_slashing
+258/422 Test #258: ethereum_official_altair_slashing ..................   Passed    0.18 sec
+        Start 259: ethereum_official_altair_full_blocks
+259/422 Test #259: ethereum_official_altair_full_blocks ...............   Passed    1.24 sec
+        Start 260: ethereum_official_altair_fork_head
+260/422 Test #260: ethereum_official_altair_fork_head .................   Passed    1.71 sec
+        Start 261: ethereum_official_altair_fork_block
+261/422 Test #261: ethereum_official_altair_fork_block ................   Passed    7.61 sec
+        Start 262: ethereum_official_altair_fork_reorg
+262/422 Test #262: ethereum_official_altair_fork_reorg ................   Passed    3.13 sec
+        Start 263: ethereum_official_altair_fork_withholding
+263/422 Test #263: ethereum_official_altair_fork_withholding ..........   Passed    0.89 sec
+        Start 264: ethereum_official_altair_fork_ex_ante
+264/422 Test #264: ethereum_official_altair_fork_ex_ante ..............   Passed    0.05 sec
+        Start 265: ethereum_official_altair_fork_proposer
+265/422 Test #265: ethereum_official_altair_fork_proposer .............   Passed    0.38 sec
+        Start 266: consensus_altair_snapshot_recovery
+266/422 Test #266: consensus_altair_snapshot_recovery .................   Passed    0.06 sec
+        Start 267: consensus_altair_store_snapshot_head
+267/422 Test #267: consensus_altair_store_snapshot_head ...............   Passed    2.35 sec
+        Start 268: consensus_altair_store_snapshot_reorg
+268/422 Test #268: consensus_altair_store_snapshot_reorg ..............   Passed    4.05 sec
+        Start 269: consensus_fork_checkpoint_commit
+269/422 Test #269: consensus_fork_checkpoint_commit ...................   Passed    0.18 sec
+        Start 270: consensus_fork_checkpoint_sync_failure
+270/422 Test #270: consensus_fork_checkpoint_sync_failure .............   Passed    0.04 sec
+        Start 271: consensus_altair_durable_reactor_head
+271/422 Test #271: consensus_altair_durable_reactor_head ..............   Passed    5.62 sec
+        Start 272: consensus_altair_durable_reactor_reorg
+272/422 Test #272: consensus_altair_durable_reactor_reorg .............   Passed   11.11 sec
+        Start 273: consensus_altair_reactor_publication
+273/422 Test #273: consensus_altair_reactor_publication ...............   Passed    0.06 sec
+        Start 274: consensus_message_ssz
+274/422 Test #274: consensus_message_ssz ..............................   Passed    0.01 sec
+        Start 275: consensus_altair_wire_admission
+275/422 Test #275: consensus_altair_wire_admission ....................   Passed    0.08 sec
+        Start 276: consensus_altair_durable_worker_head
+276/422 Test #276: consensus_altair_durable_worker_head ...............   Passed    5.73 sec
+        Start 277: consensus_altair_durable_worker_reorg
+277/422 Test #277: consensus_altair_durable_worker_reorg ..............   Passed   11.15 sec
+        Start 278: consensus_altair_private_http
+278/422 Test #278: consensus_altair_private_http ......................   Passed    0.29 sec
+        Start 279: consensus_altair_explicit_profile
+279/422 Test #279: consensus_altair_explicit_profile ..................   Passed    0.03 sec
+        Start 280: consensus_altair_trusted_anchor
+280/422 Test #280: consensus_altair_trusted_anchor ....................   Passed    0.03 sec
+        Start 281: consensus_altair_runtime
+281/422 Test #281: consensus_altair_runtime ...........................   Passed    0.20 sec
+        Start 282: consensus_altair_managed_runtime
+282/422 Test #282: consensus_altair_managed_runtime ...................   Passed    1.31 sec
+        Start 283: consensus_relay_peer_concurrency
+283/422 Test #283: consensus_relay_peer_concurrency ...................   Passed    0.05 sec
+        Start 284: consensus_relay_rejected_vote_progress
+284/422 Test #284: consensus_relay_rejected_vote_progress .............   Passed    0.01 sec
+        Start 285: consensus_altair_receipts
+285/422 Test #285: consensus_altair_receipts ..........................   Passed    0.01 sec
+        Start 286: consensus_altair_core_client
+286/422 Test #286: consensus_altair_core_client .......................   Passed    0.09 sec
+        Start 287: consensus_altair_libp2p
+287/422 Test #287: consensus_altair_libp2p ............................   Passed    3.25 sec
+        Start 288: consensus_altair_archive
+288/422 Test #288: consensus_altair_archive ...........................   Passed    0.17 sec
+        Start 289: consensus_altair_propagation
+289/422 Test #289: consensus_altair_propagation .......................   Passed    3.67 sec
+        Start 290: consensus_altair_restart_libp2p
+290/422 Test #290: consensus_altair_restart_libp2p ....................   Passed    2.70 sec
+        Start 291: consensus_altair_vote_archive
+291/422 Test #291: consensus_altair_vote_archive ......................   Passed    0.20 sec
+        Start 292: consensus_altair_vote_propagation
+292/422 Test #292: consensus_altair_vote_propagation ..................   Passed    3.07 sec
+        Start 293: consensus_beacon_signing_journal
+293/422 Test #293: consensus_beacon_signing_journal ...................   Passed    0.18 sec
+        Start 294: consensus_beacon_journal_cli
+294/422 Test #294: consensus_beacon_journal_cli .......................   Passed    0.22 sec
+        Start 295: consensus_altair_attester_duty
+295/422 Test #295: consensus_altair_attester_duty .....................   Passed    0.25 sec
+        Start 296: consensus_altair_local_generated_finality
+296/422 Test #296: consensus_altair_local_generated_finality ..........   Passed    9.22 sec
+        Start 297: consensus_altair_local_without_votes
+297/422 Test #297: consensus_altair_local_without_votes ...............   Passed    2.12 sec
+        Start 298: consensus_altair_local_minority_votes
+298/422 Test #298: consensus_altair_local_minority_votes ..............   Passed    4.37 sec
+        Start 299: consensus_altair_generated_chain_libp2p
+299/422 Test #299: consensus_altair_generated_chain_libp2p ............   Passed   26.82 sec
+        Start 300: consensus_altair_generated_chain_libp2p_restart
+300/422 Test #300: consensus_altair_generated_chain_libp2p_restart ....   Passed   32.42 sec
+        Start 301: consensus_altair_adversarial_finality
+301/422 Test #301: consensus_altair_adversarial_finality ..............   Passed    9.68 sec
+        Start 302: ethereum_official_bellatrix_execution_payload
+302/422 Test #302: ethereum_official_bellatrix_execution_payload ......   Passed    0.01 sec
+        Start 303: consensus_bellatrix_execution_candidate
+303/422 Test #303: consensus_bellatrix_execution_candidate ............   Passed    0.02 sec
+        Start 304: ethereum_official_bellatrix_containers
+304/422 Test #304: ethereum_official_bellatrix_containers .............   Passed    0.03 sec
+        Start 305: ethereum_official_bellatrix_full_slots
+305/422 Test #305: ethereum_official_bellatrix_full_slots .............   Passed    0.18 sec
+        Start 306: consensus_bellatrix_partition_recovery
+306/422 Test #306: consensus_bellatrix_partition_recovery .............   Passed  372.34 sec
+        Start 307: consensus_bellatrix_distributed_finality
+307/422 Test #307: consensus_bellatrix_distributed_finality ...........   Passed  179.83 sec
+        Start 308: consensus_bellatrix_managed_runtime
+308/422 Test #308: consensus_bellatrix_managed_runtime ................   Passed   12.17 sec
+        Start 309: consensus_bellatrix_voluntary_exit_reorg
+309/422 Test #309: consensus_bellatrix_voluntary_exit_reorg ...........   Passed    5.54 sec
+        Start 310: consensus_bellatrix_voluntary_exit_pruning
+310/422 Test #310: consensus_bellatrix_voluntary_exit_pruning .........   Passed   17.50 sec
+        Start 311: consensus_bellatrix_voluntary_exit_network
+311/422 Test #311: consensus_bellatrix_voluntary_exit_network .........   Passed    4.36 sec
+        Start 312: consensus_bellatrix_slashing_pruning
+312/422 Test #312: consensus_bellatrix_slashing_pruning ...............   Passed   16.62 sec
+        Start 313: consensus_bellatrix_slashing_network
+313/422 Test #313: consensus_bellatrix_slashing_network ...............   Passed    2.12 sec
+        Start 314: consensus_bellatrix_validator_network
+314/422 Test #314: consensus_bellatrix_validator_network ..............   Passed   16.32 sec
+        Start 315: consensus_bellatrix_runtime_restart
+315/422 Test #315: consensus_bellatrix_runtime_restart ................   Passed    0.91 sec
+        Start 316: consensus_bellatrix_validator_loop
+316/422 Test #316: consensus_bellatrix_validator_loop .................   Passed    5.08 sec
+        Start 317: consensus_bellatrix_proposal_expiry
+317/422 Test #317: consensus_bellatrix_proposal_expiry ................   Passed    0.57 sec
+        Start 318: consensus_bellatrix_randao_expiry
+318/422 Test #318: consensus_bellatrix_randao_expiry ..................   Passed    0.57 sec
+        Start 319: consensus_bellatrix_attestation_expiry
+319/422 Test #319: consensus_bellatrix_attestation_expiry .............   Passed    0.70 sec
+        Start 320: consensus_bellatrix_duty_trace
+320/422 Test #320: consensus_bellatrix_duty_trace .....................   Passed    2.21 sec
+        Start 321: consensus_bellatrix_clock_coalescing
+321/422 Test #321: consensus_bellatrix_clock_coalescing ...............   Passed    0.20 sec
+        Start 322: consensus_bellatrix_partition_simulation
+322/422 Test #322: consensus_bellatrix_partition_simulation ...........   Passed   59.26 sec
+        Start 323: consensus_bellatrix_signed_execution_chain
+323/422 Test #323: consensus_bellatrix_signed_execution_chain .........   Passed    1.28 sec
+        Start 324: storage_execution_checkpoint
+324/422 Test #324: storage_execution_checkpoint .......................   Passed    0.30 sec
+        Start 325: storage_execution_checkpoint_sync
+325/422 Test #325: storage_execution_checkpoint_sync ..................   Passed    0.09 sec
+        Start 326: consensus_beacon_witness_recovery
+326/422 Test #326: consensus_beacon_witness_recovery ..................   Passed    0.13 sec
+        Start 327: consensus_bellatrix_witness_runtime
+327/422 Test #327: consensus_bellatrix_witness_runtime ................   Passed    1.74 sec
+        Start 328: consensus_bellatrix_crash_runtime
+328/422 Test #328: consensus_bellatrix_crash_runtime ..................   Passed   12.29 sec
+        Start 329: consensus_bellatrix_local_slashing
+329/422 Test #329: consensus_bellatrix_local_slashing .................   Passed    0.92 sec
+        Start 330: consensus_bellatrix_voluntary_exit
+330/422 Test #330: consensus_bellatrix_voluntary_exit .................   Passed    0.96 sec
+        Start 331: consensus_execution_deposit_source
+331/422 Test #331: consensus_execution_deposit_source .................   Passed    0.26 sec
+        Start 332: consensus_execution_deposit_history
+332/422 Test #332: consensus_execution_deposit_history ................   Passed    0.05 sec
+        Start 333: consensus_bellatrix_deposit_store
+333/422 Test #333: consensus_bellatrix_deposit_store ..................   Passed    0.34 sec
+        Start 334: consensus_bellatrix_native_deposit_admission
+334/422 Test #334: consensus_bellatrix_native_deposit_admission .......   Passed    2.82 sec
+        Start 335: consensus_bellatrix_deposit_activation
+335/422 Test #335: consensus_bellatrix_deposit_activation .............   Passed   22.38 sec
+        Start 336: consensus_bellatrix_exit_identity
+336/422 Test #336: consensus_bellatrix_exit_identity ..................   Passed    0.01 sec
+        Start 337: consensus_capella_withdrawal_execution
+337/422 Test #337: consensus_capella_withdrawal_execution .............   Passed    0.00 sec
+        Start 338: secp256k1_ethereum_compatibility
+338/422 Test #338: secp256k1_ethereum_compatibility ...................   Passed    0.01 sec
+        Start 339: ethereum_official_capella_containers
+339/422 Test #339: ethereum_official_capella_containers ...............   Passed    0.05 sec
+        Start 340: consensus_bellatrix_beacon_reads
+340/422 Test #340: consensus_bellatrix_beacon_reads ...................   Passed    1.09 sec
+        Start 341: consensus_bellatrix_beacon_headers
+341/422 Test #341: consensus_bellatrix_beacon_headers .................   Passed    0.16 sec
+        Start 342: consensus_bellatrix_beacon_headers_reorg
+342/422 Test #342: consensus_bellatrix_beacon_headers_reorg ...........   Passed    0.76 sec
+        Start 343: consensus_proposal_vote_selection
+343/422 Test #343: consensus_proposal_vote_selection ..................   Passed    0.00 sec
+        Start 344: ethereum_official_capella_bls_changes
+344/422 Test #344: ethereum_official_capella_bls_changes ..............   Passed    0.08 sec
+        Start 345: ethereum_official_capella_payload
+345/422 Test #345: ethereum_official_capella_payload ..................   Passed    0.16 sec
+        Start 346: consensus_capella_payload_paired_state
+346/422 Test #346: consensus_capella_payload_paired_state .............   Passed    0.02 sec
+        Start 347: ethereum_official_capella_body
+347/422 Test #347: ethereum_official_capella_body .....................   Passed    0.08 sec
+        Start 348: ethereum_official_capella_slots
+348/422 Test #348: ethereum_official_capella_slots ....................   Passed    0.19 sec
+        Start 349: consensus_capella_queued_exit_sync
+349/422 Test #349: consensus_capella_queued_exit_sync .................   Passed    1.84 sec
+        Start 350: consensus_capella_queued_bls_sync
+350/422 Test #350: consensus_capella_queued_bls_sync ..................   Passed    2.07 sec
+        Start 351: consensus_capella_reactor_sync_failure
+351/422 Test #351: consensus_capella_reactor_sync_failure .............   Passed    1.81 sec
+        Start 352: consensus_capella_signed_transition
+352/422 Test #352: consensus_capella_signed_transition ................   Passed    6.20 sec
+        Start 353: ethereum_official_capella_fork
+353/422 Test #353: ethereum_official_capella_fork .....................   Passed    0.08 sec
+        Start 354: storage_shanghai_checkpoint
+354/422 Test #354: storage_shanghai_checkpoint ........................   Passed    0.28 sec
+        Start 355: storage_shanghai_checkpoint_sync
+355/422 Test #355: storage_shanghai_checkpoint_sync ...................   Passed    0.09 sec
+        Start 356: consensus_capella_multiepoch_finality
+356/422 Test #356: consensus_capella_multiepoch_finality ..............   Passed    9.97 sec
+        Start 357: consensus_capella_insufficient_finality
+357/422 Test #357: consensus_capella_insufficient_finality ............   Passed    7.78 sec
+        Start 358: consensus_capella_local_assembly_finality
+358/422 Test #358: consensus_capella_local_assembly_finality ..........   Passed   14.21 sec
+        Start 359: consensus_capella_local_assembly_insufficient
+359/422 Test #359: consensus_capella_local_assembly_insufficient ......   Passed    9.18 sec
+        Start 360: consensus_capella_execution_owner
+360/422 Test #360: consensus_capella_execution_owner ..................   Passed   14.20 sec
+        Start 361: consensus_capella_execution_owner_reorg
+361/422 Test #361: consensus_capella_execution_owner_reorg ............   Passed    2.22 sec
+        Start 362: consensus_capella_execution_owner_sync
+362/422 Test #362: consensus_capella_execution_owner_sync .............   Passed    1.85 sec
+        Start 363: consensus_capella_execution_owner_witness
+363/422 Test #363: consensus_capella_execution_owner_witness ..........   Passed    2.15 sec
+        Start 364: consensus_capella_scheduled_sync_rotation
+364/422 Test #364: consensus_capella_scheduled_sync_rotation ..........   Passed  100.95 sec
+        Start 365: consensus_capella_clock_diagnostics
+365/422 Test #365: consensus_capella_clock_diagnostics ................   Passed    0.15 sec
+        Start 366: consensus_capella_scheduled_finality
+366/422 Test #366: consensus_capella_scheduled_finality ...............   Passed   18.01 sec
+        Start 367: consensus_capella_configured_runtime
+367/422 Test #367: consensus_capella_configured_runtime ...............   Passed    6.46 sec
+        Start 368: consensus_capella_beacon_reads
+368/422 Test #368: consensus_capella_beacon_reads .....................   Passed    2.23 sec
+        Start 369: consensus_capella_wire_admission
+369/422 Test #369: consensus_capella_wire_admission ...................   Passed    2.18 sec
+        Start 370: consensus_capella_private_http
+370/422 Test #370: consensus_capella_private_http .....................   Passed    6.55 sec
+        Start 371: consensus_capella_cli_serve
+371/422 Test #371: consensus_capella_cli_serve ........................   Passed    0.13 sec
+        Start 372: consensus_capella_managed_node
+372/422 Test #372: consensus_capella_managed_node .....................   Passed    0.74 sec
+        Start 373: consensus_capella_catalog_concurrency
+373/422 Test #373: consensus_capella_catalog_concurrency ..............   Passed    2.30 sec
+        Start 374: consensus_capella_local_bls_changes
+374/422 Test #374: consensus_capella_local_bls_changes ................   Passed    2.06 sec
+        Start 375: consensus_capella_queued_bls_changes
+375/422 Test #375: consensus_capella_queued_bls_changes ...............   Passed    2.04 sec
+        Start 376: consensus_capella_queued_bls_owner
+376/422 Test #376: consensus_capella_queued_bls_owner .................   Passed   15.09 sec
+        Start 377: consensus_capella_queued_bls_wire
+377/422 Test #377: consensus_capella_queued_bls_wire ..................   Passed    2.32 sec
+        Start 378: consensus_capella_queued_bls_rpc
+378/422 Test #378: consensus_capella_queued_bls_rpc ...................   Passed    6.40 sec
+        Start 379: consensus_capella_queued_bls_reorg
+379/422 Test #379: consensus_capella_queued_bls_reorg .................   Passed    2.24 sec
+        Start 380: consensus_capella_pruning_primitive
+380/422 Test #380: consensus_capella_pruning_primitive ................   Passed   15.01 sec
+        Start 381: consensus_capella_pruning_bls
+381/422 Test #381: consensus_capella_pruning_bls ......................   Passed   15.43 sec
+        Start 382: consensus_capella_historical_export
+382/422 Test #382: consensus_capella_historical_export ................   Passed   21.67 sec
+        Start 383: consensus_capella_pruning_native
+383/422 Test #383: consensus_capella_pruning_native ...................   Passed   20.29 sec
+        Start 384: consensus_capella_pruning_automatic
+384/422 Test #384: consensus_capella_pruning_automatic ................   Passed   36.24 sec
+        Start 385: consensus_capella_pruning_sync
+385/422 Test #385: consensus_capella_pruning_sync .....................   Passed   38.03 sec
+        Start 386: consensus_capella_pruning_slashing
+386/422 Test #386: consensus_capella_pruning_slashing .................   Passed   20.41 sec
+        Start 387: consensus_capella_slashing_sync
+387/422 Test #387: consensus_capella_slashing_sync ....................   Passed   84.66 sec
+        Start 388: consensus_capella_unknown_finality_slashing
+388/422 Test #388: consensus_capella_unknown_finality_slashing ........   Passed  108.62 sec
+        Start 389: consensus_capella_new_validator_slashing
+389/422 Test #389: consensus_capella_new_validator_slashing ...........   Passed   96.68 sec
+        Start 390: consensus_capella_slashing_multi
+390/422 Test #390: consensus_capella_slashing_multi ...................   Passed   36.32 sec
+        Start 391: consensus_capella_slashing_reorg
+391/422 Test #391: consensus_capella_slashing_reorg ...................   Passed    2.36 sec
+        Start 392: consensus_capella_slashing_retirement
+392/422 Test #392: consensus_capella_slashing_retirement ..............   Passed   36.48 sec
+        Start 393: consensus_capella_deposit_consumption
+393/422 Test #393: consensus_capella_deposit_consumption ..............   Passed   47.18 sec
+        Start 394: consensus_capella_deposit_activation
+394/422 Test #394: consensus_capella_deposit_activation ...............   Passed   91.49 sec
+        Start 395: consensus_capella_deposit_activation_restart
+395/422 Test #395: consensus_capella_deposit_activation_restart .......   Passed   92.46 sec
+        Start 396: consensus_capella_automatic_registration
+396/422 Test #396: consensus_capella_automatic_registration ...........   Passed    7.06 sec
+        Start 397: consensus_capella_deposit_auto_registration
+397/422 Test #397: consensus_capella_deposit_auto_registration ........   Passed   96.65 sec
+        Start 398: consensus_capella_deposit_invalid_signature
+398/422 Test #398: consensus_capella_deposit_invalid_signature ........   Passed   49.83 sec
+        Start 399: consensus_capella_local_sync
+399/422 Test #399: consensus_capella_local_sync .......................   Passed   22.43 sec
+        Start 400: consensus_capella_automatic_recovery
+400/422 Test #400: consensus_capella_automatic_recovery ...............   Passed    7.35 sec
+        Start 401: consensus_capella_withdrawal_scale
+401/422 Test #401: consensus_capella_withdrawal_scale .................   Passed    0.34 sec
+        Start 402: consensus_capella_withdrawal_ssz_scale
+402/422 Test #402: consensus_capella_withdrawal_ssz_scale .............   Passed    3.88 sec
+        Start 403: consensus_capella_registration_scale
+403/422 Test #403: consensus_capella_registration_scale ...............   Passed    4.92 sec
+        Start 404: consensus_capella_registration_signing_guard
+404/422 Test #404: consensus_capella_registration_signing_guard .......   Passed   19.52 sec
+        Start 405: consensus_capella_competing_deposit_reorg
+405/422 Test #405: consensus_capella_competing_deposit_reorg ..........   Passed   13.37 sec
+        Start 406: consensus_capella_reindexed_validator_activation
+406/422 Test #406: consensus_capella_reindexed_validator_activation ...   Passed  115.28 sec
+        Start 407: consensus_capella_deposit_reorg_sync
+407/422 Test #407: consensus_capella_deposit_reorg_sync ...............   Passed   17.28 sec
+        Start 408: consensus_capella_local_exits
+408/422 Test #408: consensus_capella_local_exits ......................   Passed    2.09 sec
+        Start 409: consensus_capella_queued_exits
+409/422 Test #409: consensus_capella_queued_exits .....................   Passed    2.36 sec
+        Start 410: consensus_capella_exit_wire
+410/422 Test #410: consensus_capella_exit_wire ........................   Passed    2.32 sec
+        Start 411: consensus_capella_exit_network
+411/422 Test #411: consensus_capella_exit_network .....................   Passed  426.28 sec
+        Start 412: consensus_capella_exit_retirement
+412/422 Test #412: consensus_capella_exit_retirement ..................   Passed   39.38 sec
+        Start 413: consensus_capella_exit_reindex
+413/422 Test #413: consensus_capella_exit_reindex .....................   Passed  116.18 sec
+        Start 414: consensus_capella_exit_pending_pruning
+414/422 Test #414: consensus_capella_exit_pending_pruning .............   Passed   15.21 sec
+        Start 415: consensus_capella_exit_lifecycle_sync
+415/422 Test #415: consensus_capella_exit_lifecycle_sync ..............   Passed   73.44 sec
+        Start 416: storage_read_only
+416/422 Test #416: storage_read_only ..................................   Passed    0.01 sec
+        Start 417: consensus_capella_http_admission_queue
+417/422 Test #417: consensus_capella_http_admission_queue .............   Passed    7.00 sec
+        Start 418: rpc_load_window
+418/422 Test #418: rpc_load_window ....................................   Passed    0.00 sec
+        Start 419: consensus_checkpoint_json_canonical
+419/422 Test #419: consensus_checkpoint_json_canonical ................   Passed    0.12 sec
+        Start 420: consensus_bellatrix_publication_cache
+420/422 Test #420: consensus_bellatrix_publication_cache ..............   Passed    0.16 sec
+        Start 421: consensus_hash_provider_parallel
+421/422 Test #421: consensus_hash_provider_parallel ...................   Passed    0.00 sec
+        Start 422: consensus_hash_provider_unavailable
+422/422 Test #422: consensus_hash_provider_unavailable ................   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 422
+
+Label Time Summary:
+controlled_load                                       =   0.15 sec*proc (1 test)
+qualification_bft_assembly_crash_local                =  50.80 sec*proc (2 tests)
+qualification_bft_departure_local                     = 218.23 sec*proc (2 tests)
+qualification_bft_large_block_download_crash_local    = 172.06 sec*proc (2 tests)
+qualification_bft_large_block_local                   = 571.40 sec*proc (22 tests)
+qualification_bft_large_block_processes_local         = 167.35 sec*proc (2 tests)
+qualification_bft_liveness                            =   0.46 sec*proc (2 tests)
+qualification_bft_load_crash_local                    =  66.46 sec*proc (2 tests)
+qualification_bft_load_local                          =  63.49 sec*proc (4 tests)
+qualification_bft_local                               =   0.17 sec*proc (2 tests)
+qualification_bft_managed_large_crash_local           = 210.51 sec*proc (2 tests)
+qualification_bft_membership_local                    =  59.15 sec*proc (4 tests)
+qualification_bft_network_local                       =  53.41 sec*proc (8 tests)
+qualification_bft_pool_local                          =   7.89 sec*proc (2 tests)
+qualification_bft_rpc_admission_local                 =  44.71 sec*proc (2 tests)
+qualification_bft_rpc_cost_all_local                  =  67.92 sec*proc (2 tests)
+qualification_bft_rpc_cost_local                      =  13.77 sec*proc (2 tests)
+qualification_bft_rpc_cost_many_local                 =  90.71 sec*proc (2 tests)
+qualification_bft_rpc_cost_sustained_local            =  50.14 sec*proc (2 tests)
+qualification_bft_rpc_default_overload_local          =  82.67 sec*proc (2 tests)
+qualification_bft_rpc_overload_local                  =  84.70 sec*proc (2 tests)
+qualification_bft_rpc_websocket_local                 =  90.87 sec*proc (2 tests)
+qualification_bft_scaling                             =  31.78 sec*proc (2 tests)
+qualification_bft_stake_change_crash_local            =  74.44 sec*proc (2 tests)
+qualification_bft_stake_change_local                  =  61.51 sec*proc (2 tests)
+qualification_bft_weighted_local                      = 130.53 sec*proc (4 tests)
+qualification_consensus_api                           =   2.01 sec*proc (3 tests)
+qualification_consensus_crypto                        =   0.01 sec*proc (2 tests)
+qualification_consensus_deposits                      =  25.54 sec*proc (3 tests)
+qualification_consensus_distributed                   = 179.83 sec*proc (1 test)
+qualification_consensus_ethereum                      = 223.94 sec*proc (112 tests)
+qualification_consensus_harness                       =   0.00 sec*proc (1 test)
+qualification_consensus_local                         =   0.92 sec*proc (5 tests)
+qualification_consensus_local_network                 =  62.46 sec*proc (6 tests)
+qualification_consensus_local_validator               =   5.08 sec*proc (1 test)
+qualification_consensus_network                       = 428.60 sec*proc (2 tests)
+qualification_consensus_operations                    =   6.32 sec*proc (4 tests)
+qualification_consensus_partition                     = 372.34 sec*proc (1 test)
+qualification_consensus_recovery                      = 803.79 sec*proc (25 tests)
+qualification_consensus_runtime                       = 745.74 sec*proc (30 tests)
+qualification_consensus_scale                         =   9.60 sec*proc (4 tests)
+qualification_consensus_simulation                    =  59.26 sec*proc (1 test)
+qualification_consensus_transport                     =   0.01 sec*proc (1 test)
+qualification_crypto                                  =   0.03 sec*proc (1 test)
+qualification_evm                                     =  11.87 sec*proc (19 tests)
+qualification_recovery_audit_local                    =  32.22 sec*proc (7 tests)
+qualification_rpc_admission                           =   0.06 sec*proc (1 test)
+qualification_rpc_load                                =   1.08 sec*proc (1 test)
+qualification_rpc_load_control                        =   0.00 sec*proc (1 test)
+qualification_rpc_load_local                          =  21.69 sec*proc (14 tests)
+qualification_storage_local                           =   1.89 sec*proc (6 tests)
+qualification_storage_sync_local                      =  19.07 sec*proc (11 tests)
+qualification_validator_scaling_local                 =  87.26 sec*proc (5 tests)
+
+Total Test time (real) = 6088.58 sec

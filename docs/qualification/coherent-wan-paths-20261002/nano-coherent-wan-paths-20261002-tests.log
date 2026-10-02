@@ -1,0 +1,44 @@
+✔ legacy read-only volume paths remain available (0.584333ms)
+✔ isolated runtime, provenance and rotation auditor share the selected build (0.0725ms)
+✔ packaged/default mode cannot silently ignore a requested build (0.149708ms)
+✔ escape, whitespace, empty and multiline build selectors are rejected (0.114083ms)
+✔ architecture-specific paths select separate existing builds (0.051416ms)
+✔ common selector remains backward compatible and supports explicit override (0.525417ms)
+✔ one missing architecture without fallback cannot silently use the legacy binary (0.049125ms)
+✔ per-architecture selectors preserve packaged and path validation (0.058083ms)
+✔ remote source can select a Git candidate without changing the main checkout (0.083416ms)
+✖ remote source rejects traversal, relative paths and mount injection (0.378709ms)
+✔ actual runner inventory covers restored audit and transitive finality/monitor dependencies (19.911542ms)
+✔ dependency-only edit changes its hash while entry hash remains identical (2.709292ms)
+✔ multiline imports, side effects and cycles are included once (1.523167ms)
+✔ missing imported dependency fails rather than making a partial manifest (1.135209ms)
+✔ import outside repository is rejected (3.263125ms)
+✔ symlink to external source is rejected (1.4835ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 15
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 93.44725
+
+✖ failing tests:
+
+test at tests/multihost/build-paths.test.mjs:44:1
+✖ remote source rejects traversal, relative paths and mount injection (0.378709ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///private/tmp/nano-coherent-wan-paths-20261002/tests/multihost/build-paths.test.mjs:45:125)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /Invalid/,
+    operator: 'throws',
+    diff: 'simple'
+  }

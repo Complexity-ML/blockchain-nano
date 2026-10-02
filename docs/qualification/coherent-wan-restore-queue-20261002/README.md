@@ -1,0 +1,19 @@
+# Restauration WAN cohérente — contrôleur en attente, résultat non acquis
+
+Runtime cible 2d2764ded1f1d7f065ef163d8dcc0fc216268bc1 ; contrôleur/native checkout 554ebc3a, runtime strictement identique. Source Mac `/tmp/nano-coherent-wan-paths-20261002`, source distante `/home/ubuntu/nano-production-hex-candidate-20261002`. Cœur main non promu. Le contrôleur host Python lance ensuite le runner Node existant avec builds ARM64/AMD64 séparés, après vérification des gates. Aucun logiciel envoyé par SCP : sources distantes déjà via Git ; seules nouvelles fixtures publiques traverseront SSH.
+
+Session **78086** observée active ; `state.json` snapshot indique armFull/amdSelected réellement actifs, audit AMD64 encore en attente via son contrôleur PID 510599, aucun nœud WAN lancé. Lecture Docker ne considère terminal qu'un conteneur absent confirmé ; une erreur SSH/observation arrête le contrôleur et ne déclenche pas une relance. Boucle espacée 20 secondes, vérifie aussi le contrôleur audit arrêté avant de poursuivre.
+
+Gates avant nouvelle fixture : ARM64 exact **425/425** sans skip et audits source/exécutables terminaux ; AMD64 sélection **15/15** sans skip, délais originaux, sources/programmes/libs inchangés ; audit arrêté AMD64 **4/4** ; natif **8/8** et 198 empreintes toujours égales au parent. Un gate en échec interdit cette campagne, sans étendre les délais ni relancer des tests. **Aucun de ces résultats pendants n'est présumé acquis.** Régression complète AMD64 non qualifiée par ces quinze cas.
+
+Identités du tag builder vérifiées sur les deux hôtes : ARM64 sha256:6116669430b02b7e8012af8c8bd515a5a7dcd1dd2034649f9b45ae5b9e70a3a4 ; AMD64 sha256:0fa8a608c09ff5ad1e804afc160c04d4964898bed149fcb47a2b587a0a9c194c. Le contrôleur vérifie à nouveau ces IDs avant lancement, nano correspond aux preuves terminales, nano/P2P ARM correspondent aussi au manifeste complet. P2P AMD existant enregistré, portée antérieure et nouveau fonctionnement WAN à qualifier. Pas de nouvelle image/rebuild. Stamp provenance Docker écrit seulement après gates d’intégrité ; identifie le runtime compilé, pas la readiness.
+
+Lancement privé : `NANO_TEST_CONSENSUS_PROFILE=capella`, build-volume, sélection ARM64/AMD64, checkout distant candidat, `NANO_TEST_BACKUP_RESTORE=1`, nofile65536. Ports distants loopback et tunnel SSH existant du runner ; aucune exposition publique. Fresh output `/tmp/nano-coherent-wan-restore-2d2764de-20261002`. Le runner génère un genesis frais, arrête le VPS proprement, copie toute la base/journaux/witness et peer.key, compare les bytes, conserve les engagements d'arrêt séparés de l'archive, reprend le restauré et exige attestations/propositions puis trois époques de finalité commune. Audit natif final doit lier le checkpoint indépendamment observé au token terminal. Arrêts finally limités à ses propres trois nœuds ; conteneurs/volumes arrêtés conservés. Limites de récupération/observation inchangées. Aucun fonds réel ni vente.
+
+Erreurs de préparation conservées : A, lancement arrière-plan Mac disparu avant création de state/avant Nano ; B, message Docker `error: no such object` en minuscules non reconnu, arrêt avant toute fixture ; C, reconnaissance insensible à la casse, session persistante confirme l'attente. `py_compile` passe, pas simulation end-to-end du contrôleur. Aucun ancien test/job redémarré.
+
+**État :** aucune restauration WAN nouvelle ni reprise des duties acquise. Campagnes runtime courantes continuent ; anciens échecs, autres critères de production et revue indépendante restent ouverts.
+
+## Suite observée
+
+Cas de réindexation AMD64 timeout360,05 s puis parent14/15 terminal. Le seul contrôleur d'attente, PID40016/session78086, est arrêté avant toute fixture/nœud WAN : gate15/15 impossible. Les campagnes C++ ne sont pas arrêtées. État `state-gate-refused.json`, nouvelle optimisation et résultats terminaux dans [checkpoint-row-dump](../checkpoint-row-dump-20261002/README.md).
