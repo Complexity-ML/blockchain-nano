@@ -5920,3 +5920,8 @@ Pilote uniquement : sélection explicite du daemon depuis le build de chaque arc
 ### 2026-10-02 — Transport WAN IPv6 avec identité VPS conservée
 
 [Contrôleur SSH/SCP et essais](qualification/coherent-wan-pinned-transport-20261002/README.md) : 12 contrôles passent, deux refus réels de configuration non autorisée (exit 64), lectures SSH et SCP réelles réussies (exit 0). Le seul endpoint autorisé passe en IPv6 en conservant `HostKeyAlias` et la vérification stricte de l’empreinte connue. Aucun logiciel transféré par SCP, aucun nœud WAN lancé, aucun runtime promu. La finalité/restauration WAN, les campagnes terminales et tous les autres critères de production restent ouverts.
+
+
+### 2026-10-02 — Audit signé AMD64 préparé pour le binaire cohérent
+
+[Contrôleur et requêtes](qualification/coherent-amd-signed-audit-control-20261002/README.md) : attente des propriétaires réels et codes terminaux, revue complète/EEST exact/réseau/SHA, puis quatre requêtes conservées sur la fixture signée 99 blocs/97 transactions. Pas de compilation ni de modification de fixture, limites 180 s inchangées ; ces cas requalifient le nouveau binaire sans ajouter de scénario historique. Aucun résultat signé acquis à ce stade, aucune reprise des duties/finalité WAN prouvée. Les campagnes existantes et tous les gates de production restent ouverts.
