@@ -3057,3 +3057,8 @@ Après demande explicite de nettoyage de A à Z, conteneurs/images/volumes/cache
 ### 2026-10-02 — Reconstruction propre et diagnostic RPC ciblé
 
 Après remise à zéro Docker, build des dépendances AMD64 effectivement démarré sur le VPS (PID 1204418, source `9e9ebed3`). [Contrôleur préparé](qualification/clean-rpc-build-control-20261002/README.md) : compilation fraîche de Nano/P2P/test RPC, puis cas Paris WebSocket inchangé, délai original 480 s, traces internes existantes, empreintes sources/programmes avant/après. Syntaxe Python validée ; résultat de compilation/diagnostic non acquis. Échec RPC historique et campagne interrompue conservés ; aucune qualification complète ou production revendiquée.
+
+
+### 2026-10-02 — Diagnostic RPC propre terminé, échec historique ouvert
+
+Compilation AMD64 Docker neuve de Nano/P2P/banc réseau réussie ; cas Paris WebSocket original instrumenté PASS en 80.91 s. Audit : 15 315 empreintes sources et trois programmes inchangés. Attente WebSocket maximale 3421.725 ms sur limite 4000 ms ; estimation maximale 3426.193 ms. Marge réduite observée, cause de l'échec historique non établie, aucune correction runtime ni régression complète nouvelle. Image/volume neufs conservés pour réutilisation. Les critères WAN, restauration effective des duties, forks et production restent ouverts. [Preuves et limites](qualification/clean-rpc-diagnostic-20261002/README.md).

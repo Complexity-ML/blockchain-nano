@@ -1,0 +1,11 @@
+# Diagnostic RPC après reconstruction Docker propre — 2026-10-02
+
+Source runtime : `9e9ebed3833a24f75ce7b29b9a80dcce341dfc3a`. Dépendances AMD64 reconstruites sur le VPS ; image `sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14`. Volume neuf `nano-clean-rpc-build-20261002`, compilation de `nano`, `nano-p2p` et `nano-bft-network-tests` réussie. Contrôleur terminé, conteneurs temporaires retirés ; image et volume conservés pour réutilisation.
+
+Cas original `bft_rpc_cost_websocket_paris_network`, profil Paris, assertions conservées, délai CTest 480 s, 16 clients : **PASS 80.91 s**, avec instrumentation opt-in `NANO_RPC_TIMING_DIR`. Ce résultat diagnostique ne clôt pas l'échec historique `RPC simulation queue wait exceeded` de la campagne interrompue. L'instrumentation et l'ordonnancement peuvent influencer le comportement ; aucune cause ni correction runtime démontrée.
+
+Les quatre nœuds ont produit 144 mesures de file WebSocket chacun, dont 48 estimations et 96 appels. Maximum global d'attente : 3421.725 ms ; médianes par nœud : 620.161–784.008 ms. Estimation : médianes 1909.108–2127.193 ms, maximum 3426.193 ms. Préparation : maximum 65.456 ms ; verrou RPC : maximum 297.090 ms. La marge face au délai de file de 4000 ms reste réduite. Ces phases correspondent à ce passage réussi, pas à la requête historique échouée ; elles ne prouvent pas sa cause.
+
+Audit indépendant de l'archive : 15 315 empreintes sources identiques avant/après, trois empreintes programmes identiques, codes compilation et diagnostic zéro. `evidence.tar.gz` contient les manifests, logs CTest/JUnit, sélection du cas, quatre traces JSONL et statistiques (p95 empirique sans interpolation). SHA-256 de l'archive : `a1ab8a90ddb97958101a5571c395cadd92e8c49943bca1364cd3a179b062b490`.
+
+Aucune régression complète neuve, qualification WAN, restauration/duties ou production prouvée. Campagne historique : 393 terminés, 392 PASS, un échec, 34 non terminés. Prochaine investigation : distinguer coût des sondes d'estimation et contention des workers avec des mesures ciblées avant une correction causale ; conserver les limites et les assertions. Tous les autres critères du goal et des matrices restent ouverts selon leurs statuts.
