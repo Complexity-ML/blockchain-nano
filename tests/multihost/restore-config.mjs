@@ -33,7 +33,14 @@ export function restoreAuditRequest(original,receipt) {
  return {profile:{file:c.profile.file,sha256:c.profile.sha256},anchor:structuredClone(c.initial),limits:structuredClone(c.limits),expectedCheckpoint:token(receipt.restart),maximumBlocks:'0x400',maximumArchiveBytes:'0x20000000'};
 }
 export function validateRestoredFinality(receipt,result,terminal) {
+ const decimal=value=>typeof value==='string'&&/^(?:0|[1-9][0-9]*)$/.test(value);
+ const checkpoint=value=>value&&typeof value.epoch==='string'&&/^(?:0|[1-9][0-9]*|0x(?:0|[1-9a-f][0-9a-f]*))$/.test(value.epoch)&&/^0x[0-9a-f]{64}$/.test(value.root);
+ if(!decimal(result?.firstEpoch)||!decimal(result?.lastEpoch)||!checkpoint(result.lastCheckpoint)||BigInt(result.lastCheckpoint.epoch)!==BigInt(result.lastEpoch)||!checkpoint(receipt?.finalized)||!checkpoint(terminal?.finalized))throw Error('Missing or malformed restored finality evidence');
  if(result.epochs!==3||BigInt(result.firstEpoch)<BigInt(receipt.finalized.epoch)||BigInt(result.lastEpoch)<BigInt(receipt.finalized.epoch)+3n)throw Error('Restored common finality did not advance three epochs');
- if(terminal.validator?.healthy!==true||terminal.validator.failure!==null||terminal.clockHealthy!==true||terminal.validator.attestationsAdmitted<=0||(!Number.isSafeInteger(terminal.validator.proposalsAdmitted)||terminal.validator.proposalsAdmitted<=0))throw Error('Restored signer did not resume healthy attestations and proposals');
+ const validator=terminal.validator;
+ if(validator?.healthy!==true||validator.failure!==null||terminal.clockHealthy!==true||!Number.isSafeInteger(validator.attestationsAdmitted)||validator.attestationsAdmitted<=0||!Number.isSafeInteger(validator.proposalsAdmitted)||validator.proposalsAdmitted<=0)throw Error('Restored signer did not resume healthy attestations and proposals');
  if(BigInt(terminal.finalized.epoch)<BigInt(result.lastEpoch))throw Error('Restored terminal finality behind observed window');
+ // This check alone does not prove ancestry at a later terminal epoch.
+ // Same-epoch disagreement must never pass on the epoch number alone.
+ if(BigInt(terminal.finalized.epoch)===BigInt(result.lastEpoch)&&terminal.finalized.root!==result.lastCheckpoint.root)throw Error('Restored terminal finality conflicts with observed checkpoint');
 }

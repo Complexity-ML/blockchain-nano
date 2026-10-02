@@ -118,3 +118,5 @@ test('pinned reads still reject finalized regression',async()=>{
 test('unknown or pruned pinned state fails without falling back to head',async()=>{
  await assert.rejects(fixture(s=>{s.pruned=true;},false,true,three,true,true).run(),/REST 404/);
 });
+
+test('terminal stability evidence retains the checkpoint and execution hash actually bound on every node',async()=>{const f=fixture(()=>{},false,false,three,true,true),r=await f.run();assert.deepEqual(r.lastCheckpoint,{epoch:r.lastEpoch,root:'0x'+r.lastEpoch.padStart(64,'0')});assert.equal(r.lastExecutionHash,'0x1234');assert.equal(f.records.at(-1).executionHash,r.lastExecutionHash);});

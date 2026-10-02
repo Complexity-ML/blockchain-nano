@@ -80,7 +80,7 @@ export async function observeStableFinality(endpoints, epochs, record, {clock=Da
         } else ++advances;
         commonEpoch = epoch; commonChanged = clock();
         await record({time:clock(), commonEpoch:String(epoch), executionHash:blocks[0], advances});
-        if (advances === epochs) return {epochs:advances, firstEpoch:String(baseline), lastEpoch:String(commonEpoch), elapsedMs:clock()-start};
+        if (advances === epochs) return {epochs:advances, firstEpoch:String(baseline), lastEpoch:String(commonEpoch), lastCheckpoint:structuredClone(samples[0].checkpoint), lastExecutionHash:blocks[0], elapsedMs:clock()-start};
       }
     }
     if (clock() - commonChanged > 2 * epochMs) throw Error('Common finality stalled for two epochs');
