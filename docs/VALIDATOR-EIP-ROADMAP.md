@@ -6131,3 +6131,7 @@ une dépendance. Cœur/daemon read-only ; aucune règle d’admission assouplie.
 ### 2026-10-02 — Snapshot : transfert des temporaires, délai encore dépassé
 
 [Contrôle conservé](qualification/bellatrix-snapshot-move-20261002/README.md) : 512 comparaisons ciblées ARM64 passent ; AMD64 expire à 240,025 s, dernier slot 96. Aux mêmes 1 792 appels, encodage 42,678 s et publication inclusive 107,889 s : petit écart descriptif, pas de résolution du cas. Manifestes inchangés, zéro skip. Prochain diagnostic : témoin/commit/lecture authentifiée/Write synchrone séparés, sans retirer de protection. Aucune promotion runtime, autres critères conservés.
+
+### 2026-10-02 — Commit durable mesuré, candidat sérialiseur en qualification
+
+[Profil terminal](qualification/bellatrix-commit-cost-20261002/README.md) : timeout 240,030 s, slot 96. Sur 1 920 commits, 42,966 s incluent 13,194 s de Write synchrone ; témoin externe absent, ne pas généraliser. [Candidat Git 4834a014](qualification/checkpoint-serialization-candidate-20261002/README.md), hors main : test direct du helper ARM64 passe (2 048 comparaisons, 3 076 rejets, 1 024 annulations). Huit cas AMD64 démarrent avec limites originales ; préflight à délai de coalescence erroné arrêté avant test puis corrigé à 60 s et conservé. Aucun runtime main promu ni production qualifiée, autres critères ouverts.
