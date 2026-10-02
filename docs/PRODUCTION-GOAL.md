@@ -3052,3 +3052,8 @@ Caches de build et ressources Docker inutilisées nettoyés sur Mac/VPS ; volume
 ### 2026-10-02 — Remise à zéro Docker complète autorisée
 
 Après demande explicite de nettoyage de A à Z, conteneurs/images/volumes/caches supprimés sur Mac et VPS : `docker system df` affiche 0B dans les quatre catégories. Campagne VPS interrompue volontairement à 393 cas terminés : 392 succès, échec RPC conservé et 34 cas non terminés. Contrôleurs en attente arrêtés ; diagnostic RPC non exécuté. Rapports hors Docker et preuves Git conservés. Les anciennes images et compilations Docker ne sont plus disponibles pour des contrôles en direct ; reconstruction identifiée requise avant reprise. Aucun nouveau build ni lancement public démarré ; production non qualifiée. [Preuves du reset](qualification/docker-cleanup-20261002/full-reset.json).
+
+
+### 2026-10-02 — Reconstruction propre et diagnostic RPC ciblé
+
+Après remise à zéro Docker, build des dépendances AMD64 effectivement démarré sur le VPS (PID 1204418, source `9e9ebed3`). [Contrôleur préparé](qualification/clean-rpc-build-control-20261002/README.md) : compilation fraîche de Nano/P2P/test RPC, puis cas Paris WebSocket inchangé, délai original 480 s, traces internes existantes, empreintes sources/programmes avant/après. Syntaxe Python validée ; résultat de compilation/diagnostic non acquis. Échec RPC historique et campagne interrompue conservés ; aucune qualification complète ou production revendiquée.
