@@ -3300,3 +3300,11 @@ Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régr
 ### 2026-10-02 — sélection AMD0275 terminale, gate complet refusé
 
 **15/16**, zéro skip,1856,66 s ; seule réindexation360,04 en timeout (slot160/finalité18/sept votes), exits399,736/480 passe. Sources/neuf programmes/sept entrées avant/après inchangés, délais originaux exacts. [Sélection terminale](qualification/coherent-row-candidate-0275b1af-20261002/README.md) ; [driver complet exit1](qualification/full-coherent-0275b1af-amd64-queue-20261002/README.md), aucun full AMD démarré. Aucun runtime promu, profil EIP ou gate production clôturé ; poursuite du diagnostic requise.
+
+### 2026-10-02 — SSZ du cache : copie différée, qualification cohérente lancée
+
+[Candidat80373152 et preuves](qualification/snapshot-ssz-deferred-copy-20261002/README.md) : tous les octets SSZ et les autres champs sont comparés avant réutilisation ; placeholder jamais émis, changement matérialisé puis revalidé. ARM partiel :1153 comparaisons canoniques,2560 contrôles différentiels,256 mutations SSZ refusées et trois scénarios locaux signés avec deux SIGKILL chacun passent ; entrées inchangées. Aucun gain de vitesse acquis. Builds Docker cohérents ARM/AMD neufs et sélection16 aux délais originaux mis en attente ; résultats terminaux non acquis. Ancienne queue ARM0275 annulée avant tests, échec AMD15/16 conservé. Runtime main inchangé, aucun statut EIP ni gate production/WAN/lancement clôturé.
+
+### 2026-10-02 — régression ARM2d terminale425/425
+
+[Registre complet et rapports](qualification/full-coherent-2d2764de-arm64-terminal-20261002/README.md) :425/425, zéro skip/échec,5895,09s ; sources et programmes inventoriés inchangés, JUnit exact, audits exits0. EEST5387 (4882 exécution/505 validation),317 fichiers, forkConformanceProven=false. Révision2d antérieure : ne qualifie pas les deltas0275/803, l'AMD ou une reprise WAN. Aucun statut EIP ni gate production/lancement clôturé.

@@ -1,0 +1,676 @@
+-- Found the following ICU libraries:
+--   uc (required): /usr/lib/aarch64-linux-gnu/libicuuc.so
+-- Could NOT find Valgrind (missing: Valgrind_INCLUDE_DIR Valgrind_WORKS) 
+
+
+secp256k1 configure summary
+===========================
+Build artifacts:
+  library type ........................ Static
+Optional modules:
+  ECDH ................................ OFF
+  ECDSA pubkey recovery ............... ON
+  extrakeys ........................... OFF
+  schnorrsig .......................... OFF
+  musig ............................... OFF
+  ElligatorSwift ...................... OFF
+Parameters:
+  ecmult window size .................. 15
+  ecmult gen table size ............... 86 KiB
+Optional features:
+  assembly ............................ OFF
+  external callbacks .................. OFF
+Optional binaries:
+  benchmark ........................... OFF
+  noverify_tests ...................... OFF
+  tests ............................... OFF
+  exhaustive tests .................... OFF
+  ctime_tests ......................... OFF
+  examples ............................ OFF
+
+Cross compiling ....................... FALSE
+API visibility attributes ............. ON
+Valgrind .............................. OFF
+Preprocessor defined macros ........... ECMULT_WINDOW_SIZE=15 COMB_BLOCKS=43 COMB_TEETH=6
+C compiler ............................ Clang 18.1.3, /usr/bin/clang
+CFLAGS ................................ 
+Compile options ....................... -Wall -pedantic -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef
+Build type:
+ - CMAKE_BUILD_TYPE ................... Release
+ - CFLAGS ............................. -O2 
+ - LDFLAGS for executables ............ 
+ - LDFLAGS for shared libraries ....... 
+
+bint_obj=/build/coherent-2d2764de-arm64-20261002/third_party/mcl/bint64.o
+base_obj=/build/coherent-2d2764de-arm64-20261002/third_party/mcl/base64.o
+-- Configuring done (0.3s)
+-- Generating done (0.2s)
+-- Build files have been written to: /build/coherent-2d2764de-arm64-20261002
+[  0%] Built target gen_bint.o
+[  0%] Built target gen_base.o
+[  1%] Built target secp256k1_precomputed
+[  2%] Built target nano_blst
+[  2%] Building CXX object CMakeFiles/nano-proposal-vote-selection-tests.dir/tests/test_proposal_vote_selection.cpp.o
+[  2%] Built target nano-test-sync-fault
+[  3%] Building CXX object CMakeFiles/nano-rpc-load-window-tests.dir/tests/test_rpc_load_window.cpp.o
+[  3%] Linking CXX executable nano-proposal-vote-selection-tests
+[  3%] Built target nano-proposal-vote-selection-tests
+[  4%] Built target nano-checkpoint-json-tests
+[  4%] Building CXX object CMakeFiles/nano-consensus-hash-provider-tests.dir/tests/test_consensus_hash_provider.cpp.o
+[  4%] Linking CXX executable nano-rpc-load-window-tests
+[  4%] Built target nano-rpc-load-window-tests
+[  5%] Built target nano-capella-snapshot-hex-tests
+[  6%] Built target mcl_st
+[  6%] Built target nano_ckzg
+[  6%] Built target secp256k1
+[  6%] Building CXX object CMakeFiles/nano-bn-pairing-tests.dir/tests/test_bn_pairing.cpp.o
+[  6%] Building CXX object CMakeFiles/nano-consensus-hash-provider-tests.dir/src/consensus_signing.cpp.o
+[  6%] Linking CXX executable nano-consensus-hash-provider-tests
+[  6%] Built target nano-consensus-hash-provider-tests
+[  6%] Building CXX object CMakeFiles/nano-bn-pairing-tests.dir/src/bn_pairing.cpp.o
+[  6%] Building CXX object CMakeFiles/nano_core.dir/src/kzg.cpp.o
+[  7%] Linking CXX executable nano-bn-pairing-tests
+[  7%] Built target nano-bn-pairing-tests
+[  7%] Linking CXX static library libnano_core.a
+[ 31%] Built target nano_core
+[ 32%] Building CXX object CMakeFiles/nano-process-backpressure-tests.dir/tests/test_process_backpressure.cpp.o
+[ 32%] Linking CXX executable nano-tests
+[ 33%] Built target nano-tests
+[ 33%] Linking CXX executable nano
+[ 33%] Built target nano
+[ 33%] Linking CXX executable nano-capella-rotation-audit
+[ 33%] Built target nano-capella-rotation-audit
+[ 33%] Building CXX object CMakeFiles/nano-chain-tests.dir/tests/test_chain.cpp.o
+[ 33%] Linking CXX executable nano-process-backpressure-tests
+[ 33%] Built target nano-process-backpressure-tests
+[ 34%] Building CXX object CMakeFiles/nano-rpc-tests.dir/tests/test_rpc.cpp.o
+[ 34%] Linking CXX executable nano-chain-tests
+[ 34%] Built target nano-chain-tests
+[ 34%] Building CXX object CMakeFiles/nano-rpc-foreign-admission-tests.dir/tests/test_rpc_foreign_admission.cpp.o
+[ 34%] Linking CXX executable nano-rpc-foreign-admission-tests
+[ 34%] Built target nano-rpc-foreign-admission-tests
+[ 34%] Building CXX object CMakeFiles/nano-rpc-fee-policy-tests.dir/tests/test_rpc_fee_policy.cpp.o
+[ 34%] Linking CXX executable nano-rpc-fee-policy-tests
+[ 34%] Built target nano-rpc-fee-policy-tests
+[ 34%] Building CXX object CMakeFiles/nano-rpc-fee-load-tests.dir/tests/test_rpc_fee_load.cpp.o
+[ 35%] Linking CXX executable nano-rpc-fee-load-tests
+[ 35%] Built target nano-rpc-fee-load-tests
+[ 35%] Building CXX object CMakeFiles/nano-http-tests.dir/tests/test_http.cpp.o
+[ 36%] Linking CXX executable nano-http-tests
+[ 36%] Built target nano-http-tests
+[ 36%] Building CXX object CMakeFiles/nano-beacon-http-errors-tests.dir/tests/test_beacon_http_errors.cpp.o
+[ 37%] Linking CXX executable nano-beacon-http-errors-tests
+[ 37%] Built target nano-beacon-http-errors-tests
+[ 37%] Building CXX object CMakeFiles/nano-websocket-output-tests.dir/tests/test_websocket_output.cpp.o
+[ 38%] Linking CXX executable nano-websocket-output-tests
+[ 38%] Built target nano-websocket-output-tests
+[ 38%] Building CXX object CMakeFiles/nano-large-block-sync-tests.dir/tests/test_large_block_sync.cpp.o
+[ 38%] Linking CXX executable nano-rpc-tests
+[ 38%] Built target nano-rpc-tests
+[ 38%] Building CXX object CMakeFiles/nano-block-transport-tests.dir/tests/test_block_transport.cpp.o
+[ 39%] Linking CXX executable nano-large-block-sync-tests
+[ 39%] Built target nano-large-block-sync-tests
+[ 39%] Building CXX object CMakeFiles/nano-rpc-shutdown-tests.dir/tests/test_rpc_shutdown.cpp.o
+[ 40%] Linking CXX executable nano-block-transport-tests
+[ 40%] Built target nano-block-transport-tests
+[ 40%] Building CXX object CMakeFiles/nano-rpc-disconnect-tests.dir/tests/test_rpc_disconnect.cpp.o
+[ 40%] Linking CXX executable nano-rpc-shutdown-tests
+[ 40%] Built target nano-rpc-shutdown-tests
+[ 40%] Building CXX object CMakeFiles/nano-http-disconnect-tests.dir/tests/test_http_disconnect.cpp.o
+[ 40%] Linking CXX executable nano-rpc-disconnect-tests
+[ 40%] Built target nano-rpc-disconnect-tests
+[ 40%] Building CXX object CMakeFiles/nano-rpc-queue-tests.dir/tests/test_rpc_queue.cpp.o
+[ 40%] Linking CXX executable nano-http-disconnect-tests
+[ 40%] Built target nano-http-disconnect-tests
+[ 40%] Building CXX object CMakeFiles/nano-event-tests.dir/tests/test_events.cpp.o
+[ 40%] Linking CXX executable nano-rpc-queue-tests
+[ 40%] Built target nano-rpc-queue-tests
+[ 40%] Building CXX object CMakeFiles/nano-validator-tests.dir/tests/test_validator.cpp.o
+[ 40%] Linking CXX executable nano-event-tests
+[ 40%] Built target nano-event-tests
+[ 40%] Building CXX object CMakeFiles/nano-network-tests.dir/tests/test_network.cpp.o
+[ 41%] Linking CXX executable nano-network-tests
+[ 41%] Built target nano-network-tests
+[ 41%] Building CXX object CMakeFiles/nano-bft-network-tests.dir/tests/test_bft_network.cpp.o
+[ 41%] Linking CXX executable nano-validator-tests
+[ 41%] Built target nano-validator-tests
+[ 41%] Building CXX object CMakeFiles/nano-supervisor-tests.dir/tests/test_supervisor.cpp.o
+[ 41%] Linking CXX executable nano-supervisor-tests
+[ 41%] Built target nano-supervisor-tests
+[ 41%] Building CXX object CMakeFiles/nano-wallet-cli-tests.dir/tests/test_wallet_cli.cpp.o
+[ 41%] Linking CXX executable nano-wallet-cli-tests
+[ 41%] Built target nano-wallet-cli-tests
+[ 41%] Building CXX object CMakeFiles/nano-rpc-cli-tests.dir/tests/test_rpc_cli.cpp.o
+[ 42%] Linking CXX executable nano-rpc-cli-tests
+[ 42%] Built target nano-rpc-cli-tests
+[ 42%] Building CXX object CMakeFiles/nano-migration-tests.dir/tests/test_migration.cpp.o
+[ 42%] Linking CXX executable nano-migration-tests
+[ 42%] Built target nano-migration-tests
+[ 42%] Building CXX object CMakeFiles/nano-migration_cli-tests.dir/tests/test_migration_cli.cpp.o
+[ 43%] Linking CXX executable nano-migration_cli-tests
+[ 43%] Built target nano-migration_cli-tests
+[ 43%] Building CXX object CMakeFiles/nano-uncle-tests.dir/tests/test_uncles.cpp.o
+[ 43%] Linking CXX executable nano-uncle-tests
+[ 43%] Built target nano-uncle-tests
+[ 43%] Building CXX object CMakeFiles/nano-install-tests.dir/tests/test_install.cpp.o
+[ 43%] Linking CXX executable nano-install-tests
+[ 43%] Built target nano-install-tests
+[ 43%] Building CXX object CMakeFiles/nano-staking-tests.dir/tests/test_staking.cpp.o
+[ 43%] Linking CXX executable nano-bft-network-tests
+[ 43%] Built target nano-bft-network-tests
+[ 43%] Building CXX object CMakeFiles/nano-staking_cli-tests.dir/tests/test_staking_cli.cpp.o
+[ 43%] Linking CXX executable nano-staking-tests
+[ 43%] Built target nano-staking-tests
+[ 43%] Building CXX object CMakeFiles/nano-miner-tests.dir/tests/test_miner.cpp.o
+[ 43%] Linking CXX executable nano-staking_cli-tests
+[ 43%] Built target nano-staking_cli-tests
+[ 43%] Building CXX object CMakeFiles/nano-block-auth-tests.dir/tests/test_block_auth.cpp.o
+[ 43%] Linking CXX executable nano-miner-tests
+[ 43%] Built target nano-miner-tests
+[ 44%] Building CXX object CMakeFiles/nano-signed-validator-cli-tests.dir/tests/test_signed_validator_cli.cpp.o
+[ 44%] Linking CXX executable nano-block-auth-tests
+[ 44%] Built target nano-block-auth-tests
+[ 44%] Building CXX object CMakeFiles/nano-finality-tests.dir/tests/test_finality.cpp.o
+[ 44%] Linking CXX executable nano-signed-validator-cli-tests
+[ 44%] Built target nano-signed-validator-cli-tests
+[ 44%] Building CXX object CMakeFiles/nano-storage-sync-failure-tests.dir/tests/test_storage_sync_failure.cpp.o
+[ 44%] Linking CXX executable nano-finality-tests
+[ 44%] Built target nano-finality-tests
+[ 45%] Building CXX object CMakeFiles/nano-storage-write-failure-tests.dir/tests/test_storage_write_failure.cpp.o
+[ 45%] Linking CXX executable nano-storage-sync-failure-tests
+[ 45%] Built target nano-storage-sync-failure-tests
+[ 45%] Building CXX object CMakeFiles/nano-finality-crash-fixture.dir/tests/finality_crash_fixture.cpp.o
+[ 45%] Linking CXX executable nano-storage-write-failure-tests
+[ 45%] Built target nano-storage-write-failure-tests
+[ 45%] Building CXX object CMakeFiles/nano-finality-crash-tests.dir/tests/test_finality_crash.cpp.o
+[ 45%] Linking CXX executable nano-finality-crash-fixture
+[ 45%] Built target nano-finality-crash-fixture
+[ 45%] Building CXX object CMakeFiles/nano-erc20-tests.dir/tests/test_erc20.cpp.o
+[ 46%] Linking CXX executable nano-finality-crash-tests
+[ 46%] Built target nano-finality-crash-tests
+[ 46%] Building CXX object CMakeFiles/nano-load-tests.dir/tests/test_load.cpp.o
+[ 46%] Linking CXX executable nano-erc20-tests
+[ 46%] Built target nano-erc20-tests
+[ 46%] Building CXX object CMakeFiles/nano-pending-load-tests.dir/tests/test_pending_load.cpp.o
+[ 46%] Linking CXX executable nano-load-tests
+[ 46%] Built target nano-load-tests
+[ 46%] Building CXX object CMakeFiles/nano-rpc-cost-tests.dir/tests/test_rpc_cost.cpp.o
+[ 46%] Linking CXX executable nano-pending-load-tests
+[ 46%] Built target nano-pending-load-tests
+[ 46%] Building CXX object CMakeFiles/nano-consensus-round-tests.dir/tests/test_consensus_round.cpp.o
+[ 46%] Linking CXX executable nano-rpc-cost-tests
+[ 46%] Built target nano-rpc-cost-tests
+[ 47%] Building CXX object CMakeFiles/nano-ethereum-state-runner.dir/tests/ethereum_state_runner.cpp.o
+[ 48%] Linking CXX executable nano-consensus-round-tests
+[ 48%] Built target nano-consensus-round-tests
+[ 49%] Building CXX object CMakeFiles/nano-evm-stack-tests.dir/tests/test_evm_stack.cpp.o
+[ 49%] Linking CXX executable nano-evm-stack-tests
+[ 49%] Built target nano-evm-stack-tests
+[ 50%] Building CXX object CMakeFiles/nano-blob-tests.dir/tests/test_blobs.cpp.o
+[ 50%] Linking CXX executable nano-ethereum-state-runner
+[ 50%] Built target nano-ethereum-state-runner
+[ 50%] Building CXX object CMakeFiles/nano-kzg-tests.dir/tests/test_kzg.cpp.o
+[ 50%] Linking CXX executable nano-kzg-tests
+[ 50%] Built target nano-kzg-tests
+[ 50%] Building CXX object CMakeFiles/nano-bls-tests.dir/tests/test_bls.cpp.o
+[ 50%] Linking CXX executable nano-blob-tests
+[ 50%] Built target nano-blob-tests
+[ 50%] Building CXX object CMakeFiles/nano-authorization-tests.dir/tests/test_authorization.cpp.o
+[ 50%] Linking CXX executable nano-bls-tests
+[ 50%] Built target nano-bls-tests
+[ 50%] Building CXX object CMakeFiles/nano-osaka-tests.dir/tests/test_osaka.cpp.o
+[ 50%] Linking CXX executable nano-authorization-tests
+[ 50%] Built target nano-authorization-tests
+[ 50%] Building CXX object CMakeFiles/nano-ethereum-transaction-runner.dir/tests/ethereum_transaction_runner.cpp.o
+[ 50%] Linking CXX executable nano-osaka-tests
+[ 50%] Built target nano-osaka-tests
+[ 50%] Building CXX object CMakeFiles/nano-ethereum-block-runner.dir/tests/ethereum_block_runner.cpp.o
+[ 50%] Linking CXX executable nano-ethereum-transaction-runner
+[ 50%] Built target nano-ethereum-transaction-runner
+[ 50%] Building CXX object CMakeFiles/nano-withdrawal-tests.dir/tests/test_withdrawals.cpp.o
+[ 50%] Linking CXX executable nano-withdrawal-tests
+[ 50%] Built target nano-withdrawal-tests
+[ 50%] Building CXX object CMakeFiles/nano-beacon-tests.dir/tests/test_beacon.cpp.o
+[ 50%] Linking CXX executable nano-ethereum-block-runner
+[ 50%] Built target nano-ethereum-block-runner
+[ 50%] Building CXX object CMakeFiles/nano-prevrandao-tests.dir/tests/test_prevrandao.cpp.o
+[ 51%] Linking CXX executable nano-beacon-tests
+[ 51%] Built target nano-beacon-tests
+[ 51%] Building CXX object CMakeFiles/nano-request-tests.dir/tests/test_requests.cpp.o
+[ 51%] Linking CXX executable nano-prevrandao-tests
+[ 51%] Built target nano-prevrandao-tests
+[ 51%] Building CXX object CMakeFiles/nano-signed-execution-runner.dir/tests/signed_execution_runner.cpp.o
+[ 51%] Linking CXX executable nano-request-tests
+[ 51%] Built target nano-request-tests
+[ 51%] Building CXX object CMakeFiles/nano-recovery-audit-tests.dir/tests/test_recovery_audit.cpp.o
+[ 51%] Linking CXX executable nano-signed-execution-runner
+[ 51%] Built target nano-signed-execution-runner
+[ 52%] Building CXX object CMakeFiles/nano-gossip-recovery-tests.dir/tests/test_gossip_recovery.cpp.o
+[ 52%] Linking CXX executable nano-recovery-audit-tests
+[ 52%] Built target nano-recovery-audit-tests
+[ 53%] Building CXX object CMakeFiles/nano-txpool-history-tests.dir/tests/test_txpool_history.cpp.o
+[ 53%] Linking CXX executable nano-gossip-recovery-tests
+[ 53%] Built target nano-gossip-recovery-tests
+[ 54%] Building CXX object CMakeFiles/nano-bellatrix-wire-identity-tests.dir/tests/test_bellatrix_wire_identity.cpp.o
+[ 54%] Linking CXX executable nano-txpool-history-tests
+[ 54%] Built target nano-txpool-history-tests
+[ 55%] Building CXX object CMakeFiles/nano-beacon-execution-gate-tests.dir/tests/test_beacon_execution_gate.cpp.o
+[ 55%] Linking CXX executable nano-bellatrix-wire-identity-tests
+[ 55%] Built target nano-bellatrix-wire-identity-tests
+[ 55%] Building CXX object CMakeFiles/nano-txpool-canonical-tests.dir/tests/test_txpool_canonical.cpp.o
+[ 55%] Linking CXX executable nano-beacon-execution-gate-tests
+[ 55%] Built target nano-beacon-execution-gate-tests
+[ 55%] Building CXX object CMakeFiles/nano-txpool-bytes-tests.dir/tests/test_txpool_bytes.cpp.o
+[ 55%] Linking CXX executable nano-txpool-bytes-tests
+[ 55%] Built target nano-txpool-bytes-tests
+[ 55%] Building CXX object CMakeFiles/nano-gossip-restart-tests.dir/tests/test_gossip_restart.cpp.o
+[ 55%] Linking CXX executable nano-txpool-canonical-tests
+[ 55%] Built target nano-txpool-canonical-tests
+[ 55%] Building CXX object CMakeFiles/nano-gossip-retry-tests.dir/tests/test_gossip_retry.cpp.o
+[ 55%] Linking CXX executable nano-gossip-restart-tests
+[ 55%] Built target nano-gossip-restart-tests
+[ 55%] Building CXX object CMakeFiles/nano-gossip-capacity-tests.dir/tests/test_gossip_capacity.cpp.o
+[ 55%] Linking CXX executable nano-gossip-retry-tests
+[ 55%] Built target nano-gossip-retry-tests
+[ 55%] Building CXX object CMakeFiles/nano-bft-large-envelope-tests.dir/tests/test_bft_large_envelope.cpp.o
+[ 55%] Linking CXX executable nano-gossip-capacity-tests
+[ 55%] Built target nano-gossip-capacity-tests
+[ 55%] Building CXX object CMakeFiles/nano-oversized-block-tests.dir/tests/test_oversized_block.cpp.o
+[ 55%] Linking CXX executable nano-oversized-block-tests
+[ 55%] Built target nano-oversized-block-tests
+[ 55%] Building CXX object CMakeFiles/nano-chunked-proposal-tests.dir/tests/test_chunked_proposal.cpp.o
+[ 55%] Linking CXX executable nano-bft-large-envelope-tests
+[ 55%] Built target nano-bft-large-envelope-tests
+[ 55%] Building CXX object CMakeFiles/nano-block-fragment-tests.dir/tests/test_block_fragments.cpp.o
+[ 55%] Linking CXX executable nano-chunked-proposal-tests
+[ 55%] Built target nano-chunked-proposal-tests
+[ 55%] Building CXX object CMakeFiles/nano-block-import-tests.dir/tests/test_block_import.cpp.o
+[ 55%] Linking CXX executable nano-block-import-tests
+[ 55%] Built target nano-block-import-tests
+[ 55%] Building CXX object CMakeFiles/nano-block-ingress-tests.dir/tests/test_block_ingress.cpp.o
+[ 55%] Linking CXX executable nano-block-fragment-tests
+[ 55%] Built target nano-block-fragment-tests
+[ 56%] Building CXX object CMakeFiles/nano-fragment-network-tests.dir/tests/test_fragment_network.cpp.o
+[ 56%] Linking CXX executable nano-fragment-network-tests
+[ 56%] Built target nano-fragment-network-tests
+[ 56%] Building CXX object CMakeFiles/nano-bft-fragment-network-tests.dir/tests/test_bft_fragment_network.cpp.o
+[ 57%] Linking CXX executable nano-block-ingress-tests
+[ 57%] Built target nano-block-ingress-tests
+[ 57%] Building CXX object CMakeFiles/nano-block-event-reference-tests.dir/tests/test_block_event_references.cpp.o
+[ 58%] Linking CXX executable nano-block-event-reference-tests
+[ 58%] Linking CXX executable nano-bft-fragment-network-tests
+[ 58%] Built target nano-block-event-reference-tests
+[ 58%] Building CXX object CMakeFiles/nano-bft-signing-sync-tests.dir/tests/test_bft_signing_sync_failure.cpp.o
+[ 58%] Built target nano-bft-fragment-network-tests
+[ 59%] Building CXX object CMakeFiles/nano-bft-managed-large-tests.dir/tests/test_bft_managed_large.cpp.o
+[ 59%] Linking CXX executable nano-bft-signing-sync-tests
+[ 59%] Built target nano-bft-signing-sync-tests
+[ 59%] Building CXX object CMakeFiles/nano-vote-scaling-tests.dir/tests/test_vote_scaling.cpp.o
+[ 59%] Linking CXX executable nano-bft-managed-large-tests
+[ 59%] Built target nano-bft-managed-large-tests
+[ 59%] Building CXX object CMakeFiles/nano-vote-participation-tests.dir/tests/test_vote_participation.cpp.o
+[ 59%] Linking CXX executable nano-vote-scaling-tests
+[ 59%] Built target nano-vote-scaling-tests
+[ 59%] Building CXX object CMakeFiles/nano-validator-admission-tests.dir/tests/test_validator_admission.cpp.o
+[ 60%] Linking CXX executable nano-vote-participation-tests
+[ 60%] Built target nano-vote-participation-tests
+[ 60%] Building CXX object CMakeFiles/nano-committee-tests.dir/tests/test_committee.cpp.o
+[ 60%] Linking CXX executable nano-committee-tests
+[ 61%] Linking CXX executable nano-validator-admission-tests
+[ 61%] Built target nano-committee-tests
+[ 61%] Building CXX object CMakeFiles/nano-consensus-bls-tests.dir/tests/test_consensus_bls.cpp.o
+[ 61%] Built target nano-validator-admission-tests
+[ 61%] Building CXX object CMakeFiles/nano-consensus-signing-tests.dir/tests/test_consensus_signing.cpp.o
+[ 61%] Linking CXX executable nano-consensus-bls-tests
+[ 61%] Built target nano-consensus-bls-tests
+[ 61%] Building CXX object CMakeFiles/nano-consensus-bls-aggregate-tests.dir/tests/test_consensus_bls_aggregate.cpp.o
+[ 61%] Linking CXX executable nano-consensus-signing-tests
+[ 61%] Built target nano-consensus-signing-tests
+[ 61%] Building CXX object CMakeFiles/nano-network-scale-tests.dir/tests/test_network_scale.cpp.o
+[ 62%] Linking CXX executable nano-consensus-bls-aggregate-tests
+[ 62%] Built target nano-consensus-bls-aggregate-tests
+[ 62%] Building CXX object CMakeFiles/nano-consensus-deposit-tests.dir/tests/test_consensus_deposit.cpp.o
+[ 62%] Linking CXX executable nano-network-scale-tests
+[ 62%] Built target nano-network-scale-tests
+[ 62%] Building CXX object CMakeFiles/nano-staking-rules-tests.dir/tests/test_staking_rules.cpp.o
+[ 63%] Linking CXX executable nano-consensus-deposit-tests
+[ 63%] Built target nano-consensus-deposit-tests
+[ 63%] Building CXX object CMakeFiles/nano-staking-pagination-tests.dir/tests/test_staking_pagination.cpp.o
+[ 64%] Linking CXX executable nano-staking-rules-tests
+[ 64%] Built target nano-staking-rules-tests
+[ 65%] Building CXX object CMakeFiles/nano-static-state-tests.dir/tests/test_static_state.cpp.o
+[ 65%] Linking CXX executable nano-static-state-tests
+[ 65%] Linking CXX executable nano-staking-pagination-tests
+[ 65%] Built target nano-static-state-tests
+[ 65%] Building CXX object CMakeFiles/nano-consensus-committee-tests.dir/tests/test_consensus_committee.cpp.o
+[ 65%] Built target nano-staking-pagination-tests
+[ 66%] Building CXX object CMakeFiles/nano-consensus-attestation-tests.dir/tests/test_consensus_attestation.cpp.o
+[ 66%] Linking CXX executable nano-consensus-committee-tests
+[ 66%] Built target nano-consensus-committee-tests
+[ 67%] Building CXX object CMakeFiles/nano-attestation-conflict-tests.dir/tests/test_attestation_conflicts.cpp.o
+[ 67%] Linking CXX executable nano-consensus-attestation-tests
+[ 67%] Built target nano-consensus-attestation-tests
+[ 67%] Building CXX object CMakeFiles/nano-consensus-slashing-tests.dir/tests/test_consensus_slashing.cpp.o
+[ 67%] Linking CXX executable nano-attestation-conflict-tests
+[ 67%] Built target nano-attestation-conflict-tests
+[ 67%] Building CXX object CMakeFiles/nano-slashing-transition-tests.dir/tests/test_slashing_transition.cpp.o
+[ 67%] Linking CXX executable nano-consensus-slashing-tests
+[ 67%] Built target nano-consensus-slashing-tests
+[ 67%] Building CXX object CMakeFiles/nano-slashing-recovery-tests.dir/tests/test_slashing_recovery.cpp.o
+[ 67%] Linking CXX executable nano-slashing-transition-tests
+[ 67%] Built target nano-slashing-transition-tests
+[ 67%] Building CXX object CMakeFiles/nano-slashing-epoch-tests.dir/tests/test_slashing_epoch.cpp.o
+[ 67%] Linking CXX executable nano-slashing-recovery-tests
+[ 67%] Built target nano-slashing-recovery-tests
+[ 67%] Building CXX object CMakeFiles/nano-slashing-official-tests.dir/tests/test_slashing_official.cpp.o
+[ 67%] Linking CXX executable nano-slashing-epoch-tests
+[ 67%] Built target nano-slashing-epoch-tests
+[ 67%] Building CXX object CMakeFiles/nano-consensus-randao-tests.dir/tests/test_consensus_randao.cpp.o
+[ 67%] Linking CXX executable nano-consensus-randao-tests
+[ 68%] Linking CXX executable nano-slashing-official-tests
+[ 68%] Built target nano-consensus-randao-tests
+[ 69%] Building CXX object CMakeFiles/nano-randao-official-tests.dir/tests/test_randao_official.cpp.o
+[ 69%] Built target nano-slashing-official-tests
+[ 70%] Building CXX object CMakeFiles/nano-consensus-proposer-tests.dir/tests/test_consensus_proposer.cpp.o
+[ 70%] Linking CXX executable nano-consensus-proposer-tests
+[ 70%] Built target nano-consensus-proposer-tests
+[ 70%] Building CXX object CMakeFiles/nano-selected-randao-tests.dir/tests/test_selected_randao.cpp.o
+[ 70%] Linking CXX executable nano-randao-official-tests
+[ 70%] Built target nano-randao-official-tests
+[ 70%] Building CXX object CMakeFiles/nano-beacon-header-tests.dir/tests/test_beacon_header.cpp.o
+[ 70%] Linking CXX executable nano-selected-randao-tests
+[ 70%] Built target nano-selected-randao-tests
+[ 70%] Building CXX object CMakeFiles/nano-beacon-body-tests.dir/tests/test_beacon_body.cpp.o
+[ 70%] Linking CXX executable nano-beacon-header-tests
+[ 70%] Built target nano-beacon-header-tests
+[ 70%] Building CXX object CMakeFiles/nano-consensus-block-auth-tests.dir/tests/test_consensus_block_auth.cpp.o
+[ 70%] Linking CXX executable nano-beacon-body-tests
+[ 70%] Built target nano-beacon-body-tests
+[ 70%] Building CXX object CMakeFiles/nano-proposer-slashing-official-tests.dir/tests/test_proposer_slashing_official.cpp.o
+[ 70%] Linking CXX executable nano-consensus-block-auth-tests
+[ 70%] Built target nano-consensus-block-auth-tests
+[ 70%] Building CXX object CMakeFiles/nano-block-proposer-operations-tests.dir/tests/test_block_proposer_operations.cpp.o
+[ 70%] Linking CXX executable nano-proposer-slashing-official-tests
+[ 70%] Built target nano-proposer-slashing-official-tests
+[ 70%] Building CXX object CMakeFiles/nano-block-operations-official-tests.dir/tests/test_block_operations_official.cpp.o
+[ 70%] Linking CXX executable nano-block-proposer-operations-tests
+[ 70%] Built target nano-block-proposer-operations-tests
+[ 70%] Building CXX object CMakeFiles/nano-voluntary-exit-official-tests.dir/tests/test_voluntary_exit_official.cpp.o
+[ 70%] Linking CXX executable nano-block-operations-official-tests
+[ 70%] Built target nano-block-operations-official-tests
+[ 70%] Building CXX object CMakeFiles/nano-deneb-exit-official-tests.dir/tests/test_deneb_exit_official.cpp.o
+[ 70%] Linking CXX executable nano-voluntary-exit-official-tests
+[ 70%] Built target nano-voluntary-exit-official-tests
+[ 70%] Building CXX object CMakeFiles/nano-deposit-transition-official-tests.dir/tests/test_deposit_transition_official.cpp.o
+[ 70%] Linking CXX executable nano-deneb-exit-official-tests
+[ 70%] Built target nano-deneb-exit-official-tests
+[ 70%] Building CXX object CMakeFiles/nano-registry-operations-tests.dir/tests/test_registry_operations.cpp.o
+[ 71%] Linking CXX executable nano-deposit-transition-official-tests
+[ 71%] Built target nano-deposit-transition-official-tests
+[ 71%] Building CXX object CMakeFiles/nano-registry-blocks-official-tests.dir/tests/test_registry_blocks_official.cpp.o
+[ 72%] Linking CXX executable nano-registry-operations-tests
+[ 72%] Built target nano-registry-operations-tests
+[ 73%] Building CXX object CMakeFiles/nano-registry-epoch-official-tests.dir/tests/test_registry_epoch_official.cpp.o
+[ 73%] Linking CXX executable nano-registry-blocks-official-tests
+[ 73%] Built target nano-registry-blocks-official-tests
+[ 73%] Building CXX object CMakeFiles/nano-registry-epoch-scale-tests.dir/tests/test_registry_epoch_scale.cpp.o
+[ 73%] Linking CXX executable nano-registry-epoch-scale-tests
+[ 73%] Linking CXX executable nano-registry-epoch-official-tests
+[ 73%] Built target nano-registry-epoch-scale-tests
+[ 73%] Building CXX object CMakeFiles/nano-ffg-official-tests.dir/tests/test_ffg_official.cpp.o
+[ 73%] Built target nano-registry-epoch-official-tests
+[ 73%] Building CXX object CMakeFiles/nano-attestation-inclusion-official-tests.dir/tests/test_attestation_inclusion_official.cpp.o
+[ 73%] Linking CXX executable nano-ffg-official-tests
+[ 73%] Linking CXX executable nano-attestation-inclusion-official-tests
+[ 73%] Built target nano-ffg-official-tests
+[ 74%] Building CXX object CMakeFiles/nano-attester-slashing-official-tests.dir/tests/test_attester_slashing_official.cpp.o
+[ 74%] Built target nano-attestation-inclusion-official-tests
+[ 74%] Building CXX object CMakeFiles/nano-attester-blocks-official-tests.dir/tests/test_attester_blocks_official.cpp.o
+[ 74%] Linking CXX executable nano-attester-blocks-official-tests
+[ 74%] Linking CXX executable nano-attester-slashing-official-tests
+[ 74%] Built target nano-attester-blocks-official-tests
+[ 74%] Building CXX object CMakeFiles/nano-effective-balance-official-tests.dir/tests/test_effective_balance_official.cpp.o
+[ 74%] Built target nano-attester-slashing-official-tests
+[ 74%] Building CXX object CMakeFiles/nano-epoch-maintenance-official-tests.dir/tests/test_epoch_maintenance_official.cpp.o
+[ 74%] Linking CXX executable nano-effective-balance-official-tests
+[ 74%] Built target nano-effective-balance-official-tests
+[ 74%] Building CXX object CMakeFiles/nano-rewards-official-tests.dir/tests/test_rewards_official.cpp.o
+[ 74%] Linking CXX executable nano-epoch-maintenance-official-tests
+[ 74%] Built target nano-epoch-maintenance-official-tests
+[ 74%] Building CXX object CMakeFiles/nano-epoch-transition-tests.dir/tests/test_epoch_transition.cpp.o
+[ 74%] Linking CXX executable nano-rewards-official-tests
+[ 74%] Built target nano-rewards-official-tests
+[ 74%] Building CXX object CMakeFiles/nano-beacon-state-root-tests.dir/tests/test_beacon_state_root.cpp.o
+[ 75%] Linking CXX executable nano-epoch-transition-tests
+[ 75%] Built target nano-epoch-transition-tests
+[ 75%] Building CXX object CMakeFiles/nano-slots-official-tests.dir/tests/test_slots_official.cpp.o
+[ 75%] Linking CXX executable nano-beacon-state-root-tests
+[ 75%] Built target nano-beacon-state-root-tests
+[ 75%] Building CXX object CMakeFiles/nano-full-blocks-official-tests.dir/tests/test_full_blocks_official.cpp.o
+[ 76%] Linking CXX executable nano-slots-official-tests
+[ 76%] Built target nano-slots-official-tests
+[ 76%] Building CXX object CMakeFiles/nano-consensus-snapshot-tests.dir/tests/test_consensus_snapshot.cpp.o
+[ 76%] Linking CXX executable nano-full-blocks-official-tests
+[ 76%] Built target nano-full-blocks-official-tests
+[ 76%] Building CXX object CMakeFiles/nano-snapshot-sync-failure-tests.dir/tests/test_snapshot_sync_failure.cpp.o
+[ 77%] Linking CXX executable nano-consensus-snapshot-tests
+[ 77%] Built target nano-consensus-snapshot-tests
+[ 77%] Building CXX object CMakeFiles/nano-fork-choice-tests.dir/tests/test_fork_choice.cpp.o
+[ 77%] Linking CXX executable nano-fork-choice-tests
+[ 77%] Built target nano-fork-choice-tests
+[ 77%] Building CXX object CMakeFiles/nano-fork-vote-tests.dir/tests/test_fork_vote.cpp.o
+[ 77%] Linking CXX executable nano-snapshot-sync-failure-tests
+[ 77%] Built target nano-snapshot-sync-failure-tests
+[ 77%] Building CXX object CMakeFiles/nano-fork-state-tests.dir/tests/test_fork_state.cpp.o
+[ 77%] Linking CXX executable nano-fork-vote-tests
+[ 77%] Built target nano-fork-vote-tests
+[ 77%] Building CXX object CMakeFiles/nano-fork-clock-tests.dir/tests/test_fork_clock.cpp.o
+[ 77%] Linking CXX executable nano-fork-clock-tests
+[ 77%] Built target nano-fork-clock-tests
+[ 77%] Building CXX object CMakeFiles/nano-fork-store-tests.dir/tests/test_fork_store.cpp.o
+[ 78%] Linking CXX executable nano-fork-state-tests
+[ 78%] Built target nano-fork-state-tests
+[ 78%] Building CXX object CMakeFiles/nano-altair-state-root-tests.dir/tests/test_altair_state_root.cpp.o
+[ 79%] Linking CXX executable nano-altair-state-root-tests
+[ 79%] Built target nano-altair-state-root-tests
+[ 79%] Building CXX object CMakeFiles/nano-altair-inactivity-tests.dir/tests/test_altair_inactivity.cpp.o
+[ 79%] Linking CXX executable nano-fork-store-tests
+[ 79%] Built target nano-fork-store-tests
+[ 79%] Building CXX object CMakeFiles/nano-altair-rewards-tests.dir/tests/test_altair_rewards.cpp.o
+[ 79%] Linking CXX executable nano-altair-inactivity-tests
+[ 79%] Built target nano-altair-inactivity-tests
+[ 79%] Building CXX object CMakeFiles/nano-altair-ffg-tests.dir/tests/test_altair_ffg.cpp.o
+[ 79%] Linking CXX executable nano-altair-rewards-tests
+[ 79%] Built target nano-altair-rewards-tests
+[ 79%] Building CXX object CMakeFiles/nano-altair-sync-tests.dir/tests/test_altair_sync.cpp.o
+[ 79%] Linking CXX executable nano-altair-ffg-tests
+[ 79%] Built target nano-altair-ffg-tests
+[ 79%] Building CXX object CMakeFiles/nano-altair-participation-tests.dir/tests/test_altair_participation.cpp.o
+[ 79%] Linking CXX executable nano-altair-sync-tests
+[ 79%] Built target nano-altair-sync-tests
+[ 79%] Building CXX object CMakeFiles/nano-altair-slots-tests.dir/tests/test_altair_slots.cpp.o
+[ 79%] Linking CXX executable nano-altair-participation-tests
+[ 79%] Built target nano-altair-participation-tests
+[ 79%] Building CXX object CMakeFiles/nano-altair-sync-aggregate-tests.dir/tests/test_altair_sync_aggregate.cpp.o
+[ 79%] Linking CXX executable nano-altair-slots-tests
+[ 79%] Built target nano-altair-slots-tests
+[ 79%] Building CXX object CMakeFiles/nano-altair-attestation-tests.dir/tests/test_altair_attestation.cpp.o
+[ 79%] Linking CXX executable nano-altair-sync-aggregate-tests
+[ 79%] Built target nano-altair-sync-aggregate-tests
+[ 79%] Building CXX object CMakeFiles/nano-altair-deposit-tests.dir/tests/test_altair_deposit.cpp.o
+[ 79%] Linking CXX executable nano-altair-attestation-tests
+[ 79%] Built target nano-altair-attestation-tests
+[ 79%] Building CXX object CMakeFiles/nano-altair-slashing-tests.dir/tests/test_altair_slashing.cpp.o
+[ 79%] Linking CXX executable nano-altair-deposit-tests
+[ 79%] Built target nano-altair-deposit-tests
+[ 79%] Building CXX object CMakeFiles/nano-altair-full-blocks-tests.dir/tests/test_altair_full_blocks.cpp.o
+[ 80%] Linking CXX executable nano-altair-slashing-tests
+[ 80%] Built target nano-altair-slashing-tests
+[ 81%] Building CXX object CMakeFiles/nano-altair-fork-head-tests.dir/tests/test_altair_fork_head.cpp.o
+/work/tests/test_altair_fork_head.cpp:40:11: warning: enumeration values 'voluntary_exit', 'bls_to_execution_change', and 'sync_committee_message' not handled in switch [-Wswitch]
+   40 |    switch(kind){case AltairWireKind::block:return reactor->block(packet);case AltairWireKind::attestation:return reactor->vote_ssz(packet);case AltairWireKind::attester_slashing:return reactor->slashing_ssz(packet);}return false;
+      |           ^~~~
+[ 81%] Linking CXX executable nano-altair-full-blocks-tests
+[ 81%] Built target nano-altair-full-blocks-tests
+[ 81%] Building CXX object CMakeFiles/nano-altair-snapshot-tests.dir/tests/test_altair_snapshot.cpp.o
+1 warning generated.
+[ 81%] Linking CXX executable nano-altair-fork-head-tests
+[ 81%] Built target nano-altair-fork-head-tests
+[ 81%] Building CXX object CMakeFiles/nano-fork-checkpoint-tests.dir/tests/test_fork_checkpoint.cpp.o
+[ 81%] Linking CXX executable nano-altair-snapshot-tests
+[ 81%] Built target nano-altair-snapshot-tests
+[ 81%] Building CXX object CMakeFiles/nano-fork-checkpoint-sync-tests.dir/tests/test_fork_checkpoint_sync.cpp.o
+[ 82%] Linking CXX executable nano-fork-checkpoint-tests
+[ 82%] Built target nano-fork-checkpoint-tests
+[ 82%] Building CXX object CMakeFiles/nano-altair-reactor-tests.dir/tests/test_altair_reactor.cpp.o
+[ 82%] Linking CXX executable nano-fork-checkpoint-sync-tests
+[ 82%] Built target nano-fork-checkpoint-sync-tests
+[ 82%] Building CXX object CMakeFiles/nano-consensus-message-ssz-tests.dir/tests/test_consensus_message_ssz.cpp.o
+[ 82%] Linking CXX executable nano-altair-reactor-tests
+[ 82%] Built target nano-altair-reactor-tests
+[ 82%] Building CXX object CMakeFiles/nano-altair-wire-tests.dir/tests/test_altair_wire.cpp.o
+[ 82%] Linking CXX executable nano-consensus-message-ssz-tests
+[ 82%] Built target nano-consensus-message-ssz-tests
+[ 83%] Building CXX object CMakeFiles/nano-altair-profile-tests.dir/tests/test_altair_profile.cpp.o
+[ 83%] Linking CXX executable nano-altair-profile-tests
+[ 83%] Built target nano-altair-profile-tests
+[ 83%] Building CXX object CMakeFiles/nano-altair-anchor-tests.dir/tests/test_altair_anchor.cpp.o
+[ 84%] Linking CXX executable nano-altair-anchor-tests
+[ 84%] Built target nano-altair-anchor-tests
+[ 84%] Building CXX object CMakeFiles/nano-altair-runtime-tests.dir/tests/test_altair_runtime.cpp.o
+[ 84%] Linking CXX executable nano-altair-runtime-tests
+[ 84%] Built target nano-altair-runtime-tests
+[ 85%] Building CXX object CMakeFiles/nano-peer-relay-concurrency-tests.dir/tests/test_peer_relay_concurrency.cpp.o
+[ 85%] Linking CXX executable nano-altair-wire-tests
+[ 85%] Built target nano-altair-wire-tests
+[ 85%] Building CXX object CMakeFiles/nano-altair-relay-progress-tests.dir/tests/test_altair_relay_progress.cpp.o
+[ 85%] Linking CXX executable nano-peer-relay-concurrency-tests
+[ 85%] Built target nano-peer-relay-concurrency-tests
+[ 86%] Building CXX object CMakeFiles/nano-altair-receipts-tests.dir/tests/test_altair_receipts.cpp.o
+[ 86%] Linking CXX executable nano-altair-relay-progress-tests
+[ 86%] Built target nano-altair-relay-progress-tests
+[ 86%] Building CXX object CMakeFiles/nano-altair-p2p-tests.dir/tests/test_altair_p2p.cpp.o
+[ 86%] Linking CXX executable nano-altair-receipts-tests
+[ 86%] Built target nano-altair-receipts-tests
+[ 86%] Building CXX object CMakeFiles/nano-altair-archive-tests.dir/tests/test_altair_archive.cpp.o
+[ 86%] Linking CXX executable nano-altair-archive-tests
+[ 86%] Built target nano-altair-archive-tests
+[ 86%] Building CXX object CMakeFiles/nano-altair-propagation-tests.dir/tests/test_altair_propagation.cpp.o
+[ 86%] Linking CXX executable nano-altair-p2p-tests
+[ 86%] Built target nano-altair-p2p-tests
+[ 86%] Building CXX object CMakeFiles/nano-altair-restart-p2p-tests.dir/tests/test_altair_restart_p2p.cpp.o
+[ 86%] Linking CXX executable nano-altair-propagation-tests
+[ 86%] Built target nano-altair-propagation-tests
+[ 87%] Building CXX object CMakeFiles/nano-altair-vote-archive-tests.dir/tests/test_altair_vote_archive.cpp.o
+[ 88%] Linking CXX executable nano-altair-restart-p2p-tests
+[ 88%] Built target nano-altair-restart-p2p-tests
+[ 88%] Building CXX object CMakeFiles/nano-altair-vote-propagation-tests.dir/tests/test_altair_vote_propagation.cpp.o
+[ 88%] Linking CXX executable nano-altair-vote-archive-tests
+[ 88%] Built target nano-altair-vote-archive-tests
+[ 88%] Building CXX object CMakeFiles/nano-beacon-signer-tests.dir/tests/test_beacon_signer.cpp.o
+[ 88%] Linking CXX executable nano-altair-vote-propagation-tests
+[ 88%] Built target nano-altair-vote-propagation-tests
+[ 88%] Building CXX object CMakeFiles/nano-beacon-interchange-tests.dir/tests/test_beacon_interchange.cpp.o
+[ 88%] Linking CXX executable nano-beacon-signer-tests
+[ 88%] Built target nano-beacon-signer-tests
+[ 88%] Building CXX object CMakeFiles/nano-beacon-journal-cli-tests.dir/tests/test_beacon_journal_cli.cpp.o
+[ 88%] Linking CXX executable nano-beacon-interchange-tests
+[ 88%] Built target nano-beacon-interchange-tests
+[ 88%] Building CXX object CMakeFiles/nano-altair-attester-duty-tests.dir/tests/test_altair_attester_duty.cpp.o
+[ 88%] Linking CXX executable nano-beacon-journal-cli-tests
+[ 88%] Built target nano-beacon-journal-cli-tests
+[ 89%] Building CXX object CMakeFiles/nano-altair-local-finality-tests.dir/tests/test_altair_local_finality.cpp.o
+[ 90%] Linking CXX executable nano-altair-attester-duty-tests
+[ 90%] Built target nano-altair-attester-duty-tests
+[ 90%] Building CXX object CMakeFiles/nano-execution-payload-tests.dir/tests/test_execution_payload.cpp.o
+[ 91%] Linking CXX executable nano-execution-payload-tests
+[ 91%] Built target nano-execution-payload-tests
+[ 91%] Building CXX object CMakeFiles/nano-execution-bridge-tests.dir/tests/test_execution_bridge.cpp.o
+[ 91%] Linking CXX executable nano-altair-local-finality-tests
+[ 91%] Built target nano-altair-local-finality-tests
+[ 91%] Building CXX object CMakeFiles/nano-bellatrix-containers-tests.dir/tests/test_bellatrix_containers.cpp.o
+[ 91%] Linking CXX executable nano-execution-bridge-tests
+[ 91%] Built target nano-execution-bridge-tests
+[ 91%] Building CXX object CMakeFiles/nano-bellatrix-slots-tests.dir/tests/test_bellatrix_slots.cpp.o
+[ 91%] Linking CXX executable nano-bellatrix-containers-tests
+[ 91%] Built target nano-bellatrix-containers-tests
+[ 91%] Building CXX object CMakeFiles/nano-bellatrix-transition-tests.dir/tests/test_bellatrix_transition.cpp.o
+[ 91%] Linking CXX executable nano-bellatrix-slots-tests
+[ 91%] Built target nano-bellatrix-slots-tests
+[ 92%] Building CXX object CMakeFiles/nano-execution-checkpoint-tests.dir/tests/test_execution_checkpoint.cpp.o
+[ 92%] Linking CXX executable nano-execution-checkpoint-tests
+[ 92%] Built target nano-execution-checkpoint-tests
+[ 92%] Building CXX object CMakeFiles/nano-execution-checkpoint-sync-tests.dir/tests/test_execution_checkpoint.cpp.o
+[ 92%] Linking CXX executable nano-execution-checkpoint-sync-tests
+[ 92%] Built target nano-execution-checkpoint-sync-tests
+[ 92%] Building CXX object CMakeFiles/nano-bellatrix-checkpoint-export.dir/tests/bellatrix_checkpoint_export.cpp.o
+[ 92%] Linking CXX executable nano-bellatrix-checkpoint-export
+[ 92%] Built target nano-bellatrix-checkpoint-export
+[ 92%] Building CXX object CMakeFiles/nano-beacon-recovery-tests.dir/tests/test_beacon_recovery.cpp.o
+[ 93%] Linking CXX executable nano-beacon-recovery-tests
+[ 93%] Built target nano-beacon-recovery-tests
+[ 93%] Building CXX object CMakeFiles/nano-execution-deposit-tests.dir/tests/test_execution_deposit.cpp.o
+[ 93%] Linking CXX executable nano-execution-deposit-tests
+[ 93%] Built target nano-execution-deposit-tests
+[ 93%] Building CXX object CMakeFiles/nano-deposit-history-tests.dir/tests/test_deposit_history.cpp.o
+[ 93%] Linking CXX executable nano-deposit-history-tests
+[ 93%] Built target nano-deposit-history-tests
+[ 94%] Building CXX object CMakeFiles/nano-bellatrix-exit-identity-tests.dir/tests/test_bellatrix_exit_identity.cpp.o
+[ 94%] Linking CXX executable nano-bellatrix-exit-identity-tests
+[ 94%] Built target nano-bellatrix-exit-identity-tests
+[ 94%] Building CXX object CMakeFiles/nano-capella-withdrawal-tests.dir/tests/test_capella_withdrawals.cpp.o
+[ 94%] Linking CXX executable nano-capella-withdrawal-tests
+[ 94%] Built target nano-capella-withdrawal-tests
+[ 94%] Building CXX object CMakeFiles/nano-secp256k1-tests.dir/tests/test_secp256k1.cpp.o
+[ 94%] Linking CXX executable nano-secp256k1-tests
+[ 94%] Built target nano-secp256k1-tests
+[ 94%] Building CXX object CMakeFiles/nano-capella-containers-tests.dir/tests/test_capella_containers.cpp.o
+[ 94%] Linking CXX executable nano-capella-containers-tests
+[ 94%] Built target nano-capella-containers-tests
+[ 94%] Building CXX object CMakeFiles/nano-capella-bls-change-tests.dir/tests/test_capella_bls_change.cpp.o
+[ 94%] Linking CXX executable nano-bellatrix-transition-tests
+[ 94%] Built target nano-bellatrix-transition-tests
+[ 94%] Building CXX object CMakeFiles/nano-capella-payload-tests.dir/tests/test_capella_payload.cpp.o
+[ 95%] Linking CXX executable nano-capella-bls-change-tests
+[ 95%] Built target nano-capella-bls-change-tests
+[ 95%] Building CXX object CMakeFiles/nano-capella-execution-tests.dir/tests/test_capella_execution.cpp.o
+[ 95%] Linking CXX executable nano-capella-payload-tests
+[ 95%] Built target nano-capella-payload-tests
+[ 95%] Building CXX object CMakeFiles/nano-capella-body-tests.dir/tests/test_capella_body.cpp.o
+[ 96%] Linking CXX executable nano-capella-execution-tests
+[ 96%] Built target nano-capella-execution-tests
+[ 96%] Building CXX object CMakeFiles/nano-capella-slots-tests.dir/tests/test_capella_slots.cpp.o
+[ 96%] Linking CXX executable nano-capella-body-tests
+[ 96%] Built target nano-capella-body-tests
+[ 96%] Linking CXX executable nano-capella-transition-tests
+[ 96%] Built target nano-capella-transition-tests
+[ 96%] Building CXX object CMakeFiles/nano-capella-fork-tests.dir/tests/test_capella_fork.cpp.o
+[ 96%] Linking CXX executable nano-capella-slots-tests
+[ 96%] Built target nano-capella-slots-tests
+[ 96%] Building CXX object CMakeFiles/nano-shanghai-checkpoint-tests.dir/tests/test_execution_checkpoint.cpp.o
+[ 96%] Linking CXX executable nano-capella-fork-tests
+[ 96%] Built target nano-capella-fork-tests
+[ 97%] Building CXX object CMakeFiles/nano-shanghai-checkpoint-sync-tests.dir/tests/test_execution_checkpoint.cpp.o
+[ 97%] Linking CXX executable nano-shanghai-checkpoint-tests
+[ 97%] Built target nano-shanghai-checkpoint-tests
+[ 97%] Building CXX object CMakeFiles/nano-capella-withdrawal-scale-tests.dir/tests/test_capella_withdrawal_scale.cpp.o
+[ 97%] Linking CXX executable nano-shanghai-checkpoint-sync-tests
+[ 97%] Built target nano-shanghai-checkpoint-sync-tests
+[ 98%] Building CXX object CMakeFiles/nano-capella-withdrawal-ssz-scale-tests.dir/tests/test_capella_withdrawal_ssz_scale.cpp.o
+[ 98%] Linking CXX executable nano-capella-withdrawal-scale-tests
+[ 98%] Built target nano-capella-withdrawal-scale-tests
+[ 98%] Building CXX object CMakeFiles/nano-capella-registration-scale-tests.dir/tests/test_capella_registration_scale.cpp.o
+[ 98%] Linking CXX executable nano-capella-withdrawal-ssz-scale-tests
+[ 98%] Built target nano-capella-withdrawal-ssz-scale-tests
+[ 98%] Building CXX object CMakeFiles/nano-storage-read-only-tests.dir/tests/test_storage_read_only.cpp.o
+[ 99%] Linking CXX executable nano-capella-registration-scale-tests
+[ 99%] Built target nano-capella-registration-scale-tests
+[ 99%] Building CXX object CMakeFiles/nano-capella-audit-corruption-tests.dir/tests/test_capella_audit_corruption.cpp.o
+[ 99%] Linking CXX executable nano-storage-read-only-tests
+[ 99%] Built target nano-storage-read-only-tests
+[ 99%] Linking CXX executable nano-capella-audit-ancestry-tests
+[ 99%] Built target nano-capella-audit-ancestry-tests
+[ 99%] Linking CXX executable nano-hex-encoding-tests
+[100%] Built target nano-hex-encoding-tests
+[100%] Linking CXX executable nano-capella-audit-corruption-tests
+[100%] Built target nano-capella-audit-corruption-tests
