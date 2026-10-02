@@ -6040,3 +6040,8 @@ Fixture locale hors Docker : 313 fichiers / 121 445 250 octets, empreintes ident
 ### 2026-10-02 — Nouveau natif qualifié et fixture signée auditée
 
 [Preuves](qualification/rpc-native-result-20261002/README.md) pour `d1597d9a` : 14 cas natifs + 21 réseau réussis sans skip, délais originaux ; relecture indépendante des 15 315 sources et 598 entrées stables. Audit signé en sandbox : 99 blocs / 97 transactions, checkpoint finalisé et engagement cœur externes correspondants ; trois requêtes invalides refusées, 313 fichiers de la fixture inchangés. Pas de régression native complète/dyld intégral, ni audit du contenu des journaux des signataires, reprise des duties, historique complet votes/fork-choice ou WAN. Régressions Docker en cours ; tous les gates et échecs historiques conservés.
+
+
+### 2026-10-02 — Pilote WAN compatible avec les volumes conservés
+
+[Candidate JS](qualification/rpc-wan-harness-selectors-20261002/README.md) `c7f759bb` basée sur `d1597d9a`, trois fichiers JS seulement : images immuables et volumes existants sélectionnés explicitement par architecture, montage de build traduit et aucun montage de données réécrit. 20 tests passent et trois refus du pilote réel interviennent avant Docker/SSH/SCP. Premier échec de texte d’erreur conservé puis corrigé. Aucun changement C++ ni lancement WAN ; tous les gates terminaux/production et échecs historiques maintenus.

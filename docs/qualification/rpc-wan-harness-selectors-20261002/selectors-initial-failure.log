@@ -1,0 +1,60 @@
+✔ legacy read-only volume paths remain available (0.627791ms)
+✔ isolated runtime, provenance and rotation auditor share the selected build (0.085208ms)
+✔ packaged/default mode cannot silently ignore a requested build (0.162167ms)
+✔ escape, whitespace, empty and multiline build selectors are rejected (0.115916ms)
+✔ architecture-specific paths select separate existing builds (0.054334ms)
+✔ common selector remains backward compatible and supports explicit override (0.535792ms)
+✔ one missing architecture without fallback cannot silently use the legacy binary (0.056125ms)
+✔ per-architecture selectors preserve packaged and path validation (0.06075ms)
+✔ remote source can select a Git candidate without changing the main checkout (0.588042ms)
+✔ remote source rejects traversal, relative paths and mount injection (0.132375ms)
+✔ remote Docker invocations translate provenance, native audit, restore and rotation executables (0.094583ms)
+✔ coherent campaign selects distinct daemon paths and translates remote argv (0.051583ms)
+✔ coherent network cannot be requested in packaged mode or with an ambiguous selector (0.064417ms)
+✔ explicit native core and network selections keep independently qualified binaries (0.0695ms)
+✔ native selectors reject traversal, whitespace and argument injection (0.172375ms)
+✔ explicit immutable images and existing volumes select actual per-host artifacts (0.128916ms)
+✔ legacy artifact selection remains explicit and unchanged (0.021958ms)
+✖ partial selections and artifact overrides in packaged mode are refused (0.9645ms)
+✔ mutable tags, malformed digests and mount injection are refused (0.316417ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 18
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 71.683
+
+✖ failing tests:
+
+test at tests/multihost/build-paths.test.mjs:94:1
+✖ partial selections and artifact overrides in packaged mode are refused (0.9645ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /requires build-volume/. Input:
+  
+  'Error: Existing artifacts require build-volume mode'
+  
+      at TestContext.<anonymous> (file:///private/tmp/nano-rpc-wan-harness-candidate-20261002/tests/multihost/build-paths.test.mjs:97:9)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Existing artifacts require build-volume mode
+        at selectBuildArtifacts (file:///private/tmp/nano-rpc-wan-harness-candidate-20261002/tests/multihost/build-paths.mjs:42:34)
+        at file:///private/tmp/nano-rpc-wan-harness-candidate-20261002/tests/multihost/build-paths.test.mjs:97:20
+        at getActual (node:assert:586:5)
+        at strict.throws (node:assert:734:24)
+        at TestContext.<anonymous> (file:///private/tmp/nano-rpc-wan-harness-candidate-20261002/tests/multihost/build-paths.test.mjs:97:9)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1201:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+        at Test.postRun (node:internal/test_runner/test:1330:19)
+        at Test.run (node:internal/test_runner/test:1258:12),
+    expected: /requires build-volume/,
+    operator: 'throws',
+    diff: 'simple'
+  }

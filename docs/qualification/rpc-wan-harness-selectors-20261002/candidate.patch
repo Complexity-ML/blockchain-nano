@@ -1,0 +1,205 @@
+diff --git a/tests/multihost/build-paths.mjs b/tests/multihost/build-paths.mjs
+index df787a42..3a0eb080 100644
+--- a/tests/multihost/build-paths.mjs
++++ b/tests/multihost/build-paths.mjs
+@@ -1,22 +1,49 @@
+ // Select existing read-only build artifacts; never copy or compile here.
+-export function selectBuildPaths(buildVolume,subdirectory){
++export function selectBuildPaths(buildVolume,subdirectory,networkWithinBuild=false){
++ if(typeof networkWithinBuild!=="boolean")throw Error("Invalid network build selector");
++ if(networkWithinBuild&&!buildVolume)throw Error("Network build selector requires build-volume mode");
+  if(subdirectory!==undefined&&!buildVolume)throw Error('Build subdirectory requires build-volume mode');
+  if(subdirectory!==undefined&&(typeof subdirectory!=='string'||!/^[a-zA-Z0-9]/.test(subdirectory)||/[^a-zA-Z0-9_.-]/.test(subdirectory)))throw Error('Invalid build subdirectory');
+  const directory=subdirectory===undefined?'/build':`/build/${subdirectory}`;
+- return {directory,nano:`${directory}/nano`,revision:`${directory}/production-source-revision.txt`,rotationAudit:`${directory}/nano-capella-rotation-audit`,p2p:'/build/network/nano-p2p'};
++ return {directory,nano:`${directory}/nano`,revision:`${directory}/production-source-revision.txt`,rotationAudit:`${directory}/nano-capella-rotation-audit`,p2p:networkWithinBuild?`${directory}/network/nano-p2p`:'/build/network/nano-p2p'};
+ }
+ // Both architecture selectors must be explicit unless a common fallback exists.
+-export function selectHostBuildPaths(buildVolume,common,arm64,amd64){
++export function selectHostBuildPaths(buildVolume,common,arm64,amd64,networkWithinBuild=false){
+  if(common===undefined&&(arm64===undefined)!==(amd64===undefined))throw Error('Both architecture build selectors are required');
+- return {arm64:selectBuildPaths(buildVolume,arm64===undefined?common:arm64),amd64:selectBuildPaths(buildVolume,amd64===undefined?common:amd64)};
++ return {arm64:selectBuildPaths(buildVolume,arm64===undefined?common:arm64,networkWithinBuild),amd64:selectBuildPaths(buildVolume,amd64===undefined?common:amd64,networkWithinBuild)};
+ }
+ export function selectRemoteSourceRepository(user,requested){
+  const path=requested===undefined?`/home/${user}/blockchain-nano-git`:requested;
+  if(typeof path!=='string'||!path.startsWith('/')||path==='/'||path.split('/').some(x=>x==='.'||x==='..')||/[^a-zA-Z0-9_./-]/.test(path)||path.includes('//'))throw Error('Invalid remote source repository');
+  return path;
+ }
+-export function remoteDockerArgument(argument,localImage,remoteImage,buildVolume,paths){
++export function remoteDockerArgument(argument,localImage,remoteImage,buildVolume,paths,artifacts){
++ if(buildVolume&&artifacts&&argument===artifacts.arm64.mount)return artifacts.amd64.mount;
+  if(argument===localImage)return remoteImage;
+- if(buildVolume)for(const key of ['nano','revision','rotationAudit'])if(argument===paths.arm64[key])return paths.amd64[key];
++ if(buildVolume)for(const key of ['nano','revision','rotationAudit','p2p'])if(argument===paths.arm64[key])return paths.amd64[key];
+  return argument;
+ }
++
++// Explicit native selections avoid silently using an old shared daemon.
++export function selectNativeBuildPaths(repository,coreDirectory,networkDirectory){
++ const check=path=>{
++  if(typeof path!=='string'||!path.startsWith('/')||path==='/'||path.split('/').some(x=>x==='.'||x==='..')||/[^a-zA-Z0-9_./-]/.test(path)||path.includes('//'))throw Error('Invalid native build directory');
++  return path;
++ };
++ const core=check(coreDirectory===undefined?`${repository}/build-release`:coreDirectory);
++ const network=check(networkDirectory===undefined?`${repository}/build-network`:networkDirectory);
++ return {nano:`${core}/nano`,p2p:`${network}/nano-p2p`,rotationAudit:`${core}/nano-capella-rotation-audit`,transitionTests:{bellatrix:`${core}/nano-bellatrix-transition-tests`,capella:`${core}/nano-capella-transition-tests`}};
++}
++
++// Explicit existing images/volumes must be complete and cannot escape Docker argv.
++export function selectBuildArtifacts(buildVolume,armImage,amdImage,armVolume,amdVolume){
++ if(typeof buildVolume!=='boolean')throw Error('Invalid build-volume mode');
++ const values=[armImage,amdImage,armVolume,amdVolume];
++ const explicit=values.some(v=>v!==undefined);
++ if(explicit&&!buildVolume)throw Error('Explicit artifact selection requires build-volume mode');
++ if(explicit&&values.some(v=>v===undefined))throw Error('Both images and volumes are required');
++ const image=v=>{if(typeof v!=='string'||v.length!==71||!/^sha256:[a-f0-9]{64}$/.test(v))throw Error('Invalid immutable builder image');return v;};
++ const volume=v=>{if(typeof v!=='string'||!v||!/^[a-zA-Z0-9]/.test(v)||/[^a-zA-Z0-9_.-]/.test(v))throw Error('Invalid existing build volume');return v;};
++ const artifact=(i,v)=>({image:i,volume:v,mount:`type=volume,src=${v},dst=/build,readonly`});
++ return explicit?{arm64:artifact(image(armImage),volume(armVolume)),amd64:artifact(image(amdImage),volume(amdVolume))}:{arm64:artifact('nano-build-dependencies:local','nano-linux-sync-build'),amd64:artifact('nano-build-dependencies:local','nano-linux-sync-build')};
++}
+diff --git a/tests/multihost/build-paths.test.mjs b/tests/multihost/build-paths.test.mjs
+index f1ed8820..f9497372 100644
+--- a/tests/multihost/build-paths.test.mjs
++++ b/tests/multihost/build-paths.test.mjs
+@@ -1,6 +1,6 @@
+ import {test} from 'node:test';
+ import assert from 'node:assert/strict';
+-import {selectBuildPaths,selectHostBuildPaths,selectRemoteSourceRepository,remoteDockerArgument} from './build-paths.mjs';
++import {selectBuildPaths,selectHostBuildPaths,selectRemoteSourceRepository,remoteDockerArgument,selectNativeBuildPaths,selectBuildArtifacts} from './build-paths.mjs';
+ test('legacy read-only volume paths remain available',()=>{
+  const p=selectBuildPaths(true,undefined);
+  assert.equal(p.nano,'/build/nano');assert.equal(p.revision,'/build/production-source-revision.txt');
+@@ -54,3 +54,52 @@ test('remote Docker invocations translate provenance, native audit, restore and
+  assert.deepEqual(['bash','/work/tests/multihost/backup-restore.sh',p.arm64.nano].map(translate),['bash','/work/tests/multihost/backup-restore.sh',p.amd64.nano]);
+  assert.equal(remoteDockerArgument(p.arm64.nano,'local-image','remote-image',false,p),p.arm64.nano);
+ });
++
++test('coherent campaign selects distinct daemon paths and translates remote argv',()=>{
++ const p=selectHostBuildPaths(true,undefined,'current-arm','current-amd',true);
++ assert.equal(p.arm64.p2p,'/build/current-arm/network/nano-p2p');
++ assert.equal(p.amd64.p2p,'/build/current-amd/network/nano-p2p');
++ const argv=['sha256sum',p.arm64.nano,p.arm64.p2p].map(a=>remoteDockerArgument(a,'arm-image','amd-image',true,p));
++ assert.deepEqual(argv,['sha256sum',p.amd64.nano,p.amd64.p2p]);
++});
++test('coherent network cannot be requested in packaged mode or with an ambiguous selector',()=>{
++ assert.throws(()=>selectBuildPaths(false,undefined,true),/requires build-volume/);
++ for(const bad of ['1',1,null,{},[]])assert.throws(()=>selectHostBuildPaths(true,'current',undefined,undefined,bad),/Invalid/);
++});
++test('explicit native core and network selections keep independently qualified binaries',()=>{
++ const p=selectNativeBuildPaths('/repo','/tmp/native-core','/tmp/current-network');
++ assert.equal(p.nano,'/tmp/native-core/nano');assert.equal(p.p2p,'/tmp/current-network/nano-p2p');
++ assert.equal(p.transitionTests.capella,'/tmp/native-core/nano-capella-transition-tests');
++ assert.equal(p.rotationAudit,'/tmp/native-core/nano-capella-rotation-audit');
++ const legacy=selectNativeBuildPaths('/repo');assert.equal(legacy.nano,'/repo/build-release/nano');assert.equal(legacy.p2p,'/repo/build-network/nano-p2p');
++});
++test('native selectors reject traversal, whitespace and argument injection',()=>{
++ for(const bad of ['relative','/','/tmp/../old','/tmp/./old','/tmp//old','/tmp/a,b','/tmp/a b','/tmp/a\nb',null,123]){
++  assert.throws(()=>selectNativeBuildPaths('/repo',bad,'/tmp/network'),/Invalid/);
++  assert.throws(()=>selectNativeBuildPaths('/repo','/tmp/core',bad),/Invalid/);
++ }
++});
++
++test('explicit immutable images and existing volumes select actual per-host artifacts',()=>{
++ const a=selectBuildArtifacts(true,'sha256:'+'a'.repeat(64),'sha256:'+'b'.repeat(64),'current-arm','current-amd');
++ const p=selectHostBuildPaths(true,undefined,'arm','amd',true);
++ const argv=['run','--mount',a.arm64.mount,a.arm64.image,'sha256sum',p.arm64.nano,p.arm64.p2p];
++ assert.deepEqual(argv.map(v=>remoteDockerArgument(v,a.arm64.image,a.amd64.image,true,p,a)),['run','--mount','type=volume,src=current-amd,dst=/build,readonly',a.amd64.image,'sha256sum',p.amd64.nano,p.amd64.p2p]);
++ assert.equal(remoteDockerArgument('type=volume,src=fixture-data,dst=/var/lib/nano',a.arm64.image,a.amd64.image,true,p,a),'type=volume,src=fixture-data,dst=/var/lib/nano');
++ assert.equal(a.arm64.mount,'type=volume,src=current-arm,dst=/build,readonly');
++});
++test('legacy artifact selection remains explicit and unchanged',()=>{
++ const a=selectBuildArtifacts(true);assert.equal(a.arm64.image,'nano-build-dependencies:local');assert.equal(a.amd64.volume,'nano-linux-sync-build');
++});
++test('partial selections and artifact overrides in packaged mode are refused',()=>{
++ const valid=['sha256:'+'a'.repeat(64),'sha256:'+'b'.repeat(64),'arm','amd'];
++ for(let i=0;i<4;i++){const bad=[...valid];bad[i]=undefined;assert.throws(()=>selectBuildArtifacts(true,...bad),/Both/);}
++ assert.throws(()=>selectBuildArtifacts(false,...valid),/requires build-volume/);
++});
++test('mutable tags, malformed digests and mount injection are refused',()=>{
++ const valid=['sha256:'+'a'.repeat(64),'sha256:'+'b'.repeat(64),'arm','amd'];
++ for(const bad of ['latest','sha256:'+'a'.repeat(63),'sha256:'+'A'.repeat(64),'sha256:'+'a'.repeat(64)+'\n',null,123])for(const i of [0,1]){const v=[...valid];v[i]=bad;assert.throws(()=>selectBuildArtifacts(true,...v),/Invalid immutable/);}
++ for(const bad of ['','../old','/build','-flag','name,readonly','a b','a\nb','a\n',null,123])for(const i of [2,3]){const v=[...valid];v[i]=bad;assert.throws(()=>selectBuildArtifacts(true,...v),/Invalid existing/);}
++});
++
++test('artifact mode must be an explicit boolean',()=>{for(const bad of ['1',1,null,undefined,{}])assert.throws(()=>selectBuildArtifacts(bad),/Invalid build-volume/);});
+diff --git a/tests/multihost/run.mjs b/tests/multihost/run.mjs
+index dd61fce7..4666f785 100644
+--- a/tests/multihost/run.mjs
++++ b/tests/multihost/run.mjs
+@@ -23,7 +23,7 @@ import {restoredFinalityAuditRequest,verifyRestoredFinalityAudit} from './restor
+ import {startFinalityMonitor} from './monitor.mjs';
+ import {qualifyAlertFault} from './alert-fault.mjs';
+ import {selectCandidates,verifyPackagedImage} from './candidate-images.mjs';
+-import {selectHostBuildPaths,selectRemoteSourceRepository,remoteDockerArgument} from './build-paths.mjs';
++import {selectHostBuildPaths,selectRemoteSourceRepository,remoteDockerArgument,selectNativeBuildPaths,selectBuildArtifacts} from './build-paths.mjs';
+ import {advanceRestartConfiguration} from './restart-pins.mjs';
+ import {decodeHttpResponse,httpStatusTrailer} from './http-response.mjs';
+ import {hashHarness} from './harness-manifest.mjs';
+@@ -34,18 +34,21 @@ if(!/^[a-z_][a-z0-9_-]*@[0-9.]+$/.test(target??'')||!(/^[0-9a-f]{40}$/).test(rev
+ const monitor=process.env.NANO_TEST_FINALITY_MONITOR==='1';
+ const alertDelivery=process.env.NANO_TEST_ALERT_DELIVERY==='1';
+ const buildVolume=process.env.NANO_TEST_BUILD_VOLUME==='1';
+-const hostBuildPaths=selectHostBuildPaths(buildVolume,process.env.NANO_TEST_BUILD_SUBDIRECTORY,process.env.NANO_TEST_BUILD_SUBDIRECTORY_ARM64,process.env.NANO_TEST_BUILD_SUBDIRECTORY_AMD64);
++if(process.env.NANO_TEST_NETWORK_WITH_CORE!==undefined&&!['0','1'].includes(process.env.NANO_TEST_NETWORK_WITH_CORE))throw Error('Invalid network build selector');
++const hostBuildPaths=selectHostBuildPaths(buildVolume,process.env.NANO_TEST_BUILD_SUBDIRECTORY,process.env.NANO_TEST_BUILD_SUBDIRECTORY_ARM64,process.env.NANO_TEST_BUILD_SUBDIRECTORY_AMD64,process.env.NANO_TEST_NETWORK_WITH_CORE==='1');
+ const buildPaths=hostBuildPaths.arm64;
++const buildArtifacts=selectBuildArtifacts(buildVolume,process.env.NANO_TEST_BUILDER_IMAGE_ARM64,process.env.NANO_TEST_BUILDER_IMAGE_AMD64,process.env.NANO_TEST_BUILD_VOLUME_ARM64,process.env.NANO_TEST_BUILD_VOLUME_AMD64);
+ const remoteRepository=selectRemoteSourceRepository(target.split('@')[0],process.env.NANO_TEST_REMOTE_SOURCE_REPOSITORY);
+ const candidateFile=process.env.NANO_TEST_CANDIDATE_MANIFEST;
+ if(candidateFile&&buildVolume)throw Error('Select packaged images or build volume, not both');
+ const candidates=candidateFile?selectCandidates(JSON.parse(await readFile(resolve(candidateFile),'utf8')),revision):null;
+ const privateTransport=buildVolume||Boolean(candidates);
+-const output=resolve(outputArg),repo=process.cwd(),image=candidates?.arm64.image??(buildVolume?'nano-build-dependencies:local':`blockchain-nano:${revision.slice(0,7)}`),remoteImage=candidates?.amd64.image??image;
++const output=resolve(outputArg),repo=process.cwd(),image=candidates?.arm64.image??(buildVolume?buildArtifacts.arm64.image:`blockchain-nano:${revision.slice(0,7)}`),remoteImage=candidates?.amd64.image??(buildVolume?buildArtifacts.amd64.image:image);
++const nativePaths=selectNativeBuildPaths(repo,process.env.NANO_TEST_NATIVE_BUILD_DIRECTORY,process.env.NANO_TEST_NATIVE_NETWORK_DIRECTORY);
+ const nofile=process.env.NANO_DOCKER_NOFILE??'65536';
+ if(!/^[1-9]\d*$/.test(nofile)||!Number.isSafeInteger(Number(nofile)))throw Error('NANO_DOCKER_NOFILE requires a positive safe integer');
+ const descriptorArgs=['--ulimit',`nofile=${nofile}:${nofile}`];
+-const artifactMount=buildVolume?['--mount','type=volume,src=nano-linux-sync-build,dst=/build,readonly']:[];
++const artifactMount=buildVolume?['--mount',buildArtifacts.arm64.mount]:[];
+ const runtimeCommand=buildVolume?[buildPaths.nano]:[];
+ const traceArgs=process.env.NANO_TEST_NETWORK_TRACE==='1'?['--env','NANO_TEST_NETWORK_TRACE=1']:[];
+ const id=Date.now().toString(36),local=`nano-qualification-mac-${id}`,remote=`nano-qualification-vps-${id}`;
+@@ -71,7 +74,7 @@ if(alertDelivery&&(!monitor||!candidates||fork!=='capella'||partition||asymmetri
+ const remoteRoot=`/home/${target.split('@')[0]}/nano-qualification-${id}`,ip=target.split('@')[1];
+ const quote=s=>"'"+String(s).replaceAll("'","'\\''")+"'";
+ const sh=async (args,timeout=30000)=>(await exec('ssh',['-o','BatchMode=yes','-o','ConnectTimeout=8',target,args.map(quote).join(' ')],{timeout,maxBuffer:8*1024*1024})).stdout;
+-const remoteArtifact=a=>remoteDockerArgument(a,image,remoteImage,buildVolume,hostBuildPaths);
++const remoteArtifact=a=>remoteDockerArgument(a,image,remoteImage,buildVolume,hostBuildPaths,buildArtifacts);
+ const docker=async(args,onRemote=false,timeout=30000)=>onRemote?sh(['sudo','-n','docker',...args.map(remoteArtifact)],timeout):(await exec('docker',args,{timeout,maxBuffer:8*1024*1024})).stdout;
+ const captureLogs=async(name,onRemote)=>{
+  const args=onRemote?['ssh','-o','BatchMode=yes',target,['sudo','-n','docker','logs',name].map(quote).join(' ')+' 2>&1']:['docker','logs',name];
+@@ -122,18 +125,18 @@ const rpc=async(kind,method,params=[])=>{
+  const r=await request(kind,'/',{jsonrpc:'2.0',id:1,method,params});if(r.error)throw Error(JSON.stringify(r.error));return r.result;
+ };
+ try{
+- const binary=join(repo,'build-release/nano'),p2p=join(repo,'build-network/nano-p2p');
+- if(rotation)await log({event:'rotation-audit-binary',sha256:createHash('sha256').update(await readFile(join(repo,'build-release/nano-capella-rotation-audit'))).digest('hex')});
++ const {nano:binary,p2p}=nativePaths;
++ if(rotation)await log({event:'rotation-audit-binary',sha256:createHash('sha256').update(await readFile(nativePaths.rotationAudit)).digest('hex')});
+  const harness=await hashHarness(repo);
+  if(monitor&&(fork!=='capella'||!privateTransport||partition||asymmetric||backupRestore||rotation||boundedLoad))throw Error('Monitor qualification requires standalone private Capella campaign');
+- await log({event:'harness',monitor,alertDelivery,partition,asymmetric,rotation,boundedLoad,backupRestore,pinnedRestart,partitionCuts,majorityIsland,majorityCutMs,faultProgress,fork,buildVolume,buildPaths:buildVolume?hostBuildPaths:null,remoteRepository,packagedImages:Boolean(candidates),artifacts,sha256:harness});
++ await log({event:'harness',monitor,alertDelivery,partition,asymmetric,rotation,boundedLoad,backupRestore,pinnedRestart,partitionCuts,majorityIsland,majorityCutMs,faultProgress,fork,buildVolume,buildPaths:buildVolume?hostBuildPaths:null,nativePaths,remoteRepository,buildArtifacts:buildVolume?buildArtifacts:null,packagedImages:Boolean(candidates),artifacts,sha256:harness});
+  await log({event:'binaries',revision,nanoSha256:createHash('sha256').update(await readFile(binary)).digest('hex'),p2pSha256:createHash('sha256').update(await readFile(p2p)).digest('hex')});
+  const assets=join(output,'assets'),prepared=join(output,'prepared');
+- await exec(join(repo,`build-release/nano-${fork}-transition-tests`),[fork==='capella'?'--export-network':'--export-kurtosis',assets],{timeout:30000});
++ await exec(nativePaths.transitionTests[fork],[fork==='capella'?'--export-network':'--export-kurtosis',assets],{timeout:30000});
+  const topology=[{name:'mac-native',host:'mac',mode:'native',rpcPort:18545,p2pPort:30305,p2pBinary:p2p,runtimeDirectory:join(prepared,'mac-native')},{name:'mac-docker',host:'mac',mode:'docker',rpcPort:8545,p2pPort:30303},{name:'vps-docker',host:target,mode:'docker',rpcPort:8545,p2pPort:30303}];
+  await writeFile(join(output,'topology.json'),JSON.stringify(topology));
+  await exec(process.execPath,['tests/multihost/prepare.mjs',assets,prepared,join(output,'topology.json')]);
+- if(buildVolume)for(const name of ['mac-docker','vps-docker']){const path=join(prepared,name,'node.json'),c=await json(path);c.p2p_binary=buildPaths.p2p;await writeFile(path,JSON.stringify(c));}
++ if(buildVolume)for(const name of ['mac-docker','vps-docker']){const path=join(prepared,name,'node.json'),c=await json(path);c.p2p_binary=hostBuildPaths[name==='vps-docker'?'amd64':'arm64'].p2p;await writeFile(path,JSON.stringify(c));}
+  await sh(['mkdir',remoteRoot]);
+  // Only newly generated PUBLIC fixtures cross SSH; software arrived via Git.
+  await exec('scp',['-q','-r',join(prepared,'vps-docker'),`${target}:${remoteRoot}/config`],{timeout:30000});
+@@ -418,7 +421,7 @@ if(pinnedRestart&&!process.exitCode){
+    await exec('scp',['-q',proofFile,`${target}:${remoteRoot}/rotation-proof.json`],{timeout:30000});
+    const audits=[];
+    const nd=join(output,'prepared/mac-native');
+-   audits.push(JSON.parse((await exec(join(repo,'build-release/nano-capella-rotation-audit'),[join(nd,'genesis.json'),join(nd,'node.json'),join(nd,'data/chain'),proofFile,rotationNodes[0]],{timeout:120000,maxBuffer:1024*1024})).stdout));
++   audits.push(JSON.parse((await exec(nativePaths.rotationAudit,[join(nd,'genesis.json'),join(nd,'node.json'),join(nd,'data/chain'),proofFile,rotationNodes[0]],{timeout:120000,maxBuffer:1024*1024})).stdout));
+    await writeFile(join(output,'rotation-audits.json'),JSON.stringify(audits,null,2));
+    for(const [name,onRemote,index] of [[local,false,1],[remote,true,2]]){
+     const config=onRemote?remoteRoot+'/config':join(output,'prepared/mac-docker');
