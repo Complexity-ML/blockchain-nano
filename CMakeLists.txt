@@ -1358,6 +1358,9 @@ if(NANO_NETWORK_EXECUTABLE)
  set_tests_properties(consensus_bellatrix_managed_runtime PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_runtime")
  find_program(NANO_RECOVERY_NODEJS_EXECUTABLE NAMES node)
  if(NANO_RECOVERY_NODEJS_EXECUTABLE)
+  add_test(NAME consensus_multihost_build_paths COMMAND ${NANO_RECOVERY_NODEJS_EXECUTABLE} --test
+   ${CMAKE_CURRENT_SOURCE_DIR}/tests/multihost/build-paths.test.mjs)
+  set_tests_properties(consensus_multihost_build_paths PROPERTIES TIMEOUT 15 LABELS "qualification_consensus_harness")
   add_test(NAME consensus_multihost_harness_manifest COMMAND ${NANO_RECOVERY_NODEJS_EXECUTABLE} --test
    ${CMAKE_CURRENT_SOURCE_DIR}/tests/multihost/harness-manifest.test.mjs)
   set_tests_properties(consensus_multihost_harness_manifest PROPERTIES TIMEOUT 15 LABELS "qualification_consensus_harness")
