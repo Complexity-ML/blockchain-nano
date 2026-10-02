@@ -6271,3 +6271,7 @@ Les huit cibles AMD64 **2d2764de** terminent ensuite leur compilation ; sélecti
 ### 2026-10-02 — Propriétaire Mac natif cohérent en préparation
 
 [Compilation et contrôle](qualification/coherent-wan-native-20261002/README.md) : source 554ebc3a, runtime strictement égal à 2d2764de ; CMake Mac Release isolé actif, huit cibles, P2P existant hashé. Nécessaire au propriétaire macOS natif demandé, les deux autres restent Docker Linux. Huit cas natifs enregistrés et contrôle préparé, **aucun résultat natif acquis**. Campagnes Docker inchangées ; activation/redémarrage AMD64 passent en 346,72/350,86 s sur 360 s, marge faible. Restauration complète, duties, WAN, régression et tous critères de production restent ouverts.
+
+### 2026-10-02 — Build Mac natif terminal, sélection 8/8
+
+[Résultats et portée](qualification/coherent-wan-native-20261002/README.md) : checkout 554ebc3a, runtime égal à 2d2764de, huit programmes compilés ; sources/P2P inchangés. **8/8 CTest natifs, zéro skip, 2,71 s**, registre exact/délais originaux ; **198 fichiers d’entrée** inchangés avant/après. Nouveau périmètre de plateforme native et enregistrement CTest des contrôles WAN ; aucune régression native complète, rotation réelle ou reprise de duties démontrée. Campagnes Docker toujours indépendantes ; tous critères de production ouverts.
