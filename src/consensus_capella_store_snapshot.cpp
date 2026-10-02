@@ -1,5 +1,6 @@
 #include "nano/consensus_capella_store_snapshot.hpp"
 #include <source_location>
+#include "consensus_capella_snapshot_hex.hpp"
 #include "nano/consensus_capella_deposits.hpp"
 #include "nano/consensus_bellatrix_store_snapshot.hpp"
 namespace nano {
@@ -47,11 +48,20 @@ std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBl
   const auto& n=v.nodes.at(id);require(n.slot==b.header.slot&&n.parent==b.header.parent_root);
   uint64_t genesis_seconds=0;for(unsigned i=0;i<8;++i)genesis_seconds|=uint64_t(b.state.ssz[i])<<(8*i);
   require(genesis_seconds<=UINT64_MAX/1000&&genesis_seconds*1000==c.genesis_time_ms&&b.header.slot<=(c.time_ms-c.genesis_time_ms)/r.slot_duration_ms);
-  auto row=Json::array({root(id),Json::array({num(b.header.slot),num(b.header.proposer_index),root(b.header.parent_root),root(b.header.state_root),root(b.header.body_root)}),slot_snapshot(b.state),num(n.realized_justified_epoch),num(n.unrealized_justified_epoch),execution(b,cancel)});
+  const auto known=cache?cache->records_.find(id):std::map<ConsensusRoot,Json>::iterator{};
+  // Reuse only the canonical state encoding after comparing every source byte.
+  // The complete row comparison below still covers all execution and metadata.
+  Json encoded_state;
+  if(cache&&known!=cache->records_.end()&&known->second.is_array()&&known->second.size()==3&&
+     known->second[0].is_array()&&known->second[0].size()==6&&known->second[0][2].is_array()&&
+     known->second[0][2].size()==2&&known->second[0][2][0].is_string()&&
+     snapshot_detail::canonical_hex_matches(known->second[0][2][0].get_ref<const std::string&>(),b.state.ssz,cancel))
+   encoded_state=Json::array({known->second[0][2][0],b.state.last_processed_epoch?Json(num(*b.state.last_processed_epoch)):Json(nullptr)});
+  else encoded_state=slot_snapshot(b.state);
+  auto row=Json::array({root(id),Json::array({num(b.header.slot),num(b.header.proposer_index),root(b.header.parent_root),root(b.header.state_root),root(b.header.body_root)}),std::move(encoded_state),num(n.realized_justified_epoch),num(n.unrealized_justified_epoch),execution(b,cancel)});
   // Compare every serialized field, including state/receipts/deposit history,
   // plus the checkpoint metadata checked below. Root equality alone is unsafe.
   const auto justification=cp(s.unrealized_justifications.at(id));
-  const auto known=cache?cache->records_.find(id):std::map<ConsensusRoot,Json>::iterator{};
   const bool validated=cache&&known!=cache->records_.end()&&known->second.is_array()&&known->second.size()==3&&known->second[0]==row&&known->second[1]==justification&&known->second[2]==Json(id==v.anchor);
   if(!validated){
    validate_capella_execution_record(b,r,cancel);

@@ -1853,3 +1853,7 @@ target_link_libraries(nano-consensus-hash-provider-tests PRIVATE OpenSSL::Crypto
 add_test(NAME consensus_hash_provider_parallel COMMAND nano-consensus-hash-provider-tests)
 add_test(NAME consensus_hash_provider_unavailable COMMAND nano-consensus-hash-provider-tests --provider-unavailable)
 set_tests_properties(consensus_hash_provider_parallel consensus_hash_provider_unavailable PROPERTIES TIMEOUT 30 LABELS "qualification_consensus_crypto")
+
+add_executable(nano-capella-snapshot-hex-tests tests/test_capella_snapshot_hex.cpp)
+add_test(NAME consensus_capella_snapshot_canonical_hex COMMAND nano-capella-snapshot-hex-tests)
+set_tests_properties(consensus_capella_snapshot_canonical_hex PROPERTIES TIMEOUT 60 LABELS "consensus;capella;snapshot")

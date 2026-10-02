@@ -1282,6 +1282,19 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
   CapellaStoreSnapshotCache cache;size_t cold=0,warm=0;
   const auto encoded=capella_store_snapshot(value,store_rules,snapshot_limits,[&]{++cold;},&cache);
   check(encoded==capella_store_snapshot(value,store_rules,snapshot_limits,[&]{++warm;},&cache)&&warm<cold,"snapshot cache changed bytes or did not reuse records");
+  // Compare cold and warm behavior after changes to both serialized slot fields.
+  // A cache hit must never substitute the old SSZ or processing-epoch metadata.
+  for(unsigned mutation=0;mutation<2;++mutation){
+   auto altered=value;auto& state=altered.blocks.begin()->second.state;
+   if(mutation==0)state.ssz.back()^=1;
+   else state.last_processed_epoch=state.last_processed_epoch?std::nullopt:std::optional<uint64_t>(0);
+   auto outcome=[&](CapellaStoreSnapshotCache* memo){
+    try{return std::optional<std::string>(capella_store_snapshot(altered,store_rules,snapshot_limits,{},memo));}
+    catch(const std::invalid_argument&){return std::optional<std::string>{};}
+   };
+   const auto uncached=outcome(nullptr),cached=outcome(&cache);
+   check(uncached==cached&&(!cached||*cached!=encoded),"cache masked changed SSZ or processed epoch");
+  }
   const auto digest=sha256(Bytes(encoded.begin(),encoded.end()));
   const auto restored=capella_store_from_snapshot(encoded,digest,store_rules,snapshot_limits);
   check(capella_store_snapshot(restored,store_rules,snapshot_limits)==encoded,"Capella snapshot roundtrip differs");
