@@ -5925,3 +5925,8 @@ Pilote uniquement : sélection explicite du daemon depuis le build de chaque arc
 ### 2026-10-02 — Audit signé AMD64 préparé pour le binaire cohérent
 
 [Contrôleur et requêtes](qualification/coherent-amd-signed-audit-control-20261002/README.md) : attente des propriétaires réels et codes terminaux, revue complète/EEST exact/réseau/SHA, puis quatre requêtes conservées sur la fixture signée 99 blocs/97 transactions. Pas de compilation ni de modification de fixture, limites 180 s inchangées ; ces cas requalifient le nouveau binaire sans ajouter de scénario historique. Aucun résultat signé acquis à ce stade, aucune reprise des duties/finalité WAN prouvée. Les campagnes existantes et tous les gates de production restent ouverts.
+
+
+### 2026-10-02 — Lanceur de restauration cohérent préparé, exécution refusée avant gates
+
+[Code et inspection en lecture seule](qualification/coherent-wan-launch-control-20261002/README.md) : raccordement au cœur et réseau qualifiés séparément, contrôles terminaux des deux architectures, revue signée indépendante, SHA et sources avant/après, transport IPv6 à empreinte conservée. Lanceur non exécuté/non qualifié : approbation automatique refusée avant gates, aucune commande lancée. Le contrôleur séparé en lecture seule constate que les résultats terminaux sont encore absents. Aucun nœud WAN démarré ni runtime promu. Tous les gates et critères de production restent ouverts.
