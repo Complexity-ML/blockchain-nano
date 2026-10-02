@@ -3047,3 +3047,8 @@ Pilote uniquement : sélection explicite du daemon depuis le build de chaque arc
 ### Nettoyage Docker demandé — 2026-10-02
 
 Caches de build et ressources Docker inutilisées nettoyés sur Mac/VPS ; volumes et conteneurs actifs conservés en attente de clarification sur leur suppression. Rapports des commandes : Mac 20 GB + 6.438 GB, VPS 7.98 GB + 1.264 GB récupérés. Image de compilation ARM précédente absente après nettoyage ; volume `nano-linux-sync-build` conservé. Les preuves ARM archivées restent historiques, mais leur réutilisation opérationnelle nécessite une nouvelle image identifiée. Aucun nouveau build démarré. Campagne VPS toujours active : 388 succès / 389 terminés et échec RPC conservé, 38 cas restants. Production non qualifiée ; tous les critères précédents restent ouverts selon leurs statuts. Preuves : [docker-cleanup-20261002](qualification/docker-cleanup-20261002/README.md).
+
+
+### 2026-10-02 — Remise à zéro Docker complète autorisée
+
+Après demande explicite de nettoyage de A à Z, conteneurs/images/volumes/caches supprimés sur Mac et VPS : `docker system df` affiche 0B dans les quatre catégories. Campagne VPS interrompue volontairement à 393 cas terminés : 392 succès, échec RPC conservé et 34 cas non terminés. Contrôleurs en attente arrêtés ; diagnostic RPC non exécuté. Rapports hors Docker et preuves Git conservés. Les anciennes images et compilations Docker ne sont plus disponibles pour des contrôles en direct ; reconstruction identifiée requise avant reprise. Aucun nouveau build ni lancement public démarré ; production non qualifiée. [Preuves du reset](qualification/docker-cleanup-20261002/full-reset.json).
