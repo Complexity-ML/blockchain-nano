@@ -1,0 +1,234 @@
+{
+  "backtraceGraph" : 
+  {
+    "commands" : 
+    [
+      "add_test"
+    ],
+    "files" : 
+    [
+      "/work/CMakeLists.txt"
+    ],
+    "nodes" : 
+    [
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 1607,
+        "parent" : 0
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 1788,
+        "parent" : 2
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 1859,
+        "parent" : 4
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 1860,
+        "parent" : 6
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 1874,
+        "parent" : 8
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 1879,
+        "parent" : 10
+      }
+    ]
+  },
+  "kind" : "ctestInfo",
+  "tests" : 
+  [
+    {
+      "backtrace" : 1,
+      "command" : 
+      [
+        "/build/snapshot-accounts-0f53b42d-amd64-20261002/nano-capella-transition-tests"
+      ],
+      "name" : "consensus_capella_signed_transition",
+      "properties" : 
+      [
+        {
+          "name" : "TIMEOUT",
+          "value" : 120.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/snapshot-accounts-0f53b42d-amd64-20261002"
+        }
+      ]
+    },
+    {
+      "backtrace" : 3,
+      "command" : 
+      [
+        "/build/snapshot-accounts-0f53b42d-amd64-20261002/nano-capella-transition-tests",
+        "--deposit-reorg-activation"
+      ],
+      "name" : "consensus_capella_reindexed_validator_activation",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_consensus_runtime"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 360.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/snapshot-accounts-0f53b42d-amd64-20261002"
+        }
+      ]
+    },
+    {
+      "backtrace" : 5,
+      "command" : 
+      [
+        "/build/snapshot-accounts-0f53b42d-amd64-20261002/nano-consensus-hash-provider-tests"
+      ],
+      "name" : "consensus_hash_provider_parallel",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_consensus_crypto"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 30.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/snapshot-accounts-0f53b42d-amd64-20261002"
+        }
+      ]
+    },
+    {
+      "backtrace" : 7,
+      "command" : 
+      [
+        "/build/snapshot-accounts-0f53b42d-amd64-20261002/nano-consensus-hash-provider-tests",
+        "--provider-unavailable"
+      ],
+      "name" : "consensus_hash_provider_unavailable",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_consensus_crypto"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 30.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/snapshot-accounts-0f53b42d-amd64-20261002"
+        }
+      ]
+    },
+    {
+      "backtrace" : 9,
+      "command" : 
+      [
+        "/build/snapshot-accounts-0f53b42d-amd64-20261002/nano-capella-snapshot-json-tests"
+      ],
+      "name" : "consensus_capella_snapshot_cached_rows",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "capella",
+            "qualification_storage_local",
+            "snapshot"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 60.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/snapshot-accounts-0f53b42d-amd64-20261002"
+        }
+      ]
+    },
+    {
+      "backtrace" : 11,
+      "command" : 
+      [
+        "/build/snapshot-accounts-0f53b42d-amd64-20261002/nano-capella-snapshot-account-tests"
+      ],
+      "name" : "consensus_capella_snapshot_account_primitives",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "capella",
+            "qualification_storage_local",
+            "snapshot"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 60.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/snapshot-accounts-0f53b42d-amd64-20261002"
+        }
+      ]
+    }
+  ],
+  "version" : 
+  {
+    "major" : 1,
+    "minor" : 0
+  }
+}

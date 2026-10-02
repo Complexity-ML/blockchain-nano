@@ -1,0 +1,7 @@
+# Four-target AMD build terminal; signed transition passed; campaign pending
+
+Source0f53b42d3e78da85aa9a2c2f2993472747aabe8a. Fresh four-target CMake build0, four programs hashed, all15315 tracked source inputs match frozen candidate manifest. Six exact selected names/deadlines/no-disable/no-skip rules verified: signed transition120, reindex360, providers30+30, cached rows60, account primitives60. This is not a full node build or global427 regression.
+
+Actual CTest output observed: signed transition Passed28.02s, then reindex started. Signed test includes actual cold/warm snapshot-byte checks and14 mutations covering SSZ/metadata plus account balance/nonce/code/storage/membership/empty/zero fields. Its reported result is not yet tied to final after-campaign source/program hashes; terminal integrity check pending. All six JUnit cases/outcomes and after-source equality remain unacquired. No claim of reindex success, node speedup, native/WAN/funds/production gate.
+
+Prepared audit-terminal.py binds six exact commands and original deadlines, four program hashes, all15315 before/after source hashes against external frozen manifest, exits and JUnit/no-skip. Run only after terminal collection with the uncompressed source-before/after reports and reference source-manifest.json.gz. Syntax checked, not yet exercised on pending terminal reports. Previous f7 timeout remains authoritative historical evidence.
