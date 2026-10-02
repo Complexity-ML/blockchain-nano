@@ -5521,3 +5521,26 @@ checkpoint inchangé et horloge saine. Les traces récentes ne désignent pas en
 le défaut précis du transport ou de l’écriture du pair de qualification.
 Sources, programmes et entrées de lien inchangés ; audit garde l’échec.
 Aucune correction de protocole ni qualification production déduite de ce seul refus.
+
+### 2026-10-02 — Profil partition Bellatrix : coût des admissions, timeout conservé
+
+[Mesures terminales](qualification/bellatrix-partition-profile-20261002/terminal/README.md) :
+timeout 240,03 s sous limite originale 240 s, scénario 112 slots inchangé.
+Dernière observation slot 88 : têtes égales, finalité 9, trois époques consécutives ;
+assertions terminales non atteintes. Relais 69,806 s, dont admissions bloc/vote
+69,726 s incluses (99,885 %) ; reste environ 0,080 s. Les nombreux scans ne
+prouvent donc pas un coût dominant. Polls validateurs 128,777 s, horloges 32,729 s.
+Temps imbriqués non additionnés deux fois. Sources/programmes/entrées de lien
+inchangés ; aucune qualification de candidat ou de production. Priorité :
+isoler transition, signature et commit durable sans retirer leurs contrôles.
+
+### 2026-10-02 — Altair : reset distant isolé pendant l’écriture
+
+[Diagnostic du pair](qualification/altair-bound-diagnostics-20261002/probe-transport/README.md) :
+cas original encore échoué en 2,11 s, délai 120 s inchangé. Le pair instrumenté
+reçoit `Stream: reset by remote peer` en écrivant la trame 16 777 370 octets ;
+la lecture de l’ACK n’est pas atteinte. HighWater/checkpoint inchangés, horloge
+saine. Le garde distant ou défaut transport précis reste à identifier.
+Sources, programmes, entrées de lien cœur/probe inchangés. Essai initial arrêté
+avant compilation faute de Python conservé ; contrôle corrigé sans installer
+une dépendance. Cœur/daemon read-only ; aucune règle d’admission assouplie.

@@ -1,0 +1,16 @@
+--- a/network/altair_probe.cpp
++++ b/network/altair_probe.cpp
+@@ -20,10 +20,10 @@
+   if(index>=scenario.at("frames").size()){finish();return;}
+   auto bytes=std::make_shared<std::string>(scenario.at("frames").at(index++).get<std::string>());
+   host->newStream(peer,{altair_protocol},[&,bytes](auto result){
+-   if(!result){results.push_back(nullptr);next();return;}auto stream=result.value().stream;
++   if(!result){std::cerr<<Json{{"event","altair-probe-transport-failure"},{"stage","open-stream"},{"frameBytes",bytes->size()},{"error",result.error().message()}}.dump()<<std::endl;results.push_back(nullptr);next();return;}auto stream=result.value().stream;
+    libp2p::write(stream,libp2p::BytesIn(reinterpret_cast<const uint8_t*>(bytes->data()),bytes->size()),[&,stream,bytes](auto written){
+-    if(!written){stream->reset();results.push_back(nullptr);next();return;}
+-    read_json(*io,stream,[&,stream](Json reply){close_stream(stream);results.push_back(std::move(reply));next();});
++    if(!written){std::cerr<<Json{{"event","altair-probe-transport-failure"},{"stage","write-frame"},{"frameBytes",bytes->size()},{"error",written.error().message()}}.dump()<<std::endl;stream->reset();results.push_back(nullptr);next();return;}
++    read_json(*io,stream,[&,stream,frame_bytes=bytes->size()](Json reply){if(reply.is_null())std::cerr<<Json{{"event","altair-probe-transport-failure"},{"stage","read-ack"},{"frameBytes",frame_bytes},{"error","null reply after successful write"}}.dump()<<std::endl;close_stream(stream);results.push_back(std::move(reply));next();});
+    });
+   });
+  };
