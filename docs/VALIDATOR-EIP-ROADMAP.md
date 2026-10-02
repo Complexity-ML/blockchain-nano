@@ -6355,3 +6355,7 @@ Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régr
 ### 2026-10-02 — reprise privée : sources des deux propriétaires liées
 
 [Collecte réelle et contrôles](qualification/coherent-80373152-release-gates-20261002/README.md) :15313 fichiers identiques Mac/VPS, manifestes avant/après des deux sources ajoutés au lanceur préparé ; aucun WAN exercé. AMD restart335,42/360 passe, sélection encore active. Observation partielle : pic499560448octets sous3GiB, zéro OOM/max/throttling ; ni qualification de charge ni gain causal. Tous les critères terminauxAMD/WAN/production et statuts EIP restent ouverts.
+
+### 2026-10-02 — candidat803 : timeout de réindexationAMD persistant
+
+[Échec et contrôleur diagnostic](qualification/coherent-80373152-release-gates-20261002/README.md) :timeout360,04,slot160/finalité18/sept votes. Sélection encore active, pas de16/16 acquis ; full et WAN resteront refusés. Diagnostic unique séparé en attente de la fin :programme exact/archives readonly,scratch neuf,360s,30s49Hz aprèsslot128,PID/executable/hash vérifiés ; profil non acquis et résultat instrumenté non qualifiant. Aucun délai augmenté, échec effacé, runtime promu ou critère EIP/production/lancement clôturé.
