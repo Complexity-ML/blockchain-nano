@@ -53,19 +53,21 @@ std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBl
   const auto known=cache?cache->records_.find(id):std::map<ConsensusRoot,Json>::iterator{};
   // Reuse only the canonical state encoding after comparing every source byte.
   // The complete row comparison below still covers all execution and metadata.
-  Json encoded_state;
+  bool matched_state=false;
   if(cache&&known!=cache->records_.end()&&known->second.is_array()&&known->second.size()==4&&
      known->second[0].is_array()&&known->second[0].size()==6&&known->second[0][2].is_array()&&
-     known->second[0][2].size()==2&&known->second[0][2][0].is_string()&&
-     snapshot_detail::canonical_hex_matches(known->second[0][2][0].get_ref<const std::string&>(),b.state.ssz,cancel))
-   encoded_state=Json::array({known->second[0][2][0],b.state.last_processed_epoch?Json(num(*b.state.last_processed_epoch)):Json(nullptr)});
-  else encoded_state=slot_snapshot(b.state);
+     known->second[0][2].size()==2&&known->second[0][2][0].is_string())
+   matched_state=snapshot_detail::canonical_hex_matches(known->second[0][2][0].get_ref<const std::string&>(),b.state.ssz,cancel);
+  // Defer the cached SSZ string copy. Every byte was compared above; a cold
+  // or changed record materializes the full string before validation/storage.
+  Json encoded_state=matched_state?Json::array({nullptr,b.state.last_processed_epoch?Json(num(*b.state.last_processed_epoch)):Json(nullptr)}):slot_snapshot(b.state);
   auto row=Json::array({root(id),Json::array({num(b.header.slot),num(b.header.proposer_index),root(b.header.parent_root),root(b.header.state_root),root(b.header.body_root)}),std::move(encoded_state),num(n.realized_justified_epoch),num(n.unrealized_justified_epoch),execution(b,cancel)});
   // Compare every serialized field, including state/receipts/deposit history,
   // plus the checkpoint metadata checked below. Root equality alone is unsafe.
   const auto justification=cp(s.unrealized_justifications.at(id));
-  const bool validated=cache&&known!=cache->records_.end()&&known->second.is_array()&&known->second.size()==4&&known->second[0]==row&&known->second[1]==justification&&known->second[2]==Json(id==v.anchor)&&known->second[3].is_string();
+  const bool validated=matched_state&&snapshot_detail::same_row_after_ssz_match(known->second[0],row)&&known->second[1]==justification&&known->second[2]==Json(id==v.anchor)&&known->second[3].is_string();
   if(!validated){
+   if(matched_state)row[2][0]=known->second[0][2][0];
    validate_capella_execution_record(b,r,cancel);
    if(id!=v.anchor){const auto ffg=capella_fork_checkpoints(b.state,epoch_rules(r),r.transition.consensus.state,cancel);require(n.realized_justified_epoch==ffg.realized.current_justified.epoch&&n.unrealized_justified_epoch==ffg.unrealized.current_justified.epoch&&s.unrealized_justifications.at(id)==ffg.unrealized.current_justified);}
    if(cancel)cancel();if(cache)cache->records_.insert_or_assign(id,Json::array({row,justification,id==v.anchor,row.dump()}));

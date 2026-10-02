@@ -7,6 +7,19 @@
 #include <string>
 #include <string_view>
 namespace nano::snapshot_detail {
+// Internal only. The caller has already compared every SSZ source byte to
+// cached[2][0] using canonical_hex_matches. Compare every other row field;
+// the candidate's null SSZ slot is a deferred copy, never wire output.
+inline bool same_row_after_ssz_match(const nlohmann::json& cached,const nlohmann::json& candidate){
+ if(!cached.is_array()||cached.size()!=6||!candidate.is_array()||candidate.size()!=6||
+    !cached[2].is_array()||cached[2].size()!=2||!cached[2][0].is_string()||
+    !candidate[2].is_array()||candidate[2].size()!=2||!candidate[2][0].is_null())return false;
+ for(size_t i=0;i<6;++i){
+  if(i==2){if(cached[2][1]!=candidate[2][1])return false;}
+  else if(cached[i]!=candidate[i])return false;
+ }
+ return true;
+}
 // Internal only: rows are dumps of the complete, validated block records in
 // document["blocks"]. Never embed peer-supplied strings through this helper.
 inline std::string canonical_snapshot_rows(const nlohmann::json& document,
