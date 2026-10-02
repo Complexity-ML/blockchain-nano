@@ -3002,3 +3002,8 @@ Candidat `9e9ebed3` : **21/21 tests réseau autonomes natifs qualifiés**, 23 ha
 ## Sélection des artefacts WAN corrigée — 2 octobre 2026
 
 Pilote uniquement : sélection explicite du daemon depuis le build de chaque architecture, traduction des argv et du JSON VPS, chemins natifs indépendants et validés avant appels outils. **15 tests de chemins réussis**, dont 4 nouveaux ; 2 exécutions de refus avant Git/SSH/Docker vérifiées. Runtime C++ inchangé. [Preuves et paramètres préparés](qualification/coherent-wan-artifact-selection-20261002/README.md). Campagnes 427/21, audits EEST exacts, rejeu signé AMD4 et attestation des binaires encore requis avant lancement de la restauration WAN ; aucune finalité/duty nouvelle ni production globale qualifiée.
+
+
+### 2026-10-02 — Contrôle terminal du build réseau cohérent préparé
+
+[Contrôleur et preuves de refus](qualification/coherent-terminal-review-controls-20261002/README.md) : 15 contrôles synthétiques passent (1 positif, 14 refus), avec comparaison des commandes/timeouts des 427 cas, manifests source/programmes, helpers réseau et résultats JUnit. Le contrôle réel refuse la campagne ARM encore active faute de manifeste terminal. Le parcours terminal préparé ajoute les fixtures EEST exactes, les 21 tests réseau et une relecture des SHA du volume en lecture seule. Aucun résultat terminal acquis, aucune couverture runtime ajoutée par ces contrôles, aucun WAN lancé ni runtime promu. Les deux processus de campagne et les deux files réseau ont été confirmés actifs. Tous les critères de production précédents restent ouverts.
