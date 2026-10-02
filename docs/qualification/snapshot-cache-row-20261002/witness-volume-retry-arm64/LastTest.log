@@ -1,0 +1,39 @@
+Start testing: Oct 02 03:39 UTC
+----------------------------------------------------------
+326/420 Testing: consensus_beacon_witness_recovery
+326/420 Test: consensus_beacon_witness_recovery
+Command: "/build/snapshot-cache-row-2db1840c-arm64-20261002/nano-beacon-recovery-tests"
+Directory: /build/snapshot-cache-row-2db1840c-arm64-20261002
+"consensus_beacon_witness_recovery" start time: Oct 02 03:39 UTC
+Output:
+----------------------------------------------------------
+Witness crash recovery, exact roll-forward, rollback refusal, identity and stale writer checks passed
+<end of output>
+Test time =   0.14 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_beacon_witness_recovery" end time: Oct 02 03:39 UTC
+"consensus_beacon_witness_recovery" time elapsed: 00:00:00
+----------------------------------------------------------
+
+327/420 Testing: consensus_bellatrix_witness_runtime
+327/420 Test: consensus_bellatrix_witness_runtime
+Command: "/build/snapshot-cache-row-2db1840c-arm64-20261002/nano-bellatrix-transition-tests" "--runtime-recovery"
+Directory: /build/snapshot-cache-row-2db1840c-arm64-20261002
+"consensus_bellatrix_witness_runtime" start time: Oct 02 03:39 UTC
+Output:
+----------------------------------------------------------
+{"clockRegressionGated":true,"configuredKeys":64,"independentProcesses":false,"invalidConfigCases":4,"proposalsAcrossRestart":2,"repeatedDutySuppressed":true,"scenario":"bellatrix-runtime-config-restart","slashingIncludedAfterRestart":false,"staleCheckpointRejected":true,"witnessed":true}
+Bellatrix witnessed core roll-forward and rollback admission checks passed
+<end of output>
+Test time =   1.71 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_witness_runtime" end time: Oct 02 03:39 UTC
+"consensus_bellatrix_witness_runtime" time elapsed: 00:00:01
+----------------------------------------------------------
+
+End testing: Oct 02 03:39 UTC
+
+qualification_consensus_recovery =   1.85 sec*proc
+

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="2"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="1"
+	timestamp="2026-10-02T03:39:45"
+	>
+	<testcase name="consensus_beacon_witness_recovery" classname="consensus_beacon_witness_recovery" time="0.138811" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_recovery"/>
+		</properties>
+		<system-out>Witness crash recovery, exact roll-forward, rollback refusal, identity and stale writer checks passed
+</system-out>
+	</testcase>
+	<testcase name="consensus_bellatrix_witness_runtime" classname="consensus_bellatrix_witness_runtime" time="1.70696" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_recovery"/>
+		</properties>
+		<system-out>{"clockRegressionGated":true,"configuredKeys":64,"independentProcesses":false,"invalidConfigCases":4,"proposalsAcrossRestart":2,"repeatedDutySuppressed":true,"scenario":"bellatrix-runtime-config-restart","slashingIncludedAfterRestart":false,"staleCheckpointRejected":true,"witnessed":true}
+Bellatrix witnessed core roll-forward and rollback admission checks passed
+</system-out>
+	</testcase>
+</testsuite>

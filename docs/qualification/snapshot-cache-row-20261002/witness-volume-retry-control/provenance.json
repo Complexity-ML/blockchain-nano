@@ -1,0 +1,22 @@
+{
+  "revision": "2db1840c86d66129c55570e4abc60ff2335f6a3b",
+  "parent": "bad3e0c0",
+  "branch": "qualification/checkpoint-serialization-20261002",
+  "purpose": "Retry only two witness cases after reproducing bind mount copy failure vs Linux volume copy success",
+  "selectionRegex": "^(consensus_bellatrix_signed_execution_chain|consensus_bellatrix_partition_simulation|consensus_bellatrix_publication_cache)$",
+  "timeouts": {
+    "consensus_bellatrix_signed_execution_chain": 120,
+    "consensus_bellatrix_partition_simulation": 240,
+    "consensus_bellatrix_publication_cache": 90
+  },
+  "buildReuse": "Complete unchanged ARM64 2db1840c binaries",
+  "previousCampaignsRetained": true,
+  "mainRuntimePromoted": false,
+  "architecture": "arm64",
+  "fullCoreCompilation": false,
+  "targets": "nano, Bellatrix, Capella, canonical encoding, checkpoint/sync/witness",
+  "selection": "consensus_beacon_witness_recovery + consensus_bellatrix_witness_runtime",
+  "image": "sha256:6116669430b02b7e8012af8c8bd515a5a7dcd1dd2034649f9b45ae5b9e70a3a4",
+  "temporaryStorage": "existing Linux volume; no changed runtime, binaries, capabilities or test limits",
+  "newImageBuild": false
+}

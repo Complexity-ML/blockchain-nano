@@ -1,0 +1,53 @@
+Internal ctest changing into directory: /build/snapshot-cache-row-2db1840c-arm64-20261002
+Test project /build/snapshot-cache-row-2db1840c-arm64-20261002
+      Start 321: consensus_bellatrix_clock_coalescing
+ 1/13 Test #321: consensus_bellatrix_clock_coalescing .........   Passed    0.29 sec
+      Start 322: consensus_bellatrix_partition_simulation
+ 2/13 Test #322: consensus_bellatrix_partition_simulation .....   Passed   70.71 sec
+      Start 323: consensus_bellatrix_signed_execution_chain
+ 3/13 Test #323: consensus_bellatrix_signed_execution_chain ...   Passed    2.01 sec
+      Start 324: storage_execution_checkpoint
+ 4/13 Test #324: storage_execution_checkpoint .................   Passed    0.30 sec
+      Start 325: storage_execution_checkpoint_sync
+ 5/13 Test #325: storage_execution_checkpoint_sync ............   Passed    0.09 sec
+      Start 326: consensus_beacon_witness_recovery
+ 6/13 Test #326: consensus_beacon_witness_recovery ............***Failed    0.02 sec
+filesystem error: cannot copy: Permission denied [/reports/scratch/nano-native-test-PRmUtB/primary] [/reports/scratch/nano-native-test-PRmUtB/previous]
+
+      Start 327: consensus_bellatrix_witness_runtime
+ 7/13 Test #327: consensus_bellatrix_witness_runtime ..........***Failed    1.87 sec
+{"clockRegressionGated":true,"configuredKeys":64,"independentProcesses":false,"invalidConfigCases":4,"proposalsAcrossRestart":2,"repeatedDutySuppressed":true,"scenario":"bellatrix-runtime-config-restart","slashingIncludedAfterRestart":false,"staleCheckpointRejected":true,"witnessed":true}
+filesystem error: cannot copy: Permission denied [/reports/scratch/nano-native-test-NieLBk/primary] [/reports/scratch/nano-native-test-NieLBk/genesis-only]
+
+      Start 329: consensus_bellatrix_local_slashing
+ 8/13 Test #329: consensus_bellatrix_local_slashing ...........   Passed    1.06 sec
+      Start 330: consensus_bellatrix_voluntary_exit
+ 9/13 Test #330: consensus_bellatrix_voluntary_exit ...........   Passed    1.11 sec
+      Start 333: consensus_bellatrix_deposit_store
+10/13 Test #333: consensus_bellatrix_deposit_store ............   Passed    0.45 sec
+      Start 342: consensus_bellatrix_beacon_headers_reorg
+11/13 Test #342: consensus_bellatrix_beacon_headers_reorg .....   Passed    1.22 sec
+      Start 419: consensus_checkpoint_json_canonical
+12/13 Test #419: consensus_checkpoint_json_canonical ..........   Passed    0.09 sec
+      Start 420: consensus_bellatrix_publication_cache
+13/13 Test #420: consensus_bellatrix_publication_cache ........   Passed    0.21 sec
+
+85% tests passed, 2 tests failed out of 13
+
+Label Time Summary:
+qualification_consensus_api           =   1.22 sec*proc (1 test)
+qualification_consensus_deposits      =   0.45 sec*proc (1 test)
+qualification_consensus_ethereum      =   2.01 sec*proc (1 test)
+qualification_consensus_operations    =   2.18 sec*proc (2 tests)
+qualification_consensus_recovery      =   2.10 sec*proc (3 tests)
+qualification_consensus_runtime       =   0.29 sec*proc (1 test)
+qualification_consensus_simulation    =  70.71 sec*proc (1 test)
+qualification_storage_local           =   0.40 sec*proc (2 tests)
+qualification_storage_sync_local      =   0.09 sec*proc (1 test)
+
+Total Test time (real) =  79.45 sec
+
+The following tests FAILED:
+	326 - consensus_beacon_witness_recovery (Failed)
+	327 - consensus_bellatrix_witness_runtime (Failed)
+Errors while running CTest

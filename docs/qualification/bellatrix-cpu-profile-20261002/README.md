@@ -1,0 +1,7 @@
+# Profil CPU isolé — diagnostic, aucun seuil relâché
+
+Source 2db1840c, mêmes programmes/bibliothèques déjà compilés, image AMD64 existante. Échantillonnage logiciel du seul PID de `consensus_bellatrix_partition_simulation`, 30 secondes, 49 Hz, piles DWARF 8192 octets, aucune modification du noyau ou du binaire. Cycles matériels indisponibles sur ce VPS ; événement `cpu-clock:u`.
+
+Capture : 1 420 échantillons, zéro perdu déclaré, 11,480 MB de données. `perf record` et report code 0. Fonctions propres : `pthread_rwlock_unlock` 5,85 %, `pthread_rwlock_rdlock` 4,93 %, opérations BLS d’assemblage, sérialisation JSON, hex, allocations et EVP_MD_free également visibles. Des piles des verrous passent par EVP_MD_fetch/EVP_Q_digest/SHA256 puis consensus_signing_root et le merkle SSZ. Ne pas attribuer tout le CPU des verrous à une unique fonction ni additionner les pourcentages imbriqués ; une fenêtre initiale de 30 s ne représente pas toute la charge d’un réseau. Symboles partiellement anonymes conservés tels quels.
+
+Cas complet instrumenté : timeout original 240 s, assertions finales non atteintes. Rapport JUnit et toutes les entrées avant/après conservés ; aucun skip, aucun changement source/programmes/bibliothèques. Le raw `perf.data` reste sur le VPS, hors Git : `/home/ubuntu/nano-bellatrix-cpu-profile-control-20261002-reports/perf.data`, SHA256 conservé dans les rapports. Ce profil motive une correction du fetch OpenSSL par paire SSZ, sans prouver son bénéfice avant mesure.
