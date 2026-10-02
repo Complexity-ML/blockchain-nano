@@ -9,3 +9,7 @@ Les **426** cas enregistrés, commandes directes et helpers externes (`nano`, `n
 Sources, exécutables/auxiliaires et archives/librairies sont manifestés avant/après. Rapports VPS `/home/ubuntu/nano-full-coherent-0275b1af-amd-reports-20261002`, contrôleur Mac `/tmp/nano-full-coherent-0275b1af-amd-host-reports-20261002`, pilote `/tmp/nano-full-coherent-0275b1af-amd-driver-20261002.log`. Toutes les sorties terminales, y compris échecs, doivent être conservées. Code runtime déjà obtenu par Git ; SCP transmet uniquement ces contrôles/tests et rapports.
 
 Cette préparation ne constitue pas une qualification, ne remplace pas le timeout AMD2d360,05 historique, et ne ferme ni la reprise/finalité WAN, les partitions, le cycle validateur, la charge/mémoire du cache, les profils EIP non activés, le bridge/vente ou la revue indépendante.
+
+## Contrôleur terminal : gate refusé
+
+Driver session77603 **exit1**, prepare PID531568 terminé. Le contrôle `ctest-exit==0` refuse le parent en sortie8 ; aucun répertoire de compilation/régression complète créé par ce contrôleur avant ce gate. Parent15/16 terminal archivés dans coherent-row-candidate-0275b1af-20261002. Aucun CTest complet AMD du candidat exécuté ; la préparation n’est pas requalifiée en réussite.

@@ -6323,3 +6323,7 @@ Lanceur du candidat0275 préparé avec gate réexécuté, attestation image/bina
 ### 2026-10-02 — réindexation AMD0275 encore en échec, delta DOM isolé
 
 Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régression AMD complète et WAN restent refusés. Sélection encore active, preuves partielles conservées. Candidat a0e18693 : **1153** comparaisons canoniques et trois intégrations signées locales passent par lien partiel ARM ; diagnostic de copie profonde rectifié, aucun gain CPU/mémoire ou qualification globale acquis. Commentaire seul ajusté en418d05cc, branche isolée, aucun runtime promu. [Rapports, patch et limites](qualification/snapshot-dom-lifetime-20261002/README.md). Aucun échec historique, statut EIP ou critère final clôturé.
+
+### 2026-10-02 — sélection AMD0275 terminale, gate complet refusé
+
+**15/16**, zéro skip,1856,66 s ; seule réindexation360,04 en timeout (slot160/finalité18/sept votes), exits399,736/480 passe. Sources/neuf programmes/sept entrées avant/après inchangés, délais originaux exacts. [Sélection terminale](qualification/coherent-row-candidate-0275b1af-20261002/README.md) ; [driver complet exit1](qualification/full-coherent-0275b1af-amd64-queue-20261002/README.md), aucun full AMD démarré. Aucun runtime promu, profil EIP ou gate production clôturé ; poursuite du diagnostic requise.
