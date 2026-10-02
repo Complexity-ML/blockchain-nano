@@ -1,0 +1,60 @@
+{
+  "runtimeRevision": "0275b1afaa41edef01878eb1937777ad036061df",
+  "readyForBinaryAttestation": false,
+  "newWanNodesStarted": false,
+  "candidateFullArmProven": false,
+  "checks": [
+    {
+      "gate": "candidate-source-identity",
+      "verified": true,
+      "details": {
+        "revision": "0275b1afaa41edef01878eb1937777ad036061df",
+        "cleanCandidates": 2
+      }
+    },
+    {
+      "gate": "prior-arm-full-425",
+      "verified": false,
+      "reason": "[Errno 2] No such file or directory: '/tmp/nano-full-2d2764de-arm64-reports-20261002/ctest-exit.txt'"
+    },
+    {
+      "gate": "candidate-arm-selected-16",
+      "verified": false,
+      "reason": "[Errno 2] No such file or directory: '/tmp/nano-coherent-0275b1af-arm64-test-reports-20261002/ctest-exit.txt'"
+    },
+    {
+      "gate": "candidate-amd-selected-16",
+      "verified": false,
+      "reason": "Observation failed: ssh exit 1: cat: /home/ubuntu/nano-coherent-0275b1af-amd64-test-reports-20261002/ctest-exit.txt: No such file or directory\n"
+    },
+    {
+      "gate": "candidate-amd-full-426",
+      "verified": false,
+      "reason": "Observation failed: ssh exit 1: cat: /home/ubuntu/nano-full-coherent-0275b1af-amd-reports-20261002/ctest-exit.txt: No such file or directory\n"
+    },
+    {
+      "gate": "candidate-native-9",
+      "verified": true,
+      "details": {
+        "registered": 9,
+        "passed": 9,
+        "skipped": 0,
+        "inputsVerified": 200
+      }
+    },
+    {
+      "gate": "candidate-native-offline-4",
+      "verified": true,
+      "details": {
+        "cases": 4,
+        "signedCanonicalReplay": true,
+        "newWanRun": false
+      }
+    },
+    {
+      "gate": "candidate-amd-offline-4",
+      "verified": false,
+      "reason": "Observation failed: ssh exit 1: cat: /home/ubuntu/nano-coherent-0275b1af-amd64-offline-reports-20261002/result-audit.json: No such file or directory\n"
+    }
+  ]
+}

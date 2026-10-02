@@ -6315,3 +6315,7 @@ Nouveau préflight réellement exécuté : sources Mac/VPS, natif9/200 entrées 
 ### 2026-10-02 — dossier de lancement : inspection Airlock supplémentaire
 
 [Inspection source immuable et critères de raccordement](qualification/doppler-airlock-path-20261002/README.md) ajoutés au cadrage Doppler. Aucune implémentation ou qualification de bridge/vente acquise ; aucun statut EIP ou gate de consensus clôturé. Les campagnes Docker continuent indépendamment.
+
+### 2026-10-02 — lanceur de restauration privée : refus vérifié
+
+Lanceur du candidat0275 préparé avec gate réexécuté, attestation image/binaire future et invocation du harness Capella backup/restore. Exécution actuelle **exit2/preflight-refused** : aucun nouveau nœud WAN ou metadata de provenance Docker écrit, prérequis terminaux encore manquants. [Contrôle et traces](qualification/coherent-0275b1af-wan-preflight-20261002/README.md). Attestation, reprise/finalité WAN, statuts EIP et critères de production restent ouverts.
