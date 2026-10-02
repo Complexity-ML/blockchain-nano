@@ -32,3 +32,9 @@ Candidat803 ARM **16/16**, zéro skip/échec, **457,46s**. Réindexation97,88/36
 Audit AMD futur corrigé pour viser **le binaire du build complet qui sera effectivement lancé en WAN** : hash attendu issu du manifeste full terminal, égalité source/archives et exit0 exigés, binaire hashé avant/après audit. Gate WAN vérifiera cette correspondance, au lieu de seulement accepter l'audit de la sélection. Aucune réussite future supposée.
 
 Contrôleur queued-after-full effectivement lancé, en attente du driver completAMD spécifique. Échec/absence de preuves entraîne refus, jamais relance automatique. Si426/426 exacts, audits0, sources/programmes/entrées inchangés et révision803 sont acquis, il exécute l'auditAMD4 puis le lanceur qui réexécute huit gates/attestations avant toute restauration privée. Aucun nouveau nœud à cette observation. Tous les critères WAN, réseau, EIP, production/bridge/lancement restent ouverts.
+
+## Préparation de l'intégrité après exécution WAN
+
+Le lanceur contrôlera désormais, après le retour du harness (succès ou échec), l'égalité du manifeste complet des sources, des200 entrées natives matérialisées et des deux couples de programmesDocker avec les hashes vérifiés avant lancement. Les bases et journaux de consensus qui doivent avancer sont exclus du manifeste des programmes. Une différence produit artifact-integrity-failed ; l'exit du harness ne suffit pas à revendiquer une qualification. Contrôleur Python syntaxiquement vérifié, **branche d'exécution WAN non encore exercée**. Aucun code runtime du candidat ou test actif modifié.
+
+Gate réévalué effectivement : **5/8 critères vérifiés** (sources, parentARM425, candidatARM16, natif9, auditnatif4). Les trois preuvesAMD16/full426/audit4 restent absentes ; exit2, ready=false, aucun nouveau nœudWAN. Les handles des processusAMD et des queues sont observés actifs, aucune relance.

@@ -46,9 +46,38 @@ if not network.exists():network.symlink_to(canonical,target_is_directory=True)
 assert network.resolve()==canonical.resolve()
 assert not get(['git','-C',str(source),'status','--porcelain'])
 save(control/'launch-attestation.json',{'runtimeRevision':revision,'dockerArtifacts':artifacts,'preflight':proof,'newWanNodesStarted':False})
+# Preserve artifact identity around the actual WAN invocation, including
+# native materialized link/runtime inputs. Database state is intentionally
+# excluded: blocks and signer journals must advance during this scenario.
+def source_manifest():
+ names=subprocess.check_output(['git','ls-files','-z'],cwd=source).split(b'\0')
+ return {n.decode():hashlib.sha256((source/n.decode()).read_bytes()).hexdigest() for n in names if n}
+def native_manifest():
+ expected=json.loads(Path('/tmp/nano-coherent-80373152-native-test-reports-20261002/inputs-after.json').read_text())
+ actual={name:hashlib.sha256((Path(name) if Path(name).is_absolute() else source/name).read_bytes()).hexdigest() for name in expected}
+ assert actual==expected,'Native qualified inputs changed before WAN'
+ return actual
+source_before=source_manifest();native_before=native_manifest()
+save(control/'wan-source-before.json',source_before);save(control/'wan-native-inputs-before.json',native_before)
+
 env=os.environ.copy();env.update({'NANO_TEST_CONSENSUS_PROFILE':'capella','NANO_TEST_BUILD_VOLUME':'1','NANO_TEST_BUILD_SUBDIRECTORY_ARM64':artifacts[0]['build'],'NANO_TEST_BUILD_SUBDIRECTORY_AMD64':artifacts[1]['build'],'NANO_TEST_REMOTE_SOURCE_REPOSITORY':remote_source,'NANO_TEST_BACKUP_RESTORE':'1','NANO_DOCKER_NOFILE':'65536'})
 save(state,{'phase':'running-wan','startedAt':time.time(),'output':str(output),'runtimeRevision':revision})
 with (control/'wan-driver.log').open('w') as log:
  r=subprocess.run(['/opt/homebrew/bin/node','tests/multihost/run.mjs',target,revision,str(output)],cwd=source,env=env,stdout=log,stderr=subprocess.STDOUT)
+try:
+ source_after=source_manifest();save(control/'wan-source-after.json',source_after)
+ assert source_after==source_before,'Source changed during WAN'
+ assert not get(['git','-C',str(source),'status','--porcelain'])
+ native_after=native_manifest();save(control/'wan-native-inputs-after.json',native_after)
+ assert native_after==native_before
+ for artifact in artifacts:
+  remote=artifact['architecture']=='amd64';docker=(['sudo','-n'] if remote else [])+['docker']
+  args=docker+['run','--rm','--network','none','--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--mount','type=volume,src=nano-linux-sync-build,dst=/build,readonly',artifact['image'],'sha256sum','/build/'+artifact['build']+'/nano','/build/network/nano-p2p']
+  values={line.split()[1]:line.split()[0] for line in get(args,remote).splitlines()}
+  assert values==artifact['programs'],'Docker programs changed during WAN'
+ save(control/'wan-artifact-integrity.json',{'sourceAndProgramsUnchanged':True,'nativeInputs':len(native_after),'dockerOwners':2,'runtimeRevision':revision,'wanExit':r.returncode})
+except Exception as error:
+ save(state,{'phase':'artifact-integrity-failed','reason':str(error),'wanExit':r.returncode,'output':str(output),'runtimeRevision':revision,'wanHarnessInvoked':True,'nodesStartedProvenByThisController':False})
+ raise
 save(state,{'phase':'terminal','exit':r.returncode,'output':str(output),'runtimeRevision':revision,'wanHarnessInvoked':True,'nodesStartedProvenByThisController':False})
 raise SystemExit(r.returncode)

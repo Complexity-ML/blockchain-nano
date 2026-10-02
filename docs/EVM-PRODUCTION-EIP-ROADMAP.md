@@ -3320,3 +3320,7 @@ Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régr
 ### 2026-10-02 — candidat803 : sélectionARM16 terminale
 
 [Rapports exacts](qualification/coherent-80373152-release-gates-20261002/README.md) :16/16, zéro skip/échec,457,46s ; réindexation97,88/360, sorties95,14/480 passent ; sources/neuf programmes/sept entrées inchangés, registre/délais originaux vérifiés. AMD actif, full et WAN non démarrés. AuditAMD futur lié au binaire complet réel ; enchaînement privé en attente du driverAMD puis audits/gates exacts, sans relance automatique. Aucun runtime promu, statut EIP ou critère production/lancement clôturé.
+
+### 2026-10-02 — reprise privée : intégrité post-exécution préparée
+
+[Lanceur et gate actuels](qualification/coherent-80373152-release-gates-20261002/README.md) : contrôle des sources/200 entrées natives/deux couples de programmesDocker avant-après WAN ajouté, mais non encore exercé sur le réseau. Gate réexécuté :5/8 vérifiés, trois preuvesAMD manquantes, exit2/aucun nœud lancé. TestAMD et queues précis toujours actifs ; aucun runtime ou délai modifié, aucune clôture EIP/production/lancement.
