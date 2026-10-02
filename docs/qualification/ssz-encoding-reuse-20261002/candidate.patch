@@ -1,0 +1,130 @@
+commit 12ad9eb5a4928a058058675cacab97c8b9e87021
+Author:     Boris Peyriguere <boris@mac.home>
+AuthorDate: Fri Oct 2 07:22:34 2026 +0200
+Commit:     Boris Peyriguere <boris@mac.home>
+CommitDate: Fri Oct 2 07:22:34 2026 +0200
+
+    Reuse canonical SSZ encoding after exact byte comparison
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 5ba31bfa..0aabbfb6 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1853,3 +1853,7 @@ target_link_libraries(nano-consensus-hash-provider-tests PRIVATE OpenSSL::Crypto
+ add_test(NAME consensus_hash_provider_parallel COMMAND nano-consensus-hash-provider-tests)
+ add_test(NAME consensus_hash_provider_unavailable COMMAND nano-consensus-hash-provider-tests --provider-unavailable)
+ set_tests_properties(consensus_hash_provider_parallel consensus_hash_provider_unavailable PROPERTIES TIMEOUT 30 LABELS "qualification_consensus_crypto")
++
++add_executable(nano-capella-snapshot-hex-tests tests/test_capella_snapshot_hex.cpp)
++add_test(NAME consensus_capella_snapshot_canonical_hex COMMAND nano-capella-snapshot-hex-tests)
++set_tests_properties(consensus_capella_snapshot_canonical_hex PROPERTIES TIMEOUT 60 LABELS "consensus;capella;snapshot")
+diff --git a/src/consensus_capella_snapshot_hex.hpp b/src/consensus_capella_snapshot_hex.hpp
+new file mode 100644
+index 00000000..7c6f69c5
+--- /dev/null
++++ b/src/consensus_capella_snapshot_hex.hpp
+@@ -0,0 +1,20 @@
++#pragma once
++#include <cstdint>
++#include <functional>
++#include <limits>
++#include <span>
++#include <string_view>
++namespace nano::snapshot_detail {
++// Match the canonical lower-case 0x encoding without allocating or decoding.
++// This is encoding reuse only; it grants no execution-validation exemption.
++inline bool canonical_hex_matches(std::string_view encoded,std::span<const uint8_t> bytes,
++ const std::function<void()>& cancel={}) {
++ if(bytes.size()>(std::numeric_limits<size_t>::max()-2)/2||encoded.size()!=2+2*bytes.size()||!encoded.starts_with("0x"))return false;
++ constexpr char digits[]="0123456789abcdef";
++ for(size_t i=0;i<bytes.size();++i){
++  if(cancel&&i%4096==0)cancel();
++  if(encoded[2+2*i]!=digits[bytes[i]>>4]||encoded[3+2*i]!=digits[bytes[i]&15])return false;
++ }
++ if(cancel)cancel();return true;
++}
++}
+diff --git a/src/consensus_capella_store_snapshot.cpp b/src/consensus_capella_store_snapshot.cpp
+index 44d368b8..75b0b7f2 100644
+--- a/src/consensus_capella_store_snapshot.cpp
++++ b/src/consensus_capella_store_snapshot.cpp
+@@ -1,5 +1,6 @@
+ #include "nano/consensus_capella_store_snapshot.hpp"
+ #include <source_location>
++#include "consensus_capella_snapshot_hex.hpp"
+ #include "nano/consensus_capella_deposits.hpp"
+ #include "nano/consensus_bellatrix_store_snapshot.hpp"
+ namespace nano {
+@@ -47,11 +48,20 @@ std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBl
+   const auto& n=v.nodes.at(id);require(n.slot==b.header.slot&&n.parent==b.header.parent_root);
+   uint64_t genesis_seconds=0;for(unsigned i=0;i<8;++i)genesis_seconds|=uint64_t(b.state.ssz[i])<<(8*i);
+   require(genesis_seconds<=UINT64_MAX/1000&&genesis_seconds*1000==c.genesis_time_ms&&b.header.slot<=(c.time_ms-c.genesis_time_ms)/r.slot_duration_ms);
+-  auto row=Json::array({root(id),Json::array({num(b.header.slot),num(b.header.proposer_index),root(b.header.parent_root),root(b.header.state_root),root(b.header.body_root)}),slot_snapshot(b.state),num(n.realized_justified_epoch),num(n.unrealized_justified_epoch),execution(b,cancel)});
++  const auto known=cache?cache->records_.find(id):std::map<ConsensusRoot,Json>::iterator{};
++  // Reuse only the canonical state encoding after comparing every source byte.
++  // The complete row comparison below still covers all execution and metadata.
++  Json encoded_state;
++  if(cache&&known!=cache->records_.end()&&known->second.is_array()&&known->second.size()==3&&
++     known->second[0].is_array()&&known->second[0].size()==6&&known->second[0][2].is_array()&&
++     known->second[0][2].size()==2&&known->second[0][2][0].is_string()&&
++     snapshot_detail::canonical_hex_matches(known->second[0][2][0].get_ref<const std::string&>(),b.state.ssz,cancel))
++   encoded_state=Json::array({known->second[0][2][0],b.state.last_processed_epoch?Json(num(*b.state.last_processed_epoch)):Json(nullptr)});
++  else encoded_state=slot_snapshot(b.state);
++  auto row=Json::array({root(id),Json::array({num(b.header.slot),num(b.header.proposer_index),root(b.header.parent_root),root(b.header.state_root),root(b.header.body_root)}),std::move(encoded_state),num(n.realized_justified_epoch),num(n.unrealized_justified_epoch),execution(b,cancel)});
+   // Compare every serialized field, including state/receipts/deposit history,
+   // plus the checkpoint metadata checked below. Root equality alone is unsafe.
+   const auto justification=cp(s.unrealized_justifications.at(id));
+-  const auto known=cache?cache->records_.find(id):std::map<ConsensusRoot,Json>::iterator{};
+   const bool validated=cache&&known!=cache->records_.end()&&known->second.is_array()&&known->second.size()==3&&known->second[0]==row&&known->second[1]==justification&&known->second[2]==Json(id==v.anchor);
+   if(!validated){
+    validate_capella_execution_record(b,r,cancel);
+diff --git a/tests/test_capella_snapshot_hex.cpp b/tests/test_capella_snapshot_hex.cpp
+new file mode 100644
+index 00000000..504da423
+--- /dev/null
++++ b/tests/test_capella_snapshot_hex.cpp
+@@ -0,0 +1,20 @@
++#include "../src/consensus_capella_snapshot_hex.hpp"
++#include <iostream>
++#include <vector>
++#include <stdexcept>
++using nano::snapshot_detail::canonical_hex_matches;
++int main(){try{
++ auto check=[](bool ok){if(!ok)throw std::runtime_error("canonical encoding mismatch");};
++ std::vector<uint8_t> bytes;std::string expected="0x";const std::string digits="0123456789abcdef";
++ for(unsigned i=0;i<256;++i){bytes.push_back(i);expected+=digits[i/16];expected+=digits[i%16];}
++ check(canonical_hex_matches(expected,bytes));unsigned rejected=0;
++ for(size_t i=0;i<bytes.size();++i){auto changed=bytes;changed[i]^=1;check(!canonical_hex_matches(expected,changed));++rejected;}
++ for(size_t i=2;i<expected.size();++i){auto changed=expected;changed[i]=changed[i]=='0'?'1':'0';check(!canonical_hex_matches(changed,bytes));++rejected;}
++ for(auto text:{std::string("0X")+expected.substr(2),expected+"0",expected.substr(1),expected.substr(0,expected.size()-1)}){check(!canonical_hex_matches(text,bytes));++rejected;}
++ auto upper=expected;upper[22]='A';check(!canonical_hex_matches(upper,bytes));++rejected;
++ check(canonical_hex_matches("0x",{}));check(!canonical_hex_matches("",{}));
++ std::vector<uint8_t> large(16385,0);std::string large_hex="0x"+std::string(large.size()*2,'0');size_t calls=0;
++ check(canonical_hex_matches(large_hex,large,[&]{++calls;}));check(calls==6);
++ bool cancelled=false;calls=0;try{canonical_hex_matches(large_hex,large,[&]{if(++calls==3)throw std::runtime_error("cancel");});}catch(const std::runtime_error&){cancelled=true;}check(cancelled&&calls==3);
++ std::cout<<rejected<<" mutation/format refusals; all byte values, empty input and bounded cancellation passed\n";return 0;
++}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index b5439a3a..6dc4cd6c 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -1282,6 +1282,19 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
+   CapellaStoreSnapshotCache cache;size_t cold=0,warm=0;
+   const auto encoded=capella_store_snapshot(value,store_rules,snapshot_limits,[&]{++cold;},&cache);
+   check(encoded==capella_store_snapshot(value,store_rules,snapshot_limits,[&]{++warm;},&cache)&&warm<cold,"snapshot cache changed bytes or did not reuse records");
++  // Compare cold and warm behavior after changes to both serialized slot fields.
++  // A cache hit must never substitute the old SSZ or processing-epoch metadata.
++  for(unsigned mutation=0;mutation<2;++mutation){
++   auto altered=value;auto& state=altered.blocks.begin()->second.state;
++   if(mutation==0)state.ssz.back()^=1;
++   else state.last_processed_epoch=state.last_processed_epoch?std::nullopt:std::optional<uint64_t>(0);
++   auto outcome=[&](CapellaStoreSnapshotCache* memo){
++    try{return std::optional<std::string>(capella_store_snapshot(altered,store_rules,snapshot_limits,{},memo));}
++    catch(const std::invalid_argument&){return std::optional<std::string>{};}
++   };
++   const auto uncached=outcome(nullptr),cached=outcome(&cache);
++   check(uncached==cached&&(!cached||*cached!=encoded),"cache masked changed SSZ or processed epoch");
++  }
+   const auto digest=sha256(Bytes(encoded.begin(),encoded.end()));
+   const auto restored=capella_store_from_snapshot(encoded,digest,store_rules,snapshot_limits);
+   check(capella_store_snapshot(restored,store_rules,snapshot_limits)==encoded,"Capella snapshot roundtrip differs");

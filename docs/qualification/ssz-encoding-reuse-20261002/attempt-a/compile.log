@@ -1,0 +1,22 @@
+/work/tests/test_capella_transition.cpp:1231:31: error: use of undeclared identifier 'NANO_TEST_SOURCE'
+ 1231 |  const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-bellatrix-containers-official",source=fixtures/"consensus-capella-slots-official";
+      |                               ^
+/work/tests/test_capella_transition.cpp:1644:96: error: no viable conversion from '(lambda at /work/tests/test_capella_transition.cpp:1641:21)' to 'const BeaconSigningJournal::Signer' (aka 'const function<vector<unsigned char> (const array<unsigned char, 32> &)>')
+ 1644 |        check(!reactor->sign_attestation(UINT64_MAX,slot,[&]{return now;},current.token,journal,provider)&&provider_calls==0,"unassigned validator signed");
+      |                                                                                                ^~~~~~~~
+/usr/bin/../lib/gcc/aarch64-linux-gnu/13/../../../../include/c++/13/bits/std_function.h:375:7: note: candidate constructor not viable: no known conversion from '(lambda at /work/tests/test_capella_transition.cpp:1641:21)' to 'nullptr_t' (aka 'std::nullptr_t') for 1st argument
+  375 |       function(nullptr_t) noexcept
+      |       ^        ~~~~~~~~~
+/usr/bin/../lib/gcc/aarch64-linux-gnu/13/../../../../include/c++/13/bits/std_function.h:386:7: note: candidate constructor not viable: no known conversion from '(lambda at /work/tests/test_capella_transition.cpp:1641:21)' to 'const function<vector<unsigned char> (const array<unsigned char, 32> &)> &' for 1st argument
+  386 |       function(const function& __x)
+      |       ^        ~~~~~~~~~~~~~~~~~~~
+/usr/bin/../lib/gcc/aarch64-linux-gnu/13/../../../../include/c++/13/bits/std_function.h:404:7: note: candidate constructor not viable: no known conversion from '(lambda at /work/tests/test_capella_transition.cpp:1641:21)' to 'function<vector<unsigned char> (const array<unsigned char, 32> &)> &&' for 1st argument
+  404 |       function(function&& __x) noexcept
+      |       ^        ~~~~~~~~~~~~~~
+/usr/bin/../lib/gcc/aarch64-linux-gnu/13/../../../../include/c++/13/bits/std_function.h:435:2: note: candidate template ignored: requirement '_Callable<(lambda at /work/tests/test_capella_transition.cpp:1641:21) &, (lambda at /work/tests/test_capella_transition.cpp:1641:21), std::__invoke_result<(lambda at /work/tests/test_capella_transition.cpp:1641:21) &, const std::array<unsigned char, 32> &>>::value' was not satisfied [with _Functor = (lambda at /work/tests/test_capella_transition.cpp:1641:21) &]
+  435 |         function(_Functor&& __f)
+      |         ^
+/work/include/nano/consensus_capella_reactor.hpp:159:60: note: passing argument to parameter here
+  159 |   BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={});
+      |                                                            ^
+2 errors generated.
