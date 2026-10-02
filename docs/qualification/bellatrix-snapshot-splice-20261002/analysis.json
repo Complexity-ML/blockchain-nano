@@ -1,0 +1,101 @@
+{
+  "case": {
+    "name": "consensus_bellatrix_partition_simulation",
+    "classname": "consensus_bellatrix_partition_simulation",
+    "time": "240.022",
+    "status": "fail"
+  },
+  "lastSlot": 96,
+  "sampledCounters": {
+    "store-copy": {
+      "event": "reactor-inner-profile",
+      "phase": "store-copy",
+      "calls": 4544,
+      "totalUs": 2197712,
+      "maximumUs": 2681
+    },
+    "snapshot-encode": {
+      "event": "reactor-inner-profile",
+      "phase": "snapshot-encode",
+      "calls": 1920,
+      "totalUs": 50109457,
+      "maximumUs": 69798
+    },
+    "reactor-publish": {
+      "event": "reactor-inner-profile",
+      "phase": "reactor-publish",
+      "calls": 1920,
+      "totalUs": 123172486,
+      "maximumUs": 138989
+    },
+    "vote-context": {
+      "event": "reactor-inner-profile",
+      "phase": "vote-context",
+      "calls": 2688,
+      "totalUs": 13593145,
+      "maximumUs": 36597
+    },
+    "vote-verify-choice": {
+      "event": "reactor-inner-profile",
+      "phase": "vote-verify-choice",
+      "calls": 2688,
+      "totalUs": 5471978,
+      "maximumUs": 4928
+    },
+    "reactor-vote": {
+      "event": "reactor-inner-profile",
+      "phase": "reactor-vote",
+      "calls": 1344,
+      "totalUs": 98407558,
+      "maximumUs": 150849
+    },
+    "reactor-block": {
+      "event": "reactor-inner-profile",
+      "phase": "reactor-block",
+      "calls": 192,
+      "totalUs": 38548504,
+      "maximumUs": 926554
+    }
+  },
+  "matching1792Calls": {
+    "store-copy": {
+      "event": "reactor-inner-profile",
+      "phase": "store-copy",
+      "calls": 1792,
+      "totalUs": 396604,
+      "maximumUs": 737
+    },
+    "vote-context": {
+      "event": "reactor-inner-profile",
+      "phase": "vote-context",
+      "calls": 1792,
+      "totalUs": 9738821,
+      "maximumUs": 36597
+    },
+    "vote-verify-choice": {
+      "event": "reactor-inner-profile",
+      "phase": "vote-verify-choice",
+      "calls": 1792,
+      "totalUs": 3651655,
+      "maximumUs": 4800
+    },
+    "snapshot-encode": {
+      "event": "reactor-inner-profile",
+      "phase": "snapshot-encode",
+      "calls": 1792,
+      "totalUs": 44415944,
+      "maximumUs": 55173
+    },
+    "reactor-publish": {
+      "event": "reactor-inner-profile",
+      "phase": "reactor-publish",
+      "calls": 1792,
+      "totalUs": 109663248,
+      "maximumUs": 128028
+    }
+  },
+  "baseline1792SnapshotUs": 70948212,
+  "baseline1792PublishUs": 137116864,
+  "nestedDoNotSum": true,
+  "noRuntimePromotion": true
+}
