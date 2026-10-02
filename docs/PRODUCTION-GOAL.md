@@ -2590,3 +2590,26 @@ Correction limitée aux permissions du nouveau dossier de sortie dédié.
 Compilation corrective reprise ; Altair puis Bellatrix restent séquentiels,
 sans contournement des audits, changement de runtime ou relaxation des délais.
 Aucun résultat correctif encore qualifié ; production toujours ouverte.
+
+### 2026-10-02 — Correctifs ciblés AMD64 : 19/19 réussis
+
+[Contrôle terminal](qualification/corrective-amd64-control-20261002/terminal/README.md) :
+source runtime 1ac57e25, 19 tests exacts réussis, zéro ignoré, 135,33 s ;
+CTest/conteneur/audit/manifeste post-test exit 0. Sources et sept programmes
+inchangés, dont `nano` explicite. Le manifeste renforcé daab685d est distinct
+du runtime. Fenêtres RPC Paris/Shanghai et barrière d’horloge des sorties
+Bellatrix qualifiées dans ce périmètre ; aucun critère ni délai assoupli.
+Les neuf échecs de la campagne complète c104 restent conservés. Altair,
+partition Bellatrix et cinq cas Capella exclus de cette sélection restent
+ouverts ; pas de promotion moteur ni de qualification production globale.
+
+### 2026-10-02 — Diagnostic Altair AMD64 : refus reproduit, cause encore ouverte
+
+[Diagnostic terminal](qualification/altair-bound-diagnostics-20261002/c104-runtime-control/terminal/README.md) :
+un cas original échoué en 2,17 s, limite 120 s inchangée. Composition de diagnostic
+c104 + instrumentation du test f92533e9, sans modification du cœur. Payload
+8 388 608 octets, frame 16 777 370 octets, réponse `[null]`, highWater inchangé,
+checkpoint inchangé et horloge saine. Les traces récentes ne désignent pas encore
+le défaut précis du transport ou de l’écriture du pair de qualification.
+Sources, programmes et entrées de lien inchangés ; audit garde l’échec.
+Aucune correction de protocole ni qualification production déduite de ce seul refus.

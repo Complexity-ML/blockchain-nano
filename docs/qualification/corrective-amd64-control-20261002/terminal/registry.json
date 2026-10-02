@@ -1,0 +1,852 @@
+{
+  "backtraceGraph" : 
+  {
+    "commands" : 
+    [
+      "add_test"
+    ],
+    "files" : 
+    [
+      "/work/CMakeLists.txt"
+    ],
+    "nodes" : 
+    [
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 55,
+        "parent" : 0
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 190,
+        "parent" : 2
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 192,
+        "parent" : 4
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 190,
+        "parent" : 6
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 192,
+        "parent" : 8
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 406,
+        "parent" : 10
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 408,
+        "parent" : 12
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 411,
+        "parent" : 14
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 411,
+        "parent" : 16
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 406,
+        "parent" : 18
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 408,
+        "parent" : 20
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 411,
+        "parent" : 22
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 411,
+        "parent" : 24
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 1423,
+        "parent" : 26
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 1425,
+        "parent" : 28
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 1427,
+        "parent" : 30
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 1448,
+        "parent" : 32
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 1498,
+        "parent" : 34
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 1832,
+        "parent" : 36
+      }
+    ]
+  },
+  "kind" : "ctestInfo",
+  "tests" : 
+  [
+    {
+      "backtrace" : 1,
+      "command" : 
+      [
+        "/build/corrective-1ac57e25-20261002/nano-tests"
+      ],
+      "name" : "core",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_evm"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 120.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/work"
+        }
+      ]
+    },
+    {
+      "backtrace" : 3,
+      "command" : 
+      [
+        "/build/corrective-1ac57e25-20261002/nano-bft-network-tests",
+        "/build/corrective-1ac57e25-20261002/nano",
+        "/build/network/nano-p2p",
+        "--rpc-cost"
+      ],
+      "name" : "bft_rpc_cost_paris_network",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "NANO_TEST_EVM_FORK=Paris"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_bft_rpc_cost_local"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 180.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/corrective-1ac57e25-20261002"
+        }
+      ]
+    },
+    {
+      "backtrace" : 5,
+      "command" : 
+      [
+        "/build/corrective-1ac57e25-20261002/nano-bft-network-tests",
+        "/build/corrective-1ac57e25-20261002/nano",
+        "/build/network/nano-p2p",
+        "--rpc-cost-sustained"
+      ],
+      "name" : "bft_rpc_cost_sustained_paris_network",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "NANO_TEST_EVM_FORK=Paris"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_bft_rpc_cost_sustained_local"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 480.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/corrective-1ac57e25-20261002"
+        }
+      ]
+    },
+    {
+      "backtrace" : 7,
+      "command" : 
+      [
+        "/build/corrective-1ac57e25-20261002/nano-bft-network-tests",
+        "/build/corrective-1ac57e25-20261002/nano",
+        "/build/network/nano-p2p",
+        "--rpc-cost"
+      ],
+      "name" : "bft_rpc_cost_shanghai_network",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "NANO_TEST_EVM_FORK=Shanghai"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_bft_rpc_cost_local"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 180.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/corrective-1ac57e25-20261002"
+        }
+      ]
+    },
+    {
+      "backtrace" : 9,
+      "command" : 
+      [
+        "/build/corrective-1ac57e25-20261002/nano-bft-network-tests",
+        "/build/corrective-1ac57e25-20261002/nano",
+        "/build/network/nano-p2p",
+        "--rpc-cost-sustained"
+      ],
+      "name" : "bft_rpc_cost_sustained_shanghai_network",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "NANO_TEST_EVM_FORK=Shanghai"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_bft_rpc_cost_sustained_local"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 480.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/corrective-1ac57e25-20261002"
+        }
+      ]
+    },
+    {
+      "backtrace" : 11,
+      "command" : 
+      [
+        "/build/corrective-1ac57e25-20261002/nano-rpc-cost-tests"
+      ],
+      "name" : "rpc_cost_paris",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "NANO_TEST_EVM_FORK=Paris"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_rpc_load_local"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 180.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/corrective-1ac57e25-20261002"
+        }
+      ]
+    },
+    {
+      "backtrace" : 13,
+      "command" : 
+      [
+        "/build/corrective-1ac57e25-20261002/nano-rpc-cost-tests"
+      ],
+      "name" : "rpc_cost_success_paris",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "NANO_TEST_EVM_FORK=Paris",
+            "NANO_RPC_COST_SUCCESS=1"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_rpc_load_local"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 180.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/corrective-1ac57e25-20261002"
+        }
+      ]
+    },
+    {
+      "backtrace" : 15,
+      "command" : 
+      [
+        "/build/corrective-1ac57e25-20261002/nano-rpc-cost-tests"
+      ],
+      "name" : "rpc_cost_nested_1_paris",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "NANO_TEST_EVM_FORK=Paris",
+            "NANO_RPC_COST_SUCCESS=1",
+            "NANO_RPC_COST_DEPTH=1"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_rpc_load_local"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 180.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/corrective-1ac57e25-20261002"
+        }
+      ]
+    },
+    {
+      "backtrace" : 17,
+      "command" : 
+      [
+        "/build/corrective-1ac57e25-20261002/nano-rpc-cost-tests"
+      ],
+      "name" : "rpc_cost_nested_4_paris",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "NANO_TEST_EVM_FORK=Paris",
+            "NANO_RPC_COST_SUCCESS=1",
+            "NANO_RPC_COST_DEPTH=4"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_rpc_load_local"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 180.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/corrective-1ac57e25-20261002"
+        }
+      ]
+    },
+    {
+      "backtrace" : 19,
+      "command" : 
+      [
+        "/build/corrective-1ac57e25-20261002/nano-rpc-cost-tests"
+      ],
+      "name" : "rpc_cost_shanghai",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "NANO_TEST_EVM_FORK=Shanghai"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_rpc_load_local"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 180.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/corrective-1ac57e25-20261002"
+        }
+      ]
+    },
+    {
+      "backtrace" : 21,
+      "command" : 
+      [
+        "/build/corrective-1ac57e25-20261002/nano-rpc-cost-tests"
+      ],
+      "name" : "rpc_cost_success_shanghai",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "NANO_TEST_EVM_FORK=Shanghai",
+            "NANO_RPC_COST_SUCCESS=1"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_rpc_load_local"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 180.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/corrective-1ac57e25-20261002"
+        }
+      ]
+    },
+    {
+      "backtrace" : 23,
+      "command" : 
+      [
+        "/build/corrective-1ac57e25-20261002/nano-rpc-cost-tests"
+      ],
+      "name" : "rpc_cost_nested_1_shanghai",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "NANO_TEST_EVM_FORK=Shanghai",
+            "NANO_RPC_COST_SUCCESS=1",
+            "NANO_RPC_COST_DEPTH=1"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_rpc_load_local"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 180.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/corrective-1ac57e25-20261002"
+        }
+      ]
+    },
+    {
+      "backtrace" : 25,
+      "command" : 
+      [
+        "/build/corrective-1ac57e25-20261002/nano-rpc-cost-tests"
+      ],
+      "name" : "rpc_cost_nested_4_shanghai",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "NANO_TEST_EVM_FORK=Shanghai",
+            "NANO_RPC_COST_SUCCESS=1",
+            "NANO_RPC_COST_DEPTH=4"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_rpc_load_local"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 180.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/corrective-1ac57e25-20261002"
+        }
+      ]
+    },
+    {
+      "backtrace" : 27,
+      "command" : 
+      [
+        "/build/corrective-1ac57e25-20261002/nano-bellatrix-transition-tests",
+        "--exit-reorg",
+        "/build/network/nano-p2p"
+      ],
+      "name" : "consensus_bellatrix_voluntary_exit_reorg",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_consensus_local_network"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 180.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/corrective-1ac57e25-20261002"
+        }
+      ]
+    },
+    {
+      "backtrace" : 29,
+      "command" : 
+      [
+        "/build/corrective-1ac57e25-20261002/nano-bellatrix-transition-tests",
+        "--exit-pruning",
+        "/build/network/nano-p2p"
+      ],
+      "name" : "consensus_bellatrix_voluntary_exit_pruning",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_consensus_local_network"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 240.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/corrective-1ac57e25-20261002"
+        }
+      ]
+    },
+    {
+      "backtrace" : 31,
+      "command" : 
+      [
+        "/build/corrective-1ac57e25-20261002/nano-bellatrix-transition-tests",
+        "--exit-network",
+        "/build/network/nano-p2p"
+      ],
+      "name" : "consensus_bellatrix_voluntary_exit_network",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_consensus_local_network"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 180.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/corrective-1ac57e25-20261002"
+        }
+      ]
+    },
+    {
+      "backtrace" : 33,
+      "command" : 
+      [
+        "/build/corrective-1ac57e25-20261002/nano-bellatrix-transition-tests",
+        "--clock-coalescing"
+      ],
+      "name" : "consensus_bellatrix_clock_coalescing",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_consensus_runtime"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 60.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/corrective-1ac57e25-20261002"
+        }
+      ]
+    },
+    {
+      "backtrace" : 35,
+      "command" : 
+      [
+        "/build/corrective-1ac57e25-20261002/nano-bellatrix-transition-tests",
+        "--exit-loop"
+      ],
+      "name" : "consensus_bellatrix_voluntary_exit",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_consensus_operations"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 180.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/corrective-1ac57e25-20261002"
+        }
+      ]
+    },
+    {
+      "backtrace" : 37,
+      "command" : 
+      [
+        "/build/corrective-1ac57e25-20261002/nano-rpc-load-window-tests"
+      ],
+      "name" : "rpc_load_window",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_rpc_load_control"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 10.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/corrective-1ac57e25-20261002"
+        }
+      ]
+    }
+  ],
+  "version" : 
+  {
+    "major" : 1,
+    "minor" : 0
+  }
+}
