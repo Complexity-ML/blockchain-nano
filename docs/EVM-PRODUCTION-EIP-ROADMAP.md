@@ -3506,3 +3506,8 @@ Après remise à zéro Docker, build des dépendances AMD64 effectivement démar
 ### 2026-10-02 — Diagnostic RPC propre terminé, échec historique ouvert
 
 Compilation AMD64 Docker neuve de Nano/P2P/banc réseau réussie ; cas Paris WebSocket original instrumenté PASS en 80.91 s. Audit : 15 315 empreintes sources et trois programmes inchangés. Attente WebSocket maximale 3421.725 ms sur limite 4000 ms ; estimation maximale 3426.193 ms. Marge réduite observée, cause de l'échec historique non établie, aucune correction runtime ni régression complète nouvelle. Image/volume neufs conservés pour réutilisation. Les critères WAN, restauration effective des duties, forks et production restent ouverts. [Preuves et limites](qualification/clean-rpc-diagnostic-20261002/README.md).
+
+
+### 2026-10-02 — Instrumentation des sondes d'estimation préparée
+
+Candidate séparée `3fa8b805` : seules les mesures opt-in des simulations de l'estimateur changent ; recherche, budgets et assertions conservés. [Contrôleur](qualification/rpc-probe-build-control-20261002/README.md) préparé pour réutiliser image/volume AMD64 et compiler les cibles nécessaires, sans reconstruire une image. Pas encore de résultat ; échec historique, régression complète, restauration WAN et production restent ouverts. Aucun changement runtime promu sur main.
