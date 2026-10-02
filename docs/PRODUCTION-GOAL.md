@@ -2965,3 +2965,8 @@ Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régr
 ### 2026-10-02 — Régression ARM64 0f53b42d terminale
 
 [Preuves terminales](qualification/full-arm-terminal-0f53b42d-20261002/README.md) : **427/427 réussis, zéro échec/skip, 5652,20 s**, délais originaux. Auditeur séparé terminé exit 0 : 15315 sources, 208 programmes et entrées de liaison inchangés avant/après, registre complet vérifié. Deux audits du journal terminal confirment les 5387 variantes EEST exactes (4882 exécutions/505 validations, 317 fichiers) liées aux fixtures. Ce périmètre ne certifie aucun fork complet ni la production. Campagne AMD64 encore active ; audits signés AMD64 et restauration WAN attendus. Provenance native 016ab243 distincte, runtime main inchangé, échecs historiques et tous autres critères conservés.
+
+
+### 2026-10-02 — Échec de l’admission libp2p Altair AMD64
+
+[Diagnostic préservé](qualification/amd-altair-ingress-failure-20261002/README.md) : test 287 `consensus_altair_libp2p` échoué en 2,37 s sur le bloc à la taille maximale configurée. Trois programmes inchangés par rapport au manifeste initial ; réponse exacte absente, cause non prouvée. La campagne continue sans relance, mais son gate ne peut plus autoriser la restauration WAN. Candidat séparé e9ae45ee : diagnostic seulement, assertion/limites/délais/runtime inchangés, non exécuté. ARM64 427/427 conservé ; aucun statut EIP global ni critère de production fermé.
