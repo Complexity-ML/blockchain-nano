@@ -130,7 +130,7 @@ int main(int argc,char** argv){try{
  const bool expiry_attestation=argc==2&&std::string(argv[1])=="--attestation-expiry-loop";
  const bool expiry_loop=expiry_randao||expiry_attestation||(argc==2&&std::string(argv[1])=="--proposal-expiry-loop");
  const bool validator_only=expiry_loop||deposit_loop||exits_only||network||(argc==2&&std::string(argv[1])=="--validator-loop");
- check(argc==1||duty_trace||clock_coalescing||partition_simulation||beacon_headers_reorg||beacon_headers||beacon_api||deposit_store||validator_only||runtime_only||managed,"unknown Bellatrix qualification arguments");
+ check(argc==1||duty_trace||clock_coalescing||publication_cache||partition_simulation||beacon_headers_reorg||beacon_headers||beacon_api||deposit_store||validator_only||runtime_only||managed,"unknown Bellatrix qualification arguments");
  const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-bellatrix-containers-official",source=fixtures/"consensus-bellatrix-slots-official";
  const auto manifest=load(source/"manifest.json");check(manifest.at("commit")=="bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908","initial state revision");
  for(const auto& row:manifest.at("cases"))if(row.at("name")=="slots_1")for(const auto& [path,info]:row.at("files").items())check(hex(sha256(binary(source/path))).substr(2)==info.at("sha256").get<std::string>(),"initial state digest");
