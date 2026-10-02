@@ -2568,3 +2568,25 @@ après réindexation. ARM64 c104 : 162,259 s réussi ; cause AMD64 non identifi�
 413 résultats, 404 réussis et neuf échecs/timeouts. Les contrôles correctifs déjà
 en attente ne couvrent pas ce cas Capella. Aucun timeout ni critère assoupli ;
 aucun statut EIP ou production clôturé.
+
+### 2026-10-02 — Régression intégrée AMD64 terminale : 408/417
+
+[Archive terminale](qualification/production-evm-integration-20261001/full-amd64-terminal/README.md) :
+417 résultats complets, 408 réussites, neuf échecs, zéro ignoré ; CTest exit 8,
+15 101,53 s. Sources, registre et 197 programmes historiques inchangés.
+Audit résultats exit 1 à cause des neuf échecs ; audit EEST réussi :
+4 882 exécutions + 505 validations sur 317 fichiers, sans conformité de fork déduite.
+Les omissions historiques de trois helpers restent explicites, sans preuve
+rétroactive inventée. ARM64 terminal 410/417 reste non réussi également.
+Aucun échec effacé, aucun moteur promu, aucune qualification production clôturée.
+
+### 2026-10-02 — Contrôle correctif AMD64 : panne de préparation conservée
+
+[Échec et reprise des pilotes](qualification/corrective-amd64-control-20261002/permission-retry/README.md) :
+le dossier de rapports non inscriptible a arrêté le contrôle avant toute
+compilation ou test. Essai et erreur conservés, sources inchangées ; les
+pilotes suivants se sont arrêtés à leurs barrières de rapports manquants.
+Correction limitée aux permissions du nouveau dossier de sortie dédié.
+Compilation corrective reprise ; Altair puis Bellatrix restent séquentiels,
+sans contournement des audits, changement de runtime ou relaxation des délais.
+Aucun résultat correctif encore qualifié ; production toujours ouverte.

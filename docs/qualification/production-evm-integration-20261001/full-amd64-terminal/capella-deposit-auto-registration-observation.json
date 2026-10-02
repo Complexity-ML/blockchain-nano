@@ -1,0 +1,79 @@
+{
+  "observationUTC": "2026-10-02T00:52:37.375738+00:00",
+  "runtimeSourceRevision": "c10426b2eab0aff7eaada3e4b57460f15cf7e90c",
+  "architecture": "AMD64",
+  "campaignTerminal": false,
+  "completedAtObservation": 397,
+  "failuresAtObservation": [
+    {
+      "completed": 40,
+      "testNumber": 40,
+      "name": "bft_rpc_cost_sustained_paris_network",
+      "result": "...............***Failed   20.41 sec"
+    },
+    {
+      "completed": 62,
+      "testNumber": 62,
+      "name": "bft_rpc_cost_sustained_shanghai_network",
+      "result": "............***Failed   21.34 sec"
+    },
+    {
+      "completed": 287,
+      "testNumber": 287,
+      "name": "consensus_altair_libp2p",
+      "result": "............................***Failed    2.53 sec"
+    },
+    {
+      "completed": 322,
+      "testNumber": 322,
+      "name": "consensus_bellatrix_partition_simulation",
+      "result": "...........***Timeout 240.03 sec"
+    },
+    {
+      "completed": 394,
+      "testNumber": 394,
+      "name": "consensus_capella_deposit_activation",
+      "result": "...............***Timeout 360.03 sec"
+    },
+    {
+      "completed": 395,
+      "testNumber": 395,
+      "name": "consensus_capella_deposit_activation_restart",
+      "result": ".......***Timeout 360.03 sec"
+    },
+    {
+      "completed": 397,
+      "testNumber": 397,
+      "name": "consensus_capella_deposit_auto_registration",
+      "result": "........***Timeout 360.03 sec"
+    }
+  ],
+  "scenario": {
+    "resultLine": "397/417 Test #397: consensus_capella_deposit_auto_registration ........***Timeout 360.03 sec",
+    "outputLines": [
+      "{\"finalizedEpoch\":0,\"progressSlot\":8,\"signedVotes\":8}",
+      "{\"finalizedEpoch\":0,\"progressSlot\":16,\"signedVotes\":72}",
+      "{\"finalizedEpoch\":0,\"progressSlot\":24,\"signedVotes\":136}",
+      "{\"finalizedEpoch\":2,\"progressSlot\":32,\"signedVotes\":200}",
+      "{\"finalizedEpoch\":3,\"progressSlot\":40,\"signedVotes\":264}",
+      "{\"finalizedEpoch\":3,\"progressSlot\":41,\"signedVotes\":272}",
+      "{\"depositIndex\":0,\"depositProgressSlot\":48,\"finalizedEpoch\":4}",
+      "{\"depositIndex\":0,\"depositProgressSlot\":56,\"finalizedEpoch\":5}",
+      "{\"depositIndex\":0,\"depositProgressSlot\":64,\"finalizedEpoch\":6}",
+      "{\"depositIndex\":0,\"depositProgressSlot\":72,\"finalizedEpoch\":7}",
+      "{\"depositIndex\":1,\"depositProgressSlot\":80,\"finalizedEpoch\":8}",
+      "{\"depositIndex\":1,\"depositProgressSlot\":88,\"finalizedEpoch\":9}",
+      "{\"depositIndex\":1,\"depositProgressSlot\":96,\"finalizedEpoch\":10}",
+      "{\"depositIndex\":1,\"depositProgressSlot\":104,\"finalizedEpoch\":11}",
+      "{\"depositIndex\":1,\"depositProgressSlot\":112,\"finalizedEpoch\":12}",
+      "{\"depositIndex\":1,\"depositProgressSlot\":120,\"finalizedEpoch\":13}",
+      ""
+    ]
+  },
+  "lastProgress": {
+    "depositIndex": 1,
+    "depositProgressSlot": 120,
+    "finalizedEpoch": 13
+  },
+  "interpretation": "Original 360-second limit and end assertions unchanged. Result must be interpreted separately from registration-only success."
+}
