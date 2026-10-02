@@ -1,0 +1,102 @@
+{
+  "inputSha256": "1f19718afa7b49ca3e52016fc0558cc60957c6aef7bdf797d973c7830f65ca71",
+  "nodes": [
+    {
+      "node": 0,
+      "methods": {
+        "eth_call": {
+          "successful": 96,
+          "maximumMs": 3421.756041,
+          "medianMs": 1210.0903715
+        },
+        "eth_estimateGas": {
+          "successful": 48,
+          "maximumMs": 5813.666167,
+          "medianMs": 3041.246064
+        },
+        "eth_chainId": {
+          "successful": 96,
+          "maximumMs": 185.957198,
+          "medianMs": 2.5931645000000003
+        }
+      },
+      "failed": []
+    },
+    {
+      "node": 1,
+      "methods": {
+        "eth_call": {
+          "successful": 91,
+          "maximumMs": 3508.547761,
+          "medianMs": 1183.918487
+        },
+        "eth_estimateGas": {
+          "successful": 45,
+          "maximumMs": 5214.002701,
+          "medianMs": 2926.701873
+        },
+        "eth_chainId": {
+          "successful": 91,
+          "maximumMs": 220.074793,
+          "medianMs": 4.55238
+        }
+      },
+      "failed": [
+        {
+          "durationMs": 4006.316544,
+          "error": "RPC simulation queue wait exceeded",
+          "method": "eth_estimateGas",
+          "request": 47,
+          "rpcCode": -32005,
+          "startedMs": 59780.375058,
+          "success": false,
+          "tag": "pending"
+        }
+      ]
+    },
+    {
+      "node": 2,
+      "methods": {
+        "eth_call": {
+          "successful": 96,
+          "maximumMs": 3708.837867,
+          "medianMs": 1218.8996655
+        },
+        "eth_estimateGas": {
+          "successful": 48,
+          "maximumMs": 6396.008312,
+          "medianMs": 3280.889272
+        },
+        "eth_chainId": {
+          "successful": 96,
+          "maximumMs": 375.520487,
+          "medianMs": 1.9737585
+        }
+      },
+      "failed": []
+    },
+    {
+      "node": 3,
+      "methods": {
+        "eth_call": {
+          "successful": 96,
+          "maximumMs": 3395.033958,
+          "medianMs": 1351.9503285
+        },
+        "eth_estimateGas": {
+          "successful": 48,
+          "maximumMs": 7026.818131,
+          "medianMs": 3033.7897844999998
+        },
+        "eth_chainId": {
+          "successful": 96,
+          "maximumMs": 323.771049,
+          "medianMs": 2.5962285
+        }
+      },
+      "failed": []
+    }
+  ],
+  "causalAttribution": false,
+  "note": "End-to-end client durations do not distinguish queue wait, RPC lock, preparation or execution."
+}

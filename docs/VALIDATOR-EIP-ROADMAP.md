@@ -6508,3 +6508,8 @@ Pilote uniquement : sélection explicite du daemon depuis le build de chaque arc
 ### 2026-10-02 — Échec AMD64 WebSocket découvert dans le journal complet
 
 [Trace et diagnostic](qualification/coherent-amd64-websocket-failure-20261002/README.md) : cas 43 échoué, `eth_estimateGas pending` refusé (-32005) après 4 006 ms d’attente, limite originale 4 s. Marqueur finalisé avec 16 clients actifs, mais ce scénario exige zéro refus : qualification AMD64 non acquise. Cause profonde ouverte ; aucun délai/assertion assoupli, aucune relance ni correction runtime. Campagne encore active. Les indications antérieures « sans échec » fondées sur la fin du journal étaient incorrectes. Contrôle WAN maintenu fermé ; preuve ARM64 distincte et tous les critères globaux conservés.
+
+
+### 2026-10-02 — Mesures internes du cas WebSocket AMD64 préparées
+
+[Contrôleur ciblé et latences client](qualification/coherent-amd64-websocket-timing-control-20261002/README.md) : un rejeu diagnostique attend le propriétaire réel et les preuves terminales de la campagne, conserve programmes/charge/délais et active seulement les traces internes existantes. Aucun résultat acquis ni correction runtime. L’échec d’origine reste conservé ; aucun gate WAN ou critère global de production fermé.
