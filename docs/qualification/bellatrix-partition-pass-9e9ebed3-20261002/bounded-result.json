@@ -1,0 +1,71 @@
+{
+  "commonBeaconAndExecutionProjectionRequiredBySource": true,
+  "competingLiveBranchesRequiredBySource": true,
+  "configuredRecoveryDeadlineSeconds": 240,
+  "cutSeconds": 96,
+  "elapsedSeconds": 372.25,
+  "fault": "SIGSTOP both owned P2P daemons; SIGCONT reconnect",
+  "fullCampaignTerminal": false,
+  "isolatedHalvesFinalityUnchanged": true,
+  "observedRecoverySeconds": 95,
+  "postCampaignIntegrityAuditDone": false,
+  "productionQualified": false,
+  "programsBeforeCampaign": {
+    "/build/full-network-9e9ebed3-arm64-20261002/nano": "b02fe9726b27c664f8e5d20572a9672fc08f720fcbfe15ee939d15c665f8abd1",
+    "/build/full-network-9e9ebed3-arm64-20261002/nano-bellatrix-transition-tests": "993f83a67929ab4dc51a57a8b7b587860b09c2866dea203760fbd6b5d0d460ae",
+    "/build/full-network-9e9ebed3-arm64-20261002/network/nano-p2p": "ae567df0787a6d64e72a126b4d8b00bbc8ed761c4d7fe308d42c61a878ee2d75"
+  },
+  "runtimeRevision": "9e9ebed3833a24f75ce7b29b9a80dcce341dfc3a",
+  "sourceSha256": {
+    "CMakeLists.txt": "6855adb4f098b7a17b74852f0a5a01312976f96cd77e845ab31df0164493df62",
+    "tests/support/bellatrix_runtime_scenario.hpp": "985b06697891eb3bd219ad80dfeb31ca714426049da9fffeea1c642ba1c1a68d",
+    "tests/test_bellatrix_transition.cpp": "d4ebeca46279ed462e2e64425545566fed4ccf5df1c141a67ae26ec4ba15391d"
+  },
+  "summary": {
+    "beaconPeerObservations": true,
+    "blockAfterRestart": "0x36",
+    "blockBeforeRestart": "0x3",
+    "crashRecovered": false,
+    "distributedStake": true,
+    "finalized": {
+      "epoch": "0x6",
+      "root": "0xa36b599ff33052f9621f9e123c7522bbeeedc5c6c4d8ed7d0de4285253ba52d2"
+    },
+    "independentCoreProcesses": 2,
+    "localKeys": 64,
+    "observerSynchronized": true,
+    "p2pDaemons": 2,
+    "partitionRecovered": true,
+    "physicalHosts": 1,
+    "scenario": "bellatrix-managed-cores-restart",
+    "validatorNodes": 2,
+    "wallClock": true
+  },
+  "test": {
+    "backtrace": 611,
+    "command": [
+      "/build/full-network-9e9ebed3-arm64-20261002/nano-bellatrix-transition-tests",
+      "--partition-recovery",
+      "/build/full-network-9e9ebed3-arm64-20261002/nano",
+      "/build/full-network-9e9ebed3-arm64-20261002/network/nano-p2p"
+    ],
+    "name": "consensus_bellatrix_partition_recovery",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "qualification_consensus_partition"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 720.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/build/full-network-9e9ebed3-arm64-20261002"
+      }
+    ]
+  },
+  "wanQualified": false
+}

@@ -6493,3 +6493,8 @@ Pilote uniquement : sélection explicite du daemon depuis le build de chaque arc
 ### 2026-10-02 — Lanceur de restauration cohérent préparé, exécution refusée avant gates
 
 [Code et inspection en lecture seule](qualification/coherent-wan-launch-control-20261002/README.md) : raccordement au cœur et réseau qualifiés séparément, contrôles terminaux des deux architectures, revue signée indépendante, SHA et sources avant/après, transport IPv6 à empreinte conservée. Lanceur non exécuté/non qualifié : approbation automatique refusée avant gates, aucune commande lancée. Le contrôleur séparé en lecture seule constate que les résultats terminaux sont encore absents. Aucun nœud WAN démarré ni runtime promu. Tous les gates et critères de production restent ouverts.
+
+
+### 2026-10-02 — Bellatrix : coupe locale et reprise réussies dans la campagne ARM
+
+[Trace CTest complète du cas](qualification/bellatrix-partition-pass-9e9ebed3-20261002/README.md) : **372,25 s / 720 s**, deux cœurs/deux P2P, un hôte, horloge réelle. SIGSTOP des deux P2P pendant 96 s, branches concurrentes exigées, finalité des moitiés isolées inchangée ; convergence des projections Beacon/exécution après SIGCONT en 95 s / fenêtre 240 s. Aucun délai augmenté ou cas relancé. Campagne encore active, intégrité post-campagne à vérifier ; aucune qualification WAN/asymétrique, panne physique ou restauration trois propriétaires. Tous les gates globaux et critères de production restent ouverts.

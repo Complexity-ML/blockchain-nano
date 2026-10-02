@@ -1,0 +1,35 @@
+306/427 Testing: consensus_bellatrix_partition_recovery
+306/427 Test: consensus_bellatrix_partition_recovery
+Command: "/build/full-network-9e9ebed3-arm64-20261002/nano-bellatrix-transition-tests" "--partition-recovery" "/build/full-network-9e9ebed3-arm64-20261002/nano" "/build/full-network-9e9ebed3-arm64-20261002/network/nano-p2p"
+Directory: /build/full-network-9e9ebed3-arm64-20261002
+"consensus_bellatrix_partition_recovery" start time: Oct 02 15:00 UTC
+Output:
+----------------------------------------------------------
+independent Bellatrix cores synchronized
+Beacon slots observed through both P2P daemons
+restarted Bellatrix validator propagated next block
+Beacon slot observations restored after restart
+{"epoch":1,"event":"distributed-progress","sameHead":false,"slot":8}
+{"epoch":2,"event":"distributed-progress","sameHead":true,"slot":16}
+{"epoch":3,"event":"distributed-progress","sameHead":true,"slot":24}
+{"epoch":4,"event":"distributed-progress","sameHead":false,"slot":32}
+distributed validators completed four epochs
+{"aHead":{"hash":"0xed1e23642625c6b0700fda569d65e0e6dae312de1c717bdfabe57c66f3ed041d","number":"0x20","timestamp":"0x6abfc7af"},"bHead":{"hash":"0xed1e23642625c6b0700fda569d65e0e6dae312de1c717bdfabe57c66f3ed041d","number":"0x20","timestamp":"0x6abfc7af"},"event":"partition-baseline","finalized":{"hash":"0x83abb8dde544d556aaffaf1b96c01d7ff482cf768c79e3a399b3f484f1d52394","number":"0x10","timestamp":"0x6abfc74f"},"preCutPrefix":{"0x10":"0x83abb8dde544d556aaffaf1b96c01d7ff482cf768c79e3a399b3f484f1d52394","0x11":"0xaf276fb9d52a1d48875d2534ee06b956ec140d5bec1156da05f9d7245a7dfd24","0x12":"0x73402059c6b9e9604fbba0bd99d58ab94b071178744aa1de5dc22abe8380e017","0x13":"0x0c0b850b0216c8a7dbc0051cb8c3450d3cf3b981adc60542d166e844d9e61577","0x14":"0xb435ed9025eaf736a02a8c3fd664e39c733aae4ccf516e09671e2f51a44cc8e1","0x15":"0x94dfd421c5d26b53396ab654c00eea456aa85cb0ac794b5bd3e3944363a882c9","0x16":"0x51f48ee369a66e7006e570f26358be7854cddc1632fdc831e2a9a01bb1937155","0x17":"0xd3fa8f3b5406985259de6154eaa570640dc01ee130fb1a7e85b41499f92a054b","0x18":"0x849f5274ffff4fcfea6b3b0dc653b1c082ba55725c2fbb5d4d48a8c8ef7bd289","0x19":"0xd0cced78e319b8d6018e016880ace9cd326b5737ee266ac3cef85fa2b8b44866","0x1a":"0x52756ff50574aefe862b702120080776d429215f94e13cba5b1bf53f886dbf40","0x1b":"0x56aa3c6eec8e271b71594e5b5572c32ccdea62b46b453a78362ad3dd400e7f14","0x1c":"0xc4179f91b5062ac4f5d1d7e32f91d55f40ca1fe3e5c4634e28790b8248c546c5","0x1d":"0xa99e2df6ffb837e85e90d52d83a900b6d09937fb159157419a388cc7007241e9","0x1e":"0x82b479c115437151762ce58dd07379bca20f6811c3ca70d65b19d6d1300949df","0x1f":"0x7298c87bfe0a7b10e6f3ecbf25f57f977feebe7935f4863aa3a67cba92aafc0c","0x20":"0xed1e23642625c6b0700fda569d65e0e6dae312de1c717bdfabe57c66f3ed041d"}}
+{"event":"partition-start","finalizedHash":"0x83abb8dde544d556aaffaf1b96c01d7ff482cf768c79e3a399b3f484f1d52394","seconds":96}
+{"a":"0x20","b":"0x20","elapsedSeconds":0,"event":"partition-progress","finalityUnchanged":true}
+{"a":"0x26","b":"0x22","elapsedSeconds":48,"event":"partition-progress","finalityUnchanged":true}
+{"event":"partition-healed"}
+{"aFinalized":"0x10","bFinalized":"0x10","elapsedSeconds":0,"event":"recovery-progress"}
+{"aFinalized":"0x10","bFinalized":"0x10","elapsedSeconds":48,"event":"recovery-progress"}
+{"beaconFinalized":{"epoch":"6","root":"0xa36b599ff33052f9621f9e123c7522bbeeedc5c6c4d8ed7d0de4285253ba52d2"},"elapsedSeconds":95,"event":"partition-recovery-bound","executionHash":"0xf8843ff303d6fe6b6ad98f5d2ba6e89929480e54eab8ab1d1d7e86805cce4dc5"}
+partition recovered common advancing finality
+{"a":{"epoch":"0x6","root":"0xa36b599ff33052f9621f9e123c7522bbeeedc5c6c4d8ed7d0de4285253ba52d2"},"b":{"epoch":"0x6","root":"0xa36b599ff33052f9621f9e123c7522bbeeedc5c6c4d8ed7d0de4285253ba52d2"},"event":"distributed-checkpoints","justifiedA":"0x7","justifiedB":"0x7"}
+{"beaconPeerObservations":true,"blockAfterRestart":"0x36","blockBeforeRestart":"0x3","crashRecovered":false,"distributedStake":true,"finalized":{"epoch":"0x6","root":"0xa36b599ff33052f9621f9e123c7522bbeeedc5c6c4d8ed7d0de4285253ba52d2"},"independentCoreProcesses":2,"localKeys":64,"observerSynchronized":true,"p2pDaemons":2,"partitionRecovered":true,"physicalHosts":1,"scenario":"bellatrix-managed-cores-restart","validatorNodes":2,"wallClock":true}
+<end of output>
+Test time = 372.25 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_partition_recovery" end time: Oct 02 15:06 UTC
+"consensus_bellatrix_partition_recovery" time elapsed: 00:06:12
+----------------------------------------------------------
+
