@@ -10,12 +10,21 @@ namespace nano::snapshot_detail {
 // Internal only. The caller has already compared every SSZ source byte to
 // cached[2][0] using canonical_hex_matches. Compare every other row field;
 // the candidate's null SSZ slot is a deferred copy, never wire output.
-inline bool same_row_after_ssz_match(const nlohmann::json& cached,const nlohmann::json& candidate){
+// matched_accounts additionally requires exhaustive primitive comparison to a
+// private validated execution-account encoding. All other execution fields
+// still compare exactly; any miss must materialize both deferred slots.
+inline bool same_row_after_ssz_match(const nlohmann::json& cached,const nlohmann::json& candidate,bool matched_accounts=false){
  if(!cached.is_array()||cached.size()!=6||!candidate.is_array()||candidate.size()!=6||
     !cached[2].is_array()||cached[2].size()!=2||!cached[2][0].is_string()||
     !candidate[2].is_array()||candidate[2].size()!=2||!candidate[2][0].is_null())return false;
  for(size_t i=0;i<6;++i){
   if(i==2){if(cached[2][1]!=candidate[2][1])return false;}
+  else if(i==5&&matched_accounts){
+   const auto& old=cached[i];const auto& fresh=candidate[i];
+   if(!old.is_array()||!fresh.is_array()||old.size()!=fresh.size()||
+      (old.size()!=3&&old.size()!=4)||!old[1].is_object()||!fresh[1].is_null())return false;
+   for(size_t part=0;part<old.size();++part)if(part!=1&&old[part]!=fresh[part])return false;
+  }
   else if(cached[i]!=candidate[i])return false;
  }
  return true;

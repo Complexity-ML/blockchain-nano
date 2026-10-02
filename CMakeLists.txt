@@ -1873,3 +1873,8 @@ add_executable(nano-capella-snapshot-json-tests tests/test_capella_snapshot_json
 target_include_directories(nano-capella-snapshot-json-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
 add_test(NAME consensus_capella_snapshot_cached_rows COMMAND nano-capella-snapshot-json-tests)
 set_tests_properties(consensus_capella_snapshot_cached_rows PROPERTIES TIMEOUT 60 LABELS "qualification_storage_local;capella;snapshot")
+
+add_executable(nano-capella-snapshot-account-tests tests/test_capella_snapshot_accounts.cpp)
+target_link_libraries(nano-capella-snapshot-account-tests PRIVATE nano_core)
+add_test(NAME consensus_capella_snapshot_account_primitives COMMAND nano-capella-snapshot-account-tests)
+set_tests_properties(consensus_capella_snapshot_account_primitives PROPERTIES TIMEOUT 60 LABELS "qualification_storage_local;capella;snapshot")
