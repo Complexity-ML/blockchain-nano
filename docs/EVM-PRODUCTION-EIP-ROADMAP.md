@@ -2968,3 +2968,14 @@ assertions de fin d'activation/vote non démontrées. 394/417 résultats observ�
 L'ARM64 c104 avait réussi ce cas en 136,363 s ; cause non identifiée, performance
 à analyser. Les 19 cas correctifs déjà prévus ne couvrent pas ce nouvel échec.
 Aucun délai/critère relâché, aucun échec clôturé ni profil EIP requalifié.
+
+### 2026-10-02 — Sixième échec AMD64 : reprise d'activation Capella
+
+Cas #395 `consensus_capella_deposit_activation_restart` : timeout 360,03 s,
+limite originale de 360 s conservée. [Observation complémentaire](qualification/production-evm-integration-20261001/capella-activation-amd64-partial/README.md) :
+réouverture « scheduled-pending » observée au slot 104, puis finalité époque 13
+au slot 120 ; reprise active/vote et refus du conflit de signature non qualifiés.
+ARM64 c104 : 139,204 s réussi, sans cause AMD64 identifiée. Le cas #396
+`automatic_registration` a réussi en 29,71 s : 396 résultats, 390 réussis,
+six échecs/timeouts. #397 reste en cours. Les contrôles correctifs déjà en attente
+ne couvrent pas ces deux timeouts Capella ; aucun statut EIP/production clôturé.
