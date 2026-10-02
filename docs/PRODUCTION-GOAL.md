@@ -3027,3 +3027,8 @@ Pilote uniquement : sélection explicite du daemon depuis le build de chaque arc
 ### 2026-10-02 — Bellatrix : coupe locale et reprise réussies dans la campagne ARM
 
 [Trace CTest complète du cas](qualification/bellatrix-partition-pass-9e9ebed3-20261002/README.md) : **372,25 s / 720 s**, deux cœurs/deux P2P, un hôte, horloge réelle. SIGSTOP des deux P2P pendant 96 s, branches concurrentes exigées, finalité des moitiés isolées inchangée ; convergence des projections Beacon/exécution après SIGCONT en 95 s / fenêtre 240 s. Aucun délai augmenté ou cas relancé. Campagne encore active, intégrité post-campagne à vérifier ; aucune qualification WAN/asymétrique, panne physique ou restauration trois propriétaires. Tous les gates globaux et critères de production restent ouverts.
+
+
+### 2026-10-02 — Qualification terminale du candidat cohérent Docker ARM64
+
+[Preuves terminales et revue indépendante](qualification/coherent-arm64-terminal-9e9ebed3-20261002/README.md) : **427/427 + 21/21**, aucun skip/échec, délais originaux. Revue exit 0 : 15 315 sources stables, 208 SHA de programmes relus du volume, 317 fichiers / 5 387 variantes EEST exactes. Cette entrée actualise les observations ARM « encore active » précédentes sans les effacer. Régression après recompilation cohérente des helpers ; aucune couverture nouvelle revendiquée. AMD64/audit signé encore actifs, restauration/duties/finalité WAN non prouvés, liaison statique non auditée ici, conformité complète et revue de sécurité indépendante ouvertes. Aucun runtime promu ; tous les critères globaux de production restent ouverts.
