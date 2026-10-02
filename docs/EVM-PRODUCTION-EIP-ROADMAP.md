@@ -3092,3 +3092,7 @@ une dépendance. Cœur/daemon read-only ; aucune règle d’admission assouplie.
 ### 2026-10-02 — Profil interne Bellatrix AMD64 démarré
 
 [Préparation reproductible](qualification/bellatrix-inner-profile-20261002/README.md) : diagnostic des copies/contextes/vérifications/sérialisation, scénario original 112 slots et timeout 240 s conservés. Compilation terminée puis CTest actif constaté ; résultat final non acquis. Bibliothèques et objet de test réutilisés, pas de nouvelle image. Aucun critère de production clos ni code de diagnostic promu.
+
+### 2026-10-02 — Profil interne Bellatrix terminal
+
+[Mesures conservées](qualification/bellatrix-inner-profile-20261002/README.md) : timeout original 240,025 s, dernier slot observé 88 ; entrées inchangées et zéro skip. Sur 1 792 publications, 137,117 s incluent 70,948 s de snapshot ; copies du store 1,929 s sur 4 160 appels. Compteurs imbriqués, fenêtres différentes, ne pas sommer. Cible suivante : éviter le reparcours JSON du store sans changer encodage canonique, limites, WAL ou écritures synchrones. Aucune qualification ou promotion runtime ; autres critères et échecs historiques conservés.
