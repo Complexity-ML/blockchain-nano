@@ -74,3 +74,8 @@ Before-test registry/program manifest archived in preflight-amd64. No terminal
 AMD64 result or cross-architecture final-root equality acquired. Separate guarded
 full-regression controller still waits for all ten cases to pass and manifests
 to remain unchanged before touching the build volume again.
+
+## First AMD64 activation case completed, whole campaign still active
+
+Activation passes in 356.26 / 360 seconds. Only 3.74 seconds remain below the
+original bound. [Actual case assertions and in-progress capture](activation-amd64-in-progress/README.md). Terminal ten-case and after-test manifest checks remain pending; no production or WAN closure.
