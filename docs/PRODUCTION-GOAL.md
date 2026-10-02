@@ -2491,3 +2491,14 @@ Jobs cœur/réseau non demandés par le filtre et ignorés : aucune qualificatio
 du runtime, d'un fork ou de la production déduite. La régression AMD64 c10426b2
 poursuit ses cas Capella avec ses sources figées et son périmètre de manifeste
 historique ; les quatre échecs connus et les critères originaux restent ouverts.
+
+### 2026-10-02 — Diagnostic Altair AMD64 en attente, moteur c104 conservé
+
+Le contrôle [archivé](qualification/altair-bound-diagnostics-20261002/c104-runtime-control/README.md)
+attend la fin de la campagne complète puis des 19 cas correctifs, avec contrôle
+des résultats et empreintes. Il ne recompilera que le test instrumenté, lié aux
+bibliothèques c104 existantes, volume de build en lecture seule. Révisions du
+runtime, du test et du collecteur distinctes ; composition diagnostique, pas
+candidate de production. Syntaxe shell vérifiée ; compilation/exécution encore
+non réalisées, timeout et assertions d'origine conservés. Aucun échec clôturé,
+aucun changement de statut EIP ni des critères de production.
