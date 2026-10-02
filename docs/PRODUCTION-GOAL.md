@@ -2872,3 +2872,7 @@ Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régr
 ### 2026-10-02 — candidat803 : natif9+audit4 terminaux et buildAMD cohérent
 
 [Preuves terminales](qualification/coherent-80373152-release-gates-20261002/README.md) : buildAMD0/neuf cibles/registre426, sélection16 démarrée ; buildnatif0,9/9 zéro skip2,89s et4/4 audits signés99blocs97tx passent. Sources identiques ARM/AMD/natif ; fixture/binaire/200 entrées matérialisées inchangés après tests et audit. Le checkpoint finalisé et l'ascendance sont vérifiés, pas la reprise des duties/WAN. SélectionsDocker et fullAMD non terminaux ; aucun runtime promu, EIP ou critère production/lancement clôturé.
+
+### 2026-10-02 — candidat803 : sélectionARM16 terminale
+
+[Rapports exacts](qualification/coherent-80373152-release-gates-20261002/README.md) :16/16, zéro skip/échec,457,46s ; réindexation97,88/360, sorties95,14/480 passent ; sources/neuf programmes/sept entrées inchangés, registre/délais originaux vérifiés. AMD actif, full et WAN non démarrés. AuditAMD futur lié au binaire complet réel ; enchaînement privé en attente du driverAMD puis audits/gates exacts, sans relance automatique. Aucun runtime promu, statut EIP ou critère production/lancement clôturé.

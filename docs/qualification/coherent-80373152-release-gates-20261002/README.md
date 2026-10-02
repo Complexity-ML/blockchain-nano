@@ -24,3 +24,11 @@ Le parent ARM2d complet ne prouve pas la régression complète du candidat803 (c
 Build AMD cohérent neuf terminal0, neuf cibles et registre426 vérifiés ; mêmes15313 sources que l'ARM. SélectionAMD16 réellement démarrée, trois premiers contrôles passent, activation en cours ; complèteAMD reste en attente de16/16.
 
 Build natif cohérent terminal0, **9/9 tests**, zéro skip,2,89s, noms/délais originaux vérifiés. **4/4 audits réels** : checkpoint finalisé/ascendance/checkpointSequence/digest vérifiés sur99blocs/97transactions, tête/futur/malformation refusés. Sources/fixture/binaire et **200 entrées** matérialisées restent identiques avant/après tests/audit. NanoSHA `293ad6b40c6c020dfef633ad9dcdc1aa922c73b3e78f48530c39b2d888cc9fad`. Source native identique aux deux buildsDocker. Aucun nouveau duty, transport WAN ni consensus inter-nœuds qualifié par ces audits locaux.
+
+## ARM16 terminal et enchaînement privé conditionnel
+
+Candidat803 ARM **16/16**, zéro skip/échec, **457,46s**. Réindexation97,88/360, réindexation des sorties95,14/480 passent ; sources/neuf programmes/sept entrées avant/après identiques, registre exact et délais originaux vérifiés indépendamment. Même périmètre qu'avant, aucune causalité de performance déduite. Résultat intégral archivé. AMD encore actif (activation en cours), pas de régression complète ni de reprise WAN commencée.
+
+Audit AMD futur corrigé pour viser **le binaire du build complet qui sera effectivement lancé en WAN** : hash attendu issu du manifeste full terminal, égalité source/archives et exit0 exigés, binaire hashé avant/après audit. Gate WAN vérifiera cette correspondance, au lieu de seulement accepter l'audit de la sélection. Aucune réussite future supposée.
+
+Contrôleur queued-after-full effectivement lancé, en attente du driver completAMD spécifique. Échec/absence de preuves entraîne refus, jamais relance automatique. Si426/426 exacts, audits0, sources/programmes/entrées inchangés et révision803 sont acquis, il exécute l'auditAMD4 puis le lanceur qui réexécute huit gates/attestations avant toute restauration privée. Aucun nouveau nœud à cette observation. Tous les critères WAN, réseau, EIP, production/bridge/lancement restent ouverts.

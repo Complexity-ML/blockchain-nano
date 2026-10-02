@@ -34,13 +34,25 @@ PY
 manifest "$fixture/chain" > "$reports/fixture-before.json"
 git ls-files -z | python3 -c 'import sys,json,hashlib;print(json.dumps({p.decode():hashlib.sha256(open(p,"rb").read()).hexdigest() for p in sys.stdin.buffer.read().split(b"\0") if p},sort_keys=True))' > "$reports/source-before.json"
 cp "$parent/programs-after.sha256" "$reports/parent-programs.sha256"
+python3 - "$reports" <<'BIND_FULL'
+import json,sys
+from pathlib import Path
+p=Path('/home/ubuntu/nano-full-coherent-80373152-amd-reports-20261002');out=Path(sys.argv[1])
+for name in ['ctest-exit.txt','container-exit.txt','post-test-manifest-exit.txt']:assert (p/name).read_text().strip()=='0'
+assert (p/'source-manifest.json').read_bytes()==(p/'source-manifest-after-tests.json').read_bytes()
+assert (p/'executables-before-tests.json').read_bytes()==(p/'executables-after-tests.json').read_bytes()
+assert (p/'link-inputs-before.txt').read_bytes()==(p/'link-inputs-after.txt').read_bytes()
+assert (p/'source-manifest.json').read_bytes()==(out/'source-before.json').read_bytes()
+values=json.loads((p/'executables-after-tests.json').read_text());binary='/build/full-coherent-80373152-amd64-20261002/nano';digest=values[binary]
+assert len(digest)==64 and all(c in '0123456789abcdef' for c in digest)
+(out/'full-binary.sha256').write_text(digest+'  '+binary+'\n')
+BIND_FULL
 set +e
 sudo docker run --rm -i --name nano-coherent-80373152-amd64-offline --network none --read-only --cap-drop ALL --security-opt no-new-privileges --cpus 2 --memory 3g --ulimit nofile=65536:65536 --tmpfs /tmp:rw,nosuid,nodev,noexec,size=128m --mount "type=bind,src=$source_dir,dst=/work,readonly" --mount "type=bind,src=$fixture,dst=/fixture,readonly" --mount "type=bind,src=$control,dst=/control,readonly" --mount "type=bind,src=$reports,dst=/reports" --mount type=volume,src=nano-linux-sync-build,dst=/build,readonly -w /work sha256:0fa8a608c09ff5ad1e804afc160c04d4964898bed149fcb47a2b587a0a9c194c bash -s > "$reports/container.log" 2>&1 <<'RUN'
 set -euo pipefail
-binary=/build/coherent-80373152-amd64-20261002/nano
+binary=/build/full-coherent-80373152-amd64-20261002/nano
 sha256sum "$binary" > /reports/binary-before.sha256
-awk -v binary="$binary" '$2==binary {print}' /reports/parent-programs.sha256 > /reports/parent-binary.sha256
-cmp /reports/binary-before.sha256 /reports/parent-binary.sha256
+cmp /reports/binary-before.sha256 /reports/full-binary.sha256
 for name in positive-current reject-head-as-finalized reject-future-epoch reject-malformed-root; do
  start=$(date +%s)
  set +e
@@ -77,6 +89,6 @@ errors={'reject-head-as-finalized':'observed checkpoint differs from finalized e
 for name,message in errors.items():
  assert (p/f'{name}.exit').read_text().strip()=='1',(name,(p/f'{name}.stderr').read_text())
  assert message in (p/f'{name}.stderr').read_text()
-(p/'result-audit.json').write_text(json.dumps({'cases':4,'passed':4,'fixtureUnchanged':True,'binaryMatchesSelectedCampaign':True,'sourceUnchanged':True,'actualSignedCanonicalReplay':True,'newWanRun':False,'dutyResumptionVerified':False},indent=2)+'\n')
+(p/'result-audit.json').write_text(json.dumps({'cases':4,'passed':4,'fixtureUnchanged':True,'binaryMatchesFullCampaign':True,'sourceUnchanged':True,'actualSignedCanonicalReplay':True,'newWanRun':False,'dutyResumptionVerified':False},indent=2)+'\n')
 PY
 printf '0\n' > "$reports/qualification-exit.txt"

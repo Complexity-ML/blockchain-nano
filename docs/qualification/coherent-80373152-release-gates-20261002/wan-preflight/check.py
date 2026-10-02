@@ -58,6 +58,12 @@ def offline(arch):
  for a,b in [('source-before.json','source-after.json'),('fixture-before.json','fixture-after.json')]:same(p,a,b,remote)
  if remote:
   assert read(p+'/qualification-exit.txt',True).strip()=='0';same(p,'binary-before.sha256','binary-after.sha256',True)
+  assert report.get('binaryMatchesFullCampaign') is True
+  same(p,'full-binary.sha256','binary-before.sha256',True)
+  digest,path=read(p+'/binary-before.sha256',True).split()
+  assert path=='/build/full-coherent-80373152-amd64-20261002/nano'
+  expected=json.loads(read('/home/ubuntu/nano-full-coherent-80373152-amd-reports-20261002/executables-after-tests.json',True))
+  assert expected[path]==digest
  else:
   same(p,'binary-before.json','binary-after.json')
   assert read(p+'/inputs-after-offline.json')==read('/tmp/nano-coherent-80373152-native-test-reports-20261002/inputs-after.json')
