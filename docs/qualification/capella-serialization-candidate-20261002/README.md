@@ -27,3 +27,15 @@ retained; the new source does not modify that active run.
 
 Full regression, AMD64 candidate integration, WAN qualification and all remaining
 production gates stay open. No production readiness claim.
+
+## AMD64 qualification prepared
+
+Separate clean source checkout at 3030b799; all 13,726 source-file hashes equal
+the ARM64 campaign's source manifest. Controls select the same ten cases and
+original timeouts. A live wait-and-run controller waits for the confirmed parent
+container to end, then requires five terminal cases, zero skips, successful
+post-test manifest and unchanged source/program/library inputs. Parent failures
+are accepted as retained evidence, not treated as a reason to weaken tests.
+Only then may the existing shared AMD64 build volume be recompiled. No new
+Docker image. Source identity is not runtime equivalence. Current ARM64 five
+cases passed, remaining cases still active at this preparation observation.
