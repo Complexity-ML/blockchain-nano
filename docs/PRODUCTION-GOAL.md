@@ -2557,3 +2557,14 @@ ne démontrent pas les assertions terminales du scénario. ARM64 c104 : 162,612 
 réussi ; cause AMD64 non identifiée. 406 résultats, 398 réussis et huit
 échecs/timeouts. Les diagnostics déjà en attente ne couvrent pas ce cas Capella.
 Aucune limite relâchée ; qualifications complètes et production restent ouvertes.
+
+### 2026-10-02 — Neuvième échec AMD64 : sortie après réindexation
+
+Cas #413 `consensus_capella_exit_reindex` : timeout 480,04 s sous la limite
+originale de 480 s. [Traces complémentaires](qualification/production-evm-integration-20261001/capella-activation-amd64-partial/README.md) :
+activation époque 13, cinq votes du nouveau validateur au slot 144, finalité
+époque 16. Ces progrès ne démontrent pas les assertions terminales de sortie
+après réindexation. ARM64 c104 : 162,259 s réussi ; cause AMD64 non identifiée.
+413 résultats, 404 réussis et neuf échecs/timeouts. Les contrôles correctifs déjà
+en attente ne couvrent pas ce cas Capella. Aucun timeout ni critère assoupli ;
+aucun statut EIP ou production clôturé.
