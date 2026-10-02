@@ -292,3 +292,7 @@ factory personnalisable ; cela ne qualifie pas l'import d'un ERC-20 existant
 ni l'adossement au NANO natif. La disponibilité d'une factory adaptée dans
 l'application reste à vérifier avant la vente.
 [Sources, constats et limites](../docs/qualification/doppler-token-path-20261002/README.md).
+
+## 2026-10-02 — Contrat Airlock et conservation de la réserve
+
+[Inspection figée des permissions/interfaces](../docs/qualification/doppler-airlock-path-20261002/README.md) : le wrapper local reste inchangé ; le raccordement Base exige une qualification distincte du token, des modules et des remboursements. Couvrir l’intégralité de l’offre créée, pas seulement les jetons vendus, avec une conversion d’unités explicitement définie. Ces critères restent non implémentés/non qualifiés. Aucun contrat, transaction ou vente ouvert.

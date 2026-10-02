@@ -3284,3 +3284,7 @@ Contrôleur vivant Mac/VPS en attente de la sélection **16/16** avec délais or
 ### 2026-10-02 — prérequis WAN du candidat contrôlés sans lancement
 
 Nouveau préflight réellement exécuté : sources Mac/VPS, natif9/200 entrées et audit signé natif4 vérifiés ; résultats Docker terminaux et audit AMD4 encore requis, sortie2 attendue, aucun nœud WAN démarré. Régression ARM parent425 explicitement séparée du delta snapshot actuel (deux fichiers runtime modifiés) et de la régression AMD426 attendue. Audit AMD4 préparé sans concurrence avec tests/builds chronométrés. Observation mémoire intermédiaire et activation337,35/360 conservées, sans qualification de charge/mémoire finale. [Contrôles et limites](qualification/coherent-0275b1af-wan-preflight-20261002/README.md). Aucun critère final/EIP ni échec historique clôturé.
+
+### 2026-10-02 — dossier de lancement : inspection Airlock supplémentaire
+
+[Inspection source immuable et critères de raccordement](qualification/doppler-airlock-path-20261002/README.md) ajoutés au cadrage Doppler. Aucune implémentation ou qualification de bridge/vente acquise ; aucun statut EIP ou gate de consensus clôturé. Les campagnes Docker continuent indépendamment.
