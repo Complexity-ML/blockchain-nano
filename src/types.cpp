@@ -8,7 +8,14 @@ Bytes unhex(std::string s) {
  auto digit=[](char c)->int { if(c>='0'&&c<='9') return c-'0'; if(c>='a'&&c<='f') return c-'a'+10; if(c>='A'&&c<='F') return c-'A'+10; throw std::invalid_argument("invalid hex"); };
  Bytes b; b.reserve(s.size()/2); for(size_t i=0;i<s.size();i+=2) b.push_back(uint8_t(digit(s[i])*16+digit(s[i+1]))); return b;
 }
-std::string hex(const Bytes& b) { const char* digits="0123456789abcdef"; std::string s="0x"; for(auto c:b) { s+=digits[c>>4]; s+=digits[c&15]; } return s; }
+std::string hex(const Bytes& b) {
+ const char* digits="0123456789abcdef";
+ std::string s;
+ if(b.size()>(s.max_size()-2)/2)throw std::length_error("hex encoding too large");
+ s.resize(2+2*b.size());s[0]='0';s[1]='x';
+ for(size_t i=0;i<b.size();++i){s[2+2*i]=digits[b[i]>>4];s[3+2*i]=digits[b[i]&15];}
+ return s;
+}
 Bytes bytes(const Int& n,size_t width) { if(n<0) throw std::invalid_argument("negative integer"); size_t size=n==0?0:(mpz_sizeinbase(n.get_mpz_t(),2)+7)/8; if(width && size>width) throw std::overflow_error("integer too large"); Bytes b(std::max(size,width)); if(size) mpz_export(b.data()+b.size()-size,nullptr,1,1,1,0,n.get_mpz_t()); return b; }
 Int integer(const Bytes& b) { Int n; if(!b.empty()) mpz_import(n.get_mpz_t(),b.size(),1,1,1,0,b.data()); return n; }
 Int quantity(const Json& j) { std::string s; if(j.is_string()) s=j.get<std::string>(); else if(j.is_number_unsigned() || j.is_number_integer()) s=j.dump(); else throw std::invalid_argument("expected quantity"); Int n; int base=10; if(s.starts_with("0x")) {s.erase(0,2);base=16;} if(s.empty()||mpz_set_str(n.get_mpz_t(),s.c_str(),base)!=0||n<0) throw std::invalid_argument("invalid quantity"); return n; }

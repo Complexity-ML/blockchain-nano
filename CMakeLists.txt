@@ -1857,3 +1857,8 @@ set_tests_properties(consensus_hash_provider_parallel consensus_hash_provider_un
 add_executable(nano-capella-snapshot-hex-tests tests/test_capella_snapshot_hex.cpp)
 add_test(NAME consensus_capella_snapshot_canonical_hex COMMAND nano-capella-snapshot-hex-tests)
 set_tests_properties(consensus_capella_snapshot_canonical_hex PROPERTIES TIMEOUT 60 LABELS "consensus;capella;snapshot")
+
+add_executable(nano-hex-encoding-tests tests/test_hex_encoding.cpp)
+target_link_libraries(nano-hex-encoding-tests PRIVATE nano_core)
+add_test(NAME core_hex_encoding_differential COMMAND nano-hex-encoding-tests)
+set_tests_properties(core_hex_encoding_differential PROPERTIES TIMEOUT 60 LABELS "core;encoding")
