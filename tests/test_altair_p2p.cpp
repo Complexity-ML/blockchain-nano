@@ -22,7 +22,7 @@ int main(int argc,char** argv){try{
  // transport/commit integration, not host UTC synchronisation or live finality.
  auto endpoint=std::make_shared<AltairRpcService>(reactor,profile,4,2*transition.maximum_block_bytes,10s,[&](const auto& check){if(check)check();if(!healthy.load())throw std::runtime_error("fixture local clock unavailable");},[&]{return healthy.load();},identity,true);
  Blockchain execution(root/"execution",genesis);Rpc rpc_service(execution,"fixture-token",AdmissionBudget::Clock::now,RpcSimulationLimits{},endpoint);HttpServer server(rpc_service,"127.0.0.1",0);RunningAltair running(server);
- Process daemon({argv[1],std::to_string(server.port()),(root/"peer-key").string(),"/ip4/127.0.0.1/tcp/0"},{{"NANO_NETWORK_TOKEN","fixture-token"}});
+ Process daemon({argv[1],std::to_string(server.port()),(root/"peer-key").string(),"/ip4/127.0.0.1/tcp/0"},{{"NANO_NETWORK_TOKEN","fixture-token"},{"NANO_TEST_NETWORK_TRACE","1"}});
  const auto address=daemon.event("listen").at("address").get<std::string>();daemon.event("ready");check(daemon.event("altair-ingress-ready").at("consensusIdentity")==identity,"daemon enabled different profile");
  auto status=rpc(server.port(),"nano_networkStatus");status["altair"]={{"protocol","/nano/altair/1.0.0"},{"consensusIdentity",identity},{"forkDigest",profile.fork_digest}};
  unsigned probes=0;std::set<std::string> peer_ids;
@@ -44,7 +44,16 @@ int main(int argc,char** argv){try{
  const auto maximum_block_expected=Json::array({Json{{"accepted",false}}});
  if(maximum_block_reply!=maximum_block_expected){
   // Record bounded metadata only: no payload, peer keys or secret material.
-  std::cerr<<Json{{"scenario","altair-maximum-block-rejection"},{"maximumPayloadBytes",transition.maximum_block_bytes},{"maximumFrameBytes",profile.frame_bytes},{"actualReply",maximum_block_reply},{"expectedReply",maximum_block_expected},{"coreJobs",endpoint->jobs()},{"coreSequence",reactor.current().token.sequence},{"healthy",healthy.load()}}.dump()<<'\n';
+  Json stream_diagnostics=Json::array();std::istringstream diagnostics(daemon.output());std::string line;
+  while(std::getline(diagnostics,line)){
+   const auto event=Json::parse(line,nullptr,false);
+   if(event.is_object()&&event.value("event","")=="test-consensus-stream-completion"){
+    if(stream_diagnostics.size()==32)stream_diagnostics.erase(stream_diagnostics.begin());
+    Json metadata=Json::object();for(const auto* field:{"reason","kind","dispatched","workerDone","budgetReason"})if(event.contains(field))metadata[field]=event.at(field);
+    stream_diagnostics.push_back(std::move(metadata));
+   }
+  }
+  std::cerr<<Json{{"streamDiagnostics",stream_diagnostics},{"scenario","altair-maximum-block-rejection"},{"maximumPayloadBytes",transition.maximum_block_bytes},{"maximumFrameBytes",profile.frame_bytes},{"actualReply",maximum_block_reply},{"expectedReply",maximum_block_expected},{"coreJobs",endpoint->jobs()},{"coreSequence",reactor.current().token.sequence},{"healthy",healthy.load()}}.dump()<<'\n';
  }
  check(maximum_block_reply==maximum_block_expected,"full configured block bound failed before core validation");
  unsigned blocks=0;
