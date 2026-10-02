@@ -13,3 +13,7 @@ Lancement privé : `NANO_TEST_CONSENSUS_PROFILE=capella`, build-volume, sélecti
 Erreurs de préparation conservées : A, lancement arrière-plan Mac disparu avant création de state/avant Nano ; B, message Docker `error: no such object` en minuscules non reconnu, arrêt avant toute fixture ; C, reconnaissance insensible à la casse, session persistante confirme l'attente. `py_compile` passe, pas simulation end-to-end du contrôleur. Aucun ancien test/job redémarré.
 
 **État :** aucune restauration WAN nouvelle ni reprise des duties acquise. Campagnes runtime courantes continuent ; anciens échecs, autres critères de production et revue indépendante restent ouverts.
+
+## Suite observée
+
+Cas de réindexation AMD64 timeout360,05 s puis parent14/15 terminal. Le seul contrôleur d'attente, PID40016/session78086, est arrêté avant toute fixture/nœud WAN : gate15/15 impossible. Les campagnes C++ ne sont pas arrêtées. État `state-gate-refused.json`, nouvelle optimisation et résultats terminaux dans [checkpoint-row-dump](../checkpoint-row-dump-20261002/README.md).

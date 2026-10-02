@@ -1,0 +1,75 @@
+Internal ctest changing into directory: /build/coherent-2d2764de-amd64-20261002
+Test project /build/coherent-2d2764de-amd64-20261002
+      Start   3: core
+ 1/15 Test   #3: core ...............................................   Passed    0.55 sec
+      Start   4: consensus_rotation_audit_empty_aggregate
+ 2/15 Test   #4: consensus_rotation_audit_empty_aggregate ...........   Passed    0.01 sec
+      Start 375: consensus_capella_queued_bls_changes
+ 3/15 Test #375: consensus_capella_queued_bls_changes ...............   Passed    9.50 sec
+      Start 394: consensus_capella_deposit_activation
+ 4/15 Test #394: consensus_capella_deposit_activation ...............   Passed  346.72 sec
+      Start 395: consensus_capella_deposit_activation_restart
+ 5/15 Test #395: consensus_capella_deposit_activation_restart .......   Passed  350.86 sec
+      Start 397: consensus_capella_deposit_auto_registration
+ 6/15 Test #397: consensus_capella_deposit_auto_registration ........   Passed  347.50 sec
+      Start 405: consensus_capella_competing_deposit_reorg
+ 7/15 Test #405: consensus_capella_competing_deposit_reorg ..........   Passed   48.04 sec
+      Start 406: consensus_capella_reindexed_validator_activation
+ 8/15 Test #406: consensus_capella_reindexed_validator_activation ...***Timeout 360.05 sec
+{"observerRecords":15,"scenario":"deposit-reorg-progress","slot":8}
+{"observerRecords":31,"scenario":"deposit-reorg-progress","slot":16}
+{"observerRecords":47,"scenario":"deposit-reorg-progress","slot":24}
+{"observerRecords":63,"scenario":"deposit-reorg-progress","slot":32}
+{"observerRecords":79,"scenario":"deposit-reorg-progress","slot":40}
+{"observerRecords":95,"scenario":"deposit-reorg-progress","slot":48}
+{"activationQualified":false,"branches":2,"depositsPerBranch":2,"indexA":[64,65],"networkTransport":false,"observerReopens":2,"providerCalls":0,"registrySize":66,"scenario":"capella-competing-deposit-reorg","selectedBranches":2,"staleIndexRefused":true}
+{"activationEpoch":18446744073709551615,"finalizedEpoch":0,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":56}
+{"activationEpoch":18446744073709551615,"finalizedEpoch":0,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":64}
+{"activationEpoch":13,"finalizedEpoch":7,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":72}
+{"activationEpoch":13,"finalizedEpoch":8,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":80}
+{"activationEpoch":13,"finalizedEpoch":9,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":88}
+{"activationEpoch":13,"finalizedEpoch":10,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":96}
+{"activationEpoch":13,"finalizedEpoch":11,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":104}
+{"activationEpoch":13,"finalizedEpoch":12,"newVotes":1,"scenario":"deposit-reorg-activation-progress","slot":112}
+{"activationEpoch":13,"finalizedEpoch":13,"newVotes":2,"scenario":"deposit-reorg-activation-progress","slot":120}
+{"activationEpoch":13,"finalizedEpoch":14,"newVotes":3,"scenario":"deposit-reorg-activation-progress","slot":128}
+{"activationEpoch":13,"finalizedEpoch":15,"newVotes":4,"scenario":"deposit-reorg-activation-progress","slot":136}
+{"activationEpoch":13,"finalizedEpoch":16,"newVotes":5,"scenario":"deposit-reorg-activation-progress","slot":144}
+{"activationEpoch":13,"finalizedEpoch":17,"newVotes":6,"scenario":"deposit-reorg-activation-progress","slot":152}
+
+      Start 408: consensus_capella_local_exits
+ 9/15 Test #408: consensus_capella_local_exits ......................   Passed    9.08 sec
+      Start 409: consensus_capella_queued_exits
+10/15 Test #409: consensus_capella_queued_exits .....................   Passed   10.34 sec
+      Start 413: consensus_capella_exit_reindex
+11/15 Test #413: consensus_capella_exit_reindex .....................   Passed  413.30 sec
+      Start 417: consensus_capella_audit_finalized_ancestry
+12/15 Test #417: consensus_capella_audit_finalized_ancestry .........   Passed    0.01 sec
+      Start 420: consensus_checkpoint_json_canonical
+13/15 Test #420: consensus_checkpoint_json_canonical ................   Passed    0.27 sec
+      Start 424: consensus_capella_snapshot_canonical_hex
+14/15 Test #424: consensus_capella_snapshot_canonical_hex ...........   Passed    0.00 sec
+      Start 425: core_hex_encoding_differential
+15/15 Test #425: core_hex_encoding_differential .....................   Passed    0.05 sec
+
+93% tests passed, 1 tests failed out of 15
+
+Label Time Summary:
+audit                                 =   0.01 sec*proc (1 test)
+capella                               =   0.01 sec*proc (2 tests)
+consensus                             =   0.01 sec*proc (2 tests)
+core                                  =   0.05 sec*proc (1 test)
+encoding                              =   0.05 sec*proc (1 test)
+qualification_consensus_harness       =   0.01 sec*proc (1 test)
+qualification_consensus_operations    =  19.42 sec*proc (2 tests)
+qualification_consensus_recovery      = 413.30 sec*proc (1 test)
+qualification_consensus_runtime       = 1462.67 sec*proc (6 tests)
+qualification_evm                     =   0.55 sec*proc (1 test)
+qualification_storage_local           =   0.27 sec*proc (1 test)
+snapshot                              =   0.00 sec*proc (1 test)
+
+Total Test time (real) = 1896.31 sec
+
+The following tests FAILED:
+	406 - consensus_capella_reindexed_validator_activation (Timeout)
+Errors while running CTest

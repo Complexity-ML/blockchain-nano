@@ -1,0 +1,170 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 637d1af7..659160ba 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1865,3 +1865,8 @@ add_executable(nano-hex-encoding-tests tests/test_hex_encoding.cpp)
+ target_link_libraries(nano-hex-encoding-tests PRIVATE nano_core)
+ add_test(NAME core_hex_encoding_differential COMMAND nano-hex-encoding-tests)
+ set_tests_properties(core_hex_encoding_differential PROPERTIES TIMEOUT 60 LABELS "core;encoding")
++
++add_executable(nano-capella-snapshot-json-tests tests/test_capella_snapshot_json.cpp)
++target_include_directories(nano-capella-snapshot-json-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
++add_test(NAME consensus_capella_snapshot_cached_rows COMMAND nano-capella-snapshot-json-tests)
++set_tests_properties(consensus_capella_snapshot_cached_rows PROPERTIES TIMEOUT 60 LABELS "qualification_storage_local;capella;snapshot")
+diff --git a/src/consensus_capella_snapshot_json.hpp b/src/consensus_capella_snapshot_json.hpp
+new file mode 100644
+index 00000000..1e604fc8
+--- /dev/null
++++ b/src/consensus_capella_snapshot_json.hpp
+@@ -0,0 +1,29 @@
++#pragma once
++#include "json.hpp"
++#include <algorithm>
++#include <functional>
++#include <span>
++#include <stdexcept>
++#include <string>
++#include <string_view>
++namespace nano::snapshot_detail {
++// Internal only: rows are dumps of the complete, validated block records in
++// document["blocks"]. Never embed peer-supplied strings through this helper.
++inline std::string canonical_snapshot_rows(const nlohmann::json& document,
++ std::span<const std::string_view> rows,size_t maximum_bytes,const std::function<void()>& cancel={}){
++ auto require=[](bool ok){if(!ok)throw std::invalid_argument("Invalid canonical snapshot rows");};
++ require(document.is_object()&&document.contains("blocks")&&document.at("blocks").is_array()&&document.at("blocks").size()==rows.size());
++ std::string result;
++ auto append=[&](std::string_view bytes){
++  require(result.size()<=maximum_bytes&&bytes.size()<=maximum_bytes-result.size());
++  for(size_t offset=0;offset<bytes.size();){if(cancel)cancel();const auto count=std::min<size_t>(4096,bytes.size()-offset);result.append(bytes.substr(offset,count));offset+=count;}
++ };
++ append("{");bool first=true;
++ for(const auto& item:document.items()){
++  if(!first)append(",");first=false;append(nlohmann::json(item.key()).dump());append(":");
++  if(item.key()!="blocks")append(item.value().dump());
++  else {append("[");bool first_row=true;for(const auto row:rows){require(!row.empty());if(!first_row)append(",");first_row=false;append(row);}append("]");}
++ }
++ append("}");if(cancel)cancel();return result;
++}
++}
+diff --git a/src/consensus_capella_store_snapshot.cpp b/src/consensus_capella_store_snapshot.cpp
+index 75b0b7f2..9ee928ed 100644
+--- a/src/consensus_capella_store_snapshot.cpp
++++ b/src/consensus_capella_store_snapshot.cpp
+@@ -1,6 +1,7 @@
+ #include "nano/consensus_capella_store_snapshot.hpp"
+ #include <source_location>
+ #include "consensus_capella_snapshot_hex.hpp"
++#include "consensus_capella_snapshot_json.hpp"
+ #include "nano/consensus_capella_deposits.hpp"
+ #include "nano/consensus_bellatrix_store_snapshot.hpp"
+ namespace nano {
+@@ -41,6 +42,7 @@ std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBl
+  const auto current_profile=profile(r);
+  if(cache&&cache->profile_!=current_profile){cache->records_.clear();cache->profile_=current_profile;}
+  if(cache)std::erase_if(cache->records_,[&](const auto& item){return !s.blocks.contains(item.first);});
++ std::vector<std::string_view> encoded_rows;
+  Json blocks=Json::array(),messages=Json::array(),equiv=Json::array(),timely=Json::array(),unrealized=Json::array();size_t bytes=0;
+  for(const auto& [id,b]:s.blocks){
+   if(cancel)cancel();require(b.state.ssz.size()>=8&&b.state.ssz.size()<=l.state_bytes&&b.state.ssz.size()<=l.total_state_bytes-bytes);bytes+=b.state.ssz.size();
+@@ -52,7 +54,7 @@ std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBl
+   // Reuse only the canonical state encoding after comparing every source byte.
+   // The complete row comparison below still covers all execution and metadata.
+   Json encoded_state;
+-  if(cache&&known!=cache->records_.end()&&known->second.is_array()&&known->second.size()==3&&
++  if(cache&&known!=cache->records_.end()&&known->second.is_array()&&known->second.size()==4&&
+      known->second[0].is_array()&&known->second[0].size()==6&&known->second[0][2].is_array()&&
+      known->second[0][2].size()==2&&known->second[0][2][0].is_string()&&
+      snapshot_detail::canonical_hex_matches(known->second[0][2][0].get_ref<const std::string&>(),b.state.ssz,cancel))
+@@ -62,12 +64,15 @@ std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBl
+   // Compare every serialized field, including state/receipts/deposit history,
+   // plus the checkpoint metadata checked below. Root equality alone is unsafe.
+   const auto justification=cp(s.unrealized_justifications.at(id));
+-  const bool validated=cache&&known!=cache->records_.end()&&known->second.is_array()&&known->second.size()==3&&known->second[0]==row&&known->second[1]==justification&&known->second[2]==Json(id==v.anchor);
++  const bool validated=cache&&known!=cache->records_.end()&&known->second.is_array()&&known->second.size()==4&&known->second[0]==row&&known->second[1]==justification&&known->second[2]==Json(id==v.anchor)&&known->second[3].is_string();
+   if(!validated){
+    validate_capella_execution_record(b,r,cancel);
+    if(id!=v.anchor){const auto ffg=capella_fork_checkpoints(b.state,epoch_rules(r),r.transition.consensus.state,cancel);require(n.realized_justified_epoch==ffg.realized.current_justified.epoch&&n.unrealized_justified_epoch==ffg.unrealized.current_justified.epoch&&s.unrealized_justifications.at(id)==ffg.unrealized.current_justified);}
+-   if(cancel)cancel();if(cache)cache->records_.insert_or_assign(id,Json::array({row,justification,id==v.anchor}));
++   if(cancel)cancel();if(cache)cache->records_.insert_or_assign(id,Json::array({row,justification,id==v.anchor,row.dump()}));
+   }
++  // String views remain valid: std::map insertions preserve other entries,
++  // and this entry is never replaced again during this invocation.
++  if(cache)encoded_rows.push_back(cache->records_.at(id)[3].get_ref<const std::string&>());
+   blocks.push_back(std::move(row));
+  }
+  for(const auto& [i,m]:v.latest_messages)messages.push_back(Json::array({num(i),num(m.epoch),root(m.root)}));
+@@ -88,7 +93,7 @@ std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBl
+   for(const auto& old:s.deposit_ancestors){if(cancel)cancel();const auto& h=old.beacon;pins.push_back(Json::array({Json::array({num(h.slot),num(h.proposer_index),root(h.parent_root),root(h.state_root),root(h.body_root)}),old.execution.to_json(),num(old.count),root(old.root)}));}
+   j["format"]="nano-capella-store-v3";j["depositAncestors"]=std::move(pins);
+  }
+- auto encoded=j.dump();require(encoded.size()<=l.envelope_bytes);if(cancel)cancel();return encoded;
++ auto encoded=cache?snapshot_detail::canonical_snapshot_rows(j,encoded_rows,l.envelope_bytes,cancel):j.dump();require(encoded.size()<=l.envelope_bytes);if(cancel)cancel();return encoded;
+ }
+ CapellaForkStore capella_store_from_snapshot(std::string_view bytes,const Bytes& digest,const CapellaForkBlockRules& r,
+  const CapellaStoreSnapshotLimits& l,const std::function<void()>& cancel){
+diff --git a/tests/test_capella_snapshot_json.cpp b/tests/test_capella_snapshot_json.cpp
+new file mode 100644
+index 00000000..e19e62e7
+--- /dev/null
++++ b/tests/test_capella_snapshot_json.cpp
+@@ -0,0 +1,29 @@
++#include "../src/consensus_capella_snapshot_json.hpp"
++#include <chrono>
++#include <iostream>
++#include <random>
++#include <vector>
++using Json=nlohmann::json;
++using nano::snapshot_detail::canonical_snapshot_rows;
++int main(){try{
++ auto check=[](bool ok){if(!ok)throw std::runtime_error("canonical snapshot rows mismatch");};
++ std::mt19937_64 random(0x4e414e4f);size_t comparisons=0,bounds=0,cancellations=0;
++ for(unsigned schema=1;schema<=3;++schema)for(unsigned sample=0;sample<128;++sample){
++  Json blocks=Json::array();std::vector<std::string> owned;
++  for(unsigned i=0;i<sample%11;++i){blocks.push_back(Json::array({random(),Json{{"ssz",std::string((sample%16)*4097,'a')},{"text","é 🐝 \"\\\n"}},Json::array({nullptr,true,false,-17,1.25})}));owned.push_back(blocks.back().dump());}
++  std::vector<std::string_view> rows;for(const auto& row:owned)rows.push_back(row);
++  Json document={{"format","nano-capella-store-v"+std::to_string(schema)},{"blocks",blocks},{"ancestors",Json::array()},{"clock",Json::array({"0",std::to_string(random())})},{"nested",Json{{"blocks",Json::array()},{"escape","\"blocks\":[]"}}},{"z",UINT64_MAX}};
++  if(schema>=2)document["networkAnchor"]="0x0123";if(schema>=3)document["depositAncestors"]=Json::array({"0xdead"});
++  const auto expected=document.dump();
++  check(canonical_snapshot_rows(document,rows,expected.size())==expected);check(canonical_snapshot_rows(document,rows,SIZE_MAX)==expected);comparisons+=2;
++  for(size_t bound:{size_t(0),expected.size()-1}){bool refused=false;try{canonical_snapshot_rows(document,rows,bound);}catch(const std::invalid_argument&){refused=true;}check(refused);++bounds;}
++  bool stopped=false;size_t callbacks=0;try{canonical_snapshot_rows(document,rows,SIZE_MAX,[&]{if(++callbacks==2)throw std::runtime_error("cancel");});}catch(const std::runtime_error&){stopped=true;}check(stopped&&callbacks==2);++cancellations;
++ }
++ for(const auto& value:{Json::array(),Json::object(),Json{{"blocks",false}},Json{{"blocks",Json::array({1})}}}){bool refused=false;try{canonical_snapshot_rows(value,{},SIZE_MAX);}catch(const std::invalid_argument&){refused=true;}check(refused);}
++ Json row=Json::array({std::string(65536,'a'),Json{{"escape","é 🐝 \"\\\n"}}});const auto dump=row.dump();std::vector<std::string_view> rows(32,dump);Json document={{"blocks",Json::array()},{"format","nano-capella-store-v3"}};for(unsigned i=0;i<32;++i)document["blocks"].push_back(row);
++ const auto expected=document.dump();check(canonical_snapshot_rows(document,rows,expected.size())==expected);
++ std::vector<double> legacy,optimized;size_t consumed=0;
++ auto measure=[&](bool reuse){const auto begin=std::chrono::steady_clock::now();for(unsigned i=0;i<12;++i){const auto text=reuse?canonical_snapshot_rows(document,rows,expected.size()):document.dump();check(text==expected);consumed+=text.size();}return std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-begin).count();};
++ for(unsigned i=0;i<5;++i){if(i%2){optimized.push_back(measure(true));legacy.push_back(measure(false));}else{legacy.push_back(measure(false));optimized.push_back(measure(true));}}
++ std::cout<<Json{{"comparisons",comparisons+1},{"envelopeRefusals",bounds},{"cancellations",cancellations},{"legacyMilliseconds",legacy},{"cachedRowsMilliseconds",optimized},{"bytesConsumed",consumed},{"scope","canonical JSON assembly only; no node speed extrapolation"},{"passed",true}}.dump()<<'\n';
++}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index 6dc4cd6c..7a2d9e68 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -1284,16 +1284,22 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
+   check(encoded==capella_store_snapshot(value,store_rules,snapshot_limits,[&]{++warm;},&cache)&&warm<cold,"snapshot cache changed bytes or did not reuse records");
+   // Compare cold and warm behavior after changes to both serialized slot fields.
+   // A cache hit must never substitute the old SSZ or processing-epoch metadata.
+-  for(unsigned mutation=0;mutation<2;++mutation){
+-   auto altered=value;auto& state=altered.blocks.begin()->second.state;
++  for(unsigned mutation=0;mutation<7;++mutation){
++   auto altered=value;auto& block=altered.blocks.begin()->second;auto& state=block.state;
++   const auto id=altered.blocks.begin()->first;
+    if(mutation==0)state.ssz.back()^=1;
+-   else state.last_processed_epoch=state.last_processed_epoch?std::nullopt:std::optional<uint64_t>(0);
++   else if(mutation==1)state.last_processed_epoch=state.last_processed_epoch?std::nullopt:std::optional<uint64_t>(0);
++   else if(mutation==2)block.execution_block.header.extra_data.push_back(1);
++   else if(mutation==3)block.receipts.push_back(Receipt{});
++   else if(mutation==4)++altered.timed.view.nodes.at(id).realized_justified_epoch;
++   else if(mutation==5)++altered.timed.view.nodes.at(id).unrealized_justified_epoch;
++   else ++altered.unrealized_justifications.at(id).epoch;
+    auto outcome=[&](CapellaStoreSnapshotCache* memo){
+     try{return std::optional<std::string>(capella_store_snapshot(altered,store_rules,snapshot_limits,{},memo));}
+     catch(const std::invalid_argument&){return std::optional<std::string>{};}
+    };
+    const auto uncached=outcome(nullptr),cached=outcome(&cache);
+-   check(uncached==cached&&(!cached||*cached!=encoded),"cache masked changed SSZ or processed epoch");
++   check(uncached==cached&&(!cached||*cached!=encoded),"cache masked changed complete record or justification");
+   }
+   const auto digest=sha256(Bytes(encoded.begin(),encoded.end()));
+   const auto restored=capella_store_from_snapshot(encoded,digest,store_rules,snapshot_limits);
