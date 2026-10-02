@@ -2946,3 +2946,14 @@ runtime, du test et du collecteur distinctes ; composition diagnostique, pas
 candidate de production. Syntaxe shell vérifiée ; compilation/exécution encore
 non réalisées, timeout et assertions d'origine conservés. Aucun échec clôturé,
 aucun changement de statut EIP ni des critères de production.
+
+### 2026-10-02 — Profilage du timeout de partition Bellatrix préparé
+
+[Contrôle diagnostique](qualification/bellatrix-partition-profile-20261002/README.md)
+lié au runtime c104 d'origine : temps cumulés de l'horloge, des duties et des
+admissions/relais, compteurs de messages ; mesures imbriquées non additives.
+Syntaxe ARM64 Release avec définitions d'origine vérifiée. Driver VPS observé
+en attente du diagnostic Altair ; compilation liée/exécution encore à faire.
+112 slots, limite de 240 s et assertions conservés. Bibliothèques/volume en
+lecture seule, pas de rebuild du cœur ni nouvelle image. Le timeout historique,
+les exigences de finalité/WAN et tous les statuts EIP restent ouverts.

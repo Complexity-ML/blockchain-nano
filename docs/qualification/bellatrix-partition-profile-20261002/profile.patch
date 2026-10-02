@@ -1,0 +1,48 @@
+--- a/tests/test_bellatrix_transition.cpp
++++ b/tests/test_bellatrix_transition.cpp
+@@ -287,21 +287,29 @@
+     }
+     BellatrixValidatorLoop la(ra,ca,seconds*1000,slots,128,std::move(ka),now),lb(rb,cb,seconds*1000,slots,128,std::move(kb),now);
+     if(duty_trace)la.set_duty_trace_limit(2);
++    struct PhaseTiming {uint64_t calls=0,total_us=0,maximum_us=0;};
++    std::map<std::string,PhaseTiming> phase_timings;
++    uint64_t relayed_blocks=0,relayed_votes=0,block_checks=0,vote_checks=0;
++    auto measured=[&](const char* phase,auto&& action){
++     const auto begin=std::chrono::steady_clock::now();action();
++     const auto elapsed=std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now()-begin).count();
++     auto& timing=phase_timings[phase];++timing.calls;timing.total_us+=elapsed;timing.maximum_us=std::max<uint64_t>(timing.maximum_us,elapsed);
++    };
+     auto deliver=[&](BellatrixDurableReactor& from,BellatrixDurableReactor& to){
+      const auto source=from.current();std::vector<std::pair<uint64_t,ConsensusRoot>> ordered;
+      for(const auto& [id,wire]:*source.signed_blocks)ordered.emplace_back(source.state->blocks.at(id).header.slot,id);
+      std::sort(ordered.begin(),ordered.end());
+-     for(const auto& [slot,id]:ordered)if(!to.current().state->blocks.contains(id))to.block(*source.signed_blocks->at(id));
+-     for(const auto& [id,wire]:*source.signed_votes)if(!to.current().signed_votes->contains(id))to.vote_ssz(*wire);
++     for(const auto& [slot,id]:ordered){++block_checks;if(!to.current().state->blocks.contains(id)){measured("blockAdmission",[&]{to.block(*source.signed_blocks->at(id));});++relayed_blocks;}}
++     for(const auto& [id,wire]:*source.signed_votes){++vote_checks;if(!to.current().signed_votes->contains(id)){measured("voteAdmission",[&]{to.vote_ssz(*wire);});++relayed_votes;}}
+     };
+-    auto relay=[&]{deliver(ra,rb);deliver(rb,ra);};
++    auto relay=[&]{measured("relay",[&]{deliver(ra,rb);deliver(rb,ra);});};
+     ConsensusCheckpoint before_cut;bool divergent=false;uint64_t previous=0,consecutive=0;
+     for(uint64_t slot=2;slot<=(duty_trace?slots+4:14*slots);++slot){
+      const bool isolated=slot>4*slots&&slot<=6*slots;
+      for(uint64_t fraction:{0u,1u,2u}){
+-      wall=(genesis_time+slot*seconds)*1000+fraction*seconds*1000/3;ca.poll();cb.poll();
++      wall=(genesis_time+slot*seconds)*1000+fraction*seconds*1000/3;measured("clockA",[&]{ca.poll();});measured("clockB",[&]{cb.poll();});
+       if(!isolated)relay();
+-      if(slot%2){la.poll();if(!isolated)relay();lb.poll();}else{lb.poll();if(!isolated)relay();la.poll();}
++      if(slot%2){measured("validatorA",[&]{la.poll();});if(!isolated)relay();measured("validatorB",[&]{lb.poll();});}else{measured("validatorB",[&]{lb.poll();});if(!isolated)relay();measured("validatorA",[&]{la.poll();});}
+       if(!isolated)relay();
+      }
+      const auto av=ra.current(),bv=rb.current();const auto af=av.state->timed.view.finalized,bf=bv.state->timed.view.finalized;
+@@ -309,6 +317,10 @@
+      if(isolated){check(af==before_cut&&bf==before_cut,"isolated half-stake finalized alone");divergent|=a.tip().header.hash()!=b.tip().header.hash();}
+      if(slot>6*slots&&af==bf&&af.epoch>previous){consecutive=af.epoch==previous+1?consecutive+1:0;previous=af.epoch;}
+      if(slot%slots==0)std::cout<<Json{{"event","simulation-epoch"},{"slot",slot},{"sameHead",a.tip().header.hash()==b.tip().header.hash()},{"finalizedA",af.epoch},{"finalizedB",bf.epoch},{"consecutive",consecutive}}.dump()<<std::endl;
++     if(slot%slots==0){
++      Json phases=Json::object();for(const auto& [name,timing]:phase_timings)phases[name]={{"calls",timing.calls},{"totalUs",timing.total_us},{"maximumUs",timing.maximum_us}};
++      std::cout<<Json{{"event","partition-phase-profile"},{"slot",slot},{"cumulative",true},{"nestedTimings",true},{"phases",phases},{"blockChecks",block_checks},{"voteChecks",vote_checks},{"relayedBlocks",relayed_blocks},{"relayedVotes",relayed_votes}}.dump()<<std::endl;
++     }
+     }
+     if(duty_trace){
+      check(!la.status().contains("dutyTrace")&&la.status().at("dutyTraceFailures")==0,"ordinary status leaked or lost duty diagnostics");

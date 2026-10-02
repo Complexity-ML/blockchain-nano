@@ -1,0 +1,11 @@
+# Queued AMD64 Bellatrix partition phase profiling
+
+The original c104 full campaign timed out at 240 seconds after observing common finalized epoch 9 at slot 88. Its 112-slot criterion and completion assertions remain unchanged and unqualified. This diagnostic measures cumulative microseconds and call counts for clock polls, validator duties, relay, block admission and vote admission. Admission timings are nested in relay timings; totals must not be added together. Checked/relayed message counters accompany each epoch. Instrumentation changes wall-clock overhead and cannot itself establish the uninstrumented candidate meets its deadline.
+
+Prepared on 2026-10-02. ARM64 Release syntax checking passed first with basic flags, then with the original MCL and NANO_TEST_SYNC_FAULT definitions, original c104 headers and generated includes. Existing builder digest 6116669430b02b7e8012af8c8bd515a5a7dcd1dd2034649f9b45ae5b9e70a3a4 was reused, networking disabled, sources/build volume read-only. No linked execution has occurred. Shell syntax and patch application against c104 also passed.
+
+VPS driver PID 321560 was observed waiting for the Altair diagnostic driver PID 318471. The Altair result and unchanged source/program manifests must be retained before profiling starts. It is scheduled after the full campaign and the 19-case corrective campaign, with no concurrent compilation or profiling. Compilation/linking/execution remains pending.
+
+Only the test translation unit is instrumented. Original c104 core/static libraries, test-sync-fault shared library, headers and fixtures remain unchanged; the build volume is read-only and compiler outputs reside in a separate report directory. Original flags/link inputs and 240-second CTest limit are retained. Binary, source and link-input pre/post hashes are collected. This composition is a diagnostic against c104, not a production candidate and not qualification of the 1ac corrective runtime.
+
+Reconstruct the test from `git show c10426b2eab0aff7eaada3e4b57460f15cf7e90c:tests/test_bellatrix_transition.cpp` plus profile.patch; verify instrumentedTestSha256 in provenance.json. Controls use that blob as /control/test_bellatrix_transition.cpp. No original assertions, slot count, isolation interval, duty ordering, relay ordering, gas/resource rules or production requirements have been removed or relaxed.
