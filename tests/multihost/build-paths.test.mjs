@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {selectBuildPaths,selectHostBuildPaths,selectRemoteSourceRepository,remoteDockerArgument} from './build-paths.mjs';
+import {selectBuildPaths,selectHostBuildPaths,selectRemoteSourceRepository,remoteDockerArgument,selectNativeBuildPaths} from './build-paths.mjs';
 test('legacy read-only volume paths remain available',()=>{
  const p=selectBuildPaths(true,undefined);
  assert.equal(p.nano,'/build/nano');assert.equal(p.revision,'/build/production-source-revision.txt');
@@ -53,4 +53,29 @@ test('remote Docker invocations translate provenance, native audit, restore and 
  assert.deepEqual(['--entrypoint',p.arm64.nano,'local-image','audit-capella'].map(translate),['--entrypoint',p.amd64.nano,'remote-image','audit-capella']);
  assert.deepEqual(['bash','/work/tests/multihost/backup-restore.sh',p.arm64.nano].map(translate),['bash','/work/tests/multihost/backup-restore.sh',p.amd64.nano]);
  assert.equal(remoteDockerArgument(p.arm64.nano,'local-image','remote-image',false,p),p.arm64.nano);
+});
+
+test('coherent campaign selects distinct daemon paths and translates remote argv',()=>{
+ const p=selectHostBuildPaths(true,undefined,'current-arm','current-amd',true);
+ assert.equal(p.arm64.p2p,'/build/current-arm/network/nano-p2p');
+ assert.equal(p.amd64.p2p,'/build/current-amd/network/nano-p2p');
+ const argv=['sha256sum',p.arm64.nano,p.arm64.p2p].map(a=>remoteDockerArgument(a,'arm-image','amd-image',true,p));
+ assert.deepEqual(argv,['sha256sum',p.amd64.nano,p.amd64.p2p]);
+});
+test('coherent network cannot be requested in packaged mode or with an ambiguous selector',()=>{
+ assert.throws(()=>selectBuildPaths(false,undefined,true),/requires build-volume/);
+ for(const bad of ['1',1,null,{},[]])assert.throws(()=>selectHostBuildPaths(true,'current',undefined,undefined,bad),/Invalid/);
+});
+test('explicit native core and network selections keep independently qualified binaries',()=>{
+ const p=selectNativeBuildPaths('/repo','/tmp/native-core','/tmp/current-network');
+ assert.equal(p.nano,'/tmp/native-core/nano');assert.equal(p.p2p,'/tmp/current-network/nano-p2p');
+ assert.equal(p.transitionTests.capella,'/tmp/native-core/nano-capella-transition-tests');
+ assert.equal(p.rotationAudit,'/tmp/native-core/nano-capella-rotation-audit');
+ const legacy=selectNativeBuildPaths('/repo');assert.equal(legacy.nano,'/repo/build-release/nano');assert.equal(legacy.p2p,'/repo/build-network/nano-p2p');
+});
+test('native selectors reject traversal, whitespace and argument injection',()=>{
+ for(const bad of ['relative','/','/tmp/../old','/tmp/./old','/tmp//old','/tmp/a,b','/tmp/a b','/tmp/a\nb',null,123]){
+  assert.throws(()=>selectNativeBuildPaths('/repo',bad,'/tmp/network'),/Invalid/);
+  assert.throws(()=>selectNativeBuildPaths('/repo','/tmp/core',bad),/Invalid/);
+ }
 });
