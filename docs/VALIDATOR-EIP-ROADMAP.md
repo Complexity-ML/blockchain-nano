@@ -6538,3 +6538,8 @@ Compilation AMD64 Docker neuve de Nano/P2P/banc réseau réussie ; cas Paris Web
 ### 2026-10-02 — Instrumentation des sondes d'estimation préparée
 
 Candidate séparée `3fa8b805` : seules les mesures opt-in des simulations de l'estimateur changent ; recherche, budgets et assertions conservés. [Contrôleur](qualification/rpc-probe-build-control-20261002/README.md) préparé pour réutiliser image/volume AMD64 et compiler les cibles nécessaires, sans reconstruire une image. Pas encore de résultat ; échec historique, régression complète, restauration WAN et production restent ouverts. Aucun changement runtime promu sur main.
+
+
+### 2026-10-02 — Coût des sondes RPC mesuré, optimisation non qualifiée
+
+Candidate de diagnostic `3fa8b805`, compilation incrémentale Docker AMD64 sans nouvelle image, cas Paris WebSocket original PASS 82.05 s. Les 192 estimations effectuent cinq simulations chacune ; médiane totale 2103.730 ms, simulations individuelles environ 394–416 ms en médiane. Préparation médiane 3.713 ms ; attente WebSocket maximum 3197.998 ms. Source et trois programmes stables audités. Coût des sondes identifié pour ce scénario, cause de l'expiration historique non démontrée ; aucune optimisation promue sur main, régression complète ou production qualifiée. Le volume actuel contient désormais la candidate instrumentée. [Preuves et portée](qualification/rpc-probe-diagnostic-20261002/README.md).
