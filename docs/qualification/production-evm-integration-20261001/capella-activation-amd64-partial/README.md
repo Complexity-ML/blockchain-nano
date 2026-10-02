@@ -1,0 +1,7 @@
+# AMD64 Capella activation timeout, partial full campaign
+
+Source c10426b2, existing AMD64 builder on the authorized OVH VPS. Case #394 consensus_capella_deposit_activation timed out at the original 360-second limit (reported 360.03 s). Exact result and progress lines are retained in observation.json. The last progress reports deposit index 1, slot 120, finalized epoch 13. Continued finality is observed, but the scenario's end checks for pending/active transition and new-validator voting were not reached. This is neither a successful activation qualification nor proof of a protocol stall.
+
+At this observation, 394/417 cases were reported: 389 passed, five failures/timeouts. The four earlier failures remain. Case #395 activation_restart is still running and has not been assigned a result. The queued 19-case corrective campaign does not cover this new failure, nor the Altair and Bellatrix partition failures. No original timeout, slot bound, assertion, runtime source, executable or image has been modified.
+
+The archived ARM64 c104 result for this same activation scenario passed in 136.363 seconds. This comparison motivates investigating execution cost; it does not identify a cause or prove performance on another candidate. The Bellatrix phase profile is separately queued and is not a Capella profile or a fix for this activation timeout. Full AMD64 source/program/result/EEST audits remain pending campaign termination. Candidate promotion and production remain blocked by unclosed qualification requirements.

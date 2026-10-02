@@ -5421,3 +5421,14 @@ en attente du diagnostic Altair ; compilation liée/exécution encore à faire.
 112 slots, limite de 240 s et assertions conservés. Bibliothèques/volume en
 lecture seule, pas de rebuild du cœur ni nouvelle image. Le timeout historique,
 les exigences de finalité/WAN et tous les statuts EIP restent ouverts.
+
+### 2026-10-02 — Cinquième échec AMD64 : activation Capella hors délai
+
+Cas #394 `consensus_capella_deposit_activation` : timeout 360,03 s sous la
+limite originale de 360 s. [Traces conservées](qualification/production-evm-integration-20261001/capella-activation-amd64-partial/README.md) :
+dépôt consommé (index 1), progression jusqu'au slot 120 et finalité époque 13 ;
+assertions de fin d'activation/vote non démontrées. 394/417 résultats observés,
+389 réussis et cinq échecs/timeouts. Le cas de reprise #395 reste en cours.
+L'ARM64 c104 avait réussi ce cas en 136,363 s ; cause non identifiée, performance
+à analyser. Les 19 cas correctifs déjà prévus ne couvrent pas ce nouvel échec.
+Aucun délai/critère relâché, aucun échec clôturé ni profil EIP requalifié.
