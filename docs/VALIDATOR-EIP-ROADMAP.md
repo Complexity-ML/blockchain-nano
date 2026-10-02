@@ -6618,3 +6618,8 @@ Fixture locale hors Docker : 313 fichiers / 121 445 250 octets, empreintes ident
 ### 2026-10-02 — Régression complète ARM64 de la candidate RPC acquise
 
 [Preuves terminales](qualification/rpc-full-arm64-terminal-result-20261002/README.md) `d1597d9a` : 427/427 sans échec/skip, 5 805,22 s, statuts terminaux zéro ; supplément21 réussi. Registre/commandes/délais d’origine préservés, sources 15 315 et programmes 208 relus dans le volume et concordants. Corpus EEST exact sélectionné 317 fichiers / 5 387 variantes vérifié ; pas conformité exhaustive de fork, ni réexécution indépendante des booléens hash/reçus, ni audit intégral des entrées statiques Docker. Sortie/retrait réseau/reprise de données bornée qualifiée sur même hôte, pas WAN. AMD64 encore en cours ; échec historique WebSocket conservé, aucun runtime promu sur main, aucun duty restauré démarré. Tous les autres gates de production demeurent ouverts.
+
+
+### 2026-10-02 — Rejeu signé Linux ARM64 confirmé
+
+[Audit Docker ARM64](qualification/rpc-arm-signed-result-20261002/README.md) : quatre contrôles réussis sur le binaire des 427 tests, revue terminale préalable et indépendante, 99 blocs / 97 transactions signées, engagements externes concordants et trois rejets attendus. Sources et neuf fichiers de chaîne inchangés, lecture seule sans réseau, clés/journaux non montés. Contrôles existants rejoués sur Linux ARM64 ; pas de nouvelle couverture historique des votes/fork-choice, de reprise des duties ou de WAN. AMD64 en cours ; aucun runtime promu et gates de production maintenus.
