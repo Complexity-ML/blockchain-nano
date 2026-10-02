@@ -52,6 +52,9 @@ class BellatrixDurableReactor {
  std::shared_ptr<const BellatrixForkStore> state_;
  std::optional<ForkCheckpointToken> token_;
  BellatrixStoreSnapshotCache snapshot_cache_;
+ // Exact bytes paired with token_ only after a successful durable publication.
+ // Empty after reopen: retain the existing digest comparison as a cold fallback.
+ std::string published_snapshot_;
  std::shared_ptr<const BellatrixSignedBlockArchive> signed_blocks_=std::make_shared<const BellatrixSignedBlockArchive>();
  std::shared_ptr<const BellatrixSignedVoteArchive> signed_votes_=std::make_shared<const BellatrixSignedVoteArchive>();
  std::shared_ptr<const BellatrixSignedVoteArchive> signed_slashings_=std::make_shared<const BellatrixSignedVoteArchive>();

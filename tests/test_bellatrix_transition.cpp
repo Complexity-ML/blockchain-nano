@@ -102,6 +102,7 @@ Bytes signed_header(const ConsensusBeaconHeader& h,const Bytes& signature){Bytes
 int main(int argc,char** argv){try{
  const bool duty_trace=argc==2&&std::string(argv[1])=="--duty-trace";
  const bool clock_coalescing=argc==2&&std::string(argv[1])=="--clock-coalescing";
+ const bool publication_cache=argc==2&&std::string(argv[1])=="--publication-cache";
  const bool partition_simulation=argc==2&&std::string(argv[1])=="--partition-simulation";
  const bool beacon_headers_reorg=argc==2&&std::string(argv[1])=="--beacon-headers-reorg";
  const bool beacon_headers=argc==2&&std::string(argv[1])=="--beacon-headers";
@@ -689,6 +690,22 @@ int main(int argc,char** argv){try{
     check(cancelled&&reactor->beacon_events(event_cursor).at("events").empty(),"rejected/cancelled block emitted event");
    }
    check(deliver("block",wire),"durable reactor rejected block");
+   if(publication_cache){
+    const auto warm=reactor->current().token;
+    for(unsigned retry=0;retry<3;++retry)check(reactor->block(wire)&&reactor->current().token==warm,"warm duplicate changed durable token");
+    const auto record=reactor_disk->fork_checkpoint(1337,execution_genesis.header.hash(),reactor_limits.envelope_bytes,warm);
+    const auto tip=reactor_disk->latest();check(record&&tip,"missing cache test checkpoint");
+    // A second legitimate storage writer changes the coupled checkpoint. A
+    // cached byte match must still detect the stale external commitment.
+    const auto replacement=reactor_disk->commit_execution_checkpoint(1337,execution_genesis.header.hash(),warm,tip->header.hash(),tip->header.number,tip->header.hash(),{},record->payload+" ",reactor_limits.envelope_bytes,reactor_limits.blocks);
+    check(replacement!=warm,"external writer did not advance checkpoint");
+    bool rejected=false;try{reactor->block(wire);}catch(const std::exception&){rejected=true;}
+    check(rejected,"warm cache acknowledged stale disk checkpoint");
+    bool closed=false;try{reactor->current();}catch(const std::exception&){closed=true;}
+    check(closed,"stale disk checkpoint did not fail closed");
+    service->stop();service->join();
+    std::cout<<Json{{"scenario","published-snapshot-cache"},{"warmDuplicates",3},{"duplicateTokenUnchanged",true},{"externalCommitmentChangeRejected",true},{"failClosed",true}}.dump()<<std::endl;return 0;
+   }
    if(beacon_headers){
     const auto batch=reactor->beacon_events(event_cursor);const auto& events=batch.at("events");
     check(events.size()==1&&events.at(0).at("topic")=="block"&&events.at(0).at("data").at("slot")==std::to_string(slot),"committed block event missing");

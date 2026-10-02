@@ -1837,3 +1837,6 @@ add_executable(nano-checkpoint-json-tests tests/test_checkpoint_json.cpp)
 target_include_directories(nano-checkpoint-json-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
 add_test(NAME consensus_checkpoint_json_canonical COMMAND nano-checkpoint-json-tests)
 set_tests_properties(consensus_checkpoint_json_canonical PROPERTIES TIMEOUT 30 LABELS "qualification_storage_local")
+
+add_test(NAME consensus_bellatrix_publication_cache COMMAND nano-bellatrix-transition-tests --publication-cache)
+set_tests_properties(consensus_bellatrix_publication_cache PROPERTIES TIMEOUT 90 LABELS "qualification_consensus_recovery")

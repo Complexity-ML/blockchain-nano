@@ -227,12 +227,13 @@ void BellatrixDurableReactor::publish(BellatrixForkStore candidate,std::shared_p
   // no longer be reassigned by an admissible branch. Never prune on head alone.
   if(retained->size()!=exits->size())exits=std::move(retained);
  }
- const auto encoded=durable_snapshot(*next,*archive,*votes,*slashings,*exits,rules_,limits_,checkpoint,&snapshot_cache_);
+ auto encoded=durable_snapshot(*next,*archive,*votes,*slashings,*exits,rules_,limits_,checkpoint,&snapshot_cache_);
  if(checkpoint)checkpoint();
  // A retransmission with identical durable contents is already acknowledged by
  // this checkpoint. Do not invalidate local duty tokens or amplify disk writes
  // merely because another peer returned a block/vote we already retained.
- if(token_&&sha256(Bytes(encoded.begin(),encoded.end()))==token_->digest){
+ if(token_&&(!published_snapshot_.empty()?encoded==published_snapshot_:
+             sha256(Bytes(encoded.begin(),encoded.end()))==token_->digest)){
   try{if(witness_)witness_->fork_checkpoint(chain_id_,genesis_,witness_limit(),witness_token_);if(!disk_.fork_checkpoint(chain_id_,genesis_,limits_.envelope_bytes,token_))throw std::runtime_error("Missing duplicate checkpoint");}
   catch(...){fail_closed();throw;}
   return;
@@ -301,6 +302,9 @@ void BellatrixDurableReactor::publish(BellatrixForkStore candidate,std::shared_p
  }
  catch(...){fail_closed();throw;}
  events_=std::move(notifications);token_=std::move(committed);state_=std::move(next);signed_blocks_=std::move(archive);signed_votes_=std::move(votes);signed_slashings_=std::move(slashings);signed_exits_=std::move(exits);
+ // Moving the complete canonical bytes cannot fail after the durable commit.
+ static_assert(std::is_nothrow_move_assignable_v<std::string>);
+ published_snapshot_=std::move(encoded);
 }
 BellatrixDurableReactor::BellatrixDurableReactor(Blockchain& execution,BellatrixForkBlockRules rules,
  BellatrixStoreSnapshotLimits limits,BellatrixForkStore initial,const std::function<void()>& checkpoint,ChainStore* witness):
