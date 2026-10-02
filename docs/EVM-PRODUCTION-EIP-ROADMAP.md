@@ -3292,3 +3292,7 @@ Nouveau préflight réellement exécuté : sources Mac/VPS, natif9/200 entrées 
 ### 2026-10-02 — lanceur de restauration privée : refus vérifié
 
 Lanceur du candidat0275 préparé avec gate réexécuté, attestation image/binaire future et invocation du harness Capella backup/restore. Exécution actuelle **exit2/preflight-refused** : aucun nouveau nœud WAN ou metadata de provenance Docker écrit, prérequis terminaux encore manquants. [Contrôle et traces](qualification/coherent-0275b1af-wan-preflight-20261002/README.md). Attestation, reprise/finalité WAN, statuts EIP et critères de production restent ouverts.
+
+### 2026-10-02 — réindexation AMD0275 encore en échec, delta DOM isolé
+
+Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régression AMD complète et WAN restent refusés. Sélection encore active, preuves partielles conservées. Candidat a0e18693 : **1153** comparaisons canoniques et trois intégrations signées locales passent par lien partiel ARM ; diagnostic de copie profonde rectifié, aucun gain CPU/mémoire ou qualification globale acquis. Commentaire seul ajusté en418d05cc, branche isolée, aucun runtime promu. [Rapports, patch et limites](qualification/snapshot-dom-lifetime-20261002/README.md). Aucun échec historique, statut EIP ou critère final clôturé.

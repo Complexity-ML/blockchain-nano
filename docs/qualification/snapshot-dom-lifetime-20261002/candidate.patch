@@ -1,0 +1,30 @@
+diff --git a/src/consensus_capella_store_snapshot.cpp b/src/consensus_capella_store_snapshot.cpp
+index 9ee928ed..22a50a78 100644
+--- a/src/consensus_capella_store_snapshot.cpp
++++ b/src/consensus_capella_store_snapshot.cpp
+@@ -73,7 +73,11 @@ std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBl
+   // String views remain valid: std::map insertions preserve other entries,
+   // and this entry is never replaced again during this invocation.
+   if(cache)encoded_rows.push_back(cache->records_.at(id)[3].get_ref<const std::string&>());
+-  blocks.push_back(std::move(row));
++  // Cached row dumps contain the complete, validated records. The envelope
++  // only needs their count, so release the temporary SSZ/execution row DOM
++  // immediately instead of retaining it until the envelope is destroyed.
++  // The uncached path retains the full DOM and remains the byte-level oracle.
++  if(cache)blocks.push_back(nullptr);else blocks.push_back(std::move(row));
+  }
+  for(const auto& [i,m]:v.latest_messages)messages.push_back(Json::array({num(i),num(m.epoch),root(m.root)}));
+  for(auto i:v.equivocating_indices)equiv.push_back(num(i));
+diff --git a/tests/test_capella_snapshot_json.cpp b/tests/test_capella_snapshot_json.cpp
+index e19e62e7..0c0b2e0b 100644
+--- a/tests/test_capella_snapshot_json.cpp
++++ b/tests/test_capella_snapshot_json.cpp
+@@ -16,6 +16,8 @@ int main(){try{
+   if(schema>=2)document["networkAnchor"]="0x0123";if(schema>=3)document["depositAncestors"]=Json::array({"0xdead"});
+   const auto expected=document.dump();
+   check(canonical_snapshot_rows(document,rows,expected.size())==expected);check(canonical_snapshot_rows(document,rows,SIZE_MAX)==expected);comparisons+=2;
++  auto skeleton=document;skeleton["blocks"]=Json::array();for(size_t i=0;i<rows.size();++i)skeleton["blocks"].push_back(nullptr);
++  check(canonical_snapshot_rows(skeleton,rows,expected.size())==expected);++comparisons;
+   for(size_t bound:{size_t(0),expected.size()-1}){bool refused=false;try{canonical_snapshot_rows(document,rows,bound);}catch(const std::invalid_argument&){refused=true;}check(refused);++bounds;}
+   bool stopped=false;size_t callbacks=0;try{canonical_snapshot_rows(document,rows,SIZE_MAX,[&]{if(++callbacks==2)throw std::runtime_error("cancel");});}catch(const std::runtime_error&){stopped=true;}check(stopped&&callbacks==2);++cancellations;
+  }
