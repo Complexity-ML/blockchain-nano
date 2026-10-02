@@ -6275,3 +6275,7 @@ Les huit cibles AMD64 **2d2764de** terminent ensuite leur compilation ; sélecti
 ### 2026-10-02 — Build Mac natif terminal, sélection 8/8
 
 [Résultats et portée](qualification/coherent-wan-native-20261002/README.md) : checkout 554ebc3a, runtime égal à 2d2764de, huit programmes compilés ; sources/P2P inchangés. **8/8 CTest natifs, zéro skip, 2,71 s**, registre exact/délais originaux ; **198 fichiers d’entrée** inchangés avant/après. Nouveau périmètre de plateforme native et enregistrement CTest des contrôles WAN ; aucune régression native complète, rotation réelle ou reprise de duties démontrée. Campagnes Docker toujours indépendantes ; tous critères de production ouverts.
+
+### 2026-10-02 — Rejeu canonique signé sur macOS natif 4/4
+
+[Preuves et première erreur conservée](qualification/coherent-wan-native-offline-20261002/README.md) : binaire CMake natif identifié, **99 blocs / 97 transactions**, checkpoint finalisé/engagement attendus acceptés ; tête non finalisée, époque future et racine malformée refusées (**4/4**). Sandbox enfant sans écritures/réseau, base/source/binaire inchangés ; 198 entrées liées identiques au parent qualifié. Première tentative du wrapper refusée avant Nano, aucune qualification déduite. Nouvelle portée OS natif sur fixture arrêtée, pas d’observation WAN indépendante ni reprise des duties ; critères de production et échecs historiques restent ouverts.
