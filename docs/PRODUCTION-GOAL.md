@@ -2832,3 +2832,7 @@ Candidat isolé **0275b1af**, neuf programmes AMD64 construits, sources exactes 
 ### 2026-10-02 — candidat 0275b1af : périmètre natif qualifié
 
 Neuf programmes macOS construits depuis les mêmes sources Docker : **9/9** contrôles core/helpers/contrôleurs, zéro skip, délais conservés ; **4/4** audits signés en lecture seule (**99 blocs / 97 transactions**, ascendance finalisée requise et trois rejets négatifs). Deux cents entrées binaires existantes et sources inchangées avant/après, y compris après audit. [Preuves et limites](qualification/coherent-row-candidate-0275b1af-20261002/README.md). Cette qualification locale du nouveau candidat ne ferme pas la réindexation AMD360, la régression globale, la restauration des journals/duties ou la finalité WAN ; aucun statut EIP changé.
+
+### 2026-10-02 — régression AMD64 complète conditionnée au candidat 0275b1af
+
+Contrôleur vivant Mac/VPS en attente de la sélection **16/16** avec délais originaux et entrées inchangées ; ensuite build séparé et registre complet **426** exigés, sans reconstruire image ni P2P ou modifier sorties déjà qualifiées. Audits de registre/JUnit/EEST sur Mac puisque builder et VPS sans Node. [Contrôles et scope](qualification/full-coherent-0275b1af-amd64-queue-20261002/README.md). Aucun résultat complet nouveau encore acquis, aucun échec historique/critère de production/EIP clôturé.
