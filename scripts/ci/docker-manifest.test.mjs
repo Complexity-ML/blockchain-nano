@@ -43,3 +43,13 @@ test('explicit node binary is recorded even when absent from command arguments',
  const manifest=await run([], [`-DNODE_EXECUTABLE=${node}`]);assert.match(manifest[node],/^[a-f0-9]{64}$/);
  await rm(node);await assert.rejects(run([], [`-DNODE_EXECUTABLE=${node}`]),/Missing executable/);
 }));
+
+for(const name of ['nano','nano-finality-crash-fixture'])test(`${name} argument cannot disappear from qualification`,async()=>fixture(async({root,program,network,run})=>{
+ const helper=join(root,name);
+ await assert.rejects(run([helper]),/Missing executable/);
+ await writeFile(helper,'#!/bin/sh\nexit 0\n');await chmod(helper,0o644);
+ await assert.rejects(run([helper]),/Non-executable CTest command/);
+ await chmod(helper,0o755);const before=await run([helper]);assert.match(before[helper],/^[a-f0-9]{64}$/);
+ await writeFile(helper,'#!/bin/sh\nexit 2\n');const after=await run([helper]);
+ assert.notEqual(after[helper],before[helper]);assert.equal(after[program],before[program]);assert.equal(after[network],before[network]);
+}));

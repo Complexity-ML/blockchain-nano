@@ -24,8 +24,9 @@ foreach(i RANGE 0 ${last})
       string(JSON argument GET "${registry}" tests ${i} command ${j})
       if(IS_ABSOLUTE "${argument}")
         get_filename_component(name "${argument}" NAME)
-        if(name STREQUAL "nano-altair-probe")
-          # This required helper must fail the same checks as command[0].
+        if(name STREQUAL "nano-altair-probe" OR name STREQUAL "nano" OR name STREQUAL "nano-finality-crash-fixture")
+          # Known required helpers must fail the same checks as command[0],
+          # even when absent or lacking their executable permission.
           list(APPEND paths "${argument}")
         elseif(EXISTS "${argument}" AND NOT IS_DIRECTORY "${argument}")
           execute_process(COMMAND "${FILE_TEST_PROGRAM}" -x "${argument}" RESULT_VARIABLE executable)
