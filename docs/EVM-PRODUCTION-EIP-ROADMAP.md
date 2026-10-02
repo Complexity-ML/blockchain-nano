@@ -3404,3 +3404,8 @@ Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régr
 ### 2026-10-02 — Bloc EEST courant ARM64 audité, contrôleur CLI corrigé
 
 [Bloc EEST terminé du candidat `0f53b42d`](qualification/current-arm-eest-partial-20261002/README.md) : 3,45/30 s ; 5 387 variantes exactes/317 fixtures, 4 882 exécution/505 validation, sources actuelles et runner liés au manifeste. Snapshot provisoire de la campagne complète, invariance terminale/AMD64/WAN non acquis. [Contrôleur v2](qualification/current-release-pipeline-v2-20261002/README.md) : corrige le caller CLI Node `/tmp` → chemin canonique après résultat vide réel ; ancien contrôleur seul arrêté exit 143, nouveau PID 61450/session 34463 vivant. Campagnes et audit VPS inchangés, aucun test relancé, aucun critère/EIP global clôturé.
+
+
+### 2026-10-02 — Régression ARM64 0f53b42d terminale
+
+[Preuves terminales](qualification/full-arm-terminal-0f53b42d-20261002/README.md) : **427/427 réussis, zéro échec/skip, 5652,20 s**, délais originaux. Auditeur séparé terminé exit 0 : 15315 sources, 208 programmes et entrées de liaison inchangés avant/après, registre complet vérifié. Deux audits du journal terminal confirment les 5387 variantes EEST exactes (4882 exécutions/505 validations, 317 fichiers) liées aux fixtures. Ce périmètre ne certifie aucun fork complet ni la production. Campagne AMD64 encore active ; audits signés AMD64 et restauration WAN attendus. Provenance native 016ab243 distincte, runtime main inchangé, échecs historiques et tous autres critères conservés.
