@@ -1284,16 +1284,22 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
   check(encoded==capella_store_snapshot(value,store_rules,snapshot_limits,[&]{++warm;},&cache)&&warm<cold,"snapshot cache changed bytes or did not reuse records");
   // Compare cold and warm behavior after changes to both serialized slot fields.
   // A cache hit must never substitute the old SSZ or processing-epoch metadata.
-  for(unsigned mutation=0;mutation<2;++mutation){
-   auto altered=value;auto& state=altered.blocks.begin()->second.state;
+  for(unsigned mutation=0;mutation<7;++mutation){
+   auto altered=value;auto& block=altered.blocks.begin()->second;auto& state=block.state;
+   const auto id=altered.blocks.begin()->first;
    if(mutation==0)state.ssz.back()^=1;
-   else state.last_processed_epoch=state.last_processed_epoch?std::nullopt:std::optional<uint64_t>(0);
+   else if(mutation==1)state.last_processed_epoch=state.last_processed_epoch?std::nullopt:std::optional<uint64_t>(0);
+   else if(mutation==2)block.execution_block.header.extra_data.push_back(1);
+   else if(mutation==3)block.receipts.push_back(Receipt{});
+   else if(mutation==4)++altered.timed.view.nodes.at(id).realized_justified_epoch;
+   else if(mutation==5)++altered.timed.view.nodes.at(id).unrealized_justified_epoch;
+   else ++altered.unrealized_justifications.at(id).epoch;
    auto outcome=[&](CapellaStoreSnapshotCache* memo){
     try{return std::optional<std::string>(capella_store_snapshot(altered,store_rules,snapshot_limits,{},memo));}
     catch(const std::invalid_argument&){return std::optional<std::string>{};}
    };
    const auto uncached=outcome(nullptr),cached=outcome(&cache);
-   check(uncached==cached&&(!cached||*cached!=encoded),"cache masked changed SSZ or processed epoch");
+   check(uncached==cached&&(!cached||*cached!=encoded),"cache masked changed complete record or justification");
   }
   const auto digest=sha256(Bytes(encoded.begin(),encoded.end()));
   const auto restored=capella_store_from_snapshot(encoded,digest,store_rules,snapshot_limits);

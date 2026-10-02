@@ -1,6 +1,7 @@
 #include "nano/consensus_capella_store_snapshot.hpp"
 #include <source_location>
 #include "consensus_capella_snapshot_hex.hpp"
+#include "consensus_capella_snapshot_json.hpp"
 #include "nano/consensus_capella_deposits.hpp"
 #include "nano/consensus_bellatrix_store_snapshot.hpp"
 namespace nano {
@@ -41,6 +42,7 @@ std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBl
  const auto current_profile=profile(r);
  if(cache&&cache->profile_!=current_profile){cache->records_.clear();cache->profile_=current_profile;}
  if(cache)std::erase_if(cache->records_,[&](const auto& item){return !s.blocks.contains(item.first);});
+ std::vector<std::string_view> encoded_rows;
  Json blocks=Json::array(),messages=Json::array(),equiv=Json::array(),timely=Json::array(),unrealized=Json::array();size_t bytes=0;
  for(const auto& [id,b]:s.blocks){
   if(cancel)cancel();require(b.state.ssz.size()>=8&&b.state.ssz.size()<=l.state_bytes&&b.state.ssz.size()<=l.total_state_bytes-bytes);bytes+=b.state.ssz.size();
@@ -52,7 +54,7 @@ std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBl
   // Reuse only the canonical state encoding after comparing every source byte.
   // The complete row comparison below still covers all execution and metadata.
   Json encoded_state;
-  if(cache&&known!=cache->records_.end()&&known->second.is_array()&&known->second.size()==3&&
+  if(cache&&known!=cache->records_.end()&&known->second.is_array()&&known->second.size()==4&&
      known->second[0].is_array()&&known->second[0].size()==6&&known->second[0][2].is_array()&&
      known->second[0][2].size()==2&&known->second[0][2][0].is_string()&&
      snapshot_detail::canonical_hex_matches(known->second[0][2][0].get_ref<const std::string&>(),b.state.ssz,cancel))
@@ -62,12 +64,15 @@ std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBl
   // Compare every serialized field, including state/receipts/deposit history,
   // plus the checkpoint metadata checked below. Root equality alone is unsafe.
   const auto justification=cp(s.unrealized_justifications.at(id));
-  const bool validated=cache&&known!=cache->records_.end()&&known->second.is_array()&&known->second.size()==3&&known->second[0]==row&&known->second[1]==justification&&known->second[2]==Json(id==v.anchor);
+  const bool validated=cache&&known!=cache->records_.end()&&known->second.is_array()&&known->second.size()==4&&known->second[0]==row&&known->second[1]==justification&&known->second[2]==Json(id==v.anchor)&&known->second[3].is_string();
   if(!validated){
    validate_capella_execution_record(b,r,cancel);
    if(id!=v.anchor){const auto ffg=capella_fork_checkpoints(b.state,epoch_rules(r),r.transition.consensus.state,cancel);require(n.realized_justified_epoch==ffg.realized.current_justified.epoch&&n.unrealized_justified_epoch==ffg.unrealized.current_justified.epoch&&s.unrealized_justifications.at(id)==ffg.unrealized.current_justified);}
-   if(cancel)cancel();if(cache)cache->records_.insert_or_assign(id,Json::array({row,justification,id==v.anchor}));
+   if(cancel)cancel();if(cache)cache->records_.insert_or_assign(id,Json::array({row,justification,id==v.anchor,row.dump()}));
   }
+  // String views remain valid: std::map insertions preserve other entries,
+  // and this entry is never replaced again during this invocation.
+  if(cache)encoded_rows.push_back(cache->records_.at(id)[3].get_ref<const std::string&>());
   blocks.push_back(std::move(row));
  }
  for(const auto& [i,m]:v.latest_messages)messages.push_back(Json::array({num(i),num(m.epoch),root(m.root)}));
@@ -88,7 +93,7 @@ std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBl
   for(const auto& old:s.deposit_ancestors){if(cancel)cancel();const auto& h=old.beacon;pins.push_back(Json::array({Json::array({num(h.slot),num(h.proposer_index),root(h.parent_root),root(h.state_root),root(h.body_root)}),old.execution.to_json(),num(old.count),root(old.root)}));}
   j["format"]="nano-capella-store-v3";j["depositAncestors"]=std::move(pins);
  }
- auto encoded=j.dump();require(encoded.size()<=l.envelope_bytes);if(cancel)cancel();return encoded;
+ auto encoded=cache?snapshot_detail::canonical_snapshot_rows(j,encoded_rows,l.envelope_bytes,cancel):j.dump();require(encoded.size()<=l.envelope_bytes);if(cancel)cancel();return encoded;
 }
 CapellaForkStore capella_store_from_snapshot(std::string_view bytes,const Bytes& digest,const CapellaForkBlockRules& r,
  const CapellaStoreSnapshotLimits& l,const std::function<void()>& cancel){

@@ -1865,3 +1865,8 @@ add_executable(nano-hex-encoding-tests tests/test_hex_encoding.cpp)
 target_link_libraries(nano-hex-encoding-tests PRIVATE nano_core)
 add_test(NAME core_hex_encoding_differential COMMAND nano-hex-encoding-tests)
 set_tests_properties(core_hex_encoding_differential PROPERTIES TIMEOUT 60 LABELS "core;encoding")
+
+add_executable(nano-capella-snapshot-json-tests tests/test_capella_snapshot_json.cpp)
+target_include_directories(nano-capella-snapshot-json-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
+add_test(NAME consensus_capella_snapshot_cached_rows COMMAND nano-capella-snapshot-json-tests)
+set_tests_properties(consensus_capella_snapshot_cached_rows PROPERTIES TIMEOUT 60 LABELS "qualification_storage_local;capella;snapshot")
