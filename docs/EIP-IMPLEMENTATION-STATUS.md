@@ -6000,3 +6000,8 @@ Candidate `d1597d9a` : [contrôleur](qualification/rpc-full-regression-control-2
 ### 2026-10-02 — Régression complète VPS et dépendances Mac effectivement démarrées
 
 Candidate `d1597d9a` : PID VPS 1440584 et conteneur de préparation vérifiés en vie, compilation fraîche cohérente P2P/helpers dans volume réutilisé ; tests complets sans instrumentation pas encore démarrés. Mac ARM64 : PID Docker 83863 / BuildKit `hgesiw1wk0njw3i54awcf449a` Running, reconstruction d'une image de dépendances après reset, Hunter/cpp-libp2p en préparation. [Receipts de démarrage et logs](qualification/rpc-full-regression-start-20261002/README.md). Aucun résultat complet, autre architecture, restauration des duties, WAN ou production acquis ; aucun runtime promu sur main et échec historique conservé.
+
+
+### 2026-10-02 — Enchaînement ARM64 vers régression complète préparé
+
+[Contrôleur Mac](qualification/rpc-full-arm64-control-20261002/README.md) syntaxiquement vérifié : attend le PID réel du build de dépendances, refuse sa réutilisation, exige une image ARM64 finale identifiable et les 15 315 sources inchangées, puis compile/qualifie la candidate `d1597d9a` avec le script complet Git sans instrumentation RPC. Une image/un volume requis après reset Mac ; aucun résultat de régression complète ou production encore acquis, tous les autres gates conservés.
