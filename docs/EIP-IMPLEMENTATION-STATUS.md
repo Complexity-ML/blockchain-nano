@@ -5796,3 +5796,7 @@ Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régr
 ### 2026-10-02 — candidat803 : timeout de réindexationAMD persistant
 
 [Échec et contrôleur diagnostic](qualification/coherent-80373152-release-gates-20261002/README.md) :timeout360,04,slot160/finalité18/sept votes. Sélection encore active, pas de16/16 acquis ; full et WAN resteront refusés. Diagnostic unique séparé en attente de la fin :programme exact/archives readonly,scratch neuf,360s,30s49Hz aprèsslot128,PID/executable/hash vérifiés ; profil non acquis et résultat instrumenté non qualifiant. Aucun délai augmenté, échec effacé, runtime promu ou critère EIP/production/lancement clôturé.
+
+### 2026-10-02 — candidat803 : sélectionAMD terminale15/16 et refus effectifs
+
+[Registre et rapports terminaux](qualification/coherent-80373152-release-gates-20261002/README.md) :15/16,zéro skip,1835,73s ; unique réindexation360,04 timeout ; sorties391,395/480 passent. Sources/neuf programmes/sept entrées inchangés et délais exacts. Driverfull exit1/queueWAN exit1,newWanNodesStarted=false. Diagnostic séparé démarré seulement après la sélection, profil non acquis. Aucun runtime promu ou critère EIP/production/lancement clôturé.
