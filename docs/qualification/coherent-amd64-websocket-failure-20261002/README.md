@@ -1,0 +1,9 @@
+# Échec AMD64 WebSocket sous charge — candidat cohérent
+
+Le cas 43 `bft_rpc_cost_websocket_paris_network` échoue en 80,90 s (timeout CTest original 480 s). La trace complète est préservée, sans relance ni modification de délai. La campagne principale continue : son état terminal n’est pas encore connu.
+
+La requête 47 du worker 4 est `eth_estimateGas`, tag `pending`, démarrée à 59 780,375 ms et refusée après 4 006,317 ms avec code -32005 / `RPC simulation queue wait exceeded`. La file partagée HTTP/WebSocket possède deux workers et une attente maximale de quatre secondes. Le scénario lance seize clients répartis sur quatre nœuds ; il ne permet pas les refus d’admission, contrairement au scénario explicitement nommé overload. Le bloc marqueur est finalisé avec seize clients actifs et `controlError` vide. Ces observations localisent l’échec dans la file avant exécution ; elles ne prouvent ni sa cause profonde, ni une absence de corruption, ni une qualification complète du consensus.
+
+Sources inspectées : `include/nano/simulation_queue.hpp`, `src/websocket.cpp`, `tests/test_bft_network.cpp` sur 9e9ebed3833a24f75ce7b29b9a80dcce341dfc3a. La file expire un travail qui n’a pas encore commencé. Aucun timeout relevé, aucune assertion assouplie, aucun runtime modifié. Prochaine investigation : coût des estimations, ordonnancement et concurrence sous la limite CPU de la campagne ; comparaison avec les cas HTTP et surcharge, puis correction démontrée par un scénario ciblé avant régression pertinente.
+
+Les messages antérieurs qui disaient AMD64 « sans échec » en consultant seulement la fin du journal étaient incorrects. La vérification du journal entier a révélé ce cas. Les contrôles terminaux existants refusent toute campagne comportant un échec ; aucun WAN ne doit être lancé avec cette qualification. La qualification ARM64 conservée reste distincte. Tous les critères globaux de production demeurent ouverts.

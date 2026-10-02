@@ -1,0 +1,31 @@
+{
+  "revision": "9e9ebed3833a24f75ce7b29b9a80dcce341dfc3a",
+  "case": 43,
+  "name": "bft_rpc_cost_websocket_paris_network",
+  "caseSeconds": 80.9,
+  "originalCtestTimeoutSeconds": 480,
+  "queueDeadlineSeconds": 4,
+  "workerCountPerNode": 2,
+  "clientsTotal": 16,
+  "clientsPerNode": 4,
+  "activeClientsAtMarkerFinality": 16,
+  "controlError": "",
+  "failedRequests": [
+    {
+      "worker": 4,
+      "durationMs": 4006.316544,
+      "error": "RPC simulation queue wait exceeded",
+      "method": "eth_estimateGas",
+      "request": 47,
+      "rpcCode": -32005,
+      "startedMs": 59780.375058,
+      "success": false,
+      "tag": "pending"
+    }
+  ],
+  "logSha256": "1f19718afa7b49ca3e52016fc0558cc60957c6aef7bdf797d973c7830f65ca71",
+  "rootCauseProven": false,
+  "campaignTerminal": false,
+  "wanQualified": false,
+  "productionQualified": false
+}

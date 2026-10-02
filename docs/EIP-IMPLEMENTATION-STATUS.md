@@ -5940,3 +5940,8 @@ Pilote uniquement : sélection explicite du daemon depuis le build de chaque arc
 ### 2026-10-02 — Qualification terminale du candidat cohérent Docker ARM64
 
 [Preuves terminales et revue indépendante](qualification/coherent-arm64-terminal-9e9ebed3-20261002/README.md) : **427/427 + 21/21**, aucun skip/échec, délais originaux. Revue exit 0 : 15 315 sources stables, 208 SHA de programmes relus du volume, 317 fichiers / 5 387 variantes EEST exactes. Cette entrée actualise les observations ARM « encore active » précédentes sans les effacer. Régression après recompilation cohérente des helpers ; aucune couverture nouvelle revendiquée. AMD64/audit signé encore actifs, restauration/duties/finalité WAN non prouvés, liaison statique non auditée ici, conformité complète et revue de sécurité indépendante ouvertes. Aucun runtime promu ; tous les critères globaux de production restent ouverts.
+
+
+### 2026-10-02 — Échec AMD64 WebSocket découvert dans le journal complet
+
+[Trace et diagnostic](qualification/coherent-amd64-websocket-failure-20261002/README.md) : cas 43 échoué, `eth_estimateGas pending` refusé (-32005) après 4 006 ms d’attente, limite originale 4 s. Marqueur finalisé avec 16 clients actifs, mais ce scénario exige zéro refus : qualification AMD64 non acquise. Cause profonde ouverte ; aucun délai/assertion assoupli, aucune relance ni correction runtime. Campagne encore active. Les indications antérieures « sans échec » fondées sur la fin du journal étaient incorrectes. Contrôle WAN maintenu fermé ; preuve ARM64 distincte et tous les critères globaux conservés.
