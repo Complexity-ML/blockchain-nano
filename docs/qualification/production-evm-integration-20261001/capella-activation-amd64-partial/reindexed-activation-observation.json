@@ -1,0 +1,88 @@
+{
+  "observationUTC": "2026-10-02T01:09:24.268056+00:00",
+  "runtimeSourceRevision": "c10426b2eab0aff7eaada3e4b57460f15cf7e90c",
+  "architecture": "AMD64",
+  "campaignTerminal": false,
+  "completedAtObservation": 406,
+  "passedAtObservation": 398,
+  "failuresAtObservation": [
+    {
+      "completed": 40,
+      "testNumber": 40,
+      "name": "bft_rpc_cost_sustained_paris_network",
+      "result": "...............***Failed   20.41 sec"
+    },
+    {
+      "completed": 62,
+      "testNumber": 62,
+      "name": "bft_rpc_cost_sustained_shanghai_network",
+      "result": "............***Failed   21.34 sec"
+    },
+    {
+      "completed": 287,
+      "testNumber": 287,
+      "name": "consensus_altair_libp2p",
+      "result": "............................***Failed    2.53 sec"
+    },
+    {
+      "completed": 322,
+      "testNumber": 322,
+      "name": "consensus_bellatrix_partition_simulation",
+      "result": "...........***Timeout 240.03 sec"
+    },
+    {
+      "completed": 394,
+      "testNumber": 394,
+      "name": "consensus_capella_deposit_activation",
+      "result": "...............***Timeout 360.03 sec"
+    },
+    {
+      "completed": 395,
+      "testNumber": 395,
+      "name": "consensus_capella_deposit_activation_restart",
+      "result": ".......***Timeout 360.03 sec"
+    },
+    {
+      "completed": 397,
+      "testNumber": 397,
+      "name": "consensus_capella_deposit_auto_registration",
+      "result": "........***Timeout 360.03 sec"
+    },
+    {
+      "completed": 406,
+      "testNumber": 406,
+      "name": "consensus_capella_reindexed_validator_activation",
+      "result": "...***Timeout 360.02 sec"
+    }
+  ],
+  "scenario": {
+    "resultLine": "406/417 Test #406: consensus_capella_reindexed_validator_activation ...***Timeout 360.02 sec",
+    "outputLines": [
+      "{\"observerRecords\":15,\"scenario\":\"deposit-reorg-progress\",\"slot\":8}",
+      "{\"observerRecords\":31,\"scenario\":\"deposit-reorg-progress\",\"slot\":16}",
+      "{\"observerRecords\":47,\"scenario\":\"deposit-reorg-progress\",\"slot\":24}",
+      "{\"observerRecords\":63,\"scenario\":\"deposit-reorg-progress\",\"slot\":32}",
+      "{\"observerRecords\":79,\"scenario\":\"deposit-reorg-progress\",\"slot\":40}",
+      "{\"observerRecords\":95,\"scenario\":\"deposit-reorg-progress\",\"slot\":48}",
+      "{\"activationQualified\":false,\"branches\":2,\"depositsPerBranch\":2,\"indexA\":[64,65],\"networkTransport\":false,\"observerReopens\":2,\"providerCalls\":0,\"registrySize\":66,\"scenario\":\"capella-competing-deposit-reorg\",\"selectedBranches\":2,\"staleIndexRefused\":true}",
+      "{\"activationEpoch\":18446744073709551615,\"finalizedEpoch\":0,\"newVotes\":0,\"scenario\":\"deposit-reorg-activation-progress\",\"slot\":56}",
+      "{\"activationEpoch\":18446744073709551615,\"finalizedEpoch\":0,\"newVotes\":0,\"scenario\":\"deposit-reorg-activation-progress\",\"slot\":64}",
+      "{\"activationEpoch\":13,\"finalizedEpoch\":7,\"newVotes\":0,\"scenario\":\"deposit-reorg-activation-progress\",\"slot\":72}",
+      "{\"activationEpoch\":13,\"finalizedEpoch\":8,\"newVotes\":0,\"scenario\":\"deposit-reorg-activation-progress\",\"slot\":80}",
+      "{\"activationEpoch\":13,\"finalizedEpoch\":9,\"newVotes\":0,\"scenario\":\"deposit-reorg-activation-progress\",\"slot\":88}",
+      "{\"activationEpoch\":13,\"finalizedEpoch\":10,\"newVotes\":0,\"scenario\":\"deposit-reorg-activation-progress\",\"slot\":96}",
+      "{\"activationEpoch\":13,\"finalizedEpoch\":11,\"newVotes\":0,\"scenario\":\"deposit-reorg-activation-progress\",\"slot\":104}",
+      "{\"activationEpoch\":13,\"finalizedEpoch\":12,\"newVotes\":1,\"scenario\":\"deposit-reorg-activation-progress\",\"slot\":112}",
+      "{\"activationEpoch\":13,\"finalizedEpoch\":13,\"newVotes\":2,\"scenario\":\"deposit-reorg-activation-progress\",\"slot\":120}",
+      ""
+    ]
+  },
+  "lastProgress": {
+    "activationEpoch": 13,
+    "finalizedEpoch": 13,
+    "newVotes": 2,
+    "scenario": "deposit-reorg-activation-progress",
+    "slot": 120
+  },
+  "interpretation": "Original timeout and terminal assertions unchanged. Newly active validator votes are observed; scenario completion is not demonstrated."
+}
