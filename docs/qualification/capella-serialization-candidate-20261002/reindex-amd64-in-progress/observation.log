@@ -1,0 +1,44 @@
+Internal ctest changing into directory: /build/published-bytes-fa390c3b-20261002
+Test project /build/published-bytes-fa390c3b-20261002
+      Start 375: consensus_capella_queued_bls_changes
+ 1/10 Test #375: consensus_capella_queued_bls_changes ...............   Passed    9.08 sec
+      Start 394: consensus_capella_deposit_activation
+ 2/10 Test #394: consensus_capella_deposit_activation ...............   Passed  356.26 sec
+      Start 395: consensus_capella_deposit_activation_restart
+ 3/10 Test #395: consensus_capella_deposit_activation_restart .......   Passed  356.26 sec
+      Start 397: consensus_capella_deposit_auto_registration
+ 4/10 Test #397: consensus_capella_deposit_auto_registration ........   Passed  356.39 sec
+      Start 405: consensus_capella_competing_deposit_reorg
+ 5/10 Test #405: consensus_capella_competing_deposit_reorg ..........   Passed   49.48 sec
+      Start 406: consensus_capella_reindexed_validator_activation
+ 6/10 Test #406: consensus_capella_reindexed_validator_activation ...***Timeout 360.04 sec
+{"observerRecords":15,"scenario":"deposit-reorg-progress","slot":8}
+{"observerRecords":31,"scenario":"deposit-reorg-progress","slot":16}
+{"observerRecords":47,"scenario":"deposit-reorg-progress","slot":24}
+{"observerRecords":63,"scenario":"deposit-reorg-progress","slot":32}
+{"observerRecords":79,"scenario":"deposit-reorg-progress","slot":40}
+{"observerRecords":95,"scenario":"deposit-reorg-progress","slot":48}
+{"activationQualified":false,"branches":2,"depositsPerBranch":2,"indexA":[64,65],"networkTransport":false,"observerReopens":2,"providerCalls":0,"registrySize":66,"scenario":"capella-competing-deposit-reorg","selectedBranches":2,"staleIndexRefused":true}
+{"activationEpoch":18446744073709551615,"finalizedEpoch":0,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":56}
+{"activationEpoch":18446744073709551615,"finalizedEpoch":0,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":64}
+{"activationEpoch":13,"finalizedEpoch":7,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":72}
+{"activationEpoch":13,"finalizedEpoch":8,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":80}
+{"activationEpoch":13,"finalizedEpoch":9,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":88}
+{"activationEpoch":13,"finalizedEpoch":10,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":96}
+{"activationEpoch":13,"finalizedEpoch":11,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":104}
+{"activationEpoch":13,"finalizedEpoch":12,"newVotes":1,"scenario":"deposit-reorg-activation-progress","slot":112}
+{"activationEpoch":13,"finalizedEpoch":13,"newVotes":2,"scenario":"deposit-reorg-activation-progress","slot":120}
+{"activationEpoch":13,"finalizedEpoch":14,"newVotes":3,"scenario":"deposit-reorg-activation-progress","slot":128}
+{"activationEpoch":13,"finalizedEpoch":15,"newVotes":4,"scenario":"deposit-reorg-activation-progress","slot":136}
+{"activationEpoch":13,"finalizedEpoch":16,"newVotes":5,"scenario":"deposit-reorg-activation-progress","slot":144}
+{"activationEpoch":13,"finalizedEpoch":17,"newVotes":6,"scenario":"deposit-reorg-activation-progress","slot":152}
+
+      Start 408: consensus_capella_local_exits
+ 7/10 Test #408: consensus_capella_local_exits ......................   Passed    9.04 sec
+      Start 409: consensus_capella_queued_exits
+ 8/10 Test #409: consensus_capella_queued_exits .....................   Passed   10.29 sec
+      Start 413: consensus_capella_exit_reindex
+PID                 ELAPSED             %CPU                COMMAND
+470860              37:41               0.0                 bash -s
+473145              27:15               0.0                 ctest --test-dir /build/published-bytes-fa390c3b-20261002 -R ^(consensus_checkpoint_json_canonical|consensus_capella_local_exits|consensus_capella_queued_exits|consensus_capella_queued_bls_changes|consensus_capella_competing_deposit_reorg|consensus_capella_deposit_activation|consensus_capella_deposit_activation_restart|consensus_capella_deposit_auto_registration|consensus_capella_reindexed_validator_activation|consensus_capella_exit_reindex)$ --no-tests=error --parallel 1 --output-on-failure --output-junit /reports/results.xml
+487362              02:08               99.2                /build/published-bytes-fa390c3b-20261002/nano-capella-transition-tests --exit-reindex

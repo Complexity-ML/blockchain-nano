@@ -19,6 +19,7 @@ import {createRotationCapture,ownership,rotationNodes,waitRotationWindow} from '
 import {runBoundedLoad} from './bounded-load.mjs';
 import {stoppedReceipt,pinnedRestoreConfiguration,restoreAuditRequest,validateRestoredFinality} from './restore-config.mjs';
 import {waitRestoredRecovery} from './restore-recovery.mjs';
+import {restoredFinalityAuditRequest,verifyRestoredFinalityAudit} from './restore-offline-audit.mjs';
 import {startFinalityMonitor} from './monitor.mjs';
 import {qualifyAlertFault} from './alert-fault.mjs';
 import {selectCandidates,verifyPackagedImage} from './candidate-images.mjs';
@@ -389,6 +390,15 @@ if(pinnedRestart&&!process.exitCode){
   if(backupRestore&&!process.exitCode){
    const restored=stoppedReceipt(await readFile(join(output,'vps.log'),'utf8')),stable=await json(join(output,'observations/result.json'));
    validateRestoredFinality(restoreReceipt,stable,restored);
+   const stopped=JSON.parse(await docker(['inspect',remote,'--format','{{json .State}}'],true));
+   if(stopped.Running||stopped.ExitCode!==0||stopped.OOMKilled)throw Error('Restored writer did not stop cleanly before ancestry audit');
+   const request=restoredFinalityAuditRequest(await json(join(prepared,'vps-docker/node.json')),restoreReceipt,stable,restored);
+   const requestPath=join(output,'restore/finalized-audit-request.json');await writeFile(requestPath,JSON.stringify(request,null,2));
+   await exec('scp',['-q',requestPath,`${target}:${restoreProof}/finalized-audit-request.json`],{timeout:10000});
+   const audit=JSON.parse(await docker(['run','--rm','--network','none','--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--memory','2g','--cpus','1','--tmpfs','/tmp:rw,nosuid,noexec,size=64m',...artifactMount,'--mount',`type=bind,src=${remoteRoot}/restore-config,dst=/config,readonly`,'--mount',`type=bind,src=${restoreProof},dst=/proof,readonly`,'--entrypoint',buildPaths.nano,image,'audit-capella','/config/genesis.json','/proof/backup/restored/chain','/proof/finalized-audit-request.json'],true,180000));
+   await writeFile(join(output,'restore/finalized-audit.json'),JSON.stringify(audit,null,2));
+   verifyRestoredFinalityAudit(request,restored,audit);
+   await log({event:'backup-restore-finalized-ancestry-passed',request,audit});
    await docker(['run','--rm','--network','none','--mount',`type=volume,src=${remote}-data,dst=/source,readonly`,'--mount',`type=bind,src=${restoreProof},dst=/proof,readonly`,image,'bash','-lc','set -e; cd /source; find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | cmp /proof/backup/source-before.sha256 -'],true);
    await log({event:'backup-restore-passed',sourceStillUnchanged:true,restoredSignerStatus:restored.validator,stable});
   }
