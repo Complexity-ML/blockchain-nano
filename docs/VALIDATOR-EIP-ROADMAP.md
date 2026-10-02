@@ -6558,3 +6558,8 @@ Candidate `d1597d9a` : contrôle négatif de performance rejette l'ancien algori
 ### 2026-10-02 — Régression cohérente complète après correction RPC préparée
 
 Candidate `d1597d9a` : [contrôleur](qualification/rpc-full-regression-control-20261002/README.md) préparé pour réutiliser image/volume VPS, compiler cœur/P2P/helpers dans un nouveau sous-dossier cohérent puis exécuter toute la sélection CTest sans instrumentation. Résultat et sélection terminale non acquis ; supplément réseau, autre architecture, restauration des duties, WAN et critères production toujours ouverts. Pas de nouvelle image VPS ni de promotion runtime sur main.
+
+
+### 2026-10-02 — Régression complète VPS et dépendances Mac effectivement démarrées
+
+Candidate `d1597d9a` : PID VPS 1440584 et conteneur de préparation vérifiés en vie, compilation fraîche cohérente P2P/helpers dans volume réutilisé ; tests complets sans instrumentation pas encore démarrés. Mac ARM64 : PID Docker 83863 / BuildKit `hgesiw1wk0njw3i54awcf449a` Running, reconstruction d'une image de dépendances après reset, Hunter/cpp-libp2p en préparation. [Receipts de démarrage et logs](qualification/rpc-full-regression-start-20261002/README.md). Aucun résultat complet, autre architecture, restauration des duties, WAN ou production acquis ; aucun runtime promu sur main et échec historique conservé.
