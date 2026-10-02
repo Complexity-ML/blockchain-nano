@@ -43,12 +43,16 @@ std::string bellatrix_store_snapshot(const BellatrixForkStore& s,const Bellatrix
   auto row=Json::array({root(id),Json::array({num(b.header.slot),num(b.header.proposer_index),root(b.header.parent_root),root(b.header.state_root),root(b.header.body_root)}),slot_snapshot(b.state),num(n.realized_justified_epoch),num(n.unrealized_justified_epoch),execution(b,cancel)});
   // Compare every serialized field, including state/receipts/deposit history,
   // plus the checkpoint metadata checked below. Root equality alone is unsafe.
-  const auto validation=cache?Json::array({row,cp(s.unrealized_justifications.at(id)),id==v.anchor}):Json();
+  const auto justification=cp(s.unrealized_justifications.at(id));
   const auto known=cache?cache->records_.find(id):std::map<ConsensusRoot,Json>::iterator{};
-  if(!cache||known==cache->records_.end()||known->second!=validation){
+  // Compare the complete row in place. Constructing a validation tuple before
+  // this comparison copied every large state/receipt JSON even on cache hits.
+  const bool validated=cache&&known!=cache->records_.end()&&known->second.is_array()&&
+   known->second.size()==3&&known->second[0]==row&&known->second[1]==justification&&known->second[2]==Json(id==v.anchor);
+  if(!validated){
    validate_bellatrix_execution_record(b,r,cancel);
    if(id!=v.anchor){const auto ffg=bellatrix_fork_checkpoints(b.state,epoch_rules(r),r.transition.consensus.state,cancel);require(n.realized_justified_epoch==ffg.realized.current_justified.epoch&&n.unrealized_justified_epoch==ffg.unrealized.current_justified.epoch&&s.unrealized_justifications.at(id)==ffg.unrealized.current_justified);}
-   if(cancel)cancel();if(cache)cache->records_.insert_or_assign(id,validation);
+   if(cancel)cancel();if(cache)cache->records_.insert_or_assign(id,Json::array({row,justification,id==v.anchor}));
   }
   blocks.push_back(std::move(row));
  }
