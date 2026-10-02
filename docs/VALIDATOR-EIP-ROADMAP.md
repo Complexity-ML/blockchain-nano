@@ -6263,3 +6263,7 @@ Les huit cibles AMD64 **2d2764de** terminent ensuite leur compilation ; sélecti
 ### 2026-10-02 — Rejeu natif AMD64 préparé sans concurrencer la qualification
 
 [Contrôle et limites](qualification/coherent-offline-amd64-20261002/README.md) : témoin arrêté ARM64 transféré avec hash identique ; audit natif **2d2764de** mis en attente de la campagne AMD64 existante, empreintes base/source/binaire et quatre cas exigés. Aucun résultat acquis ni observation WAN indépendante, aucun journal de signature transféré, aucune reprise des duties prouvée. Activation AMD64 observée **346,72 s / 360 s** ; autres cas et régression ARM64 complète encore actifs. Marge faible et échecs historiques conservés ; aucun critère de production clos ni runtime main promu.
+
+### 2026-10-02 — Chemins WAN cohérents ARM64/AMD64 et checkout distant candidat
+
+[Correction du contrôleur](qualification/coherent-wan-paths-20261002/README.md) : choix séparés des builds ARM64/AMD64, checkout Git distant explicite et routage des appels d’audit/sauvegarde/rotation. **17 contrôles Node Mac passent, dont 7 nouveaux**, erreur initiale null conservée. Enregistrement CTest conditionnel Node ajouté, non exécuté dans les builders actuels sans Node. Aucun runtime ou build actif modifié, aucun résultat WAN acquis ; restauration complète, reprise des duties et tous critères de production restent ouverts.
