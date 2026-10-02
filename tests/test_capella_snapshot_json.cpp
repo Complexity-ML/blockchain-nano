@@ -16,6 +16,8 @@ int main(){try{
   if(schema>=2)document["networkAnchor"]="0x0123";if(schema>=3)document["depositAncestors"]=Json::array({"0xdead"});
   const auto expected=document.dump();
   check(canonical_snapshot_rows(document,rows,expected.size())==expected);check(canonical_snapshot_rows(document,rows,SIZE_MAX)==expected);comparisons+=2;
+  auto skeleton=document;skeleton["blocks"]=Json::array();for(size_t i=0;i<rows.size();++i)skeleton["blocks"].push_back(nullptr);
+  check(canonical_snapshot_rows(skeleton,rows,expected.size())==expected);++comparisons;
   for(size_t bound:{size_t(0),expected.size()-1}){bool refused=false;try{canonical_snapshot_rows(document,rows,bound);}catch(const std::invalid_argument&){refused=true;}check(refused);++bounds;}
   bool stopped=false;size_t callbacks=0;try{canonical_snapshot_rows(document,rows,SIZE_MAX,[&]{if(++callbacks==2)throw std::runtime_error("cancel");});}catch(const std::runtime_error&){stopped=true;}check(stopped&&callbacks==2);++cancellations;
  }
