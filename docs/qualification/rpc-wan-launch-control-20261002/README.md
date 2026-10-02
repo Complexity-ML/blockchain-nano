@@ -1,0 +1,11 @@
+# Lanceur de restauration WAN pour d1597d9a
+
+Préparation seulement : aucun nœud WAN lancé par cette qualification. Le lanceur précédent référence des images supprimées et un ancien build ; celui-ci sélectionne les images immuables et volumes conservés ARM64/AMD64 de la candidate RPC d1597d9a, et le pilote JS c7f759bb (trois fichiers JS modifiés, aucun changement runtime).
+
+Avant le pilote : contrôleurs complets terminaux zéro, 427 résultats et supplément21 par architecture, revue exacte EEST/registre/délais/sources/programmes, audits signés quatre cas sur chaque Docker et contrôle natif indépendant. Gate natif acquis : 14 cœur +21 réseau +4 signés ; sources 15 315, entrées 598 et sauvegarde complète 313 fichiers relus. Pas de dyld système intégral, ni preuve de duties. Quatre contrôles du lanceur, sans Docker/SSH/SCP, confirment le refus sans flag, avec gates manquants et après revue refusée, et les références actuelles explicites. Compilation syntaxique réussie. Régression AMD64 encore active : le lanceur reste interdit tant que ses gates terminaux manquent.
+
+Le pilote prévu crée un devnet privé de trois propriétaires (Mac natif, Docker Mac, Docker VPS), prend une nouvelle sauvegarde complète arrêtée avec pins externes issus du reçu d’arrêt, contrôle copie/restauration, redémarre les duties et exige trois epochs de finalité commune puis audit de l’ascendance finalisée. Ce n’est pas la reprise de l’ancienne sauvegarde Mac conservée ; celle-ci reste auditée hors ligne, avec journaux non encore repris. Aucune preuve de reprise WAN n’est acquise ici.
+
+Réutilisation des images/volumes ; aucun build d’image ou logiciel transféré par SCP. Le pilote et les contrôleurs sont publiés par Git, seules données de devnet/rapports transitent autrement. Délais et budgets hérités du pilote inchangés. Variables NANO_TEST héritées supprimées avant sélection explicite pour éviter l’activation accidentelle d’une autre campagne. Les sources, programmes et dépendances natives sont relus avant/après ; pas promotion runtime sur main, production non qualifiée.
+
+Commande réservée à la réussite préalable de tous les gates : `python3 -B docs/qualification/rpc-wan-launch-control-20261002/launch.py --execute-qualified-wan`. Ne pas mettre en file d’attente ni relancer automatiquement. Les sorties et tentatives sont immuables.
