@@ -18,3 +18,15 @@ Supplemental observer is active, no after-test result yet. Full CTest has not
 started at this preparation observation. Existing target tests/registries,
 old failures and optional external corpora remain distinct from production
 qualification. AMD64 Capella parent still running; new candidate still queued.
+
+## Preparation terminal, full CTest active
+
+P2P all-target build and core all-target build succeeded. Final configured
+registry: 422 cases, all commands present, explicit timeout everywhere, complete
+selection. 200 primary/network executables measured plus the three supplemental
+helpers. Sources before/after build, registry and main executable manifests
+before CTest match. Before-test artifacts archived in preflight-arm64; P2P
+source/program evidence in network-preflight-arm64. Tests are confirmed active;
+no terminal suite result or after-test helper comparison yet. The observed
+registry during build remains separate and cannot substitute for this final
+complete registry. Other production gates remain open.
