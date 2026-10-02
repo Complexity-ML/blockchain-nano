@@ -1,0 +1,13 @@
+diff --git a/tests/test_capella_snapshot_accounts.cpp b/tests/test_capella_snapshot_accounts.cpp
+index 5bb1b611..08e10fd1 100644
+--- a/tests/test_capella_snapshot_accounts.cpp
++++ b/tests/test_capella_snapshot_accounts.cpp
+@@ -10,7 +10,7 @@ int main(){try{
+  for(unsigned sample=0;sample<64;++sample){
+   State original;
+   for(unsigned i=0;i<1+sample%9;++i){const auto addr=hex(bytes(Int(i+1),20));auto& a=original.get(addr);
+-   a.nonce=Int(std::to_string(random()));a.balance=(Int(1)<<255)+random();
++   a.nonce=Int(std::to_string(random()));a.balance=(Int(1)<<255)+Int(std::to_string(random()));
+    a.code.resize((sample+i)%3==0?8193:(sample+i)%35);for(auto& b:a.code)b=static_cast<uint8_t>(random());
+    for(unsigned slot=0;slot<1+i%5;++slot)a.storage[(Int(1)<<200)+slot]=slot?Int(std::to_string(random())):Int(0);
+   }
