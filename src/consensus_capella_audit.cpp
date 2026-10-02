@@ -2,6 +2,7 @@
 #include <fstream>
 #include "nano/consensus_capella_audit.hpp"
 #include <algorithm>
+#include "consensus_capella_audit_ancestry.hpp"
 namespace nano {
 namespace {
 void require(bool value,const char* message){if(!value)throw std::runtime_error(std::string("Capella canonical audit: ")+message);}
@@ -10,7 +11,7 @@ ConsensusRoot root_at(const Bytes& wire,size_t offset){require(offset<=wire.size
 Json audit_capella_canonical_history(ChainStore& disk,const Int& chain,const Bytes& genesis,
  const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits,
  const CapellaForkStore& trusted,const ForkCheckpointToken& expected,
- size_t maximum_blocks,size_t maximum_archive_bytes,const std::function<void()>& check){
+ size_t maximum_blocks,size_t maximum_archive_bytes,const std::function<void()>& check,const std::optional<ConsensusCheckpoint>& required_finalized){
  require(maximum_blocks&&maximum_archive_bytes,"zero replay budget");
  require(trusted.blocks.size()==1&&trusted.blocks.contains(trusted.timed.view.anchor),"single trusted anchor required");
  // Revalidate the caller-authenticated anchor's structural/state bindings.
@@ -57,9 +58,11 @@ Json audit_capella_canonical_history(ChainStore& disk,const Int& chain,const Byt
   replay=std::move(*next);verify_disk(replay.blocks.at(id));
  }
  require(replay.blocks.contains(head)&&replay.blocks.contains(saved.state->timed.view.finalized.root),"head/finalized checkpoint outside replayed chain");
+ if(required_finalized)audit_detail::require_finalized_ancestor(replay,saved.state->timed.view.finalized,*required_finalized,rules.transition.consensus.epoch.ffg.slots_per_epoch,check);
  const auto tip=disk.latest();require(tip&&tip->header.hash()==target.execution_block.header.hash(),"tip changed during audit");
  require(bool(disk.fork_checkpoint(chain,genesis,limits.envelope_bytes,expected)),"checkpoint disappeared");
- return {{"canonicalHistoryVerified",true},{"historicalForkChoiceVerified",false},{"historicalStandaloneVotesReplayed",false},
+ return {{"canonicalHistoryVerified",true},{"externalFinalizedAncestorVerified",bool(required_finalized)},
+  {"finalized",{{"epoch",quantity(Int(std::to_string(saved.state->timed.view.finalized.epoch)))},{"root",hex(Bytes(saved.state->timed.view.finalized.root.begin(),saved.state->timed.view.finalized.root.end()))}}},{"historicalForkChoiceVerified",false},{"historicalStandaloneVotesReplayed",false},
   {"trustedAnchor",hex(Bytes(anchor.begin(),anchor.end()))},{"firstExecutionBlock",quantity(first.execution_block.header.number)},
   {"lastExecutionBlock",quantity(target.execution_block.header.number)},{"blocksIncludingTrustedAnchor",blocks},{"transactions",transactions},
   {"archiveBytes",archive_bytes},{"head",hex(Bytes(head.begin(),head.end()))},{"checkpointSequence",expected.sequence},{"checkpointDigest",hex(expected.digest)}};
@@ -70,7 +73,13 @@ namespace nano {
 Json audit_capella_database(const Genesis& genesis,const std::filesystem::path& path,const Json& request){
  auto number=[](const Json& value){return u64(quantity(value));};
  require(genesis.consensus=="beacon"&&genesis.evm_revision==EvmRevision::Shanghai,"Beacon Shanghai genesis required");
- require(request.is_object()&&request.size()==6,"request must contain profile, anchor, limits, expectedCheckpoint, maximumBlocks, maximumArchiveBytes");
+ require(request.is_object()&&(request.size()==6||(request.size()==7&&request.contains("requiredFinalized"))),"request must contain six audit fields and optional requiredFinalized");
+ std::optional<ConsensusCheckpoint> required_finalized;
+ if(request.contains("requiredFinalized")){
+  const auto& value=request.at("requiredFinalized");require(value.is_object()&&value.size()==2,"invalid required finalized checkpoint");
+  const auto text=value.at("root").get<std::string>();require(text.size()==66&&text.starts_with("0x"),"required finalized root must be canonical 32-byte hex");const auto bytes=unhex(text);require(bytes.size()==32&&hex(bytes)==text,"required finalized root must be canonical 32-byte hex");
+  ConsensusRoot root;std::copy(bytes.begin(),bytes.end(),root.begin());required_finalized=ConsensusCheckpoint{number(value.at("epoch")),root};
+ }
  auto bounded=[](const Json& reference,size_t maximum){
   require(reference.is_object()&&reference.size()==2&&maximum,"invalid file reference");
   const auto file=reference.at("file").get<std::string>();require(std::filesystem::is_regular_file(file)&&std::filesystem::file_size(file)<=maximum,"file size/type");
@@ -86,6 +95,6 @@ Json audit_capella_database(const Genesis& genesis,const std::filesystem::path& 
  const auto& token=request.at("expectedCheckpoint");require(token.is_object()&&token.size()==2,"external checkpoint required");
  const ForkCheckpointToken expected{number(token.at("sequence")),unhex(token.at("digest").get<std::string>())};
  ChainStore store(path,ChainStore::OpenMode::ReadOnly);store.bind_chain(genesis.chain_id,genesis.block.header.hash(),"beacon");
- return audit_capella_canonical_history(store,genesis.chain_id,genesis.block.header.hash(),rules,limits,initial,expected,number(request.at("maximumBlocks")),number(request.at("maximumArchiveBytes")));
+ return audit_capella_canonical_history(store,genesis.chain_id,genesis.block.header.hash(),rules,limits,initial,expected,number(request.at("maximumBlocks")),number(request.at("maximumArchiveBytes")),{},required_finalized);
 }
 }
