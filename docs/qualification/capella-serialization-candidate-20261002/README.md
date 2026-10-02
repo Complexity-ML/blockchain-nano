@@ -39,3 +39,28 @@ are accepted as retained evidence, not treated as a reason to weaken tests.
 Only then may the existing shared AMD64 build volume be recompiled. No new
 Docker image. Source identity is not runtime equivalence. Current ARM64 five
 cases passed, remaining cases still active at this preparation observation.
+
+## ARM64 terminal qualification
+
+10/10 pass, zero skips, CTest/container/post-test manifest exit 0; source,
+program and library hashes before/after are identical. 517.32 s total. Original
+timeouts preserved. Activation 90.9422 s, activation/restart 92.3815 s,
+automatic registration 93.1471 s, reindexed activation 111.639 s, reindexed exit
+110.093 s. Full raw outputs and manifests preserved; larger files gzip encoded
+with hashes of original data in RAW-SHA256SUMS.
+
+Terminal assertions: new validator votes three times after activation epoch 17,
+through slot 161; pending and first-vote restarts succeed, conflicting vote is
+rejected before signer, finality epoch 18. After a deposit reorg the local key
+resolves to index 65, signs nine votes, both owners reopen at finality epoch 20.
+Exit signed for old index 64 is rejected; exit at index 65 is automatically
+included and both owners reopen with the exact exit, other validator unchanged.
+This is bounded in-process lifecycle/storage qualification, synthetic time,
+no network transport for reindexed cases. No WAN or physical-failure claim.
+
+The guarded ARM64 full-regression controller has passed its terminal gate and
+started recompiling all P2P targets from this same source before the existing
+full-docker runner rebuilds the core and runs the complete configured registry.
+It reuses the image/build volume. Network/core preparation and full regression
+are not yet terminal. The AMD64 serializer qualification remains queued behind
+its still-active parent; no cross-architecture final-root equality inferred.

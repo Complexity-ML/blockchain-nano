@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="10"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="517"
+	timestamp="2026-10-02T04:02:38"
+	>
+	<testcase name="consensus_capella_queued_bls_changes" classname="consensus_capella_queued_bls_changes" time="1.98673" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_runtime"/>
+		</properties>
+		<system-out>{"assembledBodies":9,"beaconReadChecks":0,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":0,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":true,"localProposals":8,"localRandao":8,"migrated":false,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":true,"rejected":20,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"wireMessages":0,"withdrawals":2}
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_deposit_activation" classname="consensus_capella_deposit_activation" time="90.9422" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_runtime"/>
+		</properties>
+		<system-out>{"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+{"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+{"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+{"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+{"finalizedEpoch":3,"progressSlot":40,"signedVotes":264}
+{"finalizedEpoch":3,"progressSlot":41,"signedVotes":272}
+{"depositIndex":0,"depositProgressSlot":48,"finalizedEpoch":4}
+{"depositIndex":0,"depositProgressSlot":56,"finalizedEpoch":5}
+{"depositIndex":0,"depositProgressSlot":64,"finalizedEpoch":6}
+{"depositIndex":0,"depositProgressSlot":72,"finalizedEpoch":7}
+{"depositIndex":1,"depositProgressSlot":80,"finalizedEpoch":8}
+{"depositIndex":1,"depositProgressSlot":88,"finalizedEpoch":9}
+{"depositIndex":1,"depositProgressSlot":96,"finalizedEpoch":10}
+{"depositIndex":1,"depositProgressSlot":104,"finalizedEpoch":11}
+{"depositIndex":1,"depositProgressSlot":112,"finalizedEpoch":12}
+{"depositIndex":1,"depositProgressSlot":120,"finalizedEpoch":13}
+{"depositIndex":1,"depositProgressSlot":128,"fina...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_deposit_activation_restart" classname="consensus_capella_deposit_activation_restart" time="92.3815" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_runtime"/>
+		</properties>
+		<system-out>{"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+{"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+{"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+{"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+{"finalizedEpoch":3,"progressSlot":40,"signedVotes":264}
+{"finalizedEpoch":3,"progressSlot":41,"signedVotes":272}
+{"depositIndex":0,"depositProgressSlot":48,"finalizedEpoch":4}
+{"depositIndex":0,"depositProgressSlot":56,"finalizedEpoch":5}
+{"depositIndex":0,"depositProgressSlot":64,"finalizedEpoch":6}
+{"depositIndex":0,"depositProgressSlot":72,"finalizedEpoch":7}
+{"depositIndex":1,"depositProgressSlot":80,"finalizedEpoch":8}
+{"depositIndex":1,"depositProgressSlot":88,"finalizedEpoch":9}
+{"depositIndex":1,"depositProgressSlot":96,"finalizedEpoch":10}
+{"activationRestartPhase":"scheduled-pending","owner":0,"signedTarget":null,"slot":104}
+{"depositIndex":1,"depositProgressSlot":104,"finalizedEpoch":11}
+{"depositIndex":1,"depositProgressSlot":112,"finalizedEpoch":12}
+{"depositIndex":1,"deposit...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_deposit_auto_registration" classname="consensus_capella_deposit_auto_registration" time="93.1471" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_runtime"/>
+		</properties>
+		<system-out>{"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+{"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+{"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+{"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+{"finalizedEpoch":3,"progressSlot":40,"signedVotes":264}
+{"finalizedEpoch":3,"progressSlot":41,"signedVotes":272}
+{"depositIndex":0,"depositProgressSlot":48,"finalizedEpoch":4}
+{"depositIndex":0,"depositProgressSlot":56,"finalizedEpoch":5}
+{"depositIndex":0,"depositProgressSlot":64,"finalizedEpoch":6}
+{"depositIndex":0,"depositProgressSlot":72,"finalizedEpoch":7}
+{"depositIndex":1,"depositProgressSlot":80,"finalizedEpoch":8}
+{"depositIndex":1,"depositProgressSlot":88,"finalizedEpoch":9}
+{"depositIndex":1,"depositProgressSlot":96,"finalizedEpoch":10}
+{"depositIndex":1,"depositProgressSlot":104,"finalizedEpoch":11}
+{"depositIndex":1,"depositProgressSlot":112,"finalizedEpoch":12}
+{"depositIndex":1,"depositProgressSlot":120,"finalizedEpoch":13}
+{"depositIndex":1,"depositProgressSlot":128,"fina...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_competing_deposit_reorg" classname="consensus_capella_competing_deposit_reorg" time="12.7394" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_runtime"/>
+		</properties>
+		<system-out>{"observerRecords":15,"scenario":"deposit-reorg-progress","slot":8}
+{"observerRecords":31,"scenario":"deposit-reorg-progress","slot":16}
+{"observerRecords":47,"scenario":"deposit-reorg-progress","slot":24}
+{"observerRecords":63,"scenario":"deposit-reorg-progress","slot":32}
+{"observerRecords":79,"scenario":"deposit-reorg-progress","slot":40}
+{"observerRecords":95,"scenario":"deposit-reorg-progress","slot":48}
+{"activationQualified":false,"branches":2,"depositsPerBranch":2,"indexA":[64,65],"networkTransport":false,"observerReopens":2,"providerCalls":0,"registrySize":66,"scenario":"capella-competing-deposit-reorg","selectedBranches":2,"staleIndexRefused":true}
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_reindexed_validator_activation" classname="consensus_capella_reindexed_validator_activation" time="111.639" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_runtime"/>
+		</properties>
+		<system-out>{"observerRecords":15,"scenario":"deposit-reorg-progress","slot":8}
+{"observerRecords":31,"scenario":"deposit-reorg-progress","slot":16}
+{"observerRecords":47,"scenario":"deposit-reorg-progress","slot":24}
+{"observerRecords":63,"scenario":"deposit-reorg-progress","slot":32}
+{"observerRecords":79,"scenario":"deposit-reorg-progress","slot":40}
+{"observerRecords":95,"scenario":"deposit-reorg-progress","slot":48}
+{"activationQualified":false,"branches":2,"depositsPerBranch":2,"indexA":[64,65],"networkTransport":false,"observerReopens":2,"providerCalls":0,"registrySize":66,"scenario":"capella-competing-deposit-reorg","selectedBranches":2,"staleIndexRefused":true}
+{"activationEpoch":18446744073709551615,"finalizedEpoch":0,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":56}
+{"activationEpoch":18446744073709551615,"finalizedEpoch":0,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":64}
+{"activationEpoch":13,"finalizedEpoch":7,"newVotes":0,"scenario":"deposit-reorg-activation-progre...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_local_exits" classname="consensus_capella_local_exits" time="2.00167" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_operations"/>
+		</properties>
+		<system-out>{"cancellationChecked":true,"invalidOrDuplicateRejected":4,"scenario":"capella-local-exits","selected":1,"trialBudgetChecked":true}
+{"assembledBodies":9,"beaconReadChecks":0,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":0,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":false,"localProposals":8,"localRandao":8,"migrated":false,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":false,"rejected":20,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"wireMessages":0,"withdrawals":1}
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_queued_exits" classname="consensus_capella_queued_exits" time="2.27005" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_operations"/>
+		</properties>
+		<system-out>{"checkpointUnchanged":true,"queueEmpty":true,"rejected":["wrong-domain","wrong-fork","wrong-genesis","wrong-index","wrong-key","future-epoch","unknown-index","insufficient-tenure"],"scenario":"capella-exit-authentication-rejections"}
+{"capacityChecked":true,"consensusUnchangedOnAdmission":true,"duplicateIdempotent":true,"invalidRejected":true,"reopened":true,"scenario":"capella-queued-exits"}
+{"applicable":false,"reopened":false,"retained":true,"scenario":"capella-exit-reorg"}
+{"automaticSelection":true,"liveCheckpointUnchanged":true,"scenario":"capella-exit-reincluded","signedBlockAccepted":true}
+{"applicable":true,"reopened":true,"retained":true,"scenario":"capella-exit-reorg"}
+{"applicable":false,"reopened":true,"retained":true,"scenario":"capella-exit-reorg"}
+{"assembledBodies":9,"beaconReadChecks":0,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":0,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":false,"...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_exit_reindex" classname="consensus_capella_exit_reindex" time="110.093" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_recovery"/>
+		</properties>
+		<system-out>{"observerRecords":15,"scenario":"deposit-reorg-progress","slot":8}
+{"observerRecords":31,"scenario":"deposit-reorg-progress","slot":16}
+{"observerRecords":47,"scenario":"deposit-reorg-progress","slot":24}
+{"observerRecords":63,"scenario":"deposit-reorg-progress","slot":32}
+{"observerRecords":79,"scenario":"deposit-reorg-progress","slot":40}
+{"observerRecords":95,"scenario":"deposit-reorg-progress","slot":48}
+{"activationQualified":false,"branches":2,"depositsPerBranch":2,"indexA":[64,65],"networkTransport":false,"observerReopens":2,"providerCalls":0,"registrySize":66,"scenario":"capella-competing-deposit-reorg","selectedBranches":2,"staleIndexRefused":true}
+{"activationEpoch":18446744073709551615,"finalizedEpoch":0,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":56}
+{"activationEpoch":18446744073709551615,"finalizedEpoch":0,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":64}
+{"activationEpoch":13,"finalizedEpoch":7,"newVotes":0,"scenario":"deposit-reorg-activation-progre...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="consensus_checkpoint_json_canonical" classname="consensus_checkpoint_json_canonical" time="0.106486" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_local"/>
+		</properties>
+		<system-out>{"bellatrixVersions":[2,3,4,5],"boundRejections":3844,"byteComparisons":3584,"cancellations":1024,"capellaStoreSchemas":[1,2,3],"capellaVersions":[1,2,3,4],"passed":true}
+</system-out>
+	</testcase>
+</testsuite>
