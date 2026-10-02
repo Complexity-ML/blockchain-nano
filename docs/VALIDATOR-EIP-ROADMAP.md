@@ -6335,3 +6335,7 @@ Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régr
 ### 2026-10-02 — régression ARM2d terminale425/425
 
 [Registre complet et rapports](qualification/full-coherent-2d2764de-arm64-terminal-20261002/README.md) :425/425, zéro skip/échec,5895,09s ; sources et programmes inventoriés inchangés, JUnit exact, audits exits0. EEST5387 (4882 exécution/505 validation),317 fichiers, forkConformanceProven=false. Révision2d antérieure : ne qualifie pas les deltas0275/803, l'AMD ou une reprise WAN. Aucun statut EIP ni gate production/lancement clôturé.
+
+### 2026-10-02 — candidat803 : propriétaire natif et gates préparés
+
+[Contrôleurs et observation effective](qualification/coherent-80373152-release-gates-20261002/README.md) : build natif neuf démarré, qualification9+audits4 en attente ; driver completAMD attend le passage16/16 aux délais originaux avant tout build frais426. Gate WAN exécuté exit2 : sources exactes et parentARM425 vérifiés, six prérequis encore non acquis, aucun nouveau nœud WAN. ARM actuel cinq premiers tests passent (activation79,11/360 ; restart80,34/360), sélection non terminale. Aucun gain causal, runtime promu, EIP ou critère production/lancement clôturé.

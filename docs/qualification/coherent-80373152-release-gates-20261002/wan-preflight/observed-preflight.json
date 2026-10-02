@@ -1,0 +1,62 @@
+{
+  "runtimeRevision": "803731526c33111ea128bf6fddf5d7323fb5b220",
+  "readyForBinaryAttestation": false,
+  "newWanNodesStarted": false,
+  "candidateFullArmProven": false,
+  "checks": [
+    {
+      "gate": "candidate-source-identity",
+      "verified": true,
+      "details": {
+        "revision": "803731526c33111ea128bf6fddf5d7323fb5b220",
+        "cleanCandidates": 2
+      }
+    },
+    {
+      "gate": "prior-arm-full-425",
+      "verified": true,
+      "details": {
+        "registered": 425,
+        "passed": 425,
+        "skipped": 0,
+        "revision": "2d2764de",
+        "candidateFullArmProven": false,
+        "onlyRuntimeChanges": [
+          "src/consensus_capella_snapshot_json.hpp",
+          "src/consensus_capella_store_snapshot.cpp"
+        ],
+        "scope": "prior full regression; snapshot delta requires current ARM selected and current AMD full"
+      }
+    },
+    {
+      "gate": "candidate-arm-selected-16",
+      "verified": false,
+      "reason": "[Errno 2] No such file or directory: '/tmp/nano-coherent-80373152-arm64-test-reports-20261002/ctest-exit.txt'"
+    },
+    {
+      "gate": "candidate-amd-selected-16",
+      "verified": false,
+      "reason": "Observation failed: ssh exit 1: cat: /home/ubuntu/nano-coherent-80373152-amd64-test-reports-20261002/ctest-exit.txt: No such file or directory\n"
+    },
+    {
+      "gate": "candidate-amd-full-426",
+      "verified": false,
+      "reason": "Observation failed: ssh exit 1: cat: /home/ubuntu/nano-full-coherent-80373152-amd-reports-20261002/ctest-exit.txt: No such file or directory\n"
+    },
+    {
+      "gate": "candidate-native-9",
+      "verified": false,
+      "reason": "[Errno 2] No such file or directory: '/tmp/nano-coherent-80373152-native-test-reports-20261002/ctest-exit.txt'"
+    },
+    {
+      "gate": "candidate-native-offline-4",
+      "verified": false,
+      "reason": "[Errno 2] No such file or directory: '/tmp/nano-coherent-80373152-native-offline-reports-20261002/result-audit.json'"
+    },
+    {
+      "gate": "candidate-amd-offline-4",
+      "verified": false,
+      "reason": "Observation failed: ssh exit 1: cat: /home/ubuntu/nano-coherent-80373152-amd64-offline-reports-20261002/result-audit.json: No such file or directory\n"
+    }
+  ]
+}
