@@ -31,7 +31,8 @@ def full(arch):
  assert out['registered']==out['reported']==427 and not out['failed'] and out['skipped']==0
  eest=json.loads(call(['/opt/homebrew/bin/node',str(control/'audit-eest-ctest.mjs'),str(p/'LastTest.log')]))
  assert eest['totalMatched']==5387 and eest['executionMatched']==4882 and eest['validationMatched']==505 and eest['files']==317
- return {'fullAudit':out,'boundedEest':eest}
+ fixtureAudit=json.loads(call([sys.executable,str(control/'eest-fixture-audit.py'),'/tmp/nano-snapshot-account-view-candidate-20261002',str(reference),str(p/'LastTest.log')]))
+ return {'fullAudit':out,'boundedEest':eest,'exactFixtureAudit':fixtureAudit}
 
 def amd_signed():
  p=Path('/tmp/nano-full-coherent-0f53b42d-amd64-offline-host-reports-20261002')

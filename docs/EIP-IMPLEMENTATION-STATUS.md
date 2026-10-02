@@ -5852,3 +5852,7 @@ Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régr
 ### 2026-10-02 — Lanceur de restauration raccordé aux builds courants
 
 [Lanceur et refus réel](qualification/runtime-wan-evidence-gate-20261002/README.md) : nouveaux chemins complets ARM64/AMD64, source native `016ab243` et Docker `0f53b42d` enregistrées séparément, manifests exacts et 205 inputs natifs exigés. Exécution exit 2 avant création de nœuds : preuves terminales encore manquantes. Voie positive/attestation/restauration WAN non qualifiées ; campagnes existantes continuent. Aucun critère de production ni statut EIP clôturé.
+
+### 2026-10-02 — Audit EEST lié aux fixtures exactes
+
+[Auditeur et contrôles adverses](qualification/runtime-wan-evidence-gate-20261002/README.md) : 317 SHA-256 de fixtures, 5 387 identités exactes et racines/logs/erreurs/gas disponibles liés au corpus, au-delà des compteurs. Rapport historique exercé sans relancer l’EVM, sept altérations refusées ; aucune qualification courante par héritage. Gate des campagnes complètes renforcé, exit 2 faute de preuves terminales actuelles. Campagnes continuent ; toutes les limites de conformité/forks/WAN/production restent ouvertes.
