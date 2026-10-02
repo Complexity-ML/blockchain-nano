@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="3"
+	failures="1"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="360"
+	timestamp="2026-10-02T05:43:22"
+	>
+	<testcase name="consensus_capella_reindexed_validator_activation" classname="consensus_capella_reindexed_validator_activation" time="360.026" status="fail">
+		<failure message="Timeout"/>
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_runtime"/>
+		</properties>
+		<system-out>{"observerRecords":15,"scenario":"deposit-reorg-progress","slot":8}
+{"observerRecords":31,"scenario":"deposit-reorg-progress","slot":16}
+{"observerRecords":47,"scenario":"deposit-reorg-progress","slot":24}
+{"observerRecords":63,"scenario":"deposit-reorg-progress","slot":32}
+{"observerRecords":79,"scenario":"deposit-reorg-progress","slot":40}
+{"observerRecords":95,"scenario":"deposit-reorg-progress","slot":48}
+{"activationQualified":false,"branches":2,"depositsPerBranch":2,"indexA":[64,65],"networkTransport":false,"observerReopens":2,"providerCalls":0,"registrySize":66,"scenario":"capella-competing-deposit-reorg","selectedBranches":2,"staleIndexRefused":true}
+{"activationEpoch":18446744073709551615,"finalizedEpoch":0,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":56}
+{"activationEpoch":18446744073709551615,"finalizedEpoch":0,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":64}
+{"activationEpoch":13,"finalizedEpoch":7,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":72}
+{"activationEpoch":13,"finalizedEpoch":8,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":80}
+{"activationEpoch":13,"finalizedEpoch":9,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":88}
+{"activationEpoch":13,"finalizedEpoch":10,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":96}
+{"activationEpoch":13,"finalizedEpoch":11,"newVotes":0,"scenario":"deposit-reorg-activation-progress","slot":104}
+{"activationEpoch":13,"finalizedEpoch":12,"newVotes":1,"scenario":"deposit-reorg-activation-progress","slot":112}
+{"activationEpoch":13,"finalizedEpoch":13,"newVotes":2,"scenario":"deposit-reorg-activation-progress","slot":120}
+{"activationEpoch":13,"finalizedEpoch":14,"newVotes":3,"scenario":"deposit-reorg-activation-progress","slot":128}
+{"activationEpoch":13,"finalizedEpoch":15,"newVotes":4,"scenario":"deposit-reorg-activation-progress","slot":136}
+{"activationEpoch":13,"finalizedEpoch":16,"newVotes":5,"scenario":"deposit-reorg-activation-progress","slot":144}
+{"activationEpoch":13,"finalizedEpoch":17,"newVotes":6,"scenario":"deposit-reorg-activation-progress","slot":152}
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_audit_finalized_ancestry" classname="consensus_capella_audit_finalized_ancestry" time="0.00918846" status="run">
+		<properties>
+			<property name="cmake_labels" value="audit;capella;consensus"/>
+		</properties>
+		<system-out>12 actual ancestry-helper cases passed; no signature or full replay qualification
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_snapshot_canonical_hex" classname="consensus_capella_snapshot_canonical_hex" time="0.00214039" status="run">
+		<properties>
+			<property name="cmake_labels" value="capella;consensus;snapshot"/>
+		</properties>
+		<system-out>773 mutation/format refusals; all byte values, empty input and bounded cancellation passed
+</system-out>
+	</testcase>
+</testsuite>

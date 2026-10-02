@@ -1,0 +1,135 @@
+{
+  "backtraceGraph" : 
+  {
+    "commands" : 
+    [
+      "add_test"
+    ],
+    "files" : 
+    [
+      "/work/CMakeLists.txt"
+    ],
+    "nodes" : 
+    [
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 1782,
+        "parent" : 0
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 1829,
+        "parent" : 2
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 1858,
+        "parent" : 4
+      }
+    ]
+  },
+  "kind" : "ctestInfo",
+  "tests" : 
+  [
+    {
+      "backtrace" : 1,
+      "command" : 
+      [
+        "/build/coherent-12ad9eb5-amd64-20261002/nano-capella-transition-tests",
+        "--deposit-reorg-activation"
+      ],
+      "name" : "consensus_capella_reindexed_validator_activation",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_consensus_runtime"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 360.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/coherent-12ad9eb5-amd64-20261002"
+        }
+      ]
+    },
+    {
+      "backtrace" : 3,
+      "command" : 
+      [
+        "/build/coherent-12ad9eb5-amd64-20261002/nano-capella-audit-ancestry-tests"
+      ],
+      "name" : "consensus_capella_audit_finalized_ancestry",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "audit",
+            "capella",
+            "consensus"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 60.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/coherent-12ad9eb5-amd64-20261002"
+        }
+      ]
+    },
+    {
+      "backtrace" : 5,
+      "command" : 
+      [
+        "/build/coherent-12ad9eb5-amd64-20261002/nano-capella-snapshot-hex-tests"
+      ],
+      "name" : "consensus_capella_snapshot_canonical_hex",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "capella",
+            "consensus",
+            "snapshot"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 60.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/build/coherent-12ad9eb5-amd64-20261002"
+        }
+      ]
+    }
+  ],
+  "version" : 
+  {
+    "major" : 1,
+    "minor" : 0
+  }
+}
