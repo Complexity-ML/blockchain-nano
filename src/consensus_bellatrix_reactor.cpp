@@ -1,3 +1,4 @@
+#include "consensus_checkpoint_json.hpp"
 #include "nano/consensus_bellatrix_reactor.hpp"
 #include <type_traits>
 #include "nano/chain.hpp"
@@ -50,7 +51,7 @@ std::string durable_snapshot(const BellatrixForkStore& store,const BellatrixSign
   if(cancel)cancel();archive_require(bytes&&id!=store.timed.view.anchor&&store.blocks.contains(id)&&bytes->size()<=rules.transition.consensus.maximum_block_bytes&&bytes->size()<=limits.envelope_bytes/2-total);total+=bytes->size();
   blocks.push_back(Json::array({hex(Bytes(id.begin(),id.end())),hex(*bytes)}));
  }
- Json document{{"format",!exits.empty()?"nano-bellatrix-durable-v5":!slashings.empty()?"nano-bellatrix-durable-v4":votes.empty()?"nano-bellatrix-durable-v2":"nano-bellatrix-durable-v3"},{"store",Json::parse(encoded)},{"signedBlocks",std::move(blocks)}};
+ Json document{{"format",!exits.empty()?"nano-bellatrix-durable-v5":!slashings.empty()?"nano-bellatrix-durable-v4":votes.empty()?"nano-bellatrix-durable-v2":"nano-bellatrix-durable-v3"},{"signedBlocks",std::move(blocks)}};
  if(!votes.empty()||!slashings.empty()||!exits.empty()){
   archive_require(votes.size()<=limits.messages);Json messages=Json::array();
   const auto epoch=store.timed.view.current_epoch,oldest=epoch?epoch-1:0;
@@ -71,7 +72,7 @@ std::string durable_snapshot(const BellatrixForkStore& store,const BellatrixSign
   for(const auto& [id,record]:exits){if(cancel)cancel();archive_require(record&&record->ssz.size()==112&&store.blocks.contains(record->admission_root)&&144<=limits.envelope_bytes/2-total);total+=144;list.push_back(Json::array({hex(Bytes(id.begin(),id.end())),hex(Bytes(record->admission_root.begin(),record->admission_root.end())),hex(record->ssz)}));}
   document["signedExits"]=std::move(list);
  }
- auto result=document.dump();archive_require(result.size()<=limits.envelope_bytes);if(cancel)cancel();return result;
+ return checkpoint_detail::durable_json(std::move(document),encoded,limits.envelope_bytes,cancel);
 }
 struct Restored {BellatrixForkStore store;std::shared_ptr<const BellatrixSignedBlockArchive> blocks;std::shared_ptr<const BellatrixSignedVoteArchive> votes,slashings;std::shared_ptr<const BellatrixSignedExitArchive> exits;};
 Restored restore_durable_snapshot(std::string_view bytes,const Bytes& digest,const BellatrixForkBlockRules& rules,const BellatrixStoreSnapshotLimits& limits,const std::function<void()>& cancel){

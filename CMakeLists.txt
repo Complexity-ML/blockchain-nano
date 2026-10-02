@@ -1831,3 +1831,9 @@ set_tests_properties(consensus_capella_http_admission_queue PROPERTIES TIMEOUT 1
 add_executable(nano-rpc-load-window-tests tests/test_rpc_load_window.cpp)
 add_test(NAME rpc_load_window COMMAND nano-rpc-load-window-tests)
 set_tests_properties(rpc_load_window PROPERTIES TIMEOUT 10 LABELS "qualification_rpc_load_control")
+
+# Canonical durable encoding must retain byte-identical checkpoint digests.
+add_executable(nano-checkpoint-json-tests tests/test_checkpoint_json.cpp)
+target_include_directories(nano-checkpoint-json-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
+add_test(NAME consensus_checkpoint_json_canonical COMMAND nano-checkpoint-json-tests)
+set_tests_properties(consensus_checkpoint_json_canonical PROPERTIES TIMEOUT 30 LABELS "qualification_storage_local")
