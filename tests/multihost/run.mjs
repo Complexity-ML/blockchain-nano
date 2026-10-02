@@ -23,7 +23,7 @@ import {restoredFinalityAuditRequest,verifyRestoredFinalityAudit} from './restor
 import {startFinalityMonitor} from './monitor.mjs';
 import {qualifyAlertFault} from './alert-fault.mjs';
 import {selectCandidates,verifyPackagedImage} from './candidate-images.mjs';
-import {selectBuildPaths} from './build-paths.mjs';
+import {selectHostBuildPaths,selectRemoteSourceRepository,remoteDockerArgument} from './build-paths.mjs';
 import {advanceRestartConfiguration} from './restart-pins.mjs';
 import {decodeHttpResponse,httpStatusTrailer} from './http-response.mjs';
 import {hashHarness} from './harness-manifest.mjs';
@@ -34,7 +34,9 @@ if(!/^[a-z_][a-z0-9_-]*@[0-9.]+$/.test(target??'')||!(/^[0-9a-f]{40}$/).test(rev
 const monitor=process.env.NANO_TEST_FINALITY_MONITOR==='1';
 const alertDelivery=process.env.NANO_TEST_ALERT_DELIVERY==='1';
 const buildVolume=process.env.NANO_TEST_BUILD_VOLUME==='1';
-const buildPaths=selectBuildPaths(buildVolume,process.env.NANO_TEST_BUILD_SUBDIRECTORY);
+const hostBuildPaths=selectHostBuildPaths(buildVolume,process.env.NANO_TEST_BUILD_SUBDIRECTORY,process.env.NANO_TEST_BUILD_SUBDIRECTORY_ARM64,process.env.NANO_TEST_BUILD_SUBDIRECTORY_AMD64);
+const buildPaths=hostBuildPaths.arm64;
+const remoteRepository=selectRemoteSourceRepository(target.split('@')[0],process.env.NANO_TEST_REMOTE_SOURCE_REPOSITORY);
 const candidateFile=process.env.NANO_TEST_CANDIDATE_MANIFEST;
 if(candidateFile&&buildVolume)throw Error('Select packaged images or build volume, not both');
 const candidates=candidateFile?selectCandidates(JSON.parse(await readFile(resolve(candidateFile),'utf8')),revision):null;
@@ -69,7 +71,8 @@ if(alertDelivery&&(!monitor||!candidates||fork!=='capella'||partition||asymmetri
 const remoteRoot=`/home/${target.split('@')[0]}/nano-qualification-${id}`,ip=target.split('@')[1];
 const quote=s=>"'"+String(s).replaceAll("'","'\\''")+"'";
 const sh=async (args,timeout=30000)=>(await exec('ssh',['-o','BatchMode=yes','-o','ConnectTimeout=8',target,args.map(quote).join(' ')],{timeout,maxBuffer:8*1024*1024})).stdout;
-const docker=async(args,onRemote=false,timeout=30000)=>onRemote?sh(['sudo','-n','docker',...args.map(a=>a===image?remoteImage:a)],timeout):(await exec('docker',args,{timeout,maxBuffer:8*1024*1024})).stdout;
+const remoteArtifact=a=>remoteDockerArgument(a,image,remoteImage,buildVolume,hostBuildPaths);
+const docker=async(args,onRemote=false,timeout=30000)=>onRemote?sh(['sudo','-n','docker',...args.map(remoteArtifact)],timeout):(await exec('docker',args,{timeout,maxBuffer:8*1024*1024})).stdout;
 const captureLogs=async(name,onRemote)=>{
  const args=onRemote?['ssh','-o','BatchMode=yes',target,['sudo','-n','docker','logs',name].map(quote).join(' ')+' 2>&1']:['docker','logs',name];
  const result=await exec(args[0],args.slice(1),{timeout:30000,maxBuffer:8*1024*1024});
@@ -79,7 +82,7 @@ const json=async p=>JSON.parse(await readFile(p,'utf8'));
 // Preflight before creating fixtures, so compilation cannot age the genesis.
 const artifacts=[];
 await exec('git',['diff','--quiet',revision,'--','src','include','network','third_party']);
-await sh(['git','-C',`/home/${target.split('@')[0]}/blockchain-nano-git`,'diff','--quiet',revision,'--','src','include','network','third_party']);
+await sh(['git','-C',remoteRepository,'diff','--quiet',revision,'--','src','include','network','third_party']);
 for(const onRemote of [false,true]){
  const info=JSON.parse(await docker(['image','inspect',image,'--format','{{json .}}'],onRemote));
  if((!buildVolume&&info.Config.Labels?.['org.opencontainers.image.revision']!==revision)||info.Architecture!==(onRemote?'amd64':'arm64'))throw Error('Build revision/architecture mismatch');
@@ -123,7 +126,7 @@ try{
  if(rotation)await log({event:'rotation-audit-binary',sha256:createHash('sha256').update(await readFile(join(repo,'build-release/nano-capella-rotation-audit'))).digest('hex')});
  const harness=await hashHarness(repo);
  if(monitor&&(fork!=='capella'||!privateTransport||partition||asymmetric||backupRestore||rotation||boundedLoad))throw Error('Monitor qualification requires standalone private Capella campaign');
- await log({event:'harness',monitor,alertDelivery,partition,asymmetric,rotation,boundedLoad,backupRestore,pinnedRestart,partitionCuts,majorityIsland,majorityCutMs,faultProgress,fork,buildVolume,buildPaths:buildVolume?buildPaths:null,packagedImages:Boolean(candidates),artifacts,sha256:harness});
+ await log({event:'harness',monitor,alertDelivery,partition,asymmetric,rotation,boundedLoad,backupRestore,pinnedRestart,partitionCuts,majorityIsland,majorityCutMs,faultProgress,fork,buildVolume,buildPaths:buildVolume?hostBuildPaths:null,remoteRepository,packagedImages:Boolean(candidates),artifacts,sha256:harness});
  await log({event:'binaries',revision,nanoSha256:createHash('sha256').update(await readFile(binary)).digest('hex'),p2pSha256:createHash('sha256').update(await readFile(p2p)).digest('hex')});
  const assets=join(output,'assets'),prepared=join(output,'prepared');
  await exec(join(repo,`build-release/nano-${fork}-transition-tests`),[fork==='capella'?'--export-network':'--export-kurtosis',assets],{timeout:30000});
@@ -275,7 +278,7 @@ try{
   await exec('scp',['-q',join(restoreDirectory,'node.json'),`${target}:${remoteRoot}/restore-config/node.json`],{timeout:10000});
   await exec('scp',['-q',join(restoreDirectory,'audit-request.json'),join(restoreDirectory,'stop-receipt.json'),`${target}:${restoreProof}/`],{timeout:10000});
   const active=(await docker(['ps','--filter','volume='+remote+'-data','--format','{{.Names}}'],true)).trim();if(active)throw Error('Backup source volume still used by a running container');
-  await docker(['run','--rm','--network','none',...descriptorArgs,...artifactMount,'--cpus','2','--memory','3g','--mount',`type=volume,src=${remote}-data,dst=/source,readonly`,'--mount',`type=bind,src=${remoteRoot}/config,dst=/config,readonly`,'--mount',`type=bind,src=${restoreProof},dst=/proof`,'--mount',`type=bind,src=/home/${target.split('@')[0]}/blockchain-nano-git,dst=/work,readonly`,image,'bash','/work/tests/multihost/backup-restore.sh','/source','/proof/backup','/config/genesis.json','/proof/audit-request.json',buildPaths.nano],true,90000);
+  await docker(['run','--rm','--network','none',...descriptorArgs,...artifactMount,'--cpus','2','--memory','3g','--mount',`type=volume,src=${remote}-data,dst=/source,readonly`,'--mount',`type=bind,src=${remoteRoot}/config,dst=/config,readonly`,'--mount',`type=bind,src=${restoreProof},dst=/proof`,'--mount',`type=bind,src=${remoteRepository},dst=/work,readonly`,image,'bash','/work/tests/multihost/backup-restore.sh','/source','/proof/backup','/config/genesis.json','/proof/audit-request.json',buildPaths.nano],true,90000);
   const audit=JSON.parse(await sh(['sudo','-n','cat',restoreProof+'/backup/audit.json']));if(audit.canonicalHistoryVerified!==true)throw Error('Restored canonical audit not verified');
   const metadata=['source-before.sha256','source-after.sha256','restored-before.sha256','restored-after.sha256','archive.sha256','inputs.sha256','audit.json','passed.txt'];
   for(const name of metadata)await writeFile(join(restoreDirectory,name),await sh(['sudo','-n','cat',restoreProof+'/backup/'+name]));
