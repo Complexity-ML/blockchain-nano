@@ -3107,3 +3107,8 @@ Image Mac figée `sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e7
 ### 2026-10-02 — Matériel de restauration complet conservé et re-vérifié
 
 Fixture locale hors Docker : 313 fichiers / 121 445 250 octets, empreintes identiques aux manifests arrêtés source/restore historiques ; archive complète vérifiée. Chaîne, témoin cœur, 21 paires journal/témoin et clé P2P présents. Genesis et requête externe séparée retrouvés sur hôte et empreintes originales correspondantes ; anciens chemins/binaire Docker disparus après reset. [Inventaire](qualification/surviving-full-backup-inventory-20261002/README.md). Conservation des bytes prouvée, pas une restauration contre la nouvelle candidate, concordance de tous les engagements indépendants, reprise des duties ou finalité WAN. Tous les gates restants maintenus.
+
+
+### 2026-10-02 — Contrôle terminal de la candidate RPC préparé
+
+[Contrôle indépendant](qualification/rpc-terminal-review-control-20261002/README.md) adapté à `d1597d9a` avec référence exacte des 15 315 sources et critères inchangés : 427 cas uniques exécutés, aucun échec/skip, délais originaux, sources et programmes stables. 15 contrôles synthétiques passent ; le rapport ARM64 réel incomplet est refusé comme attendu. Aucun résultat terminal, supplément réseau ou lancement WAN encore acquis ; tous les gates et échecs historiques restent ouverts.
