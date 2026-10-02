@@ -2813,3 +2813,392 @@ Nouvelle couverture du candidat figé 082143a2 : le backend BN128 portable const
 ### Intégrité des campagnes complètes après échec — 2026-10-01
 
 Les scripts de qualification capturent et comparent désormais les binaires après CTest, contrôlent les sources, et conservent tous les audits même lorsqu’un test échoue. Nouveau vérificateur EEST sur `LastTest.log` complet ; onze nouveaux contrôles (dont mutations de source/binaire et exit CTest 8) passent, 22 avec les contrôles précédents. Aucun moteur modifié ni campagne complète rejouée ; la campagne aacc56da en cours reste figée sur son script d’origine. [Correction et limites](qualification/full-postrun-audit-20261001/README.md).
+
+### CI terminale et candidat d’intégration préparé — 2026-10-01
+
+CI f62236a4 : 257 contrôles opérations et neuf tests C++ sélectionnés passent sans ignoré ; CI 47ba41a1 : 268 contrôles opérations passent sans ignoré. Les jobs non demandés ne sont pas des preuves réseau ou C++. [Archives exactes](qualification/ci-20261001/terminal-f62236a4-and-47ba41a1/README.md).
+
+Branche isolée c10426b2 : onze fichiers moteur/test/CMake identiques au candidat 082143a2, rapporteur EEST corrigé conservé. Régression complète ARM64 préparée conditionnellement à la réussite terminale des 20 tests AMD64 et à la fin contrôlée de l’ancienne campagne 416. Aucun moteur promu sur main ni régression intégrée complète revendiquée. [Préparation et empreintes](qualification/production-evm-integration-20261001/README.md). Tous les critères originaux restent ouverts.
+
+### Régression complète précédente terminée — 2026-10-01
+
+Révision aacc56da Docker ARM64 : **405/416 réussites, onze échecs identifiés, zéro ignoré**, exit CTest 8. Aucun nouvel échec : admission HTTP, huit scénarios RPC de charge, deux anciennes attentes de trame volumineuse. Observation indépendante après terminaison : 196 empreintes exécutables et sources suivies inchangées ; cette observation ne vient pas rétroactivement du script d’origine. EEST : 4 882 exécutions et 505 validations, total 5 387. Journaux bruts conservés sous compression avec empreintes. [Campagne terminale et limites](qualification/full-regression-aacc56da-20261001/README.md). Les réparations/candidats plus récents restent qualifiés séparément, sans effacer cet échec complet ni fermer les gates globaux.
+
+### Candidat moteur portable qualifié et régression intégrée lancée — 2026-10-01
+
+082143a2 termine **20/20 tests AMD64**, zéro ignoré, onze empreintes exécutables inchangées, exit 0 sans OOM. Les huit scénarios RPC de charge passent en Paris/Shanghai avec délais et capacités inchangés. EEST : 4 882 exécutions + 505 validations, total 5 387 sur 317 fichiers. Le même périmètre ARM64 avait déjà passé 20/20. [Preuves et limites](qualification/evm-stack-slots-20261001/README.md). Les 14 vecteurs BN128 GNU/LLVM passent aussi sur AMD64, après la charge RPC ; un nœud GNU complet n’est pas qualifié. [Toolchains](qualification/bn-pairing-portability-20261001/README.md).
+
+Les préconditions exactes sont satisfaites et la reconstruction/régression complète du candidat intégré c10426b2 démarre sur Docker ARM64 et AMD64, sans nouvelle image ni nouveau serveur. Les audits VPS sont coordonnés depuis le Mac car Node n’est pas installé sur l’hôte VPS. [Candidat et provenance](qualification/production-evm-integration-20261001/README.md). Moteur encore sur branche isolée ; aucun résultat complet intégré ni gate global de production déclaré acquis.
+
+### Assemblage depuis le répertoire qualifié — 2026-10-01
+
+Le script de livraison sélectionne désormais le sous-répertoire du build qualifié sans écraser les anciens exécutables ; six arguments conservent le chemin historique. Huit nouveaux contrôles passent, ainsi que deux exports réels Docker sur fichiers factices : trois fichiers réguliers attendus et lien symbolique refusé. Aucun nouveau runtime assemblé ou service déployé. Le README du staking historique est rectifié (plafond 1 000 déjà supprimé du contrat, pagination existante, distinction Beacon). [Preuves et limites](qualification/candidate-build-path-20261001/README.md). Les campagnes intégrées c10426b2 restent figées ; aucune clôture de gate global.
+
+### 2026-10-02 — Échecs ouverts du candidat intégré, campagnes en cours
+
+La campagne ARM64 c10426b2 révèle six échecs de durée RPC et un échec
+`consensus_bellatrix_voluntary_exit_pruning` : accès à l'exécution refusé avant
+vérification du checkpoint. Le saut d'une barrière de synchronisation du banc
+est une hypothèse, pas une cause établie.
+[Observation partielle conservée](qualification/production-evm-integration-20261001/in-progress-failures-20261002.json).
+Les campagnes ARM64/AMD64 restent actives et figées ; le bilan terminal,
+les audits de sources/binaires et les résultats AMD64 restent requis.
+La branche `qualification/bellatrix-failure-diagnostics-20261002` prépare la
+conservation de la première erreur Bellatrix et son exposition dans le banc :
+contrôles syntaxiques ARM64 seulement, aucune exécution qualifiée ni intégration
+du moteur dans main. Aucun gate de production, profil réseau ou statut EIP clos.
+
+### 2026-10-02 — Régression intégrée ARM64 terminale : 410/417, sept échecs
+
+Candidat isolé c10426b2 : 417 résultats sur 417 enregistrés, 410 réussites,
+sept échecs, zéro ignoré ; CTest exit 8 conservé, durée 6 959,14 s.
+197 empreintes exécutables et manifestes de sources inchangés avant/après.
+EEST : 4 882 exécutions + 505 validations, 5 387 résultats sur 317 fichiers ;
+conformité complète de fork non prouvée. Audit global exit 1 conservé :
+les sept tests échoués sont bloquants, les autres audits ont réussi.
+[Preuves terminales et empreintes](qualification/production-evm-integration-20261001/full-arm64-terminal/README.md).
+Les six échecs de durée RPC et l'élagage des sorties Bellatrix restent à
+corriger/qualifier ; le moteur n'est pas promu dans main. Campagne AMD64
+encore active ; nouvelles qualifications réseau et exigences de production
+inchangées. Les observations partielles précédentes restent historiques.
+
+### 2026-10-02 — Correctif RPC qualifié sur une sélection ARM64 ; cause Bellatrix révélée
+
+La révision isolée a00ff7d0 a exécuté les 16 cas enregistrés : 15 réussites,
+un échec, zéro ignoré, CTest exit 8. Les six scénarios de durée RPC auparavant
+échoués passent, avec les contrôles RPC réussis/imbriqués, le cœur, la fenêtre
+de charge et le rejet des discontinuités d'horloge. Sources et exécutables
+inchangés avant/après. Ce résultat ne remplace pas la régression intégrale
+c10426b2 ni une qualification AMD64/WAN du correctif.
+[Résultats et diagnostic conservés](qualification/bellatrix-pruning-clock-barrier-20261002/README.md).
+L'observateur Bellatrix échoue sur un saut simulé de 12 000 ms avec une limite
+de 6 000 ms : le scénario omet la synchronisation du slot d'inclusion de la
+sortie. Le correctif b0eb5ba1 ajoute cette barrière ; sa validation d'exécution
+est en cours, sans augmentation de la tolérance ni changement des règles.
+Les matrices EIP et tous les critères de production restent inchangés.
+Le moteur et les correctifs demeurent sur leurs branches de qualification.
+
+### 2026-10-02 — Barrière d'horloge Bellatrix qualifiée sur cinq cas ARM64
+
+Le correctif b0eb5ba1, testé dans la source propre 1ac57e25, passe les cinq
+scénarios enregistrés : sortie locale, propagation P2P locale, réorganisation,
+élagage après finalité et garde d'horloge. CTest exit 0, zéro ignoré, 31,69 s ;
+sources et empreintes exécutables inchangées, audits de résultats/inventaire
+réussis. La limite d'un slot est conservée ; seule la synchronisation du
+scénario à l'inclusion de la sortie est ajoutée.
+[Preuves du correctif ARM64](qualification/bellatrix-pruning-clock-barrier-20261002/barrier-arm64/README.md).
+L'échec initial reste archivé. Les six cas RPC et ce correctif ont désormais
+une réussite ciblée ARM64, mais la qualification AMD64 et la régression du
+candidat final cohérent restent ouvertes, ainsi que les exigences WAN et de
+production. Aucun moteur/correctif n'est encore promu dans main et aucun
+statut global EIP n'est relevé sur la seule base de ces résultats.
+
+### 2026-10-02 — Deux échecs AMD64 supplémentaires restent ouverts
+
+La campagne complète c10426b2 est encore active. Outre les deux cas RPC
+soutenus, elle observe un échec consensus_altair_libp2p au payload maximal et
+un timeout consensus_bellatrix_partition_simulation à 240,03 s. Cette dernière
+trace atteint une finalité commune 9 au slot 88, sans finir les 14 époques
+prévues : ni récupération complète qualifiée, ni blocage de protocole démontré.
+[Observation partielle et diagnostic](qualification/altair-bound-diagnostics-20261002/README.md).
+La branche de diagnostic f92533e9 conserve réponse, tailles, admission,
+checkpoint et huit raisons de fin de flux au maximum. Syntaxe ARM64 Release
+validée, exécution AMD64 en attente ; aucun seuil relevé ni règle assouplie.
+Les 19 cas du correctif RPC/Bellatrix sur 1ac57e25 attendent la fin du conteneur
+initial et ses résultats/empreintes avant compilation. Ils ne couvrent pas ces
+deux nouveaux échecs. Régression terminale, candidat cohérent, gates WAN et
+production globale restent ouverts ; matrices EIP inchangées.
+
+### 2026-10-02 — Manifeste des programmes auxiliaires renforcé
+
+L'ancien manifeste ARM64 c10426b2 vérifie 197 empreintes avant/après, mais
+omet nano, nano-altair-probe et nano-finality-crash-fixture fournis en arguments.
+Le nouveau collecteur les inclut et permet de déclarer explicitement nano ;
+cinq contrôles macOS passent, et l'inspection Docker Linux en lecture seule
+retrouve les 197 empreintes inchangées plus ces trois programmes. Les fichiers
+de données marqués exécutables sont distingués par leur en-tête.
+[Preuves et limites du collecteur](qualification/executable-arguments-manifest-20261002/README.md).
+Aucune intégrité avant/après des auxiliaires anciens n'est prouvée rétroactivement.
+Les campagnes en cours gardent leurs sources figées ; leur périmètre historique
+reste exact. Les prochains runs complets utiliseront le manifeste renforcé.
+Il ne découvre pas toutes les bibliothèques ou les programmes dont le chemin
+est incorporé dans le code compilé. Gates de runtime/production et matrices EIP
+inchangées ; aucune réussite globale déduite de ces contrôles d'outillage.
+
+### 2026-10-02 — CI du collecteur terminale, 285/285 contrôles
+
+Run GitHub 36941560281, source daab685d : opérations 285/285 réussies,
+zéro échec/annulation/ignoré, incluant les cinq nouveaux contrôles du manifeste.
+Révision de l'artifact et du run concordantes ; rapports bruts et empreintes
+[archivés](qualification/ci-20261002/terminal-daab685d/README.md).
+Jobs cœur/réseau non demandés par le filtre et ignorés : aucune qualification
+du runtime, d'un fork ou de la production déduite. La régression AMD64 c10426b2
+poursuit ses cas Capella avec ses sources figées et son périmètre de manifeste
+historique ; les quatre échecs connus et les critères originaux restent ouverts.
+
+### 2026-10-02 — Diagnostic Altair AMD64 en attente, moteur c104 conservé
+
+Le contrôle [archivé](qualification/altair-bound-diagnostics-20261002/c104-runtime-control/README.md)
+attend la fin de la campagne complète puis des 19 cas correctifs, avec contrôle
+des résultats et empreintes. Il ne recompilera que le test instrumenté, lié aux
+bibliothèques c104 existantes, volume de build en lecture seule. Révisions du
+runtime, du test et du collecteur distinctes ; composition diagnostique, pas
+candidate de production. Syntaxe shell vérifiée ; compilation/exécution encore
+non réalisées, timeout et assertions d'origine conservés. Aucun échec clôturé,
+aucun changement de statut EIP ni des critères de production.
+
+### 2026-10-02 — Profilage du timeout de partition Bellatrix préparé
+
+[Contrôle diagnostique](qualification/bellatrix-partition-profile-20261002/README.md)
+lié au runtime c104 d'origine : temps cumulés de l'horloge, des duties et des
+admissions/relais, compteurs de messages ; mesures imbriquées non additives.
+Syntaxe ARM64 Release avec définitions d'origine vérifiée. Driver VPS observé
+en attente du diagnostic Altair ; compilation liée/exécution encore à faire.
+112 slots, limite de 240 s et assertions conservés. Bibliothèques/volume en
+lecture seule, pas de rebuild du cœur ni nouvelle image. Le timeout historique,
+les exigences de finalité/WAN et tous les statuts EIP restent ouverts.
+
+### 2026-10-02 — Cinquième échec AMD64 : activation Capella hors délai
+
+Cas #394 `consensus_capella_deposit_activation` : timeout 360,03 s sous la
+limite originale de 360 s. [Traces conservées](qualification/production-evm-integration-20261001/capella-activation-amd64-partial/README.md) :
+dépôt consommé (index 1), progression jusqu'au slot 120 et finalité époque 13 ;
+assertions de fin d'activation/vote non démontrées. 394/417 résultats observés,
+389 réussis et cinq échecs/timeouts. Le cas de reprise #395 reste en cours.
+L'ARM64 c104 avait réussi ce cas en 136,363 s ; cause non identifiée, performance
+à analyser. Les 19 cas correctifs déjà prévus ne couvrent pas ce nouvel échec.
+Aucun délai/critère relâché, aucun échec clôturé ni profil EIP requalifié.
+
+### 2026-10-02 — Sixième échec AMD64 : reprise d'activation Capella
+
+Cas #395 `consensus_capella_deposit_activation_restart` : timeout 360,03 s,
+limite originale de 360 s conservée. [Observation complémentaire](qualification/production-evm-integration-20261001/capella-activation-amd64-partial/README.md) :
+réouverture « scheduled-pending » observée au slot 104, puis finalité époque 13
+au slot 120 ; reprise active/vote et refus du conflit de signature non qualifiés.
+ARM64 c104 : 139,204 s réussi, sans cause AMD64 identifiée. Le cas #396
+`automatic_registration` a réussi en 29,71 s : 396 résultats, 390 réussis,
+six échecs/timeouts. #397 reste en cours. Les contrôles correctifs déjà en attente
+ne couvrent pas ces deux timeouts Capella ; aucun statut EIP/production clôturé.
+
+### 2026-10-02 — Septième échec AMD64 : dépôt/enregistrement automatique
+
+Cas #397 `consensus_capella_deposit_auto_registration` : timeout 360,03 s
+sous la limite originale de 360 s. [Traces complémentaires](qualification/production-evm-integration-20261001/capella-activation-amd64-partial/README.md) :
+index de dépôt 1, slot 120 et finalité époque 13, sans qualification des
+assertions terminales d'activation/vote. L'enregistrement seul #396 réussi ne
+couvre pas ce scénario complet. ARM64 c104 : 137,396 s réussi ; cause AMD64
+non identifiée. 397 résultats observés, 390 réussis et sept échecs/timeouts.
+Le cutoff commun des trois cas est une observation, pas une cause démontrée.
+Aucune limite relâchée, aucun critère EIP ou production clôturé.
+
+### 2026-10-02 — Huitième échec AMD64 : activation après réindexation
+
+Cas #406 `consensus_capella_reindexed_validator_activation` : timeout 360,02 s
+sous la limite originale de 360 s. [Traces complémentaires](qualification/production-evm-integration-20261001/capella-activation-amd64-partial/README.md) :
+rejet de l’index périmé observé, activation époque 13, puis un vote du nouveau
+validateur au slot 112 et deux au slot 120, finalité époque 13. Ces observations
+ne démontrent pas les assertions terminales du scénario. ARM64 c104 : 162,612 s
+réussi ; cause AMD64 non identifiée. 406 résultats, 398 réussis et huit
+échecs/timeouts. Les diagnostics déjà en attente ne couvrent pas ce cas Capella.
+Aucune limite relâchée ; qualifications complètes et production restent ouvertes.
+
+### 2026-10-02 — Neuvième échec AMD64 : sortie après réindexation
+
+Cas #413 `consensus_capella_exit_reindex` : timeout 480,04 s sous la limite
+originale de 480 s. [Traces complémentaires](qualification/production-evm-integration-20261001/capella-activation-amd64-partial/README.md) :
+activation époque 13, cinq votes du nouveau validateur au slot 144, finalité
+époque 16. Ces progrès ne démontrent pas les assertions terminales de sortie
+après réindexation. ARM64 c104 : 162,259 s réussi ; cause AMD64 non identifiée.
+413 résultats, 404 réussis et neuf échecs/timeouts. Les contrôles correctifs déjà
+en attente ne couvrent pas ce cas Capella. Aucun timeout ni critère assoupli ;
+aucun statut EIP ou production clôturé.
+
+### 2026-10-02 — Régression intégrée AMD64 terminale : 408/417
+
+[Archive terminale](qualification/production-evm-integration-20261001/full-amd64-terminal/README.md) :
+417 résultats complets, 408 réussites, neuf échecs, zéro ignoré ; CTest exit 8,
+15 101,53 s. Sources, registre et 197 programmes historiques inchangés.
+Audit résultats exit 1 à cause des neuf échecs ; audit EEST réussi :
+4 882 exécutions + 505 validations sur 317 fichiers, sans conformité de fork déduite.
+Les omissions historiques de trois helpers restent explicites, sans preuve
+rétroactive inventée. ARM64 terminal 410/417 reste non réussi également.
+Aucun échec effacé, aucun moteur promu, aucune qualification production clôturée.
+
+### 2026-10-02 — Contrôle correctif AMD64 : panne de préparation conservée
+
+[Échec et reprise des pilotes](qualification/corrective-amd64-control-20261002/permission-retry/README.md) :
+le dossier de rapports non inscriptible a arrêté le contrôle avant toute
+compilation ou test. Essai et erreur conservés, sources inchangées ; les
+pilotes suivants se sont arrêtés à leurs barrières de rapports manquants.
+Correction limitée aux permissions du nouveau dossier de sortie dédié.
+Compilation corrective reprise ; Altair puis Bellatrix restent séquentiels,
+sans contournement des audits, changement de runtime ou relaxation des délais.
+Aucun résultat correctif encore qualifié ; production toujours ouverte.
+
+### 2026-10-02 — Correctifs ciblés AMD64 : 19/19 réussis
+
+[Contrôle terminal](qualification/corrective-amd64-control-20261002/terminal/README.md) :
+source runtime 1ac57e25, 19 tests exacts réussis, zéro ignoré, 135,33 s ;
+CTest/conteneur/audit/manifeste post-test exit 0. Sources et sept programmes
+inchangés, dont `nano` explicite. Le manifeste renforcé daab685d est distinct
+du runtime. Fenêtres RPC Paris/Shanghai et barrière d’horloge des sorties
+Bellatrix qualifiées dans ce périmètre ; aucun critère ni délai assoupli.
+Les neuf échecs de la campagne complète c104 restent conservés. Altair,
+partition Bellatrix et cinq cas Capella exclus de cette sélection restent
+ouverts ; pas de promotion moteur ni de qualification production globale.
+
+### 2026-10-02 — Diagnostic Altair AMD64 : refus reproduit, cause encore ouverte
+
+[Diagnostic terminal](qualification/altair-bound-diagnostics-20261002/c104-runtime-control/terminal/README.md) :
+un cas original échoué en 2,17 s, limite 120 s inchangée. Composition de diagnostic
+c104 + instrumentation du test f92533e9, sans modification du cœur. Payload
+8 388 608 octets, frame 16 777 370 octets, réponse `[null]`, highWater inchangé,
+checkpoint inchangé et horloge saine. Les traces récentes ne désignent pas encore
+le défaut précis du transport ou de l’écriture du pair de qualification.
+Sources, programmes et entrées de lien inchangés ; audit garde l’échec.
+Aucune correction de protocole ni qualification production déduite de ce seul refus.
+
+### 2026-10-02 — Profil partition Bellatrix : coût des admissions, timeout conservé
+
+[Mesures terminales](qualification/bellatrix-partition-profile-20261002/terminal/README.md) :
+timeout 240,03 s sous limite originale 240 s, scénario 112 slots inchangé.
+Dernière observation slot 88 : têtes égales, finalité 9, trois époques consécutives ;
+assertions terminales non atteintes. Relais 69,806 s, dont admissions bloc/vote
+69,726 s incluses (99,885 %) ; reste environ 0,080 s. Les nombreux scans ne
+prouvent donc pas un coût dominant. Polls validateurs 128,777 s, horloges 32,729 s.
+Temps imbriqués non additionnés deux fois. Sources/programmes/entrées de lien
+inchangés ; aucune qualification de candidat ou de production. Priorité :
+isoler transition, signature et commit durable sans retirer leurs contrôles.
+
+### 2026-10-02 — Altair : reset distant isolé pendant l’écriture
+
+[Diagnostic du pair](qualification/altair-bound-diagnostics-20261002/probe-transport/README.md) :
+cas original encore échoué en 2,11 s, délai 120 s inchangé. Le pair instrumenté
+reçoit `Stream: reset by remote peer` en écrivant la trame 16 777 370 octets ;
+la lecture de l’ACK n’est pas atteinte. HighWater/checkpoint inchangés, horloge
+saine. Le garde distant ou défaut transport précis reste à identifier.
+Sources, programmes, entrées de lien cœur/probe inchangés. Essai initial arrêté
+avant compilation faute de Python conservé ; contrôle corrigé sans installer
+une dépendance. Cœur/daemon read-only ; aucune règle d’admission assouplie.
+
+### 2026-10-02 — Altair AMD64 : succès instrumenté, contrôle original en échec
+
+[Comparaison conservée](qualification/altair-bound-diagnostics-20261002/daemon-comparison/README.md) : traces préadmission/ouverture, 1/1 passe (3,91398 s) ; recompilation sans nouvelles traces, 1/1 échoue (2,19625 s), reset distant sur écriture pleine. Sources/programmes/bibliothèques inchangés avant/après. Effet du diagnostic à isoler ; aucune correction ou conformité supplémentaire revendiquée. Délais, échecs historiques, critères de production et revue indépendante restent conservés.
+
+### 2026-10-02 — Pair de qualification Altair : sondes de statut
+
+[Contrôle AMD64](qualification/altair-bound-diagnostics-20261002/status-peer-control/README.md) : 1/1 passe en 4.36831 s, zéro skip, daemon original inchangé. Le pair de test répond désormais aux sondes périodiques avec son annonce exacte ; la trace précédente localisait le reset à `unknown-peer`. Aucun contrôle d’admission ni délai relâché. Correction du test intégrée ; ancienne campagne et échecs conservés, régression candidat globale et exigences de production toujours ouvertes.
+
+### 2026-10-02 — Profil interne Bellatrix AMD64 démarré
+
+[Préparation reproductible](qualification/bellatrix-inner-profile-20261002/README.md) : diagnostic des copies/contextes/vérifications/sérialisation, scénario original 112 slots et timeout 240 s conservés. Compilation terminée puis CTest actif constaté ; résultat final non acquis. Bibliothèques et objet de test réutilisés, pas de nouvelle image. Aucun critère de production clos ni code de diagnostic promu.
+
+### 2026-10-02 — Profil interne Bellatrix terminal
+
+[Mesures conservées](qualification/bellatrix-inner-profile-20261002/README.md) : timeout original 240,025 s, dernier slot observé 88 ; entrées inchangées et zéro skip. Sur 1 792 publications, 137,117 s incluent 70,948 s de snapshot ; copies du store 1,929 s sur 4 160 appels. Compteurs imbriqués, fenêtres différentes, ne pas sommer. Cible suivante : éviter le reparcours JSON du store sans changer encodage canonique, limites, WAL ou écritures synchrones. Aucune qualification ou promotion runtime ; autres critères et échecs historiques conservés.
+
+### 2026-10-02 — Sérialisation candidate : équivalence et gain partiel
+
+[Contrôles archivés](qualification/bellatrix-snapshot-splice-20261002/README.md) : ARM64, 2 048 comparaisons byte à byte des formats v2-v5, 3 072 rejets de limites et 1 024 annulations ; portée limitée à l’assemblage extrait. AMD64, timeout conservé 240,022 s, slot observé 96 contre 88. Aux mêmes 1 792 appels, encodage 44,416 contre 70,948 s, publication inclusive 109,663 contre 137,117 s. Échec terminal toujours ouvert, pas de promotion runtime ni conformité globale ; autres critères historiques conservés.
+
+### 2026-10-02 — Snapshot : transfert des temporaires, délai encore dépassé
+
+[Contrôle conservé](qualification/bellatrix-snapshot-move-20261002/README.md) : 512 comparaisons ciblées ARM64 passent ; AMD64 expire à 240,025 s, dernier slot 96. Aux mêmes 1 792 appels, encodage 42,678 s et publication inclusive 107,889 s : petit écart descriptif, pas de résolution du cas. Manifestes inchangés, zéro skip. Prochain diagnostic : témoin/commit/lecture authentifiée/Write synchrone séparés, sans retirer de protection. Aucune promotion runtime, autres critères conservés.
+
+### 2026-10-02 — Commit durable mesuré, candidat sérialiseur en qualification
+
+[Profil terminal](qualification/bellatrix-commit-cost-20261002/README.md) : timeout 240,030 s, slot 96. Sur 1 920 commits, 42,966 s incluent 13,194 s de Write synchrone ; témoin externe absent, ne pas généraliser. [Candidat Git 4834a014](qualification/checkpoint-serialization-candidate-20261002/README.md), hors main : test direct du helper ARM64 passe (2 048 comparaisons, 3 076 rejets, 1 024 annulations). Huit cas AMD64 démarrent avec limites originales ; préflight à délai de coalescence erroné arrêté avant test puis corrigé à 60 s et conservé. Aucun runtime main promu ni production qualifiée, autres critères ouverts.
+
+### 2026-10-02 — Candidat sérialisation terminal, cache des octets publiés en compilation
+
+[Parent 4834a014](qualification/checkpoint-serialization-candidate-20261002/README.md) : 8 cas exacts AMD64, 7 passent, partition timeout 240,027 s, dernier slot 96 ; zéro skip et entrées inchangées. [Candidat fa390c3b](qualification/published-snapshot-bytes-candidate-20261002/README.md) : comparaison des octets précédemment publiés, contrôles disque/témoin et repli crypto après réouverture conservés ; nouveau scénario stale-writer. Header modifié, recompilation complète dans Docker existant, sélection de douze tests aux délais originaux ensuite. Aucun résultat nouveau acquis, aucune promotion runtime main ni production qualifiée ; autres critères conservés.
+
+### 2026-10-02 — Cache : échec de compilation du test conservé, reprise test seule
+
+[Candidat](qualification/published-snapshot-bytes-candidate-20261002/README.md) fa390c3b : cœur compilé, nouveau test ne compile pas (champ inexistant), code 2, aucun CTest exécuté. Rapports conservés ; aucun résultat runtime inventé. Correction 090e95df du champ `snapshot` seulement, récupérée par Git ; headers/runtime inchangés, objets du cœur réutilisés. Reprise Docker identifiée en cours avec douze cas et délais originaux ; pas de promotion main ni de clôture de production. Tous les critères et échecs antérieurs demeurent ouverts.
+
+### 2026-10-02 — Cache : qualification AMD64 terminale, partition non résolue
+
+[Rapports conservés](qualification/published-snapshot-bytes-candidate-20261002/README.md) : 090e95df, 12 cas exacts, 10 passent, 2 échouent, zéro skip ; sources/programmes/bibliothèques avant/après identiques. Partition timeout 240,053 s, dernière observation slot 96, finalité commune 10 ; pas de clôture. Nouveau scénario cache arrêté au contrôle des arguments : assertions non exécutées. Correction test seule bad3e0c0 publiée/récupérée par Git, rejeu de ce seul cas en cours avec délai original 90 s. Atomicité/sync/témoin/slashing/sortie/dépôt/reorg/encodage passent dans leurs portées exactes. Aucune promotion runtime main ni qualification globale ; toutes les exigences et anciens échecs conservés.
+
+### 2026-10-02 — Cache publié : nouveau contrôle stale-writer réussi
+
+[Rapport bad3e0c0](qualification/published-snapshot-bytes-candidate-20261002/README.md) : un seul nouveau scénario, 1/1 passe en 0,833 s ; trois retransmissions idempotentes puis changement disque détecté et réacteur fermé. Aucun skip, sorties/entrées vérifiées, pas de rejeu des dix autres réussites 090e95df. Partition demeure en timeout au slot 96, aucune promotion runtime main ni clôture de production. Prochaine correction ciblée : retirer les copies JSON inutiles à la comparaison du cache en conservant tous les champs et gardes de validation. Les exigences et échecs historiques restent ouverts.
+
+### 2026-10-02 — Cache JSON sans copie : gardes passent, partition toujours lente
+
+[Contrôle 2db1840c](qualification/snapshot-cache-row-20261002/README.md), hors main : AMD64 3 cas exacts, 2 passent, partition timeout 240,047 s/dernier slot 96, aucun skip, entrées avant/après inchangées. Égalité complète du cache, mutations, règles/annulation et stale-writer qualifiés dans ces limites. Aucun gain terminal observé, délai non clôturé. Recompilation ARM64 cohérente de la même source figée dans Docker existant et 13 cas en cours ; résultats non acquis. Prochaine analyse : profil CPU isolé, sans retirer validation/WAL/sync. Aucun runtime main promu ni production globale ; tous les critères et échecs conservés.
+
+### 2026-10-02 — ARM64 terminal, fixture corrigée, profil CPU et candidat SHA-256
+
+[ARM64 2db1840c](qualification/snapshot-cache-row-20261002/README.md) : 11/13 passent dont partition 70,708 s ; 2 échecs de copie sur bind mount macOS conservés. Probe reproduit copy refusé sur bind et réussi sur volume Linux ; rejeu des seuls deux cas sur volume existant passe, mêmes sources/programmes/libs/caps/limites. Pas de qualification panne physique ni globale. [Profil VPS](qualification/bellatrix-cpu-profile-20261002/README.md) : 1 420 échantillons sur 30 s, piles de fetch SHA/OpenSSL identifiées, cas complet reste timeout, aucun seuil changé. [Candidat cac8d719](qualification/sha-provider-candidate-20261002/README.md), hors main : méthode EVP SHA256 fetchée une fois, erreurs contrôlées ; nouveaux tests concurrence/indisponibilité passent sur helper ARM64 réel (4 098 comparaisons). Six contrôles AMD64 en compilation/qualification, résultats/gain non acquis. Tous les critères de production et anciens échecs restent ouverts.
+
+### 2026-10-02 — SHA-256 : gate partition AMD64 réussi, suite Capella ouverte
+
+[Candidat cac8d719](qualification/sha-provider-candidate-20261002/README.md), hors main : 6/6 passent, aucun skip, entrées avant/après identiques. Partition 221,908 s <240 s original, slot 112, finalité commune 12 et six avancements consécutifs, assertions finales atteintes. Portée : deux cœurs/64 validateurs, un processus, clock synthétique, sans P2P ; pas de clôture WAN ni réseau public. Racines officielles, concurrence/indisponibilité, chaîne signée et stale-writer passent. Qualification ARM64 intégrée en cours après recompilation complète du cœur (timestamps du worktree renouvelés). Les cinq anciens timeouts Capella sont en qualification sur le même cœur, délais 360/480 s conservés. Aucune promotion runtime main, pas de régression globale nouvelle ; tous les autres critères et anciens échecs restent ouverts.
+
+### 2026-10-02 — SHA-256 intégré qualifié dans six cas sur ARM64 et AMD64
+
+[Rapports cac8d719](qualification/sha-provider-candidate-20261002/README.md) : même manifeste source, 6/6 passent sur chaque architecture, aucun skip, entrées avant/après inchangées. Partition originale : AMD64 221,908 s, ARM64 58,372 s, limites et assertions conservées. Racines officielles/concurrence/indisponibilité/chaîne/cache passent. Aucune égalité du root final entre architectures ni convergence WAN inférée des seules sorties locales ; vraie qualification réseau encore ouverte. Les cinq Capella VPS continuent, régression globale et tous les autres critères conservés. Aucun runtime main promu ni production déclarée prête.
+
+### 2026-10-02 — Candidat de sérialisation Capella, qualification ouverte
+
+[Candidat 3030b799](qualification/capella-serialization-candidate-20261002/README.md), hors runtime main : suppression des copies JSON et du parse/dump du store canonique, comparaison de tous les champs/cache conservée, exception de capacité Capella inchangée. Test direct ARM64 : 3 584 comparaisons d’octets, 3 844 rejets et 1 024 annulations passent ; formats Capella durable v1–v4 / store v1–v3 ajoutés. Dix cas intégrés ARM64 en cours, aucune clôture avant résultats terminaux. Campagne VPS parent cac8d719 indépendante : activation timeout 360,04 s au slot 144/finalité 16, restart encore actif ; source non modifiée pendant ce run. Tous les échecs, délais originaux, régression globale, WAN, bridge/Doppler et revue indépendante restent conservés et ouverts.
+
+### 2026-10-02 — Activation candidat ARM64 et profiling Capella VPS
+
+[Candidat 3030b799](qualification/capella-serialization-candidate-20261002/README.md) : activation intégrée passe en 90,94 s sous le délai original 360 s ; queued BLS changes passe en 1,99 s. Suite de dix cas encore active, résultat global non acquis. [Profil parent VPS](qualification/capella-cpu-profile-20261002/README.md) : 1 403 échantillons CPU sur 30 s, aucune perte, binaire conforme au manifeste pré-campagne. JSON lecture/écriture et piles de publication identifiées ; pas de gain AMD64 inféré ni attribution exclusive. Deux premiers cas parent timeout, auto-registration encore active ; traces intermédiaires explicitement conservées comme non terminales. Délais et exigences originales, anciens échecs, régression globale et gates de production restent ouverts.
+
+### 2026-10-02 — Candidat Capella préparé sur AMD64 avec garde de fin de campagne
+
+[Contrôles 3030b799](qualification/capella-serialization-candidate-20261002/README.md) : 13 726 fichiers sources identiques ARM64/VPS, checkout séparé propre. Contrôleur AMD64 confirmé actif en attente de la fin réelle du parent ; exige ses cinq résultats terminaux et manifestes inchangés avant toute recompilation partagée. Même sélection de dix cas, limites originales, image/volume réutilisés. Cinq cas ARM64 passent déjà (BLS, activation, reprise, auto-registration, reorg dépôts) ; reindexation/sorties encore actives. Qualification AMD64 non acquise, aucune clôture globale/EIP/production ni suppression des échecs.
+
+### 2026-10-02 — Capella candidat ARM64 : dix cas terminaux réussis
+
+[Rapport 3030b799](qualification/capella-serialization-candidate-20261002/README.md) : 10/10, zéro skip, CTest/container/post-manifest 0, sources/programmes/libs inchangés. Activation/reprise/auto-registration : 90,94/92,38/93,15 s ; réindexation activation/sortie : 111,64/110,09 s, limites originales conservées. Assertions finales : trois votes après activation et reprise, conflit refusé avant signer ; index 65 après reorg, neuf votes/finalité 20 et deux owners rouverts ; sortie ancien index refusée, sortie nouvel index incluse et persistée sans altérer l’autre validateur. Portée locale en processus/clock synthétique, pas de WAN ou panne physique. Régression entière ARM64 préparée : recompilation P2P réelle depuis mêmes sources en cours, image/volume réutilisés ; résultat global non acquis. AMD64 nouveau candidat toujours en attente du parent actif. Tous les autres critères/échecs/bridge/revue restent ouverts, aucune promotion runtime main.
+
+### 2026-10-02 — Préparation régression entière et helpers externes ARM64
+
+[Candidat 3030b799](qualification/full-candidate-3030b799-20261002/README.md) : tous targets P2P recompilés depuis mêmes sources ; build complet du cœur encore actif. Registre configuré observé 422 cas, aucun résultat global déduit ; commande peut manquer pendant build et garde finale exige tous exécutables. Observer séparé capture avant CTest les trois arguments exécutables omis du manifeste historique (nano, fixture crash, probe Altair), après compilation vérifiée et sans container test actif ; comparaison après tests encore pending. Contrôles/hashes datés conservés, sources/test limits inchangés, image/volume réutilisés. Parent Capella AMD64 actif, nouveau candidat en attente. Tous critères restants et anciens échecs ouverts.
+
+### 2026-10-02 — Garde permanente des helpers requis dans le manifeste CI
+
+[Contrôles outils](qualification/required-helper-guards-20261002/README.md) : manifeste main refuse désormais nano et fixture crash absents/non exécutables comme arguments, au lieu de les ignorer ; détection des données et garde probe conservées. Sept cas CMake réels passent, zéro skip, dont deux nouveaux couvrant disparition/permissions/remplacement du helper sans mutation du driver. Aucun runtime changé. Checkout actif 3030b799 reste figé et utilise son ancien runner avec observer externe déjà en place ; comparaison helpers après tests pending. Régression entière et AMD64 pas encore terminaux, tous critères de production et anciens échecs ouverts.
+
+### 2026-10-02 — Préparation complète terminée, 422 CTest réellement actifs
+
+[Préflight 3030b799 ARM64](qualification/full-candidate-3030b799-20261002/README.md) : tous targets P2P puis cœur compilés, sources avant/après build identiques. Registre final 422 cas complet, toutes commandes présentes et TIMEOUT explicite ; 200 exécutables principaux/réseau + trois helpers externes mesurés avant tests. Registre/manifestes principaux inchangés entre préparation et lancement. Container de test confirmé actif et premiers cas passent ; résultat terminal et comparaisons après tests non acquis. Ancien registre observé pendant compilation distingué du registre final. Aucun gain WAN, égalité globale de roots, clôture EIP ou production déduit ; AMD64 et autres gates ouverts.
+
+### 2026-10-02 — Parent Capella VPS terminal, candidat corrigé AMD64 actif
+
+[Parent cac8d719](qualification/sha-provider-candidate-20261002/README.md) : cinq timeouts terminaux (quatre à 360 s, sortie à 480 s), zéro skip, exit 8/post-manifest 0 ; sources/programmes/libs avant/après identiques. Rapports négatifs conservés, sampling CPU registration distingué d’un benchmark contrôlé. Contrôleur a vérifié la fin réelle puis démarré le build AMD64 de 3030b799, image/volume existants et checkout séparé ; mêmes dix cas et limites originales, aucun succès nouveau déduit. Régression ARM64 entière encore active, 44 premiers cas passent à l’observation ; résultat global et toutes autres gates encore ouverts.
+
+### 2026-10-02 — Régression complète AMD64 préparée et gardée par Capella
+
+[Contrôleur AMD64 3030b799](qualification/full-candidate-3030b799-20261002/README.md) confirmé actif en attente des dix cas Capella actuels. Exige 10/10 terminaux, zéro skip et manifestes inchangés avant compilation P2P/cœur complète. Audit Node du registre depuis Mac, aucun outil installé sur VPS ; CTest complet refusé sans inventaire complet validé. Manifestes stricts des helpers comme contrôles séparés identifiés, runtime figé ; images/volumes réutilisés. Scripts syntaxiquement vérifiés, exécution complète pas encore acquise. ARM64 continue avec 53 premiers cas réussis à l’observation, pas de résultat global. Tous critères initiaux et échecs restent ouverts.
+
+### 2026-10-02 — Préflight Capella AMD64 identique, tests réellement actifs
+
+[3030b799 AMD64](qualification/capella-serialization-candidate-20261002/README.md) : build terminé, sources identiques ARM64 ; dix noms/modes/délais/labels identiques, seule WORKING_DIRECTORY diffère. Premier queued-BLS passe 9,08 s, activation confirmée active ; avant-tests programmes/registre archivés. Résultat terminal, égalité des roots entre architectures et régression entière AMD64 non acquis ; contrôleur complet attend 10/10 et manifestes inchangés. ARM64 entier toujours actif, aucun autre gate de production fermé ni échec supprimé.
+
+### 2026-10-02 — Première activation Capella AMD64 terminée, campagne ouverte
+
+Candidat 3030b799 : le cas d’activation passe en **356,26 s / 360 s**, avec seulement 3,74 s de marge. Les assertions confirment consommation au slot 80, activation à l’époque 17, trois votes du nouveau validateur, poursuite jusqu’au slot 161 / finalité 18, réouverture des deux propriétaires et rejeu idempotent. [Preuve du cas](qualification/capella-serialization-candidate-20261002/activation-amd64-in-progress/README.md). Ce résultat demeure provisoire au niveau campagne : la clôture des dix cas et les manifestes terminaux restent à vérifier. Temps synthétique, deux états en processus, transport réseau désactivé ; aucune qualification WAN ou panne physique. Le timeout historique du parent est conservé. La régression ARM64 complète est toujours active ; AMD64 reste soumise au passage des dix cas. Tous les autres critères de production, bridge/Doppler et revue indépendante demeurent ouverts.
+
+### 2026-10-02 — Contrôle de preuves de restauration renforcé
+
+[Correctif et preuves](qualification/restore-evidence-guards-20261002/README.md) : le résumé de stabilité conserve désormais le checkpoint Beacon final et le hash d’exécution vérifié ; le contrôleur de restauration refuse compteurs terminaux absents/non entiers, checkpoint manquant ou incohérent, et racine terminale différente à la même époque. Reproduction directe avant correctif conservée ; le runner externe rejetait déjà les compteurs malformés via son reçu d’arrêt, sans comparaison de cette racine. Quatre suites ciblées **60/60, zéro skip**, dont **16 nouveaux cas** ; ce sont des tests de vérificateur, aucune nouvelle qualification WAN ou de production. Les trois avances consécutives et délais restent inchangés. Un reçu terminal plus récent ne prouve pas à lui seul l’ascendance. Campagnes Docker/source gelée 3030b799 inchangées ; historiques, finalité WAN, revue indépendante et lancement restent ouverts.
+
+### 2026-10-02 — Reconnexion : preuves RPC malformées refusées
+
+[Contrôles de reconnexion](qualification/recovery-sample-guards-20261002/README.md) : racines absentes/courtes, époques ou compteurs de pairs malformés et délais invalides sont refusés avant tout crédit ; quantités RPC décimales/hexadécimales canoniques acceptées. **19/19**, zéro skip, dont **13 nouveaux cas**. Aucun changement de runtime ou campagne WAN ; seuils/délais originaux conservés. Écart identifié pour la suite : l’audit natif à six champs rejoue l’historique canonique mais ne reçoit pas encore le checkpoint observé indépendamment pour vérifier son ascendance lorsque le reçu terminal a avancé. Ce critère reste ouvert ; les sources/binaries Docker gelés ne sont pas modifiés.
+
+### 2026-10-02 — Audit natif d’ascendance implémenté sur candidat isolé
+
+[Candidat 736dab46 / preuves](qualification/finalized-ancestry-audit-20261002/README.md), parent 3030b799 : `requiredFinalized` permet de vérifier le checkpoint observé contre la branche finalisée rejouée à la limite de son époque, slots vides inclus. Requêtes historiques à six champs conservées sans prétendre vérifier ce checkpoint externe. ARM64 Docker : **12 cas du helper natif**, puis intégration réelle sur **99 blocs / 97 transactions** : checkpoint valide accepté, tête non finalisée / époque future / racine malformée refusées. Base et driver inchangés avant/après. Tentatives initiales et correction de longueur avant décodage conservées. Compilation directe du seul nouveau module contre les bibliothèques 3030b799 en lecture seule ; ce n’est pas un rebuild complet. Checkpoint choisi dans la fixture pour cette intégration, aucune observation WAN indépendante. Candidat publié séparément ; main runtime inchangé. Branchement du runner WAN, qualification AMD64, régression et tous les critères de production restent ouverts.
+
+### 2026-10-02 — Branchement de l’ascendance à la restauration ; échec de réindexation conservé
+
+[Runner et contrôles](qualification/restore-offline-binding-20261002/README.md) : après arrêt propre du restauré, le checkpoint observé et le token d’arrêt séparés alimentent l’audit natif readonly ; rapport correspondant exactement aux deux exigé avant réussite. **14 nouveaux cas du contrôleur passent**. Candidat natif 40132425 : rapport enrichi vérifié sur un seul rejeu positif réel ARM64 (99 blocs/97 transactions), sans rejouer helper/négatifs inchangés. Pas de campagne WAN : main runtime ancien ne traite pas ce nouveau champ et le runner échoue explicitement jusqu’à qualification/promotion du candidat.
+
+[Échec AMD64 3030b799](qualification/capella-serialization-candidate-20261002/reindex-amd64-in-progress/README.md) : activation réindexée **timeout 360,04 s**, dernier marqueur slot 152/finalité 17/six nouveaux votes. Les activations simples près de 356 s ne ferment pas ce cas. Campagne encore active, manifestes terminaux pendants. Régression complète AMD64 conditionnée aux dix réussites : gate non satisfaisable avec cet échec. Aucun délai augmenté ni source modifiée ; diagnostic de coût après fin de campagne requis. Les critères WAN, architectures, régression, bridge/lancement et revue indépendante restent ouverts.

@@ -1,0 +1,64 @@
+{
+  "case": {
+    "name": "consensus_bellatrix_partition_simulation",
+    "classname": "consensus_bellatrix_partition_simulation",
+    "time": "240.025",
+    "status": "fail"
+  },
+  "lastPhaseSlot": 88,
+  "sampledCounters": {
+    "store-copy": {
+      "event": "reactor-inner-profile",
+      "phase": "store-copy",
+      "calls": 4160,
+      "totalUs": 1928980,
+      "maximumUs": 1662
+    },
+    "snapshot-encode": {
+      "event": "reactor-inner-profile",
+      "phase": "snapshot-encode",
+      "calls": 1792,
+      "totalUs": 70948212,
+      "maximumUs": 108704
+    },
+    "reactor-publish": {
+      "event": "reactor-inner-profile",
+      "phase": "reactor-publish",
+      "calls": 1792,
+      "totalUs": 137116864,
+      "maximumUs": 182886
+    },
+    "vote-context": {
+      "event": "reactor-inner-profile",
+      "phase": "vote-context",
+      "calls": 2432,
+      "totalUs": 12457112,
+      "maximumUs": 30366
+    },
+    "vote-verify-choice": {
+      "event": "reactor-inner-profile",
+      "phase": "vote-verify-choice",
+      "calls": 2432,
+      "totalUs": 4956812,
+      "maximumUs": 4794
+    },
+    "reactor-vote": {
+      "event": "reactor-inner-profile",
+      "phase": "reactor-vote",
+      "calls": 1216,
+      "totalUs": 102762582,
+      "maximumUs": 198478
+    },
+    "reactor-block": {
+      "event": "reactor-inner-profile",
+      "phase": "reactor-block",
+      "calls": 128,
+      "totalUs": 25365989,
+      "maximumUs": 926472
+    }
+  },
+  "cumulativeEvery": 64,
+  "nestedDoNotSum": true,
+  "snapshotShareOfMatchingPublishCalls": 0.5174287825019102,
+  "noRuntimePromotion": true
+}

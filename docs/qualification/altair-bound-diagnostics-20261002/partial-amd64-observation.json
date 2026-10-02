@@ -1,0 +1,32 @@
+{
+  "observedAt": "2026-10-01T23:19:14.188243+00:00",
+  "revision": "c10426b2eab0aff7eaada3e4b57460f15cf7e90c",
+  "terminal": false,
+  "completed": 334,
+  "failed": [
+    {
+      "id": 40,
+      "name": "bft_rpc_cost_sustained_paris_network",
+      "result": "...............***Failed   20.41 sec"
+    },
+    {
+      "id": 62,
+      "name": "bft_rpc_cost_sustained_shanghai_network",
+      "result": "............***Failed   21.34 sec"
+    },
+    {
+      "id": 287,
+      "name": "consensus_altair_libp2p",
+      "result": "............................***Failed    2.53 sec"
+    },
+    {
+      "id": 322,
+      "name": "consensus_bellatrix_partition_simulation",
+      "result": "...........***Timeout 240.03 sec"
+    }
+  ],
+  "failureBlocks": {
+    "287": "        Start 287: consensus_altair_libp2p\n287/417 Test #287: consensus_altair_libp2p ............................***Failed    2.53 sec\nfull configured block bound failed before core validation\n",
+    "322": "        Start 322: consensus_bellatrix_partition_simulation\n322/417 Test #322: consensus_bellatrix_partition_simulation ...........***Timeout 240.03 sec\n{\"consecutive\":0,\"event\":\"simulation-epoch\",\"finalizedA\":0,\"finalizedB\":0,\"sameHead\":true,\"slot\":8}\n{\"consecutive\":0,\"event\":\"simulation-epoch\",\"finalizedA\":0,\"finalizedB\":0,\"sameHead\":true,\"slot\":16}\n{\"consecutive\":0,\"event\":\"simulation-epoch\",\"finalizedA\":0,\"finalizedB\":0,\"sameHead\":true,\"slot\":24}\n{\"consecutive\":0,\"event\":\"simulation-epoch\",\"finalizedA\":2,\"finalizedB\":2,\"sameHead\":true,\"slot\":32}\n{\"consecutive\":0,\"event\":\"simulation-epoch\",\"finalizedA\":2,\"finalizedB\":2,\"sameHead\":false,\"slot\":40}\n{\"consecutive\":0,\"event\":\"simulation-epoch\",\"finalizedA\":2,\"finalizedB\":2,\"sameHead\":false,\"slot\":48}\n{\"consecutive\":0,\"event\":\"simulation-epoch\",\"finalizedA\":2,\"finalizedB\":2,\"sameHead\":true,\"slot\":56}\n{\"consecutive\":0,\"event\":\"simulation-epoch\",\"finalizedA\":6,\"finalizedB\":6,\"sameHead\":true,\"slot\":64}\n{\"consecutive\":1,\"event\":\"simulation-epoch\",\"finalizedA\":7,\"finalizedB\":7,\"sameHead\":true,\"slot\":72}\n{\"consecutive\":2,\"event\":\"simulation-epoch\",\"finalizedA\":8,\"finalizedB\":8,\"sameHead\":true,\"slot\":80}\n{\"consecutive\":3,\"event\":\"simulation-epoch\",\"finalizedA\":9,\"finalizedB\":9,\"sameHead\":true,\"slot\":88}\n"
+  }
+}

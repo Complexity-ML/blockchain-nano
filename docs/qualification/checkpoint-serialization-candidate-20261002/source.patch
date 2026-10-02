@@ -1,0 +1,139 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 68f5ffea..4bdee564 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1831,3 +1831,9 @@ set_tests_properties(consensus_capella_http_admission_queue PROPERTIES TIMEOUT 1
+ add_executable(nano-rpc-load-window-tests tests/test_rpc_load_window.cpp)
+ add_test(NAME rpc_load_window COMMAND nano-rpc-load-window-tests)
+ set_tests_properties(rpc_load_window PROPERTIES TIMEOUT 10 LABELS "qualification_rpc_load_control")
++
++# Canonical durable encoding must retain byte-identical checkpoint digests.
++add_executable(nano-checkpoint-json-tests tests/test_checkpoint_json.cpp)
++target_include_directories(nano-checkpoint-json-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
++add_test(NAME consensus_checkpoint_json_canonical COMMAND nano-checkpoint-json-tests)
++set_tests_properties(consensus_checkpoint_json_canonical PROPERTIES TIMEOUT 30 LABELS "qualification_storage_local")
+diff --git a/network/altair_probe.cpp b/network/altair_probe.cpp
+index 48de9eaf..1e605717 100644
+--- a/network/altair_probe.cpp
++++ b/network/altair_probe.cpp
+@@ -12,7 +12,13 @@ int main(int argc,char** argv){try{
+  Json scenario;std::ifstream(argv[2])>>scenario;
+  auto logging=std::make_shared<soralog::LoggingSystem>(std::make_shared<libp2p::log::Configurator>());auto configured=logging->configure();if(configured.has_error)throw std::runtime_error(configured.message);libp2p::log::setLoggingSystem(logging);
+  auto injector=libp2p::injector::makeHostInjector(libp2p::injector::useSecurityAdaptors<libp2p::security::Noise>(),libp2p::injector::useTransportAdaptors<libp2p::transport::TcpTransport>());
+- auto host=injector.create<std::shared_ptr<libp2p::Host>>();auto io=injector.create<std::shared_ptr<asio::io_context>>();host->start();
++ auto host=injector.create<std::shared_ptr<libp2p::Host>>();auto io=injector.create<std::shared_ptr<asio::io_context>>();
++ // Answer periodic status polls with the exact handshake advertisement.
++ // Negative compatibility scenarios retain their original advertised status.
++ if(!scenario.at("status").is_null())host->setProtocolHandler({"/nanopy/chainsync/1.0.0"},[io,status=scenario.at("status")](libp2p::StreamAndProtocol incoming){
++  auto stream=std::move(incoming.stream);read_json(*io,stream,[io,stream,status](Json request){if(request.is_null()){stream->reset();return;}write_json(*io,stream,status,[stream](bool){close_stream(stream);});});
++ });
++ host->start();
+  auto address=libp2p::multi::Multiaddress::create(argv[1]).value();auto id=address.getPeerId();if(!id)throw std::invalid_argument("remote peer identity required");libp2p::peer::PeerInfo peer{libp2p::peer::PeerId::fromBase58(*id).value(),{address}};
+  Json results=Json::array();size_t index=0;bool finished=false;asio::steady_timer deadline(*io);deadline.expires_after(std::chrono::seconds(25));
+  auto finish=[&]{if(finished)return;finished=true;deadline.cancel();host->stop();io->stop();};deadline.async_wait([&](auto error){if(!error)finish();});
+diff --git a/src/consensus_bellatrix_reactor.cpp b/src/consensus_bellatrix_reactor.cpp
+index 5080ad1e..301027bd 100644
+--- a/src/consensus_bellatrix_reactor.cpp
++++ b/src/consensus_bellatrix_reactor.cpp
+@@ -1,3 +1,4 @@
++#include "consensus_checkpoint_json.hpp"
+ #include "nano/consensus_bellatrix_reactor.hpp"
+ #include <type_traits>
+ #include "nano/chain.hpp"
+@@ -50,7 +51,7 @@ std::string durable_snapshot(const BellatrixForkStore& store,const BellatrixSign
+   if(cancel)cancel();archive_require(bytes&&id!=store.timed.view.anchor&&store.blocks.contains(id)&&bytes->size()<=rules.transition.consensus.maximum_block_bytes&&bytes->size()<=limits.envelope_bytes/2-total);total+=bytes->size();
+   blocks.push_back(Json::array({hex(Bytes(id.begin(),id.end())),hex(*bytes)}));
+  }
+- Json document{{"format",!exits.empty()?"nano-bellatrix-durable-v5":!slashings.empty()?"nano-bellatrix-durable-v4":votes.empty()?"nano-bellatrix-durable-v2":"nano-bellatrix-durable-v3"},{"store",Json::parse(encoded)},{"signedBlocks",std::move(blocks)}};
++ Json document{{"format",!exits.empty()?"nano-bellatrix-durable-v5":!slashings.empty()?"nano-bellatrix-durable-v4":votes.empty()?"nano-bellatrix-durable-v2":"nano-bellatrix-durable-v3"},{"signedBlocks",std::move(blocks)}};
+  if(!votes.empty()||!slashings.empty()||!exits.empty()){
+   archive_require(votes.size()<=limits.messages);Json messages=Json::array();
+   const auto epoch=store.timed.view.current_epoch,oldest=epoch?epoch-1:0;
+@@ -71,7 +72,7 @@ std::string durable_snapshot(const BellatrixForkStore& store,const BellatrixSign
+   for(const auto& [id,record]:exits){if(cancel)cancel();archive_require(record&&record->ssz.size()==112&&store.blocks.contains(record->admission_root)&&144<=limits.envelope_bytes/2-total);total+=144;list.push_back(Json::array({hex(Bytes(id.begin(),id.end())),hex(Bytes(record->admission_root.begin(),record->admission_root.end())),hex(record->ssz)}));}
+   document["signedExits"]=std::move(list);
+  }
+- auto result=document.dump();archive_require(result.size()<=limits.envelope_bytes);if(cancel)cancel();return result;
++ return checkpoint_detail::durable_json(std::move(document),encoded,limits.envelope_bytes,cancel);
+ }
+ struct Restored {BellatrixForkStore store;std::shared_ptr<const BellatrixSignedBlockArchive> blocks;std::shared_ptr<const BellatrixSignedVoteArchive> votes,slashings;std::shared_ptr<const BellatrixSignedExitArchive> exits;};
+ Restored restore_durable_snapshot(std::string_view bytes,const Bytes& digest,const BellatrixForkBlockRules& rules,const BellatrixStoreSnapshotLimits& limits,const std::function<void()>& cancel){
+diff --git a/src/consensus_bellatrix_store_snapshot.cpp b/src/consensus_bellatrix_store_snapshot.cpp
+index f778caca..f31fdc26 100644
+--- a/src/consensus_bellatrix_store_snapshot.cpp
++++ b/src/consensus_bellatrix_store_snapshot.cpp
+@@ -60,9 +60,9 @@ std::string bellatrix_store_snapshot(const BellatrixForkStore& s,const Bellatrix
+  require(child.number>=0&&child.number<=Int("18446744073709551615")&&s.anchor_execution_ancestors.size()==std::min<uint64_t>(u64(child.number),256));
+  for(const auto& ancestor:s.anchor_execution_ancestors){if(cancel)cancel();require(ancestor.number+1==child.number&&ancestor.hash()==child.parent_hash);ancestors.push_back(ancestor.to_json());child=ancestor;}
+  for(const auto& [id,b]:s.blocks)if(id!=v.anchor){const auto& parent=s.blocks.at(b.header.parent_root);require(parent.header.slot<b.header.slot&&parent.execution_block.header.number+1==b.execution_block.header.number&&parent.execution_block.header.hash()==b.execution_block.header.parent_hash);}
+- Json j{{"ancestors",ancestors},{"format","nano-bellatrix-store-v1"},{"profile",current_profile},{"anchor",root(v.anchor)},{"justified",cp(v.justified)},{"finalized",cp(v.finalized)},
++ Json j{{"ancestors",std::move(ancestors)},{"format","nano-bellatrix-store-v1"},{"profile",current_profile},{"anchor",root(v.anchor)},{"justified",cp(v.justified)},{"finalized",cp(v.finalized)},
+  {"clock",Json::array({num(c.genesis_time_ms),num(c.time_ms),cp(c.unrealized_justified),cp(c.unrealized_finalized)})},
+- {"boost",v.proposer_boost?Json(root(*v.proposer_boost)):Json(nullptr)},{"blocks",blocks},{"messages",messages},{"equivocations",equiv},{"timely",timely},{"unrealized",unrealized}};
++ {"boost",v.proposer_boost?Json(root(*v.proposer_boost)):Json(nullptr)},{"blocks",std::move(blocks)},{"messages",std::move(messages)},{"equivocations",std::move(equiv)},{"timely",std::move(timely)},{"unrealized",std::move(unrealized)}};
+  auto encoded=j.dump();require(encoded.size()<=l.envelope_bytes);if(cancel)cancel();return encoded;
+ }
+ BellatrixForkStore bellatrix_store_from_snapshot(std::string_view bytes,const Bytes& digest,const BellatrixForkBlockRules& r,
+diff --git a/src/consensus_checkpoint_json.hpp b/src/consensus_checkpoint_json.hpp
+new file mode 100644
+index 00000000..90d80aeb
+--- /dev/null
++++ b/src/consensus_checkpoint_json.hpp
+@@ -0,0 +1,23 @@
++#pragma once
++#include "json.hpp"
++#include <functional>
++#include <stdexcept>
++#include <string>
++#include <string_view>
++namespace nano::checkpoint_detail {
++// Internal canonical serializer: encoded_store must come from the validated
++// store serializer. Never use this entry point to embed an untrusted peer value.
++inline std::string durable_json(nlohmann::json document,const std::string& encoded_store,
++ size_t maximum_bytes,const std::function<void()>& cancel={}){
++ auto require=[](bool ok){if(!ok)throw std::invalid_argument("Invalid Bellatrix durable archive");};
++ require(document.is_object()&&!encoded_store.empty());
++ // The canonical object uses sorted keys. Refuse future fields that would
++ // change the position of store instead of silently changing checkpoint bytes.
++ for(const auto& item:document.items())require(item.key()<"store");
++ auto result=document.dump();constexpr std::string_view key=",\"store\":";
++ require(!document.empty()&&encoded_store.size()<=maximum_bytes&&result.size()<=maximum_bytes-encoded_store.size()&&key.size()<=maximum_bytes-encoded_store.size()-result.size());
++ result.reserve(result.size()+key.size()+encoded_store.size());
++ result.pop_back();result.append(key);result.append(encoded_store);result.push_back('}');
++ if(cancel)cancel();return result;
++}
++}
+diff --git a/tests/test_checkpoint_json.cpp b/tests/test_checkpoint_json.cpp
+new file mode 100644
+index 00000000..1210660c
+--- /dev/null
++++ b/tests/test_checkpoint_json.cpp
+@@ -0,0 +1,28 @@
++#include "consensus_checkpoint_json.hpp"
++#include "json.hpp"
++#include <functional>
++#include <iostream>
++#include <random>
++#include <stdexcept>
++#include <string>
++using Json=nlohmann::json;
++using nano::checkpoint_detail::durable_json;
++int main(){try{
++ std::mt19937_64 random(0x42454c4c41545249);size_t comparisons=0,rejections=0,cancellations=0;
++ for(int version=2;version<=5;++version)for(unsigned sample=0;sample<256;++sample){
++  Json blocks=Json::array();for(unsigned i=0;i<sample%9;++i)blocks.push_back(Json::array({std::to_string(random()),std::string(121*(1+sample%8),'a')}));
++  Json store={{"format","nano-bellatrix-store-v1"},{"clock",Json::array({"0",std::to_string(random())})},{"blocks",blocks},{"unicode","é 🐝"},{"escape","\"\\\n"},{"nested",Json{{"z",UINT64_MAX},{"a",Json::array({nullptr,true,false,-17,1.25})}}}};
++  Json document={{"format","nano-bellatrix-durable-v"+std::to_string(version)},{"signedBlocks",blocks}};
++  if(version>=3)document["signedVotes"]=blocks;
++  if(version>=4)document["signedSlashings"]=blocks;
++  if(version>=5)document["signedExits"]=blocks;
++  const auto encoded=store.dump();auto legacy=document;legacy["store"]=Json::parse(encoded);const auto expected=legacy.dump();
++  if(durable_json(document,encoded,expected.size())!=expected)throw std::runtime_error("canonical byte mismatch");++comparisons;
++  if(durable_json(document,encoded,SIZE_MAX)!=expected)throw std::runtime_error("unbounded byte mismatch");++comparisons;
++  for(size_t bound:{size_t(0),encoded.size()-1,expected.size()-1}){bool rejected=false;try{durable_json(document,encoded,bound);}catch(const std::invalid_argument&){rejected=true;}if(!rejected)throw std::runtime_error("envelope bound accepted");++rejections;}
++  bool cancelled=false;try{durable_json(document,encoded,expected.size(),[]{throw std::runtime_error("cancelled");});}catch(const std::runtime_error&){cancelled=true;}if(!cancelled)throw std::runtime_error("cancellation swallowed");++cancellations;
++ }
++ for(const auto& document:{Json::array(),Json::object(),Json{{"format","v3"},{"store",Json::object()}},Json{{"format","v3"},{"zzz",true}}}){bool rejected=false;try{durable_json(document,"{}",SIZE_MAX);}catch(const std::invalid_argument&){rejected=true;}if(!rejected)throw std::runtime_error("noncanonical outer keys accepted");++rejections;}
++ std::cout<<Json{{"versions",Json::array({2,3,4,5})},{"byteComparisons",comparisons},{"boundRejections",rejections},{"cancellations",cancellations},{"passed",true}}.dump()<<std::endl;
++ return 0;
++}catch(const std::exception& error){std::cerr<<error.what()<<std::endl;return 1;}}

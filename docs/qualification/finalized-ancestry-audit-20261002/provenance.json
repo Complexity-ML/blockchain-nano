@@ -1,0 +1,26 @@
+{
+  "source_candidate": "736dab4674753eaee6db11e2bb01e9550843aeaa",
+  "parent": "3030b799",
+  "image": "sha256:6116669430b02b7e8012af8c8bd515a5a7dcd1dd2034649f9b45ae5b9e70a3a4",
+  "architecture": "ARM64",
+  "method": "Direct O2 compilation of new audit translation unit and helper; existing O3 libraries from frozen 3030b799 build mounted read-only. Not a full candidate CMake build.",
+  "resource_bounds": {
+    "cpus": 1,
+    "memory": "2GiB",
+    "network": "none",
+    "root_filesystem": "read-only",
+    "capabilities": "all dropped",
+    "replay_timeout_seconds": 180
+  },
+  "fixture": "stopped restored fixture from 2026-09-30, readonly mount, complete hashes unchanged",
+  "helper_cases": 12,
+  "native_integration_cases": 4,
+  "legacy_compatibility_replay": true,
+  "fixture_input_checkpoint_selection": "selected from legacy audit output for synthetic integration, not an independent WAN observation",
+  "source_manifest_timing": "source patch archived after test; CMake test registration and header comments added after first helper compilation; no complete before/after source manifest claim",
+  "static_input_manifest_scope": "Six explicit link inputs before/after; fixed image dynamic libraries; not an exhaustive link dependency manifest",
+  "AMD64_qualified": false,
+  "full_regression_qualified": false,
+  "live_WAN_qualified": false,
+  "main_runtime_promoted": false
+}

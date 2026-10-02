@@ -1,0 +1,13 @@
+diff --git a/tests/test_bellatrix_transition.cpp b/tests/test_bellatrix_transition.cpp
+index ca81fb93..becbe859 100644
+--- a/tests/test_bellatrix_transition.cpp
++++ b/tests/test_bellatrix_transition.cpp
+@@ -697,7 +697,7 @@ int main(int argc,char** argv){try{
+     const auto tip=reactor_disk->latest();check(record&&tip,"missing cache test checkpoint");
+     // A second legitimate storage writer changes the coupled checkpoint. A
+     // cached byte match must still detect the stale external commitment.
+-    const auto replacement=reactor_disk->commit_execution_checkpoint(1337,execution_genesis.header.hash(),warm,tip->header.hash(),tip->header.number,tip->header.hash(),{},record->payload+" ",reactor_limits.envelope_bytes,reactor_limits.blocks);
++    const auto replacement=reactor_disk->commit_execution_checkpoint(1337,execution_genesis.header.hash(),warm,tip->header.hash(),tip->header.number,tip->header.hash(),{},record->snapshot+" ",reactor_limits.envelope_bytes,reactor_limits.blocks);
+     check(replacement!=warm,"external writer did not advance checkpoint");
+     bool rejected=false;try{reactor->block(wire);}catch(const std::exception&){rejected=true;}
+     check(rejected,"warm cache acknowledged stale disk checkpoint");

@@ -1,0 +1,24 @@
+{
+  "revision": "2db1840c86d66129c55570e4abc60ff2335f6a3b",
+  "parent": "bad3e0c0",
+  "branch": "qualification/checkpoint-serialization-20261002",
+  "purpose": "30-second software CPU sample of isolated partition case, no recompile, no runtime instrumentation",
+  "selectionRegex": "^consensus_bellatrix_partition_simulation$",
+  "timeouts": {
+    "consensus_bellatrix_signed_execution_chain": 120,
+    "consensus_bellatrix_partition_simulation": 240,
+    "consensus_bellatrix_publication_cache": 90
+  },
+  "buildReuse": "No header changes, rebuild changed core source and relink nano/test; no new image",
+  "previousCampaignsRetained": true,
+  "mainRuntimePromoted": false,
+  "perf": {
+    "event": "cpu-clock:u",
+    "frequency": 49,
+    "callGraph": "dwarf,8192",
+    "windowSeconds": 30,
+    "noKernelSettingChanged": true,
+    "cyclesNotSupported": true
+  },
+  "performanceComparison": "Instrumented wall time cannot establish production throughput or resolve baseline deadline"
+}

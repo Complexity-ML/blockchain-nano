@@ -64,6 +64,23 @@ Vérification préparatoire réalisée avec le véritable exporteur natif :
 préparés sans lancement réseau. Ces fixtures de vérification doivent être
 régénérées juste avant la campagne : le genesis dépend de l’horloge.
 
+## Réutiliser une compilation isolée
+
+En mode `NANO_TEST_BUILD_VOLUME=1`, `NANO_TEST_BUILD_SUBDIRECTORY` sélectionne
+un sous-dossier existant de `/build` (par exemple
+`production-evm-c10426b2-20261001`). Le binaire Nano, le marqueur de révision
+et l'auditeur de rotation sont lus dans ce même dossier ; le relais P2P reste
+`/build/network/nano-p2p`. Le volume demeure en lecture seule. Le chemin est
+consigné dans la preuve du banc et les empreintes sont collectées avant démarrage.
+Un sélecteur de dossier est refusé hors du mode volume ou s'il contient un
+chemin, un espace ou un saut de ligne. L'absence du sélecteur conserve l'ancien
+chemin `/build/nano`.
+
+Cela ne qualifie pas les binaires : la régression complète, la provenance du
+marqueur, la correspondance des sources et du binaire natif doivent être revues
+avant le lancement. Ne pas créer de marqueur pour une compilation non qualifiée.
+Aucune campagne ni nouvelle image ne sont lancées par cette configuration.
+
 ## Critère de campagne
 
 Vérifier le commit et l’architecture des binaires, les connexions réelles,

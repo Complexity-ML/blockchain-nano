@@ -1,0 +1,19 @@
+{
+  "revision": "cac8d719",
+  "parent": "2db1840c",
+  "purpose": "Qualify five original Capella timeout gates after SSZ provider optimization",
+  "sourceTransport": "Git",
+  "buildReuse": "Same unchanged cac8d719 core; relink existing Capella test object with changed signing implementation; no layout change",
+  "selection": "deposit_activation, deposit_activation_restart, deposit_auto_registration, reindexed_validator_activation, exit_reindex",
+  "newImageBuild": false,
+  "mainRuntimePromoted": false,
+  "cryptoProviderLifetime": "Default OpenSSL context/properties at first use; immutable fetched method freed on static destruction; OpenSSL >= 3.0 explicitly required",
+  "timeoutsSeconds": [
+    360,
+    360,
+    360,
+    360,
+    480
+  ],
+  "previousSixCasesTerminalPassed": true
+}

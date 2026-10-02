@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="12"
+	failures="2"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="258"
+	timestamp="2026-10-02T03:18:58"
+	>
+	<testcase name="consensus_bellatrix_clock_coalescing" classname="consensus_bellatrix_clock_coalescing" time="1.11603" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_runtime"/>
+		</properties>
+		<system-out>{"backwardsStepRejected":true,"cancellationPreserved":true,"observations":45,"oversizedStepRejected":true,"publications":17,"scenario":"clock-phase-coalescing","stateEquivalent":true}
+</system-out>
+	</testcase>
+	<testcase name="consensus_bellatrix_partition_simulation" classname="consensus_bellatrix_partition_simulation" time="240.053" status="fail">
+		<failure message="Timeout"/>
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_simulation"/>
+		</properties>
+		<system-out>{"consecutive":0,"event":"simulation-epoch","finalizedA":0,"finalizedB":0,"sameHead":true,"slot":8}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":0,"finalizedB":0,"sameHead":true,"slot":16}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":0,"finalizedB":0,"sameHead":true,"slot":24}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":2,"finalizedB":2,"sameHead":true,"slot":32}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":2,"finalizedB":2,"sameHead":false,"slot":40}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":2,"finalizedB":2,"sameHead":false,"slot":48}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":2,"finalizedB":2,"sameHead":true,"slot":56}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":6,"finalizedB":6,"sameHead":true,"slot":64}
+{"consecutive":1,"event":"simulation-epoch","finalizedA":7,"finalizedB":7,"sameHead":true,"slot":72}
+{"consecutive":2,"event":"simulation-epoch","finalizedA":8,"finalizedB":8,"sameHead":true,"slot":80}
+{"consecutive":3,"event":"simulation-epoch","finalizedA":9,"finalizedB":9,"sameHead":true,"slot":88}
+{"consecutive":4,"event":"simulation-epoch","finalizedA":10,"finalizedB":10,"sameHead":true,"slot":96}
+</system-out>
+	</testcase>
+	<testcase name="storage_execution_checkpoint" classname="storage_execution_checkpoint" time="0.857357" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_local"/>
+		</properties>
+		<system-out>{"archiveAtomicRecovery":true,"archiveSurvivesReorg":true,"bellatrixReactor":false,"concurrentCAS":true,"rejections":14,"scenario":"atomic-execution-checkpoint","shanghai":false,"shorterReorg":true,"sigkillReopens":4,"unchangedHeadCheckpoint":true}
+</system-out>
+	</testcase>
+	<testcase name="storage_execution_checkpoint_sync" classname="storage_execution_checkpoint_sync" time="0.230234" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_sync_local"/>
+		</properties>
+		<system-out>{"physicalPowerLoss":false,"retainedAndLostSuffix":true,"scenario":"atomic-execution-checkpoint-sync","shanghai":false}
+</system-out>
+	</testcase>
+	<testcase name="consensus_beacon_witness_recovery" classname="consensus_beacon_witness_recovery" time="0.224112" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_recovery"/>
+		</properties>
+		<system-out>Witness crash recovery, exact roll-forward, rollback refusal, identity and stale writer checks passed
+</system-out>
+	</testcase>
+	<testcase name="consensus_bellatrix_witness_runtime" classname="consensus_bellatrix_witness_runtime" time="3.43045" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_recovery"/>
+		</properties>
+		<system-out>{"clockRegressionGated":true,"configuredKeys":64,"independentProcesses":false,"invalidConfigCases":4,"proposalsAcrossRestart":2,"repeatedDutySuppressed":true,"scenario":"bellatrix-runtime-config-restart","slashingIncludedAfterRestart":false,"staleCheckpointRejected":true,"witnessed":true}
+Bellatrix witnessed core roll-forward and rollback admission checks passed
+</system-out>
+	</testcase>
+	<testcase name="consensus_bellatrix_local_slashing" classname="consensus_bellatrix_local_slashing" time="2.00063" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_operations"/>
+		</properties>
+		<system-out>{"clockRegressionGated":true,"configuredKeys":64,"independentProcesses":false,"invalidConfigCases":4,"proposalsAcrossRestart":2,"repeatedDutySuppressed":true,"scenario":"bellatrix-runtime-config-restart","slashingIncludedAfterRestart":true,"staleCheckpointRejected":true,"witnessed":false}
+</system-out>
+	</testcase>
+	<testcase name="consensus_bellatrix_voluntary_exit" classname="consensus_bellatrix_voluntary_exit" time="3.46581" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_operations"/>
+		</properties>
+		<system-out>{"duplicateDidNotPublish":true,"durableArchive":true,"exitEpoch":6,"futureEpochRejected":true,"invalidSignatureRejected":true,"networkAdmissionQualified":false,"payoutImplemented":false,"scenario":"bellatrix-local-voluntary-exit","scheduledByBlock":true,"syntheticTenureEpochs":1,"withdrawableEpoch":262}
+</system-out>
+	</testcase>
+	<testcase name="consensus_bellatrix_deposit_store" classname="consensus_bellatrix_deposit_store" time="1.65112" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_deposits"/>
+		</properties>
+		<system-out>{"atomicExecutionReopen":true,"beaconAdmission":false,"competingBranches":true,"fundedDeposits":2,"scenario":"bellatrix-deposit-store","snapshotTamperingRejected":true}
+</system-out>
+	</testcase>
+	<testcase name="consensus_bellatrix_beacon_headers_reorg" classname="consensus_bellatrix_beacon_headers_reorg" time="5.23825" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_api"/>
+		</properties>
+		<system-out>{"assertoorQualified":false,"beaconHeaderReorgs":2,"frozenSnapshotPreserved":true}
+</system-out>
+	</testcase>
+	<testcase name="consensus_checkpoint_json_canonical" classname="consensus_checkpoint_json_canonical" time="0.208246" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_local"/>
+		</properties>
+		<system-out>{"boundRejections":3076,"byteComparisons":2048,"cancellations":1024,"passed":true,"versions":[2,3,4,5]}
+</system-out>
+	</testcase>
+	<testcase name="consensus_bellatrix_publication_cache" classname="consensus_bellatrix_publication_cache" time="0.00803769" status="fail">
+		<failure message="Failed"/>
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_recovery"/>
+		</properties>
+		<system-out>unknown Bellatrix qualification arguments
+</system-out>
+	</testcase>
+</testsuite>

@@ -1,0 +1,124 @@
+Start testing: Oct 02 03:50 UTC
+----------------------------------------------------------
+197/422 Testing: ethereum_consensus_signing_roots
+197/422 Test: ethereum_consensus_signing_roots
+Command: "/build/snapshot-cache-row-2db1840c-arm64-20261002/nano-consensus-signing-tests"
+Directory: /build/snapshot-cache-row-2db1840c-arm64-20261002
+"ethereum_consensus_signing_roots" start time: Oct 02 03:50 UTC
+Output:
+----------------------------------------------------------
+{"activeInConsensus":false,"forkDataCases":5,"scenario":"consensus-signing-roots","signingDataCases":5}
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"ethereum_consensus_signing_roots" end time: Oct 02 03:50 UTC
+"ethereum_consensus_signing_roots" time elapsed: 00:00:00
+----------------------------------------------------------
+
+322/422 Testing: consensus_bellatrix_partition_simulation
+322/422 Test: consensus_bellatrix_partition_simulation
+Command: "/build/snapshot-cache-row-2db1840c-arm64-20261002/nano-bellatrix-transition-tests" "--partition-simulation"
+Directory: /build/snapshot-cache-row-2db1840c-arm64-20261002
+"consensus_bellatrix_partition_simulation" start time: Oct 02 03:50 UTC
+Output:
+----------------------------------------------------------
+{"consecutive":0,"event":"simulation-epoch","finalizedA":0,"finalizedB":0,"sameHead":true,"slot":8}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":0,"finalizedB":0,"sameHead":true,"slot":16}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":0,"finalizedB":0,"sameHead":true,"slot":24}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":2,"finalizedB":2,"sameHead":true,"slot":32}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":2,"finalizedB":2,"sameHead":false,"slot":40}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":2,"finalizedB":2,"sameHead":false,"slot":48}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":2,"finalizedB":2,"sameHead":true,"slot":56}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":6,"finalizedB":6,"sameHead":true,"slot":64}
+{"consecutive":1,"event":"simulation-epoch","finalizedA":7,"finalizedB":7,"sameHead":true,"slot":72}
+{"consecutive":2,"event":"simulation-epoch","finalizedA":8,"finalizedB":8,"sameHead":true,"slot":80}
+{"consecutive":3,"event":"simulation-epoch","finalizedA":9,"finalizedB":9,"sameHead":true,"slot":88}
+{"consecutive":4,"event":"simulation-epoch","finalizedA":10,"finalizedB":10,"sameHead":true,"slot":96}
+{"consecutive":5,"event":"simulation-epoch","finalizedA":11,"finalizedB":11,"sameHead":true,"slot":104}
+{"consecutive":6,"event":"simulation-epoch","finalizedA":12,"finalizedB":12,"sameHead":true,"slot":112}
+{"consecutiveAdvances":6,"cores":2,"finalizedEpoch":12,"p2p":false,"scenario":"partition-direct-delivery","syntheticClock":true,"validatorA":{"attestationsAdmitted":415,"dutyTraceFailures":0,"failure":null,"healthy":true,"localKeys":32,"proposalsAdmitted":56,"staleDutyRetries":0,"timing":{"maxPollMs":315,"maxProposalMs":142,"polls":333,"pollsOverSlot":0,"proposalAttempts":56,"proposalsUnavailable":0,"slotBoundaryExits":0}},"validatorB":{"attestationsAdmitted":422,"dutyTraceFailures":0,"failure":null,"healthy":true,"localKeys":32,"proposalsAdmitted":55,"staleDutyRetries":0,"timing":{"maxPollMs":819,"maxProposalMs":719,"polls":333,"pollsOverSlot":0,"proposalAttempts":55,"proposalsUnavailable":0,"slotBoundaryExits":0}},"validators":64}
+<end of output>
+Test time =  58.37 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_partition_simulation" end time: Oct 02 03:51 UTC
+"consensus_bellatrix_partition_simulation" time elapsed: 00:00:58
+----------------------------------------------------------
+
+323/422 Testing: consensus_bellatrix_signed_execution_chain
+323/422 Test: consensus_bellatrix_signed_execution_chain
+Command: "/build/snapshot-cache-row-2db1840c-arm64-20261002/nano-bellatrix-transition-tests"
+Directory: /build/snapshot-cache-row-2db1840c-arm64-20261002
+"consensus_bellatrix_signed_execution_chain" start time: Oct 02 03:51 UTC
+Output:
+----------------------------------------------------------
+vote retry batch: 18 retries, 126 checkpoints, 3133 us (including negative signatures)
+vote retry batch: 18 retries, 126 checkpoints, 3101 us (including negative signatures)
+{"blocks":9,"cachedSnapshotCallbacks":3642,"cancellations":7,"doubleProposalSlashed":true,"durableCommit":true,"durableReactor":true,"forkBlocks":10,"invalidSignedBlocks":7,"localAttestations":1,"localProposals":8,"localSignatureRefusals":8,"networkActive":false,"pairedCheckpointReopens":3,"pairedExecutionReorgs":2,"reactorCancellations":3,"reactorSyncErrorTested":true,"scenario":"signed-bellatrix-evm-chain","snapshotCacheMutationRefusals":4,"snapshotRefusals":6,"snapshotValidationCallbacks":152622,"storeCancellations":3,"validators":64,"wireMessages":15,"wireRefusals":6}
+<end of output>
+Test time =   1.22 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_signed_execution_chain" end time: Oct 02 03:51 UTC
+"consensus_bellatrix_signed_execution_chain" time elapsed: 00:00:01
+----------------------------------------------------------
+
+420/422 Testing: consensus_bellatrix_publication_cache
+420/422 Test: consensus_bellatrix_publication_cache
+Command: "/build/snapshot-cache-row-2db1840c-arm64-20261002/nano-bellatrix-transition-tests" "--publication-cache"
+Directory: /build/snapshot-cache-row-2db1840c-arm64-20261002
+"consensus_bellatrix_publication_cache" start time: Oct 02 03:51 UTC
+Output:
+----------------------------------------------------------
+{"duplicateTokenUnchanged":true,"externalCommitmentChangeRejected":true,"failClosed":true,"scenario":"published-snapshot-cache","warmDuplicates":3}
+<end of output>
+Test time =   0.14 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_bellatrix_publication_cache" end time: Oct 02 03:51 UTC
+"consensus_bellatrix_publication_cache" time elapsed: 00:00:00
+----------------------------------------------------------
+
+421/422 Testing: consensus_hash_provider_parallel
+421/422 Test: consensus_hash_provider_parallel
+Command: "/build/snapshot-cache-row-2db1840c-arm64-20261002/nano-consensus-hash-provider-tests"
+Directory: /build/snapshot-cache-row-2db1840c-arm64-20261002
+"consensus_hash_provider_parallel" start time: Oct 02 03:51 UTC
+Output:
+----------------------------------------------------------
+parallelWorkers=16 independentDigestComparisons=4098 concurrentFirstUse=true
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_hash_provider_parallel" end time: Oct 02 03:51 UTC
+"consensus_hash_provider_parallel" time elapsed: 00:00:00
+----------------------------------------------------------
+
+422/422 Testing: consensus_hash_provider_unavailable
+422/422 Test: consensus_hash_provider_unavailable
+Command: "/build/snapshot-cache-row-2db1840c-arm64-20261002/nano-consensus-hash-provider-tests" "--provider-unavailable"
+Directory: /build/snapshot-cache-row-2db1840c-arm64-20261002
+"consensus_hash_provider_unavailable" start time: Oct 02 03:51 UTC
+Output:
+----------------------------------------------------------
+providerFailureRejected=true initializationRetried=true
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_hash_provider_unavailable" end time: Oct 02 03:51 UTC
+"consensus_hash_provider_unavailable" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 02 03:51 UTC
+
+qualification_consensus_crypto =   0.00 sec*proc
+
+qualification_consensus_ethereum =   1.22 sec*proc
+
+qualification_consensus_recovery =   0.14 sec*proc
+
+qualification_consensus_simulation =  58.37 sec*proc
+

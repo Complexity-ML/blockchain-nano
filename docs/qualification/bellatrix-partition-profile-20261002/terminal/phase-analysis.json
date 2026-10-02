@@ -1,0 +1,65 @@
+{
+  "lastProfile": {
+    "blockChecks": 57259,
+    "cumulative": true,
+    "event": "partition-phase-profile",
+    "nestedTimings": true,
+    "phases": {
+      "blockAdmission": {
+        "calls": 87,
+        "maximumUs": 927382,
+        "totalUs": 18353232
+      },
+      "clockA": {
+        "calls": 261,
+        "maximumUs": 251832,
+        "totalUs": 16773789
+      },
+      "clockB": {
+        "calls": 261,
+        "maximumUs": 181494,
+        "totalUs": 15955231
+      },
+      "relay": {
+        "calls": 639,
+        "maximumUs": 10324565,
+        "totalUs": 69805946
+      },
+      "validatorA": {
+        "calls": 261,
+        "maximumUs": 1796655,
+        "totalUs": 61781950
+      },
+      "validatorB": {
+        "calls": 261,
+        "maximumUs": 4387333,
+        "totalUs": 66995197
+      },
+      "voteAdmission": {
+        "calls": 589,
+        "maximumUs": 179912,
+        "totalUs": 51372387
+      }
+    },
+    "relayedBlocks": 87,
+    "relayedVotes": 589,
+    "slot": 88,
+    "voteChecks": 104051
+  },
+  "lastFinality": {
+    "consecutive": 3,
+    "event": "simulation-epoch",
+    "finalizedA": 9,
+    "finalizedB": 9,
+    "sameHead": true,
+    "slot": 88
+  },
+  "relaySeconds": 69.805946,
+  "nestedAdmissionSeconds": 69.725619,
+  "relayRemainderSeconds": 0.080327,
+  "admissionFractionOfRelay": 0.9988492814064865,
+  "validatorSeconds": 128.777147,
+  "clockSeconds": 32.72902,
+  "warning": "Nested admission timings are included in relay; never add them to top-level phase totals. Counts alone do not identify scan cost. No timing after slot 88 is inferred.",
+  "productionQualified": false
+}

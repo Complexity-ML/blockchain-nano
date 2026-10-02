@@ -37,7 +37,7 @@ dpkg-query -W > /reports/build-packages.txt
 cmake -S /work -B "$build" -DCMAKE_BUILD_TYPE=Release -DNANO_NETWORK_EXECUTABLE=/build/network/nano-p2p
 cmake --build "$build" --parallel 2
 ctest --test-dir "$build" --show-only=json-v1 > /reports/registry.json
-cmake -DREGISTRY=/reports/registry.json -DOUTPUT=/reports/executables.json -DNETWORK_EXECUTABLE=/build/network/nano-p2p -P scripts/ci/docker-manifest.cmake
+cmake -DREGISTRY=/reports/registry.json -DOUTPUT=/reports/executables.json -DNETWORK_EXECUTABLE=/build/network/nano-p2p -DNODE_EXECUTABLE="$build/nano" -P scripts/ci/docker-manifest.cmake
 SH
 node scripts/ci/docker-inventory.mjs "$reports/registry.json" "$reports/executables.json" > "$reports/inventory.json"
 snapshot_sources > "$reports/source-manifest-after-build.json"
@@ -50,14 +50,14 @@ build=/build/$NANO_BUILD_SUBDIR
 export TMPDIR="$build/qualification-scratch"
 ctest --test-dir "$build" --show-only=json-v1 > /reports/registry-before-tests.json
 cmp /reports/registry.json /reports/registry-before-tests.json
-cmake -DREGISTRY=/reports/registry.json -DOUTPUT=/reports/executables-before-tests.json -DNETWORK_EXECUTABLE=/build/network/nano-p2p -P scripts/ci/docker-manifest.cmake
+cmake -DREGISTRY=/reports/registry.json -DOUTPUT=/reports/executables-before-tests.json -DNETWORK_EXECUTABLE=/build/network/nano-p2p -DNODE_EXECUTABLE="$build/nano" -P scripts/ci/docker-manifest.cmake
 cmp /reports/executables.json /reports/executables-before-tests.json
 set +e
 ctest --test-dir "$build" --no-tests=error --parallel 1 --output-on-failure --output-junit /reports/results.xml 2>&1 | tee /reports/tests.log
 status=${PIPESTATUS[0]}
 cp "$build/Testing/Temporary/LastTest.log" /reports/LastTest.log
 printf '%s\n' "$status" > /reports/ctest-exit.txt
-cmake -DREGISTRY=/reports/registry.json -DOUTPUT=/reports/executables-after-tests.json -DNETWORK_EXECUTABLE=/build/network/nano-p2p -P scripts/ci/docker-manifest.cmake
+cmake -DREGISTRY=/reports/registry.json -DOUTPUT=/reports/executables-after-tests.json -DNETWORK_EXECUTABLE=/build/network/nano-p2p -DNODE_EXECUTABLE="$build/nano" -P scripts/ci/docker-manifest.cmake
 manifest_status=$?
 printf '%s\n' "$manifest_status" > /reports/post-test-manifest-exit.txt
 if (( manifest_status != 0 )); then exit 1; fi

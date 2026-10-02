@@ -1,0 +1,11 @@
+{
+  "revision": "cac8d719",
+  "parent": "2db1840c",
+  "purpose": "Reuse fetched OpenSSL SHA256 method for SSZ pairs; checked digest length/success; no shared mutable digest context",
+  "sourceTransport": "Git",
+  "buildReuse": "No header changes; compile changed signing module/new target and relink existing core/node/tests",
+  "selection": "Six cases: official roots, concurrent first use, unavailable provider, signed chain, partition, cache stale writer",
+  "newImageBuild": false,
+  "mainRuntimePromoted": false,
+  "cryptoProviderLifetime": "Default OpenSSL context/properties at first use; immutable fetched method freed on static destruction; OpenSSL >= 3.0 explicitly required"
+}

@@ -1,0 +1,11 @@
+# Sélection du build qualifié pour l’assemblage — 2026-10-01
+
+Le script `scripts/operations/package-candidate.sh` acceptait uniquement les exécutables du répertoire historique `/build`. Les candidats isolés sont construits dans leur propre sous-répertoire. Un septième argument facultatif permet maintenant d’exporter `nano` et son marqueur depuis ce répertoire ; `nano-p2p` conserve son chemin séparé `/build/network/nano-p2p`. Le volume demeure en lecture seule, sans copie vers les anciens chemins ni recompilation. Six arguments gardent le comportement historique.
+
+Les identifiants/répertoires multi-lignes ne peuvent plus être validés par le seul succès d’une ligne du grep. Répertoire absolu, traversal, séparateur, préfixe option et métadonnées multi-lignes sont refusés avant tout appel Docker. Marqueur divergent, export échoué, fichier non régulier ou architecture divergente interdisent l’assemblage. Les empreintes finales et dépendances restent vérifiées dans la recette existante ; le marqueur seul ne prouve pas la provenance.
+
+Huit nouveaux contrôles avec Docker simulé passent, dont refus avant assemblage ; dix-neuf avec les onze contrôles d’intégrité de candidat précédents. Deux contrôles du vrai conteneur ARM64 réutilisent l’image existante avec **fichiers factices uniquement** : archive composée exactement des trois fichiers réguliers attendus et refus d’un lien symbolique (exit 1, zéro octet). Aucun nouveau runtime assemblé, aucun nouveau service lancé, aucune qualification globale de production.
+
+`export-command.sh` est le corps exact exporté du script courant ; son SHA-256 figure dans `real-export-summary.json`. L’erreur initiale du shell de contrôle (variable réservée zsh) est conservée séparément et n’est pas un échec du moteur. Les deux régressions intégrées c10426b2 poursuivent leurs sources figées et ne reçoivent pas rétroactivement cette modification d’outillage.
+
+La documentation NanoStaking est également corrigée : aucun plafond fixe de validateurs dans le source courant, pagination déjà implémentée. Ce guide concerne le PoS historique ; le profil Beacon refuse `stakingContract` et utilise son registre distinct. Aucun contrat ni artefact compilé n’est modifié par cette correction documentaire.

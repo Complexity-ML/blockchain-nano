@@ -1,0 +1,34 @@
+Internal ctest changing into directory: /build/published-bytes-fa390c3b-20261002
+Test project /build/published-bytes-fa390c3b-20261002
+    Start 322: consensus_bellatrix_partition_simulation
+1/3 Test #322: consensus_bellatrix_partition_simulation .....***Timeout 240.05 sec
+{"consecutive":0,"event":"simulation-epoch","finalizedA":0,"finalizedB":0,"sameHead":true,"slot":8}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":0,"finalizedB":0,"sameHead":true,"slot":16}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":0,"finalizedB":0,"sameHead":true,"slot":24}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":2,"finalizedB":2,"sameHead":true,"slot":32}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":2,"finalizedB":2,"sameHead":false,"slot":40}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":2,"finalizedB":2,"sameHead":false,"slot":48}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":2,"finalizedB":2,"sameHead":true,"slot":56}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":6,"finalizedB":6,"sameHead":true,"slot":64}
+{"consecutive":1,"event":"simulation-epoch","finalizedA":7,"finalizedB":7,"sameHead":true,"slot":72}
+{"consecutive":2,"event":"simulation-epoch","finalizedA":8,"finalizedB":8,"sameHead":true,"slot":80}
+{"consecutive":3,"event":"simulation-epoch","finalizedA":9,"finalizedB":9,"sameHead":true,"slot":88}
+{"consecutive":4,"event":"simulation-epoch","finalizedA":10,"finalizedB":10,"sameHead":true,"slot":96}
+
+    Start 323: consensus_bellatrix_signed_execution_chain
+2/3 Test #323: consensus_bellatrix_signed_execution_chain ...   Passed    8.49 sec
+    Start 420: consensus_bellatrix_publication_cache
+3/3 Test #420: consensus_bellatrix_publication_cache ........   Passed    0.82 sec
+
+67% tests passed, 1 tests failed out of 3
+
+Label Time Summary:
+qualification_consensus_ethereum      =   8.49 sec*proc (1 test)
+qualification_consensus_recovery      =   0.82 sec*proc (1 test)
+qualification_consensus_simulation    = 240.05 sec*proc (1 test)
+
+Total Test time (real) = 249.37 sec
+
+The following tests FAILED:
+	322 - consensus_bellatrix_partition_simulation (Timeout)
+Errors while running CTest

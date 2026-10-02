@@ -241,9 +241,10 @@ consultée n'établit à elle seule son indexation DexScreener à l'ouverture.
 Sources : https://docs.flaunch.gg/protocol/frequently-asked-questions et
 https://docs.flaunch.gg/references/api.
 
-Doppler est un candidat technique supplémentaire : la documentation décrit des
-modules de création de tokens, des courbes configurables et des déploiements sur
-Base/Base Sepolia. Cela justifie une étude, pas une sélection. Restent à vérifier
+Lors de cette comparaison initiale, Doppler était un candidat technique : la
+documentation décrivait des modules de création de tokens, des courbes
+configurables et des déploiements sur Base/Base Sepolia. Le choix utilisateur du
+1 octobre 2026, consigné en tête de document, retient désormais Doppler. Restent à vérifier
 l'indexation avant migration, l'utilisation de l'actif USDC retenu, l'import ou
 l'adossement de l'offre NANO, les modules canoniques autorisés et la destination
 des liquidités. Sources : https://docs.doppler.lol/explainer et
@@ -283,3 +284,11 @@ prêts. Conserver le visuel et le brouillon ; aucune création de token, signatu
 collecte ou publication n'est autorisée par cette préparation. Priorité actuelle :
 reprise WAN, définition et qualification de l'adossement Base/NANO, puis vente
 et migration de liquidité. La date provisoire n'est pas un calendrier de lancement.
+
+## 2026-10-02 — Vérification du parcours token Dynamic
+
+L'inspection du SDK officiel constate une configuration de token et une
+factory personnalisable ; cela ne qualifie pas l'import d'un ERC-20 existant
+ni l'adossement au NANO natif. La disponibilité d'une factory adaptée dans
+l'application reste à vérifier avant la vente.
+[Sources, constats et limites](../docs/qualification/doppler-token-path-20261002/README.md).

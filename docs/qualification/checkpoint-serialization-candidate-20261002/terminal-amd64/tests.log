@@ -1,0 +1,42 @@
+Internal ctest changing into directory: /reports/ctest
+Test project /reports/ctest
+    Start 1: consensus_checkpoint_json_canonical
+1/8 Test #1: consensus_checkpoint_json_canonical ........   Passed    0.21 sec
+    Start 2: consensus_bellatrix_witness_runtime
+2/8 Test #2: consensus_bellatrix_witness_runtime ........   Passed    3.34 sec
+    Start 3: consensus_bellatrix_local_slashing
+3/8 Test #3: consensus_bellatrix_local_slashing .........   Passed    1.97 sec
+    Start 4: consensus_bellatrix_voluntary_exit
+4/8 Test #4: consensus_bellatrix_voluntary_exit .........   Passed    3.72 sec
+    Start 5: consensus_bellatrix_deposit_store
+5/8 Test #5: consensus_bellatrix_deposit_store ..........   Passed    1.62 sec
+    Start 6: consensus_bellatrix_clock_coalescing
+6/8 Test #6: consensus_bellatrix_clock_coalescing .......   Passed    1.08 sec
+    Start 7: consensus_bellatrix_beacon_headers_reorg
+7/8 Test #7: consensus_bellatrix_beacon_headers_reorg ...   Passed    5.28 sec
+    Start 8: consensus_bellatrix_partition_simulation
+8/8 Test #8: consensus_bellatrix_partition_simulation ...***Timeout 240.03 sec
+{"consecutive":0,"event":"simulation-epoch","finalizedA":0,"finalizedB":0,"sameHead":true,"slot":8}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":0,"finalizedB":0,"sameHead":true,"slot":16}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":0,"finalizedB":0,"sameHead":true,"slot":24}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":2,"finalizedB":2,"sameHead":true,"slot":32}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":2,"finalizedB":2,"sameHead":false,"slot":40}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":2,"finalizedB":2,"sameHead":false,"slot":48}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":2,"finalizedB":2,"sameHead":true,"slot":56}
+{"consecutive":0,"event":"simulation-epoch","finalizedA":6,"finalizedB":6,"sameHead":true,"slot":64}
+{"consecutive":1,"event":"simulation-epoch","finalizedA":7,"finalizedB":7,"sameHead":true,"slot":72}
+{"consecutive":2,"event":"simulation-epoch","finalizedA":8,"finalizedB":8,"sameHead":true,"slot":80}
+{"consecutive":3,"event":"simulation-epoch","finalizedA":9,"finalizedB":9,"sameHead":true,"slot":88}
+{"consecutive":4,"event":"simulation-epoch","finalizedA":10,"finalizedB":10,"sameHead":true,"slot":96}
+
+
+88% tests passed, 1 tests failed out of 8
+
+Label Time Summary:
+qualification_consensus_ethereum    = 257.26 sec*proc (8 tests)
+
+Total Test time (real) = 257.26 sec
+
+The following tests FAILED:
+	  8 - consensus_bellatrix_partition_simulation (Timeout)
+Errors while running CTest
