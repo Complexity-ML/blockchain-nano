@@ -73,9 +73,9 @@ std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBl
   // String views remain valid: std::map insertions preserve other entries,
   // and this entry is never replaced again during this invocation.
   if(cache)encoded_rows.push_back(cache->records_.at(id)[3].get_ref<const std::string&>());
-  // Cached row dumps already contain the complete, validated records. Keep
-  // only array cardinality in the enclosing DOM, avoiding another deep copy
-  // of every SSZ/execution record when the JSON object is assembled below.
+  // Cached row dumps contain the complete, validated records. The envelope
+  // only needs their count, so release the temporary SSZ/execution row DOM
+  // immediately instead of retaining it until the envelope is destroyed.
   // The uncached path retains the full DOM and remains the byte-level oracle.
   if(cache)blocks.push_back(nullptr);else blocks.push_back(std::move(row));
  }
