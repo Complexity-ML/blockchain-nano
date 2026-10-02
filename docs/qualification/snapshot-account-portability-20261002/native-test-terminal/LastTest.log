@@ -1,0 +1,265 @@
+Start testing: Oct 02 11:53 CEST
+----------------------------------------------------------
+3/433 Testing: core
+3/433 Test: core
+Command: "/tmp/nano-snapshot-account-portable-candidate-20261002/build-release/nano-tests"
+Directory: /tmp/nano-snapshot-account-portable-candidate-20261002
+"core" start time: Oct 02 11:53 CEST
+Output:
+----------------------------------------------------------
+4069 checks passed
+<end of output>
+Test time =   0.99 sec
+----------------------------------------------------------
+Test Passed.
+"core" end time: Oct 02 11:53 CEST
+"core" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/433 Testing: consensus_rotation_audit_empty_aggregate
+4/433 Test: consensus_rotation_audit_empty_aggregate
+Command: "/tmp/nano-snapshot-account-portable-candidate-20261002/build-release/nano-capella-rotation-audit" "--self-test"
+Directory: /tmp/nano-snapshot-account-portable-candidate-20261002/build-release
+"consensus_rotation_audit_empty_aggregate" start time: Oct 02 11:53 CEST
+Output:
+----------------------------------------------------------
+6 empty-aggregate checks passed; no network qualification
+<end of output>
+Test time =   0.28 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_rotation_audit_empty_aggregate" end time: Oct 02 11:53 CEST
+"consensus_rotation_audit_empty_aggregate" time elapsed: 00:00:00
+----------------------------------------------------------
+
+309/433 Testing: consensus_multihost_build_paths
+309/433 Test: consensus_multihost_build_paths
+Command: "/opt/homebrew/bin/node" "--test" "/tmp/nano-snapshot-account-portable-candidate-20261002/tests/multihost/build-paths.test.mjs"
+Directory: /tmp/nano-snapshot-account-portable-candidate-20261002/build-release
+"consensus_multihost_build_paths" start time: Oct 02 11:53 CEST
+Output:
+----------------------------------------------------------
+✔ legacy read-only volume paths remain available (0.549542ms)
+✔ isolated runtime, provenance and rotation auditor share the selected build (0.07075ms)
+✔ packaged/default mode cannot silently ignore a requested build (0.157417ms)
+✔ escape, whitespace, empty and multiline build selectors are rejected (0.105292ms)
+✔ architecture-specific paths select separate existing builds (0.053125ms)
+✔ common selector remains backward compatible and supports explicit override (0.493042ms)
+✔ one missing architecture without fallback cannot silently use the legacy binary (0.046375ms)
+✔ per-architecture selectors preserve packaged and path validation (0.060083ms)
+✔ remote source can select a Git candidate without changing the main checkout (0.086417ms)
+✔ remote source rejects traversal, relative paths and mount injection (0.111834ms)
+✔ remote Docker invocations translate provenance, native audit, restore and rotation executables (0.08475ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 63.938
+<end of output>
+Test time =   0.20 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_multihost_build_paths" end time: Oct 02 11:53 CEST
+"consensus_multihost_build_paths" time elapsed: 00:00:00
+----------------------------------------------------------
+
+310/433 Testing: consensus_multihost_harness_manifest
+310/433 Test: consensus_multihost_harness_manifest
+Command: "/opt/homebrew/bin/node" "--test" "/tmp/nano-snapshot-account-portable-candidate-20261002/tests/multihost/harness-manifest.test.mjs"
+Directory: /tmp/nano-snapshot-account-portable-candidate-20261002/build-release
+"consensus_multihost_harness_manifest" start time: Oct 02 11:53 CEST
+Output:
+----------------------------------------------------------
+✔ actual runner inventory covers restored audit and transitive finality/monitor dependencies (17.038208ms)
+✔ dependency-only edit changes its hash while entry hash remains identical (2.438ms)
+✔ multiline imports, side effects and cycles are included once (3.115625ms)
+✔ missing imported dependency fails rather than making a partial manifest (1.136333ms)
+✔ import outside repository is rejected (1.598792ms)
+✔ symlink to external source is rejected (1.431ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 91.174666
+<end of output>
+Test time =   0.14 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_multihost_harness_manifest" end time: Oct 02 11:53 CEST
+"consensus_multihost_harness_manifest" time elapsed: 00:00:00
+----------------------------------------------------------
+
+358/433 Testing: consensus_capella_signed_transition
+358/433 Test: consensus_capella_signed_transition
+Command: "/tmp/nano-snapshot-account-portable-candidate-20261002/build-release/nano-capella-transition-tests"
+Directory: /tmp/nano-snapshot-account-portable-candidate-20261002/build-release
+"consensus_capella_signed_transition" start time: Oct 02 11:53 CEST
+Output:
+----------------------------------------------------------
+{"assembledBodies":9,"beaconReadChecks":0,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":0,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":false,"localProposals":8,"localRandao":8,"migrated":false,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":false,"rejected":20,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"wireMessages":0,"withdrawals":1}
+{"assembledBodies":9,"beaconReadChecks":0,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":1,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":false,"localProposals":8,"localRandao":8,"migrated":true,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":false,"rejected":24,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"wireMessages":0,"withdrawals":1}
+{"assembledBodies":9,"beaconReadChecks":0,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":1,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":false,"localProposals":8,"localRandao":8,"migrated":true,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":false,"rejected":24,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":3,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"wireMessages":0,"withdrawals":1}
+<end of output>
+Test time =  10.52 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_signed_transition" end time: Oct 02 11:53 CEST
+"consensus_capella_signed_transition" time elapsed: 00:00:10
+----------------------------------------------------------
+
+423/433 Testing: consensus_capella_audit_finalized_ancestry
+423/433 Test: consensus_capella_audit_finalized_ancestry
+Command: "/tmp/nano-snapshot-account-portable-candidate-20261002/build-release/nano-capella-audit-ancestry-tests"
+Directory: /tmp/nano-snapshot-account-portable-candidate-20261002/build-release
+"consensus_capella_audit_finalized_ancestry" start time: Oct 02 11:53 CEST
+Output:
+----------------------------------------------------------
+12 actual ancestry-helper cases passed; no signature or full replay qualification
+<end of output>
+Test time =   0.25 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_audit_finalized_ancestry" end time: Oct 02 11:53 CEST
+"consensus_capella_audit_finalized_ancestry" time elapsed: 00:00:00
+----------------------------------------------------------
+
+426/433 Testing: consensus_checkpoint_json_canonical
+426/433 Test: consensus_checkpoint_json_canonical
+Command: "/tmp/nano-snapshot-account-portable-candidate-20261002/build-release/nano-checkpoint-json-tests"
+Directory: /tmp/nano-snapshot-account-portable-candidate-20261002/build-release
+"consensus_checkpoint_json_canonical" start time: Oct 02 11:53 CEST
+Output:
+----------------------------------------------------------
+{"bellatrixVersions":[2,3,4,5],"boundRejections":3844,"byteComparisons":3584,"cancellations":1024,"capellaStoreSchemas":[1,2,3],"capellaVersions":[1,2,3,4],"passed":true}
+<end of output>
+Test time =   0.37 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_checkpoint_json_canonical" end time: Oct 02 11:53 CEST
+"consensus_checkpoint_json_canonical" time elapsed: 00:00:00
+----------------------------------------------------------
+
+428/433 Testing: consensus_hash_provider_parallel
+428/433 Test: consensus_hash_provider_parallel
+Command: "/tmp/nano-snapshot-account-portable-candidate-20261002/build-release/nano-consensus-hash-provider-tests"
+Directory: /tmp/nano-snapshot-account-portable-candidate-20261002/build-release
+"consensus_hash_provider_parallel" start time: Oct 02 11:53 CEST
+Output:
+----------------------------------------------------------
+parallelWorkers=16 independentDigestComparisons=5634 knownVectorChecks=513 completeInputBitMutations=512 replacementThreads=8 concurrentFirstUse=true
+<end of output>
+Test time =   0.23 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_hash_provider_parallel" end time: Oct 02 11:53 CEST
+"consensus_hash_provider_parallel" time elapsed: 00:00:00
+----------------------------------------------------------
+
+429/433 Testing: consensus_hash_provider_unavailable
+429/433 Test: consensus_hash_provider_unavailable
+Command: "/tmp/nano-snapshot-account-portable-candidate-20261002/build-release/nano-consensus-hash-provider-tests" "--provider-unavailable"
+Directory: /tmp/nano-snapshot-account-portable-candidate-20261002/build-release
+"consensus_hash_provider_unavailable" start time: Oct 02 11:53 CEST
+Output:
+----------------------------------------------------------
+providerFailureRejected=true initializationRetried=true
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_hash_provider_unavailable" end time: Oct 02 11:53 CEST
+"consensus_hash_provider_unavailable" time elapsed: 00:00:00
+----------------------------------------------------------
+
+430/433 Testing: consensus_capella_snapshot_canonical_hex
+430/433 Test: consensus_capella_snapshot_canonical_hex
+Command: "/tmp/nano-snapshot-account-portable-candidate-20261002/build-release/nano-capella-snapshot-hex-tests"
+Directory: /tmp/nano-snapshot-account-portable-candidate-20261002/build-release
+"consensus_capella_snapshot_canonical_hex" start time: Oct 02 11:53 CEST
+Output:
+----------------------------------------------------------
+773 mutation/format refusals; all byte values, empty input and bounded cancellation passed
+<end of output>
+Test time =   0.21 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_snapshot_canonical_hex" end time: Oct 02 11:53 CEST
+"consensus_capella_snapshot_canonical_hex" time elapsed: 00:00:00
+----------------------------------------------------------
+
+431/433 Testing: core_hex_encoding_differential
+431/433 Test: core_hex_encoding_differential
+Command: "/tmp/nano-snapshot-account-portable-candidate-20261002/build-release/nano-hex-encoding-tests"
+Directory: /tmp/nano-snapshot-account-portable-candidate-20261002/build-release
+"core_hex_encoding_differential" start time: Oct 02 11:53 CEST
+Output:
+----------------------------------------------------------
+{"allocationBoundVerified":true,"differentialCases":1031,"endToEndQualification":false,"microbenchmark":[]}
+<end of output>
+Test time =   0.25 sec
+----------------------------------------------------------
+Test Passed.
+"core_hex_encoding_differential" end time: Oct 02 11:53 CEST
+"core_hex_encoding_differential" time elapsed: 00:00:00
+----------------------------------------------------------
+
+432/433 Testing: consensus_capella_snapshot_cached_rows
+432/433 Test: consensus_capella_snapshot_cached_rows
+Command: "/tmp/nano-snapshot-account-portable-candidate-20261002/build-release/nano-capella-snapshot-json-tests"
+Directory: /tmp/nano-snapshot-account-portable-candidate-20261002/build-release
+"consensus_capella_snapshot_cached_rows" start time: Oct 02 11:53 CEST
+Output:
+----------------------------------------------------------
+{"bytesConsumed":251790360,"cachedRowsMilliseconds":[1.2665,1.213625,1.294625,1.28925,1.262417],"cancellations":384,"comparisons":1153,"envelopeRefusals":768,"legacyMilliseconds":[37.082542,38.021209,37.476834,37.020292,37.202375],"passed":true,"rowComparisonChecks":2560,"scope":"canonical JSON assembly only; no node speed extrapolation","sszMutationRefusals":256}
+<end of output>
+Test time =   0.64 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_snapshot_cached_rows" end time: Oct 02 11:53 CEST
+"consensus_capella_snapshot_cached_rows" time elapsed: 00:00:00
+----------------------------------------------------------
+
+433/433 Testing: consensus_capella_snapshot_account_primitives
+433/433 Test: consensus_capella_snapshot_account_primitives
+Command: "/tmp/nano-snapshot-account-portable-candidate-20261002/build-release/nano-capella-snapshot-account-tests"
+Directory: /tmp/nano-snapshot-account-portable-candidate-20261002/build-release
+"consensus_capella_snapshot_account_primitives" start time: Oct 02 11:53 CEST
+Output:
+----------------------------------------------------------
+{"cancellations":64,"deferredRowChecks":384,"passed":true,"primitiveOracleComparisons":1408,"scope":"private validated cache primitive comparison; no peer authentication or whole-node qualification"}
+<end of output>
+Test time =   0.35 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_snapshot_account_primitives" end time: Oct 02 11:53 CEST
+"consensus_capella_snapshot_account_primitives" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 02 11:53 CEST
+
+audit =   0.25 sec*proc
+
+capella =   1.46 sec*proc
+
+consensus =   0.46 sec*proc
+
+core =   0.25 sec*proc
+
+encoding =   0.25 sec*proc
+
+qualification_consensus_crypto =   0.24 sec*proc
+
+qualification_consensus_harness =   0.61 sec*proc
+
+qualification_evm =   0.99 sec*proc
+
+qualification_storage_local =   1.36 sec*proc
+
+snapshot =   1.20 sec*proc
+

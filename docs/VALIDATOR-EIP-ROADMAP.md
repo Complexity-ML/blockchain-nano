@@ -6399,3 +6399,7 @@ Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régr
 ### 2026-10-02 — Portabilité native du test des comptes
 
 [Preuve et candidat isolé](qualification/snapshot-account-portability-20261002/README.md) : build natif `0f53b42d` refusé par une surcharge GMP ambiguë dans le nouveau test ; exit 2 et sources inchangées archivés. Descendant `016ab243` corrige une conversion entière exacte dans le seul test, runtime inchangé. Build natif frais lancé, treize cas et quatre audits signés conditionnés à sa réussite ; aucun passage anticipé. Les régressions Docker complètes 427 cas restent sur leur arbre figé `0f53b42d`. Aucun échec historique, critère de production, WAN ou statut EIP supprimé ou clôturé.
+
+### 2026-10-02 — Qualification native du correctif de portabilité
+
+[Résultats terminaux indépendamment audités](qualification/snapshot-account-portability-20261002/README.md) : candidat `016ab243`, onze programmes construits frais ; **13/13 cas natifs** et **4/4 audits signés en lecture seule** passent. 15 315 sources et 205 entrées matérielles inchangées ; rejeu de 99 blocs/97 transactions et refus de tête/époque/racine invalides. Première tentative de sandbox macOS refusée avant Nano conservée, puis relance autorisée des seuls audits avec interdiction de réseau/écriture. Aucun résultat WAN/duties ou régression complète Linux du descendant déduit ; campagnes 427 cas du parent toujours séparées. Tous les critères/EIP non qualifiés restent ouverts.

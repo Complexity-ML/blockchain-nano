@@ -1,0 +1,117 @@
+diff --git a/include/nano/core.hpp b/include/nano/core.hpp
+index f9ae2a97..d14b2e42 100644
+--- a/include/nano/core.hpp
++++ b/include/nano/core.hpp
+@@ -54,6 +54,8 @@ class State {
+  std::map<std::string,Account> accounts_;
+  std::vector<std::map<std::string,Account>> snapshots_;
+ public:
++ // Read-only enumeration; callers must not retain the view across mutation.
++ const std::map<std::string,Account>& accounts_view() const {return accounts_;}
+  const Account& get(const std::string& addr) const;
+  Account& get(const std::string& addr);
+  bool exists(const std::string& addr) const;
+diff --git a/src/consensus_capella_snapshot_accounts.hpp b/src/consensus_capella_snapshot_accounts.hpp
+new file mode 100644
+index 00000000..d141a30d
+--- /dev/null
++++ b/src/consensus_capella_snapshot_accounts.hpp
+@@ -0,0 +1,30 @@
++#pragma once
++#include "nano/core.hpp"
++#include "consensus_capella_snapshot_hex.hpp"
++namespace nano::snapshot_detail {
++// Internal comparison against a privately generated, already validated cache.
++// Derived storageRoot/codeHash are deterministic from the compared primitives;
++// never use this helper to authenticate account JSON supplied by a peer.
++inline bool validated_accounts_match(const State& state,const Json& cached,
++ const std::function<void()>& cancel={}){
++ if(!cached.is_object()||cached.size()!=state.accounts_view().size())return false;
++ for(const auto& [address,account]:state.accounts_view()){
++  if(cancel)cancel();const auto found=cached.find(address);
++  if(found==cached.end()||!found->is_object()||found->size()!=6)return false;
++  const auto& row=*found;
++  for(const auto* field:{"nonce","balance","code","codeHash","storageRoot"})
++   if(!row.contains(field)||!row[field].is_string())return false;
++  if(!row.contains("storage")||!row["storage"].is_object()||
++     row["storage"].size()!=account.storage.size())return false;
++  if(row["nonce"].get_ref<const std::string&>()!=quantity(account.nonce)||
++     row["balance"].get_ref<const std::string&>()!=quantity(account.balance)||
++     !canonical_hex_matches(row["code"].get_ref<const std::string&>(),account.code,cancel))return false;
++  for(const auto& [key,value]:account.storage){
++   if(cancel)cancel();const auto slot=row["storage"].find(quantity(key));
++   if(slot==row["storage"].end()||!slot->is_string()||
++      slot->get_ref<const std::string&>()!=quantity(value))return false;
++  }
++ }
++ if(cancel)cancel();return true;
++}
++}
+diff --git a/src/consensus_capella_snapshot_json.hpp b/src/consensus_capella_snapshot_json.hpp
+index a180b577..1283bd1b 100644
+--- a/src/consensus_capella_snapshot_json.hpp
++++ b/src/consensus_capella_snapshot_json.hpp
+@@ -10,12 +10,21 @@ namespace nano::snapshot_detail {
+ // Internal only. The caller has already compared every SSZ source byte to
+ // cached[2][0] using canonical_hex_matches. Compare every other row field;
+ // the candidate's null SSZ slot is a deferred copy, never wire output.
+-inline bool same_row_after_ssz_match(const nlohmann::json& cached,const nlohmann::json& candidate){
++// matched_accounts additionally requires exhaustive primitive comparison to a
++// private validated execution-account encoding. All other execution fields
++// still compare exactly; any miss must materialize both deferred slots.
++inline bool same_row_after_ssz_match(const nlohmann::json& cached,const nlohmann::json& candidate,bool matched_accounts=false){
+  if(!cached.is_array()||cached.size()!=6||!candidate.is_array()||candidate.size()!=6||
+     !cached[2].is_array()||cached[2].size()!=2||!cached[2][0].is_string()||
+     !candidate[2].is_array()||candidate[2].size()!=2||!candidate[2][0].is_null())return false;
+  for(size_t i=0;i<6;++i){
+   if(i==2){if(cached[2][1]!=candidate[2][1])return false;}
++  else if(i==5&&matched_accounts){
++   const auto& old=cached[i];const auto& fresh=candidate[i];
++   if(!old.is_array()||!fresh.is_array()||old.size()!=fresh.size()||
++      (old.size()!=3&&old.size()!=4)||!old[1].is_object()||!fresh[1].is_null())return false;
++   for(size_t part=0;part<old.size();++part)if(part!=1&&old[part]!=fresh[part])return false;
++  }
+   else if(cached[i]!=candidate[i])return false;
+  }
+  return true;
+diff --git a/src/consensus_capella_store_snapshot.cpp b/src/consensus_capella_store_snapshot.cpp
+index 8874a66d..d8284ac9 100644
+--- a/src/consensus_capella_store_snapshot.cpp
++++ b/src/consensus_capella_store_snapshot.cpp
+@@ -2,6 +2,7 @@
+ #include <source_location>
+ #include "consensus_capella_snapshot_hex.hpp"
+ #include "consensus_capella_snapshot_json.hpp"
++#include "consensus_capella_snapshot_accounts.hpp"
+ #include "nano/consensus_capella_deposits.hpp"
+ #include "nano/consensus_bellatrix_store_snapshot.hpp"
+ namespace nano {
+@@ -22,7 +23,7 @@ Json profile(const CapellaForkBlockRules& r){
+ }
+ Json slot_snapshot(const CapellaSlotState& s){return Json::array({hex(s.ssz),s.last_processed_epoch?Json(num(*s.last_processed_epoch)):Json(nullptr)});}
+ CapellaSlotState slot_restore(const Json& j,size_t budget){require(j.is_array()&&j.size()==2&&j[0].is_string());const auto& hexstate=j[0].get_ref<const std::string&>();require(hexstate.starts_with("0x")&&hexstate.size()%2==0&&(hexstate.size()-2)/2<=budget);CapellaSlotState s{unhex(hexstate),std::nullopt};if(!j[1].is_null())s.last_processed_epoch=number(j[1]);return s;}
+-Json execution(const CapellaForkBlock& b,const std::function<void()>& cancel){Json receipts=Json::array();for(const auto& receipt:b.receipts)receipts.push_back(receipt.to_json());auto out=Json::array({b.execution_block.to_json(true),b.execution_state.to_json(),receipts});if(b.deposit_history)out.push_back(b.deposit_history->snapshot(cancel));return out;}
++Json execution(const CapellaForkBlock& b,const std::function<void()>& cancel,bool matched_accounts=false){Json receipts=Json::array();for(const auto& receipt:b.receipts)receipts.push_back(receipt.to_json());auto out=Json::array({b.execution_block.to_json(true),matched_accounts?Json(nullptr):b.execution_state.to_json(),receipts});if(b.deposit_history)out.push_back(b.deposit_history->snapshot(cancel));return out;}
+ ConsensusSlashingState registry(const CapellaForkStore& s,const CapellaForkBlockRules& r,const CapellaStoreSnapshotLimits& l,const std::function<void()>& cancel){
+  const auto& b=s.blocks.at(s.timed.view.justified.root);
+  if(s.timed.view.justified.root==s.timed.view.anchor&&s.timed.view.justified.epoch==b.header.slot/r.transition.consensus.epoch.ffg.slots_per_epoch)return capella_fork_block_context(b.state,b.header,epoch_rules(r),r.transition.consensus.state,cancel).registry;
+@@ -61,13 +62,17 @@ std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBl
+   // Defer the cached SSZ string copy. Every byte was compared above; a cold
+   // or changed record materializes the full string before validation/storage.
+   Json encoded_state=matched_state?Json::array({nullptr,b.state.last_processed_epoch?Json(num(*b.state.last_processed_epoch)):Json(nullptr)}):slot_snapshot(b.state);
+-  auto row=Json::array({root(id),Json::array({num(b.header.slot),num(b.header.proposer_index),root(b.header.parent_root),root(b.header.state_root),root(b.header.body_root)}),std::move(encoded_state),num(n.realized_justified_epoch),num(n.unrealized_justified_epoch),execution(b,cancel)});
++  const bool matched_accounts=matched_state&&known->second[0][5].is_array()&&
++   (known->second[0][5].size()==3||known->second[0][5].size()==4)&&
++   snapshot_detail::validated_accounts_match(b.execution_state,known->second[0][5][1],cancel);
++  auto row=Json::array({root(id),Json::array({num(b.header.slot),num(b.header.proposer_index),root(b.header.parent_root),root(b.header.state_root),root(b.header.body_root)}),std::move(encoded_state),num(n.realized_justified_epoch),num(n.unrealized_justified_epoch),execution(b,cancel,matched_accounts)});
+   // Compare every serialized field, including state/receipts/deposit history,
+   // plus the checkpoint metadata checked below. Root equality alone is unsafe.
+   const auto justification=cp(s.unrealized_justifications.at(id));
+-  const bool validated=matched_state&&snapshot_detail::same_row_after_ssz_match(known->second[0],row)&&known->second[1]==justification&&known->second[2]==Json(id==v.anchor)&&known->second[3].is_string();
++  const bool validated=matched_state&&snapshot_detail::same_row_after_ssz_match(known->second[0],row,matched_accounts)&&known->second[1]==justification&&known->second[2]==Json(id==v.anchor)&&known->second[3].is_string();
+   if(!validated){
+    if(matched_state)row[2][0]=known->second[0][2][0];
++   if(matched_accounts)row[5][1]=known->second[0][5][1];
+    validate_capella_execution_record(b,r,cancel);
+    if(id!=v.anchor){const auto ffg=capella_fork_checkpoints(b.state,epoch_rules(r),r.transition.consensus.state,cancel);require(n.realized_justified_epoch==ffg.realized.current_justified.epoch&&n.unrealized_justified_epoch==ffg.unrealized.current_justified.epoch&&s.unrealized_justifications.at(id)==ffg.unrealized.current_justified);}
+    if(cancel)cancel();if(cache)cache->records_.insert_or_assign(id,Json::array({row,justification,id==v.anchor,row.dump()}));
