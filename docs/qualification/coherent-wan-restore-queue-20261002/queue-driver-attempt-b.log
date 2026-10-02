@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/tmp/nano-coherent-wan-restore-control-20261002/run.py", line 31, in <module>
+    jobs={'armFull':active('nano-full-coherent-2d2764de-arm64-20261002-test'),'amdSelected':active('nano-coherent-2d2764de-amd64-test',True),'amdOffline':active('nano-coherent-2d2764de-amd64-offline',True)}
+                                                                                                                                                          ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/nano-coherent-wan-restore-control-20261002/run.py", line 28, in active
+    raise RuntimeError(('Cannot observe job',name,r.stderr))
+RuntimeError: ('Cannot observe job', 'nano-coherent-2d2764de-amd64-offline', 'error: no such object: nano-coherent-2d2764de-amd64-offline\n')

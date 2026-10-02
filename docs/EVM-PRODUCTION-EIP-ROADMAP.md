@@ -3252,3 +3252,7 @@ Les huit cibles AMD64 **2d2764de** terminent ensuite leur compilation ; sélecti
 ### 2026-10-02 — Rejeu canonique signé sur macOS natif 4/4
 
 [Preuves et première erreur conservée](qualification/coherent-wan-native-offline-20261002/README.md) : binaire CMake natif identifié, **99 blocs / 97 transactions**, checkpoint finalisé/engagement attendus acceptés ; tête non finalisée, époque future et racine malformée refusées (**4/4**). Sandbox enfant sans écritures/réseau, base/source/binaire inchangés ; 198 entrées liées identiques au parent qualifié. Première tentative du wrapper refusée avant Nano, aucune qualification déduite. Nouvelle portée OS natif sur fixture arrêtée, pas d’observation WAN indépendante ni reprise des duties ; critères de production et échecs historiques restent ouverts.
+
+### 2026-10-02 — Restauration WAN cohérente mise en attente des gates terminaux
+
+[Contrôleur et erreurs conservés](qualification/coherent-wan-restore-queue-20261002/README.md) : session 78086 observe les campagnes existantes sans les relancer ; gates ARM64 425/425, AMD64 15/15, audit arrêté AMD64 4/4 et natif 8/8/intégrité exigés avant fixture fraîche. Images/volumes réutilisés, architectures séparées, source VPS candidate par Git, aucun runtime main promu. La future campagne privée doit restaurer journaux/witness, reprendre les duties et lier finalité commune observée au checkpoint terminal. **Aucun résultat WAN acquis**, gates encore pendants ; tous critères de production et revue indépendante restent ouverts.
