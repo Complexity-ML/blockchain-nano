@@ -3122,3 +3122,8 @@ Fixture locale hors Docker : 313 fichiers / 121 445 250 octets, empreintes ident
 ### 2026-10-02 — Engagements indépendants de la sauvegarde retrouvés
 
 [Entrées vérifiées](qualification/surviving-full-backup-pins-20261002/README.md) : reçu d’arrêt original correspondant à la sauvegarde complète ARM64, engagement cœur identique à la requête externe, 21 pins de clés compatibles avec la configuration conservée et les paires journal/témoin. Profil/ancre et limites correspondants ; requête préparée exige le checkpoint finalisé sauvegardé. Aucun pin dérivé de RocksDB, aucun secret publié. Contenu des journaux non encore audité par la nouvelle candidate, duties et finalité WAN non repris ; tous les gates restent ouverts.
+
+
+### 2026-10-02 — Préparation du propriétaire natif Mac de la candidate RPC
+
+[Contrôleur](qualification/rpc-native-control-20261002/README.md) syntaxiquement vérifié pour `d1597d9a` : build natif neuf, helpers cohérents, dépendances existantes, deux jobs, 14 cas natifs (13 antérieurs + RPC modifié) et 21 cas réseau avec délais d’origine. Manifests sources et entrées de liaison/dépendances disponibles contrôlés ; dyld système non intégralement audité. Aucun résultat acquis ni lancement WAN, gates de production et échecs historiques conservés.
