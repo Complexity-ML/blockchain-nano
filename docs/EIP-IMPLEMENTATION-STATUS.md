@@ -5840,3 +5840,7 @@ Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régr
 ### 2026-10-02 — Qualification native du correctif de portabilité
 
 [Résultats terminaux indépendamment audités](qualification/snapshot-account-portability-20261002/README.md) : candidat `016ab243`, onze programmes construits frais ; **13/13 cas natifs** et **4/4 audits signés en lecture seule** passent. 15 315 sources et 205 entrées matérielles inchangées ; rejeu de 99 blocs/97 transactions et refus de tête/époque/racine invalides. Première tentative de sandbox macOS refusée avant Nano conservée, puis relance autorisée des seuls audits avec interdiction de réseau/écriture. Aucun résultat WAN/duties ou régression complète Linux du descendant déduit ; campagnes 427 cas du parent toujours séparées. Tous les critères/EIP non qualifiés restent ouverts.
+
+### 2026-10-02 — Raccordement explicite des preuves au scénario WAN
+
+[Contrôleur exécuté, refus exit 2](qualification/runtime-wan-evidence-gate-20261002/README.md) : delta exact du seul test entre Docker `0f53b42d` et Mac `016ab243`, et audit natif indépendant réexécuté avec succès. Les régressions complètes 427 cas ARM64/AMD64 et l’audit signé du binaire AMD64 exact restent requis ; campagnes actives, résultats globaux non acquis. Aucune nouvelle instance WAN, aucune fausse identité de révision complète ni qualification production déduite. Attestation matérielle des binaires, reprise des duties/finalité commune et tous les autres critères restent ouverts.
