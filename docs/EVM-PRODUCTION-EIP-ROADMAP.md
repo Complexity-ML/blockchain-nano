@@ -3429,3 +3429,5 @@ Révision runtime `0f53b42d` : **426/427**, aucun skip ; `consensus_altair_libp2
 ## Cause du refus Altair — 2 octobre 2026
 
 Diagnostic : `peer-missing` après échec du sondage de statut. Le pair de qualification réutilisé était périmé : son binaire ne contenait pas le handler présent dans la source. Recompiler uniquement ce pair depuis `0f53b42d` fait réussir le même cas, daemon/cœur originaux inchangés : bloc maximal 8 Mio, 2 blocs officiels, 9 pairs distincts. Aucun assouplissement runtime. La campagne originale demeure **426/427** ; la cohérence sources/binaires réseau doit être corrigée puis qualifiée sur les deux architectures. [Preuves et portée](qualification/altair-stale-probe-cause-20261002/README.md). Aucun gate EIP/WAN/production global clos.
+
+Le contrôleur `scripts/ci/full-docker.sh` compile désormais tous les binaires réseau depuis le même checkout dans un sous-répertoire neuf de la campagne, puis configure le cœur avec ce daemon. Il refuse un répertoire déjà configuré et conserve le cache CMake réseau. Syntaxe shell vérifiée ; exécution Docker complète de ce contrôleur corrigé encore à qualifier. Les campagnes précédentes restent intactes.
