@@ -2664,3 +2664,7 @@ une dépendance. Cœur/daemon read-only ; aucune règle d’admission assouplie.
 ### 2026-10-02 — Commit durable mesuré, candidat sérialiseur en qualification
 
 [Profil terminal](qualification/bellatrix-commit-cost-20261002/README.md) : timeout 240,030 s, slot 96. Sur 1 920 commits, 42,966 s incluent 13,194 s de Write synchrone ; témoin externe absent, ne pas généraliser. [Candidat Git 4834a014](qualification/checkpoint-serialization-candidate-20261002/README.md), hors main : test direct du helper ARM64 passe (2 048 comparaisons, 3 076 rejets, 1 024 annulations). Huit cas AMD64 démarrent avec limites originales ; préflight à délai de coalescence erroné arrêté avant test puis corrigé à 60 s et conservé. Aucun runtime main promu ni production qualifiée, autres critères ouverts.
+
+### 2026-10-02 — Candidat sérialisation terminal, cache des octets publiés en compilation
+
+[Parent 4834a014](qualification/checkpoint-serialization-candidate-20261002/README.md) : 8 cas exacts AMD64, 7 passent, partition timeout 240,027 s, dernier slot 96 ; zéro skip et entrées inchangées. [Candidat fa390c3b](qualification/published-snapshot-bytes-candidate-20261002/README.md) : comparaison des octets précédemment publiés, contrôles disque/témoin et repli crypto après réouverture conservés ; nouveau scénario stale-writer. Header modifié, recompilation complète dans Docker existant, sélection de douze tests aux délais originaux ensuite. Aucun résultat nouveau acquis, aucune promotion runtime main ni production qualifiée ; autres critères conservés.

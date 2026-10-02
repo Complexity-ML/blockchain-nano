@@ -1,0 +1,224 @@
+{
+  "backtraceGraph" : 
+  {
+    "commands" : [],
+    "files" : [],
+    "nodes" : []
+  },
+  "kind" : "ctestInfo",
+  "tests" : 
+  [
+    {
+      "command" : 
+      [
+        "/reports/nano-checkpoint-json-tests"
+      ],
+      "name" : "consensus_checkpoint_json_canonical",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_consensus_ethereum"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 30.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/reports/ctest"
+        }
+      ]
+    },
+    {
+      "command" : 
+      [
+        "/reports/nano-bellatrix-candidate",
+        "--runtime-recovery"
+      ],
+      "name" : "consensus_bellatrix_witness_runtime",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_consensus_ethereum"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 180.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/reports/ctest"
+        }
+      ]
+    },
+    {
+      "command" : 
+      [
+        "/reports/nano-bellatrix-candidate",
+        "--runtime-slashing"
+      ],
+      "name" : "consensus_bellatrix_local_slashing",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_consensus_ethereum"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 180.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/reports/ctest"
+        }
+      ]
+    },
+    {
+      "command" : 
+      [
+        "/reports/nano-bellatrix-candidate",
+        "--exit-loop"
+      ],
+      "name" : "consensus_bellatrix_voluntary_exit",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_consensus_ethereum"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 180.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/reports/ctest"
+        }
+      ]
+    },
+    {
+      "command" : 
+      [
+        "/reports/nano-bellatrix-candidate",
+        "--deposit-store"
+      ],
+      "name" : "consensus_bellatrix_deposit_store",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_consensus_ethereum"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 180.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/reports/ctest"
+        }
+      ]
+    },
+    {
+      "command" : 
+      [
+        "/reports/nano-bellatrix-candidate",
+        "--clock-coalescing"
+      ],
+      "name" : "consensus_bellatrix_clock_coalescing",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_consensus_ethereum"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 60.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/reports/ctest"
+        }
+      ]
+    },
+    {
+      "command" : 
+      [
+        "/reports/nano-bellatrix-candidate",
+        "--beacon-headers-reorg"
+      ],
+      "name" : "consensus_bellatrix_beacon_headers_reorg",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_consensus_ethereum"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 90.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/reports/ctest"
+        }
+      ]
+    },
+    {
+      "command" : 
+      [
+        "/reports/nano-bellatrix-candidate",
+        "--partition-simulation"
+      ],
+      "name" : "consensus_bellatrix_partition_simulation",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_consensus_ethereum"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 240.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/reports/ctest"
+        }
+      ]
+    }
+  ],
+  "version" : 
+  {
+    "major" : 1,
+    "minor" : 0
+  }
+}

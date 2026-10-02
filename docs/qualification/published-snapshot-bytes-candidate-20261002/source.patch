@@ -1,0 +1,90 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 4bdee564..dee5d159 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1837,3 +1837,6 @@ add_executable(nano-checkpoint-json-tests tests/test_checkpoint_json.cpp)
+ target_include_directories(nano-checkpoint-json-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
+ add_test(NAME consensus_checkpoint_json_canonical COMMAND nano-checkpoint-json-tests)
+ set_tests_properties(consensus_checkpoint_json_canonical PROPERTIES TIMEOUT 30 LABELS "qualification_storage_local")
++
++add_test(NAME consensus_bellatrix_publication_cache COMMAND nano-bellatrix-transition-tests --publication-cache)
++set_tests_properties(consensus_bellatrix_publication_cache PROPERTIES TIMEOUT 90 LABELS "qualification_consensus_recovery")
+diff --git a/include/nano/consensus_bellatrix_reactor.hpp b/include/nano/consensus_bellatrix_reactor.hpp
+index c0f31fd2..58a66a38 100644
+--- a/include/nano/consensus_bellatrix_reactor.hpp
++++ b/include/nano/consensus_bellatrix_reactor.hpp
+@@ -52,6 +52,9 @@ class BellatrixDurableReactor {
+  std::shared_ptr<const BellatrixForkStore> state_;
+  std::optional<ForkCheckpointToken> token_;
+  BellatrixStoreSnapshotCache snapshot_cache_;
++ // Exact bytes paired with token_ only after a successful durable publication.
++ // Empty after reopen: retain the existing digest comparison as a cold fallback.
++ std::string published_snapshot_;
+  std::shared_ptr<const BellatrixSignedBlockArchive> signed_blocks_=std::make_shared<const BellatrixSignedBlockArchive>();
+  std::shared_ptr<const BellatrixSignedVoteArchive> signed_votes_=std::make_shared<const BellatrixSignedVoteArchive>();
+  std::shared_ptr<const BellatrixSignedVoteArchive> signed_slashings_=std::make_shared<const BellatrixSignedVoteArchive>();
+diff --git a/src/consensus_bellatrix_reactor.cpp b/src/consensus_bellatrix_reactor.cpp
+index 301027bd..f5c39f50 100644
+--- a/src/consensus_bellatrix_reactor.cpp
++++ b/src/consensus_bellatrix_reactor.cpp
+@@ -227,12 +227,13 @@ void BellatrixDurableReactor::publish(BellatrixForkStore candidate,std::shared_p
+   // no longer be reassigned by an admissible branch. Never prune on head alone.
+   if(retained->size()!=exits->size())exits=std::move(retained);
+  }
+- const auto encoded=durable_snapshot(*next,*archive,*votes,*slashings,*exits,rules_,limits_,checkpoint,&snapshot_cache_);
++ auto encoded=durable_snapshot(*next,*archive,*votes,*slashings,*exits,rules_,limits_,checkpoint,&snapshot_cache_);
+  if(checkpoint)checkpoint();
+  // A retransmission with identical durable contents is already acknowledged by
+  // this checkpoint. Do not invalidate local duty tokens or amplify disk writes
+  // merely because another peer returned a block/vote we already retained.
+- if(token_&&sha256(Bytes(encoded.begin(),encoded.end()))==token_->digest){
++ if(token_&&(!published_snapshot_.empty()?encoded==published_snapshot_:
++             sha256(Bytes(encoded.begin(),encoded.end()))==token_->digest)){
+   try{if(witness_)witness_->fork_checkpoint(chain_id_,genesis_,witness_limit(),witness_token_);if(!disk_.fork_checkpoint(chain_id_,genesis_,limits_.envelope_bytes,token_))throw std::runtime_error("Missing duplicate checkpoint");}
+   catch(...){fail_closed();throw;}
+   return;
+@@ -301,6 +302,9 @@ void BellatrixDurableReactor::publish(BellatrixForkStore candidate,std::shared_p
+  }
+  catch(...){fail_closed();throw;}
+  events_=std::move(notifications);token_=std::move(committed);state_=std::move(next);signed_blocks_=std::move(archive);signed_votes_=std::move(votes);signed_slashings_=std::move(slashings);signed_exits_=std::move(exits);
++ // Moving the complete canonical bytes cannot fail after the durable commit.
++ static_assert(std::is_nothrow_move_assignable_v<std::string>);
++ published_snapshot_=std::move(encoded);
+ }
+ BellatrixDurableReactor::BellatrixDurableReactor(Blockchain& execution,BellatrixForkBlockRules rules,
+  BellatrixStoreSnapshotLimits limits,BellatrixForkStore initial,const std::function<void()>& checkpoint,ChainStore* witness):
+diff --git a/tests/test_bellatrix_transition.cpp b/tests/test_bellatrix_transition.cpp
+index ac1629fb..ca81fb93 100644
+--- a/tests/test_bellatrix_transition.cpp
++++ b/tests/test_bellatrix_transition.cpp
+@@ -102,6 +102,7 @@ Bytes signed_header(const ConsensusBeaconHeader& h,const Bytes& signature){Bytes
+ int main(int argc,char** argv){try{
+  const bool duty_trace=argc==2&&std::string(argv[1])=="--duty-trace";
+  const bool clock_coalescing=argc==2&&std::string(argv[1])=="--clock-coalescing";
++ const bool publication_cache=argc==2&&std::string(argv[1])=="--publication-cache";
+  const bool partition_simulation=argc==2&&std::string(argv[1])=="--partition-simulation";
+  const bool beacon_headers_reorg=argc==2&&std::string(argv[1])=="--beacon-headers-reorg";
+  const bool beacon_headers=argc==2&&std::string(argv[1])=="--beacon-headers";
+@@ -689,6 +690,22 @@ int main(int argc,char** argv){try{
+     check(cancelled&&reactor->beacon_events(event_cursor).at("events").empty(),"rejected/cancelled block emitted event");
+    }
+    check(deliver("block",wire),"durable reactor rejected block");
++   if(publication_cache){
++    const auto warm=reactor->current().token;
++    for(unsigned retry=0;retry<3;++retry)check(reactor->block(wire)&&reactor->current().token==warm,"warm duplicate changed durable token");
++    const auto record=reactor_disk->fork_checkpoint(1337,execution_genesis.header.hash(),reactor_limits.envelope_bytes,warm);
++    const auto tip=reactor_disk->latest();check(record&&tip,"missing cache test checkpoint");
++    // A second legitimate storage writer changes the coupled checkpoint. A
++    // cached byte match must still detect the stale external commitment.
++    const auto replacement=reactor_disk->commit_execution_checkpoint(1337,execution_genesis.header.hash(),warm,tip->header.hash(),tip->header.number,tip->header.hash(),{},record->payload+" ",reactor_limits.envelope_bytes,reactor_limits.blocks);
++    check(replacement!=warm,"external writer did not advance checkpoint");
++    bool rejected=false;try{reactor->block(wire);}catch(const std::exception&){rejected=true;}
++    check(rejected,"warm cache acknowledged stale disk checkpoint");
++    bool closed=false;try{reactor->current();}catch(const std::exception&){closed=true;}
++    check(closed,"stale disk checkpoint did not fail closed");
++    service->stop();service->join();
++    std::cout<<Json{{"scenario","published-snapshot-cache"},{"warmDuplicates",3},{"duplicateTokenUnchanged",true},{"externalCommitmentChangeRejected",true},{"failClosed",true}}.dump()<<std::endl;return 0;
++   }
+    if(beacon_headers){
+     const auto batch=reactor->beacon_events(event_cursor);const auto& events=batch.at("events");
+     check(events.size()==1&&events.at(0).at("topic")=="block"&&events.at(0).at("data").at("slot")==std::to_string(slot),"committed block event missing");

@@ -10,4 +10,4 @@ AMD64 : sélection de huit cas lancée avec le nouveau test et reprise témoin, 
 
 Première préparation arrêtée pendant la compilation, avant tout test : le contrôleur accordait par erreur 90 s à la coalescence, dont le délai original est 60 s. Tentative et scripts conservés sur VPS sous `...-timeout-preflight-*`. Contrôleur corrigé : 60 s, autres délais originaux conservés. Aucun résultat ne provient de cette tentative.
 
-Résultats AMD64 encore en attente. Aucun runtime main promu, aucun délai assoupli, aucun critère de production clos. Les échecs historiques restent conservés.
+Résultats AMD64 terminaux : huit cas exacts, sept passent, un échoue, zéro skip. Partition timeout 240,027 s ; dernière observation slot 96, finalité commune epoch 10 et quatre observations consécutives de tête identique, assertions finales non atteintes. Manifeste sources/programmes/bibliothèques inchangé avant/après, post-manifest à zéro. Aucun runtime main promu, aucun délai assoupli, aucun critère de production clos. Les échecs historiques restent conservés.
