@@ -5950,3 +5950,8 @@ Pilote uniquement : sélection explicite du daemon depuis le build de chaque arc
 ### 2026-10-02 — Mesures internes du cas WebSocket AMD64 préparées
 
 [Contrôleur ciblé et latences client](qualification/coherent-amd64-websocket-timing-control-20261002/README.md) : un rejeu diagnostique attend le propriétaire réel et les preuves terminales de la campagne, conserve programmes/charge/délais et active seulement les traces internes existantes. Aucun résultat acquis ni correction runtime. L’échec d’origine reste conservé ; aucun gate WAN ou critère global de production fermé.
+
+
+### Nettoyage Docker demandé — 2026-10-02
+
+Caches de build et ressources Docker inutilisées nettoyés sur Mac/VPS ; volumes et conteneurs actifs conservés en attente de clarification sur leur suppression. Rapports des commandes : Mac 20 GB + 6.438 GB, VPS 7.98 GB + 1.264 GB récupérés. Image de compilation ARM précédente absente après nettoyage ; volume `nano-linux-sync-build` conservé. Les preuves ARM archivées restent historiques, mais leur réutilisation opérationnelle nécessite une nouvelle image identifiée. Aucun nouveau build démarré. Campagne VPS toujours active : 388 succès / 389 terminés et échec RPC conservé, 38 cas restants. Production non qualifiée ; tous les critères précédents restent ouverts selon leurs statuts. Preuves : [docker-cleanup-20261002](qualification/docker-cleanup-20261002/README.md).
