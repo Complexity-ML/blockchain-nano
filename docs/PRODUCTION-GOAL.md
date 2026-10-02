@@ -3082,3 +3082,8 @@ Candidate séparée `d1597d9a` : sonde proche de la borne haute limitée par la 
 ### 2026-10-02 — Optimisation RPC qualifiée sur tranche AMD64
 
 Candidate `d1597d9a` : contrôle négatif de performance rejette l'ancien algorithme ; RPC optimisé PASS 2.90 s / 1053 vérifications, nouvelles profondeurs Paris/Shanghai 2/4/8, gaz minimal indépendant et plafonds serrés. Cas réseau WebSocket Paris original PASS 71.03 s : 192 estimations, quatre simulations chacune contre cinq auparavant, médiane observée 1620.740 ms, file maximum 2595.770 ms (limite 4000 ms conservée). Sources et quatre programmes stables audités, image/volume réutilisés. Qualification bornée instrumentée, candidate non promue sur main ; origine de l'expiration historique, régression complète sans instrumentation, deux architectures, restauration des duties, WAN et production encore ouverts. [Preuves et limites](qualification/rpc-headroom-result-20261002/README.md).
+
+
+### 2026-10-02 — Régression cohérente complète après correction RPC préparée
+
+Candidate `d1597d9a` : [contrôleur](qualification/rpc-full-regression-control-20261002/README.md) préparé pour réutiliser image/volume VPS, compiler cœur/P2P/helpers dans un nouveau sous-dossier cohérent puis exécuter toute la sélection CTest sans instrumentation. Résultat et sélection terminale non acquis ; supplément réseau, autre architecture, restauration des duties, WAN et critères production toujours ouverts. Pas de nouvelle image VPS ni de promotion runtime sur main.
