@@ -6441,3 +6441,8 @@ Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régr
 ### 2026-10-02 — Échec de l’admission libp2p Altair AMD64
 
 [Diagnostic préservé](qualification/amd-altair-ingress-failure-20261002/README.md) : test 287 `consensus_altair_libp2p` échoué en 2,37 s sur le bloc à la taille maximale configurée. Trois programmes inchangés par rapport au manifeste initial ; réponse exacte absente, cause non prouvée. La campagne continue sans relance, mais son gate ne peut plus autoriser la restauration WAN. Candidat séparé e9ae45ee : diagnostic seulement, assertion/limites/délais/runtime inchangés, non exécuté. ARM64 427/427 conservé ; aucun statut EIP global ni critère de production fermé.
+
+
+### 2026-10-02 — Collecte diagnostique AMD64 en attente vérifiée
+
+[Contrôleur et périmètre](qualification/altair-ingress-diagnostic-queue-20261002/README.md) : candidat e8efb812, diagnostic de test uniquement, mêmes assertions/limites/délais. PID VPS 750324 confirmé vivant, attendant le conteneur full 582618 et ses manifestes terminaux. Une seule compilation directe/exécution ciblée sera réalisée ensuite contre les bibliothèques et programmes réseau existants en lecture seule, sans nouvelle image. Réponse exacte et raisons de fin de flux bornées ajoutées ; aucun diagnostic exécuté ni cause prouvée à ce stade. La restauration reste refusée sur la campagne échouée ; toutes les qualifications globales restent ouvertes.
