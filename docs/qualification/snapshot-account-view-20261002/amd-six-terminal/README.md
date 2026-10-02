@@ -1,0 +1,7 @@
+# AMD bounded account candidate terminal — six passed, original deadlines
+
+Source0f53b42d3e78da85aa9a2c2f2993472747aabe8a, fresh four-target CMake build. Six cases passed, zero failures/skips,382.51s total. Signedtransition28.02s, reindexed activation352.815s under unchanged360; providers0.0178/0.0075; cachedrows1.4748; accountprimitives0.1615. Exits0. All15315 tracked source hashes match independent frozen candidate manifest and each other before/after; all four programs unchanged. Auditor exact commands/deadlines/names/JUnit/exit binding passed. Compressed source reports retained; decompress before rerunning auditor.
+
+Reindex reaches slot176/finalized20/nine new votes and completes scenario. Margin to deadline about7.19s, not a load/production-headroom guarantee. Prior f7/803 timeouts remain historical; this single bounded pass neither erases them nor establishes controlled speedup. Actual signed snapshots compare cold/warm output and14 mutations of SSZ/metadata/accounts; helper1408 oracle checks/384 row checks/64 cancellations and legacy1153 assembly/2560 row/256 SSZ-mutation/768 bounds/384 cancel checks passed. These scope counts do not sum into EEST completeness.
+
+No full node/regression427/nativity/signed offline99block audit/WAN qualification acquired here; no runtime main promotion, EIP/production/fair-launch gate closed. Fresh complete architecture builds started separately in new volume subdirectories and existing images, not modifying these qualified binaries. Goal remains active.
