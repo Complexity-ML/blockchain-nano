@@ -3581,3 +3581,8 @@ Fixture locale hors Docker : 313 fichiers / 121 445 250 octets, empreintes ident
 ### 2026-10-02 — Pilote WAN compatible avec les volumes conservés
 
 [Candidate JS](qualification/rpc-wan-harness-selectors-20261002/README.md) `c7f759bb` basée sur `d1597d9a`, trois fichiers JS seulement : images immuables et volumes existants sélectionnés explicitement par architecture, montage de build traduit et aucun montage de données réécrit. 20 tests passent et trois refus du pilote réel interviennent avant Docker/SSH/SCP. Premier échec de texte d’erreur conservé puis corrigé. Aucun changement C++ ni lancement WAN ; tous les gates terminaux/production et échecs historiques maintenus.
+
+
+### 2026-10-02 — Audit signé AMD64 préparé pour le nouveau binaire
+
+[Contrôleur terminal](qualification/rpc-amd-signed-audit-control-20261002/README.md) d159 adapté aux image/volume/sous-dossier conservés, quatre demandes et référence de fixture inchangées. Exige contrôleur complet, 427 cas, supplément21 et revue réseau à zéro, puis revues exact EEST/sources/programmes avant audit en lecture seule. Syntaxe vérifiée, aucun audit AMD64 ou WAN lancé ; copie de chaîne non équivalente aux journaux complets pour reprise. Tous les gates de production et échecs historiques maintenus.
