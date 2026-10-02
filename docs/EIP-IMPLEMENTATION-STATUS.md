@@ -5776,3 +5776,7 @@ Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régr
 ### 2026-10-02 — candidat803 : propriétaire natif et gates préparés
 
 [Contrôleurs et observation effective](qualification/coherent-80373152-release-gates-20261002/README.md) : build natif neuf démarré, qualification9+audits4 en attente ; driver completAMD attend le passage16/16 aux délais originaux avant tout build frais426. Gate WAN exécuté exit2 : sources exactes et parentARM425 vérifiés, six prérequis encore non acquis, aucun nouveau nœud WAN. ARM actuel cinq premiers tests passent (activation79,11/360 ; restart80,34/360), sélection non terminale. Aucun gain causal, runtime promu, EIP ou critère production/lancement clôturé.
+
+### 2026-10-02 — candidat803 : natif9+audit4 terminaux et buildAMD cohérent
+
+[Preuves terminales](qualification/coherent-80373152-release-gates-20261002/README.md) : buildAMD0/neuf cibles/registre426, sélection16 démarrée ; buildnatif0,9/9 zéro skip2,89s et4/4 audits signés99blocs97tx passent. Sources identiques ARM/AMD/natif ; fixture/binaire/200 entrées matérialisées inchangés après tests et audit. Le checkpoint finalisé et l'ascendance sont vérifiés, pas la reprise des duties/WAN. SélectionsDocker et fullAMD non terminaux ; aucun runtime promu, EIP ou critère production/lancement clôturé.

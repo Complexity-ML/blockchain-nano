@@ -1,0 +1,69 @@
+diff --git a/src/consensus_capella_snapshot_json.hpp b/src/consensus_capella_snapshot_json.hpp
+index 1e604fc8..a180b577 100644
+--- a/src/consensus_capella_snapshot_json.hpp
++++ b/src/consensus_capella_snapshot_json.hpp
+@@ -7,6 +7,19 @@
+ #include <string>
+ #include <string_view>
+ namespace nano::snapshot_detail {
++// Internal only. The caller has already compared every SSZ source byte to
++// cached[2][0] using canonical_hex_matches. Compare every other row field;
++// the candidate's null SSZ slot is a deferred copy, never wire output.
++inline bool same_row_after_ssz_match(const nlohmann::json& cached,const nlohmann::json& candidate){
++ if(!cached.is_array()||cached.size()!=6||!candidate.is_array()||candidate.size()!=6||
++    !cached[2].is_array()||cached[2].size()!=2||!cached[2][0].is_string()||
++    !candidate[2].is_array()||candidate[2].size()!=2||!candidate[2][0].is_null())return false;
++ for(size_t i=0;i<6;++i){
++  if(i==2){if(cached[2][1]!=candidate[2][1])return false;}
++  else if(cached[i]!=candidate[i])return false;
++ }
++ return true;
++}
+ // Internal only: rows are dumps of the complete, validated block records in
+ // document["blocks"]. Never embed peer-supplied strings through this helper.
+ inline std::string canonical_snapshot_rows(const nlohmann::json& document,
+diff --git a/src/consensus_capella_store_snapshot.cpp b/src/consensus_capella_store_snapshot.cpp
+index 9ee928ed..8874a66d 100644
+--- a/src/consensus_capella_store_snapshot.cpp
++++ b/src/consensus_capella_store_snapshot.cpp
+@@ -53,19 +53,21 @@ std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBl
+   const auto known=cache?cache->records_.find(id):std::map<ConsensusRoot,Json>::iterator{};
+   // Reuse only the canonical state encoding after comparing every source byte.
+   // The complete row comparison below still covers all execution and metadata.
+-  Json encoded_state;
++  bool matched_state=false;
+   if(cache&&known!=cache->records_.end()&&known->second.is_array()&&known->second.size()==4&&
+      known->second[0].is_array()&&known->second[0].size()==6&&known->second[0][2].is_array()&&
+-     known->second[0][2].size()==2&&known->second[0][2][0].is_string()&&
+-     snapshot_detail::canonical_hex_matches(known->second[0][2][0].get_ref<const std::string&>(),b.state.ssz,cancel))
+-   encoded_state=Json::array({known->second[0][2][0],b.state.last_processed_epoch?Json(num(*b.state.last_processed_epoch)):Json(nullptr)});
+-  else encoded_state=slot_snapshot(b.state);
++     known->second[0][2].size()==2&&known->second[0][2][0].is_string())
++   matched_state=snapshot_detail::canonical_hex_matches(known->second[0][2][0].get_ref<const std::string&>(),b.state.ssz,cancel);
++  // Defer the cached SSZ string copy. Every byte was compared above; a cold
++  // or changed record materializes the full string before validation/storage.
++  Json encoded_state=matched_state?Json::array({nullptr,b.state.last_processed_epoch?Json(num(*b.state.last_processed_epoch)):Json(nullptr)}):slot_snapshot(b.state);
+   auto row=Json::array({root(id),Json::array({num(b.header.slot),num(b.header.proposer_index),root(b.header.parent_root),root(b.header.state_root),root(b.header.body_root)}),std::move(encoded_state),num(n.realized_justified_epoch),num(n.unrealized_justified_epoch),execution(b,cancel)});
+   // Compare every serialized field, including state/receipts/deposit history,
+   // plus the checkpoint metadata checked below. Root equality alone is unsafe.
+   const auto justification=cp(s.unrealized_justifications.at(id));
+-  const bool validated=cache&&known!=cache->records_.end()&&known->second.is_array()&&known->second.size()==4&&known->second[0]==row&&known->second[1]==justification&&known->second[2]==Json(id==v.anchor)&&known->second[3].is_string();
++  const bool validated=matched_state&&snapshot_detail::same_row_after_ssz_match(known->second[0],row)&&known->second[1]==justification&&known->second[2]==Json(id==v.anchor)&&known->second[3].is_string();
+   if(!validated){
++   if(matched_state)row[2][0]=known->second[0][2][0];
+    validate_capella_execution_record(b,r,cancel);
+    if(id!=v.anchor){const auto ffg=capella_fork_checkpoints(b.state,epoch_rules(r),r.transition.consensus.state,cancel);require(n.realized_justified_epoch==ffg.realized.current_justified.epoch&&n.unrealized_justified_epoch==ffg.unrealized.current_justified.epoch&&s.unrealized_justifications.at(id)==ffg.unrealized.current_justified);}
+    if(cancel)cancel();if(cache)cache->records_.insert_or_assign(id,Json::array({row,justification,id==v.anchor,row.dump()}));
+@@ -73,7 +75,11 @@ std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBl
+   // String views remain valid: std::map insertions preserve other entries,
+   // and this entry is never replaced again during this invocation.
+   if(cache)encoded_rows.push_back(cache->records_.at(id)[3].get_ref<const std::string&>());
+-  blocks.push_back(std::move(row));
++  // Cached row dumps contain the complete, validated records. The envelope
++  // only needs their count, so release the temporary SSZ/execution row DOM
++  // immediately instead of retaining it until the envelope is destroyed.
++  // The uncached path retains the full DOM and remains the byte-level oracle.
++  if(cache)blocks.push_back(nullptr);else blocks.push_back(std::move(row));
+  }
+  for(const auto& [i,m]:v.latest_messages)messages.push_back(Json::array({num(i),num(m.epoch),root(m.root)}));
+  for(auto i:v.equivocating_indices)equiv.push_back(num(i));

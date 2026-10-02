@@ -18,3 +18,9 @@ Audit AMD4 adapté mais non lancé ; attendra fin de sélection réussie et rég
 check.py **exit2**, readyForBinaryAttestation=false, newWanNodesStarted=false. Identité exacte des deux sources et régression ARM425 du parent2d vérifiées. Les six autres prérequis sont encore non acquis : sélection ARM16, AMD16, AMD426, natif9, audit natif4 et audit AMD4. Ce refus est attendu pendant les campagnes, pas un résultat de réseau ni un incident de consensus.
 
 Le parent ARM2d complet ne prouve pas la régression complète du candidat803 (candidateFullArmProven=false). Diff runtime2d→803 limité aux deux fichiers snapshot ; périmètre réutilisé explicitement et deltas à qualifier. Tous les critères de finalité/duties/restauration, partitions, rotation/slashing/endurance, profils réseau EIP, bridge/Doppler et revue indépendante restent ouverts. Les échecs AMD antérieurs sont conservés.
+
+## Résultats terminaux supplémentaires
+
+Build AMD cohérent neuf terminal0, neuf cibles et registre426 vérifiés ; mêmes15313 sources que l'ARM. SélectionAMD16 réellement démarrée, trois premiers contrôles passent, activation en cours ; complèteAMD reste en attente de16/16.
+
+Build natif cohérent terminal0, **9/9 tests**, zéro skip,2,89s, noms/délais originaux vérifiés. **4/4 audits réels** : checkpoint finalisé/ascendance/checkpointSequence/digest vérifiés sur99blocs/97transactions, tête/futur/malformation refusés. Sources/fixture/binaire et **200 entrées** matérialisées restent identiques avant/après tests/audit. NanoSHA `293ad6b40c6c020dfef633ad9dcdc1aa922c73b3e78f48530c39b2d888cc9fad`. Source native identique aux deux buildsDocker. Aucun nouveau duty, transport WAN ni consensus inter-nœuds qualifié par ces audits locaux.
