@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(blockchain_nano VERSION 0.1.0 LANGUAGES C CXX ASM)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-find_package(OpenSSL REQUIRED)
+find_package(OpenSSL 3.0 REQUIRED)
 find_package(Threads REQUIRED)
 # Homebrew keeps ICU keg-only on macOS; retain normal system discovery elsewhere.
 if(APPLE AND NOT ICU_ROOT)
@@ -1840,3 +1840,12 @@ set_tests_properties(consensus_checkpoint_json_canonical PROPERTIES TIMEOUT 30 L
 
 add_test(NAME consensus_bellatrix_publication_cache COMMAND nano-bellatrix-transition-tests --publication-cache)
 set_tests_properties(consensus_bellatrix_publication_cache PROPERTIES TIMEOUT 90 LABELS "qualification_consensus_recovery")
+
+# Exercise the actual signing-root implementation against an independent legacy
+# SHA256 entry point, including concurrent first use and provider failure.
+add_executable(nano-consensus-hash-provider-tests tests/test_consensus_hash_provider.cpp src/consensus_signing.cpp)
+target_include_directories(nano-consensus-hash-provider-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_link_libraries(nano-consensus-hash-provider-tests PRIVATE OpenSSL::Crypto Threads::Threads)
+add_test(NAME consensus_hash_provider_parallel COMMAND nano-consensus-hash-provider-tests)
+add_test(NAME consensus_hash_provider_unavailable COMMAND nano-consensus-hash-provider-tests --provider-unavailable)
+set_tests_properties(consensus_hash_provider_parallel consensus_hash_provider_unavailable PROPERTIES TIMEOUT 30 LABELS "qualification_consensus_crypto")
