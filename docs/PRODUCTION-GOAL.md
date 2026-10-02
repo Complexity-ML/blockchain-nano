@@ -3157,3 +3157,8 @@ Fixture locale hors Docker : 313 fichiers / 121 445 250 octets, empreintes ident
 ### 2026-10-02 — Lanceur de restauration raccordé aux artefacts RPC
 
 [Préparation WAN](qualification/rpc-wan-launch-control-20261002/README.md) : sélection explicite des images/volumes actuels par architecture et pilote JS c7f759bb, gates terminaux renforcés et aucune création de nœud avant les revues. Gate natif indépendant : 14+21+4 réussis, sources 15 315 / entrées 598 / sauvegarde complète 313 fichiers relus. Quatre contrôles sans action externe passent. Campagne AMD64 toujours active ; aucun lancement WAN ni reprise de duties. Le pilote prévoit une nouvelle sauvegarde complète arrêtée, pas la reprise de l’ancienne fixture Mac. Tous les critères de production et échecs historiques conservés.
+
+
+### 2026-10-02 — Finalité du reçu d’arrêt exigée avant les duties
+
+[Correction du pilote](qualification/rpc-stopped-finality-gate-20261002/README.md) `7434452d` : la requête de restauration exige désormais la finalité externe sauvegardée et vérifie l’audit complet avant redémarrage, au lieu du seul statut canonicalHistoryVerified. 44 contrôles réussis, six nouveaux refus/liaison démontrés par contrôle négatif sur l’ancien pilote ; requête du véritable reçu/configuration liée aux pins déjà qualifiés. Aucun runtime C++, budget ou délai modifié ; pas de reprise WAN acquise. Lanceur adapté au nouveau pilote, gates AMD64 encore ouverts, tous les critères de production conservés.

@@ -1,0 +1,53 @@
+diff --git a/tests/multihost/restore-config.mjs b/tests/multihost/restore-config.mjs
+index bf0cef66..4f2f2550 100644
+--- a/tests/multihost/restore-config.mjs
++++ b/tests/multihost/restore-config.mjs
+@@ -29,8 +29,10 @@ export function pinnedRestoreConfiguration(node, receipt) {
+  return result;
+ }
+ export function restoreAuditRequest(original,receipt) {
++ const finalized=receipt?.finalized;
++ if(!/^0x(?:0|[1-9a-f][0-9a-f]*)$/.test(finalized?.epoch)||!/^0x[0-9a-f]{64}$/.test(finalized?.root))throw Error('Independent stopped finalized checkpoint required');
+  const c=original.capella;if(!c?.initial?.file||!c.initial.sha256||!c.profile?.sha256)throw Error('Independent profile/anchor required');
+- return {profile:{file:c.profile.file,sha256:c.profile.sha256},anchor:structuredClone(c.initial),limits:structuredClone(c.limits),expectedCheckpoint:token(receipt.restart),maximumBlocks:'0x400',maximumArchiveBytes:'0x20000000'};
++ return {profile:{file:c.profile.file,sha256:c.profile.sha256},anchor:structuredClone(c.initial),limits:structuredClone(c.limits),expectedCheckpoint:token(receipt.restart),requiredFinalized:structuredClone(finalized),maximumBlocks:'0x400',maximumArchiveBytes:'0x20000000'};
+ }
+ export function validateRestoredFinality(receipt,result,terminal) {
+  const decimal=value=>typeof value==='string'&&/^(?:0|[1-9][0-9]*)$/.test(value);
+diff --git a/tests/multihost/restore-config.test.mjs b/tests/multihost/restore-config.test.mjs
+index 659e712a..eab135a3 100644
+--- a/tests/multihost/restore-config.test.mjs
++++ b/tests/multihost/restore-config.test.mjs
+@@ -14,3 +14,18 @@ for(const value of [undefined,null,NaN,Infinity,0.5,-1,0,Number.MAX_SAFE_INTEGER
+ test('same-epoch terminal root must match the independently observed checkpoint',()=>{const f=completion();f.terminal.finalized.root='0x'+'e'.repeat(64);assert.throws(()=>validateRestoredFinality(f.saved,f.result,f.terminal),/conflicts/);});
+ for(const [name,alter] of [['missing checkpoint',f=>delete f.result.lastCheckpoint],['missing terminal root',f=>delete f.terminal.finalized.root],['different checkpoint epoch',f=>f.result.lastCheckpoint.epoch='6'],['noncanonical result epoch',f=>f.result.lastEpoch='05']])test('refuses '+name,()=>{const f=completion();alter(f);assert.throws(()=>validateRestoredFinality(f.saved,f.result,f.terminal),/malformed restored finality/);});
+ test('matching terminal checkpoint accepts safe fresh duties; later epoch retains audit requirement',()=>{const f=completion();validateRestoredFinality(f.saved,f.result,f.terminal);f.terminal.finalized.epoch='0x6';validateRestoredFinality(f.saved,f.result,f.terminal);});
++
++// Initial offline restore must use the independently stopped finality before duties.
++test('restore audit binds the stopped finalized checkpoint without aliasing it',()=>{
++ const r=receipt(),request=restoreAuditRequest(node(),r);
++ assert.deepEqual(request.requiredFinalized,r.finalized);
++ r.finalized.root='0x'+'e'.repeat(64);
++ assert.equal(request.requiredFinalized.root,'0x'+'a'.repeat(64));
++});
++for(const [name,alter] of [
++ ['absent finality',r=>delete r.finalized],
++ ['leading-zero epoch',r=>r.finalized.epoch='0x02'],
++ ['decimal epoch',r=>r.finalized.epoch='2'],
++ ['short root',r=>r.finalized.root='0xaa'],
++ ['absent root',r=>delete r.finalized.root]
++])test('restore audit refuses '+name,()=>{const r=receipt();alter(r);assert.throws(()=>restoreAuditRequest(node(),r),/stopped finalized checkpoint/);});
+diff --git a/tests/multihost/run.mjs b/tests/multihost/run.mjs
+index 4666f785..21fde296 100644
+--- a/tests/multihost/run.mjs
++++ b/tests/multihost/run.mjs
+@@ -282,7 +282,8 @@ try{
+   await exec('scp',['-q',join(restoreDirectory,'audit-request.json'),join(restoreDirectory,'stop-receipt.json'),`${target}:${restoreProof}/`],{timeout:10000});
+   const active=(await docker(['ps','--filter','volume='+remote+'-data','--format','{{.Names}}'],true)).trim();if(active)throw Error('Backup source volume still used by a running container');
+   await docker(['run','--rm','--network','none',...descriptorArgs,...artifactMount,'--cpus','2','--memory','3g','--mount',`type=volume,src=${remote}-data,dst=/source,readonly`,'--mount',`type=bind,src=${remoteRoot}/config,dst=/config,readonly`,'--mount',`type=bind,src=${restoreProof},dst=/proof`,'--mount',`type=bind,src=${remoteRepository},dst=/work,readonly`,image,'bash','/work/tests/multihost/backup-restore.sh','/source','/proof/backup','/config/genesis.json','/proof/audit-request.json',buildPaths.nano],true,90000);
+-  const audit=JSON.parse(await sh(['sudo','-n','cat',restoreProof+'/backup/audit.json']));if(audit.canonicalHistoryVerified!==true)throw Error('Restored canonical audit not verified');
++  const audit=JSON.parse(await sh(['sudo','-n','cat',restoreProof+'/backup/audit.json']));
++  verifyRestoredFinalityAudit(await json(join(restoreDirectory,'audit-request.json')),restoreReceipt,audit);
+   const metadata=['source-before.sha256','source-after.sha256','restored-before.sha256','restored-after.sha256','archive.sha256','inputs.sha256','audit.json','passed.txt'];
+   for(const name of metadata)await writeFile(join(restoreDirectory,name),await sh(['sudo','-n','cat',restoreProof+'/backup/'+name]));
+   const elapsedMs=Date.now()-restoreStartedMs,step=Number(BigInt(original.capella.clock.maximumForwardStepMs));

@@ -3,7 +3,7 @@ import hashlib,json,os,socket,subprocess,sys,time
 from pathlib import Path
 C=Path(__file__).resolve().parent
 REV='d1597d9a6987d0839ed2f0c7ded268aead35d071'
-HARNESS_REV='c7f759bb25e20a0673c0544a87445430a0c4dfc2'
+HARNESS_REV='7434452d18d07d704b0f926d746444ccb9c416bb'
 H=Path('/tmp/nano-rpc-wan-harness-candidate-20261002')
 S=Path('/tmp/nano-rpc-headroom-margin-candidate-20261002')
 N=Path('/tmp/nano-rpc-headroom-margin-candidate-20261002')
@@ -88,7 +88,7 @@ def main():
  require(call(['git','rev-parse','HEAD'],cwd=H).strip()==HARNESS_REV,'harness revision drift')
  require(not call(['git','status','--porcelain'],cwd=H),'harness worktree dirty')
  delta=set(call(['git','diff','--name-only',REV,'HEAD'],cwd=H).splitlines())
- require(delta=={'tests/multihost/build-paths.mjs','tests/multihost/build-paths.test.mjs','tests/multihost/run.mjs'},'unexpected harness/runtime delta')
+ require(delta=={'tests/multihost/build-paths.mjs','tests/multihost/build-paths.test.mjs','tests/multihost/run.mjs','tests/multihost/restore-config.mjs','tests/multihost/restore-config.test.mjs'},'unexpected harness/runtime delta')
  require(call(['git','rev-parse','HEAD'],cwd=S).strip()==REV and not call(['git','status','--porcelain'],cwd=S),'native/Docker candidate revision or source drift')
  # Preserve old native artifacts and attest real retained program bytes.
  artifacts=[]

@@ -9,3 +9,5 @@ Le pilote prévu crée un devnet privé de trois propriétaires (Mac natif, Dock
 Réutilisation des images/volumes ; aucun build d’image ou logiciel transféré par SCP. Le pilote et les contrôleurs sont publiés par Git, seules données de devnet/rapports transitent autrement. Délais et budgets hérités du pilote inchangés. Variables NANO_TEST héritées supprimées avant sélection explicite pour éviter l’activation accidentelle d’une autre campagne. Les sources, programmes et dépendances natives sont relus avant/après ; pas promotion runtime sur main, production non qualifiée.
 
 Commande réservée à la réussite préalable de tous les gates : `python3 -B docs/qualification/rpc-wan-launch-control-20261002/launch.py --execute-qualified-wan`. Ne pas mettre en file d’attente ni relancer automatiquement. Les sorties et tentatives sont immuables.
+
+Mise à jour : pilote `7434452d` (cinq fichiers JS seulement) ; [contrôle renforcé](../rpc-stopped-finality-gate-20261002/README.md) du checkpoint finalisé du reçu d’arrêt avant reprise des duties. Les références c7f759bb ci-dessus décrivent la préparation initiale, désormais remplacée.
