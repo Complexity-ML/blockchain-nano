@@ -542,7 +542,12 @@ std::function<Json()> Rpc::prepare_simulation(const std::string& method,const Js
     // lies close to the required budget. Tighten once near that upper bound,
     // then retain the ordinary binary fallback and verified-success invariant.
     if(result.max_call_depth>1&&high-low>1&&Int(std::to_string(high-low))*1000>Int(std::to_string(high))*15){
-     auto near=high-std::max(uint64_t(1),(high-low)/4);
+     // If this near-upper probe fails, leave an interval already within
+     // the accepted quote tolerance instead of spending another full EVM
+     // execution just to bisect a slightly wider interval. A successful
+     // probe still tightens high and retains the ordinary verified search.
+     auto tolerance=u64(Int(std::to_string(high))*15/1000);
+     auto near=high-std::max(uint64_t(1),std::min((high-low)/4,tolerance));
      auto verified=probe("estimate_near",near);
      if(verified.success)high=near;else low=near;
     }
