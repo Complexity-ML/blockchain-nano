@@ -2892,3 +2892,7 @@ Timeout original **360,04 s** au slot160/finalité18/sept nouveaux votes : régr
 ### 2026-10-02 — candidat803 : sélectionAMD terminale15/16 et refus effectifs
 
 [Registre et rapports terminaux](qualification/coherent-80373152-release-gates-20261002/README.md) :15/16,zéro skip,1835,73s ; unique réindexation360,04 timeout ; sorties391,395/480 passent. Sources/neuf programmes/sept entrées inchangés et délais exacts. Driverfull exit1/queueWAN exit1,newWanNodesStarted=false. Diagnostic séparé démarré seulement après la sélection, profil non acquis. Aucun runtime promu ou critère EIP/production/lancement clôturé.
+
+### 2026-10-02 — profilCPU803 terminal, correction suivante à établir
+
+[Mesure et scope](qualification/coherent-80373152-release-gates-20261002/README.md) :1420 échantillons/zéro perte/PID564794,30s49Hz après slot128 ; diagnostic124/360s, sources/programme/bibliothèques inchangés, pas de qualification. Allocations,Keccak,BLS/JSON observés ; piles SSZ signing_root et store en chevauchement, sans addition ni gain causal. Examiner les allocations de contexteSHA256 et recalculsJSON ; correction encore non implémentée.15/16 original conservé,full/WAN refusés,aucun runtime/EIP/production/lancement clôturé.
