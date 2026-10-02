@@ -2824,3 +2824,11 @@ Les huit cibles AMD64 **2d2764de** terminent ensuite leur compilation ; sélecti
 ### 2026-10-02 — Compilation ARM64 cohérente terminale
 
 [Build0275b1af terminal](qualification/coherent-row-candidate-0275b1af-20261002/README.md) : neuf programmes, sorties build/container/source-compare0, sources avant/après inchangées. **426 cas enregistrés** (sans Node), seize noms/délais d’origine vérifiés. Aucun cas de ce nouveau build encore exécuté ; ARM attend l’ancienne régression, AMD compile encore. Aucun runtime main promu, aucune porte production fermée.
+
+### 2026-10-02 — compilation cohérente AMD64 terminée, exécution en cours
+
+Candidat isolé **0275b1af**, neuf programmes AMD64 construits, sources exactes identiques à ARM64 ; registre426/sélection16 et délais originaux vérifiés. La sélection AMD64 est active, pas encore terminale. Compilation macOS native du même candidat et contrôles/rejeu signés préparés pour le troisième propriétaire ; aucun nouveau résultat natif ou WAN acquis. Rapports et scripts : [coherent-row-candidate-0275b1af-20261002](qualification/coherent-row-candidate-0275b1af-20261002/README.md). Aucun statut EIP, timeout historique ou critère de production clôturé.
+
+### 2026-10-02 — candidat 0275b1af : périmètre natif qualifié
+
+Neuf programmes macOS construits depuis les mêmes sources Docker : **9/9** contrôles core/helpers/contrôleurs, zéro skip, délais conservés ; **4/4** audits signés en lecture seule (**99 blocs / 97 transactions**, ascendance finalisée requise et trois rejets négatifs). Deux cents entrées binaires existantes et sources inchangées avant/après, y compris après audit. [Preuves et limites](qualification/coherent-row-candidate-0275b1af-20261002/README.md). Cette qualification locale du nouveau candidat ne ferme pas la réindexation AMD360, la régression globale, la restauration des journals/duties ou la finalité WAN ; aucun statut EIP changé.

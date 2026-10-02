@@ -1,0 +1,197 @@
+Start testing: Oct 02 09:02 CEST
+----------------------------------------------------------
+3/432 Testing: core
+3/432 Test: core
+Command: "/tmp/nano-checkpoint-row-dump-candidate-20261002/build-release/nano-tests"
+Directory: /tmp/nano-checkpoint-row-dump-candidate-20261002
+"core" start time: Oct 02 09:02 CEST
+Output:
+----------------------------------------------------------
+4069 checks passed
+<end of output>
+Test time =   0.69 sec
+----------------------------------------------------------
+Test Passed.
+"core" end time: Oct 02 09:02 CEST
+"core" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/432 Testing: consensus_rotation_audit_empty_aggregate
+4/432 Test: consensus_rotation_audit_empty_aggregate
+Command: "/tmp/nano-checkpoint-row-dump-candidate-20261002/build-release/nano-capella-rotation-audit" "--self-test"
+Directory: /tmp/nano-checkpoint-row-dump-candidate-20261002/build-release
+"consensus_rotation_audit_empty_aggregate" start time: Oct 02 09:02 CEST
+Output:
+----------------------------------------------------------
+6 empty-aggregate checks passed; no network qualification
+<end of output>
+Test time =   0.30 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_rotation_audit_empty_aggregate" end time: Oct 02 09:02 CEST
+"consensus_rotation_audit_empty_aggregate" time elapsed: 00:00:00
+----------------------------------------------------------
+
+309/432 Testing: consensus_multihost_build_paths
+309/432 Test: consensus_multihost_build_paths
+Command: "/opt/homebrew/bin/node" "--test" "/tmp/nano-checkpoint-row-dump-candidate-20261002/tests/multihost/build-paths.test.mjs"
+Directory: /tmp/nano-checkpoint-row-dump-candidate-20261002/build-release
+"consensus_multihost_build_paths" start time: Oct 02 09:02 CEST
+Output:
+----------------------------------------------------------
+✔ legacy read-only volume paths remain available (0.869042ms)
+✔ isolated runtime, provenance and rotation auditor share the selected build (0.107125ms)
+✔ packaged/default mode cannot silently ignore a requested build (0.205375ms)
+✔ escape, whitespace, empty and multiline build selectors are rejected (0.123125ms)
+✔ architecture-specific paths select separate existing builds (0.058459ms)
+✔ common selector remains backward compatible and supports explicit override (0.587ms)
+✔ one missing architecture without fallback cannot silently use the legacy binary (0.055417ms)
+✔ per-architecture selectors preserve packaged and path validation (0.061667ms)
+✔ remote source can select a Git candidate without changing the main checkout (0.102584ms)
+✔ remote source rejects traversal, relative paths and mount injection (0.11975ms)
+✔ remote Docker invocations translate provenance, native audit, restore and rotation executables (0.091291ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 73.367459
+<end of output>
+Test time =   0.17 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_multihost_build_paths" end time: Oct 02 09:02 CEST
+"consensus_multihost_build_paths" time elapsed: 00:00:00
+----------------------------------------------------------
+
+310/432 Testing: consensus_multihost_harness_manifest
+310/432 Test: consensus_multihost_harness_manifest
+Command: "/opt/homebrew/bin/node" "--test" "/tmp/nano-checkpoint-row-dump-candidate-20261002/tests/multihost/harness-manifest.test.mjs"
+Directory: /tmp/nano-checkpoint-row-dump-candidate-20261002/build-release
+"consensus_multihost_harness_manifest" start time: Oct 02 09:02 CEST
+Output:
+----------------------------------------------------------
+✔ actual runner inventory covers restored audit and transitive finality/monitor dependencies (19.577709ms)
+✔ dependency-only edit changes its hash while entry hash remains identical (2.668375ms)
+✔ multiline imports, side effects and cycles are included once (3.665458ms)
+✔ missing imported dependency fails rather than making a partial manifest (1.0845ms)
+✔ import outside repository is rejected (1.629416ms)
+✔ symlink to external source is rejected (1.4895ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 94.058125
+<end of output>
+Test time =   0.15 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_multihost_harness_manifest" end time: Oct 02 09:02 CEST
+"consensus_multihost_harness_manifest" time elapsed: 00:00:00
+----------------------------------------------------------
+
+423/432 Testing: consensus_capella_audit_finalized_ancestry
+423/432 Test: consensus_capella_audit_finalized_ancestry
+Command: "/tmp/nano-checkpoint-row-dump-candidate-20261002/build-release/nano-capella-audit-ancestry-tests"
+Directory: /tmp/nano-checkpoint-row-dump-candidate-20261002/build-release
+"consensus_capella_audit_finalized_ancestry" start time: Oct 02 09:02 CEST
+Output:
+----------------------------------------------------------
+12 actual ancestry-helper cases passed; no signature or full replay qualification
+<end of output>
+Test time =   0.26 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_audit_finalized_ancestry" end time: Oct 02 09:02 CEST
+"consensus_capella_audit_finalized_ancestry" time elapsed: 00:00:00
+----------------------------------------------------------
+
+426/432 Testing: consensus_checkpoint_json_canonical
+426/432 Test: consensus_checkpoint_json_canonical
+Command: "/tmp/nano-checkpoint-row-dump-candidate-20261002/build-release/nano-checkpoint-json-tests"
+Directory: /tmp/nano-checkpoint-row-dump-candidate-20261002/build-release
+"consensus_checkpoint_json_canonical" start time: Oct 02 09:02 CEST
+Output:
+----------------------------------------------------------
+{"bellatrixVersions":[2,3,4,5],"boundRejections":3844,"byteComparisons":3584,"cancellations":1024,"capellaStoreSchemas":[1,2,3],"capellaVersions":[1,2,3,4],"passed":true}
+<end of output>
+Test time =   0.33 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_checkpoint_json_canonical" end time: Oct 02 09:02 CEST
+"consensus_checkpoint_json_canonical" time elapsed: 00:00:00
+----------------------------------------------------------
+
+430/432 Testing: consensus_capella_snapshot_canonical_hex
+430/432 Test: consensus_capella_snapshot_canonical_hex
+Command: "/tmp/nano-checkpoint-row-dump-candidate-20261002/build-release/nano-capella-snapshot-hex-tests"
+Directory: /tmp/nano-checkpoint-row-dump-candidate-20261002/build-release
+"consensus_capella_snapshot_canonical_hex" start time: Oct 02 09:02 CEST
+Output:
+----------------------------------------------------------
+773 mutation/format refusals; all byte values, empty input and bounded cancellation passed
+<end of output>
+Test time =   0.28 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_snapshot_canonical_hex" end time: Oct 02 09:02 CEST
+"consensus_capella_snapshot_canonical_hex" time elapsed: 00:00:00
+----------------------------------------------------------
+
+431/432 Testing: core_hex_encoding_differential
+431/432 Test: core_hex_encoding_differential
+Command: "/tmp/nano-checkpoint-row-dump-candidate-20261002/build-release/nano-hex-encoding-tests"
+Directory: /tmp/nano-checkpoint-row-dump-candidate-20261002/build-release
+"core_hex_encoding_differential" start time: Oct 02 09:02 CEST
+Output:
+----------------------------------------------------------
+{"allocationBoundVerified":true,"differentialCases":1031,"endToEndQualification":false,"microbenchmark":[]}
+<end of output>
+Test time =   0.33 sec
+----------------------------------------------------------
+Test Passed.
+"core_hex_encoding_differential" end time: Oct 02 09:02 CEST
+"core_hex_encoding_differential" time elapsed: 00:00:00
+----------------------------------------------------------
+
+432/432 Testing: consensus_capella_snapshot_cached_rows
+432/432 Test: consensus_capella_snapshot_cached_rows
+Command: "/tmp/nano-checkpoint-row-dump-candidate-20261002/build-release/nano-capella-snapshot-json-tests"
+Directory: /tmp/nano-checkpoint-row-dump-candidate-20261002/build-release
+"consensus_capella_snapshot_cached_rows" start time: Oct 02 09:02 CEST
+Output:
+----------------------------------------------------------
+{"bytesConsumed":251790360,"cachedRowsMilliseconds":[1.287125,1.299458,1.279208,1.297041,1.316208],"cancellations":384,"comparisons":769,"envelopeRefusals":768,"legacyMilliseconds":[39.8325,37.289375,37.426917,37.222334,37.149208],"passed":true,"scope":"canonical JSON assembly only; no node speed extrapolation"}
+<end of output>
+Test time =   0.60 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_snapshot_cached_rows" end time: Oct 02 09:02 CEST
+"consensus_capella_snapshot_cached_rows" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 02 09:02 CEST
+
+audit =   0.26 sec*proc
+
+capella =   1.14 sec*proc
+
+consensus =   0.54 sec*proc
+
+core =   0.33 sec*proc
+
+encoding =   0.33 sec*proc
+
+qualification_consensus_harness =   0.62 sec*proc
+
+qualification_evm =   0.69 sec*proc
+
+qualification_storage_local =   0.93 sec*proc
+
+snapshot =   0.87 sec*proc
+
