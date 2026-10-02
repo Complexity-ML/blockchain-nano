@@ -6267,3 +6267,7 @@ Les huit cibles AMD64 **2d2764de** terminent ensuite leur compilation ; sélecti
 ### 2026-10-02 — Chemins WAN cohérents ARM64/AMD64 et checkout distant candidat
 
 [Correction du contrôleur](qualification/coherent-wan-paths-20261002/README.md) : choix séparés des builds ARM64/AMD64, checkout Git distant explicite et routage des appels d’audit/sauvegarde/rotation. **17 contrôles Node Mac passent, dont 7 nouveaux**, erreur initiale null conservée. Enregistrement CTest conditionnel Node ajouté, non exécuté dans les builders actuels sans Node. Aucun runtime ou build actif modifié, aucun résultat WAN acquis ; restauration complète, reprise des duties et tous critères de production restent ouverts.
+
+### 2026-10-02 — Propriétaire Mac natif cohérent en préparation
+
+[Compilation et contrôle](qualification/coherent-wan-native-20261002/README.md) : source 554ebc3a, runtime strictement égal à 2d2764de ; CMake Mac Release isolé actif, huit cibles, P2P existant hashé. Nécessaire au propriétaire macOS natif demandé, les deux autres restent Docker Linux. Huit cas natifs enregistrés et contrôle préparé, **aucun résultat natif acquis**. Campagnes Docker inchangées ; activation/redémarrage AMD64 passent en 346,72/350,86 s sur 360 s, marge faible. Restauration complète, duties, WAN, régression et tous critères de production restent ouverts.
