@@ -5,7 +5,7 @@ const hash=v=>typeof v==='string'&&/^0x[0-9a-f]{64}$/.test(v);
 const address=v=>typeof v==='string'&&/^0x[0-9a-f]{40}$/.test(v)&&v!=='0x'+'0'.repeat(40);
 const data=v=>typeof v==='string'&&/^0x(?:[0-9a-f]{2})*$/.test(v)&&v.length<=131074;
 function quantity(v){check(typeof v==='string'&&/^0x(?:0|[1-9a-f][0-9a-f]*)$/.test(v)&&v.length<=66,'Noncanonical/oversized source quantity');return BigInt(v);}
-function header(v){check(v&&hash(v.hash),'Missing source header');quantity(v.number);return v;}
+function header(v){check(v&&hash(v.hash),'Missing source header');quantity(v.number);return {hash:v.hash,number:v.number};}
 function validateLog(log,receipt){
  check(log&&log.removed===false&&address(log.address)&&hash(log.transactionHash)&&hash(log.blockHash)&&data(log.data)&&Array.isArray(log.topics)&&log.topics.length<=4&&log.topics.every(hash),'Malformed/removed source log');
  check(log.transactionHash===receipt.transactionHash&&log.blockHash===receipt.blockHash&&log.blockNumber===receipt.blockNumber,'Source log receipt binding differs');
@@ -17,13 +17,17 @@ function receipt(v,tx){
  quantity(v.blockNumber);quantity(v.transactionIndex);
  check(Array.isArray(v.logs)&&v.logs.length<=256,'Source receipt log budget');
  const indices=new Set();for(const log of v.logs){validateLog(log,v);check(!indices.has(log.logIndex),'Duplicate source log index');indices.add(log.logIndex);}
- return v;
+ // Keep only verified fields, detached from mutable provider cache objects.
+ return {status:v.status,transactionHash:v.transactionHash,blockHash:v.blockHash,blockNumber:v.blockNumber,transactionIndex:v.transactionIndex,
+  logs:v.logs.map(l=>({address:l.address,topics:[...l.topics],data:l.data,logIndex:l.logIndex,transactionIndex:l.transactionIndex,blockNumber:l.blockNumber,blockHash:l.blockHash,transactionHash:l.transactionHash,removed:l.removed}))};
 }
 function projection(v){return JSON.stringify([v.status,v.transactionHash,v.blockHash,v.blockNumber,v.transactionIndex,v.logs.map(l=>[l.address,l.topics,l.data,l.logIndex,l.transactionIndex,l.blockNumber,l.blockHash,l.transactionHash,l.removed])]);}
 export async function observeBaseFinalizedReceipt(rpc,{transactionHash,event}={}){
  check(hash(transactionHash),'Canonical transaction hash required');
  check(event&&address(event.emitter)&&Array.isArray(event.topics)&&event.topics.length>0&&event.topics.length<=4&&event.topics.every(hash)&&data(event.data)&&/^[0-9a-f]{64}$/.test(event.codeSha256??''),'Exact reviewed event and emitter code SHA-256 required');
  quantity(event.logIndex);
+ // A configuration reload must not change the reviewed event during awaits.
+ event={emitter:event.emitter,topics:[...event.topics],data:event.data,logIndex:event.logIndex,codeSha256:event.codeSha256};
  const request=(method,params)=>rpc.request({method,params});
  check(await request('eth_chainId',[])==='0x2105','Base mainnet chain ID required');
  // Base finalized is derived from L1 finality; never substitute safe/latest

@@ -3467,3 +3467,14 @@ avec sélection/JUnit concordants, 9/9 sans échec/skip.
 Runtime inchangé depuis 674a23e0 ; pas d’extension du périmètre ni de
 qualification efbeb9bc/pruning/WAN déduite. Réseau encore actif à l’observation.
 Tous les critères et échecs historiques restent conservés.
+
+## Stabilité des observations source RPC — 4 octobre 2026
+
+Trois défauts reproduits avec configuration/cache mutables : définition
+de l’événement, reçu partagé et checkpoint partagé pouvaient changer pendant
+les awaits sans refus. Contrôles avant correction conservés (24 succès,
+3 échecs), puis champs vérifiés copiés et 27/27 sans échec/skip, exit 0.
+[Preuves](qualification/base-source-observation-snapshot-20261004/README.md).
+Pas de preuve cryptographique de finalité, dépôt réel, permission de mint,
+bridge qualifié ou changement de candidate C++. Tous les critères et échecs
+historiques antérieurs restent conservés.

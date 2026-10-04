@@ -1,0 +1,79 @@
+✔ finalized canonical event is observed with explicit mint prohibition (1.630917ms)
+✔ source gate rejects wrongChain (0.1415ms)
+✔ source gate rejects chainChanged (0.102458ms)
+✔ source gate rejects notFinalized (0.063791ms)
+✔ source gate rejects wrongTransaction (0.067208ms)
+✔ source gate rejects failedReceipt (0.051791ms)
+✔ source gate rejects removedLog (0.077458ms)
+✔ source gate rejects logBlockMismatch (0.067ms)
+✔ source gate rejects duplicatedLog (0.069375ms)
+✔ source gate rejects wrongEmitter (0.118375ms)
+✔ source gate rejects wrongPayload (0.06175ms)
+✔ source gate rejects wrongTopic (0.055834ms)
+✔ source gate rejects noncanonicalQuantity (0.044625ms)
+✔ source gate rejects missingCode (0.065708ms)
+✔ source gate rejects changedCode (0.051708ms)
+✔ source gate rejects receiptReorg (0.0635ms)
+✔ source gate rejects finalizedReorg (0.083166ms)
+✔ source gate rejects finalizedRegression (0.072542ms)
+✔ source gate rejects receiptChanged (0.071ms)
+✔ source gate rejects excessiveLogs (0.0725ms)
+✔ unsupported EIP-1898 is fatal without a block-number fallback (0.128167ms)
+✔ invalid reviewed event is rejected before RPC access (0.1525ms)
+✔ finalized hash replacement at the same height is rejected (0.091166ms)
+✔ advancing finalized head is accepted only with its matching canonical header (0.136542ms)
+✖ reviewed event remains fixed when the caller changes its configuration during RPC (0.427583ms)
+✖ shared receipt cache cannot erase evidence of a changed event (0.121625ms)
+✖ shared header cache cannot rewrite the saved finalized checkpoint (0.087417ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 24
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 71.146041
+
+✖ failing tests:
+
+test at tools/bridge-source/finality.test.mjs:58:1
+✖ reviewed event remains fixed when the caller changes its configuration during RPC (0.427583ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (file:///Users/boris/Dev/blockchain-nano/tools/bridge-source/finality.test.mjs:64:2)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /reviewed event/,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at tools/bridge-source/finality.test.mjs:66:1
+✖ shared receipt cache cannot erase evidence of a changed event (0.121625ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (file:///Users/boris/Dev/blockchain-nano/tools/bridge-source/finality.test.mjs:75:2)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /receipt changed/,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at tools/bridge-source/finality.test.mjs:77:1
+✖ shared header cache cannot rewrite the saved finalized checkpoint (0.087417ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (file:///Users/boris/Dev/blockchain-nano/tools/bridge-source/finality.test.mjs:83:2)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /checkpoint changed/,
+    operator: 'rejects',
+    diff: 'simple'
+  }

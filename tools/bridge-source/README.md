@@ -29,7 +29,7 @@ ne sont pas authentifiées. Cette fonction n’est ni un light client ni un brid
 La clé source seule n’est pas un journal idempotent persistant.
 
 Référence protocole : [dérivation Base et signal de finalité L1](https://docs.base.org/base-chain/specs/protocol/consensus/derivation).
-Vingt-quatre tests avec RPC injecté passent : finalité/reorgs/logs/bindings,
+Vingt-sept tests avec RPC injecté passent : finalité/reorgs/logs/bindings,
 code/identité, refus d’EIP-1898 absent, budgets et évolution de tête finalisée.
 Pas encore de preuve issue d’un dépôt réel ou d’un réseau privé interchaîne.
 La CI d’outillage inclut ces tests ; pas de nouvelle qualification C++ revendiquée.
@@ -61,7 +61,16 @@ const observation = await observeBaseFinalizedReceipt(rpc, {transactionHash, eve
 // observation.eligibleForMint reste false.
 ```
 
-Qualification locale : 15 tests avec véritables serveurs HTTP loopback et
-24 tests de l’observateur avec RPC injecté, 39/39 sans skip. Cette combinaison
+Qualification initiale : 15 tests avec véritables serveurs HTTP loopback et
+24 tests de l’observateur avec RPC injecté, 39/39 sans skip.
+Le lot de l’observateur compte désormais 27 tests après la correction des
+références mutables ; les 15 tests du transport ne sont pas rejoués pour cette
+modification sans changement du transport. Cette combinaison
 ne teste pas encore un dépôt réel Base ni un bridge interchaînes.
 [Rapport](../../docs/qualification/base-source-rpc-transport-20261004/README.md).
+
+Les champs vérifiés des reçus/checkpoints et la définition revue de l’événement
+sont copiés avant les attentes asynchrones ; un cache/configuration mutable
+ne doit pas réécrire l’observation initiale. Les champs additionnels non vérifiés
+du reçu ne sont pas propagés.
+[Échecs reproduits et correction](../../docs/qualification/base-source-observation-snapshot-20261004/README.md).

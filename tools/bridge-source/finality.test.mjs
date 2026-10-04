@@ -54,3 +54,31 @@ test('advancing finalized head is accepted only with its matching canonical head
  else assert.equal((await observeBaseFinalizedReceipt(rpc,{transactionHash:tx,event})).eligibleForMint,false);
  }
 });
+
+test('reviewed event remains fixed when the caller changes its configuration during RPC',async()=>{
+ const reviewed=structuredClone(event);
+ const {rpc}=fixture(o=>{
+  if(o.method==='eth_chainId'&&o.nth===1)reviewed.data='0x5678';
+  if(o.method==='eth_getTransactionReceipt'){o.value.logs[0].data='0x5678';return o.value;}
+ });
+ await assert.rejects(observeBaseFinalizedReceipt(rpc,{transactionHash:tx,event:reviewed}),/reviewed event/);
+});
+test('shared receipt cache cannot erase evidence of a changed event',async()=>{
+ let shared;
+ const {rpc}=fixture(o=>{
+  if(o.method==='eth_getTransactionReceipt'){
+   if(o.nth===1)shared=o.value;
+   else shared.logs[0].data='0x5678';
+   return shared;
+  }
+ });
+ await assert.rejects(observeBaseFinalizedReceipt(rpc,{transactionHash:tx,event}),/receipt changed/);
+});
+test('shared header cache cannot rewrite the saved finalized checkpoint',async()=>{
+ const shared={number:'0xb',hash:final};
+ const {rpc}=fixture(o=>{
+  if(o.method==='eth_getBlockByNumber'&&o.params[0]!=='0xa')return shared;
+  if(o.method==='eth_getCode')shared.number='0x9';
+ });
+ await assert.rejects(observeBaseFinalizedReceipt(rpc,{transactionHash:tx,event}),/checkpoint changed/);
+});
