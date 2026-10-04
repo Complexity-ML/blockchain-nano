@@ -1,0 +1,11 @@
+# Packaged Nano2 WAN restore — terminal success, 2026-10-05
+
+Original campaign/controller exited **0**, no restart or changed deadline. Three actual node processes (Mac native, Docker ARM64, VPS Docker AMD64), two physical hosts, 64 public synthetic validator keys, private SSH loopback transport. Immutable candidates and native runtime equivalence are identified in the companion packaging/native proofs and rehashed afterward; 33 harness files unchanged.
+
+Startup common finality epoch 2, then VPS stopped cleanly. Full source database, peer key, chain witness and 21 signing journals/witnesses archived/restored into a new owned copy. Independently captured chain/key commitments travelled outside the archive. Initial audit: 32 blocks, 15 pruned states replayed, checkpoint 295. Source and offline restored bytes unchanged; only fresh-copy ownership changed to UID/GID 10001.
+
+Restored peer identity retained. Common finality advanced **2→3 in 78,597 ms**, below unchanged 180,000 ms limit. Further common window **5→8** passed with the same epoch-8 root on all nodes. All 21 restored signer commitments advanced; VPS admitted 123 attestations, 13 proposals, 441 sync messages, no duty failure reported. Terminal read-only audit under packaged user bound independent stopped checkpoint 830/digest and observed epoch-8 root, verified canonical ancestry across 77 blocks and replayed 59 pruned execution states. Final original source comparison passed; validators stopped healthy.
+
+The startup `warming.heads` field represented finalized execution blocks; latest head advanced while waiting for FFG epoch 2. This explains this campaign's startup wait only, not historical WAN A. Read-only diagnostic method/endpoint refusals are retained: an invented consensus RPC is absent; Capella syncing endpoint returned 404 and coverage remains open. No API-completeness claim.
+
+Does not prove physical power loss, all historical fork choice/standalone votes, public mesh or three independent failure domains. Images restored **current Nano2** data; prior explicit legacy migration and local resumed duties have separate evidence. No real funds, public node, sale, repeated image build, or full production readiness. Remaining consensus/load/operations, economic bridge/Doppler and independent review criteria remain open.

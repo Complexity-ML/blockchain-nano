@@ -1,0 +1,115 @@
+{
+  "harnessSource": "079c7f92",
+  "runtimeSource": "59fa653033aefb23651c32f1d986ac644e4866d2",
+  "controllerExit": 0,
+  "nodes": 3,
+  "physicalHosts": 2,
+  "syntheticValidators": 64,
+  "restoredSigners": 21,
+  "allRestoredPinsAdvanced": true,
+  "independentPinsRetainedSeparately": true,
+  "sourceAndOfflineCopyUnchanged": true,
+  "recoveryMs": 78597,
+  "recoveryBoundMs": 180000,
+  "initialAudit": {
+    "allHistoricalStatesMaterialized": false,
+    "archiveBytes": 76612,
+    "blocksIncludingTrustedAnchor": 32,
+    "canonicalHistoryVerified": true,
+    "checkpointDigest": "0x3cc8657522c6737994059049987839ed929b102e77fdf6bf5a4602d43bbda3f7",
+    "checkpointSequence": 295,
+    "externalFinalizedAncestorVerified": true,
+    "finalized": {
+      "epoch": "0x2",
+      "root": "0x34738ddb3dcf709fb78e8392d143a965ff6a6d17b8df062fb148062054ae38be"
+    },
+    "firstExecutionBlock": "0x1",
+    "head": "0xa681faa90575474264f9dd64419defb4a362231f2f7a6d12c3f75608bb25f317",
+    "historicalForkChoiceVerified": false,
+    "historicalStandaloneVotesReplayed": false,
+    "lastExecutionBlock": "0x20",
+    "prunedExecutionStatesReplayed": 15,
+    "requiredFinalized": {
+      "epoch": "0x2",
+      "root": "0x34738ddb3dcf709fb78e8392d143a965ff6a6d17b8df062fb148062054ae38be"
+    },
+    "transactions": 1,
+    "trustedAnchor": "0x4ac967ffc687039ec94f1f5cd40b9f5db6f45e074045a088da14d346151fa89f"
+  },
+  "terminalAudit": {
+    "allHistoricalStatesMaterialized": false,
+    "archiveBytes": 213580,
+    "blocksIncludingTrustedAnchor": 77,
+    "canonicalHistoryVerified": true,
+    "checkpointDigest": "0x3d964998e8eb08a9860d8b42e2d227420cef264dd0bb340c23f6ddac3b5f33af",
+    "checkpointSequence": 830,
+    "externalFinalizedAncestorVerified": true,
+    "finalized": {
+      "epoch": "0x8",
+      "root": "0x0c07161048d4494a29459d75c9da4c8d6616324fdff47e2ceb0681497cce3ccc"
+    },
+    "firstExecutionBlock": "0x1",
+    "head": "0x61aa3ddae5c60c30872df867deacf02ba2c69f9393e1c14c3b5015437d9a9e77",
+    "historicalForkChoiceVerified": false,
+    "historicalStandaloneVotesReplayed": false,
+    "lastExecutionBlock": "0x4d",
+    "prunedExecutionStatesReplayed": 59,
+    "requiredFinalized": {
+      "epoch": "0x8",
+      "root": "0x0c07161048d4494a29459d75c9da4c8d6616324fdff47e2ceb0681497cce3ccc"
+    },
+    "transactions": 1,
+    "trustedAnchor": "0x4ac967ffc687039ec94f1f5cd40b9f5db6f45e074045a088da14d346151fa89f"
+  },
+  "stable": {
+    "epochs": 3,
+    "firstEpoch": "5",
+    "lastEpoch": "8",
+    "lastCheckpoint": {
+      "epoch": "8",
+      "root": "0x0c07161048d4494a29459d75c9da4c8d6616324fdff47e2ceb0681497cce3ccc"
+    },
+    "lastExecutionHash": "0x351730101b33bf72d46181ab4b3f084566599eb5b7e61f315ab5ec1863167f70",
+    "elapsedMs": 192564,
+    "nodes": [
+      "mac-native",
+      "mac-docker",
+      "vps-docker"
+    ],
+    "revision": "59fa653033aefb23651c32f1d986ac644e4866d2"
+  },
+  "restoredDuties": {
+    "attestationsAdmitted": 123,
+    "awaitingRegistration": 0,
+    "dutyTrace": [],
+    "dutyTraceFailures": 0,
+    "failure": null,
+    "healthy": true,
+    "localKeys": 21,
+    "proposalsAdmitted": 13,
+    "staleDutyRetries": 0,
+    "syncMessagesAdmitted": 441,
+    "timing": {
+      "awaitingSlotBlock": 123,
+      "maxPollMs": 1619,
+      "maxProposalMs": 611,
+      "polls": 2041,
+      "pollsOverSlot": 0,
+      "proposalAttempts": 13,
+      "proposalsUnavailable": 0,
+      "slotBoundaryExits": 5
+    }
+  },
+  "harnessFilesUnchanged": 33,
+  "imageAndNativeProgramHashesRechecked": true,
+  "publicMeshQualified": false,
+  "powerLossQualified": false,
+  "historicalForkChoiceVerified": false,
+  "historicalStandaloneVotesReplayed": false,
+  "productionQualified": false,
+  "retainedDiagnosticErrors": [
+    "nno_getConsensusStatus method absent, read-only diagnostic only",
+    "Capella /eth/v1/node/syncing returns 404; API coverage remains open"
+  ],
+  "startupInterpretation": "warming heads were finalized execution blocks, not latest head; latest advanced to block33 before epoch2 finality"
+}
