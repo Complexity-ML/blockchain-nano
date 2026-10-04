@@ -3721,3 +3721,16 @@ Migration hors ligne du helper qualifiée ARM64/AMD64 ; duties après migration
 qualifiés localement ARM64 seulement. Nouveau lot AMD64 actif, terminal attendu.
 Pas de nouveau WAN, migration en place ou panne électrique acquis ; toutes
 exigences/erreurs conservées, runtime main non promu, objectif production actif.
+
+## Duties après migration AMD64 — terminal réel, 5 octobre 2026
+
+Source 477e5ba4 : même nouveau parcours que ARM64, helper réel et cœur 59fa6530.
+64 journaux repris, conflit refusé avant signer, finalité locale 2 → 7, source
+et backup inchangés. Conteneur exit 0 via docker wait indépendant enregistré
+pendant l'exécution ; hashes des programmes/bibliothèque vérifiés séparément.
+[Preuves et timeout du wrapper conservé](qualification/pruned-migration-duties-amd64-terminal-20261005/README.md).
+Wrapper compilation+test échoué à 300 s, sans relance ou extension. Qualification
+fonctionnelle acquise ; ce budget de contrôle reste échoué. Migration/reprise
+locale désormais couvertes ARM64/AMD64 dans cette portée ; aucun nouveau WAN,
+migration publique en place, panne électrique ou production globale déduit.
+Toutes exigences et erreurs conservées, objectif production actif.
