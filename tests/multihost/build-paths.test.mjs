@@ -103,3 +103,24 @@ test('mutable tags, malformed digests and mount injection are refused',()=>{
 });
 
 test('artifact mode must be an explicit boolean',()=>{for(const bad of ['1',1,null,undefined,{}])assert.throws(()=>selectBuildArtifacts(bad),/Invalid build-volume/);});
+
+import {qualifiedRetainedArtifacts} from './build-paths.mjs';
+const frozenArtifacts=()=>selectBuildArtifacts(true,'sha256:'+'a'.repeat(64),'sha256:'+'b'.repeat(64),'arm-owned','amd-owned');
+test('majority mode accepts both immutable images and read-only retained volumes',()=>{
+ assert.equal(qualifiedRetainedArtifacts(true,frozenArtifacts()),true);
+});
+test('majority mode rejects legacy mutable image selectors',()=>{
+ assert.equal(qualifiedRetainedArtifacts(true,selectBuildArtifacts(true)),false);
+});
+test('majority mode requires build-volume ownership and both architectures',()=>{
+ assert.equal(qualifiedRetainedArtifacts(false,frozenArtifacts()),false);
+ const a=frozenArtifacts();delete a.amd64;assert.equal(qualifiedRetainedArtifacts(true,a),false);
+});
+test('majority mode rejects writable or mismatched retained mounts',()=>{
+ for(const mount of ['type=volume,src=arm-owned,dst=/build','type=volume,src=other,dst=/build,readonly']){
+  const a=frozenArtifacts();a.arm64.mount=mount;assert.equal(qualifiedRetainedArtifacts(true,a),false);
+ }
+});
+test('majority mode rejects malformed image and volume identities',()=>{
+ for(const key of ['image','volume']){const a=frozenArtifacts();a.amd64[key]='invalid,value';assert.equal(qualifiedRetainedArtifacts(true,a),false);}
+});

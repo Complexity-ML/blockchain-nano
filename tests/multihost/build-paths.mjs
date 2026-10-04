@@ -47,3 +47,16 @@ export function selectBuildArtifacts(buildVolume,armImage,amdImage,armVolume,amd
  const artifact=(i,v)=>({image:i,volume:v,mount:`type=volume,src=${v},dst=/build,readonly`});
  return explicit?{arm64:artifact(image(armImage),volume(armVolume)),amd64:artifact(image(amdImage),volume(amdVolume))}:{arm64:artifact('nano-build-dependencies:local','nano-linux-sync-build'),amd64:artifact('nano-build-dependencies:local','nano-linux-sync-build')};
 }
+
+// Majority isolation can reuse qualified programs in read-only build volumes.
+// Legacy mutable builder tags remain ineligible for this qualification mode.
+export function qualifiedRetainedArtifacts(buildVolume,artifacts){
+ if(typeof buildVolume!=='boolean')throw Error('Invalid build-volume mode');
+ if(!buildVolume)return false;
+ return ['arm64','amd64'].every(arch=>{
+  const a=artifacts?.[arch];
+  return typeof a?.image==='string'&&/^sha256:[a-f0-9]{64}$/.test(a.image)
+   &&typeof a.volume==='string'&&/^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/.test(a.volume)
+   &&a.mount===`type=volume,src=${a.volume},dst=/build,readonly`;
+ });
+}

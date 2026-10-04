@@ -23,7 +23,7 @@ import {restoredFinalityAuditRequest,verifyRestoredFinalityAudit} from './restor
 import {startFinalityMonitor} from './monitor.mjs';
 import {qualifyAlertFault} from './alert-fault.mjs';
 import {selectCandidates,verifyPackagedImage} from './candidate-images.mjs';
-import {selectHostBuildPaths,selectRemoteSourceRepository,remoteDockerArgument,selectNativeBuildPaths,selectBuildArtifacts} from './build-paths.mjs';
+import {selectHostBuildPaths,selectRemoteSourceRepository,remoteDockerArgument,selectNativeBuildPaths,selectBuildArtifacts,qualifiedRetainedArtifacts} from './build-paths.mjs';
 import {advanceRestartConfiguration} from './restart-pins.mjs';
 import {decodeHttpResponse,httpStatusTrailer} from './http-response.mjs';
 import {hashHarness} from './harness-manifest.mjs';
@@ -65,7 +65,7 @@ if(faultProgress&&(fork!=='capella'||!partition))throw Error('Fault progress dia
 const backupRestore=process.env.NANO_TEST_BACKUP_RESTORE==='1';
 const pinnedRestart=process.env.NANO_TEST_PINNED_RESTART==='1';
 if(partitionCuts&&(!candidates||fork!=='capella'||!partition||asymmetric||rotation||boundedLoad||backupRestore||pinnedRestart||monitor))throw Error('Repeated partitions require standalone packaged Capella partition campaign');
-if(majorityIsland&&(!candidates||fork!=='capella'||!partition||asymmetric||rotation||boundedLoad||backupRestore||pinnedRestart||monitor||partitionCuts))throw Error('Majority island requires standalone packaged Capella partition campaign');
+if(majorityIsland&&(!(candidates||qualifiedRetainedArtifacts(buildVolume,buildArtifacts))||fork!=='capella'||!partition||asymmetric||rotation||boundedLoad||backupRestore||pinnedRestart||monitor||partitionCuts))throw Error('Majority island requires standalone attested Capella partition campaign');
 if(pinnedRestart&&(!candidates||fork!=='capella'||monitor||backupRestore||partition||asymmetric||rotation||boundedLoad))throw Error('Pinned container replacement requires standalone packaged Capella images');
 if(backupRestore&&(fork!=='capella'||!buildVolume||partition||asymmetric||rotation||boundedLoad))throw Error('Backup restore requires standalone Capella build-volume campaign');
 if(boundedLoad&&(fork!=='capella'||asymmetric||rotation))throw Error('Bounded load requires Capella; asymmetric/rotation combinations are not qualified yet');
