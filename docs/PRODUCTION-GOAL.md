@@ -3407,3 +3407,13 @@ Le résultat interdit tout mint (`eligibleForMint:false`) ; l’assertion RPC se
 ne clôt pas la sécurité du bridge ni les termes Base–Nano.
 [Module, tests et limites](qualification/base-source-finality-gate-20261004/README.md).
 Toutes les exigences précédentes restent conservées selon leur statut.
+
+## WAN A : preuve de stockage indisponible — 4 octobre 2026
+
+Le volume historique référencé par la forensique A n’est plus disponible.
+Une sonde n’a ouvert aucune base : Docker avait créé un nouveau volume vide,
+identifié et supprimé après contrôle. Échec de la sonde conservé, aucun audit
+canonique revendiqué. Logs/manifeste historiques restent conservés ; la cause
+initiale et l’anomalie A restent ouvertes. Autre copie vérifiée ou reproduction
+bornée avec les diagnostics actuels nécessaire ; aucune campagne active relancée.
+[Constat et périmètre](qualification/wan-a-evidence-availability-20261004/README.md).
