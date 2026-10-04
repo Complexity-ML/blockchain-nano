@@ -6811,3 +6811,12 @@ Complément au draft pruning : onze corruptions du marqueur/ancre/checkpoint
 et deux résultats RPC (ancien état supprimé/latest exact) sont ajoutés.
 Syntaxe Docker exit 0 ; file complétée avant son premier build. Ces nouveaux
 scénarios restent non exécutés, sans promotion du runtime ni clôture des critères.
+
+## Assemblage cohérent des deux binaires — 4 octobre 2026
+
+L’outil de packaging sélectionne désormais explicitement le P2P du build isolé,
+au lieu de dépendre du P2P racine historique. Dix précontrôles et trois tests du
+vrai shell d’export passent ; absence/symlinks refusés, aucun fallback silencieux.
+Pas encore d’assemblage Docker réel ni de cycle de promotion de cette candidate.
+[Correction et preuves](qualification/coherent-package-paths-20261004/README.md).
+Les exigences antérieures restent ouvertes selon leur statut.

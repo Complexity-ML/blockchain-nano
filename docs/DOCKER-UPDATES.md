@@ -110,7 +110,12 @@ révision compilée complète et SHA-256 de chacun des deux exécutables. Un sep
 argument facultatif sélectionne le sous-répertoire qualifié du volume (par exemple
 `production-evm-c10426b2-20261001`) ; sans cet argument, le chemin historique
 `/build` est conservé. Le binaire `nano` et `production-source-revision.txt` doivent
-se trouver dans ce répertoire ; `nano-p2p` reste dans `/build/network/`. Ne créer
+se trouver dans ce répertoire. Sans huitième argument, `nano-p2p` reste dans
+`/build/network/` pour les volumes historiques. Le huitième argument sélectionne
+explicitement `/build/<argument>/network/` ; pour la candidate cohérente, fournir
+`coherent-efbeb9bc-arm64` (ou `amd64`) en septième **et** huitième arguments.
+Le dossier réseau, son parent direct et les trois fichiers doivent être réguliers,
+sans symlink ; aucun fallback vers le P2P racine si le P2P sélectionné manque. Ne créer
 le marqueur qu’après qualification et liaison vérifiée des sources/binaires. Les
 empreintes doivent provenir d’une preuve conservée et revue séparément. Le
 script exporte uniquement les deux binaires et leur marqueur depuis un volume
@@ -135,3 +140,14 @@ configuration de reprise échoue sur une copie du nouvel état après signature 
 conserver les derniers engagements indépendants et les derniers journaux.
 Un vrai retour entre versions demande encore une cible compatible qualifiée.
 [Preuves et limites](qualification/pinned-replacement-20260930/manifest.json).
+
+## Correction de sélection du P2P isolé — 4 octobre 2026
+
+Le packaging peut désormais sélectionner séparément le dossier qualifié du cœur
+et celui contenant `network/nano-p2p`. Les appels historiques à six/sept arguments
+conservent leur comportement. Dix tests de précontrôle et trois tests exécutant
+le vrai shell d’export passent. Une fixture P2P racine ancienne ne remplace pas
+le fichier sélectionné ; fichier absent et symlinks sont refusés.
+Cette preuve ne remplace pas l’assemblage réel, la vérification des bibliothèques,
+la qualification du manifeste ni le cycle de mise à jour/restauration actuel.
+[Preuves et périmètre](qualification/coherent-package-paths-20261004/README.md).
