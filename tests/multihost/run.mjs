@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {pruningRestoreMode,pruningRestoreConfiguration,verifyPrunedRestoreAudit} from './pruning-restore.mjs';
 // Authorized isolated devnet only; code is deployed through Git, not this script.
 import {execFile,spawn} from 'node:child_process';
 import {promisify} from 'node:util';
@@ -65,6 +66,7 @@ const majorityCutMs=majorityIsland?majorityCutDuration(process.env.NANO_TEST_MAJ
 const faultProgress=majorityIsland||process.env.NANO_TEST_FAULT_PROGRESS==='1';
 if(faultProgress&&(fork!=='capella'||!partition))throw Error('Fault progress diagnostics require Capella partition campaign');
 const backupRestore=process.env.NANO_TEST_BACKUP_RESTORE==='1';
+const historicalPruning=pruningRestoreMode(process.env.NANO_TEST_HISTORICAL_STATE_PRUNING,{profile:fork,backupRestore});
 const pinnedRestart=process.env.NANO_TEST_PINNED_RESTART==='1';
 if(partitionCuts&&(!candidates||fork!=='capella'||!partition||asymmetric||rotation||boundedLoad||backupRestore||pinnedRestart||monitor))throw Error('Repeated partitions require standalone packaged Capella partition campaign');
 if(majorityIsland&&(!(candidates||qualifiedRetainedArtifacts(buildVolume,buildArtifacts))||fork!=='capella'||!partition||asymmetric||rotation||boundedLoad||backupRestore||pinnedRestart||monitor||partitionCuts))throw Error('Majority island requires standalone attested Capella partition campaign');
@@ -138,6 +140,8 @@ try{
  const topology=[{name:'mac-native',host:'mac',mode:'native',rpcPort:18545,p2pPort:30305,p2pBinary:p2p,runtimeDirectory:join(prepared,'mac-native')},{name:'mac-docker',host:'mac',mode:'docker',rpcPort:8545,p2pPort:30303},{name:'vps-docker',host:target,mode:'docker',rpcPort:8545,p2pPort:30303}];
  await writeFile(join(output,'topology.json'),JSON.stringify(topology));
  await exec(process.execPath,['tests/multihost/prepare.mjs',assets,prepared,join(output,'topology.json')]);
+ if(historicalPruning)for(const name of ['mac-native','mac-docker','vps-docker']){const path=join(prepared,name,'node.json');await writeFile(path,JSON.stringify(pruningRestoreConfiguration(await json(path),true),null,2));}
+ await log({event:'historical-state-pruning-mode',enabled:historicalPruning});
  if(buildVolume)for(const name of ['mac-docker','vps-docker']){const path=join(prepared,name,'node.json'),c=await json(path);c.p2p_binary=hostBuildPaths[name==='vps-docker'?'amd64':'arm64'].p2p;await writeFile(path,JSON.stringify(c));}
  await sh(['mkdir',remoteRoot]);
  // Only newly generated PUBLIC fixtures cross SSH; software arrived via Git.
@@ -286,6 +290,7 @@ try{
   await docker(['run','--rm','--network','none',...descriptorArgs,...artifactMount,'--cpus','2','--memory','3g','--mount',`type=volume,src=${remote}-data,dst=/source,readonly`,'--mount',`type=bind,src=${remoteRoot}/config,dst=/config,readonly`,'--mount',`type=bind,src=${restoreProof},dst=/proof`,'--mount',`type=bind,src=${remoteRepository},dst=/work,readonly`,image,'bash','/work/tests/multihost/backup-restore.sh','/source','/proof/backup','/config/genesis.json','/proof/audit-request.json',buildPaths.nano],true,90000);
   const audit=JSON.parse(await sh(['sudo','-n','cat',restoreProof+'/backup/audit.json']));
   verifyRestoredFinalityAudit(await json(join(restoreDirectory,'audit-request.json')),restoreReceipt,audit);
+  if(historicalPruning)verifyPrunedRestoreAudit(audit);
   const metadata=['source-before.sha256','source-after.sha256','restored-before.sha256','restored-after.sha256','archive.sha256','inputs.sha256','audit.json','passed.txt'];
   for(const name of metadata)await writeFile(join(restoreDirectory,name),await sh(['sudo','-n','cat',restoreProof+'/backup/'+name]));
   const elapsedMs=Date.now()-restoreStartedMs,step=Number(BigInt(original.capella.clock.maximumForwardStepMs));
@@ -408,6 +413,7 @@ if(pinnedRestart&&!process.exitCode){
    const audit=JSON.parse(await docker(['run','--rm','--network','none','--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--memory','2g','--cpus','1','--tmpfs','/tmp:rw,nosuid,noexec,size=64m',...artifactMount,'--mount',`type=bind,src=${remoteRoot}/restore-config,dst=/config,readonly`,'--mount',`type=bind,src=${restoreProof},dst=/proof,readonly`,'--entrypoint',buildPaths.nano,image,'audit-capella','/config/genesis.json','/proof/backup/restored/chain','/proof/finalized-audit-request.json'],true,180000));
    await writeFile(join(output,'restore/finalized-audit.json'),JSON.stringify(audit,null,2));
    verifyRestoredFinalityAudit(request,restored,audit);
+   if(historicalPruning)verifyPrunedRestoreAudit(audit);
    await log({event:'backup-restore-finalized-ancestry-passed',request,audit});
    await docker(['run','--rm','--network','none','--mount',`type=volume,src=${remote}-data,dst=/source,readonly`,'--mount',`type=bind,src=${restoreProof},dst=/proof,readonly`,image,'bash','-lc','set -e; cd /source; find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | cmp /proof/backup/source-before.sha256 -'],true);
    await log({event:'backup-restore-passed',sourceStillUnchanged:true,restoredSignerStatus:restored.validator,stable});
