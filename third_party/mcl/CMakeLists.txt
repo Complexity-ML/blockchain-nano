@@ -27,6 +27,10 @@ endif()
 
 set(MCL_FP_BIT 384 CACHE STRING "max bit size for Fp")
 set(MCL_FR_BIT 256 CACHE STRING "max bit size for Fr")
+option(MCL_PORTABLE "Use portable LLVM arithmetic instead of x86 ADX/JIT assembly" OFF)
+if(MCL_PORTABLE AND MSVC)
+ message(FATAL_ERROR "MCL_PORTABLE is currently qualified only with Unix toolchains")
+endif()
 
 option(
 	MCL_USE_GMP
@@ -138,6 +142,10 @@ set_target_properties(mcl_st PROPERTIES
 
 target_compile_definitions(mcl PUBLIC MCL_FP_BIT=${MCL_FP_BIT} MCL_FR_BIT=${MCL_FR_BIT})
 target_compile_definitions(mcl_st PUBLIC MCL_FP_BIT=${MCL_FP_BIT} MCL_FR_BIT=${MCL_FR_BIT})
+if(MCL_PORTABLE)
+ target_compile_definitions(mcl PUBLIC MCL_PORTABLE=1 MCL_DONT_USE_XBYAK MCL_MSM=0)
+ target_compile_definitions(mcl_st PUBLIC MCL_PORTABLE=1 MCL_DONT_USE_XBYAK MCL_MSM=0)
+endif()
 
 # Compiler and linker settings
 if(MCL_WIN_ARM64)
@@ -180,7 +188,7 @@ else()
 	set(MCL_COMPILE_OPTIONS -Wall -Wextra -Wformat=2 -Wcast-qual -Wcast-align
 		-Wwrite-strings -Wfloat-equal -Wpointer-arith -DNDEBUG -O3 -fPIC)
 	# bmi2 (mulx) and adx (adcx/adox) are required on x86/x64 (same as common.mk)
-	if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64|AMD64|i[3-6]86|x86)$")
+	if(NOT MCL_PORTABLE AND CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64|AMD64|i[3-6]86|x86)$")
 		list(APPEND MCL_COMPILE_OPTIONS -mbmi2 -madx)
 	endif()
 endif()
@@ -204,6 +212,11 @@ if(CMAKE_CXX_COMPILER_LAUNCHER)
 endif()
 if(CMAKE_CXX_COMPILER_ARG1)
 	list(APPEND _cxx_cmd ${CMAKE_CXX_COMPILER_ARG1})
+endif()
+set(_llvm_cmd ${_cxx_cmd})
+if(MCL_PORTABLE AND NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+ find_program(MCL_PORTABLE_CLANG NAMES clang++ clang REQUIRED)
+ set(_llvm_cmd ${MCL_PORTABLE_CLANG})
 endif()
 
 # use bint-x64 on x64, bint${BIT}.ll on the other CPU
@@ -292,7 +305,7 @@ elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "AMD64") # Win64
 	target_sources(mcl PRIVATE ${BINT_X64_OBJ})
 	add_dependencies(mcl_st gen_bint-x64-win.obj)
 	target_sources(mcl_st PRIVATE ${BINT_X64_OBJ})
-elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT APPLE)
+elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT APPLE AND NOT MCL_PORTABLE)
 	if (CMAKE_SYSTEM_NAME STREQUAL "MSYS")
 		target_sources(mcl PRIVATE src/asm/bint-x64-mingw.S)
 		target_sources(mcl_st PRIVATE src/asm/bint-x64-mingw.S)
@@ -301,7 +314,7 @@ elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT APPLE)
 		target_sources(mcl_st PRIVATE src/asm/bint-x64-amd64.S)
 	endif()
 else()
-	if(NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+	if(NOT MCL_PORTABLE AND NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 		message(FATAL_ERROR "requiring clang++. cmake -DCMAKE_CXX_COMPILER=clang++ ..")
 	endif()
 	set(BINT_OBJ "${CMAKE_CURRENT_BINARY_DIR}/bint${BIT}.o")
@@ -310,7 +323,7 @@ else()
 	target_compile_definitions(mcl_st PUBLIC MCL_BINT_ASM_X64=0)
 
 	add_custom_command(OUTPUT ${BINT_OBJ}
-		COMMAND ${_cxx_cmd} -c -o ${BINT_OBJ} ${CMAKE_CURRENT_SOURCE_DIR}/src/bint${BIT}.ll -O3 -fPIC -fno-ident
+		COMMAND ${_llvm_cmd} -c -o ${BINT_OBJ} ${CMAKE_CURRENT_SOURCE_DIR}/src/bint${BIT}.ll -O3 -fPIC -fno-ident
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 	add_custom_target(gen_bint.o
 		SOURCES ${BINT_OBJ})
@@ -323,7 +336,7 @@ endif()
 
 # use generated asm or compile base${BIT}.ll by clang
 
-if (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT APPLE AND NOT CMAKE_SYSTEM_NAME STREQUAL "MSYS")
+if (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT APPLE AND NOT CMAKE_SYSTEM_NAME STREQUAL "MSYS" AND NOT MCL_PORTABLE)
   set(X86_64_LINUX TRUE)
 else()
   set(X86_64_LINUX FALSE)
@@ -345,7 +358,7 @@ elseif(${MCL_USE_LLVM})
 	target_compile_definitions(mcl_st PUBLIC MCL_USE_LLVM=1)
 
 	add_custom_command(OUTPUT ${BASE_OBJ}
-		COMMAND ${_cxx_cmd} -c -o ${BASE_OBJ} ${CMAKE_CURRENT_SOURCE_DIR}/src/base${BIT}.ll -O3 -fPIC -fno-ident
+		COMMAND ${_llvm_cmd} -c -o ${BASE_OBJ} ${CMAKE_CURRENT_SOURCE_DIR}/src/base${BIT}.ll -O3 -fPIC -fno-ident
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 	add_custom_target(gen_base.o
 		SOURCES ${BASE_OBJ})
@@ -374,7 +387,7 @@ if(CMAKE_SYSTEM_PROCESSOR STREQUAL "AMD64") # Win64
 elseif(MCL_WIN_ARM64)
 	# ARM64 doesn't use AVX instructions, so skip MSM optimization
 	message(STATUS "Skipping MSM AVX optimization for ARM64")
-elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT APPLE)
+elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT APPLE AND NOT MCL_PORTABLE)
 	set(MSM_OBJ "${CMAKE_CURRENT_BINARY_DIR}/msm_avx.o")
 
 	add_custom_command(OUTPUT ${MSM_OBJ}

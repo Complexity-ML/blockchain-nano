@@ -458,8 +458,9 @@ bool Op::init(const mpz_class& _p, int _u, int _xi_a, int tag, size_t sizeofF)
 	case FrTag: if (sizeofF != sizeof(Fr)) return false; break;
 	default: break;
 	}
-#if CYBOZU_HOST == CYBOZU_HOST_INTEL && MCL_SIZEOF_UNIT == 8
-	// x64 requires BMI2 (mulx) and ADX (adox, adcx)
+#if CYBOZU_HOST == CYBOZU_HOST_INTEL && MCL_SIZEOF_UNIT == 8 && !defined(MCL_PORTABLE)
+	// The optimized x64 assembly requires BMI2 (mulx) and ADX (adox, adcx).
+	// Portable builds use generic LLVM objects with Xbyak/MSM assembly disabled.
 	if ((getCpuType() & tAVX_BMI2_ADX) == 0) return false;
 #endif
 	if (_p <= 0) return false;

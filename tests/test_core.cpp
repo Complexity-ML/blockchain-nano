@@ -21,6 +21,48 @@ void check(bool yes,const char* name){++checks;if(!yes)throw std::runtime_error(
 template<class F>void rejects(F f,const char* name){bool threw=false;try{f();}catch(const std::exception&){threw=true;}check(threw,name);}
 int main(){try{
  {
+  State state;ExecutionContext ctx;ctx.revision=EvmRevision::Shanghai;ctx.address="0x1000000000000000000000000000000000000000";ctx.gas=100000;
+  Bytes high_water;for(unsigned i=0;i<1024;++i)high_water.insert(high_water.end(),{0x60,0xff});high_water.insert(high_water.end(),1024,0x50);
+  ctx.code=high_water;for(unsigned i=0;i<1024;++i)ctx.code.insert(ctx.code.end(),{0x60,0x01});auto full=EVM(state).execute(ctx);check(full.success&&full.gas_used==8192,"retired slots do not count toward live stack limit");
+  ctx.code.insert(ctx.code.end(),{0x60,0x01});auto overflow=EVM(state).execute(ctx);check(!overflow.success&&overflow.gas_used==ctx.gas,"live stack still rejects element 1025 after reuse");
+  for(auto opcode:{uint8_t(0x8f),uint8_t(0x9f)}){ctx.code=high_water;ctx.code.insert(ctx.code.end(),{0x60,0x01,0x60,0x02,opcode});auto result=EVM(state).execute(ctx);check(!result.success&&result.gas_used==ctx.gas,"DUP16 and SWAP16 cannot read retained inactive slots");}
+  Bytes retired;for(unsigned i=0;i<32;++i){retired.push_back(0x7f);auto word=bytes((Int(i+1)<<192)+(i+7),32);retired.insert(retired.end(),word.begin(),word.end());}retired.insert(retired.end(),32,0x50);
+  std::vector<Int> words;Bytes live;for(unsigned i=0;i<17;++i){words.push_back((Int(i+1)<<200)+i);live.push_back(0x7f);auto word=bytes(words.back(),32);live.insert(live.end(),word.begin(),word.end());}
+  for(unsigned distance=1;distance<=16;++distance){
+   ctx.code=concat(retired,live);ctx.code.push_back(uint8_t(0x7f+distance));ctx.code=concat(ctx.code,unhex("0x60005260205260406000f3"));auto duplicate=EVM(state).execute(ctx);
+   check(duplicate.success&&duplicate.return_data.size()==64&&integer(Bytes(duplicate.return_data.begin(),duplicate.return_data.begin()+32))==words[17-distance]&&integer(Bytes(duplicate.return_data.begin()+32,duplicate.return_data.end()))==words[16],"all DUP depths copy independent live values after slot reuse");
+   ctx.code=concat(retired,live);ctx.code.push_back(uint8_t(0x8f+distance));ctx.code=concat(ctx.code,unhex("0x600052"));ctx.code.insert(ctx.code.end(),distance-1,0x50);ctx.code=concat(ctx.code,unhex("0x60205260406000f3"));auto swapped=EVM(state).execute(ctx);
+   check(swapped.success&&swapped.return_data.size()==64&&integer(Bytes(swapped.return_data.begin(),swapped.return_data.begin()+32))==words[16-distance]&&integer(Bytes(swapped.return_data.begin()+32,swapped.return_data.end()))==words[16],"all SWAP depths exchange live values after slot reuse");
+  }
+  ctx.code=Bytes{0x80};check(!EVM(state).execute(ctx).success,"DUP cannot read an empty stack");ctx.code=high_water;for(unsigned i=0;i<1024;++i)ctx.code.push_back(0x5f);ctx.code.push_back(0x80);auto dup_overflow=EVM(state).execute(ctx);check(!dup_overflow.success&&dup_overflow.gas_used==ctx.gas,"DUP cannot exceed active 1024 limit after reuse");
+  for(auto value:std::vector<Int>{Int(0),Int(1)<<255,(Int(1)<<256)-1}){
+   ctx.code=concat(concat(Bytes{0x7f},bytes(value,32)),unhex("0x805060071860005260206000f3"));auto result=EVM(state).execute(ctx);check(result.success&&integer(result.return_data)==Int(value^7),"reused PUSH slot cannot alias live DUP source");
+   ctx.code=concat(concat(Bytes{0x7f},bytes(value,32)),unhex("0x505f60005260206000f3"));auto zero=EVM(state).execute(ctx);check(zero.success&&integer(zero.return_data)==0,"PUSH0 clears retained wide operand");
+  }
+ }
+
+ {
+  State state;ExecutionContext ctx;ctx.revision=EvmRevision::Paris;ctx.address="0x1000000000000000000000000000000000000000";ctx.gas=1000;
+  for(const auto& value:std::vector<Int>{Int(0),Int(1),Int(1)<<255,(Int(1)<<256)-1}){
+   ctx.code=concat(concat(Bytes{0x7f},bytes(value,32)),unhex("0x801560005260205260406000f3"));auto result=EVM(state).execute(ctx);
+   check(result.success&&result.return_data.size()==64,"ISZERO executes for all word widths");check(integer(Bytes(result.return_data.begin(),result.return_data.begin()+32))==Int(value==0),"ISZERO exact boolean");check(integer(Bytes(result.return_data.begin()+32,result.return_data.end()))==value,"ISZERO preserves independent duplicated operand");
+  }
+  ctx.code=unhex("0x15");auto underflow=EVM(state).execute(ctx);check(!underflow.success&&underflow.gas_used==ctx.gas,"ISZERO underflow consumes exceptional frame gas");
+  ctx.code=unhex("0x6003565b00");ctx.gas=12;auto exact=EVM(state).execute(ctx);check(exact.success&&exact.gas_used==12,"unconditional JUMP exact gas boundary");ctx.gas=11;auto short_gas=EVM(state).execute(ctx);check(!short_gas.success&&short_gas.gas_used==11,"JUMPDEST one-gas-short fails exceptionally");
+  ctx.gas=1000;ctx.code=concat(concat(unhex("0x60007f"),bytes((Int(1)<<256)-1,32)),unhex("0x5700"));auto untaken=EVM(state).execute(ctx);check(untaken.success&&untaken.gas_used==16,"untaken JUMPI ignores huge invalid destination");
+  for(const auto& code:std::vector<Bytes>{unhex("0x600456605b00"),concat(concat(Bytes{0x7f},bytes((Int(1)<<256)-1,32)),Bytes{0x56}),unhex("0x600157"),unhex("0x56")}){ctx.code=code;auto invalid=EVM(state).execute(ctx);check(!invalid.success&&invalid.gas_used==ctx.gas,"invalid or underflowed jump retains exceptional semantics");}
+ }
+
+ {
+  check(u64(Int(0))==0,"u64 zero");
+  check(u64(Int("18446744073709551615"))==UINT64_MAX,"u64 exact maximum");
+  for(unsigned bit=0;bit<64;++bit){Int n=Int(1)<<bit;check(u64(n)==(uint64_t(1)<<bit),"u64 single-bit boundary");check(u64(n-1)==((uint64_t(1)<<bit)-1),"u64 below each bit boundary");}
+  for(const auto& n:std::vector<Int>{Int(-1),-Int("18446744073709551615"),Int(1)<<64,(Int(1)<<64)+1,Int(1)<<256,Int(1)<<4096}){
+   bool overflow=false;try{(void)u64(n);}catch(const std::overflow_error&){overflow=true;}check(overflow,"u64 rejects negative or wide input before narrowing");
+  }
+ }
+
+ {
   State state;auto key=bytes(Int(1),32);auto sender=public_address(public_key(key));state.get(sender).balance=Int("1000000000000000000");
   Transaction tx;tx.chain_id=0;tx.to="0x3000000000000000000000000000000000000000";
   auto sig=sign_hash(key,tx.signing_hash(false));SignedTransaction legacy{tx,Int(sig.v+27),sig.r,sig.s};Header block;
@@ -379,6 +421,26 @@ int main(){try{
  State state;std::string alice="0x"+std::string(40,'a'),bob="0x"+std::string(40,'b');state.get(alice).balance=100;auto initial=state.root();auto snap=state.snapshot();check(state.transfer(alice,bob,30),"transfer");state.set_storage(bob,0,123);state.revert(snap);check(state.root()==initial&&state.get(bob).balance==0,"snapshot restores all state");check(!state.transfer(alice,bob,101),"insufficient balance");rejects([&]{state.transfer(alice,bob,-1);},"negative transfer");
  check(create2_address("0x"+std::string(40,'0'),Bytes(32),keccak(Bytes{0}))=="0x4d1a2e2bb4f88f0250f26ffff098b0b30b26bf38","EIP1014 vector");
  EVM vm(state);ExecutionContext ctx;ctx.address=bob;ctx.code=unhex("0x600260030160005260206000f3");auto result=vm.execute(ctx);check(result.success&&integer(result.return_data)==5,"EVM add and return");check(result.gas_used==24,"EVM arithmetic gas");
+ // Exercise owned stack operands: subtraction wraps negative results, products
+ // exceed 256 bits, and DUP must preserve an independent original operand.
+ for(unsigned i=0;i<64;++i)for(uint8_t opcode:{uint8_t(0x03),uint8_t(0x02)}){
+  Int a=(Int(1)<<256)-1-i,b=(Int(1)<<255)+i;
+  ctx.code=concat(Bytes{0x7f},bytes(a,32));ctx.code=concat(ctx.code,Bytes{0x7f});ctx.code=concat(ctx.code,bytes(b,32));
+  ctx.code=concat(ctx.code,Bytes{opcode,0x80,0x01});ctx.code=concat(ctx.code,unhex("0x60005260206000f3"));
+  Int operand=opcode==0x03?Int(b-a):Int(a*b);Int expected=word(2*word(operand));result=vm.execute(ctx);
+  check(result.success&&integer(result.return_data)==expected,"owned EVM stack wraps and duplicates 256-bit operands");
+  check(result.gas_used==(opcode==0x03?30u:32u),"owned EVM stack preserves arithmetic gas");
+ }
+ ctx.code.clear();for(unsigned i=0;i<1024;++i)ctx.code=concat(ctx.code,Bytes{0x60,0x01});
+ check(vm.execute(ctx).success,"owned EVM stack accepts exactly 1024 operands");ctx.code.push_back(0x80);
+ result=vm.execute(ctx);check(!result.success&&result.error=="Stack overflow","owned EVM stack rejects the 1025th operand");
+ for(unsigned width=1;width<=32;++width){
+  Bytes immediate(width,0xff),expected(32-width,0);expected.insert(expected.end(),immediate.begin(),immediate.end());
+  ctx.code=concat(Bytes{uint8_t(0x5f+width)},immediate);ctx.code=concat(ctx.code,unhex("0x60005260206000f3"));
+  result=vm.execute(ctx);check(result.success&&result.return_data==expected&&result.gas_used==18,"PUSH widths preserve unsigned big-endian output and gas");
+  ctx.gas=17;result=vm.execute(ctx);check(!result.success&&result.gas_used==17,"PUSH memory return still exhausts one-short gas");ctx.gas=1000000;
+  for(unsigned available:{0u,width-1}){ctx.code=concat(Bytes{uint8_t(0x5f+width)},Bytes(available,0xff));result=vm.execute(ctx);check(result.success&&result.gas_used==3,"truncated PUSH is padded rather than rejected");}
+ }
  ctx.code=unhex("0x602a60005560005460005260206000f3");result=vm.execute(ctx);check(result.success&&integer(result.return_data)==42&&state.get_storage(bob,0)==42,"EVM storage");
  auto before=state.root();ctx.code=unhex("0x600160005560006000fd");result=vm.execute(ctx);check(!result.success&&state.root()==before&&result.logs.empty(),"EVM revert rolls back storage");
  ctx.is_static=true;ctx.code=unhex("0x6001600055");check(!vm.execute(ctx).success&&state.root()==before,"EVM static rejects storage");ctx.is_static=false;
