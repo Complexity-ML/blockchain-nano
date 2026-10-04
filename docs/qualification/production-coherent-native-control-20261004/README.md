@@ -1,0 +1,5 @@
+# Coherent native candidate qualification — running
+
+Same immutable candidate efbeb9bca3d42e41edb9cb81afba98c0b953a90f, fresh native build /tmp/nano-coherent-native-build-20261004. Actual dependencies reused; network/P2P/helpers rebuilt from the candidate. No previous build or chain fixture overwritten. Reports /tmp/nano-coherent-native-reports-20261004; network configure/build succeeded, core configure succeeded and compilation started.15 selected native cases: previous14 scoped cases plus storage_read_only60s. Exact registry/timeouts and JUnit results audited; tracked sources and actual available program/object/static/link/dylib inputs compared before/after. SST portability helper built and separately hash-bound for its later test.
+
+No terminal native result yet. Complete native regression and exhaustive system dyld provenance are not claimed. Subsequent signed offline replay and real multi-host backup/restore remain separate gates. Concurrent Docker regression/build is recorded; no controlled performance comparison. Candidate not promoted, production not qualified.
