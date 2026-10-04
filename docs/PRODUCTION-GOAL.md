@@ -3590,3 +3590,15 @@ Deux propriétaires locaux, pas de WAN ni de coupure électrique qualifiée.
 Nouveaux scénarios pas encore AMD64 ; pruning toujours isolé/non promu.
 Restent reprise multi-hôte pertinente, downgrade, mesure/gestion des ressources
 et critères de production complets. Toutes exigences et erreurs conservées.
+
+## Préparation WAN pruning et nouveaux scénarios AMD64 — 4 octobre 2026
+
+Branche 092a153c : activation explicite de historicalStatePruning sur les trois
+nœuds du banc Capella backup/restore. Audits initial/terminal exigent désormais
+un rejeu non vide d’états réellement élagués. Trois tests de contrôles et syntaxe
+du harness exit 0. [Preuves](qualification/pruning-wan-preparation-20261004/README.md).
+Préparation uniquement : aucun nouveau résultat WAN acquis. Contrôleur AMD64
+94535766 lancé pour les deux scénarios de restauration seulement, cœur/image
+existants conservés. Stockage exit 0, Capella en cours à cette observation.
+Ne pas confondre avec le précédent lot 7/7 AMD64. Runtime isolé/non promu ;
+exigences, preuves et échecs historiques restent conservés.
