@@ -45,6 +45,13 @@ mkdir "$context/notices"
 for notice in json-LICENSE.MIT json-COPYRIGHTS libp2p-LICENSE-APACHE libp2p-LICENSE-MIT; do
   cp "$repo/third_party/notices/$notice" "$context/notices/$notice"
 done
+cp "$repo/third_party/opcodes/LICENSE.ethereumjs" "$context/notices/LICENSE.ethereumjs"
+cp "$repo/third_party/opcodes/LICENSE.evm-codes" "$context/notices/LICENSE.evm-codes"
+cp "$repo/third_party/bip39/LICENSE" "$context/notices/bip39-LICENSE"
+cp "$repo/third_party/ckzg/blst/LICENSE" "$context/notices/blst-LICENSE"
+cp "$repo/third_party/ckzg/LICENSE" "$context/notices/ckzg-LICENSE"
+cp "$repo/third_party/mcl/COPYRIGHT" "$context/notices/mcl-COPYRIGHT"
+cp "$repo/third_party/secp256k1/COPYING" "$context/notices/secp256k1-LICENSE"
 cp "$repo/deploy/docker/notices.sha256" "$context/notices/notices.sha256"
 # The named volume is read-only; export exactly the two executables and provenance.
 docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges \

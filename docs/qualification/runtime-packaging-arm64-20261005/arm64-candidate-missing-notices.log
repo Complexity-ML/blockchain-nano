@@ -1,0 +1,72 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from candidate.Dockerfile
+#1 transferring dockerfile: 1.04kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/nano-runtime-base:arm64-20261005
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/5] FROM docker.io/library/nano-runtime-base:arm64-20261005@sha256:6617aab24f18fb2836d85aaa31c0b6e47c38dda16dc98adeb2aa29b59896a883
+#4 resolve docker.io/library/nano-runtime-base:arm64-20261005@sha256:6617aab24f18fb2836d85aaa31c0b6e47c38dda16dc98adeb2aa29b59896a883 done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 31.84MB 0.2s done
+#5 DONE 0.2s
+
+#6 [2/5] COPY nano nano-p2p /usr/local/bin/
+#6 DONE 0.0s
+
+#7 [3/5] COPY notices/ /usr/local/share/nano/licenses/
+#7 DONE 0.0s
+
+#8 [4/5] RUN cd /usr/local/share/nano/licenses && sha256sum -c notices.sha256
+#8 0.025 LICENSE.ethereumjs: FAILED open or read
+#8 0.025 LICENSE.evm-codes: FAILED open or read
+#8 0.025 bip39-LICENSE: FAILED open or read
+#8 0.025 blst-LICENSE: FAILED open or read
+#8 0.025 ckzg-LICENSE: FAILED open or read
+#8 0.025 json-COPYRIGHTS: OK
+#8 0.025 json-LICENSE.MIT: OK
+#8 0.025 sha256sum: LICENSE.ethereumjs: No such file or directory
+#8 0.025 sha256sum: LICENSE.evm-codes: No such file or directory
+#8 0.025 sha256sum: bip39-LICENSE: No such file or directory
+#8 0.025 sha256sum: blst-LICENSE: No such file or directory
+#8 0.025 sha256sum: ckzg-LICENSE: No such file or directory
+#8 0.025 sha256sum: mcl-COPYRIGHT: No such file or directory
+#8 0.025 sha256sum: secp256k1-LICENSE: No such file or directory
+#8 0.025 sha256sum: WARNING: 7 listed files could not be read
+#8 0.025 libp2p-LICENSE-APACHE: OK
+#8 0.025 libp2p-LICENSE-MIT: OK
+#8 0.025 mcl-COPYRIGHT: FAILED open or read
+#8 0.025 secp256k1-LICENSE: FAILED open or read
+#8 ERROR: process "/bin/sh -c cd /usr/local/share/nano/licenses && sha256sum -c notices.sha256" did not complete successfully: exit code: 1
+------
+ > [4/5] RUN cd /usr/local/share/nano/licenses && sha256sum -c notices.sha256:
+0.025 sha256sum: bip39-LICENSE: No such file or directory
+0.025 sha256sum: blst-LICENSE: No such file or directory
+0.025 sha256sum: ckzg-LICENSE: No such file or directory
+0.025 sha256sum: mcl-COPYRIGHT: No such file or directory
+0.025 sha256sum: secp256k1-LICENSE: No such file or directory
+0.025 sha256sum: WARNING: 7 listed files could not be read
+0.025 libp2p-LICENSE-APACHE: OK
+0.025 libp2p-LICENSE-MIT: OK
+0.025 mcl-COPYRIGHT: FAILED open or read
+0.025 secp256k1-LICENSE: FAILED open or read
+------
+candidate.Dockerfile:13
+--------------------
+  11 |     COPY nano nano-p2p /usr/local/bin/
+  12 |     COPY notices/ /usr/local/share/nano/licenses/
+  13 | >>> RUN cd /usr/local/share/nano/licenses && sha256sum -c notices.sha256
+  14 |     RUN printf '%s  /usr/local/bin/nano\n%s  /usr/local/bin/nano-p2p\n' "$NANO_SHA256" "$P2P_SHA256" | sha256sum -c - \
+  15 |      && ldd /usr/local/bin/nano > /tmp/nano-candidate.libs \
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c cd /usr/local/share/nano/licenses && sha256sum -c notices.sha256" did not complete successfully: exit code: 1
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/waf8k6d9dpxq7nyioara2s4dg

@@ -4146,3 +4146,8 @@ périmètres exacts réutilisés, timeout global de contrôle AMD64 toujours éc
 La production globale, nouvelle preuve WAN après migration, maintenance en place,
 critères consensus/exploitation restants, relation Base–Nano/bridge/termes Doppler
 et revue indépendante demeurent ouverts. Objectif actif, aucune vente autorisée.
+
+
+### 2026-10-05 — ARM64 runtime packaging and missing-license fix
+
+Standalone execution base and candidate assembled without recompiling qualified C++ binaries: image `sha256:8a4e25879769a0f8b4b9793280ef11f1ee2a94591a166c84c7bb454f40a6a85d`, 272,168,394 bytes, user 10001:10001. Binary hashes, all eleven notices, shared-library closure and read-only/network-disabled help execution verified. Packaging originally omitted seven licenses; the blocked build is preserved and the exporter now includes them, with complete-manifest regression coverage. Runtime source matches main 4eb31d3a / 59fa6530; cached-object provenance remains explicit. No public node started. AMD64 assembly, hermetic dependency rebuild, outstanding consensus/economic gates and independent security review remain open. Evidence: `docs/qualification/runtime-packaging-arm64-20261005/`. Existing CI 37242291266: operations success; core/network still running at this observation. No existing qualification or historical failure removed.

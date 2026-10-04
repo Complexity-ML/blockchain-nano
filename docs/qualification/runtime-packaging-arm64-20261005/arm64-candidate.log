@@ -1,0 +1,80 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from candidate.Dockerfile
+#1 transferring dockerfile: 1.04kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/nano-runtime-base:arm64-20261005
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/5] FROM docker.io/library/nano-runtime-base:arm64-20261005@sha256:6617aab24f18fb2836d85aaa31c0b6e47c38dda16dc98adeb2aa29b59896a883
+#4 resolve docker.io/library/nano-runtime-base:arm64-20261005@sha256:6617aab24f18fb2836d85aaa31c0b6e47c38dda16dc98adeb2aa29b59896a883 done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 44.89kB done
+#5 DONE 0.0s
+
+#6 [2/5] COPY nano nano-p2p /usr/local/bin/
+#6 CACHED
+
+#7 [3/5] COPY notices/ /usr/local/share/nano/licenses/
+#7 DONE 0.0s
+
+#8 [4/5] RUN cd /usr/local/share/nano/licenses && sha256sum -c notices.sha256
+#8 0.023 LICENSE.ethereumjs: OK
+#8 0.023 LICENSE.evm-codes: OK
+#8 0.023 bip39-LICENSE: OK
+#8 0.023 blst-LICENSE: OK
+#8 0.023 ckzg-LICENSE: OK
+#8 0.023 json-COPYRIGHTS: OK
+#8 0.023 json-LICENSE.MIT: OK
+#8 0.023 libp2p-LICENSE-APACHE: OK
+#8 0.023 libp2p-LICENSE-MIT: OK
+#8 0.023 mcl-COPYRIGHT: OK
+#8 0.023 secp256k1-LICENSE: OK
+#8 DONE 0.0s
+
+#9 [5/5] RUN printf '%s  /usr/local/bin/nano\n%s  /usr/local/bin/nano-p2p\n' "8aa1eb375267e15eaa1b03966d31e482bc34ad3a36d564b165f369d778fdd19c" "ae567df0787a6d64e72a126b4d8b00bbc8ed761c4d7fe308d42c61a878ee2d75" | sha256sum -c -  && ldd /usr/local/bin/nano > /tmp/nano-candidate.libs  && ldd /usr/local/bin/nano-p2p >> /tmp/nano-candidate.libs  && ! grep -q 'not found' /tmp/nano-candidate.libs  && rm /tmp/nano-candidate.libs  && /usr/local/bin/nano --help
+#9 0.026 /usr/local/bin/nano: OK
+#9 0.033 /usr/local/bin/nano-p2p: OK
+#9 0.039 Nano local chain tools
+#9 0.039 Usage: nano <init|status|audit|mine|validate|import|serve|run> <genesis.json> <database-directory> [arguments]
+#9 0.039   wallet <create|import|address|sign-message|sign-transaction|sign-typed-data> <keyfile> [data]
+#9 0.039   wallet deployment-address <keyfile> [nonce]
+#9 0.039   wallet create-many <new-directory> [count] (default: 10)
+#9 0.039   wallet hd-create <mnemonic-file> [word-count]; wallet hd-derive <keyfile> [index]
+#9 0.039   rpc <URL> <info|nodes|network|balance|send|deploy|receipt|mine> [arguments]
+#9 0.039   rpc <URL> <stake-register|stake-add> <keyfile> <contract> <amountNano>
+#9 0.039   rpc <URL> stake-withdraw <keyfile> <contract>
+#9 0.039   rpc <URL> deploy <keyfile> <bytecode-file> [timeout] [valueNano]
+#9 0.039   validator <config.json> [--once] (separate client)
+#9 0.039   init/status: show canonical chain status
+#9 0.039   mine/validate: <coinbase> <timestamp> [signed-raw-transactions.json]
+#9 0.039   audit-capella <genesis.json> <existing-database-directory> <audit-request.json> (offline canonical replay)
+#9 0.039   beacon-journal init <identity.json> <new-database> <new-receipt-directory>
+#9 0.039   beacon-journal status <identity.json> <database> <expected-commitment.json>
+#9 0.039   beacon-journal export <identity.json> <database> <expected-commitment.json> <new-receipt-directory>
+#9 0.039   beacon-journal import <identity.json> <database> <expected-commitment.json> <interchange.json> <max-bytes> <new-receipt-directory>
+#9 0.039   migrate: <genesis.json> <python-chaindb-directory> <new-database-directory>
+#9 0.039   import: <block.json> <current-timestamp>
+#9 0.039   run: [node-config.json] (RPC and P2P together)
+#9 0.039   serve: [port] [bind-address] [wallet-config.json] (defaults: 8545, 127.0.0.1)
+#9 DONE 0.0s
+
+#10 exporting to image
+#10 exporting layers
+#10 exporting layers 0.4s done
+#10 exporting manifest sha256:2f7da04c6f9e49b4828979560bb05c0b33d920144e39764f8ec2094f3cdc4f7a done
+#10 exporting config sha256:9a954acf9dcb1fd692681717a149f0598ca64420171b036b51127517a4848aea done
+#10 exporting attestation manifest sha256:1d6f7c66dbd0291326a5bb58303e3607e1d9820b3bf3117bf9285e3556fd2cc9 done
+#10 exporting manifest list sha256:8a4e25879769a0f8b4b9793280ef11f1ee2a94591a166c84c7bb454f40a6a85d done
+#10 naming to docker.io/library/nanobees-candidate:59fa6530-arm64-20261005 done
+#10 unpacking to docker.io/library/nanobees-candidate:59fa6530-arm64-20261005 0.1s done
+#10 DONE 0.6s
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/nncwcb5ttxgbxesxstqmrn9h2
