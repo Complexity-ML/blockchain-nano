@@ -1,0 +1,53 @@
+{
+  "helperRevision": "23df7f63",
+  "runtimeCoreRevision": "59fa6530",
+  "entrypointObjectRevision": "092a153c (unchanged source)",
+  "architecture": "amd64",
+  "controllerExit": 0,
+  "scenarios": {
+    "normal": {
+      "alreadyMigratedAtResume": false,
+      "idempotentWrites": 0,
+      "checkpoint": {
+        "digest": "0xc5366531ce30796288223ad9f4893ce83b3c43335f4934910233220b00ea8a58",
+        "sequence": "0x33b"
+      },
+      "canonicalAuditBeforeAfterIdentical": true,
+      "blocks": 77,
+      "prunedStatesReplayed": 59
+    },
+    "before-write": {
+      "alreadyMigratedAtResume": false,
+      "idempotentWrites": 0,
+      "checkpoint": {
+        "digest": "0xc5366531ce30796288223ad9f4893ce83b3c43335f4934910233220b00ea8a58",
+        "sequence": "0x33b"
+      },
+      "canonicalAuditBeforeAfterIdentical": true,
+      "blocks": 77,
+      "prunedStatesReplayed": 59
+    },
+    "after-write": {
+      "alreadyMigratedAtResume": true,
+      "idempotentWrites": 0,
+      "checkpoint": {
+        "digest": "0xc5366531ce30796288223ad9f4893ce83b3c43335f4934910233220b00ea8a58",
+        "sequence": "0x33b"
+      },
+      "canonicalAuditBeforeAfterIdentical": true,
+      "blocks": 77,
+      "prunedStatesReplayed": 59
+    }
+  },
+  "nonSchemaContentSha256": "4a9acaf4c4402cf594fe45f97089832f01e8d1fea90603db6c3c95461dc16b8f",
+  "badCommitmentRefusedWithoutMutation": true,
+  "sourceFilesUnchanged": true,
+  "oldQualifiedProgramsUnchanged": true,
+  "independentProgramHashesVerified": true,
+  "oldReaderRefusals": 3,
+  "firstCompileFailurePreserved": true,
+  "physicalPowerLoss": false,
+  "dutiesAfterMigrationQualified": false,
+  "inPlacePublicMigrationQualified": false,
+  "productionQualified": false
+}
