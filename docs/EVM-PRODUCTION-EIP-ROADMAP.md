@@ -4166,3 +4166,8 @@ Harness accepts reviewed packaged Capella restoration; installed Nano performs a
 ### 2026-10-05 — Native Nano2 and packaged source rehash prerequisite
 
 Native storage.cpp rebuilt in an isolated directory from 59fa6530-equivalent runtime; new library/entry/test links reuse explicit 092a153c objects. Member comparison: only storage.cpp.o changed; original binaries/library/object hashes unchanged. Actual local pruned restore terminal 0, all 64 signing journals advance, independent pins/witnesses retained, conflicting proposal rejected before signer, local finality 2→7. Transport=false, power-loss=false; not WAN qualification. Last packaged source rehash call now explicitly selects shell/root tool; actual AMD64 read-only source comparison passed without repeating restore/audit. Evidence: `docs/qualification/nano2-native-restore-20261005/`. Three-node packaged Nano2 restore campaign remains next; all broader production gates/review remain open.
+
+
+### 2026-10-05 — Existing main CI completed, no restart
+
+GitHub run 37242291266 / source 4eb31d3a terminal **success** for changes, operations, core and network. Network XML: exactly 21 tests, zero failures/skips; core XML: exactly 9 tests, zero failures/skips. Operations log and notices archived. These are selected CI checks, not full EVM/consensus/financial production qualification; subsequent packaging/controller changes retain their separate evidence. Three-node packaged Nano2 restoration remains active and no terminal WAN success is claimed here. Proof: `docs/qualification/main-ci-terminal-20261005/`; prior core proof retained. No repeated CI job or image rebuild. Other requirements and independent security review remain open.
