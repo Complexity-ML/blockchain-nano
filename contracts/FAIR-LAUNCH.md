@@ -296,3 +296,16 @@ l'application reste à vérifier avant la vente.
 ## 2026-10-02 — Contrat Airlock et conservation de la réserve
 
 [Inspection figée des permissions/interfaces](../docs/qualification/doppler-airlock-path-20261002/README.md) : le wrapper local reste inchangé ; le raccordement Base exige une qualification distincte du token, des modules et des remboursements. Couvrir l’intégralité de l’offre créée, pas seulement les jetons vendus, avec une conversion d’unités explicitement définie. Ces critères restent non implémentés/non qualifiés. Aucun contrat, transaction ou vente ouvert.
+
+## Avancement Doppler — 4 octobre 2026
+
+L’outil `tools/doppler-launch/preview.mjs` prépare réellement l’appel Airlock
+`create` via le SDK officiel 1.0.43, sans wallet ni diffusion. Configuration
+explicite Base/USDC, allocations, inflation, gouvernance et migration V2/V4 ;
+calldata et hash vérifiables. Cinq tests ciblés couvrent encodage/décodage,
+rejets des paramètres et simulation RPC bornée à un bloc en lecture seule.
+La configuration synthétique a été rejetée par `eth_call` sur Base : ce résultat
+reste un échec, pas une qualification du lancement. Les termes réels, le lien
+Base–NANO, le bridge, les retraits, la visibilité T0 et toutes les autres
+exigences de production restent ouverts. Les deux campagnes C++ de la candidate
+`efbeb9bc` continuent ; ce lot JavaScript ne change pas leurs sources figées.

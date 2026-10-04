@@ -6128,3 +6128,16 @@ Candidate efbeb9bc : Docker ARM64 atteint compilation100% et lance les427cas enr
 ### 2026-10-04 — candidat natif/SST6 et rejeu signé qualifiés à portée explicite
 
 [Preuves efbeb9bc](qualification/production-coherent-native-result-20261004/README.md) : compilation native fraîche puis15cas sélectionnés/21réseau, audit indépendant JUnit/registry/délais,603entrées et16494sources rehashées inchangées. Rejeu hors ligne99blocs/97tx, checkpoint externe attendu, refus3requêtes invalides ;313fichiers fixture historique inchangés, sandbox sans réseau/écriture. Pas rejeu votes autonomes/fork-choice/duties ni régression native complète. Nouveaux helpers liés natif↔DockerARM64 écrivent SSTphysique/optionsformat6 ; lecture croisée réussit,20fichiers et programmes inchangés. AMD64 distinct encore en compilation, full427ARM64 en cours. Aucune promotion candidate ni readiness production ; toutes exigences initiales et limites/revue indépendante demeurent ouvertes.
+
+## Avancement Doppler — 4 octobre 2026
+
+L’outil `tools/doppler-launch/preview.mjs` prépare réellement l’appel Airlock
+`create` via le SDK officiel 1.0.43, sans wallet ni diffusion. Configuration
+explicite Base/USDC, allocations, inflation, gouvernance et migration V2/V4 ;
+calldata et hash vérifiables. Cinq tests ciblés couvrent encodage/décodage,
+rejets des paramètres et simulation RPC bornée à un bloc en lecture seule.
+La configuration synthétique a été rejetée par `eth_call` sur Base : ce résultat
+reste un échec, pas une qualification du lancement. Les termes réels, le lien
+Base–NANO, le bridge, les retraits, la visibilité T0 et toutes les autres
+exigences de production restent ouverts. Les deux campagnes C++ de la candidate
+`efbeb9bc` continuent ; ce lot JavaScript ne change pas leurs sources figées.

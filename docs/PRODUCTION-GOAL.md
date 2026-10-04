@@ -1,5 +1,51 @@
 # Objectif : Nano C++ de niveau production
 
+## Objectif courant et ordre de livraison — 4 octobre 2026
+
+**Cible : livrer Nanobees/Nano comme L1 de production et préparer son fair
+launch sur Doppler/Base en USDC, avec une relation définie et vérifiable entre
+le token Base et le NANO natif.** Ni une suite verte, ni un nœud sur VPS, ni
+une cotation ne suffisent à clore cet objectif. Aucun lancement public, fonds
+réels ou ouverture de vente n’est autorisé par cette feuille de route.
+
+Les exigences originales et les quatre matrices ci-dessous restent intégrales.
+Les observations historiques sont des preuves datées, pas les prochaines tâches
+courantes. Le goal reste actif. Travailler par lots fonctionnels complets ;
+réutiliser les preuves dont la révision et le périmètre concordent. Ne relancer
+une qualification que pour un changement pertinent ou un écart non résolu.
+
+1. **Version C++ cohérente.** Achever les deux campagnes Docker existantes de
+   `efbeb9bc` sans les redémarrer ; conserver leurs sorties terminales, audits
+   et manifestes. Compléter la portabilité physique ARM64/AMD64 et la restauration
+   effective de cette version, journaux et témoins compris, puis démontrer la
+   reprise des duties et l’avancement de finalité commune Mac natif/Docker Mac/VPS.
+   Les preuves WAN de `d1597d9a` et les lectures de journaux ne suffisent pas à
+   attribuer toutes ces réussites à la nouvelle candidate.
+2. **Consensus et exploitation.** Fermer les critères encore ouverts du cycle
+   des validateurs, entrée/sortie, rotation, sanctions, sync, charge bornée,
+   ressources, pruning et anomalie WAN A ; réutiliser les partitions/asymétries
+   déjà qualifiées dans leur périmètre exact. Finaliser sauvegardes, mises à jour,
+   supervision/alertes et CI reproductible. Conserver la revue indépendante
+   comme exigence ouverte tant qu’elle n’est pas réalisée.
+3. **Actif Base–Nano et bridge.** Définir allocations, réserve canonique, ratio,
+   droits de conversion/remboursement et autorité des messages. Implémenter puis
+   qualifier dépôts/retraits, finalité source, reorgs, rejeu, compromission et
+   reprises idempotentes, sans promettre une sécurité non démontrée.
+4. **Lancement Doppler.** Terminer la configuration réelle : identité, offre,
+   inflation, dates, ticks/prix, frais, gouvernance, migration, invendus et seuils.
+   Utiliser le SDK officiel et l’outil de préparation livré ; simuler création,
+   achats, ventes et migration avec ces termes. L’exemple synthétique actuellement
+   rejeté sur Base reste un échec conservé. Vérifier séparément visibilité à T0
+   et indexation externe ; ne présumer ni bridge ni retrait des réserves Doppler.
+5. **Clôture production.** Réconcilier le profil EVM/RPC réellement activé avec
+   les matrices EIP, livrer la candidate identifiée par Git et Docker et publier
+   les preuves et limites. Déploiement public et vente seulement après autorisation
+   dédiée, lorsque tous les critères applicables sont démontrés.
+
+Livraison immédiate : outil Doppler sans signature/diffusion, puis clôture des
+campagnes déjà actives et du lot de restauration cohérente. Pas de reconstruction
+d’image pour les seules modifications de documents ou de cet outil JavaScript.
+
 ## WAN Q : participation canonique incluse à temps et rejeu vérifié — 1er octobre 2026
 
 Le rejeu canonique Q arrêté passe : 118 blocs avec ancre, 322989 octets, une transaction. Attribution BLS individuelle et contrôle de transitions sont séparés. L’époque 14 compte 62 signataires canoniques distincts, dont 50 inclus avant slot 120 (quorum requis : 43), contre 40 avant cette frontière dans P. L’époque 15 compte 59 canoniques, dont 51 avant slot 128. Les groupes de cibles sont disjoints et couvrent les 64 clés de la fixture. [Preuves et limites](qualification/capella-wan-q-inclusion-timing-20261001/README.md).
@@ -3220,3 +3266,16 @@ Candidate efbeb9bc : Docker ARM64 atteint compilation100% et lance les427cas enr
 ### 2026-10-04 — candidat natif/SST6 et rejeu signé qualifiés à portée explicite
 
 [Preuves efbeb9bc](qualification/production-coherent-native-result-20261004/README.md) : compilation native fraîche puis15cas sélectionnés/21réseau, audit indépendant JUnit/registry/délais,603entrées et16494sources rehashées inchangées. Rejeu hors ligne99blocs/97tx, checkpoint externe attendu, refus3requêtes invalides ;313fichiers fixture historique inchangés, sandbox sans réseau/écriture. Pas rejeu votes autonomes/fork-choice/duties ni régression native complète. Nouveaux helpers liés natif↔DockerARM64 écrivent SSTphysique/optionsformat6 ; lecture croisée réussit,20fichiers et programmes inchangés. AMD64 distinct encore en compilation, full427ARM64 en cours. Aucune promotion candidate ni readiness production ; toutes exigences initiales et limites/revue indépendante demeurent ouvertes.
+
+## Avancement Doppler — 4 octobre 2026
+
+L’outil `tools/doppler-launch/preview.mjs` prépare réellement l’appel Airlock
+`create` via le SDK officiel 1.0.43, sans wallet ni diffusion. Configuration
+explicite Base/USDC, allocations, inflation, gouvernance et migration V2/V4 ;
+calldata et hash vérifiables. Cinq tests ciblés couvrent encodage/décodage,
+rejets des paramètres et simulation RPC bornée à un bloc en lecture seule.
+La configuration synthétique a été rejetée par `eth_call` sur Base : ce résultat
+reste un échec, pas une qualification du lancement. Les termes réels, le lien
+Base–NANO, le bridge, les retraits, la visibilité T0 et toutes les autres
+exigences de production restent ouverts. Les deux campagnes C++ de la candidate
+`efbeb9bc` continuent ; ce lot JavaScript ne change pas leurs sources figées.
