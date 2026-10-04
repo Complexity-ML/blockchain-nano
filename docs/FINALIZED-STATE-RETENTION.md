@@ -63,4 +63,3 @@ Sept scénarios terminaux : ancien/nouveau lecteur, copie physique/bornes, onze 
 Les anciennes bases expérimentales prunées nano/1 sont désormais refusées ; aucune migration automatique n'est implémentée. Retour à un ancien binaire : restaurer une sauvegarde non prunée compatible, jamais rouvrir en force ni changer manuellement le marqueur. Une procédure de migration validée et la qualification AMD64 restent ouvertes. Cette branche n'est pas intégrée au runtime main ; la production globale reste non qualifiée.
 
 Contrôleurs, commandes, lecteurs, journaux, hachages indépendants et manifests de sources compressés conservés. Le test de refus ancien utilise le vrai cœur historique ; il n'est pas remplacé par une simulation du comportement ancien.
-
