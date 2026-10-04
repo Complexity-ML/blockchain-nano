@@ -3,6 +3,11 @@
 #include "nano/finality.hpp"
 #include <rocksdb/db.h>
 #include <rocksdb/write_batch.h>
+#include <rocksdb/table.h>
+#include <rocksdb/version.h>
+#if ROCKSDB_MAJOR < 8 || (ROCKSDB_MAJOR == 8 && ROCKSDB_MINOR < 6)
+#error "Nano storage requires RocksDB >= 8.6 (portable SST format 6)"
+#endif
 #include <memory>
 #include <set>
 #include <limits>
@@ -94,6 +99,11 @@ ChainStore::ChainStore(const std::filesystem::path& path,OpenMode mode){
  // default file preallocation multiplies reserved disk space across these tiny
  // databases. Allocate on demand; keep WAL and synchronous durability unchanged.
  options.allow_fallocate=false;
+ // Keep the physical backup format readable by our oldest supported reader
+ // (Ubuntu 24.04 RocksDB 8.9). Format 6 retains footer checksum protection;
+ // newer hosts must not silently emit format 7. Existing SSTs are not rewritten.
+ rocksdb::BlockBasedTableOptions tables;tables.format_version=6;
+ options.table_factory.reset(rocksdb::NewBlockBasedTableFactory(tables));
  db_=(read_only?open_read_only_database(options,path.string()):open_database(options,path.string())).release();
  try{
   auto schema=get("meta/schema");

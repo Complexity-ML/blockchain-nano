@@ -1821,3 +1821,7 @@ target_link_libraries(nano-capella-audit-corruption-tests PRIVATE nano_core)
 
 add_test(NAME consensus_capella_http_admission_queue COMMAND nano-capella-transition-tests --http-queue)
 set_tests_properties(consensus_capella_http_admission_queue PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_recovery")
+
+# Explicit cross-platform physical backup qualification helper.
+add_executable(nano-storage-portability tests/qualification/storage-portability.cpp)
+target_link_libraries(nano-storage-portability PRIVATE nano_core)
