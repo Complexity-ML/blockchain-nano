@@ -6966,3 +6966,19 @@ Portée : deux exécutables de livraison ; pas de reconstruction hermétique
 des dépendances ni de qualification d'image de release finale. Compilation
 pruning 4734f285 désormais démarrée, non qualifiée à cette observation.
 Tous les critères, résultats et échecs antérieurs restent conservés.
+
+## Pruning isolé ARM64 qualifié localement — 4 octobre 2026
+
+Branche 4734f285 sur base efbeb9bc, désactivée par défaut et non promue.
+Build/link, CTest et contrôleur exit 0 : 7/7 sans échec/skip. Sources et
+quatre programmes re-hachés indépendamment ; livrables efbeb9bc inchangés.
+Deux propriétaires : finalité epoch 7, six mouvements d’ancre, réouverture
+et rejeu de 55 états élagués chacun. Fsync/WAL : marqueur, suppression et
+checkpoint atomiques avec suffixe conservé/perdu ; onze corruptions refusées.
+RPC historique indisponible explicitement, latest exact ; régressions pertinentes.
+[Preuves](qualification/finalized-retention-arm64-20261004/README.md).
+AMD64 lancé dans l’image existante : [contrôleur](qualification/finalized-retention-amd64-control-20261004/README.md).
+Restent sauvegarde/restauration de base élaguée, downgrade, mesures disque,
+portabilité terminale et qualification réseau pertinente. Aucun gain SST
+physique immédiat ni coupure électrique qualifié. Toutes les preuves, critères
+et erreurs historiques sont conservés ; production toujours non qualifiée.
