@@ -18,7 +18,7 @@ std::optional<Block> Blockchain::finalized_block()const{
 
 ForkCheckpointToken Blockchain::commit_beacon_checkpoint(const std::optional<ForkCheckpointToken>& expected,
  const Bytes& expected_tip,const Int& common_height,const Bytes& common_hash,
- const std::vector<ExecutionCheckpointBlock>& suffix,Block finalized,std::string_view snapshot,size_t maximum_bytes,size_t maximum_blocks,const std::vector<CheckpointArchiveEntry>& archive){
+ const std::vector<ExecutionCheckpointBlock>& suffix,Block finalized,std::string_view snapshot,size_t maximum_bytes,size_t maximum_blocks,const std::vector<CheckpointArchiveEntry>& archive,const std::optional<ExecutionStateRetentionAnchor>& retention){
  std::lock_guard lock(mutex_);
  if(genesis_.consensus!="beacon"||(genesis_.evm_revision!=EvmRevision::Paris&&genesis_.evm_revision!=EvmRevision::Shanghai)||tip_.header.hash()!=expected_tip)
   throw std::invalid_argument("Beacon canonical publication context mismatch");
@@ -45,7 +45,7 @@ ForkCheckpointToken Blockchain::commit_beacon_checkpoint(const std::optional<For
  static_assert(std::is_nothrow_move_assignable_v<State>);
  static_assert(std::is_nothrow_move_assignable_v<Block>);
  static_assert(std::is_nothrow_move_assignable_v<std::optional<Block>>);
- auto token=store_.commit_execution_checkpoint(genesis_.chain_id,genesis_.block.header.hash(),expected,expected_tip,common_height,common_hash,suffix,snapshot,maximum_bytes,maximum_blocks,archive);
+ auto token=store_.commit_execution_checkpoint(genesis_.chain_id,genesis_.block.header.hash(),expected,expected_tip,common_height,common_hash,suffix,snapshot,maximum_bytes,maximum_blocks,archive,retention);
  if(changed){state_=std::move(state);tip_=std::move(next);publish_pool();events_.swap(events);event_sequence_=sequence;audited_certified_tip_.reset();}
  beacon_finalized_=std::move(next_finalized);beacon_ready_=true;
  return token;

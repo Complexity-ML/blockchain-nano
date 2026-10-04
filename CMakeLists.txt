@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(blockchain_nano VERSION 0.1.0 LANGUAGES C CXX ASM)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-find_package(OpenSSL REQUIRED)
+find_package(OpenSSL 3.0 REQUIRED)
 find_package(Threads REQUIRED)
 # Homebrew keeps ICU keg-only on macOS; retain normal system discovery elsewhere.
 if(APPLE AND NOT ICU_ROOT)
@@ -31,9 +31,21 @@ target_include_directories(nano_core SYSTEM PUBLIC ${GMP_INCLUDE_DIR} ${ROCKSDB_
 target_link_libraries(nano_core PUBLIC ${GMPXX_LIBRARY} ${GMP_LIBRARY} OpenSSL::SSL OpenSSL::Crypto ICU::uc ${ROCKSDB_LIBRARY} Threads::Threads)
 target_compile_options(nano_core PRIVATE -Wall -Wextra -Wpedantic)
 set(CMAKE_EXPORT_NO_PACKAGE_REGISTRY ON)
+set(NANO_MCL_PORTABLE_DEFAULT OFF)
+if(UNIX)
+ set(NANO_MCL_PORTABLE_DEFAULT ON)
+endif()
+option(MCL_PORTABLE "Use portable LLVM BN128 arithmetic without an ADX/JIT requirement" ${NANO_MCL_PORTABLE_DEFAULT})
 add_subdirectory(third_party/mcl EXCLUDE_FROM_ALL)
 target_link_libraries(nano_core PUBLIC mcl::mcl_st)
 enable_testing()
+# Exercise the BN128 integration in a fresh process without the EVM, RocksDB
+# or prior cryptographic calls. Keep its failure separate from the core suite.
+add_executable(nano-bn-pairing-tests tests/test_bn_pairing.cpp src/bn_pairing.cpp)
+target_include_directories(nano-bn-pairing-tests PRIVATE third_party)
+target_link_libraries(nano-bn-pairing-tests PRIVATE mcl::mcl_st Threads::Threads)
+add_test(NAME bn_pairing_cold_vectors COMMAND nano-bn-pairing-tests "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/bn256Pairing.json")
+set_tests_properties(bn_pairing_cold_vectors PROPERTIES TIMEOUT 30 LABELS qualification_crypto)
 add_executable(nano-process-backpressure-tests tests/test_process_backpressure.cpp)
 target_link_libraries(nano-process-backpressure-tests PRIVATE nano_core)
 add_test(NAME process_trace_backpressure COMMAND nano-process-backpressure-tests)
@@ -1818,10 +1830,72 @@ set_tests_properties(storage_read_only PROPERTIES TIMEOUT 60 LABELS "qualificati
 # historical transactions and an independently recorded checkpoint commitment.
 add_executable(nano-capella-audit-corruption-tests tests/test_capella_audit_corruption.cpp)
 target_link_libraries(nano-capella-audit-corruption-tests PRIVATE nano_core)
+add_executable(nano-capella-audit-ancestry-tests tests/test_capella_audit_ancestry.cpp)
+target_link_libraries(nano-capella-audit-ancestry-tests PRIVATE nano_core)
+add_test(NAME consensus_capella_audit_finalized_ancestry COMMAND nano-capella-audit-ancestry-tests)
+set_tests_properties(consensus_capella_audit_finalized_ancestry PROPERTIES TIMEOUT 60 LABELS "consensus;capella;audit")
 
 add_test(NAME consensus_capella_http_admission_queue COMMAND nano-capella-transition-tests --http-queue)
 set_tests_properties(consensus_capella_http_admission_queue PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_recovery")
 
+add_executable(nano-rpc-load-window-tests tests/test_rpc_load_window.cpp)
+add_test(NAME rpc_load_window COMMAND nano-rpc-load-window-tests)
+set_tests_properties(rpc_load_window PROPERTIES TIMEOUT 10 LABELS "qualification_rpc_load_control")
+
+# Canonical durable encoding must retain byte-identical checkpoint digests.
+add_executable(nano-checkpoint-json-tests tests/test_checkpoint_json.cpp)
+target_include_directories(nano-checkpoint-json-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
+add_test(NAME consensus_checkpoint_json_canonical COMMAND nano-checkpoint-json-tests)
+set_tests_properties(consensus_checkpoint_json_canonical PROPERTIES TIMEOUT 30 LABELS "qualification_storage_local")
+
+add_test(NAME consensus_bellatrix_publication_cache COMMAND nano-bellatrix-transition-tests --publication-cache)
+set_tests_properties(consensus_bellatrix_publication_cache PROPERTIES TIMEOUT 90 LABELS "qualification_consensus_recovery")
+
+# Exercise the actual signing-root implementation against an independent legacy
+# SHA256 entry point, including concurrent first use and provider failure.
+add_executable(nano-consensus-hash-provider-tests tests/test_consensus_hash_provider.cpp src/consensus_signing.cpp)
+target_include_directories(nano-consensus-hash-provider-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_link_libraries(nano-consensus-hash-provider-tests PRIVATE OpenSSL::Crypto Threads::Threads)
+add_test(NAME consensus_hash_provider_parallel COMMAND nano-consensus-hash-provider-tests)
+add_test(NAME consensus_hash_provider_unavailable COMMAND nano-consensus-hash-provider-tests --provider-unavailable)
+set_tests_properties(consensus_hash_provider_parallel consensus_hash_provider_unavailable PROPERTIES TIMEOUT 30 LABELS "qualification_consensus_crypto")
+
+add_executable(nano-capella-snapshot-hex-tests tests/test_capella_snapshot_hex.cpp)
+add_test(NAME consensus_capella_snapshot_canonical_hex COMMAND nano-capella-snapshot-hex-tests)
+set_tests_properties(consensus_capella_snapshot_canonical_hex PROPERTIES TIMEOUT 60 LABELS "consensus;capella;snapshot")
+
+add_executable(nano-hex-encoding-tests tests/test_hex_encoding.cpp)
+target_link_libraries(nano-hex-encoding-tests PRIVATE nano_core)
+add_test(NAME core_hex_encoding_differential COMMAND nano-hex-encoding-tests)
+set_tests_properties(core_hex_encoding_differential PROPERTIES TIMEOUT 60 LABELS "core;encoding")
+
+add_executable(nano-capella-snapshot-json-tests tests/test_capella_snapshot_json.cpp)
+target_include_directories(nano-capella-snapshot-json-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
+add_test(NAME consensus_capella_snapshot_cached_rows COMMAND nano-capella-snapshot-json-tests)
+set_tests_properties(consensus_capella_snapshot_cached_rows PROPERTIES TIMEOUT 60 LABELS "qualification_storage_local;capella;snapshot")
+
+add_executable(nano-capella-snapshot-account-tests tests/test_capella_snapshot_accounts.cpp)
+target_link_libraries(nano-capella-snapshot-account-tests PRIVATE nano_core)
+add_test(NAME consensus_capella_snapshot_account_primitives COMMAND nano-capella-snapshot-account-tests)
+set_tests_properties(consensus_capella_snapshot_account_primitives PROPERTIES TIMEOUT 60 LABELS "qualification_storage_local;capella;snapshot")
+
 # Explicit cross-platform physical backup qualification helper.
 add_executable(nano-storage-portability tests/qualification/storage-portability.cpp)
 target_link_libraries(nano-storage-portability PRIVATE nano_core)
+
+add_test(NAME consensus_capella_historical_state_pruning COMMAND nano-capella-transition-tests --historical-state-pruning)
+set_tests_properties(consensus_capella_historical_state_pruning PROPERTIES TIMEOUT 300 LABELS "qualification_consensus_recovery")
+
+if(TARGET nano-execution-checkpoint-sync-tests)
+ add_test(NAME storage_historical_state_pruning_sync COMMAND nano-execution-checkpoint-sync-tests --pruning-sync)
+ set_tests_properties(storage_historical_state_pruning_sync PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_recovery")
+endif()
+
+add_test(NAME storage_historical_state_pruning_corruption COMMAND nano-execution-checkpoint-tests --pruning-corruption)
+set_tests_properties(storage_historical_state_pruning_corruption PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_recovery")
+
+add_test(NAME storage_historical_state_pruning_restore COMMAND nano-execution-checkpoint-tests --pruning-restore)
+set_tests_properties(storage_historical_state_pruning_restore PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_recovery")
+
+add_test(NAME consensus_capella_historical_pruning_restore COMMAND nano-capella-transition-tests --historical-pruning-restore)
+set_tests_properties(consensus_capella_historical_pruning_restore PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_recovery")

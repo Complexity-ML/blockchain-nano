@@ -70,7 +70,15 @@ struct BellatrixNetworkPair {
   sender=std::make_unique<Process>(std::vector<std::string>{daemon.string(),std::to_string(sa->port()),(path/"source-peer").string(),"/ip4/127.0.0.1/tcp/0",address},Env{{"NANO_NETWORK_TOKEN","fixture-token"}});
   sender->event("altair-ingress-ready");sender->event("peer");
  }
- void sync(const Bytes& hash){until([&]{return observer->tip().header.hash()==hash;},"Bellatrix observer canonical sync",20);}
+ void sync(const Bytes& hash){
+  try{until([&]{return observer->tip().header.hash()==hash;},"Bellatrix observer canonical sync",20);}
+  catch(const std::exception& error){
+   Json diagnosis={{"scenario","bellatrix-observer-sync-failure"},{"failure",error.what()},{"clockHealthy",clock->healthy()},{"expectedExecutionHash",hex(hash)}};
+   try{const auto view=reactor->current();diagnosis["checkpointSequence"]=view.token.sequence;}
+   catch(const std::exception& initial){diagnosis["reactorFailure"]=initial.what();}
+   std::cerr<<diagnosis.dump()<<std::endl;throw;
+  }
+ }
  void stop(){check(sender->stop().code==0&&receiver->stop().code==0,"Bellatrix daemon shutdown");ea->stop();eb->stop();ea->join();eb->join();}
 };
 void check_finalized_rpc(Blockchain& chain,const BellatrixDurableReactor& reactor,const std::string& account,const std::string& contract){
@@ -94,6 +102,7 @@ Bytes signed_header(const ConsensusBeaconHeader& h,const Bytes& signature){Bytes
 int main(int argc,char** argv){try{
  const bool duty_trace=argc==2&&std::string(argv[1])=="--duty-trace";
  const bool clock_coalescing=argc==2&&std::string(argv[1])=="--clock-coalescing";
+ const bool publication_cache=argc==2&&std::string(argv[1])=="--publication-cache";
  const bool partition_simulation=argc==2&&std::string(argv[1])=="--partition-simulation";
  const bool beacon_headers_reorg=argc==2&&std::string(argv[1])=="--beacon-headers-reorg";
  const bool beacon_headers=argc==2&&std::string(argv[1])=="--beacon-headers";
@@ -121,7 +130,7 @@ int main(int argc,char** argv){try{
  const bool expiry_attestation=argc==2&&std::string(argv[1])=="--attestation-expiry-loop";
  const bool expiry_loop=expiry_randao||expiry_attestation||(argc==2&&std::string(argv[1])=="--proposal-expiry-loop");
  const bool validator_only=expiry_loop||deposit_loop||exits_only||network||(argc==2&&std::string(argv[1])=="--validator-loop");
- check(argc==1||duty_trace||clock_coalescing||partition_simulation||beacon_headers_reorg||beacon_headers||beacon_api||deposit_store||validator_only||runtime_only||managed,"unknown Bellatrix qualification arguments");
+ check(argc==1||duty_trace||clock_coalescing||publication_cache||partition_simulation||beacon_headers_reorg||beacon_headers||beacon_api||deposit_store||validator_only||runtime_only||managed,"unknown Bellatrix qualification arguments");
  const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-bellatrix-containers-official",source=fixtures/"consensus-bellatrix-slots-official";
  const auto manifest=load(source/"manifest.json");check(manifest.at("commit")=="bc5c1a7fb2a8871aaffd4b16ee4dd9c72bb81908","initial state revision");
  for(const auto& row:manifest.at("cases"))if(row.at("name")=="slots_1")for(const auto& [path,info]:row.at("files").items())check(hex(sha256(binary(source/path))).substr(2)==info.at("sha256").get<std::string>(),"initial state digest");
@@ -266,6 +275,12 @@ int main(int argc,char** argv){try{
     check(cancelled&&fine.healthy()&&bound.current().token==unchanged,"cancelled unchanged tick corrupted clock");
     --wall;bool rejected=false;try{fine.poll();}catch(const std::runtime_error&){rejected=true;}
     check(rejected&&!fine.healthy(),"coalescing hid a backwards sub-phase clock step");
+    auto first_clock_failure=[&]{try{bound.current();}catch(const std::runtime_error& error){return std::string(error.what());}return std::string();};
+    const auto first_failure=first_clock_failure();
+    check(first_failure.find("initial failure: Bellatrix local clock discontinuity")!=std::string::npos&&first_failure.find("beforeObserved=1")!=std::string::npos,"Bellatrix lost original backward-clock diagnosis");
+    bound.invalidate();check(first_clock_failure()==first_failure,"repeated invalidation overwrote initial Bellatrix failure");
+    bool execution_closed=false;try{chain.tip();}catch(const std::runtime_error&){execution_closed=true;}
+    check(execution_closed,"diagnostic preservation reopened execution after clock failure");
     Blockchain jump_chain(live/"jump",g);BellatrixDurableReactor jump_bound(jump_chain,fork_rules,reactor_limits,*store);
     uint64_t jump_wall=start;BellatrixLocalClock jump(jump_bound,1,[&]{return jump_wall;});
     ++jump_wall;check(!jump.poll(),"sub-phase observation unexpectedly published");
@@ -482,7 +497,12 @@ int main(int argc,char** argv){try{
        loop.poll();peers->sync(chain.tip().header.hash());
        check(context().registry.validators.at(0).exit_epoch!=UINT64_MAX,"pending exit not reincluded after reorg");
        std::cout<<Json{{"scenario","bellatrix-exit-reorg"},{"syntheticEquivocatingProposer",true},{"exitRolledBack",true},{"pendingRequestRetained",true},{"reincluded",true}}.dump()<<'\n';
-      }else{wall=(genesis_time+(slots+1)*seconds)*1000;loop.poll();}
+      }else{
+       wall=(genesis_time+(slots+1)*seconds)*1000;loop.poll();
+       // Observe the exit-inclusion slot before advancing the shared synthetic
+       // clock again. The peer retains its one-slot discontinuity guard.
+       if(peers)peers->sync(chain.tip().header.hash());
+      }
       const auto member=context().registry.validators.at(0);
       check(member.exit_epoch!=UINT64_MAX&&!member.slashed,"block did not schedule voluntary exit");
       check(bound.current().signed_exits->size()==1,"unfinalized exit proof prematurely dropped");
@@ -670,6 +690,22 @@ int main(int argc,char** argv){try{
     check(cancelled&&reactor->beacon_events(event_cursor).at("events").empty(),"rejected/cancelled block emitted event");
    }
    check(deliver("block",wire),"durable reactor rejected block");
+   if(publication_cache){
+    const auto warm=reactor->current().token;
+    for(unsigned retry=0;retry<3;++retry)check(reactor->block(wire)&&reactor->current().token==warm,"warm duplicate changed durable token");
+    const auto record=reactor_disk->fork_checkpoint(1337,execution_genesis.header.hash(),reactor_limits.envelope_bytes,warm);
+    const auto tip=reactor_disk->latest();check(record&&tip,"missing cache test checkpoint");
+    // A second legitimate storage writer changes the coupled checkpoint. A
+    // cached byte match must still detect the stale external commitment.
+    const auto replacement=reactor_disk->commit_execution_checkpoint(1337,execution_genesis.header.hash(),warm,tip->header.hash(),tip->header.number,tip->header.hash(),{},record->snapshot+" ",reactor_limits.envelope_bytes,reactor_limits.blocks);
+    check(replacement!=warm,"external writer did not advance checkpoint");
+    bool rejected=false;try{reactor->block(wire);}catch(const std::exception&){rejected=true;}
+    check(rejected,"warm cache acknowledged stale disk checkpoint");
+    bool closed=false;try{reactor->current();}catch(const std::exception&){closed=true;}
+    check(closed,"stale disk checkpoint did not fail closed");
+    service->stop();service->join();
+    std::cout<<Json{{"scenario","published-snapshot-cache"},{"warmDuplicates",3},{"duplicateTokenUnchanged",true},{"externalCommitmentChangeRejected",true},{"failClosed",true}}.dump()<<std::endl;return 0;
+   }
    if(beacon_headers){
     const auto batch=reactor->beacon_events(event_cursor);const auto& events=batch.at("events");
     check(events.size()==1&&events.at(0).at("topic")=="block"&&events.at(0).at("data").at("slot")==std::to_string(slot),"committed block event missing");
