@@ -3876,3 +3876,21 @@ les awaits sans refus. Contrôles avant correction conservés (24 succès,
 Pas de preuve cryptographique de finalité, dépôt réel, permission de mint,
 bridge qualifié ou changement de candidate C++. Tous les critères et échecs
 historiques antérieurs restent conservés.
+
+## Candidate efbeb9bc AMD64 terminale et reprise WAN — 4 octobre 2026
+
+427/427 sans échec/skip, CTest/contrôleur/audit/manifestes exit 0. Revue
+indépendante : 16 494 sources et 208 programmes réellement re-hachés,
+identiques avant/après ; temps CTest 12 065,68 s. ARM64 déjà 427/427.
+[Rapports](qualification/coherent-amd64-terminal-20261004/README.md).
+EEST : 5 387 variantes sélectionnées (4 882 exécution, 505 validation),
+317 fichiers, aucune conformité complète des forks ni activation déduite.
+Réactivation réindexée 351,85/360 s : faible marge de performance ouverte.
+
+Préflight de restauration initial arrêté sur Permission denied du marqueur
+(source/binaire inchangés, aucun WAN lancé) ; dépendants ont refusé leur build.
+Correction du propriétaire et contrôleurs v2/v3 conservés avec les erreurs.
+[Contrôles](qualification/coherent-recovery-queue-correction-20261004/README.md).
+Restauration efbeb9bc désormais réellement lancée ; reprise de duties/finalité
+commune, reproductibilité et nouveaux scénarios pruning pas encore acquis.
+Runtime main non promu ; tous les critères, preuves et échecs antérieurs conservés.

@@ -1,0 +1,4 @@
+{
+  "error": "(['docker', 'run', '--rm', '--network', 'none', '--read-only', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--mount', 'type=volume,src=nano-clean-arm64-build-20261002,dst=/build', 'sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb', 'sh', '-c', 'set -eu; f=\"$1/production-source-revision.txt\"; if test -e \"$f\"; then test \"$(cat \"$f\")\" = \"$2\"; else printf \"%s\\\\n\" \"$2\" > \"$f\"; fi', 'sh', '/build/coherent-efbeb9bc-arm64', 'efbeb9bca3d42e41edb9cb81afba98c0b953a90f'], 2, 'sh: 1: cannot create /build/coherent-efbeb9bc-arm64/production-source-revision.txt: Permission denied\\n')",
+  "productionQualified": false
+}
