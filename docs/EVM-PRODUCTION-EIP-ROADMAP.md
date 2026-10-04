@@ -4000,3 +4000,17 @@ Préparation uniquement : aucun nouveau résultat WAN acquis. Contrôleur AMD64
 existants conservés. Stockage exit 0, Capella en cours à cette observation.
 Ne pas confondre avec le précédent lot 7/7 AMD64. Runtime isolé/non promu ;
 exigences, preuves et échecs historiques restent conservés.
+
+## Nouveaux scénarios de restauration pruning AMD64 terminaux — 4 octobre 2026
+
+94535766 : contrôleur, compilations/link et deux nouveaux scénarios exit 0,
+délais 120/180 s inchangés. Sources (16 495) et deux programmes re-hachés
+indépendamment ; anciens programmes et sources conservés.
+[Preuves](qualification/pruning-recovery-amd64-terminal-20261004/README.md).
+Copie physique stockage et bornes/refus atomiques qualifiés ; restauration
+Capella avec témoins indépendants, 64/64 journaux avancés, conflit refusé avant
+signature, finalité commune locale 2 → 7, sauvegarde/source inchangées.
+Portée locale AMD64, deux propriétaires et clés synthétiques ; pas de WAN
+pruning, downgrade ou panne électrique acquis. Échec tmpfs ARM64 conservé.
+Banc WAN 092a153c préparé mais non exécuté ; pruning reste isolé/non promu.
+Toutes exigences, preuves et erreurs antérieures demeurent conservées.
