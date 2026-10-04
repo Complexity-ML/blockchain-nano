@@ -3750,3 +3750,20 @@ vivant existant ; rétention des états historiques EVM/archives encore à trait
 avec l'ancre de rejeu et les contrats RPC/audit, sans suppression isolée.
 [Outil, mesures et limites](qualification/storage-growth-accounting-20261004/README.md).
 Tous les critères originaux restent conservés selon leur statut.
+
+## Candidate cohérente : ARM64 complète terminale — 4 octobre 2026
+
+427/427 réussis, zéro échec/skip, 5 771,83 s ; contrôleur/CTest/audit/manifeste
+exit 0. Revue indépendante : 16 494 sources et 208 programmes réels inchangés.
+EEST : 5 387 variantes sélectionnées, aucun fork complet certifié. AMD64 actif ;
+restauration, reprise de duties et reproductibilité encore attendues.
+[Traces et limites](qualification/coherent-arm64-terminal-20261004/README.md).
+
+## Doppler : lectures par hash canonique — 4 octobre 2026
+
+Cinq tests de reorg/bindings passent, puis cycle privé Anvil complet exit 0 avec
+six lectures EIP-1898 liées au même hash canonique. Première revente échouée
+pour slippage conservée, timestamps du rejeu explicitement déterministes,
+sortie minimale inchangée. Assertion RPC seulement, pas preuve cryptographique
+Base ni bridge. [Sources, résultats et limites](qualification/doppler-canonical-hash-proof-20261004/README.md).
+Tous les critères originaux et échecs restent conservés selon leur statut.

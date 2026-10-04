@@ -86,3 +86,9 @@ prématurée, transfert de propriété non autorisé, double migration. Chaque r
 exige un sélecteur attendu, un reçu reverted sans épuisement du gas et des états,
 soldes, réserves et LP identiques avant/après. Couverture déterministe limitée,
 pas une qualification des bridges ou de Nano.
+
+Le vérificateur lie reçu, logs et lectures d'état au hash canonique du bloc via
+EIP-1898 et refuse un changement de header, sans fallback par hauteur. Cela reste
+une assertion RPC, pas une preuve cryptographique de finalité ou de bridge.
+Le scénario Anvil fixe ses timestamps pour que le devis et l'exécution ne
+franchissent pas une époque ; la sortie minimale reste 99 % du devis.

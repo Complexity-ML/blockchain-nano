@@ -33,7 +33,9 @@ try {
  const wallet=createWalletClient({chain,transport:http(url,{retryCount:0}),account});
  const impersonate=async(address)=>{await rpc.request({method:'anvil_impersonateAccount',params:[address]});await rpc.request({method:'anvil_setBalance',params:[address,'0x56bc75e2d63100000']});};
  await impersonate(account);
+ const nextTimestamp=async()=>{const block=await rpc.getBlock();await rpc.request({method:'evm_setNextBlockTimestamp',params:[Number(block.timestamp)+1]});};
  const tx=async(name,address,abi,functionName,args,sender=account)=>{
+  await nextTimestamp();
   const hash=await wallet.writeContract({address,abi,functionName,args,account:sender,chain,gas:15000000n});
   const receipt=await rpc.waitForTransactionReceipt({hash});
   await record(name,{hash,status:receipt.status,gasUsed:receipt.gasUsed,blockNumber:receipt.blockNumber});
@@ -63,6 +65,7 @@ try {
   catch(e){error=e.shortMessage??e.message;for(let c=e;c;c=c.cause){if(typeof c.data==='string'&&/^0x[0-9a-f]+$/i.test(c.data)){revertData=c.data;break;}}}
   assert(error&&revertData,'Expected explicit contract revert data: '+name);
   assert(selectors.includes(revertData.slice(0,10)),'Unexpected revert selector '+revertData+' for '+name);
+  await nextTimestamp();
   const hash=await wallet.writeContract({address,abi,functionName,args,account:sender,chain,gas:15000000n});
   const receipt=await rpc.waitForTransactionReceipt({hash});
   const after=await snapshot();const unchanged=serialize(before)===serialize(after);
@@ -90,10 +93,14 @@ try {
  const swap=async(name,input,output,amount)=>{
   await tx(name+'-erc20-approve',input,tokenAbi,'approve',[addresses.permit2,maxUint256]);
   await tx(name+'-permit2-approve',addresses.permit2,permitAbi,'approve',[input,addresses.universalRouter,2n**160n-1n,2**48-1]);
+  const latest=await rpc.getBlock();const epochLength=BigInt(c.auction.epochLength);
+  const quoteTime=start+((latest.timestamp-start)/epochLength+1n)*epochLength+1n;
+  await rpc.request({method:'evm_setNextBlockTimestamp',params:[Number(quoteTime)]});await rpc.request({method:'evm_mine',params:[]});
   const zeroForOne=input.toLowerCase()===poolKey.currency0.toLowerCase();
   const quote=await sdk.quoter.quoteExactInputV4({poolKey,zeroForOne,exactAmount:amount,hookData:'0x'});
   assert(quote.amountOut>0n,'Zero quote');
   const before={input:await balance(input),output:await balance(output)};
+  await record(name+'-quote',{quoteTime,amountIn:amount,amountOut:quote.amountOut,minimumOutput:quote.amountOut*99n/100n});
   const actions=new V4ActionBuilder();actions.addSwapExactInSingle(poolKey,zeroForOne,amount,quote.amountOut*99n/100n,'0x');
   actions.addAction(V4ActionType.SETTLE_ALL,[input,amount]);actions.addAction(V4ActionType.TAKE_ALL,[output,quote.amountOut*99n/100n]);
   const [a,p]=actions.build();const commands=new CommandBuilder();commands.addV4Swap(a,p);const [cmd,args]=commands.build();
