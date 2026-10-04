@@ -1,0 +1,9 @@
+# Portabilité ARM64 et duties après migration — 5 octobre 2026
+
+Migration helper 23df7f63 sur Docker ARM64 existant. Archive VPS e19bafc3… vérifiée contre la preuve WAN 092a153c, chemins sûrs, extraite dans un répertoire privé séparé et montée en lecture seule. Engagement initial de la même archive, sans substituer l'engagement terminal. Parcours normal et SIGKILL avant/après écriture passent ; rejeux zéro écriture, mauvais engagement refusé sans modification. Audits avant/après identiques : 31 blocs et 14 états prunés rejoués. Originaux/programmes qualifiés inchangés, hashes indépendants vérifiés.
+
+Nouveau scénario C++ 477e5ba4, cœur 59fa6530, helper réel 23df7f63 : source valide prunée auditée, copie node/journaux et témoins retenus séparément. Seul le schéma de la copie est placé en format legacy nano/1 pour modéliser le format expérimental ; nouveau lecteur le refuse. Helper checkpoint-bound invoqué réellement, rejeu sans écriture, audit canonique après migration, puis réouverture des owners/journaux avec les engagements conservés indépendamment. 64/64 journaux avancés, conflit refusé avant callback de signature, finalité locale 2 → 7, source/sauvegarde inchangées. Contrôleur terminal 0 et hashes indépendants vérifiés.
+
+Préflight échoué conservé : création du seul nouveau dossier de build refusée par permissions. Aucun test n'avait démarré ; dossier neuf créé avec le propriétaire attendu, contrôleur distinct v2. Aucun ancien build/volume modifié, aucune assertion/deadline assouplie, aucun rebuild d'image.
+
+Portée : deux propriétaires locaux, 64 clés synthétiques, injection directe ; pas de nouvelle qualification WAN, mesh public, migration en place ou panne électrique. Nouveau scénario AMD64 lancé séparément, terminal encore attendu. L'archive privée et les bases/journaux ne sont pas publiés dans Git. Production et revue indépendante restent ouvertes.
