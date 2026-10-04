@@ -1,0 +1,54 @@
+diff --git a/tests/multihost/build-paths.mjs b/tests/multihost/build-paths.mjs
+index 3a0eb080..9437cd13 100644
+--- a/tests/multihost/build-paths.mjs
++++ b/tests/multihost/build-paths.mjs
+@@ -49,0 +50,13 @@ export function selectBuildArtifacts(buildVolume,armImage,amdImage,armVolume,amd
++
++// Majority isolation can reuse qualified programs in read-only build volumes.
++// Legacy mutable builder tags remain ineligible for this qualification mode.
++export function qualifiedRetainedArtifacts(buildVolume,artifacts){
++ if(typeof buildVolume!=='boolean')throw Error('Invalid build-volume mode');
++ if(!buildVolume)return false;
++ return ['arm64','amd64'].every(arch=>{
++  const a=artifacts?.[arch];
++  return typeof a?.image==='string'&&/^sha256:[a-f0-9]{64}$/.test(a.image)
++   &&typeof a.volume==='string'&&/^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/.test(a.volume)
++   &&a.mount===`type=volume,src=${a.volume},dst=/build,readonly`;
++ });
++}
+diff --git a/tests/multihost/build-paths.test.mjs b/tests/multihost/build-paths.test.mjs
+index f9497372..7f2680ab 100644
+--- a/tests/multihost/build-paths.test.mjs
++++ b/tests/multihost/build-paths.test.mjs
+@@ -105,0 +106,21 @@ test('artifact mode must be an explicit boolean',()=>{for(const bad of ['1',1,nu
++
++import {qualifiedRetainedArtifacts} from './build-paths.mjs';
++const frozenArtifacts=()=>selectBuildArtifacts(true,'sha256:'+'a'.repeat(64),'sha256:'+'b'.repeat(64),'arm-owned','amd-owned');
++test('majority mode accepts both immutable images and read-only retained volumes',()=>{
++ assert.equal(qualifiedRetainedArtifacts(true,frozenArtifacts()),true);
++});
++test('majority mode rejects legacy mutable image selectors',()=>{
++ assert.equal(qualifiedRetainedArtifacts(true,selectBuildArtifacts(true)),false);
++});
++test('majority mode requires build-volume ownership and both architectures',()=>{
++ assert.equal(qualifiedRetainedArtifacts(false,frozenArtifacts()),false);
++ const a=frozenArtifacts();delete a.amd64;assert.equal(qualifiedRetainedArtifacts(true,a),false);
++});
++test('majority mode rejects writable or mismatched retained mounts',()=>{
++ for(const mount of ['type=volume,src=arm-owned,dst=/build','type=volume,src=other,dst=/build,readonly']){
++  const a=frozenArtifacts();a.arm64.mount=mount;assert.equal(qualifiedRetainedArtifacts(true,a),false);
++ }
++});
++test('majority mode rejects malformed image and volume identities',()=>{
++ for(const key of ['image','volume']){const a=frozenArtifacts();a.amd64[key]='invalid,value';assert.equal(qualifiedRetainedArtifacts(true,a),false);}
++});
+diff --git a/tests/multihost/run.mjs b/tests/multihost/run.mjs
+index 1812522a..8bc08252 100644
+--- a/tests/multihost/run.mjs
++++ b/tests/multihost/run.mjs
+@@ -26 +26 @@ import {selectCandidates,verifyPackagedImage} from './candidate-images.mjs';
+-import {selectHostBuildPaths,selectRemoteSourceRepository,remoteDockerArgument,selectNativeBuildPaths,selectBuildArtifacts} from './build-paths.mjs';
++import {selectHostBuildPaths,selectRemoteSourceRepository,remoteDockerArgument,selectNativeBuildPaths,selectBuildArtifacts,qualifiedRetainedArtifacts} from './build-paths.mjs';
+@@ -68 +68 @@ if(partitionCuts&&(!candidates||fork!=='capella'||!partition||asymmetric||rotati
+-if(majorityIsland&&(!candidates||fork!=='capella'||!partition||asymmetric||rotation||boundedLoad||backupRestore||pinnedRestart||monitor||partitionCuts))throw Error('Majority island requires standalone packaged Capella partition campaign');
++if(majorityIsland&&(!(candidates||qualifiedRetainedArtifacts(buildVolume,buildArtifacts))||fork!=='capella'||!partition||asymmetric||rotation||boundedLoad||backupRestore||pinnedRestart||monitor||partitionCuts))throw Error('Majority island requires standalone attested Capella partition campaign');

@@ -1,0 +1,9 @@
+# Majorité connectée pendant isolation VPS — contrôle du 4 octobre 2026
+
+Runtime `d1597d9a6987d0839ed2f0c7ded268aead35d071`, pilote `ba7bac4f038827c2d4dabcfac3695b136c907205`. Réutilise les images immuables et volumes des gates 427 + réseau21 + audit signé4 ARM64/AMD64 ; aucun rebuild. Les références des programmes, sources, entrées natives, corpus EEST sélectionné et gates sont revérifiées avant création des nœuds. Dossier neuf `/tmp/nano-rpc-wan-majority-d1597d9a-20261004`, refus si présent ou si un nœud existant est actif ; aucune file automatique.
+
+Le même scénario existant accepte maintenant les volumes qualifiés avec images immuables et montages strictement en lecture seule. Les anciennes sélections à tag mutable ne sont pas admissibles. 40 contrôles des sélecteurs/politiques passent, dont cinq nouveaux refus/acceptations des artefacts conservés. Pas de modification C++ ni de politique de majorité.
+
+L'île Mac natif/Docker Mac doit conserver son lien P2P direct, posséder strictement plus de deux tiers du stake effectif extrait de la fixture SSZ liée par empreintes, et avancer sa finalité au-delà des engagements déjà reçus lors de la coupure. Le VPS minoritaire est déconnecté de son réseau Docker dédié pendant 192 secondes et ne peut finaliser au-delà de son plafond de réception. Après reconnexion, une finalité commune plus récente doit être atteinte dans la fenêtre monotone originale de 180 secondes ; trois époques de stabilité et la santé terminale des trois signataires suivent. Ressources relevées ; trafic et ports restent privés. Cela ne teste pas une population physique massive ni des fonds réels.
+
+Commande explicite après revue : `python3 -B launch.py --execute-qualified-majority`. Les contrôles de `test_gates.py` n'effectuent aucune action externe. Aucun résultat WAN encore acquis à la préparation de ce contrôle. Échecs historiques et tous les autres critères de production conservés.
