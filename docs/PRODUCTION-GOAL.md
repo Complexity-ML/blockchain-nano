@@ -3417,3 +3417,12 @@ canonique revendiqué. Logs/manifeste historiques restent conservés ; la cause
 initiale et l’anomalie A restent ouvertes. Autre copie vérifiée ou reproduction
 bornée avec les diagnostics actuels nécessaire ; aucune campagne active relancée.
 [Constat et périmètre](qualification/wan-a-evidence-availability-20261004/README.md).
+
+## CI distante de l’outillage — 4 octobre 2026
+
+Job GitHub operations à la révision `674a23e0` : terminal success, 375/375 tests
+sans échec/skip, logs et artefacts réellement téléchargés et révision vérifiée.
+Les jobs core/network de ce run restent actifs à l’observation ; aucune nouvelle
+qualification C++/WAN, bridge ou production déduite de ce succès d’outillage.
+[Preuves et périmètre](qualification/github-operations-674a23e0-20261004/README.md).
+Toutes les exigences antérieures restent conservées selon leur statut.
