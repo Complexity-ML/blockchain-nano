@@ -3824,3 +3824,13 @@ Les jobs core/network de ce run restent actifs à l’observation ; aucune nouve
 qualification C++/WAN, bridge ou production déduite de ce succès d’outillage.
 [Preuves et périmètre](qualification/github-operations-674a23e0-20261004/README.md).
 Toutes les exigences antérieures restent conservées selon leur statut.
+
+## CI C++ distante sélectionnée — 4 octobre 2026
+
+Job GitHub core à la révision `674a23e0` : neuf tests attendus, sélection/JUnit
+concordants, neuf réussites sans échec/skip, build Release Linux AMD64 et artefacts
+récupérés. Révision distincte de la candidate efbeb9bc ; aucun remplacement des
+427 tests, de la restauration WAN, du pruning ou de la qualification complète.
+Le job réseau reste actif à l’observation.
+[Logs et limites](qualification/github-core-674a23e0-20261004/README.md).
+Tous les critères antérieurs restent conservés selon leur statut.
