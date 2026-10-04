@@ -19,7 +19,10 @@ Replace every economic/identity/timing parameter for the actual launch. Supply u
 18-decimal token base units, proceeds use 6-decimal USDC base units, fees use Uniswap
 millionths, fee shares use WAD (1e18). Ticks represent the ordered raw-unit ratio,
 not directly a dollar price; decimal conversion and token ordering matter.
-Dynamic tick spacing must be at most 30. The official SDK validates tick direction
+Dynamic tick spacing must be at most 30. Gamma is mandatory and describes
+total-curve movement; its exact integer normalized epoch value must be nonzero
+and it must be divisible by tick spacing. The wrapper does not use SDK gamma
+defaults. The official SDK validates tick direction
 and mines the token/hook salt. Yearly inflation is mandatory in this wrapper;
 zero in the fixture is a fixture choice, not an adopted token policy.
 
@@ -36,7 +39,12 @@ are allowed. Module hashes are recorded observations, not comparison to an audit
 allowlist. A rejected preflight/simulation is saved as `simulation-rejected` and the
 CLI exits 1. Offline encoding and mocked RPC tests do not prove on-chain acceptance.
 The synthetic fixture reverted on Base during the first real read-only attempt;
-no transaction was sent. Real economic terms still need configuration and qualification.
+no transaction was sent. The rejection was decoded as `InvalidGamma` (0x248d3d6a). The SDK automatic
+value 120 failed the on-chain constructor; an explicit synthetic value 20040
+passed creation simulation and gas estimation on Base (10,912,762 gas). Token
+and hook return addresses match SDK predictions. Both failed and successful
+review artifacts are retained under `docs/qualification/doppler-unsigned-preview-20261004`.
+Real economic terms still need configuration and qualification.
 
 Supported governance choices are explicit `noOp`/`launchpad`; migration choices are
 V2/V4. V4 requires explicit fee beneficiaries and lock duration. Other SDK modes,

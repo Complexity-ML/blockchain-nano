@@ -35,7 +35,8 @@ export function parameters(c) {
   if (numTokensToSell <= 0n || initialSupply <= numTokensToSell) throw new Error('Supply must include a positive sale and migration remainder');
   const yearlyMintRate = amount(c.yearlyMintRate, 'yearlyMintRate');
   const a = c.auction;
-  if (a.gamma !== undefined) integer(a.gamma,'gamma');
+  integer(a.gamma,'gamma');
+  if (!a.gamma || a.gamma > 8388607) throw new Error('gamma: positive int24 required; no SDK default');
   for (const key of ['duration', 'epochLength', 'numPdSlugs']) integer(a[key], key);
   if (!a.duration || !a.epochLength || a.duration % a.epochLength || !a.numPdSlugs) throw new Error('Invalid auction epochs/slugs');
   for (const key of ['startTick', 'endTick']) if (!Number.isSafeInteger(a[key]) || Math.abs(a[key]) > 887272) throw new Error(`Invalid ${key}`);
@@ -43,7 +44,9 @@ export function parameters(c) {
   const maxProceeds = amount(a.maxProceeds, 'maxProceeds');
   if (minProceeds <= 0n || maxProceeds < minProceeds) throw new Error('Invalid USDC proceeds');
   const pool = { fee: integer(c.pool.fee, 'fee'), tickSpacing: integer(c.pool.tickSpacing, 'tickSpacing') };
-  if (!pool.tickSpacing || pool.fee > 1000000) throw new Error('Invalid pool parameters');
+  if (!pool.tickSpacing || pool.tickSpacing > 30 || pool.fee > 1000000) throw new Error('Invalid Dynamic pool tickSpacing/fee');
+  const normalizedEpoch = BigInt(a.epochLength) * 10n**18n / BigInt(a.duration);
+  if (a.gamma % pool.tickSpacing || normalizedEpoch * BigInt(a.gamma) / 10n**18n === 0n) throw new Error('InvalidGamma: explicit total-curve gamma must be spacing-aligned and yield a nonzero upper slug');
   if (!['noOp', 'launchpad'].includes(c.governance.type)) throw new Error('Explicit noOp/launchpad governance required');
   const governance = c.governance.type === 'launchpad' ? {type:'launchpad', multisig:getAddress(c.governance.multisig)} : {type:'noOp'};
   if (governance.multisig === zeroAddress) throw new Error('Multisig cannot be zero');
@@ -63,13 +66,17 @@ export function parameters(c) {
 
 export async function preview(c, rpc) {
   const params = parameters(c);
+  const rpcErrors=[];
   const allowed = new Set(['eth_chainId','eth_getBlockByNumber','eth_getCode','eth_call','eth_estimateGas']);
   const client = createPublicClient({chain:base, transport:custom({request:async ({method,params:args}) => {
     if (!rpc || !allowed.has(method)) throw new Error(`RPC disabled: ${method}`);
     const response = await fetch(rpc,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params:args}),signal:AbortSignal.timeout(30000)});
     if (!response.ok) throw new Error(`RPC HTTP ${response.status}`);
     const body=await response.json();
-    if (body.error) throw new Error(`RPC ${method}: ${body.error.message}`);
+    if (body.error) {
+      rpcErrors.push({method,code:body.error.code,message:body.error.message,data:body.error.data});
+      throw new Error(`RPC ${method}: ${body.error.message}`);
+    }
     return body.result;
   }},{retryCount:0})});
   const sdk = new DopplerSDK({publicClient:client,chainId:8453});
@@ -91,13 +98,14 @@ export async function preview(c, rpc) {
     const decimals = await client.call({to:USDC,data:'0x313ce567',blockNumber:block.number});
     if (!decimals.data || BigInt(decimals.data)!==6n) throw new Error('Unexpected USDC decimals');
     result.simulation={performed:true,success:false,blockNumber:block.number,blockHash:block.hash,modules};
-    await client.simulateContract({address:to,abi:airlockAbi,functionName:'create',args:[createParams],account:params.userAddress,blockNumber:block.number});
+    const simulated=await client.simulateContract({address:to,abi:airlockAbi,functionName:'create',args:[createParams],account:params.userAddress,blockNumber:block.number});
+    if (getAddress(simulated.result[0]) !== getAddress(tokenAddress) || getAddress(simulated.result[1]) !== getAddress(hookAddress)) throw new Error('Simulated token/hook differ from SDK predictions');
     const gas=await client.estimateGas({account:params.userAddress,to,data,blockNumber:block.number});
     if ((await client.getBlock({blockNumber:block.number})).hash !== block.hash) throw new Error('Reference block changed');
-    result.simulation={performed:true,success:true,blockNumber:block.number,blockHash:block.hash,gas,modules};
+    result.simulation={performed:true,success:true,blockNumber:block.number,blockHash:block.hash,gas,modules,returnedAddresses:simulated.result};
     } catch(e) {
       result.status='simulation-rejected';
-      result.simulation={...result.simulation,performed:true,success:false,error:e.shortMessage ?? e.message.split('\n')[0]};
+      result.simulation={...result.simulation,performed:true,success:false,error:e.shortMessage ?? e.message.split('\n')[0],rpcErrors};
     }
   }
   return result;

@@ -309,3 +309,17 @@ reste un échec, pas une qualification du lancement. Les termes réels, le lien
 Base–NANO, le bridge, les retraits, la visibilité T0 et toutes les autres
 exigences de production restent ouverts. Les deux campagnes C++ de la candidate
 `efbeb9bc` continuent ; ce lot JavaScript ne change pas leurs sources figées.
+
+## Doppler : cause du rejet corrigée, création simulée — 4 octobre 2026
+
+Le rejet synthétique `0x248d3d6a` correspond à `InvalidGamma` dans les sources
+officielles. Le gamma automatique 120 du SDK ne passe pas la normalisation
+entiere du constructeur pour 168 époques. L’outil exige maintenant un gamma
+explicite et contrôle cette règle et la divisibilité par tick spacing. Avec
+20040 dans la fixture, `eth_call` de création sur Base et `eth_estimateGas`
+passent (10 912 762 gas), au même bloc de référence ; les adresses token/hook
+retournées correspondent aux prédictions SDK. Les erreurs initiales restent
+conservées. Cinq tests ciblés couvrent aussi les bindings RPC et les rejets.
+Aucune transaction diffusée : achats, ventes, migration, paramètres économiques
+réels, actif Base–Nano et tous les critères originaux restent ouverts.
+[Preuves](../docs/qualification/doppler-unsigned-preview-20261004/).

@@ -1,0 +1,14 @@
+{
+  "sourceRepository": "https://github.com/whetstoneresearch/doppler",
+  "sourceRevision": "5754c7ee01f1bdbd6f07c62be721e1223b725ecd",
+  "sourcePath": "src/initializers/Doppler.sol",
+  "selector": "0x248d3d6a",
+  "error": "InvalidGamma",
+  "rejectedAutomaticGamma": 120,
+  "explicitSyntheticGamma": 20040,
+  "duration": 604800,
+  "epochLength": 3600,
+  "tickSpacing": 30,
+  "condition": "floor(floor(epochLength * 1e18 / duration) * gamma / 1e18) > 0; gamma % tickSpacing == 0",
+  "scope": "Synthetic Base read-only creation, no purchases/sales/graduation, no actual launch terms"
+}

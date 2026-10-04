@@ -6704,3 +6704,28 @@ reste un échec, pas une qualification du lancement. Les termes réels, le lien
 Base–NANO, le bridge, les retraits, la visibilité T0 et toutes les autres
 exigences de production restent ouverts. Les deux campagnes C++ de la candidate
 `efbeb9bc` continuent ; ce lot JavaScript ne change pas leurs sources figées.
+
+## Candidate cohérente : stockage croisé et journaux — 4 octobre 2026
+
+Les programmes `efbeb9bc` passent la lecture physique SST format 6 dans les deux
+sens Docker ARM64/AMD64. L’audit natif des 22 journaux originaux et migrés passe
+avec pins/témoins indépendants et 66 refus de bindings erronés par fixture,
+sans signatures ni reprise de duties. Les deux campagnes complètes continuent.
+La restauration effective de cette candidate est mise en attente avec refus
+automatique tant que leurs résultats terminaux et manifestes ne passent pas.
+[Preuves, contrôleur et limites](qualification/coherent-storage-and-restore-20261004/README.md).
+Production non qualifiée ; critères originaux intégralement conservés.
+
+## Doppler : cause du rejet corrigée, création simulée — 4 octobre 2026
+
+Le rejet synthétique `0x248d3d6a` correspond à `InvalidGamma` dans les sources
+officielles. Le gamma automatique 120 du SDK ne passe pas la normalisation
+entiere du constructeur pour 168 époques. L’outil exige maintenant un gamma
+explicite et contrôle cette règle et la divisibilité par tick spacing. Avec
+20040 dans la fixture, `eth_call` de création sur Base et `eth_estimateGas`
+passent (10 912 762 gas), au même bloc de référence ; les adresses token/hook
+retournées correspondent aux prédictions SDK. Les erreurs initiales restent
+conservées. Cinq tests ciblés couvrent aussi les bindings RPC et les rejets.
+Aucune transaction diffusée : achats, ventes, migration, paramètres économiques
+réels, actif Base–Nano et tous les critères originaux restent ouverts.
+[Preuves](qualification/doppler-unsigned-preview-20261004/).
