@@ -6872,3 +6872,14 @@ et des méthodes d’écriture. Lot ciblé 39/39 (15 nouveaux tests HTTP loopbac
 Aucune authentification cryptographique de finalité, éligibilité au mint,
 qualification bridge ou nouvelle conformité EIP/C++ déduite de ce résultat.
 Toutes les exigences et tous les échecs antérieurs restent conservés.
+
+## CI : résultat outillage et annulation réseau — 4 octobre 2026
+
+Outillage e87fc7b8 : run 37231284533 terminal success, 390/390 sans échec/skip ;
+core/network sautés. [Artefacts](qualification/github-operations-e87fc7b8-20261004/README.md).
+Le run réseau 674a23e0 a été annulé par le réglage cancel-in-progress:true
+lors du push suivant, build publié interrompu à 73 %, sans qualification
+réseau terminale. [Annulation conservée](qualification/github-network-cancelled-674a23e0-20261004/README.md).
+Réglage remplacé par false pour préserver les runs actifs, sans supprimer
+le groupe de sérialisation. Prochain résultat réseau encore attendu.
+Les preuves core/operations antérieures et les critères ouverts restent conservés.

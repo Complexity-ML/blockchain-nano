@@ -19,7 +19,8 @@ permissions:
   contents: read
 concurrency:
   group: nano-checks-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Preserve active C++ qualification even when a later push only changes tools.
+  cancel-in-progress: false
 jobs:
   changes:
     runs-on: ubuntu-24.04
