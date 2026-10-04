@@ -1,0 +1,132 @@
+{
+  "harnessSource": "5a5ebbe5",
+  "runtimeSource": "59fa653033aefb23651c32f1d986ac644e4866d2",
+  "controllerExit": 0,
+  "nodes": 3,
+  "physicalHosts": 2,
+  "syntheticValidators": 64,
+  "finiteTransactions": 96,
+  "allReceiptsSuccessfulCanonicalAndFinalized": true,
+  "fullReceiptsIdenticalAcrossNodes": true,
+  "target": "repeated SSTORE(0,42) and 1 wei transfers; no complex DeFi or state growth",
+  "workloadElapsedMs": 276123,
+  "workloadDeadlineMs": 600000,
+  "states": {
+    "native": {
+      "nonce": "0x61",
+      "balance": "0x60",
+      "storage": "0x000000000000000000000000000000000000000000000000000000000000002a"
+    },
+    "local": {
+      "nonce": "0x61",
+      "balance": "0x60",
+      "storage": "0x000000000000000000000000000000000000000000000000000000000000002a"
+    },
+    "remote": {
+      "nonce": "0x61",
+      "balance": "0x60",
+      "storage": "0x000000000000000000000000000000000000000000000000000000000000002a"
+    }
+  },
+  "finalizedLoadAnchor": {
+    "number": "0x2f",
+    "hash": "0xb473780c04ceff7d87c33a937b421517a69f29be12b76ab6419353ad58933ef9"
+  },
+  "ramp": [
+    {
+      "transactions": 32,
+      "requestedIntervalMs": 1000,
+      "firstToLastMs": 31062,
+      "observedIntervalRatePerSecond": 0.998003992015968
+    },
+    {
+      "transactions": 32,
+      "requestedIntervalMs": 500,
+      "firstToLastMs": 16094,
+      "observedIntervalRatePerSecond": 1.9261836709332671
+    },
+    {
+      "transactions": 32,
+      "requestedIntervalMs": 250,
+      "firstToLastMs": 9058,
+      "observedIntervalRatePerSecond": 3.422389048355045
+    }
+  ],
+  "postLoadFinality": {
+    "epochs": 3,
+    "firstEpoch": "8",
+    "lastEpoch": "11",
+    "lastCheckpoint": {
+      "epoch": "11",
+      "root": "0x7225b7d5bda760d13c19b0a8e2d970cda91943b2616291a4b9a5f2a47ffa3989"
+    },
+    "lastExecutionHash": "0xcf3d835b77d04eab5e91987de71ff3499c7ac93c368585c88a2bd30c41fcaf25",
+    "elapsedMs": 150206,
+    "nodes": [
+      "mac-native",
+      "mac-docker",
+      "vps-docker"
+    ],
+    "revision": "59fa653033aefb23651c32f1d986ac644e4866d2"
+  },
+  "resources": {
+    "scope": "Sampled observations of this campaign only. Peaks between samples are unknown. No throughput, disk-occupancy, endurance or production-readiness claim.",
+    "collectionStartDelayMs": 0,
+    "firstTimeMs": 1791157516770,
+    "lastTimeMs": 1791158130023,
+    "records": 31,
+    "nodes": {
+      "mac-native": {
+        "samples": 31,
+        "unavailable": [],
+        "identity": "28657",
+        "firstTimeMs": 1791157516770,
+        "lastTimeMs": 1791158130023,
+        "maximumSampleGapMs": 20546,
+        "maxObservedMemoryBytes": 302907392,
+        "maxObservedCpuPercent": 43.7,
+        "measurement": "ps RSS and %CPU for the main process only, excluding its P2P child; sampling differs from Docker"
+      },
+      "mac-docker": {
+        "samples": 31,
+        "unavailable": [],
+        "identity": "a5f6327b31e9",
+        "firstTimeMs": 1791157516770,
+        "lastTimeMs": 1791158130023,
+        "maximumSampleGapMs": 20546,
+        "maxObservedMemoryBytes": 350434099,
+        "maxObservedCpuPercent": 48.1,
+        "memoryLimitBytes": 3221225472,
+        "lastBlockIoBytes": {
+          "read": 0,
+          "written": 2290000000
+        },
+        "measurement": "docker stats memory accounting and sampled CPU; BlockIO is cumulative I/O, not disk usage"
+      },
+      "vps-docker": {
+        "samples": 31,
+        "unavailable": [],
+        "identity": "78b5f186adda",
+        "firstTimeMs": 1791157516770,
+        "lastTimeMs": 1791158130023,
+        "maximumSampleGapMs": 20546,
+        "maxObservedMemoryBytes": 290770125,
+        "maxObservedCpuPercent": 86.73,
+        "memoryLimitBytes": 3221225472,
+        "lastBlockIoBytes": {
+          "read": 0,
+          "written": 2290000000
+        },
+        "measurement": "docker stats memory accounting and sampled CPU; BlockIO is cumulative I/O, not disk usage"
+      }
+    }
+  },
+  "pruningEnabled": false,
+  "historicalWanACauseProven": false,
+  "saturationQualified": false,
+  "maximumCapacityQualified": false,
+  "continuousFlood": false,
+  "powerLossQualified": false,
+  "sourceAndProgramHashesUnchanged": true,
+  "productionQualified": false
+}
