@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 # Qualification of an explicitly stopped fixture, never a live-node backup.
 set -euo pipefail
-if [ "$#" -ne 5 ]; then
-  echo 'Usage: backup-restore.sh stopped-data new-output genesis.json audit-request.json nano-binary' >&2
+if [ "$#" -ne 5 ] && [ "$#" -ne 6 ]; then
+  echo 'Usage: backup-restore.sh stopped-data new-output genesis.json audit-request.json nano-binary [10001:10001]' >&2
   exit 2
+fi
+if [ "$#" -eq 6 ]; then
+  [ "$6" = '10001:10001' ] && [ "$(id -u)" -eq 0 ] || { echo 'Invalid restored-copy owner or offline user' >&2; exit 2; }
 fi
 source_root=$(realpath "$1")
 output_root=$(realpath -m "$2")
@@ -33,4 +36,11 @@ manifest "$output_root/restored" > "$output_root/restored-after.sha256"
 manifest "$source_root" > "$output_root/source-after.sha256"
 cmp "$output_root/restored-before.sha256" "$output_root/restored-after.sha256"
 cmp "$output_root/source-before.sha256" "$output_root/source-after.sha256"
+# Extraction is fresh and rejects links above. Only its copy changes ownership.
+if [ "$#" -eq 6 ]; then
+  chown -R -- "$6" "$output_root/restored"
+  manifest "$output_root/restored" > "$output_root/restored-owner-after.sha256"
+  cmp "$output_root/restored-after.sha256" "$output_root/restored-owner-after.sha256"
+  printf '%s\n' "$6" > "$output_root/restored-owner.txt"
+fi
 printf '%s\n' 'Stopped fixture archive, full byte-equivalent restoration and non-mutating canonical audit passed.' > "$output_root/passed.txt"
