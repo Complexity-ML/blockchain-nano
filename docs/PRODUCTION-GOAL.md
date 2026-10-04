@@ -3557,3 +3557,17 @@ Restent sauvegarde/restauration de base élaguée, downgrade, mesures disque,
 portabilité terminale et qualification réseau pertinente. Aucun gain SST
 physique immédiat ni coupure électrique qualifié. Toutes les preuves, critères
 et erreurs historiques sont conservés ; production toujours non qualifiée.
+
+## Nouveau scénario de restauration du stockage élagué — 4 octobre 2026
+
+3358d27b (tests seuls sur runtime pruning 4734f285) : compilation/link/test
+ARM64 exit 0. Copie physique hors ligne et hashes exacts, réouverture read-only
+sans mutation, reprise des frontières 3 → 5 → 6, sauvegarde source inchangée.
+Budget zéro sans suppression et dépassement d’octets refusé atomiquement ;
+commit repris après frontière complète, remplacement sous l’ancre refusé.
+[Preuves et échec préflight conservé](qualification/pruning-offline-restore-arm64-20261004/README.md).
+Seul le nouveau test compilé ; cœur et quatre anciens programmes conservés.
+Portée stockage synthétique local, pas de restauration entière du consensus
+avec témoins/signers, downgrade, panne électrique ou WAN pruning qualifiés.
+Branche de tests publiée, runtime toujours isolé ; exigences et échecs antérieurs
+conservés. AMD64 encore en cours à cette observation.
