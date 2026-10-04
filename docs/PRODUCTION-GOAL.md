@@ -3707,3 +3707,17 @@ copies migrées ; originaux et anciens programmes inchangés/re-hachés.
 Contrôleur terminal exit 0. ARM64 du helper, reprise des duties après migration,
 maintenance en ligne et panne électrique non acquises ; runtime main non promu.
 Toutes exigences et erreurs historiques conservées, objectif production actif.
+
+## Migration ARM64 et reprise des duties locale — 5 octobre 2026
+
+Archive WAN vérifiée e19bafc3, engagement initial correspondant : migration normale
+et SIGKILL avant/après écriture passent sur Docker ARM64, rejeux sans écriture ;
+audits identiques, 31 blocs/14 états prunés. Source et programmes préservés.
+Nouveau scénario 477e5ba4 utilise le helper réel sur une copie legacy contrôlée,
+reprend les 64 journaux avec témoins indépendants, refuse le conflit avant signer
+et avance la finalité locale 2 → 7 ; contrôleur terminal 0, source/backup inchangés.
+[Preuves et préflight refusé conservé](qualification/pruned-migration-arm64-duties-20261005/README.md).
+Migration hors ligne du helper qualifiée ARM64/AMD64 ; duties après migration
+qualifiés localement ARM64 seulement. Nouveau lot AMD64 actif, terminal attendu.
+Pas de nouveau WAN, migration en place ou panne électrique acquis ; toutes
+exigences/erreurs conservées, runtime main non promu, objectif production actif.
