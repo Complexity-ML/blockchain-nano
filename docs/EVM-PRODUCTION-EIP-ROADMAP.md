@@ -3927,3 +3927,15 @@ sans échec/skip. Core/réseau skipped pour cette révision JavaScript.
 Reproductibilité AMD64 encore en cours, pruning non qualifié à cette observation.
 Runtime main non promu ; tous les critères, échecs et preuves antérieurs restent
 conservés. Bridge, termes économiques et revue indépendante restent ouverts.
+
+## Reproductibilité des livrables terminale — 4 octobre 2026
+
+Candidate efbeb9bc : contrôleur exit 0, ARM64 et AMD64 complets. `nano` et
+`nano-p2p` recompilés dans des répertoires neufs sont identiques octet pour
+octet aux livrables qualifiés de chaque architecture. Sources et binaires
+originaux inchangés ; images/cache épinglés réutilisés, aucune image reconstruite.
+[Preuves](qualification/coherent-delivery-reproducibility-20261004/README.md).
+Portée : deux exécutables de livraison ; pas de reconstruction hermétique
+des dépendances ni de qualification d'image de release finale. Compilation
+pruning 4734f285 désormais démarrée, non qualifiée à cette observation.
+Tous les critères, résultats et échecs antérieurs restent conservés.
