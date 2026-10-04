@@ -1,0 +1,9 @@
+# Mesure physique sur copie prunée AMD64 — 5 octobre 2026
+
+Helper 6b1237a7, fixture WAN 092a153c conservée. Original monté en lecture seule ; copie isolée et marquée uniquement. Docker AMD64 existant, aucun rebuild d'image. Refus sans marqueur et d'un chemin symlink vérifiés. Flush puis compaction complète du seul chain de copie : 6 761 823 → 793 227 octets apparents, 6 782 976 → 815 104 octets alloués. SST 1 062 871 → 666 214 ; WAL 5 569 963 → 0. Ensemble des bases du nœud 22 535 188 → 16 566 592 octets apparents.
+
+Les 344 clés/valeurs (1 543 992 octets logiques) ont un SHA-256 ordonné et encadré identique avant/après ; toutes les catégories logiques des bases/journaux sont conservées. Fichiers originaux re-hachés inchangés, programmes re-hachés indépendamment. Audit canonique après compaction exit 0 : 77 blocs, 59 états prunés rejoués, checkpoint 827 et racine finale liés à l'engagement terminal indépendant déjà archivé.
+
+Échec conservé : le premier audit a reçu l'engagement initial de la campagne alors que la copie restaurée avait poursuivi les duties jusqu'au terminal ; refus fork checkpoint differs from external commitment. Seul l'audit a été repris avec le vrai engagement terminal préexistant (SHA 7206db7a3da215b54fd028f73a413ae08aec6b5c83c17bf1c6e3a0a634cb0794). Pas de nouveau build, compaction, modification d'engagement ou d'état pour rendre le test vert.
+
+Le gain observé combine le nettoyage WAL et la compaction de la base déjà prunée : il n'isole pas l'économie du pruning contre une chaîne non prunée. Petite fixture, pas de modèle de croissance long terme, politique automatique/in-place ou panne électrique qualifiée. Schéma historique expérimental nano/1 pruné ; aucune migration automatique vers nano/2-state-pruned réalisée. Sources, témoins et volumes d'origine conservés ; aucune base/clé publiée dans Git.
