@@ -31,6 +31,42 @@ struct Fixture {
 }
 int main(int argc,char** argv){try{
  Fixture f;
+ if(argc==2&&std::string(argv[1])=="--pruning-restore"){
+  Temp tmp;const auto source=tmp/"source",backup=tmp/"backup",restored=tmp/"restored";
+  std::vector<ExecutionCheckpointBlock> history{f.a,f.c};
+  for(unsigned number=3;number<=6;++number){
+   const auto& parent=history.back();ExecutionCheckpointBlock next;next.state=parent.state;
+   auto& h=next.block.header;h.number=number;h.parent_hash=parent.block.header.hash();h.difficulty=0;h.timestamp=parent.block.header.timestamp+12;h.base_fee=next_base_fee(parent.block.header);
+   next.receipts=ExecutionEngine(1337,{},EvmRevision::Paris,ReplayPolicy::RequireChainId,ConsensusInputPolicy::RejectExternalInputs).execute_block(next.state,next.block,false);history.push_back(std::move(next));
+  }
+  const auto& head=history.back();const auto head_hash=head.block.header.hash();const auto snapshot=f.snapshot(head);ForkCheckpointToken token;
+  auto verify=[&](ChainStore& disk,unsigned boundary){
+   const auto marker=disk.state_pruning();check(marker&&marker->before==boundary&&marker->anchor.number==6&&marker->anchor.hash==head_hash,"restored pruning boundary differs");
+   check(disk.latest()->header.hash()==head_hash&&disk.state_at(0)->root()==f.state.root()&&disk.state_at(6)->root()==head.state.root(),"restored genesis/head differs");
+   for(unsigned n=1;n<=6;++n){check(bool(disk.state_at(n))==(n>=boundary),"pruning crossed bounded frontier");const auto& original=history.at(n-1);check(disk.block_by_number(n)->header.hash()==original.block.header.hash()&&disk.checkpoint_archive(original.block.header.hash(),budget)->payload==f.archived(original).payload,"pruning lost canonical block/archive");}
+   check(disk.receipt(f.a.block.transactions[0].hash()).has_value()&&disk.receipt(f.c.block.transactions[0].hash()).has_value(),"pruning lost receipt");
+   check(disk.fork_checkpoint(1337,f.genesis.header.hash(),budget,token).has_value(),"restored checkpoint commitment differs");
+  };
+  {
+   ChainStore disk(source);f.init(disk);token=f.save(disk,{},f.genesis.header.hash(),history);
+   const auto before=token;bool rejected=false;
+   try{disk.commit_execution_checkpoint(1337,f.genesis.header.hash(),token,head_hash,6,head_hash,{},snapshot,snapshot.size(),2,{},ExecutionStateRetentionAnchor{6,head_hash});}catch(const std::length_error&){rejected=true;}
+   check(rejected&&!disk.state_pruning()&&disk.state_at(1).has_value()&&disk.fork_checkpoint(1337,f.genesis.header.hash(),budget,before).has_value(),"byte budget failure published pruning changes");
+   token=disk.commit_execution_checkpoint(1337,f.genesis.header.hash(),token,head_hash,6,head_hash,{},snapshot,budget,0,{},ExecutionStateRetentionAnchor{6,head_hash});
+   check(!disk.state_pruning()&&disk.state_at(1).has_value(),"zero block budget deleted state");
+   token=disk.commit_execution_checkpoint(1337,f.genesis.header.hash(),token,head_hash,6,head_hash,{},snapshot,budget,2,{},ExecutionStateRetentionAnchor{6,head_hash});verify(disk,3);
+  }
+  auto file_hashes=[](const fs::path& directory){std::map<std::string,std::string> result;for(const auto& entry:fs::recursive_directory_iterator(directory))if(entry.is_regular_file()){const auto data=read(entry.path());result.emplace(fs::relative(entry.path(),directory).string(),hex(sha256(Bytes(data.begin(),data.end()))));}return result;};
+  const auto source_hashes=file_hashes(source);fs::copy(source,backup,fs::copy_options::recursive);check(file_hashes(backup)==source_hashes,"offline backup differs");fs::copy(backup,restored,fs::copy_options::recursive);
+  const auto readonly_before=file_hashes(restored);{ChainStore disk(restored,ChainStore::OpenMode::ReadOnly);verify(disk,3);}check(file_hashes(restored)==readonly_before,"restored read-only verification wrote files");
+  for(unsigned boundary:{5u,6u}){
+   ChainStore disk(restored);token=disk.commit_execution_checkpoint(1337,f.genesis.header.hash(),token,head_hash,6,head_hash,{},snapshot,budget,2,{},ExecutionStateRetentionAnchor{6,head_hash});verify(disk,boundary);
+  }
+  {ChainStore disk(restored);const auto before=token;token=disk.commit_execution_checkpoint(1337,f.genesis.header.hash(),token,head_hash,6,head_hash,{},snapshot,budget,2,{},ExecutionStateRetentionAnchor{6,head_hash});check(token.sequence==before.sequence+1,"completed pruning cannot resume checkpoint");verify(disk,6);
+   bool refused=false;try{disk.commit_execution_checkpoint(1337,f.genesis.header.hash(),token,head_hash,5,history.at(4).block.header.hash(),{},snapshot,budget,2);}catch(const std::invalid_argument&){refused=true;}check(refused&&disk.fork_checkpoint(1337,f.genesis.header.hash(),budget,token).has_value(),"replacement below retained anchor was published");}
+  check(file_hashes(source)==source_hashes&&file_hashes(backup)==source_hashes,"restore/resume changed backup source");
+  std::cout<<Json{{"scenario","historical-state-pruning-offline-restore"},{"frontiers",Json::array({3,5,6})},{"zeroBlockBudgetRetainedAllStates",true},{"byteBudgetRejectedAtomically",true},{"physicalCopyVerified",true},{"readOnlyCopyUnchanged",true},{"sourceBackupUnchanged",true},{"resumedCheckpoint",true},{"physicalPowerLoss",false},{"consensusWitnessesQualified",false}}.dump()<<std::endl;return 0;
+ }
  if(argc==2&&std::string(argv[1])=="--pruning-corruption"){
   for(unsigned attack=0;attack<11;++attack){Temp tmp;const auto path=tmp/"db";
    {ChainStore disk(path);f.init(disk);const auto token=f.save(disk,{},f.genesis.header.hash(),{f.a,f.c});disk.commit_execution_checkpoint(1337,f.genesis.header.hash(),token,f.c.block.header.hash(),2,f.c.block.header.hash(),{},f.snapshot(f.c),budget,8,{},ExecutionStateRetentionAnchor{2,f.c.block.header.hash()});check(disk.state_pruning()->before==2&&!disk.state_at(1),"corruption fixture was not pruned");}

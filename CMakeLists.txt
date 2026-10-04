@@ -1893,3 +1893,6 @@ endif()
 
 add_test(NAME storage_historical_state_pruning_corruption COMMAND nano-execution-checkpoint-tests --pruning-corruption)
 set_tests_properties(storage_historical_state_pruning_corruption PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_recovery")
+
+add_test(NAME storage_historical_state_pruning_restore COMMAND nano-execution-checkpoint-tests --pruning-restore)
+set_tests_properties(storage_historical_state_pruning_restore PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_recovery")
