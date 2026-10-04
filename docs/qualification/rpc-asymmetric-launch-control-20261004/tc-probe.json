@@ -1,0 +1,60 @@
+{
+  "before": [
+    {
+      "kind": "noqueue",
+      "handle": "0:",
+      "root": true,
+      "refcnt": 2,
+      "options": {},
+      "bytes": 0,
+      "packets": 0,
+      "drops": 0,
+      "overlimits": 0,
+      "requeues": 0,
+      "backlog": 0,
+      "qlen": 0
+    }
+  ],
+  "during": [
+    {
+      "kind": "netem",
+      "handle": "7a00:",
+      "root": true,
+      "refcnt": 5,
+      "options": {
+        "limit": 1000,
+        "delay": {
+          "delay": 0.5,
+          "jitter": 0,
+          "correlation": 0
+        },
+        "ecn": false,
+        "gap": 0
+      },
+      "bytes": 0,
+      "packets": 0,
+      "drops": 0,
+      "overlimits": 0,
+      "requeues": 0,
+      "backlog": 0,
+      "qlen": 0
+    }
+  ],
+  "after": [
+    {
+      "kind": "noqueue",
+      "handle": "0:",
+      "root": true,
+      "refcnt": 2,
+      "options": {},
+      "bytes": 0,
+      "packets": 0,
+      "drops": 0,
+      "overlimits": 0,
+      "requeues": 0,
+      "backlog": 0,
+      "qlen": 0
+    }
+  ],
+  "hostNamespaceUntouched": true
+}

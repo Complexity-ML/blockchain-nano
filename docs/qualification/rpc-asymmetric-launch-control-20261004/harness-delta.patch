@@ -1,0 +1,83 @@
+diff --git a/tests/multihost/asymmetric.mjs b/tests/multihost/asymmetric.mjs
+index 71f64404..9ab88885 100644
+--- a/tests/multihost/asymmetric.mjs
++++ b/tests/multihost/asymmetric.mjs
+@@ -1,0 +2,7 @@ import {setTimeout as delay} from 'node:timers/promises';
++import {performance} from 'node:perf_hooks';
++
++export function asymmetricHoldDuration(text){
++ if(text===undefined)return 96000;
++ if(typeof text!=='string'||!/^\d+$/.test(text))throw Error('Invalid finite asymmetric hold');
++ const ms=Number(text);if(!Number.isSafeInteger(ms)||ms<96000||ms>600000)throw Error('Asymmetric hold exceeds qualification budget');return ms;
++}
+@@ -28 +35,2 @@ export async function createRemoteTc({docker, sh, container, network, revision})
+-export async function asymmetricRemote({tc,sample,record,clock=Date.now,wait=delay,holdMs=96000,progressMs=144000}) {
++export async function asymmetricRemote({tc,sample,record,clock=()=>performance.now(),wait=delay,holdMs=96000,progressMs=144000}) {
++ if(!Number.isSafeInteger(holdMs)||holdMs<=0||!Number.isSafeInteger(progressMs)||progressMs<0||!Number.isSafeInteger(holdMs+progressMs))throw Error('Invalid finite asymmetric budget');
+@@ -56 +64,2 @@ export async function asymmetricRemote({tc,sample,record,clock=Date.now,wait=del
+-   if(!stats.some(q=>q.kind==='netem'&&q.handle==='7a00:'))throw Error('Delay disappeared');
++   const injected=stats.filter(q=>q.kind==='netem');
++   if(injected.length!==1||injected[0].handle!=='7a00:'||injected[0].root!==true||injected[0].options?.delay?.delay!==0.5||injected[0].options.delay.jitter!==0||injected[0].options.delay.correlation!==0)throw Error('Expected fixed 500ms egress delay disappeared or changed');
+@@ -58 +67,4 @@ export async function asymmetricRemote({tc,sample,record,clock=Date.now,wait=del
+-   if(clock()-start>=holdMs&&common(rows)&&BigInt(rows[0].checkpoint.epoch)>=minimum){
++   const observedAt=clock(),elapsedMs=observedAt-start;
++   // Include the complete qdisc/RPC observation in the original budget.
++   if(observedAt>deadline)throw Error('Asymmetric finality deadline exceeded');
++   if(elapsedMs>=holdMs&&common(rows)&&BigInt(rows[0].checkpoint.epoch)>=minimum){
+@@ -60 +72 @@ export async function asymmetricRemote({tc,sample,record,clock=Date.now,wait=del
+-    await record({event:'asymmetric-delay-finality',rows,qdiscs:stats});return;
++    await record({event:'asymmetric-delay-finality',rows,qdiscs:stats,elapsedMs,holdMs,progressMs,limitMs:holdMs+progressMs});return;
+diff --git a/tests/multihost/asymmetric.test.mjs b/tests/multihost/asymmetric.test.mjs
+index 5476b24e..e0b2c90f 100644
+--- a/tests/multihost/asymmetric.test.mjs
++++ b/tests/multihost/asymmetric.test.mjs
+@@ -3 +3 @@ import assert from 'node:assert/strict';
+-import {asymmetricRemote,createRemoteTc} from './asymmetric.mjs';
++import {asymmetricRemote,createRemoteTc,asymmetricHoldDuration} from './asymmetric.mjs';
+@@ -8 +8 @@ function fixture(mode='pass'){
+-  if(args.includes('show'))return JSON.stringify(active?[{kind:'netem',handle:'7a00:',packets:mode==='no-packets'?0:42}]:[]);
++  if(args.includes('show'))return JSON.stringify(active?[{kind:'netem',handle:'7a00:',root:true,options:{delay:{delay:0.5,jitter:0,correlation:0}},packets:mode==='no-packets'?0:42}]:[]);
+@@ -53,0 +54,30 @@ test('container restart cannot redirect subsequent tc calls',async()=>{
++
++for(const mode of ['rpc','qdisc'])test('late complete '+mode+' observation cannot pass',async()=>{
++ const f=fixture();
++ if(mode==='rpc'){
++  const original=f.args.sample;f.args.sample=async()=>{if(f.calls.some(c=>c.includes('add')))await f.args.wait(13000);return original();};
++ }else{
++  const original=f.args.tc;f.args.tc=async args=>{if(args.includes('show')&&f.calls.some(c=>c.includes('add'))&&f.active())await f.args.wait(13000);return original(args);};
++ }
++ await assert.rejects(asymmetricRemote(f.args),/deadline/);assert.equal(f.active(),false);
++});
++for(const [holdMs,progressMs] of [[0,1],[-1,1],[1,-1],[Infinity,1],[1,NaN],[Number.MAX_SAFE_INTEGER,1]])test('invalid delay budget '+holdMs+'/'+progressMs+' refuses before mutation',async()=>{
++ const f=fixture();await assert.rejects(asymmetricRemote({...f.args,holdMs,progressMs}),/budget/);assert.equal(f.calls.length,0);
++});
++
++test('sustained hold is explicit and bounded, existing default retained',()=>{
++ assert.equal(asymmetricHoldDuration(),96000);assert.equal(asymmetricHoldDuration('384000'),384000);
++ for(const value of ['0','95999','600001','Infinity','NaN','1e6',384000])assert.throws(()=>asymmetricHoldDuration(value));
++});
++
++for(const mode of ['missing','different','jitter'])test('unproved delay '+mode+' cannot qualify',async()=>{
++ const f=fixture(),original=f.args.tc;f.args.tc=async args=>{
++  const value=await original(args);if(args.includes('show')&&f.active()){
++   const rows=JSON.parse(value);if(mode==='missing')delete rows[0].options.delay;
++   if(mode==='different')rows[0].options.delay.delay=0.25;
++   if(mode==='jitter')rows[0].options.delay.jitter=0.05;
++   return JSON.stringify(rows);
++  }return value;
++ };
++ await assert.rejects(asymmetricRemote(f.args),/500ms/);assert.equal(f.active(),false);
++});
+diff --git a/tests/multihost/run.mjs b/tests/multihost/run.mjs
+index 8bc08252..89f04ab9 100644
+--- a/tests/multihost/run.mjs
++++ b/tests/multihost/run.mjs
+@@ -14 +14 @@ import {partitionSchedule,runPartitionCycles} from './partition-cycles.mjs';
+-import {asymmetricRemote,createRemoteTc} from './asymmetric.mjs';
++import {asymmetricRemote,createRemoteTc,asymmetricHoldDuration} from './asymmetric.mjs';
+@@ -56,0 +57,2 @@ if(partition&&asymmetric)throw Error('Select only one WAN fault');
++if(process.env.NANO_TEST_ASYMMETRIC_HOLD_MS!==undefined&&!asymmetric)throw Error('Asymmetric hold requires asymmetric mode');
++const asymmetricHoldMs=asymmetric?asymmetricHoldDuration(process.env.NANO_TEST_ASYMMETRIC_HOLD_MS):null;
+@@ -348 +350 @@ try{
+-   await asymmetricRemote({tc,sample:faultSample,record:log});
++   await asymmetricRemote({tc,sample:faultSample,record:log,holdMs:asymmetricHoldMs});

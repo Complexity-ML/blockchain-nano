@@ -1,0 +1,9 @@
+# Sustained asymmetric delay qualification controller
+
+Runtime d159; harness d7c673f4ee49700e8e22e888b19d3a9477cf8f81. Reuses unchanged qualified427/network21/signed4 native/ARM64/AMD64 artifacts, verified before fresh three-node launch. No image rebuild or runtime change. Only reviewed JS harness delta7 files versus runtime; original five retained-build/restore files plus asymmetric helper/tests.
+
+Fixed500ms VPS container eth0 egress (ingress not delayed), zero jitter/correlation. Hold at least384000ms, at most additional144000ms to observe >=2 newer common finalized epochs while packets demonstrably traverse the configured qdisc. Complete qdisc/RPC reads count in528000ms monotonic budget: late results cannot pass. Qdisc configuration must match measured JSON layout, not merely its kind/handle. Finally removes owned netem and verifies removal; host namespace never targeted. After removal, unchanged3 consecutive finality advances and terminal validator health/source artifacts required. This is not a partition recovery180s gate; that already-qualified scenario remains separate.
+
+27 controls pass, including12 new checks for late reads/invalid budgets/explicit hold/configuration drift; two late-result cases fail against original helper. Isolated VPS tc probe records actual0.5s delay and restoration, probe container/network removed. No source C++ changes, quorum relaxation, host firewall mutation or package installation. Controller copy differs only scenario/output/explicit activation, reviewed harness revision/allowlist and fault budget metadata.
+
+Command: `python3 -B launch.py --execute-qualified-asymmetric`. Refuses existing output/active multihost nodes; no queue/retry. Actual network result not acquired at preparation. Does not qualify main SST correction, physical scale, adversarial lifecycle, full fork-choice or production. All historical failures and original criteria remain open.
