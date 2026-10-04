@@ -1,0 +1,5 @@
+# Sustained majority isolation controller
+
+Identical to the reviewed192s controller except new output/name and explicit384s isolation. Exact replacement whitelist and Python syntax verified; all artifact/source/terminal gate/ownership/peer link/refusal checks unchanged. Runtime d159 and harness ba7, original180s recovery and3epoch stability remain mandatory. Policy conservative ceiling is not lowered. No source/runtime rebuild. Previous192s failure remains recorded. Diagnostic basis: persisted FFG boundary inspection reproduces observed finality4 at slot64, with current target quorum absent but previous-epoch quorum present.
+
+Command: `python3 -B launch.py --execute-qualified-majority`. Refuses an existing output directory or any running multihost node; no queue or automatic retry. Requires exact clean runtime/harness and live hashes of original qualified artifacts. This does not qualify the main SST correction. Network result not acquired at preparation. All other production criteria remain open.
