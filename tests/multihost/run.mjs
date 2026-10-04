@@ -11,7 +11,7 @@ import {validateStoppedValidators} from './validator-gate.mjs';
 import {partitionRemote} from './partition.mjs';
 import {fixtureStake,majorityIslandPolicy,majorityCutDuration} from './majority-island.mjs';
 import {partitionSchedule,runPartitionCycles} from './partition-cycles.mjs';
-import {asymmetricRemote,createRemoteTc} from './asymmetric.mjs';
+import {asymmetricRemote,createRemoteTc,asymmetricHoldDuration} from './asymmetric.mjs';
 import {observeRecovery} from './recovery-observation.mjs';
 import {sampleClock} from './clock-sample.mjs';
 import {captureFaultProgress} from './fault-progress.mjs';
@@ -54,6 +54,8 @@ const traceArgs=process.env.NANO_TEST_NETWORK_TRACE==='1'?['--env','NANO_TEST_NE
 const id=Date.now().toString(36),local=`nano-qualification-mac-${id}`,remote=`nano-qualification-vps-${id}`;
 const partition=process.env.NANO_TEST_WAN_PARTITION==='1',asymmetric=process.env.NANO_TEST_WAN_ASYMMETRIC==='1',testNetwork=remote+'-net';
 if(partition&&asymmetric)throw Error('Select only one WAN fault');
+if(process.env.NANO_TEST_ASYMMETRIC_HOLD_MS!==undefined&&!asymmetric)throw Error('Asymmetric hold requires asymmetric mode');
+const asymmetricHoldMs=asymmetric?asymmetricHoldDuration(process.env.NANO_TEST_ASYMMETRIC_HOLD_MS):null;
 const rotation=process.env.NANO_TEST_WAN_ROTATION==='1';
 const boundedLoad=process.env.NANO_TEST_BOUNDED_LOAD==='1';
 const partitionCuts=partitionSchedule(process.env.NANO_TEST_PARTITION_SCHEDULE_MS);
@@ -345,7 +347,7 @@ try{
   }else if(partition&&!boundedLoad)await partitionRemote({docker:args=>docker(args,true),container:remote,network:testNetwork,revision,record:faultRecord,sample:faultSample,...(majorityIsland?{cutMs:majorityCutMs,policy:islandPolicy}:{})});
   if(asymmetric){
    const tc=await createRemoteTc({docker:args=>docker(args,true),sh,container:remote,network:testNetwork,revision});
-   await asymmetricRemote({tc,sample:faultSample,record:log});
+   await asymmetricRemote({tc,sample:faultSample,record:log,holdMs:asymmetricHoldMs});
   }
  },
  observe:()=>exec(process.execPath,['tests/multihost/observe.mjs',join(output,'observers.json'),join(output,'observations')],{timeout:480000,maxBuffer:8*1024*1024})});

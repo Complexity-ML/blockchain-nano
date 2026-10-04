@@ -1,4 +1,11 @@
 import {setTimeout as delay} from 'node:timers/promises';
+import {performance} from 'node:perf_hooks';
+
+export function asymmetricHoldDuration(text){
+ if(text===undefined)return 96000;
+ if(typeof text!=='string'||!/^\d+$/.test(text))throw Error('Invalid finite asymmetric hold');
+ const ms=Number(text);if(!Number.isSafeInteger(ms)||ms<96000||ms>600000)throw Error('Asymmetric hold exceeds qualification budget');return ms;
+}
 
 // Host tools enter only the labelled campaign container's network namespace.
 // No changes to the host qdisc, firewall, routes, or SSH connection.
@@ -25,7 +32,8 @@ export async function createRemoteTc({docker, sh, container, network, revision})
  };
 }
 
-export async function asymmetricRemote({tc,sample,record,clock=Date.now,wait=delay,holdMs=96000,progressMs=144000}) {
+export async function asymmetricRemote({tc,sample,record,clock=()=>performance.now(),wait=delay,holdMs=96000,progressMs=144000}) {
+ if(!Number.isSafeInteger(holdMs)||holdMs<=0||!Number.isSafeInteger(progressMs)||progressMs<0||!Number.isSafeInteger(holdMs+progressMs))throw Error('Invalid finite asymmetric budget');
  const qdiscs=async()=>JSON.parse(await tc(['-j','-s','qdisc','show','dev','eth0']));
  const initial=await qdiscs();
  if(initial.some(q=>q.kind==='netem'))throw Error('Unexpected pre-existing netem');
@@ -53,11 +61,15 @@ export async function asymmetricRemote({tc,sample,record,clock=Date.now,wait=del
   await record({event:'asymmetric-delay-start',egressMilliseconds:500,holdMs,progressMs});
   while(clock()<=deadline){
    const stats=await qdiscs();
-   if(!stats.some(q=>q.kind==='netem'&&q.handle==='7a00:'))throw Error('Delay disappeared');
+   const injected=stats.filter(q=>q.kind==='netem');
+   if(injected.length!==1||injected[0].handle!=='7a00:'||injected[0].root!==true||injected[0].options?.delay?.delay!==0.5||injected[0].options.delay.jitter!==0||injected[0].options.delay.correlation!==0)throw Error('Expected fixed 500ms egress delay disappeared or changed');
    const rows=await read();
-   if(clock()-start>=holdMs&&common(rows)&&BigInt(rows[0].checkpoint.epoch)>=minimum){
+   const observedAt=clock(),elapsedMs=observedAt-start;
+   // Include the complete qdisc/RPC observation in the original budget.
+   if(observedAt>deadline)throw Error('Asymmetric finality deadline exceeded');
+   if(elapsedMs>=holdMs&&common(rows)&&BigInt(rows[0].checkpoint.epoch)>=minimum){
     if(!stats.some(q=>q.kind==='netem'&&Number(q.packets)>0))throw Error('No packets traversed delay');
-    await record({event:'asymmetric-delay-finality',rows,qdiscs:stats});return;
+    await record({event:'asymmetric-delay-finality',rows,qdiscs:stats,elapsedMs,holdMs,progressMs,limitMs:holdMs+progressMs});return;
    }
    if(clock()>=deadline)break;
    await wait(Math.min(3000,deadline-clock()));
