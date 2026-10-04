@@ -32,6 +32,14 @@ int main(int argc,char** argv){try{
  Fixture f;
  if(argc==3){ChainStore disk(argv[2]);
 #ifdef NANO_SYNC_FAULT
+  if(std::string(argv[1])=="--fail-pruning"){
+   f.init(disk);const auto token=f.save(disk,{},f.genesis.header.hash(),{f.a,f.c});
+   fs::path wal;for(const auto& e:fs::directory_iterator(argv[2]))if(e.path().extension()==".log"&&(wal.empty()||e.path().filename()>wal.filename()))wal=e.path();check(!wal.empty(),"pruning WAL missing");const auto before=fs::file_size(wal);
+   nano_test_arm_sync_fault(wal.c_str());bool failed=false;
+   try{disk.commit_execution_checkpoint(1337,f.genesis.header.hash(),token,f.c.block.header.hash(),2,f.c.block.header.hash(),{},f.snapshot(f.c),budget,8,{},ExecutionStateRetentionAnchor{2,f.c.block.header.hash()});}catch(const std::runtime_error&){failed=true;}
+   check(failed&&nano_test_sync_failures(),"pruning sync fault not observed");bool blocked=false;try{disk.state_pruning();}catch(const std::runtime_error&){blocked=true;}check(blocked,"uncertain pruning database remained readable");
+   std::cout<<Json{{"wal",wal.filename().string()},{"before",before},{"after",fs::file_size(wal)}}.dump()<<std::endl;_exit(0);
+  }
   if(std::string(argv[1])=="--fail"){
    f.init(disk);const auto token=f.save(disk,{},f.genesis.header.hash(),{f.a});fs::path wal;for(const auto& e:fs::directory_iterator(argv[2]))if(e.path().extension()==".log"&&(wal.empty()||e.path().filename()>wal.filename()))wal=e.path();check(!wal.empty(),"WAL missing");const auto before=fs::file_size(wal);nano_test_arm_sync_fault(wal.c_str());bool failed=false;try{f.save(disk,token,f.a.block.header.hash(),{f.b});}catch(const std::runtime_error&){failed=true;}check(failed&&nano_test_sync_failures(),"sync fault not observed");unsigned blocked=0;try{disk.latest();}catch(const std::runtime_error&){++blocked;}try{disk.fork_checkpoint(1337,f.genesis.header.hash(),budget);}catch(const std::runtime_error&){++blocked;}try{f.save(disk,token,f.a.block.header.hash(),{f.b});}catch(const std::runtime_error&){++blocked;}check(blocked==3,"uncertain disk remained usable");std::cout<<Json{{"wal",wal.filename().string()},{"before",before},{"after",fs::file_size(wal)}}.dump()<<std::endl;_exit(0);
   }
@@ -40,6 +48,19 @@ int main(int argc,char** argv){try{
   for(unsigned i=0;i<128;++i){const auto tip=disk.latest()->header.hash();const auto& next=tip==f.a.block.header.hash()?f.b:f.a;record.token=f.save(disk,record.token,tip,{next});std::cout<<record.token.sequence<<std::endl;}_exit(0);
  }
 #ifdef NANO_SYNC_FAULT
+ if(argc==2&&std::string(argv[1])=="--pruning-sync"){
+  for(bool lose:{false,true}){Temp tmp;const auto path=tmp/"db";const auto result=success(run({argv[0],"--fail-pruning",path.string()}));const auto wal=path/result.at("wal").get<std::string>();check(fs::file_size(wal)==result.at("after").get<uint64_t>()&&result.at("after")>result.at("before"),"pruning WAL suffix missing");
+   if(lose){int fd=open(wal.c_str(),O_WRONLY);check(fd>=0,"open owned pruning WAL");const bool ok=ftruncate(fd,result.at("before").get<uint64_t>())==0&&fsync(fd)==0;close(fd);check(ok,"truncate owned pruning WAL");}
+   ChainStore disk(path);const auto cp=disk.fork_checkpoint(1337,f.genesis.header.hash(),budget);const auto marker=disk.state_pruning();
+   check(cp&&cp->token.sequence==(lose?1:2)&&bool(marker)==!lose,"pruning checkpoint/marker split across WAL recovery");
+   check(disk.state_at(0).has_value()&&disk.state_at(2)->root()==f.c.state.root()&&bool(disk.state_at(1))==lose,"pruning state deletion split across WAL recovery");
+   check(disk.latest()->header.hash()==f.c.block.header.hash()&&disk.block_by_number(1)->header.hash()==f.a.block.header.hash()&&disk.checkpoint_archive(f.a.block.header.hash(),budget)->payload==f.archived(f.a).payload&&disk.receipt(f.a.block.transactions[0].hash()).has_value(),"pruning removed canonical archives/indexes");
+   if(marker)check(marker->before==2&&marker->anchor.number==2&&marker->anchor.hash==f.c.block.header.hash(),"pruning recovered wrong boundary");
+   const auto next=disk.commit_execution_checkpoint(1337,f.genesis.header.hash(),cp->token,f.c.block.header.hash(),2,f.c.block.header.hash(),{},f.snapshot(f.c),budget,8,{},ExecutionStateRetentionAnchor{2,f.c.block.header.hash()});
+   check(next.sequence==cp->token.sequence+1&&disk.state_pruning()->before==2&&!disk.state_at(1),"pruning recovery could not continue/idempotent boundary failed");
+  }
+  std::cout<<Json{{"scenario","atomic-historical-state-pruning-sync"},{"retainedAndLostSuffix",true},{"markerStateCheckpointAtomic",true},{"continuedAfterRecovery",true},{"physicalPowerLoss",false}}.dump()<<std::endl;return 0;
+ }
  for(bool lose:{false,true}){Temp tmp;auto path=tmp/"db";const auto result=success(run({argv[0],"--fail",path.string()}));auto wal=path/result.at("wal").get<std::string>();check(fs::file_size(wal)==result.at("after").get<uint64_t>()&&result.at("after")>result.at("before"),"WAL suffix missing");if(lose){int fd=open(wal.c_str(),O_WRONLY);check(fd>=0,"open owned WAL");bool ok=ftruncate(fd,result.at("before").get<uint64_t>())==0&&fsync(fd)==0;close(fd);check(ok,"truncate owned WAL");}ChainStore disk(path);auto record=f.verify(disk);check(record.token.sequence==(lose?1:2)&&disk.latest()->header.hash()==(lose?f.a:f.b).block.header.hash(),"wrong recovery disposition");check(bool(disk.checkpoint_archive(f.b.block.header.hash(),budget))==!lose,"archive detached from retained/lost WAL suffix");f.save(disk,record.token,disk.latest()->header.hash(),{f.a});f.verify(disk);}
  std::cout<<Json{{"scenario","atomic-execution-checkpoint-sync"},{"shanghai",shanghai},{"retainedAndLostSuffix",true},{"physicalPowerLoss",false}}.dump()<<'\n';
 #else

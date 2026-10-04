@@ -1885,3 +1885,8 @@ target_link_libraries(nano-storage-portability PRIVATE nano_core)
 
 add_test(NAME consensus_capella_historical_state_pruning COMMAND nano-capella-transition-tests --historical-state-pruning)
 set_tests_properties(consensus_capella_historical_state_pruning PROPERTIES TIMEOUT 300 LABELS "qualification_consensus_recovery")
+
+if(TARGET nano-execution-checkpoint-sync-tests)
+ add_test(NAME storage_historical_state_pruning_sync COMMAND nano-execution-checkpoint-sync-tests --pruning-sync)
+ set_tests_properties(storage_historical_state_pruning_sync PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_recovery")
+endif()

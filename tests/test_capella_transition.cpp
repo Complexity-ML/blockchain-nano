@@ -1,5 +1,4 @@
 #include "nano/consensus_capella_audit.hpp"
-#include "nano/consensus_capella_audit.hpp"
 #include "nano/consensus_bls.hpp"
 #include "support/altair_transition_rules.hpp"
 #include "nano/consensus_capella_transition.hpp"
@@ -374,12 +373,15 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
    const auto now=nodes[i]->current();const auto& live=now.state->blocks.at(now.state->timed.view.anchor).execution_block.header;
    check(marker->anchor.number<=live.number&&marker->before<=marker->anchor.number,"pruning passed authenticated live anchor");
    check(disk.state_at(0).has_value()&&!disk.state_at(marker->before-1).has_value()&&disk.state_at(marker->anchor.number).has_value()&&disk.state_at(head.execution_block.header.number).has_value(),"genesis/historical/live state retention differs");
-   const auto replay=audit_capella_canonical_history(disk,t.chain_id,genesis.header.hash(),rules,limits,initial,now.token,1000,64*1024*1024);
+   ChainStore audit_disk(directory/("node-"+std::to_string(i)),ChainStore::OpenMode::ReadOnly);
+   const auto replay=audit_capella_canonical_history(audit_disk,t.chain_id,genesis.header.hash(),rules,limits,initial,now.token,1000,64*1024*1024);
    check(replay.at("canonicalHistoryVerified")==true&&replay.at("prunedExecutionStatesReplayed").get<size_t>()>0&&replay.at("allHistoricalStatesMaterialized")==false,"pruned history did not replay from trusted genesis");
    const auto tip=disk.latest();const auto saved=disk.fork_checkpoint(t.chain_id,genesis.header.hash(),limits.envelope_bytes,now.token);check(tip&&saved,"pruning test checkpoint absent");
-   auto wrong=marker->anchor;wrong.hash[0]^=1;bool refused=false;
-   try{disk.commit_execution_checkpoint(t.chain_id,genesis.header.hash(),now.token,tip->header.hash(),tip->header.number,tip->header.hash(),{},saved->snapshot,limits.envelope_bytes,limits.blocks,{},wrong);}catch(const std::invalid_argument&){refused=true;}
-   check(refused&&disk.fork_checkpoint(t.chain_id,genesis.header.hash(),limits.envelope_bytes,now.token).has_value(),"bad pruning anchor changed commitment");
+   auto reject_anchor=[&](ExecutionStateRetentionAnchor wrong){bool refused=false;try{disk.commit_execution_checkpoint(t.chain_id,genesis.header.hash(),now.token,tip->header.hash(),tip->header.number,tip->header.hash(),{},saved->snapshot,limits.envelope_bytes,limits.blocks,{},wrong);}catch(const std::invalid_argument&){refused=true;}check(refused&&disk.fork_checkpoint(t.chain_id,genesis.header.hash(),limits.envelope_bytes,now.token).has_value(),"bad pruning anchor changed commitment");check(disk.state_pruning()->before==marker->before&&disk.state_at(marker->anchor.number).has_value(),"rejected retention mutated state boundary");};
+   auto wrong=marker->anchor;wrong.hash[0]^=1;reject_anchor(wrong);
+   const auto zero=disk.block_by_number(0);check(zero.has_value(),"retention genesis block missing");reject_anchor({0,zero->header.hash()});
+   reject_anchor({tip->header.number+1,Bytes(32,0)});
+   const bool refused=true;
    std::cout<<Json{{"scenario","capella-historical-state-pruning"},{"before",quantity(marker->before)},{"anchor",quantity(marker->anchor.number)},{"replayed",replay.at("prunedExecutionStatesReplayed")},{"invalidAnchorRefused",refused}}.dump()<<std::endl;
   }
  }

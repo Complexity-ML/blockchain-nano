@@ -30,7 +30,12 @@ sans fallback vers latest. Archives signées/index/receipts demeurent conservés
 Nouveau scénario `consensus_capella_historical_state_pruning` : deux propriétaires,
 finalité et signatures, avancement d'ancre, réouverture, disparition d'états
 anciens avec genesis/ancre/head conservés, rejeu signé des états élagués,
-et refus d'une ancre altérée sans changement de token. Le scénario est ajouté
+et refus d'une ancre altérée, régressive ou future sans changement de token.
+L'audit utilise une ouverture séparée en lecture seule. Un second scénario
+`storage_historical_state_pruning_sync` injecte une panne de fsync : conservation
+ou perte simulée du suffixe WAL doivent garder marqueur, suppression et checkpoint
+atomiques, préserver genesis/head/archives/reçus et permettre un commit suivant.
+Cela ne reproduit pas une coupure électrique physique. Le scénario est ajouté
 mais **pas encore exécuté**. Les états existants restent tous conservés quand
 le paramètre est faux/absent. Une réouverture avec l'ancien logiciel ne constitue
 pas une procédure de downgrade qualifiée pour une base élaguée.
