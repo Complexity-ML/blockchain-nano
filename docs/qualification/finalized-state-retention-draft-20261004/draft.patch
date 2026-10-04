@@ -1,8 +1,8 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 3b26e6cb..3cd25697 100644
+index 3b26e6cb..2468ebd9 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -1882,3 +1882,11 @@ set_tests_properties(consensus_capella_snapshot_account_primitives PROPERTIES TI
+@@ -1882,3 +1882,14 @@ set_tests_properties(consensus_capella_snapshot_account_primitives PROPERTIES TI
  # Explicit cross-platform physical backup qualification helper.
  add_executable(nano-storage-portability tests/qualification/storage-portability.cpp)
  target_link_libraries(nano-storage-portability PRIVATE nano_core)
@@ -14,12 +14,15 @@ index 3b26e6cb..3cd25697 100644
 + add_test(NAME storage_historical_state_pruning_sync COMMAND nano-execution-checkpoint-sync-tests --pruning-sync)
 + set_tests_properties(storage_historical_state_pruning_sync PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_recovery")
 +endif()
++
++add_test(NAME storage_historical_state_pruning_corruption COMMAND nano-execution-checkpoint-tests --pruning-corruption)
++set_tests_properties(storage_historical_state_pruning_corruption PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_recovery")
 diff --git a/docs/FINALIZED-STATE-RETENTION.md b/docs/FINALIZED-STATE-RETENTION.md
 new file mode 100644
-index 00000000..aca38464
+index 00000000..1b48f7a9
 --- /dev/null
 +++ b/docs/FINALIZED-STATE-RETENTION.md
-@@ -0,0 +1,48 @@
+@@ -0,0 +1,52 @@
 +# Rétention des états d'exécution finalisés
 +
 +Statut : implémentation isolée, syntaxe Docker ARM64 vérifiée seulement.
@@ -57,7 +60,11 @@ index 00000000..aca38464
 +`storage_historical_state_pruning_sync` injecte une panne de fsync : conservation
 +ou perte simulée du suffixe WAL doivent garder marqueur, suppression et checkpoint
 +atomiques, préserver genesis/head/archives/reçus et permettre un commit suivant.
-+Cela ne reproduit pas une coupure électrique physique. Le scénario est ajouté
++Cela ne reproduit pas une coupure électrique physique. Un troisième scénario
++`storage_historical_state_pruning_corruption` altère onze fixtures privées
++(marqueur, bornes, hash, état de l’ancre, liaison checkpoint) et exige le refus.
++Le scénario Capella vérifie aussi `eth_getBalance` : l’état élagué doit retourner
++`State unavailable`, latest doit rester exact, sans fallback. Le scénario est ajouté
 +mais **pas encore exécuté**. Les états existants restent tous conservés quand
 +le paramètre est faux/absent. Une réouverture avec l'ancien logiciel ne constitue
 +pas une procédure de downgrade qualifiée pour une base élaguée.
@@ -322,7 +329,7 @@ index f71f7502..c80e5eb1 100644
 +std::optional<ExecutionStatePruningInfo> ChainStore::state_pruning()const{std::lock_guard lock(mutex_);return state_pruning_impl();}
 +}
 diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
-index 560c3b96..92c62e97 100644
+index 560c3b96..44e01ad4 100644
 --- a/tests/test_capella_transition.cpp
 +++ b/tests/test_capella_transition.cpp
 @@ -62,7 +62,7 @@ static bool automatic_recovery=false;
@@ -351,7 +358,7 @@ index 560c3b96..92c62e97 100644
     reopened_journals=journals.size();for(auto& [index,value]:journals){const auto saved=value->commitment();value.reset();key_disks[index].reset();key_disks[index]=std::make_unique<ChainStore>(directory/("key-"+std::to_string(index)));value=std::make_unique<BeaconSigningJournal>(*key_disks[index],t.chain_id,genesis.header.hash(),genesis_root,Key(index).public_key,slots,saved);}
     equal();verify_exit_archive();
    }
-@@ -366,6 +367,24 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+@@ -366,6 +367,29 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
   if(slashing_sync)check(slashing_fault_stages.size()==2,"slashing fault boundaries not covered");
   if(pruning_sync)qualify_pruning_sync(*result.state,nodes[0]->signed_votes(),rules,owner_genesis);
  #endif
@@ -361,6 +368,11 @@ index 560c3b96..92c62e97 100644
 +   const auto now=nodes[i]->current();const auto& live=now.state->blocks.at(now.state->timed.view.anchor).execution_block.header;
 +   check(marker->anchor.number<=live.number&&marker->before<=marker->anchor.number,"pruning passed authenticated live anchor");
 +   check(disk.state_at(0).has_value()&&!disk.state_at(marker->before-1).has_value()&&disk.state_at(marker->anchor.number).has_value()&&disk.state_at(head.execution_block.header.number).has_value(),"genesis/historical/live state retention differs");
++   Rpc historical_rpc(*owners[i]);
++   const auto absent=historical_rpc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method","eth_getBalance"},{"params",Json::array({sender,quantity(marker->before-1)})}});
++   check(absent.contains("error")&&absent.at("error").at("code")==-32000&&absent.at("error").at("message")=="State unavailable","historical RPC fell back to latest or hid pruned state");
++   const auto available=historical_rpc.handle(Json{{"jsonrpc","2.0"},{"id",2},{"method","eth_getBalance"},{"params",Json::array({sender,"latest"})}});
++   check(available.contains("result")&&available.at("result")==quantity(capella_fork_head(*now.state,rules).execution_state.get(sender).balance),"latest balance unavailable/changed after pruning");
 +   ChainStore audit_disk(directory/("node-"+std::to_string(i)),ChainStore::OpenMode::ReadOnly);
 +   const auto replay=audit_capella_canonical_history(audit_disk,t.chain_id,genesis.header.hash(),rules,limits,initial,now.token,1000,64*1024*1024);
 +   check(replay.at("canonicalHistoryVerified")==true&&replay.at("prunedExecutionStatesReplayed").get<size_t>()>0&&replay.at("allHistoricalStatesMaterialized")==false,"pruned history did not replay from trusted genesis");
@@ -376,7 +388,7 @@ index 560c3b96..92c62e97 100644
   if(pruning_automatic){check(automatic_moves>=3&&maximum_records<=5*slots&&result.state->blocks.size()<5*slots,"automatic pruning did not bound retained block states");for(size_t i=0;i<2;++i){const auto token=nodes[i]->current().token;nodes[i].reset();owners[i].reset();owners[i]=std::make_unique<Blockchain>(directory/("node-"+std::to_string(i)),owner_genesis);nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,token);nodes[i]->set_automatic_pruning(true);}equal();std::cout<<Json{{"scenario","capella-automatic-pruning"},{"anchorMoves",automatic_moves},{"maximumRetainedRecords",maximum_records},{"finalRetainedRecords",result.state->blocks.size()},{"depositAncestorPins",result.state->deposit_ancestors.size()},{"nativeProfile",pruning_native},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"reopenedBothOwners",true}}.dump()<<std::endl;}
   if(slashing_multi){verify_multi_slashing();check(multi_partial&&multi_complete,"multi-offender retirement lifecycle incomplete");std::cout<<Json{{"scenario","capella-slashing-multi"},{"partialFinalityRetained",true},{"completeFinalityRetired",true},{"reopenedBothOwners",true},{"aggregateProofVerified",true},{"networkTransport",false}}.dump()<<std::endl;}
   if(slashing_retirement&&!slashing_multi){check(saw_pending_proof&&saw_retired_proof&&nodes[0]->signed_slashings().empty()&&nodes[1]->signed_slashings().empty(),"slashing archive lifecycle incomplete");std::cout<<Json{{"scenario","capella-slashing-retirement"},{"retainedUntilFinalized",true},{"retiredAfterFinality",true},{"replayDidNotRegrowArchive",true},{"finalizedEpoch",retirement_epoch},{"skippedSlashedProposers",skipped_slashed_proposers},{"reopenedWithoutProof",true}}.dump()<<std::endl;}
-@@ -1951,7 +1970,8 @@ if(argc==2&&std::string(argv[1])=="--exit-lifecycle-sync"){exit_lifecycle_sync=t
+@@ -1951,7 +1975,8 @@ if(argc==2&&std::string(argv[1])=="--exit-lifecycle-sync"){exit_lifecycle_sync=t
  #endif
  if(argc==2&&std::string(argv[1])=="--exit-pending-pruning"){exit_pending_pruning=true;local_exits=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}
  if(argc==2&&std::string(argv[1])=="--exit-retirement"){exit_retirement=true;local_exits=true;pruning_automatic=true;pruning_native=true;owner_mode=true;local_finality=100;scenario(false);return 0;}
@@ -387,11 +399,42 @@ index 560c3b96..92c62e97 100644
  if(argc==3&&std::string(argv[1])=="--deposit-vote-sync-writer")return deposit_vote_sync_writer(argv[2]);
  if(argc==2&&std::string(argv[1])=="--deposit-reorg-sync"){deposit_reorg_sync=true;deposit_reorg=true;pruning_native=true;scenario(false);return 0;}
 diff --git a/tests/test_execution_checkpoint.cpp b/tests/test_execution_checkpoint.cpp
-index d901952a..e88f2522 100644
+index d901952a..a084f27b 100644
 --- a/tests/test_execution_checkpoint.cpp
 +++ b/tests/test_execution_checkpoint.cpp
-@@ -32,6 +32,14 @@ int main(int argc,char** argv){try{
+@@ -2,6 +2,7 @@
+ #include "nano/storage.hpp"
+ #include <atomic>
+ #include <barrier>
++#include <rocksdb/db.h>
+ #ifdef NANO_SYNC_FAULT
+ extern "C" void nano_test_arm_sync_fault(const char*);
+ extern "C" unsigned nano_test_sync_failures();
+@@ -30,8 +31,37 @@ struct Fixture {
+ }
+ int main(int argc,char** argv){try{
   Fixture f;
++ if(argc==2&&std::string(argv[1])=="--pruning-corruption"){
++  for(unsigned attack=0;attack<11;++attack){Temp tmp;const auto path=tmp/"db";
++   {ChainStore disk(path);f.init(disk);const auto token=f.save(disk,{},f.genesis.header.hash(),{f.a,f.c});disk.commit_execution_checkpoint(1337,f.genesis.header.hash(),token,f.c.block.header.hash(),2,f.c.block.header.hash(),{},f.snapshot(f.c),budget,8,{},ExecutionStateRetentionAnchor{2,f.c.block.header.hash()});check(disk.state_pruning()->before==2&&!disk.state_at(1),"corruption fixture was not pruned");}
++   rocksdb::Options options;options.create_if_missing=false;rocksdb::DB* raw=nullptr;check(rocksdb::DB::Open(options,path.string(),&raw).ok(),"open owned corruption fixture");std::unique_ptr<rocksdb::DB> db(raw);
++   Json marker{{"before","0x2"},{"anchorNumber","0x2"},{"anchorHash",hex(f.c.block.header.hash())}};const auto state_key="state/"+hex(bytes(Int(2),8));rocksdb::WriteOptions write;write.sync=true;
++   if(attack==0)marker["before"]="0x0";
++   if(attack==1)marker["before"]="0x3";
++   if(attack==2)marker["anchorNumber"]="0x10000000000000000";
++   if(attack==3)marker["before"]="0x02";
++   if(attack==4)marker["anchorHash"]=hex(Bytes(32,0xab));
++   if(attack==5)marker["extra"]=true;
++   if(attack==6)marker.erase("anchorNumber");
++   if(attack==7)marker["anchorHash"]="0xab";
++   if(attack<8)check(db->Put(write,"execution-state-pruning/v1",marker.dump()).ok(),"write owned bad marker");
++   if(attack==8)check(db->Delete(write,state_key).ok(),"delete owned anchor state");
++   if(attack==9)check(db->Put(write,state_key,f.state.to_json().dump()).ok(),"write owned wrong state root");
++   if(attack==10)check(db->Delete(write,"execution-checkpoint/v1").ok(),"delete owned checkpoint binding");
++   db.reset();bool refused=false;try{ChainStore disk(path,ChainStore::OpenMode::ReadOnly);(void)disk.state_pruning();}catch(const std::exception&){refused=true;}check(refused,"corrupt pruning marker/anchor/checkpoint accepted");
++  }
++  std::cout<<Json{{"scenario","historical-state-pruning-corruption"},{"corruptionsRejected",11},{"ownedFixturesOnly",true}}.dump()<<std::endl;return 0;
++ }
   if(argc==3){ChainStore disk(argv[2]);
  #ifdef NANO_SYNC_FAULT
 +  if(std::string(argv[1])=="--fail-pruning"){
@@ -405,7 +448,7 @@ index d901952a..e88f2522 100644
    if(std::string(argv[1])=="--fail"){
     f.init(disk);const auto token=f.save(disk,{},f.genesis.header.hash(),{f.a});fs::path wal;for(const auto& e:fs::directory_iterator(argv[2]))if(e.path().extension()==".log"&&(wal.empty()||e.path().filename()>wal.filename()))wal=e.path();check(!wal.empty(),"WAL missing");const auto before=fs::file_size(wal);nano_test_arm_sync_fault(wal.c_str());bool failed=false;try{f.save(disk,token,f.a.block.header.hash(),{f.b});}catch(const std::runtime_error&){failed=true;}check(failed&&nano_test_sync_failures(),"sync fault not observed");unsigned blocked=0;try{disk.latest();}catch(const std::runtime_error&){++blocked;}try{disk.fork_checkpoint(1337,f.genesis.header.hash(),budget);}catch(const std::runtime_error&){++blocked;}try{f.save(disk,token,f.a.block.header.hash(),{f.b});}catch(const std::runtime_error&){++blocked;}check(blocked==3,"uncertain disk remained usable");std::cout<<Json{{"wal",wal.filename().string()},{"before",before},{"after",fs::file_size(wal)}}.dump()<<std::endl;_exit(0);
    }
-@@ -40,6 +48,19 @@ int main(int argc,char** argv){try{
+@@ -40,6 +70,19 @@ int main(int argc,char** argv){try{
    for(unsigned i=0;i<128;++i){const auto tip=disk.latest()->header.hash();const auto& next=tip==f.a.block.header.hash()?f.b:f.a;record.token=f.save(disk,record.token,tip,{next});std::cout<<record.token.sequence<<std::endl;}_exit(0);
   }
  #ifdef NANO_SYNC_FAULT

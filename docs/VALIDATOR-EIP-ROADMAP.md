@@ -6797,12 +6797,17 @@ Tous les critères originaux et échecs restent conservés selon leur statut.
 
 ## Pruning historique : draft isolé — 4 octobre 2026
 
-Branche `feature/finalized-state-retention`, révision `9e3f442c` :
+Branche `feature/finalized-state-retention`, révision `4734f285` :
 pruning EVM lié à l’ancre Capella et au checkpoint atomique, replay signé
 depuis genesis, paramètres désactivés par défaut. Syntaxe Docker ARM64 exit 0 ;
-linkage et six tests ciblés pas encore exécutés. Nouveaux scénarios de rétention
+linkage et sept tests ciblés pas encore exécutés. Nouveaux scénarios de rétention
 et de panne WAL conservée/perdue ajoutés ; build mis en file après restauration
 et reproductibilité pour éviter un chevauchement. Runtime main et candidate
 figée inchangés. Corruptions, RPC, AMD64, ressources, sauvegarde et archives
 restent ouverts. [Patch, contrôleur, preuves et échecs](qualification/finalized-state-retention-draft-20261004/README.md).
 Aucune exigence ni qualification antérieure supprimée ; production non démontrée.
+
+Complément au draft pruning : onze corruptions du marqueur/ancre/checkpoint
+et deux résultats RPC (ancien état supprimé/latest exact) sont ajoutés.
+Syntaxe Docker exit 0 ; file complétée avant son premier build. Ces nouveaux
+scénarios restent non exécutés, sans promotion du runtime ni clôture des critères.

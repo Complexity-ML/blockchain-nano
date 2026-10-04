@@ -8,7 +8,7 @@ VOLUME='nano-clean-arm64-build-20261002'
 REV=subprocess.check_output(['git','-C',str(SOURCE),'rev-parse','HEAD'],text=True).strip()
 NAME='nano-finalized-retention-20261004'
 BUILD='/build/finalized-retention-'+REV[:8]+'-arm64'
-TESTS=['consensus_capella_historical_state_pruning','storage_historical_state_pruning_sync','consensus_capella_pruning_automatic','storage_execution_checkpoint','storage_execution_checkpoint_sync','storage_read_only']
+TESTS=['consensus_capella_historical_state_pruning','storage_historical_state_pruning_sync','storage_historical_state_pruning_corruption','consensus_capella_pruning_automatic','storage_execution_checkpoint','storage_execution_checkpoint_sync','storage_read_only']
 def save(name,data): (ROOT/name).write_text(json.dumps(data,indent=2,sort_keys=True)+'\n')
 def call(args,timeout=45):
  p=subprocess.run(args,text=True,capture_output=True,timeout=timeout)
@@ -57,7 +57,8 @@ try:
  ''',7200)
  registry=json.loads((ROOT/'registry.json').read_text());assert all(n in [t['name'] for t in registry['tests']] for n in TESTS)
  expression='^('+'|'.join(TESTS)+')$'
- run_container('tests',f"set -euo pipefail; ctest --test-dir {BUILD} --output-on-failure --no-tests=error --parallel 1 -R '{expression}' --output-junit /report/results.xml",3600)
+ run_container('tests',f"set -euo pipefail; ctest --test-dir {BUILD} --output-on-failure --no-tests=error --parallel 1 -R '{expression}' --output-junit /report/results.xml; sha256sum {BUILD}/nano-capella-transition-tests {BUILD}/nano-execution-checkpoint-tests {BUILD}/nano-execution-checkpoint-sync-tests {BUILD}/nano-storage-read-only-tests > /report/programs-after.txt",3600)
+ assert (ROOT/'programs-after.txt').read_bytes()==(ROOT/'programs.txt').read_bytes(), 'Test programs changed during execution'
  import xml.etree.ElementTree as ET
  tree=ET.parse(ROOT/'results.xml');cases=list(tree.iter('testcase'));assert len(cases)==len(TESTS)
  assert sorted(c.attrib['name'] for c in cases)==sorted(TESTS)

@@ -1,0 +1,427 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 3b26e6cb..3cd25697 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1882,3 +1882,11 @@ set_tests_properties(consensus_capella_snapshot_account_primitives PROPERTIES TI
+ # Explicit cross-platform physical backup qualification helper.
+ add_executable(nano-storage-portability tests/qualification/storage-portability.cpp)
+ target_link_libraries(nano-storage-portability PRIVATE nano_core)
++
++add_test(NAME consensus_capella_historical_state_pruning COMMAND nano-capella-transition-tests --historical-state-pruning)
++set_tests_properties(consensus_capella_historical_state_pruning PROPERTIES TIMEOUT 300 LABELS "qualification_consensus_recovery")
++
++if(TARGET nano-execution-checkpoint-sync-tests)
++ add_test(NAME storage_historical_state_pruning_sync COMMAND nano-execution-checkpoint-sync-tests --pruning-sync)
++ set_tests_properties(storage_historical_state_pruning_sync PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_recovery")
++endif()
+diff --git a/docs/FINALIZED-STATE-RETENTION.md b/docs/FINALIZED-STATE-RETENTION.md
+new file mode 100644
+index 00000000..aca38464
+--- /dev/null
++++ b/docs/FINALIZED-STATE-RETENTION.md
+@@ -0,0 +1,48 @@
++# Rétention des états d'exécution finalisés
++
++Statut : implémentation isolée, syntaxe Docker ARM64 vérifiée seulement.
++Base : efbeb9bca3d42e41edb9cb81afba98c0b953a90f. Aucun runtime main, volume
++historique ou fixture de qualification modifié. Désactivé par défaut.
++
++`historicalStatePruning: true` dans le profil Capella autorise le retrait des
++états EVM strictement antérieurs à l'ancre authentifiée du fork store vivant.
++Le genesis reste disponible. Le pruning du fork store demeure contrôlé
++séparément par `automaticPruning` ; le paramètre historique seul ne fait pas
++progresser cette ancre.
++
++Le coordinateur fournit l'ancre du candidat validé. Le stockage vérifie son
++hash et sa racine d'état et refuse tout recul de la rétention ou remplacement
++canonique sous l'ancre déjà retenue. La suppression est bornée par le budget
++de blocs du checkpoint ; sa frontière et le checkpoint sont écrits dans le
++même WriteBatch synchrone protégé par les CAS existants. Un batch trop grand,
++un état absent hors frontière ou une ancre invalide est refusé avant I/O.
++Aucune suppression de bloc, transaction, reçu, archive signée, journal ou témoin.
++
++Le marqueur versionné n'est pas une preuve de consensus autonome. Au redémarrage,
++il doit rester en deçà de l'ancre du snapshot Capella authentifié. L'audit depuis
++un genesis de confiance rejoue les archives signées et recalcule les racines
++EVM, même lorsque les états intermédiaires ne sont plus matérialisés ; il refuse
++une absence hors frontière, vérifie l'ancre sur le rejeu signé et conserve
++l'absence de qualification exhaustive des votes historiques/fork-choice.
++Les RPC historiques gardent leur erreur `State unavailable` pour ces états,
++sans fallback vers latest. Archives signées/index/receipts demeurent conservés.
++
++Nouveau scénario `consensus_capella_historical_state_pruning` : deux propriétaires,
++finalité et signatures, avancement d'ancre, réouverture, disparition d'états
++anciens avec genesis/ancre/head conservés, rejeu signé des états élagués,
++et refus d'une ancre altérée, régressive ou future sans changement de token.
++L'audit utilise une ouverture séparée en lecture seule. Un second scénario
++`storage_historical_state_pruning_sync` injecte une panne de fsync : conservation
++ou perte simulée du suffixe WAL doivent garder marqueur, suppression et checkpoint
++atomiques, préserver genesis/head/archives/reçus et permettre un commit suivant.
++Cela ne reproduit pas une coupure électrique physique. Le scénario est ajouté
++mais **pas encore exécuté**. Les états existants restent tous conservés quand
++le paramètre est faux/absent. Une réouverture avec l'ancien logiciel ne constitue
++pas une procédure de downgrade qualifiée pour une base élaguée.
++
++Travail restant : build/link Docker, nouveau scénario et régressions pertinentes,
++corruption du marqueur/state récent, frontière des pannes d'écriture et reprise
++avec témoins indépendants, comportement RPC, bornes et mesures disque,
++portabilité AMD64, sauvegarde/restauration et procédure de downgrade. Les écritures
++sync gardent leur politique ; la suppression logique ne garantit pas une baisse
++immédiate de taille des SST et n'élague pas les archives signées conservées.
+diff --git a/include/nano/chain.hpp b/include/nano/chain.hpp
+index d6d48357..549e597e 100644
+--- a/include/nano/chain.hpp
++++ b/include/nano/chain.hpp
+@@ -62,7 +62,8 @@ class Blockchain {
+  ForkCheckpointToken commit_beacon_checkpoint(const std::optional<ForkCheckpointToken>& expected,
+   const Bytes& expected_tip,const Int& common_height,const Bytes& common_hash,
+   const std::vector<ExecutionCheckpointBlock>& suffix,Block finalized,std::string_view snapshot,
+-  size_t maximum_bytes,size_t maximum_blocks,const std::vector<CheckpointArchiveEntry>& archive);
++  size_t maximum_bytes,size_t maximum_blocks,const std::vector<CheckpointArchiveEntry>& archive,
++  const std::optional<ExecutionStateRetentionAnchor>& retention=std::nullopt);
+ public:
+  Blockchain(const std::filesystem::path& database,Genesis genesis);
+  // RPC must not serve a Beacon database until its checkpoint has been verified.
+diff --git a/include/nano/consensus_capella_reactor.hpp b/include/nano/consensus_capella_reactor.hpp
+index a01252a4..eeac3c11 100644
+--- a/include/nano/consensus_capella_reactor.hpp
++++ b/include/nano/consensus_capella_reactor.hpp
+@@ -37,7 +37,7 @@ class CapellaDurableReactor {
+  std::shared_ptr<const CapellaPublishedStore> beacon_publication_;
+  CapellaPublishedStore beacon_snapshot()const;
+  std::optional<Bytes> beacon_signed_block(const CapellaPublishedStore&,const ConsensusRoot&,const std::function<void()>&)const;
+- CapellaSignedVotes votes_,slashings_;CapellaPendingBlsChanges bls_changes_;CapellaPendingExits exits_;CapellaStoreSnapshotCache cache_;bool unavailable_=false;bool automatic_pruning_=false;
++ CapellaSignedVotes votes_,slashings_;CapellaPendingBlsChanges bls_changes_;CapellaPendingExits exits_;CapellaStoreSnapshotCache cache_;bool unavailable_=false;bool automatic_pruning_=false;bool historical_state_pruning_=false;
+  std::exception_ptr failure_;
+  // Only populated from this reactor's immutable, admitted head under mutex_.
+  // Single-entry cache: no retained state snapshots or old-branch registry maps.
+@@ -138,6 +138,7 @@ public:
+  bool prune_finalized(const std::function<void()>& checkpoint={});
+  // Local maintenance policy, not a consensus/fork parameter. Runtime enables it.
+  void set_automatic_pruning(bool enabled);
++ void set_historical_state_pruning(bool enabled);
+  CapellaPublishedStore current()const;
+  Json network_identity()const;
+  // Atomic archive/checkpoint projection. maximum_bytes bounds raw SSZ; caller
+diff --git a/include/nano/storage.hpp b/include/nano/storage.hpp
+index f02805f8..456368db 100644
+--- a/include/nano/storage.hpp
++++ b/include/nano/storage.hpp
+@@ -6,6 +6,8 @@
+ namespace rocksdb { class DB; }
+ namespace nano {
+ struct ForkCheckpointToken {uint64_t sequence;Bytes digest;bool operator==(const ForkCheckpointToken&)const=default;};
++struct ExecutionStateRetentionAnchor {Int number;Bytes hash;};
++struct ExecutionStatePruningInfo {Int before;ExecutionStateRetentionAnchor anchor;};
+ struct ExecutionCheckpointBlock {Block block;State state;std::vector<Receipt> receipts;};
+ // Opaque authenticated consensus record; validation belongs to the reactor.
+ struct CheckpointArchiveEntry {Bytes root;uint64_t slot;Bytes payload;};
+@@ -23,6 +25,7 @@ class ChainStore {
+  mutable std::mutex mutex_;
+  bool fork_checkpoint_write_uncertain_=false;
+  std::optional<ForkCheckpointRecord> fork_checkpoint_impl(const Int&,const Bytes&,size_t) const;
++ std::optional<ExecutionStatePruningInfo> state_pruning_impl() const;
+  std::optional<std::string> get(const std::string& key) const;
+  std::optional<Json> read(const std::string& key) const;
+  std::optional<std::string> proposal_data_impl(const std::string& key) const;
+@@ -61,7 +64,10 @@ public:
+   const Int& common_height,const Bytes& common_hash,
+   const std::vector<ExecutionCheckpointBlock>& suffix,std::string_view snapshot,
+   size_t maximum_bytes,size_t maximum_blocks,
+-  const std::vector<CheckpointArchiveEntry>& archive={});
++  const std::vector<CheckpointArchiveEntry>& archive={},
++  const std::optional<ExecutionStateRetentionAnchor>& retention=std::nullopt);
++ // Missing historical state is intentional only below this durable boundary.
++ std::optional<ExecutionStatePruningInfo> state_pruning() const;
+  // Immutable records committed in the same batch as the execution checkpoint.
+  // The digest detects corruption, not consensus validity or external rollback.
+  std::optional<CheckpointArchiveEntry> checkpoint_archive(const Bytes& root,size_t maximum_bytes) const;
+diff --git a/src/chain_beacon.cpp b/src/chain_beacon.cpp
+index 5e98822e..326dbb98 100644
+--- a/src/chain_beacon.cpp
++++ b/src/chain_beacon.cpp
+@@ -18,7 +18,7 @@ std::optional<Block> Blockchain::finalized_block()const{
+ 
+ ForkCheckpointToken Blockchain::commit_beacon_checkpoint(const std::optional<ForkCheckpointToken>& expected,
+  const Bytes& expected_tip,const Int& common_height,const Bytes& common_hash,
+- const std::vector<ExecutionCheckpointBlock>& suffix,Block finalized,std::string_view snapshot,size_t maximum_bytes,size_t maximum_blocks,const std::vector<CheckpointArchiveEntry>& archive){
++ const std::vector<ExecutionCheckpointBlock>& suffix,Block finalized,std::string_view snapshot,size_t maximum_bytes,size_t maximum_blocks,const std::vector<CheckpointArchiveEntry>& archive,const std::optional<ExecutionStateRetentionAnchor>& retention){
+  std::lock_guard lock(mutex_);
+  if(genesis_.consensus!="beacon"||(genesis_.evm_revision!=EvmRevision::Paris&&genesis_.evm_revision!=EvmRevision::Shanghai)||tip_.header.hash()!=expected_tip)
+   throw std::invalid_argument("Beacon canonical publication context mismatch");
+@@ -45,7 +45,7 @@ ForkCheckpointToken Blockchain::commit_beacon_checkpoint(const std::optional<For
+  static_assert(std::is_nothrow_move_assignable_v<State>);
+  static_assert(std::is_nothrow_move_assignable_v<Block>);
+  static_assert(std::is_nothrow_move_assignable_v<std::optional<Block>>);
+- auto token=store_.commit_execution_checkpoint(genesis_.chain_id,genesis_.block.header.hash(),expected,expected_tip,common_height,common_hash,suffix,snapshot,maximum_bytes,maximum_blocks,archive);
++ auto token=store_.commit_execution_checkpoint(genesis_.chain_id,genesis_.block.header.hash(),expected,expected_tip,common_height,common_hash,suffix,snapshot,maximum_bytes,maximum_blocks,archive,retention);
+  if(changed){state_=std::move(state);tip_=std::move(next);publish_pool();events_.swap(events);event_sequence_=sequence;audited_certified_tip_.reset();}
+  beacon_finalized_=std::move(next_finalized);beacon_ready_=true;
+  return token;
+diff --git a/src/consensus_capella_audit.cpp b/src/consensus_capella_audit.cpp
+index 3f5a5c6b..f8861fad 100644
+--- a/src/consensus_capella_audit.cpp
++++ b/src/consensus_capella_audit.cpp
+@@ -18,6 +18,7 @@ Json audit_capella_canonical_history(ChainStore& disk,const Int& chain,const Byt
+  const auto encoded=capella_store_snapshot(trusted,rules,limits,check);
+  auto replay=capella_store_from_snapshot(encoded,sha256(Bytes(encoded.begin(),encoded.end())),rules,limits,check);
+  CapellaDurableReactor restored(disk,chain,genesis,rules,limits,expected,check);
++ const auto pruning=disk.state_pruning();size_t pruned_states=0;
+  const auto saved=restored.current();const auto& target=capella_fork_head(*saved.state,rules,check);
+  require(capella_network_anchor(replay)==capella_network_anchor(*saved.state),"network anchor differs");
+  const auto anchor=replay.timed.view.anchor,head=consensus_beacon_header_root(target.header);
+@@ -36,7 +37,9 @@ Json audit_capella_canonical_history(ChainStore& disk,const Int& chain,const Byt
+   if(check)check();const auto& block=record.execution_block;const auto hash=block.header.hash();
+   const auto canonical=disk.block_by_number(block.header.number),indexed=disk.block_by_hash(hash);const auto state=disk.state_at(block.header.number);
+   require(canonical&&indexed&&canonical->to_json(true)==block.to_json(true)&&indexed->to_json(true)==block.to_json(true),"canonical block/index mismatch");
+-  require(state&&state->root()==record.execution_state.root(),"execution state mismatch");
++  if(state)require(state->root()==record.execution_state.root(),"execution state mismatch");
++  else{require(pruning&&block.header.number>0&&block.header.number<pruning->before&&pruning->anchor.number<=saved.state->blocks.at(saved.state->timed.view.anchor).execution_block.header.number,"missing state outside authenticated pruning range");require(block.header.state_root==record.execution_state.root(),"pruned execution state differs from signed replay");++pruned_states;}
++  if(pruning&&block.header.number==pruning->anchor.number)require(hash==pruning->anchor.hash,"pruning anchor differs from signed replay");
+   require(record.receipts.size()==block.transactions.size(),"receipt count mismatch");
+   for(size_t i=0;i<block.transactions.size();++i){
+    if(check)check();const auto& tx=block.transactions[i];auto wanted=tx.to_json();wanted["blockHash"]=hex(hash);wanted["blockNumber"]=quantity(block.header.number);wanted["transactionIndex"]=quantity(Int(std::to_string(i)));
+@@ -66,7 +69,7 @@ Json audit_capella_canonical_history(ChainStore& disk,const Int& chain,const Byt
+   {"finalized",{{"epoch",quantity(Int(std::to_string(saved.state->timed.view.finalized.epoch)))},{"root",hex(Bytes(saved.state->timed.view.finalized.root.begin(),saved.state->timed.view.finalized.root.end()))}}},{"historicalForkChoiceVerified",false},{"historicalStandaloneVotesReplayed",false},
+   {"trustedAnchor",hex(Bytes(anchor.begin(),anchor.end()))},{"firstExecutionBlock",quantity(first.execution_block.header.number)},
+   {"lastExecutionBlock",quantity(target.execution_block.header.number)},{"blocksIncludingTrustedAnchor",blocks},{"transactions",transactions},
+-  {"archiveBytes",archive_bytes},{"head",hex(Bytes(head.begin(),head.end()))},{"checkpointSequence",expected.sequence},{"checkpointDigest",hex(expected.digest)}};
++  {"prunedExecutionStatesReplayed",pruned_states},{"allHistoricalStatesMaterialized",pruned_states==0},{"archiveBytes",archive_bytes},{"head",hex(Bytes(head.begin(),head.end()))},{"checkpointSequence",expected.sequence},{"checkpointDigest",hex(expected.digest)}};
+ }
+ }
+ 
+diff --git a/src/consensus_capella_reactor.cpp b/src/consensus_capella_reactor.cpp
+index c922a329..76a486df 100644
+--- a/src/consensus_capella_reactor.cpp
++++ b/src/consensus_capella_reactor.cpp
+@@ -218,11 +218,13 @@ void CapellaDurableReactor::publish(CapellaForkStore candidate,const std::functi
+  // Allocate the coherent read view before I/O; no allocation after commit.
+  if(token_&&token_->sequence==UINT64_MAX)throw std::overflow_error("Capella publication sequence exhausted");
+  const auto publication=std::make_shared<const CapellaPublishedStore>(CapellaPublishedStore{next,{token_?token_->sequence+1:1,digest}});
++ std::optional<ExecutionStateRetentionAnchor> retention;
++ if(historical_state_pruning_){const auto& anchor=next->blocks.at(next->timed.view.anchor).execution_block.header;if(anchor.number<=common_height)retention=ExecutionStateRetentionAnchor{anchor.number,anchor.hash()};}
+  ForkCheckpointToken committed;
+  try{
+   witness_prepare(encoded,archive);
+-  if(execution_)committed=execution_->commit_beacon_checkpoint(token_,tip->header.hash(),common_height,common_hash,suffix,next->blocks.at(next->timed.view.finalized.root).execution_block,encoded,limits_.envelope_bytes,limits_.blocks,archive);
+-  else committed=disk_.commit_execution_checkpoint(chain_,genesis_,token_,tip->header.hash(),common_height,common_hash,suffix,encoded,limits_.envelope_bytes,limits_.blocks,archive);
++  if(execution_)committed=execution_->commit_beacon_checkpoint(token_,tip->header.hash(),common_height,common_hash,suffix,next->blocks.at(next->timed.view.finalized.root).execution_block,encoded,limits_.envelope_bytes,limits_.blocks,archive,retention);
++  else committed=disk_.commit_execution_checkpoint(chain_,genesis_,token_,tip->header.hash(),common_height,common_hash,suffix,encoded,limits_.envelope_bytes,limits_.blocks,archive,retention);
+   if(committed!=publication->token)throw std::runtime_error("Capella durable publication token mismatch");
+  }
+  catch(...){fail_closed();throw;}
+@@ -235,7 +237,7 @@ CapellaDurableReactor::CapellaDurableReactor(ChainStore& disk,Int chain,Bytes ge
+  std::lock_guard lock(mutex_);validate_execution_binding();
+  if(chain_!=rules_.transition.chain_id||genesis_.size()!=32)throw std::invalid_argument("Capella reactor chain/profile mismatch");
+  const auto record=disk_.fork_checkpoint(chain_,genesis_,limits_.envelope_bytes,expected);if(!record)throw std::invalid_argument("Capella restart checkpoint missing");
+- auto [restored,votes,slashings,changes,exits]=restore_durable(record->snapshot,expected.digest,rules_,limits_,check);const auto& head=capella_fork_head(restored,rules_,check);const auto tip=disk_.latest();const auto state=disk_.state_at(head.execution_block.header.number);
++ auto [restored,votes,slashings,changes,exits]=restore_durable(record->snapshot,expected.digest,rules_,limits_,check);const auto pruning=disk_.state_pruning();if(pruning&&pruning->anchor.number>restored.blocks.at(restored.timed.view.anchor).execution_block.header.number)throw std::invalid_argument("pruning boundary exceeds authenticated Capella anchor");const auto& head=capella_fork_head(restored,rules_,check);const auto tip=disk_.latest();const auto state=disk_.state_at(head.execution_block.header.number);
+  if(!tip||!state||tip->header.hash()!=head.execution_block.header.hash()||state->root()!=head.execution_state.root())throw std::invalid_argument("Capella restart execution mismatch");
+  for(const auto& receipt:head.receipts){if(check)check();const auto saved=disk_.receipt(receipt.transaction_hash);archive_require(saved&&saved->to_json()==receipt.to_json());}
+  auto finalized=restored.blocks.at(restored.timed.view.finalized.root).execution_block;const auto canonical=disk_.block_by_number(finalized.header.number);archive_require(canonical&&canonical->header.hash()==finalized.header.hash());
+@@ -257,7 +259,7 @@ CapellaDurableReactor::CapellaDurableReactor(Blockchain& owner,CapellaForkBlockR
+  const auto primary=disk_.fork_checkpoint(chain_,genesis_,limits_.envelope_bytes);const auto actual=primary?std::optional<ForkCheckpointToken>(primary->token):std::nullopt;archive_require(actual==next||actual==previous);witness_token_=saved->token;
+  if(actual!=next){token_=previous;publish(std::move(restored),check,archive,std::move(votes),std::move(slashings),std::move(changes),std::move(exits));return;}
+  for(const auto& entry:archive){const auto persisted=disk_.checkpoint_archive(entry.root,limits_.envelope_bytes);archive_require(persisted&&persisted->slot==entry.slot&&persisted->payload==entry.payload);}
+- const auto& head=capella_fork_head(restored,rules_,check);const auto tip=disk_.latest();const auto state=disk_.state_at(head.execution_block.header.number);archive_require(chain_==rules_.transition.chain_id&&tip&&state&&tip->header.hash()==head.execution_block.header.hash()&&state->root()==head.execution_state.root());
++ const auto pruning=disk_.state_pruning();if(pruning&&pruning->anchor.number>restored.blocks.at(restored.timed.view.anchor).execution_block.header.number)throw std::invalid_argument("pruning boundary exceeds authenticated Capella anchor");const auto& head=capella_fork_head(restored,rules_,check);const auto tip=disk_.latest();const auto state=disk_.state_at(head.execution_block.header.number);archive_require(chain_==rules_.transition.chain_id&&tip&&state&&tip->header.hash()==head.execution_block.header.hash()&&state->root()==head.execution_state.root());
+  for(const auto& receipt:head.receipts){if(check)check();const auto persisted=disk_.receipt(receipt.transaction_hash);archive_require(persisted&&persisted->to_json()==receipt.to_json());}
+  auto finalized=restored.blocks.at(restored.timed.view.finalized.root).execution_block;const auto canonical=disk_.block_by_number(finalized.header.number);archive_require(canonical&&canonical->header.hash()==finalized.header.hash());
+  if(check)check();state_=std::make_shared<const CapellaForkStore>(std::move(restored));token_=*next;votes_=std::move(votes);slashings_=std::move(slashings);bls_changes_=std::move(changes);exits_=std::move(exits);
+@@ -552,3 +554,7 @@ void CapellaDurableReactor::prune_if_ready_locked(const std::function<void()>& c
+  publish(std::move(candidate),check);
+ }
+ }
++
++namespace nano {
++void CapellaDurableReactor::set_historical_state_pruning(bool enabled){std::lock_guard lock(mutex_);require_available();historical_state_pruning_=enabled;}
++}
+diff --git a/src/consensus_capella_runtime.cpp b/src/consensus_capella_runtime.cpp
+index 94729710..7baf5a09 100644
+--- a/src/consensus_capella_runtime.cpp
++++ b/src/consensus_capella_runtime.cpp
+@@ -31,7 +31,7 @@ std::string read_bounded(const std::filesystem::path& path,size_t maximum,const
+ struct Owner {InboundBudget decoder_budget;std::unique_ptr<ChainStore> witness;std::unique_ptr<CapellaDurableReactor> reactor;std::unique_ptr<CapellaLocalClock> clock;std::unique_ptr<CapellaValidatorLoop> validator;std::unique_ptr<CapellaConsensusService> admission;std::unique_ptr<CapellaInventorySessions> catalogs;};
+ }
+ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const std::function<void()>& checkpoint,std::function<uint64_t()> now){
+- if(checkpoint)checkpoint();auto base=config;base.erase("validator");base.erase("admission");base.erase("catalogs");base.erase("recoveryWitness");base.erase("recoveryCommitment");base.erase("automaticRecovery");base.erase("network");base.erase("automaticPruning");shape(base,{"profile","limits","initial","restart","clock"});
++ if(checkpoint)checkpoint();auto base=config;base.erase("validator");base.erase("admission");base.erase("catalogs");base.erase("recoveryWitness");base.erase("recoveryCommitment");base.erase("automaticRecovery");base.erase("network");base.erase("automaticPruning");base.erase("historicalStatePruning");shape(base,{"profile","limits","initial","restart","clock"});
+  const auto& genesis=chain.genesis();
+  if(genesis.consensus!="beacon"||genesis.evm_revision!=EvmRevision::Shanghai)throw std::invalid_argument("Capella runtime requires Beacon Shanghai chain");
+  const auto& p=config.at("profile");shape(p,{"file","sha256","maximumBytes"});const auto maximum=number(p.at("maximumBytes"));
+@@ -82,6 +82,8 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const
+  }
+  if(config.contains("automaticPruning")&&!config.at("automaticPruning").is_boolean())throw std::invalid_argument("Capella automaticPruning must be boolean");
+  owner->reactor->set_automatic_pruning(config.value("automaticPruning",true));
++ if(config.contains("historicalStatePruning")&&!config.at("historicalStatePruning").is_boolean())throw std::invalid_argument("Capella historicalStatePruning must be boolean");
++ owner->reactor->set_historical_state_pruning(config.value("historicalStatePruning",false));
+  if(!now)now=[](){const auto ms=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();if(ms<0)throw std::runtime_error("Negative local time");return uint64_t(ms);};
+  owner->clock=std::make_unique<CapellaLocalClock>(*owner->reactor,step,now);
+  owner->clock->poll(checkpoint);chain.require_execution_ready();
+diff --git a/src/storage.cpp b/src/storage.cpp
+index f71f7502..c80e5eb1 100644
+--- a/src/storage.cpp
++++ b/src/storage.cpp
+@@ -463,7 +463,7 @@ namespace nano {
+ ForkCheckpointToken ChainStore::commit_execution_checkpoint(const Int& chain_id,const Bytes& genesis_hash,
+  const std::optional<ForkCheckpointToken>& expected,const Bytes& expected_tip,
+  const Int& common_height,const Bytes& common_hash,const std::vector<ExecutionCheckpointBlock>& suffix,
+- std::string_view snapshot,size_t maximum_bytes,size_t maximum_blocks,const std::vector<CheckpointArchiveEntry>& archive){
++ std::string_view snapshot,size_t maximum_bytes,size_t maximum_blocks,const std::vector<CheckpointArchiveEntry>& archive,const std::optional<ExecutionStateRetentionAnchor>& retention){
+  if(snapshot.empty()||snapshot.size()>maximum_bytes||suffix.size()>maximum_blocks||archive.size()>maximum_blocks||common_height<0||common_height>Int("18446744073709551615")||expected_tip.size()!=32||common_hash.size()!=32)
+   throw std::invalid_argument("execution checkpoint bounds");
+  const auto digest=sha256(Bytes(snapshot.begin(),snapshot.end()));
+@@ -479,6 +479,14 @@ ForkCheckpointToken ChainStore::commit_execution_checkpoint(const Int& chain_id,
+  const auto height=quantity(tip->at("number"));
+  if(height_key(height)!=*tip_key||common_height>height||height-common_height>Int(std::to_string(maximum_blocks)))throw std::invalid_argument("execution checkpoint reorg bounds");
+  if(const auto linked=read("execution-checkpoint/v1")){if(!previous||linked->at("digest")!=hex(previous->token.digest)||linked->at("tip")!=hex(expected_tip))throw std::runtime_error("execution checkpoint binding corrupt");}
++ const auto pruning=state_pruning_impl();
++ if(pruning&&common_height<pruning->anchor.number)throw std::invalid_argument("replacement below retained execution anchor");
++ if(retention){
++  if(retention->number<0||retention->number>common_height||retention->hash.size()!=32)throw std::invalid_argument("execution state retention bounds");
++  const auto anchor=read("block/"+height_key(retention->number)),anchor_state=read("state/"+height_key(retention->number));
++  if(!anchor||!anchor_state||Block::from_json(*anchor).header.hash()!=retention->hash||State::from_json(*anchor_state).root()!=unhex(anchor->at("stateRoot")))throw std::invalid_argument("execution state retention anchor mismatch");
++  if(pruning&&(retention->number<pruning->anchor.number||(retention->number==pruning->anchor.number&&retention->hash!=pruning->anchor.hash)))throw std::invalid_argument("execution state retention regressed");
++ }
+  const auto common_state=read("state/"+height_key(common_height));if(!common_state||State::from_json(*common_state).root()!=unhex(common->at("stateRoot")))throw std::runtime_error("execution checkpoint ancestor state corrupt");
+  Int total(*total_data),count(*count_data);if(count!=height+1)throw std::runtime_error("execution checkpoint count corrupt");
+  rocksdb::WriteBatch batch;std::set<std::string> removed,inserted;
+@@ -517,6 +525,17 @@ ForkCheckpointToken ChainStore::commit_execution_checkpoint(const Int& chain_id,
+   for(size_t i=0;i<receipts.size();++i){const auto txhash=hex(block.transactions[i].hash());if(!inserted.insert(txhash).second||(get("tx/"+txhash)&&!removed.contains(txhash)))throw std::invalid_argument("execution checkpoint duplicate transaction");auto tx=block.transactions[i].to_json();tx["blockHash"]=hex(hash);tx["blockNumber"]=quantity(h.number);tx["transactionIndex"]=quantity(Int(i));batch.Put("tx/"+txhash,tx.dump());batch.Put("receipt/"+txhash,receipts[i].to_json().dump());}
+   total+=h.difficulty;++count;parent=h;bounded();
+  }
++ // Pruning shares this exact synchronous CAS batch with publication. Retain
++ // genesis, the authenticated live-store anchor and all more recent states.
++ // Never delete blocks, receipts, signed archives, journals or witnesses here.
++ if(retention&&retention->number>1){
++  Int before=pruning?pruning->before:Int(1);size_t deleted=0;
++  while(before<retention->number&&deleted<maximum_blocks){
++   if(!get("state/"+height_key(before)))throw std::runtime_error("missing execution state before pruning boundary");
++   batch.Delete("state/"+height_key(before));++before;++deleted;bounded();
++  }
++  if(deleted){batch.Put("execution-state-pruning/v1",Json{{"before",quantity(before)},{"anchorNumber",quantity(retention->number)},{"anchorHash",hex(retention->hash)}}.dump());bounded();}
++ }
+  const ForkCheckpointToken token{previous?previous->token.sequence+1:1,digest};
+  batch.Put("meta/tip",height_key(parent.number));batch.Put("meta/difficulty",total.get_str());batch.Put("meta/count",count.get_str());
+  batch.Put("fork-checkpoint/v1/payload",rocksdb::Slice(snapshot.data(),snapshot.size()));batch.Put("fork-checkpoint/v1/token",Json{{"sequence",quantity(Int(std::to_string(token.sequence)))},{"digest",hex(digest)}}.dump());
+@@ -542,3 +561,16 @@ std::optional<CheckpointArchiveEntry> ChainStore::checkpoint_archive(const Bytes
+  return CheckpointArchiveEntry{root,u64(slot),std::move(payload)};
+ }
+ }
++
++namespace nano {
++std::optional<ExecutionStatePruningInfo> ChainStore::state_pruning_impl()const{
++ const auto marker=read("execution-state-pruning/v1");if(!marker)return std::nullopt;
++ if(!get("execution-checkpoint/v1")||!marker->is_object()||marker->size()!=3)throw std::runtime_error("invalid execution state pruning marker");
++ ExecutionStatePruningInfo info{quantity(marker->at("before")),{quantity(marker->at("anchorNumber")),unhex(marker->at("anchorHash"))}};
++ if(info.before<=1||info.before>info.anchor.number||info.anchor.hash.size()!=32||info.anchor.number>Int("18446744073709551615")||quantity(info.before)!=marker->at("before").get<std::string>()||quantity(info.anchor.number)!=marker->at("anchorNumber").get<std::string>()||hex(info.anchor.hash)!=marker->at("anchorHash").get<std::string>())throw std::runtime_error("invalid execution state pruning bounds");
++ const auto block=read("block/"+height_key(info.anchor.number)),state=read("state/"+height_key(info.anchor.number));
++ if(!block||!state||Block::from_json(*block).header.hash()!=info.anchor.hash||State::from_json(*state).root()!=unhex(block->at("stateRoot")))throw std::runtime_error("execution state pruning anchor corrupt");
++ return info;
++}
++std::optional<ExecutionStatePruningInfo> ChainStore::state_pruning()const{std::lock_guard lock(mutex_);return state_pruning_impl();}
++}
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index 560c3b96..92c62e97 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -62,7 +62,7 @@ static bool automatic_recovery=false;
+ static bool capella_http=false,capella_http_queue=false;
+ static std::string cli_binary;static Json cli_genesis;static bool managed_cli=false;static std::string daemon_binary;static bool network_cli=false;static bool multipeer_cli=false;static bool distributed_cli=false;static bool sync_distributed_cli=false,distributed_sync_rotation=false;static bool transport_outage_cli=false;static fs::path network_export;
+ static bool beacon_reads=false;
+-static bool historical_export=false;static bool exit_lifecycle_sync=false;static bool exit_pending_pruning=false;static bool exit_reindex=false;static bool exit_retirement=false;static bool exit_sync=false;static bool exit_network=false;static bool exit_wire=false;static bool queued_exits=false;static bool local_exits=false;static bool deposit_reorg_sync=false;static bool deposit_reorg_activation=false;static bool deposit_reorg=false;static bool automatic_registration=false;static bool deposit_activation_restart=false;static bool local_sync=false;static bool deposit_invalid_signature=false;static bool deposit_activation=false;static bool deposit_consumption=false;static bool slashing_retirement=false;static bool pruning_slashing=false;static bool pruning_sync=false;static bool pruning_automatic=false;static bool pruning_native=false;static bool pruning_bls=false;static bool pruning_primitive=false;static bool queued_bls_sync=false;static bool queued_bls_reorg=false;static bool queued_bls_changes=false;static bool local_bls_changes=false;static bool wire_mode=false;static bool catalog_concurrency=false;
++static bool historical_state_pruning=false;static bool historical_export=false;static bool exit_lifecycle_sync=false;static bool exit_pending_pruning=false;static bool exit_reindex=false;static bool exit_retirement=false;static bool exit_sync=false;static bool exit_network=false;static bool exit_wire=false;static bool queued_exits=false;static bool local_exits=false;static bool deposit_reorg_sync=false;static bool deposit_reorg_activation=false;static bool deposit_reorg=false;static bool automatic_registration=false;static bool deposit_activation_restart=false;static bool local_sync=false;static bool deposit_invalid_signature=false;static bool deposit_activation=false;static bool deposit_consumption=false;static bool slashing_retirement=false;static bool pruning_slashing=false;static bool pruning_sync=false;static bool pruning_automatic=false;static bool pruning_native=false;static bool pruning_bls=false;static bool pruning_primitive=false;static bool queued_bls_sync=false;static bool queued_bls_reorg=false;static bool queued_bls_changes=false;static bool local_bls_changes=false;static bool wire_mode=false;static bool catalog_concurrency=false;
+ static size_t beacon_read_checks=0;
+ #ifdef NANO_SYNC_FAULT
+ extern "C" void nano_test_arm_sync_fault(const char*);
+@@ -117,6 +117,7 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+  std::array<std::unique_ptr<ChainStore>,2> disks;std::array<std::unique_ptr<Blockchain>,2> owners;std::array<std::unique_ptr<CapellaDurableReactor>,2> nodes;
+  for(size_t i=0;i<2;++i){if(owner_mode){owners[i]=std::make_unique<Blockchain>(directory/("node-"+std::to_string(i)),owner_genesis);bool blocked=false;try{owners[i]->tip();}catch(const std::runtime_error&){blocked=true;}check(blocked,"unattached Capella owner readable");if(exit_lifecycle_sync||slashing_sync)lifecycle_witnesses[i]=std::make_unique<ChainStore>(directory/("exit-witness-"+std::to_string(i)));nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,initial,std::function<void()>{},lifecycle_witnesses[i].get());continue;}disks[i]=std::make_unique<ChainStore>(directory/("node-"+std::to_string(i)));disks[i]->bind_chain(t.chain_id,genesis.header.hash(),"capella-local-loop");disks[i]->commit(genesis,genesis_state,{});nodes[i]=std::make_unique<CapellaDurableReactor>(*disks[i],t.chain_id,genesis.header.hash(),rules,limits,initial);}
+  if(pruning_automatic)for(auto& node:nodes)node->set_automatic_pruning(true);
++ if(historical_state_pruning)for(auto& node:nodes)node->set_historical_state_pruning(true);
+  if(queued_bls_changes){SignedCapellaBlsChange change;Key withdrawal_key(1001);change.validator_index=1;copy_to(change.from_bls_pubkey,withdrawal_key.public_key);change.to_execution_address[19]=43;copy_to(change.signature,withdrawal_key.sign(consensus_signing_root(capella_bls_change_root(change),consensus_domain({10,0,0,0},t.genesis_version,genesis_root))));for(auto& node:nodes)check(node->bls_change_ssz(encode_capella_bls_change(change)),"owner queue admission rejected");}
+  if(pruning_bls){SignedCapellaBlsChange change;Key key(1001);change.validator_index=1;copy_to(change.from_bls_pubkey,key.public_key);change.to_execution_address[19]=43;copy_to(change.signature,key.sign(consensus_signing_root(capella_bls_change_root(change),consensus_domain({10,0,0,0},t.genesis_version,genesis_root))));check(nodes[1]->bls_change_ssz(encode_capella_bls_change(change)),"pruning BLS admission failed");}
+  std::map<uint64_t,std::unique_ptr<ChainStore>> key_disks;std::map<uint64_t,std::unique_ptr<BeaconSigningJournal>> journals;
+@@ -353,7 +354,7 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+   const auto finalized=nodes[0]->current().state->timed.view.finalized.epoch;check(finalized>=previous_finalized,"local loop finality regressed");previous_finalized=finalized;
+   if(slot%slots==0||slot==end){equal();std::cout<<Json{{"progressSlot",slot},{"finalizedEpoch",finalized},{"signedVotes",votes}}.dump()<<std::endl;}
+   if(slot==3*slots||(exit_retirement&&slot==slots+1)){
+-   for(size_t i=0;i<2;++i){const auto saved=nodes[i]->current().token;nodes[i].reset();if(owner_mode){bool blocked=false;try{owners[i]->tip();}catch(const std::runtime_error&){blocked=true;}check(blocked,"detached Capella owner remained readable");owners[i].reset();owners[i]=std::make_unique<Blockchain>(directory/("node-"+std::to_string(i)),owner_genesis);if(exit_lifecycle_sync||slashing_sync)nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,*lifecycle_witnesses[i]);else nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,saved);}else{disks[i].reset();disks[i]=std::make_unique<ChainStore>(directory/("node-"+std::to_string(i)));nodes[i]=std::make_unique<CapellaDurableReactor>(*disks[i],t.chain_id,genesis.header.hash(),rules,limits,saved);}if(pruning_automatic)nodes[i]->set_automatic_pruning(true);++restarts;}
++   for(size_t i=0;i<2;++i){const auto saved=nodes[i]->current().token;nodes[i].reset();if(owner_mode){bool blocked=false;try{owners[i]->tip();}catch(const std::runtime_error&){blocked=true;}check(blocked,"detached Capella owner remained readable");owners[i].reset();owners[i]=std::make_unique<Blockchain>(directory/("node-"+std::to_string(i)),owner_genesis);if(exit_lifecycle_sync||slashing_sync)nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,*lifecycle_witnesses[i]);else nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,saved);}else{disks[i].reset();disks[i]=std::make_unique<ChainStore>(directory/("node-"+std::to_string(i)));nodes[i]=std::make_unique<CapellaDurableReactor>(*disks[i],t.chain_id,genesis.header.hash(),rules,limits,saved);}if(pruning_automatic)nodes[i]->set_automatic_pruning(true);if(historical_state_pruning)nodes[i]->set_historical_state_pruning(true);++restarts;}
+    reopened_journals=journals.size();for(auto& [index,value]:journals){const auto saved=value->commitment();value.reset();key_disks[index].reset();key_disks[index]=std::make_unique<ChainStore>(directory/("key-"+std::to_string(index)));value=std::make_unique<BeaconSigningJournal>(*key_disks[index],t.chain_id,genesis.header.hash(),genesis_root,Key(index).public_key,slots,saved);}
+    equal();verify_exit_archive();
+   }
+@@ -366,6 +367,24 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
+  if(slashing_sync)check(slashing_fault_stages.size()==2,"slashing fault boundaries not covered");
+  if(pruning_sync)qualify_pruning_sync(*result.state,nodes[0]->signed_votes(),rules,owner_genesis);
+ #endif
++ if(historical_state_pruning){
++  for(size_t i=0;i<2;++i){
++   auto& disk=const_cast<ChainStore&>(owners[i]->store());const auto marker=disk.state_pruning();check(marker&&marker->before>1,"historical pruning never removed state");
++   const auto now=nodes[i]->current();const auto& live=now.state->blocks.at(now.state->timed.view.anchor).execution_block.header;
++   check(marker->anchor.number<=live.number&&marker->before<=marker->anchor.number,"pruning passed authenticated live anchor");
++   check(disk.state_at(0).has_value()&&!disk.state_at(marker->before-1).has_value()&&disk.state_at(marker->anchor.number).has_value()&&disk.state_at(head.execution_block.header.number).has_value(),"genesis/historical/live state retention differs");
++   ChainStore audit_disk(directory/("node-"+std::to_string(i)),ChainStore::OpenMode::ReadOnly);
++   const auto replay=audit_capella_canonical_history(audit_disk,t.chain_id,genesis.header.hash(),rules,limits,initial,now.token,1000,64*1024*1024);
++   check(replay.at("canonicalHistoryVerified")==true&&replay.at("prunedExecutionStatesReplayed").get<size_t>()>0&&replay.at("allHistoricalStatesMaterialized")==false,"pruned history did not replay from trusted genesis");
++   const auto tip=disk.latest();const auto saved=disk.fork_checkpoint(t.chain_id,genesis.header.hash(),limits.envelope_bytes,now.token);check(tip&&saved,"pruning test checkpoint absent");
++   auto reject_anchor=[&](ExecutionStateRetentionAnchor wrong){bool refused=false;try{disk.commit_execution_checkpoint(t.chain_id,genesis.header.hash(),now.token,tip->header.hash(),tip->header.number,tip->header.hash(),{},saved->snapshot,limits.envelope_bytes,limits.blocks,{},wrong);}catch(const std::invalid_argument&){refused=true;}check(refused&&disk.fork_checkpoint(t.chain_id,genesis.header.hash(),limits.envelope_bytes,now.token).has_value(),"bad pruning anchor changed commitment");check(disk.state_pruning()->before==marker->before&&disk.state_at(marker->anchor.number).has_value(),"rejected retention mutated state boundary");};
++   auto wrong=marker->anchor;wrong.hash[0]^=1;reject_anchor(wrong);
++   const auto zero=disk.block_by_number(0);check(zero.has_value(),"retention genesis block missing");reject_anchor({0,zero->header.hash()});
++   reject_anchor({tip->header.number+1,Bytes(32,0)});
++   const bool refused=true;
++   std::cout<<Json{{"scenario","capella-historical-state-pruning"},{"before",quantity(marker->before)},{"anchor",quantity(marker->anchor.number)},{"replayed",replay.at("prunedExecutionStatesReplayed")},{"invalidAnchorRefused",refused}}.dump()<<std::endl;
++  }
++ }
+  if(pruning_automatic){check(automatic_moves>=3&&maximum_records<=5*slots&&result.state->blocks.size()<5*slots,"automatic pruning did not bound retained block states");for(size_t i=0;i<2;++i){const auto token=nodes[i]->current().token;nodes[i].reset();owners[i].reset();owners[i]=std::make_unique<Blockchain>(directory/("node-"+std::to_string(i)),owner_genesis);nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,token);nodes[i]->set_automatic_pruning(true);}equal();std::cout<<Json{{"scenario","capella-automatic-pruning"},{"anchorMoves",automatic_moves},{"maximumRetainedRecords",maximum_records},{"finalRetainedRecords",result.state->blocks.size()},{"depositAncestorPins",result.state->deposit_ancestors.size()},{"nativeProfile",pruning_native},{"finalizedEpoch",result.state->timed.view.finalized.epoch},{"reopenedBothOwners",true}}.dump()<<std::endl;}
+  if(slashing_multi){verify_multi_slashing();check(multi_partial&&multi_complete,"multi-offender retirement lifecycle incomplete");std::cout<<Json{{"scenario","capella-slashing-multi"},{"partialFinalityRetained",true},{"completeFinalityRetired",true},{"reopenedBothOwners",true},{"aggregateProofVerified",true},{"networkTransport",false}}.dump()<<std::endl;}
+  if(slashing_retirement&&!slashing_multi){check(saw_pending_proof&&saw_retired_proof&&nodes[0]->signed_slashings().empty()&&nodes[1]->signed_slashings().empty(),"slashing archive lifecycle incomplete");std::cout<<Json{{"scenario","capella-slashing-retirement"},{"retainedUntilFinalized",true},{"retiredAfterFinality",true},{"replayDidNotRegrowArchive",true},{"finalizedEpoch",retirement_epoch},{"skippedSlashedProposers",skipped_slashed_proposers},{"reopenedWithoutProof",true}}.dump()<<std::endl;}
+@@ -1951,7 +1970,8 @@ if(argc==2&&std::string(argv[1])=="--exit-lifecycle-sync"){exit_lifecycle_sync=t
+ #endif
+ if(argc==2&&std::string(argv[1])=="--exit-pending-pruning"){exit_pending_pruning=true;local_exits=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}
+ if(argc==2&&std::string(argv[1])=="--exit-retirement"){exit_retirement=true;local_exits=true;pruning_automatic=true;pruning_native=true;owner_mode=true;local_finality=100;scenario(false);return 0;}
+-if(argc==2&&std::string(argv[1])=="--http-queue"){configured_runtime=true;capella_http=true;capella_http_queue=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--historical-export"){historical_export=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==3&&std::string(argv[1])=="--cli"){cli_binary=argv[2];configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--http"){configured_runtime=true;capella_http=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--catalog-concurrency"){wire_mode=true;catalog_concurrency=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-reorg"){queued_bls_reorg=true;queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-automatic"){pruning_automatic=true;pruning_native=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--slashing-retirement"){slashing_retirement=true;pruning_automatic=true;pruning_native=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-slashing"){pruning_slashing=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--local-sync"){local_sync=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-invalid-signature"){deposit_invalid_signature=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--automatic-registration"){automatic_registration=true;configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-auto-registration"){automatic_registration=true;deposit_activation=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-activation-restart"){deposit_activation_restart=true;deposit_activation=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-activation"){deposit_activation=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-consumption"){deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-native"){pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-bls"){pruning_bls=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-primitive"){pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-owner"){queued_bls_changes=true;local_bls_changes=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-rpc"){queued_bls_changes=true;local_bls_changes=true;configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-wire"){wire_mode=true;queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-changes"){queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--exit-wire"){exit_wire=true;queued_exits=true;local_exits=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-exits"){queued_exits=true;local_exits=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--local-exits"){local_exits=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--local-bls-changes"){local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--wire"){wire_mode=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--beacon-reads"){beacon_reads=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--automatic-recovery"){automatic_recovery=true;configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--configured-runtime"){configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler-sync-rotation"){scheduled=true;sync_rotation=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-reorg-activation"){deposit_reorg_activation=true;deposit_reorg=true;pruning_native=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-reorg"){deposit_reorg=true;pruning_native=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler-registration"){automatic_registration=true;scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler"){scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-reorg"){owner_reorg=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}
++if(argc==2&&std::string(argv[1])=="--http-queue"){configured_runtime=true;capella_http=true;capella_http_queue=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--historical-state-pruning"){historical_state_pruning=true;pruning_automatic=true;pruning_native=true;owner_mode=true;local_finality=100;scenario(false);return 0;}
++if(argc==2&&std::string(argv[1])=="--historical-export"){historical_export=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==3&&std::string(argv[1])=="--cli"){cli_binary=argv[2];configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--http"){configured_runtime=true;capella_http=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--catalog-concurrency"){wire_mode=true;catalog_concurrency=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-reorg"){queued_bls_reorg=true;queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-automatic"){pruning_automatic=true;pruning_native=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--slashing-retirement"){slashing_retirement=true;pruning_automatic=true;pruning_native=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-slashing"){pruning_slashing=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--local-sync"){local_sync=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-invalid-signature"){deposit_invalid_signature=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--automatic-registration"){automatic_registration=true;configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-auto-registration"){automatic_registration=true;deposit_activation=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-activation-restart"){deposit_activation_restart=true;deposit_activation=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-activation"){deposit_activation=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-consumption"){deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-native"){pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-bls"){pruning_bls=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--pruning-primitive"){pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-owner"){queued_bls_changes=true;local_bls_changes=true;owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-rpc"){queued_bls_changes=true;local_bls_changes=true;configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-wire"){wire_mode=true;queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-bls-changes"){queued_bls_changes=true;local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--exit-wire"){exit_wire=true;queued_exits=true;local_exits=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--queued-exits"){queued_exits=true;local_exits=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--local-exits"){local_exits=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--local-bls-changes"){local_bls_changes=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--wire"){wire_mode=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--beacon-reads"){beacon_reads=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--automatic-recovery"){automatic_recovery=true;configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--configured-runtime"){configured_runtime=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler-sync-rotation"){scheduled=true;sync_rotation=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-reorg-activation"){deposit_reorg_activation=true;deposit_reorg=true;pruning_native=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--deposit-reorg"){deposit_reorg=true;pruning_native=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler-registration"){automatic_registration=true;scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--scheduler"){scheduled=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-reorg"){owner_reorg=true;scenario(false);return 0;}if(argc==2&&std::string(argv[1])=="--owner-finality"){owner_mode=true;local_finality=100;scenario(false);return 0;}if(argc==2&&(std::string(argv[1])=="--local-finality"||std::string(argv[1])=="--local-finality-half")){local_finality=std::string(argv[1])=="--local-finality"?100:50;scenario(false);return 0;}
+ #ifdef NANO_SYNC_FAULT
+ if(argc==3&&std::string(argv[1])=="--deposit-vote-sync-writer")return deposit_vote_sync_writer(argv[2]);
+ if(argc==2&&std::string(argv[1])=="--deposit-reorg-sync"){deposit_reorg_sync=true;deposit_reorg=true;pruning_native=true;scenario(false);return 0;}
+diff --git a/tests/test_execution_checkpoint.cpp b/tests/test_execution_checkpoint.cpp
+index d901952a..e88f2522 100644
+--- a/tests/test_execution_checkpoint.cpp
++++ b/tests/test_execution_checkpoint.cpp
+@@ -32,6 +32,14 @@ int main(int argc,char** argv){try{
+  Fixture f;
+  if(argc==3){ChainStore disk(argv[2]);
+ #ifdef NANO_SYNC_FAULT
++  if(std::string(argv[1])=="--fail-pruning"){
++   f.init(disk);const auto token=f.save(disk,{},f.genesis.header.hash(),{f.a,f.c});
++   fs::path wal;for(const auto& e:fs::directory_iterator(argv[2]))if(e.path().extension()==".log"&&(wal.empty()||e.path().filename()>wal.filename()))wal=e.path();check(!wal.empty(),"pruning WAL missing");const auto before=fs::file_size(wal);
++   nano_test_arm_sync_fault(wal.c_str());bool failed=false;
++   try{disk.commit_execution_checkpoint(1337,f.genesis.header.hash(),token,f.c.block.header.hash(),2,f.c.block.header.hash(),{},f.snapshot(f.c),budget,8,{},ExecutionStateRetentionAnchor{2,f.c.block.header.hash()});}catch(const std::runtime_error&){failed=true;}
++   check(failed&&nano_test_sync_failures(),"pruning sync fault not observed");bool blocked=false;try{disk.state_pruning();}catch(const std::runtime_error&){blocked=true;}check(blocked,"uncertain pruning database remained readable");
++   std::cout<<Json{{"wal",wal.filename().string()},{"before",before},{"after",fs::file_size(wal)}}.dump()<<std::endl;_exit(0);
++  }
+   if(std::string(argv[1])=="--fail"){
+    f.init(disk);const auto token=f.save(disk,{},f.genesis.header.hash(),{f.a});fs::path wal;for(const auto& e:fs::directory_iterator(argv[2]))if(e.path().extension()==".log"&&(wal.empty()||e.path().filename()>wal.filename()))wal=e.path();check(!wal.empty(),"WAL missing");const auto before=fs::file_size(wal);nano_test_arm_sync_fault(wal.c_str());bool failed=false;try{f.save(disk,token,f.a.block.header.hash(),{f.b});}catch(const std::runtime_error&){failed=true;}check(failed&&nano_test_sync_failures(),"sync fault not observed");unsigned blocked=0;try{disk.latest();}catch(const std::runtime_error&){++blocked;}try{disk.fork_checkpoint(1337,f.genesis.header.hash(),budget);}catch(const std::runtime_error&){++blocked;}try{f.save(disk,token,f.a.block.header.hash(),{f.b});}catch(const std::runtime_error&){++blocked;}check(blocked==3,"uncertain disk remained usable");std::cout<<Json{{"wal",wal.filename().string()},{"before",before},{"after",fs::file_size(wal)}}.dump()<<std::endl;_exit(0);
+   }
+@@ -40,6 +48,19 @@ int main(int argc,char** argv){try{
+   for(unsigned i=0;i<128;++i){const auto tip=disk.latest()->header.hash();const auto& next=tip==f.a.block.header.hash()?f.b:f.a;record.token=f.save(disk,record.token,tip,{next});std::cout<<record.token.sequence<<std::endl;}_exit(0);
+  }
+ #ifdef NANO_SYNC_FAULT
++ if(argc==2&&std::string(argv[1])=="--pruning-sync"){
++  for(bool lose:{false,true}){Temp tmp;const auto path=tmp/"db";const auto result=success(run({argv[0],"--fail-pruning",path.string()}));const auto wal=path/result.at("wal").get<std::string>();check(fs::file_size(wal)==result.at("after").get<uint64_t>()&&result.at("after")>result.at("before"),"pruning WAL suffix missing");
++   if(lose){int fd=open(wal.c_str(),O_WRONLY);check(fd>=0,"open owned pruning WAL");const bool ok=ftruncate(fd,result.at("before").get<uint64_t>())==0&&fsync(fd)==0;close(fd);check(ok,"truncate owned pruning WAL");}
++   ChainStore disk(path);const auto cp=disk.fork_checkpoint(1337,f.genesis.header.hash(),budget);const auto marker=disk.state_pruning();
++   check(cp&&cp->token.sequence==(lose?1:2)&&bool(marker)==!lose,"pruning checkpoint/marker split across WAL recovery");
++   check(disk.state_at(0).has_value()&&disk.state_at(2)->root()==f.c.state.root()&&bool(disk.state_at(1))==lose,"pruning state deletion split across WAL recovery");
++   check(disk.latest()->header.hash()==f.c.block.header.hash()&&disk.block_by_number(1)->header.hash()==f.a.block.header.hash()&&disk.checkpoint_archive(f.a.block.header.hash(),budget)->payload==f.archived(f.a).payload&&disk.receipt(f.a.block.transactions[0].hash()).has_value(),"pruning removed canonical archives/indexes");
++   if(marker)check(marker->before==2&&marker->anchor.number==2&&marker->anchor.hash==f.c.block.header.hash(),"pruning recovered wrong boundary");
++   const auto next=disk.commit_execution_checkpoint(1337,f.genesis.header.hash(),cp->token,f.c.block.header.hash(),2,f.c.block.header.hash(),{},f.snapshot(f.c),budget,8,{},ExecutionStateRetentionAnchor{2,f.c.block.header.hash()});
++   check(next.sequence==cp->token.sequence+1&&disk.state_pruning()->before==2&&!disk.state_at(1),"pruning recovery could not continue/idempotent boundary failed");
++  }
++  std::cout<<Json{{"scenario","atomic-historical-state-pruning-sync"},{"retainedAndLostSuffix",true},{"markerStateCheckpointAtomic",true},{"continuedAfterRecovery",true},{"physicalPowerLoss",false}}.dump()<<std::endl;return 0;
++ }
+  for(bool lose:{false,true}){Temp tmp;auto path=tmp/"db";const auto result=success(run({argv[0],"--fail",path.string()}));auto wal=path/result.at("wal").get<std::string>();check(fs::file_size(wal)==result.at("after").get<uint64_t>()&&result.at("after")>result.at("before"),"WAL suffix missing");if(lose){int fd=open(wal.c_str(),O_WRONLY);check(fd>=0,"open owned WAL");bool ok=ftruncate(fd,result.at("before").get<uint64_t>())==0&&fsync(fd)==0;close(fd);check(ok,"truncate owned WAL");}ChainStore disk(path);auto record=f.verify(disk);check(record.token.sequence==(lose?1:2)&&disk.latest()->header.hash()==(lose?f.a:f.b).block.header.hash(),"wrong recovery disposition");check(bool(disk.checkpoint_archive(f.b.block.header.hash(),budget))==!lose,"archive detached from retained/lost WAL suffix");f.save(disk,record.token,disk.latest()->header.hash(),{f.a});f.verify(disk);}
+  std::cout<<Json{{"scenario","atomic-execution-checkpoint-sync"},{"shanghai",shanghai},{"retainedAndLostSuffix",true},{"physicalPowerLoss",false}}.dump()<<'\n';
+ #else
