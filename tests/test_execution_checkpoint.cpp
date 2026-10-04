@@ -31,6 +31,19 @@ struct Fixture {
 }
 int main(int argc,char** argv){try{
  Fixture f;
+ if(argc==3&&std::string(argv[1])=="--pruning-schema"){
+  Temp tmp;const auto path=tmp/"db";ForkCheckpointToken token;
+  {ChainStore disk(path);f.init(disk);token=f.save(disk,{},f.genesis.header.hash(),{f.a,f.c});}
+  check(run({argv[2],path.string()}).code==0,"legacy reader cannot open unpruned schema");
+  {ChainStore disk(path);token=disk.commit_execution_checkpoint(1337,f.genesis.header.hash(),token,f.c.block.header.hash(),2,f.c.block.header.hash(),{},f.snapshot(f.c),budget,8,{},ExecutionStateRetentionAnchor{2,f.c.block.header.hash()});}
+  auto file_hashes=[](const fs::path& root){std::map<std::string,std::string> out;for(const auto& e:fs::recursive_directory_iterator(root))if(e.is_regular_file()){const auto d=read(e.path());out.emplace(fs::relative(e.path(),root).string(),hex(sha256(Bytes(d.begin(),d.end()))));}return out;};
+  const auto before=file_hashes(path);const auto legacy=run({argv[2],path.string()});check(legacy.code!=0&&legacy.err.find("unsupported Nano database schema")!=std::string::npos,"legacy reader accepted pruned schema or failed for unrelated reason");check(file_hashes(path)==before,"legacy read-only refusal mutated pruned database");
+  {ChainStore disk(path,ChainStore::OpenMode::ReadOnly);check(disk.state_pruning()->before==2&&!disk.state_at(1)&&disk.state_at(2)->root()==f.c.state.root()&&disk.fork_checkpoint(1337,f.genesis.header.hash(),budget,token).has_value(),"new schema reader lost checkpoint/retention");}
+  check(file_hashes(path)==before,"new schema read-only open mutated files");
+  for(unsigned attack=0;attack<2;++attack){const auto copy=tmp/("bad-"+std::to_string(attack));fs::copy(path,copy,fs::copy_options::recursive);rocksdb::Options options;options.create_if_missing=false;rocksdb::DB* raw=nullptr;check(rocksdb::DB::Open(options,copy.string(),&raw).ok(),"open owned schema corruption fixture");std::unique_ptr<rocksdb::DB> db(raw);rocksdb::WriteOptions write;write.sync=true;
+   if(attack==0)check(db->Put(write,"meta/schema","nano/1").ok(),"write owned legacy pruning schema");else check(db->Delete(write,"execution-state-pruning/v1").ok(),"remove owned pruning marker");db.reset();bool refused=false;try{ChainStore disk(copy,ChainStore::OpenMode::ReadOnly);}catch(const std::runtime_error&){refused=true;}check(refused,"schema/marker disagreement accepted");}
+  std::cout<<Json{{"scenario","pruned-schema-legacy-refusal"},{"legacyUnprunedReadable",true},{"legacyPrunedRefused",true},{"newPrunedReadable",true},{"readOnlyFilesUnchanged",true},{"schemaMarkerCorruptionsRejected",2},{"schemaUpgradeSharesCheckpointBatch",true},{"automaticDowngrade",false}}.dump()<<std::endl;return 0;
+ }
  if(argc==2&&std::string(argv[1])=="--pruning-restore"){
   Temp tmp;const auto source=tmp/"source",backup=tmp/"backup",restored=tmp/"restored";
   std::vector<ExecutionCheckpointBlock> history{f.a,f.c};

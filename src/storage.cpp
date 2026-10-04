@@ -107,7 +107,9 @@ ChainStore::ChainStore(const std::filesystem::path& path,OpenMode mode){
  db_=(read_only?open_read_only_database(options,path.string()):open_database(options,path.string())).release();
  try{
   auto schema=get("meta/schema");
-  if(schema&&*schema!="nano/1")throw std::runtime_error("unsupported Nano database schema");
+  if(schema&&*schema!="nano/1"&&*schema!="nano/2-state-pruned")throw std::runtime_error("unsupported Nano database schema");
+  if(schema&&*schema=="nano/1"&&get("execution-state-pruning/v1"))throw std::runtime_error("legacy pruned database requires explicit migration or unpruned backup");
+  if(schema&&*schema=="nano/2-state-pruned"&&!state_pruning_impl())throw std::runtime_error("pruned database schema has no retention marker");
   if(!schema){
    if(read_only)throw std::runtime_error("read-only database has no Nano schema");
    std::unique_ptr<rocksdb::Iterator> iterator(db_->NewIterator(rocksdb::ReadOptions()));iterator->SeekToFirst();require_ok(iterator->status());
@@ -534,7 +536,7 @@ ForkCheckpointToken ChainStore::commit_execution_checkpoint(const Int& chain_id,
    if(!get("state/"+height_key(before)))throw std::runtime_error("missing execution state before pruning boundary");
    batch.Delete("state/"+height_key(before));++before;++deleted;bounded();
   }
-  if(deleted){batch.Put("execution-state-pruning/v1",Json{{"before",quantity(before)},{"anchorNumber",quantity(retention->number)},{"anchorHash",hex(retention->hash)}}.dump());bounded();}
+  if(deleted){batch.Put("meta/schema","nano/2-state-pruned");batch.Put("execution-state-pruning/v1",Json{{"before",quantity(before)},{"anchorNumber",quantity(retention->number)},{"anchorHash",hex(retention->hash)}}.dump());bounded();}
  }
  const ForkCheckpointToken token{previous?previous->token.sequence+1:1,digest};
  batch.Put("meta/tip",height_key(parent.number));batch.Put("meta/difficulty",total.get_str());batch.Put("meta/count",count.get_str());
@@ -565,6 +567,7 @@ std::optional<CheckpointArchiveEntry> ChainStore::checkpoint_archive(const Bytes
 namespace nano {
 std::optional<ExecutionStatePruningInfo> ChainStore::state_pruning_impl()const{
  const auto marker=read("execution-state-pruning/v1");if(!marker)return std::nullopt;
+ if(get("meta/schema")!=std::optional<std::string>("nano/2-state-pruned"))throw std::runtime_error("pruning marker requires versioned state retention schema");
  if(!get("execution-checkpoint/v1")||!marker->is_object()||marker->size()!=3)throw std::runtime_error("invalid execution state pruning marker");
  ExecutionStatePruningInfo info{quantity(marker->at("before")),{quantity(marker->at("anchorNumber")),unhex(marker->at("anchorHash"))}};
  if(info.before<=1||info.before>info.anchor.number||info.anchor.hash.size()!=32||info.anchor.number>Int("18446744073709551615")||quantity(info.before)!=marker->at("before").get<std::string>()||quantity(info.anchor.number)!=marker->at("anchorNumber").get<std::string>()||hex(info.anchor.hash)!=marker->at("anchorHash").get<std::string>())throw std::runtime_error("invalid execution state pruning bounds");
