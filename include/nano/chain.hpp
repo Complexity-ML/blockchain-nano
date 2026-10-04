@@ -62,7 +62,8 @@ class Blockchain {
  ForkCheckpointToken commit_beacon_checkpoint(const std::optional<ForkCheckpointToken>& expected,
   const Bytes& expected_tip,const Int& common_height,const Bytes& common_hash,
   const std::vector<ExecutionCheckpointBlock>& suffix,Block finalized,std::string_view snapshot,
-  size_t maximum_bytes,size_t maximum_blocks,const std::vector<CheckpointArchiveEntry>& archive);
+  size_t maximum_bytes,size_t maximum_blocks,const std::vector<CheckpointArchiveEntry>& archive,
+  const std::optional<ExecutionStateRetentionAnchor>& retention=std::nullopt);
 public:
  Blockchain(const std::filesystem::path& database,Genesis genesis);
  // RPC must not serve a Beacon database until its checkpoint has been verified.

@@ -1,3 +1,4 @@
+#include "consensus_checkpoint_json.hpp"
 #include "nano/consensus_bellatrix_reactor.hpp"
 #include <type_traits>
 #include "nano/chain.hpp"
@@ -50,7 +51,7 @@ std::string durable_snapshot(const BellatrixForkStore& store,const BellatrixSign
   if(cancel)cancel();archive_require(bytes&&id!=store.timed.view.anchor&&store.blocks.contains(id)&&bytes->size()<=rules.transition.consensus.maximum_block_bytes&&bytes->size()<=limits.envelope_bytes/2-total);total+=bytes->size();
   blocks.push_back(Json::array({hex(Bytes(id.begin(),id.end())),hex(*bytes)}));
  }
- Json document{{"format",!exits.empty()?"nano-bellatrix-durable-v5":!slashings.empty()?"nano-bellatrix-durable-v4":votes.empty()?"nano-bellatrix-durable-v2":"nano-bellatrix-durable-v3"},{"store",Json::parse(encoded)},{"signedBlocks",std::move(blocks)}};
+ Json document{{"format",!exits.empty()?"nano-bellatrix-durable-v5":!slashings.empty()?"nano-bellatrix-durable-v4":votes.empty()?"nano-bellatrix-durable-v2":"nano-bellatrix-durable-v3"},{"signedBlocks",std::move(blocks)}};
  if(!votes.empty()||!slashings.empty()||!exits.empty()){
   archive_require(votes.size()<=limits.messages);Json messages=Json::array();
   const auto epoch=store.timed.view.current_epoch,oldest=epoch?epoch-1:0;
@@ -71,7 +72,7 @@ std::string durable_snapshot(const BellatrixForkStore& store,const BellatrixSign
   for(const auto& [id,record]:exits){if(cancel)cancel();archive_require(record&&record->ssz.size()==112&&store.blocks.contains(record->admission_root)&&144<=limits.envelope_bytes/2-total);total+=144;list.push_back(Json::array({hex(Bytes(id.begin(),id.end())),hex(Bytes(record->admission_root.begin(),record->admission_root.end())),hex(record->ssz)}));}
   document["signedExits"]=std::move(list);
  }
- auto result=document.dump();archive_require(result.size()<=limits.envelope_bytes);if(cancel)cancel();return result;
+ return checkpoint_detail::durable_json(std::move(document),encoded,limits.envelope_bytes,cancel);
 }
 struct Restored {BellatrixForkStore store;std::shared_ptr<const BellatrixSignedBlockArchive> blocks;std::shared_ptr<const BellatrixSignedVoteArchive> votes,slashings;std::shared_ptr<const BellatrixSignedExitArchive> exits;};
 Restored restore_durable_snapshot(std::string_view bytes,const Bytes& digest,const BellatrixForkBlockRules& rules,const BellatrixStoreSnapshotLimits& limits,const std::function<void()>& cancel){
@@ -177,11 +178,19 @@ void BellatrixDurableReactor::validate_execution_binding()const{
 BellatrixDurableReactor::~BellatrixDurableReactor(){
  if(execution_){std::lock_guard lock(execution_->mutex_);execution_->beacon_ready_=false;}
 }
-void BellatrixDurableReactor::invalidate(){
- std::lock_guard lock(mutex_);unavailable_=true;
+void BellatrixDurableReactor::fail_closed(){
+ if(!failure_)failure_=std::current_exception();
+ unavailable_=true;
  if(execution_){std::lock_guard chain_lock(execution_->mutex_);execution_->beacon_ready_=false;}
 }
-void BellatrixDurableReactor::require_available()const{if(unavailable_||!state_||!token_)throw std::runtime_error("Bellatrix reactor unavailable; reopen and resolve checkpoint required");}
+void BellatrixDurableReactor::invalidate(){std::lock_guard lock(mutex_);fail_closed();}
+void BellatrixDurableReactor::require_available()const{
+ if(unavailable_||!state_||!token_){
+  std::string message="Bellatrix reactor unavailable; reopen and resolve checkpoint required";
+  if(failure_)try{std::rethrow_exception(failure_);}catch(const std::exception& error){message+="; initial failure: ";message+=error.what();}catch(...){message+="; initial failure: unknown exception";}
+  throw std::runtime_error(message);
+ }
+}
 void BellatrixDurableReactor::publish(BellatrixForkStore candidate,std::shared_ptr<const BellatrixSignedBlockArchive> archive,std::shared_ptr<const BellatrixSignedVoteArchive> votes,const std::function<void()>& checkpoint,std::shared_ptr<const BellatrixSignedVoteArchive> slashings,std::shared_ptr<const BellatrixSignedExitArchive> exits){
  if(!slashings)slashings=signed_slashings_;
  if(!exits)exits=signed_exits_;
@@ -218,14 +227,15 @@ void BellatrixDurableReactor::publish(BellatrixForkStore candidate,std::shared_p
   // no longer be reassigned by an admissible branch. Never prune on head alone.
   if(retained->size()!=exits->size())exits=std::move(retained);
  }
- const auto encoded=durable_snapshot(*next,*archive,*votes,*slashings,*exits,rules_,limits_,checkpoint,&snapshot_cache_);
+ auto encoded=durable_snapshot(*next,*archive,*votes,*slashings,*exits,rules_,limits_,checkpoint,&snapshot_cache_);
  if(checkpoint)checkpoint();
  // A retransmission with identical durable contents is already acknowledged by
  // this checkpoint. Do not invalidate local duty tokens or amplify disk writes
  // merely because another peer returned a block/vote we already retained.
- if(token_&&sha256(Bytes(encoded.begin(),encoded.end()))==token_->digest){
+ if(token_&&(!published_snapshot_.empty()?encoded==published_snapshot_:
+             sha256(Bytes(encoded.begin(),encoded.end()))==token_->digest)){
   try{if(witness_)witness_->fork_checkpoint(chain_id_,genesis_,witness_limit(),witness_token_);if(!disk_.fork_checkpoint(chain_id_,genesis_,limits_.envelope_bytes,token_))throw std::runtime_error("Missing duplicate checkpoint");}
-  catch(...){unavailable_=true;if(execution_){std::lock_guard lock(execution_->mutex_);execution_->beacon_ready_=false;}throw;}
+  catch(...){fail_closed();throw;}
   return;
  }
 
@@ -290,8 +300,11 @@ void BellatrixDurableReactor::publish(BellatrixForkStore candidate,std::shared_p
   if(execution_)committed=execution_->commit_beacon_checkpoint(token_,tip->header.hash(),common_height,common_hash,suffix,next->blocks.at(next->timed.view.finalized.root).execution_block,encoded,limits_.envelope_bytes,limits_.blocks,archived);
   else committed=disk_.commit_execution_checkpoint(chain_id_,genesis_,token_,tip->header.hash(),common_height,common_hash,suffix,encoded,limits_.envelope_bytes,limits_.blocks,archived);
  }
- catch(...){unavailable_=true;if(execution_){std::lock_guard lock(execution_->mutex_);execution_->beacon_ready_=false;}throw;}
+ catch(...){fail_closed();throw;}
  events_=std::move(notifications);token_=std::move(committed);state_=std::move(next);signed_blocks_=std::move(archive);signed_votes_=std::move(votes);signed_slashings_=std::move(slashings);signed_exits_=std::move(exits);
+ // Moving the complete canonical bytes cannot fail after the durable commit.
+ static_assert(std::is_nothrow_move_assignable_v<std::string>);
+ published_snapshot_=std::move(encoded);
 }
 BellatrixDurableReactor::BellatrixDurableReactor(Blockchain& execution,BellatrixForkBlockRules rules,
  BellatrixStoreSnapshotLimits limits,BellatrixForkStore initial,const std::function<void()>& checkpoint,ChainStore* witness):

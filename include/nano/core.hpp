@@ -54,6 +54,8 @@ class State {
  std::map<std::string,Account> accounts_;
  std::vector<std::map<std::string,Account>> snapshots_;
 public:
+ // Read-only enumeration; callers must not retain the view across mutation.
+ const std::map<std::string,Account>& accounts_view() const {return accounts_;}
  const Account& get(const std::string& addr) const;
  Account& get(const std::string& addr);
  bool exists(const std::string& addr) const;

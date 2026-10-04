@@ -13,17 +13,26 @@ int main(){try{
  for(unsigned nonce=0;nonce<10;++nonce){Transaction tx;tx.chain_id=1337;tx.nonce=nonce;tx.gas=4000000;tx.gas_price=2000000000;tx.to="0x00000000000000000000000000000000000000b0";tx.value=1;tx.data=Bytes(900000,0);auto signed_tx=SignedTransaction::sign(tx,key);check(signed_tx.raw().size()<1024*1024,"transaction below pool byte ceiling");check(chain.submit(signed_tx),"transaction admitted");}
  auto block=chain.block_template(signer,12,0);check(block.transactions.size()==10,"all ten fit gas budget");sign_block(block,key,1337,genesis.block.header.hash());chain.verify_authentication(block);chain.verify_proposal(block,12);
  auto wire=block.to_transport_json().dump();check(wire.size()>JsonFrame::maximum_size,"compact proposal must exceed frame cap");
- Json failures=Json::array();bool voted=false;
- try{ConsensusRound round(chain,journal,key,0,ConsensusRound::Clock::time_point{},1s,1s,1s);round.propose(block,12);voted=round.advance(ConsensusRound::Clock::time_point{},12).committed;}
- catch(const std::exception& e){failures.push_back({{"stage","voting-journal"},{"error",e.what()}});check(chain.tip().header.number==0&&!journal.latest_consensus_vote(signer,1337,genesis.block.header.hash()),"failed reservation cannot publish block or vote");}
- // An external certificate fixture isolates import/export from the failing
- // local journal. It is not evidence that live validators signed this block.
- if(!voted){FinalityVote vote;vote.height=1;vote.round=0;vote.step=VoteStep::precommit;vote.validator=signer;vote.validator_set_hash=voting_set_hash(chain.voting_set());vote.block_hash=block.header.hash();sign_vote(vote,key,1337,genesis.block.header.hash());check(verify_commit_certificate({vote},chain.voting_set(),1,0,block.header.hash(),1337,genesis.block.header.hash()),"external fixture certificate valid");chain.import_certified_block(block,0,{vote},12);}
- check(chain.tip().header.hash()==block.header.hash()&&chain.audit().at("verified")==true,"imported oversized canonical history audits");
+ ConsensusRound round(chain,journal,key,0,ConsensusRound::Clock::time_point{},1s,1s,1s);
+ round.propose(block,12);check(round.advance(ConsensusRound::Clock::time_point{},12).committed,"real journal-backed oversized block finalizes");
+ check(chain.tip().header.hash()==block.header.hash()&&chain.audit().at("verified")==true,"oversized canonical history audits");
  Rpc rpc(chain);auto call=[&](const std::string& method,Json params){return rpc.handle({{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",params}});};
- auto page=call("nano_networkBlocks",Json::array({0}));bool exported=page.contains("result")&&!page.at("result").at("blocks").empty();if(!exported)failures.push_back({{"stage","block-export"},{"reply",page}});
- uint64_t cursor=0;bool announced=false;for(unsigned i=0;i<15&&!announced;++i){auto reply=call("nano_networkEvents",Json::array({cursor}));if(reply.contains("error")){failures.push_back({{"stage","block-event"},{"reply",reply}});break;}auto value=reply.at("result");for(const auto& event:value.at("events"))if(event.at("type")=="block")announced=true;auto next=value.at("cursor").get<uint64_t>();if(next==cursor)break;cursor=next;}
- bool framed=false;try{JsonFrame frame;framed=frame.feed(wire);}catch(const std::exception& e){failures.push_back({{"stage","libp2p-frame"},{"error",e.what()}});}
- std::cout<<Json{{"scenario","oversized-valid-block"},{"fork",fork},{"gasLimit",quantity(block.header.gas_limit)},{"gasUsed",quantity(block.header.gas_used)},{"transactions",10},{"compactBytes",wire.size()},{"maximumFrameBytes",JsonFrame::maximum_size},{"proposalValid",true},{"liveJournalCommitted",voted},{"externalCertificateFixture",!voted},{"canonicalAudit",true},{"exported",exported},{"announced",announced},{"framed",framed},{"failures",failures}}.dump()<<std::endl;
- check(voted&&exported&&announced&&framed,"valid oversized block cannot complete voting and transport lifecycle");return 0;
+ auto page=call("nano_networkBlocks",Json::array({0}));check(page.contains("error")&&page.at("error").at("message").get<std::string>().find("single-page size limit")!=std::string::npos,"legacy aggregate export retains frame bound");
+ bool oversized_refused=false;try{JsonFrame frame;frame.feed(wire);}catch(const std::invalid_argument&){oversized_refused=true;}check(oversized_refused,"oversized single frame remains forbidden");
+ auto refs=call("nano_networkEventRefs",Json::array({0,""}));check(refs.contains("result"),"bounded block references export");
+ bool announced=false;for(const auto& event:refs.at("result").at("events"))if(event.at("type")=="block"&&event.at("value").at("hash")==hex(block.header.hash()))announced=true;
+ check(announced,"committed oversized block is announced through reference route");
+ auto manifest_reply=call("nano_networkBlockManifest",Json::array({hex(block.header.hash())}));check(manifest_reply.contains("result"),"oversized block manifest export");auto manifest=manifest_reply.at("result");
+ auto framed=[](const Json& value){JsonFrame frame;check(frame.feed(value.dump()),"each transport document fits unchanged frame bound");};framed(refs);framed(manifest_reply);
+ Blockchain follower(root/"follower",genesis);const std::string token="oversized-lifecycle-token";Rpc receiver(follower,token);
+ auto receive=[&](const std::string& method,Json params){auto reply=receiver.handle({{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",params}});check(reply.contains("result"),"authenticated fragmented import succeeds");return reply.at("result");};
+ auto id=receive("nano_beginBlockImport",Json::array({token,manifest})).at("id");size_t fragments=0;
+ for(size_t index=0;index<block.transactions.size();++index){Json offset="0x0";do{
+  auto reply=call("nano_networkTransactionFragment",Json::array({hex(block.header.hash()),hex(block.transactions[index].hash()),offset}));check(reply.contains("result"),"transaction fragment export");framed(reply);auto fragment=reply.at("result");
+  receive("nano_appendBlockImport",Json::array({token,id,quantity(Int(index)),fragment}));++fragments;offset=fragment.at("next");
+ }while(!offset.is_null());}
+ auto imported=receive("nano_finishBlockImport",Json::array({token,id}));check(imported.at("success")==true,"certified fragmented import commits");
+ check(fragments==40&&follower.tip().header.hash()==block.header.hash()&&follower.state().root()==chain.state().root()&&follower.audit().at("verified")==true,"all forty fragments reconstruct exact audited canonical state");
+ check(follower.state().get("0x00000000000000000000000000000000000000b0").balance==10,"transfers applied exactly once");
+ std::cout<<Json{{"scenario","oversized-valid-block"},{"fork",fork},{"compactBytes",wire.size()},{"maximumFrameBytes",JsonFrame::maximum_size},{"liveJournalCommitted",true},{"canonicalAudit",true},{"referenceAnnounced",true},{"fragments",fragments},{"legacyAggregateRefused",true},{"oversizedFrameRefused",true},{"fragmentedImportAudited",true},{"libp2pIntegrated",false}}.dump()<<std::endl;return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<std::endl;return 1;}}

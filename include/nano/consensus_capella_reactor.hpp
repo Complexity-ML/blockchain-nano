@@ -37,7 +37,7 @@ class CapellaDurableReactor {
  std::shared_ptr<const CapellaPublishedStore> beacon_publication_;
  CapellaPublishedStore beacon_snapshot()const;
  std::optional<Bytes> beacon_signed_block(const CapellaPublishedStore&,const ConsensusRoot&,const std::function<void()>&)const;
- CapellaSignedVotes votes_,slashings_;CapellaPendingBlsChanges bls_changes_;CapellaPendingExits exits_;CapellaStoreSnapshotCache cache_;bool unavailable_=false;bool automatic_pruning_=false;
+ CapellaSignedVotes votes_,slashings_;CapellaPendingBlsChanges bls_changes_;CapellaPendingExits exits_;CapellaStoreSnapshotCache cache_;bool unavailable_=false;bool automatic_pruning_=false;bool historical_state_pruning_=false;
  std::exception_ptr failure_;
  // Only populated from this reactor's immutable, admitted head under mutex_.
  // Single-entry cache: no retained state snapshots or old-branch registry maps.
@@ -138,6 +138,7 @@ public:
  bool prune_finalized(const std::function<void()>& checkpoint={});
  // Local maintenance policy, not a consensus/fork parameter. Runtime enables it.
  void set_automatic_pruning(bool enabled);
+ void set_historical_state_pruning(bool enabled);
  CapellaPublishedStore current()const;
  Json network_identity()const;
  // Atomic archive/checkpoint projection. maximum_bytes bounds raw SSZ; caller

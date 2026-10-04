@@ -3734,3 +3734,17 @@ fonctionnelle acquise ; ce budget de contrôle reste échoué. Migration/reprise
 locale désormais couvertes ARM64/AMD64 dans cette portée ; aucun nouveau WAN,
 migration publique en place, panne électrique ou production globale déduit.
 Toutes exigences et erreurs conservées, objectif production actif.
+
+## Sources du cœur qualifié livrées dans main — 5 octobre 2026
+
+Fusion de la candidate source sans conflit : runtime/dépendances/CMake identiques
+à 59fa6530, test Capella identique à 477e5ba4, outils JS/CI inchangés depuis le
+lot intégré 424/424. Quatre documents originaux byte-identiques avant annexe.
+[Provenance et audit de livraison](qualification/runtime-main-delivery-20261005/README.md).
+Cette livraison réconcilie enfin les sources main avec le cœur/pruning qualifiés ;
+elles n'étaient pas auparavant identiques. Aucun binaire public déployé ou base
+active migrée, aucun rebuild d'image. Preuves/erreurs historiques conservées,
+périmètres exacts réutilisés, timeout global de contrôle AMD64 toujours échoué.
+La production globale, nouvelle preuve WAN après migration, maintenance en place,
+critères consensus/exploitation restants, relation Base–Nano/bridge/termes Doppler
+et revue indépendante demeurent ouverts. Objectif actif, aucune vente autorisée.
