@@ -6543,3 +6543,16 @@ du goal inchangés à la fusion. Outils combinés : 424/424, code terminal 0.
 Cette préparation n'est pas une promotion du runtime main ni une nouvelle
 qualification WAN. Critères pruning/espace/migration, consensus, exploitation,
 revue indépendante et termes financiers restent ouverts ; objectif actif.
+
+## Mesure physique sur copie prunée — AMD64, 5 octobre 2026
+
+Fixture arrêtée 092a153c copiée, original lecture seule/hachages inchangés.
+Flush/compaction de la copie : chain 6 761 823 → 793 227 octets apparents ; SST
+1 062 871 → 666 214, WAL 5 569 963 → 0. Nœud entier 22 535 188 → 16 566 592.
+344 clés/valeurs et toutes catégories logiques identiques. Audit terminal exit 0 :
+77 blocs, 59 états prunés rejoués, engagement checkpoint indépendant vérifié.
+[Mesures, refus initial et limites](qualification/pruned-copy-compaction-amd64-20261005/README.md).
+Gain combiné compaction/WAL sur petite copie : pas de comparaison non-prunée,
+politique automatique/en ligne, croissance long terme ou panne électrique acquis.
+Migration nano/1 pruné reste ouverte ; aucun runtime main promu. Toutes exigences
+et erreurs historiques conservées, objectif production actif.
