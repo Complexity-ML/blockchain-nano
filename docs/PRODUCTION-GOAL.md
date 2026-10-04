@@ -3670,3 +3670,14 @@ Protection de schéma désormais qualifiée ARM64/AMD64 dans ce périmètre. Run
 main non promu ; migration des anciennes bases expérimentales prunées nano/1,
 gain SST mesuré et autres critères production restent ouverts. Pas de panne
 électrique ou nouveau WAN déduit ; toutes preuves/erreurs historiques conservées.
+
+## Candidate intégrée prunée préparée — 5 octobre 2026
+
+Branche qualification/production-pruning-20261005, candidate 1d83428e : fusion
+sans conflit de main 064aa25d et du runtime qualifié avec garde-fou 59fa6530.
+Runtime et tests stockage/Capella vérifiés byte-identiques ; les quatre documents
+du goal inchangés à la fusion. Outils combinés : 424/424, code terminal 0.
+[Preuves, provenance et échecs de contrôle](qualification/production-pruning-integration-20261005/README.md).
+Cette préparation n'est pas une promotion du runtime main ni une nouvelle
+qualification WAN. Critères pruning/espace/migration, consensus, exploitation,
+revue indépendante et termes financiers restent ouverts ; objectif actif.
