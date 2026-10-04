@@ -4056,3 +4056,15 @@ avec 64 journaux avancés et finalité locale 2 → 7.
 AMD64, migration des anciennes bases expérimentales prunées nano/1 et gain SST
 mesuré restent ouverts. Aucun runtime promu à main ; pas de panne électrique
 ou nouveau WAN acquis. Toutes exigences et erreurs historiques conservées.
+
+## Protection du schéma pruné — AMD64 terminal, 5 octobre 2026
+
+59fa6530 : sept scénarios concernés passés aussi dans Docker AMD64, contrôleurs
+et revue indépendante exit 0. 16 497 sources et binaires re-hachés, anciens
+programmes qualifiés inchangés. Vrai lecteur ancien refusé après contrôle positif
+sur base non prunée ; WAL atomique, 64 journaux Capella repris, finalité 2 → 7.
+[Preuves AMD64](qualification/pruning-schema-amd64-terminal-20261005/README.md).
+Protection de schéma désormais qualifiée ARM64/AMD64 dans ce périmètre. Runtime
+main non promu ; migration des anciennes bases expérimentales prunées nano/1,
+gain SST mesuré et autres critères production restent ouverts. Pas de panne
+électrique ou nouveau WAN déduit ; toutes preuves/erreurs historiques conservées.

@@ -1,0 +1,81 @@
+{
+  "revision": "59fa653033aefb23651c32f1d986ac644e4866d2",
+  "architecture": "amd64",
+  "terminalExit": 0,
+  "extendTerminalExit": 0,
+  "trackedSources": 16497,
+  "independentHashesVerified": true,
+  "oldQualifiedProgramsUnchanged": true,
+  "scenarios": {
+    "schema": {
+      "automaticDowngrade": false,
+      "legacyPrunedRefused": true,
+      "legacyUnprunedReadable": true,
+      "newPrunedReadable": true,
+      "readOnlyFilesUnchanged": true,
+      "scenario": "pruned-schema-legacy-refusal",
+      "schemaMarkerCorruptionsRejected": 2,
+      "schemaUpgradeSharesCheckpointBatch": true
+    },
+    "restore": {
+      "byteBudgetRejectedAtomically": true,
+      "consensusWitnessesQualified": false,
+      "frontiers": [
+        3,
+        5,
+        6
+      ],
+      "physicalCopyVerified": true,
+      "physicalPowerLoss": false,
+      "readOnlyCopyUnchanged": true,
+      "resumedCheckpoint": true,
+      "scenario": "historical-state-pruning-offline-restore",
+      "sourceBackupUnchanged": true,
+      "zeroBlockBudgetRetainedAllStates": true
+    },
+    "corruption": {
+      "corruptionsRejected": 11,
+      "ownedFixturesOnly": true,
+      "scenario": "historical-state-pruning-corruption"
+    },
+    "checkpoint": {
+      "archiveAtomicRecovery": true,
+      "archiveSurvivesReorg": true,
+      "bellatrixReactor": false,
+      "concurrentCAS": true,
+      "rejections": 14,
+      "scenario": "atomic-execution-checkpoint",
+      "shanghai": false,
+      "shorterReorg": true,
+      "sigkillReopens": 4,
+      "unchangedHeadCheckpoint": true
+    },
+    "pruning-sync": {
+      "continuedAfterRecovery": true,
+      "markerStateCheckpointAtomic": true,
+      "physicalPowerLoss": false,
+      "retainedAndLostSuffix": true,
+      "scenario": "atomic-historical-state-pruning-sync"
+    },
+    "checkpoint-sync": {
+      "physicalPowerLoss": false,
+      "retainedAndLostSuffix": true,
+      "scenario": "atomic-execution-checkpoint-sync",
+      "shanghai": false
+    },
+    "capella-restore": {
+      "afterFinalizedEpoch": 7,
+      "beforeFinalizedEpoch": 2,
+      "conflictingProposalRejectedBeforeSigner": true,
+      "independentWitnessesRetained": true,
+      "journalsAdvanced": 64,
+      "networkTransport": false,
+      "physicalPowerLoss": false,
+      "scenario": "capella-pruned-consensus-physical-restore",
+      "signingPins": 64,
+      "sourceBackupUnchanged": true
+    }
+  },
+  "physicalPowerLoss": false,
+  "productionQualified": false
+}
