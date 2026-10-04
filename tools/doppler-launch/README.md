@@ -80,3 +80,9 @@ because its published index has extensionless ESM imports.
 
 The failed terminal assertion in attempt B remains recorded; attempt C uses
 the corrected reserve/event/LP verification and completed the entire cycle.
+
+Le cycle privé comprend aussi trois transactions adversariales : migration
+prématurée, transfert de propriété non autorisé, double migration. Chaque refus
+exige un sélecteur attendu, un reçu reverted sans épuisement du gas et des états,
+soldes, réserves et LP identiques avant/après. Couverture déterministe limitée,
+pas une qualification des bridges ou de Nano.

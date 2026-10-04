@@ -6753,3 +6753,14 @@ relues conformes. Reproductibilité effective encore **non démontrée** ; scope
 limité aux deux programmes, dépendances de l'image/cache réutilisées.
 [Contrôleur, contrôles et limites](qualification/reproducible-delivery-control-20261004/README.md).
 Tous les critères et échecs précédents restent ouverts selon leur statut.
+
+## Doppler : refus adversariaux et rollback observé — 4 octobre 2026
+
+Le cycle privé Base/Anvil termine exit 0 avec migration prématurée, transfert
+non autorisé et double migration réellement rejetés. Erreurs précises et reçus
+reverted contrôlés ; état d'enchère, soldes, réserves et LP inchangés avant/après.
+Achat/revente/migration V2 passent dans le même cycle. La première tentative
+exit 1 (faute de champ du lanceur) reste conservée. Trois cas déterministes,
+pas de fuzzing ni qualification du runtime Nano ou du bridge public.
+[Sources exécutées, résultats et limites](qualification/doppler-adversarial-lifecycle-20261004/README.md).
+Tous les critères originaux restent conservés selon leur statut.
