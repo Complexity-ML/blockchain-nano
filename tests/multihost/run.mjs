@@ -103,6 +103,7 @@ for(const onRemote of [false,true]){
 }
 await mkdir(output);
 const log=async event=>appendFile(join(output,'run.jsonl'),JSON.stringify({time:Date.now(),...event})+'\n');
+const assets=join(output,'assets'),prepared=join(output,'prepared');
 let monitorTask,restartReceipt,restartPriorText,restartOriginal;
 let native,tunnel,localStarted=false,remoteStarted=false,restoreReceipt,restoreStartedMs,restoreProof;
 let resourceTask,resourceStop=false,resourceFailure;
@@ -131,7 +132,6 @@ try{
  if(monitor&&(fork!=='capella'||!privateTransport||partition||asymmetric||backupRestore||rotation||boundedLoad))throw Error('Monitor qualification requires standalone private Capella campaign');
  await log({event:'harness',monitor,alertDelivery,partition,asymmetric,rotation,boundedLoad,backupRestore,pinnedRestart,partitionCuts,majorityIsland,majorityCutMs,faultProgress,fork,buildVolume,buildPaths:buildVolume?hostBuildPaths:null,nativePaths,remoteRepository,buildArtifacts:buildVolume?buildArtifacts:null,packagedImages:Boolean(candidates),artifacts,sha256:harness});
  await log({event:'binaries',revision,nanoSha256:createHash('sha256').update(await readFile(binary)).digest('hex'),p2pSha256:createHash('sha256').update(await readFile(p2p)).digest('hex')});
- const assets=join(output,'assets'),prepared=join(output,'prepared');
  await exec(nativePaths.transitionTests[fork],[fork==='capella'?'--export-network':'--export-kurtosis',assets],{timeout:30000});
  const topology=[{name:'mac-native',host:'mac',mode:'native',rpcPort:18545,p2pPort:30305,p2pBinary:p2p,runtimeDirectory:join(prepared,'mac-native')},{name:'mac-docker',host:'mac',mode:'docker',rpcPort:8545,p2pPort:30303},{name:'vps-docker',host:target,mode:'docker',rpcPort:8545,p2pPort:30303}];
  await writeFile(join(output,'topology.json'),JSON.stringify(topology));
