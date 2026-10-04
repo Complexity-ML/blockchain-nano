@@ -3894,3 +3894,16 @@ Correction du propriétaire et contrôleurs v2/v3 conservés avec les erreurs.
 Restauration efbeb9bc désormais réellement lancée ; reprise de duties/finalité
 commune, reproductibilité et nouveaux scénarios pruning pas encore acquis.
 Runtime main non promu ; tous les critères, preuves et échecs antérieurs conservés.
+
+## CI réseau après correction — 4 octobre 2026
+
+Run 37231449042 à 9e87b63b entièrement terminal success. Réseau : pin
+cpp-libp2p et 21 noms attendus vérifiés, sélection/JUnit concordants,
+21/21 sans échec/skip. [Preuves](qualification/github-network-9e87b63b-20261004/README.md).
+Le push d’outillage suivant a attendu sans annuler le build actif. Ancienne
+annulation conservée ; pas de preuve WAN ou de capacité réseau déduite.
+La restauration efbeb9bc a avancé avec une même racine de finalité de l’époque
+2 à 3 sur Mac natif, Docker Mac et Docker VPS en 86,247 s dans le contrôle de reprise,
+sous la borne 180 s. Stabilité et audits terminaux encore attendus à cette
+observation : pas de clôture générale de restauration/production.
+Tous les critères, résultats et échecs antérieurs restent conservés.
