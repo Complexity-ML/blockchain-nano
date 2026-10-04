@@ -4043,3 +4043,16 @@ Délai initial de progression observé, cause non démontrée. Pruning toujours 
 runtime main non promu ; toutes exigences et erreurs historiques conservées.
 Protection de schéma/downgrade 59fa6530 écrite séparément, pas encore qualifiée.
 Production complète et revue de sécurité indépendante toujours ouvertes.
+
+## Protection du schéma pruné — ARM64, 5 octobre 2026
+
+59fa6530 sur branche isolée : schéma nano/2-state-pruned écrit atomiquement
+avec checkpoint/marqueur/suppressions. Vrai lecteur efbeb9bc : base non prunée
+acceptée, base prunée explicitement refusée sans modification. Nouveau lecteur
+accepté, deux désaccords schéma/marqueur refusés. Sept scénarios concernés
+terminaux exit 0 : restauration/bornes, corruption, checkpoints/WAL et Capella
+avec 64 journaux avancés et finalité locale 2 → 7.
+[Preuves ARM64](qualification/pruning-schema-arm64-20261005/README.md).
+AMD64, migration des anciennes bases expérimentales prunées nano/1 et gain SST
+mesuré restent ouverts. Aucun runtime promu à main ; pas de panne électrique
+ou nouveau WAN acquis. Toutes exigences et erreurs historiques conservées.
