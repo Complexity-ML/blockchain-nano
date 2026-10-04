@@ -6320,3 +6320,12 @@ réseau terminale. [Annulation conservée](qualification/github-network-cancelle
 Réglage remplacé par false pour préserver les runs actifs, sans supprimer
 le groupe de sérialisation. Prochain résultat réseau encore attendu.
 Les preuves core/operations antérieures et les critères ouverts restent conservés.
+
+## CI core après correction de concurrence — 4 octobre 2026
+
+Job core du run 37231449042 à 9e87b63b terminal success, neuf noms attendus
+avec sélection/JUnit concordants, 9/9 sans échec/skip.
+[Artefacts et revue](qualification/github-core-9e87b63b-20261004/README.md).
+Runtime inchangé depuis 674a23e0 ; pas d’extension du périmètre ni de
+qualification efbeb9bc/pruning/WAN déduite. Réseau encore actif à l’observation.
+Tous les critères et échecs historiques restent conservés.
