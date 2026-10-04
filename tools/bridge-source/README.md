@@ -38,3 +38,30 @@ Restent : contrats lock/mint/burn/release et standard USDC, preuve/confiance
 source authentifiée, journal atomique et reprise/rejeu, couverture, retraits,
 compromission, tests interchaînes et définition du lien Nanobees Base–Nano.
 Aucun ratio, allocation, offre ou déploiement public n’est approuvé par ce module.
+
+## Transport HTTP borné
+
+`createSourceRpc(endpoint, {timeoutMs, maxResponseBytes})` dans `rpc.mjs`
+fournit le transport de lecture : HTTPS (HTTP uniquement sur loopback),
+aucune redirection ni retry, délai couvrant aussi le corps de réponse, budget
+sur les bytes effectivement reçues, enveloppe JSON-RPC et identifiant exacts.
+Defaults : 10 secondes par requête et 1 MiB par réponse ; plafonds configurables
+60 secondes et 4 MiB. Les requêtes sont limitées à 64 KiB et aux quatre méthodes
+de lecture utilisées par l’observateur. Les erreurs ne reproduisent pas
+l’endpoint ni le message du fournisseur. Aucun timeout global de toute
+l’observation ou quota de concurrence n’est ajouté ici.
+
+```js
+import {createSourceRpc} from './rpc.mjs';
+import {observeBaseFinalizedReceipt} from './finality.mjs';
+const rpc = createSourceRpc(process.env.BASE_RPC_URL);
+// `event` est la définition exacte revue indépendamment, jamais dérivée
+// automatiquement du reçu à accepter.
+const observation = await observeBaseFinalizedReceipt(rpc, {transactionHash, event});
+// observation.eligibleForMint reste false.
+```
+
+Qualification locale : 15 tests avec véritables serveurs HTTP loopback et
+24 tests de l’observateur avec RPC injecté, 39/39 sans skip. Cette combinaison
+ne teste pas encore un dépôt réel Base ni un bridge interchaînes.
+[Rapport](../../docs/qualification/base-source-rpc-transport-20261004/README.md).

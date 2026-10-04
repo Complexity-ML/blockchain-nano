@@ -3834,3 +3834,14 @@ récupérés. Révision distincte de la candidate efbeb9bc ; aucun remplacement 
 Le job réseau reste actif à l’observation.
 [Logs et limites](qualification/github-core-674a23e0-20261004/README.md).
 Tous les critères antérieurs restent conservés selon leur statut.
+
+## Transport RPC source Base — 4 octobre 2026
+
+Transport de lecture borné livré dans tools/bridge-source/rpc.mjs : délais
+par requête, taille reçue, identité JSON-RPC, refus des redirections/retries
+et des méthodes d’écriture. Lot ciblé 39/39 (15 nouveaux tests HTTP loopback
++ 24 tests d’observation injectée), exit 0 sans skip.
+[Preuves et limites](qualification/base-source-rpc-transport-20261004/README.md).
+Aucune authentification cryptographique de finalité, éligibilité au mint,
+qualification bridge ou nouvelle conformité EIP/C++ déduite de ce résultat.
+Toutes les exigences et tous les échecs antérieurs restent conservés.
