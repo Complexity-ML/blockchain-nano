@@ -1,0 +1,123 @@
+[
+  {
+    "time": 1791130486416,
+    "event": "startup-finality-bound",
+    "checkpoint": {
+      "epoch": "2",
+      "root": "0x2494b3c728bad170d9856fba4c23853f716c942e40344eb7a0757792fe40488f"
+    },
+    "execution": "0x8a228f8d9dc179f7a3b667e79fd68d62415a5cc2a214e06513ab7e615b952202"
+  },
+  {
+    "time": 1791130491922,
+    "event": "majority-island-stake-bound",
+    "stake": {
+      "slotsPerEpoch": "8",
+      "totalStake": "2048000000000",
+      "majorityStake": "1376000000000",
+      "minorityStake": "672000000000",
+      "weights": {
+        "mac-native": "704000000000",
+        "mac-docker": "672000000000",
+        "vps-docker": "672000000000"
+      },
+      "initialSha256": "0xa5a162e3f32fe218ee5708eaa0db9366a287b59cf69c36b23dd9b81948dea651",
+      "profileSha256": "0xc9d115373e63eea3332aadd86611d1fe6f9d129d61b80d6af883cf16ad176467"
+    },
+    "peerIds": {
+      "mac-native": "12D3KooWC66HyZNKPRNRpb99v46o3LVLjMkpCBtJuVFTp3SDDcJz",
+      "mac-docker": "12D3KooWB3QxGqCKHo4en9gGWkYUYPLMEbTfxPidp2TevtarFqvZ",
+      "vps-docker": "12D3KooWFmPNNmffCZNtbbBpB2thiCCAuH1F3mdY8jUZaoJi5b9s"
+    },
+    "preCutFinalityCeiling": "5"
+  },
+  {
+    "time": 1791130492425,
+    "event": "partition-disconnected",
+    "container": "nano-qualification-vps-muu0qi14",
+    "network": "nano-qualification-vps-muu0qi14-net",
+    "address": "172.19.0.2",
+    "cutMs": 384000
+  },
+  {
+    "time": 1791130502689,
+    "event": "majority-island-isolated-bound",
+    "finalityCeiling": "5"
+  },
+  {
+    "time": 1791130775047,
+    "event": "majority-island-finality-advanced",
+    "checkpoint": {
+      "epoch": "6",
+      "root": "0xc032ed86d22228a61d1d9a5bc3664fce5aec871f6f4e35c438aa547d10495f0e"
+    },
+    "minority": {
+      "epoch": "2",
+      "root": "0x2494b3c728bad170d9856fba4c23853f716c942e40344eb7a0757792fe40488f"
+    },
+    "finalityCeiling": "5"
+  },
+  {
+    "time": 1791130835965,
+    "event": "majority-island-finality-advanced",
+    "checkpoint": {
+      "epoch": "7",
+      "root": "0xba047428b05bdac0718c7f21a0e57c323d56425c6b8f124ff93918fc6c506b85"
+    },
+    "minority": {
+      "epoch": "2",
+      "root": "0x2494b3c728bad170d9856fba4c23853f716c942e40344eb7a0757792fe40488f"
+    },
+    "finalityCeiling": "5"
+  },
+  {
+    "time": 1791130876416,
+    "event": "majority-island-cut-passed",
+    "highestMajorityEpoch": "7",
+    "finalityCeiling": "5"
+  },
+  {
+    "time": 1791130877649,
+    "event": "partition-reconnected",
+    "container": "nano-qualification-vps-muu0qi14",
+    "network": "nano-qualification-vps-muu0qi14-net",
+    "address": "172.19.0.2",
+    "recoveryLimitMs": 180000
+  },
+  {
+    "time": 1791130954315,
+    "event": "partition-recovery-bound",
+    "checkpoint": {
+      "epoch": "9",
+      "root": "0x0b5f376684480022b76a38fd0d9b75f561604741d8169b5019f022df8e415433"
+    },
+    "recoveryElapsedMs": 76666.175667,
+    "recoveryLimitMs": 180000,
+    "completeReadElapsedMs": 2357.6083749999525
+  },
+  {
+    "time": 1791131213431,
+    "event": "finality-passed"
+  },
+  {
+    "time": 1791131218127,
+    "event": "passed",
+    "validators": [
+      {
+        "file": "native.log",
+        "healthy": true,
+        "attestationsAdmitted": 393
+      },
+      {
+        "file": "docker-mac.log",
+        "healthy": true,
+        "attestationsAdmitted": 376
+      },
+      {
+        "file": "vps.log",
+        "healthy": true,
+        "attestationsAdmitted": 373
+      }
+    ]
+  }
+]
