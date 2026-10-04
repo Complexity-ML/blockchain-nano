@@ -7056,3 +7056,17 @@ et audits initial/terminal de rejeu requis. Restauration WAN, sortie terminale
 et finalité stable encore attendues à cette observation. Aucun critère clos
 sur la seule préparation ; runtime main non promu. Toutes exigences et erreurs
 historiques conservées, production complète toujours non qualifiée.
+
+## Restauration WAN prunée terminale — 5 octobre 2026
+
+092a153c : contrôleur et revue des preuves exit 0. Trois nœuds réels / deux
+hôtes privés ; restauration VPS avec 21 engagements de signature indépendants,
+21 journaux avancés, duties repris (122 attestations, 19 propositions, 423 sync).
+Finalité commune 2 → 3 en 80 506 ms sous la borne 180 000 ms, puis stable 5 → 8.
+Audits lecture seule : 14 puis 59 états prunés rejoués, 77 blocs au terminal ;
+source sauvegardée inchangée. [Preuves et limites](qualification/pruned-wan-restore-terminal-20261004/README.md).
+Pas de fork choice historique, panne électrique, downgrade ou mesh public acquis.
+Délai initial de progression observé, cause non démontrée. Pruning toujours isolé,
+runtime main non promu ; toutes exigences et erreurs historiques conservées.
+Protection de schéma/downgrade 59fa6530 écrite séparément, pas encore qualifiée.
+Production complète et revue de sécurité indépendante toujours ouvertes.
