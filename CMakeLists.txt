@@ -1890,3 +1890,6 @@ if(TARGET nano-execution-checkpoint-sync-tests)
  add_test(NAME storage_historical_state_pruning_sync COMMAND nano-execution-checkpoint-sync-tests --pruning-sync)
  set_tests_properties(storage_historical_state_pruning_sync PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_recovery")
 endif()
+
+add_test(NAME storage_historical_state_pruning_corruption COMMAND nano-execution-checkpoint-tests --pruning-corruption)
+set_tests_properties(storage_historical_state_pruning_corruption PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_recovery")

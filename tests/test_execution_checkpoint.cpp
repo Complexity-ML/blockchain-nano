@@ -2,6 +2,7 @@
 #include "nano/storage.hpp"
 #include <atomic>
 #include <barrier>
+#include <rocksdb/db.h>
 #ifdef NANO_SYNC_FAULT
 extern "C" void nano_test_arm_sync_fault(const char*);
 extern "C" unsigned nano_test_sync_failures();
@@ -30,6 +31,27 @@ struct Fixture {
 }
 int main(int argc,char** argv){try{
  Fixture f;
+ if(argc==2&&std::string(argv[1])=="--pruning-corruption"){
+  for(unsigned attack=0;attack<11;++attack){Temp tmp;const auto path=tmp/"db";
+   {ChainStore disk(path);f.init(disk);const auto token=f.save(disk,{},f.genesis.header.hash(),{f.a,f.c});disk.commit_execution_checkpoint(1337,f.genesis.header.hash(),token,f.c.block.header.hash(),2,f.c.block.header.hash(),{},f.snapshot(f.c),budget,8,{},ExecutionStateRetentionAnchor{2,f.c.block.header.hash()});check(disk.state_pruning()->before==2&&!disk.state_at(1),"corruption fixture was not pruned");}
+   rocksdb::Options options;options.create_if_missing=false;rocksdb::DB* raw=nullptr;check(rocksdb::DB::Open(options,path.string(),&raw).ok(),"open owned corruption fixture");std::unique_ptr<rocksdb::DB> db(raw);
+   Json marker{{"before","0x2"},{"anchorNumber","0x2"},{"anchorHash",hex(f.c.block.header.hash())}};const auto state_key="state/"+hex(bytes(Int(2),8));rocksdb::WriteOptions write;write.sync=true;
+   if(attack==0)marker["before"]="0x0";
+   if(attack==1)marker["before"]="0x3";
+   if(attack==2)marker["anchorNumber"]="0x10000000000000000";
+   if(attack==3)marker["before"]="0x02";
+   if(attack==4)marker["anchorHash"]=hex(Bytes(32,0xab));
+   if(attack==5)marker["extra"]=true;
+   if(attack==6)marker.erase("anchorNumber");
+   if(attack==7)marker["anchorHash"]="0xab";
+   if(attack<8)check(db->Put(write,"execution-state-pruning/v1",marker.dump()).ok(),"write owned bad marker");
+   if(attack==8)check(db->Delete(write,state_key).ok(),"delete owned anchor state");
+   if(attack==9)check(db->Put(write,state_key,f.state.to_json().dump()).ok(),"write owned wrong state root");
+   if(attack==10)check(db->Delete(write,"execution-checkpoint/v1").ok(),"delete owned checkpoint binding");
+   db.reset();bool refused=false;try{ChainStore disk(path,ChainStore::OpenMode::ReadOnly);(void)disk.state_pruning();}catch(const std::exception&){refused=true;}check(refused,"corrupt pruning marker/anchor/checkpoint accepted");
+  }
+  std::cout<<Json{{"scenario","historical-state-pruning-corruption"},{"corruptionsRejected",11},{"ownedFixturesOnly",true}}.dump()<<std::endl;return 0;
+ }
  if(argc==3){ChainStore disk(argv[2]);
 #ifdef NANO_SYNC_FAULT
   if(std::string(argv[1])=="--fail-pruning"){

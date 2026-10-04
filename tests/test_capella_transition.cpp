@@ -373,6 +373,11 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
    const auto now=nodes[i]->current();const auto& live=now.state->blocks.at(now.state->timed.view.anchor).execution_block.header;
    check(marker->anchor.number<=live.number&&marker->before<=marker->anchor.number,"pruning passed authenticated live anchor");
    check(disk.state_at(0).has_value()&&!disk.state_at(marker->before-1).has_value()&&disk.state_at(marker->anchor.number).has_value()&&disk.state_at(head.execution_block.header.number).has_value(),"genesis/historical/live state retention differs");
+   Rpc historical_rpc(*owners[i]);
+   const auto absent=historical_rpc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method","eth_getBalance"},{"params",Json::array({sender,quantity(marker->before-1)})}});
+   check(absent.contains("error")&&absent.at("error").at("code")==-32000&&absent.at("error").at("message")=="State unavailable","historical RPC fell back to latest or hid pruned state");
+   const auto available=historical_rpc.handle(Json{{"jsonrpc","2.0"},{"id",2},{"method","eth_getBalance"},{"params",Json::array({sender,"latest"})}});
+   check(available.contains("result")&&available.at("result")==quantity(capella_fork_head(*now.state,rules).execution_state.get(sender).balance),"latest balance unavailable/changed after pruning");
    ChainStore audit_disk(directory/("node-"+std::to_string(i)),ChainStore::OpenMode::ReadOnly);
    const auto replay=audit_capella_canonical_history(audit_disk,t.chain_id,genesis.header.hash(),rules,limits,initial,now.token,1000,64*1024*1024);
    check(replay.at("canonicalHistoryVerified")==true&&replay.at("prunedExecutionStatesReplayed").get<size_t>()>0&&replay.at("allHistoricalStatesMaterialized")==false,"pruned history did not replay from trusted genesis");
