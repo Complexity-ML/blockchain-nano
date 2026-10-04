@@ -1,0 +1,20 @@
+import {readFileSync,writeFileSync} from 'node:fs';
+import assert from 'node:assert/strict';
+import {stoppedReceipt,validateRestoredFinality,pinnedRestoreConfiguration} from '/tmp/nano-production-coherent-20261004/tests/multihost/restore-config.mjs';
+import {verifyRestoredFinalityAudit} from '/tmp/nano-production-coherent-20261004/tests/multihost/restore-offline-audit.mjs';
+const root='/tmp/nano-coherent-wan-restore-efbeb9bc-20261004';
+const json=p=>JSON.parse(readFileSync(p,'utf8'));
+const state=json('/tmp/nano-coherent-restore-queue-v2-20261004/state.json');assert.equal(state.phase,'terminal');assert.equal(state.exit,0);assert.equal(state.revision,'efbeb9bca3d42e41edb9cb81afba98c0b953a90f');
+const prior=json(root+'/restore/stop-receipt.json');assert.deepEqual(stoppedReceipt(readFileSync(root+'/vps-before-restore.log','utf8')),prior);
+const terminal=stoppedReceipt(readFileSync(root+'/vps.log','utf8'));const stable=json(root+'/observations/result.json');validateRestoredFinality(prior,stable,terminal);
+const configured=json(root+'/prepared/vps-docker/node.json');pinnedRestoreConfiguration(configured,prior);pinnedRestoreConfiguration(configured,terminal);
+verifyRestoredFinalityAudit(json(root+'/restore/audit-request.json'),prior,json(root+'/restore/audit.json'));
+verifyRestoredFinalityAudit(json(root+'/restore/finalized-audit-request.json'),terminal,json(root+'/restore/finalized-audit.json'));
+for(const [before,after] of [['source-before.sha256','source-after.sha256'],['restored-before.sha256','restored-after.sha256']])assert.equal(readFileSync(root+'/restore/'+before,'utf8'),readFileSync(root+'/restore/'+after,'utf8'));
+const keys=new Map(prior.validatorKeys.map(k=>[k.index,k.restart]));assert.equal(keys.size,21);assert.equal(terminal.validatorKeys.length,21);let advanced=0;
+for(const key of terminal.validatorKeys){const old=keys.get(key.index);assert.ok(old);assert.ok(BigInt(key.restart.sequence)>=BigInt(old.sequence));if(key.restart.sequence===old.sequence)assert.equal(key.restart.digest,old.digest);else advanced++;}
+const events=readFileSync(root+'/run.jsonl','utf8').trim().split('\n').map(JSON.parse);
+const bound=events.find(e=>e.event==='backup-restore-recovery-bound');assert.ok(bound&&bound.elapsedMs<180000);
+assert.ok(events.some(e=>e.event==='backup-restore-passed'&&e.sourceStillUnchanged===true));assert.equal(events.at(-1).event,'passed');
+const result={revision:state.revision,controllerExit:0,priorFinalized:prior.finalized,stable,terminalFinalized:terminal.finalized,recoveryBoundMs:bound.elapsedMs,independentSigningPins:keys.size,journalsAdvanced:advanced,journalsNotRegressed:true,restoredValidator:terminal.validator,readOnlyAuditsVerified:true,sourceFilesUnchanged:true,archiveSha256:readFileSync(root+'/restore/archive.sha256','utf8').trim(),historicalForkChoiceVerified:false,physicalPowerLoss:false,distributedNodes:3,hosts:2,syntheticValidators:64,productionQualified:false};
+writeFileSync('/tmp/nano-coherent-restore-terminal-review-20261004/result.json',JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result));

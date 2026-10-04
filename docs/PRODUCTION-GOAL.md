@@ -3509,3 +3509,23 @@ La restauration efbeb9bc a avancé avec une même racine de finalité de l’ép
 sous la borne 180 s. Stabilité et audits terminaux encore attendus à cette
 observation : pas de clôture générale de restauration/production.
 Tous les critères, résultats et échecs antérieurs restent conservés.
+
+## Restauration entière terminale et CI d’outillage — 4 octobre 2026
+
+Candidate efbeb9bc : restauration réelle terminée, contrôleur/revue exit 0.
+21/21 journaux de signature ont avancé sans régression ; duties repris
+(124 attestations, 19 propositions, 441 messages sync). Finalité commune
+2 → 3 en 86,247 s sous la borne 180 s, puis stabilité commune 5 → 8 entre
+Mac natif, Docker Mac et Docker VPS. Audit canonique terminal en lecture seule
+(78 blocs, 1 transaction), ancrage externe et sauvegarde source inchangée.
+[Preuves](qualification/coherent-restore-terminal-20261004/README.md).
+Trois nœuds/deux hôtes, 64 clés synthétiques ; aucune coupure physique,
+qualification réseau public ou vérification historique complète du fork choice.
+L’échec initial de permission reste conservé ; anomalie WAN A encore ouverte.
+
+CI outillage 1a58ae05, run 37233103046 : terminal success, operations 393/393
+sans échec/skip. Core/réseau skipped pour cette révision JavaScript.
+[Preuves](qualification/github-operations-1a58ae05-20261004/README.md).
+Reproductibilité AMD64 encore en cours, pruning non qualifié à cette observation.
+Runtime main non promu ; tous les critères, échecs et preuves antérieurs restent
+conservés. Bridge, termes économiques et revue indépendante restent ouverts.
