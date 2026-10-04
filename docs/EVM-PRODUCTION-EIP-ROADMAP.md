@@ -4014,3 +4014,18 @@ Portée locale AMD64, deux propriétaires et clés synthétiques ; pas de WAN
 pruning, downgrade ou panne électrique acquis. Échec tmpfs ARM64 conservé.
 Banc WAN 092a153c préparé mais non exécuté ; pruning reste isolé/non promu.
 Toutes exigences, preuves et erreurs antérieures demeurent conservées.
+
+## Livrables prunés prêts et campagne WAN active — 4 octobre 2026
+
+092a153c : trois livrables vérifiés avant lancement. Docker ARM64/AMD64 :
+entrées nano compilées/linkées contre le cœur 4734f285 qualifié, sources de
+runtime identiques, anciens programmes conservés et P2P efbeb9bc exact réutilisé.
+Mac natif : nouveau build, scénario de restauration prunée exit 0 ; 64 journaux
+avancés, finalité locale 2 → 7. Sources/binaires re-hachés par le préflight.
+[Provenance, rapports et contrôle](qualification/pruning-wan-delivery-20261004/README.md).
+Aucun rebuild d’image ; pas de preuve de reproductibilité hermétique déduite.
+WAN privé Mac natif/Docker Mac/Docker VPS réellement lancé avec pruning explicite
+et audits initial/terminal de rejeu requis. Restauration WAN, sortie terminale
+et finalité stable encore attendues à cette observation. Aucun critère clos
+sur la seule préparation ; runtime main non promu. Toutes exigences et erreurs
+historiques conservées, production complète toujours non qualifiée.
