@@ -6433,3 +6433,22 @@ Portée stockage synthétique local, pas de restauration entière du consensus
 avec témoins/signers, downgrade, panne électrique ou WAN pruning qualifiés.
 Branche de tests publiée, runtime toujours isolé ; exigences et échecs antérieurs
 conservés. AMD64 encore en cours à cette observation.
+
+## Pruning AMD64 terminal et restauration Capella locale — 4 octobre 2026
+
+4734f285 AMD64 : build/link, CTest/contrôleur exit 0, 7/7 sans échec/skip
+(242,91 s). Revue indépendante de 16 495 sources et quatre programmes réels.
+[Preuves AMD64](qualification/finalized-retention-amd64-terminal-20261004/README.md).
+Même périmètre que ARM64, sans les nouveaux tests de restauration suivants.
+
+94535766 (tests seuls) : nouveau scénario Capella de copie physique du
+propriétaire élagué et 64 journaux, témoins indépendants retenus séparément,
+audit genesis sans mutation, conflit refusé avant callback signataire.
+Duties repris, 64/64 journaux avancés, finalité commune locale 2 → 7 et
+source/sauvegarde inchangées. Premier échec tmpfs 256 Mio conservé ; même
+binaire rejoué sur le volume disque existant, exit 0.
+[Preuves et échec](qualification/capella-pruned-physical-restore-arm64-20261004/README.md).
+Deux propriétaires locaux, pas de WAN ni de coupure électrique qualifiée.
+Nouveaux scénarios pas encore AMD64 ; pruning toujours isolé/non promu.
+Restent reprise multi-hôte pertinente, downgrade, mesure/gestion des ressources
+et critères de production complets. Toutes exigences et erreurs conservées.
