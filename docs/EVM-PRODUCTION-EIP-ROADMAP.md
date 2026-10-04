@@ -3793,3 +3793,15 @@ vrai shell d’export passent ; absence/symlinks refusés, aucun fallback silenc
 Pas encore d’assemblage Docker réel ni de cycle de promotion de cette candidate.
 [Correction et preuves](qualification/coherent-package-paths-20261004/README.md).
 Les exigences antérieures restent ouvertes selon leur statut.
+
+## Bridge : observation de finalité source — 4 octobre 2026
+
+Nouveau module en lecture seule `tools/bridge-source/finality.mjs` : reçu/log/bloc
+lié à la tête `finalized` de Base, code émetteur lu par hash canonique EIP-1898,
+relectures et refus des reorgs/régressions/bindings inattendus. Vingt-quatre tests
+avec RPC injecté passent et sont intégrés à la CI d’outillage. Pas de dépôt réel,
+preuve cryptographique, journal idempotent, contrats lock/mint ou relayer livrés.
+Le résultat interdit tout mint (`eligibleForMint:false`) ; l’assertion RPC seule
+ne clôt pas la sécurité du bridge ni les termes Base–Nano.
+[Module, tests et limites](qualification/base-source-finality-gate-20261004/README.md).
+Toutes les exigences précédentes restent conservées selon leur statut.

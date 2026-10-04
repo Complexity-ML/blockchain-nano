@@ -2,9 +2,9 @@ name: Nano qualification checks
 on:
   push:
     branches: [main]
-    paths: ['scripts/**', 'tests/**', '.github/workflows/**', 'src/**', 'include/**', 'network/**', 'cmake/**', 'third_party/**', 'genesis/**', 'CMakeLists.txt', 'Dockerfile', 'dependencies.lock.json']
+    paths: ['scripts/**', 'tools/bridge-source/**', 'tests/**', '.github/workflows/**', 'src/**', 'include/**', 'network/**', 'cmake/**', 'third_party/**', 'genesis/**', 'CMakeLists.txt', 'Dockerfile', 'dependencies.lock.json']
   pull_request:
-    paths: ['scripts/**', 'tests/**', '.github/workflows/**', 'src/**', 'include/**', 'network/**', 'cmake/**', 'third_party/**', 'genesis/**', 'CMakeLists.txt', 'Dockerfile', 'dependencies.lock.json']
+    paths: ['scripts/**', 'tools/bridge-source/**', 'tests/**', '.github/workflows/**', 'src/**', 'include/**', 'network/**', 'cmake/**', 'third_party/**', 'genesis/**', 'CMakeLists.txt', 'Dockerfile', 'dependencies.lock.json']
   workflow_dispatch:
     inputs:
       core:
