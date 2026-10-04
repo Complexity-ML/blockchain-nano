@@ -1,0 +1,116 @@
+[
+  {
+    "bootnode": "/ip4/127.0.0.1/tcp/30307/p2p/12D3KooWSktykxNE2u5rvEcjn5Majs2M7FiWbnj5QkdRCo36Fyif",
+    "event": "started",
+    "localContainer": "nano-qualification-mac-muu1pzgu",
+    "nativePid": 79923,
+    "physicalHosts": 2,
+    "remoteContainer": "nano-qualification-vps-muu1pzgu",
+    "time": 1791131965312,
+    "validatorKeys": 64
+  },
+  {
+    "checkpoint": {
+      "epoch": "2",
+      "root": "0x942baf95c8186851e79887aa0a5c4c93f1df6abed8d35b40ee020e564384a012"
+    },
+    "event": "startup-finality-bound",
+    "execution": "0x218607789d780f395c2fd58e5a542ee298ad1a7f1f3efddb837afd7b28b73683",
+    "time": 1791132144765
+  },
+  {
+    "egressMilliseconds": 500,
+    "event": "asymmetric-delay-start",
+    "holdMs": 384000,
+    "progressMs": 144000,
+    "time": 1791132150227
+  },
+  {
+    "elapsedMs": 388606.71229199995,
+    "event": "asymmetric-delay-finality",
+    "holdMs": 384000,
+    "limitMs": 528000,
+    "progressMs": 144000,
+    "qdiscs": [
+      {
+        "backlog": 7858,
+        "bytes": 2780807,
+        "drops": 0,
+        "handle": "7a00:",
+        "kind": "netem",
+        "options": {
+          "delay": {
+            "correlation": 0,
+            "delay": 0.5,
+            "jitter": 0
+          },
+          "ecn": false,
+          "gap": 0,
+          "limit": 1000
+        },
+        "overlimits": 0,
+        "packets": 5128,
+        "qlen": 6,
+        "refcnt": 5,
+        "requeues": 0,
+        "root": true
+      }
+    ],
+    "rows": [
+      {
+        "checkpoint": {
+          "epoch": "8",
+          "root": "0x1a48aa6dce9e7bb72db7dfa7e82bddc46bc7b48a31a38187a9cbd767022e72e7"
+        },
+        "name": "mac-native",
+        "peers": "0x1"
+      },
+      {
+        "checkpoint": {
+          "epoch": "8",
+          "root": "0x1a48aa6dce9e7bb72db7dfa7e82bddc46bc7b48a31a38187a9cbd767022e72e7"
+        },
+        "name": "mac-docker",
+        "peers": "0x1"
+      },
+      {
+        "checkpoint": {
+          "epoch": "8",
+          "root": "0x1a48aa6dce9e7bb72db7dfa7e82bddc46bc7b48a31a38187a9cbd767022e72e7"
+        },
+        "name": "vps-docker",
+        "peers": "0x2"
+      }
+    ],
+    "time": 1791132538833
+  },
+  {
+    "event": "asymmetric-delay-restored",
+    "time": 1791132543411
+  },
+  {
+    "event": "finality-passed",
+    "time": 1791132768372
+  },
+  {
+    "event": "passed",
+    "time": 1791132772785,
+    "validators": [
+      {
+        "attestationsAdmitted": 355,
+        "file": "native.log",
+        "healthy": true
+      },
+      {
+        "attestationsAdmitted": 341,
+        "file": "docker-mac.log",
+        "healthy": true
+      },
+      {
+        "attestationsAdmitted": 343,
+        "file": "vps.log",
+        "healthy": true
+      }
+    ]
+  }
+]
