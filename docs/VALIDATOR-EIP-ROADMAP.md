@@ -6764,3 +6764,16 @@ exit 1 (faute de champ du lanceur) reste conservée. Trois cas déterministes,
 pas de fuzzing ni qualification du runtime Nano ou du bridge public.
 [Sources exécutées, résultats et limites](qualification/doppler-adversarial-lifecycle-20261004/README.md).
 Tous les critères originaux restent conservés selon leur statut.
+
+## Stockage : croissance logique mesurée hors ligne — 4 octobre 2026
+
+Le helper C++ autonome passe sous sandbox sans écritures/réseau : 46 bases,
+2 686 457 octets logiques identiques original/migré ; 54 états EVM = 60 985
+octets, checkpoint vivant = 2 231 548. Taille apparente des fichiers :
+51 403 853 → 5 290 934 ; aucune attribution causale ni borne de croissance.
+331/461 fichiers et 603 entrées natives qualifiées inchangés. Refus des chemins
+vides/symlinks ; erreur initiale du contrôle négatif conservée. Pruning Capella
+vivant existant ; rétention des états historiques EVM/archives encore à traiter
+avec l'ancre de rejeu et les contrats RPC/audit, sans suppression isolée.
+[Outil, mesures et limites](qualification/storage-growth-accounting-20261004/README.md).
+Tous les critères originaux restent conservés selon leur statut.

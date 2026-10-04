@@ -1,0 +1,17 @@
+{
+  "command": [
+    "/usr/bin/c++",
+    "-std=c++20",
+    "-O2",
+    "-Ithird_party",
+    "-I/opt/homebrew/include",
+    "tools/storage-profile/profile.cpp",
+    "-L/opt/homebrew/lib",
+    "-lrocksdb",
+    "-o",
+    "/tmp/nano-storage-profile-20261004"
+  ],
+  "sourceSHA256": "c0ebb73ca2da3069230b31195b3645d7421f2cd293a1219336d81a34d323d62a",
+  "librarySHA256": "f36ffa5423364e81bc374bec509e93f8f9042c56a8e98f9c0e61d450ce91708e",
+  "purpose": "standalone accounting helper, does not modify or relink nano"
+}
