@@ -6794,3 +6794,15 @@ pour slippage conservée, timestamps du rejeu explicitement déterministes,
 sortie minimale inchangée. Assertion RPC seulement, pas preuve cryptographique
 Base ni bridge. [Sources, résultats et limites](qualification/doppler-canonical-hash-proof-20261004/README.md).
 Tous les critères originaux et échecs restent conservés selon leur statut.
+
+## Pruning historique : draft isolé — 4 octobre 2026
+
+Branche `feature/finalized-state-retention`, révision `9e3f442c` :
+pruning EVM lié à l’ancre Capella et au checkpoint atomique, replay signé
+depuis genesis, paramètres désactivés par défaut. Syntaxe Docker ARM64 exit 0 ;
+linkage et six tests ciblés pas encore exécutés. Nouveaux scénarios de rétention
+et de panne WAL conservée/perdue ajoutés ; build mis en file après restauration
+et reproductibilité pour éviter un chevauchement. Runtime main et candidate
+figée inchangés. Corruptions, RPC, AMD64, ressources, sauvegarde et archives
+restent ouverts. [Patch, contrôleur, preuves et échecs](qualification/finalized-state-retention-draft-20261004/README.md).
+Aucune exigence ni qualification antérieure supprimée ; production non démontrée.

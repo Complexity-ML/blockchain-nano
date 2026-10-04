@@ -1,0 +1,13 @@
+/work/tests/test_capella_transition.cpp:377:22: error: no matching function for call to 'audit_capella_canonical_history'
+  377 |    const auto replay=audit_capella_canonical_history(disk,t.chain_id,genesis.header.hash(),rules,limits,initial,now.token,1000,64*1024*1024);
+      |                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/work/include/nano/consensus_capella_audit.hpp:11:6: note: candidate function not viable: 1st argument ('const ChainStore') would lose const qualifier
+   11 | Json audit_capella_canonical_history(ChainStore&,const Int& chain,const Bytes& genesis,
+      |      ^                               ~~~~~~~~~~~
+/work/tests/test_capella_transition.cpp:381:8: error: 'this' argument to member function 'commit_execution_checkpoint' has type 'const ChainStore', but function is not marked const
+  381 |    try{disk.commit_execution_checkpoint(t.chain_id,genesis.header.hash(),now.token,tip->header.hash(),tip->header.number,tip->header.hash(),{},saved->snapshot,limits.envelope_bytes,limits.blocks,{},wrong);}catch(const std::invalid_argument&){refused=true;}
+      |        ^~~~
+/work/include/nano/storage.hpp:62:22: note: 'commit_execution_checkpoint' declared here
+   62 |  ForkCheckpointToken commit_execution_checkpoint(const Int& chain_id,const Bytes& genesis_hash,
+      |                      ^
+2 errors generated.
