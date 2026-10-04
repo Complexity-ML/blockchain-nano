@@ -6556,3 +6556,16 @@ Gain combiné compaction/WAL sur petite copie : pas de comparaison non-prunée,
 politique automatique/en ligne, croissance long terme ou panne électrique acquis.
 Migration nano/1 pruné reste ouverte ; aucun runtime main promu. Toutes exigences
 et erreurs historiques conservées, objectif production actif.
+
+## Migration des anciennes copies prunées — AMD64, 5 octobre 2026
+
+Helper 23df7f63 : nano/1 pruné → nano/2-state-pruned sur trois copies arrêtées.
+Normal, SIGKILL avant écriture, SIGKILL après écriture sync : reprise exacte et
+rejeux sans écriture. Mauvais engagement externe refusé, fichiers inchangés ;
+seule meta/schema change. Audits avant/après identiques : 77 blocs, 59 états
+prunés rejoués, checkpoint indépendant conservé. Ancien lecteur refuse les trois
+copies migrées ; originaux et anciens programmes inchangés/re-hachés.
+[Preuves, compilation échouée et limites](qualification/pruned-schema-migration-amd64-20261005/README.md).
+Contrôleur terminal exit 0. ARM64 du helper, reprise des duties après migration,
+maintenance en ligne et panne électrique non acquises ; runtime main non promu.
+Toutes exigences et erreurs historiques conservées, objectif production actif.
