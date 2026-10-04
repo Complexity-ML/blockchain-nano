@@ -3304,3 +3304,15 @@ conservées. Cinq tests ciblés couvrent aussi les bindings RPC et les rejets.
 Aucune transaction diffusée : achats, ventes, migration, paramètres économiques
 réels, actif Base–Nano et tous les critères originaux restent ouverts.
 [Preuves](qualification/doppler-unsigned-preview-20261004/).
+
+## Doppler : achat, revente et migration V2 locaux — 4 octobre 2026
+
+Le scénario réutilisable sur fork Anvil privé de Base termine exit 0 : création,
+achat USDC/token, revente, deltas de soldes, produit net et migration V2 avec
+événement, monnaies, réserves et LP vérifiés. Chain ID 31337, loopback, fonds
+fictifs ; aucun déploiement public. Les deux échecs de harness initiaux restent
+conservés. Nanobees est le nom de l’actif de lancement confirmé par l’utilisateur ;
+les fixtures TEST ne fixent ni ratio Base/natif, ni réserve, ni gouvernance réelle.
+Un achat/revente et migration V2 seulement : bridge, fuzzing, graduation V4,
+profil réel de Nano et exigences originales restent ouverts.
+[Preuves et limites](qualification/doppler-fork-lifecycle-20261004/README.md).

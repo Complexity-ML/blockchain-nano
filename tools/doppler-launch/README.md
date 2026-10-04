@@ -57,3 +57,26 @@ References checked 2026-10-04:
 - https://github.com/whetstoneresearch/doppler-sdk
 - https://docs.doppler.lol/
 - https://developers.circle.com/stablecoins/usdc-contract-addresses
+
+## Private Anvil lifecycle
+
+For the synthetic local lifecycle, start an owned Anvil instance with chain ID
+31337 and loopback binding, then run the script with a new output directory:
+
+```sh
+anvil --host 127.0.0.1 --port 19546 --chain-id 31337 --fork-url https://mainnet.base.org --fork-block-number 52173454 --no-storage-caching --silent
+node fork-lifecycle.mjs /tmp/doppler-lifecycle-new
+```
+
+The script only writes to this hardcoded local RPC and requires Anvil/chain
+31337 before funding, impersonation or transactions. It mints synthetic USDC
+by impersonating the master minter on the local fork, buys, sells, advances
+fixture time and migrates to V2. It checks receipt status, token/USDC deltas,
+net proceeds, migration event, pair currencies, reserves and beneficiary LP.
+Stop the owned Anvil instance afterward. These are synthetic terms, not
+Nanobees launch parameters or native Nano qualification. No real private key
+is used. The router package is pinned and imported through explicit .js files
+because its published index has extensionless ESM imports.
+
+The failed terminal assertion in attempt B remains recorded; attempt C uses
+the corrected reserve/event/LP verification and completed the entire cycle.
