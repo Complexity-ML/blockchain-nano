@@ -3316,3 +3316,15 @@ les fixtures TEST ne fixent ni ratio Base/natif, ni réserve, ni gouvernance ré
 Un achat/revente et migration V2 seulement : bridge, fuzzing, graduation V4,
 profil réel de Nano et exigences originales restent ouverts.
 [Preuves et limites](qualification/doppler-fork-lifecycle-20261004/README.md).
+
+## Programmes de livraison : recompilation indépendante préparée — 4 octobre 2026
+
+Le contrôleur réutilise les images épinglées et attend les campagnes complètes
+puis la restauration réussie avant de reconstruire `nano` et `nano-p2p` dans
+des répertoires distincts, sans rebuild d'image. Il compare leurs empreintes
+aux programmes qualifiés et vérifie les sources/programmes originaux avant
+et après. Conservation des logs d'échec et timeout contrôlée ; 16 494 sources
+relues conformes. Reproductibilité effective encore **non démontrée** ; scope
+limité aux deux programmes, dépendances de l'image/cache réutilisées.
+[Contrôleur, contrôles et limites](qualification/reproducible-delivery-control-20261004/README.md).
+Tous les critères et échecs précédents restent ouverts selon leur statut.
