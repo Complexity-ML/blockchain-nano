@@ -463,7 +463,7 @@ namespace nano {
 ForkCheckpointToken ChainStore::commit_execution_checkpoint(const Int& chain_id,const Bytes& genesis_hash,
  const std::optional<ForkCheckpointToken>& expected,const Bytes& expected_tip,
  const Int& common_height,const Bytes& common_hash,const std::vector<ExecutionCheckpointBlock>& suffix,
- std::string_view snapshot,size_t maximum_bytes,size_t maximum_blocks,const std::vector<CheckpointArchiveEntry>& archive){
+ std::string_view snapshot,size_t maximum_bytes,size_t maximum_blocks,const std::vector<CheckpointArchiveEntry>& archive,const std::optional<ExecutionStateRetentionAnchor>& retention){
  if(snapshot.empty()||snapshot.size()>maximum_bytes||suffix.size()>maximum_blocks||archive.size()>maximum_blocks||common_height<0||common_height>Int("18446744073709551615")||expected_tip.size()!=32||common_hash.size()!=32)
   throw std::invalid_argument("execution checkpoint bounds");
  const auto digest=sha256(Bytes(snapshot.begin(),snapshot.end()));
@@ -479,6 +479,14 @@ ForkCheckpointToken ChainStore::commit_execution_checkpoint(const Int& chain_id,
  const auto height=quantity(tip->at("number"));
  if(height_key(height)!=*tip_key||common_height>height||height-common_height>Int(std::to_string(maximum_blocks)))throw std::invalid_argument("execution checkpoint reorg bounds");
  if(const auto linked=read("execution-checkpoint/v1")){if(!previous||linked->at("digest")!=hex(previous->token.digest)||linked->at("tip")!=hex(expected_tip))throw std::runtime_error("execution checkpoint binding corrupt");}
+ const auto pruning=state_pruning_impl();
+ if(pruning&&common_height<pruning->anchor.number)throw std::invalid_argument("replacement below retained execution anchor");
+ if(retention){
+  if(retention->number<0||retention->number>common_height||retention->hash.size()!=32)throw std::invalid_argument("execution state retention bounds");
+  const auto anchor=read("block/"+height_key(retention->number)),anchor_state=read("state/"+height_key(retention->number));
+  if(!anchor||!anchor_state||Block::from_json(*anchor).header.hash()!=retention->hash||State::from_json(*anchor_state).root()!=unhex(anchor->at("stateRoot")))throw std::invalid_argument("execution state retention anchor mismatch");
+  if(pruning&&(retention->number<pruning->anchor.number||(retention->number==pruning->anchor.number&&retention->hash!=pruning->anchor.hash)))throw std::invalid_argument("execution state retention regressed");
+ }
  const auto common_state=read("state/"+height_key(common_height));if(!common_state||State::from_json(*common_state).root()!=unhex(common->at("stateRoot")))throw std::runtime_error("execution checkpoint ancestor state corrupt");
  Int total(*total_data),count(*count_data);if(count!=height+1)throw std::runtime_error("execution checkpoint count corrupt");
  rocksdb::WriteBatch batch;std::set<std::string> removed,inserted;
@@ -517,6 +525,17 @@ ForkCheckpointToken ChainStore::commit_execution_checkpoint(const Int& chain_id,
   for(size_t i=0;i<receipts.size();++i){const auto txhash=hex(block.transactions[i].hash());if(!inserted.insert(txhash).second||(get("tx/"+txhash)&&!removed.contains(txhash)))throw std::invalid_argument("execution checkpoint duplicate transaction");auto tx=block.transactions[i].to_json();tx["blockHash"]=hex(hash);tx["blockNumber"]=quantity(h.number);tx["transactionIndex"]=quantity(Int(i));batch.Put("tx/"+txhash,tx.dump());batch.Put("receipt/"+txhash,receipts[i].to_json().dump());}
   total+=h.difficulty;++count;parent=h;bounded();
  }
+ // Pruning shares this exact synchronous CAS batch with publication. Retain
+ // genesis, the authenticated live-store anchor and all more recent states.
+ // Never delete blocks, receipts, signed archives, journals or witnesses here.
+ if(retention&&retention->number>1){
+  Int before=pruning?pruning->before:Int(1);size_t deleted=0;
+  while(before<retention->number&&deleted<maximum_blocks){
+   if(!get("state/"+height_key(before)))throw std::runtime_error("missing execution state before pruning boundary");
+   batch.Delete("state/"+height_key(before));++before;++deleted;bounded();
+  }
+  if(deleted){batch.Put("execution-state-pruning/v1",Json{{"before",quantity(before)},{"anchorNumber",quantity(retention->number)},{"anchorHash",hex(retention->hash)}}.dump());bounded();}
+ }
  const ForkCheckpointToken token{previous?previous->token.sequence+1:1,digest};
  batch.Put("meta/tip",height_key(parent.number));batch.Put("meta/difficulty",total.get_str());batch.Put("meta/count",count.get_str());
  batch.Put("fork-checkpoint/v1/payload",rocksdb::Slice(snapshot.data(),snapshot.size()));batch.Put("fork-checkpoint/v1/token",Json{{"sequence",quantity(Int(std::to_string(token.sequence)))},{"digest",hex(digest)}}.dump());
@@ -541,4 +560,17 @@ std::optional<CheckpointArchiveEntry> ChainStore::checkpoint_archive(const Bytes
  if(canonical!=*encoded)throw std::runtime_error("checkpoint archive noncanonical encoding");
  return CheckpointArchiveEntry{root,u64(slot),std::move(payload)};
 }
+}
+
+namespace nano {
+std::optional<ExecutionStatePruningInfo> ChainStore::state_pruning_impl()const{
+ const auto marker=read("execution-state-pruning/v1");if(!marker)return std::nullopt;
+ if(!get("execution-checkpoint/v1")||!marker->is_object()||marker->size()!=3)throw std::runtime_error("invalid execution state pruning marker");
+ ExecutionStatePruningInfo info{quantity(marker->at("before")),{quantity(marker->at("anchorNumber")),unhex(marker->at("anchorHash"))}};
+ if(info.before<=1||info.before>info.anchor.number||info.anchor.hash.size()!=32||info.anchor.number>Int("18446744073709551615")||quantity(info.before)!=marker->at("before").get<std::string>()||quantity(info.anchor.number)!=marker->at("anchorNumber").get<std::string>()||hex(info.anchor.hash)!=marker->at("anchorHash").get<std::string>())throw std::runtime_error("invalid execution state pruning bounds");
+ const auto block=read("block/"+height_key(info.anchor.number)),state=read("state/"+height_key(info.anchor.number));
+ if(!block||!state||Block::from_json(*block).header.hash()!=info.anchor.hash||State::from_json(*state).root()!=unhex(block->at("stateRoot")))throw std::runtime_error("execution state pruning anchor corrupt");
+ return info;
+}
+std::optional<ExecutionStatePruningInfo> ChainStore::state_pruning()const{std::lock_guard lock(mutex_);return state_pruning_impl();}
 }

@@ -18,6 +18,7 @@ Json audit_capella_canonical_history(ChainStore& disk,const Int& chain,const Byt
  const auto encoded=capella_store_snapshot(trusted,rules,limits,check);
  auto replay=capella_store_from_snapshot(encoded,sha256(Bytes(encoded.begin(),encoded.end())),rules,limits,check);
  CapellaDurableReactor restored(disk,chain,genesis,rules,limits,expected,check);
+ const auto pruning=disk.state_pruning();size_t pruned_states=0;
  const auto saved=restored.current();const auto& target=capella_fork_head(*saved.state,rules,check);
  require(capella_network_anchor(replay)==capella_network_anchor(*saved.state),"network anchor differs");
  const auto anchor=replay.timed.view.anchor,head=consensus_beacon_header_root(target.header);
@@ -36,7 +37,9 @@ Json audit_capella_canonical_history(ChainStore& disk,const Int& chain,const Byt
   if(check)check();const auto& block=record.execution_block;const auto hash=block.header.hash();
   const auto canonical=disk.block_by_number(block.header.number),indexed=disk.block_by_hash(hash);const auto state=disk.state_at(block.header.number);
   require(canonical&&indexed&&canonical->to_json(true)==block.to_json(true)&&indexed->to_json(true)==block.to_json(true),"canonical block/index mismatch");
-  require(state&&state->root()==record.execution_state.root(),"execution state mismatch");
+  if(state)require(state->root()==record.execution_state.root(),"execution state mismatch");
+  else{require(pruning&&block.header.number>0&&block.header.number<pruning->before&&pruning->anchor.number<=saved.state->blocks.at(saved.state->timed.view.anchor).execution_block.header.number,"missing state outside authenticated pruning range");require(block.header.state_root==record.execution_state.root(),"pruned execution state differs from signed replay");++pruned_states;}
+  if(pruning&&block.header.number==pruning->anchor.number)require(hash==pruning->anchor.hash,"pruning anchor differs from signed replay");
   require(record.receipts.size()==block.transactions.size(),"receipt count mismatch");
   for(size_t i=0;i<block.transactions.size();++i){
    if(check)check();const auto& tx=block.transactions[i];auto wanted=tx.to_json();wanted["blockHash"]=hex(hash);wanted["blockNumber"]=quantity(block.header.number);wanted["transactionIndex"]=quantity(Int(std::to_string(i)));
@@ -66,7 +69,7 @@ Json audit_capella_canonical_history(ChainStore& disk,const Int& chain,const Byt
   {"finalized",{{"epoch",quantity(Int(std::to_string(saved.state->timed.view.finalized.epoch)))},{"root",hex(Bytes(saved.state->timed.view.finalized.root.begin(),saved.state->timed.view.finalized.root.end()))}}},{"historicalForkChoiceVerified",false},{"historicalStandaloneVotesReplayed",false},
   {"trustedAnchor",hex(Bytes(anchor.begin(),anchor.end()))},{"firstExecutionBlock",quantity(first.execution_block.header.number)},
   {"lastExecutionBlock",quantity(target.execution_block.header.number)},{"blocksIncludingTrustedAnchor",blocks},{"transactions",transactions},
-  {"archiveBytes",archive_bytes},{"head",hex(Bytes(head.begin(),head.end()))},{"checkpointSequence",expected.sequence},{"checkpointDigest",hex(expected.digest)}};
+  {"prunedExecutionStatesReplayed",pruned_states},{"allHistoricalStatesMaterialized",pruned_states==0},{"archiveBytes",archive_bytes},{"head",hex(Bytes(head.begin(),head.end()))},{"checkpointSequence",expected.sequence},{"checkpointDigest",hex(expected.digest)}};
 }
 }
 

@@ -1882,3 +1882,6 @@ set_tests_properties(consensus_capella_snapshot_account_primitives PROPERTIES TI
 # Explicit cross-platform physical backup qualification helper.
 add_executable(nano-storage-portability tests/qualification/storage-portability.cpp)
 target_link_libraries(nano-storage-portability PRIVATE nano_core)
+
+add_test(NAME consensus_capella_historical_state_pruning COMMAND nano-capella-transition-tests --historical-state-pruning)
+set_tests_properties(consensus_capella_historical_state_pruning PROPERTIES TIMEOUT 300 LABELS "qualification_consensus_recovery")

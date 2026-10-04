@@ -6,6 +6,8 @@
 namespace rocksdb { class DB; }
 namespace nano {
 struct ForkCheckpointToken {uint64_t sequence;Bytes digest;bool operator==(const ForkCheckpointToken&)const=default;};
+struct ExecutionStateRetentionAnchor {Int number;Bytes hash;};
+struct ExecutionStatePruningInfo {Int before;ExecutionStateRetentionAnchor anchor;};
 struct ExecutionCheckpointBlock {Block block;State state;std::vector<Receipt> receipts;};
 // Opaque authenticated consensus record; validation belongs to the reactor.
 struct CheckpointArchiveEntry {Bytes root;uint64_t slot;Bytes payload;};
@@ -23,6 +25,7 @@ class ChainStore {
  mutable std::mutex mutex_;
  bool fork_checkpoint_write_uncertain_=false;
  std::optional<ForkCheckpointRecord> fork_checkpoint_impl(const Int&,const Bytes&,size_t) const;
+ std::optional<ExecutionStatePruningInfo> state_pruning_impl() const;
  std::optional<std::string> get(const std::string& key) const;
  std::optional<Json> read(const std::string& key) const;
  std::optional<std::string> proposal_data_impl(const std::string& key) const;
@@ -61,7 +64,10 @@ public:
   const Int& common_height,const Bytes& common_hash,
   const std::vector<ExecutionCheckpointBlock>& suffix,std::string_view snapshot,
   size_t maximum_bytes,size_t maximum_blocks,
-  const std::vector<CheckpointArchiveEntry>& archive={});
+  const std::vector<CheckpointArchiveEntry>& archive={},
+  const std::optional<ExecutionStateRetentionAnchor>& retention=std::nullopt);
+ // Missing historical state is intentional only below this durable boundary.
+ std::optional<ExecutionStatePruningInfo> state_pruning() const;
  // Immutable records committed in the same batch as the execution checkpoint.
  // The digest detects corruption, not consensus validity or external rollback.
  std::optional<CheckpointArchiveEntry> checkpoint_archive(const Bytes& root,size_t maximum_bytes) const;
