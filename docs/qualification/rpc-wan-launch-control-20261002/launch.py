@@ -14,7 +14,7 @@ REMOTE_SOURCE='/home/ubuntu/nano-rpc-headroom-margin-candidate-20261002'
 REMOTE_FULL='/home/ubuntu/nano-rpc-full-amd64-reports-20261002'
 REMOTE_NETWORK='/home/ubuntu/nano-rpc-network-supplement-amd64-reports-20261002'
 REMOTE_SIGNED='/home/ubuntu/nano-rpc-amd64-signed-audit-reports-20261002'
-OUTPUT=Path('/tmp/nano-rpc-wan-restore-d1597d9a-20261002')
+OUTPUT=Path('/tmp/nano-rpc-wan-restore-d1597d9a-20261004-b')
 ARM_REPORT=Path('/tmp/nano-rpc-full-arm64-reports-20261002')
 ARM_NETWORK=Path('/tmp/nano-rpc-network-supplement-arm64-reports-20261002')
 ARM_BUILD='rpc-full-d1597d9a-arm64'
@@ -22,7 +22,7 @@ AMD_BUILD='rpc-full-d1597d9a-amd64'
 IMAGES={'arm64':'sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb','amd64':'sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14'}
 VOLUMES={'arm64':'nano-clean-arm64-build-20261002','amd64':'nano-clean-rpc-build-20261002'}
 TARGET='ubuntu@145.239.199.166'
-ENV={**{k:v for k,v in os.environ.items() if not k.startswith('NANO_TEST_')},'PATH':'/tmp/nano-coherent-wan-transport-control-20261002/bin:'+os.environ['PATH'],'PYTHONDONTWRITEBYTECODE':'1'}
+ENV={**{k:v for k,v in os.environ.items() if not k.startswith('NANO_TEST_')},'PATH':'/tmp/nano-wan-dual-family-transport-control-20261004/bin:'+os.environ['PATH'],'PYTHONDONTWRITEBYTECODE':'1'}
 
 def require(ok,msg):
  if not ok:raise RuntimeError(msg)
