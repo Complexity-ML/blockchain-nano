@@ -236,3 +236,7 @@ scales, asynchronous cross-chain bridges or production readiness.
 cut. The default remains 192000 ms, allowed finite range 192000–600000 ms.
 A longer-cut result cannot close an earlier failed shorter-cut criterion;
 the reconnection deadline remains 180000 ms.
+
+## Packaged stopped-copy restoration — 2026-10-05
+
+`NANO_TEST_BACKUP_RESTORE=1` now supports reviewed candidate manifests for standalone Capella campaigns. Archive creation remains an offline root tool; only the new restored directory is chowned to UID/GID 10001, with unchanged byte manifests. The final canonical audit uses the installed Nano binary and direct read-only copy/request mounts under the packaged user. Build-volume mode retains its previous path and owner. Rotation audit still requires build volumes. The real offline Nano2 proof is scoped separately from pending duties and multi-host finality qualification.

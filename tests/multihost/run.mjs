@@ -293,7 +293,7 @@ try{
   const audit=JSON.parse(await sh(['sudo','-n','cat',restoreProof+'/backup/audit.json']));
   verifyRestoredFinalityAudit(await json(join(restoreDirectory,'audit-request.json')),restoreReceipt,audit);
   if(historicalPruning)verifyPrunedRestoreAudit(audit);
-  const metadata=['source-before.sha256','source-after.sha256','restored-before.sha256','restored-after.sha256','archive.sha256','inputs.sha256','audit.json','passed.txt'];
+  const metadata=['source-before.sha256','source-after.sha256','restored-before.sha256','restored-after.sha256','archive.sha256','inputs.sha256','audit.json','passed.txt',...(candidates?['restored-owner-after.sha256','restored-owner.txt']:[])];
   for(const name of metadata)await writeFile(join(restoreDirectory,name),await sh(['sudo','-n','cat',restoreProof+'/backup/'+name]));
   const elapsedMs=Date.now()-restoreStartedMs,step=Number(BigInt(original.capella.clock.maximumForwardStepMs));
   if(elapsedMs>=step-10000)throw Error('Offline restore used the configured clock-recovery budget');
@@ -412,7 +412,7 @@ if(pinnedRestart&&!process.exitCode){
    const request=restoredFinalityAuditRequest(await json(join(prepared,'vps-docker/node.json')),restoreReceipt,stable,restored);
    const requestPath=join(output,'restore/finalized-audit-request.json');await writeFile(requestPath,JSON.stringify(request,null,2));
    await exec('scp',['-q',requestPath,`${target}:${restoreProof}/finalized-audit-request.json`],{timeout:10000});
-   const audit=JSON.parse(await docker(['run','--rm','--network','none','--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--memory','2g','--cpus','1','--tmpfs','/tmp:rw,nosuid,noexec,size=64m',...artifactMount,'--mount',`type=bind,src=${remoteRoot}/restore-config,dst=/config,readonly`,'--mount',`type=bind,src=${restoreProof},dst=/proof,readonly`,...restoreRuntime.auditArgs,'--entrypoint',restoreRuntime.nano,image,'audit-capella','/config/genesis.json','/proof/backup/restored/chain','/proof/finalized-audit-request.json'],true,180000));
+   const audit=JSON.parse(await docker(['run','--rm','--network','none','--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--memory','2g','--cpus','1','--tmpfs','/tmp:rw,nosuid,noexec,size=64m',...artifactMount,'--mount',`type=bind,src=${remoteRoot}/restore-config,dst=/config,readonly`,...(restoreRuntime.auditUsesDirectCopy?['--mount',`type=bind,src=${restoreProof}/backup/restored,dst=/data,readonly`,'--mount',`type=bind,src=${restoreProof}/finalized-audit-request.json,dst=/request.json,readonly`]:['--mount',`type=bind,src=${restoreProof},dst=/proof,readonly`]),'--entrypoint',restoreRuntime.nano,image,'audit-capella','/config/genesis.json',restoreRuntime.auditUsesDirectCopy?'/data/chain':'/proof/backup/restored/chain',restoreRuntime.auditUsesDirectCopy?'/request.json':'/proof/finalized-audit-request.json'],true,180000));
    await writeFile(join(output,'restore/finalized-audit.json'),JSON.stringify(audit,null,2));
    verifyRestoredFinalityAudit(request,restored,audit);
    if(historicalPruning)verifyPrunedRestoreAudit(audit);

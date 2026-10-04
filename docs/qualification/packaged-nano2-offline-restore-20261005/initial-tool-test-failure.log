@@ -1,0 +1,90 @@
+✔ actual runner inventory covers restored audit and transitive finality/monitor dependencies (16.432333ms)
+✔ dependency-only edit changes its hash while entry hash remains identical (2.669459ms)
+✔ multiline imports, side effects and cycles are included once (1.480292ms)
+✔ missing imported dependency fails rather than making a partial manifest (1.441167ms)
+✔ import outside repository is rejected (1.59975ms)
+✔ symlink to external source is rejected (1.543375ms)
+✔ independent pins bind by signer identity despite receipt permutation (1.411042ms)
+✔ refuses missing signer pin (0.144ms)
+✔ refuses duplicate signer pin (0.078625ms)
+✔ refuses foreign signer pin (0.064041ms)
+✔ refuses malformed signer pin (0.407292ms)
+✔ refuses duplicate receipt (0.110166ms)
+✔ refuses inactive signer (0.057958ms)
+✔ refuses unhealthy clock (0.0595ms)
+✔ three common advances plus fresh duties required (0.213375ms)
+✔ terminal attestations must be a positive safe integer: undefined (0.181208ms)
+✔ terminal attestations must be a positive safe integer: null (0.0465ms)
+✔ terminal attestations must be a positive safe integer: NaN (0.030667ms)
+✔ terminal attestations must be a positive safe integer: Infinity (0.050333ms)
+✔ terminal attestations must be a positive safe integer: 0.5 (0.024417ms)
+✔ terminal attestations must be a positive safe integer: -1 (0.036792ms)
+✔ terminal attestations must be a positive safe integer: 0 (0.037542ms)
+✔ terminal attestations must be a positive safe integer: 9007199254740992 (0.031583ms)
+✔ terminal attestations must be a positive safe integer: 1 (0.033084ms)
+✔ same-epoch terminal root must match the independently observed checkpoint (0.062917ms)
+✔ refuses missing checkpoint (0.038ms)
+✔ refuses missing terminal root (0.028084ms)
+✔ refuses different checkpoint epoch (0.027792ms)
+✔ refuses noncanonical result epoch (0.033625ms)
+✔ matching terminal checkpoint accepts safe fresh duties; later epoch retains audit requirement (0.026458ms)
+✔ restore audit binds the stopped finalized checkpoint without aliasing it (0.124208ms)
+✔ restore audit refuses absent finality (0.044792ms)
+✔ restore audit refuses leading-zero epoch (0.027209ms)
+✔ restore audit refuses decimal epoch (0.02575ms)
+✔ restore audit refuses short root (0.027ms)
+✔ restore audit refuses absent root (0.024917ms)
+✔ separate observed root and terminal commitment bind different epochs without database-derived pins (1.573041ms)
+✔ refuses legacy report (0.140792ms)
+✔ refuses unverified replay (0.069458ms)
+✔ refuses wrong sequence (0.06275ms)
+✔ refuses unsafe sequence (0.073792ms)
+✔ refuses wrong digest (0.06775ms)
+✔ refuses wrong observed root (0.069042ms)
+✔ refuses wrong observed epoch (0.060375ms)
+✔ refuses missing observed checkpoint (0.138917ms)
+✔ refuses wrong terminal root (0.128833ms)
+✔ refuses wrong terminal epoch (0.073625ms)
+✔ refuses missing terminal checkpoint (0.053833ms)
+✔ old/incomplete observed evidence cannot generate a native proof request (0.065667ms)
+✔ missing signer witness prevents request generation before offline audit (0.062167ms)
+✔ packaged restoration selects installed binary and root offline tools, then only restored-copy owner (1.054041ms)
+✔ build volume preserves selected binary and existing ownership (0.171084ms)
+✔ refuses missing, mixed or untyped modes {"buildVolume":false,"packaged":false} (0.11575ms)
+✔ refuses missing, mixed or untyped modes {"buildVolume":true,"packaged":true} (0.046042ms)
+✔ refuses missing, mixed or untyped modes {"buildVolume":1,"packaged":false} (0.031ms)
+✔ refuses missing, mixed or untyped modes {"buildVolume":false,"packaged":"yes"} (0.02975ms)
+✔ refuses unreviewed build path /usr/local/bin/nano (0.064ms)
+✔ refuses unreviewed build path /build/../nano (0.030291ms)
+✔ refuses unreviewed build path /build/./nano (0.042042ms)
+✖ refuses unreviewed build path /build/-option/nano (0.375042ms)
+✔ refuses unreviewed build path /build/a b/nano (0.040667ms)
+✔ refuses unreviewed build path undefined (0.0275ms)
+ℹ tests 62
+ℹ suites 0
+ℹ pass 61
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 87.504083
+
+✖ failing tests:
+
+test at tests/multihost/restore-runtime.test.mjs:7:126
+✖ refuses unreviewed build path /build/-option/nano (0.375042ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/boris/Dev/blockchain-nano/tests/multihost/restore-runtime.test.mjs:7:188)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: undefined,
+    operator: 'throws',
+    diff: 'simple'
+  }
