@@ -417,7 +417,7 @@ if(pinnedRestart&&!process.exitCode){
    verifyRestoredFinalityAudit(request,restored,audit);
    if(historicalPruning)verifyPrunedRestoreAudit(audit);
    await log({event:'backup-restore-finalized-ancestry-passed',request,audit});
-   await docker(['run','--rm','--network','none','--mount',`type=volume,src=${remote}-data,dst=/source,readonly`,'--mount',`type=bind,src=${restoreProof},dst=/proof,readonly`,image,'bash','-lc','set -e; cd /source; find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | cmp /proof/backup/source-before.sha256 -'],true);
+   await docker(['run','--rm','--network','none','--mount',`type=volume,src=${remote}-data,dst=/source,readonly`,'--mount',`type=bind,src=${restoreProof},dst=/proof,readonly`,...restoreRuntime.archiveArgs,image,...restoreRuntime.archiveCommand,'-lc','set -e; cd /source; find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | cmp /proof/backup/source-before.sha256 -'],true);
    await log({event:'backup-restore-passed',sourceStillUnchanged:true,restoredSignerStatus:restored.validator,stable});
   }
 
