@@ -1896,3 +1896,6 @@ set_tests_properties(storage_historical_state_pruning_corruption PROPERTIES TIME
 
 add_test(NAME storage_historical_state_pruning_restore COMMAND nano-execution-checkpoint-tests --pruning-restore)
 set_tests_properties(storage_historical_state_pruning_restore PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_recovery")
+
+add_test(NAME consensus_capella_historical_pruning_restore COMMAND nano-capella-transition-tests --historical-pruning-restore)
+set_tests_properties(consensus_capella_historical_pruning_restore PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_recovery")
