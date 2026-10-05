@@ -1512,7 +1512,16 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
    bool incomplete=false;try{prepare_capella_contextual_received_block(timed,included_wire,rules,preparation,missing,3,100000);}catch(const std::invalid_argument&){incomplete=true;}check(incomplete,"included vote used incomplete target");++checks;
    auto invalid=included_wire;invalid[4]^=1;check(!prepare_capella_contextual_received_block(timed,invalid,rules,preparation,targets,3,100000),"contextual block bypassed BLS signature");++checks;
    Temp worker_directory;Genesis wg;wg.chain_id=r.chain_id;wg.consensus="beacon";wg.evm_revision=EvmRevision::Shanghai;wg.block=genesis;wg.state=genesis_state;
-   auto worker_limits=crash_limits;worker_limits.replay_slots=3;Blockchain worker_owner(worker_directory/"owner",wg);ChainStore worker_witness(worker_directory/"witness");
+   auto worker_limits=crash_limits;worker_limits.replay_slots=3;
+   {
+    Blockchain warm_owner(worker_directory/"warm-owner",wg);ChainStore warm_witness(worker_directory/"warm-witness");CapellaDurableReactor warmed(warm_owner,rules,worker_limits,initial,{},&warm_witness);warmed.tick(clock);
+    size_t attempts=0;while(!warmed.vote(vote))check(++attempts<slot/3+4,"prewarmed included target stalled");
+    attempts=0;while(!warmed.prepare_current_duties(slot))check(++attempts<slot/3+4,"prewarmed local block stalled");
+    const auto before=warmed.current();const auto oracle=prepare_capella_received_block(*before.state,included_wire,rules,slot-parent.header.slot,100000);
+    check(warmed.block(included_wire)&&warmed.current().token.sequence==before.token.sequence+1,"ready included target unnecessarily deferred local admission");++checks;
+    check(oracle&&capella_store_snapshot(*warmed.current().state,rules,worker_limits)==capella_store_snapshot(*oracle,rules,worker_limits),"ready-cache admission differs from full-gap oracle");++checks;
+   }
+   Blockchain worker_owner(worker_directory/"owner",wg);ChainStore worker_witness(worker_directory/"witness");
    auto worker=std::make_unique<CapellaDurableReactor>(worker_owner,rules,worker_limits,initial,std::function<void()>{},&worker_witness);worker->tick(clock);const auto pending=worker->current().token;
    bool cancelled=false;try{worker->block(included_wire,[]{throw ExecutionCancelled("cancel included worker");});}catch(const ExecutionCancelled&){cancelled=true;}
    check(cancelled&&worker->current().token==pending,"cancelled included worker published state");++checks;

@@ -406,22 +406,27 @@ bool CapellaDurableReactor::block(std::span<const uint8_t> wire,const std::funct
   if(!incoming_preparation_->advance_for_block(header.slot,std::min(limits_.replay_slots,slots),limits_.sync_trials,check))return false;
   if(incoming_target_block_!=id){incoming_targets_.clear();incoming_target_block_=id;}
   if(std::any_of(incoming_targets_.begin(),incoming_targets_.end(),[&](const auto& frame){return !frame.matches(*state_,rules_,frame.target(),check);}))incoming_targets_.clear();
-  std::vector<const CapellaTargetPreparation*> targets;
-  for(auto& frame:incoming_targets_){
-   if(!frame.advance(std::min(limits_.replay_slots,slots),limits_.sync_trials,check))return false;
-   targets.push_back(&frame);
-  }
-  try{
-   next=prepare_capella_contextual_received_block(*state_,wire,rules_,*incoming_preparation_,targets,limits_.replay_slots,limits_.sync_trials,check);
-  }catch(const CapellaTargetContextRequired& needed){
-   // At most one new frame per admitted-work attempt. A block's bounded
-   // attestation list plus its realized/unrealized checkpoints bounds retention.
-   if(incoming_targets_.size()>=size_t(rules_.transition.consensus.body.attestations)+2)throw std::length_error("Incoming Capella target cache capacity");
-   incoming_targets_.emplace_back(*state_,rules_,needed.target(),check);
-   auto& frame=incoming_targets_.back();
-   for(const auto& ready:vote_preparations_)if(ready&&ready->ready()&&ready->matches(*state_,rules_,needed.target(),check)){frame=*ready;break;}
-   frame.advance(std::min(limits_.replay_slots,slots),limits_.sync_trials,check);
-   return false;
+  for(;;){
+   std::vector<const CapellaTargetPreparation*> targets;
+   for(auto& frame:incoming_targets_){
+    if(!frame.advance(std::min(limits_.replay_slots,slots),limits_.sync_trials,check))return false;
+    targets.push_back(&frame);
+   }
+   try{
+    next=prepare_capella_contextual_received_block(*state_,wire,rules_,*incoming_preparation_,targets,limits_.replay_slots,limits_.sync_trials,check);
+    break;
+   }catch(const CapellaTargetContextRequired& needed){
+    if(incoming_targets_.size()>=size_t(rules_.transition.consensus.body.attestations)+2)throw std::length_error("Incoming Capella target cache capacity");
+    incoming_targets_.emplace_back(*state_,rules_,needed.target(),check);
+    auto& frame=incoming_targets_.back();bool reused=false;
+    for(const auto& ready:vote_preparations_)if(ready&&ready->ready()&&ready->matches(*state_,rules_,needed.target(),check)){frame=*ready;reused=true;break;}
+    // A completed authenticated context needs no more slot work. Rebuild the
+    // pointer view after vector growth and finish admission in this same call.
+    // Only genuinely unfinished preparation defers the signed block.
+    if(reused)continue;
+    frame.advance(std::min(limits_.replay_slots,slots),limits_.sync_trials,check);
+    return false;
+   }
   }
  }
  if(!next)return false;
