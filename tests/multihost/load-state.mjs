@@ -19,7 +19,9 @@ export async function collectFinalizedLoadState({rpc,receiptAnchor,sender,target
   try{
    states[node]={nonce:await rpc(node,'eth_getTransactionCount',[sender,anchor.number]),balance:await rpc(node,'eth_getBalance',[target,anchor.number]),storage:await rpc(node,'eth_getStorageAt',[target,'0x0',anchor.number])};
   }catch(error){if(!unavailable(error))throw error;return {complete:false,reason:'state-pruned-during-read',node,anchor};}
-  for(const value of Object.values(states[node]))quantity(value);
+  quantity(states[node].nonce);quantity(states[node].balance);
+  // eth_getStorageAt returns DATA (one padded 32-byte word), not QUANTITY.
+  assert.match(states[node].storage??'',/^0x[0-9a-f]{64}$/,'Invalid storage word');
   assert.deepEqual(block(await rpc(node,'eth_getBlockByNumber',[anchor.number,false])),anchor,'State anchor changed during read');
   const finalized=block(await rpc(node,'eth_getBlockByNumber',['finalized',false]));
   assert.ok(quantity(finalized.number)>=quantity(anchor.number),'State anchor no longer finalized');
