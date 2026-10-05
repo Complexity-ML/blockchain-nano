@@ -11,11 +11,12 @@ import {setTimeout as wait} from 'node:timers/promises';
 import assert from 'node:assert/strict';
 import {restoredThreeNodePlan} from './restored-three-node-plan.mjs';
 import {waitRestoredReadiness} from './restored-readiness.mjs';
+import {restoredFinalityProgress} from './restored-finality-progress.mjs';
 import {durableFinalityObservation} from './finality-observation.mjs';
 const exec=promisify(execFile),[target,revision,preparedArg]=process.argv.slice(2);
 assert.match(target??'',/^[a-z_][a-z0-9_-]*@[0-9.]+$/);assert.match(revision??'',/^[a-f0-9]{40}$/);assert.ok(preparedArg);
 const repo=process.cwd(),prepared=resolve(preparedArg),out=join(prepared,'campaign');await mkdir(out);
-const controllerFiles=['tests/capella/restored-three-node-run.mjs','tests/capella/restored-three-node-plan.mjs','tests/capella/deposit-restart-pins.mjs','tests/capella/finality-observation.mjs','tests/capella/restored-readiness.mjs'];let controllerHashes;
+const controllerFiles=['tests/capella/restored-three-node-run.mjs','tests/capella/restored-three-node-plan.mjs','tests/capella/deposit-restart-pins.mjs','tests/capella/finality-observation.mjs','tests/capella/restored-readiness.mjs','tests/capella/restored-finality-progress.mjs'];let controllerHashes;
 const evidence=resolve(process.env.NANO_TEST_RESTORED_PREPARATION??join(repo,'docs/qualification/restored-three-node-prepare-20261005'));assert.ok(evidence.startsWith(join(repo,'docs/qualification')+'/'),'Preparation must be a committed qualification bundle');
 const json=async p=>JSON.parse(await readFile(p,'utf8')),save=(p,v)=>writeFile(p,JSON.stringify(v,null,2)+'\n');
 const hash=async p=>createHash('sha256').update(await readFile(p)).digest('hex');
@@ -74,7 +75,7 @@ try{
  await waitRestoredReadiness({sample:async()=>{const nativeRows=events(await readFile(join(out,'native.log'),'utf8'));const rows=[{name:'mac-native',running:native.exitCode===null&&native.signalCode===null,networkReady:nativeRows.some(x=>x.event==='altair-ipc-ready'&&x.networkProtocolActive===true)}];for(const [name,rem,owner] of [[local,false,'mac-docker'],[remote,true,'vps-docker']]){const s=await inspect(name,rem),ev=events(await logs(name,rem));rows.push({name:owner,running:s.State.Running&&!s.State.OOMKilled,networkReady:ev.some(x=>x.event==='altair-ipc-ready'&&x.networkProtocolActive===true)});}assert.equal(tunnel.exitCode,null);assert.equal(tunnel.signalCode,null);return rows;},record});
  const request=async(n,path,body)=>{if(n===1){const args=['exec',local,'curl','-sS','--max-time','10','-H','Accept: application/json','--write-out','\n%{http_code}'];if(body)args.push('-H','Content-Type: application/json','--data',JSON.stringify(body));args.push('http://127.0.0.1:8545'+path);const text=await docker(args),cut=text.lastIndexOf('\n'),status=Number(text.slice(cut+1));if(status!==200){const e=Error(`HTTP ${status} ${names[n]} ${path}`);e.status=status;throw e;}return JSON.parse(text.slice(0,cut));}const response=await fetch(urls[n]+path,{method:body?'POST':'GET',headers:{Accept:'application/json',...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(10000)});if(!response.ok){const e=Error(`HTTP ${response.status} ${names[n]} ${path}`);e.status=response.status;throw e;}return response.json();};
  const rpc=async(n,method)=>{const x=await request(n,'/',{jsonrpc:'2.0',id:1,method,params:[]});assert.ok(!x.error,JSON.stringify(x.error));return x.result;};
- const baseline=BigInt(plan.baseline.epoch),previous=[baseline,baseline,baseline],known=new Map([[String(baseline),plan.baseline.root]]),blocks=[new Map(),new Map(),new Map()];let stable=0;const deadline=Date.now()+900000;
+ const baseline=BigInt(plan.baseline.epoch),previous=[baseline,baseline,baseline],known=new Map([[String(baseline),plan.baseline.root]]),blocks=[new Map(),new Map(),new Map()];const progress=restoredFinalityProgress(plan.baseline);const deadline=Date.now()+900000;
  async function ancestry(n,root){let tip=root;for(let count=0;tip!==plan.baseline.root&&!blocks[n].has(tip);count++){assert.ok(count<1024,'Ancestry work bound exceeded');const b=await request(n,'/eth/v2/beacon/blocks/'+tip);assert.equal(b.version,'capella');assert.equal(b.execution_optimistic,false);for(let other=0;other<3;other++)if(blocks[other].has(tip))assert.deepEqual(b.data.message,blocks[other].get(tip),'Conflicting canonical block bodies');blocks[n].set(tip,b.data.message);tip=b.data.message.parent_root;}}
  while(Date.now()<deadline){
   assert.ok(!failure);assert.equal(native.exitCode,null,'Native exited');assert.equal(native.signalCode,null);assert.equal(tunnel.exitCode,null);assert.equal(tunnel.signalCode,null);for(const [name,rem] of [[local,false],[remote,true]])assert.equal((await inspect(name,rem)).State.Running,true,name+' exited');
@@ -84,9 +85,9 @@ try{
     const cp=observation.checkpoint,epoch=BigInt(cp.epoch),key=String(epoch);assert.ok(epoch>=previous[n],'Finality regressed');if(known.has(key))assert.equal(cp.root,known.get(key),'Conflicting finalized roots');previous[n]=epoch;known.set(key,cp.root);await ancestry(n,cp.root);rows.push({name:names[n],checkpoint:cp,slot:head.header.message.slot,head:head.root,peers:await rpc(n,'net_peerCount')});
    }catch(e){if(e.status===404||e.cause?.code==='ECONNREFUSED'){await record({event:'startup-pending',node:n,message:e.message});continue;}throw e;}
   }
-  await record({event:'observation',rows});if(rows.length===3&&rows.every(x=>BigInt(x.peers)>0n&&x.checkpoint.root===rows[0].checkpoint.root&&BigInt(x.checkpoint.epoch)===BigInt(rows[0].checkpoint.epoch))&&BigInt(rows[0].checkpoint.epoch)>=baseline+3n){if(++stable>=3){common=rows[0].checkpoint;break;}}else stable=0;await wait(3000);
+  await record({event:'observation',rows});common=progress.observe(rows);await save(join(out,'distinct-finality-progress.json'),progress.snapshot());if(common)break;await wait(3000);
  }
- assert.ok(common,'Three-node common finality did not advance by three epochs before deadline');await save(join(out,'canonical-blocks.json'),blocks.map(m=>[...m].map(([root,message])=>({root,message}))));result='PASSED';
+ assert.ok(common,'Three-node common finality did not advance through three distinct checkpoints before deadline');await save(join(out,'canonical-blocks.json'),blocks.map(m=>[...m].map(([root,message])=>({root,message}))));result='PASSED';
 }catch(e){failure=e;process.exitCode=1;await record({event:'failed',message:e.stack});}
 finally{
  await stop(native);

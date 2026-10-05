@@ -1,0 +1,2276 @@
+{
+  "macConfig": {
+    "capella": {
+      "admission": {
+        "attestationBytes": "0x1e5",
+        "blockBytes": "0x800000",
+        "frameBytes": "0x1000400",
+        "jobs": "0x2",
+        "payloadBytes": "0x1000000",
+        "slashingBytes": "0x81d0"
+      },
+      "catalogs": {
+        "handles": "0x2",
+        "rootBytes": "0x10000",
+        "ttlMs": "0xea60"
+      },
+      "clock": {
+        "intervalMs": "0x64",
+        "maximumForwardStepMs": "0x5dc000",
+        "maximumWallClockDriftMs": "0xfa",
+        "startupCatchup": {
+          "maximumDowntimeMs": "0x5265c00",
+          "maximumSteps": "0x10"
+        }
+      },
+      "initial": null,
+      "limits": {
+        "blocks": "0x100",
+        "envelopeBytes": "0x8000000",
+        "equivocations": "0x3e8",
+        "messages": "0x800",
+        "replaySlots": "0x400",
+        "stateBytes": "0x400000",
+        "syncTrials": "0x186a0",
+        "totalStateBytes": "0x4000000"
+      },
+      "network": {
+        "acknowledgedRoots": "0x400",
+        "dependencyBlocks": "0x100",
+        "dependencyBytes": "0x1000000",
+        "enabled": false,
+        "maximumEntries": "0x400",
+        "pageEntries": "0x8"
+      },
+      "profile": {
+        "file": "/config/profile.json",
+        "maximumBytes": "0x100000",
+        "sha256": "0xe3440eba0a871a8eedf84a6e2cdccee53cc4389e8ce6b979166621c8e893890d"
+      },
+      "recoveryWitness": "/var/lib/nano/witness",
+      "restart": null,
+      "validator": {
+        "keys": [
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x0",
+            "journal": "/var/lib/nano/key-0",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_0",
+            "recoveryWitness": "/var/lib/nano/key-0-witness",
+            "restart": {
+              "digest": "0xfc16a87485f460aed6b64f0ea14071ad3f1e0f289692648bbe67b45358ff464b",
+              "sequence": "0x37"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1",
+            "journal": "/var/lib/nano/key-1",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_1",
+            "recoveryWitness": "/var/lib/nano/key-1-witness",
+            "restart": {
+              "digest": "0xaa3da579de5c176b020b40b90328be8c3169a060335312860298dccbc843a5c9",
+              "sequence": "0x37"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x2",
+            "journal": "/var/lib/nano/key-2",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_2",
+            "recoveryWitness": "/var/lib/nano/key-2-witness",
+            "restart": {
+              "digest": "0xa19d724d0209950896a3d0dea8566a57c83808715c651f7745dabc55a16e00a5",
+              "sequence": "0x37"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x3",
+            "journal": "/var/lib/nano/key-3",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_3",
+            "recoveryWitness": "/var/lib/nano/key-3-witness",
+            "restart": {
+              "digest": "0xcc5a1c8cad20cd7684f8e9f62b7a2c899d29eb4b051135a1a0736b47b9968c25",
+              "sequence": "0x38"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x4",
+            "journal": "/var/lib/nano/key-4",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_4",
+            "recoveryWitness": "/var/lib/nano/key-4-witness",
+            "restart": {
+              "digest": "0xf35ccd0e586ff1e0e23b7d63b96c9520084cd0dec4f9b02a32baa0322fec4f6e",
+              "sequence": "0x37"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x5",
+            "journal": "/var/lib/nano/key-5",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_5",
+            "recoveryWitness": "/var/lib/nano/key-5-witness",
+            "restart": {
+              "digest": "0x60168f55ac236f31d4cdca6280c252db27465203dc9f46fa3b9ef22a6293d9cf",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x6",
+            "journal": "/var/lib/nano/key-6",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_6",
+            "recoveryWitness": "/var/lib/nano/key-6-witness",
+            "restart": {
+              "digest": "0xba78bede90ce50e960b5caf0b975261d9d77a2b42f6bdb40b770b1db92b02b95",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x7",
+            "journal": "/var/lib/nano/key-7",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_7",
+            "recoveryWitness": "/var/lib/nano/key-7-witness",
+            "restart": {
+              "digest": "0x908a44ddc52ca082bec49d655db53890a7dd8794b4393fd2136efba9f681d9a6",
+              "sequence": "0x34"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x8",
+            "journal": "/var/lib/nano/key-8",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_8",
+            "recoveryWitness": "/var/lib/nano/key-8-witness",
+            "restart": {
+              "digest": "0xceb4629e99e61b1d652e6a457502535e4afe7d31bc8ff0700d1165febf4e212d",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x9",
+            "journal": "/var/lib/nano/key-9",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_9",
+            "recoveryWitness": "/var/lib/nano/key-9-witness",
+            "restart": {
+              "digest": "0x07bee2ff9a35dc066cee1ff5d1fe27a3191dfd4ddceb9bf1b53d9892301f2a32",
+              "sequence": "0x33"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0xa",
+            "journal": "/var/lib/nano/key-10",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_10",
+            "recoveryWitness": "/var/lib/nano/key-10-witness",
+            "restart": {
+              "digest": "0x296c43a6a7b7e9a27e95cafc00a68efb3c18a03f1ecc64d50c51717a1bb27145",
+              "sequence": "0x37"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0xb",
+            "journal": "/var/lib/nano/key-11",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_11",
+            "recoveryWitness": "/var/lib/nano/key-11-witness",
+            "restart": {
+              "digest": "0xe6987e8539271f85d96b114c31808add32a0db3139b0927f088d2b45db83ce26",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0xc",
+            "journal": "/var/lib/nano/key-12",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_12",
+            "recoveryWitness": "/var/lib/nano/key-12-witness",
+            "restart": {
+              "digest": "0x426130275ad1c82083c4c649eda28deeb4105eb62ddf5181b616ee3ab3dc6571",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0xd",
+            "journal": "/var/lib/nano/key-13",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_13",
+            "recoveryWitness": "/var/lib/nano/key-13-witness",
+            "restart": {
+              "digest": "0xe974d936b726957d6014324749e655404959894dfe3d8187e2065d612e882118",
+              "sequence": "0x31"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0xe",
+            "journal": "/var/lib/nano/key-14",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_14",
+            "recoveryWitness": "/var/lib/nano/key-14-witness",
+            "restart": {
+              "digest": "0x54272601184e11e1a74eaa0b3ef7e9c0c898c3f9e1482bbb91d5ff7e48ddab0f",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0xf",
+            "journal": "/var/lib/nano/key-15",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_15",
+            "recoveryWitness": "/var/lib/nano/key-15-witness",
+            "restart": {
+              "digest": "0x22a8cbdb9b9fe5075c975cc1d2332da9cf4504a9c3c9d1b8668cc61247a7aa64",
+              "sequence": "0x32"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x10",
+            "journal": "/var/lib/nano/key-16",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_16",
+            "recoveryWitness": "/var/lib/nano/key-16-witness",
+            "restart": {
+              "digest": "0x55be9e8ed55b57767a0e058809231d379f2a66ec2c514cb686f6b4c1af2fb285",
+              "sequence": "0x34"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x11",
+            "journal": "/var/lib/nano/key-17",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_17",
+            "recoveryWitness": "/var/lib/nano/key-17-witness",
+            "restart": {
+              "digest": "0x38a705e7a10e486ee272e01cd70952c1eb9818ff83dee265ebc74d23e77e2c5e",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x12",
+            "journal": "/var/lib/nano/key-18",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_18",
+            "recoveryWitness": "/var/lib/nano/key-18-witness",
+            "restart": {
+              "digest": "0x24449240f93ec03941903a83a831854c1ca5c786041aa9155dd31f020baa960d",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x13",
+            "journal": "/var/lib/nano/key-19",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_19",
+            "recoveryWitness": "/var/lib/nano/key-19-witness",
+            "restart": {
+              "digest": "0x0ed28f32c337ba25e411cd350c20339613fcc6252b0df761c1ec264631035084",
+              "sequence": "0x36"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x14",
+            "journal": "/var/lib/nano/key-20",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_20",
+            "recoveryWitness": "/var/lib/nano/key-20-witness",
+            "restart": {
+              "digest": "0x02be8138e4fa6eeae7d7268371a64e610e0a246300da379e2fdfc8b243549cd0",
+              "sequence": "0x37"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x15",
+            "journal": "/var/lib/nano/key-21",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_21",
+            "recoveryWitness": "/var/lib/nano/key-21-witness",
+            "restart": {
+              "digest": "0xd3b40bc7d69bdc018b33ae061f5bbb68e43e41a6b18e1276cdc195c40fe62519",
+              "sequence": "0x36"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x16",
+            "journal": "/var/lib/nano/key-22",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_22",
+            "recoveryWitness": "/var/lib/nano/key-22-witness",
+            "restart": {
+              "digest": "0x4c3f12819fc647ef93fc45b278de2573ef255a99ac58c7dd336d61c7f900c554",
+              "sequence": "0x32"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x17",
+            "journal": "/var/lib/nano/key-23",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_23",
+            "recoveryWitness": "/var/lib/nano/key-23-witness",
+            "restart": {
+              "digest": "0x4f9bb705cc321f001b9a086a5e1f1889c2baa8ef57c718fc6600920a2f18fe75",
+              "sequence": "0x34"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x18",
+            "journal": "/var/lib/nano/key-24",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_24",
+            "recoveryWitness": "/var/lib/nano/key-24-witness",
+            "restart": {
+              "digest": "0x896493045490560ea591fa8a9e84bf5c42c390da0bdd649229891f09f589c38d",
+              "sequence": "0x36"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x19",
+            "journal": "/var/lib/nano/key-25",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_25",
+            "recoveryWitness": "/var/lib/nano/key-25-witness",
+            "restart": {
+              "digest": "0xf72127c09d213fc7866045d8c122f761e64857e4432b66cf6634c0943a0320d0",
+              "sequence": "0x31"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1a",
+            "journal": "/var/lib/nano/key-26",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_26",
+            "recoveryWitness": "/var/lib/nano/key-26-witness",
+            "restart": {
+              "digest": "0x1b459a6a55e754a56f86f8a29095bafc42742cb0536bb0f024f9025f044bf2a8",
+              "sequence": "0x30"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1b",
+            "journal": "/var/lib/nano/key-27",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_27",
+            "recoveryWitness": "/var/lib/nano/key-27-witness",
+            "restart": {
+              "digest": "0x5acb1630a6bcf76b2931d5c0107de71ddb4d69311c20e4b020e3a3d643b36874",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1c",
+            "journal": "/var/lib/nano/key-28",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_28",
+            "recoveryWitness": "/var/lib/nano/key-28-witness",
+            "restart": {
+              "digest": "0x53e0f0e9fc440eb6423c98382ae396c695245fdd341f6e189f28cfc8653cec96",
+              "sequence": "0x34"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1d",
+            "journal": "/var/lib/nano/key-29",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_29",
+            "recoveryWitness": "/var/lib/nano/key-29-witness",
+            "restart": {
+              "digest": "0x4c5e7662008b0e386acf751c5a51c4ab02e8a364c0ce8f73cdbb5a04cb6ed498",
+              "sequence": "0x34"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1e",
+            "journal": "/var/lib/nano/key-30",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_30",
+            "recoveryWitness": "/var/lib/nano/key-30-witness",
+            "restart": {
+              "digest": "0x0f99f8d6bbc5b9adb530f8b39a92f2621fd0d9fd2086d30c787f4180f642587a",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1f",
+            "journal": "/var/lib/nano/key-31",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_31",
+            "recoveryWitness": "/var/lib/nano/key-31-witness",
+            "restart": {
+              "digest": "0x2d76c35e0422f60f503c011be7168c9e1e7aa6f8151194b9d6ac8154d1ced8a3",
+              "sequence": "0x33"
+            }
+          }
+        ],
+        "maximumTransactionTrials": "0x10",
+        "maximumVoteTrials": "0x40",
+        "pollIntervalMs": "0x64"
+      },
+      "recoveryCommitment": {
+        "digest": "0xbaf55d7881ea0b33cfafac4a359af5bbd03b39c173458e1a387e901dfe769b4e",
+        "sequence": "0x1099"
+      },
+      "automaticRecovery": false
+    }
+  },
+  "vpsConfig": {
+    "bootnodes": [],
+    "capella": {
+      "admission": {
+        "attestationBytes": "0x1e5",
+        "blockBytes": "0x800000",
+        "frameBytes": "0x1000400",
+        "jobs": "0x2",
+        "payloadBytes": "0x1000000",
+        "slashingBytes": "0x81d0"
+      },
+      "catalogs": {
+        "handles": "0x2",
+        "rootBytes": "0x10000",
+        "ttlMs": "0xea60"
+      },
+      "clock": {
+        "intervalMs": "0x64",
+        "maximumForwardStepMs": "0x5dc000",
+        "maximumWallClockDriftMs": "0xfa"
+      },
+      "initial": null,
+      "limits": {
+        "blocks": "0x100",
+        "envelopeBytes": "0x8000000",
+        "equivocations": "0x3e8",
+        "messages": "0x800",
+        "replaySlots": "0x400",
+        "stateBytes": "0x400000",
+        "syncTrials": "0x186a0",
+        "totalStateBytes": "0x4000000"
+      },
+      "network": {
+        "acknowledgedRoots": "0x400",
+        "dependencyBlocks": "0x100",
+        "dependencyBytes": "0x1000000",
+        "enabled": true,
+        "maximumEntries": "0x400",
+        "pageEntries": "0x8"
+      },
+      "profile": {
+        "file": "/config/profile.json",
+        "maximumBytes": "0x100000",
+        "sha256": "0xe3440eba0a871a8eedf84a6e2cdccee53cc4389e8ce6b979166621c8e893890d"
+      },
+      "recoveryWitness": "/var/lib/nano/witness",
+      "restart": null,
+      "validator": {
+        "keys": [
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x20",
+            "journal": "/var/lib/nano/key-32",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_32",
+            "recoveryWitness": "/var/lib/nano/key-witness-32",
+            "restart": {
+              "digest": "0x8190496ee7f168c4e6c34ec7b6133683aa02759966ec20d9650d6d133f2de668",
+              "sequence": "0x24"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x21",
+            "journal": "/var/lib/nano/key-33",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_33",
+            "recoveryWitness": "/var/lib/nano/key-witness-33",
+            "restart": {
+              "digest": "0x0802dfdcadc225a7db3b6bfcd89e29bae2c1ad162cc0c250bfed3d61f5e6f3f4",
+              "sequence": "0x21"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x22",
+            "journal": "/var/lib/nano/key-34",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_34",
+            "recoveryWitness": "/var/lib/nano/key-witness-34",
+            "restart": {
+              "digest": "0x1f5d873ce5803bf9d65de1436c225db9d0341c2961c84d99589ba49b1b258f24",
+              "sequence": "0x25"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x23",
+            "journal": "/var/lib/nano/key-35",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_35",
+            "recoveryWitness": "/var/lib/nano/key-witness-35",
+            "restart": {
+              "digest": "0x248f2e39f098da3f9d86c08e8173b44ab0811322479cbd65cc6f9dd49fb951a1",
+              "sequence": "0x21"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x24",
+            "journal": "/var/lib/nano/key-36",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_36",
+            "recoveryWitness": "/var/lib/nano/key-witness-36",
+            "restart": {
+              "digest": "0x4aff48eb59f5a4cecc6ead64a4c64585953f8f62d88323deffc434a8863f3fad",
+              "sequence": "0x24"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x25",
+            "journal": "/var/lib/nano/key-37",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_37",
+            "recoveryWitness": "/var/lib/nano/key-witness-37",
+            "restart": {
+              "digest": "0xf31880a88d72df34fe9c3bdcd80d8a0ce6bebd71e59b560a5f11325dd9a6f29f",
+              "sequence": "0x20"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x26",
+            "journal": "/var/lib/nano/key-38",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_38",
+            "recoveryWitness": "/var/lib/nano/key-witness-38",
+            "restart": {
+              "digest": "0xd5e6ee626e1ef84cb13b8742022ec156732e78fe9fdde374ebba0bd2ade1c8b9",
+              "sequence": "0x22"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x27",
+            "journal": "/var/lib/nano/key-39",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_39",
+            "recoveryWitness": "/var/lib/nano/key-witness-39",
+            "restart": {
+              "digest": "0xab36d631fc9938a523505c4e4d89640d5f7784e5e6af54d483e3f631d61cf8a9",
+              "sequence": "0x20"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x28",
+            "journal": "/var/lib/nano/key-40",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_40",
+            "recoveryWitness": "/var/lib/nano/key-witness-40",
+            "restart": {
+              "digest": "0xe96e409994c9b2c38617f68ba91f2797e7c02f6d2ff2f3ebcb059f8abbe83c01",
+              "sequence": "0x1d"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x29",
+            "journal": "/var/lib/nano/key-41",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_41",
+            "recoveryWitness": "/var/lib/nano/key-witness-41",
+            "restart": {
+              "digest": "0x1fdecd3236f8822b102e1e7fc2608c4c56cdb3b266c521b93b386236a362fee3",
+              "sequence": "0x21"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x2a",
+            "journal": "/var/lib/nano/key-42",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_42",
+            "recoveryWitness": "/var/lib/nano/key-witness-42",
+            "restart": {
+              "digest": "0xe7a4ca34f36b8e525e3d8dc57c6a8c76378e8da2be9a10433d49cef9dad01ac4",
+              "sequence": "0x23"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x2b",
+            "journal": "/var/lib/nano/key-43",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_43",
+            "recoveryWitness": "/var/lib/nano/key-witness-43",
+            "restart": {
+              "digest": "0x970b8656fcb9345286b41171a588866b9baa64bfdda34563078f520104a54765",
+              "sequence": "0x21"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x2c",
+            "journal": "/var/lib/nano/key-44",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_44",
+            "recoveryWitness": "/var/lib/nano/key-witness-44",
+            "restart": {
+              "digest": "0xc5878b51f3695279989619f23e98c66722f6f11f6ae5ef904808ada7e4d8ae89",
+              "sequence": "0x22"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x2d",
+            "journal": "/var/lib/nano/key-45",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_45",
+            "recoveryWitness": "/var/lib/nano/key-witness-45",
+            "restart": {
+              "digest": "0xad713d1e3a34646c2e51aca257e1e7c0bd78fd4c389640bf6aa40cb124ab5804",
+              "sequence": "0x20"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x2e",
+            "journal": "/var/lib/nano/key-46",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_46",
+            "recoveryWitness": "/var/lib/nano/key-witness-46",
+            "restart": {
+              "digest": "0x2da33a68c099c8c570f41470419f4f45367affc67e4953eb4e0a1766b6179c5c",
+              "sequence": "0x22"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x2f",
+            "journal": "/var/lib/nano/key-47",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_47",
+            "recoveryWitness": "/var/lib/nano/key-witness-47",
+            "restart": {
+              "digest": "0xee5a133968392753181c42f949a069c32bfa2357f4f1e4c1ef77ce0a4ee48c7a",
+              "sequence": "0x20"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x30",
+            "journal": "/var/lib/nano/key-48",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_48",
+            "recoveryWitness": "/var/lib/nano/key-witness-48",
+            "restart": {
+              "digest": "0xef0985cd14b06579d38e776ce2cf8be784752bcd3cb3e5077c0e6c42def395ba",
+              "sequence": "0x20"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x31",
+            "journal": "/var/lib/nano/key-49",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_49",
+            "recoveryWitness": "/var/lib/nano/key-witness-49",
+            "restart": {
+              "digest": "0xa4f7d7712fc0df7e857b37a1002d3d6afcbb570db0ac3d80e1cf13968b86d14b",
+              "sequence": "0x25"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x32",
+            "journal": "/var/lib/nano/key-50",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_50",
+            "recoveryWitness": "/var/lib/nano/key-witness-50",
+            "restart": {
+              "digest": "0x0f290fd7e2b98d35ed6aae7be7a1bf4dcc8af9222c3a4ece08bc56fc5c0f83d0",
+              "sequence": "0x20"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x33",
+            "journal": "/var/lib/nano/key-51",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_51",
+            "recoveryWitness": "/var/lib/nano/key-witness-51",
+            "restart": {
+              "digest": "0xccaa6d3838810cde3d236005a47b2144dbd9b1462c9b174e674e040224e63b47",
+              "sequence": "0x20"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x34",
+            "journal": "/var/lib/nano/key-52",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_52",
+            "recoveryWitness": "/var/lib/nano/key-witness-52",
+            "restart": {
+              "digest": "0x68f6fe31ec1addf0b06300e0dc6fe9fcb54b3207c7ed49cd8856ae7450f5f094",
+              "sequence": "0x23"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x35",
+            "journal": "/var/lib/nano/key-53",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_53",
+            "recoveryWitness": "/var/lib/nano/key-witness-53",
+            "restart": {
+              "digest": "0x97c285c43308dc74c5a790495935da2cefec3d1a5a41a9924c594511a05a1468",
+              "sequence": "0x24"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x36",
+            "journal": "/var/lib/nano/key-54",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_54",
+            "recoveryWitness": "/var/lib/nano/key-witness-54",
+            "restart": {
+              "digest": "0x427e986b0b6aef3e3a27dbd9fa9cc2e4c8173c4906a86c02ef8a2184d090b2a9",
+              "sequence": "0x24"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x37",
+            "journal": "/var/lib/nano/key-55",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_55",
+            "recoveryWitness": "/var/lib/nano/key-witness-55",
+            "restart": {
+              "digest": "0x9548f02877cdbc3793d7806956bc45c20cd8860aa71b64ab00448cc9cc9a6537",
+              "sequence": "0x1f"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x38",
+            "journal": "/var/lib/nano/key-56",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_56",
+            "recoveryWitness": "/var/lib/nano/key-witness-56",
+            "restart": {
+              "digest": "0x895b0b9c2fa110d71ec7d99971e81164b9006330e5c71774ffba7bd14e41015a",
+              "sequence": "0x22"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x39",
+            "journal": "/var/lib/nano/key-57",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_57",
+            "recoveryWitness": "/var/lib/nano/key-witness-57",
+            "restart": {
+              "digest": "0xffa47a0373c2c84228bbf213c14ec84c4eb712f065329148b4e2eaaae2aaea75",
+              "sequence": "0x23"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x3a",
+            "journal": "/var/lib/nano/key-58",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_58",
+            "recoveryWitness": "/var/lib/nano/key-witness-58",
+            "restart": {
+              "digest": "0xd876bf359e58a3f6c5834db2ad6723d9616997a39805ddef0ebbaf3b647c5d50",
+              "sequence": "0x1f"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x3b",
+            "journal": "/var/lib/nano/key-59",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_59",
+            "recoveryWitness": "/var/lib/nano/key-witness-59",
+            "restart": {
+              "digest": "0xfce9aeede736a29db1937537481b594e5307ff38aaa5138e69ef788f63531421",
+              "sequence": "0x23"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x3c",
+            "journal": "/var/lib/nano/key-60",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_60",
+            "recoveryWitness": "/var/lib/nano/key-witness-60",
+            "restart": {
+              "digest": "0xb3245f3ebcd49400aab0d07bdb3a248a55e1b53a7d78bc3fb97e3407ed2ee068",
+              "sequence": "0x22"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x3d",
+            "journal": "/var/lib/nano/key-61",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_61",
+            "recoveryWitness": "/var/lib/nano/key-witness-61",
+            "restart": {
+              "digest": "0xddc6e8c327dfee40147d1a296fb04e65fc8bbdb27035eaf9c085078142d58a81",
+              "sequence": "0x22"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x3e",
+            "journal": "/var/lib/nano/key-62",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_62",
+            "recoveryWitness": "/var/lib/nano/key-witness-62",
+            "restart": {
+              "digest": "0xe7bfdce78f12c84c6df9378506293bcb2d34dc34e9327ea5c890935366f001db",
+              "sequence": "0x1e"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x3f",
+            "journal": "/var/lib/nano/key-63",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_63",
+            "recoveryWitness": "/var/lib/nano/key-witness-63",
+            "restart": {
+              "digest": "0xc770c333853ce233840e11dce9eb4cddff25dda298adc759a848d62e775939f8",
+              "sequence": "0x1f"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": null,
+            "journal": "/var/lib/nano/key-64",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_64",
+            "recoveryWitness": "/var/lib/nano/key-witness-64",
+            "restart": {
+              "digest": "0x88901727b695097aedf64c9c0cf8c5fc0797703e812f6a83751d41ae8854ed85",
+              "sequence": "0x12"
+            }
+          }
+        ],
+        "maximumTransactionTrials": "0x10",
+        "maximumVoteTrials": "0x40",
+        "pollIntervalMs": "0x64"
+      },
+      "automaticRecovery": false,
+      "recoveryCommitment": {
+        "digest": "0xf3eb159a768fdd63183672d8e47d8d809b406fb1724dcc2874754038ae2eb8c4",
+        "sequence": "0x9e0"
+      }
+    },
+    "listen_addr": "/ip4/127.0.0.1/tcp/41943",
+    "p2p_binary": "/build/monotonic-clock-amd64-20261005/network/nano-p2p",
+    "p2p_identity": "/var/lib/nano/peer.key",
+    "rpc_host": "127.0.0.1",
+    "rpc_port": 49797
+  },
+  "macCapsule": {
+    "canonicalReplay": {
+      "allHistoricalStatesMaterialized": true,
+      "archiveBytes": 1183166,
+      "blocksIncludingTrustedAnchor": 414,
+      "canonicalHistoryVerified": true,
+      "checkpointDigest": "0xba23b426859cc6b9f556b5f3cbb89c97b7b132eade8b698ba01d98de6158a4b7",
+      "checkpointSequence": 4860,
+      "externalFinalizedAncestorVerified": true,
+      "finalized": {
+        "epoch": "0x504",
+        "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+      },
+      "firstExecutionBlock": "0x1",
+      "head": "0x64cfb7a25e73a544ec628fbd8378d5997dcc7ab9f3fc10ac71f6e19a579c29ae",
+      "historicalForkChoiceVerified": false,
+      "historicalStandaloneVotesReplayed": false,
+      "lastExecutionBlock": "0x19e",
+      "prunedExecutionStatesReplayed": 0,
+      "requiredFinalized": {
+        "epoch": "0x504",
+        "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+      },
+      "transactions": 2,
+      "trustedAnchor": "0x1f84dd50b5d8740e8c9a7b2a62ef9790593498978dfb7de244406b7449b75c2f"
+    },
+    "chainId": "0x539",
+    "format": "nano-private-quiescent-recovery-pins-v1",
+    "genesisHash": "0xdc39226edf6b7c4ed0735b306e39502de8220dbbbeedf3f3fca2fd4bc04e893c",
+    "historicalTokenDigestAncestryVerified": false,
+    "minimumSequenceBoundsVerified": true,
+    "primaryWitnessAndSignersVerified": true,
+    "productionQualified": false,
+    "profileSha256": "0xe3440eba0a871a8eedf84a6e2cdccee53cc4389e8ce6b979166621c8e893890d",
+    "readOnlyStores": true,
+    "restart": {
+      "digest": "0xba23b426859cc6b9f556b5f3cbb89c97b7b132eade8b698ba01d98de6158a4b7",
+      "sequence": "0x12fc"
+    },
+    "runtimeHealthInferred": false,
+    "sourceQuiescenceExternallyRequired": true,
+    "validatorKeys": [
+      {
+        "index": "0x0",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0x7e3c5f5f06099e8f91db340080301892aba597920f08309a625ed4cb0f702081",
+          "sequence": "0x3a"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1",
+        "latestAttestationTarget": 1207,
+        "restart": {
+          "digest": "0x322fb31cb67e2678b4b95f7b4387e49bf4fea5bda075df714dbed217592466ea",
+          "sequence": "0x39"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x2",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0xb4cb38eb28a41763831a7ac5f14c37eb300d3df8aede2f423f7ee44799a1059d",
+          "sequence": "0x3a"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x3",
+        "latestAttestationTarget": 1207,
+        "restart": {
+          "digest": "0x44351b7173d9d00b01870127fa49f8979855ae550f76a1b60707713b7a135aa4",
+          "sequence": "0x39"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x4",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0x6260f50d31ff0d7d46c5d13ea900aa9b990ae1a331005a23310e039a088e4b1d",
+          "sequence": "0x3a"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x5",
+        "latestAttestationTarget": 1207,
+        "restart": {
+          "digest": "0x50d920a2991d0231ded4a4078cbd48dfc4995954ed543ea4fb3817bbdf50346f",
+          "sequence": "0x37"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x6",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0xaa470be6fdd3ff623fb8eedccbe9c3e3a88f65c65d740e6416ae366f41b0bfed",
+          "sequence": "0x39"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x7",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0x648c7adaf35c6ae570c267bcfba7e182845ea60c7cfd0056a0581229b768decd",
+          "sequence": "0x38"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x8",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0xcf78c9fb76030c6f6f15fb599404fd5cef159e68ea9fa698f09f067bf4a03472",
+          "sequence": "0x38"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x9",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0xad06858049fe427f3531c61b33685764d156bfe0de4866be6f531567be2725a2",
+          "sequence": "0x36"
+        },
+        "retired": false
+      },
+      {
+        "index": "0xa",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0xa17bf9f74ea2148a3636b33569758be10dc8ec97c1e26741073c57c947d42041",
+          "sequence": "0x39"
+        },
+        "retired": false
+      },
+      {
+        "index": "0xb",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0xedcaf9ff9a38b10182831d24d5e064bd0197585b9cd752675697dfd3ac8501f7",
+          "sequence": "0x38"
+        },
+        "retired": false
+      },
+      {
+        "index": "0xc",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0xad11a2ac81ebf4b53e2165531972df79ecde064a1cca97169342bd83eb562413",
+          "sequence": "0x38"
+        },
+        "retired": false
+      },
+      {
+        "index": "0xd",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0x0be89181738f96ae479bb638bbaeb18558c836fff66162982c1252aef219210b",
+          "sequence": "0x33"
+        },
+        "retired": false
+      },
+      {
+        "index": "0xe",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0xfec92d3f5f3136a6b3353e86889a97112578185bb76f8dc2a9a7d318ccaf5fd1",
+          "sequence": "0x38"
+        },
+        "retired": false
+      },
+      {
+        "index": "0xf",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0x475b90f9cfd7730d509a1951d10798faa04c1fc38dce00489ec18c56b74160cc",
+          "sequence": "0x35"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x10",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0x759fc98f43f0b4022712487c1f72ee92baad9fab0bfcafca69789e9db150fb3a",
+          "sequence": "0x3d"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x11",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0x26ba1507c719f6f9f71a9e278058c9fec7a6b1301912d33c2bc85c850df24966",
+          "sequence": "0x41"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x12",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0xba30b60ccbb7d201ed522b5ea486cda7ea1e422db827066dbc10ee48ad948110",
+          "sequence": "0x42"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x13",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0x905696f7a6e10d1308c80f18c90e5181faa078ba9eebaab7051fd14b342b3cb5",
+          "sequence": "0x40"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x14",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0x2918f547c6270fec3496c2341ae821d9190bc6e1201630620f4b929ee6e731e2",
+          "sequence": "0x44"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x15",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0x42d01415ab82f1f1ff9b03a4b418a2774124bb2c2676d800131a34bfcd03e88e",
+          "sequence": "0x44"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x16",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0x9a73bef75f2358bf94f09450c4b01b05a17457ad5f5ad7ea1baaa96715be9e31",
+          "sequence": "0x3e"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x17",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0x2814609569a3f14eea7da369843d40ab227e5976bb55e3e41b42d6fdfac13412",
+          "sequence": "0x3f"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x18",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0x79571067c2fe87f5cdb8cece1f91d63adb5245bc3c1000f1af1da53635d97573",
+          "sequence": "0x42"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x19",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0xb23ab4c6350efa7f008d1cbdb88a98ad6173f954b03bd57cdd5b31aac700a5f5",
+          "sequence": "0x3f"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1a",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0xd018f6eb7fe4172f8a45c1f308970ba12674010391f33ccbb40430f27d9e7a3d",
+          "sequence": "0x3a"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1b",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0x2239d0e6d90a27c929bbac554eb653487622642f1fc24d5e7e9ffe41de26b29f",
+          "sequence": "0x40"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1c",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0xa3a06fb41cf0f6d54ffb09c84d0b7f4bf87033710196abd11f68c81d2a24a426",
+          "sequence": "0x3f"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1d",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0xa27d7e5b406c3f61f5897c73bf91b0e6ee0b5c307972d5093d61117c01f76483",
+          "sequence": "0x3f"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1e",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0x1cc2f21e6c997ab8bc345ef0fc4af0786377fd6dc0a15d418192df4df7bb406c",
+          "sequence": "0x41"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1f",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0xfd88c5925ba80bd0b4125af8805317fbb1d55ed7232c6549612a30cb63bc22c1",
+          "sequence": "0x3d"
+        },
+        "retired": false
+      }
+    ]
+  },
+  "vpsCapsule": {
+    "canonicalReplay": {
+      "allHistoricalStatesMaterialized": true,
+      "archiveBytes": 1183166,
+      "blocksIncludingTrustedAnchor": 414,
+      "canonicalHistoryVerified": true,
+      "checkpointDigest": "0x9e3ad987a8fda5cb92d993deb323547a89407bb2a566bee08a19b4bb4ff74425",
+      "checkpointSequence": 4541,
+      "externalFinalizedAncestorVerified": true,
+      "finalized": {
+        "epoch": "0x504",
+        "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+      },
+      "firstExecutionBlock": "0x1",
+      "head": "0x64cfb7a25e73a544ec628fbd8378d5997dcc7ab9f3fc10ac71f6e19a579c29ae",
+      "historicalForkChoiceVerified": false,
+      "historicalStandaloneVotesReplayed": false,
+      "lastExecutionBlock": "0x19e",
+      "prunedExecutionStatesReplayed": 0,
+      "requiredFinalized": {
+        "epoch": "0x504",
+        "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+      },
+      "transactions": 2,
+      "trustedAnchor": "0x1f84dd50b5d8740e8c9a7b2a62ef9790593498978dfb7de244406b7449b75c2f"
+    },
+    "chainId": "0x539",
+    "format": "nano-private-quiescent-recovery-pins-v1",
+    "genesisHash": "0xdc39226edf6b7c4ed0735b306e39502de8220dbbbeedf3f3fca2fd4bc04e893c",
+    "historicalTokenDigestAncestryVerified": false,
+    "minimumSequenceBoundsVerified": true,
+    "primaryWitnessAndSignersVerified": true,
+    "productionQualified": false,
+    "profileSha256": "0xe3440eba0a871a8eedf84a6e2cdccee53cc4389e8ce6b979166621c8e893890d",
+    "readOnlyStores": true,
+    "restart": {
+      "digest": "0x9e3ad987a8fda5cb92d993deb323547a89407bb2a566bee08a19b4bb4ff74425",
+      "sequence": "0x11bd"
+    },
+    "runtimeHealthInferred": false,
+    "sourceQuiescenceExternallyRequired": true,
+    "validatorKeys": [
+      {
+        "index": "0x20",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0xbc57c479f4f9f771e25e8e37a0c0a46ce9d10d89e16f5bc8eea9bdd1577a2789",
+          "sequence": "0x3d"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x21",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0x21b44e62cbeade4e90a45d76b51f4c4414b0ee81b4db896fd741a73e13a996e0",
+          "sequence": "0x37"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x22",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0xdc01a0b1abf3c88562d37289f510f8f26de53d632e8946cb902a5b85bd17fab7",
+          "sequence": "0x40"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x23",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0x28791c7b7540e7be05d530d51ff1917a9470c99021a69b7c998e492576cee151",
+          "sequence": "0x35"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x24",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0xa36ea6e121769d419b22a0a6a6ae3071d55f6fe49b95a019ea6348adc932f9be",
+          "sequence": "0x3d"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x25",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0x3586ccd74acd0aba2c8851b508f46ed4e6eadd08290e715c0e803937414907d3",
+          "sequence": "0x38"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x26",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0x6c2654dc0679ec2976173f3e1df39ab15cf6ba7097dd2ace0fa1b78fe8b05498",
+          "sequence": "0x3a"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x27",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0xdacc3a761a277fa822c8557410c5d7082fc157bff24c0f409bdcfda4e1464eca",
+          "sequence": "0x38"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x28",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0x26bc9e1afc1c9e850e7c02f836ba1d26e8a2bcd03e92b0f7a23e9ff886b06fb4",
+          "sequence": "0x35"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x29",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0x7bd2b73015aa43bc720910bd128dab5024e8abcbf97c7e72ceeb07e27c48b204",
+          "sequence": "0x38"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x2a",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0x8f5df4dc0b6692f4c89dbafa4e01d0e2b01febf17f62f102f7ebc3488b6578fd",
+          "sequence": "0x39"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x2b",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0xaf740f4ab288d669419f34c9665155a93366d1a6398e1aa79911937a8286ce93",
+          "sequence": "0x39"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x2c",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0x02b4b2cdf3895558d541382e04247182ea188fc48745a3aab76a2dfeb84809b7",
+          "sequence": "0x3b"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x2d",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0xe1f5c2346a2d7167c37fd9ca91391ff626b21b3badacd1643051f2dd9d855228",
+          "sequence": "0x39"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x2e",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0x1cfd6f0bc02097b147b97fed178faaa3a80a6cd161db78034300dd0b3ce1052d",
+          "sequence": "0x39"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x2f",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0xe5e619eda4d5d9f3e484ae95d328a7cf8fcd4bbb8fb86a4fb5baf33b4d178a6f",
+          "sequence": "0x3a"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x30",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0x0dbde8e78246b5c8ed1ff741e6ba61753de51c73b8ff3f347a4ca763e888f004",
+          "sequence": "0x36"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x31",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0x737b1463d07cc7f1d455ba5ea88555a58bc076d6f624b0fb8b99f71e9ec37909",
+          "sequence": "0x3b"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x32",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0x8b268209586c03ce4413be9f3c3f60831690f8d7bc962e88836b3178ea4484e6",
+          "sequence": "0x36"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x33",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0xb3a5063afa79edb39b3d7338704f612888ed6e844cc8c5d13dcd9bcd109d9d3c",
+          "sequence": "0x3a"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x34",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0x83453729387df5c145e41adbe7631984662d8b23c58a24caa8221945ebc2ea28",
+          "sequence": "0x3c"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x35",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0xb085fa0d3f8565a2a6b3e4871a0389c0c3a4d02ed53ee6c7fe2dc993a1954060",
+          "sequence": "0x3c"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x36",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0xb14b71182e64a0d78fddbdedb375c095c194bc60dc9c546ce0dc53a8f97f1f5c",
+          "sequence": "0x38"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x37",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0xd95a8d7a061d29d8c9c674cf05aec94ea306b5940433e13268ca7351c34629ea",
+          "sequence": "0x38"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x38",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0xff4b6aa59a5ccfeb1ef7e9325abb0bc7c1f86ef33de4ba1b0f51b47f6480912f",
+          "sequence": "0x3b"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x39",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0x20b52d996ad6916251ca7ebc76cba00e78c35ea56c10500f4c814a20253955e2",
+          "sequence": "0x3d"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x3a",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0xe180a33a979c9e05aeaab19592b9736bfe686bfd6070a0505c0382045f05e4b6",
+          "sequence": "0x35"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x3b",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0x3027957cd4f9004c85b6b8f556d810bc81478ed8ad205c20d3632604aaa0e038",
+          "sequence": "0x38"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x3c",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0x4e078de3140ae1e693cc20dd729559c942e3bcbfe9afe61081e55f66228bf90a",
+          "sequence": "0x3b"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x3d",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0x8e91acfcbe36c5db075c7e1ff9c637131f5f1cd99cb6fec8689bd00fb4a90ab3",
+          "sequence": "0x3b"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x3e",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0x538018edca2fca914f4edf2777b7d0ab39273d3bb777779e3fba9afc76d35fe1",
+          "sequence": "0x34"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x3f",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0x873c552070c83f1c82f56e7053bf5997b9d76755f3bed8bf66ca1c74471f51b8",
+          "sequence": "0x38"
+        },
+        "retired": false
+      },
+      {
+        "index": null,
+        "latestAttestationTarget": 1286,
+        "publicKey": "0xb4e84be7005df300900c6f5f67cf288374e33c3f05c2f10b6d2ff754e92ea8577d55b91e22cea2782250a8bc7d2af46d",
+        "restart": {
+          "digest": "0x3f1fbbde83e64b45054f8377592dea7d01107102c9c88bc73bbced523c899562",
+          "sequence": "0x2a"
+        },
+        "retired": false
+      }
+    ]
+  },
+  "writersStopped": true,
+  "genesisHash": "0xdc39226edf6b7c4ed0735b306e39502de8220dbbbeedf3f3fca2fd4bc04e893c",
+  "finalized": {
+    "epoch": "1284",
+    "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+  },
+  "pendingPublicKey": "0xb4e84be7005df300900c6f5f67cf288374e33c3f05c2f10b6d2ff754e92ea8577d55b91e22cea2782250a8bc7d2af46d",
+  "macNativeConfig": {
+    "capella": {
+      "admission": {
+        "attestationBytes": "0x1e5",
+        "blockBytes": "0x800000",
+        "frameBytes": "0x1000400",
+        "jobs": "0x2",
+        "payloadBytes": "0x1000000",
+        "slashingBytes": "0x81d0"
+      },
+      "catalogs": {
+        "handles": "0x2",
+        "rootBytes": "0x10000",
+        "ttlMs": "0xea60"
+      },
+      "clock": {
+        "intervalMs": "0x64",
+        "maximumForwardStepMs": "0x5dc000",
+        "maximumWallClockDriftMs": "0xfa",
+        "startupCatchup": {
+          "maximumDowntimeMs": "0x5265c00",
+          "maximumSteps": "0x10"
+        }
+      },
+      "initial": null,
+      "limits": {
+        "blocks": "0x100",
+        "envelopeBytes": "0x8000000",
+        "equivocations": "0x3e8",
+        "messages": "0x800",
+        "replaySlots": "0x400",
+        "stateBytes": "0x400000",
+        "syncTrials": "0x186a0",
+        "totalStateBytes": "0x4000000"
+      },
+      "network": {
+        "acknowledgedRoots": "0x400",
+        "dependencyBlocks": "0x100",
+        "dependencyBytes": "0x1000000",
+        "enabled": false,
+        "maximumEntries": "0x400",
+        "pageEntries": "0x8"
+      },
+      "profile": {
+        "file": "/config/profile.json",
+        "maximumBytes": "0x100000",
+        "sha256": "0xe3440eba0a871a8eedf84a6e2cdccee53cc4389e8ce6b979166621c8e893890d"
+      },
+      "recoveryWitness": "/var/lib/nano/witness",
+      "restart": null,
+      "validator": {
+        "keys": [
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x0",
+            "journal": "/var/lib/nano/key-0",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_0",
+            "recoveryWitness": "/var/lib/nano/key-0-witness",
+            "restart": {
+              "digest": "0xfc16a87485f460aed6b64f0ea14071ad3f1e0f289692648bbe67b45358ff464b",
+              "sequence": "0x37"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1",
+            "journal": "/var/lib/nano/key-1",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_1",
+            "recoveryWitness": "/var/lib/nano/key-1-witness",
+            "restart": {
+              "digest": "0xaa3da579de5c176b020b40b90328be8c3169a060335312860298dccbc843a5c9",
+              "sequence": "0x37"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x2",
+            "journal": "/var/lib/nano/key-2",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_2",
+            "recoveryWitness": "/var/lib/nano/key-2-witness",
+            "restart": {
+              "digest": "0xa19d724d0209950896a3d0dea8566a57c83808715c651f7745dabc55a16e00a5",
+              "sequence": "0x37"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x3",
+            "journal": "/var/lib/nano/key-3",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_3",
+            "recoveryWitness": "/var/lib/nano/key-3-witness",
+            "restart": {
+              "digest": "0xcc5a1c8cad20cd7684f8e9f62b7a2c899d29eb4b051135a1a0736b47b9968c25",
+              "sequence": "0x38"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x4",
+            "journal": "/var/lib/nano/key-4",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_4",
+            "recoveryWitness": "/var/lib/nano/key-4-witness",
+            "restart": {
+              "digest": "0xf35ccd0e586ff1e0e23b7d63b96c9520084cd0dec4f9b02a32baa0322fec4f6e",
+              "sequence": "0x37"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x5",
+            "journal": "/var/lib/nano/key-5",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_5",
+            "recoveryWitness": "/var/lib/nano/key-5-witness",
+            "restart": {
+              "digest": "0x60168f55ac236f31d4cdca6280c252db27465203dc9f46fa3b9ef22a6293d9cf",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x6",
+            "journal": "/var/lib/nano/key-6",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_6",
+            "recoveryWitness": "/var/lib/nano/key-6-witness",
+            "restart": {
+              "digest": "0xba78bede90ce50e960b5caf0b975261d9d77a2b42f6bdb40b770b1db92b02b95",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x7",
+            "journal": "/var/lib/nano/key-7",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_7",
+            "recoveryWitness": "/var/lib/nano/key-7-witness",
+            "restart": {
+              "digest": "0x908a44ddc52ca082bec49d655db53890a7dd8794b4393fd2136efba9f681d9a6",
+              "sequence": "0x34"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x8",
+            "journal": "/var/lib/nano/key-8",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_8",
+            "recoveryWitness": "/var/lib/nano/key-8-witness",
+            "restart": {
+              "digest": "0xceb4629e99e61b1d652e6a457502535e4afe7d31bc8ff0700d1165febf4e212d",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x9",
+            "journal": "/var/lib/nano/key-9",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_9",
+            "recoveryWitness": "/var/lib/nano/key-9-witness",
+            "restart": {
+              "digest": "0x07bee2ff9a35dc066cee1ff5d1fe27a3191dfd4ddceb9bf1b53d9892301f2a32",
+              "sequence": "0x33"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0xa",
+            "journal": "/var/lib/nano/key-10",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_10",
+            "recoveryWitness": "/var/lib/nano/key-10-witness",
+            "restart": {
+              "digest": "0x296c43a6a7b7e9a27e95cafc00a68efb3c18a03f1ecc64d50c51717a1bb27145",
+              "sequence": "0x37"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0xb",
+            "journal": "/var/lib/nano/key-11",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_11",
+            "recoveryWitness": "/var/lib/nano/key-11-witness",
+            "restart": {
+              "digest": "0xe6987e8539271f85d96b114c31808add32a0db3139b0927f088d2b45db83ce26",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0xc",
+            "journal": "/var/lib/nano/key-12",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_12",
+            "recoveryWitness": "/var/lib/nano/key-12-witness",
+            "restart": {
+              "digest": "0x426130275ad1c82083c4c649eda28deeb4105eb62ddf5181b616ee3ab3dc6571",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0xd",
+            "journal": "/var/lib/nano/key-13",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_13",
+            "recoveryWitness": "/var/lib/nano/key-13-witness",
+            "restart": {
+              "digest": "0xe974d936b726957d6014324749e655404959894dfe3d8187e2065d612e882118",
+              "sequence": "0x31"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0xe",
+            "journal": "/var/lib/nano/key-14",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_14",
+            "recoveryWitness": "/var/lib/nano/key-14-witness",
+            "restart": {
+              "digest": "0x54272601184e11e1a74eaa0b3ef7e9c0c898c3f9e1482bbb91d5ff7e48ddab0f",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0xf",
+            "journal": "/var/lib/nano/key-15",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_15",
+            "recoveryWitness": "/var/lib/nano/key-15-witness",
+            "restart": {
+              "digest": "0x22a8cbdb9b9fe5075c975cc1d2332da9cf4504a9c3c9d1b8668cc61247a7aa64",
+              "sequence": "0x32"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x10",
+            "journal": "/var/lib/nano/key-16",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_16",
+            "recoveryWitness": "/var/lib/nano/key-16-witness",
+            "restart": {
+              "digest": "0x55be9e8ed55b57767a0e058809231d379f2a66ec2c514cb686f6b4c1af2fb285",
+              "sequence": "0x34"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x11",
+            "journal": "/var/lib/nano/key-17",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_17",
+            "recoveryWitness": "/var/lib/nano/key-17-witness",
+            "restart": {
+              "digest": "0x38a705e7a10e486ee272e01cd70952c1eb9818ff83dee265ebc74d23e77e2c5e",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x12",
+            "journal": "/var/lib/nano/key-18",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_18",
+            "recoveryWitness": "/var/lib/nano/key-18-witness",
+            "restart": {
+              "digest": "0x24449240f93ec03941903a83a831854c1ca5c786041aa9155dd31f020baa960d",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x13",
+            "journal": "/var/lib/nano/key-19",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_19",
+            "recoveryWitness": "/var/lib/nano/key-19-witness",
+            "restart": {
+              "digest": "0x0ed28f32c337ba25e411cd350c20339613fcc6252b0df761c1ec264631035084",
+              "sequence": "0x36"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x14",
+            "journal": "/var/lib/nano/key-20",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_20",
+            "recoveryWitness": "/var/lib/nano/key-20-witness",
+            "restart": {
+              "digest": "0x02be8138e4fa6eeae7d7268371a64e610e0a246300da379e2fdfc8b243549cd0",
+              "sequence": "0x37"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x15",
+            "journal": "/var/lib/nano/key-21",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_21",
+            "recoveryWitness": "/var/lib/nano/key-21-witness",
+            "restart": {
+              "digest": "0xd3b40bc7d69bdc018b33ae061f5bbb68e43e41a6b18e1276cdc195c40fe62519",
+              "sequence": "0x36"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x16",
+            "journal": "/var/lib/nano/key-22",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_22",
+            "recoveryWitness": "/var/lib/nano/key-22-witness",
+            "restart": {
+              "digest": "0x4c3f12819fc647ef93fc45b278de2573ef255a99ac58c7dd336d61c7f900c554",
+              "sequence": "0x32"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x17",
+            "journal": "/var/lib/nano/key-23",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_23",
+            "recoveryWitness": "/var/lib/nano/key-23-witness",
+            "restart": {
+              "digest": "0x4f9bb705cc321f001b9a086a5e1f1889c2baa8ef57c718fc6600920a2f18fe75",
+              "sequence": "0x34"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x18",
+            "journal": "/var/lib/nano/key-24",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_24",
+            "recoveryWitness": "/var/lib/nano/key-24-witness",
+            "restart": {
+              "digest": "0x896493045490560ea591fa8a9e84bf5c42c390da0bdd649229891f09f589c38d",
+              "sequence": "0x36"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x19",
+            "journal": "/var/lib/nano/key-25",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_25",
+            "recoveryWitness": "/var/lib/nano/key-25-witness",
+            "restart": {
+              "digest": "0xf72127c09d213fc7866045d8c122f761e64857e4432b66cf6634c0943a0320d0",
+              "sequence": "0x31"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1a",
+            "journal": "/var/lib/nano/key-26",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_26",
+            "recoveryWitness": "/var/lib/nano/key-26-witness",
+            "restart": {
+              "digest": "0x1b459a6a55e754a56f86f8a29095bafc42742cb0536bb0f024f9025f044bf2a8",
+              "sequence": "0x30"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1b",
+            "journal": "/var/lib/nano/key-27",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_27",
+            "recoveryWitness": "/var/lib/nano/key-27-witness",
+            "restart": {
+              "digest": "0x5acb1630a6bcf76b2931d5c0107de71ddb4d69311c20e4b020e3a3d643b36874",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1c",
+            "journal": "/var/lib/nano/key-28",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_28",
+            "recoveryWitness": "/var/lib/nano/key-28-witness",
+            "restart": {
+              "digest": "0x53e0f0e9fc440eb6423c98382ae396c695245fdd341f6e189f28cfc8653cec96",
+              "sequence": "0x34"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1d",
+            "journal": "/var/lib/nano/key-29",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_29",
+            "recoveryWitness": "/var/lib/nano/key-29-witness",
+            "restart": {
+              "digest": "0x4c5e7662008b0e386acf751c5a51c4ab02e8a364c0ce8f73cdbb5a04cb6ed498",
+              "sequence": "0x34"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1e",
+            "journal": "/var/lib/nano/key-30",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_30",
+            "recoveryWitness": "/var/lib/nano/key-30-witness",
+            "restart": {
+              "digest": "0x0f99f8d6bbc5b9adb530f8b39a92f2621fd0d9fd2086d30c787f4180f642587a",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1f",
+            "journal": "/var/lib/nano/key-31",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_31",
+            "recoveryWitness": "/var/lib/nano/key-31-witness",
+            "restart": {
+              "digest": "0x2d76c35e0422f60f503c011be7168c9e1e7aa6f8151194b9d6ac8154d1ced8a3",
+              "sequence": "0x33"
+            }
+          }
+        ],
+        "maximumTransactionTrials": "0x10",
+        "maximumVoteTrials": "0x40",
+        "pollIntervalMs": "0x64"
+      },
+      "recoveryCommitment": {
+        "digest": "0xbaf55d7881ea0b33cfafac4a359af5bbd03b39c173458e1a387e901dfe769b4e",
+        "sequence": "0x1099"
+      },
+      "automaticRecovery": false
+    }
+  },
+  "macNativeCapsule": {
+    "canonicalReplay": {
+      "allHistoricalStatesMaterialized": true,
+      "archiveBytes": 1183166,
+      "blocksIncludingTrustedAnchor": 414,
+      "canonicalHistoryVerified": true,
+      "checkpointDigest": "0x917c2bac49f2f2d73e8ef427ccfe933ee56b304cdd1d45f985db310ebadedd1d",
+      "checkpointSequence": 4837,
+      "externalFinalizedAncestorVerified": true,
+      "finalized": {
+        "epoch": "0x504",
+        "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+      },
+      "firstExecutionBlock": "0x1",
+      "head": "0x64cfb7a25e73a544ec628fbd8378d5997dcc7ab9f3fc10ac71f6e19a579c29ae",
+      "historicalForkChoiceVerified": false,
+      "historicalStandaloneVotesReplayed": false,
+      "lastExecutionBlock": "0x19e",
+      "prunedExecutionStatesReplayed": 0,
+      "requiredFinalized": {
+        "epoch": "0x504",
+        "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+      },
+      "transactions": 2,
+      "trustedAnchor": "0x1f84dd50b5d8740e8c9a7b2a62ef9790593498978dfb7de244406b7449b75c2f"
+    },
+    "chainId": "0x539",
+    "format": "nano-private-quiescent-recovery-pins-v1",
+    "genesisHash": "0xdc39226edf6b7c4ed0735b306e39502de8220dbbbeedf3f3fca2fd4bc04e893c",
+    "historicalTokenDigestAncestryVerified": false,
+    "minimumSequenceBoundsVerified": true,
+    "primaryWitnessAndSignersVerified": true,
+    "productionQualified": false,
+    "profileSha256": "0xe3440eba0a871a8eedf84a6e2cdccee53cc4389e8ce6b979166621c8e893890d",
+    "readOnlyStores": true,
+    "restart": {
+      "digest": "0x917c2bac49f2f2d73e8ef427ccfe933ee56b304cdd1d45f985db310ebadedd1d",
+      "sequence": "0x12e5"
+    },
+    "runtimeHealthInferred": false,
+    "sourceQuiescenceExternallyRequired": true,
+    "validatorKeys": [
+      {
+        "index": "0x0",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0x94b0530fb28ffe1e0c1c6cb20d9aea18f7db95707b121a68a5ffdb8038949ee6",
+          "sequence": "0x44"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0xb29206e1763ab3bc2d7158ce0c82af492862c04d860795b169e66cfa0408d228",
+          "sequence": "0x40"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x2",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0x4cd3100ba549dd8410488dfdb91770503612eb48cc949527cc0bb5550c695e94",
+          "sequence": "0x43"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x3",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0x30f718615fdc166575b921f8a779459d672e17a50913b5cad3f6a6ba56f42e2d",
+          "sequence": "0x41"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x4",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0x3dc4c2f2b52809788514568784007f5e50eb96223554acb571a5365aed9b355a",
+          "sequence": "0x42"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x5",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0x78185e21bbb451477a4d5e2c86c59cfc5f9f7edca7ee193af34b947bd8fded57",
+          "sequence": "0x3f"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x6",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0x9a301f25b019bc8dc5d81c7045783483d277f6094b45618adb32433d0688c1ef",
+          "sequence": "0x44"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x7",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0x64a607e80c33544658d094ac21719bc2533a083b15908686ac5bde0bf66b4bf9",
+          "sequence": "0x3e"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x8",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0x12f0794d4159fd557cd4a2be4b48ee67f97c78c478106f73dbace82c8689ae44",
+          "sequence": "0x40"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x9",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0x5d2396e926e3fb380cf0e8861111acd8de6b640aa1fbc4afd7d322931b0cbf40",
+          "sequence": "0x3f"
+        },
+        "retired": false
+      },
+      {
+        "index": "0xa",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0x693ba6352380433b1de1dcd84ec5677e48cadc9585a63b41199d45212ae1314e",
+          "sequence": "0x43"
+        },
+        "retired": false
+      },
+      {
+        "index": "0xb",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0x2181c8dc11413fcc543c1bbe4d63bc1cd75f02e987bc47755a3a76fc360114e3",
+          "sequence": "0x40"
+        },
+        "retired": false
+      },
+      {
+        "index": "0xc",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0x68c74bebb37dd4aa1c902ca5acdad4eb84d3b99b4eac5e1fa803312ac5311ffe",
+          "sequence": "0x40"
+        },
+        "retired": false
+      },
+      {
+        "index": "0xd",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0x8cbf2721882c3bc54719191774380de7dc8e638659e6d84758c5f741083638e7",
+          "sequence": "0x3a"
+        },
+        "retired": false
+      },
+      {
+        "index": "0xe",
+        "latestAttestationTarget": 1286,
+        "restart": {
+          "digest": "0x0812455dede370482ae93ea0d99a5800eda0ee24f57b38bd6fc7f9319d72f53c",
+          "sequence": "0x3f"
+        },
+        "retired": false
+      },
+      {
+        "index": "0xf",
+        "latestAttestationTarget": 1285,
+        "restart": {
+          "digest": "0x58efb662530cd723196869457433d204d0fabf906bfd638a47dfaa88e2f09d8a",
+          "sequence": "0x3b"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x10",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0x424269f6f9da94c504d75623c3f1362f6812a6f5994324b1226c4845c17ec31e",
+          "sequence": "0x36"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x11",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0xa37a77c612d40f58f1a4915d55ddf8b120fe3a863f5addffb732ceb1281761e3",
+          "sequence": "0x3a"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x12",
+        "latestAttestationTarget": 1267,
+        "restart": {
+          "digest": "0xbce74dbe61a003036b90b2cce6fd3386655de31a2831c8b3831e7009a783ca94",
+          "sequence": "0x3a"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x13",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0x9179125135faf1f7ef68fc55387936f608e8824ee7831c0d3b8114037ab82d4d",
+          "sequence": "0x38"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x14",
+        "latestAttestationTarget": 1267,
+        "restart": {
+          "digest": "0x37b500f98cf66cacb22fd5b1d5cdf0e593d0067d30faa8bf2330670dbe1baa35",
+          "sequence": "0x3b"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x15",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0x20edb671f6954d1cd49e60073b6970c154fc152cc41229f0079fc71e5f0704b0",
+          "sequence": "0x3a"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x16",
+        "latestAttestationTarget": 1267,
+        "restart": {
+          "digest": "0xe550e68fb216f346454206011ca40d0e1ab12931cb093af9be4c454581464ea3",
+          "sequence": "0x36"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x17",
+        "latestAttestationTarget": 1268,
+        "restart": {
+          "digest": "0x27fdcbeb46ebfb2cbde67bba4c67b46077a4016a7e4e7dc57feb8b41b3734291",
+          "sequence": "0x37"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x18",
+        "latestAttestationTarget": 1268,
+        "restart": {
+          "digest": "0x16724cfbae57c48c1b63bff390d8d30fe8802f5a854f6a3cfd8d93ab96513e48",
+          "sequence": "0x3b"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x19",
+        "latestAttestationTarget": 1267,
+        "restart": {
+          "digest": "0xea743b970c0f43e0c93c13845128ae4b97a9036cb6a5c3fecef7a1de1aa74afa",
+          "sequence": "0x36"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1a",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0x233c8a6d38a8e83ca592a7a517b0118a382f9f2cdb5ee0ed67857030ffad9643",
+          "sequence": "0x33"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1b",
+        "latestAttestationTarget": 1207,
+        "restart": {
+          "digest": "0xac3e6f68addc39853d026549b7d441fbf2b08d0f6478e4d2190b34e579088d44",
+          "sequence": "0x37"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1c",
+        "latestAttestationTarget": 1267,
+        "restart": {
+          "digest": "0xccc9126c4529570b8704ec6d4e960d0bca493f680ba6d1ab99d10858dec17d7d",
+          "sequence": "0x38"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1d",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0x0c5e21be8a21b13fa5f87e93f9e2cb629585b86b750073b575e9d10a4f190aa4",
+          "sequence": "0x36"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1e",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0x2bad7ab33e91390329b91272a46229c28b0509e1ccc41cf6118999871c718a70",
+          "sequence": "0x38"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1f",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0xee8a221952f2a8bfcc630bc6618c3a45e82b22d9d1c6c549bec0a3748135728a",
+          "sequence": "0x36"
+        },
+        "retired": false
+      }
+    ]
+  }
+}
