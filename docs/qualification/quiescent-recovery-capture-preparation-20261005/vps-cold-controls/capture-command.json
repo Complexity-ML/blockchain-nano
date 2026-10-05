@@ -1,0 +1,7 @@
+[
+  "ssh",
+  "-o",
+  "BatchMode=yes",
+  "ubuntu@145.239.199.166",
+  "sudo -n docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges --mount type=volume,src=nano-clean-rpc-build-20261002,dst=/build,readonly --mount type=volume,src=nano-deposit-resume-wan-3f028de2c232-data,dst=/var/lib/nano,readonly --mount type=bind,src=/tmp/nano-deposit-resume-wan-3f028de2c232/config,dst=/config,readonly --mount type=bind,src=/tmp/nano-paused-capture-vps-cold-request-20261005.json,dst=/request.json,readonly --entrypoint /build/paused-capture-amd64-20261005/nano-capella-paused-capture sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14 --capture /config/genesis.json /config/node-1.json /var/lib/nano/chain /request.json"
+]
