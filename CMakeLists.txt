@@ -58,6 +58,9 @@ set_tests_properties(core PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DI
 
 add_executable(nano src/main.cpp)
 target_link_libraries(nano PRIVATE nano_core)
+add_executable(nano-capella-deposit-audit tests/capella/deposit_audit.cpp)
+target_link_libraries(nano-capella-deposit-audit PRIVATE nano_core)
+target_include_directories(nano-capella-deposit-audit PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ckzg/blst/bindings")
 add_executable(nano-capella-slashing-audit tests/capella/slashing_audit.cpp)
 target_link_libraries(nano-capella-slashing-audit PRIVATE nano_core)
 target_include_directories(nano-capella-slashing-audit PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ckzg/blst/bindings")
