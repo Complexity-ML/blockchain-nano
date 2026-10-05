@@ -6769,3 +6769,7 @@ Nouvel outil privé `nano-capella-slashing-audit` compilé nativement contre la 
 ### 2026-10-05 — Échec CI du générateur BLS et correction CMake
 
 Run 37258158600 terminé en échec : `blst.h` absent des includes de la cible privée `nano-capella-slashing-fixture`. Les compilations manuelles précédentes ne prouvaient pas cette cible CMake. Includes explicités pour générateur et auditeur ; nouvelle configuration CMake et compilation des deux unités avec leurs seules options générées réussies. Preuves et échec conservés dans `docs/qualification/slashing-cmake-include-fix-20261005`. CI complète après correction et sanction WAN restent ouvertes.
+
+### 2026-10-05 — Auditeur AMD64 et scénario WAN de sanction/rejeu
+
+Auditeur AMD64 lié contre le cœur ab10b8ae dans le volume existant : sortie 0, sans OOM, six programmes/bibliothèque existants inchangés, aucune image reconstruite. Preuves `docs/qualification/slashing-audit-amd64-preparation-20261005`. Nouveau banc privé `tests/capella/slashing-multihost.mjs` : preuve valide et quatre preuves forgées, sanction canonique, SIGKILL après finalisation, rejeu au redémarrage, avancement commun de deux époques et audits des bases arrêtées avec engagements externes et témoins séparés. Banc préparé ; aucune réussite WAN ni production revendiquée avant sortie terminale et audits.
