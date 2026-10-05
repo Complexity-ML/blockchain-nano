@@ -1,0 +1,5 @@
+# Attestation catalogue starvation after a negative delivery reply
+
+New regression fails on the unchanged catalogue relay with `first rejected attestation starved next page`. After the correction, 45 native scenarios pass. The scan continues after a negative attestation delivery reply, separates scanned/rejected/acknowledged entries, and remains bounded by the existing scan limit and deadline. It never marks refused votes as acknowledged and the attempt remains failed even if a later vote is accepted. Blocks still stop on a negative delivery response; missing raw delivery callbacks still time out. Duplicate callbacks do not credit refusal as admission.
+
+The negative reply can represent a dependency refusal, not exclusively a consensus-invalid vote; this change does not classify the root cause. Existing WAN traces show repeated attempts that export one vote and stop before any admitted payload. The exact WAN root cause and restoration of finality remain unqualified. No consensus validation, signing, witness or transaction rules change. ARM64/AMD64 Docker build and WAN replay remain open.

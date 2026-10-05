@@ -89,5 +89,36 @@ int main(){try{
   if(mode=="sparse-known")check(total_sends==5&&total_pages==5,"sparse payload quantum lost progress or retransmitted");
   if(mode=="all-known")check(total_sends==0&&total_pages==3,"cached pages consumed payload quantum");++scenarios;
  }
+ // A definitive rejected attestation must not starve later independent votes.
+ // Rejection stays visible, never enters ACK knowledge and never means success.
+ for(const std::string mode:{"reject-first","reject-all","lost-ack","block-reject"}){
+  asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);
+  const std::string kind=mode=="block-reject"?"block":"attestation";
+  unsigned sends=0,pages=0,closes=0,done=0;std::set<std::string> acknowledged;Json result;
+  auto core=[&](std::string method,Json args,Reply reply){
+   if(method=="nano_capellaCatalogGeneration")reply(root('e'));
+   else if(method=="nano_capellaCatalogAcquire")reply(Json{{"handle",root('c')}});
+   else if(method=="nano_capellaCatalogRelease"){++closes;reply(true);}
+   else if(method=="nano_capellaCatalogPage"){
+    ++pages;const bool first=args[2].is_null();check(first||args[2]==root('1'),"rejection corrupted cursor");
+    reply(Json{{"kind",kind},{"sequence","0x1"},{"digest",root('d')},{"entries",Json::array({root(first?'1':'2')})},{"next",first?Json(root('1')):Json(nullptr)}});
+   }else if(method=="nano_capellaExport")reply(Json{{"available",true},{"root",args[2]},{"envelope",{{"chainId",profile.chain_id},{"genesisHash",profile.genesis_hash},{"forkDigest",profile.fork_digest},{"consensusIdentity",profile.consensus_identity},{"kind",kind},{"ssz","0x0102"}}}});
+   else throw std::runtime_error("unexpected rejection scan method");
+  };
+  auto deliver=[&](std::string id,Json,Reply reply){
+   ++sends;if(mode=="lost-ack")return;
+   const bool accept=mode=="reject-first"&&id==root('2');if(accept)acknowledged.insert(id);
+   reply(Json{{"accepted",accept}});reply(Json{{"accepted",true}}); // duplicate callback cannot turn refusal into ACK
+  };
+  auto relay=std::make_shared<CapellaCatalogRelay>(io,core,deliver,"token",kind,ingress,1,2,[&](Json value){++done;result=std::move(value);},[&](const std::string& id){return acknowledged.contains(id);});
+  relay->start(20ms);io.run();check(done==1&&closes==1&&result["success"]==false,"rejection scan lost failure or cleanup");
+  if(mode=="reject-first"||mode=="reject-all"){
+   check(sends==2&&pages==2,"first rejected attestation starved next page");
+   check(result["rejected"]==(mode=="reject-all"?2:1)&&result["scanned"]==2&&result["delivered"]==(mode=="reject-all"?0:1),"refusal counted as admission");
+   check(result["reason"]=="admission-rejected"&&result["failureStage"]=="delivery","refusal diagnostic erased by later admission");
+   check(!acknowledged.contains(root('1'))&&acknowledged.size()==size_t(mode=="reject-first"),"refusal polluted ACK cache");
+  }else check(sends==1&&pages==1&&acknowledged.empty(),"unknown outcome or rejected block advanced scan");
+  ++scenarios;
+ }
  std::cout<<scenarios<<" Capella catalog relay scenarios passed; no consensus validity inferred from mocked ACKs\n";
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

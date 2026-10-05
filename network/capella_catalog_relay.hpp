@@ -15,14 +15,14 @@ public:
 private:
  asio::io_context& io_;Call core_;Deliver deliver_;Known known_;std::string token_,kind_,handle_,cursor_,sequence_,digest_,stage_="open",generation_,request_;
  std::shared_ptr<AltairMessageIngress> ingress_;Reply done_;asio::steady_timer timer_;
- const size_t page_size_,maximum_;size_t delivered_=0,index_=0;Json entries_,next_;
+ const size_t page_size_,maximum_;size_t delivered_=0,scanned_=0,rejected_=0,index_=0;Json entries_,next_;
  bool started_=false,finished_=false,closing_=false;bool desired_success_=false;const bool yield_after_payload_quantum_;
  std::string failure_stage_,reason_;std::chrono::steady_clock::time_point started_at_=std::chrono::steady_clock::now();
  size_t exports_=0,skipped_known_=0,payloads_admitted_=0;std::optional<uint64_t> sync_slot_;
  void failure(std::string reason){if(reason_.empty()){reason_=std::move(reason);failure_stage_=stage_;}close(false);}
  static bool root(const Json& j){if(!j.is_string())return false;const auto& s=j.get_ref<const std::string&>();return s.size()==66&&s.starts_with("0x")&&std::all_of(s.begin()+2,s.end(),[](char c){return (c>='0'&&c<='9')||(c>='a'&&c<='f');});}
  static bool quantity(const Json& j){if(!j.is_string())return false;const auto& s=j.get_ref<const std::string&>();return s.size()>=3&&s.size()<=18&&s.starts_with("0x")&&(s.size()==3||s[2]!='0')&&std::all_of(s.begin()+2,s.end(),[](char c){return (c>='0'&&c<='9')||(c>='a'&&c<='f');});}
- void complete(bool success,bool closed){if(finished_)return;if(!success&&reason_.empty()){reason_="incomplete";failure_stage_=stage_;}finished_=true;timer_.cancel();auto done=std::move(done_);done(Json{{"success",success},{"closed",closed},{"delivered",delivered_},{"stage",stage_},{"failureStage",failure_stage_.empty()?Json(nullptr):Json(failure_stage_)},{"reason",reason_.empty()?Json(nullptr):Json(reason_)},{"exports",exports_},{"payloadsAdmitted",payloads_admitted_},{"skippedKnown",skipped_known_},{"syncSlot",sync_slot_?Json(*sync_slot_):Json(nullptr)},{"elapsedMs",std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-started_at_).count()}});}
+ void complete(bool success,bool closed){if(finished_)return;if(!success&&reason_.empty()){reason_="incomplete";failure_stage_=stage_;}finished_=true;timer_.cancel();auto done=std::move(done_);done(Json{{"success",success},{"closed",closed},{"delivered",delivered_},{"scanned",scanned_},{"rejected",rejected_},{"stage",stage_},{"failureStage",failure_stage_.empty()?Json(nullptr):Json(failure_stage_)},{"reason",reason_.empty()?Json(nullptr):Json(reason_)},{"exports",exports_},{"payloadsAdmitted",payloads_admitted_},{"skippedKnown",skipped_known_},{"syncSlot",sync_slot_?Json(*sync_slot_):Json(nullptr)},{"elapsedMs",std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-started_at_).count()}});}
  Json release_params(){return Json::array({token_,generation_,request_});}
  void cleanup_request(){if(request_.empty())return;try{core_("nano_capellaCatalogRelease",release_params(),[](Json){});}catch(...){}}
  void cleanup(const std::string& handle){try{core_("nano_capellaCatalogClose",Json::array({token_,handle}),[](Json){});}catch(...){}}
@@ -43,15 +43,15 @@ private:
   if(finished_||closing_)return;
   if(!success&&reason_.empty()){reason_="invalid-response";failure_stage_=stage_;}
   if(request_.empty()){complete(false,false);return;}
-  closing_=true;desired_success_=success;stage_="close";
+  closing_=true;desired_success_=success&&rejected_==0;stage_="close";
   close_attempt(true);
  }
  void page(){
-  stage_="page";std::ostringstream count;count<<"0x"<<std::hex<<std::min(page_size_,maximum_-delivered_);
+  stage_="page";std::ostringstream count;count<<"0x"<<std::hex<<std::min(page_size_,maximum_-scanned_);
   call("nano_capellaCatalogPage",Json::array({token_,handle_,cursor_.empty()?Json(nullptr):Json(cursor_),count.str()}),callback([](auto& self,Json value){self.got_page(std::move(value));}));
  }
  void got_page(Json value){
-  if(!value.is_object()||value.at("kind")!=kind_||!quantity(value.at("sequence"))||!root(value.at("digest"))||!value.at("entries").is_array()||value.at("entries").size()>std::min(page_size_,maximum_-delivered_)){close(false);return;}
+  if(!value.is_object()||value.at("kind")!=kind_||!quantity(value.at("sequence"))||!root(value.at("digest"))||!value.at("entries").is_array()||value.at("entries").size()>std::min(page_size_,maximum_-scanned_)){close(false);return;}
   if(sequence_.empty()){sequence_=value.at("sequence").get<std::string>();digest_=value.at("digest").get<std::string>();}
   if(value.at("sequence")!=sequence_||value.at("digest")!=digest_){close(false);return;}
   std::string previous=cursor_;
@@ -60,11 +60,11 @@ private:
   entries_=std::move(value["entries"]);next_=next;index_=0;
   if(entries_.empty()){close(next_.is_null());return;}export_next();
  }
- void advance(){
-  ++delivered_;cursor_=entries_.at(index_).get<std::string>();++index_;
+ void advance(bool acknowledged=true){
+  ++scanned_;if(acknowledged)++delivered_;cursor_=entries_.at(index_).get<std::string>();++index_;
   if(index_<entries_.size()){export_next();return;}
   if(next_.is_null()){close(true);return;}
-  if(delivered_==maximum_){failure("entry-limit");return;}
+  if(scanned_==maximum_){failure("entry-limit");return;}
   // Release the stable snapshot after a quantum of admitted payloads, at a page boundary. The peer scheduler
   // can serve another category; admitted-root knowledge survives this yield.
   // Cached entries do not consume the quantum. Overshoot is bounded by one
@@ -87,7 +87,17 @@ private:
    self.stage_="delivery";
    auto reply=self.callback([](auto& s,Json ack){
     if(ack.is_object()&&ack.size()==1&&ack.value("yielded",Json())==true){s.failure("dependency-quantum-yield");return;}
-    if(!ack.is_object()||ack.size()!=1||ack.value("accepted",Json())!=true){s.failure(ack.is_object()&&ack.size()==1&&ack.value("accepted",Json())==false?"admission-rejected":"delivery-unconfirmed");return;}
+    if(!ack.is_object()||ack.size()!=1||ack.value("accepted",Json())!=true){
+     const bool rejected=ack.is_object()&&ack.size()==1&&ack.value("accepted",Json())==false;
+     // Independent votes can be expired or reference a different branch. A
+     // definitive refusal must not starve later entries in this bounded scan.
+     // Never cache it as an ACK, retry it here, or hide the failed attempt.
+     if(rejected&&s.kind_=="attestation"){
+      ++s.rejected_;if(s.reason_.empty()){s.reason_="admission-rejected";s.failure_stage_="delivery";}
+      s.advance(false);return;
+     }
+     s.failure(rejected?"admission-rejected":"delivery-unconfirmed");return;
+    }
     ++s.payloads_admitted_;s.advance();
    });
    try{self.deliver_(id,std::move(frame),reply);}catch(...){reply(nullptr);}
