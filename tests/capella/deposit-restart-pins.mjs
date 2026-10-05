@@ -8,6 +8,6 @@ export function pinnedDepositRestart(configuration,receipt,pendingPublicKey){
  const identity=x=>x.index===null?(assert.equal(x.publicKey,pendingPublicKey),'key:'+x.publicKey):'index:'+BigInt(x.index).toString();
  const inventory=new Map();for(const p of pins){const id=identity(p);assert.ok(!inventory.has(id),'Duplicate signer receipt');inventory.set(id,pin(p.restart));}
  for(const k of keys){const id=k.index===null?'key:'+pendingPublicKey:'index:'+BigInt(k.index).toString();assert.ok(inventory.has(id),'Missing signer commitment');k.restart=inventory.get(id);inventory.delete(id);}
- assert.equal(inventory.size,0);c.capella.restart=pin(receipt.restart);c.capella.automaticRecovery=false;
+ assert.equal(inventory.size,0);c.capella.restart=null;c.capella.initial=null;c.capella.recoveryCommitment=pin(receipt.restart);c.capella.automaticRecovery=false;
  return c;
 }

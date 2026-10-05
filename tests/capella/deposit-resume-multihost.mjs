@@ -79,6 +79,7 @@ try{
   const receipt=await json(resume.stopReceipts[n]);configs[n]=pinnedDepositRestart(configs[n],receipt,resume.pendingPublicKey);
   // Administrative replay budget for downtime; consensus profile is unchanged.
   configs[n].capella.limits.replaySlots='0x400';
+  configs[n].capella.clock.maximumForwardStepMs='0x'+(BigInt(meta.secondsPerSlot)*1000n*1024n).toString(16);
  }
  const deposit=await json(join(fixture,'deposit.json'));
  check(deposit.validatorIndex===64&&deposit.amountGwei===32000000000&&deposit.productionQualified===false,'Unexpected deposit fixture');
@@ -94,7 +95,7 @@ try{
  const rpcForward=await freePort();let p2pForward=await freePort();while(p2pForward===rpcForward)p2pForward=await freePort();
  const tf=openSync(join(out,'tunnel.log'),'a');tunnel=spawn('ssh',['-N','-o','BatchMode=yes','-o','ExitOnForwardFailure=yes','-o','ServerAliveInterval=15','-L',`127.0.0.1:${rpcForward}:127.0.0.1:${ports[0]}`,'-L',`127.0.0.1:${p2pForward}:127.0.0.1:${ports[1]}`,target],{stdio:['ignore',tf,tf]});closeSync(tf);tunnel.on('error',e=>{failure=e;});
  m=configs[0];data=join(out,'mac-data');
- m.rpc_port=await freePort();m.listen_addr='/ip4/127.0.0.1/tcp/0';m.p2p_binary=p2p;m.p2p_identity=join(data,'peer.key');m.bootnodes=[address.replace(`/tcp/${ports[1]}/`,`/tcp/${p2pForward}/`)];m.capella.profile.file=join(fixture,'profile.json');m.capella.initial.file=join(fixture,'initial.json');m.capella.recoveryWitness=join(data,'witness');
+ m.rpc_port=await freePort();m.listen_addr='/ip4/127.0.0.1/tcp/0';m.p2p_binary=p2p;m.p2p_identity=join(data,'peer.key');m.bootnodes=[address.replace(`/tcp/${ports[1]}/`,`/tcp/${p2pForward}/`)];m.capella.profile.file=join(fixture,'profile.json');if(m.capella.initial)m.capella.initial.file=join(fixture,'initial.json');m.capella.recoveryWitness=join(data,'witness');
  for(const k of m.capella.validator.keys){k.journal=join(data,'key-'+BigInt(k.index));k.recoveryWitness=k.journal+'-witness';}
  await save(join(out,'mac.json'),m);
  const urls=[`http://127.0.0.1:${m.rpc_port}`,`http://127.0.0.1:${rpcForward}`];
@@ -107,7 +108,7 @@ try{
  await save(join(out,'resources.json'),{target,revision,remote,volume,remoteRoot,urls,data,nativePid:native.pid,tunnelPid:tunnel.pid});
  let localReady=false;for(let i=0;i<60;i++){try{await rpc(0,'eth_chainId');localReady=true;break;}catch{check(native.exitCode===null&&native.signalCode===null,'Native node exited');await wait(500);}}check(localReady,'Native RPC startup deadline');
  let headersReady=false;const headerDeadline=Date.now()+90000;while(Date.now()<headerDeadline){try{for(let n=0;n<2;n++)await request(n,'/eth/v1/beacon/headers/head');headersReady=true;break;}catch(error){if(error.httpStatus!==404)throw error;}check(native.exitCode===null&&native.signalCode===null,'Native exited before signed head');await wait(1000);}check(headersReady,'Signed heads startup deadline');
- await record({event:'pinned-resume-no-new-deposit',sourceOutput:resume.sourceOutput,baseline:resume.baseline,automaticRecovery:false,replaySlots:'0x400'});
+ await record({event:'pinned-resume-no-new-deposit',sourceOutput:resume.sourceOutput,baseline:resume.baseline,automaticRecovery:false,replaySlots:'0x400',maximumForwardStepMs:configs[0].capella.clock.maximumForwardStepMs});
  blocks=[new Map(),new Map()];const epochs=[BigInt(resume.baseline.epoch),BigInt(resume.baseline.epoch)],roots=new Map([[String(BigInt(resume.baseline.epoch)),resume.baseline.root]]);let stable=0,proposalAfter;
  async function observe(n,root){for(let depth=0;root!==meta.initialHead&&!blocks[n].has(root);depth++){
   check(depth<1024,'Beacon ancestry budget');const d=await request(n,'/eth/v2/beacon/blocks/'+root),msg=d.data.message;

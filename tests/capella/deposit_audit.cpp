@@ -30,7 +30,7 @@ int main(int argc,char** argv){try{
  const auto& l=c.at("limits");CapellaStoreSnapshotLimits limits{size_t(number(l.at("envelopeBytes"))),size_t(number(l.at("blocks"))),size_t(number(l.at("messages"))),size_t(number(l.at("equivocations"))),size_t(number(l.at("stateBytes"))),size_t(number(l.at("totalStateBytes"))),number(l.at("replaySlots")),number(l.at("syncTrials"))};
  require(limits.envelope_bytes<=128*1024*1024&&limits.blocks<=1024,"private audit snapshot budget");
  const auto& p=c.at("profile");const auto rules=load_capella_fork_profile(read(p.at("file"),1024*1024),unhex(p.at("sha256")),1024*1024);require(rules.transition.chain_id==genesis.chain_id&&rules.native_deposit_votes,"native deposit profile required");
- const auto& i=c.at("initial");const auto seed=capella_store_from_snapshot(read(i.at("file"),limits.envelope_bytes),unhex(i.at("sha256")),rules,limits);
+ const auto& i=request.at("anchor");const auto seed=capella_store_from_snapshot(read(i.at("file"),limits.envelope_bytes),unhex(i.at("sha256")),rules,limits);
  auto context=[&](const CapellaForkBlock& block){return capella_fork_block_context(block.state,block.header,{rules.transition.consensus.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},rules.transition.consensus.state);};
  const auto initial=context(capella_fork_head(seed,rules));require(initial.registry.validators.size()==64,"initial64-member fixture required");
  for(const auto& member:initial.registry.validators)require(member.second.public_key!=public_key,"new key already registered in seed");

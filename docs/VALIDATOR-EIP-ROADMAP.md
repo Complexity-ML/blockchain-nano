@@ -7394,3 +7394,10 @@ L’observateur du probe est corrigé pour confirmer les checkpoints avec `/eth/
 
 
 2026-10-05, contrôle d’interface complémentaire : après fourniture du checkpoint durable 27 encore conservé et du slot réel de coupure, la requête enrichie passe l’audit canonique puis est refusée avec `distinct proposals required` lorsque les deux propositions sont volontairement identiques (`post-fix-semantic-control-v3.*`). Les contrôles précédents — état 26 élagué, puis slot de coupure manquant — restent conservés. Ce refus est attendu et ne qualifie aucune proposition post-reprise. L’observateur utilise aussi l’en-tête finalisé lorsque le checkpoint de tête revient temporairement à zéro après une époque positive.
+
+
+### 2026-10-05 — Restauration du dépôt : refus de configuration conservé
+
+La tentative `d0823af9` est terminale avec code 1 avant reprise des duties : `Witness recovery cannot use a restart token`. Le runtime a refusé une configuration mélangeant token de redémarrage direct et récupération par témoin. Les originaux arrêtés et leurs engagements restent conservés ; les copies de cette tentative ne sont pas une qualification. Preuves : `docs/qualification/native-deposit-resume-refusal-20261005/`.
+
+Le probe utilise désormais `initial=null`, `restart=null`, l’engagement de cœur externe dans `recoveryCommitment`, et les engagements individuels des clés. L’auditeur charge son ancre externe depuis la requête, indépendamment de la configuration de reprise ; compilation/link natifs v7 réussis, runtime inchangé. La prochaine tentative privée conserve le profil de consensus, avec budget administratif de replay 1024 slots et fenêtre d’horloge correspondante (6144000 ms). Cette fenêtre élargie ne qualifie pas la politique opérationnelle originale de 120000 ms ni une politique de récupération longue de production. Les propositions nouvelles, la finalité commune qui avance et les deux audits positifs restent à démontrer.
