@@ -7,6 +7,15 @@ namespace nano {
 namespace {
 template<size_t N>std::array<uint8_t,N> signing_array(std::span<const uint8_t> bytes,size_t at){std::array<uint8_t,N> out{};std::copy_n(bytes.begin()+at,N,out.begin());return out;}
 }
+bool CapellaDurableReactor::prepare_local_duties_locked(uint64_t slot,const std::function<void()>& check){
+ require_available();const auto& c=state_->timed.clock;
+ if(!rules_.slot_duration_ms||c.time_ms<c.genesis_time_ms||slot==UINT64_MAX||(c.time_ms-c.genesis_time_ms)/rules_.slot_duration_ms!=slot)return false;
+ if(!local_preparation_||!local_preparation_->matches(*state_,rules_,slot,check))local_preparation_.emplace(*state_,rules_,slot,check);
+ return local_preparation_->advance(std::min(limits_.replay_slots,rules_.transition.consensus.epoch.ffg.slots_per_epoch),limits_.sync_trials,check);
+}
+bool CapellaDurableReactor::prepare_current_duties(uint64_t slot,const std::function<void()>& check){
+ std::lock_guard lock(mutex_);return prepare_local_duties_locked(slot,check);
+}
 std::optional<Phase0SignedAttestation> CapellaDurableReactor::sign_attestation(uint64_t index,
  uint64_t slot,const std::function<uint64_t()>& local_clock,const ForkCheckpointToken& expected,BeaconSigningJournal& journal,
  const BeaconSigningJournal::Signer& signer,const std::function<void()>& checkpoint){
@@ -30,7 +39,9 @@ std::optional<Phase0SignedAttestation> CapellaDurableReactor::sign_attestation_l
  };
  auto expiry=[&](const char* message){if(expired)throw ExpiredCapellaDuty(message);throw std::runtime_error(message);};
  if(!timely())return std::nullopt;
- auto duty=prepare_capella_attestation_duty(*state_,rules_,index,slot,limits_.replay_slots,limits_.sync_trials,checkpoint);if(!duty)return std::nullopt;
+ if(!prepare_local_duties_locked(slot,checkpoint))return std::nullopt;
+ auto duties=local_preparation_->duties(*state_,checkpoint);const auto found=duties.find(index);if(found==duties.end())return std::nullopt;
+ auto* duty=&found->second;
  // Non-duty keys must not reread the complete durable archive on every poll.
  // Eligible duties still verify the disk commitment before any signature.
  disk_.fork_checkpoint(chain_,genesis_,limits_.envelope_bytes,token_);
@@ -80,7 +91,9 @@ std::optional<Bytes> CapellaDurableReactor::sign_proposal_locked(uint64_t index,
  const auto parent_context=capella_fork_block_context(parent.state,parent.header,CapellaEpochRules{t.epoch,rules_.transition.execution,rules_.transition.maximum_state_bytes},t.state,checkpoint);
  validate_capella_execution_record(parent,rules_,checkpoint);
  if(parent_context.block_root!=head)throw std::invalid_argument("Proposal parent binding mismatch");
- auto candidate=prepare_capella_unsigned_block(parent.state,slot,index,head,body,rules_.transition,parent.execution_block.header,parent.execution_state,[&](const Int& height){return capella_execution_history(*state_,head,height,checkpoint);},limits_.replay_slots,limits_.sync_trials,checkpoint);
+ if(!prepare_local_duties_locked(slot,checkpoint))return std::nullopt;
+ const auto* prepared=local_preparation_->block();if(!prepared)return std::nullopt;
+ auto candidate=prepared->construct(slot,index,body,parent.execution_block.header,parent.execution_state,[&](const Int& height){return capella_execution_history(*state_,head,height,checkpoint);},limits_.sync_trials,checkpoint);
  if(!candidate)return std::nullopt;
  const auto& message=candidate->message_ssz;
  const ConsensusBeaconHeader header{slot,index,head,signing_array<32>(message,48),capella_beacon_body_root(std::span<const uint8_t>(message).subspan(84),t.body,t.state.sync_committee_size,rules_.transition.execution,rules_.transition.withdrawals.maximum_per_payload,rules_.transition.maximum_bls_changes,t.maximum_block_bytes,checkpoint)};
@@ -127,7 +140,9 @@ std::optional<Bytes> CapellaDurableReactor::sign_randao_locked(uint64_t index,ui
  const auto head=phase0_fork_choice_head(state_->timed.view,{t.epoch.ffg.slots_per_epoch,t.attestation.duties.effective_balance_increment,rules_.proposer_score_boost},checkpoint).head;
  const auto& parent=state_->blocks.at(head);
  if(consensus_beacon_header_root(parent.header)!=head)throw std::invalid_argument("RANDAO parent binding mismatch");
- const auto identity=prepare_capella_proposer_identity(parent.state,parent.header,slot,CapellaEpochRules{t.epoch,rules_.transition.execution,rules_.transition.maximum_state_bytes},t.state,t.attestation.duties,limits_.replay_slots,limits_.sync_trials,checkpoint);
+ if(!prepare_local_duties_locked(slot,checkpoint))return std::nullopt;
+ const auto* prepared=local_preparation_->block();if(!prepared)return std::nullopt;
+ const auto identity=prepared->proposer_for_block(slot,limits_.sync_trials,checkpoint);
  if(!identity||identity->index!=index)return std::nullopt;
  // Non-duty keys must not reread the complete durable archive on every poll.
  // Eligible duties still verify the disk commitment before any signature.
@@ -153,9 +168,11 @@ std::optional<Bytes> CapellaDurableReactor::sign_randao_locked(uint64_t index,ui
 }
 
 std::optional<uint64_t> CapellaDurableReactor::current_proposer(uint64_t slot,const std::function<void()>& check){
- std::lock_guard lock(mutex_);require_available();const auto& t=rules_.transition.consensus;const auto& c=state_->timed.clock;
+ std::lock_guard lock(mutex_);require_available();const auto& c=state_->timed.clock;
  if((c.time_ms-c.genesis_time_ms)/rules_.slot_duration_ms!=slot)return std::nullopt;
- const auto& parent=capella_fork_head(*state_,rules_,check);const auto identity=prepare_capella_proposer_identity(parent.state,parent.header,slot,{t.epoch,rules_.transition.execution,rules_.transition.maximum_state_bytes},t.state,t.attestation.duties,limits_.replay_slots,limits_.sync_trials,check);
+ if(!prepare_local_duties_locked(slot,check))return std::nullopt;
+ const auto* prepared=local_preparation_->block();if(!prepared)return std::nullopt;
+ const auto identity=prepared->proposer_for_block(slot,limits_.sync_trials,check);
  if(!identity||state_->timed.view.equivocating_indices.contains(identity->index))return std::nullopt;return identity->index;
 }
 std::map<Bytes,uint64_t> CapellaDurableReactor::current_validator_indices(const std::set<Bytes>& keys,const std::function<void()>& check){
@@ -191,7 +208,7 @@ bool CapellaDurableReactor::current_duties_ready(uint64_t slot,const std::functi
  return capella_fork_head(*state_,rules_,check).header.slot==slot;
 }
 std::set<uint64_t> CapellaDurableReactor::current_attesters(uint64_t slot,const std::function<void()>& check){
- std::lock_guard lock(mutex_);require_available();const auto duties=prepare_capella_attestation_duties(*state_,rules_,slot,limits_.replay_slots,limits_.sync_trials,check);std::set<uint64_t> result;for(const auto& [index,duty]:duties)result.insert(index);return result;
+ std::lock_guard lock(mutex_);require_available();if(!prepare_local_duties_locked(slot,check))return {};const auto duties=local_preparation_->duties(*state_,check);std::set<uint64_t> result;for(const auto& [index,duty]:duties)result.insert(index);return result;
 }
 std::optional<Phase0SignedAttestation> CapellaDurableReactor::attest_current(uint64_t index,uint64_t slot,const std::function<uint64_t()>& clock,BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& check,const Bytes& registration_public_key){
  std::lock_guard lock(mutex_);check_registered_index_locked(index,registration_public_key,journal,check);require_available();return sign_attestation_locked(index,slot,clock,*token_,journal,signer,check);

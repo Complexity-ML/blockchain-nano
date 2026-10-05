@@ -1491,7 +1491,29 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
   check(admitted&&admitted_oracle&&capella_store_snapshot(*admitted,rules,crash_limits)==capella_store_snapshot(*admitted_oracle,rules,crash_limits),"prepared Store admission differs from ordinary fork-choice/operation processing");++checks;
   auto incompatible=r;incompatible.chain_id+=1;CapellaBlockPreparation wrong_profile(original,parent.header,incompatible);while(!wrong_profile.advance_for_block(slot,3,100000)){}
   refused=false;try{prepare_capella_prepared_received_block(timed,wire,rules,wrong_profile,3,100000);}catch(const std::invalid_argument&){refused=true;}check(refused,"prepared Store admitted a frame from another transition profile");++checks;
+  CapellaDutyPreparation local(timed,rules,slot);size_t local_attempts=0;
+  while(!local.advance(slots,100000)){check(++local_attempts<(slot-parent.header.slot)/slots+3,"local preparation failed to advance");}
+  check(local_attempts>0&&local.ready()&&local.head_state()==advanced,"local slot preparation differs from full-gap oracle");++checks;
+  const auto local_duties=local.duties(timed),oracle_duties=prepare_capella_attestation_duties(timed,rules,slot,slot-parent.header.slot,100000);
+  check(local_duties.size()==oracle_duties.size(),"prepared local committee count differs");
+  for(const auto& [member,duty]:local_duties){const auto& expected=oracle_duties.at(member);check(duty.public_key==expected.public_key&&duty.genesis_root==expected.genesis_root&&duty.fork_version==expected.fork_version&&duty.attestation.data==expected.attestation.data&&duty.attestation.aggregation_bits==expected.attestation.aggregation_bits,"prepared local attestation differs from oracle");}++checks;
+  check(local.block()&&local.block()->proposer_for_block(slot,100000)==identity,"prepared local proposer differs from oracle");++checks;
+  check(local.sync_state(100000)==prepare_capella_slots(original,epoch_rules,l,slot+1,slot+1-parent.header.slot,100000),"prepared local sync state differs from oracle");++checks;
+  check(!local.matches(timed,rules,slot+1),"local preparation reused at wrong slot");++checks;
   Temp directory;Genesis g;g.chain_id=r.chain_id;g.consensus="beacon";g.evm_revision=EvmRevision::Shanghai;g.block=genesis;g.state=genesis_state;
+  {
+   Blockchain local_owner(directory/"local-owner",g);ChainStore local_witness(directory/"local-witness");CapellaDurableReactor local_reactor(local_owner,rules,crash_limits,initial,{},&local_witness);local_reactor.tick(clock);
+   const auto local_token=local_reactor.current().token;size_t polls=0;
+   while(!local_reactor.prepare_current_duties(slot)){check(local_reactor.current().token==local_token,"incomplete duty preparation published state");check(++polls<(slot-parent.header.slot)/slots+3,"reactor local duty preparation stalled");}
+   check(polls>0&&local_reactor.current_proposer(slot)==std::optional<uint64_t>(identity->index),"reactor prepared local proposer mismatch");++checks;
+   ChainStore signer_disk(directory/"local-signer");BeaconSigningJournal journal(signer_disk,r.chain_id,genesis.header.hash(),identity->genesis_root,key.public_key,slots);
+   const auto local_wire=local_reactor.propose_current(identity->index,slot,"0x0000000000000000000000000000000000000000",4,4,[&]{return clock;},journal,[&](const ConsensusRoot& root){return key.sign(root);});
+   check(local_wire&&journal.latest_proposal_slot()==std::optional<uint64_t>(slot),"prepared local proposal did not reserve and sign");++checks;
+   const auto local_oracle=prepare_capella_received_block(timed,*local_wire,rules,slot-parent.header.slot,100000);
+   check(local_oracle&&local_reactor.block(*local_wire),"prepared local proposal was not immediately admitted");++checks;
+   check(capella_store_snapshot(*local_reactor.current().state,rules,crash_limits)==capella_store_snapshot(*local_oracle,rules,crash_limits),"local signed proposal Store differs from ordinary oracle");++checks;
+   check(!local_reactor.propose_current(identity->index,slot,"0x0000000000000000000000000000000000000000",4,4,[&]{return clock;},journal,[&](const ConsensusRoot& root){return key.sign(root);}),"admitted local slot signed twice");++checks;
+  }
   Blockchain owner(directory/"owner",g);ChainStore witness(directory/"witness");auto reactor=std::make_unique<CapellaDurableReactor>(owner,rules,crash_limits,initial,std::function<void()>{},&witness);reactor->tick(clock);
   const auto token=reactor->current().token;InboundBudget budget;CapellaConsensusService service(*reactor,budget,2*r.consensus.maximum_block_bytes+8192,r.consensus.maximum_block_bytes,4096,4096,4,2*r.consensus.maximum_block_bytes+8192);
   auto envelope=reactor->network_identity();envelope["kind"]="block";envelope["ssz"]=hex(wire);
@@ -1504,7 +1526,7 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
   check(reopened.block(wire)&&reopened.current().token==committed.token,"prepared worker duplicate admission rewrote checkpoint");++checks;
 
  }
- std::cout<<Json{{"scenario","capella-prepared-block-transition"},{"workerIntegration",true},{"boundedRetryHarness",true},{"witnessedPublication",true},{"checks",checks},{"variants",2},{"signedBlsBlocks",2},{"type2Transactions",2},{"epochBoundaryFinalSlot",true},{"fullGapOracleEqual",true},{"runtimeIntegrated",false},{"networkQualified",false}}.dump()<<std::endl;
+ std::cout<<Json{{"scenario","capella-prepared-block-transition"},{"workerIntegration",true},{"localProposalIntegration",true},{"boundedRetryHarness",true},{"witnessedPublication",true},{"checks",checks},{"variants",2},{"signedBlsBlocks",2},{"type2Transactions",2},{"epochBoundaryFinalSlot",true},{"fullGapOracleEqual",true},{"runtimeIntegrated",false},{"networkQualified",false}}.dump()<<std::endl;
 }
 static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigned participation=100){
  const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-bellatrix-containers-official",source=fixtures/"consensus-capella-slots-official";

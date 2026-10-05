@@ -1,11 +1,12 @@
 #include "nano/consensus_capella_duty.hpp"
 #include "nano/committee.hpp"
+#include "nano/consensus_capella_store_snapshot.hpp"
 #include <algorithm>
 namespace nano {
-std::map<uint64_t,CapellaAttestationDuty> prepare_capella_attestation_duties(
+static std::map<uint64_t,CapellaAttestationDuty> attestation_duties_impl(
  const CapellaForkStore& store,const CapellaForkBlockRules& rules,
  uint64_t expected_slot,uint64_t maximum_slots,uint64_t maximum_sync_trials,
- const std::function<void()>& checkpoint){
+ const std::function<void()>& checkpoint,const CapellaDutyPreparation* prepared){
  const auto& t=rules.transition.consensus;validate_altair_transition_rules(t);
  const CapellaEpochRules epoch_rules{t.epoch,rules.transition.execution,rules.transition.maximum_state_bytes};
  const auto slots=t.epoch.ffg.slots_per_epoch;const auto& clock=store.timed.clock;const auto& view=store.timed.view;
@@ -30,13 +31,15 @@ std::map<uint64_t,CapellaAttestationDuty> prepare_capella_attestation_duties(
   target=node.parent;
  }
  const auto& boundary=store.blocks.at(target);
- const auto context=prepare_capella_fork_state_contexts(boundary.state,boundary.header,{epoch,target},epoch_rules,t.state,maximum_slots,maximum_sync_trials,checkpoint);
- const auto duties=phase0_attestation_duties(context.target.registry,context.target.randao,t.attestation.duties,epoch,checkpoint);
+ const auto prepared_target=prepared?prepared->target_context(store,{epoch,target},checkpoint):std::nullopt;
+ if(prepared&&!prepared_target)return {};
+ const auto context=prepared_target?*prepared_target:prepare_capella_fork_state_contexts(boundary.state,boundary.header,{epoch,target},epoch_rules,t.state,maximum_slots,maximum_sync_trials,checkpoint).target;
+ const auto duties=phase0_attestation_duties(context.registry,context.randao,t.attestation.duties,epoch,checkpoint);
  if(duties.committees_per_slot>UINT64_MAX/slots)throw std::overflow_error("Duty committee count overflow");
- const auto advanced=block.header.slot==slot?block.state:prepare_capella_slots(block.state,epoch_rules,t.state,slot,maximum_slots,maximum_sync_trials,checkpoint);
+ const auto advanced=prepared?prepared->head_state():(block.header.slot==slot?block.state:prepare_capella_slots(block.state,epoch_rules,t.state,slot,maximum_slots,maximum_sync_trials,checkpoint));
  const auto source=capella_fork_checkpoints(advanced,epoch_rules,t.state,checkpoint).realized.current_justified;
  if(source.epoch>epoch)throw std::invalid_argument("Future duty source checkpoint");
- const auto& fork=context.target.fork;const auto version=epoch<fork.epoch?fork.previous_version:fork.current_version;
+ const auto& fork=context.fork;const auto version=epoch<fork.epoch?fork.previous_version:fork.current_version;
  if(checkpoint)checkpoint();
  std::map<uint64_t,CapellaAttestationDuty> result;
  for(uint64_t c=0;c<duties.committees_per_slot;++c){
@@ -45,15 +48,80 @@ std::map<uint64_t,CapellaAttestationDuty> prepare_capella_attestation_duties(
   if(committee.size()>t.body.validators_per_committee)throw std::invalid_argument("Duty committee exceeds profile bound");
   for(size_t position=0;position<committee.size();++position){
    if(checkpoint)checkpoint();const auto index=committee[position];
-   const auto member=context.target.registry.validators.find(index),head_member=head_context.registry.validators.find(index);
-   if(member==context.target.registry.validators.end()||head_member==head_context.registry.validators.end())continue;
+   const auto member=context.registry.validators.find(index),head_member=head_context.registry.validators.find(index);
+   if(member==context.registry.validators.end()||head_member==head_context.registry.validators.end())continue;
    if(view.equivocating_indices.contains(index)||member->second.slashed||head_member->second.slashed||member->second.activation_epoch>epoch||member->second.exit_epoch<=epoch)continue;
-   if(member->second.public_key!=head_member->second.public_key||context.target.genesis_root!=head_context.genesis_root)throw std::invalid_argument("Inconsistent duty validator identity");
+   if(member->second.public_key!=head_member->second.public_key||context.genesis_root!=head_context.genesis_root)throw std::invalid_argument("Inconsistent duty validator identity");
    std::vector<bool> bits(committee.size());bits[position]=true;
-   result.emplace(index,CapellaAttestationDuty{index,Bytes(member->second.public_key.begin(),member->second.public_key.end()),context.target.genesis_root,version,{{slot,c,head,source,{epoch,target}},std::move(bits),{}}});
+   result.emplace(index,CapellaAttestationDuty{index,Bytes(member->second.public_key.begin(),member->second.public_key.end()),context.genesis_root,version,{{slot,c,head,source,{epoch,target}},std::move(bits),{}}});
   }
  }
  return result;
+}
+std::map<uint64_t,CapellaAttestationDuty> prepare_capella_attestation_duties(
+ const CapellaForkStore& store,const CapellaForkBlockRules& rules,uint64_t slot,
+ uint64_t maximum_slots,uint64_t trials,const std::function<void()>& check){
+ return attestation_duties_impl(store,rules,slot,maximum_slots,trials,check,nullptr);
+}
+CapellaDutyPreparation::CapellaDutyPreparation(const CapellaForkStore& store,
+ const CapellaForkBlockRules& rules,uint64_t slot,const std::function<void()>& check)
+ :rules_(rules),slot_(slot),head_(capella_fork_head(store,rules,check).state,
+ capella_fork_head(store,rules,check).header,
+ {rules.transition.consensus.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},rules.transition.consensus.state,check){
+ const auto& t=rules_.transition;const auto slots=t.consensus.epoch.ffg.slots_per_epoch;
+ if(!slots||slot_==UINT64_MAX||head_.parent().slot>slot_)throw std::invalid_argument("Invalid prepared local duty slot");
+ const auto& head=store.blocks.at(consensus_beacon_header_root(head_.parent()));
+ validate_capella_execution_record(head,rules_,check);
+ if(head.header.slot<slot_)block_.emplace(head.state,head.header,t,check);
+ auto root=consensus_beacon_header_root(head.header);const auto start=(slot_/slots)*slots;
+ while(store.timed.view.nodes.at(root).slot>start){
+  if(check)check();if(root==store.timed.view.anchor)return;
+  const auto& n=store.timed.view.nodes.at(root);
+  if(!store.timed.view.nodes.contains(n.parent)||store.timed.view.nodes.at(n.parent).slot>=n.slot)throw std::invalid_argument("Invalid prepared duty ancestry");
+  root=n.parent;
+ }
+ const auto& boundary=store.blocks.at(root);
+ target_.emplace(boundary.state,boundary.header,CapellaEpochRules{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state,check);
+}
+bool CapellaDutyPreparation::matches(const CapellaForkStore& store,const CapellaForkBlockRules& rules,
+ uint64_t slot,const std::function<void()>& check)const{
+ if(slot!=slot_||capella_fork_profile(rules)!=capella_fork_profile(rules_))return false;
+ if(capella_fork_head(store,rules,check).header!=head_.parent())return false;
+ if(target_){const auto root=consensus_beacon_header_root(target_->parent());const auto found=store.blocks.find(root);if(found==store.blocks.end()||found->second.header!=target_->parent())return false;}
+ return true;
+}
+bool CapellaDutyPreparation::advance(uint64_t maximum_slots,uint64_t trials,const std::function<void()>& check){
+ const auto slots=rules_.transition.consensus.epoch.ffg.slots_per_epoch;
+ const bool head_ready=head_.advance(slot_,maximum_slots,trials,check);
+ bool target_ready=true,block_ready=true;
+ if(target_)target_ready=target_->advance((slot_/slots)*slots,maximum_slots,trials,check);
+ if(block_)block_ready=block_->advance_for_block(slot_,maximum_slots,trials,check);
+ return head_ready&&target_ready&&block_ready;
+}
+bool CapellaDutyPreparation::ready()const{
+ const auto slots=rules_.transition.consensus.epoch.ffg.slots_per_epoch;
+ return head_.slot()==slot_&&(!target_||target_->slot()==(slot_/slots)*slots)&&(!block_||block_->prepared_slot()==slot_-1);
+}
+const CapellaSlotState& CapellaDutyPreparation::head_state()const{
+ if(!ready())throw std::logic_error("Local duty preparation incomplete");return head_.state();
+}
+CapellaSlotState CapellaDutyPreparation::sync_state(uint64_t trials,const std::function<void()>& check)const{
+ if(!ready())throw std::logic_error("Local sync preparation incomplete");auto frame=head_;frame.advance(slot_+1,1,trials,check);return frame.state();
+}
+const CapellaBlockPreparation* CapellaDutyPreparation::block()const{
+ if(!ready())throw std::logic_error("Local block preparation incomplete");return block_?&*block_:nullptr;
+}
+std::optional<Phase0ForkVoteContext> CapellaDutyPreparation::target_context(const CapellaForkStore& store,
+ const ConsensusCheckpoint& target,const std::function<void()>& check)const{
+ if(!ready()||!target_)return std::nullopt;
+ const auto root=consensus_beacon_header_root(target_->parent());const auto found=store.blocks.find(root);
+ if(found==store.blocks.end()||found->second.header!=target_->parent()||target.root!=root||target.epoch!=slot_/rules_.transition.consensus.epoch.ffg.slots_per_epoch)return std::nullopt;
+ return target_->vote_context(target,check);
+}
+std::map<uint64_t,CapellaAttestationDuty> CapellaDutyPreparation::duties(const CapellaForkStore& store,const std::function<void()>& check)const{
+ if(!ready())return {};
+ if(!matches(store,rules_,slot_,check))throw std::invalid_argument("Stale prepared local duties");
+ return attestation_duties_impl(store,rules_,slot_,1,1,check,this);
 }
 std::optional<CapellaAttestationDuty> prepare_capella_attestation_duty(
  const CapellaForkStore& store,const CapellaForkBlockRules& rules,uint64_t index,

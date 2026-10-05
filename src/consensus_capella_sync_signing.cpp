@@ -11,7 +11,8 @@ const CapellaDurableReactor::SyncSigningContext& CapellaDurableReactor::sync_sig
  if(sync_signing_context_&&sync_signing_context_->slot==slot&&sync_signing_context_->parent==head)return *sync_signing_context_;
  if(slot==UINT64_MAX)throw std::overflow_error("Sync duty slot overflow");
  const auto& parent=state_->blocks.at(head);
- const auto advanced=prepare_capella_slots(parent.state,{c.epoch,t.execution,t.maximum_state_bytes},l,slot+1,limits_.replay_slots,limits_.sync_trials,check);
+ if(!prepare_local_duties_locked(slot,check))throw StaleCapellaDuty("Sync preparation incomplete");
+ const auto advanced=local_preparation_->sync_state(limits_.sync_trials,check);
  const auto& bytes=advanced.ssz;const size_t historical=176+64*l.slots_per_historical_root;
  SyncSigningContext candidate{slot,head,sync_field<32>(bytes,176+32*(slot%l.slots_per_historical_root)),sync_field<32>(bytes,8),sync_field<4>(bytes,slot/c.sync.slots_per_epoch<sync_number(bytes,56)?48:52),{}};
  const size_t committee=historical+96+32*l.epochs_per_historical_vector+8*l.epochs_per_slashings_vector+133;

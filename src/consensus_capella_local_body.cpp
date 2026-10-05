@@ -25,7 +25,10 @@ const CapellaDurableReactor::SyncAdmissionContext& CapellaDurableReactor::sync_a
   if(sync_context_hits_!=UINT64_MAX)++sync_context_hits_;return *sync_admission_context_;
  }
  const auto& t=rules_.transition;const auto& c=t.consensus;
- auto advanced=prepare_capella_slots(state_->blocks.at(head).state,{c.epoch,t.execution,t.maximum_state_bytes},c.state,slot,limits_.replay_slots,limits_.sync_trials,check);
+ const auto current=(state_->timed.clock.time_ms-state_->timed.clock.genesis_time_ms)/rules_.slot_duration_ms;
+ auto advanced=local_preparation_&&local_preparation_->matches(*state_,rules_,current,check)&&local_preparation_->ready()&&current!=UINT64_MAX&&slot==current+1
+  ?local_preparation_->sync_state(limits_.sync_trials,check)
+  :prepare_capella_slots(state_->blocks.at(head).state,{c.epoch,t.execution,t.maximum_state_bytes},c.state,slot,limits_.replay_slots,limits_.sync_trials,check);
  auto projected=capella_detail::project(advanced.ssz,c.state,t.execution,t.maximum_state_bytes,check);
  SyncAdmissionContext candidate{slot,head,std::move(advanced.ssz),std::move(projected.common)};
  if(check)check();sync_admission_context_=std::move(candidate);
@@ -166,9 +169,11 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t i
  const auto head=phase0_fork_choice_head(state_->timed.view,{t.epoch.ffg.slots_per_epoch,t.attestation.duties.effective_balance_increment,rules_.proposer_score_boost},check).head;
  const auto& parent=state_->blocks.at(head);
  const CapellaEpochRules epoch{t.epoch,rules_.transition.execution,rules_.transition.maximum_state_bytes};
- const auto identity=prepare_capella_proposer_identity(parent.state,parent.header,slot,epoch,t.state,t.attestation.duties,limits_.replay_slots,limits_.sync_trials,check);
+ if(!prepare_local_duties_locked(slot,check))return std::nullopt;
+ const auto* prepared=local_preparation_->block();if(!prepared)return std::nullopt;
+ const auto identity=prepared->proposer_for_block(slot,limits_.sync_trials,check);
  if(!identity||identity->index!=index)return std::nullopt;
- auto advanced=prepare_capella_slots(parent.state,epoch,t.state,slot,limits_.replay_slots,limits_.sync_trials,check);
+ const auto& advanced=local_preparation_->head_state();
  // The complete Capella SSZ layout was validated by prepare_capella_slots.
  const size_t historical=176+64*t.state.slots_per_historical_root,randao=historical+96;
  Bytes deposit_vote(advanced.ssz.begin()+historical+4,advanced.ssz.begin()+historical+76),selected_deposits;
@@ -229,7 +234,7 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t i
   if(encoded.size()>t.maximum_block_bytes-body.size())throw std::length_error("Capella body payload budget");body.insert(body.end(),encoded.begin(),encoded.end());
   if(selected_changes.size()>t.maximum_block_bytes-body.size())throw std::length_error("Capella body BLS change budget");body.insert(body.end(),selected_changes.begin(),selected_changes.end());return body;
  };
- auto valid=[&](const Bytes& body){return prepare_capella_unsigned_block(parent.state,slot,index,head,body,rules_.transition,parent.execution_block.header,parent.execution_state,history,limits_.replay_slots,limits_.sync_trials,check).has_value();};
+ auto valid=[&](const Bytes& body){return prepared->construct(slot,index,body,parent.execution_block.header,parent.execution_state,history,limits_.sync_trials,check).has_value();};
  std::vector<Bytes> selected;auto body=assemble(selected);
  if(!valid(body))throw std::runtime_error("Capella proposal needs valid mandatory operations or execution payload");
  size_t tried=0;

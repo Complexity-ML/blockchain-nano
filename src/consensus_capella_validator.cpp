@@ -29,6 +29,9 @@ void CapellaValidatorLoop::poll(const std::function<void()>& checkpoint){
   const auto genesis=current.state->timed.clock.genesis_time_ms,now=now_();if(now<genesis)throw std::runtime_error("Validator clock precedes genesis");
   const auto slot=(now-genesis)/slot_ms_,epoch=slot/slots_per_epoch_;
   auto same_slot=[&]{const auto time=now_();if(time<genesis)throw std::runtime_error("Validator clock precedes genesis");return (time-genesis)/slot_ms_==slot;};
+  // Resume bounded preparation before enumerating or reserving any key duty.
+  // Incomplete work is a deferred poll, never a failed signer or an ACK.
+  if(!reactor_.prepare_current_duties(slot,check)){++duty_waits_;return;}
   std::set<Bytes> requested;
   for(const auto& key:keys_)if(!key.registration_public_key.empty())requested.insert(key.registration_public_key);
   const auto registered=reactor_.current_validator_indices(requested,check);

@@ -3,6 +3,7 @@
 #include <atomic>
 #include "nano/consensus_capella_store_snapshot.hpp"
 #include "nano/storage.hpp"
+#include "nano/consensus_capella_duty.hpp"
 #include "nano/consensus_beacon_signer.hpp"
 #include "nano/consensus_capella_bls_change.hpp"
 #include "nano/consensus_sync_message.hpp"
@@ -43,6 +44,8 @@ class CapellaDurableReactor {
  // parent/profile, no peer-supplied state, no journal or durable writes while
  // incomplete. Each retry advances at most one epoch within replay_slots.
  std::optional<CapellaBlockPreparation> incoming_preparation_;
+ std::optional<CapellaDutyPreparation> local_preparation_;
+ bool prepare_local_duties_locked(uint64_t,const std::function<void()>&);
  // Only populated from this reactor's immutable, admitted head under mutex_.
  // Single-entry cache: no retained state snapshots or old-branch registry maps.
  struct ValidatorIndexCache {ConsensusRoot root;std::set<Bytes> keys;std::map<Bytes,uint64_t> indices;};
@@ -91,6 +94,7 @@ class CapellaDurableReactor {
  std::optional<Bytes> prepare_local_body_from_pool_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,size_t,size_t,const std::function<void()>&);
  void publish(CapellaForkStore,const std::function<void()>&,const std::vector<CheckpointArchiveEntry>& archive={},std::optional<CapellaSignedVotes> votes=std::nullopt,std::optional<CapellaSignedVotes> slashings=std::nullopt,std::optional<CapellaPendingBlsChanges> changes=std::nullopt,std::optional<CapellaPendingExits> exits=std::nullopt);
 public:
+ bool prepare_current_duties(uint64_t,const std::function<void()>& checkpoint={});
  bool voluntary_exit_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
  std::vector<SignedConsensusVoluntaryExit> pending_exits()const;
  // Ephemeral bounded diagnostic counters; never part of consensus state.

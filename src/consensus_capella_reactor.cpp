@@ -376,6 +376,9 @@ bool CapellaDurableReactor::block(std::span<const uint8_t> wire,const std::funct
   auto ancestor=header.parent_root;const auto finalized_slot=view.finalized.epoch*slots;
   while(view.nodes.at(ancestor).slot>finalized_slot&&ancestor!=view.anchor){if(check)check();const auto& node=view.nodes.at(ancestor);if(view.nodes.at(node.parent).slot>=node.slot)throw std::invalid_argument("Invalid incoming Capella ancestry");ancestor=node.parent;}
   if(ancestor!=view.finalized.root)return false;
+  if(local_preparation_&&local_preparation_->matches(*state_,rules_,header.slot,check)&&local_preparation_->ready()){
+   const auto* local=local_preparation_->block();if(local)incoming_preparation_=*local;
+  }
   if(!incoming_preparation_||incoming_preparation_->parent()!=parent.header||incoming_preparation_->prepared_slot()>header.slot-1)
    incoming_preparation_.emplace(parent.state,parent.header,rules_.transition,check);
   if(!incoming_preparation_->advance_for_block(header.slot,std::min(limits_.replay_slots,slots),limits_.sync_trials,check))return false;

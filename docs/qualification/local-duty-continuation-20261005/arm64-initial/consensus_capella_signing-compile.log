@@ -1,0 +1,26 @@
+/work/src/consensus_capella_signing.cpp:52:29: error: no viable overloaded '='
+   52 |  duty->attestation.signature=journal.sign_attestation(duty->attestation.data,duty->fork_version,[&](const ConsensusRoot& root){
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   53 |   if(!timely())expiry("Attestation duty expired before provider");
+      |   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   54 |   auto signature=signer(root);
+      |   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   55 |   if(!timely())expiry("Attestation duty expired during provider");
+      |   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   56 |   return signature;
+      |   ~~~~~~~~~~~~~~~~~
+   57 |  });
+      |  ~~
+/usr/bin/../lib/gcc/aarch64-linux-gnu/13/../../../../include/c++/13/bits/stl_vector.h:751:7: note: candidate function not viable: 'this' argument has type 'const Bytes' (aka 'const vector<unsigned char>'), but method is not marked const
+  751 |       operator=(const vector& __x);
+      |       ^
+/usr/bin/../lib/gcc/aarch64-linux-gnu/13/../../../../include/c++/13/bits/stl_vector.h:766:7: note: candidate function not viable: 'this' argument has type 'const Bytes' (aka 'const vector<unsigned char>'), but method is not marked const
+  766 |       operator=(vector&& __x) noexcept(_Alloc_traits::_S_nothrow_move())
+      |       ^
+/usr/bin/../lib/gcc/aarch64-linux-gnu/13/../../../../include/c++/13/bits/stl_vector.h:788:7: note: candidate function not viable: 'this' argument has type 'const Bytes' (aka 'const vector<unsigned char>'), but method is not marked const
+  788 |       operator=(initializer_list<value_type> __l)
+      |       ^
+/work/src/consensus_capella_signing.cpp:171:63: warning: unused variable 't' [-Wunused-variable]
+  171 |  std::lock_guard lock(mutex_);require_available();const auto& t=rules_.transition.consensus;const auto& c=state_->timed.clock;
+      |                                                               ^
+1 warning and 1 error generated.

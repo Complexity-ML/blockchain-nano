@@ -1,0 +1,80 @@
+/work/tests/test_capella_transition.cpp:631:219: error: cannot initialize a parameter of type 'uint64_t' (aka 'unsigned long') with an lvalue of type 'clock_t () noexcept(true)' (aka 'long () noexcept(true)')
+  631 |    Blockchain local_owner(directory/"local-owner",g);ChainStore local_witness(directory/"local-witness");CapellaDurableReactor local_reactor(local_owner,rules,crash_limits,initial,{},&local_witness);local_reactor.tick(clock);
+      |                                                                                                                                                                                                                           ^~~~~
+/work/include/nano/consensus_capella_reactor.hpp:201:21: note: passing argument to parameter 'time_ms' here
+  201 |  void tick(uint64_t time_ms,const std::function<void()>& checkpoint={});
+      |                     ^
+/work/tests/test_capella_transition.cpp:633:48: error: use of undeclared identifier 'slot'; did you mean 'slots'?
+  633 |    while(!local_reactor.prepare_current_duties(slot)){check(local_reactor.current().token==local_token,"incomplete duty preparation published state");check(++polls<(slot-parent.header.slot)/slots+3,"reactor local duty preparation stalled");}
+      |                                                ^~~~
+      |                                                slots
+/work/tests/test_capella_transition.cpp:626:44: note: 'slots' declared here
+  626 |  const auto& t=rules.transition;const auto slots=t.consensus.epoch.ffg.slots_per_epoch;
+      |                                            ^
+/work/tests/test_capella_transition.cpp:633:166: error: use of undeclared identifier 'slot'; did you mean 'slots'?
+  633 |    while(!local_reactor.prepare_current_duties(slot)){check(local_reactor.current().token==local_token,"incomplete duty preparation published state");check(++polls<(slot-parent.header.slot)/slots+3,"reactor local duty preparation stalled");}
+      |                                                                                                                                                                      ^~~~
+      |                                                                                                                                                                      slots
+/work/tests/test_capella_transition.cpp:626:44: note: 'slots' declared here
+  626 |  const auto& t=rules.transition;const auto slots=t.consensus.epoch.ffg.slots_per_epoch;
+      |                                            ^
+/work/tests/test_capella_transition.cpp:633:171: error: use of undeclared identifier 'parent'
+  633 |    while(!local_reactor.prepare_current_duties(slot)){check(local_reactor.current().token==local_token,"incomplete duty preparation published state");check(++polls<(slot-parent.header.slot)/slots+3,"reactor local duty preparation stalled");}
+      |                                                                                                                                                                           ^
+/work/tests/test_capella_transition.cpp:634:81: error: use of undeclared identifier 'identity'
+  634 |    check(polls>0&&local_reactor.current_proposer(slot)==std::optional<uint64_t>(identity->index),"reactor prepared local proposer mismatch");++checks;
+      |                                                                                 ^
+/work/tests/test_capella_transition.cpp:634:50: error: use of undeclared identifier 'slot'; did you mean 'slots'?
+  634 |    check(polls>0&&local_reactor.current_proposer(slot)==std::optional<uint64_t>(identity->index),"reactor prepared local proposer mismatch");++checks;
+      |                                                  ^~~~
+      |                                                  slots
+/work/tests/test_capella_transition.cpp:626:44: note: 'slots' declared here
+  626 |  const auto& t=rules.transition;const auto slots=t.consensus.epoch.ffg.slots_per_epoch;
+      |                                            ^
+/work/tests/test_capella_transition.cpp:634:144: error: use of undeclared identifier 'checks'
+  634 |    check(polls>0&&local_reactor.current_proposer(slot)==std::optional<uint64_t>(identity->index),"reactor prepared local proposer mismatch");++checks;
+      |                                                                                                                                                ^
+/work/tests/test_capella_transition.cpp:635:150: error: base of member reference is a function; perhaps you meant to call it with no arguments?
+  635 |    ChainStore signer_disk(directory/"local-signer");BeaconSigningJournal journal(signer_disk,r.chain_id,genesis.header.hash(),identity->genesis_root,key.public_key,slots);
+      |                                                                                                                                                      ^~~
+      |                                                                                                                                                         ()
+/work/tests/test_capella_transition.cpp:635:154: error: no member named 'public_key' in 'std::basic_string<char>'
+  635 |    ChainStore signer_disk(directory/"local-signer");BeaconSigningJournal journal(signer_disk,r.chain_id,genesis.header.hash(),identity->genesis_root,key.public_key,slots);
+      |                                                                                                                                                      ~~~ ^
+/work/tests/test_capella_transition.cpp:635:94: error: use of undeclared identifier 'r'
+  635 |    ChainStore signer_disk(directory/"local-signer");BeaconSigningJournal journal(signer_disk,r.chain_id,genesis.header.hash(),identity->genesis_root,key.public_key,slots);
+      |                                                                                              ^
+/work/tests/test_capella_transition.cpp:635:127: error: use of undeclared identifier 'identity'
+  635 |    ChainStore signer_disk(directory/"local-signer");BeaconSigningJournal journal(signer_disk,r.chain_id,genesis.header.hash(),identity->genesis_root,key.public_key,slots);
+      |                                                                                                                               ^
+/work/tests/test_capella_transition.cpp:636:191: error: base of member reference is a function; perhaps you meant to call it with no arguments?
+  636 |    const auto local_wire=local_reactor.propose_current(identity->index,slot,"0x0000000000000000000000000000000000000000",4,4,[&]{return clock;},journal,[&](const ConsensusRoot& root){return key.sign(root);});
+      |                                                                                                                                                                                               ^~~
+      |                                                                                                                                                                                                  ()
+/work/tests/test_capella_transition.cpp:636:195: error: no member named 'sign' in 'std::basic_string<char>'
+  636 |    const auto local_wire=local_reactor.propose_current(identity->index,slot,"0x0000000000000000000000000000000000000000",4,4,[&]{return clock;},journal,[&](const ConsensusRoot& root){return key.sign(root);});
+      |                                                                                                                                                                                               ~~~ ^
+/work/tests/test_capella_transition.cpp:636:56: error: use of undeclared identifier 'identity'
+  636 |    const auto local_wire=local_reactor.propose_current(identity->index,slot,"0x0000000000000000000000000000000000000000",4,4,[&]{return clock;},journal,[&](const ConsensusRoot& root){return key.sign(root);});
+      |                                                        ^
+/work/tests/test_capella_transition.cpp:636:72: error: use of undeclared identifier 'slot'
+  636 |    const auto local_wire=local_reactor.propose_current(identity->index,slot,"0x0000000000000000000000000000000000000000",4,4,[&]{return clock;},journal,[&](const ConsensusRoot& root){return key.sign(root);});
+      |                                                                        ^
+/work/tests/test_capella_transition.cpp:637:78: error: use of undeclared identifier 'slot'; did you mean 'slots'?
+  637 |    check(local_wire&&journal.latest_proposal_slot()==std::optional<uint64_t>(slot),"prepared local proposal did not reserve and sign");++checks;
+      |                                                                              ^~~~
+      |                                                                              slots
+/work/tests/test_capella_transition.cpp:626:44: note: 'slots' declared here
+  626 |  const auto& t=rules.transition;const auto slots=t.consensus.epoch.ffg.slots_per_epoch;
+      |                                            ^
+/work/tests/test_capella_transition.cpp:637:138: error: use of undeclared identifier 'checks'
+  637 |    check(local_wire&&journal.latest_proposal_slot()==std::optional<uint64_t>(slot),"prepared local proposal did not reserve and sign");++checks;
+      |                                                                                                                                          ^
+/work/tests/test_capella_transition.cpp:638:59: error: use of undeclared identifier 'timed'
+  638 |    const auto local_oracle=prepare_capella_received_block(timed,*local_wire,rules,slot-parent.header.slot,100000);
+      |                                                           ^
+/work/tests/test_capella_transition.cpp:638:83: error: use of undeclared identifier 'slot'
+  638 |    const auto local_oracle=prepare_capella_received_block(timed,*local_wire,rules,slot-parent.header.slot,100000);
+      |                                                                                   ^
+fatal error: too many errors emitted, stopping now [-ferror-limit=]
+20 errors generated.
