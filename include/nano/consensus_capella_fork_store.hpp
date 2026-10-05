@@ -66,6 +66,15 @@ std::optional<CapellaForkStore> prepare_capella_prepared_store_vote(const Capell
 std::optional<CapellaForkStore> prepare_capella_fork_block(const CapellaForkStore&,
  std::span<const uint8_t> signed_block,const CapellaForkBlockRules&,uint64_t maximum_slots,uint64_t maximum_sync_trials,
  const std::function<void()>& checkpoint={});
+// Explicit local archive-validation path. Complete authenticated slot chunks
+// with cancellation between chunks, then run full signed on_block processing.
+// Does not replay standalone/included fork votes, persist, sign or admit gossip.
+std::optional<CapellaForkStore> prepare_capella_resumed_fork_block(const CapellaForkStore&,
+ std::span<const uint8_t>,const CapellaForkBlockRules&,uint64_t maximum_slots,
+ uint64_t maximum_sync_trials,const std::function<void()>& checkpoint={});
+CapellaForkStore prepare_capella_resumed_store_tick(const CapellaForkStore&,uint64_t time_ms,
+ const CapellaForkBlockRules&,uint64_t maximum_slots,uint64_t maximum_sync_trials,
+ const std::function<void()>& checkpoint={});
 // Receive a block as one private candidate: on_block first, then its embedded
 // attestations (verified-block time window) and attester slashing evidence.
 // The relaxed vote window is never exposed to gossip callers. Votes whose fork

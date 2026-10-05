@@ -54,8 +54,8 @@ Json audit_capella_canonical_history(ChainStore& disk,const Int& chain,const Byt
  for(const auto& id:reverse){
   if(check)check();const auto entry=disk.checkpoint_archive(Bytes(id.begin(),id.end()),limits.envelope_bytes);require(bool(entry),"archive disappeared");
   require(rules.slot_duration_ms&&entry->slot<=(UINT64_MAX-replay.timed.clock.genesis_time_ms)/rules.slot_duration_ms,"archive clock overflow");
-  replay=prepare_capella_store_tick(replay,replay.timed.clock.genesis_time_ms+entry->slot*rules.slot_duration_ms,rules,limits.replay_slots,limits.sync_trials,check);
-  auto next=prepare_capella_fork_block(replay,entry->payload,rules,limits.replay_slots,limits.sync_trials,check);
+  replay=prepare_capella_resumed_store_tick(replay,replay.timed.clock.genesis_time_ms+entry->slot*rules.slot_duration_ms,rules,limits.replay_slots,limits.sync_trials,check);
+  auto next=prepare_capella_resumed_fork_block(replay,entry->payload,rules,limits.replay_slots,limits.sync_trials,check);
   require(next&&next->blocks.contains(id)&&next->blocks.size()==replay.blocks.size()+1,"signed transition rejected");
   require(next->blocks.at(id).header.slot==entry->slot,"archive slot differs from signed header");
   replay=std::move(*next);verify_disk(replay.blocks.at(id));

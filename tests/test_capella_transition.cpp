@@ -1488,6 +1488,15 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
   const auto timed=prepare_capella_store_tick(initial,clock,rules,3,100000);
   const auto admitted=prepare_capella_prepared_received_block(timed,wire,rules,preparation,3,100000);
   const auto admitted_oracle=prepare_capella_received_block(timed,wire,rules,slot-parent.header.slot,100000);
+  {
+   const auto expected=prepare_capella_fork_block(timed,wire,rules,slot-parent.header.slot,100000);
+   const auto replayed=prepare_capella_resumed_fork_block(timed,wire,rules,3,100000);
+   check(expected&&replayed&&capella_store_snapshot(*expected,rules,crash_limits)==capella_store_snapshot(*replayed,rules,crash_limits),"resumed archive on_block differs from full-gap oracle");++checks;
+   bool limited=false;try{prepare_capella_fork_block(timed,wire,rules,3,100000);}catch(const std::length_error&){limited=true;}check(limited,"legacy archive block budget weakened");++checks;
+   auto invalid=wire;invalid[4]^=1;check(!prepare_capella_resumed_fork_block(timed,invalid,rules,3,100000),"resumed archive accepted invalid BLS");++checks;
+   bool cancelled=false;try{size_t callbacks=0;prepare_capella_resumed_fork_block(timed,wire,rules,3,100000,[&]{if(++callbacks==12)throw ExecutionCancelled("cancel resumed archive");});}catch(const ExecutionCancelled&){cancelled=true;}check(cancelled&&timed.blocks.size()==initial.blocks.size()&&parent.state==original,"resumed archive cancellation swallowed or changed source");++checks;
+   bool zero=false;try{prepare_capella_resumed_fork_block(timed,wire,rules,0,100000);}catch(const std::invalid_argument&){zero=true;}check(zero,"resumed archive accepted zero slot budget");++checks;
+  }
   check(admitted&&admitted_oracle&&capella_store_snapshot(*admitted,rules,crash_limits)==capella_store_snapshot(*admitted_oracle,rules,crash_limits),"prepared Store admission differs from ordinary fork-choice/operation processing");++checks;
   {
    const auto prior_time=initial.timed.clock.genesis_time_ms+(slot-1)*rules.slot_duration_ms+rules.attestation_due_ms;
@@ -1577,6 +1586,8 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
    const std::array<const CapellaTargetPreparation*,1> targets{&target};
    const auto ffg_oracle=prepare_capella_store_tick(ffg_input,boundary_time,rules,slot-parent.header.slot,100000);
    const auto ffg_prepared=prepare_capella_contextual_store_tick(ffg_input,boundary_time,rules,targets,3,100000);
+   const auto ffg_replayed=prepare_capella_resumed_store_tick(ffg_input,boundary_time,rules,3,100000);
+   check(capella_store_snapshot(ffg_replayed,rules,crash_limits)==capella_store_snapshot(ffg_oracle,rules,crash_limits),"resumed archive tick differs from full-gap oracle");++checks;
    check(capella_store_snapshot(ffg_prepared,rules,crash_limits)==capella_store_snapshot(ffg_oracle,rules,crash_limits)&&ffg_prepared.timed.view.justified==vote.data.target&&ffg_prepared.timed.view.justified_registry==context.registry,"prepared tick justification differs from full-gap oracle");++checks;
    limited=false;try{prepare_capella_store_tick(ffg_input,boundary_time,rules,3,100000);}catch(const std::length_error&){limited=true;}check(limited,"ordinary tick replay budget weakened");++checks;
    CapellaTargetPreparation incomplete(vote_store,rules,vote.data.target);const std::array<const CapellaTargetPreparation*,1> unfinished{&incomplete};

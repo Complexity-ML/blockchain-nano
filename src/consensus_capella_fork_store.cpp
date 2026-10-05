@@ -129,6 +129,36 @@ std::optional<CapellaForkStore> prepare_capella_fork_block(const CapellaForkStor
  uint64_t trials,const std::function<void()>& checkpoint){
  return prepare_fork_block_impl(input,bytes,rules,maximum_slots,trials,checkpoint,nullptr);
 }
+std::optional<CapellaForkStore> prepare_capella_resumed_fork_block(const CapellaForkStore& input,
+ std::span<const uint8_t> bytes,const CapellaForkBlockRules& rules,uint64_t maximum_slots,
+ uint64_t trials,const std::function<void()>& check){
+ validate_rules(rules);const auto& t=rules.transition.consensus;
+ const auto slots=t.epoch.ffg.slots_per_epoch,chunk=std::min(maximum_slots,slots);
+ if(!chunk||!trials)throw std::invalid_argument("Invalid resumed Capella archive budget");
+ if(check)check();
+ if(bytes.size()<404||bytes.size()>t.maximum_block_bytes||number(bytes,0,4)!=100||number(bytes,180,4)!=84)return std::nullopt;
+ ConsensusBeaconHeader header{number(bytes,100),number(bytes,108),root(bytes,116),root(bytes,148),{}};
+ std::exception_ptr interrupted;auto guard=[&]{try{if(check)check();}catch(...){interrupted=std::current_exception();throw;}};
+ try{header.body_root=capella_beacon_body_root(bytes.subspan(184),t.body,t.state.sync_committee_size,rules.transition.execution,rules.transition.withdrawals.maximum_per_payload,rules.transition.maximum_bls_changes,t.maximum_block_bytes,guard);}catch(const std::invalid_argument&){if(interrupted)std::rethrow_exception(interrupted);return std::nullopt;}
+ if(input.blocks.contains(consensus_beacon_header_root(header)))return input;
+ const auto& clock=input.timed.clock;
+ if(clock.time_ms<clock.genesis_time_ms)throw std::invalid_argument("Invalid resumed Capella archive clock");
+ const auto parent=input.blocks.find(header.parent_root);
+ if(parent==input.blocks.end()||header.slot<=parent->second.header.slot||header.slot>(clock.time_ms-clock.genesis_time_ms)/rules.slot_duration_ms)return std::nullopt;
+ CapellaBlockPreparation block(parent->second.state,parent->second.header,rules.transition,check);
+ while(!block.advance_for_block(header.slot,chunk,trials,check)){}
+ std::vector<CapellaTargetPreparation> frames;
+ for(;;){
+  std::vector<const CapellaTargetPreparation*> targets;for(const auto& frame:frames)targets.push_back(&frame);
+  try{return prepare_fork_block_impl(input,bytes,rules,maximum_slots,trials,check,&block,targets,true);}
+  catch(const CapellaTargetContextRequired& required){
+   // on_block can promote its realized and unrealized checkpoints only.
+   if(frames.size()>=2)throw std::length_error("Resumed Capella archive target capacity");
+   frames.emplace_back(input,rules,required.target(),check);
+   while(!frames.back().advance(chunk,trials,check)){}
+  }
+ }
+}
 
 }
 
@@ -220,6 +250,19 @@ CapellaForkStore prepare_capella_contextual_store_tick(const CapellaForkStore& i
 CapellaForkStore prepare_capella_store_tick(const CapellaForkStore& input,uint64_t time_ms,
  const CapellaForkBlockRules& rules,uint64_t maximum_slots,uint64_t trials,const std::function<void()>& check){
  return prepare_capella_contextual_store_tick(input,time_ms,rules,{},maximum_slots,trials,check);
+}
+CapellaForkStore prepare_capella_resumed_store_tick(const CapellaForkStore& input,uint64_t time_ms,
+ const CapellaForkBlockRules& rules,uint64_t maximum_slots,uint64_t trials,const std::function<void()>& check){
+ validate_rules(rules);const auto& c=input.timed.clock;const auto slots=rules.transition.consensus.epoch.ffg.slots_per_epoch;
+ const auto chunk=std::min(maximum_slots,slots);
+ if(!chunk||!trials||time_ms<c.time_ms||c.time_ms<c.genesis_time_ms)throw std::invalid_argument("Invalid resumed Capella tick budget/clock");
+ std::optional<CapellaTargetPreparation> frame;std::vector<const CapellaTargetPreparation*> targets;
+ if((time_ms-c.genesis_time_ms)/rules.slot_duration_ms/slots>input.timed.view.current_epoch&&c.unrealized_justified.epoch>input.timed.view.justified.epoch){
+  frame.emplace(input,rules,c.unrealized_justified,check);
+  while(!frame->advance(chunk,trials,check)){}
+  targets.push_back(&*frame);
+ }
+ return prepare_capella_contextual_store_tick(input,time_ms,rules,targets,maximum_slots,trials,check);
 }
 }
 
