@@ -7324,3 +7324,7 @@ Preuve `docs/qualification/monotonic-pruned-load-restore-terminal-20261005`, ban
 ### 2026-10-05 — Helper sanction AMD64 terminal, runtime conservé
 
 `docs/qualification/slashing-wan-helper-amd64-20261005` : source Git1bad38f2, compilation/link seuls du helper sur image/volume existants, terminal0 sans OOM,5 programmes existants rehashés inchangés. Même SHA256 source que natif ; preuve JSON complète générée identique (valide/inversée/4 variantes falsifiées). Pas de rebuild d’image ni sanction WAN/finalité/reprise qualifiée par ce lot ; prochaine campagne reste ouverte avec tous les autres critères/revue indépendante.
+
+### 2026-10-05 — Préparation de l’audit de sanction finalisée
+
+Nouvel outil privé `nano-capella-slashing-audit` compilé nativement contre la bibliothèque candidate ab10b8ae, sans reconstruire le nœud ni les images Docker. Trois refus vérifiés : validateur non sanctionné, signature falsifiée, engagement externe incorrect. Première erreur du contrôle du témoin conservée et corrigée : vérifier son intention `next` et le hash du snapshot, et non assimiler son jeton au jeton principal. Preuves : `docs/qualification/slashing-audit-preparation-20261005`. Sanction WAN positive, rejeu après reprise, finalité commune et exécution AMD64 restent ouverts ; aucun critère de production clôturé par cette préparation.
