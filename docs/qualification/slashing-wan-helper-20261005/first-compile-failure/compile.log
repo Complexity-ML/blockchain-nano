@@ -1,0 +1,200 @@
+/Users/boris/Dev/blockchain-nano/tests/capella/slashing_fixture.cpp:34:92: error: invalid operands to binary expression ('std::array<uint8_t, 48>' (aka 'array<unsigned char, 48>') and 'Bytes' (aka 'vector<unsigned char>'))
+   34 |   need(context.registry.validators.size()==64&&context.registry.validators.at(0).public_key==PublicKey0{}.key,"known 64-key fixture required");
+      |                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^ ~~~~~~~~~~~~~~~~
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__variant/monostate.h:28:45: note: candidate function not viable: no known conversion from 'std::array<uint8_t, 48>' (aka 'array<unsigned char, 48>') to 'monostate' for 1st argument
+   28 | _LIBCPP_HIDE_FROM_ABI inline constexpr bool operator==(monostate, monostate) noexcept { return true; }
+      |                                             ^          ~~~~~~~~~
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__system_error/error_condition.h:95:35: note: candidate function not viable: no known conversion from 'std::array<uint8_t, 48>' (aka 'array<unsigned char, 48>') to 'const error_condition' for 1st argument
+   95 | inline _LIBCPP_HIDE_FROM_ABI bool operator==(const error_condition& __x, const error_condition& __y) _NOEXCEPT {
+      |                                   ^          ~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__system_error/error_code.h:91:35: note: candidate function not viable: no known conversion from 'std::array<uint8_t, 48>' (aka 'array<unsigned char, 48>') to 'const error_code' for 1st argument
+   91 | inline _LIBCPP_HIDE_FROM_ABI bool operator==(const error_code& __x, const error_code& __y) _NOEXCEPT {
+      |                                   ^          ~~~~~~~~~~~~~~~~~~~~~
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__system_error/error_code.h:95:35: note: candidate function not viable: no known conversion from 'std::array<uint8_t, 48>' (aka 'array<unsigned char, 48>') to 'const error_code' for 1st argument
+   95 | inline _LIBCPP_HIDE_FROM_ABI bool operator==(const error_code& __x, const error_condition& __y) _NOEXCEPT {
+      |                                   ^          ~~~~~~~~~~~~~~~~~~~~~
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__system_error/error_code.h:95:35: note: candidate function (with reversed parameter order) not viable: no known conversion from 'std::array<uint8_t, 48>' (aka 'array<unsigned char, 48>') to 'const error_condition' for 1st argument
+   95 | inline _LIBCPP_HIDE_FROM_ABI bool operator==(const error_code& __x, const error_condition& __y) _NOEXCEPT {
+      |                                   ^          ~~~~~~~~~~~~~~~~~~~~~
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/id.h:78:35: note: candidate function not viable: no known conversion from 'std::array<uint8_t, 48>' (aka 'array<unsigned char, 48>') to '__thread_id' for 1st argument
+   78 | inline _LIBCPP_HIDE_FROM_ABI bool operator==(__thread_id __x, __thread_id __y) _NOEXCEPT {
+      |                                   ^          ~~~~~~~~~~~~~~~
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__coroutine/coroutine_handle.h:87:45: note: candidate function not viable: no known conversion from 'std::array<uint8_t, 48>' (aka 'array<unsigned char, 48>') to 'coroutine_handle<>' for 1st argument
+   87 | inline _LIBCPP_HIDE_FROM_ABI constexpr bool operator==(coroutine_handle<> __x, coroutine_handle<> __y) noexcept {
+      |                                             ^          ~~~~~~~~~~~~~~~~~~~~~~
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__utility/pair.h:455:1: note: candidate template ignored: could not match 'pair' against 'std::array'
+  455 | operator==(const pair<_T1, _T2>& __x, const pair<_U1, _U2>& __y)
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__utility/pair.h:455:1: note: candidate template ignored: could not match 'pair' against 'vector'
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__iterator/reverse_iterator.h:203:1: note: candidate template ignored: could not match 'reverse_iterator' against 'std::array'
+  203 | operator==(const reverse_iterator<_Iter1>& __x, const reverse_iterator<_Iter2>& __y)
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__memory/unique_ptr.h:638:1: note: candidate template ignored: could not match 'unique_ptr' against 'std::array'
+  638 | operator==(const unique_ptr<_T1, _D1>& __x, const unique_ptr<_T2, _D2>& __y) {
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__memory/unique_ptr.h:638:1: note: candidate template ignored: could not match 'unique_ptr' against 'vector'
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__memory/unique_ptr.h:684:1: note: candidate template ignored: could not match 'unique_ptr' against 'std::array'
+  684 | operator==(const unique_ptr<_T1, _D1>& __x, nullptr_t) _NOEXCEPT {
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__memory/unique_ptr.h:684:1: note: candidate template ignored: could not match 'unique_ptr' against 'vector'
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__memory/allocator.h:150:1: note: candidate template ignored: could not match 'allocator' against 'std::array'
+  150 | operator==(const allocator<_Tp>&, const allocator<_Up>&) _NOEXCEPT {
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__memory/allocator.h:150:1: note: candidate template ignored: could not match 'allocator' against 'vector'
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__iterator/move_iterator.h:255:1: note: candidate template ignored: could not match 'move_iterator' against 'std::array'
+  255 | operator==(const move_iterator<_Iter1>& __x, const move_iterator<_Iter2>& __y) {
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__iterator/move_iterator.h:255:1: note: candidate template ignored: could not match 'move_iterator' against 'vector'
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__iterator/istream_iterator.h:88:35: note: candidate template ignored: could not match 'istream_iterator' against 'std::array'
+   88 | inline _LIBCPP_HIDE_FROM_ABI bool operator==(const istream_iterator<_Tp, _CharT, _Traits, _Distance>& __x,
+      |                                   ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__iterator/istreambuf_iterator.h:96:1: note: candidate template ignored: could not match 'istreambuf_iterator' against 'std::array'
+   96 | operator==(const istreambuf_iterator<_CharT, _Traits>& __a, const istreambuf_iterator<_CharT, _Traits>& __b) {
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__iterator/wrap_iter.h:126:1: note: candidate template ignored: could not match '__wrap_iter' against 'std::array'
+  126 | operator==(const __wrap_iter<_Iter1>& __x, const __wrap_iter<_Iter1>& __y) _NOEXCEPT {
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__iterator/wrap_iter.h:132:1: note: candidate template ignored: could not match '__wrap_iter' against 'std::array'
+  132 | operator==(const __wrap_iter<_Iter1>& __x, const __wrap_iter<_Iter2>& __y) _NOEXCEPT {
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__iterator/wrap_iter.h:132:1: note: candidate template ignored: could not match '__wrap_iter' against 'vector'
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/variant:1445:38: note: candidate template ignored: could not match 'variant' against 'std::array'
+ 1445 | _LIBCPP_HIDE_FROM_ABI constexpr bool operator==(const variant<_Types...>& __lhs, const variant<_Types...>& __rhs) {
+      |                                      ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/tuple:1194:1: note: candidate template ignored: could not match 'tuple' against 'std::array'
+ 1194 | operator==(const tuple<_Tp...>& __x, const tuple<_Up...>& __y) {
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/tuple:1194:1: note: candidate template ignored: could not match 'tuple' against 'vector'
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__memory/shared_ptr.h:966:35: note: candidate template ignored: could not match 'shared_ptr' against 'std::array'
+  966 | inline _LIBCPP_HIDE_FROM_ABI bool operator==(const shared_ptr<_Tp>& __x, const shared_ptr<_Up>& __y) _NOEXCEPT {
+      |                                   ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__memory/shared_ptr.h:966:35: note: candidate template ignored: could not match 'shared_ptr' against 'vector'
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__memory/shared_ptr.h:1012:35: note: candidate template ignored: could not match 'shared_ptr' against 'std::array'
+ 1012 | inline _LIBCPP_HIDE_FROM_ABI bool operator==(const shared_ptr<_Tp>& __x, nullptr_t) _NOEXCEPT {
+      |                                   ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__memory/shared_ptr.h:1012:35: note: candidate template ignored: could not match 'shared_ptr' against 'vector'
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/optional:1453:38: note: candidate template ignored: could not match 'optional' against 'std::array'
+ 1453 | _LIBCPP_HIDE_FROM_ABI constexpr bool operator==(const optional<_Tp>& __x, const optional<_Up>& __y) {
+      |                                      ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/optional:1453:38: note: candidate template ignored: could not match 'optional' against 'vector'
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/optional:1539:38: note: candidate template ignored: could not match 'optional' against 'std::array'
+ 1539 | _LIBCPP_HIDE_FROM_ABI constexpr bool operator==(const optional<_Tp>& __x, nullopt_t) noexcept {
+      |                                      ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/optional:1539:38: note: candidate template ignored: could not match 'optional' against 'vector'
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/optional:1616:38: note: candidate template ignored: could not match 'optional' against 'std::array'
+ 1616 | _LIBCPP_HIDE_FROM_ABI constexpr bool operator==(const optional<_Tp>& __x, const _Up& __v) {
+      |                                      ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/optional:1616:38: note: candidate template ignored: could not match 'optional' against 'vector'
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/optional:1627:38: note: candidate template ignored: could not match 'optional' against 'vector'
+ 1627 | _LIBCPP_HIDE_FROM_ABI constexpr bool operator==(const _Tp& __v, const optional<_Up>& __x) {
+      |                                      ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/optional:1627:38: note: candidate template ignored: could not match 'optional' against 'std::array'
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/string_view:756:1: note: candidate template ignored: could not match 'basic_string_view' against 'std::array'
+  756 | operator==(basic_string_view<_CharT, _Traits> __lhs,
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/string_view:756:1: note: candidate template ignored: could not match 'basic_string_view' against 'vector'
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/string:3573:1: note: candidate template ignored: could not match 'basic_string' against 'std::array'
+ 3573 | operator==(const basic_string<_CharT, _Traits, _Allocator>& __lhs,
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/string:3581:1: note: candidate template ignored: could not match 'basic_string' against 'std::array'
+ 3581 | operator==(const basic_string<_CharT, _Traits, _Allocator>& __lhs,
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/string:3581:1: note: candidate template ignored: could not match 'basic_string' against 'vector'
+/opt/homebrew/include/gmpxx.h:3339:41: note: candidate template ignored: could not match '__gmp_expr' against 'std::array'
+ 3339 | __GMP_DEFINE_BINARY_TYPE_FUNCTION(bool, operator==, __gmp_binary_equal)
+      |                                         ^
+/opt/homebrew/include/gmpxx.h:3339:41: note: candidate template ignored: could not match '__gmp_expr' against 'std::array'
+/opt/homebrew/include/gmpxx.h:3339:41: note: candidate template ignored: could not match '__gmp_expr' against 'vector'
+/opt/homebrew/include/gmpxx.h:3339:41: note: candidate template ignored: could not match '__gmp_expr' against 'std::array'
+/opt/homebrew/include/gmpxx.h:3339:41: note: candidate template ignored: could not match '__gmp_expr' against 'vector'
+/opt/homebrew/include/gmpxx.h:3339:41: note: candidate template ignored: could not match '__gmp_expr' against 'std::array'
+/opt/homebrew/include/gmpxx.h:3339:41: note: candidate template ignored: could not match '__gmp_expr' against 'vector'
+/opt/homebrew/include/gmpxx.h:3339:41: note: candidate template ignored: could not match '__gmp_expr' against 'std::array'
+/opt/homebrew/include/gmpxx.h:3339:41: note: candidate template ignored: could not match '__gmp_expr' against 'vector'
+/opt/homebrew/include/gmpxx.h:3339:41: note: candidate template ignored: could not match '__gmp_expr' against 'std::array'
+/opt/homebrew/include/gmpxx.h:3339:41: note: candidate template ignored: could not match '__gmp_expr' against 'vector'
+/opt/homebrew/include/gmpxx.h:3339:41: note: candidate template ignored: could not match '__gmp_expr' against 'std::array'
+/opt/homebrew/include/gmpxx.h:3339:41: note: candidate template ignored: could not match '__gmp_expr' against 'vector'
+/opt/homebrew/include/gmpxx.h:3339:41: note: candidate template ignored: could not match '__gmp_expr' against 'std::array'
+/opt/homebrew/include/gmpxx.h:3339:41: note: candidate template ignored: could not match '__gmp_expr' against 'vector'
+/opt/homebrew/include/gmpxx.h:3339:41: note: candidate template ignored: could not match '__gmp_expr' against 'std::array'
+/opt/homebrew/include/gmpxx.h:3339:41: note: candidate template ignored: could not match '__gmp_expr' against 'vector'
+/opt/homebrew/include/gmpxx.h:3339:41: note: candidate template ignored: could not match '__gmp_expr' against 'std::array'
+/opt/homebrew/include/gmpxx.h:3339:41: note: candidate template ignored: could not match '__gmp_expr' against 'vector'
+/opt/homebrew/include/gmpxx.h:3339:41: note: candidate template ignored: could not match '__gmp_expr' against 'std::array'
+/opt/homebrew/include/gmpxx.h:3339:41: note: candidate template ignored: could not match '__gmp_expr' against 'vector'
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/map:1558:1: note: candidate template ignored: could not match 'map' against 'std::array'
+ 1558 | operator==(const map<_Key, _Tp, _Compare, _Allocator>& __x, const map<_Key, _Tp, _Compare, _Allocator>& __y) {
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/map:2083:1: note: candidate template ignored: could not match 'multimap' against 'std::array'
+ 2083 | operator==(const multimap<_Key, _Tp, _Compare, _Allocator>& __x, const multimap<_Key, _Tp, _Compare, _Allocator>& __y) {
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__functional/function.h:779:35: note: candidate template ignored: could not match 'function' against 'std::array'
+  779 | inline _LIBCPP_HIDE_FROM_ABI bool operator==(const function<_Rp(_ArgTypes...)>& __f, nullptr_t) _NOEXCEPT {
+      |                                   ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__functional/function.h:779:35: note: candidate template ignored: could not match 'function' against 'vector'
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/array:479:1: note: candidate template ignored: could not match 'array' against 'vector'
+  479 | operator==(const array<_Tp, _Size>& __x, const array<_Tp, _Size>& __y) {
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/unordered_map:1623:28: note: candidate template ignored: could not match 'unordered_map' against 'std::array'
+ 1623 | _LIBCPP_HIDE_FROM_ABI bool operator==(const unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>& __x,
+      |                            ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/unordered_map:2291:28: note: candidate template ignored: could not match 'unordered_multimap' against 'std::array'
+ 2291 | _LIBCPP_HIDE_FROM_ABI bool operator==(const unordered_multimap<_Key, _Tp, _Hash, _Pred, _Alloc>& __x,
+      |                            ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__vector/comparison.h:27:1: note: candidate template ignored: could not match 'vector' against 'std::array'
+   27 | operator==(const vector<_Tp, _Allocator>& __x, const vector<_Tp, _Allocator>& __y) {
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__ios/fpos.h:65:35: note: candidate template ignored: could not match 'fpos' against 'std::array'
+   65 | inline _LIBCPP_HIDE_FROM_ABI bool operator==(const fpos<_StateT>& __x, const fpos<_StateT>& __y) {
+      |                                   ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/forward_list:1505:1: note: candidate template ignored: could not match 'forward_list' against 'std::array'
+ 1505 | operator==(const forward_list<_Tp, _Alloc>& __x, const forward_list<_Tp, _Alloc>& __y) {
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/valarray:2949:1: note: candidate template ignored: requirement '__is_val_expr<std::array<unsigned char, 48>>::value' was not satisfied [with _Expr1 = std::array<uint8_t, 48>, _Expr2 = Bytes]
+ 2949 | operator==(const _Expr1& __x, const _Expr2& __y) {
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/valarray:2958:1: note: candidate template ignored: requirement '__is_val_expr<std::array<unsigned char, 48>>::value' was not satisfied [with _Expr = std::array<uint8_t, 48>]
+ 2958 | operator==(const _Expr& __x, const typename _Expr::value_type& __y) {
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/valarray:2967:1: note: candidate template ignored: requirement '__is_val_expr<std::vector<unsigned char, std::allocator<unsigned char>>>::value' was not satisfied [with _Expr = Bytes]
+ 2967 | operator==(const typename _Expr::value_type& __x, const _Expr& __y) {
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/deque:2454:35: note: candidate template ignored: could not match 'deque' against 'std::array'
+ 2454 | inline _LIBCPP_HIDE_FROM_ABI bool operator==(const deque<_Tp, _Allocator>& __x, const deque<_Tp, _Allocator>& __y) {
+      |                                   ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/queue:470:35: note: candidate template ignored: could not match 'queue' against 'std::array'
+  470 | inline _LIBCPP_HIDE_FROM_ABI bool operator==(const queue<_Tp, _Container>& __x, const queue<_Tp, _Container>& __y) {
+      |                                   ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/stack:328:35: note: candidate template ignored: could not match 'stack' against 'std::array'
+  328 | inline _LIBCPP_HIDE_FROM_ABI bool operator==(const stack<_Tp, _Container>& __x, const stack<_Tp, _Container>& __y) {
+      |                                   ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/set:981:1: note: candidate template ignored: could not match 'set' against 'std::array'
+  981 | operator==(const set<_Key, _Compare, _Allocator>& __x, const set<_Key, _Compare, _Allocator>& __y) {
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/set:1457:1: note: candidate template ignored: could not match 'multiset' against 'std::array'
+ 1457 | operator==(const multiset<_Key, _Compare, _Allocator>& __x, const multiset<_Key, _Compare, _Allocator>& __y) {
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/complex:861:1: note: candidate template ignored: could not match 'complex' against 'std::array'
+  861 | operator==(const complex<_Tp>& __x, const complex<_Tp>& __y) {
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/complex:866:65: note: candidate template ignored: could not match 'complex' against 'std::array'
+  866 | inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX14 bool operator==(const complex<_Tp>& __x, const _Tp& __y) {
+      |                                                                 ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/complex:866:65: note: candidate template ignored: could not match 'complex' against 'vector'
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/discard_block_engine.h:125:1: note: candidate template ignored: could not match 'discard_block_engine' against 'std::array'
+  125 | operator==(const discard_block_engine<_Eng, _Pp, _Rp>& __x, const discard_block_engine<_Eng, _Pp, _Rp>& __y) {
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/independent_bits_engine.h:175:1: note: candidate template ignored: could not match 'independent_bits_engine' against 'std::array'
+  175 | operator==(const independent_bits_engine<_Eng, _Wp, _UInt>& __x, const independent_bits_engine<_Eng, _Wp, _UInt>& __y) {
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/shuffle_order_engine.h:178:1: note: candidate template ignored: could not match 'shuffle_order_engine' against 'std::array'
+  178 | operator==(const shuffle_order_engine<_Eng, _Kp>& __x, const shuffle_order_engine<_Eng, _Kp>& __y) {
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/mersenne_twister_engine.h:338:1: note: candidate template ignored: could not match 'mersenne_twister_engine' against 'std::array'
+  338 | operator==(const mersenne_twister_engine<_UInt, _Wp, _Np, _Mp, _Rp, _Ap, _Up, _Dp, _Sp, _Bp, _Tp, _Cp, _Lp, _Fp>& __x,
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/subtract_with_carry_engine.h:189:28: note: candidate template ignored: could not match 'subtract_with_carry_engine' against 'std::array'
+  189 | _LIBCPP_HIDE_FROM_ABI bool operator==(const subtract_with_carry_engine<_UInt, _Wp, _Sp, _Rp>& __x,
+      |                            ^
+1 error generated.
