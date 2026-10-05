@@ -1117,6 +1117,33 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
  bool clock_refused=false;try{runtime.beacon_read("/eth/v1/node/syncing",{});}catch(const std::runtime_error&){clock_refused=true;}check(clock_refused,"Capella backwards wall clock accepted");
  now=sync_time;bool sync_cancelled=false;try{runtime.beacon_read("/eth/v1/node/syncing",[]{throw std::runtime_error("cancel");});}catch(const std::runtime_error&){sync_cancelled=true;}check(sync_cancelled,"Capella sync cancellation ignored");
  runtime.sync_tracker->report({});check(runtime.beacon_read("/eth/v1/node/syncing",{}).status==503,"Capella isolated node declared synced");
+
+ if(capella_http){
+  HttpServer sync_server(sync_rpc,"127.0.0.1",0,std::chrono::seconds(4),runtime.beacon_read);
+  std::thread sync_thread([&]{sync_server.run();});
+  struct SyncHttpStop{HttpServer& server;std::thread& thread;~SyncHttpStop(){server.stop();thread.join();}} sync_stop{sync_server,sync_thread};
+  auto get_sync=[&]{
+   namespace asio=boost::asio;namespace http=boost::beast::http;
+   asio::io_context context;boost::beast::tcp_stream socket(context);socket.expires_after(std::chrono::seconds(5));socket.connect({asio::ip::make_address("127.0.0.1"),sync_server.port()});
+   http::request<http::empty_body> request(http::verb::get,"/eth/v1/node/syncing",11);request.set(http::field::host,"localhost");request.set(http::field::accept,"application/json");http::write(socket,request);
+   boost::beast::flat_buffer buffer;http::response<http::string_body> response;http::read(socket,buffer,response);
+   return BeaconReadResponse{unsigned(response.result_int()),Json::parse(response.body()),{}, {}};
+  };
+  PersistentRpc sync_client(sync_server.port());
+  auto http_report=[&](uint64_t slot,std::string token="capella-sync-test"){
+   return sync_client.call("nano_networkReport",Json::array({token,Json{{"peerId","self"},{"addresses",Json::array()},{"peers",Json::array({Json{{"peerId","peer"},{"bestBlock",uint64_t(999999)},{"beaconHeadSlot",slot}}})}}}));
+  };
+  check(get_sync().status==503,"Capella HTTP isolated node declared synced");
+  bool unauthorized=false;try{http_report(head_slot,"wrong-token");}catch(const PersistentRpcError& e){unauthorized=e.code==-32001;}
+  check(unauthorized&&get_sync().status==503,"Capella HTTP unauthorized observation changed syncing");
+  check(http_report(head_slot)==true,"Capella HTTP peer report refused");sync=get_sync();
+  check(sync.status==200&&sync.body.at("data").at("sync_distance")=="0"&&sync.body.at("data").at("head_slot")==std::to_string(head_slot),"Capella HTTP sync projection");
+  now=sync_time+2*rules.slot_duration_ms;check(http_report(head_slot+2)==true,"Capella HTTP ahead observation refused");sync=get_sync();
+  check(sync.status==200&&sync.body.at("data").at("sync_distance")=="2"&&sync.body.at("data").at("is_syncing")==true,"Capella HTTP lag concealed");
+  check(http_report(UINT64_MAX)==true,"Capella HTTP future fixture report refused at wrong layer");sync=get_sync();
+  check(sync.status==503&&sync.body.dump().find("Beacon peer claims future slot")==std::string::npos,"Capella HTTP future slot accepted or private failure leaked");
+  now=sync_time;runtime.sync_tracker->report({});
+ }
  check(runtime.reactor->current().token==sync_before.token,"Capella peer observation changed checkpoint");
  stop_capella_runtime(runtime);runtime={};runtime=start_capella_runtime(*owner,config,{},wall);if(automatic_registration)runtime.validator->set_duty_trace_limit(4);
  std::optional<ForkCheckpointToken> stale_token;uint64_t stale_time=0;
