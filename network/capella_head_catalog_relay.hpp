@@ -30,6 +30,11 @@ class CapellaHeadCatalogRelay:public std::enable_shared_from_this<CapellaHeadCat
   priority_="selected";const auto remaining=deadline_-std::chrono::steady_clock::now();if(remaining<=std::chrono::steady_clock::duration::zero()){fail("head-or-catalog-deadline");return;}
   head_=std::make_shared<CapellaBlockDelivery>(io_,core_,send_,token_,anchor_,id,ingress_,knowledge_,dependency_blocks_,dependency_bytes_,callback([self=shared_from_this()](Json ack){
    if(ack==Json{{"yielded",true}}){self->priority_="dependency-quantum-yield";self->fail("dependency-quantum-yield");return;}
+   if(ack==Json{{"accepted",false},{"reason","dependency-depth-limit"}}){
+    // A fresh session knows no ancestral ACKs. Seed them through the bounded
+    // historical catalog instead of retrying an over-deep head forever.
+    self->priority_="dependency-depth-catalog-fallback";self->catalog();return;
+   }
    if(ack!=Json{{"accepted",true}}){self->fail("head-admission-unconfirmed");return;}
    self->priority_="admitted";self->catalog();
   }),quantum_);head_->start(remaining);

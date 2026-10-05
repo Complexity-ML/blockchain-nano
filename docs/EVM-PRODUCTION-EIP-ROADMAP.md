@@ -4577,3 +4577,15 @@ finalité commune nouvelle ni disponibilité soutenue n'est qualifiée.
 
 
 2026-10-06, préparation v6 : engagements post-v5 vérifiés séparément et copies Mac SHA identiques hors identité P2P. Volume VPS arrêté réutilisé après audit indépendant. Journaux non fusionnés ni réinitialisés. Contrôleur 31a66f24 : diagnostics HTTP conservés, refus temporaires connus sans extension de délai et ascendance complète malgré cache partiel (cinq nouveaux tests passent). Binaires C++ et images inchangés depuis v5, noyau b5ee00ac et relais 8adbabff. Cette préparation ne qualifie aucune finalité réelle ni production. Preuves restored-three-node-v6-prepare-20261006/.
+
+## Rattrapage P2P avec profondeur bornée — 6 octobre 2026
+
+Blocage local reproduit dans Docker : tête dépassant le budget de dépendances,
+aucun envoi ni catalogue ouvert sur un nouveau pair. Correctif C++ intégré :
+seule la limite locale de profondeur autorise le repli vers le catalogue, puis
+le balayage de racines suivantes, sans faux ACK ni effacement du refus. Limites
+et échéance conservées. 90 scénarios existants et deux nouveaux passent en
+transport modélisé ARM64 Docker. AMD64, exécutables P2P et réseau réel de ce
+correctif restent à qualifier. v6 continue sur ses binaires d'origine ; aucune
+causalité exclusive ni production déduite. Profil EVM inchangé.
+[Preuves](qualification/capella-depth-catchup-20261006/README.md).

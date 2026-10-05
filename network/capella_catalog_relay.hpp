@@ -87,6 +87,12 @@ private:
    self.stage_="delivery";
    auto reply=self.callback([](auto& s,Json ack){
     if(ack.is_object()&&ack.size()==1&&ack.value("yielded",Json())==true){s.failure("dependency-quantum-yield");return;}
+    if(s.kind_=="block"&&ack==Json{{"accepted",false},{"reason","dependency-depth-limit"}}){
+     // A local preparation bound is not a remote ACK. Keep this attempt failed,
+     // but scan later roots so shallow historical ancestors can seed catch-up.
+     ++s.rejected_;if(s.reason_.empty()){s.reason_="dependency-depth-limit";s.failure_stage_="delivery";}
+     s.advance(false);return;
+    }
     if(!ack.is_object()||ack.size()!=1||ack.value("accepted",Json())!=true){
      const bool rejected=ack.is_object()&&ack.size()==1&&ack.value("accepted",Json())==false;
      // Independent votes can be expired or reference a different branch. A

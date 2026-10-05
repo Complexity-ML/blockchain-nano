@@ -18,11 +18,11 @@ class CapellaBlockDelivery:public std::enable_shared_from_this<CapellaBlockDeliv
  std::shared_ptr<CapellaDeliveryQuantum> quantum_;
  Reply done_;asio::steady_timer timer_;bool started_=false,finished_=false;
  static bool root(const std::string& s){return s.size()==66&&s.starts_with("0x")&&std::all_of(s.begin()+2,s.end(),[](char c){return (c>='0'&&c<='9')||(c>='a'&&c<='f');});}
- void finish(bool accepted,bool yielded=false){if(finished_)return;finished_=true;timer_.cancel();pending_.clear();auto done=std::move(done_);done(yielded?Json{{"yielded",true}}:Json{{"accepted",accepted}});}
+ void finish(bool accepted,bool yielded=false,const char* reason=nullptr){if(finished_)return;finished_=true;timer_.cancel();pending_.clear();auto done=std::move(done_);Json result=yielded?Json{{"yielded",true}}:Json{{"accepted",accepted}};if(reason)result["reason"]=reason;done(std::move(result));}
  template<class F>Reply callback(F handler){auto once=std::make_shared<std::atomic<bool>>(false);return [self=shared_from_this(),once,handler](Json value){if(once->exchange(true))return;asio::post(self->io_,[self,handler,value=std::move(value)]()mutable{if(self->finished_)return;try{handler(*self,std::move(value));}catch(...){self->finish(false);}});};}
  void fetch(const std::string& id){
   if(id==anchor_||knowledge_->acknowledged(id)){deliver();return;}
-  if(pending_.size()>=maximum_){finish(false);return;}
+  if(pending_.size()>=maximum_){finish(false,false,"dependency-depth-limit");return;}
   auto reply=callback([id](auto& self,Json value){self.exported(id,std::move(value));});
   try{core_("nano_capellaExport",Json::array({token_,"block",id}),reply);}catch(...){reply(nullptr);}
  }
