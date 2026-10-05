@@ -173,3 +173,9 @@ target_compile_definitions(nano-capella-depth-catchup-tests PRIVATE FMT_CONSTEVA
 target_link_libraries(nano-capella-depth-catchup-tests PRIVATE p2p::p2p)
 add_test(NAME capella_depth_catchup COMMAND nano-capella-depth-catchup-tests)
 set_tests_properties(capella_depth_catchup PROPERTIES TIMEOUT 20)
+
+add_executable(nano-capella-export-resume-tests test_capella_export_resume.cpp)
+target_include_directories(nano-capella-export-resume-tests PRIVATE ../third_party)
+target_compile_definitions(nano-capella-export-resume-tests PRIVATE FMT_CONSTEVAL= NANO_TEST_EXPORT_CACHE)
+target_link_libraries(nano-capella-export-resume-tests PRIVATE p2p::p2p)
+add_test(NAME capella_export_resume COMMAND nano-capella-export-resume-tests)

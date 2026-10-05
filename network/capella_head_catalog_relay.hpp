@@ -10,7 +10,7 @@ class CapellaHeadCatalogRelay:public std::enable_shared_from_this<CapellaHeadCat
  std::function<void(Json,Reply)> send_;std::string token_,anchor_;
  std::shared_ptr<AltairMessageIngress> ingress_;std::shared_ptr<AltairRelayProgress> knowledge_;
  size_t dependency_blocks_,dependency_bytes_,page_,maximum_;Reply done_;CapellaCatalogRelay::Known known_;
- std::shared_ptr<CapellaDeliveryQuantum> quantum_;bool fair_,started_=false,finished_=false;
+ std::shared_ptr<CapellaDeliveryQuantum> quantum_;std::shared_ptr<CapellaExportCache> exports_;bool fair_,started_=false,finished_=false;
  asio::steady_timer timer_;std::chrono::steady_clock::time_point deadline_,began_;
  std::shared_ptr<CapellaBlockDelivery> head_;std::shared_ptr<CapellaCatalogRelay> catalog_;
  std::string priority_="unselected";
@@ -37,10 +37,10 @@ class CapellaHeadCatalogRelay:public std::enable_shared_from_this<CapellaHeadCat
    }
    if(ack!=Json{{"accepted",true}}){self->fail("head-admission-unconfirmed");return;}
    self->priority_="admitted";self->catalog();
-  }),quantum_);head_->start(remaining);
+  }),quantum_,exports_);head_->start(remaining);
  }
 public:
- CapellaHeadCatalogRelay(asio::io_context& io,AltairCoreDispatch::Call core,CapellaCatalogRelay::Deliver deliver,std::function<void(Json,Reply)> send,std::string token,std::string anchor,std::shared_ptr<AltairMessageIngress> ingress,std::shared_ptr<AltairRelayProgress> knowledge,size_t dependency_blocks,size_t dependency_bytes,size_t page,size_t maximum,Reply done,CapellaCatalogRelay::Known known,std::shared_ptr<CapellaDeliveryQuantum> quantum={},bool fair=false):io_(io),core_(std::move(core)),deliver_(std::move(deliver)),send_(std::move(send)),token_(std::move(token)),anchor_(std::move(anchor)),ingress_(std::move(ingress)),knowledge_(std::move(knowledge)),dependency_blocks_(dependency_blocks),dependency_bytes_(dependency_bytes),page_(page),maximum_(maximum),done_(std::move(done)),known_(std::move(known)),quantum_(std::move(quantum)),fair_(fair),timer_(io){if(!core_||!deliver_||!send_||token_.empty()||!ingress_||!knowledge_||!dependency_blocks_||!dependency_bytes_||!page_||page_>maximum_||!done_)throw std::invalid_argument("Invalid Capella head catalog relay");}
+ CapellaHeadCatalogRelay(asio::io_context& io,AltairCoreDispatch::Call core,CapellaCatalogRelay::Deliver deliver,std::function<void(Json,Reply)> send,std::string token,std::string anchor,std::shared_ptr<AltairMessageIngress> ingress,std::shared_ptr<AltairRelayProgress> knowledge,size_t dependency_blocks,size_t dependency_bytes,size_t page,size_t maximum,Reply done,CapellaCatalogRelay::Known known,std::shared_ptr<CapellaDeliveryQuantum> quantum={},bool fair=false,std::shared_ptr<CapellaExportCache> exports={}):io_(io),core_(std::move(core)),deliver_(std::move(deliver)),send_(std::move(send)),token_(std::move(token)),anchor_(std::move(anchor)),ingress_(std::move(ingress)),knowledge_(std::move(knowledge)),dependency_blocks_(dependency_blocks),dependency_bytes_(dependency_bytes),page_(page),maximum_(maximum),done_(std::move(done)),known_(std::move(known)),quantum_(std::move(quantum)),exports_(std::move(exports)),fair_(fair),timer_(io){if(!core_||!deliver_||!send_||token_.empty()||!ingress_||!knowledge_||!dependency_blocks_||!dependency_bytes_||!page_||page_>maximum_||!done_)throw std::invalid_argument("Invalid Capella head catalog relay");}
  void start(std::chrono::steady_clock::duration timeout=std::chrono::seconds(30)){
   if(started_||finished_||timeout<=std::chrono::steady_clock::duration::zero())throw std::logic_error("Invalid Capella head relay start");started_=true;began_=std::chrono::steady_clock::now();deadline_=began_+timeout;timer_.expires_at(deadline_);timer_.async_wait([self=shared_from_this()](auto e){if(!e)self->fail("head-or-catalog-deadline");});
   auto reply=callback([self=shared_from_this()](Json status){self->selected(std::move(status));});try{core_("nano_capellaStatus",Json::array({token_}),reply);}catch(...){reply(nullptr);}

@@ -7663,3 +7663,14 @@ Outil diagnostique seul compilé et lié au cœur b5ee00ac inchangé ; premier
 ni signature, aucun rebuild d’image. Gestion de capacité, propagation des votes
 et finalité commune restent ouvertes ; augmenter la borne ne les qualifie pas.
 [Preuves](qualification/restored-v7-snapshot-capacity-20261006/README.md).
+
+## Reprise bornée des exports P2P — 6 octobre 2026
+
+Cache local authentifié par pair/session implémenté : conserve la préparation
+entre échéances, sans transformer un export en ACK. Échec ancien reproduit
+(sortie 1), correctif sortie 0 ; 106 cas de transport concernés passent en
+Docker ARM64 et AMD64. Relais complets compilés/liés sur les trois plateformes,
+ancien cœur b5ee00ac et binaires conservés. Flags/liens CMake réutilisés ;
+configuration fraîche non qualifiée. Aucun rebuild d’image, aucune relance
+réseau. v7 reste FAILED, capacité du Store et finalité commune toujours ouvertes.
+[Preuves et limites](qualification/capella-export-resume-20261006/README.md).

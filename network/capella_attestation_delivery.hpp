@@ -8,7 +8,7 @@ class CapellaAttestationDelivery:public std::enable_shared_from_this<CapellaAtte
  asio::io_context& io_;AltairCoreDispatch::Call core_;std::function<void(Json,Reply)> send_;
  std::string token_,anchor_;Json frame_;std::shared_ptr<AltairMessageIngress> ingress_;
  std::shared_ptr<AltairRelayProgress> blocks_;size_t maximum_,budget_;Reply done_;
- std::shared_ptr<CapellaDeliveryQuantum> quantum_;std::shared_ptr<CapellaBlockDelivery> dependency_;
+ std::shared_ptr<CapellaDeliveryQuantum> quantum_;std::shared_ptr<CapellaExportCache> exports_;std::shared_ptr<CapellaBlockDelivery> dependency_;
  asio::steady_timer timer_;bool started_=false,finished_=false;
  void finish(Json value){if(finished_)return;finished_=true;timer_.cancel();auto done=std::move(done_);done(std::move(value));}
  Reply callback(std::function<void(Json)> handler){auto once=std::make_shared<std::atomic<bool>>(false);return [self=shared_from_this(),once,handler=std::move(handler)](Json value){if(once->exchange(true))return;asio::post(self->io_,[self,handler,value=std::move(value)]()mutable{if(self->finished_)return;try{handler(std::move(value));}catch(...){self->finish(Json{{"accepted",false}});}});};}
@@ -17,7 +17,7 @@ class CapellaAttestationDelivery:public std::enable_shared_from_this<CapellaAtte
   try{send_(std::move(frame_),reply);}catch(...){reply(nullptr);}
  }
 public:
- CapellaAttestationDelivery(asio::io_context& io,AltairCoreDispatch::Call core,std::function<void(Json,Reply)> send,std::string token,std::string anchor,Json frame,std::shared_ptr<AltairMessageIngress> ingress,std::shared_ptr<AltairRelayProgress> blocks,size_t maximum,size_t budget,Reply done,std::shared_ptr<CapellaDeliveryQuantum> quantum={}):io_(io),core_(std::move(core)),send_(std::move(send)),token_(std::move(token)),anchor_(std::move(anchor)),frame_(std::move(frame)),ingress_(std::move(ingress)),blocks_(std::move(blocks)),maximum_(maximum),budget_(budget),done_(std::move(done)),quantum_(std::move(quantum)),timer_(io){
+ CapellaAttestationDelivery(asio::io_context& io,AltairCoreDispatch::Call core,std::function<void(Json,Reply)> send,std::string token,std::string anchor,Json frame,std::shared_ptr<AltairMessageIngress> ingress,std::shared_ptr<AltairRelayProgress> blocks,size_t maximum,size_t budget,Reply done,std::shared_ptr<CapellaDeliveryQuantum> quantum={},std::shared_ptr<CapellaExportCache> exports={}):io_(io),core_(std::move(core)),send_(std::move(send)),token_(std::move(token)),anchor_(std::move(anchor)),frame_(std::move(frame)),ingress_(std::move(ingress)),blocks_(std::move(blocks)),maximum_(maximum),budget_(budget),done_(std::move(done)),quantum_(std::move(quantum)),exports_(std::move(exports)),timer_(io){
   if(!core_||!send_||!ingress_||!blocks_||!done_||token_.empty()||!maximum_||!budget_)throw std::invalid_argument("Invalid Capella attestation delivery");
  }
  void start(std::chrono::steady_clock::duration timeout=std::chrono::seconds(30)){
@@ -30,7 +30,7 @@ public:
    if(result==Json{{"yielded",true}}){self->finish(std::move(result));return;}
    if(result!=Json{{"accepted",true}}){self->finish(Json{{"accepted",false}});return;}self->vote();
   });
-  dependency_=std::make_shared<CapellaBlockDelivery>(io_,core_,send_,token_,anchor_,head,ingress_,blocks_,maximum_,budget_,std::move(ready),quantum_);dependency_->start(timeout);
+  dependency_=std::make_shared<CapellaBlockDelivery>(io_,core_,send_,token_,anchor_,head,ingress_,blocks_,maximum_,budget_,std::move(ready),quantum_,exports_);dependency_->start(timeout);
  }
  void cancel(){if(finished_)return;finish(Json{{"accepted",false}});if(dependency_)dependency_->cancel();}
 };
