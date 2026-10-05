@@ -1500,9 +1500,53 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
   check(local.block()&&local.block()->proposer_for_block(slot,100000)==identity,"prepared local proposer differs from oracle");++checks;
   check(local.sync_state(100000)==prepare_capella_slots(original,epoch_rules,l,slot+1,slot+1-parent.header.slot,100000),"prepared local sync state differs from oracle");++checks;
   check(!local.matches(timed,rules,slot+1),"local preparation reused at wrong slot");++checks;
+  {
+   const auto vote_time=clock+rules.attestation_due_ms;
+   const auto vote_store=prepare_capella_store_tick(initial,vote_time,rules,3,100000);
+   const auto full_duties=prepare_capella_attestation_duties(vote_store,rules,slot,slot-parent.header.slot,100000);check(!full_duties.empty(),"long-gap vote test has no committee assignment");
+   const auto& assignment=full_duties.begin()->second;auto vote=assignment.attestation;Key voter_key(assignment.validator_index);
+   vote.signature=voter_key.sign(consensus_signing_root(consensus_attestation_root(vote.data),consensus_domain({1,0,0,0},assignment.fork_version,assignment.genesis_root)));
+   CapellaDutyPreparation moving(vote_store,rules,slot);check(!moving.advance(3,100000),"moving preparation skipped gap");const auto prefix=moving.prepared_slot();
+   const auto next_slot=(slot/slots+1)*slots;const auto later=prepare_capella_store_tick(vote_store,initial.timed.clock.genesis_time_ms+next_slot*rules.slot_duration_ms+rules.attestation_due_ms,rules,3,100000);
+   check(moving.retarget(later,rules,next_slot)&&moving.prepared_slot()==prefix,"slot/epoch retarget discarded authenticated progress");++checks;
+   size_t moving_chunks=0;while(!moving.advance(3,100000))check(++moving_chunks<(next_slot-parent.header.slot)/3+3,"retargeted preparation stalled");
+   check(moving.head_state()==prepare_capella_slots(original,epoch_rules,l,next_slot,next_slot-parent.header.slot,100000),"retargeted state differs from ordinary slots");++checks;
+   const auto moving_duties=moving.duties(later),moving_oracle=prepare_capella_attestation_duties(later,rules,next_slot,next_slot-parent.header.slot,100000);check(!moving_duties.empty()&&moving_duties.size()==moving_oracle.size(),"retargeted committee mismatch");
+   for(const auto& [member,duty]:moving_duties){const auto& oracle=moving_oracle.at(member);check(duty.attestation.data==oracle.attestation.data&&duty.attestation.aggregation_bits==oracle.attestation.aggregation_bits&&duty.public_key==oracle.public_key&&duty.fork_version==oracle.fork_version,"retargeted duty differs from full-gap oracle");}++checks;
+   check(!moving.retarget(vote_store,rules,slot),"backwards retarget accepted");++checks;
+   CapellaTargetPreparation target(vote_store,rules,vote.data.target);check(!target.advance(3,100000),"target preparation unexpectedly skipped long gap");++checks;
+   bool interrupted=false;try{target.advance(3,100000,[]{throw ExecutionCancelled("target chunk cancellation");});}catch(const ExecutionCancelled&){interrupted=true;}check(interrupted&&!target.ready(),"target cancellation swallowed or fabricated completion");++checks;
+   size_t chunks=0;while(!target.advance(3,100000)){check(++chunks<(slot-parent.header.slot)/3+3,"target chunks stalled");}
+   const auto context=target.context(vote_store,rules),context_oracle=prepare_capella_fork_state_contexts(original,parent.header,vote.data.target,epoch_rules,l,slot-parent.header.slot,100000).target;
+   check(context.checkpoint==context_oracle.checkpoint&&context.registry==context_oracle.registry&&context.randao==context_oracle.randao&&context.fork.previous_version==context_oracle.fork.previous_version&&context.fork.current_version==context_oracle.fork.current_version&&context.fork.epoch==context_oracle.fork.epoch&&context.genesis_root==context_oracle.genesis_root,"resumed target differs from full-gap oracle");++checks;
+   const auto after=prepare_capella_store_tick(vote_store,initial.timed.clock.genesis_time_ms+(slot+1)*rules.slot_duration_ms,rules,3,100000);
+   bool limited=false;try{prepare_capella_store_vote(after,vote,rules,3,100000);}catch(const std::length_error&){limited=true;}check(limited,"legacy vote replay budget weakened");++checks;
+   const auto expected_vote=prepare_capella_store_vote(after,vote,rules,slot-parent.header.slot,100000),prepared_vote=prepare_capella_prepared_store_vote(after,vote,rules,target);
+   check(expected_vote&&prepared_vote&&capella_store_snapshot(*expected_vote,rules,crash_limits)==capella_store_snapshot(*prepared_vote,rules,crash_limits),"prepared vote admission differs from ordinary oracle");++checks;
+   auto invalid_vote=vote;invalid_vote.signature[0]^=1;check(!prepare_capella_prepared_store_vote(after,invalid_vote,rules,target),"prepared vote accepted invalid BLS");++checks;
+   auto future_target=vote.data.target;future_target.epoch=vote_store.timed.view.current_epoch+1;bool future_refused=false;try{CapellaTargetPreparation future(vote_store,rules,future_target);}catch(const std::invalid_argument&){future_refused=true;}check(future_refused,"target frame allowed a future epoch before replay");++checks;
+   auto other_profile=rules;other_profile.transition.chain_id+=1;bool mismatch=false;try{target.context(vote_store,other_profile);}catch(const std::invalid_argument&){mismatch=true;}check(mismatch,"target cache accepted a different profile");++checks;
+   Temp vote_directory;Genesis vg;vg.chain_id=r.chain_id;vg.consensus="beacon";vg.evm_revision=EvmRevision::Shanghai;vg.block=genesis;vg.state=genesis_state;
+   auto vote_limits=crash_limits;vote_limits.replay_slots=3;Blockchain vote_owner(vote_directory/"owner",vg);ChainStore vote_witness(vote_directory/"witness");
+   auto receiver=std::make_unique<CapellaDurableReactor>(vote_owner,rules,vote_limits,initial,std::function<void()>{},&vote_witness);receiver->tick(vote_time);const auto vote_token=receiver->current().token;
+   size_t attempts=0;while(!receiver->vote(vote)){check(receiver->current().token==vote_token,"unfinished gossip target published a checkpoint");check(++attempts<(slot-parent.header.slot)/3+3,"gossip target failed to resume");}
+   check(attempts>0&&receiver->current().token.sequence==vote_token.sequence+1&&receiver->signed_votes().size()==1,"gossip target did not defer then admit exactly once");++checks;
+   const auto accepted_token=receiver->current().token;check(receiver->vote(vote)&&receiver->current().token==accepted_token,"gossip duplicate rewrote checkpoint");++checks;
+   receiver.reset();receiver=std::make_unique<CapellaDurableReactor>(vote_owner,rules,vote_limits,vote_witness);
+   check(receiver->current().token==accepted_token&&receiver->signed_votes().size()==1,"long-gap signed vote witness restore failed");++checks;
+   {
+    Blockchain sender_owner(vote_directory/"sender",vg);ChainStore sender_witness(vote_directory/"sender-witness");CapellaDurableReactor sender(sender_owner,rules,vote_limits,initial,{},&sender_witness);sender.tick(vote_time);
+    size_t polls=0;while(!sender.prepare_current_duties(slot))check(++polls<(slot-parent.header.slot)/3+3,"local vote prewarming stalled");
+    ChainStore signer_disk(vote_directory/"sender-key");BeaconSigningJournal journal(signer_disk,r.chain_id,genesis.header.hash(),assignment.genesis_root,voter_key.public_key,slots);
+    const auto local_vote=sender.attest_current(assignment.validator_index,slot,[&]{return vote_time;},journal,[&](const ConsensusRoot& root){return voter_key.sign(root);});
+    check(local_vote&&local_vote->data==vote.data&&local_vote->signature==vote.signature&&sender.vote(*local_vote)&&journal.latest_attestation_target()==std::optional<uint64_t>(vote.data.target.epoch),"long-gap local signed vote was not immediately admitted through prepared target");++checks;
+   }
+   receiver->tick(initial.timed.clock.genesis_time_ms+(slot+1)*rules.slot_duration_ms);
+   check(capella_store_snapshot(*receiver->current().state,rules,vote_limits)==capella_store_snapshot(*expected_vote,rules,vote_limits),"restored deferred vote applied incorrectly at next tick");++checks;
+  }
   Temp directory;Genesis g;g.chain_id=r.chain_id;g.consensus="beacon";g.evm_revision=EvmRevision::Shanghai;g.block=genesis;g.state=genesis_state;
   {
-   Blockchain local_owner(directory/"local-owner",g);ChainStore local_witness(directory/"local-witness");CapellaDurableReactor local_reactor(local_owner,rules,crash_limits,initial,{},&local_witness);local_reactor.tick(clock);
+   Blockchain local_owner(directory/"local-owner",g);ChainStore local_witness(directory/"local-witness");CapellaDurableReactor local_reactor(local_owner,rules,crash_limits,initial,{},&local_witness);check(local_reactor.prepare_current_duties(parent.header.slot),"current-head preparation unavailable");local_reactor.tick(clock);
    const auto local_token=local_reactor.current().token;size_t polls=0;
    while(!local_reactor.prepare_current_duties(slot)){check(local_reactor.current().token==local_token,"incomplete duty preparation published state");check(++polls<(slot-parent.header.slot)/slots+3,"reactor local duty preparation stalled");}
    check(polls>0&&local_reactor.current_proposer(slot)==std::optional<uint64_t>(identity->index),"reactor prepared local proposer mismatch");++checks;
@@ -1526,7 +1570,7 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
   check(reopened.block(wire)&&reopened.current().token==committed.token,"prepared worker duplicate admission rewrote checkpoint");++checks;
 
  }
- std::cout<<Json{{"scenario","capella-prepared-block-transition"},{"workerIntegration",true},{"localProposalIntegration",true},{"boundedRetryHarness",true},{"witnessedPublication",true},{"checks",checks},{"variants",2},{"signedBlsBlocks",2},{"type2Transactions",2},{"epochBoundaryFinalSlot",true},{"fullGapOracleEqual",true},{"runtimeIntegrated",false},{"networkQualified",false}}.dump()<<std::endl;
+ std::cout<<Json{{"scenario","capella-prepared-block-transition"},{"workerIntegration",true},{"localProposalIntegration",true},{"longGapGossipVoteRestore",true},{"boundedRetryHarness",true},{"witnessedPublication",true},{"checks",checks},{"variants",2},{"signedBlsBlocks",2},{"type2Transactions",2},{"epochBoundaryFinalSlot",true},{"fullGapOracleEqual",true},{"runtimeIntegrated",false},{"networkQualified",false}}.dump()<<std::endl;
 }
 static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigned participation=100){
  const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-bellatrix-containers-official",source=fixtures/"consensus-capella-slots-official";

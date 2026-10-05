@@ -10,8 +10,14 @@ template<size_t N>std::array<uint8_t,N> signing_array(std::span<const uint8_t> b
 bool CapellaDurableReactor::prepare_local_duties_locked(uint64_t slot,const std::function<void()>& check){
  require_available();const auto& c=state_->timed.clock;
  if(!rules_.slot_duration_ms||c.time_ms<c.genesis_time_ms||slot==UINT64_MAX||(c.time_ms-c.genesis_time_ms)/rules_.slot_duration_ms!=slot)return false;
- if(!local_preparation_||!local_preparation_->matches(*state_,rules_,slot,check))local_preparation_.emplace(*state_,rules_,slot,check);
- return local_preparation_->advance(std::min(limits_.replay_slots,rules_.transition.consensus.epoch.ffg.slots_per_epoch),limits_.sync_trials,check);
+ if(!local_preparation_||(!local_preparation_->matches(*state_,rules_,slot,check)&&!local_preparation_->retarget(*state_,rules_,slot,check)))local_preparation_.emplace(*state_,rules_,slot,check);
+ if(const auto& cached=vote_preparations_[(slot/rules_.transition.consensus.epoch.ffg.slots_per_epoch)%vote_preparations_.size()];cached)local_preparation_->seed_target(*cached,*state_,check);
+ if(!local_preparation_->advance(std::min(limits_.replay_slots,rules_.transition.consensus.epoch.ffg.slots_per_epoch),limits_.sync_trials,check))return false;
+ if(const auto* target=local_preparation_->target_preparation()){
+  auto& ready=vote_preparations_[target->target().epoch%vote_preparations_.size()];
+  if(!ready||!ready->ready()||!ready->matches(*state_,rules_,target->target(),check))ready=*target;
+ }
+ return true;
 }
 bool CapellaDurableReactor::prepare_current_duties(uint64_t slot,const std::function<void()>& check){
  std::lock_guard lock(mutex_);return prepare_local_duties_locked(slot,check);

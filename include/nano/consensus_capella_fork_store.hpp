@@ -29,6 +29,32 @@ struct CapellaForkBlockRules {
  Bytes deposit_contract_code_hash;
  bool native_deposit_votes=false;
 };
+// Ephemeral target-epoch continuation bound to a real admitted block and the
+// complete local profile. Contexts never come from gossip or serialized weights.
+class CapellaTargetPreparation {
+ CapellaForkBlockRules rules_;
+ ConsensusCheckpoint target_;
+ CapellaSlotPreparation slots_;
+public:
+ CapellaTargetPreparation(const CapellaForkStore&,const CapellaForkBlockRules&,
+  const ConsensusCheckpoint&,const std::function<void()>& checkpoint={});
+ const ConsensusCheckpoint& target()const{return target_;}
+ bool matches(const CapellaForkStore&,const CapellaForkBlockRules&,
+  const ConsensusCheckpoint&,const std::function<void()>& checkpoint={})const;
+ bool retarget(const CapellaForkStore&,const CapellaForkBlockRules&,const ConsensusCheckpoint&,const std::function<void()>& checkpoint={});
+ bool advance(uint64_t maximum_slots,uint64_t trials,const std::function<void()>& checkpoint={});
+ bool ready()const;
+ Phase0ForkVoteContext context(const CapellaForkStore&,const CapellaForkBlockRules&,
+  const std::function<void()>& checkpoint={})const;
+};
+// Explicit local restoration/validation path. Each completed chunk remains
+// bounded; caller's cancellation is checked between chunks. No signatures/I/O.
+Phase0ForkVoteContext prepare_capella_resumed_target_context(const CapellaForkStore&,
+ const CapellaForkBlockRules&,const ConsensusCheckpoint&,uint64_t maximum_slots,
+ uint64_t trials,const std::function<void()>& checkpoint={});
+std::optional<CapellaForkStore> prepare_capella_prepared_store_vote(const CapellaForkStore&,
+ const Phase0SignedAttestation&,const CapellaForkBlockRules&,const CapellaTargetPreparation&,
+ const std::function<void()>& checkpoint={});
 // Capella on_block on a trusted, internally consistent in-memory Store. Full
 // signature/operation/state-root validation precedes candidate publication.
 // Unknown parent/future/incompatible-finality/invalid blocks return nullopt;

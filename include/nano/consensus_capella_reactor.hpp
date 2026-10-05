@@ -45,6 +45,9 @@ class CapellaDurableReactor {
  // incomplete. Each retry advances at most one epoch within replay_slots.
  std::optional<CapellaBlockPreparation> incoming_preparation_;
  std::optional<CapellaDutyPreparation> local_preparation_;
+ std::array<std::optional<CapellaTargetPreparation>,2> vote_preparations_;
+ CapellaTargetPreparation* prepare_vote_target_locked(const CapellaForkStore&,const Phase0SignedAttestation&,
+  bool complete,const std::function<void()>&);
  bool prepare_local_duties_locked(uint64_t,const std::function<void()>&);
  // Only populated from this reactor's immutable, admitted head under mutex_.
  // Single-entry cache: no retained state snapshots or old-branch registry maps.

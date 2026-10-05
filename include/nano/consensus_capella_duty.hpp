@@ -14,18 +14,22 @@ class CapellaDutyPreparation {
  CapellaForkBlockRules rules_;
  uint64_t slot_;
  CapellaSlotPreparation head_;
- std::optional<CapellaSlotPreparation> target_;
+ std::optional<CapellaTargetPreparation> target_;
  std::optional<CapellaBlockPreparation> block_;
 public:
  CapellaDutyPreparation(const CapellaForkStore&,const CapellaForkBlockRules&,uint64_t,
   const std::function<void()>& checkpoint={});
  bool matches(const CapellaForkStore&,const CapellaForkBlockRules&,uint64_t,
   const std::function<void()>& checkpoint={})const;
+ uint64_t prepared_slot()const{return head_.slot();}
+ bool retarget(const CapellaForkStore&,const CapellaForkBlockRules&,uint64_t,const std::function<void()>& checkpoint={});
+ void seed_target(const CapellaTargetPreparation&,const CapellaForkStore&,const std::function<void()>& checkpoint={});
  bool advance(uint64_t maximum_slots,uint64_t trials,const std::function<void()>& checkpoint={});
  bool ready()const;
  const CapellaSlotState& head_state()const;
  CapellaSlotState sync_state(uint64_t trials,const std::function<void()>& checkpoint={})const;
  const CapellaBlockPreparation* block()const;
+ const CapellaTargetPreparation* target_preparation()const;
  std::map<uint64_t,CapellaAttestationDuty> duties(const CapellaForkStore&,
   const std::function<void()>& checkpoint={})const;
  std::optional<Phase0ForkVoteContext> target_context(const CapellaForkStore&,

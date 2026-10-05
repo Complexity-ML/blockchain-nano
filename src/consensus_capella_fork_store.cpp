@@ -118,9 +118,48 @@ std::optional<CapellaForkStore> prepare_capella_fork_block(const CapellaForkStor
 }
 
 namespace nano {
-std::optional<CapellaForkStore> prepare_capella_store_vote(const CapellaForkStore& input,
+CapellaTargetPreparation::CapellaTargetPreparation(const CapellaForkStore& store,
+ const CapellaForkBlockRules& rules,const ConsensusCheckpoint& target,const std::function<void()>& check)
+ :rules_(rules),target_(target),slots_(store.blocks.at(target.root).state,store.blocks.at(target.root).header,
+ epoch_rules(rules),rules.transition.consensus.state,check){
+ validate_rules(rules);const auto count=rules.transition.consensus.epoch.ffg.slots_per_epoch;
+ if(!count||target.epoch>store.timed.view.current_epoch||target.epoch>UINT64_MAX/count||slots_.parent().slot>target.epoch*count||consensus_beacon_header_root(slots_.parent())!=target.root)throw std::invalid_argument("Invalid prepared Capella target");
+}
+bool CapellaTargetPreparation::matches(const CapellaForkStore& store,const CapellaForkBlockRules& rules,
+ const ConsensusCheckpoint& target,const std::function<void()>& check)const{
+ if(target!=target_||capella_fork_profile(rules)!=capella_fork_profile(rules_))return false;
+ const auto found=store.blocks.find(target.root);if(found==store.blocks.end()||found->second.header!=slots_.parent())return false;
+ // Recheck the source state binding. A reused root/header must not conceal a
+ // mutated record or changed processing metadata in local checkpoint validation.
+ capella_fork_block_context(found->second.state,found->second.header,epoch_rules(rules),rules.transition.consensus.state,check);
+ return true;
+}
+bool CapellaTargetPreparation::retarget(const CapellaForkStore& store,const CapellaForkBlockRules& rules,
+ const ConsensusCheckpoint& target,const std::function<void()>& check){
+ const auto count=rules_.transition.consensus.epoch.ffg.slots_per_epoch;
+ if(target.root!=target_.root||target.epoch<target_.epoch||target.epoch>store.timed.view.current_epoch||target.epoch>UINT64_MAX/count||!matches(store,rules,target_,check))return false;
+ if(check)check();target_=target;return true;
+}
+bool CapellaTargetPreparation::advance(uint64_t maximum_slots,uint64_t trials,const std::function<void()>& check){
+ return slots_.advance(target_.epoch*rules_.transition.consensus.epoch.ffg.slots_per_epoch,maximum_slots,trials,check);
+}
+bool CapellaTargetPreparation::ready()const{return slots_.slot()==target_.epoch*rules_.transition.consensus.epoch.ffg.slots_per_epoch;}
+Phase0ForkVoteContext CapellaTargetPreparation::context(const CapellaForkStore& store,
+ const CapellaForkBlockRules& rules,const std::function<void()>& check)const{
+ if(!ready()||!matches(store,rules,target_,check))throw std::invalid_argument("Incomplete or stale Capella target frame");
+ return slots_.vote_context(target_,check);
+}
+Phase0ForkVoteContext prepare_capella_resumed_target_context(const CapellaForkStore& store,
+ const CapellaForkBlockRules& rules,const ConsensusCheckpoint& target,uint64_t maximum_slots,
+ uint64_t trials,const std::function<void()>& check){
+ CapellaTargetPreparation frame(store,rules,target,check);
+ const auto chunk=std::min(maximum_slots,rules.transition.consensus.epoch.ffg.slots_per_epoch);
+ while(!frame.advance(chunk,trials,check)){};
+ return frame.context(store,rules,check);
+}
+static std::optional<CapellaForkStore> prepare_store_vote_impl(const CapellaForkStore& input,
  const Phase0SignedAttestation& vote,const CapellaForkBlockRules& rules,uint64_t maximum_slots,uint64_t maximum_sync_trials,
- const std::function<void()>& checkpoint){
+ const std::function<void()>& checkpoint,const CapellaTargetPreparation* prepared){
  validate_rules(rules);const auto& c=input.timed.clock;const auto slots=rules.transition.consensus.epoch.history.slots_per_epoch;
  if(!slots||!rules.slot_duration_ms||c.time_ms<c.genesis_time_ms)throw std::invalid_argument("invalid store vote clock");
  const auto slot=(c.time_ms-c.genesis_time_ms)/rules.slot_duration_ms,epoch=slot/slots;
@@ -129,11 +168,18 @@ std::optional<CapellaForkStore> prepare_capella_store_vote(const CapellaForkStor
     !input.blocks.contains(d.target.root)||!input.timed.view.nodes.contains(d.beacon_block_root))return std::nullopt;
  const auto& block=input.blocks.at(d.target.root);
  if(block.header.slot>d.target.epoch*slots)return std::nullopt;
- const auto ctx=prepare_capella_fork_state_contexts(block.state,block.header,d.target,epoch_rules(rules),rules.transition.consensus.state,maximum_slots,maximum_sync_trials,checkpoint);
+ const auto ctx=prepared?prepared->context(input,rules,checkpoint):prepare_capella_fork_state_contexts(block.state,block.header,d.target,epoch_rules(rules),rules.transition.consensus.state,maximum_slots,maximum_sync_trials,checkpoint).target;
+ if(ctx.checkpoint!=d.target)throw std::invalid_argument("Prepared vote target mismatch");
  auto out=input;
- if(!process_phase0_fork_vote(out.timed.view,slot,ctx.target,rules.transition.consensus.attestation.duties,vote,false,checkpoint))return std::nullopt;
+ if(!process_phase0_fork_vote(out.timed.view,slot,ctx,rules.transition.consensus.attestation.duties,vote,false,checkpoint))return std::nullopt;
  return out;
 }
+std::optional<CapellaForkStore> prepare_capella_store_vote(const CapellaForkStore& store,
+ const Phase0SignedAttestation& vote,const CapellaForkBlockRules& rules,uint64_t maximum_slots,
+ uint64_t trials,const std::function<void()>& check){return prepare_store_vote_impl(store,vote,rules,maximum_slots,trials,check,nullptr);}
+std::optional<CapellaForkStore> prepare_capella_prepared_store_vote(const CapellaForkStore& store,
+ const Phase0SignedAttestation& vote,const CapellaForkBlockRules& rules,const CapellaTargetPreparation& prepared,
+ const std::function<void()>& check){return prepare_store_vote_impl(store,vote,rules,1,1,check,&prepared);}
 std::optional<CapellaForkStore> prepare_capella_store_slashing(const CapellaForkStore& input,
  const IndexedConsensusAttestation& first,const IndexedConsensusAttestation& second,
  const CapellaForkBlockRules& rules,const std::function<void()>& checkpoint){

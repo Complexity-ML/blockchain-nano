@@ -27,7 +27,7 @@ Json execution(const CapellaForkBlock& b,const std::function<void()>& cancel,boo
 ConsensusSlashingState registry(const CapellaForkStore& s,const CapellaForkBlockRules& r,const CapellaStoreSnapshotLimits& l,const std::function<void()>& cancel){
  const auto& b=s.blocks.at(s.timed.view.justified.root);
  if(s.timed.view.justified.root==s.timed.view.anchor&&s.timed.view.justified.epoch==b.header.slot/r.transition.consensus.epoch.ffg.slots_per_epoch)return capella_fork_block_context(b.state,b.header,epoch_rules(r),r.transition.consensus.state,cancel).registry;
- return prepare_capella_fork_state_contexts(b.state,b.header,s.timed.view.justified,epoch_rules(r),r.transition.consensus.state,l.replay_slots,l.sync_trials,cancel).target.registry;
+ return prepare_capella_resumed_target_context(s,r,s.timed.view.justified,l.replay_slots,l.sync_trials,cancel).registry;
 }
 }
 std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBlockRules& r,

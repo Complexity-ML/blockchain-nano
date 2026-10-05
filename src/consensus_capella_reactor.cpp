@@ -22,13 +22,14 @@ void verify_archived_block(const ConsensusRoot& id,const Bytes& wire,const Capel
  const auto& state=block.state.ssz;const auto version=archive_array<4>(state,context.registry.epoch<archive_number(state,56)?48:52);
  archive_require(verify_consensus_beacon_header(header,version,archive_array<32>(state,8),proposer->second.public_key,std::span(wire).subspan(4,96)));if(check)check();
 }
-std::optional<CapellaForkStore> checked_vote(const CapellaForkStore& store,const Phase0SignedAttestation& vote,const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits,const std::function<void()>& check){
+std::optional<CapellaForkStore> checked_vote(const CapellaForkStore& store,const Phase0SignedAttestation& vote,const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits,const std::function<void()>& check,const CapellaTargetPreparation* prepared=nullptr){
  const auto& clock=store.timed.clock;if(!rules.slot_duration_ms||clock.time_ms<clock.genesis_time_ms)throw std::invalid_argument("Capella vote clock");
  const auto slot=(clock.time_ms-clock.genesis_time_ms)/rules.slot_duration_ms;
- if(vote.data.slot!=slot)return prepare_capella_store_vote(store,vote,rules,limits.replay_slots,limits.sync_trials,check);
+ auto apply=[&](const CapellaForkStore& input){return prepared?prepare_capella_prepared_store_vote(input,vote,rules,*prepared,check):prepare_capella_store_vote(input,vote,rules,limits.replay_slots,limits.sync_trials,check);};
+ if(vote.data.slot!=slot)return apply(store);
  if(slot==UINT64_MAX||slot+1>(UINT64_MAX-clock.genesis_time_ms)/rules.slot_duration_ms)throw std::overflow_error("Capella deferred vote clock");
  const auto future=prepare_capella_store_tick(store,clock.genesis_time_ms+(slot+1)*rules.slot_duration_ms,rules,limits.replay_slots,limits.sync_trials,check);
- if(!prepare_capella_store_vote(future,vote,rules,limits.replay_slots,limits.sync_trials,check))return std::nullopt;
+ if(!apply(future))return std::nullopt;
  return store;
 }
 bool valid_bls_change(const CapellaForkStore& store,const ConsensusRoot& root,const SignedCapellaBlsChange& change,const CapellaForkBlockRules& rules,const std::function<void()>& check){
@@ -79,11 +80,18 @@ std::tuple<CapellaForkStore,CapellaSignedVotes,CapellaSignedVotes,CapellaPending
  if(!with_proofs&&document.value("format",std::string())!="nano-capella-durable-v1")return {capella_store_from_snapshot(encoded,digest,rules,limits,check),{}, {}, {}, {}};
  archive_require(document.size()==(with_exits?6:with_changes?5:with_proofs?4:3)&&document.at("signedVotes").is_array()&&(with_proofs||!document.at("signedVotes").empty())&&document.at("signedVotes").size()<=limits.messages);
  const auto inner=document.at("store").dump();auto store=capella_store_from_snapshot(inner,sha256(Bytes(inner.begin(),inner.end())),rules,limits,check);CapellaSignedVotes votes,proofs;
+ std::array<std::optional<CapellaTargetPreparation>,2> restored_targets;
  for(const auto& entry:document.at("signedVotes")){
   if(check)check();archive_require(entry.is_array()&&entry.size()==2&&entry[0].is_string()&&entry[1].is_string());
   const auto key=entry[0].get<std::string>(),payload=entry[1].get<std::string>();archive_require(key.size()==66&&payload.size()>=2&&payload.size()%2==0&&(payload.size()-2)/2<=228+uint64_t(rules.transition.consensus.body.validators_per_committee)/8+1);
   auto id=unhex(key),wire=unhex(payload);archive_require(hex(id)==key&&hex(wire)==payload&&sha256(wire)==id);
-  const auto vote=decode_consensus_attestation_ssz(wire,rules.transition.consensus.body.validators_per_committee,check);archive_require(vote&&checked_vote(store,*vote,rules,limits,check).has_value());archive_require(votes.emplace(std::move(id),std::move(wire)).second);
+  const auto vote=decode_consensus_attestation_ssz(wire,rules.transition.consensus.body.validators_per_committee,check);archive_require(bool(vote));
+  const auto slots=rules.transition.consensus.epoch.ffg.slots_per_epoch,current=(store.timed.clock.time_ms-store.timed.clock.genesis_time_ms)/rules.slot_duration_ms;
+  archive_require(slots&&vote->data.slot<=current&&vote->data.target.epoch==vote->data.slot/slots&&vote->data.target.epoch<=current/slots&&vote->data.target.epoch>=(current/slots?current/slots-1:0)&&store.blocks.contains(vote->data.target.root)&&store.blocks.at(vote->data.target.root).header.slot<=vote->data.target.epoch*slots);
+  auto& frame=restored_targets[vote->data.target.epoch%restored_targets.size()];
+  if(!frame||!frame->matches(store,rules,vote->data.target,check))frame.emplace(store,rules,vote->data.target,check);
+  while(!frame->advance(std::min(limits.replay_slots,slots),limits.sync_trials,check)){};
+  archive_require(checked_vote(store,*vote,rules,limits,check,&*frame).has_value());archive_require(votes.emplace(std::move(id),std::move(wire)).second);
  }
  if(with_proofs){
   const auto& list=document.at("signedSlashings");archive_require(list.is_array()&&(with_changes||!list.empty())&&list.size()<=limits.equivocations);
@@ -341,7 +349,7 @@ void CapellaDurableReactor::tick_locked(uint64_t time,const std::function<void()
  const auto current=(time-state_->timed.clock.genesis_time_ms)/rules_.slot_duration_ms;const auto epoch=current/rules_.transition.consensus.epoch.history.slots_per_epoch;
  for(auto it=votes.begin();it!=votes.end();){
   if(check)check();const auto vote=decode_consensus_attestation_ssz(it->second,rules_.transition.consensus.body.validators_per_committee,check);if(!vote)throw std::logic_error("Capella stored vote encoding");
-  if(current>previous&&vote->data.slot==previous){auto applied=prepare_capella_store_vote(next,*vote,rules_,limits_.replay_slots,limits_.sync_trials,check);if(applied)next=std::move(*applied);}
+  if(current>previous&&vote->data.slot==previous){auto* prepared=prepare_vote_target_locked(next,*vote,true,check);if(prepared){auto applied=prepare_capella_prepared_store_vote(next,*vote,rules_,*prepared,check);if(applied)next=std::move(*applied);}}
   if(vote->data.target.epoch<(epoch?epoch-1:0))it=votes.erase(it);else ++it;
  }
  publish(std::move(next),check,{},std::move(votes));
@@ -523,10 +531,22 @@ Json CapellaDurableReactor::export_message(std::string_view kind,const Consensus
  if(check)check();return result;
 }
 
+CapellaTargetPreparation* CapellaDurableReactor::prepare_vote_target_locked(const CapellaForkStore& store,
+ const Phase0SignedAttestation& vote,bool complete,const std::function<void()>& check){
+ const auto slots=rules_.transition.consensus.epoch.ffg.slots_per_epoch;
+ const auto& clock=store.timed.clock;if(!slots||!rules_.slot_duration_ms||clock.time_ms<clock.genesis_time_ms)throw std::invalid_argument("Invalid vote preparation clock");
+ const auto current=(clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms,epoch=current/slots;const auto& d=vote.data;
+ if(d.slot>current||d.target.epoch!=d.slot/slots||d.target.epoch>epoch||d.target.epoch<(epoch?epoch-1:0)||!store.blocks.contains(d.target.root)||!store.timed.view.nodes.contains(d.beacon_block_root)||store.blocks.at(d.target.root).header.slot>d.target.epoch*slots)return nullptr;
+ auto& frame=vote_preparations_[d.target.epoch%vote_preparations_.size()];
+ if(!frame||!frame->matches(store,rules_,d.target,check))frame.emplace(store,rules_,d.target,check);
+ do{if(frame->advance(std::min(limits_.replay_slots,slots),limits_.sync_trials,check))return &*frame;}while(complete);
+ return nullptr;
+}
 bool CapellaDurableReactor::vote(const Phase0SignedAttestation& vote,const std::function<void()>& check){
  std::lock_guard lock(mutex_);require_available();auto wire=encode_consensus_attestation_ssz(vote,rules_.transition.consensus.body.validators_per_committee,check);auto id=sha256(wire);
  if(const auto found=votes_.find(id);found!=votes_.end()&&found->second==wire)return true;
- auto next=checked_vote(*state_,vote,rules_,limits_,check);if(!next)return false;
+ auto* prepared=prepare_vote_target_locked(*state_,vote,false,check);if(!prepared)return false;
+ auto next=checked_vote(*state_,vote,rules_,limits_,check,prepared);if(!next)return false;
  if(votes_.size()>=limits_.messages)throw std::length_error("Capella signed vote capacity");auto votes=votes_;votes.emplace(std::move(id),std::move(wire));publish(std::move(*next),check,{},std::move(votes));return true;
 }
 
