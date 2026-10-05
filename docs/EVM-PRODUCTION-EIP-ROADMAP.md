@@ -4613,3 +4613,13 @@ les engagements audités post-v6. [Preuves](qualification/depth-p2p-candidate-20
 
 
 2026-10-06, préparation v7 : copies Mac séparées et engagements post-v6 audités, volume VPS arrêté réutilisé sans transfert. Relais corrigé 81e5ab31 remplace les trois exécutables P2P, noyau b5ee00ac inchangé ; images réutilisées. Traces P2P existantes activées dans la fixture pour diagnostiquer les refus/ACK/yields, règles et échéance 900 s inchangées. Trois avances communes distinctes restent nécessaires. Préparation non qualifiée réseau/production ; v6 conservé. Preuves restored-three-node-v7-prepare-20261006/.
+
+## Reprise v7 : résultat original — 6 octobre 2026
+
+Résultat FAILED, sortie 1, sans redémarrage du contrôleur. Core b5ee00ac et relais 81e5ab31. Critère de trois avancées distinctes conservé.
+mac-native : boucle saine oui, aucune erreur, propositions 33, attestations 296.
+mac-docker : boucle saine oui, aucune erreur, propositions 29, attestations 302.
+vps-docker : boucle saine non, erreur invalid Capella Store snapshot at line 39, propositions 28, attestations 161.
+Engagements avancés : 16/16 natif, 16/16 Docker Mac, 32/33 VPS ; clé en enregistrement automatique inchangée, donc reprise de 65 duties non démontrée.
+Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichiers inchangés. Journaux non fusionnés/non réinitialisés, aucun transfert de base entre hôtes. Reprise réseau et production toujours ouvertes.
+[Preuves v7](qualification/restored-three-node-v7-terminal-20261006/README.md).

@@ -1,0 +1,7 @@
+{
+  "exitCode": 1,
+  "failure": "TypeError: int() cannot convert non-string with explicit base",
+  "cause": "Verifier assumed every signer used a fixed index. One source signer uses automatic registration and has index=null with a publicKey identity.",
+  "repair": "Match fixed signers by index and the registration signer by publicKey; preserve original failure. No journals or runtime changed.",
+  "productionQualified": false
+}
