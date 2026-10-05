@@ -1,0 +1,7 @@
+# Owned-copy maintenance AMD64 qualification
+
+Source 622983f1f718a12f9db62857a42972fb48079a3d, tools only; no runtime or image rebuild. Existing RocksDB8.9.1 builder image and volume reused. Corrected controller terminal0, no OOM. Six marker refusals retain identical copied-chain file hashes. Migration changes only schema with synchronous WAL write, retry0writes and identical non-schema digest. Compaction preserves all344 framed ordered entries/1,543,992 logical bytes. Canonical read-only audits before/after both operations agree:77 blocks,59 pruned execution states, checkpoint827/digest c5366531ce30796288223ad9f4893ce83b3c43335f4934910233220b00ea8a58, external epoch8 ancestry verified. Original source file hashes unchanged. Independent evidence comparisons passed.
+
+First controller terminal1: it mounted original volume rather than the independently committed restored fixture; audit refused `fork checkpoint differs from external commitment` before migration. Failure and logs retained. Second controller reused compiled binaries, mounted the previously qualified restored/chain fixture and unchanged finalized-audit-request.json. No weakening or replacement of the commitment.
+
+Physical apparent chain size6,761,823→793,227 bytes includes WAL cleanup and full compaction, not isolated pruning effect or long-term growth. No in-place/public migration, automatic maintenance, physical power-loss or historical fork-choice/vote qualification. Independent security review and all other production gates remain open.
