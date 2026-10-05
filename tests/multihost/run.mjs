@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {capturePeerSyncing} from './peer-syncing.mjs';
 import {pruningRestoreMode,pruningRestoreConfiguration,verifyPrunedRestoreAudit} from './pruning-restore.mjs';
 // Authorized isolated devnet only; code is deployed through Git, not this script.
 import {execFile,spawn} from 'node:child_process';
@@ -33,6 +34,8 @@ const exec=promisify(execFile),[target,revision,outputArg]=process.argv.slice(2)
 const fork=process.env.NANO_TEST_CONSENSUS_PROFILE??'bellatrix';
 if(!['bellatrix','capella'].includes(fork))throw Error('Unsupported consensus profile');
 if(!/^[a-z_][a-z0-9_-]*@[0-9.]+$/.test(target??'')||!(/^[0-9a-f]{40}$/).test(revision??'')||!outputArg)throw Error('Usage: run.mjs user@IPv4 core-revision fresh-output');
+const peerSyncing=process.env.NANO_TEST_PEER_SYNCING==='1';
+if(peerSyncing&&fork!=='capella')throw Error('Peer syncing qualification requires Capella');
 const monitor=process.env.NANO_TEST_FINALITY_MONITOR==='1';
 const alertDelivery=process.env.NANO_TEST_ALERT_DELIVERY==='1';
 const buildVolume=process.env.NANO_TEST_BUILD_VOLUME==='1';
@@ -136,7 +139,7 @@ try{
  if(rotation)await log({event:'rotation-audit-binary',sha256:createHash('sha256').update(await readFile(nativePaths.rotationAudit)).digest('hex')});
  const harness=await hashHarness(repo);
  if(monitor&&(fork!=='capella'||!privateTransport||partition||asymmetric||backupRestore||rotation||boundedLoad))throw Error('Monitor qualification requires standalone private Capella campaign');
- await log({event:'harness',monitor,alertDelivery,partition,asymmetric,rotation,boundedLoad,backupRestore,pinnedRestart,partitionCuts,majorityIsland,majorityCutMs,faultProgress,fork,buildVolume,buildPaths:buildVolume?hostBuildPaths:null,nativePaths,remoteRepository,buildArtifacts:buildVolume?buildArtifacts:null,packagedImages:Boolean(candidates),artifacts,sha256:harness});
+ await log({event:'harness',peerSyncing,monitor,alertDelivery,partition,asymmetric,rotation,boundedLoad,backupRestore,pinnedRestart,partitionCuts,majorityIsland,majorityCutMs,faultProgress,fork,buildVolume,buildPaths:buildVolume?hostBuildPaths:null,nativePaths,remoteRepository,buildArtifacts:buildVolume?buildArtifacts:null,packagedImages:Boolean(candidates),artifacts,sha256:harness});
  await log({event:'binaries',revision,nanoSha256:createHash('sha256').update(await readFile(binary)).digest('hex'),p2pSha256:createHash('sha256').update(await readFile(p2p)).digest('hex')});
  await exec(nativePaths.transitionTests[fork],[fork==='capella'?'--export-network':'--export-kurtosis',assets],{timeout:30000});
  const topology=[{name:'mac-native',host:'mac',mode:'native',rpcPort:18545,p2pPort:30305,p2pBinary:p2p,runtimeDirectory:join(prepared,'mac-native')},{name:'mac-docker',host:'mac',mode:'docker',rpcPort:8545,p2pPort:30303},{name:'vps-docker',host:target,mode:'docker',rpcPort:8545,p2pPort:30303}];
@@ -210,6 +213,7 @@ try{
   await delay(3000);
  }
  if(!ready)throw Error('Three-node startup/finality deadline exceeded');
+ if(peerSyncing)await capturePeerSyncing({request,record:log,phase:'startup'});
  const genesis=await rpc('native','eth_getBlockByNumber',['0x0',false]);
  const observers={revision,pinnedStateRoots:fork==='capella',settleRecoveryGaps:partition||asymmetric||backupRestore||pinnedRestart,genesisHash:genesis.hash,nodes:[{name:'mac-native',kind:'native',url:'http://127.0.0.1:18545'},{name:'mac-docker',kind:'docker',container:local,url:'http://127.0.0.1:8545'},{name:'vps-docker',kind:'ssh-docker',ssh:target,container:remote,url:'http://127.0.0.1:8545'}]};
  await writeFile(join(output,'observers.json'),JSON.stringify(observers,null,2));
@@ -359,6 +363,7 @@ try{
  },
  observe:()=>exec(process.execPath,['tests/multihost/observe.mjs',join(output,'observers.json'),join(output,'observations')],{timeout:480000,maxBuffer:8*1024*1024})});
  await log({event:'finality-passed'});
+ if(peerSyncing)await capturePeerSyncing({request,record:log,phase:'finalized'});
  if(monitorTask){await monitorTask.stop(true);monitorTask=undefined;}
  if(backupRestore){
   const stable=await json(join(output,'observations/result.json'));

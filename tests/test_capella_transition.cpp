@@ -8,6 +8,7 @@
 #include "nano/consensus_capella_store_snapshot.hpp"
 #include "nano/storage.hpp"
 #include <rocksdb/db.h>
+#include "support/rocksdb_fixture.hpp"
 #include "nano/consensus_capella_reactor.hpp"
 #include "nano/consensus_capella_duty.hpp"
 #include "nano/rpc.hpp"
@@ -373,7 +374,7 @@ static void local_finality_loop(const CapellaForkStore& initial,const CapellaFor
    if(!pruning_migration_helper.empty()){
     // Model the legacy on-disk schema on an already audited owned copy only.
     fs::rename(restored_node,restored/"chain");restored_node=restored/"chain";
-    rocksdb::Options options;options.create_if_missing=false;rocksdb::DB* raw=nullptr;check(rocksdb::DB::Open(options,restored_node.string(),&raw).ok(),"open owned legacy-format fixture");std::unique_ptr<rocksdb::DB> legacy(raw);rocksdb::WriteOptions write;write.sync=true;check(legacy->Put(write,"meta/schema","nano/1").ok(),"write owned legacy schema");legacy.reset();
+    rocksdb::Options options;options.create_if_missing=false;auto legacy=test::open_owned_fixture(options,restored_node.string());rocksdb::WriteOptions write;write.sync=true;check(legacy->Put(write,"meta/schema","nano/1").ok(),"write owned legacy schema");legacy.reset();
     bool refused=false;try{ChainStore disk(restored_node,ChainStore::OpenMode::ReadOnly);}catch(const std::runtime_error& error){refused=std::string(error.what()).find("legacy pruned database requires explicit migration")!=std::string::npos;}check(refused,"new reader accepted legacy pruned fixture before migration");
     std::ofstream marker(restored/".nano-owned-schema-migration-copy");marker<<"owned-offline-schema-migration-v1\n";marker.close();check(bool(marker),"migration marker write failed");
     const auto request=restored/"migration-request.json";save(request,Json{{"expectedCheckpoint",Json{{"sequence",quantity(Int(std::to_string(current.token.sequence)))},{"digest",hex(current.token.digest)}}},{"limits",Json{{"stateBytes",quantity(Int(std::to_string(limits.envelope_bytes)))}}}});

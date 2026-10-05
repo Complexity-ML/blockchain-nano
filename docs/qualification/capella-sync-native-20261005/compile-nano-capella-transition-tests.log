@@ -1,0 +1,48 @@
+In file included from /Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:3:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/altair_transition_rules.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_transition_rules.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_epoch_ssz.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_ffg_ssz.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_minimal_ssz.hpp:2:
+/Users/boris/Dev/blockchain-nano/tests/support/process.hpp:39:19: warning: 'posix_spawn_file_actions_addchdir_np' is deprecated: first deprecated in macOS 26.0 - posix_spawn_file_actions_addchdir(3) has replaced posix_spawn_file_actions_addchdir_np(3) [-Wdeprecated-declarations]
+   39 |   if(!cwd.empty())posix_spawn_file_actions_addchdir_np(&actions,cwd.c_str());
+      |                   ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/spawn.h:184:9: note: 'posix_spawn_file_actions_addchdir_np' has been explicitly marked deprecated here
+  184 | int     posix_spawn_file_actions_addchdir_np(posix_spawn_file_actions_t *,
+      |         ^
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:376:93: error: no matching function for call to 'Open'
+  376 |     rocksdb::Options options;options.create_if_missing=false;rocksdb::DB* raw=nullptr;check(rocksdb::DB::Open(options,restored_node.string(),&raw).ok(),"open owned legacy-format fixture");std::unique_ptr<rocksdb::DB> legacy(raw);rocksdb::WriteOptions write;write.sync=true;check(legacy->Put(write,"meta/schema","nano/1").ok(),"write owned legacy schema");legacy.reset();
+      |                                                                                             ^~~~~~~~~~~~~~~~~
+/opt/homebrew/include/rocksdb/db.h:167:17: note: candidate function not viable: no known conversion from 'rocksdb::DB **' to 'std::unique_ptr<DB> *' for 3rd argument
+  167 |   static Status Open(const Options& options, const std::string& name,
+      |                 ^
+  168 |                      std::unique_ptr<DB>* dbptr);
+      |                      ~~~~~~~~~~~~~~~~~~~~~~~~~~
+/opt/homebrew/include/rocksdb/db.h:184:17: note: candidate function not viable: requires 5 arguments, but 3 were provided
+  184 |   static Status Open(const DBOptions& db_options, const std::string& name,
+      |                 ^    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  185 |                      const std::vector<ColumnFamilyDescriptor>& column_families,
+      |                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  186 |                      std::vector<ColumnFamilyHandle*>* handles,
+      |                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  187 |                      std::unique_ptr<DB>* dbptr);
+      |                      ~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1176:38: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1176 |    if(!acquired){release.set_value();holder.get();check(false,"queue fixture did not hold real admission mutex");}
+      |                                      ^~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1179:101: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1179 |    if(clock_ready.wait_for(std::chrono::seconds(2))!=std::future_status::ready){release.set_value();holder.get();clock_waiter.get();check(false,"clock poll did not enter while admission held");}
+      |                                                                                                     ^~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1179:114: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1179 |    if(clock_ready.wait_for(std::chrono::seconds(2))!=std::future_status::ready){release.set_value();holder.get();clock_waiter.get();check(false,"clock poll did not enter while admission held");}
+      |                                                                                                                  ^~~~~~~~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1188:24: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1188 |    release.set_value();clock_waiter.get();const auto archive=holder.get();const auto status=blocked.get(),chain_id=identity.get(),read=beacon.get();
+      |                        ^~~~~~~~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1279:35: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1279 |   if(!locked){unblock.set_value();blocked_writer.get();check(false,"Admission lock fixture not reached");}
+      |                                   ^~~~~~~~~~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1291:36: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1291 |  if(!captured){release.set_value();reader.get();check(false,"Concurrent Beacon reader never captured publication");}
+      |                                    ^~~~~~~~~~
+7 warnings and 1 error generated.
