@@ -158,7 +158,23 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const 
   owner->validator->start(std::chrono::milliseconds(poll));
  }
  owner->clock->start(std::chrono::milliseconds(interval));
- return {owner->validator?std::shared_ptr<CapellaValidatorLoop>(owner,owner->validator.get()):nullptr,std::shared_ptr<CapellaDurableReactor>(owner,owner->reactor.get()),std::shared_ptr<CapellaLocalClock>(owner,owner->clock.get()),[owner](std::string_view path,const std::function<void()>& check){if(!owner->clock->healthy())throw std::runtime_error("Capella clock unavailable");return owner->reactor->beacon_read(path,check);},owner->admission?std::shared_ptr<CapellaConsensusService>(owner,owner->admission.get()):nullptr,owner->catalogs?std::shared_ptr<CapellaInventorySessions>(owner,owner->catalogs.get()):nullptr,std::move(network)};
+ auto sync_tracker=std::make_shared<BeaconSyncTracker>();
+ return {owner->validator?std::shared_ptr<CapellaValidatorLoop>(owner,owner->validator.get()):nullptr,std::shared_ptr<CapellaDurableReactor>(owner,owner->reactor.get()),std::shared_ptr<CapellaLocalClock>(owner,owner->clock.get()),[owner,rules,sync_tracker,now](std::string_view path,const std::function<void()>& check){
+  if(check)check();
+  if(!owner->clock->healthy())throw std::runtime_error("Capella clock unavailable");
+  if(path!="/eth/v1/node/syncing")return owner->reactor->beacon_read(path,check);
+  const auto observation=sync_tracker->current();
+  if(!observation||observation->peer_slots.empty())return BeaconReadResponse{503,{{"code",503},{"message","Beacon peer observation unavailable"}}};
+  const auto snapshot=owner->reactor->current();
+  const auto local_time=now(),genesis_time=snapshot.state->timed.clock.genesis_time_ms;
+  if(local_time<snapshot.state->timed.clock.time_ms||local_time<genesis_time)throw std::runtime_error("Beacon clock discontinuity");
+  const auto wall_slot=(local_time-genesis_time)/rules.slot_duration_ms;
+  const auto& head=capella_fork_head(*snapshot.state,rules,check);uint64_t target=head.header.slot;
+  if(target>wall_slot)throw std::runtime_error("Beacon head in future");
+  for(const auto slot:observation->peer_slots){if(slot>wall_slot)throw std::runtime_error("Beacon peer claims future slot");target=std::max(target,slot);}
+  if(check)check();
+  return BeaconReadResponse{200,{{"data",{{"head_slot",std::to_string(head.header.slot)},{"sync_distance",std::to_string(target-head.header.slot)},{"is_syncing",target>head.header.slot},{"is_optimistic",false},{"el_offline",false}}}}};
+ },owner->admission?std::shared_ptr<CapellaConsensusService>(owner,owner->admission.get()):nullptr,owner->catalogs?std::shared_ptr<CapellaInventorySessions>(owner,owner->catalogs.get()):nullptr,std::move(network),sync_tracker};
 }
 Json stop_capella_runtime(CapellaRuntime& runtime){
  if(!runtime.reactor||!runtime.clock)throw std::invalid_argument("Missing Capella runtime");

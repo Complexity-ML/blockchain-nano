@@ -49,7 +49,7 @@ int main(int argc,char** argv){try{
    const auto* secret=std::getenv("NANO_NETWORK_TOKEN");if(!secret)throw std::invalid_argument("Capella serve requires NANO_NETWORK_TOKEN");token=secret;const auto decoded=unhex(token);if(decoded.size()!=32||hex(decoded)!=token)throw std::invalid_argument("Capella private token must be canonical 32-byte hex");
    capella=std::make_shared<CapellaRuntime>(start_capella_runtime(chain,config.at("capella")));
   }
-  Rpc rpc(chain,token,AdmissionBudget::Clock::now,{}, {}, {},capella);rpc.load_wallets(config,bind);
+  Rpc rpc(chain,token,AdmissionBudget::Clock::now,{}, {}, {},capella);if(capella)rpc.set_beacon_sync_tracker(capella->sync_tracker);rpc.load_wallets(config,bind);
   {HttpServer server(rpc,bind,uint16_t(port),std::chrono::seconds(4),capella?capella->beacon_read:BeaconReadHandler{});std::cout<<"Nano JSON-RPC listening on "<<bind<<":"<<server.port()<<std::endl;server.run();}
   if(capella){auto receipt=stop_capella_runtime(*capella);receipt["event"]="capella-runtime-stopped";std::cout<<receipt.dump()<<std::endl;}
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "nano/chain.hpp"
 #include "nano/beacon_api.hpp"
+#include "nano/beacon_sync.hpp"
 #include "nano/consensus_capella_validator.hpp"
 class CapellaConsensusService;
 class CapellaInventorySessions;
@@ -15,6 +16,7 @@ struct CapellaRuntime {
  std::shared_ptr<::CapellaConsensusService> admission;
  std::shared_ptr<::CapellaInventorySessions> catalogs;
  Json network=Json::object();
+ std::shared_ptr<BeaconSyncTracker> sync_tracker;
 };
 // Locally authenticated profile + initial snapshot, exact restart token, or
 // explicitly trusted recovery witness. automaticRecovery opts into bootstrap

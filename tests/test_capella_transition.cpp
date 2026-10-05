@@ -1095,6 +1095,30 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
   config["validator"]["keys"].push_back({{"index",nullptr},{"feeRecipient",genesis.header.coinbase},{"keyEnv",name},{"journal",(directory/"pending-key").string()},{"restart",nullptr},{"recoveryWitness",(directory/"pending-witness").string()}});
  }
  auto runtime=start_capella_runtime(*owner,config,{},wall);check(bool(runtime.validator)&&runtime.clock->healthy()&&runtime.admission&&runtime.catalogs,"configured runtime unavailable");const auto runtime_identity=runtime.reactor->network_identity();if(automatic_registration)runtime.validator->set_duty_trace_limit(4);
+ // Peer observations describe monitoring only; they must never mutate consensus.
+ runtime.validator->stop();runtime.clock->stop();
+ const auto sync_before=runtime.reactor->current();const auto sync_time=now.load();
+ check(runtime.beacon_read("/eth/v1/node/syncing",{}).status==503,"Capella missing peers declared synced");
+ Rpc sync_rpc(*owner,"capella-sync-test");sync_rpc.set_beacon_sync_tracker(runtime.sync_tracker);
+ auto report_sync=[&](Json slot,std::string token="capella-sync-test"){
+  return sync_rpc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method","nano_networkReport"},{"params",Json::array({token,Json{{"peerId","self"},{"addresses",Json::array()},{"peers",Json::array({Json{{"peerId","peer"},{"bestBlock",uint64_t(999999)},{"beaconHeadSlot",slot}}})}}})}});
+ };
+ const auto head_slot=capella_fork_head(*sync_before.state,rules).header.slot;
+ check(report_sync(head_slot,"wrong-token").contains("error")&&runtime.beacon_read("/eth/v1/node/syncing",{}).status==503,"Capella unauthorized sync observation");
+ check(report_sync(head_slot).value("result",false),"Capella peer report rejected");
+ auto sync=runtime.beacon_read("/eth/v1/node/syncing",{});
+ check(sync.status==200&&sync.body.at("data")==Json{{"head_slot",std::to_string(head_slot)},{"sync_distance","0"},{"is_syncing",false},{"is_optimistic",false},{"el_offline",false}},"Capella sync projection");
+ now=sync_time+2*rules.slot_duration_ms;check(report_sync(head_slot+2).value("result",false),"Capella ahead report rejected");
+ sync=runtime.beacon_read("/eth/v1/node/syncing",{});check(sync.body.at("data").at("sync_distance")=="2"&&sync.body.at("data").at("is_syncing")==true,"Capella lag concealed");
+ check(report_sync("0xffff").contains("error"),"Capella malformed peer slot accepted");
+ check(report_sync(UINT64_MAX).value("result",false),"Capella future fixture rejected at wrong layer");
+ bool future_refused=false;try{runtime.beacon_read("/eth/v1/node/syncing",{});}catch(const std::runtime_error&){future_refused=true;}check(future_refused,"Capella future peer claimed synced");
+ runtime.sync_tracker->report({head_slot});check(sync_before.state->timed.clock.time_ms>0,"Capella clock regression fixture lacks positive time");now=sync_before.state->timed.clock.time_ms-1;
+ bool clock_refused=false;try{runtime.beacon_read("/eth/v1/node/syncing",{});}catch(const std::runtime_error&){clock_refused=true;}check(clock_refused,"Capella backwards wall clock accepted");
+ now=sync_time;bool sync_cancelled=false;try{runtime.beacon_read("/eth/v1/node/syncing",[]{throw std::runtime_error("cancel");});}catch(const std::runtime_error&){sync_cancelled=true;}check(sync_cancelled,"Capella sync cancellation ignored");
+ runtime.sync_tracker->report({});check(runtime.beacon_read("/eth/v1/node/syncing",{}).status==503,"Capella isolated node declared synced");
+ check(runtime.reactor->current().token==sync_before.token,"Capella peer observation changed checkpoint");
+ stop_capella_runtime(runtime);runtime={};runtime=start_capella_runtime(*owner,config,{},wall);if(automatic_registration)runtime.validator->set_duty_trace_limit(4);
  std::optional<ForkCheckpointToken> stale_token;uint64_t stale_time=0;
  const auto secret=bytes(Int(777),32);Transaction tx;tx.type=2;tx.to="0x0000000000000000000000000000000000001234";tx.gas=100000;tx.max_fee=2000000000;tx.priority_fee=100000000;const auto sender=SignedTransaction::sign(tx,secret).sender();uint64_t proposals=0;
  for(uint64_t slot=2;slot<=2*slots+1;++slot){
