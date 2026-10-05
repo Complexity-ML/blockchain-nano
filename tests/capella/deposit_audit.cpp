@@ -52,9 +52,10 @@ int main(int argc,char** argv){try{
  ConsensusRoot withdrawal{};withdrawal[0]=1;withdrawal[31]=44;require(member.withdrawal_credentials==withdrawal,"finalized withdrawal credentials mismatch");
  const auto cutoff=number(request.at("restartCutoffSlot"));
  const auto before=root(request.at("proposalBefore").at("root")),after=root(request.at("proposalAfter").at("root"));require(before!=after,"distinct proposals required");
+ const auto archive_blocks=number(request.at("maximumBlocks"));require(archive_blocks>0&&archive_blocks<=1024,"deposit archive block budget");
  size_t included=0,registered=0,executed=0;bool before_verified=false,after_verified=false;ConsensusRoot tip=selected;std::vector<std::pair<ConsensusRoot,Bytes>> reverse;
  while(tip!=seed.timed.view.anchor){
-  require(reverse.size()<limits.blocks,"deposit ancestry budget");const auto archive=disk.checkpoint_archive(Bytes(tip.begin(),tip.end()),limits.envelope_bytes);require(bool(archive),"canonical signed deposit archive missing");const auto message=beacon_block_json(archive->payload,rules,{}).at("message");reverse.push_back({tip,archive->payload});tip=root(message.at("parent_root"));
+  require(reverse.size()<archive_blocks,"deposit ancestry budget");const auto archive=disk.checkpoint_archive(Bytes(tip.begin(),tip.end()),limits.envelope_bytes);require(bool(archive),"canonical signed deposit archive missing");const auto message=beacon_block_json(archive->payload,rules,{}).at("message");reverse.push_back({tip,archive->payload});tip=root(message.at("parent_root"));
  }
  std::reverse(reverse.begin(),reverse.end());auto replay=seed;Json registration;
  for(const auto& [id,wire]:reverse){
