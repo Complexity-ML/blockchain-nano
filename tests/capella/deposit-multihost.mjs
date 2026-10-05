@@ -106,7 +106,7 @@ try{
   const rows=[];for(let n=0;n<2;n++){
    const stateCheckpoint=(await request(n,'/eth/v1/beacon/states/head/finality_checkpoints')).data.finalized,h=(await request(n,'/eth/v1/beacon/headers/head')).data;
    let cp=stateCheckpoint;
-   if(BigInt(stateCheckpoint.epoch)>0n){
+   if(BigInt(stateCheckpoint.epoch)>0n||epochs[n]>0n){
     const first=await request(n,'/eth/v1/beacon/headers/finalized');
     const observation=durableFinalityObservation(stateCheckpoint,first,roots,epochs[n]);
     const second=await request(n,'/eth/v1/beacon/headers/finalized');
