@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {monotonicClockConfiguration} from './local-clock.mjs';
 import {capturePeerSyncing} from './peer-syncing.mjs';
 import {pruningRestoreMode,pruningRestoreConfiguration,verifyPrunedRestoreAudit,validateBackupRestoreMode} from './pruning-restore.mjs';
 // Authorized isolated devnet only; code is deployed through Git, not this script.
@@ -147,6 +148,13 @@ try{
  await exec(process.execPath,['tests/multihost/prepare.mjs',assets,prepared,join(output,'topology.json')]);
  if(historicalPruning)for(const name of ['mac-native','mac-docker','vps-docker']){const path=join(prepared,name,'node.json');await writeFile(path,JSON.stringify(pruningRestoreConfiguration(await json(path),true),null,2));}
  await log({event:'historical-state-pruning-mode',enabled:historicalPruning});
+ if(process.env.NANO_TEST_WALL_CLOCK_DRIFT_MS!==undefined){
+  for(const name of ['mac-native','mac-docker','vps-docker']){
+   const path=join(prepared,name,'node.json');
+   await writeFile(path,JSON.stringify(monotonicClockConfiguration(await json(path),process.env.NANO_TEST_WALL_CLOCK_DRIFT_MS,await json(join(prepared,name,'profile.json'))),null,2));
+  }
+  await log({event:'monotonic-local-clock-mode',maximumWallClockDriftMs:process.env.NANO_TEST_WALL_CLOCK_DRIFT_MS,peerTimeAuthority:false});
+ }
  if(buildVolume)for(const name of ['mac-docker','vps-docker']){const path=join(prepared,name,'node.json'),c=await json(path);c.p2p_binary=hostBuildPaths[name==='vps-docker'?'amd64':'arm64'].p2p;await writeFile(path,JSON.stringify(c));}
  await sh(['mkdir',remoteRoot]);
  // Only newly generated PUBLIC fixtures cross SSH; software arrived via Git.
