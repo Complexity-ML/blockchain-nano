@@ -1445,7 +1445,7 @@ static void slot_continuation_loop(const CapellaForkStore& initial,const Capella
  CapellaSlotPreparation at_parent(original,parent.header,epoch,limits);check(!at_parent.proposer_identity(t.consensus.attestation.duties),"prepared parent itself produced a new proposal identity");++passed;
  std::cout<<Json{{"scenario","capella-authenticated-slot-continuation"},{"scenarios",passed},{"crossedHistoryWindows",2},{"canonicalOracleEqual",true},{"parentPreserved",true},{"runtimeIntegrated",false},{"networkQualified",false}}.dump()<<std::endl;
 }
-static void prepared_block_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules){
+static void prepared_block_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules,const Block& genesis,const State& genesis_state){
  const auto& parent=capella_fork_head(initial,rules);const auto& r=rules.transition;const auto& l=r.consensus.state;
  const CapellaEpochRules epoch_rules{r.consensus.epoch,r.execution,r.maximum_state_bytes};const auto slots=r.consensus.epoch.ffg.slots_per_epoch;
  const size_t hist=176+64*l.slots_per_historical_root,randao=hist+96,field=randao+32*l.epochs_per_historical_vector+8*l.epochs_per_slashings_vector+229+96*l.sync_committee_size;
@@ -1484,8 +1484,27 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
   refused=false;try{preparation.construct(slot+1,identity->index,body,parent.execution_block.header,parent.execution_state,history,100000);}catch(const std::invalid_argument&){refused=true;}check(refused,"unfinished next block constructed");++checks;
   refused=false;try{preparation.receive(wire,parent.execution_block.header,parent.execution_state,history,100000,[]{throw ExecutionCancelled("cancel prepared receive");});}catch(const ExecutionCancelled&){refused=true;}check(refused,"prepared receive cancellation swallowed");++checks;
   check(preparation.prepared_state()==before&&parent.state==original,"block preparation or transition mutated its source");++checks;
+  const auto clock=initial.timed.clock.genesis_time_ms+slot*rules.slot_duration_ms;
+  const auto timed=prepare_capella_store_tick(initial,clock,rules,3,100000);
+  const auto admitted=prepare_capella_prepared_received_block(timed,wire,rules,preparation,3,100000);
+  const auto admitted_oracle=prepare_capella_received_block(timed,wire,rules,slot-parent.header.slot,100000);
+  check(admitted&&admitted_oracle&&capella_store_snapshot(*admitted,rules,crash_limits)==capella_store_snapshot(*admitted_oracle,rules,crash_limits),"prepared Store admission differs from ordinary fork-choice/operation processing");++checks;
+  auto incompatible=r;incompatible.chain_id+=1;CapellaBlockPreparation wrong_profile(original,parent.header,incompatible);while(!wrong_profile.advance_for_block(slot,3,100000)){}
+  refused=false;try{prepare_capella_prepared_received_block(timed,wire,rules,wrong_profile,3,100000);}catch(const std::invalid_argument&){refused=true;}check(refused,"prepared Store admitted a frame from another transition profile");++checks;
+  Temp directory;Genesis g;g.chain_id=r.chain_id;g.consensus="beacon";g.evm_revision=EvmRevision::Shanghai;g.block=genesis;g.state=genesis_state;
+  Blockchain owner(directory/"owner",g);ChainStore witness(directory/"witness");auto reactor=std::make_unique<CapellaDurableReactor>(owner,rules,crash_limits,initial,std::function<void()>{},&witness);reactor->tick(clock);
+  const auto token=reactor->current().token;InboundBudget budget;CapellaConsensusService service(*reactor,budget,2*r.consensus.maximum_block_bytes+8192,r.consensus.maximum_block_bytes,4096,4096,4,2*r.consensus.maximum_block_bytes+8192);
+  auto envelope=reactor->network_identity();envelope["kind"]="block";envelope["ssz"]=hex(wire);
+  const auto maximum_attempts=(slot-1-parent.header.slot+slots-1)/slots+1;size_t attempts=0;bool accepted=false;
+  while(!accepted&&attempts<maximum_attempts){++attempts;auto promise=std::make_shared<std::promise<CapellaConsensusService::Decision>>();auto future=promise->get_future();check(service.submit(envelope.dump(),std::make_shared<std::atomic<bool>>(false),[promise](auto decision){promise->set_value(decision);}),"prepared block worker queue refused job");check(future.wait_for(std::chrono::seconds(10))==std::future_status::ready,"prepared block worker did not finish bounded job");const auto decision=future.get();check(decision!=CapellaConsensusService::Decision::local_failure,"prepared worker hit historical replay budget or another local failure");accepted=decision==CapellaConsensusService::Decision::accepted;if(!accepted)check(reactor->current().token==token&&owner.tip().header.hash()==parent.execution_block.header.hash(),"unfinished incoming preparation published durable state");}
+  service.stop();service.join();check(accepted&&attempts>1&&attempts<=maximum_attempts,"prepared worker did not admit after bounded retries");++checks;
+  const auto committed=reactor->current();check(committed.token.sequence==token.sequence+1&&capella_store_snapshot(*committed.state,rules,crash_limits)==capella_store_snapshot(*admitted_oracle,rules,crash_limits)&&owner.tip().header.hash()==execution.header.hash()&&owner.state().root()==expected.root(),"prepared worker published incorrect core/execution checkpoint");++checks;
+  check(reactor->signed_block(consensus_beacon_header_root(capella_fork_head(*committed.state,rules).header))==std::optional<Bytes>(wire),"prepared worker did not archive authenticated signed bytes");++checks;
+  reactor.reset();CapellaDurableReactor reopened(owner,rules,crash_limits,witness);check(reopened.current().token==committed.token&&capella_store_snapshot(*reopened.current().state,rules,crash_limits)==capella_store_snapshot(*committed.state,rules,crash_limits),"prepared worker witness restart changed checkpoint");++checks;
+  check(reopened.block(wire)&&reopened.current().token==committed.token,"prepared worker duplicate admission rewrote checkpoint");++checks;
+
  }
- std::cout<<Json{{"scenario","capella-prepared-block-transition"},{"checks",checks},{"variants",2},{"signedBlsBlocks",2},{"type2Transactions",2},{"epochBoundaryFinalSlot",true},{"fullGapOracleEqual",true},{"runtimeIntegrated",false},{"networkQualified",false}}.dump()<<std::endl;
+ std::cout<<Json{{"scenario","capella-prepared-block-transition"},{"workerIntegration",true},{"boundedRetryHarness",true},{"witnessedPublication",true},{"checks",checks},{"variants",2},{"signedBlsBlocks",2},{"type2Transactions",2},{"epochBoundaryFinalSlot",true},{"fullGapOracleEqual",true},{"runtimeIntegrated",false},{"networkQualified",false}}.dump()<<std::endl;
 }
 static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigned participation=100){
  const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-bellatrix-containers-official",source=fixtures/"consensus-capella-slots-official";
@@ -1934,7 +1953,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
     }
    }
   }
-  if(slot==first_slot){short_snapshot=capella_store_snapshot(*store,store_rules,snapshot_limits);if(prepared_block){prepared_block_loop(*store,store_rules);return;}if(slot_continuation){slot_continuation_loop(*store,store_rules);return;}if(signer_health){signer_health_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(duty_timing){duty_timing_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(clock_diagnostics){clock_diagnostics_loop(*store,store_rules,disk_genesis,disk_genesis_state);startup_catchup_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(deposit_reorg){deposit_reorg_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(configured_runtime){runtime_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(scheduled){scheduler_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}
+  if(slot==first_slot){short_snapshot=capella_store_snapshot(*store,store_rules,snapshot_limits);if(prepared_block){prepared_block_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(slot_continuation){slot_continuation_loop(*store,store_rules);return;}if(signer_health){signer_health_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(duty_timing){duty_timing_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(clock_diagnostics){clock_diagnostics_loop(*store,store_rules,disk_genesis,disk_genesis_state);startup_catchup_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(deposit_reorg){deposit_reorg_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(configured_runtime){runtime_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(scheduled){scheduler_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}
   if(local_finality){local_finality_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}}
   ++contexts;
   beacon=received->consensus;state=received->execution.state;parent=received->execution.block;hashes[parent.header.number]=parent.header.hash();++accepted;

@@ -51,6 +51,7 @@ class CapellaBlockPreparation {
 public:
  CapellaBlockPreparation(const CapellaSlotState&,const ConsensusBeaconHeader&,
   const CapellaTransitionRules&,const std::function<void()>& checkpoint={});
+ const CapellaTransitionRules& transition_rules()const{return rules_;}
  const ConsensusBeaconHeader& parent()const{return slots_.parent();}
  const CapellaSlotState& prepared_state()const{return slots_.state();}
  uint64_t prepared_slot()const{return slots_.slot();}

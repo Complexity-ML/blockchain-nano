@@ -360,7 +360,28 @@ bool CapellaDurableReactor::block(std::span<const uint8_t> wire,const std::funct
   const auto id=consensus_beacon_header_root(header);
   if(!state_->blocks.contains(id)){const auto prior=signed_block_locked(id,check);return prior&&std::equal(wire.begin(),wire.end(),prior->begin(),prior->end());}
  }
- auto next=prepare_capella_received_block(*state_,wire,rules_,limits_.replay_slots,limits_.sync_trials,check);if(!next)return false;
+ std::optional<CapellaForkStore> next;
+ if(wire.size()<404||wire.size()>rules_.transition.consensus.maximum_block_bytes)return false;
+ std::exception_ptr interrupted;auto guard=[&]{try{if(check)check();}catch(...){interrupted=std::current_exception();throw;}};
+ ConsensusBeaconHeader header;
+ try{header=archived_header(wire,rules_,guard);}catch(const std::invalid_argument&){if(interrupted)std::rethrow_exception(interrupted);return false;}
+ const auto id=consensus_beacon_header_root(header);
+ if(state_->blocks.contains(id))next=prepare_capella_received_block(*state_,wire,rules_,limits_.replay_slots,limits_.sync_trials,check);
+ else {
+  const auto& view=state_->timed.view;const auto& clock=state_->timed.clock;
+  const auto slots=rules_.transition.consensus.epoch.ffg.slots_per_epoch;
+  if(!slots||!limits_.replay_slots||!rules_.slot_duration_ms||clock.time_ms<clock.genesis_time_ms||view.finalized.epoch>UINT64_MAX/slots)throw std::invalid_argument("Invalid incoming Capella preparation bounds");
+  if(!state_->blocks.contains(header.parent_root)||!view.nodes.contains(header.parent_root)||header.slot>(clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms||header.slot<=view.finalized.epoch*slots)return false;
+  const auto& parent=state_->blocks.at(header.parent_root);if(header.slot<=parent.header.slot)return false;
+  auto ancestor=header.parent_root;const auto finalized_slot=view.finalized.epoch*slots;
+  while(view.nodes.at(ancestor).slot>finalized_slot&&ancestor!=view.anchor){if(check)check();const auto& node=view.nodes.at(ancestor);if(view.nodes.at(node.parent).slot>=node.slot)throw std::invalid_argument("Invalid incoming Capella ancestry");ancestor=node.parent;}
+  if(ancestor!=view.finalized.root)return false;
+  if(!incoming_preparation_||incoming_preparation_->parent()!=parent.header||incoming_preparation_->prepared_slot()>header.slot-1)
+   incoming_preparation_.emplace(parent.state,parent.header,rules_.transition,check);
+  if(!incoming_preparation_->advance_for_block(header.slot,std::min(limits_.replay_slots,slots),limits_.sync_trials,check))return false;
+  next=prepare_capella_prepared_received_block(*state_,wire,rules_,*incoming_preparation_,limits_.replay_slots,limits_.sync_trials,check);
+ }
+ if(!next)return false;
  std::vector<CheckpointArchiveEntry> archive;
  if(next->blocks.size()!=state_->blocks.size()){
   if(next->blocks.size()!=state_->blocks.size()+1)throw std::logic_error("Capella admission changed multiple blocks");

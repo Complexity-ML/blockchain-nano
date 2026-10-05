@@ -48,6 +48,13 @@ std::optional<CapellaForkStore> prepare_capella_fork_block(const CapellaForkStor
 std::optional<CapellaForkStore> prepare_capella_received_block(const CapellaForkStore&,
  std::span<const uint8_t> signed_block,const CapellaForkBlockRules&,uint64_t maximum_slots,
  uint64_t maximum_sync_trials,const std::function<void()>& checkpoint={});
+// Same Store admission/publication candidate semantics using a prepared parent.
+// Full profile and admitted parent must match; included-vote processing remains
+// bounded by maximum_slots. No unverified state or peer checkpoint is installed.
+std::optional<CapellaForkStore> prepare_capella_prepared_received_block(
+ const CapellaForkStore&,std::span<const uint8_t>,const CapellaForkBlockRules&,
+ const CapellaBlockPreparation&,uint64_t maximum_slots,uint64_t maximum_sync_trials,
+ const std::function<void()>& checkpoint={});
 // Store-bound gossip admission; the sender cannot supply committee/context or
 // bypass the gossip time window with an "already included" flag.
 std::optional<CapellaForkStore> prepare_capella_store_vote(const CapellaForkStore&,

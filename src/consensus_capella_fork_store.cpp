@@ -1,4 +1,5 @@
 #include "nano/consensus_capella_fork_store.hpp"
+#include "nano/consensus_capella_store_snapshot.hpp"
 #include "consensus_capella_projection.hpp"
 #include "nano/consensus_capella_deposits.hpp"
 #include <exception>
@@ -46,9 +47,9 @@ ConsensusRoot ancestor(const Phase0ForkChoiceView& v,ConsensusRoot r,uint64_t sl
  for(;;){if(checkpoint)checkpoint();const auto& n=v.nodes.at(r);if(n.slot<=slot||r==v.anchor)return r;const auto& p=v.nodes.at(n.parent);if(p.slot>=n.slot)throw std::invalid_argument("invalid fork parent slots");r=n.parent;}
 }
 }
-std::optional<CapellaForkStore> prepare_capella_fork_block(const CapellaForkStore& input,
+static std::optional<CapellaForkStore> prepare_fork_block_impl(const CapellaForkStore& input,
  std::span<const uint8_t> bytes,const CapellaForkBlockRules& rules,uint64_t maximum_slots,uint64_t maximum_sync_trials,
- const std::function<void()>& checkpoint){
+ const std::function<void()>& checkpoint,const CapellaBlockPreparation* prepared){
  validate_rules(rules);const auto& t=rules.transition.consensus;const auto slots=t.epoch.history.slots_per_epoch;
  const auto& clock=input.timed.clock;const auto& view=input.timed.view;
  if(!slots||!rules.slot_duration_ms||rules.attestation_due_ms>rules.slot_duration_ms||clock.time_ms<clock.genesis_time_ms||view.finalized.epoch>UINT64_MAX/slots)
@@ -69,7 +70,12 @@ std::optional<CapellaForkStore> prepare_capella_fork_block(const CapellaForkStor
   throw std::invalid_argument("fork parent state binding mismatch");
  validate_execution(parent,rules,checkpoint);
  auto history=[&](const Int& height){return branch_hash(input,h.parent_root,height,checkpoint);};
- auto post=prepare_capella_state_transition(parent.state,bytes,rules.transition,parent.execution_block.header,parent.execution_state,history,maximum_slots,maximum_sync_trials,checkpoint);if(!post)return std::nullopt;
+ if(prepared){
+  auto profile=rules;profile.transition=prepared->transition_rules();
+  if(prepared->parent()!=parent.header||capella_fork_profile(profile)!=capella_fork_profile(rules))
+   throw std::invalid_argument("Capella prepared block parent/profile mismatch");
+ }
+ auto post=prepared?prepared->receive(bytes,parent.execution_block.header,parent.execution_state,history,maximum_sync_trials,checkpoint):prepare_capella_state_transition(parent.state,bytes,rules.transition,parent.execution_block.header,parent.execution_state,history,maximum_slots,maximum_sync_trials,checkpoint);if(!post)return std::nullopt;
  const auto head=phase0_fork_choice_head(view,{slots,t.attestation.duties.effective_balance_increment,rules.proposer_score_boost},checkpoint).head;
  const auto ffg=capella_fork_checkpoints(post->consensus,epoch_rules(rules),t.state,checkpoint);
  auto out=input;auto& v=out.timed.view;auto& c=out.timed.clock;
@@ -103,6 +109,12 @@ std::optional<CapellaForkStore> prepare_capella_fork_block(const CapellaForkStor
  if(h.slot/slots<v.current_epoch)update(ffg.unrealized);
  if(checkpoint)checkpoint();return out;
 }
+std::optional<CapellaForkStore> prepare_capella_fork_block(const CapellaForkStore& input,
+ std::span<const uint8_t> bytes,const CapellaForkBlockRules& rules,uint64_t maximum_slots,
+ uint64_t trials,const std::function<void()>& checkpoint){
+ return prepare_fork_block_impl(input,bytes,rules,maximum_slots,trials,checkpoint,nullptr);
+}
+
 }
 
 namespace nano {
@@ -181,10 +193,10 @@ ConsensusAttestationData embedded_data(View b){return {number(b,4),number(b,12),
 IndexedConsensusAttestation embedded_indexed(View b){IndexedConsensusAttestation a{embedded_data(b),{},Bytes(b.begin()+132,b.begin()+228)};for(size_t i=228;i<b.size();i+=8)a.indices.push_back(number(b,i));return a;}
 std::vector<View> embedded_list(View b){std::vector<View> list;if(b.empty())return list;const auto count=number(b,0,4)/4;for(size_t i=0;i<count;++i){const auto start=number(b,4*i,4),end=i+1==count?b.size():number(b,4*(i+1),4);list.push_back(b.subspan(start,end-start));}return list;}
 }
-std::optional<CapellaForkStore> prepare_capella_received_block(const CapellaForkStore& input,
+static std::optional<CapellaForkStore> prepare_received_block_impl(const CapellaForkStore& input,
  View bytes,const CapellaForkBlockRules& rules,uint64_t maximum_slots,uint64_t maximum_sync_trials,
- const std::function<void()>& checkpoint){
- auto out=prepare_capella_fork_block(input,bytes,rules,maximum_slots,maximum_sync_trials,checkpoint);if(!out)return std::nullopt;
+ const std::function<void()>& checkpoint,const CapellaBlockPreparation* prepared){
+ auto out=prepare_fork_block_impl(input,bytes,rules,maximum_slots,maximum_sync_trials,checkpoint,prepared);if(!out)return std::nullopt;
  const auto body=bytes.subspan(184);const auto attesters=number(body,204,4),attestations=number(body,208,4),deposits=number(body,212,4);
  const auto slots=rules.transition.consensus.epoch.ffg.slots_per_epoch;
  const auto current_slot=(out->timed.clock.time_ms-out->timed.clock.genesis_time_ms)/rules.slot_duration_ms;
@@ -205,6 +217,17 @@ std::optional<CapellaForkStore> prepare_capella_received_block(const CapellaFork
  }
  if(checkpoint)checkpoint();return out;
 }
+std::optional<CapellaForkStore> prepare_capella_received_block(const CapellaForkStore& input,
+ View bytes,const CapellaForkBlockRules& rules,uint64_t maximum_slots,uint64_t trials,
+ const std::function<void()>& checkpoint){
+ return prepare_received_block_impl(input,bytes,rules,maximum_slots,trials,checkpoint,nullptr);
+}
+std::optional<CapellaForkStore> prepare_capella_prepared_received_block(const CapellaForkStore& input,
+ View bytes,const CapellaForkBlockRules& rules,const CapellaBlockPreparation& prepared,
+ uint64_t maximum_slots,uint64_t trials,const std::function<void()>& checkpoint){
+ return prepare_received_block_impl(input,bytes,rules,maximum_slots,trials,checkpoint,&prepared);
+}
+
 }
 
 namespace nano {

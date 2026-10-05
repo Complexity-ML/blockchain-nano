@@ -39,6 +39,10 @@ class CapellaDurableReactor {
  std::optional<Bytes> beacon_signed_block(const CapellaPublishedStore&,const ConsensusRoot&,const std::function<void()>&)const;
  CapellaSignedVotes votes_,slashings_;CapellaPendingBlsChanges bls_changes_;CapellaPendingExits exits_;CapellaStoreSnapshotCache cache_;bool unavailable_=false;bool automatic_pruning_=false;bool historical_state_pruning_=false;
  std::exception_ptr failure_;
+ // One ephemeral incoming-block continuation, owned under mutex_. Authenticated
+ // parent/profile, no peer-supplied state, no journal or durable writes while
+ // incomplete. Each retry advances at most one epoch within replay_slots.
+ std::optional<CapellaBlockPreparation> incoming_preparation_;
  // Only populated from this reactor's immutable, admitted head under mutex_.
  // Single-entry cache: no retained state snapshots or old-branch registry maps.
  struct ValidatorIndexCache {ConsensusRoot root;std::set<Bytes> keys;std::map<Bytes,uint64_t> indices;};
