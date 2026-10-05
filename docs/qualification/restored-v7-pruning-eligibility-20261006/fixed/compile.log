@@ -1,0 +1,4 @@
+/diagnostic/pruning_eligibility.cpp:70:160: error: use of undeclared identifier 'decode_consensus_attestation_ssz'
+   70 |  size_t pending_votes=0,required_outside=0;if(document.contains("signedVotes"))for(const auto& row:document.at("signedVotes")){++pending_votes;const auto vote=decode_consensus_attestation_ssz(unhex(row.at(1)),rules.transition.consensus.body.validators_per_committee);need(bool(vote),"diagnostic signed vote decode");auto root_text=[](const ConsensusRoot& r){return hex(Bytes(r.begin(),r.end()));};if(!retained.contains(root_text(vote->data.target.root))||!retained.contains(root_text(vote->data.beacon_block_root)))++required_outside;}
+      |                                                                                                                                                                ^
+1 error generated.

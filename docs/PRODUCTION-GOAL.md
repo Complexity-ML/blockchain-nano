@@ -4280,3 +4280,16 @@ La course est qualifiée dans ce périmètre ; libération de capacité, autres 
 I/O à ce point, contention et finalité WAN restent ouverts. Aucun rebuild d’image ;
 CMake frais et build intégral reproductible non qualifiés. v7 reste FAILED.
 [Preuves et limites](qualification/capella-atomic-proposal-admission-20261006/README.md).
+
+## Éligibilité d’élagage du VPS v7 arrêté — 6 octobre 2026
+
+Diagnostic structural engagé : ancre déjà égale à la finalité epoch 1284,
+256/256 blocs tous descendants, zéro bloc supprimable par la frontière actuelle.
+SSZ 7 956 128/67 108 864 octets, snapshot 21 914 821/134 217 728 octets ;
+la borne en nombre de blocs est atteinte avant ces deux bornes d’octets.
+1393 fichiers inchangés ; lecture seule sans suppression, signer ni reprise.
+Deux échecs de build diagnostique conservés puis version corrigée sortie 0.
+Ce résultat interdit de qualifier un simple prune comme récupération : rétention
+sous pression et nouvelle finalité doivent encore être démontrées. Pas d’estimation
+de RAM ni de qualification d’un profil agrandi. v7 et production restent ouverts.
+[Preuves et limites](qualification/restored-v7-pruning-eligibility-20261006/README.md).
