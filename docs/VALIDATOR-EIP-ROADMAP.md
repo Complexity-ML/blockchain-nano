@@ -7416,3 +7416,10 @@ Preuves : `docs/qualification/native-deposit-pinned-resume-terminal-20261005/`. 
 
 
 2026-10-05, CI 37265527065 sur `c95ba02325583d3095cf2a025d3a51b06640a434` terminale avec succès : core et operations réussis, network skipped. Preuve terminale conservée dans le bundle de reprise épinglée. Cette CI complète les contrôles ciblés des outils ; la campagne WAN et les audits ont leurs preuves séparées et ne découlent pas du job network absent.
+
+
+### 2026-10-05 — Sanction du membre admis : préparation authentifiée
+
+Le générateur privé `slashing_fixture.cpp` accepte désormais `--generate-admitted` pour le membre synthétique 64 depuis la base arrêtée de la reprise qualifiée. Il vérifie ancre externe, rejeu canonique, token externe et témoin indépendant du cœur, registre exact de 65 clés publiques connues, activation et absence de sanction préalable. Aucune écriture dans les bases sources ; profils publics refusés. Le contexte de preuve est celui du checkpoint justifié, conformément à l’admission runtime ; le premier refus `invalid fork slashing context` (outil utilisant à tort la tête) est conservé.
+
+Compilation/link natifs isolés réussis, six artefacts runtime inchangés. Génération positive pour le membre 64 ; quatre cas de signatures/index malformés refusés localement. Token externe falsifié : génération refusée sans fichier de preuve. Le mode historique du membre 0 génère exactement la même preuve et refuse toujours d’écraser un résultat existant. Preuves : `docs/qualification/admitted-validator-slashing-preparation-20261005/`. L’AMD64 courant, l’injection/propagation/inclusion WAN, la pénalité et la sortie/restitution du membre nouvellement admis restent à qualifier. Aucun nouveau résultat de production.
