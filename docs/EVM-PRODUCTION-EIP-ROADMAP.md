@@ -4451,3 +4451,6 @@ Auditeur de sanction AMD64 courant : contrôle positif historique du membre 0 te
 
 
 2026-10-05, contextes issus de la continuation : projections lecture seule du proposant (index/clé/domaine) et du contexte cible d’attestation à frontière exacte, racine du parent authentifiée et overflow refusé. Docker ARM64 : premier test compile FAILED (nom de champ incorrect), diagnostic conservé ; cœur réutilisé après correction, 19 scénarios PASSED et régression runtime 64 clés/16 blocs PASSED, sortie 0 sans OOM. Preuves prepared-duty-contexts-20261005/. Calcul historique du proposant refactorisé sans lever son budget. Raccordement scheduler/reactor/blocs/votes, AMD64 et reprise réelle longue interruption/finalité restent ouverts ; aucune signature nouvelle ni critère production fermé.
+
+
+2026-10-05, contextes préparés 2102a625 : Docker AMD64/VPS terminal 0 sans OOM, 19 scénarios PASSED et régression runtime existant 64 clés/16 blocs/reprise témoins PASSED comme ARM64. Sources concordantes vérifiées, parents inchangés, VPS reçu par Git pull. Preuves prepared-duty-contexts-20261005/amd64/. Projections pures qualifiées ; raccordement scheduler/reactor/construction-admission blocs-votes, reprise froide et finalité WAN restent ouverts.
