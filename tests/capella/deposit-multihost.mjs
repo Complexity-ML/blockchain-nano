@@ -11,6 +11,7 @@ import {setTimeout as wait} from 'node:timers/promises';
 import {selectExitArtifacts,verifyExitExecutableHashes,verifyExitVpsArtifacts} from './exit-artifacts.mjs';
 import {monotonicClockConfiguration} from '../multihost/local-clock.mjs';
 import {hashHarness} from '../multihost/harness-manifest.mjs';
+import {durableFinalityObservation} from './finality-observation.mjs';
 const exec=promisify(execFile),[target,revision,outArg]=process.argv.slice(2);
 if(!/^[a-z_][a-z0-9_-]*@[0-9.]+$/.test(target??'')||!/^([a-f0-9]{40})$/.test(revision??'')||!outArg)throw Error('Usage: deposit-multihost.mjs user@IPv4 harness-revision NEW-output');
 const repo=process.cwd(),out=resolve(outArg),fixture=join(out,'fixture'),id=randomBytes(6).toString('hex');
@@ -103,10 +104,21 @@ try{
  while(Date.now()<deadline){
   check(!failure&&native.exitCode===null&&native.signalCode===null&&tunnel.exitCode===null&&tunnel.signalCode===null,'Campaign process stopped');check((await inspect()).State.Running,'VPS stopped');
   const rows=[];for(let n=0;n<2;n++){
-   const cp=(await request(n,'/eth/v1/beacon/states/head/finality_checkpoints')).data.finalized,h=(await request(n,'/eth/v1/beacon/headers/head')).data;
+   const stateCheckpoint=(await request(n,'/eth/v1/beacon/states/head/finality_checkpoints')).data.finalized,h=(await request(n,'/eth/v1/beacon/headers/head')).data;
+   let cp=stateCheckpoint;
+   if(BigInt(stateCheckpoint.epoch)>0n){
+    const first=await request(n,'/eth/v1/beacon/headers/finalized');
+    const observation=durableFinalityObservation(stateCheckpoint,first,roots,epochs[n]);
+    const second=await request(n,'/eth/v1/beacon/headers/finalized');
+    if(first.data.root!==second.data.root||!observation){await record({event:'finality-read-pending',node:n,stateCheckpoint,firstRoot:first.data.root,secondRoot:second.data.root});continue;}
+    cp=observation.checkpoint;
+    if(cp.root!==stateCheckpoint.root)await record({event:'head-state-checkpoint-lags-durable-finality',node:n,...observation});
+   }
+
    const epoch=BigInt(cp.epoch);check(epoch>=epochs[n],'Finality regressed');check(!roots.has(cp.epoch)||roots.get(cp.epoch)===cp.root,'Conflicting finalized roots');epochs[n]=epoch;roots.set(cp.epoch,cp.root);
    await observe(n,h.root);if(epoch>0n)await observe(n,cp.root);else check(cp.root==='0x'+'0'.repeat(64)||cp.root===meta.initialHead,'Unexpected epoch-zero finality anchor');rows.push({node:n,checkpoint:cp,slot:h.header.message.slot,peers:await rpc(n,'net_peerCount')});
   }
+  if(rows.length!==2){await wait(3000);continue;}
   await record({event:'observation',rows});const a=rows[0].checkpoint,b=rows[1].checkpoint;
   if(BigInt(a.epoch)>0n&&a.epoch===b.epoch&&a.root===b.root&&rows.every(r=>BigInt(r.peers)>0n)){
    const evidence=canonicalEvidence(a.root,0),other=canonicalEvidence(a.root,1);

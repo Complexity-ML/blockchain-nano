@@ -36,7 +36,8 @@ int main(int argc,char** argv){try{
  for(const auto& member:initial.registry.validators)require(member.second.public_key!=public_key,"new key already registered in seed");
  // The standard runtime audit first verifies canonical signed transitions,
  // balances, receipts and externally observed checkpoint epoch/root binding.
- const auto canonical=audit_capella_database(genesis,argv[4],request);require(canonical.at("canonicalHistoryVerified")==true&&canonical.at("externalFinalizedAncestorVerified")==true,"canonical replay/finality binding");
+ Json canonical_request;for(const auto* field:{"profile","anchor","limits","expectedCheckpoint","requiredFinalized","maximumBlocks","maximumArchiveBytes"})canonical_request[field]=request.at(field);
+ const auto canonical=audit_capella_database(genesis,argv[4],canonical_request);require(canonical.at("canonicalHistoryVerified")==true&&canonical.at("externalFinalizedAncestorVerified")==true,"canonical replay/finality binding");
  const auto& expected=request.at("expectedCheckpoint");const ForkCheckpointToken token{number(expected.at("sequence")),unhex(expected.at("digest"))};
  ChainStore disk(argv[4],ChainStore::OpenMode::ReadOnly);disk.bind_chain(genesis.chain_id,genesis.block.header.hash(),"beacon");
  CapellaDurableReactor reactor(disk,genesis.chain_id,genesis.block.header.hash(),rules,limits,token);const auto stopped=reactor.current();
