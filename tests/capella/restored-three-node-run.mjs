@@ -15,7 +15,7 @@ const exec=promisify(execFile),[target,revision,preparedArg]=process.argv.slice(
 assert.match(target??'',/^[a-z_][a-z0-9_-]*@[0-9.]+$/);assert.match(revision??'',/^[a-f0-9]{40}$/);assert.ok(preparedArg);
 const repo=process.cwd(),prepared=resolve(preparedArg),out=join(prepared,'campaign');await mkdir(out);
 const controllerFiles=['tests/capella/restored-three-node-run.mjs','tests/capella/restored-three-node-plan.mjs','tests/capella/deposit-restart-pins.mjs','tests/capella/finality-observation.mjs'];let controllerHashes;
-const evidence=join(repo,'docs/qualification/restored-three-node-prepare-20261005');
+const evidence=resolve(process.env.NANO_TEST_RESTORED_PREPARATION??join(repo,'docs/qualification/restored-three-node-prepare-20261005'));assert.ok(evidence.startsWith(join(repo,'docs/qualification')+'/'),'Preparation must be a committed qualification bundle');
 const json=async p=>JSON.parse(await readFile(p,'utf8')),save=(p,v)=>writeFile(p,JSON.stringify(v,null,2)+'\n');
 const hash=async p=>createHash('sha256').update(await readFile(p)).digest('hex');
 const q=x=>"'"+String(x).replaceAll("'","'\\''")+"'";
@@ -25,8 +25,8 @@ const docker=(args,remote=false)=>remote?ssh(['sudo','-n','docker',...args]):run
 const record=async x=>{const row={time:new Date().toISOString(),...x};console.log(JSON.stringify(row));await appendFile(join(out,'events.jsonl'),JSON.stringify(row)+'\n');};
 const events=s=>s.split('\n').flatMap(l=>{try{return [JSON.parse(l)];}catch{return [];}});
 const port=()=>new Promise((ok,no)=>{const s=createServer();s.on('error',no);s.listen(0,'127.0.0.1',()=>{const p=s.address().port;s.close(()=>ok(p));});});
-const names=['mac-native','mac-docker','vps-docker'],local='nano-restored-three-node-mac-20261005',remote='nano-restored-three-node-vps-20261005',remoteRoot='/tmp/'+remote;
-const vpsVolume=remote+'-data',remoteRepo='/home/'+target.split('@')[0]+'/blockchain-nano-git';
+const instance=Date.now().toString(36),names=['mac-native','mac-docker','vps-docker'],local='nano-restored-three-node-mac-'+instance,remote='nano-restored-three-node-vps-'+instance,remoteRoot='/tmp/'+remote;
+let vpsVolume;const remoteRepo='/home/'+target.split('@')[0]+'/blockchain-nano-git';
 let native,tunnel,localCreated=false,remoteCreated=false,failure,result='FAILED',common,artifacts,plan,urls;
 const inspect=(name,onRemote)=>docker(['inspect',name,'--format','{{json .}}'],onRemote).then(JSON.parse);
 const logs=async(name,onRemote)=>{if(onRemote)return run('ssh',['-o','BatchMode=yes',target,['sudo','-n','docker','logs',name].map(q).join(' ')+' 2>&1']);const r=await exec('docker',['logs',name],{maxBuffer:32*1024*1024});return r.stdout+r.stderr;};
@@ -35,8 +35,9 @@ const stop=async child=>{if(!child||child.exitCode!==null||child.signalCode!==nu
 try{
  assert.equal((await run('git',['rev-parse','HEAD'])).trim(),revision);assert.equal((await ssh(['git','-C',remoteRepo,'rev-parse','HEAD'])).trim(),revision);
  assert.equal((await run('git',['status','--porcelain'])).trim(),'');assert.equal((await ssh(['git','-C',remoteRepo,'status','--porcelain'])).trim(),'');
+ const preparation=await json(join(evidence,'manifest.json'));if(preparation.sourceNativeStop){assert.equal(preparation.sourceNativeStop.exitCode,0);assert.equal(preparation.sourceNativeStop.signalCode,null);}vpsVolume=preparation.vpsCopiedVolume;assert.match(vpsVolume,/^nano-restored-three-node-vps-[a-z0-9-]+-data$/);
  artifacts=await json(join(evidence,'artifacts.json'));await run('git',['diff','--quiet',artifacts.coreRevision,'--','src','include','third_party']);await run('git',['diff','--quiet',artifacts.relayRevision,'--','network']);
- for(const [name,onRemote] of [['nano-ready-target-cold-resume-arm64-20261005',false],['nano-deposit-resume-wan-3f028de2c232',true]]){const s=await inspect(name,onRemote);assert.equal(s.State.Status,'exited');assert.equal(s.State.ExitCode,0);assert.equal(s.State.OOMKilled,false);}
+ for(const [name,onRemote] of [[preparation.sourceMacContainer,false],[preparation.sourceVpsContainer,true]]){const s=await inspect(name,onRemote);assert.equal(s.State.Status,'exited');assert.equal(s.State.ExitCode,0);assert.equal(s.State.OOMKilled,false);}
  const processes=await run('ps',['-axo','pid,command']);assert.ok(!processes.split('\n').some(l=>/\/nano(?: |$)/.test(l)&&/\brun\b/.test(l)),'An existing native writer is active');
  assert.equal((await docker(['ps','-q','--filter','volume='+vpsVolume],true)).trim(),'','Restored VPS volume already has a writer');
  const input=await json(join(evidence,'input.json'));plan=restoredThreeNodePlan(input);assert.deepEqual(plan,await json(join(evidence,'plan.json')));
@@ -50,6 +51,7 @@ try{
  const rp=JSON.parse(await ssh(['python3','-c','import socket,json; a=socket.socket();b=socket.socket();a.bind(("127.0.0.1",0));b.bind(("127.0.0.1",0));print(json.dumps([a.getsockname()[1],b.getsockname()[1]]))']));assert.equal(rp.length,2);assert.notEqual(rp[0],rp[1]);
  const lp=await port(),lr=await port(),nr=await port(),pf=await port(),rf=await port();assert.equal(new Set([lp,lr,nr,pf,rf]).size,5);
  const configs=structuredClone(plan.configs),fixture=join(prepared,'config');await mkdir(fixture);
+ assert.equal(await hash(join(evidence,'input.json')),preparation.artifacts['input.json']);assert.equal(await hash(join(evidence,'plan.json')),preparation.artifacts['plan.json']);
  for(const f of ['genesis.json','profile.json','initial.json'])await copyFile('/private/tmp/nano-ready-target-cold-resume-20261005/config/'+f,join(fixture,f));
  const envFor=n=>Object.fromEntries(plan.ownership[n].map(i=>['NANO_TEST_CAPELLA_NETWORK_KEY_'+i,'0x'+BigInt(i+1).toString(16).padStart(64,'0')]));
  const environment={...process.env};for(const k of Object.keys(environment))if(k.startsWith('NANO_TEST_CAPELLA_NETWORK_KEY_')||k==='NANO_TEST_EXIT_BOOTSTRAP')delete environment[k];
