@@ -1,0 +1,6 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {waitRestoredReadiness} from './restored-readiness.mjs';
+const rows=ready=>['mac-native','mac-docker','vps-docker'].map(name=>({name,running:true,networkReady:ready||name==='vps-docker'}));
+test('delayed Mac startup is awaited before consumers may issue RPC',async()=>{let t=0,n=0;const recorded=[];const r=await waitRestoredReadiness({clock:()=>t,wait:async ms=>t+=ms,sample:async()=>rows(++n===3),record:async x=>recorded.push(x),maximumMs:3000});assert.equal(n,3);assert.equal(r.elapsedMs,2000);assert.equal(recorded[0].rows[1].networkReady,false);});
+test('fixed deadline never resets while processes stay alive without readiness',async()=>{let t=0;await assert.rejects(waitRestoredReadiness({clock:()=>t,wait:async ms=>t+=ms,sample:async()=>rows(false),record:async()=>{},maximumMs:2500}),/fixed startup deadline/);assert.equal(t,2500);});
+test('terminal process is fatal even if stale readiness was recorded',async()=>{const x=rows(true);x[1].running=false;await assert.rejects(waitRestoredReadiness({sample:async()=>x,record:async()=>{}}),/stopped during startup/);});
+test('duplicated process identities cannot count as three observers',async()=>{const x=rows(true);x[1].name=x[0].name;await assert.rejects(waitRestoredReadiness({sample:async()=>x,record:async()=>{}}));});
