@@ -13,6 +13,27 @@ CapellaForkStateContexts prepare_capella_fork_state_contexts(const CapellaSlotSt
  const ConsensusBeaconHeader&,const ConsensusCheckpoint&,const CapellaEpochRules&,
  const AltairStateLimits&,uint64_t maximum_slots,uint64_t maximum_sync_trials,
  const std::function<void()>& checkpoint={});
+// Ephemeral empty-slot continuation authenticated once against a real block.
+// Never substitute state() for that block's signed post-state: its slot/root
+// changes. One complete bounded chunk commits locally; cancellation discards
+// only the unfinished chunk. Caller serializes access and rebinds on head change.
+class CapellaSlotPreparation {
+ ConsensusBeaconHeader parent_;
+ CapellaEpochRules rules_;
+ AltairStateLimits limits_;
+ CapellaSlotState state_;
+public:
+ CapellaSlotPreparation(const CapellaSlotState&,const ConsensusBeaconHeader&,
+  const CapellaEpochRules&,const AltairStateLimits&,
+  const std::function<void()>& checkpoint={});
+ const ConsensusBeaconHeader& parent()const{return parent_;}
+ const CapellaSlotState& state()const{return state_;}
+ uint64_t slot()const;
+ // Returns true only when target is reached. Zero budget and backwards targets
+ // fail, including at completion. No signatures, journal or durable writes.
+ bool advance(uint64_t target,uint64_t maximum_slots,uint64_t maximum_sync_trials,
+  const std::function<void()>& checkpoint={});
+};
 struct CapellaProposerIdentity {
  uint64_t index;
  ConsensusBytes4 fork_version;

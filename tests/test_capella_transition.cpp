@@ -60,6 +60,7 @@ static bool owner_sync=false;
 static bool owner_witness=false;
 static bool scheduled=false,sync_rotation=false,clock_diagnostics=false,duty_timing=false,signer_health=false;
 static bool configured_runtime=false;
+static bool slot_continuation=false;
 static bool automatic_recovery=false;
 static bool capella_http=false,capella_http_queue=false;
 static std::string cli_binary;static Json cli_genesis;static bool managed_cli=false;static std::string daemon_binary;static bool network_cli=false;static bool multipeer_cli=false;static bool distributed_cli=false;static bool sync_distributed_cli=false,distributed_sync_rotation=false;static bool transport_outage_cli=false;static fs::path network_export;
@@ -1408,6 +1409,29 @@ static void verify_beacon_reads(CapellaDurableReactor& reactor,const CapellaFork
  bool cancelled=false;try{reactor.beacon_read("/eth/v2/beacon/blocks/head",[]{throw ExecutionCancelled("Beacon read cancelled");});}catch(const ExecutionCancelled&){cancelled=true;}check(cancelled&&reactor.current().token==snapshot.token,"Beacon read cancellation changed checkpoint");++beacon_read_checks;
 }
 #include "support/capella_slashing_reorg.hpp"
+static void slot_continuation_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules){
+ const auto& parent=capella_fork_head(initial,rules);const auto original=parent.state;
+ const auto& t=rules.transition;const CapellaEpochRules epoch{t.consensus.epoch,t.execution,t.maximum_state_bytes};
+ const auto& limits=t.consensus.state;const auto target=parent.header.slot+2*limits.slots_per_historical_root+3;
+ const auto expected=prepare_capella_slots(original,epoch,limits,target,target-parent.header.slot,100000);
+ size_t passed=0;
+ for(uint64_t budget:{uint64_t(1),uint64_t(3),t.consensus.epoch.ffg.slots_per_epoch+1}){
+  CapellaSlotPreparation progress(original,parent.header,epoch,limits);size_t steps=0;
+  while(progress.slot()<target){const auto before=progress.slot();const auto complete=progress.advance(target,budget,100000);check(progress.slot()>before&&progress.slot()-before<=budget,"continuation chunk exceeded bound");check(complete==(progress.slot()==target),"continuation reported premature readiness");++steps;}
+  check(progress.state()==expected&&progress.parent()==parent.header,"chunked slot transition differs from monolithic oracle");
+  check(steps==(target-parent.header.slot+budget-1)/budget,"continuation chunk count mismatch");
+  const auto done=progress.state();check(progress.advance(target,budget,100000)&&progress.state()==done,"completed continuation replayed state");++passed;
+ }
+ CapellaSlotPreparation progress(original,parent.header,epoch,limits);progress.advance(target,3,100000);const auto prefix=progress.state();
+ bool cancelled=false;try{size_t calls=0;progress.advance(target,3,100000,[&]{if(++calls==12)throw std::runtime_error("injected preparation cancellation");});}catch(const std::runtime_error&){cancelled=true;}
+ check(cancelled&&progress.state()==prefix,"cancelled chunk changed committed prefix");++passed;
+ while(!progress.advance(target,3,100000)){}check(progress.state()==expected,"cancelled continuation did not resume exactly");++passed;
+ for(unsigned mode=0;mode<3;++mode){bool refused=false;const auto before=progress.state();try{progress.advance(mode==0?target-1:target,mode==1?0:3,mode==2?0:100000);}catch(const std::invalid_argument&){refused=true;}check(refused&&progress.state()==before,"invalid continuation bounds mutated state");++passed;}
+ auto bad=parent.header;bad.state_root[0]^=1;bool refused=false;try{CapellaSlotPreparation forged(original,bad,epoch,limits);}catch(const std::invalid_argument&){refused=true;}check(refused,"continuation accepted unauthenticated parent");++passed;
+ refused=false;try{CapellaSlotPreparation forged(expected,parent.header,epoch,limits);}catch(const std::invalid_argument&){refused=true;}check(refused,"advanced state masqueraded as original signed block state");++passed;
+ check(parent.state==original&&capella_fork_block_context(parent.state,parent.header,epoch,limits).block_root==consensus_beacon_header_root(parent.header),"continuation mutated admitted parent");++passed;
+ std::cout<<Json{{"scenario","capella-authenticated-slot-continuation"},{"scenarios",passed},{"crossedHistoryWindows",2},{"canonicalOracleEqual",true},{"parentPreserved",true},{"runtimeIntegrated",false},{"networkQualified",false}}.dump()<<std::endl;
+}
 static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigned participation=100){
  const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-bellatrix-containers-official",source=fixtures/"consensus-capella-slots-official";
  const auto manifest=load(source/"manifest.json");check(manifest.at("commit")=="194a91fd9e6f97118156421aac4c80e6e47a9a7f","initial state revision");
@@ -1855,7 +1879,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
     }
    }
   }
-  if(slot==first_slot){short_snapshot=capella_store_snapshot(*store,store_rules,snapshot_limits);if(signer_health){signer_health_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(duty_timing){duty_timing_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(clock_diagnostics){clock_diagnostics_loop(*store,store_rules,disk_genesis,disk_genesis_state);startup_catchup_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(deposit_reorg){deposit_reorg_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(configured_runtime){runtime_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(scheduled){scheduler_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}
+  if(slot==first_slot){short_snapshot=capella_store_snapshot(*store,store_rules,snapshot_limits);if(slot_continuation){slot_continuation_loop(*store,store_rules);return;}if(signer_health){signer_health_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(duty_timing){duty_timing_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(clock_diagnostics){clock_diagnostics_loop(*store,store_rules,disk_genesis,disk_genesis_state);startup_catchup_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(deposit_reorg){deposit_reorg_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(configured_runtime){runtime_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(scheduled){scheduler_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}
   if(local_finality){local_finality_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}}
   ++contexts;
   beacon=received->consensus;state=received->execution.state;parent=received->execution.block;hashes[parent.header.number]=parent.header.hash();++accepted;
@@ -2089,6 +2113,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
 }
 #include "support/capella_exit_owner.hpp"
 int main(int argc,char** argv){try{executable=argv[0];
+if(argc==2&&std::string(argv[1])=="--slot-continuation"){slot_continuation=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--signer-health"){signer_health=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--duty-timing"){duty_timing=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--clock-diagnostics"){clock_diagnostics=true;scenario(false);return 0;}

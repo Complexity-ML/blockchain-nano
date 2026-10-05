@@ -37,6 +37,27 @@ CapellaForkStateContexts prepare_capella_fork_state_contexts(const CapellaSlotSt
  auto block=capella_fork_block_context(input,h,r,l,checkpoint);auto state=h.slot==slot?input:prepare_capella_slots(input,r,l,slot,maximum_slots,maximum_sync_trials,checkpoint);auto p=project(state.ssz,r,l,checkpoint);require(p.registry.epoch==target.epoch);
  Phase0ForkVoteContext vote{target,std::move(p.registry),std::move(p.randao),block.fork,block.genesis_root};if(checkpoint)checkpoint();return {std::move(block),std::move(vote),std::move(state)};
 }
+CapellaSlotPreparation::CapellaSlotPreparation(const CapellaSlotState& input,
+ const ConsensusBeaconHeader& parent,const CapellaEpochRules& rules,
+ const AltairStateLimits& limits,const std::function<void()>& checkpoint)
+ :parent_(parent),rules_(rules),limits_(limits),state_(input){
+ capella_fork_block_context(input,parent,rules,limits,checkpoint);
+}
+uint64_t CapellaSlotPreparation::slot()const{return number(state_.ssz,40);}
+bool CapellaSlotPreparation::advance(uint64_t target,uint64_t maximum_slots,
+ uint64_t trials,const std::function<void()>& checkpoint){
+ const auto start=slot();
+ if(!maximum_slots||!trials||target<start)
+  throw std::invalid_argument("invalid Capella slot continuation bounds");
+ if(checkpoint)checkpoint();
+ if(target==start)return true;
+ // Subtraction first keeps the addition safe even for UINT64_MAX targets.
+ const auto next=start+std::min(maximum_slots,target-start);
+ auto prepared=prepare_capella_slots(state_,rules_,limits_,next,maximum_slots,trials,checkpoint);
+ if(checkpoint)checkpoint();
+ state_=std::move(prepared);
+ return next==target;
+}
 std::optional<CapellaProposerIdentity> prepare_capella_proposer_identity(
  const CapellaSlotState& input,const ConsensusBeaconHeader& h,uint64_t slot,
  const CapellaEpochRules& r,const AltairStateLimits& l,const Phase0FfgRules& d,
