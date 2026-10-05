@@ -1917,3 +1917,6 @@ target_include_directories(nano-local-monotonic-time-tests PRIVATE "${CMAKE_CURR
 target_link_libraries(nano-local-monotonic-time-tests PRIVATE Threads::Threads)
 add_test(NAME consensus_local_monotonic_time COMMAND nano-local-monotonic-time-tests)
 set_tests_properties(consensus_local_monotonic_time PROPERTIES TIMEOUT 60 LABELS "consensus;clock")
+
+add_test(NAME consensus_capella_block_capacity_pressure COMMAND nano-capella-transition-tests --capacity-pressure)
+set_tests_properties(consensus_capella_block_capacity_pressure PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_runtime")

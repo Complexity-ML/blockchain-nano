@@ -390,6 +390,9 @@ bool CapellaDurableReactor::block(std::span<const uint8_t> wire,const std::funct
  // require an obsolete target replay and must never replace archive bytes.
  if(state_->blocks.contains(id))next=*state_;
  else {
+  // A full retained graph is temporary admission pressure, not corrupt state.
+  // Duplicates above still succeed; votes/ticks can advance safe pruning.
+  if(state_->blocks.size()>=limits_.blocks)return false;
   const auto& view=state_->timed.view;const auto& clock=state_->timed.clock;
   const auto slots=rules_.transition.consensus.epoch.ffg.slots_per_epoch;
   if(!slots||!limits_.replay_slots||!rules_.slot_duration_ms||clock.time_ms<clock.genesis_time_ms||view.finalized.epoch>UINT64_MAX/slots)throw std::invalid_argument("Invalid incoming Capella preparation bounds");

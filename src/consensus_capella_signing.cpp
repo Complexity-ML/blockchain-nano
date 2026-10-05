@@ -90,6 +90,9 @@ std::optional<Bytes> CapellaDurableReactor::sign_proposal_locked(uint64_t index,
  auto timely=[&]{const auto time=local_clock();expired=time>=last_time&&time>=clock.genesis_time_ms&&(time-clock.genesis_time_ms)/rules_.slot_duration_ms>slot;if(time<last_time||time<clock.genesis_time_ms||(time-clock.genesis_time_ms)/rules_.slot_duration_ms!=slot)return false;last_time=time;return true;};
  auto expiry=[&](const char* message){if(expired)throw ExpiredCapellaDuty(message);throw std::runtime_error(message);};
  if(!timely())return std::nullopt;
+ // Resource refusal precedes journal reservation and provider invocation.
+ // Retained ancestry cannot be discarded until authenticated pruning is safe.
+ if(state_->blocks.size()>=limits_.blocks)return std::nullopt;
  const auto head=phase0_fork_choice_head(state_->timed.view,{t.epoch.ffg.slots_per_epoch,t.attestation.duties.effective_balance_increment,rules_.proposer_score_boost},checkpoint).head;
  const auto& parent=state_->blocks.at(head);
  if(parent.header.slot>=slot)return std::nullopt;
@@ -220,7 +223,10 @@ std::optional<Phase0SignedAttestation> CapellaDurableReactor::attest_current(uin
  std::lock_guard lock(mutex_);check_registered_index_locked(index,registration_public_key,journal,check);require_available();return sign_attestation_locked(index,slot,clock,*token_,journal,signer,check);
 }
 std::optional<Bytes> CapellaDurableReactor::propose_current(uint64_t index,uint64_t slot,const std::string& recipient,size_t tx_trials,size_t vote_trials,const std::function<uint64_t()>& clock,BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& check,const Bytes& registration_public_key){
- std::lock_guard lock(mutex_);check_registered_index_locked(index,registration_public_key,journal,check);require_available();const auto reveal=sign_randao_locked(index,slot,clock,*token_,journal,signer,check);if(!reveal)return std::nullopt;
+ std::lock_guard lock(mutex_);check_registered_index_locked(index,registration_public_key,journal,check);require_available();
+ // Do not invoke even the RANDAO provider for a proposal we cannot retain.
+ if(state_->blocks.size()>=limits_.blocks)return std::nullopt;
+ const auto reveal=sign_randao_locked(index,slot,clock,*token_,journal,signer,check);if(!reveal)return std::nullopt;
  const auto body=prepare_local_body_from_pool_locked(index,slot,*reveal,recipient,*token_,tx_trials,vote_trials,check);if(!body)return std::nullopt;
  return sign_proposal_locked(index,slot,*body,clock,*token_,journal,signer,check);
 }

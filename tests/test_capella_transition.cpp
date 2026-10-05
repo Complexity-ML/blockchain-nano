@@ -60,7 +60,7 @@ static bool owner_sync=false;
 static bool owner_witness=false;
 static bool scheduled=false,sync_rotation=false,clock_diagnostics=false,duty_timing=false,signer_health=false;
 static bool configured_runtime=false;
-static bool slot_continuation=false,prepared_block=false;
+static bool slot_continuation=false,prepared_block=false,capacity_pressure=false;
 static bool automatic_recovery=false;
 static bool capella_http=false,capella_http_queue=false;
 static std::string cli_binary;static Json cli_genesis;static bool managed_cli=false;static std::string daemon_binary;static bool network_cli=false;static bool multipeer_cli=false;static bool distributed_cli=false;static bool sync_distributed_cli=false,distributed_sync_rotation=false;static bool transport_outage_cli=false;static fs::path network_export;
@@ -1475,6 +1475,27 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
   check(oracle&&constructed->message_ssz==oracle->message_ssz&&constructed->post.consensus==oracle->post.consensus&&constructed->post.execution.block.header.hash()==oracle->post.execution.block.header.hash()&&constructed->post.execution.state.root()==expected.root(),"prepared block differs from full-gap execution oracle");++checks;
   auto sign=[&](const Bytes& message,uint64_t signer){const auto view=std::span<const uint8_t>(message);const ConsensusBeaconHeader h{little(message,0,8),little(message,8,8),root_at(message,16),root_at(message,48),capella_beacon_body_root(view.subspan(84),r.consensus.body,l.sync_committee_size,r.execution,r.withdrawals.maximum_per_payload,r.maximum_bls_changes,r.consensus.maximum_block_bytes)};const auto signature=Key(signer).sign(consensus_signing_root(consensus_beacon_header_root(h),consensus_domain({0,0,0,0},identity->fork_version,identity->genesis_root)));Bytes wire(100,0);put(wire,0,100,4);std::copy(signature.begin(),signature.end(),wire.begin()+4);wire.insert(wire.end(),message.begin(),message.end());return wire;};
   const auto wire=sign(constructed->message_ssz,identity->index);const auto received=preparation.receive(wire,parent.execution_block.header,parent.execution_state,history,100000);check(received&&received->consensus==oracle->post.consensus&&received->execution.block.header.hash()==oracle->post.execution.block.header.hash()&&received->execution.state.root()==oracle->post.execution.state.root(),"prepared signed block transition differs from oracle");++checks;
+  if(capacity_pressure){
+   Temp directory;Genesis g;g.chain_id=r.chain_id;g.consensus="beacon";g.evm_revision=EvmRevision::Shanghai;g.block=genesis;g.state=genesis_state;
+   auto tight=crash_limits;tight.blocks=initial.blocks.size();
+   Blockchain owner(directory/"owner",g);ChainStore witness(directory/"witness");
+   auto reactor=std::make_unique<CapellaDurableReactor>(owner,rules,tight,initial,std::function<void()>{},&witness);
+   const auto clock=initial.timed.clock.genesis_time_ms+slot*rules.slot_duration_ms;
+   reactor->tick(clock);size_t attempts=0;while(!reactor->prepare_current_duties(slot))check(++attempts<slot/slots+4,"capacity fixture preparation stalled");
+   ChainStore signer_disk(directory/"signer");BeaconSigningJournal journal(signer_disk,r.chain_id,genesis.header.hash(),identity->genesis_root,key.public_key,slots);
+   unsigned providers=0;auto provider=[&](const ConsensusRoot& root){++providers;return key.sign(root);};
+   const auto before=reactor->current().token;const auto guard=journal.commitment();const auto tip=owner.tip().header.hash();
+   check(!reactor->propose_current(identity->index,slot,"0x0000000000000000000000000000000000000000",4,4,[&]{return clock;},journal,provider),"full graph invoked automatic proposal signer");
+   check(!reactor->sign_proposal(identity->index,slot,body,[&]{return clock;},before,journal,provider),"full graph invoked explicit proposal signer");
+   check(providers==0&&journal.commitment()==guard&&!journal.latest_proposal_slot(),"capacity refusal changed signer reservation");
+   for(unsigned retry=0;retry<3;++retry)check(!reactor->block(wire)&&reactor->current().token==before&&owner.tip().header.hash()==tip,"capacity refusal changed durable Store or execution");
+   // The signed wire is valid: an independently provisioned receiver admits it.
+   Blockchain peer_owner(directory/"peer",g);ChainStore peer_witness(directory/"peer-witness");CapellaDurableReactor peer(peer_owner,rules,crash_limits,initial,{},&peer_witness);peer.tick(clock);
+   attempts=0;while(!peer.block(wire))check(++attempts<slot/slots+4,"independent valid block admission stalled");
+   reactor->tick(clock+rules.slot_duration_ms);const auto stopped=reactor->current().token;check(stopped.sequence>before.sequence&&reactor->current().state->blocks.size()==tight.blocks,"full Store stopped clock or silently grew");
+   reactor.reset();reactor=std::make_unique<CapellaDurableReactor>(owner,rules,tight,witness);check(reactor->current().token==stopped&&journal.commitment()==guard,"full Store witness restore or signer guard changed");
+   std::cout<<Json{{"scenario","capella-block-capacity-pressure"},{"providerCalls",providers},{"journalUnchanged",true},{"incomingRefusals",3},{"independentValidAdmission",true},{"clockAdvanced",true},{"witnessRestored",true},{"networkQualified",false},{"capacityRecoveryQualified",false}}.dump()<<std::endl;return;
+  }
   for(unsigned mode=0;mode<5;++mode){auto invalid=wire;
    if(mode==0)invalid[4]^=1;
    else {auto message=constructed->message_ssz;if(mode==1)message[16]^=1;else if(mode==2)message[48]^=1;else if(mode==3)message[84]^=1;else put(message,0,slot+1);invalid=sign(message,identity->index);}
@@ -2329,6 +2350,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
 }
 #include "support/capella_exit_owner.hpp"
 int main(int argc,char** argv){try{executable=argv[0];
+if(argc==2&&std::string(argv[1])=="--capacity-pressure"){capacity_pressure=true;prepared_block=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--prepared-block"){prepared_block=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--slot-continuation"){slot_continuation=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--signer-health"){signer_health=true;scenario(false);return 0;}

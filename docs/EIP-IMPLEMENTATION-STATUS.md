@@ -7111,3 +7111,17 @@ ancien cœur b5ee00ac et binaires conservés. Flags/liens CMake réutilisés ;
 configuration fraîche non qualifiée. Aucun rebuild d’image, aucune relance
 réseau. v7 reste FAILED, capacité du Store et finalité commune toujours ouvertes.
 [Preuves et limites](qualification/capella-export-resume-20261006/README.md).
+
+## Refus de capacité avant signature — 6 octobre 2026
+
+Garde de capacité de blocs implémentée dans la proposition et l’admission :
+refus avant fournisseur/réservation/publication quand le graphe est plein,
+sans augmenter sa limite. Régression avant/après Docker ARM64 et AMD64 :
+ancien cœur signe (échec 1 conservé), correctif zéro appel fournisseur, journal
+intact, refus sans écriture, horloge active et restauration avec témoin (sortie 0).
+Runtime 16 blocs/64 clés et scheduler 40 blocs/272 votes/1280 sync passent
+sur les deux architectures. Échec initial de montage des fixtures ARM64 conservé.
+Qualification locale seulement ; nouveau cœur natif/runtime non livré, course
+signature/admission, autres budgets, libération de capacité et reprise de finalité
+restent ouverts. Aucun rebuild d’image ni relance WAN.
+[Preuves et périmètre](qualification/capella-block-capacity-pressure-20261006/README.md).
