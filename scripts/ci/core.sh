@@ -6,7 +6,7 @@ git -c safe.directory="$PWD" rev-parse HEAD > ci-reports/source-revision.txt
 cmake --version > ci-reports/cmake-version.txt
 "${CXX:-c++}" --version > ci-reports/compiler-version.txt
 cmake -S . -B "$build_dir" -DCMAKE_BUILD_TYPE=Release 2>&1 | tee ci-reports/configure.log
-cmake --build "$build_dir" --parallel 2 --target nano nano-tests nano-chain-tests nano-rpc-queue-tests nano-consensus-bls-tests nano-consensus-bls-aggregate-tests nano-execution-checkpoint-tests nano-capella-execution-tests nano-capella-transition-tests nano-local-monotonic-time-tests nano-capella-slashing-fixture nano-capella-slashing-audit nano-capella-deposit-audit 2>&1 | tee ci-reports/build.log
+cmake --build "$build_dir" --parallel 2 --target nano nano-tests nano-chain-tests nano-rpc-queue-tests nano-consensus-bls-tests nano-consensus-bls-aggregate-tests nano-execution-checkpoint-tests nano-capella-execution-tests nano-capella-transition-tests nano-local-monotonic-time-tests nano-capella-slashing-fixture nano-capella-slashing-audit nano-capella-deposit-audit nano-capella-paused-capture 2>&1 | tee ci-reports/build.log
 # Reviewed scope. Failure or a missing registration must not silently pass.
 pattern='^(core|chain|rpc_queue_expiry|ethereum_consensus_bls_verify|ethereum_consensus_bls_fast_aggregate|storage_execution_checkpoint|consensus_capella_payload_paired_state|consensus_capella_signed_transition|consensus_capella_clock_diagnostics|consensus_local_monotonic_time)$'
 ctest --test-dir "$build_dir" -R "$pattern" --show-only=json-v1 > ci-reports/selection.json
@@ -51,6 +51,19 @@ pathlib.Path('ci-reports/slashing-audit-result.json').write_text(json.dumps({'fo
 pathlib.Path('ci-reports/slashing-helper-result.json').write_text(json.dumps({'generatorExit':0,'existingOutputRefusalExit':1,'existingProofUnchanged':True,'realNetworkQualified':False,'productionQualified':False},indent=2)+'\n')
 PYHELPER
 
+# Capture must refuse a bootstrap configuration before opening any database.
+python3 - "$build_dir" <<'PYCAPTURE'
+import pathlib,subprocess,sys,json
+root=pathlib.Path('ci-reports/slashing-fixture').resolve()
+request=root/'capture-unused-request.json';request.write_text('{}')
+never=root/'must-not-create-capture-db'
+binary=str(pathlib.Path(sys.argv[1],'nano-capella-paused-capture').resolve())
+p=subprocess.run([binary,'--capture',str(root/'genesis.json'),str(root/'native.json'),str(never),str(request)],capture_output=True,text=True,timeout=30)
+pathlib.Path('ci-reports/capture-bootstrap-refusal.log').write_text(p.stdout+p.stderr)
+if p.returncode!=1 or p.stdout or 'strict witnessed source configuration required' not in p.stderr or never.exists():raise SystemExit('capture bootstrap refusal failed')
+pathlib.Path('ci-reports/capture-scope.json').write_text(json.dumps({'bootstrapRefusedBeforeDatabaseCreation':True,'livePausedCaptureQualified':False,'productionQualified':False},indent=2)+'\n')
+PYCAPTURE
+
 # Deposit auditor controls are separate from its positive stopped-network audit.
 "$build_dir/nano-capella-transition-tests" --export-deposit-network "$PWD/ci-reports/deposit-fixture" > ci-reports/deposit-export.log
 python3 - "$build_dir" <<'PYDEPOSIT'
@@ -71,5 +84,5 @@ for name,field,value,expected in [('wrong-index','validatorIndex',65,'deposit fi
 pathlib.Path('ci-reports/deposit-audit-controls.json').write_text(json.dumps({'cases':results,'positiveNetworkAuditQualified':False,'productionQualified':False},indent=2)+'\n')
 PYDEPOSIT
 
-sha256sum "$build_dir/nano" "$build_dir/nano-tests" "$build_dir/nano-chain-tests" "$build_dir/nano-rpc-queue-tests" "$build_dir/nano-consensus-bls-tests" "$build_dir/nano-consensus-bls-aggregate-tests" "$build_dir/nano-execution-checkpoint-tests" "$build_dir/nano-capella-execution-tests" "$build_dir/nano-capella-transition-tests" "$build_dir/nano-local-monotonic-time-tests" "$build_dir/nano-capella-slashing-fixture" "$build_dir/nano-capella-slashing-audit" "$build_dir/nano-capella-deposit-audit" > ci-reports/executables.sha256
+sha256sum "$build_dir/nano" "$build_dir/nano-tests" "$build_dir/nano-chain-tests" "$build_dir/nano-rpc-queue-tests" "$build_dir/nano-consensus-bls-tests" "$build_dir/nano-consensus-bls-aggregate-tests" "$build_dir/nano-execution-checkpoint-tests" "$build_dir/nano-capella-execution-tests" "$build_dir/nano-capella-transition-tests" "$build_dir/nano-local-monotonic-time-tests" "$build_dir/nano-capella-slashing-fixture" "$build_dir/nano-capella-slashing-audit" "$build_dir/nano-capella-deposit-audit" "$build_dir/nano-capella-paused-capture" > ci-reports/executables.sha256
 if command -v dpkg-query >/dev/null; then dpkg-query -W > ci-reports/build-packages.txt; fi
