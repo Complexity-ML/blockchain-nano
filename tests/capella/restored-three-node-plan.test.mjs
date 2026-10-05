@@ -33,3 +33,24 @@ for(const [name,change] of [
  ['independent profile mismatch',x=>x.macNativeConfig.capella.profile.sha256='0x'+'ab'.repeat(32)],
  ['independent finalized root mismatch',x=>x.macNativeCapsule.canonicalReplay.finalized.root='0x'+'ab'.repeat(32)]
 ])test('rejects '+name,()=>{const x=structuredClone(fixture);x.macNativeConfig=structuredClone(x.macConfig);x.macNativeCapsule=structuredClone(x.macCapsule);change(x);assert.throws(()=>restoredThreeNodePlan(x));});
+
+
+test('explicit retention experiment preserves source evidence and exact pins, changing only local block capacity',()=>{
+ const x=structuredClone(fixture);x.retentionExperiment={blocks:'0x400',rationale:'Bounded recovery experiment; old saturation criterion stays open.'};const before=structuredClone(x);
+ const base=restoredThreeNodePlan(fixture),p=restoredThreeNodePlan(x);
+ assert.deepEqual(x,before);assert.deepEqual(p.sourceCheckpoints,base.sourceCheckpoints);assert.deepEqual(p.baseline,base.baseline);
+ for(let n=0;n<3;n++){const c=structuredClone(p.configs[n]);assert.equal(c.capella.limits.blocks,'0x400');c.capella.limits.blocks=base.configs[n].capella.limits.blocks;assert.deepEqual(c,base.configs[n]);}
+ assert.deepEqual(p.retentionBudget.sourceLimits,fixture.macConfig.capella.limits);assert.equal(p.retentionBudget.oldBoundaryRecoveryQualified,false);assert.equal(p.productionQualified,false);
+});
+for(const [name,change] of [
+ ['same budget',x=>x.retentionExperiment.blocks=x.macConfig.capella.limits.blocks],
+ ['smaller budget',x=>x.retentionExperiment.blocks='0x1'],
+ ['beyond capture bound',x=>x.retentionExperiment.blocks='0x401'],
+ ['noncanonical budget',x=>x.retentionExperiment.blocks='0x0400'],
+ ['unbounded budget',x=>x.retentionExperiment.blocks='0xffffffffffffffffffffffff'],
+ ['missing rationale',x=>delete x.retentionExperiment.rationale],
+ ['fee or consensus override',x=>x.retentionExperiment.profile='changed'],
+ ['unequal source limits',x=>x.vpsConfig.capella.limits.blocks='0x200'],
+ ['foreign source profile',x=>x.vpsConfig.capella.profile.sha256='0x'+'ab'.repeat(32)],
+ ['live source despite experiment',x=>x.writersStopped=false]
+])test('retention experiment refuses '+name,()=>{const x=structuredClone(fixture);x.retentionExperiment={blocks:'0x400',rationale:'Bounded recovery experiment; old saturation criterion stays open.'};change(x);assert.throws(()=>restoredThreeNodePlan(x));});

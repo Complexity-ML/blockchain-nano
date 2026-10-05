@@ -4293,3 +4293,6 @@ Ce résultat interdit de qualifier un simple prune comme récupération : réten
 sous pression et nouvelle finalité doivent encore être démontrées. Pas d’estimation
 de RAM ni de qualification d’un profil agrandi. v7 et production restent ouverts.
 [Preuves et limites](qualification/restored-v7-pruning-eligibility-20261006/README.md).
+
+
+2026-10-06, préparation v8 de rétention explicitement expérimentale : sources post-v7 auditées, engagements exacts, journaux séparés sans remise à zéro. Candidate cœur 05649987 / relais 5902c983 liée sur les trois environnements, images réutilisées. Capacité locale 256→1024 blocs, autres limites en octets et règles inchangées ; ce changement ne clôture ni saturation, ni pruning, ni mémoire, ni production. Échéance originale 900 s et trois avances communes distinctes nécessaires. Préparation seule sans reprise qualifiée. Preuves restored-three-node-v8-retention-prepare-20261006/.
