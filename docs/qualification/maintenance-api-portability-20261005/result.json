@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "architectures": [
+    "native arm64 RocksDB11.8.1",
+    "Docker arm64 RocksDB8.9.1"
+  ],
+  "rejectionsPerArchitecture": 6,
+  "copyOnly": true,
+  "sourceUnchanged": true,
+  "canonicalAuditBeforeAndAfter": true,
+  "fixture": "existing stopped Nano1 pruned fixture; independent checkpoint293 f573b7de",
+  "runtimeChanged": false,
+  "imagesRebuilt": false,
+  "productionMaintenanceQualified": false,
+  "historicalFailures": [
+    "native /tmp alias symlink refused before mutation; controller corrected to canonical /private/tmp",
+    "native migration symlink has an earlier owned-chain diagnostic; verifier corrected without weakening marker refusal"
+  ]
+}

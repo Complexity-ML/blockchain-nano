@@ -1,5 +1,6 @@
 // Qualification helper: only an explicitly marked, offline owned chain copy.
 #include <rocksdb/db.h>
+#include "rocksdb-owned-copy.hpp"
 #include <rocksdb/table.h>
 #include <rocksdb/version.h>
 #include <openssl/evp.h>
@@ -20,8 +21,8 @@ Json logical(rocksdb::DB& db){std::unique_ptr<EVP_MD_CTX,decltype(&EVP_MD_CTX_fr
 int main(int argc,char** argv){try{
  if(argc!=3||std::string(argv[1])!="--offline-owned-copy")throw std::invalid_argument("Usage: compact-owned-copy --offline-owned-copy COPY/chain");
  fs::path input(argv[2]);for(auto p=input;!p.empty();p=p.parent_path()){if(fs::is_symlink(p))throw std::invalid_argument("Symlink path refused");if(p==p.parent_path())break;}
- const auto path=fs::canonical(input);if(path.filename()!="chain"||!fs::is_regular_file(path/"CURRENT"))throw std::invalid_argument("Owned chain copy required");std::ifstream marker(path.parent_path()/".nano-owned-compaction-copy");std::string flag;std::getline(marker,flag);if(flag!="owned-offline-qualification-copy-v1")throw std::invalid_argument("Explicit owned copy marker required");
- const auto beforeFiles=files(path);rocksdb::Options options;options.create_if_missing=false;options.paranoid_checks=true;options.allow_fallocate=false;options.info_log=std::make_shared<SilentLogger>();rocksdb::BlockBasedTableOptions tables;tables.format_version=6;options.table_factory.reset(rocksdb::NewBlockBasedTableFactory(tables));rocksdb::DB* raw=nullptr;check(rocksdb::DB::Open(options,path.string(),&raw));std::unique_ptr<rocksdb::DB> db(raw);
+ const auto path=fs::canonical(input);if(path.filename()!="chain"||!fs::is_regular_file(path/"CURRENT"))throw std::invalid_argument("Owned chain copy required");nano::maintenance::require_owned_marker(path.parent_path()/".nano-owned-compaction-copy","owned-offline-qualification-copy-v1");
+ const auto beforeFiles=files(path);rocksdb::Options options;options.create_if_missing=false;options.paranoid_checks=true;options.allow_fallocate=false;options.info_log=std::make_shared<SilentLogger>();rocksdb::BlockBasedTableOptions tables;tables.format_version=6;options.table_factory.reset(rocksdb::NewBlockBasedTableFactory(tables));auto db=nano::maintenance::open_copy(options,path.string());
  std::string schema;check(db->Get(rocksdb::ReadOptions(),"meta/schema",&schema));if(schema!="nano/1"&&schema!="nano/2-state-pruned")throw std::invalid_argument("Unknown Nano schema");const auto before=logical(*db);rocksdb::FlushOptions flush;flush.wait=true;check(db->Flush(flush));rocksdb::CompactRangeOptions compact;compact.exclusive_manual_compaction=true;check(db->CompactRange(compact,nullptr,nullptr));const auto after=logical(*db);if(before!=after)throw std::runtime_error("Compaction changed logical key/value content");db.reset();
  std::cout<<Json{{"schema",schema},{"rocksdbVersion",std::to_string(ROCKSDB_MAJOR)+"."+std::to_string(ROCKSDB_MINOR)+"."+std::to_string(ROCKSDB_PATCH)},{"ownedCopyOnly",true},{"beforeFiles",beforeFiles},{"afterFiles",files(path)},{"logicalBefore",before},{"logicalAfter",after},{"logicalContentUnchanged",true},{"physicalPowerLoss",false},{"productionMaintenanceQualified",false}}.dump(2)<<'\n';return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
