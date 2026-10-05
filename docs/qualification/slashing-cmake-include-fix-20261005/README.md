@@ -1,0 +1,3 @@
+# CMake BLS include correction — 2026-10-05
+
+CI run 37258158600 terminated in failure while compiling slashing_fixture.cpp: blst.h was unavailable through nano_core's private dependency. No CTest success is inferred from that run. Both private slashing tools now explicitly declare the BLS binding include directory; runtime dependency visibility is unchanged. A fresh CMake configuration and compilation of both translation units using only their generated target flags succeeded. This is a compile correction, not complete CI, AMD64 linkage or WAN sanction qualification. Full failed CI log retained.
