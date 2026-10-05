@@ -15,6 +15,9 @@ class CapellaLocalClock {
 public:
  CapellaLocalClock(CapellaDurableReactor&,uint64_t maximum_forward_step_ms,std::function<uint64_t()> now={});
  ~CapellaLocalClock();
+ // Explicit startup-only recovery, before poll/duties. Each durable tick uses
+ // at most the ordinary step bound; total downtime and step count are bounded.
+ Json startup_catch_up(uint64_t maximum_downtime_ms,uint64_t maximum_steps,const std::function<void()>& checkpoint={});
  bool poll(const std::function<void()>& checkpoint={});
  // Health reports the latched fault, without waiting for a poll blocked on
  // admission. Poll ordering / last_observed_ remain protected by mutex_.

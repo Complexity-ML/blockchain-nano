@@ -1,0 +1,7 @@
+# Explicit bounded startup catch-up
+
+The optional clock.startupCatchup object requires maximumDowntimeMs and maximumSteps (hex quantities). Each tick stays within maximumForwardStepMs; runtime validates that this step fits replaySlots. All configured signing journals are authenticated before catch-up, and validator threads start after catch-up and a normal guarded poll. No genesis or timestamp reset, no peer clock authority, no change of consensus profile. After startup, the old runtime clock jump/backward refusal remains.
+
+Nine native real-store scenarios pass: direct transition oracle, within-phase progress, downtime bound, step bound with witnessed durable prefix, cancellation with committed prefix retained, backward clock, clock jump during catch-up, reuse refusal, and default first-poll refusal without explicit startup allowance. Four existing clock diagnostics and the configured runtime baseline also pass. The baseline uses no startupCatchup option: end-to-end option parsing/activation and the real twelve-hour restart are still open.
+
+The core was compiled incrementally by replacing the two changed archive members in a copy of the previous library; the old binaries/library are unchanged. This is not a full reproducible-build qualification. Docker ARM64/AMD64, current snapshot migration, external pins, resumed duties and common WAN finality remain unqualified.

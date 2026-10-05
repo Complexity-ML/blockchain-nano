@@ -5,6 +5,28 @@ CapellaLocalClock::CapellaLocalClock(CapellaDurableReactor& reactor,uint64_t max
  if(!now_)now_=[](){const auto ms=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();if(ms<0)throw std::runtime_error("negative system clock");return uint64_t(ms);};
 }
 CapellaLocalClock::~CapellaLocalClock(){stop();}
+Json CapellaLocalClock::startup_catch_up(uint64_t maximum_downtime,uint64_t maximum_steps,const std::function<void()>& checkpoint){
+ std::lock_guard lock(mutex_);
+ if(!maximum_downtime||!maximum_steps||last_observed_||failed_.load(std::memory_order_acquire))throw std::invalid_argument("Capella startup catch-up requires unused healthy clock and explicit bounds");
+ bool cancelled=false;auto check=[&]{if(checkpoint)try{checkpoint();}catch(...){cancelled=true;throw;}};
+ try{
+  check();const auto from=reactor_.current().state->timed.clock.time_ms;uint64_t observed=now_(),steps=0;
+  for(;;){
+   check();const auto now=now_(),previous=reactor_.current().state->timed.clock.time_ms;
+   if(now<previous||now<observed||now-observed>maximum_step_)throw std::runtime_error("Capella startup catch-up local clock discontinuity");
+   observed=now;
+   if(now<from||now-from>maximum_downtime)throw std::runtime_error("Capella startup catch-up downtime budget exceeded");
+   if(now==previous){last_observed_=now;return {{"fromMs",from},{"toMs",now},{"steps",steps},{"maximumStepMs",maximum_step_},{"maximumDowntimeMs",maximum_downtime},{"maximumSteps",maximum_steps}};}
+   if(steps==maximum_steps)throw std::runtime_error("Capella startup catch-up step budget exceeded");
+   const auto remaining=now-previous;
+   const auto next=remaining<=maximum_step_?now:previous+maximum_step_;
+   // Always publish this bounded clock step, even inside the same phase. No
+   // key providers or validator duties exist in this startup recovery path.
+   reactor_.tick(next,check);++steps;
+   if(next==now){last_observed_=now;return {{"fromMs",from},{"toMs",now},{"steps",steps},{"maximumStepMs",maximum_step_},{"maximumDowntimeMs",maximum_downtime},{"maximumSteps",maximum_steps}};}
+  }
+ }catch(...){if(!cancelled){failed_.store(true,std::memory_order_release);reactor_.invalidate();}throw;}
+}
 bool CapellaLocalClock::poll(const std::function<void()>& checkpoint){
  std::lock_guard lock(mutex_);if(failed_.load(std::memory_order_acquire))throw std::runtime_error("Capella local clock unavailable; restart required");
  bool cancelled=false;auto check=[&]{if(checkpoint)try{checkpoint();}catch(...){cancelled=true;throw;}};

@@ -707,6 +707,43 @@ static void duty_timing_loop(const CapellaForkStore& initial,const CapellaForkBl
  }
  std::cout<<Json{{"scenario","capella-duty-timing"},{"cases",4},{"earlyOldHeadPrevented",true},{"validBlockBeforeDeadline",true},{"invalidBlockNoRelease",true},{"deadlineFallback",true},{"missedSlotNoLateSignature",true},{"duplicatePollNoResign",true},{"fullSlotWorkerInterval",true},{"networkTransport",false}}.dump()<<std::endl;
 }
+static void startup_catchup_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules,const Block& genesis,const State& genesis_state){
+ const auto limits=crash_limits;const auto& t=rules.transition;unsigned passed=0;
+ for(const std::string mode:{"success","within-phase","downtime","steps","cancel","backward","jump","used","default-refusal"}){
+  Temp directory;Genesis g;g.chain_id=t.chain_id;g.consensus="beacon";g.evm_revision=EvmRevision::Shanghai;g.block=genesis;g.state=genesis_state;
+  Blockchain owner(directory/"owner",g);ChainStore witness(directory/"witness");CapellaDurableReactor reactor(owner,rules,limits,initial,std::function<void()>{},&witness);
+  const auto base=initial.timed.clock.time_ms,bound=2*rules.slot_duration_ms;uint64_t now=base+(mode=="within-phase"?1:5*rules.slot_duration_ms);unsigned reads=0;
+  if(mode=="backward")now=base-1;
+  CapellaLocalClock clock(reactor,bound,[&]{++reads;if(mode=="jump"&&reads>=3)now+=bound+1;return now;});
+  const auto before=reactor.current();std::string failure;Json report;bool cancellation=false;
+  if(mode=="used"){now=base;clock.poll();}
+  try{
+   if(mode=="default-refusal")clock.poll();
+   else report=clock.startup_catch_up(mode=="downtime"?5*rules.slot_duration_ms-1:10*rules.slot_duration_ms,mode=="steps"?1:8,[&]{if(mode=="cancel"&&reads>=3){cancellation=true;throw std::runtime_error("cancel startup");}});
+  }catch(const std::exception& e){failure=e.what();}
+  const auto saved=owner.store().fork_checkpoint(t.chain_id,genesis.header.hash(),limits.envelope_bytes);check(bool(saved),"startup lost durable checkpoint");
+  const auto intent=witness.fork_checkpoint(t.chain_id,genesis.header.hash(),2048+8*limits.envelope_bytes);check(bool(intent),"startup lost independent witness");const auto publication=Json::parse(intent->snapshot);
+  check(publication.at("snapshot")==saved->snapshot&&publication.at("next").at("digest")==hex(saved->token.digest),"startup witness differs from primary publication");
+  if(mode=="success"||mode=="within-phase"){
+   check(failure.empty()&&clock.healthy()&&report.at("steps")==uint64_t(mode=="success"?3:1),"bounded startup did not complete");
+   const auto expected=prepare_capella_store_tick(initial,now,rules,limits.replay_slots,limits.sync_trials);
+   check(capella_store_snapshot(*reactor.current().state,rules,limits)==capella_store_snapshot(expected,rules,limits),"chunked startup differs from direct transition oracle");
+   check(reactor.signed_votes().empty(),"startup invented signed votes");
+   bool reused=false;try{clock.startup_catch_up(10*rules.slot_duration_ms,8);}catch(const std::invalid_argument&){reused=true;}check(reused&&clock.healthy(),"startup allowance reused after completion");
+   now+=bound+1;bool refused=false;try{clock.poll();}catch(const std::runtime_error&){refused=true;}check(refused&&!clock.healthy(),"startup weakened ordinary forward-jump refusal");
+  }else{
+   check(!failure.empty(),"invalid startup accepted");
+   const bool partial=mode=="steps"||mode=="cancel"||mode=="jump";
+   check((saved->token.sequence>before.token.sequence)==partial,"startup durable prefix changed unexpectedly");
+   check(clock.healthy()==(mode=="cancel"||mode=="used"),"startup cancellation/failure latch incorrect");
+   if(mode=="cancel")check(cancellation&&reactor.current().state->timed.clock.time_ms==base+bound,"cancelled startup lost committed prefix");
+   if(mode=="steps")check(failure.find("step budget exceeded")!=std::string::npos,"missing step bound failure");
+   if(mode=="downtime")check(failure.find("downtime budget exceeded")!=std::string::npos,"missing downtime bound failure");
+  }
+  ++passed;
+ }
+ std::cout<<Json{{"scenario","capella-startup-catchup"},{"scenarios",passed},{"directTransitionOracle",true},{"witnessedDurablePrefixes",true},{"runtimeJumpRefusalPreserved",true},{"networkTransport",false}}.dump()<<std::endl;
+}
 static void clock_diagnostics_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules,const Block& genesis,const State& genesis_state){
  const auto limits=crash_limits;const auto& t=rules.transition;unsigned passed=0;
  for(unsigned mode=0;mode<4;++mode){
@@ -1818,7 +1855,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
     }
    }
   }
-  if(slot==first_slot){short_snapshot=capella_store_snapshot(*store,store_rules,snapshot_limits);if(signer_health){signer_health_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(duty_timing){duty_timing_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(clock_diagnostics){clock_diagnostics_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(deposit_reorg){deposit_reorg_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(configured_runtime){runtime_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(scheduled){scheduler_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}
+  if(slot==first_slot){short_snapshot=capella_store_snapshot(*store,store_rules,snapshot_limits);if(signer_health){signer_health_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(duty_timing){duty_timing_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(clock_diagnostics){clock_diagnostics_loop(*store,store_rules,disk_genesis,disk_genesis_state);startup_catchup_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(deposit_reorg){deposit_reorg_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(configured_runtime){runtime_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(scheduled){scheduler_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}
   if(local_finality){local_finality_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}}
   ++contexts;
   beacon=received->consensus;state=received->execution.state;parent=received->execution.block;hashes[parent.header.number]=parent.header.hash();++accepted;

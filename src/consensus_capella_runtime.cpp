@@ -1,6 +1,7 @@
 #include "nano/consensus_capella_runtime.hpp"
 #include "nano/local_monotonic_time.hpp"
 #include <fstream>
+#include <iostream>
 #include <cstdlib>
 #include <set>
 #include <openssl/crypto.h>
@@ -41,7 +42,14 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const 
  const auto& l=config.at("limits");shape(l,{"envelopeBytes","blocks","messages","equivocations","stateBytes","totalStateBytes","replaySlots","syncTrials"});
  const CapellaStoreSnapshotLimits limits{number(l.at("envelopeBytes")),number(l.at("blocks")),number(l.at("messages")),number(l.at("equivocations")),number(l.at("stateBytes")),number(l.at("totalStateBytes")),number(l.at("replaySlots")),number(l.at("syncTrials"))};
  if(limits.state_bytes<rules.transition.maximum_state_bytes||limits.total_state_bytes<limits.state_bytes)throw std::invalid_argument("Capella state capacity below configured transition");
- const auto& c=config.at("clock");auto clock_fields=c;clock_fields.erase("maximumWallClockDriftMs");shape(clock_fields,{"intervalMs","maximumForwardStepMs"});const auto interval=number(c.at("intervalMs")),step=number(c.at("maximumForwardStepMs"));
+ const auto& c=config.at("clock");auto clock_fields=c;clock_fields.erase("maximumWallClockDriftMs");clock_fields.erase("startupCatchup");shape(clock_fields,{"intervalMs","maximumForwardStepMs"});const auto interval=number(c.at("intervalMs")),step=number(c.at("maximumForwardStepMs"));
+ std::optional<std::pair<uint64_t,uint64_t>> startup_catchup;
+ if(c.contains("startupCatchup")){
+  const auto& recovery=c.at("startupCatchup");shape(recovery,{"maximumDowntimeMs","maximumSteps"});
+  const auto downtime=number(recovery.at("maximumDowntimeMs")),steps=number(recovery.at("maximumSteps"));
+  if(!downtime||!steps||!step||!rules.slot_duration_ms||step/rules.slot_duration_ms+uint64_t(step%rules.slot_duration_ms!=0)>limits.replay_slots)throw std::invalid_argument("Capella startup catch-up bounds exceed replay capacity");
+  startup_catchup=std::pair{downtime,steps};
+ }
  std::optional<uint64_t> wall_drift;
  if(c.contains("maximumWallClockDriftMs")){
   wall_drift=number(c.at("maximumWallClockDriftMs"));
@@ -95,7 +103,7 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const 
   now=[time](){return time->now();};
  }else if(!now)now=[](){const auto ms=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();if(ms<0)throw std::runtime_error("Negative local time");return uint64_t(ms);};
  owner->clock=std::make_unique<CapellaLocalClock>(*owner->reactor,step,now);
- owner->clock->poll(checkpoint);chain.require_execution_ready();
+ uint64_t validator_poll=0;
  if(config.contains("admission")){
   const auto& a=config.at("admission");shape(a,{"frameBytes","blockBytes","attestationBytes","slashingBytes","jobs","payloadBytes"});
   const auto frame=number(a.at("frameBytes")),block=number(a.at("blockBytes")),vote=number(a.at("attestationBytes")),slash=number(a.at("slashingBytes")),jobs=number(a.at("jobs")),bytes=number(a.at("payloadBytes"));
@@ -164,8 +172,13 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const 
   }
   owner->validator=std::make_unique<CapellaValidatorLoop>(*owner->reactor,*owner->clock,rules.slot_duration_ms,rules.transition.consensus.epoch.ffg.slots_per_epoch,transactions,trials,std::move(keys),now);
   if(const char* trace=std::getenv("NANO_TEST_NETWORK_TRACE");trace&&std::string_view(trace)=="1")owner->validator->set_duty_trace_limit(128);
-  owner->validator->start(std::chrono::milliseconds(poll));
+  validator_poll=poll;
  }
+ // Authenticate all configured signing journals before recovery publishes new
+ // durable clock state. No duty thread starts until the catch-up is complete.
+ if(startup_catchup){auto recovered=owner->clock->startup_catch_up(startup_catchup->first,startup_catchup->second,checkpoint);recovered["event"]="capella-startup-catchup-completed";std::cout<<recovered.dump()<<std::endl;}
+ owner->clock->poll(checkpoint);chain.require_execution_ready();
+ if(owner->validator)owner->validator->start(std::chrono::milliseconds(validator_poll));
  owner->clock->start(std::chrono::milliseconds(interval));
  auto sync_tracker=std::make_shared<BeaconSyncTracker>();
  return {owner->validator?std::shared_ptr<CapellaValidatorLoop>(owner,owner->validator.get()):nullptr,std::shared_ptr<CapellaDurableReactor>(owner,owner->reactor.get()),std::shared_ptr<CapellaLocalClock>(owner,owner->clock.get()),[owner,rules,sync_tracker,now](std::string_view path,const std::function<void()>& check){
