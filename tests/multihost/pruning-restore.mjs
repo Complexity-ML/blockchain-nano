@@ -16,3 +16,9 @@ export function verifyPrunedRestoreAudit(audit){
  if(audit?.canonicalHistoryVerified!==true||audit.allHistoricalStatesMaterialized!==false||!Number.isSafeInteger(audit.prunedExecutionStatesReplayed)||audit.prunedExecutionStatesReplayed<=0)throw Error('Restore audit did not prove pruned states replayed from trusted genesis');
  return audit;
 }
+
+// The combined workload retains the complete restore and terminal ancestry gates.
+export function validateBackupRestoreMode({backupRestore,profile,reviewedArtifacts,partition,asymmetric,rotation,boundedLoad,historicalPruning}){
+ if(!backupRestore)return;
+ if(profile!=='capella'||!reviewedArtifacts||partition||asymmetric||rotation||(boundedLoad&&!historicalPruning))throw Error('Backup restore requires reviewed Capella artifacts; bounded load additionally requires historical pruning');
+}

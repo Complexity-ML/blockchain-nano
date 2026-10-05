@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import {capturePeerSyncing} from './peer-syncing.mjs';
-import {pruningRestoreMode,pruningRestoreConfiguration,verifyPrunedRestoreAudit} from './pruning-restore.mjs';
+import {pruningRestoreMode,pruningRestoreConfiguration,verifyPrunedRestoreAudit,validateBackupRestoreMode} from './pruning-restore.mjs';
 // Authorized isolated devnet only; code is deployed through Git, not this script.
 import {execFile,spawn} from 'node:child_process';
 import {promisify} from 'node:util';
@@ -75,7 +75,7 @@ const pinnedRestart=process.env.NANO_TEST_PINNED_RESTART==='1';
 if(partitionCuts&&(!candidates||fork!=='capella'||!partition||asymmetric||rotation||boundedLoad||backupRestore||pinnedRestart||monitor))throw Error('Repeated partitions require standalone packaged Capella partition campaign');
 if(majorityIsland&&(!(candidates||qualifiedRetainedArtifacts(buildVolume,buildArtifacts))||fork!=='capella'||!partition||asymmetric||rotation||boundedLoad||backupRestore||pinnedRestart||monitor||partitionCuts))throw Error('Majority island requires standalone attested Capella partition campaign');
 if(pinnedRestart&&(!candidates||fork!=='capella'||monitor||backupRestore||partition||asymmetric||rotation||boundedLoad))throw Error('Pinned container replacement requires standalone packaged Capella images');
-if(backupRestore&&(fork!=='capella'||!(buildVolume||candidates)||partition||asymmetric||rotation||boundedLoad))throw Error('Backup restore requires standalone Capella reviewed artifact campaign');
+validateBackupRestoreMode({backupRestore,profile:fork,reviewedArtifacts:Boolean(buildVolume||candidates),partition,asymmetric,rotation,boundedLoad,historicalPruning});
 const restoreRuntime=backupRestore?selectRestoreRuntime({buildVolume,packaged:Boolean(candidates),buildNano:buildPaths.nano}):null;
 if(boundedLoad&&(fork!=='capella'||asymmetric||rotation))throw Error('Bounded load requires Capella; asymmetric/rotation combinations are not qualified yet');
 if(rotation&&(fork!=='capella'||!partition||!buildVolume))throw Error('Rotation requires Capella, the isolated partition and build volumes');
