@@ -1,0 +1,15 @@
+# Current Capella voluntary exit / crash / withdrawal — terminal 2026-10-05
+
+**Campaign terminal 0 / PASSED**, harness `2c8fc30a3c5c0a7c78bfca931f5bcc47fe036f13`, runtime `ab10b8ae5dd50c7edf6f919ed440aa51a46e5e0e`. Native Mac and Docker AMD64 VPS, two physical hosts, 64 public synthetic keys (32 each). Existing immutable image and readonly build volume, no image rebuild; loopback RPC and private SSH P2P forwarding. Started only after the three-node rotation campaign was terminal. Private fixture uses shortened exit/withdrawal parameters and `automaticRecovery=true`; it is not public validator recovery policy.
+
+The valid signed exit for validator0 is included before finality. VPS is killed with SIGKILL, exit137 is observed, half-stake survivor cannot finalize beyond cutoff, then the same container, data volume, config, listener and peer identity resume. Healthy proposal/attestation stop receipts are retained. Exit occurs exactly once on the jointly finalized ancestry.
+
+At common checkpoint epoch7/root `0xd0da645f27a66c3329581a3730ad6b8f30bf8194c01a52f7232cfc823a7dc19c`, both nodes return identical execution history through finalized block46/hash `0x4902ce289614c6db89db6c90d35d719d41399e2f40385ec0600b8891e9f0f30b`. Nine payments to the configured recipient, **one capital payment**, sum exactly **33009394462000000000 wei**, matching both finalized balances with zero initial recipient balance. Runtime/witness/journals remain preserved on each host. Terminal program/hash/harness checks pass; VPS stops0 without OOM.
+
+Additional offline C++ audits each return0: readonly canonical replay verifies signed transitions, execution state/withdrawals/transaction index, independent stop token and the separately observed finalized checkpoint as ancestor. Native63/VPS64 blocks including trusted anchor, one transaction each. Finalized checkpoints agree.
+
+**Collector failure retained:** `audit.py` initially demanded identical heads after sequential shutdown and returned1, although both C++ audits passed. Native stopped height63, VPS64 with distinct heads. The common finalized payout gate is verified independently from saved results; no network or audit was rerun to erase the failure. Identical stopped heads and a separately proven linear extension relation are not claimed. An extra RPC observation after shutdown refused the connection and is recorded separately, not attributed to a running-network fault.
+
+CI37256392186/source2c8fc30a terminal success: operations **460 passed, zero failures/skips**, including new artifact selector tests. Core and network jobs were explicitly skipped; this CI does not requalify the C++ runtime or a live WAN by itself.
+
+Limits: two-node test, known synthetic keys and accelerated fixture parameters; SIGKILL is not physical power loss; no pruning/load/ARM Docker in this specific campaign; no large-scale, admission/deposit/activation/slashing WAN cycle, historical standalone-vote replay or full historical fork choice. The archive retains all failures, global production/bridge/Doppler/review requirements remain open. No real asset, sale or public deployment.
