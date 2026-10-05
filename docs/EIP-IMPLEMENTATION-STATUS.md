@@ -7087,3 +7087,16 @@ vps-docker : boucle saine non, erreur invalid Capella Store snapshot at line 39,
 Engagements avancés : 16/16 natif, 16/16 Docker Mac, 32/33 VPS ; clé en enregistrement automatique inchangée, donc reprise de 65 duties non démontrée.
 Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichiers inchangés. Journaux non fusionnés/non réinitialisés, aucun transfert de base entre hôtes. Reprise réseau et production toujours ouvertes.
 [Preuves v7](qualification/restored-three-node-v7-terminal-20261006/README.md).
+
+## Diagnostic de capacité du snapshot v7 — 6 octobre 2026
+
+Lecture Docker AMD64 du VPS arrêté : 256 blocs retenus pour une limite
+configurée de 256, 65 messages sur 2048, zéro équivoque sur 1000. Engagement
+exact du reçu d’arrêt et témoin vérifiés ; 1393 fichiers inchangés. Cela pointe
+vers l’épuisement de rétention pour l’erreur ligne 39 ; le candidat rejeté
+en mémoire n’a pas été capturé, sa structure complète reste à reproduire.
+Outil diagnostique seul compilé et lié au cœur b5ee00ac inchangé ; premier
+échec d’include conservé, copie corrigée sortie 0 sans OOM. Aucune relance
+ni signature, aucun rebuild d’image. Gestion de capacité, propagation des votes
+et finalité commune restent ouvertes ; augmenter la borne ne les qualifie pas.
+[Preuves](qualification/restored-v7-snapshot-capacity-20261006/README.md).
