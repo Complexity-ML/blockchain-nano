@@ -81,6 +81,18 @@ std::optional<CapellaForkStore> prepare_capella_prepared_received_block(
  const CapellaForkStore&,std::span<const uint8_t>,const CapellaForkBlockRules&,
  const CapellaBlockPreparation&,uint64_t maximum_slots,uint64_t maximum_sync_trials,
  const std::function<void()>& checkpoint={});
+// Completed local target frames may be shared with embedded votes and FFG
+// updates. Every used frame rechecks the admitted source and complete profile.
+// Missing targets retain the original bounded replay semantics.
+std::optional<CapellaForkStore> prepare_capella_contextual_received_block(
+ const CapellaForkStore&,std::span<const uint8_t>,const CapellaForkBlockRules&,
+ const CapellaBlockPreparation&,std::span<const CapellaTargetPreparation* const>,
+ uint64_t maximum_slots,uint64_t maximum_sync_trials,
+ const std::function<void()>& checkpoint={});
+CapellaForkStore prepare_capella_contextual_store_tick(const CapellaForkStore&,uint64_t time_ms,
+ const CapellaForkBlockRules&,std::span<const CapellaTargetPreparation* const>,
+ uint64_t maximum_slots,uint64_t maximum_sync_trials,
+ const std::function<void()>& checkpoint={});
 // Store-bound gossip admission; the sender cannot supply committee/context or
 // bypass the gossip time window with an "already included" flag.
 std::optional<CapellaForkStore> prepare_capella_store_vote(const CapellaForkStore&,

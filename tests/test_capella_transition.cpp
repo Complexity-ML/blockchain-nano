@@ -1489,6 +1489,29 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
   const auto admitted=prepare_capella_prepared_received_block(timed,wire,rules,preparation,3,100000);
   const auto admitted_oracle=prepare_capella_received_block(timed,wire,rules,slot-parent.header.slot,100000);
   check(admitted&&admitted_oracle&&capella_store_snapshot(*admitted,rules,crash_limits)==capella_store_snapshot(*admitted_oracle,rules,crash_limits),"prepared Store admission differs from ordinary fork-choice/operation processing");++checks;
+  {
+   const auto prior_time=initial.timed.clock.genesis_time_ms+(slot-1)*rules.slot_duration_ms+rules.attestation_due_ms;
+   const auto prior_store=prepare_capella_store_tick(initial,prior_time,rules,3,100000);
+   const auto assignments=prepare_capella_attestation_duties(prior_store,rules,slot-1,slot-parent.header.slot,100000);
+   check(!assignments.empty(),"included long-gap vote has no assignment");const auto& assignment=assignments.begin()->second;
+   auto vote=assignment.attestation;vote.signature=Key(assignment.validator_index).sign(consensus_signing_root(consensus_attestation_root(vote.data),consensus_domain({1,0,0,0},assignment.fork_version,assignment.genesis_root)));
+   const auto vote_bytes=encode_consensus_attestation_ssz(vote,r.consensus.body.validators_per_committee);
+   Bytes included_body(body.begin(),body.begin()+fixed);Bytes list(4,0);put(list,0,4,4);list.insert(list.end(),vote_bytes.begin(),vote_bytes.end());
+   for(size_t at:std::array<size_t,3>{212,216,220+sync_bytes})put(included_body,at,fixed+list.size(),4);
+   put(included_body,224+sync_bytes,fixed+list.size()+encoded.size(),4);included_body.insert(included_body.end(),list.begin(),list.end());included_body.insert(included_body.end(),encoded.begin(),encoded.end());
+   const auto block_with_vote=preparation.construct(slot,identity->index,included_body,parent.execution_block.header,parent.execution_state,history,100000);
+   check(bool(block_with_vote),"signed included vote failed normal block transition");++checks;
+   const auto included_wire=sign(block_with_vote->message_ssz,identity->index);
+   CapellaTargetPreparation included_target(timed,rules,vote.data.target);size_t chunks=0;while(!included_target.advance(3,100000))check(++chunks<slot/3+3,"included target preparation stalled");
+   const std::array<const CapellaTargetPreparation*,1> targets{&included_target};
+   const auto expected=prepare_capella_received_block(timed,included_wire,rules,slot-parent.header.slot,100000);
+   const auto actual=prepare_capella_contextual_received_block(timed,included_wire,rules,preparation,targets,3,100000);
+   check(expected&&actual&&capella_store_snapshot(*actual,rules,crash_limits)==capella_store_snapshot(*expected,rules,crash_limits)&&!actual->timed.view.latest_messages.empty(),"included prepared vote differs from full-gap Store oracle");++checks;
+   bool bounded=false;try{prepare_capella_prepared_received_block(timed,included_wire,rules,preparation,3,100000);}catch(const std::length_error&){bounded=true;}check(bounded,"included vote silently bypassed legacy replay budget");++checks;
+   CapellaTargetPreparation unfinished(timed,rules,vote.data.target);const std::array<const CapellaTargetPreparation*,1> missing{&unfinished};
+   bool incomplete=false;try{prepare_capella_contextual_received_block(timed,included_wire,rules,preparation,missing,3,100000);}catch(const std::invalid_argument&){incomplete=true;}check(incomplete,"included vote used incomplete target");++checks;
+   auto invalid=included_wire;invalid[4]^=1;check(!prepare_capella_contextual_received_block(timed,invalid,rules,preparation,targets,3,100000),"contextual block bypassed BLS signature");++checks;
+  }
   auto incompatible=r;incompatible.chain_id+=1;CapellaBlockPreparation wrong_profile(original,parent.header,incompatible);while(!wrong_profile.advance_for_block(slot,3,100000)){}
   refused=false;try{prepare_capella_prepared_received_block(timed,wire,rules,wrong_profile,3,100000);}catch(const std::invalid_argument&){refused=true;}check(refused,"prepared Store admitted a frame from another transition profile");++checks;
   CapellaDutyPreparation local(timed,rules,slot);size_t local_attempts=0;
@@ -1526,6 +1549,19 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
    auto invalid_vote=vote;invalid_vote.signature[0]^=1;check(!prepare_capella_prepared_store_vote(after,invalid_vote,rules,target),"prepared vote accepted invalid BLS");++checks;
    auto future_target=vote.data.target;future_target.epoch=vote_store.timed.view.current_epoch+1;bool future_refused=false;try{CapellaTargetPreparation future(vote_store,rules,future_target);}catch(const std::invalid_argument&){future_refused=true;}check(future_refused,"target frame allowed a future epoch before replay");++checks;
    auto other_profile=rules;other_profile.transition.chain_id+=1;bool mismatch=false;try{target.context(vote_store,other_profile);}catch(const std::invalid_argument&){mismatch=true;}check(mismatch,"target cache accepted a different profile");++checks;
+   // Exercise the fork-clock registry update with an explicit unrealized
+   // checkpoint fixture; this does not claim that its FFG votes were produced.
+   auto ffg_input=vote_store;ffg_input.timed.clock.unrealized_justified=vote.data.target;
+   const auto boundary_time=initial.timed.clock.genesis_time_ms+(slot/slots+1)*slots*rules.slot_duration_ms;
+   const std::array<const CapellaTargetPreparation*,1> targets{&target};
+   const auto ffg_oracle=prepare_capella_store_tick(ffg_input,boundary_time,rules,slot-parent.header.slot,100000);
+   const auto ffg_prepared=prepare_capella_contextual_store_tick(ffg_input,boundary_time,rules,targets,3,100000);
+   check(capella_store_snapshot(ffg_prepared,rules,crash_limits)==capella_store_snapshot(ffg_oracle,rules,crash_limits)&&ffg_prepared.timed.view.justified==vote.data.target&&ffg_prepared.timed.view.justified_registry==context.registry,"prepared tick justification differs from full-gap oracle");++checks;
+   limited=false;try{prepare_capella_store_tick(ffg_input,boundary_time,rules,3,100000);}catch(const std::length_error&){limited=true;}check(limited,"ordinary tick replay budget weakened");++checks;
+   CapellaTargetPreparation incomplete(vote_store,rules,vote.data.target);const std::array<const CapellaTargetPreparation*,1> unfinished{&incomplete};
+   bool bad_context=false;try{prepare_capella_contextual_store_tick(ffg_input,boundary_time,rules,unfinished,3,100000);}catch(const std::invalid_argument&){bad_context=true;}check(bad_context&&ffg_input.timed.view.justified==vote_store.timed.view.justified,"incomplete tick context published justification");++checks;
+   bad_context=false;try{prepare_capella_contextual_store_tick(ffg_input,boundary_time,other_profile,targets,3,100000);}catch(const std::invalid_argument&){bad_context=true;}check(bad_context,"tick used target from another profile");++checks;
+   interrupted=false;try{prepare_capella_contextual_store_tick(ffg_input,boundary_time,rules,targets,3,100000,[]{throw ExecutionCancelled("cancel contextual tick");});}catch(const ExecutionCancelled&){interrupted=true;}check(interrupted&&ffg_input.timed.view.justified==vote_store.timed.view.justified,"contextual tick swallowed cancellation or mutated source");++checks;
    Temp vote_directory;Genesis vg;vg.chain_id=r.chain_id;vg.consensus="beacon";vg.evm_revision=EvmRevision::Shanghai;vg.block=genesis;vg.state=genesis_state;
    auto vote_limits=crash_limits;vote_limits.replay_slots=3;Blockchain vote_owner(vote_directory/"owner",vg);ChainStore vote_witness(vote_directory/"witness");
    auto receiver=std::make_unique<CapellaDurableReactor>(vote_owner,rules,vote_limits,initial,std::function<void()>{},&vote_witness);receiver->tick(vote_time);const auto vote_token=receiver->current().token;
