@@ -1,0 +1,272 @@
+{
+  "Id": "88dc37c520db2591a29cd602b0268b08b7f85fcaac52e70570f646c3a2f978af",
+  "Created": "2026-10-05T22:02:41.602725217Z",
+  "Path": "/build/deposit-deadline-arm64-b5ee00ac-20261005/nano",
+  "Args": [
+    "run",
+    "/config/genesis.json",
+    "/var/lib/nano/chain",
+    "/config/mac-docker.json"
+  ],
+  "State": {
+    "Status": "exited",
+    "Running": false,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 0,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "2026-10-05T22:02:41.637332675Z",
+    "FinishedAt": "2026-10-05T22:03:42.402763676Z"
+  },
+  "Image": "sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb",
+  "ResolvConfPath": "/var/lib/docker/containers/88dc37c520db2591a29cd602b0268b08b7f85fcaac52e70570f646c3a2f978af/resolv.conf",
+  "HostnamePath": "/var/lib/docker/containers/88dc37c520db2591a29cd602b0268b08b7f85fcaac52e70570f646c3a2f978af/hostname",
+  "HostsPath": "/var/lib/docker/containers/88dc37c520db2591a29cd602b0268b08b7f85fcaac52e70570f646c3a2f978af/hosts",
+  "LogPath": "/var/lib/docker/containers/88dc37c520db2591a29cd602b0268b08b7f85fcaac52e70570f646c3a2f978af/88dc37c520db2591a29cd602b0268b08b7f85fcaac52e70570f646c3a2f978af-json.log",
+  "Name": "/nano-restored-three-node-mac-muvspd93",
+  "RestartCount": 0,
+  "Driver": "overlayfs",
+  "Platform": "linux",
+  "MountLabel": "",
+  "ProcessLabel": "",
+  "AppArmorProfile": "",
+  "ExecIDs": null,
+  "HostConfig": {
+    "Binds": [
+      "nano-clean-arm64-build-20261002:/build:ro",
+      "/host_mnt/private/tmp/nano-restored-three-node-v5-20261005/mac-docker/data:/var/lib/nano",
+      "/host_mnt/private/tmp/nano-restored-three-node-v5-20261005/config:/config:ro"
+    ],
+    "ContainerIDFile": "",
+    "LogConfig": {
+      "Type": "json-file",
+      "Config": {}
+    },
+    "NetworkMode": "bridge",
+    "PortBindings": {
+      "30303/tcp": [
+        {
+          "HostIp": "127.0.0.1",
+          "HostPort": "54242"
+        }
+      ]
+    },
+    "RestartPolicy": {
+      "Name": "no",
+      "MaximumRetryCount": 0
+    },
+    "AutoRemove": false,
+    "VolumeDriver": "",
+    "VolumesFrom": null,
+    "ConsoleSize": [
+      0,
+      0
+    ],
+    "CapAdd": null,
+    "CapDrop": [
+      "ALL"
+    ],
+    "CgroupnsMode": "private",
+    "Dns": null,
+    "DnsOptions": [],
+    "DnsSearch": [],
+    "ExtraHosts": null,
+    "GroupAdd": null,
+    "IpcMode": "private",
+    "Cgroup": "",
+    "Links": null,
+    "OomScoreAdj": 0,
+    "PidMode": "",
+    "Privileged": false,
+    "PublishAllPorts": false,
+    "ReadonlyRootfs": true,
+    "SecurityOpt": [
+      "no-new-privileges"
+    ],
+    "Tmpfs": {
+      "/tmp": ""
+    },
+    "UTSMode": "",
+    "UsernsMode": "",
+    "ShmSize": 67108864,
+    "Runtime": "runc",
+    "Isolation": "",
+    "CpuShares": 0,
+    "Memory": 4294967296,
+    "NanoCpus": 2000000000,
+    "CgroupParent": "",
+    "BlkioWeight": 0,
+    "BlkioWeightDevice": [],
+    "BlkioDeviceReadBps": [],
+    "BlkioDeviceWriteBps": [],
+    "BlkioDeviceReadIOps": [],
+    "BlkioDeviceWriteIOps": [],
+    "CpuPeriod": 0,
+    "CpuQuota": 0,
+    "CpuRealtimePeriod": 0,
+    "CpuRealtimeRuntime": 0,
+    "CpusetCpus": "",
+    "CpusetMems": "",
+    "Devices": [],
+    "DeviceCgroupRules": null,
+    "DeviceRequests": null,
+    "MemoryReservation": 0,
+    "MemorySwap": 8589934592,
+    "MemorySwappiness": null,
+    "OomKillDisable": null,
+    "PidsLimit": null,
+    "Ulimits": [
+      {
+        "Name": "nofile",
+        "Hard": 65536,
+        "Soft": 65536
+      }
+    ],
+    "CpuCount": 0,
+    "CpuPercent": 0,
+    "IOMaximumIOps": 0,
+    "IOMaximumBandwidth": 0,
+    "MaskedPaths": [
+      "/proc/acpi",
+      "/proc/asound",
+      "/proc/interrupts",
+      "/proc/kcore",
+      "/proc/keys",
+      "/proc/latency_stats",
+      "/proc/sched_debug",
+      "/proc/scsi",
+      "/proc/timer_list",
+      "/proc/timer_stats",
+      "/sys/devices/virtual/powercap",
+      "/sys/firmware"
+    ],
+    "ReadonlyPaths": [
+      "/proc/bus",
+      "/proc/fs",
+      "/proc/irq",
+      "/proc/sys",
+      "/proc/sysrq-trigger"
+    ]
+  },
+  "Storage": {
+    "RootFS": {
+      "Snapshot": {
+        "Name": "overlayfs"
+      }
+    }
+  },
+  "Mounts": [
+    {
+      "Type": "volume",
+      "Name": "nano-clean-arm64-build-20261002",
+      "Source": "/var/lib/docker/volumes/nano-clean-arm64-build-20261002/_data",
+      "Destination": "/build",
+      "Driver": "local",
+      "Mode": "ro",
+      "RW": false,
+      "Propagation": ""
+    },
+    {
+      "Type": "bind",
+      "Source": "/host_mnt/private/tmp/nano-restored-three-node-v5-20261005/config",
+      "Destination": "/config",
+      "Mode": "ro",
+      "RW": false,
+      "Propagation": "rprivate"
+    },
+    {
+      "Type": "bind",
+      "Source": "/host_mnt/private/tmp/nano-restored-three-node-v5-20261005/mac-docker/data",
+      "Destination": "/var/lib/nano",
+      "Mode": "",
+      "RW": true,
+      "Propagation": "rprivate"
+    }
+  ],
+  "Config": {
+    "Hostname": "88dc37c520db",
+    "Domainname": "",
+    "User": "",
+    "AttachStdin": false,
+    "AttachStdout": false,
+    "AttachStderr": false,
+    "ExposedPorts": {
+      "30303/tcp": {}
+    },
+    "Tty": false,
+    "OpenStdin": false,
+    "StdinOnce": false,
+    "Env": [
+      "NANO_TEST_CAPELLA_NETWORK_KEY_16=<redacted>",
+      "NANO_TEST_CAPELLA_NETWORK_KEY_17=<redacted>",
+      "NANO_TEST_CAPELLA_NETWORK_KEY_18=<redacted>",
+      "NANO_TEST_CAPELLA_NETWORK_KEY_19=<redacted>",
+      "NANO_TEST_CAPELLA_NETWORK_KEY_20=<redacted>",
+      "NANO_TEST_CAPELLA_NETWORK_KEY_21=<redacted>",
+      "NANO_TEST_CAPELLA_NETWORK_KEY_22=<redacted>",
+      "NANO_TEST_CAPELLA_NETWORK_KEY_23=<redacted>",
+      "NANO_TEST_CAPELLA_NETWORK_KEY_24=<redacted>",
+      "NANO_TEST_CAPELLA_NETWORK_KEY_25=<redacted>",
+      "NANO_TEST_CAPELLA_NETWORK_KEY_26=<redacted>",
+      "NANO_TEST_CAPELLA_NETWORK_KEY_27=<redacted>",
+      "NANO_TEST_CAPELLA_NETWORK_KEY_28=<redacted>",
+      "NANO_TEST_CAPELLA_NETWORK_KEY_29=<redacted>",
+      "NANO_TEST_CAPELLA_NETWORK_KEY_30=<redacted>",
+      "NANO_TEST_CAPELLA_NETWORK_KEY_31=<redacted>",
+      "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+      "CC=clang",
+      "CXX=clang++"
+    ],
+    "Cmd": [
+      "run",
+      "/config/genesis.json",
+      "/var/lib/nano/chain",
+      "/config/mac-docker.json"
+    ],
+    "Image": "sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb",
+    "Volumes": null,
+    "WorkingDir": "/src",
+    "Entrypoint": [
+      "/build/deposit-deadline-arm64-b5ee00ac-20261005/nano"
+    ],
+    "Labels": {
+      "org.opencontainers.image.version": "24.04"
+    }
+  },
+  "NetworkSettings": {
+    "SandboxID": "",
+    "SandboxKey": "",
+    "Ports": {},
+    "Networks": {
+      "bridge": {
+        "IPAMConfig": null,
+        "Links": null,
+        "Aliases": null,
+        "DriverOpts": null,
+        "GwPriority": 0,
+        "NetworkID": "53d0e4f6682de03fc92be0687a1450210519b820c467669172ad83a41f4e548a",
+        "EndpointID": "",
+        "Gateway": "",
+        "IPAddress": "",
+        "MacAddress": "",
+        "IPPrefixLen": 0,
+        "IPv6Gateway": "",
+        "GlobalIPv6Address": "",
+        "GlobalIPv6PrefixLen": 0,
+        "DNSNames": null
+      }
+    }
+  },
+  "ImageManifestDescriptor": {
+    "mediaType": "application/vnd.oci.image.manifest.v1+json",
+    "digest": "sha256:eac45de38333b3d10e46b2037b4cb988a183c67db84d17ac080d65129f9a6309",
+    "size": 1433,
+    "platform": {
+      "architecture": "arm64",
+      "os": "linux"
+    }
+  }
+}

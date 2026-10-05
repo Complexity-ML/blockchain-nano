@@ -7018,3 +7018,23 @@ Auditeur de sanction AMD64 courant : contrôle positif historique du membre 0 te
 
 
 2026-10-05, contrôleur de finalité renforcé et préparation v5 : trois checkpoints communs distincts désormais requis, puis trois lectures stables du dernier ; saut de nombreuses époques et répétitions comptent pour un avancement unique, désaccord/pair absent/alias remettent la stabilité à zéro, régression/conflit refusés. Plan de reprise accepte deux captures Mac indépendantes et conserve leurs checkpoints/journaux propres après signatures séparées ; aucun reset/merge. Qualification existante des 18 contrôles ciblés réutilisée pour le contrôleur JavaScript inchangé depuis f0c4cb03 ; candidate C++ b5ee00ac corrigée et qualifiée localement comme ci-dessus. Copies v5 Mac séparées SHA égales à leurs sources hors peer.key, VPS réutilise son volume audité arrêté. Preuves restored-three-node-v5-prepare-20261005/. Campagne réelle v5 à lancer ; ceci ne qualifie ni trois avances réelles ni partitions/reconnexion/production. Les anciens PASSED/FAILED conservent leur périmètre initial.
+
+## Reprise trois nœuds v5 — 6 octobre 2026
+
+Campagne b8567771/C++ b5ee00ac : sortie terminale 1 sur HTTP 503 Beacon du
+VPS, zéro avancée de finalité commune. Corps de refus non conservé par
+l'ancien contrôleur : cause précise inconnue. Boucles de validation saines
+à l'arrêt, avec propositions/attestations sur chaque nœud ; cela ne qualifie
+pas la finalité ni la production. Délais VPS observés > un slot restent ouverts.
+Contrôleur corrigé pour conserver le diagnostic et accepter uniquement les
+refus temporaires connus de budget de lecture, sans rallonger l'échéance
+ni compter de lecture incomplète. Pas de modification du profil EVM/RPC activé.
+Tous les échecs et critères précédents restent ouverts dans leur périmètre.
+[Preuves v5](qualification/restored-three-node-v5-failure-20261006/README.md).
+
+Audits post-v5 terminés en lecture seule sur les trois magasins : engagements
+core et 16/16/33 signataires exacts, fichiers inchangés, ancêtre finalisé 1284
+vérifié séparément ; têtes canoniques divergentes. Aucun journal fusionné ou
+réinitialisé. Cinq nouveaux tests du contrôleur passent, dont la reprise
+d'ascendance après refus partiel. Cela prépare la prochaine campagne ; aucune
+finalité commune nouvelle ni disponibilité soutenue n'est qualifiée.
