@@ -4325,3 +4325,10 @@ Banc732ba1f3/cœurab10 : deux hôtes/64 clés synthétiques ; finalité commune2
 ### 2026-10-05 — Nouveau fixture dépôt natif réseau et reçu RPC
 
 Option privée `--export-deposit-network` : contrat de dépôt natif lié au profil, fonds synthétiques,64 membres et clé65 en attente (index automatique), transaction type2 signée avec nonce du seed. Exporteur compilé séparément, compile/link/export0 ; six programmes/bibliothèque existants inchangés. Nœud natif réel exécute le dépôt par RPC : hash attendu, reçu réussi/un événement, arrêt0 et horloge/signataires sains,65 clés locales/dont1 awaitingRegistration. Preuves `docs/qualification/native-deposit-network-fixture-20261005`. Ne qualifie pas encore registration consensus, activation/duties, cycle complet ou WAN ; aucune image/fonds réels/déploiement public. CI1b4 encore en cours lors dernier contrôle.
+
+
+### 2026-10-05 — Exporteur de dépôt : terminal AMD64 et comparaison native
+
+Preuves : `docs/qualification/native-deposit-amd64-terminal-20261005/`. La compilation isolée du test à la révision `d50cb87240f1c6ce46bba513a672547d580d5a4a` est terminée avec code 0, sans OOM ; les sept programmes/bibliothèques protégés de la candidate `ab10b8ae5dd50c7edf6f919ed440aa51a46e5e0e` sont inchangés. L’export AMD64 termine avec code 0 et produit exactement la même transaction signée et les mêmes métadonnées de dépôt que l’export natif Mac. Deux essais d’export échoués (montage des fixtures absent, puis /tmp non inscriptible) sont conservés, suivis de l’export corrigé. Aucun rebuild d’image.
+
+La CI 37260639656 sur `1b4f2b794bf7537203bd72d47421c03fb60aff4b` est terminée avec succès (core et operations) ; network est skipped. Cette CI ne qualifie pas le nouveau dépôt réseau. L’enregistrement, l’activation et les duties WAN du nouveau membre restent ouverts ; production non qualifiée.
