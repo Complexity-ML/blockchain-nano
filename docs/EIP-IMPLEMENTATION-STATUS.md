@@ -7053,3 +7053,24 @@ transport modélisé ARM64 Docker. AMD64, exécutables P2P et réseau réel de c
 correctif restent à qualifier. v6 continue sur ses binaires d'origine ; aucune
 causalité exclusive ni production déduite. Profil EVM inchangé.
 [Preuves](qualification/capella-depth-catchup-20261006/README.md).
+
+## Reprise v6 : échéance complète non satisfaite — 6 octobre 2026
+
+Sortie terminale 1 après 900 s, zéro avancée commune au-delà de 1284. Trois
+processus arrêtés proprement sans OOM, boucles saines et duties effectifs.
+VPS : quinze polls > six secondes, maximum 6697 ms. Aucun HTTP 503 observé
+sur cette campagne ; la cause v5 reste inconnue. Audits séparés post-arrêt
+réussis, engagements exacts et fichiers inchangés (1260 VPS), têtes divergentes
+et ancêtre finalisé vérifié. Journaux non fusionnés/non réinitialisés.
+Correctif de profondeur 81e5ab31 absent des binaires v6 : qualification réseau
+du correctif encore ouverte, compilations déclenchées seulement après les arrêts.
+[Preuves v6](qualification/restored-three-node-v6-terminal-20261006/README.md).
+
+2026-10-06 : relais P2P 81e5ab31 compilé/lié sur Mac natif et Docker ARM64/AMD64,
+parents conservés et sources hash vérifiées. AMD64 : 90 scénarios existants +
+deux nouveaux passent ; ARM64 : deux nouveaux passent et qualification 90
+antérieure réutilisée par égalité des sources. Contrôleurs Docker initiaux
+exit 1 conservés : hypothèse incorrecte sur --help, post-vérification négative
+CLI attendue et contrôles des compilations/tests exit 0 sans recompilation.
+Aucune qualification réseau réelle du nouveau relais ; prochaine reprise avec
+les engagements audités post-v6. [Preuves](qualification/depth-p2p-candidate-20261006/README.md).
