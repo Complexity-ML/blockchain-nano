@@ -5,6 +5,7 @@
 #include "nano/consensus_capella_fork_state.hpp"
 #include "nano/consensus_message_ssz.hpp"
 #include "nano/chain.hpp"
+#include "nano/consensus_beacon_signer.hpp"
 #include "../../src/beacon_block_json.hpp"
 #include "blst.h"
 #include <fstream>
@@ -75,5 +76,34 @@ int main(int argc,char** argv){try{
  }
  require(replay.blocks.contains(selected)&&replay.blocks.at(selected).state==at->second.state,"replayed finalized deposit state differs from retained state");
  require(included==1&&registered==1&&executed==1&&before_verified&&after_verified,"deposit/registration/proposals incomplete");require(reactor.current().token==token,"audit checkpoint changed");
- std::cout<<Json{{"canonicalReplay",canonical},{"requiredFinalized",request.at("requiredFinalized")},{"newValidator",64},{"initialRegistrySize",64},{"finalizedRegistrySize",65},{"canonicalSignedDepositTransactions",executed},{"canonicalDepositInclusions",included},{"canonicalRegistrationTransitions",registered},{"registration",registration},{"activationEpoch",member.activation_epoch},{"activationEligibilityEpoch",member.activation_eligibility_epoch},{"finalizedBalanceGwei",member.balance},{"signedFinalizedProposalBeforeRestart",before_verified},{"signedFinalizedProposalAfterRestart",after_verified},{"externalStopTokenAndWitnessVerified",true},{"perKeyJournalWitnessAuditQualified",false},{"readOnlyStores",true},{"productionQualified",false}}.dump(2)<<'\n';return 0;
+
+ // All journals are opened read-only with EXTERNAL terminal commitments.
+ // Refuse a stale primary rather than letting the signer repair it during audit.
+ const auto& configured=c.at("validator").at("keys"),&pins=request.at("validatorKeys");
+ require(configured.is_array()&&pins.is_array()&&(configured.size()==32||configured.size()==33)&&configured.size()==pins.size(),"local key commitment inventory");
+ const auto& seed_ssz=seed.blocks.at(seed.timed.view.anchor).state.ssz;require(seed_ssz.size()>=40,"validators genesis binding");ConsensusRoot validators_genesis{};std::copy_n(seed_ssz.begin()+8,32,validators_genesis.begin());
+ std::set<uint64_t> audited;std::set<std::filesystem::path> key_paths;Json key_results=Json::array();
+ for(const auto& key:configured){
+  const bool pending=key.at("index").is_null();const auto index=pending?64:number(key.at("index"));require(index<=64&&audited.insert(index).second,"duplicate/foreign local key");
+  require(key.at("keyEnv")=="NANO_TEST_CAPELLA_NETWORK_KEY_"+std::to_string(index),"private local key configuration identity");
+  uint64_t local_words[4]{index+1,0,0,0};blst_scalar local_scalar;blst_scalar_from_uint64(&local_scalar,local_words);blst_p1 local_point;blst_sk_to_pk_in_g1(&local_point,&local_scalar);Bytes local_pk(48);blst_p1_compress(local_pk.data(),&local_point);
+  require(Bytes(final.registry.validators.at(index).public_key.begin(),final.registry.validators.at(index).public_key.end())==local_pk,"local key differs from finalized registry");
+  const Json* external=nullptr;
+  for(const auto& item:pins){const bool match=pending?(item.at("index").is_null()&&item.contains("publicKey")&&item.at("publicKey")==hex(local_pk)):(!item.at("index").is_null()&&number(item.at("index"))==index);if(match){require(!external,"duplicate external signer commitment");external=&item;}}
+  require(external,"missing external signer commitment");const auto& pin=external->at("restart");const ForkCheckpointToken key_token{number(pin.at("sequence")),unhex(pin.at("digest"))};require(key_token.sequence&&key_token.digest.size()==32,"external signer token bounds");
+  const auto journal_path=std::filesystem::weakly_canonical(key.at("journal").get<std::string>()),witness_path=std::filesystem::weakly_canonical(key.at("recoveryWitness").get<std::string>());
+  require(key_paths.insert(journal_path).second&&key_paths.insert(witness_path).second,"duplicate journal/witness path");
+  ChainStore key_disk(journal_path,ChainStore::OpenMode::ReadOnly),key_witness(witness_path,ChainStore::OpenMode::ReadOnly);
+  key_disk.bind_chain(genesis.chain_id,genesis.block.header.hash(),"nano-beacon-signing-v1");key_witness.bind_chain(genesis.chain_id,genesis.block.header.hash(),"nano-beacon-signing-witness-v1");
+  const auto primary=key_disk.fork_checkpoint(genesis.chain_id,genesis.block.header.hash(),4096,key_token),independent=key_witness.fork_checkpoint(genesis.chain_id,genesis.block.header.hash(),16384);
+  require(primary&&independent,"missing independent signer stores");const auto key_intent=Json::parse(independent->snapshot);
+  require(key_intent.is_object()&&key_intent.size()==4&&key_intent.at("format")=="nano-beacon-signing-witness-v1"&&key_intent.dump()==independent->snapshot,"noncanonical signer witness");
+  require(number(key_intent.at("next").at("sequence"))==key_token.sequence&&unhex(key_intent.at("next").at("digest"))==key_token.digest&&key_intent.at("snapshot")==primary->snapshot,"signer primary/witness/external commitment disagreement");
+  BeaconSigningJournal signer(key_disk,genesis.chain_id,genesis.block.header.hash(),validators_genesis,local_pk,rules.transition.consensus.epoch.ffg.slots_per_epoch,key_token,&key_witness);
+  require(signer.commitment()==key_token&&!signer.is_retired(),"signer commitment/status differs after reopen");const auto proposal_slot=signer.latest_proposal_slot(),attestation_target=signer.latest_attestation_target();require(attestation_target.has_value(),"local key never reserved an attestation");
+  if(pending)require(proposal_slot&&*proposal_slot>=number(request.at("proposalAfter").at("slot")),"new member proposal journal did not advance after restart");
+  key_results.push_back({{"validator",index},{"externalTokenVerified",true},{"independentWitnessVerified",true},{"latestProposalSlot",proposal_slot?Json(*proposal_slot):Json(nullptr)},{"latestAttestationTarget",*attestation_target}});
+ }
+ require(audited.size()==configured.size()&&reactor.current().token==token,"audit changed checkpoint or omitted keys");
+ std::cout<<Json{{"canonicalReplay",canonical},{"requiredFinalized",request.at("requiredFinalized")},{"newValidator",64},{"initialRegistrySize",64},{"finalizedRegistrySize",65},{"canonicalSignedDepositTransactions",executed},{"canonicalDepositInclusions",included},{"canonicalRegistrationTransitions",registered},{"registration",registration},{"activationEpoch",member.activation_epoch},{"activationEligibilityEpoch",member.activation_eligibility_epoch},{"finalizedBalanceGwei",member.balance},{"signedFinalizedProposalBeforeRestart",before_verified},{"signedFinalizedProposalAfterRestart",after_verified},{"externalStopTokenAndWitnessVerified",true},{"perKeyJournalWitnessAuditQualified",true},{"localSigningCommitments",key_results},{"readOnlyStores",true},{"productionQualified",false}}.dump(2)<<'\n';return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
