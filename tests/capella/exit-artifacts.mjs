@@ -6,7 +6,8 @@ const names=['nano','p2p','exporter'];
 // Synthetic two-node exit qualification only: this manifest cannot deploy a sale
 // or authorize automatic recovery on a public network.
 export function selectExitArtifacts(input){
- shape(input,['runtimeRevision','native','vps']);assert.match(input.runtimeRevision??'',/^[0-9a-f]{40}$/,'Exact runtime revision required');
+ shape(input,['runtimeRevision','native','vps',...(Object.hasOwn(input,'coreRevision')?['coreRevision']:[])]);assert.match(input.runtimeRevision??'',/^[0-9a-f]{40}$/,'Exact runtime revision required');
+ if(Object.hasOwn(input,'coreRevision'))assert.match(input.coreRevision??'',/^[0-9a-f]{40}$/,'Exact core revision required');
  shape(input.native,names);shape(input.vps,['image','volume','directory','executables']);shape(input.vps.executables,names);
  assert.match(input.vps.image??'',/^sha256:[0-9a-f]{64}$/,'Immutable builder image required');
  assert.match(input.vps.volume??'',/^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/,'Explicit build volume required');
@@ -28,4 +29,18 @@ export function verifyExitVpsArtifacts(selection,info,revision,hashes){
  assert.equal(info?.Id,selection.vps.image,'Selected image changed');assert.equal(info.Architecture,'amd64','Wrong VPS architecture');
  assert.equal(revision.trim(),selection.runtimeRevision,'Build/runtime revision mismatch');
  return verifyExitExecutableHashes(selection.vps.executables,hashes);
+}
+
+// Cold data can be reused with a new relay only when the exact core and fixture
+// exporter binaries still match the source campaign. The caller must ALSO prove
+// that src/include/third_party have no diff against this explicit core revision.
+export function verifyExitCoreCompatibility(selection,source){
+ const coreRevision=selection.coreRevision??selection.runtimeRevision;
+ assert.equal(source.runtimeRevision,coreRevision,'Stopped source/core revision mismatch');
+ for(const side of ['native','vps'])for(const name of ['nano','exporter']){
+  const a=side==='native'?selection.native:selection.vps.executables;
+  const b=side==='native'?source.native:source.vps.executables;
+  digest(b?.[name]?.sha256);assert.equal(a[name].sha256,b[name].sha256,'Stopped source core or exporter changed');
+ }
+ return coreRevision;
 }

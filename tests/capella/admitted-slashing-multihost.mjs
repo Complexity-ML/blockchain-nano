@@ -8,7 +8,7 @@ import {resolve,join} from 'node:path';
 import {createHash,randomBytes} from 'node:crypto';
 import {createServer} from 'node:net';
 import {setTimeout as wait} from 'node:timers/promises';
-import {selectExitArtifacts,verifyExitExecutableHashes,verifyExitVpsArtifacts} from './exit-artifacts.mjs';
+import {selectExitArtifacts,verifyExitExecutableHashes,verifyExitVpsArtifacts,verifyExitCoreCompatibility} from './exit-artifacts.mjs';
 import {monotonicClockConfiguration} from '../multihost/local-clock.mjs';
 import {hashHarness} from '../multihost/harness-manifest.mjs';
 import {durableFinalityObservation} from './finality-observation.mjs';
@@ -43,9 +43,11 @@ try{
  harness=await hashHarness(repo,['tests/capella/admitted-slashing-multihost.mjs']);
  await save(join(out,'artifacts.json'),artifacts);await save(join(out,'harness.json'),harness);
  await run('git',['diff','--quiet',artifacts.runtimeRevision,'--','src','include','network','third_party']);
+ await run('git',['diff','--quiet',artifacts.coreRevision??artifacts.runtimeRevision,'--','src','include','third_party']);
  check((await ssh(['git','-C',remoteRepo,'rev-parse','HEAD'])).trim()===revision,'VPS revision mismatch');
  check(!(await ssh(['git','-C',remoteRepo,'status','--porcelain'])).trim(),'VPS source is dirty');
  await ssh(['git','-C',remoteRepo,'diff','--quiet',artifacts.runtimeRevision,'--','src','include','network','third_party']);
+ await ssh(['git','-C',remoteRepo,'diff','--quiet',artifacts.coreRevision??artifacts.runtimeRevision,'--','src','include','third_party']);
  const {vps}=artifacts,{image}=vps,nativeBin=artifacts.native.nano.path,p2p=artifacts.native.p2p.path,exporter=artifacts.native.exporter.path;
  const nativeHashes=Object.fromEntries(await Promise.all(Object.values(artifacts.native).map(async e=>[e.path,await hash(e.path)])));
  verifyExitExecutableHashes(artifacts.native,Object.entries(nativeHashes).map(([p,h])=>`${h}  ${p}`).join('\n'));
@@ -57,8 +59,11 @@ try{
  await record({event:'provenance',revision,runtimeRevision:artifacts.runtimeRevision,transport:'real cpp-libp2p TCP over private SSH forwarding',nativeHashes,harness,image:vps.image,buildVolume:vps.volume,remoteHashes,publicDeployment:false});
  check(process.env.NANO_TEST_DEPOSIT_RESUME_MANIFEST,'Pinned stopped-source manifest required');
  resume=await json(resolve(process.env.NANO_TEST_DEPOSIT_RESUME_MANIFEST));
- check(resume.runtimeRevision===artifacts.runtimeRevision&&/^nano-deposit-resume-wan-[a-f0-9]{12}-data$/.test(resume.volume)&&/^nano-deposit-resume-wan-[a-f0-9]{12}$/.test(resume.originalContainer),'Private source identity mismatch');
+ check(resume.runtimeRevision===(artifacts.coreRevision??artifacts.runtimeRevision)&&/^nano-deposit-resume-wan-[a-f0-9]{12}-data$/.test(resume.volume)&&/^nano-deposit-resume-wan-[a-f0-9]{12}$/.test(resume.originalContainer),'Private source identity mismatch');
  check((await json(join(resume.sourceOutput,'result.json'))).result==='PASSED','Qualified cold source record required');
+ const sourceArtifacts=await json(join(resume.sourceOutput,'artifacts.json'));
+ const coreRevision=verifyExitCoreCompatibility(artifacts,sourceArtifacts);
+ await record({event:'explicit-runtime-composition',runtimeRevision:artifacts.runtimeRevision,coreRevision,exactSourceCoreAndExporterHashesVerified:true,sourceCoreDiffAbsent:true});
  const old=JSON.parse(await docker(['inspect',resume.originalContainer,'--format','{{json .}}']));check(!old.State.Running&&old.Mounts.some(x=>x.Name===resume.volume&&x.Destination==='/var/lib/nano'),'Original container still live or wrong volume');
  for(let n=0;n<2;n++){const sourceAudit=await json(resume.canonicalAudits[n]);const audit=sourceAudit.canonicalReplay;check(sourceAudit.perKeyJournalWitnessAuditQualified&&audit.canonicalHistoryVerified&&audit.externalFinalizedAncestorVerified&&BigInt(audit.finalized.epoch)===BigInt(resume.baseline.epoch)&&audit.finalized.root===resume.baseline.root,'Source canonical audit/finality mismatch');}
  volume=remote+'-data';await cp(join(resume.sourceOutput,'fixture'),fixture,{recursive:true,errorOnExist:true,force:false});
@@ -67,7 +72,7 @@ try{
  await record({event:'cold-stopped-data-copied',originalVolume:resume.volume,restoredVolume:volume,originalDatabasesPreserved:true,originalSignersRemainStopped:true});
  await save(join(out,'resume-source.json'),resume);
  tools=await json(resolve(process.env.NANO_TEST_SLASHING_TOOLS??''));
- check(tools.runtimeRevision===artifacts.runtimeRevision,'Tool runtime revision mismatch');
+ check(tools.runtimeRevision===(artifacts.coreRevision??artifacts.runtimeRevision),'Tool runtime revision mismatch');
  for(const side of ['native','vps'])for(const name of ['helper','audit','capture']){const e=tools[side]?.[name];check(e&&/^\/[A-Za-z0-9_./-]+$/.test(e.path)&&!e.path.split('/').includes('..')&&/^[a-f0-9]{64}$/.test(e.sha256),'Pinned tool required');if(side==='native')check(await hash(e.path)===e.sha256,'Native tool hash mismatch');}
  const toolHash=await docker(['run','--rm','--network','none','--read-only','--mount',artifacts.mount,'--entrypoint','sha256sum',image,...Object.values(tools.vps).map(e=>e.path)]);
  for(const e of Object.values(tools.vps))check(toolHash.split('\n').includes(e.sha256+'  '+e.path),'VPS tool hash mismatch');
@@ -123,7 +128,7 @@ try{
  let connected=false;for(let i=0;i<30;i++){try{await rpc(1,'eth_chainId');connected=true;break;}catch{check(tunnel.exitCode===null&&tunnel.signalCode===null,'SSH tunnel exited');await wait(500);}}check(connected,'SSH forward unavailable');
  const clean={...process.env};for(const k of Object.keys(clean))if(k.startsWith('NANO_TEST_CAPELLA_NETWORK_KEY_')||k==='NANO_TEST_EXIT_BOOTSTRAP')delete clean[k];
  const fd=openSync(join(out,'native.log'),'a');native=spawn(nativeBin,['run',join(fixture,'genesis.json'),join(data,'chain'),join(out,'mac.json')],{env:{...clean,...envs[0]},stdio:['ignore',fd,fd]});closeSync(fd);native.on('error',e=>{failure=e;});
- await record({event:'started',nativePid:native.pid,remote,volume,physicalHosts:2,initialValidatorsPerHost:32,pendingValidatorOnVps:64,submissionHost:'mac-native',loopbackOnly:true});
+ await record({event:'started',nativePid:native.pid,remote,volume,physicalHosts:2,initialValidatorsPerHost:32,pendingValidatorOnVps:64,submissionHost:'vps-docker',loopbackOnly:true});
  await save(join(out,'resources.json'),{target,revision,remote,volume,remoteRoot,urls,data,nativePid:native.pid,tunnelPid:tunnel.pid});
  let localReady=false;for(let i=0;i<60;i++){try{await rpc(0,'eth_chainId');localReady=true;break;}catch{check(native.exitCode===null&&native.signalCode===null,'Native node exited');await wait(500);}}check(localReady,'Native RPC startup deadline');
  let headersReady=false;const headerDeadline=Date.now()+90000;while(Date.now()<headerDeadline){try{for(let n=0;n<2;n++)await request(n,'/eth/v1/beacon/headers/head');headersReady=true;break;}catch(error){if(error.httpStatus!==404)throw error;}check(native.exitCode===null&&native.signalCode===null,'Native exited before signed head');await wait(1000);}check(headersReady,'Signed heads startup deadline');
@@ -179,7 +184,7 @@ try{
    }
 
    const epoch=BigInt(cp.epoch);check(epoch>=epochs[n],'Finality regressed');check(!roots.has(cp.epoch)||roots.get(cp.epoch)===cp.root,'Conflicting finalized roots');epochs[n]=epoch;roots.set(cp.epoch,cp.root);
-   await observe(n,h.root);if(epoch>0n)await observe(n,cp.root);else check(cp.root==='0x'+'0'.repeat(64)||cp.root===meta.initialHead,'Unexpected epoch-zero finality anchor');rows.push({node:n,checkpoint:cp,slot:h.header.message.slot,peers:await rpc(n,'net_peerCount')});
+   await observe(n,h.root);if(epoch>0n)await observe(n,cp.root);else check(cp.root==='0x'+'0'.repeat(64)||cp.root===meta.initialHead,'Unexpected epoch-zero finality anchor');rows.push({node:n,checkpoint:cp,slot:h.header.message.slot,headRoot:h.root,peers:await rpc(n,'net_peerCount')});
   }
   if(rows.length!==2){await wait(3000);continue;}
   await record({event:'observation',rows});const a=rows[0].checkpoint,b=rows[1].checkpoint;
@@ -222,5 +227,5 @@ finally{
 
   catch(error){result='FAILED';failure=error;process.exitCode=1;await record({event:'failed',message:error.stack});}
  }
- await save(join(out,'result.json'),{result,failure:failure?.message??null,revision,runtimeRevision:artifacts?.runtimeRevision,remote,volume,physicalHosts:2,initialSyntheticValidators:64,admittedOffender:64,offlineRegistryAndAntiSlashingAuditQualified:false,automaticRecoveryFixture:false,pinnedStoppedDataResume:true,originalFailuresPreserved:true,sourceOutput:resume?.sourceOutput,productionQualified:false,transport:'cpp-libp2p over SSH tunnel',publicDeployment:false});await record({event:'completed',result});
+ await save(join(out,'result.json'),{result,failure:failure?.message??null,revision,runtimeRevision:artifacts?.runtimeRevision,coreRevision:artifacts?.coreRevision??artifacts?.runtimeRevision,remote,volume,physicalHosts:2,initialSyntheticValidators:64,admittedOffender:64,offlineRegistryAndAntiSlashingAuditQualified:false,automaticRecoveryFixture:false,pinnedStoppedDataResume:true,originalFailuresPreserved:true,sourceOutput:resume?.sourceOutput,productionQualified:false,transport:'cpp-libp2p over SSH tunnel',publicDeployment:false});await record({event:'completed',result});
 }
