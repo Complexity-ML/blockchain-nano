@@ -22,13 +22,25 @@ void verify_archived_block(const ConsensusRoot& id,const Bytes& wire,const Capel
  const auto& state=block.state.ssz;const auto version=archive_array<4>(state,context.registry.epoch<archive_number(state,56)?48:52);
  archive_require(verify_consensus_beacon_header(header,version,archive_array<32>(state,8),proposer->second.public_key,std::span(wire).subspan(4,96)));if(check)check();
 }
+CapellaForkStore continued_tick(const CapellaForkStore& store,uint64_t time,
+ const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits,const std::function<void()>& check){
+ const auto& clock=store.timed.clock;const auto slots=rules.transition.consensus.epoch.ffg.slots_per_epoch;
+ if(!slots||!rules.slot_duration_ms||time<clock.time_ms||clock.time_ms<clock.genesis_time_ms)throw std::invalid_argument("Invalid continued Capella tick");
+ std::optional<CapellaTargetPreparation> frame;std::vector<const CapellaTargetPreparation*> targets;
+ if((time-clock.genesis_time_ms)/rules.slot_duration_ms/slots>store.timed.view.current_epoch&&clock.unrealized_justified.epoch>store.timed.view.justified.epoch){
+  frame.emplace(store,rules,clock.unrealized_justified,check);
+  while(!frame->advance(std::min(limits.replay_slots,slots),limits.sync_trials,check)){}
+  targets.push_back(&*frame);
+ }
+ return prepare_capella_contextual_store_tick(store,time,rules,targets,limits.replay_slots,limits.sync_trials,check);
+}
 std::optional<CapellaForkStore> checked_vote(const CapellaForkStore& store,const Phase0SignedAttestation& vote,const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits,const std::function<void()>& check,const CapellaTargetPreparation* prepared=nullptr){
  const auto& clock=store.timed.clock;if(!rules.slot_duration_ms||clock.time_ms<clock.genesis_time_ms)throw std::invalid_argument("Capella vote clock");
  const auto slot=(clock.time_ms-clock.genesis_time_ms)/rules.slot_duration_ms;
  auto apply=[&](const CapellaForkStore& input){return prepared?prepare_capella_prepared_store_vote(input,vote,rules,*prepared,check):prepare_capella_store_vote(input,vote,rules,limits.replay_slots,limits.sync_trials,check);};
  if(vote.data.slot!=slot)return apply(store);
  if(slot==UINT64_MAX||slot+1>(UINT64_MAX-clock.genesis_time_ms)/rules.slot_duration_ms)throw std::overflow_error("Capella deferred vote clock");
- const auto future=prepare_capella_store_tick(store,clock.genesis_time_ms+(slot+1)*rules.slot_duration_ms,rules,limits.replay_slots,limits.sync_trials,check);
+ const auto future=continued_tick(store,clock.genesis_time_ms+(slot+1)*rules.slot_duration_ms,rules,limits,check);
  if(!apply(future))return std::nullopt;
  return store;
 }
@@ -344,7 +356,7 @@ bool CapellaDurableReactor::tick_if_needed(uint64_t time,const std::function<voi
  tick_locked(time,check);return true;
 }
 void CapellaDurableReactor::tick_locked(uint64_t time,const std::function<void()>& check){
- auto next=prepare_capella_store_tick(*state_,time,rules_,limits_.replay_slots,limits_.sync_trials,check);auto votes=votes_;
+ auto next=continued_tick(*state_,time,rules_,limits_,check);auto votes=votes_;
  const auto previous=(state_->timed.clock.time_ms-state_->timed.clock.genesis_time_ms)/rules_.slot_duration_ms;
  const auto current=(time-state_->timed.clock.genesis_time_ms)/rules_.slot_duration_ms;const auto epoch=current/rules_.transition.consensus.epoch.history.slots_per_epoch;
  for(auto it=votes.begin();it!=votes.end();){
@@ -374,7 +386,9 @@ bool CapellaDurableReactor::block(std::span<const uint8_t> wire,const std::funct
  ConsensusBeaconHeader header;
  try{header=archived_header(wire,rules_,guard);}catch(const std::invalid_argument&){if(interrupted)std::rethrow_exception(interrupted);return false;}
  const auto id=consensus_beacon_header_root(header);
- if(state_->blocks.contains(id))next=prepare_capella_received_block(*state_,wire,rules_,limits_.replay_slots,limits_.sync_trials,check);
+ // A retained root is already admitted. Reprocessing its embedded votes can
+ // require an obsolete target replay and must never replace archive bytes.
+ if(state_->blocks.contains(id))next=*state_;
  else {
   const auto& view=state_->timed.view;const auto& clock=state_->timed.clock;
   const auto slots=rules_.transition.consensus.epoch.ffg.slots_per_epoch;
@@ -390,7 +404,25 @@ bool CapellaDurableReactor::block(std::span<const uint8_t> wire,const std::funct
   if(!incoming_preparation_||incoming_preparation_->parent()!=parent.header||incoming_preparation_->prepared_slot()>header.slot-1)
    incoming_preparation_.emplace(parent.state,parent.header,rules_.transition,check);
   if(!incoming_preparation_->advance_for_block(header.slot,std::min(limits_.replay_slots,slots),limits_.sync_trials,check))return false;
-  next=prepare_capella_prepared_received_block(*state_,wire,rules_,*incoming_preparation_,limits_.replay_slots,limits_.sync_trials,check);
+  if(incoming_target_block_!=id){incoming_targets_.clear();incoming_target_block_=id;}
+  if(std::any_of(incoming_targets_.begin(),incoming_targets_.end(),[&](const auto& frame){return !frame.matches(*state_,rules_,frame.target(),check);}))incoming_targets_.clear();
+  std::vector<const CapellaTargetPreparation*> targets;
+  for(auto& frame:incoming_targets_){
+   if(!frame.advance(std::min(limits_.replay_slots,slots),limits_.sync_trials,check))return false;
+   targets.push_back(&frame);
+  }
+  try{
+   next=prepare_capella_contextual_received_block(*state_,wire,rules_,*incoming_preparation_,targets,limits_.replay_slots,limits_.sync_trials,check);
+  }catch(const CapellaTargetContextRequired& needed){
+   // At most one new frame per admitted-work attempt. A block's bounded
+   // attestation list plus its realized/unrealized checkpoints bounds retention.
+   if(incoming_targets_.size()>=size_t(rules_.transition.consensus.body.attestations)+2)throw std::length_error("Incoming Capella target cache capacity");
+   incoming_targets_.emplace_back(*state_,rules_,needed.target(),check);
+   auto& frame=incoming_targets_.back();
+   for(const auto& ready:vote_preparations_)if(ready&&ready->ready()&&ready->matches(*state_,rules_,needed.target(),check)){frame=*ready;break;}
+   frame.advance(std::min(limits_.replay_slots,slots),limits_.sync_trials,check);
+   return false;
+  }
  }
  if(!next)return false;
  std::vector<CheckpointArchiveEntry> archive;

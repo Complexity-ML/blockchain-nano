@@ -1,0 +1,7 @@
+# Reactor target continuation
+
+Parent checkout: 116576cef2a968da58d4564a2542d886646e7aa5. Incoming targets are discovered after full signed transition, maintained under the reactor mutex per checked block identity, and bound to admitted source/full profile/checkpoint. Incomplete preparation returns false with no durable mutation or ACK. Cache capacity derives from maximum block attestations plus two FFG checkpoint updates, not validator count. Local tick/deferred-vote simulation finish bounded target chunks with cancellation checks before a private Store publication.
+
+Changed Reactor layout: initial ARM64 compiles every transitive header consumer (22 units), main and test. Initial prepared-block FAILED with legacy slot-budget exception. Included-block duplicate was reprocessed by old included-vote path; repair retains unchanged admitted Store/archive. Repair recompiles Reactor only and freshly links main/test against complete new-layout core. ARM64 repair terminal 0/no OOM, 130 checks plus configured-runtime and scheduler PASSED. Fourteen new checks across two variants cover actual Reactor retries, no incomplete token mutation, cancellation, complete Store equality, duplicate idempotence, signed archive and witness reopen, plus explicit unrealized-FFG promotion/cancellation fixture.
+
+Image/volume reused. Original budgets unchanged. Real cold activation, AMD64, automatic P2P resubmission, common WAN finality, wall-time/resource bounds, and local-proposal readiness with every missing included context remain open. This is not production qualification.

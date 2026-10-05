@@ -81,6 +81,16 @@ std::optional<CapellaForkStore> prepare_capella_prepared_received_block(
  const CapellaForkStore&,std::span<const uint8_t>,const CapellaForkBlockRules&,
  const CapellaBlockPreparation&,uint64_t maximum_slots,uint64_t maximum_sync_trials,
  const std::function<void()>& checkpoint={});
+// Internal continuation signal: a fully validated signed block needs a
+// retained checkpoint context beyond this call's slot budget. No candidate
+// Store has been published. Ordinary admission APIs keep their old exception.
+class CapellaTargetContextRequired : public std::length_error {
+ ConsensusCheckpoint target_;
+public:
+ explicit CapellaTargetContextRequired(const ConsensusCheckpoint& target)
+  :std::length_error("Capella target continuation required"),target_(target){}
+ const ConsensusCheckpoint& target()const{return target_;}
+};
 // Completed local target frames may be shared with embedded votes and FFG
 // updates. Every used frame rechecks the admitted source and complete profile.
 // Missing targets retain the original bounded replay semantics.

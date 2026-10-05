@@ -1511,6 +1511,18 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
    CapellaTargetPreparation unfinished(timed,rules,vote.data.target);const std::array<const CapellaTargetPreparation*,1> missing{&unfinished};
    bool incomplete=false;try{prepare_capella_contextual_received_block(timed,included_wire,rules,preparation,missing,3,100000);}catch(const std::invalid_argument&){incomplete=true;}check(incomplete,"included vote used incomplete target");++checks;
    auto invalid=included_wire;invalid[4]^=1;check(!prepare_capella_contextual_received_block(timed,invalid,rules,preparation,targets,3,100000),"contextual block bypassed BLS signature");++checks;
+   Temp worker_directory;Genesis wg;wg.chain_id=r.chain_id;wg.consensus="beacon";wg.evm_revision=EvmRevision::Shanghai;wg.block=genesis;wg.state=genesis_state;
+   auto worker_limits=crash_limits;worker_limits.replay_slots=3;Blockchain worker_owner(worker_directory/"owner",wg);ChainStore worker_witness(worker_directory/"witness");
+   auto worker=std::make_unique<CapellaDurableReactor>(worker_owner,rules,worker_limits,initial,std::function<void()>{},&worker_witness);worker->tick(clock);const auto pending=worker->current().token;
+   bool cancelled=false;try{worker->block(included_wire,[]{throw ExecutionCancelled("cancel included worker");});}catch(const ExecutionCancelled&){cancelled=true;}
+   check(cancelled&&worker->current().token==pending,"cancelled included worker published state");++checks;
+   size_t retries=0;while(!worker->block(included_wire)){check(worker->current().token==pending,"incomplete included worker published state");check(++retries<2*(slot-parent.header.slot)/3+12,"included worker continuation stalled");}
+   check(retries>(slot-parent.header.slot-1)/3&&worker->current().token.sequence==pending.sequence+1,"included worker skipped target continuation or published twice");++checks;
+   check(capella_store_snapshot(*worker->current().state,rules,worker_limits)==capella_store_snapshot(*expected,rules,worker_limits),"included worker Store differs from full-gap oracle");++checks;
+   const auto admitted_token=worker->current().token;check(worker->block(included_wire)&&worker->current().token==admitted_token,"included duplicate rewrote checkpoint");++checks;
+   worker.reset();worker=std::make_unique<CapellaDurableReactor>(worker_owner,rules,worker_limits,worker_witness);
+   const auto block_root=consensus_beacon_header_root({little(included_wire,100,8),little(included_wire,108,8),root_at(included_wire,116),root_at(included_wire,148),capella_beacon_body_root(std::span<const uint8_t>(included_wire).subspan(184),r.consensus.body,l.sync_committee_size,r.execution,r.withdrawals.maximum_per_payload,r.maximum_bls_changes,r.consensus.maximum_block_bytes)});
+   check(worker->current().token==admitted_token&&worker->signed_block(block_root)==std::optional<Bytes>(included_wire),"included worker witness reopen lost Store or signed archive");++checks;
   }
   auto incompatible=r;incompatible.chain_id+=1;CapellaBlockPreparation wrong_profile(original,parent.header,incompatible);while(!wrong_profile.advance_for_block(slot,3,100000)){}
   refused=false;try{prepare_capella_prepared_received_block(timed,wire,rules,wrong_profile,3,100000);}catch(const std::invalid_argument&){refused=true;}check(refused,"prepared Store admitted a frame from another transition profile");++checks;
@@ -1562,6 +1574,14 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
    bool bad_context=false;try{prepare_capella_contextual_store_tick(ffg_input,boundary_time,rules,unfinished,3,100000);}catch(const std::invalid_argument&){bad_context=true;}check(bad_context&&ffg_input.timed.view.justified==vote_store.timed.view.justified,"incomplete tick context published justification");++checks;
    bad_context=false;try{prepare_capella_contextual_store_tick(ffg_input,boundary_time,other_profile,targets,3,100000);}catch(const std::invalid_argument&){bad_context=true;}check(bad_context,"tick used target from another profile");++checks;
    interrupted=false;try{prepare_capella_contextual_store_tick(ffg_input,boundary_time,rules,targets,3,100000,[]{throw ExecutionCancelled("cancel contextual tick");});}catch(const ExecutionCancelled&){interrupted=true;}check(interrupted&&ffg_input.timed.view.justified==vote_store.timed.view.justified,"contextual tick swallowed cancellation or mutated source");++checks;
+   {
+    Temp ffg_directory;Genesis fg;fg.chain_id=r.chain_id;fg.consensus="beacon";fg.evm_revision=EvmRevision::Shanghai;fg.block=genesis;fg.state=genesis_state;
+    auto ffg_limits=crash_limits;ffg_limits.replay_slots=3;Blockchain owner(ffg_directory/"owner",fg);ChainStore witness(ffg_directory/"witness");
+    CapellaDurableReactor reactor(owner,rules,ffg_limits,ffg_input,{},&witness);const auto before=reactor.current().token;
+    bool cancelled=false;try{reactor.tick(boundary_time,[]{throw ExecutionCancelled("cancel reactor promotion");});}catch(const ExecutionCancelled&){cancelled=true;}
+    check(cancelled&&reactor.current().token==before,"cancelled Reactor tick published justification");++checks;
+    reactor.tick(boundary_time);check(capella_store_snapshot(*reactor.current().state,rules,ffg_limits)==capella_store_snapshot(ffg_oracle,rules,ffg_limits),"Reactor tick promotion differs from full-gap oracle");++checks;
+   }
    Temp vote_directory;Genesis vg;vg.chain_id=r.chain_id;vg.consensus="beacon";vg.evm_revision=EvmRevision::Shanghai;vg.block=genesis;vg.state=genesis_state;
    auto vote_limits=crash_limits;vote_limits.replay_slots=3;Blockchain vote_owner(vote_directory/"owner",vg);ChainStore vote_witness(vote_directory/"witness");
    auto receiver=std::make_unique<CapellaDurableReactor>(vote_owner,rules,vote_limits,initial,std::function<void()>{},&vote_witness);receiver->tick(vote_time);const auto vote_token=receiver->current().token;

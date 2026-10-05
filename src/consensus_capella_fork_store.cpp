@@ -48,13 +48,16 @@ ConsensusRoot ancestor(const Phase0ForkChoiceView& v,ConsensusRoot r,uint64_t sl
 }
 Phase0ForkVoteContext target_context(const CapellaForkStore& store,const CapellaForkBlockRules& rules,
  const ConsensusCheckpoint& target,std::span<const CapellaTargetPreparation* const> frames,
- uint64_t maximum_slots,uint64_t trials,const std::function<void()>& check){
+ uint64_t maximum_slots,uint64_t trials,const std::function<void()>& check,bool require_prepared=false){
  for(const auto* frame:frames){
   if(check)check();
   if(!frame)throw std::invalid_argument("Null Capella target frame");
   if(frame->target()==target)return frame->context(store,rules,check);
  }
  const auto& record=store.blocks.at(target.root);
+ const auto slots=rules.transition.consensus.epoch.ffg.slots_per_epoch;
+ if(require_prepared&&slots&&target.epoch<=UINT64_MAX/slots&&record.header.slot<=target.epoch*slots&&target.epoch*slots-record.header.slot>maximum_slots)
+  throw CapellaTargetContextRequired(target);
  return prepare_capella_fork_state_contexts(record.state,record.header,target,epoch_rules(rules),
   rules.transition.consensus.state,maximum_slots,trials,check).target;
 }
@@ -62,7 +65,7 @@ Phase0ForkVoteContext target_context(const CapellaForkStore& store,const Capella
 static std::optional<CapellaForkStore> prepare_fork_block_impl(const CapellaForkStore& input,
  std::span<const uint8_t> bytes,const CapellaForkBlockRules& rules,uint64_t maximum_slots,uint64_t maximum_sync_trials,
  const std::function<void()>& checkpoint,const CapellaBlockPreparation* prepared,
- std::span<const CapellaTargetPreparation* const> targets={}){
+ std::span<const CapellaTargetPreparation* const> targets={},bool require_prepared=false){
  validate_rules(rules);const auto& t=rules.transition.consensus;const auto slots=t.epoch.history.slots_per_epoch;
  const auto& clock=input.timed.clock;const auto& view=input.timed.view;
  if(!slots||!rules.slot_duration_ms||rules.attestation_due_ms>rules.slot_duration_ms||clock.time_ms<clock.genesis_time_ms||view.finalized.epoch>UINT64_MAX/slots)
@@ -109,7 +112,7 @@ static std::optional<CapellaForkStore> prepare_fork_block_impl(const CapellaFork
  if(timely&&(!v.proposer_boost||*v.proposer_boost==ConsensusRoot{})&&(rules.boost_profile==CapellaProposerBoostProfile::Release160Beta0||same_dependency))v.proposer_boost=id;
  auto update=[&](const Phase0FfgCheckpoints& cp){
   if(cp.current_justified.epoch>v.justified.epoch){
-   const auto ctx=target_context(out,rules,cp.current_justified,targets,maximum_slots,maximum_sync_trials,checkpoint);
+   const auto ctx=target_context(out,rules,cp.current_justified,targets,maximum_slots,maximum_sync_trials,checkpoint,require_prepared);
    v.justified=cp.current_justified;v.justified_registry=ctx.registry;
   }
   if(cp.finalized.epoch>v.finalized.epoch)v.finalized=cp.finalized;
@@ -258,8 +261,8 @@ std::vector<View> embedded_list(View b){std::vector<View> list;if(b.empty())retu
 static std::optional<CapellaForkStore> prepare_received_block_impl(const CapellaForkStore& input,
  View bytes,const CapellaForkBlockRules& rules,uint64_t maximum_slots,uint64_t maximum_sync_trials,
  const std::function<void()>& checkpoint,const CapellaBlockPreparation* prepared,
- std::span<const CapellaTargetPreparation* const> targets={}){
- auto out=prepare_fork_block_impl(input,bytes,rules,maximum_slots,maximum_sync_trials,checkpoint,prepared,targets);if(!out)return std::nullopt;
+ std::span<const CapellaTargetPreparation* const> targets={},bool require_prepared=false){
+ auto out=prepare_fork_block_impl(input,bytes,rules,maximum_slots,maximum_sync_trials,checkpoint,prepared,targets,require_prepared);if(!out)return std::nullopt;
  const auto body=bytes.subspan(184);const auto attesters=number(body,204,4),attestations=number(body,208,4),deposits=number(body,212,4);
  const auto slots=rules.transition.consensus.epoch.ffg.slots_per_epoch;
  const auto current_slot=(out->timed.clock.time_ms-out->timed.clock.genesis_time_ms)/rules.slot_duration_ms;
@@ -270,7 +273,7 @@ static std::optional<CapellaForkStore> prepare_received_block_impl(const Capella
   const auto& d=vote.data;
   if(d.slot>=current_slot||d.target.epoch!=d.slot/slots||!out->blocks.contains(d.target.root)||!out->timed.view.nodes.contains(d.beacon_block_root))continue;
   const auto& target=out->blocks.at(d.target.root);if(target.header.slot>d.target.epoch*slots)continue;
-  const auto ctx=target_context(*out,rules,d.target,targets,maximum_slots,maximum_sync_trials,checkpoint);
+  const auto ctx=target_context(*out,rules,d.target,targets,maximum_slots,maximum_sync_trials,checkpoint,require_prepared);
   process_phase0_fork_vote(out->timed.view,current_slot,ctx,rules.transition.consensus.attestation.duties,vote,true,checkpoint);
  }
  for(auto b:embedded_list(body.subspan(attesters,attestations-attesters))){
@@ -294,7 +297,7 @@ std::optional<CapellaForkStore> prepare_capella_contextual_received_block(const 
  View bytes,const CapellaForkBlockRules& rules,const CapellaBlockPreparation& prepared,
  std::span<const CapellaTargetPreparation* const> targets,uint64_t maximum_slots,uint64_t trials,
  const std::function<void()>& checkpoint){
- return prepare_received_block_impl(input,bytes,rules,maximum_slots,trials,checkpoint,&prepared,targets);
+ return prepare_received_block_impl(input,bytes,rules,maximum_slots,trials,checkpoint,&prepared,targets,true);
 }
 
 }
