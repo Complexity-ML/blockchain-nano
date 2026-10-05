@@ -1,0 +1,302 @@
+{
+  "Id": "874131fd4bf2776dc4e2b940378f990430bcfce52546333fa2276a88a82aa2f2",
+  "Created": "2026-10-05T06:18:34.316661138Z",
+  "Path": "/build/monotonic-clock-amd64-20261005/nano",
+  "Args": [
+    "run",
+    "/config/genesis.json",
+    "/var/lib/nano/chain",
+    "/config/node-1.json"
+  ],
+  "State": {
+    "Status": "exited",
+    "Running": false,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 0,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "2026-10-05T06:18:34.350878902Z",
+    "FinishedAt": "2026-10-05T06:33:54.326203491Z"
+  },
+  "Image": "sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14",
+  "ResolvConfPath": "/var/lib/docker/containers/874131fd4bf2776dc4e2b940378f990430bcfce52546333fa2276a88a82aa2f2/resolv.conf",
+  "HostnamePath": "/var/lib/docker/containers/874131fd4bf2776dc4e2b940378f990430bcfce52546333fa2276a88a82aa2f2/hostname",
+  "HostsPath": "/var/lib/docker/containers/874131fd4bf2776dc4e2b940378f990430bcfce52546333fa2276a88a82aa2f2/hosts",
+  "LogPath": "/var/lib/docker/containers/874131fd4bf2776dc4e2b940378f990430bcfce52546333fa2276a88a82aa2f2/874131fd4bf2776dc4e2b940378f990430bcfce52546333fa2276a88a82aa2f2-json.log",
+  "Name": "/nano-admitted-slashing-wan-995e62f85659",
+  "RestartCount": 0,
+  "Driver": "overlayfs",
+  "Platform": "linux",
+  "MountLabel": "",
+  "ProcessLabel": "",
+  "AppArmorProfile": "docker-default",
+  "ExecIDs": null,
+  "HostConfig": {
+    "Binds": null,
+    "ContainerIDFile": "",
+    "LogConfig": {
+      "Type": "json-file",
+      "Config": {}
+    },
+    "NetworkMode": "host",
+    "PortBindings": {},
+    "RestartPolicy": {
+      "Name": "no",
+      "MaximumRetryCount": 0
+    },
+    "AutoRemove": false,
+    "VolumeDriver": "",
+    "VolumesFrom": null,
+    "ConsoleSize": [
+      0,
+      0
+    ],
+    "CapAdd": null,
+    "CapDrop": [
+      "ALL"
+    ],
+    "CgroupnsMode": "private",
+    "Dns": null,
+    "DnsOptions": [],
+    "DnsSearch": [],
+    "ExtraHosts": null,
+    "GroupAdd": null,
+    "IpcMode": "private",
+    "Cgroup": "",
+    "Links": null,
+    "OomScoreAdj": 0,
+    "PidMode": "",
+    "Privileged": false,
+    "PublishAllPorts": false,
+    "ReadonlyRootfs": true,
+    "SecurityOpt": [
+      "no-new-privileges"
+    ],
+    "Tmpfs": {
+      "/tmp": ""
+    },
+    "UTSMode": "",
+    "UsernsMode": "",
+    "ShmSize": 67108864,
+    "Runtime": "runc",
+    "Isolation": "",
+    "CpuShares": 0,
+    "Memory": 4294967296,
+    "NanoCpus": 2000000000,
+    "CgroupParent": "",
+    "BlkioWeight": 0,
+    "BlkioWeightDevice": [],
+    "BlkioDeviceReadBps": [],
+    "BlkioDeviceWriteBps": [],
+    "BlkioDeviceReadIOps": [],
+    "BlkioDeviceWriteIOps": [],
+    "CpuPeriod": 0,
+    "CpuQuota": 0,
+    "CpuRealtimePeriod": 0,
+    "CpuRealtimeRuntime": 0,
+    "CpusetCpus": "",
+    "CpusetMems": "",
+    "Devices": [],
+    "DeviceCgroupRules": null,
+    "DeviceRequests": null,
+    "MemoryReservation": 0,
+    "MemorySwap": 8589934592,
+    "MemorySwappiness": null,
+    "OomKillDisable": null,
+    "PidsLimit": null,
+    "Ulimits": [
+      {
+        "Name": "nofile",
+        "Hard": 65536,
+        "Soft": 65536
+      }
+    ],
+    "CpuCount": 0,
+    "CpuPercent": 0,
+    "IOMaximumIOps": 0,
+    "IOMaximumBandwidth": 0,
+    "Mounts": [
+      {
+        "Type": "bind",
+        "Source": "/tmp/nano-admitted-slashing-wan-995e62f85659/config",
+        "Target": "/config",
+        "ReadOnly": true
+      },
+      {
+        "Type": "volume",
+        "Source": "nano-clean-rpc-build-20261002",
+        "Target": "/build",
+        "ReadOnly": true
+      },
+      {
+        "Type": "volume",
+        "Source": "nano-admitted-slashing-wan-995e62f85659-data",
+        "Target": "/var/lib/nano"
+      }
+    ],
+    "MaskedPaths": [
+      "/proc/acpi",
+      "/proc/asound",
+      "/proc/interrupts",
+      "/proc/kcore",
+      "/proc/keys",
+      "/proc/latency_stats",
+      "/proc/sched_debug",
+      "/proc/scsi",
+      "/proc/timer_list",
+      "/proc/timer_stats",
+      "/sys/devices/virtual/powercap",
+      "/sys/firmware"
+    ],
+    "ReadonlyPaths": [
+      "/proc/bus",
+      "/proc/fs",
+      "/proc/irq",
+      "/proc/sys",
+      "/proc/sysrq-trigger"
+    ]
+  },
+  "Storage": {
+    "RootFS": {
+      "Snapshot": {
+        "Name": "overlayfs"
+      }
+    }
+  },
+  "Mounts": [
+    {
+      "Type": "volume",
+      "Name": "nano-clean-rpc-build-20261002",
+      "Source": "/var/lib/docker/volumes/nano-clean-rpc-build-20261002/_data",
+      "Destination": "/build",
+      "Driver": "local",
+      "Mode": "z",
+      "RW": false,
+      "Propagation": ""
+    },
+    {
+      "Type": "bind",
+      "Source": "/tmp/nano-admitted-slashing-wan-995e62f85659/config",
+      "Destination": "/config",
+      "Mode": "",
+      "RW": false,
+      "Propagation": "rprivate"
+    },
+    {
+      "Type": "volume",
+      "Name": "nano-admitted-slashing-wan-995e62f85659-data",
+      "Source": "/var/lib/docker/volumes/nano-admitted-slashing-wan-995e62f85659-data/_data",
+      "Destination": "/var/lib/nano",
+      "Driver": "local",
+      "Mode": "z",
+      "RW": true,
+      "Propagation": ""
+    }
+  ],
+  "Config": {
+    "Hostname": "vps-0c09c21c",
+    "Domainname": "",
+    "User": "",
+    "AttachStdin": false,
+    "AttachStdout": false,
+    "AttachStderr": false,
+    "Tty": false,
+    "OpenStdin": false,
+    "StdinOnce": false,
+    "Cmd": [
+      "run",
+      "/config/genesis.json",
+      "/var/lib/nano/chain",
+      "/config/node-1.json"
+    ],
+    "Image": "sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14",
+    "Volumes": null,
+    "WorkingDir": "/src",
+    "Entrypoint": [
+      "/build/monotonic-clock-amd64-20261005/nano"
+    ],
+    "Labels": {
+      "nano.qualification": "capella-deposit-wan",
+      "org.opencontainers.image.revision": "4d7857755c96a53783456c4ccc612a8993a2cac2",
+      "org.opencontainers.image.version": "24.04"
+    }
+  },
+  "NetworkSettings": {
+    "SandboxID": "",
+    "SandboxKey": "",
+    "Ports": {},
+    "Networks": {
+      "host": {
+        "IPAMConfig": null,
+        "Links": null,
+        "Aliases": null,
+        "DriverOpts": null,
+        "GwPriority": 0,
+        "NetworkID": "b374b9efa787c80f988b811bbc4368e47ecd919e9230795e5ffb93d105a47163",
+        "EndpointID": "",
+        "Gateway": "",
+        "IPAddress": "",
+        "MacAddress": "",
+        "IPPrefixLen": 0,
+        "IPv6Gateway": "",
+        "GlobalIPv6Address": "",
+        "GlobalIPv6PrefixLen": 0,
+        "DNSNames": null
+      }
+    }
+  },
+  "ImageManifestDescriptor": {
+    "mediaType": "application/vnd.oci.image.manifest.v1+json",
+    "digest": "sha256:5b905a70da62fa7971cd36822095c62e760e5494ecb1804266af74b087d3ecb3",
+    "size": 1433,
+    "platform": {
+      "architecture": "amd64",
+      "os": "linux"
+    }
+  },
+  "archivedEnvironmentNames": [
+    "NANO_TEST_CAPELLA_NETWORK_KEY_32",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_33",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_34",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_35",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_36",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_37",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_38",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_39",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_40",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_41",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_42",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_43",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_44",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_45",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_46",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_47",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_48",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_49",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_50",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_51",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_52",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_53",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_54",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_55",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_56",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_57",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_58",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_59",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_60",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_61",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_62",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_63",
+    "NANO_TEST_CAPELLA_NETWORK_KEY_64",
+    "NANO_TEST_NETWORK_TRACE",
+    "NANO_TEST_SLASHING_FILE",
+    "NANO_TEST_SLASHING_DAEMON",
+    "PATH",
+    "CC",
+    "CXX"
+  ],
+  "sourceInspectSha256": "7898cbe49dea59dde0e3fa9595b9fd3adb0e8cd38c76182e8070bc2f32bf0076"
+}
