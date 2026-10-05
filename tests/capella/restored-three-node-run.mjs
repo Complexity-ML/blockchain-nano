@@ -50,13 +50,13 @@ try{
   else{const text=await docker(['run','--rm','--network','none','-v',a.buildVolume+':/build:ro','--entrypoint','sha256sum',a.image,a.nano.path,a.p2p.path],name==='vps-docker');for(const x of [a.nano,a.p2p])assert.ok(text.split('\n').includes(x.sha256+'  '+x.path));}
  }
  controllerHashes=Object.fromEntries(await Promise.all(controllerFiles.map(async p=>[p,await hash(join(repo,p))])));await save(join(out,'controller-hashes.json'),controllerHashes);
- await save(join(out,'plan.json'),plan);await save(join(out,'artifacts.json'),artifacts);await record({event:'preflight-verified',revision,sourceWritersStopped:true,ownership:plan.ownership,physicalHosts:2,macDatabaseTransferred:false});
+ await save(join(out,'plan.json'),plan);await save(join(out,'artifacts.json'),artifacts);await record({event:'preflight-verified',revision,sourceWritersStopped:true,ownership:plan.ownership,physicalHosts:2,macDatabaseTransferred:false,networkTraceEnabled:true});
  const rp=JSON.parse(await ssh(['python3','-c','import socket,json; a=socket.socket();b=socket.socket();a.bind(("127.0.0.1",0));b.bind(("127.0.0.1",0));print(json.dumps([a.getsockname()[1],b.getsockname()[1]]))']));assert.equal(rp.length,2);assert.notEqual(rp[0],rp[1]);
  const lp=await port(),lr=await port(),nr=await port(),pf=await port(),rf=await port();assert.equal(new Set([lp,lr,nr,pf,rf]).size,5);
  const configs=structuredClone(plan.configs),fixture=join(prepared,'config');await mkdir(fixture);
  assert.equal(await hash(join(evidence,'input.json')),preparation.artifacts['input.json']);assert.equal(await hash(join(evidence,'plan.json')),preparation.artifacts['plan.json']);
  for(const f of ['genesis.json','profile.json','initial.json'])await copyFile('/private/tmp/nano-ready-target-cold-resume-20261005/config/'+f,join(fixture,f));
- const envFor=n=>Object.fromEntries(plan.ownership[n].map(i=>['NANO_TEST_CAPELLA_NETWORK_KEY_'+i,'0x'+BigInt(i+1).toString(16).padStart(64,'0')]));
+ const envFor=n=>({...Object.fromEntries(plan.ownership[n].map(i=>['NANO_TEST_CAPELLA_NETWORK_KEY_'+i,'0x'+BigInt(i+1).toString(16).padStart(64,'0')])),NANO_TEST_NETWORK_TRACE:'1'});
  const environment={...process.env};for(const k of Object.keys(environment))if(k.startsWith('NANO_TEST_CAPELLA_NETWORK_KEY_')||k==='NANO_TEST_EXIT_BOOTSTRAP')delete environment[k];
  for(const [i,c] of configs.entries()){
   const a=artifacts.nodes[names[i]];c.p2p_binary=a.p2p.path;c.p2p_identity='/var/lib/nano/peer.key';c.bootnodes=[];c.rpc_host='127.0.0.1';c.rpc_port=i===2?rp[0]:8545;c.listen_addr=i===2?`/ip4/127.0.0.1/tcp/${rp[1]}`:'/ip4/0.0.0.0/tcp/30303';c.capella.profile.file='/config/profile.json';assert.deepEqual({...c.capella.network,enabled:true},configs[2].capella.network,'Network protocol budgets/profile differ');c.capella.network.enabled=true;

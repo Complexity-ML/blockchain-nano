@@ -4610,3 +4610,6 @@ exit 1 conservés : hypothèse incorrecte sur --help, post-vérification négati
 CLI attendue et contrôles des compilations/tests exit 0 sans recompilation.
 Aucune qualification réseau réelle du nouveau relais ; prochaine reprise avec
 les engagements audités post-v6. [Preuves](qualification/depth-p2p-candidate-20261006/README.md).
+
+
+2026-10-06, préparation v7 : copies Mac séparées et engagements post-v6 audités, volume VPS arrêté réutilisé sans transfert. Relais corrigé 81e5ab31 remplace les trois exécutables P2P, noyau b5ee00ac inchangé ; images réutilisées. Traces P2P existantes activées dans la fixture pour diagnostiquer les refus/ACK/yields, règles et échéance 900 s inchangées. Trois avances communes distinctes restent nécessaires. Préparation non qualifiée réseau/production ; v6 conservé. Preuves restored-three-node-v7-prepare-20261006/.
