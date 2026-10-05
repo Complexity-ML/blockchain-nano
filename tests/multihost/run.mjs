@@ -348,7 +348,7 @@ try{
   await waitRestoredRecovery({saved:restartReceipt.finalized,record:log,sample:async()=>{const rows=await faultSample(),heads=await rotationHeads();return rows.map((r,i)=>({...r,headSlot:heads[i].slot}));}});
  }
  await clockSamples('before-fault');
- if(boundedLoad)await runBoundedLoad({rpc,genesisHash:genesis.hash,output,sampleFinality:faultSample,
+ if(boundedLoad)await runBoundedLoad({rpc,genesisHash:genesis.hash,output,sampleFinality:faultSample,freshFinalizedState:historicalPruning,
   ...(partition?{duringSubmit:submit=>partitionRemote({docker:args=>docker(args,true),container:remote,
    network:testNetwork,revision,record:faultRecord,sample:faultSample,duringCut:submit})}:{})});
  if(alertDelivery)await qualifyAlertFault({repo,output,prepared,local,remote,target,record:log,docker:args=>docker(args,true)});

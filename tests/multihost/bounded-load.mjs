@@ -4,6 +4,7 @@ import {promisify} from 'node:util';
 import {writeFile, appendFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {setTimeout as delay} from 'node:timers/promises';
+import {collectFinalizedLoadState} from './load-state.mjs';
 import {collectLoadReceipts, loadNodes} from './load-receipts.mjs';
 
 const exec = promisify(execFile);
@@ -13,7 +14,7 @@ const target = '0x0000000000000000000000000000000000001234';
 const count = 96, maxFee = 2000000000n, gas = 100000n;
 
 export async function runBoundedLoad({rpc, genesisHash, output, sampleFinality,
-  duringSubmit=submit=>submit(),
+  duringSubmit=submit=>submit(),freshFinalizedState=false,
   cast = '/Users/boris/.foundry/bin/cast'}) {
   const record = e => appendFile(join(output,'load.jsonl'),JSON.stringify({time:Date.now(),...e})+'\n');
   const castCommand = async args => (await exec(cast,args,{timeout:15000,maxBuffer:1024*1024})).stdout.trim();
@@ -65,17 +66,28 @@ export async function runBoundedLoad({rpc, genesisHash, output, sampleFinality,
       await delay(Math.max(0,[1000,500,250][Math.floor(i/32)]-(Date.now()-begin)));
     }
     });
+    let verifiedReceipts;
     for(;;) {
       checkDeadline();
       await record({event:'load-finality-sample',rows:await sampleFinality()});
-      const result=await collectLoadReceipts(transactions.map(t=>t.hash),rpc);
-      checkDeadline();
-      await record({event:'receipt-observation',...result});
+      if(!verifiedReceipts){
+        const result=await collectLoadReceipts(transactions.map(t=>t.hash),rpc);
+        checkDeadline();await record({event:'receipt-observation',...result});
+        if(!result.verdict.complete){await delay(3000);continue;}
+        verifiedReceipts=result;
+      }
+      const result=verifiedReceipts;
       if(result.verdict.complete) {
-        const tag=result.verdict.anchor.number;
-        const states={};
+        let anchor=result.verdict.anchor,states={};
+        if(freshFinalizedState){
+          const observed=await collectFinalizedLoadState({rpc,receiptAnchor:anchor,sender,target});
+          checkDeadline();await record({event:'load-state-observation',...observed});
+          if(!observed.complete){await delay(3000);continue;}
+          anchor=observed.anchor;states=observed.states;
+        }
+        const tag=anchor.number;
         for(const node of loadNodes) {
-          states[node]={nonce:await rpc(node,'eth_getTransactionCount',[sender,tag]),
+          if(!freshFinalizedState)states[node]={nonce:await rpc(node,'eth_getTransactionCount',[sender,tag]),
             balance:await rpc(node,'eth_getBalance',[target,tag]),
             storage:await rpc(node,'eth_getStorageAt',[target,'0x0',tag])};
           assert.equal(BigInt(states[node].nonce),
@@ -84,10 +96,10 @@ export async function runBoundedLoad({rpc, genesisHash, output, sampleFinality,
             BigInt(baseline.native.balance)+BigInt(count),'Finalized target balance mismatch');
           assert.equal(BigInt(states[node].storage),42n,'Finalized storage mismatch');
           assert.equal((await rpc(node,'eth_getBlockByNumber',[tag,false])).hash,
-            result.verdict.anchor.hash,'Finalized state anchor changed');
+            anchor.hash,'Finalized state anchor changed');
         }
         checkDeadline();
-        await record({event:'load-passed',count,elapsedMs:Date.now()-started,anchor:result.verdict.anchor,states});
+        await record({event:'load-passed',count,elapsedMs:Date.now()-started,anchor,states,...(freshFinalizedState?{receiptAnchor:result.verdict.anchor}:{})});
         return;
       }
       await delay(3000);
