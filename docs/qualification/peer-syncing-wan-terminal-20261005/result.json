@@ -1,0 +1,165 @@
+{
+  "passed": true,
+  "terminalExit": 0,
+  "runtimeRevision": "2cd9ab9d55a0c179c2d413441c787fae482bca26",
+  "harnessRevision": "3a3f3fb2",
+  "nodes": 3,
+  "physicalHosts": 2,
+  "validators": 64,
+  "restoredSignerPins": 21,
+  "allSignerPinsAdvanced": true,
+  "recovery": {
+    "time": 1791160749495,
+    "event": "backup-restore-recovery-bound",
+    "elapsedMs": 78792,
+    "recoveryMs": 180000,
+    "checkpoint": {
+      "epoch": "3",
+      "root": "0xb81894ff0ae04a33dea06367c2ea151d8adee094010ff8dc5440b3d28baf8aaf"
+    }
+  },
+  "stable": {
+    "epochs": 3,
+    "firstEpoch": "5",
+    "lastEpoch": "8",
+    "lastCheckpoint": {
+      "epoch": "8",
+      "root": "0xf2fe0096f9e5a8c499a06adfa693a3d23d5a094dfc90be15122cabe12a102deb"
+    },
+    "lastExecutionHash": "0x5d9b760f44c189f4319933e123c60fbb88c476c12313464d9a37f497b55ece49",
+    "elapsedMs": 186611,
+    "nodes": [
+      "mac-native",
+      "mac-docker",
+      "vps-docker"
+    ],
+    "revision": "2cd9ab9d55a0c179c2d413441c787fae482bca26"
+  },
+  "peerSyncing": [
+    {
+      "time": 1791160652303,
+      "event": "peer-syncing-window",
+      "phase": "startup",
+      "rows": [
+        {
+          "name": "mac-native",
+          "el_offline": false,
+          "head_slot": "32",
+          "is_optimistic": false,
+          "is_syncing": false,
+          "sync_distance": "0"
+        },
+        {
+          "name": "mac-docker",
+          "el_offline": false,
+          "head_slot": "32",
+          "is_optimistic": false,
+          "is_syncing": false,
+          "sync_distance": "0"
+        },
+        {
+          "name": "vps-docker",
+          "el_offline": false,
+          "head_slot": "33",
+          "is_optimistic": false,
+          "is_syncing": false,
+          "sync_distance": "0"
+        }
+      ],
+      "attempts": 1,
+      "elapsedMs": 1506
+    },
+    {
+      "time": 1791160940382,
+      "event": "peer-syncing-window",
+      "phase": "finalized",
+      "rows": [
+        {
+          "name": "mac-native",
+          "el_offline": false,
+          "head_slot": "80",
+          "is_optimistic": false,
+          "is_syncing": false,
+          "sync_distance": "0"
+        },
+        {
+          "name": "mac-docker",
+          "el_offline": false,
+          "head_slot": "80",
+          "is_optimistic": false,
+          "is_syncing": false,
+          "sync_distance": "0"
+        },
+        {
+          "name": "vps-docker",
+          "el_offline": false,
+          "head_slot": "81",
+          "is_optimistic": false,
+          "is_syncing": false,
+          "sync_distance": "0"
+        }
+      ],
+      "attempts": 1,
+      "elapsedMs": 1475
+    }
+  ],
+  "restoredValidator": {
+    "attestationsAdmitted": 121,
+    "awaitingRegistration": 0,
+    "dutyTrace": [],
+    "dutyTraceFailures": 0,
+    "failure": null,
+    "healthy": true,
+    "localKeys": 21,
+    "proposalsAdmitted": 17,
+    "staleDutyRetries": 0,
+    "syncMessagesAdmitted": 423,
+    "timing": {
+      "awaitingSlotBlock": 92,
+      "maxPollMs": 1651,
+      "maxProposalMs": 457,
+      "polls": 1993,
+      "pollsOverSlot": 0,
+      "proposalAttempts": 17,
+      "proposalsUnavailable": 0,
+      "slotBoundaryExits": 7
+    }
+  },
+  "sourceUnchanged": true,
+  "harnessFilesUnchanged": 34,
+  "nativeProgramsUnchanged": true,
+  "audit": {
+    "allHistoricalStatesMaterialized": false,
+    "archiveBytes": 213949,
+    "blocksIncludingTrustedAnchor": 78,
+    "canonicalHistoryVerified": true,
+    "checkpointDigest": "0xa1ff448a1dbdf1aa005301d89b27ffc6a2b70bcbf92cd85b06ae72fd021d67f1",
+    "checkpointSequence": 827,
+    "externalFinalizedAncestorVerified": true,
+    "finalized": {
+      "epoch": "0x8",
+      "root": "0xf2fe0096f9e5a8c499a06adfa693a3d23d5a094dfc90be15122cabe12a102deb"
+    },
+    "firstExecutionBlock": "0x1",
+    "head": "0x21323756805104803b673532f6206f69747a32c6ca73890e149d99e50e3d0abb",
+    "historicalForkChoiceVerified": false,
+    "historicalStandaloneVotesReplayed": false,
+    "lastExecutionBlock": "0x4e",
+    "prunedExecutionStatesReplayed": 60,
+    "requiredFinalized": {
+      "epoch": "0x8",
+      "root": "0xf2fe0096f9e5a8c499a06adfa693a3d23d5a094dfc90be15122cabe12a102deb"
+    },
+    "transactions": 1,
+    "trustedAnchor": "0x92390613818855adf39346745912e8333cf0feb536c9b39eff68f94fb39a84e1"
+  },
+  "productionQualified": false,
+  "limits": [
+    "synthetic private network",
+    "two physical hosts",
+    "no physical power loss",
+    "no historical standalone vote replay or historical fork-choice replay",
+    "no independent security review",
+    "no public launch or funds"
+  ]
+}
