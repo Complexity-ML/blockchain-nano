@@ -231,6 +231,48 @@ std::optional<CapellaUnsignedBlockCandidate> prepare_capella_unsigned_block(
  return CapellaUnsignedBlockCandidate{Bytes(envelope.begin()+100,envelope.end()),{{std::move(out->ssz),out->last_processed_epoch},std::move(execution)}};
 }
 
+CapellaBlockPreparation::CapellaBlockPreparation(const CapellaSlotState& state,
+ const ConsensusBeaconHeader& parent,const CapellaTransitionRules& rules,
+ const std::function<void()>& checkpoint)
+ :rules_(rules),slots_(state,parent,{rules_.consensus.epoch,rules_.execution,rules_.maximum_state_bytes},rules_.consensus.state,checkpoint){
+ check_rules(rules_.consensus);
+}
+void CapellaBlockPreparation::require_next_slot(uint64_t slot)const{
+ if(slot<=parent().slot||slot<=prepared_slot()||slot-prepared_slot()!=1)
+  throw std::invalid_argument("Capella block preparation not at preceding slot");
+}
+bool CapellaBlockPreparation::advance_for_block(uint64_t slot,uint64_t maximum_slots,
+ uint64_t trials,const std::function<void()>& checkpoint){
+ if(slot<=parent().slot)throw std::invalid_argument("Capella block preparation target precedes parent");
+ return slots_.advance(slot-1,maximum_slots,trials,checkpoint);
+}
+std::optional<CapellaProposerIdentity> CapellaBlockPreparation::proposer_for_block(
+ uint64_t slot,uint64_t trials,const std::function<void()>& checkpoint)const{
+ require_next_slot(slot);auto advanced=slots_;
+ if(!advanced.advance(slot,1,trials,checkpoint))throw std::logic_error("Capella final slot not prepared");
+ return advanced.proposer_identity(rules_.consensus.attestation.duties,checkpoint);
+}
+std::optional<CapellaUnsignedBlockCandidate> CapellaBlockPreparation::construct(
+ uint64_t slot,uint64_t proposer,View body,const Header& execution_parent,
+ const State& execution_state,const std::function<Bytes(const Int&)>& history,
+ uint64_t trials,const std::function<void()>& checkpoint)const{
+ require_next_slot(slot);
+ if(!trials)throw std::invalid_argument("Capella block preparation trial budget required");
+ return prepare_capella_unsigned_block(slots_.state(),slot,proposer,
+  consensus_beacon_header_root(parent()),body,rules_,execution_parent,execution_state,history,1,trials,checkpoint);
+}
+std::optional<CapellaBlockCandidate> CapellaBlockPreparation::receive(View block,
+ const Header& execution_parent,const State& execution_state,
+ const std::function<Bytes(const Int&)>& history,uint64_t trials,
+ const std::function<void()>& checkpoint)const{
+ if(!trials)throw std::invalid_argument("Capella block preparation trial budget required");
+ if(block.size()<184||block.size()>rules_.consensus.maximum_block_bytes)return std::nullopt;
+ const auto slot=number(block,100);
+ if(slot<=parent().slot||slot<=prepared_slot()||slot-prepared_slot()!=1||
+  array<32>(block,116)!=consensus_beacon_header_root(parent()))return std::nullopt;
+ return prepare_capella_state_transition(slots_.state(),block,rules_,execution_parent,execution_state,history,1,trials,checkpoint);
+}
+
 std::optional<CapellaBlockCandidate> prepare_capella_fork_state_transition(
  const BellatrixSlotState& input,const ConsensusRoot& authenticated_root,const CapellaForkSchedule& schedule,View block,const CapellaTransitionRules& r,
  const Header& parent,const State& state,const std::function<Bytes(const Int&)>& history,

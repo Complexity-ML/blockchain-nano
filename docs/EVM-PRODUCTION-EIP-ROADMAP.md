@@ -4454,3 +4454,6 @@ Auditeur de sanction AMD64 courant : contrôle positif historique du membre 0 te
 
 
 2026-10-05, contextes préparés 2102a625 : Docker AMD64/VPS terminal 0 sans OOM, 19 scénarios PASSED et régression runtime existant 64 clés/16 blocs/reprise témoins PASSED comme ARM64. Sources concordantes vérifiées, parents inchangés, VPS reçu par Git pull. Preuves prepared-duty-contexts-20261005/amd64/. Projections pures qualifiées ; raccordement scheduler/reactor/construction-admission blocs-votes, reprise froide et finalité WAN restent ouverts.
+
+
+2026-10-05, transition de bloc préparée : CapellaBlockPreparation conserve le profil complet et le parent authentifié, prépare jusqu’au slot précédent puis traite normalement le slot final et tout le bloc signé. Docker ARM64 terminal 0 sans OOM : 28 contrôles PASSED, deux blocs BLS avec transactions type 2 après deux fenêtres historiques, dont frontière d’époque ; égalité exacte avec rejeu complet, falsifications re-signées et annulation refusées, anciens budgets inchangés. Preuves prepared-block-transition-20261005/. Construction/vérification pure qualifiée ; AMD64, cache scheduler/reactor, publication Store/fork-choice, reprise froide et finalité WAN restent ouverts. Aucun fonds réel ni signature réseau, aucun critère production fermé.

@@ -60,7 +60,7 @@ static bool owner_sync=false;
 static bool owner_witness=false;
 static bool scheduled=false,sync_rotation=false,clock_diagnostics=false,duty_timing=false,signer_health=false;
 static bool configured_runtime=false;
-static bool slot_continuation=false;
+static bool slot_continuation=false,prepared_block=false;
 static bool automatic_recovery=false;
 static bool capella_http=false,capella_http_queue=false;
 static std::string cli_binary;static Json cli_genesis;static bool managed_cli=false;static std::string daemon_binary;static bool network_cli=false;static bool multipeer_cli=false;static bool distributed_cli=false;static bool sync_distributed_cli=false,distributed_sync_rotation=false;static bool transport_outage_cli=false;static fs::path network_export;
@@ -1445,6 +1445,48 @@ static void slot_continuation_loop(const CapellaForkStore& initial,const Capella
  CapellaSlotPreparation at_parent(original,parent.header,epoch,limits);check(!at_parent.proposer_identity(t.consensus.attestation.duties),"prepared parent itself produced a new proposal identity");++passed;
  std::cout<<Json{{"scenario","capella-authenticated-slot-continuation"},{"scenarios",passed},{"crossedHistoryWindows",2},{"canonicalOracleEqual",true},{"parentPreserved",true},{"runtimeIntegrated",false},{"networkQualified",false}}.dump()<<std::endl;
 }
+static void prepared_block_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules){
+ const auto& parent=capella_fork_head(initial,rules);const auto& r=rules.transition;const auto& l=r.consensus.state;
+ const CapellaEpochRules epoch_rules{r.consensus.epoch,r.execution,r.maximum_state_bytes};const auto slots=r.consensus.epoch.ffg.slots_per_epoch;
+ const size_t hist=176+64*l.slots_per_historical_root,randao=hist+96,field=randao+32*l.epochs_per_historical_vector+8*l.epochs_per_slashings_vector+229+96*l.sync_committee_size;
+ const auto base=parent.header.slot+2*l.slots_per_historical_root;size_t checks=0;
+ auto history=[&](const Int& n){return capella_execution_history(initial,consensus_beacon_header_root(parent.header),n);};
+ for(uint64_t slot:{base,((base/slots)+1)*slots}){
+  CapellaBlockPreparation preparation(parent.state,parent.header,r);const auto original=parent.state;bool refused=false;
+  try{preparation.proposer_for_block(slot,100000);}catch(const std::invalid_argument&){refused=true;}check(refused,"unfinished block preparation produced proposer");++checks;
+  while(!preparation.advance_for_block(slot,3,100000)){}
+  check(preparation.prepared_slot()==slot-1,"block preparation skipped final slot");++checks;
+  const auto before=preparation.prepared_state();const auto identity=preparation.proposer_for_block(slot,100000);check(bool(identity),"prepared block proposer missing");
+  check(identity==prepare_capella_proposer_identity(original,parent.header,slot,epoch_rules,l,r.consensus.attestation.duties,slot-parent.header.slot,100000),"prepared block proposer differs from original-parent oracle");++checks;
+  const auto advanced=prepare_capella_slots(before,epoch_rules,l,slot,1,100000);const auto& b=advanced.ssz;const auto epoch=slot/slots;
+  ConsensusRoot epoch_root{};for(unsigned i=0;i<8;++i)epoch_root[i]=uint8_t(epoch>>(8*i));
+  Key key(identity->index);const auto reveal=key.sign(consensus_signing_root(epoch_root,consensus_domain({2,0,0,0},identity->fork_version,identity->genesis_root)));
+  Block execution;execution.header.parent_hash=parent.execution_block.header.hash();execution.header.number=parent.execution_block.header.number+1;execution.header.timestamp=Int(std::to_string(little(b,0,8)+slot*r.seconds_per_slot));execution.header.difficulty=0;execution.header.base_fee=next_base_fee(parent.execution_block.header);const auto mix=root_at(b,randao+32*(epoch%l.epochs_per_historical_vector));execution.header.mix_hash=Bytes(mix.begin(),mix.end());
+  const auto user_key=bytes(Int(777),32);Transaction tx;tx.type=2;tx.to="0x0000000000000000000000000000000000001234";tx.gas=100000;tx.max_fee=2000000000;tx.priority_fee=100000000;tx.nonce=parent.execution_state.get(SignedTransaction::sign(tx,user_key).sender()).nonce;execution.transactions.push_back(SignedTransaction::sign(tx,user_key));
+  CapellaWithdrawalState withdrawals;withdrawals.registry.epoch=epoch;withdrawals.next_withdrawal_index=little(b,field+4,8);withdrawals.next_validator_index=little(b,field+12,8);const auto validators=little(b,hist+88,4),balances=little(b,hist+92,4);
+  for(size_t i=0;i<(balances-validators)/121;++i){ConsensusSlashingValidator v;const auto at=validators+121*i;v.balance=little(b,balances+8*i,8);v.effective_balance=little(b,at+80,8);v.withdrawable_epoch=little(b,at+113,8);std::copy_n(b.begin()+at+48,32,v.withdrawal_credentials.begin());withdrawals.registry.validators.emplace(i,v);}
+  const auto payments=expected_capella_withdrawals(withdrawals,r.withdrawals);for(const auto& w:payments)execution.withdrawals.push_back(w.to_json());
+  State expected=parent.execution_state;ExecutionEngine(r.chain_id,history,EvmRevision::Shanghai,r.replay_policy,ConsensusInputPolicy::EthereumValidated).execute_block(expected,execution,false);
+  auto ep=payload(execution);ep.withdrawals=payments;const auto encoded=encode_capella_execution_payload(ep,r.execution,r.withdrawals.maximum_per_payload,r.consensus.maximum_block_bytes);
+  const size_t sync_bytes=(l.sync_committee_size+7)/8+96,fixed=228+sync_bytes;Bytes body(fixed,0);std::copy(reveal.begin(),reveal.end(),body.begin());std::copy_n(b.begin()+hist+4,72,body.begin()+96);body[220+(l.sync_committee_size+7)/8]=0xc0;
+  for(size_t at:std::array<size_t,6>{200,204,208,212,216,220+sync_bytes})put(body,at,fixed,4);put(body,224+sync_bytes,fixed+encoded.size(),4);body.insert(body.end(),encoded.begin(),encoded.end());
+  const auto constructed=preparation.construct(slot,identity->index,body,parent.execution_block.header,parent.execution_state,history,100000);check(bool(constructed),"prepared unsigned block rejected");
+  const auto oracle=prepare_capella_unsigned_block(original,slot,identity->index,consensus_beacon_header_root(parent.header),body,r,parent.execution_block.header,parent.execution_state,history,slot-parent.header.slot,100000);
+  check(oracle&&constructed->message_ssz==oracle->message_ssz&&constructed->post.consensus==oracle->post.consensus&&constructed->post.execution.block.header.hash()==oracle->post.execution.block.header.hash()&&constructed->post.execution.state.root()==expected.root(),"prepared block differs from full-gap execution oracle");++checks;
+  auto sign=[&](const Bytes& message,uint64_t signer){const auto view=std::span<const uint8_t>(message);const ConsensusBeaconHeader h{little(message,0,8),little(message,8,8),root_at(message,16),root_at(message,48),capella_beacon_body_root(view.subspan(84),r.consensus.body,l.sync_committee_size,r.execution,r.withdrawals.maximum_per_payload,r.maximum_bls_changes,r.consensus.maximum_block_bytes)};const auto signature=Key(signer).sign(consensus_signing_root(consensus_beacon_header_root(h),consensus_domain({0,0,0,0},identity->fork_version,identity->genesis_root)));Bytes wire(100,0);put(wire,0,100,4);std::copy(signature.begin(),signature.end(),wire.begin()+4);wire.insert(wire.end(),message.begin(),message.end());return wire;};
+  const auto wire=sign(constructed->message_ssz,identity->index);const auto received=preparation.receive(wire,parent.execution_block.header,parent.execution_state,history,100000);check(received&&received->consensus==oracle->post.consensus&&received->execution.block.header.hash()==oracle->post.execution.block.header.hash()&&received->execution.state.root()==oracle->post.execution.state.root(),"prepared signed block transition differs from oracle");++checks;
+  for(unsigned mode=0;mode<5;++mode){auto invalid=wire;
+   if(mode==0)invalid[4]^=1;
+   else {auto message=constructed->message_ssz;if(mode==1)message[16]^=1;else if(mode==2)message[48]^=1;else if(mode==3)message[84]^=1;else put(message,0,slot+1);invalid=sign(message,identity->index);}
+   check(!preparation.receive(invalid,parent.execution_block.header,parent.execution_state,history,100000),"prepared receive accepted invalid signature/parent/state-root/RANDAO/slot");++checks;
+  }
+  refused=false;try{prepare_capella_unsigned_block(original,slot,identity->index,consensus_beacon_header_root(parent.header),body,r,parent.execution_block.header,parent.execution_state,history,3,100000);}catch(const std::length_error&){refused=true;}check(refused,"legacy full-gap work budget was weakened");++checks;
+  refused=false;try{preparation.construct(slot+1,identity->index,body,parent.execution_block.header,parent.execution_state,history,100000);}catch(const std::invalid_argument&){refused=true;}check(refused,"unfinished next block constructed");++checks;
+  refused=false;try{preparation.receive(wire,parent.execution_block.header,parent.execution_state,history,100000,[]{throw ExecutionCancelled("cancel prepared receive");});}catch(const ExecutionCancelled&){refused=true;}check(refused,"prepared receive cancellation swallowed");++checks;
+  check(preparation.prepared_state()==before&&parent.state==original,"block preparation or transition mutated its source");++checks;
+ }
+ std::cout<<Json{{"scenario","capella-prepared-block-transition"},{"checks",checks},{"variants",2},{"signedBlsBlocks",2},{"type2Transactions",2},{"epochBoundaryFinalSlot",true},{"fullGapOracleEqual",true},{"runtimeIntegrated",false},{"networkQualified",false}}.dump()<<std::endl;
+}
 static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigned participation=100){
  const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-bellatrix-containers-official",source=fixtures/"consensus-capella-slots-official";
  const auto manifest=load(source/"manifest.json");check(manifest.at("commit")=="194a91fd9e6f97118156421aac4c80e6e47a9a7f","initial state revision");
@@ -1892,7 +1934,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
     }
    }
   }
-  if(slot==first_slot){short_snapshot=capella_store_snapshot(*store,store_rules,snapshot_limits);if(slot_continuation){slot_continuation_loop(*store,store_rules);return;}if(signer_health){signer_health_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(duty_timing){duty_timing_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(clock_diagnostics){clock_diagnostics_loop(*store,store_rules,disk_genesis,disk_genesis_state);startup_catchup_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(deposit_reorg){deposit_reorg_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(configured_runtime){runtime_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(scheduled){scheduler_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}
+  if(slot==first_slot){short_snapshot=capella_store_snapshot(*store,store_rules,snapshot_limits);if(prepared_block){prepared_block_loop(*store,store_rules);return;}if(slot_continuation){slot_continuation_loop(*store,store_rules);return;}if(signer_health){signer_health_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(duty_timing){duty_timing_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(clock_diagnostics){clock_diagnostics_loop(*store,store_rules,disk_genesis,disk_genesis_state);startup_catchup_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(deposit_reorg){deposit_reorg_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(configured_runtime){runtime_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}if(scheduled){scheduler_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}
   if(local_finality){local_finality_loop(*store,store_rules,disk_genesis,disk_genesis_state);return;}}
   ++contexts;
   beacon=received->consensus;state=received->execution.state;parent=received->execution.block;hashes[parent.header.number]=parent.header.hash();++accepted;
@@ -2126,6 +2168,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
 }
 #include "support/capella_exit_owner.hpp"
 int main(int argc,char** argv){try{executable=argv[0];
+if(argc==2&&std::string(argv[1])=="--prepared-block"){prepared_block=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--slot-continuation"){slot_continuation=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--signer-health"){signer_health=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--duty-timing"){duty_timing=true;scenario(false);return 0;}
