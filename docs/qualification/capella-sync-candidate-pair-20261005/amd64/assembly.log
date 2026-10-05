@@ -1,0 +1,83 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from candidate.Dockerfile
+#1 transferring dockerfile: 1.04kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/nano-candidate-base:2e35327fba2050e4ed6e7ba1d93f0e85401fb2dbaefd369cee1ad68918cd4da8
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/5] FROM docker.io/library/nano-candidate-base:2e35327fba2050e4ed6e7ba1d93f0e85401fb2dbaefd369cee1ad68918cd4da8@sha256:2e35327fba2050e4ed6e7ba1d93f0e85401fb2dbaefd369cee1ad68918cd4da8
+#4 resolve docker.io/library/nano-candidate-base:2e35327fba2050e4ed6e7ba1d93f0e85401fb2dbaefd369cee1ad68918cd4da8@sha256:2e35327fba2050e4ed6e7ba1d93f0e85401fb2dbaefd369cee1ad68918cd4da8 0.0s done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 32.12MB 0.2s done
+#5 DONE 0.2s
+
+#4 [1/5] FROM docker.io/library/nano-candidate-base:2e35327fba2050e4ed6e7ba1d93f0e85401fb2dbaefd369cee1ad68918cd4da8@sha256:2e35327fba2050e4ed6e7ba1d93f0e85401fb2dbaefd369cee1ad68918cd4da8
+#4 CACHED
+
+#6 [2/5] COPY nano nano-p2p /usr/local/bin/
+#6 DONE 0.1s
+
+#7 [3/5] COPY notices/ /usr/local/share/nano/licenses/
+#7 DONE 0.0s
+
+#8 [4/5] RUN cd /usr/local/share/nano/licenses && sha256sum -c notices.sha256
+#8 0.072 LICENSE.ethereumjs: OK
+#8 0.072 LICENSE.evm-codes: OK
+#8 0.072 bip39-LICENSE: OK
+#8 0.073 blst-LICENSE: OK
+#8 0.073 ckzg-LICENSE: OK
+#8 0.073 json-COPYRIGHTS: OK
+#8 0.073 json-LICENSE.MIT: OK
+#8 0.073 libp2p-LICENSE-APACHE: OK
+#8 0.073 libp2p-LICENSE-MIT: OK
+#8 0.073 mcl-COPYRIGHT: OK
+#8 0.073 secp256k1-LICENSE: OK
+#8 DONE 0.1s
+
+#9 [5/5] RUN printf '%s  /usr/local/bin/nano\n%s  /usr/local/bin/nano-p2p\n' "e3355c7177c41ac4a31a8a04f4f60b4605621144b09868ea45a8df1c215a6cda" "2bf673749c292e0f7c69618efcbedd9d219bf13d3b8c7e0e4f18ac30304e0dc4" | sha256sum -c -  && ldd /usr/local/bin/nano > /tmp/nano-candidate.libs  && ldd /usr/local/bin/nano-p2p >> /tmp/nano-candidate.libs  && ! grep -q 'not found' /tmp/nano-candidate.libs  && rm /tmp/nano-candidate.libs  && /usr/local/bin/nano --help
+#9 0.093 /usr/local/bin/nano: OK
+#9 0.138 /usr/local/bin/nano-p2p: OK
+#9 0.189 Nano local chain tools
+#9 0.189 Usage: nano <init|status|audit|mine|validate|import|serve|run> <genesis.json> <database-directory> [arguments]
+#9 0.189   wallet <create|import|address|sign-message|sign-transaction|sign-typed-data> <keyfile> [data]
+#9 0.189   wallet deployment-address <keyfile> [nonce]
+#9 0.189   wallet create-many <new-directory> [count] (default: 10)
+#9 0.189   wallet hd-create <mnemonic-file> [word-count]; wallet hd-derive <keyfile> [index]
+#9 0.189   rpc <URL> <info|nodes|network|balance|send|deploy|receipt|mine> [arguments]
+#9 0.189   rpc <URL> <stake-register|stake-add> <keyfile> <contract> <amountNano>
+#9 0.189   rpc <URL> stake-withdraw <keyfile> <contract>
+#9 0.189   rpc <URL> deploy <keyfile> <bytecode-file> [timeout] [valueNano]
+#9 0.189   validator <config.json> [--once] (separate client)
+#9 0.189   init/status: show canonical chain status
+#9 0.189   mine/validate: <coinbase> <timestamp> [signed-raw-transactions.json]
+#9 0.189   audit-capella <genesis.json> <existing-database-directory> <audit-request.json> (offline canonical replay)
+#9 0.189   beacon-journal init <identity.json> <new-database> <new-receipt-directory>
+#9 0.189   beacon-journal status <identity.json> <database> <expected-commitment.json>
+#9 0.189   beacon-journal export <identity.json> <database> <expected-commitment.json> <new-receipt-directory>
+#9 0.189   beacon-journal import <identity.json> <database> <expected-commitment.json> <interchange.json> <max-bytes> <new-receipt-directory>
+#9 0.189   migrate: <genesis.json> <python-chaindb-directory> <new-database-directory>
+#9 0.189   import: <block.json> <current-timestamp>
+#9 0.189   run: [node-config.json] (RPC and P2P together)
+#9 0.189   serve: [port] [bind-address] [wallet-config.json] (defaults: 8545, 127.0.0.1)
+#9 DONE 0.2s
+
+#10 exporting to image
+#10 exporting layers
+#10 exporting layers 1.4s done
+#10 exporting manifest sha256:018bbe600f52c0df0090b4c0666899cf98ee5f753553c6eb35f5eb5556f523e1 done
+#10 exporting config sha256:7ec763ce569eb0ef06ef0fe68f079b8651360a6146371042a48613e574ff647d done
+#10 exporting attestation manifest sha256:e9f1ee99823521fcbb723f76f0f17b429b2b2c82ffa2fcc32af78e0867302dbd done
+#10 exporting manifest list sha256:433ad751a884bb0b7061994f3accb6fede4067c2f2626de861e10b26da297966 done
+#10 naming to moby-dangling@sha256:433ad751a884bb0b7061994f3accb6fede4067c2f2626de861e10b26da297966 done
+#10 unpacking to moby-dangling@sha256:433ad751a884bb0b7061994f3accb6fede4067c2f2626de861e10b26da297966
+#10 unpacking to moby-dangling@sha256:433ad751a884bb0b7061994f3accb6fede4067c2f2626de861e10b26da297966 0.2s done
+#10 DONE 1.6s
+sha256:433ad751a884bb0b7061994f3accb6fede4067c2f2626de861e10b26da297966
