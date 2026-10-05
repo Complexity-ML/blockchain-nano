@@ -7472,3 +7472,6 @@ Auditeur de sanction AMD64 courant : contrôle positif historique du membre 0 te
 
 
 2026-10-05, continuation des slots manqués : primitive CapellaSlotPreparation authentifiant le post-état contre son vrai bloc parent, état dérivé privé et étapes bornées avec préfixe conservé après annulation. Docker ARM64 terminal 0 sans OOM ; 11 scénarios PASSED, égalité exacte avec rejeu monolithique sur deux fenêtres historiques, refus de faux parent/état avancé présenté comme bloc signé et budgets invalides. Preuves authenticated-slot-continuation-20261005/. Pas encore raccordée aux duties, construction/admission blocs/votes/contextes cibles ; AMD64, reprise réelle et finalité WAN restent ouverts. L’échec de reprise froide précédent est conservé, aucun critère production fermé.
+
+
+2026-10-05, continuation authentifiée 0501b7d9 : Docker AMD64/VPS terminal 0 sans OOM, 11 nouveaux scénarios PASSED comme ARM64 ; hashes sources vérifiés sur les deux architectures et parents inchangés. Mise à jour VPS par Git pull, images/volumes réutilisés. Preuves authenticated-slot-continuation-20261005/amd64/. Primitive qualifiée dans ce périmètre ; raccordement runtime et reprise réelle longue interruption restent ouverts.

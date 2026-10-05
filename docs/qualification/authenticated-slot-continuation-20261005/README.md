@@ -6,6 +6,8 @@ Parent worktree: e6354658; parent core: 6b7a437e. New source changes are recorde
 
 Docker ARM64 terminal exit 0, no OOM; 11 scenarios PASS. Three chunk budgets (1, 3, epoch+1) produce exact byte/epoch-marker equality with monolithic processing across two history windows. Completion is idempotent. Mid-chunk cancellation preserves the prefix and subsequent resume matches the oracle. Backwards target, zero work/trial bounds, wrong parent state-root, and advanced-state impersonation are refused. Admitted original parent is unchanged and still authenticates.
 
-Scope: new primitive only. Runtime duties, proposer/block construction, incoming block/vote admission and target contexts are not integrated yet. There is no successful cold duty recovery, WAN finality, AMD64 qualification or production readiness claim. The previous real cold recovery failure remains open.
+Scope: new primitive only. Runtime duties, proposer/block construction, incoming block/vote admission and target contexts are not integrated yet. There is no successful cold duty recovery, WAN finality or production readiness claim. The previous real cold recovery failure remains open.
 
 The incremental archive replaces only consensus_capella_fork_state.cpp.o in a copy of the 6b7a437e core. The new class is not added to any existing object's layout. The transition-test translation unit is freshly compiled. Parent binary/archive/test hashes are checked unchanged.
+
+AMD64/VPS source received by Git pull of 0501b7d9. Existing Docker image and volume reused, no network, one CPU, 2 GiB memory. Terminal exit 0/no OOM; the same 11 new scenarios PASS. Both architecture source hashes match this worktree; all protected parent hashes remain unchanged. Exact logs and program hashes are in amd64/. This qualifies the primitive on both architectures, not runtime integration or long recovery.
