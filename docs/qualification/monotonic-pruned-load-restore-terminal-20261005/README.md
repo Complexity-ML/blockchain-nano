@@ -1,0 +1,13 @@
+# Monotonic clock, pruning, whole-node restore and bounded load — terminal
+
+Harness797b00e5, runtimeab10b8ae, controller terminal **0**. Three nodes (Mac native, Docker ARM64, Docker VPS AMD64), two physical hosts,64 synthetic validator keys, reviewed private SSH-loopback WAN transport. Existing images/programs reused; no image rebuild, public deployment, real funds or continuous flood. Explicit250 ms local drift budget is a fixture choice, not a production default.
+
+The complete VPS backup/restore retains journal/witness/peer identity and independently pinned commitments. Common finality2→3 in85,581 ms under180,000 ms. All21 restored signer journal sequences and digests advanced, terminal227 attestations/38 proposals, healthy.
+
+96 finite signed type-2 transactions accepted, complete successful canonical finalized receipts identical across allthree nodes. Fresh common finalized state at block74 / `0xafd00b1a6e010812c046f01fa2aa52e71cb45c9d556a3f71e0d2562fb52854f6` matches nonce97, recipient balance96 wei, slot0=42; verified receipt anchor66 retained. Load passes in282,320 ms under600,000 ms. This repeats SSTORE(0,42), not storage growth or a capacity benchmark.
+
+Post-load window10→13 in136,626 ms, common FFG root `0x2ddfc6e2c32eb9c283d4f1ce026b3e496d574b405739c05d05fd0028f5017911`, linked execution hash `0x8c69ed54242d0f8a1f7bb4ab226cc8d942a74e45f7a362a53450a0541b06484d`. Readonly terminal audit115 blocks/97 pruned execution states replayed/97 transactions; externally pinned checkpoint1271 digest `0x0e7884a0ea45926a85e4f1f2e8b940bbba0150b40e7eacca3b2d2cba2daff926` and expected finalized ancestry verified. Original source backup unchanged;36 transitive harness files and native program hashes unchanged. Both Docker containers exit0, no OOM; native stopped receipt healthy.35 resource snapshots retained, not peak/TPS/capacity measurements.
+
+Independent artifact verification rechecks full receipts, fresh state arithmetic, every restored signer pin, harness hashes and the terminal audit against separate request/stop receipt. Raw databases/archive retained at `/home/ubuntu/nano-qualification-muulvklu`; no source or private keys published. Prior startup-wall-clock, stale-pruned-state and storage-DATA collector failures preserved.
+
+Not covered: public mesh, large validator capacity, complete validator lifecycle/sanctions/rotation on this revision, historical fork-choice replay, long-term storage growth, physical power loss, hermetic dependency rebuild, unresolved historical WAN A cause, production bridge/fair-launch terms or independent security review. This bounded lot passes; global production does not.
