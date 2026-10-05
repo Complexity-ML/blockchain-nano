@@ -1,12 +1,19 @@
 #include "nano/consensus_deposit_history.hpp"
+#include <exception>
 namespace nano {
 namespace {
 ConsensusRoot scalar(uint64_t n){ConsensusRoot out{};for(unsigned i=0;i<8;++i)out[i]=uint8_t(n>>(8*i));return out;}
 const std::array<ConsensusRoot,33>& zeros(){static const auto value=[] {std::array<ConsensusRoot,33> out{};for(unsigned i=1;i<=32;++i)out[i]=consensus_signing_root(out[i-1],out[i-1]);return out;}();return value;}
 Bytes view(const State& state,const Header& header,const char* name,const std::function<void()>& check){
  State isolated=state;ExecutionContext ctx;ctx.revision=EvmRevision::Paris;ctx.address=ethereum_deposit_contract;ctx.code=state.get(ctx.address).code;
- const std::string signature=name;ctx.data=keccak(Bytes(signature.begin(),signature.end()));ctx.data.resize(4);ctx.is_static=true;ctx.checkpoint=check;ctx.number=header.number;ctx.timestamp=header.timestamp;
- auto result=EVM(isolated).execute(ctx);if(!result.success)throw std::invalid_argument("deposit history contract view failed");return result.return_data;
+ const std::string signature=name;ctx.data=keccak(Bytes(signature.begin(),signature.end()));ctx.data.resize(4);ctx.is_static=true;ctx.number=header.number;ctx.timestamp=header.timestamp;
+ // The EVM preserves ExecutionCancelled but treats other exceptions as execution
+ // failures. A caller's typed duty expiry must reach its scheduler unchanged.
+ std::exception_ptr interrupted;
+ if(check)ctx.checkpoint=[&]{try{check();}catch(...){interrupted=std::current_exception();throw ExecutionCancelled("deposit view checkpoint interrupted");}};
+ auto result=[&]{try{return EVM(isolated).execute(ctx);}catch(...){if(interrupted)std::rethrow_exception(interrupted);throw;}}();
+ if(interrupted)std::rethrow_exception(interrupted);
+ if(!result.success)throw std::invalid_argument("deposit history contract view failed");return result.return_data;
 }
 void validate_view(const ExecutionDepositHistory& history,const State& state,const Header& header,const std::function<void()>& check){
  if(check)check();const auto count=view(state,header,"get_deposit_count()",check);

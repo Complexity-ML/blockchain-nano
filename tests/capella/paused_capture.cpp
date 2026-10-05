@@ -6,6 +6,7 @@
 #include "nano/consensus_beacon_signer.hpp"
 #include "nano/chain.hpp"
 #include "blst.h"
+#include "../../src/consensus_capella_projection.hpp"
 #include <fstream>
 #include <iostream>
 #include <set>
@@ -16,6 +17,23 @@ std::string read(const std::string& p,size_t max){need(std::filesystem::is_regul
 Json json(const std::string& p){return Json::parse(read(p,1024*1024));}
 uint64_t num(const Json& j){return u64(quantity(j));}
 ForkCheckpointToken token(const Json& j){need(j.is_object()&&j.size()==2,"capture token shape");ForkCheckpointToken t{num(j.at("sequence")),unhex(j.at("digest"))};need(t.sequence&&t.digest.size()==32&&j.at("digest")==hex(t.digest),"capture token bounds");return t;}
+// Private-fixture telemetry from authenticated state; never infer gossip replay or health.
+Json participation_diagnostic(const CapellaForkStore& store,const CapellaForkBlockRules& rules){
+ const auto& head=capella_fork_head(store,rules);const auto& t=rules.transition;
+ capella_beacon_state_root(head.state.ssz,t.consensus.state,t.execution,t.maximum_state_bytes);
+ const auto offsets=capella_detail::offsets(t.consensus.state);const auto& b=head.state.ssz;
+ const auto previous=capella_detail::offset(b,offsets[4]),current=capella_detail::offset(b,offsets[5]),scores=capella_detail::offset(b,offsets[6]);
+ need(current>=previous&&scores>=current&&current-previous==65&&scores-current==65,"private diagnostic participation inventory bounds");
+ const auto ctx=capella_fork_block_context(head.state,head.header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state);
+ const auto epoch=head.header.slot/t.consensus.epoch.ffg.slots_per_epoch;Json members=Json::array();std::array<size_t,3> prior{},now{};
+ for(uint64_t i=0;i<65;++i){
+  const auto& member=ctx.registry.validators.at(i);const size_t owner=i<16?0:i<32?1:2;
+  const auto pf=b.at(previous+i),cf=b.at(current+i);if(pf&2)++prior[owner];if(cf&2)++now[owner];
+  Json message=nullptr;const auto it=store.timed.view.latest_messages.find(i);if(it!=store.timed.view.latest_messages.end())message={{"epoch",it->second.epoch},{"root",hex(Bytes(it->second.root.begin(),it->second.root.end()))}};
+  members.push_back({{"index",i},{"owner",owner},{"previousFlags",pf},{"currentFlags",cf},{"latestForkMessage",message},{"effectiveBalance",member.effective_balance},{"activationEpoch",member.activation_epoch},{"exitEpoch",member.exit_epoch},{"slashed",member.slashed}});
+ }
+ return {{"stateRoot",hex(Bytes(head.header.state_root.begin(),head.header.state_root.end()))},{"headSlot",head.header.slot},{"stateEpoch",epoch},{"previousEpoch",epoch?Json(epoch-1):Json(nullptr)},{"timelyTargetFlagIndex",1},{"previousTimelyTargetCountsByOwner",prior},{"currentTimelyTargetCountsByOwner",now},{"members",members},{"historicalStandaloneVotesReplayed",false},{"runtimeHealthInferred",false},{"productionQualified",false}};
+}
 Json wire(const ForkCheckpointToken& t){return {{"sequence",quantity(Int(std::to_string(t.sequence)))},{"digest",hex(t.digest)}};}
 void floor(const ForkCheckpointToken& actual,const ForkCheckpointToken& minimum){need(actual.sequence>=minimum.sequence,"capture below external minimum sequence");if(actual.sequence==minimum.sequence)need(actual.digest==minimum.digest,"capture external minimum digest mismatch");}
 Bytes public_key(uint64_t index){need(index<=64,"private capture key bounds");uint64_t words[4]{index+1,0,0,0};blst_scalar s;blst_scalar_from_uint64(&s,words);blst_p1 p;blst_sk_to_pk_in_g1(&p,&s);Bytes b(48);blst_p1_compress(b.data(),&p);return b;}
@@ -53,5 +71,6 @@ int main(int argc,char** argv){try{
  ChainStore final_disk(argv[4],ChainStore::OpenMode::ReadOnly),final_witness(c.at("recoveryWitness"),ChainStore::OpenMode::ReadOnly);final_disk.bind_chain(genesis.chain_id,genesis.block.header.hash(),"beacon");final_witness.bind_chain(genesis.chain_id,genesis.block.header.hash(),"nano-capella-recovery-v1");
  need(final_witness.fork_checkpoint(genesis.chain_id,genesis.block.header.hash(),2048+8*limits.envelope_bytes,saved->token).has_value(),"capture core witness moved");
  need(final_disk.fork_checkpoint(genesis.chain_id,genesis.block.header.hash(),limits.envelope_bytes,primary->token).has_value(),"capture source moved; freeze all writers first");
- std::cout<<Json{{"format","nano-private-quiescent-recovery-pins-v1"},{"chainId","0x539"},{"genesisHash",hex(genesis.block.header.hash())},{"profileSha256",p.at("sha256")},{"restart",wire(primary->token)},{"validatorKeys",result_keys},{"canonicalReplay",audit},{"readOnlyStores",true},{"primaryWitnessAndSignersVerified",true},{"minimumSequenceBoundsVerified",true},{"historicalTokenDigestAncestryVerified",false},{"sourceQuiescenceExternallyRequired",true},{"runtimeHealthInferred",false},{"productionQualified",false}}.dump(2)<<'\n';return 0;
+ const Json diagnostic=req.value("participationDiagnostics",false)?participation_diagnostic(*reactor.current().state,rules):Json(nullptr);
+ std::cout<<Json{{"participationDiagnostics",diagnostic},{"format","nano-private-quiescent-recovery-pins-v1"},{"chainId","0x539"},{"genesisHash",hex(genesis.block.header.hash())},{"profileSha256",p.at("sha256")},{"restart",wire(primary->token)},{"validatorKeys",result_keys},{"canonicalReplay",audit},{"readOnlyStores",true},{"primaryWitnessAndSignersVerified",true},{"minimumSequenceBoundsVerified",true},{"historicalTokenDigestAncestryVerified",false},{"sourceQuiescenceExternallyRequired",true},{"runtimeHealthInferred",false},{"productionQualified",false}}.dump(2)<<'\n';return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

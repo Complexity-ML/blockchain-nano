@@ -1,6 +1,7 @@
 #include "nano/consensus_deposit_history.hpp"
 #include "blst.h"
 #include "nano/consensus_capella_deposits.hpp"
+#include "nano/consensus_capella_reactor.hpp"
 #include <fstream>
 #include <iostream>
 using namespace nano;
@@ -39,6 +40,17 @@ int main(){try{
  const auto [ha,ra]=empty.extend(engine,state,anchor,ba,ba.header.hash(),code_hash,4);
  const auto [hb,rb]=empty.extend(engine,state,anchor,bb,bb.header.hash(),code_hash,4);
  check(empty.count()==0&&empty.root()==empty_root&&ha.count()==1&&hb.count()==1&&ha.root()!=hb.root(),"branch histories not isolated");
+ // A duty deadline is administrative cancellation, never a contract failure.
+ // Interrupt both deposit views inside their EVM checkpoint paths, then retry.
+ size_t view_checkpoints=0;ha.validate_execution(ba.header,ra.state,code_hash,[&]{++view_checkpoints;});
+ check(view_checkpoints>5,"deposit view did not execute checkpoints");
+ for(const auto stop_at:{size_t(4),view_checkpoints-1}){
+  size_t visits=0;bool expired=false;try{ha.validate_execution(ba.header,ra.state,code_hash,[&]{if(++visits==stop_at)throw ExpiredCapellaDuty("deposit view duty expired");});}
+  catch(const ExpiredCapellaDuty& e){expired=std::string(e.what())=="deposit view duty expired";}
+  catch(const std::exception&){/* Wrong exception type means a fatal validator error. */}
+  check(expired,"deposit view swallowed typed duty deadline");
+  ha.validate_execution(ba.header,ra.state,code_hash);check(ha.count()==1&&ra.state.root()==ba.header.state_root,"deadline changed authenticated execution/history");
+ }
  Phase0DepositRules rules{1000000000,32000000000,100,{}};
  Phase0DepositState registry{};registry.deposit_root=ha.root();registry.deposit_count=1;
  check(process_phase0_deposit(registry,rules,ha.proof(0))==Phase0DepositOutcome::Admitted,"funded validator not admitted");

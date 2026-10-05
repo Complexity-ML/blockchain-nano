@@ -1,0 +1,146 @@
+{
+  "result": "FAILED",
+  "distinctCommonAdvances": 0,
+  "validators": [
+    {
+      "name": "mac-native",
+      "status": {
+        "attestationsAdmitted": 304,
+        "awaitingRegistration": 0,
+        "dutyTrace": [],
+        "dutyTraceFailures": 0,
+        "failure": null,
+        "healthy": true,
+        "localKeys": 16,
+        "proposalsAdmitted": 36,
+        "staleDutyRetries": 0,
+        "syncMessagesAdmitted": 1158,
+        "timing": {
+          "awaitingSlotBlock": 1750,
+          "maxPollMs": 885,
+          "maxProposalMs": 555,
+          "polls": 6902,
+          "pollsOverSlot": 0,
+          "proposalAttempts": 36,
+          "proposalsUnavailable": 0,
+          "slotBoundaryExits": 25
+        }
+      },
+      "checkpoint": {
+        "digest": "0x07c5e98277fa7af33952c7a1242cb50506517e4bb5f29c723b9bb223e13ac6d2",
+        "sequence": "0x16d4"
+      }
+    },
+    {
+      "name": "mac-docker",
+      "status": {
+        "attestationsAdmitted": 304,
+        "awaitingRegistration": 0,
+        "dutyTrace": [],
+        "dutyTraceFailures": 0,
+        "failure": null,
+        "healthy": true,
+        "localKeys": 16,
+        "proposalsAdmitted": 37,
+        "staleDutyRetries": 0,
+        "syncMessagesAdmitted": 1308,
+        "timing": {
+          "awaitingSlotBlock": 1668,
+          "maxPollMs": 994,
+          "maxProposalMs": 724,
+          "polls": 6678,
+          "pollsOverSlot": 0,
+          "proposalAttempts": 37,
+          "proposalsUnavailable": 0,
+          "slotBoundaryExits": 26
+        }
+      },
+      "checkpoint": {
+        "digest": "0xa257278d80af0142f795fc869b4fc7937be430d87b5b645dd6086037308d2c45",
+        "sequence": "0x16eb"
+      }
+    },
+    {
+      "name": "vps-docker",
+      "status": {
+        "attestationsAdmitted": 22,
+        "awaitingRegistration": 0,
+        "dutyTrace": [],
+        "dutyTraceFailures": 0,
+        "failure": "deposit history contract view failed",
+        "healthy": false,
+        "localKeys": 33,
+        "proposalsAdmitted": 2,
+        "staleDutyRetries": 0,
+        "syncMessagesAdmitted": 46,
+        "timing": {
+          "awaitingSlotBlock": 52,
+          "maxPollMs": 5898,
+          "maxProposalMs": 4668,
+          "polls": 85,
+          "pollsOverSlot": 0,
+          "proposalAttempts": 2,
+          "proposalsUnavailable": 0,
+          "slotBoundaryExits": 3
+        }
+      },
+      "checkpoint": {
+        "digest": "0x6ac9294419c2dc8578b55c8576d57d4a7739dbafe05a465c3923414bee313cf9",
+        "sequence": "0x15ad"
+      }
+    }
+  ],
+  "postStopMacAudits": [
+    {
+      "name": "mac-native",
+      "canonicalBlocks": 486,
+      "participation": {
+        "stateEpoch": 1321,
+        "headSlot": 10574,
+        "previousTimelyTargetCountsByOwner": [
+          16,
+          16,
+          0
+        ],
+        "currentTimelyTargetCountsByOwner": [
+          10,
+          14,
+          0
+        ]
+      },
+      "primaryWitnessVerified": true,
+      "immutability": {
+        "files": 985,
+        "hashesUnchanged": true
+      }
+    },
+    {
+      "name": "mac-docker",
+      "canonicalBlocks": 486,
+      "participation": {
+        "stateEpoch": 1321,
+        "headSlot": 10574,
+        "previousTimelyTargetCountsByOwner": [
+          16,
+          16,
+          0
+        ],
+        "currentTimelyTargetCountsByOwner": [
+          10,
+          14,
+          0
+        ]
+      },
+      "primaryWitnessVerified": true,
+      "immutability": {
+        "files": 1012,
+        "hashesUnchanged": true
+      }
+    }
+  ],
+  "vpsPostStopReadonlyAudit": "OPEN",
+  "observedVpsFailure": "deposit history contract view failed",
+  "reproducedFailureMechanism": "typed duty expiry inside deposit EVM view becomes generic contract failure",
+  "wholeNetworkCauseExclusivelyProven": false,
+  "productionQualified": false
+}

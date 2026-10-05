@@ -1,0 +1,7 @@
+# Deposit view typed deadline regression
+
+Baseline old-core test exit 1: deposit view swallowed typed duty deadline. After recompiling only consensus_deposit_history.cpp into a copy of the unchanged parent native core, the same test exits 0. Two interruption positions exercise both count/root EVM views, preserve ExpiredCapellaDuty and permit a clean retry without state/history mutation. Existing deposit branch, proof, prefix, selected ancestry and cancellation checks also pass in this targeted executable.
+
+The EVM already propagates ExecutionCancelled but turns other std exceptions into failed executions. The view now transports any checkpoint interruption through ExecutionCancelled and rethrows the original exception. Real failed contract results are still rejected. Consensus formulas/signatures and journal policies are unchanged. This is native qualification only; Docker builds and actual scheduler/network recovery remain required.
+
+Optional readonly participation diagnostics authenticate the Capella SSZ root before reading preset-derived vector offsets, require the private 65-member inventory, show raw source/target/head flags plus fork-choice latest messages and registry metadata. They neither replay standalone votes nor infer runtime health. Baseline capture exit 0 reproduces all previous audit fields exactly; newly observed previous-target flags are 14/15/33. Both failed-v4 Mac states show 16/16/0.
