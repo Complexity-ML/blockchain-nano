@@ -4309,3 +4309,7 @@ Run 37258158600 terminé en échec : `blst.h` absent des includes de la cible pr
 ### 2026-10-05 — Auditeur AMD64 et scénario WAN de sanction/rejeu
 
 Auditeur AMD64 lié contre le cœur ab10b8ae dans le volume existant : sortie 0, sans OOM, six programmes/bibliothèque existants inchangés, aucune image reconstruite. Preuves `docs/qualification/slashing-audit-amd64-preparation-20261005`. Nouveau banc privé `tests/capella/slashing-multihost.mjs` : preuve valide et quatre preuves forgées, sanction canonique, SIGKILL après finalisation, rejeu au redémarrage, avancement commun de deux époques et audits des bases arrêtées avec engagements externes et témoins séparés. Banc préparé ; aucune réussite WAN ni production revendiquée avant sortie terminale et audits.
+
+### 2026-10-05 — Premier essai WAN sanction : échec du collecteur époque zéro
+
+Banc 49f865ad/cœur ab10b8ae : sortie terminale 1, requête erronée du checkpoint finalisé nul d’époque 0 comme bloc Beacon (HTTP404). Nœuds arrêtés, volume et logs conservés. Correction du seul collecteur : sentinel/anchor initial vérifié et aucune tentative de qualification avant une époque positive ; contrôles des finalités ultérieures inchangés. Preuves `docs/qualification/slashing-wan-epoch-zero-failure-20261005`. Sanction et reprise WAN restent non qualifiées.

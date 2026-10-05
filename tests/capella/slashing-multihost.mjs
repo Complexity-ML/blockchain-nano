@@ -110,10 +110,10 @@ try{
   const rows=[];for(let n=0;n<2;n++){
    const cp=(await request(n,'/eth/v1/beacon/states/head/finality_checkpoints')).data.finalized,h=(await request(n,'/eth/v1/beacon/headers/head')).data;
    const epoch=BigInt(cp.epoch);check(epoch>=epochs[n],'Finality regressed');check(!roots.has(cp.epoch)||roots.get(cp.epoch)===cp.root,'Conflicting finalized roots');epochs[n]=epoch;roots.set(cp.epoch,cp.root);
-   await observe(n,h.root);await observe(n,cp.root);rows.push({node:n,checkpoint:cp,slot:h.header.message.slot,peers:await rpc(n,'net_peerCount')});
+   await observe(n,h.root);if(epoch>0n)await observe(n,cp.root);else check(cp.root==='0x'+'0'.repeat(64)||cp.root===meta.initialHead,'Unexpected epoch-zero finality anchor');rows.push({node:n,checkpoint:cp,slot:h.header.message.slot,peers:await rpc(n,'net_peerCount')});
   }
   await record({event:'observation',rows});const a=rows[0].checkpoint,b=rows[1].checkpoint;
-  if(a.epoch===b.epoch&&a.root===b.root&&rows.every(r=>BigInt(r.peers)>0n)&&included(a.root,0)===1&&included(a.root,1)===1){
+  if(BigInt(a.epoch)>0n&&a.epoch===b.epoch&&a.root===b.root&&rows.every(r=>BigInt(r.peers)>0n)&&included(a.root,0)===1&&included(a.root,1)===1){
    if(!preRestart){
     preRestart=a;const before=await inspect();await docker(['kill','--signal','KILL',remote]);const stopped=await inspect();check(stopped.State.ExitCode===137&&!stopped.State.Running,'SIGKILL missing');
     await record({event:'crash-after-finalized-proof',checkpoint:a,containerId:before.Id,volume});await wait(meta.secondsPerSlot*2000);

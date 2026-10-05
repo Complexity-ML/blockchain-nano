@@ -1,0 +1,3 @@
+# Private slashing WAN first attempt — terminal failure
+
+Harness revision 49f865ad, runtime ab10b8ae, two private hosts with 64 synthetic validators. Controller exited 1. The collector requested the epoch-zero null finalized root as a Beacon block and received HTTP404. This is a collector error, not evidence of a failed finalized transition or a successful sanction. Both nodes were stopped; stopped container/volume and full raw logs remain retained locally/remotely. Subsequent checkpoints remain subject to authenticated ancestry and signed replay audits. Correction skips block retrieval only for epoch zero after verifying its sentinel/initial anchor, and requires positive finality epoch before the sanction gate. No qualification claimed.
