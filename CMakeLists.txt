@@ -1899,3 +1899,9 @@ set_tests_properties(storage_historical_state_pruning_restore PROPERTIES TIMEOUT
 
 add_test(NAME consensus_capella_historical_pruning_restore COMMAND nano-capella-transition-tests --historical-pruning-restore)
 set_tests_properties(consensus_capella_historical_pruning_restore PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_recovery")
+
+add_executable(nano-local-monotonic-time-tests tests/test_local_monotonic_time.cpp)
+target_include_directories(nano-local-monotonic-time-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_link_libraries(nano-local-monotonic-time-tests PRIVATE Threads::Threads)
+add_test(NAME consensus_local_monotonic_time COMMAND nano-local-monotonic-time-tests)
+set_tests_properties(consensus_local_monotonic_time PROPERTIES TIMEOUT 60 LABELS "consensus;clock")

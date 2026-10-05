@@ -1,4 +1,5 @@
 #include "nano/consensus_capella_runtime.hpp"
+#include "nano/local_monotonic_time.hpp"
 #include <fstream>
 #include <cstdlib>
 #include <set>
@@ -40,7 +41,12 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const 
  const auto& l=config.at("limits");shape(l,{"envelopeBytes","blocks","messages","equivocations","stateBytes","totalStateBytes","replaySlots","syncTrials"});
  const CapellaStoreSnapshotLimits limits{number(l.at("envelopeBytes")),number(l.at("blocks")),number(l.at("messages")),number(l.at("equivocations")),number(l.at("stateBytes")),number(l.at("totalStateBytes")),number(l.at("replaySlots")),number(l.at("syncTrials"))};
  if(limits.state_bytes<rules.transition.maximum_state_bytes||limits.total_state_bytes<limits.state_bytes)throw std::invalid_argument("Capella state capacity below configured transition");
- const auto& c=config.at("clock");shape(c,{"intervalMs","maximumForwardStepMs"});const auto interval=number(c.at("intervalMs")),step=number(c.at("maximumForwardStepMs"));
+ const auto& c=config.at("clock");auto clock_fields=c;clock_fields.erase("maximumWallClockDriftMs");shape(clock_fields,{"intervalMs","maximumForwardStepMs"});const auto interval=number(c.at("intervalMs")),step=number(c.at("maximumForwardStepMs"));
+ std::optional<uint64_t> wall_drift;
+ if(c.contains("maximumWallClockDriftMs")){
+  wall_drift=number(c.at("maximumWallClockDriftMs"));
+  if(*wall_drift>=rules.attestation_due_ms||*wall_drift>=step)throw std::invalid_argument("Capella wall drift budget must be below duty deadline and recovery step");
+ }
  if(interval>uint64_t(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::duration::max()/2).count()))throw std::invalid_argument("Capella clock interval range");
  const bool restart=!config.at("restart").is_null();
  const bool witnessed=config.contains("recoveryWitness");
@@ -84,7 +90,10 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const 
  owner->reactor->set_automatic_pruning(config.value("automaticPruning",true));
  if(config.contains("historicalStatePruning")&&!config.at("historicalStatePruning").is_boolean())throw std::invalid_argument("Capella historicalStatePruning must be boolean");
  owner->reactor->set_historical_state_pruning(config.value("historicalStatePruning",false));
- if(!now)now=[](){const auto ms=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();if(ms<0)throw std::runtime_error("Negative local time");return uint64_t(ms);};
+ if(wall_drift){
+  auto time=std::make_shared<LocalMonotonicTime>(*wall_drift,std::move(now));
+  now=[time](){return time->now();};
+ }else if(!now)now=[](){const auto ms=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();if(ms<0)throw std::runtime_error("Negative local time");return uint64_t(ms);};
  owner->clock=std::make_unique<CapellaLocalClock>(*owner->reactor,step,now);
  owner->clock->poll(checkpoint);chain.require_execution_ready();
  if(config.contains("admission")){

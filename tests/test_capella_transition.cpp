@@ -825,6 +825,23 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
  Genesis g;g.chain_id=t.chain_id;g.consensus="beacon";g.evm_revision=EvmRevision::Shanghai;g.block=genesis;g.state=genesis_state;auto owner=std::make_unique<Blockchain>(directory/"owner",g);
  const auto profile=capella_fork_profile(rules).dump(),snapshot=capella_store_snapshot(initial,rules,limits);{std::ofstream f(directory/"profile.json");f<<profile;}{std::ofstream f(directory/"initial.json");f<<snapshot;}
  Json config{{"profile",{{"file",(directory/"profile.json").string()},{"sha256",hex(sha256(Bytes(profile.begin(),profile.end())))},{"maximumBytes","0x100000"}}},{"limits",{{"envelopeBytes",quantity(Int(std::to_string(limits.envelope_bytes)))},{"blocks",quantity(Int(std::to_string(limits.blocks)))},{"messages",quantity(Int(std::to_string(limits.messages)))},{"equivocations",quantity(Int(std::to_string(limits.equivocations)))},{"stateBytes",quantity(Int(std::to_string(limits.state_bytes)))},{"totalStateBytes",quantity(Int(std::to_string(limits.total_state_bytes)))},{"replaySlots",quantity(Int(std::to_string(limits.replay_slots)))},{"syncTrials",quantity(Int(std::to_string(limits.sync_trials)))}}},{"initial",{{"file",(directory/"initial.json").string()},{"sha256",hex(sha256(Bytes(snapshot.begin(),snapshot.end())))}}},{"restart",nullptr},{"recoveryWitness",(directory/"witness").string()},{"clock",{{"intervalMs","0x3e8"},{"maximumForwardStepMs",quantity(Int(std::to_string(2*rules.slot_duration_ms)))}}}};
+ // Invalid tolerance is rejected before any checkpoint publication.
+ for(const auto& drift:std::vector<Json>{"0x0","0x01",Json(1),quantity(Int(std::to_string(rules.attestation_due_ms))),quantity(Int(std::to_string(2*rules.slot_duration_ms)))}){
+  auto invalid=config;invalid["clock"]["maximumWallClockDriftMs"]=drift;
+  bool refused=false;try{auto rejected=start_capella_runtime(*owner,invalid,{},[]{return uint64_t(0);});}catch(const std::invalid_argument&){refused=true;}
+  check(refused&&!owner->store().fork_checkpoint(g.chain_id,g.block.header.hash(),limits.envelope_bytes),"Invalid wall drift published a checkpoint");
+ }
+ {Temp time_directory;Blockchain time_owner(time_directory/"chain",g);auto selected=config;
+  selected["recoveryWitness"]=(time_directory/"witness").string();
+  selected["clock"]["maximumWallClockDriftMs"]=quantity(Int(std::to_string(rules.attestation_due_ms/2)));
+  const uint64_t initial_time=initial.timed.clock.time_ms;
+  auto time_runtime=start_capella_runtime(time_owner,selected,{},[initial_time]{return initial_time;});
+  check(time_runtime.clock->healthy(),"Monotonic runtime did not start");
+  const auto first=time_runtime.reactor->current().state->timed.clock.time_ms;
+  time_runtime.clock->poll();
+  check(time_runtime.reactor->current().state->timed.clock.time_ms>=first,"Monotonic runtime time regressed");
+  stop_capella_runtime(time_runtime);
+ }
  if(!cli_binary.empty()){
   owner.reset();config["clock"]["maximumForwardStepMs"]="0x1d4c0";config["catalogs"]={{"handles","0x2"},{"rootBytes","0x10000"},{"ttlMs","0xea60"}};
   {std::ofstream f(directory/"genesis.json");f<<cli_genesis;}{std::ofstream f(directory/"serve.json");f<<Json{{"capella",config}};}
