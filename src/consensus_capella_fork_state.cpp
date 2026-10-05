@@ -58,6 +58,39 @@ bool CapellaSlotPreparation::advance(uint64_t target,uint64_t maximum_slots,
  state_=std::move(prepared);
  return next==target;
 }
+namespace {
+std::optional<CapellaProposerIdentity> derive_proposer_identity(const CapellaSlotState& advanced,
+ const CapellaEpochRules& r,const AltairStateLimits& l,const Phase0FfgRules& d,
+ const ConsensusRoot& genesis_root,const std::function<void()>& checkpoint){
+ require(d.slots_per_epoch==r.operations.ffg.slots_per_epoch);
+ const auto slot=number(advanced.ssz,40);
+ const auto p=project(advanced.ssz,r,l,checkpoint);
+ std::vector<Phase0ProposerValidator> candidates;candidates.reserve(p.registry.validators.size());
+ for(const auto& [index,v]:p.registry.validators){if(checkpoint)checkpoint();candidates.push_back({index,v.effective_balance,v.activation_epoch,v.exit_epoch});}
+ const auto index=phase0_proposer_index(candidates,p.randao,{d.slots_per_epoch,d.min_seed_lookahead},slot,d.maximum_effective_balance,d.shuffle_rounds,checkpoint);
+ const auto& selected=p.registry.validators.at(index);if(selected.slashed)return std::nullopt;
+ const auto epoch=slot/d.slots_per_epoch;const auto version=array<4>(advanced.ssz,epoch<number(advanced.ssz,56)?48:52);
+ if(checkpoint)checkpoint();
+ return CapellaProposerIdentity{index,version,genesis_root,Bytes(selected.public_key.begin(),selected.public_key.end())};
+}
+}
+std::optional<CapellaProposerIdentity> CapellaSlotPreparation::proposer_identity(
+ const Phase0FfgRules& duties,const std::function<void()>& checkpoint)const{
+ require(duties.slots_per_epoch==rules_.operations.ffg.slots_per_epoch);
+ if(slot()<=parent_.slot)return std::nullopt;
+ return derive_proposer_identity(state_,rules_,limits_,duties,array<32>(state_.ssz,8),checkpoint);
+}
+Phase0ForkVoteContext CapellaSlotPreparation::vote_context(const ConsensusCheckpoint& target,
+ const std::function<void()>& checkpoint)const{
+ const auto slots=rules_.operations.ffg.slots_per_epoch;
+ require(slots&&target.epoch<=UINT64_MAX/slots&&target.epoch*slots==slot()&&
+  parent_.slot<=slot()&&target.root==consensus_beacon_header_root(parent_));
+ auto p=project(state_.ssz,rules_,limits_,checkpoint);require(p.registry.epoch==target.epoch);
+ const Phase0StateFork fork{array<4>(state_.ssz,48),array<4>(state_.ssz,52),number(state_.ssz,56)};
+ require(fork.epoch<=target.epoch);
+ if(checkpoint)checkpoint();
+ return {target,std::move(p.registry),std::move(p.randao),fork,array<32>(state_.ssz,8)};
+}
 std::optional<CapellaProposerIdentity> prepare_capella_proposer_identity(
  const CapellaSlotState& input,const ConsensusBeaconHeader& h,uint64_t slot,
  const CapellaEpochRules& r,const AltairStateLimits& l,const Phase0FfgRules& d,
@@ -66,14 +99,7 @@ std::optional<CapellaProposerIdentity> prepare_capella_proposer_identity(
  const auto parent=capella_fork_block_context(input,h,r,l,checkpoint);
  if(slot<=h.slot)return std::nullopt;
  const auto advanced=prepare_capella_slots(input,r,l,slot,maximum_slots,maximum_sync_trials,checkpoint);
- const auto p=project(advanced.ssz,r,l,checkpoint);
- std::vector<Phase0ProposerValidator> candidates;candidates.reserve(p.registry.validators.size());
- for(const auto& [index,v]:p.registry.validators){if(checkpoint)checkpoint();candidates.push_back({index,v.effective_balance,v.activation_epoch,v.exit_epoch});}
- const auto index=phase0_proposer_index(candidates,p.randao,{d.slots_per_epoch,d.min_seed_lookahead},slot,d.maximum_effective_balance,d.shuffle_rounds,checkpoint);
- const auto& selected=p.registry.validators.at(index);if(selected.slashed)return std::nullopt;
- const auto epoch=slot/d.slots_per_epoch;const auto version=array<4>(advanced.ssz,epoch<number(advanced.ssz,56)?48:52);
- if(checkpoint)checkpoint();
- return CapellaProposerIdentity{index,version,parent.genesis_root,Bytes(selected.public_key.begin(),selected.public_key.end())};
+ return derive_proposer_identity(advanced,r,l,d,parent.genesis_root,checkpoint);
 }
 
 }

@@ -1430,6 +1430,19 @@ static void slot_continuation_loop(const CapellaForkStore& initial,const Capella
  auto bad=parent.header;bad.state_root[0]^=1;bool refused=false;try{CapellaSlotPreparation forged(original,bad,epoch,limits);}catch(const std::invalid_argument&){refused=true;}check(refused,"continuation accepted unauthenticated parent");++passed;
  refused=false;try{CapellaSlotPreparation forged(expected,parent.header,epoch,limits);}catch(const std::invalid_argument&){refused=true;}check(refused,"advanced state masqueraded as original signed block state");++passed;
  check(parent.state==original&&capella_fork_block_context(parent.state,parent.header,epoch,limits).block_root==consensus_beacon_header_root(parent.header),"continuation mutated admitted parent");++passed;
+ const auto oracle_proposer=prepare_capella_proposer_identity(original,parent.header,target,epoch,limits,t.consensus.attestation.duties,target-parent.header.slot,100000);
+ check(progress.proposer_identity(t.consensus.attestation.duties)==oracle_proposer,"prepared proposer/domain differs from original-parent oracle");++passed;
+ const auto before_duties=progress.state();auto wrong_duties=t.consensus.attestation.duties;++wrong_duties.slots_per_epoch;
+ refused=false;try{progress.proposer_identity(wrong_duties);}catch(const std::invalid_argument&){refused=true;}check(refused&&progress.state()==before_duties,"prepared proposer accepted incompatible epoch size");++passed;
+ refused=false;try{progress.proposer_identity(t.consensus.attestation.duties,[]{throw std::runtime_error("cancel duty projection");});}catch(const std::runtime_error&){refused=true;}check(refused&&progress.state()==before_duties,"cancelled duty projection changed state");++passed;
+ const auto boundary_slot=((target/t.consensus.epoch.ffg.slots_per_epoch)+1)*t.consensus.epoch.ffg.slots_per_epoch;
+ const ConsensusCheckpoint checkpoint{boundary_slot/t.consensus.epoch.ffg.slots_per_epoch,consensus_beacon_header_root(parent.header)};
+ while(!progress.advance(boundary_slot,3,100000)){}
+ const auto context=progress.vote_context(checkpoint);
+ const auto context_oracle=prepare_capella_fork_state_contexts(original,parent.header,checkpoint,epoch,limits,boundary_slot-parent.header.slot,100000).target;
+ check(context.checkpoint==context_oracle.checkpoint&&context.registry==context_oracle.registry&&context.randao==context_oracle.randao&&context.fork.previous_version==context_oracle.fork.previous_version&&context.fork.current_version==context_oracle.fork.current_version&&context.fork.epoch==context_oracle.fork.epoch&&context.genesis_root==context_oracle.genesis_root,"prepared vote context differs from original-parent oracle");++passed;
+ for(unsigned mode=0;mode<3;++mode){auto invalid=checkpoint;if(mode==0)invalid.root[0]^=1;else if(mode==1)--invalid.epoch;else invalid.epoch=UINT64_MAX;const auto before=progress.state();refused=false;try{progress.vote_context(invalid);}catch(const std::invalid_argument&){refused=true;}check(refused&&progress.state()==before,"prepared vote context accepted wrong root/boundary or overflow");++passed;}
+ CapellaSlotPreparation at_parent(original,parent.header,epoch,limits);check(!at_parent.proposer_identity(t.consensus.attestation.duties),"prepared parent itself produced a new proposal identity");++passed;
  std::cout<<Json{{"scenario","capella-authenticated-slot-continuation"},{"scenarios",passed},{"crossedHistoryWindows",2},{"canonicalOracleEqual",true},{"parentPreserved",true},{"runtimeIntegrated",false},{"networkQualified",false}}.dump()<<std::endl;
 }
 static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigned participation=100){

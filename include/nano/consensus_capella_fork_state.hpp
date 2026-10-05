@@ -13,6 +13,13 @@ CapellaForkStateContexts prepare_capella_fork_state_contexts(const CapellaSlotSt
  const ConsensusBeaconHeader&,const ConsensusCheckpoint&,const CapellaEpochRules&,
  const AltairStateLimits&,uint64_t maximum_slots,uint64_t maximum_sync_trials,
  const std::function<void()>& checkpoint={});
+struct CapellaProposerIdentity {
+ uint64_t index;
+ ConsensusBytes4 fork_version;
+ ConsensusRoot genesis_root;
+ Bytes public_key;
+ bool operator==(const CapellaProposerIdentity&)const=default;
+};
 // Ephemeral empty-slot continuation authenticated once against a real block.
 // Never substitute state() for that block's signed post-state: its slot/root
 // changes. One complete bounded chunk commits locally; cancellation discards
@@ -29,16 +36,18 @@ public:
  const ConsensusBeaconHeader& parent()const{return parent_;}
  const CapellaSlotState& state()const{return state_;}
  uint64_t slot()const;
+ // Derive duties ONLY at the prepared slot. Neither call advances or signs.
+ // Caller must match slot()/parent() against its current immutable publication.
+ std::optional<CapellaProposerIdentity> proposer_identity(const Phase0FfgRules&,
+  const std::function<void()>& checkpoint={})const;
+ // Target root is the authenticated parent; prepared slot must be exactly the
+ // requested epoch boundary. No fabricated target or implicit rewind/replay.
+ Phase0ForkVoteContext vote_context(const ConsensusCheckpoint&,
+  const std::function<void()>& checkpoint={})const;
  // Returns true only when target is reached. Zero budget and backwards targets
  // fail, including at completion. No signatures, journal or durable writes.
  bool advance(uint64_t target,uint64_t maximum_slots,uint64_t maximum_sync_trials,
   const std::function<void()>& checkpoint={});
-};
-struct CapellaProposerIdentity {
- uint64_t index;
- ConsensusBytes4 fork_version;
- ConsensusRoot genesis_root;
- Bytes public_key;
 };
 // Authenticate the parent, advance to the proposed slot and derive the selected
 // proposer from that state. Slashed selection is refused, never rerolled.

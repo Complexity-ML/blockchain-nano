@@ -4053,3 +4053,6 @@ Auditeur de sanction AMD64 courant : contrôle positif historique du membre 0 te
 
 
 2026-10-05, continuation authentifiée 0501b7d9 : Docker AMD64/VPS terminal 0 sans OOM, 11 nouveaux scénarios PASSED comme ARM64 ; hashes sources vérifiés sur les deux architectures et parents inchangés. Mise à jour VPS par Git pull, images/volumes réutilisés. Preuves authenticated-slot-continuation-20261005/amd64/. Primitive qualifiée dans ce périmètre ; raccordement runtime et reprise réelle longue interruption restent ouverts.
+
+
+2026-10-05, contextes issus de la continuation : projections lecture seule du proposant (index/clé/domaine) et du contexte cible d’attestation à frontière exacte, racine du parent authentifiée et overflow refusé. Docker ARM64 : premier test compile FAILED (nom de champ incorrect), diagnostic conservé ; cœur réutilisé après correction, 19 scénarios PASSED et régression runtime 64 clés/16 blocs PASSED, sortie 0 sans OOM. Preuves prepared-duty-contexts-20261005/. Calcul historique du proposant refactorisé sans lever son budget. Raccordement scheduler/reactor/blocs/votes, AMD64 et reprise réelle longue interruption/finalité restent ouverts ; aucune signature nouvelle ni critère production fermé.

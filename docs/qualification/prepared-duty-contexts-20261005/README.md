@@ -1,0 +1,11 @@
+# Prepared proposer and target vote contexts — 2026-10-05
+
+Parent checkout e4193946; core changes recorded by the enclosing commit. Extends authenticated CapellaSlotPreparation with two read-only projections at its exact prepared slot. Neither projection advances, signs, reserves a journal, admits a vote or modifies the original block.
+
+proposer_identity derives the selected key/index/domain from the prepared state, refuses incompatible epoch size, and returns no new proposal identity at the parent slot. The legacy original-parent function retains its authentication and full-gap budget checks and shares the same selection routine. vote_context requires the authenticated parent root and exact requested epoch boundary, checks overflow before multiplication and derives registry/RANDAO/fork/genesis context. No rewind or fabricated checkpoint.
+
+ARM64 Docker: initial test translation-unit compilation FAILED (wrong test field name target instead of checkpoint). Diagnostic and source hashes retained under arm64-initial-compile-failure. Core compilation was successful and its archive was reused for the corrected test; no unchanged core rebuild. Repaired controller terminal 0, no OOM. 19 scenarios PASS (prior 11 plus differential proposer/domain, epoch mismatch, cancellation, exact target context, wrong root/epoch/overflow refusals and no parent-slot proposer). Existing configured-runtime regression PASS: 64 keys, 16 blocks, 6 negative configurations, core/signer witness restart, catalogs/receipts. Repeated only because legacy proposer derivation was refactored. All protected parent hashes unchanged.
+
+Scope remains partial: pure prepared projections. Scheduler/reactor caches, stale-head invalidation, attestation-source handling, construction/admission of blocks and votes, runtime long-gap continuation and common WAN finality are not integrated or qualified. The previous real cold recovery failure remains open; no production readiness claim. AMD64 still pending in this first record.
+
+Existing images/volumes, network disabled, CPU 1 and memory 2 GiB; no image reconstruction. Incremental archive replacement only consensus_capella_fork_state.cpp.o in a copy of core 6b7a437e; no existing object layout changes. Test translation unit freshly compiled.
