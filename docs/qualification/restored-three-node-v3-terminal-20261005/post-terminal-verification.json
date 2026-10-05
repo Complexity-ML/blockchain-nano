@@ -1,0 +1,48 @@
+{
+  "revision": "57761d82e22489572ce4930cebba557a53a2648a",
+  "programHashesVerified": {
+    "mac-native": {
+      "nano": "9bb41a2c6ce1f799aed26311d706a1d925127f4d5a28545b8b757af6c001a022",
+      "p2p": "54abf4551deb4ea013fdc6eaf24057c2d80ba3464b6148ac31b8df23b4951b52"
+    },
+    "mac-docker": {
+      "nano": "9e4bee5b7049308658955e51c30b5762c8f87cdd5696b9a0a681d4dca6590ad9",
+      "p2p": "540688447b53275ee71ac5e07fcd8eabdb43ac092d4c37e6a2c2e5dc642c3d08"
+    },
+    "vps-docker": {
+      "nano": "5dbb08c69252f8eb3cdf303064235f14a68f2ce4ae5cd97137c1a822b901cf8d",
+      "p2p": "8db4b2a0442121ec0d70dcccb37dd7b60f64f6f43630f2050e28b184bb4087ca"
+    }
+  },
+  "controllerHashesVerified": {
+    "tests/capella/restored-three-node-run.mjs": "f616bba3b964558e2dc4ea2aaac528cb2a48019fb27b25beef7b879249f4f291",
+    "tests/capella/restored-three-node-plan.mjs": "44d1251bf6590f0086e65ac9a0ccec43304de088351a6e737bbe56b9066b366d",
+    "tests/capella/deposit-restart-pins.mjs": "f3ad5c1a0cc3e23264b0d26d181c6eb3343021bfc864ee51dd6de409c982587c",
+    "tests/capella/finality-observation.mjs": "5c3c00011f5f1810e42286ce9e57b8c785924b9deb213d5888949f335777fa3e",
+    "tests/capella/restored-readiness.mjs": "ec14a8c845006fc5a1d255ab09b0c7fdf64efde7371d68799df338f264dc9c08"
+  },
+  "dockerStoppedCleanly": true,
+  "commonDistinctCheckpoints": [
+    [
+      "75",
+      "0x48cf6d7bbc9b07affee2be3e417ba4d1c7f9ff8f810f7d4a08c85ddbe87b0185"
+    ],
+    [
+      "1284",
+      "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+    ]
+  ],
+  "distinctCommonAdvances": 1,
+  "matchingFinalSamples": 3,
+  "advancedActiveSigners": 65,
+  "postStopDatabaseWitnessAudit": {
+    "mac-native": "PASSED native readonly tool, 32 journals, 1002 unchanged files",
+    "mac-docker": "PASSED native readonly tool on stopped ARM64 Docker data, 32 journals, 981 unchanged files",
+    "vps-docker": "PASSED AMD64 Docker readonly tool, 33 journals, 1084 unchanged files",
+    "exactActiveSignerStopTokensVerified": true,
+    "historicalForkChoiceVerified": false,
+    "historicalStandaloneVotesReplayed": false
+  },
+  "physicalArmToAmdStoragePortability": "OPEN - dedicated export permission pending",
+  "productionQualified": false
+}
