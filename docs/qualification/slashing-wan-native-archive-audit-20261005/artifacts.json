@@ -1,0 +1,38 @@
+{
+  "runtimeRevision": "ab10b8ae5dd50c7edf6f919ed440aa51a46e5e0e",
+  "native": {
+    "nano": {
+      "path": "/tmp/nano-monotonic-runtime-native-build-20261005/nano",
+      "sha256": "9f27e7603588b7c5b2233b7e510d1b62b900a09f208ae7e0dd44e6aa638f71aa"
+    },
+    "p2p": {
+      "path": "/tmp/nano-coherent-native-build-20261004/network/nano-p2p",
+      "sha256": "0a9964c9ee1ae95fd0256d5da6707d5cc937c05cb3e90de7575a9e7d041a2cee"
+    },
+    "exporter": {
+      "path": "/tmp/nano-monotonic-runtime-native-build-20261005/nano-capella-transition-tests",
+      "sha256": "48bbec502f055898d6acff65ac158aeb8e5b865343a99b8009e8fdc4282ded42"
+    }
+  },
+  "vps": {
+    "image": "sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14",
+    "volume": "nano-clean-rpc-build-20261002",
+    "directory": "/build/monotonic-clock-amd64-20261005",
+    "executables": {
+      "nano": {
+        "path": "/build/monotonic-clock-amd64-20261005/nano",
+        "sha256": "4e34569eaa4df27d33cd3ea3459c3a90e4e911da41bf4e0f58e9bfece893c8e7"
+      },
+      "p2p": {
+        "path": "/build/monotonic-clock-amd64-20261005/network/nano-p2p",
+        "sha256": "2bf673749c292e0f7c69618efcbedd9d219bf13d3b8c7e0e4f18ac30304e0dc4"
+      },
+      "exporter": {
+        "path": "/build/monotonic-clock-amd64-20261005/nano-capella-transition-tests",
+        "sha256": "1938106331c838c3fc05a01a3f17ca754e512d96fac38d7a858c931184075f60"
+      }
+    }
+  },
+  "mount": "type=volume,src=nano-clean-rpc-build-20261002,dst=/build,readonly",
+  "revisionFile": "/build/monotonic-clock-amd64-20261005/production-source-revision.txt"
+}

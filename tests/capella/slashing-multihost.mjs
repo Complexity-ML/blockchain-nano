@@ -145,7 +145,7 @@ finally{
    const requests=[];for(const [n,name] of ['native.log','vps.log'].entries()){
     const stop=parseEvents(await readFile(join(out,name),'utf8')).filter(e=>e.event==='capella-runtime-stopped').at(-1),config=n===0?m:r;
     check(stop?.restart&&BigInt(stop.finalized.epoch)>=BigInt(checkpoint.epoch),'Stopped commitment/finality missing');
-    const req={profile:config.capella.profile,anchor:config.capella.initial,limits:config.capella.limits,expectedCheckpoint:stop.restart,requiredFinalized:checkpoint,maximumBlocks:'0x400',maximumArchiveBytes:'0x20000000'};requests.push(req);await save(join(out,`${n}-audit-request.json`),req);
+    const req={profile:{file:config.capella.profile.file,sha256:config.capella.profile.sha256},anchor:{file:config.capella.initial.file,sha256:config.capella.initial.sha256},limits:config.capella.limits,expectedCheckpoint:stop.restart,requiredFinalized:checkpoint,maximumBlocks:'0x400',maximumArchiveBytes:'0x20000000'};requests.push(req);await save(join(out,`${n}-audit-request.json`),req);
    }
    const localAudit=JSON.parse(await run(tools.native.audit.path,['--audit',join(fixture,'genesis.json'),join(out,'mac.json'),join(data,'chain'),join(out,'0-audit-request.json'),join(fixture,'proof.json')],180000));await save(join(out,'native-slashing-audit.json'),localAudit);
    await run('scp',['-q',join(out,'1-audit-request.json'),`${target}:${remoteRoot}/audit-request.json`]);

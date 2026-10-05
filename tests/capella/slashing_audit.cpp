@@ -51,19 +51,32 @@ int main(int argc,char** argv){try{
  require(member.balance<initial.registry.validators.at(0).balance,"finalized balance has no net debit");
  size_t included=0,applied=0,blocks=0;ConsensusRoot tip=selected;Json sanction;
  const std::set<std::string> expected_signatures{hex(decoded->first.signature),hex(decoded->second.signature)};
+ // Finality may retire old intermediate states. Reconstruct them from the
+ // authenticated signed archive rather than requiring their retention.
+ std::vector<std::pair<ConsensusRoot,Bytes>> reverse;
  while(tip!=seed.timed.view.anchor){
-  require(++blocks<=limits.blocks,"sanction ancestry budget");const auto b=stopped.state->blocks.find(tip);require(b!=stopped.state->blocks.end(),"canonical sanction ancestor state missing");
-  const auto parent=stopped.state->blocks.find(b->second.header.parent_root);require(parent!=stopped.state->blocks.end(),"canonical sanction parent missing");
-  const auto now=context(b->second).registry.validators.at(0),prior=context(parent->second).registry.validators.at(0);
-  if(now.slashed&&!prior.slashed){++applied;sanction={{"slot",b->second.header.slot},{"root",text(tip)},{"balanceBeforeGwei",prior.balance},{"balanceAfterGwei",now.balance}};}
+  require(++blocks<=limits.blocks,"sanction ancestry budget");
+  const auto archive=disk.checkpoint_archive(Bytes(tip.begin(),tip.end()),limits.envelope_bytes);require(bool(archive),"canonical signed sanction archive missing");
+  const auto message=beacon_block_json(archive->payload,rules,{}).at("message");
+  reverse.push_back({tip,archive->payload});tip=root(message.at("parent_root"));
+ }
+ std::reverse(reverse.begin(),reverse.end());auto replay=seed;
+ for(const auto& [id,wire]:reverse){
+  const auto message=beacon_block_json(wire,rules,{}).at("message");const auto slot=number(message.at("slot"));
+  require(rules.slot_duration_ms&&slot<=(UINT64_MAX-replay.timed.clock.genesis_time_ms)/rules.slot_duration_ms,"sanction replay clock overflow");
+  replay=prepare_capella_store_tick(replay,replay.timed.clock.genesis_time_ms+slot*rules.slot_duration_ms,rules,limits.replay_slots,limits.sync_trials);
+  const auto parent=root(message.at("parent_root"));require(replay.blocks.contains(parent),"replayed sanction parent missing");const auto prior=context(replay.blocks.at(parent)).registry.validators.at(0);
+  auto next=prepare_capella_fork_block(replay,wire,rules,limits.replay_slots,limits.sync_trials);require(next&&next->blocks.contains(id),"signed sanction transition rejected");
+  const auto now=context(next->blocks.at(id)).registry.validators.at(0);
+  if(now.slashed&&!prior.slashed){++applied;sanction={{"slot",slot},{"root",text(id)},{"balanceBeforeGwei",prior.balance},{"balanceAfterGwei",now.balance}};}
   require(!prior.slashed||now.slashed,"slashed status reverted on canonical ancestry");
-  const auto wire=reactor.signed_block(tip);require(bool(wire),"authenticated signed canonical block missing");const auto message=beacon_block_json(*wire,rules,{});
   for(const auto& operation:message.at("body").at("attester_slashings")){
    const auto& a=operation.at("attestation_1"),&b=operation.at("attestation_2");auto has=[](const Json& v){for(const auto& index:v.at("attesting_indices"))if(index=="0")return true;return false;};
    if(has(a)&&has(b)){require(std::set<std::string>{a.at("signature"),b.at("signature")}==expected_signatures,"canonical offender proof differs from submitted proof");++included;}
   }
-  tip=b->second.header.parent_root;
+  replay=std::move(*next);
  }
+ require(replay.blocks.contains(selected)&&replay.blocks.at(selected).state==at->second.state,"replayed finalized sanction state differs from retained state");
  require(included==1&&applied==1,"expected exactly one canonical proof and one slashed transition");
  require(reactor.signed_slashings().empty(),"finalized sanction proof was not retired");require(reactor.current().token==token,"audit checkpoint changed");
  std::cout<<Json{{"canonicalReplay",canonical},{"requiredFinalized",request.at("requiredFinalized")},{"offender",0},{"finalizedSlashed",true},{"canonicalProofInclusions",included},{"canonicalSlashedTransitions",applied},{"sanction",sanction},{"initialBalanceGwei",initial.registry.validators.at(0).balance},{"finalizedBalanceGwei",member.balance},{"finalizedExitEpoch",member.exit_epoch},{"proofRetired",true},{"externalStopTokenAndWitnessVerified",true},{"readOnlyStores",true},{"productionQualified",false}}.dump(2)<<'\n';return 0;
