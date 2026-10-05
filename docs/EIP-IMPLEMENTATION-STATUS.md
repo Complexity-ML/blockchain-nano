@@ -6756,3 +6756,8 @@ Preuve `docs/qualification/monotonic-pruned-load-restore-terminal-20261005`, ban
 ### 2026-10-05 — Sanctions WAN : nouveau helper, admission réelle validée
 
 `docs/qualification/slashing-wan-helper-20261005` : helper C++ séparé, cœur runtimeab10 inchangé. Preuve BLS d’équivocation publique key0, paire inversée, quatre falsifications vérifiées avant export ; sortie existante refusée intacte. Bootstrap IPC privé impose identité chaîne/genesis et décisions exactes rejected/accepted, local_failure n’est jamais un rejet réussi.4 scénarios serveur synthétique passent ; nœud natif réel refuse4 preuves falsifiées et accepte preuve/rejeu inversé, arrêt0 horloge/signataire healthy. Première compilation1 conservée, finale compile/link0 ;5 programmes existants rehashés inchangés. CMake/CI helper ajouté,48 tests scriptsCI passent, nouvelle CI pas encore terminale. Aucune sanction finalisée/relai WAN qualifiée ici, aucun rebuild d’image. Prochain lot : compilation helper Git VPS et scénario WAN borné inclusion/sanction/reprise/idempotence/finalité. Cycle complet admission/activation/sanction, échelle, autres écarts financiers et revue indépendante demeurent ouverts.
+
+
+### 2026-10-05 — Helper sanction AMD64 terminal, runtime conservé
+
+`docs/qualification/slashing-wan-helper-amd64-20261005` : source Git1bad38f2, compilation/link seuls du helper sur image/volume existants, terminal0 sans OOM,5 programmes existants rehashés inchangés. Même SHA256 source que natif ; preuve JSON complète générée identique (valide/inversée/4 variantes falsifiées). Pas de rebuild d’image ni sanction WAN/finalité/reprise qualifiée par ce lot ; prochaine campagne reste ouverte avec tous les autres critères/revue indépendante.

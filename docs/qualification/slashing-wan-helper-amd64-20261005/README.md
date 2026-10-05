@@ -1,0 +1,5 @@
+# Private slashing helper AMD64 — terminal 2026-10-05
+
+Source Git `1bad38f2a2471a662ad20578c883244d0428544f`, helper source SHA256 `053f9013c5fcb96129c489846bf6df20506dac16d75988e771306d2f54668f8d`, reused runtimeab10 core. Only the helper object and executable were compiled/linked in the existing immutable AMD64 builder and explicit volume; no image build. Container and controller terminal0, no OOM. Five existing runtime/core/exporter/P2P/auditor programs rehashed unchanged. Source SHA256 matches native.
+
+AMD64 fixture generation0, using the existing authentic64-key exported seed; full proof JSON (valid, reverse and four malformed variants) exactly equals native output. Build/generator logs and hashes retained. This is cross-architecture helper qualification, not a live WAN penalty, witness-recovery or finalized slashing lifecycle. Those next scenarios and global production criteria remain open. The earlier helper compilation error and native bootstrap evidence remain in `../slashing-wan-helper-20261005`.
