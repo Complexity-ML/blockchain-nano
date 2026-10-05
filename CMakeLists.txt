@@ -1920,3 +1920,6 @@ set_tests_properties(consensus_local_monotonic_time PROPERTIES TIMEOUT 60 LABELS
 
 add_test(NAME consensus_capella_block_capacity_pressure COMMAND nano-capella-transition-tests --capacity-pressure)
 set_tests_properties(consensus_capella_block_capacity_pressure PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_runtime")
+
+add_test(NAME consensus_capella_atomic_proposal_admission COMMAND nano-capella-transition-tests --atomic-proposal)
+set_tests_properties(consensus_capella_atomic_proposal_admission PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_runtime")

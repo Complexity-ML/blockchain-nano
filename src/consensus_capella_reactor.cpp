@@ -369,7 +369,10 @@ void CapellaDurableReactor::tick_locked(uint64_t time,const std::function<void()
 }
 
 bool CapellaDurableReactor::block(std::span<const uint8_t> wire,const std::function<void()>& check){
- std::lock_guard lock(mutex_);require_available();if(check)check();
+ std::lock_guard lock(mutex_);return block_locked(wire,check);
+}
+bool CapellaDurableReactor::block_locked(std::span<const uint8_t> wire,const std::function<void()>& check){
+ require_available();if(check)check();
  // Reconnection may lose the sender's ACK cache. A pruned historical duplicate
  // is acknowledged only from our OWN authenticated finalized archive; it never
  // installs a peer checkpoint or changes the current execution/fork state.

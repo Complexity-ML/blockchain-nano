@@ -60,7 +60,7 @@ static bool owner_sync=false;
 static bool owner_witness=false;
 static bool scheduled=false,sync_rotation=false,clock_diagnostics=false,duty_timing=false,signer_health=false;
 static bool configured_runtime=false;
-static bool slot_continuation=false,prepared_block=false,capacity_pressure=false;
+static bool slot_continuation=false,prepared_block=false,capacity_pressure=false,atomic_proposal=false,proposal_gap=false;
 static bool automatic_recovery=false;
 static bool capella_http=false,capella_http_queue=false;
 static std::string cli_binary;static Json cli_genesis;static bool managed_cli=false;static std::string daemon_binary;static bool network_cli=false;static bool multipeer_cli=false;static bool distributed_cli=false;static bool sync_distributed_cli=false,distributed_sync_rotation=false;static bool transport_outage_cli=false;static fs::path network_export;
@@ -1475,6 +1475,33 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
   check(oracle&&constructed->message_ssz==oracle->message_ssz&&constructed->post.consensus==oracle->post.consensus&&constructed->post.execution.block.header.hash()==oracle->post.execution.block.header.hash()&&constructed->post.execution.state.root()==expected.root(),"prepared block differs from full-gap execution oracle");++checks;
   auto sign=[&](const Bytes& message,uint64_t signer){const auto view=std::span<const uint8_t>(message);const ConsensusBeaconHeader h{little(message,0,8),little(message,8,8),root_at(message,16),root_at(message,48),capella_beacon_body_root(view.subspan(84),r.consensus.body,l.sync_committee_size,r.execution,r.withdrawals.maximum_per_payload,r.maximum_bls_changes,r.consensus.maximum_block_bytes)};const auto signature=Key(signer).sign(consensus_signing_root(consensus_beacon_header_root(h),consensus_domain({0,0,0,0},identity->fork_version,identity->genesis_root)));Bytes wire(100,0);put(wire,0,100,4);std::copy(signature.begin(),signature.end(),wire.begin()+4);wire.insert(wire.end(),message.begin(),message.end());return wire;};
   const auto wire=sign(constructed->message_ssz,identity->index);const auto received=preparation.receive(wire,parent.execution_block.header,parent.execution_state,history,100000);check(received&&received->consensus==oracle->post.consensus&&received->execution.block.header.hash()==oracle->post.execution.block.header.hash()&&received->execution.state.root()==oracle->post.execution.state.root(),"prepared signed block transition differs from oracle");++checks;
+  if(atomic_proposal||proposal_gap){
+   Temp directory;Genesis g;g.chain_id=r.chain_id;g.consensus="beacon";g.evm_revision=EvmRevision::Shanghai;g.block=genesis;g.state=genesis_state;
+   auto tight=crash_limits;tight.blocks=initial.blocks.size()+1;
+   Blockchain owner(directory/"owner",g);ChainStore witness(directory/"witness");
+   auto reactor=std::make_unique<CapellaDurableReactor>(owner,rules,tight,initial,std::function<void()>{},&witness);
+   const auto clock=initial.timed.clock.genesis_time_ms+slot*rules.slot_duration_ms;
+   reactor->tick(clock);size_t attempts=0;while(!reactor->prepare_current_duties(slot))check(++attempts<slot/slots+4,"atomic fixture preparation stalled");
+   ChainStore signer_disk(directory/"signer");BeaconSigningJournal journal(signer_disk,r.chain_id,genesis.header.hash(),identity->genesis_root,key.public_key,slots);
+   std::promise<void> contender_started;auto started=contender_started.get_future();std::future<bool> contender;unsigned providers=0;
+   auto provider=[&](const ConsensusRoot& root){
+    if(++providers==1){contender=std::async(std::launch::async,[&]{contender_started.set_value();return reactor->block(wire);});
+     check(started.wait_for(std::chrono::seconds(5))==std::future_status::ready,"concurrent admission thread did not start");
+     check(contender.wait_for(std::chrono::milliseconds(0))!=std::future_status::ready,"peer mutated Store during local signing lock");}
+    return key.sign(root);
+   };
+   const auto before=reactor->current().token;
+   const auto local=proposal_gap?reactor->propose_current(identity->index,slot,"0x0000000000000000000000000000000000000001",4,4,[&]{return clock;},journal,provider):reactor->propose_and_admit_current(identity->index,slot,"0x0000000000000000000000000000000000000001",4,4,[&]{return clock;},journal,provider);
+   check(local&&*local!=wire&&providers==2&&journal.latest_proposal_slot()==slot,"local proposal fixture did not sign a distinct valid child");
+   const bool incoming=contender.get();
+   if(proposal_gap){check(incoming,"two-step competitor did not fill capacity");check(reactor->block(*local),"two-step proposal lost admission capacity");}
+   check(!incoming&&reactor->current().state->blocks.size()==tight.blocks&&reactor->current().token.sequence==before.sequence+1,"concurrent peer displaced atomic local publication");
+   check(reactor->block(*local),"atomic proposal duplicate not admitted at capacity");
+   const auto committed=reactor->current().token,guard=journal.commitment();const auto tip=owner.tip().header.hash();
+   reactor.reset();reactor=std::make_unique<CapellaDurableReactor>(owner,rules,tight,witness);
+   check(reactor->current().token==committed&&journal.commitment()==guard&&owner.tip().header.hash()==tip&&reactor->block(*local),"atomic publication witness restore lost block or signing guard");
+   std::cout<<Json{{"scenario","capella-atomic-proposal-admission"},{"providerCalls",providers},{"contenderAttemptedDuringProvider",true},{"contenderRefusedAtCapacity",!incoming},{"localDurablyAdmitted",true},{"duplicateAdmitted",true},{"witnessRestored",true},{"networkQualified",false}}.dump()<<std::endl;return;
+  }
   if(capacity_pressure){
    Temp directory;Genesis g;g.chain_id=r.chain_id;g.consensus="beacon";g.evm_revision=EvmRevision::Shanghai;g.block=genesis;g.state=genesis_state;
    auto tight=crash_limits;tight.blocks=initial.blocks.size();
@@ -1487,6 +1514,7 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
    const auto before=reactor->current().token;const auto guard=journal.commitment();const auto tip=owner.tip().header.hash();
    check(!reactor->propose_current(identity->index,slot,"0x0000000000000000000000000000000000000000",4,4,[&]{return clock;},journal,provider),"full graph invoked automatic proposal signer");
    check(!reactor->sign_proposal(identity->index,slot,body,[&]{return clock;},before,journal,provider),"full graph invoked explicit proposal signer");
+   check(!reactor->propose_and_admit_current(identity->index,slot,"0x0000000000000000000000000000000000000000",4,4,[&]{return clock;},journal,provider),"full graph invoked atomic proposal signer");
    check(providers==0&&journal.commitment()==guard&&!journal.latest_proposal_slot(),"capacity refusal changed signer reservation");
    for(unsigned retry=0;retry<3;++retry)check(!reactor->block(wire)&&reactor->current().token==before&&owner.tip().header.hash()==tip,"capacity refusal changed durable Store or execution");
    // The signed wire is valid: an independently provisioned receiver admits it.
@@ -2350,6 +2378,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
 }
 #include "support/capella_exit_owner.hpp"
 int main(int argc,char** argv){try{executable=argv[0];
+if(argc==2&&(std::string(argv[1])=="--atomic-proposal"||std::string(argv[1])=="--proposal-gap")){atomic_proposal=std::string(argv[1])=="--atomic-proposal";proposal_gap=!atomic_proposal;prepared_block=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--capacity-pressure"){capacity_pressure=true;prepared_block=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--prepared-block"){prepared_block=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--slot-continuation"){slot_continuation=true;scenario(false);return 0;}

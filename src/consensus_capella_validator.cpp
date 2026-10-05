@@ -50,8 +50,8 @@ void CapellaValidatorLoop::poll(const std::function<void()>& checkpoint){
    const auto previous=key.journal->latest_proposal_slot();
    if(!previous||*previous<slot){
     ++proposal_attempts_;DutyWallTiming proposal_timing{DutyWallTiming::Clock::now(),proposal_max_ms_};
-    const auto signed_block=reactor_.propose_current(key.index,slot,key.fee_recipient,transaction_trials_,vote_trials_,now_,*key.journal,key.signer,check,key.registration_public_key);
-    if(signed_block){if(!reactor_.block(*signed_block,check))throw std::runtime_error("Locally signed Capella proposal refused by admission");++proposals_;}else ++proposals_unavailable_;
+    const auto signed_block=reactor_.propose_and_admit_current(key.index,slot,key.fee_recipient,transaction_trials_,vote_trials_,now_,*key.journal,key.signer,check,key.registration_public_key);
+    if(signed_block)++proposals_;else ++proposals_unavailable_;
 
    }
   }

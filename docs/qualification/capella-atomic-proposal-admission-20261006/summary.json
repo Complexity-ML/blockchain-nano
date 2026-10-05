@@ -1,0 +1,35 @@
+{
+  "baseCommit": "d71f574a23c7c2447bdd1d1aa1d61c1363439031",
+  "sources": {
+    "src/consensus_capella_signing.cpp": "e08142c7b31766376122731dd494bcb4d59b79336cfaba401001fd3f42f1b680",
+    "src/consensus_capella_reactor.cpp": "99b7d1ecb7db392916af3e054c2c682806a5e061dd2e757d39b38477e6ef89e2",
+    "src/consensus_capella_validator.cpp": "2470ca28dc5f16b89103d10d8467fb3e458566d786853e41a4931e5cafaec5d6",
+    "include/nano/consensus_capella_reactor.hpp": "86147efb0750ab7ea6e316e5613c9b9b17ba98daaab64796610a3220a647ce91",
+    "tests/test_capella_transition.cpp": "925d7327c9d941479bf613d64fadb38c705a2bd641ac73db01d3ecd08b9a9690"
+  },
+  "qualification": "local atomic scheduler proposal/signing/admission and full-block refusal",
+  "twoStepReproduction": "same candidate, retained separate signing/admission API, forced concurrent order; not an old executable before/after test",
+  "twoStepExit": 1,
+  "atomicExit": 0,
+  "architectures": [
+    "mac-native",
+    "docker-arm64",
+    "docker-amd64"
+  ],
+  "schedulerArchitectures": [
+    "docker-arm64",
+    "docker-amd64"
+  ],
+  "runtimeLinkedArchitectures": [
+    "mac-native",
+    "docker-arm64",
+    "docker-amd64"
+  ],
+  "runtimeMainAndCaptureObjectsReusedFrom": "b5ee00ac unchanged source files verified by git diff",
+  "freshCMakeConfigureQualified": false,
+  "fullReproducibleBuildQualified": false,
+  "capacityRecoveryQualified": false,
+  "wanFinalityQualified": false,
+  "deployed": false,
+  "productionQualified": false
+}

@@ -4266,3 +4266,17 @@ Qualification locale seulement ; nouveau cœur natif/runtime non livré, course
 signature/admission, autres budgets, libération de capacité et reprise de finalité
 restent ouverts. Aucun rebuild d’image ni relance WAN.
 [Preuves et périmètre](qualification/capella-block-capacity-pressure-20261006/README.md).
+
+## Signature et admission atomiques du scheduler — 6 octobre 2026
+
+Chemin atomique implémenté : verrou du propriétaire conservé entre signature
+et admission durable, sans court-circuiter la validation ni supprimer de journal.
+Reproduction du protocole séparé sortie 1 conservée ; admission concurrente
+contrôlée, doublon et restauration réussis sur Mac natif et Docker ARM64/AMD64.
+Refus à pleine capacité avant fournisseur confirmé sur les trois plateformes.
+Scheduler et gardes d’inscription passent sur les deux Docker (40 blocs,
+272 votes, 1280 sync). Nouveaux runtime/audits liés et identifiés, pas déployés.
+La course est qualifiée dans ce périmètre ; libération de capacité, autres budgets,
+I/O à ce point, contention et finalité WAN restent ouverts. Aucun rebuild d’image ;
+CMake frais et build intégral reproductible non qualifiés. v7 reste FAILED.
+[Preuves et limites](qualification/capella-atomic-proposal-admission-20261006/README.md).

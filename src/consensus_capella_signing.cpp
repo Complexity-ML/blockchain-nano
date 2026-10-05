@@ -223,7 +223,15 @@ std::optional<Phase0SignedAttestation> CapellaDurableReactor::attest_current(uin
  std::lock_guard lock(mutex_);check_registered_index_locked(index,registration_public_key,journal,check);require_available();return sign_attestation_locked(index,slot,clock,*token_,journal,signer,check);
 }
 std::optional<Bytes> CapellaDurableReactor::propose_current(uint64_t index,uint64_t slot,const std::string& recipient,size_t tx_trials,size_t vote_trials,const std::function<uint64_t()>& clock,BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& check,const Bytes& registration_public_key){
- std::lock_guard lock(mutex_);check_registered_index_locked(index,registration_public_key,journal,check);require_available();
+ std::lock_guard lock(mutex_);return propose_current_locked(index,slot,recipient,tx_trials,vote_trials,clock,journal,signer,check,registration_public_key);
+}
+std::optional<Bytes> CapellaDurableReactor::propose_and_admit_current(uint64_t index,uint64_t slot,const std::string& recipient,size_t tx_trials,size_t vote_trials,const std::function<uint64_t()>& clock,BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& check,const Bytes& registration_public_key){
+ std::lock_guard lock(mutex_);auto wire=propose_current_locked(index,slot,recipient,tx_trials,vote_trials,clock,journal,signer,check,registration_public_key);
+ if(wire&&!block_locked(*wire,check))throw std::runtime_error("Locally signed Capella proposal refused by admission");
+ return wire;
+}
+std::optional<Bytes> CapellaDurableReactor::propose_current_locked(uint64_t index,uint64_t slot,const std::string& recipient,size_t tx_trials,size_t vote_trials,const std::function<uint64_t()>& clock,BeaconSigningJournal& journal,const BeaconSigningJournal::Signer& signer,const std::function<void()>& check,const Bytes& registration_public_key){
+ check_registered_index_locked(index,registration_public_key,journal,check);require_available();
  // Do not invoke even the RANDAO provider for a proposal we cannot retain.
  if(state_->blocks.size()>=limits_.blocks)return std::nullopt;
  const auto reveal=sign_randao_locked(index,slot,clock,*token_,journal,signer,check);if(!reveal)return std::nullopt;
