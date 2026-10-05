@@ -1,0 +1,7 @@
+/Users/boris/Dev/blockchain-nano/tests/capella/slashing_audit.cpp:45:12: error: no matching function for call to 'verify_consensus_bls_fast_aggregate'
+   45 |    require(verify_consensus_bls_fast_aggregate({Bytes(public_key.begin(),public_key.end())},signing,vote->signature),"expected proof signatures/eligibility invalid");
+      |            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/include/nano/consensus_bls.hpp:16:6: note: candidate function not viable: cannot convert initializer list argument to 'std::span<const std::vector<uint8_t>>' (aka 'span<const vector<unsigned char>>')
+   16 | bool verify_consensus_bls_fast_aggregate(std::span<const std::vector<uint8_t>> public_keys,std::span<const uint8_t> message,std::span<const uint8_t> signature);
+      |      ^                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1 error generated.
