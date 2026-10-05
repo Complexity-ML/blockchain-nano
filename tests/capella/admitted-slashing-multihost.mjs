@@ -108,7 +108,17 @@ try{
  for(const k of m.capella.validator.keys){k.journal=join(data,'key-'+BigInt(k.index));k.recoveryWitness=k.journal+'-witness';}
  await save(join(out,'mac.json'),m);
  const urls=[`http://127.0.0.1:${m.rpc_port}`,`http://127.0.0.1:${rpcForward}`];
- async function request(n,path,body){const res=await fetch(urls[n]+path,{method:body?'POST':'GET',headers:{Accept:'application/json',...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(10000)});if(!res.ok){const error=Error(`HTTP ${res.status} node ${n} ${path}`);error.httpStatus=res.status;error.node=n;throw error;}return res.json();}
+ async function request(n,path,body){
+  for(let attempt=0;attempt<3;attempt++){
+   const res=await fetch(urls[n]+path,{method:body?'POST':'GET',headers:{Accept:'application/json',...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(10000)});
+   if(res.ok)return res.json();
+   const raw=(await res.text()).slice(0,4096);let responseBody;try{responseBody=JSON.parse(raw);}catch{responseBody={raw};}
+   await record({event:'http-read-refusal',node:n,path,httpStatus:res.status,attempt,responseBody});
+   const retryable=!body&&path.startsWith('/eth/')&&res.status===503&&['Beacon read capacity exceeded','Beacon read cancelled or execution budget expired','Beacon read queue expired'].includes(responseBody.message);
+   if(retryable&&attempt<2){await wait(1000);continue;}
+   const error=Error(`HTTP ${res.status} node ${n} ${path}: ${raw}`);error.httpStatus=res.status;error.node=n;error.responseBody=responseBody;throw error;
+  }
+ }
  const rpc=async(n,method,params=[])=>{const d=await request(n,'/',{jsonrpc:'2.0',id:1,method,params});check(!d.error,`RPC ${method}: ${JSON.stringify(d.error)}`);return d.result;};
  let connected=false;for(let i=0;i<30;i++){try{await rpc(1,'eth_chainId');connected=true;break;}catch{check(tunnel.exitCode===null&&tunnel.signalCode===null,'SSH tunnel exited');await wait(500);}}check(connected,'SSH forward unavailable');
  const clean={...process.env};for(const k of Object.keys(clean))if(k.startsWith('NANO_TEST_CAPELLA_NETWORK_KEY_')||k==='NANO_TEST_EXIT_BOOTSTRAP')delete clean[k];
