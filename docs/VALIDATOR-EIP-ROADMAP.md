@@ -7601,3 +7601,6 @@ vérifié séparément ; têtes canoniques divergentes. Aucun journal fusionné 
 réinitialisé. Cinq nouveaux tests du contrôleur passent, dont la reprise
 d'ascendance après refus partiel. Cela prépare la prochaine campagne ; aucune
 finalité commune nouvelle ni disponibilité soutenue n'est qualifiée.
+
+
+2026-10-06, préparation v6 : engagements post-v5 vérifiés séparément et copies Mac SHA identiques hors identité P2P. Volume VPS arrêté réutilisé après audit indépendant. Journaux non fusionnés ni réinitialisés. Contrôleur 31a66f24 : diagnostics HTTP conservés, refus temporaires connus sans extension de délai et ascendance complète malgré cache partiel (cinq nouveaux tests passent). Binaires C++ et images inchangés depuis v5, noyau b5ee00ac et relais 8adbabff. Cette préparation ne qualifie aucune finalité réelle ni production. Preuves restored-three-node-v6-prepare-20261006/.

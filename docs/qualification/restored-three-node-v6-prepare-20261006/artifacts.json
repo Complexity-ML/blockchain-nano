@@ -1,0 +1,45 @@
+{
+  "coreRevision": "b5ee00acce4bd1a73bbd3c3024102d157315fe92",
+  "relayRevision": "8adbabffd626b37a48e793103a2d4f7266d09e8b",
+  "networkSourcesUnchangedFromRelayRevision": true,
+  "coreSourcesUnchangedFromCoreRevision": true,
+  "nodes": {
+    "mac-native": {
+      "nano": {
+        "path": "/private/tmp/nano-deposit-deadline-20261005/nano",
+        "sha256": "0a000d8e014227e2af76de7b17c6869742591ccbe973a1ab4505be7fea9badb4"
+      },
+      "p2p": {
+        "path": "/tmp/nano-rejection-scan-build-20261005/p2p-native-after/test",
+        "sha256": "54abf4551deb4ea013fdc6eaf24057c2d80ba3464b6148ac31b8df23b4951b52"
+      }
+    },
+    "mac-docker": {
+      "image": "sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb",
+      "buildVolume": "nano-clean-arm64-build-20261002",
+      "nano": {
+        "path": "/build/deposit-deadline-arm64-b5ee00ac-20261005/nano",
+        "sha256": "b16c065c98d9c6ca774ca8429677997a4b3adddc08f55af0c339d404b182f3a3"
+      },
+      "p2p": {
+        "path": "/build/rejection-scan-8adbabff-arm64-20261005/nano-p2p",
+        "sha256": "540688447b53275ee71ac5e07fcd8eabdb43ac092d4c37e6a2c2e5dc642c3d08"
+      }
+    },
+    "vps-docker": {
+      "image": "sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14",
+      "buildVolume": "nano-clean-rpc-build-20261002",
+      "nano": {
+        "path": "/build/deposit-deadline-amd64-b5ee00ac-20261005/nano",
+        "sha256": "995d62a41b4576646720fb428bc6ab82f1546d29ab23feb0b6dc794b59a6ce55"
+      },
+      "p2p": {
+        "path": "/build/rejection-scan-8adbabff-amd64-20261005/nano-p2p",
+        "sha256": "8db4b2a0442121ec0d70dcccb37dd7b60f64f6f43630f2050e28b184bb4087ca"
+      }
+    }
+  },
+  "keysLoaded": false,
+  "networkQualified": false,
+  "productionQualified": false
+}
