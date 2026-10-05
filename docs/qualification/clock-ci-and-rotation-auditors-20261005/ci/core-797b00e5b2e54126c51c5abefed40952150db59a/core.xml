@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="10"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="15"
+	timestamp="2026-10-05T02:21:32"
+	>
+	<testcase name="core" classname="core" time="0.564009" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_evm"/>
+		</properties>
+		<system-out>4069 checks passed
+</system-out>
+	</testcase>
+	<testcase name="chain" classname="chain" time="0.511482" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_evm"/>
+		</properties>
+		<system-out>185 chain checks passed
+</system-out>
+	</testcase>
+	<testcase name="rpc_queue_expiry" classname="rpc_queue_expiry" time="1.10398" status="run">
+		<properties/>
+		<system-out>{"drained":1,"lateWork":0,"replies":1,"scenario":"delayed-event-loop"}
+{"capacityRecovered":true,"capacityRetainedUntilDrain":true,"concurrentWorkers":2,"expiryMs":50.301942,"lateMutationSkipped":true,"notifications":false,"runningWorkCompleted":true,"transport":"http","wallet":false}
+{"capacityRecovered":true,"capacityRetainedUntilDrain":true,"concurrentWorkers":2,"expiryMs":50.427458,"lateMutationSkipped":true,"notifications":false,"runningWorkCompleted":true,"transport":"http","wallet":true}
+{"capacityRecovered":true,"capacityRetainedUntilDrain":true,"concurrentWorkers":2,"expiryMs":50.28469,"lateMutationSkipped":true,"notifications":true,"runningWorkCompleted":true,"transport":"http","wallet":false}
+{"capacityRecovered":true,"capacityRetainedUntilDrain":true,"concurrentWorkers":2,"expiryMs":50.291332,"lateMutationSkipped":true,"notifications":true,"runningWorkCompleted":true,"transport":"http","wallet":true}
+{"capacityRecovered":true,"capacityRetainedUntilDrain":true,"concurrentWorkers":2,"expiryMs":50.56...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="ethereum_consensus_bls_verify" classname="ethereum_consensus_bls_verify" time="0.0514114" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_ethereum"/>
+		</properties>
+		<system-out>{"activeInConsensus":false,"aggregateVerification":false,"invalid":19,"mutationsRejected":100,"officialCases":29,"scenario":"ethereum-consensus-bls-verify","valid":10}
+</system-out>
+	</testcase>
+	<testcase name="ethereum_consensus_bls_fast_aggregate" classname="ethereum_consensus_bls_fast_aggregate" time="0.038868" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_ethereum"/>
+		</properties>
+		<system-out>{"activeInConsensus":false,"invalid":9,"mutationsRejected":33,"officialCases":12,"possessionEstablished":false,"scenario":"consensus-bls-fast-aggregate","valid":3}
+</system-out>
+	</testcase>
+	<testcase name="storage_execution_checkpoint" classname="storage_execution_checkpoint" time="0.666005" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_local"/>
+		</properties>
+		<system-out>{"archiveAtomicRecovery":true,"archiveSurvivesReorg":true,"bellatrixReactor":false,"concurrentCAS":true,"rejections":14,"scenario":"atomic-execution-checkpoint","shanghai":false,"shorterReorg":true,"sigkillReopens":4,"unchangedHeadCheckpoint":true}
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_payload_paired_state" classname="consensus_capella_payload_paired_state" time="0.0309172" status="run">
+		<properties/>
+		<system-out>{"cancellations":3,"firstCapella":false,"historicalSummariesPreserved":true,"networkActivated":false,"rejected":7,"scenario":"capella-payload-paired-state","withdrawals":4}
+{"cancellations":3,"firstCapella":true,"historicalSummariesPreserved":true,"networkActivated":false,"rejected":8,"scenario":"capella-payload-paired-state","withdrawals":4}
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_signed_transition" classname="consensus_capella_signed_transition" time="12.5605" status="run">
+		<properties/>
+		<system-out>{"assembledBodies":9,"beaconReadChecks":0,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":0,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":false,"localProposals":8,"localRandao":8,"migrated":false,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":false,"rejected":20,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"wireMessages":0,"withdrawals":1}
+{"assembledBodies":9,"beaconReadChecks":0,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":1,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":false,"localProposals":8,"localRandao":8,"migrated":true,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":fals...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_clock_diagnostics" classname="consensus_capella_clock_diagnostics" time="0.175911" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_runtime"/>
+		</properties>
+		<system-out>{"checkpointUnchanged":true,"failClosedPreserved":true,"networkTransport":false,"scenario":"capella-clock-diagnostics","scenarios":4}
+</system-out>
+	</testcase>
+	<testcase name="consensus_local_monotonic_time" classname="consensus_local_monotonic_time" time="0.00306268" status="run">
+		<properties>
+			<property name="cmake_labels" value="clock;consensus"/>
+		</properties>
+		<system-out>bounded wall adjustments, latched faults, overflow and800 concurrent observations passed
+</system-out>
+	</testcase>
+</testsuite>
