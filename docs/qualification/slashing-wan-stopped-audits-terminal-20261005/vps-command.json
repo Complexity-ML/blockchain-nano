@@ -1,0 +1,9 @@
+[
+  "/tmp/nano-wan-dual-family-transport-control-20261004/bin/ssh",
+  "-o",
+  "BatchMode=yes",
+  "-o",
+  "ConnectTimeout=8",
+  "ubuntu@145.239.199.166",
+  "sudo -n docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges --mount type=volume,src=nano-clean-rpc-build-20261002,dst=/build,readonly --mount type=volume,src=nano-slashing-wan-d7cbf1545ffa-data,dst=/var/lib/nano,readonly --mount type=bind,src=/tmp/nano-slashing-wan-d7cbf1545ffa/config,dst=/config,readonly --mount type=bind,src=/tmp/nano-slashing-wan-d7cbf1545ffa/slashing-audit-corrected-request.json,dst=/request.json,readonly --entrypoint /build/monotonic-clock-amd64-20261005/nano-capella-slashing-audit sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14 --audit /config/genesis.json /config/node-1.json /var/lib/nano/chain /request.json /config/proof.json"
+]
