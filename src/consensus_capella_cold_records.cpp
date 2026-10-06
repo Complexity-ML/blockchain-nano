@@ -1,5 +1,6 @@
 #include "nano/consensus_capella_cold_records.hpp"
 #include <algorithm>
+#include <chrono>
 namespace nano {
 namespace {
 void require(bool ok){if(!ok)throw std::invalid_argument("Invalid Capella cold record");}
@@ -24,7 +25,15 @@ CapellaColdRecordCache::CapellaColdRecordCache(CapellaForkBlockRules rules,Capel
  if(!records||!bytes||bytes>limits.envelope_bytes)throw std::invalid_argument("Invalid Capella cold cache budget");
 }
 std::shared_ptr<const CapellaColdRecord> CapellaColdRecordCache::load(const CapellaColdReference& reference,const std::function<std::optional<std::string>(const Bytes&,size_t)>& fetch,const std::function<void()>& check){
- if(check)check();require(reference.digest.size()==32&&reference.bytes&&reference.bytes<=limits_.envelope_bytes&&reference.bytes<=maximum_encoded_bytes_);
+ if(check)check();
+ std::unique_lock lock(mutex_,std::defer_lock);
+ // Cancellation callbacks run without ownership while waiting. Recursive
+ // ownership permits usage() in fetch/check callbacks, never nested loads.
+ while(!lock.try_lock_for(std::chrono::milliseconds(10)))if(check)check();
+ if(check)check();
+ if(loading_)throw std::logic_error("Reentrant Capella cold load");
+ struct Loading {bool& flag;explicit Loading(bool& f):flag(f){flag=true;}~Loading(){flag=false;}} loading(loading_);
+ require(reference.digest.size()==32&&reference.bytes&&reference.bytes<=limits_.envelope_bytes&&reference.bytes<=maximum_encoded_bytes_);
  if(clock_==UINT64_MAX)throw std::overflow_error("Capella cold cache clock exhausted");const auto key=hex(reference.digest)+(reference.anchor?"/anchor":"/block");
  if(const auto known=entries_.find(key);known!=entries_.end()){require(known->second.record->reference==reference);known->second.used=++clock_;return known->second.record;}
  // Select victims without mutating the cache; pinned records are never victims.

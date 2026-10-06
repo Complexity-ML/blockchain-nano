@@ -1,8 +1,9 @@
 #pragma once
 #include "nano/consensus_capella_store_snapshot.hpp"
+#include <mutex>
 namespace nano {
 // LOCAL only: references must come from an externally authenticated checkpoint,
-// not gossip. Cache is serialized by its owner and retains all outstanding pins.
+// not gossip. Concurrent readers are serialized; outstanding pins stay immutable.
 struct CapellaColdRecord {CapellaColdReference reference;CapellaForkBlock block;Phase0ForkNode node;};
 struct CapellaColdCacheUsage {size_t records,encoded_bytes;};
 class CapellaColdRecordCache {
@@ -10,6 +11,7 @@ class CapellaColdRecordCache {
  CapellaForkBlockRules rules_;CapellaStoreSnapshotLimits limits_;
  size_t maximum_records_,maximum_encoded_bytes_,encoded_bytes_=0;uint64_t clock_=0;
  std::map<std::string,Entry> entries_;
+ mutable std::recursive_timed_mutex mutex_;bool loading_=false;
 public:
  CapellaColdRecordCache(CapellaForkBlockRules,CapellaStoreSnapshotLimits,size_t maximum_records,size_t maximum_encoded_bytes);
  // Authenticate hash/length/root and fully validate Beacon/EVM/receipt binding.
@@ -18,6 +20,7 @@ public:
  std::shared_ptr<const CapellaColdRecord> load(const CapellaColdReference&,
   const std::function<std::optional<std::string>(const Bytes&,size_t)>& fetch,
   const std::function<void()>& checkpoint={});
- CapellaColdCacheUsage usage()const{return {entries_.size(),encoded_bytes_};}
+ // Callbacks may inspect usage; nested load is rejected before mutation.
+ CapellaColdCacheUsage usage()const{std::lock_guard lock(mutex_);return {entries_.size(),encoded_bytes_};}
 };
 }

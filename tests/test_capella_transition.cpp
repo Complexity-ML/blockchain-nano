@@ -1641,6 +1641,21 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
     auto substituted=first;substituted.root=second.root;reject(substituted,fetch);
     auto row=Json::parse(*fetch(first.digest,first.bytes));row[5][0]["stateRoot"]="0x"+std::string(64,'0');auto invalid=row.dump();auto bound=first;bound.digest=sha256(Bytes(invalid.begin(),invalid.end()));bound.bytes=invalid.size();reject(bound,[&](const Bytes&,size_t)->std::optional<std::string>{return invalid;});
     bool cancelled=false;try{cache.load(first,fetch,[]{throw ExecutionCancelled("cancel cold load");});}catch(const ExecutionCancelled&){cancelled=true;}check(cancelled&&cache.usage().records==1,"cold cancellation mutated cache");
+    if(std::getenv("NANO_TEST_COLD_CACHE_CONCURRENCY")){
+     CapellaColdRecordCache concurrent(rules,crash_limits,1,std::max(first.bytes,second.bytes));
+     std::promise<void> entered,release;auto ready=entered.get_future();auto proceed=release.get_future().share();std::atomic<unsigned> reads{0};
+     auto loader=std::async(std::launch::async,[&]{return concurrent.load(first,[&](const Bytes& digest,size_t bytes){++reads;check(concurrent.usage().records==0,"usage callback deadlocked or published early");bool rejected=false;try{concurrent.load(first,fetch);}catch(const std::logic_error&){rejected=true;}check(rejected,"nested cold load accepted");entered.set_value();proceed.wait();return backup_owner->store().checkpoint_blob(r.chain_id,genesis.header.hash(),digest,bytes);});});
+     check(ready.wait_for(std::chrono::seconds(10))==std::future_status::ready,"cold concurrent loader not entered");
+     std::promise<void> waiting;auto waiting_ready=waiting.get_future();std::atomic<bool> cancel{false};unsigned wait_checks=0;
+     auto waiter=std::async(std::launch::async,[&]{try{concurrent.load(second,fetch,[&]{if(++wait_checks==2)waiting.set_value();if(cancel)throw ExecutionCancelled("cancel cold wait");});return false;}catch(const ExecutionCancelled&){return true;}});
+     check(waiting_ready.wait_for(std::chrono::seconds(10))==std::future_status::ready,"cold waiter did not start");cancel=true;
+     const bool prompt=waiter.wait_for(std::chrono::seconds(2))==std::future_status::ready;
+     release.set_value();const auto held=loader.get();check(prompt&&waiter.get(),"cold cache wait not cancellable");
+     std::vector<std::future<std::shared_ptr<const CapellaColdRecord>>> readers;for(unsigned i=0;i<8;++i)readers.push_back(std::async(std::launch::async,[&]{return concurrent.load(first,[&](const Bytes&,size_t)->std::optional<std::string>{++reads;throw std::runtime_error("concurrent hit fetched");});}));
+     for(auto& reader:readers)check(reader.get()==held,"concurrent readers lost shared pin");check(reads==1&&concurrent.usage().records==1&&concurrent.usage().encoded_bytes==first.bytes,"concurrent cache accounting differs");
+     bool pinned=false;try{concurrent.load(second,fetch);}catch(const std::length_error&){pinned=true;}check(pinned,"concurrent cache evicted outstanding pin");
+     std::cout<<Json{{"scenario","capella-cold-cache-concurrent-readers"},{"sameImmutablePin",true},{"fetches",reads.load()},{"cancelledWaitBeforeRelease",true},{"nestedLoadRejected",true},{"usageCallbackAllowed",true},{"physicalMemoryQualified",false},{"runtimeActivated",false}}.dump()<<std::endl;
+    }
     auto graph_cache=std::make_shared<CapellaColdRecordCache>(rules,crash_limits,refs.size(),crash_limits.envelope_bytes);
     auto cold_graph=[&](const CapellaForkStore& trusted){auto out=trusted;for(auto& [id,entry]:out.blocks){std::optional<CapellaColdReference> ref;for(size_t i=0;i<refs.size();++i){auto candidate=reference(i);if(candidate.root==id){candidate.anchor=id==out.timed.view.anchor;ref=std::move(candidate);break;}}check(ref.has_value(),"cold graph reference missing");entry=CapellaForkRecord(*ref,entry.header(),entry.execution_header(),graph_cache,fetch);}return out;};
     auto cold=cold_graph(*reactor->current().state);check(std::all_of(cold.blocks.begin(),cold.blocks.end(),[](const auto& item){return item.second.cold_reference().has_value();}),"cold graph retained hot-only records");
