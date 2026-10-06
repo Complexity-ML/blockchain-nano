@@ -1969,3 +1969,6 @@ endforeach()
 
 add_test(NAME consensus_capella_incoming_parent_interference COMMAND nano-capella-transition-tests --incoming-parent-interference)
 set_tests_properties(consensus_capella_incoming_parent_interference PROPERTIES TIMEOUT 180 LABELS qualification_consensus_recovery)
+
+add_test(NAME consensus_capella_fragment_checkpoint_migration COMMAND ${CMAKE_COMMAND} -E env NANO_TEST_FRAGMENT_CHECKPOINT=1 $<TARGET_FILE:nano-capella-transition-tests> --prepared-block)
+set_tests_properties(consensus_capella_fragment_checkpoint_migration PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_ethereum")

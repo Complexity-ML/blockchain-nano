@@ -1603,6 +1603,42 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
   check(oracle&&constructed->message_ssz==oracle->message_ssz&&constructed->post.consensus==oracle->post.consensus&&constructed->post.execution.block.header.hash()==oracle->post.execution.block.header.hash()&&constructed->post.execution.state.root()==expected.root(),"prepared block differs from full-gap execution oracle");++checks;
   auto sign=[&](const Bytes& message,uint64_t signer){const auto view=std::span<const uint8_t>(message);const ConsensusBeaconHeader h{little(message,0,8),little(message,8,8),root_at(message,16),root_at(message,48),capella_beacon_body_root(view.subspan(84),r.consensus.body,l.sync_committee_size,r.execution,r.withdrawals.maximum_per_payload,r.maximum_bls_changes,r.consensus.maximum_block_bytes)};const auto signature=Key(signer).sign(consensus_signing_root(consensus_beacon_header_root(h),consensus_domain({0,0,0,0},identity->fork_version,identity->genesis_root)));Bytes wire(100,0);put(wire,0,100,4);std::copy(signature.begin(),signature.end(),wire.begin()+4);wire.insert(wire.end(),message.begin(),message.end());return wire;};
   const auto wire=sign(constructed->message_ssz,identity->index);const auto received=preparation.receive(wire,parent.execution_block.header,parent.execution_state,history,100000);check(received&&received->consensus==oracle->post.consensus&&received->execution.block.header.hash()==oracle->post.execution.block.header.hash()&&received->execution.state.root()==oracle->post.execution.state.root(),"prepared signed block transition differs from oracle");++checks;
+  if(std::getenv("NANO_TEST_FRAGMENT_CHECKPOINT")){
+   Temp directory;Genesis g;g.chain_id=r.chain_id;g.consensus="beacon";g.evm_revision=EvmRevision::Shanghai;g.block=genesis;g.state=genesis_state;
+   auto owner=std::make_unique<Blockchain>(directory/"owner",g);auto witness=std::make_unique<ChainStore>(directory/"witness");
+   auto reactor=std::make_unique<CapellaDurableReactor>(*owner,rules,crash_limits,initial,std::function<void()>{},witness.get());
+   const auto clock=initial.timed.clock.genesis_time_ms+slot*rules.slot_duration_ms;reactor->tick(clock);
+   auto backup_owner=std::make_unique<Blockchain>(directory/"previous-primary",g);auto backup_reactor=std::make_unique<CapellaDurableReactor>(*backup_owner,rules,crash_limits,initial);backup_reactor->tick(clock);
+   const auto before=reactor->current().token;check(backup_reactor->current().token==before,"independent previous checkpoint differs");backup_reactor.reset();
+   ChainStore signer_disk(directory/"signer");BeaconSigningJournal journal(signer_disk,r.chain_id,genesis.header.hash(),identity->genesis_root,key.public_key,slots);const auto guard=journal.commitment();
+   const auto identity_before=reactor->network_identity();const auto flat_before=capella_store_snapshot(*reactor->current().state,rules,crash_limits);
+   bool cancelled=false;try{reactor->migrate_fragment_checkpoint([]{throw ExecutionCancelled("cancel migration");});}catch(const ExecutionCancelled&){cancelled=true;}
+   check(cancelled&&reactor->current().token==before&&journal.commitment()==guard,"cancelled migration mutated commitments");
+   check(reactor->migrate_fragment_checkpoint(),"legacy checkpoint not migrated");const auto migrated=reactor->current().token;
+   check(migrated.sequence==before.sequence+1&&migrated.digest!=before.digest&&reactor->network_identity()==identity_before&&capella_store_snapshot(*reactor->current().state,rules,crash_limits)==flat_before&&journal.commitment()==guard,"migration changed authenticated graph or signer");
+   const auto primary=owner->store().fork_checkpoint(r.chain_id,genesis.header.hash(),crash_limits.envelope_bytes,migrated);const auto manifest=Json::parse(primary->snapshot);check(manifest.at("format")=="nano-capella-fragments-v1","primary still monolithic");
+   const auto intent=witness->fork_checkpoint(r.chain_id,genesis.header.hash(),8*crash_limits.envelope_bytes+2048);check(intent&&Json::parse(intent->snapshot).at("snapshot")==primary->snapshot,"witness did not commit identical manifest");
+   for(const auto& ref:manifest.at("snapshot").at("blocks")){const auto digest=unhex(ref[1]);const auto size=u64(quantity(ref[2]));check(owner->store().checkpoint_blob(r.chain_id,genesis.header.hash(),digest,size)==witness->checkpoint_blob(r.chain_id,genesis.header.hash(),digest,size),"primary/witness fragments differ");}
+   check(!reactor->migrate_fragment_checkpoint()&&reactor->current().token==migrated,"migration not idempotent");
+   reactor.reset();owner.reset();
+   reactor=std::make_unique<CapellaDurableReactor>(*backup_owner,rules,crash_limits,*witness,std::function<void()>{},migrated);
+   check(reactor->current().token==migrated&&journal.commitment()==guard&&reactor->network_identity()==identity_before,"pending fragment witness recovery differs");
+   size_t attempts=0;while(!reactor->block(wire))check(++attempts<slot/slots+4,"fragmented valid child admission stalled");
+   check(reactor->signed_block(consensus_beacon_header_root(capella_fork_head(*reactor->current().state,rules).header))==wire,"fragmented child archive absent");
+   const auto child_token=reactor->current().token;const auto child_flat=capella_store_snapshot(*reactor->current().state,rules,crash_limits);
+   check(Json::parse(backup_owner->store().fork_checkpoint(r.chain_id,genesis.header.hash(),crash_limits.envelope_bytes,child_token)->snapshot).at("format")=="nano-capella-fragments-v1","later publication downgraded format");
+   reactor.reset();reactor=std::make_unique<CapellaDurableReactor>(*backup_owner,rules,crash_limits,*witness,std::function<void()>{},child_token);check(reactor->current().token==child_token&&capella_store_snapshot(*reactor->current().state,rules,crash_limits)==child_flat&&journal.commitment()==guard,"fragment witness restart lost graph/journal");
+   reactor.reset();reactor=std::make_unique<CapellaDurableReactor>(*backup_owner,rules,crash_limits,child_token);check(capella_store_snapshot(*reactor->current().state,rules,crash_limits)==child_flat,"primary-only fragment restart differs");reactor.reset();backup_owner.reset();witness.reset();
+   unsigned corruptions=0;
+   for(unsigned attack=0;attack<3;++attack){const auto copy=directory/("corrupt-"+std::to_string(attack));fs::copy(directory/(attack==2?"witness":"previous-primary"),copy,fs::copy_options::recursive);
+    rocksdb::Options options;options.create_if_missing=false;rocksdb::DB* raw=nullptr;check(rocksdb::DB::Open(options,copy.string(),&raw).ok(),"owned fragment corruption fixture open");std::unique_ptr<rocksdb::DB> db(raw);rocksdb::ReadOptions read_opts;std::string snapshot;
+    check(db->Get(read_opts,"fork-checkpoint/v1/payload",&snapshot).ok(),"owned checkpoint absent");auto envelope=Json::parse(snapshot);if(attack==2)envelope=Json::parse(envelope.at("snapshot").get<std::string>());const auto& payload=envelope.at("snapshot");const auto& records=payload.contains("store")?payload.at("store").at("blocks"):payload.at("blocks");const auto blob_key="checkpoint-blob/v1/"+records[0][1].get<std::string>();rocksdb::WriteOptions write;write.sync=true;
+    check((attack==1?db->Put(write,blob_key,"altered"):db->Delete(write,blob_key)).ok(),"owned fragment corruption failed");db.reset();bool refused=false;
+    try{if(attack==2){Blockchain intact(directory/"previous-primary",g);ChainStore broken(copy);CapellaDurableReactor rejected(intact,rules,crash_limits,broken,{},child_token);}else{Blockchain broken(copy,g);CapellaDurableReactor rejected(broken,rules,crash_limits,child_token);}}catch(const std::exception&){refused=true;}
+    check(refused,"missing/altered primary or witness fragment accepted");++corruptions;
+   }
+   std::cout<<Json{{"scenario","capella-fragment-checkpoint-integration"},{"legacyMigrated",true},{"graphAndIdentityPreserved",true},{"migrationIdempotent",true},{"cancelledMigrationUnchanged",true},{"independentPreviousPrimaryRecovered",true},{"validChildDurablyAdmitted",true},{"stickyFragmentFormat",true},{"primaryAndWitnessRestarts",true},{"journalCommitmentUnchanged",true},{"corruptionRejections",corruptions},{"coldStateCacheImplemented",false},{"networkQualified",false},{"productionQualified",false}}.dump()<<std::endl;return;
+  }
   if(atomic_proposal||proposal_gap){
    Temp directory;Genesis g;g.chain_id=r.chain_id;g.consensus="beacon";g.evm_revision=EvmRevision::Shanghai;g.block=genesis;g.state=genesis_state;
    auto tight=crash_limits;tight.blocks=initial.blocks.size()+1;

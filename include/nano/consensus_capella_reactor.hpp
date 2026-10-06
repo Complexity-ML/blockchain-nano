@@ -97,7 +97,7 @@ class CapellaDurableReactor {
  void require_available()const;
  ChainStore* witness_=nullptr;std::optional<ForkCheckpointToken> witness_token_;
  size_t witness_limit()const;
- void witness_prepare(std::string_view,const std::vector<CheckpointArchiveEntry>&);
+ void witness_prepare(std::string_view,const std::vector<CheckpointArchiveEntry>&,const std::vector<CheckpointBlob>&);
  void validate_execution_binding()const;
  void fail_closed();
  std::optional<Bytes> prepare_local_body_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,std::span<const SignedTransaction>,size_t,size_t,const std::function<void()>&,std::span<const SignedCapellaBlsChange> = {},size_t maximum_change_trials = 0,std::span<const SignedConsensusVoluntaryExit> = {},size_t maximum_exit_trials = 0);
@@ -113,6 +113,8 @@ class CapellaDurableReactor {
  std::optional<Bytes> sign_proposal_locked(uint64_t,uint64_t,std::span<const uint8_t>,const std::function<uint64_t()>&,const ForkCheckpointToken&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>&);
  std::optional<Bytes> prepare_local_body_from_pool_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,size_t,size_t,const std::function<void()>&);
  void publish(CapellaForkStore,const std::function<void()>&,const std::vector<CheckpointArchiveEntry>& archive={},std::optional<CapellaSignedVotes> votes=std::nullopt,std::optional<CapellaSignedVotes> slashings=std::nullopt,std::optional<CapellaPendingBlsChanges> changes=std::nullopt,std::optional<CapellaPendingExits> exits=std::nullopt);
+ void publish_impl(CapellaForkStore,const std::function<void()>&,const std::vector<CheckpointArchiveEntry>&,
+  std::optional<CapellaSignedVotes>,std::optional<CapellaSignedVotes>,std::optional<CapellaPendingBlsChanges>,std::optional<CapellaPendingExits>,bool);
 public:
  bool prepare_current_duties(uint64_t,const std::function<void()>& checkpoint={});
  bool voluntary_exit_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
@@ -164,6 +166,9 @@ public:
  // Scheduler path: hold the owner lock through signing and durable admission.
  // Return a wire only after ordinary local admission has committed it.
  std::optional<Bytes> propose_and_admit_current(uint64_t,uint64_t,const std::string&,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<uint64_t()>&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={},const Bytes& registration_public_key={});
+ // Explicit verified migration; no graph pruning or change of network rules.
+ // Existing fragment checkpoints remain fragmented on all later publications.
+ bool migrate_fragment_checkpoint(const std::function<void()>& checkpoint={});
  // Local durable maintenance; preserves the selected head and authenticated archives.
  // Scheduling and native deposit-history pinning remain separate responsibilities.
  bool prune_finalized(const std::function<void()>& checkpoint={});
