@@ -1,0 +1,50 @@
+{
+  "coreRevision": "02ec0ab0b3841a09ffa5749cc9db54faa61a2b20",
+  "relayRevision": "2f93dda09ce9765e5240d9ddcb3d74b82144138f",
+  "networkSourcesUnchangedFromRelayRevision": true,
+  "coreSourcesUnchangedFromCoreRevision": true,
+  "nodes": {
+    "mac-native": {
+      "nano": {
+        "path": "/private/tmp/nano-catalog-reactor-failfast-20261006/native/nano",
+        "sha256": "22bf85302c9101fc82e6c1f70cbbcd3b2340b10a83c4bddabfdebd078ec84171"
+      },
+      "p2p": {
+        "path": "/private/tmp/nano-catalog-busy-integrated-native-20261006/network/nano-p2p",
+        "sha256": "0c06ce4f220f385f7e460c1f932b5f34ca61d88ec2d37070f2d0475b579eb686"
+      }
+    },
+    "mac-docker": {
+      "image": "sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb",
+      "buildVolume": "nano-clean-arm64-build-20261002",
+      "nano": {
+        "path": "/build/catalog-reactor-failfast-arm64-20261006/nano",
+        "sha256": "0b637b65690e217998ec501621b95c6c09a6665ad61e8d2f9274e07ebafa1df0"
+      },
+      "p2p": {
+        "path": "/build/catalog-busy-integrated-arm64-20261006/network/nano-p2p",
+        "sha256": "198a29327f61c3542d7f3968a56fdb473c3f031f59b5d81231ee9a1e3cbad5dc"
+      }
+    },
+    "vps-docker": {
+      "image": "sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14",
+      "buildVolume": "nano-clean-rpc-build-20261002",
+      "nano": {
+        "path": "/build/catalog-reactor-failfast-amd64-20261006/nano",
+        "sha256": "80c83140a13d2e3ce00973cd429610e8a1865cbfa9af88bf7286c72312877215"
+      },
+      "p2p": {
+        "path": "/build/catalog-busy-integrated-amd64-20261006/network/nano-p2p",
+        "sha256": "99e4252ec36b8212e74e908d7e91ff7cca539d3c5073209ccc7814aa753b738b"
+      }
+    }
+  },
+  "keysLoaded": false,
+  "networkQualified": false,
+  "productionQualified": false,
+  "relayBuildRevision": "2f93dda09ce9765e5240d9ddcb3d74b82144138f",
+  "relayReuseProof": "relay-reuse/reuse-boundary.json",
+  "relayCompilerInputsUnchangedFromBuildRevision": true,
+  "relayReuseScope": "35 project compiler inputs per architecture; explicit busy handling and retry headers included; qualified snapshot identical to committed runtime inputs",
+  "coreBuildRevision": "02ec0ab0b3841a09ffa5749cc9db54faa61a2b20"
+}

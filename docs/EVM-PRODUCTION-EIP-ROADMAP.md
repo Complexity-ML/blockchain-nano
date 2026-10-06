@@ -4933,3 +4933,6 @@ Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, d
 
 
 2026-10-06 — Lot réacteur intégré : capture catalogue non bloquante derrière admission, RPC occupé existant, quotas/quorum/délais inchangés. Huit modes par architecture natif/ARM64/AMD64 passent ; mêmes binaires réutilisés après réparations des drivers, erreurs initiales conservées. Originaux runtime 76431/9495/15849 sorties 0, 1602 sources figées correspondantes et hashes des exécutables relevés. [Preuves](qualification/catalog-reactor-failfast-integrated-20261006/README.md). Pas de WAN relancé ni d’image construite ; V27 FAILED, cause globale/finalité commune et toutes exigences non démontrées/revue indépendante restent ouvertes.
+
+
+2026-10-06 — Préparation V28 : états post-V27 audités et revérifiés, pins possédés 16/16/33 et historiques conservés séparément, copies Mac sans peer.key et volume VPS réutilisé sur son hôte. Cœur 02ec0ab0 qualifié dans huit modes sur trois architectures ; relais 2f93dda0 réutilisé avec 35 dépendances projet inchangées par architecture. Mêmes quotas et trois nouvelles finalités communes en 900 s à démontrer. Aucun signataire lancé ni image reconstruite. V27 FAILED, cause globale et critères non démontrés/revue indépendante ouverts. Preuves restored-three-node-v28-reactor-failfast-prepare-20261006/.
