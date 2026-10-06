@@ -31,7 +31,7 @@ const port=()=>new Promise((ok,no)=>{const s=createServer();s.on('error',no);s.l
 const instance=Date.now().toString(36),names=['mac-native','mac-docker','vps-docker'],local='nano-restored-three-node-mac-'+instance,remote='nano-restored-three-node-vps-'+instance,remoteRoot='/tmp/'+remote;
 let vpsVolume;const remoteRepo='/home/'+target.split('@')[0]+'/blockchain-nano-git';
 let native,tunnel,localCreated=false,remoteCreated=false,failure,result='FAILED',common,artifacts,plan,urls;
-const inspect=(name,onRemote)=>docker(['inspect',name,'--format','{{json .}}'],onRemote).then(JSON.parse);
+const inspect=(name,onRemote)=>docker(['inspect',name,'--format','{{json .State}}'],onRemote).then(text=>({State:JSON.parse(text)}));
 const logs=async(name,onRemote)=>{if(onRemote)return run('ssh',['-o','BatchMode=yes',target,['sudo','-n','docker','logs',name].map(q).join(' ')+' 2>&1']);const r=await exec('docker',['logs',name],{maxBuffer:32*1024*1024});return r.stdout+r.stderr;};
 const spawnLog=(bin,args,name,env)=>{const fd=openSync(join(out,name),'a'),child=spawn(bin,args,{env,stdio:['ignore',fd,fd]});closeSync(fd);child.on('error',e=>failure=e);return child;};
 const stop=async child=>{if(!child||child.exitCode!==null||child.signalCode!==null)return;child.kill('SIGTERM');for(let n=0;n<200&&child.exitCode===null&&child.signalCode===null;n++)await wait(100);if(child.exitCode===null&&child.signalCode===null){child.kill('SIGKILL');for(let n=0;n<50&&child.exitCode===null&&child.signalCode===null;n++)await wait(100);}};
@@ -70,7 +70,7 @@ try{
   const stable=v=>Array.isArray(v)?v.map(stable):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,stable(v[k])])):v;
   const expected=createHash('sha256').update(JSON.stringify(stable(configs[2]))).digest('hex');
   const helper=await readFile(join(repo,'tests/capella/vps-local-launch-prepare.py'),'utf8');
-  const proof=JSON.parse(await ssh(['python3','-c',helper,process.env.NANO_TEST_VPS_LOCAL_SOURCE,remoteRoot,String(rp[0]),String(rp[1]),artifacts.nodes['vps-docker'].p2p.path,expected]));
+  const proof=JSON.parse(await ssh(['python3','-c',helper,process.env.NANO_TEST_VPS_LOCAL_SOURCE,remoteRoot,String(rp[0]),String(rp[1]),artifacts.nodes['vps-docker'].p2p.path,expected,JSON.stringify(Object.fromEntries(['retentionExperiment','coldCheckpoint'].filter(k=>Object.hasOwn(input,k)).map(k=>[k,input[k]])))]));
   assert.equal(proof.configCanonicalSHA256,expected);assert.equal(proof.configPreparedLocally,true);assert.equal(proof.configurationExportedFromMac,false);assert.equal(proof.signingKeysExportedFromMac,false);
   for(const f of ['genesis.json','profile.json','initial.json'])assert.equal(proof.files[f],await hash(join(fixture,f)));
   await save(join(out,'vps-local-preparation-proof.json'),proof);
