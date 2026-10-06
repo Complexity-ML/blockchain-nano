@@ -604,9 +604,23 @@ CapellaTargetPreparation* CapellaDurableReactor::prepare_vote_target_locked(cons
  const auto& clock=store.timed.clock;if(!slots||!rules_.slot_duration_ms||clock.time_ms<clock.genesis_time_ms)throw std::invalid_argument("Invalid vote preparation clock");
  const auto current=(clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms,epoch=current/slots;const auto& d=vote.data;
  if(d.slot>current||d.target.epoch!=d.slot/slots||d.target.epoch>epoch||d.target.epoch<(epoch?epoch-1:0)||!store.blocks.contains(d.target.root)||!store.timed.view.nodes.contains(d.beacon_block_root)||store.blocks.at(d.target.root).header.slot>d.target.epoch*slots)return nullptr;
- auto& frame=vote_preparations_[d.target.epoch%vote_preparations_.size()];
- if(!frame||!frame->matches(store,rules_,d.target,check))frame.emplace(store,rules_,d.target,check);
- do{if(frame->advance(std::min(limits_.replay_slots,slots),limits_.sync_trials,check))return &*frame;}while(complete);
+ auto& primary=vote_preparations_[d.target.epoch%vote_preparations_.size()];
+ CapellaTargetPreparation* frame=nullptr;
+ if(!primary||primary->target().epoch!=d.target.epoch||!primary->matches(store,rules_,primary->target(),check)){
+  primary.emplace(store,rules_,d.target,check);frame=&*primary;
+ }else if(primary->target()==d.target)frame=&*primary;
+ else{
+  // Concurrent branches in one epoch must not replace each other's prefixes.
+  // Share the bounded, authenticated block-target cache for secondary roots.
+  std::erase_if(incoming_targets_,[&](const auto& entry){return !entry.matches(store,rules_,entry.target(),check);});
+  auto found=std::find_if(incoming_targets_.begin(),incoming_targets_.end(),[&](const auto& entry){return entry.target()==d.target;});
+  if(found==incoming_targets_.end()){
+   if(incoming_targets_.size()>=size_t(rules_.transition.consensus.body.attestations)+2)incoming_targets_.erase(incoming_targets_.begin());
+   incoming_targets_.emplace_back(store,rules_,d.target,check);
+  }else std::rotate(found,std::next(found),incoming_targets_.end());
+  frame=&incoming_targets_.back();
+ }
+ do{if(frame->advance(std::min(limits_.replay_slots,slots),limits_.sync_trials,check))return frame;}while(complete);
  return nullptr;
 }
 bool CapellaDurableReactor::vote(const Phase0SignedAttestation& vote,const std::function<void()>& check){

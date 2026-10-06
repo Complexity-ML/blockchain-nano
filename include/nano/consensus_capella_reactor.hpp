@@ -46,7 +46,7 @@ class CapellaDurableReactor {
  std::optional<CapellaBlockPreparation> incoming_preparation_;
  // Bounded shared target continuations, bound to admitted root/epoch/profile.
  // Required contexts come from checked block processing, never peer state.
- // Last requested block does not invalidate authenticated continuation work.
+ // Blocks and votes share this cache; request identity never discards prefixes.
  ConsensusRoot incoming_target_block_{};
  std::vector<CapellaTargetPreparation> incoming_targets_;
  std::optional<CapellaDutyPreparation> local_preparation_;

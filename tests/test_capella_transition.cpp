@@ -60,7 +60,7 @@ static bool owner_sync=false;
 static bool owner_witness=false;
 static bool scheduled=false,sync_rotation=false,clock_diagnostics=false,duty_timing=false,signer_health=false;
 static bool configured_runtime=false;
-static bool slot_continuation=false,prepared_block=false,capacity_pressure=false,atomic_proposal=false,proposal_gap=false,incoming_alternation=false;
+static bool slot_continuation=false,prepared_block=false,capacity_pressure=false,atomic_proposal=false,proposal_gap=false,incoming_alternation=false,vote_target_alternation=false;
 static bool automatic_recovery=false;
 static bool capella_http=false,capella_http_queue=false;
 static std::string cli_binary;static Json cli_genesis;static bool managed_cli=false;static std::string daemon_binary;static bool network_cli=false;static bool multipeer_cli=false;static bool distributed_cli=false;static bool sync_distributed_cli=false,distributed_sync_rotation=false;static bool transport_outage_cli=false;static fs::path network_export;
@@ -1577,6 +1577,52 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
    auto invalid=included_wire;invalid[4]^=1;check(!prepare_capella_contextual_received_block(timed,invalid,rules,preparation,targets,3,100000),"contextual block bypassed BLS signature");++checks;
    Temp worker_directory;Genesis wg;wg.chain_id=r.chain_id;wg.consensus="beacon";wg.evm_revision=EvmRevision::Shanghai;wg.block=genesis;wg.state=genesis_state;
    auto worker_limits=crash_limits;worker_limits.replay_slots=3;
+   if(vote_target_alternation){
+    auto other_body=body;other_body[168]^=1;
+    const auto other_block=preparation.construct(slot,identity->index,other_body,parent.execution_block.header,parent.execution_state,history,100000);
+    check(bool(other_block),"second sibling construction failed");const auto other_wire=sign(other_block->message_ssz,identity->index);
+    auto both=prepare_capella_received_block(*admitted,other_wire,rules,slot-parent.header.slot,100000);check(bool(both),"both individually valid siblings were not admitted");
+    ConsensusRoot added_first{},added_second{};
+    for(const auto& [root,record]:admitted->blocks)if(!initial.blocks.contains(root))added_first=root;
+    for(const auto& [root,record]:both->blocks)if(!admitted->blocks.contains(root))added_second=root;
+    check(added_first!=added_second,"sibling roots coincide");
+    const auto vote_slot=slot+2*l.slots_per_historical_root+3;
+    const auto vote_clock=initial.timed.clock.genesis_time_ms+vote_slot*rules.slot_duration_ms+rules.attestation_due_ms;
+    const auto common=prepare_capella_store_tick(*both,vote_clock,rules,vote_slot,100000);
+    auto branch1=common,branch2=common;
+    branch1.blocks.erase(added_second);branch1.timed.view.nodes.erase(added_second);branch1.timely.erase(added_second);branch1.unrealized_justifications.erase(added_second);
+    branch2.blocks.erase(added_first);branch2.timed.view.nodes.erase(added_first);branch2.timely.erase(added_first);branch2.unrealized_justifications.erase(added_first);
+    branch1.timed.view.proposer_boost.reset();branch2.timed.view.proposer_boost.reset();
+    const auto duties1=prepare_capella_attestation_duties(branch1,rules,vote_slot,vote_slot,100000),duties2=prepare_capella_attestation_duties(branch2,rules,vote_slot,vote_slot,100000);
+    check(!duties1.empty()&&!duties2.empty(),"alternate branches have no vote duties");
+    auto assignment1=duties1.begin()->second,assignment2=duties2.begin()->second;
+    auto sign_vote=[](const auto& assignment){auto result=assignment.attestation;result.signature=Key(assignment.validator_index).sign(consensus_signing_root(consensus_attestation_root(result.data),consensus_domain({1,0,0,0},assignment.fork_version,assignment.genesis_root)));return result;};
+    vote=sign_vote(assignment1);auto other=sign_vote(assignment2);
+    check(other.data.target.epoch==vote.data.target.epoch&&other.data.target.root!=vote.data.target.root,"vote targets are not distinct in the same epoch");
+    const auto deferred=prepare_capella_store_tick(common,vote_clock+rules.slot_duration_ms,rules,vote_slot,100000);
+    const auto oracle1=prepare_capella_store_vote(deferred,vote,rules,vote_slot,100000),oracle2=prepare_capella_store_vote(deferred,other,rules,vote_slot,100000);
+    check(oracle1&&oracle2,"alternating vote fixture not individually valid on common Store");
+    Blockchain alternating_owner(worker_directory/"alternating-owner",wg);ChainStore alternating_witness(worker_directory/"alternating-witness");
+    auto alternating=std::make_unique<CapellaDurableReactor>(alternating_owner,rules,worker_limits,*both,std::function<void()>{},&alternating_witness);alternating->tick(vote_clock+rules.slot_duration_ms);
+    const auto before=alternating->current().token;bool accepted=false,other_accepted=false;size_t attempts=0;const auto maximum=2*vote_slot/3+12;
+    while(!accepted&&attempts<maximum){++attempts;for(const auto* input:{&other,&vote}){
+     const auto token=alternating->current().token;const bool admitted=alternating->vote(*input);
+     if(!admitted)check(alternating->current().token==token,"incomplete vote preparation published state");
+     if(input==&vote)accepted=admitted;else other_accepted|=admitted;
+    }}
+    check(accepted,"Alternating valid votes erased target continuation");
+    check(alternating->current().token.sequence>before.sequence,"admitted vote did not publish checkpoint");
+    const auto current=alternating->current();auto expected=oracle1;
+    if(other_accepted)expected=prepare_capella_store_vote(*oracle2,vote,rules,vote_slot,100000);
+    check(expected&&capella_store_snapshot(*current.state,rules,worker_limits)==capella_store_snapshot(*expected,rules,worker_limits),"alternating votes differ from full-gap oracle");
+    const auto signed_votes=alternating->signed_votes();const auto first_bytes=encode_consensus_attestation_ssz(vote,r.consensus.body.validators_per_committee),second_bytes=encode_consensus_attestation_ssz(other,r.consensus.body.validators_per_committee);
+    check(signed_votes.at(sha256(first_bytes))==first_bytes&&(!other_accepted||signed_votes.at(sha256(second_bytes))==second_bytes),"alternating signed votes lost exact bytes");
+    auto invalid=other;invalid.signature[0]^=1;check(!alternating->vote(invalid)&&alternating->current().token==current.token,"prepared vote context bypassed invalid signature");
+    check(alternating->vote(vote)&&alternating->current().token==current.token,"duplicate vote rewrote checkpoint");
+    alternating.reset();CapellaDurableReactor reopened(alternating_owner,rules,worker_limits,alternating_witness);
+    check(reopened.current().token==current.token&&reopened.signed_votes()==signed_votes,"alternating witness reopen lost votes or checkpoint");
+    std::cout<<Json{{"scenario","capella-vote-target-alternation"},{"attemptPairs",attempts},{"individuallyValidVotes",true},{"sameEpochDistinctTargets",true},{"honestVoteProgress",true},{"otherVoteProgress",other_accepted},{"fullGapOracleEqual",true},{"invalidSignatureRejected",true},{"duplicateCheckpointStable",true},{"witnessReopened",true},{"networkQualified",false}}.dump()<<std::endl;return;
+   }
    if(incoming_alternation){
     // A slashable proposer sends two individually valid siblings. Alternating
     // retries must not erase authenticated target work needed by the honest one.
@@ -2415,6 +2461,7 @@ int main(int argc,char** argv){try{executable=argv[0];
 if(argc==2&&(std::string(argv[1])=="--atomic-proposal"||std::string(argv[1])=="--proposal-gap")){atomic_proposal=std::string(argv[1])=="--atomic-proposal";proposal_gap=!atomic_proposal;prepared_block=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--capacity-pressure"){capacity_pressure=true;prepared_block=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--incoming-alternation"){incoming_alternation=true;prepared_block=true;scenario(false);return 0;}
+if(argc==2&&std::string(argv[1])=="--vote-target-alternation"){vote_target_alternation=true;prepared_block=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--prepared-block"){prepared_block=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--slot-continuation"){slot_continuation=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--signer-health"){signer_health=true;scenario(false);return 0;}
