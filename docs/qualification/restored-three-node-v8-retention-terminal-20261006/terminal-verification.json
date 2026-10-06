@@ -1,0 +1,75 @@
+{
+  "result": {
+    "result": "FAILED",
+    "commonFinality": null,
+    "baseline": {
+      "epoch": "1284",
+      "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+    },
+    "stopReceipts": 3,
+    "failure": "Three-node common finality did not advance through three distinct checkpoints before deadline",
+    "networkScope": "private restored three-node/two-host common finality only",
+    "productionQualified": false
+  },
+  "processesCleanlyStopped": true,
+  "controllerFilesUnchanged": true,
+  "ownedSignerPinsCheckedSeparately": 65,
+  "nodes": [
+    {
+      "name": "mac-native",
+      "ownedKeys": 16,
+      "ownedSignerPinsAdvanced": 16,
+      "clockHealthy": true,
+      "validatorHealthy": true,
+      "validatorFailure": null,
+      "proposals": 37,
+      "attestations": 297,
+      "restart": {
+        "digest": "0x1bb5ebdcd78acde31b7ef977225b47d306fbf61e741499e1c1b044cf6438ec6a",
+        "sequence": "0x1f49"
+      },
+      "finalized": {
+        "epoch": "0x504",
+        "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+      }
+    },
+    {
+      "name": "mac-docker",
+      "ownedKeys": 16,
+      "ownedSignerPinsAdvanced": 16,
+      "clockHealthy": true,
+      "validatorHealthy": true,
+      "validatorFailure": null,
+      "proposals": 35,
+      "attestations": 298,
+      "restart": {
+        "digest": "0x1cccef80d1cb410ef2ba1279eb1d6f56da242cf80f3998324978a40aaef9b650",
+        "sequence": "0x1e8e"
+      },
+      "finalized": {
+        "epoch": "0x504",
+        "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+      }
+    },
+    {
+      "name": "vps-docker",
+      "ownedKeys": 33,
+      "ownedSignerPinsAdvanced": 33,
+      "clockHealthy": true,
+      "validatorHealthy": true,
+      "validatorFailure": null,
+      "proposals": 74,
+      "attestations": 376,
+      "restart": {
+        "digest": "0x32da76f94d8880ed7c833121153753405d51290379ebd204a86228218913e369",
+        "sequence": "0x1f5d"
+      },
+      "finalized": {
+        "epoch": "0x504",
+        "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+      }
+    }
+  ],
+  "scope": "Original stop receipts, owner-specific commitments and controller integrity; not a successful finality campaign or storage replay",
+  "productionQualified": false
+}

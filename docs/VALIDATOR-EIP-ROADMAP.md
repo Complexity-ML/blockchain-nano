@@ -7718,3 +7718,15 @@ de RAM ni de qualification d’un profil agrandi. v7 et production restent ouver
 
 
 2026-10-06, préparation v8 de rétention explicitement expérimentale : sources post-v7 auditées, engagements exacts, journaux séparés sans remise à zéro. Candidate cœur 05649987 / relais 5902c983 liée sur les trois environnements, images réutilisées. Capacité locale 256→1024 blocs, autres limites en octets et règles inchangées ; ce changement ne clôture ni saturation, ni pruning, ni mémoire, ni production. Échéance originale 900 s et trois avances communes distinctes nécessaires. Préparation seule sans reprise qualifiée. Preuves restored-three-node-v8-retention-prepare-20261006/.
+
+## Reprise v8 expérimentale : résultat original — 6 octobre 2026
+
+Résultat FAILED, sortie 1, sans redémarrage du contrôleur. Core 05649987 et relais 5902c983. Critère de trois avancées distinctes conservé.
+mac-native : boucle saine True, erreur None, propositions 37, attestations 297.
+mac-docker : boucle saine True, erreur None, propositions 35, attestations 298.
+vps-docker : boucle saine True, erreur None, propositions 74, attestations 376.
+Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichiers inchangés. Journaux non fusionnés/non réinitialisés, aucun transfert de base entre hôtes. Reprise réseau et production toujours ouvertes.
+[Preuves v8](qualification/restored-three-node-v8-retention-terminal-20261006/README.md).
+
+
+2026-10-06 — Dispatcher : gel après trois réponses RPC perdues reproduit en HTTP local avec délai réel 5 s et registre réel de tickets. Prototype isolé : 8 scénarios simulés, 5 avec registre réel, 10 contrôles existants et un cas HTTP passent ; anciennes versions échouent sur le gel. Aucun ticket actif retiré sans preuve, annulation puis Forget confirmé, décisions contradictoires restent fermées. Prototype non intégré/non déployé ; cause WAN, régression Docker, liaison P2P et nouvelle finalité commune restent à qualifier. Preuves dispatch-transport-recovery-local-20261006/.

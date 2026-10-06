@@ -1,0 +1,19 @@
+In file included from /private/tmp/nano-dispatch-recovery-20261006/http.cpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/network/altair_receipts.hpp:3:
+In file included from /Users/boris/Dev/blockchain-nano/include/nano/types.hpp:2:
+/opt/homebrew/include/gmpxx.h:2163:29: warning: identifier '_mpz' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+ 2163 | inline mpz_class operator"" _mpz(const char* s)
+      |                  ~~~~~~~~~~~^~~~
+      |                  operator""_mpz
+/opt/homebrew/include/gmpxx.h:2168:29: warning: identifier '_mpq' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+ 2168 | inline mpq_class operator"" _mpq(const char* s)
+      |                  ~~~~~~~~~~~^~~~
+      |                  operator""_mpq
+/opt/homebrew/include/gmpxx.h:2175:29: warning: identifier '_mpf' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+ 2175 | inline mpf_class operator"" _mpf(const char* s)
+      |                  ~~~~~~~~~~~^~~~
+      |                  operator""_mpf
+/private/tmp/nano-dispatch-recovery-20261006/http.cpp:18:9: error: 'auto' deduced as 'basic_json<>' in declaration of 'request' and deduced as 'decltype(std::declval<const basic_json_t &>().template get_impl<std::string>(detail::priority_tag<4>{}))' (aka 'std::string') in declaration of 'method'
+   18 |   const auto request=Json::parse(channel->request.body()),method=request.at("method").get<std::string>();const auto& args=request.at("params");need(args[0]=="token"&&args[1]==session&&args[2]=="0x1","HTTP ticket identity changed");++requests;Json result;
+      |         ^            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+3 warnings and 1 error generated.
