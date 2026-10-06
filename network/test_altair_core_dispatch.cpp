@@ -33,8 +33,8 @@ int main(){try{
   auto client=std::make_shared<AltairCoreDispatch>(io,call,profile,"token","session",0,1,3,std::chrono::milliseconds(1));
   check(client->enqueue(message(),flag,[&](D d){++completed;decision=d;}),"initial admission");
   check(!client->enqueue(message(),std::make_shared<std::atomic<bool>>(false),[](D){}),"queue bound bypassed");
-  io.run();
-  if(mode==4||mode==5){check(client->blocked()&&client->pending()==1&&completed==0&&flag->load(),"unknown worker completion released capacity");if(mode==4)check(calls==3,"transport retry bound");}
+  if(mode==4)io.run_for(std::chrono::milliseconds(12));else io.run();
+  if(mode==4||mode==5){check(client->blocked()&&client->pending()==1&&completed==0&&flag->load(),"unknown worker completion released capacity");if(mode==4)check(calls>=3&&calls<15,"bounded transport reconciliation probes");}
   else{check(!client->blocked()&&client->pending()==0&&completed==1,"missing or duplicate completion");check(decision==((mode==2||mode==6)?D::local_failure:D::accepted),"wrong outcome");}
   if(mode==0)check(submits==1,"lost Submit reply repeated admitted work");
   if(mode==1)check(submits==2&&submitted[0]==submitted[1],"unknown admission changed payload/sequence");

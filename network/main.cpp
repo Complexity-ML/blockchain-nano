@@ -88,7 +88,7 @@ class Network {
     const auto& w=result.at("wire");AltairWireProfile profile{result.at("chainId").get<std::string>(),result.at("genesisHash").get<std::string>(),result.at("forkDigest").get<std::string>(),w.at("frameBytes").get<size_t>(),w.at("blockBytes").get<size_t>(),w.at("attestationBytes").get<size_t>(),w.at("slashingBytes").get<size_t>()};
     if(execution_consensus())profile.consensus_identity=result.at("consensusIdentity").get<std::string>();
     profile.bls_changes=capella_mode_;profile.sync_messages=capella_mode_;
-    altair_dispatch_=std::make_shared<AltairCoreDispatch>(io_,call,profile,report_token_,result.at("session").get<std::string>(),result.at("highWater").get<uint64_t>(),result.at("workerJobs").get<size_t>(),3,std::chrono::milliseconds(100));
+    altair_dispatch_=std::make_shared<AltairCoreDispatch>(io_,call,profile,report_token_,result.at("session").get<std::string>(),result.at("highWater").get<uint64_t>(),result.at("workerJobs").get<size_t>(),3,std::chrono::milliseconds(100),trace_network_?AltairCoreDispatch::Trace{[](const char* phase,uint64_t high_water,size_t pending){std::cout<<Json{{"event","test-core-dispatch-transition"},{"phase",phase},{"highWater",high_water},{"pending",pending},{"timeMs",std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()}}.dump()<<std::endl;}}:AltairCoreDispatch::Trace{});
     if(capella_mode_){capella_relay_=result.at("capellaRelay");capella_session_=result.at("session").get<std::string>();status_["capellaSession"]=capella_session_;}
     if(result.at("networkAdmissionEnabled")==true){
      altair_ingress_=std::make_shared<AltairMessageIngress>(profile,inbound_budget_);

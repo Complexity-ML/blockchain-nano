@@ -12,26 +12,35 @@
 class AltairCoreDispatch:public std::enable_shared_from_this<AltairCoreDispatch>{
 public:
  using Call=std::function<void(const std::string&,Json,Reply)>;
+ using Trace=std::function<void(const char*,uint64_t,size_t)>;
 private:
  enum class Operation {submit,query,cancel,forget};
  struct Job {Json frame;AltairWork::Cancellation cancelled;AltairWork::Done done;uint64_t sequence=0;bool admitted=false,uncertain=false;std::optional<AltairWork::Decision> result;};
  asio::io_context& io_;asio::steady_timer timer_;Call call_;
  const AltairWireProfile profile_;const std::string token_,session_;
+ Trace trace_;
  const size_t maximum_;const unsigned failure_limit_;const std::chrono::milliseconds retry_;
  std::deque<Job> jobs_;uint64_t high_water_;unsigned failures_=0;
- bool busy_=false,scheduled_=false,blocked_=false,closing_=false;
+ bool busy_=false,scheduled_=false,blocked_=false,closing_=false,recovering_=false;
  static std::string quantity(uint64_t value){const char* hex="0123456789abcdef";std::string out;do{out.push_back(hex[value&15]);value>>=4;}while(value);std::reverse(out.begin(),out.end());return "0x"+out;}
- void block(){blocked_=true;for(auto& job:jobs_)job.cancelled->store(true);}
+ void trace(const char* event)noexcept{if(trace_)try{trace_(event,high_water_,jobs_.size());}catch(...){}}
+ void block(){blocked_=true;for(auto& job:jobs_)job.cancelled->store(true);trace("protocol-blocked");}
+ void suspend_transport(){
+  const bool first=!recovering_;recovering_=true;for(auto& job:jobs_)job.cancelled->store(true);if(first)trace("transport-suspended");
+  // Keep the exact session, watermark and tickets. Cancel fences delayed
+  // Submit; Forget cannot complete until the core proves worker completion.
+  schedule(retry_*failure_limit_);
+ }
  void schedule(std::chrono::milliseconds delay){
   if(busy_||scheduled_||blocked_||jobs_.empty())return;scheduled_=true;timer_.expires_after(delay);
   timer_.async_wait([self=shared_from_this()](auto error){self->scheduled_=false;if(!error&&!self->blocked_)self->step();});
  }
- void complete(AltairWork::Decision decision){auto done=std::move(jobs_.front().done);jobs_.pop_front();failures_=0;done(decision);schedule(std::chrono::milliseconds(0));}
+ void complete(AltairWork::Decision decision){auto done=std::move(jobs_.front().done);jobs_.pop_front();failures_=0;if(jobs_.empty()&&recovering_){recovering_=false;trace("transport-resumed");}done(decision);schedule(std::chrono::milliseconds(0));}
  void response(Operation operation,Json reply){
   busy_=false;if(blocked_||jobs_.empty())return;auto& job=jobs_.front();
   if(!reply.is_object()||!reply.contains("state")||!reply.at("state").is_string()){
    if(operation==Operation::submit)job.uncertain=true;
-   if(++failures_>=failure_limit_){block();return;}schedule(retry_);return;
+   if(failures_<failure_limit_)++failures_;if(failures_>=failure_limit_){suspend_transport();return;}schedule(retry_);return;
   }
   failures_=0;
   try{
@@ -63,13 +72,14 @@ private:
   try{call_(method,std::move(args),callback);}catch(...){callback(nullptr);}
  }
 public:
- AltairCoreDispatch(asio::io_context& io,Call call,AltairWireProfile profile,std::string token,std::string session,uint64_t high_water,size_t maximum,unsigned failures,std::chrono::milliseconds retry):
- io_(io),timer_(io),call_(std::move(call)),profile_(std::move(profile)),token_(std::move(token)),session_(std::move(session)),maximum_(maximum),failure_limit_(failures),retry_(retry),high_water_(high_water){
+ AltairCoreDispatch(asio::io_context& io,Call call,AltairWireProfile profile,std::string token,std::string session,uint64_t high_water,size_t maximum,unsigned failures,std::chrono::milliseconds retry,Trace trace={}):
+ io_(io),timer_(io),call_(std::move(call)),profile_(std::move(profile)),token_(std::move(token)),session_(std::move(session)),trace_(std::move(trace)),maximum_(maximum),failure_limit_(failures),retry_(retry),high_water_(high_water){
   InboundBudget budget;AltairMessageIngress validate(profile_,budget);
+  if(retry_.count()>std::chrono::milliseconds::max().count()/std::max(1u,failure_limit_))throw std::invalid_argument("Altair recovery delay overflow");
   if(!call_||token_.empty()||session_.empty()||!maximum_||!failure_limit_||retry_<=std::chrono::milliseconds::zero())throw std::invalid_argument("Invalid Altair core dispatch configuration");
  }
  bool enqueue(AltairWireMessage message,AltairWork::Cancellation cancel,AltairWork::Done done){
-  if(blocked_||closing_||!cancel||!done||cancel->load()||jobs_.size()>=maximum_||high_water_==UINT64_MAX)return false;
+  if(blocked_||recovering_||closing_||!cancel||!done||cancel->load()||jobs_.size()>=maximum_||high_water_==UINT64_MAX)return false;
   const auto unissued=jobs_.size()-(!jobs_.empty()&&jobs_.front().sequence?1:0);if(unissued>=UINT64_MAX-high_water_)return false;
   if(message.kind!=AltairWireKind::block&&message.kind!=AltairWireKind::attestation&&message.kind!=AltairWireKind::attester_slashing&&message.kind!=AltairWireKind::voluntary_exit&&message.kind!=AltairWireKind::bls_to_execution_change&&message.kind!=AltairWireKind::sync_committee_message)return false;
   if(message.kind==AltairWireKind::voluntary_exit&&(profile_.consensus_identity.empty()||message.ssz.size()!=112))return false;
@@ -89,6 +99,7 @@ public:
  }
  AltairWork::Dispatch dispatcher(){return [weak=weak_from_this()](auto message,auto cancel,auto done){auto self=weak.lock();return self&&self->enqueue(std::move(message),std::move(cancel),std::move(done));};}
  void stop(){closing_=true;for(auto& job:jobs_)job.cancelled->store(true);schedule(std::chrono::milliseconds(0));}
- bool blocked()const{return blocked_;}
+ bool blocked()const{return blocked_||recovering_;}
+ bool transport_recovering()const{return recovering_&&!blocked_;}
  size_t pending()const{return jobs_.size();}
 };

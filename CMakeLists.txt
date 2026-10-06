@@ -1923,3 +1923,12 @@ set_tests_properties(consensus_capella_block_capacity_pressure PROPERTIES TIMEOU
 
 add_test(NAME consensus_capella_atomic_proposal_admission COMMAND nano-capella-transition-tests --atomic-proposal)
 set_tests_properties(consensus_capella_atomic_proposal_admission PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_runtime")
+
+# Same-session transport recovery keeps uncertain tickets until server retirement.
+foreach(NANO_DISPATCH_CASE transport receipt http)
+ add_executable(nano-dispatch-${NANO_DISPATCH_CASE}-recovery-tests tests/test_dispatch_${NANO_DISPATCH_CASE}_recovery.cpp)
+ target_link_libraries(nano-dispatch-${NANO_DISPATCH_CASE}-recovery-tests PRIVATE nano_core)
+ target_compile_definitions(nano-dispatch-${NANO_DISPATCH_CASE}-recovery-tests PRIVATE FMT_CONSTEVAL=)
+ add_test(NAME consensus_dispatch_${NANO_DISPATCH_CASE}_recovery COMMAND nano-dispatch-${NANO_DISPATCH_CASE}-recovery-tests)
+ set_tests_properties(consensus_dispatch_${NANO_DISPATCH_CASE}_recovery PROPERTIES TIMEOUT 30 LABELS "qualification_consensus_ethereum")
+endforeach()
