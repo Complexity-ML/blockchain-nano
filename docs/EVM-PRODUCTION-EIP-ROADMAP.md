@@ -4936,3 +4936,6 @@ Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, d
 
 
 2026-10-06 — Préparation V28 : états post-V27 audités et revérifiés, pins possédés 16/16/33 et historiques conservés séparément, copies Mac sans peer.key et volume VPS réutilisé sur son hôte. Cœur 02ec0ab0 qualifié dans huit modes sur trois architectures ; relais 2f93dda0 réutilisé avec 35 dépendances projet inchangées par architecture. Mêmes quotas et trois nouvelles finalités communes en 900 s à démontrer. Aucun signataire lancé ni image reconstruite. V27 FAILED, cause globale et critères non démontrés/revue indépendante ouverts. Preuves restored-three-node-v28-reactor-failfast-prepare-20261006/.
+
+
+2026-10-06 — V28 rejet préalable 93900/1 avant démarrage : garde du dossier network inclut le header sessions core modifié. Copies locales inchangées, zéro signataire/nœud/arrêt. Métadonnées rectifiées : alignement relayRevision 02ec0ab0, origine relayBuildRevision 2f93dda0 ; 35 entrées compilateur et hashes des mêmes binaires vérifiés, aucun garde désactivé. [Échec conservé](qualification/restored-three-node-v28-preflight-rejection-20261006/README.md). Première campagne effective et finalité restent à démontrer.

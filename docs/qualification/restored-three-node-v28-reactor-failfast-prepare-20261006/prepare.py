@@ -47,8 +47,10 @@ prep.mkdir(exist_ok=False);root.mkdir(exist_ok=False);save(prep/'input.json',inp
 assert not subprocess.check_output(['git','diff','HEAD','--','src','include','tests/test_capella_transition.cpp','CMakeLists.txt'],cwd=repo),'Candidate core not committed'
 revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=repo,text=True).strip()
 assert revision==sys.argv[1]
-artifacts['coreRevision']=revision;artifacts['relayRevision']='2f93dda09ce9765e5240d9ddcb3d74b82144138f'
-artifacts['coreBuildRevision']=revision
+compiled_inputs=read(Path('/private/tmp/nano-catalog-reactor-failfast-20261006/source-worktree-match.json'))['matched']
+assert len(compiled_inputs)==1602 and all(sha(repo/k)==v for k,v in compiled_inputs.items()), 'Current sources differ from qualified frozen core'
+artifacts['coreRevision']=revision;artifacts['relayRevision']=revision;artifacts['relaySourceAlignmentRevision']=revision
+artifacts['coreBuildRevision']='02ec0ab0b3841a09ffa5749cc9db54faa61a2b20'
 artifacts['relayBuildRevision']='2f93dda09ce9765e5240d9ddcb3d74b82144138f';artifacts['relayReuseProof']='relay-reuse/reuse-boundary.json'
 artifacts['relayCompilerInputsUnchangedFromBuildRevision']=True
 artifacts['relayReuseScope']='35 project compiler inputs per architecture; explicit busy handling and retry headers included; qualified snapshot identical to committed runtime inputs'

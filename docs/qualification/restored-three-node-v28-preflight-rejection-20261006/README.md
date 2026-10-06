@@ -1,0 +1,5 @@
+# V28 : rejet préalable, aucun nœud démarré
+
+Original 93900 / sortie 1. Le garde git diff du dossier network rejette relayRevision=2f93dda0 : le header capella_inventory_sessions.hpp a changé dans le lot core 02ec0ab0. Les 35 fichiers réellement compilés dans chaque nano-p2p sont inchangés, mais les métadonnées confondaient origine de compilation et révision d’alignement du dossier. Aucun signataire ni conteneur n’a été lancé, zéro reçu d’arrêt et baseline null. Les copies locales sont revérifiées inchangées.
+
+Correction des seules métadonnées : relayRevision/relaySourceAlignmentRevision=02ec0ab0, relayBuildRevision=2f93dda0. Ce changement ne prétend pas qu’une compilation du relais a eu lieu : mêmes hashes de binaires et preuve des 35 entrées compilateur inchangées. Le contrôleur conserve son garde du dossier entier ; aucun test/garde n’est désactivé. Échec initial et préparation originale conservés ici. La première campagne effective reste à lancer avec les mêmes données, quotas et critères.

@@ -5,3 +5,5 @@
 Cœur 02ec0ab0 : huit modes concernés passent sur natif, Docker ARM64 et Docker AMD64. Les erreurs de driver initiales sont conservées. Relais 2f93dda0 réutilisé avec 35 entrées compilateur projet inchangées par architecture. Les exécutables core corrigés et leurs hashes figurent dans artifacts.json. Aucune image reconstruite.
 
 Mêmes limites 1024 blocs et quorum. Trois nouvelles finalités communes distinctes requises en 900 secondes, baseline epoch 1284. Préparation seule, aucun signataire lancé. V27 FAILED et contre-exemple EE5 conservés ; cause globale WAN, tous critères non démontrés et revue indépendante ouverts.
+
+Correction après rejet préalable 93900/1 : relayRevision désigne l’alignement source 02ec0ab0 ; relayBuildRevision conserve 2f93dda0 et les mêmes binaires. 35 entrées compilateur inchangées par architecture, garde du dossier entier conservé. Aucun nœud lancé ni fichier de données changé lors du premier essai. Préparation originale et échec dans restored-three-node-v28-preflight-rejection-20261006.
