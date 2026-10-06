@@ -73,6 +73,7 @@ static bool owner_sync=false;
 static bool owner_witness=false;
 static bool scheduled=false,sync_rotation=false,clock_diagnostics=false,duty_timing=false,signer_health=false;
 static bool configured_runtime=false;
+static bool runtime_catalog_preflight=false;
 static bool slot_continuation=false,prepared_block=false,capacity_pressure=false,atomic_proposal=false,proposal_gap=false,incoming_alternation=false,vote_target_alternation=false,incoming_parent_interference=false;
 static bool automatic_recovery=false;
 static bool capella_http=false,capella_http_queue=false;
@@ -892,6 +893,23 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
   for(const auto& value:std::vector<Json>{"0x0","0x01",Json(1),quantity(Int(std::to_string(limits.envelope_bytes+1)))}){auto invalid=config;invalid["coldCheckpoint"]["cacheEncodedBytes"]=value;invalids.push_back(invalid);}
   auto invalid=config;invalid["coldCheckpoint"]["unexpected"]=true;invalids.push_back(invalid);
   for(const auto& selected:invalids){bool refused=false;try{auto rejected=start_capella_runtime(*owner,selected,{},[]{return uint64_t(0);});}catch(const std::invalid_argument&){refused=true;}check(refused&&!owner->store().fork_checkpoint(g.chain_id,g.block.header.hash(),limits.envelope_bytes)&&!fs::exists(directory/"witness"),"invalid cold budget created checkpoint or witness");}
+ }
+ if(runtime_catalog_preflight){
+  config["coldCheckpoint"]={{"cacheRecords","0x8"},{"cacheEncodedBytes",quantity(Int(std::to_string(limits.envelope_bytes)))}};
+  config["catalogs"]={{"handles","0x2"},{"rootBytes","0x10000"},{"ttlMs","0xea60"}};
+  std::vector<Json> invalids;
+  for(const auto& [field,value]:std::vector<std::pair<std::string,Json>>{{"rootBytes","0x1"},{"rootBytes","0x0"},{"handles","0x0"},{"ttlMs","0x0"},{"ttlMs","0xffffffffffffffff"},{"rootBytes","0x010000"}}){auto bad=config;bad["catalogs"][field]=value;invalids.push_back(bad);}
+  auto bad=config;bad["catalogs"]["unexpected"]=true;invalids.push_back(bad);
+  for(const auto& candidate:invalids){bool rejected=false;try{auto unused=start_capella_runtime(*owner,candidate,{},[]{return uint64_t(0);});}catch(const std::invalid_argument&){rejected=true;}check(rejected&&!fs::exists(directory/"witness")&&!owner->store().fork_checkpoint(g.chain_id,g.block.header.hash(),limits.envelope_bytes),"catalog preflight created bootstrap checkpoint/witness");}
+  ChainStore witness(directory/"witness");ForkCheckpointToken original;
+  {CapellaDurableReactor seed(*owner,rules,limits,initial,{},&witness);original=seed.current().token;}
+  const auto before=owner->store().fork_checkpoint(g.chain_id,g.block.header.hash(),limits.envelope_bytes,original);
+  const auto witness_before=witness.fork_checkpoint(g.chain_id,g.block.header.hash(),2048+8*limits.envelope_bytes);
+  for(auto candidate:invalids){candidate["initial"]=nullptr;candidate["recoveryCommitment"]={{"sequence",quantity(Int(std::to_string(original.sequence)))},{"digest",hex(Bytes(original.digest.begin(),original.digest.end()))}};bool rejected=false;try{auto unused=start_capella_runtime(*owner,candidate,{},[]{return uint64_t(0);});}catch(const std::invalid_argument&){rejected=true;}
+   const auto after=owner->store().fork_checkpoint(g.chain_id,g.block.header.hash(),limits.envelope_bytes),witness_after=witness.fork_checkpoint(g.chain_id,g.block.header.hash(),2048+8*limits.envelope_bytes);
+   check(rejected&&after&&before&&after->token==before->token&&after->snapshot==before->snapshot&&witness_before&&witness_after&&witness_before->token==witness_after->token&&witness_before->snapshot==witness_after->snapshot,"catalog preflight published migration or changed independent witness");
+  }
+  std::cout<<Json{{"scenario","capella-runtime-catalog-preflight"},{"bootstrapRefusals",invalids.size()},{"coldMigrationRefusals",invalids.size()},{"noBootstrapWrites",true},{"primaryAndWitnessUnchanged",true},{"keysLoaded",0},{"networkQualified",false}}.dump()<<std::endl;return;
  }
  // Invalid tolerance is rejected before any checkpoint publication.
  for(const auto& drift:std::vector<Json>{"0x0","0x01",Json(1),quantity(Int(std::to_string(rules.attestation_due_ms))),quantity(Int(std::to_string(2*rules.slot_duration_ms)))}){
@@ -2849,6 +2867,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
 }
 #include "support/capella_exit_owner.hpp"
 int main(int argc,char** argv){try{executable=argv[0];
+if(argc==2&&std::string(argv[1])=="--runtime-catalog-preflight"){runtime_catalog_preflight=true;configured_runtime=true;scenario(false);return 0;}
 if(argc==2&&(std::string(argv[1])=="--atomic-proposal"||std::string(argv[1])=="--proposal-gap")){atomic_proposal=std::string(argv[1])=="--atomic-proposal";proposal_gap=!atomic_proposal;prepared_block=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--capacity-pressure"){capacity_pressure=true;prepared_block=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--incoming-parent-interference"){incoming_parent_interference=true;prepared_block=true;scenario(false);return 0;}

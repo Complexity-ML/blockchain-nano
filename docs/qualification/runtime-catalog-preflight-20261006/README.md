@@ -1,0 +1,11 @@
+# Préflight catalogue avant recovery/migration
+
+Parent77566654, core cohérent e33ad89e. Garde shape/capacité/handles/TTL déplacée avant ouverture du témoin et toute publication de checkpoint. Construction du catalogue réutilise les paramètres validés ; aucune règle de consensus, clé ou format disque changé. Une seule TU core recompilée, archive copiée/relinkée vers de nouveaux chemins ; binaires parents inchangés, aucune image reconstruite.
+
+Scénario nouveau `--runtime-catalog-preflight` : sept refus bootstrap (shape,quantités/capacité,handles,TTL), sans checkpoint/témoin créé, puis mêmes sept refus sur checkpoint existant avec migration froide demandée. Token/snapshot principal et témoin exactement inchangés, zéro clé chargée. Terminales : ARM64 session98448/0, natif88852/0, AMD6425869/0. Ce test couvre les refus avant migration ; il ne qualifie pas la reprise réseau de la candidate corrigée, ni les vieux427/EEST complets. Gate CMake ajoutée, qualification ici via appels directs de ces binaires, pas par un nouveau configure/CTest complet.
+
+Planner/helper : catalogue couplé à la capacité de graphe/messages/equivocations, catalogRootBytes explicite quand nécessaire, borné par le budget local de capture. Source/root handles/TTL/clock/pins préservés, seul rootBytes explicitement demandé peut changer.78 tests intégrés passent, incluant refus du budget omis/insuffisant/noncanonique/excessif et comparaison complète avec le planner indépendant. Les cas million restent des tests de parsing/dérivation, pas un réseau million de validateurs.
+
+Erreurs pilotes conservées : python absent des images (aucune installation), puis chemin d'en-tête fixture manquant. Reprises avec Python hôte et -I/work/tests ; le core déjà compilé est réutilisé pour les reprises fixture, sans recompilation core injustifiée. Sources patch et commandes exactes, hashes des programmes parents/nouveaux et logs sont archivés.
+
+V29 FAILED conservé séparément. Le checkpoint VPS migré authentifié n'est pas effacé ; pins33 inchangés, copie source V28 préservée. Préparer la prochaine reprise depuis ce checkpoint et les snapshots Mac exacts, budget catalogue128KiB cohérent pour4096 records, puis démontrer duties et nouvelle finalité WAN. Revue indépendante, autres critères de production/EIP et Base–Nano restent ouverts.

@@ -1,0 +1,11 @@
+from pathlib import Path
+import json,subprocess
+root=Path('/tmp/nano-restored-three-node-vps-mux7cfxf');out=root/'post-failure-readonly-audit-v3';old=Path('/tmp/nano-current-core-v28-readonly-20261006');volume='nano-restored-three-node-vps-20261005-data'
+assert json.loads((out/'exit.json').read_text())['exitCode']==0
+state=json.loads(subprocess.check_output(['sudo','-n','docker','inspect',root.name,'--format','{{json .State}}'],text=True));assert state['Status']=='exited' and state['ExitCode']==1 and not state['OOMKilled'];assert not subprocess.check_output(['sudo','-n','docker','ps','-q','--filter','volume='+volume],text=True).strip()
+current=json.loads((out/'capture.json').read_text());prior=json.loads((old/'capture.json').read_text());assert current['validatorKeys']==prior['validatorKeys'];assert current['primaryWitnessAndSignersVerified'] and current['readOnlyStores']
+oldseq=int(prior['restart']['sequence'],16);newseq=int(current['restart']['sequence'],16);assert newseq==oldseq+1
+for cap in [current,prior]:assert cap['canonicalReplay']['checkpointSequence']==int(cap['restart']['sequence'],16) and cap['canonicalReplay']['checkpointDigest']==cap['restart']['digest']
+omit={'checkpointSequence','checkpointDigest'};assert {k:v for k,v in current['canonicalReplay'].items() if k not in omit}=={k:v for k,v in prior['canonicalReplay'].items() if k not in omit}
+before=(out/'data-before.sha256').read_text();after=subprocess.check_output(['sudo','-n','docker','run','--rm','--network','none','--read-only','-v',volume+':/var/lib/nano:ro','--entrypoint','sh','fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14','-c','find /var/lib/nano -type f -exec sha256sum {} + | sort'],text=True);assert before==after
+receipt={'files':len(before.splitlines()),'auditHashesUnchanged':True,'signerPinsUnchanged':True,'canonicalReplayUnchangedExceptCheckpointToken':True,'migrationCheckpointSequenceIncrement':1,'oldCheckpoint':prior['restart'],'currentCheckpoint':current['restart'],'independentWitnessVerified':True,'sourceObservedExited1NoOom':True,'readOnly':True,'dutiesResumed':False,'networkQualified':False,'verificationCorrection':'Compare the migrated checkpoint separately; all canonical replay fields otherwise exact.'};(out/'immutability.json').write_text(json.dumps(receipt,indent=2)+'\n');print(json.dumps(receipt),flush=True)

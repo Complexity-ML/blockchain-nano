@@ -8,7 +8,7 @@ const root=fileURLToPath(new URL('../../',import.meta.url)).replace(/\/$/,'');
 const fixture=JSON.parse(readFileSync(root+'/docs/qualification/restored-three-node-prepare-20261005/input.json','utf8'));
 const helper=root+'/tests/capella/vps-local-launch-prepare.py';
 const binary='/build/coherent-e33ad89e-amd64/network/nano-p2p';
-const options={retentionExperiment:{blocks:'0x1000',rationale:'Bounded cold restoration beyond the historical graph boundary.',captureBudget:{blocks:'0x1000',envelopeBytes:'0x8000000'}},coldCheckpoint:{cacheRecords:'0x8',cacheEncodedBytes:'0x1000000'}};
+const options={retentionExperiment:{blocks:'0x1000',catalogRootBytes:'0x20000',rationale:'Bounded cold restoration beyond the historical graph boundary.',captureBudget:{blocks:'0x1000',envelopeBytes:'0x8000000'}},coldCheckpoint:{cacheRecords:'0x8',cacheEncodedBytes:'0x1000000'}};
 function derive(input=fixture, runtime={}, path=binary){
  const r=spawnSync('python3',['-B','-c',`import importlib.util,json,sys\ns=importlib.util.spec_from_file_location('helper',sys.argv[1]);m=importlib.util.module_from_spec(s);s.loader.exec_module(m)\nx=json.load(sys.stdin);print(json.dumps(m.derive(x['input']['vpsConfig'],x['input']['vpsCapsule'],8545,30303,x['binary'],x['options'])))`,helper],{input:JSON.stringify({input,options:runtime,binary:path}),encoding:'utf8'});
  return r.status===0?{value:JSON.parse(r.stdout)}:{error:true};
@@ -24,6 +24,10 @@ for(const [name,change] of [
  ['noncanonical count',o=>o.retentionExperiment.blocks='0x01000'],
  ['uint64 overflow',o=>o.retentionExperiment.blocks='0x10000000000000000'],
  ['witness overflow',o=>o.retentionExperiment.captureBudget.envelopeBytes='0xffffffffffffffff'],
+ ['missing coupled inventory budget',o=>delete o.retentionExperiment.catalogRootBytes],
+ ['insufficient coupled inventory budget',o=>o.retentionExperiment.catalogRootBytes='0x10000'],
+ ['noncanonical catalog budget',o=>o.retentionExperiment.catalogRootBytes='0x020000'],
+ ['excessive catalog budget',o=>o.retentionExperiment.catalogRootBytes='0x8000001'],
  ['missing rationale',o=>delete o.retentionExperiment.rationale],
  ['unknown consensus override',o=>o.retentionExperiment.profile='changed'],
  ['cold records beyond budget',o=>o.coldCheckpoint.cacheRecords='0x1001'],

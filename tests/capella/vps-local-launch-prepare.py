@@ -20,12 +20,17 @@ def apply_runtime_options(configuration,options):
  assert isinstance(options,dict) and set(options)<={'retentionExperiment','coldCheckpoint'}
  c=copy.deepcopy(configuration);a=c['capella'];limits=a['limits']
  if 'retentionExperiment' in options:
-  e=options['retentionExperiment'];assert isinstance(e,dict) and set(e) in ({'blocks','rationale'},{'blocks','rationale','captureBudget'})
+  e=options['retentionExperiment'];assert isinstance(e,dict) and {'blocks','rationale'}<=set(e)<={'blocks','rationale','captureBudget','catalogRootBytes'}
   assert isinstance(e['rationale'],str) and len(e['rationale'].strip())>=20 and len(e['rationale'])<=2048
   budget=e.get('captureBudget',{'blocks':'0x400','envelopeBytes':'0x8000000'});assert isinstance(budget,dict) and set(budget)=={'blocks','envelopeBytes'}
   target=positive_quantity(e['blocks']);count=positive_quantity(budget['blocks']);size=positive_quantity(budget['envelopeBytes'])
   assert size<=(2**64-1-2048)//8 and count<=size
   assert positive_quantity(limits['blocks'])<target<=count and positive_quantity(limits['envelopeBytes'])<=size
+  if 'catalogRootBytes' in e:
+   roots=positive_quantity(e['catalogRootBytes']);assert roots<=size
+  else:roots=positive_quantity(a['catalogs']['rootBytes'])
+  assert roots>=positive_quantity(a['catalogs']['rootBytes']) and max(target,positive_quantity(limits['messages']),positive_quantity(limits['equivocations']))<=roots//32
+  if 'catalogRootBytes' in e:a['catalogs']['rootBytes']=e['catalogRootBytes']
   limits['blocks']=e['blocks']
  if 'coldCheckpoint' in options:
   cold=options['coldCheckpoint'];assert isinstance(cold,dict) and set(cold)=={'cacheRecords','cacheEncodedBytes'}

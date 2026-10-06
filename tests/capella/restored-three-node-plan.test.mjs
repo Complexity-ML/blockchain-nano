@@ -87,7 +87,7 @@ test('cold planner preserves already matching source options',()=>{
 });
 
 for(const blocks of ['0x401','0x1000','0xf4240'])test('explicit capture budget permits local retained graph '+blocks+' without changing pins',()=>{
- const x=structuredClone(fixture);x.retentionExperiment={blocks,rationale:'Explicit bounded cold metadata experiment; saturation recovery remains open.',captureBudget:{blocks,envelopeBytes:x.macConfig.capella.limits.envelopeBytes}};const before=structuredClone(x),p=restoredThreeNodePlan(x),base=restoredThreeNodePlan(fixture);assert.deepEqual(x,before);assert.deepEqual(p.sourceCheckpoints,base.sourceCheckpoints);assert.deepEqual(p.baseline,base.baseline);assert.deepEqual(p.retentionBudget.captureBudget,x.retentionExperiment.captureBudget);for(const c of p.configs)assert.equal(c.capella.limits.blocks,blocks);assert.equal(p.retentionBudget.oldBoundaryRecoveryQualified,false);
+ const x=structuredClone(fixture);x.retentionExperiment={blocks,catalogRootBytes:'0x'+(32n*(BigInt(blocks)>2048n?BigInt(blocks):2048n)).toString(16),rationale:'Explicit bounded cold metadata experiment; saturation recovery remains open.',captureBudget:{blocks,envelopeBytes:x.macConfig.capella.limits.envelopeBytes}};const before=structuredClone(x),p=restoredThreeNodePlan(x),base=restoredThreeNodePlan(fixture);assert.deepEqual(x,before);assert.deepEqual(p.sourceCheckpoints,base.sourceCheckpoints);assert.deepEqual(p.baseline,base.baseline);assert.deepEqual(p.retentionBudget.captureBudget,x.retentionExperiment.captureBudget);for(const c of p.configs)assert.equal(c.capella.limits.blocks,blocks);assert.equal(p.retentionBudget.oldBoundaryRecoveryQualified,false);
 });
 for(const [name,change] of [
  ['capture count too small',p=>p.blocks='0x400'],

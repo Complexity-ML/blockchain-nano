@@ -62,6 +62,16 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const 
   if(*wall_drift>=rules.attestation_due_ms||*wall_drift>=step)throw std::invalid_argument("Capella wall drift budget must be below duty deadline and recovery step");
  }
  if(interval>uint64_t(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::duration::max()/2).count()))throw std::invalid_argument("Capella clock interval range");
+ // Administrative inventory capacity must be coherent before recovery can
+ // create a witness or publish a cold migration checkpoint.
+ std::optional<std::array<uint64_t,3>> catalog_limits;
+ if(config.contains("catalogs")){
+  const auto& c=config.at("catalogs");shape(c,{"handles","rootBytes","ttlMs"});const auto handles=number(c.at("handles")),bytes=number(c.at("rootBytes")),ttl=number(c.at("ttlMs"));
+  if(!handles||!bytes||!ttl||handles>SIZE_MAX||bytes>SIZE_MAX)throw std::invalid_argument("Invalid Capella inventory session limits");
+  if(std::max({limits.blocks,limits.messages,limits.equivocations})>bytes/sizeof(ConsensusRoot))throw std::invalid_argument("Capella catalog budget below configured inventory capacity");
+  if(ttl>uint64_t(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::duration::max()/2).count()))throw std::invalid_argument("Capella catalog TTL range");
+  catalog_limits=std::array<uint64_t,3>{handles,bytes,ttl};
+ }
  const bool restart=!config.at("restart").is_null();
  const bool witnessed=config.contains("recoveryWitness");
  std::optional<ForkCheckpointToken> recovery_commitment;
@@ -120,10 +130,8 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const 
   if(vote<228+(committee+8)/8||slash<464+16*committee||block<rules.transition.consensus.maximum_block_bytes||bytes<largest||frame<1024||largest>(frame-1024)/2)throw std::invalid_argument("Capella admission cannot carry configured messages");
   owner->admission=std::make_unique<CapellaConsensusService>(*owner->reactor,owner->decoder_budget,frame,block,vote,slash,jobs,bytes,[clock=owner->clock.get()](const auto& check){clock->poll(check);});
  }
- if(config.contains("catalogs")){
-  const auto& c=config.at("catalogs");shape(c,{"handles","rootBytes","ttlMs"});const auto handles=number(c.at("handles")),bytes=number(c.at("rootBytes")),ttl=number(c.at("ttlMs"));
-  if(std::max({limits.blocks,limits.messages,limits.equivocations})>bytes/sizeof(ConsensusRoot))throw std::invalid_argument("Capella catalog budget below configured inventory capacity");
-  if(ttl>uint64_t(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::duration::max()/2).count()))throw std::invalid_argument("Capella catalog TTL range");
+ if(catalog_limits){
+  const auto [handles,bytes,ttl]=*catalog_limits;
   owner->catalogs=std::make_unique<CapellaInventorySessions>(*owner->reactor,handles,bytes,std::chrono::milliseconds(ttl));
  }
  Json network=Json::object();

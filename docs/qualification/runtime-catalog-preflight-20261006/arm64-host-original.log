@@ -1,0 +1,11 @@
+stage exit0
+compile-runtime exit0
+replace-runtime-object exit0
+Traceback (most recent call last):
+  File "/private/tmp/nano-runtime-catalog-preflight-20261006/host-build.py", line 18, in <module>
+    run('compile-fixture',['/usr/bin/clang++']+flags('nano-capella-transition-tests.dir')+['-c',out+'/source/tests/test_capella_transition.cpp','-o',out+'/fixture.o'])
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/nano-runtime-catalog-preflight-20261006/host-build.py", line 11, in run
+    (probe/(name+'-exit.json')).write_text(json.dumps({'exitCode':r.returncode})+'\n');assert r.returncode==0,(name,r.returncode);print(name+' exit0',flush=True)
+                                                                                              ^^^^^^^^^^^^^^^
+AssertionError: ('compile-fixture', 1)

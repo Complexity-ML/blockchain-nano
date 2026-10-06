@@ -27,7 +27,8 @@ export function restoredThreeNodePlan({macConfig,vpsConfig,macCapsule,vpsCapsule
  if(retentionExperiment!==undefined){
   assert.ok(retentionExperiment&&typeof retentionExperiment==='object'&&!Array.isArray(retentionExperiment));
   const explicit=Object.hasOwn(retentionExperiment,'captureBudget');
-  assert.deepEqual(Object.keys(retentionExperiment).sort(),explicit?['blocks','captureBudget','rationale']:['blocks','rationale']);
+  const catalogExplicit=Object.hasOwn(retentionExperiment,'catalogRootBytes');
+  assert.deepEqual(Object.keys(retentionExperiment).sort(),['blocks','rationale',...(explicit?['captureBudget']:[]),...(catalogExplicit?['catalogRootBytes']:[])].sort());
   assert.match(retentionExperiment.blocks,/^0x[1-9a-f][0-9a-f]*$/);
   assert.ok(typeof retentionExperiment.rationale==='string'&&retentionExperiment.rationale.trim().length>=20&&retentionExperiment.rationale.length<=2048);
   const source=structuredClone(mac.capella.limits),target=BigInt(retentionExperiment.blocks);
@@ -39,8 +40,15 @@ export function restoredThreeNodePlan({macConfig,vpsConfig,macCapsule,vpsCapsule
   const captureBlocks=BigInt(captureBudget.blocks),captureBytes=BigInt(captureBudget.envelopeBytes);
   assert.ok(captureBytes<=(0xffffffffffffffffn-2048n)/8n&&captureBlocks<=captureBytes,'Capture witness/resource budget overflow');
   assert.ok(target<=captureBlocks&&BigInt(source.envelopeBytes)<=captureBytes,'Experiment exceeds explicit capture resource budget');
-  for(const c of configs)c.capella.limits.blocks=retentionExperiment.blocks;
-  retentionBudget={...(explicit?{captureBudget:structuredClone(captureBudget)}:{}),sourceLimits:source,candidateLimits:structuredClone(configs[0].capella.limits),rationale:retentionExperiment.rationale,oldBoundaryRecoveryQualified:false,productionQualified:false};
+  if(catalogExplicit){assert.equal(typeof retentionExperiment.catalogRootBytes,'string');assert.match(retentionExperiment.catalogRootBytes,/^0x[1-9a-f][0-9a-f]*$/);assert.ok(BigInt(retentionExperiment.catalogRootBytes)<=captureBytes,'Catalog exceeds explicit local capture resource budget');}
+  for(const c of configs){
+   const roots=catalogExplicit?BigInt(retentionExperiment.catalogRootBytes):BigInt(c.capella.catalogs.rootBytes);
+   const required=[target,BigInt(c.capella.limits.messages),BigInt(c.capella.limits.equivocations)].reduce((a,b)=>a>b?a:b);
+   assert.ok(roots>=BigInt(c.capella.catalogs.rootBytes)&&required<=roots/32n,'Catalog budget below candidate graph/inventory capacity');
+   if(catalogExplicit)c.capella.catalogs.rootBytes=retentionExperiment.catalogRootBytes;
+   c.capella.limits.blocks=retentionExperiment.blocks;
+  }
+  retentionBudget={...(catalogExplicit?{catalogRootBytes:retentionExperiment.catalogRootBytes}:{}),...(explicit?{captureBudget:structuredClone(captureBudget)}:{}),sourceLimits:source,candidateLimits:structuredClone(configs[0].capella.limits),rationale:retentionExperiment.rationale,oldBoundaryRecoveryQualified:false,productionQualified:false};
  }
  // Explicit startup migration; no source files, pins or consensus profile change.
  let coldCheckpointPlan;
