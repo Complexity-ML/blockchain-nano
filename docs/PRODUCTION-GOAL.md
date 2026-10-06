@@ -4485,3 +4485,6 @@ Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, d
 
 
 2026-10-06 — Complément de revue : garde après fermeture du relais avant toute mutation du curseur. Un seul header change ; 12 cas affectés et runtime passent en natif/ARM64/AMD64. Wire précédent réutilisé après scan réel de dépendances et hashes des autres entrées inchangés ; aucun rejeu identique. [Preuves](qualification/timeout-closed-guard-integrated-20261006/README.md). Finalité WAN V24, autres critères et revue indépendante toujours ouverts.
+
+
+2026-10-06 — Préparation v25 : états Mac/VPS post-v24 et témoins audités, copies locales sans identité de pair et volume VPS conservé sur son hôte. Cœur inchangé et relais de reprise après délai qualifié dans son périmètre natif/ARM64/AMD64 ; mêmes limites, trois nouvelles finalités communes en 900 s à démontrer. Préparation seule, échec V24 et revue indépendante ouverts. Preuves restored-three-node-v25-timeout-preparation-prepare-20261006/.
