@@ -1,0 +1,86 @@
+{
+  "mac-native": {
+    "sends": {
+      "unconfirmed|block": 538,
+      "accepted|block": 107,
+      "unconfirmed|sync_committee_message": 7
+    },
+    "streamReasons": {
+      "accepted-ack-written": 40,
+      "frame-read-failed": 5
+    },
+    "catalogues": {
+      "block|head-admission-unconfirmed": 9,
+      "attestation|None": 5,
+      "attester_slashing|None": 9,
+      "bls_to_execution_change|None": 9,
+      "sync_committee_message|None": 2,
+      "voluntary_exit|None": 9,
+      "block|head-or-catalog-deadline": 1,
+      "attestation|admission-rejected": 38,
+      "sync_committee_message|delivery-unconfirmed": 7,
+      "attestation|cancelled-or-deadline": 2
+    },
+    "dispatchTransitions": []
+  },
+  "mac-docker": {
+    "sends": {
+      "accepted|block": 114,
+      "unconfirmed|block": 489,
+      "unconfirmed|sync_committee_message": 8
+    },
+    "streamReasons": {
+      "accepted-ack-written": 56,
+      "frame-read-failed": 7
+    },
+    "catalogues": {
+      "block|head-or-catalog-deadline": 1,
+      "attestation|admission-rejected": 38,
+      "attester_slashing|None": 8,
+      "bls_to_execution_change|None": 8,
+      "sync_committee_message|delivery-unconfirmed": 8,
+      "voluntary_exit|None": 7,
+      "block|head-admission-unconfirmed": 7
+    },
+    "dispatchTransitions": []
+  },
+  "vps-docker": {
+    "sends": {
+      "accepted|block": 96
+    },
+    "streamReasons": {
+      "accepted-ack-written": 223,
+      "deadline": 40,
+      "dispatch-unavailable": 306,
+      "frame-read-failed": 2
+    },
+    "catalogues": {
+      "block|dependency-quantum-yield": 11,
+      "attestation|None": 4,
+      "attester_slashing|None": 19,
+      "bls_to_execution_change|None": 18,
+      "attestation|admission-rejected": 82,
+      "sync_committee_message|None": 16,
+      "voluntary_exit|None": 18,
+      "attestation|export-unconfirmed": 2,
+      "block|head-admission-unconfirmed": 3,
+      "block|head-reference-unavailable": 6,
+      "attestation|incomplete": 9,
+      "block|head-or-catalog-deadline": 1,
+      "sync_committee_message|invalid-response": 12,
+      "block|admission-rejected": 2,
+      "block|invalid-response": 8,
+      "attester_slashing|incomplete": 2,
+      "attestation|invalid-response": 49,
+      "voluntary_exit|invalid-response": 10,
+      "attester_slashing|invalid-response": 9,
+      "bls_to_execution_change|invalid-response": 10,
+      "attestation|export-unavailable": 1,
+      "attestation|cancelled-or-deadline": 1,
+      "sync_committee_message|incomplete": 1,
+      "voluntary_exit|incomplete": 1,
+      "bls_to_execution_change|incomplete": 2
+    },
+    "dispatchTransitions": []
+  }
+}

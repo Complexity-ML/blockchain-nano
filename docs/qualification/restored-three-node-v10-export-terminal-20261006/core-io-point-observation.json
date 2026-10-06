@@ -1,0 +1,46 @@
+{
+  "capturedAt": "2026-10-06T01:19:38.301476+00:00",
+  "sourceSample": "vps-thread-sample-011510.json",
+  "sampleSha256": "251782ec7b050aa8b7a3168b2dccc7cc2323d160cddee2c31385f6b6cff6268e",
+  "processes": {
+    "nano": {
+      "writeBytesDelta": 53964800,
+      "readBytesDelta": 0,
+      "userAndSystemTicksDelta": 296,
+      "afterStatus": {
+        "VmRSS": "777840 kB",
+        "VmHWM": "1046112 kB",
+        "Threads": "10"
+      },
+      "intervalSeconds": 2
+    },
+    "nano-p2p": {
+      "writeBytesDelta": 0,
+      "readBytesDelta": 0,
+      "userAndSystemTicksDelta": 5,
+      "afterStatus": {
+        "VmRSS": "17320 kB",
+        "VmHWM": "17464 kB",
+        "Threads": "1"
+      },
+      "intervalSeconds": 2
+    }
+  },
+  "interpretation": "Core CPU and write cost observed; does not establish causal attribution of finality nonprogress. nano-p2p is not the observed disk writer. Full snapshot publication and witness intent are source inspection leads, not a measured per-operation latency.",
+  "campaignSession": 76765,
+  "sourceRevision": "e6b166c41288aea2385f6119c333718156b50fba",
+  "originalDeadlineRetained": true,
+  "networkSuccess": false,
+  "productionReady": false,
+  "sampleCollectionHistory": [
+    {
+      "tool": "python3 inside existing Docker image",
+      "exit": 127,
+      "reason": "Python absent, no package installed"
+    },
+    {
+      "tool": "Python3 on VPS host reading process counters",
+      "exit": 0
+    }
+  ]
+}

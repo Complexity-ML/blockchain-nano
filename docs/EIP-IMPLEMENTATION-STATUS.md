@@ -7182,3 +7182,6 @@ Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichi
 
 
 2026-10-06 — Préparation v10 : engagements exacts post-v9 (arrêt VPS complémentaire documenté), core bc6d1794 et relais 76bb2468. Copies Mac locales et volume VPS conservés ; aucun journal réinitialisé/fusionné. Export retenu qualifié sans verrou d’admission ; profil/limites et critère de trois avancées communes en 900 s inchangés. SSH explicitement IPv4. Préparation seule, finalité et production ouvertes. Preuves restored-three-node-v10-export-prepare-20261006/.
+
+
+2026-10-06 — Reprise v10 FAILED : session originale 76765/sortie 1, core bc6d1794, relais 76bb2468 ; délai initial 900 s et trois avancées requises conservés, aucune nouvelle finalité commune depuis 1284. Trois arrêts originaux propres/sans OOM et engagements audités séparément en lecture seule, fichiers inchangés. 221 blocs Mac→VPS et 96 VPS→Mac acceptés ; refus d’attestations et saturation/admissions expirées encore observés. Échantillon : cœur C++ écrit 54 Mo/2 s, sans preuve causale. Prochaines causes à isoler : coût de publication et alternance des préparations de branches. Premier refus préflight de hash avant tout démarrage conservé. Production ouverte. [Preuves v10](qualification/restored-three-node-v10-export-terminal-20261006/README.md).
