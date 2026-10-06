@@ -4359,3 +4359,6 @@ Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichi
 
 
 2026-10-06 — Reprise v13 FAILED : contrôleur 80316 / sortie 1, checkout 24ea13b0, cœur 5787915e et relais 76bb2468 ; 0 avancées communes observées selon le critère original. Trois propriétaires arrêtés et audits read-only des engagements, journaux/témoins et historique canonique ; fichiers inchangés. Pas de compilation concurrente, ni transfert de base inter-hôtes. Périmètre privé exact ; production et revue indépendante restent ouvertes. [Preuves v13](qualification/restored-three-node-v13-parent-cache-terminal-20261006/README.md).
+
+
+2026-10-06 — Diagnostic Docker ARM sur stockages post-v13 arrêtés : cœur candidat 5787915e, lecteur compilé avec le type actuel, sortie 0 ; tous les fichiers inchangés. Graphes 453/356 sous la limite 1024 ; mêmes trois frontières absentes à parent connu qu’après v12 (10751/10753/10752 depuis 10574). 32 votes récents référencent des blocs absents, avant BLS. Priorité au diagnostic sélection/reprise du relais et admission des frontières sur archives réelles ; cause complète non prouvée, v13 FAILED et production ouverte. [Preuves](qualification/v13-stopped-frontiers-20261006/README.md).
