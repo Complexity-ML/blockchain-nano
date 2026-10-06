@@ -42,6 +42,12 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const 
  const auto& l=config.at("limits");shape(l,{"envelopeBytes","blocks","messages","equivocations","stateBytes","totalStateBytes","replaySlots","syncTrials"});
  const CapellaStoreSnapshotLimits limits{number(l.at("envelopeBytes")),number(l.at("blocks")),number(l.at("messages")),number(l.at("equivocations")),number(l.at("stateBytes")),number(l.at("totalStateBytes")),number(l.at("replaySlots")),number(l.at("syncTrials"))};
  if(limits.state_bytes<rules.transition.maximum_state_bytes||limits.total_state_bytes<limits.state_bytes)throw std::invalid_argument("Capella state capacity below configured transition");
+ std::optional<CapellaColdCheckpointOptions> cold_checkpoint;
+ if(config.contains("coldCheckpoint")){
+  const auto& cold=config.at("coldCheckpoint");shape(cold,{"cacheRecords","cacheEncodedBytes"});
+  cold_checkpoint=CapellaColdCheckpointOptions{number(cold.at("cacheRecords")),number(cold.at("cacheEncodedBytes"))};
+  if(cold_checkpoint->cache_records>limits.blocks||cold_checkpoint->cache_bytes>limits.envelope_bytes)throw std::invalid_argument("Capella cold cache exceeds configured budget");
+ }
  const auto& c=config.at("clock");auto clock_fields=c;clock_fields.erase("maximumWallClockDriftMs");clock_fields.erase("startupCatchup");shape(clock_fields,{"intervalMs","maximumForwardStepMs"});const auto interval=number(c.at("intervalMs")),step=number(c.at("maximumForwardStepMs"));
  std::optional<std::pair<uint64_t,uint64_t>> startup_catchup;
  if(c.contains("startupCatchup")){
@@ -100,7 +106,7 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const 
  owner->reactor->set_historical_state_pruning(config.value("historicalStatePruning",false));
  if(config.contains("fragmentCheckpointMigration")&&!config.at("fragmentCheckpointMigration").is_boolean())throw std::invalid_argument("Capella fragmentCheckpointMigration must be boolean");
  if(config.value("fragmentCheckpointMigration",false))owner->reactor->migrate_fragment_checkpoint(checkpoint);
- if(config.contains("coldCheckpoint")){const auto& cold=config.at("coldCheckpoint");shape(cold,{"cacheRecords","cacheEncodedBytes"});owner->reactor->migrate_reference_checkpoint({number(cold.at("cacheRecords")),number(cold.at("cacheEncodedBytes"))},checkpoint);}
+ if(cold_checkpoint)owner->reactor->migrate_reference_checkpoint(*cold_checkpoint,checkpoint);
  if(wall_drift){
   auto time=std::make_shared<LocalMonotonicTime>(*wall_drift,std::move(now));
   now=[time](){return time->now();};

@@ -260,7 +260,10 @@ void CapellaDurableReactor::publish_impl(CapellaForkStore candidate,const std::f
  // and the exact durable envelope must remain fully restart-verifiable before I/O.
  if(state_&&next->timed.view.anchor!=state_->timed.view.anchor){
   const auto expected=prepare_capella_pruned_store(*state_,next->timed.view.anchor,rules_,check);
-  if(capella_store_snapshot(expected,rules_,limits_,check)!=capella_store_snapshot(*next,rules_,limits_,check))throw std::invalid_argument("Capella pruning changed live state");
+  const std::function<void(const CapellaColdReference&,std::string_view)> compare_only=[](const auto&,auto){};
+  const auto expected_snapshot=cold?capella_store_reference_snapshot(expected,rules_,limits_,compare_only,check):capella_store_snapshot(expected,rules_,limits_,check);
+  const auto next_snapshot=cold?capella_store_reference_snapshot(*next,rules_,limits_,compare_only,check):capella_store_snapshot(*next,rules_,limits_,check);
+  if(expected_snapshot!=next_snapshot)throw std::invalid_argument("Capella pruning changed live state");
   if(!cold)(void)restore_durable(flat,sha256(Bytes(flat.begin(),flat.end())),rules_,limits_,check);
  }
  const auto digest=sha256(Bytes(encoded.begin(),encoded.end()));
