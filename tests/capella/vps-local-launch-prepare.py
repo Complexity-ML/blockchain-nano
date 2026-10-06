@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
 """Prepare isolated restart from VPS-local audited configuration; emit digests only."""
-import copy,hashlib,json,os,shutil,sys
+import copy,hashlib,json,os,shutil,sys,re
 from pathlib import Path
 
 def canonical_hash(value):
  return hashlib.sha256(json.dumps(value,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()
 
+def qualified_p2p_binary(binary):
+ # The controller pins and verifies the exact binary digest before invoking
+ # this helper. Validate placement/architecture, not the qualification lot name.
+ return isinstance(binary,str) and re.fullmatch(r'/build/[a-z0-9]+(?:-[a-z0-9]+)*-amd64-[0-9]{8}/network/nano-p2p',binary) is not None
+
 def derive(configuration,capsule,rpc_port,p2p_port,binary):
  assert 0<rpc_port<65536 and 0<p2p_port<65536 and rpc_port!=p2p_port
- assert binary.startswith('/build/catalog-selection-amd64-') and binary.endswith('/network/nano-p2p')
+ assert qualified_p2p_binary(binary)
  assert capsule['readOnlyStores'] and capsule['primaryWitnessAndSignersVerified']
  assert capsule['minimumSequenceBoundsVerified'] and not capsule['productionQualified']
  assert capsule['format']=='nano-private-quiescent-recovery-pins-v1' and capsule['chainId']=='0x539'

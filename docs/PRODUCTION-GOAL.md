@@ -4470,3 +4470,6 @@ Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, d
 
 
 2026-10-06 — Préparation v23 : états Mac/VPS post-v22 et témoins audités, copies locales sans identité de pair et volume VPS conservé sur son hôte. Cœur inchangé et nouveau relais de préparation bornée qualifié dans son périmètre natif/ARM64/AMD64 ; mêmes limites et trois nouvelles finalités communes en 900 s restent à démontrer. Préparation seule ; production et revue indépendante ouvertes. Preuves restored-three-node-v23-dependency-preparation-prepare-20261006/.
+
+
+2026-10-06 — v23 FAILED avant lancement : contrôleur 57911 / sortie 1, garde du préparateur VPS limitée à l’ancien nom de lot. Aucun nœud/signataire lancé, zéro reçu ; finalité non testée et copies Mac inchangées (1525/1557). Garde de placement corrigée sans dépendre du nom de lot, digest binaire/canonical hash conservés ; 11 chemins et 3 dérivations auditées qualifiés localement, capsule non auditée refusée. Aucun binaire/image modifié. [Preuves v23](qualification/restored-three-node-v23-preparation-terminal-20261006/README.md). Production/revue indépendante et finalité WAN ouvertes.
