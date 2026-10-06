@@ -1,0 +1,13 @@
+/private/tmp/nano-startup-diagnostic-draft-20261006/test_altair_core_recovery.cpp:40:243: error: 'Trace' is a private member of 'AltairCoreRecovery'
+   40 |   auto recovery=std::make_shared<AltairCoreRecovery>(io,[&](const auto& m,auto p,auto cb){fake.call(m,p,cb);},"token","0x539","0x"+std::string(64,'9'),3,1ms,100ms,[&](Json value){++calls;result=std::move(value);},observer?AltairCoreRecovery::Trace{[&](const Json& row){traces.push_back(row);if(observer==2)throw std::runtime_error("observer-private-data");}}:AltairCoreRecovery::Trace{});
+      |                                                                                                                                                                                                                                                   ^
+/private/tmp/nano-startup-diagnostic-draft-20261006/altair_core_recovery.hpp:10:8: note: implicitly declared private here
+   10 |  using Trace=std::function<void(const Json&)>;
+      |        ^
+/private/tmp/nano-startup-diagnostic-draft-20261006/test_altair_core_recovery.cpp:40:380: error: 'Trace' is a private member of 'AltairCoreRecovery'
+   40 |   auto recovery=std::make_shared<AltairCoreRecovery>(io,[&](const auto& m,auto p,auto cb){fake.call(m,p,cb);},"token","0x539","0x"+std::string(64,'9'),3,1ms,100ms,[&](Json value){++calls;result=std::move(value);},observer?AltairCoreRecovery::Trace{[&](const Json& row){traces.push_back(row);if(observer==2)throw std::runtime_error("observer-private-data");}}:AltairCoreRecovery::Trace{});
+      |                                                                                                                                                                                                                                                                                                                                                                                            ^
+/private/tmp/nano-startup-diagnostic-draft-20261006/altair_core_recovery.hpp:10:8: note: implicitly declared private here
+   10 |  using Trace=std::function<void(const Json&)>;
+      |        ^
+2 errors generated.

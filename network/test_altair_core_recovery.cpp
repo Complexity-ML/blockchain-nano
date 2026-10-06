@@ -35,13 +35,25 @@ struct Fake {
 int main(){try{
  unsigned scenarios=0;
  for(const auto& mode:{"normal","lost-rotation","lost-forget","duplicate-callback","unavailable","silent","bad-profile","changed-profile","final-session","wrong-session","regression","exhausted","duplicate-sequence","malformed-sequence","stalled"}){
-  Fake fake;fake.mode=mode;asio::io_context io;unsigned calls=0;Json result;
-  auto recovery=std::make_shared<AltairCoreRecovery>(io,[&](const auto& m,auto p,auto cb){fake.call(m,p,cb);},"token","0x539","0x"+std::string(64,'9'),3,1ms,100ms,[&](Json value){++calls;result=std::move(value);});
+  for(unsigned observer=0;observer<3;++observer){
+  Fake fake;fake.mode=mode;std::vector<Json> traces;asio::io_context io;unsigned calls=0;Json result;
+  auto recovery=std::make_shared<AltairCoreRecovery>(io,[&](const auto& m,auto p,auto cb){fake.call(m,p,cb);},"token","0x539","0x"+std::string(64,'9'),3,1ms,100ms,[&](Json value){++calls;result=std::move(value);},observer?AltairCoreRecovery::Trace{[&](const Json& row){traces.push_back(row);if(observer==2)throw std::runtime_error("observer-private-data");}}:AltairCoreRecovery::Trace{});
   recovery->start();io.run();check(calls==1,"recovery completion count");
   const bool success=fake.mode=="normal"||fake.mode=="lost-rotation"||fake.mode=="lost-forget"||fake.mode=="duplicate-callback";
   check(result.is_object()==success,"incorrect readiness result");
   if(success){check(!fake.job&&fake.completed&&fake.cancels==1&&result.at("session")==fake.session&&result.at("highWater")==1,"ready before confirmed drain");if(fake.mode=="lost-rotation")check(fake.rotations==2,"lost rotation was not fenced again");}
+  if(observer){
+   check(!traces.empty(),"observer received no stages");
+   for(const auto& row:traces){check(row.size()==3&&row.contains("stage")&&row.contains("outcome")&&row.contains("failures"),"unsafe diagnostic shape");check(row.dump().find("token")==std::string::npos&&row.dump().find(fake.session)==std::string::npos,"diagnostic leaked auth/session");}
+   check(traces.back().at("outcome")== (success?"ready":"not-ready"),"wrong diagnostic terminal outcome");
+   if(fake.mode=="bad-profile")check(traces[1]==Json{{"stage","status"},{"outcome","validation-rejected"},{"failures",0}},"profile failure not identified");
+   if(fake.mode=="wrong-session")check(traces[traces.size()-2].at("stage")=="inventory","inventory failure not identified");
+   if(fake.mode=="final-session"||fake.mode=="changed-profile")check(traces[traces.size()-2].at("stage")=="verify","verify failure not identified");
+   if(fake.mode=="unavailable")check(traces[traces.size()-2].at("outcome")=="null-response","transport failure not identified");
+   if(fake.mode=="silent"||fake.mode=="stalled")check(traces[traces.size()-2].at("outcome")=="deadline","deadline not identified");
+  }else check(traces.empty(),"disabled observer emitted");
   ++scenarios;
+  }
  }
  // A cancellation must finish once; a delayed valid HTTP response cannot revive it.
  {asio::io_context io;Reply delayed;unsigned completions=0;auto recovery=std::make_shared<AltairCoreRecovery>(io,[&](const auto&,auto,auto cb){delayed=cb;},"token","0x539","0x"+std::string(64,'9'),3,1ms,100ms,[&](Json result){check(result.is_null(),"cancel became ready");++completions;});recovery->start();recovery->cancel();Fake fake;delayed(fake.status());io.run();check(completions==1,"late reply completed twice");++scenarios;}

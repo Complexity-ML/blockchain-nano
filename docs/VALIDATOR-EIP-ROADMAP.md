@@ -7859,3 +7859,6 @@ Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, d
 
 
 2026-10-06 — Reprise v19 FAILED au démarrage : contrôleur 81355 / sortie 1, checkout fc704b9f, délai IPC VPS de 180 s expiré ; propriétaires Mac non lancés et critère de finalité non exécuté. Arrêt VPS normal et audit read-only des engagements/journaux/historique, 2170 fichiers inchangés ; base et clés non exportées. Cause IPC précise encore ouverte, diagnostic isolé en préparation sans changement des politiques. [Preuves v19](qualification/restored-three-node-v19-startup-terminal-20261006/README.md). Toutes les autres exigences et la revue indépendante restent ouvertes.
+
+
+2026-10-06 — Diagnostic IPC/RPC intégré et qualifié dans son périmètre : 14 suites affectées et --wire natif/ARM64/AMD64, originaux 43059/8395/34086 sorties 0. Étapes de récupération et causes RPC expurgées ; mêmes règles de fencing/admission/retry. 46 scénarios de récupération, 18 transports loopback et 6 classifications ; cœur réutilisé, fixture recompilée, images inchangées. Cause réelle v19 et finalité commune non prouvées. [Preuves ciblées](qualification/startup-diagnostic-integrated-20261006/README.md). Échecs et critères de production/revue indépendante conservés.

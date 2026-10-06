@@ -218,3 +218,10 @@ target_compile_definitions(nano-capella-catalog-selection-tests PRIVATE FMT_CONS
 target_link_libraries(nano-capella-catalog-selection-tests PRIVATE p2p::p2p)
 add_test(NAME capella_catalog_selection COMMAND nano-capella-catalog-selection-tests)
 set_tests_properties(capella_catalog_selection PROPERTIES TIMEOUT 20)
+
+add_executable(nano-core-rpc-diagnostic-tests test_core_rpc_diagnostic.cpp)
+target_include_directories(nano-core-rpc-diagnostic-tests PRIVATE ../third_party)
+target_compile_definitions(nano-core-rpc-diagnostic-tests PRIVATE FMT_CONSTEVAL=)
+target_link_libraries(nano-core-rpc-diagnostic-tests PRIVATE p2p::p2p)
+add_test(NAME core_rpc_diagnostic COMMAND nano-core-rpc-diagnostic-tests)
+set_tests_properties(core_rpc_diagnostic PROPERTIES TIMEOUT 20)

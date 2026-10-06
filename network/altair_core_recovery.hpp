@@ -7,10 +7,16 @@
 // A failed recovery never implies completion of the old workers.
 class AltairCoreRecovery:public std::enable_shared_from_this<AltairCoreRecovery>{
  using Call=AltairCoreDispatch::Call;
+public:
+ using Trace=std::function<void(const Json&)>;
+private:
  enum class Step{status,rotate,inventory,cancel,forget,verify};
  asio::io_context& io_;asio::steady_timer retry_timer_,deadline_;
  Call call_;Reply done_;const std::string token_,chain_,genesis_;
  const unsigned maximum_failures_;const std::chrono::milliseconds retry_,timeout_;
+ Trace trace_;
+ static const char* step_name(Step step){switch(step){case Step::status:return "status";case Step::rotate:return "rotate";case Step::inventory:return "inventory";case Step::cancel:return "cancel";case Step::forget:return "forget";case Step::verify:return "verify";}return "unknown";}
+ void trace(const char* outcome,Step step)noexcept{if(!trace_)return;try{trace_(Json{{"stage",step_name(step)},{"outcome",outcome},{"failures",failures_}});}catch(...){}}
  Step step_=Step::status;Json metadata_;std::string session_,ticket_;
  uint64_t high_water_=0;unsigned failures_=0;bool started_=false,finished_=false;
  static uint64_t quantity(const Json& value){
@@ -35,11 +41,12 @@ class AltairCoreRecovery:public std::enable_shared_from_this<AltairCoreRecovery>
   }
   return result;
  }
- void finish(Json result){if(finished_)return;finished_=true;retry_timer_.cancel();deadline_.cancel();auto done=std::move(done_);done(std::move(result));}
+ void finish(Json result){if(finished_)return;trace(result.is_null()?"not-ready":"ready",step_);finished_=true;retry_timer_.cancel();deadline_.cancel();auto done=std::move(done_);done(std::move(result));}
  void schedule(){retry_timer_.expires_after(retry_);retry_timer_.async_wait([self=shared_from_this()](auto error){if(!error&&!self->finished_)self->request();});}
  void response(Step operation,Json value){
   if(finished_)return;
   if(value.is_null()){
+   trace("null-response",operation);
    if(++failures_>=maximum_failures_){finish(nullptr);return;}
    // A lost rotation response requires another confirmed fence. Never assume
    // that a newly observed session was created by our previous request.
@@ -68,19 +75,19 @@ class AltairCoreRecovery:public std::enable_shared_from_this<AltairCoreRecovery>
     step_=Step::inventory;
    }
    schedule();
-  }catch(const std::exception&){finish(nullptr);}
+  }catch(const std::exception&){trace("validation-rejected",operation);finish(nullptr);}
  }
  void request(){
-  const auto operation=step_;const char* method=operation==Step::status||operation==Step::verify?"nano_altairStatus":operation==Step::rotate?"nano_altairRotateSession":operation==Step::inventory?"nano_altairJobs":operation==Step::cancel?"nano_altairCancel":"nano_altairForget";
+  const auto operation=step_;trace("request",operation);const char* method=operation==Step::status||operation==Step::verify?"nano_altairStatus":operation==Step::rotate?"nano_altairRotateSession":operation==Step::inventory?"nano_altairJobs":operation==Step::cancel?"nano_altairCancel":"nano_altairForget";
   auto params=Json::array({token_});if(operation==Step::rotate||operation==Step::cancel||operation==Step::forget)params.push_back(session_);if(operation==Step::cancel||operation==Step::forget)params.push_back(ticket_);
   auto once=std::make_shared<std::atomic<bool>>(false);auto callback=[self=shared_from_this(),operation,once](Json result){if(once->exchange(true))return;asio::post(self->io_,[self,operation,result=std::move(result)]()mutable{self->response(operation,std::move(result));});};
   try{call_(method,std::move(params),callback);}catch(...){callback(nullptr);}
  }
 public:
- AltairCoreRecovery(asio::io_context& io,Call call,std::string token,std::string chain,std::string genesis,unsigned failures,std::chrono::milliseconds retry,std::chrono::milliseconds timeout,Reply done):
- io_(io),retry_timer_(io),deadline_(io),call_(std::move(call)),done_(std::move(done)),token_(std::move(token)),chain_(std::move(chain)),genesis_(std::move(genesis)),maximum_failures_(failures),retry_(retry),timeout_(timeout){
+ AltairCoreRecovery(asio::io_context& io,Call call,std::string token,std::string chain,std::string genesis,unsigned failures,std::chrono::milliseconds retry,std::chrono::milliseconds timeout,Reply done,Trace observer={}):
+ io_(io),retry_timer_(io),deadline_(io),call_(std::move(call)),done_(std::move(done)),token_(std::move(token)),chain_(std::move(chain)),genesis_(std::move(genesis)),maximum_failures_(failures),retry_(retry),timeout_(timeout),trace_(std::move(observer)){
   if(!call_||!done_||token_.empty()||!maximum_failures_||retry_.count()<=0||timeout_<retry_||timeout_>std::chrono::duration_cast<std::chrono::milliseconds>(asio::steady_timer::duration::max()/2))throw std::invalid_argument("invalid Altair recovery limits");
  }
- void start(){if(started_||finished_)throw std::logic_error("Altair recovery already started");started_=true;deadline_.expires_after(timeout_);deadline_.async_wait([self=shared_from_this()](auto error){if(!error)self->finish(nullptr);});request();}
+ void start(){if(started_||finished_)throw std::logic_error("Altair recovery already started");started_=true;deadline_.expires_after(timeout_);deadline_.async_wait([self=shared_from_this()](auto error){if(!error){self->trace("deadline",self->step_);self->finish(nullptr);}});request();}
  void cancel(){finish(nullptr);}
 };

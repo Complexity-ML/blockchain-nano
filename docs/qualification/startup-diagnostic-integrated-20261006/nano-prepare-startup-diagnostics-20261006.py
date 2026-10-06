@@ -1,0 +1,14 @@
+from pathlib import Path
+import json,hashlib,shutil,tarfile
+repo=Path('/Users/boris/Dev/blockchain-nano');old=Path('/private/tmp/nano-signed-anchor-docker-20261006');root=Path('/private/tmp/nano-startup-diagnostic-docker-20261006');root.mkdir(exist_ok=False)
+shutil.copytree(old/'source',root/'source');shutil.rmtree(root/'source/network');shutil.copytree(repo/'network',root/'source/network',ignore=shutil.ignore_patterns('build','build-*','.deps'))
+m={str(p.relative_to(root/'source')):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted((root/'source').rglob('*')) if p.is_file()};prior=json.loads((old/'source-manifest.json').read_text());changed=[n for n,h in prior.items() if m.get(n)!=h];assert all(n.startswith('network/') for n in changed)
+(root/'source-manifest.json').write_text(json.dumps(m,indent=2)+'\n');(root/'source.sha256').write_text(''.join(h+'  '+n+'\n' for n,h in m.items()))
+with tarfile.open(root/'source.tar','w') as t:t.add(root/'source',arcname='source')
+(root/'reuse-audit.json').write_text(json.dumps({'coreSourcesUnchanged':True,'changedSources':changed,'addedSources':sorted(set(m)-set(prior)),'reuseCoreFrom':'d8d5b46c','wireFixtureRecompiled':True,'scope':'RPC header affects SDK consumers and real wire fixture; no core source change'},indent=2)+'\n')
+for name in ['all.sh','regression.sh']:shutil.copy2(old/name,root/name)
+p=root/'regression.sh';p.write_text(p.read_text().replace('signed-anchor-','startup-diagnostic-'))
+s=(old/'sdk.sh').read_text();s=s.replace('nano-p2p -j2','nano-altair-core-dispatch-tests nano-altair-core-recovery-tests nano-altair-block-relay-tests nano-core-keepalive-tests nano-core-rpc-diagnostic-tests nano-p2p -j2');s=s.replace("'^capella_", "'^(altair_(core_dispatch|core_recovery|block_relay)|core_(keepalive|rpc_diagnostic)|capella_");s=s.replace("head_history_fairness)$'","head_history_fairness))$'");(root/'sdk.sh').write_text(s)
+s=Path('/private/tmp/nano-launch-signed-anchor-20261006.py').read_text().replace('nano-signed-anchor-docker-20261006','nano-startup-diagnostic-docker-20261006').replace('nano-signed-anchor-','nano-startup-diagnostic-');Path('/private/tmp/nano-launch-startup-diagnostic-20261006.py').write_text(s)
+s=Path('/private/tmp/nano-qualify-signed-anchor-native-20261006.py').read_text().replace('nano-signed-anchor-docker-20261006','nano-startup-diagnostic-docker-20261006').replace('nano-signed-anchor-native-20261006','nano-startup-diagnostic-native-20261006');s=s.replace("'capella_block_delivery','capella_signed_anchor'", "'core_rpc_diagnostic','core_keepalive','altair_core_dispatch','altair_core_recovery','altair_block_relay','capella_block_delivery','capella_signed_anchor'");Path('/private/tmp/nano-qualify-startup-diagnostic-native-20261006.py').write_text(s)
+print('Frozen',len(m),'public source files;',len(changed),'changes; core reused; 14 affected SDK suites + wire fixture')

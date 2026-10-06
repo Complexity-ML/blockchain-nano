@@ -99,8 +99,8 @@ class Network {
      std::cout<<Json{{"event","altair-ingress-ready"},{"consensusIdentity",result.at("consensusIdentity")},{"executionBound",execution_consensus()}}.dump()<<std::endl;
     }
     std::cout<<Json{{"event","altair-ipc-ready"},{"profile",consensus_field()},{"consensusIdentity",result.at("consensusIdentity")},{"networkProtocolActive",bool(altair_ingress_)}}.dump()<<std::endl;
-   }catch(const std::exception&){altair_ingress_.reset();altair_advertisement_=nullptr;status_[consensus_field()]=nullptr;if(altair_dispatch_)altair_dispatch_->stop();std::cerr<<Json{{"event","altair-ipc-recovery-failed"},{"networkProtocolActive",false}}.dump()<<std::endl;}
-  });altair_recovery_->start();
+   }catch(const std::exception&){if(trace_network_)std::cerr<<Json{{"event","test-core-recovery-stage"},{"stage","setup"},{"outcome","validation-rejected"}}.dump()<<std::endl;altair_ingress_.reset();altair_advertisement_=nullptr;status_[consensus_field()]=nullptr;if(altair_dispatch_)altair_dispatch_->stop();std::cerr<<Json{{"event","altair-ipc-recovery-failed"},{"networkProtocolActive",false}}.dump()<<std::endl;}
+  },trace_network_?AltairCoreRecovery::Trace{[](const Json& row){if(row.at("outcome")=="request")return;auto record=row;record["event"]="test-core-recovery-stage";std::cerr<<record.dump()<<std::endl;}}:AltairCoreRecovery::Trace{});altair_recovery_->start();
  }
  Json status_;uint64_t cursor_=0;bool initialized_=false;bool previous_bft_page_=false;bool download_busy_=false,bft_download_busy_=false;
  std::string report_token_,event_epoch_;bool event_polling_=false;unsigned reference_trace_count_=0;InboundBudget inbound_budget_;
@@ -451,7 +451,7 @@ class Network {
   schedule();
  });}
 public:
- Network(asio::io_context& io,Host host,uint16_t port,std::vector<libp2p::multi::Multiaddress> bootstrap,std::shared_ptr<libp2p::network::DnsaddrResolver> resolver):io_(io),host_(std::move(host)),core_(io,port),timer_(io),bft_timer_(io),consensus_relay_timer_(io),bootstrap_(std::move(bootstrap)),resolver_(std::move(resolver)){if(const char* token=std::getenv("NANO_NETWORK_TOKEN"))report_token_=token;
+ Network(asio::io_context& io,Host host,uint16_t port,std::vector<libp2p::multi::Multiaddress> bootstrap,std::shared_ptr<libp2p::network::DnsaddrResolver> resolver):io_(io),host_(std::move(host)),core_(io,port,4,std::getenv("NANO_TEST_NETWORK_TRACE")?CoreRpcTrace{[count=unsigned(0)](const Json& row)mutable{if(count++>=64)return;auto record=row;record["event"]="test-core-rpc-failure";std::cerr<<record.dump()<<std::endl;}}:CoreRpcTrace{}),timer_(io),bft_timer_(io),consensus_relay_timer_(io),bootstrap_(std::move(bootstrap)),resolver_(std::move(resolver)){if(const char* token=std::getenv("NANO_NETWORK_TOKEN"))report_token_=token;
   if(const char* raw=std::getenv("NANO_CONSENSUS_RELAY_CONCURRENCY")){const std::string value(raw);if(value.empty()||value.size()>4||value.find_first_not_of("0123456789")!=std::string::npos)throw std::invalid_argument("Invalid consensus relay concurrency");altair_relay_budget_=PeerRelayBudget(std::stoul(value));}
   if(const char* raw=std::getenv("NANO_CONSENSUS_RELAY_INTERVAL_MS")){const std::string value(raw);if(value.empty()||value.size()>5||value.find_first_not_of("0123456789")!=std::string::npos)throw std::invalid_argument("Invalid consensus relay interval");const auto n=std::stoul(value);if(n<25||n>60000)throw std::invalid_argument("Consensus relay interval outside 25..60000 ms");consensus_relay_interval_=std::chrono::milliseconds(n);}
  }
