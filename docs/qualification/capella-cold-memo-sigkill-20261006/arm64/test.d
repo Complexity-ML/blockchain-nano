@@ -1,0 +1,133 @@
+/build/cold-memo-sigkill-arm64-20261006/test.o: \
+  /faultsource/tests/test_capella_transition.cpp \
+  /source/include/nano/consensus_capella_audit.hpp \
+  /source/include/nano/consensus_capella_reactor.hpp \
+  /source/include/nano/consensus_capella_cold_records.hpp \
+  /source/include/nano/consensus_capella_store_snapshot.hpp \
+  /source/include/nano/consensus_capella_fork_store.hpp \
+  /source/include/nano/consensus_fork_clock.hpp \
+  /source/include/nano/consensus_fork_vote.hpp \
+  /source/include/nano/consensus_fork_choice.hpp \
+  /source/include/nano/consensus_slashing.hpp \
+  /source/include/nano/consensus_attestation.hpp \
+  /source/include/nano/consensus_signing.hpp \
+  /source/include/nano/consensus_committee.hpp \
+  /source/include/nano/consensus_deposit.hpp \
+  /source/include/nano/core.hpp /source/include/nano/crypto.hpp \
+  /source/include/nano/types.hpp /source/third_party/json.hpp \
+  /source/include/nano/rlp.hpp \
+  /source/include/nano/consensus_beacon_header.hpp \
+  /source/include/nano/consensus_attestation_inclusion.hpp \
+  /source/include/nano/consensus_ffg.hpp \
+  /source/include/nano/consensus_randao.hpp \
+  /source/include/nano/consensus_block_operations.hpp \
+  /source/include/nano/consensus_block_auth.hpp \
+  /source/include/nano/consensus_beacon_body.hpp \
+  /source/include/nano/consensus_execution_payload.hpp \
+  /source/include/nano/consensus_proposer.hpp \
+  /source/include/nano/consensus_deposit_history.hpp \
+  /source/include/nano/consensus_execution_deposit.hpp \
+  /source/include/nano/engine.hpp /source/include/nano/evm.hpp \
+  /source/include/nano/opcodes.hpp /source/include/nano/receipt.hpp \
+  /source/include/nano/consensus_deposit_transition.hpp \
+  /source/include/nano/consensus_capella_fork_state.hpp \
+  /source/include/nano/consensus_capella_slots.hpp \
+  /source/include/nano/consensus_altair_slots.hpp \
+  /source/include/nano/consensus_altair_epoch.hpp \
+  /source/include/nano/consensus_beacon_state.hpp \
+  /source/include/nano/consensus_epoch.hpp \
+  /source/include/nano/consensus_rewards.hpp \
+  /source/include/nano/consensus_registry_epoch.hpp \
+  /source/include/nano/consensus_effective_balance.hpp \
+  /source/include/nano/consensus_epoch_maintenance.hpp \
+  /source/include/nano/consensus_fork_state.hpp \
+  /source/include/nano/consensus_slots.hpp \
+  /source/include/nano/consensus_capella_transition.hpp \
+  /source/include/nano/consensus_altair_transition.hpp \
+  /source/include/nano/consensus_altair_attestation.hpp \
+  /source/include/nano/consensus_altair_sync_aggregate.hpp \
+  /source/include/nano/consensus_altair_deposit.hpp \
+  /source/include/nano/consensus_altair_slashing.hpp \
+  /source/include/nano/consensus_exit.hpp \
+  /source/include/nano/consensus_capella_fork.hpp \
+  /source/include/nano/consensus_bellatrix_slots.hpp \
+  /source/include/nano/consensus_capella_execution.hpp \
+  /source/include/nano/consensus_bellatrix_execution.hpp \
+  /source/include/nano/consensus_execution_bridge.hpp \
+  /source/include/nano/consensus_capella_withdrawals.hpp \
+  /source/include/nano/consensus_altair_snapshot.hpp \
+  /source/include/nano/storage.hpp /source/include/nano/finality.hpp \
+  /source/include/nano/consensus_capella_duty.hpp \
+  /source/include/nano/consensus_beacon_signer.hpp \
+  /source/include/nano/consensus_capella_bls_change.hpp \
+  /source/include/nano/consensus_sync_message.hpp \
+  /source/include/nano/consensus_bls.hpp \
+  /faultsource/tests/support/altair_transition_rules.hpp \
+  /faultsource/tests/support/phase0_transition_rules.hpp \
+  /faultsource/tests/support/phase0_epoch_ssz.hpp \
+  /faultsource/tests/support/phase0_ffg_ssz.hpp \
+  /faultsource/tests/support/phase0_minimal_ssz.hpp \
+  /faultsource/tests/support/process.hpp /source/include/nano/client.hpp \
+  /source/include/nano/rpc.hpp /source/include/nano/chain.hpp \
+  /source/include/nano/consensus.hpp \
+  /source/include/nano/staking_rules.hpp /source/include/nano/txpool.hpp \
+  /source/include/nano/beacon_sync.hpp \
+  /source/include/nano/admission_budget.hpp \
+  /source/include/nano/wallet.hpp /source/include/nano/bft_reactor.hpp \
+  /source/include/nano/consensus_round.hpp \
+  /source/include/nano/block_import.hpp \
+  /source/include/nano/consensus_transition.hpp \
+  /source/include/nano/consensus_registry_operations.hpp \
+  /faultsource/tests/support/rocksdb_fixture.hpp \
+  /source/include/nano/http.hpp /source/include/nano/beacon_api.hpp \
+  /source/include/nano/consensus_bellatrix_reactor.hpp \
+  /source/include/nano/consensus_bellatrix_store_snapshot.hpp \
+  /source/include/nano/consensus_bellatrix_fork_store.hpp \
+  /source/include/nano/consensus_bellatrix_fork_state.hpp \
+  /source/include/nano/consensus_bellatrix_transition.hpp \
+  /source/include/nano/beacon_events.hpp \
+  /source/include/nano/simulation_queue.hpp \
+  /faultsource/tests/support/persistent_rpc.hpp \
+  /source/include/nano/consensus_capella_validator.hpp \
+  /source/include/nano/consensus_capella_clock.hpp \
+  /source/include/nano/consensus_capella_health.hpp \
+  /source/include/nano/consensus_capella_runtime.hpp \
+  /source/include/nano/consensus_capella_sync.hpp \
+  /source/include/nano/committee.hpp \
+  /source/include/nano/consensus_message_ssz.hpp \
+  /source/third_party/ckzg/blst/bindings/blst.h \
+  /source/third_party/ckzg/blst/bindings/blst_aux.h \
+  /faultsource/tests/../src/consensus_capella_projection.hpp \
+  /faultsource/tests/../src/beacon_block_json.hpp \
+  /faultsource/tests/../network/capella_consensus_service.hpp \
+  /faultsource/tests/../network/altair_worker.hpp \
+  /faultsource/tests/../network/altair_work.hpp \
+  /faultsource/tests/../network/altair_message.hpp \
+  /faultsource/tests/../network/json_frame.hpp \
+  /faultsource/tests/../network/altair_base64.hpp \
+  /faultsource/tests/../network/inbound_budget.hpp \
+  /faultsource/tests/../network/altair_receipts.hpp \
+  /faultsource/tests/../network/capella_inventory_sessions.hpp \
+  /faultsource/tests/../network/altair_core_recovery.hpp \
+  /faultsource/tests/../network/altair_core_dispatch.hpp \
+  /faultsource/tests/../network/core.hpp \
+  /faultsource/tests/../network/core_rpc_diagnostic.hpp \
+  /faultsource/tests/../network/capella_catalog_relay.hpp \
+  /faultsource/tests/../network/capella_peer_core.hpp \
+  /faultsource/tests/../network/capella_block_delivery.hpp \
+  /faultsource/tests/../network/altair_archive_relay.hpp \
+  /faultsource/tests/../network/timed_reply.hpp \
+  /faultsource/tests/../network/capella_export_cache.hpp \
+  /faultsource/tests/support/capella_catalog_concurrency.hpp \
+  /faultsource/tests/support/../../network/capella_inventory_sessions.hpp \
+  /faultsource/tests/../src/consensus_bellatrix_projection.hpp \
+  /faultsource/tests/capella_cold_memo_sync.hpp \
+  /faultsource/tests/support/capella_bls_sync.hpp \
+  /faultsource/tests/support/capella_exit_lifecycle_sync.hpp \
+  /faultsource/tests/support/capella_slashing_sync.hpp \
+  /faultsource/tests/support/capella_pruning_sync.hpp \
+  /faultsource/tests/support/capella_deposit_reorg.hpp \
+  /faultsource/tests/support/capella_slashing_multi.hpp \
+  /faultsource/tests/support/capella_new_validator_slashing.hpp \
+  /faultsource/tests/support/capella_slashing_reorg.hpp \
+  /faultsource/tests/support/capella_exit_owner.hpp

@@ -1682,6 +1682,9 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
     reactor.reset();backup_owner.reset(); // Destroy the borrowing reactor before its backing owner.
 #ifdef NANO_SYNC_FAULT
     if(std::getenv("NANO_TEST_COLD_MEMO_SYNC")){witness.reset();qualify_cold_memo_sync(directory/"previous-primary",directory/"witness",rules,g);check(journal.commitment()==guard,"cold fault qualification changed signer commitment");}
+#ifdef __linux__
+    if(std::getenv("NANO_TEST_COLD_MEMO_SIGKILL")){witness.reset();qualify_cold_memo_sigkill(directory/"previous-primary",directory/"witness",rules,g);check(journal.commitment()==guard,"SIGKILL qualification changed signer commitment");}
+#endif
 #endif
     std::cout<<Json{{"scenario","capella-cold-reactor-integration"},{"migrationAtomic",true},{"witnessPreviousPrimaryRecovered",true},{"primaryAndWitnessRestarts",true},{"validChildDurablyAdmitted",true},{"allPublishedRecordsCold",true},{"stickyColdFormat",true},{"idempotentMigration",true},{"signerCommitmentUnchanged",true},{"lateSnapshotReadRejected",true},{"runtimeConfigBootQualified",false},{"graphCapacityClosed",false},{"networkQualified",false},{"productionQualified",false}}.dump()<<std::endl;return;
    }

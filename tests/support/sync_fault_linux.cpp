@@ -7,10 +7,12 @@
 #include <dlfcn.h>
 #include <limits.h>
 #include <unistd.h>
+#include <signal.h>
 namespace {
 char target_path[PATH_MAX]{};
 std::atomic<bool> armed{false};
 std::atomic<unsigned> failures{0};
+std::atomic<bool> stop_at_sync{false};
 bool should_fail(int fd){
  if(!armed.load(std::memory_order_acquire))return false;
  char descriptor[64],path[PATH_MAX]{},resolved[PATH_MAX]{};
@@ -20,17 +22,25 @@ bool should_fail(int fd){
  if(length<0||size_t(length)>=sizeof(path)-1)return false;
  path[length]=0;
  if(!realpath(path,resolved)||std::strcmp(resolved,target_path)!=0)return false;
+ if(stop_at_sync.load(std::memory_order_acquire)){
+  static constexpr char marker[]="nano-test-sync-stopped\n";
+  if(::write(STDOUT_FILENO,marker,sizeof(marker)-1)!=sizeof(marker)-1)std::abort();
+  ::raise(SIGSTOP); // Parent owns the child and kills it at this explicit barrier.
+ }
  ++failures;errno=EIO;return true;
 }
 using Sync=int(*)(int);
 Sync next(const char* symbol){auto fn=reinterpret_cast<Sync>(dlsym(RTLD_NEXT,symbol));if(!fn)std::abort();return fn;}
 }
 extern "C" void nano_test_arm_sync_fault(const char* path){
- if(!realpath(path,target_path))std::abort();failures=0;armed.store(true,std::memory_order_release);
+ if(!realpath(path,target_path))std::abort();failures=0;stop_at_sync=false;armed.store(true,std::memory_order_release);
 }
 extern "C" void nano_test_arm_future_sync_fault(const char* path){
  if(!path||path[0]!='/'||std::strlen(path)>=sizeof(target_path))std::abort();
- std::strcpy(target_path,path);failures=0;armed.store(true,std::memory_order_release);
+ std::strcpy(target_path,path);failures=0;stop_at_sync=false;armed.store(true,std::memory_order_release);
+}
+extern "C" void nano_test_arm_sync_stop(const char* path){
+ if(!realpath(path,target_path))std::abort();failures=0;stop_at_sync=true;armed.store(true,std::memory_order_release);
 }
 extern "C" void nano_test_disarm_sync_fault(){armed.store(false,std::memory_order_release);}
 extern "C" unsigned nano_test_sync_failures(){return failures.load();}
