@@ -1,0 +1,14 @@
+In file included from /output/diagnose.cpp:1:
+In file included from /work/network/capella_head_catalog_relay.hpp:2:
+In file included from /work/network/capella_block_delivery.hpp:2:
+In file included from /work/network/altair_archive_relay.hpp:2:
+/work/network/altair_core_dispatch.hpp:97:73: warning: missing field 'result' initializer [-Wmissing-field-initializers]
+   97 |   jobs_.push_back(Job{std::move(frame),std::move(cancel),std::move(done)});
+      |                                                                         ^
+/output/diagnose.cpp:54:13: error: redefinition of 'maximum'
+   54 |  const auto maximum=request.at("maximumAttempts").get<unsigned>();need(maximum&&maximum<=32,"relay attempt bound");
+      |             ^
+/output/diagnose.cpp:19:13: note: previous definition is here
+   19 |  const auto maximum=number(request.at("maximumSamples")),work=number(request.at("maximumSlotsPerSample"));need(maximum&&maximum<=16&&work&&work<=128,"diagnostic sampling bounds");
+      |             ^
+1 warning and 1 error generated.

@@ -1,0 +1,27 @@
+{
+  "genesis": "/fixture/genesis.json",
+  "maximumSamples": "0x10",
+  "maximumSlotsPerSample": "0x80",
+  "sources": [
+    {
+      "name": "mac-native",
+      "config": "/output/mac-native-config.json",
+      "database": "/native-data/chain",
+      "checkpoint": {
+        "digest": "0x4ce0e753abf8209f17a862129e1822954e26aa6e16a7f5c09388ca6108800b5f",
+        "sequence": "0x2b22"
+      }
+    },
+    {
+      "name": "mac-docker",
+      "config": "/output/mac-docker-config.json",
+      "database": "/docker-data/chain",
+      "checkpoint": {
+        "digest": "0x44d16837981fa677ee5209c10dc7cf37f56e2b26c8ce7a7c73b040bf9f36123f",
+        "sequence": "0x2a4a"
+      }
+    }
+  ],
+  "cloneDatabase": "/output/recipient-chain",
+  "maximumAttempts": 32
+}
