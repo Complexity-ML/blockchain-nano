@@ -7215,3 +7215,6 @@ Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichi
 
 
 2026-10-06 — Préparation v13 : engagements post-v12 exacts, continuation par parent/slot et relais 76bb2468. Copies locales séparées et volume VPS conservé ; journaux non réinitialisés/fusionnés. Même profil, même limite et même critère de finalité en 900 s. Préparation seule, pression/éviction/coût des caches, cause globale WAN, finalité et production ouverts. Preuves restored-three-node-v13-parent-cache-prepare-20261006/.
+
+
+2026-10-06 — Reprise v13 FAILED : contrôleur 80316 / sortie 1, checkout 24ea13b0, cœur 5787915e et relais 76bb2468 ; 0 avancées communes observées selon le critère original. Trois propriétaires arrêtés et audits read-only des engagements, journaux/témoins et historique canonique ; fichiers inchangés. Pas de compilation concurrente, ni transfert de base inter-hôtes. Périmètre privé exact ; production et revue indépendante restent ouvertes. [Preuves v13](qualification/restored-three-node-v13-parent-cache-terminal-20261006/README.md).
