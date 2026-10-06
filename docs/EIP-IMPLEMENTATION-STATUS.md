@@ -1,5 +1,11 @@
 # Feuille de route EIP — état réel de Nano
 
+## Codec du manifeste compact Capella : Docker ARM64/AMD64 — 6 octobre 2026
+
+Le codec local remplace les états complets par des références racine/hash/longueur, conserve les métadonnées et opérations, authentifie le manifeste avant tout fetch puis restitue exactement le checkpoint engagé. Fixture synthétique de trois records : 25269 octets de checkpoint, 854 de manifeste, fragments séparés ; quinze refus adversariaux et réouverture RocksDB réussis sur ARM64/AMD64. Ce n’est pas une réduction mesurée du stockage/IO total. [Sources et preuves](qualification/capella-fragment-manifest-codec-20261006/README.md).
+
+**Codec qualifié, réacteur/runtime non raccordés.** Publication/témoin/migration et cache de branches froides restent à intégrer. La candidate runtime `02ec0ab0`, son format complet et le plafond 1024 restent inchangés ; saturation V28 non corrigée. Aucune qualification EIP/consensus/WAN ou production déduite ; tous les critères et échecs historiques, revue indépendante et lancement Base–Nano restent ouverts.
+
 ## Stockage des fragments immuables : Docker ARM64/AMD64 — 6 octobre 2026
 
 Le backend RocksDB publie maintenant des fragments opaques SHA256 dans le même batch synchrone que le checkpoint/token et, si demandé, l’exécution. Contenu immutable, liaison chainId/genesis, CAS, budgets et refus de corruption ; une écriture incertaine bloque ce handle jusqu’à réouverture. Deux nouveaux modes et la régression d’exécution actuelle passent sur les deux architectures : duplication/CAS/budgets/copie readonly/altération, fsync avec deux dispositions du WAL, puis CAS/reorg/archives et SIGKILL. Les deux erreurs de préparation des fixtures sont conservées. [Sources, preuves et périmètre](qualification/checkpoint-immutable-blobs-docker-20261006/README.md).

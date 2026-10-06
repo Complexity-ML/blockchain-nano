@@ -1,0 +1,1 @@
+/usr/bin/clang++ -I/source/include -I/source/network  -DMCL_BINT_ASM_X64=0 -DMCL_DONT_USE_XBYAK -DMCL_FP_BIT=384 -DMCL_FR_BIT=256 -DMCL_MSM=0 -DMCL_PORTABLE=1 -DMCL_USE_LLVM=1  -I/source/include -I/source/third_party -I/source/third_party/mcl/include  -O3 -DNDEBUG -std=gnu++20  -MMD -MF /probe/manifest.d -c /source/tests/test_checkpoint_fragment_manifest.cpp -o /probe/manifest.o

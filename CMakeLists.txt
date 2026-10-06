@@ -1149,6 +1149,11 @@ add_test(NAME consensus_altair_store_snapshot_head COMMAND ${CMAKE_COMMAND} -E e
 add_test(NAME consensus_altair_store_snapshot_reorg COMMAND ${CMAKE_COMMAND} -E env NANO_TEST_STORE_SNAPSHOTS=1 $<TARGET_FILE:nano-altair-fork-head-tests> "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/consensus-altair-fork-reorg-official" 8)
 set_tests_properties(consensus_altair_store_snapshot_head consensus_altair_store_snapshot_reorg PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_ethereum")
 
+add_executable(nano-checkpoint-fragment-manifest-tests tests/test_checkpoint_fragment_manifest.cpp)
+target_link_libraries(nano-checkpoint-fragment-manifest-tests PRIVATE nano_core)
+add_test(NAME storage_capella_checkpoint_fragment_manifest COMMAND nano-checkpoint-fragment-manifest-tests)
+set_tests_properties(storage_capella_checkpoint_fragment_manifest PROPERTIES TIMEOUT 90 LABELS "qualification_storage_local")
+
 add_executable(nano-checkpoint-blob-tests tests/test_checkpoint_blobs.cpp)
 target_link_libraries(nano-checkpoint-blob-tests PRIVATE nano_core)
 add_test(NAME storage_checkpoint_immutable_blobs COMMAND nano-checkpoint-blob-tests)
