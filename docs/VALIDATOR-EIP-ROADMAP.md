@@ -7754,3 +7754,9 @@ Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichi
 
 
 2026-10-06 — Préparation v11 : engagements exacts post-v10, core 504c9df8 et relais 76bb2468. Fichiers audités inchangés, copies Mac locales et volume VPS conservés ; aucun journal réinitialisé/fusionné. Défaut de continuation de cibles qualifié sur les trois environnements ; profil/limites et critère de trois avancées communes en 900 s inchangés. Préparation seule ; finalité, cause v10 et production ouvertes. Preuves restored-three-node-v11-target-prepare-20261006/.
+
+
+2026-10-06 — Reprise v11 FAILED : session originale 23882/sortie 1, checkout c193eb4a, core 504c9df8/relais 76bb2468 ; aucune nouvelle finalité commune depuis 1284 ; critère initial de trois avancées en 900 s conservé. Trois arrêts propres et engagements post-v11 audités séparément en lecture seule, fichiers inchangés. Traces/compteurs bruts conservés ; aucun succès réseau extrapolé. Diagnostic natif concurrent documenté ; pas un benchmark CPU isolé. Prototype de cache de votes distinct, non déployé. Cause WAN, saturation/pruning, finalité et production restent ouverts. [Preuves v11](qualification/restored-three-node-v11-target-terminal-20261006/README.md).
+
+
+2026-10-06 — Contre-exemple natif supplémentaire : deux attestations individuellement valides sur des racines distinctes à la même époque effacent leur préparation dans le core 504c9df8 ; fixture finale exacte, baseline sortie 1. Prototype hors dépôt/runtime : cache primaire par époque conservé, cibles secondaires dans le cache partagé borné, 43 paires pour admettre les deux votes, oracle complet identique, signature invalide rejetée, duplicata stable et témoin rouvert. Première construction de fixture et erreur include conservées distinctement. Prototype non intégré, non déployé, Docker non qualifié ; cause v11 non démontrée et production ouverte. [Preuves](qualification/vote-target-alternation-prototype-20261006/README.md).

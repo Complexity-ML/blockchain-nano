@@ -1,0 +1,114 @@
+{
+  "mac-native": {
+    "sends": {
+      "accepted|block": 43,
+      "rejected|sync_committee_message": 22,
+      "unconfirmed|block": 23,
+      "unconfirmed|sync_committee_message": 4
+    },
+    "streamReasons": {
+      "accepted-ack-written": 40,
+      "frame-read-failed": 5
+    },
+    "catalogues": {
+      "block|head-or-catalog-deadline": 4,
+      "attestation|admission-rejected": 129,
+      "attester_slashing|None": 26,
+      "bls_to_execution_change|None": 26,
+      "sync_committee_message|admission-rejected": 22,
+      "voluntary_exit|None": 25,
+      "block|admission-rejected": 22,
+      "sync_committee_message|delivery-unconfirmed": 4
+    },
+    "dispatchTransitions": []
+  },
+  "mac-docker": {
+    "sends": {
+      "accepted|block": 112,
+      "unconfirmed|block": 528,
+      "unconfirmed|sync_committee_message": 8
+    },
+    "streamReasons": {
+      "accepted-ack-written": 40,
+      "frame-read-failed": 5
+    },
+    "catalogues": {
+      "block|head-or-catalog-deadline": 1,
+      "attestation|admission-rejected": 38,
+      "attester_slashing|None": 9,
+      "bls_to_execution_change|None": 8,
+      "sync_committee_message|delivery-unconfirmed": 8,
+      "voluntary_exit|None": 8,
+      "block|head-admission-unconfirmed": 8,
+      "attestation|cancelled-or-deadline": 3
+    },
+    "dispatchTransitions": []
+  },
+  "vps-docker": {
+    "sends": {
+      "accepted|block": 80
+    },
+    "streamReasons": {
+      "accepted-ack-written": 155,
+      "rejected-ack-written": 22,
+      "deadline": 44,
+      "dispatch-unavailable": 142,
+      "frame-read-failed": 15,
+      "core-local-failure": 1
+    },
+    "catalogues": {
+      "block|dependency-quantum-yield": 10,
+      "attestation|None": 12,
+      "attester_slashing|None": 21,
+      "bls_to_execution_change|None": 18,
+      "sync_committee_message|None": 16,
+      "voluntary_exit|None": 19,
+      "attestation|admission-rejected": 75,
+      "attestation|export-unconfirmed": 3,
+      "attestation|invalid-response": 59,
+      "block|head-reference-unavailable": 10,
+      "bls_to_execution_change|invalid-response": 11,
+      "block|head-admission-unconfirmed": 4,
+      "attestation|incomplete": 13,
+      "attester_slashing|incomplete": 4,
+      "bls_to_execution_change|incomplete": 4,
+      "sync_committee_message|incomplete": 3,
+      "voluntary_exit|invalid-response": 14,
+      "block|invalid-response": 7,
+      "sync_committee_message|invalid-response": 14,
+      "attester_slashing|invalid-response": 8,
+      "block|admission-rejected": 2,
+      "attestation|export-unavailable": 2
+    },
+    "dispatchTransitions": [
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 30,
+        "pending": 2,
+        "phase": "transport-suspended",
+        "timeMs": 1791251582457
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 30,
+        "pending": 0,
+        "phase": "transport-resumed",
+        "timeMs": 1791251584784
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 199,
+        "pending": 2,
+        "phase": "transport-suspended",
+        "timeMs": 1791252289443
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 199,
+        "pending": 0,
+        "phase": "transport-resumed",
+        "timeMs": 1791252294930
+      }
+    ]
+  }
+}
