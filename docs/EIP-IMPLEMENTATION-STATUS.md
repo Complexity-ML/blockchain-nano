@@ -7290,3 +7290,6 @@ Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, d
 
 
 2026-10-06 — Ancre locale signée : contre-exemple de famine reproduit puis correctif intégré. Admission distante obligatoire ; refus explicite permet le parcours borné des parents, résultat ambigu sans retry automatique. Neuf suites SDK et scénario réel --wire qualifiés en natif/ARM64/AMD64, contrôleurs 94615/86191/33176 sortis 0. Images/volumes réutilisés ; cœur inchangé, fixture consommatrice recompilée. Cause WAN globale et finalité commune non prouvées ; échecs historiques et toutes les exigences restantes conservés. [Qualification ciblée](qualification/signed-anchor-integrated-20261006/README.md).
+
+
+2026-10-06 — Préparation v19 : engagements post-v18 et journaux conservés, ancre signée qualifiée en natif/ARM64/AMD64 dans son périmètre ciblé. Trois finalités communes nouvelles en 900 s restent à démontrer ; préparation seule. Production et revue indépendante ouvertes. Preuves restored-three-node-v19-signed-anchor-prepare-20261006/.
