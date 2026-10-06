@@ -179,3 +179,11 @@ target_include_directories(nano-capella-export-resume-tests PRIVATE ../third_par
 target_compile_definitions(nano-capella-export-resume-tests PRIVATE FMT_CONSTEVAL= NANO_TEST_EXPORT_CACHE)
 target_link_libraries(nano-capella-export-resume-tests PRIVATE p2p::p2p)
 add_test(NAME capella_export_resume COMMAND nano-capella-export-resume-tests)
+
+add_executable(nano-capella-head-history-fairness-tests test_capella_head_history_fairness.cpp)
+target_include_directories(nano-capella-head-history-fairness-tests PRIVATE ../third_party)
+target_compile_features(nano-capella-head-history-fairness-tests PRIVATE cxx_std_20)
+target_compile_definitions(nano-capella-head-history-fairness-tests PRIVATE FMT_CONSTEVAL= NANO_HEAD_HISTORY_FIRST)
+target_link_libraries(nano-capella-head-history-fairness-tests PRIVATE p2p::p2p)
+add_test(NAME capella_head_history_fairness COMMAND nano-capella-head-history-fairness-tests)
+set_tests_properties(capella_head_history_fairness PROPERTIES TIMEOUT 20)
