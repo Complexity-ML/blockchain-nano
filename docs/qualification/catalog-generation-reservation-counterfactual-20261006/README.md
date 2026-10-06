@@ -1,0 +1,7 @@
+# Réservation de capture et rotation — contre-exemple conservé
+
+Correction fail-fast non publiée sur parent cfc30fe6. Baseline original 18115 / sortie 0 : les quatre courses tournent la génération et empêchent toute publication, y compris les deux nettoyages bénins (sans rapport et propriétaire étranger). Ce résultat est un échec de progression utile, pas une qualification de production. Draft isolé original 11207 / sortie 0 : la réservation autorisée survit aux rotations étrangères ; son propre retrait avant ou après rotation interdit toujours la publication. Quatre capacités récupérées, primaire inchangé. Runtime intégré et finalité WAN non qualifiés par ces pilotes.
+
+HTTP réel de la correction fail-fast précédente : natif 84093, ARM64 98970 et AMD64 64858 / sorties 0, code occupé -32005, mauvais token refusé, génération/release réactives et primaire inchangé. Le premier mode --http n’entrait pas dans le bloc queued_bls_changes : ses sorties 0 ne qualifient PAS ce nouveau cas. Réparation avec --queued-bls-rpc, mêmes binaires, aucune recompilation. Premier helper ARM64 sans fixture / sortie 1 conservé ; fixture publique montée puis scénario réellement exécuté.
+
+Le lot final doit reconstruire les deux consommateurs du nouveau layout, qualifier bornes/fencing/HTTP sur natif et Docker ARM64/AMD64, et garder ouverte la contention provenant d’autres tâches RPC et la finalité WAN. Aucun thread, quota, fonds ou réseau public ajouté.

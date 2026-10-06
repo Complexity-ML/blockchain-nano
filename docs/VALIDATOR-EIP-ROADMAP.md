@@ -7922,3 +7922,6 @@ Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, d
 
 
 2026-10-06 — Contention de deux travailleurs reproduite (14001/0) : capture retenue + acquéreur en attente font expirer génération/release dans la file. Draft à refus immédiat (48776/0) : contrôles non expirés, réservations drainées et primaire inchangé ; mêmes deux threads et quotas. Comparaison isolée sans HTTP réel, cause WAN et runtime intégré non qualifiés. Prochain lot : code RPC occupé distinct, HTTP réel et qualification des deux architectures. [Preuves](qualification/catalog-worker-starvation-counterfactual-20261006/README.md).
+
+
+2026-10-06 — Course de génération confirmée (18115/0) : nettoyages étrangers annulent une capture utile. Draft avec réservation suivie (11207/0) : captures bénignes préservées, retraits propres avant/après rotation toujours clôturants, capacité récupérée et primaire inchangé. HTTP réellement activé sur trois architectures ; omission initiale du mode et helper ARM64 sans fixture conservés. Lot final ABI/HTTP/quotas encore à qualifier ; cause et finalité WAN non closes. [Preuves](qualification/catalog-generation-reservation-counterfactual-20261006/README.md).
