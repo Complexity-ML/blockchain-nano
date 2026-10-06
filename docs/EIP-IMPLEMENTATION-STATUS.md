@@ -7236,3 +7236,6 @@ Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichi
 
 
 2026-10-06 — Alternance tête/historique qualifiée dans son périmètre : contre-exemple ancien relais conservé (tête non confirmée bloque deux tours historiques), correction et mêmes 19/10/5 scénarios sur Mac natif et Docker ARM/AMD. ACK de tête réel obligatoire, statut absent/tardif et erreurs restent des échecs, quota/annulation partagés ; catégories intercalées et état par session. Trois cibles CMake compilées et CTest ARM 3/3. Nouveaux binaires P2P identifiés, cœur 5787915e inchangé, images/volumes réutilisés. Aucun résultat WAN/finalité nouvelle revendiqué : prochaine reprise post-v14 selon le critère original. Échecs historiques, autres écarts et revue indépendante restent ouverts. [Preuves](qualification/head-history-fairness-integrated-20261006/README.md).
+
+
+2026-10-06 — Préparation v15 : engagements post-v14 exacts, cœur 5787915e et relais 1427e624 avec alternance tête/historique. Copies locales séparées et volume VPS conservé ; journaux non réinitialisés/fusionnés. Même profil, même limite et même critère de trois finalités nouvelles en 900 s. Préparation seule, finalité/WAN et autres critères de production restent ouverts. Preuves restored-three-node-v15-history-first-prepare-20261006/.
