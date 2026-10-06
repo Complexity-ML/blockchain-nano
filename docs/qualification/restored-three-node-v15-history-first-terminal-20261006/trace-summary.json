@@ -1,0 +1,251 @@
+{
+  "mac-native": {
+    "catalogues": {
+      "block|dependency-depth-limit": 3,
+      "attestation|admission-rejected": 93,
+      "attester_slashing|None": 19,
+      "bls_to_execution_change|None": 19,
+      "sync_committee_message|admission-rejected": 12,
+      "voluntary_exit|None": 18,
+      "block|head-or-catalog-deadline": 14,
+      "sync_committee_message|delivery-unconfirmed": 7,
+      "block|head-reference-unavailable": 2
+    },
+    "dispatchTransitions": [],
+    "payloadsAdmittedByKind": {
+      "block": 0,
+      "attestation": 0
+    },
+    "sendCompletionByKind": {
+      "block": {
+        "attempts": 114,
+        "outcomes": {
+          "unconfirmed": 72,
+          "accepted": 42
+        },
+        "elapsedMs": {
+          "min": 16,
+          "median": 4834,
+          "max": 10048
+        },
+        "writesCompleted": 105
+      },
+      "sync_committee_message": {
+        "attempts": 19,
+        "outcomes": {
+          "rejected": 12,
+          "unconfirmed": 7
+        },
+        "elapsedMs": {
+          "min": 0,
+          "median": 4842,
+          "max": 10050
+        },
+        "writesCompleted": 18
+      }
+    }
+  },
+  "mac-docker": {
+    "catalogues": {
+      "block|admission-rejected": 5,
+      "attestation|admission-rejected": 81,
+      "attester_slashing|None": 17,
+      "bls_to_execution_change|None": 16,
+      "sync_committee_message|admission-rejected": 10,
+      "voluntary_exit|None": 16,
+      "block|head-or-catalog-deadline": 10,
+      "sync_committee_message|delivery-unconfirmed": 5,
+      "sync_committee_message|None": 1,
+      "block|head-reference-unavailable": 2
+    },
+    "dispatchTransitions": [],
+    "payloadsAdmittedByKind": {
+      "block": 0,
+      "attestation": 0
+    },
+    "sendCompletionByKind": {
+      "block": {
+        "attempts": 138,
+        "outcomes": {
+          "unconfirmed": 112,
+          "accepted": 26
+        },
+        "elapsedMs": {
+          "min": 35,
+          "median": 116,
+          "max": 10064
+        },
+        "writesCompleted": 125
+      },
+      "sync_committee_message": {
+        "attempts": 15,
+        "outcomes": {
+          "rejected": 10,
+          "unconfirmed": 5
+        },
+        "elapsedMs": {
+          "min": 0,
+          "median": 6137,
+          "max": 10055
+        },
+        "writesCompleted": 14
+      }
+    }
+  },
+  "vps-docker": {
+    "catalogues": {
+      "block|invalid-response": 34,
+      "block|dependency-quantum-yield": 10,
+      "attestation|invalid-response": 239,
+      "attester_slashing|invalid-response": 47,
+      "bls_to_execution_change|invalid-response": 48,
+      "sync_committee_message|invalid-response": 51,
+      "voluntary_exit|invalid-response": 54,
+      "block|head-reference-unavailable": 37,
+      "attestation|incomplete": 104,
+      "attester_slashing|incomplete": 22,
+      "bls_to_execution_change|incomplete": 23,
+      "sync_committee_message|incomplete": 20,
+      "voluntary_exit|incomplete": 17,
+      "attestation|admission-rejected": 55,
+      "voluntary_exit|None": 10,
+      "attestation|export-unconfirmed": 7,
+      "attester_slashing|None": 13,
+      "bls_to_execution_change|None": 10,
+      "sync_committee_message|None": 10,
+      "block|head-or-catalog-deadline": 1
+    },
+    "dispatchTransitions": [
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 3,
+        "pending": 2,
+        "phase": "transport-suspended",
+        "timeMs": 1791262411366
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 3,
+        "pending": 0,
+        "phase": "transport-resumed",
+        "timeMs": 1791262413470
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 37,
+        "pending": 2,
+        "phase": "transport-suspended",
+        "timeMs": 1791262609555
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 37,
+        "pending": 0,
+        "phase": "transport-resumed",
+        "timeMs": 1791262610092
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 69,
+        "pending": 2,
+        "phase": "transport-suspended",
+        "timeMs": 1791262810139
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 69,
+        "pending": 0,
+        "phase": "transport-resumed",
+        "timeMs": 1791262812554
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 87,
+        "pending": 2,
+        "phase": "transport-suspended",
+        "timeMs": 1791262905585
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 87,
+        "pending": 0,
+        "phase": "transport-resumed",
+        "timeMs": 1791262906787
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 91,
+        "pending": 2,
+        "phase": "transport-suspended",
+        "timeMs": 1791262941238
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 91,
+        "pending": 0,
+        "phase": "transport-resumed",
+        "timeMs": 1791262944004
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 110,
+        "pending": 2,
+        "phase": "transport-suspended",
+        "timeMs": 1791263072485
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 110,
+        "pending": 0,
+        "phase": "transport-resumed",
+        "timeMs": 1791263073988
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 128,
+        "pending": 2,
+        "phase": "transport-suspended",
+        "timeMs": 1791263176355
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 128,
+        "pending": 0,
+        "phase": "transport-resumed",
+        "timeMs": 1791263176941
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 134,
+        "pending": 2,
+        "phase": "transport-suspended",
+        "timeMs": 1791263224340
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 134,
+        "pending": 0,
+        "phase": "transport-resumed",
+        "timeMs": 1791263225119
+      }
+    ],
+    "payloadsAdmittedByKind": {
+      "block": 0,
+      "attestation": 0
+    },
+    "sendCompletionByKind": {
+      "block": {
+        "attempts": 103,
+        "outcomes": {
+          "accepted": 103
+        },
+        "elapsedMs": {
+          "min": 117,
+          "median": 164,
+          "max": 2131
+        },
+        "writesCompleted": 103
+      }
+    }
+  }
+}

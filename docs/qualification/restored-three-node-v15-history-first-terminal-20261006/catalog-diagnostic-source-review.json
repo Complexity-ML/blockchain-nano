@@ -1,0 +1,24 @@
+{
+  "observedAt": "2026-10-06T05:03:31.022041+00:00",
+  "sourceRevision": "7c6c1fd306f811237596c62deae2cf28bc1fb2d5",
+  "sourceHashes": {
+    "src/consensus_capella_reactor.cpp": "e8c20fa44841075fbf7d5e0e7566b65a4a5a2d17585e7a062e77b6a521ed3012",
+    "src/consensus_capella_runtime.cpp": "7dc581185c226e2ab21f64ce7278559b552ce031a0a7563a519c0d5374ba3039",
+    "network/capella_catalog_relay.hpp": "2d1d62a65d49d1b7a922494ba9fe178fa6f91991a1e23c22306059596f205d0c",
+    "network/capella_head_catalog_relay.hpp": "76b5efe9fdd49fa759748098914b267e35cde37a2a728fe27f889c2f404a3f95",
+    "network/capella_inventory_sessions.hpp": "7d1f2544d591aeb4a2e2e47fc9e32a8447ef7dd92c1a66ef4d7559ccfe89ffea"
+  },
+  "observations": [
+    "capture_inventory includes every retained non-anchor block, bounded by root budget; no fixed 32-entry cap found in reviewed path",
+    "relay maximumEntries configured 0x400; runtime normalizes supplied quantities",
+    "closed means confirmed catalog release, not necessarily successful or exhaustive scan",
+    "failure() preserves first reason; a later terminal export, page, capacity or timeout event may not appear in reason",
+    "head-wrapper deadline can omit in-progress catalog counters"
+  ],
+  "hypothesesNotProven": [
+    "Which stopping event affected each live attempt",
+    "Why remote admission or RPC observations time out",
+    "Whether a cursor-continuation change would resolve actual convergence"
+  ],
+  "nextEvidence": "Post-stop retained frontier classification and termination counterexample; no live code or quota changes"
+}

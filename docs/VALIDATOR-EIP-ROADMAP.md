@@ -7802,3 +7802,6 @@ Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichi
 
 
 2026-10-06 — Préparation v15 : engagements post-v14 exacts, cœur 5787915e et relais 1427e624 avec alternance tête/historique. Copies locales séparées et volume VPS conservé ; journaux non réinitialisés/fusionnés. Même profil, même limite et même critère de trois finalités nouvelles en 900 s. Préparation seule, finalité/WAN et autres critères de production restent ouverts. Preuves restored-three-node-v15-history-first-prepare-20261006/.
+
+
+2026-10-06 — Reprise v15 FAILED : contrôleur 29884 / sortie 1, checkout 7c6c1fd3, cœur 5787915e et relais 1427e624 ; 0 avancées communes observées selon le critère original. Frontières et classifications de votes enregistrées ; diagnostic avec lecteur existant réutilisé, sans présumer de leur stabilité ni de la cause WAN. Trois propriétaires arrêtés et audits read-only des engagements, journaux/témoins et historique canonique ; fichiers inchangés. Pas de compilation concurrente, ni transfert de base inter-hôtes. Périmètre privé exact ; production et revue indépendante restent ouvertes. [Preuves v15](qualification/restored-three-node-v15-history-first-terminal-20261006/README.md).

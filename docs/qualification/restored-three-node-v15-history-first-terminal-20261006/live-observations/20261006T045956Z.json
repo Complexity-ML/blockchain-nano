@@ -1,0 +1,1431 @@
+{
+  "observedAt": "20261006T045956Z",
+  "scope": "point-in-time logs; attempts not unique objects; not terminal result",
+  "nodes": {
+    "mac-native": {
+      "eventLines": 229,
+      "catalogues": {
+        "attestation": {
+          "attempts": 40,
+          "payloadsAdmitted": 0,
+          "rejected": 878,
+          "reasons": {
+            "admission-rejected": 40
+          }
+        },
+        "attester_slashing": {
+          "attempts": 8,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 8
+          }
+        },
+        "block": {
+          "attempts": 8,
+          "payloadsAdmitted": 0,
+          "rejected": 36,
+          "reasons": {
+            "dependency-depth-limit": 2,
+            "head-or-catalog-deadline": 6
+          }
+        },
+        "bls_to_execution_change": {
+          "attempts": 8,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 8
+          }
+        },
+        "sync_committee_message": {
+          "attempts": 8,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "admission-rejected": 5,
+            "delivery-unconfirmed": 3
+          }
+        },
+        "voluntary_exit": {
+          "attempts": 8,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 8
+          }
+        }
+      },
+      "blockAttempts": [
+        {
+          "catalogElapsedMs": 19445,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 19762,
+          "event": "test-capella-catalog-relay",
+          "exports": 32,
+          "failureStage": "delivery",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "dependency-depth-limit",
+          "rejected": 32,
+          "scanned": 32,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "closed": false,
+          "elapsedMs": 30001,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "historical-first",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        },
+        {
+          "closed": false,
+          "elapsedMs": 30002,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        },
+        {
+          "closed": false,
+          "elapsedMs": 30002,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "historical-first",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        },
+        {
+          "catalogElapsedMs": 15615,
+          "closed": true,
+          "delivered": 1,
+          "elapsedMs": 15638,
+          "event": "test-capella-catalog-relay",
+          "exports": 5,
+          "failureStage": "delivery",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "dependency-depth-limit",
+          "rejected": 4,
+          "scanned": 5,
+          "skippedKnown": 1,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "closed": false,
+          "elapsedMs": 30002,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "historical-first",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        },
+        {
+          "closed": false,
+          "elapsedMs": 30002,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        },
+        {
+          "closed": false,
+          "elapsedMs": 30000,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "historical-first",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        }
+      ],
+      "dispatchTransitions": [],
+      "sendCompletionByKind": {
+        "block": {
+          "attempts": 67,
+          "outcomes": {
+            "unconfirmed": 52,
+            "accepted": 15
+          },
+          "elapsedMs": {
+            "min": 25,
+            "median": 127,
+            "max": 10043
+          },
+          "writesCompleted": 61,
+          "slowest": [
+            {
+              "elapsedMs": 10043,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 346,
+              "timeMs": 1791262744415,
+              "writeCompletedMs": 346
+            },
+            {
+              "elapsedMs": 10034,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 34,
+              "timeMs": 1791262521821,
+              "writeCompletedMs": 34
+            },
+            {
+              "elapsedMs": 10034,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 62,
+              "timeMs": 1791262579894,
+              "writeCompletedMs": 62
+            },
+            {
+              "elapsedMs": 10017,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 17,
+              "timeMs": 1791262568326,
+              "writeCompletedMs": 17
+            },
+            {
+              "elapsedMs": 10002,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 0,
+              "timeMs": 1791262696433,
+              "writeCompletedMs": 0
+            }
+          ]
+        },
+        "sync_committee_message": {
+          "attempts": 8,
+          "outcomes": {
+            "rejected": 5,
+            "unconfirmed": 3
+          },
+          "elapsedMs": {
+            "min": 54,
+            "median": 6100,
+            "max": 10032
+          },
+          "writesCompleted": 8,
+          "slowest": [
+            {
+              "elapsedMs": 10032,
+              "event": "test-consensus-send-completion",
+              "kind": "sync_committee_message",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 32,
+              "timeMs": 1791262543291,
+              "writeCompletedMs": 32
+            },
+            {
+              "elapsedMs": 7775,
+              "event": "test-consensus-send-completion",
+              "kind": "sync_committee_message",
+              "outcome": "rejected",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 57,
+              "timeMs": 1791262778667,
+              "writeCompletedMs": 57
+            },
+            {
+              "elapsedMs": 6976,
+              "event": "test-consensus-send-completion",
+              "kind": "sync_committee_message",
+              "outcome": "rejected",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 32,
+              "timeMs": 1791262479606,
+              "writeCompletedMs": 33
+            },
+            {
+              "elapsedMs": 6100,
+              "event": "test-consensus-send-completion",
+              "kind": "sync_committee_message",
+              "outcome": "rejected",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 53,
+              "timeMs": 1791262590843,
+              "writeCompletedMs": 53
+            },
+            {
+              "elapsedMs": 4641,
+              "event": "test-consensus-send-completion",
+              "kind": "sync_committee_message",
+              "outcome": "rejected",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 62,
+              "timeMs": 1791262423746,
+              "writeCompletedMs": 62
+            }
+          ]
+        }
+      },
+      "blockOrderObserved": {
+        "dependency-depth-catalog-fallback": 4,
+        "historical-first": 4
+      }
+    },
+    "mac-docker": {
+      "eventLines": 206,
+      "catalogues": {
+        "attestation": {
+          "attempts": 35,
+          "payloadsAdmitted": 0,
+          "rejected": 677,
+          "reasons": {
+            "admission-rejected": 35
+          }
+        },
+        "attester_slashing": {
+          "attempts": 7,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 7
+          }
+        },
+        "block": {
+          "attempts": 7,
+          "payloadsAdmitted": 0,
+          "rejected": 44,
+          "reasons": {
+            "admission-rejected": 2,
+            "head-or-catalog-deadline": 5
+          }
+        },
+        "bls_to_execution_change": {
+          "attempts": 7,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 7
+          }
+        },
+        "sync_committee_message": {
+          "attempts": 7,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "admission-rejected": 3,
+            "delivery-unconfirmed": 3,
+            "None": 1
+          }
+        },
+        "voluntary_exit": {
+          "attempts": 7,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 7
+          }
+        }
+      },
+      "blockAttempts": [
+        {
+          "catalogElapsedMs": 19145,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 19502,
+          "event": "test-capella-catalog-relay",
+          "exports": 24,
+          "failureStage": "delivery",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "admission-rejected",
+          "rejected": 23,
+          "scanned": 23,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "closed": false,
+          "elapsedMs": 30008,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "historical-first",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        },
+        {
+          "closed": false,
+          "elapsedMs": 30003,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        },
+        {
+          "closed": false,
+          "elapsedMs": 30001,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "historical-first",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        },
+        {
+          "catalogElapsedMs": 27226,
+          "closed": true,
+          "delivered": 1,
+          "elapsedMs": 27241,
+          "event": "test-capella-catalog-relay",
+          "exports": 22,
+          "failureStage": "delivery",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "admission-rejected",
+          "rejected": 21,
+          "scanned": 22,
+          "skippedKnown": 1,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "closed": false,
+          "elapsedMs": 30000,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "historical-first",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        },
+        {
+          "closed": false,
+          "elapsedMs": 30004,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        }
+      ],
+      "dispatchTransitions": [],
+      "sendCompletionByKind": {
+        "block": {
+          "attempts": 82,
+          "outcomes": {
+            "unconfirmed": 68,
+            "accepted": 14
+          },
+          "elapsedMs": {
+            "min": 35,
+            "median": 112,
+            "max": 10064
+          },
+          "writesCompleted": 70,
+          "slowest": [
+            {
+              "elapsedMs": 10064,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 63,
+              "timeMs": 1791262680590,
+              "writeCompletedMs": 63
+            },
+            {
+              "elapsedMs": 10018,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 48,
+              "timeMs": 1791262467712,
+              "writeCompletedMs": 48
+            },
+            {
+              "elapsedMs": 10017,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 49,
+              "timeMs": 1791262720645,
+              "writeCompletedMs": 49
+            },
+            {
+              "elapsedMs": 10017,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 50,
+              "timeMs": 1791262731289,
+              "writeCompletedMs": 50
+            },
+            {
+              "elapsedMs": 10002,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 0,
+              "timeMs": 1791262454404,
+              "writeCompletedMs": 0
+            }
+          ]
+        },
+        "sync_committee_message": {
+          "attempts": 6,
+          "outcomes": {
+            "rejected": 3,
+            "unconfirmed": 3
+          },
+          "elapsedMs": {
+            "min": 0,
+            "median": 4957,
+            "max": 10055
+          },
+          "writesCompleted": 5,
+          "slowest": [
+            {
+              "elapsedMs": 10055,
+              "event": "test-consensus-send-completion",
+              "kind": "sync_committee_message",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 48,
+              "timeMs": 1791262576713,
+              "writeCompletedMs": 48
+            },
+            {
+              "elapsedMs": 10017,
+              "event": "test-consensus-send-completion",
+              "kind": "sync_committee_message",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 57,
+              "timeMs": 1791262512376,
+              "writeCompletedMs": 57
+            },
+            {
+              "elapsedMs": 4957,
+              "event": "test-consensus-send-completion",
+              "kind": "sync_committee_message",
+              "outcome": "rejected",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 23,
+              "timeMs": 1791262699577,
+              "writeCompletedMs": 23
+            },
+            {
+              "elapsedMs": 4083,
+              "event": "test-consensus-send-completion",
+              "kind": "sync_committee_message",
+              "outcome": "rejected",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 40,
+              "timeMs": 1791262760584,
+              "writeCompletedMs": 40
+            },
+            {
+              "elapsedMs": 3994,
+              "event": "test-consensus-send-completion",
+              "kind": "sync_committee_message",
+              "outcome": "rejected",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 49,
+              "timeMs": 1791262420393,
+              "writeCompletedMs": 49
+            }
+          ]
+        }
+      },
+      "blockOrderObserved": {
+        "dependency-depth-catalog-fallback": 4,
+        "historical-first": 3
+      }
+    },
+    "vps-docker": {
+      "eventLines": 604,
+      "catalogues": {
+        "attestation": {
+          "attempts": 175,
+          "payloadsAdmitted": 0,
+          "rejected": 31,
+          "reasons": {
+            "invalid-response": 106,
+            "incomplete": 42,
+            "admission-rejected": 22,
+            "export-unconfirmed": 5
+          }
+        },
+        "attester_slashing": {
+          "attempts": 35,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "invalid-response": 22,
+            "incomplete": 9,
+            "None": 4
+          }
+        },
+        "block": {
+          "attempts": 35,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "invalid-response": 14,
+            "dependency-quantum-yield": 5,
+            "head-reference-unavailable": 15,
+            "head-or-catalog-deadline": 1
+          }
+        },
+        "bls_to_execution_change": {
+          "attempts": 35,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "invalid-response": 23,
+            "incomplete": 8,
+            "None": 4
+          }
+        },
+        "sync_committee_message": {
+          "attempts": 35,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "invalid-response": 22,
+            "incomplete": 9,
+            "None": 4
+          }
+        },
+        "voluntary_exit": {
+          "attempts": 35,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "invalid-response": 25,
+            "incomplete": 6,
+            "None": 4
+          }
+        }
+      },
+      "blockAttempts": [
+        {
+          "catalogElapsedMs": 9001,
+          "closed": false,
+          "delivered": 0,
+          "elapsedMs": 16981,
+          "event": "test-capella-catalog-relay",
+          "exports": 0,
+          "failureStage": "open",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWM31rxaJFv45UbnAk6AvTHQsbVqaKBLMY73U5u7DqEwrm",
+          "reason": "invalid-response",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 13821,
+          "closed": false,
+          "delivered": 0,
+          "elapsedMs": 17661,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "delivery",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWLX2qsmjrYGu7Gw98e4h1rDpzoJTvQvGKZGLmmdiRv8zy",
+          "reason": "dependency-quantum-yield",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 1,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 3562,
+          "event": "test-capella-catalog-relay",
+          "exports": 0,
+          "failureStage": "open",
+          "headPriority": "historical-first-head-unconfirmed",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWLX2qsmjrYGu7Gw98e4h1rDpzoJTvQvGKZGLmmdiRv8zy",
+          "reason": "invalid-response",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 3464,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 4030,
+          "event": "test-capella-catalog-relay",
+          "exports": 0,
+          "failureStage": "open",
+          "headPriority": "historical-first-head-unconfirmed",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWM31rxaJFv45UbnAk6AvTHQsbVqaKBLMY73U5u7DqEwrm",
+          "reason": "invalid-response",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 0,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 2332,
+          "event": "test-capella-catalog-relay",
+          "exports": 0,
+          "failureStage": "open",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWM31rxaJFv45UbnAk6AvTHQsbVqaKBLMY73U5u7DqEwrm",
+          "reason": "invalid-response",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 237,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 5237,
+          "event": "test-capella-catalog-relay",
+          "exports": 0,
+          "failureStage": "head",
+          "headPriority": "historical-first",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWM31rxaJFv45UbnAk6AvTHQsbVqaKBLMY73U5u7DqEwrm",
+          "reason": "head-reference-unavailable",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "head",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 5665,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 16551,
+          "event": "test-capella-catalog-relay",
+          "exports": 0,
+          "failureStage": "open",
+          "headPriority": "head-unconfirmed-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWLX2qsmjrYGu7Gw98e4h1rDpzoJTvQvGKZGLmmdiRv8zy",
+          "reason": "invalid-response",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 3385,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 6542,
+          "event": "test-capella-catalog-relay",
+          "exports": 0,
+          "failureStage": "open",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWM31rxaJFv45UbnAk6AvTHQsbVqaKBLMY73U5u7DqEwrm",
+          "reason": "invalid-response",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 2210,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 7210,
+          "event": "test-capella-catalog-relay",
+          "exports": 0,
+          "failureStage": "head",
+          "headPriority": "historical-first",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWLX2qsmjrYGu7Gw98e4h1rDpzoJTvQvGKZGLmmdiRv8zy",
+          "reason": "head-reference-unavailable",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "head",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "closed": true,
+          "elapsedMs": 0,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "head",
+          "headPriority": "unselected",
+          "kind": "block",
+          "peerId": "12D3KooWLX2qsmjrYGu7Gw98e4h1rDpzoJTvQvGKZGLmmdiRv8zy",
+          "reason": "head-reference-unavailable",
+          "stage": "head",
+          "success": false
+        },
+        {
+          "catalogElapsedMs": 0,
+          "closed": false,
+          "delivered": 0,
+          "elapsedMs": 0,
+          "event": "test-capella-catalog-relay",
+          "exports": 0,
+          "failureStage": "head",
+          "headPriority": "historical-first",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWLX2qsmjrYGu7Gw98e4h1rDpzoJTvQvGKZGLmmdiRv8zy",
+          "reason": "head-reference-unavailable",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "head",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "closed": true,
+          "elapsedMs": 0,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "head",
+          "headPriority": "unselected",
+          "kind": "block",
+          "peerId": "12D3KooWLX2qsmjrYGu7Gw98e4h1rDpzoJTvQvGKZGLmmdiRv8zy",
+          "reason": "head-reference-unavailable",
+          "stage": "head",
+          "success": false
+        },
+        {
+          "catalogElapsedMs": 10565,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 10573,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "delivery",
+          "headPriority": "historical-first-head-unconfirmed",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWM31rxaJFv45UbnAk6AvTHQsbVqaKBLMY73U5u7DqEwrm",
+          "reason": "dependency-quantum-yield",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 14071,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 19071,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "head",
+          "headPriority": "historical-first",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWLX2qsmjrYGu7Gw98e4h1rDpzoJTvQvGKZGLmmdiRv8zy",
+          "reason": "head-reference-unavailable",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "head",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "closed": true,
+          "elapsedMs": 0,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "head",
+          "headPriority": "unselected",
+          "kind": "block",
+          "peerId": "12D3KooWLX2qsmjrYGu7Gw98e4h1rDpzoJTvQvGKZGLmmdiRv8zy",
+          "reason": "head-reference-unavailable",
+          "stage": "head",
+          "success": false
+        },
+        {
+          "catalogElapsedMs": 0,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 5001,
+          "event": "test-capella-catalog-relay",
+          "exports": 0,
+          "failureStage": "head",
+          "headPriority": "historical-first",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWLX2qsmjrYGu7Gw98e4h1rDpzoJTvQvGKZGLmmdiRv8zy",
+          "reason": "head-reference-unavailable",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "head",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "closed": true,
+          "elapsedMs": 5000,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "head",
+          "headPriority": "unselected",
+          "kind": "block",
+          "peerId": "12D3KooWM31rxaJFv45UbnAk6AvTHQsbVqaKBLMY73U5u7DqEwrm",
+          "reason": "head-reference-unavailable",
+          "stage": "head",
+          "success": false
+        },
+        {
+          "catalogElapsedMs": 462,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 11792,
+          "event": "test-capella-catalog-relay",
+          "exports": 0,
+          "failureStage": "open",
+          "headPriority": "head-unconfirmed-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWLX2qsmjrYGu7Gw98e4h1rDpzoJTvQvGKZGLmmdiRv8zy",
+          "reason": "invalid-response",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 2983,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 5742,
+          "event": "test-capella-catalog-relay",
+          "exports": 0,
+          "failureStage": "open",
+          "headPriority": "historical-first-head-unconfirmed",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWLX2qsmjrYGu7Gw98e4h1rDpzoJTvQvGKZGLmmdiRv8zy",
+          "reason": "invalid-response",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 8,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 3145,
+          "event": "test-capella-catalog-relay",
+          "exports": 0,
+          "failureStage": "open",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWLX2qsmjrYGu7Gw98e4h1rDpzoJTvQvGKZGLmmdiRv8zy",
+          "reason": "invalid-response",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 1,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 5001,
+          "event": "test-capella-catalog-relay",
+          "exports": 0,
+          "failureStage": "head",
+          "headPriority": "historical-first",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWM31rxaJFv45UbnAk6AvTHQsbVqaKBLMY73U5u7DqEwrm",
+          "reason": "head-reference-unavailable",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "head",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 4355,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 5112,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "delivery",
+          "headPriority": "historical-first-head-unconfirmed",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWLX2qsmjrYGu7Gw98e4h1rDpzoJTvQvGKZGLmmdiRv8zy",
+          "reason": "dependency-quantum-yield",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 5693,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 9375,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "delivery",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWM31rxaJFv45UbnAk6AvTHQsbVqaKBLMY73U5u7DqEwrm",
+          "reason": "dependency-quantum-yield",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 0,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 10989,
+          "event": "test-capella-catalog-relay",
+          "exports": 0,
+          "failureStage": "open",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWLX2qsmjrYGu7Gw98e4h1rDpzoJTvQvGKZGLmmdiRv8zy",
+          "reason": "invalid-response",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 0,
+          "closed": false,
+          "delivered": 0,
+          "elapsedMs": 0,
+          "event": "test-capella-catalog-relay",
+          "exports": 0,
+          "failureStage": "head",
+          "headPriority": "historical-first",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWLX2qsmjrYGu7Gw98e4h1rDpzoJTvQvGKZGLmmdiRv8zy",
+          "reason": "head-reference-unavailable",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "head",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 9,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 5009,
+          "event": "test-capella-catalog-relay",
+          "exports": 0,
+          "failureStage": "head",
+          "headPriority": "historical-first",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWM31rxaJFv45UbnAk6AvTHQsbVqaKBLMY73U5u7DqEwrm",
+          "reason": "head-reference-unavailable",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "head",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 0,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 7471,
+          "event": "test-capella-catalog-relay",
+          "exports": 0,
+          "failureStage": "open",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWM31rxaJFv45UbnAk6AvTHQsbVqaKBLMY73U5u7DqEwrm",
+          "reason": "invalid-response",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "closed": false,
+          "elapsedMs": 30000,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "head-unconfirmed-catalog-fallback",
+          "kind": "block",
+          "peerId": "12D3KooWLX2qsmjrYGu7Gw98e4h1rDpzoJTvQvGKZGLmmdiRv8zy",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        },
+        {
+          "catalogElapsedMs": 8,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 5008,
+          "event": "test-capella-catalog-relay",
+          "exports": 0,
+          "failureStage": "head",
+          "headPriority": "historical-first",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWM31rxaJFv45UbnAk6AvTHQsbVqaKBLMY73U5u7DqEwrm",
+          "reason": "head-reference-unavailable",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "head",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 1,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 2747,
+          "event": "test-capella-catalog-relay",
+          "exports": 0,
+          "failureStage": "open",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWM31rxaJFv45UbnAk6AvTHQsbVqaKBLMY73U5u7DqEwrm",
+          "reason": "invalid-response",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 0,
+          "closed": false,
+          "delivered": 0,
+          "elapsedMs": 0,
+          "event": "test-capella-catalog-relay",
+          "exports": 0,
+          "failureStage": "head",
+          "headPriority": "historical-first",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWM31rxaJFv45UbnAk6AvTHQsbVqaKBLMY73U5u7DqEwrm",
+          "reason": "head-reference-unavailable",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "head",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 1,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 2743,
+          "event": "test-capella-catalog-relay",
+          "exports": 0,
+          "failureStage": "open",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWM31rxaJFv45UbnAk6AvTHQsbVqaKBLMY73U5u7DqEwrm",
+          "reason": "invalid-response",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 0,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 3917,
+          "event": "test-capella-catalog-relay",
+          "exports": 0,
+          "failureStage": "open",
+          "headPriority": "historical-first-head-unconfirmed",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWM31rxaJFv45UbnAk6AvTHQsbVqaKBLMY73U5u7DqEwrm",
+          "reason": "invalid-response",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 11729,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 12859,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "delivery",
+          "headPriority": "historical-first-head-unconfirmed",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWLX2qsmjrYGu7Gw98e4h1rDpzoJTvQvGKZGLmmdiRv8zy",
+          "reason": "dependency-quantum-yield",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "closed": true,
+          "elapsedMs": 5000,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "head",
+          "headPriority": "unselected",
+          "kind": "block",
+          "peerId": "12D3KooWM31rxaJFv45UbnAk6AvTHQsbVqaKBLMY73U5u7DqEwrm",
+          "reason": "head-reference-unavailable",
+          "stage": "head",
+          "success": false
+        }
+      ],
+      "dispatchTransitions": [
+        {
+          "event": "test-core-dispatch-transition",
+          "highWater": 3,
+          "pending": 2,
+          "phase": "transport-suspended",
+          "timeMs": 1791262411366
+        },
+        {
+          "event": "test-core-dispatch-transition",
+          "highWater": 3,
+          "pending": 0,
+          "phase": "transport-resumed",
+          "timeMs": 1791262413470
+        },
+        {
+          "event": "test-core-dispatch-transition",
+          "highWater": 37,
+          "pending": 2,
+          "phase": "transport-suspended",
+          "timeMs": 1791262609555
+        },
+        {
+          "event": "test-core-dispatch-transition",
+          "highWater": 37,
+          "pending": 0,
+          "phase": "transport-resumed",
+          "timeMs": 1791262610092
+        }
+      ],
+      "sendCompletionByKind": {
+        "block": {
+          "attempts": 71,
+          "outcomes": {
+            "accepted": 71
+          },
+          "elapsedMs": {
+            "min": 117,
+            "median": 161,
+            "max": 2131
+          },
+          "writesCompleted": 71,
+          "slowest": [
+            {
+              "elapsedMs": 2131,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "accepted",
+              "peerId": "12D3KooWM31rxaJFv45UbnAk6AvTHQsbVqaKBLMY73U5u7DqEwrm",
+              "streamOpenMs": 35,
+              "timeMs": 1791262466215,
+              "writeCompletedMs": 35
+            },
+            {
+              "elapsedMs": 658,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "accepted",
+              "peerId": "12D3KooWLX2qsmjrYGu7Gw98e4h1rDpzoJTvQvGKZGLmmdiRv8zy",
+              "streamOpenMs": 0,
+              "timeMs": 1791262616599,
+              "writeCompletedMs": 0
+            },
+            {
+              "elapsedMs": 595,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "accepted",
+              "peerId": "12D3KooWM31rxaJFv45UbnAk6AvTHQsbVqaKBLMY73U5u7DqEwrm",
+              "streamOpenMs": 0,
+              "timeMs": 1791262622099,
+              "writeCompletedMs": 0
+            },
+            {
+              "elapsedMs": 574,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "accepted",
+              "peerId": "12D3KooWLX2qsmjrYGu7Gw98e4h1rDpzoJTvQvGKZGLmmdiRv8zy",
+              "streamOpenMs": 0,
+              "timeMs": 1791262688157,
+              "writeCompletedMs": 0
+            },
+            {
+              "elapsedMs": 568,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "accepted",
+              "peerId": "12D3KooWLX2qsmjrYGu7Gw98e4h1rDpzoJTvQvGKZGLmmdiRv8zy",
+              "streamOpenMs": 0,
+              "timeMs": 1791262687582,
+              "writeCompletedMs": 0
+            }
+          ]
+        }
+      },
+      "blockOrderObserved": {
+        "dependency-depth-catalog-fallback": 10,
+        "historical-first-head-unconfirmed": 7,
+        "historical-first": 10,
+        "head-unconfirmed-catalog-fallback": 3,
+        "unselected": 5
+      }
+    }
+  }
+}
