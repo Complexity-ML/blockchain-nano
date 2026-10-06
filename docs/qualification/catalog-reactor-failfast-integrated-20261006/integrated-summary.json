@@ -1,0 +1,1409 @@
+{
+  "tests": {
+    "native": {
+      "reactor-failfast": {
+        "exitCode": 0,
+        "scenarios": [
+          {
+            "checkpointUnchanged": true,
+            "commitmentCancellationQualified": true,
+            "privateExceptionRedacted": true,
+            "publicationCancellationQualified": true,
+            "scenario": "beacon-read-phase-diagnostics"
+          },
+          {
+            "cancellationPreserved": true,
+            "capacityRecovered": true,
+            "firstRefusedWhileWriterHeld": true,
+            "networkQualified": false,
+            "primaryUnchanged": true,
+            "requestRetirementPreserved": true,
+            "scenario": "catalog-reactor-failfast",
+            "secondRefusedWhileWriterHeld": true,
+            "wanCauseProven": false
+          },
+          {
+            "archiveReadCompleted": true,
+            "cancelledWriterUnpublished": true,
+            "oldPublicationPreserved": true,
+            "publicationReadCompleted": true,
+            "retainedBlockExportCompleted": true,
+            "scenario": "beacon-read-during-held-admission"
+          },
+          {
+            "admissionWhileExporterPaused": true,
+            "admissionWhileReaderPaused": true,
+            "headAdvanced": true,
+            "oldPublicationPreserved": true,
+            "retainedExportCoherentDuringCommit": true,
+            "scenario": "beacon-read-concurrent-admission"
+          },
+          {
+            "assembledBodies": 9,
+            "beaconReadChecks": 14,
+            "blocks": 9,
+            "cancellations": 18,
+            "contexts": 9,
+            "deferredVotes": 0,
+            "durableReactor": true,
+            "finalityScenario": false,
+            "finalizedEpoch": 0,
+            "includedAttestations": 0,
+            "localAttestations": 0,
+            "localBlsChangeSelection": false,
+            "localProposals": 8,
+            "localRandao": 8,
+            "migrated": false,
+            "networkActivated": false,
+            "participationPercent": 100,
+            "queuedBlsChangeSelection": false,
+            "rejected": 20,
+            "scenario": "capella-signed-transition",
+            "signedArchives": 9,
+            "signedSlashings": 1,
+            "signedVotes": 6,
+            "skippedForkSlots": 0,
+            "snapshotReopened": true,
+            "storeBlocks": 9,
+            "storeSigkillReopens": 2,
+            "storeVotes": 6,
+            "voteReorgs": 2,
+            "wireMessages": 0,
+            "withdrawals": 1
+          }
+        ]
+      },
+      "generation-reservation": {
+        "exitCode": 0,
+        "scenarios": [
+          {
+            "checkpointUnchanged": true,
+            "commitmentCancellationQualified": true,
+            "privateExceptionRedacted": true,
+            "publicationCancellationQualified": true,
+            "scenario": "beacon-read-phase-diagnostics"
+          },
+          {
+            "cases": [
+              {
+                "capacityRecovered": true,
+                "mode": "unrelated",
+                "primaryUnchanged": true,
+                "published": true,
+                "rotated": true
+              },
+              {
+                "capacityRecovered": true,
+                "mode": "own-before",
+                "primaryUnchanged": true,
+                "published": false,
+                "rotated": true
+              },
+              {
+                "capacityRecovered": true,
+                "mode": "own-after",
+                "primaryUnchanged": true,
+                "published": false,
+                "rotated": true
+              },
+              {
+                "capacityRecovered": true,
+                "mode": "foreign",
+                "primaryUnchanged": true,
+                "published": true,
+                "rotated": true
+              }
+            ],
+            "scenario": "catalog-generation-reservation",
+            "wanCauseProven": false
+          },
+          {
+            "archiveReadCompleted": true,
+            "cancelledWriterUnpublished": true,
+            "oldPublicationPreserved": true,
+            "publicationReadCompleted": true,
+            "retainedBlockExportCompleted": true,
+            "scenario": "beacon-read-during-held-admission"
+          },
+          {
+            "admissionWhileExporterPaused": true,
+            "admissionWhileReaderPaused": true,
+            "headAdvanced": true,
+            "oldPublicationPreserved": true,
+            "retainedExportCoherentDuringCommit": true,
+            "scenario": "beacon-read-concurrent-admission"
+          },
+          {
+            "assembledBodies": 9,
+            "beaconReadChecks": 14,
+            "blocks": 9,
+            "cancellations": 18,
+            "contexts": 9,
+            "deferredVotes": 0,
+            "durableReactor": true,
+            "finalityScenario": false,
+            "finalizedEpoch": 0,
+            "includedAttestations": 0,
+            "localAttestations": 0,
+            "localBlsChangeSelection": false,
+            "localProposals": 8,
+            "localRandao": 8,
+            "migrated": false,
+            "networkActivated": false,
+            "participationPercent": 100,
+            "queuedBlsChangeSelection": false,
+            "rejected": 20,
+            "scenario": "capella-signed-transition",
+            "signedArchives": 9,
+            "signedSlashings": 1,
+            "signedVotes": 6,
+            "skippedForkSlots": 0,
+            "snapshotReopened": true,
+            "storeBlocks": 9,
+            "storeSigkillReopens": 2,
+            "storeVotes": 6,
+            "voteReorgs": 2,
+            "wireMessages": 0,
+            "withdrawals": 1
+          }
+        ]
+      },
+      "capture-control": {
+        "exitCode": 0,
+        "scenarios": [
+          {
+            "checkpointUnchanged": true,
+            "commitmentCancellationQualified": true,
+            "privateExceptionRedacted": true,
+            "publicationCancellationQualified": true,
+            "scenario": "beacon-read-phase-diagnostics"
+          },
+          {
+            "cases": [
+              {
+                "capacityRecovered": true,
+                "controlResponsive": true,
+                "generationResponsive": true,
+                "lateCaptureRefused": true,
+                "mode": "release",
+                "primaryUnchanged": true
+              },
+              {
+                "capacityRecovered": false,
+                "controlResponsive": true,
+                "generationResponsive": true,
+                "lateCaptureRefused": true,
+                "mode": "stop",
+                "primaryUnchanged": true
+              },
+              {
+                "capacityRecovered": true,
+                "controlResponsive": true,
+                "generationResponsive": true,
+                "lateCaptureRefused": true,
+                "mode": "expiry",
+                "primaryUnchanged": true
+              },
+              {
+                "capacityRecovered": true,
+                "controlResponsive": true,
+                "generationResponsive": true,
+                "lateCaptureRefused": true,
+                "mode": "cancel",
+                "primaryUnchanged": true
+              }
+            ],
+            "networkActivated": false,
+            "scenario": "catalog-capture-outside-control-lock",
+            "wanCauseProven": false
+          },
+          {
+            "archiveReadCompleted": true,
+            "cancelledWriterUnpublished": true,
+            "oldPublicationPreserved": true,
+            "publicationReadCompleted": true,
+            "retainedBlockExportCompleted": true,
+            "scenario": "beacon-read-during-held-admission"
+          },
+          {
+            "admissionWhileExporterPaused": true,
+            "admissionWhileReaderPaused": true,
+            "headAdvanced": true,
+            "oldPublicationPreserved": true,
+            "retainedExportCoherentDuringCommit": true,
+            "scenario": "beacon-read-concurrent-admission"
+          },
+          {
+            "assembledBodies": 9,
+            "beaconReadChecks": 14,
+            "blocks": 9,
+            "cancellations": 18,
+            "contexts": 9,
+            "deferredVotes": 0,
+            "durableReactor": true,
+            "finalityScenario": false,
+            "finalizedEpoch": 0,
+            "includedAttestations": 0,
+            "localAttestations": 0,
+            "localBlsChangeSelection": false,
+            "localProposals": 8,
+            "localRandao": 8,
+            "migrated": false,
+            "networkActivated": false,
+            "participationPercent": 100,
+            "queuedBlsChangeSelection": false,
+            "rejected": 20,
+            "scenario": "capella-signed-transition",
+            "signedArchives": 9,
+            "signedSlashings": 1,
+            "signedVotes": 6,
+            "skippedForkSlots": 0,
+            "snapshotReopened": true,
+            "storeBlocks": 9,
+            "storeSigkillReopens": 2,
+            "storeVotes": 6,
+            "voteReorgs": 2,
+            "wireMessages": 0,
+            "withdrawals": 1
+          }
+        ]
+      },
+      "worker-control": {
+        "exitCode": 0,
+        "scenarios": [
+          {
+            "checkpointUnchanged": true,
+            "commitmentCancellationQualified": true,
+            "privateExceptionRedacted": true,
+            "publicationCancellationQualified": true,
+            "scenario": "beacon-read-phase-diagnostics"
+          },
+          {
+            "acquirerRejectedBusy": true,
+            "allReservationsDrained": true,
+            "captureHeld": true,
+            "directRegistryControlResponsive": true,
+            "jobs": 4,
+            "primaryUnchanged": true,
+            "queuedGenerationExpired": false,
+            "queuedReleaseExpired": false,
+            "realHttpTransport": false,
+            "scenario": "catalog-worker-control-progress",
+            "wanCauseProven": false,
+            "workers": 2
+          },
+          {
+            "archiveReadCompleted": true,
+            "cancelledWriterUnpublished": true,
+            "oldPublicationPreserved": true,
+            "publicationReadCompleted": true,
+            "retainedBlockExportCompleted": true,
+            "scenario": "beacon-read-during-held-admission"
+          },
+          {
+            "admissionWhileExporterPaused": true,
+            "admissionWhileReaderPaused": true,
+            "headAdvanced": true,
+            "oldPublicationPreserved": true,
+            "retainedExportCoherentDuringCommit": true,
+            "scenario": "beacon-read-concurrent-admission"
+          },
+          {
+            "assembledBodies": 9,
+            "beaconReadChecks": 14,
+            "blocks": 9,
+            "cancellations": 18,
+            "contexts": 9,
+            "deferredVotes": 0,
+            "durableReactor": true,
+            "finalityScenario": false,
+            "finalizedEpoch": 0,
+            "includedAttestations": 0,
+            "localAttestations": 0,
+            "localBlsChangeSelection": false,
+            "localProposals": 8,
+            "localRandao": 8,
+            "migrated": false,
+            "networkActivated": false,
+            "participationPercent": 100,
+            "queuedBlsChangeSelection": false,
+            "rejected": 20,
+            "scenario": "capella-signed-transition",
+            "signedArchives": 9,
+            "signedSlashings": 1,
+            "signedVotes": 6,
+            "skippedForkSlots": 0,
+            "snapshotReopened": true,
+            "storeBlocks": 9,
+            "storeSigkillReopens": 2,
+            "storeVotes": 6,
+            "voteReorgs": 2,
+            "wireMessages": 0,
+            "withdrawals": 1
+          }
+        ]
+      },
+      "worker-http": {
+        "exitCode": 0,
+        "scenarios": [
+          {
+            "busyRpcCode": -32005,
+            "generationAndReleaseResponsive": true,
+            "lateCaptureCancelled": true,
+            "primaryUnchanged": true,
+            "realHttpTransport": true,
+            "scenario": "catalog-busy-http-control",
+            "unauthorizedRejected": true,
+            "wanCauseProven": false
+          },
+          {
+            "admissionReceiptChecks": 6,
+            "automaticRecovery": false,
+            "automaticRegistration": false,
+            "blocks": 16,
+            "catalogSeekBoundaryChecks": 8,
+            "catalogSeekOwnershipAndBoundsChecks": 3,
+            "externalRecoveryCommitmentChecks": 0,
+            "httpTransport": false,
+            "invalidConfigurationsRejected": 6,
+            "keysLoaded": 64,
+            "networkTransport": false,
+            "runtimeCatalogChecks": 3,
+            "scenario": "capella-configured-runtime",
+            "signerWitnessRestart": true,
+            "witnessRestart": true,
+            "workersStopped": true
+          }
+        ]
+      },
+      "wire": {
+        "exitCode": 0,
+        "scenarios": [
+          {
+            "assembledBodies": 9,
+            "beaconReadChecks": 0,
+            "blocks": 9,
+            "cancellations": 18,
+            "contexts": 9,
+            "deferredVotes": 0,
+            "durableReactor": true,
+            "finalityScenario": false,
+            "finalizedEpoch": 0,
+            "includedAttestations": 0,
+            "localAttestations": 0,
+            "localBlsChangeSelection": false,
+            "localProposals": 8,
+            "localRandao": 8,
+            "migrated": false,
+            "networkActivated": false,
+            "participationPercent": 100,
+            "queuedBlsChangeSelection": false,
+            "rejected": 20,
+            "scenario": "capella-signed-transition",
+            "signedArchives": 9,
+            "signedSlashings": 1,
+            "signedVotes": 6,
+            "skippedForkSlots": 0,
+            "snapshotReopened": true,
+            "storeBlocks": 9,
+            "storeSigkillReopens": 2,
+            "storeVotes": 6,
+            "voteReorgs": 2,
+            "wireMessages": 17,
+            "withdrawals": 1
+          }
+        ]
+      },
+      "configured-runtime": {
+        "exitCode": 0,
+        "scenarios": [
+          {
+            "admissionReceiptChecks": 6,
+            "automaticRecovery": false,
+            "automaticRegistration": false,
+            "blocks": 16,
+            "catalogSeekBoundaryChecks": 8,
+            "catalogSeekOwnershipAndBoundsChecks": 3,
+            "externalRecoveryCommitmentChecks": 0,
+            "httpTransport": false,
+            "invalidConfigurationsRejected": 6,
+            "keysLoaded": 64,
+            "networkTransport": false,
+            "runtimeCatalogChecks": 3,
+            "scenario": "capella-configured-runtime",
+            "signerWitnessRestart": true,
+            "witnessRestart": true,
+            "workersStopped": true
+          }
+        ]
+      },
+      "automatic-recovery": {
+        "exitCode": 0,
+        "scenarios": [
+          {
+            "admissionReceiptChecks": 6,
+            "automaticRecovery": true,
+            "automaticRegistration": false,
+            "blocks": 16,
+            "catalogSeekBoundaryChecks": 8,
+            "catalogSeekOwnershipAndBoundsChecks": 3,
+            "externalRecoveryCommitmentChecks": 9,
+            "httpTransport": false,
+            "invalidConfigurationsRejected": 6,
+            "keysLoaded": 64,
+            "networkTransport": false,
+            "runtimeCatalogChecks": 3,
+            "scenario": "capella-configured-runtime",
+            "signerWitnessRestart": true,
+            "witnessRestart": true,
+            "workersStopped": true
+          }
+        ]
+      }
+    },
+    "arm64": {
+      "reactor-failfast": {
+        "exitCode": 0,
+        "scenarios": [
+          {
+            "checkpointUnchanged": true,
+            "commitmentCancellationQualified": true,
+            "privateExceptionRedacted": true,
+            "publicationCancellationQualified": true,
+            "scenario": "beacon-read-phase-diagnostics"
+          },
+          {
+            "cancellationPreserved": true,
+            "capacityRecovered": true,
+            "firstRefusedWhileWriterHeld": true,
+            "networkQualified": false,
+            "primaryUnchanged": true,
+            "requestRetirementPreserved": true,
+            "scenario": "catalog-reactor-failfast",
+            "secondRefusedWhileWriterHeld": true,
+            "wanCauseProven": false
+          },
+          {
+            "archiveReadCompleted": true,
+            "cancelledWriterUnpublished": true,
+            "oldPublicationPreserved": true,
+            "publicationReadCompleted": true,
+            "retainedBlockExportCompleted": true,
+            "scenario": "beacon-read-during-held-admission"
+          },
+          {
+            "admissionWhileExporterPaused": true,
+            "admissionWhileReaderPaused": true,
+            "headAdvanced": true,
+            "oldPublicationPreserved": true,
+            "retainedExportCoherentDuringCommit": true,
+            "scenario": "beacon-read-concurrent-admission"
+          },
+          {
+            "assembledBodies": 9,
+            "beaconReadChecks": 14,
+            "blocks": 9,
+            "cancellations": 18,
+            "contexts": 9,
+            "deferredVotes": 0,
+            "durableReactor": true,
+            "finalityScenario": false,
+            "finalizedEpoch": 0,
+            "includedAttestations": 0,
+            "localAttestations": 0,
+            "localBlsChangeSelection": false,
+            "localProposals": 8,
+            "localRandao": 8,
+            "migrated": false,
+            "networkActivated": false,
+            "participationPercent": 100,
+            "queuedBlsChangeSelection": false,
+            "rejected": 20,
+            "scenario": "capella-signed-transition",
+            "signedArchives": 9,
+            "signedSlashings": 1,
+            "signedVotes": 6,
+            "skippedForkSlots": 0,
+            "snapshotReopened": true,
+            "storeBlocks": 9,
+            "storeSigkillReopens": 2,
+            "storeVotes": 6,
+            "voteReorgs": 2,
+            "wireMessages": 0,
+            "withdrawals": 1
+          }
+        ]
+      },
+      "generation-reservation": {
+        "exitCode": 0,
+        "scenarios": [
+          {
+            "checkpointUnchanged": true,
+            "commitmentCancellationQualified": true,
+            "privateExceptionRedacted": true,
+            "publicationCancellationQualified": true,
+            "scenario": "beacon-read-phase-diagnostics"
+          },
+          {
+            "cases": [
+              {
+                "capacityRecovered": true,
+                "mode": "unrelated",
+                "primaryUnchanged": true,
+                "published": true,
+                "rotated": true
+              },
+              {
+                "capacityRecovered": true,
+                "mode": "own-before",
+                "primaryUnchanged": true,
+                "published": false,
+                "rotated": true
+              },
+              {
+                "capacityRecovered": true,
+                "mode": "own-after",
+                "primaryUnchanged": true,
+                "published": false,
+                "rotated": true
+              },
+              {
+                "capacityRecovered": true,
+                "mode": "foreign",
+                "primaryUnchanged": true,
+                "published": true,
+                "rotated": true
+              }
+            ],
+            "scenario": "catalog-generation-reservation",
+            "wanCauseProven": false
+          },
+          {
+            "archiveReadCompleted": true,
+            "cancelledWriterUnpublished": true,
+            "oldPublicationPreserved": true,
+            "publicationReadCompleted": true,
+            "retainedBlockExportCompleted": true,
+            "scenario": "beacon-read-during-held-admission"
+          },
+          {
+            "admissionWhileExporterPaused": true,
+            "admissionWhileReaderPaused": true,
+            "headAdvanced": true,
+            "oldPublicationPreserved": true,
+            "retainedExportCoherentDuringCommit": true,
+            "scenario": "beacon-read-concurrent-admission"
+          },
+          {
+            "assembledBodies": 9,
+            "beaconReadChecks": 14,
+            "blocks": 9,
+            "cancellations": 18,
+            "contexts": 9,
+            "deferredVotes": 0,
+            "durableReactor": true,
+            "finalityScenario": false,
+            "finalizedEpoch": 0,
+            "includedAttestations": 0,
+            "localAttestations": 0,
+            "localBlsChangeSelection": false,
+            "localProposals": 8,
+            "localRandao": 8,
+            "migrated": false,
+            "networkActivated": false,
+            "participationPercent": 100,
+            "queuedBlsChangeSelection": false,
+            "rejected": 20,
+            "scenario": "capella-signed-transition",
+            "signedArchives": 9,
+            "signedSlashings": 1,
+            "signedVotes": 6,
+            "skippedForkSlots": 0,
+            "snapshotReopened": true,
+            "storeBlocks": 9,
+            "storeSigkillReopens": 2,
+            "storeVotes": 6,
+            "voteReorgs": 2,
+            "wireMessages": 0,
+            "withdrawals": 1
+          }
+        ]
+      },
+      "capture-control": {
+        "exitCode": 0,
+        "scenarios": [
+          {
+            "checkpointUnchanged": true,
+            "commitmentCancellationQualified": true,
+            "privateExceptionRedacted": true,
+            "publicationCancellationQualified": true,
+            "scenario": "beacon-read-phase-diagnostics"
+          },
+          {
+            "cases": [
+              {
+                "capacityRecovered": true,
+                "controlResponsive": true,
+                "generationResponsive": true,
+                "lateCaptureRefused": true,
+                "mode": "release",
+                "primaryUnchanged": true
+              },
+              {
+                "capacityRecovered": false,
+                "controlResponsive": true,
+                "generationResponsive": true,
+                "lateCaptureRefused": true,
+                "mode": "stop",
+                "primaryUnchanged": true
+              },
+              {
+                "capacityRecovered": true,
+                "controlResponsive": true,
+                "generationResponsive": true,
+                "lateCaptureRefused": true,
+                "mode": "expiry",
+                "primaryUnchanged": true
+              },
+              {
+                "capacityRecovered": true,
+                "controlResponsive": true,
+                "generationResponsive": true,
+                "lateCaptureRefused": true,
+                "mode": "cancel",
+                "primaryUnchanged": true
+              }
+            ],
+            "networkActivated": false,
+            "scenario": "catalog-capture-outside-control-lock",
+            "wanCauseProven": false
+          },
+          {
+            "archiveReadCompleted": true,
+            "cancelledWriterUnpublished": true,
+            "oldPublicationPreserved": true,
+            "publicationReadCompleted": true,
+            "retainedBlockExportCompleted": true,
+            "scenario": "beacon-read-during-held-admission"
+          },
+          {
+            "admissionWhileExporterPaused": true,
+            "admissionWhileReaderPaused": true,
+            "headAdvanced": true,
+            "oldPublicationPreserved": true,
+            "retainedExportCoherentDuringCommit": true,
+            "scenario": "beacon-read-concurrent-admission"
+          },
+          {
+            "assembledBodies": 9,
+            "beaconReadChecks": 14,
+            "blocks": 9,
+            "cancellations": 18,
+            "contexts": 9,
+            "deferredVotes": 0,
+            "durableReactor": true,
+            "finalityScenario": false,
+            "finalizedEpoch": 0,
+            "includedAttestations": 0,
+            "localAttestations": 0,
+            "localBlsChangeSelection": false,
+            "localProposals": 8,
+            "localRandao": 8,
+            "migrated": false,
+            "networkActivated": false,
+            "participationPercent": 100,
+            "queuedBlsChangeSelection": false,
+            "rejected": 20,
+            "scenario": "capella-signed-transition",
+            "signedArchives": 9,
+            "signedSlashings": 1,
+            "signedVotes": 6,
+            "skippedForkSlots": 0,
+            "snapshotReopened": true,
+            "storeBlocks": 9,
+            "storeSigkillReopens": 2,
+            "storeVotes": 6,
+            "voteReorgs": 2,
+            "wireMessages": 0,
+            "withdrawals": 1
+          }
+        ]
+      },
+      "worker-control": {
+        "exitCode": 0,
+        "scenarios": [
+          {
+            "checkpointUnchanged": true,
+            "commitmentCancellationQualified": true,
+            "privateExceptionRedacted": true,
+            "publicationCancellationQualified": true,
+            "scenario": "beacon-read-phase-diagnostics"
+          },
+          {
+            "acquirerRejectedBusy": true,
+            "allReservationsDrained": true,
+            "captureHeld": true,
+            "directRegistryControlResponsive": true,
+            "jobs": 4,
+            "primaryUnchanged": true,
+            "queuedGenerationExpired": false,
+            "queuedReleaseExpired": false,
+            "realHttpTransport": false,
+            "scenario": "catalog-worker-control-progress",
+            "wanCauseProven": false,
+            "workers": 2
+          },
+          {
+            "archiveReadCompleted": true,
+            "cancelledWriterUnpublished": true,
+            "oldPublicationPreserved": true,
+            "publicationReadCompleted": true,
+            "retainedBlockExportCompleted": true,
+            "scenario": "beacon-read-during-held-admission"
+          },
+          {
+            "admissionWhileExporterPaused": true,
+            "admissionWhileReaderPaused": true,
+            "headAdvanced": true,
+            "oldPublicationPreserved": true,
+            "retainedExportCoherentDuringCommit": true,
+            "scenario": "beacon-read-concurrent-admission"
+          },
+          {
+            "assembledBodies": 9,
+            "beaconReadChecks": 14,
+            "blocks": 9,
+            "cancellations": 18,
+            "contexts": 9,
+            "deferredVotes": 0,
+            "durableReactor": true,
+            "finalityScenario": false,
+            "finalizedEpoch": 0,
+            "includedAttestations": 0,
+            "localAttestations": 0,
+            "localBlsChangeSelection": false,
+            "localProposals": 8,
+            "localRandao": 8,
+            "migrated": false,
+            "networkActivated": false,
+            "participationPercent": 100,
+            "queuedBlsChangeSelection": false,
+            "rejected": 20,
+            "scenario": "capella-signed-transition",
+            "signedArchives": 9,
+            "signedSlashings": 1,
+            "signedVotes": 6,
+            "skippedForkSlots": 0,
+            "snapshotReopened": true,
+            "storeBlocks": 9,
+            "storeSigkillReopens": 2,
+            "storeVotes": 6,
+            "voteReorgs": 2,
+            "wireMessages": 0,
+            "withdrawals": 1
+          }
+        ]
+      },
+      "worker-http": {
+        "exitCode": 0,
+        "scenarios": [
+          {
+            "busyRpcCode": -32005,
+            "generationAndReleaseResponsive": true,
+            "lateCaptureCancelled": true,
+            "primaryUnchanged": true,
+            "realHttpTransport": true,
+            "scenario": "catalog-busy-http-control",
+            "unauthorizedRejected": true,
+            "wanCauseProven": false
+          },
+          {
+            "admissionReceiptChecks": 6,
+            "automaticRecovery": false,
+            "automaticRegistration": false,
+            "blocks": 16,
+            "catalogSeekBoundaryChecks": 8,
+            "catalogSeekOwnershipAndBoundsChecks": 3,
+            "externalRecoveryCommitmentChecks": 0,
+            "httpTransport": false,
+            "invalidConfigurationsRejected": 6,
+            "keysLoaded": 64,
+            "networkTransport": false,
+            "runtimeCatalogChecks": 3,
+            "scenario": "capella-configured-runtime",
+            "signerWitnessRestart": true,
+            "witnessRestart": true,
+            "workersStopped": true
+          }
+        ]
+      },
+      "wire": {
+        "exitCode": 0,
+        "scenarios": [
+          {
+            "assembledBodies": 9,
+            "beaconReadChecks": 0,
+            "blocks": 9,
+            "cancellations": 18,
+            "contexts": 9,
+            "deferredVotes": 0,
+            "durableReactor": true,
+            "finalityScenario": false,
+            "finalizedEpoch": 0,
+            "includedAttestations": 0,
+            "localAttestations": 0,
+            "localBlsChangeSelection": false,
+            "localProposals": 8,
+            "localRandao": 8,
+            "migrated": false,
+            "networkActivated": false,
+            "participationPercent": 100,
+            "queuedBlsChangeSelection": false,
+            "rejected": 20,
+            "scenario": "capella-signed-transition",
+            "signedArchives": 9,
+            "signedSlashings": 1,
+            "signedVotes": 6,
+            "skippedForkSlots": 0,
+            "snapshotReopened": true,
+            "storeBlocks": 9,
+            "storeSigkillReopens": 2,
+            "storeVotes": 6,
+            "voteReorgs": 2,
+            "wireMessages": 17,
+            "withdrawals": 1
+          }
+        ]
+      },
+      "configured-runtime": {
+        "exitCode": 0,
+        "scenarios": [
+          {
+            "admissionReceiptChecks": 6,
+            "automaticRecovery": false,
+            "automaticRegistration": false,
+            "blocks": 16,
+            "catalogSeekBoundaryChecks": 8,
+            "catalogSeekOwnershipAndBoundsChecks": 3,
+            "externalRecoveryCommitmentChecks": 0,
+            "httpTransport": false,
+            "invalidConfigurationsRejected": 6,
+            "keysLoaded": 64,
+            "networkTransport": false,
+            "runtimeCatalogChecks": 3,
+            "scenario": "capella-configured-runtime",
+            "signerWitnessRestart": true,
+            "witnessRestart": true,
+            "workersStopped": true
+          }
+        ]
+      },
+      "automatic-recovery": {
+        "exitCode": 0,
+        "scenarios": [
+          {
+            "admissionReceiptChecks": 6,
+            "automaticRecovery": true,
+            "automaticRegistration": false,
+            "blocks": 16,
+            "catalogSeekBoundaryChecks": 8,
+            "catalogSeekOwnershipAndBoundsChecks": 3,
+            "externalRecoveryCommitmentChecks": 9,
+            "httpTransport": false,
+            "invalidConfigurationsRejected": 6,
+            "keysLoaded": 64,
+            "networkTransport": false,
+            "runtimeCatalogChecks": 3,
+            "scenario": "capella-configured-runtime",
+            "signerWitnessRestart": true,
+            "witnessRestart": true,
+            "workersStopped": true
+          }
+        ]
+      }
+    },
+    "amd64": {
+      "reactor-failfast": {
+        "exitCode": 0,
+        "scenarios": [
+          {
+            "checkpointUnchanged": true,
+            "commitmentCancellationQualified": true,
+            "privateExceptionRedacted": true,
+            "publicationCancellationQualified": true,
+            "scenario": "beacon-read-phase-diagnostics"
+          },
+          {
+            "cancellationPreserved": true,
+            "capacityRecovered": true,
+            "firstRefusedWhileWriterHeld": true,
+            "networkQualified": false,
+            "primaryUnchanged": true,
+            "requestRetirementPreserved": true,
+            "scenario": "catalog-reactor-failfast",
+            "secondRefusedWhileWriterHeld": true,
+            "wanCauseProven": false
+          },
+          {
+            "archiveReadCompleted": true,
+            "cancelledWriterUnpublished": true,
+            "oldPublicationPreserved": true,
+            "publicationReadCompleted": true,
+            "retainedBlockExportCompleted": true,
+            "scenario": "beacon-read-during-held-admission"
+          },
+          {
+            "admissionWhileExporterPaused": true,
+            "admissionWhileReaderPaused": true,
+            "headAdvanced": true,
+            "oldPublicationPreserved": true,
+            "retainedExportCoherentDuringCommit": true,
+            "scenario": "beacon-read-concurrent-admission"
+          },
+          {
+            "assembledBodies": 9,
+            "beaconReadChecks": 14,
+            "blocks": 9,
+            "cancellations": 18,
+            "contexts": 9,
+            "deferredVotes": 0,
+            "durableReactor": true,
+            "finalityScenario": false,
+            "finalizedEpoch": 0,
+            "includedAttestations": 0,
+            "localAttestations": 0,
+            "localBlsChangeSelection": false,
+            "localProposals": 8,
+            "localRandao": 8,
+            "migrated": false,
+            "networkActivated": false,
+            "participationPercent": 100,
+            "queuedBlsChangeSelection": false,
+            "rejected": 20,
+            "scenario": "capella-signed-transition",
+            "signedArchives": 9,
+            "signedSlashings": 1,
+            "signedVotes": 6,
+            "skippedForkSlots": 0,
+            "snapshotReopened": true,
+            "storeBlocks": 9,
+            "storeSigkillReopens": 2,
+            "storeVotes": 6,
+            "voteReorgs": 2,
+            "wireMessages": 0,
+            "withdrawals": 1
+          }
+        ]
+      },
+      "generation-reservation": {
+        "exitCode": 0,
+        "scenarios": [
+          {
+            "checkpointUnchanged": true,
+            "commitmentCancellationQualified": true,
+            "privateExceptionRedacted": true,
+            "publicationCancellationQualified": true,
+            "scenario": "beacon-read-phase-diagnostics"
+          },
+          {
+            "cases": [
+              {
+                "capacityRecovered": true,
+                "mode": "unrelated",
+                "primaryUnchanged": true,
+                "published": true,
+                "rotated": true
+              },
+              {
+                "capacityRecovered": true,
+                "mode": "own-before",
+                "primaryUnchanged": true,
+                "published": false,
+                "rotated": true
+              },
+              {
+                "capacityRecovered": true,
+                "mode": "own-after",
+                "primaryUnchanged": true,
+                "published": false,
+                "rotated": true
+              },
+              {
+                "capacityRecovered": true,
+                "mode": "foreign",
+                "primaryUnchanged": true,
+                "published": true,
+                "rotated": true
+              }
+            ],
+            "scenario": "catalog-generation-reservation",
+            "wanCauseProven": false
+          },
+          {
+            "archiveReadCompleted": true,
+            "cancelledWriterUnpublished": true,
+            "oldPublicationPreserved": true,
+            "publicationReadCompleted": true,
+            "retainedBlockExportCompleted": true,
+            "scenario": "beacon-read-during-held-admission"
+          },
+          {
+            "admissionWhileExporterPaused": true,
+            "admissionWhileReaderPaused": true,
+            "headAdvanced": true,
+            "oldPublicationPreserved": true,
+            "retainedExportCoherentDuringCommit": true,
+            "scenario": "beacon-read-concurrent-admission"
+          },
+          {
+            "assembledBodies": 9,
+            "beaconReadChecks": 14,
+            "blocks": 9,
+            "cancellations": 18,
+            "contexts": 9,
+            "deferredVotes": 0,
+            "durableReactor": true,
+            "finalityScenario": false,
+            "finalizedEpoch": 0,
+            "includedAttestations": 0,
+            "localAttestations": 0,
+            "localBlsChangeSelection": false,
+            "localProposals": 8,
+            "localRandao": 8,
+            "migrated": false,
+            "networkActivated": false,
+            "participationPercent": 100,
+            "queuedBlsChangeSelection": false,
+            "rejected": 20,
+            "scenario": "capella-signed-transition",
+            "signedArchives": 9,
+            "signedSlashings": 1,
+            "signedVotes": 6,
+            "skippedForkSlots": 0,
+            "snapshotReopened": true,
+            "storeBlocks": 9,
+            "storeSigkillReopens": 2,
+            "storeVotes": 6,
+            "voteReorgs": 2,
+            "wireMessages": 0,
+            "withdrawals": 1
+          }
+        ]
+      },
+      "capture-control": {
+        "exitCode": 0,
+        "scenarios": [
+          {
+            "checkpointUnchanged": true,
+            "commitmentCancellationQualified": true,
+            "privateExceptionRedacted": true,
+            "publicationCancellationQualified": true,
+            "scenario": "beacon-read-phase-diagnostics"
+          },
+          {
+            "cases": [
+              {
+                "capacityRecovered": true,
+                "controlResponsive": true,
+                "generationResponsive": true,
+                "lateCaptureRefused": true,
+                "mode": "release",
+                "primaryUnchanged": true
+              },
+              {
+                "capacityRecovered": false,
+                "controlResponsive": true,
+                "generationResponsive": true,
+                "lateCaptureRefused": true,
+                "mode": "stop",
+                "primaryUnchanged": true
+              },
+              {
+                "capacityRecovered": true,
+                "controlResponsive": true,
+                "generationResponsive": true,
+                "lateCaptureRefused": true,
+                "mode": "expiry",
+                "primaryUnchanged": true
+              },
+              {
+                "capacityRecovered": true,
+                "controlResponsive": true,
+                "generationResponsive": true,
+                "lateCaptureRefused": true,
+                "mode": "cancel",
+                "primaryUnchanged": true
+              }
+            ],
+            "networkActivated": false,
+            "scenario": "catalog-capture-outside-control-lock",
+            "wanCauseProven": false
+          },
+          {
+            "archiveReadCompleted": true,
+            "cancelledWriterUnpublished": true,
+            "oldPublicationPreserved": true,
+            "publicationReadCompleted": true,
+            "retainedBlockExportCompleted": true,
+            "scenario": "beacon-read-during-held-admission"
+          },
+          {
+            "admissionWhileExporterPaused": true,
+            "admissionWhileReaderPaused": true,
+            "headAdvanced": true,
+            "oldPublicationPreserved": true,
+            "retainedExportCoherentDuringCommit": true,
+            "scenario": "beacon-read-concurrent-admission"
+          },
+          {
+            "assembledBodies": 9,
+            "beaconReadChecks": 14,
+            "blocks": 9,
+            "cancellations": 18,
+            "contexts": 9,
+            "deferredVotes": 0,
+            "durableReactor": true,
+            "finalityScenario": false,
+            "finalizedEpoch": 0,
+            "includedAttestations": 0,
+            "localAttestations": 0,
+            "localBlsChangeSelection": false,
+            "localProposals": 8,
+            "localRandao": 8,
+            "migrated": false,
+            "networkActivated": false,
+            "participationPercent": 100,
+            "queuedBlsChangeSelection": false,
+            "rejected": 20,
+            "scenario": "capella-signed-transition",
+            "signedArchives": 9,
+            "signedSlashings": 1,
+            "signedVotes": 6,
+            "skippedForkSlots": 0,
+            "snapshotReopened": true,
+            "storeBlocks": 9,
+            "storeSigkillReopens": 2,
+            "storeVotes": 6,
+            "voteReorgs": 2,
+            "wireMessages": 0,
+            "withdrawals": 1
+          }
+        ]
+      },
+      "worker-control": {
+        "exitCode": 0,
+        "scenarios": [
+          {
+            "checkpointUnchanged": true,
+            "commitmentCancellationQualified": true,
+            "privateExceptionRedacted": true,
+            "publicationCancellationQualified": true,
+            "scenario": "beacon-read-phase-diagnostics"
+          },
+          {
+            "acquirerRejectedBusy": true,
+            "allReservationsDrained": true,
+            "captureHeld": true,
+            "directRegistryControlResponsive": true,
+            "jobs": 4,
+            "primaryUnchanged": true,
+            "queuedGenerationExpired": false,
+            "queuedReleaseExpired": false,
+            "realHttpTransport": false,
+            "scenario": "catalog-worker-control-progress",
+            "wanCauseProven": false,
+            "workers": 2
+          },
+          {
+            "archiveReadCompleted": true,
+            "cancelledWriterUnpublished": true,
+            "oldPublicationPreserved": true,
+            "publicationReadCompleted": true,
+            "retainedBlockExportCompleted": true,
+            "scenario": "beacon-read-during-held-admission"
+          },
+          {
+            "admissionWhileExporterPaused": true,
+            "admissionWhileReaderPaused": true,
+            "headAdvanced": true,
+            "oldPublicationPreserved": true,
+            "retainedExportCoherentDuringCommit": true,
+            "scenario": "beacon-read-concurrent-admission"
+          },
+          {
+            "assembledBodies": 9,
+            "beaconReadChecks": 14,
+            "blocks": 9,
+            "cancellations": 18,
+            "contexts": 9,
+            "deferredVotes": 0,
+            "durableReactor": true,
+            "finalityScenario": false,
+            "finalizedEpoch": 0,
+            "includedAttestations": 0,
+            "localAttestations": 0,
+            "localBlsChangeSelection": false,
+            "localProposals": 8,
+            "localRandao": 8,
+            "migrated": false,
+            "networkActivated": false,
+            "participationPercent": 100,
+            "queuedBlsChangeSelection": false,
+            "rejected": 20,
+            "scenario": "capella-signed-transition",
+            "signedArchives": 9,
+            "signedSlashings": 1,
+            "signedVotes": 6,
+            "skippedForkSlots": 0,
+            "snapshotReopened": true,
+            "storeBlocks": 9,
+            "storeSigkillReopens": 2,
+            "storeVotes": 6,
+            "voteReorgs": 2,
+            "wireMessages": 0,
+            "withdrawals": 1
+          }
+        ]
+      },
+      "worker-http": {
+        "exitCode": 0,
+        "scenarios": [
+          {
+            "busyRpcCode": -32005,
+            "generationAndReleaseResponsive": true,
+            "lateCaptureCancelled": true,
+            "primaryUnchanged": true,
+            "realHttpTransport": true,
+            "scenario": "catalog-busy-http-control",
+            "unauthorizedRejected": true,
+            "wanCauseProven": false
+          },
+          {
+            "admissionReceiptChecks": 6,
+            "automaticRecovery": false,
+            "automaticRegistration": false,
+            "blocks": 16,
+            "catalogSeekBoundaryChecks": 8,
+            "catalogSeekOwnershipAndBoundsChecks": 3,
+            "externalRecoveryCommitmentChecks": 0,
+            "httpTransport": false,
+            "invalidConfigurationsRejected": 6,
+            "keysLoaded": 64,
+            "networkTransport": false,
+            "runtimeCatalogChecks": 3,
+            "scenario": "capella-configured-runtime",
+            "signerWitnessRestart": true,
+            "witnessRestart": true,
+            "workersStopped": true
+          }
+        ]
+      },
+      "wire": {
+        "exitCode": 0,
+        "scenarios": [
+          {
+            "assembledBodies": 9,
+            "beaconReadChecks": 0,
+            "blocks": 9,
+            "cancellations": 18,
+            "contexts": 9,
+            "deferredVotes": 0,
+            "durableReactor": true,
+            "finalityScenario": false,
+            "finalizedEpoch": 0,
+            "includedAttestations": 0,
+            "localAttestations": 0,
+            "localBlsChangeSelection": false,
+            "localProposals": 8,
+            "localRandao": 8,
+            "migrated": false,
+            "networkActivated": false,
+            "participationPercent": 100,
+            "queuedBlsChangeSelection": false,
+            "rejected": 20,
+            "scenario": "capella-signed-transition",
+            "signedArchives": 9,
+            "signedSlashings": 1,
+            "signedVotes": 6,
+            "skippedForkSlots": 0,
+            "snapshotReopened": true,
+            "storeBlocks": 9,
+            "storeSigkillReopens": 2,
+            "storeVotes": 6,
+            "voteReorgs": 2,
+            "wireMessages": 17,
+            "withdrawals": 1
+          }
+        ]
+      },
+      "configured-runtime": {
+        "exitCode": 0,
+        "scenarios": [
+          {
+            "admissionReceiptChecks": 6,
+            "automaticRecovery": false,
+            "automaticRegistration": false,
+            "blocks": 16,
+            "catalogSeekBoundaryChecks": 8,
+            "catalogSeekOwnershipAndBoundsChecks": 3,
+            "externalRecoveryCommitmentChecks": 0,
+            "httpTransport": false,
+            "invalidConfigurationsRejected": 6,
+            "keysLoaded": 64,
+            "networkTransport": false,
+            "runtimeCatalogChecks": 3,
+            "scenario": "capella-configured-runtime",
+            "signerWitnessRestart": true,
+            "witnessRestart": true,
+            "workersStopped": true
+          }
+        ]
+      },
+      "automatic-recovery": {
+        "exitCode": 0,
+        "scenarios": [
+          {
+            "admissionReceiptChecks": 6,
+            "automaticRecovery": true,
+            "automaticRegistration": false,
+            "blocks": 16,
+            "catalogSeekBoundaryChecks": 8,
+            "catalogSeekOwnershipAndBoundsChecks": 3,
+            "externalRecoveryCommitmentChecks": 9,
+            "httpTransport": false,
+            "invalidConfigurationsRejected": 6,
+            "keysLoaded": 64,
+            "networkTransport": false,
+            "runtimeCatalogChecks": 3,
+            "scenario": "capella-configured-runtime",
+            "signerWitnessRestart": true,
+            "witnessRestart": true,
+            "workersStopped": true
+          }
+        ]
+      }
+    }
+  },
+  "runtimeBinaryHashes": {
+    "native": {
+      "nano": "22bf85302c9101fc82e6c1f70cbbcd3b2340b10a83c4bddabfdebd078ec84171",
+      "nano-capella-paused-capture": "cba2b57715ffaf9b446363de7e9167892a7e33c7868884ed488eec0ca226d456",
+      "candidate": "f9c24beef24bd82f246f232dd56def88af7866c485f06d20864d2d18980d97c4",
+      "libnano_core.a": "8810e4ecb6ec12e02e0524411a0fa256d20ebde4fd8f8270af3b0dbb063cffa6"
+    },
+    "arm64": {
+      "nano": "0b637b65690e217998ec501621b95c6c09a6665ad61e8d2f9274e07ebafa1df0",
+      "nano-capella-paused-capture": "200bda0d9f268e0448d492f8fbac7cbacdea4cfe613ad840c34c2ca0920428f0",
+      "libnano_core.a": "7be5ce0c5f62716100002b9cc811208c038ccfff7ad053ea9047d52f1220ace6"
+    },
+    "amd64": {
+      "nano": "80c83140a13d2e3ce00973cd429610e8a1865cbfa9af88bf7286c72312877215",
+      "nano-capella-paused-capture": "8c79fd07e0c90c86f7a2bef9a33480cedd94605c74f35923ecb7a1af044326e0",
+      "libnano_core.a": "16cae1bbaea00849f7e03990d82095996e4687f1b69890d96a74bc3228ea1730"
+    }
+  },
+  "sourceFilesMatchedToWorktree": 1602,
+  "wanCauseProven": false,
+  "networkQualified": false,
+  "productionQualified": false
+}

@@ -74,7 +74,9 @@ private:
   // Exception unwinding destroys the snapshot before relinquishing its byte
   // reservation. stop/release never free a capture still using that reservation.
   try{
-   auto snapshot=reactor_.capture_inventory(kind,allowance,check);if(check)check();
+   auto snapshot=reactor_.try_capture_inventory(kind,allowance,check);
+   if(!snapshot)throw CapellaInventoryCaptureBusy();
+   if(check)check();
    std::lock_guard lock(mutex_);const auto now=now_();reap(now);
    if(stopped_)throw std::runtime_error("Capella inventory sessions stopped");
    if(now<created||now-created>=ttl_)throw std::invalid_argument("Capella inventory capture expired");

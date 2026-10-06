@@ -101,6 +101,7 @@ class CapellaDurableReactor {
  void validate_execution_binding()const;
  void fail_closed();
  std::optional<Bytes> prepare_local_body_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,std::span<const SignedTransaction>,size_t,size_t,const std::function<void()>&,std::span<const SignedCapellaBlsChange> = {},size_t maximum_change_trials = 0,std::span<const SignedConsensusVoluntaryExit> = {},size_t maximum_exit_trials = 0);
+ std::shared_ptr<const CapellaInventorySnapshot> capture_inventory_locked(std::string_view,size_t,const std::function<void()>&)const;
  std::vector<ConsensusRoot> exit_roots_locked(const std::function<void()>&)const;
  std::vector<ConsensusRoot> bls_change_roots_locked(const std::function<void()>&)const;
  std::vector<SignedCapellaBlsChange> pending_bls_changes_locked(size_t,const std::function<void()>&)const;
@@ -175,6 +176,9 @@ public:
  // must separately budget JSON/hex framing. An anchor has no fabricated signature.
  // Root-ordered candidates; export_message determines signed availability.
  std::shared_ptr<const CapellaInventorySnapshot> capture_inventory(std::string_view kind,size_t maximum_root_bytes,const std::function<void()>& checkpoint={})const;
+ // No waiting behind admission: nullptr means the reactor is busy.
+ // The caller retains responsibility for request fencing and retry policy.
+ std::shared_ptr<const CapellaInventorySnapshot> try_capture_inventory(std::string_view kind,size_t maximum_root_bytes,const std::function<void()>& checkpoint={})const;
  Json inventory(std::string_view kind,const std::optional<ConsensusRoot>& after,size_t maximum_entries,size_t maximum_json_bytes,const std::optional<ForkCheckpointToken>& expected={},const std::function<void()>& checkpoint={})const;
  Json export_message(std::string_view kind,const ConsensusRoot&,size_t maximum_bytes,const std::optional<ForkCheckpointToken>& expected={},const std::function<void()>& checkpoint={})const;
  bool bls_change_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});

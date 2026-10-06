@@ -535,7 +535,15 @@ bool CapellaDurableReactor::sync_messages_current_locked(const PendingSyncMessag
 }
 
 std::shared_ptr<const CapellaInventorySnapshot> CapellaDurableReactor::capture_inventory(std::string_view kind,size_t budget,const std::function<void()>& check)const{
- std::lock_guard lock(mutex_);require_available();if(check)check();
+ std::lock_guard lock(mutex_);return capture_inventory_locked(kind,budget,check);
+}
+std::shared_ptr<const CapellaInventorySnapshot> CapellaDurableReactor::try_capture_inventory(std::string_view kind,size_t budget,const std::function<void()>& check)const{
+ if(check)check();std::unique_lock lock(mutex_,std::try_to_lock);
+ if(!lock.owns_lock())return {};
+ return capture_inventory_locked(kind,budget,check);
+}
+std::shared_ptr<const CapellaInventorySnapshot> CapellaDurableReactor::capture_inventory_locked(std::string_view kind,size_t budget,const std::function<void()>& check)const{
+ require_available();if(check)check();
  if(kind!="block"&&kind!="attestation"&&kind!="attester_slashing"&&kind!="voluntary_exit"&&kind!="bls_to_execution_change"&&kind!="sync_committee_message")throw std::invalid_argument("Unsupported Capella inventory kind");
  const bool sync=kind=="sync_committee_message";size_t sync_count=0;if(sync)for(const auto& [_,messages]:pending_sync_messages_)if(sync_messages_current_locked(messages,check)){if(messages.wires.size()>budget/sizeof(ConsensusRoot)-sync_count)throw std::length_error("Capella sync inventory exceeds root budget");sync_count+=messages.wires.size();}
  const auto count=sync?sync_count:kind=="block"?state_->blocks.size()-size_t(state_->blocks.contains(state_->timed.view.anchor)):kind=="attestation"?votes_.size():kind=="bls_to_execution_change"?bls_changes_.size():kind=="voluntary_exit"?exits_.size():slashings_.size();

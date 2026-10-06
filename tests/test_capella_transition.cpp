@@ -1423,6 +1423,28 @@ static void verify_beacon_read_admission(CapellaDurableReactor& reactor,const By
   }
   std::cout<<Json{{"scenario","catalog-capture-outside-control-lock"},{"cases",cases},{"wanCauseProven",false},{"networkActivated",false}}.dump()<<std::endl;
  }
+ if(std::getenv("NANO_TEST_CATALOG_REACTOR_FAILFAST")){
+  const auto primary=reactor.current().token;
+  CapellaInventorySessions catalogs(reactor,2,65536,std::chrono::seconds(60));
+  const auto gen=catalogs.generation(),request="0x"+std::string(64,'a');
+  std::promise<void> held,unblock;auto ready=held.get_future();auto gate=unblock.get_future().share();
+  std::future<bool> writer,acquire,other;
+  struct ReleaseCatalogGate{std::promise<void>& p;~ReleaseCatalogGate(){try{p.set_value();}catch(const std::future_error&){}}} release_gate{unblock};
+  writer=std::async(std::launch::async,[&]{bool paused=false;try{return reactor.block(wire,[&]{if(!paused){paused=true;held.set_value();gate.wait();throw ExecutionCancelled("catalog failfast writer cancelled");}});}catch(const ExecutionCancelled&){return false;}});
+  check(ready.wait_for(std::chrono::seconds(5))==std::future_status::ready,"catalog writer not held");
+  acquire=std::async(std::launch::async,[&]{try{catalogs.acquire("probe",gen,request,"block");return false;}catch(const CapellaInventoryCaptureBusy&){return true;}});
+  const bool first_completed=acquire.wait_for(std::chrono::seconds(1))==std::future_status::ready;
+  // Distinct request tests that the first failed capture releases its reservation.
+  other=std::async(std::launch::async,[&]{try{catalogs.acquire("probe",gen,"0x"+std::string(64,'b'),"block");return false;}catch(const CapellaInventoryCaptureBusy&){return true;}});
+  const bool second_completed=other.wait_for(std::chrono::seconds(1))==std::future_status::ready;
+  unblock.set_value();const bool published=writer.get(),first_busy=acquire.get(),second_busy=other.get();
+  catalogs.release("probe",gen,request);bool retired=false;
+  try{catalogs.acquire("probe",gen,request,"block");}catch(const std::invalid_argument&){retired=true;}
+  bool cancelled=false;try{catalogs.acquire("cancel",gen,"0x"+std::string(64,'d'),"block",[]{throw ExecutionCancelled("catalog request cancelled");});}catch(const ExecutionCancelled&){cancelled=true;}
+  const auto recovered=catalogs.acquire("recovery",gen,"0x"+std::string(64,'c'),"block");catalogs.close("recovery",recovered);
+  check(first_completed&&second_completed&&first_busy&&second_busy&&!published&&retired&&cancelled&&reactor.current().token==primary,"catalog reactor failfast invariants");
+  std::cout<<Json{{"scenario","catalog-reactor-failfast"},{"firstRefusedWhileWriterHeld",first_completed&&first_busy},{"secondRefusedWhileWriterHeld",second_completed&&second_busy},{"requestRetirementPreserved",retired},{"cancellationPreserved",cancelled},{"capacityRecovered",true},{"primaryUnchanged",true},{"wanCauseProven",false},{"networkQualified",false}}.dump()<<std::endl;
+ }
  if(const char* field=std::getenv("NANO_TEST_NETWORK_STATUS_FIELD")){
   const std::string name=field;check(name=="identity"||name=="sync","Invalid status probe field");
   auto read_status=[&]{return name=="identity"?reactor.network_identity():reactor.sync_admission_stats();};
