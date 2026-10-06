@@ -1344,32 +1344,38 @@ static void verify_beacon_read_admission(CapellaDurableReactor& reactor,const By
  const auto path="/eth/v1/beacon/headers/"+hex(Bytes(parent.begin(),parent.end()));
  const auto before=reactor.beacon_read(path);check(before.status==200,"Concurrent Beacon signed parent missing");
  {
-  const auto before_state=reactor.beacon_read("/eth/v1/beacon/states/head/finality_checkpoints");const auto token=reactor.current().token;const auto before_head=reactor.relay_head();
+  const auto before_state=reactor.beacon_read("/eth/v1/beacon/states/head/finality_checkpoints");const auto token=reactor.current().token;const auto before_head=reactor.relay_head();const auto before_export=reactor.export_message("block",parent,16*1024*1024,token);
   std::promise<void> held,unblock;auto held_future=held.get_future();auto gate=unblock.get_future().share();
   auto blocked_writer=std::async(std::launch::async,[&]{bool paused=false;try{return reactor.block(wire,[&]{if(!paused){paused=true;held.set_value();gate.wait();throw ExecutionCancelled("held writer cancelled");}});}catch(const ExecutionCancelled&){return false;}});
   const bool locked=held_future.wait_for(std::chrono::seconds(5))==std::future_status::ready;
   if(!locked){unblock.set_value();blocked_writer.get();check(false,"Admission lock fixture not reached");}
-  auto concurrent=std::async(std::launch::async,[&]{return Json::array({reactor.beacon_read(path).body,reactor.beacon_read("/eth/v1/beacon/states/head/finality_checkpoints").body,reactor.relay_head()});});
+  auto concurrent=std::async(std::launch::async,[&]{return Json::array({reactor.beacon_read(path).body,reactor.beacon_read("/eth/v1/beacon/states/head/finality_checkpoints").body,reactor.relay_head(),reactor.export_message("block",parent,16*1024*1024,token)});});
   const bool completed=concurrent.wait_for(std::chrono::seconds(5))==std::future_status::ready;
   // Release before all assertions so the old locking path fails without hanging.
   unblock.set_value();const auto bodies=concurrent.get();const auto admitted=blocked_writer.get();
-  check(completed&&!admitted&&bodies==Json::array({before.body,before_state.body,before_head})&&reactor.current().token==token,"Beacon reads waited on admission or mixed unpublished state");
-  std::cout<<Json{{"scenario","beacon-read-during-held-admission"},{"publicationReadCompleted",true},{"archiveReadCompleted",true},{"oldPublicationPreserved",true},{"cancelledWriterUnpublished",true}}.dump()<<std::endl;
+  check(completed&&!admitted&&bodies==Json::array({before.body,before_state.body,before_head,before_export})&&reactor.current().token==token,"Beacon read or retained block export waited on admission or mixed unpublished state");
+  std::cout<<Json{{"scenario","beacon-read-during-held-admission"},{"publicationReadCompleted",true},{"archiveReadCompleted",true},{"retainedBlockExportCompleted",true},{"oldPublicationPreserved",true},{"cancelledWriterUnpublished",true}}.dump()<<std::endl;
  }
 
  std::promise<void> entered,release;auto entered_future=entered.get_future();auto gate=release.get_future().share();
  auto reader=std::async(std::launch::async,[&]{bool paused=false;return reactor.beacon_read(path,[&]{if(!paused){paused=true;entered.set_value();gate.wait();}});});
  const bool captured=entered_future.wait_for(std::chrono::seconds(5))==std::future_status::ready;
  if(!captured){release.set_value();reader.get();check(false,"Concurrent Beacon reader never captured publication");}
+ const auto export_token=reactor.current().token;const auto before_export=reactor.export_message("block",parent,16*1024*1024,export_token);
+ std::promise<void> export_entered,export_release;auto export_ready=export_entered.get_future();auto export_gate=export_release.get_future().share();
+ auto exporter=std::async(std::launch::async,[&]{unsigned checks=0;return reactor.export_message("block",parent,16*1024*1024,export_token,[&]{if(++checks==2){export_entered.set_value();export_gate.wait();}});});
+ const bool export_captured=export_ready.wait_for(std::chrono::seconds(5))==std::future_status::ready;
+ if(!export_captured){release.set_value();export_release.set_value();reader.get();exporter.get();check(false,"Concurrent block exporter never captured publication");}
  auto writer=std::async(std::launch::async,[&]{return reactor.block(wire);});
  const bool progressed=writer.wait_for(std::chrono::seconds(5))==std::future_status::ready;
  // Always release before checking: a regression must fail, not deadlock cleanup.
- release.set_value();const auto response=reader.get();const bool admitted=writer.get();
- check(progressed&&admitted,"Paused Beacon projection blocked block admission");
+ release.set_value();export_release.set_value();const auto response=reader.get();const auto exported=exporter.get();const bool admitted=writer.get();
+ check(progressed&&admitted,"Paused Beacon projection or block export blocked block admission");
+ check(exported==before_export&&reactor.current().token!=export_token,"Concurrent retained export mixed publications or prevented commit");
  check(response.status==200&&response.body==before.body,"Concurrent Beacon read mixed publications");
  const auto after=reactor.beacon_read("/eth/v1/beacon/headers/head");
  check(after.status==200&&after.body.at("data").at("root")!=before.body.at("data").at("root"),"Concurrent Beacon test did not advance head");
- std::cout<<Json{{"scenario","beacon-read-concurrent-admission"},{"admissionWhileReaderPaused",true},{"oldPublicationPreserved",true},{"headAdvanced",true}}.dump()<<std::endl;
+ std::cout<<Json{{"scenario","beacon-read-concurrent-admission"},{"retainedExportCoherentDuringCommit",true},{"admissionWhileExporterPaused",true},{"admissionWhileReaderPaused",true},{"oldPublicationPreserved",true},{"headAdvanced",true}}.dump()<<std::endl;
 }
 static void verify_beacon_reads(CapellaDurableReactor& reactor,const CapellaForkBlockRules& rules){
  const auto snapshot=reactor.current();const auto& head=capella_fork_head(*snapshot.state,rules);const auto id=consensus_beacon_header_root(head.header);auto text=[](const ConsensusRoot& r){return hex(Bytes(r.begin(),r.end()));};

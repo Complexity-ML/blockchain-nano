@@ -290,7 +290,10 @@ Json CapellaDurableReactor::network_identity()const{
  std::lock_guard lock(mutex_);return network_identity_locked();
 }
 Json CapellaDurableReactor::network_identity_locked()const{
- require_available();const auto anchor=capella_network_anchor(*state_);const auto encoded=Json::array({"nano-capella-network-v1",quantity(chain_),hex(genesis_),hex(Bytes(anchor.begin(),anchor.end())),capella_fork_profile(rules_)}).dump();const auto digest=sha256(Bytes(encoded.begin(),encoded.end()));
+ require_available();return network_identity_for_store(*state_);
+}
+Json CapellaDurableReactor::network_identity_for_store(const CapellaForkStore& store)const{
+ const auto anchor=capella_network_anchor(store);const auto encoded=Json::array({"nano-capella-network-v1",quantity(chain_),hex(genesis_),hex(Bytes(anchor.begin(),anchor.end())),capella_fork_profile(rules_)}).dump();const auto digest=sha256(Bytes(encoded.begin(),encoded.end()));
  return {{"chainId",quantity(chain_)},{"genesisHash",hex(genesis_)},{"consensusIdentity",hex(digest)},{"forkDigest",hex(Bytes(digest.begin(),digest.begin()+4))}};
 }
 std::vector<SignedConsensusVoluntaryExit> CapellaDurableReactor::pending_exits_locked(size_t maximum,const std::function<void()>& check)const{
@@ -553,6 +556,23 @@ Json CapellaDurableReactor::inventory(std::string_view kind,const std::optional<
 }
 
 Json CapellaDurableReactor::export_message(std::string_view kind,const ConsensusRoot& id,size_t maximum,const std::optional<ForkCheckpointToken>& expected,const std::function<void()>& check)const{
+ // Retained block serving uses exactly one durably published immutable view.
+ // Do not serialize archive validation behind a concurrent admission writer.
+ // Historical exports and mutable operation inventories retain their lock path.
+ if(kind=="block"){
+  if(check)check();const auto published=beacon_snapshot();
+  const auto found=published.state->blocks.find(id);
+  if(found!=published.state->blocks.end()){
+   if(!maximum)throw std::invalid_argument("Capella export capacity required");
+   if(expected&&*expected!=published.token)throw std::invalid_argument("Stale Capella export checkpoint");
+   const auto payload=beacon_signed_block(published,id,check);
+   const auto& header=found->second.header;
+   Json result{{"available",bool(payload)},{"root",hex(Bytes(id.begin(),id.end()))},{"sequence",quantity(Int(std::to_string(published.token.sequence)))},{"digest",hex(published.token.digest)},
+    {"known",true},{"anchor",id==published.state->timed.view.anchor},{"parentRoot",hex(Bytes(header.parent_root.begin(),header.parent_root.end()))},{"slot",quantity(Int(std::to_string(header.slot)))}};
+   if(payload){if(payload->size()>maximum)throw std::length_error("Capella export exceeds capacity");auto envelope=network_identity_for_store(*published.state);envelope["kind"]=kind;envelope["ssz"]=hex(*payload);result["envelope"]=std::move(envelope);}
+   if(check)check();return result;
+  }
+ }
  std::lock_guard lock(mutex_);require_available();if(check)check();
  if(!maximum)throw std::invalid_argument("Capella export capacity required");
  if(kind!="block"&&kind!="attestation"&&kind!="attester_slashing"&&kind!="voluntary_exit"&&kind!="bls_to_execution_change"&&kind!="sync_committee_message")throw std::invalid_argument("Unsupported Capella archive kind");

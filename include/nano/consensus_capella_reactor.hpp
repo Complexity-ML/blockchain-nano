@@ -65,6 +65,7 @@ class CapellaDurableReactor {
  mutable std::map<ConsensusRoot,ConsensusBeaconHeader> historical_headers_;
  std::optional<Bytes> signed_block_locked(const ConsensusRoot&,const std::function<void()>&)const;
  Json network_identity_locked()const;
+ Json network_identity_for_store(const CapellaForkStore&)const;
  struct PendingSyncAggregate {uint64_t slot;ConsensusRoot parent;size_t participants;Bytes ssz;};
  std::map<uint64_t,PendingSyncAggregate> pending_sync_;
  struct PendingSyncMessages { uint64_t slot; ConsensusRoot parent; std::map<uint64_t,Bytes> wires; };
