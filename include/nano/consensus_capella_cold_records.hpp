@@ -4,6 +4,22 @@
 namespace nano {
 // LOCAL only: references must come from an externally authenticated checkpoint,
 // not gossip. Concurrent readers are serialized; outstanding pins stay immutable.
+// Lifetime gate for LOCAL checkpoint fetches. Close before destroying backing
+// storage. Existing decoded leases remain valid; later fetches fail closed.
+// Fetch callbacks must not re-enter this provider or call close().
+class CapellaCheckpointProvider {
+ struct Shared;
+ std::shared_ptr<Shared> shared_;
+public:
+ using Fetch=std::function<std::optional<std::string>(const Bytes&,size_t)>;
+ explicit CapellaCheckpointProvider(Fetch);
+ CapellaCheckpointProvider(const CapellaCheckpointProvider&)=delete;
+ CapellaCheckpointProvider& operator=(const CapellaCheckpointProvider&)=delete;
+ ~CapellaCheckpointProvider();
+ Fetch reader()const;
+ // Wait for an in-flight fetch, then release the backing closure exactly once.
+ void close();
+};
 struct CapellaColdRecord {CapellaColdReference reference;CapellaForkBlock block;Phase0ForkNode node;};
 struct CapellaColdCacheUsage {size_t records,encoded_bytes;};
 class CapellaColdRecordCache {

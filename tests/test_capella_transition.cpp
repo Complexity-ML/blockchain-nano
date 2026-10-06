@@ -1656,6 +1656,19 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
      bool pinned=false;try{concurrent.load(second,fetch);}catch(const std::length_error&){pinned=true;}check(pinned,"concurrent cache evicted outstanding pin");
      std::cout<<Json{{"scenario","capella-cold-cache-concurrent-readers"},{"sameImmutablePin",true},{"fetches",reads.load()},{"cancelledWaitBeforeRelease",true},{"nestedLoadRejected",true},{"usageCallbackAllowed",true},{"physicalMemoryQualified",false},{"runtimeActivated",false}}.dump()<<std::endl;
     }
+    if(std::getenv("NANO_TEST_CHECKPOINT_PROVIDER")){
+     std::promise<void> entered,release;auto ready=entered.get_future();auto proceed=release.get_future().share();std::atomic<unsigned> calls{0};
+     auto backing=std::make_shared<unsigned>(7);std::weak_ptr<unsigned> backing_weak=backing;
+     auto provider=std::make_unique<CapellaCheckpointProvider>([&,owner=backing](const Bytes& digest,size_t bytes){++calls;entered.set_value();proceed.wait();check(*owner==7,"provider backing released during fetch");return backup_owner->store().checkpoint_blob(r.chain_id,genesis.header.hash(),digest,bytes);});backing.reset();
+     const auto guarded_reader=provider->reader();auto active=std::async(std::launch::async,[&]{return guarded_reader(first.digest,first.bytes);});
+     const bool began=ready.wait_for(std::chrono::seconds(10))==std::future_status::ready;if(!began)release.set_value();check(began,"provider fetch never started");
+     std::promise<void> closing;auto closing_ready=closing.get_future();auto closer=std::async(std::launch::async,[&]{closing.set_value();provider->close();});
+     const bool started=closing_ready.wait_for(std::chrono::seconds(10))==std::future_status::ready;const bool waits=started&&closer.wait_for(std::chrono::milliseconds(100))==std::future_status::timeout;
+     release.set_value();const auto payload=active.get();closer.get();check(waits&&payload&&payload->size()==first.bytes&&sha256(Bytes(payload->begin(),payload->end()))==first.digest,"provider close did not drain active read");check(backing_weak.expired(),"closed provider retained backing closure");
+     provider->close();provider.reset();bool refused=false;try{guarded_reader(first.digest,first.bytes);}catch(const std::runtime_error&){refused=true;}check(refused&&calls==1,"reader after provider destruction touched backing storage");
+     auto scoped_reader=[&]{CapellaCheckpointProvider scoped([&](const Bytes&,size_t)->std::optional<std::string>{++calls;return "unused";});return scoped.reader();}();refused=false;try{scoped_reader(first.digest,first.bytes);}catch(const std::runtime_error&){refused=true;}check(refused&&calls==1,"provider destructor left a live reader");
+     std::cout<<Json{{"scenario","capella-checkpoint-provider-lifetime"},{"activeFetchDrained",true},{"backingReleasedAtClose",true},{"lateReaderRejected",true},{"destructorCloses",true},{"idempotentClose",true},{"actualRocksDBFetch",true},{"runtimeIntegrated",false},{"networkQualified",false}}.dump()<<std::endl;
+    }
     auto graph_cache=std::make_shared<CapellaColdRecordCache>(rules,crash_limits,refs.size(),crash_limits.envelope_bytes);
     auto cold_graph=[&](const CapellaForkStore& trusted){auto out=trusted;for(auto& [id,entry]:out.blocks){std::optional<CapellaColdReference> ref;for(size_t i=0;i<refs.size();++i){auto candidate=reference(i);if(candidate.root==id){candidate.anchor=id==out.timed.view.anchor;ref=std::move(candidate);break;}}check(ref.has_value(),"cold graph reference missing");entry=CapellaForkRecord(*ref,entry.header(),entry.execution_header(),graph_cache,fetch);}return out;};
     auto cold=cold_graph(*reactor->current().state);check(std::all_of(cold.blocks.begin(),cold.blocks.end(),[](const auto& item){return item.second.cold_reference().has_value();}),"cold graph retained hot-only records");
