@@ -1,0 +1,21 @@
+consensus_capella_withdrawals.cpp: \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/SDKSettings.json \
+  /private/tmp/nano-catalog-reservation-integrated-docker-20261006/source/src/consensus_capella_withdrawals.cpp \
+  /private/tmp/nano-catalog-reservation-integrated-docker-20261006/source/include/nano/consensus_capella_withdrawals.hpp \
+  /private/tmp/nano-catalog-reservation-integrated-docker-20261006/source/include/nano/consensus_slashing.hpp \
+  /private/tmp/nano-catalog-reservation-integrated-docker-20261006/source/include/nano/consensus_attestation.hpp \
+  /private/tmp/nano-catalog-reservation-integrated-docker-20261006/source/include/nano/consensus_signing.hpp \
+  /private/tmp/nano-catalog-reservation-integrated-docker-20261006/source/include/nano/consensus_committee.hpp \
+  /private/tmp/nano-catalog-reservation-integrated-docker-20261006/source/include/nano/consensus_deposit.hpp \
+  /private/tmp/nano-catalog-reservation-integrated-docker-20261006/source/include/nano/core.hpp \
+  /private/tmp/nano-catalog-reservation-integrated-docker-20261006/source/include/nano/crypto.hpp \
+  /private/tmp/nano-catalog-reservation-integrated-docker-20261006/source/include/nano/types.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/json.hpp \
+  /private/tmp/nano-catalog-reservation-integrated-docker-20261006/source/include/nano/rlp.hpp \
+  /private/tmp/nano-catalog-reservation-integrated-docker-20261006/source/include/nano/consensus_beacon_header.hpp \
+  /private/tmp/nano-catalog-reservation-integrated-docker-20261006/source/include/nano/engine.hpp \
+  /private/tmp/nano-catalog-reservation-integrated-docker-20261006/source/include/nano/evm.hpp \
+  /private/tmp/nano-catalog-reservation-integrated-docker-20261006/source/include/nano/opcodes.hpp \
+  /private/tmp/nano-catalog-reservation-integrated-docker-20261006/source/include/nano/receipt.hpp \
+  /private/tmp/nano-catalog-reservation-integrated-docker-20261006/source/include/nano/consensus_beacon_state.hpp \
+  /private/tmp/nano-catalog-reservation-integrated-docker-20261006/source/include/nano/consensus_execution_payload.hpp

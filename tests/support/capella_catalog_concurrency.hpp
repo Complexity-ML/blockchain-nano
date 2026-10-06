@@ -10,6 +10,12 @@ inline nano::Json qualify_capella_catalog_concurrency(nano::CapellaDurableReacto
  using Clock=std::chrono::steady_clock;
  constexpr size_t workers=32,rounds=32;
  const auto id=[](uint64_t n){auto s=nano::quantity(nano::Int(std::to_string(n)));return "0x"+std::string(66-s.size(),'0')+s.substr(2);};
+ // Busy means another bounded capture is active, not a published handle.
+ // Only test clients retry this transitory refusal, with an explicit deadline.
+ auto acquire_retry=[](CapellaInventorySessions& sessions,const std::string& owner,const std::string& generation,const std::string& request,const std::string& kind){
+  const auto deadline=Clock::now()+std::chrono::seconds(2);
+  for(;;)try{return sessions.acquire(owner,generation,request,kind);}catch(const CapellaInventoryCaptureBusy&){if(Clock::now()>=deadline)throw;std::this_thread::sleep_for(std::chrono::milliseconds(1));}
+ };
  const auto baseline=reactor.current().token;
  const auto bytes=reactor.capture_inventory("block",1024*1024)->root_bytes();
  if(!bytes)throw std::runtime_error("Concurrent catalog test needs nonempty inventory");
@@ -28,7 +34,7 @@ inline nano::Json qualify_capella_catalog_concurrency(nano::CapellaDurableReacto
     try{generation=sessions.generation();}catch(...){error();}
     phase.arrive_and_wait();
     try{
-     handle=sessions.acquire("shared-daemon",generation,request,"block");
+     handle=acquire_retry(sessions,"shared-daemon",generation,request,"block");
      ++admitted[worker];const auto n=++live;auto old=peak.load();while(old<n&&!peak.compare_exchange_weak(old,n)){}
      if(sessions.page("shared-daemon",handle,{},2,512).at("entries").empty())error();
     }catch(const std::length_error&){++limited[worker];}catch(...){error();}
@@ -44,7 +50,7 @@ inline nano::Json qualify_capella_catalog_concurrency(nano::CapellaDurableReacto
    // This does NOT claim mutex fairness during unscheduled contention.
    for(size_t turn=0;turn<workers;++turn){
     phase.arrive_and_wait();
-    if(turn==worker)try{const auto gen=sessions.generation(),request=id(100000+worker);const auto h=sessions.acquire("shared-daemon",gen,request,"block");if(sessions.page("shared-daemon",h,{},2,512).at("entries").empty())error();sessions.release("shared-daemon",gen,request);++recovered[worker];}catch(...){error();}
+    if(turn==worker)try{const auto gen=sessions.generation(),request=id(100000+worker);const auto h=acquire_retry(sessions,"shared-daemon",gen,request,"block");if(sessions.page("shared-daemon",h,{},2,512).at("entries").empty())error();sessions.release("shared-daemon",gen,request);++recovered[worker];}catch(...){error();}
     phase.arrive_and_wait();
    }
   });
@@ -58,7 +64,7 @@ inline nano::Json qualify_capella_catalog_concurrency(nano::CapellaDurableReacto
   CapellaInventorySessions sessions(reactor,1,bytes,std::chrono::seconds(1),[]{return Clock::time_point{};});
   const auto gen=sessions.generation(),request=id(200000);std::barrier phase(static_cast<std::ptrdiff_t>(workers));
   std::array<std::string,workers> handles;std::atomic<size_t> errors=0;std::vector<std::thread> threads;
-  for(size_t w=0;w<workers;++w)threads.emplace_back([&,w]{phase.arrive_and_wait();try{handles[w]=sessions.acquire("daemon",gen,request,"block");}catch(...){++errors;}});
+  for(size_t w=0;w<workers;++w)threads.emplace_back([&,w]{phase.arrive_and_wait();try{handles[w]=acquire_retry(sessions,"daemon",gen,request,"block");}catch(...){++errors;}});
   for(auto& t:threads)t.join();for(const auto& h:handles)if(h.empty()||h!=handles[0])++errors;
   sessions.release("daemon",gen,request);if(errors)throw std::runtime_error("Concurrent duplicate acquire allocated multiple snapshots");
  }
@@ -68,10 +74,10 @@ inline nano::Json qualify_capella_catalog_concurrency(nano::CapellaDurableReacto
  for(size_t round=0;round<128;++round){
   CapellaInventorySessions sessions(reactor,1,bytes,std::chrono::seconds(1),[]{return Clock::time_point{};});
   const auto gen=sessions.generation(),request=id(300000+round);std::barrier phase(2);std::string handle;std::exception_ptr failure;
-  std::thread opener([&]{phase.arrive_and_wait();try{handle=sessions.acquire("daemon",gen,request,"block");}catch(const std::invalid_argument&){}catch(...){failure=std::current_exception();}});
+  std::thread opener([&]{phase.arrive_and_wait();try{handle=acquire_retry(sessions,"daemon",gen,request,"block");}catch(const std::invalid_argument&){}catch(...){failure=std::current_exception();}});
   phase.arrive_and_wait();sessions.release("daemon",gen,request);opener.join();if(failure)std::rethrow_exception(failure);
   if(handle.empty())++cancelled;else{++won;bool missing=false;try{sessions.page("daemon",handle,{},1,512);}catch(const std::invalid_argument&){missing=true;}if(!missing)throw std::runtime_error("Cancel/acquire race leaked readable handle");}
-  bool fenced=false;try{sessions.acquire("daemon",gen,request,"block");}catch(const std::invalid_argument&){fenced=true;}if(!fenced)throw std::runtime_error("Cancel/acquire race resurrected request");
+  bool fenced=false;try{acquire_retry(sessions,"daemon",gen,request,"block");}catch(const std::invalid_argument&){fenced=true;}if(!fenced)throw std::runtime_error("Cancel/acquire race resurrected request");
   const auto h=sessions.open("capacity-probe","block");sessions.close("capacity-probe",h);
  }
  if(reactor.current().token!=baseline)throw std::runtime_error("Catalog contention changed consensus checkpoint");

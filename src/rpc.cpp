@@ -655,6 +655,7 @@ Json Rpc::one(const Json& request,const std::function<void()>& cancelled){
  }
  catch(const ExecutionCancelled& e){response=error_response(id,-32002,e.what());}
  catch(const RpcError& e){response=error_response(id,e.code,e.what(),e.data);}
+ catch(const CapellaInventoryCaptureBusy&){response=error_response(id,-32005,"Capella inventory capture busy");}
  catch(const Json::exception&){response=error_response(id,-32602,"Invalid params");}
  catch(const std::invalid_argument& e){response=error_response(id,-32602,e.what());}
  catch(const std::overflow_error& e){response=error_response(id,-32602,e.what());}

@@ -1333,6 +1333,20 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
  if(queued_bls_changes){
   SignedCapellaBlsChange change;Key key(1001);change.validator_index=1;copy_to(change.from_bls_pubkey,key.public_key);change.to_execution_address[19]=43;const auto genesis_root=root_at(initial.blocks.at(initial.timed.view.anchor).state.ssz,8);copy_to(change.signature,key.sign(consensus_signing_root(capella_bls_change_root(change),consensus_domain({10,0,0,0},t.genesis_version,genesis_root))));
   Rpc rpc(*owner,"capella-test-token",AdmissionBudget::Clock::now,{}, {}, {},std::make_shared<CapellaRuntime>(runtime));HttpServer server(rpc,"127.0.0.1",0);std::thread http_thread([&]{server.run();});struct StopHttp{HttpServer& server;std::thread& thread;~StopHttp(){server.stop();thread.join();}} stop{server,http_thread};PersistentRpc client(server.port());
+  if(std::getenv("NANO_TEST_CATALOG_WORKER_FAILFAST")){
+   const auto gen=runtime.catalogs->generation(),request="0x"+std::string(64,'c');const auto primary=runtime.reactor->current().token;
+   std::promise<void> held,unblock;auto ready=held.get_future();auto gate=unblock.get_future().share();
+   auto capture=std::async(std::launch::async,[&]{bool seen=false;try{runtime.catalogs->acquire("capella-private-daemon",gen,request,"block",[&]{if(!seen){seen=true;held.set_value();gate.wait();}throw ExecutionCancelled("HTTP capture probe cancelled");});return false;}catch(const ExecutionCancelled&){return true;}});
+   const bool started=ready.wait_for(std::chrono::seconds(5))==std::future_status::ready;
+   auto requests=std::async(std::launch::async,[&]{PersistentRpc probe(server.port());bool denied=false,busy=false;try{probe.call("nano_capellaCatalogAcquire",Json::array({"wrong-token","block",gen,"0x"+std::string(64,'d')}));}catch(const PersistentRpcError& e){denied=e.code==-32001;}
+    try{probe.call("nano_capellaCatalogAcquire",Json::array({"capella-test-token","block",gen,"0x"+std::string(64,'d')}));}catch(const PersistentRpcError& e){busy=e.code==-32005;}
+    const bool readable=probe.call("nano_capellaCatalogGeneration",Json::array({"capella-test-token"}))==gen;
+    const bool released=probe.call("nano_capellaCatalogRelease",Json::array({"capella-test-token",gen,request}))==true;return denied&&busy&&readable&&released;});
+   const bool responsive=requests.wait_for(std::chrono::seconds(2))==std::future_status::ready;
+   unblock.set_value();const bool cancelled=capture.get(),transport_ok=requests.get();
+   check(started&&responsive&&cancelled&&transport_ok&&runtime.reactor->current().token==primary,"HTTP busy/control contract failed");
+   std::cout<<Json{{"scenario","catalog-busy-http-control"},{"busyRpcCode",-32005},{"unauthorizedRejected",true},{"generationAndReleaseResponsive",responsive},{"lateCaptureCancelled",cancelled},{"primaryUnchanged",true},{"realHttpTransport",true},{"wanCauseProven",false}}.dump()<<std::endl;
+  }
   const auto status=client.call("nano_capellaStatus",Json::array({"capella-test-token"}));const auto active=runtime.admission->receipts();const auto ticket=quantity(quantity(active.at("highWater"))+1);auto operation=runtime_identity;operation["kind"]="bls_to_execution_change";operation["sszBase64"]=altair_base64(encode_capella_bls_change(change));const auto before=runtime.reactor->current().token;
   bool denied=false;try{client.call("nano_capellaSubmit",Json::array({"wrong-token",active.at("session"),ticket,operation}));}catch(const PersistentRpcError& e){denied=e.code==-32001;}check(denied&&runtime.reactor->current().token==before,"unauthorized BLS RPC admitted");
   client.call("nano_capellaSubmit",Json::array({"capella-test-token",active.at("session"),ticket,operation}));Json receipt;const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(10);do{receipt=client.call("nano_capellaJob",Json::array({"capella-test-token",active.at("session"),ticket}));if(receipt.at("state")=="completed")break;std::this_thread::sleep_for(std::chrono::milliseconds(1));}while(std::chrono::steady_clock::now()<deadline);
@@ -1351,6 +1365,47 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
  std::cout<<Json{{"externalRecoveryCommitmentChecks",automatic_recovery?9:0},{"automaticRecovery",automatic_recovery},{"scenario","capella-configured-runtime"},{"blocks",proposals},{"keysLoaded",automatic_registration?65:64},{"automaticRegistration",automatic_registration},{"witnessRestart",true},{"signerWitnessRestart",true},{"admissionReceiptChecks",6},{"httpTransport",capella_http},{"runtimeCatalogChecks",3},{"catalogSeekBoundaryChecks",8},{"catalogSeekOwnershipAndBoundsChecks",3},{"invalidConfigurationsRejected",6},{"workersStopped",true},{"networkTransport",false}}.dump()<<std::endl;
 }
 static void verify_beacon_read_admission(CapellaDurableReactor& reactor,const Bytes& wire,const ConsensusRoot& parent){
+ if(std::getenv("NANO_TEST_CATALOG_GENERATION_RACE")){
+  Json cases=Json::array();const auto primary=reactor.current().token;
+  for(const std::string mode:{"unrelated","own-before","own-after","foreign"}){
+   CapellaInventorySessions catalogs(reactor,2,65536,std::chrono::seconds(60));const auto generation=catalogs.generation(),request="0x"+std::string(64,'a');
+   std::promise<void> held,unblock;auto ready=held.get_future();auto gate=unblock.get_future().share();
+   auto capture=std::async(std::launch::async,[&]{bool seen=false;try{return catalogs.acquire("owner",generation,request,"block",[&]{if(!seen){seen=true;held.set_value();gate.wait();}});}catch(const std::invalid_argument&){return std::string();}});
+   const bool started=ready.wait_for(std::chrono::seconds(5))==std::future_status::ready;
+   if(mode=="own-before")catalogs.release("owner",generation,request);
+   if(mode=="foreign")catalogs.release("foreign-owner",generation,request);
+   for(char c:{'b','c','d'})catalogs.release("unrelated-owner",generation,"0x"+std::string(64,c));
+   const bool rotated=catalogs.generation()!=generation;
+   if(mode=="own-after")catalogs.release("owner",generation,request);
+   unblock.set_value();const auto handle=capture.get();const bool published=!handle.empty();
+   if(published){check(!catalogs.page("owner",handle,{},2,512).at("entries").empty(),"published capture unreadable");catalogs.release("owner",generation,request);}
+   const auto recovered=catalogs.open("capacity-probe","block");catalogs.close("capacity-probe",recovered);
+   check(started&&rotated&&reactor.current().token==primary,"generation race setup or state failed");
+   check(published==(mode=="unrelated"||mode=="foreign"),"capture reservation/retirement invariant failed");
+   cases.push_back({{"mode",mode},{"rotated",rotated},{"published",published},{"capacityRecovered",true},{"primaryUnchanged",true}});
+  }
+  std::cout<<Json{{"scenario","catalog-generation-reservation"},{"cases",cases},{"wanCauseProven",false}}.dump()<<std::endl;
+ }
+ if(std::getenv("NANO_TEST_CATALOG_WORKER_FAILFAST")){
+  CapellaInventorySessions catalogs(reactor,2,65536,std::chrono::seconds(60));const auto gen=catalogs.generation();const auto primary=reactor.current().token;
+  SimulationQueue queue(std::chrono::milliseconds(150));boost::asio::io_context io;auto keep=boost::asio::make_work_guard(io);
+  std::promise<void> held,waiter,unblock;auto held_ready=held.get_future(),waiter_ready=waiter.get_future();auto gate=unblock.get_future().share();std::atomic<bool> cancel{false},waiter_busy{false};std::atomic<unsigned> drained{0};
+  check(queue.reserve(4),"starvation probe reservation failed");auto cleanup=[&]{queue.release(1);if(++drained==4)keep.reset();};
+  queue.dispatch(io.get_executor(),[&]()->Json{bool seen=false;try{catalogs.acquire("probe",gen,"0x"+std::string(64,'a'),"block",[&]{if(!seen){seen=true;held.set_value();gate.wait();}throw ExecutionCancelled("held acquisition cancelled");});}catch(const ExecutionCancelled&){}return false;},[](auto){},cleanup);
+  const bool capture_started=held_ready.wait_for(std::chrono::seconds(5))==std::future_status::ready;
+  queue.dispatch(io.get_executor(),[&]()->Json{bool seen=false;try{catalogs.acquire("probe",gen,"0x"+std::string(64,'b'),"block",[&]{if(!seen){seen=true;waiter.set_value();}if(cancel)throw ExecutionCancelled("waiting acquisition cancelled");});}catch(const ExecutionCancelled&){}catch(const CapellaInventoryCaptureBusy&){waiter_busy=true;if(!seen)waiter.set_value();}return false;},[](auto){},cleanup);
+  const bool waiter_started=waiter_ready.wait_for(std::chrono::seconds(5))==std::future_status::ready;
+  std::promise<bool> generation_result,release_result;auto generation_ready=generation_result.get_future(),release_ready=release_result.get_future();
+  queue.dispatch(io.get_executor(),[&]()->Json{return catalogs.generation();},[&](auto result){generation_result.set_value(!result);},cleanup);
+  queue.dispatch(io.get_executor(),[&]()->Json{catalogs.release("probe",gen,"0x"+std::string(64,'a'));return true;},[&](auto result){release_result.set_value(!result);},cleanup);
+  const bool direct_control=catalogs.generation()==gen;std::thread loop([&]{io.run();});
+  const bool gen_delivered=generation_ready.wait_for(std::chrono::seconds(2))==std::future_status::ready;
+  const bool rel_delivered=release_ready.wait_for(std::chrono::seconds(2))==std::future_status::ready;
+  cancel=true;unblock.set_value();queue.workers.join();loop.join();
+  const bool gen_expired=generation_ready.get(),rel_expired=release_ready.get();
+  check(capture_started&&waiter_started&&direct_control&&gen_delivered&&rel_delivered&&!gen_expired&&!rel_expired&&waiter_busy&&queue.pending==0&&drained==4&&reactor.current().token==primary,"worker starvation hypothesis not reproduced");
+  std::cout<<Json{{"scenario","catalog-worker-control-progress"},{"workers",2},{"jobs",4},{"captureHeld",capture_started},{"acquirerRejectedBusy",waiter_busy.load()},{"directRegistryControlResponsive",direct_control},{"queuedGenerationExpired",gen_expired},{"queuedReleaseExpired",rel_expired},{"allReservationsDrained",queue.pending==0},{"primaryUnchanged",true},{"realHttpTransport",false},{"wanCauseProven",false}}.dump()<<std::endl;
+ }
  if(std::getenv("NANO_TEST_CATALOG_CAPTURE_UNLOCKED")){
   const auto primary=reactor.current().token;Json cases=Json::array();
   for(const std::string mode:{"release","stop","expiry","cancel"}){

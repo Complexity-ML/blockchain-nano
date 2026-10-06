@@ -4898,3 +4898,6 @@ Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, d
 
 
 2026-10-06 — Course de génération confirmée (18115/0) : nettoyages étrangers annulent une capture utile. Draft avec réservation suivie (11207/0) : captures bénignes préservées, retraits propres avant/après rotation toujours clôturants, capacité récupérée et primaire inchangé. HTTP réellement activé sur trois architectures ; omission initiale du mode et helper ARM64 sans fixture conservés. Lot final ABI/HTTP/quotas encore à qualifier ; cause et finalité WAN non closes. [Preuves](qualification/catalog-generation-reservation-counterfactual-20261006/README.md).
+
+
+2026-10-06 — Lot catalogue intégré : refus occupé immédiat (-32005), réservation suivie à travers rotation, retrait propre/arrêt/expiry/cancel conservés. Originaux 57019/81866/79512 sorties 0, sept modes natif/ARM64/AMD64, 350 sources figées et deux consommateurs ABI reconstruits. Scénarios HTTP réel et génération vérifiés explicitement ; modes omis et échecs historiques conservés. Quotas/threads/quorum inchangés. Cause globale et finalité WAN restent ouvertes ; autres tâches RPC/votes récents à qualifier avant clôture production. [Preuves](qualification/catalog-reservation-integrated-20261006/README.md).

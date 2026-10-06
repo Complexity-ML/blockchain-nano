@@ -1,0 +1,233 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index c4cc308f..5da92268 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1678,6 +1678,12 @@ set_tests_properties(consensus_capella_scheduled_finality PROPERTIES TIMEOUT 360
+ add_test(NAME consensus_capella_configured_runtime COMMAND nano-capella-transition-tests --configured-runtime)
+ set_tests_properties(consensus_capella_configured_runtime PROPERTIES TIMEOUT 240 LABELS "qualification_consensus_runtime")
+ 
++add_test(NAME consensus_capella_catalog_generation_reservation COMMAND nano-capella-transition-tests --beacon-reads)
++set_tests_properties(consensus_capella_catalog_generation_reservation PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_runtime" ENVIRONMENT "NANO_TEST_CATALOG_GENERATION_RACE=1")
++add_test(NAME consensus_capella_catalog_busy_http COMMAND nano-capella-transition-tests --queued-bls-rpc)
++set_tests_properties(consensus_capella_catalog_busy_http PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_runtime" ENVIRONMENT "NANO_TEST_CATALOG_WORKER_FAILFAST=1")
++add_test(NAME consensus_capella_catalog_worker_control COMMAND nano-capella-transition-tests --beacon-reads)
++set_tests_properties(consensus_capella_catalog_worker_control PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_runtime" ENVIRONMENT "NANO_TEST_CATALOG_WORKER_FAILFAST=1")
+ add_test(NAME consensus_capella_catalog_capture_control COMMAND nano-capella-transition-tests --beacon-reads)
+ set_tests_properties(consensus_capella_catalog_capture_control PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_runtime" ENVIRONMENT "NANO_TEST_CATALOG_CAPTURE_UNLOCKED=1")
+ add_test(NAME consensus_capella_beacon_reads COMMAND nano-capella-transition-tests --beacon-reads)
+diff --git a/network/capella_inventory_sessions.hpp b/network/capella_inventory_sessions.hpp
+index 5fe1d51a..50307282 100644
+--- a/network/capella_inventory_sessions.hpp
++++ b/network/capella_inventory_sessions.hpp
+@@ -3,14 +3,19 @@
+ #include <algorithm>
+ #include <chrono>
+ #include <set>
+-#include <thread>
+ #include <openssl/rand.h>
+ 
+ // Private transport adapter supplies an authenticated principal, never a payload
+ // field. No snapshot escapes this registry: quota covers in-flight page reads too.
++class CapellaInventoryCaptureBusy : public std::length_error {
++public: CapellaInventoryCaptureBusy():std::length_error("Capella inventory capture busy"){}
++};
++
+ class CapellaInventorySessions {
+  using Clock=std::chrono::steady_clock;
+  struct Entry {std::string owner;Clock::time_point created;std::shared_ptr<const nano::CapellaInventorySnapshot> snapshot;std::string generation,request,kind;};
++ struct PendingCapture {std::string owner,generation,request;bool cancelled=false;};
++ std::optional<PendingCapture> pending_capture_;
+  nano::CapellaDurableReactor& reactor_;
+  const size_t maximum_,budget_;const Clock::duration ttl_;
+  std::function<Clock::time_point()> now_;
+@@ -21,8 +26,10 @@ class CapellaInventorySessions {
+  static std::string random_id(){nano::Bytes value(32);if(RAND_bytes(value.data(),value.size())!=1)throw std::runtime_error("Capella inventory randomness unavailable");return nano::hex(value);}
+  static void identity(const std::string& owner,const std::string& id){if(owner.empty()||owner.size()>256||id.size()!=66||!id.starts_with("0x")||!std::all_of(id.begin()+2,id.end(),[](char c){return (c>='0'&&c<='9')||(c>='a'&&c<='f');}))throw std::invalid_argument("Invalid Capella inventory identity");}
+  // Retire identifiers without unbounded tombstones. Rotation fences every older
+- // acquire, while existing handles and request releases remain valid.
++ // acquire. Existing handles and an already-reserved capture remain tracked;
++ // cancellation of that capture is retained even across tombstone rotation.
+  void retire(const std::string& owner,const std::string& generation,const std::string& request){
++  if(!request.empty()&&pending_capture_&&pending_capture_->owner==owner&&pending_capture_->generation==generation&&pending_capture_->request==request)pending_capture_->cancelled=true;
+   if(request.empty()||generation!=generation_||retired_.contains({owner,request}))return;
+   if(retired_.size()>=maximum_){auto next=random_id();if(next==generation_)throw std::runtime_error("Capella generation collision");generation_.swap(next);retired_.clear();return;}
+   retired_.emplace(owner,request);
+@@ -51,11 +58,7 @@ public:
+ private:
+  std::string capture(const std::string& owner,std::string_view kind,const std::function<void()>& check,const std::string& generation,const std::string& request){
+   std::unique_lock capture_lock(capture_mutex_,std::defer_lock);
+-  while(!capture_lock.try_lock()){
+-   {std::lock_guard lock(mutex_);if(stopped_)throw std::runtime_error("Capella inventory sessions stopped");
+-    if(!request.empty()&&(generation!=generation_||retired_.contains({owner,request})))throw std::invalid_argument("Capella inventory request retired");}
+-   if(check)check();std::this_thread::sleep_for(std::chrono::milliseconds(1));
+-  }
++  if(!capture_lock.try_lock())throw CapellaInventoryCaptureBusy();
+   Clock::time_point created;size_t allowance;std::string id;
+   {
+    std::lock_guard lock(mutex_);created=now_();reap(created);
+@@ -66,7 +69,7 @@ private:
+    }
+    if(entries_.size()>=maximum_)throw std::length_error("Capella inventory session capacity exhausted");
+    allowance=budget_-bytes_;id=random_id();if(entries_.contains(id))throw std::runtime_error("Capella inventory handle collision");
+-   reserved_bytes_=allowance;
++   pending_capture_=PendingCapture{owner,generation,request,false};reserved_bytes_=allowance;
+   }
+   // Exception unwinding destroys the snapshot before relinquishing its byte
+   // reservation. stop/release never free a capture still using that reservation.
+@@ -75,11 +78,11 @@ private:
+    std::lock_guard lock(mutex_);const auto now=now_();reap(now);
+    if(stopped_)throw std::runtime_error("Capella inventory sessions stopped");
+    if(now<created||now-created>=ttl_)throw std::invalid_argument("Capella inventory capture expired");
+-   if(!request.empty()&&(generation!=generation_||retired_.contains({owner,request})))throw std::invalid_argument("Capella inventory request retired");
++   if(!pending_capture_||pending_capture_->cancelled)throw std::invalid_argument("Capella inventory request retired");
+    if(snapshot->root_bytes()>reserved_bytes_)throw std::length_error("Capella inventory capture exceeds reservation");
+    auto [it,inserted]=entries_.emplace(id,Entry{owner,created,std::move(snapshot),generation,request,std::string(kind)});
+-   if(!inserted)throw std::runtime_error("Capella inventory handle collision");bytes_+=it->second.snapshot->root_bytes();reserved_bytes_=0;return id;
+-  }catch(...){std::lock_guard lock(mutex_);reserved_bytes_=0;throw;}
++   if(!inserted)throw std::runtime_error("Capella inventory handle collision");bytes_+=it->second.snapshot->root_bytes();reserved_bytes_=0;pending_capture_.reset();return id;
++  }catch(...){std::lock_guard lock(mutex_);reserved_bytes_=0;pending_capture_.reset();throw;}
+  }
+ 
+ public:
+diff --git a/src/rpc.cpp b/src/rpc.cpp
+index e8c54aa3..4e31e858 100644
+--- a/src/rpc.cpp
++++ b/src/rpc.cpp
+@@ -655,6 +655,7 @@ Json Rpc::one(const Json& request,const std::function<void()>& cancelled){
+  }
+  catch(const ExecutionCancelled& e){response=error_response(id,-32002,e.what());}
+  catch(const RpcError& e){response=error_response(id,e.code,e.what(),e.data);}
++ catch(const CapellaInventoryCaptureBusy&){response=error_response(id,-32005,"Capella inventory capture busy");}
+  catch(const Json::exception&){response=error_response(id,-32602,"Invalid params");}
+  catch(const std::invalid_argument& e){response=error_response(id,-32602,e.what());}
+  catch(const std::overflow_error& e){response=error_response(id,-32602,e.what());}
+diff --git a/tests/support/capella_catalog_concurrency.hpp b/tests/support/capella_catalog_concurrency.hpp
+index 79923709..9d7f98ce 100644
+--- a/tests/support/capella_catalog_concurrency.hpp
++++ b/tests/support/capella_catalog_concurrency.hpp
+@@ -10,6 +10,12 @@ inline nano::Json qualify_capella_catalog_concurrency(nano::CapellaDurableReacto
+  using Clock=std::chrono::steady_clock;
+  constexpr size_t workers=32,rounds=32;
+  const auto id=[](uint64_t n){auto s=nano::quantity(nano::Int(std::to_string(n)));return "0x"+std::string(66-s.size(),'0')+s.substr(2);};
++ // Busy means another bounded capture is active, not a published handle.
++ // Only test clients retry this transitory refusal, with an explicit deadline.
++ auto acquire_retry=[](CapellaInventorySessions& sessions,const std::string& owner,const std::string& generation,const std::string& request,const std::string& kind){
++  const auto deadline=Clock::now()+std::chrono::seconds(2);
++  for(;;)try{return sessions.acquire(owner,generation,request,kind);}catch(const CapellaInventoryCaptureBusy&){if(Clock::now()>=deadline)throw;std::this_thread::sleep_for(std::chrono::milliseconds(1));}
++ };
+  const auto baseline=reactor.current().token;
+  const auto bytes=reactor.capture_inventory("block",1024*1024)->root_bytes();
+  if(!bytes)throw std::runtime_error("Concurrent catalog test needs nonempty inventory");
+@@ -28,7 +34,7 @@ inline nano::Json qualify_capella_catalog_concurrency(nano::CapellaDurableReacto
+     try{generation=sessions.generation();}catch(...){error();}
+     phase.arrive_and_wait();
+     try{
+-     handle=sessions.acquire("shared-daemon",generation,request,"block");
++     handle=acquire_retry(sessions,"shared-daemon",generation,request,"block");
+      ++admitted[worker];const auto n=++live;auto old=peak.load();while(old<n&&!peak.compare_exchange_weak(old,n)){}
+      if(sessions.page("shared-daemon",handle,{},2,512).at("entries").empty())error();
+     }catch(const std::length_error&){++limited[worker];}catch(...){error();}
+@@ -44,7 +50,7 @@ inline nano::Json qualify_capella_catalog_concurrency(nano::CapellaDurableReacto
+    // This does NOT claim mutex fairness during unscheduled contention.
+    for(size_t turn=0;turn<workers;++turn){
+     phase.arrive_and_wait();
+-    if(turn==worker)try{const auto gen=sessions.generation(),request=id(100000+worker);const auto h=sessions.acquire("shared-daemon",gen,request,"block");if(sessions.page("shared-daemon",h,{},2,512).at("entries").empty())error();sessions.release("shared-daemon",gen,request);++recovered[worker];}catch(...){error();}
++    if(turn==worker)try{const auto gen=sessions.generation(),request=id(100000+worker);const auto h=acquire_retry(sessions,"shared-daemon",gen,request,"block");if(sessions.page("shared-daemon",h,{},2,512).at("entries").empty())error();sessions.release("shared-daemon",gen,request);++recovered[worker];}catch(...){error();}
+     phase.arrive_and_wait();
+    }
+   });
+@@ -58,7 +64,7 @@ inline nano::Json qualify_capella_catalog_concurrency(nano::CapellaDurableReacto
+   CapellaInventorySessions sessions(reactor,1,bytes,std::chrono::seconds(1),[]{return Clock::time_point{};});
+   const auto gen=sessions.generation(),request=id(200000);std::barrier phase(static_cast<std::ptrdiff_t>(workers));
+   std::array<std::string,workers> handles;std::atomic<size_t> errors=0;std::vector<std::thread> threads;
+-  for(size_t w=0;w<workers;++w)threads.emplace_back([&,w]{phase.arrive_and_wait();try{handles[w]=sessions.acquire("daemon",gen,request,"block");}catch(...){++errors;}});
++  for(size_t w=0;w<workers;++w)threads.emplace_back([&,w]{phase.arrive_and_wait();try{handles[w]=acquire_retry(sessions,"daemon",gen,request,"block");}catch(...){++errors;}});
+   for(auto& t:threads)t.join();for(const auto& h:handles)if(h.empty()||h!=handles[0])++errors;
+   sessions.release("daemon",gen,request);if(errors)throw std::runtime_error("Concurrent duplicate acquire allocated multiple snapshots");
+  }
+@@ -68,10 +74,10 @@ inline nano::Json qualify_capella_catalog_concurrency(nano::CapellaDurableReacto
+  for(size_t round=0;round<128;++round){
+   CapellaInventorySessions sessions(reactor,1,bytes,std::chrono::seconds(1),[]{return Clock::time_point{};});
+   const auto gen=sessions.generation(),request=id(300000+round);std::barrier phase(2);std::string handle;std::exception_ptr failure;
+-  std::thread opener([&]{phase.arrive_and_wait();try{handle=sessions.acquire("daemon",gen,request,"block");}catch(const std::invalid_argument&){}catch(...){failure=std::current_exception();}});
++  std::thread opener([&]{phase.arrive_and_wait();try{handle=acquire_retry(sessions,"daemon",gen,request,"block");}catch(const std::invalid_argument&){}catch(...){failure=std::current_exception();}});
+   phase.arrive_and_wait();sessions.release("daemon",gen,request);opener.join();if(failure)std::rethrow_exception(failure);
+   if(handle.empty())++cancelled;else{++won;bool missing=false;try{sessions.page("daemon",handle,{},1,512);}catch(const std::invalid_argument&){missing=true;}if(!missing)throw std::runtime_error("Cancel/acquire race leaked readable handle");}
+-  bool fenced=false;try{sessions.acquire("daemon",gen,request,"block");}catch(const std::invalid_argument&){fenced=true;}if(!fenced)throw std::runtime_error("Cancel/acquire race resurrected request");
++  bool fenced=false;try{acquire_retry(sessions,"daemon",gen,request,"block");}catch(const std::invalid_argument&){fenced=true;}if(!fenced)throw std::runtime_error("Cancel/acquire race resurrected request");
+   const auto h=sessions.open("capacity-probe","block");sessions.close("capacity-probe",h);
+  }
+  if(reactor.current().token!=baseline)throw std::runtime_error("Catalog contention changed consensus checkpoint");
+diff --git a/tests/test_capella_transition.cpp b/tests/test_capella_transition.cpp
+index 4cd16b35..25386ed5 100644
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -1333,6 +1333,20 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
+  if(queued_bls_changes){
+   SignedCapellaBlsChange change;Key key(1001);change.validator_index=1;copy_to(change.from_bls_pubkey,key.public_key);change.to_execution_address[19]=43;const auto genesis_root=root_at(initial.blocks.at(initial.timed.view.anchor).state.ssz,8);copy_to(change.signature,key.sign(consensus_signing_root(capella_bls_change_root(change),consensus_domain({10,0,0,0},t.genesis_version,genesis_root))));
+   Rpc rpc(*owner,"capella-test-token",AdmissionBudget::Clock::now,{}, {}, {},std::make_shared<CapellaRuntime>(runtime));HttpServer server(rpc,"127.0.0.1",0);std::thread http_thread([&]{server.run();});struct StopHttp{HttpServer& server;std::thread& thread;~StopHttp(){server.stop();thread.join();}} stop{server,http_thread};PersistentRpc client(server.port());
++  if(std::getenv("NANO_TEST_CATALOG_WORKER_FAILFAST")){
++   const auto gen=runtime.catalogs->generation(),request="0x"+std::string(64,'c');const auto primary=runtime.reactor->current().token;
++   std::promise<void> held,unblock;auto ready=held.get_future();auto gate=unblock.get_future().share();
++   auto capture=std::async(std::launch::async,[&]{bool seen=false;try{runtime.catalogs->acquire("capella-private-daemon",gen,request,"block",[&]{if(!seen){seen=true;held.set_value();gate.wait();}throw ExecutionCancelled("HTTP capture probe cancelled");});return false;}catch(const ExecutionCancelled&){return true;}});
++   const bool started=ready.wait_for(std::chrono::seconds(5))==std::future_status::ready;
++   auto requests=std::async(std::launch::async,[&]{PersistentRpc probe(server.port());bool denied=false,busy=false;try{probe.call("nano_capellaCatalogAcquire",Json::array({"wrong-token","block",gen,"0x"+std::string(64,'d')}));}catch(const PersistentRpcError& e){denied=e.code==-32001;}
++    try{probe.call("nano_capellaCatalogAcquire",Json::array({"capella-test-token","block",gen,"0x"+std::string(64,'d')}));}catch(const PersistentRpcError& e){busy=e.code==-32005;}
++    const bool readable=probe.call("nano_capellaCatalogGeneration",Json::array({"capella-test-token"}))==gen;
++    const bool released=probe.call("nano_capellaCatalogRelease",Json::array({"capella-test-token",gen,request}))==true;return denied&&busy&&readable&&released;});
++   const bool responsive=requests.wait_for(std::chrono::seconds(2))==std::future_status::ready;
++   unblock.set_value();const bool cancelled=capture.get(),transport_ok=requests.get();
++   check(started&&responsive&&cancelled&&transport_ok&&runtime.reactor->current().token==primary,"HTTP busy/control contract failed");
++   std::cout<<Json{{"scenario","catalog-busy-http-control"},{"busyRpcCode",-32005},{"unauthorizedRejected",true},{"generationAndReleaseResponsive",responsive},{"lateCaptureCancelled",cancelled},{"primaryUnchanged",true},{"realHttpTransport",true},{"wanCauseProven",false}}.dump()<<std::endl;
++  }
+   const auto status=client.call("nano_capellaStatus",Json::array({"capella-test-token"}));const auto active=runtime.admission->receipts();const auto ticket=quantity(quantity(active.at("highWater"))+1);auto operation=runtime_identity;operation["kind"]="bls_to_execution_change";operation["sszBase64"]=altair_base64(encode_capella_bls_change(change));const auto before=runtime.reactor->current().token;
+   bool denied=false;try{client.call("nano_capellaSubmit",Json::array({"wrong-token",active.at("session"),ticket,operation}));}catch(const PersistentRpcError& e){denied=e.code==-32001;}check(denied&&runtime.reactor->current().token==before,"unauthorized BLS RPC admitted");
+   client.call("nano_capellaSubmit",Json::array({"capella-test-token",active.at("session"),ticket,operation}));Json receipt;const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(10);do{receipt=client.call("nano_capellaJob",Json::array({"capella-test-token",active.at("session"),ticket}));if(receipt.at("state")=="completed")break;std::this_thread::sleep_for(std::chrono::milliseconds(1));}while(std::chrono::steady_clock::now()<deadline);
+@@ -1351,6 +1365,47 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
+  std::cout<<Json{{"externalRecoveryCommitmentChecks",automatic_recovery?9:0},{"automaticRecovery",automatic_recovery},{"scenario","capella-configured-runtime"},{"blocks",proposals},{"keysLoaded",automatic_registration?65:64},{"automaticRegistration",automatic_registration},{"witnessRestart",true},{"signerWitnessRestart",true},{"admissionReceiptChecks",6},{"httpTransport",capella_http},{"runtimeCatalogChecks",3},{"catalogSeekBoundaryChecks",8},{"catalogSeekOwnershipAndBoundsChecks",3},{"invalidConfigurationsRejected",6},{"workersStopped",true},{"networkTransport",false}}.dump()<<std::endl;
+ }
+ static void verify_beacon_read_admission(CapellaDurableReactor& reactor,const Bytes& wire,const ConsensusRoot& parent){
++ if(std::getenv("NANO_TEST_CATALOG_GENERATION_RACE")){
++  Json cases=Json::array();const auto primary=reactor.current().token;
++  for(const std::string mode:{"unrelated","own-before","own-after","foreign"}){
++   CapellaInventorySessions catalogs(reactor,2,65536,std::chrono::seconds(60));const auto generation=catalogs.generation(),request="0x"+std::string(64,'a');
++   std::promise<void> held,unblock;auto ready=held.get_future();auto gate=unblock.get_future().share();
++   auto capture=std::async(std::launch::async,[&]{bool seen=false;try{return catalogs.acquire("owner",generation,request,"block",[&]{if(!seen){seen=true;held.set_value();gate.wait();}});}catch(const std::invalid_argument&){return std::string();}});
++   const bool started=ready.wait_for(std::chrono::seconds(5))==std::future_status::ready;
++   if(mode=="own-before")catalogs.release("owner",generation,request);
++   if(mode=="foreign")catalogs.release("foreign-owner",generation,request);
++   for(char c:{'b','c','d'})catalogs.release("unrelated-owner",generation,"0x"+std::string(64,c));
++   const bool rotated=catalogs.generation()!=generation;
++   if(mode=="own-after")catalogs.release("owner",generation,request);
++   unblock.set_value();const auto handle=capture.get();const bool published=!handle.empty();
++   if(published){check(!catalogs.page("owner",handle,{},2,512).at("entries").empty(),"published capture unreadable");catalogs.release("owner",generation,request);}
++   const auto recovered=catalogs.open("capacity-probe","block");catalogs.close("capacity-probe",recovered);
++   check(started&&rotated&&reactor.current().token==primary,"generation race setup or state failed");
++   check(published==(mode=="unrelated"||mode=="foreign"),"capture reservation/retirement invariant failed");
++   cases.push_back({{"mode",mode},{"rotated",rotated},{"published",published},{"capacityRecovered",true},{"primaryUnchanged",true}});
++  }
++  std::cout<<Json{{"scenario","catalog-generation-reservation"},{"cases",cases},{"wanCauseProven",false}}.dump()<<std::endl;
++ }
++ if(std::getenv("NANO_TEST_CATALOG_WORKER_FAILFAST")){
++  CapellaInventorySessions catalogs(reactor,2,65536,std::chrono::seconds(60));const auto gen=catalogs.generation();const auto primary=reactor.current().token;
++  SimulationQueue queue(std::chrono::milliseconds(150));boost::asio::io_context io;auto keep=boost::asio::make_work_guard(io);
++  std::promise<void> held,waiter,unblock;auto held_ready=held.get_future(),waiter_ready=waiter.get_future();auto gate=unblock.get_future().share();std::atomic<bool> cancel{false},waiter_busy{false};std::atomic<unsigned> drained{0};
++  check(queue.reserve(4),"starvation probe reservation failed");auto cleanup=[&]{queue.release(1);if(++drained==4)keep.reset();};
++  queue.dispatch(io.get_executor(),[&]()->Json{bool seen=false;try{catalogs.acquire("probe",gen,"0x"+std::string(64,'a'),"block",[&]{if(!seen){seen=true;held.set_value();gate.wait();}throw ExecutionCancelled("held acquisition cancelled");});}catch(const ExecutionCancelled&){}return false;},[](auto){},cleanup);
++  const bool capture_started=held_ready.wait_for(std::chrono::seconds(5))==std::future_status::ready;
++  queue.dispatch(io.get_executor(),[&]()->Json{bool seen=false;try{catalogs.acquire("probe",gen,"0x"+std::string(64,'b'),"block",[&]{if(!seen){seen=true;waiter.set_value();}if(cancel)throw ExecutionCancelled("waiting acquisition cancelled");});}catch(const ExecutionCancelled&){}catch(const CapellaInventoryCaptureBusy&){waiter_busy=true;if(!seen)waiter.set_value();}return false;},[](auto){},cleanup);
++  const bool waiter_started=waiter_ready.wait_for(std::chrono::seconds(5))==std::future_status::ready;
++  std::promise<bool> generation_result,release_result;auto generation_ready=generation_result.get_future(),release_ready=release_result.get_future();
++  queue.dispatch(io.get_executor(),[&]()->Json{return catalogs.generation();},[&](auto result){generation_result.set_value(!result);},cleanup);
++  queue.dispatch(io.get_executor(),[&]()->Json{catalogs.release("probe",gen,"0x"+std::string(64,'a'));return true;},[&](auto result){release_result.set_value(!result);},cleanup);
++  const bool direct_control=catalogs.generation()==gen;std::thread loop([&]{io.run();});
++  const bool gen_delivered=generation_ready.wait_for(std::chrono::seconds(2))==std::future_status::ready;
++  const bool rel_delivered=release_ready.wait_for(std::chrono::seconds(2))==std::future_status::ready;
++  cancel=true;unblock.set_value();queue.workers.join();loop.join();
++  const bool gen_expired=generation_ready.get(),rel_expired=release_ready.get();
++  check(capture_started&&waiter_started&&direct_control&&gen_delivered&&rel_delivered&&!gen_expired&&!rel_expired&&waiter_busy&&queue.pending==0&&drained==4&&reactor.current().token==primary,"worker starvation hypothesis not reproduced");
++  std::cout<<Json{{"scenario","catalog-worker-control-progress"},{"workers",2},{"jobs",4},{"captureHeld",capture_started},{"acquirerRejectedBusy",waiter_busy.load()},{"directRegistryControlResponsive",direct_control},{"queuedGenerationExpired",gen_expired},{"queuedReleaseExpired",rel_expired},{"allReservationsDrained",queue.pending==0},{"primaryUnchanged",true},{"realHttpTransport",false},{"wanCauseProven",false}}.dump()<<std::endl;
++ }
+  if(std::getenv("NANO_TEST_CATALOG_CAPTURE_UNLOCKED")){
+   const auto primary=reactor.current().token;Json cases=Json::array();
+   for(const std::string mode:{"release","stop","expiry","cancel"}){
