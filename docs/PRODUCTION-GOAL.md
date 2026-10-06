@@ -4488,3 +4488,6 @@ Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, d
 
 
 2026-10-06 — Préparation v25 : états Mac/VPS post-v24 et témoins audités, copies locales sans identité de pair et volume VPS conservé sur son hôte. Cœur inchangé et relais de reprise après délai qualifié dans son périmètre natif/ARM64/AMD64 ; mêmes limites, trois nouvelles finalités communes en 900 s à démontrer. Préparation seule, échec V24 et revue indépendante ouverts. Preuves restored-three-node-v25-timeout-preparation-prepare-20261006/.
+
+
+2026-10-06 — V25 FAILED : original 29725 / sortie 1, checkout e928b177, zéro nouvelle finalité commune en 900 s. Rattrapage partiel de blocs avec ACK réels ; Docker Mac régresse 18793→10936. Trois arrêts normaux, engagements/témoins et hashes vérifiés. Diagnostic authentifié après arrêt : graphes 794/758/627 sur 1024, catalogues individuels sous 64 Kio ; aucune hausse de quota, pas de rejeu canonique identique. Échec initial de liaison du diagnostic conservé et réparé après terminal original avec le même objet. Traces bornées : capacity/queue-expired, suspensions/reprises et erreurs CatalogAcquire ; cause globale non prouvée. [Preuves V25](qualification/restored-three-node-v25-terminal-20261006/README.md). Investigation contention RPC/votes récents ; toutes exigences non démontrées et revue indépendante restent ouvertes.
