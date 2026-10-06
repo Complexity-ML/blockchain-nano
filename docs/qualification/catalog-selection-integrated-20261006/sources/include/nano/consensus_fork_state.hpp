@@ -1,0 +1,29 @@
+#pragma once
+#include "nano/consensus_slots.hpp"
+#include "nano/consensus_fork_vote.hpp"
+namespace nano {
+struct Phase0ForkCheckpoints {Phase0FfgCheckpoints realized,unrealized;};
+// Context for slashing from the immediate authenticated block post-state;
+// unlike the target-state helper, never advances slots.
+Phase0ForkSlashingContext phase0_fork_block_context(const Phase0SlotState&,
+ const ConsensusBeaconHeader&,const Phase0EpochRules&,const Phase0StateLimits&,
+ const std::function<void()>& checkpoint={});
+// Pull-up FFG on a validated post-state; does not advance/mutate its SSZ.
+Phase0ForkCheckpoints phase0_fork_checkpoints(const Phase0SlotState&,
+ const Phase0EpochRules&,const Phase0StateLimits&,
+ const std::function<void()>& checkpoint={});
+struct Phase0ForkStateContexts {
+ Phase0ForkSlashingContext block;
+ Phase0ForkVoteContext target;
+ Phase0SlotState target_state;
+};
+// Input is the immediate post-state of a PREVIOUSLY AUTHENTICATED block/header.
+// Checks SSZ root, latest header, slot and checkpoint block-root binding, then
+// advances skipped slots to target.epoch's start and derives both contexts.
+// This does not authenticate a header obtained from the network, establish key
+// possession at genesis, persist a checkpoint or admit an arbitrary snapshot.
+Phase0ForkStateContexts prepare_phase0_fork_state_contexts(
+ const Phase0SlotState&,const ConsensusBeaconHeader& authenticated_header,
+ const ConsensusCheckpoint& target,const Phase0EpochRules&,const Phase0StateLimits&,
+ uint64_t maximum_slots,const std::function<void()>& checkpoint={});
+}

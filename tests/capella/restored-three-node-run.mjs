@@ -17,7 +17,7 @@ import {durableFinalityObservation} from './finality-observation.mjs';
 const exec=promisify(execFile),[target,revision,preparedArg]=process.argv.slice(2);
 assert.match(target??'',/^[a-z_][a-z0-9_-]*@[0-9.]+$/);assert.match(revision??'',/^[a-f0-9]{40}$/);assert.ok(preparedArg);
 const repo=process.cwd(),prepared=resolve(preparedArg),out=join(prepared,'campaign');await mkdir(out);
-const controllerFiles=['tests/capella/restored-three-node-run.mjs','tests/capella/restored-three-node-plan.mjs','tests/capella/deposit-restart-pins.mjs','tests/capella/finality-observation.mjs','tests/capella/restored-readiness.mjs','tests/capella/restored-finality-progress.mjs','tests/capella/restored-http-observation.mjs'];let controllerHashes;
+const controllerFiles=['tests/capella/restored-three-node-run.mjs','tests/capella/restored-three-node-plan.mjs','tests/capella/deposit-restart-pins.mjs','tests/capella/finality-observation.mjs','tests/capella/restored-readiness.mjs','tests/capella/restored-finality-progress.mjs','tests/capella/restored-http-observation.mjs','tests/capella/vps-local-launch-prepare.py'];let controllerHashes;
 const evidence=resolve(process.env.NANO_TEST_RESTORED_PREPARATION??join(repo,'docs/qualification/restored-three-node-prepare-20261005'));assert.ok(evidence.startsWith(join(repo,'docs/qualification')+'/'),'Preparation must be a committed qualification bundle');
 const json=async p=>JSON.parse(await readFile(p,'utf8')),save=(p,v)=>writeFile(p,JSON.stringify(v,null,2)+'\n');
 const hash=async p=>createHash('sha256').update(await readFile(p)).digest('hex');
@@ -64,7 +64,19 @@ try{
   c.capella.clock=structuredClone(configs[0].capella.clock);
  }
  await save(join(fixture,'vps.json'),configs[2]);await writeFile(join(fixture,'vps.env'),Object.entries(envFor('vps-docker')).map(([k,v])=>k+'='+v).join('\n')+'\n',{mode:0o600});
- await ssh(['mkdir',remoteRoot]);for(const f of ['genesis.json','profile.json','initial.json','vps.json','vps.env'])await run('scp',[join(fixture,f),target+':'+remoteRoot+'/'+f]);
+ if(process.env.NANO_TEST_VPS_LOCAL_SOURCE){
+  // Bind a VPS-local derivation to the independent plan without exporting
+  // configuration, administrative credentials or signer environments.
+  const stable=v=>Array.isArray(v)?v.map(stable):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,stable(v[k])])):v;
+  const expected=createHash('sha256').update(JSON.stringify(stable(configs[2]))).digest('hex');
+  const helper=await readFile(join(repo,'tests/capella/vps-local-launch-prepare.py'),'utf8');
+  const proof=JSON.parse(await ssh(['python3','-c',helper,process.env.NANO_TEST_VPS_LOCAL_SOURCE,remoteRoot,String(rp[0]),String(rp[1]),artifacts.nodes['vps-docker'].p2p.path,expected]));
+  assert.equal(proof.configCanonicalSHA256,expected);assert.equal(proof.configPreparedLocally,true);assert.equal(proof.configurationExportedFromMac,false);assert.equal(proof.signingKeysExportedFromMac,false);
+  for(const f of ['genesis.json','profile.json','initial.json'])assert.equal(proof.files[f],await hash(join(fixture,f)));
+  await save(join(out,'vps-local-preparation-proof.json'),proof);
+ }else{
+  await ssh(['mkdir',remoteRoot]);for(const f of ['genesis.json','profile.json','initial.json','vps.json','vps.env'])await run('scp',[join(fixture,f),target+':'+remoteRoot+'/'+f]);
+ }
  const va=artifacts.nodes['vps-docker'];await docker(['run','-d','--name',remote,'--network','host','--ulimit','nofile=65536:65536','--memory','4g','--cpus','2','--read-only','--tmpfs','/tmp','--cap-drop','ALL','--security-opt','no-new-privileges','-v',va.buildVolume+':/build:ro','-v',vpsVolume+':/var/lib/nano','-v',remoteRoot+':/config:ro','--env-file',remoteRoot+'/vps.env','--entrypoint',va.nano.path,va.image,'run','/config/genesis.json','/var/lib/nano/chain','/config/vps.json'],true);remoteCreated=true;
  let peer;const readyUntil=Date.now()+180000;while(Date.now()<readyUntil){const s=await inspect(remote,true);assert.equal(s.State.Running,true,'VPS stopped during startup');const e=events(await logs(remote,true));if(e.some(x=>x.event==='altair-ipc-ready'&&x.networkProtocolActive===true)){peer=e.filter(x=>x.event==='listen').at(-1)?.address;break;}await wait(1000);}assert.ok(peer?.startsWith(`/ip4/127.0.0.1/tcp/${rp[1]}/p2p/`),'VPS IPC readiness deadline');
  tunnel=spawnLog('ssh',['-N','-o','BatchMode=yes','-o','ExitOnForwardFailure=yes','-o','ServerAliveInterval=15','-L',`127.0.0.1:${pf}:127.0.0.1:${rp[1]}`,'-L',`127.0.0.1:${rf}:127.0.0.1:${rp[0]}`,target],'tunnel.log',environment);await wait(1000);assert.equal(tunnel.exitCode,null);assert.equal(tunnel.signalCode,null);

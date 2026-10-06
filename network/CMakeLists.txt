@@ -203,3 +203,11 @@ target_compile_definitions(nano-altair-worker-continuation-tests PRIVATE FMT_CON
 target_link_libraries(nano-altair-worker-continuation-tests PRIVATE p2p::p2p)
 add_test(NAME altair_worker_continuations COMMAND nano-altair-worker-continuation-tests)
 set_tests_properties(altair_worker_continuations PROPERTIES TIMEOUT 20)
+
+add_executable(nano-capella-catalog-selection-tests test_capella_catalog_selection.cpp)
+target_include_directories(nano-capella-catalog-selection-tests PRIVATE . ../third_party)
+target_compile_features(nano-capella-catalog-selection-tests PRIVATE cxx_std_20)
+target_compile_definitions(nano-capella-catalog-selection-tests PRIVATE FMT_CONSTEVAL=)
+target_link_libraries(nano-capella-catalog-selection-tests PRIVATE p2p::p2p)
+add_test(NAME capella_catalog_selection COMMAND nano-capella-catalog-selection-tests)
+set_tests_properties(capella_catalog_selection PROPERTIES TIMEOUT 20)

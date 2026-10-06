@@ -58,6 +58,9 @@ public:
  nano::Json page(const std::string& owner,const std::string& id,const std::optional<nano::ConsensusRoot>& after,size_t count,size_t json_bytes,const std::function<void()>& check={}){
   std::lock_guard lock(mutex_);reap(now_());return find(owner,id)->second.snapshot->page(after,count,json_bytes,check);
  }
+ nano::Json seek(const std::string& owner,const std::string& id,const nano::ConsensusRoot& boundary,size_t count,size_t json_bytes,const std::function<void()>& check={}){
+  std::lock_guard lock(mutex_);reap(now_());return find(owner,id)->second.snapshot->seek(boundary,count,json_bytes,check);
+ }
  void stop(){std::lock_guard lock(mutex_);stopped_=true;entries_.clear();retired_.clear();bytes_=0;}
  // Closing is idempotent: a lost acknowledgement can be retried without
  // extending leases. Request retirement remains bounded. Foreign handles are protected.

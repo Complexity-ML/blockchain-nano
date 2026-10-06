@@ -26,6 +26,8 @@ class CapellaInventorySnapshot {
 public:
  size_t root_bytes()const{return roots_.capacity()*sizeof(ConsensusRoot);}
  Json page(const std::optional<ConsensusRoot>& after,size_t maximum_entries,size_t maximum_json_bytes,const std::function<void()>& checkpoint={})const;
+ // Selection boundary may be absent from this snapshot; this is not an ACK.
+ Json seek(const ConsensusRoot& boundary,size_t maximum_entries,size_t maximum_json_bytes,const std::function<void()>& checkpoint={})const;
 };
 // Serialized local event coordinator. Initial anchor or restart token must be
 // independently trusted. Optional execution-cache binding; no scheduler, P2P or fork activation.

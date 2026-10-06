@@ -546,6 +546,11 @@ std::shared_ptr<const CapellaInventorySnapshot> CapellaDurableReactor::capture_i
  else{for(const auto& [key,_]:kind=="attestation"?votes_:slashings_){if(check)check();ConsensusRoot root{};if(key.size()!=root.size())throw std::logic_error("Invalid Capella archive root");std::copy(key.begin(),key.end(),root.begin());snapshot->roots_.push_back(root);}}
  if(snapshot->roots_.capacity()>budget/sizeof(ConsensusRoot))throw std::length_error("Capella inventory allocation exceeds root budget");return snapshot;
 }
+Json CapellaInventorySnapshot::seek(const ConsensusRoot& boundary,size_t count,size_t budget,const std::function<void()>& check)const{
+ if(check)check();const auto next=std::upper_bound(roots_.begin(),roots_.end(),boundary);
+ std::optional<ConsensusRoot> after;if(next!=roots_.begin())after=*std::prev(next);
+ return page(after,count,budget,check);
+}
 Json CapellaInventorySnapshot::page(const std::optional<ConsensusRoot>& after,size_t count,size_t budget,const std::function<void()>& check)const{
  if(check)check();if(!count||!budget)throw std::invalid_argument("Capella inventory page capacity required");
  auto it=roots_.begin();if(after){it=std::lower_bound(roots_.begin(),roots_.end(),*after);if(it==roots_.end()||*it!=*after)throw std::invalid_argument("Unknown Capella snapshot cursor");++it;}
