@@ -1,0 +1,7 @@
+# Contention du contrôle de catalogue — reproduction isolée
+
+Cœur d285db64 déjà qualifié, sources courantes d3675f36. Scénario neuf : capture réelle du registre et du réacteur, callback de contrôle retenu volontairement ; lecture de génération et libération concurrentes attendent chacune au moins 150 ms. Après libération du callback : acquisition annulée, opérations terminées, jeton primaire inchangé. Sortie originale 51762 : 0. Pas de réseau ni de base de campagne ouverte, pas de runtime modifié, pas d’image construite.
+
+Ce résultat prouve le couplage du verrou de registre avec la capture, pas la cause du blocage WAN ni une durée réelle de capture. Le registre conserve son mutex pendant l’attente du mutex du réacteur et durant la capture. Le prochain lot doit permettre une capture hors de ce verrou, avec réservation bornée et clôture atomique, sans affaiblir les quotas, les retraits de requête, les générations, les leases, l’arrêt et l’annulation. La contention de la file HTTP partagée et la transmission de votes restent à qualifier séparément.
+
+Premier essai de compilation 33587 : sortie 1, doublon physique d’en-tête dans le support de fixture ; aucun test exécuté. Réparation après terminal : copie du support dans l’arbre isolé pour résoudre ses includes relatifs sur le même registre courant, compilation et liaison réussies. Échec conservé. Le reste du mode beacon-reads est exécuté par la fixture : ce n’est ni une qualification distribuée ni une finalité démontrée.
