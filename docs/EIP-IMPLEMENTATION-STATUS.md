@@ -7311,3 +7311,6 @@ Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, d
 
 
 2026-10-06 — Préparation v21 : engagements VPS post-v20 et Mac post-v20 et journaux conservés, diagnostic des dépendances de votes et refus HTTP qualifié en natif/ARM64/AMD64 dans son périmètre ciblé. Trois finalités communes nouvelles en 900 s restent à démontrer ; préparation seule. Production et revue indépendante ouvertes. Preuves restored-three-node-v21-delivery-diagnostic-prepare-20261006/.
+
+
+2026-10-06 — v21 FAILED au démarrage : contrôleur 5353 / sortie 1, checkout 32e75e19, nano_capellaStatus read-error aux étapes status/verify, récupération not-ready puis délai IPC VPS 180 s expiré. Mac non lancés et inchangés (1573/1538 fichiers) ; critère de finalité non exécuté. Arrêt VPS normal, audit read-only des engagements/témoins/historique vérifié sur son hôte. Défaut local reproduit contre cœur inchangé : network_identity et sync_admission_stats bloquent sous admission retenue (deux sorties 1 attendues, annulation sans publication). Correctif et causalité WAN restent ouverts, aucune relance ni limite augmentée. [Preuves v21](qualification/restored-three-node-v21-startup-terminal-20261006/README.md). Toutes les autres exigences et revue indépendante restent ouvertes.
