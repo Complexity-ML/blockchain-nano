@@ -105,7 +105,14 @@ std::string capella_store_snapshot_impl(const CapellaForkStore& s,const CapellaF
  Json ancestors=Json::array();require(s.blocks.contains(v.anchor));auto child=s.blocks.at(v.anchor).execution_header();
  require(child.number>=0&&child.number<=Int("18446744073709551615")&&s.anchor_execution_ancestors.size()==std::min<uint64_t>(u64(child.number),256));
  for(const auto& ancestor:s.anchor_execution_ancestors){if(cancel)cancel();require(ancestor.number+1==child.number&&ancestor.hash()==child.parent_hash);ancestors.push_back(ancestor.to_json());child=ancestor;}
- for(const auto& [id,entry]:s.blocks)if(id!=v.anchor){const auto b_pin=entry.lease(cancel);const auto& b=*b_pin;const auto parent_pin=s.blocks.at(b.header.parent_root).lease(cancel);const auto& parent=*parent_pin;require(parent.header.slot<b.header.slot&&parent.execution_block.header.number+1==b.execution_block.header.number&&parent.execution_block.header.hash()==b.execution_block.header.parent_hash);}
+ // Every record was authenticated above, including its retained cold metadata.
+ // Link checks use only headers; reloading evicted state here would duplicate
+ // the complete cold decoding pass without checking any additional state byte.
+ for(const auto& [id,entry]:s.blocks)if(id!=v.anchor){
+  if(cancel)cancel();const auto& header=entry.header();const auto& execution_header=entry.execution_header();
+  const auto& parent=s.blocks.at(header.parent_root);
+  require(parent.header().slot<header.slot&&parent.execution_header().number+1==execution_header.number&&parent.execution_header().hash()==execution_header.parent_hash);
+ }
  Json j{{"ancestors",std::move(ancestors)},{"format","nano-capella-store-v1"},{"profile",current_profile},{"anchor",root(v.anchor)},{"justified",cp(v.justified)},{"finalized",cp(v.finalized)},
  {"clock",Json::array({num(c.genesis_time_ms),num(c.time_ms),cp(c.unrealized_justified),cp(c.unrealized_finalized)})},
  {"boost",v.proposer_boost?Json(root(*v.proposer_boost)):Json(nullptr)},{"blocks",std::move(blocks)},{"messages",std::move(messages)},{"equivocations",std::move(equiv)},{"timely",std::move(timely)},{"unrealized",std::move(unrealized)}};

@@ -1,0 +1,16 @@
+{
+  "classification": "audit preparation assertion failure, not C++ test failure",
+  "expected_mismatches": [
+    "src/consensus_capella_store_snapshot.cpp",
+    "tests/test_capella_transition.cpp",
+    "tests/capella/restored-three-node-plan.mjs",
+    "tests/capella/restored-three-node-plan.test.mjs"
+  ],
+  "actual_mismatches": [
+    "tests/test_capella_transition.cpp",
+    "src/consensus_capella_store_snapshot.cpp"
+  ],
+  "cause": "JS planner files are outside frozen C++ manifest",
+  "fix": "require exactly two C++ changes then zero mismatch after integration; qualify JS separately",
+  "additional_tests_run": false
+}

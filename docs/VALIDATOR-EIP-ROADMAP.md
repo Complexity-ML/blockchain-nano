@@ -2,7 +2,7 @@
 
 ## État courant vérifié — 6 octobre 2026
 
-Lot runtime froid, parent `88591cad`, qualifié en fixture Docker ARM64/AMD64 : validation anticipée `coldCheckpoint`, activation avant duties, pruning compact. Sur chaque architecture : deux parcours froids de32 blocs/64 clés terminaux0 et régression legacy72 blocs terminal0 après ajout de la fixture de dépôt absente, sans recompilation. Hashes parent/programmes avant/après inchangés ; source1616 fichiers sans écart. [Rapport et échecs conservés](qualification/capella-cold-runtime-20261006/README.md). Aucune nouvelle candidate déployée.
+Main parent `681f29eb` : runtime froid et duplicate-fastpath livrés. Lot writer par en-têtes qualifié sur ARM64/AMD64 : première passe complète conservée, seconde passe sans rechargement des états ; oracle/cache1/refus7, corruption réacteur3 et runtime32 blocs/cache8 avec pruning/reprises terminaux0. Hashes parent/programmes inchangés. [Sources, preuves et limites](qualification/capella-cold-header-links-20261006/README.md). Aucune nouvelle candidate déployée.
 
 Production reste ouverte : capacité du graphe (1024 blocs retenus dans V28, distincte du nombre de validateurs), coût des publications froides, GC/RSS/crashs, reprise physique et finalité WAN commune, autres critères techniques, lancement Base–Nano et revue indépendante. Les sections ci-dessous sont l'historique de preuves : leurs états anciens ne remplacent pas cet état courant. Aucun statut EIP supplémentaire promu.
 
@@ -8034,3 +8034,7 @@ Composition writer/duplicate ARM64 : contrôles réacteur et trois mutations de 
 Correctif duplicate-fastpath, parent runtime5b3f5c48 : intégré et qualifié ARM64/AMD64 dans la fixture2 records ;32 replays par série, engagements et archive inchangés, trois altérations locales de stockage refusées puis réacteur fermé. AMD6434314 terminal0, hashes vérifiés, source1616 fichiers sans écart. Le gain paired reste ARM64 seulement. [Preuves et échecs historiques](qualification/capella-duplicate-fastpath-prototype-20261006/README.md). Writer froid combiné : AMD6440272 en cours, code du writer toujours isolé. Aucun critère WAN/grand graphe/release/production fermé.
 
 Writer par en-têtes : prepared-block ARM64/AMD64 terminaux0 et hashes inchangés ; runtime32/cache8 encore actif78239/7934, variante isolée. Préparateur restored-three-node raccorde coldCheckpoint explicite avec budgets locaux et pins conservés,38 tests Node terminaux0 ; cela ne migre aucune base ni ne qualifie le WAN. [Preuves du planner](qualification/restored-plan-cold-options-20261006/README.md).
+
+Clôture writer froid par en-têtes : ARM6478239/AMD647934 runtime32/cache8 terminaux0,hashes vérifiés,CPP/fixtures figés identiques ; évolution JS distincte qualifiée38 tests. Aucun état lourd n’est supprimé de la première validation. Publications complètes/preflight,graphe1024,GC/RSS/reprise physique/WAN et toutes les gates production restent ouverts. Prototype de certificats local séparé, non intégré au runtime.
+
+Prototype validation-memo isolé : ARM6413329 terminal0,oracle canonique/reuse2/refus5 et invalidation profile,hashes parent/programmes inchangés. Aucun raccordement runtime ou contournement du préflight ; AMD64 et grands graphes non qualifiés. [Preuves](qualification/capella-reference-validation-memo-20261006/README.md).
