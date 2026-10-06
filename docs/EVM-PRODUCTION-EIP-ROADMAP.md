@@ -4919,3 +4919,6 @@ Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, d
 
 
 2026-10-06 — Fixtures concernées reconstruites avec nouveaux headers réseau et core EE5 inchangé : natif/ARM64/AMD64 --wire passent (51773/43538/58855, sorties 0), 17 messages et deux réouvertures internes ; networkActivated=false/finalizedEpoch=0. Enregistrement CTest du nouveau mode vérifié ; sources/deps/hashes contrôlés, erreurs de driver conservées. [Preuves](qualification/catalog-busy-core-fixture-20261006/README.md). Lot candidat à livrer puis reprise V27 ; aucune finalité WAN ajoutée, critères non démontrés et revue indépendante ouverts.
+
+
+2026-10-06 — Préparation V27 depuis états post-V26 audités : pins possédés 16/16/33 et historiques 16/16 vérifiés séparément, hashes revérifiés et copies Mac sans peer.key, volume VPS conservé sur son hôte. Core EE5 inchangé ; nouveau relais du lot 2f93dda0 réutilisé avec 35 entrées compilateur identiques par architecture. Trois nouvelles finalités communes en 900 s à démontrer ; mêmes quotas et quorum, aucune image reconstruite. Préparation seule, V26 FAILED et revue indépendante ouverts. Preuves restored-three-node-v27-catalog-busy-retry-prepare-20261006/.
