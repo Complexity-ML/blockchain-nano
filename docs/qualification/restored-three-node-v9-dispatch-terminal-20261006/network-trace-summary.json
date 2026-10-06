@@ -1,0 +1,69 @@
+{
+  "mac-native": {
+    "dispatchTransitions": [],
+    "outbound": {
+      "unconfirmed|block": 276,
+      "accepted|block": 134,
+      "unconfirmed|sync_committee_message": 4
+    },
+    "catalogReasons": {
+      "block|head-admission-unconfirmed": 4,
+      "attestation|None": 5,
+      "attester_slashing|None": 6,
+      "bls_to_execution_change|None": 6,
+      "sync_committee_message|None": 1,
+      "voluntary_exit|None": 5,
+      "block|head-or-catalog-deadline": 2,
+      "attestation|admission-rejected": 23,
+      "sync_committee_message|delivery-unconfirmed": 4
+    },
+    "incoming": {}
+  },
+  "mac-docker": {
+    "dispatchTransitions": [],
+    "outbound": {
+      "unconfirmed|block": 311,
+      "accepted|block": 134,
+      "unconfirmed|sync_committee_message": 4
+    },
+    "catalogReasons": {
+      "block|head-admission-unconfirmed": 6,
+      "attestation|None": 5,
+      "attester_slashing|None": 7,
+      "bls_to_execution_change|None": 6,
+      "sync_committee_message|None": 2,
+      "voluntary_exit|None": 6,
+      "block|head-or-catalog-deadline": 1,
+      "attestation|admission-rejected": 24,
+      "sync_committee_message|delivery-unconfirmed": 4,
+      "attestation|dependency-quantum-yield": 1,
+      "attestation|cancelled-or-deadline": 2
+    },
+    "incoming": {}
+  },
+  "vps-docker": {
+    "dispatchTransitions": [],
+    "outbound": {},
+    "catalogReasons": {
+      "block|head-or-catalog-deadline": 8,
+      "attestation|cancelled-or-deadline": 26,
+      "attester_slashing|incomplete": 1,
+      "attestation|incomplete": 1,
+      "bls_to_execution_change|incomplete": 1,
+      "attester_slashing|None": 5,
+      "sync_committee_message|None": 6,
+      "bls_to_execution_change|None": 6,
+      "voluntary_exit|None": 5,
+      "attestation|admission-rejected": 8,
+      "attester_slashing|invalid-response": 2,
+      "sync_committee_message|incomplete": 1,
+      "voluntary_exit|incomplete": 1,
+      "attestation|invalid-response": 1
+    },
+    "incoming": {
+      "accepted-ack-written": 268,
+      "deadline": 6,
+      "dispatch-unavailable": 19
+    }
+  }
+}

@@ -4709,3 +4709,6 @@ Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichi
 
 
 2026-10-06 — Préparation v9 : exacts engagements post-v8, core 05649987 inchangé et relais 76bb2468 qualifié. Sources auditées et copiées localement par propriétaire, volume VPS conservé ; aucun journal réinitialisé/fusionné. Limites réellement utilisées par v8 (1024 blocs) conservées sans hausse. Trois avancées communes distinctes en 900 s restent requises. Préparation seule, finalité et production ouvertes. Preuves restored-three-node-v9-dispatch-prepare-20261006/.
+
+
+2026-10-06 — Reprise v9 FAILED (session originale 37036, sortie 1), timeout HTTP puis nettoyage SSH IPv6 « No route to host ». Core 05649987 et relais 76bb2468 ; aucune avancée commune depuis 1284. VPS original resté actif, arrêté séparément par IPv4, sortie 0/sans OOM ; résultat original conservé avec deux reçus, troisième arrêt complémentaire documenté. Boucles saines et 65 engagements propriétaires avancés, audits read-only séparés exacts et fichiers inchangés. Traces : 268 envois Mac→VPS acceptés, aucun VPS→Mac observé, aucune transition du dispatcher ; cause WAN/asymétrie et contention/persistance à diagnostiquer. Aucune production déclarée. [Preuves v9](qualification/restored-three-node-v9-dispatch-terminal-20261006/README.md).
