@@ -466,8 +466,20 @@ bool CapellaDurableReactor::block_locked(std::span<const uint8_t> wire,const std
  const auto id=consensus_beacon_header_root(header);
  // A retained root is already admitted. Reprocessing its embedded votes can
  // require an obsolete target replay and must never replace archive bytes.
- if(state_->blocks.contains(id))next=*state_;
- else {
+ if(state_->blocks.contains(id)){
+  // The root is already authenticated and its archived bytes are immutable.
+  // Keep the idempotent publication guards without reserializing every row.
+  const auto& c=rules_.transition.consensus;
+  const auto head=phase0_fork_choice_head(state_->timed.view,{c.epoch.ffg.slots_per_epoch,c.attestation.duties.effective_balance_increment,rules_.proposer_score_boost},check).head;
+  if(check)check();
+  try{
+   const auto tip=disk_.latest();
+   if(!tip||tip->header.hash()!=state_->blocks.at(head).execution_header().hash())throw std::runtime_error("Capella execution tip changed outside reactor");
+   if(witness_)archive_require(bool(witness_->fork_checkpoint(chain_,genesis_,witness_limit(),witness_token_)));
+   if(!disk_.fork_checkpoint(chain_,genesis_,limits_.envelope_bytes,token_))throw std::runtime_error("missing Capella checkpoint");
+  }catch(...){fail_closed();throw;}
+  if(check)check();return true;
+ }else {
   // A full retained graph is temporary admission pressure, not corrupt state.
   // Duplicates above still succeed; votes/ticks can advance safe pruning.
   if(state_->blocks.size()>=limits_.blocks)return false;

@@ -1651,6 +1651,31 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
     reactor.reset();backup_owner.reset();bool late_refused=false;try{retained->blocks.at(child_root).lease();}catch(const std::runtime_error& error){late_refused=std::string(error.what()).find("provider closed")!=std::string::npos;}check(late_refused,"retained cold snapshot accessed closed reactor storage");retained.reset();
     backup_owner=std::make_unique<Blockchain>(directory/"previous-primary",g);reactor=std::make_unique<CapellaDurableReactor>(*backup_owner,rules,crash_limits,*witness,std::function<void()>{},child_token);check(all_cold(*reactor->current().state)&&reactor->signed_block(child_root)==wire&&journal.commitment()==guard,"cold witness next-primary restart lost archive or signer");
     const auto child_flat=capella_store_snapshot(*reactor->current().state,rules,crash_limits);reactor.reset();reactor=std::make_unique<CapellaDurableReactor>(*backup_owner,rules,crash_limits,child_token);check(all_cold(*reactor->current().state)&&capella_store_snapshot(*reactor->current().state,rules,crash_limits)==child_flat&&journal.commitment()==guard,"cold primary restart differs");
+    if(std::getenv("NANO_TEST_DUPLICATE_BENCH")){
+     Json timings=Json::array(),callbacks=Json::array();auto altered=wire;altered[4]^=1;
+     const auto checkpoint=reactor->current();
+     bool cancelled=false;try{reactor->block(wire,[]{throw ExecutionCancelled("cancel duplicate");});}catch(const ExecutionCancelled&){cancelled=true;}check(cancelled&&reactor->current().token==checkpoint.token,"duplicate cancellation mutated state");
+     for(unsigned trial=0;trial<7;++trial){size_t steps=0;const auto begin=std::chrono::steady_clock::now();
+      for(unsigned n=0;n<32;++n)check(reactor->block(n%2?altered:wire,[&]{++steps;}),"duplicate replay refused admitted root");
+      timings.push_back(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now()-begin).count());callbacks.push_back(steps);
+      check(reactor->current().token==checkpoint.token&&reactor->current().state==checkpoint.state&&reactor->signed_block(child_root)==wire&&journal.commitment()==guard,"duplicate replay changed publication archive or journal");
+     }
+     std::cout<<Json{{"scenario","capella-cold-duplicate-replays"},{"records",checkpoint.state->blocks.size()},{"replaysPerTrial",32},{"microseconds",timings},{"checkpointCallbacks",callbacks},{"publicationUnchanged",true},{"archiveUnchanged",true},{"journalUnchanged",true},{"cancelledWithoutMutation",true},{"networkQualified",false}}.dump()<<std::endl;
+    }
+    if(std::getenv("NANO_TEST_DUPLICATE_GUARDS")){
+     unsigned closed=0;
+     for(unsigned fault=0;fault<3;++fault){
+      Temp isolated;ChainStore disk(isolated/"primary"),mirror(isolated/"witness");disk.bind_chain(r.chain_id,genesis.header.hash(),"capella-duplicate-guards");disk.commit(genesis,genesis_state,{});
+      auto subject=std::make_unique<CapellaDurableReactor>(disk,r.chain_id,genesis.header.hash(),rules,crash_limits,initial,std::function<void()>{},nullptr,&mirror);
+      subject->tick(clock);subject->migrate_reference_checkpoint(options);size_t trials=0;while(!subject->block(wire))check(++trials<slot/slots+4,"guard fixture child admission stalled");
+      const auto state=subject->current();
+      if(fault<2){auto& target=fault?mirror:disk;const auto maximum=fault?8*crash_limits.envelope_bytes+2048:crash_limits.envelope_bytes;const auto saved=target.fork_checkpoint(r.chain_id,genesis.header.hash(),maximum);check(bool(saved),"guard checkpoint missing");if(fault)target.commit_fork_checkpoint(r.chain_id,genesis.header.hash(),saved->token,saved->snapshot+" ",maximum);
+       else{const auto tip=disk.latest();check(bool(tip),"guard tip missing");disk.commit_execution_checkpoint(r.chain_id,genesis.header.hash(),saved->token,tip->header.hash(),tip->header.number,tip->header.hash(),{},saved->snapshot+" ",maximum,crash_limits.blocks);}}
+      else{const auto pin=capella_fork_head(*state.state,rules);auto foreign=pin->execution_block;auto foreign_state=pin->execution_state;foreign.header.parent_hash=foreign.header.hash();foreign.header.number+=1;foreign.header.timestamp+=1;foreign.transactions.clear();ExecutionEngine(r.chain_id,history,EvmRevision::Shanghai,r.replay_policy,ConsensusInputPolicy::EthereumValidated).execute_block(foreign_state,foreign,false);const auto saved=disk.fork_checkpoint(r.chain_id,genesis.header.hash(),crash_limits.envelope_bytes,state.token);check(bool(saved),"guard checkpoint missing");disk.commit_execution_checkpoint(r.chain_id,genesis.header.hash(),state.token,pin->execution_block.header.hash(),pin->execution_block.header.number,pin->execution_block.header.hash(),{{foreign,foreign_state,{}}},saved->snapshot,crash_limits.envelope_bytes,crash_limits.blocks);}
+      bool refused=false;try{subject->block(wire);}catch(const std::exception&){refused=true;}bool unavailable=false;try{subject->current();}catch(const std::exception&){unavailable=true;}check(refused&&unavailable,"duplicate guard ignored external storage mutation or stayed available");++closed;subject.reset();
+     }
+     std::cout<<Json{{"scenario","capella-cold-duplicate-storage-guards"},{"externalMutationsRejectedAndClosed",closed},{"primaryCheckpoint",true},{"witnessCheckpoint",true},{"executionTip",true},{"networkQualified",false}}.dump()<<std::endl;
+    }
     reactor.reset();backup_owner.reset(); // Destroy the borrowing reactor before its backing owner.
     std::cout<<Json{{"scenario","capella-cold-reactor-integration"},{"migrationAtomic",true},{"witnessPreviousPrimaryRecovered",true},{"primaryAndWitnessRestarts",true},{"validChildDurablyAdmitted",true},{"allPublishedRecordsCold",true},{"stickyColdFormat",true},{"idempotentMigration",true},{"signerCommitmentUnchanged",true},{"lateSnapshotReadRejected",true},{"runtimeConfigBootQualified",false},{"graphCapacityClosed",false},{"networkQualified",false},{"productionQualified",false}}.dump()<<std::endl;return;
    }
