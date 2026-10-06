@@ -1,0 +1,149 @@
+{
+  "mac-native": {
+    "sends": {
+      "unconfirmed|block": 18,
+      "accepted|block": 50,
+      "rejected|sync_committee_message": 16,
+      "unconfirmed|sync_committee_message": 5
+    },
+    "streamReasons": {
+      "accepted-ack-written": 64,
+      "frame-read-failed": 8
+    },
+    "catalogues": {
+      "block|admission-rejected": 6,
+      "attestation|None": 5,
+      "attester_slashing|None": 22,
+      "bls_to_execution_change|None": 22,
+      "sync_committee_message|None": 1,
+      "voluntary_exit|None": 22,
+      "attestation|admission-rejected": 104,
+      "sync_committee_message|admission-rejected": 16,
+      "block|head-or-catalog-deadline": 6,
+      "block|dependency-depth-limit": 10,
+      "sync_committee_message|delivery-unconfirmed": 5
+    },
+    "dispatchTransitions": []
+  },
+  "mac-docker": {
+    "sends": {
+      "unconfirmed|block": 21,
+      "accepted|block": 56,
+      "rejected|sync_committee_message": 16,
+      "unconfirmed|sync_committee_message": 7
+    },
+    "streamReasons": {
+      "accepted-ack-written": 69,
+      "frame-read-failed": 9
+    },
+    "catalogues": {
+      "block|admission-rejected": 17,
+      "attestation|None": 5,
+      "attester_slashing|None": 24,
+      "bls_to_execution_change|None": 24,
+      "sync_committee_message|None": 1,
+      "voluntary_exit|None": 24,
+      "attestation|admission-rejected": 115,
+      "sync_committee_message|admission-rejected": 16,
+      "block|head-or-catalog-deadline": 7,
+      "sync_committee_message|delivery-unconfirmed": 7
+    },
+    "dispatchTransitions": []
+  },
+  "vps-docker": {
+    "sends": {
+      "accepted|block": 133
+    },
+    "streamReasons": {
+      "accepted-ack-written": 106,
+      "deadline": 40,
+      "rejected-ack-written": 32,
+      "frame-read-failed": 29,
+      "core-local-failure": 2,
+      "dispatch-unavailable": 6
+    },
+    "catalogues": {
+      "block|dependency-quantum-yield": 16,
+      "attestation|None": 7,
+      "attester_slashing|None": 18,
+      "bls_to_execution_change|None": 13,
+      "sync_committee_message|None": 11,
+      "voluntary_exit|None": 12,
+      "attestation|admission-rejected": 67,
+      "block|head-or-catalog-deadline": 1,
+      "attestation|incomplete": 54,
+      "block|invalid-response": 13,
+      "attester_slashing|incomplete": 12,
+      "attester_slashing|invalid-response": 25,
+      "bls_to_execution_change|incomplete": 12,
+      "sync_committee_message|incomplete": 12,
+      "voluntary_exit|incomplete": 10,
+      "bls_to_execution_change|invalid-response": 28,
+      "attestation|invalid-response": 136,
+      "sync_committee_message|invalid-response": 30,
+      "voluntary_exit|invalid-response": 31,
+      "block|head-reference-unavailable": 21,
+      "attestation|export-unconfirmed": 2,
+      "block|head-admission-unconfirmed": 4,
+      "attestation|export-unavailable": 1
+    },
+    "dispatchTransitions": [
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 57,
+        "pending": 2,
+        "phase": "transport-suspended",
+        "timeMs": 1791253874788
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 57,
+        "pending": 0,
+        "phase": "transport-resumed",
+        "timeMs": 1791253876435
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 109,
+        "pending": 2,
+        "phase": "transport-suspended",
+        "timeMs": 1791254146217
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 109,
+        "pending": 0,
+        "phase": "transport-resumed",
+        "timeMs": 1791254146875
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 117,
+        "pending": 2,
+        "phase": "transport-suspended",
+        "timeMs": 1791254196748
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 117,
+        "pending": 0,
+        "phase": "transport-resumed",
+        "timeMs": 1791254197649
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 166,
+        "pending": 1,
+        "phase": "transport-suspended",
+        "timeMs": 1791254451150
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 166,
+        "pending": 0,
+        "phase": "transport-resumed",
+        "timeMs": 1791254451751
+      }
+    ]
+  }
+}

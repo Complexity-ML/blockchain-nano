@@ -1,0 +1,219 @@
+{
+  "observedAt": "2026-10-06T02:37:37.047685+00:00",
+  "scope": "live non-atomic log snapshots; not terminal or whole-network qualification",
+  "originalControllerSession": 70646,
+  "rows": [
+    {
+      "node": "mac-native",
+      "exitCode": 0,
+      "logSHA256": "2c417662a1f3b09e6ef43649de4d22f5745dc4966eed8fb53d5089c6ad46bbb3",
+      "relayGroups": {
+        "attestation": {
+          "attempts": 80,
+          "payloadsAdmitted": 0,
+          "rejected": 1671,
+          "reasons": {
+            "no-reason": 5,
+            "admission-rejected": 75
+          },
+          "successfulAttempts": 5
+        },
+        "attester_slashing": {
+          "attempts": 16,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "no-reason": 16
+          },
+          "successfulAttempts": 16
+        },
+        "block": {
+          "attempts": 16,
+          "payloadsAdmitted": 1,
+          "rejected": 7,
+          "reasons": {
+            "admission-rejected": 6,
+            "head-or-catalog-deadline": 3,
+            "dependency-depth-limit": 7
+          },
+          "successfulAttempts": 0
+        },
+        "bls_to_execution_change": {
+          "attempts": 16,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "no-reason": 16
+          },
+          "successfulAttempts": 16
+        },
+        "sync_committee_message": {
+          "attempts": 16,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "no-reason": 1,
+            "admission-rejected": 13,
+            "delivery-unconfirmed": 2
+          },
+          "successfulAttempts": 1
+        },
+        "voluntary_exit": {
+          "attempts": 16,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "no-reason": 16
+          },
+          "successfulAttempts": 16
+        }
+      }
+    },
+    {
+      "node": "mac-docker",
+      "exitCode": 0,
+      "logSHA256": "b228386a8150e24fb498e81b1dc50096b700016a6b4c0a5023a8186312255a97",
+      "relayGroups": {
+        "attestation": {
+          "attempts": 90,
+          "payloadsAdmitted": 0,
+          "rejected": 1775,
+          "reasons": {
+            "no-reason": 5,
+            "admission-rejected": 85
+          },
+          "successfulAttempts": 5
+        },
+        "attester_slashing": {
+          "attempts": 18,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "no-reason": 18
+          },
+          "successfulAttempts": 18
+        },
+        "block": {
+          "attempts": 18,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "admission-rejected": 13,
+            "head-or-catalog-deadline": 5
+          },
+          "successfulAttempts": 0
+        },
+        "bls_to_execution_change": {
+          "attempts": 18,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "no-reason": 18
+          },
+          "successfulAttempts": 18
+        },
+        "sync_committee_message": {
+          "attempts": 18,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "no-reason": 1,
+            "admission-rejected": 12,
+            "delivery-unconfirmed": 5
+          },
+          "successfulAttempts": 1
+        },
+        "voluntary_exit": {
+          "attempts": 18,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "no-reason": 18
+          },
+          "successfulAttempts": 18
+        }
+      }
+    },
+    {
+      "node": "vps-docker",
+      "exitCode": 0,
+      "logSHA256": "7de6e09d3324c16f602648c17f0295a630b2fec75e74b9a6109f341f80c0e759",
+      "relayGroups": {
+        "attestation": {
+          "attempts": 130,
+          "payloadsAdmitted": 0,
+          "rejected": 105,
+          "reasons": {
+            "no-reason": 6,
+            "admission-rejected": 49,
+            "incomplete": 20,
+            "invalid-response": 52,
+            "export-unconfirmed": 2,
+            "export-unavailable": 1
+          },
+          "successfulAttempts": 6
+        },
+        "attester_slashing": {
+          "attempts": 27,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "no-reason": 12,
+            "incomplete": 4,
+            "invalid-response": 11
+          },
+          "successfulAttempts": 12
+        },
+        "block": {
+          "attempts": 27,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "dependency-quantum-yield": 12,
+            "head-or-catalog-deadline": 1,
+            "invalid-response": 7,
+            "head-reference-unavailable": 6,
+            "head-admission-unconfirmed": 1
+          },
+          "successfulAttempts": 0
+        },
+        "bls_to_execution_change": {
+          "attempts": 26,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "no-reason": 11,
+            "incomplete": 4,
+            "invalid-response": 11
+          },
+          "successfulAttempts": 11
+        },
+        "sync_committee_message": {
+          "attempts": 26,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "no-reason": 10,
+            "incomplete": 4,
+            "invalid-response": 12
+          },
+          "successfulAttempts": 10
+        },
+        "voluntary_exit": {
+          "attempts": 26,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "no-reason": 10,
+            "incomplete": 4,
+            "invalid-response": 12
+          },
+          "successfulAttempts": 10
+        }
+      }
+    }
+  ],
+  "causeProven": false,
+  "productionQualified": false,
+  "caveat": "Rejections count attempts including retries, not distinct votes; successful empty scans do not mean a vote was admitted."
+}

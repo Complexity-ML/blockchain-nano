@@ -4344,3 +4344,6 @@ Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichi
 
 
 2026-10-06 — Préparation v12 : engagements post-v11 exacts, core f077205f et relais 76bb2468. Empreintes propriétaires inchangées, copies Mac locales et volume VPS conservés ; journaux non réinitialisés/fusionnés. Cache des cibles de vote qualifié sur les trois environnements ; profil/limites et critère de trois avancées en 900 s inchangés. Préparation seule ; cause v11, finalité et production ouvertes. Preuves restored-three-node-v12-vote-cache-prepare-20261006/.
+
+
+2026-10-06 — Reprise v12 FAILED : contrôleur 70646 / sortie 1, checkout 4612ddf8, core f077205f / relais 76bb2468. Aucun avancement commun de finalité depuis 1284 dans le délai original de 900 s. Trois propriétaires arrêtés ; audits read-only séparés et engagements exacts conservés. Diagnostic hors ligne borné v11/v12 Mac : 32 votes récents par campagne référencent des blocs absents du destinataire, avant vérification BLS ; cause complète du réseau non prouvée. Priorité au rattrapage des branches/dépendances, sans assouplissement cryptographique. Pas de compilation diagnostique concurrente v12. Tous les critères et échecs historiques restent ouverts/conservés. [Preuves v12](qualification/restored-three-node-v12-vote-cache-terminal-20261006/README.md).
