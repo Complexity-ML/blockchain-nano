@@ -1,0 +1,25 @@
+rpc_accounts.cpp: \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/SDKSettings.json \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/src/rpc_accounts.cpp \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/include/nano/rpc.hpp \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/include/nano/chain.hpp \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/include/nano/consensus.hpp \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/include/nano/core.hpp \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/include/nano/crypto.hpp \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/include/nano/types.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/json.hpp \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/include/nano/rlp.hpp \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/include/nano/staking_rules.hpp \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/include/nano/engine.hpp \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/include/nano/evm.hpp \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/include/nano/opcodes.hpp \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/include/nano/receipt.hpp \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/include/nano/storage.hpp \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/include/nano/finality.hpp \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/include/nano/txpool.hpp \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/include/nano/beacon_sync.hpp \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/include/nano/admission_budget.hpp \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/include/nano/wallet.hpp \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/include/nano/bft_reactor.hpp \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/include/nano/consensus_round.hpp \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/include/nano/block_import.hpp

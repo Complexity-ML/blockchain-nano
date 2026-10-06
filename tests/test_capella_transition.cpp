@@ -1351,6 +1351,23 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
  std::cout<<Json{{"externalRecoveryCommitmentChecks",automatic_recovery?9:0},{"automaticRecovery",automatic_recovery},{"scenario","capella-configured-runtime"},{"blocks",proposals},{"keysLoaded",automatic_registration?65:64},{"automaticRegistration",automatic_registration},{"witnessRestart",true},{"signerWitnessRestart",true},{"admissionReceiptChecks",6},{"httpTransport",capella_http},{"runtimeCatalogChecks",3},{"catalogSeekBoundaryChecks",8},{"catalogSeekOwnershipAndBoundsChecks",3},{"invalidConfigurationsRejected",6},{"workersStopped",true},{"networkTransport",false}}.dump()<<std::endl;
 }
 static void verify_beacon_read_admission(CapellaDurableReactor& reactor,const Bytes& wire,const ConsensusRoot& parent){
+ if(std::getenv("NANO_TEST_CATALOG_CAPTURE_UNLOCKED")){
+  const auto primary=reactor.current().token;Json cases=Json::array();
+  for(const std::string mode:{"release","stop","expiry","cancel"}){
+   std::atomic<int> elapsed{0};CapellaInventorySessions catalogs(reactor,2,65536,std::chrono::seconds(1),[&]{return std::chrono::steady_clock::time_point{}+std::chrono::milliseconds(elapsed.load());});
+   const auto gen=catalogs.generation(),request="0x"+std::string(64,'a');std::promise<void> held,unblock;auto ready=held.get_future();auto gate=unblock.get_future().share();
+   auto acquisition=std::async(std::launch::async,[&]{bool paused=false;try{catalogs.acquire("probe",gen,request,"block",[&]{if(!paused){paused=true;held.set_value();gate.wait();}if(mode=="cancel")throw ExecutionCancelled("capture probe cancelled");});return false;}catch(const ExecutionCancelled&){return mode=="cancel";}catch(const std::invalid_argument&){return mode=="release"||mode=="expiry";}catch(const std::runtime_error&){return mode=="stop";}});
+   if(ready.wait_for(std::chrono::seconds(5))!=std::future_status::ready){unblock.set_value();acquisition.get();check(false,"capture not held");}
+   auto generation=std::async(std::launch::async,[&]{return catalogs.generation();});const bool readable=generation.wait_for(std::chrono::milliseconds(150))==std::future_status::ready;
+   auto control=std::async(std::launch::async,[&]{if(mode=="stop")catalogs.stop();else if(mode=="release")catalogs.release("probe",gen,request);else if(mode=="expiry")elapsed=1000;return true;});
+   const bool responsive=control.wait_for(std::chrono::milliseconds(150))==std::future_status::ready;
+   unblock.set_value();const bool refused=acquisition.get();control.get();bool generation_same=false;try{generation_same=generation.get()==gen;}catch(const std::runtime_error&){}
+   check(readable&&responsive&&generation_same&&refused&&reactor.current().token==primary,"capture control/fencing invariant failed");
+   if(mode!="stop"){const auto h=catalogs.open("recovery","block");catalogs.close("recovery",h);}
+   cases.push_back({{"mode",mode},{"generationResponsive",readable},{"controlResponsive",responsive},{"lateCaptureRefused",refused},{"primaryUnchanged",true},{"capacityRecovered",mode!="stop"}});
+  }
+  std::cout<<Json{{"scenario","catalog-capture-outside-control-lock"},{"cases",cases},{"wanCauseProven",false},{"networkActivated",false}}.dump()<<std::endl;
+ }
  if(const char* field=std::getenv("NANO_TEST_NETWORK_STATUS_FIELD")){
   const std::string name=field;check(name=="identity"||name=="sync","Invalid status probe field");
   auto read_status=[&]{return name=="identity"?reactor.network_identity():reactor.sync_admission_stats();};

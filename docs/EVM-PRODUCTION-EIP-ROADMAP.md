@@ -4889,3 +4889,6 @@ Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, d
 
 
 2026-10-06 — Diagnostic neuf du contrôle catalogue : capture retenue volontairement, génération et release bloqués, puis annulation terminée et état primaire inchangé (original 51762, sortie 0). Premier échec de compilation conservé, pas de modification runtime ni de réseau relancé. Couplage du verrou reproduit ; cause WAN non prouvée. Préparer réservation/capture hors verrou avec fencing et quotas inchangés ; qualifier ensuite contention HTTP et votes. [Preuves](qualification/catalog-control-contention-probe-20261006/README.md).
+
+
+2026-10-06 — Capture catalogue hors verrou de contrôle : lot intégré natif/ARM64/AMD64, originaux 65381/1980/4618 sorties 0 ; 349 sources figées, deux consommateurs ABI reconstruits, cinq modes concernés réussis. Quatre scénarios neufs (release/stop/expiry/cancel), quotas et courses conservés. Échecs initiaux de montage conservés. Pas de finalité WAN démontrée ; contention de la file HTTP et votes récents encore ouverts avant nouvelle campagne. [Preuves](qualification/catalog-capture-control-integrated-20261006/README.md).

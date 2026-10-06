@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <chrono>
 #include <set>
+#include <thread>
 #include <openssl/rand.h>
 
 // Private transport adapter supplies an authenticated principal, never a payload
@@ -13,7 +14,9 @@ class CapellaInventorySessions {
  nano::CapellaDurableReactor& reactor_;
  const size_t maximum_,budget_;const Clock::duration ttl_;
  std::function<Clock::time_point()> now_;
- std::mutex mutex_;std::map<std::string,Entry> entries_;size_t bytes_=0;bool stopped_=false;
+ // Serialize captures separately: never retain the control mutex while waiting
+ // for the reactor. A capture keeps its full byte reservation until it drains.
+ std::mutex capture_mutex_,mutex_;std::map<std::string,Entry> entries_;size_t bytes_=0,reserved_bytes_=0;bool stopped_=false;
  std::string generation_=random_id();std::set<std::pair<std::string,std::string>> retired_;
  static std::string random_id(){nano::Bytes value(32);if(RAND_bytes(value.data(),value.size())!=1)throw std::runtime_error("Capella inventory randomness unavailable");return nano::hex(value);}
  static void identity(const std::string& owner,const std::string& id){if(owner.empty()||owner.size()>256||id.size()!=66||!id.starts_with("0x")||!std::all_of(id.begin()+2,id.end(),[](char c){return (c>='0'&&c<='9')||(c>='a'&&c<='f');}))throw std::invalid_argument("Invalid Capella inventory identity");}
@@ -33,10 +36,7 @@ public:
  std::string generation(){std::lock_guard lock(mutex_);if(stopped_)throw std::runtime_error("Capella inventory sessions stopped");return generation_;}
  std::string acquire(const std::string& owner,const std::string& generation,const std::string& request,std::string_view kind,const std::function<void()>& check={}){
   identity(owner,request);identity(owner,generation);
-  std::lock_guard lock(mutex_);const auto now=now_();reap(now);
-  if(stopped_||generation!=generation_||retired_.contains({owner,request}))throw std::invalid_argument("Capella inventory request retired");
-  for(const auto& [id,entry]:entries_)if(entry.owner==owner&&entry.generation==generation&&entry.request==request){if(entry.kind!=kind)throw std::invalid_argument("Capella inventory request conflict");if(check)check();return id;}
-  return open_locked(owner,kind,now,check,generation,request);
+  return capture(owner,kind,check,generation,request);
  }
  // Also fences cancel-before-acquire. An old generation cannot create a new
  // snapshot; its existing snapshot can still be found and released.
@@ -46,14 +46,42 @@ public:
  }
  std::string open(const std::string& owner,std::string_view kind,const std::function<void()>& check={}){
   if(owner.empty()||owner.size()>256)throw std::invalid_argument("Invalid Capella inventory principal");
-  std::lock_guard lock(mutex_);const auto now=now_();reap(now);return open_locked(owner,kind,now,check,{},{});
+  return capture(owner,kind,check,{},{});
  }
 private:
- std::string open_locked(const std::string& owner,std::string_view kind,Clock::time_point now,const std::function<void()>& check,const std::string& generation,const std::string& request){
-  if(stopped_)throw std::runtime_error("Capella inventory sessions stopped");if(entries_.size()>=maximum_)throw std::length_error("Capella inventory session capacity exhausted");
-  auto snapshot=reactor_.capture_inventory(kind,budget_-bytes_,check);const auto id=random_id();
-  if(check)check();auto [it,inserted]=entries_.emplace(id,Entry{owner,now,std::move(snapshot),generation,request,std::string(kind)});if(!inserted)throw std::runtime_error("Capella inventory handle collision");bytes_+=it->second.snapshot->root_bytes();return id;
+ std::string capture(const std::string& owner,std::string_view kind,const std::function<void()>& check,const std::string& generation,const std::string& request){
+  std::unique_lock capture_lock(capture_mutex_,std::defer_lock);
+  while(!capture_lock.try_lock()){
+   {std::lock_guard lock(mutex_);if(stopped_)throw std::runtime_error("Capella inventory sessions stopped");
+    if(!request.empty()&&(generation!=generation_||retired_.contains({owner,request})))throw std::invalid_argument("Capella inventory request retired");}
+   if(check)check();std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+  Clock::time_point created;size_t allowance;std::string id;
+  {
+   std::lock_guard lock(mutex_);created=now_();reap(created);
+   if(stopped_)throw std::runtime_error("Capella inventory sessions stopped");
+   if(!request.empty()){
+    if(generation!=generation_||retired_.contains({owner,request}))throw std::invalid_argument("Capella inventory request retired");
+    for(const auto& [handle,entry]:entries_)if(entry.owner==owner&&entry.generation==generation&&entry.request==request){if(entry.kind!=kind)throw std::invalid_argument("Capella inventory request conflict");if(check)check();return handle;}
+   }
+   if(entries_.size()>=maximum_)throw std::length_error("Capella inventory session capacity exhausted");
+   allowance=budget_-bytes_;id=random_id();if(entries_.contains(id))throw std::runtime_error("Capella inventory handle collision");
+   reserved_bytes_=allowance;
+  }
+  // Exception unwinding destroys the snapshot before relinquishing its byte
+  // reservation. stop/release never free a capture still using that reservation.
+  try{
+   auto snapshot=reactor_.capture_inventory(kind,allowance,check);if(check)check();
+   std::lock_guard lock(mutex_);const auto now=now_();reap(now);
+   if(stopped_)throw std::runtime_error("Capella inventory sessions stopped");
+   if(now<created||now-created>=ttl_)throw std::invalid_argument("Capella inventory capture expired");
+   if(!request.empty()&&(generation!=generation_||retired_.contains({owner,request})))throw std::invalid_argument("Capella inventory request retired");
+   if(snapshot->root_bytes()>reserved_bytes_)throw std::length_error("Capella inventory capture exceeds reservation");
+   auto [it,inserted]=entries_.emplace(id,Entry{owner,created,std::move(snapshot),generation,request,std::string(kind)});
+   if(!inserted)throw std::runtime_error("Capella inventory handle collision");bytes_+=it->second.snapshot->root_bytes();reserved_bytes_=0;return id;
+  }catch(...){std::lock_guard lock(mutex_);reserved_bytes_=0;throw;}
  }
+
 public:
  nano::Json page(const std::string& owner,const std::string& id,const std::optional<nano::ConsensusRoot>& after,size_t count,size_t json_bytes,const std::function<void()>& check={}){
   std::lock_guard lock(mutex_);reap(now_());return find(owner,id)->second.snapshot->page(after,count,json_bytes,check);

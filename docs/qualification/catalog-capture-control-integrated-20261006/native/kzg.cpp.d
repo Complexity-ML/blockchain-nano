@@ -1,0 +1,22 @@
+kzg.cpp: \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/SDKSettings.json \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/src/kzg.cpp \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/include/nano/core.hpp \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/include/nano/crypto.hpp \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/include/nano/types.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/json.hpp \
+  /private/tmp/nano-catalog-capture-unlocked-docker-20261006/source/include/nano/rlp.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/ckzg/src/ckzg.h \
+  /Users/boris/Dev/blockchain-nano/third_party/ckzg/src/eip4844/eip4844.h \
+  /Users/boris/Dev/blockchain-nano/third_party/ckzg/src/common/bytes.h \
+  /Users/boris/Dev/blockchain-nano/third_party/ckzg/src/common/ec.h \
+  /Users/boris/Dev/blockchain-nano/third_party/ckzg/blst/bindings/blst.h \
+  /Users/boris/Dev/blockchain-nano/third_party/ckzg/blst/bindings/blst_aux.h \
+  /Users/boris/Dev/blockchain-nano/third_party/ckzg/src/common/fr.h \
+  /Users/boris/Dev/blockchain-nano/third_party/ckzg/src/common/ret.h \
+  /Users/boris/Dev/blockchain-nano/third_party/ckzg/src/eip4844/blob.h \
+  /Users/boris/Dev/blockchain-nano/third_party/ckzg/src/setup/settings.h \
+  /Users/boris/Dev/blockchain-nano/third_party/ckzg/src/eip7594/eip7594.h \
+  /Users/boris/Dev/blockchain-nano/third_party/ckzg/src/eip7594/cell.h \
+  /Users/boris/Dev/blockchain-nano/third_party/ckzg/src/setup/setup.h \
+  /tmp/nano-pruning-wan-native-build-20261004/third_party/ckzg/include/nano_kzg_setup.hpp
