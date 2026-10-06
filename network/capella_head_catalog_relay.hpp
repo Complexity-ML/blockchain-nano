@@ -13,8 +13,8 @@ class CapellaHeadCatalogRelay:public std::enable_shared_from_this<CapellaHeadCat
  std::shared_ptr<CapellaDeliveryQuantum> quantum_;std::shared_ptr<CapellaExportCache> exports_;bool fair_,started_=false,finished_=false;
  asio::steady_timer timer_;std::chrono::steady_clock::time_point deadline_,began_;
  std::shared_ptr<CapellaBlockDelivery> head_;std::shared_ptr<CapellaCatalogRelay> catalog_;
- std::string priority_="unselected";
- void finish(Json result){if(finished_)return;if(result.value("success",false)&&std::chrono::steady_clock::now()>deadline_){result["success"]=false;result["reason"]="head-or-catalog-deadline";result["failureStage"]="catalog";}finished_=true;timer_.cancel();if(head_)head_->cancel();if(catalog_)catalog_->cancel();result["headPriority"]=priority_;if(result.contains("elapsedMs"))result["catalogElapsedMs"]=result["elapsedMs"];result["elapsedMs"]=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-began_).count();auto done=std::move(done_);done(std::move(result));}
+ std::string priority_="unselected",selected_head_;
+ void finish(Json result){if(finished_)return;if(result.value("success",false)&&!selected_head_.empty()&&selected_head_!=anchor_&&!knowledge_->acknowledged(selected_head_)){result["success"]=false;if(!result.contains("reason")||result["reason"].is_null()){result["reason"]="head-admission-unconfirmed";result["failureStage"]="head";}}if(result.value("success",false)&&std::chrono::steady_clock::now()>deadline_){result["success"]=false;result["reason"]="head-or-catalog-deadline";result["failureStage"]="catalog";}finished_=true;timer_.cancel();if(head_)head_->cancel();if(catalog_)catalog_->cancel();result["headPriority"]=priority_;if(result.contains("elapsedMs"))result["catalogElapsedMs"]=result["elapsedMs"];result["elapsedMs"]=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-began_).count();auto done=std::move(done_);done(std::move(result));}
  void fail(const char* reason){finish(Json{{"success",false},{"reason",reason},{"stage",catalog_?"catalog":"head"},{"failureStage",catalog_?"catalog":"head"},{"closed",!catalog_}});}
  Reply callback(std::function<void(Json)> handler){auto once=std::make_shared<std::atomic<bool>>(false);return [self=shared_from_this(),once,handler=std::move(handler)](Json value){if(once->exchange(true))return;asio::post(self->io_,[self,handler,value=std::move(value)]()mutable{if(self->finished_)return;try{handler(std::move(value));}catch(...){self->fail("invalid-head-response");}});};}
  void catalog(){
@@ -25,6 +25,7 @@ class CapellaHeadCatalogRelay:public std::enable_shared_from_this<CapellaHeadCat
   if(!status.is_object()||!status.contains("headRoot")||!status["headRoot"].is_string()||!status.contains("headSlot")||!status["headSlot"].is_number_unsigned()){fail("head-reference-unavailable");return;}
   const auto id=status["headRoot"].get<std::string>();
   if(id.size()!=66||!id.starts_with("0x")||!std::all_of(id.begin()+2,id.end(),[](char c){return (c>='0'&&c<='9')||(c>='a'&&c<='f');})){fail("invalid-head-reference");return;}
+  selected_head_=id;
   if(id==anchor_){priority_="anchor";catalog();return;}
   if(knowledge_->acknowledged(id)){priority_="already-acknowledged";catalog();return;}
   priority_="selected";const auto remaining=deadline_-std::chrono::steady_clock::now();if(remaining<=std::chrono::steady_clock::duration::zero()){fail("head-or-catalog-deadline");return;}
@@ -34,6 +35,12 @@ class CapellaHeadCatalogRelay:public std::enable_shared_from_this<CapellaHeadCat
     // A fresh session knows no ancestral ACKs. Seed them through the bounded
     // historical catalog instead of retrying an over-deep head forever.
     self->priority_="dependency-depth-catalog-fallback";self->catalog();return;
+   }
+   if(ack==Json{{"accepted",false}}){
+    // A rejected/incomplete head is never an ACK. Independent historical
+    // branches may supply its missing context; preserve the same deadline,
+    // admission quantum and peer knowledge while scanning that catalog.
+    self->priority_="head-unconfirmed-catalog-fallback";self->catalog();return;
    }
    if(ack!=Json{{"accepted",true}}){self->fail("head-admission-unconfirmed");return;}
    self->priority_="admitted";self->catalog();

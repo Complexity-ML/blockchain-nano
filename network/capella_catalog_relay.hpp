@@ -95,10 +95,10 @@ private:
     }
     if(!ack.is_object()||ack.size()!=1||ack.value("accepted",Json())!=true){
      const bool rejected=ack.is_object()&&ack.size()==1&&ack.value("accepted",Json())==false;
-     // Independent votes can be expired or reference a different branch. A
+     // Blocks may need incremental context or another branch; votes can expire. A
      // definitive refusal must not starve later entries in this bounded scan.
      // Never cache it as an ACK, retry it here, or hide the failed attempt.
-     if(rejected&&s.kind_=="attestation"){
+     if(rejected&&(s.kind_=="attestation"||s.kind_=="block")){
       ++s.rejected_;if(s.reason_.empty()){s.reason_="admission-rejected";s.failure_stage_="delivery";}
       s.advance(false);return;
      }

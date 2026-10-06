@@ -26,7 +26,7 @@ int main(){try{
   auto h=std::make_shared<CapellaHeadCatalogRelay>(io,core,deliver,send,"token",id(0),ingress,knowledge,2,8192,4,8,[&](Json r){++done;last=std::move(r);},[&](const std::string& r){return knowledge->acknowledged(r);},q,true);h->start(100ms);io.restart();io.run();
   if(attempt==0){check(last["success"]==false&&last["headPriority"]=="dependency-depth-catalog-fallback","head failure hid fallback diagnostics");check(!knowledge->acknowledged(id(3)),"unconfirmed deep head was acknowledged");}
  }
- if(reject){check(pages==1&&sends==1&&admitted==0&&knowledge->retained()==0,"remote rejection advanced catch-up");}
+ if(reject){check(pages==1&&sends==2&&admitted==0&&knowledge->retained()==0,"remote rejection advanced catch-up");}
  else {check(done==2&&last["success"]==true&&pages==2&&sends==3&&admitted==3&&knowledge->acknowledged(id(3)),"fresh session did not progressively catch up with fixed bound");}
  }
  std::cout<<"Progressive depth-bound catch-up and actual-rejection guards passed; modeled transport only\n";

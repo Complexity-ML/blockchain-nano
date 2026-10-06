@@ -1,0 +1,21 @@
+[
+  "sudo",
+  "-n",
+  "docker",
+  "run",
+  "--rm",
+  "--network",
+  "none",
+  "--memory",
+  "4g",
+  "--cpus",
+  "2",
+  "-v",
+  "/home/ubuntu/blockchain-nano-git:/work:ro",
+  "-v",
+  "/tmp/nano-head-fallback-20261006:/output",
+  "--entrypoint",
+  "/bin/bash",
+  "sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14",
+  "/output/tests-amd.sh"
+]
