@@ -1,0 +1,238 @@
+{
+  "originalSession": 9157,
+  "exitCode": 1,
+  "result": "FAILED",
+  "controllerUnchanged": true,
+  "newCommonFinalities": 0,
+  "duties": [
+    {
+      "name": "mac-native",
+      "clockHealthy": true,
+      "finalized": {
+        "epoch": "0x504",
+        "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+      },
+      "validator": {
+        "healthy": true,
+        "localKeys": 16,
+        "proposalsAdmitted": 43,
+        "attestationsAdmitted": 306,
+        "syncMessagesAdmitted": 1135,
+        "timing": {
+          "awaitingSlotBlock": 1466,
+          "maxPollMs": 3063,
+          "maxProposalMs": 885,
+          "polls": 4880,
+          "pollsOverSlot": 0,
+          "proposalAttempts": 44,
+          "proposalsUnavailable": 1,
+          "slotBoundaryExits": 28
+        }
+      }
+    },
+    {
+      "name": "mac-docker",
+      "clockHealthy": true,
+      "finalized": {
+        "epoch": "0x504",
+        "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+      },
+      "validator": {
+        "healthy": true,
+        "localKeys": 16,
+        "proposalsAdmitted": 36,
+        "attestationsAdmitted": 298,
+        "syncMessagesAdmitted": 956,
+        "timing": {
+          "awaitingSlotBlock": 1293,
+          "maxPollMs": 6424,
+          "maxProposalMs": 2316,
+          "polls": 3794,
+          "pollsOverSlot": 2,
+          "proposalAttempts": 36,
+          "proposalsUnavailable": 0,
+          "slotBoundaryExits": 50
+        }
+      }
+    },
+    {
+      "name": "vps-docker",
+      "clockHealthy": true,
+      "finalized": {
+        "epoch": "0x504",
+        "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+      },
+      "validator": {
+        "healthy": true,
+        "localKeys": 33,
+        "proposalsAdmitted": 67,
+        "attestationsAdmitted": 161,
+        "syncMessagesAdmitted": 0,
+        "timing": {
+          "awaitingSlotBlock": 95,
+          "maxPollMs": 9030,
+          "maxProposalMs": 4258,
+          "polls": 256,
+          "pollsOverSlot": 52,
+          "proposalAttempts": 76,
+          "proposalsUnavailable": 9,
+          "slotBoundaryExits": 160
+        }
+      }
+    }
+  ],
+  "relayCompletedTurns": {
+    "mac-native": {
+      "kinds": {
+        "block": 35,
+        "attestation": 16,
+        "attester_slashing": 3,
+        "bls_to_execution_change": 3,
+        "sync_committee_message": 3,
+        "voluntary_exit": 3
+      },
+      "blockReasons": {
+        "dependency-depth-limit": 10,
+        "head-or-catalog-deadline": 6,
+        "dependency-quantum-yield": 18,
+        "admission-rejected": 1
+      },
+      "preparationBlockTurns": 34,
+      "dependencyExports": 1033,
+      "dependencyCacheHits": 1176,
+      "dependencySendAttempts": 114,
+      "dependencyACKs": 111,
+      "selectedHeadACKs": 0,
+      "rpcRefusals": [
+        {
+          "method": "nano_capellaCatalogAcquire",
+          "cause": "inventory-capture-busy",
+          "count": 88
+        }
+      ],
+      "scope": "completed turns only; dependency counters exclude independent catalog delivery"
+    },
+    "mac-docker": {
+      "kinds": {
+        "block": 35,
+        "attestation": 16,
+        "attester_slashing": 3,
+        "bls_to_execution_change": 3,
+        "sync_committee_message": 3,
+        "voluntary_exit": 3
+      },
+      "blockReasons": {
+        "dependency-depth-limit": 7,
+        "dependency-quantum-yield": 21,
+        "head-or-catalog-deadline": 6,
+        "admission-rejected": 1
+      },
+      "preparationBlockTurns": 34,
+      "dependencyExports": 1692,
+      "dependencyCacheHits": 159,
+      "dependencySendAttempts": 127,
+      "dependencyACKs": 125,
+      "selectedHeadACKs": 0,
+      "rpcRefusals": [
+        {
+          "method": "nano_capellaCatalogAcquire",
+          "cause": "inventory-capture-busy",
+          "count": 164
+        }
+      ],
+      "scope": "completed turns only; dependency counters exclude independent catalog delivery"
+    },
+    "vps-docker": {
+      "kinds": {
+        "block": 60,
+        "attestation": 27,
+        "attester_slashing": 6,
+        "bls_to_execution_change": 6,
+        "sync_committee_message": 6,
+        "voluntary_exit": 4
+      },
+      "blockReasons": {
+        "head-or-catalog-deadline": 16,
+        "dependency-depth-limit": 11,
+        "invalid-response": 4,
+        "dependency-quantum-yield": 29
+      },
+      "preparationBlockTurns": 58,
+      "dependencyExports": 2836,
+      "dependencyCacheHits": 698,
+      "dependencySendAttempts": 191,
+      "dependencyACKs": 191,
+      "selectedHeadACKs": 0,
+      "rpcRefusals": [
+        {
+          "method": "nano_capellaCatalogAcquire",
+          "cause": "inventory-capture-busy",
+          "count": 10839
+        },
+        {
+          "method": "nano_capellaCatalogAcquire",
+          "cause": "inventory-request-retired",
+          "count": 10
+        },
+        {
+          "method": "nano_capellaExport",
+          "cause": "unknown",
+          "count": 2
+        }
+      ],
+      "scope": "completed turns only; dependency counters exclude independent catalog delivery"
+    }
+  },
+  "rawLogs": {
+    "mac-native": {
+      "path": "/private/tmp/nano-restored-three-node-v32-preparation-priority-20261007/campaign/native.log",
+      "sha256": "4283fbd5da31182e58b7d0f2a86c15c93d5816ac31754d56c22ce3cdb4029758",
+      "bytes": 1268967
+    },
+    "mac-docker": {
+      "path": "/private/tmp/nano-restored-three-node-v32-preparation-priority-20261007/campaign/docker-mac.log",
+      "sha256": "2962cee72c2d998a8de0cd96a9072426f198e25b4c1c81a59cce3956a0fa20e7",
+      "bytes": 1264618
+    },
+    "vps-docker": {
+      "path": "/private/tmp/nano-restored-three-node-v32-preparation-priority-20261007/campaign/vps.log",
+      "sha256": "b80eb6b235fe23deb787476c44eb30839f6ce84ff63f32b45d4432fa87474913",
+      "bytes": 2950974
+    }
+  },
+  "productionQualified": false,
+  "scope": "private restored 65-validator fixture, three processes on two physical hosts; no public deployment or production claim",
+  "stops": {
+    "native": {
+      "pid": 78359,
+      "exitCode": 0,
+      "signalCode": null
+    },
+    "dockerMac": {
+      "Status": "exited",
+      "Running": false,
+      "Paused": false,
+      "Restarting": false,
+      "OOMKilled": false,
+      "Dead": false,
+      "Pid": 0,
+      "ExitCode": 0,
+      "Error": "",
+      "StartedAt": "2026-10-06T23:08:24.477536712Z",
+      "FinishedAt": "2026-10-06T23:24:34.382435884Z"
+    },
+    "vps": {
+      "Status": "exited",
+      "Running": false,
+      "Paused": false,
+      "Restarting": false,
+      "OOMKilled": false,
+      "Dead": false,
+      "Pid": 0,
+      "ExitCode": 0,
+      "Error": "",
+      "StartedAt": "2026-10-06T23:05:24.471322707Z",
+      "FinishedAt": "2026-10-06T23:24:36.691183499Z"
+    }
+  }
+}
