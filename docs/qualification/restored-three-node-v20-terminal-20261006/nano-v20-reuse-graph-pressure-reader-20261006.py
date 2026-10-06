@@ -1,0 +1,29 @@
+from pathlib import Path
+import json,hashlib,subprocess
+base=Path('/private/tmp');root=base/'nano-restored-three-node-v20-startup-diagnostic-20261006';audit=base/'nano-v20-post-stop-native-diagnostic-20261006';template=base/'nano-catalog-selection-native-20261006';draft=base/'nano-v18-graph-pressure-capture-draft-20261006';out=base/'nano-v20-graph-pressure-native-proof-20261006'
+def read(p):return json.loads(p.read_text())
+def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+t=read(root/'campaign/terminal-exit.json');assert t['originalSession']==34949 and t['exitCode'] in [0,1]
+assert read(root/'campaign/result.json')['stopReceipts']==3
+for n in ['mac-native','mac-docker']:assert read(audit/(n+'-exit.json'))['exitCode']==0 and read(audit/(n+'-immutability.json'))['hashesUnchanged']
+assert read(root/'campaign/native-state.json')['exitCode']==0
+assert not any('/nano run ' in x for x in subprocess.check_output(['ps','-axo','pid,command'],text=True).splitlines())
+r=read(root/'campaign/resources.json');state=json.loads(subprocess.check_output(['docker','inspect',r['localContainer'],'--format','{{json .State}}'],text=True));assert not state['Running'] and state['ExitCode']==0 and not state['OOMKilled']
+out.mkdir(exist_ok=False)
+def run(name,args,cwd=None):
+ (out/(name+'-command.json')).write_text(json.dumps(args,indent=2)+'\n')
+ with (out/(name+'.log')).open('w') as f:r=subprocess.run(args,stdout=f,stderr=subprocess.STDOUT,cwd=cwd)
+ (out/(name+'-exit.json')).write_text(json.dumps({'exitCode':r.returncode}));assert r.returncode==0,name
+reader=Path('/private/tmp/nano-v18-graph-pressure-native-proof-20261006/capture');assert sha(reader)==read(Path('/private/tmp/nano-v18-graph-pressure-native-proof-20261006/scope.json'))['readerSHA256']
+fields=['retainedBlocks','retainedForkNodes','blockCapacity','atBlockCapacity','anchorSlot','finalizedEpoch','clockEpoch'];summary={}
+for n in ['mac-native','mac-docker']:
+ data=root/n/'data';before=read(audit/(n+'-before.json'))
+ def hashes():return {str(f.relative_to(data)):sha(f) for f in sorted(data.rglob('*')) if f.is_file()}
+ assert hashes()==before,'Audited source changed'
+ args=[str(reader),'--capture',str(root/'config/genesis.json'),str(audit/(n+'-config.json')),str(data/'chain'),str(audit/(n+'-request.json'))]
+ (out/(n+'-command.json')).write_text(json.dumps(args,indent=2)+'\n')
+ with (out/(n+'-capture.json')).open('w') as stdout,(out/(n+'-error.log')).open('w') as stderr:r=subprocess.run(args,stdout=stdout,stderr=stderr)
+ (out/(n+'-exit.json')).write_text(json.dumps({'exitCode':r.returncode}));assert r.returncode==0
+ assert hashes()==before;d=read(out/(n+'-capture.json'));old=read(audit/(n+'-capture.json'));summary[n]={k:d['participationDiagnostics'].pop(k) for k in fields};assert d==old,'Extended reader changed baseline capture proof'
+ print(n,json.dumps(summary[n]),flush=True)
+(out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n');(out/'scope.json').write_text(json.dumps({'readerSHA256':sha(reader),'sourceSHA256':sha(draft/'paused_capture.cpp'),'originalCoreUnchanged':True,'readonly':True,'allOtherCaptureFieldsIdenticalToQualifiedReader':True,'dataHashesUnchanged':True,'productionQualified':False},indent=2)+'\n')

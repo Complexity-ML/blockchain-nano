@@ -4838,3 +4838,6 @@ Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, d
 
 
 2026-10-06 — Préparation v20 : engagements VPS post-v19 et Mac post-v18 et journaux conservés, diagnostic IPC/RPC qualifié en natif/ARM64/AMD64 dans son périmètre ciblé. Trois finalités communes nouvelles en 900 s restent à démontrer ; préparation seule. Production et revue indépendante ouvertes. Preuves restored-three-node-v20-startup-diagnostic-prepare-20261006/.
+
+
+2026-10-06 — v20 FAILED : contrôleur original 34949 / sortie 1, checkout e8008698, zéro nouvelle finalité commune en 900 s (3 requises), malgré trois propriétaires restaurés actifs. Trois arrêts normaux ; audits read-only des engagements et témoins comparés aux reçus indépendants, bases inchangées. Le démarrage IPC réussit sans expliquer v19. Les participations Mac restent locales ; les logs ne prouvent pas encore une cause unique. Brouillon non intégré : 48 cas attestation + 10 cas diagnostic RPC passent, sans qualification WAN. [Preuves v20](qualification/restored-three-node-v20-terminal-20261006/README.md). Les autres critères et la revue indépendante restent ouverts.
