@@ -4383,3 +4383,6 @@ Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichi
 
 
 2026-10-06 — Reprise v15 FAILED : contrôleur 29884 / sortie 1, checkout 7c6c1fd3, cœur 5787915e et relais 1427e624 ; 0 avancées communes observées selon le critère original. Frontières et classifications de votes enregistrées ; diagnostic avec lecteur existant réutilisé, sans présumer de leur stabilité ni de la cause WAN. Trois propriétaires arrêtés et audits read-only des engagements, journaux/témoins et historique canonique ; fichiers inchangés. Pas de compilation concurrente, ni transfert de base inter-hôtes. Périmètre privé exact ; production et revue indépendante restent ouvertes. [Preuves v15](qualification/restored-three-node-v15-history-first-terminal-20261006/README.md).
+
+
+2026-10-06 — Diagnostics de catalogue corrigés : premier refus conservé séparément de la terminaison, parcours complet distinct de libération, compteurs préservés sur délai/annulation du wrapper. 7 nouveaux scénarios et régression pertinente sur Mac natif/ARM64/AMD64 ; CMake SDK/CTest 4/4 sur les deux architectures et relais reconstruits. Échecs initiaux conservés. Core inchangé ; aucune convergence WAN ni production déduite. [Preuves](qualification/catalog-termination-diagnostic-20261006/README.md).

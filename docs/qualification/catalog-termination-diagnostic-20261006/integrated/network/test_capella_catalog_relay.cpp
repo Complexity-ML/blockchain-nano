@@ -1,0 +1,124 @@
+#include "capella_catalog_relay.hpp"
+#include "altair_vote_delivery.hpp"
+#include <iostream>
+using namespace std::chrono_literals;
+void check(bool ok,const char* text){if(!ok)throw std::runtime_error(text);}
+std::string root(char c){return "0x"+std::string(64,c);}
+int main(){try{
+ const AltairWireProfile profile{"0x539",root('a'),"0x01020304",1024,256,256,256,root('b')};unsigned scenarios=0;
+ for(const std::string mode:{"success","lost-open","duplicate","empty","changed-snapshot","wrong-next","unsorted","unavailable","foreign","rejected","dependency-yield","lost-ack","lost-close","close-applied-reply-lost","close-request-lost","close-unreachable","close-refused","limit","expired","known","known-all","known-limit"}){
+  asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);unsigned pages=0,sends=0,closes=0,done=0;Json result;bool allocated=false;unsigned removals=0;
+  auto core=[&](std::string method,Json p,Reply cb){check(p[0]=="token","missing authentication");Json value;
+   if(method=="nano_capellaCatalogGeneration"){cb(root('e'));return;}
+   if(method=="nano_capellaCatalogAcquire"){allocated=true;if(mode=="lost-open"){cb(nullptr);return;}value={{"handle",root('c')}};}
+   else if(method=="nano_capellaCatalogRelease"){++closes;check(p[1]==root('e')&&p[2].get<std::string>().size()==66,"wrong release request");if(mode=="lost-close")return;
+    if(mode=="close-unreachable"||(mode=="close-request-lost"&&closes==1)){cb(nullptr);return;}
+    if(mode=="close-refused"){cb(false);return;}
+    if(allocated){allocated=false;++removals;}
+    if(mode=="close-applied-reply-lost"&&closes==1){cb(nullptr);return;}value=true;}
+   else if(method=="nano_capellaCatalogPage"){
+    ++pages;check(p[1]==root('c'),"wrong page handle");if(mode=="expired"){cb(nullptr);return;}
+    check((pages==1&&p[2].is_null())||(pages==2&&p[2]==root('2')),"cursor did not follow acknowledged page");
+    value={{"sequence",mode=="changed-snapshot"&&pages==2?"0x2":"0x1"},{"digest",root('d')},{"kind","block"},{"entries",pages==1?Json::array({root('1'),root('2')}):Json::array({root('3')})},{"next",pages==1?Json(root('2')):Json(nullptr)}};
+    if(mode=="empty"){value["entries"]=Json::array();value["next"]=nullptr;}if(mode=="wrong-next")value["next"]=root('4');if(mode=="unsorted")value["entries"]=Json::array({root('2'),root('1')});
+   }else if(method=="nano_capellaExport"){check(!(mode=="known-all"||((mode=="known"||mode=="known-limit")&&p[2]!=root('3'))),"known root was unnecessarily exported");value={{"available",mode!="unavailable"},{"root",p[2]},{"envelope",{{"chainId",mode=="foreign"?"0x1":profile.chain_id},{"genesisHash",profile.genesis_hash},{"forkDigest",profile.fork_digest},{"consensusIdentity",profile.consensus_identity},{"kind","block"},{"ssz","0x0102"}}}};}
+   else throw std::runtime_error("unexpected RPC");cb(value);if(mode=="duplicate")cb(value);
+  };
+  auto deliver=[&](std::string id,Json envelope,Reply cb){++sends;check(id==root(mode=="known"?'3':char('0'+sends))&&envelope["ssz"]=="0x0102","wrong payload");if(mode=="lost-ack")return;if(mode=="dependency-yield"){cb(Json{{"yielded",true}});return;}cb(Json{{"accepted",mode!="rejected"}});if(mode=="duplicate")cb(Json{{"accepted",true}});};
+  auto relay=std::make_shared<CapellaCatalogRelay>(io,core,deliver,"token","block",ingress,2,(mode=="limit"||mode=="known-limit")?2:4,[&](Json value){++done;result=std::move(value);},[&](const std::string& id){return mode=="known-all"||((mode=="known"||mode=="known-limit")&&id!=root('3'));});relay->start(20ms);io.run();
+  const bool success=mode=="known"||mode=="known-all"||mode=="success"||mode=="duplicate"||mode=="empty"||mode=="close-applied-reply-lost"||mode=="close-request-lost";const bool retried=mode=="close-applied-reply-lost"||mode=="close-request-lost"||mode=="close-unreachable";check(done==1&&result["success"]==success&&closes==(retried?2:1),"incorrect completion/cleanup");
+  check(result.contains("elapsedMs")&&result["elapsedMs"].get<int64_t>()>=0,"missing relay elapsed time");
+  if(success)check(result["reason"].is_null()&&result["failureStage"].is_null(),"success has failure reason");
+  if(mode=="unavailable")check(result["reason"]=="export-unavailable"&&result["failureStage"]=="export","lost export failure reason");
+  if(mode=="dependency-yield")check(result["reason"]=="dependency-quantum-yield"&&result["delivered"]==0&&result["payloadsAdmitted"]==0&&result["closed"]==true,"dependency yield counted as admission or rejection");
+  if(mode=="rejected")check(result["reason"]=="admission-rejected"&&result["failureStage"]=="delivery","rejection confused with transport failure");
+  if(mode=="lost-ack")check(result["reason"]=="cancelled-or-deadline"&&result["failureStage"]=="delivery","unknown outcome reported as rejection");
+  if(mode=="known"||mode=="known-all")check(result["delivered"]==3&&result["skippedKnown"]==(mode=="known"?2:3)&&result["exports"]==(mode=="known"?1:0)&&sends==(mode=="known"?1:0),"known roots bypass lost cursor/count bounds");
+  if(mode=="known-limit")check(result["reason"]=="entry-limit"&&result["delivered"]==2&&sends==0,"cached roots bypassed entry limit");
+  if(mode=="success"||mode=="duplicate")check(sends==3&&pages==2&&result["closed"]==true,"pagination failed");
+  if(mode=="lost-open")check(removals==1&&!allocated&&sends==0&&result["closed"]==true,"lost open reply leaked snapshot");
+  if(mode=="close-applied-reply-lost"||mode=="close-request-lost")check(removals==1&&!allocated&&result["closed"]==true&&sends==3,"close retry leaked or replayed delivery");
+  if(mode=="close-unreachable"||mode=="close-refused")check(allocated&&result["closed"]==false,"unconfirmed close reported success");
+  if(mode=="limit")check(sends==2&&pages==1,"entry limit exceeded");if(mode=="lost-ack")check(result["delivered"]==0,"unacknowledged delivery counted");++scenarios;
+ }
+ // Open may allocate a handle after cancellation: close the late handle once.
+ for(const bool late_open:{true,false}){
+  asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);Reply delayed;unsigned closes=0,done=0;Json result;
+  auto core=[&](std::string method,Json,Reply cb){if(method=="nano_capellaCatalogGeneration"){cb(root('e'));return;}
+   if(method=="nano_capellaCatalogAcquire"){if(late_open)delayed=cb;else cb(Json{{"handle",root('c')}});}else if(method=="nano_capellaCatalogRelease"||method=="nano_capellaCatalogClose"){++closes;cb(true);}else delayed=cb;};
+  auto relay=std::make_shared<CapellaCatalogRelay>(io,core,[](auto,auto,auto){throw std::runtime_error("delivery after cancellation");},"token","block",ingress,1,2,[&](Json value){++done;result=value;});relay->start(20ms);io.poll();relay->cancel();check(bool(delayed),"missing delayed call");delayed(Json{{"handle",root('c')}});delayed(Json{{"handle",root('c')}});io.restart();io.run();check(done==1&&result["success"]==false&&closes==(late_open?2:1),"late callback resurrected/leaked catalog");++scenarios;
+ }
+ for(unsigned mode:{0u,1u,2u})for(bool wrong_id:{false,true}){
+  asio::io_context io;InboundBudget budget;auto capable=profile;capable.bls_changes=true;capable.sync_messages=true;const std::string kind=mode==2?"voluntary_exit":mode==1?"sync_committee_message":"bls_to_execution_change";auto ingress=std::make_shared<AltairMessageIngress>(capable,budget);std::vector<uint8_t> bytes(mode==2?112:mode==1?144:172,7);unsigned char digest[32];SHA256(bytes.data(),bytes.size(),digest);std::string id="0x",wire="0x";for(auto b:digest){id+="0123456789abcdef"[b>>4];id+="0123456789abcdef"[b&15];}for(auto b:bytes){wire+="0123456789abcdef"[b>>4];wire+="0123456789abcdef"[b&15];}if(wrong_id)id=root('1');unsigned delivered=0,closed=0;Json result;
+  auto core=[&](std::string method,Json args,Reply reply){if(method=="nano_capellaCatalogGeneration")reply(root('e'));else if(method=="nano_capellaCatalogAcquire"){check(args[1]==kind,"wrong BLS catalog requested");reply(Json{{"handle",root('c')}});}else if(method=="nano_capellaCatalogPage")reply(Json{{"kind",kind},{"sequence","0x1"},{"digest",root('d')},{"entries",Json::array({id})},{"next",nullptr}});else if(method=="nano_capellaExport")reply(Json{{"available",true},{"root",id},{"envelope",{{"chainId",capable.chain_id},{"genesisHash",capable.genesis_hash},{"forkDigest",capable.fork_digest},{"consensusIdentity",capable.consensus_identity},{"kind",kind},{"ssz",wire}}}});else if(method=="nano_capellaCatalogRelease"){++closed;reply(true);}else throw std::runtime_error("unexpected BLS catalog method");};
+  auto deliver=[&](std::string actual,Json frame,Reply reply){check(actual==id&&frame.at("ssz")==wire,"changed BLS catalog payload");++delivered;reply(Json{{"accepted",true}});};auto relay=std::make_shared<CapellaCatalogRelay>(io,core,deliver,"token",kind,ingress,1,1,[&](Json value){result=std::move(value);});relay->start(1s);io.run();check(result.at("success")==!wrong_id&&delivered==(wrong_id?0:1)&&closed==1,"BLS catalog identity or cleanup failed");if(wrong_id)check(result["reason"]=="digest-mismatch"&&result["failureStage"]=="export","digest failure reason lost");++scenarios;
+ }
+ for(auto kind:{AltairWireKind::attestation,AltairWireKind::sync_committee_message})for(auto decision:{AltairWork::Decision::accepted,AltairWork::Decision::rejected,AltairWork::Decision::local_failure}){
+  auto knowledge=std::make_shared<AltairRelayProgress>(2);const auto old=knowledge;AltairWork::Done pending;bool completed=false;
+  auto dispatch=remember_message_sender([&](auto,auto,AltairWork::Done done){pending=std::move(done);return true;},knowledge,kind);
+  check(dispatch({kind,{1,2}},std::make_shared<std::atomic<bool>>(false),[&](auto d){check(d==decision,"sender cache changed admission decision");completed=true;}),"sender dispatch failed");
+  check(old->retained()==0,"unadmitted sender seeded knowledge");knowledge=std::make_shared<AltairRelayProgress>(2);pending(decision);
+  check(completed&&old->retained()==size_t(decision==AltairWork::Decision::accepted)&&knowledge->retained()==0,"rejected or old-session sender polluted cache");++scenarios;
+ }
+ // A quantum of admitted payloads yields fairly; cached entries are skipped
+ // on the next stable snapshot. Never count an unknown delivery outcome.
+ for(const std::string mode:{"resume","sparse-known","all-known","rejected","lost-ack"}){
+  std::set<std::string> known;if(mode=="all-known")for(char c='1';c<='6';++c)known.insert(root(c));
+  if(mode=="sparse-known")known.insert(root('1'));unsigned total_sends=0,total_pages=0;
+  for(unsigned attempt=0;attempt<(mode=="resume"?3u:mode=="sparse-known"?2u:1u);++attempt){
+   asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);unsigned closes=0,completions=0;Json result;
+   auto core=[&](std::string method,Json params,Reply cb){
+    if(method=="nano_capellaCatalogGeneration")cb(root('e'));
+    else if(method=="nano_capellaCatalogAcquire")cb(Json{{"handle",root('c')}});
+    else if(method=="nano_capellaCatalogRelease"){++closes;cb(true);}
+    else if(method=="nano_capellaCatalogPage"){
+     ++total_pages;const char first=params[2].is_null()?'1':params[2]==root('2')?'3':'5';
+     cb(Json{{"kind","block"},{"sequence","0x1"},{"digest",root('d')},{"entries",Json::array({root(first),root(first+1)})},{"next",first=='5'?Json(nullptr):Json(root(first+1))}});
+    }else if(method=="nano_capellaExport")cb(Json{{"available",true},{"root",params[2]},{"envelope",{{"chainId",profile.chain_id},{"genesisHash",profile.genesis_hash},{"forkDigest",profile.fork_digest},{"consensusIdentity",profile.consensus_identity},{"kind","block"},{"ssz","0x0102"}}}});
+    else throw std::runtime_error("unexpected yielding relay method");
+   };
+   auto deliver=[&](std::string id,Json,Reply cb){++total_sends;check(!known.contains(id),"yield resend bypassed acknowledged cache");if(mode=="lost-ack")return;if(mode!="rejected")known.insert(id);cb(Json{{"accepted",mode!="rejected"}});};
+   auto relay=std::make_shared<CapellaCatalogRelay>(io,core,deliver,"token","block",ingress,2,6,[&](Json r){++completions;result=std::move(r);},[&](const std::string& id){return known.contains(id);},true);
+   relay->start(20ms);io.run();check(completions==1&&closes==1,"yielding relay leaked or duplicated completion");
+   if(mode=="resume"&&attempt<2)check(result["reason"]=="payload-quantum-yield"&&result["closed"]==true&&result["delivered"]==2*(attempt+1)&&known.size()==2*(attempt+1),"yield lost admission/cursor bounds");
+   else if(mode=="sparse-known"&&attempt==0)check(result["reason"]=="payload-quantum-yield"&&result["delivered"]==4&&result["exports"]==3&&result["payloadsAdmitted"]==3&&known.size()==4,"sparse cached page yielded before payload quantum");
+   else if(mode=="resume"||mode=="sparse-known"||mode=="all-known")check(result["success"]==true&&result["delivered"]==6&&known.size()==6,"yielded inventory failed to complete");
+   else check(result["success"]==false&&result["delivered"]==0&&known.empty()&&result["reason"]==(mode=="rejected"?"admission-rejected":"cancelled-or-deadline"),"yield credited rejected/unknown delivery");
+  }
+  if(mode=="resume")check(total_sends==6&&total_pages==6,"yield repeated payloads or blocked cached-page scan");
+  if(mode=="sparse-known")check(total_sends==5&&total_pages==5,"sparse payload quantum lost progress or retransmitted");
+  if(mode=="all-known")check(total_sends==0&&total_pages==3,"cached pages consumed payload quantum");++scenarios;
+ }
+ // A definitive rejected attestation must not starve later independent votes.
+ // Rejection stays visible, never enters ACK knowledge and never means success.
+ for(const std::string mode:{"reject-first","reject-all","lost-ack","block-reject","block-reject-first"}){
+  asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(profile,budget);
+  const std::string kind=(mode=="block-reject"||mode=="block-reject-first")?"block":"attestation";
+  unsigned sends=0,pages=0,closes=0,done=0;std::set<std::string> acknowledged;Json result;
+  auto core=[&](std::string method,Json args,Reply reply){
+   if(method=="nano_capellaCatalogGeneration")reply(root('e'));
+   else if(method=="nano_capellaCatalogAcquire")reply(Json{{"handle",root('c')}});
+   else if(method=="nano_capellaCatalogRelease"){++closes;reply(true);}
+   else if(method=="nano_capellaCatalogPage"){
+    ++pages;const bool first=args[2].is_null();check(first||args[2]==root('1'),"rejection corrupted cursor");
+    reply(Json{{"kind",kind},{"sequence","0x1"},{"digest",root('d')},{"entries",Json::array({root(first?'1':'2')})},{"next",first?Json(root('1')):Json(nullptr)}});
+   }else if(method=="nano_capellaExport")reply(Json{{"available",true},{"root",args[2]},{"envelope",{{"chainId",profile.chain_id},{"genesisHash",profile.genesis_hash},{"forkDigest",profile.fork_digest},{"consensusIdentity",profile.consensus_identity},{"kind",kind},{"ssz","0x0102"}}}});
+   else throw std::runtime_error("unexpected rejection scan method");
+  };
+  auto deliver=[&](std::string id,Json,Reply reply){
+   ++sends;if(mode=="lost-ack")return;
+   const bool accept=(mode=="reject-first"||mode=="block-reject-first")&&id==root('2');if(accept)acknowledged.insert(id);
+   reply(Json{{"accepted",accept}});reply(Json{{"accepted",true}}); // duplicate callback cannot turn refusal into ACK
+  };
+  auto relay=std::make_shared<CapellaCatalogRelay>(io,core,deliver,"token",kind,ingress,1,2,[&](Json value){++done;result=std::move(value);},[&](const std::string& id){return acknowledged.contains(id);});
+  relay->start(20ms);io.run();check(done==1&&closes==1&&result["success"]==false,"rejection scan lost failure or cleanup");
+  if(mode!="lost-ack"){
+   check(sends==2&&pages==2,"first rejected item starved next page");
+   check(result["rejected"]==((mode=="reject-all"||mode=="block-reject")?2:1)&&result["scanned"]==2&&result["delivered"]==((mode=="reject-all"||mode=="block-reject")?0:1),"refusal counted as admission");
+   check(result["reason"]=="admission-rejected"&&result["failureStage"]=="delivery","refusal diagnostic erased by later admission");
+   check(!acknowledged.contains(root('1'))&&acknowledged.size()==size_t(mode=="reject-first"||mode=="block-reject-first"),"refusal polluted ACK cache");
+  }else check(sends==1&&pages==1&&acknowledged.empty(),"unknown outcome advanced scan");
+  ++scenarios;
+ }
+ std::cout<<scenarios<<" Capella catalog relay scenarios passed; no consensus validity inferred from mocked ACKs\n";
+}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

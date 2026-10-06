@@ -1,0 +1,22 @@
+[
+  "sudo",
+  "-n",
+  "docker",
+  "run",
+  "--rm",
+  "--network",
+  "none",
+  "--name",
+  "nano-catalog-termination-amd64-20261006",
+  "-v",
+  "/home/ubuntu/blockchain-nano-git:/work:ro",
+  "-v",
+  "/tmp/nano-catalog-termination-integrated-20261006/network:/work/network:ro",
+  "-v",
+  "/tmp/nano-catalog-termination-integrated-20261006:/output",
+  "-v",
+  "nano-clean-rpc-build-20261002:/build",
+  "sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14",
+  "bash",
+  "/output/amd64-cmake.sh"
+]

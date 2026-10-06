@@ -187,3 +187,11 @@ target_compile_definitions(nano-capella-head-history-fairness-tests PRIVATE FMT_
 target_link_libraries(nano-capella-head-history-fairness-tests PRIVATE p2p::p2p)
 add_test(NAME capella_head_history_fairness COMMAND nano-capella-head-history-fairness-tests)
 set_tests_properties(capella_head_history_fairness PROPERTIES TIMEOUT 20)
+
+add_executable(nano-capella-catalog-termination-tests test_capella_catalog_termination.cpp)
+target_include_directories(nano-capella-catalog-termination-tests PRIVATE . ../third_party)
+target_compile_features(nano-capella-catalog-termination-tests PRIVATE cxx_std_20)
+target_compile_definitions(nano-capella-catalog-termination-tests PRIVATE FMT_CONSTEVAL=)
+target_link_libraries(nano-capella-catalog-termination-tests PRIVATE p2p::p2p)
+add_test(NAME capella_catalog_termination COMMAND nano-capella-catalog-termination-tests)
+set_tests_properties(capella_catalog_termination PROPERTIES TIMEOUT 20)
