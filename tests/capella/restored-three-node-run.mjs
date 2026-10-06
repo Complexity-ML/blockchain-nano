@@ -9,6 +9,7 @@ import {createServer} from 'node:net';
 import {resolve,join} from 'node:path';
 import {setTimeout as wait} from 'node:timers/promises';
 import assert from 'node:assert/strict';
+import {verifyRestoredSourceStop} from './restored-source-stop.mjs';
 import {restoredThreeNodePlan} from './restored-three-node-plan.mjs';
 import {waitRestoredReadiness} from './restored-readiness.mjs';
 import {restoredFinalityProgress} from './restored-finality-progress.mjs';
@@ -17,7 +18,7 @@ import {durableFinalityObservation} from './finality-observation.mjs';
 const exec=promisify(execFile),[target,revision,preparedArg]=process.argv.slice(2);
 assert.match(target??'',/^[a-z_][a-z0-9_-]*@[0-9.]+$/);assert.match(revision??'',/^[a-f0-9]{40}$/);assert.ok(preparedArg);
 const repo=process.cwd(),prepared=resolve(preparedArg),out=join(prepared,'campaign');await mkdir(out);
-const controllerFiles=['tests/capella/restored-three-node-run.mjs','tests/capella/restored-three-node-plan.mjs','tests/capella/deposit-restart-pins.mjs','tests/capella/finality-observation.mjs','tests/capella/restored-readiness.mjs','tests/capella/restored-finality-progress.mjs','tests/capella/restored-http-observation.mjs','tests/capella/vps-local-launch-prepare.py'];let controllerHashes;
+const controllerFiles=['tests/capella/restored-source-stop.mjs','tests/capella/restored-three-node-run.mjs','tests/capella/restored-three-node-plan.mjs','tests/capella/deposit-restart-pins.mjs','tests/capella/finality-observation.mjs','tests/capella/restored-readiness.mjs','tests/capella/restored-finality-progress.mjs','tests/capella/restored-http-observation.mjs','tests/capella/vps-local-launch-prepare.py'];let controllerHashes;
 const evidence=resolve(process.env.NANO_TEST_RESTORED_PREPARATION??join(repo,'docs/qualification/restored-three-node-prepare-20261005'));assert.ok(evidence.startsWith(join(repo,'docs/qualification')+'/'),'Preparation must be a committed qualification bundle');
 const json=async p=>JSON.parse(await readFile(p,'utf8')),save=(p,v)=>writeFile(p,JSON.stringify(v,null,2)+'\n');
 const hash=async p=>createHash('sha256').update(await readFile(p)).digest('hex');
@@ -40,7 +41,10 @@ try{
  assert.equal((await run('git',['status','--porcelain'])).trim(),'');assert.equal((await ssh(['git','-C',remoteRepo,'status','--porcelain'])).trim(),'');
  const preparation=await json(join(evidence,'manifest.json'));if(preparation.sourceNativeStop){assert.equal(preparation.sourceNativeStop.exitCode,0);assert.equal(preparation.sourceNativeStop.signalCode,null);}vpsVolume=preparation.vpsCopiedVolume;assert.match(vpsVolume,/^nano-restored-three-node-vps-[a-z0-9-]+-data$/);
  artifacts=await json(join(evidence,'artifacts.json'));await run('git',['diff','--quiet',artifacts.coreRevision,'--','src','include','third_party']);await run('git',['diff','--quiet',artifacts.relayRevision,'--','network']);
- for(const [name,onRemote,expectedExit] of [[preparation.sourceMacContainer,false,preparation.sourceMacExpectedExit??0],[preparation.sourceVpsContainer,true,preparation.sourceVpsExpectedExit??0]]){assert.ok([0,137].includes(expectedExit),'Unsupported stopped-source exit');const s=await inspect(name,onRemote);assert.equal(s.State.Status,'exited');assert.equal(s.State.ExitCode,expectedExit);assert.equal(s.State.OOMKilled,false);if(expectedExit!==0)assert.equal(preparation.sourceCrashReadonlyAudited,true,'Crash source must be independently audited');}
+ for(const [name,onRemote,expectedExit] of [[preparation.sourceMacContainer,false,preparation.sourceMacExpectedExit??0],[preparation.sourceVpsContainer,true,preparation.sourceVpsExpectedExit??0]]){let startupRefusalAudit;
+  if(expectedExit===1){assert.equal(onRemote,true,'Startup-refusal recovery is scoped to the audited VPS source');const file='source-startup-refusal-audit.json';assert.equal(await hash(join(evidence,file)),preparation.artifacts[file],'Startup refusal audit differs from committed preparation');startupRefusalAudit=await json(join(evidence,file));}
+  verifyRestoredSourceStop((await inspect(name,onRemote)).State,{expectedExit,crashReadonlyAudited:preparation.sourceCrashReadonlyAudited,startupRefusalAudit});
+ }
  const processes=await run('ps',['-axo','pid,command']);assert.ok(!processes.split('\n').some(l=>/\/nano(?: |$)/.test(l)&&/\brun\b/.test(l)),'An existing native writer is active');
  assert.equal((await docker(['ps','-q','--filter','volume='+vpsVolume],true)).trim(),'','Restored VPS volume already has a writer');
  const input=await json(join(evidence,'input.json'));plan=restoredThreeNodePlan(input);assert.deepEqual(plan,await json(join(evidence,'plan.json')));

@@ -12,7 +12,17 @@ export function restoredThreeNodePlan({macConfig,vpsConfig,macCapsule,vpsCapsule
  assert.deepEqual(native.capella.validator.keys.map(identity),mac.capella.validator.keys.map(identity),'Native and Docker source inventories differ');
  assert.equal(native.capella.profile.sha256,mac.capella.profile.sha256,'Native source profile mismatch');assert.deepEqual(native.capella.limits,mac.capella.limits,'Native source limits mismatch');
  assert.deepEqual((macNativeCapsule??macCapsule).canonicalReplay.finalized,macCapsule.canonicalReplay.finalized,'Native source finalized checkpoint differs');
- assert.equal(mac.capella.profile.sha256,vps.capella.profile.sha256,'Consensus profile mismatch');assert.deepEqual(mac.capella.limits,vps.capella.limits,'Recovery resource limits mismatch');
+ assert.equal(mac.capella.profile.sha256,vps.capella.profile.sha256,'Consensus profile mismatch');
+ const sourceBlockBudgets=retentionExperiment?.sourceBlockBudgets;
+ if(sourceBlockBudgets===undefined)assert.deepEqual(mac.capella.limits,vps.capella.limits,'Recovery resource limits mismatch');
+ else {
+  assert.ok(sourceBlockBudgets&&typeof sourceBlockBudgets==='object'&&!Array.isArray(sourceBlockBudgets));assert.deepEqual(Object.keys(sourceBlockBudgets).sort(),[...names].sort());
+  const withoutBlocks=c=>{const limits=structuredClone(c.capella.limits);delete limits.blocks;return limits;};
+  for(const [i,c] of [native,mac,vps].entries()){
+   const value=sourceBlockBudgets[names[i]];assert.equal(typeof value,'string');assert.match(value,/^0x[1-9a-f][0-9a-f]*$/);assert.ok(BigInt(value)<=0xffffffffffffffffn);
+   assert.equal(value,c.capella.limits.blocks,'Declared source budget differs from audited configuration');assert.deepEqual(withoutBlocks(c),withoutBlocks(mac),'Non-block source resource limits mismatch');
+  }
+ }
  assert.deepEqual(macCapsule.canonicalReplay.finalized,vpsCapsule.canonicalReplay.finalized,'Stored finalized checkpoints differ');
  const all=[...mac.capella.validator.keys,...vps.capella.validator.keys];assert.equal(all.length,65,'Full admitted fixture inventory required');
  const seen=new Set();for(const key of all){const i=identity(key);assert.ok(!seen.has(i),'Overlapping source signer inventory');seen.add(i);}
@@ -28,11 +38,11 @@ export function restoredThreeNodePlan({macConfig,vpsConfig,macCapsule,vpsCapsule
   assert.ok(retentionExperiment&&typeof retentionExperiment==='object'&&!Array.isArray(retentionExperiment));
   const explicit=Object.hasOwn(retentionExperiment,'captureBudget');
   const catalogExplicit=Object.hasOwn(retentionExperiment,'catalogRootBytes');
-  assert.deepEqual(Object.keys(retentionExperiment).sort(),['blocks','rationale',...(explicit?['captureBudget']:[]),...(catalogExplicit?['catalogRootBytes']:[])].sort());
+  assert.deepEqual(Object.keys(retentionExperiment).sort(),['blocks','rationale',...(explicit?['captureBudget']:[]),...(catalogExplicit?['catalogRootBytes']:[]),...(sourceBlockBudgets===undefined?[]:['sourceBlockBudgets'])].sort());
   assert.match(retentionExperiment.blocks,/^0x[1-9a-f][0-9a-f]*$/);
   assert.ok(typeof retentionExperiment.rationale==='string'&&retentionExperiment.rationale.trim().length>=20&&retentionExperiment.rationale.length<=2048);
   const source=structuredClone(mac.capella.limits),target=BigInt(retentionExperiment.blocks);
-  assert.ok(target>BigInt(source.blocks),'Experiment must increase the retained-block budget');
+  assert.ok(configs.some(c=>target>BigInt(c.capella.limits.blocks))&&configs.every(c=>target>=BigInt(c.capella.limits.blocks)),'Experiment must grow a source without reducing another source budget');
   const captureBudget=explicit?retentionExperiment.captureBudget:{blocks:'0x400',envelopeBytes:'0x8000000'};
   assert.ok(captureBudget&&typeof captureBudget==='object'&&!Array.isArray(captureBudget));
   assert.deepEqual(Object.keys(captureBudget).sort(),['blocks','envelopeBytes']);
@@ -48,7 +58,7 @@ export function restoredThreeNodePlan({macConfig,vpsConfig,macCapsule,vpsCapsule
    if(catalogExplicit)c.capella.catalogs.rootBytes=retentionExperiment.catalogRootBytes;
    c.capella.limits.blocks=retentionExperiment.blocks;
   }
-  retentionBudget={...(catalogExplicit?{catalogRootBytes:retentionExperiment.catalogRootBytes}:{}),...(explicit?{captureBudget:structuredClone(captureBudget)}:{}),sourceLimits:source,candidateLimits:structuredClone(configs[0].capella.limits),rationale:retentionExperiment.rationale,oldBoundaryRecoveryQualified:false,productionQualified:false};
+  retentionBudget={...(sourceBlockBudgets===undefined?{}:{sourceBlockBudgets:structuredClone(sourceBlockBudgets)}),...(catalogExplicit?{catalogRootBytes:retentionExperiment.catalogRootBytes}:{}),...(explicit?{captureBudget:structuredClone(captureBudget)}:{}),sourceLimits:source,candidateLimits:structuredClone(configs[0].capella.limits),rationale:retentionExperiment.rationale,oldBoundaryRecoveryQualified:false,productionQualified:false};
  }
  // Explicit startup migration; no source files, pins or consensus profile change.
  let coldCheckpointPlan;
