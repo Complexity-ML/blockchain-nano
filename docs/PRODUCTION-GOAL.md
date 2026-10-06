@@ -4329,3 +4329,6 @@ Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichi
 
 
 2026-10-06 — Alternance de blocs frères : défaut de continuation reproduit sur ancien core bc6d1794, sortie 1 sur Mac natif/Docker ARM64/AMD64. Cache de cibles authentifiées partagé et borné : bloc honnête admis en 43 paires (borne 97), oracle pleine durée identique, signature invalide rejetée, duplicata stable, témoin réouvert. Préparation 146 contrôles et wire terminaux 0 ; runtimes nano/capture liés, images réutilisées. Premier montage AMD64 incorrect/sortie 1 conservé. Ni cause v10 ni finalité réseau démontrée ; parents distincts, pression/coût du cache, saturation/pruning et production restent ouverts. [Preuves](qualification/incoming-target-alternation-20261006/README.md).
+
+
+2026-10-06 — Préparation v11 : engagements exacts post-v10, core 504c9df8 et relais 76bb2468. Fichiers audités inchangés, copies Mac locales et volume VPS conservés ; aucun journal réinitialisé/fusionné. Défaut de continuation de cibles qualifié sur les trois environnements ; profil/limites et critère de trois avancées communes en 900 s inchangés. Préparation seule ; finalité, cause v10 et production ouvertes. Preuves restored-three-node-v11-target-prepare-20261006/.
