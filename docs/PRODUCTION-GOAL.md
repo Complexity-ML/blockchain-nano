@@ -4341,3 +4341,6 @@ Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichi
 
 
 2026-10-06 — Cache de cibles de vote intégré : défaut d'alternance de deux votes valides reproduit sur ancien core 504c9df8, sortie 1 avec le même objet test. Entrée primaire conservée et cibles secondaires dans le cache partagé borné, validation maintenue. Mac natif/Docker ARM64/AMD64 : deux votes admis en 43 paires, oracle combiné identique, signature invalide rejetée, duplicata stable, témoin rouvert ; blocs alternants, 146 contrôles et wire terminaux 0. Nano/capture liés, images réutilisées. Pas de finalité réseau ni de cause v11 démontrée ; coût/pression des caches, parents distincts, pruning et production restent ouverts. Reprise uniquement depuis les engagements post-v11. [Preuves](qualification/vote-target-cache-integrated-20261006/README.md).
+
+
+2026-10-06 — Préparation v12 : engagements post-v11 exacts, core f077205f et relais 76bb2468. Empreintes propriétaires inchangées, copies Mac locales et volume VPS conservés ; journaux non réinitialisés/fusionnés. Cache des cibles de vote qualifié sur les trois environnements ; profil/limites et critère de trois avancées en 900 s inchangés. Préparation seule ; cause v11, finalité et production ouvertes. Preuves restored-three-node-v12-vote-cache-prepare-20261006/.
