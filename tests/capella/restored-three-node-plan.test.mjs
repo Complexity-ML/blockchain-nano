@@ -54,3 +54,34 @@ for(const [name,change] of [
  ['foreign source profile',x=>x.vpsConfig.capella.profile.sha256='0x'+'ab'.repeat(32)],
  ['live source despite experiment',x=>x.writersStopped=false]
 ])test('retention experiment refuses '+name,()=>{const x=structuredClone(fixture);x.retentionExperiment={blocks:'0x400',rationale:'Bounded recovery experiment; old saturation criterion stays open.'};change(x);assert.throws(()=>restoredThreeNodePlan(x));});
+
+
+test('explicit cold startup plan preserves independent source commitments and signer pins',()=>{
+ const x=structuredClone(fixture);x.coldCheckpoint={cacheRecords:'0x2',cacheEncodedBytes:'0x10000'};const before=structuredClone(x);
+ const baseline=restoredThreeNodePlan(fixture),p=restoredThreeNodePlan(x);
+ assert.deepEqual(x,before);assert.deepEqual(p.sourceCheckpoints,baseline.sourceCheckpoints);assert.deepEqual(p.baseline,baseline.baseline);
+ for(let n=0;n<3;n++){const config=structuredClone(p.configs[n]);assert.deepEqual(config.capella.coldCheckpoint,x.coldCheckpoint);delete config.capella.coldCheckpoint;assert.deepEqual(config,baseline.configs[n]);}
+ assert.equal(p.coldCheckpointPlan.startupMigrationPerformed,false);assert.equal(p.coldCheckpointPlan.physicalRecoveryQualified,false);assert.equal(p.networkQualified,false);
+});
+for(const [name,options] of [
+ ['zero records',{cacheRecords:'0x0',cacheEncodedBytes:'0x10000'}],
+ ['noncanonical records',{cacheRecords:'0x02',cacheEncodedBytes:'0x10000'}],
+ ['numeric records',{cacheRecords:2,cacheEncodedBytes:'0x10000'}],
+ ['zero bytes',{cacheRecords:'0x2',cacheEncodedBytes:'0x0'}],
+ ['noncanonical bytes',{cacheRecords:'0x2',cacheEncodedBytes:'0x010000'}],
+ ['huge records',{cacheRecords:'0x10000000000000000',cacheEncodedBytes:'0x10000'}],
+ ['huge bytes',{cacheRecords:'0x2',cacheEncodedBytes:'0x10000000000000000'}],
+ ['extra field',{cacheRecords:'0x2',cacheEncodedBytes:'0x10000',other:true}],
+ ['missing field',{cacheRecords:'0x2'}]
+])test('rejects cold plan '+name,()=>{const x=structuredClone(fixture);x.coldCheckpoint=options;assert.throws(()=>restoredThreeNodePlan(x));});
+test('cold cache is checked against source budgets without implicit expansion',()=>{
+ for(const field of ['cacheRecords','cacheEncodedBytes']){const x=structuredClone(fixture);x.coldCheckpoint={cacheRecords:'0x2',cacheEncodedBytes:'0x10000'};const limit=field==='cacheRecords'?'blocks':'envelopeBytes';x.coldCheckpoint[field]='0x'+(BigInt(x.macConfig.capella.limits[limit])+1n).toString(16);assert.throws(()=>restoredThreeNodePlan(x));}
+});
+test('cold planner refuses changing existing migrated format options',()=>{
+ const x=structuredClone(fixture);x.macConfig.capella.coldCheckpoint={cacheRecords:'0x3',cacheEncodedBytes:'0x10000'};x.coldCheckpoint={cacheRecords:'0x2',cacheEncodedBytes:'0x10000'};assert.throws(()=>restoredThreeNodePlan(x));
+});
+test('cold planner preserves already matching source options',()=>{
+ const x=structuredClone(fixture);x.coldCheckpoint={cacheRecords:'0x2',cacheEncodedBytes:'0x10000'};
+ for(const c of [x.macConfig,x.vpsConfig])c.capella.coldCheckpoint=structuredClone(x.coldCheckpoint);
+ const before=structuredClone(x),p=restoredThreeNodePlan(x);assert.deepEqual(x,before);assert.deepEqual(p.sourceCheckpoints,{mac:x.macCapsule.restart,vps:x.vpsCapsule.restart});for(const c of p.configs)assert.deepEqual(c.capella.coldCheckpoint,x.coldCheckpoint);
+});

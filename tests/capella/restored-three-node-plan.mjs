@@ -3,7 +3,7 @@ import {pinnedQuiescentRestart} from './deposit-restart-pins.mjs';
 const names=['mac-native','mac-docker','vps-docker'];
 const identity=k=>{const n=k.index===null?64:Number(BigInt(k.index));assert.ok(Number.isInteger(n)&&n>=0&&n<=64);assert.equal(k.keyEnv,`NANO_TEST_CAPELLA_NETWORK_KEY_${n}`);assert.equal(k.index===null,n===64,'Only admitted fixture key 64 may retain pending identity');return n;};
 // Administrative signer ownership changes only; no consensus rule or journal reset.
-export function restoredThreeNodePlan({macConfig,vpsConfig,macCapsule,vpsCapsule,macNativeConfig,macNativeCapsule,pendingPublicKey,genesisHash,finalized,writersStopped,retentionExperiment}){
+export function restoredThreeNodePlan({macConfig,vpsConfig,macCapsule,vpsCapsule,macNativeConfig,macNativeCapsule,pendingPublicKey,genesisHash,finalized,writersStopped,retentionExperiment,coldCheckpoint}){
  assert.equal(writersStopped,true,'Source writers must be observed stopped before preparing copies');
  const binding={writersSuspended:true,genesisHash,finalized};
  assert.equal(macNativeConfig===undefined,macNativeCapsule===undefined,'Separate native source requires configuration and audited capsule');
@@ -35,6 +35,22 @@ export function restoredThreeNodePlan({macConfig,vpsConfig,macCapsule,vpsCapsule
   for(const c of configs)c.capella.limits.blocks=retentionExperiment.blocks;
   retentionBudget={sourceLimits:source,candidateLimits:structuredClone(configs[0].capella.limits),rationale:retentionExperiment.rationale,oldBoundaryRecoveryQualified:false,productionQualified:false};
  }
+ // Explicit startup migration; no source files, pins or consensus profile change.
+ let coldCheckpointPlan;
+ if(coldCheckpoint!==undefined){
+  assert.ok(coldCheckpoint&&typeof coldCheckpoint==='object'&&!Array.isArray(coldCheckpoint));
+  assert.deepEqual(Object.keys(coldCheckpoint).sort(),['cacheEncodedBytes','cacheRecords']);
+  for(const [field,limit] of [['cacheRecords','blocks'],['cacheEncodedBytes','envelopeBytes']]){
+   assert.equal(typeof coldCheckpoint[field],'string');assert.match(coldCheckpoint[field],/^0x[1-9a-f][0-9a-f]*$/);
+   const value=BigInt(coldCheckpoint[field]);assert.ok(value<=0xffffffffffffffffn,'Cold cache exceeds runtime uint64 range');
+   for(const c of configs)assert.ok(value<=BigInt(c.capella.limits[limit]),'Cold cache exceeds configured local budget');
+  }
+  for(const c of configs){
+   if(c.capella.coldCheckpoint!==undefined)assert.deepEqual(c.capella.coldCheckpoint,coldCheckpoint,'Existing cold format options cannot be changed by the planner');
+   c.capella.coldCheckpoint=structuredClone(coldCheckpoint);
+  }
+  coldCheckpointPlan={options:structuredClone(coldCheckpoint),sourceCommitmentsUnchanged:true,startupMigrationPerformed:false,physicalRecoveryQualified:false,networkQualified:false};
+ }
  const ownership=Object.fromEntries(configs.map((c,n)=>[names[n],c.capella.validator.keys.map(identity)]));
  const owner=new Map(),paths=new Set();
  for(const [n,c] of configs.entries()){
@@ -42,5 +58,5 @@ export function restoredThreeNodePlan({macConfig,vpsConfig,macCapsule,vpsCapsule
   for(const k of c.capella.validator.keys){const i=identity(k);assert.ok(!owner.has(i),'Duplicate active signer');owner.set(i,n);assert.notEqual(k.journal,k.recoveryWitness,'Signer journal equals independent witness');for(const p of [k.journal,k.recoveryWitness]){assert.ok(typeof p==='string'&&p.startsWith('/var/lib/nano/'),'Unexpected fixture path');const scoped=names[n]+':'+p;assert.ok(!paths.has(scoped),'Shared local journal/witness path');paths.add(scoped);}}
  }
  assert.equal(owner.size,65);
- return {format:'nano-private-restored-three-node-plan-v1',...(retentionBudget?{retentionBudget}:{}),names,configs,ownership,sourceCheckpoints:{mac:macCapsule.restart,vps:vpsCapsule.restart,...(macNativeCapsule?{macNative:macNativeCapsule.restart}: {})},baseline:structuredClone(finalized),sourceWritersObservedStopped:true,peerIdentityCopyPermitted:false,sourceDatabaseTransferRequired:false,keysLoaded:false,networkQualified:false,productionQualified:false};
+ return {format:'nano-private-restored-three-node-plan-v1',...(retentionBudget?{retentionBudget}:{}),...(coldCheckpointPlan?{coldCheckpointPlan}:{}),names,configs,ownership,sourceCheckpoints:{mac:macCapsule.restart,vps:vpsCapsule.restart,...(macNativeCapsule?{macNative:macNativeCapsule.restart}: {})},baseline:structuredClone(finalized),sourceWritersObservedStopped:true,peerIdentityCopyPermitted:false,sourceDatabaseTransferRequired:false,keysLoaded:false,networkQualified:false,productionQualified:false};
 }
