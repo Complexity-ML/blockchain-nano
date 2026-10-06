@@ -22,7 +22,7 @@ CapellaColdRecord decode(const CapellaColdReference& reference,std::string_view 
 }
 }
 CapellaColdRecordCache::CapellaColdRecordCache(CapellaForkBlockRules rules,CapellaStoreSnapshotLimits limits,size_t records,size_t bytes):rules_(std::move(rules)),limits_(limits),maximum_records_(records),maximum_encoded_bytes_(bytes){
- if(!records||!bytes||bytes>limits.envelope_bytes)throw std::invalid_argument("Invalid Capella cold cache budget");
+ if(!records||!bytes)throw std::invalid_argument("Invalid Capella cold cache budget");
 }
 std::shared_ptr<const CapellaColdRecord> CapellaColdRecordCache::load(const CapellaColdReference& reference,const std::function<std::optional<std::string>(const Bytes&,size_t)>& fetch,const std::function<void()>& check){
  if(check)check();

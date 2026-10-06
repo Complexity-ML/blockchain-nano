@@ -15,6 +15,7 @@ class CapellaColdRecordCache {
 public:
  CapellaColdRecordCache(CapellaForkBlockRules,CapellaStoreSnapshotLimits,size_t maximum_records,size_t maximum_encoded_bytes);
  // Authenticate hash/length/root and fully validate Beacon/EVM/receipt binding.
+ // Total cache bytes and per-row limits are independent explicit budgets.
  // Resource pressure throws before eviction/publication. Pinned records cannot
  // be evicted. Encoded-byte accounting is NOT a physical RSS bound.
  std::shared_ptr<const CapellaColdRecord> load(const CapellaColdReference&,

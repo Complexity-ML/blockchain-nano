@@ -37,6 +37,14 @@ std::string capella_store_reference_snapshot(const CapellaForkStore&,const Capel
  const CapellaStoreSnapshotLimits&,
  const std::function<void(const CapellaColdReference&,std::string_view)>& stage,
  const std::function<void()>& checkpoint={});
+// Authenticate the reference manifest before fetch, validate rows through a
+// bounded cache and retain metadata/references only. Fetch is owned by returned
+// records: its backing store must outlive them. This is LOCAL trusted recovery,
+// not gossip admission. Cache byte budget is distinct from per-row/manifest size.
+CapellaForkStore capella_store_from_reference_snapshot(std::string_view,const Bytes& expected_digest,
+ const CapellaForkBlockRules&,const CapellaStoreSnapshotLimits&,size_t cache_records,size_t cache_bytes,
+ const std::function<std::optional<std::string>(const Bytes&,size_t)>& fetch,
+ const std::function<void()>& checkpoint={});
 // Verify external digest before JSON parsing. Rebuild the justified registry
 // from authenticated SSZ rather than accepting duplicate serialized weights.
 CapellaForkStore capella_store_from_snapshot(std::string_view,const Bytes& expected_digest,
