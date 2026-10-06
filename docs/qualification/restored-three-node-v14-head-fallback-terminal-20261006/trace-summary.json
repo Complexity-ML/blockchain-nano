@@ -1,0 +1,223 @@
+{
+  "mac-native": {
+    "catalogues": {
+      "block|head-or-catalog-deadline": 14,
+      "attestation|admission-rejected": 90,
+      "attester_slashing|None": 18,
+      "bls_to_execution_change|None": 18,
+      "sync_committee_message|admission-rejected": 10,
+      "voluntary_exit|None": 18,
+      "sync_committee_message|delivery-unconfirmed": 8,
+      "block|dependency-depth-limit": 4
+    },
+    "dispatchTransitions": [],
+    "payloadsAdmittedByKind": {
+      "block": 0,
+      "attestation": 0
+    },
+    "sendCompletionByKind": {
+      "block": {
+        "attempts": 132,
+        "outcomes": {
+          "accepted": 50,
+          "unconfirmed": 82
+        },
+        "elapsedMs": {
+          "min": 31,
+          "median": 4039,
+          "max": 10020
+        },
+        "writesCompleted": 130
+      },
+      "sync_committee_message": {
+        "attempts": 18,
+        "outcomes": {
+          "rejected": 10,
+          "unconfirmed": 8
+        },
+        "elapsedMs": {
+          "min": 0,
+          "median": 6324,
+          "max": 10048
+        },
+        "writesCompleted": 16
+      }
+    }
+  },
+  "mac-docker": {
+    "catalogues": {
+      "block|head-or-catalog-deadline": 14,
+      "attestation|admission-rejected": 90,
+      "attester_slashing|None": 18,
+      "bls_to_execution_change|None": 18,
+      "sync_committee_message|delivery-unconfirmed": 7,
+      "voluntary_exit|None": 18,
+      "sync_committee_message|admission-rejected": 10,
+      "block|admission-rejected": 4,
+      "sync_committee_message|None": 1
+    },
+    "dispatchTransitions": [],
+    "payloadsAdmittedByKind": {
+      "block": 0,
+      "attestation": 0
+    },
+    "sendCompletionByKind": {
+      "block": {
+        "attempts": 252,
+        "outcomes": {
+          "unconfirmed": 216,
+          "accepted": 36
+        },
+        "elapsedMs": {
+          "min": 0,
+          "median": 107,
+          "max": 10067
+        },
+        "writesCompleted": 188
+      },
+      "sync_committee_message": {
+        "attempts": 17,
+        "outcomes": {
+          "unconfirmed": 7,
+          "rejected": 10
+        },
+        "elapsedMs": {
+          "min": 0,
+          "median": 4406,
+          "max": 10018
+        },
+        "writesCompleted": 13
+      }
+    }
+  },
+  "vps-docker": {
+    "catalogues": {
+      "block|dependency-quantum-yield": 14,
+      "attestation|None": 21,
+      "attester_slashing|None": 16,
+      "bls_to_execution_change|None": 17,
+      "sync_committee_message|None": 16,
+      "voluntary_exit|None": 15,
+      "attestation|incomplete": 70,
+      "attestation|admission-rejected": 56,
+      "block|head-reference-unavailable": 26,
+      "sync_committee_message|invalid-response": 36,
+      "attestation|invalid-response": 171,
+      "attestation|export-unavailable": 1,
+      "attester_slashing|incomplete": 16,
+      "bls_to_execution_change|incomplete": 16,
+      "sync_committee_message|incomplete": 13,
+      "attestation|export-unconfirmed": 4,
+      "voluntary_exit|incomplete": 14,
+      "attester_slashing|invalid-response": 33,
+      "bls_to_execution_change|invalid-response": 32,
+      "voluntary_exit|invalid-response": 35,
+      "block|invalid-response": 25,
+      "block|incomplete": 1
+    },
+    "dispatchTransitions": [
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 31,
+        "pending": 2,
+        "phase": "transport-suspended",
+        "timeMs": 1791260307537
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 31,
+        "pending": 0,
+        "phase": "transport-resumed",
+        "timeMs": 1791260309039
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 74,
+        "pending": 2,
+        "phase": "transport-suspended",
+        "timeMs": 1791260575601
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 74,
+        "pending": 0,
+        "phase": "transport-resumed",
+        "timeMs": 1791260579004
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 80,
+        "pending": 2,
+        "phase": "transport-suspended",
+        "timeMs": 1791260619662
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 80,
+        "pending": 0,
+        "phase": "transport-resumed",
+        "timeMs": 1791260620563
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 114,
+        "pending": 2,
+        "phase": "transport-suspended",
+        "timeMs": 1791260830323
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 114,
+        "pending": 0,
+        "phase": "transport-resumed",
+        "timeMs": 1791260830685
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 128,
+        "pending": 2,
+        "phase": "transport-suspended",
+        "timeMs": 1791260907933
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 128,
+        "pending": 0,
+        "phase": "transport-resumed",
+        "timeMs": 1791260908649
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 148,
+        "pending": 2,
+        "phase": "transport-suspended",
+        "timeMs": 1791261030464
+      },
+      {
+        "event": "test-core-dispatch-transition",
+        "highWater": 148,
+        "pending": 0,
+        "phase": "transport-resumed",
+        "timeMs": 1791261031366
+      }
+    ],
+    "payloadsAdmittedByKind": {
+      "block": 0,
+      "attestation": 0
+    },
+    "sendCompletionByKind": {
+      "block": {
+        "attempts": 112,
+        "outcomes": {
+          "accepted": 112
+        },
+        "elapsedMs": {
+          "min": 124,
+          "median": 166,
+          "max": 931
+        },
+        "writesCompleted": 112
+      }
+    }
+  }
+}

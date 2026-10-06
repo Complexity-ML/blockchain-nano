@@ -1,0 +1,835 @@
+{
+  "observedAt": "20261006T042016Z",
+  "scope": "point-in-time logs; attempts not unique objects; not terminal result",
+  "nodes": {
+    "mac-native": {
+      "eventLines": 131,
+      "catalogues": {
+        "attestation": {
+          "attempts": 22,
+          "payloadsAdmitted": 0,
+          "rejected": 477,
+          "reasons": {
+            "admission-rejected": 22
+          }
+        },
+        "attester_slashing": {
+          "attempts": 5,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 5
+          }
+        },
+        "block": {
+          "attempts": 5,
+          "payloadsAdmitted": 0,
+          "rejected": 3,
+          "reasons": {
+            "head-or-catalog-deadline": 4,
+            "dependency-depth-limit": 1
+          }
+        },
+        "bls_to_execution_change": {
+          "attempts": 5,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 5
+          }
+        },
+        "sync_committee_message": {
+          "attempts": 4,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "admission-rejected": 2,
+            "delivery-unconfirmed": 2
+          }
+        },
+        "voluntary_exit": {
+          "attempts": 4,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 4
+          }
+        }
+      },
+      "blockAttempts": [
+        {
+          "closed": false,
+          "elapsedMs": 30002,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        },
+        {
+          "closed": false,
+          "elapsedMs": 30002,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        },
+        {
+          "catalogElapsedMs": 26743,
+          "closed": true,
+          "delivered": 1,
+          "elapsedMs": 27159,
+          "event": "test-capella-catalog-relay",
+          "exports": 4,
+          "failureStage": "delivery",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "dependency-depth-limit",
+          "rejected": 3,
+          "scanned": 4,
+          "skippedKnown": 1,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "closed": false,
+          "elapsedMs": 30000,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        },
+        {
+          "closed": false,
+          "elapsedMs": 30000,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        }
+      ],
+      "dispatchTransitions": [],
+      "sendCompletionByKind": {
+        "block": {
+          "attempts": 36,
+          "outcomes": {
+            "accepted": 19,
+            "unconfirmed": 17
+          },
+          "elapsedMs": {
+            "min": 76,
+            "median": 4815,
+            "max": 9983
+          },
+          "writesCompleted": 36,
+          "slowest": [
+            {
+              "elapsedMs": 9983,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 0,
+              "timeMs": 1791260263524,
+              "writeCompletedMs": 0
+            },
+            {
+              "elapsedMs": 9914,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 0,
+              "timeMs": 1791260410858,
+              "writeCompletedMs": 0
+            },
+            {
+              "elapsedMs": 9883,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "accepted",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 0,
+              "timeMs": 1791260192315,
+              "writeCompletedMs": 0
+            },
+            {
+              "elapsedMs": 9559,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 0,
+              "timeMs": 1791260241830,
+              "writeCompletedMs": 0
+            },
+            {
+              "elapsedMs": 8532,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "accepted",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 0,
+              "timeMs": 1791260210039,
+              "writeCompletedMs": 0
+            }
+          ]
+        },
+        "sync_committee_message": {
+          "attempts": 4,
+          "outcomes": {
+            "rejected": 2,
+            "unconfirmed": 2
+          },
+          "elapsedMs": {
+            "min": 3134,
+            "median": 10018,
+            "max": 10048
+          },
+          "writesCompleted": 4,
+          "slowest": [
+            {
+              "elapsedMs": 10048,
+              "event": "test-consensus-send-completion",
+              "kind": "sync_committee_message",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 46,
+              "timeMs": 1791260378299,
+              "writeCompletedMs": 46
+            },
+            {
+              "elapsedMs": 10018,
+              "event": "test-consensus-send-completion",
+              "kind": "sync_committee_message",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 72,
+              "timeMs": 1791260276582,
+              "writeCompletedMs": 72
+            },
+            {
+              "elapsedMs": 7325,
+              "event": "test-consensus-send-completion",
+              "kind": "sync_committee_message",
+              "outcome": "rejected",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 0,
+              "timeMs": 1791260218944,
+              "writeCompletedMs": 0
+            },
+            {
+              "elapsedMs": 3134,
+              "event": "test-consensus-send-completion",
+              "kind": "sync_committee_message",
+              "outcome": "rejected",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 18,
+              "timeMs": 1791260323931,
+              "writeCompletedMs": 18
+            }
+          ]
+        }
+      }
+    },
+    "mac-docker": {
+      "eventLines": 175,
+      "catalogues": {
+        "attestation": {
+          "attempts": 25,
+          "payloadsAdmitted": 0,
+          "rejected": 427,
+          "reasons": {
+            "admission-rejected": 25
+          }
+        },
+        "attester_slashing": {
+          "attempts": 5,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 5
+          }
+        },
+        "block": {
+          "attempts": 5,
+          "payloadsAdmitted": 0,
+          "rejected": 4,
+          "reasons": {
+            "head-or-catalog-deadline": 4,
+            "admission-rejected": 1
+          }
+        },
+        "bls_to_execution_change": {
+          "attempts": 5,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 5
+          }
+        },
+        "sync_committee_message": {
+          "attempts": 5,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "delivery-unconfirmed": 2,
+            "admission-rejected": 3
+          }
+        },
+        "voluntary_exit": {
+          "attempts": 5,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 5
+          }
+        }
+      },
+      "blockAttempts": [
+        {
+          "closed": false,
+          "elapsedMs": 30002,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        },
+        {
+          "closed": false,
+          "elapsedMs": 30010,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        },
+        {
+          "closed": false,
+          "elapsedMs": 30000,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        },
+        {
+          "catalogElapsedMs": 19430,
+          "closed": true,
+          "delivered": 1,
+          "elapsedMs": 19770,
+          "event": "test-capella-catalog-relay",
+          "exports": 5,
+          "failureStage": "delivery",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "admission-rejected",
+          "rejected": 4,
+          "scanned": 5,
+          "skippedKnown": 1,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "closed": false,
+          "elapsedMs": 30009,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        }
+      ],
+      "dispatchTransitions": [],
+      "sendCompletionByKind": {
+        "block": {
+          "attempts": 65,
+          "outcomes": {
+            "unconfirmed": 49,
+            "accepted": 16
+          },
+          "elapsedMs": {
+            "min": 0,
+            "median": 105,
+            "max": 10067
+          },
+          "writesCompleted": 39,
+          "slowest": [
+            {
+              "elapsedMs": 10067,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 58,
+              "timeMs": 1791260349519,
+              "writeCompletedMs": 58
+            },
+            {
+              "elapsedMs": 10026,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 16,
+              "timeMs": 1791260261704,
+              "writeCompletedMs": 16
+            },
+            {
+              "elapsedMs": 10018,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 38,
+              "timeMs": 1791260283885,
+              "writeCompletedMs": 38
+            },
+            {
+              "elapsedMs": 10017,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 53,
+              "timeMs": 1791260271737,
+              "writeCompletedMs": 53
+            },
+            {
+              "elapsedMs": 10005,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 0,
+              "timeMs": 1791260307255,
+              "writeCompletedMs": 0
+            }
+          ]
+        },
+        "sync_committee_message": {
+          "attempts": 5,
+          "outcomes": {
+            "unconfirmed": 2,
+            "rejected": 3
+          },
+          "elapsedMs": {
+            "min": 0,
+            "median": 997,
+            "max": 5980
+          },
+          "writesCompleted": 4,
+          "slowest": [
+            {
+              "elapsedMs": 5980,
+              "event": "test-consensus-send-completion",
+              "kind": "sync_committee_message",
+              "outcome": "rejected",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 47,
+              "timeMs": 1791260385554,
+              "writeCompletedMs": 47
+            },
+            {
+              "elapsedMs": 4074,
+              "event": "test-consensus-send-completion",
+              "kind": "sync_committee_message",
+              "outcome": "rejected",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 67,
+              "timeMs": 1791260332680,
+              "writeCompletedMs": 67
+            },
+            {
+              "elapsedMs": 997,
+              "event": "test-consensus-send-completion",
+              "kind": "sync_committee_message",
+              "outcome": "rejected",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 48,
+              "timeMs": 1791260243135,
+              "writeCompletedMs": 48
+            },
+            {
+              "elapsedMs": 95,
+              "event": "test-consensus-send-completion",
+              "kind": "sync_committee_message",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 46,
+              "timeMs": 1791260284081,
+              "writeCompletedMs": 46
+            },
+            {
+              "elapsedMs": 0,
+              "event": "test-consensus-send-completion",
+              "kind": "sync_committee_message",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": -1,
+              "timeMs": 1791260208699,
+              "writeCompletedMs": -1
+            }
+          ]
+        }
+      }
+    },
+    "vps-docker": {
+      "eventLines": 266,
+      "catalogues": {
+        "attestation": {
+          "attempts": 48,
+          "payloadsAdmitted": 0,
+          "rejected": 33,
+          "reasons": {
+            "None": 18,
+            "incomplete": 7,
+            "admission-rejected": 19,
+            "invalid-response": 2,
+            "export-unavailable": 1,
+            "export-unconfirmed": 1
+          }
+        },
+        "attester_slashing": {
+          "attempts": 10,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 9,
+            "incomplete": 1
+          }
+        },
+        "block": {
+          "attempts": 10,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "dependency-quantum-yield": 7,
+            "head-reference-unavailable": 3
+          }
+        },
+        "bls_to_execution_change": {
+          "attempts": 10,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 9,
+            "incomplete": 1
+          }
+        },
+        "sync_committee_message": {
+          "attempts": 10,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 8,
+            "invalid-response": 1,
+            "incomplete": 1
+          }
+        },
+        "voluntary_exit": {
+          "attempts": 9,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 9
+          }
+        }
+      },
+      "blockAttempts": [
+        {
+          "catalogElapsedMs": 9466,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 16337,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "delivery",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWS48WscqWxDL3wZpCccaTjzVgZzUYWJNwv2mm6vfQUiRJ",
+          "reason": "dependency-quantum-yield",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 7747,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 16783,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "delivery",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWCjLVTXfLZ3BpfZxsHxKkS8U9F9rNLht4fkK9JqJHSpek",
+          "reason": "dependency-quantum-yield",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 3432,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 9803,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "delivery",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWCjLVTXfLZ3BpfZxsHxKkS8U9F9rNLht4fkK9JqJHSpek",
+          "reason": "dependency-quantum-yield",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 8428,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 14993,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "delivery",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWS48WscqWxDL3wZpCccaTjzVgZzUYWJNwv2mm6vfQUiRJ",
+          "reason": "dependency-quantum-yield",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 4760,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 10327,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "delivery",
+          "headPriority": "head-unconfirmed-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWCjLVTXfLZ3BpfZxsHxKkS8U9F9rNLht4fkK9JqJHSpek",
+          "reason": "dependency-quantum-yield",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "closed": true,
+          "elapsedMs": 5000,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "head",
+          "headPriority": "unselected",
+          "kind": "block",
+          "peerId": "12D3KooWS48WscqWxDL3wZpCccaTjzVgZzUYWJNwv2mm6vfQUiRJ",
+          "reason": "head-reference-unavailable",
+          "stage": "head",
+          "success": false
+        },
+        {
+          "catalogElapsedMs": 3773,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 8319,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "delivery",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWS48WscqWxDL3wZpCccaTjzVgZzUYWJNwv2mm6vfQUiRJ",
+          "reason": "dependency-quantum-yield",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 10962,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 10987,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "delivery",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWCjLVTXfLZ3BpfZxsHxKkS8U9F9rNLht4fkK9JqJHSpek",
+          "reason": "dependency-quantum-yield",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "closed": true,
+          "elapsedMs": 5000,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "head",
+          "headPriority": "unselected",
+          "kind": "block",
+          "peerId": "12D3KooWS48WscqWxDL3wZpCccaTjzVgZzUYWJNwv2mm6vfQUiRJ",
+          "reason": "head-reference-unavailable",
+          "stage": "head",
+          "success": false
+        },
+        {
+          "closed": true,
+          "elapsedMs": 5000,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "head",
+          "headPriority": "unselected",
+          "kind": "block",
+          "peerId": "12D3KooWCjLVTXfLZ3BpfZxsHxKkS8U9F9rNLht4fkK9JqJHSpek",
+          "reason": "head-reference-unavailable",
+          "stage": "head",
+          "success": false
+        }
+      ],
+      "dispatchTransitions": [
+        {
+          "event": "test-core-dispatch-transition",
+          "highWater": 31,
+          "pending": 2,
+          "phase": "transport-suspended",
+          "timeMs": 1791260307537
+        },
+        {
+          "event": "test-core-dispatch-transition",
+          "highWater": 31,
+          "pending": 0,
+          "phase": "transport-resumed",
+          "timeMs": 1791260309039
+        }
+      ],
+      "sendCompletionByKind": {
+        "block": {
+          "attempts": 56,
+          "outcomes": {
+            "accepted": 56
+          },
+          "elapsedMs": {
+            "min": 124,
+            "median": 163,
+            "max": 931
+          },
+          "writesCompleted": 56,
+          "slowest": [
+            {
+              "elapsedMs": 931,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "accepted",
+              "peerId": "12D3KooWCjLVTXfLZ3BpfZxsHxKkS8U9F9rNLht4fkK9JqJHSpek",
+              "streamOpenMs": 53,
+              "timeMs": 1791260322866,
+              "writeCompletedMs": 53
+            },
+            {
+              "elapsedMs": 488,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "accepted",
+              "peerId": "12D3KooWCjLVTXfLZ3BpfZxsHxKkS8U9F9rNLht4fkK9JqJHSpek",
+              "streamOpenMs": 0,
+              "timeMs": 1791260275520,
+              "writeCompletedMs": 0
+            },
+            {
+              "elapsedMs": 486,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "accepted",
+              "peerId": "12D3KooWCjLVTXfLZ3BpfZxsHxKkS8U9F9rNLht4fkK9JqJHSpek",
+              "streamOpenMs": 0,
+              "timeMs": 1791260233866,
+              "writeCompletedMs": 0
+            },
+            {
+              "elapsedMs": 479,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "accepted",
+              "peerId": "12D3KooWS48WscqWxDL3wZpCccaTjzVgZzUYWJNwv2mm6vfQUiRJ",
+              "streamOpenMs": 0,
+              "timeMs": 1791260323966,
+              "writeCompletedMs": 0
+            },
+            {
+              "elapsedMs": 474,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "accepted",
+              "peerId": "12D3KooWCjLVTXfLZ3BpfZxsHxKkS8U9F9rNLht4fkK9JqJHSpek",
+              "streamOpenMs": 0,
+              "timeMs": 1791260323474,
+              "writeCompletedMs": 0
+            }
+          ]
+        }
+      }
+    }
+  }
+}

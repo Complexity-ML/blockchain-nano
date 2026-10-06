@@ -1,0 +1,351 @@
+{
+  "observedAt": "20261006T041819Z",
+  "scope": "point-in-time logs; attempts not unique objects; not terminal result",
+  "nodes": {
+    "mac-native": {
+      "eventLines": 70,
+      "catalogues": {
+        "attestation": {
+          "attempts": 10,
+          "payloadsAdmitted": 0,
+          "rejected": 173,
+          "reasons": {
+            "admission-rejected": 10
+          }
+        },
+        "attester_slashing": {
+          "attempts": 2,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 2
+          }
+        },
+        "block": {
+          "attempts": 2,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "head-or-catalog-deadline": 2
+          }
+        },
+        "bls_to_execution_change": {
+          "attempts": 2,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 2
+          }
+        },
+        "sync_committee_message": {
+          "attempts": 2,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "admission-rejected": 1,
+            "delivery-unconfirmed": 1
+          }
+        },
+        "voluntary_exit": {
+          "attempts": 2,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 2
+          }
+        }
+      },
+      "blockAttempts": [
+        {
+          "closed": false,
+          "elapsedMs": 30002,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        },
+        {
+          "closed": false,
+          "elapsedMs": 30002,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        }
+      ],
+      "dispatchTransitions": []
+    },
+    "mac-docker": {
+      "eventLines": 129,
+      "catalogues": {
+        "attestation": {
+          "attempts": 15,
+          "payloadsAdmitted": 0,
+          "rejected": 225,
+          "reasons": {
+            "admission-rejected": 15
+          }
+        },
+        "attester_slashing": {
+          "attempts": 3,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 3
+          }
+        },
+        "block": {
+          "attempts": 3,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "head-or-catalog-deadline": 3
+          }
+        },
+        "bls_to_execution_change": {
+          "attempts": 3,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 3
+          }
+        },
+        "sync_committee_message": {
+          "attempts": 3,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "delivery-unconfirmed": 2,
+            "admission-rejected": 1
+          }
+        },
+        "voluntary_exit": {
+          "attempts": 3,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 3
+          }
+        }
+      },
+      "blockAttempts": [
+        {
+          "closed": false,
+          "elapsedMs": 30002,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        },
+        {
+          "closed": false,
+          "elapsedMs": 30010,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        },
+        {
+          "closed": false,
+          "elapsedMs": 30000,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        }
+      ],
+      "dispatchTransitions": []
+    },
+    "vps-docker": {
+      "eventLines": 156,
+      "catalogues": {
+        "attestation": {
+          "attempts": 25,
+          "payloadsAdmitted": 0,
+          "rejected": 6,
+          "reasons": {
+            "None": 18,
+            "incomplete": 1,
+            "admission-rejected": 6
+          }
+        },
+        "attester_slashing": {
+          "attempts": 6,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 6
+          }
+        },
+        "block": {
+          "attempts": 6,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "dependency-quantum-yield": 5,
+            "head-reference-unavailable": 1
+          }
+        },
+        "bls_to_execution_change": {
+          "attempts": 6,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 6
+          }
+        },
+        "sync_committee_message": {
+          "attempts": 4,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 4
+          }
+        },
+        "voluntary_exit": {
+          "attempts": 4,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 4
+          }
+        }
+      },
+      "blockAttempts": [
+        {
+          "catalogElapsedMs": 9466,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 16337,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "delivery",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWS48WscqWxDL3wZpCccaTjzVgZzUYWJNwv2mm6vfQUiRJ",
+          "reason": "dependency-quantum-yield",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 7747,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 16783,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "delivery",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWCjLVTXfLZ3BpfZxsHxKkS8U9F9rNLht4fkK9JqJHSpek",
+          "reason": "dependency-quantum-yield",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 3432,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 9803,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "delivery",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWCjLVTXfLZ3BpfZxsHxKkS8U9F9rNLht4fkK9JqJHSpek",
+          "reason": "dependency-quantum-yield",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 8428,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 14993,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "delivery",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWS48WscqWxDL3wZpCccaTjzVgZzUYWJNwv2mm6vfQUiRJ",
+          "reason": "dependency-quantum-yield",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 4760,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 10327,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "delivery",
+          "headPriority": "head-unconfirmed-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWCjLVTXfLZ3BpfZxsHxKkS8U9F9rNLht4fkK9JqJHSpek",
+          "reason": "dependency-quantum-yield",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "closed": true,
+          "elapsedMs": 5000,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "head",
+          "headPriority": "unselected",
+          "kind": "block",
+          "peerId": "12D3KooWS48WscqWxDL3wZpCccaTjzVgZzUYWJNwv2mm6vfQUiRJ",
+          "reason": "head-reference-unavailable",
+          "stage": "head",
+          "success": false
+        }
+      ],
+      "dispatchTransitions": []
+    }
+  }
+}

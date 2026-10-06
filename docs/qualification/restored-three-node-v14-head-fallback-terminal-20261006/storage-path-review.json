@@ -1,0 +1,32 @@
+{
+  "coreRevision": "5787915e4c62ce3c84dc46e1a9829257cdf628a1",
+  "scope": "source inspection only; causal WAN bottleneck not proven",
+  "observations": [
+    {
+      "file": "src/consensus_capella_reactor.cpp",
+      "function": "publish",
+      "behavior": "Each changed publication encodes a complete durable snapshot and writes an independent recovery witness before the primary checkpoint."
+    },
+    {
+      "file": "src/consensus_capella_reactor.cpp",
+      "function": "witness_prepare",
+      "behavior": "Witness JSON embeds the complete snapshot plus archive and previous/next tokens."
+    },
+    {
+      "file": "src/storage.cpp",
+      "function": "commit_execution_checkpoint",
+      "behavior": "Primary synchronous atomic CAS WriteBatch writes the complete checkpoint payload, metadata and execution suffix."
+    },
+    {
+      "file": "src/consensus_capella_clock.cpp",
+      "function": "poll",
+      "behavior": "Clock uses tick_if_needed; publication is already coalesced by consensus phase rather than unconditional every poll."
+    }
+  ],
+  "notClaimed": [
+    "BlockIO is disk occupancy",
+    "Snapshot serialization alone proves the WAN cause",
+    "WAL or synchronous write durability can be disabled safely"
+  ],
+  "nextEvidence": "After authoritative terminal stop, correlate durable sequence change, checkpoint payload size and actual recovery with send latency and accumulated BlockIO."
+}

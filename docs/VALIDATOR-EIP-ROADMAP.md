@@ -7793,3 +7793,6 @@ Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichi
 
 
 2026-10-06 — Préparation v14 : engagements post-v13 exacts, cœur 5787915e et relais 7248698d avec parcours historique après refus de tête. Copies locales séparées et volume VPS conservé ; journaux non réinitialisés/fusionnés. Même profil, même limite et même critère de finalité en 900 s. Préparation seule, pression/éviction/coût des caches, cause globale WAN, finalité et production ouverts. Preuves restored-three-node-v14-head-fallback-prepare-20261006/.
+
+
+2026-10-06 — Reprise v14 FAILED : contrôleur 40209 / sortie 1, checkout ec3b6441, cœur 5787915e et relais 7248698d ; 0 avancées communes observées selon le critère original. Frontières manquantes inchangées, graphes sous capacité ; diagnostic avec lecteur existant réutilisé. Trois propriétaires arrêtés et audits read-only des engagements, journaux/témoins et historique canonique ; fichiers inchangés. Pas de compilation concurrente, ni transfert de base inter-hôtes. Périmètre privé exact ; production et revue indépendante restent ouvertes. [Preuves v14](qualification/restored-three-node-v14-head-fallback-terminal-20261006/README.md).

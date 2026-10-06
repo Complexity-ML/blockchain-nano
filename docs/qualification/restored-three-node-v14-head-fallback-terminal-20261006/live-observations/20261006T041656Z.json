@@ -1,0 +1,214 @@
+{
+  "observedAt": "20261006T041656Z",
+  "scope": "point-in-time logs; attempts not unique objects; not terminal result",
+  "nodes": {
+    "mac-native": {
+      "eventLines": 36,
+      "catalogues": {
+        "attestation": {
+          "attempts": 3,
+          "payloadsAdmitted": 0,
+          "rejected": 29,
+          "reasons": {
+            "admission-rejected": 3
+          }
+        },
+        "attester_slashing": {
+          "attempts": 1,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 1
+          }
+        },
+        "block": {
+          "attempts": 1,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "head-or-catalog-deadline": 1
+          }
+        },
+        "bls_to_execution_change": {
+          "attempts": 1,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 1
+          }
+        }
+      },
+      "blockAttempts": [
+        {
+          "closed": false,
+          "elapsedMs": 30002,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        }
+      ],
+      "dispatchTransitions": []
+    },
+    "mac-docker": {
+      "eventLines": 71,
+      "catalogues": {
+        "attestation": {
+          "attempts": 5,
+          "payloadsAdmitted": 0,
+          "rejected": 55,
+          "reasons": {
+            "admission-rejected": 5
+          }
+        },
+        "attester_slashing": {
+          "attempts": 1,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 1
+          }
+        },
+        "block": {
+          "attempts": 1,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "head-or-catalog-deadline": 1
+          }
+        },
+        "bls_to_execution_change": {
+          "attempts": 1,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 1
+          }
+        },
+        "sync_committee_message": {
+          "attempts": 1,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "delivery-unconfirmed": 1
+          }
+        },
+        "voluntary_exit": {
+          "attempts": 1,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 1
+          }
+        }
+      },
+      "blockAttempts": [
+        {
+          "closed": false,
+          "elapsedMs": 30002,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        }
+      ],
+      "dispatchTransitions": []
+    },
+    "vps-docker": {
+      "eventLines": 64,
+      "catalogues": {
+        "attestation": {
+          "attempts": 7,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 7
+          }
+        },
+        "attester_slashing": {
+          "attempts": 2,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 2
+          }
+        },
+        "block": {
+          "attempts": 2,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "dependency-quantum-yield": 2
+          }
+        },
+        "bls_to_execution_change": {
+          "attempts": 2,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 2
+          }
+        },
+        "sync_committee_message": {
+          "attempts": 2,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 2
+          }
+        }
+      },
+      "blockAttempts": [
+        {
+          "catalogElapsedMs": 9466,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 16337,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "delivery",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWS48WscqWxDL3wZpCccaTjzVgZzUYWJNwv2mm6vfQUiRJ",
+          "reason": "dependency-quantum-yield",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        },
+        {
+          "catalogElapsedMs": 7747,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 16783,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "delivery",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWCjLVTXfLZ3BpfZxsHxKkS8U9F9rNLht4fkK9JqJHSpek",
+          "reason": "dependency-quantum-yield",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null
+        }
+      ],
+      "dispatchTransitions": []
+    }
+  }
+}
