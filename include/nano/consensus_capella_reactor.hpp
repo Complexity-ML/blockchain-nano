@@ -43,7 +43,7 @@ class CapellaDurableReactor {
  std::shared_ptr<const CapellaPublishedStore> beacon_publication_;
  CapellaPublishedStore beacon_snapshot()const;
  std::optional<Bytes> beacon_signed_block(const CapellaPublishedStore&,const ConsensusRoot&,const std::function<void()>&)const;
- CapellaSignedVotes votes_,slashings_;CapellaPendingBlsChanges bls_changes_;CapellaPendingExits exits_;CapellaStoreSnapshotCache cache_;bool unavailable_=false;bool automatic_pruning_=false;bool historical_state_pruning_=false;
+ CapellaSignedVotes votes_,slashings_;CapellaPendingBlsChanges bls_changes_;CapellaPendingExits exits_;CapellaStoreSnapshotCache cache_;CapellaReferenceSnapshotCache reference_cache_;bool unavailable_=false;bool automatic_pruning_=false;bool historical_state_pruning_=false;
  std::exception_ptr failure_;
  // Bounded ephemeral continuations keyed by admitted parent and block slot.
  // Alternating parents or target slots never reset another retained prefix.
@@ -181,6 +181,7 @@ public:
  void set_automatic_pruning(bool enabled);
  void set_historical_state_pruning(bool enabled);
  CapellaPublishedStore current()const;
+ CapellaReferenceSnapshotCacheUsage reference_snapshot_cache_usage()const;
  Json network_identity()const;
  // Atomic archive/checkpoint projection. maximum_bytes bounds raw SSZ; caller
  // must separately budget JSON/hex framing. An anchor has no fabricated signature.

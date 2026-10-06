@@ -12,7 +12,11 @@ struct CapellaStoreSnapshotLimits {
 };
 // Process-local validation memo, never serialized or accepted from peers. Entries
 // are reused only for byte-equivalent complete records under identical rules.
+class CapellaReferenceSnapshotCache;
 class CapellaStoreSnapshotCache {
+ friend std::string capella_store_snapshot_reference_memo_impl(const CapellaForkStore&,const CapellaForkBlockRules&,
+  const CapellaStoreSnapshotLimits&,const std::function<void()>&,CapellaStoreSnapshotCache*,
+  const std::function<void(const CapellaColdReference&,std::string_view)>*,CapellaReferenceSnapshotCache*);
  Json profile_;
  std::map<ConsensusRoot,Json> records_;
  friend std::string capella_store_snapshot_impl(const CapellaForkStore&,const CapellaForkBlockRules&,
@@ -20,6 +24,19 @@ class CapellaStoreSnapshotCache {
   const std::function<void(const CapellaColdReference&,std::string_view)>*);
  friend std::string capella_store_snapshot(const CapellaForkStore&,const CapellaForkBlockRules&,
   const CapellaStoreSnapshotLimits&,const std::function<void()>&,CapellaStoreSnapshotCache*);
+};
+// Process-local row-validation certificates. Owner-serialized, never persisted
+// or supplied by peers. No heavy SSZ/accounts retained; encoded metadata budget
+// is distinct from physical RSS. Cached API commits memo changes only on success.
+struct CapellaReferenceSnapshotCacheUsage {size_t records,encoded_bytes;uint64_t reuses,validated_cold_rows;};
+class CapellaReferenceSnapshotCache {
+ struct Entry {CapellaColdReference reference;Json metadata;size_t state_bytes;uint64_t genesis_seconds;size_t encoded_bytes;};
+ Json profile_;std::map<ConsensusRoot,Entry> records_;size_t encoded_bytes_=0;uint64_t reuses_=0,validated_cold_rows_=0;
+ friend std::string capella_store_snapshot_reference_memo_impl(const CapellaForkStore&,const CapellaForkBlockRules&,
+  const CapellaStoreSnapshotLimits&,const std::function<void()>&,CapellaStoreSnapshotCache*,
+  const std::function<void(const CapellaColdReference&,std::string_view)>*,CapellaReferenceSnapshotCache*);
+public:
+ CapellaReferenceSnapshotCacheUsage usage()const{return {records_.size(),encoded_bytes_,reuses_,validated_cold_rows_};}
 };
 // Canonical LOCAL checkpoint of an already authenticated Store, including votes,
 // branches, clock and all checkpoints. Not peer admission. Caller atomically
@@ -37,6 +54,13 @@ std::string capella_store_reference_snapshot(const CapellaForkStore&,const Capel
  const CapellaStoreSnapshotLimits&,
  const std::function<void(const CapellaColdReference&,std::string_view)>& stage,
  const std::function<void()>& checkpoint={});
+// Optional LOCAL writer memo: cold digest/length/root, complete retained headers,
+// node epochs, justification, anchor role and profile must match a row previously
+// validated by this writer. Hot rows always undergo full validation. This does
+// not verify current disk availability or replace durable recovery preflight.
+std::string capella_store_reference_snapshot_cached(const CapellaForkStore&,const CapellaForkBlockRules&,
+ const CapellaStoreSnapshotLimits&,const std::function<void(const CapellaColdReference&,std::string_view)>&,
+ CapellaReferenceSnapshotCache&,const std::function<void()>& checkpoint={});
 // Authenticate the reference manifest before fetch, validate rows through a
 // bounded cache and retain metadata/references only. Fetch is owned by returned
 // records: its backing store must outlive them. This is LOCAL trusted recovery,

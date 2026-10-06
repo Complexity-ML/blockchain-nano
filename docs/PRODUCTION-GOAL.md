@@ -2,7 +2,9 @@
 
 ## État courant vérifié — 6 octobre 2026
 
-Main parent `681f29eb` : runtime froid et duplicate-fastpath livrés. Lot writer par en-têtes qualifié sur ARM64/AMD64 : première passe complète conservée, seconde passe sans rechargement des états ; oracle/cache1/refus7, corruption réacteur3 et runtime32 blocs/cache8 avec pruning/reprises terminaux0. Hashes parent/programmes inchangés. [Sources, preuves et limites](qualification/capella-cold-header-links-20261006/README.md). Aucune nouvelle candidate déployée.
+Main parent `1c84e7b3` : mémo transactionnel du writer froid raccordé au réacteur, qualifié Docker ARM64/AMD64 par quatre scénarios séparés chacun. Runtime32 blocs/cache8, 64 journaux, pruning/reprises et engagements externes9 conservés ; hashes parent/programmes inchangés et1616 sources publiques identiques au lot intégré. Préflight durable complet conservé. [Sources, preuves et limites](qualification/capella-reference-memo-runtime-20261006/README.md). Nouvelle couverture de panne WAL : quatre dispositions ARM64 passent, AMD64 active68450 ; pas encore intégrée. Aucune nouvelle candidate déployée.
+
+État précédent conservé : Main parent `681f29eb` : runtime froid et duplicate-fastpath livrés. Lot writer par en-têtes qualifié sur ARM64/AMD64 : première passe complète conservée, seconde passe sans rechargement des états ; oracle/cache1/refus7, corruption réacteur3 et runtime32 blocs/cache8 avec pruning/reprises terminaux0. Hashes parent/programmes inchangés. [Sources, preuves et limites](qualification/capella-cold-header-links-20261006/README.md). Aucune nouvelle candidate déployée.
 
 Production reste ouverte : capacité du graphe (1024 blocs retenus dans V28, distincte du nombre de validateurs), coût des publications froides, GC/RSS/crashs, reprise physique et finalité WAN commune, autres critères techniques, lancement Base–Nano et revue indépendante. Les sections ci-dessous sont l'historique de preuves : leurs états anciens ne remplacent pas cet état courant. Aucun statut EIP supplémentaire promu.
 
@@ -4616,3 +4618,9 @@ Writer par en-têtes : prepared-block ARM64/AMD64 terminaux0 et hashes inchangé
 Clôture writer froid par en-têtes : ARM6478239/AMD647934 runtime32/cache8 terminaux0,hashes vérifiés,CPP/fixtures figés identiques ; évolution JS distincte qualifiée38 tests. Aucun état lourd n’est supprimé de la première validation. Publications complètes/preflight,graphe1024,GC/RSS/reprise physique/WAN et toutes les gates production restent ouverts. Prototype de certificats local séparé, non intégré au runtime.
 
 Prototype validation-memo isolé : ARM6413329 terminal0,oracle canonique/reuse2/refus5 et invalidation profile,hashes parent/programmes inchangés. Aucun raccordement runtime ou contournement du préflight ; AMD64 et grands graphes non qualifiés. [Preuves](qualification/capella-reference-validation-memo-20261006/README.md).
+
+Mémo API isolé ARM64/AMD64 terminal0 (13329/88013),oracle/refus5/profil/hashes qualifiés sur2 records. Raccordement réacteur isolé : nouveau layout,17 unités core,ARM648281/AMD6485922 en cours ; préflight complet conservé et mémo installé seulement après succès durable. [Sources et critères](qualification/capella-reference-memo-runtime-20261006/README.md). Aucun code du mémo intégré au main, aucune gate production fermée.
+
+Raccordement mémo isolé ARM648281 terminal0 :17 core TU,4 modes dont deux runtimes32/cache8 avec reuse de certificats exigé,hachages avant/après OK ; AMD6485922 actif. Cela ne clôt pas préflight complet,graphe1024,SIGKILL/reprise physique,WAN ou production ; code toujours hors main.
+
+Lot isolé cold-memo-sync du6 octobre : ARM6472535 terminal0, quatre erreurs fsync simulées principale/témoin avec suffixe conservé/perdu, oracle durable exact, archives et reprise idempotente. Parent runtime mémo AMD6485922 dernier BLS actif ; nouveau scénario AMD64 non lancé. Pas de code main, coupure physique/SIGKILL, capacité1024 et WAN/production toujours ouverts. Preuves docs/qualification/capella-cold-memo-sync-20261006.

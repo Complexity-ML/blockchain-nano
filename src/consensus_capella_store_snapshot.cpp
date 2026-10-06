@@ -31,10 +31,10 @@ ConsensusSlashingState registry(const CapellaForkStore& s,const CapellaForkBlock
  return prepare_capella_resumed_target_context(s,r,s.timed.view.justified,l.replay_slots,l.sync_trials,cancel).registry;
 }
 }
-std::string capella_store_snapshot_impl(const CapellaForkStore& s,const CapellaForkBlockRules& r,
+std::string capella_store_snapshot_reference_memo_impl(const CapellaForkStore& s,const CapellaForkBlockRules& r,
  const CapellaStoreSnapshotLimits& l,const std::function<void()>& cancel,CapellaStoreSnapshotCache* cache,
- const std::function<void(const CapellaColdReference&,std::string_view)>* stage){
- require(!stage||(!cache&&bool(*stage)));
+ const std::function<void(const CapellaColdReference&,std::string_view)>* stage,CapellaReferenceSnapshotCache* memo){
+ require(!stage||(!cache&&bool(*stage)));require(!memo||stage);
  const auto& v=s.timed.view;const auto& c=s.timed.clock;const auto slots=r.transition.consensus.epoch.ffg.slots_per_epoch;
  require(slots&&r.slot_duration_ms&&r.attestation_due_ms<=r.slot_duration_ms&&c.time_ms>=c.genesis_time_ms&&
   v.current_epoch==(c.time_ms-c.genesis_time_ms)/r.slot_duration_ms/slots&&
@@ -44,11 +44,29 @@ std::string capella_store_snapshot_impl(const CapellaForkStore& s,const CapellaF
  require(v.justified_registry==registry(s,r,l,cancel));
  phase0_fork_choice_head(v,{slots,r.transition.consensus.attestation.duties.effective_balance_increment,r.proposer_score_boost},cancel);
  const auto current_profile=profile(r);
+ if(memo){
+  if(memo->profile_!=current_profile||memo->encoded_bytes_>l.envelope_bytes){memo->records_.clear();memo->encoded_bytes_=0;memo->profile_=current_profile;}
+  for(auto it=memo->records_.begin();it!=memo->records_.end();)if(!s.blocks.contains(it->first)){memo->encoded_bytes_-=it->second.encoded_bytes;it=memo->records_.erase(it);}else ++it;
+ }
+ const auto metadata=[&](const ConsensusRoot& id,const CapellaForkRecord& entry){const auto& h=entry.header();const auto& node=v.nodes.at(id);return Json::array({Json::array({num(h.slot),num(h.proposer_index),root(h.parent_root),root(h.state_root),root(h.body_root)}),entry.execution_header().to_json(),num(node.realized_justified_epoch),num(node.unrealized_justified_epoch),cp(s.unrealized_justifications.at(id)),id==v.anchor});};
  if(cache&&cache->profile_!=current_profile){cache->records_.clear();cache->profile_=current_profile;}
  if(cache)std::erase_if(cache->records_,[&](const auto& item){return !s.blocks.contains(item.first);});
  std::vector<std::string_view> encoded_rows;
  Json blocks=Json::array(),messages=Json::array(),equiv=Json::array(),timely=Json::array(),unrealized=Json::array();size_t bytes=0;
- for(const auto& [id,entry]:s.blocks){const auto b_pin=entry.lease(cancel);const auto& b=*b_pin;
+ for(const auto& [id,entry]:s.blocks){
+  if(cancel)cancel();
+  if(memo&&entry.cold_reference()){
+   const auto known=memo->records_.find(id);const auto& reference=*entry.cold_reference();
+   if(known!=memo->records_.end()&&known->second.reference==reference&&known->second.metadata==metadata(id,entry)){
+    const auto& certified=known->second;const auto& node=v.nodes.at(id);
+    require(reference.root==id&&reference.bytes&&reference.bytes<=l.envelope_bytes&&certified.state_bytes>=8&&certified.state_bytes<=l.state_bytes);
+    require(consensus_beacon_header_root(entry.header())==id&&node.slot==entry.header().slot&&node.parent==entry.header().parent_root);
+    require(certified.genesis_seconds<=UINT64_MAX/1000&&certified.genesis_seconds*1000==c.genesis_time_ms&&entry.header().slot<=(c.time_ms-c.genesis_time_ms)/r.slot_duration_ms);
+    if(memo->reuses_==UINT64_MAX)throw std::overflow_error("Capella reference memo counter exhausted");++memo->reuses_;
+    blocks.push_back(Json::array({root(id),hex(reference.digest),num(reference.bytes)}));continue;
+   }
+  }
+  const auto b_pin=entry.lease(cancel);const auto& b=*b_pin;
   if(cancel)cancel();require(b.state.ssz.size()>=8&&b.state.ssz.size()<=l.state_bytes);
   if(!stage){require(b.state.ssz.size()<=l.total_state_bytes-bytes);bytes+=b.state.ssz.size();}
   require(consensus_beacon_header_root(b.header)==id);
@@ -94,7 +112,17 @@ std::string capella_store_snapshot_impl(const CapellaForkStore& s,const CapellaF
    const CapellaColdReference reference{id,digest,payload.size(),id==v.anchor};
    if(entry.cold_reference()){
     const auto& committed=*entry.cold_reference();require(committed.root==id&&committed.digest==digest&&committed.bytes==payload.size());
+
    }else (*stage)(reference,payload);
+    if(memo){
+     auto proof_metadata=metadata(id,entry);const auto charge=Json::array({root(id),hex(digest),num(payload.size()),proof_metadata,num(b.state.ssz.size()),num(genesis_seconds)}).dump().size();
+     if(entry.cold_reference()){if(memo->validated_cold_rows_==UINT64_MAX)throw std::overflow_error("Capella reference memo counter exhausted");++memo->validated_cold_rows_;}
+     if(const auto old=memo->records_.find(id);old!=memo->records_.end()){memo->encoded_bytes_-=old->second.encoded_bytes;memo->records_.erase(old);}
+     if(charge<=l.envelope_bytes){
+      while(charge>l.envelope_bytes-memo->encoded_bytes_){auto victim=memo->records_.begin();memo->encoded_bytes_-=victim->second.encoded_bytes;memo->records_.erase(victim);}
+      memo->records_.emplace(id,CapellaReferenceSnapshotCache::Entry{reference,std::move(proof_metadata),b.state.ssz.size(),genesis_seconds,charge});memo->encoded_bytes_+=charge;
+     }
+    }
    blocks.push_back(Json::array({root(id),hex(digest),num(payload.size())}));
   }else if(cache)blocks.push_back(nullptr);else blocks.push_back(std::move(row));
  }
@@ -124,6 +152,18 @@ std::string capella_store_snapshot_impl(const CapellaForkStore& s,const CapellaF
   j["format"]="nano-capella-store-v3";j["depositAncestors"]=std::move(pins);
  }
  auto encoded=stage?Json{{"format","nano-capella-reference-store-v1"},{"snapshot",std::move(j)}}.dump():cache?snapshot_detail::canonical_snapshot_rows(j,encoded_rows,l.envelope_bytes,cancel):j.dump();require(encoded.size()<=l.envelope_bytes);if(cancel)cancel();return encoded;
+}
+std::string capella_store_snapshot_impl(const CapellaForkStore& s,const CapellaForkBlockRules& r,
+ const CapellaStoreSnapshotLimits& l,const std::function<void()>& check,CapellaStoreSnapshotCache* cache,
+ const std::function<void(const CapellaColdReference&,std::string_view)>* stage){
+ return capella_store_snapshot_reference_memo_impl(s,r,l,check,cache,stage,nullptr);
+}
+std::string capella_store_reference_snapshot_cached(const CapellaForkStore& s,const CapellaForkBlockRules& r,
+ const CapellaStoreSnapshotLimits& l,const std::function<void(const CapellaColdReference&,std::string_view)>& stage,
+ CapellaReferenceSnapshotCache& memo,const std::function<void()>& check){
+ if(check)check();auto candidate=memo;
+ auto result=capella_store_snapshot_reference_memo_impl(s,r,l,check,nullptr,&stage,&candidate);
+ memo=std::move(candidate);return result;
 }
 std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBlockRules& r,
  const CapellaStoreSnapshotLimits& l,const std::function<void()>& check,CapellaStoreSnapshotCache* cache){
