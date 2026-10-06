@@ -225,3 +225,13 @@ target_compile_definitions(nano-core-rpc-diagnostic-tests PRIVATE FMT_CONSTEVAL=
 target_link_libraries(nano-core-rpc-diagnostic-tests PRIVATE p2p::p2p)
 add_test(NAME core_rpc_diagnostic COMMAND nano-core-rpc-diagnostic-tests)
 set_tests_properties(core_rpc_diagnostic PROPERTIES TIMEOUT 20)
+
+add_executable(nano-capella-dependency-preparation-tests test_capella_dependency_preparation.cpp)
+target_include_directories(nano-capella-dependency-preparation-tests PRIVATE ../third_party)
+target_compile_features(nano-capella-dependency-preparation-tests PRIVATE cxx_std_20)
+target_compile_definitions(nano-capella-dependency-preparation-tests PRIVATE FMT_CONSTEVAL= NANO_TEST_DEPENDENCY_PREPARATION)
+target_link_libraries(nano-capella-dependency-preparation-tests PRIVATE p2p::p2p)
+foreach(scenario normal duplicate unavailable unavailable-anchor refused lost cancel)
+  add_test(NAME capella_dependency_preparation_${scenario} COMMAND nano-capella-dependency-preparation-tests ${scenario})
+  set_tests_properties(capella_dependency_preparation_${scenario} PROPERTIES TIMEOUT 20)
+endforeach()
