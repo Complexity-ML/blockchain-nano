@@ -1,0 +1,158 @@
+{
+  "registered_tests": {
+    "consensus_capella_cold_reference_writer": {
+      "backtrace": 711,
+      "command": [
+        "/usr/bin/cmake",
+        "-E",
+        "env",
+        "NANO_TEST_REFERENCE_VALIDATION_MEMO=1",
+        "NANO_TEST_COMPACT_REFERENCE_RESTORE=1",
+        "NANO_TEST_COMPACT_REFERENCE_WRITER=1",
+        "NANO_TEST_COLD_RECORD_CACHE=1",
+        "NANO_TEST_FRAGMENT_CHECKPOINT=1",
+        "/build/cold-memo-ctest-arm64-20261006/nano-capella-transition-tests",
+        "--prepared-block"
+      ],
+      "name": "consensus_capella_cold_reference_writer",
+      "properties": [
+        {
+          "name": "LABELS",
+          "value": [
+            "qualification_consensus_recovery"
+          ]
+        },
+        {
+          "name": "TIMEOUT",
+          "value": 240.0
+        },
+        {
+          "name": "WORKING_DIRECTORY",
+          "value": "/build/cold-memo-ctest-arm64-20261006"
+        }
+      ]
+    },
+    "consensus_capella_cold_reactor_guards": {
+      "backtrace": 713,
+      "command": [
+        "/usr/bin/cmake",
+        "-E",
+        "env",
+        "NANO_TEST_RUNTIME_REFERENCE_MEMO=1",
+        "NANO_TEST_COLD_REACTOR=1",
+        "NANO_TEST_FRAGMENT_CHECKPOINT=1",
+        "NANO_TEST_DUPLICATE_GUARDS=1",
+        "/build/cold-memo-ctest-arm64-20261006/nano-capella-transition-tests",
+        "--prepared-block"
+      ],
+      "name": "consensus_capella_cold_reactor_guards",
+      "properties": [
+        {
+          "name": "LABELS",
+          "value": [
+            "qualification_consensus_recovery"
+          ]
+        },
+        {
+          "name": "TIMEOUT",
+          "value": 240.0
+        },
+        {
+          "name": "WORKING_DIRECTORY",
+          "value": "/build/cold-memo-ctest-arm64-20261006"
+        }
+      ]
+    },
+    "consensus_capella_cold_runtime_recovery": {
+      "backtrace": 715,
+      "command": [
+        "/usr/bin/cmake",
+        "-E",
+        "env",
+        "NANO_TEST_RUNTIME_REFERENCE_MEMO=1",
+        "NANO_TEST_COLD_RUNTIME=1",
+        "/build/cold-memo-ctest-arm64-20261006/nano-capella-transition-tests",
+        "--automatic-recovery"
+      ],
+      "name": "consensus_capella_cold_runtime_recovery",
+      "properties": [
+        {
+          "name": "LABELS",
+          "value": [
+            "qualification_consensus_recovery"
+          ]
+        },
+        {
+          "name": "TIMEOUT",
+          "value": 1200.0
+        },
+        {
+          "name": "WORKING_DIRECTORY",
+          "value": "/build/cold-memo-ctest-arm64-20261006"
+        }
+      ]
+    },
+    "consensus_capella_cold_runtime_bls": {
+      "backtrace": 717,
+      "command": [
+        "/usr/bin/cmake",
+        "-E",
+        "env",
+        "NANO_TEST_RUNTIME_REFERENCE_MEMO=1",
+        "NANO_TEST_COLD_RUNTIME=1",
+        "/build/cold-memo-ctest-arm64-20261006/nano-capella-transition-tests",
+        "--queued-bls-rpc"
+      ],
+      "name": "consensus_capella_cold_runtime_bls",
+      "properties": [
+        {
+          "name": "LABELS",
+          "value": [
+            "qualification_consensus_recovery"
+          ]
+        },
+        {
+          "name": "TIMEOUT",
+          "value": 1200.0
+        },
+        {
+          "name": "WORKING_DIRECTORY",
+          "value": "/build/cold-memo-ctest-arm64-20261006"
+        }
+      ]
+    },
+    "consensus_capella_cold_memo_sync_recovery": {
+      "backtrace": 719,
+      "command": [
+        "/usr/bin/cmake",
+        "-E",
+        "env",
+        "NANO_TEST_FRAGMENT_CHECKPOINT=1",
+        "NANO_TEST_COLD_REACTOR=1",
+        "NANO_TEST_RUNTIME_REFERENCE_MEMO=1",
+        "NANO_TEST_COLD_MEMO_SYNC=1",
+        "/build/cold-memo-ctest-arm64-20261006/nano-capella-transition-tests",
+        "--prepared-block"
+      ],
+      "name": "consensus_capella_cold_memo_sync_recovery",
+      "properties": [
+        {
+          "name": "LABELS",
+          "value": [
+            "qualification_consensus_recovery"
+          ]
+        },
+        {
+          "name": "TIMEOUT",
+          "value": 240.0
+        },
+        {
+          "name": "WORKING_DIRECTORY",
+          "value": "/build/cold-memo-ctest-arm64-20261006"
+        }
+      ]
+    }
+  },
+  "inventory_only": true,
+  "tests_reexecuted": false
+}

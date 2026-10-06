@@ -109,6 +109,7 @@ static int sync_writer(const fs::path& directory){
  std::cout<<Json{{"wal",wal.filename().string()},{"before",offset},{"after",fs::file_size(wal)},{"blocked",blocked}}.dump()<<std::endl;_exit(0);
 }
 #endif
+#include "capella_cold_memo_sync.hpp"
 #include "support/capella_bls_sync.hpp"
 #include "support/capella_exit_lifecycle_sync.hpp"
 #include "support/capella_slashing_sync.hpp"
@@ -1679,6 +1680,9 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
      std::cout<<Json{{"scenario","capella-cold-duplicate-storage-guards"},{"externalMutationsRejectedAndClosed",closed},{"primaryCheckpoint",true},{"witnessCheckpoint",true},{"executionTip",true},{"networkQualified",false}}.dump()<<std::endl;
     }
     reactor.reset();backup_owner.reset(); // Destroy the borrowing reactor before its backing owner.
+#ifdef NANO_SYNC_FAULT
+    if(std::getenv("NANO_TEST_COLD_MEMO_SYNC")){witness.reset();qualify_cold_memo_sync(directory/"previous-primary",directory/"witness",rules,g);check(journal.commitment()==guard,"cold fault qualification changed signer commitment");}
+#endif
     std::cout<<Json{{"scenario","capella-cold-reactor-integration"},{"migrationAtomic",true},{"witnessPreviousPrimaryRecovered",true},{"primaryAndWitnessRestarts",true},{"validChildDurablyAdmitted",true},{"allPublishedRecordsCold",true},{"stickyColdFormat",true},{"idempotentMigration",true},{"signerCommitmentUnchanged",true},{"lateSnapshotReadRejected",true},{"runtimeConfigBootQualified",false},{"graphCapacityClosed",false},{"networkQualified",false},{"productionQualified",false}}.dump()<<std::endl;return;
    }
    bool cancelled=false;try{reactor->migrate_fragment_checkpoint([]{throw ExecutionCancelled("cancel migration");});}catch(const ExecutionCancelled&){cancelled=true;}
@@ -2866,6 +2870,7 @@ if(argc==3&&std::string(argv[1])=="--exit-sync-writer")return bls_sync_writer(ar
 if(argc==2&&std::string(argv[1])=="--queued-exit-sync"){exit_sync=true;local_exits=true;scenario(false);return 0;}
 if(argc==3&&std::string(argv[1])=="--bls-sync-writer")return bls_sync_writer(argv[2]);
 if(argc==2&&std::string(argv[1])=="--queued-bls-sync"){queued_bls_sync=true;local_bls_changes=true;scenario(false);return 0;}
+if(argc==3&&std::string(argv[1])=="--cold-memo-sync-writer")return cold_memo_sync_writer(argv[2]);
 if(argc==3&&std::string(argv[1])=="--sync-writer")return sync_writer(argv[2]);
 if(argc==2&&std::string(argv[1])=="--owner-witness"){owner_witness=true;owner_sync=true;sync_scenario=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--owner-sync"){owner_sync=true;sync_scenario=true;scenario(false);return 0;}
