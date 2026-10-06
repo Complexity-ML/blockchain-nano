@@ -1,0 +1,7 @@
+/build/startup-stage-diagnostic-arm64-20261007/source/src/consensus_capella_runtime.cpp:229:146: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  229 |   if(!observation||observation->peer_slots.empty())return BeaconReadResponse{503,{{"code",503},{"message","Beacon peer observation unavailable"}}};
+      |                                                                                                                                                  ^
+/build/startup-stage-diagnostic-arm64-20261007/source/src/consensus_capella_runtime.cpp:238:234: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  238 |   return BeaconReadResponse{200,{{"data",{{"head_slot",std::to_string(head.header.slot)},{"sync_distance",std::to_string(target-head.header.slot)},{"is_syncing",target>head.header.slot},{"is_optimistic",false},{"el_offline",false}}}}};
+      |                                                                                                                                                                                                                                          ^
+2 warnings generated.

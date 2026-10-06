@@ -1,0 +1,71 @@
+--- a/src/consensus_capella_runtime.cpp
++++ b/src/consensus_capella_runtime.cpp
+@@ -3,6 +3,7 @@
+ #include <fstream>
+ #include <iostream>
+ #include <cstdlib>
++#include <chrono>
+ #include <set>
+ #include <openssl/crypto.h>
+ #include "blst.h"
+@@ -33,6 +34,21 @@
+ struct Owner {InboundBudget decoder_budget;std::unique_ptr<ChainStore> witness;std::unique_ptr<CapellaDurableReactor> reactor;std::unique_ptr<CapellaLocalClock> clock;std::unique_ptr<CapellaValidatorLoop> validator;std::unique_ptr<CapellaConsensusService> admission;std::unique_ptr<CapellaInventorySessions> catalogs;};
+ }
+ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const std::function<void()>& checkpoint,std::function<uint64_t()> now){
++ // Diagnostic stage timing contains no configuration or key material. It is
++ // enabled only by the existing private-network trace flag and cannot fail boot.
++ const char* startup_trace=std::getenv("NANO_TEST_NETWORK_TRACE");
++ const bool trace_startup=startup_trace&&std::string_view(startup_trace)=="1";
++ const auto startup_began=std::chrono::steady_clock::now();auto stage_began=startup_began;
++ const char* previous_stage=nullptr;
++ auto stage=[&](const char* name)noexcept{
++  if(!trace_startup)return;
++  try{const auto at=std::chrono::steady_clock::now();const auto ms=[](auto duration){return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();};
++   Json row{{"event","capella-startup-stage"},{"stage",name},{"elapsedMs",ms(at-startup_began)},
++    {"previousStage",previous_stage?Json(previous_stage):Json(nullptr)},{"previousElapsedMs",ms(at-stage_began)}};
++   previous_stage=name;stage_began=at;std::cout<<row.dump()<<std::endl;
++  }catch(...){} // Telemetry never substitutes for validation or controls startup.
++ };
++ stage("validate-input");
+  if(checkpoint)checkpoint();auto base=config;base.erase("validator");base.erase("admission");base.erase("catalogs");base.erase("recoveryWitness");base.erase("recoveryCommitment");base.erase("automaticRecovery");base.erase("network");base.erase("automaticPruning");base.erase("historicalStatePruning");base.erase("fragmentCheckpointMigration");base.erase("coldCheckpoint");shape(base,{"profile","limits","initial","restart","clock"});
+  const auto& genesis=chain.genesis();
+  if(genesis.consensus!="beacon"||genesis.evm_revision!=EvmRevision::Shanghai)throw std::invalid_argument("Capella runtime requires Beacon Shanghai chain");
+@@ -99,6 +115,7 @@
+   recover=bool(primary)||bool(witness);
+  }
+  if(recovery_commitment&&!recover)throw std::invalid_argument("Capella recovery commitment forbids bootstrap");
++ stage("reactor-recovery");
+  if(recover){
+   owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,*owner->witness,checkpoint,recovery_commitment);
+  }else if(restart){
+@@ -110,6 +127,7 @@
+   auto initial=capella_store_from_snapshot(read_bounded(a.at("file").get<std::string>(),limits.envelope_bytes,checkpoint),digest(a.at("sha256")),rules,limits,checkpoint);
+   owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,std::move(initial),checkpoint,owner->witness.get());
+  }
++ stage("checkpoint-migration");
+  if(config.contains("automaticPruning")&&!config.at("automaticPruning").is_boolean())throw std::invalid_argument("Capella automaticPruning must be boolean");
+  owner->reactor->set_automatic_pruning(config.value("automaticPruning",true));
+  if(config.contains("historicalStatePruning")&&!config.at("historicalStatePruning").is_boolean())throw std::invalid_argument("Capella historicalStatePruning must be boolean");
+@@ -143,6 +161,7 @@
+   if(n.at("enabled")==true&&(!owner->admission||!owner->catalogs))throw std::invalid_argument("Capella network requires admission and catalogs");
+   const auto& anchor=owner->reactor->current().state->timed.view.anchor;network["anchorRoot"]=hex(Bytes(anchor.begin(),anchor.end()));
+  }
++ stage("signing-journals");
+  if(config.contains("validator")){
+   const auto& v=config.at("validator");shape(v,{"pollIntervalMs","maximumTransactionTrials","maximumVoteTrials","keys"});
+   const auto poll=number(v.at("pollIntervalMs")),transactions=number(v.at("maximumTransactionTrials")),trials=number(v.at("maximumVoteTrials"));
+@@ -193,10 +212,14 @@
+  }
+  // Authenticate all configured signing journals before recovery publishes new
+  // durable clock state. No duty thread starts until the catch-up is complete.
++ stage("clock-catchup");
+  if(startup_catchup){auto recovered=owner->clock->startup_catch_up(startup_catchup->first,startup_catchup->second,checkpoint);recovered["event"]="capella-startup-catchup-completed";std::cout<<recovered.dump()<<std::endl;}
++ stage("initial-clock-poll");
+  owner->clock->poll(checkpoint);chain.require_execution_ready();
++ stage("duty-workers");
+  if(owner->validator)owner->validator->start(std::chrono::milliseconds(validator_poll));
+  owner->clock->start(std::chrono::milliseconds(interval));
++ stage("runtime-ready");
+  auto sync_tracker=std::make_shared<BeaconSyncTracker>();
+  return {owner->validator?std::shared_ptr<CapellaValidatorLoop>(owner,owner->validator.get()):nullptr,std::shared_ptr<CapellaDurableReactor>(owner,owner->reactor.get()),std::shared_ptr<CapellaLocalClock>(owner,owner->clock.get()),[owner,rules,sync_tracker,now](std::string_view path,const std::function<void()>& check){
+   if(check)check();

@@ -1,0 +1,5 @@
+# V33 forced-stop read-only integrity audit — 7 October 2026
+
+Original34298 exit0. VPS capture ran204.706 seconds with one CPU and read-only stores, after V33 forced stop137/noOOM.2936 files exact before/after. Primary and independent recovery witness at a common publication boundary; full canonical replay and required finalized ancestor verified. Core sequence0x3b93→0x3b94, new digest recorded in capture. All33 signer commitments exactly unchanged against V32, independently witnessed. This proves scoped crash integrity, not successful runtime recovery, duties, live finality or historical token digest ancestry. No Mac writer ran duringV33; current Mac copies/sources remain unchanged.
+
+Only public capsule, exit/error/immutability and script are retained here. Config/request/full file hashes and source database stay private on VPS. No signer/network started by this audit. The204.706-second read-only audit is not a startup benchmark. V33 readiness failure and all prior failures remain open evidence.
