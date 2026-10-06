@@ -7170,3 +7170,6 @@ Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichi
 
 
 2026-10-06 — Dispatcher intégré : reprise de transport dans la même session après réponses RPC perdues, annulation/réconciliation sans libérer un worker incertain ; contradictions toujours bloquantes. Qualification Docker ARM64 et AMD64 : 10 cas transport, 5 registre réel, 10 régressions et 1 HTTP réel, tous terminaux 0. P2P complet lié sur Mac natif et les deux Docker. Core 05649987 inchangé. Traces de transitions sans secrets. Génération CMake ARM64/enregistrement vérifiés, exécutions via commandes sauvegardées. Reprise avec nouvelle session, cause WAN v8 et finalité commune restent ouvertes ; aucune production déclarée. [Preuves](qualification/dispatch-transport-recovery-integrated-20261006/README.md).
+
+
+2026-10-06 — Préparation v9 : exacts engagements post-v8, core 05649987 inchangé et relais 76bb2468 qualifié. Sources auditées et copiées localement par propriétaire, volume VPS conservé ; aucun journal réinitialisé/fusionné. Limites réellement utilisées par v8 (1024 blocs) conservées sans hausse. Trois avancées communes distinctes en 900 s restent requises. Préparation seule, finalité et production ouvertes. Preuves restored-three-node-v9-dispatch-prepare-20261006/.
