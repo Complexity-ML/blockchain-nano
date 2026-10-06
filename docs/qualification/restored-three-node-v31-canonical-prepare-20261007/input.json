@@ -1,0 +1,5104 @@
+{
+  "macConfig": {
+    "capella": {
+      "admission": {
+        "attestationBytes": "0x1e5",
+        "blockBytes": "0x800000",
+        "frameBytes": "0x1000400",
+        "jobs": "0x2",
+        "payloadBytes": "0x1000000",
+        "slashingBytes": "0x81d0"
+      },
+      "catalogs": {
+        "handles": "0x2",
+        "rootBytes": "0x20000",
+        "ttlMs": "0xea60"
+      },
+      "clock": {
+        "intervalMs": "0x64",
+        "maximumForwardStepMs": "0x5dc000",
+        "maximumWallClockDriftMs": "0xfa",
+        "startupCatchup": {
+          "maximumDowntimeMs": "0x5265c00",
+          "maximumSteps": "0x10"
+        }
+      },
+      "initial": null,
+      "limits": {
+        "blocks": "0x1000",
+        "envelopeBytes": "0x8000000",
+        "equivocations": "0x3e8",
+        "messages": "0x800",
+        "replaySlots": "0x400",
+        "stateBytes": "0x400000",
+        "syncTrials": "0x186a0",
+        "totalStateBytes": "0x4000000"
+      },
+      "network": {
+        "acknowledgedRoots": "0x400",
+        "dependencyBlocks": "0x100",
+        "dependencyBytes": "0x1000000",
+        "enabled": true,
+        "maximumEntries": "0x400",
+        "pageEntries": "0x8"
+      },
+      "profile": {
+        "file": "/config/profile.json",
+        "maximumBytes": "0x100000",
+        "sha256": "0xe3440eba0a871a8eedf84a6e2cdccee53cc4389e8ce6b979166621c8e893890d"
+      },
+      "recoveryWitness": "/var/lib/nano/witness",
+      "restart": null,
+      "validator": {
+        "keys": [
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x0",
+            "journal": "/var/lib/nano/key-0",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_0",
+            "recoveryWitness": "/var/lib/nano/key-0-witness",
+            "restart": {
+              "digest": "0xfc16a87485f460aed6b64f0ea14071ad3f1e0f289692648bbe67b45358ff464b",
+              "sequence": "0x37"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1",
+            "journal": "/var/lib/nano/key-1",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_1",
+            "recoveryWitness": "/var/lib/nano/key-1-witness",
+            "restart": {
+              "digest": "0xaa3da579de5c176b020b40b90328be8c3169a060335312860298dccbc843a5c9",
+              "sequence": "0x37"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x2",
+            "journal": "/var/lib/nano/key-2",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_2",
+            "recoveryWitness": "/var/lib/nano/key-2-witness",
+            "restart": {
+              "digest": "0xa19d724d0209950896a3d0dea8566a57c83808715c651f7745dabc55a16e00a5",
+              "sequence": "0x37"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x3",
+            "journal": "/var/lib/nano/key-3",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_3",
+            "recoveryWitness": "/var/lib/nano/key-3-witness",
+            "restart": {
+              "digest": "0xcc5a1c8cad20cd7684f8e9f62b7a2c899d29eb4b051135a1a0736b47b9968c25",
+              "sequence": "0x38"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x4",
+            "journal": "/var/lib/nano/key-4",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_4",
+            "recoveryWitness": "/var/lib/nano/key-4-witness",
+            "restart": {
+              "digest": "0xf35ccd0e586ff1e0e23b7d63b96c9520084cd0dec4f9b02a32baa0322fec4f6e",
+              "sequence": "0x37"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x5",
+            "journal": "/var/lib/nano/key-5",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_5",
+            "recoveryWitness": "/var/lib/nano/key-5-witness",
+            "restart": {
+              "digest": "0x60168f55ac236f31d4cdca6280c252db27465203dc9f46fa3b9ef22a6293d9cf",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x6",
+            "journal": "/var/lib/nano/key-6",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_6",
+            "recoveryWitness": "/var/lib/nano/key-6-witness",
+            "restart": {
+              "digest": "0xba78bede90ce50e960b5caf0b975261d9d77a2b42f6bdb40b770b1db92b02b95",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x7",
+            "journal": "/var/lib/nano/key-7",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_7",
+            "recoveryWitness": "/var/lib/nano/key-7-witness",
+            "restart": {
+              "digest": "0x908a44ddc52ca082bec49d655db53890a7dd8794b4393fd2136efba9f681d9a6",
+              "sequence": "0x34"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x8",
+            "journal": "/var/lib/nano/key-8",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_8",
+            "recoveryWitness": "/var/lib/nano/key-8-witness",
+            "restart": {
+              "digest": "0xceb4629e99e61b1d652e6a457502535e4afe7d31bc8ff0700d1165febf4e212d",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x9",
+            "journal": "/var/lib/nano/key-9",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_9",
+            "recoveryWitness": "/var/lib/nano/key-9-witness",
+            "restart": {
+              "digest": "0x07bee2ff9a35dc066cee1ff5d1fe27a3191dfd4ddceb9bf1b53d9892301f2a32",
+              "sequence": "0x33"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0xa",
+            "journal": "/var/lib/nano/key-10",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_10",
+            "recoveryWitness": "/var/lib/nano/key-10-witness",
+            "restart": {
+              "digest": "0x296c43a6a7b7e9a27e95cafc00a68efb3c18a03f1ecc64d50c51717a1bb27145",
+              "sequence": "0x37"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0xb",
+            "journal": "/var/lib/nano/key-11",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_11",
+            "recoveryWitness": "/var/lib/nano/key-11-witness",
+            "restart": {
+              "digest": "0xe6987e8539271f85d96b114c31808add32a0db3139b0927f088d2b45db83ce26",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0xc",
+            "journal": "/var/lib/nano/key-12",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_12",
+            "recoveryWitness": "/var/lib/nano/key-12-witness",
+            "restart": {
+              "digest": "0x426130275ad1c82083c4c649eda28deeb4105eb62ddf5181b616ee3ab3dc6571",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0xd",
+            "journal": "/var/lib/nano/key-13",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_13",
+            "recoveryWitness": "/var/lib/nano/key-13-witness",
+            "restart": {
+              "digest": "0xe974d936b726957d6014324749e655404959894dfe3d8187e2065d612e882118",
+              "sequence": "0x31"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0xe",
+            "journal": "/var/lib/nano/key-14",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_14",
+            "recoveryWitness": "/var/lib/nano/key-14-witness",
+            "restart": {
+              "digest": "0x54272601184e11e1a74eaa0b3ef7e9c0c898c3f9e1482bbb91d5ff7e48ddab0f",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0xf",
+            "journal": "/var/lib/nano/key-15",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_15",
+            "recoveryWitness": "/var/lib/nano/key-15-witness",
+            "restart": {
+              "digest": "0x22a8cbdb9b9fe5075c975cc1d2332da9cf4504a9c3c9d1b8668cc61247a7aa64",
+              "sequence": "0x32"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x10",
+            "journal": "/var/lib/nano/key-16",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_16",
+            "recoveryWitness": "/var/lib/nano/key-16-witness",
+            "restart": {
+              "digest": "0x55be9e8ed55b57767a0e058809231d379f2a66ec2c514cb686f6b4c1af2fb285",
+              "sequence": "0x34"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x11",
+            "journal": "/var/lib/nano/key-17",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_17",
+            "recoveryWitness": "/var/lib/nano/key-17-witness",
+            "restart": {
+              "digest": "0x38a705e7a10e486ee272e01cd70952c1eb9818ff83dee265ebc74d23e77e2c5e",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x12",
+            "journal": "/var/lib/nano/key-18",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_18",
+            "recoveryWitness": "/var/lib/nano/key-18-witness",
+            "restart": {
+              "digest": "0x24449240f93ec03941903a83a831854c1ca5c786041aa9155dd31f020baa960d",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x13",
+            "journal": "/var/lib/nano/key-19",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_19",
+            "recoveryWitness": "/var/lib/nano/key-19-witness",
+            "restart": {
+              "digest": "0x0ed28f32c337ba25e411cd350c20339613fcc6252b0df761c1ec264631035084",
+              "sequence": "0x36"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x14",
+            "journal": "/var/lib/nano/key-20",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_20",
+            "recoveryWitness": "/var/lib/nano/key-20-witness",
+            "restart": {
+              "digest": "0x02be8138e4fa6eeae7d7268371a64e610e0a246300da379e2fdfc8b243549cd0",
+              "sequence": "0x37"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x15",
+            "journal": "/var/lib/nano/key-21",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_21",
+            "recoveryWitness": "/var/lib/nano/key-21-witness",
+            "restart": {
+              "digest": "0xd3b40bc7d69bdc018b33ae061f5bbb68e43e41a6b18e1276cdc195c40fe62519",
+              "sequence": "0x36"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x16",
+            "journal": "/var/lib/nano/key-22",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_22",
+            "recoveryWitness": "/var/lib/nano/key-22-witness",
+            "restart": {
+              "digest": "0x4c3f12819fc647ef93fc45b278de2573ef255a99ac58c7dd336d61c7f900c554",
+              "sequence": "0x32"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x17",
+            "journal": "/var/lib/nano/key-23",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_23",
+            "recoveryWitness": "/var/lib/nano/key-23-witness",
+            "restart": {
+              "digest": "0x4f9bb705cc321f001b9a086a5e1f1889c2baa8ef57c718fc6600920a2f18fe75",
+              "sequence": "0x34"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x18",
+            "journal": "/var/lib/nano/key-24",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_24",
+            "recoveryWitness": "/var/lib/nano/key-24-witness",
+            "restart": {
+              "digest": "0x896493045490560ea591fa8a9e84bf5c42c390da0bdd649229891f09f589c38d",
+              "sequence": "0x36"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x19",
+            "journal": "/var/lib/nano/key-25",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_25",
+            "recoveryWitness": "/var/lib/nano/key-25-witness",
+            "restart": {
+              "digest": "0xf72127c09d213fc7866045d8c122f761e64857e4432b66cf6634c0943a0320d0",
+              "sequence": "0x31"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1a",
+            "journal": "/var/lib/nano/key-26",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_26",
+            "recoveryWitness": "/var/lib/nano/key-26-witness",
+            "restart": {
+              "digest": "0x1b459a6a55e754a56f86f8a29095bafc42742cb0536bb0f024f9025f044bf2a8",
+              "sequence": "0x30"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1b",
+            "journal": "/var/lib/nano/key-27",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_27",
+            "recoveryWitness": "/var/lib/nano/key-27-witness",
+            "restart": {
+              "digest": "0x5acb1630a6bcf76b2931d5c0107de71ddb4d69311c20e4b020e3a3d643b36874",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1c",
+            "journal": "/var/lib/nano/key-28",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_28",
+            "recoveryWitness": "/var/lib/nano/key-28-witness",
+            "restart": {
+              "digest": "0x53e0f0e9fc440eb6423c98382ae396c695245fdd341f6e189f28cfc8653cec96",
+              "sequence": "0x34"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1d",
+            "journal": "/var/lib/nano/key-29",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_29",
+            "recoveryWitness": "/var/lib/nano/key-29-witness",
+            "restart": {
+              "digest": "0x4c5e7662008b0e386acf751c5a51c4ab02e8a364c0ce8f73cdbb5a04cb6ed498",
+              "sequence": "0x34"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1e",
+            "journal": "/var/lib/nano/key-30",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_30",
+            "recoveryWitness": "/var/lib/nano/key-30-witness",
+            "restart": {
+              "digest": "0x0f99f8d6bbc5b9adb530f8b39a92f2621fd0d9fd2086d30c787f4180f642587a",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1f",
+            "journal": "/var/lib/nano/key-31",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_31",
+            "recoveryWitness": "/var/lib/nano/key-31-witness",
+            "restart": {
+              "digest": "0x2d76c35e0422f60f503c011be7168c9e1e7aa6f8151194b9d6ac8154d1ced8a3",
+              "sequence": "0x33"
+            }
+          }
+        ],
+        "maximumTransactionTrials": "0x10",
+        "maximumVoteTrials": "0x40",
+        "pollIntervalMs": "0x64"
+      },
+      "recoveryCommitment": {
+        "digest": "0xbaf55d7881ea0b33cfafac4a359af5bbd03b39c173458e1a387e901dfe769b4e",
+        "sequence": "0x1099"
+      },
+      "automaticRecovery": false,
+      "coldCheckpoint": {
+        "cacheRecords": "0x8",
+        "cacheEncodedBytes": "0x1000000"
+      }
+    }
+  },
+  "vpsConfig": {
+    "bootnodes": [],
+    "capella": {
+      "admission": {
+        "attestationBytes": "0x1e5",
+        "blockBytes": "0x800000",
+        "frameBytes": "0x1000400",
+        "jobs": "0x2",
+        "payloadBytes": "0x1000000",
+        "slashingBytes": "0x81d0"
+      },
+      "catalogs": {
+        "handles": "0x2",
+        "rootBytes": "0x20000",
+        "ttlMs": "0xea60"
+      },
+      "clock": {
+        "intervalMs": "0x64",
+        "maximumForwardStepMs": "0x5dc000",
+        "maximumWallClockDriftMs": "0xfa",
+        "startupCatchup": {
+          "maximumDowntimeMs": "0x5265c00",
+          "maximumSteps": "0x10"
+        }
+      },
+      "initial": null,
+      "limits": {
+        "blocks": "0x1000",
+        "envelopeBytes": "0x8000000",
+        "equivocations": "0x3e8",
+        "messages": "0x800",
+        "replaySlots": "0x400",
+        "stateBytes": "0x400000",
+        "syncTrials": "0x186a0",
+        "totalStateBytes": "0x4000000"
+      },
+      "network": {
+        "acknowledgedRoots": "0x400",
+        "dependencyBlocks": "0x100",
+        "dependencyBytes": "0x1000000",
+        "enabled": true,
+        "maximumEntries": "0x400",
+        "pageEntries": "0x8"
+      },
+      "profile": {
+        "file": "/config/profile.json",
+        "maximumBytes": "0x100000",
+        "sha256": "0xe3440eba0a871a8eedf84a6e2cdccee53cc4389e8ce6b979166621c8e893890d"
+      },
+      "recoveryWitness": "/var/lib/nano/witness",
+      "restart": null,
+      "validator": {
+        "keys": [
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x20",
+            "journal": "/var/lib/nano/key-32",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_32",
+            "recoveryWitness": "/var/lib/nano/key-witness-32",
+            "restart": {
+              "digest": "0x8190496ee7f168c4e6c34ec7b6133683aa02759966ec20d9650d6d133f2de668",
+              "sequence": "0x24"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x21",
+            "journal": "/var/lib/nano/key-33",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_33",
+            "recoveryWitness": "/var/lib/nano/key-witness-33",
+            "restart": {
+              "digest": "0x0802dfdcadc225a7db3b6bfcd89e29bae2c1ad162cc0c250bfed3d61f5e6f3f4",
+              "sequence": "0x21"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x22",
+            "journal": "/var/lib/nano/key-34",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_34",
+            "recoveryWitness": "/var/lib/nano/key-witness-34",
+            "restart": {
+              "digest": "0x1f5d873ce5803bf9d65de1436c225db9d0341c2961c84d99589ba49b1b258f24",
+              "sequence": "0x25"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x23",
+            "journal": "/var/lib/nano/key-35",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_35",
+            "recoveryWitness": "/var/lib/nano/key-witness-35",
+            "restart": {
+              "digest": "0x248f2e39f098da3f9d86c08e8173b44ab0811322479cbd65cc6f9dd49fb951a1",
+              "sequence": "0x21"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x24",
+            "journal": "/var/lib/nano/key-36",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_36",
+            "recoveryWitness": "/var/lib/nano/key-witness-36",
+            "restart": {
+              "digest": "0x4aff48eb59f5a4cecc6ead64a4c64585953f8f62d88323deffc434a8863f3fad",
+              "sequence": "0x24"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x25",
+            "journal": "/var/lib/nano/key-37",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_37",
+            "recoveryWitness": "/var/lib/nano/key-witness-37",
+            "restart": {
+              "digest": "0xf31880a88d72df34fe9c3bdcd80d8a0ce6bebd71e59b560a5f11325dd9a6f29f",
+              "sequence": "0x20"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x26",
+            "journal": "/var/lib/nano/key-38",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_38",
+            "recoveryWitness": "/var/lib/nano/key-witness-38",
+            "restart": {
+              "digest": "0xd5e6ee626e1ef84cb13b8742022ec156732e78fe9fdde374ebba0bd2ade1c8b9",
+              "sequence": "0x22"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x27",
+            "journal": "/var/lib/nano/key-39",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_39",
+            "recoveryWitness": "/var/lib/nano/key-witness-39",
+            "restart": {
+              "digest": "0xab36d631fc9938a523505c4e4d89640d5f7784e5e6af54d483e3f631d61cf8a9",
+              "sequence": "0x20"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x28",
+            "journal": "/var/lib/nano/key-40",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_40",
+            "recoveryWitness": "/var/lib/nano/key-witness-40",
+            "restart": {
+              "digest": "0xe96e409994c9b2c38617f68ba91f2797e7c02f6d2ff2f3ebcb059f8abbe83c01",
+              "sequence": "0x1d"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x29",
+            "journal": "/var/lib/nano/key-41",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_41",
+            "recoveryWitness": "/var/lib/nano/key-witness-41",
+            "restart": {
+              "digest": "0x1fdecd3236f8822b102e1e7fc2608c4c56cdb3b266c521b93b386236a362fee3",
+              "sequence": "0x21"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x2a",
+            "journal": "/var/lib/nano/key-42",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_42",
+            "recoveryWitness": "/var/lib/nano/key-witness-42",
+            "restart": {
+              "digest": "0xe7a4ca34f36b8e525e3d8dc57c6a8c76378e8da2be9a10433d49cef9dad01ac4",
+              "sequence": "0x23"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x2b",
+            "journal": "/var/lib/nano/key-43",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_43",
+            "recoveryWitness": "/var/lib/nano/key-witness-43",
+            "restart": {
+              "digest": "0x970b8656fcb9345286b41171a588866b9baa64bfdda34563078f520104a54765",
+              "sequence": "0x21"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x2c",
+            "journal": "/var/lib/nano/key-44",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_44",
+            "recoveryWitness": "/var/lib/nano/key-witness-44",
+            "restart": {
+              "digest": "0xc5878b51f3695279989619f23e98c66722f6f11f6ae5ef904808ada7e4d8ae89",
+              "sequence": "0x22"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x2d",
+            "journal": "/var/lib/nano/key-45",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_45",
+            "recoveryWitness": "/var/lib/nano/key-witness-45",
+            "restart": {
+              "digest": "0xad713d1e3a34646c2e51aca257e1e7c0bd78fd4c389640bf6aa40cb124ab5804",
+              "sequence": "0x20"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x2e",
+            "journal": "/var/lib/nano/key-46",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_46",
+            "recoveryWitness": "/var/lib/nano/key-witness-46",
+            "restart": {
+              "digest": "0x2da33a68c099c8c570f41470419f4f45367affc67e4953eb4e0a1766b6179c5c",
+              "sequence": "0x22"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x2f",
+            "journal": "/var/lib/nano/key-47",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_47",
+            "recoveryWitness": "/var/lib/nano/key-witness-47",
+            "restart": {
+              "digest": "0xee5a133968392753181c42f949a069c32bfa2357f4f1e4c1ef77ce0a4ee48c7a",
+              "sequence": "0x20"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x30",
+            "journal": "/var/lib/nano/key-48",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_48",
+            "recoveryWitness": "/var/lib/nano/key-witness-48",
+            "restart": {
+              "digest": "0xef0985cd14b06579d38e776ce2cf8be784752bcd3cb3e5077c0e6c42def395ba",
+              "sequence": "0x20"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x31",
+            "journal": "/var/lib/nano/key-49",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_49",
+            "recoveryWitness": "/var/lib/nano/key-witness-49",
+            "restart": {
+              "digest": "0xa4f7d7712fc0df7e857b37a1002d3d6afcbb570db0ac3d80e1cf13968b86d14b",
+              "sequence": "0x25"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x32",
+            "journal": "/var/lib/nano/key-50",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_50",
+            "recoveryWitness": "/var/lib/nano/key-witness-50",
+            "restart": {
+              "digest": "0x0f290fd7e2b98d35ed6aae7be7a1bf4dcc8af9222c3a4ece08bc56fc5c0f83d0",
+              "sequence": "0x20"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x33",
+            "journal": "/var/lib/nano/key-51",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_51",
+            "recoveryWitness": "/var/lib/nano/key-witness-51",
+            "restart": {
+              "digest": "0xccaa6d3838810cde3d236005a47b2144dbd9b1462c9b174e674e040224e63b47",
+              "sequence": "0x20"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x34",
+            "journal": "/var/lib/nano/key-52",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_52",
+            "recoveryWitness": "/var/lib/nano/key-witness-52",
+            "restart": {
+              "digest": "0x68f6fe31ec1addf0b06300e0dc6fe9fcb54b3207c7ed49cd8856ae7450f5f094",
+              "sequence": "0x23"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x35",
+            "journal": "/var/lib/nano/key-53",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_53",
+            "recoveryWitness": "/var/lib/nano/key-witness-53",
+            "restart": {
+              "digest": "0x97c285c43308dc74c5a790495935da2cefec3d1a5a41a9924c594511a05a1468",
+              "sequence": "0x24"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x36",
+            "journal": "/var/lib/nano/key-54",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_54",
+            "recoveryWitness": "/var/lib/nano/key-witness-54",
+            "restart": {
+              "digest": "0x427e986b0b6aef3e3a27dbd9fa9cc2e4c8173c4906a86c02ef8a2184d090b2a9",
+              "sequence": "0x24"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x37",
+            "journal": "/var/lib/nano/key-55",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_55",
+            "recoveryWitness": "/var/lib/nano/key-witness-55",
+            "restart": {
+              "digest": "0x9548f02877cdbc3793d7806956bc45c20cd8860aa71b64ab00448cc9cc9a6537",
+              "sequence": "0x1f"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x38",
+            "journal": "/var/lib/nano/key-56",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_56",
+            "recoveryWitness": "/var/lib/nano/key-witness-56",
+            "restart": {
+              "digest": "0x895b0b9c2fa110d71ec7d99971e81164b9006330e5c71774ffba7bd14e41015a",
+              "sequence": "0x22"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x39",
+            "journal": "/var/lib/nano/key-57",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_57",
+            "recoveryWitness": "/var/lib/nano/key-witness-57",
+            "restart": {
+              "digest": "0xffa47a0373c2c84228bbf213c14ec84c4eb712f065329148b4e2eaaae2aaea75",
+              "sequence": "0x23"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x3a",
+            "journal": "/var/lib/nano/key-58",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_58",
+            "recoveryWitness": "/var/lib/nano/key-witness-58",
+            "restart": {
+              "digest": "0xd876bf359e58a3f6c5834db2ad6723d9616997a39805ddef0ebbaf3b647c5d50",
+              "sequence": "0x1f"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x3b",
+            "journal": "/var/lib/nano/key-59",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_59",
+            "recoveryWitness": "/var/lib/nano/key-witness-59",
+            "restart": {
+              "digest": "0xfce9aeede736a29db1937537481b594e5307ff38aaa5138e69ef788f63531421",
+              "sequence": "0x23"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x3c",
+            "journal": "/var/lib/nano/key-60",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_60",
+            "recoveryWitness": "/var/lib/nano/key-witness-60",
+            "restart": {
+              "digest": "0xb3245f3ebcd49400aab0d07bdb3a248a55e1b53a7d78bc3fb97e3407ed2ee068",
+              "sequence": "0x22"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x3d",
+            "journal": "/var/lib/nano/key-61",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_61",
+            "recoveryWitness": "/var/lib/nano/key-witness-61",
+            "restart": {
+              "digest": "0xddc6e8c327dfee40147d1a296fb04e65fc8bbdb27035eaf9c085078142d58a81",
+              "sequence": "0x22"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x3e",
+            "journal": "/var/lib/nano/key-62",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_62",
+            "recoveryWitness": "/var/lib/nano/key-witness-62",
+            "restart": {
+              "digest": "0xe7bfdce78f12c84c6df9378506293bcb2d34dc34e9327ea5c890935366f001db",
+              "sequence": "0x1e"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x3f",
+            "journal": "/var/lib/nano/key-63",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_63",
+            "recoveryWitness": "/var/lib/nano/key-witness-63",
+            "restart": {
+              "digest": "0xc770c333853ce233840e11dce9eb4cddff25dda298adc759a848d62e775939f8",
+              "sequence": "0x1f"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": null,
+            "journal": "/var/lib/nano/key-64",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_64",
+            "recoveryWitness": "/var/lib/nano/key-witness-64",
+            "restart": {
+              "digest": "0x88901727b695097aedf64c9c0cf8c5fc0797703e812f6a83751d41ae8854ed85",
+              "sequence": "0x12"
+            }
+          }
+        ],
+        "maximumTransactionTrials": "0x10",
+        "maximumVoteTrials": "0x40",
+        "pollIntervalMs": "0x64"
+      },
+      "automaticRecovery": false,
+      "recoveryCommitment": {
+        "digest": "0xf3eb159a768fdd63183672d8e47d8d809b406fb1724dcc2874754038ae2eb8c4",
+        "sequence": "0x9e0"
+      },
+      "coldCheckpoint": {
+        "cacheRecords": "0x8",
+        "cacheEncodedBytes": "0x1000000"
+      }
+    },
+    "listen_addr": "/ip4/127.0.0.1/tcp/41943",
+    "p2p_binary": "/build/monotonic-clock-amd64-20261005/network/nano-p2p",
+    "p2p_identity": "/var/lib/nano/peer.key",
+    "rpc_host": "127.0.0.1",
+    "rpc_port": 49797
+  },
+  "macCapsule": {
+    "canonicalReplay": {
+      "allHistoricalStatesMaterialized": true,
+      "archiveBytes": 2070355,
+      "blocksIncludingTrustedAnchor": 826,
+      "canonicalHistoryVerified": true,
+      "checkpointDigest": "0xe90ddcc8083089c8bc3f777920bbe76d56d7b7b33d464b4c68eb151c74d9e76b",
+      "checkpointSequence": 18357,
+      "externalFinalizedAncestorVerified": true,
+      "finalized": {
+        "epoch": "0x504",
+        "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+      },
+      "firstExecutionBlock": "0x1",
+      "head": "0x2e460f9646e00cf32d1db608ff4a5a8f2d494161e124e6c26d717e3f158994b8",
+      "historicalForkChoiceVerified": false,
+      "historicalStandaloneVotesReplayed": false,
+      "lastExecutionBlock": "0x33a",
+      "prunedExecutionStatesReplayed": 0,
+      "requiredFinalized": {
+        "epoch": "0x504",
+        "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+      },
+      "transactions": 2,
+      "trustedAnchor": "0x1f84dd50b5d8740e8c9a7b2a62ef9790593498978dfb7de244406b7449b75c2f"
+    },
+    "captureBudget": {
+      "blocks": "0x1000",
+      "envelopeBytes": "0x8000000"
+    },
+    "chainId": "0x539",
+    "format": "nano-private-quiescent-recovery-pins-v1",
+    "genesisHash": "0xdc39226edf6b7c4ed0735b306e39502de8220dbbbeedf3f3fca2fd4bc04e893c",
+    "historicalTokenDigestAncestryVerified": false,
+    "minimumSequenceBoundsVerified": true,
+    "participationDiagnostics": {
+      "currentTimelyTargetCountsByOwner": [
+        0,
+        0,
+        0
+      ],
+      "headSlot": 25209,
+      "historicalStandaloneVotesReplayed": false,
+      "members": [
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 0,
+          "latestForkMessage": {
+            "epoch": 1360,
+            "root": "0xf4b40dcd5b59f50c199462d07945f88e43c1f0388186659e80e1ab0eda99c447"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 1,
+          "latestForkMessage": {
+            "epoch": 1360,
+            "root": "0x7a71476811be50dff042eea9af4303eff576428bce01e80d1976fc386cac5c17"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 2,
+          "latestForkMessage": {
+            "epoch": 1363,
+            "root": "0xdc5235112eddf8bf847416815708bd67109f77afc42c4fc7b58731a40de41e1d"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 3,
+          "latestForkMessage": {
+            "epoch": 1360,
+            "root": "0x7a71476811be50dff042eea9af4303eff576428bce01e80d1976fc386cac5c17"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 4,
+          "latestForkMessage": {
+            "epoch": 1363,
+            "root": "0xdc5235112eddf8bf847416815708bd67109f77afc42c4fc7b58731a40de41e1d"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 5,
+          "latestForkMessage": {
+            "epoch": 1367,
+            "root": "0x6b4cc56379a081892c7b0891bfe9cb99b5d857d9774c74d36d48808dd0394358"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 6,
+          "latestForkMessage": {
+            "epoch": 1367,
+            "root": "0x6b4cc56379a081892c7b0891bfe9cb99b5d857d9774c74d36d48808dd0394358"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 7,
+          "latestForkMessage": {
+            "epoch": 1363,
+            "root": "0xdc5235112eddf8bf847416815708bd67109f77afc42c4fc7b58731a40de41e1d"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 8,
+          "latestForkMessage": {
+            "epoch": 1360,
+            "root": "0x7a71476811be50dff042eea9af4303eff576428bce01e80d1976fc386cac5c17"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 9,
+          "latestForkMessage": {
+            "epoch": 1368,
+            "root": "0x3e7b7b27b04f3a79d14dda5261cd955f8210467d95c7c0847a2e33f5a014fc2b"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 10,
+          "latestForkMessage": {
+            "epoch": 1363,
+            "root": "0xdc5235112eddf8bf847416815708bd67109f77afc42c4fc7b58731a40de41e1d"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 11,
+          "latestForkMessage": {
+            "epoch": 1367,
+            "root": "0x6b4cc56379a081892c7b0891bfe9cb99b5d857d9774c74d36d48808dd0394358"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 12,
+          "latestForkMessage": {
+            "epoch": 1363,
+            "root": "0xdc5235112eddf8bf847416815708bd67109f77afc42c4fc7b58731a40de41e1d"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 13,
+          "latestForkMessage": {
+            "epoch": 1367,
+            "root": "0x6b4cc56379a081892c7b0891bfe9cb99b5d857d9774c74d36d48808dd0394358"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 14,
+          "latestForkMessage": {
+            "epoch": 1367,
+            "root": "0x6b4cc56379a081892c7b0891bfe9cb99b5d857d9774c74d36d48808dd0394358"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 15,
+          "latestForkMessage": {
+            "epoch": 1360,
+            "root": "0x1b01702a591b9545a7ba6dde3f2d8ead7f1e403feba01d2c2e876f6d7f29ad2b"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 16,
+          "latestForkMessage": {
+            "epoch": 3149,
+            "root": "0xf04fe76154c73a43a6c763fcfeec3f4a1237d978b57381eb6c46b1813318c6db"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 17,
+          "latestForkMessage": {
+            "epoch": 3157,
+            "root": "0x2e460f9646e00cf32d1db608ff4a5a8f2d494161e124e6c26d717e3f158994b8"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 18,
+          "latestForkMessage": {
+            "epoch": 2645,
+            "root": "0xb69a59158d106d27f6d01ef5b2c207697ac1979b897d9df57ba52e76a8079ccf"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 19,
+          "latestForkMessage": {
+            "epoch": 3155,
+            "root": "0x2e460f9646e00cf32d1db608ff4a5a8f2d494161e124e6c26d717e3f158994b8"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 20,
+          "latestForkMessage": {
+            "epoch": 3161,
+            "root": "0x2e460f9646e00cf32d1db608ff4a5a8f2d494161e124e6c26d717e3f158994b8"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 21,
+          "latestForkMessage": {
+            "epoch": 2646,
+            "root": "0xb69a59158d106d27f6d01ef5b2c207697ac1979b897d9df57ba52e76a8079ccf"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 22,
+          "latestForkMessage": {
+            "epoch": 2645,
+            "root": "0xb69a59158d106d27f6d01ef5b2c207697ac1979b897d9df57ba52e76a8079ccf"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 23,
+          "latestForkMessage": {
+            "epoch": 2646,
+            "root": "0xb69a59158d106d27f6d01ef5b2c207697ac1979b897d9df57ba52e76a8079ccf"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 24,
+          "latestForkMessage": {
+            "epoch": 2646,
+            "root": "0xb69a59158d106d27f6d01ef5b2c207697ac1979b897d9df57ba52e76a8079ccf"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 25,
+          "latestForkMessage": {
+            "epoch": 2646,
+            "root": "0xb69a59158d106d27f6d01ef5b2c207697ac1979b897d9df57ba52e76a8079ccf"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 26,
+          "latestForkMessage": {
+            "epoch": 2646,
+            "root": "0xb69a59158d106d27f6d01ef5b2c207697ac1979b897d9df57ba52e76a8079ccf"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 27,
+          "latestForkMessage": {
+            "epoch": 3151,
+            "root": "0x2e460f9646e00cf32d1db608ff4a5a8f2d494161e124e6c26d717e3f158994b8"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 28,
+          "latestForkMessage": {
+            "epoch": 2646,
+            "root": "0xb69a59158d106d27f6d01ef5b2c207697ac1979b897d9df57ba52e76a8079ccf"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 29,
+          "latestForkMessage": {
+            "epoch": 2646,
+            "root": "0xb69a59158d106d27f6d01ef5b2c207697ac1979b897d9df57ba52e76a8079ccf"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 30,
+          "latestForkMessage": {
+            "epoch": 2646,
+            "root": "0xb69a59158d106d27f6d01ef5b2c207697ac1979b897d9df57ba52e76a8079ccf"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 31,
+          "latestForkMessage": {
+            "epoch": 3147,
+            "root": "0xb69a59158d106d27f6d01ef5b2c207697ac1979b897d9df57ba52e76a8079ccf"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 32,
+          "latestForkMessage": {
+            "epoch": 1684,
+            "root": "0x3bc3ba064edde163018cfa26743590f39cb6bda8201273d3ef7871c5ab6b35fc"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 33,
+          "latestForkMessage": {
+            "epoch": 1687,
+            "root": "0xd06b20d40620d4a16a92e5afd21509c823ae544516a12b4441c12f52408c0e8c"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 34,
+          "latestForkMessage": {
+            "epoch": 1687,
+            "root": "0xd06b20d40620d4a16a92e5afd21509c823ae544516a12b4441c12f52408c0e8c"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 35,
+          "latestForkMessage": {
+            "epoch": 1686,
+            "root": "0xc00576fa4e789e054a759430b6de88d556cb35e0d19a2a463b6a982260a5b8dc"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 36,
+          "latestForkMessage": {
+            "epoch": 1644,
+            "root": "0x159065b96dc0ffbce1c230d9755cedec422eb91c6d7a6c4015de2c4e90109bed"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 37,
+          "latestForkMessage": {
+            "epoch": 1690,
+            "root": "0x23a2a38d223c8b9687545b65686c51a397ae974a12fbcc3668611201c3b2d24e"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 38,
+          "latestForkMessage": {
+            "epoch": 1685,
+            "root": "0x03243eae70ce9ea9fe23f1806ef8408de009373b0dd25c7f934baae892199201"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 39,
+          "latestForkMessage": {
+            "epoch": 1686,
+            "root": "0xc00576fa4e789e054a759430b6de88d556cb35e0d19a2a463b6a982260a5b8dc"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 40,
+          "latestForkMessage": {
+            "epoch": 1689,
+            "root": "0x23a2a38d223c8b9687545b65686c51a397ae974a12fbcc3668611201c3b2d24e"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 41,
+          "latestForkMessage": {
+            "epoch": 1674,
+            "root": "0x8778edeae32a919154e0ab3547426990eae3092e0595049b8a4d460af658bea9"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 42,
+          "latestForkMessage": {
+            "epoch": 1645,
+            "root": "0x0470b6c4ed9fda9c30ff4cc475f5a69cec5f30858183e7f9d370300066a878c7"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 43,
+          "latestForkMessage": {
+            "epoch": 1675,
+            "root": "0x288b0bf9cecb67fec4bc909fe6f74d7f7a754a2fc7a3fdaa70508ecff51a24af"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 44,
+          "latestForkMessage": {
+            "epoch": 1640,
+            "root": "0x690a81b6a02803866e184688f047092bf9b74f29e08a7d441213d4d0adf54134"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 45,
+          "latestForkMessage": {
+            "epoch": 1679,
+            "root": "0xae218842cf2e382d90df9065285ef90f2e2fd66eea0f32bea330c63941f0e89d"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 46,
+          "latestForkMessage": {
+            "epoch": 1592,
+            "root": "0xff70a0cc86d75faacd34ada1be049a6579466c7d2c5514e40b5fbdd0ac4468b2"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 47,
+          "latestForkMessage": {
+            "epoch": 1641,
+            "root": "0x81f08732b6b69f392dcea30130b7d0415a9e302ca37f3f4d6c9fe557334f9c0d"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 48,
+          "latestForkMessage": {
+            "epoch": 1681,
+            "root": "0xc84869dd00d5a81aa5eca4ffb3f9ecd1f85b3e9b3398b7049e484a52beee4319"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 49,
+          "latestForkMessage": {
+            "epoch": 1638,
+            "root": "0xcd3a74fd95f91266fe6e8b6bd8860cfbde3d038e647826d4ab36606be78df8ca"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 50,
+          "latestForkMessage": {
+            "epoch": 1547,
+            "root": "0x60e519f9b36d24c86b46260eb01abbdd5ca26bb107e9fb478ebf624861200d6c"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 51,
+          "latestForkMessage": {
+            "epoch": 1546,
+            "root": "0x069be4dc0af201ecadb67473d32e200bb1bea4c5fb406a15bad58378bd945e25"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 52,
+          "latestForkMessage": {
+            "epoch": 1548,
+            "root": "0xd00f7f3e99e8085981cbcc91c918e2faa696443422382beface11d8f0a95ab03"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 53,
+          "latestForkMessage": {
+            "epoch": 1584,
+            "root": "0xef97aee69c683b214f2c19e1d697a089f8e6415fde6c5ebacf9bda80947ff1a1"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 54,
+          "latestForkMessage": {
+            "epoch": 1545,
+            "root": "0x38b11adb2371ec14566fd8998ab347254cf4e042a248af8b9e43cb10cf6f7e24"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 55,
+          "latestForkMessage": {
+            "epoch": 1546,
+            "root": "0x069be4dc0af201ecadb67473d32e200bb1bea4c5fb406a15bad58378bd945e25"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 56,
+          "latestForkMessage": {
+            "epoch": 1544,
+            "root": "0x5d0b4f2f347f1475b0146c2317a6938d1371b4cea06d06ae2ef73a2fec849c4c"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 57,
+          "latestForkMessage": {
+            "epoch": 1546,
+            "root": "0x11645e48ab53840b75b419c97ed8a7f845238ee5ee77c29e7581da2577b53f61"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 58,
+          "latestForkMessage": {
+            "epoch": 1532,
+            "root": "0x501b6d4aaf18899d842f4450118d03d657e0356d8e1b9cf28b217e21c4227e32"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 59,
+          "latestForkMessage": {
+            "epoch": 1539,
+            "root": "0xd34d111d49510749b95579ac2f5b65c50dba785e35c9b0100915d04016e744a5"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 60,
+          "latestForkMessage": {
+            "epoch": 1547,
+            "root": "0x123beb31faf686292c7a574b1301cc57ed070a73983839eda86654df95a7727d"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 61,
+          "latestForkMessage": {
+            "epoch": 1535,
+            "root": "0xb89d82e606622baf878fa3ab2479a1a5b29e40cb1e1e9c8b9248926a4566faa5"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 62,
+          "latestForkMessage": {
+            "epoch": 1539,
+            "root": "0xbbbcab3c7a75d3c147d3765ae801cc6df265c2d21e12bc0a081b8570da44916b"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 63,
+          "latestForkMessage": {
+            "epoch": 1640,
+            "root": "0x690a81b6a02803866e184688f047092bf9b74f29e08a7d441213d4d0adf54134"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 13,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 64,
+          "latestForkMessage": {
+            "epoch": 1504,
+            "root": "0xb291271ca275e298fd3fce88485e061f8dae16a338668fbe3078910616e625ac"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        }
+      ],
+      "previousEpoch": 3150,
+      "previousTimelyTargetCountsByOwner": [
+        0,
+        0,
+        0
+      ],
+      "productionQualified": false,
+      "runtimeHealthInferred": false,
+      "stateEpoch": 3151,
+      "stateRoot": "0x0c48d5d50649b0e5311739b299e4c7edeea35a7ae16fa4947d4fab8ad176a471",
+      "timelyTargetFlagIndex": 1
+    },
+    "primaryWitnessAndSignersVerified": true,
+    "productionQualified": false,
+    "profileSha256": "0xe3440eba0a871a8eedf84a6e2cdccee53cc4389e8ce6b979166621c8e893890d",
+    "readOnlyStores": true,
+    "restart": {
+      "digest": "0xe90ddcc8083089c8bc3f777920bbe76d56d7b7b33d464b4c68eb151c74d9e76b",
+      "sequence": "0x47b5"
+    },
+    "runtimeHealthInferred": false,
+    "sourceQuiescenceExternallyRequired": true,
+    "validatorKeys": [
+      {
+        "index": "0x0",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0x7e3c5f5f06099e8f91db340080301892aba597920f08309a625ed4cb0f702081",
+          "sequence": "0x3a"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1",
+        "latestAttestationTarget": 1207,
+        "restart": {
+          "digest": "0x322fb31cb67e2678b4b95f7b4387e49bf4fea5bda075df714dbed217592466ea",
+          "sequence": "0x39"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x2",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0xb4cb38eb28a41763831a7ac5f14c37eb300d3df8aede2f423f7ee44799a1059d",
+          "sequence": "0x3a"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x3",
+        "latestAttestationTarget": 1207,
+        "restart": {
+          "digest": "0x44351b7173d9d00b01870127fa49f8979855ae550f76a1b60707713b7a135aa4",
+          "sequence": "0x39"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x4",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0x6260f50d31ff0d7d46c5d13ea900aa9b990ae1a331005a23310e039a088e4b1d",
+          "sequence": "0x3a"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x5",
+        "latestAttestationTarget": 1207,
+        "restart": {
+          "digest": "0x50d920a2991d0231ded4a4078cbd48dfc4995954ed543ea4fb3817bbdf50346f",
+          "sequence": "0x37"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x6",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0xaa470be6fdd3ff623fb8eedccbe9c3e3a88f65c65d740e6416ae366f41b0bfed",
+          "sequence": "0x39"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x7",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0x648c7adaf35c6ae570c267bcfba7e182845ea60c7cfd0056a0581229b768decd",
+          "sequence": "0x38"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x8",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0xcf78c9fb76030c6f6f15fb599404fd5cef159e68ea9fa698f09f067bf4a03472",
+          "sequence": "0x38"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x9",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0xad06858049fe427f3531c61b33685764d156bfe0de4866be6f531567be2725a2",
+          "sequence": "0x36"
+        },
+        "retired": false
+      },
+      {
+        "index": "0xa",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0xa17bf9f74ea2148a3636b33569758be10dc8ec97c1e26741073c57c947d42041",
+          "sequence": "0x39"
+        },
+        "retired": false
+      },
+      {
+        "index": "0xb",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0xedcaf9ff9a38b10182831d24d5e064bd0197585b9cd752675697dfd3ac8501f7",
+          "sequence": "0x38"
+        },
+        "retired": false
+      },
+      {
+        "index": "0xc",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0xad11a2ac81ebf4b53e2165531972df79ecde064a1cca97169342bd83eb562413",
+          "sequence": "0x38"
+        },
+        "retired": false
+      },
+      {
+        "index": "0xd",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0x0be89181738f96ae479bb638bbaeb18558c836fff66162982c1252aef219210b",
+          "sequence": "0x33"
+        },
+        "retired": false
+      },
+      {
+        "index": "0xe",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0xfec92d3f5f3136a6b3353e86889a97112578185bb76f8dc2a9a7d318ccaf5fd1",
+          "sequence": "0x38"
+        },
+        "retired": false
+      },
+      {
+        "index": "0xf",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0x475b90f9cfd7730d509a1951d10798faa04c1fc38dce00489ec18c56b74160cc",
+          "sequence": "0x35"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x10",
+        "latestAttestationTarget": 3149,
+        "restart": {
+          "digest": "0xb4febb1e5ac8a202ea6d7610abfbd21e177f35cca257a5a506cd7a3fd3f12ba1",
+          "sequence": "0x1cc"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x11",
+        "latestAttestationTarget": 3157,
+        "restart": {
+          "digest": "0x5fc75546d6c58477f97d9b1a64e91e0eb97f4b785db4c1fda64607a10e0537c7",
+          "sequence": "0x1cd"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x12",
+        "latestAttestationTarget": 2645,
+        "restart": {
+          "digest": "0x0104cfd7781417cfa007801a544544480c4f457419392d2c0e45b2a19fc42727",
+          "sequence": "0x1d0"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x13",
+        "latestAttestationTarget": 3155,
+        "restart": {
+          "digest": "0xb192b1ac54290c75cb5d1da1987edfab85b1bd53338da9e4e5634bd1fcb8dba8",
+          "sequence": "0x1d3"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x14",
+        "latestAttestationTarget": 3161,
+        "restart": {
+          "digest": "0x1f890b0df19994ce1d84ce791929417876c0ee1fd307a2a158d7e8390d224926",
+          "sequence": "0x1d4"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x15",
+        "latestAttestationTarget": 2646,
+        "restart": {
+          "digest": "0x7c1f781d3dfa46d78a40c06f8e24b8097547360d10538eae5cbc580499b72410",
+          "sequence": "0x1d2"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x16",
+        "latestAttestationTarget": 2645,
+        "restart": {
+          "digest": "0x53e55f7f80a1b85fc8db1b6325c36e86faad7ec8ac5881d7e9c96407b69d0f2c",
+          "sequence": "0x1c9"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x17",
+        "latestAttestationTarget": 2646,
+        "restart": {
+          "digest": "0xd4e96c51e3f67c3b378eb9a57f2e3311d7027cd9c58bd1ccdea1a6c780ca27df",
+          "sequence": "0x1c2"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x18",
+        "latestAttestationTarget": 2646,
+        "restart": {
+          "digest": "0x3ca96791ec03363cabc70658d1d174e92b1918e2ccf9566b175108c27f610695",
+          "sequence": "0x1d8"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x19",
+        "latestAttestationTarget": 2646,
+        "restart": {
+          "digest": "0x98a58eb389f8034e7c99b6d6425d2848eda819b0cad8501e3b5f35df17d932ab",
+          "sequence": "0x1cc"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1a",
+        "latestAttestationTarget": 2646,
+        "restart": {
+          "digest": "0x4d7a602364cdeb661e592cba065e5a6747a1e295d8b3171fa04bc06940f89222",
+          "sequence": "0x1c3"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1b",
+        "latestAttestationTarget": 3151,
+        "restart": {
+          "digest": "0x458448a5bf73195962fc345e6ff8897845e563cba19d75a3e7afbfdf8a78658e",
+          "sequence": "0x1c7"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1c",
+        "latestAttestationTarget": 2646,
+        "restart": {
+          "digest": "0x61e3cd342d23f2203596ac057fa0d4ad7c7a721d528a1d0427a19a647f8ee5fb",
+          "sequence": "0x1c9"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1d",
+        "latestAttestationTarget": 2646,
+        "restart": {
+          "digest": "0x234c2ab4a3dc67e409e1136063f229786d45cc3b7ccbc8e8c44cf05384f3e9d2",
+          "sequence": "0x1c9"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1e",
+        "latestAttestationTarget": 2646,
+        "restart": {
+          "digest": "0x3e2f401f61f98ea058f87e974c79bbd41ee3617c701b5bd5bde625eb39c054ed",
+          "sequence": "0x1c3"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1f",
+        "latestAttestationTarget": 3147,
+        "restart": {
+          "digest": "0x25574e3c813fb73850e93295bca13eadb843d40287ed73c5d757bdf6f6b01c91",
+          "sequence": "0x1bf"
+        },
+        "retired": false
+      }
+    ]
+  },
+  "vpsCapsule": {
+    "canonicalReplay": {
+      "allHistoricalStatesMaterialized": true,
+      "archiveBytes": 2231337,
+      "blocksIncludingTrustedAnchor": 960,
+      "canonicalHistoryVerified": true,
+      "checkpointDigest": "0xd464e680b862381b2f0b9f70079dde395560293e0bcb3302f504e598a7996fca",
+      "checkpointSequence": 14138,
+      "externalFinalizedAncestorVerified": true,
+      "finalized": {
+        "epoch": "0x504",
+        "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+      },
+      "firstExecutionBlock": "0x1",
+      "head": "0xadf98a7e40927a67f7a9d9a7000eff8959a8ea55397e915f2e5bbdee3d5440cc",
+      "historicalForkChoiceVerified": false,
+      "historicalStandaloneVotesReplayed": false,
+      "lastExecutionBlock": "0x3c0",
+      "prunedExecutionStatesReplayed": 0,
+      "requiredFinalized": {
+        "epoch": "0x504",
+        "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+      },
+      "transactions": 2,
+      "trustedAnchor": "0x1f84dd50b5d8740e8c9a7b2a62ef9790593498978dfb7de244406b7449b75c2f"
+    },
+    "captureBudget": {
+      "blocks": "0x1000",
+      "envelopeBytes": "0x8000000"
+    },
+    "chainId": "0x539",
+    "format": "nano-private-quiescent-recovery-pins-v1",
+    "genesisHash": "0xdc39226edf6b7c4ed0735b306e39502de8220dbbbeedf3f3fca2fd4bc04e893c",
+    "historicalTokenDigestAncestryVerified": false,
+    "minimumSequenceBoundsVerified": true,
+    "participationDiagnostics": {
+      "currentTimelyTargetCountsByOwner": [
+        0,
+        0,
+        0
+      ],
+      "headSlot": 25282,
+      "historicalStandaloneVotesReplayed": false,
+      "members": [
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 0,
+          "latestForkMessage": {
+            "epoch": 1371,
+            "root": "0x19bc37a623d37d14c1aa02c397d6aa98257d4a499ae4ab6d16b9dcae7e1f210f"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 1,
+          "latestForkMessage": {
+            "epoch": 1371,
+            "root": "0x19bc37a623d37d14c1aa02c397d6aa98257d4a499ae4ab6d16b9dcae7e1f210f"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 2,
+          "latestForkMessage": {
+            "epoch": 1369,
+            "root": "0xee6486719496c4e30474ecb79e5c319dad6b2a5bbb654b91c13e0e9227148dd3"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 3,
+          "latestForkMessage": {
+            "epoch": 1371,
+            "root": "0x19bc37a623d37d14c1aa02c397d6aa98257d4a499ae4ab6d16b9dcae7e1f210f"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 4,
+          "latestForkMessage": {
+            "epoch": 1369,
+            "root": "0xee6486719496c4e30474ecb79e5c319dad6b2a5bbb654b91c13e0e9227148dd3"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 5,
+          "latestForkMessage": {
+            "epoch": 1371,
+            "root": "0x19bc37a623d37d14c1aa02c397d6aa98257d4a499ae4ab6d16b9dcae7e1f210f"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 6,
+          "latestForkMessage": {
+            "epoch": 1372,
+            "root": "0x19bc37a623d37d14c1aa02c397d6aa98257d4a499ae4ab6d16b9dcae7e1f210f"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 7,
+          "latestForkMessage": {
+            "epoch": 1372,
+            "root": "0xeb6cc4e9defb3b7a698dfa2d0c3a51d574aa40526cfc933e7c7ffcbfd4558c31"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 8,
+          "latestForkMessage": {
+            "epoch": 1371,
+            "root": "0xfd4eb5171ab250a1fd31b95d6fee38147edd9182eec7b8b38a909609d33ff919"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 9,
+          "latestForkMessage": {
+            "epoch": 1371,
+            "root": "0x19bc37a623d37d14c1aa02c397d6aa98257d4a499ae4ab6d16b9dcae7e1f210f"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 10,
+          "latestForkMessage": {
+            "epoch": 1372,
+            "root": "0x19bc37a623d37d14c1aa02c397d6aa98257d4a499ae4ab6d16b9dcae7e1f210f"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 11,
+          "latestForkMessage": {
+            "epoch": 1372,
+            "root": "0x19bc37a623d37d14c1aa02c397d6aa98257d4a499ae4ab6d16b9dcae7e1f210f"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 12,
+          "latestForkMessage": {
+            "epoch": 1371,
+            "root": "0x19bc37a623d37d14c1aa02c397d6aa98257d4a499ae4ab6d16b9dcae7e1f210f"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 13,
+          "latestForkMessage": {
+            "epoch": 1369,
+            "root": "0xee6486719496c4e30474ecb79e5c319dad6b2a5bbb654b91c13e0e9227148dd3"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 14,
+          "latestForkMessage": {
+            "epoch": 1371,
+            "root": "0x19bc37a623d37d14c1aa02c397d6aa98257d4a499ae4ab6d16b9dcae7e1f210f"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 15,
+          "latestForkMessage": {
+            "epoch": 1370,
+            "root": "0xee6486719496c4e30474ecb79e5c319dad6b2a5bbb654b91c13e0e9227148dd3"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 16,
+          "latestForkMessage": {
+            "epoch": 1372,
+            "root": "0x84e5309ed767e01054cd58387d2acf864fa82deeb5ef32dc55cf9b0bf4e20ee6"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 17,
+          "latestForkMessage": {
+            "epoch": 1371,
+            "root": "0xb50ba01b499b087d527d6ce95f4d7a3f2e84344fb72cc12bf576aaf010b25e87"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 18,
+          "latestForkMessage": {
+            "epoch": 1371,
+            "root": "0xb50ba01b499b087d527d6ce95f4d7a3f2e84344fb72cc12bf576aaf010b25e87"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 19,
+          "latestForkMessage": {
+            "epoch": 1371,
+            "root": "0xb50ba01b499b087d527d6ce95f4d7a3f2e84344fb72cc12bf576aaf010b25e87"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 20,
+          "latestForkMessage": {
+            "epoch": 1371,
+            "root": "0xb50ba01b499b087d527d6ce95f4d7a3f2e84344fb72cc12bf576aaf010b25e87"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 21,
+          "latestForkMessage": {
+            "epoch": 1371,
+            "root": "0xb50ba01b499b087d527d6ce95f4d7a3f2e84344fb72cc12bf576aaf010b25e87"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 22,
+          "latestForkMessage": {
+            "epoch": 1371,
+            "root": "0xb50ba01b499b087d527d6ce95f4d7a3f2e84344fb72cc12bf576aaf010b25e87"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 23,
+          "latestForkMessage": {
+            "epoch": 1371,
+            "root": "0xb50ba01b499b087d527d6ce95f4d7a3f2e84344fb72cc12bf576aaf010b25e87"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 24,
+          "latestForkMessage": {
+            "epoch": 1371,
+            "root": "0xb50ba01b499b087d527d6ce95f4d7a3f2e84344fb72cc12bf576aaf010b25e87"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 25,
+          "latestForkMessage": {
+            "epoch": 1372,
+            "root": "0x84e5309ed767e01054cd58387d2acf864fa82deeb5ef32dc55cf9b0bf4e20ee6"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 26,
+          "latestForkMessage": {
+            "epoch": 1371,
+            "root": "0xb50ba01b499b087d527d6ce95f4d7a3f2e84344fb72cc12bf576aaf010b25e87"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 27,
+          "latestForkMessage": {
+            "epoch": 1372,
+            "root": "0x84e5309ed767e01054cd58387d2acf864fa82deeb5ef32dc55cf9b0bf4e20ee6"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 28,
+          "latestForkMessage": {
+            "epoch": 1370,
+            "root": "0x6f349ad038fe380e78c6dccf2f18d5c5e54e845021bb1d82dcb2a5047e6cb047"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 29,
+          "latestForkMessage": {
+            "epoch": 1372,
+            "root": "0x84e5309ed767e01054cd58387d2acf864fa82deeb5ef32dc55cf9b0bf4e20ee6"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 30,
+          "latestForkMessage": {
+            "epoch": 1372,
+            "root": "0x84e5309ed767e01054cd58387d2acf864fa82deeb5ef32dc55cf9b0bf4e20ee6"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 31,
+          "latestForkMessage": {
+            "epoch": 1371,
+            "root": "0xb50ba01b499b087d527d6ce95f4d7a3f2e84344fb72cc12bf576aaf010b25e87"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 32,
+          "latestForkMessage": {
+            "epoch": 3148,
+            "root": "0xc15e3bb7d286a096c70214452aea835847bf2af13e2b457f2f1694ba3cf74827"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 33,
+          "latestForkMessage": {
+            "epoch": 3156,
+            "root": "0xad42ab0b2bd95a36efab8a452bc47b544db20af552640a76510cee59a9cafb40"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 34,
+          "latestForkMessage": {
+            "epoch": 2348,
+            "root": "0xe7351a4a85b776fd065f7150db4f4556e2e9e29a9b3e20c4ae78967db7de2f91"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 35,
+          "latestForkMessage": {
+            "epoch": 2233,
+            "root": "0x5c409602ac591d00d539d0689d024fd0d4b2aca6a4b69ee2694b50420cbb049f"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 36,
+          "latestForkMessage": {
+            "epoch": 3158,
+            "root": "0xad42ab0b2bd95a36efab8a452bc47b544db20af552640a76510cee59a9cafb40"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 37,
+          "latestForkMessage": {
+            "epoch": 2058,
+            "root": "0xd20f8c730e05ba3c4b84efe6d02977ed44c71ad2619856737c5d9efce09f69c1"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 38,
+          "latestForkMessage": {
+            "epoch": 2290,
+            "root": "0xc076c9fba8d6a5ef636a1350f55ae43661a07bd0381bb310ce881738f6e48923"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 39,
+          "latestForkMessage": {
+            "epoch": 2126,
+            "root": "0xade2d9c08738094f8e82b52b319087483ba3e08d51b6d0574e115ff3e149dc42"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 40,
+          "latestForkMessage": {
+            "epoch": 3152,
+            "root": "0xad42ab0b2bd95a36efab8a452bc47b544db20af552640a76510cee59a9cafb40"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 41,
+          "latestForkMessage": {
+            "epoch": 3160,
+            "root": "0xadf98a7e40927a67f7a9d9a7000eff8959a8ea55397e915f2e5bbdee3d5440cc"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 42,
+          "latestForkMessage": {
+            "epoch": 2140,
+            "root": "0xe155e46f28a940b7ef5a6f19885d349f71a1ad0c1a7c36c2f70a08eb975065bb"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 43,
+          "latestForkMessage": {
+            "epoch": 2348,
+            "root": "0xe7351a4a85b776fd065f7150db4f4556e2e9e29a9b3e20c4ae78967db7de2f91"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 44,
+          "latestForkMessage": {
+            "epoch": 2294,
+            "root": "0x7385f438a0321b9398303601e6dae0a8ece03af6e0ea6f224d790d2f438b525d"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 45,
+          "latestForkMessage": {
+            "epoch": 3150,
+            "root": "0xad42ab0b2bd95a36efab8a452bc47b544db20af552640a76510cee59a9cafb40"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 46,
+          "latestForkMessage": {
+            "epoch": 2018,
+            "root": "0x8ca7fcb29677e5e481ce8cc85ad9f2c7babb455d02ce40b2f08664cc19ffab45"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 47,
+          "latestForkMessage": {
+            "epoch": 2130,
+            "root": "0xade2d9c08738094f8e82b52b319087483ba3e08d51b6d0574e115ff3e149dc42"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 48,
+          "latestForkMessage": {
+            "epoch": 2172,
+            "root": "0xe155e46f28a940b7ef5a6f19885d349f71a1ad0c1a7c36c2f70a08eb975065bb"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 49,
+          "latestForkMessage": {
+            "epoch": 1638,
+            "root": "0xcd3a74fd95f91266fe6e8b6bd8860cfbde3d038e647826d4ab36606be78df8ca"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 50,
+          "latestForkMessage": {
+            "epoch": 1547,
+            "root": "0x60e519f9b36d24c86b46260eb01abbdd5ca26bb107e9fb478ebf624861200d6c"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 51,
+          "latestForkMessage": {
+            "epoch": 1681,
+            "root": "0x8e0ed9cc77e701aa7b2d3b14379ae8b0a80d63202eeecc9ce0f09f4b38b6e5a7"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 52,
+          "latestForkMessage": {
+            "epoch": 2133,
+            "root": "0xc38ec931b51d6091ff84a92852b0a65f3e2248f291a0b6a7147e864a1f9b42f7"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 53,
+          "latestForkMessage": {
+            "epoch": 1584,
+            "root": "0xef97aee69c683b214f2c19e1d697a089f8e6415fde6c5ebacf9bda80947ff1a1"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 54,
+          "latestForkMessage": {
+            "epoch": 1821,
+            "root": "0xe9a777c988ebc70999c841200cce2c0a143884dfadf7502b790fd5c9e378c106"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 55,
+          "latestForkMessage": {
+            "epoch": 2128,
+            "root": "0xade2d9c08738094f8e82b52b319087483ba3e08d51b6d0574e115ff3e149dc42"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 56,
+          "latestForkMessage": {
+            "epoch": 1544,
+            "root": "0x5d0b4f2f347f1475b0146c2317a6938d1371b4cea06d06ae2ef73a2fec849c4c"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 57,
+          "latestForkMessage": {
+            "epoch": 1818,
+            "root": "0xf88372af9e4366ade18ed1df9ed842213af314c878163879103990a88f3cc847"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 58,
+          "latestForkMessage": {
+            "epoch": 1532,
+            "root": "0x501b6d4aaf18899d842f4450118d03d657e0356d8e1b9cf28b217e21c4227e32"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 59,
+          "latestForkMessage": {
+            "epoch": 3154,
+            "root": "0xad42ab0b2bd95a36efab8a452bc47b544db20af552640a76510cee59a9cafb40"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 60,
+          "latestForkMessage": {
+            "epoch": 1547,
+            "root": "0x123beb31faf686292c7a574b1301cc57ed070a73983839eda86654df95a7727d"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 61,
+          "latestForkMessage": {
+            "epoch": 1535,
+            "root": "0xb89d82e606622baf878fa3ab2479a1a5b29e40cb1e1e9c8b9248926a4566faa5"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 62,
+          "latestForkMessage": {
+            "epoch": 1539,
+            "root": "0xbbbcab3c7a75d3c147d3765ae801cc6df265c2d21e12bc0a081b8570da44916b"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 63,
+          "latestForkMessage": {
+            "epoch": 1640,
+            "root": "0x690a81b6a02803866e184688f047092bf9b74f29e08a7d441213d4d0adf54134"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 13,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 64,
+          "latestForkMessage": {
+            "epoch": 1504,
+            "root": "0xb291271ca275e298fd3fce88485e061f8dae16a338668fbe3078910616e625ac"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        }
+      ],
+      "previousEpoch": 3159,
+      "previousTimelyTargetCountsByOwner": [
+        0,
+        0,
+        0
+      ],
+      "productionQualified": false,
+      "runtimeHealthInferred": false,
+      "stateEpoch": 3160,
+      "stateRoot": "0xc26fe7c44bf8d967cf1de193e0b1538764e4ad631819ae0a34fabebba8613c47",
+      "timelyTargetFlagIndex": 1
+    },
+    "primaryWitnessAndSignersVerified": true,
+    "productionQualified": false,
+    "profileSha256": "0xe3440eba0a871a8eedf84a6e2cdccee53cc4389e8ce6b979166621c8e893890d",
+    "readOnlyStores": true,
+    "restart": {
+      "digest": "0xd464e680b862381b2f0b9f70079dde395560293e0bcb3302f504e598a7996fca",
+      "sequence": "0x373a"
+    },
+    "runtimeHealthInferred": false,
+    "sourceQuiescenceExternallyRequired": true,
+    "validatorKeys": [
+      {
+        "index": "0x20",
+        "latestAttestationTarget": 3148,
+        "restart": {
+          "digest": "0xb8ae927ed8d4b43497375b2edec254518a89fd17d06d08c2683cfddb8d0870bd",
+          "sequence": "0xa8"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x21",
+        "latestAttestationTarget": 3156,
+        "restart": {
+          "digest": "0x87ba257f7691de6b6d5c26f68a278d8d19b681c2c73a1b8b8aab3770e2b3eefc",
+          "sequence": "0xac"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x22",
+        "latestAttestationTarget": 2348,
+        "restart": {
+          "digest": "0xd81882f03abc8ceaadcb5063ada6af1cd373bc68ef043873afa04dd6d7db36f8",
+          "sequence": "0xb3"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x23",
+        "latestAttestationTarget": 2233,
+        "restart": {
+          "digest": "0x31cdb959583513e00f966748933e68f95ce2cd44f10b2dbdfe420e20982721e1",
+          "sequence": "0x90"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x24",
+        "latestAttestationTarget": 3158,
+        "restart": {
+          "digest": "0xf29cebe5b6d8601bd27dc18d6d6a6ecd76751bc924f647baca39561fac0636f5",
+          "sequence": "0x9d"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x25",
+        "latestAttestationTarget": 2058,
+        "restart": {
+          "digest": "0x441a344963581ea84eea96f5e140aa6dac3cb4816d0c9b4d4d701db8a614dadc",
+          "sequence": "0x88"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x26",
+        "latestAttestationTarget": 2290,
+        "restart": {
+          "digest": "0x29a036f5424782c797ea1c7ee94793f69ab01d96b7a5d6b22e81c21c034919d7",
+          "sequence": "0x9a"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x27",
+        "latestAttestationTarget": 2126,
+        "restart": {
+          "digest": "0xb6f4c7eae5adf1f8287b5f7d4b5e5084057c6efede67493de9dee1f9601874f2",
+          "sequence": "0x85"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x28",
+        "latestAttestationTarget": 3152,
+        "restart": {
+          "digest": "0x1cfd1dc8bfaaaf9a74ef2e11d0a9b46366bb89005491b064576ba8bd3845f23e",
+          "sequence": "0x87"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x29",
+        "latestAttestationTarget": 3160,
+        "restart": {
+          "digest": "0x61c9d323d76eb2db9a680ed6a29b7d89b1dc15099f052be54ec4c79f64a5397a",
+          "sequence": "0x86"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x2a",
+        "latestAttestationTarget": 2140,
+        "restart": {
+          "digest": "0x7128a05596e83c1c14ce6f2bf1a113b8a71010401100e9ba24967da52e98aa88",
+          "sequence": "0x7f"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x2b",
+        "latestAttestationTarget": 2348,
+        "restart": {
+          "digest": "0x621783e68f5e24feb6fc82fce830bc25ed46b3aacddf15b5920cb114c2114507",
+          "sequence": "0x7f"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x2c",
+        "latestAttestationTarget": 2294,
+        "restart": {
+          "digest": "0xdf4f4118b528b94129e169f54604c8b2fecc54693d140ba937d284a2778d5fca",
+          "sequence": "0x81"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x2d",
+        "latestAttestationTarget": 3150,
+        "restart": {
+          "digest": "0xac6a081bebaecd0df987fd3b519cc92261e0a0966ebed91841485c5160954cd1",
+          "sequence": "0x7f"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x2e",
+        "latestAttestationTarget": 2018,
+        "restart": {
+          "digest": "0x75188e46623b0ccdcbc7861d49b68cd31082695626c040d40d1c695ebace8c10",
+          "sequence": "0x78"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x2f",
+        "latestAttestationTarget": 2130,
+        "restart": {
+          "digest": "0x0e3611abf367916c83252a1b339ddaa7cb0203937d4f59868f9c10d61e1cb741",
+          "sequence": "0x72"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x30",
+        "latestAttestationTarget": 2172,
+        "restart": {
+          "digest": "0xfd0416eb6f3114ed144d593eb79438980f22cdf1068fd61f90372b2d407276c0",
+          "sequence": "0x78"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x31",
+        "latestAttestationTarget": 1638,
+        "restart": {
+          "digest": "0xc93db3cf70e5f48f50ba2ef9509d930ada94295e289c880eb472475cfbb6a1ba",
+          "sequence": "0x6d"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x32",
+        "latestAttestationTarget": 1547,
+        "restart": {
+          "digest": "0x4834578f25fd952a737ff118991da79dfd6e4baa5a714eed5b07f3a52133e0c8",
+          "sequence": "0x71"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x33",
+        "latestAttestationTarget": 1681,
+        "restart": {
+          "digest": "0x87f367a43799a5640fc7989add5d2c427d6448efe1ff609b2bd735e2ad5c235c",
+          "sequence": "0x6c"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x34",
+        "latestAttestationTarget": 2133,
+        "restart": {
+          "digest": "0x3698de16a40cbfc3e92af75c202884f9ac6e719eea52afd441e5684a06ced39c",
+          "sequence": "0x6d"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x35",
+        "latestAttestationTarget": 1584,
+        "restart": {
+          "digest": "0xe8078ce9746f10aa206d90121a112ce24a1b7127acd5a4c53c304d8e43d6bf2f",
+          "sequence": "0x70"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x36",
+        "latestAttestationTarget": 1821,
+        "restart": {
+          "digest": "0x9b2c8d54baafa2dbf1b3cf524c6a38fe935c970dd5472cede52ab44bd80180c2",
+          "sequence": "0x61"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x37",
+        "latestAttestationTarget": 2128,
+        "restart": {
+          "digest": "0x8f0e5fce6d448598f3866620c13a7a025da9a9a6e5a2786f0e63dda6d743a392",
+          "sequence": "0x5f"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x38",
+        "latestAttestationTarget": 1544,
+        "restart": {
+          "digest": "0x4a09420d6a3037e18b31ccc5ebcaf0da789c686d18b5b22a7f6d85f4aba2730e",
+          "sequence": "0x60"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x39",
+        "latestAttestationTarget": 1818,
+        "restart": {
+          "digest": "0xbaa5d9614f994f7449d89e531a6f8a8020ad34bc472ee655140f67bab43f8930",
+          "sequence": "0x65"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x3a",
+        "latestAttestationTarget": 1532,
+        "restart": {
+          "digest": "0x8f9077c2edf77d09e2c4310c6c0430bd51a12cdfd3eab9cf0e9d97561c31a862",
+          "sequence": "0x5b"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x3b",
+        "latestAttestationTarget": 3154,
+        "restart": {
+          "digest": "0xad68387d6c8147ee5ecece36ee0a9fb793ee71729f4e214af44d2edd0ccb0561",
+          "sequence": "0x55"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x3c",
+        "latestAttestationTarget": 1547,
+        "restart": {
+          "digest": "0xa07e5e16008f528aacc6dcb75490d5c25746a8212bcd5e262e79121801a339c3",
+          "sequence": "0x5d"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x3d",
+        "latestAttestationTarget": 1535,
+        "restart": {
+          "digest": "0x2472a874fef3b66387d384121dd46cee9c290aece683e558e93f6e1dc550bcec",
+          "sequence": "0x62"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x3e",
+        "latestAttestationTarget": 1539,
+        "restart": {
+          "digest": "0xa022cf304699365dde265baa94c6b90ba7d2c8d5adbddc33059be16ef2fbde24",
+          "sequence": "0x53"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x3f",
+        "latestAttestationTarget": 1640,
+        "restart": {
+          "digest": "0x279936a2feb90541c36da96424dc6188db6a7c3c0e1f1b51a4b66032528110d2",
+          "sequence": "0x53"
+        },
+        "retired": false
+      },
+      {
+        "index": null,
+        "latestAttestationTarget": 1504,
+        "publicKey": "0xb4e84be7005df300900c6f5f67cf288374e33c3f05c2f10b6d2ff754e92ea8577d55b91e22cea2782250a8bc7d2af46d",
+        "restart": {
+          "digest": "0xf215bc099b45e74c8f07faf0d5015668ac8f98eb39ab0349591933c01120a773",
+          "sequence": "0x49"
+        },
+        "retired": false
+      }
+    ]
+  },
+  "writersStopped": true,
+  "genesisHash": "0xdc39226edf6b7c4ed0735b306e39502de8220dbbbeedf3f3fca2fd4bc04e893c",
+  "finalized": {
+    "epoch": "0x504",
+    "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+  },
+  "pendingPublicKey": "0xb4e84be7005df300900c6f5f67cf288374e33c3f05c2f10b6d2ff754e92ea8577d55b91e22cea2782250a8bc7d2af46d",
+  "macNativeConfig": {
+    "capella": {
+      "admission": {
+        "attestationBytes": "0x1e5",
+        "blockBytes": "0x800000",
+        "frameBytes": "0x1000400",
+        "jobs": "0x2",
+        "payloadBytes": "0x1000000",
+        "slashingBytes": "0x81d0"
+      },
+      "catalogs": {
+        "handles": "0x2",
+        "rootBytes": "0x20000",
+        "ttlMs": "0xea60"
+      },
+      "clock": {
+        "intervalMs": "0x64",
+        "maximumForwardStepMs": "0x5dc000",
+        "maximumWallClockDriftMs": "0xfa",
+        "startupCatchup": {
+          "maximumDowntimeMs": "0x5265c00",
+          "maximumSteps": "0x10"
+        }
+      },
+      "initial": null,
+      "limits": {
+        "blocks": "0x1000",
+        "envelopeBytes": "0x8000000",
+        "equivocations": "0x3e8",
+        "messages": "0x800",
+        "replaySlots": "0x400",
+        "stateBytes": "0x400000",
+        "syncTrials": "0x186a0",
+        "totalStateBytes": "0x4000000"
+      },
+      "network": {
+        "acknowledgedRoots": "0x400",
+        "dependencyBlocks": "0x100",
+        "dependencyBytes": "0x1000000",
+        "enabled": true,
+        "maximumEntries": "0x400",
+        "pageEntries": "0x8"
+      },
+      "profile": {
+        "file": "/config/profile.json",
+        "maximumBytes": "0x100000",
+        "sha256": "0xe3440eba0a871a8eedf84a6e2cdccee53cc4389e8ce6b979166621c8e893890d"
+      },
+      "recoveryWitness": "/var/lib/nano/witness",
+      "restart": null,
+      "validator": {
+        "keys": [
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x0",
+            "journal": "/var/lib/nano/key-0",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_0",
+            "recoveryWitness": "/var/lib/nano/key-0-witness",
+            "restart": {
+              "digest": "0xfc16a87485f460aed6b64f0ea14071ad3f1e0f289692648bbe67b45358ff464b",
+              "sequence": "0x37"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1",
+            "journal": "/var/lib/nano/key-1",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_1",
+            "recoveryWitness": "/var/lib/nano/key-1-witness",
+            "restart": {
+              "digest": "0xaa3da579de5c176b020b40b90328be8c3169a060335312860298dccbc843a5c9",
+              "sequence": "0x37"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x2",
+            "journal": "/var/lib/nano/key-2",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_2",
+            "recoveryWitness": "/var/lib/nano/key-2-witness",
+            "restart": {
+              "digest": "0xa19d724d0209950896a3d0dea8566a57c83808715c651f7745dabc55a16e00a5",
+              "sequence": "0x37"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x3",
+            "journal": "/var/lib/nano/key-3",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_3",
+            "recoveryWitness": "/var/lib/nano/key-3-witness",
+            "restart": {
+              "digest": "0xcc5a1c8cad20cd7684f8e9f62b7a2c899d29eb4b051135a1a0736b47b9968c25",
+              "sequence": "0x38"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x4",
+            "journal": "/var/lib/nano/key-4",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_4",
+            "recoveryWitness": "/var/lib/nano/key-4-witness",
+            "restart": {
+              "digest": "0xf35ccd0e586ff1e0e23b7d63b96c9520084cd0dec4f9b02a32baa0322fec4f6e",
+              "sequence": "0x37"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x5",
+            "journal": "/var/lib/nano/key-5",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_5",
+            "recoveryWitness": "/var/lib/nano/key-5-witness",
+            "restart": {
+              "digest": "0x60168f55ac236f31d4cdca6280c252db27465203dc9f46fa3b9ef22a6293d9cf",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x6",
+            "journal": "/var/lib/nano/key-6",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_6",
+            "recoveryWitness": "/var/lib/nano/key-6-witness",
+            "restart": {
+              "digest": "0xba78bede90ce50e960b5caf0b975261d9d77a2b42f6bdb40b770b1db92b02b95",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x7",
+            "journal": "/var/lib/nano/key-7",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_7",
+            "recoveryWitness": "/var/lib/nano/key-7-witness",
+            "restart": {
+              "digest": "0x908a44ddc52ca082bec49d655db53890a7dd8794b4393fd2136efba9f681d9a6",
+              "sequence": "0x34"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x8",
+            "journal": "/var/lib/nano/key-8",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_8",
+            "recoveryWitness": "/var/lib/nano/key-8-witness",
+            "restart": {
+              "digest": "0xceb4629e99e61b1d652e6a457502535e4afe7d31bc8ff0700d1165febf4e212d",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x9",
+            "journal": "/var/lib/nano/key-9",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_9",
+            "recoveryWitness": "/var/lib/nano/key-9-witness",
+            "restart": {
+              "digest": "0x07bee2ff9a35dc066cee1ff5d1fe27a3191dfd4ddceb9bf1b53d9892301f2a32",
+              "sequence": "0x33"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0xa",
+            "journal": "/var/lib/nano/key-10",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_10",
+            "recoveryWitness": "/var/lib/nano/key-10-witness",
+            "restart": {
+              "digest": "0x296c43a6a7b7e9a27e95cafc00a68efb3c18a03f1ecc64d50c51717a1bb27145",
+              "sequence": "0x37"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0xb",
+            "journal": "/var/lib/nano/key-11",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_11",
+            "recoveryWitness": "/var/lib/nano/key-11-witness",
+            "restart": {
+              "digest": "0xe6987e8539271f85d96b114c31808add32a0db3139b0927f088d2b45db83ce26",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0xc",
+            "journal": "/var/lib/nano/key-12",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_12",
+            "recoveryWitness": "/var/lib/nano/key-12-witness",
+            "restart": {
+              "digest": "0x426130275ad1c82083c4c649eda28deeb4105eb62ddf5181b616ee3ab3dc6571",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0xd",
+            "journal": "/var/lib/nano/key-13",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_13",
+            "recoveryWitness": "/var/lib/nano/key-13-witness",
+            "restart": {
+              "digest": "0xe974d936b726957d6014324749e655404959894dfe3d8187e2065d612e882118",
+              "sequence": "0x31"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0xe",
+            "journal": "/var/lib/nano/key-14",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_14",
+            "recoveryWitness": "/var/lib/nano/key-14-witness",
+            "restart": {
+              "digest": "0x54272601184e11e1a74eaa0b3ef7e9c0c898c3f9e1482bbb91d5ff7e48ddab0f",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0xf",
+            "journal": "/var/lib/nano/key-15",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_15",
+            "recoveryWitness": "/var/lib/nano/key-15-witness",
+            "restart": {
+              "digest": "0x22a8cbdb9b9fe5075c975cc1d2332da9cf4504a9c3c9d1b8668cc61247a7aa64",
+              "sequence": "0x32"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x10",
+            "journal": "/var/lib/nano/key-16",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_16",
+            "recoveryWitness": "/var/lib/nano/key-16-witness",
+            "restart": {
+              "digest": "0x55be9e8ed55b57767a0e058809231d379f2a66ec2c514cb686f6b4c1af2fb285",
+              "sequence": "0x34"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x11",
+            "journal": "/var/lib/nano/key-17",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_17",
+            "recoveryWitness": "/var/lib/nano/key-17-witness",
+            "restart": {
+              "digest": "0x38a705e7a10e486ee272e01cd70952c1eb9818ff83dee265ebc74d23e77e2c5e",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x12",
+            "journal": "/var/lib/nano/key-18",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_18",
+            "recoveryWitness": "/var/lib/nano/key-18-witness",
+            "restart": {
+              "digest": "0x24449240f93ec03941903a83a831854c1ca5c786041aa9155dd31f020baa960d",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x13",
+            "journal": "/var/lib/nano/key-19",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_19",
+            "recoveryWitness": "/var/lib/nano/key-19-witness",
+            "restart": {
+              "digest": "0x0ed28f32c337ba25e411cd350c20339613fcc6252b0df761c1ec264631035084",
+              "sequence": "0x36"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x14",
+            "journal": "/var/lib/nano/key-20",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_20",
+            "recoveryWitness": "/var/lib/nano/key-20-witness",
+            "restart": {
+              "digest": "0x02be8138e4fa6eeae7d7268371a64e610e0a246300da379e2fdfc8b243549cd0",
+              "sequence": "0x37"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x15",
+            "journal": "/var/lib/nano/key-21",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_21",
+            "recoveryWitness": "/var/lib/nano/key-21-witness",
+            "restart": {
+              "digest": "0xd3b40bc7d69bdc018b33ae061f5bbb68e43e41a6b18e1276cdc195c40fe62519",
+              "sequence": "0x36"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x16",
+            "journal": "/var/lib/nano/key-22",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_22",
+            "recoveryWitness": "/var/lib/nano/key-22-witness",
+            "restart": {
+              "digest": "0x4c3f12819fc647ef93fc45b278de2573ef255a99ac58c7dd336d61c7f900c554",
+              "sequence": "0x32"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x17",
+            "journal": "/var/lib/nano/key-23",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_23",
+            "recoveryWitness": "/var/lib/nano/key-23-witness",
+            "restart": {
+              "digest": "0x4f9bb705cc321f001b9a086a5e1f1889c2baa8ef57c718fc6600920a2f18fe75",
+              "sequence": "0x34"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x18",
+            "journal": "/var/lib/nano/key-24",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_24",
+            "recoveryWitness": "/var/lib/nano/key-24-witness",
+            "restart": {
+              "digest": "0x896493045490560ea591fa8a9e84bf5c42c390da0bdd649229891f09f589c38d",
+              "sequence": "0x36"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x19",
+            "journal": "/var/lib/nano/key-25",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_25",
+            "recoveryWitness": "/var/lib/nano/key-25-witness",
+            "restart": {
+              "digest": "0xf72127c09d213fc7866045d8c122f761e64857e4432b66cf6634c0943a0320d0",
+              "sequence": "0x31"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1a",
+            "journal": "/var/lib/nano/key-26",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_26",
+            "recoveryWitness": "/var/lib/nano/key-26-witness",
+            "restart": {
+              "digest": "0x1b459a6a55e754a56f86f8a29095bafc42742cb0536bb0f024f9025f044bf2a8",
+              "sequence": "0x30"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1b",
+            "journal": "/var/lib/nano/key-27",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_27",
+            "recoveryWitness": "/var/lib/nano/key-27-witness",
+            "restart": {
+              "digest": "0x5acb1630a6bcf76b2931d5c0107de71ddb4d69311c20e4b020e3a3d643b36874",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1c",
+            "journal": "/var/lib/nano/key-28",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_28",
+            "recoveryWitness": "/var/lib/nano/key-28-witness",
+            "restart": {
+              "digest": "0x53e0f0e9fc440eb6423c98382ae396c695245fdd341f6e189f28cfc8653cec96",
+              "sequence": "0x34"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1d",
+            "journal": "/var/lib/nano/key-29",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_29",
+            "recoveryWitness": "/var/lib/nano/key-29-witness",
+            "restart": {
+              "digest": "0x4c5e7662008b0e386acf751c5a51c4ab02e8a364c0ce8f73cdbb5a04cb6ed498",
+              "sequence": "0x34"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1e",
+            "journal": "/var/lib/nano/key-30",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_30",
+            "recoveryWitness": "/var/lib/nano/key-30-witness",
+            "restart": {
+              "digest": "0x0f99f8d6bbc5b9adb530f8b39a92f2621fd0d9fd2086d30c787f4180f642587a",
+              "sequence": "0x35"
+            }
+          },
+          {
+            "feeRecipient": "0x0000000000000000000000000000000000000000",
+            "index": "0x1f",
+            "journal": "/var/lib/nano/key-31",
+            "keyEnv": "NANO_TEST_CAPELLA_NETWORK_KEY_31",
+            "recoveryWitness": "/var/lib/nano/key-31-witness",
+            "restart": {
+              "digest": "0x2d76c35e0422f60f503c011be7168c9e1e7aa6f8151194b9d6ac8154d1ced8a3",
+              "sequence": "0x33"
+            }
+          }
+        ],
+        "maximumTransactionTrials": "0x10",
+        "maximumVoteTrials": "0x40",
+        "pollIntervalMs": "0x64"
+      },
+      "recoveryCommitment": {
+        "digest": "0xbaf55d7881ea0b33cfafac4a359af5bbd03b39c173458e1a387e901dfe769b4e",
+        "sequence": "0x1099"
+      },
+      "automaticRecovery": false,
+      "coldCheckpoint": {
+        "cacheRecords": "0x8",
+        "cacheEncodedBytes": "0x1000000"
+      }
+    }
+  },
+  "macNativeCapsule": {
+    "canonicalReplay": {
+      "allHistoricalStatesMaterialized": true,
+      "archiveBytes": 2006248,
+      "blocksIncludingTrustedAnchor": 775,
+      "canonicalHistoryVerified": true,
+      "checkpointDigest": "0x17eb1ead516b85db54d0f6b4cde3a9b5dc5b8fe4b8bb9ec8ce7d0989a9236b36",
+      "checkpointSequence": 18789,
+      "externalFinalizedAncestorVerified": true,
+      "finalized": {
+        "epoch": "0x504",
+        "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+      },
+      "firstExecutionBlock": "0x1",
+      "head": "0x0f827c6c6f649cc7007be15ffb1b554be02756238dbaaf29eefa2fc27be8cff9",
+      "historicalForkChoiceVerified": false,
+      "historicalStandaloneVotesReplayed": false,
+      "lastExecutionBlock": "0x307",
+      "prunedExecutionStatesReplayed": 0,
+      "requiredFinalized": {
+        "epoch": "0x504",
+        "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+      },
+      "transactions": 2,
+      "trustedAnchor": "0x1f84dd50b5d8740e8c9a7b2a62ef9790593498978dfb7de244406b7449b75c2f"
+    },
+    "captureBudget": {
+      "blocks": "0x1000",
+      "envelopeBytes": "0x8000000"
+    },
+    "chainId": "0x539",
+    "format": "nano-private-quiescent-recovery-pins-v1",
+    "genesisHash": "0xdc39226edf6b7c4ed0735b306e39502de8220dbbbeedf3f3fca2fd4bc04e893c",
+    "historicalTokenDigestAncestryVerified": false,
+    "minimumSequenceBoundsVerified": true,
+    "participationDiagnostics": {
+      "currentTimelyTargetCountsByOwner": [
+        0,
+        0,
+        0
+      ],
+      "headSlot": 25265,
+      "historicalStandaloneVotesReplayed": false,
+      "members": [
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 0,
+          "latestForkMessage": {
+            "epoch": 3156,
+            "root": "0xa452382a1de3a21a3e033276a1ff587ee08c261ba9642965407ef57b0b3d0a0d"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 1,
+          "latestForkMessage": {
+            "epoch": 2646,
+            "root": "0xa452382a1de3a21a3e033276a1ff587ee08c261ba9642965407ef57b0b3d0a0d"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 2,
+          "latestForkMessage": {
+            "epoch": 3150,
+            "root": "0xa452382a1de3a21a3e033276a1ff587ee08c261ba9642965407ef57b0b3d0a0d"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 3,
+          "latestForkMessage": {
+            "epoch": 3154,
+            "root": "0xa452382a1de3a21a3e033276a1ff587ee08c261ba9642965407ef57b0b3d0a0d"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 4,
+          "latestForkMessage": {
+            "epoch": 2646,
+            "root": "0xa452382a1de3a21a3e033276a1ff587ee08c261ba9642965407ef57b0b3d0a0d"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 5,
+          "latestForkMessage": {
+            "epoch": 3148,
+            "root": "0xa452382a1de3a21a3e033276a1ff587ee08c261ba9642965407ef57b0b3d0a0d"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 6,
+          "latestForkMessage": {
+            "epoch": 2646,
+            "root": "0xa452382a1de3a21a3e033276a1ff587ee08c261ba9642965407ef57b0b3d0a0d"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 7,
+          "latestForkMessage": {
+            "epoch": 3158,
+            "root": "0x0f827c6c6f649cc7007be15ffb1b554be02756238dbaaf29eefa2fc27be8cff9"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 8,
+          "latestForkMessage": {
+            "epoch": 3160,
+            "root": "0x0f827c6c6f649cc7007be15ffb1b554be02756238dbaaf29eefa2fc27be8cff9"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 9,
+          "latestForkMessage": {
+            "epoch": 3152,
+            "root": "0xa452382a1de3a21a3e033276a1ff587ee08c261ba9642965407ef57b0b3d0a0d"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 10,
+          "latestForkMessage": {
+            "epoch": 2646,
+            "root": "0xa452382a1de3a21a3e033276a1ff587ee08c261ba9642965407ef57b0b3d0a0d"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 11,
+          "latestForkMessage": {
+            "epoch": 2646,
+            "root": "0xa452382a1de3a21a3e033276a1ff587ee08c261ba9642965407ef57b0b3d0a0d"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 12,
+          "latestForkMessage": {
+            "epoch": 2646,
+            "root": "0xa452382a1de3a21a3e033276a1ff587ee08c261ba9642965407ef57b0b3d0a0d"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 13,
+          "latestForkMessage": {
+            "epoch": 2646,
+            "root": "0xa452382a1de3a21a3e033276a1ff587ee08c261ba9642965407ef57b0b3d0a0d"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 14,
+          "latestForkMessage": {
+            "epoch": 2645,
+            "root": "0xa452382a1de3a21a3e033276a1ff587ee08c261ba9642965407ef57b0b3d0a0d"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 15,
+          "latestForkMessage": {
+            "epoch": 2646,
+            "root": "0xa452382a1de3a21a3e033276a1ff587ee08c261ba9642965407ef57b0b3d0a0d"
+          },
+          "owner": 0,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 16,
+          "latestForkMessage": {
+            "epoch": 1357,
+            "root": "0x74d2441a2ced54f8249741b1cdc90011dbcefd689f2960e37bc2d2afb24dd041"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 17,
+          "latestForkMessage": {
+            "epoch": 1356,
+            "root": "0xa2934fad2c061bc7cb0fcecaf190b0c85a33f74fc2947f2c8622c301f39e4145"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 18,
+          "latestForkMessage": {
+            "epoch": 1357,
+            "root": "0x74d2441a2ced54f8249741b1cdc90011dbcefd689f2960e37bc2d2afb24dd041"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 19,
+          "latestForkMessage": {
+            "epoch": 1357,
+            "root": "0x74d2441a2ced54f8249741b1cdc90011dbcefd689f2960e37bc2d2afb24dd041"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 20,
+          "latestForkMessage": {
+            "epoch": 1357,
+            "root": "0x74d2441a2ced54f8249741b1cdc90011dbcefd689f2960e37bc2d2afb24dd041"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 21,
+          "latestForkMessage": {
+            "epoch": 1357,
+            "root": "0x74d2441a2ced54f8249741b1cdc90011dbcefd689f2960e37bc2d2afb24dd041"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 22,
+          "latestForkMessage": {
+            "epoch": 1356,
+            "root": "0xec1c74a513152fa9f58f48144fc4043addd41f2736a8b966024389ff146271a4"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 23,
+          "latestForkMessage": {
+            "epoch": 1357,
+            "root": "0x74d2441a2ced54f8249741b1cdc90011dbcefd689f2960e37bc2d2afb24dd041"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 24,
+          "latestForkMessage": {
+            "epoch": 1357,
+            "root": "0x74d2441a2ced54f8249741b1cdc90011dbcefd689f2960e37bc2d2afb24dd041"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 25,
+          "latestForkMessage": {
+            "epoch": 1357,
+            "root": "0x74d2441a2ced54f8249741b1cdc90011dbcefd689f2960e37bc2d2afb24dd041"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 26,
+          "latestForkMessage": {
+            "epoch": 1356,
+            "root": "0x74d2441a2ced54f8249741b1cdc90011dbcefd689f2960e37bc2d2afb24dd041"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 27,
+          "latestForkMessage": {
+            "epoch": 1357,
+            "root": "0x74d2441a2ced54f8249741b1cdc90011dbcefd689f2960e37bc2d2afb24dd041"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 28,
+          "latestForkMessage": {
+            "epoch": 1357,
+            "root": "0x74d2441a2ced54f8249741b1cdc90011dbcefd689f2960e37bc2d2afb24dd041"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 29,
+          "latestForkMessage": {
+            "epoch": 1356,
+            "root": "0x74d2441a2ced54f8249741b1cdc90011dbcefd689f2960e37bc2d2afb24dd041"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 30,
+          "latestForkMessage": {
+            "epoch": 1356,
+            "root": "0x74d2441a2ced54f8249741b1cdc90011dbcefd689f2960e37bc2d2afb24dd041"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 31,
+          "latestForkMessage": {
+            "epoch": 1357,
+            "root": "0x74d2441a2ced54f8249741b1cdc90011dbcefd689f2960e37bc2d2afb24dd041"
+          },
+          "owner": 1,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 32,
+          "latestForkMessage": {
+            "epoch": 1630,
+            "root": "0x5643de883adfbfdd168f0034be783c825770beebfc16e10afcf0204aaa7b4c54"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 33,
+          "latestForkMessage": {
+            "epoch": 1596,
+            "root": "0x0fa4ffff716e238eaba186318652303915c7787b665232dab8f4993d90786fee"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 34,
+          "latestForkMessage": {
+            "epoch": 1597,
+            "root": "0x0fa4ffff716e238eaba186318652303915c7787b665232dab8f4993d90786fee"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 35,
+          "latestForkMessage": {
+            "epoch": 1595,
+            "root": "0x578ea65c8696e4965145caaaaa9c3a8e42585dac85cdb64afc14a55602e2a71f"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 36,
+          "latestForkMessage": {
+            "epoch": 1592,
+            "root": "0x404fd8ce216d1c55654c998b2380f3e54033f99a4fa949f4ee00b05fcec5fa54"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 37,
+          "latestForkMessage": {
+            "epoch": 1594,
+            "root": "0x578ea65c8696e4965145caaaaa9c3a8e42585dac85cdb64afc14a55602e2a71f"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 38,
+          "latestForkMessage": {
+            "epoch": 1597,
+            "root": "0x0fa4ffff716e238eaba186318652303915c7787b665232dab8f4993d90786fee"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 39,
+          "latestForkMessage": {
+            "epoch": 1581,
+            "root": "0x3137ec3489824a81b5a5a1869f1bb7913800fc326cf9e3b65d4aad00d8356d19"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 40,
+          "latestForkMessage": {
+            "epoch": 1579,
+            "root": "0x994ce49996bd69e061daf51c51ff87e56a04f6bd15d544c1d9157fcb37bcdef6"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 41,
+          "latestForkMessage": {
+            "epoch": 1632,
+            "root": "0xaef298a33c733f1825cab2ff71428fbde98c8cc20fd5dd1820f4612e5327c599"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 42,
+          "latestForkMessage": {
+            "epoch": 1544,
+            "root": "0x5d0b4f2f347f1475b0146c2317a6938d1371b4cea06d06ae2ef73a2fec849c4c"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 43,
+          "latestForkMessage": {
+            "epoch": 1590,
+            "root": "0x218d94ef846cbc37bbb4285e133e2ae34e1a1d9d038c3fa0d9465d313ffbeba4"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 44,
+          "latestForkMessage": {
+            "epoch": 1631,
+            "root": "0x9f6f06edc6372d837934578fcb02867fa715abeebe6cf6783ea9ebe8b9d647d7"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 45,
+          "latestForkMessage": {
+            "epoch": 1631,
+            "root": "0x226930ecce45116ccf644b37fc841f5962f7d053f509a08cdf16d3ed281ce5d8"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 46,
+          "latestForkMessage": {
+            "epoch": 1592,
+            "root": "0xff70a0cc86d75faacd34ada1be049a6579466c7d2c5514e40b5fbdd0ac4468b2"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 47,
+          "latestForkMessage": {
+            "epoch": 1594,
+            "root": "0x578ea65c8696e4965145caaaaa9c3a8e42585dac85cdb64afc14a55602e2a71f"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 48,
+          "latestForkMessage": {
+            "epoch": 1548,
+            "root": "0x587a6f8f43c02ba9c8740172fdc1fb94e4e9541a43eaab0c334412e9c9486391"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 49,
+          "latestForkMessage": {
+            "epoch": 1595,
+            "root": "0x578ea65c8696e4965145caaaaa9c3a8e42585dac85cdb64afc14a55602e2a71f"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 50,
+          "latestForkMessage": {
+            "epoch": 1547,
+            "root": "0x60e519f9b36d24c86b46260eb01abbdd5ca26bb107e9fb478ebf624861200d6c"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 51,
+          "latestForkMessage": {
+            "epoch": 1546,
+            "root": "0x069be4dc0af201ecadb67473d32e200bb1bea4c5fb406a15bad58378bd945e25"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 52,
+          "latestForkMessage": {
+            "epoch": 1548,
+            "root": "0xd00f7f3e99e8085981cbcc91c918e2faa696443422382beface11d8f0a95ab03"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 53,
+          "latestForkMessage": {
+            "epoch": 1584,
+            "root": "0xef97aee69c683b214f2c19e1d697a089f8e6415fde6c5ebacf9bda80947ff1a1"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 54,
+          "latestForkMessage": {
+            "epoch": 1545,
+            "root": "0x38b11adb2371ec14566fd8998ab347254cf4e042a248af8b9e43cb10cf6f7e24"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 55,
+          "latestForkMessage": {
+            "epoch": 1546,
+            "root": "0x069be4dc0af201ecadb67473d32e200bb1bea4c5fb406a15bad58378bd945e25"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 56,
+          "latestForkMessage": {
+            "epoch": 1544,
+            "root": "0x5d0b4f2f347f1475b0146c2317a6938d1371b4cea06d06ae2ef73a2fec849c4c"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 57,
+          "latestForkMessage": {
+            "epoch": 1546,
+            "root": "0x11645e48ab53840b75b419c97ed8a7f845238ee5ee77c29e7581da2577b53f61"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 58,
+          "latestForkMessage": {
+            "epoch": 1532,
+            "root": "0x501b6d4aaf18899d842f4450118d03d657e0356d8e1b9cf28b217e21c4227e32"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 59,
+          "latestForkMessage": {
+            "epoch": 1539,
+            "root": "0xd34d111d49510749b95579ac2f5b65c50dba785e35c9b0100915d04016e744a5"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 60,
+          "latestForkMessage": {
+            "epoch": 1547,
+            "root": "0x123beb31faf686292c7a574b1301cc57ed070a73983839eda86654df95a7727d"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 61,
+          "latestForkMessage": {
+            "epoch": 1535,
+            "root": "0xb89d82e606622baf878fa3ab2479a1a5b29e40cb1e1e9c8b9248926a4566faa5"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 62,
+          "latestForkMessage": {
+            "epoch": 1539,
+            "root": "0xbbbcab3c7a75d3c147d3765ae801cc6df265c2d21e12bc0a081b8570da44916b"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 0,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 63,
+          "latestForkMessage": {
+            "epoch": 1504,
+            "root": "0xb291271ca275e298fd3fce88485e061f8dae16a338668fbe3078910616e625ac"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        },
+        {
+          "activationEpoch": 13,
+          "currentFlags": 0,
+          "effectiveBalance": 22000000000,
+          "exitEpoch": 18446744073709551615,
+          "index": 64,
+          "latestForkMessage": {
+            "epoch": 1504,
+            "root": "0xb291271ca275e298fd3fce88485e061f8dae16a338668fbe3078910616e625ac"
+          },
+          "owner": 2,
+          "previousFlags": 0,
+          "slashed": false
+        }
+      ],
+      "previousEpoch": 3157,
+      "previousTimelyTargetCountsByOwner": [
+        0,
+        0,
+        0
+      ],
+      "productionQualified": false,
+      "runtimeHealthInferred": false,
+      "stateEpoch": 3158,
+      "stateRoot": "0x390dbb9bf2542d695ae296d6ba2014d019fd38017bbb2c4f4ddd630025ad208f",
+      "timelyTargetFlagIndex": 1
+    },
+    "primaryWitnessAndSignersVerified": true,
+    "productionQualified": false,
+    "profileSha256": "0xe3440eba0a871a8eedf84a6e2cdccee53cc4389e8ce6b979166621c8e893890d",
+    "readOnlyStores": true,
+    "restart": {
+      "digest": "0x17eb1ead516b85db54d0f6b4cde3a9b5dc5b8fe4b8bb9ec8ce7d0989a9236b36",
+      "sequence": "0x4965"
+    },
+    "runtimeHealthInferred": false,
+    "sourceQuiescenceExternallyRequired": true,
+    "validatorKeys": [
+      {
+        "index": "0x0",
+        "latestAttestationTarget": 3156,
+        "restart": {
+          "digest": "0xf706d6bb08f2e2ef3764e35eb8c9cc2a3f25444961ab18c7d80698e044ccbc03",
+          "sequence": "0x1e7"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1",
+        "latestAttestationTarget": 2646,
+        "restart": {
+          "digest": "0x0e7506f79c65d5297df3cb3946388aca9066e47ad3144ba7b55c666b3b4e15f1",
+          "sequence": "0x1d9"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x2",
+        "latestAttestationTarget": 3150,
+        "restart": {
+          "digest": "0x10ab706134b2766a8568e40129b241b26752c8d3529d5941fa9901251ec618bd",
+          "sequence": "0x1eb"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x3",
+        "latestAttestationTarget": 3154,
+        "restart": {
+          "digest": "0x59fa1e2534804e3a6980cf3db8fe9b63017b417bab58a6e3f5ebcaac53810863",
+          "sequence": "0x1ea"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x4",
+        "latestAttestationTarget": 2646,
+        "restart": {
+          "digest": "0x2eed911e102864aaf46707d98ad2e6d84ca60c853dd455ccb10af6f611028ff7",
+          "sequence": "0x1f6"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x5",
+        "latestAttestationTarget": 3148,
+        "restart": {
+          "digest": "0xb0fa4a7e1bef404da2a0dffe32e36b9387779aad1b6a53745ac4f0ea00c2d7d3",
+          "sequence": "0x1e8"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x6",
+        "latestAttestationTarget": 2646,
+        "restart": {
+          "digest": "0x8ebe9d02c532c86bb3f86f186129869376b699cda6338c85f2b3410089fe89d0",
+          "sequence": "0x1ee"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x7",
+        "latestAttestationTarget": 3158,
+        "restart": {
+          "digest": "0x772a866c15d3521cf11ce9fc59236b68c6a36c9b5e2290edad978578be68476d",
+          "sequence": "0x1d7"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x8",
+        "latestAttestationTarget": 3160,
+        "restart": {
+          "digest": "0x598fa369154144db24b273c44b9a000f15870da12347895a315e6dabe65ef16e",
+          "sequence": "0x1d5"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x9",
+        "latestAttestationTarget": 3152,
+        "restart": {
+          "digest": "0xeb0220615b2eac04a5497620744892a941894ab6f874508da535688307612e77",
+          "sequence": "0x1de"
+        },
+        "retired": false
+      },
+      {
+        "index": "0xa",
+        "latestAttestationTarget": 2646,
+        "restart": {
+          "digest": "0x8995978530f4a28195a523204df9106db8035e4391a534b8d0b7753bcd7d2435",
+          "sequence": "0x1e1"
+        },
+        "retired": false
+      },
+      {
+        "index": "0xb",
+        "latestAttestationTarget": 2646,
+        "restart": {
+          "digest": "0xb9969c66921bfddb01bae22525f161349b4acbe65869ad2ccd4066f23e3d3683",
+          "sequence": "0x1db"
+        },
+        "retired": false
+      },
+      {
+        "index": "0xc",
+        "latestAttestationTarget": 2646,
+        "restart": {
+          "digest": "0x3004498e59b1662a045cc0aa6aeb29b993cb2ec94b2b7225409486bfe3c80e6c",
+          "sequence": "0x1db"
+        },
+        "retired": false
+      },
+      {
+        "index": "0xd",
+        "latestAttestationTarget": 2646,
+        "restart": {
+          "digest": "0x416d375743af1fcf8900437bb827945a13b2bc8bc3f1436dc5105ae17bbd6c6a",
+          "sequence": "0x1d2"
+        },
+        "retired": false
+      },
+      {
+        "index": "0xe",
+        "latestAttestationTarget": 2645,
+        "restart": {
+          "digest": "0x61cecc8c174403daeb4fe24b77b2fdf9cbcc14345f506ace2d05b5506aa01320",
+          "sequence": "0x1dd"
+        },
+        "retired": false
+      },
+      {
+        "index": "0xf",
+        "latestAttestationTarget": 2646,
+        "restart": {
+          "digest": "0x6882979863d19a3f9bfc1d600e16f47b5ddebffe16309a5dcadf35e9e3748166",
+          "sequence": "0x1d1"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x10",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0x424269f6f9da94c504d75623c3f1362f6812a6f5994324b1226c4845c17ec31e",
+          "sequence": "0x36"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x11",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0xa37a77c612d40f58f1a4915d55ddf8b120fe3a863f5addffb732ceb1281761e3",
+          "sequence": "0x3a"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x12",
+        "latestAttestationTarget": 1267,
+        "restart": {
+          "digest": "0xbce74dbe61a003036b90b2cce6fd3386655de31a2831c8b3831e7009a783ca94",
+          "sequence": "0x3a"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x13",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0x9179125135faf1f7ef68fc55387936f608e8824ee7831c0d3b8114037ab82d4d",
+          "sequence": "0x38"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x14",
+        "latestAttestationTarget": 1267,
+        "restart": {
+          "digest": "0x37b500f98cf66cacb22fd5b1d5cdf0e593d0067d30faa8bf2330670dbe1baa35",
+          "sequence": "0x3b"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x15",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0x20edb671f6954d1cd49e60073b6970c154fc152cc41229f0079fc71e5f0704b0",
+          "sequence": "0x3a"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x16",
+        "latestAttestationTarget": 1267,
+        "restart": {
+          "digest": "0xe550e68fb216f346454206011ca40d0e1ab12931cb093af9be4c454581464ea3",
+          "sequence": "0x36"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x17",
+        "latestAttestationTarget": 1268,
+        "restart": {
+          "digest": "0x27fdcbeb46ebfb2cbde67bba4c67b46077a4016a7e4e7dc57feb8b41b3734291",
+          "sequence": "0x37"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x18",
+        "latestAttestationTarget": 1268,
+        "restart": {
+          "digest": "0x16724cfbae57c48c1b63bff390d8d30fe8802f5a854f6a3cfd8d93ab96513e48",
+          "sequence": "0x3b"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x19",
+        "latestAttestationTarget": 1267,
+        "restart": {
+          "digest": "0xea743b970c0f43e0c93c13845128ae4b97a9036cb6a5c3fecef7a1de1aa74afa",
+          "sequence": "0x36"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1a",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0x233c8a6d38a8e83ca592a7a517b0118a382f9f2cdb5ee0ed67857030ffad9643",
+          "sequence": "0x33"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1b",
+        "latestAttestationTarget": 1207,
+        "restart": {
+          "digest": "0xac3e6f68addc39853d026549b7d441fbf2b08d0f6478e4d2190b34e579088d44",
+          "sequence": "0x37"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1c",
+        "latestAttestationTarget": 1267,
+        "restart": {
+          "digest": "0xccc9126c4529570b8704ec6d4e960d0bca493f680ba6d1ab99d10858dec17d7d",
+          "sequence": "0x38"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1d",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0x0c5e21be8a21b13fa5f87e93f9e2cb629585b86b750073b575e9d10a4f190aa4",
+          "sequence": "0x36"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1e",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0x2bad7ab33e91390329b91272a46229c28b0509e1ccc41cf6118999871c718a70",
+          "sequence": "0x38"
+        },
+        "retired": false
+      },
+      {
+        "index": "0x1f",
+        "latestAttestationTarget": 1208,
+        "restart": {
+          "digest": "0xee8a221952f2a8bfcc630bc6618c3a45e82b22d9d1c6c549bec0a3748135728a",
+          "sequence": "0x36"
+        },
+        "retired": false
+      }
+    ]
+  },
+  "coldCheckpoint": {
+    "cacheRecords": "0x8",
+    "cacheEncodedBytes": "0x1000000"
+  }
+}
