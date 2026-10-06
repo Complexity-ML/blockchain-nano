@@ -7880,3 +7880,6 @@ Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, d
 
 
 2026-10-06 — Lectures de statut : défaut local identity/sync reproduit contre ancien cœur, correctif qualifié natif/ARM64/AMD64 (78144/46395/11667 sorties 0). Publication authentifiée pour identité et verrou distinct pour compteurs ; aucun quorum, délai ou fencing modifié. ABI cohérente : 136 unités scannées, 18 consommateurs recompilés par architecture, programmes parents conservés. Deux régressions de lecture sous admission retenue passent, ainsi que Beacon/reprise/HTTP/wire ciblés. Échec initial de fixture conservé. [Preuves](qualification/network-status-coherent-20261006/README.md). Effet sur WAN/finalité, release sans instrumentation et autres critères/revue indépendante non qualifiés.
+
+
+2026-10-06 — Préparation v22 : engagements VPS post-v21 et Mac post-v20, copies Mac v21 non exécutées et journaux conservés, correctif de contention des lectures de statut qualifié en natif/ARM64/AMD64 dans son périmètre ciblé. Trois finalités communes nouvelles en 900 s restent à démontrer ; préparation seule. Production et revue indépendante ouvertes. Preuves restored-three-node-v22-network-status-prepare-20261006/.
