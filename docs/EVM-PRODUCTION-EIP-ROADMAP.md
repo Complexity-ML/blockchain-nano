@@ -4763,3 +4763,6 @@ Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichi
 
 
 2026-10-06 — Repli tête/catalogue corrigé et qualifié dans son périmètre : mêmes six unités sur Mac natif et Docker ARM/AMD, nouveaux binaires P2P identifiés. Catalogue borné accessible après tête non confirmée ; refus de bloc ne masque plus les entrées indépendantes, sans faux ACK ni succès de tête absente. Rejeu sur mêmes archives/cœur/limites : deux frontières admises en 26 cycles et 117 publications, contre une frontière jamais envoyée après 128 cycles avant correction. Originaux inchangés ; transport modélisé, résultat partiel reste FAILED sur autres refus. Finalité WAN/production non démontrées ; prochaine reprise sur engagements/journaux post-v13 exacts. Erreur initiale de collecte conservée et réparée sans relancer les builds/tests. [Preuves](qualification/head-catalog-fallback-integrated-20261006/README.md).
+
+
+2026-10-06 — Préparation v14 : engagements post-v13 exacts, cœur 5787915e et relais 7248698d avec parcours historique après refus de tête. Copies locales séparées et volume VPS conservé ; journaux non réinitialisés/fusionnés. Même profil, même limite et même critère de finalité en 900 s. Préparation seule, pression/éviction/coût des caches, cause globale WAN, finalité et production ouverts. Preuves restored-three-node-v14-head-fallback-prepare-20261006/.
