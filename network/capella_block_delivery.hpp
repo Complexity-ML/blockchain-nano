@@ -55,9 +55,10 @@ class CapellaBlockDelivery:public std::enable_shared_from_this<CapellaBlockDeliv
   const bool signed_anchor=value.value("anchor",Json())==true&&value.value("known",Json())==true;
   if(exports_)exports_->remember(id,wire,parent,signed_anchor);
   child_slot_=slot;bytes_+=wire.capacity();pending_.push_back({id,std::move(wire)});
-  if(signed_anchor){anchor_probe_pending_=true;anchor_probe_root_=id;anchor_probe_parent_=parent;deliver();}else fetch(parent);
+  if(signed_anchor){anchor_probe_pending_=true;anchor_probe_root_=id;anchor_probe_parent_=parent;deliver();}else {preparation_boundary_=parent;fetch(parent);}
  }
  void deliver(){
+  preparation_boundary_.clear(); // Traversal progress is not an in-flight delivery retry.
   if(pending_.empty()){finish(true);return;}
   // A local yield never claims admission of the still-pending target. Only
   // authenticated dependency ACKs survive in the peer/session knowledge.

@@ -1,0 +1,11 @@
+# Reprise du parcours de dépendances après délai borné
+
+Parent d80e15a8, cœur d285db64 inchangé. Le relais conservait son curseur seulement au plafond de profondeur : si les exports authentifiés prenaient plus de temps que le délai total, il repartait de la même cible au tour suivant. Le contre-exemple isolé avec exports retardés échoue avec le code parent : 20 tours, 60 exports, zéro envoi et zéro ACK de cible. Le correctif atteint les neuf ACK en 15 tours et 39 exports avec les mêmes limites. Deux modes nouveaux : exports lents, exports lents dupliqués ; callbacks d'export reçus après completion ignorés.
+
+Le dernier parent extrait d'un export local authentifié devient un curseur de préparation au délai total. Il ne vaut jamais ACK distant. Cette frontière est effacée avant toute émission de payload afin de ne pas transformer une transmission ambiguë en reprise implicite. Profondeur, octets, quantum, deadline, quorum et fencing inchangés ; succès conditionné aux ACK effectivement obtenus. La correction ne prétend pas expliquer entièrement l'échec WAN V24 ni la régression de branche observée.
+
+Qualification ciblée : natif, Docker ARM64, Docker AMD64 ; quatorze suites affectées et neuf variantes de préparation, soit 23 tests CTest sur chaque Docker. Runtime nano-p2p compilé sur les trois architectures. Fixture wire compilée et réellement liée au cœur actuel inchangé ; commandes vérifiées pour l'objet natif. Wire couvre neuf blocs, dix-sept messages, deux SIGKILL, annulations, votes et opérations signées dans son périmètre. finalityScenario=false et networkActivated=false : finalité WAN non qualifiée.
+
+Sources figées (349 fichiers), hashes avant/après et bibliothèques cœur vérifiés. Images/volumes existants réutilisés ; sorties distinctes gardant les anciens programmes. Le premier pilote isolé n'injectait pas le retard à cause d'un remplacement de texte sans correspondance : il est conservé et exclu. Seule la preuve native-review contient le retard effectivement injecté et les deux contre-exemples attendus.
+
+Toutes les preuves historiques, les exigences de production non démontrées, la revue indépendante et les critères bridge/fair launch demeurent ouverts. Aucun lancement public, fonds ou vente. Effet sur la reprise réelle à trois nœuds à démontrer séparément.

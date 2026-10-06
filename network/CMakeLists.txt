@@ -231,7 +231,7 @@ target_include_directories(nano-capella-dependency-preparation-tests PRIVATE ../
 target_compile_features(nano-capella-dependency-preparation-tests PRIVATE cxx_std_20)
 target_compile_definitions(nano-capella-dependency-preparation-tests PRIVATE FMT_CONSTEVAL= NANO_TEST_DEPENDENCY_PREPARATION)
 target_link_libraries(nano-capella-dependency-preparation-tests PRIVATE p2p::p2p)
-foreach(scenario normal duplicate unavailable unavailable-anchor refused lost cancel)
+foreach(scenario normal duplicate unavailable unavailable-anchor refused lost cancel slow slow-duplicate)
   add_test(NAME capella_dependency_preparation_${scenario} COMMAND nano-capella-dependency-preparation-tests ${scenario})
   set_tests_properties(capella_dependency_preparation_${scenario} PROPERTIES TIMEOUT 20)
 endforeach()

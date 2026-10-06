@@ -14,7 +14,7 @@ int main(int argc,char** argv){try{
  unsigned total_exports=0,total_sends=0,attempts=0;
  for(;attempts<20&&!knowledge->acknowledged(root('9'));++attempts){
   asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(p,budget);
-  unsigned exports=0,sends=0,done=0;Json result;Reply late;std::shared_ptr<CapellaHeadCatalogRelay> relay;
+  unsigned exports=0,sends=0,done=0;Json result;Reply late;std::string cursor_at_done;std::shared_ptr<CapellaHeadCatalogRelay> relay;
   auto core=[&](std::string method,Json args,Reply reply){Json v;
    if(method=="nano_capellaStatus")v={{"headRoot",root('9')},{"headSlot",uint64_t(9)}};
    else if(method=="nano_capellaExport"){
@@ -26,17 +26,21 @@ int main(int argc,char** argv){try{
    else if(method=="nano_capellaCatalogAcquire")v={{"handle",root('c')}};
    else if(method=="nano_capellaCatalogPage")v={{"kind","block"},{"sequence","0x1"},{"digest",root('d')},{"entries",Json::array()},{"next",nullptr}};
    else if(method=="nano_capellaCatalogRelease")v=true;
-   else throw std::runtime_error("unexpected core operation");reply(v);if(mode=="duplicate")reply(v);
+   else throw std::runtime_error("unexpected core operation");
+   if(method=="nano_capellaExport"&&(mode=="slow"||mode=="slow-duplicate")){
+    auto timer=std::make_shared<asio::steady_timer>(io);timer->expires_after(40ms);timer->async_wait([timer,reply,v,mode](auto e){if(!e){reply(v);if(mode=="slow-duplicate")reply(v);}});return;
+   }
+   reply(v);if(mode=="duplicate")reply(v);
   };
   auto send=[&](Json frame,Reply reply){const auto n=std::stoul(frame.at("ssz").get<std::string>().substr(202,2),nullptr,16);check(n==1||knowledge->acknowledged(root(char('0'+n-1))),"sent descendant without admitted parent");check(!knowledge->acknowledged(root(char('0'+n))),"retransmitted admitted payload");++sends;++total_sends;
    if(!injected&&(mode=="refused"||mode=="lost"||mode=="cancel")){injected=true;if(mode=="refused")reply(Json{{"accepted",false}});else{late=reply;if(mode=="cancel")relay->cancel();}return;}
    reply(Json{{"accepted",true}});if(mode=="duplicate")reply(Json{{"accepted",true}});};
   auto quantum=std::make_shared<CapellaDeliveryQuantum>(CapellaDeliveryQuantum{2});
-  relay=std::make_shared<CapellaHeadCatalogRelay>(io,core,[](std::string,Json,Reply){throw std::runtime_error("empty catalog sent payload");},send,"token",root('0'),ingress,knowledge,3,8192,2,8,[&](Json r){++done;result=std::move(r);},[&](const std::string& id){return knowledge->acknowledged(id);},quantum,true,nullptr,false,nullptr
+  relay=std::make_shared<CapellaHeadCatalogRelay>(io,core,[](std::string,Json,Reply){throw std::runtime_error("empty catalog sent payload");},send,"token",root('0'),ingress,knowledge,3,8192,2,8,[&](Json r){++done;result=std::move(r);cursor_at_done=preparation->cursor;},[&](const std::string& id){return knowledge->acknowledged(id);},quantum,true,nullptr,false,nullptr
 #ifdef NANO_TEST_DEPENDENCY_PREPARATION
    ,preparation
 #endif
-  );relay->start(100ms);io.run();if(late){const auto before=knowledge->retained();late(Json{{"accepted",true}});io.restart();io.run();check(knowledge->retained()==before,"late unknown ACK seeded peer knowledge");}check(done==1,"completion duplicated");check(exports<=3&&sends<=2,"attempt exceeded unchanged preparation or admission bound");check(!result.value("success",false)||knowledge->acknowledged(root('9')),"claimed recent head without actual ACK");
+  );relay->start(100ms);io.run();if(late){const auto before=knowledge->retained();late(Json{{"accepted",true}});io.restart();io.run();check(knowledge->retained()==before,"late unknown ACK seeded peer knowledge");}check(preparation->cursor==cursor_at_done,"late export mutated preparation after completion");check(done==1,"completion duplicated");check(exports<=3&&sends<=2,"attempt exceeded unchanged preparation or admission bound");check(!result.value("success",false)||knowledge->acknowledged(root('9')),"claimed recent head without actual ACK");
  }
  std::cout<<"mode="<<mode<<" attempts="<<attempts<<" exports="<<total_exports<<" sends="<<total_sends<<" targetAcknowledged="<<knowledge->acknowledged(root('9'))<<"; modeled receiver, not WAN qualification\n";
  check(knowledge->acknowledged(root('9'))&&total_sends==(mode=="refused"||mode=="lost"||mode=="cancel"?10u:9u),"repeated bounded turns never admitted deep target");

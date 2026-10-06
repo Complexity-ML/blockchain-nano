@@ -4479,3 +4479,9 @@ Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, d
 
 
 2026-10-06 — v24 FAILED : contrôleur original 4013 / sortie 1, checkout 49362f29, cœur d285db64 et relais 514ad2b8. Zéro nouvelle finalité commune en 900 s ; trois propriétaires actifs et trois arrêts normaux. Audits read-only : engagements et témoins comparés aux reçus indépendants, hashes inchangés ; budget de rejeu forensic 32768 blocs / 512 Mio, limites runtime inchangées. Régression de tête Docker Mac 18356 → 10760 observée, checkpoint finalisé 1284 conservé ; cause globale et effet WAN du correctif non qualifiés. [Preuves v24](qualification/restored-three-node-v24-terminal-20261006/README.md). Toutes les exigences non démontrées et la revue indépendante demeurent ouvertes.
+
+
+2026-10-06 — Reprise du parcours de dépendances après délai intégrée : parent local authentifié conservé comme curseur, jamais comme ACK ; effacement avant émission, mêmes limites et fencing. Contre-exemples exports lents/dupliqués : parent 20 tours sans envoi, correctif 15 tours/9 ACK. Natif/ARM64/AMD64 : 23 cas ciblés, runtime et wire liés au cœur d285db64 inchangé, hashes vérifiés. Premier pilote sans retard exclu et conservé. [Preuves](qualification/timeout-preparation-integrated-20261006/README.md). Effet WAN V24 et régression de branche non qualifiés ; autres critères et revue indépendante ouverts.
+
+
+2026-10-06 — Complément de revue : garde après fermeture du relais avant toute mutation du curseur. Un seul header change ; 12 cas affectés et runtime passent en natif/ARM64/AMD64. Wire précédent réutilisé après scan réel de dépendances et hashes des autres entrées inchangés ; aucun rejeu identique. [Preuves](qualification/timeout-closed-guard-integrated-20261006/README.md). Finalité WAN V24, autres critères et revue indépendante toujours ouverts.
