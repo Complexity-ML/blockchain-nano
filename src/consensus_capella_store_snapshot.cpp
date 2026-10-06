@@ -30,8 +30,10 @@ ConsensusSlashingState registry(const CapellaForkStore& s,const CapellaForkBlock
  return prepare_capella_resumed_target_context(s,r,s.timed.view.justified,l.replay_slots,l.sync_trials,cancel).registry;
 }
 }
-std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBlockRules& r,
- const CapellaStoreSnapshotLimits& l,const std::function<void()>& cancel,CapellaStoreSnapshotCache* cache){
+std::string capella_store_snapshot_impl(const CapellaForkStore& s,const CapellaForkBlockRules& r,
+ const CapellaStoreSnapshotLimits& l,const std::function<void()>& cancel,CapellaStoreSnapshotCache* cache,
+ const std::function<void(const CapellaColdReference&,std::string_view)>* stage){
+ require(!stage||(!cache&&bool(*stage)));
  const auto& v=s.timed.view;const auto& c=s.timed.clock;const auto slots=r.transition.consensus.epoch.ffg.slots_per_epoch;
  require(slots&&r.slot_duration_ms&&r.attestation_due_ms<=r.slot_duration_ms&&c.time_ms>=c.genesis_time_ms&&
   v.current_epoch==(c.time_ms-c.genesis_time_ms)/r.slot_duration_ms/slots&&
@@ -46,7 +48,8 @@ std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBl
  std::vector<std::string_view> encoded_rows;
  Json blocks=Json::array(),messages=Json::array(),equiv=Json::array(),timely=Json::array(),unrealized=Json::array();size_t bytes=0;
  for(const auto& [id,entry]:s.blocks){const auto b_pin=entry.lease(cancel);const auto& b=*b_pin;
-  if(cancel)cancel();require(b.state.ssz.size()>=8&&b.state.ssz.size()<=l.state_bytes&&b.state.ssz.size()<=l.total_state_bytes-bytes);bytes+=b.state.ssz.size();
+  if(cancel)cancel();require(b.state.ssz.size()>=8&&b.state.ssz.size()<=l.state_bytes);
+  if(!stage){require(b.state.ssz.size()<=l.total_state_bytes-bytes);bytes+=b.state.ssz.size();}
   require(consensus_beacon_header_root(b.header)==id);
   const auto& n=v.nodes.at(id);require(n.slot==b.header.slot&&n.parent==b.header.parent_root);
   uint64_t genesis_seconds=0;for(unsigned i=0;i<8;++i)genesis_seconds|=uint64_t(b.state.ssz[i])<<(8*i);
@@ -84,7 +87,15 @@ std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBl
   // only needs their count, so release the temporary SSZ/execution row DOM
   // immediately instead of retaining it until the envelope is destroyed.
   // The uncached path retains the full DOM and remains the byte-level oracle.
-  if(cache)blocks.push_back(nullptr);else blocks.push_back(std::move(row));
+  if(stage){
+   const auto payload=row.dump();require(!payload.empty()&&payload.size()<=l.envelope_bytes);
+   const auto digest=sha256(Bytes(payload.begin(),payload.end()));
+   const CapellaColdReference reference{id,digest,payload.size(),id==v.anchor};
+   if(entry.cold_reference()){
+    const auto& committed=*entry.cold_reference();require(committed.root==id&&committed.digest==digest&&committed.bytes==payload.size());
+   }else (*stage)(reference,payload);
+   blocks.push_back(Json::array({root(id),hex(digest),num(payload.size())}));
+  }else if(cache)blocks.push_back(nullptr);else blocks.push_back(std::move(row));
  }
  for(const auto& [i,m]:v.latest_messages)messages.push_back(Json::array({num(i),num(m.epoch),root(m.root)}));
  for(auto i:v.equivocating_indices)equiv.push_back(num(i));
@@ -104,7 +115,15 @@ std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBl
   for(const auto& old:s.deposit_ancestors){if(cancel)cancel();const auto& h=old.beacon;pins.push_back(Json::array({Json::array({num(h.slot),num(h.proposer_index),root(h.parent_root),root(h.state_root),root(h.body_root)}),old.execution.to_json(),num(old.count),root(old.root)}));}
   j["format"]="nano-capella-store-v3";j["depositAncestors"]=std::move(pins);
  }
- auto encoded=cache?snapshot_detail::canonical_snapshot_rows(j,encoded_rows,l.envelope_bytes,cancel):j.dump();require(encoded.size()<=l.envelope_bytes);if(cancel)cancel();return encoded;
+ auto encoded=stage?Json{{"format","nano-capella-reference-store-v1"},{"snapshot",std::move(j)}}.dump():cache?snapshot_detail::canonical_snapshot_rows(j,encoded_rows,l.envelope_bytes,cancel):j.dump();require(encoded.size()<=l.envelope_bytes);if(cancel)cancel();return encoded;
+}
+std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBlockRules& r,
+ const CapellaStoreSnapshotLimits& l,const std::function<void()>& check,CapellaStoreSnapshotCache* cache){
+ return capella_store_snapshot_impl(s,r,l,check,cache,nullptr);
+}
+std::string capella_store_reference_snapshot(const CapellaForkStore& s,const CapellaForkBlockRules& r,
+ const CapellaStoreSnapshotLimits& l,const std::function<void(const CapellaColdReference&,std::string_view)>& stage,const std::function<void()>& check){
+ return capella_store_snapshot_impl(s,r,l,check,nullptr,&stage);
 }
 CapellaForkStore capella_store_from_snapshot(std::string_view bytes,const Bytes& digest,const CapellaForkBlockRules& r,
  const CapellaStoreSnapshotLimits& l,const std::function<void()>& cancel){

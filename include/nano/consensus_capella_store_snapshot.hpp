@@ -15,6 +15,9 @@ struct CapellaStoreSnapshotLimits {
 class CapellaStoreSnapshotCache {
  Json profile_;
  std::map<ConsensusRoot,Json> records_;
+ friend std::string capella_store_snapshot_impl(const CapellaForkStore&,const CapellaForkBlockRules&,
+  const CapellaStoreSnapshotLimits&,const std::function<void()>&,CapellaStoreSnapshotCache*,
+  const std::function<void(const CapellaColdReference&,std::string_view)>*);
  friend std::string capella_store_snapshot(const CapellaForkStore&,const CapellaForkBlockRules&,
   const CapellaStoreSnapshotLimits&,const std::function<void()>&,CapellaStoreSnapshotCache*);
 };
@@ -24,6 +27,16 @@ class CapellaStoreSnapshotCache {
 // prevent rollback of that external commitment and does not perform disk I/O.
 std::string capella_store_snapshot(const CapellaForkStore&,const CapellaForkBlockRules&,
  const CapellaStoreSnapshotLimits&,const std::function<void()>& checkpoint={},CapellaStoreSnapshotCache* cache=nullptr);
+// LOCAL reference-only manifest. Validate one complete row at a time, emit new
+// hot rows synchronously, reuse authenticated cold rows without emitting them.
+// The sink must stage only: callbacks can precede a later validation failure.
+// Per-row/manifest bounds apply; no total flat-state budget or JSON memo is used.
+// Caller must commit every referenced blob and manifest atomically. Not runtime
+// activation; legacy restoration intentionally does not accept this format.
+std::string capella_store_reference_snapshot(const CapellaForkStore&,const CapellaForkBlockRules&,
+ const CapellaStoreSnapshotLimits&,
+ const std::function<void(const CapellaColdReference&,std::string_view)>& stage,
+ const std::function<void()>& checkpoint={});
 // Verify external digest before JSON parsing. Rebuild the justified registry
 // from authenticated SSZ rather than accepting duplicate serialized weights.
 CapellaForkStore capella_store_from_snapshot(std::string_view,const Bytes& expected_digest,
