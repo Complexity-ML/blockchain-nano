@@ -1700,6 +1700,8 @@ set_tests_properties(consensus_capella_runtime_catalog_preflight PROPERTIES TIME
 add_test(NAME consensus_capella_configured_runtime COMMAND nano-capella-transition-tests --configured-runtime)
 set_tests_properties(consensus_capella_configured_runtime PROPERTIES TIMEOUT 240 LABELS "qualification_consensus_runtime")
 
+add_test(NAME consensus_capella_published_block_inventory COMMAND nano-capella-transition-tests --beacon-reads)
+set_tests_properties(consensus_capella_published_block_inventory PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_runtime" ENVIRONMENT "NANO_TEST_BLOCK_INVENTORY_PUBLISHED=1")
 add_test(NAME consensus_capella_catalog_reactor_failfast COMMAND nano-capella-transition-tests --beacon-reads)
 set_tests_properties(consensus_capella_catalog_reactor_failfast PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_runtime" ENVIRONMENT "NANO_TEST_CATALOG_REACTOR_FAILFAST=1")
 add_test(NAME consensus_capella_catalog_generation_reservation COMMAND nano-capella-transition-tests --beacon-reads)

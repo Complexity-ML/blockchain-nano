@@ -871,6 +871,10 @@ static void scheduler_loop(const CapellaForkStore& initial,const CapellaForkBloc
  now-=1;bool rejected=false;try{clock->poll();}catch(const std::runtime_error&){rejected=true;}check(rejected&&!clock->healthy(),"backward clock accepted");bool closed=false;try{owner->tip();}catch(const std::runtime_error&){closed=true;}check(closed,"clock failure left execution readable");bool beacon_closed=false;try{reactor->beacon_read("/eth/v1/beacon/headers/head");}catch(const std::runtime_error&){beacon_closed=true;}check(beacon_closed,"clock failure left Beacon readable");
  bool diagnosed=false;try{reactor->current();}catch(const std::runtime_error& error){diagnosed=std::string(error.what()).find("initial failure: Capella local clock discontinuity")!=std::string::npos;}check(diagnosed,"reactor lost initial clock failure");
  reactor->invalidate();diagnosed=false;try{reactor->current();}catch(const std::runtime_error& error){diagnosed=std::string(error.what()).find("initial failure: Capella local clock discontinuity")!=std::string::npos;}check(diagnosed,"repeated invalidation lost first failure");
+ for(bool attempt:{false,true}){
+  bool refused=false;try{if(attempt)reactor->try_capture_inventory("block",65536);else reactor->capture_inventory("block",65536);}catch(const std::runtime_error& error){refused=std::string(error.what()).find("initial failure: Capella local clock discontinuity")!=std::string::npos;}
+  check(refused,"invalidated block inventory lost initial failure or served roots");
+ }
  std::cout<<Json{{"scenario",sync_rotation?"capella-scheduled-sync-rotation":"capella-scheduled-finality"},{"rotations",rotations},{"committeeChanges",committee_changes},{"restartSlot",sync_rotation?2*boundary-1:3*slots},{"verifiedSyncAggregates",verified_aggregates},{"maximumRetainedRecords",maximum_records},{"syncMessages",sync_messages},{"blocks",proposals},{"votes",votes},{"finalizedEpoch",current.state->timed.view.finalized.epoch},{"witnessRestart",true},{"signingJournalsReopened",64},{"duplicatePollNoSignature",true},{"backwardsClockClosedOwner",true},{"initialFailurePreserved",true},{"networkTransport",false}}.dump()<<std::endl;
 }
 static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules,const Block& genesis,const State& genesis_state){
@@ -1485,6 +1489,21 @@ static void verify_beacon_read_admission(CapellaDurableReactor& reactor,const By
   }
   std::cout<<Json{{"scenario","catalog-capture-outside-control-lock"},{"cases",cases},{"wanCauseProven",false},{"networkActivated",false}}.dump()<<std::endl;
  }
+ if(std::getenv("NANO_TEST_BLOCK_INVENTORY_PUBLISHED")){
+  const auto before=reactor.capture_inventory("block",65536);const auto expected=before->page({},1024,1024*1024);check(!expected.at("entries").empty(),"published inventory budget fixture needs retained blocks");
+  const auto primary=reactor.current().token;
+  std::promise<void> held,unblock;auto ready=held.get_future();auto gate=unblock.get_future().share();
+  struct ReleaseInventoryGate{std::promise<void>& p;~ReleaseInventoryGate(){try{p.set_value();}catch(const std::future_error&){}}} release_gate{unblock};
+  auto writer=std::async(std::launch::async,[&]{bool paused=false;try{return reactor.block(wire,[&]{if(!paused){paused=true;held.set_value();gate.wait();throw ExecutionCancelled("published inventory writer cancelled");}});}catch(const ExecutionCancelled&){return false;}});
+  const bool locked=ready.wait_for(std::chrono::seconds(5))==std::future_status::ready;
+  auto reader=std::async(std::launch::async,[&]{auto snapshot=reactor.try_capture_inventory("block",65536);auto blocking=reactor.capture_inventory("block",65536);return Json::array({snapshot?snapshot->page({},1024,1024*1024):Json(nullptr),blocking->page({},1024,1024*1024)});});
+  const bool completed=reader.wait_for(std::chrono::seconds(1))==std::future_status::ready;
+  unblock.set_value();const auto pair=reader.get();const bool admitted=writer.get();const auto actual=pair.at(0);const bool both=actual==expected&&pair.at(1)==expected;
+  bool cancelled=false;try{reactor.try_capture_inventory("block",65536,[]{throw ExecutionCancelled("published inventory cancellation");});}catch(const ExecutionCancelled&){cancelled=true;}
+  bool bounded=false;try{reactor.try_capture_inventory("block",0);}catch(const std::length_error&){bounded=true;}
+  check(locked&&completed&&both&&!admitted&&reactor.current().token==primary&&cancelled&&bounded,"published block inventory waited, mixed publication or lost bounds/cancellation");
+  std::cout<<Json{{"scenario","published-block-inventory-during-held-admission"},{"completedWhileWriterHeld",completed},{"sameDurableRootsAndToken",both},{"cancelledWriterUnpublished",!admitted},{"cancellationPreserved",cancelled},{"rootBudgetPreserved",bounded},{"wanQualified",false}}.dump()<<std::endl;
+ }
  if(std::getenv("NANO_TEST_CATALOG_REACTOR_FAILFAST")){
   const auto primary=reactor.current().token;
   CapellaInventorySessions catalogs(reactor,2,65536,std::chrono::seconds(60));
@@ -1494,16 +1513,16 @@ static void verify_beacon_read_admission(CapellaDurableReactor& reactor,const By
   struct ReleaseCatalogGate{std::promise<void>& p;~ReleaseCatalogGate(){try{p.set_value();}catch(const std::future_error&){}}} release_gate{unblock};
   writer=std::async(std::launch::async,[&]{bool paused=false;try{return reactor.block(wire,[&]{if(!paused){paused=true;held.set_value();gate.wait();throw ExecutionCancelled("catalog failfast writer cancelled");}});}catch(const ExecutionCancelled&){return false;}});
   check(ready.wait_for(std::chrono::seconds(5))==std::future_status::ready,"catalog writer not held");
-  acquire=std::async(std::launch::async,[&]{try{catalogs.acquire("probe",gen,request,"block");return false;}catch(const CapellaInventoryCaptureBusy&){return true;}});
+  acquire=std::async(std::launch::async,[&]{try{catalogs.acquire("probe",gen,request,"attestation");return false;}catch(const CapellaInventoryCaptureBusy&){return true;}});
   const bool first_completed=acquire.wait_for(std::chrono::seconds(1))==std::future_status::ready;
   // Distinct request tests that the first failed capture releases its reservation.
-  other=std::async(std::launch::async,[&]{try{catalogs.acquire("probe",gen,"0x"+std::string(64,'b'),"block");return false;}catch(const CapellaInventoryCaptureBusy&){return true;}});
+  other=std::async(std::launch::async,[&]{try{catalogs.acquire("probe",gen,"0x"+std::string(64,'b'),"attestation");return false;}catch(const CapellaInventoryCaptureBusy&){return true;}});
   const bool second_completed=other.wait_for(std::chrono::seconds(1))==std::future_status::ready;
   unblock.set_value();const bool published=writer.get(),first_busy=acquire.get(),second_busy=other.get();
   catalogs.release("probe",gen,request);bool retired=false;
-  try{catalogs.acquire("probe",gen,request,"block");}catch(const std::invalid_argument&){retired=true;}
-  bool cancelled=false;try{catalogs.acquire("cancel",gen,"0x"+std::string(64,'d'),"block",[]{throw ExecutionCancelled("catalog request cancelled");});}catch(const ExecutionCancelled&){cancelled=true;}
-  const auto recovered=catalogs.acquire("recovery",gen,"0x"+std::string(64,'c'),"block");catalogs.close("recovery",recovered);
+  try{catalogs.acquire("probe",gen,request,"attestation");}catch(const std::invalid_argument&){retired=true;}
+  bool cancelled=false;try{catalogs.acquire("cancel",gen,"0x"+std::string(64,'d'),"attestation",[]{throw ExecutionCancelled("catalog request cancelled");});}catch(const ExecutionCancelled&){cancelled=true;}
+  const auto recovered=catalogs.acquire("recovery",gen,"0x"+std::string(64,'c'),"attestation");catalogs.close("recovery",recovered);
   check(first_completed&&second_completed&&first_busy&&second_busy&&!published&&retired&&cancelled&&reactor.current().token==primary,"catalog reactor failfast invariants");
   std::cout<<Json{{"scenario","catalog-reactor-failfast"},{"firstRefusedWhileWriterHeld",first_completed&&first_busy},{"secondRefusedWhileWriterHeld",second_completed&&second_busy},{"requestRetirementPreserved",retired},{"cancellationPreserved",cancelled},{"capacityRecovered",true},{"primaryUnchanged",true},{"wanCauseProven",false},{"networkQualified",false}}.dump()<<std::endl;
  }

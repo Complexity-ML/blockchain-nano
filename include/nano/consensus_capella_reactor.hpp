@@ -105,6 +105,7 @@ class CapellaDurableReactor {
  void validate_execution_binding()const;
  void fail_closed();
  std::optional<Bytes> prepare_local_body_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,std::span<const SignedTransaction>,size_t,size_t,const std::function<void()>&,std::span<const SignedCapellaBlsChange> = {},size_t maximum_change_trials = 0,std::span<const SignedConsensusVoluntaryExit> = {},size_t maximum_exit_trials = 0);
+ std::shared_ptr<const CapellaInventorySnapshot> capture_block_inventory(const CapellaPublishedStore&,size_t,const std::function<void()>&)const;
  std::shared_ptr<const CapellaInventorySnapshot> capture_inventory_locked(std::string_view,size_t,const std::function<void()>&)const;
  std::vector<ConsensusRoot> exit_roots_locked(const std::function<void()>&)const;
  std::vector<ConsensusRoot> bls_change_roots_locked(const std::function<void()>&)const;

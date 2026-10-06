@@ -613,10 +613,30 @@ bool CapellaDurableReactor::sync_messages_current_locked(const PendingSyncMessag
  return head==messages.parent;
 }
 
+std::shared_ptr<const CapellaInventorySnapshot> CapellaDurableReactor::capture_block_inventory(const CapellaPublishedStore& published,size_t budget,const std::function<void()>& check)const{
+ // A block inventory is a copy of roots from one durably published immutable
+ // store. Its token, anchor and roots must all come from that same publication.
+ // Mutable operation inventories still require the reactor admission lock.
+ if(check)check();const auto& store=*published.state;
+ const auto count=store.blocks.size()-size_t(store.blocks.contains(store.timed.view.anchor));
+ if(count>budget/sizeof(ConsensusRoot))throw std::length_error("Capella inventory snapshot exceeds root budget");
+ auto snapshot=std::make_shared<CapellaInventorySnapshot>();snapshot->token_=published.token;snapshot->kind_="block";snapshot->roots_.reserve(count);
+ for(const auto& [root,_]:store.blocks){if(check)check();if(root!=store.timed.view.anchor)snapshot->roots_.push_back(root);}
+ if(snapshot->roots_.capacity()>budget/sizeof(ConsensusRoot))throw std::length_error("Capella inventory allocation exceeds root budget");
+ if(check)check();return snapshot;
+}
+
 std::shared_ptr<const CapellaInventorySnapshot> CapellaDurableReactor::capture_inventory(std::string_view kind,size_t budget,const std::function<void()>& check)const{
+ if(kind=="block")return capture_block_inventory(beacon_snapshot(),budget,check);
  std::lock_guard lock(mutex_);return capture_inventory_locked(kind,budget,check);
 }
 std::shared_ptr<const CapellaInventorySnapshot> CapellaDurableReactor::try_capture_inventory(std::string_view kind,size_t budget,const std::function<void()>& check)const{
+ if(kind=="block"){
+  if(check)check();
+  if(const auto published=std::atomic_load_explicit(&beacon_publication_,std::memory_order_acquire))return capture_block_inventory(*published,budget,check);
+  // Preserve try-lock refusal and the original latched error when no durable
+  // publication is available. Never turn a fail-closed state into an empty list.
+ }
  if(check)check();std::unique_lock lock(mutex_,std::try_to_lock);
  if(!lock.owns_lock())return {};
  return capture_inventory_locked(kind,budget,check);
