@@ -22,7 +22,7 @@ CapellaExecutionPayload payload(const Block& b,const std::vector<CapellaWithdraw
 const CapellaDurableReactor::SyncAdmissionContext& CapellaDurableReactor::sync_admission_context_locked(const ConsensusRoot& head,uint64_t slot,const std::function<void()>& check){
  if(check)check();
  if(sync_admission_context_&&sync_admission_context_->parent==head&&sync_admission_context_->slot==slot){
-  if(sync_context_hits_!=UINT64_MAX)++sync_context_hits_;return *sync_admission_context_;
+  {std::lock_guard stats_lock(sync_stats_mutex_);if(sync_context_hits_!=UINT64_MAX)++sync_context_hits_;}return *sync_admission_context_;
  }
  const auto& t=rules_.transition;const auto& c=t.consensus;
  const auto current=(state_->timed.clock.time_ms-state_->timed.clock.genesis_time_ms)/rules_.slot_duration_ms;
@@ -32,7 +32,7 @@ const CapellaDurableReactor::SyncAdmissionContext& CapellaDurableReactor::sync_a
  auto projected=capella_detail::project(advanced.ssz,c.state,t.execution,t.maximum_state_bytes,check);
  SyncAdmissionContext candidate{slot,head,std::move(advanced.ssz),std::move(projected.common)};
  if(check)check();sync_admission_context_=std::move(candidate);
- if(sync_context_builds_!=UINT64_MAX)++sync_context_builds_;return *sync_admission_context_;
+ {std::lock_guard stats_lock(sync_stats_mutex_);if(sync_context_builds_!=UINT64_MAX)++sync_context_builds_;}return *sync_admission_context_;
 }
 bool CapellaDurableReactor::submit_sync_aggregate(uint64_t slot,std::span<const uint8_t> aggregate,
  const ForkCheckpointToken& expected,const std::function<void()>& check){
@@ -73,10 +73,10 @@ bool CapellaDurableReactor::submit_sync_aggregate_locked(uint64_t slot,std::span
  if(check)check();pending_sync_.swap(aggregates);return true;
 }
 bool CapellaDurableReactor::record_sync_outcome(SyncOutcome outcome)noexcept{
- auto& count=sync_outcomes_[static_cast<size_t>(outcome)];if(count!=UINT64_MAX)++count;return outcome==SyncOutcome::accepted;
+ std::lock_guard stats_lock(sync_stats_mutex_);auto& count=sync_outcomes_[static_cast<size_t>(outcome)];if(count!=UINT64_MAX)++count;return outcome==SyncOutcome::accepted;
 }
 Json CapellaDurableReactor::sync_admission_stats()const{
- std::lock_guard lock(mutex_);Json result=Json::object();
+ std::lock_guard lock(sync_stats_mutex_);Json result=Json::object();
  constexpr std::array names{"accepted","invalid-width","slot-overflow","expired-slot","future-slot","head-at-or-after-inclusion","unknown-validator","root-mismatch","not-in-committee","invalid-signature","aggregation-failed"};
  static_assert(names.size()==static_cast<size_t>(SyncOutcome::count));
  for(size_t i=0;i<names.size();++i)result[names[i]]=sync_outcomes_[i];

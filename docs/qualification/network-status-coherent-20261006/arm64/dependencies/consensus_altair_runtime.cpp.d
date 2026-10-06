@@ -1,0 +1,66 @@
+consensus_altair_runtime.cpp: /work/src/consensus_altair_runtime.cpp \
+  /work/include/nano/consensus_altair_runtime.hpp \
+  /work/include/nano/consensus_altair_reactor.hpp \
+  /work/include/nano/consensus_altair_store_snapshot.hpp \
+  /work/include/nano/consensus_altair_fork_store.hpp \
+  /work/include/nano/consensus_fork_clock.hpp \
+  /work/include/nano/consensus_fork_vote.hpp \
+  /work/include/nano/consensus_fork_choice.hpp \
+  /work/include/nano/consensus_slashing.hpp \
+  /work/include/nano/consensus_attestation.hpp \
+  /work/include/nano/consensus_signing.hpp \
+  /work/include/nano/consensus_committee.hpp \
+  /work/include/nano/consensus_deposit.hpp /work/include/nano/core.hpp \
+  /work/include/nano/crypto.hpp /work/include/nano/types.hpp \
+  /work/third_party/json.hpp /work/include/nano/rlp.hpp \
+  /work/include/nano/consensus_beacon_header.hpp \
+  /work/include/nano/consensus_attestation_inclusion.hpp \
+  /work/include/nano/consensus_ffg.hpp \
+  /work/include/nano/consensus_randao.hpp \
+  /work/include/nano/consensus_block_operations.hpp \
+  /work/include/nano/consensus_block_auth.hpp \
+  /work/include/nano/consensus_beacon_body.hpp \
+  /work/include/nano/consensus_execution_payload.hpp \
+  /work/include/nano/consensus_proposer.hpp \
+  /work/include/nano/consensus_altair_fork_state.hpp \
+  /work/include/nano/consensus_altair_slots.hpp \
+  /work/include/nano/consensus_altair_epoch.hpp \
+  /work/include/nano/consensus_beacon_state.hpp \
+  /work/include/nano/consensus_epoch.hpp \
+  /work/include/nano/consensus_rewards.hpp \
+  /work/include/nano/consensus_registry_epoch.hpp \
+  /work/include/nano/consensus_effective_balance.hpp \
+  /work/include/nano/consensus_epoch_maintenance.hpp \
+  /work/include/nano/consensus_fork_state.hpp \
+  /work/include/nano/consensus_slots.hpp \
+  /work/include/nano/consensus_altair_transition.hpp \
+  /work/include/nano/consensus_altair_attestation.hpp \
+  /work/include/nano/consensus_altair_sync_aggregate.hpp \
+  /work/include/nano/consensus_altair_deposit.hpp \
+  /work/include/nano/consensus_deposit_transition.hpp \
+  /work/include/nano/consensus_altair_slashing.hpp \
+  /work/include/nano/consensus_exit.hpp \
+  /work/include/nano/consensus_altair_snapshot.hpp \
+  /work/include/nano/storage.hpp /work/include/nano/receipt.hpp \
+  /work/include/nano/finality.hpp \
+  /work/include/nano/consensus_beacon_signer.hpp \
+  /work/include/nano/consensus_altair_anchor.hpp \
+  /work/include/nano/consensus_altair_clock.hpp \
+  /work/src/../network/altair_rpc_service.hpp \
+  /work/src/../network/altair_consensus_service.hpp \
+  /work/src/../network/altair_worker.hpp \
+  /work/src/../network/altair_work.hpp \
+  /work/src/../network/altair_message.hpp \
+  /work/src/../network/json_frame.hpp \
+  /work/src/../network/altair_base64.hpp \
+  /work/src/../network/inbound_budget.hpp \
+  /work/src/../network/altair_receipts.hpp /work/include/nano/rpc.hpp \
+  /work/include/nano/chain.hpp /work/include/nano/consensus.hpp \
+  /work/include/nano/staking_rules.hpp /work/include/nano/engine.hpp \
+  /work/include/nano/evm.hpp /work/include/nano/opcodes.hpp \
+  /work/include/nano/txpool.hpp /work/include/nano/beacon_sync.hpp \
+  /work/include/nano/admission_budget.hpp /work/include/nano/wallet.hpp \
+  /work/include/nano/bft_reactor.hpp \
+  /work/include/nano/consensus_round.hpp \
+  /work/include/nano/block_import.hpp \
+  /work/include/nano/consensus_message_ssz.hpp

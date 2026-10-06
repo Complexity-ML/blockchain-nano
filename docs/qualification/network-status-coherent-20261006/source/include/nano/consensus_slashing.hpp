@@ -1,0 +1,122 @@
+#pragma once
+#include "nano/consensus_attestation.hpp"
+#include "nano/consensus_committee.hpp"
+#include "nano/consensus_beacon_header.hpp"
+#include <functional>
+namespace nano {
+struct IndexedConsensusAttestation {
+ ConsensusAttestationData data;
+ std::vector<uint64_t> indices;
+ Bytes signature;
+};
+// Verify a directional double/surround proof against two trusted historical
+// snapshots/domains. Returns common authenticated signer indices, or nullopt.
+// Caller still checks slashability at the processing epoch, applies penalties
+// exactly once, and persists the registry transition atomically.
+std::optional<std::vector<uint64_t>> verify_attester_slashing(
+ const IndexedConsensusAttestation& first,const ConsensusCommittee& first_context,
+ const IndexedConsensusAttestation& second,const ConsensusCommittee& second_context);
+
+// Explicit Phase0 economics profile, NOT the Electra/Pectra slashing rules.
+// Values must come from authenticated chain configuration. No network defaults.
+struct Phase0SlashingRules {
+ uint64_t minimum_churn_limit, churn_limit_quotient, max_seed_lookahead;
+ uint64_t minimum_withdrawability_delay, epochs_per_slashings_vector;
+ uint64_t minimum_penalty_quotient, whistleblower_reward_quotient, proposer_reward_quotient;
+ uint64_t effective_balance_increment, proportional_slashing_multiplier;
+};
+struct ConsensusSlashingValidator {
+ std::array<uint8_t,48> public_key{};
+ uint64_t balance=0, effective_balance=0;
+ uint64_t activation_epoch=UINT64_MAX, exit_epoch=UINT64_MAX, withdrawable_epoch=UINT64_MAX;
+ bool slashed=false;
+ ConsensusRoot withdrawal_credentials{};
+ uint64_t activation_eligibility_epoch=UINT64_MAX;
+ bool operator==(const ConsensusSlashingValidator&)const=default;
+};
+struct ConsensusSlashingState {
+ uint64_t epoch=0;
+ std::map<uint64_t,ConsensusSlashingValidator> validators;
+ std::vector<uint64_t> slashings;
+ bool operator==(const ConsensusSlashingState&)const=default;
+};
+// Atomic in-memory Phase0 transition: verify proof, check current eligibility,
+// queue exits, defer withdrawal, debit penalty and credit proposer/whistleblower.
+// nullopt means invalid proof or no slashable signer; bad configuration/state or
+// arithmetic overflow throws, always leaving state unchanged. Caller owns locking,
+// authenticated historical contexts, epoch processing and durable block commit.
+// Correlation penalties are handled separately at the epoch boundary.
+std::optional<std::vector<uint64_t>> process_phase0_attester_slashing(
+ ConsensusSlashingState& state,const Phase0SlashingRules& rules,
+ const IndexedConsensusAttestation& first,const ConsensusCommittee& first_context,
+ const IndexedConsensusAttestation& second,const ConsensusCommittee& second_context,
+ uint64_t proposer_index,uint64_t whistleblower_index);
+
+// Phase0 indexed-attestation slashing against the authenticated funded registry.
+// Admission MUST have established PoP for every key, including genesis keys.
+// Unlike ordinary attestation inclusion, slashing evidence does not require a
+// current committee/slot window: authenticate sorted unique in-range indices
+// and both signatures, then slash eligible intersection members in index order.
+// Fork versions come from authenticated state for EACH proof's target epoch.
+// maximum_indices is the fork's SSZ limit, not a network validator-count cap.
+std::optional<std::vector<uint64_t>> process_phase0_registry_attester_slashing(
+ ConsensusSlashingState& state,const Phase0SlashingRules& rules,
+ const IndexedConsensusAttestation& first,const IndexedConsensusAttestation& second,
+ uint64_t maximum_indices,const ConsensusBytes4& first_version,
+ const ConsensusBytes4& second_version,const ConsensusRoot& genesis_root,
+ uint64_t proposer_index,uint64_t whistleblower_index,
+ const std::function<void()>& checkpoint={});
+
+struct Phase0AttesterSlashingCandidate {
+ ConsensusSlashingState registry_after;
+ std::vector<uint64_t> slashed_indices;
+};
+// Isolated Ethereum operation semantics, including synthetic official states.
+// Verifies signatures/indices/keys and economics, but DOES NOT validate the
+// global activation/exit/withdrawal chronology. Never use as block admission;
+// process_phase0_registry_attester_slashing is the checked application boundary.
+std::optional<Phase0AttesterSlashingCandidate> phase0_attester_slashing_component(
+ const ConsensusSlashingState& state,const Phase0SlashingRules& rules,
+ const IndexedConsensusAttestation& first,const IndexedConsensusAttestation& second,
+ uint64_t maximum_indices,const ConsensusBytes4& first_version,const ConsensusBytes4& second_version,
+ const ConsensusRoot& genesis_root,uint64_t proposer_index,uint64_t whistleblower_index);
+
+struct SignedConsensusBeaconHeader {
+ ConsensusBeaconHeader message;
+ Bytes signature;
+};
+// Both conflicting headers must name the same slot/index and authenticate under
+// the trusted key and fork version for that slot's epoch. No duty proof required
+// by Phase0 proposer slashing; future header slots are not rejected solely by age.
+bool verify_proposer_slashing(const SignedConsensusBeaconHeader& first,
+ const SignedConsensusBeaconHeader& second,std::span<const uint8_t> public_key,
+ const ConsensusBytes4& historical_fork_version,const ConsensusRoot& genesis_root);
+// Same atomic Phase0 economics as attester slashing, with the registry key.
+// Replay/already slashed/ineligible/invalid proof returns nullopt unchanged.
+// Caller authenticates the historical fork for the evidence slot and persists
+// the result only as part of a fully validated block transition.
+std::optional<std::vector<uint64_t>> process_phase0_proposer_slashing(
+ ConsensusSlashingState& state,const Phase0SlashingRules& rules,
+ const SignedConsensusBeaconHeader& first,const SignedConsensusBeaconHeader& second,
+ const ConsensusBytes4& historical_fork_version,const ConsensusRoot& genesis_root,
+ uint64_t proposer_index,uint64_t whistleblower_index);
+
+// Versioned local persistence envelope, not an Ethereum SSZ BeaconState.
+// Decoder rejects noncanonical quantities, duplicate/reordered indices and
+// configuration mismatch. ChainStore binding supplies the chain identity.
+Json phase0_slashing_snapshot(const ConsensusSlashingState& state,const Phase0SlashingRules& rules);
+ConsensusSlashingState phase0_slashing_from_snapshot(const Json& snapshot,const Phase0SlashingRules& expected_rules);
+
+// Pure Phase0 process_slashings accounting over a component state. Returns
+// capped balance debits; does NOT establish registry lifecycle validity. Used
+// by the validated epoch transition and official isolated component fixtures.
+std::map<uint64_t,uint64_t> phase0_slashing_penalties(
+ const ConsensusSlashingState& state,const Phase0SlashingRules& rules);
+
+// Slashing sub-transition only: apply the delayed correlation penalty before
+// resetting the next epoch bucket, then advance this ledger by exactly one epoch.
+// expected_epoch rejects replay/skips; caller must persist the result with its
+// other epoch transitions. Does not implement the complete beacon epoch process.
+std::map<uint64_t,uint64_t> advance_phase0_slashing_epoch(
+ ConsensusSlashingState& state,const Phase0SlashingRules& rules,uint64_t expected_epoch);
+}

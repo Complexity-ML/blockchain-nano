@@ -1351,6 +1351,21 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
  std::cout<<Json{{"externalRecoveryCommitmentChecks",automatic_recovery?9:0},{"automaticRecovery",automatic_recovery},{"scenario","capella-configured-runtime"},{"blocks",proposals},{"keysLoaded",automatic_registration?65:64},{"automaticRegistration",automatic_registration},{"witnessRestart",true},{"signerWitnessRestart",true},{"admissionReceiptChecks",6},{"httpTransport",capella_http},{"runtimeCatalogChecks",3},{"catalogSeekBoundaryChecks",8},{"catalogSeekOwnershipAndBoundsChecks",3},{"invalidConfigurationsRejected",6},{"workersStopped",true},{"networkTransport",false}}.dump()<<std::endl;
 }
 static void verify_beacon_read_admission(CapellaDurableReactor& reactor,const Bytes& wire,const ConsensusRoot& parent){
+ if(const char* field=std::getenv("NANO_TEST_NETWORK_STATUS_FIELD")){
+  const std::string name=field;check(name=="identity"||name=="sync","Invalid status probe field");
+  auto read_status=[&]{return name=="identity"?reactor.network_identity():reactor.sync_admission_stats();};
+  const auto before=read_status();const auto token=reactor.current().token;
+  std::promise<void> held,unblock;auto held_future=held.get_future();auto gate=unblock.get_future().share();
+  auto writer=std::async(std::launch::async,[&]{bool paused=false;try{return reactor.block(wire,[&]{if(!paused){paused=true;held.set_value();gate.wait();throw ExecutionCancelled("status probe writer cancelled");}});}catch(const ExecutionCancelled&){return false;}});
+  const bool locked=held_future.wait_for(std::chrono::seconds(5))==std::future_status::ready;
+  if(!locked){unblock.set_value();writer.get();check(false,"Status probe admission lock not held");}
+  auto reader=std::async(std::launch::async,read_status);
+  const bool completed=reader.wait_for(std::chrono::seconds(1))==std::future_status::ready;
+  unblock.set_value();const auto actual=reader.get();const auto admitted=writer.get();
+  std::cout<<Json{{"scenario","network-status-during-held-admission"},{"field",name},{"completedWhileAdmissionHeld",completed},{"cancelledWriterUnpublished",!admitted&&reactor.current().token==token},{"sameStatus",actual==before},{"wanCauseProven",false}}.dump()<<std::endl;
+  check(completed&&!admitted&&actual==before&&reactor.current().token==token,"Network status "+name+" waited on held admission");
+ }
+
  // The current head can still be an unsigned bootstrap anchor before this
  // proposal. Select its already archived parent explicitly, preserving the
  // captured publication's canonical/finalized flags during admission.

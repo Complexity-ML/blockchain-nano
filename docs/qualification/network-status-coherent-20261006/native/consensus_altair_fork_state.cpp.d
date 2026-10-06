@@ -1,0 +1,35 @@
+consensus_altair_fork_state.cpp: \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/SDKSettings.json \
+  /private/tmp/nano-network-status-coherent-20261006/source/src/consensus_altair_fork_state.cpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_altair_fork_state.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_altair_slots.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_altair_epoch.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_beacon_state.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_signing.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_execution_payload.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/types.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/json.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_epoch.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_rewards.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_ffg.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_slashing.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_attestation.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_committee.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_deposit.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/core.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/crypto.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/rlp.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_beacon_header.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_randao.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_registry_epoch.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_effective_balance.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_epoch_maintenance.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_fork_state.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_slots.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_fork_vote.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_fork_choice.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_attestation_inclusion.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_block_operations.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_block_auth.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_beacon_body.hpp \
+  /private/tmp/nano-network-status-coherent-20261006/source/include/nano/consensus_proposer.hpp

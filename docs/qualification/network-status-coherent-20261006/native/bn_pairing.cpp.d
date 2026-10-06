@@ -1,0 +1,34 @@
+bn_pairing.cpp: \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/SDKSettings.json \
+  /private/tmp/nano-network-status-coherent-20261006/source/src/bn_pairing.cpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/mcl/bn.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/mcl/g1_def.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/mcl/ec.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/mcl/fp_def.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/mcl/fp.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/mcl/config.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/cybozu/inttype.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/cybozu/hash.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/cybozu/stream.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/cybozu/exception.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/mcl/op.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/mcl/gmp_util.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/cybozu/bit_operation.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/mcl/randgen.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/cybozu/random_generator.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/mcl/conversion.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/cybozu/itoa.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/mcl/vint.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/mcl/bint.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/mcl/util.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/cybozu/xorshift.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/mcl/array.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/mcl/invmod_fwd.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/mcl/operator.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/mcl/fr_def.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/mcl/ecparam.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/mcl/curve_type.h \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/mcl/window_method.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/mcl/g2_def.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/mcl/fp_tower.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/mcl/include/mcl/curve_type.hpp

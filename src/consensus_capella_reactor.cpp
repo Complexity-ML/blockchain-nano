@@ -287,7 +287,9 @@ CapellaDurableReactor::CapellaDurableReactor(Blockchain& owner,CapellaForkBlockR
  std::lock_guard chain_lock(owner.mutex_);owner.beacon_finalized_=std::move(finalized);owner.beacon_ready_=true;
 }
 Json CapellaDurableReactor::network_identity()const{
- std::lock_guard lock(mutex_);return network_identity_locked();
+ // Read an authenticated immutable publication without waiting for admission.
+ // fail_closed clears this publication; the fallback retains the latched error.
+ const auto published=beacon_snapshot();return network_identity_for_store(*published.state);
 }
 Json CapellaDurableReactor::network_identity_locked()const{
  require_available();return network_identity_for_store(*state_);

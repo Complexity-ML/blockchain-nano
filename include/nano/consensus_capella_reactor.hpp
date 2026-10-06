@@ -76,6 +76,10 @@ class CapellaDurableReactor {
  struct PendingSyncMessages { uint64_t slot; ConsensusRoot parent; std::map<uint64_t,Bytes> wires; };
  std::map<uint64_t,PendingSyncMessages> pending_sync_messages_;
  enum class SyncOutcome {accepted,invalid_width,slot_overflow,expired_slot,future_slot,head_at_or_after_inclusion,unknown_validator,root_mismatch,not_in_committee,invalid_signature,aggregation_failed,count};
+ // Telemetry reads must not wait behind execution or signing admission.
+ // Mutators hold mutex_ first, then this short-lived stats lock. Readers never
+ // acquire mutex_ while holding it; all counter changes use the same lock.
+ mutable std::mutex sync_stats_mutex_;
  std::array<uint64_t,static_cast<size_t>(SyncOutcome::count)> sync_outcomes_{};
  bool record_sync_outcome(SyncOutcome)noexcept;
  // Derived only from an admitted immutable parent under mutex_. One entry,

@@ -1,0 +1,48 @@
+In file included from /private/tmp/nano-network-status-coherent-20261006/source/tests/test_capella_transition.cpp:3:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/altair_transition_rules.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_transition_rules.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_epoch_ssz.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_ffg_ssz.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_minimal_ssz.hpp:2:
+/Users/boris/Dev/blockchain-nano/tests/support/process.hpp:39:19: warning: 'posix_spawn_file_actions_addchdir_np' is deprecated: first deprecated in macOS 26.0 - posix_spawn_file_actions_addchdir(3) has replaced posix_spawn_file_actions_addchdir_np(3) [-Wdeprecated-declarations]
+   39 |   if(!cwd.empty())posix_spawn_file_actions_addchdir_np(&actions,cwd.c_str());
+      |                   ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/spawn.h:184:9: note: 'posix_spawn_file_actions_addchdir_np' has been explicitly marked deprecated here
+  184 | int     posix_spawn_file_actions_addchdir_np(posix_spawn_file_actions_t *,
+      |         ^
+In file included from /private/tmp/nano-network-status-coherent-20261006/source/tests/test_capella_transition.cpp:36:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/capella_catalog_concurrency.hpp:2:
+/Users/boris/Dev/blockchain-nano/tests/support/../../network/capella_inventory_sessions.hpp:10:7: error: redefinition of 'CapellaInventorySessions'
+   10 | class CapellaInventorySessions {
+      |       ^
+/private/tmp/nano-network-status-coherent-20261006/source/tests/../network/capella_inventory_sessions.hpp:10:7: note: previous definition is here
+   10 | class CapellaInventorySessions {
+      |       ^
+/private/tmp/nano-network-status-coherent-20261006/source/tests/test_capella_transition.cpp:1248:38: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1248 |    if(!acquired){release.set_value();holder.get();check(false,"queue fixture did not hold real admission mutex");}
+      |                                      ^~~~~~~~~~
+/private/tmp/nano-network-status-coherent-20261006/source/tests/test_capella_transition.cpp:1251:101: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1251 |    if(clock_ready.wait_for(std::chrono::seconds(2))!=std::future_status::ready){release.set_value();holder.get();clock_waiter.get();check(false,"clock poll did not enter while admission held");}
+      |                                                                                                     ^~~~~~~~~~
+/private/tmp/nano-network-status-coherent-20261006/source/tests/test_capella_transition.cpp:1251:114: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1251 |    if(clock_ready.wait_for(std::chrono::seconds(2))!=std::future_status::ready){release.set_value();holder.get();clock_waiter.get();check(false,"clock poll did not enter while admission held");}
+      |                                                                                                                  ^~~~~~~~~~~~~~~~
+/private/tmp/nano-network-status-coherent-20261006/source/tests/test_capella_transition.cpp:1260:24: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1260 |    release.set_value();clock_waiter.get();const auto archive=holder.get();const auto status=blocked.get(),chain_id=identity.get(),read=beacon.get();
+      |                        ^~~~~~~~~~~~~~~~
+/private/tmp/nano-network-status-coherent-20261006/source/tests/test_capella_transition.cpp:1361:35: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1361 |   if(!locked){unblock.set_value();writer.get();check(false,"Status probe admission lock not held");}
+      |                                   ^~~~~~~~~~
+/private/tmp/nano-network-status-coherent-20261006/source/tests/test_capella_transition.cpp:1379:35: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1379 |   if(!locked){unblock.set_value();blocked_writer.get();check(false,"Admission lock fixture not reached");}
+      |                                   ^~~~~~~~~~~~~~~~~~
+/private/tmp/nano-network-status-coherent-20261006/source/tests/test_capella_transition.cpp:1391:36: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1391 |  if(!captured){release.set_value();reader.get();check(false,"Concurrent Beacon reader never captured publication");}
+      |                                    ^~~~~~~~~~
+/private/tmp/nano-network-status-coherent-20261006/source/tests/test_capella_transition.cpp:1396:70: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1396 |  if(!export_captured){release.set_value();export_release.set_value();reader.get();exporter.get();check(false,"Concurrent block exporter never captured publication");}
+      |                                                                      ^~~~~~~~~~
+/private/tmp/nano-network-status-coherent-20261006/source/tests/test_capella_transition.cpp:1396:83: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1396 |  if(!export_captured){release.set_value();export_release.set_value();reader.get();exporter.get();check(false,"Concurrent block exporter never captured publication");}
+      |                                                                                   ^~~~~~~~~~~~
+10 warnings and 1 error generated.
