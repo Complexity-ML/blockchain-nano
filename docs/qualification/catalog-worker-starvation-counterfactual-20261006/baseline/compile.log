@@ -1,0 +1,46 @@
+In file included from /private/tmp/nano-catalog-worker-starvation-probe-20261006/tests/test_capella_transition.cpp:3:
+In file included from /private/tmp/nano-catalog-worker-starvation-probe-20261006/tests/support/altair_transition_rules.hpp:2:
+In file included from /private/tmp/nano-catalog-worker-starvation-probe-20261006/tests/support/phase0_transition_rules.hpp:2:
+In file included from /private/tmp/nano-catalog-worker-starvation-probe-20261006/tests/support/phase0_epoch_ssz.hpp:2:
+In file included from /private/tmp/nano-catalog-worker-starvation-probe-20261006/tests/support/phase0_ffg_ssz.hpp:2:
+In file included from /private/tmp/nano-catalog-worker-starvation-probe-20261006/tests/support/phase0_minimal_ssz.hpp:2:
+/private/tmp/nano-catalog-worker-starvation-probe-20261006/tests/support/process.hpp:39:19: warning: 'posix_spawn_file_actions_addchdir_np' is deprecated: first deprecated in macOS 26.0 - posix_spawn_file_actions_addchdir(3) has replaced posix_spawn_file_actions_addchdir_np(3) [-Wdeprecated-declarations]
+   39 |   if(!cwd.empty())posix_spawn_file_actions_addchdir_np(&actions,cwd.c_str());
+      |                   ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/spawn.h:184:9: note: 'posix_spawn_file_actions_addchdir_np' has been explicitly marked deprecated here
+  184 | int     posix_spawn_file_actions_addchdir_np(posix_spawn_file_actions_t *,
+      |         ^
+/private/tmp/nano-catalog-worker-starvation-probe-20261006/tests/test_capella_transition.cpp:1248:38: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1248 |    if(!acquired){release.set_value();holder.get();check(false,"queue fixture did not hold real admission mutex");}
+      |                                      ^~~~~~~~~~
+/private/tmp/nano-catalog-worker-starvation-probe-20261006/tests/test_capella_transition.cpp:1251:101: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1251 |    if(clock_ready.wait_for(std::chrono::seconds(2))!=std::future_status::ready){release.set_value();holder.get();clock_waiter.get();check(false,"clock poll did not enter while admission held");}
+      |                                                                                                     ^~~~~~~~~~
+/private/tmp/nano-catalog-worker-starvation-probe-20261006/tests/test_capella_transition.cpp:1251:114: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1251 |    if(clock_ready.wait_for(std::chrono::seconds(2))!=std::future_status::ready){release.set_value();holder.get();clock_waiter.get();check(false,"clock poll did not enter while admission held");}
+      |                                                                                                                  ^~~~~~~~~~~~~~~~
+/private/tmp/nano-catalog-worker-starvation-probe-20261006/tests/test_capella_transition.cpp:1260:24: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1260 |    release.set_value();clock_waiter.get();const auto archive=holder.get();const auto status=blocked.get(),chain_id=identity.get(),read=beacon.get();
+      |                        ^~~~~~~~~~~~~~~~
+/private/tmp/nano-catalog-worker-starvation-probe-20261006/tests/test_capella_transition.cpp:1380:95: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1380 |    if(ready.wait_for(std::chrono::seconds(5))!=std::future_status::ready){unblock.set_value();acquisition.get();check(false,"capture not held");}
+      |                                                                                               ^~~~~~~~~~~~~~~
+/private/tmp/nano-catalog-worker-starvation-probe-20261006/tests/test_capella_transition.cpp:1384:61: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1384 |    unblock.set_value();const bool refused=acquisition.get();control.get();bool generation_same=false;try{generation_same=generation.get()==gen;}catch(const std::runtime_error&){}
+      |                                                             ^~~~~~~~~~~
+/private/tmp/nano-catalog-worker-starvation-probe-20261006/tests/test_capella_transition.cpp:1398:35: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1398 |   if(!locked){unblock.set_value();writer.get();check(false,"Status probe admission lock not held");}
+      |                                   ^~~~~~~~~~
+/private/tmp/nano-catalog-worker-starvation-probe-20261006/tests/test_capella_transition.cpp:1416:35: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1416 |   if(!locked){unblock.set_value();blocked_writer.get();check(false,"Admission lock fixture not reached");}
+      |                                   ^~~~~~~~~~~~~~~~~~
+/private/tmp/nano-catalog-worker-starvation-probe-20261006/tests/test_capella_transition.cpp:1428:36: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1428 |  if(!captured){release.set_value();reader.get();check(false,"Concurrent Beacon reader never captured publication");}
+      |                                    ^~~~~~~~~~
+/private/tmp/nano-catalog-worker-starvation-probe-20261006/tests/test_capella_transition.cpp:1433:70: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1433 |  if(!export_captured){release.set_value();export_release.set_value();reader.get();exporter.get();check(false,"Concurrent block exporter never captured publication");}
+      |                                                                      ^~~~~~~~~~
+/private/tmp/nano-catalog-worker-starvation-probe-20261006/tests/test_capella_transition.cpp:1433:83: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1433 |  if(!export_captured){release.set_value();export_release.set_value();reader.get();exporter.get();check(false,"Concurrent block exporter never captured publication");}
+      |                                                                                   ^~~~~~~~~~~~
+12 warnings generated.

@@ -7919,3 +7919,6 @@ Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, d
 
 
 2026-10-06 — Capture catalogue hors verrou de contrôle : lot intégré natif/ARM64/AMD64, originaux 65381/1980/4618 sorties 0 ; 349 sources figées, deux consommateurs ABI reconstruits, cinq modes concernés réussis. Quatre scénarios neufs (release/stop/expiry/cancel), quotas et courses conservés. Échecs initiaux de montage conservés. Pas de finalité WAN démontrée ; contention de la file HTTP et votes récents encore ouverts avant nouvelle campagne. [Preuves](qualification/catalog-capture-control-integrated-20261006/README.md).
+
+
+2026-10-06 — Contention de deux travailleurs reproduite (14001/0) : capture retenue + acquéreur en attente font expirer génération/release dans la file. Draft à refus immédiat (48776/0) : contrôles non expirés, réservations drainées et primaire inchangé ; mêmes deux threads et quotas. Comparaison isolée sans HTTP réel, cause WAN et runtime intégré non qualifiés. Prochain lot : code RPC occupé distinct, HTTP réel et qualification des deux architectures. [Preuves](qualification/catalog-worker-starvation-counterfactual-20261006/README.md).
