@@ -35,6 +35,10 @@ class CapellaReferenceSnapshotCache {
  friend std::string capella_store_snapshot_reference_memo_impl(const CapellaForkStore&,const CapellaForkBlockRules&,
   const CapellaStoreSnapshotLimits&,const std::function<void()>&,CapellaStoreSnapshotCache*,
   const std::function<void(const CapellaColdReference&,std::string_view)>*,CapellaReferenceSnapshotCache*);
+
+ friend CapellaForkStore capella_store_from_reference_snapshot_reusing(std::string_view,const Bytes&,const CapellaForkBlockRules&,
+  const CapellaStoreSnapshotLimits&,size_t,size_t,const std::function<std::optional<std::string>(const Bytes&,size_t)>&,
+  const CapellaForkStore&,CapellaReferenceSnapshotCache&,const std::function<void()>&,size_t*);
 public:
  CapellaReferenceSnapshotCacheUsage usage()const{return {records_.size(),encoded_bytes_,reuses_,validated_cold_rows_};}
 };
@@ -69,6 +73,15 @@ CapellaForkStore capella_store_from_reference_snapshot(std::string_view,const By
  const CapellaForkBlockRules&,const CapellaStoreSnapshotLimits&,size_t cache_records,size_t cache_bytes,
  const std::function<std::optional<std::string>(const Bytes&,size_t)>& fetch,
  const std::function<void()>& checkpoint={});
+// LOCAL publication preflight only: reuse certificates for unchanged cold rows
+// from an already validated source, while fetching and authenticating every blob.
+// Misses use the complete decoder; canonical graph validation still runs. Normal
+// startup recovery uses the uncached API above. Memo/stats update on success only.
+CapellaForkStore capella_store_from_reference_snapshot_reusing(std::string_view,const Bytes&,
+ const CapellaForkBlockRules&,const CapellaStoreSnapshotLimits&,size_t cache_records,size_t cache_bytes,
+ const std::function<std::optional<std::string>(const Bytes&,size_t)>& fetch,
+ const CapellaForkStore& validated_source,CapellaReferenceSnapshotCache&,
+ const std::function<void()>& checkpoint={},size_t* reused_records=nullptr);
 // Verify external digest before JSON parsing. Rebuild the justified registry
 // from authenticated SSZ rather than accepting duplicate serialized weights.
 CapellaForkStore capella_store_from_snapshot(std::string_view,const Bytes& expected_digest,

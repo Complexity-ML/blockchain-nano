@@ -92,15 +92,15 @@ std::optional<CapellaColdCheckpointOptions> cold_options(std::string_view encode
  return CapellaColdCheckpointOptions{size_t(count),size_t(bytes)};
 }
 std::string cold_envelope(std::string_view payload,CapellaColdCheckpointOptions options){return Json{{"format","nano-capella-cold-checkpoint-v1"},{"cache",Json::array({quantity(Int(std::to_string(options.cache_records))),quantity(Int(std::to_string(options.cache_bytes)))})},{"checkpoint",Json::parse(payload)}}.dump();}
-std::tuple<CapellaForkStore,CapellaSignedVotes,CapellaSignedVotes,CapellaPendingBlsChanges,CapellaPendingExits> restore_durable(std::string_view encoded,const Bytes& digest,const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits,const std::function<void()>& check,const std::function<std::optional<std::string>(const Bytes&,size_t)>& fetch={},std::optional<CapellaColdCheckpointOptions> cold=std::nullopt){
+std::tuple<CapellaForkStore,CapellaSignedVotes,CapellaSignedVotes,CapellaPendingBlsChanges,CapellaPendingExits> restore_durable(std::string_view encoded,const Bytes& digest,const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits,const std::function<void()>& check,const std::function<std::optional<std::string>(const Bytes&,size_t)>& fetch={},std::optional<CapellaColdCheckpointOptions> cold=std::nullopt,const CapellaForkStore* source=nullptr,CapellaReferenceSnapshotCache* memo=nullptr){
  if(check)check();archive_require(encoded.size()<=limits.envelope_bytes&&digest.size()==32&&sha256(Bytes(encoded.begin(),encoded.end()))==digest);
  const auto document=Json::parse(encoded);
  if(const auto options=cold_options(encoded,limits)){
   archive_require(!cold&&bool(fetch));const auto inner=document.at("checkpoint").dump();
-  return restore_durable(inner,sha256(Bytes(inner.begin(),inner.end())),rules,limits,check,fetch,options);
+  return restore_durable(inner,sha256(Bytes(inner.begin(),inner.end())),rules,limits,check,fetch,options,source,memo);
  }
  auto restore_store=[&](std::string_view bytes,const Bytes& committed){
-  return cold?capella_store_from_reference_snapshot(bytes,committed,rules,limits,cold->cache_records,cold->cache_bytes,fetch,check):capella_store_from_snapshot(bytes,committed,rules,limits,check);
+  return cold?(source&&memo?capella_store_from_reference_snapshot_reusing(bytes,committed,rules,limits,cold->cache_records,cold->cache_bytes,fetch,*source,*memo,check):capella_store_from_reference_snapshot(bytes,committed,rules,limits,cold->cache_records,cold->cache_bytes,fetch,check)):capella_store_from_snapshot(bytes,committed,rules,limits,check);
  };
  if(document.value("format",std::string())=="nano-capella-fragments-v1"){
   archive_require(!cold&&bool(fetch));const auto expanded=capella_checkpoint_detail::expand_fragment_checkpoint(encoded,digest,limits.envelope_bytes,limits.blocks,fetch,check);
@@ -286,7 +286,7 @@ void CapellaDurableReactor::publish_impl(CapellaForkStore candidate,const std::f
   const auto pending=[&](const Bytes& digest,size_t bytes)->std::optional<std::string>{for(const auto& blob:fragments.blobs)if(blob.digest==digest){archive_require(blob.payload.size()<=bytes);return blob.payload;}return reader(digest,bytes);};
   // Verify every reference and operation before I/O, then prepare the durable
   // read view with the lifetime-guarded PRIMARY reader, not the staging closure.
-  (void)restore_durable(encoded,sha256(Bytes(encoded.begin(),encoded.end())),rules_,limits_,check,pending);
+  (void)restore_durable(encoded,sha256(Bytes(encoded.begin(),encoded.end())),rules_,limits_,check,pending,std::nullopt,next.get(),&reference_next);
   auto prepared=*next;auto cache=std::make_shared<CapellaColdRecordCache>(rules_,limits_,cold->cache_records,cold->cache_bytes);
   const auto payload=Json::parse(encoded).at("checkpoint");const auto& reference_store=payload.at("format")=="nano-capella-reference-store-v1"?payload:payload.at("store");
   for(const auto& ref:reference_store.at("snapshot").at("blocks")){

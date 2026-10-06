@@ -30,6 +30,11 @@ ConsensusSlashingState registry(const CapellaForkStore& s,const CapellaForkBlock
  if(s.timed.view.justified.root==s.timed.view.anchor&&s.timed.view.justified.epoch==b.header.slot/r.transition.consensus.epoch.ffg.slots_per_epoch)return capella_fork_block_context(b.state,b.header,epoch_rules(r),r.transition.consensus.state,cancel).registry;
  return prepare_capella_resumed_target_context(s,r,s.timed.view.justified,l.replay_slots,l.sync_trials,cancel).registry;
 }
+Json reference_metadata(const ConsensusRoot& id,const CapellaForkRecord& entry,const CapellaForkStore& s){
+ const auto& h=entry.header();const auto& node=s.timed.view.nodes.at(id);
+ return Json::array({Json::array({num(h.slot),num(h.proposer_index),root(h.parent_root),root(h.state_root),root(h.body_root)}),entry.execution_header().to_json(),num(node.realized_justified_epoch),num(node.unrealized_justified_epoch),cp(s.unrealized_justifications.at(id)),id==s.timed.view.anchor});
+}
+struct ReusedColdMetadata {ConsensusBeaconHeader header;Header execution;Phase0ForkNode node;};
 }
 std::string capella_store_snapshot_reference_memo_impl(const CapellaForkStore& s,const CapellaForkBlockRules& r,
  const CapellaStoreSnapshotLimits& l,const std::function<void()>& cancel,CapellaStoreSnapshotCache* cache,
@@ -48,7 +53,7 @@ std::string capella_store_snapshot_reference_memo_impl(const CapellaForkStore& s
   if(memo->profile_!=current_profile||memo->encoded_bytes_>l.envelope_bytes){memo->records_.clear();memo->encoded_bytes_=0;memo->profile_=current_profile;}
   for(auto it=memo->records_.begin();it!=memo->records_.end();)if(!s.blocks.contains(it->first)){memo->encoded_bytes_-=it->second.encoded_bytes;it=memo->records_.erase(it);}else ++it;
  }
- const auto metadata=[&](const ConsensusRoot& id,const CapellaForkRecord& entry){const auto& h=entry.header();const auto& node=v.nodes.at(id);return Json::array({Json::array({num(h.slot),num(h.proposer_index),root(h.parent_root),root(h.state_root),root(h.body_root)}),entry.execution_header().to_json(),num(node.realized_justified_epoch),num(node.unrealized_justified_epoch),cp(s.unrealized_justifications.at(id)),id==v.anchor});};
+ const auto metadata=[&](const ConsensusRoot& id,const CapellaForkRecord& entry){return reference_metadata(id,entry,s);};
  if(cache&&cache->profile_!=current_profile){cache->records_.clear();cache->profile_=current_profile;}
  if(cache)std::erase_if(cache->records_,[&](const auto& item){return !s.blocks.contains(item.first);});
  std::vector<std::string_view> encoded_rows;
@@ -176,7 +181,9 @@ std::string capella_store_reference_snapshot(const CapellaForkStore& s,const Cap
 static CapellaForkStore restore_store(std::string_view bytes,const Bytes& digest,const CapellaForkBlockRules& r,
  const CapellaStoreSnapshotLimits& l,const std::function<void()>& cancel,
  const std::shared_ptr<CapellaColdRecordCache>& cache={},
- const std::function<std::optional<std::string>(const Bytes&,size_t)>& fetch={}){
+ const std::function<std::optional<std::string>(const Bytes&,size_t)>& fetch={},
+ CapellaReferenceSnapshotCache* memo=nullptr,
+ const std::function<std::optional<ReusedColdMetadata>(const CapellaColdReference&)>& reuse={}){
  require(bytes.size()<=l.envelope_bytes&&digest.size()==32);if(cancel)cancel();require(sha256(Bytes(bytes.begin(),bytes.end()))==digest);
  const auto document=Json::parse(bytes);
  if(cache)require(document.is_object()&&document.size()==2&&document.at("format")=="nano-capella-reference-store-v1"&&document.dump()==bytes&&bool(fetch));
@@ -194,7 +201,13 @@ static CapellaForkStore restore_store(std::string_view bytes,const Bytes& digest
    if(cancel)cancel();require(b.is_array()&&b.size()==3&&b[1].is_string()&&b[2].is_string());
    const auto id=root(b[0]);const auto hash=unhex(b[1].get<std::string>());const auto length=number(b[2]);
    require(hash.size()==32&&hex(hash)==b[1].get<std::string>()&&length&&length<=l.envelope_bytes&&num(length)==b[2].get<std::string>());
-   const CapellaColdReference reference{id,hash,size_t(length),id==v.anchor};const auto pin=cache->load(reference,fetch,cancel);
+   const CapellaColdReference reference{id,hash,size_t(length),id==v.anchor};
+   if(reuse){if(const auto known=reuse(reference)){
+    // A process-local certificate does not prove present disk availability.
+    const auto payload=fetch(reference.digest,reference.bytes);require(payload&&payload->size()==reference.bytes&&sha256(Bytes(payload->begin(),payload->end()))==reference.digest);if(cancel)cancel();
+    require(s.blocks.emplace(id,CapellaForkRecord(reference,known->header,known->execution,cache,fetch)).second);require(v.nodes.emplace(id,known->node).second);continue;
+   }}
+   const auto pin=cache->load(reference,fetch,cancel);
    require(s.blocks.emplace(id,CapellaForkRecord(reference,pin->block.header,pin->block.execution_block.header,cache,fetch)).second);
    require(v.nodes.emplace(id,pin->node).second);continue;
   }
@@ -215,7 +228,8 @@ static CapellaForkStore restore_store(std::string_view bytes,const Bytes& digest
   for(const auto& row:j.at("depositAncestors")){if(cancel)cancel();require(row.is_array()&&row.size()==4);const auto& h=row[0];require(h.is_array()&&h.size()==5);s.deposit_ancestors.push_back({{number(h[0]),number(h[1]),root(h[2]),root(h[3]),root(h[4])},Header::from_json(row[1]),number(row[2]),root(row[3])});}
  }
  v.justified_registry=registry(s,r,l,cancel);
- require((cache?capella_store_reference_snapshot(s,r,l,[](const CapellaColdReference&,std::string_view){throw std::logic_error("Unexpected hot restored record");},cancel):capella_store_snapshot(s,r,l,cancel))==bytes);return s;
+ const std::function<void(const CapellaColdReference&,std::string_view)> no_hot=[](const CapellaColdReference&,std::string_view){throw std::logic_error("Unexpected hot restored record");};
+ require((cache?(memo?capella_store_reference_snapshot_cached(s,r,l,no_hot,*memo,cancel):capella_store_reference_snapshot(s,r,l,no_hot,cancel)):capella_store_snapshot(s,r,l,cancel))==bytes);return s;
 }
 CapellaForkStore capella_store_from_snapshot(std::string_view bytes,const Bytes& digest,const CapellaForkBlockRules& rules,
  const CapellaStoreSnapshotLimits& limits,const std::function<void()>& check){return restore_store(bytes,digest,rules,limits,check);}
@@ -224,6 +238,26 @@ CapellaForkStore capella_store_from_reference_snapshot(std::string_view bytes,co
  const std::function<std::optional<std::string>(const Bytes&,size_t)>& fetch,const std::function<void()>& check){
  auto cache=std::make_shared<CapellaColdRecordCache>(rules,limits,records,encoded_bytes);
  return restore_store(bytes,digest,rules,limits,check,cache,fetch);
+}
+CapellaForkStore capella_store_from_reference_snapshot_reusing(std::string_view bytes,const Bytes& digest,const CapellaForkBlockRules& rules,
+ const CapellaStoreSnapshotLimits& limits,size_t records,size_t encoded_bytes,
+ const std::function<std::optional<std::string>(const Bytes&,size_t)>& fetch,const CapellaForkStore& source,
+ CapellaReferenceSnapshotCache& memo,const std::function<void()>& check,size_t* reused_records){
+ if(check)check();auto candidate=memo;size_t reused=0;const auto current_profile=profile(rules);
+ if(candidate.profile_!=current_profile||candidate.encoded_bytes_>limits.envelope_bytes){candidate.records_.clear();candidate.encoded_bytes_=0;candidate.profile_=current_profile;}
+ auto cache=std::make_shared<CapellaColdRecordCache>(rules,limits,records,encoded_bytes);
+ const std::function<std::optional<ReusedColdMetadata>(const CapellaColdReference&)> reuse=[&](const auto& reference)->std::optional<ReusedColdMetadata>{
+  if(check)check();if(candidate.profile_!=current_profile)return std::nullopt;
+  const auto entry=source.blocks.find(reference.root);const auto certified=candidate.records_.find(reference.root);
+  if(entry==source.blocks.end()||certified==candidate.records_.end()||!entry->second.cold_reference()||*entry->second.cold_reference()!=reference)return std::nullopt;
+  const auto& proof=certified->second;
+  if(proof.reference!=reference||proof.metadata!=reference_metadata(reference.root,entry->second,source)||proof.state_bytes<8||proof.state_bytes>limits.state_bytes||proof.state_bytes>limits.total_state_bytes||reference.bytes>encoded_bytes)return std::nullopt;
+  const auto& node=source.timed.view.nodes.at(reference.root);const auto& header=entry->second.header();
+  require(consensus_beacon_header_root(header)==reference.root&&node.slot==header.slot&&node.parent==header.parent_root);
+  ++reused;return ReusedColdMetadata{header,entry->second.execution_header(),node};
+ };
+ auto restored=restore_store(bytes,digest,rules,limits,check,cache,fetch,&candidate,reuse);
+ memo=std::move(candidate);if(reused_records)*reused_records=reused;return restored;
 }
 }
 
