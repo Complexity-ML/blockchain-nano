@@ -1,0 +1,5 @@
+# Independent read-only capture after V31 — 7 October 2026
+
+Original local controller27225 and VPS controller42295 exit0. Native and Docker Mac audit1836/1818 files; VPS2850 files. Full host-local file inventories before/after strictly identical. Native/Mac active16 plus inactive historical16 pins match separately, VPS33 active pins exact. Primary and independent witness, stop commitments and required finalized checkpoint match the terminal V31 receipts. Full cold archive/state/operation validation uses the existing core7329b7ad capture tool; no network writer or duty started during these captures.
+
+Public capsules, exit/error/immutability receipts and scripts retained. Private requests/configs, keys, database files and full dictionaries of file hashes stay on their original host. Prior V30 pins are used only for historical inactive keys, never instead of V31 active stop commitments. This closes the scoped after-stop read-only audit; V31 finality remains FAILED at1284 and no network-recovery or production gate is promoted.

@@ -1,0 +1,9 @@
+# Bounded preparation priority — 7 October 2026
+
+V31 admitted partial dependencies but only17/16/13 block-category turns in its900-second gate. Long attestation scans separated those turns; this is a scheduling bottleneck to address, not proof of a sole root cause.
+
+When a peer has an authenticated local preparation target, the scheduler inserts at most one extra block turn before each mandatory normal-cycle turn. The normal cycle never resets on mode changes. All six categories remain served within20 opportunities for every mode-toggle pattern; independent peer/session state and alternating selected-head/history block service remain intact. Without a preparation target the original schedule is exact. Existing global/per-peer budgets, timeout, admission quantum, pacer, receiver validation and ACK requirements are unchanged. This changes service opportunities, not resource bounds or consensus rules.
+
+Counterfactual parent refuses the required preparation share at the expected assertion. Docker ARM64 and AMD64 final tests pass:1100 block opportunities,500 attestation opportunities and100 of each remaining category per2000 steady preparation opportunities. Exhaustively20971520 twenty-opportunity mode windows pass, plus original five scheduler scenarios. No transport or BLS model; bounded opportunities are not wall-clock latency or WAN qualification. More block service can delay other categories within the explicitly tested20-opportunity bound.
+
+The main peer controller now selects preparation mode from its persistent local target and traces preparationPriority. Integration is source-only at this point; actual new relay binaries and WAN behavior remain to qualify. The diagnostics-only parent binaries did compile0 on ARM64/AMD64, hashes retained here; those are not builds of this new scheduling change. No node restarted, private data exported, image built or production gate closed.
