@@ -15,5 +15,9 @@ int main(){try{
  error["error"]["code"]="PRIVATE_TOKEN";core_rpc_trace(trace,"nano_capellaCatalogPage","rpc-error",200,error);check(seen["rpcCode"].is_null(),"non-numeric error code leaked");
  core_rpc_trace([](const J&){throw std::runtime_error("observer failed");},"nano_capellaStatus","read-error");
  core_rpc_trace({},"nano_capellaStatus","read-error");
- std::cout<<"6 diagnostic classification/redaction/observer cases passed; no transport or WAN qualification\n";
+ core_rpc_trace(trace,"nano_capellaStatus","http-error",503,nullptr,"RPC simulation capacity exceeded");check(seen["cause"]=="rpc-capacity-exceeded","capacity refusal lost");
+ core_rpc_trace(trace,"nano_capellaStatus","http-error",503,nullptr,"RPC simulation queue wait exceeded");check(seen["cause"]=="rpc-queue-expired","queue expiry lost");
+ core_rpc_trace(trace,"nano_capellaStatus","http-error",503,nullptr,"PRIVATE_HTTP_PAYLOAD");check(seen["cause"]=="unknown"&&seen.dump().find("PRIVATE_")==std::string::npos,"HTTP body leaked");
+ core_rpc_trace(trace,"nano_capellaStatus","rpc-error",200,nullptr,"RPC simulation capacity exceeded");check(seen["cause"]=="unknown","unrelated status forged capacity");
+ std::cout<<"10 diagnostic classification/redaction/observer cases passed; no transport or WAN qualification\n";
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

@@ -108,6 +108,7 @@ class Network {
  bool drop_altair_reply_=std::getenv("NANO_TEST_DROP_ALTAIR_REPLY_ONCE")!=nullptr;
  bool drop_block_fragment_=std::getenv("NANO_TEST_DROP_BLOCK_FRAGMENT_ONCE")!=nullptr;
  bool trace_network_=std::getenv("NANO_TEST_NETWORK_TRACE")!=nullptr;
+ unsigned attestation_trace_count_=0;
  std::map<std::string,uint64_t> budget_rejections_;uint64_t failed_status_=0;unsigned trace_ticks_=0;
  unsigned retry_trace_count_=0,periodic_trace_count_=0,vote_delta_trace_count_=0;
  std::map<std::string,std::shared_ptr<GossipProgress>> gossip_progress_;size_t gossip_active_=0;std::string gossip_last_;bool drop_gossip_reply_=std::getenv("NANO_TEST_DROP_GOSSIP_REPLY_ONCE")!=nullptr;
@@ -213,7 +214,7 @@ class Network {
      if(kind=="block"){
       *active=std::make_shared<CapellaBlockDelivery>(io_,core,send,report_token_,capella_relay_.at("anchorRoot").get<std::string>(),root,altair_ingress_,knowledge,capella_relay_.at("dependencyBlocks").get<size_t>(),capella_relay_.at("dependencyBytes").get<size_t>(),std::move(reply),quantum,export_cache);(*active)->start();
      }else if(kind=="attestation"){
-      *active_vote=std::make_shared<CapellaAttestationDelivery>(io_,core,send,report_token_,capella_relay_.at("anchorRoot").get<std::string>(),std::move(frame),altair_ingress_,block_knowledge,capella_relay_.at("dependencyBlocks").get<size_t>(),capella_relay_.at("dependencyBytes").get<size_t>(),[knowledge,root,reply=std::move(reply)](Json result)mutable{if(result==Json{{"accepted",true}})knowledge->acknowledge(root);reply(std::move(result));},quantum,export_cache);(*active_vote)->start();
+      *active_vote=std::make_shared<CapellaAttestationDelivery>(io_,core,send,report_token_,capella_relay_.at("anchorRoot").get<std::string>(),std::move(frame),altair_ingress_,block_knowledge,capella_relay_.at("dependencyBlocks").get<size_t>(),capella_relay_.at("dependencyBytes").get<size_t>(),[knowledge,root,reply=std::move(reply)](Json result)mutable{if(result==Json{{"accepted",true}})knowledge->acknowledge(root);reply(std::move(result));},quantum,export_cache,trace_network_?CapellaAttestationDelivery::Trace{[this](const Json& row){if(attestation_trace_count_>=256)return;++attestation_trace_count_;auto record=row;record["event"]="test-capella-attestation-delivery";std::cerr<<record.dump()<<std::endl;}}:CapellaAttestationDelivery::Trace{});(*active_vote)->start();
      }else send(std::move(frame),[knowledge,root,reply=std::move(reply)](Json result)mutable{if(result.is_object()&&result.size()==1&&result.value("accepted",Json())==true)knowledge->acknowledge(root);reply(std::move(result));});
     };
     auto complete=[this,id,kind,active,active_vote,active_head,alive](Json result){*alive=false;if(*active)(*active)->cancel();if(*active_vote)(*active_vote)->cancel();if(*active_head)(*active_head)->cancel();altair_relay_budget_.release(id);if(trace_network_){result["event"]="test-capella-catalog-relay";result["peerId"]=id;result["kind"]=kind;std::cout<<result.dump()<<std::endl;}};

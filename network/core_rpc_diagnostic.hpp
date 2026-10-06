@@ -3,9 +3,10 @@
 #include <functional>
 #include <string>
 #include <array>
+#include <string_view>
 using CoreRpcTrace=std::function<void(const nlohmann::json&)>;
 // Observability only: never emit parameters, payloads, tokens, error data or raw text.
-inline void core_rpc_trace(const CoreRpcTrace& trace,const std::string& method,const char* phase,unsigned status=0,const nlohmann::json& response=nullptr)noexcept{
+inline void core_rpc_trace(const CoreRpcTrace& trace,const std::string& method,const char* phase,unsigned status=0,const nlohmann::json& response=nullptr,std::string_view body={})noexcept{
  if(!trace)return;
  try{
   using J=nlohmann::json;
@@ -22,6 +23,10 @@ inline void core_rpc_trace(const CoreRpcTrace& trace,const std::string& method,c
     else if(message=="Invalid params")record["cause"]="invalid-params";
     else if(message=="Internal error")record["cause"]="internal-error";
    }
+  }
+  if(status==503){
+   if(body=="RPC simulation capacity exceeded")record["cause"]="rpc-capacity-exceeded";
+   else if(body=="RPC simulation queue wait exceeded")record["cause"]="rpc-queue-expired";
   }
   trace(record);
  }catch(...){/* A broken observer must not alter completion or cause retries. */}

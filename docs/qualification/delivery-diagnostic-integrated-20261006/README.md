@@ -1,0 +1,9 @@
+# Diagnostic des dépendances d’attestation et refus HTTP
+
+Les journaux v20 comptabilisent zéro payload de vote admis alors que des blocs sont admis. Le wrapper transforme tout échec de préparation du bloc en accepted=false : cela ne démontre pas un refus du vote par le pair. L’observateur optionnel identifie désormais frame, block-dependency, vote-ack et cancel avec résultats bornés. Une réponse accepted=false du vote est distinguée d’un ACK perdu/malformé et de la dépendance non satisfaite. Seules deux raisons fixes de dépendance peuvent être imprimées ; aucun root, token, SSZ ni texte arbitraire. Branchement runtime sous NANO_TEST_NETWORK_TRACE, plafond global de 256 événements d’attestation par instance Network. Le plafond ne modifie pas le protocole et n’est pas une qualification de ressources.
+
+Le diagnostic RPC classe exclusivement deux corps HTTP fixes, à statut 503 : capacité simulation dépassée ou attente de file expirée. Tout autre corps reste non imprimé et inconnu. Les exceptions d’observateur sont absorbées. Aucun changement de résultat, callback, cache ACK, délai, limite, admission, quorum, fencing ou retry.
+
+Qualification native, Docker ARM64 et Docker AMD64 : 14 suites consommatrices touchées, runtime P2P compilé et vraie fixture --wire recompilée contre cœur d8d5b46c inchangé. 48 cas d’attestation avec observateur absent/présent/throws ; 10 cas classification/redaction HTTP/RPC ; 18 transports loopback de non-régression. Sources figées 348 unités vérifiées avant/après dans Docker. Images/volumes et bibliothèques cœur réutilisés, aucune image reconstruite.
+
+La fixture --wire ne constitue pas une finalité WAN : finalityScenario=false et networkActivated=false. L’échec réel v20 reste conservé. Ce lot prépare la preuve de cause réelle ; il ne corrige pas encore le blocage et ne clôture aucune exigence de production globale. Critères EVM/forks activés, bridge/lancement et revue indépendante demeurent ouverts.

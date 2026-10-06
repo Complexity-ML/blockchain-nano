@@ -27,7 +27,7 @@ class CoreRequest:public std::enable_shared_from_this<CoreRequest>{
    if(ec){core_rpc_trace(self->trace_,self->method_,"read-error");self->finish(nullptr);return;}
    auto response=self->parser_->release();auto json=Json::parse(response.body(),nullptr,false);
    const bool reusable=response.keep_alive()&&self->buffer_.size()==0;
-   if(response.result()!=http::status::ok||!json.is_object()||!json.contains("result")){core_rpc_trace(self->trace_,self->method_,response.result()!=http::status::ok?"http-error":json.is_object()&&json.contains("error")?"rpc-error":"malformed-response",response.result_int(),json);self->finish(nullptr,reusable);return;}
+   if(response.result()!=http::status::ok||!json.is_object()||!json.contains("result")){core_rpc_trace(self->trace_,self->method_,response.result()!=http::status::ok?"http-error":json.is_object()&&json.contains("error")?"rpc-error":"malformed-response",response.result_int(),json,response.body());self->finish(nullptr,reusable);return;}
    self->finish(std::move(json["result"]),reusable);
   });
  });}
