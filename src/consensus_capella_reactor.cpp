@@ -407,12 +407,24 @@ bool CapellaDurableReactor::block_locked(std::span<const uint8_t> wire,const std
   auto ancestor=header.parent_root;const auto finalized_slot=view.finalized.epoch*slots;
   while(view.nodes.at(ancestor).slot>finalized_slot&&ancestor!=view.anchor){if(check)check();const auto& node=view.nodes.at(ancestor);if(view.nodes.at(node.parent).slot>=node.slot)throw std::invalid_argument("Invalid incoming Capella ancestry");ancestor=node.parent;}
   if(ancestor!=view.finalized.root)return false;
+  std::erase_if(incoming_preparations_,[&](const auto& entry){
+   const auto root=consensus_beacon_header_root(entry.second.parent());
+   const auto retained=state_->blocks.find(root);
+   return retained==state_->blocks.end()||retained->second.header!=entry.second.parent();
+  });
+  auto incoming=std::find_if(incoming_preparations_.begin(),incoming_preparations_.end(),[&](const auto& entry){return entry.first==header.slot&&entry.second.parent()==parent.header;});
+  if(incoming==incoming_preparations_.end()){
+   const auto capacity=std::min(limits_.blocks,size_t(rules_.transition.consensus.body.attestations)+2);
+   if(!capacity)throw std::invalid_argument("Invalid incoming preparation capacity");
+   if(incoming_preparations_.size()>=capacity)incoming_preparations_.erase(incoming_preparations_.begin());
+   incoming_preparations_.emplace_back(header.slot,CapellaBlockPreparation(parent.state,parent.header,rules_.transition,check));
+  }else std::rotate(incoming,std::next(incoming),incoming_preparations_.end());
+  auto& preparation=incoming_preparations_.back().second;
   if(local_preparation_&&local_preparation_->matches(*state_,rules_,header.slot,check)&&local_preparation_->ready()){
-   const auto* local=local_preparation_->block();if(local)incoming_preparation_=*local;
+   const auto* local=local_preparation_->block();
+   if(local&&local->parent()==parent.header&&local->prepared_slot()==header.slot-1)preparation=*local;
   }
-  if(!incoming_preparation_||incoming_preparation_->parent()!=parent.header||incoming_preparation_->prepared_slot()>header.slot-1)
-   incoming_preparation_.emplace(parent.state,parent.header,rules_.transition,check);
-  if(!incoming_preparation_->advance_for_block(header.slot,std::min(limits_.replay_slots,slots),limits_.sync_trials,check))return false;
+  if(!preparation.advance_for_block(header.slot,std::min(limits_.replay_slots,slots),limits_.sync_trials,check))return false;
   // Continuations bind the admitted target root/epoch/profile, not the wire
   // currently requesting them. Alternating siblings must not erase that work.
   incoming_target_block_=id;
@@ -421,7 +433,7 @@ bool CapellaDurableReactor::block_locked(std::span<const uint8_t> wire,const std
    std::vector<const CapellaTargetPreparation*> targets;
    for(const auto& frame:incoming_targets_)if(frame.ready())targets.push_back(&frame);
    try{
-    next=prepare_capella_contextual_received_block(*state_,wire,rules_,*incoming_preparation_,targets,limits_.replay_slots,limits_.sync_trials,check);
+    next=prepare_capella_contextual_received_block(*state_,wire,rules_,preparation,targets,limits_.replay_slots,limits_.sync_trials,check);
     break;
    }catch(const CapellaTargetContextRequired& needed){
     auto found=std::find_if(incoming_targets_.begin(),incoming_targets_.end(),[&](const auto& frame){return frame.target()==needed.target();});

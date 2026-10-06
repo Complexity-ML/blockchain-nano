@@ -1,0 +1,24 @@
+consensus_attestation_inclusion.cpp: \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/SDKSettings.json \
+  /Users/boris/Dev/blockchain-nano/src/consensus_attestation_inclusion.cpp \
+  /Users/boris/Dev/blockchain-nano/include/nano/consensus_attestation_inclusion.hpp \
+  /Users/boris/Dev/blockchain-nano/include/nano/consensus_ffg.hpp \
+  /Users/boris/Dev/blockchain-nano/include/nano/consensus_slashing.hpp \
+  /Users/boris/Dev/blockchain-nano/include/nano/consensus_attestation.hpp \
+  /Users/boris/Dev/blockchain-nano/include/nano/consensus_signing.hpp \
+  /Users/boris/Dev/blockchain-nano/include/nano/consensus_committee.hpp \
+  /Users/boris/Dev/blockchain-nano/include/nano/consensus_deposit.hpp \
+  /Users/boris/Dev/blockchain-nano/include/nano/core.hpp \
+  /Users/boris/Dev/blockchain-nano/include/nano/crypto.hpp \
+  /Users/boris/Dev/blockchain-nano/include/nano/types.hpp \
+  /Users/boris/Dev/blockchain-nano/third_party/json.hpp \
+  /Users/boris/Dev/blockchain-nano/include/nano/rlp.hpp \
+  /Users/boris/Dev/blockchain-nano/include/nano/consensus_beacon_header.hpp \
+  /Users/boris/Dev/blockchain-nano/include/nano/consensus_randao.hpp \
+  /Users/boris/Dev/blockchain-nano/include/nano/consensus_block_operations.hpp \
+  /Users/boris/Dev/blockchain-nano/include/nano/consensus_block_auth.hpp \
+  /Users/boris/Dev/blockchain-nano/include/nano/consensus_beacon_body.hpp \
+  /Users/boris/Dev/blockchain-nano/include/nano/consensus_execution_payload.hpp \
+  /Users/boris/Dev/blockchain-nano/include/nano/consensus_proposer.hpp \
+  /Users/boris/Dev/blockchain-nano/include/nano/consensus_bls.hpp \
+  /Users/boris/Dev/blockchain-nano/include/nano/committee.hpp

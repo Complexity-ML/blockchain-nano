@@ -1936,3 +1936,6 @@ foreach(NANO_DISPATCH_CASE transport receipt http)
  add_test(NAME consensus_dispatch_${NANO_DISPATCH_CASE}_recovery COMMAND nano-dispatch-${NANO_DISPATCH_CASE}-recovery-tests)
  set_tests_properties(consensus_dispatch_${NANO_DISPATCH_CASE}_recovery PROPERTIES TIMEOUT 30 LABELS "qualification_consensus_ethereum")
 endforeach()
+
+add_test(NAME consensus_capella_incoming_parent_interference COMMAND nano-capella-transition-tests --incoming-parent-interference)
+set_tests_properties(consensus_capella_incoming_parent_interference PROPERTIES TIMEOUT 180 LABELS qualification_consensus_recovery)

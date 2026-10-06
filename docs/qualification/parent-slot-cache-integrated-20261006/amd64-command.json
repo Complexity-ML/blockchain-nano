@@ -1,0 +1,10 @@
+[
+  "/usr/bin/ssh",
+  "-4",
+  "-o",
+  "BatchMode=yes",
+  "-o",
+  "ConnectTimeout=8",
+  "ubuntu@145.239.199.166",
+  "sudo -n docker run --rm --name nano-parent-cache-amd64-20261006 --network none -v nano-clean-rpc-build-20261002:/build -v /tmp/nano-parent-cache-docker-20261006/source:/work:ro -v /tmp/nano-vote-target-cache-docker-20261006/source:/baseline:ro -v /tmp/nano-parent-cache-docker-20261006:/drivers:ro --entrypoint bash sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14 /drivers/amd-all.sh"
+]

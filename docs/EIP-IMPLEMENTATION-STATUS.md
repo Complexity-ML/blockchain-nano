@@ -7209,3 +7209,6 @@ Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichi
 
 
 2026-10-06 — Oracle complet sur frontières v12 : les trois blocs manquants à parent connu, après 177/178/179 slots, sont admissibles et reproduisent les en-têtes/hashes d’exécution de la source sur copies en mémoire ; bases Mac arrêtées inchangées. Borne diagnostique 256, limites runtime inchangées. Écart restant : démontrer puis corriger la continuité du rattrapage (parents/cibles, scheduling, délais), sans assimiler cet oracle à une réussite réseau. [Preuves](qualification/v12-frontier-full-oracle-20261006/README.md).
+
+
+2026-10-06 — Continuations par parent/slot implémentées et qualifiées sur Mac natif, Docker ARM64 et AMD64. Contre-exemple conservé : bloc valide bloqué sous interférence dans l’ancien cœur ; correction conforme à l’oracle, signature invalide rejetée, duplicata stable et témoin réouvert. Scans/reconstructions des consommateurs du type modifié, exécutables cohérents et régressions pertinentes archivés. Erreur initiale native secp256k1 conservée, chemin réparé. Caches bornés en nombre ; pression/mémoire/équité, finalité réseau et tous les autres critères de production restent ouverts. [Preuves](qualification/parent-slot-cache-integrated-20261006/README.md).

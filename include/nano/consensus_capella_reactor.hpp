@@ -40,10 +40,11 @@ class CapellaDurableReactor {
  std::optional<Bytes> beacon_signed_block(const CapellaPublishedStore&,const ConsensusRoot&,const std::function<void()>&)const;
  CapellaSignedVotes votes_,slashings_;CapellaPendingBlsChanges bls_changes_;CapellaPendingExits exits_;CapellaStoreSnapshotCache cache_;bool unavailable_=false;bool automatic_pruning_=false;bool historical_state_pruning_=false;
  std::exception_ptr failure_;
- // One ephemeral incoming-block continuation, owned under mutex_. Authenticated
- // parent/profile, no peer-supplied state, no journal or durable writes while
- // incomplete. Each retry advances at most one epoch within replay_slots.
- std::optional<CapellaBlockPreparation> incoming_preparation_;
+ // Bounded ephemeral continuations keyed by admitted parent and block slot.
+ // Alternating parents or target slots never reset another retained prefix.
+ // No peer state, signing or durable writes while incomplete; eviction only
+ // discards recomputable work. All entries remain owned under mutex_.
+ std::vector<std::pair<uint64_t,CapellaBlockPreparation>> incoming_preparations_;
  // Bounded shared target continuations, bound to admitted root/epoch/profile.
  // Required contexts come from checked block processing, never peer state.
  // Blocks and votes share this cache; request identity never discards prefixes.
