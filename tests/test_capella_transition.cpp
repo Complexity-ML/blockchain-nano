@@ -6,6 +6,7 @@
 #include "nano/consensus_capella_fork_state.hpp"
 #include "nano/consensus_capella_fork_store.hpp"
 #include "nano/consensus_capella_store_snapshot.hpp"
+#include "nano/consensus_capella_cold_records.hpp"
 #include "nano/storage.hpp"
 #include <rocksdb/db.h>
 #include "support/rocksdb_fixture.hpp"
@@ -1626,6 +1627,23 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
    size_t attempts=0;while(!reactor->block(wire))check(++attempts<slot/slots+4,"fragmented valid child admission stalled");
    check(reactor->signed_block(consensus_beacon_header_root(capella_fork_head(*reactor->current().state,rules).header))==wire,"fragmented child archive absent");
    const auto child_token=reactor->current().token;const auto child_flat=capella_store_snapshot(*reactor->current().state,rules,crash_limits);
+   if(std::getenv("NANO_TEST_COLD_RECORD_CACHE")){
+    const auto saved=backup_owner->store().fork_checkpoint(r.chain_id,genesis.header.hash(),crash_limits.envelope_bytes,child_token);const auto document=Json::parse(saved->snapshot).at("snapshot");const auto refs=(document.contains("store")?document.at("store"):document).at("blocks");check(refs.size()>=2,"cold cache requires distinct records");
+    auto reference=[&](size_t i){const auto id=unhex(refs[i][0]);ConsensusRoot root{};std::copy(id.begin(),id.end(),root.begin());return CapellaColdReference{root,unhex(refs[i][1]),size_t(u64(quantity(refs[i][2]))),root==reactor->current().state->timed.view.anchor};};
+    const auto first=reference(0),second=reference(1);CapellaColdRecordCache cache(rules,crash_limits,1,std::max(first.bytes,second.bytes));size_t fetches=0;
+    auto fetch=[&](const Bytes& digest,size_t bytes){++fetches;return backup_owner->store().checkpoint_blob(r.chain_id,genesis.header.hash(),digest,bytes);};
+    auto pin=cache.load(first,fetch);check(pin->block.state.ssz==reactor->current().state->blocks.at(first.root).state.ssz&&pin->block.execution_state.root()==reactor->current().state->blocks.at(first.root).execution_state.root(),"cold record differs from admitted state");
+    check(cache.load(first,fetch)==pin&&fetches==1,"cold record hit fetched again");bool pressure=false;try{cache.load(second,fetch);}catch(const std::length_error&){pressure=true;}check(pressure&&fetches==1&&cache.usage().records==1&&cache.usage().encoded_bytes==first.bytes,"pinned cache pressure evicted or fetched");
+    pin.reset();auto replacement=cache.load(second,fetch);check(fetches==2&&replacement->reference==second&&cache.usage().records==1&&cache.usage().encoded_bytes==second.bytes,"cold LRU replacement/accounting failed");replacement.reset();
+    unsigned refused=0;auto unchanged=cache.usage();
+    auto reject=[&](const CapellaColdReference& ref,const auto& reader){bool error=false;try{cache.load(ref,reader);}catch(const std::exception&){error=true;}check(error&&cache.usage().records==unchanged.records&&cache.usage().encoded_bytes==unchanged.encoded_bytes,"cold rejection mutated cache");++refused;};
+    reject(first,[](const Bytes&,size_t)->std::optional<std::string>{return std::nullopt;});reject(first,[](const Bytes&,size_t)->std::optional<std::string>{return "altered";});
+    auto substituted=first;substituted.root=second.root;reject(substituted,fetch);
+    auto row=Json::parse(*fetch(first.digest,first.bytes));row[5][0]["stateRoot"]="0x"+std::string(64,'0');auto invalid=row.dump();auto bound=first;bound.digest=sha256(Bytes(invalid.begin(),invalid.end()));bound.bytes=invalid.size();reject(bound,[&](const Bytes&,size_t)->std::optional<std::string>{return invalid;});
+    bool cancelled=false;try{cache.load(first,fetch,[]{throw ExecutionCancelled("cancel cold load");});}catch(const ExecutionCancelled&){cancelled=true;}check(cancelled&&cache.usage().records==1,"cold cancellation mutated cache");
+    std::cout<<Json{{"scenario","capella-cold-record-cache"},{"fullBeaconExecutionBinding",true},{"pinnedPressureRefused",true},{"cacheHitWithoutFetch",true},{"evictionAndReload",true},{"refusals",refused},{"cancelledLoadUnchanged",true},{"runtimeColdGraphActivated",false},{"physicalMemoryBoundQualified",false},{"networkQualified",false}}.dump()<<std::endl;
+   }
+
    check(Json::parse(backup_owner->store().fork_checkpoint(r.chain_id,genesis.header.hash(),crash_limits.envelope_bytes,child_token)->snapshot).at("format")=="nano-capella-fragments-v1","later publication downgraded format");
    reactor.reset();reactor=std::make_unique<CapellaDurableReactor>(*backup_owner,rules,crash_limits,*witness,std::function<void()>{},child_token);check(reactor->current().token==child_token&&capella_store_snapshot(*reactor->current().state,rules,crash_limits)==child_flat&&journal.commitment()==guard,"fragment witness restart lost graph/journal");
    reactor.reset();reactor=std::make_unique<CapellaDurableReactor>(*backup_owner,rules,crash_limits,child_token);check(capella_store_snapshot(*reactor->current().state,rules,crash_limits)==child_flat,"primary-only fragment restart differs");reactor.reset();backup_owner.reset();witness.reset();

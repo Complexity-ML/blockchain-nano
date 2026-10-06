@@ -1,0 +1,11 @@
+--- initial/tests/test_capella_transition.cpp
++++ repaired/tests/test_capella_transition.cpp
+@@ -1628,7 +1628,7 @@
+    check(reactor->signed_block(consensus_beacon_header_root(capella_fork_head(*reactor->current().state,rules).header))==wire,"fragmented child archive absent");
+    const auto child_token=reactor->current().token;const auto child_flat=capella_store_snapshot(*reactor->current().state,rules,crash_limits);
+    if(std::getenv("NANO_TEST_COLD_RECORD_CACHE")){
+-    const auto saved=backup_owner->store().fork_checkpoint(r.chain_id,genesis.header.hash(),crash_limits.envelope_bytes,child_token);const auto refs=Json::parse(saved->snapshot).at("snapshot").at("store").at("blocks");check(refs.size()>=2,"cold cache requires distinct records");
++    const auto saved=backup_owner->store().fork_checkpoint(r.chain_id,genesis.header.hash(),crash_limits.envelope_bytes,child_token);const auto document=Json::parse(saved->snapshot).at("snapshot");const auto refs=(document.contains("store")?document.at("store"):document).at("blocks");check(refs.size()>=2,"cold cache requires distinct records");
+     auto reference=[&](size_t i){const auto id=unhex(refs[i][0]);ConsensusRoot root{};std::copy(id.begin(),id.end(),root.begin());return CapellaColdReference{root,unhex(refs[i][1]),size_t(u64(quantity(refs[i][2]))),root==reactor->current().state->timed.view.anchor};};
+     const auto first=reference(0),second=reference(1);CapellaColdRecordCache cache(rules,crash_limits,1,std::max(first.bytes,second.bytes));size_t fetches=0;
+     auto fetch=[&](const Bytes& digest,size_t bytes){++fetches;return backup_owner->store().checkpoint_blob(r.chain_id,genesis.header.hash(),digest,bytes);};
