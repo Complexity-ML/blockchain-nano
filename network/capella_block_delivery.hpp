@@ -16,6 +16,7 @@ class CapellaBlockDelivery:public std::enable_shared_from_this<CapellaBlockDeliv
  std::string token_,anchor_,target_,preparation_boundary_;std::shared_ptr<AltairMessageIngress> ingress_;
  std::shared_ptr<AltairRelayProgress> knowledge_;const size_t maximum_,budget_;
  std::vector<Entry> pending_;size_t bytes_=0;std::optional<uint64_t> child_slot_;
+ size_t exports_requested_=0,cache_hits_=0,payloads_sent_=0,payloads_admitted_=0,pending_high_water_=0;
  std::shared_ptr<CapellaDeliveryQuantum> quantum_;std::shared_ptr<CapellaExportCache> exports_;
  Reply done_;asio::steady_timer timer_;bool started_=false,finished_=false;
  bool unavailable_export_=false;
@@ -28,9 +29,10 @@ class CapellaBlockDelivery:public std::enable_shared_from_this<CapellaBlockDeliv
   if(pending_.size()>=maximum_){preparation_boundary_=id;finish(false,false,"dependency-depth-limit");return;}
   auto reply=callback([id](auto& self,Json value){self.exported(id,std::move(value));});
   if(exports_)if(auto cached=exports_->find(id)){
+   ++cache_hits_;
    reply(Json{{"root",id},{"available",true},{"known",true},{"anchor",cached->anchor_at_export},{"parentRoot",cached->parent},{"envelope",Json::parse(cached->wire)}});return;
   }
-  try{core_("nano_capellaExport",Json::array({token_,"block",id}),reply);}catch(...){reply(nullptr);}
+  ++exports_requested_;try{core_("nano_capellaExport",Json::array({token_,"block",id}),reply);}catch(...){reply(nullptr);}
  }
  void exported(const std::string& id,Json value){
   if(!value.is_object()||value.value("root",Json())!=id){finish(false);return;}
@@ -54,7 +56,7 @@ class CapellaBlockDelivery:public std::enable_shared_from_this<CapellaBlockDeliv
   if(value.at("parentRoot")!=parent||parent==id){finish(false);return;}
   const bool signed_anchor=value.value("anchor",Json())==true&&value.value("known",Json())==true;
   if(exports_)exports_->remember(id,wire,parent,signed_anchor);
-  child_slot_=slot;bytes_+=wire.capacity();pending_.push_back({id,std::move(wire)});
+  child_slot_=slot;bytes_+=wire.capacity();pending_.push_back({id,std::move(wire)});pending_high_water_=std::max(pending_high_water_,pending_.size());
   if(signed_anchor){anchor_probe_pending_=true;anchor_probe_root_=id;anchor_probe_parent_=parent;deliver();}else {preparation_boundary_=parent;fetch(parent);}
  }
  void deliver(){
@@ -72,10 +74,12 @@ class CapellaBlockDelivery:public std::enable_shared_from_this<CapellaBlockDeliv
     self.finish(false);return;
    }
    if(id==self.anchor_probe_root_)self.anchor_probe_pending_=false;
-   self.knowledge_->acknowledge(id);if(self.quantum_)++self.quantum_->admitted;self.bytes_-=self.pending_.back().wire.capacity();self.pending_.pop_back();self.deliver();
-  });try{send_(std::move(frame),reply);}catch(...){reply(nullptr);}
+   ++self.payloads_admitted_;self.knowledge_->acknowledge(id);if(self.quantum_)++self.quantum_->admitted;self.bytes_-=self.pending_.back().wire.capacity();self.pending_.pop_back();self.deliver();
+  });++payloads_sent_;try{send_(std::move(frame),reply);}catch(...){reply(nullptr);}
  }
 public:
+ // Local diagnostics only; these counters never substitute for receiver ACKs.
+ Json progress()const{return Json{{"target",target_},{"preparationBoundary",preparation_boundary_.empty()?Json(nullptr):Json(preparation_boundary_)},{"exportsRequested",exports_requested_},{"exportCacheHits",cache_hits_},{"sendAttempts",payloads_sent_},{"payloadsAdmitted",payloads_admitted_},{"pendingHighWater",pending_high_water_},{"unavailableExport",unavailable_export_}};}
  // Local authenticated traversal metadata only; never a peer acknowledgement.
  const std::string& preparation_boundary()const{return preparation_boundary_;}
  bool unavailable_export()const{return unavailable_export_;}

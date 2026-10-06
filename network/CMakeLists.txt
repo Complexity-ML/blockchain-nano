@@ -243,3 +243,13 @@ target_compile_definitions(nano-capella-catalog-busy-http-tests PRIVATE FMT_CONS
 target_link_libraries(nano-capella-catalog-busy-http-tests PRIVATE p2p::p2p)
 add_test(NAME capella_catalog_busy_http COMMAND nano-capella-catalog-busy-http-tests)
 set_tests_properties(capella_catalog_busy_http PROPERTIES TIMEOUT 10)
+
+add_executable(nano-capella-deep-preparation-tests test_capella_deep_preparation.cpp)
+target_include_directories(nano-capella-deep-preparation-tests PRIVATE ../third_party)
+target_compile_features(nano-capella-deep-preparation-tests PRIVATE cxx_std_20)
+target_compile_definitions(nano-capella-deep-preparation-tests PRIVATE FMT_CONSTEVAL=)
+target_link_libraries(nano-capella-deep-preparation-tests PRIVATE p2p::p2p)
+foreach(scenario anchor static moving reset refused)
+  add_test(NAME capella_deep_preparation_${scenario} COMMAND nano-capella-deep-preparation-tests ${scenario})
+  set_tests_properties(capella_deep_preparation_${scenario} PROPERTIES TIMEOUT 60)
+endforeach()
