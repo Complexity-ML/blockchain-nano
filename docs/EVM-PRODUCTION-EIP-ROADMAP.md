@@ -4844,3 +4844,6 @@ Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, d
 
 
 2026-10-06 — Diagnostic dépendances/ACK des attestations et refus HTTP intégré et qualifié dans son périmètre : natif/ARM64/AMD64, 14 suites affectées et vraie fixture --wire, sources figées vérifiées. 48 cas attestation, 10 classifications/redactions et 18 transports loopback ; aucune modification des politiques ou du quorum. Trace runtime optionnelle bornée à 256 événements d’attestation par nœud. Ne corrige ni ne qualifie la finalité WAN v20 ; cause réelle encore à établir. [Preuves ciblées](qualification/delivery-diagnostic-integrated-20261006/README.md). Les autres critères et la revue indépendante restent ouverts.
+
+
+2026-10-06 — Préparation v21 : engagements VPS post-v20 et Mac post-v20 et journaux conservés, diagnostic des dépendances de votes et refus HTTP qualifié en natif/ARM64/AMD64 dans son périmètre ciblé. Trois finalités communes nouvelles en 900 s restent à démontrer ; préparation seule. Production et revue indépendante ouvertes. Preuves restored-three-node-v21-delivery-diagnostic-prepare-20261006/.
