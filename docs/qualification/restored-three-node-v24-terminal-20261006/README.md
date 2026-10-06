@@ -1,0 +1,9 @@
+# Reprise v24 : finalité WAN non avancée
+
+Contrôleur original 4013, checkout 49362f29, cœur d285db64 et relais 514ad2b8 (pilotage 6424fa7c). Sortie terminale 1 : zéro nouvelle finalité commune en 900 secondes, sur trois requises. Trois propriétaires actifs, puis trois arrêts normaux sans OOM. Les engagements et témoins anti-double-signature sont comparés aux reçus indépendants après arrêt ; toutes les bases restent inchangées pendant les audits. Les nombres exacts et participations figurent dans audit-summary.json.
+
+Les lecteurs qualifiés inchangés rejouent les archives canoniques avec un budget forensic de 32768 blocs et 512 Mio. Ce budget hors ligne ne modifie aucune limite runtime. Configuration et requête VPS dérivées sur place ; seules les preuves publiques sont collectées, aucune base ni clé privée exportée.
+
+La correction de préparation des dépendances possède ses qualifications ciblées sur trois architectures ; cette campagne ne qualifie pas son effet WAN. Les diagnostics natifs bornés montrent encore des délais de relais de blocs et des dépendances d'attestations non admises. Leur trace est plafonnée à 256 événements : ils ne représentent pas la totalité des tentatives. À 10:43:25.580Z, la tête du Docker Mac régresse du slot 18356 à 10760. Ce changement de branche doit être expliqué ; il ne prouve pas à lui seul une violation de finalité. Le checkpoint finalisé observé reste à l'époque 1284. Aucune cause globale n'est attribuée sans preuve.
+
+Les mesures de ressources sont ponctuelles, sans qualification de pic ni de charge. Les octets d'E/S cumulés cgroup ne sont pas la taille de la base (environ 383 Mio au relevé VPS). Aucune image reconstruite ni campagne relancée. Finalité commune, autres exigences de production, bridge/lancement et revue indépendante restent ouverts.

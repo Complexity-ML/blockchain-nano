@@ -4476,3 +4476,6 @@ Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, d
 
 
 2026-10-06 — Préparation v24 : états Mac/VPS post-v22 et témoins audités, copies locales sans identité de pair et volume VPS conservé sur son hôte. Cœur inchangé et nouveau relais de préparation bornée qualifié dans son périmètre natif/ARM64/AMD64 ; mêmes limites et trois nouvelles finalités communes en 900 s restent à démontrer. Préparation seule ; production et revue indépendante ouvertes. Preuves restored-three-node-v24-dependency-preparation-prepare-20261006/.
+
+
+2026-10-06 — v24 FAILED : contrôleur original 4013 / sortie 1, checkout 49362f29, cœur d285db64 et relais 514ad2b8. Zéro nouvelle finalité commune en 900 s ; trois propriétaires actifs et trois arrêts normaux. Audits read-only : engagements et témoins comparés aux reçus indépendants, hashes inchangés ; budget de rejeu forensic 32768 blocs / 512 Mio, limites runtime inchangées. Régression de tête Docker Mac 18356 → 10760 observée, checkpoint finalisé 1284 conservé ; cause globale et effet WAN du correctif non qualifiés. [Preuves v24](qualification/restored-three-node-v24-terminal-20261006/README.md). Toutes les exigences non démontrées et la revue indépendante demeurent ouvertes.
