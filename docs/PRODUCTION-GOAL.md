@@ -4428,3 +4428,6 @@ Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichi
 
 
 Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, donc aucune saturation du graphe à cette frontière arrêtée. Le lecteur enrichi conserve exactement les autres champs de capture du lecteur qualifié, sans écriture de données. Cela ne prouve pas les causes de tous les refus pendant la campagne. Les participations récentes des deux états Mac restent limitées à leurs propriétaires ; finalité commune non avancée.
+
+
+2026-10-06 — Ancre locale signée : contre-exemple de famine reproduit puis correctif intégré. Admission distante obligatoire ; refus explicite permet le parcours borné des parents, résultat ambigu sans retry automatique. Neuf suites SDK et scénario réel --wire qualifiés en natif/ARM64/AMD64, contrôleurs 94615/86191/33176 sortis 0. Images/volumes réutilisés ; cœur inchangé, fixture consommatrice recompilée. Cause WAN globale et finalité commune non prouvées ; échecs historiques et toutes les exigences restantes conservés. [Qualification ciblée](qualification/signed-anchor-integrated-20261006/README.md).

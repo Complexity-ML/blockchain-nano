@@ -18,6 +18,7 @@ class CapellaBlockDelivery:public std::enable_shared_from_this<CapellaBlockDeliv
  std::vector<Entry> pending_;size_t bytes_=0;std::optional<uint64_t> child_slot_;
  std::shared_ptr<CapellaDeliveryQuantum> quantum_;std::shared_ptr<CapellaExportCache> exports_;
  Reply done_;asio::steady_timer timer_;bool started_=false,finished_=false;
+ bool anchor_probe_pending_=false;std::string anchor_probe_root_,anchor_probe_parent_;
  static bool root(const std::string& s){return s.size()==66&&s.starts_with("0x")&&std::all_of(s.begin()+2,s.end(),[](char c){return (c>='0'&&c<='9')||(c>='a'&&c<='f');});}
  void finish(bool accepted,bool yielded=false,const char* reason=nullptr){if(finished_)return;finished_=true;timer_.cancel();pending_.clear();auto done=std::move(done_);Json result=yielded?Json{{"yielded",true}}:Json{{"accepted",accepted}};if(reason)result["reason"]=reason;done(std::move(result));}
  template<class F>Reply callback(F handler){auto once=std::make_shared<std::atomic<bool>>(false);return [self=shared_from_this(),once,handler](Json value){if(once->exchange(true))return;asio::post(self->io_,[self,handler,value=std::move(value)]()mutable{if(self->finished_)return;try{handler(*self,std::move(value));}catch(...){self->finish(false);}});};}
@@ -26,7 +27,7 @@ class CapellaBlockDelivery:public std::enable_shared_from_this<CapellaBlockDeliv
   if(pending_.size()>=maximum_){finish(false,false,"dependency-depth-limit");return;}
   auto reply=callback([id](auto& self,Json value){self.exported(id,std::move(value));});
   if(exports_)if(auto cached=exports_->find(id)){
-   reply(Json{{"root",id},{"available",true},{"parentRoot",cached->parent},{"envelope",Json::parse(cached->wire)}});return;
+   reply(Json{{"root",id},{"available",true},{"known",true},{"anchor",cached->anchor_at_export},{"parentRoot",cached->parent},{"envelope",Json::parse(cached->wire)}});return;
   }
   try{core_("nano_capellaExport",Json::array({token_,"block",id}),reply);}catch(...){reply(nullptr);}
  }
@@ -34,7 +35,8 @@ class CapellaBlockDelivery:public std::enable_shared_from_this<CapellaBlockDeliv
   if(!value.is_object()||value.value("root",Json())!=id){finish(false);return;}
   // The authenticated local core can have pruned to a newer anchor since the
   // daemon started. Its anchor need not have an exportable signed envelope.
-  // A signed, available anchor must be delivered with its historical parents.
+  // Probe a signed local anchor through normal remote admission before walking
+  // older history. Its local authentication never substitutes for the peer ACK.
   // Stop only an unavailable anchor walk: never claim remote admission of the anchor
   // itself. Every retained descendant still requires the peer's actual ACK.
   if(value.value("anchor",Json())==true&&value.value("available",Json())!=true){
@@ -49,8 +51,10 @@ class CapellaBlockDelivery:public std::enable_shared_from_this<CapellaBlockDeliv
   const auto slot=number(100,8);if(child_slot_&&slot>=*child_slot_){finish(false);return;}
   std::string parent="0x";const char* digits="0123456789abcdef";for(size_t i=116;i<148;++i){parent.push_back(digits[b[i]>>4]);parent.push_back(digits[b[i]&15]);}
   if(value.at("parentRoot")!=parent||parent==id){finish(false);return;}
-  if(exports_)exports_->remember(id,wire,parent);
-  child_slot_=slot;bytes_+=wire.capacity();pending_.push_back({id,std::move(wire)});fetch(parent);
+  const bool signed_anchor=value.value("anchor",Json())==true&&value.value("known",Json())==true;
+  if(exports_)exports_->remember(id,wire,parent,signed_anchor);
+  child_slot_=slot;bytes_+=wire.capacity();pending_.push_back({id,std::move(wire)});
+  if(signed_anchor){anchor_probe_pending_=true;anchor_probe_root_=id;anchor_probe_parent_=parent;deliver();}else fetch(parent);
  }
  void deliver(){
   if(pending_.empty()){finish(true);return;}
@@ -59,7 +63,13 @@ class CapellaBlockDelivery:public std::enable_shared_from_this<CapellaBlockDeliv
   if(quantum_&&quantum_->exhausted()){finish(false,true);return;}
   auto frame=Json::parse(pending_.back().wire);const auto id=pending_.back().root;
   auto reply=callback([id](auto& self,Json value){
-   if(!value.is_object()||value.size()!=1||value.value("accepted",Json())!=true){self.finish(false);return;}
+   if(!value.is_object()||value.size()!=1||value.value("accepted",Json())!=true){
+    // Only a definitive refusal may resume parent preparation. No request or
+    // unconfirmed payload is automatically retried; no ACK is inferred.
+    if(self.anchor_probe_pending_&&id==self.anchor_probe_root_&&value==Json{{"accepted",false}}){self.anchor_probe_pending_=false;self.fetch(self.anchor_probe_parent_);return;}
+    self.finish(false);return;
+   }
+   if(id==self.anchor_probe_root_)self.anchor_probe_pending_=false;
    self.knowledge_->acknowledge(id);if(self.quantum_)++self.quantum_->admitted;self.bytes_-=self.pending_.back().wire.capacity();self.pending_.pop_back();self.deliver();
   });try{send_(std::move(frame),reply);}catch(...){reply(nullptr);}
  }

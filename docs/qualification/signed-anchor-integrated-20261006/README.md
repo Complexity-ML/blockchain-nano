@@ -1,0 +1,11 @@
+# Ancre signée : correctif intégré et qualification ciblée
+
+Le parcours des ancêtres pouvait dépasser sa limite avant d'envoyer une ancre signée déjà détenue par le destinataire. Le contre-exemple synthétique échoue sur la version précédente (sortie 1) et réussit avec le correctif (sortie 0). Il ne constitue pas une preuve de la cause WAN complète.
+
+Le relais présente maintenant l'ancre locale signée au destinataire par son admission normale. Seul un ACK exact accepté établit la connaissance distante. Un refus explicite autorise la préparation bornée des parents ; un ACK perdu, tardif ou mal formé n'est jamais assimilé à une admission. L'ancre peut être présentée de nouveau après les ACK des parents, mais sans retry d'un résultat ambigu. Le cache conserve une métadonnée locale immuable, sans attester l'état du pair. Profondeur, mémoire, quantum, annulation et délai restent bornés.
+
+Neuf suites SDK ciblées passent en natif, Docker ARM64 et Docker AMD64 : livraison des blocs (28 cas), ancre signée (11 nouveaux cas), attestations, rattrapage borné, reprise/cache, catalogue, sélection, terminaison et équité historique. Le runtime P2P compile sur les trois architectures. Le scénario --wire du cœur réel passe aussi sur les trois : neuf blocs, dix-sept messages, deux reprises SIGKILL et dix-huit annulations. Il indique explicitement finalityScenario=false et networkActivated=false : aucune qualification WAN ou finalité commune n'en découle.
+
+Contrôleurs originaux : natif 94615, ARM64 86191, AMD64 33176, tous terminaux avec sortie 0. Collecte AMD64 51448 sortie 0. Les images et volumes existants ont été réutilisés sans rebuild d'image. L'audit de dépendances permet de réutiliser le cœur d8d5b46c : zéro consommateur du cœur parmi 136 unités ; la fixture réelle consommatrice du header a été recompilée. 346 sources figées sont vérifiées contre le dépôt. L'échec initial de comparaison du baseline réseau et sa correction sont conservés.
+
+Les échecs de finalité v18 et antérieurs restent ouverts et conservés. Prochaine preuve requise : reprise entière et trois nouvelles finalités communes sur les trois propriétaires privés, avec leurs engagements et témoins indépendants. Production, release sans instrumentation de faute, portabilité physique, bridge, lancement et revue indépendante ne sont pas clos.

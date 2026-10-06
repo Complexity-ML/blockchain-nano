@@ -138,6 +138,13 @@ target_link_libraries(nano-capella-block-delivery-tests PRIVATE p2p::p2p)
 add_test(NAME capella_block_delivery COMMAND nano-capella-block-delivery-tests)
 set_tests_properties(capella_block_delivery PROPERTIES TIMEOUT 20)
 
+add_executable(nano-capella-signed-anchor-tests test_capella_signed_anchor.cpp)
+target_include_directories(nano-capella-signed-anchor-tests PRIVATE ../third_party)
+target_compile_definitions(nano-capella-signed-anchor-tests PRIVATE FMT_CONSTEVAL=)
+target_link_libraries(nano-capella-signed-anchor-tests PRIVATE p2p::p2p)
+add_test(NAME capella_signed_anchor COMMAND nano-capella-signed-anchor-tests)
+set_tests_properties(capella_signed_anchor PROPERTIES TIMEOUT 20)
+
 add_executable(nano-core-keepalive-tests test_core_keepalive.cpp)
 target_include_directories(nano-core-keepalive-tests PRIVATE ../third_party)
 target_compile_definitions(nano-core-keepalive-tests PRIVATE FMT_CONSTEVAL=)
