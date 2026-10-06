@@ -4715,3 +4715,6 @@ Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichi
 
 
 2026-10-06 — Export des blocs retenus : blocage derrière l’admission reproduit sur ancien core 05649987. Correctif : vue immuable publiée unique, archive/signature et checkpoint toujours vérifiés. Mac natif et Docker ARM64/AMD64 : tests de concurrence terminaux 0 ; messages signés et export historique Docker qualifiés. Premier export historique arrêté pour fixture de dépôt omise (sortie 1 conservée), ajout du fichier exact puis scénario seul réussi sans recompiler. Binaires nano/capture liés sur les trois environnements, images/archives parentes conservées. Cause WAN v9, reprise avec finalité commune, saturation/pruning et production restent ouverts. [Preuves](qualification/retained-export-contention-20261006/README.md).
+
+
+2026-10-06 — Préparation v10 : engagements exacts post-v9 (arrêt VPS complémentaire documenté), core bc6d1794 et relais 76bb2468. Copies Mac locales et volume VPS conservés ; aucun journal réinitialisé/fusionné. Export retenu qualifié sans verrou d’admission ; profil/limites et critère de trois avancées communes en 900 s inchangés. SSH explicitement IPv4. Préparation seule, finalité et production ouvertes. Preuves restored-three-node-v10-export-prepare-20261006/.
