@@ -1,0 +1,412 @@
+{
+  "observedAt": "20261006T055729Z",
+  "scope": "point-in-time logs; attempts not unique objects; not terminal result",
+  "nodes": {
+    "mac-native": {
+      "eventLines": 36,
+      "catalogues": {
+        "attestation": {
+          "attempts": 2,
+          "payloadsAdmitted": 0,
+          "rejected": 17,
+          "reasons": {
+            "admission-rejected": 2
+          }
+        },
+        "attester_slashing": {
+          "attempts": 1,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 1
+          }
+        },
+        "block": {
+          "attempts": 1,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "head-or-catalog-deadline": 1
+          }
+        },
+        "bls_to_execution_change": {
+          "attempts": 1,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 1
+          }
+        }
+      },
+      "blockAttempts": [
+        {
+          "catalogProgress": {
+            "catalogExhausted": false,
+            "delivered": 0,
+            "exports": 14,
+            "firstFailureReason": "dependency-depth-limit",
+            "firstFailureStage": "delivery",
+            "inProgress": true,
+            "payloadsAdmitted": 0,
+            "rejected": 13,
+            "scanned": 13,
+            "skippedKnown": 0,
+            "stage": "delivery",
+            "terminationReason": null,
+            "terminationStage": null
+          },
+          "closed": false,
+          "elapsedMs": 30001,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        }
+      ],
+      "dispatchTransitions": [],
+      "sendCompletionByKind": {
+        "block": {
+          "attempts": 7,
+          "outcomes": {
+            "unconfirmed": 6,
+            "accepted": 1
+          },
+          "elapsedMs": {
+            "min": 75,
+            "median": 146,
+            "max": 10016
+          },
+          "writesCompleted": 7,
+          "slowest": [
+            {
+              "elapsedMs": 10016,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 32,
+              "timeMs": 1791266226123,
+              "writeCompletedMs": 32
+            },
+            {
+              "elapsedMs": 10000,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 0,
+              "timeMs": 1791266246734,
+              "writeCompletedMs": 0
+            },
+            {
+              "elapsedMs": 8128,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "accepted",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 81,
+              "timeMs": 1791266236733,
+              "writeCompletedMs": 81
+            },
+            {
+              "elapsedMs": 146,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 58,
+              "timeMs": 1791266227111,
+              "writeCompletedMs": 58
+            },
+            {
+              "elapsedMs": 145,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 57,
+              "timeMs": 1791266226963,
+              "writeCompletedMs": 57
+            }
+          ]
+        }
+      },
+      "blockOrderObserved": {
+        "dependency-depth-catalog-fallback": 1
+      }
+    },
+    "mac-docker": {
+      "eventLines": 30,
+      "catalogues": {
+        "block": {
+          "attempts": 1,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "head-or-catalog-deadline": 1
+          }
+        }
+      },
+      "blockAttempts": [
+        {
+          "catalogProgress": {
+            "catalogExhausted": false,
+            "delivered": 0,
+            "exports": 12,
+            "firstFailureReason": "admission-rejected",
+            "firstFailureStage": "delivery",
+            "inProgress": true,
+            "payloadsAdmitted": 0,
+            "rejected": 11,
+            "scanned": 11,
+            "skippedKnown": 0,
+            "stage": "delivery",
+            "terminationReason": null,
+            "terminationStage": null
+          },
+          "closed": false,
+          "elapsedMs": 30004,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        }
+      ],
+      "dispatchTransitions": [],
+      "sendCompletionByKind": {
+        "block": {
+          "attempts": 6,
+          "outcomes": {
+            "accepted": 1,
+            "unconfirmed": 5
+          },
+          "elapsedMs": {
+            "min": 120,
+            "median": 3892,
+            "max": 10016
+          },
+          "writesCompleted": 6,
+          "slowest": [
+            {
+              "elapsedMs": 10016,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 56,
+              "timeMs": 1791266241619,
+              "writeCompletedMs": 56
+            },
+            {
+              "elapsedMs": 9999,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 0,
+              "timeMs": 1791266229779,
+              "writeCompletedMs": 0
+            },
+            {
+              "elapsedMs": 3892,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "accepted",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 48,
+              "timeMs": 1791266219779,
+              "writeCompletedMs": 48
+            },
+            {
+              "elapsedMs": 138,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 51,
+              "timeMs": 1791266230041,
+              "writeCompletedMs": 51
+            },
+            {
+              "elapsedMs": 122,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 50,
+              "timeMs": 1791266230171,
+              "writeCompletedMs": 50
+            }
+          ]
+        }
+      },
+      "blockOrderObserved": {
+        "dependency-depth-catalog-fallback": 1
+      }
+    },
+    "vps-docker": {
+      "eventLines": 52,
+      "catalogues": {
+        "attestation": {
+          "attempts": 3,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "invalid-response": 1,
+            "None": 2
+          }
+        },
+        "attester_slashing": {
+          "attempts": 2,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 2
+          }
+        },
+        "block": {
+          "attempts": 2,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "dependency-quantum-yield": 2
+          }
+        },
+        "bls_to_execution_change": {
+          "attempts": 1,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 1
+          }
+        }
+      },
+      "blockAttempts": [
+        {
+          "catalogElapsedMs": 8059,
+          "catalogExhausted": false,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 15533,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "delivery",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWDD1smnAdPXyfB3kziBmFsFLzwLgFfVVn2SpHwxGNNr1m",
+          "reason": "dependency-quantum-yield",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null,
+          "terminationReason": "dependency-quantum-yield",
+          "terminationStage": "delivery"
+        },
+        {
+          "catalogElapsedMs": 7535,
+          "catalogExhausted": false,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 20988,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "delivery",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWMp3NEQTiFUpWoWgxshaSeMb1uAe3dbCXcuY8tYKX1gSc",
+          "reason": "dependency-quantum-yield",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null,
+          "terminationReason": "dependency-quantum-yield",
+          "terminationStage": "delivery"
+        }
+      ],
+      "dispatchTransitions": [],
+      "sendCompletionByKind": {
+        "block": {
+          "attempts": 16,
+          "outcomes": {
+            "accepted": 16
+          },
+          "elapsedMs": {
+            "min": 132,
+            "median": 255,
+            "max": 772
+          },
+          "writesCompleted": 16,
+          "slowest": [
+            {
+              "elapsedMs": 772,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "accepted",
+              "peerId": "12D3KooWMp3NEQTiFUpWoWgxshaSeMb1uAe3dbCXcuY8tYKX1gSc",
+              "streamOpenMs": 19,
+              "timeMs": 1791266234995,
+              "writeCompletedMs": 19
+            },
+            {
+              "elapsedMs": 318,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "accepted",
+              "peerId": "12D3KooWMp3NEQTiFUpWoWgxshaSeMb1uAe3dbCXcuY8tYKX1gSc",
+              "streamOpenMs": 0,
+              "timeMs": 1791266235830,
+              "writeCompletedMs": 0
+            },
+            {
+              "elapsedMs": 315,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "accepted",
+              "peerId": "12D3KooWDD1smnAdPXyfB3kziBmFsFLzwLgFfVVn2SpHwxGNNr1m",
+              "streamOpenMs": 53,
+              "timeMs": 1791266229730,
+              "writeCompletedMs": 53
+            },
+            {
+              "elapsedMs": 287,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "accepted",
+              "peerId": "12D3KooWMp3NEQTiFUpWoWgxshaSeMb1uAe3dbCXcuY8tYKX1gSc",
+              "streamOpenMs": 0,
+              "timeMs": 1791266236914,
+              "writeCompletedMs": 0
+            },
+            {
+              "elapsedMs": 274,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "accepted",
+              "peerId": "12D3KooWMp3NEQTiFUpWoWgxshaSeMb1uAe3dbCXcuY8tYKX1gSc",
+              "streamOpenMs": 0,
+              "timeMs": 1791266235511,
+              "writeCompletedMs": 0
+            }
+          ]
+        }
+      },
+      "blockOrderObserved": {
+        "dependency-depth-catalog-fallback": 2
+      }
+    }
+  }
+}

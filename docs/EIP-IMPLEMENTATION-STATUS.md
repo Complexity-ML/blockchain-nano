@@ -7254,3 +7254,9 @@ Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichi
 
 
 2026-10-06 — Préparation v16 : stockages post-v15 vérifiés inchangés et engagements séparés conservés, nouveau cœur/relais 0e2d943a qualifié dans le périmètre admission continue. Copies locales Mac et volume VPS sur son hôte ; aucune base/clé exportée. Critère original de trois finalités communes nouvelles en 900 s inchangé. Préparation seule ; finalité WAN/production restent ouvertes. Preuves restored-three-node-v16-admission-prepare-20261006/.
+
+
+2026-10-06 — Reprise v16 FAILED : contrôleur 54275 / sortie 1, checkout 6076684d, cœur/relais 0e2d943a ; 0 avancées communes observées selon le critère original. Traces de relais/ressources et hypothèses de parcours enregistrées ; cause WAN globale non prouvée. Trois propriétaires arrêtés et audits read-only des engagements, journaux/témoins et historique canonique ; fichiers inchangés. Pas de compilation concurrente, ni transfert de base inter-hôtes. Périmètre privé exact ; production et revue indépendante restent ouvertes. [Preuves v16](qualification/restored-three-node-v16-admission-terminal-20261006/README.md).
+
+
+2026-10-06 — Catalogue : contre-exemple de préfixe répété sur base 6076684d, compile/lien 0 et sortie attendue 1. Huit tentatives revisitent trois mêmes racines ; racine valide suivante jamais atteinte après export non confirmé. Transport/core modélisés, défaut de progression confirmé, cause WAN globale non prouvée. Correction de sélection bornée distincte des ACK requise. Audit VPS v16 réalisé depuis configurations/reçu déjà locaux au serveur après refus automatique de l’ancien export ; 1926 fichiers inchangés et engagements exacts vérifiés. [Contre-exemple](qualification/catalog-prefix-starvation-baseline-20261006/README.md).

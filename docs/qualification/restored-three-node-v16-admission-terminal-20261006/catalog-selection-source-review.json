@@ -1,0 +1,28 @@
+{
+  "scope": "source review against running frozen binaries, not proof of WAN root cause",
+  "revision": "6076684df9f2a82f72073d3276eef8581ef693a8",
+  "observedCatalogs": "early termination before catalog exhausted; exact counters in live-observations",
+  "findings": [
+    {
+      "file": "network/capella_catalog_relay.hpp",
+      "fact": "Each relay starts with empty cursor_; progress() exports no selection cursor. Definitive rejection advances only within that relay."
+    },
+    {
+      "file": "network/main.cpp",
+      "fact": "Each category attempt creates a new catalog relay; retained peer knowledge is acknowledged roots, not rejected roots or scan position."
+    },
+    {
+      "file": "src/consensus_capella_reactor.cpp",
+      "fact": "Snapshot page rejects a cursor not in its own frozen inventory. A cursor from another snapshot cannot be reused without validation or a client selection scan."
+    }
+  ],
+  "hypothesis": "Repeated early termination can repeatedly scan the same unacknowledged prefix and starve shallow ancestors farther in lexical inventory. Must reproduce before correction; not proven to explain all WAN failures.",
+  "nextEvidence": "Modeled repeated interrupted catalogs with a later valid root; then actual retained frontier position after original terminal stop.",
+  "files": {
+    "network/capella_catalog_relay.hpp": "4ed0c47183116aa147b9efd8d2eff6496f2ce4e919c7ab64fac5f72c58485c5b",
+    "network/main.cpp": "2bd26efa2c3d8e880d7bbeeeda408c05ef1a2bf93d3670518cfd7dc9eb949e9f",
+    "src/consensus_capella_reactor.cpp": "866c12e2c44a3a59286bdc3adac514391c4b11ef9f728487fad7b8126b74fe8a"
+  },
+  "noChangesToActiveSources": true,
+  "noCompilationDuringCampaign": true
+}

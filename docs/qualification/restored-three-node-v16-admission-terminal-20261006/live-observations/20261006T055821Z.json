@@ -1,0 +1,680 @@
+{
+  "observedAt": "20261006T055821Z",
+  "scope": "point-in-time logs; attempts not unique objects; not terminal result",
+  "nodes": {
+    "mac-native": {
+      "eventLines": 73,
+      "catalogues": {
+        "attestation": {
+          "attempts": 8,
+          "payloadsAdmitted": 0,
+          "rejected": 118,
+          "reasons": {
+            "admission-rejected": 8
+          }
+        },
+        "attester_slashing": {
+          "attempts": 2,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 2
+          }
+        },
+        "block": {
+          "attempts": 2,
+          "payloadsAdmitted": 0,
+          "rejected": 22,
+          "reasons": {
+            "head-or-catalog-deadline": 1,
+            "head-reference-unavailable": 1
+          }
+        },
+        "bls_to_execution_change": {
+          "attempts": 2,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 2
+          }
+        },
+        "sync_committee_message": {
+          "attempts": 1,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "delivery-unconfirmed": 1
+          }
+        },
+        "voluntary_exit": {
+          "attempts": 1,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 1
+          }
+        }
+      },
+      "blockAttempts": [
+        {
+          "catalogProgress": {
+            "catalogExhausted": false,
+            "delivered": 0,
+            "exports": 14,
+            "firstFailureReason": "dependency-depth-limit",
+            "firstFailureStage": "delivery",
+            "inProgress": true,
+            "payloadsAdmitted": 0,
+            "rejected": 13,
+            "scanned": 13,
+            "skippedKnown": 0,
+            "stage": "delivery",
+            "terminationReason": null,
+            "terminationStage": null
+          },
+          "closed": false,
+          "elapsedMs": 30001,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        },
+        {
+          "catalogElapsedMs": 28475,
+          "catalogExhausted": false,
+          "catalogProgress": {
+            "catalogExhausted": false,
+            "delivered": 0,
+            "exports": 23,
+            "firstFailureReason": "dependency-depth-limit",
+            "firstFailureStage": "delivery",
+            "inProgress": false,
+            "payloadsAdmitted": 0,
+            "rejected": 22,
+            "scanned": 22,
+            "skippedKnown": 0,
+            "stage": "close",
+            "terminationReason": "export-unconfirmed",
+            "terminationStage": "export"
+          },
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 28475,
+          "event": "test-capella-catalog-relay",
+          "exports": 23,
+          "failureStage": "head",
+          "headPriority": "historical-first",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-reference-unavailable",
+          "rejected": 22,
+          "scanned": 22,
+          "skippedKnown": 0,
+          "stage": "head",
+          "success": false,
+          "syncSlot": null,
+          "terminationReason": "export-unconfirmed",
+          "terminationStage": "export"
+        }
+      ],
+      "dispatchTransitions": [],
+      "sendCompletionByKind": {
+        "block": {
+          "attempts": 21,
+          "outcomes": {
+            "unconfirmed": 18,
+            "accepted": 3
+          },
+          "elapsedMs": {
+            "min": 24,
+            "median": 145,
+            "max": 10034
+          },
+          "writesCompleted": 15,
+          "slowest": [
+            {
+              "elapsedMs": 10034,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 74,
+              "timeMs": 1791266273193,
+              "writeCompletedMs": 74
+            },
+            {
+              "elapsedMs": 10016,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 32,
+              "timeMs": 1791266226123,
+              "writeCompletedMs": 32
+            },
+            {
+              "elapsedMs": 10001,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 0,
+              "timeMs": 1791266289749,
+              "writeCompletedMs": 0
+            },
+            {
+              "elapsedMs": 10000,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 0,
+              "timeMs": 1791266246734,
+              "writeCompletedMs": 0
+            },
+            {
+              "elapsedMs": 8128,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "accepted",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 81,
+              "timeMs": 1791266236733,
+              "writeCompletedMs": 81
+            }
+          ]
+        },
+        "sync_committee_message": {
+          "attempts": 1,
+          "outcomes": {
+            "unconfirmed": 1
+          },
+          "elapsedMs": {
+            "min": 10041,
+            "median": 10041,
+            "max": 10041
+          },
+          "writesCompleted": 1,
+          "slowest": [
+            {
+              "elapsedMs": 10041,
+              "event": "test-consensus-send-completion",
+              "kind": "sync_committee_message",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 55,
+              "timeMs": 1791266259799,
+              "writeCompletedMs": 55
+            }
+          ]
+        }
+      },
+      "blockOrderObserved": {
+        "dependency-depth-catalog-fallback": 1,
+        "historical-first": 1
+      }
+    },
+    "mac-docker": {
+      "eventLines": 66,
+      "catalogues": {
+        "attestation": {
+          "attempts": 8,
+          "payloadsAdmitted": 0,
+          "rejected": 98,
+          "reasons": {
+            "admission-rejected": 8
+          }
+        },
+        "attester_slashing": {
+          "attempts": 2,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 2
+          }
+        },
+        "block": {
+          "attempts": 2,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "head-or-catalog-deadline": 2
+          }
+        },
+        "bls_to_execution_change": {
+          "attempts": 2,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 2
+          }
+        },
+        "sync_committee_message": {
+          "attempts": 1,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "delivery-unconfirmed": 1
+          }
+        },
+        "voluntary_exit": {
+          "attempts": 1,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 1
+          }
+        }
+      },
+      "blockAttempts": [
+        {
+          "catalogProgress": {
+            "catalogExhausted": false,
+            "delivered": 0,
+            "exports": 12,
+            "firstFailureReason": "admission-rejected",
+            "firstFailureStage": "delivery",
+            "inProgress": true,
+            "payloadsAdmitted": 0,
+            "rejected": 11,
+            "scanned": 11,
+            "skippedKnown": 0,
+            "stage": "delivery",
+            "terminationReason": null,
+            "terminationStage": null
+          },
+          "closed": false,
+          "elapsedMs": 30004,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        },
+        {
+          "catalogProgress": {
+            "catalogExhausted": false,
+            "delivered": 0,
+            "exports": 10,
+            "firstFailureReason": "admission-rejected",
+            "firstFailureStage": "delivery",
+            "inProgress": true,
+            "payloadsAdmitted": 0,
+            "rejected": 9,
+            "scanned": 9,
+            "skippedKnown": 0,
+            "stage": "delivery",
+            "terminationReason": null,
+            "terminationStage": null
+          },
+          "closed": false,
+          "elapsedMs": 30005,
+          "event": "test-capella-catalog-relay",
+          "failureStage": "catalog",
+          "headPriority": "historical-first",
+          "kind": "block",
+          "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+          "reason": "head-or-catalog-deadline",
+          "stage": "catalog",
+          "success": false
+        }
+      ],
+      "dispatchTransitions": [],
+      "sendCompletionByKind": {
+        "block": {
+          "attempts": 14,
+          "outcomes": {
+            "accepted": 3,
+            "unconfirmed": 11
+          },
+          "elapsedMs": {
+            "min": 97,
+            "median": 3465,
+            "max": 10018
+          },
+          "writesCompleted": 14,
+          "slowest": [
+            {
+              "elapsedMs": 10018,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 49,
+              "timeMs": 1791266254091,
+              "writeCompletedMs": 49
+            },
+            {
+              "elapsedMs": 10016,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 56,
+              "timeMs": 1791266241619,
+              "writeCompletedMs": 56
+            },
+            {
+              "elapsedMs": 9999,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 0,
+              "timeMs": 1791266229779,
+              "writeCompletedMs": 0
+            },
+            {
+              "elapsedMs": 9985,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 0,
+              "timeMs": 1791266274440,
+              "writeCompletedMs": 0
+            },
+            {
+              "elapsedMs": 7767,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": 207,
+              "timeMs": 1791266290434,
+              "writeCompletedMs": 207
+            }
+          ]
+        },
+        "sync_committee_message": {
+          "attempts": 1,
+          "outcomes": {
+            "unconfirmed": 1
+          },
+          "elapsedMs": {
+            "min": 0,
+            "median": 0,
+            "max": 0
+          },
+          "writesCompleted": 0,
+          "slowest": [
+            {
+              "elapsedMs": 0,
+              "event": "test-consensus-send-completion",
+              "kind": "sync_committee_message",
+              "outcome": "unconfirmed",
+              "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+              "streamOpenMs": -1,
+              "timeMs": 1791266253928,
+              "writeCompletedMs": -1
+            }
+          ]
+        }
+      },
+      "blockOrderObserved": {
+        "dependency-depth-catalog-fallback": 1,
+        "historical-first": 1
+      }
+    },
+    "vps-docker": {
+      "eventLines": 114,
+      "catalogues": {
+        "attestation": {
+          "attempts": 15,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "invalid-response": 3,
+            "None": 12
+          }
+        },
+        "attester_slashing": {
+          "attempts": 4,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 3,
+            "invalid-response": 1
+          }
+        },
+        "block": {
+          "attempts": 4,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "dependency-quantum-yield": 3,
+            "head-reference-unavailable": 1
+          }
+        },
+        "bls_to_execution_change": {
+          "attempts": 4,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 4
+          }
+        },
+        "sync_committee_message": {
+          "attempts": 3,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 3
+          }
+        },
+        "voluntary_exit": {
+          "attempts": 2,
+          "payloadsAdmitted": 0,
+          "rejected": 0,
+          "reasons": {
+            "None": 2
+          }
+        }
+      },
+      "blockAttempts": [
+        {
+          "catalogElapsedMs": 8059,
+          "catalogExhausted": false,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 15533,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "delivery",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWDD1smnAdPXyfB3kziBmFsFLzwLgFfVVn2SpHwxGNNr1m",
+          "reason": "dependency-quantum-yield",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null,
+          "terminationReason": "dependency-quantum-yield",
+          "terminationStage": "delivery"
+        },
+        {
+          "catalogElapsedMs": 7535,
+          "catalogExhausted": false,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 20988,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "delivery",
+          "headPriority": "dependency-depth-catalog-fallback",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWMp3NEQTiFUpWoWgxshaSeMb1uAe3dbCXcuY8tYKX1gSc",
+          "reason": "dependency-quantum-yield",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null,
+          "terminationReason": "dependency-quantum-yield",
+          "terminationStage": "delivery"
+        },
+        {
+          "catalogElapsedMs": 11477,
+          "catalogExhausted": false,
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 11491,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "delivery",
+          "headPriority": "historical-first-head-unconfirmed",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWDD1smnAdPXyfB3kziBmFsFLzwLgFfVVn2SpHwxGNNr1m",
+          "reason": "dependency-quantum-yield",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "close",
+          "success": false,
+          "syncSlot": null,
+          "terminationReason": "dependency-quantum-yield",
+          "terminationStage": "delivery"
+        },
+        {
+          "catalogElapsedMs": 7544,
+          "catalogExhausted": false,
+          "catalogProgress": {
+            "catalogExhausted": false,
+            "delivered": 0,
+            "exports": 1,
+            "firstFailureReason": "dependency-quantum-yield",
+            "firstFailureStage": "delivery",
+            "inProgress": false,
+            "payloadsAdmitted": 0,
+            "rejected": 0,
+            "scanned": 0,
+            "skippedKnown": 0,
+            "stage": "close",
+            "terminationReason": "dependency-quantum-yield",
+            "terminationStage": "delivery"
+          },
+          "closed": true,
+          "delivered": 0,
+          "elapsedMs": 11545,
+          "event": "test-capella-catalog-relay",
+          "exports": 1,
+          "failureStage": "head",
+          "headPriority": "historical-first",
+          "kind": "block",
+          "payloadsAdmitted": 0,
+          "peerId": "12D3KooWMp3NEQTiFUpWoWgxshaSeMb1uAe3dbCXcuY8tYKX1gSc",
+          "reason": "head-reference-unavailable",
+          "rejected": 0,
+          "scanned": 0,
+          "skippedKnown": 0,
+          "stage": "head",
+          "success": false,
+          "syncSlot": null,
+          "terminationReason": "dependency-quantum-yield",
+          "terminationStage": "delivery"
+        }
+      ],
+      "dispatchTransitions": [
+        {
+          "event": "test-core-dispatch-transition",
+          "highWater": 14,
+          "pending": 2,
+          "phase": "transport-suspended",
+          "timeMs": 1791266289611
+        },
+        {
+          "event": "test-core-dispatch-transition",
+          "highWater": 14,
+          "pending": 0,
+          "phase": "transport-resumed",
+          "timeMs": 1791266290450
+        }
+      ],
+      "sendCompletionByKind": {
+        "block": {
+          "attempts": 32,
+          "outcomes": {
+            "accepted": 32
+          },
+          "elapsedMs": {
+            "min": 132,
+            "median": 263,
+            "max": 1087
+          },
+          "writesCompleted": 32,
+          "slowest": [
+            {
+              "elapsedMs": 1087,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "accepted",
+              "peerId": "12D3KooWMp3NEQTiFUpWoWgxshaSeMb1uAe3dbCXcuY8tYKX1gSc",
+              "streamOpenMs": 0,
+              "timeMs": 1791266280226,
+              "writeCompletedMs": 0
+            },
+            {
+              "elapsedMs": 772,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "accepted",
+              "peerId": "12D3KooWMp3NEQTiFUpWoWgxshaSeMb1uAe3dbCXcuY8tYKX1gSc",
+              "streamOpenMs": 19,
+              "timeMs": 1791266234995,
+              "writeCompletedMs": 19
+            },
+            {
+              "elapsedMs": 733,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "accepted",
+              "peerId": "12D3KooWMp3NEQTiFUpWoWgxshaSeMb1uAe3dbCXcuY8tYKX1gSc",
+              "streamOpenMs": 0,
+              "timeMs": 1791266280961,
+              "writeCompletedMs": 0
+            },
+            {
+              "elapsedMs": 715,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "accepted",
+              "peerId": "12D3KooWMp3NEQTiFUpWoWgxshaSeMb1uAe3dbCXcuY8tYKX1gSc",
+              "streamOpenMs": 0,
+              "timeMs": 1791266281941,
+              "writeCompletedMs": 0
+            },
+            {
+              "elapsedMs": 409,
+              "event": "test-consensus-send-completion",
+              "kind": "block",
+              "outcome": "accepted",
+              "peerId": "12D3KooWDD1smnAdPXyfB3kziBmFsFLzwLgFfVVn2SpHwxGNNr1m",
+              "streamOpenMs": 0,
+              "timeMs": 1791266276866,
+              "writeCompletedMs": 0
+            }
+          ]
+        }
+      },
+      "blockOrderObserved": {
+        "dependency-depth-catalog-fallback": 2,
+        "historical-first-head-unconfirmed": 1,
+        "historical-first": 1
+      }
+    }
+  }
+}
