@@ -1,0 +1,18 @@
+{
+  "scope": "Read-only source review while original 81355 remains active; no builds, runtime changes or restart",
+  "observedEvent": "altair-ipc-recovery-failed",
+  "notProven": "Failure stage, RPC transport/error cause, or signed-anchor regression",
+  "sourceHashes": {
+    "network/main.cpp": "e731e83c6e70e893e134c4022025d99ef48b8e67adbb9b54dce06e46e6985f6b",
+    "network/core.hpp": "eb5b81b9f7d61a7ff78618ce58eb324bf1c301f215b7b70fb0ff80cf42457671",
+    "network/altair_core_recovery.hpp": "9af13d4baf60e3f4a104208dbd6c15c69bb3292cce2acd4c42344d3af35aed0a",
+    "src/rpc.cpp": "e299bb94c5633bb5f51ae9c0f617cfefad47fd719061f4035f2aec32519bb52f"
+  },
+  "findings": [
+    "Recovery completion null and setup exception share the same event; no specific cause is retained.",
+    "CoreRequest erases transport, malformed response and RPC error distinctions into nullptr.",
+    "Recovery enforces confirmed session rotation, bounded inventory draining and final status verification; timeout is 30 seconds and failures are bounded.",
+    "The signed-anchor correction executes only after IPC recovery; current failure occurs before normal relay admission."
+  ],
+  "nextAction": "Preserve original terminal outcome and stopped VPS commitments, then add bounded redacted recovery/RPC diagnostics without changing admission, retry or fencing behavior."
+}

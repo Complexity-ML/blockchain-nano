@@ -4434,3 +4434,6 @@ Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, d
 
 
 2026-10-06 — Préparation v19 : engagements post-v18 et journaux conservés, ancre signée qualifiée en natif/ARM64/AMD64 dans son périmètre ciblé. Trois finalités communes nouvelles en 900 s restent à démontrer ; préparation seule. Production et revue indépendante ouvertes. Preuves restored-three-node-v19-signed-anchor-prepare-20261006/.
+
+
+2026-10-06 — Reprise v19 FAILED au démarrage : contrôleur 81355 / sortie 1, checkout fc704b9f, délai IPC VPS de 180 s expiré ; propriétaires Mac non lancés et critère de finalité non exécuté. Arrêt VPS normal et audit read-only des engagements/journaux/historique, 2170 fichiers inchangés ; base et clés non exportées. Cause IPC précise encore ouverte, diagnostic isolé en préparation sans changement des politiques. [Preuves v19](qualification/restored-three-node-v19-startup-terminal-20261006/README.md). Toutes les autres exigences et la revue indépendante restent ouvertes.
