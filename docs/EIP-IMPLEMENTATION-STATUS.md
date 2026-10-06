@@ -7272,3 +7272,6 @@ Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichi
 
 
 2026-10-06 — Préparation nouvelle tentative v17 après correction de permissions : copies Mac vérifiées intactes et réutilisées sans copie supplémentaire ; volume VPS inchangé. Aucun signer lancé, binaires C++ identiques qualifiés, préparation VPS locale requise. Même critère de trois finalités nouvelles en 900 s ; finalité et production restent ouvertes. Preuves restored-three-node-v17-retry-prepare-20261006/.
+
+
+2026-10-06 — Reprise v17 nouvelle tentative FAILED : contrôleur 37147 / sortie 1, checkout 30f144de, cœur/relais d8d5b46c ; 0 avancées communes observées selon le critère original. Traces de relais/ressources et hypothèses de parcours enregistrées ; cause WAN globale non prouvée. Trois propriétaires arrêtés et audits read-only des engagements, journaux/témoins et historique canonique ; fichiers inchangés. Pas de compilation concurrente, ni transfert de base inter-hôtes. Périmètre privé exact ; production et revue indépendante restent ouvertes. [Preuves v17](qualification/restored-three-node-v17-retry-terminal-20261006/README.md).

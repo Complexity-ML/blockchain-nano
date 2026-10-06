@@ -1,0 +1,180 @@
+{
+  "mac-native": {
+    "catalogAttempts": 80,
+    "blockAttempts": 8,
+    "payloadsAdmitted": 0,
+    "rejected": 800,
+    "terminations": {
+      "head-or-catalog-deadline": 5,
+      "catalog-exhausted": 60,
+      "delivery-unconfirmed": 3,
+      "export-unconfirmed": 3,
+      "admission-rejected": 6,
+      "export-unavailable": 2,
+      "selection-wrap-required": 1
+    },
+    "blockSelections": [
+      "0x09eb177a051e79fc851bd4f316d205d311014199c367788276f3e0ad04ab7a0c",
+      "0x05e06bc89922efef5be9acb0678f8855957145ab019b7f5cbda93ec8e3962392",
+      "0x05e0095d1d403d2f1aa026adaa16af45b666cd31715e141e8aa301cf373ab7fe"
+    ],
+    "distinctBlockSelections": 3,
+    "lastBlockResult": {
+      "catalogProgress": {
+        "catalogExhausted": false,
+        "delivered": 1,
+        "exports": 18,
+        "firstFailureReason": "dependency-depth-limit",
+        "firstFailureStage": "delivery",
+        "inProgress": true,
+        "payloadsAdmitted": 0,
+        "rejected": 17,
+        "scanned": 18,
+        "selectionAfter": "0x0bfaeec760faff8c89a9581320f4664892eb9209088e83ca2d88427a8708912e",
+        "selectionStartAfter": null,
+        "skippedKnown": 1,
+        "stage": "delivery",
+        "terminationReason": null,
+        "terminationStage": null
+      },
+      "closed": false,
+      "elapsedMs": 30000,
+      "event": "test-capella-catalog-relay",
+      "failureStage": "catalog",
+      "headPriority": "historical-first",
+      "kind": "block",
+      "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+      "reason": "head-or-catalog-deadline",
+      "stage": "catalog",
+      "success": false
+    }
+  },
+  "mac-docker": {
+    "catalogAttempts": 60,
+    "blockAttempts": 6,
+    "payloadsAdmitted": 0,
+    "rejected": 620,
+    "terminations": {
+      "head-or-catalog-deadline": 4,
+      "catalog-exhausted": 45,
+      "delivery-unconfirmed": 3,
+      "export-unconfirmed": 3,
+      "admission-rejected": 3,
+      "export-unavailable": 1,
+      "selection-wrap-required": 1
+    },
+    "blockSelections": [
+      "0x013301606b8781bae57130f14bfd51460ea1cc79f41100f615f59d558d5b936d",
+      "0x054b833ce7cf74f81c6e8869201e0b7f2fd3171363e984e7f6a76f03fbb848d6"
+    ],
+    "distinctBlockSelections": 2,
+    "lastBlockResult": {
+      "catalogProgress": {
+        "catalogExhausted": false,
+        "delivered": 0,
+        "exports": 37,
+        "firstFailureReason": "admission-rejected",
+        "firstFailureStage": "delivery",
+        "inProgress": true,
+        "payloadsAdmitted": 0,
+        "rejected": 36,
+        "scanned": 36,
+        "selectionAfter": "0x0f9cc0570e692dbe265a79adc365c0abc7ae1b1b79d4aba2503aaaabe858c7fc",
+        "selectionStartAfter": null,
+        "skippedKnown": 0,
+        "stage": "delivery",
+        "terminationReason": null,
+        "terminationStage": null
+      },
+      "closed": false,
+      "elapsedMs": 30000,
+      "event": "test-capella-catalog-relay",
+      "failureStage": "catalog",
+      "headPriority": "historical-first",
+      "kind": "block",
+      "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+      "reason": "head-or-catalog-deadline",
+      "stage": "catalog",
+      "success": false
+    }
+  },
+  "vps-docker": {
+    "catalogAttempts": 303,
+    "blockAttempts": 31,
+    "payloadsAdmitted": 0,
+    "rejected": 12,
+    "terminations": {
+      "dependency-quantum-yield": 5,
+      "catalog-exhausted": 47,
+      "invalid-response": 156,
+      "null": 86,
+      "head-reference-unavailable": 7,
+      "export-unconfirmed": 2
+    },
+    "blockSelections": [
+      "0x00bb4ae7c14ee5745e44eadfc084ff3cf6674141e6fd10ca85705a7a55750244",
+      "0x00bb4ae7c14ee5745e44eadfc084ff3cf6674141e6fd10ca85705a7a55750244",
+      "0x00bb4ae7c14ee5745e44eadfc084ff3cf6674141e6fd10ca85705a7a55750244",
+      "0x00bb4ae7c14ee5745e44eadfc084ff3cf6674141e6fd10ca85705a7a55750244",
+      "0x013301606b8781bae57130f14bfd51460ea1cc79f41100f615f59d558d5b936d",
+      "0x00bb4ae7c14ee5745e44eadfc084ff3cf6674141e6fd10ca85705a7a55750244",
+      "0x011267a64e58e52b3e43abc737f33fea463827a93f85cf4b79eace4ddff35aac",
+      "0x00bb4ae7c14ee5745e44eadfc084ff3cf6674141e6fd10ca85705a7a55750244",
+      "0x00bb4ae7c14ee5745e44eadfc084ff3cf6674141e6fd10ca85705a7a55750244"
+    ],
+    "distinctBlockSelections": 3,
+    "lastBlockResult": {
+      "catalogElapsedMs": 1963,
+      "catalogExhausted": false,
+      "closed": true,
+      "delivered": 0,
+      "elapsedMs": 17005,
+      "event": "test-capella-catalog-relay",
+      "exports": 0,
+      "failureStage": "open",
+      "headPriority": "head-unconfirmed-catalog-fallback",
+      "kind": "block",
+      "payloadsAdmitted": 0,
+      "peerId": "12D3KooWLFgBBpZ9tUQFu3htijAjDqKg4eAkBXuMZCxgbU5S44GU",
+      "reason": "invalid-response",
+      "rejected": 0,
+      "scanned": 0,
+      "selectionAfter": null,
+      "selectionStartAfter": null,
+      "skippedKnown": 0,
+      "stage": "close",
+      "success": false,
+      "syncSlot": null,
+      "terminationReason": "invalid-response",
+      "terminationStage": "open"
+    }
+  },
+  "lastObservation": {
+    "time": "2026-10-06T06:59:54.947Z",
+    "event": "observation",
+    "rows": [
+      {
+        "name": "mac-native",
+        "checkpoint": {
+          "epoch": "1284",
+          "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+        },
+        "slot": "16119",
+        "head": "0xda16b8dfbe2c9d84c87043c1114fefb6aced9270fb3a9ce1ca32aac0d31334ea",
+        "peers": "0x1"
+      },
+      {
+        "name": "mac-docker",
+        "checkpoint": {
+          "epoch": "1284",
+          "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+        },
+        "slot": "16113",
+        "head": "0x8aa8b6a1649e3b12ba4eeef80c028a85e6d2c174e4abcdf9419559186c145e08",
+        "peers": "0x1"
+      }
+    ]
+  },
+  "partial": true,
+  "networkQualified": false
+}
