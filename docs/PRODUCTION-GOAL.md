@@ -4353,3 +4353,6 @@ Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichi
 
 
 2026-10-06 — Continuations par parent/slot implémentées et qualifiées sur Mac natif, Docker ARM64 et AMD64. Contre-exemple conservé : bloc valide bloqué sous interférence dans l’ancien cœur ; correction conforme à l’oracle, signature invalide rejetée, duplicata stable et témoin réouvert. Scans/reconstructions des consommateurs du type modifié, exécutables cohérents et régressions pertinentes archivés. Erreur initiale native secp256k1 conservée, chemin réparé. Caches bornés en nombre ; pression/mémoire/équité, finalité réseau et tous les autres critères de production restent ouverts. [Preuves](qualification/parent-slot-cache-integrated-20261006/README.md).
+
+
+2026-10-06 — Préparation v13 : engagements post-v12 exacts, continuation par parent/slot et relais 76bb2468. Copies locales séparées et volume VPS conservé ; journaux non réinitialisés/fusionnés. Même profil, même limite et même critère de finalité en 900 s. Préparation seule, pression/éviction/coût des caches, cause globale WAN, finalité et production ouverts. Preuves restored-three-node-v13-parent-cache-prepare-20261006/.
