@@ -3,7 +3,7 @@
 #include "finality.hpp"
 #include <filesystem>
 #include <mutex>
-namespace rocksdb { class DB; }
+namespace rocksdb { class DB; class WriteBatch; }
 namespace nano {
 struct ForkCheckpointToken {uint64_t sequence;Bytes digest;bool operator==(const ForkCheckpointToken&)const=default;};
 struct ExecutionStateRetentionAnchor {Int number;Bytes hash;};
@@ -11,6 +11,9 @@ struct ExecutionStatePruningInfo {Int before;ExecutionStateRetentionAnchor ancho
 struct ExecutionCheckpointBlock {Block block;State state;std::vector<Receipt> receipts;};
 // Opaque authenticated consensus record; validation belongs to the reactor.
 struct CheckpointArchiveEntry {Bytes root;uint64_t slot;Bytes payload;};
+// Local opaque immutable fragments. The caller validates consensus semantics;
+// the storage layer verifies the SHA256 commitment and synchronous atomicity.
+struct CheckpointBlob {Bytes digest;std::string payload;};
 struct ForkCheckpointRecord {ForkCheckpointToken token;std::string snapshot;};
 class ChainStore {
  friend class BeaconSigningJournal;
@@ -24,6 +27,7 @@ class ChainStore {
  rocksdb::DB* db_=nullptr;
  mutable std::mutex mutex_;
  bool fork_checkpoint_write_uncertain_=false;
+ void append_checkpoint_blobs(rocksdb::WriteBatch&,const std::vector<CheckpointBlob>&,size_t maximum_records,size_t maximum_bytes);
  std::optional<ForkCheckpointRecord> fork_checkpoint_impl(const Int&,const Bytes&,size_t) const;
  std::optional<ExecutionStatePruningInfo> state_pruning_impl() const;
  std::optional<std::string> get(const std::string& key) const;
@@ -50,6 +54,17 @@ public:
  // Separate from execution-block commit; no EVM/consensus atomic binding yet.
  ForkCheckpointToken commit_fork_checkpoint(const Int& chain_id,const Bytes& genesis_hash,
   const std::optional<ForkCheckpointToken>& expected,std::string_view snapshot,size_t maximum_bytes);
+ // All fragments and the checkpoint/token share one synchronous CAS batch.
+ // Existing content is compared, never overwritten; duplicates are idempotent.
+ // maximum_bytes also bounds the entire serialized write batch, not just each
+ // fragment. This API does not authorize a peer record or prune graph branches.
+ ForkCheckpointToken commit_fork_checkpoint_with_blobs(const Int& chain_id,const Bytes& genesis_hash,
+  const std::optional<ForkCheckpointToken>& expected,std::string_view snapshot,size_t maximum_bytes,
+  const std::vector<CheckpointBlob>& blobs,size_t maximum_records);
+ // Digest comes from the independently authenticated manifest, not from disk.
+ // Missing fragments return nullopt; corrupt or oversized records fail closed.
+ std::optional<std::string> checkpoint_blob(const Int& chain_id,const Bytes& genesis_hash,
+  const Bytes& digest,size_t maximum_bytes) const;
  // expected, when supplied, is an independently retained exact commitment. It
  // detects a restored old DB. Without it, local disk rollback is not detectable.
  std::optional<ForkCheckpointRecord> fork_checkpoint(const Int& chain_id,const Bytes& genesis_hash,
@@ -65,6 +80,15 @@ public:
   const std::vector<ExecutionCheckpointBlock>& suffix,std::string_view snapshot,
   size_t maximum_bytes,size_t maximum_blocks,
   const std::vector<CheckpointArchiveEntry>& archive={},
+  const std::optional<ExecutionStateRetentionAnchor>& retention=std::nullopt);
+ // Atomic execution/checkpoint/immutable-fragment publication. Same execution
+ // CAS and retention rules as commit_execution_checkpoint; no new consensus rule.
+ ForkCheckpointToken commit_execution_checkpoint_with_blobs(const Int& chain_id,const Bytes& genesis_hash,
+  const std::optional<ForkCheckpointToken>& expected,const Bytes& expected_tip,
+  const Int& common_height,const Bytes& common_hash,
+  const std::vector<ExecutionCheckpointBlock>& suffix,std::string_view snapshot,
+  size_t maximum_bytes,size_t maximum_blocks,const std::vector<CheckpointBlob>& blobs,
+  size_t maximum_records,const std::vector<CheckpointArchiveEntry>& archive={},
   const std::optional<ExecutionStateRetentionAnchor>& retention=std::nullopt);
  // Missing historical state is intentional only below this durable boundary.
  std::optional<ExecutionStatePruningInfo> state_pruning() const;

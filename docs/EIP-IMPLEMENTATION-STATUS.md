@@ -1,5 +1,11 @@
 # Feuille de route EIP — état réel de Nano
 
+## Stockage des fragments immuables : Docker ARM64/AMD64 — 6 octobre 2026
+
+Le backend RocksDB publie maintenant des fragments opaques SHA256 dans le même batch synchrone que le checkpoint/token et, si demandé, l’exécution. Contenu immutable, liaison chainId/genesis, CAS, budgets et refus de corruption ; une écriture incertaine bloque ce handle jusqu’à réouverture. Deux nouveaux modes et la régression d’exécution actuelle passent sur les deux architectures : duplication/CAS/budgets/copie readonly/altération, fsync avec deux dispositions du WAL, puis CAS/reorg/archives et SIGKILL. Les deux erreurs de préparation des fixtures sont conservées. [Sources, preuves et périmètre](qualification/checkpoint-immutable-blobs-docker-20261006/README.md).
+
+**Ce lot est la base de stockage, pas la correction de saturation V28.** Aucun nœud/image remplacé ; candidate runtime `02ec0ab0` et limite 1024 inchangées. Raccorder le manifeste authentifié, le cache borné/rechargement des branches froides, le témoin séparé et la migration, puis qualifier fork choice/saturation/pannes et une nouvelle finalité commune. Aucun statut EIP promu ; tous les critères originaux, autres échecs, qualification native de ce nouveau lot, portabilité physique, WAN A, bridge/Doppler et revue indépendante restent ouverts. Production non qualifiée.
+
 ## V28 terminé : saturation du graphe sur les deux Mac — 6 octobre 2026
 
 Main `ee08b6ce`, cœur `02ec0ab0`, relais compilé `2f93dda0` réutilisé par ses entrées de compilation. Contrôleur original 7884 : sortie 1, aucune avancée de finalité commune dans les 900 secondes, baseline 1284. Les trois arrêts sont propres ; audits 10017/73931 réussis, fichiers inchangés et engagements de reprise/signature comparés séparément. [Preuves terminales et diagnostic](qualification/restored-three-node-v28-terminal-graph-capacity-20261006/README.md).

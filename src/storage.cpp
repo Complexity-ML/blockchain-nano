@@ -448,6 +448,11 @@ std::optional<ForkCheckpointRecord> ChainStore::fork_checkpoint(const Int& chain
 }
 ForkCheckpointToken ChainStore::commit_fork_checkpoint(const Int& chain_id,const Bytes& genesis_hash,
  const std::optional<ForkCheckpointToken>& expected,std::string_view snapshot,size_t maximum_bytes){
+ return commit_fork_checkpoint_with_blobs(chain_id,genesis_hash,expected,snapshot,maximum_bytes,{},0);
+}
+ForkCheckpointToken ChainStore::commit_fork_checkpoint_with_blobs(const Int& chain_id,const Bytes& genesis_hash,
+ const std::optional<ForkCheckpointToken>& expected,std::string_view snapshot,size_t maximum_bytes,
+ const std::vector<CheckpointBlob>& blobs,size_t maximum_records){
  if(snapshot.empty()||snapshot.size()>maximum_bytes)throw std::invalid_argument("fork checkpoint size limit");
  const auto digest=sha256(Bytes(snapshot.begin(),snapshot.end()));
  std::lock_guard lock(mutex_);if(get("execution-checkpoint/v1"))throw std::invalid_argument("coupled checkpoint requires execution binding");const auto previous=fork_checkpoint_impl(chain_id,genesis_hash,maximum_bytes);
@@ -455,7 +460,12 @@ ForkCheckpointToken ChainStore::commit_fork_checkpoint(const Int& chain_id,const
  if(previous&&previous->token.sequence==UINT64_MAX)throw std::overflow_error("fork checkpoint sequence exhausted");
  const ForkCheckpointToken token{previous?previous->token.sequence+1:1,digest};
  const Json encoded{{"sequence",quantity(Int(std::to_string(token.sequence)))},{"digest",hex(token.digest)}};
- rocksdb::WriteBatch batch;batch.Put("fork-checkpoint/v1/payload",rocksdb::Slice(snapshot.data(),snapshot.size()));batch.Put("fork-checkpoint/v1/token",encoded.dump());
+ rocksdb::WriteBatch batch;
+ append_checkpoint_blobs(batch,blobs,maximum_records,maximum_bytes);
+ batch.Put("fork-checkpoint/v1/payload",rocksdb::Slice(snapshot.data(),snapshot.size()));batch.Put("fork-checkpoint/v1/token",encoded.dump());
+ // Legacy writers retain their old payload-only budget. The fragment API
+ // bounds the aggregate batch including metadata and pre-existing duplicates.
+ if(!blobs.empty()&&batch.GetDataSize()>maximum_bytes)throw std::length_error("checkpoint blob batch budget");
  const auto status=db_->Write(durable_write(),&batch);if(!status.ok())fork_checkpoint_write_uncertain_=true;
  require_ok(status);return token;
 }
@@ -466,6 +476,13 @@ ForkCheckpointToken ChainStore::commit_execution_checkpoint(const Int& chain_id,
  const std::optional<ForkCheckpointToken>& expected,const Bytes& expected_tip,
  const Int& common_height,const Bytes& common_hash,const std::vector<ExecutionCheckpointBlock>& suffix,
  std::string_view snapshot,size_t maximum_bytes,size_t maximum_blocks,const std::vector<CheckpointArchiveEntry>& archive,const std::optional<ExecutionStateRetentionAnchor>& retention){
+ return commit_execution_checkpoint_with_blobs(chain_id,genesis_hash,expected,expected_tip,common_height,common_hash,suffix,snapshot,maximum_bytes,maximum_blocks,{},0,archive,retention);
+}
+ForkCheckpointToken ChainStore::commit_execution_checkpoint_with_blobs(const Int& chain_id,const Bytes& genesis_hash,
+ const std::optional<ForkCheckpointToken>& expected,const Bytes& expected_tip,
+ const Int& common_height,const Bytes& common_hash,const std::vector<ExecutionCheckpointBlock>& suffix,
+ std::string_view snapshot,size_t maximum_bytes,size_t maximum_blocks,const std::vector<CheckpointBlob>& blobs,
+ size_t maximum_records,const std::vector<CheckpointArchiveEntry>& archive,const std::optional<ExecutionStateRetentionAnchor>& retention){
  if(snapshot.empty()||snapshot.size()>maximum_bytes||suffix.size()>maximum_blocks||archive.size()>maximum_blocks||common_height<0||common_height>Int("18446744073709551615")||expected_tip.size()!=32||common_hash.size()!=32)
   throw std::invalid_argument("execution checkpoint bounds");
  const auto digest=sha256(Bytes(snapshot.begin(),snapshot.end()));
@@ -493,6 +510,7 @@ ForkCheckpointToken ChainStore::commit_execution_checkpoint(const Int& chain_id,
  Int total(*total_data),count(*count_data);if(count!=height+1)throw std::runtime_error("execution checkpoint count corrupt");
  rocksdb::WriteBatch batch;std::set<std::string> removed,inserted;
  auto bounded=[&]{if(batch.GetDataSize()>maximum_bytes)throw std::length_error("execution checkpoint batch budget");};
+ append_checkpoint_blobs(batch,blobs,maximum_records,maximum_bytes);bounded();
  for(Int at=height;at>common_height;--at){
   const auto key=height_key(at);const auto old=read("block/"+key);if(!old||quantity(old->at("number"))!=at)throw std::runtime_error("missing execution checkpoint suffix");
   for(const auto& tx:old->at("transactions")){const auto hash=tx.at("hash").get<std::string>();removed.insert(hash);batch.Delete("tx/"+hash);batch.Delete("receipt/"+hash);}
@@ -576,4 +594,34 @@ std::optional<ExecutionStatePruningInfo> ChainStore::state_pruning_impl()const{
  return info;
 }
 std::optional<ExecutionStatePruningInfo> ChainStore::state_pruning()const{std::lock_guard lock(mutex_);return state_pruning_impl();}
+}
+
+namespace nano {
+void ChainStore::append_checkpoint_blobs(rocksdb::WriteBatch& batch,
+ const std::vector<CheckpointBlob>& blobs,size_t maximum_records,size_t maximum_bytes){
+ if(blobs.size()>maximum_records)throw std::length_error("checkpoint blob record budget");
+ std::map<std::string,std::string_view> seen;size_t input_bytes=0;
+ for(const auto& blob:blobs){
+  if(blob.digest.size()!=32||blob.payload.empty())throw std::invalid_argument("checkpoint blob bounds");
+  if(blob.payload.size()>maximum_bytes-input_bytes)throw std::length_error("checkpoint blob input budget");
+  input_bytes+=blob.payload.size();
+  if(sha256(Bytes(blob.payload.begin(),blob.payload.end()))!=blob.digest)throw std::invalid_argument("checkpoint blob digest mismatch");
+  const auto key="checkpoint-blob/v1/"+hex(blob.digest);
+  const auto [where,added]=seen.emplace(key,blob.payload);
+  if(!added){if(where->second!=blob.payload)throw std::invalid_argument("conflicting checkpoint blob duplicate");continue;}
+  const auto old=get(key);
+  if(old){if(*old!=blob.payload)throw std::runtime_error("corrupt immutable checkpoint blob");continue;}
+  batch.Put(key,rocksdb::Slice(blob.payload));
+  if(batch.GetDataSize()>maximum_bytes)throw std::length_error("checkpoint blob batch budget");
+ }
+}
+std::optional<std::string> ChainStore::checkpoint_blob(const Int& chain_id,const Bytes& genesis_hash,
+ const Bytes& digest,size_t maximum_bytes)const{
+ if(digest.size()!=32||!maximum_bytes)throw std::invalid_argument("checkpoint blob read bounds");
+ std::lock_guard lock(mutex_);const auto identity=read("meta/identity");
+ if(genesis_hash.size()!=32||!identity||identity->at("chainId")!=quantity(chain_id)||identity->at("genesisHash")!=hex(genesis_hash))throw std::invalid_argument("checkpoint blob chain binding mismatch");
+ auto payload=get("checkpoint-blob/v1/"+hex(digest));if(!payload)return std::nullopt;
+ if(payload->empty()||payload->size()>maximum_bytes||sha256(Bytes(payload->begin(),payload->end()))!=digest)throw std::runtime_error("corrupt or oversized checkpoint blob");
+ return payload;
+}
 }

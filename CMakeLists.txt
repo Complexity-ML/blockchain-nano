@@ -1149,6 +1149,17 @@ add_test(NAME consensus_altair_store_snapshot_head COMMAND ${CMAKE_COMMAND} -E e
 add_test(NAME consensus_altair_store_snapshot_reorg COMMAND ${CMAKE_COMMAND} -E env NANO_TEST_STORE_SNAPSHOTS=1 $<TARGET_FILE:nano-altair-fork-head-tests> "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/consensus-altair-fork-reorg-official" 8)
 set_tests_properties(consensus_altair_store_snapshot_head consensus_altair_store_snapshot_reorg PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_ethereum")
 
+add_executable(nano-checkpoint-blob-tests tests/test_checkpoint_blobs.cpp)
+target_link_libraries(nano-checkpoint-blob-tests PRIVATE nano_core)
+add_test(NAME storage_checkpoint_immutable_blobs COMMAND nano-checkpoint-blob-tests)
+set_tests_properties(storage_checkpoint_immutable_blobs PROPERTIES TIMEOUT 90 LABELS "qualification_storage_local")
+if(TARGET nano-test-sync-fault)
+ target_link_libraries(nano-checkpoint-blob-tests PRIVATE nano-test-sync-fault)
+ target_compile_definitions(nano-checkpoint-blob-tests PRIVATE NANO_SYNC_FAULT=1)
+ add_test(NAME storage_checkpoint_blob_sync_failure COMMAND nano-checkpoint-blob-tests --sync)
+ set_tests_properties(storage_checkpoint_blob_sync_failure PROPERTIES TIMEOUT 90 LABELS "qualification_storage_sync_local")
+endif()
+
 add_executable(nano-fork-checkpoint-tests tests/test_fork_checkpoint.cpp)
 target_link_libraries(nano-fork-checkpoint-tests PRIVATE nano_core)
 add_test(NAME consensus_fork_checkpoint_commit COMMAND nano-fork-checkpoint-tests)
