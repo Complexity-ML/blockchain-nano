@@ -1,5 +1,13 @@
 # Objectif : Nano C++ de niveau production
 
+## V28 terminé : saturation du graphe sur les deux Mac — 6 octobre 2026
+
+Main `ee08b6ce`, cœur `02ec0ab0`, relais compilé `2f93dda0` réutilisé par ses entrées de compilation. Contrôleur original 7884 : sortie 1, aucune avancée de finalité commune dans les 900 secondes, baseline 1284. Les trois arrêts sont propres ; audits 10017/73931 réussis, fichiers inchangés et engagements de reprise/signature comparés séparément. [Preuves terminales et diagnostic](qualification/restored-three-node-v28-terminal-graph-capacity-20261006/README.md).
+
+Le graphe restauré contient exactement 1024 blocs/1024 nœuds sur chacun des deux Mac, soit leur limite configurée. Le VPS conserve 627 blocs sur 1024 et n’est pas saturé. Le code refuse les nouvelles admissions et propositions locales à capacité atteinte : cause suffisante de refus sur les Mac, pas explication unique du WAN ni du VPS. Les nombres du rejeu canonique ne mesuraient pas la totalité de ce graphe. Ancre déjà au slot 10271 et un seul bloc avant/à la frontière finalisée ; le pruning conditionné à une nouvelle ancre ne libère pas ces descendants non finalisés. Snapshots : 90042255/89807770/54161501 octets (natif/Docker Mac/VPS). Lecteurs diagnostiques en lecture seule, mêmes engagements et fichiers inchangés ; aucun nouveau binaire de production ni image.
+
+**Prochaine correction : rétention persistante authentifiée du graphe/états, rechargement borné de branches froides et publication/restauration atomiques**, sans supprimer arbitrairement des branches valides ni seulement augmenter le plafond. Ajouter les scénarios saturation/fork choice/rechargement/archives altérées/panne, puis qualifier une nouvelle finalité commune après correction pertinente. Cette correction n’est pas implémentée ni qualifiée à ce stade. Aucun statut EIP n’est promu par ce diagnostic. Tous les critères originaux, échecs, cycle/rotation des validateurs, WAN A, ressources, bridge/Doppler et revue indépendante restent ouverts ; production non qualifiée.
+
 ## Objectif courant et ordre de livraison — 4 octobre 2026
 
 **Cible : livrer Nanobees/Nano comme L1 de production et préparer son fair
