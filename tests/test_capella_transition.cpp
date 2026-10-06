@@ -1275,6 +1275,14 @@ static void runtime_loop(const CapellaForkStore& initial,const CapellaForkBlockR
  }
  verify_cold(*runtime.reactor);if(cold_runtime)check(runtime.reactor->current().state->timed.view.anchor!=initial.timed.view.anchor,"cold runtime never pruned finalized state");
  const auto reference_memo_usage=runtime.reactor->reference_snapshot_cache_usage();if(std::getenv("NANO_TEST_RUNTIME_REFERENCE_MEMO"))check(cold_runtime&&reference_memo_usage.reuses>0&&reference_memo_usage.records<=runtime.reactor->current().state->blocks.size()&&reference_memo_usage.encoded_bytes<=limits.envelope_bytes,"runtime memo did not reuse bounded certificates");
+ if(std::getenv("NANO_TEST_DURABLE_CANONICAL_MEMO")){
+  check(cold_runtime&&!runtime.reactor->signed_votes().empty(),"durable canonical memo requires signed vote wrapper");
+  const auto before=runtime.reactor->reference_snapshot_cache_usage();const auto prior=runtime.reactor->current();const auto records=prior.state->blocks.size();
+  now=now.load()+1;runtime.reactor->tick(now.load());const auto after=runtime.reactor->reference_snapshot_cache_usage();
+  check(runtime.reactor->current().token.sequence==prior.token.sequence+1,"canonical memo probe did not publish");
+  check(after.reuses-before.reuses==3*records&&after.validated_cold_rows==before.validated_cold_rows,"durable wrapper canonical check revalidated immutable cold rows");
+  std::cout<<Json{{"scenario","durable-wrapper-canonical-memo"},{"records",records},{"reusePasses",3},{"fullColdRevalidations",after.validated_cold_rows-before.validated_cold_rows},{"signedVotes",runtime.reactor->signed_votes().size()},{"networkQualified",false}}.dump()<<std::endl;
+ }
  check(runtime.reactor->network_identity()==runtime_identity,"runtime identity changed across restart");const auto saved=runtime.reactor->current();const auto root=consensus_beacon_header_root(capella_fork_head(*saved.state,rules)->header);Json envelope=runtime_identity;envelope["kind"]="block";envelope["ssz"]=hex(*runtime.reactor->signed_block(root));auto done=std::make_shared<std::promise<CapellaConsensusService::Decision>>();auto result=done->get_future();check(runtime.admission->submit(envelope.dump(),std::make_shared<std::atomic<bool>>(false),[done](auto d){done->set_value(d);}),"runtime admission refused duplicate");check(result.wait_for(std::chrono::seconds(10))==std::future_status::ready&&result.get()==CapellaConsensusService::Decision::accepted&&runtime.reactor->current().token==saved.token,"runtime admission changed duplicate checkpoint");
  {
   Rpc rpc(*owner,"capella-test-token",AdmissionBudget::Clock::now,{}, {}, {},std::make_shared<CapellaRuntime>(runtime));check(rpc.requires_private_bind()&&rpc.local_only(),"Capella RPC exposed public bind");

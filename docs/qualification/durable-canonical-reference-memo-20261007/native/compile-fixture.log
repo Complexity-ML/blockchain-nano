@@ -1,0 +1,46 @@
+In file included from /private/tmp/nano-durable-canonical-memo-20261007/native-build/source/tests/test_capella_transition.cpp:3:
+In file included from /private/tmp/nano-durable-canonical-memo-20261007/native-build/source/tests/support/altair_transition_rules.hpp:2:
+In file included from /private/tmp/nano-durable-canonical-memo-20261007/native-build/source/tests/support/phase0_transition_rules.hpp:2:
+In file included from /private/tmp/nano-durable-canonical-memo-20261007/native-build/source/tests/support/phase0_epoch_ssz.hpp:2:
+In file included from /private/tmp/nano-durable-canonical-memo-20261007/native-build/source/tests/support/phase0_ffg_ssz.hpp:2:
+In file included from /private/tmp/nano-durable-canonical-memo-20261007/native-build/source/tests/support/phase0_minimal_ssz.hpp:2:
+/private/tmp/nano-durable-canonical-memo-20261007/native-build/source/tests/support/process.hpp:39:19: warning: 'posix_spawn_file_actions_addchdir_np' is deprecated: first deprecated in macOS 26.0 - posix_spawn_file_actions_addchdir(3) has replaced posix_spawn_file_actions_addchdir_np(3) [-Wdeprecated-declarations]
+   39 |   if(!cwd.empty())posix_spawn_file_actions_addchdir_np(&actions,cwd.c_str());
+      |                   ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/spawn.h:184:9: note: 'posix_spawn_file_actions_addchdir_np' has been explicitly marked deprecated here
+  184 | int     posix_spawn_file_actions_addchdir_np(posix_spawn_file_actions_t *,
+      |         ^
+/private/tmp/nano-durable-canonical-memo-20261007/native-build/source/tests/test_capella_transition.cpp:1307:38: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1307 |    if(!acquired){release.set_value();holder.get();check(false,"queue fixture did not hold real admission mutex");}
+      |                                      ^~~~~~~~~~
+/private/tmp/nano-durable-canonical-memo-20261007/native-build/source/tests/test_capella_transition.cpp:1310:101: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1310 |    if(clock_ready.wait_for(std::chrono::seconds(2))!=std::future_status::ready){release.set_value();holder.get();clock_waiter.get();check(false,"clock poll did not enter while admission held");}
+      |                                                                                                     ^~~~~~~~~~
+/private/tmp/nano-durable-canonical-memo-20261007/native-build/source/tests/test_capella_transition.cpp:1310:114: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1310 |    if(clock_ready.wait_for(std::chrono::seconds(2))!=std::future_status::ready){release.set_value();holder.get();clock_waiter.get();check(false,"clock poll did not enter while admission held");}
+      |                                                                                                                  ^~~~~~~~~~~~~~~~
+/private/tmp/nano-durable-canonical-memo-20261007/native-build/source/tests/test_capella_transition.cpp:1319:24: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1319 |    release.set_value();clock_waiter.get();const auto archive=holder.get();const auto status=blocked.get(),chain_id=identity.get(),read=beacon.get();
+      |                        ^~~~~~~~~~~~~~~~
+/private/tmp/nano-durable-canonical-memo-20261007/native-build/source/tests/test_capella_transition.cpp:1477:95: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1477 |    if(ready.wait_for(std::chrono::seconds(5))!=std::future_status::ready){unblock.set_value();acquisition.get();check(false,"capture not held");}
+      |                                                                                               ^~~~~~~~~~~~~~~
+/private/tmp/nano-durable-canonical-memo-20261007/native-build/source/tests/test_capella_transition.cpp:1481:61: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1481 |    unblock.set_value();const bool refused=acquisition.get();control.get();bool generation_same=false;try{generation_same=generation.get()==gen;}catch(const std::runtime_error&){}
+      |                                                             ^~~~~~~~~~~
+/private/tmp/nano-durable-canonical-memo-20261007/native-build/source/tests/test_capella_transition.cpp:1517:35: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1517 |   if(!locked){unblock.set_value();writer.get();check(false,"Status probe admission lock not held");}
+      |                                   ^~~~~~~~~~
+/private/tmp/nano-durable-canonical-memo-20261007/native-build/source/tests/test_capella_transition.cpp:1535:35: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1535 |   if(!locked){unblock.set_value();blocked_writer.get();check(false,"Admission lock fixture not reached");}
+      |                                   ^~~~~~~~~~~~~~~~~~
+/private/tmp/nano-durable-canonical-memo-20261007/native-build/source/tests/test_capella_transition.cpp:1547:36: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1547 |  if(!captured){release.set_value();reader.get();check(false,"Concurrent Beacon reader never captured publication");}
+      |                                    ^~~~~~~~~~
+/private/tmp/nano-durable-canonical-memo-20261007/native-build/source/tests/test_capella_transition.cpp:1552:70: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1552 |  if(!export_captured){release.set_value();export_release.set_value();reader.get();exporter.get();check(false,"Concurrent block exporter never captured publication");}
+      |                                                                      ^~~~~~~~~~
+/private/tmp/nano-durable-canonical-memo-20261007/native-build/source/tests/test_capella_transition.cpp:1552:83: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1552 |  if(!export_captured){release.set_value();export_release.set_value();reader.get();exporter.get();check(false,"Concurrent block exporter never captured publication");}
+      |                                                                                   ^~~~~~~~~~~~
+12 warnings generated.

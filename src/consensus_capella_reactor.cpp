@@ -155,7 +155,7 @@ std::tuple<CapellaForkStore,CapellaSignedVotes,CapellaSignedVotes,CapellaPending
   }
  }
  const std::function<void(const CapellaColdReference&,std::string_view)> no_hot=[](const auto&,auto){throw std::logic_error("Unexpected restored hot row");};
- archive_require(durable_snapshot(store,votes,proofs,changes,exits,rules,limits,check,nullptr,cold?&no_hot:nullptr)==encoded);return {std::move(store),std::move(votes),std::move(proofs),std::move(changes),std::move(exits)};
+ archive_require(durable_snapshot(store,votes,proofs,changes,exits,rules,limits,check,nullptr,cold?&no_hot:nullptr,cold?memo:nullptr)==encoded);return {std::move(store),std::move(votes),std::move(proofs),std::move(changes),std::move(exits)};
 }
 
 Json recovery_token_json(const std::optional<ForkCheckpointToken>& token){return token?Json{{"sequence",quantity(Int(std::to_string(token->sequence)))},{"digest",hex(token->digest)}}:Json(nullptr);}
