@@ -11,6 +11,15 @@
 using Json=nlohmann::json;
 namespace asio=boost::asio;namespace beast=boost::beast;namespace http=beast::http;using tcp=asio::ip::tcp;
 using Reply=std::function<void(Json)>;
+// This hint is emitted only for an authenticated-loopback RPC refusal which
+// occurs before a capture reservation. A transport failure is never a hint.
+inline Json core_capture_busy_hint(const std::string& method,const Json& response){
+ if(method!="nano_capellaCatalogAcquire"||!response.is_object()||response.contains("result")||response.value("jsonrpc",Json())!="2.0"||response.value("id",Json())!=1)return nullptr;
+ const auto error=response.value("error",Json());
+ if(!error.is_object()||error.value("code",Json())!=-32005||error.value("message",Json())!="Capella inventory capture busy")return nullptr;
+ return Json{{"nanoCoreCaptureBusy",true}};
+}
+inline bool core_capture_busy(const Json& value){return value==Json{{"nanoCoreCaptureBusy",true}};}
 class CoreRequest:public std::enable_shared_from_this<CoreRequest>{
  beast::tcp_stream stream_;beast::flat_buffer buffer_;http::request<http::string_body> request_;
  std::optional<http::response_parser<http::string_body>> parser_;Reply reply_;CoreRpcTrace trace_;std::string method_;
@@ -27,7 +36,7 @@ class CoreRequest:public std::enable_shared_from_this<CoreRequest>{
    if(ec){core_rpc_trace(self->trace_,self->method_,"read-error");self->finish(nullptr);return;}
    auto response=self->parser_->release();auto json=Json::parse(response.body(),nullptr,false);
    const bool reusable=response.keep_alive()&&self->buffer_.size()==0;
-   if(response.result()!=http::status::ok||!json.is_object()||!json.contains("result")){core_rpc_trace(self->trace_,self->method_,response.result()!=http::status::ok?"http-error":json.is_object()&&json.contains("error")?"rpc-error":"malformed-response",response.result_int(),json,response.body());self->finish(nullptr,reusable);return;}
+   if(response.result()!=http::status::ok||!json.is_object()||!json.contains("result")){core_rpc_trace(self->trace_,self->method_,response.result()!=http::status::ok?"http-error":json.is_object()&&json.contains("error")?"rpc-error":"malformed-response",response.result_int(),json,response.body());self->finish(response.result()==http::status::ok?core_capture_busy_hint(self->method_,json):Json(nullptr),reusable);return;}
    self->finish(std::move(json["result"]),reusable);
   });
  });}

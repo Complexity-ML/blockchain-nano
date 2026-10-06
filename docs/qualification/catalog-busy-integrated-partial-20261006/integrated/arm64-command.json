@@ -1,0 +1,23 @@
+[
+  "docker",
+  "run",
+  "--rm",
+  "--network",
+  "none",
+  "--memory",
+  "4g",
+  "--cpus",
+  "2",
+  "--ulimit",
+  "nofile=65536:65536",
+  "--name",
+  "nano-catalog-busy-integrated-arm64-20261006",
+  "-v",
+  "/private/tmp/nano-catalog-busy-integrated-20261006:/drivers",
+  "-v",
+  "nano-clean-arm64-build-20261002:/build",
+  "sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb",
+  "bash",
+  "/drivers/all.sh",
+  "arm64"
+]

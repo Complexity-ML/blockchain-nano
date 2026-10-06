@@ -1,0 +1,11 @@
+# Borne du test de préparation — 2026-10-06
+
+Le test historique à 20 tours échoué dans catalog-busy-integrated-partial-20261006 reste conservé et n'est pas requalifié rétroactivement. Le contre-exemple à 60 ms échoue dans les deux versions ; un diagnostic séparé imposant un progrès de curseur authentifié ou d'ACK à chaque tour finit à 45 tours dans les deux versions (session 51450, sortie 0). Ce résultat explique l'insuffisance générale de la borne 20 ; il n'établit pas l'ordonnancement exact de l'échec ARM initial.
+
+Correction du TEST, pas accélération du runtime : chaîne fixe N=9, parcours sans cache, au plus N+(N-1)+...+1 tours de traversée et N tours de callbacks d'admission, soit 54. Ce raisonnement suppose au moins une étape authentifiée utile par tour et un ACK définitif disponible ; une nouvelle assertion vérifie ce progrès dans chaque tour lent. Retards sans progrès font échouer le test ; aucune garantie temporelle WAN n'en découle. Quotas 3 exports/2 admissions, délai 100 ms, gardes de callbacks tardifs et exigences de 9 ACK réels conservés.
+
+Dix scénarios, dont slow-one-step à 60 ms, passent sur natif/ARM64/AMD64 (sessions 6543/10997/56288, toutes sorties 0). ARM slow-duplicate prend 22 tours : ancienne borne insuffisante malgré progrès à chaque tour. slow-one-step prend 45 tours sur les trois. Erreurs de chemins/headers et sed BSD du driver conservées, puis seul driver réparé. Même test compilé avec les flags/link CMake des SDK existants ; aucun build d'image ni reprise CTest intégrale. Cette qualification manuelle ne valide pas encore l'enregistrement du nouveau mode CTest par une reconfiguration.
+
+Les 74 autres fichiers du snapshot P2P sont identiques à l'archive partielle ; seules CMakeLists et le test changent. Les empreintes et journaux forensiques ARM sont récupérés après l'échec original, sans relancer ni changer sa sortie 8. Sources après capture vérifiées ; hashes binaires disponibles.
+
+Prochaine étape : vérifier l'enregistrement CTest, reconstruire les consommateurs de headers dans la fixture core concernée et qualifier les modes wire/HTTP applicables avant la campagne restaurée V27. Finalité commune WAN, V26 FAILED, exigences de production et revue indépendante restent ouverts.

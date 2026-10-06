@@ -18,7 +18,8 @@ inline void core_rpc_trace(const CoreRpcTrace& trace,const std::string& method,c
    if(error.contains("code")&&error["code"].is_number_integer())record["rpcCode"]=error["code"];
    if(error.contains("message")&&error["message"].is_string()){
     const auto& message=error["message"].get_ref<const std::string&>();
-    if(message=="Capella inventory request retired")record["cause"]="inventory-request-retired";
+    if(message=="Capella inventory capture busy")record["cause"]="inventory-capture-busy";
+    else if(message=="Capella inventory request retired")record["cause"]="inventory-request-retired";
     else if(message=="Capella inventory handle unavailable")record["cause"]="inventory-handle-unavailable";
     else if(message=="Invalid params")record["cause"]="invalid-params";
     else if(message=="Internal error")record["cause"]="internal-error";

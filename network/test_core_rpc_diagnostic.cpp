@@ -9,6 +9,7 @@ int main(){try{
  core_rpc_trace(trace,"nano_capellaCatalogAcquire","rpc-error",200,error);
  check(calls==1&&seen["cause"]=="inventory-request-retired"&&seen["rpcCode"]==-32602,"retirement cause lost");
  check(seen.dump().find("PRIVATE_PAYLOAD")==std::string::npos,"error data leaked");
+ error["error"]["message"]="Capella inventory capture busy";error["error"]["code"]=-32005;core_rpc_trace(trace,"nano_capellaCatalogAcquire","rpc-error",200,error);check(seen["cause"]=="inventory-capture-busy"&&seen["rpcCode"]==-32005&&seen.dump().find("PRIVATE_PAYLOAD")==std::string::npos,"busy cause lost or leaked data");
  error["error"]["message"]="PRIVATE_TOKEN";core_rpc_trace(trace,"PRIVATE_METHOD","rpc-error",200,error);
  check(seen["method"]=="other"&&seen["cause"]=="unknown"&&seen.dump().find("PRIVATE_")==std::string::npos,"unknown text leaked");
  core_rpc_trace(trace,"nano_capellaCatalogPage","malformed-response",200,J::array());check(seen["rpcCode"].is_null(),"malformed response acquired code");
@@ -19,5 +20,5 @@ int main(){try{
  core_rpc_trace(trace,"nano_capellaStatus","http-error",503,nullptr,"RPC simulation queue wait exceeded");check(seen["cause"]=="rpc-queue-expired","queue expiry lost");
  core_rpc_trace(trace,"nano_capellaStatus","http-error",503,nullptr,"PRIVATE_HTTP_PAYLOAD");check(seen["cause"]=="unknown"&&seen.dump().find("PRIVATE_")==std::string::npos,"HTTP body leaked");
  core_rpc_trace(trace,"nano_capellaStatus","rpc-error",200,nullptr,"RPC simulation capacity exceeded");check(seen["cause"]=="unknown","unrelated status forged capacity");
- std::cout<<"10 diagnostic classification/redaction/observer cases passed; no transport or WAN qualification\n";
+ std::cout<<"11 diagnostic classification/redaction/observer cases passed; no transport or WAN qualification\n";
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

@@ -11,8 +11,17 @@ int main(int argc,char** argv){try{
 #ifdef NANO_TEST_DEPENDENCY_PREPARATION
  auto preparation=std::make_shared<CapellaDependencyPreparation>();
 #endif
+ // With no export cache, an admitted ancestor restarts traversal at the target.
+ // If a timed turn processes only one export, a chain of N blocks takes at most
+ // N+(N-1)+...+1 traversal turns, plus N turns for deferred admission callbacks.
+ // This is a fixture bound, not a production quota or a 20-turn latency promise.
+ const unsigned chain_length=9;
+ const unsigned progress_bound=chain_length*(chain_length+1)/2+chain_length;
+ const bool slow=mode=="slow"||mode=="slow-duplicate"||mode=="slow-one-step";
  unsigned total_exports=0,total_sends=0,attempts=0;
- for(;attempts<20&&!knowledge->acknowledged(root('9'));++attempts){
+ for(;attempts<progress_bound&&!knowledge->acknowledged(root('9'));++attempts){
+  const auto admitted_before=knowledge->retained();
+  const auto cursor_before=preparation->cursor.empty()?root('9'):preparation->cursor;
   asio::io_context io;InboundBudget budget;auto ingress=std::make_shared<AltairMessageIngress>(p,budget);
   unsigned exports=0,sends=0,done=0;Json result;Reply late;std::string cursor_at_done;std::shared_ptr<CapellaHeadCatalogRelay> relay;
   auto core=[&](std::string method,Json args,Reply reply){Json v;
@@ -27,8 +36,8 @@ int main(int argc,char** argv){try{
    else if(method=="nano_capellaCatalogPage")v={{"kind","block"},{"sequence","0x1"},{"digest",root('d')},{"entries",Json::array()},{"next",nullptr}};
    else if(method=="nano_capellaCatalogRelease")v=true;
    else throw std::runtime_error("unexpected core operation");
-   if(method=="nano_capellaExport"&&(mode=="slow"||mode=="slow-duplicate")){
-    auto timer=std::make_shared<asio::steady_timer>(io);timer->expires_after(40ms);timer->async_wait([timer,reply,v,mode](auto e){if(!e){reply(v);if(mode=="slow-duplicate")reply(v);}});return;
+   if(method=="nano_capellaExport"&&slow){
+    auto timer=std::make_shared<asio::steady_timer>(io);timer->expires_after(mode=="slow-one-step"?60ms:40ms);timer->async_wait([timer,reply,v,mode](auto e){if(!e){reply(v);if(mode=="slow-duplicate")reply(v);}});return;
    }
    reply(v);if(mode=="duplicate")reply(v);
   };
@@ -40,7 +49,7 @@ int main(int argc,char** argv){try{
 #ifdef NANO_TEST_DEPENDENCY_PREPARATION
    ,preparation
 #endif
-  );relay->start(100ms);io.run();if(late){const auto before=knowledge->retained();late(Json{{"accepted",true}});io.restart();io.run();check(knowledge->retained()==before,"late unknown ACK seeded peer knowledge");}check(preparation->cursor==cursor_at_done,"late export mutated preparation after completion");check(done==1,"completion duplicated");check(exports<=3&&sends<=2,"attempt exceeded unchanged preparation or admission bound");check(!result.value("success",false)||knowledge->acknowledged(root('9')),"claimed recent head without actual ACK");
+  );relay->start(100ms);io.run();if(late){const auto before=knowledge->retained();late(Json{{"accepted",true}});io.restart();io.run();check(knowledge->retained()==before,"late unknown ACK seeded peer knowledge");}check(preparation->cursor==cursor_at_done,"late export mutated preparation after completion");check(done==1,"completion duplicated");if(slow)check(knowledge->retained()>admitted_before||(!preparation->cursor.empty()&&preparation->cursor<cursor_before),"slow turn made no authenticated traversal or admission progress");check(exports<=3&&sends<=2,"attempt exceeded unchanged preparation or admission bound");check(!result.value("success",false)||knowledge->acknowledged(root('9')),"claimed recent head without actual ACK");
  }
  std::cout<<"mode="<<mode<<" attempts="<<attempts<<" exports="<<total_exports<<" sends="<<total_sends<<" targetAcknowledged="<<knowledge->acknowledged(root('9'))<<"; modeled receiver, not WAN qualification\n";
  check(knowledge->acknowledged(root('9'))&&total_sends==(mode=="refused"||mode=="lost"||mode=="cancel"?10u:9u),"repeated bounded turns never admitted deep target");

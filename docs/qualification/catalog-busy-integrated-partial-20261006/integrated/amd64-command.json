@@ -1,0 +1,10 @@
+[
+  "/usr/bin/ssh",
+  "-4",
+  "-o",
+  "BatchMode=yes",
+  "-o",
+  "ConnectTimeout=8",
+  "ubuntu@145.239.199.166",
+  "sudo -n docker run --rm --network none --memory 4g --cpus 2 --ulimit nofile=65536:65536 --name nano-catalog-busy-integrated-amd64-20261006 -v /tmp/nano-catalog-busy-integrated-20261006:/drivers -v nano-clean-rpc-build-20261002:/build sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14 bash /drivers/all.sh amd64"
+]
