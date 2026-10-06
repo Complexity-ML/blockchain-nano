@@ -44,8 +44,9 @@ class CapellaDurableReactor {
  // parent/profile, no peer-supplied state, no journal or durable writes while
  // incomplete. Each retry advances at most one epoch within replay_slots.
  std::optional<CapellaBlockPreparation> incoming_preparation_;
- // Frames are scoped to one structurally checked incoming block. Targets are
- // discovered only after its full signed transition; never accepted from peers.
+ // Bounded shared target continuations, bound to admitted root/epoch/profile.
+ // Required contexts come from checked block processing, never peer state.
+ // Last requested block does not invalidate authenticated continuation work.
  ConsensusRoot incoming_target_block_{};
  std::vector<CapellaTargetPreparation> incoming_targets_;
  std::optional<CapellaDutyPreparation> local_preparation_;

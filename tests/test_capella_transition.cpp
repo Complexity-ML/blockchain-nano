@@ -60,7 +60,7 @@ static bool owner_sync=false;
 static bool owner_witness=false;
 static bool scheduled=false,sync_rotation=false,clock_diagnostics=false,duty_timing=false,signer_health=false;
 static bool configured_runtime=false;
-static bool slot_continuation=false,prepared_block=false,capacity_pressure=false,atomic_proposal=false,proposal_gap=false;
+static bool slot_continuation=false,prepared_block=false,capacity_pressure=false,atomic_proposal=false,proposal_gap=false,incoming_alternation=false;
 static bool automatic_recovery=false;
 static bool capella_http=false,capella_http_queue=false;
 static std::string cli_binary;static Json cli_genesis;static bool managed_cli=false;static std::string daemon_binary;static bool network_cli=false;static bool multipeer_cli=false;static bool distributed_cli=false;static bool sync_distributed_cli=false,distributed_sync_rotation=false;static bool transport_outage_cli=false;static fs::path network_export;
@@ -1577,6 +1577,34 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
    auto invalid=included_wire;invalid[4]^=1;check(!prepare_capella_contextual_received_block(timed,invalid,rules,preparation,targets,3,100000),"contextual block bypassed BLS signature");++checks;
    Temp worker_directory;Genesis wg;wg.chain_id=r.chain_id;wg.consensus="beacon";wg.evm_revision=EvmRevision::Shanghai;wg.block=genesis;wg.state=genesis_state;
    auto worker_limits=crash_limits;worker_limits.replay_slots=3;
+   if(incoming_alternation){
+    // A slashable proposer sends two individually valid siblings. Alternating
+    // retries must not erase authenticated target work needed by the honest one.
+    auto competing_body=included_body;competing_body[168]^=1;
+    const auto competing=preparation.construct(slot,identity->index,competing_body,parent.execution_block.header,parent.execution_state,history,100000);
+    check(bool(competing),"alternating sibling construction failed");const auto competing_wire=sign(competing->message_ssz,identity->index);
+    check(competing_wire!=included_wire&&prepare_capella_received_block(timed,competing_wire,rules,slot-parent.header.slot,100000).has_value(),"competing fixture is not an individually valid distinct block");
+    Blockchain alternating_owner(worker_directory/"alternating-owner",wg);ChainStore alternating_witness(worker_directory/"alternating-witness");
+    auto alternating=std::make_unique<CapellaDurableReactor>(alternating_owner,rules,worker_limits,initial,std::function<void()>{},&alternating_witness);alternating->tick(clock);
+    const auto before=alternating->current().token;bool accepted=false,sibling_accepted=false;size_t attempts=0;
+    const auto maximum=2*(slot-parent.header.slot)/3+12;
+    while(!accepted&&attempts<maximum){
+     ++attempts;for(const auto* input:{&competing_wire,&included_wire}){
+      const auto token=alternating->current().token;const bool admitted=alternating->block(*input);
+      if(!admitted)check(alternating->current().token==token,"incomplete alternating preparation published state");
+      if(input==&included_wire)accepted=admitted;else sibling_accepted|=admitted;
+     }
+    }
+    check(accepted,"Alternating valid blocks erased incoming target continuation");
+    const auto honest_root=consensus_beacon_header_root(capella_fork_head(*expected,rules).header);const auto current=alternating->current();
+    check(current.token.sequence>before.sequence&&current.state->blocks.at(honest_root).state==expected->blocks.at(honest_root).state&&current.state->blocks.at(honest_root).execution_state.root()==expected->blocks.at(honest_root).execution_state.root(),"alternating block differs from full-gap oracle");
+    check(alternating->signed_block(honest_root)==std::optional<Bytes>(included_wire),"alternating block signed archive differs");
+    auto invalid=competing_wire;invalid[4]^=1;check(!alternating->block(invalid)&&alternating->current().token==current.token,"target cache bypassed invalid signature");
+    check(alternating->block(included_wire)&&alternating->current().token==current.token,"alternating duplicate rewrote checkpoint");
+    alternating.reset();CapellaDurableReactor reopened(alternating_owner,rules,worker_limits,alternating_witness);
+    check(reopened.current().token==current.token&&reopened.signed_block(honest_root)==std::optional<Bytes>(included_wire),"alternating witness reopen lost commitment/archive");
+    std::cout<<Json{{"scenario","capella-incoming-target-alternation"},{"attemptPairs",attempts},{"maximumPairs",maximum},{"individuallyValidSiblings",true},{"siblingAdmitted",sibling_accepted},{"honestBlockProgress",true},{"fullGapOracleEqual",true},{"invalidSignatureRejected",true},{"witnessReopened",true},{"networkQualified",false}}.dump()<<std::endl;return;
+   }
    {
     Blockchain warm_owner(worker_directory/"warm-owner",wg);ChainStore warm_witness(worker_directory/"warm-witness");CapellaDurableReactor warmed(warm_owner,rules,worker_limits,initial,{},&warm_witness);warmed.tick(clock);
     size_t attempts=0;while(!warmed.vote(vote))check(++attempts<slot/3+4,"prewarmed included target stalled");
@@ -2386,6 +2414,7 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
 int main(int argc,char** argv){try{executable=argv[0];
 if(argc==2&&(std::string(argv[1])=="--atomic-proposal"||std::string(argv[1])=="--proposal-gap")){atomic_proposal=std::string(argv[1])=="--atomic-proposal";proposal_gap=!atomic_proposal;prepared_block=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--capacity-pressure"){capacity_pressure=true;prepared_block=true;scenario(false);return 0;}
+if(argc==2&&std::string(argv[1])=="--incoming-alternation"){incoming_alternation=true;prepared_block=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--prepared-block"){prepared_block=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--slot-continuation"){slot_continuation=true;scenario(false);return 0;}
 if(argc==2&&std::string(argv[1])=="--signer-health"){signer_health=true;scenario(false);return 0;}
