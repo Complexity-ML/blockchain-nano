@@ -4862,3 +4862,6 @@ Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, d
 
 
 2026-10-06 — Préparation bornée des dépendances par pair intégrée : cible/cursor locaux authentifiés, mêmes plafonds et ACK effectifs, remise à zéro aux deux chemins de changement de session. Natif/ARM64/AMD64 : quatorze suites affectées + sept variantes nouvelles, runtime nano-p2p compilé et scénario wire ciblé ; 21 tests Docker passent, sources figées vérifiées et cœur d285db64 réutilisé sans modification. Liaison native initiale erronée exclue, nouvel objet relié et scénario exécuté après terminal original. [Preuves ciblées](qualification/dependency-preparation-integrated-20261006/README.md). Effet sur finalité WAN v22 non qualifié ; autres critères et revue indépendante ouverts.
+
+
+2026-10-06 — Préparation v23 : états Mac/VPS post-v22 et témoins audités, copies locales sans identité de pair et volume VPS conservé sur son hôte. Cœur inchangé et nouveau relais de préparation bornée qualifié dans son périmètre natif/ARM64/AMD64 ; mêmes limites et trois nouvelles finalités communes en 900 s restent à démontrer. Préparation seule ; production et revue indépendante ouvertes. Preuves restored-three-node-v23-dependency-preparation-prepare-20261006/.
