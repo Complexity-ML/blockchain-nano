@@ -7281,3 +7281,9 @@ Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichi
 
 
 2026-10-06 — Préparation v18 : engagements post-v17 et journaux conservés, catalogue à sélection équitable qualifié dans son périmètre local. Trois finalités communes nouvelles en 900 s restent à démontrer ; préparation seule. Production et revue indépendante ouvertes. Preuves restored-three-node-v18-namespace-selection-prepare-20261006/.
+
+
+2026-10-06 — Reprise v18 namespace de sélection FAILED : contrôleur 53478 / sortie 1, checkout f457bd3b, cœur d8d5b46c / relais 5288e024 ; 0 avancées communes observées selon le critère original. Traces de relais/ressources et hypothèses de parcours enregistrées ; cause WAN globale non prouvée. Trois propriétaires arrêtés et audits read-only des engagements, journaux/témoins et historique canonique ; fichiers inchangés. Pas de compilation concurrente, ni transfert de base inter-hôtes. Périmètre privé exact ; production et revue indépendante restent ouvertes. [Preuves v18](qualification/restored-three-node-v18-terminal-20261006/README.md).
+
+
+Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, donc aucune saturation du graphe à cette frontière arrêtée. Le lecteur enrichi conserve exactement les autres champs de capture du lecteur qualifié, sans écriture de données. Cela ne prouve pas les causes de tous les refus pendant la campagne. Les participations récentes des deux états Mac restent limitées à leurs propriétaires ; finalité commune non avancée.

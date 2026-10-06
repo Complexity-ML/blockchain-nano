@@ -1,0 +1,30 @@
+{
+  "partial": true,
+  "networkQualified": false,
+  "campaignSession": 53478,
+  "sourceSHA256": {
+    "network/core.hpp": "eb5b81b9f7d61a7ff78618ce58eb324bf1c301f215b7b70fb0ff80cf42457671",
+    "network/capella_inventory_sessions.hpp": "bd41240e252ec226e731509c3163d7ade85624db96398329dce0371203fa376d",
+    "network/capella_catalog_relay.hpp": "d6beaf2fb0c8ca7115d6a76464502ecd0fd55b40bdb6b6d12806ff55073cfca3",
+    "src/consensus_capella_fork_store.cpp": "50363e9e4f3e408fdff1be675d36baccc3949d0771b47469db710b7faead0963"
+  },
+  "establishedSourceFacts": [
+    "CoreRequest returns null for any response without result, including JSON-RPC errors; catalog invalid-response does not identify the RPC cause",
+    "Inventory acquire can reject a retired generation or exceed session/root budget; current traces do not distinguish these paths",
+    "Pruning requires finalized ancestry and checks retained checkpoint context and unchanged fork choice",
+    "Selection boundary survives retirement namespace rotation; peer/session reset remains explicit"
+  ],
+  "notProven": [
+    "WAN failure cause",
+    "Common-finality recovery",
+    "Whether inventory failures are capacity, retirement, cancellation or transport",
+    "Whether retention contributes to refused historical payloads"
+  ],
+  "diagnosticNextStep": [
+    "Keep running campaign unchanged until terminal and three stops",
+    "Read-only audits compare complete signer pins and cross-owner participation",
+    "If needed, add bounded optional RPC error classification with no params, tokens, payloads or raw error text; observer failure must not alter return or retry behavior",
+    "Test success/malformed/error/observer exceptions and preserve no automatic retry of ambiguous calls"
+  ],
+  "staleCommentToCorrectAfterCampaign": "Catalog selection header still says reset on local generation; implementation deliberately resets only at peer/session boundaries"
+}

@@ -1,0 +1,141 @@
+{
+  "mac-native": {
+    "catalogAttempts": 11,
+    "blockAttempts": 2,
+    "payloadsAdmittedByKind": {
+      "block": 0,
+      "attestation": 0
+    },
+    "distinctSelectionPositions": 2,
+    "terminations": {
+      "head-or-catalog-deadline": 2,
+      "catalog-exhausted": 8,
+      "delivery-unconfirmed": 1
+    },
+    "lastBlockResult": {
+      "catalogProgress": {
+        "catalogExhausted": false,
+        "delivered": 0,
+        "exports": 48,
+        "firstFailureReason": "admission-rejected",
+        "firstFailureStage": "delivery",
+        "inProgress": true,
+        "payloadsAdmitted": 0,
+        "rejected": 47,
+        "scanned": 47,
+        "selectionAfter": "0x22eb9fa907140d33d45187bc9bd6cc7a489d8fc603486c4306ec1f20204417f8",
+        "selectionStartAfter": "0x0d55af26a1b32b8a7546b0ba18d2ae47e6a1549165d517fa7edebdb95d059777",
+        "skippedKnown": 0,
+        "stage": "delivery",
+        "terminationReason": null,
+        "terminationStage": null
+      },
+      "closed": false,
+      "elapsedMs": 30000,
+      "event": "test-capella-catalog-relay",
+      "failureStage": "catalog",
+      "headPriority": "historical-first",
+      "kind": "block",
+      "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+      "reason": "head-or-catalog-deadline",
+      "stage": "catalog",
+      "success": false
+    },
+    "sendOutcomes": {
+      "unconfirmed": 33,
+      "accepted": 1
+    }
+  },
+  "mac-docker": {
+    "catalogAttempts": 10,
+    "blockAttempts": 1,
+    "payloadsAdmittedByKind": {
+      "block": 0,
+      "attestation": 0
+    },
+    "distinctSelectionPositions": 1,
+    "terminations": {
+      "head-or-catalog-deadline": 1,
+      "catalog-exhausted": 8,
+      "delivery-unconfirmed": 1
+    },
+    "lastBlockResult": {
+      "catalogProgress": {
+        "catalogExhausted": false,
+        "delivered": 0,
+        "exports": 25,
+        "firstFailureReason": "admission-rejected",
+        "firstFailureStage": "delivery",
+        "inProgress": true,
+        "payloadsAdmitted": 0,
+        "rejected": 24,
+        "scanned": 24,
+        "selectionAfter": "0x0a457791efbeac4a7c13c6dc9ef65d0cf5891753912f74ae933d60eb23246bcd",
+        "selectionStartAfter": null,
+        "skippedKnown": 0,
+        "stage": "delivery",
+        "terminationReason": null,
+        "terminationStage": null
+      },
+      "closed": false,
+      "elapsedMs": 30000,
+      "event": "test-capella-catalog-relay",
+      "failureStage": "catalog",
+      "headPriority": "dependency-depth-catalog-fallback",
+      "kind": "block",
+      "peerId": "12D3KooWA1Du6tNmK3BEdNmy8VjEDd2mm6QNkmQkTnDn64LLaBW1",
+      "reason": "head-or-catalog-deadline",
+      "stage": "catalog",
+      "success": false
+    },
+    "sendOutcomes": {
+      "unconfirmed": 14
+    }
+  },
+  "vps-docker": {
+    "catalogAttempts": 41,
+    "blockAttempts": 5,
+    "payloadsAdmittedByKind": {
+      "block": 0,
+      "attestation": 0
+    },
+    "distinctSelectionPositions": 1,
+    "terminations": {
+      "invalid-response": 21,
+      "null": 12,
+      "head-or-catalog-deadline": 1,
+      "head-reference-unavailable": 1,
+      "catalog-exhausted": 6
+    },
+    "lastBlockResult": {
+      "catalogElapsedMs": 43,
+      "catalogExhausted": false,
+      "closed": true,
+      "delivered": 0,
+      "elapsedMs": 4176,
+      "event": "test-capella-catalog-relay",
+      "exports": 0,
+      "failureStage": "open",
+      "headPriority": "historical-first-head-unconfirmed",
+      "kind": "block",
+      "payloadsAdmitted": 0,
+      "peerId": "12D3KooWB8vbhST7SGh2qDbQLpgMJTA1t5sq9fLcVor4wKuFUBp7",
+      "reason": "invalid-response",
+      "rejected": 0,
+      "scanned": 0,
+      "selectionAfter": null,
+      "selectionStartAfter": null,
+      "skippedKnown": 0,
+      "stage": "close",
+      "success": false,
+      "syncSlot": null,
+      "terminationReason": "invalid-response",
+      "terminationStage": "open"
+    },
+    "sendOutcomes": {
+      "accepted": 8
+    }
+  },
+  "partial": true,
+  "networkQualified": false
+}
