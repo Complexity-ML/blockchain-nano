@@ -7931,3 +7931,6 @@ Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, d
 
 
 2026-10-06 — Préparation v26 : états Mac/VPS post-v25 et témoins audités, copies locales sans identité de pair et volume VPS conservé sur son hôte. Cœur ee5e278b qualifié pour réservation de catalogue/contrôles RPC ; relais ad536163 réutilisé avec preuve de dépendances compilateur inchangées sur trois architectures. Mêmes limites, trois nouvelles finalités communes en 900 s à démontrer. Préparation seule, échec V25 et revue indépendante ouverts. Preuves restored-three-node-v26-catalog-reservation-prepare-20261006/.
+
+
+2026-10-06 — V26 FAILED : original 95043 / sortie 1, checkout 80292a4d, cœur ee5e278b ; 0 nouvelles finalités communes distinctes, trois requises en 900 s. Trois arrêts normaux, engagements/témoins et hashes vérifiés après arrêt. 2 changements vers des têtes plus anciennes conservés. Diagnostics publics bornés : CatalogAcquire -32005 sur VPS, interprété comme invalid-response par le relais ; causalité non démontrée. Limites inchangées, aucune image reconstruite ni relance. [Preuves V26](qualification/restored-three-node-v26-terminal-20261006/README.md). Tous critères non démontrés et revue indépendante restent ouverts.

@@ -1,0 +1,28 @@
+{
+  "revision": "80292a4d9e876c1991130af3ce80f6d648c5eb40",
+  "observedAt": "2026-10-06T12:52:22.064596+00:00",
+  "scope": "VPS last 1200 log lines, public fields filtered on VPS before transfer; not complete campaign",
+  "busyAcquireInWindow": 316,
+  "notFullCampaignTotals": true,
+  "acceptedBlockSendsInWindow": 100,
+  "sourceFacts": [
+    "core.hpp discards structured RPC errors to nullptr after diagnostic",
+    "catalog relay treats missing handle as invalid-response and closes request",
+    "existing category schedule retries later using a fresh request, not the same acquire"
+  ],
+  "hypothesis": "Temporary capture contention is indistinguishable from invalid-response to the relay. This may increase catalog open/retire churn; current observations do not establish causal finality failure.",
+  "qualificationPending": "Original v26 controller remains active; no result claimed",
+  "runtimeChanged": false,
+  "sourceHashes": {
+    "network/core.hpp": "83a9f1d950358e624631684b55348906f4a94f6fa9e0d7adca9eedbf19ec8e84",
+    "network/capella_catalog_relay.hpp": "d6beaf2fb0c8ca7115d6a76464502ecd0fd55b40bdb6b6d12806ff55073cfca3",
+    "network/capella_relay_schedule.hpp": "1d8e5adf72592b217253b2c1018cf7ed40084747b36dc793c0906b43f7adb7f3"
+  },
+  "macComparison": {
+    "source": "/private/tmp/nano-v26-live-mac-docker-rpc-methods-20261006.json",
+    "rpcFailuresInWindow": 0,
+    "acceptedIncomingBlockAcksInWindow": 158,
+    "scope": "bounded last 1200 log lines; overlapping windows not additive",
+    "inference": "RPC capture contention observed on VPS is not a universal node failure; incoming ACKs do not prove head/finality advancement"
+  }
+}
