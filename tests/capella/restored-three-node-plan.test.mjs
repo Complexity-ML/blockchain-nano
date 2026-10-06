@@ -85,3 +85,17 @@ test('cold planner preserves already matching source options',()=>{
  for(const c of [x.macConfig,x.vpsConfig])c.capella.coldCheckpoint=structuredClone(x.coldCheckpoint);
  const before=structuredClone(x),p=restoredThreeNodePlan(x);assert.deepEqual(x,before);assert.deepEqual(p.sourceCheckpoints,{mac:x.macCapsule.restart,vps:x.vpsCapsule.restart});for(const c of p.configs)assert.deepEqual(c.capella.coldCheckpoint,x.coldCheckpoint);
 });
+
+for(const blocks of ['0x401','0x1000','0xf4240'])test('explicit capture budget permits local retained graph '+blocks+' without changing pins',()=>{
+ const x=structuredClone(fixture);x.retentionExperiment={blocks,rationale:'Explicit bounded cold metadata experiment; saturation recovery remains open.',captureBudget:{blocks,envelopeBytes:x.macConfig.capella.limits.envelopeBytes}};const before=structuredClone(x),p=restoredThreeNodePlan(x),base=restoredThreeNodePlan(fixture);assert.deepEqual(x,before);assert.deepEqual(p.sourceCheckpoints,base.sourceCheckpoints);assert.deepEqual(p.baseline,base.baseline);assert.deepEqual(p.retentionBudget.captureBudget,x.retentionExperiment.captureBudget);for(const c of p.configs)assert.equal(c.capella.limits.blocks,blocks);assert.equal(p.retentionBudget.oldBoundaryRecoveryQualified,false);
+});
+for(const [name,change] of [
+ ['capture count too small',p=>p.blocks='0x400'],
+ ['capture bytes too small',p=>p.envelopeBytes='0x1'],
+ ['noncanonical count',p=>p.blocks='0x01000'],
+ ['witness overflow',p=>p.envelopeBytes='0xffffffffffffffff'],
+ ['runtime overflow',p=>p.blocks='0x10000000000000000'],
+ ['unknown consensus override',p=>p.consensus=true],
+ ['missing byte budget',p=>delete p.envelopeBytes],
+ ['numeric count',p=>p.blocks=4096]
+])test('explicit capture policy refuses '+name,()=>{const x=structuredClone(fixture);x.retentionExperiment={blocks:'0x1000',rationale:'Explicit bounded local capture experiment; source commitments retained.',captureBudget:{blocks:'0x1000',envelopeBytes:x.macConfig.capella.limits.envelopeBytes}};change(x.retentionExperiment.captureBudget);assert.throws(()=>restoredThreeNodePlan(x));});

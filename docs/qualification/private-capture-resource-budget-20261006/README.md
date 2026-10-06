@@ -1,0 +1,11 @@
+# Budget explicite de capture privée — 6 octobre 2026
+
+L'outil quiescent et le planner acceptent désormais un budget local explicite captureBudget {blocks,envelopeBytes}, sans plafond fixe de1024 pour les nouvelles demandes explicites. Les anciennes demandes gardent leur politique historique1024/128MiB. Ce réglage administratif n'est ni une limite des validateurs, ni une règle du consensus. Le planner ne change que limits.blocks après validation des capsules ; pins, source limits, profil, finalité et répartition des signers restent intacts. Les règles L1 ne sont pas modifiées.
+
+Le C++ valide forme, quantités hex positives canoniques, taille uint64/size_t, budget du témoin2048+8*envelope et comptage<=octets, puis exige que les limites réellement configurées tiennent dans le budget explicite. Le contrôle est avant toute ouverture de DB/journaux ; le report expose le budget utilisé. Aucun certificat, checkpoint ou engagement externe n'est réécrit. Le plafond réellement configuré du graphe continue de s'appliquer dans le réacteur.
+
+Prototype isolé : test C++ natif20636/0, capture compilée native71753/0, ARM6416288/0, AMD6482161/0, core e33ad89e réutilisé. Vingt-six refus : formes/quantités invalides, débordements, budget compte/octet et limites réelles dépassant le budget. Les valeurs4096 et1million sont uniquement parsées sans allocation de nœuds, pas des réseaux testés. Planner49/49 (tests déjà présents et onze cas supplémentaires) : budgets explicites>1024, pins conservés, source immuable et refus des overrides/dépassements. Les modifications du seul chemin vers la fixture de test sont normalisées au dépôt et vérifiées à l'intégration.
+
+Gate CTest consensus_private_capture_resource_budget, timeout15, configuré/compilé/exécuté sur Docker ARM643512/0 et AMD6490356/0, images/volumes existants. Les sources publiques transférées sont hashées ; capture physique d'une DB historique avec cette nouvelle politique non encore exécutée. Aucun build du core/images pour ce seul outil, aucun déploiement public, aucun transfert de DB/clefs ni fonds.
+
+Ancien échec V28 conservé. Grand graphe au-delà de1024, rechargement/fork choice, migration réelle avec engagements externes et nouvelle finalité commune demeurent ouverts. Ce lot rend possible l'expérimentation bornée ; il ne qualifie pas sa réussite ni la production.

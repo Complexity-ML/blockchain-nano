@@ -58,6 +58,10 @@ set_tests_properties(core PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DI
 
 add_executable(nano src/main.cpp)
 target_link_libraries(nano PRIVATE nano_core)
+add_executable(nano-private-capture-budget-tests tests/capella/test_private_capture_budget.cpp)
+target_include_directories(nano-private-capture-budget-tests PRIVATE third_party)
+add_test(NAME consensus_private_capture_resource_budget COMMAND nano-private-capture-budget-tests)
+set_tests_properties(consensus_private_capture_resource_budget PROPERTIES TIMEOUT 15 LABELS qualification_consensus_harness)
 add_executable(nano-capella-paused-capture tests/capella/paused_capture.cpp)
 target_link_libraries(nano-capella-paused-capture PRIVATE nano_core)
 target_include_directories(nano-capella-paused-capture PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ckzg/blst/bindings")

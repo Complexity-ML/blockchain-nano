@@ -1,0 +1,89 @@
+Start testing: Oct 06 21:02 UTC
+----------------------------------------------------------
+453/458 Testing: consensus_capella_cold_reference_writer
+453/458 Test: consensus_capella_cold_reference_writer
+Command: "/usr/bin/cmake" "-E" "env" "NANO_TEST_REFERENCE_PREFLIGHT=1" "NANO_TEST_REFERENCE_VALIDATION_MEMO=1" "NANO_TEST_COMPACT_REFERENCE_RESTORE=1" "NANO_TEST_COMPACT_REFERENCE_WRITER=1" "NANO_TEST_COLD_RECORD_CACHE=1" "NANO_TEST_FRAGMENT_CHECKPOINT=1" "/build/coherent-e33ad89e-arm64/nano-capella-transition-tests" "--prepared-block"
+Directory: /build/coherent-e33ad89e-arm64
+"consensus_capella_cold_reference_writer" start time: Oct 06 21:02 UTC
+Output:
+----------------------------------------------------------
+{"canonicalOracleEqual":true,"certifiedColdRowsReused":2,"emptyMemoFullyDecoded":true,"everyBlobFetchedAndHashed":true,"failedMemoAndStatsUnchanged":true,"hotSourceFullyDecoded":true,"metadataMissFullyDecoded":true,"networkQualified":false,"refusals":10,"scenario":"capella-reference-preflight-reuse","startupRecoveryUnchanged":true}
+{"canonicalManifestEqual":true,"coldCertificateReuses":2,"durablePreflightSkipped":false,"earlyCancellationUnchanged":true,"failedCallsLeaveMemoUnchanged":true,"heavyStateCached":false,"mutationRefusals":5,"productionQualified":false,"profileInvalidation":true,"records":2,"runtimeIntegrated":false,"scenario":"capella-reference-validation-memo"}
+{"allRecordsCold":true,"cachePressureRefused":true,"cancelledBeforeFetch":true,"canonicalGraphEqual":true,"flatExpansionUsed":false,"forkChoiceEqual":true,"graphCapacityClosed":false,"manifestAuthenticatedBeforeFetch":true,"productionQualified":false,"rejections":7,"runtimeActivated":false,"scenario":"capella-reference-restore","singleRecordCacheSupported":true}
+{"cancelledSourceUnchanged":true,"canonicalExpansionEqual":true,"coldRowsRestaged":0,"flatBytes":91668,"graphCapacityClosed":false,"legacyFormatRejected":true,"manifestBytes":4017,"newRowsStreamed":2,"perRowBudget":44336,"productionQualified":false,"runtimeActivated":false,"scenario":"capella-reference-writer","warmColdManifestsEqual":true}
+{"canonicalSnapshotEqual":true,"clockTransitionEqual":true,"copyOnWritePreservesLease":true,"forkChoiceEqual":true,"graphCapacityClosed":false,"networkQualified":false,"runtimeColdActivation":false,"scenario":"capella-cold-graph-transitions","signedTransitionEqual":true}
+{"cacheHitWithoutFetch":true,"cancelledLoadUnchanged":true,"evictionAndReload":true,"fullBeaconExecutionBinding":true,"networkQualified":false,"physicalMemoryBoundQualified":false,"pinnedPressureRefused":true,"refusals":4,"runtimeColdGraphActivated":false,"scenario":"capella-cold-record-cache"}
+{"cancelledMigrationUnchanged":true,"coldStateCacheImplemented":false,"corruptionRejections":3,"graphAndIdentityPreserved":true,"independentPreviousPrimaryRecovered":true,"journalCommitmentUnchanged":true,"legacyMigrated":true,"migrationIdempotent":true,"networkQualified":false,"primaryAndWitnessRestarts":true,"productionQualified":false,"scenario":"capella-fragment-checkpoint-integration","stickyFragmentFormat":true,"validChildDurablyAdmitted":true}
+<end of output>
+Test time =   0.53 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_cold_reference_writer" end time: Oct 06 21:02 UTC
+"consensus_capella_cold_reference_writer" time elapsed: 00:00:00
+----------------------------------------------------------
+
+455/458 Testing: consensus_capella_cold_runtime_recovery
+455/458 Test: consensus_capella_cold_runtime_recovery
+Command: "/usr/bin/cmake" "-E" "env" "NANO_TEST_RUNTIME_REFERENCE_MEMO=1" "NANO_TEST_COLD_RUNTIME=1" "/build/coherent-e33ad89e-arm64/nano-capella-transition-tests" "--automatic-recovery"
+Directory: /build/coherent-e33ad89e-arm64
+"consensus_capella_cold_runtime_recovery" start time: Oct 06 21:02 UTC
+Output:
+----------------------------------------------------------
+{"event":"cold-runtime-catalog-relay","kind":"block","result":{"captureBusyRetries":0,"catalogExhausted":true,"closed":true,"delivered":17,"elapsedMs":49,"exports":17,"failureStage":null,"payloadsAdmitted":17,"reason":null,"rejected":0,"scanned":17,"selectionAfter":null,"selectionStartAfter":null,"skippedKnown":0,"stage":"close","success":true,"syncSlot":null,"terminationReason":"catalog-exhausted","terminationStage":"delivery"}}
+{"event":"cold-runtime-catalog-relay","kind":"attestation","result":{"captureBusyRetries":0,"catalogExhausted":true,"closed":true,"delivered":80,"elapsedMs":6,"exports":80,"failureStage":null,"payloadsAdmitted":80,"reason":null,"rejected":0,"scanned":80,"selectionAfter":null,"selectionStartAfter":null,"skippedKnown":0,"stage":"close","success":true,"syncSlot":null,"terminationReason":"catalog-exhausted","terminationStage":"delivery"}}
+{"event":"cold-runtime-catalog-relay","kind":"attester_slashing","result":{"captureBusyRetries":0,"catalogExhausted":true,"closed":true,"delivered":0,"elapsedMs":0,"exports":0,"failureStage":null,"payloadsAdmitted":0,"reason":null,"rejected":0,"scanned":0,"selectionAfter":null,"selectionStartAfter":null,"skippedKnown":0,"stage":"close","success":true,"syncSlot":null,"terminationReason":"catalog-exhausted","terminationStage":"page"}}
+{"admissionReceiptChecks":6,"automaticRecovery":true,"automaticRegistration":false,"blocks":32,"catalogSeekBoundaryChecks":8,"catalogSeekOwnershipAndBoundsChecks":3,"coldCacheConfigRefusals":9,"coldCheckpointActivated":true,"coldFinalizedPruning":true,"externalRecoveryCommitmentChecks":9,"httpTransport":false,"invalidConfigurationsRejected":6,"keysLoaded":64,"networkTransport":false,"referenceMemoEncodedBytes":34123,"referenceMemoRecords":18,"referenceMemoReuses":10672,"runtimeCatalogChecks":3,"scenario":"capella-configured-runtime","signerWitnessRestart":true,"witnessRestart":true,"workersStopped":true}
+<end of output>
+Test time =  66.03 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_cold_runtime_recovery" end time: Oct 06 21:03 UTC
+"consensus_capella_cold_runtime_recovery" time elapsed: 00:01:06
+----------------------------------------------------------
+
+456/458 Testing: consensus_capella_cold_runtime_bls
+456/458 Test: consensus_capella_cold_runtime_bls
+Command: "/usr/bin/cmake" "-E" "env" "NANO_TEST_RUNTIME_REFERENCE_MEMO=1" "NANO_TEST_COLD_RUNTIME=1" "/build/coherent-e33ad89e-arm64/nano-capella-transition-tests" "--queued-bls-rpc"
+Directory: /build/coherent-e33ad89e-arm64
+"consensus_capella_cold_runtime_bls" start time: Oct 06 21:03 UTC
+Output:
+----------------------------------------------------------
+{"event":"cold-runtime-catalog-relay","kind":"block","result":{"captureBusyRetries":0,"catalogExhausted":true,"closed":true,"delivered":17,"elapsedMs":52,"exports":17,"failureStage":null,"payloadsAdmitted":17,"reason":null,"rejected":0,"scanned":17,"selectionAfter":null,"selectionStartAfter":null,"skippedKnown":0,"stage":"close","success":true,"syncSlot":null,"terminationReason":"catalog-exhausted","terminationStage":"delivery"}}
+{"event":"cold-runtime-catalog-relay","kind":"attestation","result":{"captureBusyRetries":0,"catalogExhausted":true,"closed":true,"delivered":80,"elapsedMs":6,"exports":80,"failureStage":null,"payloadsAdmitted":80,"reason":null,"rejected":0,"scanned":80,"selectionAfter":null,"selectionStartAfter":null,"skippedKnown":0,"stage":"close","success":true,"syncSlot":null,"terminationReason":"catalog-exhausted","terminationStage":"delivery"}}
+{"event":"cold-runtime-catalog-relay","kind":"attester_slashing","result":{"captureBusyRetries":0,"catalogExhausted":true,"closed":true,"delivered":0,"elapsedMs":0,"exports":0,"failureStage":null,"payloadsAdmitted":0,"reason":null,"rejected":0,"scanned":0,"selectionAfter":null,"selectionStartAfter":null,"skippedKnown":0,"stage":"close","success":true,"syncSlot":null,"terminationReason":"catalog-exhausted","terminationStage":"page"}}
+{"admissionReceiptChecks":6,"automaticRecovery":false,"automaticRegistration":false,"blocks":32,"catalogSeekBoundaryChecks":8,"catalogSeekOwnershipAndBoundsChecks":3,"coldCacheConfigRefusals":9,"coldCheckpointActivated":true,"coldFinalizedPruning":true,"externalRecoveryCommitmentChecks":0,"httpTransport":false,"invalidConfigurationsRejected":6,"keysLoaded":64,"networkTransport":false,"referenceMemoEncodedBytes":34123,"referenceMemoRecords":18,"referenceMemoReuses":10672,"runtimeCatalogChecks":3,"scenario":"capella-configured-runtime","signerWitnessRestart":true,"witnessRestart":true,"workersStopped":true}
+<end of output>
+Test time =  62.44 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_cold_runtime_bls" end time: Oct 06 21:04 UTC
+"consensus_capella_cold_runtime_bls" time elapsed: 00:01:02
+----------------------------------------------------------
+
+458/458 Testing: consensus_capella_cold_memo_sigkill_recovery
+458/458 Test: consensus_capella_cold_memo_sigkill_recovery
+Command: "/usr/bin/cmake" "-E" "env" "NANO_TEST_FRAGMENT_CHECKPOINT=1" "NANO_TEST_COLD_REACTOR=1" "NANO_TEST_RUNTIME_REFERENCE_MEMO=1" "NANO_TEST_COLD_MEMO_SYNC=1" "NANO_TEST_COLD_MEMO_SIGKILL=1" "/build/coherent-e33ad89e-arm64/nano-capella-transition-tests" "--prepared-block"
+Directory: /build/coherent-e33ad89e-arm64
+"consensus_capella_cold_memo_sigkill_recovery" start time: Oct 06 21:04 UTC
+Output:
+----------------------------------------------------------
+{"blockedOperations":3,"exactOracleCheckpoint":true,"faultWitness":false,"lostSuffix":false,"physicalPowerLoss":false,"recoveredNewBeforeRetry":true,"retryIdempotent":true,"scenario":"capella-cold-memo-sync-recovery"}
+{"blockedOperations":3,"exactOracleCheckpoint":true,"faultWitness":false,"lostSuffix":true,"physicalPowerLoss":false,"recoveredNewBeforeRetry":true,"retryIdempotent":true,"scenario":"capella-cold-memo-sync-recovery"}
+{"blockedOperations":3,"exactOracleCheckpoint":true,"faultWitness":true,"lostSuffix":false,"physicalPowerLoss":false,"recoveredNewBeforeRetry":true,"retryIdempotent":true,"scenario":"capella-cold-memo-sync-recovery"}
+{"blockedOperations":3,"exactOracleCheckpoint":true,"faultWitness":true,"lostSuffix":true,"physicalPowerLoss":false,"recoveredNewBeforeRetry":false,"retryIdempotent":true,"scenario":"capella-cold-memo-sync-recovery"}
+{"exactOracleCheckpoint":true,"networkQualified":false,"physicalPowerLoss":false,"recoveredNewBeforeRetry":true,"retryIdempotent":true,"scenario":"capella-cold-memo-sigkill-recovery","signal":9,"signedArchivesPreserved":true,"stage":"before-primary-sync"}
+{"exactOracleCheckpoint":true,"networkQualified":false,"physicalPowerLoss":false,"recoveredNewBeforeRetry":true,"retryIdempotent":true,"scenario":"capella-cold-memo-sigkill-recovery","signal":9,"signedArchivesPreserved":true,"stage":"before-witness-sync"}
+{"exactOracleCheckpoint":true,"networkQualified":false,"physicalPowerLoss":false,"recoveredNewBeforeRetry":true,"retryIdempotent":true,"scenario":"capella-cold-memo-sigkill-recovery","signal":9,"signedArchivesPreserved":true,"stage":"after-durable-commit"}
+{"allPublishedRecordsCold":true,"graphCapacityClosed":false,"idempotentMigration":true,"lateSnapshotReadRejected":true,"migrationAtomic":true,"networkQualified":false,"primaryAndWitnessRestarts":true,"productionQualified":false,"runtimeConfigBootQualified":false,"scenario":"capella-cold-reactor-integration","signerCommitmentUnchanged":true,"stickyColdFormat":true,"validChildDurablyAdmitted":true,"witnessPreviousPrimaryRecovered":true}
+<end of output>
+Test time =   1.04 sec
+----------------------------------------------------------
+Test Passed.
+"consensus_capella_cold_memo_sigkill_recovery" end time: Oct 06 21:04 UTC
+"consensus_capella_cold_memo_sigkill_recovery" time elapsed: 00:00:01
+----------------------------------------------------------
+
+End testing: Oct 06 21:04 UTC
+
+qualification_consensus_recovery = 130.04 sec*proc
+

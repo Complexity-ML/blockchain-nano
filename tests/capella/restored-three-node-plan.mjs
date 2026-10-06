@@ -26,14 +26,21 @@ export function restoredThreeNodePlan({macConfig,vpsConfig,macCapsule,vpsCapsule
  let retentionBudget;
  if(retentionExperiment!==undefined){
   assert.ok(retentionExperiment&&typeof retentionExperiment==='object'&&!Array.isArray(retentionExperiment));
-  assert.deepEqual(Object.keys(retentionExperiment).sort(),['blocks','rationale']);
+  const explicit=Object.hasOwn(retentionExperiment,'captureBudget');
+  assert.deepEqual(Object.keys(retentionExperiment).sort(),explicit?['blocks','captureBudget','rationale']:['blocks','rationale']);
   assert.match(retentionExperiment.blocks,/^0x[1-9a-f][0-9a-f]*$/);
   assert.ok(typeof retentionExperiment.rationale==='string'&&retentionExperiment.rationale.trim().length>=20&&retentionExperiment.rationale.length<=2048);
   const source=structuredClone(mac.capella.limits),target=BigInt(retentionExperiment.blocks);
   assert.ok(target>BigInt(source.blocks),'Experiment must increase the retained-block budget');
-  assert.ok(target<=1024n,'Private capture supports at most 1024 retained blocks');
+  const captureBudget=explicit?retentionExperiment.captureBudget:{blocks:'0x400',envelopeBytes:'0x8000000'};
+  assert.ok(captureBudget&&typeof captureBudget==='object'&&!Array.isArray(captureBudget));
+  assert.deepEqual(Object.keys(captureBudget).sort(),['blocks','envelopeBytes']);
+  for(const field of ['blocks','envelopeBytes']){assert.equal(typeof captureBudget[field],'string');assert.match(captureBudget[field],/^0x[1-9a-f][0-9a-f]*$/);assert.ok(BigInt(captureBudget[field])<=0xffffffffffffffffn);}
+  const captureBlocks=BigInt(captureBudget.blocks),captureBytes=BigInt(captureBudget.envelopeBytes);
+  assert.ok(captureBytes<=(0xffffffffffffffffn-2048n)/8n&&captureBlocks<=captureBytes,'Capture witness/resource budget overflow');
+  assert.ok(target<=captureBlocks&&BigInt(source.envelopeBytes)<=captureBytes,'Experiment exceeds explicit capture resource budget');
   for(const c of configs)c.capella.limits.blocks=retentionExperiment.blocks;
-  retentionBudget={sourceLimits:source,candidateLimits:structuredClone(configs[0].capella.limits),rationale:retentionExperiment.rationale,oldBoundaryRecoveryQualified:false,productionQualified:false};
+  retentionBudget={...(explicit?{captureBudget:structuredClone(captureBudget)}:{}),sourceLimits:source,candidateLimits:structuredClone(configs[0].capella.limits),rationale:retentionExperiment.rationale,oldBoundaryRecoveryQualified:false,productionQualified:false};
  }
  // Explicit startup migration; no source files, pins or consensus profile change.
  let coldCheckpointPlan;

@@ -1,6 +1,7 @@
 // Private synthetic fixture only. Caller must freeze ALL source writers first.
 // Read-only capture, never repair/retire journals and never claim runtime health.
 #include "nano/consensus_capella_audit.hpp"
+#include "private_capture_budget.hpp"
 #include "nano/consensus_capella_reactor.hpp"
 #include "nano/consensus_capella_fork_state.hpp"
 #include "nano/consensus_beacon_signer.hpp"
@@ -43,7 +44,7 @@ int main(int argc,char** argv){try{
  need(argc==6&&std::string(argv[1])=="--capture","usage: --capture synthetic-genesis node-config quiescent-db external-request");
  const auto genesis=Genesis::from_json(json(argv[2]));need(genesis.chain_id==1337&&genesis.consensus=="beacon"&&genesis.evm_revision==EvmRevision::Shanghai,"private Beacon Shanghai capture only");
  const auto c=json(argv[3]).at("capella"),req=json(argv[5]);need(c.at("initial").is_null()&&c.value("automaticRecovery",true)==false&&c.contains("recoveryCommitment"),"strict witnessed source configuration required");
- const auto& l=c.at("limits");CapellaStoreSnapshotLimits limits{size_t(num(l.at("envelopeBytes"))),size_t(num(l.at("blocks"))),size_t(num(l.at("messages"))),size_t(num(l.at("equivocations"))),size_t(num(l.at("stateBytes"))),size_t(num(l.at("totalStateBytes"))),num(l.at("replaySlots")),num(l.at("syncTrials"))};need(limits.envelope_bytes<=128*1024*1024&&limits.blocks<=1024,"private capture budget");
+ const auto& l=c.at("limits");CapellaStoreSnapshotLimits limits{size_t(num(l.at("envelopeBytes"))),size_t(num(l.at("blocks"))),size_t(num(l.at("messages"))),size_t(num(l.at("equivocations"))),size_t(num(l.at("stateBytes"))),size_t(num(l.at("totalStateBytes"))),num(l.at("replaySlots")),num(l.at("syncTrials"))};const auto capture_budget=private_capture::resource_budget(l,req);
  const auto& p=c.at("profile");need(req.at("profile").at("file")==p.at("file")&&req.at("profile").at("sha256")==p.at("sha256")&&req.at("limits")==l,"capture audit/source configuration mismatch");const auto rules=load_capella_fork_profile(read(p.at("file"),1024*1024),unhex(p.at("sha256")),1024*1024);need(rules.transition.chain_id==genesis.chain_id&&rules.native_deposit_votes,"native admitted fixture profile required");
  const auto& a=req.at("anchor");const auto seed=capella_store_from_snapshot(read(a.at("file"),limits.envelope_bytes),unhex(a.at("sha256")),rules,limits);
  auto context=[&](const CapellaForkBlock& b){return capella_fork_block_context(b.state,b.header,{rules.transition.consensus.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},rules.transition.consensus.state);};
@@ -72,5 +73,5 @@ int main(int argc,char** argv){try{
  need(final_witness.fork_checkpoint(genesis.chain_id,genesis.block.header.hash(),2048+8*limits.envelope_bytes,saved->token).has_value(),"capture core witness moved");
  need(final_disk.fork_checkpoint(genesis.chain_id,genesis.block.header.hash(),limits.envelope_bytes,primary->token).has_value(),"capture source moved; freeze all writers first");
  const Json diagnostic=req.value("participationDiagnostics",false)?participation_diagnostic(*reactor.current().state,rules):Json(nullptr);
- std::cout<<Json{{"participationDiagnostics",diagnostic},{"format","nano-private-quiescent-recovery-pins-v1"},{"chainId","0x539"},{"genesisHash",hex(genesis.block.header.hash())},{"profileSha256",p.at("sha256")},{"restart",wire(primary->token)},{"validatorKeys",result_keys},{"canonicalReplay",audit},{"readOnlyStores",true},{"primaryWitnessAndSignersVerified",true},{"minimumSequenceBoundsVerified",true},{"historicalTokenDigestAncestryVerified",false},{"sourceQuiescenceExternallyRequired",true},{"runtimeHealthInferred",false},{"productionQualified",false}}.dump(2)<<'\n';return 0;
+ std::cout<<Json{{"captureBudget",capture_budget},{"participationDiagnostics",diagnostic},{"format","nano-private-quiescent-recovery-pins-v1"},{"chainId","0x539"},{"genesisHash",hex(genesis.block.header.hash())},{"profileSha256",p.at("sha256")},{"restart",wire(primary->token)},{"validatorKeys",result_keys},{"canonicalReplay",audit},{"readOnlyStores",true},{"primaryWitnessAndSignersVerified",true},{"minimumSequenceBoundsVerified",true},{"historicalTokenDigestAncestryVerified",false},{"sourceQuiescenceExternallyRequired",true},{"runtimeHealthInferred",false},{"productionQualified",false}}.dump(2)<<'\n';return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

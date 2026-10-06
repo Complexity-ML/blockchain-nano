@@ -1,0 +1,77 @@
+{
+  "sourceRevision": "e33ad89e61c0e915cf455aed3726da7cc3867ba0",
+  "frozenPublicFiles": 9363,
+  "sourceHashesVerifiedMacAndVps": true,
+  "arm64Build": {
+    "session": 9442,
+    "exitCode": 0,
+    "scope": "full core, nano, relay, Capella fixture, capture and deposit audit"
+  },
+  "arm64Qualification": {
+    "session": 43721,
+    "terminalResult": "four gates passed; 130.05 seconds",
+    "gates": [
+      "consensus_capella_cold_reference_writer",
+      "consensus_capella_cold_memo_sigkill_recovery",
+      "consensus_capella_cold_runtime_recovery",
+      "consensus_capella_cold_runtime_bls"
+    ],
+    "exitCode": 0
+  },
+  "amd64Build": {
+    "session": 1194,
+    "terminalResult": "build and CTest inventory0",
+    "exitCode": 0
+  },
+  "nativeBuild": {
+    "session": 74221,
+    "terminalResult": "core and nano built; test fixture rejected removed RocksDB DB** API",
+    "relayReuse": "network sources unchanged from 02ec0ab0; exact retained sha256 verified",
+    "exitCode": 2
+  },
+  "graphSaturationClosed": false,
+  "wanFinalityQualified": false,
+  "productionQualified": false,
+  "fixtureApiRepair": {
+    "changedFiles": [
+      "tests/test_capella_transition.cpp"
+    ],
+    "coreSourcesUnchanged": true,
+    "nativeFirstDriverExit": 1,
+    "nativeFirstDriverReason": "BSD sed flags extraction incompatible; preserved",
+    "nativeCorrectedDriver": {
+      "session": 68726,
+      "exitCode": 0,
+      "writerCorruptionsRejected": 3
+    },
+    "arm64": {
+      "session": 56889,
+      "exitCode": 0,
+      "writerCorruptionsRejected": 3
+    },
+    "amd64": {
+      "session": 54512,
+      "terminalResult": "writer corruption refusals3 and core hashes unchanged",
+      "exitCode": 0
+    },
+    "integratedOnMain": false
+  },
+  "nativeQualification": {
+    "session": 81526,
+    "coldGuardsExit": 0,
+    "runtimeTerminalResult": null,
+    "exitCode": 1,
+    "terminalResult": "guard/automatic0; BLS1 sandbox refused loopback bind"
+  },
+  "nativeBlsRetry": {
+    "session": 99188,
+    "exitCode": 0,
+    "sameBinaryHashesVerified": true,
+    "onlyFailedScenarioRetried": true
+  },
+  "amd64Qualification": {
+    "session": 55263,
+    "terminalResult": "four gates passed",
+    "exitCode": 0
+  }
+}

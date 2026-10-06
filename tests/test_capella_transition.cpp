@@ -38,6 +38,18 @@
 #include "../src/consensus_bellatrix_projection.hpp"
 using namespace test;using namespace test::phase0_minimal;
 namespace {
+// RocksDB 11 removed DB**; retain the older Ubuntu API through detection.
+template<class Database=rocksdb::DB>
+std::unique_ptr<Database> open_corruption_database(const rocksdb::Options& options,const std::string& path){
+ std::unique_ptr<Database> db;
+ if constexpr(requires { Database::Open(options,path,&db); }){
+  check(Database::Open(options,path,&db).ok(),"owned fragment corruption fixture open");
+ }else{
+  Database* raw=nullptr;const auto status=Database::Open(options,path,&raw);db.reset(raw);
+  check(status.ok(),"owned fragment corruption fixture open");
+ }
+ return db;
+}
 void put(Bytes& b,size_t at,uint64_t n,size_t width=8){for(size_t i=0;i<width;++i)b.at(at+i)=uint8_t(n>>(8*i));}
 template<class A> void copy_to(A& dst,const Bytes& src){check(dst.size()==src.size(),"fixture width");std::copy(src.begin(),src.end(),dst.begin());}
 CapellaExecutionPayload payload(const Block& block){const auto& h=block.header;CapellaExecutionPayload p;copy_to(p.parent_hash,h.parent_hash);copy_to(p.fee_recipient,unhex(h.coinbase));copy_to(p.state_root,h.state_root);copy_to(p.receipts_root,h.receipts_root);copy_to(p.logs_bloom,h.logs_bloom);copy_to(p.prev_randao,h.mix_hash);copy_to(p.block_hash,h.hash());auto fee=bytes(*h.base_fee,32);std::reverse(fee.begin(),fee.end());copy_to(p.base_fee_per_gas,fee);p.block_number=u64(h.number);p.gas_limit=u64(h.gas_limit);p.gas_used=u64(h.gas_used);p.timestamp=u64(h.timestamp);p.extra_data=h.extra_data;for(const auto& tx:block.transactions)p.transactions.push_back(tx.raw());return p;}
@@ -1827,7 +1839,7 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
    reactor.reset();reactor=std::make_unique<CapellaDurableReactor>(*backup_owner,rules,crash_limits,child_token);check(capella_store_snapshot(*reactor->current().state,rules,crash_limits)==child_flat,"primary-only fragment restart differs");reactor.reset();backup_owner.reset();witness.reset();
    unsigned corruptions=0;
    for(unsigned attack=0;attack<3;++attack){const auto copy=directory/("corrupt-"+std::to_string(attack));fs::copy(directory/(attack==2?"witness":"previous-primary"),copy,fs::copy_options::recursive);
-    rocksdb::Options options;options.create_if_missing=false;rocksdb::DB* raw=nullptr;check(rocksdb::DB::Open(options,copy.string(),&raw).ok(),"owned fragment corruption fixture open");std::unique_ptr<rocksdb::DB> db(raw);rocksdb::ReadOptions read_opts;std::string snapshot;
+    rocksdb::Options options;options.create_if_missing=false;auto db=open_corruption_database(options,copy.string());rocksdb::ReadOptions read_opts;std::string snapshot;
     check(db->Get(read_opts,"fork-checkpoint/v1/payload",&snapshot).ok(),"owned checkpoint absent");auto envelope=Json::parse(snapshot);if(attack==2)envelope=Json::parse(envelope.at("snapshot").get<std::string>());const auto& payload=envelope.at("snapshot");const auto& records=payload.contains("store")?payload.at("store").at("blocks"):payload.at("blocks");const auto blob_key="checkpoint-blob/v1/"+records[0][1].get<std::string>();rocksdb::WriteOptions write;write.sync=true;
     check((attack==1?db->Put(write,blob_key,"altered"):db->Delete(write,blob_key)).ok(),"owned fragment corruption failed");db.reset();bool refused=false;
     try{if(attack==2){Blockchain intact(directory/"previous-primary",g);ChainStore broken(copy);CapellaDurableReactor rejected(intact,rules,crash_limits,broken,{},child_token);}else{Blockchain broken(copy,g);CapellaDurableReactor rejected(broken,rules,crash_limits,child_token);}}catch(const std::exception&){refused=true;}
