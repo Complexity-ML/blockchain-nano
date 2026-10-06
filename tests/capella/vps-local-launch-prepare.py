@@ -35,7 +35,7 @@ def prepare(old,dest,rpc_port,p2p_port,binary,expected):
  c=derive(json.loads((audit/'config.json').read_text()),json.loads((audit/'capture.json').read_text()),rpc_port,p2p_port,binary)
  assert canonical_hash(c)==expected,'Local derived configuration differs from independent controller plan'
  keys={k['keyEnv'] for k in c['capella']['validator']['keys']};env=(old/'vps.env').read_text();lines=env.splitlines();assert len(lines)==len(set(v.split('=',1)[0] for v in lines));assert {v.split('=',1)[0] for v in lines}==keys|{'NANO_TEST_NETWORK_TRACE'}
- assert not dest.exists();dest.mkdir(mode=0o700)
+ assert not dest.exists();dest.mkdir(mode=0o755)
  for name in ['genesis.json','profile.json','initial.json']:shutil.copy2(old/name,dest/name)
  (dest/'vps.json').write_text(json.dumps(c,indent=2)+'\n');(dest/'vps.env').write_text(env);os.chmod(dest/'vps.env',0o600)
  result={'configCanonicalSHA256':expected,'configPreparedLocally':True,'configurationExportedFromMac':False,'signingKeysExportedFromMac':False,'validatorKeys':len(keys),'files':{name:hashlib.sha256((dest/name).read_bytes()).hexdigest() for name in ['genesis.json','profile.json','initial.json','vps.json','vps.env']}}

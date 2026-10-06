@@ -4802,3 +4802,6 @@ Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichi
 
 
 2026-10-06 — Préparation v17 : engagements post-v16 et journaux conservés, catalogue à sélection équitable qualifié dans son périmètre local. Trois finalités communes nouvelles en 900 s restent à démontrer ; préparation seule. Production et revue indépendante ouvertes. Preuves restored-three-node-v17-catalog-selection-prepare-20261006/.
+
+
+2026-10-06 — V17 démarrage FAILED, session 92712/sortie 1 : répertoire VPS local 0700 inaccessible à l’utilisateur du conteneur, avant ouverture de genesis/base. Aucun nœud Mac lancé ni reçu de consensus ; pas un échec du délai de finalité. Volume VPS 1926 fichiers vérifiés inchangés. Correction répertoire 0755/env clés 0600 qualifiée avec image réelle, sans volume de chaîne/signature. Configuration dérivée localement et liée au plan par empreinte ; aucune exportation depuis Mac. Nouvelle tentative requise, finalité et production ouvertes. Preuves restored-three-node-v17-startup-terminal-20261006/.
