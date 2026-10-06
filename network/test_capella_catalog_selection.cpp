@@ -47,10 +47,12 @@ int main(){try{
  {Fixture f;f.page=1;f.maximum=2;for(unsigned i=0;i<8;++i)f.attempt();check(f.target==1&&f.accepted.size()==1,"entry/page budget broke rotation");++cases;}
  {Fixture f;f.selection->generation=f.generation;f.selection->after=root('3');f.roots={root('1'),root('2'),root('4')};f.attempt();check(f.target==1&&f.seeks==1&&f.selection->after.empty(),"deleted bookmark did not seek/wrap");++cases;}
  {Fixture f;f.selection->generation=f.generation;f.selection->after=root('3');f.roots.insert(f.roots.begin(),root('0'));f.attempt();f.attempt();check(f.accepted.contains(root('0'))&&f.target==1,"new prefix root lost after wrap");++cases;}
- {Fixture f;f.selection->generation=root('f');f.selection->after=root('3');f.attempt();check(f.seeks==0&&f.exports.front()==root('1'),"local generation retained stale cursor");++cases;}
+ {Fixture f;f.selection->generation=root('f');f.selection->after=root('3');f.attempt();check(f.seeks==1&&f.target==1,"request namespace rotation reset a valid selection boundary");++cases;}
  {Fixture f;f.selection->generation=f.generation;f.selection->after=root('f');auto result=f.attempt();check(f.exports.empty()&&f.selection->after.empty()&&result["catalogExhausted"]==false&&result["success"]==false&&result["terminationReason"]=="selection-wrap-required","suffix end claimed complete scan or failed wrap");++cases;}
  {Fixture f;f.cancel_export=true;f.attempt();check(f.selection->after==root('1')&&f.accepted.empty(),"cancelled export became ACK or lost attempted position");++cases;}
  {Fixture f;f.selection->generation=f.generation;f.selection->after=root('3');f.bad_seek=true;auto result=f.attempt();check(f.exports.empty()&&f.accepted.empty()&&result["success"]==false,"invalid seek page accepted/backtracked");++cases;}
  {Fixture f;f.head_mode=true;for(unsigned i=0;i<8;++i)f.attempt();check(f.target==1&&f.accepted.size()==1,"head wrapper lost shared historical selection");++cases;}
+ {Fixture f;for(char generation:std::string("abcdefab")){f.generation=root(generation);f.attempt();}check(f.target==1&&f.accepted==std::set<std::string>{root('4')},"request retirement rotation starved later root or forged ACK");++cases;}
+ {Fixture f;f.selection->generation=f.generation;f.selection->after=root('3');f.selection=std::make_shared<CapellaCatalogSelection>();f.attempt();check(f.seeks==0&&f.exports.front()==root('1'),"new peer session retained selection");++cases;}
  std::cout<<cases<<" catalog selection scenarios passed; mocked transport/ACKs, not consensus qualification\n";
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

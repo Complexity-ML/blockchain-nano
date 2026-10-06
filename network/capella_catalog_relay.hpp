@@ -139,7 +139,7 @@ public:
   call("nano_capellaCatalogGeneration",Json::array({token_}),callback([](auto& self,Json generation){
    if(!root(generation)){self.complete(false,false);return;}self.generation_=generation.template get<std::string>();
    unsigned char bytes[32];if(RAND_bytes(bytes,sizeof(bytes))!=1){self.complete(false,false);return;}
-   if(self.selection_){if(self.selection_->generation!=self.generation_)self.selection_->after.clear();self.selection_->generation=self.generation_;self.started_after_=self.selection_->after;self.cursor_=self.started_after_;}
+   if(self.selection_){/* Request retirement rotates this namespace; selection is bounded by peer/session lifetime, not the request nonce. */self.selection_->generation=self.generation_;self.started_after_=self.selection_->after;self.cursor_=self.started_after_;}
    self.request_="0x";for(auto byte:bytes){self.request_+="0123456789abcdef"[byte>>4];self.request_+="0123456789abcdef"[byte&15];}
    self.call("nano_capellaCatalogAcquire",Json::array({self.token_,self.kind_,self.generation_,self.request_}),self.callback([](auto& s,Json value){if(!value.is_object()||!root(value.at("handle"))){s.close(false);return;}s.handle_=value.at("handle").template get<std::string>();if(s.started_after_.empty())s.page();else s.seek();},true));
   }));

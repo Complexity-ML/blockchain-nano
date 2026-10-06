@@ -1,0 +1,7 @@
+# Catalog selection across retirement namespace rotation
+
+Baseline adapter counterexample expected exit 1, isolated correction exit 0. Inventory and peer remain unchanged while bounded request retirement rotates its namespace; clearing the selection on that nonce rotation can repeatedly revisit refused roots and starve a later valid root. Preserve the selection boundary for the peer/session lifetime, while acquiring fresh owned snapshots with the current namespace. Explicit session reset still clears peer selections. Authentication, acquire generation fencing, budgets, seek validation, cancellation and ACK criteria remain intact.
+
+Integrated native, Docker ARM64 and Docker AMD64: five affected suites (11 selection, 46 catalog, 19 head, 7 termination, 10 history fairness scenarios) and P2P compilation. Native helper initially omitted NANO_HEAD_HISTORY_FIRST and failed; preserve that failure and the corrected run matching CMake. Docker builds use the existing images and build volumes, without image rebuild. 343 prior frozen sources unchanged; only two network files changed, allowing scoped reuse of core/capture source qualification.
+
+Mocked adapter results establish this defect and its correction, not the complete WAN failure cause or network convergence. v17 retry remains FAILED, zero new common finality, and all historical failures are retained. A new three-owner finality campaign with audited post-stop commitments remains required. No production readiness claim.
