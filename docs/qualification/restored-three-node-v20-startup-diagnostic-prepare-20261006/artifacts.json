@@ -1,0 +1,45 @@
+{
+  "coreRevision": "d8d5b46c227727ac4804fdfff5e1efb3d45a70aa",
+  "relayRevision": "a373efe78a99d30935baf978d03456e344466340",
+  "networkSourcesUnchangedFromRelayRevision": true,
+  "coreSourcesUnchangedFromCoreRevision": true,
+  "nodes": {
+    "mac-native": {
+      "nano": {
+        "path": "/private/tmp/nano-catalog-selection-native-20261006/nano",
+        "sha256": "fc02411d4fcc37cb3108234d4fceb64c6f3fbbedcb9ae0fb8c7c2b99968ec533"
+      },
+      "p2p": {
+        "path": "/private/tmp/nano-startup-diagnostic-native-20261006/runtime",
+        "sha256": "6e8e823763d86f7adf25b199bb336cef0974e19b7251ad721fbb07ce311754a5"
+      }
+    },
+    "mac-docker": {
+      "image": "sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb",
+      "buildVolume": "nano-clean-arm64-build-20261002",
+      "nano": {
+        "path": "/build/catalog-selection-arm64-20261006/nano",
+        "sha256": "29bafce2a46f0503f4d96659ecde624e70e9d71e1ba0d236d6e5ebd314d9aa4a"
+      },
+      "p2p": {
+        "path": "/build/catalog-selection-arm64-20261006/network/nano-p2p",
+        "sha256": "12f7b8819871d8381e5ecca6529b7aff84b9f1ced2db6595286646345a284e73"
+      }
+    },
+    "vps-docker": {
+      "image": "sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14",
+      "buildVolume": "nano-clean-rpc-build-20261002",
+      "nano": {
+        "path": "/build/catalog-selection-amd64-20261006/nano",
+        "sha256": "5e1ba4e4ec0af6deafc74f34e5ae8074374dff6a920e5d61fc4ec089d6bbe340"
+      },
+      "p2p": {
+        "path": "/build/catalog-selection-amd64-20261006/network/nano-p2p",
+        "sha256": "73e3da5dbe222d57d4423f9b71aa6ede2cc71bc9cb3d94ba1def1b4f1b367a61"
+      }
+    }
+  },
+  "keysLoaded": false,
+  "networkQualified": false,
+  "productionQualified": false
+}

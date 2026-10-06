@@ -4835,3 +4835,6 @@ Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, d
 
 
 2026-10-06 — Diagnostic IPC/RPC intégré et qualifié dans son périmètre : 14 suites affectées et --wire natif/ARM64/AMD64, originaux 43059/8395/34086 sorties 0. Étapes de récupération et causes RPC expurgées ; mêmes règles de fencing/admission/retry. 46 scénarios de récupération, 18 transports loopback et 6 classifications ; cœur réutilisé, fixture recompilée, images inchangées. Cause réelle v19 et finalité commune non prouvées. [Preuves ciblées](qualification/startup-diagnostic-integrated-20261006/README.md). Échecs et critères de production/revue indépendante conservés.
+
+
+2026-10-06 — Préparation v20 : engagements VPS post-v19 et Mac post-v18 et journaux conservés, diagnostic IPC/RPC qualifié en natif/ARM64/AMD64 dans son périmètre ciblé. Trois finalités communes nouvelles en 900 s restent à démontrer ; préparation seule. Production et revue indépendante ouvertes. Preuves restored-three-node-v20-startup-diagnostic-prepare-20261006/.
