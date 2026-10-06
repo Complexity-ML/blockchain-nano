@@ -1,0 +1,49 @@
+{
+  "coreRevision": "ee5e278b681fca4dac75ac18af597159a1b76896",
+  "relayRevision": "ee5e278b681fca4dac75ac18af597159a1b76896",
+  "networkSourcesUnchangedFromRelayRevision": true,
+  "coreSourcesUnchangedFromCoreRevision": true,
+  "nodes": {
+    "mac-native": {
+      "nano": {
+        "path": "/private/tmp/nano-catalog-reservation-integrated-native-20261006/nano",
+        "sha256": "c1cae259a0aabee258ef32134c6b84f0c035d10e9a18b7bd3623616abfcaee66"
+      },
+      "p2p": {
+        "path": "/private/tmp/nano-timeout-closed-guard-native-20261006/runtime",
+        "sha256": "55291cde1882e28679b290d6fde882a69dfb60f99a1d36797803202e147c317b"
+      }
+    },
+    "mac-docker": {
+      "image": "sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb",
+      "buildVolume": "nano-clean-arm64-build-20261002",
+      "nano": {
+        "path": "/build/catalog-reservation-integrated-arm64-20261006/nano",
+        "sha256": "9e78f7f119369ab85d4daaa9b0c0f9d9418e6f96dc3eb56da95f9aec4a950c83"
+      },
+      "p2p": {
+        "path": "/build/timeout-closed-guard-sdk-arm64-20261006/network/nano-p2p",
+        "sha256": "6ed1d756d6dcb51cb6bd4a2b550313f0d1258e39c815fe555eadf31176bf11c1"
+      }
+    },
+    "vps-docker": {
+      "image": "sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14",
+      "buildVolume": "nano-clean-rpc-build-20261002",
+      "nano": {
+        "path": "/build/catalog-reservation-integrated-amd64-20261006/nano",
+        "sha256": "29fca32fc58834b2f0f84b0d73e15416d9a985d28b8e983e877ead1ba10a3fb7"
+      },
+      "p2p": {
+        "path": "/build/timeout-closed-guard-sdk-amd64-20261006/network/nano-p2p",
+        "sha256": "ed780be5b55e70f9c02d0ccdfe854f1cb9cee1e991b5247efac8a2b9171755d4"
+      }
+    }
+  },
+  "keysLoaded": false,
+  "networkQualified": false,
+  "productionQualified": false,
+  "relayBuildRevision": "ad536163f13540bfab654eb06d76773220006ff9",
+  "relayReuseProof": "relay-reuse/reuse-boundary.json",
+  "relayCompilerInputsUnchangedFromBuildRevision": true,
+  "relayReuseScope": "34 project inputs per architecture; changed inventory header excluded; binary hashes pinned"
+}

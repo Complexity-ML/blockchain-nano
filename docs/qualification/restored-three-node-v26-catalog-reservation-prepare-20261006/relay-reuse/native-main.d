@@ -1,0 +1,37 @@
+nano-p2p: \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/SDKSettings.json \
+  /Users/boris/Dev/blockchain-nano/network/main.cpp \
+  /Users/boris/Dev/blockchain-nano/network/supervisor.hpp \
+  /Users/boris/Dev/blockchain-nano/network/json_stream.hpp \
+  /Users/boris/Dev/blockchain-nano/network/core.hpp \
+  /private/tmp/nano-dispatch-integrated-20261006/third_party/json.hpp \
+  /Users/boris/Dev/blockchain-nano/network/core_rpc_diagnostic.hpp \
+  /Users/boris/Dev/blockchain-nano/network/json_frame.hpp \
+  /Users/boris/Dev/blockchain-nano/network/block_download.hpp \
+  /Users/boris/Dev/blockchain-nano/network/block_reference.hpp \
+  /Users/boris/Dev/blockchain-nano/network/bootstrap.hpp \
+  /Users/boris/Dev/blockchain-nano/network/peer_status.hpp \
+  /Users/boris/Dev/blockchain-nano/network/inbound_budget.hpp \
+  /Users/boris/Dev/blockchain-nano/network/gossip_progress.hpp \
+  /Users/boris/Dev/blockchain-nano/network/bft_vote_knowledge.hpp \
+  /Users/boris/Dev/blockchain-nano/network/timed_reply.hpp \
+  /Users/boris/Dev/blockchain-nano/network/altair_core_recovery.hpp \
+  /Users/boris/Dev/blockchain-nano/network/altair_core_dispatch.hpp \
+  /Users/boris/Dev/blockchain-nano/network/altair_work.hpp \
+  /Users/boris/Dev/blockchain-nano/network/altair_message.hpp \
+  /Users/boris/Dev/blockchain-nano/network/altair_base64.hpp \
+  /Users/boris/Dev/blockchain-nano/network/altair_stream_session.hpp \
+  /Users/boris/Dev/blockchain-nano/network/altair_stream.hpp \
+  /Users/boris/Dev/blockchain-nano/network/altair_stream_sender.hpp \
+  /Users/boris/Dev/blockchain-nano/network/capella_send_pacer.hpp \
+  /Users/boris/Dev/blockchain-nano/network/altair_peer.hpp \
+  /Users/boris/Dev/blockchain-nano/network/altair_archive_relay.hpp \
+  /Users/boris/Dev/blockchain-nano/network/capella_catalog_relay.hpp \
+  /Users/boris/Dev/blockchain-nano/network/capella_attestation_delivery.hpp \
+  /Users/boris/Dev/blockchain-nano/network/capella_block_delivery.hpp \
+  /Users/boris/Dev/blockchain-nano/network/capella_export_cache.hpp \
+  /Users/boris/Dev/blockchain-nano/network/capella_head_catalog_relay.hpp \
+  /Users/boris/Dev/blockchain-nano/network/capella_relay_schedule.hpp \
+  /Users/boris/Dev/blockchain-nano/network/capella_peer_core.hpp \
+  /Users/boris/Dev/blockchain-nano/network/altair_vote_delivery.hpp \
+  /Users/boris/Dev/blockchain-nano/network/peer_relay_budget.hpp

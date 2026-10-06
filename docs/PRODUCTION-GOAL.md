@@ -4506,3 +4506,6 @@ Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, d
 
 
 2026-10-06 — Lot catalogue intégré : refus occupé immédiat (-32005), réservation suivie à travers rotation, retrait propre/arrêt/expiry/cancel conservés. Originaux 57019/81866/79512 sorties 0, sept modes natif/ARM64/AMD64, 350 sources figées et deux consommateurs ABI reconstruits. Scénarios HTTP réel et génération vérifiés explicitement ; modes omis et échecs historiques conservés. Quotas/threads/quorum inchangés. Cause globale et finalité WAN restent ouvertes ; autres tâches RPC/votes récents à qualifier avant clôture production. [Preuves](qualification/catalog-reservation-integrated-20261006/README.md).
+
+
+2026-10-06 — Préparation v26 : états Mac/VPS post-v25 et témoins audités, copies locales sans identité de pair et volume VPS conservé sur son hôte. Cœur ee5e278b qualifié pour réservation de catalogue/contrôles RPC ; relais ad536163 réutilisé avec preuve de dépendances compilateur inchangées sur trois architectures. Mêmes limites, trois nouvelles finalités communes en 900 s à démontrer. Préparation seule, échec V25 et revue indépendante ouverts. Preuves restored-three-node-v26-catalog-reservation-prepare-20261006/.
