@@ -1,5 +1,6 @@
 #pragma once
 #include <exception>
+#include "nano/consensus_capella_cold_records.hpp"
 #include <atomic>
 #include "nano/consensus_capella_store_snapshot.hpp"
 #include "nano/storage.hpp"
@@ -8,6 +9,7 @@
 #include "nano/consensus_capella_bls_change.hpp"
 #include "nano/consensus_sync_message.hpp"
 namespace nano {
+struct CapellaColdCheckpointOptions {size_t cache_records,cache_bytes;bool operator==(const CapellaColdCheckpointOptions&)const=default;};
 class Blockchain;
 struct BeaconReadResponse;
 class StaleCapellaDuty : public std::invalid_argument {public: using std::invalid_argument::invalid_argument;};
@@ -95,6 +97,8 @@ class CapellaDurableReactor {
  bool submit_sync_message_locked(const CapellaSyncMessage&,const ForkCheckpointToken&,const std::function<void()>&);
  bool submit_sync_aggregate_locked(uint64_t,std::span<const uint8_t>,const ForkCheckpointToken&,const std::function<void()>&);
  void require_available()const;
+ std::unique_ptr<CapellaCheckpointProvider> primary_provider_,witness_provider_;
+ CapellaCheckpointProvider::Fetch checkpoint_reader(ChainStore&);
  ChainStore* witness_=nullptr;std::optional<ForkCheckpointToken> witness_token_;
  size_t witness_limit()const;
  void witness_prepare(std::string_view,const std::vector<CheckpointArchiveEntry>&,const std::vector<CheckpointBlob>&);
@@ -114,7 +118,7 @@ class CapellaDurableReactor {
  std::optional<Bytes> prepare_local_body_from_pool_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,size_t,size_t,const std::function<void()>&);
  void publish(CapellaForkStore,const std::function<void()>&,const std::vector<CheckpointArchiveEntry>& archive={},std::optional<CapellaSignedVotes> votes=std::nullopt,std::optional<CapellaSignedVotes> slashings=std::nullopt,std::optional<CapellaPendingBlsChanges> changes=std::nullopt,std::optional<CapellaPendingExits> exits=std::nullopt);
  void publish_impl(CapellaForkStore,const std::function<void()>&,const std::vector<CheckpointArchiveEntry>&,
-  std::optional<CapellaSignedVotes>,std::optional<CapellaSignedVotes>,std::optional<CapellaPendingBlsChanges>,std::optional<CapellaPendingExits>,bool);
+  std::optional<CapellaSignedVotes>,std::optional<CapellaSignedVotes>,std::optional<CapellaPendingBlsChanges>,std::optional<CapellaPendingExits>,bool,std::optional<CapellaColdCheckpointOptions> cold=std::nullopt);
 public:
  bool prepare_current_duties(uint64_t,const std::function<void()>& checkpoint={});
  bool voluntary_exit_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
@@ -168,6 +172,7 @@ public:
  std::optional<Bytes> propose_and_admit_current(uint64_t,uint64_t,const std::string&,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<uint64_t()>&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={},const Bytes& registration_public_key={});
  // Explicit verified migration; no graph pruning or change of network rules.
  // Existing fragment checkpoints remain fragmented on all later publications.
+ bool migrate_reference_checkpoint(CapellaColdCheckpointOptions,const std::function<void()>& checkpoint={});
  bool migrate_fragment_checkpoint(const std::function<void()>& checkpoint={});
  // Local durable maintenance; preserves the selected head and authenticated archives.
  // Scheduling and native deposit-history pinning remain separate responsibilities.

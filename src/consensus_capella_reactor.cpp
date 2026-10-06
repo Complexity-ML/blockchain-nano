@@ -59,8 +59,8 @@ std::optional<std::array<uint8_t,48>> exit_key(const CapellaForkStore& store,con
  if(!verify_consensus_bls(member->second.public_key,consensus_signing_root(consensus_voluntary_exit_root(exit.epoch,exit.validator_index),consensus_domain({4,0,0,0},version,context.genesis_root)),exit.signature))return std::nullopt;
  return member->second.public_key;
 }
-std::string durable_snapshot(const CapellaForkStore& store,const CapellaSignedVotes& votes,const CapellaSignedVotes& slashings,const CapellaPendingBlsChanges& changes,const CapellaPendingExits& exits,const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits,const std::function<void()>& check,CapellaStoreSnapshotCache* cache=nullptr){
- const auto encoded=capella_store_snapshot(store,rules,limits,check,cache);if(votes.empty()&&slashings.empty()&&changes.empty()&&exits.empty())return encoded;
+std::string durable_snapshot(const CapellaForkStore& store,const CapellaSignedVotes& votes,const CapellaSignedVotes& slashings,const CapellaPendingBlsChanges& changes,const CapellaPendingExits& exits,const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits,const std::function<void()>& check,CapellaStoreSnapshotCache* cache=nullptr,const std::function<void(const CapellaColdReference&,std::string_view)>* stage=nullptr){
+ const auto encoded=stage?capella_store_reference_snapshot(store,rules,limits,*stage,check):capella_store_snapshot(store,rules,limits,check,cache);if(votes.empty()&&slashings.empty()&&changes.empty()&&exits.empty())return encoded;
  if(votes.size()>limits.messages)throw std::length_error("Capella signed vote capacity");Json list=Json::array();size_t total=0;
  for(const auto& [id,wire]:votes){if(check)check();if(wire.size()>limits.envelope_bytes/2-total)throw std::length_error("Capella signed vote bytes");total+=wire.size();list.push_back(Json::array({hex(id),hex(wire)}));}
  Json document{{"format","nano-capella-durable-v1"},{"signedVotes",std::move(list)}};
@@ -84,19 +84,34 @@ std::string durable_snapshot(const CapellaForkStore& store,const CapellaSignedVo
  try{return checkpoint_detail::durable_json(std::move(document),encoded,limits.envelope_bytes);}
  catch(const std::invalid_argument&){throw std::length_error("Capella durable envelope");}
 }
-std::tuple<CapellaForkStore,CapellaSignedVotes,CapellaSignedVotes,CapellaPendingBlsChanges,CapellaPendingExits> restore_durable(std::string_view encoded,const Bytes& digest,const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits,const std::function<void()>& check,const std::function<std::optional<std::string>(const Bytes&,size_t)>& fetch={}){
+std::optional<CapellaColdCheckpointOptions> cold_options(std::string_view encoded,const CapellaStoreSnapshotLimits& limits){
+ if(!encoded.starts_with("{\"cache\":"))return std::nullopt;
+ const auto j=Json::parse(encoded);archive_require(j.is_object()&&j.size()==3&&j.at("format")=="nano-capella-cold-checkpoint-v1"&&j.dump()==encoded);
+ const auto& c=j.at("cache");archive_require(c.is_array()&&c.size()==2&&c[0].is_string()&&c[1].is_string());
+ const auto count=u64(quantity(c[0])),bytes=u64(quantity(c[1]));archive_require(count&&count<=limits.blocks&&bytes&&bytes<=limits.envelope_bytes&&quantity(Int(std::to_string(count)))==c[0].get<std::string>()&&quantity(Int(std::to_string(bytes)))==c[1].get<std::string>());
+ return CapellaColdCheckpointOptions{size_t(count),size_t(bytes)};
+}
+std::string cold_envelope(std::string_view payload,CapellaColdCheckpointOptions options){return Json{{"format","nano-capella-cold-checkpoint-v1"},{"cache",Json::array({quantity(Int(std::to_string(options.cache_records))),quantity(Int(std::to_string(options.cache_bytes)))})},{"checkpoint",Json::parse(payload)}}.dump();}
+std::tuple<CapellaForkStore,CapellaSignedVotes,CapellaSignedVotes,CapellaPendingBlsChanges,CapellaPendingExits> restore_durable(std::string_view encoded,const Bytes& digest,const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits,const std::function<void()>& check,const std::function<std::optional<std::string>(const Bytes&,size_t)>& fetch={},std::optional<CapellaColdCheckpointOptions> cold=std::nullopt){
  if(check)check();archive_require(encoded.size()<=limits.envelope_bytes&&digest.size()==32&&sha256(Bytes(encoded.begin(),encoded.end()))==digest);
  const auto document=Json::parse(encoded);
+ if(const auto options=cold_options(encoded,limits)){
+  archive_require(!cold&&bool(fetch));const auto inner=document.at("checkpoint").dump();
+  return restore_durable(inner,sha256(Bytes(inner.begin(),inner.end())),rules,limits,check,fetch,options);
+ }
+ auto restore_store=[&](std::string_view bytes,const Bytes& committed){
+  return cold?capella_store_from_reference_snapshot(bytes,committed,rules,limits,cold->cache_records,cold->cache_bytes,fetch,check):capella_store_from_snapshot(bytes,committed,rules,limits,check);
+ };
  if(document.value("format",std::string())=="nano-capella-fragments-v1"){
-  archive_require(bool(fetch));const auto expanded=capella_checkpoint_detail::expand_fragment_checkpoint(encoded,digest,limits.envelope_bytes,limits.blocks,fetch,check);
+  archive_require(!cold&&bool(fetch));const auto expanded=capella_checkpoint_detail::expand_fragment_checkpoint(encoded,digest,limits.envelope_bytes,limits.blocks,fetch,check);
   return restore_durable(expanded,sha256(Bytes(expanded.begin(),expanded.end())),rules,limits,check);
  }
  const bool with_exits=document.value("format",std::string())=="nano-capella-durable-v4";
  const bool with_changes=with_exits||document.value("format",std::string())=="nano-capella-durable-v3";
  const bool with_proofs=with_changes||document.value("format",std::string())=="nano-capella-durable-v2";
- if(!with_proofs&&document.value("format",std::string())!="nano-capella-durable-v1")return {capella_store_from_snapshot(encoded,digest,rules,limits,check),{}, {}, {}, {}};
+ if(!with_proofs&&document.value("format",std::string())!="nano-capella-durable-v1")return {restore_store(encoded,digest),{}, {}, {}, {}};
  archive_require(document.size()==(with_exits?6:with_changes?5:with_proofs?4:3)&&document.at("signedVotes").is_array()&&(with_proofs||!document.at("signedVotes").empty())&&document.at("signedVotes").size()<=limits.messages);
- const auto inner=document.at("store").dump();auto store=capella_store_from_snapshot(inner,sha256(Bytes(inner.begin(),inner.end())),rules,limits,check);CapellaSignedVotes votes,proofs;
+ const auto inner=document.at("store").dump();auto store=restore_store(inner,sha256(Bytes(inner.begin(),inner.end())));CapellaSignedVotes votes,proofs;
  std::array<std::optional<CapellaTargetPreparation>,2> restored_targets;
  for(const auto& entry:document.at("signedVotes")){
   if(check)check();archive_require(entry.is_array()&&entry.size()==2&&entry[0].is_string()&&entry[1].is_string());
@@ -139,7 +154,8 @@ std::tuple<CapellaForkStore,CapellaSignedVotes,CapellaSignedVotes,CapellaPending
    archive_require(identities.emplace(operation->validator_index,*key).second&&exits.emplace(id,CapellaPendingExit{root,*key,wire}).second);
   }
  }
- archive_require(durable_snapshot(store,votes,proofs,changes,exits,rules,limits,check)==encoded);return {std::move(store),std::move(votes),std::move(proofs),std::move(changes),std::move(exits)};
+ const std::function<void(const CapellaColdReference&,std::string_view)> no_hot=[](const auto&,auto){throw std::logic_error("Unexpected restored hot row");};
+ archive_require(durable_snapshot(store,votes,proofs,changes,exits,rules,limits,check,nullptr,cold?&no_hot:nullptr)==encoded);return {std::move(store),std::move(votes),std::move(proofs),std::move(changes),std::move(exits)};
 }
 
 Json recovery_token_json(const std::optional<ForkCheckpointToken>& token){return token?Json{{"sequence",quantity(Int(std::to_string(token->sequence)))},{"digest",hex(token->digest)}}:Json(nullptr);}
@@ -150,6 +166,12 @@ std::optional<ForkCheckpointToken> recovery_token_parse(const Json& j){
 
 }
 
+CapellaCheckpointProvider::Fetch CapellaDurableReactor::checkpoint_reader(ChainStore& store){
+ auto& provider=&store==&disk_?primary_provider_:witness_provider_;
+ archive_require(&store==&disk_||&store==witness_);
+ if(!provider)provider=std::make_unique<CapellaCheckpointProvider>([disk=&store,chain=chain_,genesis=genesis_](const Bytes& digest,size_t bytes){return disk->checkpoint_blob(chain,genesis,digest,bytes);});
+ return provider->reader();
+}
 size_t CapellaDurableReactor::witness_limit()const{
  if(limits_.envelope_bytes>(SIZE_MAX-2048)/8)throw std::length_error("Capella witness size overflow");return 2048+8*limits_.envelope_bytes;
 }
@@ -166,7 +188,7 @@ void CapellaDurableReactor::validate_execution_binding()const{
  const auto tip=disk_.latest();if(!tip||tip->header.hash()!=execution_->tip_.header.hash()||execution_->state_.root()!=tip->header.state_root)throw std::invalid_argument("Capella execution cache mismatch");
 }
 void CapellaDurableReactor::fail_closed(){if(!failure_)failure_=std::current_exception();unavailable_=true;std::atomic_store_explicit(&beacon_publication_,std::shared_ptr<const CapellaPublishedStore>{},std::memory_order_release);if(execution_){std::lock_guard lock(execution_->mutex_);execution_->beacon_ready_=false;}}
-CapellaDurableReactor::~CapellaDurableReactor(){std::atomic_store_explicit(&beacon_publication_,std::shared_ptr<const CapellaPublishedStore>{},std::memory_order_release);if(execution_){std::lock_guard lock(execution_->mutex_);execution_->beacon_ready_=false;}}
+CapellaDurableReactor::~CapellaDurableReactor(){if(primary_provider_)primary_provider_->close();if(witness_provider_)witness_provider_->close();std::atomic_store_explicit(&beacon_publication_,std::shared_ptr<const CapellaPublishedStore>{},std::memory_order_release);if(execution_){std::lock_guard lock(execution_->mutex_);execution_->beacon_ready_=false;}}
 void CapellaDurableReactor::invalidate(){std::lock_guard lock(mutex_);fail_closed();}
 void CapellaDurableReactor::require_available()const{
  if(unavailable_||!state_||!token_){
@@ -178,7 +200,7 @@ void CapellaDurableReactor::require_available()const{
 void CapellaDurableReactor::publish(CapellaForkStore candidate,const std::function<void()>& check,const std::vector<CheckpointArchiveEntry>& archive,std::optional<CapellaSignedVotes> votes,std::optional<CapellaSignedVotes> slashings,std::optional<CapellaPendingBlsChanges> changes,std::optional<CapellaPendingExits> exits){
  publish_impl(std::move(candidate),check,archive,std::move(votes),std::move(slashings),std::move(changes),std::move(exits),false);
 }
-void CapellaDurableReactor::publish_impl(CapellaForkStore candidate,const std::function<void()>& check,const std::vector<CheckpointArchiveEntry>& archive,std::optional<CapellaSignedVotes> votes,std::optional<CapellaSignedVotes> slashings,std::optional<CapellaPendingBlsChanges> changes,std::optional<CapellaPendingExits> exits,bool force_fragments){
+void CapellaDurableReactor::publish_impl(CapellaForkStore candidate,const std::function<void()>& check,const std::vector<CheckpointArchiveEntry>& archive,std::optional<CapellaSignedVotes> votes,std::optional<CapellaSignedVotes> slashings,std::optional<CapellaPendingBlsChanges> changes,std::optional<CapellaPendingExits> exits,bool force_fragments,std::optional<CapellaColdCheckpointOptions> cold){
  if(unavailable_)require_available();
  if(chain_!=rules_.transition.chain_id||genesis_.size()!=32)throw std::invalid_argument("Capella reactor chain/profile mismatch");
  // Only finalized sanctions retire evidence. An unfinalized inclusion can reorg.
@@ -214,10 +236,15 @@ void CapellaDurableReactor::publish_impl(CapellaForkStore candidate,const std::f
   }
  }
  auto next=std::make_shared<const CapellaForkStore>(std::move(candidate));
- const auto flat=durable_snapshot(*next,votes?*votes:votes_,slashings?*slashings:slashings_,*changes,*exits,rules_,limits_,check,&cache_);
  const auto previous=token_?disk_.fork_checkpoint(chain_,genesis_,limits_.envelope_bytes,token_):std::nullopt;
- const bool fragmented=force_fragments||(previous&&previous->snapshot.starts_with("{\"expandedBytes\":"));
- auto fragments=fragmented?capella_checkpoint_detail::fragment_checkpoint(flat,limits_.envelope_bytes,limits_.blocks,check):capella_checkpoint_detail::FragmentCheckpoint{flat,{}};
+ if(!cold&&previous)cold=cold_options(previous->snapshot,limits_);
+ if(cold)archive_require(cold->cache_records&&cold->cache_records<=limits_.blocks&&cold->cache_bytes&&cold->cache_bytes<=limits_.envelope_bytes);
+ std::vector<CheckpointBlob> staged;size_t staged_bytes=0;
+ const std::function<void(const CapellaColdReference&,std::string_view)> stage=[&](const auto& ref,std::string_view row){if(ref.bytes>limits_.envelope_bytes-staged_bytes)throw std::length_error("Capella cold blob batch budget");staged_bytes+=ref.bytes;staged.push_back({ref.digest,std::string(row)});};
+ const auto flat=durable_snapshot(*next,votes?*votes:votes_,slashings?*slashings:slashings_,*changes,*exits,rules_,limits_,check,cold?nullptr:&cache_,cold?&stage:nullptr);
+ const bool fragmented=!cold&&(force_fragments||(previous&&previous->snapshot.starts_with("{\"expandedBytes\":")));
+ auto fragments=cold?capella_checkpoint_detail::FragmentCheckpoint{cold_envelope(flat,*cold),std::move(staged)}:fragmented?capella_checkpoint_detail::fragment_checkpoint(flat,limits_.envelope_bytes,limits_.blocks,check):capella_checkpoint_detail::FragmentCheckpoint{flat,{}};
+ if(fragments.manifest.size()>limits_.envelope_bytes)throw std::length_error("Capella cold envelope budget");
  const auto& encoded=fragments.manifest;
  const auto head_pin=capella_fork_head(*next,rules_,check);const auto& head=*head_pin;
  const auto tip=disk_.latest();if(!tip)throw std::invalid_argument("Capella reactor requires persisted execution anchor");
@@ -234,7 +261,7 @@ void CapellaDurableReactor::publish_impl(CapellaForkStore candidate,const std::f
  if(state_&&next->timed.view.anchor!=state_->timed.view.anchor){
   const auto expected=prepare_capella_pruned_store(*state_,next->timed.view.anchor,rules_,check);
   if(capella_store_snapshot(expected,rules_,limits_,check)!=capella_store_snapshot(*next,rules_,limits_,check))throw std::invalid_argument("Capella pruning changed live state");
-  (void)restore_durable(flat,sha256(Bytes(flat.begin(),flat.end())),rules_,limits_,check);
+  if(!cold)(void)restore_durable(flat,sha256(Bytes(flat.begin(),flat.end())),rules_,limits_,check);
  }
  const auto digest=sha256(Bytes(encoded.begin(),encoded.end()));
  if(token_&&digest==token_->digest){if(check)check();try{if(witness_)archive_require(bool(witness_->fork_checkpoint(chain_,genesis_,witness_limit(),witness_token_)));if(!disk_.fork_checkpoint(chain_,genesis_,limits_.envelope_bytes,token_))throw std::runtime_error("missing Capella checkpoint");}catch(...){fail_closed();throw;}return;}
@@ -249,7 +276,22 @@ void CapellaDurableReactor::publish_impl(CapellaForkStore candidate,const std::f
  std::reverse(suffix.begin(),suffix.end());if(check)check();
  // Allocate the coherent read view before I/O; no allocation after commit.
  if(token_&&token_->sequence==UINT64_MAX)throw std::overflow_error("Capella publication sequence exhausted");
- const auto publication=std::make_shared<const CapellaPublishedStore>(CapellaPublishedStore{next,{token_?token_->sequence+1:1,digest}});
+ auto published_next=next;
+ if(cold){
+  const auto reader=checkpoint_reader(disk_);
+  const auto pending=[&](const Bytes& digest,size_t bytes)->std::optional<std::string>{for(const auto& blob:fragments.blobs)if(blob.digest==digest){archive_require(blob.payload.size()<=bytes);return blob.payload;}return reader(digest,bytes);};
+  // Verify every reference and operation before I/O, then prepare the durable
+  // read view with the lifetime-guarded PRIMARY reader, not the staging closure.
+  (void)restore_durable(encoded,sha256(Bytes(encoded.begin(),encoded.end())),rules_,limits_,check,pending);
+  auto prepared=*next;auto cache=std::make_shared<CapellaColdRecordCache>(rules_,limits_,cold->cache_records,cold->cache_bytes);
+  const auto payload=Json::parse(encoded).at("checkpoint");const auto& reference_store=payload.at("format")=="nano-capella-reference-store-v1"?payload:payload.at("store");
+  for(const auto& ref:reference_store.at("snapshot").at("blocks")){
+   const auto root_bytes=unhex(ref[0].get<std::string>());const auto id=archive_array<32>(root_bytes,0);auto& entry=prepared.blocks.at(id);
+   entry=CapellaForkRecord(CapellaColdReference{id,unhex(ref[1].get<std::string>()),size_t(u64(quantity(ref[2]))),id==prepared.timed.view.anchor},entry.header(),entry.execution_header(),cache,reader);
+  }
+  published_next=std::make_shared<const CapellaForkStore>(std::move(prepared));
+ }
+ const auto publication=std::make_shared<const CapellaPublishedStore>(CapellaPublishedStore{published_next,{token_?token_->sequence+1:1,digest}});
  std::optional<ExecutionStateRetentionAnchor> retention;
  if(historical_state_pruning_){const auto& anchor=next->blocks.at(next->timed.view.anchor).execution_header();if(anchor.number<=common_height)retention=ExecutionStateRetentionAnchor{anchor.number,anchor.hash()};}
  ForkCheckpointToken committed;
@@ -261,7 +303,7 @@ void CapellaDurableReactor::publish_impl(CapellaForkStore candidate,const std::f
  }
  catch(...){fail_closed();throw;}
  // No allocation or callback after durable success and before publication.
- token_=std::move(committed);state_=std::move(next);if(votes)votes_=std::move(*votes);if(slashings)slashings_=std::move(*slashings);bls_changes_=std::move(*changes);exits_=std::move(*exits);
+ token_=std::move(committed);state_=std::move(published_next);if(cold)cache_=CapellaStoreSnapshotCache{};if(votes)votes_=std::move(*votes);if(slashings)slashings_=std::move(*slashings);bls_changes_=std::move(*changes);exits_=std::move(*exits);
  std::atomic_store_explicit(&beacon_publication_,publication,std::memory_order_release);
 }
 CapellaDurableReactor::CapellaDurableReactor(ChainStore& disk,Int chain,Bytes genesis,CapellaForkBlockRules rules,CapellaStoreSnapshotLimits limits,CapellaForkStore initial,const std::function<void()>& check,Blockchain* owner,ChainStore* witness):disk_(disk),execution_(owner),chain_(std::move(chain)),genesis_(std::move(genesis)),rules_(std::move(rules)),limits_(limits),mutex_(disk.altair_reactor_mutex_){std::lock_guard lock(mutex_);validate_execution_binding();if(witness){archive_require(witness!=&disk_);witness_=witness;witness_->bind_chain(chain_,genesis_,"nano-capella-recovery-v1");archive_require(!witness_->fork_checkpoint(chain_,genesis_,witness_limit())&&!disk_.fork_checkpoint(chain_,genesis_,limits_.envelope_bytes));}publish(std::move(initial),check);}
@@ -269,7 +311,7 @@ CapellaDurableReactor::CapellaDurableReactor(ChainStore& disk,Int chain,Bytes ge
  std::lock_guard lock(mutex_);validate_execution_binding();
  if(chain_!=rules_.transition.chain_id||genesis_.size()!=32)throw std::invalid_argument("Capella reactor chain/profile mismatch");
  const auto record=disk_.fork_checkpoint(chain_,genesis_,limits_.envelope_bytes,expected);if(!record)throw std::invalid_argument("Capella restart checkpoint missing");
- auto [restored,votes,slashings,changes,exits]=restore_durable(record->snapshot,expected.digest,rules_,limits_,check,[&](const Bytes& digest,size_t bytes){return disk_.checkpoint_blob(chain_,genesis_,digest,bytes);});const auto pruning=disk_.state_pruning();if(pruning&&pruning->anchor.number>restored.blocks.at(restored.timed.view.anchor).execution_header().number)throw std::invalid_argument("pruning boundary exceeds authenticated Capella anchor");const auto head_pin=capella_fork_head(restored,rules_,check);const auto& head=*head_pin;const auto tip=disk_.latest();const auto state=disk_.state_at(head.execution_block.header.number);
+ auto [restored,votes,slashings,changes,exits]=restore_durable(record->snapshot,expected.digest,rules_,limits_,check,checkpoint_reader(disk_));const auto pruning=disk_.state_pruning();if(pruning&&pruning->anchor.number>restored.blocks.at(restored.timed.view.anchor).execution_header().number)throw std::invalid_argument("pruning boundary exceeds authenticated Capella anchor");const auto head_pin=capella_fork_head(restored,rules_,check);const auto& head=*head_pin;const auto tip=disk_.latest();const auto state=disk_.state_at(head.execution_block.header.number);
  if(!tip||!state||tip->header.hash()!=head.execution_block.header.hash()||state->root()!=head.execution_state.root())throw std::invalid_argument("Capella restart execution mismatch");
  for(const auto& receipt:head.receipts){if(check)check();const auto saved=disk_.receipt(receipt.transaction_hash);archive_require(saved&&saved->to_json()==receipt.to_json());}
  auto finalized=restored.blocks.at(restored.timed.view.finalized.root).lease(check)->execution_block;const auto canonical=disk_.block_by_number(finalized.header.number);archive_require(canonical&&canonical->header.hash()==finalized.header.hash());
@@ -285,12 +327,19 @@ CapellaDurableReactor::CapellaDurableReactor(Blockchain& owner,CapellaForkBlockR
  archive_require(intent.is_object()&&intent.size()==5&&intent.at("format")=="nano-capella-recovery-v1"&&intent.dump()==saved->snapshot);
  const auto previous=recovery_token_parse(intent.at("previous")),next=recovery_token_parse(intent.at("next"));archive_require(next&&(!previous||previous->sequence<UINT64_MAX)&&next->sequence==(previous?previous->sequence+1:1));
  if(recovery_commitment&&next!=recovery_commitment)throw std::invalid_argument("Capella recovery commitment differs from witness intent");
- const auto encoded=intent.at("snapshot").get<std::string>();const bool fragmented=encoded.starts_with("{\"expandedBytes\":");auto [restored,votes,slashings,changes,exits]=restore_durable(encoded,next->digest,rules_,limits_,check,[&](const Bytes& digest,size_t bytes){return witness_->checkpoint_blob(chain_,genesis_,digest,bytes);});const auto flat=durable_snapshot(restored,votes,slashings,changes,exits,rules_,limits_,check);archive_require((fragmented?capella_checkpoint_detail::fragment_checkpoint(flat,limits_.envelope_bytes,limits_.blocks,check).manifest:flat)==encoded);
+ const auto encoded=intent.at("snapshot").get<std::string>();const bool fragmented=encoded.starts_with("{\"expandedBytes\":");auto [restored,votes,slashings,changes,exits]=restore_durable(encoded,next->digest,rules_,limits_,check,checkpoint_reader(*witness_));const auto cold=cold_options(encoded,limits_);const std::function<void(const CapellaColdReference&,std::string_view)> no_hot=[](const auto&,auto){throw std::logic_error("Unexpected hot witness row");};const auto payload=durable_snapshot(restored,votes,slashings,changes,exits,rules_,limits_,check,nullptr,cold?&no_hot:nullptr);const auto flat=cold?cold_envelope(payload,*cold):payload;archive_require((fragmented?capella_checkpoint_detail::fragment_checkpoint(flat,limits_.envelope_bytes,limits_.blocks,check).manifest:flat)==encoded);
  const auto& entries=intent.at("archive");archive_require(entries.is_array()&&entries.size()<=1);std::vector<CheckpointArchiveEntry> archive;
  for(const auto& entry:entries){archive_require(entry.is_array()&&entry.size()==3&&entry[0].is_string()&&entry[1].is_string()&&entry[2].is_string());const auto root=entry[0].get<std::string>(),payload=entry[2].get<std::string>();archive_require(root.size()==66&&payload.size()>=2&&payload.size()%2==0&&(payload.size()-2)/2<=limits_.envelope_bytes);auto id=unhex(root),wire=unhex(payload);const auto slot=u64(quantity(entry[1]));archive_require(hex(id)==root&&hex(wire)==payload&&quantity(Int(std::to_string(slot)))==entry[1].get<std::string>());const auto key=archive_array<32>(id,0);verify_archived_block(key,wire,restored,rules_,check);archive_require(restored.blocks.at(key).header().slot==slot);archive.push_back({std::move(id),slot,std::move(wire)});}
  const auto primary=disk_.fork_checkpoint(chain_,genesis_,limits_.envelope_bytes);const auto actual=primary?std::optional<ForkCheckpointToken>(primary->token):std::nullopt;archive_require(actual==next||actual==previous);witness_token_=saved->token;
- if(actual!=next){token_=previous;publish_impl(std::move(restored),check,archive,std::move(votes),std::move(slashings),std::move(changes),std::move(exits),fragmented);return;}
- if(fragmented){archive_require(primary&&primary->snapshot==encoded);const auto expanded=capella_checkpoint_detail::expand_fragment_checkpoint(primary->snapshot,next->digest,limits_.envelope_bytes,limits_.blocks,[&](const Bytes& digest,size_t bytes){return disk_.checkpoint_blob(chain_,genesis_,digest,bytes);},check);archive_require(expanded==flat);}
+ if(actual!=next){
+  // Witness intent is authenticated and linked to the previous primary token.
+  // Materialize only on this recovery path so all missing PRIMARY rows are
+  // included in its existing atomic batch. Recovery peak memory remains open.
+  if(cold)for(auto& [_,entry]:restored.blocks)entry.writable(check);
+  token_=previous;publish_impl(std::move(restored),check,archive,std::move(votes),std::move(slashings),std::move(changes),std::move(exits),fragmented,cold);return;
+ }
+ if(cold){archive_require(primary&&primary->snapshot==encoded);std::tie(restored,votes,slashings,changes,exits)=restore_durable(primary->snapshot,next->digest,rules_,limits_,check,checkpoint_reader(disk_));}
+ if(fragmented){archive_require(primary&&primary->snapshot==encoded);const auto expanded=capella_checkpoint_detail::expand_fragment_checkpoint(primary->snapshot,next->digest,limits_.envelope_bytes,limits_.blocks,checkpoint_reader(disk_),check);archive_require(expanded==flat);}
  for(const auto& entry:archive){const auto persisted=disk_.checkpoint_archive(entry.root,limits_.envelope_bytes);archive_require(persisted&&persisted->slot==entry.slot&&persisted->payload==entry.payload);}
  const auto pruning=disk_.state_pruning();if(pruning&&pruning->anchor.number>restored.blocks.at(restored.timed.view.anchor).execution_header().number)throw std::invalid_argument("pruning boundary exceeds authenticated Capella anchor");const auto head_pin=capella_fork_head(restored,rules_,check);const auto& head=*head_pin;const auto tip=disk_.latest();const auto state=disk_.state_at(head.execution_block.header.number);archive_require(chain_==rules_.transition.chain_id&&tip&&state&&tip->header.hash()==head.execution_block.header.hash()&&state->root()==head.execution_state.root());
  for(const auto& receipt:head.receipts){if(check)check();const auto persisted=disk_.receipt(receipt.transaction_hash);archive_require(persisted&&persisted->to_json()==receipt.to_json());}
@@ -734,9 +783,21 @@ namespace nano {
 bool CapellaDurableReactor::migrate_fragment_checkpoint(const std::function<void()>& check){
  std::lock_guard lock(mutex_);require_available();if(check)check();
  const auto record=disk_.fork_checkpoint(chain_,genesis_,limits_.envelope_bytes,token_);archive_require(bool(record));
+ if(cold_options(record->snapshot,limits_)){(void)restore_durable(record->snapshot,record->token.digest,rules_,limits_,check,checkpoint_reader(disk_));return false;}
  if(record->snapshot.starts_with("{\"expandedBytes\":")){
-  (void)restore_durable(record->snapshot,record->token.digest,rules_,limits_,check,[&](const Bytes& digest,size_t bytes){return disk_.checkpoint_blob(chain_,genesis_,digest,bytes);});return false;
+  (void)restore_durable(record->snapshot,record->token.digest,rules_,limits_,check,checkpoint_reader(disk_));return false;
  }
  publish_impl(*state_,check,{},std::nullopt,std::nullopt,std::nullopt,std::nullopt,true);return true;
+}
+}
+
+namespace nano {
+bool CapellaDurableReactor::migrate_reference_checkpoint(CapellaColdCheckpointOptions options,const std::function<void()>& check){
+ std::lock_guard lock(mutex_);require_available();if(check)check();
+ const auto record=disk_.fork_checkpoint(chain_,genesis_,limits_.envelope_bytes,token_);archive_require(bool(record));
+ if(cold_options(record->snapshot,limits_)==std::optional(options)){
+  (void)restore_durable(record->snapshot,record->token.digest,rules_,limits_,check,checkpoint_reader(disk_));return false;
+ }
+ publish_impl(*state_,check,{},std::nullopt,std::nullopt,std::nullopt,std::nullopt,false,options);return true;
 }
 }
