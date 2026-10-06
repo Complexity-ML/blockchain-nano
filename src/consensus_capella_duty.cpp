@@ -15,7 +15,7 @@ static std::map<uint64_t,CapellaAttestationDuty> attestation_duties_impl(
  if(view.current_epoch!=epoch)throw std::invalid_argument("Attestation duty epoch mismatch");
  if(slot!=expected_slot)return {};
  const auto head=phase0_fork_choice_head(view,{slots,t.attestation.duties.effective_balance_increment,rules.proposer_score_boost},checkpoint).head;
- const auto& block=store.blocks.at(head);validate_capella_execution_record(block,rules,checkpoint);
+ const auto block_pin=store.blocks.at(head).lease(checkpoint);const auto& block=*block_pin;validate_capella_execution_record(block,rules,checkpoint);
  if(block.header.slot>slot)throw std::invalid_argument("Future attestation head");
  if(block.header.slot!=slot&&(clock.time_ms-clock.genesis_time_ms)%rules.slot_duration_ms<rules.attestation_due_ms)return {};
  const auto head_context=capella_fork_block_context(block.state,block.header,epoch_rules,t.state,checkpoint);
@@ -30,7 +30,7 @@ static std::map<uint64_t,CapellaAttestationDuty> attestation_duties_impl(
   if(!view.nodes.contains(node.parent)||view.nodes.at(node.parent).slot>=node.slot)throw std::invalid_argument("Invalid duty checkpoint ancestry");
   target=node.parent;
  }
- const auto& boundary=store.blocks.at(target);
+ const auto boundary_pin=store.blocks.at(target).lease(checkpoint);const auto& boundary=*boundary_pin;
  const auto prepared_target=prepared?prepared->target_context(store,{epoch,target},checkpoint):std::nullopt;
  if(prepared&&!prepared_target)return {};
  const auto context=prepared_target?*prepared_target:prepare_capella_fork_state_contexts(boundary.state,boundary.header,{epoch,target},epoch_rules,t.state,maximum_slots,maximum_sync_trials,checkpoint).target;
@@ -65,12 +65,12 @@ std::map<uint64_t,CapellaAttestationDuty> prepare_capella_attestation_duties(
 }
 CapellaDutyPreparation::CapellaDutyPreparation(const CapellaForkStore& store,
  const CapellaForkBlockRules& rules,uint64_t slot,const std::function<void()>& check)
- :rules_(rules),slot_(slot),head_(capella_fork_head(store,rules,check).state,
- capella_fork_head(store,rules,check).header,
+ :rules_(rules),slot_(slot),head_(capella_fork_head(store,rules,check)->state,
+ capella_fork_head(store,rules,check)->header,
  {rules.transition.consensus.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},rules.transition.consensus.state,check){
  const auto& t=rules_.transition;const auto slots=t.consensus.epoch.ffg.slots_per_epoch;
  if(!slots||slot_==UINT64_MAX||head_.parent().slot>slot_)throw std::invalid_argument("Invalid prepared local duty slot");
- const auto& head=store.blocks.at(consensus_beacon_header_root(head_.parent()));
+ const auto head_pin=store.blocks.at(consensus_beacon_header_root(head_.parent())).lease(check);const auto& head=*head_pin;
  validate_capella_execution_record(head,rules_,check);
  if(head.header.slot<slot_)block_.emplace(head.state,head.header,t,check);
  auto root=consensus_beacon_header_root(head.header);const auto start=(slot_/slots)*slots;
@@ -80,20 +80,20 @@ CapellaDutyPreparation::CapellaDutyPreparation(const CapellaForkStore& store,
   if(!store.timed.view.nodes.contains(n.parent)||store.timed.view.nodes.at(n.parent).slot>=n.slot)throw std::invalid_argument("Invalid prepared duty ancestry");
   root=n.parent;
  }
- const auto& boundary=store.blocks.at(root);
+ const auto boundary_pin=store.blocks.at(root).lease(check);const auto& boundary=*boundary_pin;
  target_.emplace(store,rules_,ConsensusCheckpoint{slot_/slots,root},check);
 }
 bool CapellaDutyPreparation::matches(const CapellaForkStore& store,const CapellaForkBlockRules& rules,
  uint64_t slot,const std::function<void()>& check)const{
  if(slot!=slot_||capella_fork_profile(rules)!=capella_fork_profile(rules_))return false;
- if(capella_fork_head(store,rules,check).header!=head_.parent())return false;
+ if(capella_fork_head(store,rules,check)->header!=head_.parent())return false;
  if(target_&&!target_->matches(store,rules_,target_->target(),check))return false;
  return true;
 }
 bool CapellaDutyPreparation::retarget(const CapellaForkStore& store,const CapellaForkBlockRules& rules,
  uint64_t slot,const std::function<void()>& check){
  if(slot<slot_||slot==UINT64_MAX||capella_fork_profile(rules)!=capella_fork_profile(rules_))return false;
- const auto& head=capella_fork_head(store,rules_,check);if(head.header!=head_.parent())return false;
+ const auto head_pin=capella_fork_head(store,rules_,check);const auto& head=*head_pin;if(head.header!=head_.parent())return false;
  const auto& t=rules_.transition;const auto slots=t.consensus.epoch.ffg.slots_per_epoch;
  capella_fork_block_context(head.state,head.header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state,check);
  auto root=consensus_beacon_header_root(head.header);const auto start=(slot/slots)*slots;

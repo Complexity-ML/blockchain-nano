@@ -1,0 +1,117 @@
+In file included from <built-in>:476:
+<command line>:9:27: warning: missing terminating '"' character [-Winvalid-pp-token]
+    9 | #define NANO_TEST_SOURCE \"/work\"
+      |                           ^
+/source/tests/test_capella_transition.cpp:83:57: error: no member named 'execution_block' in 'nano::CapellaForkRecord'
+   83 |   for(const auto& [id,b]:store.blocks)ordered.emplace(b.execution_block.header.number,ExecutionCheckpointBlock{b.execution_block,b.execution_state,b.receipts});for(const auto& [height,b]:ordered)suffixes[i].push_back(b);
+      |                                                       ~ ^
+/source/tests/test_capella_transition.cpp:83:114: error: no member named 'execution_block' in 'nano::CapellaForkRecord'
+   83 |   for(const auto& [id,b]:store.blocks)ordered.emplace(b.execution_block.header.number,ExecutionCheckpointBlock{b.execution_block,b.execution_state,b.receipts});for(const auto& [height,b]:ordered)suffixes[i].push_back(b);
+      |                                                                                                                ~ ^
+/source/tests/test_capella_transition.cpp:83:132: error: no member named 'execution_state' in 'nano::CapellaForkRecord'; did you mean 'execution_header'?
+   83 |   for(const auto& [id,b]:store.blocks)ordered.emplace(b.execution_block.header.number,ExecutionCheckpointBlock{b.execution_block,b.execution_state,b.receipts});for(const auto& [height,b]:ordered)suffixes[i].push_back(b);
+      |                                                                                                                                    ^~~~~~~~~~~~~~~
+      |                                                                                                                                    execution_header
+/source/include/nano/consensus_capella_fork_store.hpp:30:16: note: 'execution_header' declared here
+   30 |  const Header& execution_header()const;
+      |                ^
+/source/tests/test_capella_transition.cpp:83:150: error: no member named 'receipts' in 'nano::CapellaForkRecord'
+   83 |   for(const auto& [id,b]:store.blocks)ordered.emplace(b.execution_block.header.number,ExecutionCheckpointBlock{b.execution_block,b.execution_state,b.receipts});for(const auto& [height,b]:ordered)suffixes[i].push_back(b);
+      |                                                                                                                                                    ~ ^
+/source/tests/test_capella_transition.cpp:83:132: error: reference to non-static member function must be called; did you mean to call it with no arguments?
+   83 |   for(const auto& [id,b]:store.blocks)ordered.emplace(b.execution_block.header.number,ExecutionCheckpointBlock{b.execution_block,b.execution_state,b.receipts});for(const auto& [height,b]:ordered)suffixes[i].push_back(b);
+      |                                                                                                                                  ~~^~~~~~~~~~~~~~~
+      |                                                                                                                                                   ()
+In file included from /source/tests/test_capella_transition.cpp:115:
+/source/tests/support/capella_pruning_sync.hpp:17:297: error: no member named 'execution_block' in 'nano::CapellaForkRecord'
+   17 |   {ChainStore disk(directory/"db");disk.bind_chain(genesis.chain_id,genesis.block.header.hash(),genesis.consensus,genesis.staking_contract);disk.commit(genesis.block,genesis.state,{});std::map<Int,const CapellaForkBlock*> ordered;for(const auto& [id,record]:initial.blocks)ordered.emplace(record.execution_block.header.number,&record);for(const auto& [height,record]:ordered)disk.commit(record->execution_block,record->execution_state,record->receipts);}
+      |                                                                                                                                                                                                                                                                                                  ~~~~~~ ^
+/source/tests/test_capella_transition.cpp:442:214: error: no matching member function for call to 'reset'
+  442 |   auto unsupported=rules;unsupported.native_deposit_votes=true;unsupported.deposit_contract_code_hash=Bytes(32,1);auto missing_history=old;missing_history.blocks.at(old.timed.view.anchor).lease()->deposit_history.reset();bool deposit_refused=false;try{prepare_capella_pruned_store(missing_history,anchor,unsupported);}catch(const std::invalid_argument&){deposit_refused=true;}check(deposit_refused,"unqualified native deposit history pruned");
+      |                                                                                                                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~
+/usr/bin/../lib/gcc/aarch64-linux-gnu/13/../../../../include/c++/13/bits/shared_ptr_base.h:1641:7: note: candidate function not viable: no known conversion from 'const std::shared_ptr<const ExecutionDepositHistory>' to 'std::__shared_ptr<const nano::ExecutionDepositHistory>' for object argument
+ 1641 |       reset() noexcept
+      |       ^
+/usr/bin/../lib/gcc/aarch64-linux-gnu/13/../../../../include/c++/13/bits/shared_ptr_base.h:1646:2: note: candidate function template not viable: requires single argument '__p', but no arguments were provided
+ 1646 |         reset(_Yp* __p) // _Yp must be complete.
+      |         ^     ~~~~~~~~
+/usr/bin/../lib/gcc/aarch64-linux-gnu/13/../../../../include/c++/13/bits/shared_ptr_base.h:1655:2: note: candidate function template not viable: requires 2 arguments, but 0 were provided
+ 1655 |         reset(_Yp* __p, _Deleter __d)
+      |         ^     ~~~~~~~~~~~~~~~~~~~~~~
+/usr/bin/../lib/gcc/aarch64-linux-gnu/13/../../../../include/c++/13/bits/shared_ptr_base.h:1660:2: note: candidate function template not viable: requires 3 arguments, but 0 were provided
+ 1660 |         reset(_Yp* __p, _Deleter __d, _Alloc __a)
+      |         ^     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/source/tests/test_capella_transition.cpp:445:283: error: no member named 'execution_block' in 'nano::CapellaForkRecord'
+  445 |   Temp pruned_directory;{ChainStore disk(pruned_directory/"db");disk.bind_chain(t.chain_id,genesis.header.hash(),"capella-pruned-test");disk.commit(genesis,genesis_state,{});std::map<Int,const CapellaForkBlock*> records;for(const auto& [id,record]:old.blocks)records.emplace(record.execution_block.header.number,&record);for(const auto& [height,record]:records)disk.commit(record->execution_block,record->execution_state,record->receipts);auto reactor=std::make_unique<CapellaDurableReactor>(disk,t.chain_id,genesis.header.hash(),rules,limits,pruned);check(reactor->network_identity()==nodes[0]->network_identity(),"pruned reactor network identity changed");const auto token=reactor->current().token;reactor.reset();reactor=std::make_unique<CapellaDurableReactor>(disk,t.chain_id,genesis.header.hash(),rules,limits,token);check(reactor->network_identity()==nodes[0]->network_identity(),"pruned restart identity changed");}
+      |                                                                                                                                                                                                                                                                                    ~~~~~~ ^
+/source/tests/test_capella_transition.cpp:1006:46: error: no member named 'state' in 'nano::CapellaForkRecord'
+ 1006 |        check(capella_beacon_state_root(block.state.ssz,t.consensus.state,t.execution,t.maximum_state_bytes)==block.header.state_root,"rotated state commitment mismatch");
+      |                                        ~~~~~ ^
+/source/tests/test_capella_transition.cpp:1006:116: error: reference to non-static member function must be called; did you mean to call it with no arguments?
+ 1006 |        check(capella_beacon_state_root(block.state.ssz,t.consensus.state,t.execution,t.maximum_state_bytes)==block.header.state_root,"rotated state commitment mismatch");
+      |                                                                                                              ~~~~~~^~~~~~
+      |                                                                                                                          ()
+/source/tests/test_capella_transition.cpp:1007:55: error: no member named 'state' in 'nano::CapellaForkRecord'
+ 1007 |        if(rotation_state)check(*rotation_state==block.state.ssz,"peers disagree on finalized rotated state");else rotation_state=block.state.ssz;
+      |                                                 ~~~~~ ^
+/source/tests/test_capella_transition.cpp:1007:136: error: no member named 'state' in 'nano::CapellaForkRecord'
+ 1007 |        if(rotation_state)check(*rotation_state==block.state.ssz,"peers disagree on finalized rotated state");else rotation_state=block.state.ssz;
+      |                                                                                                                                  ~~~~~ ^
+/source/tests/test_capella_transition.cpp:1529:55: error: reference to non-static member function must be called; did you mean to call it with no arguments?
+ 1529 |   const auto path="/eth/v1/beacon/states/"+text(older.header.state_root)+"/finality_checkpoints";
+      |                                                 ~~~~~~^~~~~~
+      |                                                             ()
+/source/tests/test_capella_transition.cpp:1530:54: error: no member named 'state' in 'nano::CapellaForkRecord'
+ 1530 |   const auto expected=capella_fork_checkpoints(older.state,{rules.transition.consensus.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},rules.transition.consensus.state).realized;
+      |                                                ~~~~~ ^
+/source/tests/test_capella_transition.cpp:1533:81: error: cannot assign to return value because function 'operator[]' returns a const value
+ 1533 |   auto corrupt=*snapshot.state;corrupt.blocks.at(older_id).lease()->state.ssz[0]^=1;bool rejected=false;try{capella_beacon_read(corrupt,rules,path);}catch(const std::invalid_argument&){rejected=true;}check(rejected,"Pinned state commitment mismatch accepted");break;
+      |                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+/usr/bin/../lib/gcc/aarch64-linux-gnu/13/../../../../include/c++/13/bits/stl_vector.h:1144:7: note: function 'operator[]' which returns const-qualified type 'const_reference' (aka 'const unsigned char &') declared here
+ 1144 |       const_reference
+      |       ^~~~~~~~~~~~~~~
+/source/tests/test_capella_transition.cpp:1982:31: error: expected expression
+ 1982 |  const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures",refs=fixtures/"consensus-bellatrix-containers-official",source=fixtures/"consensus-capella-slots-official";
+      |                               ^
+<command line>:9:26: note: expanded from macro 'NANO_TEST_SOURCE'
+    9 | #define NANO_TEST_SOURCE \"/work\"
+      |                          ^
+/source/tests/test_capella_transition.cpp:2408:96: error: no viable conversion from '(lambda at /source/tests/test_capella_transition.cpp:2405:21)' to 'const BeaconSigningJournal::Signer' (aka 'const function<vector<unsigned char> (const array<unsigned char, 32> &)>')
+ 2408 |        check(!reactor->sign_attestation(UINT64_MAX,slot,[&]{return now;},current.token,journal,provider)&&provider_calls==0,"unassigned validator signed");
+      |                                                                                                ^~~~~~~~
+/usr/bin/../lib/gcc/aarch64-linux-gnu/13/../../../../include/c++/13/bits/std_function.h:375:7: note: candidate constructor not viable: no known conversion from '(lambda at /source/tests/test_capella_transition.cpp:2405:21)' to 'nullptr_t' (aka 'std::nullptr_t') for 1st argument
+  375 |       function(nullptr_t) noexcept
+      |       ^        ~~~~~~~~~
+/usr/bin/../lib/gcc/aarch64-linux-gnu/13/../../../../include/c++/13/bits/std_function.h:386:7: note: candidate constructor not viable: no known conversion from '(lambda at /source/tests/test_capella_transition.cpp:2405:21)' to 'const function<vector<unsigned char> (const array<unsigned char, 32> &)> &' for 1st argument
+  386 |       function(const function& __x)
+      |       ^        ~~~~~~~~~~~~~~~~~~~
+/usr/bin/../lib/gcc/aarch64-linux-gnu/13/../../../../include/c++/13/bits/std_function.h:404:7: note: candidate constructor not viable: no known conversion from '(lambda at /source/tests/test_capella_transition.cpp:2405:21)' to 'function<vector<unsigned char> (const array<unsigned char, 32> &)> &&' for 1st argument
+  404 |       function(function&& __x) noexcept
+      |       ^        ~~~~~~~~~~~~~~
+/usr/bin/../lib/gcc/aarch64-linux-gnu/13/../../../../include/c++/13/bits/std_function.h:435:2: note: candidate template ignored: requirement '_Callable<(lambda at /source/tests/test_capella_transition.cpp:2405:21) &, (lambda at /source/tests/test_capella_transition.cpp:2405:21), std::__invoke_result<(lambda at /source/tests/test_capella_transition.cpp:2405:21) &, const std::array<unsigned char, 32> &>>::value' was not satisfied [with _Functor = (lambda at /source/tests/test_capella_transition.cpp:2405:21) &]
+  435 |         function(_Functor&& __f)
+      |         ^
+/source/include/nano/consensus_capella_reactor.hpp:199:60: note: passing argument to parameter here
+  199 |   BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>& checkpoint={});
+      |                                                            ^
+/source/tests/test_capella_transition.cpp:2613:67: error: no member named 'execution_block' in 'nano::CapellaForkRecord'
+ 2613 |  for(const auto& [id,record]:store->blocks)ordered.emplace(record.execution_block.header.number,ExecutionCheckpointBlock{record.execution_block,record.execution_state,record.receipts});
+      |                                                            ~~~~~~ ^
+/source/tests/test_capella_transition.cpp:2613:129: error: no member named 'execution_block' in 'nano::CapellaForkRecord'
+ 2613 |  for(const auto& [id,record]:store->blocks)ordered.emplace(record.execution_block.header.number,ExecutionCheckpointBlock{record.execution_block,record.execution_state,record.receipts});
+      |                                                                                                                          ~~~~~~ ^
+/source/tests/test_capella_transition.cpp:2613:152: error: no member named 'execution_state' in 'nano::CapellaForkRecord'; did you mean 'execution_header'?
+ 2613 |  for(const auto& [id,record]:store->blocks)ordered.emplace(record.execution_block.header.number,ExecutionCheckpointBlock{record.execution_block,record.execution_state,record.receipts});
+      |                                                                                                                                                        ^~~~~~~~~~~~~~~
+      |                                                                                                                                                        execution_header
+/source/include/nano/consensus_capella_fork_store.hpp:30:16: note: 'execution_header' declared here
+   30 |  const Header& execution_header()const;
+      |                ^
+/source/tests/test_capella_transition.cpp:2613:175: error: no member named 'receipts' in 'nano::CapellaForkRecord'
+ 2613 |  for(const auto& [id,record]:store->blocks)ordered.emplace(record.execution_block.header.number,ExecutionCheckpointBlock{record.execution_block,record.execution_state,record.receipts});
+      |                                                                                                                                                                        ~~~~~~ ^
+/source/tests/test_capella_transition.cpp:2613:152: error: reference to non-static member function must be called; did you mean to call it with no arguments?
+ 2613 |  for(const auto& [id,record]:store->blocks)ordered.emplace(record.execution_block.header.number,ExecutionCheckpointBlock{record.execution_block,record.execution_state,record.receipts});
+      |                                                                                                                                                 ~~~~~~~^~~~~~~~~~~~~~~
+      |                                                                                                                                                                       ()
+1 warning and 22 errors generated.

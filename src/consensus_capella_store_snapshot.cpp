@@ -25,7 +25,7 @@ Json slot_snapshot(const CapellaSlotState& s){return Json::array({hex(s.ssz),s.l
 CapellaSlotState slot_restore(const Json& j,size_t budget){require(j.is_array()&&j.size()==2&&j[0].is_string());const auto& hexstate=j[0].get_ref<const std::string&>();require(hexstate.starts_with("0x")&&hexstate.size()%2==0&&(hexstate.size()-2)/2<=budget);CapellaSlotState s{unhex(hexstate),std::nullopt};if(!j[1].is_null())s.last_processed_epoch=number(j[1]);return s;}
 Json execution(const CapellaForkBlock& b,const std::function<void()>& cancel,bool matched_accounts=false){Json receipts=Json::array();for(const auto& receipt:b.receipts)receipts.push_back(receipt.to_json());auto out=Json::array({b.execution_block.to_json(true),matched_accounts?Json(nullptr):b.execution_state.to_json(),receipts});if(b.deposit_history)out.push_back(b.deposit_history->snapshot(cancel));return out;}
 ConsensusSlashingState registry(const CapellaForkStore& s,const CapellaForkBlockRules& r,const CapellaStoreSnapshotLimits& l,const std::function<void()>& cancel){
- const auto& b=s.blocks.at(s.timed.view.justified.root);
+ const auto b_pin=s.blocks.at(s.timed.view.justified.root).lease(cancel);const auto& b=*b_pin;
  if(s.timed.view.justified.root==s.timed.view.anchor&&s.timed.view.justified.epoch==b.header.slot/r.transition.consensus.epoch.ffg.slots_per_epoch)return capella_fork_block_context(b.state,b.header,epoch_rules(r),r.transition.consensus.state,cancel).registry;
  return prepare_capella_resumed_target_context(s,r,s.timed.view.justified,l.replay_slots,l.sync_trials,cancel).registry;
 }
@@ -45,7 +45,7 @@ std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBl
  if(cache)std::erase_if(cache->records_,[&](const auto& item){return !s.blocks.contains(item.first);});
  std::vector<std::string_view> encoded_rows;
  Json blocks=Json::array(),messages=Json::array(),equiv=Json::array(),timely=Json::array(),unrealized=Json::array();size_t bytes=0;
- for(const auto& [id,b]:s.blocks){
+ for(const auto& [id,entry]:s.blocks){const auto b_pin=entry.lease(cancel);const auto& b=*b_pin;
   if(cancel)cancel();require(b.state.ssz.size()>=8&&b.state.ssz.size()<=l.state_bytes&&b.state.ssz.size()<=l.total_state_bytes-bytes);bytes+=b.state.ssz.size();
   require(consensus_beacon_header_root(b.header)==id);
   const auto& n=v.nodes.at(id);require(n.slot==b.header.slot&&n.parent==b.header.parent_root);
@@ -90,10 +90,10 @@ std::string capella_store_snapshot(const CapellaForkStore& s,const CapellaForkBl
  for(auto i:v.equivocating_indices)equiv.push_back(num(i));
  for(const auto& [id,b]:s.timely){require(s.blocks.contains(id));timely.push_back(Json::array({root(id),b}));}
  for(const auto& [id,p]:s.unrealized_justifications){require(s.blocks.contains(id));unrealized.push_back(Json::array({root(id),cp(p)}));}
- Json ancestors=Json::array();require(s.blocks.contains(v.anchor));auto child=s.blocks.at(v.anchor).execution_block.header;
+ Json ancestors=Json::array();require(s.blocks.contains(v.anchor));auto child=s.blocks.at(v.anchor).execution_header();
  require(child.number>=0&&child.number<=Int("18446744073709551615")&&s.anchor_execution_ancestors.size()==std::min<uint64_t>(u64(child.number),256));
  for(const auto& ancestor:s.anchor_execution_ancestors){if(cancel)cancel();require(ancestor.number+1==child.number&&ancestor.hash()==child.parent_hash);ancestors.push_back(ancestor.to_json());child=ancestor;}
- for(const auto& [id,b]:s.blocks)if(id!=v.anchor){const auto& parent=s.blocks.at(b.header.parent_root);require(parent.header.slot<b.header.slot&&parent.execution_block.header.number+1==b.execution_block.header.number&&parent.execution_block.header.hash()==b.execution_block.header.parent_hash);}
+ for(const auto& [id,entry]:s.blocks)if(id!=v.anchor){const auto b_pin=entry.lease(cancel);const auto& b=*b_pin;const auto parent_pin=s.blocks.at(b.header.parent_root).lease(cancel);const auto& parent=*parent_pin;require(parent.header.slot<b.header.slot&&parent.execution_block.header.number+1==b.execution_block.header.number&&parent.execution_block.header.hash()==b.execution_block.header.parent_hash);}
  Json j{{"ancestors",std::move(ancestors)},{"format","nano-capella-store-v1"},{"profile",current_profile},{"anchor",root(v.anchor)},{"justified",cp(v.justified)},{"finalized",cp(v.finalized)},
  {"clock",Json::array({num(c.genesis_time_ms),num(c.time_ms),cp(c.unrealized_justified),cp(c.unrealized_finalized)})},
  {"boost",v.proposer_boost?Json(root(*v.proposer_boost)):Json(nullptr)},{"blocks",std::move(blocks)},{"messages",std::move(messages)},{"equivocations",std::move(equiv)},{"timely",std::move(timely)},{"unrealized",std::move(unrealized)}};

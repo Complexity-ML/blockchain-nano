@@ -1,7 +1,7 @@
 #pragma once
 #ifdef NANO_SYNC_FAULT
 static Json slashing_fault_observation(Blockchain& owner,CapellaDurableReactor& node,const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits){
- const auto current=node.current();const auto& head=capella_fork_head(*current.state,rules);const auto& final=current.state->blocks.at(current.state->timed.view.finalized.root);const auto& t=rules.transition;
+ const auto current=node.current();const auto head_pin=capella_fork_head(*current.state,rules);const auto& head=*head_pin;const auto final_pin=current.state->blocks.at(current.state->timed.view.finalized.root).lease();const auto& final=*final_pin;const auto& t=rules.transition;
  check(owner.tip().header.hash()==head.execution_block.header.hash()&&owner.state().root()==head.execution_state.root()&&owner.finalized_block()->header.hash()==final.execution_block.header.hash(),"slashing fault owner/state mismatch");
  const auto checkpoint=owner.store().fork_checkpoint(t.chain_id,owner.genesis().block.header.hash(),limits.envelope_bytes,current.token);check(bool(checkpoint),"slashing fault checkpoint missing");
  const auto registry=capella_fork_block_context(final.state,final.header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state).registry;

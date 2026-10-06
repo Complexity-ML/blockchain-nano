@@ -5,6 +5,31 @@
 #include "nano/consensus_capella_transition.hpp"
 namespace nano {
 struct CapellaForkBlock {ConsensusBeaconHeader header;CapellaSlotState state;Block execution_block;State execution_state;std::vector<Receipt> receipts;std::shared_ptr<const ExecutionDepositHistory> deposit_history;};
+// Stable immutable lease used by transitions; a cold cache may evict only after
+// all leases are released. Metadata remains available without reading full state.
+struct CapellaColdReference {
+ ConsensusRoot root;Bytes digest;size_t bytes;bool anchor;
+ bool operator==(const CapellaColdReference&)const=default;
+};
+class CapellaColdRecordCache;
+class CapellaForkRecord {
+ std::shared_ptr<CapellaForkBlock> hot_;
+ std::optional<CapellaColdReference> cold_;
+ ConsensusBeaconHeader header_{};Header execution_header_;
+ std::shared_ptr<CapellaColdRecordCache> cache_;
+ std::function<std::optional<std::string>(const Bytes&,size_t)> fetch_;
+public:
+ CapellaForkRecord()=default;
+ CapellaForkRecord(CapellaForkBlock);
+ CapellaForkRecord(CapellaColdReference,ConsensusBeaconHeader,Header,
+  std::shared_ptr<CapellaColdRecordCache>,std::function<std::optional<std::string>(const Bytes&,size_t)>);
+ std::shared_ptr<const CapellaForkBlock> lease(const std::function<void()>& checkpoint={})const;
+ // Local candidate mutation only; detach first so snapshots/leases stay intact.
+ CapellaForkBlock& writable(const std::function<void()>& checkpoint={});
+ const ConsensusBeaconHeader& header()const;
+ const Header& execution_header()const;
+ const std::optional<CapellaColdReference>& cold_reference()const{return cold_;}
+};
 struct CapellaDepositAncestor {ConsensusBeaconHeader beacon;Header execution;uint64_t count;ConsensusRoot root;};
 struct CapellaForkStore {
  Phase0ForkTimedView timed;
@@ -14,7 +39,7 @@ struct CapellaForkStore {
  std::vector<Header> anchor_execution_ancestors;
  // Canonical ancestors before the storage anchor, newest first; no EVM states.
  std::vector<CapellaDepositAncestor> deposit_ancestors;
- std::map<ConsensusRoot,CapellaForkBlock> blocks;
+ std::map<ConsensusRoot,CapellaForkRecord> blocks;
  std::map<ConsensusRoot,bool> timely;
  std::map<ConsensusRoot,ConsensusCheckpoint> unrealized_justifications;
 };
@@ -136,7 +161,7 @@ CapellaForkStore initialize_capella_fork_store(const CapellaSlotState& anchor,
 
 namespace nano {
 // Returns the paired record at the LMD-GHOST head; no canonical DB publication.
-const CapellaForkBlock& capella_fork_head(const CapellaForkStore&,
+std::shared_ptr<const CapellaForkBlock> capella_fork_head(const CapellaForkStore&,
  const CapellaForkBlockRules&,const std::function<void()>& checkpoint={});
 }
 

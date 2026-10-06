@@ -10,7 +10,7 @@ const CapellaDurableReactor::SyncSigningContext& CapellaDurableReactor::sync_sig
  const auto head=phase0_fork_choice_head(state_->timed.view,{c.epoch.ffg.slots_per_epoch,c.attestation.duties.effective_balance_increment,rules_.proposer_score_boost},check).head;
  if(sync_signing_context_&&sync_signing_context_->slot==slot&&sync_signing_context_->parent==head)return *sync_signing_context_;
  if(slot==UINT64_MAX)throw std::overflow_error("Sync duty slot overflow");
- const auto& parent=state_->blocks.at(head);
+ const auto parent_pin=state_->blocks.at(head).lease(check);const auto& parent=*parent_pin;
  if(!prepare_local_duties_locked(slot,check))throw StaleCapellaDuty("Sync preparation incomplete");
  const auto advanced=local_preparation_->sync_state(limits_.sync_trials,check);
  const auto& bytes=advanced.ssz;const size_t historical=176+64*l.slots_per_historical_root;
@@ -45,7 +45,7 @@ std::optional<CapellaSyncMessage> CapellaDurableReactor::sync_current(uint64_t i
  };
  timely();const auto& context=sync_signing_context_locked(slot,check);
  const auto member=context.members.find(index);if(member==context.members.end())return std::nullopt;
- const auto& parent=state_->blocks.at(context.parent);
+ const auto parent_pin=state_->blocks.at(context.parent).lease(check);const auto& parent=*parent_pin;
  // A received current-slot block or one third of a skipped slot triggers sync.
  if(parent.header.slot<slot&&(last-clock.genesis_time_ms)%rules_.slot_duration_ms<(rules_.slot_duration_ms/3+uint64_t(rules_.slot_duration_ms%3!=0)))return std::nullopt;
  const auto saved=pending_sync_messages_.find(slot+1);if(saved!=pending_sync_messages_.end()&&saved->second.parent==context.parent&&saved->second.wires.contains(index))return std::nullopt;

@@ -10,14 +10,14 @@ static void qualify_slashing_reorg(const CapellaForkStore& initial,const Capella
  const auto proof_archive=nodes[0]->signed_slashings();check(proof_archive.size()==1&&nodes[1]->signed_slashings()==proof_archive,"reorg proof archive mismatch");
  auto epoch_version=[&](const Bytes& state,uint64_t epoch){ConsensusBytes4 v{};std::copy_n(state.begin()+(epoch<little(state,56,8)?48:52),4,v.begin());return v;};
  auto signed_candidate=[&](const CapellaForkStore& store,uint64_t slot,uint64_t proposer,const Bytes& body){
-  const auto& parent=capella_fork_head(store,rules);const auto root=consensus_beacon_header_root(parent.header);
+  const auto parent_pin=capella_fork_head(store,rules);const auto& parent=*parent_pin;const auto root=consensus_beacon_header_root(parent.header);
   const auto built=prepare_capella_unsigned_block(parent.state,slot,proposer,root,body,t,parent.execution_block.header,parent.execution_state,[&](const Int& n){return capella_execution_history(store,root,n);},limits.replay_slots,limits.sync_trials);check(bool(built),"slashing reorg candidate invalid");
   const auto& message=built->message_ssz;ConsensusBeaconHeader header{little(message,0,8),little(message,8,8),root_at(message,16),root_at(message,48),capella_beacon_body_root(body,c.body,c.state.sync_committee_size,t.execution,t.withdrawals.maximum_per_payload,t.maximum_bls_changes,c.maximum_block_bytes)};
   const auto signature=Key(proposer).sign(consensus_signing_root(consensus_beacon_header_root(header),consensus_domain({0,0,0,0},epoch_version(parent.state.ssz,slot/slots),root_at(parent.state.ssz,8))));
   Bytes wire(100);put(wire,0,100,4);std::copy(signature.begin(),signature.end(),wire.begin()+4);wire.insert(wire.end(),message.begin(),message.end());return std::pair{wire,header};
  };
  auto body_for=[&](CapellaDurableReactor& node,uint64_t slot){
-  const auto snapshot=node.current();const auto& h=capella_fork_head(*snapshot.state,rules);const auto identity=prepare_capella_proposer_identity(h.state,h.header,slot,{c.epoch,t.execution,t.maximum_state_bytes},c.state,c.attestation.duties,limits.replay_slots,limits.sync_trials);
+  const auto snapshot=node.current();const auto h_pin=capella_fork_head(*snapshot.state,rules);const auto& h=*h_pin;const auto identity=prepare_capella_proposer_identity(h.state,h.header,slot,{c.epoch,t.execution,t.maximum_state_bytes},c.state,c.attestation.duties,limits.replay_slots,limits.sync_trials);
   check(identity&&identity->index!=offender,"reorg fixture selected the offender proposer");ConsensusRoot epoch{};for(unsigned j=0;j<8;++j)epoch[j]=uint8_t((slot/slots)>>(8*j));
   const auto reveal=Key(identity->index).sign(consensus_signing_root(epoch,consensus_domain({2,0,0,0},epoch_version(h.state.ssz,slot/slots),root_at(h.state.ssz,8))));
   const auto body=node.prepare_local_body(identity->index,slot,reveal,h.execution_block.header.coinbase,snapshot.token,{},16,64);check(bool(body),"reorg local body unavailable");return std::pair{*body,identity->index};
@@ -38,9 +38,9 @@ static void qualify_slashing_reorg(const CapellaForkStore& initial,const Capella
  for(auto& n:nodes)n->tick(clock+proposal_slot*rules.slot_duration_ms+rules.attestation_due_ms);
  const auto voting=nodes[0]->current();const auto duties=prepare_capella_attestation_duties(*voting.state,rules,proposal_slot,limits.replay_slots,limits.sync_trials);
  std::vector<CapellaAttestationDuty> voters;for(const auto& [index,duty]:duties)if(index!=offender)voters.push_back(duty);check(voters.size()>=6,"reorg needs six distinct non-offender voters");
- const auto a_state=voting.state->blocks.at(a).state,b_state=voting.state->blocks.at(b).state;
+ const auto a_state=voting.state->blocks.at(a).lease()->state,b_state=voting.state->blocks.at(b).lease()->state;
  auto registry=[&](const CapellaForkBlock& block){return capella_fork_block_context(block.state,block.header,{c.epoch,t.execution,t.maximum_state_bytes},c.state).registry;};
- const auto ar=registry(voting.state->blocks.at(a)),br=registry(voting.state->blocks.at(b));
+ const auto ar=registry((*voting.state->blocks.at(a).lease())),br=registry((*voting.state->blocks.at(b).lease()));
  const auto penalty=br.validators.at(offender).effective_balance/c.epoch.slashing.minimum_penalty_quotient;
  check(ar.validators.at(offender).slashed&&!br.validators.at(offender).slashed&&br.validators.at(offender).balance-ar.validators.at(offender).balance==penalty,"single slashing penalty differs between sibling states");
  for(auto& n:nodes)n->tick(clock+(proposal_slot+1)*rules.slot_duration_ms); // Clear proposer boost before vote-driven reorgs.
@@ -49,7 +49,7 @@ static void qualify_slashing_reorg(const CapellaForkStore& initial,const Capella
  auto verify=[&](const ConsensusRoot& expected,bool slashed,bool reopen){
   for(size_t i=0;i<2;++i){const auto before=nodes[i]->current();
    if(reopen){nodes[i].reset();owners[i].reset();owners[i]=std::make_unique<Blockchain>(directory/("owner-"+std::to_string(i)),g);nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,*witnesses[i]);++reopen_count;check(nodes[i]->current().token==before.token,"reorg witness reopen changed token");}
-   const auto now=nodes[i]->current();const auto& h=capella_fork_head(*now.state,rules);check(consensus_beacon_header_root(h.header)==expected,"votes did not select expected slashing branch");
+   const auto now=nodes[i]->current();const auto h_pin=capella_fork_head(*now.state,rules);const auto& h=*h_pin;check(consensus_beacon_header_root(h.header)==expected,"votes did not select expected slashing branch");
    check(h.state==(slashed?a_state:b_state)&&registry(h).validators.at(offender).slashed==slashed,"slashing reorg left stale registry or balances");
    check(owners[i]->tip().header.hash()==h.execution_block.header.hash()&&owners[i]->state().root()==h.execution_state.root(),"slashing reorg detached EVM owner");
    check(nodes[i]->signed_slashings()==proof_archive,"unfinalized slashing proof lost");const auto token=now.token;
@@ -62,10 +62,10 @@ static void qualify_slashing_reorg(const CapellaForkStore& initial,const Capella
  {ChainStore witness(directory/"reinclusion-witness");auto owner=std::make_unique<Blockchain>(directory/"reinclusion",g);const auto snapshot=nodes[0]->current();auto node=std::make_unique<CapellaDurableReactor>(*owner,rules,limits,*snapshot.state,std::function<void()>{},&witness);check(node->slashing(first,second),"reinclusion proof admission");
   const auto slot=proposal_slot+1;auto [selected,index]=body_for(*node,slot);check(little(selected,208,4)>little(selected,204,4),"orphaned proof not automatically reselected");
   const auto candidate=signed_candidate(*node->current().state,slot,index,selected);check(node->block(candidate.first),"reinclusion signed block rejected");
-  const auto applied=node->current();const auto& h=capella_fork_head(*applied.state,rules);check(consensus_beacon_header_root(h.header)==consensus_beacon_header_root(candidate.second)&&registry(h).validators.at(offender).slashed,"reinclusion failed to apply sanction");
+  const auto applied=node->current();const auto h_pin=capella_fork_head(*applied.state,rules);const auto& h=*h_pin;check(consensus_beacon_header_root(h.header)==consensus_beacon_header_root(candidate.second)&&registry(h).validators.at(offender).slashed,"reinclusion failed to apply sanction");
   check(node->signed_slashings()==proof_archive,"reincluded unfinalized proof discarded");const auto exact=h.state;
   check(node->block(candidate.first)&&node->slashing(second,first)&&node->current().token==applied.token,"replay changed reinclusion checkpoint");
-  node.reset();owner.reset();owner=std::make_unique<Blockchain>(directory/"reinclusion",g);node=std::make_unique<CapellaDurableReactor>(*owner,rules,limits,witness);++reopen_count;check(node->current().token==applied.token&&capella_fork_head(*node->current().state,rules).state==exact,"reinclusion restart changed penalty");
+  node.reset();owner.reset();owner=std::make_unique<Blockchain>(directory/"reinclusion",g);node=std::make_unique<CapellaDurableReactor>(*owner,rules,limits,witness);++reopen_count;check(node->current().token==applied.token&&capella_fork_head(*node->current().state,rules)->state==exact,"reinclusion restart changed penalty");
   node->tick(clock+(slot+1)*rules.slot_duration_ms);
   const auto [next,index_next]=body_for(*node,slot+1);check(little(next,204,4)==little(next,208,4),"already applied proof selected for a second penalty");
  }

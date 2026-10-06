@@ -12,9 +12,9 @@ static int pruning_sync_writer(const fs::path& directory){
  std::cout<<Json{{"wal",wal.filename().string()},{"before",offset},{"after",fs::file_size(wal)},{"blocked",blocked}}.dump()<<std::endl;_exit(0);
 }
 static void qualify_pruning_sync(const CapellaForkStore& initial,const CapellaSignedVotes& votes,const CapellaForkBlockRules& rules,const Genesis& genesis){
- const auto& head=capella_fork_head(initial,rules);
+ const auto head_pin=capella_fork_head(initial,rules);const auto& head=*head_pin;
  for(unsigned disposition=0;disposition<4;++disposition){const bool fault_witness=disposition>=2,lose=disposition%2;Temp directory;
-  {ChainStore disk(directory/"db");disk.bind_chain(genesis.chain_id,genesis.block.header.hash(),genesis.consensus,genesis.staking_contract);disk.commit(genesis.block,genesis.state,{});std::map<Int,const CapellaForkBlock*> ordered;for(const auto& [id,record]:initial.blocks)ordered.emplace(record.execution_block.header.number,&record);for(const auto& [height,record]:ordered)disk.commit(record->execution_block,record->execution_state,record->receipts);}
+  {ChainStore disk(directory/"db");disk.bind_chain(genesis.chain_id,genesis.block.header.hash(),genesis.consensus,genesis.staking_contract);disk.commit(genesis.block,genesis.state,{});std::map<Int,std::shared_ptr<const CapellaForkBlock>> ordered;for(const auto& [id,entry]:initial.blocks){auto pin=entry.lease();ordered.emplace(pin->execution_block.header.number,std::move(pin));}for(const auto& [height,record]:ordered)disk.commit(record->execution_block,record->execution_state,record->receipts);}
   {ChainStore witness(directory/"witness");Blockchain owner(directory/"db",genesis);CapellaDurableReactor reactor(owner,rules,crash_limits,initial,{},&witness);for(const auto& [id,wire]:votes)check(reactor.vote_ssz(wire),"pruning fixture vote restore rejected");}
   save(directory/"bundle.json",Json{{"profile",capella_fork_profile(rules).dump()},{"genesis",genesis.block.to_json(true)},{"alloc",genesis.state.to_json()},{"faultWitness",fault_witness}});
   const auto result=success(run({executable,"--pruning-sync-writer",directory.path.string()}));const auto wal=directory/(fault_witness?"witness":"db")/result.at("wal").get<std::string>();check(fs::file_size(wal)==result.at("after").get<uint64_t>()&&result.at("after")>result.at("before"),"pruning sync WAL suffix missing");

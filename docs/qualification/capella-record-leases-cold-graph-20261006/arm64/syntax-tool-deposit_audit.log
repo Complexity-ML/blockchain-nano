@@ -1,0 +1,7 @@
+/source/tests/capella/deposit_audit.cpp:52:19: error: no matching function for call to object of type '(lambda at /source/tests/capella/deposit_audit.cpp:34:15)'
+   52 |  const auto final=context(at->second);require(final.registry.validators.size()==65,"finalized registry is not65 members");
+      |                   ^~~~~~~
+/source/tests/capella/deposit_audit.cpp:34:15: note: candidate function not viable: no known conversion from 'const nano::CapellaForkRecord' to 'const CapellaForkBlock' for 1st argument
+   34 |  auto context=[&](const CapellaForkBlock& block){return capella_fork_block_context(block.state,block.header,{rules.transition.consensus.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},rules.transition.consensus.state);};
+      |               ^   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1 error generated.

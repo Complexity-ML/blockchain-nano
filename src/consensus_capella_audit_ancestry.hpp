@@ -11,7 +11,7 @@ inline void require_finalized_ancestor(const CapellaForkStore& replay,const Cons
  auto at=finalized.root;uint64_t child=std::numeric_limits<uint64_t>::max();
  for(size_t n=0;n<=replay.blocks.size();++n){
   if(check)check();const auto found=replay.blocks.find(at);require(found!=replay.blocks.end(),"observed finalized checkpoint outside replayed ancestry");
-  const auto& header=found->second.header;require(header.slot<child,"non-descending finalized ancestry");
+  const auto& header=found->second.header();require(header.slot<child,"non-descending finalized ancestry");
   if(header.slot<=boundary){require(at==observed.root,"observed checkpoint differs from finalized epoch boundary");return;}
   child=header.slot;at=header.parent_root;
  }

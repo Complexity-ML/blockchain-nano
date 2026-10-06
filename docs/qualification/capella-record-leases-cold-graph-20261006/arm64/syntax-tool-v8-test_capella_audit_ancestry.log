@@ -1,0 +1,29 @@
+/source/tests/test_capella_audit_ancestry.cpp:13:98: error: no viable overloaded '='
+   13 |  {auto original=replay.blocks.at(root(4)).header();replay.blocks.at(root(4)).header().parent_root=root(4);reject({1,root(3)});replay.blocks.at(root(4)).header()=original;}
+      |                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~
+/usr/bin/../lib/gcc/aarch64-linux-gnu/13/../../../../include/c++/13/array:94:12: note: candidate function (the implicit copy assignment operator) not viable: 'this' argument has type 'const ConsensusRoot' (aka 'const array<unsigned char, 32>'), but method is not marked const
+   94 |     struct array
+      |            ^
+/usr/bin/../lib/gcc/aarch64-linux-gnu/13/../../../../include/c++/13/array:94:12: note: candidate function (the implicit move assignment operator) not viable: 'this' argument has type 'const ConsensusRoot' (aka 'const array<unsigned char, 32>'), but method is not marked const
+/source/tests/test_capella_audit_ancestry.cpp:13:161: error: no viable overloaded '='
+   13 |  {auto original=replay.blocks.at(root(4)).header();replay.blocks.at(root(4)).header().parent_root=root(4);reject({1,root(3)});replay.blocks.at(root(4)).header()=original;}
+      |                                                                                                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~
+/source/include/nano/consensus_beacon_header.hpp:6:8: note: candidate function (the implicit copy assignment operator) not viable: 'this' argument has type 'const ConsensusBeaconHeader', but method is not marked const
+    6 | struct ConsensusBeaconHeader {
+      |        ^
+/source/include/nano/consensus_beacon_header.hpp:6:8: note: candidate function (the implicit move assignment operator) not viable: 'this' argument has type 'const ConsensusBeaconHeader', but method is not marked const
+/source/tests/test_capella_audit_ancestry.cpp:14:98: error: no viable overloaded '='
+   14 |  {auto original=replay.blocks.at(root(4)).header();replay.blocks.at(root(4)).header().parent_root=root(99);reject({1,root(3)});replay.blocks.at(root(4)).header()=original;}
+      |                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~
+/usr/bin/../lib/gcc/aarch64-linux-gnu/13/../../../../include/c++/13/array:94:12: note: candidate function (the implicit copy assignment operator) not viable: 'this' argument has type 'const ConsensusRoot' (aka 'const array<unsigned char, 32>'), but method is not marked const
+   94 |     struct array
+      |            ^
+/usr/bin/../lib/gcc/aarch64-linux-gnu/13/../../../../include/c++/13/array:94:12: note: candidate function (the implicit move assignment operator) not viable: 'this' argument has type 'const ConsensusRoot' (aka 'const array<unsigned char, 32>'), but method is not marked const
+/source/tests/test_capella_audit_ancestry.cpp:14:162: error: no viable overloaded '='
+   14 |  {auto original=replay.blocks.at(root(4)).header();replay.blocks.at(root(4)).header().parent_root=root(99);reject({1,root(3)});replay.blocks.at(root(4)).header()=original;}
+      |                                                                                                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~
+/source/include/nano/consensus_beacon_header.hpp:6:8: note: candidate function (the implicit copy assignment operator) not viable: 'this' argument has type 'const ConsensusBeaconHeader', but method is not marked const
+    6 | struct ConsensusBeaconHeader {
+      |        ^
+/source/include/nano/consensus_beacon_header.hpp:6:8: note: candidate function (the implicit move assignment operator) not viable: 'this' argument has type 'const ConsensusBeaconHeader', but method is not marked const
+4 errors generated.

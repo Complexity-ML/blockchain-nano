@@ -8,7 +8,7 @@ static void verify_external_exit_owner(const fs::path& genesis_file,const fs::pa
  const CapellaStoreSnapshotLimits limits{n("envelopeBytes"),n("blocks"),n("messages"),n("equivocations"),n("stateBytes"),n("totalStateBytes"),n("replaySlots"),n("syncTrials")};
  check(fs::is_regular_file(database/"CURRENT")&&fs::is_regular_file(fs::path(config.at("recoveryWitness").get<std::string>())/"CURRENT"),"missing existing owner/witness");
  Blockchain owner(database,genesis);ChainStore witness(config.at("recoveryWitness").get<std::string>());CapellaDurableReactor recovered(owner,rules,limits,witness);
- const auto current=recovered.current();const auto& head=capella_fork_head(*current.state,rules);const auto& final=current.state->blocks.at(current.state->timed.view.finalized.root);const auto& t=rules.transition;
+ const auto current=recovered.current();const auto head_pin=capella_fork_head(*current.state,rules);const auto& head=*head_pin;const auto final_pin=current.state->blocks.at(current.state->timed.view.finalized.root).lease();const auto& final=*final_pin;const auto& t=rules.transition;
  const auto context=capella_fork_block_context(final.state,final.header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state);const auto& validator=context.registry.validators.at(0);
  check(Bytes(validator.public_key.begin(),validator.public_key.end())==Key(0).public_key&&validator.exit_epoch<=context.registry.epoch,"wrong key or still-active finalized validator");
  const auto& credentials=validator.withdrawal_credentials;check(credentials[0]==1,"exit credentials not execution address");const auto recipient=hex(Bytes(credentials.begin()+12,credentials.end()));

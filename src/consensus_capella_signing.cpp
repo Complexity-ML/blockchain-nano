@@ -94,7 +94,7 @@ std::optional<Bytes> CapellaDurableReactor::sign_proposal_locked(uint64_t index,
  // Retained ancestry cannot be discarded until authenticated pruning is safe.
  if(state_->blocks.size()>=limits_.blocks)return std::nullopt;
  const auto head=phase0_fork_choice_head(state_->timed.view,{t.epoch.ffg.slots_per_epoch,t.attestation.duties.effective_balance_increment,rules_.proposer_score_boost},checkpoint).head;
- const auto& parent=state_->blocks.at(head);
+ const auto parent_pin=state_->blocks.at(head).lease(checkpoint);const auto& parent=*parent_pin;
  if(parent.header.slot>=slot)return std::nullopt;
  if(rules_.native_deposit_votes&&(body.size()<168||!capella_native_deposit_vote_known(*state_,head,body.subspan(96,72),checkpoint)))return std::nullopt;
  const auto parent_context=capella_fork_block_context(parent.state,parent.header,CapellaEpochRules{t.epoch,rules_.transition.execution,rules_.transition.maximum_state_bytes},t.state,checkpoint);
@@ -147,7 +147,7 @@ std::optional<Bytes> CapellaDurableReactor::sign_randao_locked(uint64_t index,ui
  auto expiry=[&](const char* message){if(expired)throw ExpiredCapellaDuty(message);throw std::runtime_error(message);};
  if(!timely())return std::nullopt;
  const auto head=phase0_fork_choice_head(state_->timed.view,{t.epoch.ffg.slots_per_epoch,t.attestation.duties.effective_balance_increment,rules_.proposer_score_boost},checkpoint).head;
- const auto& parent=state_->blocks.at(head);
+ const auto parent_pin=state_->blocks.at(head).lease(checkpoint);const auto& parent=*parent_pin;
  if(consensus_beacon_header_root(parent.header)!=head)throw std::invalid_argument("RANDAO parent binding mismatch");
  if(!prepare_local_duties_locked(slot,checkpoint))return std::nullopt;
  const auto* prepared=local_preparation_->block();if(!prepared)return std::nullopt;
@@ -188,7 +188,7 @@ std::map<Bytes,uint64_t> CapellaDurableReactor::current_validator_indices(const 
  std::lock_guard lock(mutex_);require_available();std::map<Bytes,uint64_t> result;
  for(const auto& key:keys)if(key.size()!=48)throw std::invalid_argument("Validator public key width");
  if(keys.empty())return result;
- const auto& t=rules_.transition;const auto& head=capella_fork_head(*state_,rules_,check);
+ const auto& t=rules_.transition;const auto head_pin=capella_fork_head(*state_,rules_,check);const auto& head=*head_pin;
  if(check)check();
  if(validator_index_cache_&&validator_index_cache_->root==head.header.state_root&&validator_index_cache_->keys==keys)return validator_index_cache_->indices;
  ValidatorIndexCache candidate{head.header.state_root,keys,capella_validator_indices(head.state.ssz,head.header.state_root,t.consensus.state,t.execution,t.maximum_state_bytes,keys,check)};
@@ -200,7 +200,7 @@ void CapellaDurableReactor::check_registered_index_locked(uint64_t index,const B
  require_available();
  if(public_key.empty())return; // Fixed-index configuration retains strict identity errors.
  if(public_key.size()!=48||public_key!=journal.public_key_)throw std::invalid_argument("Automatic registration key differs from signing journal");
- const auto& head=capella_fork_head(*state_,rules_,check);const auto& t=rules_.transition;
+ const auto head_pin=capella_fork_head(*state_,rules_,check);const auto& head=*head_pin;const auto& t=rules_.transition;
  if(check)check();
  if(!validator_index_cache_||validator_index_cache_->root!=head.header.state_root||!validator_index_cache_->keys.contains(public_key)){
   const auto keys=validator_index_cache_&&validator_index_cache_->keys.contains(public_key)?validator_index_cache_->keys:std::set<Bytes>{public_key};
@@ -214,7 +214,7 @@ bool CapellaDurableReactor::current_duties_ready(uint64_t slot,const std::functi
  std::lock_guard lock(mutex_);require_available();const auto& c=state_->timed.clock;
  if((c.time_ms-c.genesis_time_ms)/rules_.slot_duration_ms!=slot)return false;
  if((c.time_ms-c.genesis_time_ms)%rules_.slot_duration_ms>=rules_.attestation_due_ms)return true;
- return capella_fork_head(*state_,rules_,check).header.slot==slot;
+ return capella_fork_head(*state_,rules_,check)->header.slot==slot;
 }
 std::set<uint64_t> CapellaDurableReactor::current_attesters(uint64_t slot,const std::function<void()>& check){
  std::lock_guard lock(mutex_);require_available();if(!prepare_local_duties_locked(slot,check))return {};const auto duties=local_preparation_->duties(*state_,check);std::set<uint64_t> result;for(const auto& [index,duty]:duties)result.insert(index);return result;

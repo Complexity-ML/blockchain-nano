@@ -19,10 +19,10 @@ Json audit_capella_canonical_history(ChainStore& disk,const Int& chain,const Byt
  auto replay=capella_store_from_snapshot(encoded,sha256(Bytes(encoded.begin(),encoded.end())),rules,limits,check);
  CapellaDurableReactor restored(disk,chain,genesis,rules,limits,expected,check);
  const auto pruning=disk.state_pruning();size_t pruned_states=0;
- const auto saved=restored.current();const auto& target=capella_fork_head(*saved.state,rules,check);
+ const auto saved=restored.current();const auto target_pin=capella_fork_head(*saved.state,rules,check);const auto& target=*target_pin;
  require(capella_network_anchor(replay)==capella_network_anchor(*saved.state),"network anchor differs");
  const auto anchor=replay.timed.view.anchor,head=consensus_beacon_header_root(target.header);
- const auto first=replay.blocks.at(anchor);std::vector<ConsensusRoot> reverse;
+ const auto first_pin=replay.blocks.at(anchor).lease(check);const auto& first=*first_pin;std::vector<ConsensusRoot> reverse;
  auto at=head;uint64_t child_slot=UINT64_MAX;size_t archive_bytes=0;
  while(at!=anchor){
   if(check)check();require(reverse.size()<maximum_blocks,"block budget exceeded");
@@ -38,7 +38,7 @@ Json audit_capella_canonical_history(ChainStore& disk,const Int& chain,const Byt
   const auto canonical=disk.block_by_number(block.header.number),indexed=disk.block_by_hash(hash);const auto state=disk.state_at(block.header.number);
   require(canonical&&indexed&&canonical->to_json(true)==block.to_json(true)&&indexed->to_json(true)==block.to_json(true),"canonical block/index mismatch");
   if(state)require(state->root()==record.execution_state.root(),"execution state mismatch");
-  else{require(pruning&&block.header.number>0&&block.header.number<pruning->before&&pruning->anchor.number<=saved.state->blocks.at(saved.state->timed.view.anchor).execution_block.header.number,"missing state outside authenticated pruning range");require(block.header.state_root==record.execution_state.root(),"pruned execution state differs from signed replay");++pruned_states;}
+  else{require(pruning&&block.header.number>0&&block.header.number<pruning->before&&pruning->anchor.number<=saved.state->blocks.at(saved.state->timed.view.anchor).execution_header().number,"missing state outside authenticated pruning range");require(block.header.state_root==record.execution_state.root(),"pruned execution state differs from signed replay");++pruned_states;}
   if(pruning&&block.header.number==pruning->anchor.number)require(hash==pruning->anchor.hash,"pruning anchor differs from signed replay");
   require(record.receipts.size()==block.transactions.size(),"receipt count mismatch");
   for(size_t i=0;i<block.transactions.size();++i){
@@ -47,7 +47,7 @@ Json audit_capella_canonical_history(ChainStore& disk,const Int& chain,const Byt
    require(stored&&*stored==wanted,"transaction index mismatch");require(receipt&&receipt->to_json()==record.receipts[i].to_json(),"receipt mismatch");++transactions;
   }
   const auto id=consensus_beacon_header_root(record.header);const auto retained=saved.state->blocks.find(id);
-  if(retained!=saved.state->blocks.end())require(retained->second.state==record.state&&retained->second.execution_state.root()==record.execution_state.root(),"retained checkpoint state differs from replay");
+  if(retained!=saved.state->blocks.end()){const auto retained_pin=retained->second.lease(check);require(retained_pin->state==record.state&&retained_pin->execution_state.root()==record.execution_state.root(),"retained checkpoint state differs from replay");}
   ++blocks;
  };
  verify_disk(first);
@@ -57,8 +57,8 @@ Json audit_capella_canonical_history(ChainStore& disk,const Int& chain,const Byt
   replay=prepare_capella_resumed_store_tick(replay,replay.timed.clock.genesis_time_ms+entry->slot*rules.slot_duration_ms,rules,limits.replay_slots,limits.sync_trials,check);
   auto next=prepare_capella_resumed_fork_block(replay,entry->payload,rules,limits.replay_slots,limits.sync_trials,check);
   require(next&&next->blocks.contains(id)&&next->blocks.size()==replay.blocks.size()+1,"signed transition rejected");
-  require(next->blocks.at(id).header.slot==entry->slot,"archive slot differs from signed header");
-  replay=std::move(*next);verify_disk(replay.blocks.at(id));
+  require(next->blocks.at(id).header().slot==entry->slot,"archive slot differs from signed header");
+  replay=std::move(*next);verify_disk((*replay.blocks.at(id).lease(check)));
  }
  require(replay.blocks.contains(head)&&replay.blocks.contains(saved.state->timed.view.finalized.root),"head/finalized checkpoint outside replayed chain");
  if(required_finalized)audit_detail::require_finalized_ancestor(replay,saved.state->timed.view.finalized,*required_finalized,rules.transition.consensus.epoch.ffg.slots_per_epoch,check);

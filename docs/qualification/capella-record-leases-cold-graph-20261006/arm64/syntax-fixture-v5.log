@@ -1,0 +1,10 @@
+/source/tests/test_capella_transition.cpp:951:73: error: incompatible operand types ('std::vector<unsigned char>' and 'std::shared_ptr<const CapellaForkBlock>')
+  951 |       const auto& l=t.consensus.state;const auto seed_pin=rotation_state?*rotation_state:initial.blocks.at(initial.timed.view.anchor).lease();const auto& seed=seed_pin->state.ssz;
+      |                                                                         ^~~~~~~~~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/source/tests/test_capella_transition.cpp:2601:72: error: no member named 'execution_block' in 'nano::CapellaForkRecord'
+ 2601 |    for(const auto& [id,b]:recovered.state->blocks)for(const auto& tx:b.execution_block.transactions)check(disk.receipt(tx.hash())&&disk.receipt(tx.hash())->block_hash==b.execution_block.header.hash()&&disk.transaction(tx.hash()),"Capella recovered transaction index missing");
+      |                                                                      ~ ^
+/source/tests/test_capella_transition.cpp:2601:171: error: no member named 'execution_block' in 'nano::CapellaForkRecord'
+ 2601 |    for(const auto& [id,b]:recovered.state->blocks)for(const auto& tx:b.execution_block.transactions)check(disk.receipt(tx.hash())&&disk.receipt(tx.hash())->block_hash==b.execution_block.header.hash()&&disk.transaction(tx.hash()),"Capella recovered transaction index missing");
+      |                                                                                                                                                                         ~ ^
+3 errors generated.

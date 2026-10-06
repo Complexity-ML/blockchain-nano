@@ -19,7 +19,7 @@ uint64_t num(const Json& j){return u64(quantity(j));}
 ForkCheckpointToken token(const Json& j){need(j.is_object()&&j.size()==2,"capture token shape");ForkCheckpointToken t{num(j.at("sequence")),unhex(j.at("digest"))};need(t.sequence&&t.digest.size()==32&&j.at("digest")==hex(t.digest),"capture token bounds");return t;}
 // Private-fixture telemetry from authenticated state; never infer gossip replay or health.
 Json participation_diagnostic(const CapellaForkStore& store,const CapellaForkBlockRules& rules){
- const auto& head=capella_fork_head(store,rules);const auto& t=rules.transition;
+ const auto head_pin=capella_fork_head(store,rules);const auto& head=*head_pin;const auto& t=rules.transition;
  capella_beacon_state_root(head.state.ssz,t.consensus.state,t.execution,t.maximum_state_bytes);
  const auto offsets=capella_detail::offsets(t.consensus.state);const auto& b=head.state.ssz;
  const auto previous=capella_detail::offset(b,offsets[4]),current=capella_detail::offset(b,offsets[5]),scores=capella_detail::offset(b,offsets[6]);
@@ -47,14 +47,14 @@ int main(int argc,char** argv){try{
  const auto& p=c.at("profile");need(req.at("profile").at("file")==p.at("file")&&req.at("profile").at("sha256")==p.at("sha256")&&req.at("limits")==l,"capture audit/source configuration mismatch");const auto rules=load_capella_fork_profile(read(p.at("file"),1024*1024),unhex(p.at("sha256")),1024*1024);need(rules.transition.chain_id==genesis.chain_id&&rules.native_deposit_votes,"native admitted fixture profile required");
  const auto& a=req.at("anchor");const auto seed=capella_store_from_snapshot(read(a.at("file"),limits.envelope_bytes),unhex(a.at("sha256")),rules,limits);
  auto context=[&](const CapellaForkBlock& b){return capella_fork_block_context(b.state,b.header,{rules.transition.consensus.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},rules.transition.consensus.state);};
- need(context(capella_fork_head(seed,rules)).registry.validators.size()==64,"initial64-member capture anchor required");
+ need(context((*capella_fork_head(seed,rules))).registry.validators.size()==64,"initial64-member capture anchor required");
  ChainStore disk(argv[4],ChainStore::OpenMode::ReadOnly);disk.bind_chain(genesis.chain_id,genesis.block.header.hash(),"beacon");const auto primary=disk.fork_checkpoint(genesis.chain_id,genesis.block.header.hash(),limits.envelope_bytes);need(bool(primary),"capture primary missing");floor(primary->token,token(req.at("minimumCheckpoint")));
  ChainStore core_witness(c.at("recoveryWitness"),ChainStore::OpenMode::ReadOnly);core_witness.bind_chain(genesis.chain_id,genesis.block.header.hash(),"nano-capella-recovery-v1");const auto saved=core_witness.fork_checkpoint(genesis.chain_id,genesis.block.header.hash(),2048+8*limits.envelope_bytes);need(bool(saved),"capture core witness missing");witness(*primary,*saved,"nano-capella-recovery-v1",5);
  need(sha256(Bytes(primary->snapshot.begin(),primary->snapshot.end()))==primary->token.digest,"capture primary digest mismatch");
  Json audit_request;for(const char* f:{"profile","anchor","limits","requiredFinalized","maximumBlocks","maximumArchiveBytes"})audit_request[f]=req.at(f);audit_request["expectedCheckpoint"]=wire(primary->token);const auto audit=audit_capella_database(genesis,argv[4],audit_request);need(audit.at("canonicalHistoryVerified")==true&&audit.at("externalFinalizedAncestorVerified")==true,"capture canonical audit failed");
- CapellaDurableReactor reactor(disk,genesis.chain_id,genesis.block.header.hash(),rules,limits,primary->token);const auto current=context(capella_fork_head(*reactor.current().state,rules));need(current.registry.validators.size()==65,"65-member admitted capture registry required");
+ CapellaDurableReactor reactor(disk,genesis.chain_id,genesis.block.header.hash(),rules,limits,primary->token);const auto current=context((*capella_fork_head(*reactor.current().state,rules)));need(current.registry.validators.size()==65,"65-member admitted capture registry required");
  for(uint64_t n=0;n<65;++n)need(std::ranges::equal(current.registry.validators.at(n).public_key,public_key(n)),"foreign capture registry key");
- const auto& seed_ssz=seed.blocks.at(seed.timed.view.anchor).state.ssz;need(seed_ssz.size()>=40,"capture genesis binding");ConsensusRoot validators_root{};std::copy_n(seed_ssz.begin()+8,32,validators_root.begin());
+ const auto seed_pin=seed.blocks.at(seed.timed.view.anchor).lease();const auto& seed_ssz=seed_pin->state.ssz;need(seed_ssz.size()>=40,"capture genesis binding");ConsensusRoot validators_root{};std::copy_n(seed_ssz.begin()+8,32,validators_root.begin());
  const auto& keys=c.at("validator").at("keys"),&minimum=req.at("minimumValidatorKeys");need(keys.is_array()&&minimum.is_array()&&(keys.size()==32||keys.size()==33)&&minimum.size()==keys.size(),"capture key inventory bounds");
  struct ObservedSigner{std::filesystem::path journal,witness;ForkCheckpointToken primary,independent;};std::vector<ObservedSigner> observed;
  std::set<uint64_t> indices;std::set<std::filesystem::path> paths;Json result_keys=Json::array();

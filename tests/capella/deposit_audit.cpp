@@ -32,7 +32,7 @@ int main(int argc,char** argv){try{
  const auto& p=c.at("profile");const auto rules=load_capella_fork_profile(read(p.at("file"),1024*1024),unhex(p.at("sha256")),1024*1024);require(rules.transition.chain_id==genesis.chain_id&&rules.native_deposit_votes,"native deposit profile required");
  const auto& i=request.at("anchor");const auto seed=capella_store_from_snapshot(read(i.at("file"),limits.envelope_bytes),unhex(i.at("sha256")),rules,limits);
  auto context=[&](const CapellaForkBlock& block){return capella_fork_block_context(block.state,block.header,{rules.transition.consensus.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},rules.transition.consensus.state);};
- const auto initial=context(capella_fork_head(seed,rules));require(initial.registry.validators.size()==64,"initial64-member fixture required");
+ const auto initial=context((*capella_fork_head(seed,rules)));require(initial.registry.validators.size()==64,"initial64-member fixture required");
  for(const auto& member:initial.registry.validators)require(member.second.public_key!=public_key,"new key already registered in seed");
  // The standard runtime audit first verifies canonical signed transitions,
  // balances, receipts and externally observed checkpoint epoch/root binding.
@@ -49,7 +49,7 @@ int main(int argc,char** argv){try{
  const auto encoded=intent.at("snapshot").get<std::string>();require(encoded.size()<=limits.envelope_bytes&&sha256(Bytes(encoded.begin(),encoded.end()))==token.digest,"witness snapshot differs from committed primary digest");
 
  const auto selected=root(request.at("requiredFinalized").at("root"));const auto at=stopped.state->blocks.find(selected);require(at!=stopped.state->blocks.end(),"observed finalized state missing");
- const auto final=context(at->second);require(final.registry.validators.size()==65,"finalized registry is not65 members");
+ const auto final=context(*at->second.lease());require(final.registry.validators.size()==65,"finalized registry is not65 members");
  const auto& member=final.registry.validators.at(64);require(member.public_key==public_key&&!member.slashed,"finalized new member identity/status");
  ConsensusRoot withdrawal{};withdrawal[0]=1;withdrawal[31]=44;require(member.withdrawal_credentials==withdrawal,"finalized withdrawal credentials mismatch");
  const auto cutoff=number(request.at("restartCutoffSlot"));
@@ -64,8 +64,8 @@ int main(int argc,char** argv){try{
   const auto message=beacon_block_json(wire,rules,{}).at("message");const auto slot=number(message.at("slot"));
   require(rules.slot_duration_ms&&slot<=(UINT64_MAX-replay.timed.clock.genesis_time_ms)/rules.slot_duration_ms,"deposit replay clock overflow");
   replay=prepare_capella_store_tick(replay,replay.timed.clock.genesis_time_ms+slot*rules.slot_duration_ms,rules,limits.replay_slots,limits.sync_trials);
-  const auto parent=root(message.at("parent_root"));require(replay.blocks.contains(parent),"replayed deposit parent missing");const auto prior=context(replay.blocks.at(parent));
-  auto next=prepare_capella_fork_block(replay,wire,rules,limits.replay_slots,limits.sync_trials);require(next&&next->blocks.contains(id),"signed deposit transition rejected");const auto now=context(next->blocks.at(id));
+  const auto parent=root(message.at("parent_root"));require(replay.blocks.contains(parent),"replayed deposit parent missing");const auto prior=context((*replay.blocks.at(parent).lease()));
+  auto next=prepare_capella_fork_block(replay,wire,rules,limits.replay_slots,limits.sync_trials);require(next&&next->blocks.contains(id),"signed deposit transition rejected");const auto now=context((*next->blocks.at(id).lease()));
   require(now.registry.validators.size()>=64&&now.registry.validators.size()<=65,"unexpected registry size on canonical ancestry");
   for(size_t k=0;k<64;++k)require(now.registry.validators.at(k).public_key==initial.registry.validators.at(k).public_key,"old registry identity changed");
   if(now.registry.validators.size()==65){require(now.registry.validators.at(64).public_key==public_key,"wrong new registry member");if(prior.registry.validators.size()==64){++registered;registration={{"slot",slot},{"root",text(id)}};}}
@@ -75,14 +75,14 @@ int main(int argc,char** argv){try{
   if(id==before||id==after){require(number(message.at("proposer_index"))==64,"selected block not proposed by new member");require(now.registry.validators.size()==65&&now.registry.validators.at(64).activation_epoch<=slot/rules.transition.consensus.epoch.ffg.slots_per_epoch,"new proposer not activated");if(id==before){require(slot<=cutoff,"pre-restart proposal after cutoff");before_verified=true;}else{require(slot>cutoff,"post-restart proposal before cutoff");after_verified=true;}}
   replay=std::move(*next);
  }
- require(replay.blocks.contains(selected)&&replay.blocks.at(selected).state==at->second.state,"replayed finalized deposit state differs from retained state");
+ require(replay.blocks.contains(selected)&&replay.blocks.at(selected).lease()->state==at->second.lease()->state,"replayed finalized deposit state differs from retained state");
  require(included==1&&registered==1&&executed==1&&before_verified&&after_verified,"deposit/registration/proposals incomplete");require(reactor.current().token==token,"audit checkpoint changed");
 
  // All journals are opened read-only with EXTERNAL terminal commitments.
  // Refuse a stale primary rather than letting the signer repair it during audit.
  const auto& configured=c.at("validator").at("keys"),&pins=request.at("validatorKeys");
  require(configured.is_array()&&pins.is_array()&&(configured.size()==32||configured.size()==33)&&configured.size()==pins.size(),"local key commitment inventory");
- const auto& seed_ssz=seed.blocks.at(seed.timed.view.anchor).state.ssz;require(seed_ssz.size()>=40,"validators genesis binding");ConsensusRoot validators_genesis{};std::copy_n(seed_ssz.begin()+8,32,validators_genesis.begin());
+ const auto& seed_ssz=seed.blocks.at(seed.timed.view.anchor).lease()->state.ssz;require(seed_ssz.size()>=40,"validators genesis binding");ConsensusRoot validators_genesis{};std::copy_n(seed_ssz.begin()+8,32,validators_genesis.begin());
  std::set<uint64_t> audited;std::set<std::filesystem::path> key_paths;Json key_results=Json::array();
  for(const auto& key:configured){
   const bool pending=key.at("index").is_null();const auto index=pending?64:number(key.at("index"));require(index<=64&&audited.insert(index).second,"duplicate/foreign local key");

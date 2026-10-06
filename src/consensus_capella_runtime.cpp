@@ -142,9 +142,9 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const 
    }
   };
   struct JournalOwner {std::unique_ptr<ChainStore> witness;std::unique_ptr<ChainStore> disk;std::unique_ptr<BeaconSigningJournal> journal;};
-  const auto current=owner->reactor->current();const auto& anchor=current.state->blocks.at(current.state->timed.view.anchor).state.ssz;
+  const auto current=owner->reactor->current();const auto& anchor=current.state->blocks.at(current.state->timed.view.anchor).lease(checkpoint)->state.ssz;
   if(anchor.size()<40)throw std::invalid_argument("Missing authenticated validators genesis");ConsensusRoot validators_genesis{};std::copy_n(anchor.begin()+8,32,validators_genesis.begin());
-  const auto& head=capella_fork_head(*current.state,rules,checkpoint);
+  const auto head_pin=capella_fork_head(*current.state,rules,checkpoint);const auto& head=*head_pin;
   const auto registry=capella_fork_block_context(head.state,head.header,{rules.transition.consensus.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},rules.transition.consensus.state,checkpoint).registry;
   std::vector<CapellaValidatorKey> keys;std::set<std::string> public_keys;
   for(const auto& k:v.at("keys")){
@@ -193,7 +193,7 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const 
   const auto local_time=now(),genesis_time=snapshot.state->timed.clock.genesis_time_ms;
   if(local_time<snapshot.state->timed.clock.time_ms||local_time<genesis_time)throw std::runtime_error("Beacon clock discontinuity");
   const auto wall_slot=(local_time-genesis_time)/rules.slot_duration_ms;
-  const auto& head=capella_fork_head(*snapshot.state,rules,check);uint64_t target=head.header.slot;
+  const auto head_pin=capella_fork_head(*snapshot.state,rules,check);const auto& head=*head_pin;uint64_t target=head.header.slot;
   if(target>wall_slot)throw std::runtime_error("Beacon head in future");
   for(const auto slot:observation->peer_slots){if(slot>wall_slot)throw std::runtime_error("Beacon peer claims future slot");target=std::max(target,slot);}
   if(check)check();

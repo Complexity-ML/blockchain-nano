@@ -49,13 +49,13 @@ int main(int argc,char**argv){try{
  const auto finalized_bytes=unhex(proof.at("finalizedRoot"));require(finalized_bytes.size()==32,"finalized root width");const auto finalized=root(finalized_bytes);const auto found=snapshot.state->blocks.find(finalized);require(found!=snapshot.state->blocks.end(),"finalized state not retained after reopen");
  // The selected checkpoint must remain an ancestor of the store's finality.
  auto tip=snapshot.state->timed.view.finalized.root;bool ancestor=false;
- for(size_t n=0;n<=snapshot.state->blocks.size();++n){if(tip==finalized){ancestor=true;break;}auto i=snapshot.state->blocks.find(tip);if(i==snapshot.state->blocks.end()||tip==snapshot.state->timed.view.anchor)break;tip=i->second.header.parent_root;}
- require(ancestor,"requested checkpoint not finalized");const auto& block=found->second;const auto& b=block.state.ssz;const auto& t=rules.transition;const auto& l=t.consensus.state;
+ for(size_t n=0;n<=snapshot.state->blocks.size();++n){if(tip==finalized){ancestor=true;break;}auto i=snapshot.state->blocks.find(tip);if(i==snapshot.state->blocks.end()||tip==snapshot.state->timed.view.anchor)break;tip=i->second.header().parent_root;}
+ require(ancestor,"requested checkpoint not finalized");const auto block_pin=found->second.lease();const auto& block=*block_pin;const auto& b=block.state.ssz;const auto& t=rules.transition;const auto& l=t.consensus.state;
  require(capella_beacon_state_root(b,l,t.execution,t.maximum_state_bytes)==block.header.state_root,"finalized SSZ commitment mismatch");
  const auto slots=t.consensus.epoch.ffg.slots_per_epoch,period=t.consensus.epoch.sync.epochs_per_sync_committee_period;
  require(period&&slots&&block.header.slot/slots/period>=2,"finalized state predates nontrivial rotation");
  const auto committee=272+64*l.slots_per_historical_root+32*l.epochs_per_historical_vector+8*l.epochs_per_slashings_vector+133;
- const auto width=48*(l.sync_committee_size+1);const auto original=cut(seed.blocks.at(seed.timed.view.anchor).state.ssz,committee,width),rotated=cut(b,committee,width);
+ const auto width=48*(l.sync_committee_size+1);const auto original=cut(seed.blocks.at(seed.timed.view.anchor).lease()->state.ssz,committee,width),rotated=cut(b,committee,width);
  require(original!=rotated,"committee composition never changed");
  const auto historical=176+64*l.slots_per_historical_root,registry=number(b,historical+88,4),balances=number(b,historical+92,4),count=(balances-registry)/121;
  const auto owners=proof.at("owners");require(count==64&&owners.size()==count,"expected fixed 64-validator fixture");

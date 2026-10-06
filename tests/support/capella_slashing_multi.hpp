@@ -4,7 +4,7 @@ Bytes multi_wire;
 bool multi_partial=false,multi_complete=false;
 if(slashing_multi){
  multi_proof=*retirement_proof;
- const auto& anchor=initial.blocks.at(initial.timed.view.anchor);
+ const auto anchor_pin=initial.blocks.at(initial.timed.view.anchor).lease();const auto& anchor=*anchor_pin;
  const auto context=capella_fork_block_context(anchor.state,anchor.header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state);
  for(auto* att:{&multi_proof->first,&multi_proof->second}){
   att->indices={0,1};const auto version=att->data.target.epoch<context.fork.epoch?context.fork.previous_version:context.fork.current_version;
@@ -21,7 +21,7 @@ if(slashing_multi){
 auto filter_slashing_body=[&](Bytes& body){
  if(multi_partial)return;
  const auto begin=little(body,204,4),end=little(body,208,4);
- const auto snapshot=nodes[0]->current();const auto& h=capella_fork_head(*snapshot.state,rules);
+ const auto snapshot=nodes[0]->current();const auto h_pin=capella_fork_head(*snapshot.state,rules);const auto& h=*h_pin;
  const auto context=capella_fork_block_context(h.state,h.header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state);
  Bytes selected;
  if(!context.registry.validators.at(0).slashed){const auto wire=encode_consensus_attester_slashing_ssz(retirement_proof->first,retirement_proof->second,t.consensus.body.validators_per_committee);selected.resize(4);put(selected,0,4,4);selected.insert(selected.end(),wire.begin(),wire.end());}
@@ -31,7 +31,7 @@ auto filter_slashing_body=[&](Bytes& body){
 };
 auto verify_multi_slashing=[&]{
  for(auto& node:nodes){
-  const auto snapshot=node->current();const auto& final=snapshot.state->blocks.at(snapshot.state->timed.view.finalized.root);
+  const auto snapshot=node->current();const auto final_pin=snapshot.state->blocks.at(snapshot.state->timed.view.finalized.root).lease();const auto& final=*final_pin;
   const auto context=capella_fork_block_context(final.state,final.header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state);
   const bool zero=context.registry.validators.at(0).slashed,one=context.registry.validators.at(1).slashed;
   const auto archive=node->signed_slashings();bool aggregate=false;for(const auto& [id,wire]:archive)if(wire==multi_wire)aggregate=true;

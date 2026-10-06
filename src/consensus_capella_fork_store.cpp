@@ -37,10 +37,10 @@ void validate_execution(const CapellaForkBlock& record,const CapellaForkBlockRul
 }
 Bytes branch_hash(const CapellaForkStore& store,ConsensusRoot id,const Int& height,const std::function<void()>& check){
  if(height<0)throw std::invalid_argument("negative execution history height");
- for(;;){if(check)check();const auto& block=store.blocks.at(id);const auto& h=block.execution_block.header;
+ for(;;){if(check)check();const auto block_pin=store.blocks.at(id).lease(check);const auto& block=*block_pin;const auto& h=block.execution_block.header;
   if(height==h.number)return h.hash();if(height>h.number)throw std::invalid_argument("future execution history height");
   if(id==store.timed.view.anchor){for(const auto& ancestor:store.anchor_execution_ancestors){if(check)check();if(ancestor.number==height)return ancestor.hash();}throw std::invalid_argument("execution history unavailable before anchor");}
-  const auto& parent=store.blocks.at(block.header.parent_root);if(parent.header.slot>=block.header.slot||parent.execution_block.header.number+1!=h.number||parent.execution_block.header.hash()!=h.parent_hash)throw std::invalid_argument("incoherent branch execution ancestry");id=block.header.parent_root;
+  const auto parent_pin=store.blocks.at(block.header.parent_root).lease(check);const auto& parent=*parent_pin;if(parent.header.slot>=block.header.slot||parent.execution_block.header.number+1!=h.number||parent.execution_block.header.hash()!=h.parent_hash)throw std::invalid_argument("incoherent branch execution ancestry");id=block.header.parent_root;
  }
 }
 ConsensusRoot ancestor(const Phase0ForkChoiceView& v,ConsensusRoot r,uint64_t slot,const std::function<void()>& checkpoint){
@@ -54,7 +54,7 @@ Phase0ForkVoteContext target_context(const CapellaForkStore& store,const Capella
   if(!frame)throw std::invalid_argument("Null Capella target frame");
   if(frame->target()==target)return frame->context(store,rules,check);
  }
- const auto& record=store.blocks.at(target.root);
+ const auto record_pin=store.blocks.at(target.root).lease(check);const auto& record=*record_pin;
  const auto slots=rules.transition.consensus.epoch.ffg.slots_per_epoch;
  if(require_prepared&&slots&&target.epoch<=UINT64_MAX/slots&&record.header.slot<=target.epoch*slots&&target.epoch*slots-record.header.slot>maximum_slots)
   throw CapellaTargetContextRequired(target);
@@ -81,7 +81,7 @@ static std::optional<CapellaForkStore> prepare_fork_block_impl(const CapellaFork
  if(!input.blocks.contains(h.parent_root)||!view.nodes.contains(h.parent_root)||h.slot>current_slot||h.slot<=view.finalized.epoch*slots)return std::nullopt;
  if(ancestor(view,h.parent_root,view.finalized.epoch*slots,checkpoint)!=view.finalized.root)return std::nullopt;
  if(rules.native_deposit_votes&&!capella_native_deposit_vote_known(input,h.parent_root,bytes.subspan(184+96,72),checkpoint))return std::nullopt;
- const auto& parent=input.blocks.at(h.parent_root);
+ const auto parent_pin=input.blocks.at(h.parent_root).lease(checkpoint);const auto& parent=*parent_pin;
  if(consensus_beacon_header_root(parent.header)!=h.parent_root||capella_beacon_state_root(parent.state.ssz,t.state,rules.transition.execution,rules.transition.maximum_state_bytes,checkpoint)!=parent.header.state_root)
   throw std::invalid_argument("fork parent state binding mismatch");
  validate_execution(parent,rules,checkpoint);
@@ -144,8 +144,8 @@ std::optional<CapellaForkStore> prepare_capella_resumed_fork_block(const Capella
  const auto& clock=input.timed.clock;
  if(clock.time_ms<clock.genesis_time_ms)throw std::invalid_argument("Invalid resumed Capella archive clock");
  const auto parent=input.blocks.find(header.parent_root);
- if(parent==input.blocks.end()||header.slot<=parent->second.header.slot||header.slot>(clock.time_ms-clock.genesis_time_ms)/rules.slot_duration_ms)return std::nullopt;
- CapellaBlockPreparation block(parent->second.state,parent->second.header,rules.transition,check);
+ if(parent==input.blocks.end()||header.slot<=parent->second.header().slot||header.slot>(clock.time_ms-clock.genesis_time_ms)/rules.slot_duration_ms)return std::nullopt;
+ const auto parent_pin=parent->second.lease(check);CapellaBlockPreparation block(parent_pin->state,parent_pin->header,rules.transition,check);
  while(!block.advance_for_block(header.slot,chunk,trials,check)){}
  std::vector<CapellaTargetPreparation> frames;
  for(;;){
@@ -165,7 +165,7 @@ std::optional<CapellaForkStore> prepare_capella_resumed_fork_block(const Capella
 namespace nano {
 CapellaTargetPreparation::CapellaTargetPreparation(const CapellaForkStore& store,
  const CapellaForkBlockRules& rules,const ConsensusCheckpoint& target,const std::function<void()>& check)
- :rules_(rules),target_(target),slots_(store.blocks.at(target.root).state,store.blocks.at(target.root).header,
+ :rules_(rules),target_(target),slots_(store.blocks.at(target.root).lease(check)->state,store.blocks.at(target.root).header(),
  epoch_rules(rules),rules.transition.consensus.state,check){
  validate_rules(rules);const auto count=rules.transition.consensus.epoch.ffg.slots_per_epoch;
  if(!count||target.epoch>store.timed.view.current_epoch||target.epoch>UINT64_MAX/count||slots_.parent().slot>target.epoch*count||consensus_beacon_header_root(slots_.parent())!=target.root)throw std::invalid_argument("Invalid prepared Capella target");
@@ -173,10 +173,10 @@ CapellaTargetPreparation::CapellaTargetPreparation(const CapellaForkStore& store
 bool CapellaTargetPreparation::matches(const CapellaForkStore& store,const CapellaForkBlockRules& rules,
  const ConsensusCheckpoint& target,const std::function<void()>& check)const{
  if(target!=target_||capella_fork_profile(rules)!=capella_fork_profile(rules_))return false;
- const auto found=store.blocks.find(target.root);if(found==store.blocks.end()||found->second.header!=slots_.parent())return false;
+ const auto found=store.blocks.find(target.root);if(found==store.blocks.end()||found->second.header()!=slots_.parent())return false;
  // Recheck the source state binding. A reused root/header must not conceal a
  // mutated record or changed processing metadata in local checkpoint validation.
- capella_fork_block_context(found->second.state,found->second.header,epoch_rules(rules),rules.transition.consensus.state,check);
+ const auto found_pin=found->second.lease(check);capella_fork_block_context(found_pin->state,found_pin->header,epoch_rules(rules),rules.transition.consensus.state,check);
  return true;
 }
 bool CapellaTargetPreparation::retarget(const CapellaForkStore& store,const CapellaForkBlockRules& rules,
@@ -211,7 +211,7 @@ static std::optional<CapellaForkStore> prepare_store_vote_impl(const CapellaFork
  const auto& d=vote.data;
  if(d.slot>=slot||d.target.epoch!=d.slot/slots||(d.target.epoch!=epoch&&d.target.epoch!=(epoch?epoch-1:0))||
     !input.blocks.contains(d.target.root)||!input.timed.view.nodes.contains(d.beacon_block_root))return std::nullopt;
- const auto& block=input.blocks.at(d.target.root);
+ const auto block_pin=input.blocks.at(d.target.root).lease(checkpoint);const auto& block=*block_pin;
  if(block.header.slot>d.target.epoch*slots)return std::nullopt;
  const auto ctx=prepared?prepared->context(input,rules,checkpoint):prepare_capella_fork_state_contexts(block.state,block.header,d.target,epoch_rules(rules),rules.transition.consensus.state,maximum_slots,maximum_sync_trials,checkpoint).target;
  if(ctx.checkpoint!=d.target)throw std::invalid_argument("Prepared vote target mismatch");
@@ -228,7 +228,7 @@ std::optional<CapellaForkStore> prepare_capella_prepared_store_vote(const Capell
 std::optional<CapellaForkStore> prepare_capella_store_slashing(const CapellaForkStore& input,
  const IndexedConsensusAttestation& first,const IndexedConsensusAttestation& second,
  const CapellaForkBlockRules& rules,const std::function<void()>& checkpoint){
- validate_rules(rules);const auto& block=input.blocks.at(input.timed.view.justified.root);
+ validate_rules(rules);const auto block_pin=input.blocks.at(input.timed.view.justified.root).lease(checkpoint);const auto& block=*block_pin;
  const auto ctx=capella_fork_block_context(block.state,block.header,epoch_rules(rules),rules.transition.consensus.state,checkpoint);
  auto out=input;
  if(!process_phase0_fork_slashing(out.timed.view,ctx,first,second,rules.transition.consensus.body.validators_per_committee,checkpoint))return std::nullopt;
@@ -278,7 +278,7 @@ CapellaForkStore initialize_capella_fork_store(const CapellaSlotState& state,
  const auto seconds=number(state.ssz,0);if(seconds>UINT64_MAX/1000||h.slot>(UINT64_MAX-seconds*1000)/r.slot_duration_ms)throw std::overflow_error("Capella anchor time overflow");
  CapellaForkStore out;auto& v=out.timed.view;v.anchor=id;v.justified={epoch,id};v.finalized=v.justified;v.current_epoch=epoch;v.justified_registry=context.registry;
  if(!r.deposit_contract_code_hash.empty()&&!anchor_deposits)anchor_deposits=std::make_shared<const ExecutionDepositHistory>(execution_block.header.hash());
- v.nodes.emplace(id,Phase0ForkNode{h.slot,h.parent_root,epoch,epoch});out.blocks.emplace(id,CapellaForkBlock{h,state,execution_block,execution_state,execution_receipts,std::move(anchor_deposits)});validate_execution(out.blocks.at(id),r,checkpoint);
+ v.nodes.emplace(id,Phase0ForkNode{h.slot,h.parent_root,epoch,epoch});out.blocks.emplace(id,CapellaForkBlock{h,state,execution_block,execution_state,execution_receipts,std::move(anchor_deposits)});validate_execution((*out.blocks.at(id).lease(checkpoint)),r,checkpoint);
  const auto payload_start=number(block,84+220+(r.transition.consensus.state.sync_committee_size+7)/8+96,4);
  const auto payload_end=number(block,84+224+(r.transition.consensus.state.sync_committee_size+7)/8+96,4);
  const auto payload=decode_capella_execution_payload(block.subspan(84+payload_start,payload_end-payload_start),r.transition.execution,r.transition.withdrawals.maximum_per_payload,r.transition.consensus.maximum_block_bytes,checkpoint);
@@ -315,13 +315,13 @@ static std::optional<CapellaForkStore> prepare_received_block_impl(const Capella
   for(size_t i=0;i<bit_count;++i)vote.aggregation_bits.push_back((b[228+i/8]>>(i%8))&1);
   const auto& d=vote.data;
   if(d.slot>=current_slot||d.target.epoch!=d.slot/slots||!out->blocks.contains(d.target.root)||!out->timed.view.nodes.contains(d.beacon_block_root))continue;
-  const auto& target=out->blocks.at(d.target.root);if(target.header.slot>d.target.epoch*slots)continue;
+  const auto target_pin=out->blocks.at(d.target.root).lease(checkpoint);const auto& target=*target_pin;if(target.header.slot>d.target.epoch*slots)continue;
   const auto ctx=target_context(*out,rules,d.target,targets,maximum_slots,maximum_sync_trials,checkpoint,require_prepared);
   process_phase0_fork_vote(out->timed.view,current_slot,ctx,rules.transition.consensus.attestation.duties,vote,true,checkpoint);
  }
  for(auto b:embedded_list(body.subspan(attesters,attestations-attesters))){
   if(checkpoint)checkpoint();const auto second=number(b,4,4);const auto first=embedded_indexed(b.subspan(8,second-8)),other=embedded_indexed(b.subspan(second));
-  const auto& target=out->blocks.at(out->timed.view.justified.root);const auto ctx=capella_fork_block_context(target.state,target.header,epoch_rules(rules),rules.transition.consensus.state,checkpoint);
+  const auto target_pin=out->blocks.at(out->timed.view.justified.root).lease(checkpoint);const auto& target=*target_pin;const auto ctx=capella_fork_block_context(target.state,target.header,epoch_rules(rules),rules.transition.consensus.state,checkpoint);
   process_phase0_fork_slashing(out->timed.view,ctx,first,other,rules.transition.consensus.body.validators_per_committee,checkpoint);
  }
  if(checkpoint)checkpoint();return out;
@@ -346,9 +346,9 @@ std::optional<CapellaForkStore> prepare_capella_contextual_received_block(const 
 }
 
 namespace nano {
-const CapellaForkBlock& capella_fork_head(const CapellaForkStore& store,const CapellaForkBlockRules& r,const std::function<void()>& check){
+std::shared_ptr<const CapellaForkBlock> capella_fork_head(const CapellaForkStore& store,const CapellaForkBlockRules& r,const std::function<void()>& check){
  validate_rules(r);const auto& t=r.transition.consensus;const auto id=phase0_fork_choice_head(store.timed.view,{t.epoch.ffg.slots_per_epoch,t.attestation.duties.effective_balance_increment,r.proposer_score_boost},check).head;
- const auto& record=store.blocks.at(id);if(consensus_beacon_header_root(record.header)!=id)throw std::invalid_argument("Capella fork head root mismatch");capella_fork_block_context(record.state,record.header,epoch_rules(r),t.state,check);validate_execution(record,r,check);return record;
+ const auto record_pin=store.blocks.at(id).lease(check);const auto& record=*record_pin;if(consensus_beacon_header_root(record.header)!=id)throw std::invalid_argument("Capella fork head root mismatch");capella_fork_block_context(record.state,record.header,epoch_rules(r),t.state,check);validate_execution(record,r,check);return record_pin;
 }
 }
 
@@ -367,22 +367,22 @@ CapellaForkStore prepare_capella_pruned_store(const CapellaForkStore& input,cons
  const auto slots=rules.transition.consensus.epoch.ffg.slots_per_epoch,lookahead=rules.transition.consensus.attestation.duties.min_seed_lookahead;
  if(!slots||lookahead>=view.current_epoch||!input.blocks.contains(anchor))throw std::invalid_argument("Capella pruning anchor/context unavailable");
  const auto retained_epoch=view.current_epoch-lookahead-1;
- if(retained_epoch>UINT64_MAX/slots||input.blocks.at(anchor).header.slot>retained_epoch*slots)throw std::invalid_argument("Capella pruning would remove recent fork context");
- auto at=view.finalized.root;while(at!=anchor&&at!=view.anchor){if(check)check();at=input.blocks.at(at).header.parent_root;}
+ if(retained_epoch>UINT64_MAX/slots||input.blocks.at(anchor).header().slot>retained_epoch*slots)throw std::invalid_argument("Capella pruning would remove recent fork context");
+ auto at=view.finalized.root;while(at!=anchor&&at!=view.anchor){if(check)check();at=input.blocks.at(at).header().parent_root;}
  if(at!=anchor)throw std::invalid_argument("Capella pruning anchor is not finalized ancestry");
- const auto expected=consensus_beacon_header_root(capella_fork_head(input,rules,check).header);
+ const auto expected=consensus_beacon_header_root(capella_fork_head(input,rules,check)->header);
  auto output=input;output.network_anchor=capella_network_anchor(input);output.timed.view.anchor=anchor;
  if(rules.native_deposit_votes){output.deposit_ancestors=capella_deposit_ancestors_before(input,anchor,check);validate_capella_deposit_ancestors(output,check);}
- std::vector<std::pair<uint64_t,ConsensusRoot>> ordered;for(const auto& [id,record]:input.blocks)ordered.emplace_back(record.header.slot,id);std::sort(ordered.begin(),ordered.end());std::set<ConsensusRoot> retained{anchor};
- for(const auto& [slot,id]:ordered){if(check)check();if(id!=anchor&&retained.contains(input.blocks.at(id).header.parent_root))retained.insert(id);}
+ std::vector<std::pair<uint64_t,ConsensusRoot>> ordered;for(const auto& [id,record]:input.blocks)ordered.emplace_back(record.header().slot,id);std::sort(ordered.begin(),ordered.end());std::set<ConsensusRoot> retained{anchor};
+ for(const auto& [slot,id]:ordered){if(check)check();if(id!=anchor&&retained.contains(input.blocks.at(id).header().parent_root))retained.insert(id);}
  for(const auto& required:{view.justified.root,view.finalized.root,input.timed.clock.unrealized_justified.root,input.timed.clock.unrealized_finalized.root})if(!retained.contains(required))throw std::invalid_argument("Capella pruning would remove checkpoint context");
  output.anchor_execution_ancestors.clear();at=anchor;
- while(at!=view.anchor&&output.anchor_execution_ancestors.size()<256){if(check)check();at=input.blocks.at(at).header.parent_root;output.anchor_execution_ancestors.push_back(input.blocks.at(at).execution_block.header);}
+ while(at!=view.anchor&&output.anchor_execution_ancestors.size()<256){if(check)check();at=input.blocks.at(at).header().parent_root;output.anchor_execution_ancestors.push_back(input.blocks.at(at).execution_header());}
  for(const auto& header:input.anchor_execution_ancestors){if(output.anchor_execution_ancestors.size()==256)break;output.anchor_execution_ancestors.push_back(header);}
  std::erase_if(output.blocks,[&](const auto& item){if(check)check();return !retained.contains(item.first);});std::erase_if(output.timed.view.nodes,[&](const auto& item){return !retained.contains(item.first);});std::erase_if(output.timely,[&](const auto& item){return item.first==anchor||!retained.contains(item.first);});std::erase_if(output.unrealized_justifications,[&](const auto& item){return !retained.contains(item.first);});
  // Preserve epoch watermarks: erasing messages could admit older replayed votes.
  for(auto& [index,message]:output.timed.view.latest_messages)if(!retained.contains(message.root))message.root=anchor;
  if(output.timed.view.proposer_boost&&!retained.contains(*output.timed.view.proposer_boost))output.timed.view.proposer_boost.reset();
- if(consensus_beacon_header_root(capella_fork_head(output,rules,check).header)!=expected)throw std::invalid_argument("Capella pruning changed fork choice");if(check)check();return output;
+ if(consensus_beacon_header_root(capella_fork_head(output,rules,check)->header)!=expected)throw std::invalid_argument("Capella pruning changed fork choice");if(check)check();return output;
 }
 }

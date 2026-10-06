@@ -1,0 +1,24 @@
+/source/tests/multihost/rotation_audit.cpp:53:109: error: no member named 'state' in 'nano::CapellaForkRecord'
+   53 |  require(ancestor,"requested checkpoint not finalized");const auto& block=found->second;const auto& b=block.state.ssz;const auto& t=rules.transition;const auto& l=t.consensus.state;
+      |                                                                                                       ~~~~~ ^
+/source/tests/multihost/rotation_audit.cpp:54:82: error: reference to non-static member function must be called; did you mean to call it with no arguments?
+   54 |  require(capella_beacon_state_root(b,l,t.execution,t.maximum_state_bytes)==block.header.state_root,"finalized SSZ commitment mismatch");
+      |                                                                            ~~~~~~^~~~~~
+      |                                                                                        ()
+/source/tests/multihost/rotation_audit.cpp:56:31: error: reference to non-static member function must be called; did you mean to call it with no arguments?
+   56 |  require(period&&slots&&block.header.slot/slots/period>=2,"finalized state predates nontrivial rotation");
+      |                         ~~~~~~^~~~~~
+      |                                     ()
+/source/tests/multihost/rotation_audit.cpp:77:33: error: reference to non-static member function must be called; did you mean to call it with no arguments?
+   77 |   if(h.slot/slots/period!=block.header.slot/slots/period)continue;
+      |                           ~~~~~~^~~~~~
+      |                                       ()
+/source/tests/multihost/rotation_audit.cpp:90:93: error: reference to non-static member function must be called; did you mean to call it with no arguments?
+   90 |  std::cout<<Json{{"node",argv[5]},{"finalizedRoot",text(finalized)},{"stateRoot",text(block.header.state_root)},{"stateSha256",hex(sha256(b))},{"stateSlot",block.header.slot},{"committeeHash",hex(sha256(rotated))},{"initialCommitteeHash",hex(sha256(original))},{"minimumInclusionSlot",minimum},{"remoteBlocks",remote_blocks},{"samples",samples},{"witnessReopened",true}}.dump(2)<<'\n';
+      |                                                                                       ~~~~~~^~~~~~
+      |                                                                                                   ()
+/source/tests/multihost/rotation_audit.cpp:90:163: error: reference to non-static member function must be called; did you mean to call it with no arguments?
+   90 |  std::cout<<Json{{"node",argv[5]},{"finalizedRoot",text(finalized)},{"stateRoot",text(block.header.state_root)},{"stateSha256",hex(sha256(b))},{"stateSlot",block.header.slot},{"committeeHash",hex(sha256(rotated))},{"initialCommitteeHash",hex(sha256(original))},{"minimumInclusionSlot",minimum},{"remoteBlocks",remote_blocks},{"samples",samples},{"witnessReopened",true}}.dump(2)<<'\n';
+      |                                                                                                                                                             ~~~~~~^~~~~~
+      |                                                                                                                                                                         ()
+6 errors generated.

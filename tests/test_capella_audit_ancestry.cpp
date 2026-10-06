@@ -10,8 +10,8 @@ int main(){try{
  auto reject=[&](ConsensusCheckpoint observed,uint64_t slots=8){bool refused=false;try{audit_detail::require_finalized_ancestor(replay,finalized,observed,slots);}catch(const std::invalid_argument&){refused=true;}check(refused);++passed;};
  accept({3,root(5)});accept({2,root(3)});accept({1,root(3)});accept({0,root(1)});
  reject({4,root(5)});reject({2,root(4)});reject({1,root(2)});reject({2,root(99)});reject({1,root(3)},0);
- {auto original=replay.blocks.at(root(4)).header;replay.blocks.at(root(4)).header.parent_root=root(4);reject({1,root(3)});replay.blocks.at(root(4)).header=original;}
- {auto original=replay.blocks.at(root(4)).header;replay.blocks.at(root(4)).header.parent_root=root(99);reject({1,root(3)});replay.blocks.at(root(4)).header=original;}
+ {auto original=replay.blocks.at(root(4)).header();replay.blocks.at(root(4)).writable().header.parent_root=root(4);reject({1,root(3)});replay.blocks.at(root(4)).writable().header=original;}
+ {auto original=replay.blocks.at(root(4)).header();replay.blocks.at(root(4)).writable().header.parent_root=root(99);reject({1,root(3)});replay.blocks.at(root(4)).writable().header=original;}
  bool cancelled=false;try{audit_detail::require_finalized_ancestor(replay,finalized,{1,root(3)},8,[]{throw ExecutionCancelled("cancel audit");});}catch(const ExecutionCancelled&){cancelled=true;}check(cancelled);++passed;
  check(passed==12);std::cout<<passed<<" actual ancestry-helper cases passed; no signature or full replay qualification\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

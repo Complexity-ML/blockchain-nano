@@ -24,7 +24,7 @@ auto reject_forged_new_validator_proofs=[&](const IndexedConsensusAttestation& f
 auto observe_new_validator_slashing=[&](uint64_t slot){
  if(!slashing_new_validator)return;
  const auto current=nodes[0]->current();
- auto context=[&](const CapellaForkStore& store,const ConsensusRoot& root){const auto& b=store.blocks.at(root);return capella_fork_block_context(b.state,b.header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state);};
+ auto context=[&](const CapellaForkStore& store,const ConsensusRoot& root){const auto b_pin=store.blocks.at(root).lease();const auto& b=*b_pin;return capella_fork_block_context(b.state,b.header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state);};
  const auto justified=context(*current.state,current.state->timed.view.justified.root),finalized=context(*current.state,current.state->timed.view.finalized.root);
  if(!new_validator_proof){
   IndexedConsensusAttestation a{};a.indices={64};a.data.slot=current.state->timed.view.justified.epoch*slots;a.data.source=current.state->timed.view.finalized;a.data.target=current.state->timed.view.justified;a.data.beacon_block_root=current.state->timed.view.justified.root;auto b=a;b.data.beacon_block_root[0]^=1;
@@ -48,7 +48,7 @@ auto observe_new_validator_slashing=[&](uint64_t slot){
  }
  const bool reopen_unknown_advance=slashing_unknown_finality&&new_validator_unknown_finality_advances>0&&!new_validator_unknown_advance_reopened;
  if(!new_validator_unknown_reopened||reopen_unknown_advance){
-  for(size_t i=0;i<2;++i){const auto before=nodes[i]->current();const auto& h=capella_fork_head(*before.state,rules);const auto state=h.state;nodes[i].reset();owners[i].reset();owners[i]=std::make_unique<Blockchain>(directory/("node-"+std::to_string(i)),owner_genesis);nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,before.token);nodes[i]->set_automatic_pruning(true);const auto after=nodes[i]->current();check(after.token==before.token&&capella_fork_head(*after.state,rules).state==state&&nodes[i]->signed_slashings()==new_validator_archive,"unknown finalized validator proof lost on restart");check(!context(*after.state,after.state->timed.view.finalized.root).registry.validators.contains(64),"restart did not cover missing finalized member");}
+  for(size_t i=0;i<2;++i){const auto before=nodes[i]->current();const auto h_pin=capella_fork_head(*before.state,rules);const auto& h=*h_pin;const auto state=h.state;nodes[i].reset();owners[i].reset();owners[i]=std::make_unique<Blockchain>(directory/("node-"+std::to_string(i)),owner_genesis);nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,before.token);nodes[i]->set_automatic_pruning(true);const auto after=nodes[i]->current();check(after.token==before.token&&capella_fork_head(*after.state,rules)->state==state&&nodes[i]->signed_slashings()==new_validator_archive,"unknown finalized validator proof lost on restart");check(!context(*after.state,after.state->timed.view.finalized.root).registry.validators.contains(64),"restart did not cover missing finalized member");}
   if(!reopen_unknown_advance)reject_forged_new_validator_proofs(new_validator_proof->first,new_validator_proof->second,"after-both-owners-reopened");
   if(reopen_unknown_advance)new_validator_unknown_advance_reopened=true;
   new_validator_unknown_reopened=true;

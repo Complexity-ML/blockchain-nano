@@ -28,7 +28,7 @@ const CapellaDurableReactor::SyncAdmissionContext& CapellaDurableReactor::sync_a
  const auto current=(state_->timed.clock.time_ms-state_->timed.clock.genesis_time_ms)/rules_.slot_duration_ms;
  auto advanced=local_preparation_&&local_preparation_->matches(*state_,rules_,current,check)&&local_preparation_->ready()&&current!=UINT64_MAX&&slot==current+1
   ?local_preparation_->sync_state(limits_.sync_trials,check)
-  :prepare_capella_slots(state_->blocks.at(head).state,{c.epoch,t.execution,t.maximum_state_bytes},c.state,slot,limits_.replay_slots,limits_.sync_trials,check);
+  :prepare_capella_slots(state_->blocks.at(head).lease(check)->state,{c.epoch,t.execution,t.maximum_state_bytes},c.state,slot,limits_.replay_slots,limits_.sync_trials,check);
  auto projected=capella_detail::project(advanced.ssz,c.state,t.execution,t.maximum_state_bytes,check);
  SyncAdmissionContext candidate{slot,head,std::move(advanced.ssz),std::move(projected.common)};
  if(check)check();sync_admission_context_=std::move(candidate);
@@ -50,7 +50,7 @@ bool CapellaDurableReactor::submit_sync_aggregate_locked(uint64_t slot,std::span
  if(slot<current_slot||slot-current_slot>1)return false;
  if(check)check();
  const auto head=phase0_fork_choice_head(state_->timed.view,{c.epoch.ffg.slots_per_epoch,c.attestation.duties.effective_balance_increment,rules_.proposer_score_boost},check).head;
- const auto& parent=state_->blocks.at(head);if(parent.header.slot>=slot)return false;
+ const auto parent_pin=state_->blocks.at(head).lease(check);const auto& parent=*parent_pin;if(parent.header.slot>=slot)return false;
  const auto& context=sync_admission_context_locked(head,slot,check);
  if(!verify_altair_sync_aggregate(context.common,aggregate,c.state,c.sync,check))return false;
  size_t participants=0;for(size_t i=0;i<bit_bytes;++i)participants+=std::popcount(aggregate[i]);
@@ -98,7 +98,7 @@ bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage&
  const auto& clock=state_->timed.clock;const auto current_slot=(clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms;if(slot<current_slot)return record_sync_outcome(SyncOutcome::expired_slot);if(slot-current_slot>1)return record_sync_outcome(SyncOutcome::future_slot);
  if(check)check();const auto& t=rules_.transition;const auto& c=t.consensus;const auto& l=c.state;
  const auto head=phase0_fork_choice_head(state_->timed.view,{c.epoch.ffg.slots_per_epoch,c.attestation.duties.effective_balance_increment,rules_.proposer_score_boost},check).head;
- const auto& parent=state_->blocks.at(head);if(parent.header.slot>=slot)return record_sync_outcome(SyncOutcome::head_at_or_after_inclusion);
+ const auto parent_pin=state_->blocks.at(head).lease(check);const auto& parent=*parent_pin;if(parent.header.slot>=slot)return record_sync_outcome(SyncOutcome::head_at_or_after_inclusion);
  const auto& state=sync_admission_context_locked(head,slot,check).ssz;const size_t historical=176+64*l.slots_per_historical_root;
  const auto validators=capella_detail::offset(state,historical+88),balances=capella_detail::offset(state,historical+92);
  if(message.validator_index>=(balances-validators)/121)return record_sync_outcome(SyncOutcome::unknown_validator);
@@ -167,7 +167,7 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t i
  if(check)check();const auto& t=rules_.transition.consensus;const auto& clock=state_->timed.clock;
  if((clock.time_ms-clock.genesis_time_ms)/rules_.slot_duration_ms!=slot)return std::nullopt;
  const auto head=phase0_fork_choice_head(state_->timed.view,{t.epoch.ffg.slots_per_epoch,t.attestation.duties.effective_balance_increment,rules_.proposer_score_boost},check).head;
- const auto& parent=state_->blocks.at(head);
+ const auto parent_pin=state_->blocks.at(head).lease(check);const auto& parent=*parent_pin;
  const CapellaEpochRules epoch{t.epoch,rules_.transition.execution,rules_.transition.maximum_state_bytes};
  if(!prepare_local_duties_locked(slot,check))return std::nullopt;
  const auto* prepared=local_preparation_->block();if(!prepared)return std::nullopt;
@@ -272,8 +272,8 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t i
  // walk recent ancestors of the selected parent, never competing branches.
  std::set<Bytes> included;
  auto ancestor=head;const auto oldest=slot>t.epoch.ffg.slots_per_epoch?slot-t.epoch.ffg.slots_per_epoch:0;
- while(state_->blocks.at(ancestor).header.slot>=oldest){
-  if(check)check();const auto& previous=state_->blocks.at(ancestor);
+ while(state_->blocks.at(ancestor).header().slot>=oldest){
+  if(check)check();const auto previous_pin=state_->blocks.at(ancestor).lease(check);const auto& previous=*previous_pin;
   const auto saved=signed_block_locked(ancestor,check);
   if(saved){
    const auto& wire=*saved;

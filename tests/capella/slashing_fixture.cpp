@@ -32,7 +32,7 @@ struct Fixture {
   const auto& p=c.at("profile");rules=load_capella_fork_profile(read(p.at("file"),1024*1024),unhex(p.at("sha256")),1024*1024);
   need(rules.transition.chain_id==genesis.chain_id,"genesis/profile chain mismatch");
   const auto request=request_path.empty()?Json{}:json(request_path);const auto& i=request_path.empty()?c.at("initial"):request.at("anchor");seed=capella_store_from_snapshot(read(i.at("file"),limits.envelope_bytes),unhex(i.at("sha256")),rules,limits);
-  const auto& head=capella_fork_head(seed,rules);auto context=capella_fork_block_context(head.state,head.header,{rules.transition.consensus.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},rules.transition.consensus.state);
+  const auto head_pin=capella_fork_head(seed,rules);const auto& head=*head_pin;auto context=capella_fork_block_context(head.state,head.header,{rules.transition.consensus.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},rules.transition.consensus.state);
   need(context.registry.validators.size()==64&&std::ranges::equal(context.registry.validators.at(0).public_key,PublicFixtureKey{}.key),"known 64-key fixture required");
   if(!request_path.empty()){
    need(!db.empty()&&rules.native_deposit_votes,"admitted fixture requires native deposit profile");
@@ -47,7 +47,7 @@ struct Fixture {
    const auto saved=witness.fork_checkpoint(genesis.chain_id,genesis.block.header.hash(),2048+8*limits.envelope_bytes);need(bool(saved),"stopped witness absent");const auto intent=Json::parse(saved->snapshot);need(intent.is_object()&&intent.size()==5&&intent.at("format")=="nano-capella-recovery-v1"&&intent.dump()==saved->snapshot,"noncanonical stopped witness");
    need(num(intent.at("next").at("sequence"))==token.sequence&&unhex(intent.at("next").at("digest"))==token.digest,"external stopped witness pin mismatch");
    const auto snapshot=intent.at("snapshot").get<std::string>();need(snapshot.size()<=limits.envelope_bytes&&sha256(Bytes(snapshot.begin(),snapshot.end()))==token.digest,"stopped witness snapshot digest mismatch");
-   seed=*stopped.state;const auto& current_head=capella_fork_head(seed,rules);const auto current=capella_fork_block_context(current_head.state,current_head.header,{rules.transition.consensus.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},rules.transition.consensus.state);
+   seed=*stopped.state;const auto current_head_pin=capella_fork_head(seed,rules);const auto& current_head=*current_head_pin;const auto current=capella_fork_block_context(current_head.state,current_head.header,{rules.transition.consensus.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},rules.transition.consensus.state);
    need(current.registry.validators.size()==65,"admitted 65-key registry required");
    for(uint64_t index=0;index<65;++index)need(std::ranges::equal(current.registry.validators.at(index).public_key,PublicFixtureKey(index).key),"foreign admitted fixture key");
    const auto& admitted=current.registry.validators.at(64);need(!admitted.slashed&&admitted.activation_epoch<=current_head.header.slot/rules.transition.consensus.epoch.ffg.slots_per_epoch,"new member is not active and unslashed");
@@ -56,7 +56,7 @@ struct Fixture {
  }
 };
 std::pair<IndexedConsensusAttestation,IndexedConsensusAttestation> proof(Fixture& f){
- const auto& h=f.seed.blocks.at(f.seed.timed.view.justified.root);const auto ctx=capella_fork_block_context(h.state,h.header,{f.rules.transition.consensus.epoch,f.rules.transition.execution,f.rules.transition.maximum_state_bytes},f.rules.transition.consensus.state);
+ const auto h_pin=f.seed.blocks.at(f.seed.timed.view.justified.root).lease();const auto& h=*h_pin;const auto ctx=capella_fork_block_context(h.state,h.header,{f.rules.transition.consensus.epoch,f.rules.transition.execution,f.rules.transition.maximum_state_bytes},f.rules.transition.consensus.state);
  IndexedConsensusAttestation a{};a.indices={f.offender};a.data.slot=f.seed.timed.view.justified.epoch*f.rules.transition.consensus.epoch.ffg.slots_per_epoch;a.data.source=f.seed.timed.view.finalized;a.data.target=f.seed.timed.view.justified;a.data.beacon_block_root=f.seed.timed.view.justified.root;auto b=a;b.data.beacon_block_root[0]^=1;
  const auto version=a.data.target.epoch<ctx.fork.epoch?ctx.fork.previous_version:ctx.fork.current_version;
  for(auto* v:{&a,&b})v->signature=PublicFixtureKey(f.offender).sign(consensus_signing_root(consensus_attestation_root(v->data),consensus_domain({1,0,0,0},version,ctx.genesis_root)));
@@ -65,7 +65,7 @@ std::pair<IndexedConsensusAttestation,IndexedConsensusAttestation> proof(Fixture
 }
 Json generate(Fixture& f){
  auto [a,b]=proof(f);const auto max=f.rules.transition.consensus.body.validators_per_committee;const auto wire=encode_consensus_attester_slashing_ssz(a,b,max);need(bool(decode_consensus_attester_slashing_ssz(wire,max)),"proof codec");
- const auto& head=f.seed.blocks.at(f.seed.timed.view.justified.root);const auto context=capella_fork_block_context(head.state,head.header,{f.rules.transition.consensus.epoch,f.rules.transition.execution,f.rules.transition.maximum_state_bytes},f.rules.transition.consensus.state);
+ const auto head_pin=f.seed.blocks.at(f.seed.timed.view.justified.root).lease();const auto& head=*head_pin;const auto context=capella_fork_block_context(head.state,head.header,{f.rules.transition.consensus.epoch,f.rules.transition.execution,f.rules.transition.maximum_state_bytes},f.rules.transition.consensus.state);
  Json invalid=Json::array();
  for(const std::string mode:{"bad-signature","wrong-known-key","unknown-index","duplicate-index"}){
   auto x=a,y=b;if(mode=="bad-signature")x.signature[0]^=1;else if(mode=="wrong-known-key"){x.indices={f.offender==0?1ull:0ull};y.indices=x.indices;}else if(mode=="unknown-index"){x.indices={uint64_t(f.members)};y.indices=x.indices;}else{x.indices={f.offender,f.offender};y.indices=x.indices;}

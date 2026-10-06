@@ -25,7 +25,7 @@ CapellaColdRecordCache::CapellaColdRecordCache(CapellaForkBlockRules rules,Capel
 }
 std::shared_ptr<const CapellaColdRecord> CapellaColdRecordCache::load(const CapellaColdReference& reference,const std::function<std::optional<std::string>(const Bytes&,size_t)>& fetch,const std::function<void()>& check){
  if(check)check();require(reference.digest.size()==32&&reference.bytes&&reference.bytes<=limits_.envelope_bytes&&reference.bytes<=maximum_encoded_bytes_);
- if(clock_==UINT64_MAX)throw std::overflow_error("Capella cold cache clock exhausted");const auto key=hex(reference.digest);
+ if(clock_==UINT64_MAX)throw std::overflow_error("Capella cold cache clock exhausted");const auto key=hex(reference.digest)+(reference.anchor?"/anchor":"/block");
  if(const auto known=entries_.find(key);known!=entries_.end()){require(known->second.record->reference==reference);known->second.used=++clock_;return known->second.record;}
  // Select victims without mutating the cache; pinned records are never victims.
  std::vector<std::pair<uint64_t,std::string>> possible;for(const auto& [id,entry]:entries_)if(entry.record.use_count()==1)possible.emplace_back(entry.used,id);std::sort(possible.begin(),possible.end());

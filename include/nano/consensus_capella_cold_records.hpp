@@ -3,10 +3,6 @@
 namespace nano {
 // LOCAL only: references must come from an externally authenticated checkpoint,
 // not gossip. Cache is serialized by its owner and retains all outstanding pins.
-struct CapellaColdReference {
- ConsensusRoot root;Bytes digest;size_t bytes;bool anchor;
- bool operator==(const CapellaColdReference&)const=default;
-};
 struct CapellaColdRecord {CapellaColdReference reference;CapellaForkBlock block;Phase0ForkNode node;};
 struct CapellaColdCacheUsage {size_t records,encoded_bytes;};
 class CapellaColdRecordCache {
