@@ -1,0 +1,25 @@
+from pathlib import Path
+import json,hashlib,shutil
+repo=Path('/Users/boris/Dev/blockchain-nano');root=Path('/private/tmp/nano-block-receipt-deferral-20261006');root.mkdir(exist_ok=False);v15=Path('/private/tmp/nano-restored-three-node-v15-history-first-20261006');audit=Path('/private/tmp/nano-v15-history-first-post-stop-native-diagnostic-20261006')
+assert json.loads((v15/'campaign/terminal-exit.json').read_text())==json.loads((repo/'docs/qualification/restored-three-node-v15-history-first-terminal-20261006/terminal-exit.json').read_text())
+request=json.loads(Path('/private/tmp/nano-v15-frontier-docker-20261006/request.json').read_text());request['cloneDatabase']='/output/clone-chain';request['maximumAttempts']=128
+for name in ['mac-native','mac-docker']:
+ data=v15/name/'data';before=json.loads((audit/(name+'-before.json')).read_text());assert before=={str(f.relative_to(data)):hashlib.sha256(f.read_bytes()).hexdigest() for f in sorted(data.rglob('*')) if f.is_file()};shutil.copy2(Path('/private/tmp/nano-v15-frontier-docker-20261006')/(name+'-config.json'),root/(name+'-config.json'))
+shutil.copytree(v15/'mac-docker/data/chain',root/'clone-chain');(root/'original-data-before.json').write_text(json.dumps({n:json.loads((audit/(n+'-before.json')).read_text()) for n in ['mac-native','mac-docker']},indent=2)+'\n');(root/'request.json').write_text(json.dumps(request,indent=2)+'\n')
+s=(repo/'docs/qualification/head-catalog-fallback-integrated-20261006/real-archive-replay/diagnose.cpp').read_text();s=s[:s.index(' auto& source=sources[0];')];s=s.replace('#include "capella_head_catalog_relay.hpp"','#include "capella_consensus_service.hpp"\n#include <thread>\n#include <chrono>')
+s+=''' auto& source=sources[0];auto& recipient=sources[1];const auto destination=recipient.reactor->current();std::optional<ConsensusRoot> frontier;
+ for(const auto& [id,b]:source.reactor->current().state->blocks)if(!destination.state->blocks.contains(id)&&destination.state->blocks.contains(b.header.parent_root)){frontier=id;break;}need(bool(frontier),"No retained missing frontier");
+ auto exported=source.reactor->export_message("block",*frontier,8*1024*1024);need(exported.value("available",false),"Frontier export unavailable");auto frame=exported.at("envelope");auto wire=unhex(frame.at("ssz").get<std::string>());
+ ChainStore copied(request.at("cloneDatabase").get<std::string>());copied.bind_chain(genesis.chain_id,genesis.block.header.hash(),"beacon");CapellaDurableReactor worker(copied,genesis.chain_id,genesis.block.header.hash(),recipient.rules,recipient.limits,recipient.expected);InboundBudget budget;
+ CapellaConsensusService service(worker,budget,16*1024*1024+1024,8*1024*1024,1024,65536,2,16*1024*1024);
+ const auto session=service.receipts().at("session").get<std::string>();const auto before=worker.current().token;service.submit_receipt(session,1,frame.dump());Json receipt;const auto until=std::chrono::steady_clock::now()+std::chrono::seconds(10);
+ do{receipt=service.receipt(session,1);if(receipt.at("state")=="completed")break;need(std::chrono::steady_clock::now()<until,"Receipt observation deadline");std::this_thread::sleep_for(std::chrono::milliseconds(1));}while(true);
+ const bool admitted_by_receipt=worker.current().state->blocks.contains(*frontier);const auto after_receipt=worker.current().token;service.stop();service.join();
+ unsigned manual_attempts=0;bool accepted=admitted_by_receipt;while(!accepted&&manual_attempts<request.at("maximumAttempts").get<unsigned>()){++manual_attempts;accepted=worker.block(wire);}
+ need(accepted,"Frontier did not admit after bounded explicit continuations");
+ std::cout<<Json{{"scenario","actual-worker-frontier-deferral-classification"},{"frontier",root(*frontier)},{"sourceSlot",source.reactor->current().state->blocks.at(*frontier).header.slot},{"parentSlot",destination.state->blocks.at(source.reactor->current().state->blocks.at(*frontier).header.parent_root).header.slot},{"receipt",receipt},{"admittedByOneReceipt",admitted_by_receipt},{"checkpointChangedByFirstReceipt",before!=after_receipt},{"additionalManualAdmissionAttempts",manual_attempts},{"admittedAfterManualContinuations",accepted},{"actualCoreAndReceiptWorker",true},{"transportAndClockModeled",true},{"originalStoresReadOnly",true},{"chainOnlyMacClone",true},{"noSigningStorageCopied",true},{"productionQualified",false},{"WANRootCauseProven",false}}.dump(2)<<'\\n';
+ if(!admitted_by_receipt){std::cerr<<"DEFERRED FRONTIER CLASSIFIED AS REJECTED: valid retained block requires external retries\\n";return 1;}return 0;
+}catch(const std::exception& e){std::cerr<<e.what()<<'\\n';return 2;}}
+''';(root/'diagnose.cpp').write_text(s)
+s=(repo/'docs/qualification/head-catalog-fallback-integrated-20261006/real-archive-replay/build-run.sh').read_text().replace('-I/candidate-network','-I/candidate-network');(root/'build-run.sh').write_text(s)
+print('Actual receipt-worker counterexample prepared from verified stopped v15 stores; Mac chain-only clone, no keys/journals.')

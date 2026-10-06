@@ -4781,3 +4781,6 @@ Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichi
 
 
 2026-10-06 — Diagnostics de catalogue corrigés : premier refus conservé séparément de la terminaison, parcours complet distinct de libération, compteurs préservés sur délai/annulation du wrapper. 7 nouveaux scénarios et régression pertinente sur Mac natif/ARM64/AMD64 ; CMake SDK/CTest 4/4 sur les deux architectures et relais reconstruits. Échecs initiaux conservés. Core inchangé ; aucune convergence WAN ni production déduite. [Preuves](qualification/catalog-termination-diagnostic-20261006/README.md).
+
+
+2026-10-06 — Nouveau contre-exemple réel d’admission (0a605778/core 5787915e) : ticket completed/rejected pour le bloc retenu 10751, pourtant admis après 21 continuations explicites supplémentaires. Préparation différée confondue avec rejet dans le vrai worker de reçus ; correction pending/cancellation/budgets/fairness requise. Magasins originaux inchangés, copie locale de chain seulement ; cause WAN globale non prouvée. [Preuves](qualification/block-receipt-deferral-baseline-20261006/README.md).
