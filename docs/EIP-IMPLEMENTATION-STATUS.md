@@ -7263,3 +7263,6 @@ Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichi
 
 
 2026-10-06 — Sélection du catalogue entre tentatives : qualification native, Docker ARM64 et AMD64, sources figées et sorties terminales vérifiées. Seek borné/authentifié dans snapshot ; positions de sélection distinctes des ACK, bouclage/retry et reset session/génération. Neuf nouveaux cas SDK ; suites catalogue/tête/diagnostic/historique et quatre scénarios cœur passent. Le contre-exemple initial et les échecs de lanceurs sont conservés. Aucune image reconstruite, base/configuration/clé transférée. Preuves catalog-selection-integrated-20261006/. Finalité commune post-restauration et causalité WAN restent ouvertes ; release sans instrumentation et production non qualifiées.
+
+
+2026-10-06 — Préparation v17 : engagements post-v16 et journaux conservés, catalogue à sélection équitable qualifié dans son périmètre local. Trois finalités communes nouvelles en 900 s restent à démontrer ; préparation seule. Production et revue indépendante ouvertes. Preuves restored-three-node-v17-catalog-selection-prepare-20261006/.
