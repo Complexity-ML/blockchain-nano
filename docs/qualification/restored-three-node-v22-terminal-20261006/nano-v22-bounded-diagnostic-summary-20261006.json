@@ -1,0 +1,53 @@
+{
+  "observedAt": "2026-10-06T09:44:51.149559+00:00",
+  "rows": {
+    "mac-native": {
+      "eventCounts": {
+        "catalog:head-or-catalog-deadline:None": 5,
+        "attestation:block-dependency:not-admitted:dependency-depth-limit": 256,
+        "catalog:admission-rejected:catalog-exhausted": 19,
+        "catalog:None:catalog-exhausted": 15,
+        "catalog:delivery-unconfirmed:delivery-unconfirmed": 4,
+        "catalog:admission-rejected:export-unavailable": 3,
+        "catalog:admission-rejected:selection-wrap-required": 3,
+        "catalog:admission-rejected:admission-rejected": 1
+      },
+      "catalogScannedRange": [
+        0,
+        31
+      ],
+      "scope": "snapshot only, not complete campaign",
+      "input": "/private/tmp/nano-restored-three-node-v22-network-status-20261006/campaign/native.log"
+    },
+    "mac-docker-snapshot": {
+      "eventCounts": {
+        "catalog:head-or-catalog-deadline:None": 2,
+        "attestation:block-dependency:not-admitted:dependency-depth-limit": 114,
+        "catalog:admission-rejected:catalog-exhausted": 8,
+        "catalog:None:catalog-exhausted": 6,
+        "catalog:delivery-unconfirmed:delivery-unconfirmed": 2,
+        "catalog:admission-rejected:export-unavailable": 1,
+        "catalog:admission-rejected:selection-wrap-required": 1
+      },
+      "catalogScannedRange": [
+        0,
+        20
+      ],
+      "scope": "snapshot only, not complete campaign",
+      "input": "/private/tmp/nano-v22-live-mac-docker-20261006.log"
+    },
+    "vps-public-bounded-snapshot": {
+      "eventCounts": {
+        "catalog:incomplete:None": 2,
+        "catalog:invalid-response:invalid-response": 8,
+        "catalog:None:catalog-exhausted": 31,
+        "catalog:dependency-depth-limit:dependency-quantum-yield": 4
+      },
+      "catalogScannedRange": null,
+      "scope": "snapshot only, not complete campaign",
+      "input": "/private/tmp/nano-v22-live-vps-public-diagnostics-20261006.jsonl"
+    }
+  },
+  "wanCauseCompletelyProven": false,
+  "campaignTerminal": false
+}

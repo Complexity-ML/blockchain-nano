@@ -7883,3 +7883,6 @@ Mesure après arrêt v18 : natif 631 et Docker Mac 556 blocs retenus sur 1024, d
 
 
 2026-10-06 — Préparation v22 : engagements VPS post-v21 et Mac post-v20, copies Mac v21 non exécutées et journaux conservés, correctif de contention des lectures de statut qualifié en natif/ARM64/AMD64 dans son périmètre ciblé. Trois finalités communes nouvelles en 900 s restent à démontrer ; préparation seule. Production et revue indépendante ouvertes. Preuves restored-three-node-v22-network-status-prepare-20261006/.
+
+
+2026-10-06 — v22 FAILED : contrôleur original 91325 / sortie 1, checkout 80cd143e, zéro nouvelle finalité commune en 900 s malgré trois propriétaires actifs et rattrapage des hauteurs VPS. Trois arrêts normaux ; audits read-only et engagements/témoins vérifiés, fichiers inchangés (1526/1558/2360). Premier audit natif limité à 1024 blocs échoué et conservé ; requête hors ligne bornée à 32768 réussie, lecteur et limites runtime inchangés. Dépendances de votes bloquées par profondeur dans les traces ; cause WAN complète non prouvée. Brouillon non intégré : contre-exemple ancien code échoué, sept modes natifs revus passent ; runtime/Docker/WAN non qualifiés. [Preuves v22](qualification/restored-three-node-v22-terminal-20261006/README.md). Autres exigences et revue indépendante ouvertes.
