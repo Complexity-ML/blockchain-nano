@@ -4814,3 +4814,6 @@ Audits séparés post-arrêt : engagements exacts de chaque propriétaire, fichi
 
 
 2026-10-06 — Catalogue : contre-exemple de starvation par rotation du namespace de requête reproduit sur le relais antérieur (sortie attendue 1), correctif intégré qualifié en natif et Docker ARM64/AMD64 : 5 suites affectées, 11/46/19/7/10 scénarios et compilation P2P. Conservation du curseur de sélection pendant la session ; nouveaux snapshots acquis avec le namespace courant et réinitialisation explicite au changement de session. Échec du lanceur natif sans la définition CMake conservé, relance corrigée réussie. Images/volumes réutilisés, cœur et capture inchangés. Cause WAN complète et progression de finalité toujours non qualifiées ; v17 reste FAILED. [Preuves](qualification/catalog-generation-rotation-integrated-20261006/README.md).
+
+
+2026-10-06 — Préparation v18 : engagements post-v17 et journaux conservés, catalogue à sélection équitable qualifié dans son périmètre local. Trois finalités communes nouvelles en 900 s restent à démontrer ; préparation seule. Production et revue indépendante ouvertes. Preuves restored-three-node-v18-namespace-selection-prepare-20261006/.
