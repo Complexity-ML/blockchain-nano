@@ -17,6 +17,7 @@ struct CapellaPendingBlsChange {ConsensusRoot admission_root;Bytes wire;};
 using CapellaPendingBlsChanges=std::map<uint64_t,CapellaPendingBlsChange>;
 struct CapellaPendingExit {ConsensusRoot admission_root;std::array<uint8_t,48> public_key;Bytes wire;};
 using CapellaPendingExits=std::map<Bytes,CapellaPendingExit>;
+enum class CapellaBlockAdmission {accepted,rejected,deferred};
 struct CapellaPublishedStore {std::shared_ptr<const CapellaForkStore> state;ForkCheckpointToken token;};
 // Immutable root-only inventory; does not pin EVM state or payload archives.
 class CapellaInventorySnapshot {
@@ -55,7 +56,7 @@ class CapellaDurableReactor {
  CapellaTargetPreparation* prepare_vote_target_locked(const CapellaForkStore&,const Phase0SignedAttestation&,
   bool complete,const std::function<void()>&);
  bool prepare_local_duties_locked(uint64_t,const std::function<void()>&);
- bool block_locked(std::span<const uint8_t>,const std::function<void()>&);
+ bool block_locked(std::span<const uint8_t>,const std::function<void()>&,bool* deferred=nullptr);
  std::optional<Bytes> propose_current_locked(uint64_t,uint64_t,const std::string&,size_t,size_t,const std::function<uint64_t()>&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>&,const Bytes&);
  // Only populated from this reactor's immutable, admitted head under mutex_.
  // Single-entry cache: no retained state snapshots or old-branch registry maps.
@@ -215,6 +216,7 @@ public:
  std::optional<Bytes> signed_block(const ConsensusRoot&,const std::function<void()>& checkpoint={})const;
  void tick(uint64_t time_ms,const std::function<void()>& checkpoint={});
  bool block(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
+ CapellaBlockAdmission block_admission(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
  // Current-slot votes are durable before acknowledgment, effective next slot.
  bool vote(const Phase0SignedAttestation&,const std::function<void()>& checkpoint={});
  bool slashing(const IndexedConsensusAttestation&,const IndexedConsensusAttestation&,const std::function<void()>& checkpoint={});

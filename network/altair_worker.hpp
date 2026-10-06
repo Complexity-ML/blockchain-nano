@@ -5,7 +5,7 @@
 #include <mutex>
 #include <thread>
 
-// One ordered consensus worker. Limits cover queued AND running payloads, and
+// One consensus worker with FIFO scheduling of bounded work quanta. Limits cover queued AND running payloads, and
 // are local resource policy, not consensus/validator limits. The handler must
 // check cancellation before durable commit; after commit it must return the
 // committed decision. Handler and completion must not destroy/join this queue.
@@ -38,6 +38,20 @@ private:
    auto decision=Decision::local_failure;
    if(!job->cancelled->load()){
     try{decision=handler_(job->message,job->cancelled);}catch(...){decision=Decision::local_failure;}
+   }
+   if(decision==Decision::deferred){
+    // Keep the same payload, cancellation, job count and byte reservation.
+    // Yield to already queued messages; no Done/receipt/ACK before admission.
+    bool resumed=false;
+    {
+     std::lock_guard lock(mutex_);
+     if(!stopping_&&!job->cancelled->load()){
+      try{pending_.push_back(std::move(*job));resumed=true;}catch(...){/* Retire as local failure; no reservation leak. */}
+     }
+     running_.reset();
+    }
+    if(resumed){ready_.notify_one();std::this_thread::yield();continue;}
+    decision=Decision::local_failure;
    }
    // Completion is invoked exactly once, after the handler (and commit) ends.
    // Completion callbacks must not throw, as with the stream adapter's Done.

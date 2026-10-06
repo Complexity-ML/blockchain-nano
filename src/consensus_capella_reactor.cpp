@@ -372,9 +372,14 @@ void CapellaDurableReactor::tick_locked(uint64_t time,const std::function<void()
 }
 
 bool CapellaDurableReactor::block(std::span<const uint8_t> wire,const std::function<void()>& check){
- std::lock_guard lock(mutex_);return block_locked(wire,check);
+ return block_admission(wire,check)==CapellaBlockAdmission::accepted;
 }
-bool CapellaDurableReactor::block_locked(std::span<const uint8_t> wire,const std::function<void()>& check){
+CapellaBlockAdmission CapellaDurableReactor::block_admission(std::span<const uint8_t> wire,const std::function<void()>& check){
+ std::lock_guard lock(mutex_);bool deferred=false;
+ const bool accepted=block_locked(wire,check,&deferred);
+ return accepted?CapellaBlockAdmission::accepted:deferred?CapellaBlockAdmission::deferred:CapellaBlockAdmission::rejected;
+}
+bool CapellaDurableReactor::block_locked(std::span<const uint8_t> wire,const std::function<void()>& check,bool* deferred){
  require_available();if(check)check();
  // Reconnection may lose the sender's ACK cache. A pruned historical duplicate
  // is acknowledged only from our OWN authenticated finalized archive; it never
@@ -424,7 +429,7 @@ bool CapellaDurableReactor::block_locked(std::span<const uint8_t> wire,const std
    const auto* local=local_preparation_->block();
    if(local&&local->parent()==parent.header&&local->prepared_slot()==header.slot-1)preparation=*local;
   }
-  if(!preparation.advance_for_block(header.slot,std::min(limits_.replay_slots,slots),limits_.sync_trials,check))return false;
+  if(!preparation.advance_for_block(header.slot,std::min(limits_.replay_slots,slots),limits_.sync_trials,check)){if(deferred)*deferred=true;return false;}
   // Continuations bind the admitted target root/epoch/profile, not the wire
   // currently requesting them. Alternating siblings must not erase that work.
   incoming_target_block_=id;
@@ -450,6 +455,7 @@ bool CapellaDurableReactor::block_locked(std::span<const uint8_t> wire,const std
     // Only genuinely unfinished preparation defers the signed block.
     if(reused)continue;
     frame.advance(std::min(limits_.replay_slots,slots),limits_.sync_trials,check);
+    if(deferred)*deferred=true;
     return false;
    }
   }
