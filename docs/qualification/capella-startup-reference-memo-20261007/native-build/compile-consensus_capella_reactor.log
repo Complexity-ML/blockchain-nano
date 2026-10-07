@@ -1,0 +1,11 @@
+/private/tmp/nano-startup-checkpoint-memo-20261007/native-build/source/src/consensus_capella_reactor.cpp:106:27: error: default initialization of an object of const type 'const CapellaForkStore' without a user-provided default constructor
+  106 |    const CapellaForkStore empty;
+      |                           ^    
+      |                                {}
+/private/tmp/nano-startup-checkpoint-memo-20261007/native-build/source/src/consensus_capella_reactor.cpp:624:72: error: out-of-line definition of 'capture_block_inventory' does not match any declaration in 'nano::CapellaDurableReactor'
+  624 | std::shared_ptr<const CapellaInventorySnapshot> CapellaDurableReactor::capture_block_inventory(const CapellaPublishedStore& published,size_t budget,const std::function<void()>& check)const{
+      |                                                                        ^~~~~~~~~~~~~~~~~~~~~~~
+/private/tmp/nano-coherent-e33ad89e-20261006/source/include/nano/consensus_capella_reactor.hpp:37:7: note: CapellaDurableReactor defined here
+   37 | class CapellaDurableReactor {
+      |       ^~~~~~~~~~~~~~~~~~~~~
+2 errors generated.

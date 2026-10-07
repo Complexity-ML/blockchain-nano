@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/private/tmp/nano-startup-checkpoint-memo-20261007/build-native.py", line 17, in <module>
+    run('compile-'+unit,['/usr/bin/clang++']+flags('nano_core.dir')+['-I'+str(repo/'src'),'-c',str(source/('src/'+unit+'.cpp')),'-o',str(probe/(unit+'.cpp.o'))])
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/nano-startup-checkpoint-memo-20261007/build-native.py", line 13, in run
+    (probe/(name+'-exit.json')).write_text(json.dumps({'exitCode':r.returncode})+'\n');assert r.returncode==0,(name,r.returncode);print(name+' exit0',flush=True)
+                                                                                              ^^^^^^^^^^^^^^^
+AssertionError: ('compile-consensus_capella_reactor', 1)
