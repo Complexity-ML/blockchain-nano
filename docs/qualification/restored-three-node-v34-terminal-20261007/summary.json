@@ -1,0 +1,404 @@
+{
+  "originalSession": 14735,
+  "exitCode": 1,
+  "result": "FAILED",
+  "controllerUnchanged": true,
+  "newCommonFinalities": 0,
+  "rawLogs": {
+    "mac-native": {
+      "path": "/private/tmp/nano-restored-three-node-v34-startup-memo-20261007/campaign/native.log",
+      "sha256": "807c6c6e5aa451e3d68f2add40b484b9530c19a773ff5d528339a56c45a82375",
+      "bytes": 1254825
+    },
+    "mac-docker": {
+      "path": "/private/tmp/nano-restored-three-node-v34-startup-memo-20261007/campaign/docker-mac.log",
+      "sha256": "bf06b02c143694dcfa56f61e92407a8fb5f5e32503979b53f64bf5dfd77a0d8a",
+      "bytes": 1248860
+    },
+    "vps-docker": {
+      "path": "/private/tmp/nano-restored-three-node-v34-startup-memo-20261007/campaign/vps.log",
+      "sha256": "60721de6275e1c2e7f26480ab08c56967e57c91449d1ad7e64647f58f2a49ac0",
+      "bytes": 2734855
+    }
+  },
+  "duties": [
+    {
+      "name": "mac-native",
+      "clockHealthy": true,
+      "finalized": {
+        "epoch": "0x504",
+        "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+      },
+      "validator": {
+        "healthy": true,
+        "localKeys": 16,
+        "proposalsAdmitted": 36,
+        "attestationsAdmitted": 299,
+        "syncMessagesAdmitted": 1500,
+        "timing": {
+          "awaitingSlotBlock": 1524,
+          "maxPollMs": 3787,
+          "maxProposalMs": 1550,
+          "polls": 4654,
+          "pollsOverSlot": 0,
+          "proposalAttempts": 36,
+          "proposalsUnavailable": 0,
+          "slotBoundaryExits": 31
+        }
+      }
+    },
+    {
+      "name": "mac-docker",
+      "clockHealthy": true,
+      "finalized": {
+        "epoch": "0x504",
+        "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+      },
+      "validator": {
+        "healthy": true,
+        "localKeys": 16,
+        "proposalsAdmitted": 37,
+        "attestationsAdmitted": 296,
+        "syncMessagesAdmitted": 992,
+        "timing": {
+          "awaitingSlotBlock": 1305,
+          "maxPollMs": 5597,
+          "maxProposalMs": 1462,
+          "polls": 3650,
+          "pollsOverSlot": 0,
+          "proposalAttempts": 37,
+          "proposalsUnavailable": 0,
+          "slotBoundaryExits": 34
+        }
+      }
+    },
+    {
+      "name": "vps-docker",
+      "clockHealthy": true,
+      "finalized": {
+        "epoch": "0x504",
+        "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+      },
+      "validator": {
+        "healthy": true,
+        "localKeys": 33,
+        "proposalsAdmitted": 50,
+        "attestationsAdmitted": 109,
+        "syncMessagesAdmitted": 0,
+        "timing": {
+          "awaitingSlotBlock": 95,
+          "maxPollMs": 13966,
+          "maxProposalMs": 5353,
+          "polls": 234,
+          "pollsOverSlot": 51,
+          "proposalAttempts": 59,
+          "proposalsUnavailable": 9,
+          "slotBoundaryExits": 138
+        }
+      }
+    }
+  ],
+  "relayCompletedTurns": {
+    "mac-native": {
+      "kinds": {
+        "block": 34,
+        "attestation": 15,
+        "attester_slashing": 3,
+        "bls_to_execution_change": 3,
+        "sync_committee_message": 3,
+        "voluntary_exit": 3
+      },
+      "blockReasons": {
+        "dependency-depth-limit": 7,
+        "head-or-catalog-deadline": 10,
+        "dependency-quantum-yield": 15,
+        "admission-rejected": 2
+      },
+      "dependencyExports": 1478,
+      "dependencyACKs": 104,
+      "dependencySendAttempts": 109,
+      "selectedHeadACKs": 0,
+      "rpcRefusals": [
+        {
+          "method": "nano_capellaCatalogAcquire",
+          "cause": "inventory-capture-busy",
+          "count": 37
+        }
+      ],
+      "startupStages": [
+        {
+          "elapsedMs": 0,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 0,
+          "previousStage": null,
+          "stage": "validate-input"
+        },
+        {
+          "elapsedMs": 35,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 35,
+          "previousStage": "validate-input",
+          "stage": "reactor-recovery"
+        },
+        {
+          "elapsedMs": 8423,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 8387,
+          "previousStage": "reactor-recovery",
+          "stage": "checkpoint-migration"
+        },
+        {
+          "elapsedMs": 8688,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 265,
+          "previousStage": "checkpoint-migration",
+          "stage": "signing-journals"
+        },
+        {
+          "elapsedMs": 9787,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 1098,
+          "previousStage": "signing-journals",
+          "stage": "clock-catchup"
+        },
+        {
+          "elapsedMs": 10046,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 259,
+          "previousStage": "clock-catchup",
+          "stage": "initial-clock-poll"
+        },
+        {
+          "elapsedMs": 10046,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 0,
+          "previousStage": "initial-clock-poll",
+          "stage": "duty-workers"
+        },
+        {
+          "elapsedMs": 10046,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 0,
+          "previousStage": "duty-workers",
+          "stage": "runtime-ready"
+        }
+      ],
+      "scope": "completed turns only; independent catalogue deliveries excluded from dependency counts"
+    },
+    "mac-docker": {
+      "kinds": {
+        "block": 30,
+        "attestation": 14,
+        "attester_slashing": 3,
+        "bls_to_execution_change": 3,
+        "sync_committee_message": 3,
+        "voluntary_exit": 2
+      },
+      "blockReasons": {
+        "dependency-depth-limit": 7,
+        "head-or-catalog-deadline": 8,
+        "dependency-quantum-yield": 13,
+        "admission-rejected": 2
+      },
+      "dependencyExports": 1778,
+      "dependencyACKs": 85,
+      "dependencySendAttempts": 90,
+      "selectedHeadACKs": 0,
+      "rpcRefusals": [
+        {
+          "method": "nano_capellaCatalogAcquire",
+          "cause": "inventory-capture-busy",
+          "count": 86
+        }
+      ],
+      "startupStages": [
+        {
+          "elapsedMs": 0,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 0,
+          "previousStage": null,
+          "stage": "validate-input"
+        },
+        {
+          "elapsedMs": 52,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 52,
+          "previousStage": "validate-input",
+          "stage": "reactor-recovery"
+        },
+        {
+          "elapsedMs": 10499,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 10446,
+          "previousStage": "reactor-recovery",
+          "stage": "checkpoint-migration"
+        },
+        {
+          "elapsedMs": 10910,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 410,
+          "previousStage": "checkpoint-migration",
+          "stage": "signing-journals"
+        },
+        {
+          "elapsedMs": 11166,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 256,
+          "previousStage": "signing-journals",
+          "stage": "clock-catchup"
+        },
+        {
+          "elapsedMs": 11543,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 376,
+          "previousStage": "clock-catchup",
+          "stage": "initial-clock-poll"
+        },
+        {
+          "elapsedMs": 11543,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 0,
+          "previousStage": "initial-clock-poll",
+          "stage": "duty-workers"
+        },
+        {
+          "elapsedMs": 11543,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 0,
+          "previousStage": "duty-workers",
+          "stage": "runtime-ready"
+        }
+      ],
+      "scope": "completed turns only; independent catalogue deliveries excluded from dependency counts"
+    },
+    "vps-docker": {
+      "kinds": {
+        "block": 62,
+        "attestation": 27,
+        "attester_slashing": 6,
+        "bls_to_execution_change": 6,
+        "sync_committee_message": 6,
+        "voluntary_exit": 5
+      },
+      "blockReasons": {
+        "dependency-depth-limit": 22,
+        "dependency-quantum-yield": 35,
+        "head-or-catalog-deadline": 3,
+        "head-reference-unavailable": 2
+      },
+      "dependencyExports": 2326,
+      "dependencyACKs": 192,
+      "dependencySendAttempts": 192,
+      "selectedHeadACKs": 0,
+      "rpcRefusals": [
+        {
+          "method": "nano_capellaCatalogAcquire",
+          "cause": "inventory-capture-busy",
+          "count": 10906
+        },
+        {
+          "method": "nano_capellaCatalogAcquire",
+          "cause": "inventory-request-retired",
+          "count": 13
+        }
+      ],
+      "startupStages": [
+        {
+          "elapsedMs": 0,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 0,
+          "previousStage": null,
+          "stage": "validate-input"
+        },
+        {
+          "elapsedMs": 19,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 19,
+          "previousStage": "validate-input",
+          "stage": "reactor-recovery"
+        },
+        {
+          "elapsedMs": 32981,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 32961,
+          "previousStage": "reactor-recovery",
+          "stage": "checkpoint-migration"
+        },
+        {
+          "elapsedMs": 33894,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 912,
+          "previousStage": "checkpoint-migration",
+          "stage": "signing-journals"
+        },
+        {
+          "elapsedMs": 34354,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 460,
+          "previousStage": "signing-journals",
+          "stage": "clock-catchup"
+        },
+        {
+          "elapsedMs": 35423,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 1069,
+          "previousStage": "clock-catchup",
+          "stage": "initial-clock-poll"
+        },
+        {
+          "elapsedMs": 36553,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 1130,
+          "previousStage": "initial-clock-poll",
+          "stage": "duty-workers"
+        },
+        {
+          "elapsedMs": 36553,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 0,
+          "previousStage": "duty-workers",
+          "stage": "runtime-ready"
+        }
+      ],
+      "scope": "completed turns only; independent catalogue deliveries excluded from dependency counts"
+    }
+  },
+  "productionQualified": false,
+  "stops": {
+    "native-state.json": {
+      "pid": 26100,
+      "exitCode": 0,
+      "signalCode": null
+    },
+    "docker-mac.log.state.json": {
+      "State": {
+        "Status": "exited",
+        "Running": false,
+        "Paused": false,
+        "Restarting": false,
+        "OOMKilled": false,
+        "Dead": false,
+        "Pid": 0,
+        "ExitCode": 0,
+        "Error": "",
+        "StartedAt": "2026-10-07T00:16:32.243923304Z",
+        "FinishedAt": "2026-10-07T00:31:46.429876922Z"
+      }
+    },
+    "vps.log.state.json": {
+      "State": {
+        "Status": "exited",
+        "Running": false,
+        "Paused": false,
+        "Restarting": false,
+        "OOMKilled": false,
+        "Dead": false,
+        "Pid": 0,
+        "ExitCode": 0,
+        "Error": "",
+        "StartedAt": "2026-10-07T00:15:54.071032058Z",
+        "FinishedAt": "2026-10-07T00:31:49.199566546Z"
+      }
+    }
+  }
+}
