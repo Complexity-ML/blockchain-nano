@@ -6,7 +6,7 @@
 // Preserve the complete
 // historical block catalog. One total deadline and shared dependency quantum.
 // The remote receiver still validates every block; a status hint is not an ACK.
-struct CapellaDependencyPreparation {std::string target,cursor;void clear(){target.clear();cursor.clear();}};
+struct CapellaDependencyPreparation {std::string target,cursor;std::vector<std::string> route;void clear(){target.clear();cursor.clear();route.clear();}};
 
 class CapellaHeadCatalogRelay:public std::enable_shared_from_this<CapellaHeadCatalogRelay>{
  asio::io_context& io_;AltairCoreDispatch::Call core_;CapellaCatalogRelay::Deliver deliver_;
@@ -47,10 +47,12 @@ class CapellaHeadCatalogRelay:public std::enable_shared_from_this<CapellaHeadCat
   if(id==anchor_){if(preparation_)preparation_->clear();priority_="anchor";catalog();return;}
   if(knowledge_->acknowledged(id)){if(preparation_)preparation_->clear();priority_="already-acknowledged";catalog();return;}
   if(preparation_&&preparation_->target.empty()){preparation_->target=id;preparation_->cursor=id;}
-  const auto delivery_target=preparation_?preparation_->cursor:id;
+  if(preparation_)while(!preparation_->route.empty()&&knowledge_->acknowledged(preparation_->route.front()))preparation_->route.erase(preparation_->route.begin());
+  const auto available=quantum_?quantum_->maximum-quantum_->admitted:dependency_blocks_;
+  const auto delivery_target=preparation_&&!preparation_->route.empty()&&available?preparation_->route[std::min(available,preparation_->route.size())-1]:preparation_?preparation_->cursor:id;
   priority_=delivery_target==id?"selected":"dependency-preparation-resume";const auto remaining=deadline_-std::chrono::steady_clock::now();if(remaining<=std::chrono::steady_clock::duration::zero()){fail("head-or-catalog-deadline");return;}
   head_=std::make_shared<CapellaBlockDelivery>(io_,core_,send_,token_,anchor_,delivery_target,ingress_,knowledge_,dependency_blocks_,dependency_bytes_,callback([self=shared_from_this()](Json ack){
-   if(ack==Json{{"yielded",true}}){self->priority_="dependency-quantum-yield";self->fail("dependency-quantum-yield");return;}
+   if(ack==Json{{"yielded",true}}){if(self->preparation_)self->preparation_->route=self->head_->yielded_roots();self->priority_="dependency-quantum-yield";self->fail("dependency-quantum-yield");return;}
    if(ack==Json{{"accepted",false},{"reason","dependency-depth-limit"}}){
     // A fresh session knows no ancestral ACKs. Seed them through the bounded
     // historical catalog instead of retrying an over-deep head forever.

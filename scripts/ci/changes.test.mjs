@@ -36,10 +36,11 @@ test('network dependencies, shared headers and workflow changes trigger network;
 }));
 
 test('actual CMake gate rejects empty or duplicate network registrations and a foreign dependency revision',async()=>fixture(async({dir,put})=>{
- const script=join(process.cwd(),'scripts/ci/check-network.cmake');const source=await readFile(script,'utf8');const names=/set\(expected ([^\n]+)\)/.exec(source)[1].split(' ');assert.equal(names.length,21);
+ const script=join(process.cwd(),'scripts/ci/check-network.cmake');const source=await readFile(script,'utf8');const names=/set\(expected ([^\n]+)\)/.exec(source)[1].split(' ');assert.equal(names.length,49);assert.equal(new Set(names).size,49);
  const run=mode=>exec('cmake',['-DNANO_CI_CHECK='+mode,'-P',script],{cwd:dir});
  await put('ci-reports/network-selection.json',JSON.stringify({tests:[]}));await assert.rejects(run('registry'),e=>e.code!==0&&e.stderr.includes('count differs'));
  await put('ci-reports/network-selection.json',JSON.stringify({tests:names.map((name,i)=>({name:i===20?names[0]:name,properties:[]}))}));await assert.rejects(run('registry'),e=>e.code!==0&&e.stderr.includes('names differ'));
  await put('ci-reports/network-selection.json',JSON.stringify({tests:names.map((name,i)=>({name,properties:i===0?[{name:'DISABLED',value:true}]:[]}))}));await assert.rejects(run('registry'),e=>e.code!==0&&e.stderr.includes('skip property is forbidden'));
+ await put('ci-reports/network-selection.json',JSON.stringify({tests:names.map(name=>({name,properties:[]}))}));await run('registry');
  await put('dependencies.lock.json',JSON.stringify({'cpp-libp2p':{commit:'a'.repeat(40)}}));await put('ci-reports/libp2p-revision.txt','b'.repeat(40));await assert.rejects(run('pin'),e=>e.code!==0&&e.stderr.includes('differs from reviewed lock'));
 }));

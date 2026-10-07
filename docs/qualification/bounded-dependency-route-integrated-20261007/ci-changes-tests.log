@@ -1,0 +1,16 @@
+✔ actual Git history: docs-only skips C++ but code renamed into docs still triggers it (167.412417ms)
+✔ initial push and actual PR merge base catch core changes; manual false stays quiet (137.7925ms)
+✔ invalid baselines or unrelated checkout fail closed, without executing injected Git arguments (0.741416ms)
+✔ fixture, build recipe and dependency changes require C++; harness-only changes avoid rebuilding unchanged core (0.061708ms)
+✔ live build log cannot mask compiler/configuration failure behind tee (347.695375ms)
+✔ actual Git history: transport rename triggers network; docs and core-only fixture changes skip it (163.314292ms)
+✔ network dependencies, shared headers and workflow changes trigger network; manual dispatch stays explicit (71.099209ms)
+✔ actual CMake gate rejects empty or duplicate network registrations and a foreign dependency revision (66.752917ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1011.032708

@@ -15,6 +15,7 @@ class CapellaBlockDelivery:public std::enable_shared_from_this<CapellaBlockDeliv
  asio::io_context& io_;AltairCoreDispatch::Call core_;std::function<void(Json,Reply)> send_;
  std::string token_,anchor_,target_,preparation_boundary_;std::shared_ptr<AltairMessageIngress> ingress_;
  std::shared_ptr<AltairRelayProgress> knowledge_;const size_t maximum_,budget_;
+ std::vector<std::string> yielded_roots_;
  std::vector<Entry> pending_;size_t bytes_=0;std::optional<uint64_t> child_slot_;
  size_t exports_requested_=0,cache_hits_=0,payloads_sent_=0,payloads_admitted_=0,pending_high_water_=0;
  std::shared_ptr<CapellaDeliveryQuantum> quantum_;std::shared_ptr<CapellaExportCache> exports_;
@@ -64,7 +65,11 @@ class CapellaBlockDelivery:public std::enable_shared_from_this<CapellaBlockDeliv
   if(pending_.empty()){finish(true);return;}
   // A local yield never claims admission of the still-pending target. Only
   // authenticated dependency ACKs survive in the peer/session knowledge.
-  if(quantum_&&quantum_->exhausted()){finish(false,true);return;}
+  if(quantum_&&quantum_->exhausted()){
+   // Retain only bounded authenticated local root metadata, never an ACK.
+   yielded_roots_.reserve(pending_.size());
+   for(auto i=pending_.rbegin();i!=pending_.rend();++i)yielded_roots_.push_back(i->root);
+   finish(false,true);return;}
   auto frame=Json::parse(pending_.back().wire);const auto id=pending_.back().root;
   auto reply=callback([id](auto& self,Json value){
    if(!value.is_object()||value.size()!=1||value.value("accepted",Json())!=true){
@@ -81,6 +86,7 @@ public:
  // Local diagnostics only; these counters never substitute for receiver ACKs.
  Json progress()const{return Json{{"target",target_},{"preparationBoundary",preparation_boundary_.empty()?Json(nullptr):Json(preparation_boundary_)},{"exportsRequested",exports_requested_},{"exportCacheHits",cache_hits_},{"sendAttempts",payloads_sent_},{"payloadsAdmitted",payloads_admitted_},{"pendingHighWater",pending_high_water_},{"unavailableExport",unavailable_export_}};}
  // Local authenticated traversal metadata only; never a peer acknowledgement.
+ const std::vector<std::string>& yielded_roots()const{return yielded_roots_;}
  const std::string& preparation_boundary()const{return preparation_boundary_;}
  bool unavailable_export()const{return unavailable_export_;}
  CapellaBlockDelivery(asio::io_context& io,AltairCoreDispatch::Call core,std::function<void(Json,Reply)> send,std::string token,std::string anchor,std::string target,std::shared_ptr<AltairMessageIngress> ingress,std::shared_ptr<AltairRelayProgress> knowledge,size_t maximum,size_t budget,Reply done,std::shared_ptr<CapellaDeliveryQuantum> quantum={},std::shared_ptr<CapellaExportCache> exports={}):io_(io),core_(std::move(core)),send_(std::move(send)),token_(std::move(token)),anchor_(std::move(anchor)),target_(std::move(target)),ingress_(std::move(ingress)),knowledge_(std::move(knowledge)),maximum_(maximum),budget_(budget),quantum_(std::move(quantum)),exports_(std::move(exports)),done_(std::move(done)),timer_(io){if(!core_||!send_||token_.empty()||!root(anchor_)||!root(target_)||!ingress_||!knowledge_||!maximum_||!budget_||!done_||(quantum_&&!quantum_->maximum))throw std::invalid_argument("Invalid Capella block delivery");}
