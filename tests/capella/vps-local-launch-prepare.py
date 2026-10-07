@@ -69,10 +69,27 @@ def derive(configuration,capsule,rpc_port,p2p_port,binary,runtime_options=None):
  a['profile']['file']='/config/profile.json';a['network']['enabled']=True
  return c
 
+def verify_local_audit(proof,capture_bytes,bindings):
+ assert proof.get('hashesUnchanged') is True
+ if proof.get('exactStopCommitmentsVerified') is True:return
+ # A forced stop has no healthy stop receipt. Bind its independently replayed
+ # current capsule instead; signer pins must still match the external inventory.
+ assert proof.get('format')=='nano-private-audited-crash-source-v1'
+ for key in ['minimumCoreAndSignerCommitmentsVerified','primaryAndIndependentWitnessVerified','requestPreparedOnVps','noPrivateDataExport','readOnly']:
+  assert proof.get(key) is True,key
+ assert proof.get('sourceForcedStopExit')==137 and proof.get('sourceOomKilled') is False
+ capsule=json.loads(capture_bytes);count=len(capsule['validatorKeys'])
+ assert count>0 and proof.get('exactUnchangedSignerPins')==proof.get('signerInventory')==count
+ assert isinstance(proof.get('files'),int) and proof['files']>0
+ digest=hashlib.sha256(capture_bytes).hexdigest()
+ assert proof.get('captureSHA256')==bindings.get('capture.json')==digest
+ assert proof.get('auditedRecoveryCommitment')==capsule['restart']
+
 def prepare(old,dest,rpc_port,p2p_port,binary,expected,runtime_options=None):
  old=Path(old);dest=Path(dest);assert str(old).startswith('/tmp/nano-restored-three-node-vps-') and str(dest).startswith('/tmp/nano-restored-three-node-vps-') and old!=dest
- audit=old/'local-readonly-audit';proof=json.loads((audit/'immutability.json').read_text());assert proof['hashesUnchanged'] and proof['exactStopCommitmentsVerified']
- for name,h in json.loads((audit/'request-config-hashes.json').read_text()).items():assert hashlib.sha256((audit/name).read_bytes()).hexdigest()==h
+ audit=old/'local-readonly-audit';proof=json.loads((audit/'immutability.json').read_text());bindings=json.loads((audit/'request-config-hashes.json').read_text())
+ for name,h in bindings.items():assert hashlib.sha256((audit/name).read_bytes()).hexdigest()==h
+ verify_local_audit(proof,(audit/'capture.json').read_bytes(),bindings)
  c=derive(json.loads((audit/'config.json').read_text()),json.loads((audit/'capture.json').read_text()),rpc_port,p2p_port,binary,runtime_options)
  assert canonical_hash(c)==expected,'Local derived configuration differs from independent controller plan'
  keys={k['keyEnv'] for k in c['capella']['validator']['keys']};env=(old/'vps.env').read_text();lines=env.splitlines();assert len(lines)==len(set(v.split('=',1)[0] for v in lines));assert {v.split('=',1)[0] for v in lines}==keys|{'NANO_TEST_NETWORK_TRACE'}

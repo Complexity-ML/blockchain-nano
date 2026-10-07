@@ -58,3 +58,29 @@ for(const [name,change] of [
  ['source budget not uint64',(x,o)=>o.retentionExperiment.sourceBlockBudgets['vps-docker']='0x10000000000000000']
 ])test('both planners reject mixed source '+name,()=>{const {x,o}=mixedSource();change(x,o);assert.equal(derive(x,o).error,true);assert.throws(()=>restoredThreeNodePlan({...x,...o}));});
 test('heterogeneous budget declaration never permits other source resource changes',()=>{const {x,o}=mixedSource();x.vpsConfig.capella.limits.messages='0x801';assert.throws(()=>restoredThreeNodePlan({...x,...o}));});
+
+test('audited forced-stop source binds current capsule and rejects incomplete crash evidence',()=>{
+ const code=`import importlib.util,json,sys,hashlib,copy
+s=importlib.util.spec_from_file_location('helper',sys.argv[1]);m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
+c=json.load(sys.stdin);wire=json.dumps(c).encode();digest=hashlib.sha256(wire).hexdigest();count=len(c['validatorKeys'])
+p={'format':'nano-private-audited-crash-source-v1','hashesUnchanged':True,'minimumCoreAndSignerCommitmentsVerified':True,'primaryAndIndependentWitnessVerified':True,'requestPreparedOnVps':True,'noPrivateDataExport':True,'readOnly':True,'sourceForcedStopExit':137,'sourceOomKilled':False,'exactUnchangedSignerPins':count,'signerInventory':count,'files':2936,'captureSHA256':digest,'auditedRecoveryCommitment':c['restart']};b={'capture.json':digest}
+m.verify_local_audit(p,wire,b);original=copy.deepcopy(p);refusals=0
+for key in p:
+ q=copy.deepcopy(p);del q[key]
+ try:m.verify_local_audit(q,wire,b)
+ except (AssertionError,KeyError):refusals+=1
+ else:raise AssertionError('accepted missing '+key)
+for key,value in [('sourceForcedStopExit',0),('sourceOomKilled',True),('exactUnchangedSignerPins',count-1),('files',0),('captureSHA256','0'*64),('auditedRecoveryCommitment',{'sequence':'0x1','digest':'0x'+'0'*64})]:
+ q=copy.deepcopy(p);q[key]=value
+ try:m.verify_local_audit(q,wire,b)
+ except AssertionError:refusals+=1
+ else:raise AssertionError('accepted altered '+key)
+for changed,bindings in [(wire+b' ',b),(wire,{}),(wire,{'capture.json':'0'*64})]:
+ try:m.verify_local_audit(p,changed,bindings)
+ except AssertionError:refusals+=1
+ else:raise AssertionError('accepted unbound capsule')
+assert p==original
+print(json.dumps({'validCrashSourceAccepted':True,'refusals':refusals,'proofUnchanged':True}))`;
+ const r=spawnSync('python3',['-B','-c',code,helper],{input:JSON.stringify(fixture.vpsCapsule),encoding:'utf8'});
+ assert.equal(r.status,0,r.stderr);const result=JSON.parse(r.stdout);assert.equal(result.validCrashSourceAccepted,true);assert.ok(result.refusals>=20);assert.equal(result.proofUnchanged,true);
+});
