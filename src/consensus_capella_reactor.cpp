@@ -301,7 +301,7 @@ void CapellaDurableReactor::publish_impl(CapellaForkStore candidate,const std::f
   }
   published_next=std::make_shared<const CapellaForkStore>(std::move(prepared));
  }
- const auto publication=std::make_shared<const CapellaPublishedStore>(CapellaPublishedStore{published_next,{token_?token_->sequence+1:1,digest}});
+ const auto publication=std::make_shared<const CapellaPublishedStore>(published_store(published_next,{token_?token_->sequence+1:1,digest},votes?*votes:votes_,*slashings,check));
  std::optional<ExecutionStateRetentionAnchor> retention;
  if(historical_state_pruning_){const auto& anchor=next->blocks.at(next->timed.view.anchor).execution_header();if(anchor.number<=common_height)retention=ExecutionStateRetentionAnchor{anchor.number,anchor.hash()};}
  ForkCheckpointToken committed;
@@ -326,7 +326,7 @@ CapellaDurableReactor::CapellaDurableReactor(ChainStore& disk,Int chain,Bytes ge
  for(const auto& receipt:head.receipts){if(check)check();const auto saved=disk_.receipt(receipt.transaction_hash);archive_require(saved&&saved->to_json()==receipt.to_json());}
  auto finalized=restored.blocks.at(restored.timed.view.finalized.root).lease(check)->execution_block;const auto canonical=disk_.block_by_number(finalized.header.number);archive_require(canonical&&canonical->header.hash()==finalized.header.hash());
  if(check)check();state_=std::make_shared<const CapellaForkStore>(std::move(restored));token_=expected;reference_cache_=std::move(startup_reference);votes_=std::move(votes);slashings_=std::move(slashings);bls_changes_=std::move(changes);exits_=std::move(exits);
- std::atomic_store_explicit(&beacon_publication_,std::make_shared<const CapellaPublishedStore>(CapellaPublishedStore{state_,*token_}),std::memory_order_release);
+ std::atomic_store_explicit(&beacon_publication_,std::make_shared<const CapellaPublishedStore>(published_store(state_,*token_,votes_,slashings_,check)),std::memory_order_release);
  if(execution_){std::lock_guard chain_lock(execution_->mutex_);execution_->beacon_finalized_=std::move(finalized);execution_->beacon_ready_=true;}
 }
 CapellaDurableReactor::CapellaDurableReactor(Blockchain& owner,CapellaForkBlockRules rules,CapellaStoreSnapshotLimits limits,CapellaForkStore initial,const std::function<void()>& check,ChainStore* witness):CapellaDurableReactor(owner.store_,owner.genesis_.chain_id,owner.genesis_.block.header.hash(),std::move(rules),limits,std::move(initial),check,&owner,witness){}
@@ -358,7 +358,7 @@ CapellaDurableReactor::CapellaDurableReactor(Blockchain& owner,CapellaForkBlockR
  for(const auto& receipt:head.receipts){if(check)check();const auto persisted=disk_.receipt(receipt.transaction_hash);archive_require(persisted&&persisted->to_json()==receipt.to_json());}
  auto finalized=restored.blocks.at(restored.timed.view.finalized.root).lease(check)->execution_block;const auto canonical=disk_.block_by_number(finalized.header.number);archive_require(canonical&&canonical->header.hash()==finalized.header.hash());
  if(check)check();state_=std::make_shared<const CapellaForkStore>(std::move(restored));token_=*next;reference_cache_=std::move(startup_reference);votes_=std::move(votes);slashings_=std::move(slashings);bls_changes_=std::move(changes);exits_=std::move(exits);
- std::atomic_store_explicit(&beacon_publication_,std::make_shared<const CapellaPublishedStore>(CapellaPublishedStore{state_,*token_}),std::memory_order_release);
+ std::atomic_store_explicit(&beacon_publication_,std::make_shared<const CapellaPublishedStore>(published_store(state_,*token_,votes_,slashings_,check)),std::memory_order_release);
  std::lock_guard chain_lock(owner.mutex_);owner.beacon_finalized_=std::move(finalized);owner.beacon_ready_=true;
 }
 Json CapellaDurableReactor::network_identity()const{
@@ -622,10 +622,29 @@ bool CapellaDurableReactor::sync_messages_current_locked(const PendingSyncMessag
  return head==messages.parent;
 }
 
+CapellaPublishedStore CapellaDurableReactor::published_store(std::shared_ptr<const CapellaForkStore> state,ForkCheckpointToken token,const CapellaSignedVotes& votes,const CapellaSignedVotes& slashings,const std::function<void()>& check)const{
+ auto roots=[&](const CapellaSignedVotes& archive,const char* kind,size_t maximum){
+  if(check)check();if(archive.size()>maximum)throw std::length_error("Capella published signed inventory exceeds capacity");
+  auto snapshot=std::make_shared<CapellaInventorySnapshot>();snapshot->token_=token;snapshot->kind_=kind;snapshot->roots_.reserve(archive.size());
+  for(const auto& [key,_]:archive){if(check)check();if(key.size()!=sizeof(ConsensusRoot))throw std::logic_error("Invalid Capella archive root");ConsensusRoot root{};std::copy(key.begin(),key.end(),root.begin());snapshot->roots_.push_back(root);}
+  if(check)check();return snapshot;
+ };
+ // Construct before durable commit: cancellation/allocation cannot publish a
+ // new token or a half-installed operation inventory. No unvalidated bytes.
+ auto attestations=roots(votes,"attestation",limits_.messages);auto proofs=roots(slashings,"attester_slashing",limits_.equivocations);
+ return {std::move(state),std::move(token),std::move(attestations),std::move(proofs)};
+}
+std::shared_ptr<const CapellaInventorySnapshot> CapellaDurableReactor::capture_published_inventory(const CapellaPublishedStore& published,std::string_view kind,size_t budget,const std::function<void()>& check)const{
+ if(kind=="block")return capture_block_inventory(published,budget,check);
+ if(check)check();const auto snapshot=kind=="attestation"?published.attestations:published.slashings;
+ if(!snapshot||snapshot->kind_!=kind||snapshot->token_!=published.token)throw std::logic_error("Capella signed inventory publication unavailable");
+ if(snapshot->roots_.capacity()>budget/sizeof(ConsensusRoot))throw std::length_error("Capella inventory allocation exceeds root budget");
+ if(check)check();return snapshot;
+}
 std::shared_ptr<const CapellaInventorySnapshot> CapellaDurableReactor::capture_block_inventory(const CapellaPublishedStore& published,size_t budget,const std::function<void()>& check)const{
  // A block inventory is a copy of roots from one durably published immutable
  // store. Its token, anchor and roots must all come from that same publication.
- // Mutable operation inventories still require the reactor admission lock.
+ // Ephemeral sync and state-filtered exit/change inventories retain their lock.
  if(check)check();const auto& store=*published.state;
  const auto count=store.blocks.size()-size_t(store.blocks.contains(store.timed.view.anchor));
  if(count>budget/sizeof(ConsensusRoot))throw std::length_error("Capella inventory snapshot exceeds root budget");
@@ -636,13 +655,13 @@ std::shared_ptr<const CapellaInventorySnapshot> CapellaDurableReactor::capture_b
 }
 
 std::shared_ptr<const CapellaInventorySnapshot> CapellaDurableReactor::capture_inventory(std::string_view kind,size_t budget,const std::function<void()>& check)const{
- if(kind=="block")return capture_block_inventory(beacon_snapshot(),budget,check);
+ if(kind=="block"||kind=="attestation"||kind=="attester_slashing")return capture_published_inventory(beacon_snapshot(),kind,budget,check);
  std::lock_guard lock(mutex_);return capture_inventory_locked(kind,budget,check);
 }
 std::shared_ptr<const CapellaInventorySnapshot> CapellaDurableReactor::try_capture_inventory(std::string_view kind,size_t budget,const std::function<void()>& check)const{
- if(kind=="block"){
+ if(kind=="block"||kind=="attestation"||kind=="attester_slashing"){
   if(check)check();
-  if(const auto published=std::atomic_load_explicit(&beacon_publication_,std::memory_order_acquire))return capture_block_inventory(*published,budget,check);
+  if(const auto published=std::atomic_load_explicit(&beacon_publication_,std::memory_order_acquire))return capture_published_inventory(*published,kind,budget,check);
   // Preserve try-lock refusal and the original latched error when no durable
   // publication is available. Never turn a fail-closed state into an empty list.
  }

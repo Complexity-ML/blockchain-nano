@@ -20,7 +20,13 @@ using CapellaPendingBlsChanges=std::map<uint64_t,CapellaPendingBlsChange>;
 struct CapellaPendingExit {ConsensusRoot admission_root;std::array<uint8_t,48> public_key;Bytes wire;};
 using CapellaPendingExits=std::map<Bytes,CapellaPendingExit>;
 enum class CapellaBlockAdmission {accepted,rejected,deferred};
-struct CapellaPublishedStore {std::shared_ptr<const CapellaForkStore> state;ForkCheckpointToken token;};
+class CapellaInventorySnapshot;
+struct CapellaPublishedStore {
+ std::shared_ptr<const CapellaForkStore> state;ForkCheckpointToken token;
+ // Root-only durable operation inventories share this exact state/token commit.
+ // No payload archive or mutable sync/session state is retained here.
+ std::shared_ptr<const CapellaInventorySnapshot> attestations,slashings;
+};
 // Immutable root-only inventory; does not pin EVM state or payload archives.
 class CapellaInventorySnapshot {
  friend class CapellaDurableReactor;
@@ -105,6 +111,8 @@ class CapellaDurableReactor {
  void validate_execution_binding()const;
  void fail_closed();
  std::optional<Bytes> prepare_local_body_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,std::span<const SignedTransaction>,size_t,size_t,const std::function<void()>&,std::span<const SignedCapellaBlsChange> = {},size_t maximum_change_trials = 0,std::span<const SignedConsensusVoluntaryExit> = {},size_t maximum_exit_trials = 0);
+ CapellaPublishedStore published_store(std::shared_ptr<const CapellaForkStore>,ForkCheckpointToken,const CapellaSignedVotes&,const CapellaSignedVotes&,const std::function<void()>&)const;
+ std::shared_ptr<const CapellaInventorySnapshot> capture_published_inventory(const CapellaPublishedStore&,std::string_view,size_t,const std::function<void()>&)const;
  std::shared_ptr<const CapellaInventorySnapshot> capture_block_inventory(const CapellaPublishedStore&,size_t,const std::function<void()>&)const;
  std::shared_ptr<const CapellaInventorySnapshot> capture_inventory_locked(std::string_view,size_t,const std::function<void()>&)const;
  std::vector<ConsensusRoot> exit_roots_locked(const std::function<void()>&)const;

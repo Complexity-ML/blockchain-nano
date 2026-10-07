@@ -1,0 +1,28 @@
+/Users/boris/Dev/blockchain-nano/src/capella_beacon_api.cpp:15:89: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   15 |  if(path=="/eth/v1/node/version")return {200,{{"data",{{"version","Nano/0.1.0/c++20"}}}}};
+      |                                                                                         ^
+/Users/boris/Dev/blockchain-nano/src/capella_beacon_api.cpp:25:118: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   25 |  if(!root&&!fork&&!finality&&!genesis&&!spec)return {404,{{"code",404},{"message","Beacon endpoint not implemented"}}};
+      |                                                                                                                      ^
+/Users/boris/Dev/blockchain-nano/src/capella_beacon_api.cpp:36:117: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   36 |    }catch(const std::invalid_argument&){return {400,{{"code",400},{"message","Expected head or 32-byte state root"}}};}
+      |                                                                                                                     ^
+/Users/boris/Dev/blockchain-nano/src/capella_beacon_api.cpp:40:81: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   40 |    if(!selected)return {404,{{"code",404},{"message","State root not retained"}}};
+      |                                                                                 ^
+/Users/boris/Dev/blockchain-nano/src/capella_beacon_api.cpp:51:166: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   51 |  if(genesis)return {200,{{"data",{{"genesis_time",std::to_string(number(b,0))},{"genesis_validators_root",octets(b,8,32)},{"genesis_fork_version",genesis_version}}}}};
+      |                                                                                                                                                                      ^
+/Users/boris/Dev/blockchain-nano/src/capella_beacon_api.cpp:89:70: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   89 |   if(checkpoint)checkpoint();return {200,{{"data",std::move(values)}}};
+      |                                                                      ^
+/Users/boris/Dev/blockchain-nano/src/capella_beacon_api.cpp:110:98: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  110 |  return {200,{{"execution_optimistic",false},{"finalized",is_finalized},{"data",std::move(data)}}};
+      |                                                                                                  ^
+/Users/boris/Dev/blockchain-nano/src/capella_beacon_api.cpp:125:117: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  125 |  auto error=[](unsigned code,const char* message){return BeaconReadResponse{code,{{"code",code},{"message",message}}};};
+      |                                                                                                                     ^
+/Users/boris/Dev/blockchain-nano/src/capella_beacon_api.cpp:172:91: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  172 |    {"header",{{"message",std::move(message)},{"signature",octets(*signed_block,4,96)}}}}}}};
+      |                                                                                           ^
+9 warnings generated.

@@ -1,0 +1,4 @@
+/patch/source/src/consensus_capella_reactor.cpp:425:132: warning: missing field 'attestations' initializer [-Wmissing-field-initializers]
+  425 | CapellaPublishedStore CapellaDurableReactor::current()const{std::lock_guard lock(mutex_);require_available();return {state_,*token_};}
+      |                                                                                                                                    ^
+1 warning generated.
