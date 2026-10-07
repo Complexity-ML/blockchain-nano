@@ -1,5 +1,9 @@
 # EIP pour l’EVM et la production Nano
 
+État courant vérifié : V37 terminée FAILED (contrôleur original76530/1) avant la fenêtre900s : zéro nouvelle finalité commune ; deux reçus d’arrêt seulement, Mac natif/Docker Mac à0 et Docker VPS à1 sansOOM. Le VPS a renvoyé HTTP503 « Beacon state unavailable », puis « Capella reactor unavailable; reopen required; initial failure: Capella message cancelled ». [Preuves terminales](qualification/restored-three-node-v37-terminal-20261007/README.md). Inspection du code : un lease(check) annulable subsiste après witness_prepare dans publish_impl ; un brouillon déplace la préparation avant les écritures mais reste non intégré et non qualifié. La cause exacte doit être reproduite. Audits distincts des deux arrêts propres et du refus runtime VPS requis avant tout nouveau writer ; aucun reçu terminal VPS ne doit être inventé. Finalité réelle, CI facturation, release, tous critères production/Base–Nano/Doppler et revue indépendante restent ouverts.
+
+État précédent conservé :
+
 ## État courant vérifié — 7 octobre 2026
 
 V37 en cours, original76530 confirmé vivant : préflight exact et trois nœuds prêts/connectés ; finalité1284 encore observée. [Observation non terminale](qualification/restored-three-node-v37-running-observation-20261007/README.md). Relais4b2165b8 intégré/qualifié dans ses parcours ciblés, cœur4ce3e4e2 inchangé ; même fenêtre900s et trois nouvelles finalités exigées. CI37560013999 du nouveau commit refusée avant étapes pour facturation, aucun test GitHub exécuté. Production/Base–Nano/Doppler, release/CI et revue indépendante restent ouverts.
