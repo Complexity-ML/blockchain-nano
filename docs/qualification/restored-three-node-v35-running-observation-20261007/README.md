@@ -1,6 +1,6 @@
 # V35 — observation pendant campagne, résultat non terminal
 
-Original76628 confirmé vivant (chunk fd73ec). Checkout de lancement bad32c16 ; cœur c4996498 et relais b2af22df. Les trois nœuds restaurés sont prêts, connectés et poursuivent leurs duties avec65 clés réparties16/16/33. Aucun verdict terminal ; fenêtre900secondes inchangée. Échec d’invocation initial conservé : SHA mal formé refusé avant mkdir de campagne ou writer ; invocation suivante utilise le SHA complet vérifié, aucune garde relâchée.
+Original76628 confirmé vivant (chunk fd73ec). Checkout de lancement bad32c16 ; cœur c4996498 et relais b2af22df. Les trois nœuds restaurés sont prêts et connectés, avec65 clés configurées selon le plan16/16/33. Les compteurs effectifs de duties doivent encore être recueillis dans les reçus terminaux. Aucun verdict terminal ; fenêtre900secondes inchangée. Échec d’invocation initial conservé : SHA mal formé refusé avant mkdir de campagne ou writer ; invocation suivante utilise le SHA complet vérifié, aucune garde relâchée.
 
 Au snapshot : finalité1284 commune inchangée ; admissions de dépendances dans les seuls tours terminés31/8/32, aucune tête sélectionnée confirmée. Ces chiffres sont un préfixe observé, pas le total final, et les ACKs d’ancêtres ne sont pas une finalité.
 
