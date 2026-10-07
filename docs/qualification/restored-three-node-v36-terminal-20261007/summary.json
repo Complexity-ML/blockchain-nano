@@ -1,0 +1,420 @@
+{
+  "originalSession": 73188,
+  "exitCode": 1,
+  "result": "FAILED",
+  "controllerUnchanged": true,
+  "newCommonFinalities": 0,
+  "rawLogs": {
+    "mac-native": {
+      "path": "/private/tmp/nano-restored-three-node-v36-signed-inventory-20261007/campaign/native.log",
+      "sha256": "d1d3bd57e5b42251f4c5109385ac96927b93ec2e3c6027af5c31ad3b9842ec46",
+      "bytes": 1250295
+    },
+    "mac-docker": {
+      "path": "/private/tmp/nano-restored-three-node-v36-signed-inventory-20261007/campaign/docker-mac.log",
+      "sha256": "4175632bb7b65ecd067631ef53379c1b50c40a8c9141fe4ae25f9584cd6e9c39",
+      "bytes": 1242653
+    },
+    "vps-docker": {
+      "path": "/private/tmp/nano-restored-three-node-v36-signed-inventory-20261007/campaign/vps.log",
+      "sha256": "d0796d2e480547334dc36d3e1e948985ce1a32146db14249ca05301f145e2d91",
+      "bytes": 880352
+    }
+  },
+  "duties": [
+    {
+      "name": "mac-native",
+      "clockHealthy": true,
+      "finalized": {
+        "epoch": "0x504",
+        "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+      },
+      "validator": {
+        "healthy": true,
+        "localKeys": 16,
+        "proposalsAdmitted": 35,
+        "attestationsAdmitted": 301,
+        "syncMessagesAdmitted": 1130,
+        "timing": {
+          "awaitingSlotBlock": 1501,
+          "maxPollMs": 3958,
+          "maxProposalMs": 1679,
+          "polls": 4619,
+          "pollsOverSlot": 0,
+          "proposalAttempts": 35,
+          "proposalsUnavailable": 0,
+          "slotBoundaryExits": 23
+        }
+      }
+    },
+    {
+      "name": "mac-docker",
+      "clockHealthy": true,
+      "finalized": {
+        "epoch": "0x504",
+        "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+      },
+      "validator": {
+        "healthy": true,
+        "localKeys": 16,
+        "proposalsAdmitted": 37,
+        "attestationsAdmitted": 281,
+        "syncMessagesAdmitted": 1198,
+        "timing": {
+          "awaitingSlotBlock": 1105,
+          "maxPollMs": 6495,
+          "maxProposalMs": 1626,
+          "polls": 3027,
+          "pollsOverSlot": 5,
+          "proposalAttempts": 37,
+          "proposalsUnavailable": 0,
+          "slotBoundaryExits": 55
+        }
+      }
+    },
+    {
+      "name": "vps-docker",
+      "clockHealthy": true,
+      "finalized": {
+        "epoch": "0x504",
+        "root": "0xccf88d18b2b98689ce47814d966ab42d10898eddd83a31bb2e3873ac5b2a2c48"
+      },
+      "validator": {
+        "healthy": true,
+        "localKeys": 33,
+        "proposalsAdmitted": 54,
+        "attestationsAdmitted": 71,
+        "syncMessagesAdmitted": 9,
+        "timing": {
+          "awaitingSlotBlock": 51,
+          "maxPollMs": 11506,
+          "maxProposalMs": 5798,
+          "polls": 197,
+          "pollsOverSlot": 61,
+          "proposalAttempts": 79,
+          "proposalsUnavailable": 25,
+          "slotBoundaryExits": 144
+        }
+      }
+    }
+  ],
+  "relayCompletedTurns": {
+    "mac-native": {
+      "kinds": {
+        "block": 30,
+        "attestation": 14,
+        "attester_slashing": 3,
+        "bls_to_execution_change": 3,
+        "sync_committee_message": 3,
+        "voluntary_exit": 2
+      },
+      "blockReasons": {
+        "head-or-catalog-deadline": 13,
+        "dependency-depth-limit": 3,
+        "dependency-quantum-yield": 11,
+        "admission-rejected": 3
+      },
+      "dependencyExports": 1771,
+      "dependencyACKs": 62,
+      "dependencySendAttempts": 67,
+      "selectedHeadACKs": 0,
+      "rpcDiagnosticSample": [
+        {
+          "method": "nano_capellaCatalogAcquire",
+          "inventoryKind": "voluntary_exit",
+          "cause": "inventory-capture-busy",
+          "count": 10
+        }
+      ],
+      "startupStages": [
+        {
+          "elapsedMs": 0,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 0,
+          "previousStage": null,
+          "stage": "validate-input"
+        },
+        {
+          "elapsedMs": 56,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 56,
+          "previousStage": "validate-input",
+          "stage": "reactor-recovery"
+        },
+        {
+          "elapsedMs": 8907,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 8851,
+          "previousStage": "reactor-recovery",
+          "stage": "checkpoint-migration"
+        },
+        {
+          "elapsedMs": 9193,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 285,
+          "previousStage": "checkpoint-migration",
+          "stage": "signing-journals"
+        },
+        {
+          "elapsedMs": 10098,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 905,
+          "previousStage": "signing-journals",
+          "stage": "clock-catchup"
+        },
+        {
+          "elapsedMs": 10361,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 263,
+          "previousStage": "clock-catchup",
+          "stage": "initial-clock-poll"
+        },
+        {
+          "elapsedMs": 10361,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 0,
+          "previousStage": "initial-clock-poll",
+          "stage": "duty-workers"
+        },
+        {
+          "elapsedMs": 10361,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 0,
+          "previousStage": "duty-workers",
+          "stage": "runtime-ready"
+        }
+      ],
+      "rpcDiagnosticCount": 10,
+      "rpcDiagnosticBound": 64,
+      "scope": "completed turns only; independent catalogue deliveries excluded from dependency counts; diagnostic sample capped at64, not a global refusal count"
+    },
+    "mac-docker": {
+      "kinds": {
+        "block": 27,
+        "attestation": 12,
+        "attester_slashing": 3,
+        "bls_to_execution_change": 3,
+        "sync_committee_message": 2,
+        "voluntary_exit": 2
+      },
+      "blockReasons": {
+        "head-or-catalog-deadline": 15,
+        "dependency-quantum-yield": 8,
+        "dependency-depth-limit": 3,
+        "admission-rejected": 1
+      },
+      "dependencyExports": 1989,
+      "dependencyACKs": 52,
+      "dependencySendAttempts": 59,
+      "selectedHeadACKs": 0,
+      "rpcDiagnosticSample": [
+        {
+          "method": "nano_capellaCatalogAcquire",
+          "inventoryKind": "bls_to_execution_change",
+          "cause": "inventory-capture-busy",
+          "count": 38
+        },
+        {
+          "method": "nano_capellaCatalogAcquire",
+          "inventoryKind": "sync_committee_message",
+          "cause": "inventory-capture-busy",
+          "count": 25
+        },
+        {
+          "method": "nano_capellaCatalogAcquire",
+          "inventoryKind": "voluntary_exit",
+          "cause": "inventory-capture-busy",
+          "count": 1
+        }
+      ],
+      "startupStages": [
+        {
+          "elapsedMs": 0,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 0,
+          "previousStage": null,
+          "stage": "validate-input"
+        },
+        {
+          "elapsedMs": 19,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 19,
+          "previousStage": "validate-input",
+          "stage": "reactor-recovery"
+        },
+        {
+          "elapsedMs": 11058,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 11038,
+          "previousStage": "reactor-recovery",
+          "stage": "checkpoint-migration"
+        },
+        {
+          "elapsedMs": 11506,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 447,
+          "previousStage": "checkpoint-migration",
+          "stage": "signing-journals"
+        },
+        {
+          "elapsedMs": 11774,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 268,
+          "previousStage": "signing-journals",
+          "stage": "clock-catchup"
+        },
+        {
+          "elapsedMs": 12170,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 395,
+          "previousStage": "clock-catchup",
+          "stage": "initial-clock-poll"
+        },
+        {
+          "elapsedMs": 12170,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 0,
+          "previousStage": "initial-clock-poll",
+          "stage": "duty-workers"
+        },
+        {
+          "elapsedMs": 12170,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 0,
+          "previousStage": "duty-workers",
+          "stage": "runtime-ready"
+        }
+      ],
+      "rpcDiagnosticCount": 64,
+      "rpcDiagnosticBound": 64,
+      "scope": "completed turns only; independent catalogue deliveries excluded from dependency counts; diagnostic sample capped at64, not a global refusal count"
+    },
+    "vps-docker": {
+      "kinds": {
+        "block": 76,
+        "attestation": 34,
+        "attester_slashing": 8,
+        "bls_to_execution_change": 7,
+        "sync_committee_message": 6,
+        "voluntary_exit": 6
+      },
+      "blockReasons": {
+        "dependency-depth-limit": 28,
+        "head-or-catalog-deadline": 9,
+        "dependency-quantum-yield": 38,
+        "admission-rejected": 1
+      },
+      "dependencyExports": 3723,
+      "dependencyACKs": 214,
+      "dependencySendAttempts": 215,
+      "selectedHeadACKs": 0,
+      "rpcDiagnosticSample": [
+        {
+          "method": "nano_capellaCatalogAcquire",
+          "inventoryKind": "bls_to_execution_change",
+          "cause": "inventory-capture-busy",
+          "count": 64
+        }
+      ],
+      "startupStages": [
+        {
+          "elapsedMs": 0,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 0,
+          "previousStage": null,
+          "stage": "validate-input"
+        },
+        {
+          "elapsedMs": 70,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 70,
+          "previousStage": "validate-input",
+          "stage": "reactor-recovery"
+        },
+        {
+          "elapsedMs": 39743,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 39672,
+          "previousStage": "reactor-recovery",
+          "stage": "checkpoint-migration"
+        },
+        {
+          "elapsedMs": 40974,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 1231,
+          "previousStage": "checkpoint-migration",
+          "stage": "signing-journals"
+        },
+        {
+          "elapsedMs": 41581,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 607,
+          "previousStage": "signing-journals",
+          "stage": "clock-catchup"
+        },
+        {
+          "elapsedMs": 42780,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 1198,
+          "previousStage": "clock-catchup",
+          "stage": "initial-clock-poll"
+        },
+        {
+          "elapsedMs": 43965,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 1185,
+          "previousStage": "initial-clock-poll",
+          "stage": "duty-workers"
+        },
+        {
+          "elapsedMs": 43966,
+          "event": "capella-startup-stage",
+          "previousElapsedMs": 0,
+          "previousStage": "duty-workers",
+          "stage": "runtime-ready"
+        }
+      ],
+      "rpcDiagnosticCount": 64,
+      "rpcDiagnosticBound": 64,
+      "scope": "completed turns only; independent catalogue deliveries excluded from dependency counts; diagnostic sample capped at64, not a global refusal count"
+    }
+  },
+  "productionQualified": false,
+  "stops": {
+    "native-state.json": {
+      "pid": 13143,
+      "exitCode": 0,
+      "signalCode": null
+    },
+    "docker-mac.log.state.json": {
+      "State": {
+        "Status": "exited",
+        "Running": false,
+        "Paused": false,
+        "Restarting": false,
+        "OOMKilled": false,
+        "Dead": false,
+        "Pid": 0,
+        "ExitCode": 0,
+        "Error": "",
+        "StartedAt": "2026-10-07T01:28:11.625459636Z",
+        "FinishedAt": "2026-10-07T01:43:26.717885045Z"
+      }
+    },
+    "vps.log.state.json": {
+      "State": {
+        "Status": "exited",
+        "Running": false,
+        "Paused": false,
+        "Restarting": false,
+        "OOMKilled": false,
+        "Dead": false,
+        "Pid": 0,
+        "ExitCode": 0,
+        "Error": "",
+        "StartedAt": "2026-10-07T01:27:24.616842073Z",
+        "FinishedAt": "2026-10-07T01:43:27.879385281Z"
+      }
+    }
+  }
+}

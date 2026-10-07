@@ -1,0 +1,37 @@
+/private/tmp/nano-dependency-route-draft-20261007/native-affected/main/program.o: \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/SDKSettings.json \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/main.cpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/supervisor.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/json_stream.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/core.hpp \
+  /private/tmp/nano-catalog-busy-integrated-20261006/source/network/../third_party/json.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/core_rpc_diagnostic.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/json_frame.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/block_download.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/block_reference.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/bootstrap.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/peer_status.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/inbound_budget.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/gossip_progress.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/bft_vote_knowledge.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/timed_reply.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/altair_core_recovery.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/altair_core_dispatch.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/altair_work.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/altair_message.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/altair_base64.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/altair_stream_session.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/altair_stream.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/altair_stream_sender.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/capella_send_pacer.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/altair_peer.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/altair_archive_relay.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/capella_catalog_relay.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/capella_attestation_delivery.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/capella_block_delivery.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/capella_export_cache.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/capella_head_catalog_relay.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/capella_relay_schedule.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/capella_peer_core.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/altair_vote_delivery.hpp \
+  /private/tmp/nano-dependency-route-draft-20261007/native-affected/source/network/peer_relay_budget.hpp

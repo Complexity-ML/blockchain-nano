@@ -1,0 +1,70 @@
+{
+  "status": "PRIVATE_COMPILED_MODEL_ONLY",
+  "runtimeChanged": false,
+  "hypothesis": "Bounded authenticated root route avoids revisiting the unadmitted suffix after each quantum. Payloads still locally exported/decoded and remotely admitted. No ACK inferred; no limits enlarged.",
+  "requires": [
+    "ARM64/AMD64 affected relay tests and integration",
+    "moving branches/unavailable export/remote session reset route scenarios",
+    "fresh WAN campaign after stop audits",
+    "review release reproducibility and CI"
+  ],
+  "originalFixedSession": {
+    "id": 5942,
+    "exitCode": 0,
+    "terminalChunk": "fe8793"
+  },
+  "originalChurnSession": {
+    "id": 63976,
+    "exitCode": 0,
+    "terminalChunk": "0d2ee9"
+  },
+  "fixedAncestryExportCountsUnchanged": true,
+  "churnCases": [
+    {
+      "blocks": 513,
+      "parentExports": 9217,
+      "draftExports": 1777,
+      "turns": 68
+    },
+    {
+      "blocks": 2049,
+      "parentExports": 43009,
+      "draftExports": 13249,
+      "turns": 293
+    }
+  ],
+  "headRegression": {
+    "session": 26061,
+    "exitCode": 0,
+    "terminalChunk": "6e92b9"
+  },
+  "routeAdversarial": {
+    "session": 31297,
+    "exitCode": 0,
+    "terminalChunk": "9182c1",
+    "cases": [
+      "definitive refusal followed by contradictory duplicate ACK",
+      "cancellation while ACK held, late accepted reply fenced",
+      "subsequent full retry",
+      "route roots at most dependency bound256"
+    ]
+  },
+  "review": {
+    "unchanged": [
+      "receiver full admission",
+      "quantum8",
+      "dependency256",
+      "payload cache256/16MiB",
+      "ACK1024",
+      "deadline",
+      "session ownership/reset"
+    ],
+    "limitations": [
+      "native scoped tests only",
+      "no WAN qualification",
+      "route memory is additionally bounded metadata; payload budgets unchanged",
+      "fixed cache case export counts unchanged",
+      "historical churn modeled not real peer schedule"
+    ]
+  }
+}
