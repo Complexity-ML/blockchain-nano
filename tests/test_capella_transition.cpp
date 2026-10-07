@@ -1721,7 +1721,20 @@ static void prepared_block_loop(const CapellaForkStore& initial,const CapellaFor
     check(!reactor->migrate_reference_checkpoint(options)&&!reactor->migrate_fragment_checkpoint()&&reactor->current().token==migrated,"cold migration not idempotent or downgraded");
     reactor.reset();owner.reset();reactor=std::make_unique<CapellaDurableReactor>(*backup_owner,rules,crash_limits,*witness,std::function<void()>{},migrated);
     check(reactor->current().token==migrated&&all_cold(*reactor->current().state)&&capella_store_snapshot(*reactor->current().state,rules,crash_limits)==flat_before&&journal.commitment()==guard,"cold witness previous-primary recovery differs");
-    size_t attempts=0;while(!reactor->block(wire))check(++attempts<slot/slots+4,"cold signed child admission stalled");
+    size_t attempts=0;
+    try{while(true){
+     const auto prior_intent=witness->fork_checkpoint(r.chain_id,genesis.header.hash(),8*crash_limits.envelope_bytes+2048);
+     check(bool(prior_intent),"publication cancellation fixture missing witness");
+     const bool accepted=reactor->block(wire,[&]{
+      if(!std::getenv("NANO_TEST_PUBLICATION_CANCEL_BOUNDARY"))return;
+      const auto intent=witness->fork_checkpoint(r.chain_id,genesis.header.hash(),8*crash_limits.envelope_bytes+2048);
+      if(!intent||intent->token!=prior_intent->token)throw ExecutionCancelled("cancellation callback after durable witness intent");
+     });
+     if(accepted)break;
+     check(++attempts<slot/slots+4,"cold signed child admission stalled");
+    }
+    }catch(...){reactor.reset();throw;} // Borrower must die before backup_owner during exception unwinding.
+    if(std::getenv("NANO_TEST_PUBLICATION_CANCEL_BOUNDARY"))std::cout<<Json{{"scenario","capella-publication-cancel-boundary"},{"noCancellationCallbackAfterWitnessWrite",true},{"networkQualified",false}}.dump()<<std::endl;
     if(std::getenv("NANO_TEST_RUNTIME_REFERENCE_MEMO")){const auto memo=reactor->reference_snapshot_cache_usage();check(memo.reuses>0&&memo.records<=reactor->current().state->blocks.size(),"reactor cold publication memo not exercised");}
     const auto child_token=reactor->current().token;auto retained=reactor->current().state;check(all_cold(*retained)&&retained->blocks.size()==2,"cold child publication retained hot state or changed graph");
     ConsensusRoot child_root{};for(const auto& [id,entry]:retained->blocks)if(id!=retained->timed.view.anchor)child_root=id;

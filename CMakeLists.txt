@@ -2010,3 +2010,6 @@ endif()
 
 add_test(NAME consensus_capella_published_signed_inventory COMMAND nano-capella-transition-tests --beacon-reads)
 set_tests_properties(consensus_capella_published_signed_inventory PROPERTIES TIMEOUT 120 LABELS "qualification_consensus_runtime" ENVIRONMENT "NANO_TEST_SIGNED_INVENTORY_PUBLISHED=1")
+
+add_test(NAME consensus_capella_publication_cancel_boundary COMMAND ${CMAKE_COMMAND} -E env NANO_TEST_PUBLICATION_CANCEL_BOUNDARY=1 NANO_TEST_COLD_REACTOR=1 NANO_TEST_FRAGMENT_CHECKPOINT=1 NANO_TEST_DUPLICATE_GUARDS=1 $<TARGET_FILE:nano-capella-transition-tests> --prepared-block)
+set_tests_properties(consensus_capella_publication_cancel_boundary PROPERTIES TIMEOUT 300 LABELS qualification_consensus_recovery)

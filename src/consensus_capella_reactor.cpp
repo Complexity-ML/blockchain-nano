@@ -304,10 +304,14 @@ void CapellaDurableReactor::publish_impl(CapellaForkStore candidate,const std::f
  const auto publication=std::make_shared<const CapellaPublishedStore>(published_store(published_next,{token_?token_->sequence+1:1,digest},votes?*votes:votes_,*slashings,check));
  std::optional<ExecutionStateRetentionAnchor> retention;
  if(historical_state_pruning_){const auto& anchor=next->blocks.at(next->timed.view.anchor).execution_header();if(anchor.number<=common_height)retention=ExecutionStateRetentionAnchor{anchor.number,anchor.hash()};}
+ // Resolve cancellable cold-record reads before the first durable write.
+ // Once witness intent is persisted, finish the primary commit without caller cancellation.
+ const auto finalized_block=next->blocks.at(next->timed.view.finalized.root).lease(check)->execution_block;
+ if(check)check();
  ForkCheckpointToken committed;
  try{
   witness_prepare(encoded,archive,fragments.blobs);
-  if(execution_)committed=execution_->commit_beacon_checkpoint_with_blobs(token_,tip->header.hash(),common_height,common_hash,suffix,next->blocks.at(next->timed.view.finalized.root).lease(check)->execution_block,encoded,limits_.envelope_bytes,limits_.blocks,archive,retention,fragments.blobs);
+  if(execution_)committed=execution_->commit_beacon_checkpoint_with_blobs(token_,tip->header.hash(),common_height,common_hash,suffix,finalized_block,encoded,limits_.envelope_bytes,limits_.blocks,archive,retention,fragments.blobs);
   else committed=disk_.commit_execution_checkpoint_with_blobs(chain_,genesis_,token_,tip->header.hash(),common_height,common_hash,suffix,encoded,limits_.envelope_bytes,limits_.blocks,fragments.blobs,limits_.blocks,archive,retention);
   if(committed!=publication->token)throw std::runtime_error("Capella durable publication token mismatch");
  }
