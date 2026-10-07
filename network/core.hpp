@@ -22,7 +22,7 @@ inline Json core_capture_busy_hint(const std::string& method,const Json& respons
 inline bool core_capture_busy(const Json& value){return value==Json{{"nanoCoreCaptureBusy",true}};}
 class CoreRequest:public std::enable_shared_from_this<CoreRequest>{
  beast::tcp_stream stream_;beast::flat_buffer buffer_;http::request<http::string_body> request_;
- std::optional<http::response_parser<http::string_body>> parser_;Reply reply_;CoreRpcTrace trace_;std::string method_;
+ std::optional<http::response_parser<http::string_body>> parser_;Reply reply_;CoreRpcTrace trace_;std::string method_,inventory_kind_;
  std::function<void(std::shared_ptr<CoreRequest>)> recycle_;
  void finish(Json value,bool reusable=false){
   auto cb=std::exchange(reply_,Reply{});if(!cb)return;
@@ -31,23 +31,23 @@ class CoreRequest:public std::enable_shared_from_this<CoreRequest>{
   cb(std::move(value));
  }
  void write(){http::async_write(stream_,request_,[self=shared_from_this()](beast::error_code ec,size_t){
-  if(ec){core_rpc_trace(self->trace_,self->method_,"write-error");self->finish(nullptr);return;}
+  if(ec){core_rpc_trace(self->trace_,self->method_,"write-error",0,nullptr,{},self->inventory_kind_);self->finish(nullptr);return;}
   http::async_read(self->stream_,self->buffer_,*self->parser_,[self](beast::error_code ec,size_t){
-   if(ec){core_rpc_trace(self->trace_,self->method_,"read-error");self->finish(nullptr);return;}
+   if(ec){core_rpc_trace(self->trace_,self->method_,"read-error",0,nullptr,{},self->inventory_kind_);self->finish(nullptr);return;}
    auto response=self->parser_->release();auto json=Json::parse(response.body(),nullptr,false);
    const bool reusable=response.keep_alive()&&self->buffer_.size()==0;
-   if(response.result()!=http::status::ok||!json.is_object()||!json.contains("result")){core_rpc_trace(self->trace_,self->method_,response.result()!=http::status::ok?"http-error":json.is_object()&&json.contains("error")?"rpc-error":"malformed-response",response.result_int(),json,response.body());self->finish(response.result()==http::status::ok?core_capture_busy_hint(self->method_,json):Json(nullptr),reusable);return;}
+   if(response.result()!=http::status::ok||!json.is_object()||!json.contains("result")){core_rpc_trace(self->trace_,self->method_,response.result()!=http::status::ok?"http-error":json.is_object()&&json.contains("error")?"rpc-error":"malformed-response",response.result_int(),json,response.body(),self->inventory_kind_);self->finish(response.result()==http::status::ok?core_capture_busy_hint(self->method_,json):Json(nullptr),reusable);return;}
    self->finish(std::move(json["result"]),reusable);
   });
  });}
 public:
  CoreRequest(asio::io_context& io,std::function<void(std::shared_ptr<CoreRequest>)> recycle,CoreRpcTrace trace={}):stream_(io),trace_(std::move(trace)),recycle_(std::move(recycle)){}
  void start(uint16_t port,const std::string& method,Json params,Reply reply){
-  if(reply_)throw std::logic_error("Core HTTP connection already busy");reply_=std::move(reply);method_=method;request_={};parser_.emplace();parser_->body_limit(16*1024*1024);
+  if(reply_)throw std::logic_error("Core HTTP connection already busy");reply_=std::move(reply);method_=method;inventory_kind_=core_rpc_inventory_kind(method,params);request_={};parser_.emplace();parser_->body_limit(16*1024*1024);
   request_.method(http::verb::post);request_.target("/");request_.version(11);request_.keep_alive(true);request_.set(http::field::host,"127.0.0.1:"+std::to_string(port));request_.set(http::field::content_type,"application/json");request_.body()=Json{{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",std::move(params)}}.dump();request_.prepare_payload();
   stream_.expires_after(std::chrono::seconds(5));
   if(stream_.socket().is_open()){write();return;}
-  stream_.async_connect(tcp::endpoint(asio::ip::make_address("127.0.0.1"),port),[self=shared_from_this()](beast::error_code ec){if(ec){core_rpc_trace(self->trace_,self->method_,"connect-error");self->finish(nullptr);return;}self->write();});
+  stream_.async_connect(tcp::endpoint(asio::ip::make_address("127.0.0.1"),port),[self=shared_from_this()](beast::error_code ec){if(ec){core_rpc_trace(self->trace_,self->method_,"connect-error",0,nullptr,{},self->inventory_kind_);self->finish(nullptr);return;}self->write();});
  }
 };
 class Core {

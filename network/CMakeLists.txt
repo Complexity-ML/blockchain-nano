@@ -259,3 +259,11 @@ target_compile_features(nano-capella-catchup-priority-tests PRIVATE cxx_std_20)
 target_compile_definitions(nano-capella-catchup-priority-tests PRIVATE NANO_TEST_PREPARATION_PRIORITY)
 add_test(NAME capella_catchup_priority COMMAND nano-capella-catchup-priority-tests)
 set_tests_properties(capella_catchup_priority PROPERTIES TIMEOUT 30)
+
+# Shared diagnostic allowance must survive new HTTP connection callbacks.
+add_executable(nano-core-trace-bound-http-tests test_core_trace_bound_http.cpp)
+target_include_directories(nano-core-trace-bound-http-tests PRIVATE ../third_party)
+target_compile_features(nano-core-trace-bound-http-tests PRIVATE cxx_std_20)
+target_compile_definitions(nano-core-trace-bound-http-tests PRIVATE FMT_CONSTEVAL=)
+target_link_libraries(nano-core-trace-bound-http-tests PRIVATE p2p::p2p)
+add_test(NAME core_trace_bound_http COMMAND nano-core-trace-bound-http-tests)

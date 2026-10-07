@@ -1,0 +1,138 @@
+--- a/network/core_rpc_diagnostic.hpp
++++ b/network/core_rpc_diagnostic.hpp
+@@ -1,18 +1,46 @@
+ #pragma once
+ #include "json.hpp"
+ #include <functional>
++#include <memory>
++#include <atomic>
+ #include <string>
+ #include <array>
+ #include <string_view>
+ using CoreRpcTrace=std::function<void(const nlohmann::json&)>;
++// Copies handed to pooled/concurrent HTTP connections share one process-local
++// allowance. Saturation avoids wraparound and observer failures cannot reset it.
++inline CoreRpcTrace bounded_core_rpc_trace(CoreRpcTrace observer,size_t maximum){
++ if(!observer||!maximum)return {};
++ auto used=std::make_shared<std::atomic<size_t>>(0);
++ return [used,maximum,observer=std::move(observer)](const nlohmann::json& row){
++  auto count=used->load(std::memory_order_relaxed);
++  while(count<maximum){
++   if(used->compare_exchange_weak(count,count+1,std::memory_order_relaxed)){
++    try{observer(row);}catch(...){/* Diagnostics never affect RPC completion. */}
++    return;
++   }
++  }
++ };
++}
++// Only fixed category labels for these local inventory methods are observable.
++// Authentication tokens, roots, handles and arbitrary parameters never escape.
++inline std::string core_rpc_inventory_kind(const std::string& method,const nlohmann::json& params){
++ if(method!="nano_capellaCatalogAcquire"&&method!="nano_capellaCatalogGeneration"&&method!="nano_capellaExport")return {};
++ if(!params.is_array()||params.size()<2||!params[1].is_string())return {};
++ const auto& kind=params[1].get_ref<const std::string&>();
++ for(const char* allowed:{"block","attestation","attester_slashing","voluntary_exit","bls_to_execution_change","sync_committee_message"})if(kind==allowed)return kind;
++ return {};
++}
+ // Observability only: never emit parameters, payloads, tokens, error data or raw text.
+-inline void core_rpc_trace(const CoreRpcTrace& trace,const std::string& method,const char* phase,unsigned status=0,const nlohmann::json& response=nullptr,std::string_view body={})noexcept{
++inline void core_rpc_trace(const CoreRpcTrace& trace,const std::string& method,const char* phase,unsigned status=0,const nlohmann::json& response=nullptr,std::string_view body={},std::string_view inventory_kind={})noexcept{
+  if(!trace)return;
+  try{
+   using J=nlohmann::json;
+   static constexpr std::array safe_methods={"nano_capellaCatalogGeneration","nano_capellaCatalogAcquire","nano_capellaCatalogRelease","nano_capellaCatalogPage","nano_capellaCatalogSeek","nano_capellaCatalogClose","nano_capellaExport","nano_capellaStatus","nano_capellaSubmit","nano_capellaJob","nano_capellaCancel","nano_capellaForget","nano_capellaRotateSession","nano_capellaJobs","nano_altairStatus","nano_altairRotateSession","nano_altairJobs","nano_altairCancel","nano_altairForget"};
+   bool known=false;for(const auto* allowed:safe_methods)if(method==allowed){known=true;break;}
+   J record={{"method",known?method:"other"},{"phase",phase},{"httpStatus",status},{"rpcCode",nullptr},{"cause","unknown"}};
++  record["inventoryKind"]=nullptr;
++  for(const char* allowed:{"block","attestation","attester_slashing","voluntary_exit","bls_to_execution_change","sync_committee_message"})if(inventory_kind==allowed){record["inventoryKind"]=allowed;break;}
+   if(response.is_object()&&response.contains("error")&&response["error"].is_object()){
+    const auto& error=response["error"];
+    if(error.contains("code")&&error["code"].is_number_integer())record["rpcCode"]=error["code"];
+--- a/network/main.cpp
++++ b/network/main.cpp
+@@ -454,7 +454,7 @@
+   schedule();
+  });}
+ public:
+- Network(asio::io_context& io,Host host,uint16_t port,std::vector<libp2p::multi::Multiaddress> bootstrap,std::shared_ptr<libp2p::network::DnsaddrResolver> resolver):io_(io),host_(std::move(host)),core_(io,port,4,std::getenv("NANO_TEST_NETWORK_TRACE")?CoreRpcTrace{[count=unsigned(0)](const Json& row)mutable{if(count++>=64)return;auto record=row;record["event"]="test-core-rpc-failure";std::cerr<<record.dump()<<std::endl;}}:CoreRpcTrace{}),timer_(io),bft_timer_(io),consensus_relay_timer_(io),bootstrap_(std::move(bootstrap)),resolver_(std::move(resolver)){if(const char* token=std::getenv("NANO_NETWORK_TOKEN"))report_token_=token;
++ Network(asio::io_context& io,Host host,uint16_t port,std::vector<libp2p::multi::Multiaddress> bootstrap,std::shared_ptr<libp2p::network::DnsaddrResolver> resolver):io_(io),host_(std::move(host)),core_(io,port,4,std::getenv("NANO_TEST_NETWORK_TRACE")?bounded_core_rpc_trace([](const Json& row){auto record=row;record["event"]="test-core-rpc-failure";std::cerr<<record.dump()<<std::endl;},64):CoreRpcTrace{}),timer_(io),bft_timer_(io),consensus_relay_timer_(io),bootstrap_(std::move(bootstrap)),resolver_(std::move(resolver)){if(const char* token=std::getenv("NANO_NETWORK_TOKEN"))report_token_=token;
+   if(const char* raw=std::getenv("NANO_CONSENSUS_RELAY_CONCURRENCY")){const std::string value(raw);if(value.empty()||value.size()>4||value.find_first_not_of("0123456789")!=std::string::npos)throw std::invalid_argument("Invalid consensus relay concurrency");altair_relay_budget_=PeerRelayBudget(std::stoul(value));}
+   if(const char* raw=std::getenv("NANO_CONSENSUS_RELAY_INTERVAL_MS")){const std::string value(raw);if(value.empty()||value.size()>5||value.find_first_not_of("0123456789")!=std::string::npos)throw std::invalid_argument("Invalid consensus relay interval");const auto n=std::stoul(value);if(n<25||n>60000)throw std::invalid_argument("Consensus relay interval outside 25..60000 ms");consensus_relay_interval_=std::chrono::milliseconds(n);}
+  }
+--- a/network/test_core_rpc_diagnostic.cpp
++++ b/network/test_core_rpc_diagnostic.cpp
+@@ -1,6 +1,8 @@
+ #include "core_rpc_diagnostic.hpp"
+ #include <iostream>
+ #include <stdexcept>
++#include <thread>
++#include <vector>
+ using J=nlohmann::json;
+ void check(bool b,const char* m){if(!b)throw std::runtime_error(m);}
+ int main(){try{
+@@ -20,5 +22,24 @@
+  core_rpc_trace(trace,"nano_capellaStatus","http-error",503,nullptr,"RPC simulation queue wait exceeded");check(seen["cause"]=="rpc-queue-expired","queue expiry lost");
+  core_rpc_trace(trace,"nano_capellaStatus","http-error",503,nullptr,"PRIVATE_HTTP_PAYLOAD");check(seen["cause"]=="unknown"&&seen.dump().find("PRIVATE_")==std::string::npos,"HTTP body leaked");
+  core_rpc_trace(trace,"nano_capellaStatus","rpc-error",200,nullptr,"RPC simulation capacity exceeded");check(seen["cause"]=="unknown","unrelated status forged capacity");
+- std::cout<<"11 diagnostic classification/redaction/observer cases passed; no transport or WAN qualification\n";
++ for(const char* kind:{"block","attestation","attester_slashing","voluntary_exit","bls_to_execution_change","sync_committee_message"}){
++  const auto label=core_rpc_inventory_kind("nano_capellaCatalogAcquire",J::array({"PRIVATE_TOKEN",kind}));check(label==kind,"safe inventory label lost");
++  core_rpc_trace(trace,"nano_capellaCatalogAcquire","rpc-error",200,error,{},label);check(seen["inventoryKind"]==kind&&seen.dump().find("PRIVATE_")==std::string::npos,"inventory diagnostic leaked parameters");
++ }
++ check(core_rpc_inventory_kind("nano_capellaCatalogPage",J::array({"PRIVATE_TOKEN","block"})).empty(),"catalog handle treated as category");
++ for(const auto& params:{J::array({"PRIVATE_TOKEN","PRIVATE_KIND"}),J::array({"PRIVATE_TOKEN",J::object()}),J::object(),J::array()})check(core_rpc_inventory_kind("nano_capellaCatalogAcquire",params).empty(),"arbitrary parameter escaped inventory allowlist");
++ core_rpc_trace(trace,"nano_capellaCatalogAcquire","rpc-error",200,error,{},"PRIVATE_KIND");check(seen["inventoryKind"].is_null()&&seen.dump().find("PRIVATE_")==std::string::npos,"direct invalid category leaked");
++ unsigned bounded_calls=0;auto bounded=bounded_core_rpc_trace([&](const J&){++bounded_calls;},64);
++ // Each request receives a fresh callback copy, matching Core's connection pool.
++ for(unsigned i=0;i<1000;++i){auto connection=bounded;core_rpc_trace(connection,"nano_capellaStatus","read-error");}
++ check(bounded_calls==64,"copied connections reset process trace allowance");
++ auto retained=bounded;bounded={};for(unsigned i=0;i<1000;++i)retained(J::object());
++ check(bounded_calls==64,"saturated retained copy emitted more diagnostics");
++ std::atomic<unsigned> concurrent_calls=0;auto concurrent=bounded_core_rpc_trace([&](const J&){++concurrent_calls;},64);
++ std::vector<std::thread> workers;for(unsigned n=0;n<8;++n)workers.emplace_back([observer=concurrent]{for(unsigned i=0;i<1000;++i){auto copy=observer;copy(J::object());}});
++ for(auto& worker:workers)worker.join();check(concurrent_calls==64,"concurrent copies exceeded allowance");
++ unsigned throws=0;auto broken=bounded_core_rpc_trace([&](const J&){++throws;throw std::runtime_error("observer failure");},2);
++ for(unsigned n=0;n<100;++n){auto copy=broken;copy(J::object());}check(throws==2,"observer failure reset allowance or escaped");
++ check(!bounded_core_rpc_trace({},64)&&!bounded_core_rpc_trace(trace,0),"disabled diagnostics allocated an active observer");
++ std::cout<<"Diagnostic classification/redaction and shared bounded observer cases passed; no transport or WAN qualification\n";
+ }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+--- a/network/core.hpp
++++ b/network/core.hpp
+@@ -22,7 +22,7 @@
+ inline bool core_capture_busy(const Json& value){return value==Json{{"nanoCoreCaptureBusy",true}};}
+ class CoreRequest:public std::enable_shared_from_this<CoreRequest>{
+  beast::tcp_stream stream_;beast::flat_buffer buffer_;http::request<http::string_body> request_;
+- std::optional<http::response_parser<http::string_body>> parser_;Reply reply_;CoreRpcTrace trace_;std::string method_;
++ std::optional<http::response_parser<http::string_body>> parser_;Reply reply_;CoreRpcTrace trace_;std::string method_,inventory_kind_;
+  std::function<void(std::shared_ptr<CoreRequest>)> recycle_;
+  void finish(Json value,bool reusable=false){
+   auto cb=std::exchange(reply_,Reply{});if(!cb)return;
+@@ -31,23 +31,23 @@
+   cb(std::move(value));
+  }
+  void write(){http::async_write(stream_,request_,[self=shared_from_this()](beast::error_code ec,size_t){
+-  if(ec){core_rpc_trace(self->trace_,self->method_,"write-error");self->finish(nullptr);return;}
++  if(ec){core_rpc_trace(self->trace_,self->method_,"write-error",0,nullptr,{},self->inventory_kind_);self->finish(nullptr);return;}
+   http::async_read(self->stream_,self->buffer_,*self->parser_,[self](beast::error_code ec,size_t){
+-   if(ec){core_rpc_trace(self->trace_,self->method_,"read-error");self->finish(nullptr);return;}
++   if(ec){core_rpc_trace(self->trace_,self->method_,"read-error",0,nullptr,{},self->inventory_kind_);self->finish(nullptr);return;}
+    auto response=self->parser_->release();auto json=Json::parse(response.body(),nullptr,false);
+    const bool reusable=response.keep_alive()&&self->buffer_.size()==0;
+-   if(response.result()!=http::status::ok||!json.is_object()||!json.contains("result")){core_rpc_trace(self->trace_,self->method_,response.result()!=http::status::ok?"http-error":json.is_object()&&json.contains("error")?"rpc-error":"malformed-response",response.result_int(),json,response.body());self->finish(response.result()==http::status::ok?core_capture_busy_hint(self->method_,json):Json(nullptr),reusable);return;}
++   if(response.result()!=http::status::ok||!json.is_object()||!json.contains("result")){core_rpc_trace(self->trace_,self->method_,response.result()!=http::status::ok?"http-error":json.is_object()&&json.contains("error")?"rpc-error":"malformed-response",response.result_int(),json,response.body(),self->inventory_kind_);self->finish(response.result()==http::status::ok?core_capture_busy_hint(self->method_,json):Json(nullptr),reusable);return;}
+    self->finish(std::move(json["result"]),reusable);
+   });
+  });}
+ public:
+  CoreRequest(asio::io_context& io,std::function<void(std::shared_ptr<CoreRequest>)> recycle,CoreRpcTrace trace={}):stream_(io),trace_(std::move(trace)),recycle_(std::move(recycle)){}
+  void start(uint16_t port,const std::string& method,Json params,Reply reply){
+-  if(reply_)throw std::logic_error("Core HTTP connection already busy");reply_=std::move(reply);method_=method;request_={};parser_.emplace();parser_->body_limit(16*1024*1024);
++  if(reply_)throw std::logic_error("Core HTTP connection already busy");reply_=std::move(reply);method_=method;inventory_kind_=core_rpc_inventory_kind(method,params);request_={};parser_.emplace();parser_->body_limit(16*1024*1024);
+   request_.method(http::verb::post);request_.target("/");request_.version(11);request_.keep_alive(true);request_.set(http::field::host,"127.0.0.1:"+std::to_string(port));request_.set(http::field::content_type,"application/json");request_.body()=Json{{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",std::move(params)}}.dump();request_.prepare_payload();
+   stream_.expires_after(std::chrono::seconds(5));
+   if(stream_.socket().is_open()){write();return;}
+-  stream_.async_connect(tcp::endpoint(asio::ip::make_address("127.0.0.1"),port),[self=shared_from_this()](beast::error_code ec){if(ec){core_rpc_trace(self->trace_,self->method_,"connect-error");self->finish(nullptr);return;}self->write();});
++  stream_.async_connect(tcp::endpoint(asio::ip::make_address("127.0.0.1"),port),[self=shared_from_this()](beast::error_code ec){if(ec){core_rpc_trace(self->trace_,self->method_,"connect-error",0,nullptr,{},self->inventory_kind_);self->finish(nullptr);return;}self->write();});
+  }
+ };
+ class Core {
