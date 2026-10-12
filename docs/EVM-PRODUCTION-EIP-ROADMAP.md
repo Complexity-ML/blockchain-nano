@@ -1,5 +1,7 @@
 # EIP pour l’EVM et la production Nano
 
+CI du code livré `a106e3e1` : run38310206360 terminé avant toute étape ; changes/operations refusés, core/network skipped. Les annotations indiquent des paiements récents échoués ou une limite de dépenses, sans préciser lequel. Zéro test CI exécuté, aucun réglage de facturation modifié. [Reçu actuel](qualification/isolated-runtime-copies-20261012/ci-a106e3e1-terminal.json).
+
 État courant — 12 octobre, copies physiques et tentative privée : cœur source `85eb492f` et relais `4b2165b8` inchangés ; les six binaires sont identifiés. Les 65 paires de journaux/témoins du bootstrap ont été copiées physiquement et auditées sur Mac natif, Docker ARM64 et AMD64 (130 réouvertures, fichiers intacts, sources préservées). Le relais natif reconstruit passe ses contrôles locaux ; son nouveau SHA n’est pas assimilé à l’ancien binaire perdu. [Preuves et limites](qualification/isolated-runtime-copies-20261012/README.md).
 
 Le contrôleur privé original `81954/1` demeure FAILED : trois nœuds prêts, puis refus HTTP404 du header de l’ancre trusted sans archive signée ; trois arrêts propres et zéro duty admise, aucune nouvelle finalité. Le prérequis d’observation est corrigé (23 cas ciblés passent), sans fabriquer de header ni masquer de futurs404. La revue corrige aussi le raccordement du commitment de reprise : le core attend le principal `next`, le témoin reste conservé séparément. Aucun nouveau cœur n’est compilé ni règle modifiée.
