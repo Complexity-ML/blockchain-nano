@@ -1,0 +1,10 @@
+import json,pathlib,subprocess,hashlib,time
+base=pathlib.Path('/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012');out=base/'isolated-runtime-observation-20261012';native=base/'native-candidate/build'
+parents=['nano','nano-capella-paused-capture','nano-capella-transition-tests','libnano_core.a'];hashes={name:hashlib.sha256((native/name).read_bytes()).hexdigest() for name in parents};assert hashes['libnano_core.a']=='27d821c50c5de9cccebe77aa539468297b9074d7b760d7969b9d4e3f124c80af'
+compile=json.loads((base/'isolated-fixture-exporter/native-build-public-copy-repair/compile-command.json').read_text())['args'];compile[-3]=str(out/'project-canonical-startup.cpp');compile[-1]=str(out/'project-canonical-startup.cpp.o');link=json.loads((base/'isolated-fixture-exporter/native-build-public-copy-repair/link-command.json').read_text())['args'];link[5]=str(out/'project-canonical-startup.cpp.o');link[7]=str(out/'project-canonical-startup');receipt={'format':'nano-public-startup-projection-helper-build-v1','parentHashesBefore':hashes,'commands':{'compile':compile,'link':link},'sourceSha256':hashlib.sha256((out/'project-canonical-startup.cpp').read_bytes()).hexdigest(),'productionCoreRebuilt':False}
+for name,args in [('compile',compile),('link',link)]:
+ start=time.monotonic()
+ with (out/(name+'.log')).open('wb') as log:r=subprocess.run(args,cwd=native,stdout=log,stderr=subprocess.STDOUT,timeout=60)
+ receipt[name]={'exitCode':r.returncode,'elapsedSeconds':time.monotonic()-start};(out/'build-receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
+ if r.returncode:raise SystemExit(r.returncode)
+receipt['parentHashesAfter']={name:hashlib.sha256((native/name).read_bytes()).hexdigest() for name in parents};assert receipt['parentHashesAfter']==hashes;receipt['helperBinarySha256']=hashlib.sha256((out/'project-canonical-startup').read_bytes()).hexdigest();(out/'build-receipt.json').write_text(json.dumps(receipt,indent=2)+'\n');print(json.dumps(receipt))

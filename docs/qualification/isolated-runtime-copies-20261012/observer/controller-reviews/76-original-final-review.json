@@ -1,0 +1,67 @@
+{
+  "format": "nano-isolated-three-node-controller-readonly-review-v1",
+  "reviewedAt": "2026-10-12T20:40:12.765045+00:00",
+  "source": "/Users/boris/Dev/blockchain-nano/tests/capella/isolated-three-node-run.mjs",
+  "sourceSha256": "76cbfd47e1287780595d2fddf80a0487b805ee7fcb0f0fa06fd427f08cb0012d",
+  "reviewType": "targeted static independent review; no test, build, node, RPC, signing or remote mutation executed",
+  "blockingFindings": [],
+  "resolvedFindings": [
+    {
+      "id": "unbounded-log-command",
+      "sourceLine": 39,
+      "resolution": "Local and remote execFile calls have 30000 ms timeout; SSH logs include ConnectTimeout=8 and bounded ServerAlive."
+    },
+    {
+      "id": "cleanup-terminal-state",
+      "sourceLine": 41,
+      "resolution": "Managed child stop refuses nonterminal state after bounded TERM then KILL. Finally continues all owner stops, verifies Running=false on both success and failure, verifies tunnel terminal, retains ambiguity as FAILED/allWritersStopped=false. Lines 173-180."
+    },
+    {
+      "id": "same-campaign-duplicate-owner",
+      "sourceLine": 77,
+      "resolution": "Preflight refuses active containers by canonical campaign name or label, including different preparation paths. New containers carry campaign and owner labels at line 131."
+    }
+  ],
+  "reviewedPreconditions": [
+    {
+      "sourceLines": "45-64",
+      "scope": "Canonical manifest, model, inventory and anchor pins; all three offline physical audit receipts; independent inode copies."
+    },
+    {
+      "sourceLines": "65-85",
+      "scope": "Source revisions, actual existing binaries, native relay sanity, absence of existing writers and finite actual wall-clock gap."
+    },
+    {
+      "sourceLines": "89-104",
+      "scope": "Existing real isolated key capsules with O_NOFOLLOW, owner/mode and bytes hashes checked before parsing. Controller does not derive private keys."
+    },
+    {
+      "sourceLines": "113-145",
+      "scope": "Pinned public template/genesis/profile/initial; retained primary restart tokens and distinct witnesses; runtime startupCatchup 2h/60 steps without ordinary-rule changes; private loopback host topology and existing images."
+    },
+    {
+      "sourceLines": "154-170",
+      "scope": "Strict authenticated Beacon observation module consumes original one-shot rows; two distinct common checkpoint advancements and three stable samples; no legacy 404 or connection-refused fallback."
+    },
+    {
+      "sourceLines": "172-180",
+      "scope": "All cleanup branches attempt shutdown; healthy duty admission and clean stop required for PASSED; terminal result explicitly remains private baseline with full restore and production false."
+    }
+  ],
+  "bounds": {
+    "individualLogCommandMs": 30000,
+    "individualHttpRequestMs": 10000,
+    "ancestryMaximumBlocks": 1024,
+    "startupDowntimeMs": 7200000,
+    "startupMaximumSteps": 60,
+    "readinessPollDeadlineMs": 180000,
+    "finalityPollDeadlineMs": 900000
+  },
+  "boundInterpretation": "Polling deadlines are checked between finite RPC/log samples; an in-progress sample can finish beyond its polling deadline. This is not a hard whole-campaign watchdog. No unbounded loop or command remains in reviewed controller.",
+  "trustedExternalEvidenceBoundary": "Static review validates enforcement and binding checks, but does not independently re-open private key inputs, physical journal stores, or re-execute external cryptographic audits.",
+  "readOnlyReviewPassed": true,
+  "actualRuntimeStartedByReviewer": false,
+  "actualFinalityQualified": false,
+  "fullRuntimeRestoreQualified": false,
+  "productionQualified": false
+}

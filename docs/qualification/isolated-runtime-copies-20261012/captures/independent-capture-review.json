@@ -1,0 +1,159 @@
+{
+  "format": "nano-isolated-stopped-capture-independent-static-review-v1",
+  "reviewedAt": "2026-10-12T20:53:41.283912+00:00",
+  "reviewer": "evm_activation_review",
+  "author": "prepare_review",
+  "repositoryHead": "ccf01c6a6fc8304d474ec96d70a876635bb52e4b",
+  "coreRevision": "85eb492f641452c4746ee60f027eacefa775b0b0",
+  "source": {
+    "path": "/Users/boris/Dev/blockchain-nano/tests/capella/isolated_stopped_capture.cpp",
+    "sha256": "718761a654576f93bb0bbbf258f52015e1d10ba0544672556a189568ab3e1f55",
+    "snapshot": "source/isolated_stopped_capture.cpp"
+  },
+  "referenceSourceBindings": [
+    {
+      "path": "src/storage.cpp",
+      "sha256": "e876ea9a32c0832de3c94f11c7bb9d2fa6219fd8a444589c5a9bcf9e0352b745"
+    },
+    {
+      "path": "src/consensus_beacon_signer.cpp",
+      "sha256": "38f9591f6b18e666d309080e91c2d0498f0209dba03007b28d20971bf2292e73"
+    },
+    {
+      "path": "src/consensus_capella_reactor.cpp",
+      "sha256": "709899ac13c6ca2b62e7808aca233b473d1656d160ea60a8b13c273a6759af85"
+    },
+    {
+      "path": "src/consensus_capella_store_snapshot.cpp",
+      "sha256": "a2de75d049eb959930f394ff2906fdb35dd038e7af172f823ab00374f0cf3369"
+    }
+  ],
+  "verdict": "no-static-blocker-in-stopped-capture-scope",
+  "blockingFindings": [],
+  "checks": [
+    {
+      "finding": "Raw RocksDB OpenForReadOnly and qualified ChainStore ReadOnly only; no metadata binding, signing journal/reactor constructor, import, commit, retirement or repair invoked",
+      "sourceLines": [
+        66,
+        67,
+        96,
+        98,
+        157,
+        163
+      ],
+      "coreReferences": [
+        "src/storage.cpp:94",
+        "src/storage.cpp:112",
+        "src/storage.cpp:443"
+      ]
+    },
+    {
+      "finding": "Caller-provided stop core token and all owner key tokens are exact expected fork checkpoints; public-key/domain snapshot and configured minimum restart floors checked",
+      "sourceLines": [
+        144,
+        149,
+        157,
+        158,
+        159,
+        162
+      ],
+      "coreReferences": [
+        "src/storage.cpp:443",
+        "src/consensus_beacon_signer.cpp:88"
+      ]
+    },
+    {
+      "finding": "Witness metadata role is independent, raw digest and canonical intent recomputed, next equals exact primary token/snapshot, previous sequence transition checked; witness digest cannot equal primary",
+      "sourceLines": [
+        75,
+        84,
+        157,
+        162
+      ],
+      "coreReferences": [
+        "src/consensus_beacon_signer.cpp:41",
+        "src/consensus_capella_reactor.cpp:184"
+      ]
+    },
+    {
+      "finding": "Separate non-ancestor owned roots; normalized non-symlink paths; private0700 owner/journal leaves; core leaves must be euid-owned with no group/world write under private0700 owner; database dir/file inodes unique across roles",
+      "sourceLines": [
+        36,
+        68,
+        113,
+        116,
+        154,
+        155,
+        156
+      ]
+    },
+    {
+      "finding": "16/16/33 indexed owner allocation, 65 unique public keys, pending64 null identity, explicit original/observed source mapping, unchanged network anchor and current SSZ registry keys checked",
+      "sourceLines": [
+        146,
+        149,
+        154,
+        156,
+        158,
+        162,
+        166
+      ]
+    },
+    {
+      "finding": "Bounded public JSON/files/counts/snapshot parser; private capsule filenames rejected before reads; two cold opens then full file/inode/stat digests and public-input hashes compared",
+      "sourceLines": [
+        28,
+        29,
+        47,
+        61,
+        74,
+        151,
+        163,
+        164,
+        165
+      ]
+    },
+    {
+      "finding": "Cold/fragmented/unknown core checkpoint formats are refused; flat durable wrappers captured without overstating pending-message or archived-signature semantics",
+      "sourceLines": [
+        102,
+        110,
+        166
+      ]
+    }
+  ],
+  "externalPreconditions": [
+    "all source writers are stopped and remain stopped throughout capture",
+    "stop receipt origin and public manifest/profile provenance are independently retained by caller",
+    "actual root mappings belong to the isolated cb532 campaign; caller may not substitute arbitrary same-schema inputs"
+  ],
+  "scopeLimits": [
+    "Capture observes current separately hashed primary and witness commitments; it does not authenticate arbitrary stop receipt provenance",
+    "Higher sequence than configured floor does not reconstruct historical digest ancestry; output explicitly marks false",
+    "Archive BLS signatures, durable pending-message semantics and complete canonical-history replay are not checked by this helper",
+    "Syntactic public keys remain linked to externally pinned earlier cryptographic proof, not new key derivation",
+    "File and inode equality shows bounded observation, not a universal proof excluding a privileged concurrent writer",
+    "Metadata/LOG mutation by read-only backend causes refusal; no inventory exceptions permitted"
+  ],
+  "executionByReviewer": {
+    "databaseOpened": false,
+    "privateKeysRead": false,
+    "envRead": false,
+    "selfTestsExecuted": false,
+    "compiled": false,
+    "captureExecuted": false,
+    "sourceEdited": false,
+    "newSignaturesCreated": 0,
+    "journalWritesRequested": false,
+    "runtimeStarted": false
+  },
+  "runtimeContext": {
+    "reportedByRoot": "81954 failed HTTP404 before duties; three stop receipts healthy; all writers stopped",
+    "independentlyRuntimeObservedByReviewer": false
+  },
+  "restorationSigningAuthorized": false,
+  "dutiesResumed": false,
+  "sharedFinalityProgressionProven": false,
+  "V37Restored": false,
+  "productionQualified": false
+}

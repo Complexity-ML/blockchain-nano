@@ -1,0 +1,95 @@
+{
+  "format": "nano-isolated-runtime-assets-v1",
+  "repositoryRevision": "ccf01c6a6fc8304d474ec96d70a876635bb52e4b",
+  "coreRevision": "85eb492f641452c4746ee60f027eacefa775b0b0",
+  "relayRevision": "4b2165b8a642811562bf8ddca0f0750fe1dcb079",
+  "productionCoreSourceDiffEmpty": true,
+  "relaySourceDiffEmpty": true,
+  "assets": {
+    "mac-native": {
+      "executionEnvironment": "native-macos-arm64",
+      "nano": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-candidate/build/nano",
+        "sha256": "7229d2b86921a7d643cd16137d1356e93d98038b6ad246623b2a924cea3238df"
+      },
+      "p2p": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-runtime-assets-20261012/native-relay-build/nano-p2p",
+        "sha256": "7c11c9814b5453a3ea2b0d120bd54778e843172aa118c86bf949e75bda8d655d",
+        "historicalBinaryIdentity": false,
+        "relaySourceIdentity": true,
+        "protocolSanityQualificationPending": false,
+        "protocolSanityQualification": {
+          "kind": "bounded-loopback-synthetic-rpc",
+          "receipt": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-runtime-assets-20261012/native-relay-sanity-20261012/result.json",
+          "receiptSha256": "74c7188d7eccb08bc3846bcd6bb4c3aabacc980f9adb8b42f52a8f41fe0e34b4",
+          "guardCount": 11,
+          "mutualNoiseTcpHandshake": true,
+          "genesisMismatchEvictedBothPeers": true,
+          "managedSupervisorAndLowerBudgetBoundsAccepted": true,
+          "realConsensusOrWanQualification": false
+        }
+      },
+      "coreArchive": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-candidate/build/libnano_core.a",
+        "sha256": "27d821c50c5de9cccebe77aa539468297b9074d7b760d7969b9d4e3f124c80af"
+      }
+    },
+    "mac-docker": {
+      "image": "sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb",
+      "buildVolume": "nano-clean-arm64-build-20261002",
+      "nano": {
+        "path": "/build/publication-cancel-boundary-arm64-20261007/nano",
+        "sha256": "be423a3599848ea37459b1f310a05e3b2e41501669d60d330017ef4e916cd389"
+      },
+      "p2p": {
+        "path": "/build/dependency-route-arm64-20261007/network/nano-p2p",
+        "sha256": "ddaac7b3437f64a9346403182fa661b01a4a92d122f36326a61c3990fb0ee2bc",
+        "matchesPublishedRelayBinding": true
+      },
+      "coreArchive": {
+        "path": "/build/publication-cancel-boundary-arm64-20261007/libnano_core.a",
+        "sha256": "53f4c33dcb68ca43fd054474b8cfa968f26b04f601f4a256996960bfa486a16b"
+      }
+    },
+    "vps-docker": {
+      "host": "ubuntu@145.239.199.166",
+      "image": "sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14",
+      "buildVolume": "nano-clean-rpc-build-20261002",
+      "nano": {
+        "path": "/build/publication-cancel-boundary-amd64-20261007/nano",
+        "sha256": "b8400fc87eea52cca2dea8c61785cb8f3cdb6facf814869ed2d3397046ee8792"
+      },
+      "p2p": {
+        "path": "/build/dependency-route-amd64-20261007/network/nano-p2p",
+        "sha256": "c85ae829509d30bcfd4faa924198d6bc4076483e036f3a120116b93759e77e4b",
+        "matchesPublishedRelayBinding": true
+      },
+      "coreArchive": {
+        "path": "/build/publication-cancel-boundary-amd64-20261007/libnano_core.a",
+        "sha256": "783ccae2127905741238dd58618124f9582aae380625ef3fe592523a58a056dd"
+      }
+    }
+  },
+  "nativeRelayDependencyCount": 101,
+  "nativeRelayDependenciesUnchanged": true,
+  "nativeRelayCompileExit": 0,
+  "nativeRelayLinkExit": 0,
+  "runtimeOrDutyStarted": false,
+  "networkQualified": false,
+  "productionQualified": false,
+  "inspectionDiagnostics": [
+    {
+      "armSession": 47741,
+      "terminalChunk": "029149",
+      "exit": 1,
+      "cause": "No CMake flags/link within output-only dependency-route directory; binaries found and hashed successfully; coherent path flags used separately."
+    },
+    {
+      "amdSession": 78100,
+      "terminalChunk": "1c1330",
+      "exit": 1,
+      "cause": "Same output-only directory metadata path; binaries found and hashed; not a runtime failure."
+    }
+  ],
+  "peerOnlyLoopbackProtocolSanityExecuted": true
+}

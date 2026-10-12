@@ -1,0 +1,51 @@
+{
+  "format": "nano-isolated-bootstrap-state-observer-repair-v1",
+  "recordedAt": "2026-10-12T20:51:20.674707+00:00",
+  "sources": [
+    {
+      "name": "isolated-runtime-observation.mjs",
+      "sha256": "6c030aed2b3fd99d3d7bd975000fa4a05df9682d6ed0b56856955238d48a3046",
+      "bytes": 6737
+    },
+    {
+      "name": "isolated-runtime-observation.test.mjs",
+      "sha256": "d1efdc6691db0101ab5ab2af7b35d1540581fd3ebf19ea165264b66155fe8b0a",
+      "bytes": 14240
+    }
+  ],
+  "originalTargetedTest": {
+    "command": "node --test tests/capella/isolated-runtime-observation.test.mjs",
+    "toolChunk": "6017b5",
+    "exitCode": 0,
+    "tests": 23,
+    "passes": 23,
+    "failures": 0,
+    "durationMs": 99.840541,
+    "testScope": "Observer full focused module: original13 plus10 new bootstrap option/SSZ derivation cases; not a new runtime or network qualification.",
+    "rerunForArchiving": false
+  },
+  "actualPublicDerivation": {
+    "exitCode": 0,
+    "manifestSha256": "ec150c28c8c187e6728cea7ef717acc6383e0b75242302b0a481fc2a9c425fc6",
+    "initialSha256": "33aee17d626a3e541c7934c5576c025f8819d442555df6fadc90dde49bd045a7",
+    "bootstrapStateCheckpoint": {
+      "epoch": "0",
+      "root": "0x0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "filesRead": 1,
+    "signingExecuted": false,
+    "runtimeStarted": false,
+    "productionQualified": false,
+    "inputBytesUnchanged": true
+  },
+  "api": {
+    "observer": "isolatedRuntimeObservation({baseline,bootstrapStateCheckpoint})",
+    "derivation": "isolatedBootstrapStateCheckpoint(initial)",
+    "trustBoundary": "Caller verifies exact initial bytes hash before JSON parse. Helper independently binds SSZ state hash to initial header and extracts profile-defined checkpoint; no filesystem API inside helper."
+  },
+  "unchangedLegacyModules": true,
+  "coreChanged": false,
+  "runtimeOrSigningExecuted": false,
+  "actualFinalityQualified": false,
+  "productionQualified": false
+}

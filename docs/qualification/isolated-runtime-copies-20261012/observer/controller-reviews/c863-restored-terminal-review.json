@@ -1,0 +1,33 @@
+{
+  "format": "nano-isolated-restored-controller-readonly-review-v1",
+  "reviewedAt": "2026-10-12T21:00:35.357828+00:00",
+  "sourceSha256": "c86358bd9d158d4798343e9371e4759ac0d68241bb18e33e91ac45c7b270c123",
+  "readOnlyStaticReviewPassed": true,
+  "blockingFindings": [],
+  "resolvedFinding": {
+    "oldLine": 145,
+    "currentLine": 146,
+    "correctedConfig": "recoveryCommitment = captured.restart PRIMARY target token",
+    "independentWitnessToken": "Retained separately and source/destination equality checked; not substituted as primary restart commitment.",
+    "coreContract": "src/consensus_capella_reactor.cpp:340-343"
+  },
+  "resolvedAdditionalNotes": {
+    "singleInitialBuffer": "Lines100-101 SHA before parse; bootstrap SSZ helper derives checkpoint in preflight.",
+    "capturedClock": "Lines102-104 use minimum publishedClockTimeMs and exact genesisTimeMs, not original initial wall-clock; unchanged finite2h/60step and ordinary120000ms rules.",
+    "restoreFlags": "Attempted flag separated from ready, which is set only after three-owner runtime readiness.",
+    "restorationBaseline": "Lines184-186 require all captured finalized checkpoints equal; count2newadvances from this checkpoint; bootstrap option only at epoch0.",
+    "publicSummaries": "Source and destination hashes bound to capture index and full preparation; primary/witness/core aliases, public key identities, proposal/attestation floors and snapshot hashes compared without raw VPS capsule transfer.",
+    "runtimeKeyFloors": "Current summary key.restart must equal its PRIMARY token before being passed to the runtime; pending index remains null in original model.",
+    "unchangedEnforcement": "Distinct witnesses, original65key ownership, startup reservation, active campaign exclusion, actual existing image/binary/source hashes, loopback topology, strict no404observer, bounded cleanup and healthy participation checks remain."
+  },
+  "externalPreparationRequiredBeforeLaunch": [
+    "All current source and destination public capture reports and hashes must be terminal and match.",
+    "All full copied files/inodes/modes and external stop pins must be verified; no source writer active.",
+    "No private VPS capsule transfer is needed; actual full state audit remains local to VPS."
+  ],
+  "reviewDoesNotReopenPrivateStores": true,
+  "runtimeBuildTestSigningOrRemoteMutationExecutedByReviewer": false,
+  "runtimeRecoveryQualified": false,
+  "commonFinalityQualified": false,
+  "productionQualified": false
+}

@@ -1,0 +1,37 @@
+{
+  "format": "nano-isolated-restored-controller-readonly-review-v1",
+  "reviewedAt": "2026-10-12T20:57:47.339816+00:00",
+  "sourceSha256": "23b6ec90c9cab26451a29b0a71baf556fe80d91f0ec0bcfd2831de64a6ab9967",
+  "status": "BLOCKED_BEFORE_LAUNCH_PENDING_ROOT_FIX",
+  "blockingFinding": {
+    "line": 145,
+    "cause": "Configured recoveryCommitment uses captured independent witness token, but reactor compares it to the primary next token carried by the witness intent.",
+    "coreContract": "src/consensus_capella_reactor.cpp:340-343",
+    "captureContract": "tests/capella/isolated_stopped_capture.cpp:166",
+    "safeCorrection": "Use captured.restart (primary token), retaining independent witness token as a separate source/destination audit pin.",
+    "consequence": "Deterministic fail-closed runtime refusal; no bypass or network exploit inferred."
+  },
+  "otherReviewNotes": [
+    "Use a single initial buffer, verify SHA before parse and derive the public SSZ bootstrap checkpoint before launch.",
+    "Do not label fullRuntimeRestorePerformed true solely from the basename if preparation or launch fails.",
+    "Current captured finalized epoch0 matches initial baseline; future nonzero restores must count new advancement from the captured common checkpoint."
+  ],
+  "privateSourceTransfer": "Parent reports auto-review refused transfer of raw VPS capsule, action not executed; local VPS full audit plus exact public summary is the supported alternative.",
+  "suggestedPublicSummaryFields": [
+    "publishedClockTimeMs",
+    "genesisTimeMs",
+    "restart PRIMARY token",
+    "recoveryWitnessCommitment separate",
+    "genesisValidatorsRoot",
+    "manifestSha256",
+    "profileSha256",
+    "finalized",
+    "owner",
+    "per-key exact publicKeyIndex/index/publicKey/primary/witness tokens and snapshot hashes"
+  ],
+  "runtimeOrSigningExecutedByReviewer": false,
+  "coreEditedByReviewer": false,
+  "sourceEditedByReviewer": false,
+  "fullRuntimeRestoreQualified": false,
+  "productionQualified": false
+}

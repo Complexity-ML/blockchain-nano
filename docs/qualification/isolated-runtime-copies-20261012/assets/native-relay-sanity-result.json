@@ -1,0 +1,239 @@
+{
+  "format": "nano-native-relay-loopback-sanity-v1",
+  "binarySha256": "7c11c9814b5453a3ea2b0d120bd54778e843172aa118c86bf949e75bda8d655d",
+  "scope": "CLI refusal and Noise/TCP loopback chain/genesis admission with synthetic RPC; not consensus or production qualification",
+  "startedAtUnix": 1791836935.543757,
+  "passed": true,
+  "guardCount": 11,
+  "mutualNoiseTcpHandshake": true,
+  "genesisMismatchEvictedBothPeers": true,
+  "managedSupervisorAndLowerBudgetBoundsAccepted": true,
+  "nodes": [
+    {
+      "name": "peer-a",
+      "command": [
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-runtime-assets-20261012/native-relay-build/nano-p2p",
+        "61259",
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-runtime-assets-20261012/native-relay-sanity-20261012/peer-a.ed25519.private",
+        "/ip4/127.0.0.1/tcp/0"
+      ],
+      "environmentOverrides": {
+        "NANO_SUPERVISOR_PID": "23377",
+        "NANO_NETWORK_TOKEN": "synthetic-relay-only-token",
+        "NANO_TEST_NETWORK_TRACE": "1",
+        "NANO_CONSENSUS_RELAY_CONCURRENCY": "1",
+        "NANO_CONSENSUS_RELAY_INTERVAL_MS": "25"
+      },
+      "peerId": "12D3KooWPZ6q4GhA6q3ihcUHmKKqNBcHoSegwkvRjz7cMKMQ7yJf",
+      "exit": 0,
+      "fakeRpcMethods": {
+        "nano_networkStatus": 5,
+        "nano_networkEventRefs": 5,
+        "nano_networkReport": 5,
+        "nano_bftExchangeManifest": 8,
+        "nano_gossipPage": 3
+      },
+      "identityFileMode": "0o600"
+    },
+    {
+      "name": "peer-b",
+      "command": [
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-runtime-assets-20261012/native-relay-build/nano-p2p",
+        "61263",
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-runtime-assets-20261012/native-relay-sanity-20261012/peer-b.ed25519.private",
+        "/ip4/127.0.0.1/tcp/0",
+        "/ip4/127.0.0.1/tcp/61260/p2p/12D3KooWPZ6q4GhA6q3ihcUHmKKqNBcHoSegwkvRjz7cMKMQ7yJf"
+      ],
+      "environmentOverrides": {
+        "NANO_SUPERVISOR_PID": "23377",
+        "NANO_NETWORK_TOKEN": "synthetic-relay-only-token",
+        "NANO_TEST_NETWORK_TRACE": "1",
+        "NANO_CONSENSUS_RELAY_CONCURRENCY": "1",
+        "NANO_CONSENSUS_RELAY_INTERVAL_MS": "25"
+      },
+      "peerId": "12D3KooWGardWEq7fy1mQYFiC9EV2bWBnRUndNYoftFCePMES9WP",
+      "exit": 0,
+      "fakeRpcMethods": {
+        "nano_networkStatus": 4,
+        "nano_networkEventRefs": 4,
+        "nano_networkReport": 4,
+        "nano_bftExchangeManifest": 7,
+        "nano_gossipPage": 2
+      },
+      "identityFileMode": "0o600"
+    }
+  ],
+  "guards": [
+    {
+      "name": "usage",
+      "command": [
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-runtime-assets-20261012/native-relay-build/nano-p2p"
+      ],
+      "environmentOverrides": {},
+      "exit": 1,
+      "expectedMessage": "Usage:",
+      "identityCreated": false,
+      "elapsedSeconds": 0.34842229215428233
+    },
+    {
+      "name": "invalid-port-zero",
+      "command": [
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-runtime-assets-20261012/native-relay-build/nano-p2p",
+        "0",
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-runtime-assets-20261012/native-relay-sanity-20261012/invalid-port-zero.ed25519.private",
+        "/ip4/127.0.0.1/tcp/0"
+      ],
+      "environmentOverrides": {},
+      "exit": 1,
+      "expectedMessage": "Invalid RPC port",
+      "identityCreated": false,
+      "elapsedSeconds": 0.009199208114296198
+    },
+    {
+      "name": "invalid-port-overflow",
+      "command": [
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-runtime-assets-20261012/native-relay-build/nano-p2p",
+        "65536",
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-runtime-assets-20261012/native-relay-sanity-20261012/invalid-port-overflow.ed25519.private",
+        "/ip4/127.0.0.1/tcp/0"
+      ],
+      "environmentOverrides": {},
+      "exit": 1,
+      "expectedMessage": "Invalid RPC port",
+      "identityCreated": false,
+      "elapsedSeconds": 0.00759279215708375
+    },
+    {
+      "name": "invalid-supervisor",
+      "command": [
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-runtime-assets-20261012/native-relay-build/nano-p2p"
+      ],
+      "environmentOverrides": {
+        "NANO_SUPERVISOR_PID": "bad"
+      },
+      "exit": 1,
+      "expectedMessage": "Invalid supervisor PID",
+      "identityCreated": false,
+      "elapsedSeconds": 0.0068703750148415565
+    },
+    {
+      "name": "mismatched-supervisor",
+      "command": [
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-runtime-assets-20261012/native-relay-build/nano-p2p"
+      ],
+      "environmentOverrides": {
+        "NANO_SUPERVISOR_PID": "23378"
+      },
+      "exit": 1,
+      "expectedMessage": "Supervisor exited before relay startup",
+      "identityCreated": false,
+      "elapsedSeconds": 0.00623916694894433
+    },
+    {
+      "name": "invalid-concurrency-zero",
+      "command": [
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-runtime-assets-20261012/native-relay-build/nano-p2p",
+        "1",
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-runtime-assets-20261012/native-relay-sanity-20261012/invalid-concurrency-zero.ed25519.private",
+        "/ip4/127.0.0.1/tcp/0"
+      ],
+      "environmentOverrides": {
+        "NANO_CONSENSUS_RELAY_CONCURRENCY": "0"
+      },
+      "exit": 1,
+      "expectedMessage": "Relay concurrency outside",
+      "identityCreated": true,
+      "elapsedSeconds": 0.009220917010679841
+    },
+    {
+      "name": "invalid-concurrency-overflow",
+      "command": [
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-runtime-assets-20261012/native-relay-build/nano-p2p",
+        "1",
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-runtime-assets-20261012/native-relay-sanity-20261012/invalid-concurrency-overflow.ed25519.private",
+        "/ip4/127.0.0.1/tcp/0"
+      ],
+      "environmentOverrides": {
+        "NANO_CONSENSUS_RELAY_CONCURRENCY": "1025"
+      },
+      "exit": 1,
+      "expectedMessage": "Relay concurrency outside",
+      "identityCreated": true,
+      "elapsedSeconds": 0.007926959078758955
+    },
+    {
+      "name": "invalid-concurrency-syntax",
+      "command": [
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-runtime-assets-20261012/native-relay-build/nano-p2p",
+        "1",
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-runtime-assets-20261012/native-relay-sanity-20261012/invalid-concurrency-syntax.ed25519.private",
+        "/ip4/127.0.0.1/tcp/0"
+      ],
+      "environmentOverrides": {
+        "NANO_CONSENSUS_RELAY_CONCURRENCY": "bad"
+      },
+      "exit": 1,
+      "expectedMessage": "Invalid consensus relay concurrency",
+      "identityCreated": true,
+      "elapsedSeconds": 0.007049707928672433
+    },
+    {
+      "name": "invalid-interval-low",
+      "command": [
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-runtime-assets-20261012/native-relay-build/nano-p2p",
+        "1",
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-runtime-assets-20261012/native-relay-sanity-20261012/invalid-interval-low.ed25519.private",
+        "/ip4/127.0.0.1/tcp/0"
+      ],
+      "environmentOverrides": {
+        "NANO_CONSENSUS_RELAY_INTERVAL_MS": "24"
+      },
+      "exit": 1,
+      "expectedMessage": "Consensus relay interval outside",
+      "identityCreated": true,
+      "elapsedSeconds": 0.007099875016137958
+    },
+    {
+      "name": "invalid-interval-high",
+      "command": [
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-runtime-assets-20261012/native-relay-build/nano-p2p",
+        "1",
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-runtime-assets-20261012/native-relay-sanity-20261012/invalid-interval-high.ed25519.private",
+        "/ip4/127.0.0.1/tcp/0"
+      ],
+      "environmentOverrides": {
+        "NANO_CONSENSUS_RELAY_INTERVAL_MS": "60001"
+      },
+      "exit": 1,
+      "expectedMessage": "Consensus relay interval outside",
+      "identityCreated": true,
+      "elapsedSeconds": 0.0066237919963896275
+    },
+    {
+      "name": "invalid-interval-syntax",
+      "command": [
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-runtime-assets-20261012/native-relay-build/nano-p2p",
+        "1",
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-runtime-assets-20261012/native-relay-sanity-20261012/invalid-interval-syntax.ed25519.private",
+        "/ip4/127.0.0.1/tcp/0"
+      ],
+      "environmentOverrides": {
+        "NANO_CONSENSUS_RELAY_INTERVAL_MS": "bad"
+      },
+      "exit": 1,
+      "expectedMessage": "Invalid consensus relay interval",
+      "identityCreated": true,
+      "elapsedSeconds": 0.006690459093078971
+    }
+  ],
+  "parentsAfter": {
+    "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-candidate/build/libnano_core.a": "27d821c50c5de9cccebe77aa539468297b9074d7b760d7969b9d4e3f124c80af",
+    "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-candidate/build/nano": "7229d2b86921a7d643cd16137d1356e93d98038b6ad246623b2a924cea3238df"
+  },
+  "parentsUnchanged": true,
+  "binaryUnchanged": true,
+  "noNanoCoreStarted": true,
+  "noBlsOrValidatorDuties": true,
+  "realNetworkOrConsensusQualified": false,
+  "completedAtUnix": 1791836940.596765
+}

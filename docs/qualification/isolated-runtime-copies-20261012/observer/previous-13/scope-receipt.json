@@ -1,0 +1,67 @@
+{
+  "format": "nano-isolated-runtime-observer-scope-receipt-v1",
+  "sourceHashes": {
+    "isolated-runtime-observation.mjs": "f8a1623ca1c13d646284cc23a1b3e45dea085ba832bf65f52388a4cf02ffb7a2",
+    "isolated-runtime-observation.test.mjs": "525550d54e18f1c4d7027c6eb111bd84f49276960267da5d16e264f97be092bb"
+  },
+  "projection": {
+    "finalRunChunk": "866d10",
+    "exitCode": 0,
+    "actualWallObservedMs": "1791836483884",
+    "projectedSlot": 600,
+    "registrySnapshotSlot": 600,
+    "activeByOwner": [
+      16,
+      16,
+      32
+    ],
+    "selectedProposer": 40,
+    "elapsedMs": 171,
+    "maxRssKiB": 14208,
+    "sourcePublicHashesUnchanged": true,
+    "productionCoreRebuilt": false
+  },
+  "firstProjectionRefusal": {
+    "chunk": "c35ce2",
+    "exitCode": 1,
+    "actualWallObservedMs": "1791836275953",
+    "firstFullTelemetryLastSlot": 560,
+    "frameAdvancedSlotBeforeTelemetryRefusal": 565,
+    "failure": "invalid Capella fork state binding from vote_context outside epoch boundary",
+    "receiptScope": "Original output and last6log lines retained tooltranscript; original complete log overwritten by unintended follow-through execution, not reconstructed",
+    "maxRssKiB": 14336,
+    "elapsedMs": 156
+  },
+  "repairHarness": {
+    "chunk": "2d8982",
+    "syntaxErrorBeforePatch": "Python max(...,default:...) typo; shell then ran unchanged helper unintentionally",
+    "unchangedHelperAlignedWallPass": "unpatched-boundary-pass/",
+    "chunksBoundaryChecksPassed": 45,
+    "noCoreRuleChanged": true
+  },
+  "vpsReadonlyStatus": {
+    "chunk": "520965",
+    "exitCode": 0,
+    "path": "vps-readonly-status.json",
+    "scope": "Only actual remote clock and docker ps names/images/status/ports; no configs/env/disks or mutators"
+  },
+  "newNetworkQualified": false,
+  "dutiesStarted": false,
+  "productionQualified": false,
+  "originalElevenTests": {
+    "chunk": "975990",
+    "exitCode": 0,
+    "passed": 11,
+    "durationMs": 73.505792,
+    "log": "scoped-tests.log",
+    "scope": "Only new public RPC observation cases; no RPC/network/duty executed"
+  },
+  "tests": {
+    "chunk": "d7a7e0",
+    "exitCode": 0,
+    "passed": 13,
+    "durationMs": 71.839084,
+    "log": "scoped-tests.log",
+    "scope": "Only updated fresh public RPC observation cases, including one-shot provenance/replay refusal"
+  }
+}

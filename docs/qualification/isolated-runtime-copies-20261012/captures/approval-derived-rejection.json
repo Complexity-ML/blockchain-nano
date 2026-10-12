@@ -1,0 +1,10 @@
+{
+  "format": "nano-stopped-capture-derived-egress-rejection-v1",
+  "automaticReviewReasonExact": "Although raw snapshots remain on the VPS, the action still reads private stopped databases and exports derived commitments, tokens, and operational metadata to the Mac; the user goal does not specifically authorize that sensitive egress or destination.",
+  "rejectedBeforeProcessCreation": true,
+  "blockedAction": "VPS capture plus transfer of allowlisted derived metadata and commitments to Mac",
+  "anyVpsCaptureExecuted": false,
+  "anyVpsDerivedMetadataTransferred": false,
+  "requestedUserAuthorizationRequiredForExport": true,
+  "allowedAlternative": "VPS audit and private/local results only, no derived payload egress"
+}

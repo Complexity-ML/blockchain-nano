@@ -1,0 +1,21 @@
+✔ fresh observer requires two distinct shared advances and three stable complete samples (2.9195ms)
+✔ both finalized headers must be authenticated even if their roots match (0.303917ms)
+✔ changed bracket root stays pending without guessing epoch from slots (0.076959ms)
+✔ read refusal during ancestry does not publish an unverified epoch/root as known (0.173959ms)
+✔ genuine regressions and same-epoch conflicts stay fatal (0.581834ms)
+✔ known durable checkpoint survives a stale head-state response after a reorg (0.204667ms)
+✔ unknown finalized header cannot invent an epoch from its slot (0.059375ms)
+✔ only known 503 Beacon budget refusals are pending; startup 404 and disconnect stay outside readiness (0.047375ms)
+✔ partial or disconnected rows reset stability and cannot masquerade as three owners (0.580958ms)
+✔ canonical ancestry self-cycle and bounded long cycles refuse without qualification (0.168916ms)
+✔ canonical decimal uint64 epochs and exact public owner identities are enforced (5.243167ms)
+✔ replaying the same genuine RPC sample cannot fabricate three stable reads (0.248542ms)
+✔ rows fabricated or mutated after sampling cannot become finality evidence (0.144125ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 71.839084

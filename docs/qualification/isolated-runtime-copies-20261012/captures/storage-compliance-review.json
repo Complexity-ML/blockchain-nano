@@ -1,0 +1,42 @@
+{
+  "format": "nano-isolated-stopped-capture-storage-compliance-v1",
+  "helperSourceSha256": "718761a654576f93bb0bbbf258f52015e1d10ba0544672556a189568ab3e1f55",
+  "productionSourceBindings": {
+    "include/nano/storage.hpp": "af7eafa6cfd24d494b75d8597a98cfb06fd353b8f635f6d0b3172281dd3616ae",
+    "src/storage.cpp": "e876ea9a32c0832de3c94f11c7bb9d2fa6219fd8a444589c5a9bcf9e0352b745",
+    "src/consensus_beacon_signer.cpp": "38f9591f6b18e666d309080e91c2d0498f0209dba03007b28d20971bf2292e73",
+    "src/consensus_capella_runtime.cpp": "408c44ce774583aa9791e04ef19002a8decad4768cb523e9e810307228b6fa3e",
+    "src/consensus_capella_reactor.cpp": "709899ac13c6ca2b62e7808aca233b473d1656d160ea60a8b13c273a6759af85",
+    "src/consensus_capella_store_snapshot.cpp": "a2de75d049eb959930f394ff2906fdb35dd038e7af172f823ab00374f0cf3369"
+  },
+  "readOnlyApiReview": {
+    "ChainStoreCtor": "storage.cpp96\u2013118 uses create_if_missing=false/OpenForReadOnly, no creation/migration/writes in readonly path; schema failure throws",
+    "forkCheckpoint": "storage.cpp424\u2013448 only Get/read/current digest/execution-tip validation under mutex, optional exact external commitment checked",
+    "metadata": "raw RocksDB OpenForReadOnly and Get(meta/identity) before ChainStore read; bind_chain excluded due fallback Put",
+    "witness": "signing witness v1 4fields and capella recovery v1 5fields; previous+1==next, next exact primary, raw canonical snapshot bytes and independent intent digest verified",
+    "journal": "canonical public v1/v2/v3 encoding parsed without BeaconSigningJournal construction; pubkey/genesisRoot/slots/floors exact; nullable v3 roots retained",
+    "pureStateDecode": "free capella_store_from_snapshot validates canonical store and current registry/domain; durable pending message semantics/history replay are explicitly not qualified"
+  },
+  "noRequestedActions": [
+    "key environment access",
+    "BLS signing/key derivation",
+    "signing journal construction/import/reservation",
+    "durable reactor construction/recovery",
+    "ChainStore bind_chain/commit",
+    "runtime/IPC/network",
+    "database repair/retirement/migration"
+  ],
+  "callerRequirements": [
+    "all writers independently stopped",
+    "public manifest/stop receipt provenance independently retained",
+    "capture stdout privately and durably, mode0600",
+    "no signing reuse authorization inferred from capture alone"
+  ],
+  "formatLimits": [
+    "flat capella store v1/v2/v3",
+    "flat durable wrapper v1/v2/v3/v4",
+    "cold/fragmented unknown formats fail closed"
+  ],
+  "runtimeStarted": false,
+  "productionQualified": false
+}

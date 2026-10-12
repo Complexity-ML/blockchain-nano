@@ -1,0 +1,82 @@
+{
+  "format": "nano-isolated-anchor-archive-readonly-diagnosis-v1",
+  "reviewedAt": "2026-10-12T20:46:36.118225+00:00",
+  "trigger": {
+    "parentReportedOriginalSession": 81954,
+    "terminalExitCode": 1,
+    "failure": "Native /eth/v1/beacon/headers/finalized returned 404 Signed block not retained after three-owner readiness.",
+    "parentReportedStops": "Three healthy stop receipts, exit0, no admitted new proposal/attestation/sync duty."
+  },
+  "sources": [
+    {
+      "path": "src/consensus_capella_runtime.cpp",
+      "sha256": "408c44ce774583aa9791e04ef19002a8decad4768cb523e9e810307228b6fa3e"
+    },
+    {
+      "path": "src/consensus_capella_reactor.cpp",
+      "sha256": "709899ac13c6ca2b62e7808aca233b473d1656d160ea60a8b13c273a6759af85"
+    },
+    {
+      "path": "src/capella_beacon_api.cpp",
+      "sha256": "6e33588d48c9379d78ed54cd31e570f1163db3b6cdc26583c9e51456f518de42"
+    },
+    {
+      "path": "include/nano/consensus_capella_reactor.hpp",
+      "sha256": "e2ddbd25b6f0c0ad9f8db65e1dcc652b38a492c130c0c64777fe2afd48796a43"
+    },
+    {
+      "path": "include/nano/storage.hpp",
+      "sha256": "af7eafa6cfd24d494b75d8597a98cfb06fd353b8f635f6d0b3172281dd3616ae"
+    },
+    {
+      "path": "src/storage.cpp",
+      "sha256": "e876ea9a32c0832de3c94f11c7bb9d2fa6219fd8a444589c5a9bcf9e0352b745"
+    },
+    {
+      "path": "tests/capella/isolated-runtime-observation.mjs",
+      "sha256": "f8a1623ca1c13d646284cc23a1b3e45dea085ba832bf65f52388a4cf02ffb7a2"
+    }
+  ],
+  "cause": {
+    "trustedStoreSnapshotCarriesSignedArchive": false,
+    "runtimeConstruction": "src/consensus_capella_runtime.cpp:125-128 loads only the authenticated CapellaForkStore; reactor.cpp:323 publishes initial with empty archive.",
+    "beaconReads": "src/consensus_capella_reactor.cpp:422-427 requires independently persisted checkpoint_archive; capella_beacon_api.cpp:163 returns 404 when absent.",
+    "expectedExistingBehavior": "include/nano/consensus_capella_reactor.hpp:195-197,244-246 explicitly permits unsigned trusted anchors. tests/test_capella_transition.cpp:1244 asserts no fabricated archived anchor."
+  },
+  "duplicateIngestionCannotRepair": {
+    "reason": "reactor.cpp:484-496 returns existing-root acknowledgement without authenticating/installing signed archive bytes; lines564-565 expressly forbid backfill through duplicate fast path.",
+    "noExistingRuntimeSignedAnchorImportFound": true
+  },
+  "safeAvailablePrimitives": {
+    "atomicPublication": "Private reactor publish\u2192witness_prepare\u2192commit_execution_checkpoint_with_blobs at reactor.cpp:184-189,307-315.",
+    "lowLevelContract": "storage.hpp:72-97 trusts caller validation; digest is integrity, not consensus authentication. Do not directly write archive DB keys or bypass reactor."
+  },
+  "recommendedScopeCorrection": {
+    "action": "In pure public observer, treat only the still-original externally authenticated baseline checkpoint as no advancement BEFORE requesting a signed finalized header. No 404 catch/fallback.",
+    "gate": "state.epoch equals baseline.epoch, state.root equals baseline.root, perOwnerPreviousEpoch equals baseline.epoch; a conflict or regression is refused.",
+    "retainedRequirements": "Every later checkpoint requires both authentic canonical/nonoptimistic/finalized signed header reads and bounded verified ancestry; baseline never contributes progress or stable samples.",
+    "tests": [
+      "Initial exact baseline without archive requires no header request and no progress.",
+      "Different root at baseline epoch is refused.",
+      "A later finalized checkpoint missing its signed archive (404) is fatal.",
+      "Return to baseline after completed future observation is refused.",
+      "Repeated baseline readings do not add stable finality samples."
+    ]
+  },
+  "ifSignedAnchorServingIsRequired": {
+    "change": "Introduce explicit local pinned anchor-archive import, separate from peer duplicate admission.",
+    "validation": "Bound exact wire SHA and trusted root/token; parse canonical SSZ body/header; require equality to authenticated retained header/state; verify existing proposer BLS signature/domain; reject substitutions, unknown roots and conflict with immutable archived bytes.",
+    "publication": "Atomically publish same fork/execution/finality/clock state plus one authenticated archive and witness intent under current exact CAS pins; no signer callback.",
+    "tests": [
+      "Valid manifest wire serves identical SSZ/header after import and cold reopen.",
+      "Bad signature/body/root/domain/hash and stale token refuse before durable writes.",
+      "Same wire idempotence; conflicting archive never overwrites.",
+      "Cancellation before durable intent and witness/primary boundary reopen preserve safety.",
+      "Peer duplicate path continues never installing missing archive."
+    ]
+  },
+  "sourceOrDatabaseMutationsByReviewer": 0,
+  "newNodeSigningNetworkExecutedByReviewer": false,
+  "actualFinalityQualified": false,
+  "productionQualified": false
+}

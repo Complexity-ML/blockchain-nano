@@ -1,0 +1,32 @@
+Original tool command receipt: 6017b5 / exit 0. Copied from its returned output; tests were not rerun for this archive.
+✔ fresh observer requires two distinct shared advances and three stable complete samples (2.181667ms)
+✔ both finalized headers must be authenticated even if their roots match (0.274125ms)
+✔ changed bracket root stays pending without guessing epoch from slots (0.068584ms)
+✔ read refusal during ancestry does not publish an unverified epoch/root as known (0.153292ms)
+✔ genuine regressions and same-epoch conflicts stay fatal (0.567833ms)
+✔ known durable checkpoint survives a stale head-state response after a reorg (0.109334ms)
+✔ unknown finalized header cannot invent an epoch from its slot (0.363042ms)
+✔ only known 503 Beacon budget refusals are pending; startup 404 and disconnect stay outside readiness (0.046625ms)
+✔ partial or disconnected rows reset stability and cannot masquerade as three owners (0.538792ms)
+✔ canonical ancestry self-cycle and bounded long cycles refuse without qualification (0.156209ms)
+✔ canonical decimal uint64 epochs and exact public owner identities are enforced (3.738417ms)
+✔ replaying the same genuine RPC sample cannot fabricate three stable reads (0.233916ms)
+✔ rows fabricated or mutated after sampling cannot become finality evidence (0.137792ms)
+✔ trusted baseline and explicit epoch-zero SSZ checkpoint stay pending before header reads (0.114959ms)
+✔ bootstrap option accepts only exact decimal epoch-zero root-zero shape with epoch-zero baseline (0.617791ms)
+✔ unconfigured zero checkpoint and foreign epoch-zero roots are not silently pending (0.089791ms)
+✔ future finalized header 404 remains fatal with the bootstrap option (0.063ms)
+✔ after advancing neither bootstrap checkpoint masks a durable regression or missing header (0.309542ms)
+✔ stale bootstrap SSZ state after advancement still authenticates the already-known durable checkpoint (0.116792ms)
+✔ caller mutation cannot widen the bootstrap checkpoint or baseline exception (0.0675ms)
+✔ public initial helper derives only the authenticated slot-one SSZ epoch-zero checkpoint (14.128209ms)
+✔ public initial helper rejects substituted state/header, truncated state, wrong slot and fork profile (6.481542ms)
+✔ public initial helper cannot turn a rehashed future SSZ checkpoint into bootstrap permission (8.083375ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 99.840541
