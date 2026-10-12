@@ -1,5 +1,8 @@
 # Objectif : Nano C++ de niveau production
 
+CI du lot d’outillage livré8e053d99 : run38313225000 terminé avant toute étape ; operations/changes refusés, core/network skipped. Les annotations indiquent un paiement récent échoué ou une limite de dépenses, sans préciser lequel. Zéro test CI exécuté, aucun réglage de facturation modifié. [Reçu terminal actuel](qualification/isolated-recovery-tooling-ci-20261012/ci-8e053d99-terminal.json). Sources livrées sur main et récupérées sur VPS ; reprise des duties, finalité commune et toutes les exigences restantes restent ouvertes.
+
+
 État courant — 12 octobre, outillage de reprise et CI : les deux auditeurs sont raccordés à CMake, avec un nouveau CTest de25 contrôles purs exécuté sur Docker ARM64. Les220 cibles existantes et la fermeture de production restent identiques ; le cœur85eb492f et le relais4b2165b8 sont conservés. Le job core sélectionne désormais13 noms et refuse les omissions, skips et options masquant un échec ; ses résultats JUnit et sa bibliothèque de fault-injection sont contrôlés. Le contrôleur lit/hache/parse chaque rapport sur les mêmes bytes, exige les pins des captures et accepte uniquement l’ajout CMake exact revu. [Preuves ciblées et premiers refus conservés](qualification/isolated-recovery-tooling-ci-20261012/README.md).
 
 La sélection quotidienne complète et la CI GitHub actuelles ne sont pas qualifiées par ces contrôles locaux. Les quatre preuves VPS n’ont pas été transférées ; autorisation dédiée toujours en attente. Aucun writer/duty/réseau restauré lancé dans ce lot, aucune nouvelle finalité commune et aucun statut EIP/production/Base–Nano/Doppler promu. Tous les critères et échecs historiques, ainsi que la revue indépendante ouverte, sont conservés.

@@ -1,5 +1,8 @@
 # CI et limites de qualification
 
+CI du lot d’outillage livré8e053d99 : run38313225000 terminé avant toute étape ; operations/changes refusés, core/network skipped. Les annotations indiquent un paiement récent échoué ou une limite de dépenses, sans préciser lequel. Zéro test CI exécuté, aucun réglage de facturation modifié. [Reçu terminal actuel](qualification/isolated-recovery-tooling-ci-20261012/ci-8e053d99-terminal.json). Sources livrées sur main et récupérées sur VPS ; reprise des duties, finalité commune et toutes les exigences restantes restent ouvertes.
+
+
 État courant — 12 octobre : la sélection quotidienne est maintenant strictement13 CTests, incluant `consensus_isolated_stopped_capture_guards` (25 contrôles purs, timeout15s). Les deux auditeurs de reprise sont compilés par ce job ; les globs operations couvrent aussi `tests/capella/*.test.mjs` et `tools/bridge-source/*.test.mjs`, avec six fichiers de reprise obligatoires. Le registre refuse les skips et options inversant/ignorant un exit ; le JUnit exact et l’intégrité de la bibliothèque de fault-injection sont vérifiés. [Qualification locale ciblée et limites](qualification/isolated-recovery-tooling-ci-20261012/README.md). Les notes chronologiques ci-dessous décrivent leurs anciennes sélections ; aucune CI GitHub actuelle réussie ni exécution complète des13 checks n’est revendiquée.
 
 
