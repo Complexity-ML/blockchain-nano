@@ -99,3 +99,65 @@ for(const [name,change] of [
  ['missing byte budget',p=>delete p.envelopeBytes],
  ['numeric count',p=>p.blocks=4096]
 ])test('explicit capture policy refuses '+name,()=>{const x=structuredClone(fixture);x.retentionExperiment={blocks:'0x1000',rationale:'Explicit bounded local capture experiment; source commitments retained.',captureBudget:{blocks:'0x1000',envelopeBytes:x.macConfig.capella.limits.envelopeBytes}};change(x.retentionExperiment.captureBudget);assert.throws(()=>restoredThreeNodePlan(x));});
+
+
+const startupAllowance={maximumDowntimeMs:'0x240c8400',maximumSteps:'0x63'}; // Seven days, 99 unchanged bounded steps.
+const quantity=n=>'0x'+n.toString(16);
+test('seven-day administrative startup allowance preserves sources, profile, ordinary policy and exact pins',()=>{
+ const x=structuredClone(fixture);x.macNativeConfig=structuredClone(x.macConfig);x.macNativeCapsule=structuredClone(x.macCapsule);
+ x.macNativeCapsule.restart={sequence:'0x2000',digest:'0x'+'a1'.repeat(32)};x.macNativeCapsule.validatorKeys[0].restart={sequence:'0x100',digest:'0x'+'b2'.repeat(32)};
+ const base=restoredThreeNodePlan(x);x.startupCatchup=structuredClone(startupAllowance);const before=structuredClone(x),p=restoredThreeNodePlan(x);
+ assert.deepEqual(x,before);assert.deepEqual(p.sourceCheckpoints,base.sourceCheckpoints);assert.deepEqual(p.baseline,base.baseline);assert.deepEqual(p.ownership,base.ownership);
+ for(let n=0;n<3;n++){
+  const config=structuredClone(p.configs[n]);assert.deepEqual(config.capella.clock.startupCatchup,startupAllowance);
+  if(base.configs[n].capella.clock.startupCatchup===undefined)delete config.capella.clock.startupCatchup;
+  else config.capella.clock.startupCatchup=structuredClone(base.configs[n].capella.clock.startupCatchup);
+  assert.deepEqual(config,base.configs[n]);assert.deepEqual(p.startupCatchupPlan.sourceClocks[p.names[n]],base.configs[n].capella.clock);
+ }
+ assert.deepEqual(p.startupCatchupPlan.options,startupAllowance);assert.equal(p.startupCatchupPlan.ordinaryClockPolicyUnchanged,true);assert.equal(p.startupCatchupPlan.sourceCommitmentsUnchanged,true);
+ for(const field of ['catchupPerformed','validatorSurvivalQualified','networkQualified','productionQualified'])assert.equal(p.startupCatchupPlan[field],false);
+ assert.equal(p.keysLoaded,false);assert.equal(p.networkQualified,false);assert.equal(p.productionQualified,false);
+});
+test('no explicit startup allowance keeps differing historical source startup settings and the default plan intact',()=>{
+ const p=restoredThreeNodePlan(fixture);assert.equal(p.startupCatchupPlan,undefined);
+ assert.deepEqual(p.configs[0].capella.clock,fixture.macConfig.capella.clock);assert.deepEqual(p.configs[1].capella.clock,fixture.macConfig.capella.clock);assert.deepEqual(p.configs[2].capella.clock,fixture.vpsConfig.capella.clock);
+});
+test('startup capacity accepts exact step boundary and requires an extra step for one further millisecond',()=>{
+ const x=structuredClone(fixture),step=BigInt(x.macConfig.capella.clock.maximumForwardStepMs);
+ x.startupCatchup={maximumDowntimeMs:quantity(3n*step),maximumSteps:'0x3'};
+ assert.deepEqual(restoredThreeNodePlan(x).startupCatchupPlan.options,x.startupCatchup);
+ x.startupCatchup.maximumDowntimeMs=quantity(3n*step+1n);assert.throws(()=>restoredThreeNodePlan(x),/step capacity/);
+ x.startupCatchup.maximumSteps='0x4';assert.deepEqual(restoredThreeNodePlan(x).startupCatchupPlan.options,x.startupCatchup);
+});
+test('startup capacity uses exact arithmetic at uint64 downtime boundary',()=>{
+ const x=structuredClone(fixture),maximum=0xffffffffffffffffn,step=BigInt(x.macConfig.capella.clock.maximumForwardStepMs),needed=(maximum-1n)/step+1n;
+ x.startupCatchup={maximumDowntimeMs:quantity(maximum),maximumSteps:quantity(needed)};
+ assert.deepEqual(restoredThreeNodePlan(x).startupCatchupPlan.options,x.startupCatchup);
+ x.startupCatchup.maximumSteps=quantity(needed-1n);assert.throws(()=>restoredThreeNodePlan(x),/step capacity/);
+});
+for(const [name,change] of [
+ ['null allowance',x=>x.startupCatchup=null],
+ ['array allowance',x=>x.startupCatchup=[]],
+ ['missing downtime',x=>delete x.startupCatchup.maximumDowntimeMs],
+ ['missing steps',x=>delete x.startupCatchup.maximumSteps],
+ ['unknown consensus field',x=>x.startupCatchup.profile='changed'],
+ ['ordinary step override',x=>x.startupCatchup.maximumForwardStepMs='0xffff'],
+ ['zero downtime',x=>x.startupCatchup.maximumDowntimeMs='0x0'],
+ ['zero steps',x=>x.startupCatchup.maximumSteps='0x0'],
+ ['numeric downtime',x=>x.startupCatchup.maximumDowntimeMs=604800000],
+ ['numeric steps',x=>x.startupCatchup.maximumSteps=99],
+ ['noncanonical downtime',x=>x.startupCatchup.maximumDowntimeMs='0x0240c8400'],
+ ['noncanonical steps',x=>x.startupCatchup.maximumSteps='0x063'],
+ ['uppercase quantity',x=>x.startupCatchup.maximumDowntimeMs='0x240C8400'],
+ ['downtime overflow',x=>x.startupCatchup.maximumDowntimeMs='0x10000000000000000'],
+ ['steps overflow',x=>x.startupCatchup.maximumSteps='0x10000000000000000'],
+ ['insufficient seven-day steps',x=>x.startupCatchup.maximumSteps='0x62'],
+ ['ordinary source clock disagreement',x=>x.vpsConfig.capella.clock.maximumForwardStepMs='0x5dc001'],
+ ['source zero ordinary step',x=>{for(const c of [x.macConfig,x.vpsConfig])c.capella.clock.maximumForwardStepMs='0x0';}],
+ ['source noncanonical ordinary step',x=>{for(const c of [x.macConfig,x.vpsConfig])c.capella.clock.maximumForwardStepMs='0x05dc000';}],
+ ['source ordinary step overflow',x=>{for(const c of [x.macConfig,x.vpsConfig])c.capella.clock.maximumForwardStepMs='0x10000000000000000';}],
+ ['live source',x=>x.writersStopped=false],
+ ['retired signer',x=>x.macCapsule.validatorKeys[0].retired=true],
+ ['foreign profile',x=>x.vpsConfig.capella.profile.sha256='0x'+'ab'.repeat(32)],
+ ['mismatched replay limits',x=>x.vpsConfig.capella.limits.replaySlots='0x800']
+])test('explicit startup allowance rejects '+name,()=>{const x=structuredClone(fixture);x.startupCatchup=structuredClone(startupAllowance);change(x);assert.throws(()=>restoredThreeNodePlan(x));});

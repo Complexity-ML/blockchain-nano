@@ -1,0 +1,151 @@
+✔ legacy VPS derivation equals the independent JS plan (50.467ms)
+✔ cold 4096-record preparation equals JS plan and preserves every signed pin and clock (29.495167ms)
+✔ legacy retention policy remains supported without explicit capture budget (27.886375ms)
+✔ both independent planners reject same graph budget (35.0775ms)
+✔ both independent planners reject capture count too small (33.880875ms)
+✔ both independent planners reject capture bytes too small (34.849791ms)
+✔ both independent planners reject noncanonical count (34.784542ms)
+✔ both independent planners reject uint64 overflow (32.33225ms)
+✔ both independent planners reject witness overflow (33.372334ms)
+✔ both independent planners reject missing coupled inventory budget (33.676875ms)
+✔ both independent planners reject insufficient coupled inventory budget (34.388666ms)
+✔ both independent planners reject noncanonical catalog budget (33.108791ms)
+✔ both independent planners reject excessive catalog budget (31.848541ms)
+✔ both independent planners reject missing rationale (33.648084ms)
+✔ both independent planners reject unknown consensus override (34.017084ms)
+✔ both independent planners reject cold records beyond budget (33.204625ms)
+✔ both independent planners reject cold bytes beyond budget (32.157667ms)
+✔ both independent planners reject zero cold cache (33.850166ms)
+✔ both independent planners reject cold unknown field (34.802875ms)
+✔ unchanged cold options are allowed but sticky options cannot change (58.197084ms)
+✔ refuses foreign binary /build/coherent-e33ad89e-arm64/network/nano-p2p (32.495333ms)
+✔ refuses foreign binary /build/../coherent-amd64/network/nano-p2p (32.543542ms)
+✔ refuses foreign binary /tmp/coherent-amd64/network/nano-p2p (31.94425ms)
+✔ dated qualified AMD64 path remains accepted (26.397625ms)
+✔ new options never bypass retired signer (33.140291ms)
+✔ new options never bypass missing pin (31.651916ms)
+✔ new options never bypass foreign profile (32.845084ms)
+✔ options cannot override clock or keys (63.216958ms)
+✔ CLI prepares only locally after independent digest match and never returns signer environment (93.963542ms)
+✔ independently audited mixed source budgets converge without lowering or rewriting source pins (27.772083ms)
+✔ both planners reject mixed source undeclared disparity (33.51925ms)
+✔ both planners reject mixed source wrong VPS source (33.607875ms)
+✔ both planners reject mixed source missing owner (33.92775ms)
+✔ both planners reject mixed source unknown owner (32.471417ms)
+✔ both planners reject mixed source noncanonical source (33.5245ms)
+✔ both planners reject mixed source candidate below VPS (33.547833ms)
+✔ both planners reject mixed source source budget not uint64 (36.768333ms)
+✔ heterogeneous budget declaration never permits other source resource changes (0.423458ms)
+✔ audited forced-stop source binds current capsule and rejects incomplete crash evidence (26.243291ms)
+✔ admits sealed runtime-copy valid with actual full-file verification (177.116417ms)
+✔ admits sealed runtime-copy valid-startup-catchup with actual full-file verification (146.544167ms)
+✔ refuses missing-runtime-seal before destination writes (131.957584ms)
+✔ refuses foreign-runtime-seal before destination writes (131.282625ms)
+✔ refuses missing-capture-binding before destination writes (132.995084ms)
+✔ refuses substituted-capture before destination writes (134.87825ms)
+✔ refuses foreign-checkpoint before destination writes (136.318417ms)
+✔ refuses foreign-source-volume-observation before destination writes (134.115792ms)
+✔ refuses false-current-pairs before destination writes (134.11525ms)
+✔ refuses claimed-live-recovery before destination writes (135.27325ms)
+✔ refuses changed-original-manifest before destination writes (131.222916ms)
+✔ refuses changed-recovered-manifest before destination writes (131.209208ms)
+✔ refuses false-historical-audit before destination writes (133.9555ms)
+✔ refuses false-copy-proof before destination writes (130.359917ms)
+✔ refuses forged-copy-file-count before destination writes (128.353125ms)
+✔ refuses mismatched-recovery-token before destination writes (134.91775ms)
+✔ refuses mutated-original-file before destination writes (141.113959ms)
+✔ refuses mutated-recovered-file before destination writes (138.064ms)
+✔ refuses unlisted-recovered-file before destination writes (139.851167ms)
+✔ refuses missing-recovered-file before destination writes (139.60575ms)
+✔ refuses missing-original-file before destination writes (140.765167ms)
+✔ refuses shared-file-storage before destination writes (134.899292ms)
+✔ refuses symlinked-recovered-file before destination writes (137.689209ms)
+✔ refuses symlinked-recovered-directory before destination writes (135.3295ms)
+✔ refuses changed-signer-manifest before destination writes (139.509458ms)
+✔ refuses omitted-signer-manifest before destination writes (132.311584ms)
+✔ refuses false-exact-stop-bypass before destination writes (135.752291ms)
+✔ refuses empty-recovered-data before destination writes (133.309958ms)
+✔ refuses missing-files-count before destination writes (136.156084ms)
+✔ refuses false-files-count before destination writes (141.658625ms)
+✔ refuses unbound-config before destination writes (136.671917ms)
+✖ refuses foreign-remap-path before destination writes (73.693ms)
+✖ refuses traversal-remap-path before destination writes (74.371416ms)
+✔ refuses manifest-path-traversal before destination writes (131.360542ms)
+✔ refuses duplicate-manifest-path before destination writes (131.90775ms)
+✔ explicit startup catch-up preserves the unchanged clock and validates the ceiling (26.015917ms)
+ℹ tests 75
+ℹ suites 0
+ℹ pass 73
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4751.959084
+
+✖ failing tests:
+
+test at tests/capella/vps-local-runtime-copy.test.mjs:110:833
+✖ refuses foreign-remap-path before destination writes (73.693ms)
+  AssertionError [ERR_ASSERTION]: Traceback (most recent call last):
+    File "<string>", line 72, in <module>
+      planned=m.derive(m.remap_runtime_copy_paths(config),capsule,8545,30303,x['binary'],options)
+                       ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+    File "/Users/boris/Dev/blockchain-nano/tests/capella/vps-local-launch-prepare.py", line 166, in remap_runtime_copy_paths
+      a=c['capella'];a['recoveryWitness']=remap(a['recoveryWitness'])
+                                          ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+    File "/Users/boris/Dev/blockchain-nano/tests/capella/vps-local-launch-prepare.py", line 163, in remap
+      assert isinstance(path,str) and path.startswith('/recovery/data/')
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  AssertionError
+  
+  
+  1 !== 0
+  
+      at run (file:///Users/boris/Dev/blockchain-nano/tests/capella/vps-local-runtime-copy.test.mjs:107:9)
+      at TestContext.<anonymous> (file:///Users/boris/Dev/blockchain-nano/tests/capella/vps-local-runtime-copy.test.mjs:110:901)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/capella/vps-local-runtime-copy.test.mjs:110:833
+✖ refuses traversal-remap-path before destination writes (74.371416ms)
+  AssertionError [ERR_ASSERTION]: Traceback (most recent call last):
+    File "<string>", line 72, in <module>
+      planned=m.derive(m.remap_runtime_copy_paths(config),capsule,8545,30303,x['binary'],options)
+                       ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+    File "/Users/boris/Dev/blockchain-nano/tests/capella/vps-local-launch-prepare.py", line 168, in remap_runtime_copy_paths
+      for field in ['journal','recoveryWitness']:key[field]=remap(key[field])
+                                                            ~~~~~^^^^^^^^^^^^
+    File "/Users/boris/Dev/blockchain-nano/tests/capella/vps-local-launch-prepare.py", line 164, in remap
+      rel=path[len('/recovery/data/'):];assert rel and all(part not in ('','.','..') for part in rel.split('/'))
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  AssertionError
+  
+  
+  1 !== 0
+  
+      at run (file:///Users/boris/Dev/blockchain-nano/tests/capella/vps-local-runtime-copy.test.mjs:107:9)
+      at TestContext.<anonymous> (file:///Users/boris/Dev/blockchain-nano/tests/capella/vps-local-runtime-copy.test.mjs:110:901)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

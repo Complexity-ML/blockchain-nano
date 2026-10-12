@@ -9,6 +9,7 @@ import {createServer} from 'node:net';
 import {resolve,join} from 'node:path';
 import {setTimeout as wait} from 'node:timers/promises';
 import assert from 'node:assert/strict';
+import {readDataManifest,verifyDataManifest,parseVolumeFileHashes,verifyFixtureFiles,verifyRuntimeVolumeReceipt,manifestDigest} from './restored-file-bindings.mjs';
 import {verifyRestoredSourceStop} from './restored-source-stop.mjs';
 import {restoredThreeNodePlan} from './restored-three-node-plan.mjs';
 import {waitRestoredReadiness} from './restored-readiness.mjs';
@@ -18,7 +19,7 @@ import {durableFinalityObservation} from './finality-observation.mjs';
 const exec=promisify(execFile),[target,revision,preparedArg]=process.argv.slice(2);
 assert.match(target??'',/^[a-z_][a-z0-9_-]*@[0-9.]+$/);assert.match(revision??'',/^[a-f0-9]{40}$/);assert.ok(preparedArg);
 const repo=process.cwd(),prepared=resolve(preparedArg),out=join(prepared,'campaign');await mkdir(out);
-const controllerFiles=['tests/capella/restored-source-stop.mjs','tests/capella/restored-three-node-run.mjs','tests/capella/restored-three-node-plan.mjs','tests/capella/deposit-restart-pins.mjs','tests/capella/finality-observation.mjs','tests/capella/restored-readiness.mjs','tests/capella/restored-finality-progress.mjs','tests/capella/restored-http-observation.mjs','tests/capella/vps-local-launch-prepare.py'];let controllerHashes;
+const controllerFiles=['tests/capella/restored-file-bindings.mjs','tests/capella/restored-source-stop.mjs','tests/capella/restored-three-node-run.mjs','tests/capella/restored-three-node-plan.mjs','tests/capella/deposit-restart-pins.mjs','tests/capella/finality-observation.mjs','tests/capella/restored-readiness.mjs','tests/capella/restored-finality-progress.mjs','tests/capella/restored-http-observation.mjs','tests/capella/vps-local-launch-prepare.py'];let controllerHashes;
 const evidence=resolve(process.env.NANO_TEST_RESTORED_PREPARATION??join(repo,'docs/qualification/restored-three-node-prepare-20261005'));assert.ok(evidence.startsWith(join(repo,'docs/qualification')+'/'),'Preparation must be a committed qualification bundle');
 const json=async p=>JSON.parse(await readFile(p,'utf8')),save=(p,v)=>writeFile(p,JSON.stringify(v,null,2)+'\n');
 const hash=async p=>createHash('sha256').update(await readFile(p)).digest('hex');
@@ -29,7 +30,7 @@ const docker=(args,remote=false)=>remote?ssh(['sudo','-n','docker',...args]):run
 const record=async x=>{const row={time:new Date().toISOString(),...x};console.log(JSON.stringify(row));await appendFile(join(out,'events.jsonl'),JSON.stringify(row)+'\n');};
 const events=s=>s.split('\n').flatMap(l=>{try{return [JSON.parse(l)];}catch{return [];}});
 const port=()=>new Promise((ok,no)=>{const s=createServer();s.on('error',no);s.listen(0,'127.0.0.1',()=>{const p=s.address().port;s.close(()=>ok(p));});});
-const instance=Date.now().toString(36),names=['mac-native','mac-docker','vps-docker'],local='nano-restored-three-node-mac-'+instance,remote='nano-restored-three-node-vps-'+instance,remoteRoot='/tmp/'+remote;
+const instance=Date.now().toString(36),names=['mac-native','mac-docker','vps-docker'],local='nano-restored-three-node-mac-'+instance,remote='nano-restored-three-node-vps-'+instance,remoteRoot='/home/'+target.split('@')[0]+'/nanobees-qualification/runtime/'+remote;
 let vpsVolume;const remoteRepo='/home/'+target.split('@')[0]+'/blockchain-nano-git';
 let native,tunnel,localCreated=false,remoteCreated=false,failure,result='FAILED',common,artifacts,plan,urls;
 const inspect=(name,onRemote)=>docker(['inspect',name,'--format','{{json .State}}'],onRemote).then(text=>({State:JSON.parse(text)}));
@@ -48,7 +49,20 @@ try{
  const processes=await run('ps',['-axo','pid,command']);assert.ok(!processes.split('\n').some(l=>/\/nano(?: |$)/.test(l)&&/\brun\b/.test(l)),'An existing native writer is active');
  assert.equal((await docker(['ps','-q','--filter','volume='+vpsVolume],true)).trim(),'','Restored VPS volume already has a writer');
  const input=await json(join(evidence,'input.json'));plan=restoredThreeNodePlan(input);assert.deepEqual(plan,await json(join(evidence,'plan.json')));
- for(const n of ['mac-native','mac-docker']){const hashes=await json(join(prepared,n,'data-copy-hashes.json'));for(const [rel,h] of Object.entries(hashes))assert.equal(await hash(join(prepared,n,'data',rel)),h,'Copied data changed');assert.ok(!(await readdir(join(prepared,n,'data'))).includes('peer.key'));}
+ await verifyFixtureFiles(preparation.fixtureFiles,plan.configs[0].capella.profile.sha256);
+ let runtimeVolumeReceipt;
+ if(preparation.sourceRuntimeRefusalAudited===true){
+  for(const f of ['vps-copied-file-hashes.json','vps-copied-volume-receipt.json'])assert.equal(await hash(join(evidence,f)),preparation.artifacts[f],'Unbound recovered-volume artifact');
+  const expectedFiles=await json(join(evidence,'vps-copied-file-hashes.json'));runtimeVolumeReceipt=await json(join(evidence,'vps-copied-volume-receipt.json'));verifyRuntimeVolumeReceipt(expectedFiles,runtimeVolumeReceipt,vpsVolume);
+  const currentFiles=await docker(['run','--rm','--network','none','--read-only','-v',vpsVolume+':/var/lib/nano:ro','--entrypoint','sh',artifacts.nodes['vps-docker'].image,'-c','test -z "$(find /var/lib/nano -type l -print -quit)" && find /var/lib/nano -type f -exec sha256sum {} + | sort'],true);
+  verifyDataManifest(parseVolumeFileHashes(currentFiles),expectedFiles);
+  assert.equal((await docker(['ps','-q','--filter','volume='+runtimeVolumeReceipt.sourceVolume],true)).trim(),'','Failed source volume has a writer');
+  const sourceFiles=await docker(['run','--rm','--network','none','--read-only','-v',runtimeVolumeReceipt.sourceVolume+':/var/lib/nano:ro','--entrypoint','sh',artifacts.nodes['vps-docker'].image,'-c','test -z "$(find /var/lib/nano -type l -print -quit)" && find /var/lib/nano -type f -exec sha256sum {} + | sort'],true);
+  assert.equal(manifestDigest(parseVolumeFileHashes(sourceFiles),'/source'),runtimeVolumeReceipt.sourceManifestSha256,'Original source volume changed');
+
+ }
+
+ for(const n of ['mac-native','mac-docker']){const hashes=await json(join(prepared,n,'data-copy-hashes.json'));verifyDataManifest(await readDataManifest(join(prepared,n,'data')),hashes);assert.ok(!(await readdir(join(prepared,n,'data'))).includes('peer.key'));}
  for(const [name,a] of Object.entries(artifacts.nodes)){
   if(name==='mac-native'){for(const x of [a.nano,a.p2p])assert.equal(await hash(x.path),x.sha256);}
   else{const text=await docker(['run','--rm','--network','none','-v',a.buildVolume+':/build:ro','--entrypoint','sha256sum',a.image,a.nano.path,a.p2p.path],name==='vps-docker');for(const x of [a.nano,a.p2p])assert.ok(text.split('\n').includes(x.sha256+'  '+x.path));}
@@ -59,7 +73,7 @@ try{
  const lp=await port(),lr=await port(),nr=await port(),pf=await port(),rf=await port();assert.equal(new Set([lp,lr,nr,pf,rf]).size,5);
  const configs=structuredClone(plan.configs),fixture=join(prepared,'config');await mkdir(fixture);
  assert.equal(await hash(join(evidence,'input.json')),preparation.artifacts['input.json']);assert.equal(await hash(join(evidence,'plan.json')),preparation.artifacts['plan.json']);
- for(const f of ['genesis.json','profile.json','initial.json'])await copyFile('/private/tmp/nano-ready-target-cold-resume-20261005/config/'+f,join(fixture,f));
+ for(const f of ['genesis.json','profile.json','initial.json'])await copyFile(preparation.fixtureFiles[f].path,join(fixture,f));
  const envFor=n=>({...Object.fromEntries(plan.ownership[n].map(i=>['NANO_TEST_CAPELLA_NETWORK_KEY_'+i,'0x'+BigInt(i+1).toString(16).padStart(64,'0')])),NANO_TEST_NETWORK_TRACE:'1'});
  const environment={...process.env};for(const k of Object.keys(environment))if(k.startsWith('NANO_TEST_CAPELLA_NETWORK_KEY_')||k==='NANO_TEST_EXIT_BOOTSTRAP')delete environment[k];
  for(const [i,c] of configs.entries()){
@@ -74,12 +88,15 @@ try{
   const stable=v=>Array.isArray(v)?v.map(stable):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,stable(v[k])])):v;
   const expected=createHash('sha256').update(JSON.stringify(stable(configs[2]))).digest('hex');
   const helper=await readFile(join(repo,'tests/capella/vps-local-launch-prepare.py'),'utf8');
-  const proof=JSON.parse(await ssh(['python3','-c',helper,process.env.NANO_TEST_VPS_LOCAL_SOURCE,remoteRoot,String(rp[0]),String(rp[1]),artifacts.nodes['vps-docker'].p2p.path,expected,JSON.stringify(Object.fromEntries(['retentionExperiment','coldCheckpoint'].filter(k=>Object.hasOwn(input,k)).map(k=>[k,input[k]])))]));
+  await ssh(['mkdir','-p','/home/'+target.split('@')[0]+'/nanobees-qualification/runtime']);
+  const proof=JSON.parse(await ssh(['python3','-c',helper,process.env.NANO_TEST_VPS_LOCAL_SOURCE,remoteRoot,String(rp[0]),String(rp[1]),artifacts.nodes['vps-docker'].p2p.path,expected,JSON.stringify(Object.fromEntries(['retentionExperiment','coldCheckpoint','startupCatchup'].filter(k=>Object.hasOwn(input,k)).map(k=>[k,input[k]])))]));
   assert.equal(proof.configCanonicalSHA256,expected);assert.equal(proof.configPreparedLocally,true);assert.equal(proof.configurationExportedFromMac,false);assert.equal(proof.signingKeysExportedFromMac,false);
   for(const f of ['genesis.json','profile.json','initial.json'])assert.equal(proof.files[f],await hash(join(fixture,f)));
+  if(runtimeVolumeReceipt){assert.equal(proof.runtimeCopySource?.actualOriginalAndRecoveredFilesVerified,true);assert.equal(proof.runtimeCopySource.sourceManifestSha256,runtimeVolumeReceipt.sourceManifestSha256);assert.equal(proof.runtimeCopySource.recoveredManifestSha256,runtimeVolumeReceipt.recoveredManifestSha256);assert.equal(proof.runtimeCopySource.captureSHA256,runtimeVolumeReceipt.captureSHA256);}
+
   await save(join(out,'vps-local-preparation-proof.json'),proof);
  }else{
-  await ssh(['mkdir',remoteRoot]);for(const f of ['genesis.json','profile.json','initial.json','vps.json','vps.env'])await run('scp',[join(fixture,f),target+':'+remoteRoot+'/'+f]);
+  await ssh(['mkdir','-p',remoteRoot]);for(const f of ['genesis.json','profile.json','initial.json','vps.json','vps.env'])await run('scp',[join(fixture,f),target+':'+remoteRoot+'/'+f]);
  }
  const va=artifacts.nodes['vps-docker'];await docker(['run','-d','--name',remote,'--network','host','--ulimit','nofile=65536:65536','--memory','4g','--cpus','2','--read-only','--tmpfs','/tmp','--cap-drop','ALL','--security-opt','no-new-privileges','-v',va.buildVolume+':/build:ro','-v',vpsVolume+':/var/lib/nano','-v',remoteRoot+':/config:ro','--env-file',remoteRoot+'/vps.env','--entrypoint',va.nano.path,va.image,'run','/config/genesis.json','/var/lib/nano/chain','/config/vps.json'],true);remoteCreated=true;
  let peer;const readyUntil=Date.now()+180000;while(Date.now()<readyUntil){const s=await inspect(remote,true);assert.equal(s.State.Running,true,'VPS stopped during startup');const e=events(await logs(remote,true));if(e.some(x=>x.event==='altair-ipc-ready'&&x.networkProtocolActive===true)){peer=e.filter(x=>x.event==='listen').at(-1)?.address;break;}await wait(1000);}assert.ok(peer?.startsWith(`/ip4/127.0.0.1/tcp/${rp[1]}/p2p/`),'VPS IPC readiness deadline');
