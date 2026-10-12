@@ -1,0 +1,16 @@
+{
+  "format": "nano-static-double-proposal-relevance-v1",
+  "source": "src/consensus_slashing.cpp",
+  "sourceSha256": "8e7759d5c8a4282144cea8e2bee0063ab0ab07764f64a88f01b39ba38cd4d6fc",
+  "lines": {
+    "start": 199,
+    "end": 204
+  },
+  "excerpt": "bool verify_proposer_slashing(const SignedConsensusBeaconHeader& first,\n const SignedConsensusBeaconHeader& second,std::span<const uint8_t> key,\n const ConsensusBytes4& version,const ConsensusRoot& genesis){\n if(first.message.slot!=second.message.slot||first.message.proposer_index!=second.message.proposer_index||first.message==second.message)return false;\n return verify_consensus_beacon_header(first.message,version,genesis,key,first.signature)&&verify_consensus_beacon_header(second.message,version,genesis,key,second.signature);\n}",
+  "interpretation": "The current Nano verifier accepts distinct signed headers at the same proposer and slot with both BLS signatures valid. It does not require executing both blocks. This makes isolated scenario signed negative controls relevant, rather than a hypothetical Ethereum-only concern.",
+  "verificationMethod": "source inspection only",
+  "executionPerformed": false,
+  "productionQualified": false,
+  "command": "python3 read and retain six public source lines",
+  "exit": 0
+}

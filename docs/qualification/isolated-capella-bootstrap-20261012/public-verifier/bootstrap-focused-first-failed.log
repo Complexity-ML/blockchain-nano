@@ -1,0 +1,84 @@
+✔ bootstrap official Capella execution payload 0 root and integrity (3.827667ms)
+✔ bootstrap official Capella execution payload 1 root and integrity (1.240292ms)
+✔ bootstrap official Capella execution payload 2 root and integrity (1.301583ms)
+✔ bootstrap official Capella execution payload 3 root and integrity (0.697833ms)
+✔ bootstrap official Capella execution payload 4 root and integrity (0.860709ms)
+✔ bootstrap official Capella execution payload 5 root and integrity (0.830667ms)
+✔ bootstrap official Capella execution payload 6 root and integrity (0.762958ms)
+✔ bootstrap official Capella execution payload 7 root and integrity (1.024583ms)
+✔ bootstrap official Capella execution payload 8 root and integrity (1.068333ms)
+✔ bootstrap official Capella execution payload 9 root and integrity (0.973667ms)
+✔ bootstrap official Capella execution payload 10 root and integrity (0.864541ms)
+✔ bootstrap official Capella execution payload 11 root and integrity (0.69775ms)
+✔ bootstrap official Capella execution payload 12 root and integrity (0.555875ms)
+✔ bootstrap official Capella execution payload 13 root and integrity (0.650625ms)
+✔ bootstrap official Capella execution payload 14 root and integrity (0.836917ms)
+✔ bootstrap official Capella execution payload 15 root and integrity (1.192208ms)
+✔ bootstrap four declared signing effects are bound without claiming cryptographic or journal qualification (16.442375ms)
+✔ bootstrap verifier refuses missing history (5.7485ms)
+✔ bootstrap verifier refuses missing policy (4.480541ms)
+✔ bootstrap verifier refuses extra history (8.447875ms)
+✔ bootstrap verifier refuses missing fourth deposit (8.102458ms)
+✔ bootstrap verifier refuses extra block field (7.725834ms)
+✔ bootstrap verifier refuses unexpected attestation (8.177333ms)
+✔ bootstrap verifier refuses unexpected sync vote (7.521416ms)
+✔ bootstrap verifier refuses future presigned slot (7.846125ms)
+✔ bootstrap verifier refuses string proposer index (15.552333ms)
+✔ bootstrap verifier refuses different randao owner (7.850041ms)
+✔ bootstrap verifier refuses different randao epoch (8.929541ms)
+✔ bootstrap verifier refuses different change owner (7.115583ms)
+✔ bootstrap verifier refuses different withdrawal key (7.979333ms)
+✔ bootstrap verifier refuses different deposit identity (8.093417ms)
+✔ bootstrap verifier refuses string amount (8.025791ms)
+✔ bootstrap verifier refuses different deposit amount (7.9175ms)
+✔ bootstrap verifier refuses deposit signature short (8.049416ms)
+✔ bootstrap verifier refuses block signature mismatch (7.936375ms)
+✔ bootstrap verifier refuses randao signature mismatch (7.712417ms)
+✔ bootstrap verifier refuses change signature mismatch (7.594458ms)
+✔ bootstrap verifier refuses block signing root substitution (7.877292ms)
+✔ bootstrap verifier refuses randao root substitution (7.285291ms)
+✔ bootstrap verifier refuses change root substitution (7.563625ms)
+✔ bootstrap verifier refuses deposit root substitution (7.650167ms)
+✔ bootstrap verifier refuses replay proposal permitted (7.825125ms)
+✔ bootstrap verifier refuses regenerate history permitted (7.120375ms)
+✔ bootstrap verifier refuses minimum proposal still presigned (7.674542ms)
+✔ bootstrap verifier refuses clock anchoring disabled (7.930958ms)
+✔ bootstrap verifier refuses initial clock before anchor (10.740209ms)
+✖ bootstrap verifier refuses clock genesis substitution (8.145708ms)
+✔ bootstrap verifier refuses wire header substitution (7.256708ms)
+✔ bootstrap verifier refuses wire trailing byte (7.6385ms)
+✔ bootstrap verifier refuses wire signed offset (7.838709ms)
+✔ bootstrap verifier refuses wire body offset (7.619041ms)
+✔ bootstrap verifier refuses nonempty sync bits (7.569ms)
+✔ bootstrap verifier refuses bad empty sync signature (7.610625ms)
+✔ bootstrap verifier refuses body declared operation offset (7.009875ms)
+✔ bootstrap verifier refuses payload extra offset (7.715541ms)
+✔ bootstrap verifier refuses change recipient substitution (7.668125ms)
+ℹ tests 56
+ℹ suites 0
+ℹ pass 55
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 443.051209
+
+✖ failing tests:
+
+test at ../../../../Dev/blockchain-nano/tests/capella/isolated-fixture-domain.test.mjs:93:3
+✖ bootstrap verifier refuses clock genesis substitution (8.145708ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/boris/Dev/blockchain-nano/tests/capella/isolated-fixture-domain.test.mjs:93:83)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: undefined,
+    operator: 'throws',
+    diff: 'simple'
+  }

@@ -1,0 +1,11 @@
+--- failed-source/tests/support/isolated_capella_fixture.hpp
++++ repaired-source/tests/support/isolated_capella_fixture.hpp
+@@ -195,7 +195,7 @@
+   bootstrap_history_={{"block",{{"slot",slot},{"validatorIndex",proposer},{"signingRoot",root_text(block_root)},{"signature",nano::hex(Bytes(signed_block.begin()+4,signed_block.begin()+100))},{"ssz",nano::hex(signed_block)}}},{"randao",{{"epoch",epoch},{"validatorIndex",proposer},{"signingRoot",root_text(randao_root)},{"signature",nano::hex(randao)}}},{"blsToExecutionChange",{{"validatorIndex",changed_index},{"publicKey",nano::hex(withdrawal_key)},{"signingRoot",root_text(change_root)},{"signature",nano::hex(change_signature)}}},{"attestations",Json::array()},{"syncMessages",Json::array()}};
+  }
+  void record_deposit(const ConsensusRoot& root,const Bytes& public_key,const Bytes& signature,const Bytes& credentials,uint64_t amount){
+-  require_reserved();require(!bootstrap_history_.is_null()&&!bootstrap_history_.contains("deposit")&&signatures_started_==4&&nano::hex(public_key)==public_keys_.at(64).at("publicKey")&&signature.size()==96&&credentials.size()==32,"isolated fixture deposit signing history differs");
++  require_reserved();require(!bootstrap_history_.is_null()&&!bootstrap_history_.contains("deposit")&&signatures_started_==4&&nano::hex(public_key)==public_keys_.at(64).at("publicKey").get<std::string>()&&signature.size()==96&&credentials.size()==32,"isolated fixture deposit signing history differs");
+   bootstrap_history_["deposit"]={{"validatorIndex",64},{"publicKey",nano::hex(public_key)},{"signingRoot",root_text(root)},{"signature",nano::hex(signature)},{"withdrawalCredentials",nano::hex(credentials)},{"amountGwei",amount}};
+  }
+  void save_private_json(const std::string& name,const Json& value)const{require_reserved();new_json(destination_,name,value,0600);}

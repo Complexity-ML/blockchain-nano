@@ -1,0 +1,40 @@
+{
+  "format": "nano-public-verifier-evm-balance-fix-receipt-v1",
+  "diagnosis": {
+    "field": "genesis.alloc[transactionSender.address].balance",
+    "actualCanonicalPublicBalanceBits": 65,
+    "oldIncorrectBound": "uint64",
+    "correctEvmBound": "uint256",
+    "consensusProfileAndClockBounds": "unchanged uint64"
+  },
+  "historicalRefusal": {
+    "chunk": "2b1d01",
+    "exitCode": 1,
+    "receipt": "actual-native-public-audit.json",
+    "log": "actual-native-public-audit.log"
+  },
+  "targetedTests": {
+    "chunk": "0da003",
+    "exitCode": 0,
+    "passed": 11,
+    "durationMs": 186.740084,
+    "log": "evm-balance-scoped.log",
+    "command": "node --test --test-name-pattern='EVM balances|EVM balance' /Users/boris/Dev/blockchain-nano/tests/capella/isolated-fixture-domain.test.mjs"
+  },
+  "actualNativeAudit": {
+    "chunk": "35bddb",
+    "exitCode": 0,
+    "verdict": "PASSED_PUBLIC_BINDINGS_ONLY",
+    "receipt": "actual-native-public-audit-balance-fixed.json",
+    "log": "actual-native-public-audit-balance-fixed.log",
+    "sameSixExportFilesAsHistoricalRefusal": true,
+    "sameFourPinnedLegacyPublicFiles": true
+  },
+  "sourceHashes": {
+    "isolated-fixture-domain.mjs": "3e60c538b5eae73ebf8d24af629268d6d74ab29b4c22cfa4b6ceb06e2c5d2dd5",
+    "isolated-fixture-domain.test.mjs": "85dbf9c9ef5cee0f86eeb8fb920822cf9dd3737c84c40b31a4017d702ff3a5e4"
+  },
+  "controllerSha256": "c95b1c695906ab863b8e025005fb17d4f60dfe2a401050d6f6140a45ee478697",
+  "runtimeQualified": false,
+  "productionQualified": false
+}

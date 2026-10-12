@@ -1,0 +1,21 @@
+# Preuves publiques du bootstrap isolé Nanobees
+
+Cette copie réunit uniquement les fichiers explicitement autorisés : trois exports publics, rapports, sources, logs ciblés et métadonnées de compilation. `stage-manifest.json` donne l’origine, la taille et le SHA256 de chaque fichier, vérifié après copie. Aucune capsule d’environnement, seed, clé privée, ledger, base de données, archive zip, objet ou binaire n’est inclus. Aucun push GitHub n’est déduit de cette copie.
+
+| Preuve | Portée démontrée | Limite |
+|---|---|---|
+| Natif canonique `ec150…` / campagne `cb532…` | Export réel historique issu du CPP `b081…` ; six fichiers centraux vérifiés indépendamment | Ce jeu reste distinct des nouvelles campagnes de plateforme |
+| ARM `b337…` et AMD `b8e4…` | Exports réels après les deux réparations de copie publique POSIX `e16…/afc9…`; compilation ciblée sur les trois plateformes | Trois exports séparés ; aucun réseau commun démarré |
+| Trois audits JS publics | Racines SSZ, signatures présignées comme données publiques, hashes et identité du genesis | Le JS ne vérifie pas les signatures BLS/ECDSA |
+| Audits C++ externes natif/ARM/AMD | 65 liaisons privées/publiques, 129 clés BLS, 64 credentials, deux agrégats sync, quatre racines et quatre signatures bootstrap, transaction de dépôt | Rapports publics uniquement ; aucune clé copiée ici ni nouveau signer dans ces audits |
+| Import natif EIP-3076 | 65 primaires et 65 témoins créés hors ligne puis rouverts ; seul le proposant possède la réservation slot1 | Aucun callback de signature ou duty réseau exécuté |
+| Plan des trois propriétaires | 16 clés Mac natif,16 Docker Mac,32 enregistrées+1 pending sur VPS ;130 engagements recomputés, restart primaire et témoin séparés | Modèle à chemins placeholders ; aucune copie de DB, lecture de volumes vivants ou exécution |
+| Revue indépendante terminale | Liaison explicite root importée→snapshots→engagements ; zéro finding bloquant dans ce modèle | La provenance des six pins demeure la responsabilité explicite du caller |
+
+Les 387 clés publiques des trois campagnes, leurs racines validators/genesis et leurs identités de campagne sont distinctes. Le modèle des trois propriétaires utilise exclusivement la campagne native canonique `cb532…`; les exports ARM/AMD servent à qualifier l’exporteur et ne peuvent pas être mélangés avec ses journaux. Le pending index64 reste `runtimeKey.index=null`. L’ancre slot1 et l’histoire déjà signée restent conservées ; seules de nouvelles propositions à partir du slot2 sont autorisées.
+
+Les résultats ciblés ont des périmètres distincts et ne sont pas additionnés :73 tests du premier schéma de vérification,57 nouveaux contrôles bootstrap/payload,11 contrôles de bornes des soldes EVM, puis65 tests du modèle d’import/ownership final. Les quatre contrôles d’ancre associés sont archivés avec leur reçu. Les anciennes sources, refus et essais restent présents : double proposition présignée détectée en revue, erreur de typage C++, permissions/mount ARM, tentative de copie publique consommant son namespace, borne uint64 appliquée à tort à un solde EVM et premier modèle qui ne recomputait pas encore les commitments. Les namespaces consommés ne sont pas recyclés.
+
+Les métadonnées des six compilations ciblées indiquent sources, liens, images existantes et parents core ; aucun rebuild d’image Docker n’est revendiqué. Les deux réparations de copie publique modifient l’exporteur de test, pas le cœur qualifié `85eb492f`. Les preuves GitHub archivées indiquent les surfaces de sauvegarde observées ; elles n’établissent pas une nouvelle sauvegarde publiée par cette staging.
+
+Ce paquet ne restaure pas V37, ne reprend aucun duty et ne démontre aucun nouvel avancement de finalité commune. Il ne qualifie pas la blockchain en production et ne promeut aucune EIP. L’exclusivité du ledger dépend du ledger persistant choisi et géré par l’opérateur ; elle n’est pas une garantie globale entre machines ou après suppression du ledger. La perte des anciens journaux Mac, la projection de longue panne avec refus économique du comité futur, les scénarios réseau encore ouverts et la revue indépendante de sécurité de production demeurent des chantiers distincts.

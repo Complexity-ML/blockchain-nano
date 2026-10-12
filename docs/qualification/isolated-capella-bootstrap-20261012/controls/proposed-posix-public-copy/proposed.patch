@@ -1,0 +1,21 @@
+--- a/tests/support/isolated_capella_fixture.hpp
++++ b/tests/support/isolated_capella_fixture.hpp
+@@ -198,6 +198,7 @@
+   require_reserved();require(!bootstrap_history_.is_null()&&!bootstrap_history_.contains("deposit")&&signatures_started_==4&&nano::hex(public_key)==public_keys_.at(64).at("publicKey").get<std::string>()&&signature.size()==96&&credentials.size()==32,"isolated fixture deposit signing history differs");
+   bootstrap_history_["deposit"]={{"validatorIndex",64},{"publicKey",nano::hex(public_key)},{"signingRoot",root_text(root)},{"signature",nano::hex(signature)},{"withdrawalCredentials",nano::hex(credentials)},{"amountGwei",amount}};
+  }
++ void save_public_file(const std::string& name,const Bytes& value)const{require_reserved();new_file_at(destination_fd_->get(),name,value,0644);directories_bound();}
+  void save_private_json(const std::string& name,const Json& value)const{require_reserved();new_json(destination_,name,value,0600);}
+  void replace_private_json(const std::string& name,const Json& value)const{
+   require_reserved();private_directory(destination_);require(name.find('/')==std::string::npos,"isolated fixture private replacement name refused");
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -988,7 +988,7 @@
+     for(uint64_t i=0;i<64;++i){const auto name="NANO_TEST_CAPELLA_NETWORK_KEY_"+std::to_string(i);env[name]=hex(test::isolated_capella::active?test::isolated_capella::active->validator_secret(i):bytes(Int(std::to_string(i+1)),32));node["capella"]["validator"]["keys"].push_back({{"index",quantity(Int(std::to_string(i)))},{"feeRecipient",genesis.header.coinbase},{"keyEnv",name},{"journal",(directory/("network-key-"+std::to_string(i))).string()},{"restart",nullptr},{"recoveryWitness",(directory/("network-key-witness-"+std::to_string(i))).string()}});}
+     if(!network_export.empty()){
+      if(test::isolated_capella::active)test::isolated_capella::active->check_destination(network_export);else{check(!fs::exists(network_export),"network fixture destination exists");fs::create_directories(network_export);}
+-     fs::copy_file(directory/"profile.json",network_export/"profile.json");fs::copy_file(directory/"initial.json",network_export/"initial.json");save(network_export/"genesis.json",cli_genesis);
++     if(test::isolated_capella::active){test::isolated_capella::active->save_public_file("profile.json",binary(directory/"profile.json"));test::isolated_capella::active->save_public_file("initial.json",binary(directory/"initial.json"));}else{fs::copy_file(directory/"profile.json",network_export/"profile.json");fs::copy_file(directory/"initial.json",network_export/"initial.json");}save(network_export/"genesis.json",cli_genesis);
+      const auto all=node["capella"]["validator"]["keys"];
+      for(size_t n=0;n<2;++n){auto out=node;auto& c=out["capella"];c["limits"]["blocks"]="0x100";c["limits"]["messages"]="0x800";c["limits"]["totalStateBytes"]="0x4000000";c["limits"]["envelopeBytes"]="0x8000000";c["profile"]["file"]="/config/profile.json";c["initial"]["file"]="/config/initial.json";c["recoveryWitness"]="/var/lib/nano/witness";c["validator"]["keys"]=Json::array();Json variables={{"NANO_TEST_NETWORK_TRACE","1"}};
+       for(size_t i=n*32;i<(n+1)*32;++i){auto entry=all[i];entry["journal"]="/var/lib/nano/key-"+std::to_string(i);entry["recoveryWitness"]="/var/lib/nano/key-witness-"+std::to_string(i);c["validator"]["keys"].push_back(entry);const auto name=entry.at("keyEnv").get<std::string>();variables[name]=*env.at(name);}

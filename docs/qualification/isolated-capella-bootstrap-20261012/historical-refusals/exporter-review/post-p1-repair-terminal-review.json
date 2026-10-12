@@ -1,0 +1,93 @@
+{
+  "format": "nano-isolated-exporter-independent-terminal-review-v1",
+  "reviewedAt": "2026-10-12T19:08:39.914171+00:00",
+  "revision": "b21432f591bc1235c5ab96d22e5e7ff975943662",
+  "sources": [
+    {
+      "path": "tests/test_capella_transition.cpp",
+      "bytes": 530336,
+      "sha256": "b081418827a1a1533d3dd84a6bbdde8c8d38384f340cc50735fd3b2da0cbcb6a",
+      "snapshot": "post-p1-repair-source/tests/test_capella_transition.cpp"
+    },
+    {
+      "path": "tests/support/isolated_capella_fixture.hpp",
+      "bytes": 26153,
+      "sha256": "962118b1e18f2d1e8dbadbda34dffaa7d8891f588b645a710b191607a1152bbe",
+      "snapshot": "post-p1-repair-source/tests/support/isolated_capella_fixture.hpp"
+    }
+  ],
+  "method": "read-only static inspection; no repository edits",
+  "reviewerRanBuildOrTests": false,
+  "reviewerCreatedSeedLedgerOrFixture": false,
+  "networkLaunched": false,
+  "productionQualified": false,
+  "previousP1Evidence": "pre-equivalence-repair-review.json",
+  "cppBlockingFindings": 0,
+  "p1Status": "statically-resolved-before-export",
+  "findings": [
+    {
+      "id": "P1-pre-export-double-proposal",
+      "status": "statically-resolved",
+      "source": "tests/test_capella_transition.cpp:2445",
+      "evidence": "Explicit isolated branch immediately after one valid signed wire validates that transition, creates only that anchor, records signing history, exports through runtime_loop and returns before all rejection/reorg/slashing/attestation branches."
+    },
+    {
+      "id": "proposal-fence",
+      "status": "statically-present-unexecuted",
+      "source": "tests/test_capella_transition.cpp:2439",
+      "evidence": "authorize_proposal(owner,slot,signingRoot) precedes Key.sign, checks proposer identity and refuses a second signing root for the same proposer/slot. Guard case asserts counter stays1 when conflict is refused."
+    },
+    {
+      "id": "signature-history-boundary",
+      "status": "statically-present-unexecuted",
+      "source": "tests/support/isolated_capella_fixture.hpp:195",
+      "evidence": "Bootstrap requires exactly3 guarded BLS calls (withdrawal change0, RANDAO, proposal1), one proposal pair, no attestations/syncMessages. Pending validator64 deposit makes exactly4 guarded BLS calls before manifest export. Signed wire and public roots/signatures retained."
+    },
+    {
+      "id": "bootstrap-duty-policy",
+      "status": "statically-present-unexecuted",
+      "source": "tests/test_capella_transition.cpp:2452",
+      "evidence": "prepare_capella_proposer_identity on anchor slot1 is checked absent. Public policy maximumPresignedProposalSlot1/minimumNewProposalSlot2 forbids historical signing or regeneration and requires clock at/after anchor."
+    },
+    {
+      "id": "reservation-before-first-signature",
+      "status": "statically-present-unexecuted",
+      "source": "tests/test_capella_transition.cpp:2318",
+      "evidence": "reserve after genesis re-root and before first withdrawal Key.sign; reserve fsyncs O_EXCL seed marker and private receipt with directories before setting latch. sender_secret fences first ECDSA use too."
+    },
+    {
+      "id": "persistent-private-paths",
+      "status": "statically-present-unexecuted",
+      "source": "tests/support/isolated_capella_fixture.hpp:62",
+      "evidence": "Absolute normalized paths; every component refuses symlinks; canonical real temp aliases/system temp descendants refused. Seed owner0600 regular32 with before/after metadata. Ledger explicit existing owner0700, new destination0700, final parent open O_DIRECTORY|O_NOFOLLOW. Retained ledger/destination fd dev/inode bound before reservations/signatures. No hardcoded user path allowlist."
+    },
+    {
+      "id": "env-files",
+      "status": "statically-present-unexecuted",
+      "source": "tests/support/isolated_capella_fixture.hpp:74",
+      "evidence": "Private env and receipt created0600 with O_EXCL|O_NOFOLLOW; env replacement via private same-directory temporary file and rename/fsync."
+    },
+    {
+      "id": "guard-mode-scope",
+      "status": "static-definition-only",
+      "source": "tests/test_capella_transition.cpp:93",
+      "evidence": "Guard mode is an explicit private control suite. When executed it creates deterministic test seeds/ledgers and performs one successful BLS witness signature; rejected controls must remain at zero. It exports no network fixture and starts no node. It must never be described as globally no-signatures."
+    }
+  ],
+  "schemaCoordination": {
+    "status": "separate-pending-verifier-update-at-review",
+    "verifierSha256AtRead": "fe27759ddc3ce4b5b282d278ba586db32c8257a83d279b41f7d548216fccb4b1",
+    "issue": "JS exact manifest shape has not yet accepted mandatory bootstrapSigningHistory and bootstrapDutyPolicy; owner informed. The new generator has not been verified against that schema.",
+    "effectOnCppP1Repair": "none"
+  },
+  "remainingScopeLimits": [
+    "Explicit operator ledger nonreuse is local. Replacing/deleting/choosing another ledger or copying seed to another infrastructure can bypass it.",
+    "No universal EVM/deposit replay guarantee from chainId1337. Distinct funded sender and BLS domains isolate this starting campaign only.",
+    "Future driver must separately hash/bind private env, config ownership, ledger marker/receipt, public manifest and actual runtime volumes; it must not sign slot1 or regenerate presigned history.",
+    "Filesystem checks are point-in-time; this is not a security boundary against a malicious same-UID operator replacing ancestors concurrently or root/mount manipulation.",
+    "Legacy i+1/65-admitted capture, deposit/slashing and restored controllers remain incompatible and must stay strict.",
+    "No compilation, execution, source fixture generation, BLS algebra qualification, multi-node recovery or V37 requalification was performed by this reviewer."
+  ],
+  "command": "python3 snapshot hash-asserted public candidate sources and retain static terminal review",
+  "exit": 0
+}

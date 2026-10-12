@@ -1,0 +1,37 @@
+{
+  "format": "nano-isolated-bootstrap-plan-pending-independent-review-v1",
+  "observedAt": "2026-10-12T19:43:05.377843+00:00",
+  "scope": "static review only; neither model nor tests run by reviewer",
+  "sources": [
+    {
+      "path": "tests/capella/isolated-bootstrap-plan.mjs",
+      "sha256": "8f7b7c190728ba7b38ad9a236542dca74f53910bfece8fbb03ae4dd365d3d5cf",
+      "snapshot": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-fixture-exporter/bootstrap-plan-independent-review/before-import-root-binding/tests/capella/isolated-bootstrap-plan.mjs"
+    },
+    {
+      "path": "tests/capella/isolated-bootstrap-plan.test.mjs",
+      "sha256": "b4017176daa5aeb20516d2fdd098e61f5216077cc1522140fdaec25adfe2de59",
+      "snapshot": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-fixture-exporter/bootstrap-plan-independent-review/before-import-root-binding/tests/capella/isolated-bootstrap-plan.test.mjs"
+    }
+  ],
+  "finding": {
+    "priority": "P2 qualification criterion, not an exploit against fixed external pins",
+    "id": "bootstrap-import-root-not-reconstructed",
+    "source": "tests/capella/isolated-bootstrap-plan.mjs:48",
+    "reason": "proposalSlot1/sequence2 and distinct opaque hashes validate claims, but do not reconstruct actual imported signing root. External fixed pins already prevent file mutation; a model repinned to changed claims can otherwise retain old journal tokens.",
+    "repairRequested": "Include pinned bootstrap interchange and/or reconstruct 65 primary/witness snapshot hashes from protocol schema and presigned proposal signing root; preserve fixed original evidence pins tests.",
+    "counterexampleCondition": "Mutate history.block.signingRoot and rehash report claims while leaving journal snapshot tokens stale. Unchanged trusted original pins remain safe and must reject mutations."
+  },
+  "positiveStaticObservations": [
+    "No FS/env/signing imports in planner",
+    "All five document pins mandatory; no fallback pins",
+    "Cross-domain identity checks bind reports and initial to manifest",
+    "Primary restart and expectedWitnessCommitment are separate fields",
+    "Partition fixed16/16/33 covers65unique keys; pending64 indexnull",
+    "ModelOnly true; live/disk/clock/network/prod flags false"
+  ],
+  "newTestsRun": false,
+  "privateInputsRead": false,
+  "runtimeQualified": false,
+  "productionQualified": false
+}

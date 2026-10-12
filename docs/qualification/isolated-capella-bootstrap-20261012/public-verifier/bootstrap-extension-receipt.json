@@ -1,0 +1,39 @@
+{
+  "format": "nano-public-verifier-bootstrap-scope-receipt-v1",
+  "sourceHashes": {
+    "isolated-fixture-domain.mjs": "c21504fd7477114ae213637a25bfe478600576006e0e429818df38d23d4e8ff2",
+    "isolated-fixture-domain.test.mjs": "720e655b5ee9b5c17459e662a468df23a1f6468c81a44cc886a57744c9e1382d"
+  },
+  "sourceRoot": "/Users/boris/Dev/blockchain-nano",
+  "originalFocusedCommand": "node --test --test-name-pattern=bootstrap /Users/boris/Dev/blockchain-nano/tests/capella/isolated-fixture-domain.test.mjs",
+  "firstAttempt": {
+    "chunk": "429b6c",
+    "exitCode": 1,
+    "passed": 55,
+    "failed": 1,
+    "cause": "Test used genesis clock 0 -> 0, so no mutation. Not a core or verifier refusal failure.",
+    "log": "bootstrap-focused-first-failed.log"
+  },
+  "payloadAndHistory": {
+    "chunk": "b5c812",
+    "exitCode": 0,
+    "passed": 57,
+    "durationMs": 433.582792,
+    "log": "bootstrap-focused-57-pass.log",
+    "scope": "New 16 official payload roots plus bootstrap bindings/refusals and post-state payload identity. Before final genesis-parent/post-registry additions."
+  },
+  "finalAnchorScope": {
+    "chunk": "e7c1cf",
+    "exitCode": 0,
+    "passed": 4,
+    "durationMs": 139.188417,
+    "log": "bootstrap-anchor-scope.log",
+    "command": "node --test --test-name-pattern='bootstrap four|bootstrap initial snapshot|bootstrap post-transition|bootstrap execution payload binding' /Users/boris/Dev/blockchain-nano/tests/capella/isolated-fixture-domain.test.mjs"
+  },
+  "generatedActualFixture": false,
+  "nodeStarted": false,
+  "privateFilesRead": false,
+  "networkUsed": false,
+  "cryptographicSignaturesQualified": false,
+  "productionQualified": false
+}

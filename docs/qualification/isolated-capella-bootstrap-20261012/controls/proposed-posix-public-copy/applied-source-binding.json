@@ -1,0 +1,17 @@
+{
+  "format": "nano-isolated-public-copy-repair-source-binding-v1",
+  "before": {
+    "tests/test_capella_transition.cpp": "b081418827a1a1533d3dd84a6bbdde8c8d38384f340cc50735fd3b2da0cbcb6a",
+    "tests/support/isolated_capella_fixture.hpp": "c0266f63aa545f2f4258845661a2ad2a2c4b18826766375ccd58fcade38b137f"
+  },
+  "after": {
+    "tests/test_capella_transition.cpp": "e16d75e46b8efda8118f0752c06a0247a06b8cdd173526609bc521284a9f3355",
+    "tests/support/isolated_capella_fixture.hpp": "afc9356b01085e9b96f6cb705abfe7ce9c5de8d0a70dcb3d138ec82688a538af"
+  },
+  "qualifiedCoreSourceUnchanged": true,
+  "legacyCopyBranchUnchanged": true,
+  "newWriteUsesHeldDescriptorAndFsync": true,
+  "reason": "Observed copy_file refusal after identity reservation on Mac Docker bind; exact failing internal syscall unknown",
+  "networkQualified": false,
+  "productionQualified": false
+}

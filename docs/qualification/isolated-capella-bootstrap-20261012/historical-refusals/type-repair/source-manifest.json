@@ -1,0 +1,27 @@
+{
+  "format": "nano-isolated-exporter-compile-type-repair-v1",
+  "recordedAt": "2026-10-12T19:12:48.540248+00:00",
+  "revision": "b21432f591bc1235c5ab96d22e5e7ff975943662",
+  "failedHeaderSha256": "962118b1e18f2d1e8dbadbda34dffaa7d8891f588b645a710b191607a1152bbe",
+  "repairedHeaderSha256": "c0266f63aa545f2f4258845661a2ad2a2c4b18826766375ccd58fcade38b137f",
+  "unchangedCppSha256": "b081418827a1a1533d3dd84a6bbdde8c8d38384f340cc50735fd3b2da0cbcb6a",
+  "repairPatchSha256": "7a749c07c7bd7052d62ea9c616c57aa4de9496d206df98bfe16f5a3a251ac7a4",
+  "changedLines": 1,
+  "reason": "Explicit std::string extraction from Json publicKey in deposit history validation; vendor JSON C++20 ambiguous comparison refused first native compile.",
+  "sourceLine": 198,
+  "similarComparisonAudit": "All at() comparisons in new helper inspected: proposal map uses ConsensusRoot; sole JSON/string comparable repaired. New CPP isolated branches do not add direct Json/string comparisons.",
+  "failedBuildReportedByRoot": {
+    "originalToken": "87635/1",
+    "terminalToken": "1e8028",
+    "exitCode": 1,
+    "compileLogPath": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-fixture-exporter/native-build/compile.log",
+    "compileLogSha256": "ac6b5051b60e891ea75a7e5293f591fa698a4d0e88e0806c05bc3b0aad4e931b"
+  },
+  "preservedFailedSnapshot": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-fixture-exporter/sources/tests/support/isolated_capella_fixture.hpp",
+  "compileRunByRepairAgent": false,
+  "guardRunByRepairAgent": false,
+  "exportRunByRepairAgent": false,
+  "campaignSeedCreatedByRepairAgent": false,
+  "networkLaunchedByRepairAgent": false,
+  "productionQualified": false
+}

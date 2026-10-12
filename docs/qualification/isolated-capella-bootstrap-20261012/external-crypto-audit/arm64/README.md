@@ -1,0 +1,11 @@
+# Export réel ARM64 — vérification privée en lecture seule
+
+Le même helper natif déjà construit a contrôlé l’export réellement généré par l’exécutable Docker ARM64 corrigé. Invocation avec deux arguments au sens C++ (`argc=2`) : exécutable + chemin fixture, **aucune destination de journal**. Exit0, environ0,096s. Aucun nouveau helper compilé, aucun seed lu, aucune signature/callback, aucun journal ou nœud créé. Les entrées de cette fixture et l’intégralité des 65 paires de journaux natifs précédents sont identiques avant/après, ainsi que les quatre binaires parents.
+
+Résultats de `audit.log` : 65 scalaires BE et clés publiques/configurations concordants, 129 groupes BLS valides, 64 credentials de retrait, deux agrégats sync recomputés, quatre racines/signatures BLS correctes et transaction ECDSA/calldata/financement du dépôt concordants. Clés privées de retrait et sender absentes ; leur correspondance privée ne devient pas qualifiée.
+
+Manifest ARM64 : `5097671c5f118cb4cd59476e580556adfcca1ece3ac0e2be8bba01962513439f`. Campaign : `b337213eecf837842c7d2b6f9ecd079397f3c592f22715d46144f14954af4bc1`. Le checker reste lié au core natif SHA `27d821c50c5de9cccebe77aa539468297b9074d7b760d7969b9d4e3f124c80af`, sources core85eb492f. Ce résultat vérifie les données et signatures exportées sous Linux ; il ne prouve pas le décodage de clés dans un runtime Linux actif, les RPC, duties ou finalité. Les journaux natifs appartiennent au précédent domaine natif et ne doivent pas être associés à cette nouvelle campagne ARM64.
+
+`run-receipt.json` lie le helper inchangé, la sortie et les quatre hashes de sources du correctif : CPPb081/headerc026 avant, CPPe16d/headerafc9 après. Le texte actuel est exactement celui du patch proposé isolé pour les deux copies ; les modes historiques et l’early return anti-double-proposition n’ont pas changé. Le bloc de contrôles `isolated_fixture_guards` est identique, SHA `82be4492a2bf9447d993853f856885500dacaf7d68cad10d6fd639afbc94381b` : la preuve antérieure doit être réutilisée comme telle, aucun nouveau contrôle de ce bloc n’est annoncé ici.
+
+`readonly-input-bindings.private.json`, mode0600, contient uniquement les métadonnées et hashes des fichiers comparés, aucune copie du contenu privé. V37, réseau et production restent non qualifiés.

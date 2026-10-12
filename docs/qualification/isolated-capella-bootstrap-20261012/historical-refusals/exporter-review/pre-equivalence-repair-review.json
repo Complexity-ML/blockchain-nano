@@ -1,0 +1,43 @@
+{
+  "format": "nano-isolated-exporter-static-review-v1",
+  "reviewedAt": "2026-10-12T18:54:26.287659+00:00",
+  "revision": "b21432f591bc1235c5ab96d22e5e7ff975943662",
+  "repoReadOnly": true,
+  "signatureOrFixtureOrLedgerCreated": false,
+  "buildsOrTestsRun": false,
+  "files": [
+    {
+      "path": "tests/test_capella_transition.cpp",
+      "bytes": 527350,
+      "sha256": "53f1110096bd6482580eaec31b7a1c65e17656c6804b186dc93d507f9d61ff61",
+      "snapshot": "pre-equivalence-repair-source/tests/test_capella_transition.cpp"
+    },
+    {
+      "path": "tests/support/isolated_capella_fixture.hpp",
+      "bytes": 23372,
+      "sha256": "698a5ee9f19e5a399d9fdce327bed7b52ef3ab000fcd974e564bcec04a688041",
+      "snapshot": "pre-equivalence-repair-source/tests/support/isolated_capella_fixture.hpp"
+    },
+    {
+      "path": "tests/capella/isolated-fixture-domain.mjs",
+      "bytes": 19520,
+      "sha256": "b417f2aed783e1156817ad968389d912384093f2a0580053234860210fd19648",
+      "snapshot": "pre-equivalence-repair-source/tests/capella/isolated-fixture-domain.mjs"
+    }
+  ],
+  "finding": {
+    "id": "P1-isolated-fixture-pre-export-equivocation",
+    "status": "open-at-snapshot",
+    "file": "tests/test_capella_transition.cpp",
+    "line": 2558,
+    "evidence": "The isolated exporter calls scenario(false). At slot 1 scenario signs valid anchor via sign_message, then signs a message with state_root changed and a message with body changed under same proposer/slot/domain before configured_runtime return. Block rejection does not prevent those headers from constituting double-proposal evidence.",
+    "requiredRepair": "Skip adversarial signed controls only in explicit isolated exporter, preserve legacy default, and guard unique proposal root per slot and attestation vote per target for isolated keys."
+  },
+  "limitations": [
+    "Static review only. No new fixture, seed, ledger, signer invocation or qualification.",
+    "Independent public verifier does not prove BLS subgroup/aggregate algebra, ledger consumption or universal EVM replay protection.",
+    "New campaign cannot restore or requalify V37 lost historical journals."
+  ],
+  "command": "python3 read-only source snapshot and static review evidence",
+  "exit": 0
+}
