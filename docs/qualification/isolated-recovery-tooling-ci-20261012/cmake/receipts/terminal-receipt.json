@@ -1,0 +1,66 @@
+{
+  "format": "nano-isolated-recovery-tooling-cmake-qualification-v1",
+  "passed": true,
+  "baselineRevision": "7ea3649b9c0e016ac14250667a1409d01c853689",
+  "coreReference": "85eb492f641452c4746ee60f027eacefa775b0b0",
+  "networkReference": "4b2165b8a642811562bf8ddca0f0750fe1dcb079",
+  "cmakeBaselineSha256": "7d84ecccddd4112578c20af5f4deed0b819c662dbb9571d39f3bfaf14dbcc0bd",
+  "cmakeCurrentSha256": "20bff51087f0772434eac798fec4bf1eda4ca6b57c4b2b036d4ae2a24310f8f5",
+  "cmakeAddedBlockSha256": "a9de91519d74db4a4a09dc664531fb3b4ab36848285001ec1608801b2d9518a0",
+  "cmakeBlockRemovalReconstructsCore85Exactly": true,
+  "patchSha256": "53cd7780c08d9583832a9415a6af35c6e3198154eb29f47d33f369d05ca5a52f",
+  "productionAndNetworkSourceFiles": 1052,
+  "productionAndNetworkSourcesUnchanged": true,
+  "coreSourcesDiffExit0": true,
+  "networkSourcesDiffExit0": true,
+  "networkHasSeparateUnmodifiedCMakeProject": true,
+  "networkCodemodelReconfigured": false,
+  "existingMainCMakeTargetsUnchanged": 220,
+  "newMainCMakeTargets": 2,
+  "codemodelReportSha256": "473cfec88d6a1249f49f3923e852693a1eaa4037d34e90576e56915b67300f6d",
+  "qualifiedArchiveSha256": "53f4c33dcb68ca43fd054474b8cfa968f26b04f601f4a256996960bfa486a16b",
+  "reusedParentFilesUnchanged": 14,
+  "dockerImageSha256": "e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb",
+  "dockerSourceAndBuildVolumeReadOnly": true,
+  "dockerNetwork": "none",
+  "coreOrDependencyOrImageRebuilt": false,
+  "targetedExecutables": {
+    "nano-capella-isolated-bootstrap-audit": {
+      "sourceSha256": "a3e77dd3b57c2bb8e5b72939fcbe3b623043869230e92daa5fd482acd45ad1cd",
+      "binarySha256": "2f4aa94cd532f9c392db1fb2d437012a2f82e0c37763c0238646fe3574e8c4b8",
+      "compileExitCode": 0,
+      "linkExitCode": 0,
+      "faultInjectionLibraryLinked": false
+    },
+    "nano-capella-isolated-stopped-capture": {
+      "sourceSha256": "718761a654576f93bb0bbbf258f52015e1d10ba0544672556a189568ab3e1f55",
+      "binarySha256": "f056cd6a429e84632f427089824064bf05f2e38618bb196d259a93cdccfd9522",
+      "compileExitCode": 0,
+      "linkExitCode": 0,
+      "faultInjectionLibraryLinked": false
+    }
+  },
+  "ctest": {
+    "name": "consensus_isolated_stopped_capture_guards",
+    "timeoutSeconds": 15,
+    "labels": [
+      "qualification_consensus_recovery_tooling"
+    ],
+    "passed": true,
+    "testCount": 1,
+    "selfTest": {
+      "cases": 25,
+      "databaseAccessed": false,
+      "envRead": false,
+      "format": "nano-isolated-stopped-capture-self-test-v1",
+      "newSignaturesCreated": 0,
+      "passed": true,
+      "runtimeStarted": false
+    }
+  },
+  "noDatabaseOpened": true,
+  "noPrivateKeyOrEnvRead": true,
+  "noRuntimeOrNetworkStarted": true,
+  "noVpsEvidenceExported": true,
+  "scope": "CMake configuration equality and two targeted tool builds plus one pure schema CTest; no new production, consensus or database qualification"
+}

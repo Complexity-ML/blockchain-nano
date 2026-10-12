@@ -1,5 +1,8 @@
 # CI et limites de qualification
 
+État courant — 12 octobre : la sélection quotidienne est maintenant strictement13 CTests, incluant `consensus_isolated_stopped_capture_guards` (25 contrôles purs, timeout15s). Les deux auditeurs de reprise sont compilés par ce job ; les globs operations couvrent aussi `tests/capella/*.test.mjs` et `tools/bridge-source/*.test.mjs`, avec six fichiers de reprise obligatoires. Le registre refuse les skips et options inversant/ignorant un exit ; le JUnit exact et l’intégrité de la bibliothèque de fault-injection sont vérifiés. [Qualification locale ciblée et limites](qualification/isolated-recovery-tooling-ci-20261012/README.md). Les notes chronologiques ci-dessous décrivent leurs anciennes sélections ; aucune CI GitHub actuelle réussie ni exécution complète des13 checks n’est revendiquée.
+
+
 Le workflow `Nano qualification checks` ne déploie rien, ne publie aucune image et n'accède ni au VPS ni aux clés de validation. Il utilise des actions officielles épinglées par commit complet et `contents: read`, conformément aux [recommandations GitHub](https://docs.github.com/en/actions/reference/security/secure-use). Checkout ne conserve pas les credentials.
 
 Sur push main/PR touchant sources, dépendances, recettes de build, tests, scripts ou workflow, il exécute les tests autonomes de `scripts/operations/*.test.mjs`, `scripts/ci/*.test.mjs` et `tests/multihost/*.test.mjs`. Node est fixé à 25.9.0, version déjà qualifiée par les campagnes locales. Aucun daemon, Docker ou SSH vivant dans ce job. Logs et révision sont archivés sept jours, y compris en cas d'échec.

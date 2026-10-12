@@ -1,0 +1,246 @@
+✖ exact thirteen daily registrations validate without claiming full C++ qualification (34.331125ms)
+✖ missing, duplicated and foreign registrations cannot pass daily core gate (12.640625ms)
+✖ all CTest skip properties are refused even when value is false (6.005709ms)
+✖ explicit positive numeric budgets and unique properties are required (6.213041ms)
+✖ new capture command, helper name, label and exact fifteen-second budget are bound (5.247084ms)
+✖ daily shell refuses a green CTest exit with a skipped or incomplete JUnit report (31.428959ms)
+✖ operations job refuses a missing mandatory recovery test before globs can hide it (39.524292ms)
+✔ exact qualified baseline remains admissible without test-target exception (1.341417ms)
+✔ only the six reviewed private test lines are admitted for the reused candidate (0.319458ms)
+✔ changing production flags beside the test block is refused (0.821417ms)
+✔ duplicating, moving or weakening the reviewed block is refused (0.63825ms)
+✔ caller cannot select another baseline or supply an unchecked string (0.285458ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 5
+ℹ fail 7
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 195.731042
+
+✖ failing tests:
+
+test at scripts/ci/check-core.test.mjs:19:1
+✖ exact thirteen daily registrations validate without claiming full C++ qualification (34.331125ms)
+  Error: Command failed: cmake -DREGISTRY=/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-core-selection-e7bbYW/registry.json -P /Users/boris/Dev/blockchain-nano/scripts/ci/check-core.cmake
+  CMake Error at scripts/ci/check-core.cmake:24 (message):
+    Core CTest executable missing: core
+  
+  
+  
+      at genericNodeError (node:internal/errors:998:15)
+      at wrappedFn (node:internal/errors:543:14)
+      at ChildProcess.exithandler (node:child_process:417:12)
+      at ChildProcess.emit (node:events:509:20)
+      at maybeClose (node:internal/child_process:1108:16)
+      at ChildProcess._handle.onexit (node:internal/child_process:305:5) {
+    code: 1,
+    killed: false,
+    signal: null,
+    cmd: 'cmake -DREGISTRY=/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-core-selection-e7bbYW/registry.json -P /Users/boris/Dev/blockchain-nano/scripts/ci/check-core.cmake',
+    stdout: '',
+    stderr: 'CMake Error at scripts/ci/check-core.cmake:24 (message):\n  Core CTest executable missing: core\n\n\n'
+  }
+
+test at scripts/ci/check-core.test.mjs:20:1
+✖ missing, duplicated and foreign registrations cannot pass daily core gate (12.640625ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /count differs|names differ/. Input:
+  
+  'Error: Command failed: cmake -DREGISTRY=/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-core-selection-CjqOU0/registry.json -P /Users/boris/Dev/blockchain-nano/scripts/ci/check-core.cmake\n' +
+    'CMake Error at scripts/ci/check-core.cmake:24 (message):\n' +
+    '  Core CTest executable missing: core\n' +
+    '\n' +
+    '\n'
+  
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///Users/boris/Dev/blockchain-nano/scripts/ci/check-core.test.mjs:21:135
+      at async fixture (file:///Users/boris/Dev/blockchain-nano/scripts/ci/check-core.test.mjs:16:3)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Command failed: cmake -DREGISTRY=/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-core-selection-CjqOU0/registry.json -P /Users/boris/Dev/blockchain-nano/scripts/ci/check-core.cmake
+    CMake Error at scripts/ci/check-core.cmake:24 (message):
+      Core CTest executable missing: core
+    
+    
+    
+        at genericNodeError (node:internal/errors:998:15)
+        at wrappedFn (node:internal/errors:543:14)
+        at ChildProcess.exithandler (node:child_process:417:12)
+        at ChildProcess.emit (node:events:509:20)
+        at maybeClose (node:internal/child_process:1108:16)
+        at ChildProcess._handle.onexit (node:internal/child_process:305:5),
+    expected: /count differs|names differ/,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at scripts/ci/check-core.test.mjs:23:1
+✖ all CTest skip properties are refused even when value is false (6.005709ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /skip property forbidden/. Input:
+  
+  'Error: Command failed: cmake -DREGISTRY=/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-core-selection-WzA83t/registry.json -P /Users/boris/Dev/blockchain-nano/scripts/ci/check-core.cmake\n' +
+    'CMake Error at scripts/ci/check-core.cmake:24 (message):\n' +
+    '  Core CTest executable missing: core\n' +
+    '\n' +
+    '\n'
+  
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///Users/boris/Dev/blockchain-nano/scripts/ci/check-core.test.mjs:24:145
+      at async fixture (file:///Users/boris/Dev/blockchain-nano/scripts/ci/check-core.test.mjs:16:3)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Command failed: cmake -DREGISTRY=/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-core-selection-WzA83t/registry.json -P /Users/boris/Dev/blockchain-nano/scripts/ci/check-core.cmake
+    CMake Error at scripts/ci/check-core.cmake:24 (message):
+      Core CTest executable missing: core
+    
+    
+    
+        at genericNodeError (node:internal/errors:998:15)
+        at wrappedFn (node:internal/errors:543:14)
+        at ChildProcess.exithandler (node:child_process:417:12)
+        at ChildProcess.emit (node:events:509:20)
+        at maybeClose (node:internal/child_process:1108:16)
+        at ChildProcess._handle.onexit (node:internal/child_process:305:5),
+    expected: /skip property forbidden/,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at scripts/ci/check-core.test.mjs:26:1
+✖ explicit positive numeric budgets and unique properties are required (6.213041ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /timeout|duplicate property/. Input:
+  
+  'Error: Command failed: cmake -DREGISTRY=/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-core-selection-C5AyMy/registry.json -P /Users/boris/Dev/blockchain-nano/scripts/ci/check-core.cmake\n' +
+    'CMake Error at scripts/ci/check-core.cmake:24 (message):\n' +
+    '  Core CTest executable missing: core\n' +
+    '\n' +
+    '\n'
+  
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///Users/boris/Dev/blockchain-nano/scripts/ci/check-core.test.mjs:27:188
+      at async fixture (file:///Users/boris/Dev/blockchain-nano/scripts/ci/check-core.test.mjs:16:3)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Command failed: cmake -DREGISTRY=/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-core-selection-C5AyMy/registry.json -P /Users/boris/Dev/blockchain-nano/scripts/ci/check-core.cmake
+    CMake Error at scripts/ci/check-core.cmake:24 (message):
+      Core CTest executable missing: core
+    
+    
+    
+        at genericNodeError (node:internal/errors:998:15)
+        at wrappedFn (node:internal/errors:543:14)
+        at ChildProcess.exithandler (node:child_process:417:12)
+        at ChildProcess.emit (node:events:509:20)
+        at maybeClose (node:internal/child_process:1108:16)
+        at ChildProcess._handle.onexit (node:internal/child_process:305:5),
+    expected: /timeout|duplicate property/,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at scripts/ci/check-core.test.mjs:29:1
+✖ new capture command, helper name, label and exact fifteen-second budget are bound (5.247084ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Isolated capture self-test/. Input:
+  
+  'Error: Command failed: cmake -DREGISTRY=/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-core-selection-YPY9x0/registry.json -P /Users/boris/Dev/blockchain-nano/scripts/ci/check-core.cmake\n' +
+    'CMake Error at scripts/ci/check-core.cmake:24 (message):\n' +
+    '  Core CTest executable missing: core\n' +
+    '\n' +
+    '\n'
+  
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///Users/boris/Dev/blockchain-nano/scripts/ci/check-core.test.mjs:30:213
+      at async fixture (file:///Users/boris/Dev/blockchain-nano/scripts/ci/check-core.test.mjs:16:3)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Command failed: cmake -DREGISTRY=/var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T/nano-core-selection-YPY9x0/registry.json -P /Users/boris/Dev/blockchain-nano/scripts/ci/check-core.cmake
+    CMake Error at scripts/ci/check-core.cmake:24 (message):
+      Core CTest executable missing: core
+    
+    
+    
+        at genericNodeError (node:internal/errors:998:15)
+        at wrappedFn (node:internal/errors:543:14)
+        at ChildProcess.exithandler (node:child_process:417:12)
+        at ChildProcess.emit (node:events:509:20)
+        at maybeClose (node:internal/child_process:1108:16)
+        at ChildProcess._handle.onexit (node:internal/child_process:305:5),
+    expected: /Isolated capture self-test/,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at scripts/ci/check-core.test.mjs:35:1
+✖ daily shell refuses a green CTest exit with a skipped or incomplete JUnit report (31.428959ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+  
+  Caught error:
+  
+  Error: Command failed: bash /Users/boris/Dev/blockchain-nano/scripts/ci/core.sh build
+  fatal: ambiguous argument 'HEAD': unknown revision or path not in the working tree.
+  Use '--' to separate paths from revisions, like this:
+  'git <command> [<revision>...] -- [<file>...]'
+  
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///Users/boris/Dev/blockchain-nano/scripts/ci/check-core.test.mjs:49:3
+      at async fixture (file:///Users/boris/Dev/blockchain-nano/scripts/ci/check-core.test.mjs:16:3)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Command failed: bash /Users/boris/Dev/blockchain-nano/scripts/ci/core.sh build
+    fatal: ambiguous argument 'HEAD': unknown revision or path not in the working tree.
+    Use '--' to separate paths from revisions, like this:
+    'git <command> [<revision>...] -- [<file>...]'
+    
+        at genericNodeError (node:internal/errors:998:15)
+        at wrappedFn (node:internal/errors:543:14)
+        at ChildProcess.exithandler (node:child_process:417:12)
+        at ChildProcess.emit (node:events:509:20)
+        at maybeClose (node:internal/child_process:1108:16)
+        at ChildProcess._handle.onexit (node:internal/child_process:305:5),
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at scripts/ci/check-core.test.mjs:52:1
+✖ operations job refuses a missing mandatory recovery test before globs can hide it (39.524292ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+  
+  Caught error:
+  
+  Error: Command failed: sh /Users/boris/Dev/blockchain-nano/scripts/ci/operations.sh
+  fatal: ambiguous argument 'HEAD': unknown revision or path not in the working tree.
+  Use '--' to separate paths from revisions, like this:
+  'git <command> [<revision>...] -- [<file>...]'
+  
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///Users/boris/Dev/blockchain-nano/scripts/ci/check-core.test.mjs:54:2
+      at async fixture (file:///Users/boris/Dev/blockchain-nano/scripts/ci/check-core.test.mjs:16:3)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Command failed: sh /Users/boris/Dev/blockchain-nano/scripts/ci/operations.sh
+    fatal: ambiguous argument 'HEAD': unknown revision or path not in the working tree.
+    Use '--' to separate paths from revisions, like this:
+    'git <command> [<revision>...] -- [<file>...]'
+    
+        at genericNodeError (node:internal/errors:998:15)
+        at wrappedFn (node:internal/errors:543:14)
+        at ChildProcess.exithandler (node:child_process:417:12)
+        at ChildProcess.emit (node:events:509:20)
+        at maybeClose (node:internal/child_process:1108:16)
+        at ChildProcess._handle.onexit (node:internal/child_process:305:5),
+    operator: 'rejects',
+    diff: 'simple'
+  }

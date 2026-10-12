@@ -1,0 +1,167 @@
+{
+  "format": "nano-isolated-tools-build-ci-readonly-review-v1",
+  "stage": "before-minimal-cmake-integration",
+  "reviewedAt": "2026-10-12T21:37:15.479652+00:00",
+  "repositoryHead": "7ea3649b9c0e016ac14250667a1409d01c853689",
+  "productionCoreRevision": "85eb492f641452c4746ee60f027eacefa775b0b0",
+  "sourceBindings": [
+    {
+      "path": "CMakeLists.txt",
+      "sha256": "20bff51087f0772434eac798fec4bf1eda4ca6b57c4b2b036d4ae2a24310f8f5"
+    },
+    {
+      "path": ".github/workflows/qualification.yml",
+      "sha256": "13462a49934a79f3ea2008c159e6bf28f7674bc5ef845080339d5e4e821830dc"
+    },
+    {
+      "path": "scripts/ci/core.sh",
+      "sha256": "dd90a2f5423df89cd0161756cab2869564ab0172a85cebaf09e65d3dc54242fa"
+    },
+    {
+      "path": "scripts/ci/operations.sh",
+      "sha256": "20075798580bd2b9fe201f9607bf667c9e6c082c4ae0b1b6bb14ded88d946cfb"
+    },
+    {
+      "path": "scripts/ci/regression-inventory.mjs",
+      "sha256": "0aeadb0b723be5cacdb12e51cd1878faccb7deb8b8f606910af1a1b77d1fb686"
+    },
+    {
+      "path": "scripts/ci/verify-results.sh",
+      "sha256": "807a44ef2306ee7290fbf89a460c8621139a6d25681eaf00cb375de11067ffcf"
+    },
+    {
+      "path": "scripts/ci/docker-manifest.cmake",
+      "sha256": "ac50a82372203972cb31a7324bc5b96eda7d2fe37f221780c6bd08659ccb8257"
+    },
+    {
+      "path": "scripts/ci/full.sh",
+      "sha256": "5321b69624d4c3ca62043baa3f442ce7a17a328d5a4dac3c900d6fab7824e31c"
+    },
+    {
+      "path": "scripts/ci/full-docker.sh",
+      "sha256": "271a14f66e9ff05b2711d250f9c2db73f60aa7ea4914ebabf3844b4891214322"
+    },
+    {
+      "path": "tests/capella/isolated-three-node-run.mjs",
+      "sha256": "c86358bd9d158d4798343e9371e4759ac0d68241bb18e33e91ac45c7b270c123"
+    },
+    {
+      "path": "tests/capella/isolated-runtime-observation.mjs",
+      "sha256": "6c030aed2b3fd99d3d7bd975000fa4a05df9682d6ed0b56856955238d48a3046"
+    },
+    {
+      "path": "tests/capella/isolated-runtime-observation.test.mjs",
+      "sha256": "d1efdc6691db0101ab5ab2af7b35d1540581fd3ebf19ea165264b66155fe8b0a"
+    }
+  ],
+  "baselineCmakeSha256": "7d84ecccddd4112578c20af5f4deed0b819c662dbb9571d39f3bfaf14dbcc0bd",
+  "currentCmakeEqualsBaseline": false,
+  "observerTopLevelRegistrationsObservedStatically": 23,
+  "observerRuntimeExecutedByReviewer": false,
+  "findings": [
+    {
+      "id": "CI-ISOLATED-INCLUSION",
+      "priority": "P2",
+      "sourceReferences": [
+        "scripts/ci/core.sh:9",
+        "scripts/ci/core.sh:11",
+        "CMakeLists.txt:1626"
+      ],
+      "observation": "Current CMake has no explicit isolated audit/capture targets. Core CI builds only its previous 14 targets and runs 12 named CTests. New C++ sources trigger core CI but are not compiled by its target selection.",
+      "recommendation": "Add the two isolated audit/capture targets linked PRIVATE nano_core, build both in daily CI, select the new self-test CTest explicitly with reviewed timeout and tooling label. No actual DB/network fixture capture should become an automatic CI test."
+    },
+    {
+      "id": "CI-SKIP-AND-COMPLETE-RESULTS",
+      "priority": "P2",
+      "sourceReferences": [
+        "scripts/ci/core.sh:14",
+        "scripts/ci/core.sh:19",
+        "scripts/ci/regression-inventory.mjs:6",
+        "scripts/ci/verify-results.sh:8"
+      ],
+      "observation": "Daily core checks only selected name set. DISABLED, SKIP_RETURN_CODE or SKIP_REGULAR_EXPRESSION could retain a registration yet let CTest return zero; generated JUnit is not audited there. Full-run already has strict result and inventory guards.",
+      "recommendation": "Reject duplicate names and skip properties, require reviewed labels/timeouts and exact selected test count, then audit JUnit against selection. Preserve counts for subset separately from full registry."
+    },
+    {
+      "id": "CI-OBSERVER-REQUIRED-PRESENCE",
+      "priority": "P2",
+      "sourceReferences": [
+        "scripts/ci/operations.sh:7",
+        ".github/workflows/qualification.yml:47",
+        "tests/capella/isolated-runtime-observation.test.mjs:9"
+      ],
+      "observation": "The operations glob includes isolated observer/domain/planner tests, but omitting one file would silently remove it from the glob. The observer has 23 static top-level tests, not an independently executed result in this review.",
+      "recommendation": "Retain explicit required test paths and a scoped terminal result inventory/count with fail, skipped, cancelled and todo all zero. Keep Node tests in operations unless a clearly enabled CMake option includes Node prerequisites."
+    },
+    {
+      "id": "BUILD-FAULT-LIBRARY-BINDING",
+      "priority": "P2",
+      "sourceReferences": [
+        "CMakeLists.txt:1628",
+        "scripts/ci/full.sh:38",
+        "scripts/ci/docker-manifest.cmake:17"
+      ],
+      "observation": "Transition-test binaries link nano-test-sync-fault with a build-directory RPATH. Inherited standalone helper link templates also include it. Executable-only full manifests do not bind these runtime shared libraries; replacement can change test behavior without altering executable hash.",
+      "recommendation": "Link new RO helpers to nano_core only. For fault tests retain existing qualified linkage but pin the resolved shared-library path/hash and loader environment before/after. Docker ARM/AMD historical audit parent inventories already included the .so, so this is not withdrawal of those scoped proofs."
+    },
+    {
+      "id": "RUNNER-CMAKE-TEST-ONLY-DELTA",
+      "priority": "P2",
+      "sourceReferences": [
+        "tests/capella/isolated-three-node-run.mjs:87",
+        "CMakeLists.txt:23"
+      ],
+      "observation": "Runner currently requires an empty CMake diff against core85, correctly failing closed. A reviewed append-only test-target suffix will be rejected even if production sources and compiled binaries are identical.",
+      "recommendation": "Keep strict core source paths and pinned immutable binaries. Admit only exact externally approved CMake bytes and suffix, with a baseline-prefix equality check and production graph/flags proof. Never blanket-remove CMake from the source guard."
+    }
+  ],
+  "nonFindings": [
+    "RocksDB headers are already SYSTEM PUBLIC usage requirements of nano_core, line30; no current missing include defect. If a helper-specific explicit include is added, make it PRIVATE without changing production target requirements.",
+    "prepare_review proposed two PRIVATE nano_core-only helper targets and stopped-capture self-test (timeout15, tooling label), which does not itself alter production compiler/link settings.",
+    "Source src/include/cmake/third_party/CMakeLists current diff against core85 was empty at observation; current isolated controller modifications are tests-only.",
+    "CI core Ubuntu image does not install Node. A new unconditional find_program(node REQUIRED) would break current core configure; operations is already pinned Node25.9.0."
+  ],
+  "proposedPreflight": {
+    "format": "nano-reviewed-test-only-cmake-delta-v1",
+    "productionCoreRevision": "85eb492f641452c4746ee60f027eacefa775b0b0",
+    "baselineCmakeSha256": "7d84ecccddd4112578c20af5f4deed0b819c662dbb9571d39f3bfaf14dbcc0bd",
+    "externalPinsRequired": [
+      "approved whole CMake SHA256",
+      "approved append-only suffix SHA256",
+      "review receipt SHA256",
+      "production graph/flags receipt SHA256"
+    ],
+    "acceptance": [
+      "Read baseline from exact core revision and compare its SHA to literal external pin",
+      "Require current CMake equals baseline or starts with baseline bytes exactly",
+      "If suffix exists, require whole+suffix literal external reviewed hashes; no self-approved checkout value",
+      "Reviewed suffix may only configure new helper targets/tests with PRIVATE usage requirements; no global flags, production target mutation or extra include/function affecting nano/nano_core",
+      "Require unchanged src/include/cmake/third_party paths against core85 and unchanged relay sources against relay revision",
+      "Verify nano+nano-p2p and used core archive hashes from trusted architecture assets before runtime",
+      "Configure baseline/current graph with same compiler/environment in separate owned outputs, never qualified-parent directories; normalize only source/build-root prefixes",
+      "Compare nano_core/nano source lists, compile definitions/options/includes/language/compiler/link fragments/dependency closure; retain flags.make/link.txt or file-api codemodel SHA independently",
+      "Reject LD_PRELOAD/DYLD_INSERT_LIBRARIES/LD_LIBRARY_PATH or altered loader overrides not reviewed; resolve/hash test libraries when reused",
+      "Retain old production-source revision and new test-only repository revision separately; no qualification promotion of uncompiled source revision"
+    ],
+    "approvedIntegrationPatchYet": false,
+    "productionGraphComparedByReviewer": false
+  },
+  "scope": {
+    "repositoryModified": false,
+    "dbOpened": false,
+    "privateInputsRead": false,
+    "envRead": false,
+    "compilerRun": false,
+    "testsExecuted": false,
+    "nodesStarted": false,
+    "networkUsed": false,
+    "productionQualified": false,
+    "historicalProofsRetained": true
+  },
+  "remaining": [
+    "Minimal CMake patch not yet available for terminal review",
+    "Daily CI integration is proposed, not executed",
+    "GitHub runner billing limitation remains a separate production requirement",
+    "Actual duties, restoration/finality and production gates remain open"
+  ]
+}

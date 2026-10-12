@@ -1,0 +1,278 @@
+{
+  "format": "nano-isolated-ci-runner-final-independent-readonly-review-v1",
+  "reviewedAt": "2026-10-12T21:50:05.811437+00:00",
+  "reviewer": "evm_activation_review",
+  "ownerRoot": "root",
+  "repositoryHeadAtReview": "7ea3649b9c0e016ac14250667a1409d01c853689",
+  "coreRevision": "85eb492f641452c4746ee60f027eacefa775b0b0",
+  "sourceBindings": [
+    {
+      "path": "CMakeLists.txt",
+      "sha256": "20bff51087f0772434eac798fec4bf1eda4ca6b57c4b2b036d4ae2a24310f8f5",
+      "bytes": 152001,
+      "snapshot": "final-source/CMakeLists.txt"
+    },
+    {
+      "path": "scripts/ci/core.sh",
+      "sha256": "98031fa7e74f463f1d94fc811088c9af54ccee7c7811e1d0ce44476d3fda6e48",
+      "bytes": 9012,
+      "snapshot": "final-source/scripts/ci/core.sh"
+    },
+    {
+      "path": "scripts/ci/operations.sh",
+      "sha256": "ba68891dafbd92b415fcd3dd1462f661b722f8c6f128963e1138226c0e76adb4",
+      "bytes": 1060,
+      "snapshot": "final-source/scripts/ci/operations.sh"
+    },
+    {
+      "path": "scripts/ci/check-core.cmake",
+      "sha256": "47759343edd16c5a76b32f9af6de9fedfbc8ae21ab163bed660ec184d2c17efe",
+      "bytes": 3787,
+      "snapshot": "final-source/scripts/ci/check-core.cmake"
+    },
+    {
+      "path": "scripts/ci/check-core.test.mjs",
+      "sha256": "540238889c115e690918e31aca5e37f51f634588ce46ce58b81f82451d495daf",
+      "bytes": 6150,
+      "snapshot": "final-source/scripts/ci/check-core.test.mjs"
+    },
+    {
+      "path": "scripts/ci/verify-results.sh",
+      "sha256": "807a44ef2306ee7290fbf89a460c8621139a6d25681eaf00cb375de11067ffcf",
+      "bytes": 1443,
+      "snapshot": "final-source/scripts/ci/verify-results.sh"
+    },
+    {
+      "path": "tests/capella/isolated-core-source.mjs",
+      "sha256": "ce7008b041b0987d695447fc692b05b7c4b983054950d33640043f9928cde5c6",
+      "bytes": 2321,
+      "snapshot": "final-source/tests/capella/isolated-core-source.mjs"
+    },
+    {
+      "path": "tests/capella/isolated-core-source.test.mjs",
+      "sha256": "191ecb15cd7d6b8afab8b51b4acdad686fc02ef0a42235141a55d6515e75e908",
+      "bytes": 2821,
+      "snapshot": "final-source/tests/capella/isolated-core-source.test.mjs"
+    },
+    {
+      "path": "tests/capella/pinned-json-input.mjs",
+      "sha256": "0b79fe24242d2f01d54f955da914175b7eead2da072f97d1c4e17e9beb212e59",
+      "bytes": 2009,
+      "snapshot": "final-source/tests/capella/pinned-json-input.mjs"
+    },
+    {
+      "path": "tests/capella/pinned-json-input.test.mjs",
+      "sha256": "5c607c5086ab864d49fe611ff2794890299619c591ab8ebdcb8729530b0ebe28",
+      "bytes": 5984,
+      "snapshot": "final-source/tests/capella/pinned-json-input.test.mjs"
+    },
+    {
+      "path": "tests/capella/isolated-three-node-run.mjs",
+      "sha256": "87552067c2a3204180550cd07448c5e93251333d608a147ecae667c2c2bb510c",
+      "bytes": 28803,
+      "snapshot": "final-source/tests/capella/isolated-three-node-run.mjs"
+    },
+    {
+      "path": "tests/capella/isolated-runtime-observation.mjs",
+      "sha256": "6c030aed2b3fd99d3d7bd975000fa4a05df9682d6ed0b56856955238d48a3046",
+      "bytes": 6737,
+      "snapshot": "final-source/tests/capella/isolated-runtime-observation.mjs"
+    },
+    {
+      "path": "tests/capella/isolated-runtime-observation.test.mjs",
+      "sha256": "d1efdc6691db0101ab5ab2af7b35d1540581fd3ebf19ea165264b66155fe8b0a",
+      "bytes": 14240,
+      "snapshot": "final-source/tests/capella/isolated-runtime-observation.test.mjs"
+    },
+    {
+      "path": ".github/workflows/qualification.yml",
+      "sha256": "13462a49934a79f3ea2008c159e6bf28f7674bc5ef845080339d5e4e821830dc",
+      "bytes": 4252,
+      "snapshot": "final-source/.github/workflows/qualification.yml"
+    },
+    {
+      "path": "docs/qualification/isolated-recovery-tooling-ci-20261012/cmake/source-snapshots/CMakeLists.core85.txt",
+      "sha256": "7d84ecccddd4112578c20af5f4deed0b819c662dbb9571d39f3bfaf14dbcc0bd",
+      "bytes": 151400,
+      "snapshot": "final-source/docs/qualification/isolated-recovery-tooling-ci-20261012/cmake/source-snapshots/CMakeLists.core85.txt"
+    }
+  ],
+  "verdict": "no-static-blocker-after-targeted-corrections",
+  "blockingFindings": [],
+  "priorFindingsResolvedBySourceChanges": [
+    {
+      "id": "CI-ISOLATED-INCLUSION",
+      "sourceReferences": [
+        "scripts/ci/core.sh:13",
+        "scripts/ci/core.sh:15",
+        "scripts/ci/check-core.cmake:6"
+      ],
+      "verified": "Both new helpers explicitly built; exactly13 unique reviewed selected names including stopped capture guards."
+    },
+    {
+      "id": "CI-SKIP-AND-COMPLETE-RESULTS",
+      "sourceReferences": [
+        "scripts/ci/check-core.cmake:26",
+        "scripts/ci/check-core.cmake:39",
+        "scripts/ci/check-core.cmake:59",
+        "scripts/ci/core.sh:24"
+      ],
+      "verified": "Unique property names, positive typed numeric timeouts; DISABLED/SKIP_RETURN_CODE/SKIP_REGULAR_EXPRESSION/WILL_FAIL/PASS_REGULAR_EXPRESSION all refused. New helper --self-test has two command args, expected basename, label and timeout15. Selected JUnit checked by existing strict verify-results."
+    },
+    {
+      "id": "CI-OBSERVER-REQUIRED-PRESENCE",
+      "sourceReferences": [
+        "scripts/ci/operations.sh:8"
+      ],
+      "verified": "Required presence checks cover six critical test files, including previous isolated domain/planner and current observer/pinned/core-source/core-check tests. This proves file presence, not an arbitrary promise of all test semantics or total test counts."
+    },
+    {
+      "id": "BUILD-FAULT-LIBRARY-BINDING",
+      "sourceReferences": [
+        "scripts/ci/core.sh:3",
+        "scripts/ci/core.sh:20",
+        "scripts/ci/core.sh:25",
+        "scripts/ci/core.sh:94"
+      ],
+      "verified": "Unreviewed LD_PRELOAD/LD_LIBRARY_PATH/DYLD_INSERT_LIBRARIES/DYLD_LIBRARY_PATH rejected; exactly one build fault library required and SHA compared across CTest and after later export/helper checks. New RO helpers themselves are not fault-linked."
+    },
+    {
+      "id": "RUNNER-CMAKE-TEST-ONLY-DELTA",
+      "sourceReferences": [
+        "tests/capella/isolated-core-source.mjs:6",
+        "tests/capella/isolated-core-source.mjs:12",
+        "tests/capella/isolated-three-node-run.mjs:87"
+      ],
+      "verified": "Strict production source diff retained; CMake allows exact baseline7d84 or reviewed20bff with unique six-line insertiona9de. Removal equals baseline byte-for-byte, no arbitrary CMake waiver. New production graph equality pinned in independent graph receipt."
+    },
+    {
+      "id": "CI-SHALLOW-BASELINE",
+      "sourceReferences": [
+        "tests/capella/isolated-core-source.test.mjs:5"
+      ],
+      "verified": "Test module now reads packaged public core85 CMake bytes instead of requiring gitshow old commit. Packaged SHA7d84 verified by reviewer; no history-fetch dependence introduced."
+    },
+    {
+      "id": "MANDATORY-PUBLIC-PIN-MISSING",
+      "sourceReferences": [
+        "tests/capella/pinned-json-input.mjs:29",
+        "tests/capella/isolated-three-node-run.mjs:49",
+        "tests/capella/isolated-three-node-run.mjs:72",
+        "tests/capella/isolated-three-node-run.mjs:82"
+      ],
+      "verified": "Mandatory proof calls use readRequiredPinnedJson and cannot fall back to optional mode when dictionary SHA is absent. Reader hashes and parses the same copied Buffer; invalid pin refused before read. Index/preparation optional read explicitly returns provenance and caller compares captureIndexSha256."
+    }
+  ],
+  "selectedCTestNames": [
+    "core",
+    "chain",
+    "rpc_queue_expiry",
+    "ethereum_consensus_bls_verify",
+    "ethereum_consensus_bls_fast_aggregate",
+    "storage_execution_checkpoint",
+    "consensus_capella_payload_paired_state",
+    "consensus_capella_signed_transition",
+    "consensus_capella_clock_diagnostics",
+    "consensus_capella_published_signed_inventory",
+    "consensus_capella_publication_cancel_boundary",
+    "consensus_local_monotonic_time",
+    "consensus_isolated_stopped_capture_guards"
+  ],
+  "requiredOperationsTestPaths": [
+    "tests/capella/isolated-fixture-domain.test.mjs",
+    "tests/capella/isolated-bootstrap-plan.test.mjs",
+    "tests/capella/isolated-runtime-observation.test.mjs",
+    "tests/capella/pinned-json-input.test.mjs",
+    "tests/capella/isolated-core-source.test.mjs",
+    "scripts/ci/check-core.test.mjs"
+  ],
+  "mandatoryReaderCallSites": [
+    {
+      "line": 49,
+      "source": "const pins=(await readRequiredPinnedJson(join(work,'pins-before-copy.json'),'766d2bbe7eb48fbfa88f38b503dd8404eb3bc2dc23637bf8c5c15d3dad832af7')).value;"
+    },
+    {
+      "line": 54,
+      "source": "plan=(await readRequiredPinnedJson(join(work,'audit-inputs/plan.json'),pins.planDocumentSha256)).value;"
+    },
+    {
+      "line": 72,
+      "source": "const capture=(await readRequiredPinnedJson(path,index.captures[owner].sha256)).value;assert.equal(capture.passed,true);assert.equal(capture.owner,owner);assert.equal(capture.campaignId,plan.campaignId);assert.equal(capture.manifestSha256,pins.fixtureManifestSha256);"
+    },
+    {
+      "line": 74,
+      "source": "const destPath=join(work,owner+'-restored-capture.public.json');const dest=(await readRequiredPinnedJson(destPath,prepared.destinationCaptureHashes[owner])).value;"
+    },
+    {
+      "line": 82,
+      "source": "assets=(await readRequiredPinnedJson(join(evidence,'isolated-runtime-assets-20261012/runtime-assets-manifest.json'),'ab31dd791b3e761808bbe889e95a5f902a4bf000fed4feba4ea7c84fab11b6af')).value;"
+    },
+    {
+      "line": 85,
+      "source": "const sanity=(await readRequiredPinnedJson(sanityBinding.receipt,sanityBinding.receiptSha256)).value;"
+    },
+    {
+      "line": 136,
+      "source": "const template=(await readRequiredPinnedJson(join(fixture,'node-0.json'),'5f89362cd3d7119b16f83ded46a5c8f1fd23668268c1745ebf9ac2a6a9136f62')).value;"
+    }
+  ],
+  "optionalProvenanceReaderCallSites": [
+    {
+      "line": 66,
+      "source": "const indexInput=await readPinnedJson(join(evidence,'isolated-stopped-capture-20261012/capture-index.json'));"
+    },
+    {
+      "line": 67,
+      "source": "const prepared=(await readPinnedJson(join(work,'full-restore-preparation.json'))).value;assert.equal(prepared.captureIndexSha256,indexInput.sha256);"
+    }
+  ],
+  "readerScope": {
+    "mandatoryCallSiteCount": 7,
+    "optionalCallSiteCount": 2,
+    "sourceAndDestinationCallSitesLoopAcrossThreeOwners": true,
+    "initialUsesSameBufferHashAndParse": true,
+    "broadAllEightInputsClaimMade": false,
+    "returnedBufferParsingByteLimit": 16777216,
+    "boundedFilesystemAllocationClaimMade": false,
+    "optionalPinEstablishesAuthenticity": false
+  },
+  "cmakeGraphProof": {
+    "path": "cmake-graph-independent-review.json",
+    "sha256": "a0a08020a8d7ad0ec2dcfa5f49f2ea9ce313bc948751298c69a63692beafc2cf",
+    "existingTargetsUnchanged": 220,
+    "addedTargets": 2,
+    "nanoCoreAndNanoGeneratedFlagsAndLinksByteEqual": true
+  },
+  "verificationPerformedByReviewer": {
+    "staticSourceReview": true,
+    "packagedBaselineHashChecked": true,
+    "localCmakePropertyDocumentationRead": true,
+    "repositoryEdited": false,
+    "compilerOrConfigureRun": false,
+    "testsRun": false,
+    "databaseOpened": false,
+    "envOrPrivateKeysRead": false,
+    "privateVpsEvidenceReadOrExported": false,
+    "networkUsed": false,
+    "nodesStarted": false
+  },
+  "historicalIssuesPreserved": [
+    "Initial daily CI selection had only12 checks",
+    "Initial operations presence requirement omitted older isolated domain/planner tests",
+    "Initial checker admitted positive-result inversion/regex overrides",
+    "Initial source-test module depended on absent old Git history in shallow CI"
+  ],
+  "remainingScopeBoundaries": [
+    "Root test execution receipts are separate from this static review",
+    "Actual GitHub workflow run and release qualification remain unproven here, billing limitation is outside these changes",
+    "Existing full.sh/full-docker.sh executable-only manifests do not gain the new daily-core shared-library binding automatically",
+    "File-presence gates do not claim unchanged arbitrary test semantics or a complete Ethereum production qualification",
+    "Provenance-only aggregate index/preparation still requires caller-controlled external authority; no global authentication or proof against privileged same-UID manipulation",
+    "Production source/bin remains core85; new test-only HEAD is not claimed as a recompiled production engine"
+  ],
+  "ciWorkflowExecutedByReviewer": false,
+  "dutiesResumed": false,
+  "sharedFinalityProgressionProven": false,
+  "V37Restored": false,
+  "productionQualified": false
+}

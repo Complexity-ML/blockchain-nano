@@ -1,0 +1,169 @@
+{
+  "artifacts": [
+    {
+      "path": "nano-capella-isolated-stopped-capture"
+    }
+  ],
+  "compileGroups": [
+    {
+      "compileCommandFragments": [
+        {
+          "fragment": "-O3 -DNDEBUG -std=gnu++20"
+        }
+      ],
+      "defines": [
+        {
+          "define": "MCL_BINT_ASM_X64=0"
+        },
+        {
+          "define": "MCL_DONT_USE_XBYAK"
+        },
+        {
+          "define": "MCL_FP_BIT=384"
+        },
+        {
+          "define": "MCL_FR_BIT=256"
+        },
+        {
+          "define": "MCL_MSM=0"
+        },
+        {
+          "define": "MCL_PORTABLE=1"
+        },
+        {
+          "define": "MCL_USE_LLVM=1"
+        }
+      ],
+      "includes": [
+        {
+          "path": "/work/include"
+        },
+        {
+          "path": "/work/third_party"
+        },
+        {
+          "path": "/work/third_party/mcl/include"
+        }
+      ],
+      "language": "CXX",
+      "languageStandard": {
+        "backtraces": [
+          1
+        ],
+        "standard": "20"
+      },
+      "sourceIndexes": [
+        0
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "id": "nano_core::@6890427a1f51a3e7e1df"
+    },
+    {
+      "id": "nano_blst::@ad1ca2665a3846539307"
+    },
+    {
+      "id": "nano_ckzg::@ad1ca2665a3846539307"
+    },
+    {
+      "id": "secp256k1::@8066c91d05ed55161706"
+    },
+    {
+      "id": "mcl_st::@5f4955cc44f10fb0ae53"
+    }
+  ],
+  "id": "nano-capella-isolated-stopped-capture::@6890427a1f51a3e7e1df",
+  "link": {
+    "commandFragments": [
+      {
+        "fragment": "-O3 -DNDEBUG",
+        "role": "flags"
+      },
+      {
+        "fragment": "",
+        "role": "flags"
+      },
+      {
+        "fragment": "third_party/mcl/bint64.o",
+        "role": "libraries"
+      },
+      {
+        "fragment": "third_party/mcl/base64.o",
+        "role": "libraries"
+      },
+      {
+        "fragment": "libnano_core.a",
+        "role": "libraries"
+      },
+      {
+        "fragment": "third_party/ckzg/libnano_ckzg.a",
+        "role": "libraries"
+      },
+      {
+        "fragment": "third_party/ckzg/libnano_blst.a",
+        "role": "libraries"
+      },
+      {
+        "fragment": "third_party/secp256k1/lib/libsecp256k1.a",
+        "role": "libraries"
+      },
+      {
+        "fragment": "/usr/lib/aarch64-linux-gnu/libgmpxx.so",
+        "role": "libraries"
+      },
+      {
+        "fragment": "/usr/lib/aarch64-linux-gnu/libgmp.so",
+        "role": "libraries"
+      },
+      {
+        "fragment": "/usr/lib/aarch64-linux-gnu/libssl.so",
+        "role": "libraries"
+      },
+      {
+        "fragment": "/usr/lib/aarch64-linux-gnu/libcrypto.so",
+        "role": "libraries"
+      },
+      {
+        "fragment": "/usr/lib/aarch64-linux-gnu/libicuuc.so",
+        "role": "libraries"
+      },
+      {
+        "fragment": "-ldl",
+        "role": "libraries"
+      },
+      {
+        "fragment": "/usr/lib/aarch64-linux-gnu/librocksdb.so",
+        "role": "libraries"
+      },
+      {
+        "fragment": "lib/libmcl.a",
+        "role": "libraries"
+      }
+    ],
+    "language": "CXX"
+  },
+  "name": "nano-capella-isolated-stopped-capture",
+  "nameOnDisk": "nano-capella-isolated-stopped-capture",
+  "paths": {
+    "build": ".",
+    "source": "."
+  },
+  "sourceGroups": [
+    {
+      "name": "Source Files",
+      "sourceIndexes": [
+        0
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "compileGroupIndex": 0,
+      "path": "tests/capella/isolated_stopped_capture.cpp",
+      "sourceGroupIndex": 0
+    }
+  ],
+  "type": "EXECUTABLE"
+}

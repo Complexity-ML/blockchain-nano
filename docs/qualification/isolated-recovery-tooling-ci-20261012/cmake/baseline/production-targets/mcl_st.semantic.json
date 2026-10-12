@@ -1,0 +1,163 @@
+{
+  "archive": {},
+  "artifacts": [
+    {
+      "path": "lib/libmcl.a"
+    }
+  ],
+  "compileGroups": [
+    {
+      "compileCommandFragments": [
+        {
+          "fragment": "-O3 -DNDEBUG -std=gnu++20 -fPIC"
+        },
+        {
+          "fragment": "-Wall"
+        },
+        {
+          "fragment": "-Wextra"
+        },
+        {
+          "fragment": "-Wformat=2"
+        },
+        {
+          "fragment": "-Wcast-qual"
+        },
+        {
+          "fragment": "-Wcast-align"
+        },
+        {
+          "fragment": "-Wwrite-strings"
+        },
+        {
+          "fragment": "-Wfloat-equal"
+        },
+        {
+          "fragment": "-Wpointer-arith"
+        },
+        {
+          "fragment": "-DNDEBUG"
+        },
+        {
+          "fragment": "-O3"
+        },
+        {
+          "fragment": "-fPIC"
+        }
+      ],
+      "defines": [
+        {
+          "define": "MCL_BINT_ASM_X64=0"
+        },
+        {
+          "define": "MCL_DONT_USE_XBYAK"
+        },
+        {
+          "define": "MCL_FP_BIT=384"
+        },
+        {
+          "define": "MCL_FR_BIT=256"
+        },
+        {
+          "define": "MCL_MSM=0"
+        },
+        {
+          "define": "MCL_PORTABLE=1"
+        },
+        {
+          "define": "MCL_USE_LLVM=1"
+        }
+      ],
+      "includes": [
+        {
+          "path": "/work/third_party/mcl/include"
+        }
+      ],
+      "language": "CXX",
+      "languageStandard": {
+        "backtraces": [
+          1
+        ],
+        "standard": "20"
+      },
+      "sourceIndexes": [
+        0
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "id": "gen_bint.o::@5f4955cc44f10fb0ae53"
+    },
+    {
+      "id": "gen_base.o::@5f4955cc44f10fb0ae53"
+    }
+  ],
+  "id": "mcl_st::@5f4955cc44f10fb0ae53",
+  "install": {
+    "destinations": [
+      {
+        "path": "lib"
+      }
+    ],
+    "prefix": {
+      "path": "/usr/local"
+    }
+  },
+  "name": "mcl_st",
+  "nameOnDisk": "libmcl.a",
+  "paths": {
+    "build": "third_party/mcl",
+    "source": "third_party/mcl"
+  },
+  "sourceGroups": [
+    {
+      "name": "Source Files",
+      "sourceIndexes": [
+        0
+      ]
+    },
+    {
+      "name": "Object Files",
+      "sourceIndexes": [
+        1,
+        2
+      ]
+    },
+    {
+      "name": "CMake Rules",
+      "sourceIndexes": [
+        3,
+        4
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "compileGroupIndex": 0,
+      "path": "third_party/mcl/src/fp.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "isGenerated": true,
+      "path": "/outputs/third_party/mcl/bint64.o",
+      "sourceGroupIndex": 1
+    },
+    {
+      "isGenerated": true,
+      "path": "/outputs/third_party/mcl/base64.o",
+      "sourceGroupIndex": 1
+    },
+    {
+      "isGenerated": true,
+      "path": "/outputs/third_party/mcl/bint64.o.rule",
+      "sourceGroupIndex": 2
+    },
+    {
+      "isGenerated": true,
+      "path": "/outputs/third_party/mcl/base64.o.rule",
+      "sourceGroupIndex": 2
+    }
+  ],
+  "type": "STATIC_LIBRARY"
+}

@@ -1,0 +1,110 @@
+{
+  "format": "nano-isolated-recovery-tooling-ci-targeted-controls-v1",
+  "recordedAt": "2026-10-12T21:49:05.340547+00:00",
+  "priorHead": "7ea3649b9c0e016ac14250667a1409d01c853689",
+  "finalSourceBindings": [
+    {
+      "path": "CMakeLists.txt",
+      "bytes": 152001,
+      "sha256": "20bff51087f0772434eac798fec4bf1eda4ca6b57c4b2b036d4ae2a24310f8f5"
+    },
+    {
+      "path": "scripts/ci/core.sh",
+      "bytes": 9012,
+      "sha256": "98031fa7e74f463f1d94fc811088c9af54ccee7c7811e1d0ce44476d3fda6e48"
+    },
+    {
+      "path": "scripts/ci/operations.sh",
+      "bytes": 1060,
+      "sha256": "ba68891dafbd92b415fcd3dd1462f661b722f8c6f128963e1138226c0e76adb4"
+    },
+    {
+      "path": "scripts/ci/check-core.cmake",
+      "bytes": 3787,
+      "sha256": "47759343edd16c5a76b32f9af6de9fedfbc8ae21ab163bed660ec184d2c17efe"
+    },
+    {
+      "path": "scripts/ci/check-core.test.mjs",
+      "bytes": 6150,
+      "sha256": "540238889c115e690918e31aca5e37f51f634588ce46ce58b81f82451d495daf"
+    },
+    {
+      "path": "tests/capella/isolated-three-node-run.mjs",
+      "bytes": 28803,
+      "sha256": "87552067c2a3204180550cd07448c5e93251333d608a147ecae667c2c2bb510c"
+    },
+    {
+      "path": "tests/capella/isolated-core-source.mjs",
+      "bytes": 2321,
+      "sha256": "ce7008b041b0987d695447fc692b05b7c4b983054950d33640043f9928cde5c6"
+    },
+    {
+      "path": "tests/capella/isolated-core-source.test.mjs",
+      "bytes": 2821,
+      "sha256": "191ecb15cd7d6b8afab8b51b4acdad686fc02ef0a42235141a55d6515e75e908"
+    },
+    {
+      "path": "tests/capella/pinned-json-input.mjs",
+      "bytes": 2009,
+      "sha256": "0b79fe24242d2f01d54f955da914175b7eead2da072f97d1c4e17e9beb212e59"
+    },
+    {
+      "path": "tests/capella/pinned-json-input.test.mjs",
+      "bytes": 5984,
+      "sha256": "5c607c5086ab864d49fe611ff2794890299619c591ab8ebdcb8729530b0ebe28"
+    }
+  ],
+  "sourceChanges": "two CMake private helper targets; CTest registration; strict daily CI selection/result gates; one-buffer required proof inputs; exact reviewed CMake-only runtime exception",
+  "productionCoreReference": "85eb492f641452c4746ee60f027eacefa775b0b0",
+  "relayReference": "4b2165b8a642811562bf8ddca0f0750fe1dcb079",
+  "productionImplementationUnchanged": true,
+  "relayUnchanged": true,
+  "controls": [
+    {
+      "log": "ci-controls/new-ci-source-guards.log",
+      "outerExecChunk": "480826",
+      "outerExecExit": 0,
+      "nodeExitNotCapturedBecauseFinalCatMaskedIt": true,
+      "reportedTests": 12,
+      "reportedPass": 5,
+      "reportedFail": 7,
+      "result": "FAILED; seven fixtures refused for missing /bin/true or empty Git HEAD; five CMake binding controls passed; not a successful overall run"
+    },
+    {
+      "log": "ci-controls/corrected-ci-guards.log",
+      "toolChunk": "328a31",
+      "exit": 0,
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "scope": "Corrected CMake registry controls and injected shell/JUnit controls; no C++ runtime; before final WILL_FAIL/PASS_REGULAR_EXPRESSION refusal addition"
+    },
+    {
+      "log": "ci-controls/green-override-guards.log",
+      "toolChunk": "b0fc3d",
+      "exit": 0,
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "scope": "Two selected tests on final gate: exact positive registry again and new inversion/ignored exit properties refusal. Overlaps one previous test; do not sum as nine distinct tests."
+    },
+    {
+      "log": "ci-controls/shallow-safe-source-guards.log",
+      "toolChunk": "4d8aec",
+      "exit": 0,
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "scope": "Only two positive byte-binding tests rechecked after replacing git-show test input with pinned packaged public baseline. Five original bodies unchanged."
+    }
+  ],
+  "separateCppCtest": "cmake/receipts/terminal-receipt.json; one actual ARM64 CTest with25 pure cases. Actual JUnit not emitted; no recreation claimed.",
+  "separateInputTests": "pinned-inputs/targeted-receipt.json13 new cases; required-pin-repair/new-two-receipt.json2 additional selected cases after append-only wrapper; prior13 implementation and bodies unchanged.",
+  "old23ObserverTestsRepeated": false,
+  "fullDailyCoreJobExecuted": false,
+  "currentGitHubCiExecuted": false,
+  "fullRuntimeRestoreExecuted": false,
+  "privateVpsProofsTransferred": false,
+  "productionQualified": false,
+  "reviewIndependentFromTeamStillOpen": true
+}

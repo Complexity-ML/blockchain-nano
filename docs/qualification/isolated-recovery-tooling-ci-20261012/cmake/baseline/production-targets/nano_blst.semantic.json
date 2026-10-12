@@ -1,0 +1,82 @@
+{
+  "archive": {},
+  "artifacts": [
+    {
+      "path": "third_party/ckzg/libnano_blst.a"
+    }
+  ],
+  "compileGroups": [
+    {
+      "compileCommandFragments": [
+        {
+          "fragment": "-O3 -DNDEBUG -fPIC"
+        },
+        {
+          "fragment": "-O2"
+        },
+        {
+          "fragment": "-fno-builtin"
+        }
+      ],
+      "defines": [
+        {
+          "define": "__BLST_PORTABLE__"
+        }
+      ],
+      "language": "C",
+      "sourceIndexes": [
+        0
+      ]
+    },
+    {
+      "compileCommandFragments": [
+        {
+          "fragment": "-O3 -DNDEBUG -fPIC"
+        }
+      ],
+      "defines": [
+        {
+          "define": "__BLST_PORTABLE__"
+        }
+      ],
+      "language": "ASM",
+      "sourceIndexes": [
+        1
+      ]
+    }
+  ],
+  "id": "nano_blst::@ad1ca2665a3846539307",
+  "name": "nano_blst",
+  "nameOnDisk": "libnano_blst.a",
+  "paths": {
+    "build": "third_party/ckzg",
+    "source": "third_party/ckzg"
+  },
+  "sourceGroups": [
+    {
+      "name": "Source Files",
+      "sourceIndexes": [
+        0
+      ]
+    },
+    {
+      "name": "",
+      "sourceIndexes": [
+        1
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "compileGroupIndex": 0,
+      "path": "third_party/ckzg/blst/src/server.c",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 1,
+      "path": "third_party/ckzg/blst/build/assembly.S",
+      "sourceGroupIndex": 1
+    }
+  ],
+  "type": "STATIC_LIBRARY"
+}

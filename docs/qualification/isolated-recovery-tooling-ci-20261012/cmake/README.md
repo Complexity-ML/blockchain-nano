@@ -1,0 +1,15 @@
+# CMake recovery-tool inclusion
+
+This package preserves the local ARM64 Docker evidence for adding `nano-capella-isolated-bootstrap-audit` and `nano-capella-isolated-stopped-capture` to CMake, each linked privately to `nano_core`. The one new CTest is `consensus_isolated_stopped_capture_guards`, running `--self-test` with a 15-second timeout and label `qualification_consensus_recovery_tooling`.
+
+`receipts/terminal-receipt.json` records two successful targeted compilations/links and one actual passing CTest with 25 pure checks. The helper opened no database, read no private environment, created no signatures and started no runtime. The bootstrap audit executable was compiled only. No core, library or image was rebuilt.
+
+The complete normalized **target** graphs include all 220 baseline and 222 current CMake target objects. Only structured `backtrace` and `backtraceGraph` origin-line metadata were removed. Every existing target's sources, definitions, include paths, options, dependencies, artifacts and linker/archive descriptions remain identical. The two tool targets are the only additions. Raw File API indices and top-level codemodels, per-target raw-origin hashes and normalized production target objects are also retained. This is not a comparison of omitted test-directory metadata or arbitrary generated files.
+
+The production dependency closure of `nano` and `nano_core` contains nine targets. Available generated `flags.make` and `link.txt` files, plus the two utility targets' generated build rules, were copied for both configurations and are byte-identical. `network/CMakeLists.txt` is a separate project; its sources remain equal to relay4b2165, but no separate P2P codemodel was reconfigured in this lot.
+
+`baseline/CMakeLists.txt`, `current/CMakeLists.txt` and the exact six-line block permit byte-for-byte review. The baseline SHA256 is `7d84ecccddd4112578c20af5f4deed0b819c662dbb9571d39f3bfaf14dbcc0bd`; current is `20bff51087f0772434eac798fec4bf1eda4ca6b57c4b2b036d4ae2a24310f8f5`. Removing the unique block reconstructs the core85 file exactly. The block SHA256 is `a9de91519d74db4a4a09dc664531fb3b4ab36848285001ec1608801b2d9518a0`; it must not be treated as an unrestricted CMake preflight exception.
+
+The actual CTest registry JSON, verbose output, exit receipt and `ctest/LastTest.log` are included. **No actual JUnit was emitted:** the original command did not specify `--output-junit`. No test was rerun and no XML result was synthesized. Commands, outputs, parent hashes and source manifests are under `receipts/`; `copy-provenance.json` binds copied bytes, and `file-manifest.json` hashes every packaged file other than itself.
+
+All content comes from already retained public source/build evidence. Packaging performed no compilation, test, signing, database audit, runtime or network action. No stopped database, raw snapshot, private environment, seed or VPS-derived proof is included. This package qualifies CMake/tool integration only and adds no production or consensus qualification.

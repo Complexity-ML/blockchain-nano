@@ -1,0 +1,17 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index e1063ca6..129d3c09 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -65,6 +65,12 @@ set_tests_properties(consensus_private_capture_resource_budget PROPERTIES TIMEOU
+ add_executable(nano-capella-paused-capture tests/capella/paused_capture.cpp)
+ target_link_libraries(nano-capella-paused-capture PRIVATE nano_core)
+ target_include_directories(nano-capella-paused-capture PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ckzg/blst/bindings")
++add_executable(nano-capella-isolated-bootstrap-audit tests/capella/isolated_bootstrap_audit.cpp)
++target_link_libraries(nano-capella-isolated-bootstrap-audit PRIVATE nano_core)
++add_executable(nano-capella-isolated-stopped-capture tests/capella/isolated_stopped_capture.cpp)
++target_link_libraries(nano-capella-isolated-stopped-capture PRIVATE nano_core)
++add_test(NAME consensus_isolated_stopped_capture_guards COMMAND nano-capella-isolated-stopped-capture --self-test)
++set_tests_properties(consensus_isolated_stopped_capture_guards PROPERTIES TIMEOUT 15 LABELS qualification_consensus_recovery_tooling)
+ add_executable(nano-capella-deposit-audit tests/capella/deposit_audit.cpp)
+ target_link_libraries(nano-capella-deposit-audit PRIVATE nano_core)
+ target_include_directories(nano-capella-deposit-audit PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ckzg/blst/bindings")

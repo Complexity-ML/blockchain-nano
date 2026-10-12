@@ -1,0 +1,32 @@
+{
+  "format": "nano-pinned-json-controller-integration-readonly-review-v1",
+  "reviewedAt": "2026-10-12T21:43:33.133639+00:00",
+  "runnerSha256": "7fac828b3f924ac4e549e4cf947e6a18a2a12c8bb591bedec9f07ac29445c143",
+  "status": "REQUIRED_DYNAMIC_PIN_PRESENCE_PENDING_ROOT_CORRECTION",
+  "fixedOriginalSplitReadCase": [
+    "Constant bootstrap pins, plan, assets and template use readPinnedJson.",
+    "Source/destination reports use one buffer; index is immediately tied to external preparation returned SHA.",
+    "Initial and private capsule paths already hash and parse one buffer."
+  ],
+  "newIntegrationFinding": {
+    "sourceLines": "72,74,85",
+    "reason": "Dynamic expected hashes can be undefined when a hash field is missing. readPinnedJson intentionally treats undefined as the optional no-pin mode, so these call sites silently lose mandatory authentication.",
+    "cases": [
+      "index.captures[owner] exists but has no sha256.",
+      "prepared.destinationCaptureHashes has no owner pin.",
+      "sanityBinding has no receiptSha256."
+    ],
+    "beforeIntegrationBehavior": "Old assert.equal(actualHash,undefined) refused.",
+    "safeCorrection": "Validate mandatory expected SHA at each pinned call, or use a required-pin wrapper; reserve no-pin calls for explicit index/preparation trust boundary.",
+    "noCoreBypassDemonstrated": true
+  },
+  "remainingHashParsePairs": "No other meaningful hash-then-independent-parse pair found among the reviewed pinned JSON calls. Unpinned external audit/copy/key proof reports remain external trusted inputs, not cryptographic authorities.",
+  "cmakeSourceGuard": {
+    "moduleSha256": "ce7008b041b0987d695447fc692b05b7c4b983054950d33640043f9928cde5c6",
+    "review": "Independent fixed baseline/current/insertion SHA pins, exact unique approved test-target block, and exact remainder equality to baseline. No broad deletion/fallback accepted."
+  },
+  "sourceModifiedByReviewer": false,
+  "testsBuildRuntimeOrRemoteMutationExecutedByReviewer": false,
+  "privateVpsEnvDatabasesRead": false,
+  "productionQualified": false
+}

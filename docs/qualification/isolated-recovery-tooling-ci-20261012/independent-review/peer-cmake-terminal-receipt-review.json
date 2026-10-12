@@ -1,0 +1,51 @@
+{
+  "format": "nano-peer-cmake-terminal-receipt-readonly-review-v1",
+  "peerReceiptPath": "qualification-resume-20261012/isolated-recovery-tooling-cmake-20261012/receipts/terminal-receipt.json",
+  "peerReceiptSha256": "8b46829dddad94d854cb62c71dc8c4e241ea39f32d65dd111d85dbf959f84a94",
+  "publicReceiptInspected": true,
+  "peerPassedClaimsConsistent": true,
+  "productionSourceCore85PreservedClaim": true,
+  "coreRecompiled": false,
+  "observerCompiledOrRunByReviewer": false,
+  "newTargetedExecutables": {
+    "nano-capella-isolated-bootstrap-audit": {
+      "sourceSha256": "a3e77dd3b57c2bb8e5b72939fcbe3b623043869230e92daa5fd482acd45ad1cd",
+      "binarySha256": "2f4aa94cd532f9c392db1fb2d437012a2f82e0c37763c0238646fe3574e8c4b8",
+      "compileExitCode": 0,
+      "linkExitCode": 0,
+      "faultInjectionLibraryLinked": false
+    },
+    "nano-capella-isolated-stopped-capture": {
+      "sourceSha256": "718761a654576f93bb0bbbf258f52015e1d10ba0544672556a189568ab3e1f55",
+      "binarySha256": "f056cd6a429e84632f427089824064bf05f2e38618bb196d259a93cdccfd9522",
+      "compileExitCode": 0,
+      "linkExitCode": 0,
+      "faultInjectionLibraryLinked": false
+    }
+  },
+  "ctest": {
+    "name": "consensus_isolated_stopped_capture_guards",
+    "timeoutSeconds": 15,
+    "labels": [
+      "qualification_consensus_recovery_tooling"
+    ],
+    "passed": true,
+    "testCount": 1,
+    "selfTest": {
+      "cases": 25,
+      "databaseAccessed": false,
+      "envRead": false,
+      "format": "nano-isolated-stopped-capture-self-test-v1",
+      "newSignaturesCreated": 0,
+      "passed": true,
+      "runtimeStarted": false
+    }
+  },
+  "referenceSourceFiles": 1052,
+  "parentFiles": 14,
+  "independentGraphReview": "cmake-graph-independent-review.json",
+  "dailyCiUpdateYetReviewed": false,
+  "databaseOrEnvOpenedByReviewer": false,
+  "vpsEvidenceReadOrExported": false,
+  "productionQualified": false
+}

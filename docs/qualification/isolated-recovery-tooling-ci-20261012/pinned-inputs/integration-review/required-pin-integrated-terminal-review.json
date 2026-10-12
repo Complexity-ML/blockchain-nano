@@ -1,0 +1,86 @@
+{
+  "format": "nano-pinned-json-controller-integration-terminal-readonly-review-v1",
+  "reviewedAt": "2026-10-12T21:49:07.206122+00:00",
+  "sourceBindings": [
+    {
+      "path": "tests/capella/isolated-three-node-run.mjs",
+      "sha256": "87552067c2a3204180550cd07448c5e93251333d608a147ecae667c2c2bb510c"
+    },
+    {
+      "path": "tests/capella/pinned-json-input.mjs",
+      "sha256": "0b79fe24242d2f01d54f955da914175b7eead2da072f97d1c4e17e9beb212e59"
+    },
+    {
+      "path": "tests/capella/pinned-json-input.test.mjs",
+      "sha256": "5c607c5086ab864d49fe611ff2794890299619c591ab8ebdcb8729530b0ebe28"
+    },
+    {
+      "path": "tests/capella/isolated-runtime-observation.mjs",
+      "sha256": "6c030aed2b3fd99d3d7bd975000fa4a05df9682d6ed0b56856955238d48a3046"
+    },
+    {
+      "path": "tests/capella/isolated-core-source.mjs",
+      "sha256": "ce7008b041b0987d695447fc692b05b7c4b983054950d33640043f9928cde5c6"
+    }
+  ],
+  "blockingFindings": [],
+  "staticIntegrationReviewPassed": true,
+  "mandatoryPinnedCallSites": [
+    {
+      "line": 49,
+      "input": "bootstrap pins"
+    },
+    {
+      "line": 54,
+      "input": "canonical plan"
+    },
+    {
+      "line": 72,
+      "input": "source capture, three owner iterations"
+    },
+    {
+      "line": 74,
+      "input": "destination capture, three owner iterations"
+    },
+    {
+      "line": 82,
+      "input": "runtime assets"
+    },
+    {
+      "line": 85,
+      "input": "native relay sanity receipt"
+    },
+    {
+      "line": 136,
+      "input": "public node template"
+    }
+  ],
+  "mandatoryPinFindingResolved": "All seven mandatory call sites use readRequiredPinnedJson. Missing undefined/null/malformed pins refuse before a file read; no silent switch to unpinned mode remains.",
+  "explicitUnpinnedCalls": {
+    "indexLine": 66,
+    "preparationLine": 67,
+    "boundary": "Index SHA from its exact parsed buffer is immediately compared to prepared.captureIndexSha256, then index.complete required. Preparation remains an externally trusted local report without a hardcoded external pin; no cryptographic-authority claim."
+  },
+  "separateAlreadyCorrectBuffers": [
+    "Initial JSON at lines104-105 hashes and parses one buffer before bootstrap derivation.",
+    "Private key capsules at lines118-122 use one protected descriptor and same loaded buffer; no capsule read by reviewer."
+  ],
+  "unparsedHashOnlyInputs": [
+    "audit-inputs/manifest.json",
+    "runtime native binary files",
+    "written public genesis/profile files",
+    "controller source bindings"
+  ],
+  "remainingExternalTrustedReports": "Physical audits/copy receipt/key proof sidecars have schema/claim checks and remain external trusted reports; this review does not promote them into independently authenticated authorities.",
+  "cmakeGuard": "Exact fixed baseline/reviewed/insertion hashes and single approved test-target block with exact remainder equality; no production-code wildcard exemption.",
+  "retainedSafety": "Core PRIMARY and independent witness semantics, key floors, true clock budget, baseline gating, no404fallback and bounded cleanup remain unchanged.",
+  "newTestEvidenceNotReexecuted": {
+    "initialHelper13": "1f5acd/0",
+    "requiredWrapperNew2": "486bba/0",
+    "observer23": "6017b5/0"
+  },
+  "actualRuntimeOrFinalityQualification": false,
+  "sourceMutationOrTestsBuildSigningNetworkByReviewer": false,
+  "privateVpsEnvCapsulesDatabasesRead": false,
+  "productionQualified": false
+}

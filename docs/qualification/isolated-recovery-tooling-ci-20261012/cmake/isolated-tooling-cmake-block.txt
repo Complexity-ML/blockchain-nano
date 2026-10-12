@@ -1,0 +1,6 @@
+add_executable(nano-capella-isolated-bootstrap-audit tests/capella/isolated_bootstrap_audit.cpp)
+target_link_libraries(nano-capella-isolated-bootstrap-audit PRIVATE nano_core)
+add_executable(nano-capella-isolated-stopped-capture tests/capella/isolated_stopped_capture.cpp)
+target_link_libraries(nano-capella-isolated-stopped-capture PRIVATE nano_core)
+add_test(NAME consensus_isolated_stopped_capture_guards COMMAND nano-capella-isolated-stopped-capture --self-test)
+set_tests_properties(consensus_isolated_stopped_capture_guards PROPERTIES TIMEOUT 15 LABELS qualification_consensus_recovery_tooling)

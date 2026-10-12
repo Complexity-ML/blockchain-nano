@@ -15,6 +15,8 @@ import {persistentRuntimeDirectory} from './persistent-runtime-directory.mjs';
 import {waitRestoredReadiness} from './restored-readiness.mjs';
 import {isolatedRuntimeObservation,isolatedPendingObservation,isolatedBootstrapStateCheckpoint} from './isolated-runtime-observation.mjs';
 import {beaconObservationError} from './restored-http-observation.mjs';
+import {readPinnedJson,readRequiredPinnedJson} from './pinned-json-input.mjs';
+import {verifyIsolatedCoreCmake} from './isolated-core-source.mjs';
 const exec=promisify(execFile),names=['mac-native','mac-docker','vps-docker'];
 const [workArg,target='ubuntu@145.239.199.166']=process.argv.slice(2);
 assert.equal(target,'ubuntu@145.239.199.166');
@@ -41,17 +43,15 @@ const inspect=async(name,onRemote)=>JSON.parse(await docker(['inspect',name,'--f
 const logs=async(name,onRemote)=>{const r=onRemote?await exec(sshBin,['-4','-o','BatchMode=yes','-o','ConnectTimeout=8','-o','ServerAliveInterval=10','-o','ServerAliveCountMax=2',target,['sudo','-n','docker','logs',name].map(q).join(' ')+' 2>&1'],{timeout:30000,maxBuffer:32*1024*1024}):await exec(dockerBin,['logs',name],{timeout:30000,maxBuffer:32*1024*1024});return r.stdout+r.stderr;};
 const spawnLog=(bin,args,name,env)=>{const fd=openSync(join(out,name),'ax',0o600);const child=spawn(bin,args,{env,stdio:['ignore',fd,fd]});closeSync(fd);child.on('error',e=>{failure??=e;});return child;};
 const stop=async child=>{if(!child||!child.pid||child.exitCode!==null||child.signalCode!==null)return;child.kill('SIGTERM');for(let n=0;n<200&&child.exitCode===null&&child.signalCode===null;n++)await wait(100);if(child.exitCode===null&&child.signalCode===null){child.kill('SIGKILL');for(let n=0;n<50&&child.exitCode===null&&child.signalCode===null;n++)await wait(100);}if(child.exitCode===null&&child.signalCode===null)throw Error('Managed process is still alive after bounded SIGKILL wait');};
-const controllers=['isolated-three-node-run.mjs','isolated-runtime-observation.mjs','persistent-runtime-directory.mjs','restored-readiness.mjs','restored-http-observation.mjs','restored-finality-progress.mjs','finality-observation.mjs','isolated-fixture-domain.mjs'];
+const controllers=['isolated-three-node-run.mjs','isolated-runtime-observation.mjs','persistent-runtime-directory.mjs','restored-readiness.mjs','restored-http-observation.mjs','restored-finality-progress.mjs','finality-observation.mjs','isolated-fixture-domain.mjs','pinned-json-input.mjs','isolated-core-source.mjs'];
 const controllerBindings=async()=>Object.fromEntries(await Promise.all(controllers.map(async name=>[name,await hash(join(repo,'tests/capella',name))])));
 try{
- const pins=await json(join(work,'pins-before-copy.json'));
+ const pins=(await readRequiredPinnedJson(join(work,'pins-before-copy.json'),'766d2bbe7eb48fbfa88f38b503dd8404eb3bc2dc23637bf8c5c15d3dad832af7')).value;
  assert.equal(pins.fixtureManifestSha256,'ec150c28c8c187e6728cea7ef717acc6383e0b75242302b0a481fc2a9c425fc6');
  assert.equal(pins.planDocumentSha256,'0d234e822f27f9152527ea627a7f6782db438e96376063a3474e03f79d8a2d51');
  assert.equal(pins.sourceInventorySha256,'bc2dd8b8ea94de6dd80373f4ac0498918c001d830c7fceaf04baf85c1ea08fc5');
- assert.equal(await hash(join(work,'pins-before-copy.json')),'766d2bbe7eb48fbfa88f38b503dd8404eb3bc2dc23637bf8c5c15d3dad832af7');
  assert.equal(await hash(join(work,'audit-inputs/manifest.json')),pins.fixtureManifestSha256);
- assert.equal(await hash(join(work,'audit-inputs/plan.json')),pins.planDocumentSha256);
- plan=await json(join(work,'audit-inputs/plan.json'));
+ plan=(await readRequiredPinnedJson(join(work,'audit-inputs/plan.json'),pins.planDocumentSha256)).value;
  assert.equal(plan.planSha256,'4e1e6f5763fd0258ee05857abc1ef233b4ed8ccff1e6923c1b21b8040dbb104f');
  assert.equal(plan.campaignNamespace,'isolated-capella-cb532955c358607d94e4e1074e26be4f4a235dd61b1a00ac2117129973a385ed');
  for(const [i,name] of names.entries()){
@@ -63,14 +63,15 @@ try{
   assert.equal(audit.coldPairReopens,[32,32,66][i]);assert.equal(audit.newSignaturesCreated,0);assert.equal(audit.runtimeStarted,false);
  }
  if(restoring){
-  const indexPath=join(evidence,'isolated-stopped-capture-20261012/capture-index.json'),index=await json(indexPath);
-  const prepared=await json(join(work,'full-restore-preparation.json'));assert.equal(prepared.captureIndexSha256,await hash(indexPath));
+  const indexInput=await readPinnedJson(join(evidence,'isolated-stopped-capture-20261012/capture-index.json'));
+  const prepared=(await readPinnedJson(join(work,'full-restore-preparation.json'))).value;assert.equal(prepared.captureIndexSha256,indexInput.sha256);
+  const index=indexInput.value;assert.equal(index.complete,true);
   assert.equal(prepared.sourceAllWritersStopped,true);assert.equal(prepared.sourceFullInventoriesUnchanged,true);assert.equal(prepared.sourceDestinationInodesIndependent,true);assert.equal(prepared.fullFilesBytesAndModesCopied,true);
   for(const owner of names){
-   const path=join(evidence,'isolated-stopped-capture-20261012',owner+'-capture.public.json');assert.equal(await hash(path),index.captures[owner].sha256);
-   const capture=await json(path);assert.equal(capture.passed,true);assert.equal(capture.owner,owner);assert.equal(capture.campaignId,plan.campaignId);assert.equal(capture.manifestSha256,pins.fixtureManifestSha256);
+   const path=join(evidence,'isolated-stopped-capture-20261012',owner+'-capture.public.json');
+   const capture=(await readRequiredPinnedJson(path,index.captures[owner].sha256)).value;assert.equal(capture.passed,true);assert.equal(capture.owner,owner);assert.equal(capture.campaignId,plan.campaignId);assert.equal(capture.manifestSha256,pins.fixtureManifestSha256);
    assert.equal(capture.allObservedFileBytesAndInodesUnchanged,true);assert.equal(capture.externalStopTokensMatched,true);assert.equal(capture.independentWitnessCurrentIntentsMatched,true);assert.equal(capture.canonicalStoreSnapshotVerified,true);assert.deepEqual(capture.restart,capture.core.primary);assert.deepEqual(capture.recoveryWitnessCommitment,capture.core.witness);assert.equal(capture.envRead,false);assert.equal(capture.runtimeStarted,false);assert.equal(capture.primaryWitnessPairs,owner==='vps-docker'?33:16);
-   const destPath=join(work,owner+'-restored-capture.public.json');assert.equal(await hash(destPath),prepared.destinationCaptureHashes[owner]);const dest=await json(destPath);
+   const destPath=join(work,owner+'-restored-capture.public.json');const dest=(await readRequiredPinnedJson(destPath,prepared.destinationCaptureHashes[owner])).value;
    assert.equal(dest.passed,true);assert.equal(dest.owner,owner);assert.equal(dest.manifestSha256,pins.fixtureManifestSha256);assert.equal(dest.campaignId,plan.campaignId);assert.equal(dest.externalStopTokensMatched,true);assert.equal(dest.independentWitnessCurrentIntentsMatched,true);assert.equal(dest.canonicalStoreSnapshotVerified,true);assert.deepEqual(dest.core,capture.core);assert.equal(dest.allObservedFileBytesAndInodesUnchanged,true);assert.deepEqual(dest.restart,capture.restart);assert.deepEqual(dest.recoveryWitnessCommitment,capture.recoveryWitnessCommitment);
    assert.deepEqual(dest.validatorKeys.map(k=>({i:k.publicKeyIndex,p:k.primary,w:k.witness,pub:k.publicKey,proposal:k.proposal,attestation:k.attestation,snapshotSha256:k.snapshotSha256,witnessSnapshotSha256:k.witnessSnapshotSha256})),capture.validatorKeys.map(k=>({i:k.publicKeyIndex,p:k.primary,w:k.witness,pub:k.publicKey,proposal:k.proposal,attestation:k.attestation,snapshotSha256:k.snapshotSha256,witnessSnapshotSha256:k.witnessSnapshotSha256})));
    captures[owner]=capture;
@@ -78,13 +79,16 @@ try{
  }
  physicalAuditsPassed=true;
  const copies=await json(join(work,'copy-receipt.json'));assert.equal(copies.sourceFullInventoryUnchanged,true);assert.equal(copies.sourceDestinationInodesIndependent,true);
- assets=await json(join(evidence,'isolated-runtime-assets-20261012/runtime-assets-manifest.json'));
+ assets=(await readRequiredPinnedJson(join(evidence,'isolated-runtime-assets-20261012/runtime-assets-manifest.json'),'ab31dd791b3e761808bbe889e95a5f902a4bf000fed4feba4ea7c84fab11b6af')).value;
  assert.equal(assets.productionCoreSourceDiffEmpty,true);assert.equal(assets.relaySourceDiffEmpty,true);
  const sanityBinding=assets.assets['mac-native'].p2p.protocolSanityQualification;
- assert.equal(await hash(sanityBinding.receipt),sanityBinding.receiptSha256);
- const sanity=await json(sanityBinding.receipt);
+ const sanity=(await readRequiredPinnedJson(sanityBinding.receipt,sanityBinding.receiptSha256)).value;
  assert.equal(sanity.passed,true);assert.equal(sanity.binarySha256,assets.assets['mac-native'].p2p.sha256);
- await run('git',['diff','--quiet',assets.coreRevision,'--','src','include','CMakeLists.txt','cmake','third_party']);
+ await run('git',['diff','--quiet',assets.coreRevision,'--','src','include','cmake','third_party']);
+ assert.equal(assets.coreRevision,'85eb492f641452c4746ee60f027eacefa775b0b0');
+ const baselineCmake=Buffer.from(await run('git',['show',assets.coreRevision+':CMakeLists.txt']));
+ const cmakeBinding=verifyIsolatedCoreCmake(baselineCmake,await readFile(join(repo,'CMakeLists.txt')));
+ await save(join(out,'cmake-source-binding.json'),cmakeBinding);
  await run('git',['diff','--quiet',assets.relayRevision,'--','network']);
  assert.equal((await ssh(['git','-C','/home/ubuntu/blockchain-nano-git','rev-parse','HEAD'])).trim(),(await run('git',['rev-parse','HEAD'])).trim());
  const processes=await run('ps',['-axo','pid,command']);assert.ok(!processes.split('\n').some(line=>/\/nano(?: |$)/.test(line)&&/\brun\b/.test(line)),'An existing native Nano writer is active');
@@ -129,10 +133,9 @@ try{
   const data=join(dataPrefix,plan.campaignNamespace,owner),witness=join(witnessPrefix,plan.campaignNamespace,owner);
   return {owner,a,data,witness};
  });
- assert.equal(await hash(join(fixture,'node-0.json')),'5f89362cd3d7119b16f83ded46a5c8f1fd23668268c1745ebf9ac2a6a9136f62');
+ const template=(await readRequiredPinnedJson(join(fixture,'node-0.json'),'5f89362cd3d7119b16f83ded46a5c8f1fd23668268c1745ebf9ac2a6a9136f62')).value;
  assert.equal(await hash(join(config,'genesis.json')),'3373c76de09192ad440625613db97c17b50fbfeddb5adb3190c8f0eb83a22005');
  assert.equal(await hash(join(config,'profile.json')),plan.profileBinding.sha256);
- const template=await json(join(fixture,'node-0.json'));
  for(const [i,node] of configurations.entries()){
   const c=structuredClone(template);c.p2p_binary=node.a.p2p.path;c.p2p_identity=join(node.data,'peer.key');c.bootnodes=[];
   c.rpc_host='127.0.0.1';c.rpc_port=i===2?rp[0]:i===0?nr:8545;

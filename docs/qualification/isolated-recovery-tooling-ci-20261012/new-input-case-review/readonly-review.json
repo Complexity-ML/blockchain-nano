@@ -1,0 +1,73 @@
+{
+  "format": "nano-recovery-tool-new-case-readonly-review-v1",
+  "reviewedAt": "2026-10-12T21:35:45.905616+00:00",
+  "sourceBindings": [
+    {
+      "path": "tests/capella/isolated-three-node-run.mjs",
+      "sha256": "c86358bd9d158d4798343e9371e4759ac0d68241bb18e33e91ac45c7b270c123"
+    },
+    {
+      "path": "tests/capella/isolated-runtime-observation.mjs",
+      "sha256": "6c030aed2b3fd99d3d7bd975000fa4a05df9682d6ed0b56856955238d48a3046"
+    },
+    {
+      "path": "tests/capella/isolated_stopped_capture.cpp",
+      "sha256": "718761a654576f93bb0bbbf258f52015e1d10ba0544672556a189568ab3e1f55"
+    },
+    {
+      "path": "src/consensus_capella_clock.cpp",
+      "sha256": "d1783e690e878612e18d1f943d22466727ebe059ac502b812b18fd045f126d16"
+    },
+    {
+      "path": "src/consensus_capella_reactor.cpp",
+      "sha256": "709899ac13c6ca2b62e7808aca233b473d1656d160ea60a8b13c273a6759af85"
+    }
+  ],
+  "newConcreteFinding": {
+    "scope": "Qualification-controller input provenance, not a proven consensus/signing vulnerability",
+    "source": "tests/capella/isolated-three-node-run.mjs",
+    "lines": "66-67,70-74",
+    "cause": "A public file hash and the JSON object used by the controller come from separate reads. A substituted second version can be parsed after the original hash passed.",
+    "newScenario": "Public recovery report replacement between hash and parse, changing public restart floor or proof claims. Not covered by the observer23 tests, whose pure interface receives already-parsed checkpoints.",
+    "counterexample": {
+      "toolChunk": "b9156b",
+      "exitCode": 0,
+      "splitReadHashCheckPassed": true,
+      "parsedTokenDiffersFromAuthenticatedBytes": true,
+      "protectedSequence": "0x2",
+      "parsedSequence": "0x1",
+      "singleBufferControlRetainsAuthenticatedSequence": true,
+      "executedActualRunner": false,
+      "filesystemReadOrWrite": false,
+      "network": false,
+      "keysOrSigning": false,
+      "actualCoreBypassProven": false
+    },
+    "currentRiskBoundary": "No source report replacement observed in this campaign. Current physical preparation is externally quiescent. Runtime primary/witness exact commitments still fail closed on a true DB/token mismatch; this finding concerns exact attachment of the controller proof to bytes it actually used.",
+    "proposedCorrection": "Use a pure/testable one-buffer verified JSON reader: one read, compare external expected SHA, then JSON.parse that same buffer. Apply to hash-pinned reports and other JSON bindings; bind index/preparation through their external pins before parse.",
+    "proposedNewTests": [
+      "A supplied one-shot file provider is invoked only once for accepted input.",
+      "Substituted/mismatched bytes refuse before parsing or any writer startup.",
+      "Hash-valid bytes with malformed JSON refuse.",
+      "Missing/invalid trusted pin refuses; no hash derived from the same untrusted input becomes its own authority."
+    ]
+  },
+  "noOtherNewConcreteFindingIdentified": true,
+  "checkedExistingSafety": [
+    "Independent primary/witness namespace and token types; frozen current PRIMARY config fix.",
+    "Canonical snapshots, exact digest/intent linkage, two cold reopens and before/after byte/inode inventories.",
+    "Pending key64 stop identity remains null with public key, even when automatic registry lookup resolves it internally.",
+    "Preserved actual monotonic clock limits and finite startup budget.",
+    "Strict bootstrap checkpoint option, later headers/ancestry and no404fallback.",
+    "Copied source/destination preconditions and stopped writer cleanup."
+  ],
+  "knownLimitsNotReclassifiedAsNewGaps": [
+    "Poll deadlines are checked between finite operations, not a hard whole-controller watchdog; already documented.",
+    "Capture explicitly does not qualify durable pending-message semantics, full archive BLS/history replay, cold/fragmented formats or live duties.",
+    "Observer does not independently hash general block SSZ or perform BLS algebra; already scoped."
+  ],
+  "sourceMutationByReviewer": false,
+  "existing23TestsRerun": false,
+  "privateVpsCapsulesEnvOrDatabasesRead": false,
+  "productionQualified": false
+}

@@ -1,5 +1,10 @@
 # EIP et consensus : périmètre demandé pour Nano
 
+État courant — 12 octobre, outillage de reprise et CI : les deux auditeurs sont raccordés à CMake, avec un nouveau CTest de25 contrôles purs exécuté sur Docker ARM64. Les220 cibles existantes et la fermeture de production restent identiques ; le cœur85eb492f et le relais4b2165b8 sont conservés. Le job core sélectionne désormais13 noms et refuse les omissions, skips et options masquant un échec ; ses résultats JUnit et sa bibliothèque de fault-injection sont contrôlés. Le contrôleur lit/hache/parse chaque rapport sur les mêmes bytes, exige les pins des captures et accepte uniquement l’ajout CMake exact revu. [Preuves ciblées et premiers refus conservés](qualification/isolated-recovery-tooling-ci-20261012/README.md).
+
+La sélection quotidienne complète et la CI GitHub actuelles ne sont pas qualifiées par ces contrôles locaux. Les quatre preuves VPS n’ont pas été transférées ; autorisation dédiée toujours en attente. Aucun writer/duty/réseau restauré lancé dans ce lot, aucune nouvelle finalité commune et aucun statut EIP/production/Base–Nano/Doppler promu. Tous les critères et échecs historiques, ainsi que la revue indépendante ouverte, sont conservés.
+
+
 CI du code livré `a106e3e1` : run38310206360 terminé avant toute étape ; changes/operations refusés, core/network skipped. Les annotations indiquent des paiements récents échoués ou une limite de dépenses, sans préciser lequel. Zéro test CI exécuté, aucun réglage de facturation modifié. [Reçu actuel](qualification/isolated-runtime-copies-20261012/ci-a106e3e1-terminal.json).
 
 État courant — 12 octobre, copies physiques et tentative privée : cœur source `85eb492f` et relais `4b2165b8` inchangés ; les six binaires sont identifiés. Les 65 paires de journaux/témoins du bootstrap ont été copiées physiquement et auditées sur Mac natif, Docker ARM64 et AMD64 (130 réouvertures, fichiers intacts, sources préservées). Le relais natif reconstruit passe ses contrôles locaux ; son nouveau SHA n’est pas assimilé à l’ancien binaire perdu. [Preuves et limites](qualification/isolated-runtime-copies-20261012/README.md).

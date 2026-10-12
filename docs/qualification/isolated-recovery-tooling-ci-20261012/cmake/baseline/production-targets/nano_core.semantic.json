@@ -1,0 +1,1085 @@
+{
+  "archive": {},
+  "artifacts": [
+    {
+      "path": "libnano_core.a"
+    }
+  ],
+  "compileGroups": [
+    {
+      "compileCommandFragments": [
+        {
+          "fragment": "-O3 -DNDEBUG -std=gnu++20"
+        },
+        {
+          "fragment": "-Wall"
+        },
+        {
+          "fragment": "-Wextra"
+        },
+        {
+          "fragment": "-Wpedantic"
+        }
+      ],
+      "defines": [
+        {
+          "define": "MCL_BINT_ASM_X64=0"
+        },
+        {
+          "define": "MCL_DONT_USE_XBYAK"
+        },
+        {
+          "define": "MCL_FP_BIT=384"
+        },
+        {
+          "define": "MCL_FR_BIT=256"
+        },
+        {
+          "define": "MCL_MSM=0"
+        },
+        {
+          "define": "MCL_PORTABLE=1"
+        },
+        {
+          "define": "MCL_USE_LLVM=1"
+        }
+      ],
+      "includes": [
+        {
+          "path": "/work/include"
+        },
+        {
+          "path": "/work/third_party"
+        },
+        {
+          "path": "/work/third_party/ckzg/src"
+        },
+        {
+          "path": "/work/third_party/ckzg/blst/bindings"
+        },
+        {
+          "path": "/outputs/third_party/ckzg/include"
+        },
+        {
+          "path": "/work/third_party/secp256k1/include"
+        },
+        {
+          "path": "/work/third_party/mcl/include"
+        }
+      ],
+      "language": "CXX",
+      "languageStandard": {
+        "backtraces": [
+          1
+        ],
+        "standard": "20"
+      },
+      "sourceIndexes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "id": "nano_blst::@ad1ca2665a3846539307"
+    },
+    {
+      "id": "nano_ckzg::@ad1ca2665a3846539307"
+    },
+    {
+      "id": "secp256k1::@8066c91d05ed55161706"
+    },
+    {
+      "id": "mcl_st::@5f4955cc44f10fb0ae53"
+    }
+  ],
+  "id": "nano_core::@6890427a1f51a3e7e1df",
+  "name": "nano_core",
+  "nameOnDisk": "libnano_core.a",
+  "paths": {
+    "build": ".",
+    "source": "."
+  },
+  "sourceGroups": [
+    {
+      "name": "Source Files",
+      "sourceIndexes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "compileGroupIndex": 0,
+      "path": "src/audit.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/authorization.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/beacon_api.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/beacon_block_json.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/beacon_journal_cli.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/bft_reactor.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/block.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/block_auth.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/block_import.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/bls.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/bn_pairing.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/capella_beacon_api.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/capella_beacon_block_json.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/chain.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/chain_beacon.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/cli_client.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/client.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/committee.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_altair_anchor.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_altair_attestation.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_altair_clock.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_altair_deposit.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_altair_duty.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_altair_epoch.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_altair_fork_state.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_altair_fork_store.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_altair_profile.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_altair_proposer.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_altair_reactor.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_altair_runtime.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_altair_slashing.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_altair_slots.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_altair_snapshot.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_altair_store_snapshot.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_altair_sync.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_altair_sync_aggregate.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_altair_transition.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_attestation.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_attestation_inclusion.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_beacon_body.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_beacon_header.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_beacon_signer.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_beacon_state.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_bellatrix_clock.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_bellatrix_deposits.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_bellatrix_duty.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_bellatrix_execution.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_bellatrix_exit_identity.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_bellatrix_fork_state.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_bellatrix_fork_store.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_bellatrix_local_body.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_bellatrix_profile.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_bellatrix_reactor.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_bellatrix_runtime.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_bellatrix_slots.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_bellatrix_store_snapshot.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_bellatrix_validator.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_block_auth.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_block_operations.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_bls.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_capella_audit.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_capella_bls_change.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_capella_checkpoint_provider.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_capella_clock.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_capella_cold_records.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_capella_deposits.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_capella_duty.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_capella_execution.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_capella_fork.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_capella_fork_state.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_capella_fork_store.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_capella_local_body.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_capella_profile.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_capella_reactor.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_capella_record_lease.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_capella_registration.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_capella_runtime.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_capella_signing.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_capella_slots.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_capella_store_snapshot.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_capella_sync.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_capella_sync_signing.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_capella_validator.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_capella_withdrawals.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_committee.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_deposit.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_deposit_history.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_deposit_transition.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_effective_balance.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_epoch.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_epoch_maintenance.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_execution_bridge.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_execution_deposit.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_execution_payload.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_ffg.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_fork_choice.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_fork_clock.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_fork_store.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_fork_vote.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_message_ssz.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_proposer.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_randao.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_registry_operations.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_rewards.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_round.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_signing.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_slashing.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_slots.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_snapshot.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/consensus_sync_message.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/crypto.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/engine.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/evm.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/finality.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/hdwallet.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/http.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/kzg.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/migration.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/node.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/p256.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/pos.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/precompiles.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/receipt.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/requests.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/rlp.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/rpc.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/rpc_accounts.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/rpc_fees.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/rpc_filters.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/staking.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/state.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/storage.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/transaction.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/txpool.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/typed_data.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/types.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/wallet.cpp",
+      "sourceGroupIndex": 0
+    },
+    {
+      "compileGroupIndex": 0,
+      "path": "src/websocket.cpp",
+      "sourceGroupIndex": 0
+    }
+  ],
+  "type": "STATIC_LIBRARY"
+}

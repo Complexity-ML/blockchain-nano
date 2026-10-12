@@ -1,25 +1,32 @@
 #!/usr/bin/env bash
 set -euo pipefail
+if [[ -n "${LD_PRELOAD:-}${LD_LIBRARY_PATH:-}${DYLD_INSERT_LIBRARIES:-}${DYLD_LIBRARY_PATH:-}" ]]; then
+ echo 'Unreviewed dynamic-library environment refused for C++ CI' >&2
+ exit 1
+fi
 build_dir=${1:-build-ci}
 mkdir -p ci-reports
 git -c safe.directory="$PWD" rev-parse HEAD > ci-reports/source-revision.txt
 cmake --version > ci-reports/cmake-version.txt
 "${CXX:-c++}" --version > ci-reports/compiler-version.txt
 cmake -S . -B "$build_dir" -DCMAKE_BUILD_TYPE=Release 2>&1 | tee ci-reports/configure.log
-cmake --build "$build_dir" --parallel 2 --target nano nano-tests nano-chain-tests nano-rpc-queue-tests nano-consensus-bls-tests nano-consensus-bls-aggregate-tests nano-execution-checkpoint-tests nano-capella-execution-tests nano-capella-transition-tests nano-local-monotonic-time-tests nano-capella-slashing-fixture nano-capella-slashing-audit nano-capella-deposit-audit nano-capella-paused-capture 2>&1 | tee ci-reports/build.log
+cmake --build "$build_dir" --parallel 2 --target nano nano-tests nano-chain-tests nano-rpc-queue-tests nano-consensus-bls-tests nano-consensus-bls-aggregate-tests nano-execution-checkpoint-tests nano-capella-execution-tests nano-capella-transition-tests nano-local-monotonic-time-tests nano-capella-slashing-fixture nano-capella-slashing-audit nano-capella-deposit-audit nano-capella-paused-capture nano-capella-isolated-bootstrap-audit nano-capella-isolated-stopped-capture 2>&1 | tee ci-reports/build.log
 # Reviewed scope. Failure or a missing registration must not silently pass.
-pattern='^(core|chain|rpc_queue_expiry|ethereum_consensus_bls_verify|ethereum_consensus_bls_fast_aggregate|storage_execution_checkpoint|consensus_capella_payload_paired_state|consensus_capella_signed_transition|consensus_capella_clock_diagnostics|consensus_capella_published_signed_inventory|consensus_capella_publication_cancel_boundary|consensus_local_monotonic_time)$'
+pattern='^(core|chain|rpc_queue_expiry|ethereum_consensus_bls_verify|ethereum_consensus_bls_fast_aggregate|storage_execution_checkpoint|consensus_capella_payload_paired_state|consensus_capella_signed_transition|consensus_capella_clock_diagnostics|consensus_capella_published_signed_inventory|consensus_capella_publication_cancel_boundary|consensus_local_monotonic_time|consensus_isolated_stopped_capture_guards)$'
 ctest --test-dir "$build_dir" -R "$pattern" --show-only=json-v1 > ci-reports/selection.json
-python3 - <<'PY'
-import json
-expected={'core','chain','rpc_queue_expiry','ethereum_consensus_bls_verify','ethereum_consensus_bls_fast_aggregate','storage_execution_checkpoint','consensus_capella_payload_paired_state','consensus_capella_signed_transition','consensus_capella_clock_diagnostics','consensus_local_monotonic_time','consensus_capella_published_signed_inventory','consensus_capella_publication_cancel_boundary'}
-actual={t['name'] for t in json.load(open('ci-reports/selection.json'))['tests']}
-if actual != expected: raise SystemExit('C++ CI registrations mismatch: '+str(actual ^ expected))
-PY
+cmake -DREGISTRY="$PWD/ci-reports/selection.json" -P scripts/ci/check-core.cmake > ci-reports/selection-audit.log
+# The existing transition tests link the fault-injection library. Preserve its
+# bytes across CTest too; a binary hash alone does not identify that dependency.
+fault_library=$(find "$build_dir" -maxdepth 1 -type f \( -name 'libnano-test-sync-fault.so' -o -name 'libnano-test-sync-fault.dylib' \) -print | sort)
+test -f "$fault_library" # empty or multiple candidates must fail
+sha256sum "$fault_library" > ci-reports/ctest-fault-library-before.sha256
 ctest --test-dir "$build_dir" -R "$pattern" --output-on-failure --no-tests=error --parallel 1 --output-junit "$PWD/ci-reports/core.xml" 2>&1 | tee ci-reports/core-tests.log
+bash scripts/ci/verify-results.sh ci-reports/selection.json ci-reports/core.xml > ci-reports/core-result-audit.json
+sha256sum "$fault_library" > ci-reports/ctest-fault-library-after.sha256
+cmp ci-reports/ctest-fault-library-before.sha256 ci-reports/ctest-fault-library-after.sha256
 
 # New private helper: compile and exercise its real fixture generation separately
-# from the twelve CTest checks; never count this as a live WAN or penalty test.
+# from the thirteen CTest checks; never count this as a live WAN or penalty test.
 "$build_dir/nano-capella-transition-tests" --export-network "$PWD/ci-reports/slashing-fixture" > ci-reports/slashing-export.log
 python3 - "$build_dir" <<'PYHELPER'
 import json,pathlib,subprocess,sys
@@ -84,5 +91,7 @@ for name,field,value,expected in [('wrong-index','validatorIndex',65,'deposit fi
 pathlib.Path('ci-reports/deposit-audit-controls.json').write_text(json.dumps({'cases':results,'positiveNetworkAuditQualified':False,'productionQualified':False},indent=2)+'\n')
 PYDEPOSIT
 
-sha256sum "$build_dir/nano" "$build_dir/nano-tests" "$build_dir/nano-chain-tests" "$build_dir/nano-rpc-queue-tests" "$build_dir/nano-consensus-bls-tests" "$build_dir/nano-consensus-bls-aggregate-tests" "$build_dir/nano-execution-checkpoint-tests" "$build_dir/nano-capella-execution-tests" "$build_dir/nano-capella-transition-tests" "$build_dir/nano-local-monotonic-time-tests" "$build_dir/nano-capella-slashing-fixture" "$build_dir/nano-capella-slashing-audit" "$build_dir/nano-capella-deposit-audit" "$build_dir/nano-capella-paused-capture" > ci-reports/executables.sha256
+sha256sum "$fault_library" > ci-reports/ctest-fault-library-final.sha256
+cmp ci-reports/ctest-fault-library-before.sha256 ci-reports/ctest-fault-library-final.sha256
+sha256sum "$build_dir/nano" "$build_dir/nano-tests" "$build_dir/nano-chain-tests" "$build_dir/nano-rpc-queue-tests" "$build_dir/nano-consensus-bls-tests" "$build_dir/nano-consensus-bls-aggregate-tests" "$build_dir/nano-execution-checkpoint-tests" "$build_dir/nano-capella-execution-tests" "$build_dir/nano-capella-transition-tests" "$build_dir/nano-local-monotonic-time-tests" "$build_dir/nano-capella-slashing-fixture" "$build_dir/nano-capella-slashing-audit" "$build_dir/nano-capella-deposit-audit" "$build_dir/nano-capella-paused-capture" "$build_dir/nano-capella-isolated-bootstrap-audit" "$build_dir/nano-capella-isolated-stopped-capture" > ci-reports/executables.sha256
 if command -v dpkg-query >/dev/null; then dpkg-query -W > ci-reports/build-packages.txt; fi
