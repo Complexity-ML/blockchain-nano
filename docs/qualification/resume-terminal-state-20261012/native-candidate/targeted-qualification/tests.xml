@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="3"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="12"
+	timestamp="2026-10-12T20:01:24"
+	>
+	<testcase name="consensus_capella_clock_diagnostics" classname="consensus_capella_clock_diagnostics" time="2.92838" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_runtime"/>
+		</properties>
+		<system-out>{"checkpointUnchanged":true,"failClosedPreserved":true,"networkTransport":false,"scenario":"capella-clock-diagnostics","scenarios":4}
+{"directTransitionOracle":true,"networkTransport":false,"runtimeJumpRefusalPreserved":true,"scenario":"capella-startup-catchup","scenarios":9,"witnessedDurablePrefixes":true}
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_published_signed_inventory" classname="consensus_capella_published_signed_inventory" time="3.30406" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_runtime"/>
+		</properties>
+		<system-out>{"checkpointUnchanged":true,"commitmentCancellationQualified":true,"privateExceptionRedacted":true,"publicationCancellationQualified":true,"scenario":"beacon-read-phase-diagnostics"}
+{"archiveReadCompleted":true,"cancelledWriterUnpublished":true,"oldPublicationPreserved":true,"publicationReadCompleted":true,"retainedBlockExportCompleted":true,"scenario":"beacon-read-during-held-admission"}
+{"admissionWhileExporterPaused":true,"admissionWhileReaderPaused":true,"headAdvanced":true,"oldPublicationPreserved":true,"retainedExportCoherentDuringCommit":true,"scenario":"beacon-read-concurrent-admission"}
+{"cancellationPreserved":true,"completedWhileWriterHeld":true,"rootBudgetPreserved":true,"sameDurableRootsAndToken":true,"scenario":"published-signed-inventory-during-held-admission","signedVotes":1,"slashings":0,"wanQualified":false}
+{"cancellationPreserved":true,"completedWhileWriterHeld":true,"rootBudgetPreserved":true,"sameDurableRootsAndToken":true,"scenario":"published-signed-inventory-during-held-admission","s...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_publication_cancel_boundary" classname="consensus_capella_publication_cancel_boundary" time="6.38802" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_recovery"/>
+		</properties>
+		<system-out>{"networkQualified":false,"noCancellationCallbackAfterWitnessWrite":true,"scenario":"capella-publication-cancel-boundary"}
+{"executionTip":true,"externalMutationsRejectedAndClosed":3,"networkQualified":false,"primaryCheckpoint":true,"scenario":"capella-cold-duplicate-storage-guards","witnessCheckpoint":true}
+{"allPublishedRecordsCold":true,"graphCapacityClosed":false,"idempotentMigration":true,"lateSnapshotReadRejected":true,"migrationAtomic":true,"networkQualified":false,"primaryAndWitnessRestarts":true,"productionQualified":false,"runtimeConfigBootQualified":false,"scenario":"capella-cold-reactor-integration","signerCommitmentUnchanged":true,"stickyColdFormat":true,"validChildDurablyAdmitted":true,"witnessPreviousPrimaryRecovered":true}
+</system-out>
+	</testcase>
+</testsuite>

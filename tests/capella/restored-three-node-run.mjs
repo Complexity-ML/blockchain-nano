@@ -9,6 +9,7 @@ import {createServer} from 'node:net';
 import {resolve,join} from 'node:path';
 import {setTimeout as wait} from 'node:timers/promises';
 import assert from 'node:assert/strict';
+import {persistentRuntimeDirectory} from './persistent-runtime-directory.mjs';
 import {readDataManifest,verifyDataManifest,parseVolumeFileHashes,verifyFixtureFiles,verifyRuntimeVolumeReceipt,manifestDigest} from './restored-file-bindings.mjs';
 import {verifyRestoredSourceStop} from './restored-source-stop.mjs';
 import {restoredThreeNodePlan} from './restored-three-node-plan.mjs';
@@ -18,8 +19,8 @@ import {beaconObservationError,pendingBeaconObservation,verifyRestoredAncestry} 
 import {durableFinalityObservation} from './finality-observation.mjs';
 const exec=promisify(execFile),[target,revision,preparedArg]=process.argv.slice(2);
 assert.match(target??'',/^[a-z_][a-z0-9_-]*@[0-9.]+$/);assert.match(revision??'',/^[a-f0-9]{40}$/);assert.ok(preparedArg);
-const repo=process.cwd(),prepared=resolve(preparedArg),out=join(prepared,'campaign');await mkdir(out);
-const controllerFiles=['tests/capella/restored-file-bindings.mjs','tests/capella/restored-source-stop.mjs','tests/capella/restored-three-node-run.mjs','tests/capella/restored-three-node-plan.mjs','tests/capella/deposit-restart-pins.mjs','tests/capella/finality-observation.mjs','tests/capella/restored-readiness.mjs','tests/capella/restored-finality-progress.mjs','tests/capella/restored-http-observation.mjs','tests/capella/vps-local-launch-prepare.py'];let controllerHashes;
+const repo=process.cwd(),prepared=await persistentRuntimeDirectory(preparedArg),out=join(prepared,'campaign');await mkdir(out);
+const controllerFiles=['tests/capella/persistent-runtime-directory.mjs','tests/capella/restored-file-bindings.mjs','tests/capella/restored-source-stop.mjs','tests/capella/restored-three-node-run.mjs','tests/capella/restored-three-node-plan.mjs','tests/capella/deposit-restart-pins.mjs','tests/capella/finality-observation.mjs','tests/capella/restored-readiness.mjs','tests/capella/restored-finality-progress.mjs','tests/capella/restored-http-observation.mjs','tests/capella/vps-local-launch-prepare.py'];let controllerHashes;
 const evidence=resolve(process.env.NANO_TEST_RESTORED_PREPARATION??join(repo,'docs/qualification/restored-three-node-prepare-20261005'));assert.ok(evidence.startsWith(join(repo,'docs/qualification')+'/'),'Preparation must be a committed qualification bundle');
 const json=async p=>JSON.parse(await readFile(p,'utf8')),save=(p,v)=>writeFile(p,JSON.stringify(v,null,2)+'\n');
 const hash=async p=>createHash('sha256').update(await readFile(p)).digest('hex');

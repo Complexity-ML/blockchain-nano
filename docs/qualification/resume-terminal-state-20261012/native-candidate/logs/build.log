@@ -1,0 +1,325 @@
+[  0%] Generating bint64.o
+[  0%] Generating base64.o
+warning: overriding the module target triple with arm64-apple-macosx26.0.0 [-Woverride-module]
+warning: overriding the module target triple with arm64-apple-macosx26.0.0 [-Woverride-module]
+1 warning generated.
+[  0%] Built target gen_bint.o
+[  0%] Building C object third_party/ckzg/CMakeFiles/nano_blst.dir/blst/src/server.c.o
+1 warning generated.
+[  0%] Built target gen_base.o
+[  0%] Building C object third_party/secp256k1/src/CMakeFiles/secp256k1_precomputed.dir/precomputed_ecmult.c.o
+[  0%] Building ASM object third_party/ckzg/CMakeFiles/nano_blst.dir/blst/build/assembly.S.o
+[  0%] Linking C static library libnano_blst.a
+[  0%] Built target nano_blst
+[  0%] Building CXX object third_party/mcl/CMakeFiles/mcl_st.dir/src/fp.cpp.o
+[  3%] Building C object third_party/secp256k1/src/CMakeFiles/secp256k1_precomputed.dir/precomputed_ecmult_gen.c.o
+[  3%] Built target secp256k1_precomputed
+[  7%] Building C object third_party/ckzg/CMakeFiles/nano_ckzg.dir/src/ckzg.c.o
+[  7%] Linking C static library libnano_ckzg.a
+[  7%] Built target nano_ckzg
+[  7%] Building C object third_party/secp256k1/src/CMakeFiles/secp256k1.dir/secp256k1.c.o
+[  7%] Linking CXX static library ../../lib/libmcl.a
+[  7%] Linking C static library ../lib/libsecp256k1.a
+[ 11%] Built target mcl_st
+[ 11%] Built target secp256k1
+[ 11%] Building CXX object CMakeFiles/nano_core.dir/src/authorization.cpp.o
+[ 11%] Building CXX object CMakeFiles/nano_core.dir/src/audit.cpp.o
+[ 11%] Building CXX object CMakeFiles/nano_core.dir/src/beacon_api.cpp.o
+[ 11%] Building CXX object CMakeFiles/nano_core.dir/src/beacon_block_json.cpp.o
+/Users/boris/Dev/blockchain-nano/src/beacon_api.cpp:12:89: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   12 |  if(path=="/eth/v1/node/version")return {200,{{"data",{{"version","Nano/0.1.0/c++20"}}}}};
+      |                                                                                         ^
+/Users/boris/Dev/blockchain-nano/src/beacon_api.cpp:18:118: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   18 |  if(!root&&!fork&&!finality&&!genesis&&!spec)return {404,{{"code",404},{"message","Beacon endpoint not implemented"}}};
+      |                                                                                                                      ^
+/Users/boris/Dev/blockchain-nano/src/beacon_api.cpp:26:166: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   26 |  if(genesis)return {200,{{"data",{{"genesis_time",std::to_string(number(b,0))},{"genesis_validators_root",octets(b,8,32)},{"genesis_fork_version",genesis_version}}}}};
+      |                                                                                                                                                                      ^
+/Users/boris/Dev/blockchain-nano/src/beacon_api.cpp:63:70: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   63 |   if(checkpoint)checkpoint();return {200,{{"data",std::move(values)}}};
+      |                                                                      ^
+/Users/boris/Dev/blockchain-nano/src/beacon_api.cpp:77:160: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   77 |  return {200,{{"execution_optimistic",false},{"finalized",consensus_beacon_header_root(head.header)==store.timed.view.finalized.root},{"data",std::move(data)}}};
+      |                                                                                                                                                                ^
+/Users/boris/Dev/blockchain-nano/src/beacon_api.cpp:88:117: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   88 |  auto error=[](unsigned code,const char* message){return BeaconReadResponse{code,{{"code",code},{"message",message}}};};
+      |                                                                                                                     ^
+/Users/boris/Dev/blockchain-nano/src/beacon_api.cpp:132:99: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  132 |    {"header",{{"message",std::move(message)},{"signature",octets(*signed_block->second,4,96)}}}}}}};
+      |                                                                                                   ^
+7 warnings generated.
+[ 14%] Building CXX object CMakeFiles/nano_core.dir/src/beacon_journal_cli.cpp.o
+[ 14%] Building CXX object CMakeFiles/nano_core.dir/src/bft_reactor.cpp.o
+[ 14%] Building CXX object CMakeFiles/nano_core.dir/src/block.cpp.o
+[ 14%] Building CXX object CMakeFiles/nano_core.dir/src/block_auth.cpp.o
+[ 14%] Building CXX object CMakeFiles/nano_core.dir/src/block_import.cpp.o
+[ 14%] Building CXX object CMakeFiles/nano_core.dir/src/bls.cpp.o
+[ 18%] Building CXX object CMakeFiles/nano_core.dir/src/bn_pairing.cpp.o
+[ 18%] Building CXX object CMakeFiles/nano_core.dir/src/capella_beacon_api.cpp.o
+[ 18%] Building CXX object CMakeFiles/nano_core.dir/src/capella_beacon_block_json.cpp.o
+/Users/boris/Dev/blockchain-nano/src/capella_beacon_api.cpp:15:89: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   15 |  if(path=="/eth/v1/node/version")return {200,{{"data",{{"version","Nano/0.1.0/c++20"}}}}};
+      |                                                                                         ^
+/Users/boris/Dev/blockchain-nano/src/capella_beacon_api.cpp:25:118: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   25 |  if(!root&&!fork&&!finality&&!genesis&&!spec)return {404,{{"code",404},{"message","Beacon endpoint not implemented"}}};
+      |                                                                                                                      ^
+/Users/boris/Dev/blockchain-nano/src/capella_beacon_api.cpp:36:117: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   36 |    }catch(const std::invalid_argument&){return {400,{{"code",400},{"message","Expected head or 32-byte state root"}}};}
+      |                                                                                                                     ^
+/Users/boris/Dev/blockchain-nano/src/capella_beacon_api.cpp:40:81: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   40 |    if(!selected)return {404,{{"code",404},{"message","State root not retained"}}};
+      |                                                                                 ^
+/Users/boris/Dev/blockchain-nano/src/capella_beacon_api.cpp:51:166: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   51 |  if(genesis)return {200,{{"data",{{"genesis_time",std::to_string(number(b,0))},{"genesis_validators_root",octets(b,8,32)},{"genesis_fork_version",genesis_version}}}}};
+      |                                                                                                                                                                      ^
+/Users/boris/Dev/blockchain-nano/src/capella_beacon_api.cpp:89:70: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   89 |   if(checkpoint)checkpoint();return {200,{{"data",std::move(values)}}};
+      |                                                                      ^
+/Users/boris/Dev/blockchain-nano/src/capella_beacon_api.cpp:110:98: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  110 |  return {200,{{"execution_optimistic",false},{"finalized",is_finalized},{"data",std::move(data)}}};
+      |                                                                                                  ^
+/Users/boris/Dev/blockchain-nano/src/capella_beacon_api.cpp:125:117: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  125 |  auto error=[](unsigned code,const char* message){return BeaconReadResponse{code,{{"code",code},{"message",message}}};};
+      |                                                                                                                     ^
+/Users/boris/Dev/blockchain-nano/src/capella_beacon_api.cpp:172:91: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  172 |    {"header",{{"message",std::move(message)},{"signature",octets(*signed_block,4,96)}}}}}}};
+      |                                                                                           ^
+9 warnings generated.
+[ 18%] Building CXX object CMakeFiles/nano_core.dir/src/chain.cpp.o
+[ 18%] Building CXX object CMakeFiles/nano_core.dir/src/chain_beacon.cpp.o
+[ 18%] Building CXX object CMakeFiles/nano_core.dir/src/cli_client.cpp.o
+[ 22%] Building CXX object CMakeFiles/nano_core.dir/src/client.cpp.o
+[ 22%] Building CXX object CMakeFiles/nano_core.dir/src/committee.cpp.o
+[ 22%] Building CXX object CMakeFiles/nano_core.dir/src/consensus.cpp.o
+[ 22%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_anchor.cpp.o
+[ 22%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_attestation.cpp.o
+[ 25%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_clock.cpp.o
+[ 25%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_deposit.cpp.o
+[ 25%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_duty.cpp.o
+[ 25%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_epoch.cpp.o
+[ 25%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_fork_state.cpp.o
+[ 25%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_fork_store.cpp.o
+[ 29%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_profile.cpp.o
+[ 29%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_proposer.cpp.o
+[ 29%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_reactor.cpp.o
+[ 29%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_runtime.cpp.o
+[ 29%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_slashing.cpp.o
+[ 29%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_slots.cpp.o
+[ 33%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_snapshot.cpp.o
+[ 33%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_store_snapshot.cpp.o
+[ 33%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_sync.cpp.o
+[ 33%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_sync_aggregate.cpp.o
+[ 33%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_altair_transition.cpp.o
+[ 33%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_attestation.cpp.o
+[ 37%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_attestation_inclusion.cpp.o
+[ 37%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_beacon_body.cpp.o
+[ 37%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_beacon_header.cpp.o
+[ 37%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_beacon_signer.cpp.o
+[ 37%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_beacon_state.cpp.o
+/Users/boris/Dev/blockchain-nano/src/consensus_beacon_state.cpp:21:29: warning: comparison of integers of different signs: 'unsigned int' and 'const int' [-Wsign-compare]
+   21 |   for(unsigned level=0;level<depth;++level){
+      |                        ~~~~~^~~~~~
+1 warning generated.
+[ 37%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_clock.cpp.o
+[ 40%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_deposits.cpp.o
+[ 40%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_duty.cpp.o
+[ 40%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_execution.cpp.o
+[ 40%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_exit_identity.cpp.o
+[ 40%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_fork_state.cpp.o
+[ 40%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_fork_store.cpp.o
+[ 44%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_local_body.cpp.o
+[ 44%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_profile.cpp.o
+[ 44%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_reactor.cpp.o
+[ 44%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_runtime.cpp.o
+/Users/boris/Dev/blockchain-nano/src/consensus_bellatrix_runtime.cpp:132:147: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  132 |    if(!observation||observation->peer_slots.empty())return BeaconReadResponse{503,{{"code",503},{"message","Beacon peer observation unavailable"}}};
+      |                                                                                                                                                   ^
+/Users/boris/Dev/blockchain-nano/src/consensus_bellatrix_runtime.cpp:140:235: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  140 |    return BeaconReadResponse{200,{{"data",{{"head_slot",std::to_string(head.header.slot)},{"sync_distance",std::to_string(target-head.header.slot)},{"is_syncing",target>head.header.slot},{"is_optimistic",false},{"el_offline",false}}}}};
+      |                                                                                                                                                                                                                                           ^
+2 warnings generated.
+[ 44%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_slots.cpp.o
+[ 48%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_store_snapshot.cpp.o
+[ 48%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bellatrix_validator.cpp.o
+[ 48%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_block_auth.cpp.o
+[ 48%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_block_operations.cpp.o
+[ 48%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_bls.cpp.o
+[ 48%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_audit.cpp.o
+[ 51%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_bls_change.cpp.o
+[ 51%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_checkpoint_provider.cpp.o
+[ 51%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_clock.cpp.o
+[ 51%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_cold_records.cpp.o
+[ 51%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_deposits.cpp.o
+[ 51%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_duty.cpp.o
+[ 55%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_execution.cpp.o
+/Users/boris/Dev/blockchain-nano/src/consensus_capella_duty.cpp:83:73: warning: unused variable 'boundary' [-Wunused-variable]
+   83 |  const auto boundary_pin=store.blocks.at(root).lease(check);const auto& boundary=*boundary_pin;
+      |                                                                         ^~~~~~~~
+/Users/boris/Dev/blockchain-nano/src/consensus_capella_duty.cpp:121:13: warning: unused variable 'slots' [-Wunused-variable]
+  121 |  const auto slots=rules_.transition.consensus.epoch.ffg.slots_per_epoch;
+      |             ^~~~~
+/Users/boris/Dev/blockchain-nano/src/consensus_capella_duty.cpp:129:13: warning: unused variable 'slots' [-Wunused-variable]
+  129 |  const auto slots=rules_.transition.consensus.epoch.ffg.slots_per_epoch;
+      |             ^~~~~
+3 warnings generated.
+[ 55%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_fork.cpp.o
+[ 55%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_fork_state.cpp.o
+[ 55%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_fork_store.cpp.o
+[ 55%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_local_body.cpp.o
+[ 55%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_profile.cpp.o
+[ 59%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_reactor.cpp.o
+/Users/boris/Dev/blockchain-nano/src/consensus_capella_reactor.cpp:429:132: warning: missing field 'attestations' initializer [-Wmissing-field-initializers]
+  429 | CapellaPublishedStore CapellaDurableReactor::current()const{std::lock_guard lock(mutex_);require_available();return {state_,*token_};}
+      |                                                                                                                                    ^
+[ 59%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_record_lease.cpp.o
+[ 59%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_registration.cpp.o
+[ 59%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_runtime.cpp.o
+/Users/boris/Dev/blockchain-nano/src/consensus_capella_runtime.cpp:229:146: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  229 |   if(!observation||observation->peer_slots.empty())return BeaconReadResponse{503,{{"code",503},{"message","Beacon peer observation unavailable"}}};
+      |                                                                                                                                                  ^
+/Users/boris/Dev/blockchain-nano/src/consensus_capella_runtime.cpp:238:234: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  238 |   return BeaconReadResponse{200,{{"data",{{"head_slot",std::to_string(head.header.slot)},{"sync_distance",std::to_string(target-head.header.slot)},{"is_syncing",target>head.header.slot},{"is_optimistic",false},{"el_offline",false}}}}};
+      |                                                                                                                                                                                                                                          ^
+1 warning generated.
+[ 59%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_signing.cpp.o
+[ 59%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_slots.cpp.o
+2 warnings generated.
+[ 62%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_store_snapshot.cpp.o
+[ 62%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_sync.cpp.o
+[ 62%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_sync_signing.cpp.o
+/Users/boris/Dev/blockchain-nano/src/consensus_capella_sync_signing.cpp:13:73: warning: unused variable 'parent' [-Wunused-variable]
+   13 |  const auto parent_pin=state_->blocks.at(head).lease(check);const auto& parent=*parent_pin;
+      |                                                                         ^~~~~~
+1 warning generated.
+[ 62%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_validator.cpp.o
+[ 62%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_capella_withdrawals.cpp.o
+[ 66%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_committee.cpp.o
+[ 66%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_deposit.cpp.o
+[ 66%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_deposit_history.cpp.o
+[ 66%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_deposit_transition.cpp.o
+[ 66%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_effective_balance.cpp.o
+[ 66%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_epoch.cpp.o
+[ 70%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_epoch_maintenance.cpp.o
+[ 70%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_execution_bridge.cpp.o
+[ 70%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_execution_deposit.cpp.o
+[ 70%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_execution_payload.cpp.o
+[ 70%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_ffg.cpp.o
+[ 70%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_fork_choice.cpp.o
+[ 74%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_fork_clock.cpp.o
+[ 74%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_fork_store.cpp.o
+[ 74%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_fork_vote.cpp.o
+[ 74%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_message_ssz.cpp.o
+[ 74%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_proposer.cpp.o
+[ 74%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_randao.cpp.o
+[ 77%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_registry_operations.cpp.o
+[ 77%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_rewards.cpp.o
+[ 77%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_round.cpp.o
+[ 77%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_signing.cpp.o
+[ 77%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_slashing.cpp.o
+[ 77%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_slots.cpp.o
+[ 81%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_snapshot.cpp.o
+[ 81%] Building CXX object CMakeFiles/nano_core.dir/src/consensus_sync_message.cpp.o
+[ 81%] Building CXX object CMakeFiles/nano_core.dir/src/crypto.cpp.o
+[ 81%] Building CXX object CMakeFiles/nano_core.dir/src/engine.cpp.o
+[ 81%] Building CXX object CMakeFiles/nano_core.dir/src/evm.cpp.o
+[ 85%] Building CXX object CMakeFiles/nano_core.dir/src/finality.cpp.o
+[ 85%] Building CXX object CMakeFiles/nano_core.dir/src/hdwallet.cpp.o
+[ 85%] Building CXX object CMakeFiles/nano_core.dir/src/http.cpp.o
+[ 85%] Building CXX object CMakeFiles/nano_core.dir/src/kzg.cpp.o
+[ 85%] Building CXX object CMakeFiles/nano_core.dir/src/migration.cpp.o
+[ 85%] Building CXX object CMakeFiles/nano_core.dir/src/node.cpp.o
+[ 88%] Building CXX object CMakeFiles/nano_core.dir/src/p256.cpp.o
+[ 88%] Building CXX object CMakeFiles/nano_core.dir/src/pos.cpp.o
+[ 88%] Building CXX object CMakeFiles/nano_core.dir/src/precompiles.cpp.o
+[ 88%] Building CXX object CMakeFiles/nano_core.dir/src/receipt.cpp.o
+[ 88%] Building CXX object CMakeFiles/nano_core.dir/src/requests.cpp.o
+[ 88%] Building CXX object CMakeFiles/nano_core.dir/src/rlp.cpp.o
+[ 92%] Building CXX object CMakeFiles/nano_core.dir/src/rpc.cpp.o
+[ 92%] Building CXX object CMakeFiles/nano_core.dir/src/rpc_accounts.cpp.o
+[ 92%] Building CXX object CMakeFiles/nano_core.dir/src/rpc_fees.cpp.o
+[ 92%] Building CXX object CMakeFiles/nano_core.dir/src/rpc_filters.cpp.o
+[ 92%] Building CXX object CMakeFiles/nano_core.dir/src/staking.cpp.o
+[ 92%] Building CXX object CMakeFiles/nano_core.dir/src/state.cpp.o
+[ 96%] Building CXX object CMakeFiles/nano_core.dir/src/storage.cpp.o
+[ 96%] Building CXX object CMakeFiles/nano_core.dir/src/transaction.cpp.o
+[ 96%] Building CXX object CMakeFiles/nano_core.dir/src/txpool.cpp.o
+[ 96%] Building CXX object CMakeFiles/nano_core.dir/src/typed_data.cpp.o
+[ 96%] Building CXX object CMakeFiles/nano_core.dir/src/types.cpp.o
+[ 96%] Building CXX object CMakeFiles/nano_core.dir/src/wallet.cpp.o
+[100%] Building CXX object CMakeFiles/nano_core.dir/src/websocket.cpp.o
+[100%] Linking CXX static library libnano_core.a
+[100%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano.dir/src/main.cpp.o
+[100%] Linking CXX executable nano
+[100%] Built target nano
+[  0%] Built target gen_base.o
+[  0%] Built target gen_bint.o
+[  0%] Built target nano_blst
+[  3%] Built target secp256k1_precomputed
+[  7%] Built target nano_ckzg
+[ 10%] Built target mcl_st
+[ 10%] Built target secp256k1
+[ 96%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-capella-paused-capture.dir/tests/capella/paused_capture.cpp.o
+[100%] Linking CXX executable nano-capella-paused-capture
+[100%] Built target nano-capella-paused-capture
+[  0%] Built target gen_bint.o
+[  0%] Built target gen_base.o
+[  0%] Built target nano_blst
+[  3%] Built target secp256k1_precomputed
+[  3%] Building CXX object CMakeFiles/nano-test-sync-fault.dir/tests/support/sync_fault_macos.cpp.o
+[  7%] Built target mcl_st
+[ 11%] Built target nano_ckzg
+[ 11%] Built target secp256k1
+[ 11%] Linking CXX shared library libnano-test-sync-fault.dylib
+[ 11%] Built target nano-test-sync-fault
+[100%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-capella-transition-tests.dir/tests/test_capella_transition.cpp.o
+In file included from /Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:3:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/altair_transition_rules.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_transition_rules.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_epoch_ssz.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_ffg_ssz.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_minimal_ssz.hpp:2:
+/Users/boris/Dev/blockchain-nano/tests/support/process.hpp:39:19: warning: 'posix_spawn_file_actions_addchdir_np' is deprecated: first deprecated in macOS 26.0 - posix_spawn_file_actions_addchdir(3) has replaced posix_spawn_file_actions_addchdir_np(3) [-Wdeprecated-declarations]
+   39 |   if(!cwd.empty())posix_spawn_file_actions_addchdir_np(&actions,cwd.c_str());
+      |                   ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/spawn.h:184:9: note: 'posix_spawn_file_actions_addchdir_np' has been explicitly marked deprecated here
+  184 | int     posix_spawn_file_actions_addchdir_np(posix_spawn_file_actions_t *,
+      |         ^
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1312:38: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1312 |    if(!acquired){release.set_value();holder.get();check(false,"queue fixture did not hold real admission mutex");}
+      |                                      ^~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1315:101: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1315 |    if(clock_ready.wait_for(std::chrono::seconds(2))!=std::future_status::ready){release.set_value();holder.get();clock_waiter.get();check(false,"clock poll did not enter while admission held");}
+      |                                                                                                     ^~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1315:114: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1315 |    if(clock_ready.wait_for(std::chrono::seconds(2))!=std::future_status::ready){release.set_value();holder.get();clock_waiter.get();check(false,"clock poll did not enter while admission held");}
+      |                                                                                                                  ^~~~~~~~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1324:24: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1324 |    release.set_value();clock_waiter.get();const auto archive=holder.get();const auto status=blocked.get(),chain_id=identity.get(),read=beacon.get();
+      |                        ^~~~~~~~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1499:95: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1499 |    if(ready.wait_for(std::chrono::seconds(5))!=std::future_status::ready){unblock.set_value();acquisition.get();check(false,"capture not held");}
+      |                                                                                               ^~~~~~~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1503:61: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1503 |    unblock.set_value();const bool refused=acquisition.get();control.get();bool generation_same=false;try{generation_same=generation.get()==gen;}catch(const std::runtime_error&){}
+      |                                                             ^~~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1554:35: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1554 |   if(!locked){unblock.set_value();writer.get();check(false,"Status probe admission lock not held");}
+      |                                   ^~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1572:35: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1572 |   if(!locked){unblock.set_value();blocked_writer.get();check(false,"Admission lock fixture not reached");}
+      |                                   ^~~~~~~~~~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1584:36: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1584 |  if(!captured){release.set_value();reader.get();check(false,"Concurrent Beacon reader never captured publication");}
+      |                                    ^~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1589:70: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1589 |  if(!export_captured){release.set_value();export_release.set_value();reader.get();exporter.get();check(false,"Concurrent block exporter never captured publication");}
+      |                                                                      ^~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1589:83: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1589 |  if(!export_captured){release.set_value();export_release.set_value();reader.get();exporter.get();check(false,"Concurrent block exporter never captured publication");}
+      |                                                                                   ^~~~~~~~~~~~
+12 warnings generated.
+[100%] Linking CXX executable nano-capella-transition-tests
+[100%] Built target nano-capella-transition-tests

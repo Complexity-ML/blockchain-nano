@@ -1,0 +1,13 @@
+/diagnostic/project-long-gap.cpp:86:99: error: no viable conversion from 'const AltairFfgRules' to 'const Phase0FfgRules'
+   86 |  Json proposer=nullptr;std::string proposer_error;try{const auto identity=frame.proposer_identity(t.consensus.epoch.ffg,check);if(identity)proposer={{"index",identity->index},{"owner",identity->index<16?0:identity->index<32?1:2}};}catch(const std::exception& e){proposer_error=e.what();}
+      |                                                                                                   ^~~~~~~~~~~~~~~~~~~~~
+/work/include/nano/consensus_ffg.hpp:24:8: note: candidate constructor (the implicit copy constructor) not viable: no known conversion from 'const AltairFfgRules' to 'const Phase0FfgRules &' for 1st argument
+   24 | struct Phase0FfgRules {
+      |        ^~~~~~~~~~~~~~
+/work/include/nano/consensus_ffg.hpp:24:8: note: candidate constructor (the implicit move constructor) not viable: no known conversion from 'const AltairFfgRules' to 'Phase0FfgRules &&' for 1st argument
+   24 | struct Phase0FfgRules {
+      |        ^~~~~~~~~~~~~~
+/work/include/nano/consensus_capella_fork_state.hpp:41:80: note: passing argument to parameter here
+   41 |  std::optional<CapellaProposerIdentity> proposer_identity(const Phase0FfgRules&,
+      |                                                                                ^
+1 error generated.

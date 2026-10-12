@@ -1,0 +1,27 @@
+{
+  "scope": "local prepared runtime directory only, before campaign mkdir or any writer/process preflight; history audits unaffected",
+  "newFilesystemAndControllerCases": 11,
+  "testExitCode": 0,
+  "actualSystemAliasesVerified": [
+    "/tmp -> /private/tmp",
+    "/var/tmp -> /private/var/tmp",
+    "os.tmpdir canonical root and descendants"
+  ],
+  "persistentNameContainsTmpAccepted": true,
+  "durableSymlinkToTemporaryRefused": true,
+  "persistentSymlinkReturnsCanonicalPath": true,
+  "missingPreparedRejectedWithoutCreation": true,
+  "newModuleHashBoundInControllerFiles": true,
+  "controllerRejectionBeforeCampaignCreationObserved": true,
+  "acceptedPathsDidNotLaunchControllerOrNetwork": true,
+  "historicalTemporaryDirectoriesModified": false,
+  "cppRulesSignaturesPinsChanged": false,
+  "userPathAllowlist": false,
+  "limits": [
+    "Location guard does not prove backups or immunity from manual deletion.",
+    "Validation resolves the existing prepared directory at launch; later external filesystem replacement is outside this scoped qualification.",
+    "VPS remote source/destination verification remains its separate host-local helper scope."
+  ],
+  "networkQualified": false,
+  "productionQualified": false
+}

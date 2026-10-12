@@ -1,0 +1,58 @@
+{
+  "compile": [
+    "/usr/bin/clang++",
+    "-DMCL_BINT_ASM_X64=0",
+    "-DMCL_DONT_USE_XBYAK",
+    "-DMCL_FP_BIT=384",
+    "-DMCL_FR_BIT=256",
+    "-DMCL_MSM=0",
+    "-DMCL_PORTABLE=1",
+    "-DMCL_USE_LLVM=1",
+    "-I/work/third_party/ckzg/blst/bindings",
+    "-I/work/include",
+    "-I/work/src",
+    "-I/work/third_party",
+    "-I/work/third_party/mcl/include",
+    "-O3",
+    "-DNDEBUG",
+    "-std=gnu++20",
+    "-c",
+    "/diagnostic/project-long-gap.cpp",
+    "-o",
+    "/diagnostic/build/project-long-gap.o"
+  ],
+  "containerLimits": {
+    "cpus": "2",
+    "memory": "2g",
+    "network": "none",
+    "nofile": 65536
+  },
+  "coreRevision": "85eb492f",
+  "cwd": "/build/coherent-e33ad89e-amd64",
+  "link": [
+    "/usr/bin/clang++",
+    "-O3",
+    "-DNDEBUG",
+    "/diagnostic/build/project-long-gap.o",
+    "-o",
+    "/diagnostic/build/project-long-gap",
+    "third_party/mcl/bint64.o",
+    "third_party/mcl/base64.o",
+    "/build/publication-cancel-boundary-amd64-20261007/libnano_core.a",
+    "third_party/ckzg/libnano_ckzg.a",
+    "third_party/ckzg/libnano_blst.a",
+    "third_party/secp256k1/lib/libsecp256k1.a",
+    "/usr/lib/x86_64-linux-gnu/libgmpxx.so",
+    "/usr/lib/x86_64-linux-gnu/libgmp.so",
+    "/usr/lib/x86_64-linux-gnu/libssl.so",
+    "/usr/lib/x86_64-linux-gnu/libcrypto.so",
+    "/usr/lib/x86_64-linux-gnu/libicuuc.so",
+    "-ldl",
+    "/usr/lib/x86_64-linux-gnu/librocksdb.so",
+    "lib/libmcl.a"
+  ],
+  "run": [
+    "/diagnostic/build/project-long-gap",
+    "--project-preserved-synthetic-v37"
+  ]
+}

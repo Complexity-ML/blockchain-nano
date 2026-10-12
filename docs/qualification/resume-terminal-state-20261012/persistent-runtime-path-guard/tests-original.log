@@ -1,0 +1,20 @@
+✔ refuses actual system temporary root and descendants /tmp (4.350166ms)
+✔ refuses actual system temporary root and descendants /private/tmp (1.365834ms)
+✔ refuses actual system temporary root and descendants /var/tmp (1.195666ms)
+✔ refuses actual system temporary root and descendants /var/folders/_s/kmk9hhlj4vs2jgpcvt6px6nr0000gn/T (1.093709ms)
+✔ real aliases resolve to the same forbidden temporary storage (0.751709ms)
+✔ persistent directories containing tmp or temporary in their names remain accepted (1.520041ms)
+✔ durable symlink into temporary storage is refused by its real target (1.128458ms)
+✔ symlink to persistent storage returns its canonical existing directory (0.539584ms)
+✔ missing or non-directory preparation is refused without creation (1.232833ms)
+✔ controller rejects temporary preparation before campaign mkdir and all process work (54.343542ms)
+✔ controller rejects durable symlink into temporary storage before campaign mkdir (49.692ms)
+✔ new directory guard is part of the controller source hash binding (0.36525ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 173.446875

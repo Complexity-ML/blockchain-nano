@@ -1,0 +1,16 @@
+{
+  "args": [
+    "/opt/homebrew/bin/ctest",
+    "--test-dir",
+    "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-candidate/build",
+    "-R",
+    "^(consensus_capella_clock_diagnostics|consensus_capella_published_signed_inventory|consensus_capella_publication_cancel_boundary)$",
+    "--output-on-failure",
+    "--no-tests=error",
+    "--parallel",
+    "1",
+    "--output-junit",
+    "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-candidate/targeted-qualification/tests.xml"
+  ],
+  "reason": "Fresh durable native binaries under Apple clang 21; former temporary artifacts unavailable"
+}
