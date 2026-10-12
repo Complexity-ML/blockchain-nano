@@ -1,0 +1,69 @@
+{
+  "format": "nano-autonomous-cold-duty-test-static-delta-review-v1",
+  "reviewer": "evm_activation_review",
+  "createdAtUtc": "2026-10-12T23:16:09.709026+00:00",
+  "subject": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/new-duty-projection-availability-counterexample-20261013/candidate-preparation/integration-arm64/cold-peer-individual-pass/test_capella_duty_availability.cpp",
+    "sha256": "9f763ed14ab698088a2c95b08b147ace5048da59b29b38429048b38d9e0ff6fd"
+  },
+  "previousAutonomousReviewSha256": "0acd9bdb50fc1c91d906642242341af8ed7577fbea2f89a052bcd7cd9736df16",
+  "verdict": "NO_STATIC_BLOCKER_FOR_DISTINCT_COLD_CONFIGURATION_TEST",
+  "deltaFindings": [
+    {
+      "lines": [
+        53,
+        65
+      ],
+      "finding": "slots_1 manifest row required. Empty transaction/receipt trie roots computed explicitly, repairing harness Genesis binding without bypass. Original refusal retained. Core6 unchanged."
+    },
+    {
+      "lines": [
+        76,
+        85
+      ],
+      "finding": "Real Reactor63 checks proposer+attester assignments remain available, sync-members empty/current null before provider, callback errors visible, checkpoint/journal pins unchanged and pending loop healthy. No local signed duty asserted."
+    },
+    {
+      "lines": [
+        129,
+        131
+      ],
+      "finding": "Normal block_admission finite4attempts distinguishes accepted/deferred/rejected and checkpoint must not change while deferred; no fake head or reject bypass."
+    },
+    {
+      "lines": [
+        102,
+        119
+      ],
+      "finding": "Existing migrate_reference_checkpoint({2,1048576}) on fresh synthetic DB BEFORE clocktick/pending journal pins. Complete canonical store/profile/networkidentity/executionblock/accounts equal; separately advanced primary+witness sequence/digests and exact intent previous/next checked; coldformat/cache/initialcoldrows observed."
+    },
+    {
+      "lines": [
+        133,
+        134
+      ],
+      "finding": "All final retained rows cold.64validator/48epoch target384,160signature/60s/128MiB bounds unchanged. Cacheconfig2/1MiB is distinct from processRSS and validation memo; LRU usage directlyobserved=false honest."
+    }
+  ],
+  "productionMethodReference": {
+    "file": "src/consensus_capella_reactor.cpp",
+    "sha256": "709899ac13c6ca2b62e7808aca233b473d1656d160ea60a8b13c273a6759af85",
+    "lines": [
+      246,
+      296,
+      313,
+      320,
+      864,
+      874
+    ],
+    "finding": "Same immutable state/profile/archive publication, checkpoint token authenticated, witness intent before primary commit, state memory onlypublished aftersuccess. Existing method unchanged."
+  },
+  "old11TestsPromotedToExtension": false,
+  "warmLegacyGate": "OPEN: priorRSS137524KiB after39blocks/117signatures remains a distinct observed failure; cold test does not repair/qualify warm variant.",
+  "scope": "Synthetic trusted initial state/highscores/inputtime, normal subsequent peer-wire admission into real Reactor, unregistered pending local key/provider0. Restoration/network/commonfinality/localsignedduties remain unqualified.",
+  "testAssetsAndDriver": "Current driver collects helper/driver/core6/actualpublicfixture SHA beforetest and compares source+parents+fixture hashes afterward. Full coherent core161a/nano64ca and same pinnedARMimage reused, parent buildRO, noimage/core rebuild.",
+  "reviewerTestsRun": 0,
+  "reviewerCompilerInvoked": false,
+  "reviewerDatabaseEnvironmentPrivateCapsuleOrVpsRead": false,
+  "productionQualified": false
+}

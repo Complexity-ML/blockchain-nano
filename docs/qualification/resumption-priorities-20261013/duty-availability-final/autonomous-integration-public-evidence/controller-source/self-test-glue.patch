@@ -1,0 +1,23 @@
+--- a/tests/test_capella_duty_availability.cpp
++++ b/tests/test_capella_duty_availability.cpp
+@@ -10,6 +10,8 @@
+ #include "blst.h"
+ #include <openssl/crypto.h>
+ #include <chrono>
++#include <cstdlib>
++#include <unistd.h>
+ #include <iostream>
+ #include <sys/resource.h>
+ using namespace nano;using namespace test;using namespace test::phase0_minimal;
+@@ -134,4 +136,10 @@
+  std::cout<<Json{{"scenario","capella-real-reactor-duty-projection-head-recovery"},{"result","PASS"},{"syntheticFixture",true},{"syntheticInactivityScore",uint64_t(1)<<30},{"storageOnlyColdMigrationCanonicalFieldsUnchanged",true},{"coldEnvelopeCacheRecords",2},{"coldEnvelopeCacheEncodedBytes",1048576},{"coldDecodedCacheUsageDirectlyObserved",false},{"independentWitnessMigrationBoundToPrimaryTokens",true},{"legacyFlatRssRefusalStillOpen",true},{"genesisValidatorsRoot",hex(Bytes(f.domain.begin(),f.domain.end()))},{"oldHeadProjectionReallyUnavailable",true},{"oldHeadDeferredLoopHealthy",blocked_status.at("healthy")},{"oldHeadCheckpointPreserved",true},{"normallyAdmittedPeerBlocks",blocks},{"newHeadSlot",head->header.slot},{"targetSlot",target},{"newParentPreparationAvailable",true},{"newParentPreparationPolls",polls},{"loopHealthyAfterPeerAdmission",loop.healthy()},{"localKeyPendingRegistration",true},{"localProviderCalls",provider_calls},{"pendingJournalCommitmentUnchanged",true},{"syntheticFixtureSignaturesCreated",signatures},{"clockMonotoneUnchangedAfterInitialTick",true},{"runtimeStarted",false},{"networkStarted",false},{"networkQualified",false},{"productionQualified",false},{"elapsedMs",elapsed()},{"maxRssKiB",rss()}}.dump()<<std::endl;
+ }
+ }
+-int main(int argc,char** argv){try{if(argc==2&&std::string(argv[1])=="--pure63")pure63();else if(argc==3&&std::string(argv[1])=="--reactor63")reactor63(fs::absolute(argv[2]));else if(argc==3&&std::string(argv[1])=="--reactor")reactor_case(fs::absolute(argv[2]));else throw std::invalid_argument("usage: --pure63, --reactor63 <fresh-directory>, or --reactor <fresh-directory>");check(rss()<=131072,"terminal test RSS budget");return 0;}catch(const std::exception& e){std::cerr<<Json{{"result","FAIL"},{"message",e.what()},{"syntheticFixtureSignaturesCreated",signatures},{"elapsedMs",elapsed()},{"maxRssKiB",rss()},{"networkQualified",false},{"productionQualified",false}}.dump()<<std::endl;return 1;}}
++int main(int argc,char** argv){try{if(argc==2&&std::string(argv[1])=="--self-test"){
++ // POSIX atomic creation: never reuse, reset, or remove an existing directory.
++ // TMPDIR may be supplied by the runner; only this newly owned 0700 parent is used.
++ const auto pattern=(fs::temp_directory_path()/"nano-capella-duty-availability-XXXXXX").string();std::vector<char> fresh(pattern.begin(),pattern.end());fresh.push_back(0);
++ const auto created=::mkdtemp(fresh.data());check(created!=nullptr,"fresh self-test parent creation");const fs::path parent(created);check(fs::status(parent).permissions()==fs::perms::owner_all,"self-test parent must be 0700");
++ pure63();reactor63(parent/"sync63");reactor_case(parent/"peer");
++ }else if(argc==2&&std::string(argv[1])=="--pure63")pure63();else if(argc==3&&std::string(argv[1])=="--reactor63")reactor63(fs::absolute(argv[2]));else if(argc==3&&std::string(argv[1])=="--reactor")reactor_case(fs::absolute(argv[2]));else throw std::invalid_argument("usage: --self-test, --pure63, --reactor63 <fresh-directory>, or --reactor <fresh-directory>");check(rss()<=131072,"terminal test RSS budget");return 0;}catch(const std::exception& e){std::cerr<<Json{{"result","FAIL"},{"message",e.what()},{"syntheticFixtureSignaturesCreated",signatures},{"elapsedMs",elapsed()},{"maxRssKiB",rss()},{"networkQualified",false},{"productionQualified",false}}.dump()<<std::endl;return 1;}}

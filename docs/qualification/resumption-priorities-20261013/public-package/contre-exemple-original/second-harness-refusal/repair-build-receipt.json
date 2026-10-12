@@ -1,0 +1,86 @@
+{
+  "format": "nano-new-duty-availability-counterexample-harness-repair-build-v1",
+  "oldRefusal": "first-harness-refusal/pure-duty-projection.run-receipt.json",
+  "repair": "restore one synthetic anchor unrealized_justifications entry required by snapshot schema",
+  "parentHashesBefore": {
+    "nano": "7229d2b86921a7d643cd16137d1356e93d98038b6ad246623b2a924cea3238df",
+    "nano-capella-paused-capture": "b8d16b5dff5bb6068f1469672224539a460df449a02042e6e47792aa7df5ff57",
+    "nano-capella-transition-tests": "56e0dc8b591847ba5d980fc95688b712589c8b0055c1c13b6de9bfbf67e1514d",
+    "libnano_core.a": "27d821c50c5de9cccebe77aa539468297b9074d7b760d7969b9d4e3f124c80af"
+  },
+  "helperSourceSha256": "12869b3e9a622fa9663fa841e07111e3db4cd1b5d5e4a96b72ccdc7a77511c4c",
+  "commands": {
+    "pure-duty-projection": [
+      "/usr/bin/c++",
+      "-DMCL_BINT_ASM_X64=0",
+      "-DMCL_DONT_USE_XBYAK",
+      "-DMCL_FP_BIT=384",
+      "-DMCL_FR_BIT=256",
+      "-DMCL_MSM=0",
+      "-DMCL_PORTABLE=1",
+      "-DMCL_USE_LLVM=1",
+      "-DNANO_SYNC_FAULT=1",
+      "-DNANO_TEST_SOURCE=\"/Users/boris/Dev/blockchain-nano\"",
+      "-I/Users/boris/Dev/blockchain-nano/include",
+      "-I/Users/boris/Dev/blockchain-nano/third_party",
+      "-I/Users/boris/Dev/blockchain-nano/third_party/mcl/include",
+      "-I/Users/boris/Dev/blockchain-nano/third_party/ckzg/src",
+      "-I/Users/boris/Dev/blockchain-nano/third_party/ckzg/blst/bindings",
+      "-I/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-candidate/build/third_party/ckzg/include",
+      "-isystem",
+      "/opt/homebrew/include",
+      "-isystem",
+      "/opt/homebrew/opt/icu4c/include",
+      "-iquote",
+      "/Users/boris/Dev/blockchain-nano/tests",
+      "-O3",
+      "-DNDEBUG",
+      "-std=gnu++20",
+      "-c",
+      "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/new-duty-projection-availability-counterexample-20261013/pure-duty-projection.cpp",
+      "-o",
+      "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/new-duty-projection-availability-counterexample-20261013/pure-duty-projection.o"
+    ],
+    "pure-duty-projection-link": [
+      "/usr/bin/c++",
+      "-O3",
+      "-DNDEBUG",
+      "-Wl,-search_paths_first",
+      "-Wl,-headerpad_max_install_names",
+      "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/new-duty-projection-availability-counterexample-20261013/pure-duty-projection.o",
+      "-o",
+      "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/new-duty-projection-availability-counterexample-20261013/pure-duty-projection",
+      "-Wl,-rpath,/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-candidate/build",
+      "third_party/mcl/bint64.o",
+      "third_party/mcl/base64.o",
+      "libnano_core.a",
+      "third_party/ckzg/libnano_ckzg.a",
+      "libnano-test-sync-fault.dylib",
+      "third_party/ckzg/libnano_blst.a",
+      "third_party/secp256k1/lib/libsecp256k1.a",
+      "/opt/homebrew/lib/libgmpxx.dylib",
+      "/opt/homebrew/lib/libgmp.dylib",
+      "/opt/homebrew/lib/libssl.dylib",
+      "/opt/homebrew/lib/libcrypto.dylib",
+      "/opt/homebrew/opt/icu4c/lib/libicuuc.dylib",
+      "/opt/homebrew/lib/librocksdb.dylib",
+      "lib/libmcl.a"
+    ]
+  },
+  "noCoreRebuild": true,
+  "actualValidatorObjectsReusedWithoutRecompile": true,
+  "pure-duty-projection": {
+    "exitCode": 0,
+    "elapsedSeconds": 1.3242663750424981
+  },
+  "pure-duty-projection-link": {
+    "exitCode": 0,
+    "elapsedSeconds": 0.08270141715183854
+  },
+  "parentHashesAfter": {
+    "nano": "7229d2b86921a7d643cd16137d1356e93d98038b6ad246623b2a924cea3238df",
+    "nano-capella-paused-capture": "b8d16b5dff5bb6068f1469672224539a460df449a02042e6e47792aa7df5ff57",
+    "nano-capella-transition-tests": "56e0dc8b591847ba5d980fc95688b712589c8b0055c1c13b6de9bfbf67e1514d",
+    "libnano_core.a": "27d821c50c5de9cccebe77aa539468297b9074d7b760d7969b9d4e3f124c80af"
+  }
+}

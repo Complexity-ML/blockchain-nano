@@ -1,0 +1,44 @@
+{
+  "format": "nano-coherent-arm64-main-link-static-audit-v1",
+  "reviewer": "evm_activation_review",
+  "objects": [
+    {
+      "source": "/work/src/main.cpp",
+      "object": "CMakeFiles/nano.dir/src/main.cpp.o",
+      "sha256": "76612121a7a2cf2f641bb6c560baa58fb4625d8180d45261406e7c2772208ae6",
+      "mtimeNs": 1791844702430090855
+    }
+  ],
+  "mainObjectsExplicitlyCompiledAfterSourceAndPreconfigure": true,
+  "linkCommandSha256": "35426de5a202d2d9f7adbe3ff4cc341ebdcb14586b6b78045ce018f150766c1a",
+  "linkCommand": [
+    "/usr/bin/clang++",
+    "-O3",
+    "-DNDEBUG",
+    "CMakeFiles/nano.dir/src/main.cpp.o",
+    "-o",
+    "nano",
+    "third_party/mcl/bint64.o",
+    "third_party/mcl/base64.o",
+    "libnano_core.a",
+    "third_party/ckzg/libnano_ckzg.a",
+    "third_party/ckzg/libnano_blst.a",
+    "third_party/secp256k1/lib/libsecp256k1.a",
+    "/usr/lib/aarch64-linux-gnu/libgmpxx.so",
+    "/usr/lib/aarch64-linux-gnu/libgmp.so",
+    "/usr/lib/aarch64-linux-gnu/libssl.so",
+    "/usr/lib/aarch64-linux-gnu/libcrypto.so",
+    "/usr/lib/aarch64-linux-gnu/libicuuc.so",
+    "-ldl",
+    "/usr/lib/aarch64-linux-gnu/librocksdb.so",
+    "lib/libmcl.a"
+  ],
+  "coreArchiveSha256": "161a3450c163aa324ca7c365beb028abb448fbd6912dfb34fcc26d8d230aae26",
+  "nanoSha256": "64ca2a4bf25e0d0bd82e6479f735070ca2cf2b43b756aa8b528d38169ebd0e19",
+  "coreArchiveIsSameFreshBuildRelativePath": true,
+  "noQualifiedParentArchiveAbsolutePathInLink": true,
+  "relatedFullCoreAuditSha256": "efa0d234f221608920218b914f79eff37ea7e3bb1d83d8343202e615fd4526e3",
+  "compilerInvokedByReviewer": false,
+  "testsRunByReviewer": false,
+  "productionQualified": false
+}

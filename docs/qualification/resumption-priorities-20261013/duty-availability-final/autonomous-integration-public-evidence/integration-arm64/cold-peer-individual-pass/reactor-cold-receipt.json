@@ -1,0 +1,121 @@
+{
+  "format": "nano-duty-availability-autonomous-arm64-run-v1",
+  "mode": "--run-reactor-cold",
+  "command": [
+    "docker",
+    "run",
+    "--rm",
+    "--pull=never",
+    "--platform",
+    "linux/arm64",
+    "--network",
+    "none",
+    "--read-only",
+    "--cap-drop",
+    "ALL",
+    "--security-opt",
+    "no-new-privileges",
+    "--user",
+    "501:20",
+    "--cpus",
+    "2",
+    "--memory",
+    "128m",
+    "--memory-swap",
+    "128m",
+    "--ulimit",
+    "cpu=60:60",
+    "--pids-limit",
+    "128",
+    "--mount",
+    "type=bind,source=/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/duty-availability-coherent-arm64-20261013/build,target=/outputs,readonly",
+    "--mount",
+    "type=bind,source=/Users/boris/Dev/blockchain-nano,target=/work,readonly",
+    "--mount",
+    "type=bind,source=/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/new-duty-projection-availability-counterexample-20261013/candidate-preparation/integration-arm64,target=/testing",
+    "--workdir",
+    "/outputs",
+    "sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb",
+    "/testing/test-duty-availability",
+    "--reactor",
+    "/testing/reactor-cold-data"
+  ],
+  "exitCode": 0,
+  "elapsedSeconds": 7.123233959078789,
+  "sourceSha256Before": "9f763ed14ab698088a2c95b08b147ace5048da59b29b38429048b38d9e0ff6fd",
+  "sourceSha256After": "9f763ed14ab698088a2c95b08b147ace5048da59b29b38429048b38d9e0ff6fd",
+  "helperSha256": "45435048c79968d1fbc5a5c1d4292bfb6a550401a1f3d0fe87a3dfaa45105ea7",
+  "parentsBefore": {
+    "libnano_core.a": "161a3450c163aa324ca7c365beb028abb448fbd6912dfb34fcc26d8d230aae26",
+    "nano": "64ca2a4bf25e0d0bd82e6479f735070ca2cf2b43b756aa8b528d38169ebd0e19"
+  },
+  "parentsAfter": {
+    "libnano_core.a": "161a3450c163aa324ca7c365beb028abb448fbd6912dfb34fcc26d8d230aae26",
+    "nano": "64ca2a4bf25e0d0bd82e6479f735070ca2cf2b43b756aa8b528d38169ebd0e19"
+  },
+  "coreSources": [
+    {
+      "path": "include/nano/consensus_altair_epoch.hpp",
+      "sha256": "668bedeb2334109d9cf19ba6fa3a77f5f6396dc484fed525e41e5abe7dc315ac"
+    },
+    {
+      "path": "src/consensus_altair_sync.cpp",
+      "sha256": "86e3ea6d1ee0c4b979ca076194d86da57f2dd54821a14c86391b3b91e3fedeeb"
+    },
+    {
+      "path": "include/nano/consensus_capella_duty.hpp",
+      "sha256": "b5000e20680212b38bf56457d74a557336928637349c650011671698f9570236"
+    },
+    {
+      "path": "src/consensus_capella_duty.cpp",
+      "sha256": "a08ed22c61ca6fa389b5d7e4304fee6772a2f9ee04e8e16ee2b1936bf18a0fff"
+    },
+    {
+      "path": "include/nano/consensus_capella_reactor.hpp",
+      "sha256": "b7b6a3f716945ffca5420d8cf60e9fd73df76974d45938eefaa6341ffe6d4cb4"
+    },
+    {
+      "path": "src/consensus_capella_sync_signing.cpp",
+      "sha256": "975b5072cbcf054fee2f88033763044825630616631f55e2fdfbe3287c3f5fad"
+    }
+  ],
+  "publicFixtureAssetsBefore": {
+    "consensus-capella-slots-official/manifest.json": "4ae10a776342808a5b0eb98dedae873bdd06ef71bfd1acb7117fe4407da2ebc3",
+    "consensus-slashing-official/manifest.json": "5130f01e9f9b8ffefc5ad5329abca2873655533c5bd2b4e26d77aea6d58e735f",
+    "consensus-altair-state-roots-official/manifest.json": "c691821b3cae4f4961c99e6b677196e34deeb6fe7db169aafdf6b22a7925d3ec",
+    "consensus-altair-state-roots-official/minimal-altair.yaml": "b22a2eab9ae1ac23cf79c42f209d607a1d763d4a309f43de2e6be303b8e249b9",
+    "consensus-bellatrix-containers-official/minimal-bellatrix.yaml": "96b8fbfa1a4af173be05f0dc5563af3b9df9e8327277d8f1957a4fdfa49b7cd9",
+    "consensus-capella-withdrawals-official/minimal-capella.yaml": "23fa8aeb37009976ba3f88959f91024f6dd19bde3c999011d7d6eff4ab61e523",
+    "consensus-altair-fork-head-official/minimal-config-v1.6.0-beta.0.yaml": "97457b240b976230b57ddddb4f3ce61688d3f7e5d983803c1d5b8cc4b159bfd3",
+    "consensus-capella-slots-official/slots_1/pre.ssz_snappy": "ffdf6425c022674e2b5f49d88ae8ad7d5bcb19bc1e2e1f33a803b5548b318098",
+    "consensus-capella-slots-official/slots_1/pre.ssz": "f5a464175565a8ed6a74790a60b84477c16a5b1bf71ece55736f192142cbca3d",
+    "consensus-capella-slots-official/slots_1/post.ssz_snappy": "b16fb93cb80c916623f854035b1a2856e58c795f238422acd5c2bb2b106fabd5",
+    "consensus-capella-slots-official/slots_1/post.ssz": "76db391274f7c1aa76a93c223c652a067884fce567d3d312512b62bd681d90dc",
+    "consensus-capella-slots-official/slots_1/slots.yaml": "0b6477aecfbf4beb7578413d2833a505e8f36d56a749ed3fcc43f85c537408d9",
+    "consensus-slashing-official/minimal-phase0.yaml": "e5adcabf45a9c7d5cbaecd42893dcaff7ada826f3e55c176bccc5aa7418710cc",
+    "consensus-slashing-official/minimal-config.yaml": "91074cbc6d3faf0d3edb528c1b01dd214c42912a151bbf09065a0eec2c250d4c",
+    "consensus-slashing-official/LICENSE": "feb87a2e0c305de3464cc44077da5393c52d8ca6362d37427157d04ec6f4510d"
+  },
+  "publicFixtureAssetsAfter": {
+    "consensus-capella-slots-official/manifest.json": "4ae10a776342808a5b0eb98dedae873bdd06ef71bfd1acb7117fe4407da2ebc3",
+    "consensus-slashing-official/manifest.json": "5130f01e9f9b8ffefc5ad5329abca2873655533c5bd2b4e26d77aea6d58e735f",
+    "consensus-altair-state-roots-official/manifest.json": "c691821b3cae4f4961c99e6b677196e34deeb6fe7db169aafdf6b22a7925d3ec",
+    "consensus-altair-state-roots-official/minimal-altair.yaml": "b22a2eab9ae1ac23cf79c42f209d607a1d763d4a309f43de2e6be303b8e249b9",
+    "consensus-bellatrix-containers-official/minimal-bellatrix.yaml": "96b8fbfa1a4af173be05f0dc5563af3b9df9e8327277d8f1957a4fdfa49b7cd9",
+    "consensus-capella-withdrawals-official/minimal-capella.yaml": "23fa8aeb37009976ba3f88959f91024f6dd19bde3c999011d7d6eff4ab61e523",
+    "consensus-altair-fork-head-official/minimal-config-v1.6.0-beta.0.yaml": "97457b240b976230b57ddddb4f3ce61688d3f7e5d983803c1d5b8cc4b159bfd3",
+    "consensus-capella-slots-official/slots_1/pre.ssz_snappy": "ffdf6425c022674e2b5f49d88ae8ad7d5bcb19bc1e2e1f33a803b5548b318098",
+    "consensus-capella-slots-official/slots_1/pre.ssz": "f5a464175565a8ed6a74790a60b84477c16a5b1bf71ece55736f192142cbca3d",
+    "consensus-capella-slots-official/slots_1/post.ssz_snappy": "b16fb93cb80c916623f854035b1a2856e58c795f238422acd5c2bb2b106fabd5",
+    "consensus-capella-slots-official/slots_1/post.ssz": "76db391274f7c1aa76a93c223c652a067884fce567d3d312512b62bd681d90dc",
+    "consensus-capella-slots-official/slots_1/slots.yaml": "0b6477aecfbf4beb7578413d2833a505e8f36d56a749ed3fcc43f85c537408d9",
+    "consensus-slashing-official/minimal-phase0.yaml": "e5adcabf45a9c7d5cbaecd42893dcaff7ada826f3e55c176bccc5aa7418710cc",
+    "consensus-slashing-official/minimal-config.yaml": "91074cbc6d3faf0d3edb528c1b01dd214c42912a151bbf09065a0eec2c250d4c",
+    "consensus-slashing-official/LICENSE": "feb87a2e0c305de3464cc44077da5393c52d8ca6362d37427157d04ec6f4510d"
+  },
+  "memoryLimitBytes": 134217728,
+  "cpuLimitSeconds": 60,
+  "collectorWallLimitSeconds": 65,
+  "networkDisabled": true,
+  "productionQualified": false
+}

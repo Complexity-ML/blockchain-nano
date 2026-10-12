@@ -1,5 +1,14 @@
 # Feuille de route EIP — état réel de Nano
 
+État courant — 13 octobre : GitHub main vérifiée à `b7719685` avant ce lot ; sources et rapports récupérables, aucune sauvegarde complète de validateur V37 retrouvée dans le périmètre examiné. La projection pure du vrai checkpoint commun Mac à 22:30:29 UTC montre 64 actifs et des comités/proposant disponibles ; elle ne démontre aucune reprise ni signature et sa fenêtre administrative de 2 h est expirée. [Preuves, refus et limites](qualification/resumption-priorities-20261013/README.md).
+
+Le défaut local de disponibilité est corrigé dans six sources, avec admission entrante toujours stricte. Le cœur et le binaire ont été entièrement recompilés sur Docker ARM64 (139 unités du cœur et l’unité principale). Les deux régressions concernées passent ; le nouveau CTest réel passe ses trois scénarios en 7,11 s, dont 48 blocs admis normalement puis une préparation disponible sur la nouvelle tête. Ce scénario utilise un état et des clés synthétiques, un validateur local en attente d’inscription et le stockage par références : zéro appel au fournisseur de signature locale, aucune reprise de réseau ou finalité WAN. Le refus à 128 MiB RSS de l’ancien format reste ouvert. Le test est ajouté à la sélection CI de 14 noms ; huit contrôles du harnais puis un nouveau contrôle ciblé des six substitutions interdites passent, sans revendiquer une exécution complète de cette sélection ou de la CI GitHub.
+
+Ce lot est prêt à livrer par Git après revue ; sa compilation native/AMD64, sa reprise effective des duties et la finalité commune entre trois environnements restent ouvertes. Les quatre preuves VPS restent sur VPS, en attente d’autorisation dédiée d’export. V37 FAILED, tous les critères initiaux de production/Base–Nano/Doppler, l’exploitation, le pruning, la revue de sécurité indépendante et les statuts EIP sont conservés sans promotion. Goal actif ; aucun fonds ni déploiement public.
+
+État précédent conservé :
+
+
 CI du lot d’outillage livré8e053d99 : run38313225000 terminé avant toute étape ; operations/changes refusés, core/network skipped. Les annotations indiquent un paiement récent échoué ou une limite de dépenses, sans préciser lequel. Zéro test CI exécuté, aucun réglage de facturation modifié. [Reçu terminal actuel](qualification/isolated-recovery-tooling-ci-20261012/ci-8e053d99-terminal.json). Sources livrées sur main et récupérées sur VPS ; reprise des duties, finalité commune et toutes les exigences restantes restent ouvertes.
 
 

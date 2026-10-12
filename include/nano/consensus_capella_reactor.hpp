@@ -98,7 +98,7 @@ class CapellaDurableReactor {
  const SyncAdmissionContext& sync_admission_context_locked(const ConsensusRoot&,uint64_t,const std::function<void()>&);
  struct SyncSigningContext {uint64_t slot;ConsensusRoot parent,block_root,genesis_root;ConsensusBytes4 version;std::map<uint64_t,Bytes> members;};
  std::optional<SyncSigningContext> sync_signing_context_;
- const SyncSigningContext& sync_signing_context_locked(uint64_t,const std::function<void()>&);
+ const SyncSigningContext* sync_signing_context_locked(uint64_t,const std::function<void()>&);
  bool sync_messages_current_locked(const PendingSyncMessages&,const std::function<void()>&)const;
  bool submit_sync_message_locked(const CapellaSyncMessage&,const ForkCheckpointToken&,const std::function<void()>&);
  bool submit_sync_aggregate_locked(uint64_t,std::span<const uint8_t>,const ForkCheckpointToken&,const std::function<void()>&);

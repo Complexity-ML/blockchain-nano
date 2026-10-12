@@ -96,6 +96,7 @@ bool CapellaDutyPreparation::retarget(const CapellaForkStore& store,const Capell
  const auto head_pin=capella_fork_head(store,rules_,check);const auto& head=*head_pin;if(head.header!=head_.parent())return false;
  const auto& t=rules_.transition;const auto slots=t.consensus.epoch.ffg.slots_per_epoch;
  capella_fork_block_context(head.state,head.header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state,check);
+ if(projection_blocked_){if(check)check();slot_=slot;return true;}
  auto root=consensus_beacon_header_root(head.header);const auto start=(slot/slots)*slots;
  bool available=true;
  while(store.timed.view.nodes.at(root).slot>start){
@@ -118,22 +119,37 @@ void CapellaDutyPreparation::seed_target(const CapellaTargetPreparation& ready,c
  if(target_&&ready.ready()&&ready.matches(store,rules_,target_->target(),check))target_=ready;
 }
 bool CapellaDutyPreparation::advance(uint64_t maximum_slots,uint64_t trials,const std::function<void()>& check){
- const auto slots=rules_.transition.consensus.epoch.ffg.slots_per_epoch;
- const bool head_ready=head_.advance(slot_,maximum_slots,trials,check);
- bool target_ready=true,block_ready=true;
- if(target_)target_ready=target_->advance(maximum_slots,trials,check);
- if(block_)block_ready=block_->advance_for_block(slot_,maximum_slots,trials,check);
- return head_ready&&target_ready&&block_ready;
+ if(!maximum_slots||!trials)throw std::invalid_argument("invalid Capella duty continuation bounds");
+ // A caller's cancellation/error must never masquerade as a missing future
+ // committee, even if its callback throws the same exception type.
+ bool callback_failed=false;
+ auto checkpoint=[&]{if(check)try{check();}catch(...){callback_failed=true;throw;}};
+ checkpoint();if(projection_blocked_)return false;
+ try{
+  const bool head_ready=head_.advance(slot_,maximum_slots,trials,checkpoint);
+  bool target_ready=true,block_ready=true;
+  if(target_)target_ready=target_->advance(maximum_slots,trials,checkpoint);
+  if(block_)block_ready=block_->advance_for_block(slot_,maximum_slots,trials,checkpoint);
+  return head_ready&&target_ready&&block_ready;
+ }catch(const EmptyAltairSyncActiveSet&){
+  if(callback_failed)throw;
+  projection_blocked_=true;return false;
+ }
 }
 bool CapellaDutyPreparation::ready()const{
- const auto slots=rules_.transition.consensus.epoch.ffg.slots_per_epoch;
- return head_.slot()==slot_&&(!target_||target_->ready())&&(!block_||block_->prepared_slot()==slot_-1);
+ return !projection_blocked_&&head_.slot()==slot_&&(!target_||target_->ready())&&(!block_||block_->prepared_slot()==slot_-1);
 }
 const CapellaSlotState& CapellaDutyPreparation::head_state()const{
  if(!ready())throw std::logic_error("Local duty preparation incomplete");return head_.state();
 }
 CapellaSlotState CapellaDutyPreparation::sync_state(uint64_t trials,const std::function<void()>& check)const{
  if(!ready())throw std::logic_error("Local sync preparation incomplete");auto frame=head_;frame.advance(slot_+1,1,trials,check);return frame.state();
+}
+std::optional<CapellaSlotState> CapellaDutyPreparation::try_sync_state(uint64_t trials,const std::function<void()>& check)const{
+ bool callback_failed=false;
+ auto checkpoint=[&]{if(check)try{check();}catch(...){callback_failed=true;throw;}};
+ try{return sync_state(trials,checkpoint);}
+ catch(const EmptyAltairSyncActiveSet&){if(callback_failed)throw;return std::nullopt;}
 }
 const CapellaBlockPreparation* CapellaDutyPreparation::block()const{
  if(!ready())throw std::logic_error("Local block preparation incomplete");return block_?&*block_:nullptr;

@@ -1,0 +1,65 @@
+{
+  "format": "nano-independent-duty-binding-targeted-addendum-v1",
+  "reviewedAtUtc": "2026-10-12T23:24:55.894155+00:00",
+  "previousReviewSha256": "efe5308370d219bdee4230d842dce44d4a78eba551cbde6898ea5a6e6abe01b1",
+  "reviewMode": "read-only source and existing public receipt; no execution",
+  "verdict": "No blocking defect; previous dedicated negative duty-binding coverage gap is now covered in this exact targeted scope",
+  "newSourceSha256": "706f8d886f0d12571c6ff8ca7491a769f5343bd5e50c3bd1cde93ae57c59e43e",
+  "previousSourceSha256AfterRemovingExactFiveLineAddition": "647d7f4bc924c629a3554d238edbae1ecc1958500e00b0142d5008f0b3bb6fa8",
+  "oldEightTestBodiesAndImportsByteIdenticalAfterRemoval": true,
+  "unchangedOtherReviewedSourcePaths": [
+    "include/nano/consensus_altair_epoch.hpp",
+    "src/consensus_altair_sync.cpp",
+    "include/nano/consensus_capella_duty.hpp",
+    "src/consensus_capella_duty.cpp",
+    "include/nano/consensus_capella_reactor.hpp",
+    "src/consensus_capella_sync_signing.cpp",
+    "tests/test_capella_duty_availability.cpp",
+    "CMakeLists.txt",
+    "scripts/ci/core.sh",
+    "scripts/ci/check-core.cmake",
+    "scripts/ci/verify-results.sh"
+  ],
+  "newTestName": "duty availability registration cannot substitute a different program, mode, label or budget",
+  "negativeVariants": [
+    "different mode --pure63",
+    "different executable /usr/bin/true",
+    "different timeout71 instead of70",
+    "foreign label",
+    "extra label",
+    "extra argv"
+  ],
+  "gateErrorMustMatch": "Duty availability self-test",
+  "receiptPath": "ci-duty-binding-targeted-test.json",
+  "receiptSha256": "a4aff5ecc3898f51aa2f5e4db428456058131775155c2a6d9143fe7aaa4e0f1c",
+  "observedTargetedExecution": {
+    "command": [
+      "node",
+      "--test",
+      "--test-name-pattern",
+      "duty availability registration",
+      "scripts/ci/check-core.test.mjs"
+    ],
+    "exitCode": 0,
+    "toolChunk": "b926cd",
+    "tests": 1,
+    "pass": 1,
+    "fail": 0,
+    "skipped": 0
+  },
+  "combinedHistoricalEvidence": "8 previous harness tests passed on prior source, plus1 newly added targeted test passed; no aggregate nine-test suite run inferred",
+  "oldCppAndCtestNotRerun": true,
+  "fullNineHarnessSuiteRun": false,
+  "fullFourteenCppSelectionRun": false,
+  "ciSourceObservedByReviewerTerminalOnly": true,
+  "priorStandaloneEightHarnessLogPreexecutionSourcePinStillNotInAllowlist": true,
+  "originalScopeObservationsRemain": [
+    "one actual aggregate CTest with3scenarios, JUnit system-out truncated",
+    "CTest container memory2g versus internal RSSguard128MiB",
+    "recompile kzg+relink byte-identical archive actually occurred",
+    "pending local key/provider0 does not prove resumed local signed duties",
+    "legacy flat RSS refusal still open"
+  ],
+  "noPrivateOrDatabaseOrVpsAccess": true,
+  "productionQualified": false
+}

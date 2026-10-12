@@ -1,0 +1,86 @@
+{
+  "format": "nano-post-ready-sync-availability-static-review-v1",
+  "reviewer": "evm_activation_review",
+  "createdAtUtc": "2026-10-12T22:36:15.550068+00:00",
+  "verdict": "NO_STATIC_BLOCKER_IN_PINNED_LOCAL_SYNC_OPTIONAL_POINTER_EXTENSION",
+  "sixSourceBindingSha256": "d18ca0b821f22065c6998c4f56ad7943db8c9803fa358b67fe4c3cbf41e307a6",
+  "sourceBindings": [
+    {
+      "path": "include/nano/consensus_altair_epoch.hpp",
+      "sha256": "668bedeb2334109d9cf19ba6fa3a77f5f6396dc484fed525e41e5abe7dc315ac"
+    },
+    {
+      "path": "src/consensus_altair_sync.cpp",
+      "sha256": "86e3ea6d1ee0c4b979ca076194d86da57f2dd54821a14c86391b3b91e3fedeeb"
+    },
+    {
+      "path": "include/nano/consensus_capella_duty.hpp",
+      "sha256": "b5000e20680212b38bf56457d74a557336928637349c650011671698f9570236"
+    },
+    {
+      "path": "src/consensus_capella_duty.cpp",
+      "sha256": "a08ed22c61ca6fa389b5d7e4304fee6772a2f9ee04e8e16ee2b1936bf18a0fff"
+    },
+    {
+      "path": "include/nano/consensus_capella_reactor.hpp",
+      "sha256": "b7b6a3f716945ffca5420d8cf60e9fd73df76974d45938eefaa6341ffe6d4cb4"
+    },
+    {
+      "path": "src/consensus_capella_sync_signing.cpp",
+      "sha256": "975b5072cbcf054fee2f88033763044825630616631f55e2fdfbe3287c3f5fad"
+    }
+  ],
+  "previousFourSourceReviewSha256": "a3674f8c29abd5276bebdd8ee7ae91600da0fc27adc4a4cb0c4438ae86114822",
+  "findings": [
+    {
+      "file": "src/consensus_capella_duty.cpp",
+      "lines": [
+        145,
+        153
+      ],
+      "finding": "Strict sync_state unchanged; try_sync_state const copies frame through strict method and converts only real EmptyAltairSyncActiveSet into nullopt. Callback same type flagged and rethrown; ready/bounds/resource/other context errors propagate. No change to global blocked/ready state; proposal/attestation contexts remain available."
+    },
+    {
+      "file": "include/nano/consensus_capella_reactor.hpp",
+      "line": 101,
+      "finding": "Private context API now pointer; no public RPC return signature or admission API relaxed."
+    },
+    {
+      "file": "src/consensus_capella_sync_signing.cpp",
+      "lines": [
+        8,
+        30,
+        32,
+        64
+      ],
+      "finding": "Exactly two callers under mutex hold cache pointer lifetime. Null on main preparation false or unavailable local slot+1 projection precedes constructing partial cache/disk checkpoint/journal.ready/sign/provider/admission. Positive cache bound slot+head unchanged. Registration guard and clock timing/errors retained."
+    },
+    {
+      "file": "src/consensus_capella_sync_signing.cpp",
+      "line": 14,
+      "finding": "Initial bounded preparation incomplete now returns nullptr instead of prior StaleCapellaDuty. It is ordinary no-result deferral rather than exceptional stale metric; no new generic catch. This small explicit behavior change is part of the reviewed delta."
+    },
+    {
+      "file": "src/consensus_capella_local_body.cpp",
+      "lines": [
+        22,
+        35
+      ],
+      "finding": "Git diff confirms localbody unchanged. Incoming sync admission continues strict sync_state/fallback and unchanged BLS/SSZ/membership checks. Validator/signing sources also unchanged."
+    }
+  ],
+  "negativeCasesStillRequired": [
+    "ready slot63 with future64/E8 active set empty: strict throws/try null while proposer+attestation contexts retained",
+    "typed callback same exception at entry/inside advancement propagates without caching/defer",
+    "zero budgets/incomplete/resource/corrupt context remain refusal exceptions",
+    "new authenticated peer parent allows actual local sync context and no cross-head cache confusion",
+    "provider/journal/incoming admission errors remain unchanged and visible"
+  ],
+  "reviewerDidNotRunTestsOrBuild": true,
+  "reviewerDidNotReadDatabaseEnvironmentPrivateCapsulesOrVps": true,
+  "old11PureCasesPromotedToThisExtension": false,
+  "new63CasesQualifiedByThisReview": false,
+  "fullCoherentCoreBuiltByReviewer": false,
+  "realReactorIntegrationQualified": false,
+  "productionQualified": false
+}

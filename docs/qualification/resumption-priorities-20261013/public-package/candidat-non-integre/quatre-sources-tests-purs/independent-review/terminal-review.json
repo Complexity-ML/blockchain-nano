@@ -1,0 +1,95 @@
+{
+  "format": "nano-local-duty-availability-candidate-static-review-v1",
+  "reviewer": "evm_activation_review",
+  "createdAtUtc": "2026-10-12T22:26:41.724967+00:00",
+  "verdict": "NO_STATIC_BLOCKER_IN_FOUR_FILE_PURE_LOCAL_PREPARATION_PATCH",
+  "sourceBindings": {
+    "include/nano/consensus_altair_epoch.hpp": "668bedeb2334109d9cf19ba6fa3a77f5f6396dc484fed525e41e5abe7dc315ac",
+    "src/consensus_altair_sync.cpp": "86e3ea6d1ee0c4b979ca076194d86da57f2dd54821a14c86391b3b91e3fedeeb",
+    "include/nano/consensus_capella_duty.hpp": "f1cc346df5fe2a86655ba9b66d153d88e0b7896d5a38bf6d4b52ca96bf215b22",
+    "src/consensus_capella_duty.cpp": "e612facfb112e38cf6d8d68a652b394b59f8731acd319871c3207f2395047bc2"
+  },
+  "currentTerminalTestAssetBindings": {
+    "test-duty-availability.cpp": "28dda7d20b658833d666c3ada372991fbb150814ea2dd7208812b2cfb98b4ffb",
+    "public-duty-context.hpp": "56b819d1a52e425dc953bfe55dac6e3bd8b85673c8f3f6aa0c1de5278b22c290",
+    "build-and-run-candidate.py": "706fd38e460d6961bcf1d85d2c3977d0ea3331040b3dd3a233128c726fae0a48"
+  },
+  "testAssetBindingScope": "Current bytes observed by reviewer at terminal. Original build/run sourceBindings only covered four production files; no retroactive claim of beforecompile asset SHA collection.",
+  "evidenceBindings": {
+    "before-source-binding.json": "3623a5c0998893b5fa8927b5c8a8bdfe868f0658b09277c05eac1325e29b34ea",
+    "candidate.patch": "468df1d84ce466b507e830b906837e92c3470dbb9357ee8ab0ed26adaee30e74",
+    "build-receipt.json": "4069247fd17204a3dd9606411274685904d67b1c1abf650eecebddc67617582a",
+    "run-receipt.json": "25886f76915728f15986dba7a837a0b98774828a9b14c97acf50271d13a88048",
+    "candidate-link.map": "7f1ebcc3202fcccd2dbd5516dbb2b89fc0d7aff422e6142124f64b0a9624c430"
+  },
+  "findings": [
+    {
+      "file": "include/nano/consensus_altair_epoch.hpp",
+      "lines": [
+        32,
+        38
+      ],
+      "finding": "EmptyAltairSyncActiveSet derives std::invalid_argument with exact prior message; no epoch/balance/rule change."
+    },
+    {
+      "file": "src/consensus_altair_sync.cpp",
+      "lines": [
+        16,
+        18
+      ],
+      "finding": "Only active.empty rejection throws the new typed exception. Invalid SSZ/rules, overflow, sampling resource limits, BLS key errors remain distinct and strict."
+    },
+    {
+      "file": "src/consensus_capella_duty.cpp",
+      "lines": [
+        121,
+        137
+      ],
+      "finding": "Typed catch is only on pure local preparation advance. Positive budgets validated before blocked fast path; checkpoint wrapper marks any caller exception and rethrows it, even same typed class. Other errors not caught/conflated. One bool cache is intrinsic to immutable authenticated parent/profile."
+    },
+    {
+      "file": "src/consensus_capella_duty.cpp",
+      "lines": [
+        93,
+        99,
+        139,
+        163
+      ],
+      "finding": "Retarget rejects backwards/UINT64_MAX/profile mismatch and changed authenticated parent. Blocked same-parent case validates parent context/callback before changing slot only. ready false forbids derived head/block/target/sync access and returns no duties/context. New object default clears blocked state."
+    },
+    {
+      "file": "candidate-link.map",
+      "finding": "Object table checked independently: new two overrides loaded, no old replaced source objects or old Reactor/signing/validator/runtime/clock units. This scope avoids changed DutyPreparation layout mixed with old Reactor ABI."
+    },
+    {
+      "file": "test-duty-availability.cpp",
+      "lines": [
+        25,
+        66
+      ],
+      "finding": "11 targeted public pure cases cover strict nonlocal typed rejection, defer/cache, inaccessible derived duties, invalid budgets, typed/untyped callback propagation, real sampling resource refusal, same-parent/profile monotone retarget and fresh synthetic parent. No signed peer admission; alternate contexts explicitly replace trusted synthetic roots."
+    }
+  ],
+  "observedExternalRun": {
+    "exitCode": 0,
+    "caseCount": 11,
+    "elapsedMs": 223,
+    "maxRssKiB": 14416,
+    "reviewerDidNotRerun": true
+  },
+  "remainingGates": [
+    "Full coherent Reactor/validator/native+Docker integration has not been tested; pure overrides do not promote parent nano binaries.",
+    "sync_state(slot+1), block construct/proposer paths outside advance, provider/journal failure paths and general replay variants remain open.",
+    "Cancellation must remain distinguishable in real runtime threading and incoming admission must continue rejecting unavailable contexts.",
+    "Actual authenticated peer head transition, resumed duties, complete restoration and common-finality advancement remain unqualified.",
+    "No source input age filter, fake wall time, state/balance/root adjustment, generic validator catch, signature or DB reset was introduced in the four-file patch."
+  ],
+  "testsRunByReviewer": 0,
+  "buildsRunByReviewer": 0,
+  "databaseOpenedByReviewer": false,
+  "keysOrEnvironmentFilesReadByReviewer": false,
+  "networkOrVpsUsedByReviewer": false,
+  "sourceEditedByReviewer": false,
+  "realReactorIntegrationQualified": false,
+  "productionQualified": false
+}

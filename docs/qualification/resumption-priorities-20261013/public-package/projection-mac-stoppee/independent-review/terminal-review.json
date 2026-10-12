@@ -1,0 +1,124 @@
+{
+  "format": "nano-actual-stopped-store-projection-static-review-v1",
+  "reviewer": "evm_activation_review",
+  "createdAtUtc": "2026-10-12T22:13:46.842130+00:00",
+  "repoHead": "b77196858896896f517e85ce37eaf45c2973584d",
+  "qualifiedCoreSource": "85eb492f641452c4746ee60f027eacefa775b0b0",
+  "subject": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-stopped-store-projection-20261012/project-actual-stopped-store.cpp",
+    "sha256": "304946a4ca60f9eec4be65cbf0cf42818e90695060608f59d863dfb509a4c58b"
+  },
+  "verdict": "NO_STATIC_BLOCKER_WITHIN_PINNED_LINUX_ARM_READONLY_PROJECTION_SCOPE",
+  "scope": {
+    "mode": "Linux ARM Docker only",
+    "staticSourceReview": true,
+    "testsRunByReviewer": 0,
+    "compilerInvokedByReviewer": false,
+    "sourceCapsulesReadByReviewer": false,
+    "databaseOpenedByReviewer": false,
+    "privateKeysReadByReviewer": false,
+    "environmentReadByReviewer": false,
+    "vpsAccessedByReviewer": false,
+    "sourceEditedByReviewer": false
+  },
+  "findings": [
+    {
+      "lines": [
+        35,
+        51
+      ],
+      "finding": "Same bounded bytes are SHA checked then parsed; canonical paths, regular file/euid, no group/world write, capsule0600, O_RDONLY/O_NOFOLLOW and before/after identity checks; all source hashes/inodes checked again at end. EINTR read produces a safe refusal, not a write."
+    },
+    {
+      "lines": [
+        73,
+        85
+      ],
+      "finding": "Pinned capture/report/config/stop/domain references are cross-bound; independent core witness canonical current intent links next to primary and previous+1 sequence. Key indices/pubkeys/primary stop aliases are re-linked, without reopening or independently redecoding the 32 journal snapshots/intents."
+    },
+    {
+      "lines": [
+        89,
+        99
+      ],
+      "finding": "Expected request SHA is externally required. System wall time is genuinely sampled and target as-of must be fresh <=5 seconds before projection. Actual64 registry/domain/network identity decoded from bound snapshot with qualified C++ core; exact runtime limits and unchanged finite2h/60step/120000ms policy enforced."
+    },
+    {
+      "lines": [
+        101,
+        104
+      ],
+      "finding": "Uses CapellaSlotPreparation on an authenticated parent, bounded64 slot chunks and100000 sync trials, epoch-boundary vote_context telemetry, then pure proposer_identity. No durable reactor, clock publication, signer, journal, database, network or runtime constructor/callback."
+    },
+    {
+      "lines": [
+        29,
+        35
+      ],
+      "finding": "Linux-only st_mtim/st_ctim and ru_maxrss KiB confirmed by author; no Mac-native portability claim.60s/128MiB are cooperative observation/refusal budgets, not universal OS-enforced ceilings."
+    }
+  ],
+  "sourceReferences": [
+    {
+      "file": "src/consensus_capella_fork_state.cpp",
+      "sha256": "d967d0ac35b0811ec62c88fe2aa6bf961bf49f10743644e2503fa2174061f822",
+      "lines": [
+        40,
+        59,
+        77,
+        92
+      ],
+      "reason": "Pure ephemeral continuation, context/proposer derivation; no durable/sign side effects."
+    },
+    {
+      "file": "include/nano/consensus_capella_fork_state.hpp",
+      "sha256": "205ced9b7a85e562f69a2f9ff680368597bcd8110a5b0fcf42c4ac8c3715dd36",
+      "lines": [
+        23,
+        50
+      ],
+      "reason": "Explicitly ephemeral empty-slot continuation; signed parent post-state must not be replaced."
+    },
+    {
+      "file": "src/consensus_capella_store_snapshot.cpp",
+      "sha256": "a2de75d049eb959930f394ff2906fdb35dd038e7af172f823ab00374f0cf3369",
+      "reason": "Canonical authenticated store decoder used by projection."
+    },
+    {
+      "file": "src/consensus_capella_clock.cpp",
+      "sha256": "d1783e690e878612e18d1f943d22466727ebe059ac502b812b18fd045f126d16",
+      "lines": [
+        8,
+        28
+      ],
+      "reason": "Real startup_catch_up publishes time with changing wall samples and locks/reactor; projection is not this path."
+    },
+    {
+      "file": "src/consensus_capella_runtime.cpp",
+      "sha256": "408c44ce774583aa9791e04ef19002a8decad4768cb523e9e810307228b6fa3e",
+      "lines": [
+        54,
+        78
+      ],
+      "reason": "Actual Beacon Shanghai/profile/replay/clock runtime criteria remain unchanged."
+    },
+    {
+      "file": "tests/capella/isolated_stopped_capture.cpp",
+      "sha256": "718761a654576f93bb0bbbf258f52015e1d10ba0544672556a189568ab3e1f55",
+      "lines": [
+        162,
+        166
+      ],
+      "reason": "Prior stopped journal/witness capture is source of pinned proof; not rerun here."
+    }
+  ],
+  "limitations": [
+    "Authority is the caller independently supplying the exact request SHA; the helper does not authenticate an arbitrary self-consistent user request against a global authority.",
+    "Availability is projected at actualWallObservedMs, not guaranteed at the later completion/current instant.",
+    "Real startup catch-up, its publications, finite-step elapsed time and duty/network scheduling are not exercised.",
+    "Source journals and anti-double-signature floors reuse prior capture718 hash-pinned provenance; no new physical audit.",
+    "Sync membership/aggregate bytes are observed, aggregate signature/BLS semantics are not newly qualified.",
+    "Passing this helper does not authorize signatures, restoration signing, recovery, consensus liveness or production readiness."
+  ],
+  "productionQualified": false
+}

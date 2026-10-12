@@ -16,6 +16,10 @@ class CapellaDutyPreparation {
  CapellaSlotPreparation head_;
  std::optional<CapellaTargetPreparation> target_;
  std::optional<CapellaBlockPreparation> block_;
+ // One unavailable pure projection, bound to this immutable head/profile.
+ // A new authenticated parent requires a new continuation; no state/signature
+ // is invented while the selected head remains unavailable.
+ bool projection_blocked_=false;
 public:
  CapellaDutyPreparation(const CapellaForkStore&,const CapellaForkBlockRules&,uint64_t,
   const std::function<void()>& checkpoint={});
@@ -28,6 +32,9 @@ public:
  bool ready()const;
  const CapellaSlotState& head_state()const;
  CapellaSlotState sync_state(uint64_t trials,const std::function<void()>& checkpoint={})const;
+ // Local sync duty availability only. Strict sync_state remains unchanged;
+ // callbacks/resource/context errors still propagate, without any signature.
+ std::optional<CapellaSlotState> try_sync_state(uint64_t trials,const std::function<void()>& checkpoint={})const;
  const CapellaBlockPreparation* block()const;
  const CapellaTargetPreparation* target_preparation()const;
  std::map<uint64_t,CapellaAttestationDuty> duties(const CapellaForkStore&,

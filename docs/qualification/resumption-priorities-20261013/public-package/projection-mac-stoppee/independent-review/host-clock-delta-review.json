@@ -1,0 +1,36 @@
+{
+  "format": "nano-actual-stopped-store-host-clock-static-delta-review-v1",
+  "reviewer": "evm_activation_review",
+  "subjectSha256": "f9bf00be7ed3707e441ff64b2e5d4372cab7d355c5c9e450bee58a0a2aadc0f9",
+  "initialReviewSha256": "b068571379ffd04c06c9fcf41dc84d0dee9bc908ce85797ff4e5c94a8d383d40",
+  "profilePathDeltaReviewSha256": "9a87abde6968c35e0e197e44de91127298d06032731fb2bb404960a11507d40e",
+  "verdict": "NO_STATIC_BLOCKER_FOR_HELPER_HOST_CLOCK_OBSERVATION",
+  "changes": [
+    {
+      "lines": [
+        89,
+        99
+      ],
+      "finding": "Externally supplied actualWallObservedMs must be null; helper reads system_clock itself after snapshot/domain authentication immediately before unchanged finite clock policies and pure projection. No caller-specified synthetic target time or system clock modification."
+    },
+    {
+      "line": 51,
+      "finding": "Added diagnostic reports only source input ordinal, per-field equality and timestamp nanoseconds. Strict same(identity) and SHA refusal still occurs; no exception for a changed request or source input."
+    }
+  ],
+  "preservedGuards": [
+    "same raw hash/JSON input binding",
+    "exact11source bindings and separately pinned request template",
+    "regular canonical O_NOFOLLOW reads/euid/modes/size",
+    "final full SHA/identity recheck",
+    "profile sha256/maximumBytes comparison",
+    "fresh host observation <=5seconds before projection",
+    "finite2h downtime/60steps/120000ms policy",
+    "64slot chunks and100000sync trials",
+    "Linux ARM read-only pure projection scope"
+  ],
+  "reviewerDidNotReadPrivateCapsules": true,
+  "reviewerDidNotExecuteOrCompile": true,
+  "runtimeRestorationQualified": false,
+  "productionQualified": false
+}

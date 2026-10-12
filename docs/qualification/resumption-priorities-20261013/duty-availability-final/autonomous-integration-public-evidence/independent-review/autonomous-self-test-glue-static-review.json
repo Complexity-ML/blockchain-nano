@@ -1,0 +1,35 @@
+{
+  "format": "nano-autonomous-duty-self-test-glue-static-review-v1",
+  "reviewer": "evm_activation_review",
+  "createdAtUtc": "2026-10-12T23:16:09.709614+00:00",
+  "subjectSha256": "8690cc722e6642d14be1bc4b021eef9924be47e2b7e17d070a04908aa256ded2",
+  "driverSha256": "9b3c770fcd7b551965f939d9c19b6cce5b85709b2aeac5bee1bd17e51c354524",
+  "priorColdReviewSha256": "7b2ff06cfdfaf957b139008ed4cb2653ae233e89952ae96287c6ff6029819504",
+  "verdict": "NO_STATIC_BLOCKER_IN_ATOMIC_FRESH_PARENT_AGGREGATE_GLUE",
+  "findings": [
+    {
+      "file": "tests/test_capella_duty_availability.cpp",
+      "lines": [
+        139,
+        145
+      ],
+      "finding": "POSIX mkdtemp atomically reserves a new0700 parent then pure63, reactor63 sync63 subtree, coldpeer peer subtree. No reset/reuse/removal/cleanup. Global wall/RSS/signature counters remain cumulative; only peer mode signs144expected under160cap."
+    },
+    {
+      "file": "build-autonomous-arm64.py",
+      "lines": [
+        30,
+        43
+      ],
+      "finding": "Aggregate mode uses new self-test-tmp created0700 and explicit TMPDIR=/testing/self-test-tmp on onlyRW owned testing mount; compatible readonlyrootfs. Same source/core parents/fixture pin assertions, no network,128MiBCPU60wall65 caps."
+    }
+  ],
+  "executionState": "Owner compiled this aggregate source only; no manual aggregate run. Root will own the single registered CTest/JUnit execution. This review performs no run/compile.",
+  "individualOldResultsRemainSeparate": true,
+  "oldFailuresRemainOpen": true,
+  "individualResultsAddedAsNewQualificationCount": false,
+  "provider0PendingKeyScope": true,
+  "resumedLocalSignaturesQualified": false,
+  "networkQualified": false,
+  "productionQualified": false
+}

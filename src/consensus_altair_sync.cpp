@@ -15,7 +15,7 @@ Bytes prepare_altair_sync_updates(std::span<const uint8_t> b,const AltairStateLi
  const auto validators=number(historical+88,4),balances=number(historical+92,4),count=(balances-validators)/121;
  std::vector<uint64_t> active;
  for(size_t i=0;i<count;++i){if(checkpoint)checkpoint();const auto at=validators+121*i;if(number(at+97)<=epoch&&epoch<number(at+105))active.push_back(i);}
- if(active.empty())throw std::invalid_argument("empty Altair sync active set");
+ if(active.empty())throw EmptyAltairSyncActiveSet();
  const auto position=epoch%l.epochs_per_historical_vector,back=r.min_seed_lookahead+1;
  const auto mix=position>=back?position-back:l.epochs_per_historical_vector-(back-position);
  Bytes seed_bytes{7,0,0,0};for(size_t j=0;j<8;++j)seed_bytes.push_back(uint8_t(epoch>>(8*j)));seed_bytes.insert(seed_bytes.end(),b.begin()+randao+32*mix,b.begin()+randao+32*mix+32);

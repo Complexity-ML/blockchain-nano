@@ -1,0 +1,140 @@
+{
+  "format": "nano-duty-availability-counterexample-static-review-v1",
+  "reviewer": "evm_activation_review",
+  "createdAtUtc": "2026-10-12T22:18:35.680701+00:00",
+  "verdict": "NO_STATIC_BLOCKER_IN_SCOPED_SYNTHETIC_CORE_AND_MOCK_FLOW_REPRODUCTIONS",
+  "publicManifestSha256": "10a8186fce6b7822258b1fd88e82970154f84c62a2de3b33c69ad427205171fe",
+  "reviewedPublicFiles": [
+    {
+      "path": "README.md",
+      "sha256": "06cee95bd270f21d91bade6a8c34df6affa63b0d5138e415a4a3546406fc034a",
+      "bytes": 5476
+    },
+    {
+      "path": "pure-duty-projection.cpp",
+      "sha256": "686734919d79ee2c7be18e279c0234771c15bc9cc324900cd1580066d9c9985e",
+      "bytes": 7343
+    },
+    {
+      "path": "validator-flow.cpp",
+      "sha256": "2866e6a3a561f8baab2d265392a81d0c49dd6835d91e7f4c53e63add4e185238",
+      "bytes": 3110
+    },
+    {
+      "path": "actual-validator.cpp",
+      "sha256": "2470ca28dc5f16b89103d10d8467fb3e458566d786853e41a4931e5cafaec5d6",
+      "bytes": 10245
+    },
+    {
+      "path": "mocks/nano/consensus_capella_validator.hpp",
+      "sha256": "218963e9c5ab285e975e5f5175c3226a2f377165a08db7513e41d42aca43061c",
+      "bytes": 2405
+    },
+    {
+      "path": "mocks/nano/consensus_capella_clock.hpp",
+      "sha256": "065399fdfe2c6c0f35b625092a26a2c1b4844d6b4ffce1fbb27d0cceb2308d0c",
+      "bytes": 3998
+    },
+    {
+      "path": "build-and-run.py",
+      "sha256": "7edd93d066e2218ee1dcad5d290583002f8836a6ad8e90f820c0b2d8d3d2cece",
+      "bytes": 5936
+    },
+    {
+      "path": "repair-and-run.py",
+      "sha256": "f9e94b51c1ad3e469a9686f908592ab7c0ec9cb193d4b51402d7fedd4f515125",
+      "bytes": 4039
+    },
+    {
+      "path": "build-receipt.json",
+      "sha256": "c0dddd0fac29f0df31d434cbb908c926b9b8bfadc4cd90342d3dde3d20aba82a",
+      "bytes": 9342
+    },
+    {
+      "path": "repair-build-receipt.json",
+      "sha256": "446982e9ca8ae295049942322667f96db749ad265880abdb871219814d39977b",
+      "bytes": 4299
+    },
+    {
+      "path": "pure-duty-projection.run.log",
+      "sha256": "f60d76155565dab7813fcc3664496df0240b85a2d663a0909b44f5c64717019d",
+      "bytes": 1095
+    },
+    {
+      "path": "pure-duty-projection.run-receipt.json",
+      "sha256": "57360af0d9f0d38bd9c715b0fdc7715d690d91fb1697d33f2e780281af485e86",
+      "bytes": 3235
+    },
+    {
+      "path": "validator-flow.run.log",
+      "sha256": "bfbb3b51dde3f6d4828df72972339204dd541cfc2efe2c0aa37d771eca498ba1",
+      "bytes": 1024
+    },
+    {
+      "path": "validator-flow.run-receipt.json",
+      "sha256": "b47b4a691b15c61af34ae12257d152d1c2a93f90270fd715bb7afbcf780d78c8",
+      "bytes": 2736
+    },
+    {
+      "path": "terminal-receipt.json",
+      "sha256": "bbb142633515f31bee8aa58c6cf654230d99f746630fa4e92917eb40cca49f7c",
+      "bytes": 981
+    }
+  ],
+  "qualifiedCoreSource": "85eb492f641452c4746ee60f027eacefa775b0b0",
+  "exactProductionSourceMatches": {
+    "src/consensus_capella_validator.cpp": "2470ca28dc5f16b89103d10d8467fb3e458566d786853e41a4931e5cafaec5d6",
+    "include/nano/consensus_capella_validator.hpp": "218963e9c5ab285e975e5f5175c3226a2f377165a08db7513e41d42aca43061c"
+  },
+  "findings": [
+    {
+      "file": "pure-duty-projection.cpp",
+      "lines": [
+        24,
+        64
+      ],
+      "finding": "Two public inputs have literal SHA pins. Modified exits are explicitly a new synthetic trusted anchor with positive unslashed balances, independently recomputed SSZ/header roots and execution-record/context binding; not presented as a signed or incoming block. Core85 real DutyPreparation reaches empty future active sync set at E8; observed prior prefix49 and source-store equality are asserted."
+    },
+    {
+      "file": "mocks/nano/consensus_capella_clock.hpp",
+      "lines": [
+        17,
+        52
+      ],
+      "finding": "Clock/reactor/journal doubles are normally constructed and value-initialized. Shared ownership keeps the current mock state alive. No fabricated pointer or uninitialized object; ready-head switch is sequential and only a double generation/availability change."
+    },
+    {
+      "file": "validator-flow.cpp",
+      "lines": [
+        15,
+        28
+      ],
+      "finding": "Actual frozen validator unit runs against these doubles; prepare failure precedes key enumeration and provider. failed latch is asserted, then a second poll refuses before clock/prepare even when the double reports ready. Provider closure throws if unexpectedly reached; all counters asserted0."
+    },
+    {
+      "file": "build-receipt.json",
+      "finding": "Both flow compilation commands put mock include root first. Flow link contains only actual-validator.o + validator-flow.o + GMP libraries: no core/archive object containing real reactor definitions; no demonstrated ODR class mixing. The pure diagnostic is a separate executable linked qualified native archive27d821."
+    },
+    {
+      "file": "repair-and-run.py",
+      "lines": [
+        5,
+        25
+      ],
+      "finding": "Four parent hashes and two public input hashes checked before/after; actual validator/header source hashes checked against frozen bindings. Exit0 pure diagnostic and exit1 expected mock failure are separately required. RLIMIT_CPU60 and subprocess timeout65; max RSS reported/checked in Mac-native bytes converted toKiB. No rerun by reviewer."
+    }
+  ],
+  "limits": [
+    "Static review does not universally prove absence of undefined behavior; no construction/lifetime/data-race issue identified on the exercised synchronous path.",
+    "The synthetic anchor has intentionally modified validator exits and a recomputed root; it is not a real authenticated incoming-block transition or new signed history.",
+    "The mock failure proves validator control-flow handling, not actual reactor head admission/recovery or functioning signer/storage/clock integration.",
+    "Real-core refusal and mock-flow latch are complementary, distinct scoped proofs; they are not a single end-to-end runtime trace.",
+    "Reported parent/source immutability is based on public collector receipts, code and pinned source bytes; reviewer did not inspect parents, DBs or private inputs.",
+    "No new tests/builds/run, private key/env/capsule/DB/VPS/network access, or production source edits were performed by this reviewer.",
+    "No production readiness, runtime recovery, duties, finality or release qualification is promoted."
+  ],
+  "reviewerTestsRun": 0,
+  "reviewerCompilerInvoked": false,
+  "runtimeIntegrationQualified": false,
+  "productionQualified": false
+}

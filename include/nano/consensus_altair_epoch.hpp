@@ -29,6 +29,13 @@ struct AltairFfgRules {uint64_t slots_per_epoch,effective_balance_increment;};
 // flags. Changes only justification bits/checkpoints; not gossip admission.
 Bytes prepare_altair_justification_finalization(std::span<const uint8_t>,const AltairStateLimits&,
  const AltairFfgRules&,const std::function<void()>& checkpoint={});
+// No eligible validator exists for the prescribed future sync selection.
+// Local duty projection may defer this condition; block/epoch validation still
+// rejects it. Other invalid context and work-budget errors remain distinct.
+class EmptyAltairSyncActiveSet : public std::invalid_argument {
+public:
+ EmptyAltairSyncActiveSet():std::invalid_argument("empty Altair sync active set"){}
+};
 struct AltairSyncRules {
  uint64_t slots_per_epoch,epochs_per_sync_committee_period,min_seed_lookahead,maximum_effective_balance;
  uint16_t shuffle_rounds;

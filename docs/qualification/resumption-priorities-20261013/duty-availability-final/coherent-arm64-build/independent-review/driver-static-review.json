@@ -1,0 +1,59 @@
+{
+  "format": "nano-duty-availability-arm64-build-driver-static-review-v1",
+  "reviewer": "evm_activation_review",
+  "reviewedExecutedDriverSha256": "8f31ee96ec1fecea5ec269cda8eb4d31bfb6d7fae6372c38054ee86aa3a25c5b",
+  "verdict": "BUILD_CONFINEMENT_ACCEPTABLE_FRESHNESS_SUPPORTED_BY_SEPARATE_OBJECT_AUDIT",
+  "sourceMountedReadOnly": true,
+  "outputOnlyOwnedBuildBindWritable": true,
+  "existingImagePinned": "sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb",
+  "networkDisabled": true,
+  "imageRebuildRequested": false,
+  "qualifiedParentBuildVolumesMounted": false,
+  "targets": [
+    "nano_core",
+    "nano"
+  ],
+  "resourceCaps": {
+    "cpus": 2,
+    "memory": "4g",
+    "configureSeconds": 180,
+    "buildSeconds": 1200
+  },
+  "finding": {
+    "lines": [
+      59,
+      62
+    ],
+    "issue": "mkdir(exist_ok=True) plus source-before receipt refusal alone did not prove a completely empty output at launch",
+    "disposition": "Parent preserves executed driver and will add explicit fresh output guard for future runs. Current completed build has independent explicit139/139compile+mtime+archive-member evidence and freshmain object; no empty-directory proof invented."
+  },
+  "fullCoreAuditSha256": "efa0d234f221608920218b914f79eff37ea7e3bb1d83d8343202e615fd4526e3",
+  "mainLinkAuditSha256": "7611db56cd2738c8347ee8f0d493562939a46282b9ea1c75060cc9c1975868a6",
+  "suggestedRelevantRegressionSelection": [
+    {
+      "flag": "--local-sync",
+      "cmakeTest": "consensus_capella_local_sync",
+      "timeoutSeconds": 240,
+      "sourceLines": [
+        238,
+        300
+      ],
+      "why": "Positive private pointer context via real Reactors, wrongjournal/invalidprovider/cancellation/expiry/clockregression and duplicate-sign refusal; does not independently test worker health latch."
+    },
+    {
+      "flag": "--prepared-block",
+      "sourceLines": [
+        2193,
+        2225
+      ],
+      "why": "Bounded local continuation/layout, ready/head/duties/block/sync fullgap equality, retarget/cancellation/profile/strictincoming admission regressions."
+    }
+  ],
+  "limits": [
+    "Dependency image/packages reused, not qualified anew.",
+    "No compiler/test/runtime/DB/private/network invocation by this reviewer.",
+    "Core+main build qualification is not production/readiness/restoration.",
+    "New autonomous unavailable\u2192new-authenticated-parent\u2192duties integration still required; existing selected regressions do not reproduce it."
+  ],
+  "productionQualified": false
+}

@@ -1,0 +1,242 @@
+{
+  "format": "nano-independent-registered-duty-availability-review-v1",
+  "reviewedAtUtc": "2026-10-12T23:24:19.050495+00:00",
+  "reviewMode": "read-only public source, logs, metadata and binary hashing; no test/build/runtime/network/private/DB payload access",
+  "verdict": "No blocking defect found in reviewed final six-source/test/registration/CI delta; scoped actual CTest evidence consistent",
+  "sourceRevision": "b77196858896896f517e85ce37eaf45c2973584d",
+  "dirtyWorkingTreeCandidate": true,
+  "productionQualified": false,
+  "sourceBindings": {
+    "include/nano/consensus_altair_epoch.hpp": "668bedeb2334109d9cf19ba6fa3a77f5f6396dc484fed525e41e5abe7dc315ac",
+    "src/consensus_altair_sync.cpp": "86e3ea6d1ee0c4b979ca076194d86da57f2dd54821a14c86391b3b91e3fedeeb",
+    "include/nano/consensus_capella_duty.hpp": "b5000e20680212b38bf56457d74a557336928637349c650011671698f9570236",
+    "src/consensus_capella_duty.cpp": "a08ed22c61ca6fa389b5d7e4304fee6772a2f9ee04e8e16ee2b1936bf18a0fff",
+    "include/nano/consensus_capella_reactor.hpp": "b7b6a3f716945ffca5420d8cf60e9fd73df76974d45938eefaa6341ffe6d4cb4",
+    "src/consensus_capella_sync_signing.cpp": "975b5072cbcf054fee2f88033763044825630616631f55e2fdfbe3287c3f5fad",
+    "tests/test_capella_duty_availability.cpp": "8690cc722e6642d14be1bc4b021eef9924be47e2b7e17d070a04908aa256ded2",
+    "CMakeLists.txt": "28fe657bbf1a54ad5663f64024d95f90eeb8a5e5fdd25943f0a684042e66f0ec",
+    "scripts/ci/core.sh": "faff0db48408f24ca5d9d752debcebe434c21eeb40e780cd301764019d13276f",
+    "scripts/ci/check-core.cmake": "5f6d02f7c5b60aaf39adc9090ce3322d3c63e0e96b8478ec52b8ed7dd9c0f75b",
+    "scripts/ci/check-core.test.mjs": "706f8d886f0d12571c6ff8ca7491a769f5343bd5e50c3bd1cde93ae57c59e43e",
+    "scripts/ci/verify-results.sh": "807a44ef2306ee7290fbf89a460c8621139a6d25681eaf00cb375de11067ffcf"
+  },
+  "publicEvidenceBindings": {
+    "registered-new-test-configured/terminal-receipt.json": "cb21e89c8dc78d82628ddd6bbb1a2bf1013693202ec9b27fb04671b860d179dc",
+    "registered-new-test-configured/ctest.command.json": "52a36bfd05dffacb76673d8f64571bf50c38b721ca891e6c96fa66f6f6065715",
+    "registered-new-test-configured/ctest.exit.json": "9df79fefb308093e4e73aec72de6afddd73cf7933b309859c58efa387cab304f",
+    "registered-new-test-configured/ctest.log": "92c6cdc4589d94cf45f05ed84a0ed59b7d92cf010483cec75bcabcf3f876aecd",
+    "registered-new-test-configured/new-test.xml": "67b08e8cc28b9c325b517571a429a02a946d87855214683e07a312021dd4a5a4",
+    "registered-new-test-configured/registration.log": "cb61b410054368d14e32a3c9254e3cdf7bfe264e80b4db3cabc6d9c2a751be66",
+    "registered-new-test-configured/registration.command.json": "79bba4194fabf1b0367d74bc06a5913408206613264f18d01b44f18455bd7e89",
+    "registered-new-test-configured/registration.exit.json": "9cef69bf266439d4c11a5754aad1a167fde0024b8518c37dff480763726712e4",
+    "registered-new-test-configured/source-before.json": "2a777b64e99eac4ad7b39341b6f7052be3a327720346b9a8a4400a5acf1bafdc",
+    "registered-new-test-configured/program-before.json": "31423b092a9ace0726c05e041523293cb2dbea8906e3f2873c2006a471422296",
+    "registered-new-test-configured/program-after.json": "31423b092a9ace0726c05e041523293cb2dbea8906e3f2873c2006a471422296",
+    "registered-new-test-configured/configure-new-test.command.json": "e02dc4f46d8d26753980995ef27492d0db19861d78b814745eccb444de61920d",
+    "registered-new-test-configured/configure-new-test.exit.json": "003544f7d8f708bbbe25de9b5d28cf1e46b84e4e1c356ec955abec9310f7a6c4",
+    "registered-new-test-configured/build-new-test.command.json": "433a4df45736c6fc491785bd52681d06462687f0eb8b4541b3e8c0f0e015542f",
+    "registered-new-test-configured/build-new-test.exit.json": "778ebae16a06b9a8310810a5a318790e5b63cdbb779dd56ecab6f15d120c7f8b",
+    "registered-new-test-configured/build-new-test.log": "00a5bf66d6753ce47f2dc720d40d85a18037ba5589cfd4326374bef76570755b"
+  },
+  "ciHarnessLogSha256": "65f1a4a0ddad89cef5ce55977e8e4f3964a1b6723c69ed0527beeb98937fede9",
+  "binaries": {
+    "libnano_core.a": {
+      "sha256": "161a3450c163aa324ca7c365beb028abb448fbd6912dfb34fcc26d8d230aae26",
+      "bytes": 38607848
+    },
+    "nano": {
+      "sha256": "64ca2a4bf25e0d0bd82e6479f735070ca2cf2b43b756aa8b528d38169ebd0e19",
+      "bytes": 12990912
+    },
+    "nano-capella-duty-availability-tests": {
+      "sha256": "f5564f8620d312bdd4e362af2132563f17be32ae289e53c8d34b321924767041",
+      "bytes": 5580208
+    }
+  },
+  "ctest": {
+    "exitCode": 0,
+    "registeredTests": 1,
+    "executedJUnitCases": 1,
+    "scenarioResults": 3,
+    "junitStatus": "run",
+    "skipped": 0,
+    "disabled": 0,
+    "failures": 0,
+    "errors": 0,
+    "testCaseSeconds": 7.10806,
+    "testTimeoutSeconds": 70,
+    "outerCollectorTimeoutSeconds": 90,
+    "programBeforeAfterEqual": true,
+    "parentArchiveAndNanoBeforeAfterAndCurrentByteIdentical": true,
+    "fullDailySelectionExecuted": false,
+    "results": [
+      {
+        "callbackAndResourceErrorsVisible": true,
+        "elapsedMs": 97,
+        "maxRssKiB": 16060,
+        "networkQualified": false,
+        "optionalLocalSyncDeferred": true,
+        "productionQualified": false,
+        "proposalAttestationContextsRemainReady": true,
+        "result": "PASS",
+        "runtimeStarted": false,
+        "scenario": "capella-local-sync-postready63",
+        "strictSyncBoundaryStillRejects": true,
+        "syntheticFixture": true,
+        "syntheticFixtureSignaturesCreated": 0
+      },
+      {
+        "callbackResourceErrorsRemainVisible": true,
+        "checkpointAndJournalUnchanged": true,
+        "elapsedMs": 258,
+        "localKeyPendingRegistration": true,
+        "maxRssKiB": 21112,
+        "networkQualified": false,
+        "networkStarted": false,
+        "productionQualified": false,
+        "proposalAttestationAssignmentsRemainAvailable": true,
+        "providerCalls": 0,
+        "realCoreAndLoopHealthy": true,
+        "result": "PASS",
+        "runtimeStarted": false,
+        "scenario": "capella-real-reactor-local-sync-postready63",
+        "syncCurrentDeferredBeforeProvider": true,
+        "syncMembersDeferred": true,
+        "syntheticFixture": true,
+        "syntheticFixtureSignaturesCreated": 0
+      },
+      {
+        "clockMonotoneUnchangedAfterInitialTick": true,
+        "coldDecodedCacheUsageDirectlyObserved": false,
+        "coldEnvelopeCacheEncodedBytes": 1048576,
+        "coldEnvelopeCacheRecords": 2,
+        "elapsedMs": 7101,
+        "genesisValidatorsRoot": "0xe0452c4cf0c0cc6e351cf8d7bde07f60922059e3be530afee1ff328c6f7141c7",
+        "independentWitnessMigrationBoundToPrimaryTokens": true,
+        "legacyFlatRssRefusalStillOpen": true,
+        "localKeyPendingRegistration": true,
+        "localProviderCalls": 0,
+        "loopHealthyAfterPeerAdmission": true,
+        "maxRssKiB": 30552,
+        "networkQualified": false,
+        "networkStarted": false,
+        "newHeadSlot": 384,
+        "newParentPreparationAvailable": true,
+        "newParentPreparationPolls": 0,
+        "normallyAdmittedPeerBlocks": 48,
+        "oldHeadCheckpointPreserved": true,
+        "oldHeadDeferredLoopHealthy": true,
+        "oldHeadProjectionReallyUnavailable": true,
+        "pendingJournalCommitmentUnchanged": true,
+        "productionQualified": false,
+        "result": "PASS",
+        "runtimeStarted": false,
+        "scenario": "capella-real-reactor-duty-projection-head-recovery",
+        "storageOnlyColdMigrationCanonicalFieldsUnchanged": true,
+        "syntheticFixture": true,
+        "syntheticFixtureSignaturesCreated": 144,
+        "syntheticInactivityScore": 1073741824,
+        "targetSlot": 384
+      }
+    ]
+  },
+  "bounds": {
+    "cooperativeInternalWallSeconds": 60,
+    "internalRssGuardKiB": 131072,
+    "terminalRssGuardPresent": true,
+    "observedAggregateHighWaterRssKiB": 30552,
+    "ctestDockerMemoryLimit": "2g",
+    "ctestDockerCpuLimit": 2,
+    "dockerNetwork": "none",
+    "rootFilesystemReadOnly": true,
+    "buildMountWritableForCTestMetadata": true,
+    "syntheticSignatureGuard": 160,
+    "actualSyntheticSignatures": 144,
+    "normallyAdmittedPeerBlocks": 48,
+    "headAndTargetSlot": 384,
+    "coldCacheEncodedRecords": 2,
+    "coldCacheEncodedBytes": 1048576,
+    "decodedLruUsageDirectlyObserved": false,
+    "RSSIsCumulativeProcessHighWater": true,
+    "scenarioElapsedMsAreCumulativeSinceProgramStart": true
+  },
+  "cmake": {
+    "baselineSha256": "20bff51087f0772434eac798fec4bf1eda4ca6b57c4b2b036d4ae2a24310f8f5",
+    "currentSha256": "28fe657bbf1a54ad5663f64024d95f90eeb8a5e5fdd25943f0a684042e66f0ec",
+    "sixLineAdditionSha256": "399f4c9ac7b3e66b09cf3f47b36009803e090720be6f850525222ef221734ad8",
+    "removingExactSingleSixLineBlockEqualsHead": true,
+    "newTargetPrivateLinksNanoCore": true,
+    "noFaultLibraryInNewTargetLinkCommand": true,
+    "templateFiles": {
+      "build/CMakeFiles/nano-capella-duty-availability-tests.dir/link.txt": "c0146573e0da61dc8246d7eda699d1300acfe5ccdce810af12ec2219f9866f84",
+      "build/CMakeFiles/nano-capella-duty-availability-tests.dir/flags.make": "d3ffd3f47a79a69b39f0df18a833b2d458f1c2f6daf6cc8c48492061afc83b14"
+    }
+  },
+  "ci": {
+    "shellRegexExpectedNamesAndGateExpectedNamesMatchFourteen": true,
+    "newTargetBuiltAndBinaryHashedByCoreShell": true,
+    "exactDutyCommandNameArgumentTimeoutAndLabelEnforcedByGate": true,
+    "skipAndGreenOverridesForbidden": [
+      "DISABLED",
+      "SKIP_RETURN_CODE",
+      "SKIP_REGULAR_EXPRESSION",
+      "WILL_FAIL",
+      "PASS_REGULAR_EXPRESSION"
+    ],
+    "uniquePropertiesAndPositiveNumericTimeoutEnforced": true,
+    "fullJUnitVerificationUsedByShell": true,
+    "faultLibraryHashPreservedBeforeAfterAndFinalByShell": true,
+    "dynamicLoaderEnvRefused": true,
+    "harnessLogTests": 8,
+    "harnessLogPass": 8,
+    "harnessLogFail": 0,
+    "harnessLogSkipped": 0,
+    "harnessTestsAreNotActualFourteenCppRuns": true,
+    "dedicatedNegativeDutyBindingMutationTestPresent": false,
+    "ciSourceHashesObservedByReviewerAfterExecutionOnly": true
+  },
+  "productionDeltaReview": {
+    "emptyTypedThrowOnlyAtActualEmptySyncSelection": true,
+    "sameInvalidArgumentBaseAndMessagePreserved": true,
+    "callerTypedCallbackExceptionPropagates": true,
+    "otherFailuresRemainFatal": true,
+    "blockedProjectionBoundToImmutableAuthenticatedParentAndProfile": true,
+    "newParentRequiresNewPreparation": true,
+    "optionalPostReadySyncDoesNotBlockProposalAttestationContexts": true,
+    "strictSyncAndIncomingAdmissionRemainStrict": true,
+    "pointerNullConsumersReturnBeforeCheckpointJournalProvider": true,
+    "noGenericValidatorCatchOrBalanceRuleModification": true,
+    "pointersConsumedUnderSameReactorLock": true
+  },
+  "observations": [
+    {
+      "severity": "scope",
+      "message": "CTest JUnit system-out is intentionally truncated at1024bytes; all three complete JSON results are authenticated by the full ctest.log. JUnit proves one executed aggregate test, not three CTest registrations."
+    },
+    {
+      "severity": "scope",
+      "message": "The build-new-test log explicitly recompiles src/kzg.cpp.o and relinks libnano_core.a; before/after/current archive bytes remain identical. Do not state that no core compilation occurred."
+    },
+    {
+      "severity": "coverage",
+      "message": "Eight Node harness cases pass, but exact negative command/name/label/timeout mutations currently target the capture helper. Duty bindings are statically checked and positively exercised; a dedicated duty negative mutation case is absent."
+    },
+    {
+      "severity": "provenance",
+      "message": "The standalone CI harness log contains eight passing cases but no source-before/command/exit receipt in this allowlist. Current CI source bytes are terminal-hashed by this review; no pre-execution CI source pin is inferred."
+    }
+  ],
+  "remainingOpen": [
+    "Actual signed local duties after whole-node restore; the pending local key/provider0 proves no local signature",
+    "Common advancing finality across Mac native, Mac Docker and VPS Docker",
+    "Real WAN/partition/load/crash recovery and validator lifecycle qualification",
+    "Legacy flat checkpoint resource refusal137524KiB at39blocks117signatures remains open",
+    "Direct cold decoded LRU memory usage assertion",
+    "Full fourteen-test daily CI and hosted CI run",
+    "Release/operational/security and remaining production goal criteria"
+  ],
+  "privateInputsRead": false,
+  "databasePayloadRead": false,
+  "testsOrBuildsRunByReviewer": false,
+  "vpsAccessed": false
+}
