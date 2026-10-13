@@ -1,0 +1,16 @@
+{
+  "format": "nano-duty-test-darwin-type-port-static-review-v1",
+  "beforeSourceSha256": "8690cc722e6642d14be1bc4b021eef9924be47e2b7e17d070a04908aa256ded2",
+  "afterSourceSha256": "44febdb90047ea8a7de5e78002d73ed96b82cc67259dd356e98c7ba096f6647d",
+  "exactSingleLoopHeaderReplacement": true,
+  "oldLoopHeader": "for(size_t start:{previous+133,previous+133+48*(l.sync_committee_size+1)})",
+  "newLoopHeader": "for(size_t start:std::array<size_t,2>{previous+133,previous+133+48*size_t(l.sync_committee_size+1)})",
+  "publicMinimalSyncCommitteeSize": 32,
+  "qualifiedPlatformsSizeTBits": 64,
+  "twoOffsetsAndAlgorithmUnchangedForBoundedProfile": true,
+  "productionCoreOrAbiChanged": false,
+  "linuxObjectOrBinaryByteEquivalenceObserved": false,
+  "linuxTestRerunByReviewer": false,
+  "nativeCompileSuccessClaimedByReviewer": false,
+  "newCheckoutAndTestPinRequiredBeforeGuardIntegration": true
+}

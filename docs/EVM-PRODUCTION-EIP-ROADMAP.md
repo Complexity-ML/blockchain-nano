@@ -1,3 +1,11 @@
+État qualifié — 13 octobre 2026 : cœur `c672a30d`, test `d7cc1bdb`/SHA `44febdb9`, CMake `28fe657b` ; 139 unités et main cohérents sur natif ARM64 et Docker ARM64/AMD64, dans le seul périmètre des contrôles ciblés.
+Native : trois CTests réels sans skip et `prepared-block` ; lot Linux : quatre sélections réussies. Port Linux objet/exécutable identiques mesurés, résultats réutilisés sans retest ; scénarios synthétiques avec fournisseur local à zéro.
+[Preuves et revues Mac/ARM](qualification/duty-availability-platforms-20261013/mac-platforms-public/README.md) ; [AMD64 et port](qualification/duty-availability-platforms-20261013/amd64-public/README.md). Aucun statut EIP, fork réseau, duty restaurée, finalité commune ou production publique promu.
+CI [38325619830](https://github.com/Complexity-ML/blockchain-nano/actions/runs/38325619830) refusée pour paiement ou limite de dépenses : zéro étape/test ; [reçu](qualification/duty-availability-platforms-20261013/source-ci-refusal-d7/terminal-review.json).
+Quatre preuves VPS toujours soumises à autorisation ; garde v2/4 h non activés, V37 FAILED et refus plat 137524 KiB/128 MiB conservés. Tous critères production/Base–Nano/USDC/Doppler/exploitation/revue indépendante, statuts et lignes historiques restent ouverts ou inchangés dans leur périmètre.
+
+État précédent conservé :
+
 # EIP pour l’EVM et la production Nano
 
 État courant — 13 octobre : GitHub main vérifiée à `b7719685` avant ce lot ; sources et rapports récupérables, aucune sauvegarde complète de validateur V37 retrouvée dans le périmètre examiné. La projection pure du vrai checkpoint commun Mac à 22:30:29 UTC montre 64 actifs et des comités/proposant disponibles ; elle ne démontre aucune reprise ni signature et sa fenêtre administrative de 2 h est expirée. [Preuves, refus et limites](qualification/resumption-priorities-20261013/README.md).

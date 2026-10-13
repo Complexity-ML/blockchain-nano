@@ -1,0 +1,117 @@
+[  0%] Built target gen_base.o
+[  0%] Built target gen_bint.o
+[  7%] Built target secp256k1_precomputed
+[  7%] Built target nano_blst
+[  7%] Built target secp256k1
+[ 11%] Built target mcl_st
+[ 11%] Built target nano_ckzg
+[100%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-capella-duty-availability-tests.dir/tests/test_capella_duty_availability.cpp.o
+In file included from /Users/boris/Dev/blockchain-nano/tests/test_capella_duty_availability.cpp:4:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/altair_transition_rules.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_transition_rules.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_epoch_ssz.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_ffg_ssz.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_minimal_ssz.hpp:2:
+/Users/boris/Dev/blockchain-nano/tests/support/process.hpp:39:19: warning: 'posix_spawn_file_actions_addchdir_np' is deprecated: first deprecated in macOS 26.0 - posix_spawn_file_actions_addchdir(3) has replaced posix_spawn_file_actions_addchdir_np(3) [-Wdeprecated-declarations]
+   39 |   if(!cwd.empty())posix_spawn_file_actions_addchdir_np(&actions,cwd.c_str());
+      |                   ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/spawn.h:184:9: note: 'posix_spawn_file_actions_addchdir_np' has been explicitly marked deprecated here
+  184 | int     posix_spawn_file_actions_addchdir_np(posix_spawn_file_actions_t *,
+      |         ^
+1 warning generated.
+[100%] Linking CXX executable nano-capella-duty-availability-tests
+[100%] Built target nano-capella-duty-availability-tests
+[  0%] Built target gen_bint.o
+[  0%] Built target gen_base.o
+[  7%] Built target secp256k1_precomputed
+[  7%] Built target nano_blst
+[ 10%] Building CXX object CMakeFiles/nano-test-sync-fault.dir/tests/support/sync_fault_macos.cpp.o
+[ 14%] Built target mcl_st
+[ 14%] Built target nano_ckzg
+[ 14%] Built target secp256k1
+[ 14%] Linking CXX shared library libnano-test-sync-fault.dylib
+[ 14%] Built target nano-test-sync-fault
+[100%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-capella-transition-tests.dir/tests/test_capella_transition.cpp.o
+In file included from /Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:3:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/altair_transition_rules.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_transition_rules.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_epoch_ssz.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_ffg_ssz.hpp:2:
+In file included from /Users/boris/Dev/blockchain-nano/tests/support/phase0_minimal_ssz.hpp:2:
+/Users/boris/Dev/blockchain-nano/tests/support/process.hpp:39:19: warning: 'posix_spawn_file_actions_addchdir_np' is deprecated: first deprecated in macOS 26.0 - posix_spawn_file_actions_addchdir(3) has replaced posix_spawn_file_actions_addchdir_np(3) [-Wdeprecated-declarations]
+   39 |   if(!cwd.empty())posix_spawn_file_actions_addchdir_np(&actions,cwd.c_str());
+      |                   ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/spawn.h:184:9: note: 'posix_spawn_file_actions_addchdir_np' has been explicitly marked deprecated here
+  184 | int     posix_spawn_file_actions_addchdir_np(posix_spawn_file_actions_t *,
+      |         ^
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1353:38: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1353 |    if(!acquired){release.set_value();holder.get();check(false,"queue fixture did not hold real admission mutex");}
+      |                                      ^~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1356:101: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1356 |    if(clock_ready.wait_for(std::chrono::seconds(2))!=std::future_status::ready){release.set_value();holder.get();clock_waiter.get();check(false,"clock poll did not enter while admission held");}
+      |                                                                                                     ^~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1356:114: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1356 |    if(clock_ready.wait_for(std::chrono::seconds(2))!=std::future_status::ready){release.set_value();holder.get();clock_waiter.get();check(false,"clock poll did not enter while admission held");}
+      |                                                                                                                  ^~~~~~~~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1365:24: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1365 |    release.set_value();clock_waiter.get();const auto archive=holder.get();const auto status=blocked.get(),chain_id=identity.get(),read=beacon.get();
+      |                        ^~~~~~~~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1540:95: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1540 |    if(ready.wait_for(std::chrono::seconds(5))!=std::future_status::ready){unblock.set_value();acquisition.get();check(false,"capture not held");}
+      |                                                                                               ^~~~~~~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1544:61: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1544 |    unblock.set_value();const bool refused=acquisition.get();control.get();bool generation_same=false;try{generation_same=generation.get()==gen;}catch(const std::runtime_error&){}
+      |                                                             ^~~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1595:35: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1595 |   if(!locked){unblock.set_value();writer.get();check(false,"Status probe admission lock not held");}
+      |                                   ^~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1613:35: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1613 |   if(!locked){unblock.set_value();blocked_writer.get();check(false,"Admission lock fixture not reached");}
+      |                                   ^~~~~~~~~~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1625:36: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1625 |  if(!captured){release.set_value();reader.get();check(false,"Concurrent Beacon reader never captured publication");}
+      |                                    ^~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1630:70: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1630 |  if(!export_captured){release.set_value();export_release.set_value();reader.get();exporter.get();check(false,"Concurrent block exporter never captured publication");}
+      |                                                                      ^~~~~~~~~~
+/Users/boris/Dev/blockchain-nano/tests/test_capella_transition.cpp:1630:83: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+ 1630 |  if(!export_captured){release.set_value();export_release.set_value();reader.get();exporter.get();check(false,"Concurrent block exporter never captured publication");}
+      |                                                                                   ^~~~~~~~~~~~
+12 warnings generated.
+[100%] Linking CXX executable nano-capella-transition-tests
+[100%] Built target nano-capella-transition-tests
+[  0%] Built target gen_base.o
+[  0%] Built target gen_bint.o
+[  3%] Built target secp256k1_precomputed
+[  7%] Built target nano_blst
+[  7%] Built target secp256k1
+[ 10%] Built target mcl_st
+[ 10%] Built target nano_ckzg
+[ 96%] Built target nano_core
+[ 96%] Building CXX object CMakeFiles/nano-capella-paused-capture.dir/tests/capella/paused_capture.cpp.o
+[100%] Linking CXX executable nano-capella-paused-capture
+[100%] Built target nano-capella-paused-capture
+[  0%] Built target gen_base.o
+[  0%] Built target gen_bint.o
+[  7%] Built target secp256k1_precomputed
+[  7%] Built target nano_blst
+[  7%] Built target secp256k1
+[ 11%] Built target mcl_st
+[ 11%] Built target nano_ckzg
+[100%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-capella-isolated-stopped-capture.dir/tests/capella/isolated_stopped_capture.cpp.o
+[100%] Linking CXX executable nano-capella-isolated-stopped-capture
+[100%] Built target nano-capella-isolated-stopped-capture
+[  0%] Built target gen_bint.o
+[  0%] Built target gen_base.o
+[  7%] Built target nano_blst
+[  7%] Built target secp256k1_precomputed
+[  7%] Built target nano_ckzg
+[ 11%] Built target mcl_st
+[ 11%] Built target secp256k1
+[100%] Built target nano_core
+[100%] Building CXX object CMakeFiles/nano-capella-isolated-bootstrap-audit.dir/tests/capella/isolated_bootstrap_audit.cpp.o
+[100%] Linking CXX executable nano-capella-isolated-bootstrap-audit
+[100%] Built target nano-capella-isolated-bootstrap-audit

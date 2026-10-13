@@ -1,0 +1,59 @@
+UpdateCTestConfiguration  from :/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/duty-availability-coherent-native-20261013/build/DartConfiguration.tcl
+Test project /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/duty-availability-coherent-native-20261013/build
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 5
+    Start   5: consensus_isolated_stopped_capture_guards
+
+5: Test command: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/duty-availability-coherent-native-20261013/build/nano-capella-isolated-stopped-capture "--self-test"
+5: Working Directory: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/duty-availability-coherent-native-20261013/build
+5: Test timeout computed to be: 15
+5: {"cases":25,"databaseAccessed":false,"envRead":false,"format":"nano-isolated-stopped-capture-self-test-v1","newSignaturesCreated":0,"passed":true,"runtimeStarted":false}
+1/3 Test   #5: consensus_isolated_stopped_capture_guards ........   Passed    0.32 sec
+test 6
+    Start   6: consensus_capella_duty_projection_availability
+
+6: Test command: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/duty-availability-coherent-native-20261013/build/nano-capella-duty-availability-tests "--self-test"
+6: Working Directory: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/duty-availability-coherent-native-20261013/build
+6: Test timeout computed to be: 70
+6: {"callbackAndResourceErrorsVisible":true,"elapsedMs":86,"maxRssKiB":12752,"networkQualified":false,"optionalLocalSyncDeferred":true,"productionQualified":false,"proposalAttestationContextsRemainReady":true,"result":"PASS","runtimeStarted":false,"scenario":"capella-local-sync-postready63","strictSyncBoundaryStillRejects":true,"syntheticFixture":true,"syntheticFixtureSignaturesCreated":0}
+6: {"callbackResourceErrorsRemainVisible":true,"checkpointAndJournalUnchanged":true,"elapsedMs":432,"localKeyPendingRegistration":true,"maxRssKiB":17440,"networkQualified":false,"networkStarted":false,"productionQualified":false,"proposalAttestationAssignmentsRemainAvailable":true,"providerCalls":0,"realCoreAndLoopHealthy":true,"result":"PASS","runtimeStarted":false,"scenario":"capella-real-reactor-local-sync-postready63","syncCurrentDeferredBeforeProvider":true,"syncMembersDeferred":true,"syntheticFixture":true,"syntheticFixtureSignaturesCreated":0}
+6: {"clockMonotoneUnchangedAfterInitialTick":true,"coldDecodedCacheUsageDirectlyObserved":false,"coldEnvelopeCacheEncodedBytes":1048576,"coldEnvelopeCacheRecords":2,"elapsedMs":5990,"genesisValidatorsRoot":"0xe0452c4cf0c0cc6e351cf8d7bde07f60922059e3be530afee1ff328c6f7141c7","independentWitnessMigrationBoundToPrimaryTokens":true,"legacyFlatRssRefusalStillOpen":true,"localKeyPendingRegistration":true,"localProviderCalls":0,"loopHealthyAfterPeerAdmission":true,"maxRssKiB":28592,"networkQualified":false,"networkStarted":false,"newHeadSlot":384,"newParentPreparationAvailable":true,"newParentPreparationPolls":0,"normallyAdmittedPeerBlocks":48,"oldHeadCheckpointPreserved":true,"oldHeadDeferredLoopHealthy":true,"oldHeadProjectionReallyUnavailable":true,"pendingJournalCommitmentUnchanged":true,"productionQualified":false,"result":"PASS","runtimeStarted":false,"scenario":"capella-real-reactor-duty-projection-head-recovery","storageOnlyColdMigrationCanonicalFieldsUnchanged":true,"syntheticFixture":true,"syntheticFixtureSignaturesCreated":144,"syntheticInactivityScore":1073741824,"targetSlot":384}
+2/3 Test   #6: consensus_capella_duty_projection_availability ...   Passed    6.25 sec
+test 319
+    Start 319: consensus_capella_local_sync
+
+319: Test command: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/duty-availability-coherent-native-20261013/build/nano-capella-transition-tests "--local-sync"
+319: Working Directory: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/duty-availability-coherent-native-20261013/build
+319: Test timeout computed to be: 240
+319: {"durableCommitmentsUnchanged":true,"failure":"Sync duty clock regressed: nowMs=11999, lastMs=12000, durableMs=12000, genesisMs=0, slot=2, phase=entry, read=1, beforeLast=1, beforeGenesis=0","messagePublished":false,"phase":"entry","providerCalls":0,"scenario":"sync-signing-clock-regression"}
+319: {"durableCommitmentsUnchanged":true,"failure":"Sync duty clock regressed: nowMs=13999, lastMs=14000, durableMs=12000, genesisMs=0, slot=2, phase=before-provider, read=2, beforeLast=1, beforeGenesis=0","messagePublished":false,"phase":"before-provider","providerCalls":0,"scenario":"sync-signing-clock-regression"}
+319: {"durableCommitmentsUnchanged":true,"failure":"Sync duty clock regressed: nowMs=13999, lastMs=14000, durableMs=12000, genesisMs=0, slot=2, phase=after-provider, read=4, beforeLast=1, beforeGenesis=0","messagePublished":false,"phase":"after-provider","providerCalls":1,"scenario":"sync-signing-clock-regression"}
+319: {"durableCheckpointUnchanged":true,"forgedSignatureRejected":true,"individualAndAggregateShared":true,"sameParentSlotReused":true,"scenario":"sync-admission-context-cache","twoSlotReplacement":true}
+319: {"durableCheckpointUnchanged":true,"oldParentRootRejected":true,"sameSlotNewParentRebuilt":true,"scenario":"sync-admission-context-parent-change"}
+319: {"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+319: {"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+319: {"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+319: {"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+319: {"finalizedEpoch":3,"progressSlot":40,"signedVotes":264}
+319: {"finalizedEpoch":3,"progressSlot":41,"signedVotes":272}
+319: {"blocks":40,"disjointSyncMerging":true,"executionOwner":true,"finalizedEpoch":3,"independentStores":2,"individualSyncMessages":true,"justifiedEpoch":4,"localSyncAggregates":true,"localSyncSigning":true,"networkActivated":false,"networkTransport":false,"participationPercent":100,"scenario":"capella-local-assembly-finality","signingJournalsReopened":64,"storeReopens":2,"syncCatalogExport":true,"syncPrecollection":true,"syncWireWorker":true,"votes":272}
+3/3 Test #319: consensus_capella_local_sync .....................   Passed   28.05 sec
+
+The following tests passed:
+	consensus_isolated_stopped_capture_guards
+	consensus_capella_duty_projection_availability
+	consensus_capella_local_sync
+
+100% tests passed out of 3
+
+Label Time Summary:
+qualification_consensus_duty_availability    =   6.25 sec*proc (1 test)
+qualification_consensus_recovery_tooling     =   0.32 sec*proc (1 test)
+qualification_consensus_runtime              =  28.05 sec*proc (1 test)
+
+Total Test time (real) =  34.61 sec

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="1"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="85"
+	timestamp="2026-10-13T00:03:29"
+	>
+	<testcase name="consensus_capella_local_sync" classname="consensus_capella_local_sync" time="85.1005" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_runtime"/>
+		</properties>
+		<system-out>{"durableCommitmentsUnchanged":true,"failure":"Sync duty clock regressed: nowMs=11999, lastMs=12000, durableMs=12000, genesisMs=0, slot=2, phase=entry, read=1, beforeLast=1, beforeGenesis=0","messagePublished":false,"phase":"entry","providerCalls":0,"scenario":"sync-signing-clock-regression"}
+{"durableCommitmentsUnchanged":true,"failure":"Sync duty clock regressed: nowMs=13999, lastMs=14000, durableMs=12000, genesisMs=0, slot=2, phase=before-provider, read=2, beforeLast=1, beforeGenesis=0","messagePublished":false,"phase":"before-provider","providerCalls":0,"scenario":"sync-signing-clock-regression"}
+{"durableCommitmentsUnchanged":true,"failure":"Sync duty clock regressed: nowMs=13999, lastMs=14000, durableMs=12000, genesisMs=0, slot=2, phase=after-provider, read=4, beforeLast=1, beforeGenesis=0","messagePublished":false,"phase":"after-provider","providerCalls":1,"scenario":"sync-signing-clock-regression"}
+{"durableCheckpointUnchanged":true,"forgedSignatureRejected":true,"individualAndAggregateShared":true,"s...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+</testsuite>

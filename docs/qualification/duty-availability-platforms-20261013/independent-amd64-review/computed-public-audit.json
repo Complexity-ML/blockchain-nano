@@ -1,0 +1,243 @@
+{
+  "packageValidation": [
+    {
+      "manifest": "duty-availability-coherent-amd64-20261013/public-file-manifest.json",
+      "sha256": "01696b994cd98186dcd2df8ae1ad30fe958db299345a80e40b42dbb977b0a526",
+      "payloads": 209,
+      "bytes": 5090765,
+      "allPublicRowsValidated": true
+    },
+    {
+      "manifest": "duty-availability-portability-amd64-20261013/remote-public-transfer-manifest.json",
+      "sha256": "e1226b0a5a626a6bf0ac5e33417dc004cd81b6021950e9fbd780eea1a9556939",
+      "payloads": 15,
+      "bytes": 434449,
+      "allPublicRowsValidated": true
+    },
+    {
+      "manifest": "duty-availability-amd64-final-public-evidence-20261013/manifest.json",
+      "sha256": "e9dec5b886069cadc19bc5ab9c11db78f104ec96f4d764caef0d318a7ac3323b",
+      "payloads": 237,
+      "bytes": 5768507,
+      "allPublicRowsValidated": true
+    }
+  ],
+  "originalSourceCount": 1287,
+  "originalSourceBeforeAfterEqual": true,
+  "canonicalProductionCount": 974,
+  "coreCompilation": {
+    "units": 139,
+    "actualLogCompileRows": 139,
+    "archiveMemberNames": 139,
+    "archiveObjectBytesIndependentlyReadByThisReview": false,
+    "rawCompileDatabaseRows": 363,
+    "freshEmptyOutputReceipt": {
+      "format": "nano-amd64-fresh-empty-output-proof-v1",
+      "output": "/home/ubuntu/nanobees-qualification/duty-availability-coherent-amd64-20261013/build",
+      "entries": [],
+      "createdAtomically": true,
+      "beforeCmakeAndTmpCreation": true,
+      "identity": {
+        "device": 2049,
+        "inode": 351278,
+        "owner": 1000,
+        "mode": 448
+      },
+      "rootIdentity": {
+        "device": 2049,
+        "inode": 351277,
+        "owner": 1000,
+        "mode": 448
+      },
+      "driverSha256": "20e24578c296782dcd6790dfff5e02039e9f2815fb93ed3484c5237175db5c8f"
+    },
+    "originalArchive": "1b5a867398bed07bbaca0994556d8948cbb2750ac333c30070e627f101aeecdb",
+    "nano": "31887383452c05dec078745f02ff3be21d2579ff716c1b2b3b4c0faa35b52c18"
+  },
+  "dependencies": {
+    "rawFiles": 152,
+    "uniqueProjectInputs": 495,
+    "allBoundToSourceInventory": true,
+    "ignoredMclInputsConsumed": false,
+    "dependencyImageRequalified": false
+  },
+  "programs": {
+    "libnano_core.a": "1b5a867398bed07bbaca0994556d8948cbb2750ac333c30070e627f101aeecdb",
+    "nano": "31887383452c05dec078745f02ff3be21d2579ff716c1b2b3b4c0faa35b52c18",
+    "nano-capella-duty-availability-tests": "32843ec2935a25797b98c5de6fbe45e6ce24f03214c753d23199023d22ef0945",
+    "nano-capella-transition-tests": "769e6fcefd4bfa16f83bb2d24ec4be641e801424ff310cb1e49c77dff9d75bbf",
+    "libnano-test-sync-fault.so": "1c5fbe9a94c9e4137f0ae41999390a9a9690e63324998bfeff6368609345d86e",
+    "nano-capella-paused-capture": "0968ef3328a9be217d9acad3c8ebca350be586139e5c058d65983a96368c4614",
+    "nano-capella-isolated-stopped-capture": "1314643f5db6498bc6d2b51f22207af23808d6cdf85142dd5881ea73b61a1d4b",
+    "nano-capella-isolated-bootstrap-audit": "f04a10e01b9e8958820f511aa261737b1f90ef2b9809b7581f193a67bde65a8b"
+  },
+  "consumerLinks": [
+    {
+      "role": "nano",
+      "coreArchives": [
+        "libnano_core.a"
+      ],
+      "directObjectOperands": [
+        "CMakeFiles/nano.dir/src/main.cpp.o",
+        "third_party/mcl/bint64.o",
+        "third_party/mcl/base64.o"
+      ],
+      "output": "nano"
+    },
+    {
+      "role": "nano-capella-paused-capture",
+      "coreArchives": [
+        "libnano_core.a"
+      ],
+      "directObjectOperands": [
+        "CMakeFiles/nano-capella-paused-capture.dir/tests/capella/paused_capture.cpp.o",
+        "third_party/mcl/bint64.o",
+        "third_party/mcl/base64.o"
+      ],
+      "output": "nano-capella-paused-capture"
+    },
+    {
+      "role": "nano-capella-isolated-bootstrap-audit",
+      "coreArchives": [
+        "libnano_core.a"
+      ],
+      "directObjectOperands": [
+        "CMakeFiles/nano-capella-isolated-bootstrap-audit.dir/tests/capella/isolated_bootstrap_audit.cpp.o",
+        "third_party/mcl/bint64.o",
+        "third_party/mcl/base64.o"
+      ],
+      "output": "nano-capella-isolated-bootstrap-audit"
+    },
+    {
+      "role": "nano-capella-isolated-stopped-capture",
+      "coreArchives": [
+        "libnano_core.a"
+      ],
+      "directObjectOperands": [
+        "CMakeFiles/nano-capella-isolated-stopped-capture.dir/tests/capella/isolated_stopped_capture.cpp.o",
+        "third_party/mcl/bint64.o",
+        "third_party/mcl/base64.o"
+      ],
+      "output": "nano-capella-isolated-stopped-capture"
+    }
+  ],
+  "junit": [
+    {
+      "name": "availability",
+      "cases": 1,
+      "status": "run",
+      "skips": 0,
+      "timeSeconds": "33.3082"
+    },
+    {
+      "name": "local-sync",
+      "cases": 1,
+      "status": "run",
+      "skips": 0,
+      "timeSeconds": "85.1005"
+    },
+    {
+      "name": "stopped-capture-guards",
+      "cases": 1,
+      "status": "run",
+      "skips": 0,
+      "timeSeconds": "0.00920673"
+    }
+  ],
+  "availabilityResults": [
+    {
+      "callbackAndResourceErrorsVisible": true,
+      "elapsedMs": 431,
+      "maxRssKiB": 16640,
+      "networkQualified": false,
+      "optionalLocalSyncDeferred": true,
+      "productionQualified": false,
+      "proposalAttestationContextsRemainReady": true,
+      "result": "PASS",
+      "runtimeStarted": false,
+      "scenario": "capella-local-sync-postready63",
+      "strictSyncBoundaryStillRejects": true,
+      "syntheticFixture": true,
+      "syntheticFixtureSignaturesCreated": 0
+    },
+    {
+      "callbackResourceErrorsRemainVisible": true,
+      "checkpointAndJournalUnchanged": true,
+      "elapsedMs": 1060,
+      "localKeyPendingRegistration": true,
+      "maxRssKiB": 22784,
+      "networkQualified": false,
+      "networkStarted": false,
+      "productionQualified": false,
+      "proposalAttestationAssignmentsRemainAvailable": true,
+      "providerCalls": 0,
+      "realCoreAndLoopHealthy": true,
+      "result": "PASS",
+      "runtimeStarted": false,
+      "scenario": "capella-real-reactor-local-sync-postready63",
+      "syncCurrentDeferredBeforeProvider": true,
+      "syncMembersDeferred": true,
+      "syntheticFixture": true,
+      "syntheticFixtureSignaturesCreated": 0
+    },
+    {
+      "clockMonotoneUnchangedAfterInitialTick": true,
+      "coldDecodedCacheUsageDirectlyObserved": false,
+      "coldEnvelopeCacheEncodedBytes": 1048576,
+      "coldEnvelopeCacheRecords": 2,
+      "elapsedMs": 33296,
+      "genesisValidatorsRoot": "0xe0452c4cf0c0cc6e351cf8d7bde07f60922059e3be530afee1ff328c6f7141c7",
+      "independentWitnessMigrationBoundToPrimaryTokens": true,
+      "legacyFlatRssRefusalStillOpen": true,
+      "localKeyPendingRegistration": true,
+      "localProviderCalls": 0,
+      "loopHealthyAfterPeerAdmission": true,
+      "maxRssKiB": 32512,
+      "networkQualified": false,
+      "networkStarted": false,
+      "newHeadSlot": 384,
+      "newParentPreparationAvailable": true,
+      "newParentPreparationPolls": 0,
+      "normallyAdmittedPeerBlocks": 48,
+      "oldHeadCheckpointPreserved": true,
+      "oldHeadDeferredLoopHealthy": true,
+      "oldHeadProjectionReallyUnavailable": true,
+      "pendingJournalCommitmentUnchanged": true,
+      "productionQualified": false,
+      "result": "PASS",
+      "runtimeStarted": false,
+      "scenario": "capella-real-reactor-duty-projection-head-recovery",
+      "storageOnlyColdMigrationCanonicalFieldsUnchanged": true,
+      "syntheticFixture": true,
+      "syntheticFixtureSignaturesCreated": 144,
+      "syntheticInactivityScore": 1073741824,
+      "targetSlot": 384
+    }
+  ],
+  "portability": {
+    "protectedRows": 167,
+    "coreObjectRows": 139,
+    "allProtectedShaStatsEqual": true,
+    "sourceCount": 1287,
+    "sourceChangedFromOriginal": [
+      "tests/test_capella_duty_availability.cpp"
+    ],
+    "onlyConsumerCompiled": true,
+    "byteComparison": {
+      "oldObjectSha256": "09b90fb2ebca602f2ef4fcf5f33f7f94e6c4a6a4ccd4b686b2acd87558b9e97a",
+      "newObjectSha256": "09b90fb2ebca602f2ef4fcf5f33f7f94e6c4a6a4ccd4b686b2acd87558b9e97a",
+      "oldProgramSha256": "32843ec2935a25797b98c5de6fbe45e6ce24f03214c753d23199023d22ef0945",
+      "newProgramSha256": "32843ec2935a25797b98c5de6fbe45e6ce24f03214c753d23199023d22ef0945",
+      "objectAndProgramByteIdentical": true,
+      "decision": "reuse original three-scenario executed proof, no rerun"
+    },
+    "testRerun": false
+  },
+  "scope": {
+    "localPublicEvidenceOnly": true,
+    "remoteBinariesOrMemberBytesRead": false,
+    "DBsOrPrivateFourProofsRead": false,
+    "ownBuildOrTestOrRuntimeOrSsh": false
+  },
+  "recordedAt": "2026-10-13T00:30:36.246119+00:00"
+}

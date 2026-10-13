@@ -1,3 +1,19 @@
+État qualifié — 13 octobre 2026 : compilation et contrôles ciblés sur trois architectures, production toujours ouverte.
+
+Cœur de production `c672a30d`, port de test livré `d7cc1bdb` (SHA `44febdb9`), six sources et CMake `28fe657b` inchangés : 139 unités du cœur et main recompilés sur Mac natif Darwin ARM64, Docker Linux ARM64 et Docker Linux AMD64, avec consommateurs et bibliothèques de fault-injection cohérents.
+
+Sur Mac natif : trois CTests réels avec JUnit sans skip, puis `prepared-block` direct réussis. Les quatre sélections ciblées du lot Linux passent ; elles ne constituent pas la sélection quotidienne complète. Le port Linux conserve objet et exécutable byte-identiques, mesurés avant décision de réutiliser les résultats ; aucun retest identique n’est ajouté. Les scénarios nouveaux sont synthétiques, dont 48 blocs admis puis une préparation reprise, clé locale pending et fournisseur local à zéro.
+
+Binaires nano identifiés : natif `2b4856b1`, ARM64 `64ca2a4b`, AMD64 `31887383`. [Preuves Mac/ARM et revues indépendantes](qualification/duty-availability-platforms-20261013/mac-platforms-public/README.md) ; [preuves AMD64 et port identique](qualification/duty-availability-platforms-20261013/amd64-public/README.md). Refus du test natif `8690`, collecteurs, aliases, headers complémentaires et perte du snapshot initial ARM restent documentés ; aucun historique n’est réécrit.
+
+CI [38325619830](https://github.com/Complexity-ML/blockchain-nano/actions/runs/38325619830) de `d7cc1bdb` refusée avant toute étape : paiement échoué ou limite de dépenses selon les annotations, sans préciser lequel ; zéro étape et zéro test CI exécuté. [Reçu actuel](qualification/duty-availability-platforms-20261013/source-ci-refusal-d7/terminal-review.json).
+
+Aucune reprise réelle des duties, nouvelle finalité commune, activation de fork ou production publique n’est qualifiée dans ce lot. Les quatre preuves privées VPS attendent toujours l’autorisation d’export ; le garde v2 et l’allowance administrative proposée de 4 h ne sont pas activés. V37 FAILED, refus du format plat à 137524 KiB sous limite 128 MiB, CI/release, consensus/ressources, pruning/exploitation, Base–Nano/USDC/Doppler et revue de sécurité indépendante restent ouverts ; aucun fonds ni déploiement public.
+
+Tous les critères, matrices EIP, statuts et preuves historiques sont conservés byte-for-byte, sans promotion. Objectif de production actif.
+
+État précédent conservé :
+
 # Objectif : Nano C++ de niveau production
 
 État courant — 13 octobre : GitHub main vérifiée à `b7719685` avant ce lot ; sources et rapports récupérables, aucune sauvegarde complète de validateur V37 retrouvée dans le périmètre examiné. La projection pure du vrai checkpoint commun Mac à 22:30:29 UTC montre 64 actifs et des comités/proposant disponibles ; elle ne démontre aucune reprise ni signature et sa fenêtre administrative de 2 h est expirée. [Preuves, refus et limites](qualification/resumption-priorities-20261013/README.md).

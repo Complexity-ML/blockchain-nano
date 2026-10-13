@@ -1,0 +1,181 @@
+{
+  "format": "nano-independent-amd64-public-coherent-portability-review-v1",
+  "verdict": "PASS within public build/test/portability evidence scope",
+  "reviewerActions": {
+    "localPublicReadOnly": true,
+    "compilerOrTestExecuted": false,
+    "privateFourVpsProofsRead": false,
+    "remoteOrDbOrRuntimeOrKeyAccess": false,
+    "packagesMutated": false
+  },
+  "references": [
+    {
+      "manifest": "duty-availability-coherent-amd64-20261013/public-file-manifest.json",
+      "sha256": "01696b994cd98186dcd2df8ae1ad30fe958db299345a80e40b42dbb977b0a526",
+      "payloads": 209,
+      "bytes": 5090765,
+      "allPublicRowsValidated": true
+    },
+    {
+      "manifest": "duty-availability-portability-amd64-20261013/remote-public-transfer-manifest.json",
+      "sha256": "e1226b0a5a626a6bf0ac5e33417dc004cd81b6021950e9fbd780eea1a9556939",
+      "payloads": 15,
+      "bytes": 434449,
+      "allPublicRowsValidated": true
+    },
+    {
+      "manifest": "duty-availability-amd64-final-public-evidence-20261013/manifest.json",
+      "sha256": "e9dec5b886069cadc19bc5ab9c11db78f104ec96f4d764caef0d318a7ac3323b",
+      "payloads": 237,
+      "bytes": 5768507,
+      "allPublicRowsValidated": true
+    }
+  ],
+  "original": {
+    "revision": "c672a30dbdc7b43ab04186db0e54be78510e6789",
+    "testSha256": "8690cc722e6642d14be1bc4b021eef9924be47e2b7e17d070a04908aa256ded2",
+    "fullFreshCoreCompileRows": 139,
+    "coreArchiveObjectNames": 139,
+    "actualArchiveCommandObjects": 139,
+    "freshEmptyOutputReceiptVerified": true,
+    "sourceFilesBeforeAfter": 1287,
+    "canonicalProductionSourceFiles": 974,
+    "rawCompilerDependencyFiles": 152,
+    "distinctProjectDependencyPaths": 495,
+    "projectDependenciesAllSourceBound": true,
+    "ignoredElevenMclPathsConsumed": false,
+    "protectedArtifactsBeforeAfter": 8,
+    "coreArchiveSha256": "1b5a867398bed07bbaca0994556d8948cbb2750ac333c30070e627f101aeecdb",
+    "nanoSha256": "31887383452c05dec078745f02ff3be21d2579ff716c1b2b3b4c0faa35b52c18",
+    "faultLibrarySha256": "1c5fbe9a94c9e4137f0ae41999390a9a9690e63324998bfeff6368609345d86e",
+    "consumerRawLinkChecks": [
+      {
+        "role": "nano",
+        "coreArchives": [
+          "libnano_core.a"
+        ],
+        "directObjectOperands": [
+          "CMakeFiles/nano.dir/src/main.cpp.o",
+          "third_party/mcl/bint64.o",
+          "third_party/mcl/base64.o"
+        ],
+        "output": "nano"
+      },
+      {
+        "role": "nano-capella-paused-capture",
+        "coreArchives": [
+          "libnano_core.a"
+        ],
+        "directObjectOperands": [
+          "CMakeFiles/nano-capella-paused-capture.dir/tests/capella/paused_capture.cpp.o",
+          "third_party/mcl/bint64.o",
+          "third_party/mcl/base64.o"
+        ],
+        "output": "nano-capella-paused-capture"
+      },
+      {
+        "role": "nano-capella-isolated-bootstrap-audit",
+        "coreArchives": [
+          "libnano_core.a"
+        ],
+        "directObjectOperands": [
+          "CMakeFiles/nano-capella-isolated-bootstrap-audit.dir/tests/capella/isolated_bootstrap_audit.cpp.o",
+          "third_party/mcl/bint64.o",
+          "third_party/mcl/base64.o"
+        ],
+        "output": "nano-capella-isolated-bootstrap-audit"
+      },
+      {
+        "role": "nano-capella-isolated-stopped-capture",
+        "coreArchives": [
+          "libnano_core.a"
+        ],
+        "directObjectOperands": [
+          "CMakeFiles/nano-capella-isolated-stopped-capture.dir/tests/capella/isolated_stopped_capture.cpp.o",
+          "third_party/mcl/bint64.o",
+          "third_party/mcl/base64.o"
+        ],
+        "output": "nano-capella-isolated-stopped-capture"
+      }
+    ],
+    "registeredTestsHaveExactCommandsTimeoutsLabelsAndNoSkipProperties": true,
+    "junit": [
+      {
+        "name": "availability",
+        "cases": 1,
+        "status": "run",
+        "skips": 0,
+        "timeSeconds": "33.3082"
+      },
+      {
+        "name": "local-sync",
+        "cases": 1,
+        "status": "run",
+        "skips": 0,
+        "timeSeconds": "85.1005"
+      },
+      {
+        "name": "stopped-capture-guards",
+        "cases": 1,
+        "status": "run",
+        "skips": 0,
+        "timeSeconds": "0.00920673"
+      }
+    ],
+    "preparedBlock": "direct exit0/log, no invented JUnit",
+    "stoppedCapturePureCases": 25,
+    "availability": {
+      "internalScenarios": 3,
+      "peerBlocksNormallyAdmitted": 48,
+      "syntheticSignatures": 144,
+      "providerCalls": 0,
+      "reportedCumulativeElapsedMs": [
+        431,
+        1060,
+        33296
+      ],
+      "peakRssKiB": 32512,
+      "peakRssMiB": 31.75,
+      "internalLimits": {
+        "elapsedMs": 60000,
+        "rssKiB": 131072
+      },
+      "coldEnvelopeCache": {
+        "records": 2,
+        "encodedBytes": 1048576,
+        "decodedUsageDirectlyObserved": false
+      },
+      "localKeyPending": true,
+      "realRestoredSignedDutiesQualified": false
+    }
+  },
+  "portability": {
+    "protectedRows": 167,
+    "coreObjectRows": 139,
+    "allProtectedShaStatsEqual": true,
+    "sourceCount": 1287,
+    "sourceChangedFromOriginal": [
+      "tests/test_capella_duty_availability.cpp"
+    ],
+    "onlyConsumerCompiled": true,
+    "byteComparison": {
+      "oldObjectSha256": "09b90fb2ebca602f2ef4fcf5f33f7f94e6c4a6a4ccd4b686b2acd87558b9e97a",
+      "newObjectSha256": "09b90fb2ebca602f2ef4fcf5f33f7f94e6c4a6a4ccd4b686b2acd87558b9e97a",
+      "oldProgramSha256": "32843ec2935a25797b98c5de6fbe45e6ce24f03214c753d23199023d22ef0945",
+      "newProgramSha256": "32843ec2935a25797b98c5de6fbe45e6ce24f03214c753d23199023d22ef0945",
+      "objectAndProgramByteIdentical": true,
+      "decision": "reuse original three-scenario executed proof, no rerun"
+    },
+    "testRerun": false
+  },
+  "limitations": [
+    "Local review verifies actual retained public metadata/log bytes and their hashes, not remote binary/object bytes directly; no SSH was used.",
+    "Archive member names and executed creation command139 are checked; no independent ar-p member-byte hash inventory is present. Such hashes remain a future formal source-guard conversion prerequisite, not a claim made by this review.",
+    "Image digest and source flags/link inputs are bound. Image dependency libraries/toolchain/SDK are not independently requalified or claimed reproducible from this lot.",
+    "No live campaign duty, restored network, common-finality advance, production deployment or full CI is qualified.",
+    "Legacy flat-storage RSS refusal remains open; bounded cold48block success does not close it.",
+    "The four pending private VPS recovery proof files were neither read nor transferred.",
+    "Two reviewer parsing refusals were preserved (public canonical-reference schema and copied depfile layout); these were review-tool mistakes, not test or production failures."
+  ],
+  "recordedAt": "2026-10-13T00:31:54.342087+00:00"
+}
