@@ -1,0 +1,132 @@
+{
+  "format": "nano-gc-amd64-partial-observed-result-v1",
+  "revision": "f9d078d0d45d6081c8c8745a80575d898335ec3e",
+  "buildTerminalSha256": "dde551d19d7e9175abfba6ed473825cf221d576dc526e6fb3a6075745f8b8663",
+  "publicSourceReadOnlyAnalysis": true,
+  "actualTestsExecutedByThisCollector": 0,
+  "run01": {
+    "selected": 7,
+    "ctestExitCode": 8,
+    "cases": {
+      "consensus_capella_duty_projection_availability": {
+        "status": "PASS",
+        "elapsedSeconds": 32.9132
+      },
+      "storage_checkpoint_immutable_blobs": {
+        "status": "PASS",
+        "elapsedSeconds": 0.0702696
+      },
+      "consensus_capella_fragment_checkpoint_migration": {
+        "status": "FAIL",
+        "elapsedSeconds": 0.0236103
+      },
+      "storage_capella_blob_gc_next_publication": {
+        "status": "FAIL",
+        "elapsedSeconds": 0.0215393
+      },
+      "storage_capella_blob_gc_cli_closed_fixture": {
+        "status": "FAIL",
+        "elapsedSeconds": 0.0215446
+      },
+      "storage_capella_blob_gc_adversarial_boundaries": {
+        "status": "FAIL",
+        "elapsedSeconds": 0.021411
+      },
+      "storage_capella_blob_gc_natural_pruning": {
+        "status": "FAIL",
+        "elapsedSeconds": 0.0118281
+      }
+    },
+    "reasonForFiveRefusals": "Missing runtime fixture minimal-phase0.yaml before scenarios"
+  },
+  "run02": {
+    "selected": 5,
+    "ctestExitCode": 8,
+    "cases": {
+      "consensus_capella_fragment_checkpoint_migration": {
+        "status": "PASS",
+        "elapsedSeconds": 1.69251
+      },
+      "storage_capella_blob_gc_next_publication": {
+        "status": "PASS",
+        "elapsedSeconds": 1.61267
+      },
+      "storage_capella_blob_gc_cli_closed_fixture": {
+        "status": "PASS",
+        "elapsedSeconds": 1.75774
+      },
+      "storage_capella_blob_gc_adversarial_boundaries": {
+        "status": "PASS",
+        "elapsedSeconds": 5.0944
+      },
+      "storage_capella_blob_gc_natural_pruning": {
+        "status": "FAIL",
+        "elapsedSeconds": 180.027
+      }
+    },
+    "naturalFailure": "CTest per-test timeout180.027seconds",
+    "lastLoggedNaturalProgress": {
+      "finalizedEpoch": 0,
+      "progressSlot": 16,
+      "signedVotes": 72
+    },
+    "actualFinalProcessedSlotEstablished": false,
+    "naturalGcSlot40Observed": false,
+    "finalSlot56AndColdReopenObserved": false,
+    "timeoutCauseMeasured": false
+  },
+  "uniquePassCount": 6,
+  "uniqueSelectedCount": 7,
+  "singleSevenGreenExecution": false,
+  "sevenTestsQualified": false,
+  "armNaturalResultReused": false,
+  "run01PassesNotRepeated": [
+    "consensus_capella_duty_projection_availability",
+    "storage_checkpoint_immutable_blobs"
+  ],
+  "actualBuildBindingsUnchangedBetweenRuns": true,
+  "sourceAndArtifactCompleteMetadataUnchangedDuringRun02": true,
+  "flagsAndLinkHashesUnchangedAllEightTargets": true,
+  "rawTerminalMetadataShapeDiffersByOmittedBeforeTextsOnly": true,
+  "runtimeFixtureBeforeAfterUnchanged": true,
+  "run02ContainerAbsentAfterCleanup": true,
+  "scope": {
+    "adverseUniqueCases": 30,
+    "twoFsyncCasesObserved": true,
+    "actualBetweenStoresLogicalCrashObservation": true,
+    "cliPrimaryDeletedRecords": 1,
+    "cliWitnessDeletedRecords": 1,
+    "cliRefusals": 5,
+    "cliReceiptMode": "0600",
+    "cliReceiptLinks": 1,
+    "runtimeFixtureCount": 23
+  },
+  "evidenceReferences": {
+    "beforeRun01": {
+      "sha256": "7bfa86804ea6e13e80c1ad2c536dcb8e74f9b52f0f21cc04e50fae0af1b2c186",
+      "bytes": 506261
+    },
+    "beforeRun02": {
+      "name": "before.json",
+      "sha256": "1925b1011ba38567338a24d8ad236287a91987eae70b7928b66d7b8d72499d8d",
+      "bytes": 515803
+    },
+    "afterRun02": {
+      "name": "after.json",
+      "sha256": "fe7f20e8b85ba9c3be2010bbf64dfb3d13715091a8fbae03ad5ca344842315b3",
+      "bytes": 501673
+    }
+  },
+  "open": [
+    "AMD64 natural56-slot GC/cold-reopen within180s",
+    "Native GC qualification",
+    "Actual runtime image and installation",
+    "Resumed duties and common finality",
+    "Independent security review and all prior production criteria"
+  ],
+  "privateInputsRead": false,
+  "pendingFourVpsProofsExported": false,
+  "dbOrKeyOrJournalRead": false,
+  "runtimeDutiesResumed": false,
+  "productionQualified": false
+}

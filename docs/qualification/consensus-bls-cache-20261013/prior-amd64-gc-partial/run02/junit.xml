@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="5"
+	failures="1"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="190"
+	timestamp="2026-10-13T06:27:38"
+	>
+	<testcase name="consensus_capella_fragment_checkpoint_migration" classname="consensus_capella_fragment_checkpoint_migration" time="1.69251" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_ethereum"/>
+		</properties>
+		<system-out>{"cancelledMigrationUnchanged":true,"coldStateCacheImplemented":false,"corruptionRejections":3,"graphAndIdentityPreserved":true,"independentPreviousPrimaryRecovered":true,"journalCommitmentUnchanged":true,"legacyMigrated":true,"migrationIdempotent":true,"networkQualified":false,"primaryAndWitnessRestarts":true,"productionQualified":false,"scenario":"capella-fragment-checkpoint-integration","stickyFragmentFormat":true,"validChildDurablyAdmitted":true}
+</system-out>
+	</testcase>
+	<testcase name="storage_capella_blob_gc_next_publication" classname="storage_capella_blob_gc_next_publication" time="1.61267" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_maintenance"/>
+		</properties>
+		<system-out>{"collectorInterface":"cpp-api","deletedPrimaryRecords":1,"deletedWitnessRecords":1,"localSigningProviderCalls":0,"naturallyObservedCampaignLeak":false,"networkQualified":false,"nextChildNormallyAdmitted":true,"nextPublicationColdReopened":true,"originalAndSignerWitnessBytesUnchanged":true,"productionQualified":false,"runtimeDutiesResumed":false,"sameCheckpointColdReopened":true,"scenario":"gc-cold-reopen-and-next-admission","syntheticOrphanStagedViaCas":true}
+</system-out>
+	</testcase>
+	<testcase name="storage_capella_blob_gc_cli_closed_fixture" classname="storage_capella_blob_gc_cli_closed_fixture" time="1.75774" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_maintenance_cli"/>
+		</properties>
+		<system-out>{"actualCliCompleted":true,"cliExitCode":0,"deletedPrimaryRecords":1,"deletedWitnessRecords":1,"naturalPruningReplay":false,"noWork":false,"privateFixtureExported":false,"productionQualified":false,"receiptBytes":"{\n  \"afterFiles\": [\n    {\n      \"allocatedBytes\": 131072,\n      \"apparentBytes\": 110943,\n      \"files\": 11,\n      \"sstBytes\": 19237,\n      \"walBytes\": 0\n    },\n    {\n      \"allocatedBytes\": 131072,\n      \"apparentBytes\": 109935,\n      \"files\": 11,\n      \"sstBytes\": 21764,\n      \"walBytes\": 0\n    }\n  ],\n  \"atomicExclusiveLinkPublication\": true,\n  \"beforeFiles\": [\n    {\n      \"allocatedBytes\": 143360,\n      \"apparentBytes\": 119107,\n      \"files\": 12,\n      \"sstBytes\": 41415,\n      \"walBytes\": 0\n    },\n    {\n      \"allocatedBytes\": 147456,\n      \"apparentBytes\": 121815,\n      \"files\": 12,\n      \"sstBytes\": 44083,\n      \"walBytes\": 0\n    }\n  ],\n  \"format\": \"nano-owned-checkpoint-gc-maintenance-receipt-v1\",\n  \"plan\": {...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="storage_capella_blob_gc_adversarial_boundaries" classname="storage_capella_blob_gc_adversarial_boundaries" time="5.0944" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_maintenance"/>
+		</properties>
+		<system-out>{"logicalChecks":0,"phase":"planned-before-delete","primaryWalFiles":1,"productionQualified":false,"scenario":"gc-crash-child-phase"}
+{"callbacks":57880,"logicalChecks":1,"phase":"wal-change-logical-check","primaryOrphanAbsent":true,"productionQualified":false,"scenario":"gc-crash-child-phase","witnessOrphanPresent":true}
+{"allPreDeletionRefusalsLogicalContentsUnchanged":true,"fixtureOnly":true,"localSigningProviderCalls":0,"networkQualified":false,"passedBoundaries":["primary-missing-live-ref","primary-corrupt-live-ref","witness-missing-live-ref","witness-corrupt-live-ref","pending-sequence-divergence","primary-neither-previous-nor-next","wrong-independent-witness-pin","wrong-independent-pending-next-pin","request-hash-before-parse","signing-store-role-forbidden","future-schema-refused","readers-not-stopped","complete-scan-budget","total-delete-budget","single-batch-budget","large-finite-duration-no-timepoint-overflow","inventory-cancellation","existing-mode-never-creates-missing-db","existing-mode-never-ini...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="storage_capella_blob_gc_natural_pruning" classname="storage_capella_blob_gc_natural_pruning" time="180.027" status="fail">
+		<failure message="Timeout"/>
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_maintenance"/>
+		</properties>
+		<system-out>{"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+{"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+</system-out>
+	</testcase>
+</testsuite>

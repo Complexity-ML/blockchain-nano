@@ -1,0 +1,172 @@
+{
+  "format": "nano-bls-cache-amd64-public-partial-readback-v1",
+  "status": "SEVEN_PASS_ONE_NATURAL_TIMEOUT_PRODUCTION_OPEN",
+  "actualTransferManifestSha256": "bfcdda12fc8b0f5970ce4ba2a767842c975ccd3dd722b139c9d06125e03f3d27",
+  "actualBuildTerminalSha256": "b0cf3c73cda2f9d84f5d0c82afbeca0f00a81d53df07641b9711eb5612e14434",
+  "actualExecutionTerminalSha256": "45b2e85a08ad29b48e058e2d714bb379a501846df747eb39502783562c9f24be",
+  "actualJunitSha256": "f18da1ab37d4cf75bd88faa7237933d67213b6017f4e0e6678cc6f6389f76542",
+  "actualLogSha256": "ecc3dc670b9dcdd75223174f4a232da0ac68c988e2a475feba66a1f78ef52465",
+  "cases": [
+    {
+      "name": "consensus_capella_duty_projection_availability",
+      "status": "PASS",
+      "elapsedSeconds": 32.4252
+    },
+    {
+      "name": "consensus_bls_positive_verification_cache",
+      "status": "PASS",
+      "elapsedSeconds": 1.52385
+    },
+    {
+      "name": "storage_checkpoint_immutable_blobs",
+      "status": "PASS",
+      "elapsedSeconds": 0.0879883
+    },
+    {
+      "name": "consensus_capella_fragment_checkpoint_migration",
+      "status": "PASS",
+      "elapsedSeconds": 1.61802
+    },
+    {
+      "name": "storage_capella_blob_gc_next_publication",
+      "status": "PASS",
+      "elapsedSeconds": 1.55407
+    },
+    {
+      "name": "storage_capella_blob_gc_cli_closed_fixture",
+      "status": "PASS",
+      "elapsedSeconds": 1.71637
+    },
+    {
+      "name": "storage_capella_blob_gc_adversarial_boundaries",
+      "status": "PASS",
+      "elapsedSeconds": 5.0284
+    },
+    {
+      "name": "storage_capella_blob_gc_natural_pruning",
+      "status": "FAIL",
+      "elapsedSeconds": 180.03
+    }
+  ],
+  "allEightActuallyRun": true,
+  "skippedCount": 0,
+  "actualCtestExitCode": 8,
+  "oldPassesReused": false,
+  "cacheSixPublicScenarioNames": [
+    "bls-positive-cache-byte-boundaries",
+    "bls-cache-instance-budget-allocation-snapshot",
+    "bls-cache-concurrent-clear-generation",
+    "bls-cache-bounded-local-benchmark",
+    "bls-cache-fresh-exec-cold",
+    "bls-positive-cache-self-test"
+  ],
+  "cacheBenchmarkSamples": [
+    {
+      "cacheEnabled": false,
+      "fixedMetadataBytes": 264,
+      "genuineTuples": 64,
+      "hits": 0,
+      "processCpuUs": 947188,
+      "productionQualified": false,
+      "rawCryptoCalls": 512,
+      "rawCryptoNanoseconds": 945995414,
+      "residentCacheBytes": 264,
+      "verificationCalls": 512,
+      "wallMs": 947
+    },
+    {
+      "cacheEnabled": true,
+      "fixedMetadataBytes": 264,
+      "genuineTuples": 64,
+      "hits": 448,
+      "processCpuUs": 118167,
+      "productionQualified": false,
+      "rawCryptoCalls": 64,
+      "rawCryptoNanoseconds": 117623653,
+      "residentCacheBytes": 45320,
+      "verificationCalls": 512,
+      "wallMs": 119
+    }
+  ],
+  "availabilityRegisteredTests": 1,
+  "availabilityInternalScenarios": 3,
+  "availabilityPeerElapsedMs": 32411,
+  "availabilityCounterObservation": {
+    "calls": 480,
+    "hits": 337,
+    "rawCryptoCalls": 143,
+    "rawCryptoNanoseconds": 268062372
+  },
+  "metricsCountersResetOnConfigureOrClear": true,
+  "metricsNotSummedAsHistoricalTotals": true,
+  "lastPrintedNaturalProgress": {
+    "finalizedEpoch": 0,
+    "progressSlot": 24,
+    "signedVotes": 136
+  },
+  "actualLastProcessedSlotEstablished": false,
+  "naturalGc40End56AndColdReopenQualified": false,
+  "timeoutCauseMeasured": false,
+  "sourceArtifactRootFlagsAndLinksBeforeAfterVerified": true,
+  "fixturePrivateDataExported": false,
+  "nineActualBuildProgramsBound": true,
+  "newArmQualificationClaimed": false,
+  "publicInputReferences": [
+    {
+      "path": "before.json",
+      "bytes": 519658,
+      "sha256": "17b024695df83f1a49291dfecae00471a741fadc1ae4de5490b7d555cb5a70ff"
+    },
+    {
+      "path": "after.json",
+      "bytes": 504039,
+      "sha256": "3d307828aba07915e8736ae86a98890eca65a15531130e408a09765da85d107f"
+    },
+    {
+      "path": "execution-terminal.json",
+      "bytes": 398,
+      "sha256": "45b2e85a08ad29b48e058e2d714bb379a501846df747eb39502783562c9f24be"
+    },
+    {
+      "path": "result.json",
+      "bytes": 1005,
+      "sha256": "fb469c34b7166f0238b7f142c1cd5256318d26b490eed4a1c096e99509ed9918"
+    },
+    {
+      "path": "ctest.log",
+      "bytes": 23269,
+      "sha256": "ecc3dc670b9dcdd75223174f4a232da0ac68c988e2a475feba66a1f78ef52465"
+    },
+    {
+      "path": "ctest.command.json",
+      "bytes": 1885,
+      "sha256": "8646d8df833a11c1331074a27ed3ac69e1a6ab44f6d2348f74a512ce75d99435"
+    },
+    {
+      "path": "events.jsonl",
+      "bytes": 975,
+      "sha256": "4f732c33b9e6425cb8f0f3d21eea4898c1b10f566abec86aa4ef2b58294d85e6"
+    },
+    {
+      "path": "image-binding.json",
+      "bytes": 225,
+      "sha256": "2d378f22d161b2604bd99cafd040b9be30b5a2e1d257815dbb41859e4ac8d42e"
+    },
+    {
+      "path": "selected-ctest-graph.json",
+      "bytes": 4426,
+      "sha256": "ac0ec89c8a56058b0feb42107ee1531502a4048747795b4399f1a9e79c656bf1"
+    },
+    {
+      "path": "testing/gc-selected.junit.xml",
+      "bytes": 8989,
+      "sha256": "f18da1ab37d4cf75bd88faa7237933d67213b6017f4e0e6678cc6f6389f76542"
+    }
+  ],
+  "actualBuildTerminalPath": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/root-owned-bls-cache-amd64-control-20261013/actual-terminal-build-receipt.json",
+  "actualTestsExecutedByThisReader": 0,
+  "repoEdited": false,
+  "privateRecoveryInputsRead": false,
+  "runtimeDutiesResumed": false,
+  "productionQualified": false
+}

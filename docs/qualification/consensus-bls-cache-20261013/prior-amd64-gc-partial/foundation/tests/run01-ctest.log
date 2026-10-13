@@ -1,0 +1,100 @@
+UpdateCTestConfiguration  from :/testing/ctest/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/testing/ctest/DartConfiguration.tcl
+Test project /testing/ctest
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 6
+    Start   6: consensus_capella_duty_projection_availability
+
+6: Test command: /outputs/nano-capella-duty-availability-tests "--self-test"
+6: Working Directory: /testing/ctest
+6: Test timeout computed to be: 70
+6: {"callbackAndResourceErrorsVisible":true,"elapsedMs":431,"maxRssKiB":16640,"networkQualified":false,"optionalLocalSyncDeferred":true,"productionQualified":false,"proposalAttestationContextsRemainReady":true,"result":"PASS","runtimeStarted":false,"scenario":"capella-local-sync-postready63","strictSyncBoundaryStillRejects":true,"syntheticFixture":true,"syntheticFixtureSignaturesCreated":0}
+6: {"callbackResourceErrorsRemainVisible":true,"checkpointAndJournalUnchanged":true,"elapsedMs":1046,"localKeyPendingRegistration":true,"maxRssKiB":22656,"networkQualified":false,"networkStarted":false,"productionQualified":false,"proposalAttestationAssignmentsRemainAvailable":true,"providerCalls":0,"realCoreAndLoopHealthy":true,"result":"PASS","runtimeStarted":false,"scenario":"capella-real-reactor-local-sync-postready63","syncCurrentDeferredBeforeProvider":true,"syncMembersDeferred":true,"syntheticFixture":true,"syntheticFixtureSignaturesCreated":0}
+6: {"clockMonotoneUnchangedAfterInitialTick":true,"coldDecodedCacheUsageDirectlyObserved":false,"coldEnvelopeCacheEncodedBytes":1048576,"coldEnvelopeCacheRecords":2,"elapsedMs":32901,"genesisValidatorsRoot":"0xe0452c4cf0c0cc6e351cf8d7bde07f60922059e3be530afee1ff328c6f7141c7","independentWitnessMigrationBoundToPrimaryTokens":true,"legacyFlatRssRefusalStillOpen":true,"localKeyPendingRegistration":true,"localProviderCalls":0,"loopHealthyAfterPeerAdmission":true,"maxRssKiB":32512,"networkQualified":false,"networkStarted":false,"newHeadSlot":384,"newParentPreparationAvailable":true,"newParentPreparationPolls":0,"normallyAdmittedPeerBlocks":48,"oldHeadCheckpointPreserved":true,"oldHeadDeferredLoopHealthy":true,"oldHeadProjectionReallyUnavailable":true,"pendingJournalCommitmentUnchanged":true,"productionQualified":false,"result":"PASS","runtimeStarted":false,"scenario":"capella-real-reactor-duty-projection-head-recovery","storageOnlyColdMigrationCanonicalFieldsUnchanged":true,"syntheticFixture":true,"syntheticFixtureSignaturesCreated":144,"syntheticInactivityScore":1073741824,"targetSlot":384}
+1/7 Test   #6: consensus_capella_duty_projection_availability ....   Passed   32.91 sec
+test 193
+    Start 193: storage_checkpoint_immutable_blobs
+
+193: Test command: /outputs/nano-checkpoint-blob-tests
+193: Working Directory: /testing/ctest
+193: Test timeout computed to be: 90
+193: {"binaryFragments":true,"concurrentCasLoserAbsent":true,"digestAndAggregateBounds":true,"duplicateIdempotence":true,"executionCheckpointCoupling":true,"legacyApisPreserved":true,"productionQualified":false,"readonlyCopyUnchanged":true,"runtimeGraphPagingImplemented":false,"scenario":"checkpoint-immutable-blobs","tamperingRejectedWithoutOverwrite":true}
+2/7 Test #193: storage_checkpoint_immutable_blobs ................   Passed    0.07 sec
+test 359
+    Start 359: consensus_capella_fragment_checkpoint_migration
+
+359: Test command: /usr/bin/cmake "-E" "env" "NANO_TEST_FRAGMENT_CHECKPOINT=1" "/outputs/nano-capella-transition-tests" "--prepared-block"
+359: Working Directory: /testing/ctest
+359: Test timeout computed to be: 180
+359: read /work/tests/fixtures/consensus-bellatrix-containers-official/minimal-phase0.yaml
+3/7 Test #359: consensus_capella_fragment_checkpoint_migration ...***Failed    0.02 sec
+read /work/tests/fixtures/consensus-bellatrix-containers-official/minimal-phase0.yaml
+
+test 360
+    Start 360: storage_capella_blob_gc_next_publication
+
+360: Test command: /usr/bin/cmake "-E" "env" "NANO_TEST_CHECKPOINT_BLOB_GC=1" "NANO_TEST_COLD_REACTOR=1" "NANO_TEST_FRAGMENT_CHECKPOINT=1" "/outputs/nano-capella-transition-tests" "--prepared-block"
+360: Working Directory: /testing/ctest
+360: Test timeout computed to be: 180
+360: read /work/tests/fixtures/consensus-bellatrix-containers-official/minimal-phase0.yaml
+4/7 Test #360: storage_capella_blob_gc_next_publication ..........***Failed    0.02 sec
+read /work/tests/fixtures/consensus-bellatrix-containers-official/minimal-phase0.yaml
+
+test 361
+    Start 361: storage_capella_blob_gc_cli_closed_fixture
+
+361: Test command: /usr/bin/cmake "-E" "env" "NANO_TEST_CHECKPOINT_BLOB_GC_CLI=1" "NANO_TEST_CHECKPOINT_GC_TOOL=/outputs/nano-storage-maintenance" "NANO_TEST_CHECKPOINT_BLOB_GC=1" "NANO_TEST_COLD_REACTOR=1" "NANO_TEST_FRAGMENT_CHECKPOINT=1" "/outputs/nano-capella-transition-tests" "--prepared-block"
+361: Working Directory: /testing/ctest
+361: Test timeout computed to be: 180
+361: read /work/tests/fixtures/consensus-bellatrix-containers-official/minimal-phase0.yaml
+5/7 Test #361: storage_capella_blob_gc_cli_closed_fixture ........***Failed    0.02 sec
+read /work/tests/fixtures/consensus-bellatrix-containers-official/minimal-phase0.yaml
+
+test 362
+    Start 362: storage_capella_blob_gc_adversarial_boundaries
+
+362: Test command: /usr/bin/cmake "-E" "env" "NANO_TEST_CHECKPOINT_BLOB_GC_ADVERSARIAL=1" "NANO_TEST_CHECKPOINT_BLOB_GC=1" "NANO_TEST_COLD_REACTOR=1" "NANO_TEST_FRAGMENT_CHECKPOINT=1" "/outputs/nano-capella-transition-tests" "--prepared-block"
+362: Working Directory: /testing/ctest
+362: Test timeout computed to be: 180
+362: read /work/tests/fixtures/consensus-bellatrix-containers-official/minimal-phase0.yaml
+6/7 Test #362: storage_capella_blob_gc_adversarial_boundaries ....***Failed    0.02 sec
+read /work/tests/fixtures/consensus-bellatrix-containers-official/minimal-phase0.yaml
+
+test 363
+    Start 363: storage_capella_blob_gc_natural_pruning
+
+363: Test command: /outputs/nano-capella-transition-tests "--blob-gc-natural"
+363: Working Directory: /testing/ctest
+363: Test timeout computed to be: 180
+363: read /work/tests/fixtures/consensus-bellatrix-containers-official/minimal-phase0.yaml
+7/7 Test #363: storage_capella_blob_gc_natural_pruning ...........***Failed    0.01 sec
+read /work/tests/fixtures/consensus-bellatrix-containers-official/minimal-phase0.yaml
+
+
+The following tests passed:
+	consensus_capella_duty_projection_availability
+	storage_checkpoint_immutable_blobs
+
+29% tests passed, 5 tests failed out of 7
+
+Label Time Summary:
+qualification_consensus_duty_availability    =  32.91 sec*proc (1 test)
+qualification_consensus_ethereum             =   0.02 sec*proc (1 test)
+qualification_storage_local                  =   0.07 sec*proc (1 test)
+qualification_storage_maintenance            =   0.05 sec*proc (3 tests)
+qualification_storage_maintenance_cli        =   0.02 sec*proc (1 test)
+
+Total Test time (real) =  33.09 sec
+
+The following tests FAILED:
+	359 - consensus_capella_fragment_checkpoint_migration (Failed)
+	360 - storage_capella_blob_gc_next_publication (Failed)
+	361 - storage_capella_blob_gc_cli_closed_fixture (Failed)
+	362 - storage_capella_blob_gc_adversarial_boundaries (Failed)
+	363 - storage_capella_blob_gc_natural_pruning (Failed)
+Errors while running CTest

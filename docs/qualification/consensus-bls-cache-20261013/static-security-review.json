@@ -1,0 +1,155 @@
+{
+  "format": "nano-bls-positive-cache-independent-static-security-review-v1",
+  "createdAtUtc": "2026-10-13T07:11:02.035111+00:00",
+  "verdict": "PASS_STATIC_NO_MATERIAL_BLS_CACHE_DEFECT_IDENTIFIED",
+  "baseGitRevision": "f9d078d0d45d6081c8c8745a80575d898335ec3e",
+  "manifest": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/checkpoint-bls-positive-cache-candidate-20261013/manifest.json",
+    "sha256": "3b5043dbc52485055b431aab66bb197fa2f90334e400659c1c299fa3403a4a7f"
+  },
+  "patch": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/checkpoint-bls-positive-cache-candidate-20261013/candidate.patch",
+    "sha256": "d968599262d7c22882d087bf0331eba116e8c6713585d610e4b76c87e200470e"
+  },
+  "sourceBindings": [
+    {
+      "path": "include/nano/consensus_bls_verification_cache.hpp",
+      "sha256": "864769a3bb03dc18f5cd2893253e2411bc27dd89db84a3d0f72f8928f6e72ca7",
+      "bytes": 1783,
+      "baseSha256": null
+    },
+    {
+      "path": "src/consensus_bls_verification_cache_detail.hpp",
+      "sha256": "55f78e30f11905cfdab6e301e6dadff86e705e3fe0065fa9fbe3b41c078e4657",
+      "bytes": 5805,
+      "baseSha256": null
+    },
+    {
+      "path": "src/consensus_bls.cpp",
+      "sha256": "68f6bbad750defdb5f7851bf1aed7398da8985e05be51ba8969e32378fb8f20f",
+      "bytes": 5022,
+      "baseSha256": "c782e6d6331d102308ebce68c5fb52ed299037487e3f88e1ede7c6088ce5ae73"
+    },
+    {
+      "path": "tests/test_consensus_bls_verification_cache.cpp",
+      "sha256": "3566051742f408263833e23f919fb5f47cab0e4db8613e8c5cee61fe6e476370",
+      "bytes": 13471,
+      "baseSha256": null
+    },
+    {
+      "path": "CMakeLists.txt",
+      "sha256": "8546a435ba838142ab25c01c19d3fdd5e48a1c5c63a2b68200b2ee759ae39294",
+      "bytes": 155051,
+      "baseSha256": "d07f3b2978407ca31eefb8edd9eeb7f23eec607b0254510e0963bacb13a60ac7"
+    }
+  ],
+  "unchangedProtectedSourceBindings": [
+    {
+      "path": "include/nano/consensus_bls.hpp",
+      "sha256": "bf8668a4e5119529ec091e7fe5616d93767da243bf63c9a34b3ae4b384706cbb"
+    },
+    {
+      "path": "src/consensus_capella_reactor.cpp",
+      "sha256": "4d70ac1ca6c594e25cc177f9410d9a4ccf83138ca92e759b23d1c41a81a39553"
+    },
+    {
+      "path": "src/consensus_capella_store_snapshot.cpp",
+      "sha256": "a2de75d049eb959930f394ff2906fdb35dd038e7af172f823ab00374f0cf3369"
+    },
+    {
+      "path": "tests/test_capella_transition.cpp",
+      "sha256": "35d580c3f8a15337eb56413c9d15e7b6c0644b5572a45eb6a4f9be1ac2f34a5e"
+    },
+    {
+      "path": "src/storage.cpp",
+      "sha256": "4611df07f863f1b97e48ed305b50981f396f302fb019e945e35e47b8dce53891"
+    }
+  ],
+  "verifiedStaticProperties": [
+    {
+      "property": "One exact full tuple snapshot for lookup and BLST miss",
+      "reference": "src/consensus_bls_verification_cache_detail.hpp:17,42,89",
+      "detail": "48-byte key + 32-byte message + 96-byte signature copied once; copied spans supplied to backend even when entries disabled; full-array equality, no digest-only key."
+    },
+    {
+      "property": "Mathematical crypto backend and aggregation byte-identical to f9",
+      "reference": "src/consensus_bls.cpp:42",
+      "detail": "Uncached verification body equals historical verify body exactly; key/signature uncompress, infinity, subgroup, POP DST and core pairing retained. Aggregate key/signature/fast-aggregate function bodies equal f9."
+    },
+    {
+      "property": "Positive-only ephemeral certificate insertion",
+      "reference": "src/consensus_bls_verification_cache_detail.hpp:56",
+      "detail": "Only genuine true from the private fixed production BLST verifier may insert; negative/exception/non32 never insert; no persistence/import/global verifier injection API."
+    },
+    {
+      "property": "Clear/configure are generation-bound under mutex",
+      "reference": "src/consensus_bls_verification_cache_detail.hpp:30,52,73",
+      "detail": "Outstanding crypto keeps its real bool; live in-flight count survives generation transition; stale completion cannot reinsert. New config allocation is outside lock, commit is serialized; positive capacity and actual vector capacity are checked."
+    },
+    {
+      "property": "Optional cache memory failure does not reject valid signatures",
+      "reference": "src/consensus_bls_verification_cache_detail.hpp:70",
+      "detail": "bad_alloc returns false and preserves previous configuration; default construction may remain uncached. Miss insertion performs no allocation; small invalid positive budgets reject before state change."
+    },
+    {
+      "property": "Local capacity is separate from validator/protocol limits",
+      "reference": "include/nano/consensus_bls_verification_cache.hpp:5",
+      "detail": "Default 65536-byte/256-entry optimization only; bound includes fixed instance and actual vector capacity *176. Allocator bookkeeping and transient stack RSS are explicitly outside that portable bound."
+    },
+    {
+      "property": "Metrics are opt-in and carry no key/message/signature data",
+      "reference": "src/consensus_bls.cpp:29",
+      "detail": "Singleton private; optional reporter registered after cache construction and before its destruction. One bounded counters row only for NANO_BLS_VERIFICATION_CACHE_METRICS=1; reporter exceptions swallowed without changing verification result."
+    },
+    {
+      "property": "Only five-line CMake test registration delta",
+      "reference": "CMakeLists.txt:84",
+      "detail": "Removing exact new target/include/test/timeout/label block restores f9 CMake byte-for-byte. Old public API, reactor, restore snapshot, huge transition test, storage remain exact SHA bindings."
+    }
+  ],
+  "tinyTestReview": {
+    "executedByReviewer": false,
+    "staticCoveragePresent": [
+      "real POP BLST synthetic keys and controls",
+      "176 single-byte field mutations repeated with no negative caching",
+      "malformed widths and infinity rejection",
+      "genuine non32 messages uncached",
+      "disable/default bool equivalence",
+      "fixed+one-entry resident budget and FIFO eviction",
+      "allocation failure preserves genuine verification",
+      "copied snapshot while original tuple mutates inside backend",
+      "backend exception propagation",
+      "deterministic in-flight clear and disable with independent detail instance",
+      "real global verification/clear concurrency",
+      "512 verification calls /64 distinct tuples with raw512 versus raw64+448hits expected",
+      "fresh exec cold process certificate separation"
+    ],
+    "newCanonicalOutsideSubgroupVectorIndependentlyQualified": false,
+    "fixedSubgroupChecksBytePreserved": true,
+    "resourceBoundsInSource": {
+      "selfTestWallMs": 60000,
+      "maxRssKiB": 131072,
+      "ctestTimeoutSec": 70,
+      "freshExecWaitSec": 5
+    }
+  },
+  "materialFindings": [],
+  "limitations": [
+    "Static source and exact-byte review only. No C++ compilation, tiny test, benchmark, fresh exec, concurrency run, or natural scenario execution by this reviewer.",
+    "Actual changed-core natural AMD run within unchanged 180-second budget still required; this memo is not evidence of the earlier timeout causal CPU share or a production performance result.",
+    "This cache authenticates mathematical BLS bytes only. Caller membership, PoP/domain/root/state, admission, restore digests, journals, CAS, duties and source finality checks are unchanged and still required.",
+    "No new independent canonical non-subgroup point vector is claimed; existing BLST subgroup checks are byte-preserved.",
+    "No external independent security audit, full blockchain/network/release or production readiness is claimed."
+  ],
+  "reviewerActions": {
+    "testsExecuted": 0,
+    "compilerInvoked": false,
+    "dockerInvoked": false,
+    "sshInvoked": false,
+    "privateInputsRead": false,
+    "repoSourceModified": false,
+    "workspaceReportOnly": true
+  },
+  "naturalAmdDeadlineQualified": false,
+  "productionQualified": false
+}

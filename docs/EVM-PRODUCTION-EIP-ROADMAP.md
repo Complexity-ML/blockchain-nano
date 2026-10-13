@@ -1,3 +1,9 @@
+## 13 octobre 2026 — Résultats BLS, exécution EVM inchangée
+
+Shanghai demeure le profil réseau. ARM passe 8 CTests du nouveau cœur cache avec audit sémantique `2dfd6ca3` : naturel 116,077 s etGC au slot 40 + 16/réouverture froide. Preuve de bytes courants `3a481e40`, refus metadata historique `f5b25ac1` et limites initiales conservés. AMD64 reste 7/8 avec naturel 180,03 s en timeout ; diagnostic échantillonné CPU 179 s/RSS 145252 KiB face au repère 128 MiB, observateur perturbant et fonction responsable non prouvée. Aucun ancien PASS réutilisé.
+
+Aucun nouveau fork, EIP ou résultat EVM/RPC promu. [Critères de production](PRODUCTION-GOAL.md), corps historiques et ancien 6/7 conservés : production/native, image/install, duties/finalité, reprise privée, panne matérielle et revue externe restent ouverts. Quatrepreuves VPS non exportées en attente, V37 FAILED distinct ; Git n’est pas une sauvegarde complète privée, CI facturation sans étapes.
+
 ## 13 octobre 2026 — GC de checkpoints, qualification limitée Docker ARM
 
 Le nettoyage hors ligne des blobs de checkpoints Capella est qualifié dans le périmètre des [preuves publiques](qualification/checkpoint-blob-gc-arm-20261013/README.md) : copies arrêtées détenues exclusivement, racines primaire/témoin et publication pending conservées, schémas/namespaces inconnus refusés. Ce lot ne qualifie ni un pruning complet de l’état EVM ni la production.

@@ -1,0 +1,121 @@
+{
+  "graph": [
+    {
+      "path": "./CTestTestfile.cmake",
+      "sha256": "da0a1ed78af647f5eaa7d43355b2924e0beb5e32a63d82e6deabba14a12814a3",
+      "bytes": 117373,
+      "present": true
+    },
+    {
+      "path": "third_party/mcl/CTestTestfile.cmake",
+      "present": false
+    },
+    {
+      "path": "third_party/secp256k1/CTestTestfile.cmake",
+      "sha256": "bf60862263faafb68edb02c4e1edb26f446d99a41a1ec8148273d5e56cdc482b",
+      "bytes": 285,
+      "present": true
+    },
+    {
+      "path": "third_party/secp256k1/src/CTestTestfile.cmake",
+      "sha256": "6d2a54d69a7914c86ad97c7bf1c1b4e6aca37bac4bdbd80fdebad265a18b9cf3",
+      "bytes": 278,
+      "present": true
+    },
+    {
+      "path": "third_party/ckzg/CTestTestfile.cmake",
+      "present": false
+    }
+  ],
+  "selectedCommands": {
+    "consensus_capella_duty_projection_availability": [
+      "/outputs/nano-capella-duty-availability-tests",
+      "--self-test"
+    ],
+    "storage_checkpoint_immutable_blobs": [
+      "/outputs/nano-checkpoint-blob-tests"
+    ],
+    "consensus_capella_fragment_checkpoint_migration": [
+      "/usr/bin/cmake",
+      "-E",
+      "env",
+      "NANO_TEST_FRAGMENT_CHECKPOINT=1",
+      "/outputs/nano-capella-transition-tests",
+      "--prepared-block"
+    ],
+    "storage_capella_blob_gc_next_publication": [
+      "/usr/bin/cmake",
+      "-E",
+      "env",
+      "NANO_TEST_CHECKPOINT_BLOB_GC=1",
+      "NANO_TEST_COLD_REACTOR=1",
+      "NANO_TEST_FRAGMENT_CHECKPOINT=1",
+      "/outputs/nano-capella-transition-tests",
+      "--prepared-block"
+    ],
+    "storage_capella_blob_gc_cli_closed_fixture": [
+      "/usr/bin/cmake",
+      "-E",
+      "env",
+      "NANO_TEST_CHECKPOINT_BLOB_GC_CLI=1",
+      "NANO_TEST_CHECKPOINT_GC_TOOL=/outputs/nano-storage-maintenance",
+      "NANO_TEST_CHECKPOINT_BLOB_GC=1",
+      "NANO_TEST_COLD_REACTOR=1",
+      "NANO_TEST_FRAGMENT_CHECKPOINT=1",
+      "/outputs/nano-capella-transition-tests",
+      "--prepared-block"
+    ],
+    "storage_capella_blob_gc_adversarial_boundaries": [
+      "/usr/bin/cmake",
+      "-E",
+      "env",
+      "NANO_TEST_CHECKPOINT_BLOB_GC_ADVERSARIAL=1",
+      "NANO_TEST_CHECKPOINT_BLOB_GC=1",
+      "NANO_TEST_COLD_REACTOR=1",
+      "NANO_TEST_FRAGMENT_CHECKPOINT=1",
+      "/outputs/nano-capella-transition-tests",
+      "--prepared-block"
+    ],
+    "storage_capella_blob_gc_natural_pruning": [
+      "/outputs/nano-capella-transition-tests",
+      "--blob-gc-natural"
+    ]
+  },
+  "selectedProperties": {
+    "consensus_capella_duty_projection_availability": {
+      "LABELS": "qualification_consensus_duty_availability",
+      "TIMEOUT": "70",
+      "_BACKTRACE_TRIPLES": "/work/CMakeLists.txt;82;add_test;/work/CMakeLists.txt;0;"
+    },
+    "storage_checkpoint_immutable_blobs": {
+      "LABELS": "qualification_storage_local",
+      "TIMEOUT": "90",
+      "_BACKTRACE_TRIPLES": "/work/CMakeLists.txt;1179;add_test;/work/CMakeLists.txt;0;"
+    },
+    "consensus_capella_fragment_checkpoint_migration": {
+      "LABELS": "qualification_consensus_ethereum",
+      "TIMEOUT": "180",
+      "_BACKTRACE_TRIPLES": "/work/CMakeLists.txt;1997;add_test;/work/CMakeLists.txt;0;"
+    },
+    "storage_capella_blob_gc_next_publication": {
+      "LABELS": "qualification_storage_maintenance",
+      "TIMEOUT": "180",
+      "_BACKTRACE_TRIPLES": "/work/CMakeLists.txt;1998;add_test;/work/CMakeLists.txt;0;"
+    },
+    "storage_capella_blob_gc_cli_closed_fixture": {
+      "LABELS": "qualification_storage_maintenance_cli",
+      "TIMEOUT": "180",
+      "_BACKTRACE_TRIPLES": "/work/CMakeLists.txt;2000;add_test;/work/CMakeLists.txt;0;"
+    },
+    "storage_capella_blob_gc_adversarial_boundaries": {
+      "LABELS": "qualification_storage_maintenance",
+      "TIMEOUT": "180",
+      "_BACKTRACE_TRIPLES": "/work/CMakeLists.txt;2002;add_test;/work/CMakeLists.txt;0;"
+    },
+    "storage_capella_blob_gc_natural_pruning": {
+      "LABELS": "qualification_storage_maintenance",
+      "TIMEOUT": "180",
+      "_BACKTRACE_TRIPLES": "/work/CMakeLists.txt;2004;add_test;/work/CMakeLists.txt;0;"
+    }
+  }
+}

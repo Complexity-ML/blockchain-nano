@@ -1,3 +1,9 @@
+## 13 octobre 2026 — Cache BLS, aucun EIP promu
+
+Le profil EVM réseau demeure Shanghai. Le candidat passe 8 CTests ARM sans skip, avec audit sémantique `2dfd6ca3` (naturel 116,077 s,GC au slot 40 + 16 jusqu’à 56/réouverture froide) ; sa preuve de bytes courants `3a481e40` ne réécrit pas le refus metadata `f5b25ac1` ni les stats initiaux absents. AMD64 reste 7/8 avec naturel 180,03 s en timeout ; diagnostic CPU 178,6 s/RSS 145252 KiB au-dessus du repère 128 MiB, échantillonné et perturbant, fonction responsable non prouvée.
+
+[Objectif et limites](PRODUCTION-GOAL.md) : résultats synthétiques locaux, pas de production/réseau/reprise privée/panne matérielle ni qualification native. Aucun statut EIP ou CSV changé ; ancien 6/7 et tous critères conservés. Image/install, duties/finalité commune et audit externe restent ouverts ; quatre preuves VPS en attente distinctes du V37 FAILED, sauvegarde privée intégrale hors Git, CI facturation sans étapes.
+
 ## 13 octobre 2026 — GC de checkpoints, qualification limitée Docker ARM
 
 Le nettoyage hors ligne des blobs de checkpoints Capella est qualifié dans le périmètre des [preuves publiques](qualification/checkpoint-blob-gc-arm-20261013/README.md) : copies arrêtées détenues exclusivement, racines primaire/témoin et publication pending conservées, schémas/namespaces inconnus refusés. Ce lot ne qualifie ni un pruning complet de l’état EVM ni la production.

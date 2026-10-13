@@ -1,3 +1,9 @@
+## 13 octobre 2026 — Vérification BLS locale qualifiée sur ARM
+
+Cache positif exact et borné, clear/génération et process neuf :8CTest ARM passent et audit `2dfd6ca3` valide les mêmes assertions de sécurité, CLI, GC naturel 40 + 16/réouverture froide et disponibilité. Les deux écarts ctime actuels sont consignés ; la preuve courante `3a481e40` ne restaure aucune stat initiale manquante et garde le refus `f5b25ac1`. AMD64 reste 7/8/timeout à 180,03 s ; diagnostic CPU/RSS 179 s/145252 KiB (repère 128 MiB) ne prouve pas le hotspot.
+
+Ce lot ne démontre ni duties signées en réseau, ni finalité commune,ni cycle complet des validateurs ni panne matérielle. Ancien 6/7, matrices et critères conservés ; [production](PRODUCTION-GOAL.md) ouverte, profils EIP inchangés, audit externe absent. Quatrepreuves privées VPS attendent l’autorisation dédiée ; V37 FAILED/journaux manquants distincts,Git sans backup privé complet.
+
 ## 13 octobre 2026 — GC de checkpoints, qualification limitée Docker ARM
 
 Le nettoyage hors ligne des blobs de checkpoints Capella est qualifié dans le périmètre des [preuves publiques](qualification/checkpoint-blob-gc-arm-20261013/README.md) : copies arrêtées détenues exclusivement, racines primaire/témoin et publication pending conservées, schémas/namespaces inconnus refusés. Ce lot ne qualifie ni un pruning complet de l’état EVM ni la production.

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="7"
+	failures="5"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="33"
+	timestamp="2026-10-13T06:11:26"
+	>
+	<testcase name="consensus_capella_duty_projection_availability" classname="consensus_capella_duty_projection_availability" time="32.9132" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_duty_availability"/>
+		</properties>
+		<system-out>{"callbackAndResourceErrorsVisible":true,"elapsedMs":431,"maxRssKiB":16640,"networkQualified":false,"optionalLocalSyncDeferred":true,"productionQualified":false,"proposalAttestationContextsRemainReady":true,"result":"PASS","runtimeStarted":false,"scenario":"capella-local-sync-postready63","strictSyncBoundaryStillRejects":true,"syntheticFixture":true,"syntheticFixtureSignaturesCreated":0}
+{"callbackResourceErrorsRemainVisible":true,"checkpointAndJournalUnchanged":true,"elapsedMs":1046,"localKeyPendingRegistration":true,"maxRssKiB":22656,"networkQualified":false,"networkStarted":false,"productionQualified":false,"proposalAttestationAssignmentsRemainAvailable":true,"providerCalls":0,"realCoreAndLoopHealthy":true,"result":"PASS","runtimeStarted":false,"scenario":"capella-real-reactor-local-sync-postready63","syncCurrentDeferredBeforeProvider":true,"syncMembersDeferred":true,"syntheticFixture":true,"syntheticFixtureSignaturesCreated":0}
+{"clockMonotoneUnchangedAfterInitialTick":true,"coldDecodedCacheUsageDirectlyO...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="storage_checkpoint_immutable_blobs" classname="storage_checkpoint_immutable_blobs" time="0.0702696" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_local"/>
+		</properties>
+		<system-out>{"binaryFragments":true,"concurrentCasLoserAbsent":true,"digestAndAggregateBounds":true,"duplicateIdempotence":true,"executionCheckpointCoupling":true,"legacyApisPreserved":true,"productionQualified":false,"readonlyCopyUnchanged":true,"runtimeGraphPagingImplemented":false,"scenario":"checkpoint-immutable-blobs","tamperingRejectedWithoutOverwrite":true}
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_fragment_checkpoint_migration" classname="consensus_capella_fragment_checkpoint_migration" time="0.0236103" status="fail">
+		<failure message="Failed"/>
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_ethereum"/>
+		</properties>
+		<system-out>read /work/tests/fixtures/consensus-bellatrix-containers-official/minimal-phase0.yaml
+</system-out>
+	</testcase>
+	<testcase name="storage_capella_blob_gc_next_publication" classname="storage_capella_blob_gc_next_publication" time="0.0215393" status="fail">
+		<failure message="Failed"/>
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_maintenance"/>
+		</properties>
+		<system-out>read /work/tests/fixtures/consensus-bellatrix-containers-official/minimal-phase0.yaml
+</system-out>
+	</testcase>
+	<testcase name="storage_capella_blob_gc_cli_closed_fixture" classname="storage_capella_blob_gc_cli_closed_fixture" time="0.0215446" status="fail">
+		<failure message="Failed"/>
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_maintenance_cli"/>
+		</properties>
+		<system-out>read /work/tests/fixtures/consensus-bellatrix-containers-official/minimal-phase0.yaml
+</system-out>
+	</testcase>
+	<testcase name="storage_capella_blob_gc_adversarial_boundaries" classname="storage_capella_blob_gc_adversarial_boundaries" time="0.021411" status="fail">
+		<failure message="Failed"/>
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_maintenance"/>
+		</properties>
+		<system-out>read /work/tests/fixtures/consensus-bellatrix-containers-official/minimal-phase0.yaml
+</system-out>
+	</testcase>
+	<testcase name="storage_capella_blob_gc_natural_pruning" classname="storage_capella_blob_gc_natural_pruning" time="0.0118281" status="fail">
+		<failure message="Failed"/>
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_maintenance"/>
+		</properties>
+		<system-out>read /work/tests/fixtures/consensus-bellatrix-containers-official/minimal-phase0.yaml
+</system-out>
+	</testcase>
+</testsuite>
