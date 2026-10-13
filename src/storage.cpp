@@ -2,6 +2,8 @@
 #include "nano/block_auth.hpp"
 #include "nano/finality.hpp"
 #include <rocksdb/db.h>
+#include <rocksdb/env.h>
+#include <rocksdb/file_system.h>
 #include <rocksdb/write_batch.h>
 #include <rocksdb/table.h>
 #include <rocksdb/version.h>
@@ -13,6 +15,31 @@
 #include <limits>
 namespace nano {
 namespace {
+// ReadWriteExisting must never recreate a missing database directory. DB::Open
+// can call FileSystem::CreateDirIfMissing even with create_if_missing=false.
+// Install the modern FileSystem in a composite Env so both direct FileSystem
+// calls and compatibility Env calls pass through the same no-creation policy.
+class ExistingOnlyFileSystem final : public rocksdb::FileSystemWrapper {
+public:
+ explicit ExistingOnlyFileSystem(const std::shared_ptr<rocksdb::FileSystem>& target):rocksdb::FileSystemWrapper(target){}
+ const char* Name()const override{return "NanoExistingOnlyFileSystem";}
+ rocksdb::IOStatus CreateDir(const std::string&,const rocksdb::IOOptions&,rocksdb::IODebugContext*)override{
+  return rocksdb::IOStatus::NotSupported("Nano existing-only storage forbids directory creation");
+ }
+ rocksdb::IOStatus CreateDirIfMissing(const std::string& path,const rocksdb::IOOptions& options,rocksdb::IODebugContext* context)override{
+  // NewDirectory opens an existing directory or fails. Do not delegate to a
+  // mkdir-capable method after an existence check: that would retain a race.
+  std::unique_ptr<rocksdb::FSDirectory> directory;
+  return target()->NewDirectory(path,options,&directory,context);
+ }
+};
+rocksdb::Env* existing_only_environment(){
+ // Shared process lifetime exceeds every DB using this environment, including
+ // background work joined by DB destruction. No ChainStore layout/ABI change.
+ static const auto environment=rocksdb::NewCompositeEnv(
+  std::make_shared<ExistingOnlyFileSystem>(rocksdb::Env::Default()->GetFileSystem()));
+ return environment.get();
+}
 std::string height_key(const Int& number){return hex(bytes(number,8));}
 void require_ok(const rocksdb::Status& status){if(!status.ok())throw std::runtime_error("RocksDB: "+status.ToString());}
 // Detect the API, rather than guessing the release where DB** was removed.
@@ -93,8 +120,10 @@ std::optional<std::string> ChainStore::proposal_data_impl(const std::string& key
 }
 ChainStore::ChainStore(const std::filesystem::path& path,OpenMode mode){
  const bool read_only=mode==OpenMode::ReadOnly;
- if(!read_only&&path.has_parent_path())std::filesystem::create_directories(path.parent_path());
- rocksdb::Options options;options.create_if_missing=!read_only;options.paranoid_checks=true;
+ const bool may_initialize=mode==OpenMode::ReadWrite;
+ if(may_initialize&&path.has_parent_path())std::filesystem::create_directories(path.parent_path());
+ rocksdb::Options options;options.create_if_missing=may_initialize;options.paranoid_checks=true;
+ if(mode==OpenMode::ReadWriteExisting)options.env=existing_only_environment();
  // A validator opens separate signing journals and recovery witnesses. RocksDB's
  // default file preallocation multiplies reserved disk space across these tiny
  // databases. Allocate on demand; keep WAL and synchronous durability unchanged.
@@ -111,7 +140,7 @@ ChainStore::ChainStore(const std::filesystem::path& path,OpenMode mode){
   if(schema&&*schema=="nano/1"&&get("execution-state-pruning/v1"))throw std::runtime_error("legacy pruned database requires explicit migration or unpruned backup");
   if(schema&&*schema=="nano/2-state-pruned"&&!state_pruning_impl())throw std::runtime_error("pruned database schema has no retention marker");
   if(!schema){
-   if(read_only)throw std::runtime_error("read-only database has no Nano schema");
+   if(!may_initialize)throw std::runtime_error(read_only?"read-only database has no Nano schema":"existing database has no Nano schema");
    std::unique_ptr<rocksdb::Iterator> iterator(db_->NewIterator(rocksdb::ReadOptions()));iterator->SeekToFirst();require_ok(iterator->status());
    if(iterator->Valid())throw std::runtime_error("database has no Nano schema");
    require_ok(db_->Put(durable_write(),"meta/schema","nano/1"));

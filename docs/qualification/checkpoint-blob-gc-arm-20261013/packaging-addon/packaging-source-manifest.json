@@ -1,0 +1,44 @@
+{
+  "format": "nano-gc-runtime-maintenance-packaging-proposal-v1",
+  "createdAtUtc": "2026-10-13T04:48:29.962458+00:00",
+  "baselineGcConsolidatedManifestSha256": "f677df8e07cf4397bdef21f93d16a9e80044b62dc83bab3f3bd805d866031b3b",
+  "dockerBaselineGitRevision": "7510c0ea9d7dd4fc2e175f1a03c7169850c34600",
+  "sourceFiles": [
+    {
+      "path": "CMakeLists.txt",
+      "beforeSha256": "ed860fed0f10f290c8bc00bcbbebcf186603b6d5dd46709bf381271e9e7f6bfe",
+      "sha256": "d07f3b2978407ca31eefb8edd9eeb7f23eec607b0254510e0963bacb13a60ac7",
+      "bytes": 154466,
+      "kind": "packaging-only"
+    },
+    {
+      "path": "Dockerfile",
+      "beforeSha256": "7fce9592a1221d9dd4a6af1ab6118932f7fcf84e9cad59c6fa9f2733e3967ab4",
+      "sha256": "660f4a9470bf8714f6cccad425d534992a6ba630b6aa59af152c37e3faa86a5a",
+      "bytes": 2184,
+      "kind": "packaging-only"
+    }
+  ],
+  "patch": {
+    "path": "runtime-maintenance-packaging.patch",
+    "sha256": "47f7539d22d062a47dccf1c296a8b54c4bb4bd04041dc5f3113f3378bbb33b45",
+    "bytes": 2160
+  },
+  "configureOnlyPlan": {
+    "path": "configure-only-plan.json",
+    "sha256": "295e6dbd57d889ce42471ab7a7b2c77a80ccd002c9d9ca5dea92a03189d346e0",
+    "bytes": 11607
+  },
+  "productionCppModified": false,
+  "existingNanoCompileFlagsModified": false,
+  "oldInstallDefaultNanoPreserved": true,
+  "oldDockerEntrypointAndCommandPreserved": true,
+  "sourcesCopied": 2,
+  "repoModified": false,
+  "configureDispatched": false,
+  "cppCompiled": false,
+  "testsExecuted": 0,
+  "imageBuilt": false,
+  "binariesInstalled": false,
+  "productionQualified": false
+}

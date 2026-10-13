@@ -1,0 +1,95 @@
+UpdateCTestConfiguration  from :/testing/ctest/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/testing/ctest/DartConfiguration.tcl
+Test project /testing/ctest
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 193
+    Start 193: storage_checkpoint_immutable_blobs
+
+193: Test command: /outputs/nano-checkpoint-blob-tests
+193: Working Directory: /testing/ctest
+193: Test timeout computed to be: 90
+193: {"binaryFragments":true,"concurrentCasLoserAbsent":true,"digestAndAggregateBounds":true,"duplicateIdempotence":true,"executionCheckpointCoupling":true,"legacyApisPreserved":true,"productionQualified":false,"readonlyCopyUnchanged":true,"runtimeGraphPagingImplemented":false,"scenario":"checkpoint-immutable-blobs","tamperingRejectedWithoutOverwrite":true}
+1/6 Test #193: storage_checkpoint_immutable_blobs ................   Passed    0.02 sec
+test 359
+    Start 359: consensus_capella_fragment_checkpoint_migration
+
+359: Test command: /usr/bin/cmake "-E" "env" "NANO_TEST_FRAGMENT_CHECKPOINT=1" "/outputs/nano-capella-transition-tests" "--prepared-block"
+359: Working Directory: /testing/ctest
+359: Test timeout computed to be: 180
+359: {"cancelledMigrationUnchanged":true,"coldStateCacheImplemented":false,"corruptionRejections":3,"graphAndIdentityPreserved":true,"independentPreviousPrimaryRecovered":true,"journalCommitmentUnchanged":true,"legacyMigrated":true,"migrationIdempotent":true,"networkQualified":false,"primaryAndWitnessRestarts":true,"productionQualified":false,"scenario":"capella-fragment-checkpoint-integration","stickyFragmentFormat":true,"validChildDurablyAdmitted":true}
+2/6 Test #359: consensus_capella_fragment_checkpoint_migration ...   Passed    0.33 sec
+test 360
+    Start 360: storage_capella_blob_gc_next_publication
+
+360: Test command: /usr/bin/cmake "-E" "env" "NANO_TEST_CHECKPOINT_BLOB_GC=1" "NANO_TEST_COLD_REACTOR=1" "NANO_TEST_FRAGMENT_CHECKPOINT=1" "/outputs/nano-capella-transition-tests" "--prepared-block"
+360: Working Directory: /testing/ctest
+360: Test timeout computed to be: 180
+360: {"collectorInterface":"cpp-api","deletedPrimaryRecords":1,"deletedWitnessRecords":1,"localSigningProviderCalls":0,"naturallyObservedCampaignLeak":false,"networkQualified":false,"nextChildNormallyAdmitted":true,"nextPublicationColdReopened":true,"originalAndSignerWitnessBytesUnchanged":true,"productionQualified":false,"runtimeDutiesResumed":false,"sameCheckpointColdReopened":true,"scenario":"gc-cold-reopen-and-next-admission","syntheticOrphanStagedViaCas":true}
+3/6 Test #360: storage_capella_blob_gc_next_publication ..........   Passed    0.31 sec
+test 361
+    Start 361: storage_capella_blob_gc_cli_closed_fixture
+
+361: Test command: /usr/bin/cmake "-E" "env" "NANO_TEST_CHECKPOINT_BLOB_GC_CLI=1" "NANO_TEST_CHECKPOINT_GC_TOOL=/outputs/nano-storage-maintenance" "NANO_TEST_CHECKPOINT_BLOB_GC=1" "NANO_TEST_COLD_REACTOR=1" "NANO_TEST_FRAGMENT_CHECKPOINT=1" "/outputs/nano-capella-transition-tests" "--prepared-block"
+361: Working Directory: /testing/ctest
+361: Test timeout computed to be: 180
+361: {"actualCliCompleted":true,"cliExitCode":0,"deletedPrimaryRecords":1,"deletedWitnessRecords":1,"naturalPruningReplay":false,"noWork":false,"privateFixtureExported":false,"productionQualified":false,"receiptBytes":"{\n  \"afterFiles\": [\n    {\n      \"allocatedBytes\": 131072,\n      \"apparentBytes\": 110938,\n      \"files\": 11,\n      \"sstBytes\": 19237,\n      \"walBytes\": 0\n    },\n    {\n      \"allocatedBytes\": 131072,\n      \"apparentBytes\": 109926,\n      \"files\": 11,\n      \"sstBytes\": 21764,\n      \"walBytes\": 0\n    }\n  ],\n  \"atomicExclusiveLinkPublication\": true,\n  \"beforeFiles\": [\n    {\n      \"allocatedBytes\": 143360,\n      \"apparentBytes\": 119101,\n      \"files\": 12,\n      \"sstBytes\": 41415,\n      \"walBytes\": 0\n    },\n    {\n      \"allocatedBytes\": 147456,\n      \"apparentBytes\": 121809,\n      \"files\": 12,\n      \"sstBytes\": 44083,\n      \"walBytes\": 0\n    }\n  ],\n  \"format\": \"nano-owned-checkpoint-gc-maintenance-receipt-v1\",\n  \"plan\": {\n    \"deletePrimary\": [\n      [\n        \"checkpoint-blob/v1/0x2946951f15db4dda00f217c845d435088eaef90b068827fce976dd04aa5958af\",\n        \"0x2946951f15db4dda00f217c845d435088eaef90b068827fce976dd04aa5958af\",\n        \"0xb7c4\"\n      ]\n    ],\n    \"deleteWitness\": [\n      [\n        \"checkpoint-blob/v1/0x2946951f15db4dda00f217c845d435088eaef90b068827fce976dd04aa5958af\",\n        \"0x2946951f15db4dda00f217c845d435088eaef90b068827fce976dd04aa5958af\",\n        \"0xb7c4\"\n      ]\n    ],\n    \"format\": \"nano-owned-checkpoint-blob-gc-plan-v1\",\n    \"identity\": {\n      \"genesisTimeMs\": \"0x0\",\n      \"genesisValidatorsRoot\": \"0x0a08c27fe4ece2483f9e581f78c66379a06f96e9c24cd1390594ff939b26f95b\",\n      \"networkAnchor\": \"0x641eb2bbf3995253875a52f0d16e59e3e34135ac826b8549c46e5bf85767cb8f\",\n      \"profile\": {\n        \"common\": [\n          {\n            \"attestation\": [\n              \"0x1\",\n              \"0x40\",\n              \"0xe\",\n              \"0x1a\",\n              \"0xe\",\n              \"0x8\",\n              \"0x40\"\n            ],\n            \"bodyLimits\": [\n              \"0x10\",\n              \"0x2\",\n              \"0x80\",\n              \"0x10\",\n              \"0x10\",\n              \"0x800\"\n            ],\n            \"deposit\": [\n              \"0x3b9aca00\",\n              \"0x773594000\",\n              \"0x10000000000\"\n            ],\n            \"duties\": [\n              \"0x8\",\n              \"0x1\",\n              \"0x4\",\n              \"0x4\",\n              \"0x3b9aca00\",\n              \"0x773594000\",\n              \"0xa\"\n            ],\n            \"effective\": [\n              \"0x3b9aca00\",\n              \"0x773594000\",\n              \"0x4\",\n              \"0x1\",\n              \"0x5\"\n            ],\n            \"epochSync\": [\n              \"0x8\",\n              \"0x8\",\n              \"0x1\",\n              \"0x773594000\",\n              \"0xa\"\n            ],\n            \"executionLimits\": [\n              \"0x800000\"\n            ],\n            \"exit\": [\n              \"0x2\",\n              \"0x20\",\n              \"0x4\",\n              \"0x100\",\n              \"0x40\"\n            ],\n            \"ffg\": [\n              \"0x8\",\n              \"0x3b9aca00\"\n            ],\n            \"genesisForkVersion\": \"0x00000001\",\n            \"history\": [\n              \"0x8\",\n              \"0x40\",\n              \"0x1000000\",\n              \"0x4\"\n            ],\n            \"inactivity\": [\n              \"0x8\",\n              \"0x4\",\n              \"0x10\",\n              \"0x4\"\n            ],\n            \"registry\": [\n              \"0x2\",\n              \"0x20\",\n              \"0x4\",\n              \"0x100\",\n              \"0x773594000\",\n              \"0x3b9aca000\"\n            ],\n            \"rewardWeights\": [\n              \"0xe\",\n              \"0x1a\",\n              \"0xe\",\n              \"0x40\"\n            ],\n            \"rewards\": [\n              \"0x40\",\n              \"0x8\",\n              \"0x3b9aca00\",\n              \"0x4\",\n              \"0x4\",\n              \"0x1000000\"\n            ],\n            \"slashing\": [\n              \"0x2\",\n              \"0x20\",\n              \"0x4\",\n              \"0x100\",\n              \"0x40\",\n              \"0x20\",\n              \"0x200\",\n              \"0x8\",\n              \"0x3b9aca00\",\n              \"0x3\"\n            ],\n            \"stateLimits\": [\n              \"0x40\",\n              \"0x40\",\n              \"0x40\",\n              \"0x1000000\",\n              \"0x20\",\n              \"0x10000000000\",\n              \"0x20\"\n            ],\n            \"syncAggregate\": [\n              \"0x8\",\n              \"0x3b9aca00\",\n              \"0x40\",\n              \"0x2\",\n              \"0x8\",\n              \"0x40\",\n              \"0x1\",\n              \"0x773594000\",\n              \"0xa\"\n            ]\n          },\n          \"0x1770\",\n          \"0x7d0\",\n          \"0x28\",\n          \"0x1\",\n          \"0x539\",\n          \"0x0\",\n          \"0x6\",\n          \"0x400000\",\n          \"0x20\",\n          \"0x40000000\",\n          \"0x100000\"\n        ],\n        \"format\": \"nano-capella-profile-v1\",\n        \"genesisVersion\": \"0x00000001\",\n        \"maximumBlsChanges\": \"0x10\",\n        \"withdrawals\": [\n          \"0x773594000\",\n          \"0x4\",\n          \"0x10\"\n        ]\n      }\n    },\n    \"next\": {\n      \"digest\": \"0x37672cf0d9d5b188eca3be07d03cf956f81f41cf365228005376c8bb15d5dc1e\",\n      \"sequence\": \"0x4\"\n    },\n    \"nonBlobPrimarySha256\": \"e264ea43983672da190d853064be2f0be81a311b81b75ec2b0d67d89e53a502b\",\n    \"nonBlobWitnessSha256\": \"8626ec25d8bc3c1eb69eb64e6aaf5f3b8b4eb33f26f98fe42995cb5cbe9042f4\",\n    \"operatorOwnedCopiesOnly\": true,\n    \"planId\": \"13be80bae94e21c6cc2a6a04c03a26e8c46ae32c1a8b45462a8d8e8cf3a67a17\",\n    \"primary\": {\n      \"digest\": \"0x37672cf0d9d5b188eca3be07d03cf956f81f41cf365228005376c8bb15d5dc1e\",\n      \"sequence\": \"0x4\"\n    },\n    \"productionQualified\": false,\n    \"protected\": [\n      [\n        \"0xeb1b3d7fa4fd5c4c865614dc6228e293d3049f0ee757047cee67d93b1ab7c3e6\",\n        \"0xaa93\"\n      ]\n    ],\n    \"witness\": {\n      \"digest\": \"0x181475c95260d565fcd58120666437849b813d04509ea407e24d712c887b8aad\",\n      \"sequence\": \"0x4\"\n    }\n  },\n  \"profileSha256\": \"c9d115373e63eea3332aadd86611d1fe6f9d129d61b80d6af883cf16ad176467\",\n  \"receiptPersistedSeparately\": true,\n  \"requestSha256\": \"0dfd564ad88a46a0560d66872040b92172682114ea13d32a01ce9955712bf308\",\n  \"requiresSuccessfulTerminalExit\": true,\n  \"result\": {\n    \"allProtectedReferencesReopened\": true,\n    \"copiedDataOnly\": true,\n    \"format\": \"nano-owned-checkpoint-blob-gc-result-v1\",\n    \"noWork\": false,\n    \"nonGcNamespacesUnchanged\": true,\n    \"originalSourceInventoriesUnchanged\": true,\n    \"pendingNext\": {\n      \"digest\": \"0x37672cf0d9d5b188eca3be07d03cf956f81f41cf365228005376c8bb15d5dc1e\",\n      \"sequence\": \"0x4\"\n    },\n    \"physicalPowerLossQualified\": false,\n    \"physicalSpaceReductionGuaranteed\": false,\n    \"planId\": \"13be80bae94e21c6cc2a6a04c03a26e8c46ae32c1a8b45462a8d8e8cf3a67a17\",\n    \"primary\": {\n      \"digest\": \"0x37672cf0d9d5b188eca3be07d03cf956f81f41cf365228005376c8bb15d5dc1e\",\n      \"sequence\": \"0x4\"\n    },\n    \"primaryAndWitnessAtomicTransaction\": false,\n    \"productionQualified\": false,\n    \"runtimeDutiesResumed\": false,\n    \"stores\": [\n      {\n        \"deletedLogicalPayloadBytes\": 47044,\n        \"deletedRecords\": 1\n      },\n      {\n        \"deletedLogicalPayloadBytes\": 47044,\n        \"deletedRecords\": 1\n      }\n    ],\n    \"witness\": {\n      \"digest\": \"0x181475c95260d565fcd58120666437849b813d04509ea407e24d712c887b8aad\",\n      \"sequence\": \"0x4\"\n    }\n  },\n  \"stopReceiptSha256\": \"5705ab4a3c157a32eb1f075390fa0fae9f21bed1c850fcd2a47f8ddce6ef659f\"\n}\n","receiptLinks":1,"receiptMode":384,"receiptSha256":"bff9f0c087ac4539b93f8b80216bf64551c0a2c3c3b82380c941c45fa7c3ef6c","refusals":[{"existingReceiptBytesPreserved":false,"exitCode":1,"expectedDiagnostic":"Usage: compact-owned-copy","id":"missing-receipt-argument","logicalCopyContentsUnchanged":true,"newReceiptPublished":false},{"existingReceiptBytesPreserved":false,"exitCode":1,"expectedDiagnostic":"Public input SHA mismatch before parse","id":"request-pin-mismatch","logicalCopyContentsUnchanged":true,"newReceiptPublished":false},{"existingReceiptBytesPreserved":false,"exitCode":1,"expectedDiagnostic":"Public input SHA mismatch before parse","id":"profile-pin-mismatch","logicalCopyContentsUnchanged":true,"newReceiptPublished":false},{"existingReceiptBytesPreserved":true,"exitCode":1,"expectedDiagnostic":"Fresh independent receipt path required","id":"preexisting-receipt-no-overwrite","logicalCopyContentsUnchanged":true,"newReceiptPublished":false},{"existingReceiptBytesPreserved":false,"exitCode":1,"expectedDiagnostic":"File statistics entry budget exceeded","id":"physical-statistics-entry-budget","logicalCopyContentsUnchanged":true,"newReceiptPublished":false}],"runtimeDutiesResumed":false,"scenario":"checkpoint-gc-cli-closed-staged","sourcesAndSignerWitnessBytesUnchanged":true,"syntheticOnly":true}
+361: {"collectorInterface":"actual-cli","deletedPrimaryRecords":1,"deletedWitnessRecords":1,"localSigningProviderCalls":0,"naturallyObservedCampaignLeak":false,"networkQualified":false,"nextChildNormallyAdmitted":true,"nextPublicationColdReopened":true,"originalAndSignerWitnessBytesUnchanged":true,"productionQualified":false,"runtimeDutiesResumed":false,"sameCheckpointColdReopened":true,"scenario":"gc-cold-reopen-and-next-admission","syntheticOrphanStagedViaCas":true}
+4/6 Test #361: storage_capella_blob_gc_cli_closed_fixture ........   Passed    0.50 sec
+test 362
+    Start 362: storage_capella_blob_gc_adversarial_boundaries
+
+362: Test command: /usr/bin/cmake "-E" "env" "NANO_TEST_CHECKPOINT_BLOB_GC_ADVERSARIAL=1" "NANO_TEST_CHECKPOINT_BLOB_GC=1" "NANO_TEST_COLD_REACTOR=1" "NANO_TEST_FRAGMENT_CHECKPOINT=1" "/outputs/nano-capella-transition-tests" "--prepared-block"
+362: Working Directory: /testing/ctest
+362: Test timeout computed to be: 180
+362: GC child did not reach durable between-stores boundary within 30s
+5/6 Test #362: storage_capella_blob_gc_adversarial_boundaries ....***Failed   30.81 sec
+GC child did not reach durable between-stores boundary within 30s
+
+test 363
+    Start 363: storage_capella_blob_gc_natural_pruning
+
+363: Test command: /outputs/nano-capella-transition-tests "--blob-gc-natural"
+363: Working Directory: /testing/ctest
+363: Test timeout computed to be: 180
+363: {"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+363: {"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+363: {"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+363: {"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+363: {"finalizedEpoch":3,"progressSlot":40,"signedVotes":264}
+363: {"finalizedEpoch":4,"progressSlot":48,"signedVotes":328}
+363: natural GC not followed by ordinary block publication
+6/6 Test #363: storage_capella_blob_gc_natural_pruning ...........***Failed  139.73 sec
+{"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+{"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+{"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+{"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+{"finalizedEpoch":3,"progressSlot":40,"signedVotes":264}
+{"finalizedEpoch":4,"progressSlot":48,"signedVotes":328}
+natural GC not followed by ordinary block publication
+
+
+The following tests passed:
+	storage_checkpoint_immutable_blobs
+	consensus_capella_fragment_checkpoint_migration
+	storage_capella_blob_gc_next_publication
+	storage_capella_blob_gc_cli_closed_fixture
+
+67% tests passed, 2 tests failed out of 6
+
+Label Time Summary:
+qualification_consensus_ethereum         =   0.33 sec*proc (1 test)
+qualification_storage_local              =   0.02 sec*proc (1 test)
+qualification_storage_maintenance        = 170.85 sec*proc (3 tests)
+qualification_storage_maintenance_cli    =   0.50 sec*proc (1 test)
+
+Total Test time (real) = 171.72 sec
+
+The following tests FAILED:
+	362 - storage_capella_blob_gc_adversarial_boundaries (Failed)
+	363 - storage_capella_blob_gc_natural_pruning (Failed)
+Errors while running CTest

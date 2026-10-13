@@ -30,6 +30,10 @@ target_include_directories(nano_core PUBLIC include third_party)
 target_include_directories(nano_core SYSTEM PUBLIC ${GMP_INCLUDE_DIR} ${ROCKSDB_INCLUDE_DIR} ${BOOST_INCLUDE_DIR})
 target_link_libraries(nano_core PUBLIC ${GMPXX_LIBRARY} ${GMP_LIBRARY} OpenSSL::SSL OpenSSL::Crypto ICU::uc ${ROCKSDB_LIBRARY} Threads::Threads)
 target_compile_options(nano_core PRIVATE -Wall -Wextra -Wpedantic)
+# Offline maintenance only; no RPC/background pruning activation.
+add_executable(nano-storage-maintenance tools/storage-maintenance/compact-owned-copy.cpp)
+target_link_libraries(nano-storage-maintenance PRIVATE nano_core)
+
 set(CMAKE_EXPORT_NO_PACKAGE_REGISTRY ON)
 set(NANO_MCL_PORTABLE_DEFAULT OFF)
 if(UNIX)
@@ -298,10 +302,10 @@ target_link_libraries(nano-uncle-tests PRIVATE nano_core)
 add_test(NAME uncles COMMAND nano-uncle-tests)
 set_tests_properties(uncles PROPERTIES TIMEOUT 30)
 
-# Install the native core, and the separately built transport when configured.
+# Install the native core, offline maintenance tool, and configured transport.
 include(GNUInstallDirs)
-set_target_properties(nano PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
-install(TARGETS nano RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+set_target_properties(nano nano-storage-maintenance PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
+install(TARGETS nano nano-storage-maintenance RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 if(NANO_NETWORK_EXECUTABLE)
  install(PROGRAMS "${NANO_NETWORK_EXECUTABLE}" DESTINATION ${CMAKE_INSTALL_BINDIR} RENAME nano-p2p)
 endif()
@@ -1991,6 +1995,14 @@ add_test(NAME consensus_capella_incoming_parent_interference COMMAND nano-capell
 set_tests_properties(consensus_capella_incoming_parent_interference PROPERTIES TIMEOUT 180 LABELS qualification_consensus_recovery)
 
 add_test(NAME consensus_capella_fragment_checkpoint_migration COMMAND ${CMAKE_COMMAND} -E env NANO_TEST_FRAGMENT_CHECKPOINT=1 $<TARGET_FILE:nano-capella-transition-tests> --prepared-block)
+add_test(NAME storage_capella_blob_gc_next_publication COMMAND ${CMAKE_COMMAND} -E env NANO_TEST_CHECKPOINT_BLOB_GC=1 NANO_TEST_COLD_REACTOR=1 NANO_TEST_FRAGMENT_CHECKPOINT=1 $<TARGET_FILE:nano-capella-transition-tests> --prepared-block)
+set_tests_properties(storage_capella_blob_gc_next_publication PROPERTIES TIMEOUT 180 LABELS "qualification_storage_maintenance")
+add_test(NAME storage_capella_blob_gc_cli_closed_fixture COMMAND ${CMAKE_COMMAND} -E env NANO_TEST_CHECKPOINT_BLOB_GC_CLI=1 NANO_TEST_CHECKPOINT_GC_TOOL=$<TARGET_FILE:nano-storage-maintenance> NANO_TEST_CHECKPOINT_BLOB_GC=1 NANO_TEST_COLD_REACTOR=1 NANO_TEST_FRAGMENT_CHECKPOINT=1 $<TARGET_FILE:nano-capella-transition-tests> --prepared-block)
+set_tests_properties(storage_capella_blob_gc_cli_closed_fixture PROPERTIES TIMEOUT 180 LABELS "qualification_storage_maintenance_cli")
+add_test(NAME storage_capella_blob_gc_adversarial_boundaries COMMAND ${CMAKE_COMMAND} -E env NANO_TEST_CHECKPOINT_BLOB_GC_ADVERSARIAL=1 NANO_TEST_CHECKPOINT_BLOB_GC=1 NANO_TEST_COLD_REACTOR=1 NANO_TEST_FRAGMENT_CHECKPOINT=1 $<TARGET_FILE:nano-capella-transition-tests> --prepared-block)
+set_tests_properties(storage_capella_blob_gc_adversarial_boundaries PROPERTIES TIMEOUT 180 LABELS "qualification_storage_maintenance")
+add_test(NAME storage_capella_blob_gc_natural_pruning COMMAND nano-capella-transition-tests --blob-gc-natural)
+set_tests_properties(storage_capella_blob_gc_natural_pruning PROPERTIES TIMEOUT 180 LABELS "qualification_storage_maintenance")
 set_tests_properties(consensus_capella_fragment_checkpoint_migration PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_ethereum")
 
 add_test(NAME consensus_capella_cold_record_cache COMMAND ${CMAKE_COMMAND} -E env NANO_TEST_FRAGMENT_CHECKPOINT=1 NANO_TEST_COLD_RECORD_CACHE=1 $<TARGET_FILE:nano-capella-transition-tests> --prepared-block)

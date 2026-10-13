@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="6"
+	failures="2"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="171"
+	timestamp="2026-10-13T04:07:09"
+	>
+	<testcase name="storage_checkpoint_immutable_blobs" classname="storage_checkpoint_immutable_blobs" time="0.0231354" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_local"/>
+		</properties>
+		<system-out>{"binaryFragments":true,"concurrentCasLoserAbsent":true,"digestAndAggregateBounds":true,"duplicateIdempotence":true,"executionCheckpointCoupling":true,"legacyApisPreserved":true,"productionQualified":false,"readonlyCopyUnchanged":true,"runtimeGraphPagingImplemented":false,"scenario":"checkpoint-immutable-blobs","tamperingRejectedWithoutOverwrite":true}
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_fragment_checkpoint_migration" classname="consensus_capella_fragment_checkpoint_migration" time="0.327883" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_ethereum"/>
+		</properties>
+		<system-out>{"cancelledMigrationUnchanged":true,"coldStateCacheImplemented":false,"corruptionRejections":3,"graphAndIdentityPreserved":true,"independentPreviousPrimaryRecovered":true,"journalCommitmentUnchanged":true,"legacyMigrated":true,"migrationIdempotent":true,"networkQualified":false,"primaryAndWitnessRestarts":true,"productionQualified":false,"scenario":"capella-fragment-checkpoint-integration","stickyFragmentFormat":true,"validChildDurablyAdmitted":true}
+</system-out>
+	</testcase>
+	<testcase name="storage_capella_blob_gc_next_publication" classname="storage_capella_blob_gc_next_publication" time="0.306339" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_maintenance"/>
+		</properties>
+		<system-out>{"collectorInterface":"cpp-api","deletedPrimaryRecords":1,"deletedWitnessRecords":1,"localSigningProviderCalls":0,"naturallyObservedCampaignLeak":false,"networkQualified":false,"nextChildNormallyAdmitted":true,"nextPublicationColdReopened":true,"originalAndSignerWitnessBytesUnchanged":true,"productionQualified":false,"runtimeDutiesResumed":false,"sameCheckpointColdReopened":true,"scenario":"gc-cold-reopen-and-next-admission","syntheticOrphanStagedViaCas":true}
+</system-out>
+	</testcase>
+	<testcase name="storage_capella_blob_gc_cli_closed_fixture" classname="storage_capella_blob_gc_cli_closed_fixture" time="0.501521" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_maintenance_cli"/>
+		</properties>
+		<system-out>{"actualCliCompleted":true,"cliExitCode":0,"deletedPrimaryRecords":1,"deletedWitnessRecords":1,"naturalPruningReplay":false,"noWork":false,"privateFixtureExported":false,"productionQualified":false,"receiptBytes":"{\n  \"afterFiles\": [\n    {\n      \"allocatedBytes\": 131072,\n      \"apparentBytes\": 110938,\n      \"files\": 11,\n      \"sstBytes\": 19237,\n      \"walBytes\": 0\n    },\n    {\n      \"allocatedBytes\": 131072,\n      \"apparentBytes\": 109926,\n      \"files\": 11,\n      \"sstBytes\": 21764,\n      \"walBytes\": 0\n    }\n  ],\n  \"atomicExclusiveLinkPublication\": true,\n  \"beforeFiles\": [\n    {\n      \"allocatedBytes\": 143360,\n      \"apparentBytes\": 119101,\n      \"files\": 12,\n      \"sstBytes\": 41415,\n      \"walBytes\": 0\n    },\n    {\n      \"allocatedBytes\": 147456,\n      \"apparentBytes\": 121809,\n      \"files\": 12,\n      \"sstBytes\": 44083,\n      \"walBytes\": 0\n    }\n  ],\n  \"format\": \"nano-owned-checkpoint-gc-maintenance-receipt-v1\",\n  \"plan\": {...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="storage_capella_blob_gc_adversarial_boundaries" classname="storage_capella_blob_gc_adversarial_boundaries" time="30.8123" status="fail">
+		<failure message="Failed"/>
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_maintenance"/>
+		</properties>
+		<system-out>GC child did not reach durable between-stores boundary within 30s
+</system-out>
+	</testcase>
+	<testcase name="storage_capella_blob_gc_natural_pruning" classname="storage_capella_blob_gc_natural_pruning" time="139.734" status="fail">
+		<failure message="Failed"/>
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_maintenance"/>
+		</properties>
+		<system-out>{"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+{"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+{"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+{"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+{"finalizedEpoch":3,"progressSlot":40,"signedVotes":264}
+{"finalizedEpoch":4,"progressSlot":48,"signedVotes":328}
+natural GC not followed by ordinary block publication
+</system-out>
+	</testcase>
+</testsuite>

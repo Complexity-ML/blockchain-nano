@@ -1,4 +1,5 @@
 #include "nano/consensus_capella_reactor.hpp"
+#include "nano/checkpoint_blob_gc.hpp"
 #include "nano/chain.hpp"
 #include "nano/consensus_bls.hpp"
 #include "nano/consensus_message_ssz.hpp"
@@ -872,5 +873,44 @@ bool CapellaDurableReactor::migrate_reference_checkpoint(CapellaColdCheckpointOp
   reference_cache_=std::move(candidate);return false;
  }
  publish_impl(*state_,check,{},std::nullopt,std::nullopt,std::nullopt,std::nullopt,false,options);return true;
+}
+}
+
+namespace nano {
+AuthenticatedCheckpointBlobClosure authenticate_capella_checkpoint_blob_closure(
+ std::string_view encoded,const Bytes& digest,const CapellaForkBlockRules& rules,
+ const CapellaStoreSnapshotLimits& limits,
+ const std::function<std::optional<std::string>(const Bytes&,size_t)>& reader,
+ const std::vector<CheckpointArchiveEntry>& archive,const std::function<void()>& check){
+ AuthenticatedCheckpointBlobClosure closure;
+ const auto traced=[&](const Bytes& id,size_t bytes)->std::optional<std::string>{
+  archive_require(id.size()==32&&bytes&&bytes<=limits.envelope_bytes&&bool(reader));
+  const auto [found,added]=closure.references_.emplace(id,bytes);
+  archive_require(added||found->second==bytes);
+  const auto payload=reader(id,bytes);
+  archive_require(payload&&payload->size()==bytes&&sha256(Bytes(payload->begin(),payload->end()))==id);
+  if(check)check();return payload;
+ };
+ // Neither process-local memo nor a previously authenticated Store is supplied.
+ // Every live cold record is visited by the complete decoder, not only its head.
+ auto [store,votes,slashings,changes,exits]=restore_durable(encoded,digest,rules,limits,check,traced);
+ archive_require(archive.size()<=1);
+ for(const auto& entry:archive){
+  archive_require(entry.root.size()==32&&entry.payload.size()<=limits.envelope_bytes);
+  const auto id=archive_array<32>(entry.root,0);
+  verify_archived_block(id,entry.payload,store,rules,check);
+  archive_require(store.blocks.at(id).header().slot==entry.slot);
+ }
+ const auto head=capella_fork_head(store,rules,check);
+ const auto context=capella_fork_block_context(head->state,head->header,
+  {rules.transition.consensus.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},
+  rules.transition.consensus.state,check);
+ const auto network=capella_network_anchor(store);
+ closure.execution_head_={{"number",quantity(head->execution_block.header.number)},{"hash",hex(head->execution_block.header.hash())},{"stateRoot",hex(head->execution_state.root())}};
+ closure.identity_={{"profile",capella_fork_profile(rules)},
+  {"networkAnchor",hex(Bytes(network.begin(),network.end()))},
+  {"genesisValidatorsRoot",hex(Bytes(context.genesis_root.begin(),context.genesis_root.end()))},
+  {"genesisTimeMs",quantity(Int(std::to_string(store.timed.clock.genesis_time_ms)))}};
+ if(check)check();return closure;
 }
 }

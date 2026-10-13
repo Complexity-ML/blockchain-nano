@@ -1,0 +1,62 @@
+{
+  "format": "nano-gc-crash-gate-natural56-independent-static-review-v1",
+  "reviewedAtUtc": "2026-10-13T04:21:17.995022+00:00",
+  "status": "NO_STATIC_BLOCKER_FOR_TEST_ONLY_DELTA",
+  "reviewer": "prepare_review",
+  "author": "recovery_clock_review",
+  "inputs": {
+    "manifest": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/checkpoint-blob-gc-crash-gate-natural56-20261013/manifest.json",
+      "sha256": "43bcb3e3610a474ed6902dca5befbb4bdf4253f256534193d49f117274c5c940"
+    },
+    "patch": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/checkpoint-blob-gc-crash-gate-natural56-20261013/test-only-crash-gate-natural56.patch",
+      "sha256": "17d3fe399ff2a52d8e1101d64d50dd367dc7564c02169fd8d659c0e557307586"
+    },
+    "sourceFiles": [
+      {
+        "path": "tests/support/capella_blob_gc_adversarial.hpp",
+        "baseSha256": "f6fb819e95820d5642d4a51b107d9cbee4569cce8359df64465e0a206784add7",
+        "sha256": "3f0632cf73c5486209ea2672611134e0f21b0bb3d8253641ec8b9a16f974d3e0",
+        "bytes": 32540,
+        "pathAbsolute": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/checkpoint-blob-gc-crash-gate-natural56-20261013/source/tests/support/capella_blob_gc_adversarial.hpp"
+      },
+      {
+        "path": "tests/test_capella_transition.cpp",
+        "baseSha256": "28906f0ae52cacab80eb6b4f6813430013171aa9d86462b7a3e26434fde4a531",
+        "sha256": "35d580c3f8a15337eb56413c9d15e7b6c0644b5572a45eb6a4f9be1ac2f34a5e",
+        "bytes": 537498,
+        "pathAbsolute": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/checkpoint-blob-gc-crash-gate-natural56-20261013/source/tests/test_capella_transition.cpp"
+      }
+    ]
+  },
+  "crashBoundaryVerified": [
+    "WAL metadata is only a cheap gate for opening fresh primary/witness read-only readers. It never alone authorizes readiness; the actual candidate primary key must be absent and actual witness key still present before pipeP and SIGSTOP.",
+    "No read-only DB handle is cached across primary deletion. The numeric .log map detects growth or new WAL filenames; every gate-triggered logical check reopens and closes both readers.",
+    "Production collect remains unchanged: a sync=true Write completes primary deletion then invokes its check before primary Flush and before any witness deletion. Therefore the callback can observe actual durable primary progress without staged fake deletion.",
+    "Parent still spawns fresh exec, requires actual pipeP and confirmed SIGSTOP, then SIGKILL/reap. Deadline30seconds is measured with steady_clock; EINTR cannot restart it. Separate2second SIGSTOP confirmation remains.",
+    "After SIGKILL, a fresh copied-store session and new plan must have no primary orphan but retained witness orphan; collection and allProtectedReferencesReopened remain mandatory."
+  ],
+  "naturalBoundaryVerified": [
+    "Only natural-mode end grows from6epochs48slots to7epochs56slots. Participation100%, ordinary proposed/admitted blocks, pruning trigger>=2anchorMoves and source/witness/signer preservation checks remain unchanged.",
+    "Terminal guard still requires actual GC slot followed by at least2epochs16ordinary slots and a newer checkpoint, followed by cold reopen of the real following publication. If GC occurs later than40, this bound can still fail rather than silently pass.",
+    "Automatic pruning still requires at least3anchorMoves and retained-state bounds. Natural orphans must arise from publication/pruning; injectedBlobCount remains0.",
+    "New intermediate JSON reports actual GC slot/moves and explicitly has terminalQualification=false and followingPublicationColdReopened=false; it cannot substitute for the final result."
+  ],
+  "limits": [
+    "No compiler, test, DB open, runtime, Docker or SSH executed by this reviewer. Only two test source files are changed; production and core archive are not changed by this patch.",
+    "WAL metadata is a test-fixture heuristic, not a production recovery predicate. It may still refuse on a missing/different WAL layout or if collection is not reached within the unchanged30s bound.",
+    "Expected GCslot40 and success within the unchanged180s CTest deadline remain execution hypotheses, not verified outcomes. Original48slot failure and parent timeout logs must remain preserved.",
+    "SIGKILL qualifies process-crash partial deletion under this one synthetic between-store case; it does not establish physical power-loss durability, live validator duties or network finality."
+  ],
+  "productionFilesChanged": [],
+  "freshConsumersRequired": [
+    "nano-capella-transition-tests"
+  ],
+  "coreRecompilationRequiredByPatch": false,
+  "testsExecuted": 0,
+  "dbOpenedByReviewer": false,
+  "privateDataRead": false,
+  "runtimeStarted": false,
+  "productionQualified": false
+}

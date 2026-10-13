@@ -20,6 +20,7 @@ class ChainStore {
  friend class AltairDurableReactor;
  friend class BellatrixDurableReactor;
  friend class CapellaDurableReactor;
+ friend class CheckpointBlobGcCopies;
  mutable std::mutex altair_reactor_mutex_;
  // Dedicated signing databases serialize all journal users through this gate,
  // including callbacks, independently of the short RocksDB operation mutex.
@@ -41,8 +42,9 @@ class ChainStore {
  void commit_impl(const Block& block,const State& state,const std::vector<Receipt>& receipts,const std::optional<Json>& consensus,const BlockCertificate* certificate);
  void reserve_vote_impl(const FinalityVote& vote,const Int& chain_id,const Bytes& genesis_hash,const VotingSet* validators,const std::vector<FinalityVote>& justification,const Block* proposal=nullptr);
 public:
- enum class OpenMode { ReadWrite, ReadOnly };
- // Offline inspection only: no creation, migration, WAL flush or writes.
+ enum class OpenMode { ReadWrite, ReadOnly, ReadWriteExisting };
+ // ReadOnly: offline inspection, no creation, migration, WAL flush or writes.
+ // ReadWriteExisting: exclusive maintenance open, no creation or initialization.
  explicit ChainStore(const std::filesystem::path& path,OpenMode mode=OpenMode::ReadWrite);
  ~ChainStore();
  ChainStore(const ChainStore&)=delete;

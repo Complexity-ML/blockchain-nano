@@ -1,0 +1,13 @@
+# GC Capella : qualification limitée Docker Linux ARM64
+
+Les preuves combinent explicitement quatre réussites conservées du run05 (terminal général exit8) et deux scénarios modifiés réellement exécutés dans le run06 (terminal0). Ce paquet ne représente pas une exécution unique de six tests. Le préparateur du paquet n’a relancé aucun test.
+
+Run06 :30 identifiants adverses, deux injections fsync, vrai SIGKILL entre suppression primaire et témoin après deux contrôles logiques frais. Le scénario naturel collecte au slot40, supprime23 blobs par store, continue16 blocs jusqu’à56 et rouvre le checkpoint suivant ;174.01s sous180s, avec une marge faible. Les contraintes ne sont pas relevées. Aucune garantie de panne électrique réelle, de charge WAN ou de finalité commune réelle n’est démontrée.
+
+La chaîne de build conserve :41core fraîchement compilés+99réutilisés pour une archive140 ; correction de storage.cpp seule+un consommateur+sept liens, terminés par une continuation du seul lien manquant ; dernier build test-only : archive02b718… et six programmes copiés byte exacts, un seul consommateur recompilé/relié, zéro core compilé ou copié, zéro ar et zéro autre lien. Les anciennes actions ne sont pas présentées comme exécutées dans ce dernier build.
+
+L’historique garde les refus source/metadata/E2BIG et la course du contrôleur avec reconstruction postérieure (aucun snapshot physique avant lancement inventé), le premier mode existing-only créant un dossier absent, le timeout30s du child et la condition naturelle échouée à48. Les ouvertures RO fréquentes étaient présentes ; leur causalité exclusive sur le timeout n’est pas mesurée. Le nouveau gateWAL réduit ces ouvertures et le scénario corrigé passe1.21222s. Les champs inconnus des refus initiaux de métadonnées ne sont pas inventés.
+
+Le patch exact concerne12sources publiques contre main7510c0e/source-indexe89d6eab. Ce paquet n’importe aucun arbre9411, fichier de base/journal/témoin/capsule/env/seed, objet ou binaire. Les grands inventaires, recettes et historiques supplémentaires restent liés parSHA dans reference-index.json ; cela ne prétend pas restaurer un validateur depuisGit. Les données des logs sont des fixtures synthétiques publiques, pas celles de V37.
+
+Ouverts : qualification GC natif/AMD64 ; vraie panne électrique ; sauvegarde/restauration coordonnée des journaux/témoins ; pruning EVM complet ; reprise des duties et finalité commune réelle ; transfert des quatre preuves privées VPS/V37 encore pending ; revue de sécurité indépendante et tous les critères de production. Aucun fonds, bridge, vente, déploiement public ou production n’est qualifié par ce lot.

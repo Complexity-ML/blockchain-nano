@@ -1,0 +1,44 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -302,10 +302,10 @@
+ add_test(NAME uncles COMMAND nano-uncle-tests)
+ set_tests_properties(uncles PROPERTIES TIMEOUT 30)
+ 
+-# Install the native core, and the separately built transport when configured.
++# Install the native core, offline maintenance tool, and configured transport.
+ include(GNUInstallDirs)
+-set_target_properties(nano PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
+-install(TARGETS nano RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
++set_target_properties(nano nano-storage-maintenance PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
++install(TARGETS nano nano-storage-maintenance RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+ if(NANO_NETWORK_EXECUTABLE)
+  install(PROGRAMS "${NANO_NETWORK_EXECUTABLE}" DESTINATION ${CMAKE_INSTALL_BINDIR} RENAME nano-p2p)
+ endif()
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -19,7 +19,7 @@
+  && cmake --build build-network --target nano-p2p --parallel ${JOBS} \
+  && cmake -S . -B build-container -DCMAKE_BUILD_TYPE=Release \
+       -DNANO_NETWORK_EXECUTABLE=/src/build-network/nano-p2p \
+- && cmake --build build-container --target nano --parallel ${JOBS} \
++ && cmake --build build-container --target nano nano-storage-maintenance --parallel ${JOBS} \
+  && cmake --install build-container --prefix /out
+ 
+ FROM ubuntu:24.04 AS runtime
+@@ -32,12 +32,13 @@
+  && chown nano:nano /var/lib/nano
+ COPY --from=builder /out/ /usr/local/
+ COPY deploy/docker/node.json /etc/nano/node.json
+-# Fail the build if either executable has an unresolved shared library.
++# Fail the build if any installed executable has an unresolved shared library.
+ RUN (cd /usr/local/share/nano/licenses && sha256sum -c notices.sha256) \
+  && ldd /usr/local/bin/nano > /tmp/nano.libs \
+  && ldd /usr/local/bin/nano-p2p > /tmp/p2p.libs \
+- && ! grep -q 'not found' /tmp/nano.libs /tmp/p2p.libs \
+- && rm /tmp/nano.libs /tmp/p2p.libs \
++ && ldd /usr/local/bin/nano-storage-maintenance > /tmp/maintenance.libs \
++ && ! grep -q 'not found' /tmp/nano.libs /tmp/p2p.libs /tmp/maintenance.libs \
++ && rm /tmp/nano.libs /tmp/p2p.libs /tmp/maintenance.libs \
+  && nano --help
+ USER 10001:10001
+ WORKDIR /var/lib/nano

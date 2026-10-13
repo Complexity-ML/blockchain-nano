@@ -1,0 +1,69 @@
+{
+  "format": "nano-existing-only-filesystem-independent-static-review-v1",
+  "reviewedAtUtc": "2026-10-13T03:33:01.016478+00:00",
+  "status": "NO_STATIC_BLOCKER_FOR_THIS_EXISTING_ONLY_FIX",
+  "reviewer": "prepare_review",
+  "author": "evm_activation_review",
+  "inputs": {
+    "manifest": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/checkpoint-blob-gc-existing-only-fix-proposal-20261013/category-preserving-revision/manifest.json",
+      "sha256": "f24e99d384aa780fb77b24b56cab593520b3d5aebc0c8614157a66d9fa6f25d1"
+    },
+    "patch": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/checkpoint-blob-gc-existing-only-fix-proposal-20261013/category-preserving-revision/existing-only-filesystem-category-preserving.patch",
+      "sha256": "1cb1729dec97b1ad80f17761cdfa161b1e5cb435df9b5f3de182d2710e003c63"
+    },
+    "sourceFiles": [
+      {
+        "path": "src/storage.cpp",
+        "beforeSha256": "b149bd040827c90519c6d9575f37719d951f64c92affa9afa39ea546e1f0cac8",
+        "sha256": "4611df07f863f1b97e48ed305b50981f396f302fb019e945e35e47b8dce53891",
+        "bytes": 60764,
+        "absolutePath": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/checkpoint-blob-gc-existing-only-fix-proposal-20261013/category-preserving-revision/source/src/storage.cpp"
+      },
+      {
+        "path": "tests/support/capella_blob_gc_adversarial.hpp",
+        "beforeSha256": "422eac5de6a0b1d756e7be1a134a3598234b60d0e8f891d62f994d01c17d6996",
+        "sha256": "f6fb819e95820d5642d4a51b107d9cbee4569cce8359df64465e0a206784add7",
+        "bytes": 30051,
+        "absolutePath": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/checkpoint-blob-gc-existing-only-fix-proposal-20261013/category-preserving-revision/source/tests/support/capella_blob_gc_adversarial.hpp"
+      }
+    ]
+  },
+  "actualFailureBeingRepaired": {
+    "parentReportedChunk": "824a69",
+    "parentReportedReason": "existing maintenance mode created absent DB",
+    "scope": "RocksDB DB::Open can create the directory even when database create_if_missing=false",
+    "actualFailureReceiptReviewedHere": false
+  },
+  "productionDeltaVerified": [
+    "FileSystemWrapper is installed as the actual modern FileSystem through NewCompositeEnv, not merely an old Env virtual override that direct FileSystem calls could bypass.",
+    "CreateDir always rejects. CreateDirIfMissing delegates only to NewDirectory, which opens an existing directory or returns failure; it cannot run a mkdir-capable call after a separate existence test.",
+    "If the requested directory is already absent or disappears before NewDirectory acquisition, opening fails without recreating it. Disappearance after the directory-open callback cannot become a mkdir through these intercepted callbacks.",
+    "CompositeEnv and its shared FileSystem wrapper have process static lifetime; automatic ChainStore DB destruction joins its background work before normal static teardown. No public header, ChainStore member or method signature is changed.",
+    "Only OpenMode::ReadWriteExisting assigns the wrapper. Existing ReadWrite/ReadOnly values, default ReadWrite and their initialization paths remain unchanged. Existing schema refusal and synchronous WAL options are retained."
+  ],
+  "newTestStaticScope": [
+    "Original absent-path refusal is retained, followed within the same existing-mode-never-creates-missing-db category by a private synthetic clone, successful closed ReadOnly probe, rename away, refused existing-only acquisition, absent old path and unchanged moved logical contents.",
+    "No additional category identifier is introduced; the existing thirty-category schema is unchanged by this exact patch.",
+    "The new case exercises disappearance between a closed read-only probe and exclusive acquisition; it does not inject a concurrent rename during the filesystem callback itself. Race safety of avoiding check-then-mkdir is a static finding pending execution."
+  ],
+  "limits": [
+    "No compiler, tests, DB opening, Docker, runtime or SSH was executed by this reviewer; live source copies and runningr4 binaries were not mutated.",
+    "API compatibility inspected against local RocksDB declarations; supported Linux RocksDB8.9 compilation and tests are still required. No binary ABI compatibility or successful regression is claimed.",
+    "The fix prohibits directory creation for existing-only mode, not ordinary file writes of an acquired writable database. GC copied-store ownership/path/inventory checks remain separate prerequisites.",
+    "NewDirectory return/lifetime contract is delegated to the underlying RocksDB FileSystem; malicious filesystem replacement and arbitrary concurrent host mutations are not newly qualified."
+  ],
+  "reviewerReadRefusalPreserved": {
+    "cause": "Assumed final patch retained initial basename; file was named existing-only-filesystem-category-preserving.patch. Initial missing-path read failed before any receipt; corrected via manifest/directory metadata.",
+    "qualificationFailure": false
+  },
+  "publicHeaderSourceAbiUnchanged": true,
+  "binaryAbiQualified": false,
+  "testsExecuted": 0,
+  "productionSourceEditedByReviewer": false,
+  "dbOpenedByReviewer": false,
+  "runtimeStarted": false,
+  "privateDataRead": false,
+  "productionQualified": false
+}

@@ -1,0 +1,1031 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -30,6 +30,10 @@
+ target_include_directories(nano_core SYSTEM PUBLIC ${GMP_INCLUDE_DIR} ${ROCKSDB_INCLUDE_DIR} ${BOOST_INCLUDE_DIR})
+ target_link_libraries(nano_core PUBLIC ${GMPXX_LIBRARY} ${GMP_LIBRARY} OpenSSL::SSL OpenSSL::Crypto ICU::uc ${ROCKSDB_LIBRARY} Threads::Threads)
+ target_compile_options(nano_core PRIVATE -Wall -Wextra -Wpedantic)
++# Offline maintenance only; no RPC/background pruning activation.
++add_executable(nano-storage-maintenance tools/storage-maintenance/compact-owned-copy.cpp)
++target_link_libraries(nano-storage-maintenance PRIVATE nano_core)
++
+ set(CMAKE_EXPORT_NO_PACKAGE_REGISTRY ON)
+ set(NANO_MCL_PORTABLE_DEFAULT OFF)
+ if(UNIX)
+@@ -1991,6 +1995,14 @@
+ set_tests_properties(consensus_capella_incoming_parent_interference PROPERTIES TIMEOUT 180 LABELS qualification_consensus_recovery)
+ 
+ add_test(NAME consensus_capella_fragment_checkpoint_migration COMMAND ${CMAKE_COMMAND} -E env NANO_TEST_FRAGMENT_CHECKPOINT=1 $<TARGET_FILE:nano-capella-transition-tests> --prepared-block)
++add_test(NAME storage_capella_blob_gc_next_publication COMMAND ${CMAKE_COMMAND} -E env NANO_TEST_CHECKPOINT_BLOB_GC=1 NANO_TEST_COLD_REACTOR=1 NANO_TEST_FRAGMENT_CHECKPOINT=1 $<TARGET_FILE:nano-capella-transition-tests> --prepared-block)
++set_tests_properties(storage_capella_blob_gc_next_publication PROPERTIES TIMEOUT 180 LABELS "qualification_storage_maintenance")
++add_test(NAME storage_capella_blob_gc_cli_closed_fixture COMMAND ${CMAKE_COMMAND} -E env NANO_TEST_CHECKPOINT_BLOB_GC_CLI=1 NANO_TEST_CHECKPOINT_GC_TOOL=$<TARGET_FILE:nano-storage-maintenance> NANO_TEST_CHECKPOINT_BLOB_GC=1 NANO_TEST_COLD_REACTOR=1 NANO_TEST_FRAGMENT_CHECKPOINT=1 $<TARGET_FILE:nano-capella-transition-tests> --prepared-block)
++set_tests_properties(storage_capella_blob_gc_cli_closed_fixture PROPERTIES TIMEOUT 180 LABELS "qualification_storage_maintenance_cli")
++add_test(NAME storage_capella_blob_gc_adversarial_boundaries COMMAND ${CMAKE_COMMAND} -E env NANO_TEST_CHECKPOINT_BLOB_GC_ADVERSARIAL=1 NANO_TEST_CHECKPOINT_BLOB_GC=1 NANO_TEST_COLD_REACTOR=1 NANO_TEST_FRAGMENT_CHECKPOINT=1 $<TARGET_FILE:nano-capella-transition-tests> --prepared-block)
++set_tests_properties(storage_capella_blob_gc_adversarial_boundaries PROPERTIES TIMEOUT 180 LABELS "qualification_storage_maintenance")
++add_test(NAME storage_capella_blob_gc_natural_pruning COMMAND nano-capella-transition-tests --blob-gc-natural)
++set_tests_properties(storage_capella_blob_gc_natural_pruning PROPERTIES TIMEOUT 180 LABELS "qualification_storage_maintenance")
+ set_tests_properties(consensus_capella_fragment_checkpoint_migration PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_ethereum")
+ 
+ add_test(NAME consensus_capella_cold_record_cache COMMAND ${CMAKE_COMMAND} -E env NANO_TEST_FRAGMENT_CHECKPOINT=1 NANO_TEST_COLD_RECORD_CACHE=1 $<TARGET_FILE:nano-capella-transition-tests> --prepared-block)
+--- /dev/null
++++ b/include/nano/checkpoint_blob_gc.hpp
+@@ -0,0 +1,75 @@
++#pragma once
++#include "nano/storage.hpp"
++#include "nano/consensus_capella_store_snapshot.hpp"
++#include <memory>
++#include <map>
++namespace nano {
++// Administrative operation budgets, never consensus/validator limits.
++struct CheckpointBlobGcBudget {
++ uint64_t inventory_files,inventory_bytes,scan_records,scan_bytes;
++ uint64_t delete_records,delete_bytes,batch_bytes,duration_ms;
++};
++CheckpointBlobGcBudget checkpoint_blob_gc_budget(const Json&);
++CapellaStoreSnapshotLimits checkpoint_blob_gc_snapshot_limits(const Json&);
++// Deterministic closed-file inventory; refuses symlinks, special files and
++// shared hardlinks. No database open, signing, repair or deletion.
++std::string checkpoint_blob_gc_copy_inventory(const std::filesystem::path&,uint64_t maximum_files,uint64_t maximum_bytes,const std::function<void()>& checkpoint={});
++class CheckpointBlobGcCopies;
++class AuthenticatedCheckpointBlobClosure {
++ friend class CheckpointBlobGcCopies;
++ friend AuthenticatedCheckpointBlobClosure authenticate_capella_checkpoint_blob_closure(
++  std::string_view,const Bytes&,const CapellaForkBlockRules&,const CapellaStoreSnapshotLimits&,
++  const std::function<std::optional<std::string>(const Bytes&,size_t)>&,
++  const std::vector<CheckpointArchiveEntry>&,const std::function<void()>&);
++ std::map<Bytes,size_t> references_;
++ Json identity_,execution_head_;
++ AuthenticatedCheckpointBlobClosure()=default;
++public:
++ Json description()const;
++};
++// Uses the actual complete durable decoder, with fresh caches and no reactor.
++// It returns only a sealed closure, never a mutable Store or signing authority.
++AuthenticatedCheckpointBlobClosure authenticate_capella_checkpoint_blob_closure(
++ std::string_view,const Bytes& expected_digest,const CapellaForkBlockRules&,const CapellaStoreSnapshotLimits&,
++ const std::function<std::optional<std::string>(const Bytes&,size_t)>&,
++ const std::vector<CheckpointArchiveEntry>& archive={},const std::function<void()>& checkpoint={});
++class CheckpointBlobGcPlan {
++ friend class CheckpointBlobGcCopies;
++ struct Candidate {std::string key;Bytes digest;uint64_t bytes;bool operator==(const Candidate&)const=default;};
++ const void* owner_=nullptr;
++ std::vector<Candidate> primary_,witness_;
++ std::map<Bytes,size_t> protected_;
++ ForkCheckpointToken primary_token_,witness_token_,next_token_;
++ std::string primary_snapshot_,witness_snapshot_,non_blob_primary_,non_blob_witness_,id_;
++ Json identity_;
++ CapellaForkBlockRules rules_;
++ CapellaStoreSnapshotLimits limits_{};
++ CheckpointBlobGcBudget budget_{};
++ CheckpointBlobGcPlan()=default;
++public:
++ Json description()const;
++};
++// Owns only exclusive handles on stopped, privately owned physical copies.
++// Externally pinned request/stop receipt are operator authority, not proof that
++// a privileged process cannot fabricate receipts or access the same filesystem.
++// No borrowed live ChainStore/provider/cache/lease can be passed to this API.
++class CheckpointBlobGcCopies {
++ struct Impl;
++ std::unique_ptr<Impl> impl_;
++ explicit CheckpointBlobGcCopies(std::unique_ptr<Impl>);
++ CheckpointBlobGcPlan plan_locked(const CapellaForkBlockRules&,const CapellaStoreSnapshotLimits&,
++  const CheckpointBlobGcBudget&,const std::function<void()>&);
++public:
++ static std::unique_ptr<CheckpointBlobGcCopies> open(std::string_view pinned_request,const Bytes& request_sha256,
++  std::string_view pinned_stop_receipt,const Bytes& stop_sha256,const CheckpointBlobGcBudget&,
++  const std::function<void()>& checkpoint={});
++ ~CheckpointBlobGcCopies();
++ CheckpointBlobGcCopies(const CheckpointBlobGcCopies&)=delete;
++ CheckpointBlobGcCopies& operator=(const CheckpointBlobGcCopies&)=delete;
++ CheckpointBlobGcPlan plan(const CapellaForkBlockRules&,const CapellaStoreSnapshotLimits&,
++  const CheckpointBlobGcBudget&,const std::function<void()>& checkpoint={});
++ // One-shot collection, flush/compaction, close and RO reopen. Any incomplete
++ // operation requires destruction/reopen and a NEW plan. No old-plan replay.
++ Json collect(const CheckpointBlobGcPlan&,const std::function<void()>& checkpoint={});
++};
++}
+--- a/include/nano/storage.hpp
++++ b/include/nano/storage.hpp
+@@ -20,6 +20,7 @@
+  friend class AltairDurableReactor;
+  friend class BellatrixDurableReactor;
+  friend class CapellaDurableReactor;
++ friend class CheckpointBlobGcCopies;
+  mutable std::mutex altair_reactor_mutex_;
+  // Dedicated signing databases serialize all journal users through this gate,
+  // including callbacks, independently of the short RocksDB operation mutex.
+@@ -41,8 +42,9 @@
+  void commit_impl(const Block& block,const State& state,const std::vector<Receipt>& receipts,const std::optional<Json>& consensus,const BlockCertificate* certificate);
+  void reserve_vote_impl(const FinalityVote& vote,const Int& chain_id,const Bytes& genesis_hash,const VotingSet* validators,const std::vector<FinalityVote>& justification,const Block* proposal=nullptr);
+ public:
+- enum class OpenMode { ReadWrite, ReadOnly };
+- // Offline inspection only: no creation, migration, WAL flush or writes.
++ enum class OpenMode { ReadWrite, ReadOnly, ReadWriteExisting };
++ // ReadOnly: offline inspection, no creation, migration, WAL flush or writes.
++ // ReadWriteExisting: exclusive maintenance open, no creation or initialization.
+  explicit ChainStore(const std::filesystem::path& path,OpenMode mode=OpenMode::ReadWrite);
+  ~ChainStore();
+  ChainStore(const ChainStore&)=delete;
+--- /dev/null
++++ b/src/checkpoint_blob_gc.cpp
+@@ -0,0 +1,205 @@
++#include "nano/checkpoint_blob_gc.hpp"
++#include <rocksdb/db.h>
++#include <rocksdb/write_batch.h>
++#include <openssl/evp.h>
++#include <fcntl.h>
++#include <unistd.h>
++#include <sys/stat.h>
++#include <algorithm>
++#include <chrono>
++#include <fstream>
++#include <set>
++#include <tuple>
++namespace nano {namespace {
++constexpr std::string_view blob_prefix="checkpoint-blob/v1/";
++void require(bool ok,const char* why){if(!ok)throw std::invalid_argument(why);}
++void status(const rocksdb::Status& s){if(!s.ok())throw std::runtime_error("checkpoint GC: "+s.ToString());}
++void shape(const Json& j,std::initializer_list<const char*> keys){require(j.is_object()&&j.size()==keys.size(),"checkpoint GC unknown/missing fields");for(auto k:keys)require(j.contains(k),"checkpoint GC missing field");}
++uint64_t number(const Json& j){require(j.is_string(),"checkpoint GC canonical quantity required");auto n=u64(quantity(j));require(n&&quantity(Int(std::to_string(n)))==j.get<std::string>(),"checkpoint GC positive canonical quantity required");return n;}
++size_t size(const Json& j){auto n=number(j);require(n<=SIZE_MAX,"checkpoint GC size overflow");return static_cast<size_t>(n);}
++std::string sha_text(const Json& j){require(j.is_string(),"checkpoint GC SHA required");auto text=j.get<std::string>();require(text.size()==64&&text.find_first_not_of("0123456789abcdef")==std::string::npos,"checkpoint GC canonical SHA required");return text;}
++Bytes root(const Json& j){require(j.is_string(),"checkpoint GC root required");const auto text=j.get<std::string>();auto bytes=unhex(text);require(bytes.size()==32&&hex(bytes)==text,"checkpoint GC canonical root required");return bytes;}
++ForkCheckpointToken token(const Json& j){shape(j,{"sequence","digest"});return {number(j.at("sequence")),root(j.at("digest"))};}
++Json token_json(const ForkCheckpointToken& t){return {{"sequence",quantity(Int(std::to_string(t.sequence)))},{"digest",hex(t.digest)}};}
++std::string hash_text(std::string_view bytes){return hex(sha256(Bytes(bytes.begin(),bytes.end()))).substr(2);}
++void add(uint64_t& value,uint64_t n){if(n>UINT64_MAX-value)throw std::overflow_error("checkpoint GC accounting overflow");value+=n;}
++class Hash {
++ std::unique_ptr<EVP_MD_CTX,decltype(&EVP_MD_CTX_free)> p_{EVP_MD_CTX_new(),EVP_MD_CTX_free};
++public:
++ Hash(){if(!p_||EVP_DigestInit_ex(p_.get(),EVP_sha256(),nullptr)!=1)throw std::runtime_error("checkpoint GC digest init");}
++ void raw(const void* bytes,size_t n){if(EVP_DigestUpdate(p_.get(),bytes,n)!=1)throw std::runtime_error("checkpoint GC digest update");}
++ void frame(std::string_view bytes){uint8_t length[8];uint64_t n=bytes.size();for(unsigned i=0;i<8;++i)length[7-i]=uint8_t(n>>(i*8));raw(length,8);raw(bytes.data(),bytes.size());}
++ std::string finish(){uint8_t bytes[32];unsigned n=0;if(EVP_DigestFinal_ex(p_.get(),bytes,&n)!=1||n!=32)throw std::runtime_error("checkpoint GC digest finish");return hex(Bytes(bytes,bytes+32)).substr(2);}
++};
++struct FsIdentity {dev_t device;ino_t inode;bool operator==(const FsIdentity&)const=default;};
++FsIdentity directory(const std::filesystem::path& path){
++ for(auto at=path;!at.empty();at=at.parent_path()){require(!std::filesystem::is_symlink(at),"checkpoint GC symlink path refused");if(at==at.parent_path())break;}
++ struct stat st{};require(::lstat(path.c_str(),&st)==0&&S_ISDIR(st.st_mode)&&st.st_uid==::geteuid()&&(st.st_mode&077)==0,"checkpoint GC owned private directory required");return {st.st_dev,st.st_ino};
++}
++std::filesystem::path copy_path(const Json& j){require(j.is_string(),"checkpoint GC copy path required");std::filesystem::path p(j.get<std::string>());require(p.is_absolute()&&p==p.lexically_normal(),"checkpoint GC canonical absolute copy path required");directory(p);require(std::filesystem::canonical(p)==p,"checkpoint GC alias path refused");return p;}
++bool inside(const std::filesystem::path& a,const std::filesystem::path& b){auto i=a.begin(),j=b.begin();for(;i!=a.end()&&j!=b.end()&&*i==*j;++i,++j){}return i==a.end();}
++void marker(const std::filesystem::path& path){
++ directory(path.parent_path());const auto file=path.parent_path()/".nano-owned-checkpoint-gc-copy";struct stat st{};
++ require(::lstat(file.c_str(),&st)==0&&S_ISREG(st.st_mode)&&st.st_uid==::geteuid()&&st.st_nlink==1&&st.st_size>0&&st.st_size<=64,"checkpoint GC explicit owned-copy marker required");
++ std::ifstream f(file,std::ios::binary);char buffer[65];f.read(buffer,sizeof(buffer));std::string text(buffer,size_t(f.gcount()));
++ require(f.eof()&&!f.bad()&&text.size()<=64&&(text=="owned-offline-checkpoint-gc-v1"||text=="owned-offline-checkpoint-gc-v1\n"),"checkpoint GC marker differs");
++}
++using Check=std::function<void()>;
++Check deadline(uint64_t ms,Check outer){
++ require(ms&&ms<=uint64_t(INT64_MAX),"checkpoint GC duration bound invalid");
++ const auto start=std::chrono::steady_clock::now();
++ return [start,ms,outer=std::move(outer)]{const auto elapsed=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-start).count();if(elapsed<0||static_cast<uint64_t>(elapsed)>=ms)throw std::runtime_error("checkpoint GC deadline");if(outer)outer();};
++}
++struct Scan {std::map<Bytes,uint64_t> blobs;std::string non_blobs;};
++Scan scan(rocksdb::DB& db,const CheckpointBlobGcBudget& budget,size_t maximum_blob,const Check& check){
++ Scan out;Hash non;uint64_t records=0,bytes=0;rocksdb::ReadOptions ro;ro.verify_checksums=true;ro.fill_cache=false;
++ std::unique_ptr<rocksdb::Iterator> it(db.NewIterator(ro));
++ for(it->SeekToFirst();it->Valid();it->Next()){
++  if(check)check();add(records,1);add(bytes,it->key().size());add(bytes,it->value().size());require(records<=budget.scan_records&&bytes<=budget.scan_bytes,"checkpoint GC scan budget exhausted before complete plan");
++  const auto key=it->key().ToString();const auto value=std::string_view(it->value().data(),it->value().size());
++  require(!key.starts_with("checkpoint-blob/")||key.starts_with(blob_prefix),"checkpoint GC unknown blob namespace");
++  if(key.starts_with(blob_prefix)){
++   const auto text=key.substr(blob_prefix.size());const auto digest=root(Json(text));
++   require(!value.empty()&&value.size()<=maximum_blob&&hash_text(value)==text.substr(2),"checkpoint GC corrupt/oversized blob");require(out.blobs.emplace(digest,value.size()).second,"checkpoint GC duplicate blob key");
++  }else{non.frame(key);non.frame(value);}
++ }
++ status(it->status());out.non_blobs=non.finish();return out;
++}
++std::vector<CheckpointArchiveEntry> archives(const Json& j,size_t maximum){
++ require(j.is_array()&&j.size()<=1,"checkpoint GC recovery archive bounds");std::vector<CheckpointArchiveEntry> out;
++ for(const auto& row:j){require(row.is_array()&&row.size()==3,"checkpoint GC recovery archive shape");require(row[1].is_string(),"checkpoint GC archive slot required");const auto slot=u64(quantity(row[1]));require(quantity(Int(std::to_string(slot)))==row[1].get<std::string>(),"checkpoint GC archive slot encoding");const auto bytes=unhex(row[2].get<std::string>());require(!bytes.empty()&&bytes.size()<=maximum&&hex(bytes)==row[2].get<std::string>(),"checkpoint GC archive bytes");out.push_back({root(row[0]),slot,bytes});}return out;
++}
++void validate_budget(const CheckpointBlobGcBudget& b){require(b.inventory_files&&b.inventory_bytes&&b.scan_records&&b.scan_bytes&&b.delete_records&&b.delete_bytes&&b.batch_bytes&&b.duration_ms,"checkpoint GC positive finite budgets required");require(b.duration_ms<=uint64_t(INT64_MAX),"checkpoint GC duration overflow");}
++struct Busy {bool& b;explicit Busy(bool& busy):b(busy){require(!b,"checkpoint GC reentrant operation");b=true;}~Busy(){b=false;}};
++}
++CheckpointBlobGcBudget checkpoint_blob_gc_budget(const Json& j){require(j.is_array()&&j.size()==8,"checkpoint GC budget must contain eight quantities");CheckpointBlobGcBudget b{number(j[0]),number(j[1]),number(j[2]),number(j[3]),number(j[4]),number(j[5]),number(j[6]),number(j[7])};validate_budget(b);return b;}
++CapellaStoreSnapshotLimits checkpoint_blob_gc_snapshot_limits(const Json& j){require(j.is_array()&&j.size()==8,"checkpoint GC snapshot limits must contain eight quantities");return {size(j[0]),size(j[1]),size(j[2]),size(j[3]),size(j[4]),size(j[5]),number(j[6]),number(j[7])};}
++std::string checkpoint_blob_gc_copy_inventory(const std::filesystem::path& path,uint64_t maximum_files,uint64_t maximum_bytes,const std::function<void()>& checkpoint){
++ require(maximum_files&&maximum_bytes,"checkpoint GC inventory budget required");directory(path);std::vector<std::filesystem::path> files;uint64_t count=0,total=0;
++ for(const auto& item:std::filesystem::recursive_directory_iterator(path)){
++  if(checkpoint)checkpoint();struct stat st{};require(::lstat(item.path().c_str(),&st)==0&&st.st_uid==::geteuid()&&(S_ISREG(st.st_mode)||S_ISDIR(st.st_mode)),"checkpoint GC source links/special files/owner refused");
++  if(S_ISREG(st.st_mode)){require(st.st_nlink==1&&st.st_size>=0,"checkpoint GC shared hardlink refused");add(count,1);add(total,uint64_t(st.st_size));require(count<=maximum_files&&total<=maximum_bytes,"checkpoint GC inventory budget");files.push_back(item.path());}
++ }
++ std::sort(files.begin(),files.end());Hash whole;
++ for(const auto& file:files){
++  if(checkpoint)checkpoint();const int fd=::open(file.c_str(),O_RDONLY|O_NOFOLLOW|O_CLOEXEC);if(fd<0)throw std::runtime_error("checkpoint GC inventory file open");
++  struct Fd {int fd;~Fd(){::close(fd);}} owned{fd};struct stat before{},after{};require(::fstat(fd,&before)==0&&S_ISREG(before.st_mode)&&before.st_nlink==1&&before.st_uid==::geteuid(),"checkpoint GC inventory file identity");
++  Hash content;uint8_t chunk[65536];uint64_t bytes=0;for(;;){if(checkpoint)checkpoint();const auto n=::read(fd,chunk,sizeof(chunk));if(n<0&&errno==EINTR)continue;if(n<0)throw std::runtime_error("checkpoint GC inventory read");if(!n)break;add(bytes,uint64_t(n));require(bytes<=uint64_t(before.st_size)&&bytes<=maximum_bytes,"checkpoint GC inventory file grew");content.raw(chunk,size_t(n));}
++  if(checkpoint)checkpoint();require(::fstat(fd,&after)==0&&bytes==uint64_t(before.st_size)&&before.st_dev==after.st_dev&&before.st_ino==after.st_ino&&before.st_size==after.st_size&&before.st_mtime==after.st_mtime&&before.st_ctime==after.st_ctime,"checkpoint GC inventory changed while reading");
++  whole.frame(std::filesystem::relative(file,path).generic_string());whole.frame(std::to_string(bytes));whole.frame(content.finish());
++ }
++ return whole.finish();
++}
++Json AuthenticatedCheckpointBlobClosure::description()const{Json refs=Json::array();for(const auto& [id,n]:references_)refs.push_back(Json::array({hex(id),quantity(Int(std::to_string(n)))}));return {{"identity",identity_},{"executionHead",execution_head_},{"references",refs}};}
++Json CheckpointBlobGcPlan::description()const{
++ auto rows=[](const auto& items){Json result=Json::array();for(const auto& row:items)result.push_back(Json::array({row.key,hex(row.digest),quantity(Int(std::to_string(row.bytes)))}));return result;};Json refs=Json::array();for(const auto& [id,n]:protected_)refs.push_back(Json::array({hex(id),quantity(Int(std::to_string(n)))}));
++ return {{"format","nano-owned-checkpoint-blob-gc-plan-v1"},{"planId",id_},{"identity",identity_},{"primary",token_json(primary_token_)},{"witness",token_json(witness_token_)},{"next",token_json(next_token_)},{"protected",refs},{"deletePrimary",rows(primary_)},{"deleteWitness",rows(witness_)},{"nonBlobPrimarySha256",non_blob_primary_},{"nonBlobWitnessSha256",non_blob_witness_},{"operatorOwnedCopiesOnly",true},{"productionQualified",false}};
++}
++struct CheckpointBlobGcCopies::Impl {
++ Json request;Bytes request_sha,stop_sha;std::filesystem::path primary_path,witness_path,primary_source,witness_source;
++ std::string primary_source_inventory,witness_source_inventory;FsIdentity primary_source_id,witness_source_id;
++ FsIdentity primary_id,witness_id;std::unique_ptr<ChainStore> primary,witness;
++ std::recursive_mutex mutex;bool busy=false,unavailable=false,finished=false;
++};
++CheckpointBlobGcCopies::CheckpointBlobGcCopies(std::unique_ptr<Impl> p):impl_(std::move(p)){}
++CheckpointBlobGcCopies::~CheckpointBlobGcCopies()=default;
++std::unique_ptr<CheckpointBlobGcCopies> CheckpointBlobGcCopies::open(std::string_view bytes,const Bytes& expected,
++ std::string_view stopped,const Bytes& stopped_expected,const CheckpointBlobGcBudget& budget,const std::function<void()>& outer){
++ validate_budget(budget);const auto check=deadline(budget.duration_ms,outer);check();
++ require(!bytes.empty()&&bytes.size()<=65536&&expected.size()==32&&sha256(Bytes(bytes.begin(),bytes.end()))==expected,"checkpoint GC request pin mismatch");
++ require(!stopped.empty()&&stopped.size()<=65536&&stopped_expected.size()==32&&sha256(Bytes(stopped.begin(),stopped.end()))==stopped_expected,"checkpoint GC stop receipt pin mismatch");
++ auto p=std::make_unique<Impl>();p->request=Json::parse(bytes);p->request_sha=expected;p->stop_sha=stopped_expected;const auto& j=p->request;
++ shape(j,{"format","chainId","genesisHash","profileSha256","primary","witness","next","stopReceiptSha256","limits","budget"});
++ require(j.at("format")=="nano-owned-stopped-checkpoint-gc-v1"&&j.dump()==bytes,"checkpoint GC request format/canonicality");
++ require(j.at("chainId").is_string()&&quantity(j.at("chainId"))>0&&quantity(j.at("chainId"))<(Int(1)<<256)&&quantity(quantity(j.at("chainId")))==j.at("chainId").get<std::string>(),"checkpoint GC chain ID");root(j.at("genesisHash"));sha_text(j.at("profileSha256"));
++ require(sha_text(j.at("stopReceiptSha256"))==hex(stopped_expected).substr(2),"checkpoint GC stop receipt binding");(void)checkpoint_blob_gc_snapshot_limits(j.at("limits"));
++ const auto requested_budget=checkpoint_blob_gc_budget(j.at("budget"));
++ require(requested_budget.inventory_files==budget.inventory_files&&requested_budget.inventory_bytes==budget.inventory_bytes&&requested_budget.scan_records==budget.scan_records&&requested_budget.scan_bytes==budget.scan_bytes&&requested_budget.delete_records==budget.delete_records&&requested_budget.delete_bytes==budget.delete_bytes&&requested_budget.batch_bytes==budget.batch_bytes&&requested_budget.duration_ms==budget.duration_ms,"checkpoint GC budget request mismatch");
++ for(const auto* name:{"primary","witness"}){shape(j.at(name),{"path","inventorySha256","token","sourcePath","sourceInventorySha256"});sha_text(j.at(name).at("inventorySha256"));sha_text(j.at(name).at("sourceInventorySha256"));(void)token(j.at(name).at("token"));}(void)token(j.at("next"));
++ p->primary_path=copy_path(j.at("primary").at("path"));p->witness_path=copy_path(j.at("witness").at("path"));p->primary_id=directory(p->primary_path);p->witness_id=directory(p->witness_path);
++ require(p->primary_id!=p->witness_id&&!inside(p->primary_path,p->witness_path)&&!inside(p->witness_path,p->primary_path),"checkpoint GC primary/witness copies alias or overlap");marker(p->primary_path);marker(p->witness_path);
++ p->primary_source=copy_path(j.at("primary").at("sourcePath"));p->witness_source=copy_path(j.at("witness").at("sourcePath"));p->primary_source_id=directory(p->primary_source);p->witness_source_id=directory(p->witness_source);
++ const std::array<std::filesystem::path,4> paths{p->primary_source,p->witness_source,p->primary_path,p->witness_path};
++ for(size_t a=0;a<paths.size();++a)for(size_t b=a+1;b<paths.size();++b)require(directory(paths[a])!=directory(paths[b])&&!inside(paths[a],paths[b])&&!inside(paths[b],paths[a]),"checkpoint GC originals/copies share identity or ancestry");
++ p->primary_source_inventory=checkpoint_blob_gc_copy_inventory(p->primary_source,budget.inventory_files,budget.inventory_bytes,check);p->witness_source_inventory=checkpoint_blob_gc_copy_inventory(p->witness_source,budget.inventory_files,budget.inventory_bytes,check);
++ require(p->primary_source_inventory==sha_text(j.at("primary").at("sourceInventorySha256"))&&p->witness_source_inventory==sha_text(j.at("witness").at("sourceInventorySha256")),"checkpoint GC original source inventory mismatch");
++
++ const auto receipt=Json::parse(stopped);shape(receipt,{"format","scope","allWritersStopped","allReadersStopped","stoppedAtMs","copies"});
++ require(receipt.at("format")=="nano-stopped-checkpoint-copy-receipt-v1"&&receipt.at("scope")=="isolated-owned-copies"&&receipt.dump()==stopped&&receipt.at("allWritersStopped").is_boolean()&&receipt.at("allWritersStopped")==true&&receipt.at("allReadersStopped").is_boolean()&&receipt.at("allReadersStopped")==true,"checkpoint GC externally pinned stopped-copy receipt required");(void)number(receipt.at("stoppedAtMs"));
++ require(receipt.at("copies").is_array()&&receipt.at("copies").size()==2,"checkpoint GC copy receipt shape");unsigned at=0;
++ for(const auto* name:{"primary","witness"}){const auto& copy=receipt.at("copies")[at++];shape(copy,{"role","path","inventorySha256","sourcePath","sourceInventorySha256"});require(copy.at("role")==name&&copy.at("path")==j.at(name).at("path")&&copy.at("inventorySha256")==j.at(name).at("inventorySha256")&&copy.at("sourcePath")==j.at(name).at("sourcePath")&&copy.at("sourceInventorySha256")==j.at(name).at("sourceInventorySha256"),"checkpoint GC copy receipt binding mismatch");check();const auto path=name==std::string_view("primary")?p->primary_path:p->witness_path;require(std::filesystem::is_regular_file(path/"CURRENT"),"checkpoint GC existing store required");require(checkpoint_blob_gc_copy_inventory(path,budget.inventory_files,budget.inventory_bytes,check)==sha_text(copy.at("inventorySha256")),"checkpoint GC closed copy inventory mismatch");require(copy.at("inventorySha256")==copy.at("sourceInventorySha256"),"checkpoint GC copy differs from independently pinned stopped original");}
++ // The SAME exclusive handles validate existing schemas. Creation and schema
++ // initialization stay disabled even if files disappear during acquisition.
++ p->primary=std::make_unique<ChainStore>(p->primary_path,ChainStore::OpenMode::ReadWriteExisting);
++ p->witness=std::make_unique<ChainStore>(p->witness_path,ChainStore::OpenMode::ReadWriteExisting);
++ require(directory(p->primary_path)==p->primary_id&&directory(p->witness_path)==p->witness_id,"checkpoint GC copies replaced during exclusive open");
++ check();return std::unique_ptr<CheckpointBlobGcCopies>(new CheckpointBlobGcCopies(std::move(p)));
++}
++CheckpointBlobGcPlan CheckpointBlobGcCopies::plan_locked(const CapellaForkBlockRules& rules,
++ const CapellaStoreSnapshotLimits& limits,const CheckpointBlobGcBudget& budget,const std::function<void()>& check){
++ auto& p=*impl_;validate_budget(budget);require(!p.unavailable,"checkpoint GC incomplete; destroy and reopen required");
++ require(directory(p.primary_path)==p.primary_id&&directory(p.witness_path)==p.witness_id,"checkpoint GC copy directory changed");
++ require(directory(p.primary_source)==p.primary_source_id&&directory(p.witness_source)==p.witness_source_id&&checkpoint_blob_gc_copy_inventory(p.primary_source,budget.inventory_files,budget.inventory_bytes,check)==p.primary_source_inventory&&checkpoint_blob_gc_copy_inventory(p.witness_source,budget.inventory_files,budget.inventory_bytes,check)==p.witness_source_inventory,"checkpoint GC original source changed");
++ const auto& j=p.request;const Json encoded_budget=Json::array({quantity(Int(std::to_string(budget.inventory_files))),quantity(Int(std::to_string(budget.inventory_bytes))),quantity(Int(std::to_string(budget.scan_records))),quantity(Int(std::to_string(budget.scan_bytes))),quantity(Int(std::to_string(budget.delete_records))),quantity(Int(std::to_string(budget.delete_bytes))),quantity(Int(std::to_string(budget.batch_bytes))),quantity(Int(std::to_string(budget.duration_ms)))});require(encoded_budget==j.at("budget"),"checkpoint GC administrative budget differs from pinned request");
++ require(hash_text(capella_fork_profile(rules).dump())==sha_text(j.at("profileSha256")),"checkpoint GC profile differs from pinned request");
++ const Json encoded_limits=Json::array({quantity(Int(std::to_string(limits.envelope_bytes))),quantity(Int(std::to_string(limits.blocks))),quantity(Int(std::to_string(limits.messages))),quantity(Int(std::to_string(limits.equivocations))),quantity(Int(std::to_string(limits.state_bytes))),quantity(Int(std::to_string(limits.total_state_bytes))),quantity(Int(std::to_string(limits.replay_slots))),quantity(Int(std::to_string(limits.sync_trials)))});require(encoded_limits==j.at("limits"),"checkpoint GC snapshot limits changed");
++ require(rules.transition.chain_id==quantity(j.at("chainId")),"checkpoint GC profile/chain binding");
++ std::scoped_lock stores(p.primary->mutex_,p.witness->mutex_);
++ const auto chain=quantity(j.at("chainId"));const auto genesis=root(j.at("genesisHash"));
++ for(auto pair:{std::pair{p.primary.get(),"beacon"},std::pair{p.witness.get(),"nano-capella-recovery-v1"}}){const auto identity=pair.first->read("meta/identity");require(identity&&identity->at("consensus")==pair.second,"checkpoint GC store role refused");const auto schema=pair.first->get("meta/schema");require(schema&&(*schema=="nano/1"||*schema=="nano/2-state-pruned"),"checkpoint GC unknown schema");}
++ require(limits.envelope_bytes<=(SIZE_MAX-2048)/8,"checkpoint GC witness limit overflow");const auto witness_limit=2048+8*limits.envelope_bytes;
++ const auto primary=p.primary->fork_checkpoint_impl(chain,genesis,limits.envelope_bytes),witness=p.witness->fork_checkpoint_impl(chain,genesis,witness_limit);
++ require(primary&&witness&&primary->token==token(j.at("primary").at("token"))&&witness->token==token(j.at("witness").at("token")),"checkpoint GC independently pinned primary/witness mismatch");
++ require(p.primary->get("execution-checkpoint/v1").has_value(),"checkpoint GC requires coupled execution primary");
++ const auto genesis_block=p.primary->read("block/"+hex(bytes(0,8)));require(genesis_block&&Block::from_json(*genesis_block).header.hash()==genesis,"checkpoint GC canonical genesis binding");
++ const auto intent=Json::parse(witness->snapshot);shape(intent,{"format","previous","next","snapshot","archive"});require(intent.at("format")=="nano-capella-recovery-v1"&&intent.dump()==witness->snapshot,"checkpoint GC unknown recovery namespace/encoding");
++ const auto next=token(intent.at("next"));const auto previous=intent.at("previous").is_null()?std::optional<ForkCheckpointToken>{}:std::optional(token(intent.at("previous")));
++ require((!previous||previous->sequence<UINT64_MAX)&&next.sequence==(previous?previous->sequence+1:1)&&next==token(j.at("next")),"checkpoint GC pending-next external binding mismatch");
++ require(primary->token==next||(previous&&primary->token==*previous),"checkpoint GC primary is neither completed nor pending previous");const bool pending=primary->token!=next;
++ require(intent.at("snapshot").is_string(),"checkpoint GC recovery snapshot required");const auto& next_snapshot=intent.at("snapshot").get_ref<const std::string&>();require(pending||primary->snapshot==next_snapshot,"checkpoint GC completed snapshot mismatch");
++ const auto fetch=[&](ChainStore& db){return [&db](const Bytes& id,size_t maximum)->std::optional<std::string>{const auto payload=db.get(std::string(blob_prefix)+hex(id));if(payload)require(!payload->empty()&&payload->size()<=maximum&&sha256(Bytes(payload->begin(),payload->end()))==id,"checkpoint GC corrupt referenced blob");return payload;};};
++ const auto a=authenticate_capella_checkpoint_blob_closure(primary->snapshot,primary->token.digest,rules,limits,fetch(*p.primary),{},check);
++ const auto b=authenticate_capella_checkpoint_blob_closure(next_snapshot,next.digest,rules,limits,fetch(*p.witness),archives(intent.at("archive"),limits.envelope_bytes),check);
++ const auto tip_key=p.primary->get("meta/tip");const auto tip=tip_key?p.primary->read("block/"+*tip_key):std::nullopt;const auto execution=tip_key?p.primary->read("state/"+*tip_key):std::nullopt;
++ require(tip&&execution&&Block::from_json(*tip).header.hash()==root(a.execution_head_.at("hash"))&&quantity(tip->at("number"))==quantity(a.execution_head_.at("number"))&&State::from_json(*execution).root()==root(a.execution_head_.at("stateRoot")),"checkpoint GC primary execution head/state binding");
++ require(a.identity_==b.identity_,"checkpoint GC previous/next protocol identity differs");CheckpointBlobGcPlan plan;plan.owner_=&p;plan.identity_=a.identity_;plan.rules_=rules;plan.limits_=limits;plan.budget_=budget;
++ plan.primary_token_=primary->token;plan.witness_token_=witness->token;plan.next_token_=next;plan.primary_snapshot_=primary->snapshot;plan.witness_snapshot_=witness->snapshot;plan.protected_=a.references_;
++ for(const auto& [id,n]:b.references_){const auto [where,added]=plan.protected_.emplace(id,n);require(added||where->second==n,"checkpoint GC conflicting protected lengths");}
++ for(const auto& [id,n]:plan.protected_){
++  const auto pp=fetch(*p.primary)(id,n),ww=fetch(*p.witness)(id,n);
++  require((pp&&pp->size()==n)||(pending&&b.references_.contains(id)&&!a.references_.contains(id)),"checkpoint GC missing protected primary reference");
++  require(ww&&ww->size()==n,"checkpoint GC missing protected witness reference");if(pp)require(*pp==*ww,"checkpoint GC protected stores differ");
++ }
++ const auto primary_scan=scan(*p.primary->db_,budget,limits.envelope_bytes,check),witness_scan=scan(*p.witness->db_,budget,limits.envelope_bytes,check);plan.non_blob_primary_=primary_scan.non_blobs;plan.non_blob_witness_=witness_scan.non_blobs;
++ uint64_t deletes=0,deleted_bytes=0;
++ const auto candidates=[&](const Scan& source,auto& output){for(const auto& [id,n]:source.blobs)if(!plan.protected_.contains(id)){add(deletes,1);add(deleted_bytes,n);require(deletes<=budget.delete_records&&deleted_bytes<=budget.delete_bytes,"checkpoint GC delete budget exhausted before complete plan");const auto key=std::string(blob_prefix)+hex(id);rocksdb::WriteBatch one;one.Delete(key);require(one.GetDataSize()<=budget.batch_bytes,"checkpoint GC single Delete exceeds batch budget before plan");output.push_back({key,id,n});}};
++ candidates(primary_scan,plan.primary_);candidates(witness_scan,plan.witness_);plan.id_=hash_text(plan.description().dump());if(check)check();return plan;
++}
++CheckpointBlobGcPlan CheckpointBlobGcCopies::plan(const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits,const CheckpointBlobGcBudget& budget,const std::function<void()>& check){
++ std::lock_guard lock(impl_->mutex);Busy busy(impl_->busy);require(!impl_->finished,"checkpoint GC session already finished; reopen required");return plan_locked(rules,limits,budget,deadline(budget.duration_ms,check));
++}
++Json CheckpointBlobGcCopies::collect(const CheckpointBlobGcPlan& plan,const std::function<void()>& outer){
++ auto& p=*impl_;std::lock_guard lock(p.mutex);Busy busy(p.busy);require(!p.finished&&!p.unavailable&&plan.owner_==&p,"checkpoint GC plan ownership/session mismatch");const auto check=deadline(plan.budget_.duration_ms,outer);
++ const auto fresh=plan_locked(plan.rules_,plan.limits_,plan.budget_,check);require(fresh.id_==plan.id_&&fresh.description()==plan.description(),"checkpoint GC stale plan/candidate inventory refused");
++ Json counts=Json::array();bool changed=false;
++ try{
++  for(auto pair:{std::pair{p.primary.get(),&plan.primary_},std::pair{p.witness.get(),&plan.witness_}}){
++   auto& db=*pair.first;uint64_t deleted=0,bytes=0;
++   {std::lock_guard gate(db.mutex_);rocksdb::WriteBatch batch;
++    auto flush=[&]{if(!batch.Count())return;check();rocksdb::WriteOptions write;write.sync=true;const auto result=db.db_->Write(write,&batch);if(!result.ok())db.fork_checkpoint_write_uncertain_=true;status(result);changed=true;batch.Clear();};
++    for(const auto& row:*pair.second){check();const auto current=db.get(row.key);require(current&&current->size()==row.bytes&&hash_text(*current)==hex(row.digest).substr(2),"checkpoint GC candidate changed before Delete");
++     rocksdb::WriteBatch one;one.Delete(row.key);require(one.GetDataSize()<=plan.budget_.batch_bytes,"checkpoint GC single Delete exceeds batch budget");
++     if(batch.GetDataSize()+one.GetDataSize()>plan.budget_.batch_bytes)flush();batch.Delete(row.key);require(batch.GetDataSize()<=plan.budget_.batch_bytes,"checkpoint GC batch overflow");add(deleted,1);add(bytes,row.bytes);
++    }flush();
++    check();rocksdb::FlushOptions options;options.wait=true;status(db.db_->Flush(options));
++    const std::string begin(blob_prefix),end="checkpoint-blob/v10";const rocksdb::Slice a(begin),b(end);rocksdb::CompactRangeOptions compact;compact.exclusive_manual_compaction=true;compact.max_subcompactions=1;check();status(db.db_->CompactRange(compact,&a,&b));
++   }counts.push_back({{"deletedRecords",deleted},{"deletedLogicalPayloadBytes",bytes}});
++  }
++  // No old provider/cache/lease exists. Reopen both stores through the RO API.
++  p.primary.reset();p.witness.reset();p.primary=std::make_unique<ChainStore>(p.primary_path,ChainStore::OpenMode::ReadOnly);p.witness=std::make_unique<ChainStore>(p.witness_path,ChainStore::OpenMode::ReadOnly);
++  const auto after=plan_locked(plan.rules_,plan.limits_,plan.budget_,check);
++  require(after.primary_.empty()&&after.witness_.empty()&&after.protected_==plan.protected_&&after.identity_==plan.identity_&&after.primary_token_==plan.primary_token_&&after.witness_token_==plan.witness_token_&&after.next_token_==plan.next_token_&&after.primary_snapshot_==plan.primary_snapshot_&&after.witness_snapshot_==plan.witness_snapshot_&&after.non_blob_primary_==plan.non_blob_primary_&&after.non_blob_witness_==plan.non_blob_witness_,"checkpoint GC cold reopen/unchanged namespaces failed");
++  check();p.finished=true;return {{"format","nano-owned-checkpoint-blob-gc-result-v1"},{"planId",plan.id_},{"stores",counts},{"noWork",plan.primary_.empty()&&plan.witness_.empty()},{"allProtectedReferencesReopened",true},{"nonGcNamespacesUnchanged",true},{"originalSourceInventoriesUnchanged",true},{"primary",token_json(plan.primary_token_)},{"witness",token_json(plan.witness_token_)},{"pendingNext",token_json(plan.next_token_)},{"primaryAndWitnessAtomicTransaction",false},{"copiedDataOnly",true},{"physicalSpaceReductionGuaranteed",false},{"physicalPowerLossQualified",false},{"runtimeDutiesResumed",false},{"productionQualified",false}};
++ }catch(...){p.unavailable=true;p.primary.reset();p.witness.reset();(void)changed;throw;}
++}
++}
+--- a/src/consensus_capella_reactor.cpp
++++ b/src/consensus_capella_reactor.cpp
+@@ -1,4 +1,5 @@
+ #include "nano/consensus_capella_reactor.hpp"
++#include "nano/checkpoint_blob_gc.hpp"
+ #include "nano/chain.hpp"
+ #include "nano/consensus_bls.hpp"
+ #include "nano/consensus_message_ssz.hpp"
+@@ -874,3 +875,42 @@
+  publish_impl(*state_,check,{},std::nullopt,std::nullopt,std::nullopt,std::nullopt,false,options);return true;
+ }
+ }
++
++namespace nano {
++AuthenticatedCheckpointBlobClosure authenticate_capella_checkpoint_blob_closure(
++ std::string_view encoded,const Bytes& digest,const CapellaForkBlockRules& rules,
++ const CapellaStoreSnapshotLimits& limits,
++ const std::function<std::optional<std::string>(const Bytes&,size_t)>& reader,
++ const std::vector<CheckpointArchiveEntry>& archive,const std::function<void()>& check){
++ AuthenticatedCheckpointBlobClosure closure;
++ const auto traced=[&](const Bytes& id,size_t bytes)->std::optional<std::string>{
++  archive_require(id.size()==32&&bytes&&bytes<=limits.envelope_bytes&&bool(reader));
++  const auto [found,added]=closure.references_.emplace(id,bytes);
++  archive_require(added||found->second==bytes);
++  const auto payload=reader(id,bytes);
++  archive_require(payload&&payload->size()==bytes&&sha256(Bytes(payload->begin(),payload->end()))==id);
++  if(check)check();return payload;
++ };
++ // Neither process-local memo nor a previously authenticated Store is supplied.
++ // Every live cold record is visited by the complete decoder, not only its head.
++ auto [store,votes,slashings,changes,exits]=restore_durable(encoded,digest,rules,limits,check,traced);
++ archive_require(archive.size()<=1);
++ for(const auto& entry:archive){
++  archive_require(entry.root.size()==32&&entry.payload.size()<=limits.envelope_bytes);
++  const auto id=archive_array<32>(entry.root,0);
++  verify_archived_block(id,entry.payload,store,rules,check);
++  archive_require(store.blocks.at(id).header().slot==entry.slot);
++ }
++ const auto head=capella_fork_head(store,rules,check);
++ const auto context=capella_fork_block_context(head->state,head->header,
++  {rules.transition.consensus.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},
++  rules.transition.consensus.state,check);
++ const auto network=capella_network_anchor(store);
++ closure.execution_head_={{"number",quantity(head->execution_block.header.number)},{"hash",hex(head->execution_block.header.hash())},{"stateRoot",hex(head->execution_state.root())}};
++ closure.identity_={{"profile",capella_fork_profile(rules)},
++  {"networkAnchor",hex(Bytes(network.begin(),network.end()))},
++  {"genesisValidatorsRoot",hex(Bytes(context.genesis_root.begin(),context.genesis_root.end()))},
++  {"genesisTimeMs",quantity(Int(std::to_string(store.timed.clock.genesis_time_ms)))}};
++ if(check)check();return closure;
++}
++}
+--- a/src/storage.cpp
++++ b/src/storage.cpp
+@@ -2,6 +2,8 @@
+ #include "nano/block_auth.hpp"
+ #include "nano/finality.hpp"
+ #include <rocksdb/db.h>
++#include <rocksdb/env.h>
++#include <rocksdb/file_system.h>
+ #include <rocksdb/write_batch.h>
+ #include <rocksdb/table.h>
+ #include <rocksdb/version.h>
+@@ -13,6 +15,31 @@
+ #include <limits>
+ namespace nano {
+ namespace {
++// ReadWriteExisting must never recreate a missing database directory. DB::Open
++// can call FileSystem::CreateDirIfMissing even with create_if_missing=false.
++// Install the modern FileSystem in a composite Env so both direct FileSystem
++// calls and compatibility Env calls pass through the same no-creation policy.
++class ExistingOnlyFileSystem final : public rocksdb::FileSystemWrapper {
++public:
++ explicit ExistingOnlyFileSystem(const std::shared_ptr<rocksdb::FileSystem>& target):rocksdb::FileSystemWrapper(target){}
++ const char* Name()const override{return "NanoExistingOnlyFileSystem";}
++ rocksdb::IOStatus CreateDir(const std::string&,const rocksdb::IOOptions&,rocksdb::IODebugContext*)override{
++  return rocksdb::IOStatus::NotSupported("Nano existing-only storage forbids directory creation");
++ }
++ rocksdb::IOStatus CreateDirIfMissing(const std::string& path,const rocksdb::IOOptions& options,rocksdb::IODebugContext* context)override{
++  // NewDirectory opens an existing directory or fails. Do not delegate to a
++  // mkdir-capable method after an existence check: that would retain a race.
++  std::unique_ptr<rocksdb::FSDirectory> directory;
++  return target()->NewDirectory(path,options,&directory,context);
++ }
++};
++rocksdb::Env* existing_only_environment(){
++ // Shared process lifetime exceeds every DB using this environment, including
++ // background work joined by DB destruction. No ChainStore layout/ABI change.
++ static const auto environment=rocksdb::NewCompositeEnv(
++  std::make_shared<ExistingOnlyFileSystem>(rocksdb::Env::Default()->GetFileSystem()));
++ return environment.get();
++}
+ std::string height_key(const Int& number){return hex(bytes(number,8));}
+ void require_ok(const rocksdb::Status& status){if(!status.ok())throw std::runtime_error("RocksDB: "+status.ToString());}
+ // Detect the API, rather than guessing the release where DB** was removed.
+@@ -93,8 +120,10 @@
+ }
+ ChainStore::ChainStore(const std::filesystem::path& path,OpenMode mode){
+  const bool read_only=mode==OpenMode::ReadOnly;
+- if(!read_only&&path.has_parent_path())std::filesystem::create_directories(path.parent_path());
+- rocksdb::Options options;options.create_if_missing=!read_only;options.paranoid_checks=true;
++ const bool may_initialize=mode==OpenMode::ReadWrite;
++ if(may_initialize&&path.has_parent_path())std::filesystem::create_directories(path.parent_path());
++ rocksdb::Options options;options.create_if_missing=may_initialize;options.paranoid_checks=true;
++ if(mode==OpenMode::ReadWriteExisting)options.env=existing_only_environment();
+  // A validator opens separate signing journals and recovery witnesses. RocksDB's
+  // default file preallocation multiplies reserved disk space across these tiny
+  // databases. Allocate on demand; keep WAL and synchronous durability unchanged.
+@@ -111,7 +140,7 @@
+   if(schema&&*schema=="nano/1"&&get("execution-state-pruning/v1"))throw std::runtime_error("legacy pruned database requires explicit migration or unpruned backup");
+   if(schema&&*schema=="nano/2-state-pruned"&&!state_pruning_impl())throw std::runtime_error("pruned database schema has no retention marker");
+   if(!schema){
+-   if(read_only)throw std::runtime_error("read-only database has no Nano schema");
++   if(!may_initialize)throw std::runtime_error(read_only?"read-only database has no Nano schema":"existing database has no Nano schema");
+    std::unique_ptr<rocksdb::Iterator> iterator(db_->NewIterator(rocksdb::ReadOptions()));iterator->SeekToFirst();require_ok(iterator->status());
+    if(iterator->Valid())throw std::runtime_error("database has no Nano schema");
+    require_ok(db_->Put(durable_write(),"meta/schema","nano/1"));
+--- /dev/null
++++ b/tests/support/capella_blob_gc.hpp
+@@ -0,0 +1,119 @@
++#pragma once
++#include "nano/checkpoint_blob_gc.hpp"
++#include <sys/stat.h>
++// Synthetic fixture only. This function never reads campaign paths or secrets.
++static Json gc_token(const ForkCheckpointToken& t){return {{"sequence",quantity(Int(std::to_string(t.sequence)))},{"digest",hex(t.digest)}};}
++static Json gc_limits(const CapellaStoreSnapshotLimits& l){return Json::array({quantity(Int(std::to_string(l.envelope_bytes))),quantity(Int(std::to_string(l.blocks))),quantity(Int(std::to_string(l.messages))),quantity(Int(std::to_string(l.equivocations))),quantity(Int(std::to_string(l.state_bytes))),quantity(Int(std::to_string(l.total_state_bytes))),quantity(Int(std::to_string(l.replay_slots))),quantity(Int(std::to_string(l.sync_trials)))});}
++#include "capella_blob_gc_adversarial.hpp"
++#include "capella_blob_gc_cli.hpp"
++static void qualify_capella_blob_gc_next_publication(const fs::path& incoming_dir,const Genesis& g,
++ const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits,
++ const std::string& prior_checkpoint,const Bytes& child,const Bytes& public_key,
++ const ConsensusRoot& validators_root,uint64_t slots){
++ const auto dir=fs::canonical(incoming_dir);
++ const bool use_cli=std::getenv("NANO_TEST_CHECKPOINT_BLOB_GC_CLI")!=nullptr;
++ check(!(use_cli&&std::getenv("NANO_TEST_CHECKPOINT_BLOB_GC_ADVERSARIAL")),"GC CLI and adverse variants are distinct");
++ check(!test::isolated_capella::active,"GC test must not operate on a campaign export");
++ const auto source=dir/"owner",source_witness=dir/"witness";
++ check(::chmod(source.c_str(),0700)==0&&::chmod(source_witness.c_str(),0700)==0,"GC owned synthetic source permissions");
++ ForkCheckpointToken primary_pin,witness_pin;
++ const CheckpointBlob orphan{sha256(Bytes(prior_checkpoint.begin(),prior_checkpoint.end())),prior_checkpoint};
++ // Stage an explicitly synthetic orphan using the real synchronized CAS APIs.
++ // Its bytes are a prior validated checkpoint payload; no live root is forged.
++ // This is not a measurement of naturally accumulated campaign garbage.
++ {
++  ChainStore primary(source),witness(source_witness);
++  const auto before=primary.fork_checkpoint(g.chain_id,g.block.header.hash(),limits.envelope_bytes);
++  const auto saved_witness=witness.fork_checkpoint(g.chain_id,g.block.header.hash(),8*limits.envelope_bytes+2048);
++  const auto tip=primary.latest();check(before&&saved_witness&&tip,"GC fixture bindings missing");
++  check(!primary.checkpoint_blob(g.chain_id,g.block.header.hash(),orphan.digest,limits.envelope_bytes),"GC orphan collides with current fragment");
++  const ForkCheckpointToken next{before->token.sequence+1,before->token.digest};
++  const auto intent=Json{{"format","nano-capella-recovery-v1"},{"previous",gc_token(before->token)},{"next",gc_token(next)},{"snapshot",before->snapshot},{"archive",Json::array()}}.dump();
++  witness_pin=witness.commit_fork_checkpoint_with_blobs(g.chain_id,g.block.header.hash(),saved_witness->token,intent,8*limits.envelope_bytes+2048,{orphan},limits.blocks);
++  primary_pin=primary.commit_execution_checkpoint_with_blobs(g.chain_id,g.block.header.hash(),before->token,tip->header.hash(),tip->header.number,tip->header.hash(),{},before->snapshot,limits.envelope_bytes,limits.blocks,{orphan},limits.blocks);
++  check(primary_pin==next&&primary.checkpoint_blob(g.chain_id,g.block.header.hash(),orphan.digest,limits.envelope_bytes)==orphan.payload,"GC staging not committed");
++ }
++ if(std::getenv("NANO_TEST_CHECKPOINT_BLOB_GC_ADVERSARIAL")){qualify_capella_gc_adversarial(source,source_witness,g,rules,limits,child);return;}
++ const auto signer_path=dir/"gc-protected-signer",signer_witness_path=dir/"gc-protected-signer-witness";
++ ForkCheckpointToken signer_pin,signer_witness_pin;
++ {
++  ChainStore signer(signer_path),witness(signer_witness_path);
++  BeaconSigningJournal journal(signer,g.chain_id,g.block.header.hash(),validators_root,public_key,slots,std::nullopt,&witness);
++  // An imported synthetic durable reservation, with no BLS provider call.
++  const auto reserved=hex(sha256(Bytes{'g','c','-','r','e','s','e','r','v','e','d'}));
++  const auto interchange=Json{{"metadata",{{"interchange_format_version","5"},{"genesis_validators_root",hex(Bytes(validators_root.begin(),validators_root.end()))}}},{"data",Json::array({Json{{"pubkey",hex(public_key)},{"signed_blocks",Json::array({Json{{"slot","1"},{"signing_root",reserved}}})},{"signed_attestations",Json::array()}}})}}.dump();
++  check(journal.import_interchange(interchange,65536)==1&&journal.latest_proposal_slot()==1,"GC signer reservation import");signer_pin=journal.commitment();
++  const auto saved=witness.fork_checkpoint(g.chain_id,g.block.header.hash(),limits.envelope_bytes);check(bool(saved),"GC signer witness missing");signer_witness_pin=saved->token;
++ }
++ check(::chmod(signer_path.c_str(),0700)==0&&::chmod(signer_witness_path.c_str(),0700)==0,"GC protected directory permissions");
++ const CheckpointBlobGcBudget budget{1024,128*1024*1024,16384,128*1024*1024,1024,64*1024*1024,1024*1024,60000};
++ const auto inventory=[&](const fs::path& p){return checkpoint_blob_gc_copy_inventory(p,budget.inventory_files,budget.inventory_bytes);};
++ const auto original=inventory(source),original_witness=inventory(source_witness),original_signer=inventory(signer_path),original_signer_witness=inventory(signer_witness_path);
++ const auto parent=dir/"gc-maintained-copies";check(fs::create_directory(parent)&&::chmod(parent.c_str(),0700)==0,"GC new owned copy root");
++ const auto pc=parent/"primary",wc=parent/"witness";fs::copy(source,pc,fs::copy_options::recursive);fs::copy(source_witness,wc,fs::copy_options::recursive);
++ check(::chmod(pc.c_str(),0700)==0&&::chmod(wc.c_str(),0700)==0,"GC copy permissions");
++ {std::ofstream marker(parent/".nano-owned-checkpoint-gc-copy");marker<<"owned-offline-checkpoint-gc-v1\n";check(bool(marker),"GC marker write");}
++ const auto pi=inventory(pc),wi=inventory(wc);check(pi==original&&wi==original_witness,"GC source/copy inventory differs");
++ const auto stopped=Json{{"format","nano-stopped-checkpoint-copy-receipt-v1"},{"scope","isolated-owned-copies"},{"allWritersStopped",true},{"allReadersStopped",true},{"stoppedAtMs",quantity(Int(std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())))},{"copies",Json::array({Json{{"role","primary"},{"path",pc.string()},{"inventorySha256",pi},{"sourcePath",source.string()},{"sourceInventorySha256",original}},Json{{"role","witness"},{"path",wc.string()},{"inventorySha256",wi},{"sourcePath",source_witness.string()},{"sourceInventorySha256",original_witness}}})}}.dump();
++ const auto stop_sha=sha256(Bytes(stopped.begin(),stopped.end()));const auto profile=capella_fork_profile(rules).dump();
++ const auto request=Json{{"format","nano-owned-stopped-checkpoint-gc-v1"},{"chainId",quantity(g.chain_id)},{"genesisHash",hex(g.block.header.hash())},{"profileSha256",hex(sha256(Bytes(profile.begin(),profile.end()))).substr(2)},
++  {"primary",{{"path",pc.string()},{"inventorySha256",pi},{"token",gc_token(primary_pin)},{"sourcePath",source.string()},{"sourceInventorySha256",original}}},{"witness",{{"path",wc.string()},{"inventorySha256",wi},{"token",gc_token(witness_pin)},{"sourcePath",source_witness.string()},{"sourceInventorySha256",original_witness}}},{"next",gc_token(primary_pin)},{"stopReceiptSha256",hex(stop_sha).substr(2)},{"limits",gc_limits(limits)},{"budget",Json::array({"0x400","0x8000000","0x4000","0x8000000","0x400","0x4000000","0x100000","0xea60"})}}.dump();
++ if(use_cli){gc_cli_collect_closed(dir,request,stopped,profile,budget,primary_pin,witness_pin,orphan.digest,{source,source_witness,signer_path,signer_witness_path});}
++ else{
++  auto maintenance=CheckpointBlobGcCopies::open(request,sha256(Bytes(request.begin(),request.end())),stopped,stop_sha,budget);
++  const auto plan=maintenance->plan(rules,limits,budget);const auto description=plan.description();
++  check(description.at("deletePrimary").size()==1&&description.at("deleteWitness").size()==1&&description.at("deletePrimary")[0][1]==hex(orphan.digest)&&description.at("deleteWitness")[0][1]==hex(orphan.digest),"GC exact two orphan keys not isolated");
++  const auto result=maintenance->collect(plan);check(result.at("noWork")==false&&result.at("allProtectedReferencesReopened")==true&&result.at("nonGcNamespacesUnchanged")==true,"GC deletion/cold verification did not complete");
++ }
++ ForkCheckpointToken advanced,advanced_witness;std::string advanced_snapshot;
++ {
++  Blockchain owner(pc,g);ChainStore witness(wc);CapellaDurableReactor reactor(owner,rules,limits,witness,{},primary_pin);
++  check(reactor.current().token==primary_pin&&!owner.store().checkpoint_blob(g.chain_id,g.block.header.hash(),orphan.digest,limits.envelope_bytes)&&!witness.checkpoint_blob(g.chain_id,g.block.header.hash(),orphan.digest,limits.envelope_bytes),"GC cold reopen changed commitment or retained orphan");
++  const auto identity=reactor.network_identity();bool accepted=false;
++  for(unsigned attempt=0;attempt<64&&!accepted;++attempt)accepted=reactor.block(child);
++  check(accepted,"GC next child not normally admitted within finite bound");advanced=reactor.current().token;check(advanced.sequence>primary_pin.sequence&&reactor.network_identity()==identity,"GC next publication failed/domain changed");
++  const auto snapshot=owner.store().fork_checkpoint(g.chain_id,g.block.header.hash(),limits.envelope_bytes,advanced);const auto recovery=witness.fork_checkpoint(g.chain_id,g.block.header.hash(),8*limits.envelope_bytes+2048);
++  check(snapshot&&recovery&&Json::parse(recovery->snapshot).at("next")==gc_token(advanced)&&Json::parse(recovery->snapshot).at("snapshot")==snapshot->snapshot,"GC next witness/primary binding failed");advanced_snapshot=snapshot->snapshot;advanced_witness=recovery->token;
++  check(reactor.block(child)&&reactor.current().token==advanced,"GC replay changed next commitment");
++ }
++ {
++  Blockchain owner(pc,g);ChainStore witness(wc);CapellaDurableReactor reactor(owner,rules,limits,witness,{},advanced);
++  const auto snapshot=owner.store().fork_checkpoint(g.chain_id,g.block.header.hash(),limits.envelope_bytes,advanced);
++  check(snapshot&&reactor.current().token==advanced&&snapshot->snapshot==advanced_snapshot&&witness.fork_checkpoint(g.chain_id,g.block.header.hash(),8*limits.envelope_bytes+2048,advanced_witness).has_value(),"GC second cold reopen differs");
++ }
++ {ChainStore signer(signer_path,ChainStore::OpenMode::ReadOnly),witness(signer_witness_path,ChainStore::OpenMode::ReadOnly);check(signer.fork_checkpoint(g.chain_id,g.block.header.hash(),limits.envelope_bytes,signer_pin).has_value()&&witness.fork_checkpoint(g.chain_id,g.block.header.hash(),limits.envelope_bytes,signer_witness_pin).has_value(),"GC separate signer/witness pins changed");}
++ check(inventory(source)==original&&inventory(source_witness)==original_witness&&inventory(signer_path)==original_signer&&inventory(signer_witness_path)==original_signer_witness,"GC original/protected bytes changed");
++ std::cout<<Json{{"scenario","gc-cold-reopen-and-next-admission"},{"collectorInterface",use_cli?"actual-cli":"cpp-api"},{"syntheticOrphanStagedViaCas",true},{"naturallyObservedCampaignLeak",false},{"deletedPrimaryRecords",1},{"deletedWitnessRecords",1},{"sameCheckpointColdReopened",true},{"nextChildNormallyAdmitted",true},{"nextPublicationColdReopened",true},{"originalAndSignerWitnessBytesUnchanged",true},{"localSigningProviderCalls",0},{"networkQualified",false},{"runtimeDutiesResumed",false},{"productionQualified",false}}.dump()<<std::endl;
++}
++struct NaturalGcCopies {fs::path primary,witness;Json result;std::string original_inventory,witness_inventory;};
++// Called only after the real synthetic publication/pruning loop closes its
++// reactor, owners and witness handles. No artificial blob is injected here.
++static NaturalGcCopies collect_naturally_pruned_capella_copy(const fs::path& incoming_source,const fs::path& incoming_witness,
++ const fs::path& incoming_destination,const Genesis& g,const CapellaForkBlockRules& rules,
++ const CapellaStoreSnapshotLimits& limits,const ForkCheckpointToken& primary_pin,const ForkCheckpointToken& witness_pin){
++ const auto source=fs::canonical(incoming_source),source_witness=fs::canonical(incoming_witness);
++ const auto destination=fs::canonical(incoming_destination.parent_path())/incoming_destination.filename();
++ check(!test::isolated_capella::active,"natural GC cannot operate on campaign data");
++ const CheckpointBlobGcBudget budget{2048,256*1024*1024,32768,256*1024*1024,4096,128*1024*1024,1024*1024,60000};
++ check(::chmod(source.c_str(),0700)==0&&::chmod(source_witness.c_str(),0700)==0,"natural GC closed source permissions");
++ const auto inventory=[&](const fs::path& p){return checkpoint_blob_gc_copy_inventory(p,budget.inventory_files,budget.inventory_bytes);};
++ const auto original=inventory(source),original_witness=inventory(source_witness);
++ check(fs::create_directory(destination)&&::chmod(destination.c_str(),0700)==0,"natural GC fresh destination required");
++ const auto pc=destination/"primary",wc=destination/"witness";fs::copy(source,pc,fs::copy_options::recursive);fs::copy(source_witness,wc,fs::copy_options::recursive);
++ check(::chmod(pc.c_str(),0700)==0&&::chmod(wc.c_str(),0700)==0,"natural GC private copies");
++ {std::ofstream marker(destination/".nano-owned-checkpoint-gc-copy");marker<<"owned-offline-checkpoint-gc-v1\n";check(bool(marker),"natural GC marker");}
++ const auto pi=inventory(pc),wi=inventory(wc);check(pi==original&&wi==original_witness,"natural GC copies not physically exact");
++ const auto stopped=Json{{"format","nano-stopped-checkpoint-copy-receipt-v1"},{"scope","isolated-owned-copies"},{"allWritersStopped",true},{"allReadersStopped",true},{"stoppedAtMs",quantity(Int(std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())))},{"copies",Json::array({Json{{"role","primary"},{"path",pc.string()},{"inventorySha256",pi},{"sourcePath",source.string()},{"sourceInventorySha256",original}},Json{{"role","witness"},{"path",wc.string()},{"inventorySha256",wi},{"sourcePath",source_witness.string()},{"sourceInventorySha256",original_witness}}})}}.dump();
++ const auto stop_sha=sha256(Bytes(stopped.begin(),stopped.end()));const auto profile=capella_fork_profile(rules).dump();
++ const auto request=Json{{"format","nano-owned-stopped-checkpoint-gc-v1"},{"chainId",quantity(g.chain_id)},{"genesisHash",hex(g.block.header.hash())},{"profileSha256",hex(sha256(Bytes(profile.begin(),profile.end()))).substr(2)},
++  {"primary",{{"path",pc.string()},{"inventorySha256",pi},{"token",gc_token(primary_pin)},{"sourcePath",source.string()},{"sourceInventorySha256",original}}},{"witness",{{"path",wc.string()},{"inventorySha256",wi},{"token",gc_token(witness_pin)},{"sourcePath",source_witness.string()},{"sourceInventorySha256",original_witness}}},{"next",gc_token(primary_pin)},{"stopReceiptSha256",hex(stop_sha).substr(2)},{"limits",gc_limits(limits)},{"budget",Json::array({"0x800","0x10000000","0x8000","0x10000000","0x1000","0x8000000","0x100000","0xea60"})}}.dump();
++ Json result;
++ {auto maintenance=CheckpointBlobGcCopies::open(request,sha256(Bytes(request.begin(),request.end())),stopped,stop_sha,budget);const auto plan=maintenance->plan(rules,limits,budget);const auto description=plan.description();
++  // A fixture failing to create a natural orphan is a qualification refusal.
++  // Do not inject a digest, report NO_WORK as cleanup, or silently skip.
++  check(!description.at("deletePrimary").empty()&&!description.at("deleteWitness").empty(),"natural cold publication/pruning did not produce an orphan; natural leak gate remains open");
++  result=maintenance->collect(plan);check(result.at("noWork")==false&&result.at("allProtectedReferencesReopened")==true&&result.at("nonGcNamespacesUnchanged")==true,"natural GC did not cold-verify deletion");
++ }
++ check(inventory(source)==original&&inventory(source_witness)==original_witness,"natural GC modified original publications");
++ return {pc,wc,result,original,original_witness};
++}
+--- /dev/null
++++ b/tests/support/capella_blob_gc_adversarial.hpp
+@@ -0,0 +1,163 @@
++#pragma once
++#include "nano/checkpoint_blob_gc.hpp"
++#include <poll.h>
++#include <sys/wait.h>
++#include <csignal>
++#include <thread>
++// Adversarial tests use real, short, closed Capella checkpoint pairs. Every
++// mutation below targets a NEW synthetic source clone, never the shared fixture.
++static std::string gc_case_logical(const fs::path& path){
++ rocksdb::Options options;options.create_if_missing=false;std::unique_ptr<rocksdb::DB> db;
++ // API detection, as in the existing test helpers; no schema interpretation.
++ const auto open_ro=[]<class DB=rocksdb::DB>(const rocksdb::Options& o,const std::string& p){std::unique_ptr<DB> out;if constexpr(requires{DB::OpenForReadOnly(o,p,&out);})check(DB::OpenForReadOnly(o,p,&out).ok(),"GC test RO open");else{DB* raw=nullptr;auto result=DB::OpenForReadOnly(o,p,&raw);out.reset(raw);check(result.ok(),"GC test RO open");}return out;};
++ db=open_ro(options,path.string());rocksdb::ReadOptions read;read.verify_checksums=true;std::unique_ptr<rocksdb::Iterator> it(db->NewIterator(read));Json rows=Json::array();
++ for(it->SeekToFirst();it->Valid();it->Next())rows.push_back(Json::array({it->key().ToString(),it->value().ToString()}));check(it->status().ok(),"GC test iterator status");const auto encoded=rows.dump();return hex(sha256(Bytes(encoded.begin(),encoded.end())));
++}
++static bool gc_case_has(const fs::path& path,const std::string& key){
++ rocksdb::Options options;options.create_if_missing=false;
++ const auto ro=[]<class DB=rocksdb::DB>(const rocksdb::Options& o,const std::string& p){std::unique_ptr<DB> out;if constexpr(requires{DB::OpenForReadOnly(o,p,&out);})check(DB::OpenForReadOnly(o,p,&out).ok(),"GC boundary RO open");else{DB* raw=nullptr;auto result=DB::OpenForReadOnly(o,p,&raw);out.reset(raw);check(result.ok(),"GC boundary RO open");}return out;};
++ auto db=ro(options,path.string());std::string value;const auto result=db->Get(rocksdb::ReadOptions(),key,&value);if(result.IsNotFound())return false;check(result.ok(),"GC boundary read");return true;
++}
++static void gc_case_mutate(const fs::path& path,const std::function<void(rocksdb::DB&)>& change){rocksdb::Options options;options.create_if_missing=false;auto db=open_corruption_database(options,path.string());change(*db);}
++static std::string gc_live_key(const fs::path& path,const Genesis& g,const CapellaStoreSnapshotLimits& limits){
++ ChainStore disk(path,ChainStore::OpenMode::ReadOnly);const auto checkpoint=disk.fork_checkpoint(g.chain_id,g.block.header.hash(),limits.envelope_bytes);check(bool(checkpoint),"GC short fixture checkpoint missing");const auto outer=Json::parse(checkpoint->snapshot);const auto& durable=outer.at("checkpoint");const auto& store=durable.contains("store")?durable.at("store"):durable;const auto& rows=store.at("snapshot").at("blocks");check(!rows.empty(),"GC short fixture has no live refs");return "checkpoint-blob/v1/"+rows[0][1].get<std::string>();
++}
++struct GcAdverseCase {
++ Temp temporary;fs::path source,witness_source,primary,witness;Genesis genesis;CapellaForkBlockRules rules;CapellaStoreSnapshotLimits limits;CheckpointBlobGcBudget budget;
++ std::string stopped,request;Json request_document;Bytes stopped_sha,request_sha;
++ GcAdverseCase(const fs::path& a,const fs::path& b,const Genesis& g,const CapellaForkBlockRules& r,const CapellaStoreSnapshotLimits& l):source(fs::canonical(temporary.path)/"source"),witness_source(fs::canonical(temporary.path)/"source-witness"),primary(fs::canonical(temporary.path)/"copy"),witness(fs::canonical(temporary.path)/"copy-witness"),genesis(g),rules(r),limits(l),budget{1024,128*1024*1024,16384,128*1024*1024,1024,64*1024*1024,1024*1024,60000}{
++  temporary.path=fs::canonical(temporary.path);
++  fs::copy(a,source,fs::copy_options::recursive);fs::copy(b,witness_source,fs::copy_options::recursive);check(::chmod(source.c_str(),0700)==0&&::chmod(witness_source.c_str(),0700)==0,"GC adverse source permissions");
++ }
++ Json encoded_budget()const{return Json::array({quantity(Int(std::to_string(budget.inventory_files))),quantity(Int(std::to_string(budget.inventory_bytes))),quantity(Int(std::to_string(budget.scan_records))),quantity(Int(std::to_string(budget.scan_bytes))),quantity(Int(std::to_string(budget.delete_records))),quantity(Int(std::to_string(budget.delete_bytes))),quantity(Int(std::to_string(budget.batch_bytes))),quantity(Int(std::to_string(budget.duration_ms)))});}
++ void repin(){request=request_document.dump();request_sha=sha256(Bytes(request.begin(),request.end()));}
++ void seal(){
++  ForkCheckpointToken pp,wp;Json next;
++  const auto closed=[&](const fs::path& path,bool recovery){ForkCheckpointToken result;gc_case_mutate(path,[&](rocksdb::DB& db){std::string t,payload;check(db.Get(rocksdb::ReadOptions(),"fork-checkpoint/v1/token",&t).ok()&&db.Get(rocksdb::ReadOptions(),"fork-checkpoint/v1/payload",&payload).ok(),"GC adverse source pins missing");const auto row=Json::parse(t);result={u64(quantity(row.at("sequence"))),unhex(row.at("digest").get<std::string>())};if(recovery)next=Json::parse(payload).at("next");});return result;};pp=closed(source,false);wp=closed(witness_source,true);
++  fs::copy(source,primary,fs::copy_options::recursive);fs::copy(witness_source,witness,fs::copy_options::recursive);check(::chmod(primary.c_str(),0700)==0&&::chmod(witness.c_str(),0700)==0,"GC adverse copy permissions");{std::ofstream file(temporary/".nano-owned-checkpoint-gc-copy");file<<"owned-offline-checkpoint-gc-v1\n";check(bool(file),"GC adverse marker");}
++
++  const auto pi=checkpoint_blob_gc_copy_inventory(source,budget.inventory_files,budget.inventory_bytes),wi=checkpoint_blob_gc_copy_inventory(witness_source,budget.inventory_files,budget.inventory_bytes);
++  check(checkpoint_blob_gc_copy_inventory(primary,budget.inventory_files,budget.inventory_bytes)==pi&&checkpoint_blob_gc_copy_inventory(witness,budget.inventory_files,budget.inventory_bytes)==wi,"GC adverse copy exactness");
++  const auto time=quantity(Int(std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())));
++  stopped=Json{{"format","nano-stopped-checkpoint-copy-receipt-v1"},{"scope","isolated-owned-copies"},{"allWritersStopped",true},{"allReadersStopped",true},{"stoppedAtMs",time},{"copies",Json::array({Json{{"role","primary"},{"path",primary.string()},{"inventorySha256",pi},{"sourcePath",source.string()},{"sourceInventorySha256",pi}},Json{{"role","witness"},{"path",witness.string()},{"inventorySha256",wi},{"sourcePath",witness_source.string()},{"sourceInventorySha256",wi}}})}}.dump();stopped_sha=sha256(Bytes(stopped.begin(),stopped.end()));const auto profile=capella_fork_profile(rules).dump();
++  request_document={{"format","nano-owned-stopped-checkpoint-gc-v1"},{"chainId",quantity(genesis.chain_id)},{"genesisHash",hex(genesis.block.header.hash())},{"profileSha256",hex(sha256(Bytes(profile.begin(),profile.end()))).substr(2)},
++   {"primary",{{"path",primary.string()},{"inventorySha256",pi},{"token",gc_token(pp)},{"sourcePath",source.string()},{"sourceInventorySha256",pi}}},{"witness",{{"path",witness.string()},{"inventorySha256",wi},{"token",gc_token(wp)},{"sourcePath",witness_source.string()},{"sourceInventorySha256",wi}}},{"next",next},{"stopReceiptSha256",hex(stopped_sha).substr(2)},{"limits",gc_limits(limits)},{"budget",encoded_budget()}};repin();
++ }
++ std::unique_ptr<CheckpointBlobGcCopies> open(){return CheckpointBlobGcCopies::open(request,request_sha,stopped,stopped_sha,budget);}
++};
++static void gc_adverse_intent(const fs::path& path,const std::function<void(Json&)>& change){
++ gc_case_mutate(path,[&](rocksdb::DB& db){std::string bytes,encoded;check(db.Get(rocksdb::ReadOptions(),"fork-checkpoint/v1/payload",&bytes).ok()&&db.Get(rocksdb::ReadOptions(),"fork-checkpoint/v1/token",&encoded).ok(),"GC adverse intent read");auto intent=Json::parse(bytes);change(intent);bytes=intent.dump();auto t=Json::parse(encoded);t["digest"]=hex(sha256(Bytes(bytes.begin(),bytes.end())));rocksdb::WriteOptions write;write.sync=true;check(db.Put(write,"fork-checkpoint/v1/payload",bytes).ok()&&db.Put(write,"fork-checkpoint/v1/token",t.dump()).ok(),"GC adverse intent staging");});
++}
++static int gc_crash_child(int argc,char** argv){
++ check(argc==9,"GC crash-child exact arguments");const auto load=[](const fs::path& path){check(fs::is_regular_file(path)&&!fs::is_symlink(path)&&fs::file_size(path)<=1024*1024,"GC child bounded public input");std::ifstream stream(path,std::ios::binary);std::string bytes;char block[4096];while(stream){stream.read(block,sizeof(block));bytes.append(block,size_t(stream.gcount()));check(bytes.size()<=1024*1024,"GC child input grew");}check(!stream.bad(),"GC child input read");return bytes;};
++ const auto digest=[](const std::string& text){check(text.size()==64&&text.find_first_not_of("0123456789abcdef")==std::string::npos,"GC child canonical pin");return unhex("0x"+text);};
++ const auto request=load(argv[2]),stopped=load(argv[4]),profile=load(argv[6]);const auto pin=digest(argv[3]),stop_pin=digest(argv[5]),profile_pin=digest(argv[7]);const auto rules=load_capella_fork_profile(profile,profile_pin,1024*1024);const auto parsed=Json::parse(request);const auto budget=checkpoint_blob_gc_budget(parsed.at("budget"));const auto limits=checkpoint_blob_gc_snapshot_limits(parsed.at("limits"));
++ const auto descriptor=std::stoul(argv[8]);check(descriptor<=uint64_t(INT_MAX)&&std::to_string(descriptor)==argv[8],"GC child descriptor encoding");const int output=int(descriptor);
++ auto owned=CheckpointBlobGcCopies::open(request,pin,stopped,stop_pin,budget);const auto plan=owned->plan(rules,limits,budget);const auto described=plan.description();check(!described.at("deletePrimary").empty()&&!described.at("deleteWitness").empty(),"GC kill fixture has no candidates");const auto pk=described.at("deletePrimary")[0][0].get<std::string>(),wk=described.at("deleteWitness")[0][0].get<std::string>();const fs::path primary=parsed.at("primary").at("path").get<std::string>(),witness=parsed.at("witness").at("path").get<std::string>();
++ // The callback also runs for every preflight inventory chunk. Opening new
++ // RocksDB readers at each such callback can exhaust the parent's 30s bound.
++ // Only WAL growth/new files trigger a fresh logical check; no reader is cached.
++ const auto primary_wals=[&]{std::map<std::string,uint64_t> sizes;
++  for(const auto& entry:fs::directory_iterator(primary)){const auto name=entry.path().filename().string();if(name.size()<=4||name.substr(name.size()-4)!=".log"||name.substr(0,name.size()-4).find_first_not_of("0123456789")!=std::string::npos)continue;
++   struct stat metadata{};check(::lstat(entry.path().c_str(),&metadata)==0&&S_ISREG(metadata.st_mode)&&metadata.st_size>=0,"GC child WAL metadata");check(sizes.emplace(name,uint64_t(metadata.st_size)).second&&sizes.size()<=budget.inventory_files,"GC child WAL inventory bound");
++  }check(!sizes.empty(),"GC child active primary WAL required");return sizes;
++ };
++ auto observed_wals=primary_wals();uint64_t callbacks=0,logical_checks=0;
++ std::cerr<<Json{{"scenario","gc-crash-child-phase"},{"phase","planned-before-delete"},{"primaryWalFiles",observed_wals.size()},{"logicalChecks",logical_checks},{"productionQualified",false}}.dump()<<std::endl;
++ (void)owned->collect(plan,[&]{++callbacks;const auto current=primary_wals();bool grew=false;for(const auto& [name,size]:current){const auto old=observed_wals.find(name);if(old==observed_wals.end()||size>old->second){grew=true;break;}}observed_wals=current;if(!grew)return;
++  ++logical_checks;const bool primary_removed=!gc_case_has(primary,pk);const bool witness_retained=gc_case_has(witness,wk);
++  std::cerr<<Json{{"scenario","gc-crash-child-phase"},{"phase","wal-change-logical-check"},{"callbacks",callbacks},{"logicalChecks",logical_checks},{"primaryOrphanAbsent",primary_removed},{"witnessOrphanPresent",witness_retained},{"productionQualified",false}}.dump()<<std::endl;
++  if(primary_removed&&witness_retained){const char ready='P';check(::write(output,&ready,1)==1,"GC child phase publication");::raise(SIGSTOP);throw std::runtime_error("GC child unexpectedly resumed");}
++ });throw std::runtime_error("GC child missed between-store crash boundary");
++}
++static void qualify_capella_gc_adversarial(const fs::path& baseline_primary,const fs::path& baseline_witness,
++ const Genesis& g,const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits,const Bytes& child){
++ check(!test::isolated_capella::active,"GC adverse fixture cannot use campaign data");Json passed=Json::array();
++ const auto unchanged_refusal=[&](GcAdverseCase& c,const char* id,const char* expected,const std::function<void()>& action){
++  const auto p=gc_case_logical(c.primary),w=gc_case_logical(c.witness);bool refused=false;
++  try{action();}catch(const std::exception& error){check(std::string(error.what()).find(expected)!=std::string::npos,std::string(id)+" failed at unexpected boundary: "+error.what());refused=true;}
++  check(refused&&gc_case_logical(c.primary)==p&&gc_case_logical(c.witness)==w,std::string(id)+" admitted or changed logical contents");passed.push_back(id);
++ };
++ const auto ordinary=[&](GcAdverseCase& c){auto owned=c.open();const auto plan=owned->plan(rules,limits,c.budget);(void)owned->collect(plan);};
++ // Authenticity boundary: complete root decoders, not a free list of live hashes.
++ for(unsigned fault=0;fault<4;++fault){GcAdverseCase c(baseline_primary,baseline_witness,g,rules,limits);const auto path=fault<2?c.source:c.witness_source;const auto key=gc_live_key(c.source,g,limits);
++  gc_case_mutate(path,[&](rocksdb::DB& db){rocksdb::WriteOptions write;write.sync=true;check((fault%2?db.Put(write,key,"corrupt-live-row"):db.Delete(write,key)).ok(),"GC adverse live ref mutation");});c.seal();
++  unchanged_refusal(c,fault<2?(fault%2?"primary-corrupt-live-ref":"primary-missing-live-ref"):(fault%2?"witness-corrupt-live-ref":"witness-missing-live-ref"),fault%2?"checkpoint GC corrupt referenced blob":"Invalid Capella durable archive",[&]{ordinary(c);});
++ }
++ {GcAdverseCase c(baseline_primary,baseline_witness,g,rules,limits);gc_adverse_intent(c.witness_source,[](Json& j){const auto n=u64(quantity(j.at("next").at("sequence")));j["next"]["sequence"]=quantity(Int(std::to_string(n+2)));});c.seal();unchanged_refusal(c,"pending-sequence-divergence","checkpoint GC pending-next external binding mismatch",[&]{ordinary(c);});}
++ {GcAdverseCase c(baseline_primary,baseline_witness,g,rules,limits);gc_case_mutate(c.source,[&](rocksdb::DB& db){std::string bytes;check(db.Get(rocksdb::ReadOptions(),"fork-checkpoint/v1/token",&bytes).ok(),"GC primary token read");auto j=Json::parse(bytes);j["sequence"]=quantity(Int(std::to_string(u64(quantity(j.at("sequence")))+10)));rocksdb::WriteOptions write;write.sync=true;check(db.Put(write,"fork-checkpoint/v1/token",j.dump()).ok(),"GC divergence staging");});c.seal();unchanged_refusal(c,"primary-neither-previous-nor-next","checkpoint GC primary is neither completed nor pending previous",[&]{ordinary(c);});}
++ {GcAdverseCase c(baseline_primary,baseline_witness,g,rules,limits);c.seal();c.request_document["witness"]["token"]["digest"]="0x"+std::string(64,'a');c.repin();unchanged_refusal(c,"wrong-independent-witness-pin","checkpoint GC independently pinned primary/witness mismatch",[&]{ordinary(c);});}
++ {GcAdverseCase c(baseline_primary,baseline_witness,g,rules,limits);c.seal();c.request_document["next"]["digest"]="0x"+std::string(64,'b');c.repin();unchanged_refusal(c,"wrong-independent-pending-next-pin","checkpoint GC pending-next external binding mismatch",[&]{ordinary(c);});}
++ {GcAdverseCase c(baseline_primary,baseline_witness,g,rules,limits);c.seal();c.request_sha[0]^=1;unchanged_refusal(c,"request-hash-before-parse","checkpoint GC request pin mismatch",[&]{ordinary(c);});}
++ {GcAdverseCase c(baseline_primary,baseline_witness,g,rules,limits);gc_case_mutate(c.source,[&](rocksdb::DB& db){std::string bytes;check(db.Get(rocksdb::ReadOptions(),"meta/identity",&bytes).ok(),"GC role identity missing");auto identity=Json::parse(bytes);identity["consensus"]="nano-beacon-signing-v1";rocksdb::WriteOptions write;write.sync=true;check(db.Put(write,"meta/identity",identity.dump()).ok(),"GC role staging");});c.seal();unchanged_refusal(c,"signing-store-role-forbidden","checkpoint GC store role refused",[&]{ordinary(c);});}
++ {GcAdverseCase c(baseline_primary,baseline_witness,g,rules,limits);gc_case_mutate(c.source,[&](rocksdb::DB& db){rocksdb::WriteOptions write;write.sync=true;check(db.Put(write,"meta/schema","nano/future-unknown").ok(),"GC unknown schema staging");});c.seal();unchanged_refusal(c,"future-schema-refused","unsupported Nano database schema",[&]{ordinary(c);});}
++ {GcAdverseCase c(baseline_primary,baseline_witness,g,rules,limits);c.seal();auto stopped=Json::parse(c.stopped);stopped["allReadersStopped"]=false;c.stopped=stopped.dump();c.stopped_sha=sha256(Bytes(c.stopped.begin(),c.stopped.end()));c.request_document["stopReceiptSha256"]=hex(c.stopped_sha).substr(2);c.repin();unchanged_refusal(c,"readers-not-stopped","checkpoint GC externally pinned stopped-copy receipt required",[&]{ordinary(c);});}
++ // Resource/preflight boundary: complete scan and deletion budgets, no Delete.
++ for(unsigned fault=0;fault<3;++fault){GcAdverseCase c(baseline_primary,baseline_witness,g,rules,limits);if(fault==0)c.budget.scan_records=1;else if(fault==1)c.budget.delete_records=1;else c.budget.batch_bytes=8;c.seal();unchanged_refusal(c,fault==0?"complete-scan-budget":fault==1?"total-delete-budget":"single-batch-budget",fault==0?"checkpoint GC scan budget exhausted":fault==1?"checkpoint GC delete budget exhausted":"checkpoint GC single Delete exceeds batch budget",[&]{ordinary(c);});}
++ {GcAdverseCase c(baseline_primary,baseline_witness,g,rules,limits);c.budget.duration_ms=uint64_t(INT64_MAX);c.seal();auto owned=c.open();const auto plan=owned->plan(rules,limits,c.budget);check(!plan.description().at("deletePrimary").empty(),"large finite deadline overflowed or skipped a complete plan");passed.push_back("large-finite-duration-no-timepoint-overflow");}
++ {GcAdverseCase c(baseline_primary,baseline_witness,g,rules,limits);c.seal();auto owned=c.open();unsigned calls=0;unchanged_refusal(c,"inventory-cancellation","inventory-cancel-test",[&]{(void)checkpoint_blob_gc_copy_inventory(c.source,c.budget.inventory_files,c.budget.inventory_bytes,[&]{++calls;throw ExecutionCancelled("inventory-cancel-test");});});check(calls==1,"inventory callback not reached at first scanned entry");}
++ // Existing-only acquisition never creates a missing DB or initializes an
++ // empty existing one; the legacy default remains outside this maintenance API.
++ {Temp t;const auto absent=t/"absent-existing-db";bool refused=false;try{ChainStore missing(absent,ChainStore::OpenMode::ReadWriteExisting);}catch(const std::runtime_error&){refused=true;}check(refused&&!fs::exists(absent),"existing maintenance mode created absent DB");
++  // A successful closed read-only probe must not authorize recreation if its
++  // private synthetic database disappears before maintenance acquisition.
++  {const auto probed=t/"probed-existing-db",moved=t/"moved-probed-db";fs::copy(baseline_primary,probed,fs::copy_options::recursive);check(::chmod(probed.c_str(),0700)==0,"existing probe permissions");
++   {ChainStore probe(probed,ChainStore::OpenMode::ReadOnly);}const auto before=gc_case_logical(probed);fs::rename(probed,moved);bool vanished_refused=false;
++   try{ChainStore vanished(probed,ChainStore::OpenMode::ReadWriteExisting);}catch(const std::runtime_error&){vanished_refused=true;}
++   check(vanished_refused&&!fs::exists(probed)&&gc_case_logical(moved)==before,"existing mode recreated database after read-only probe disappearance");
++  }passed.push_back("existing-mode-never-creates-missing-db");}
++ {Temp t;const auto empty=t/"existing-empty-db";{rocksdb::Options options;options.create_if_missing=true;auto db=open_corruption_database(options,empty.string());}bool refused=false;try{ChainStore missing_schema(empty,ChainStore::OpenMode::ReadWriteExisting);}catch(const std::runtime_error& error){refused=std::string(error.what()).find("existing database has no Nano schema")!=std::string::npos;}check(refused,"existing mode initialized schema or failed at wrong boundary");gc_case_mutate(empty,[&](rocksdb::DB& db){std::string value;check(db.Get(rocksdb::ReadOptions(),"meta/schema",&value).IsNotFound(),"existing mode wrote a missing schema");});passed.push_back("existing-mode-never-initializes-missing-schema");}
++ // Physical authority boundary; exclusive RW session does not accept replacement.
++ {GcAdverseCase c(baseline_primary,baseline_witness,g,rules,limits);c.seal();fs::remove(c.primary/"CURRENT");fs::create_hard_link(c.source/"CURRENT",c.primary/"CURRENT");unchanged_refusal(c,"hardlinked-original-copy","checkpoint GC shared hardlink refused",[&]{ordinary(c);});}
++ {GcAdverseCase c(baseline_primary,baseline_witness,g,rules,limits);c.seal();fs::remove(c.primary/"CURRENT");fs::create_symlink(c.source/"CURRENT",c.primary/"CURRENT");unchanged_refusal(c,"symlinked-copy-file","checkpoint GC source links/special files/owner refused",[&]{ordinary(c);});}
++ {GcAdverseCase c(baseline_primary,baseline_witness,g,rules,limits);c.seal();auto owned=c.open();const auto plan=owned->plan(rules,limits,c.budget);const auto old=c.temporary/"renamed-held-copy";fs::rename(c.primary,old);fs::copy(c.source,c.primary,fs::copy_options::recursive);check(::chmod(c.primary.c_str(),0700)==0,"GC stale path permissions");const auto held_before=gc_case_logical(old);unchanged_refusal(c,"stale-plan-directory-replaced","checkpoint GC copy directory changed",[&]{(void)owned->collect(plan);});owned.reset();check(gc_case_logical(old)==held_before,"stale plan deleted from held replaced directory");}
++ {GcAdverseCase c(baseline_primary,baseline_witness,g,rules,limits);gc_case_mutate(c.source,[&](rocksdb::DB& db){rocksdb::WriteOptions write;write.sync=true;check(db.Put(write,"checkpoint-blob/v2/unknown-consumer","future-opaque").ok(),"GC future namespace staging");});c.seal();unchanged_refusal(c,"unknown-future-blob-namespace","checkpoint GC unknown blob namespace",[&]{ordinary(c);});}
++ {GcAdverseCase c(baseline_primary,baseline_witness,g,rules,limits);gc_case_mutate(c.source,[&](rocksdb::DB& db){rocksdb::WriteOptions write;write.sync=true;check(db.Put(write,"application/outside-gc-prefix","keep-this-application-value").ok(),"GC nonprefix key staging");});c.seal();ordinary(c);gc_case_mutate(c.primary,[&](rocksdb::DB& db){std::string v;check(db.Get(rocksdb::ReadOptions(),"application/outside-gc-prefix",&v).ok()&&v=="keep-this-application-value","GC deleted nonprefix key");});passed.push_back("successful-gc-preserves-nonprefix-values");}
++ // Genuine pending publication: produce the new child normally, retain its
++ // witness intent, and restore only the closed previous PRIMARY physical copy.
++ {GcAdverseCase c(baseline_primary,baseline_witness,g,rules,limits);const auto previous=c.temporary/"previous-primary";fs::copy(c.source,previous,fs::copy_options::recursive);ForkCheckpointToken old_pin,next_pin;
++  {Blockchain owner(c.source,g);ChainStore witness(c.witness_source);const auto before=owner.store().fork_checkpoint(g.chain_id,g.block.header.hash(),limits.envelope_bytes);check(bool(before),"pending fixture before missing");old_pin=before->token;CapellaDurableReactor reactor(owner,rules,limits,witness,{},old_pin);bool admitted=false;for(unsigned n=0;n<64&&!admitted;++n)admitted=reactor.block(child);check(admitted,"pending fixture next child failed normal admission");next_pin=reactor.current().token;check(next_pin.sequence>old_pin.sequence,"pending fixture did not advance");}
++  const auto committed=c.temporary/"committed-primary";fs::rename(c.source,committed);fs::copy(previous,c.source,fs::copy_options::recursive);check(::chmod(c.source.c_str(),0700)==0,"pending source permission");c.seal();
++  {auto owned=c.open();const auto plan=owned->plan(rules,limits,c.budget);const auto result=owned->collect(plan);check(result.at("primary")==gc_token(old_pin)&&result.at("pendingNext")==gc_token(next_pin)&&result.at("noWork")==false,"pending union GC repaired publication or removed no orphan");}
++  {ChainStore primary(c.primary,ChainStore::OpenMode::ReadOnly);check(primary.fork_checkpoint(g.chain_id,g.block.header.hash(),limits.envelope_bytes,old_pin).has_value(),"GC completed pending publication without authorization");}
++  {Blockchain owner(c.primary,g);ChainStore witness(c.witness);CapellaDurableReactor reactor(owner,rules,limits,witness,{},next_pin);check(reactor.current().token==next_pin,"pending next refs lost after GC; normal recovery failed");}
++  // The next-only child ref does not yet exist in previous PRIMARY. Missing it
++  // from WITNESS is fatal; an existing corrupt PRIMARY copy cannot be ignored.
++  std::string next_only_key;std::string next_payload;
++  {ChainStore old(c.source,ChainStore::OpenMode::ReadOnly),committed_store(committed,ChainStore::OpenMode::ReadOnly);const auto cp=committed_store.fork_checkpoint(g.chain_id,g.block.header.hash(),limits.envelope_bytes,next_pin);check(bool(cp),"pending committed manifest missing");const auto outer=Json::parse(cp->snapshot);const auto& durable=outer.at("checkpoint");const auto& store=durable.contains("store")?durable.at("store"):durable;
++   for(const auto& row:store.at("snapshot").at("blocks")){const auto id=unhex(row[1].get<std::string>());const auto n=size_t(u64(quantity(row[2])));if(!old.checkpoint_blob(g.chain_id,g.block.header.hash(),id,n)){const auto bytes=committed_store.checkpoint_blob(g.chain_id,g.block.header.hash(),id,n);check(bool(bytes),"pending next ref missing from normal publication");next_only_key="checkpoint-blob/v1/"+hex(id);next_payload=*bytes;break;}}
++  }check(!next_only_key.empty()&&!next_payload.empty(),"pending normal child did not produce a new live reference");
++  {GcAdverseCase d(c.source,c.witness_source,g,rules,limits);gc_case_mutate(d.witness_source,[&](rocksdb::DB& db){rocksdb::WriteOptions write;write.sync=true;check(db.Delete(write,next_only_key).ok(),"pending missing-next staging");});d.seal();unchanged_refusal(d,"pending-missing-next-only-witness-ref","Invalid Capella durable archive",[&]{ordinary(d);});}
++  {GcAdverseCase d(c.source,c.witness_source,g,rules,limits);gc_case_mutate(d.source,[&](rocksdb::DB& db){rocksdb::WriteOptions write;write.sync=true;check(db.Put(write,next_only_key,"corrupt-pending-row").ok(),"pending corrupt primary staging");});d.seal();unchanged_refusal(d,"pending-corrupt-existing-next-primary-ref","checkpoint GC corrupt referenced blob",[&]{ordinary(d);});}
++  passed.push_back("pending-union-preserved-no-gc-repair-then-normal-recovery");
++ }
++ // A real process death after PRIMARY's Delete is durable and before WITNESS
++ // cleanup. The fork child immediately execs a FRESH process before opening
++ // RocksDB; no inherited Env threads or mutexes are used. This is process-crash
++ // recovery on a copy, not electrical power loss.
++ {GcAdverseCase c(baseline_primary,baseline_witness,g,rules,limits);c.seal();const auto request_path=(c.temporary/"crash-request.json").string(),stop_path=(c.temporary/"crash-stop.json").string(),profile_path=(c.temporary/"crash-profile.json").string();const auto profile=capella_fork_profile(rules).dump();
++  for(const auto& row:{std::pair{request_path,c.request},std::pair{stop_path,c.stopped},std::pair{profile_path,profile}}){std::ofstream file(row.first);file<<row.second;check(bool(file),"GC child public input write");}
++  const auto binary_path=fs::canonical(executable).string(),request_pin=hex(c.request_sha).substr(2),stop_pin=hex(c.stopped_sha).substr(2),profile_pin=hex(sha256(Bytes(profile.begin(),profile.end()))).substr(2);int channel[2];check(::pipe(channel)==0,"GC crash pipe");const auto descriptor=std::to_string(channel[1]);const auto child_process=::fork();check(child_process>=0,"GC crash fork");
++  if(child_process==0){::close(channel[0]);::execl(binary_path.c_str(),binary_path.c_str(),"--gc-crash-child",request_path.c_str(),request_pin.c_str(),stop_path.c_str(),stop_pin.c_str(),profile_path.c_str(),profile_pin.c_str(),descriptor.c_str(),static_cast<char*>(nullptr));::_exit(127);}
++  ::close(channel[1]);struct Child {pid_t pid;~Child(){if(pid>0){::kill(pid,SIGKILL);while(::waitpid(pid,nullptr,0)<0&&errno==EINTR){}}}} cleanup{child_process};struct Channel {int fd;~Channel(){::close(fd);}} read_end{channel[0]};
++  pollfd event{channel[0],POLLIN,0};int polled=0;const auto ready_deadline=std::chrono::steady_clock::now()+std::chrono::seconds(30);
++  for(;;){const auto now=std::chrono::steady_clock::now();if(now>=ready_deadline)break;const auto remaining=std::chrono::duration_cast<std::chrono::milliseconds>(ready_deadline-now).count();polled=::poll(&event,1,int(std::max<int64_t>(1,remaining)));if(polled>=0||errno!=EINTR)break;}
++  if(polled==1&&!(event.revents&POLLIN)&&(event.revents&(POLLHUP|POLLERR|POLLNVAL))){int state=0;const auto ended=::waitpid(child_process,&state,WNOHANG);if(ended==child_process)cleanup.pid=-1;throw std::runtime_error("GC child exited or closed phase pipe before durable boundary; wait status="+std::to_string(ended==child_process?state:-1));}
++  check(polled==1&&(event.revents&POLLIN),"GC child did not reach durable between-stores boundary within 30s");char ready=0;check(::read(channel[0],&ready,1)==1&&ready=='P',"GC child failed before natural durable boundary");
++  int state=0;bool stopped=false;const auto stop_deadline=std::chrono::steady_clock::now()+std::chrono::seconds(2);while(std::chrono::steady_clock::now()<stop_deadline){const auto waited=::waitpid(child_process,&state,WUNTRACED|WNOHANG);if(waited==child_process){stopped=WIFSTOPPED(state);if(!stopped)cleanup.pid=-1;break;}check(waited==0||errno==EINTR,"GC stop wait failed");std::this_thread::sleep_for(std::chrono::milliseconds(5));}
++  check(stopped,"GC child did not confirm SIGSTOP boundary");check(::kill(child_process,SIGKILL)==0,"GC child SIGKILL failed");while(::waitpid(child_process,&state,0)<0){check(errno==EINTR,"GC kill wait failed");}cleanup.pid=-1;check(WIFSIGNALED(state)&&WTERMSIG(state)==SIGKILL,"GC child did not terminate by SIGKILL");
++  GcAdverseCase recovered(c.primary,c.witness,g,rules,limits);recovered.seal();auto owned=recovered.open();const auto plan=owned->plan(rules,limits,recovered.budget);check(plan.description().at("deletePrimary").empty()&&!plan.description().at("deleteWitness").empty(),"between-stores kill did not leave expected partial cleanup");const auto result=owned->collect(plan);check(result.at("allProtectedReferencesReopened")==true,"SIGKILL reopen lost live closure");passed.push_back("sigkill-after-primary-before-witness-new-plan-reopen");
++ }
++#ifdef NANO_SYNC_FAULT
++ // Reuse the existing real WAL fsync shim. Both stores retain the exact roots;
++ // never count an ambiguous Delete as complete or retry on the same handle.
++ for(const bool witness_fault:{false,true}){
++  GcAdverseCase c(baseline_primary,baseline_witness,g,rules,limits);c.seal();auto owned=c.open();const auto plan=owned->plan(rules,limits,c.budget);
++  const auto target=witness_fault?c.witness:c.primary;fs::path wal;for(const auto& entry:fs::directory_iterator(target))if(entry.path().extension()==".log"&&(wal.empty()||entry.path().filename()>wal.filename()))wal=entry.path();check(!wal.empty(),"GC fault WAL missing");
++  nano_test_arm_sync_fault(wal.c_str());bool refused=false;try{(void)owned->collect(plan);}catch(const std::runtime_error&){refused=true;}check(refused&&nano_test_sync_failures()>0,"GC fsync error was not rejected");
++  bool poisoned=false;try{(void)owned->plan(rules,limits,c.budget);}catch(const std::invalid_argument& error){poisoned=std::string(error.what()).find("incomplete")!=std::string::npos;}check(poisoned,"GC incomplete handle remained usable");owned.reset();
++  GcAdverseCase reopened(c.primary,c.witness,g,rules,limits);reopened.seal();auto fresh=reopened.open();const auto retry=fresh->plan(rules,limits,reopened.budget);(void)fresh->collect(retry);passed.push_back(witness_fault?"witness-sync-failure-close-new-plan":"primary-sync-failure-close-new-plan");
++ }
++#endif
++ std::cout<<Json{{"scenario","checkpoint-gc-adversarial-boundaries"},{"passedBoundaries",passed},{"allPreDeletionRefusalsLogicalContentsUnchanged",true},{"syncFailureMayLeaveDurablePartialDeletion",true},{"sigkillPartialProgressExplicit",true},{"physicalPowerLossQualified",false},{"fixtureOnly",true},{"localSigningProviderCalls",0},{"networkQualified",false},{"productionQualified",false}}.dump()<<std::endl;
++}
+--- /dev/null
++++ b/tests/support/capella_blob_gc_cli.hpp
+@@ -0,0 +1,60 @@
++#pragma once
++#include <fcntl.h>
++#include <unistd.h>
++#include <sys/stat.h>
++// Test-only caller. All DB handles are closed before this routine. Sources and
++// signer/witness trees stay in the synthetic fixture; only PUBLIC proofs leave
++// through stdout. The CLI is executed directly, with no shell or preload.
++static void gc_cli_save_public(const fs::path& path,std::string_view bytes){
++ int fd=::open(path.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600);check(fd>=0,"GC CLI fresh public input");
++ size_t at=0;try{while(at<bytes.size()){const auto n=::write(fd,bytes.data()+at,bytes.size()-at);if(n<0&&errno==EINTR)continue;check(n>0,"GC CLI public input write");at+=size_t(n);}const auto closed=::close(fd);fd=-1;check(closed==0,"GC CLI public input close");}catch(...){if(fd>=0)::close(fd);throw;}
++}
++static std::string gc_cli_read_public(const fs::path& path){
++ check(fs::is_regular_file(path)&&!fs::is_symlink(path)&&fs::file_size(path)<=1024*1024,"GC CLI bounded receipt");std::ifstream input(path,std::ios::binary);std::string bytes;char chunk[4096];while(input){input.read(chunk,sizeof(chunk));bytes.append(chunk,size_t(input.gcount()));check(bytes.size()<=1024*1024,"GC CLI receipt grew");}check(!input.bad(),"GC CLI receipt read");return bytes;
++}
++static std::string gc_cli_sha(std::string_view bytes){return hex(sha256(Bytes(bytes.begin(),bytes.end()))).substr(2);}
++static void gc_cli_collect_closed(const fs::path& directory,const std::string& request,const std::string& stopped,
++ const std::string& profile,const CheckpointBlobGcBudget& budget,const ForkCheckpointToken& primary_pin,
++ const ForkCheckpointToken& witness_pin,const Bytes& orphan,const std::vector<fs::path>& protected_trees){
++ const auto* configured=std::getenv("NANO_TEST_CHECKPOINT_GC_TOOL");check(configured&&*configured,"GC CLI tool target path required");const fs::path supplied(configured);const auto tool=fs::canonical(supplied);check(supplied.is_absolute()&&supplied==tool&&fs::is_regular_file(tool)&&::access(tool.c_str(),X_OK)==0,"GC CLI canonical executable target required");
++ const auto parent=directory/"gc-cli-public-inputs";check(fs::create_directory(parent)&&::chmod(parent.c_str(),0700)==0,"GC CLI fresh private input root");
++ const auto request_file=parent/"request.json",stop_file=parent/"stopped.json",profile_file=parent/"profile.json",receipt_file=parent/"receipt.json";
++ gc_cli_save_public(request_file,request);gc_cli_save_public(stop_file,stopped);gc_cli_save_public(profile_file,profile);
++ const auto parsed=Json::parse(request);const fs::path primary=parsed.at("primary").at("path").get<std::string>(),witness=parsed.at("witness").at("path").get<std::string>();
++ std::map<fs::path,std::string> retained;for(const auto& tree:protected_trees)retained.emplace(tree,checkpoint_blob_gc_copy_inventory(tree,budget.inventory_files,budget.inventory_bytes));
++ const auto unchanged_protected=[&]{for(const auto& [tree,sha]:retained)check(checkpoint_blob_gc_copy_inventory(tree,budget.inventory_files,budget.inventory_bytes)==sha,"GC CLI changed protected source/journal/witness files");};
++ const auto args=[&](const fs::path& req,const std::string& req_sha,const fs::path& stop,const std::string& stop_sha,const std::string& profile_sha,const fs::path& receipt){return std::vector<std::string>{tool.string(),"--checkpoint-blob-gc-owned-copies",req.string(),req_sha,stop.string(),stop_sha,profile_file.string(),profile_sha,receipt.string()};};
++ Json refusals=Json::array();
++ const auto refuse=[&](std::vector<std::string> command,const fs::path& receipt,const char* id,const char* expected,const fs::path& p,const fs::path& w,const std::optional<std::string>& old_receipt=std::nullopt){
++  const auto logical_primary=gc_case_logical(p),logical_witness=gc_case_logical(w);Process child(command);const auto result=child.wait(70);
++  check(result.code==1&&result.err.find(expected)!=std::string::npos&&result.out.empty()&&(old_receipt?(fs::exists(receipt)&&gc_cli_read_public(receipt)==*old_receipt):!fs::exists(receipt)),std::string("GC CLI refusal failed at wrong boundary: ")+id+" "+result.err);
++  check(gc_case_logical(p)==logical_primary&&gc_case_logical(w)==logical_witness,std::string("GC CLI refusal changed logical contents: ")+id);unchanged_protected();
++  refusals.push_back({{"id",id},{"exitCode",result.code},{"newReceiptPublished",false},{"existingReceiptBytesPreserved",old_receipt.has_value()},{"logicalCopyContentsUnchanged",true},{"expectedDiagnostic",expected}});
++ };
++ {const auto receipt=parent/"bad-argc-receipt.json";auto command=args(request_file,gc_cli_sha(request),stop_file,gc_cli_sha(stopped),gc_cli_sha(profile),receipt);command.pop_back();refuse(command,receipt,"missing-receipt-argument","Usage: compact-owned-copy",primary,witness);}
++ {const auto receipt=parent/"bad-request-pin-receipt.json";auto pin=gc_cli_sha(request);pin[0]=pin[0]=='a'?'b':'a';refuse(args(request_file,pin,stop_file,gc_cli_sha(stopped),gc_cli_sha(profile),receipt),receipt,"request-pin-mismatch","Public input SHA mismatch before parse",primary,witness);}
++ {const auto receipt=parent/"bad-profile-pin-receipt.json";auto pin=gc_cli_sha(profile);pin[0]=pin[0]=='a'?'b':'a';refuse(args(request_file,gc_cli_sha(request),stop_file,gc_cli_sha(stopped),pin,receipt),receipt,"profile-pin-mismatch","Public input SHA mismatch before parse",primary,witness);}
++ {const auto receipt=parent/"preexisting-public-receipt.json";const std::string sentinel="{\"testSentinel\":true}\n";gc_cli_save_public(receipt,sentinel);refuse(args(request_file,gc_cli_sha(request),stop_file,gc_cli_sha(stopped),gc_cli_sha(profile),receipt),receipt,"preexisting-receipt-no-overwrite","Fresh independent receipt path required",primary,witness,sentinel);}
++ // A separate physical copy is mandatory: successful RW acquisition may rotate
++ // LOG before the statistics refusal, so its old raw copy pin is not reused.
++ {const auto stats_root=directory/"gc-cli-statistics-copy";check(fs::create_directory(stats_root)&&::chmod(stats_root.c_str(),0700)==0,"GC CLI new stats root");const auto p=stats_root/"primary",w=stats_root/"witness";
++  const fs::path source_primary=parsed.at("primary").at("sourcePath").get<std::string>(),source_witness=parsed.at("witness").at("sourcePath").get<std::string>();fs::copy(source_primary,p,fs::copy_options::recursive);fs::copy(source_witness,w,fs::copy_options::recursive);check(::chmod(p.c_str(),0700)==0&&::chmod(w.c_str(),0700)==0,"GC CLI stats copy permissions");gc_cli_save_public(stats_root/".nano-owned-checkpoint-gc-copy","owned-offline-checkpoint-gc-v1\n");
++  uint64_t maximum_files=0;for(const auto& path:{p,w}){uint64_t count=0;for(const auto& row:fs::recursive_directory_iterator(path))if(row.is_regular_file())++count;maximum_files=std::max(maximum_files,count);}check(maximum_files>0&&maximum_files<budget.inventory_files,"GC CLI finite stats fixture file count");
++  // Closed-file inventory counts files; physical statistics also count entries.
++  // New EMPTY directories deliberately cross only the latter boundary.
++  for(uint64_t n=0;n<=maximum_files;++n){const auto empty=p/("stats-empty-"+std::to_string(n));check(fs::create_directory(empty)&&::chmod(empty.c_str(),0700)==0,"GC CLI empty stats directory");}
++  auto stats_request=parsed;stats_request["primary"]["path"]=p.string();stats_request["witness"]["path"]=w.string();stats_request["budget"][0]=quantity(Int(std::to_string(maximum_files)));
++  auto stats_stop=Json::parse(stopped);stats_stop["copies"][0]["path"]=p.string();stats_stop["copies"][1]["path"]=w.string();const auto stop_bytes=stats_stop.dump();stats_request["stopReceiptSha256"]=gc_cli_sha(stop_bytes);const auto request_bytes=stats_request.dump();const auto req=parent/"stats-request.json",stop=parent/"stats-stop.json",receipt=parent/"stats-refusal-receipt.json";gc_cli_save_public(req,request_bytes);gc_cli_save_public(stop,stop_bytes);
++  refuse(args(req,gc_cli_sha(request_bytes),stop,gc_cli_sha(stop_bytes),gc_cli_sha(profile),receipt),receipt,"physical-statistics-entry-budget","File statistics entry budget exceeded",p,w);
++ }
++ unchanged_protected();Process child(args(request_file,gc_cli_sha(request),stop_file,gc_cli_sha(stopped),gc_cli_sha(profile),receipt_file));const auto result=child.wait(70);check(result.code==0&&result.err.empty(),"GC CLI positive failed: "+result.err);const auto terminal=Json::parse(result.out);
++ const auto receipt_bytes=gc_cli_read_public(receipt_file);const auto report=Json::parse(receipt_bytes);check(terminal.at("completed")==true&&terminal.at("receiptSha256")==gc_cli_sha(receipt_bytes)&&terminal.at("productionQualified")==false,"GC CLI terminal/receipt digest mismatch");
++ struct stat metadata{};check(::lstat(receipt_file.c_str(),&metadata)==0&&S_ISREG(metadata.st_mode)&&metadata.st_uid==::geteuid()&&(metadata.st_mode&0777)==0600&&metadata.st_nlink==1,"GC CLI receipt mode/owner/link invalid");
++ check(report.at("format")=="nano-owned-checkpoint-gc-maintenance-receipt-v1"&&report.at("requestSha256")==gc_cli_sha(request)&&report.at("stopReceiptSha256")==gc_cli_sha(stopped)&&report.at("profileSha256")==gc_cli_sha(profile)&&report.at("requiresSuccessfulTerminalExit")==true&&report.at("receiptPersistedSeparately")==true&&report.at("atomicExclusiveLinkPublication")==true,"GC CLI public input/receipt binding mismatch");
++ const auto& plan=report.at("plan");const auto& collected=report.at("result");check(plan.at("primary")==gc_token(primary_pin)&&plan.at("witness")==gc_token(witness_pin)&&plan.at("next")==gc_token(primary_pin)&&plan.at("deletePrimary").size()==1&&plan.at("deleteWitness").size()==1&&plan.at("deletePrimary")[0][1]==hex(orphan)&&plan.at("deleteWitness")[0][1]==hex(orphan),"GC CLI did not isolate actual staged orphan");
++ check(collected.at("noWork")==false&&collected.at("stores").size()==2&&collected.at("stores")[0].at("deletedRecords")==1&&collected.at("stores")[1].at("deletedRecords")==1&&collected.at("allProtectedReferencesReopened")==true&&collected.at("nonGcNamespacesUnchanged")==true&&collected.at("originalSourceInventoriesUnchanged")==true&&collected.at("primary")==gc_token(primary_pin)&&collected.at("witness")==gc_token(witness_pin),"GC CLI deletion/reopen result mismatch");
++ for(const auto& row:fs::directory_iterator(parent))check(row.path().filename().string().find(".gc-staged-")==std::string::npos,"GC CLI left temporary receipt link");unchanged_protected();
++ // The root collector can retain these exact PUBLIC bytes and their hash before
++ // Temp removes the synthetic fixture. No DB, key, ledger or env is exported.
++ std::cout<<Json{{"scenario","checkpoint-gc-cli-closed-staged"},{"cliExitCode",result.code},{"actualCliCompleted",true},{"deletedPrimaryRecords",1},{"deletedWitnessRecords",1},{"noWork",false},{"refusals",refusals},{"receiptBytes",receipt_bytes},{"receiptSha256",gc_cli_sha(receipt_bytes)},{"receiptMode",0600},{"receiptLinks",metadata.st_nlink},{"sourcesAndSignerWitnessBytesUnchanged",true},{"syntheticOnly",true},{"naturalPruningReplay",false},{"privateFixtureExported",false},{"runtimeDutiesResumed",false},{"productionQualified",false}}.dump()<<std::endl;
++}
+--- a/tests/test_capella_transition.cpp
++++ b/tests/test_capella_transition.cpp
+@@ -63,6 +63,7 @@
+ }
+ static std::string executable;
+ static bool sync_scenario=false;
++static bool checkpoint_gc_natural=false;
+ static bool slashing_reorg=false;
+ static bool slashing_multi=false;
+ static bool slashing_sync=false;
+@@ -165,6 +166,7 @@
+ #include "support/capella_exit_lifecycle_sync.hpp"
+ #include "support/capella_slashing_sync.hpp"
+ #include "support/capella_pruning_sync.hpp"
++#include "support/capella_blob_gc.hpp"
+ #include "support/capella_deposit_reorg.hpp"
+ static void local_finality_loop(const CapellaForkStore& initial,const CapellaForkBlockRules& rules,const Block& genesis,const State& genesis_state){
+  if(local_sync){CapellaSyncMessage golden{};golden.slot=0x0807060504030201ULL;golden.validator_index=0x1817161514131211ULL;golden.beacon_block_root.fill(0xaa);golden.signature.fill(0xbb);const auto expected=unhex("0102030405060708"+std::string(64,'a')+"1112131415161718"+std::string(192,'b'));check(encode_capella_sync_message(golden)==expected,"sync SSZ field ordering/endian mismatch");const auto decoded=decode_capella_sync_message(expected);check(decoded&&decoded->slot==golden.slot&&decoded->validator_index==golden.validator_index,"sync SSZ golden decode mismatch");}
+@@ -176,15 +178,17 @@
+  uint64_t restored_from_epoch=0;bool physically_restored=false;
+  std::array<std::unique_ptr<ChainStore>,2> lifecycle_witnesses;
+  std::array<std::unique_ptr<ChainStore>,2> disks;std::array<std::unique_ptr<Blockchain>,2> owners;std::array<std::unique_ptr<CapellaDurableReactor>,2> nodes;
+- for(size_t i=0;i<2;++i){if(owner_mode){owners[i]=std::make_unique<Blockchain>(node_locations[i],owner_genesis);bool blocked=false;try{owners[i]->tip();}catch(const std::runtime_error&){blocked=true;}check(blocked,"unattached Capella owner readable");if(exit_lifecycle_sync||slashing_sync||historical_pruning_restore)lifecycle_witnesses[i]=std::make_unique<ChainStore>(directory/("exit-witness-"+std::to_string(i)));nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,initial,std::function<void()>{},lifecycle_witnesses[i].get());continue;}disks[i]=std::make_unique<ChainStore>(node_locations[i]);disks[i]->bind_chain(t.chain_id,genesis.header.hash(),"capella-local-loop");disks[i]->commit(genesis,genesis_state,{});nodes[i]=std::make_unique<CapellaDurableReactor>(*disks[i],t.chain_id,genesis.header.hash(),rules,limits,initial);}
++ for(size_t i=0;i<2;++i){if(owner_mode){owners[i]=std::make_unique<Blockchain>(node_locations[i],owner_genesis);bool blocked=false;try{owners[i]->tip();}catch(const std::runtime_error&){blocked=true;}check(blocked,"unattached Capella owner readable");if(exit_lifecycle_sync||slashing_sync||historical_pruning_restore||checkpoint_gc_natural)lifecycle_witnesses[i]=std::make_unique<ChainStore>(directory/("exit-witness-"+std::to_string(i)));nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,initial,std::function<void()>{},lifecycle_witnesses[i].get());continue;}disks[i]=std::make_unique<ChainStore>(node_locations[i]);disks[i]->bind_chain(t.chain_id,genesis.header.hash(),"capella-local-loop");disks[i]->commit(genesis,genesis_state,{});nodes[i]=std::make_unique<CapellaDurableReactor>(*disks[i],t.chain_id,genesis.header.hash(),rules,limits,initial);}
++ if(checkpoint_gc_natural){check(!test::isolated_capella::active,"natural GC synthetic fixture only");for(auto& node:nodes)check(node->migrate_reference_checkpoint({2,limits.envelope_bytes}),"natural GC initial cold migration refused");}
+  if(pruning_automatic)for(auto& node:nodes)node->set_automatic_pruning(true);
+  if(historical_state_pruning)for(auto& node:nodes)node->set_historical_state_pruning(true);
+  if(queued_bls_changes){SignedCapellaBlsChange change;Key withdrawal_key(1001);change.validator_index=1;copy_to(change.from_bls_pubkey,withdrawal_key.public_key);change.to_execution_address[19]=43;copy_to(change.signature,withdrawal_key.sign(consensus_signing_root(capella_bls_change_root(change),consensus_domain({10,0,0,0},t.genesis_version,genesis_root))));for(auto& node:nodes)check(node->bls_change_ssz(encode_capella_bls_change(change)),"owner queue admission rejected");}
+  if(pruning_bls){SignedCapellaBlsChange change;Key key(1001);change.validator_index=1;copy_to(change.from_bls_pubkey,key.public_key);change.to_execution_address[19]=43;copy_to(change.signature,key.sign(consensus_signing_root(capella_bls_change_root(change),consensus_domain({10,0,0,0},t.genesis_version,genesis_root))));check(nodes[1]->bls_change_ssz(encode_capella_bls_change(change)),"pruning BLS admission failed");}
+  std::map<uint64_t,std::unique_ptr<ChainStore>> key_disks,key_witnesses;std::map<uint64_t,std::unique_ptr<BeaconSigningJournal>> journals;
+- auto journal=[&](uint64_t index)->BeaconSigningJournal&{if(!journals.contains(index)){key_disks[index]=std::make_unique<ChainStore>(key_location/("key-"+std::to_string(index)));if(historical_pruning_restore)key_witnesses[index]=std::make_unique<ChainStore>(directory/("key-witness-"+std::to_string(index)));journals[index]=std::make_unique<BeaconSigningJournal>(*key_disks[index],t.chain_id,genesis.header.hash(),genesis_root,Key(index).public_key,slots,std::nullopt,key_witnesses.contains(index)?key_witnesses.at(index).get():nullptr);}return *journals.at(index);};
++ auto journal=[&](uint64_t index)->BeaconSigningJournal&{if(!journals.contains(index)){key_disks[index]=std::make_unique<ChainStore>(key_location/("key-"+std::to_string(index)));if(historical_pruning_restore||checkpoint_gc_natural)key_witnesses[index]=std::make_unique<ChainStore>(directory/("key-witness-"+std::to_string(index)));journals[index]=std::make_unique<BeaconSigningJournal>(*key_disks[index],t.chain_id,genesis.header.hash(),genesis_root,Key(index).public_key,slots,std::nullopt,key_witnesses.contains(index)?key_witnesses.at(index).get():nullptr);}return *journals.at(index);};
+  const auto sender_key=bytes(Int(777),32);Transaction tx;tx.type=2;tx.to="0x0000000000000000000000000000000000001234";tx.gas=100000;tx.max_fee=2000000000;tx.priority_fee=100000000;const auto sender=SignedTransaction::sign(tx,sender_key).sender();
+- size_t blocks=0,votes=0,restarts=0,reopened_journals=0;uint64_t previous_finalized=0;const uint64_t end=((exit_lifecycle_sync||slashing_sync)?10:pruning_automatic?9:5)*slots+1;size_t automatic_moves=0,maximum_records=0;auto last_anchor=initial.timed.view.anchor;
++ bool natural_gc_done=false;uint64_t natural_gc_slot=0;ForkCheckpointToken natural_gc_pin{};std::optional<NaturalGcCopies> natural_gc_copies;std::optional<fs::path> natural_gc_source;fs::path natural_gc_witness_source;
++ size_t blocks=0,votes=0,restarts=0,reopened_journals=0;uint64_t previous_finalized=0;const uint64_t end=checkpoint_gc_natural?7*slots:((exit_lifecycle_sync||slashing_sync)?10:pruning_automatic?9:5)*slots+1;size_t automatic_moves=0,maximum_records=0;auto last_anchor=initial.timed.view.anchor;
+  auto equal=[&]{const auto a=nodes[0]->current(),b=nodes[1]->current();check((pruning_bls||exit_pending_pruning||a.token==b.token)&&capella_store_snapshot(*a.state,rules,limits)==capella_store_snapshot(*b.state,rules,limits)&&nodes[0]->signed_votes()==nodes[1]->signed_votes(),"local loop nodes diverged");const auto head_pin=capella_fork_head(*a.state,rules);const auto& head=*head_pin;for(size_t i=0;i<2;++i){const auto& disk=owner_mode?owners[i]->store():*disks[i];check(disk.latest()->header.hash()==head.execution_block.header.hash()&&disk.state_at(head.execution_block.header.number)->root()==head.execution_state.root(),"local loop disk/state diverged");
+    if(owner_mode){check(owners[i]->tip().header.hash()==head.execution_block.header.hash()&&owners[i]->state().root()==head.execution_state.root()&&owners[i]->pending_count()==0,"Capella owner cache/pool diverged");const auto finalized=a.state->blocks.at(a.state->timed.view.finalized.root).lease()->execution_block;check(owners[i]->finalized_block()->header.hash()==finalized.header.hash(),"Capella finalized cache mismatch");Rpc rpc(*owners[i]);auto call=[&](const char* method,const Json& params){const auto response=rpc.handle(Json{{"jsonrpc","2.0"},{"id",1},{"method",method},{"params",params}});check(!response.contains("error"),"Capella owner RPC error");return response.at("result");};check(call("eth_getBlockByNumber",Json::array({"latest",false})).at("hash")==hex(head.execution_block.header.hash()),"latest RPC mismatch");check(call("eth_getBlockByNumber",Json::array({"finalized",false})).at("hash")==hex(finalized.header.hash()),"finalized RPC mismatch");check(call("eth_getTransactionCount",Json::array({sender,"latest"}))==quantity(head.execution_state.get(sender).nonce),"nonce RPC mismatch");}
+   }};
+@@ -412,6 +416,28 @@
+   if(slashing_multi)verify_multi_slashing();
+   if(slashing_retirement&&!slashing_multi){for(auto& node:nodes){const auto state=node->current();const auto finalized_pin=state.state->blocks.at(state.state->timed.view.finalized.root).lease();const auto& finalized=*finalized_pin;const auto context=capella_fork_block_context(finalized.state,finalized.header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state);const bool retired=context.registry.validators.at(0).slashed;check(node->signed_slashings().size()==size_t(!retired),"slashing proof retired before finality or retained afterward");if(retired){saw_retired_proof=true;retirement_epoch=state.state->timed.view.finalized.epoch;const auto token=state.token;check(node->slashing(retirement_proof->second,retirement_proof->first)&&node->current().token==token&&node->signed_slashings().empty(),"finalized proof replay regrew archive");}else saw_pending_proof=true;}}
+   if(pruning_automatic){const auto current=nodes[0]->current();maximum_records=std::max(maximum_records,current.state->blocks.size());if(current.state->timed.view.anchor!=last_anchor){++automatic_moves;last_anchor=current.state->timed.view.anchor;const auto id=hex(Bytes(last_anchor.begin(),last_anchor.end()));for(auto& node:nodes){const auto header=node->beacon_read("/eth/v1/beacon/headers/"+id),full=node->beacon_read("/eth/v2/beacon/blocks/"+id);check(header.status==200&&full.status==200&&header.body.at("finalized")==true&&full.body.at("finalized")==true,"pruned signed anchor unavailable to Beacon API");}}check(nodes[0]->network_identity()==nodes[1]->network_identity(),"automatic pruning changed network identity");}
++  if(checkpoint_gc_natural&&!natural_gc_done&&automatic_moves>=2){
++   const auto saved=nodes[0]->current();const auto witness_path=fs::canonical(directory.path)/"exit-witness-0";
++   const auto recovery=lifecycle_witnesses[0]->fork_checkpoint(t.chain_id,genesis.header.hash(),8*limits.envelope_bytes+2048);check(bool(recovery),"natural GC witness pin missing");
++   const auto before_state=capella_store_snapshot(*saved.state,rules,limits);const auto before_identity=nodes[0]->network_identity();
++   std::map<uint64_t,ForkCheckpointToken> key_pins,witness_pins;
++   for(const auto& [index,value]:journals){key_pins[index]=value->commitment();const auto w=key_witnesses.at(index)->fork_checkpoint(t.chain_id,genesis.header.hash(),limits.envelope_bytes);check(bool(w),"natural GC key witness missing");witness_pins[index]=w->token;}
++   // Destroy source DB owners and close providers; old decoded immutable values
++   // may remain on this stack but cannot fetch from a destroyed backing store.
++   nodes[0].reset();owners[0].reset();lifecycle_witnesses[0].reset();journals.clear();key_disks.clear();key_witnesses.clear();
++   std::map<uint64_t,std::map<std::string,std::string>> key_bytes,witness_bytes;
++   for(const auto& [index,_]:key_pins){key_bytes[index]=hashes(key_location/("key-"+std::to_string(index)));witness_bytes[index]=hashes(directory/("key-witness-"+std::to_string(index)));}
++   natural_gc_source=fs::canonical(node_locations[0]);natural_gc_witness_source=witness_path;
++   natural_gc_copies=collect_naturally_pruned_capella_copy(*natural_gc_source,witness_path,directory/"natural-gc-maintained",owner_genesis,rules,limits,saved.token,recovery->token);
++   for(const auto& [index,pin]:key_pins){check(hashes(key_location/("key-"+std::to_string(index)))==key_bytes.at(index)&&hashes(directory/("key-witness-"+std::to_string(index)))==witness_bytes.at(index),"natural GC touched signer/witness files");
++    key_disks[index]=std::make_unique<ChainStore>(key_location/("key-"+std::to_string(index)));key_witnesses[index]=std::make_unique<ChainStore>(directory/("key-witness-"+std::to_string(index)));
++    check(key_witnesses[index]->fork_checkpoint(t.chain_id,genesis.header.hash(),limits.envelope_bytes,witness_pins.at(index)).has_value(),"natural GC key witness commitment changed");journals[index]=std::make_unique<BeaconSigningJournal>(*key_disks[index],t.chain_id,genesis.header.hash(),genesis_root,Key(index).public_key,slots,pin,key_witnesses[index].get());
++   }
++   node_locations[0]=natural_gc_copies->primary;owners[0]=std::make_unique<Blockchain>(node_locations[0],owner_genesis);lifecycle_witnesses[0]=std::make_unique<ChainStore>(natural_gc_copies->witness);nodes[0]=std::make_unique<CapellaDurableReactor>(*owners[0],rules,limits,*lifecycle_witnesses[0],std::function<void()>{},saved.token);nodes[0]->set_automatic_pruning(true);
++   check(nodes[0]->current().token==saved.token&&capella_store_snapshot(*nodes[0]->current().state,rules,limits)==before_state&&nodes[0]->network_identity()==before_identity,"natural GC restart changed roots/clock/profile/finality");
++   natural_gc_pin=saved.token;natural_gc_slot=slot;natural_gc_done=true;equal();
++   std::cout<<Json{{"scenario","gc-natural-collection-intermediate"},{"gcSlot",natural_gc_slot},{"anchorMovesBeforeGc",automatic_moves},{"collection",natural_gc_copies->result},{"sameCheckpointColdReopened",true},{"postGcOrdinaryBlocksRequired",2*slots},{"followingPublicationColdReopened",false},{"injectedBlobCount",0},{"terminalQualification",false},{"productionQualified",false}}.dump()<<std::endl;
++  }
+   const auto finalized=nodes[0]->current().state->timed.view.finalized.epoch;check(finalized>=previous_finalized,"local loop finality regressed");previous_finalized=finalized;
+   if(slot%slots==0||slot==end){equal();std::cout<<Json{{"progressSlot",slot},{"finalizedEpoch",finalized},{"signedVotes",votes}}.dump()<<std::endl;}
+   if(historical_pruning_restore&&slot==4*slots){
+@@ -442,10 +468,19 @@
+    physically_restored=true;equal();
+   }
+   if(slot==3*slots||(exit_retirement&&slot==slots+1)){
+-   for(size_t i=0;i<2;++i){const auto saved=nodes[i]->current().token;nodes[i].reset();if(owner_mode){bool blocked=false;try{owners[i]->tip();}catch(const std::runtime_error&){blocked=true;}check(blocked,"detached Capella owner remained readable");owners[i].reset();owners[i]=std::make_unique<Blockchain>(node_locations[i],owner_genesis);if(exit_lifecycle_sync||slashing_sync||historical_pruning_restore)nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,*lifecycle_witnesses[i]);else nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,saved);}else{disks[i].reset();disks[i]=std::make_unique<ChainStore>(node_locations[i]);nodes[i]=std::make_unique<CapellaDurableReactor>(*disks[i],t.chain_id,genesis.header.hash(),rules,limits,saved);}if(pruning_automatic)nodes[i]->set_automatic_pruning(true);if(historical_state_pruning)nodes[i]->set_historical_state_pruning(true);++restarts;}
++   for(size_t i=0;i<2;++i){const auto saved=nodes[i]->current().token;nodes[i].reset();if(owner_mode){bool blocked=false;try{owners[i]->tip();}catch(const std::runtime_error&){blocked=true;}check(blocked,"detached Capella owner remained readable");owners[i].reset();owners[i]=std::make_unique<Blockchain>(node_locations[i],owner_genesis);if(exit_lifecycle_sync||slashing_sync||historical_pruning_restore||checkpoint_gc_natural)nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,*lifecycle_witnesses[i]);else nodes[i]=std::make_unique<CapellaDurableReactor>(*owners[i],rules,limits,saved);}else{disks[i].reset();disks[i]=std::make_unique<ChainStore>(node_locations[i]);nodes[i]=std::make_unique<CapellaDurableReactor>(*disks[i],t.chain_id,genesis.header.hash(),rules,limits,saved);}if(pruning_automatic)nodes[i]->set_automatic_pruning(true);if(historical_state_pruning)nodes[i]->set_historical_state_pruning(true);++restarts;}
+    reopened_journals=journals.size();for(auto& [index,value]:journals){const auto saved=value->commitment();value.reset();key_disks[index].reset();key_disks[index]=std::make_unique<ChainStore>(key_location/("key-"+std::to_string(index)));value=std::make_unique<BeaconSigningJournal>(*key_disks[index],t.chain_id,genesis.header.hash(),genesis_root,Key(index).public_key,slots,saved,key_witnesses.contains(index)?key_witnesses.at(index).get():nullptr);}
+    equal();verify_exit_archive();
+   }
++ }
++ if(checkpoint_gc_natural){
++  check(natural_gc_done&&natural_gc_copies&&natural_gc_source&&end>natural_gc_slot&&end-natural_gc_slot>=2*slots&&nodes[0]->current().token.sequence>natural_gc_pin.sequence,"natural GC not followed by ordinary block publication");
++  const auto before=nodes[0]->current();const auto before_flat=capella_store_snapshot(*before.state,rules,limits);
++  const auto witness=lifecycle_witnesses[0]->fork_checkpoint(t.chain_id,genesis.header.hash(),8*limits.envelope_bytes+2048);check(bool(witness),"natural GC post-publication witness missing");
++  nodes[0].reset();owners[0].reset();lifecycle_witnesses[0].reset();owners[0]=std::make_unique<Blockchain>(node_locations[0],owner_genesis);lifecycle_witnesses[0]=std::make_unique<ChainStore>(natural_gc_copies->witness);nodes[0]=std::make_unique<CapellaDurableReactor>(*owners[0],rules,limits,*lifecycle_witnesses[0],std::function<void()>{},before.token);
++  check(capella_store_snapshot(*nodes[0]->current().state,rules,limits)==before_flat&&lifecycle_witnesses[0]->fork_checkpoint(t.chain_id,genesis.header.hash(),8*limits.envelope_bytes+2048,witness->token).has_value(),"natural GC next publication did not cold-reopen");equal();
++  check(checkpoint_blob_gc_copy_inventory(*natural_gc_source,2048,256*1024*1024)==natural_gc_copies->original_inventory&&checkpoint_blob_gc_copy_inventory(natural_gc_witness_source,2048,256*1024*1024)==natural_gc_copies->witness_inventory,"natural GC original publications changed after resumed synthetic production");
++  std::cout<<Json{{"scenario","gc-natural-cold-pruning-reopen-next-publication"},{"anchorMovesBeforeGc",2},{"naturalPublicationPruningOrphansRequired",true},{"injectedBlobCount",0},{"collection",natural_gc_copies->result},{"sameCheckpointColdReopened",true},{"nextBlocksNormallyProducedAndAdmitted",true},{"followingPublicationColdReopened",true},{"protectedSignerWitnessBytesUnchangedDuringGc",true},{"syntheticConsensusOnly",true},{"networkQualified",false},{"runtimeDutiesResumed",false},{"productionQualified",false}}.dump()<<std::endl;
+  }
+  CapellaSignedVotes pruning_proofs;
+  if(pruning_slashing){add_pruning_proof();pruning_proofs=nodes[0]->signed_slashings();check(pruning_proofs.size()==1&&nodes[1]->signed_slashings()==pruning_proofs,"pruning slashing archive differs");}
+@@ -1760,6 +1795,11 @@
+     auto all_cold=[](const auto& store){return std::all_of(store.blocks.begin(),store.blocks.end(),[](const auto& item){return item.second.cold_reference().has_value();});};check(all_cold(*reactor->current().state),"published migration retained hot records");
+     const auto primary=owner->store().fork_checkpoint(r.chain_id,genesis.header.hash(),crash_limits.envelope_bytes,migrated);check(primary&&Json::parse(primary->snapshot).at("format")=="nano-capella-cold-checkpoint-v1","cold primary manifest missing");const auto intent=witness->fork_checkpoint(r.chain_id,genesis.header.hash(),8*crash_limits.envelope_bytes+2048);check(intent&&Json::parse(intent->snapshot).at("snapshot")==primary->snapshot,"cold witness differs");
+     check(!reactor->migrate_reference_checkpoint(options)&&!reactor->migrate_fragment_checkpoint()&&reactor->current().token==migrated,"cold migration not idempotent or downgraded");
++    if(std::getenv("NANO_TEST_CHECKPOINT_BLOB_GC")){
++     reactor.reset();owner.reset();backup_owner.reset();witness.reset();
++     qualify_capella_blob_gc_next_publication(directory.path,g,rules,crash_limits,flat_before,wire,key.public_key,identity->genesis_root,slots);
++     check(journal.commitment()==guard,"GC next-publication test changed the original signer guard");return;
++    }
+     reactor.reset();owner.reset();reactor=std::make_unique<CapellaDurableReactor>(*backup_owner,rules,crash_limits,*witness,std::function<void()>{},migrated);
+     check(reactor->current().token==migrated&&all_cold(*reactor->current().state)&&capella_store_snapshot(*reactor->current().state,rules,crash_limits)==flat_before&&journal.commitment()==guard,"cold witness previous-primary recovery differs");
+     size_t attempts=0;
+@@ -2989,6 +3029,7 @@
+ }
+ #include "support/capella_exit_owner.hpp"
+ int main(int argc,char** argv){try{executable=argv[0];
++if(argc>1&&std::string(argv[1])=="--gc-crash-child")return gc_crash_child(argc,argv);
+ if(argc==2&&std::string(argv[1])=="--runtime-catalog-preflight"){runtime_catalog_preflight=true;configured_runtime=true;scenario(false);return 0;}
+ if(argc==2&&(std::string(argv[1])=="--atomic-proposal"||std::string(argv[1])=="--proposal-gap")){atomic_proposal=std::string(argv[1])=="--atomic-proposal";proposal_gap=!atomic_proposal;prepared_block=true;scenario(false);return 0;}
+ if(argc==2&&std::string(argv[1])=="--capacity-pressure"){capacity_pressure=true;prepared_block=true;scenario(false);return 0;}
+@@ -3000,6 +3041,7 @@
+ if(argc==2&&std::string(argv[1])=="--signer-health"){signer_health=true;scenario(false);return 0;}
+ if(argc==2&&std::string(argv[1])=="--duty-timing"){duty_timing=true;scenario(false);return 0;}
+ if(argc==2&&std::string(argv[1])=="--clock-diagnostics"){clock_diagnostics=true;scenario(false);return 0;}
++if(argc==2&&std::string(argv[1])=="--blob-gc-natural"){checkpoint_gc_natural=true;pruning_automatic=true;pruning_native=true;owner_mode=true;local_finality=100;scenario(false);return 0;}
+ if(argc==2&&std::string(argv[1])=="--unknown-finality-slashing"){slashing_unknown_finality=true;slashing_new_validator=true;deposit_activation=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}
+ if(argc==2&&std::string(argv[1])=="--new-validator-slashing"){slashing_new_validator=true;deposit_activation=true;deposit_consumption=true;pruning_native=true;pruning_primitive=true;owner_mode=true;local_finality=100;scenario(false);return 0;}
+ if(argc==2&&std::string(argv[1])=="--slashing-multi"){slashing_multi=true;slashing_retirement=true;pruning_automatic=true;pruning_native=true;owner_mode=true;local_finality=100;scenario(false);return 0;}
+--- a/tools/storage-maintenance/README.md
++++ b/tools/storage-maintenance/README.md
+@@ -15,3 +15,20 @@
+ ## Portabilité et témoins
+ 
+ Les ouvertures détectent l’API RocksDB effectivement installée (`DB**` ou `unique_ptr`) pour les environnements Mac et Linux. Les témoins doivent être des fichiers réguliers, non symboliques, au plus 96 octets ; leur contenu doit correspondre exactement au texte prescrit, avec un saut de ligne final facultatif. Utiliser un chemin canonique : sur macOS `/tmp` est un alias symbolique vers `/private/tmp`, refusé par le garde-fou. Ces protections restent des garde-fous d’usage sur copie, pas une preuve cryptographique de propriété ni une autorisation de maintenance en place.
++
++
++## Candidate GC Capella sur copies arrêtées — non qualifiée
++
++Le mode proposé `nano-storage-maintenance --checkpoint-blob-gc-owned-copies REQUEST.json REQUEST-SHA STOP-RECEIPT.json STOP-SHA PROFILE.json PROFILE-SHA RECEIPT.json` conserve le mode de compaction précédent. Il exige des SHA-256 externes exacts, des sources arrêtées et des copies physiques privées distinctes, deux engagements principaux/témoins séparés, et le next du témoin. Les budgets sont des quantités hex canoniques positives dans la requête ; ils ne limitent pas le nombre de validateurs.
++
++La closure est issue du décodeur durable Capella complet, sans Reactor ni signer. Seuls des `checkpoint-blob/v1/` non référencés par les racines validées peuvent être supprimés. Un état pending protège l’union previous/next et ne déclenche aucune réparation. Chaque Delete est synchrone, WAL conservé ; une coupure entre bases ne prétend jamais à une transaction cross-DB. Tout doute de format, paire, hash, longueur, rôle, provenance, limite ou mutation refuse l’opération. Bellatrix et les futurs formats restent refusés dans cette candidate Capella.
++
++Après fermeture/réouverture froide, les refs vivantes, tokens, snapshots et namespaces non-GC doivent être exacts. Les journaux de signataires et leurs témoins sont toujours exclus. Les deux sources originales sont hachées avant/après sans ouvrir leurs DB ; la collecte ne doit toucher que les copies. Un plan n’est pas une capability JSON libre : il est construit et recontrôlé dans la session qui possède les deux handles exclusifs.
++
++Le reçu final est publié hors des quatre arbres via fichier exclusif0600, fsync du contenu, publication par lien atomique sans remplacement, suppression du lien temporaire et fsync du parent. Il requiert aussi un terminal à0 ; un reçu laissé lors d’un refus de fsync ne qualifie pas la copie. L’autorité des reçus d’arrêt/copie épinglés relève de l’opérateur : elle ne prouve pas qu’un acteur privilégié ne peut mentir ou accéder au filesystem. Le marker seul n’est jamais suffisant.
++
++Cette copie de sources ajoute un contrôle staged séparé et un scénario naturel de publications cold puis pruning du graphe. Le scénario naturel n’injecte aucun digest et doit refuser si aucun vrai orphelin n’est produit. Aucun de ces cas n’est encore exécuté ; les 11 cas du design initial restent design-only. Ce lot n’élague ni les blobs EIP-4844, ni les archives signées, ni l’ensemble de l’état EVM et n’active aucun fork ou background GC.
++
++La seconde proposition ouvre chaque DB avec `ReadWriteExisting` : création de répertoire/base et initialisation de schéma restent interdites, sans transition RO puis RW créatrice. Le CLI transmet une deadline totale par temps écoulé aux inventaires, plans et collecte ; ses statistiques physiques bornées sont calculées après la validation des copies. Une limite de durée ne rend pas une E/S noyau bloquée interruptible ; le contrôleur doit garder un timeout externe.
++
++Les tests adverses écrits ciblent les closures absentes/corrompues, pins/pending, formats/rôles, liens, plan remplacé, limites/annulation, namespace hors-GC, refus de création, erreurs de fsync et un SIGKILL entre les deux bases. Le processus de crash est exécuté à neuf avant toute ouverture RocksDB ; le parent ne poursuit qu'après preuve de terminaison. Aucune de ces nouvelles frontières n'a été exécutée dans cette proposition. Le scénario naturel reste distinct et n'injecte aucun orphelin.
+--- a/tools/storage-maintenance/compact-owned-copy.cpp
++++ b/tools/storage-maintenance/compact-owned-copy.cpp
+@@ -1,5 +1,6 @@
+ // Qualification helper: only an explicitly marked, offline owned chain copy.
+ #include <rocksdb/db.h>
++#include "nano/checkpoint_blob_gc.hpp"
+ #include "rocksdb-owned-copy.hpp"
+ #include <rocksdb/table.h>
+ #include <rocksdb/version.h>
+@@ -12,13 +13,77 @@
+ #include <limits>
+ #include <cstdarg>
+ #include <sys/stat.h>
++#include <fcntl.h>
++#include <unistd.h>
++#include <cerrno>
++#include <chrono>
++#include <functional>
+ using Json=nlohmann::json;namespace fs=std::filesystem;
+ class SilentLogger final:public rocksdb::Logger{public:void Logv(const char*,va_list)override{}};
+ void check(const rocksdb::Status& s){if(!s.ok())throw std::runtime_error(s.ToString());}
+ void add(uint64_t& a,uint64_t b){if(b>std::numeric_limits<uint64_t>::max()-a)throw std::overflow_error("accounting overflow");a+=b;}
+-Json files(const fs::path& p){uint64_t apparent=0,allocated=0,sst=0,wal=0,count=0;for(const auto& e:fs::recursive_directory_iterator(p)){if(e.is_symlink())throw std::invalid_argument("Symlinks refused");if(!e.is_regular_file())continue;struct stat st{};if(::stat(e.path().c_str(),&st)||st.st_blocks<0)throw std::runtime_error("File stat failed");const auto bytes=e.file_size();add(apparent,bytes);add(allocated,uint64_t(st.st_blocks)*512);add(count,1);if(e.path().extension()==".sst")add(sst,bytes);if(e.path().extension()==".log")add(wal,bytes);}return {{"files",count},{"apparentBytes",apparent},{"allocatedBytes",allocated},{"sstBytes",sst},{"walBytes",wal}};}
++Json files(const fs::path& p,uint64_t maximum_files=UINT64_MAX,uint64_t maximum_bytes=UINT64_MAX,const std::function<void()>& checkpoint={}){
++ uint64_t apparent=0,allocated=0,sst=0,wal=0,count=0,entries=0;
++ for(const auto& e:fs::recursive_directory_iterator(p)){
++  if(checkpoint)checkpoint();add(entries,1);if(entries>maximum_files)throw std::length_error("File statistics entry budget exceeded");
++  struct stat st{};if(::lstat(e.path().c_str(),&st)||st.st_blocks<0||st.st_size<0)throw std::runtime_error("File stat failed");
++  if(S_ISLNK(st.st_mode)||(!S_ISREG(st.st_mode)&&!S_ISDIR(st.st_mode)))throw std::invalid_argument("Statistics links/special files refused");if(!S_ISREG(st.st_mode))continue;
++  const auto bytes=uint64_t(st.st_size);add(apparent,bytes);if(apparent>maximum_bytes)throw std::length_error("File statistics byte budget exceeded");
++  add(allocated,uint64_t(st.st_blocks)*512);add(count,1);if(e.path().extension()==".sst")add(sst,bytes);if(e.path().extension()==".log")add(wal,bytes);
++ }if(checkpoint)checkpoint();return {{"files",count},{"apparentBytes",apparent},{"allocatedBytes",allocated},{"sstBytes",sst},{"walBytes",wal}};
++}
+ Json logical(rocksdb::DB& db){std::unique_ptr<EVP_MD_CTX,decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_new(),EVP_MD_CTX_free);if(!ctx||EVP_DigestInit_ex(ctx.get(),EVP_sha256(),nullptr)!=1)throw std::runtime_error("Digest init failed");auto update=[&](const void* p,size_t n){if(EVP_DigestUpdate(ctx.get(),p,n)!=1)throw std::runtime_error("Digest update failed");};auto framed=[&](rocksdb::Slice s){uint64_t n=s.size();unsigned char size[8];for(unsigned i=0;i<8;++i)size[7-i]=static_cast<unsigned char>(n>>(8*i));update(size,8);update(s.data(),s.size());};rocksdb::ReadOptions ro;ro.verify_checksums=true;ro.fill_cache=false;std::unique_ptr<rocksdb::Iterator> it(db.NewIterator(ro));uint64_t entries=0,bytes=0;for(it->SeekToFirst();it->Valid();it->Next()){framed(it->key());framed(it->value());add(entries,1);add(bytes,it->key().size());add(bytes,it->value().size());}check(it->status());unsigned char digest[EVP_MAX_MD_SIZE];unsigned n=0;if(EVP_DigestFinal_ex(ctx.get(),digest,&n)!=1||n!=32)throw std::runtime_error("Digest final failed");static constexpr char hex[]="0123456789abcdef";std::string value;for(unsigned i=0;i<n;++i){value+=hex[digest[i]>>4];value+=hex[digest[i]&15];}return {{"entries",entries},{"keyValueBytes",bytes},{"sha256FramedOrderedKeyValues",value}};}
++std::string bounded_public_file(const fs::path& path,size_t maximum){
++ if(fs::is_symlink(path)||!fs::is_regular_file(path)||fs::file_size(path)>maximum)throw std::invalid_argument("Bounded regular public input required");
++ std::ifstream f(path,std::ios::binary);std::string out;char block[4096];while(f){f.read(block,sizeof(block));out.append(block,size_t(f.gcount()));if(out.size()>maximum)throw std::length_error("Public input grew past budget");}if(f.bad())throw std::runtime_error("Public input read failed");return out;
++}
++nano::Bytes input_sha(const char* text){const std::string value(text);if(value.size()!=64||value.find_first_not_of("0123456789abcdef")!=std::string::npos)throw std::invalid_argument("Exact SHA-256 without 0x required");return nano::unhex("0x"+value);}
++std::string pinned_public_file(const fs::path& path,const nano::Bytes& digest,size_t maximum){const auto bytes=bounded_public_file(path,maximum);if(nano::sha256(nano::Bytes(bytes.begin(),bytes.end()))!=digest)throw std::invalid_argument("Public input SHA mismatch before parse");return bytes;}
++struct PublicReceiptDestination {
++ fs::path path;int parent=-1;dev_t device;ino_t inode;
++ PublicReceiptDestination(const fs::path& value,const fs::path& primary,const fs::path& witness):path(value){
++  if(!path.is_absolute()||path!=path.lexically_normal()||path.filename().empty())throw std::invalid_argument("Canonical absolute independent receipt path required");
++  auto parent_path=path.parent_path();if(fs::canonical(parent_path)!=parent_path||fs::exists(path)||fs::is_symlink(path))throw std::invalid_argument("Fresh independent receipt path required");
++  auto contains=[](const fs::path& a,const fs::path& b){auto i=a.begin(),j=b.begin();for(;i!=a.end()&&j!=b.end()&&*i==*j;++i,++j){}return i==a.end();};
++  if(contains(primary,path)||contains(witness,path))throw std::invalid_argument("Receipt must remain outside both maintained copies");
++  parent=::open(parent_path.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC);struct stat st{};
++  if(parent<0||::fstat(parent,&st)||st.st_uid!=::geteuid()||(st.st_mode&077)!=0){if(parent>=0)::close(parent);throw std::invalid_argument("Private owned receipt parent required");}device=st.st_dev;inode=st.st_ino;
++ }
++ ~PublicReceiptDestination(){if(parent>=0)::close(parent);}
++ void publish(const Json& result){
++  struct stat current{};if(::stat(path.parent_path().c_str(),&current)||current.st_dev!=device||current.st_ino!=inode)throw std::runtime_error("Receipt parent replaced");
++  const auto temporary=path.filename().string()+".gc-staged-"+std::to_string(::getpid());
++  int file=::openat(parent,temporary.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600);if(file<0)throw std::runtime_error("Exclusive receipt staging failed");
++  bool linked=false;try{const auto bytes=result.dump(2)+"\n";size_t at=0;while(at<bytes.size()){auto n=::write(file,bytes.data()+at,bytes.size()-at);if(n<0&&errno==EINTR)continue;if(n<=0)throw std::runtime_error("Receipt write failed");at+=size_t(n);}if(::fsync(file))throw std::runtime_error("Receipt fsync failed");if(::close(file))throw std::runtime_error("Receipt close failed");file=-1;
++   // Atomic no-overwrite publication on Darwin and Linux. The temp link is then
++   // removed, so the complete final artifact has one link and private mode0600.
++   if(::linkat(parent,temporary.c_str(),parent,path.filename().c_str(),0))throw std::runtime_error("Exclusive receipt publication failed");linked=true;if(::unlinkat(parent,temporary.c_str(),0)||::fsync(parent))throw std::runtime_error("Receipt parent durability failed");
++  }catch(...){if(file>=0)::close(file);if(!linked)::unlinkat(parent,temporary.c_str(),0);throw;}
++ }
++};
++int checkpoint_gc(int argc,char** argv){
++ if(argc!=9)throw std::invalid_argument("Usage: compact-owned-copy --checkpoint-blob-gc-owned-copies REQUEST.json REQUEST-SHA STOP-RECEIPT.json STOP-SHA PROFILE.json PROFILE-SHA RECEIPT.json");
++ const auto request_sha=input_sha(argv[3]),stop_sha=input_sha(argv[5]),profile_sha=input_sha(argv[7]);
++ const auto request=pinned_public_file(argv[2],request_sha,65536),stop=pinned_public_file(argv[4],stop_sha,65536),profile=pinned_public_file(argv[6],profile_sha,1048576);
++ const auto j=Json::parse(request);if(j.at("profileSha256")!=std::string(argv[7]))throw std::invalid_argument("Profile SHA differs from externally pinned request");
++ const auto budget=nano::checkpoint_blob_gc_budget(j.at("budget"));
++ const auto started=std::chrono::steady_clock::now();const std::function<void()> deadline=[&]{const auto elapsed=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-started).count();if(elapsed<0||uint64_t(elapsed)>=budget.duration_ms)throw std::runtime_error("Maintenance total deadline exhausted");};
++ const auto limits=nano::checkpoint_blob_gc_snapshot_limits(j.at("limits"));
++ const auto rules=nano::load_capella_fork_profile(profile,profile_sha,1048576);
++ const auto primary=fs::path(j.at("primary").at("path").get<std::string>()),witness=fs::path(j.at("witness").at("path").get<std::string>());
++ const auto source_primary=fs::path(j.at("primary").at("sourcePath").get<std::string>()),source_witness=fs::path(j.at("witness").at("sourcePath").get<std::string>());
++ PublicReceiptDestination source_receipt_guard(argv[8],source_primary,source_witness);
++ PublicReceiptDestination receipt(argv[8],primary,witness);
++ auto copies=nano::CheckpointBlobGcCopies::open(request,request_sha,stop,stop_sha,budget,deadline);
++ const auto before=Json::array({files(primary,budget.inventory_files,budget.inventory_bytes,deadline),files(witness,budget.inventory_files,budget.inventory_bytes,deadline)});
++ const auto plan=copies->plan(rules,limits,budget,deadline);const auto result=copies->collect(plan,deadline);copies.reset();
++ const Json report{{"format","nano-owned-checkpoint-gc-maintenance-receipt-v1"},{"requestSha256",std::string(argv[3])},{"stopReceiptSha256",std::string(argv[5])},{"profileSha256",std::string(argv[7])},{"plan",plan.description()},{"result",result},{"beforeFiles",before},{"afterFiles",Json::array({files(primary,budget.inventory_files,budget.inventory_bytes,deadline),files(witness,budget.inventory_files,budget.inventory_bytes,deadline)})},{"receiptPersistedSeparately",true},{"requiresSuccessfulTerminalExit",true},{"atomicExclusiveLinkPublication",true}};
++ deadline();receipt.publish(report);const auto receipt_bytes=report.dump(2)+"\n";std::cout<<Json{{"completed",true},{"receiptSha256",nano::hex(nano::sha256(nano::Bytes(receipt_bytes.begin(),receipt_bytes.end()))).substr(2)},{"productionQualified",false}}.dump()<<'\n';
++ return 0;
++}
+ int main(int argc,char** argv){try{
++ if(argc>1&&std::string(argv[1])=="--checkpoint-blob-gc-owned-copies")return checkpoint_gc(argc,argv);
++
+  if(argc!=3||std::string(argv[1])!="--offline-owned-copy")throw std::invalid_argument("Usage: compact-owned-copy --offline-owned-copy COPY/chain");
+  fs::path input(argv[2]);for(auto p=input;!p.empty();p=p.parent_path()){if(fs::is_symlink(p))throw std::invalid_argument("Symlink path refused");if(p==p.parent_path())break;}
+  const auto path=fs::canonical(input);if(path.filename()!="chain"||!fs::is_regular_file(path/"CURRENT"))throw std::invalid_argument("Owned chain copy required");nano::maintenance::require_owned_marker(path.parent_path()/".nano-owned-compaction-copy","owned-offline-qualification-copy-v1");

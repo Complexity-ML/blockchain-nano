@@ -1,3 +1,21 @@
+## 13 octobre 2026 — GC de checkpoints, qualification limitée Docker ARM
+
+Le nettoyage hors ligne des blobs de checkpoints Capella est qualifié dans le périmètre des [preuves publiques](qualification/checkpoint-blob-gc-arm-20261013/README.md) : copies arrêtées détenues exclusivement, racines primaire/témoin et publication pending conservées, schémas/namespaces inconnus refusés. Ce lot ne qualifie ni un pruning complet de l’état EVM ni la production.
+
+Les preuves combinent quatre réussites conservées du run05 (terminal général `exit8`) et deux scénarios corrigés exécutés dans le run06 (`exit0`) :30 branches adverses avec SIGKILL réel entre les stores et deux injections fsync ; GC naturel au slot40,23 blobs supprimés par store,16 blocs suivants jusqu’à56 puis réouverture du checkpoint suivant. Le scénario naturel dure174.01s sous180s. Il n’y a pas eu de nouvelle exécution unique des six tests. Le dernier build réutilise l’archive140 membres `02b718…` byte exacte et recompile/relie uniquement le consommateur de test modifié.
+
+Les échecs restent conservés : refus source/metadata/E2BIG, course du contrôleur b1/42 et reconstruction postérieure, dossier absent créé puis corrigé pour `ReadWriteExisting`, timeout30s du child et condition naturelle échouée à48 (GC réellement observé à40). Le gateWAL réduit les ouvertures RO et le scénario corrigé passe1.21222s ; la cause exclusive du timeout précédent n’est pas mesurée.
+
+Restent ouverts : GC natif/AMD64, panne électrique réelle, sauvegarde/restauration complète avec journaux/témoins, pruning EVM complet, reprise des duties/finalité commune réelle, transfert des preuves privées VPS/V37 encore pending, revue indépendante et intégralité du goal de production. Aucun statut EIP, critère historique, règle de rattrapage ou autorisation de dépense/vente/déploiement n’est changé par cette note.
+
+---
+
+Le packaging ajoute désormais `nano-storage-maintenance` à côté de `nano`. Le [configure de livraison](qualification/checkpoint-blob-gc-arm-20261013/packaging-addon/configure-terminal.json) réussit : base de commandes complète,147 commandes sélectionnées et16 fichiers flags/link inchangés, deux cibles install présentes. Aucune unité Nano, test, image runtime ou installation réelle n’a été exécuté dans cette étape. L’image runtime n’est pas reconstruite et l’outil n’est pas installé publiquement ; la livraison effective reste ouverte.
+
+Les quatre preuves privées VPS concernent la campagne courante et leur transfert nécessite encore une autorisation distincte. V37 reste `FAILED`, avec les journaux Mac requis manquants et une restauration incomplète. Ces deux blocages distincts ne sont pas résolus par les tests GC ni par le contrôle de packaging.
+
+---
+
 État du 13 octobre 2026 — contrôleur de reprise candidat raccordé, sans lancement de nœud.
 
 Le nouveau mode exige des pins externes et vérifie séparément sources, objets compilés, consommateurs, relais et captures. Les montages Docker refusent les arbres privés et leurs parents ; leurs chemins physiques correspondent aux preuves de compilation. Six nouveaux tests d’intégration synthétiques passent ensemble (6 PASS, zéro FAIL/SKIP), après conservation des refus initiaux et revue des corrections. Les anciens tests ne sont pas rejoués pour ce lot.

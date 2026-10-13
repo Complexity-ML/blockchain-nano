@@ -1,0 +1,182 @@
+{
+  "format": "nano-gc-consolidated-source-and-arm-scoped-qualification-independent-review-v1",
+  "reviewedAtUtc": "2026-10-13T04:38:08.389521+00:00",
+  "status": "SOURCE_PACKAGE_BYTE_BOUND_AND_LIMITED_ARM_TEST_SCOPE_CONFIRMED",
+  "reviewer": "prepare_review",
+  "sourceComparison": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/checkpoint-blob-gc-consolidated-source-independent-review-20261013/twelve-file-byte-comparison.json",
+    "sha256": "f74a52059979c687a862060880ae66a413f30b7fef38c27b75de4f7deb0f2960"
+  },
+  "consolidatedManifestSha256": "f677df8e07cf4397bdef21f93d16a9e80044b62dc83bab3f3bd805d866031b3b",
+  "consolidatedPatchSha256": "3cfe8ce9b37968206bae2058347b58635ebd48c11f9313fcb8de83c329ff1930",
+  "sourceIndexSha256": "e89d6eab8eca7faf8492b26c8971e4a566ce159659fb3835c31ef5beb7e054f8",
+  "baseRevision": "7510c0ea9d7dd4fc2e175f1a03c7169850c34600",
+  "finalImplementationScope": [
+    "All12packagefiles match raw bytes of actual source-testfix2 and independent rootindexe89; seven modified baseline Gitblobs and five new absent baseline paths were independently verified.",
+    "Final GC source637a and closure decoder4d70 match the earlier independently reviewed implementation; storage4611 adds the reviewed FileSystem no-directory-creation wrapper only to new existing-only mode. Mode0ReadWrite/mode1ReadOnly/default initialization behavior and public ChainStore layout are preserved.",
+    "New GC API and CLI operate only on independently pinned, stopped, exclusively owned copies, conservatively preserve decoded reference unions and primary/witness/pending commitments, and leave repair/recovery to normal existing paths. No live RPC/background pruning is activated.",
+    "Final test-only sources35d580/3f063 retain source/witness/signer preservation, actualSIGKILLpartial-progress check,30namedboundaries, and real natural publication/pruning with0injectedblobs. No old production semantics are replaced by a test flag."
+  ],
+  "actualPublicEvidence": {
+    "audit": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/checkpoint-blob-gc-arm-qualification-20261013/tests-root-dispatched-06-two-retries/public-result-audit.json",
+      "sha256": "9125d43fed3a80696fade74e655ca5c5647588daef3ce9002999818e8acf6bcd"
+    },
+    "provenanceHashesChecked": {
+      "prior-junit": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/checkpoint-blob-gc-arm-qualification-20261013/tests-root-dispatched-05-corrected/testing/gc-selected.junit.xml",
+        "sha256": "8b29be94fe1dc94f9e843070cbe8eb70b7039cdbedc11857486ebc0664fefd00"
+      },
+      "prior-log": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/checkpoint-blob-gc-arm-qualification-20261013/tests-root-dispatched-05-corrected/ctest.log",
+        "sha256": "a00a6abe1369bc1b5edc9ab10d1c799047e961b8bf7b689da0b28e2cd028df2a"
+      },
+      "prior-terminal": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/checkpoint-blob-gc-arm-qualification-20261013/tests-root-dispatched-05-corrected/execution-terminal.json",
+        "sha256": "6651269b209fd63b5b101b5a038b7752614cf647665fce8531f3bf3799bb843a"
+      },
+      "prior-before": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/checkpoint-blob-gc-arm-qualification-20261013/tests-root-dispatched-05-corrected/before.json",
+        "sha256": "979c8aa511c345dcce56a25465a2f9a820159b2409a4e92977aab27aa0cfcc02"
+      },
+      "prior-source-index": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/checkpoint-blob-gc-arm-qualification-20261013/source-after-fix1.json",
+        "sha256": "59cfc6f7d8071e6045fa912dc4c5faeb89e86d8e7aa48dd7aede737d3018ce91"
+      },
+      "new-junit": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/checkpoint-blob-gc-arm-qualification-20261013/tests-root-dispatched-06-two-retries/testing/gc-selected.junit.xml",
+        "sha256": "f76338739c6cd2fc3aa2715d0f19c9e5a404514a258e3cc02456babc63134d77"
+      },
+      "new-log": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/checkpoint-blob-gc-arm-qualification-20261013/tests-root-dispatched-06-two-retries/ctest.log",
+        "sha256": "3d0554ce0a3d2e6c3ad41344eee498c2ff87f573be00a34616604e1fc2f0c017"
+      },
+      "new-terminal": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/checkpoint-blob-gc-arm-qualification-20261013/tests-root-dispatched-06-two-retries/execution-terminal.json",
+        "sha256": "a1ec5fa756d2cb86f51fa361d3cb631393d2d412559bc64ee6fa379e16555ad9"
+      },
+      "new-before": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/checkpoint-blob-gc-arm-qualification-20261013/tests-root-dispatched-06-two-retries/before.json",
+        "sha256": "d385e8f0810c9a99c1c47bfa69d41a2a9b5f33c09bd4f84b0fdced0993e3d1d2"
+      },
+      "new-buildTerminal": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/checkpoint-blob-gc-arm-qualification-20261013/build-testfix2-driver-receipts/terminal-build-receipt.json",
+        "sha256": "617bc9ffa17418c8e6476b484f0fc86bd543e6aba57550e9566bc1743aa91889"
+      },
+      "new-sourceIndex": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/checkpoint-blob-gc-arm-qualification-20261013/source-after-testfix2.json",
+        "sha256": "e89d6eab8eca7faf8492b26c8971e4a566ce159659fb3835c31ef5beb7e054f8"
+      }
+    },
+    "executionTerminalSha256": "a1ec5fa756d2cb86f51fa361d3cb631393d2d412559bc64ee6fa379e16555ad9",
+    "resultSha256": "5664c265df7391a4e31fd68f51311a838fe208d94ecad222c1a12622a8d6e22e",
+    "newCases": {
+      "storage_capella_blob_gc_adversarial_boundaries": {
+        "status": "run",
+        "time": "1.21222",
+        "failed": false,
+        "skipped": false
+      },
+      "storage_capella_blob_gc_natural_pruning": {
+        "status": "run",
+        "time": "174.01",
+        "failed": false,
+        "skipped": false
+      }
+    },
+    "historicalCases": {
+      "storage_checkpoint_immutable_blobs": {
+        "status": "run",
+        "time": "0.0231354",
+        "failed": false,
+        "skipped": false
+      },
+      "consensus_capella_fragment_checkpoint_migration": {
+        "status": "run",
+        "time": "0.327883",
+        "failed": false,
+        "skipped": false
+      },
+      "storage_capella_blob_gc_next_publication": {
+        "status": "run",
+        "time": "0.306339",
+        "failed": false,
+        "skipped": false
+      },
+      "storage_capella_blob_gc_cli_closed_fixture": {
+        "status": "run",
+        "time": "0.501521",
+        "failed": false,
+        "skipped": false
+      },
+      "storage_capella_blob_gc_adversarial_boundaries": {
+        "status": "fail",
+        "time": "30.8123",
+        "failed": true,
+        "skipped": false
+      },
+      "storage_capella_blob_gc_natural_pruning": {
+        "status": "fail",
+        "time": "139.734",
+        "failed": true,
+        "skipped": false
+      }
+    },
+    "historicalExitCode": 8,
+    "newExitCode": 0,
+    "singleSixTestExecution": false,
+    "adversarialIds": [
+      "primary-missing-live-ref",
+      "primary-corrupt-live-ref",
+      "witness-missing-live-ref",
+      "witness-corrupt-live-ref",
+      "pending-sequence-divergence",
+      "primary-neither-previous-nor-next",
+      "wrong-independent-witness-pin",
+      "wrong-independent-pending-next-pin",
+      "request-hash-before-parse",
+      "signing-store-role-forbidden",
+      "future-schema-refused",
+      "readers-not-stopped",
+      "complete-scan-budget",
+      "total-delete-budget",
+      "single-batch-budget",
+      "large-finite-duration-no-timepoint-overflow",
+      "inventory-cancellation",
+      "existing-mode-never-creates-missing-db",
+      "existing-mode-never-initializes-missing-schema",
+      "hardlinked-original-copy",
+      "symlinked-copy-file",
+      "stale-plan-directory-replaced",
+      "unknown-future-blob-namespace",
+      "successful-gc-preserves-nonprefix-values",
+      "pending-missing-next-only-witness-ref",
+      "pending-corrupt-existing-next-primary-ref",
+      "pending-union-preserved-no-gc-repair-then-normal-recovery",
+      "sigkill-after-primary-before-witness-new-plan-reopen",
+      "primary-sync-failure-close-new-plan",
+      "witness-sync-failure-close-new-plan"
+    ],
+    "actualFsyncBranches": 2,
+    "gcSlot": 40,
+    "postGcOrdinarySlots": 16,
+    "endSlot": 56,
+    "naturalDeletedOrphansEachStore": 23,
+    "followingPublicationColdReopened": true,
+    "containerAbsentAfterCleanup": true,
+    "sourceAndArtifactsBeforeAfterUnchanged": true
+  },
+  "limits": [
+    "This is limited offline DockerARM qualification, not native/AMD64 qualification or a full CI/production verdict.",
+    "Four actual earlier PASS cases and two new actual PASS cases are separate runs. Earlier exit8, adverse/natural failures, build/SDK/metadata/race refusals and post-dispatch reconstruction remain preserved rather than overwritten.",
+    "No fully new140-unit compilation is claimed: the coherent object provenance comprises validated reuse and targeted fresh objects; final consumer phase copies archive02 and six executables and compiles/links one transition consumer.",
+    "The sourceABI statement is a source/interface observation; no general binaryABI certification or independent external security audit is supplied.",
+    "No physical powerloss, completeEVMstatepruning, resumed duties, real common finality, private VPS export, funds, sale or publicdeployment is qualified. All such goal gates remain open."
+  ],
+  "reviewerExecutedTests": 0,
+  "reviewerCompiledCpp": false,
+  "repoMutated": false,
+  "privateDataRead": false,
+  "runtimeStartedByReviewer": false,
+  "productionQualified": false
+}

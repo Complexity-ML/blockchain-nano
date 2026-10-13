@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="2"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="175"
+	timestamp="2026-10-13T04:32:38"
+	>
+	<testcase name="storage_capella_blob_gc_adversarial_boundaries" classname="storage_capella_blob_gc_adversarial_boundaries" time="1.21222" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_maintenance"/>
+		</properties>
+		<system-out>{"logicalChecks":0,"phase":"planned-before-delete","primaryWalFiles":1,"productionQualified":false,"scenario":"gc-crash-child-phase"}
+{"callbacks":57880,"logicalChecks":1,"phase":"wal-change-logical-check","primaryOrphanAbsent":true,"productionQualified":false,"scenario":"gc-crash-child-phase","witnessOrphanPresent":true}
+{"allPreDeletionRefusalsLogicalContentsUnchanged":true,"fixtureOnly":true,"localSigningProviderCalls":0,"networkQualified":false,"passedBoundaries":["primary-missing-live-ref","primary-corrupt-live-ref","witness-missing-live-ref","witness-corrupt-live-ref","pending-sequence-divergence","primary-neither-previous-nor-next","wrong-independent-witness-pin","wrong-independent-pending-next-pin","request-hash-before-parse","signing-store-role-forbidden","future-schema-refused","readers-not-stopped","complete-scan-budget","total-delete-budget","single-batch-budget","large-finite-duration-no-timepoint-overflow","inventory-cancellation","existing-mode-never-creates-missing-db","existing-mode-never-ini...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="storage_capella_blob_gc_natural_pruning" classname="storage_capella_blob_gc_natural_pruning" time="174.01" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_maintenance"/>
+		</properties>
+		<system-out>{"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+{"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+{"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+{"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+{"anchorMovesBeforeGc":2,"collection":{"allProtectedReferencesReopened":true,"copiedDataOnly":true,"format":"nano-owned-checkpoint-blob-gc-result-v1","noWork":false,"nonGcNamespacesUnchanged":true,"originalSourceInventoriesUnchanged":true,"pendingNext":{"digest":"0xfdc2b91ec399b1dc69b275396f73eee20be1afe721da61e1056f34c2840fcc39","sequence":"0x15a"},"physicalPowerLossQualified":false,"physicalSpaceReductionGuaranteed":false,"planId":"e5199c84c4e5bbcff4958a23d4b158bc0ecf982cc2b0c0496b784ab1f8c4bfce","primary":{"digest":"0xfdc2b91ec399b1dc69b275396f73eee20be1afe721da61e1056f34c2840fcc39","sequence":"0x15a"},"primaryAndWitnessAtomicTransaction":false,"productionQualified":false,"runtimeDutiesResumed":false,"stores":[{"deletedLogicalPayloadBytes":1403222,"deletedRecords":23},{"deletedLogicalPa...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+</testsuite>
