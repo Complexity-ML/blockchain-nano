@@ -1,3 +1,13 @@
+État du 13 octobre 2026 — contrôleur de reprise candidat raccordé, sans lancement de nœud.
+
+Le nouveau mode exige des pins externes et vérifie séparément sources, objets compilés, consommateurs, relais et captures. Les montages Docker refusent les arbres privés et leurs parents ; leurs chemins physiques correspondent aux preuves de compilation. Six nouveaux tests d’intégration synthétiques passent ensemble (6 PASS, zéro FAIL/SKIP), après conservation des refus initiaux et revue des corrections. Les anciens tests ne sont pas rejoués pour ce lot.
+
+Les 139 membres de chaque archive ont été comparés réellement aux objets sur les trois environnements. Quatre unités ARM recompilées avec les 13 headers manquant au snapshot historique sont byte-identiques aux objets qualifiés ; aucun test/link/archive répété, parents inchangés. Cette équivalence actuelle ne reconstitue pas le snapshot initial perdu. [Preuves compactes et limites](qualification/candidate-runtime-binding-20261013/README.md).
+
+Aucune source du cœur C++ ou règle de consensus/EVM n’est modifiée. Les autorités et assets réels, les commandes d’audit des captures actuelles, les quatre preuves privées VPS et la reprise après expiration des deux heures restent ouverts. Aucun writer, duty, nouveau réseau/finalité, fonds ou déploiement public lancé ; aucun fork/EIP promu. Le lot C++ GC reste séparé, non compilé/non exécuté. V37 FAILED, refus RSS historique, CI/release, consensus/exploitation/pruning, Base–Nano/USDC/Doppler et revue de sécurité indépendante sont conservés sans clôture. Tous les critères et matrices historiques restent intacts ; objectif actif.
+
+État précédent conservé :
+
 État qualifié — 13 octobre 2026 : cœur `c672a30d`, test `d7cc1bdb`/SHA `44febdb9`, CMake `28fe657b` ; 139 unités et main cohérents sur natif ARM64 et Docker ARM64/AMD64, dans le seul périmètre des contrôles ciblés.
 Native : trois CTests réels sans skip et `prepared-block` ; lot Linux : quatre sélections réussies. Port Linux objet/exécutable identiques mesurés, résultats réutilisés sans retest ; scénarios synthétiques avec fournisseur local à zéro.
 [Preuves et revues Mac/ARM](qualification/duty-availability-platforms-20261013/mac-platforms-public/README.md) ; [AMD64 et port](qualification/duty-availability-platforms-20261013/amd64-public/README.md). Aucun statut EIP, fork réseau, duty restaurée, finalité commune ou production publique promu.

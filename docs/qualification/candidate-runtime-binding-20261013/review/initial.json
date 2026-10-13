@@ -1,0 +1,45 @@
+{
+  "format": "nano-candidate-controller-integration-independent-static-review-v1",
+  "proposalManifestSha256": "1e40828689558b9e8130680d5f383511e1b0e79694a08bcbc909b46e8e9c431b",
+  "proposalPayloadsVerified": 23,
+  "proposalHashOrByteMismatches": 0,
+  "patchSha256": "887c327009099119caa27a933941aede4192da986e92bc67941861381417b675",
+  "verdict": "REPAIR_REQUIRED_BEFORE_INTEGRATION_QUALIFICATION",
+  "reviewScope": {
+    "staticReadOnly": true,
+    "javascriptModulesImported": false,
+    "testsOrBuildsRun": false,
+    "privateRecoveryFilesRead": false,
+    "sshDockerRuntimeInvoked": false,
+    "repoOrProposalEdited": false
+  },
+  "findings": [
+    {
+      "id": "P1-code-mount-private-overlap",
+      "priority": 1,
+      "file": "draft/tests/capella/isolated-three-node-run.mjs",
+      "lines": [
+        73,
+        88
+      ],
+      "cause": "candidateBuildMounts uses lexical substring checks for /data/, /witness/, /captures/ and resolve equality, without binding /outputs to an explicit physical build root or comparing filesystem path components against work, fixture and capture roots. A mount source ending exactly in /data, work itself, or an ancestor containing those private trees is accepted by this check. observeCandidateArtifacts uses the mount before restoration validation.",
+      "consequence": "The stated no-campaign/no-environment-mounted-reader property is not established. This review did not observe any actual private mount or read. Root confirmed the contract defect and requested a separate repair preserving this proposal.",
+      "requiredRepair": "Require the exact explicit qualified physical build root for the /outputs bind; refuse all ancestor/descendant/equal overlaps by canonical path components with work, fixture, capture and private data/witness trees. Keep sourceSymlink/bind identity observations bounded. Add a focused new negative case for exact /data and parent-root mounts without replaying old suites."
+    }
+  ],
+  "acceptedStaticProperties": [
+    "Mandatory external CLI SHA seals approval before candidate source/public compiler inputs are accepted; no own-source/reference hash embedded.",
+    "Authority keeps immutable production974 c672, portable test44fe/d7 and explicitly approved future-controller HEAD separate.",
+    "Candidate requests cover core/archive,139 objects,4 consumers and direct MCL link objects; actual artifact hashes obtained rather than copied from declaration. Separately pinned ar-p member observations remain archive/ordinal/name scoped.",
+    "Candidate is restore-only; source/destination captured primary and independent witness tokens, per-key floors/public identities and copied snapshot hashes remain compared.",
+    "Startup configuration and actual-downtime gate remain 2hours/60steps; no4hours allowance/genesis reset/global catch introduced.",
+    "Legacy source/asset branch remains distinct and retains its core85 requirement. Current candidate authority/assets examples are pending/null and fail closed."
+  ],
+  "openEvidenceAndContractLimits": [
+    "Helper receipt has one physicalReport hash but identifies both bootstrap/capture binaries and source/destination capture hashes. It is externally reviewed provenance, not self-authenticating execution; genuine distinct command/output mapping must be supplied. The bootstrap helper only accepts imported initial floors slot1/sequences1-2, while current stopped captures use the capture helper. Do not claim current captured floors were audited by the bootstrap helper without distinct actual command/report evidence.",
+    "Source-code syntax checks do not qualify the new integration entry/worker/restore wiring. No new integration case ran in this proposal.",
+    "No real candidate all-owner assets/source authority/input approval or current candidate helper-execution reports have been produced by this patch.",
+    "Private VPS derived-report egress authorization remains separate.",
+    "Expired actual campaign2hour startup window remains blocking; static review cannot qualify live restored duties/finality or production."
+  ]
+}

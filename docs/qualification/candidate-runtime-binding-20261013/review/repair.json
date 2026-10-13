@@ -1,0 +1,69 @@
+{
+  "format": "nano-candidate-controller-integration-independent-repair-review-v1",
+  "verdict": "STATIC_REPAIR_ACCEPTED_WITH_RUNTIME_PROVENANCE_AND_CLOCK_GATES_OPEN",
+  "originalReviewSha256": "65630f56799165241ce49d6e743b62bc070e06d4465e9046844f4cff0bbf5dfb",
+  "finalProposalManifestSha256": "257c05f28eefd3144c43136f05a2d31745b5cc832a0bd5bc5dcd3b29dc3a19f7",
+  "finalPayloadsReadbackVerified": 24,
+  "finalPayloadHashOrByteMismatches": 0,
+  "finalControllerSha256": "88ee823fedc79f4ae44d6ac1e51e1914b1b2d35dbe47ccedd9f0fc9a8da2ad64",
+  "finalRuntimeModuleSha256": "55f1d69b64b8c42e37008fa5c55b144e21117aac5fea9f16e090b55ce068e6ce",
+  "resolvedFindings": [
+    {
+      "id": "P1-code-mount-private-overlap",
+      "resolution": "Exact asset physical buildRoot equals /outputs bind source; path-component equal/ancestor/descendant exclusions include work, fixture, stopped captures and data/witness/captures components. Host root canonical/no-symlink identity is checked before and after a future worker. Same mount function is used for future runtime.",
+      "file": "draft/tests/capella/isolated-three-node-run.mjs",
+      "lines": [
+        73,
+        128
+      ]
+    },
+    {
+      "id": "P1-current-private-VPS-fixture-parent-omitted",
+      "resolution": "The actual current AMD private fixture parent isolated-fixture-exporter-amd64-public-copy-repair-20261012 is explicitly excluded, covering its runtime-parent/private/export-v1 descendant. No private contents were read.",
+      "file": "draft/tests/capella/isolated-three-node-run.mjs",
+      "lines": [
+        74,
+        81
+      ]
+    },
+    {
+      "id": "P1-asset-buildRoot-not-linked-to-fixed-compiler-binding",
+      "resolution": "Before artifact request/worker creation, candidateArtifactRequests requires namespaceMapping.physicalBuildRoot===assets.buildRoot, sourceRoot===proof.sourceRoot and compilerAndLinkerBuildRoot===native physical buildRoot or Docker /outputs. Coordinated asset/bind substitution cannot pass a fixed compiled proof.",
+      "file": "draft/tests/capella/candidate-runtime-source.mjs",
+      "lines": [
+        174,
+        190
+      ]
+    }
+  ],
+  "reviewedTestsScope": [
+    "Mount repair log: two selected synthetic tests passed, no skips; source eab intermediate preserved.",
+    "Remote-fixture repair: same new mount case targeted after adding two remote private-path variants; author reports1PASS, not a full-suite rerun.",
+    "Final namespace receipt/log: one new test with all-owner physical/source/compiler-namespace substitutions and missing mapping passed0skip.",
+    "Six distinct final test definitions have results acquired across revisions. No final full-six or legacy22/12/6 suite run is claimed."
+  ],
+  "testSemantics": "Selected public controller fragments execute with in-memory/stat/Docker/SSH stubs only. Controller top-level and real observer/runtime are never exercised by these synthetic cases. The independent reviewer read source/receipts only and did not run tests or import modules.",
+  "unchangedProperties": [
+    "External CLI approval SHA and separately pinned source authority remain independent; no own-source reference hash embedded.",
+    "Exact immutable production974/corec672 and portable44fe/testd7 remain separate from the externally approved future-controller HEAD and five allowed controller source paths.",
+    "Legacy source/asset checks retain core85 and current candidate CMake28fe refusal.",
+    "Source/destination primary and independent witness identities, key floors and captured snapshots remain compared.",
+    "The existing2hours/60steps startup gate and runtime settings remain unchanged."
+  ],
+  "openGates": [
+    "Actual candidate source authority/assets/input approval and a future clean committed controller checkout are not produced by these patches.",
+    "The aggregate helper receipt remains an externally reviewed input, not proof that the bootstrap helper audited current stopped floors. Genuine bootstrap-initial/source-capture/destination-capture command/output observations are still required.",
+    "No actual host root/worker observations, private restoration inputs, copied journal/DB admission, signer duties, common finality, funds or public deployment were exercised.",
+    "The actual campaign startup clock is expired under the unchanged2hour budget; no4hour allowance or genesis reset was introduced.",
+    "PrivateVPS proof egress remains a separate authorization gate.",
+    "All production goals and EIP requirements remain open unless qualified by their separate evidence."
+  ],
+  "reviewScope": {
+    "staticPublicReadOnly": true,
+    "testsRunByReviewer": 0,
+    "cppCompilerArDockerSshRuntimeInvoked": false,
+    "privateInputsRead": false,
+    "repoOrProposalEdited": false,
+    "productionQualified": false
+  }
+}

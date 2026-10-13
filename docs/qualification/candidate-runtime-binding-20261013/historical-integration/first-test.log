@@ -1,0 +1,46 @@
+✔ candidate entry rejects missing external pins and baseline before outputs or workers (2.672625ms)
+✖ artifact wiring covers 139 units, four consumer objects, MCL, helpers and relay; substitutions refuse (13.027125ms)
+✖ mount and compiler namespace wiring refuses private trees and accepts only approved RO code mounts (1.484709ms)
+✔ helper hashes and captured current witness/key floors cannot be substituted by self-sealed preparation (0.740833ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 2
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 85.711875
+
+✖ failing tests:
+
+test at qualification-resume-20261012/candidate-runtime-integration-synthetic-tests-20261013/tests/capella/candidate-runtime-integration.test.mjs:55:1
+✖ artifact wiring covers 139 units, four consumer objects, MCL, helpers and relay; substitutions refuse (13.027125ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/candidate-runtime-integration-synthetic-tests-20261013/tests/capella/candidate-runtime-integration.test.mjs:59:384)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /conflicting/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at qualification-resume-20261012/candidate-runtime-integration-synthetic-tests-20261013/tests/capella/candidate-runtime-integration.test.mjs:62:1
+✖ mount and compiler namespace wiring refuses private trees and accepts only approved RO code mounts (1.484709ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/candidate-runtime-integration-synthetic-tests-20261013/tests/capella/candidate-runtime-integration.test.mjs:65:308)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: undefined,
+    operator: 'throws',
+    diff: 'simple'
+  }
