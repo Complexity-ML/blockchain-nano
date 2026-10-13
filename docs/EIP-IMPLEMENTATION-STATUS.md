@@ -1,3 +1,9 @@
+## 13 octobre 2026 — Audit d’ancre, aucun EIP promu
+
+Le helper V3 passe ses self-tests publics sur Docker ARM et AMD64 : ancre déjà signée, transition complète, 13 refus adverses, cinq contrôles d’archive et annulation typée. Le lot ajoute un outil ; aucun cœur recompilé ni ancien test rejoué. Erreurs de typage V2 et refus du contrôleur conservés.
+
+L’archive signée initiale PRIMARY est effectivement absente de la copie VPS arrêtée ; son égalité reste refusée. La conservation CAS avec témoin est un chantier non implémenté et non appliqué. Aucun rapport, token ou engagement privé publié. Ces constats ne qualifient pas les journaux/témoins, la reprise des duties ou la finalité commune. Profil réseau Shanghai, forks activés, tous statuts EIP et CSV inchangés. Critères et corps historiques intégralement conservés ; production ouverte.
+
 ## 13 octobre 2026 — Source Capella : statuts EIP et CSV inchangés
 
 Candidat : baseline `8be93c69e144ed6e7f8b8a33ecb308c6fe3d4fdd` + six fichiers exacts coreV2 `da39fde2` / testV4 `27667420` (patch `70b062b5`). La copie détenue du state est authentifiée avant certification ; le fingerprint privé bytes/metadata/header/profil évite une validation complète répétée de la même source. Toute différence conserve la validation complète et ses refus ; signatures, admission et journaux restent contrôlés. Douze catégories synthétiques couvrent oracle, alias HOT/COW, framing/annulation, vraie admission de votes et contre-exemples constructeur BAD→GOOD/GOOD→BAD. Le tiny ne qualifie pas cold→hot.

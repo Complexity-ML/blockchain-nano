@@ -1671,6 +1671,12 @@ target_compile_definitions(nano-capella-target-source-authentication-tests PRIVA
 add_test(NAME consensus_capella_target_source_authentication COMMAND nano-capella-target-source-authentication-tests --self-test)
 set_tests_properties(consensus_capella_target_source_authentication PROPERTIES TIMEOUT 70 LABELS qualification_consensus_source_authentication)
 
+add_executable(nano-capella-bootstrap-anchor-verify tests/capella/bootstrap_anchor_verify.cpp)
+target_link_libraries(nano-capella-bootstrap-anchor-verify PRIVATE nano_core)
+target_compile_definitions(nano-capella-bootstrap-anchor-verify PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+add_test(NAME consensus_capella_public_bootstrap_anchor_verifier COMMAND nano-capella-bootstrap-anchor-verify --self-test)
+set_tests_properties(consensus_capella_public_bootstrap_anchor_verifier PROPERTIES TIMEOUT 70 LABELS qualification_consensus_recovery_tooling)
+
 add_executable(nano-capella-fork-tests tests/test_capella_fork.cpp)
 target_link_libraries(nano-capella-fork-tests PRIVATE nano_core)
 target_compile_definitions(nano-capella-fork-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")

@@ -1,3 +1,9 @@
+## 13 octobre 2026 — Ancre publique vérifiée, archive manquante
+
+Deux self-tests réels du helper V3 passent sur Docker ARM et AMD64. Le wire déjà signé est authentifié par les fonctions de production : signature, proposeur, domaine, transition Capella et comparaison complète du post-état consensus, exécution et receipts. Treize refus adverses et cinq contrôles d’archive ne remplacent pas une restauration opérationnelle. Aucune nouvelle signature, modification du cœur ou répétition des anciens tests.
+
+Sur la copie VPS arrêtée, l’archive signée initiale PRIMARY est absente ; l’égalité d’archive reste refusée. La conservation atomique CAS avec témoin n’est ni implémentée ni appliquée. Aucun résultat ou engagement privé publié. Profil Shanghai, statuts EVM/RPC, forks, EIP, matrices et critères historiques inchangés. Timeout naturel AMD64, image/install, restauration complète, duties, finalité commune, audit externe et production restent ouverts.
+
 ## 13 octobre 2026 — Source Capella : aucune promotion EVM/EIP
 
 Candidat : baseline `8be93c69e144ed6e7f8b8a33ecb308c6fe3d4fdd` + six fichiers exacts coreV2 `da39fde2` / testV4 `27667420` (patch `70b062b5`). La copie détenue du state est authentifiée avant certification ; le fingerprint privé bytes/metadata/header/profil évite une validation complète répétée de la même source. Toute différence conserve la validation complète et ses refus ; signatures, admission et journaux restent contrôlés. Douze catégories synthétiques couvrent oracle, alias HOT/COW, framing/annulation, vraie admission de votes et contre-exemples constructeur BAD→GOOD/GOOD→BAD. Le tiny ne qualifie pas cold→hot.

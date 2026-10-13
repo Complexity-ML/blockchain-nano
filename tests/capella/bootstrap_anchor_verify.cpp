@@ -1,0 +1,133 @@
+// Public-key-only, offline verification of an ALREADY signed bootstrap anchor.
+// No signer, private env/seed/key, journal, import, clock publication or runtime.
+#include "nano/consensus_capella_store_snapshot.hpp"
+#include "nano/consensus_capella_transition.hpp"
+#include "nano/consensus_beacon_header.hpp"
+#include "nano/chain.hpp"
+#include "nano/storage.hpp"
+#include <algorithm>
+#include <array>
+#include <chrono>
+#include <dirent.h>
+#include <fcntl.h>
+#include <filesystem>
+#include <functional>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <set>
+#include <stdexcept>
+#include <sys/resource.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <vector>
+#include <cstdint>
+#include <optional>
+#include <cerrno>
+using namespace nano;namespace fs=std::filesystem;
+namespace {
+const char* stage="arguments";const auto began=std::chrono::steady_clock::now();
+void require(bool ok,const char* why){if(!ok)throw std::runtime_error(why);}
+uint64_t elapsed(){return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-began).count();}
+uint64_t rss(){rusage r{};require(::getrusage(RUSAGE_SELF,&r)==0,"RSS observation");
+#ifdef __APPLE__
+ return uint64_t(r.ru_maxrss)/1024;
+#else
+ return uint64_t(r.ru_maxrss);
+#endif
+}
+void checkpoint(){require(elapsed()<60000&&rss()<=131072,"public anchor resource budget");}
+struct Fd {int value;explicit Fd(int fd):value(fd){require(fd>=0,"read-only file open");}~Fd(){::close(value);}Fd(const Fd&)=delete;Fd& operator=(const Fd&)=delete;};
+bool same_stat(const struct stat& a,const struct stat& b){
+#ifdef __APPLE__
+ const bool time=a.st_mtimespec.tv_sec==b.st_mtimespec.tv_sec&&a.st_mtimespec.tv_nsec==b.st_mtimespec.tv_nsec&&a.st_ctimespec.tv_sec==b.st_ctimespec.tv_sec&&a.st_ctimespec.tv_nsec==b.st_ctimespec.tv_nsec;
+#else
+ const bool time=a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;
+#endif
+ return time&&a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid&&a.st_mode==b.st_mode&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size;
+}
+void canonical_sha(const std::string& h){require(h.size()==64&&std::all_of(h.begin(),h.end(),[](char c){return (c>='0'&&c<='9')||(c>='a'&&c<='f');}),"external SHA256 literal");}
+std::string digest(const Bytes& b){return hex(sha256(b)).substr(2);}
+std::string digest(const std::string& b){return digest(Bytes(b.begin(),b.end()));}
+Json parse(const Bytes& b){return Json::parse(b.begin(),b.end());}
+uint64_t little(std::span<const uint8_t> b,size_t at,size_t width=8){require(width<=8&&at<=b.size()&&width<=b.size()-at,"public SSZ width");uint64_t out=0;for(size_t i=0;i<width;++i)out|=uint64_t(b[at+i])<<(8*i);return out;}
+ConsensusRoot root(std::span<const uint8_t> b,size_t at){require(at<=b.size()&&32<=b.size()-at,"root width");ConsensusRoot out{};std::copy_n(b.begin()+at,32,out.begin());return out;}
+ConsensusRoot root(const Json& j){const auto s=j.get<std::string>();const auto b=unhex(s);require(b.size()==32&&hex(b)==s,"canonical root");return root(b,0);}
+Bytes encoded(const Json& j,size_t width){const auto s=j.get<std::string>();const auto b=unhex(s);require(b.size()==width&&hex(b)==s,"canonical encoded public bytes");return b;}
+void shape(const Json& j,std::initializer_list<const char*> keys){require(j.is_object()&&j.size()==keys.size(),"exact public schema");for(const char* k:keys)require(j.contains(k),"public schema key");}
+std::unique_ptr<Fd> directory(const fs::path& path){
+ require(path.is_absolute()&&path==path.lexically_normal(),"absolute normal directory");auto current=std::make_unique<Fd>(::open("/",O_RDONLY|O_DIRECTORY|O_CLOEXEC));
+ for(const auto& part:path.relative_path()){require(part!="."&&part!="..","directory component");current=std::make_unique<Fd>(::openat(current->value,part.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));}
+ return current;
+}
+struct ReadFile {
+ int parent;std::string name;std::unique_ptr<Fd> fd;struct stat observed{};Bytes bytes;
+ ReadFile(int d,std::string leaf,size_t maximum):parent(d),name(std::move(leaf)){
+  require(!name.empty()&&fs::path(name).filename()==name&&name!="."&&name!="..","public basename");fd=std::make_unique<Fd>(::openat(d,name.c_str(),O_RDONLY|O_NOFOLLOW|O_CLOEXEC));require(::fstat(fd->value,&observed)==0&&S_ISREG(observed.st_mode)&&observed.st_nlink==1&&observed.st_uid==::geteuid()&&(observed.st_mode&0022)==0&&observed.st_size>=0&&uint64_t(observed.st_size)<=maximum,"public file identity/budget");
+  bytes.resize(size_t(observed.st_size));size_t at=0;while(at<bytes.size()){checkpoint();const auto n=::pread(fd->value,bytes.data()+at,std::min<size_t>(65536,bytes.size()-at),off_t(at));require(n>0,"bounded public read");at+=size_t(n);}recheck();
+ }
+ void recheck()const{struct stat fdstat{},pathstat{};require(::fstat(fd->value,&fdstat)==0&&::fstatat(parent,name.c_str(),&pathstat,AT_SYMLINK_NOFOLLOW)==0&&same_stat(observed,fdstat)&&same_stat(observed,pathstat),"public input replaced/moved");Bytes again(bytes.size());size_t at=0;while(at<again.size()){checkpoint();const auto n=::pread(fd->value,again.data()+at,std::min<size_t>(65536,again.size()-at),off_t(at));require(n>0,"public input readback");at+=size_t(n);}require(again==bytes&&::fstat(fd->value,&fdstat)==0&&::fstatat(parent,name.c_str(),&pathstat,AT_SYMLINK_NOFOLLOW)==0&&same_stat(observed,fdstat)&&same_stat(observed,pathstat),"public bytes or identity changed during readback");}
+};
+struct Bundle {Json manifest;std::map<std::string,Bytes> files;Bytes wire;std::string manifest_sha;};
+struct Loaded {
+ std::unique_ptr<Fd> dir;std::vector<std::unique_ptr<ReadFile>> reads;Bundle bundle;
+ Loaded(const fs::path& path,const std::string& expected){canonical_sha(expected);require(path.filename()=="manifest.json"||path.filename()=="isolated-domain.json","only public manifest basename accepted");dir=directory(path.parent_path());auto m=std::make_unique<ReadFile>(dir->value,path.filename().string(),4*1024*1024);require(digest(m->bytes)==expected,"external manifest pin");bundle.manifest=parse(m->bytes);bundle.manifest_sha=expected;reads.push_back(std::move(m));
+  const std::map<std::string,std::string> names{{"genesis","genesis.json"},{"genesisState","genesis-state.ssz"},{"genesisValidators","genesis-validators.ssz"},{"initial","initial.json"},{"profile","profile.json"}};const auto& files=bundle.manifest.at("files");require(files.is_object()&&files.size()==names.size(),"five public files required");
+  for(const auto& [kind,name]:names){const auto& pin=files.at(kind);shape(pin,{"path","sha256","bytes"});require(pin.at("path")==name,"only known public files permitted");auto input=std::make_unique<ReadFile>(dir->value,name,16*1024*1024);require(pin.at("bytes").get<size_t>()==input->bytes.size()&&pin.at("sha256").get<std::string>()==digest(input->bytes),"manifest public file pin");bundle.files.emplace(kind,input->bytes);reads.push_back(std::move(input));}
+  const auto text=bundle.manifest.at("bootstrapSigningHistory").at("block").at("ssz").get<std::string>();require(text.size()<=16*1024*1024&&text.starts_with("0x"),"public wire budget");bundle.wire=unhex(text);require(hex(bundle.wire)==text,"canonical public signed wire");
+ }
+ void recheck()const{for(const auto& input:reads)input->recheck();}
+};
+struct Verified {Json report;ConsensusBeaconHeader header;Genesis genesis;Bytes wire;};
+Verified verify(const Bundle& b,const std::function<void()>& check=checkpoint){
+ if(check)check();const auto& m=b.manifest;require(m.at("format")=="nano-isolated-capella-fixture-domain-v1"&&m.at("synthetic")==true&&m.at("productionQualified")==false,"isolated public fixture only");const auto& history=m.at("bootstrapSigningHistory").at("block");const auto& wire=b.wire;
+ const auto& profile=b.files.at("profile");const auto rules=load_capella_fork_profile(std::string(profile.begin(),profile.end()),sha256(profile),1024*1024);const auto& r=rules.transition;const auto& limits=r.consensus.state;const auto genesis=Genesis::from_json(parse(b.files.at("genesis")));require(genesis.consensus=="beacon"&&genesis.evm_revision==EvmRevision::Shanghai&&genesis.chain_id==r.chain_id&&r.replay_policy==ReplayPolicy::RequireChainId&&genesis.block.header.number==0&&hex(genesis.block.header.hash())==m.at("executionGenesisHash").get<std::string>(),"pinned genesis/profile identity");
+ const auto& pre=b.files.at("genesisState");require(pre.size()<=r.maximum_state_bytes&&little(pre,40)==0&&root(pre,8)==root(m.at("genesisValidatorsRoot")),"pinned pre-state domain");const auto pre_root=capella_beacon_state_root(pre,limits,r.execution,r.maximum_state_bytes,check);require(pre_root==root(m.at("genesisStateRoot")),"pinned full pre-state root");
+ const ConsensusBeaconHeader parent{little(pre,64),little(pre,72),root(pre,80),pre_root,root(pre,144)};const auto context=capella_fork_block_context({pre,std::nullopt},parent,{r.consensus.epoch,r.execution,r.maximum_state_bytes},limits,check);require(context.registry.validators.size()==64&&m.at("publicKeys").size()==65,"public registry size");
+ const size_t historical=176+64*limits.slots_per_historical_root;const auto vs=little(pre,historical+88,4),end=little(pre,historical+92,4);require(vs<=end&&end<=pre.size()&&Bytes(pre.begin()+vs,pre.begin()+end)==b.files.at("genesisValidators"),"public registry bytes differ from authenticated pre-state");
+ for(size_t i=0;i<64;++i){const auto& item=m.at("publicKeys").at(i);require(item.at("index")==i&&encoded(item.at("publicKey"),48)==Bytes(context.registry.validators.at(i).public_key.begin(),context.registry.validators.at(i).public_key.end()),"public key differs from authenticated registry");}
+ require(wire.size()>=184&&wire.size()<=r.consensus.maximum_block_bytes&&little(wire,0,4)==100&&little(wire,180,4)==84,"signed Capella envelope");const auto body=std::span<const uint8_t>(wire).subspan(184);const ConsensusBeaconHeader h{little(wire,100),little(wire,108),root(wire,116),root(wire,148),capella_beacon_body_root(body,r.consensus.body,limits.sync_committee_size,r.execution,r.withdrawals.maximum_per_payload,r.maximum_bls_changes,r.consensus.maximum_block_bytes,check)};
+ require(h.slot==1&&history.at("slot")==1&&history.at("validatorIndex")==h.proposer_index&&h.state_root==root(m.at("initialStateRoot"))&&consensus_beacon_header_root(h)==root(m.at("initialHeadRoot"))&&m.at("bootstrapDutyPolicy").at("minimumNewProposalSlot")==2,"presigned anchor metadata");
+ const auto identity=prepare_capella_proposer_identity({pre,std::nullopt},parent,h.slot,{r.consensus.epoch,r.execution,r.maximum_state_bytes},limits,r.consensus.attestation.duties,64,100000,check);require(identity&&identity->index==h.proposer_index&&identity->public_key==encoded(m.at("publicKeys").at(h.proposer_index).at("publicKey"),48),"genuine proposer selection");const auto signing=consensus_signing_root(consensus_beacon_header_root(h),consensus_domain({0,0,0,0},identity->fork_version,identity->genesis_root));require(signing==root(history.at("signingRoot"))&&Bytes(wire.begin()+4,wire.begin()+100)==encoded(history.at("signature"),96)&&verify_consensus_beacon_header(h,identity->fork_version,identity->genesis_root,identity->public_key,std::span<const uint8_t>(wire).subspan(4,96)),"genuine proposal signature/domain");
+ auto block_hash=[&](const Int& height){if(height==0)return genesis.block.header.hash();throw std::runtime_error("bootstrap requested unavailable ancestor");};const auto post=prepare_capella_state_transition({pre,std::nullopt},wire,r,genesis.block.header,genesis.state,block_hash,64,100000,check);require(bool(post),"full signed Capella transition rejected");
+ const CapellaStoreSnapshotLimits snapshot_limits{16*1024*1024,4,64,64,r.maximum_state_bytes,4*r.maximum_state_bytes,64,100000};const auto& initial=b.files.at("initial");const auto trusted=capella_store_from_snapshot(std::string(initial.begin(),initial.end()),sha256(initial),rules,snapshot_limits,check);require(trusted.blocks.size()==1&&trusted.blocks.contains(consensus_beacon_header_root(h)),"single public trusted anchor required");const auto anchor=trusted.blocks.at(consensus_beacon_header_root(h)).lease(check);require(anchor->header==h&&anchor->state==post->consensus&&anchor->execution_block.to_json(true)==post->execution.block.to_json(true)&&anchor->execution_state.root()==post->execution.state.root()&&anchor->execution_state.to_json()==post->execution.state.to_json()&&anchor->receipts.size()==post->execution.receipts.size(),"full post-state/execution differs from pinned anchor");for(size_t i=0;i<anchor->receipts.size();++i)require(anchor->receipts[i].to_json()==post->execution.receipts[i].to_json(),"anchor receipts differ");
+ if(check)check();return {Json{{"format","nano-public-bootstrap-anchor-verification-v1"},{"passed",true},{"manifestSha256",b.manifest_sha},{"wireSha256",digest(wire)},{"wireBytes",wire.size()},{"slot",h.slot},{"proposerIndex",h.proposer_index},{"authenticatedRegistryKeys",64},{"fullSignedCapellaTransitionVerified",true},{"publicKeyDomainProposerSignatureVerified",true},{"pinnedPostStateExecutionReceiptsMatched",true},{"archiveRead",false},{"archivePayloadEqualityVerified",false},{"currentJournalFloorsVerified",false},{"witnessArchiveSignaturesVerified",false},{"historicalTokenDigestAncestryVerified",false},{"durablePendingMessageSemanticsVerified",false},{"runtimeStarted",false},{"newSignaturesCreated",0},{"privateKeysOrEnvRead",false},{"networkUsed",false},{"productionQualified",false}},h,genesis,wire};
+}
+void archive_entry(const std::optional<CheckpointArchiveEntry>& row,const Verified& v){const auto header_root=consensus_beacon_header_root(v.header);require(row&&row->root==Bytes(header_root.begin(),header_root.end())&&row->slot==v.header.slot&&row->payload==v.wire,"archive must equal the complete authenticated signed public wire");}
+Json inventory(int directory_fd){
+ auto held=std::make_unique<Fd>(::dup(directory_fd));DIR* raw=::fdopendir(held->value);require(raw,"database metadata inventory");held->value=-1;std::unique_ptr<DIR,decltype(&::closedir)> entries(raw,::closedir);::rewinddir(entries.get());std::vector<std::string> names;
+ for(;;){checkpoint();errno=0;auto* entry=::readdir(entries.get());if(!entry){require(errno==0,"database inventory directory read error");break;}const std::string name=entry->d_name;if(name=="."||name=="..")continue;require(names.size()<4096,"database file count bound");names.push_back(name);}std::sort(names.begin(),names.end());Json out=Json::array();uint64_t total=0;
+ for(const auto& name:names){checkpoint();ReadFile input(directory_fd,name,32*1024*1024);total+=input.bytes.size();require(total<=512*1024*1024,"database inventory byte bound");const auto& st=input.observed;
+#ifdef __APPLE__
+  const Json times=Json::array({st.st_mtimespec.tv_sec,st.st_mtimespec.tv_nsec,st.st_ctimespec.tv_sec,st.st_ctimespec.tv_nsec});
+#else
+  const Json times=Json::array({st.st_mtim.tv_sec,st.st_mtim.tv_nsec,st.st_ctim.tv_sec,st.st_ctim.tv_nsec});
+#endif
+  out.push_back({{"name",name},{"sha256",digest(input.bytes)},{"bytes",input.bytes.size()},{"device",uint64_t(st.st_dev)},{"inode",uint64_t(st.st_ino)},{"uid",uint64_t(st.st_uid)},{"gid",uint64_t(st.st_gid)},{"mode",uint64_t(st.st_mode)},{"nlink",uint64_t(st.st_nlink)},{"times",times}});
+ }
+ return out;
+}
+void archive_readonly(const fs::path& request_path,const std::string& request_sha,Verified& verified){
+ canonical_sha(request_sha);require(request_path.filename()=="archive-request.json","fixed archive request basename");auto request_dir=directory(request_path.parent_path());ReadFile input(request_dir->value,request_path.filename().string(),65536);require(digest(input.bytes)==request_sha,"external archive request pin");const auto request=parse(input.bytes);shape(request,{"database","expectedCheckpoint","maximumArchiveBytes","expectedWireSha256"});require(request.at("expectedWireSha256").get<std::string>()==digest(verified.wire),"externally pinned public wire differs");
+ const auto& pin=request.at("expectedCheckpoint");shape(pin,{"sequence","digest"});const auto sequence=u64(quantity(pin.at("sequence")));require(sequence&&quantity(Int(std::to_string(sequence)))==pin.at("sequence").get<std::string>(),"canonical external checkpoint sequence");const ForkCheckpointToken expected{sequence,encoded(pin.at("digest"),32)};const auto maximum=u64(quantity(request.at("maximumArchiveBytes")));require(maximum>=verified.wire.size()&&maximum<=16*1024*1024,"archive read budget");
+ const fs::path database=request.at("database").get<std::string>();auto db_dir=directory(database);struct stat dir_before{},path_before{};require(::fstat(db_dir->value,&dir_before)==0&&::lstat(database.c_str(),&path_before)==0&&same_stat(dir_before,path_before)&&dir_before.st_uid==::geteuid()&&(dir_before.st_mode&0022)==0,"database directory identity/mode");ReadFile current(db_dir->value,"CURRENT",65536);const auto before=inventory(db_dir->value);
+ {ChainStore disk(database,ChainStore::OpenMode::ReadOnly);disk.bind_chain(verified.genesis.chain_id,verified.genesis.block.header.hash(),"beacon");require(bool(disk.fork_checkpoint(verified.genesis.chain_id,verified.genesis.block.header.hash(),128*1024*1024,expected)),"current external checkpoint not present");const auto id=consensus_beacon_header_root(verified.header);archive_entry(disk.checkpoint_archive(Bytes(id.begin(),id.end()),size_t(maximum)),verified);require(bool(disk.fork_checkpoint(verified.genesis.chain_id,verified.genesis.block.header.hash(),128*1024*1024,expected)),"checkpoint moved during archive read");}
+ const auto after=inventory(db_dir->value);struct stat dir_after{},path_after{};require(::fstat(db_dir->value,&dir_after)==0&&::lstat(database.c_str(),&path_after)==0&&same_stat(dir_before,dir_after)&&same_stat(dir_before,path_after)&&before==after,"read-only database inventory changed");current.recheck();input.recheck();verified.report["archiveRead"]=true;verified.report["archivePayloadEqualityVerified"]=true;verified.report["currentExternalPrimaryCheckpointMatched"]=true;verified.report["databaseFileInventoryUnchanged"]=true;verified.report["archiveRequestSha256"]=request_sha;verified.report["databaseInventorySha256"]=digest(before.dump());
+}
+struct Cancel:std::runtime_error{Cancel():std::runtime_error("public anchor test cancellation"){} };
+void self_test(const fs::path& public_manifest){
+ constexpr const char* literal="ec150c28c8c187e6728cea7ef717acc6383e0b75242302b0a481fc2a9c425fc6";Loaded loaded(public_manifest,literal);const auto original=loaded.bundle;const auto good=verify(original);size_t refusals=0;
+ auto reject=[&](Bundle bad){bool refused=false;try{verify(bad);}catch(const std::exception&){refused=true;}require(refused,"altered public anchor accepted");++refusals;};
+ auto bad=original;bad.wire[4]^=1;bad.manifest["bootstrapSigningHistory"]["block"]["signature"]=hex(Bytes(bad.wire.begin()+4,bad.wire.begin()+100));bad.manifest["bootstrapSigningHistory"]["block"]["ssz"]=hex(bad.wire);reject(std::move(bad));
+ bad=original;bad.wire[116]^=1;reject(std::move(bad));bad=original;bad.wire[184]^=1;reject(std::move(bad));bad=original;bad.wire[180]=0;reject(std::move(bad));bad=original;bad.wire.resize(183);reject(std::move(bad));
+ bad=original;bad.files.at("genesisState")[0]^=1;reject(std::move(bad));bad=original;bad.manifest["publicKeys"][63]["publicKey"]="0x"+std::string(96,'0');reject(std::move(bad));bad=original;bad.manifest["genesisValidatorsRoot"]="0x"+std::string(64,'0');reject(std::move(bad));
+ bad=original;auto profile=parse(bad.files.at("profile"));profile.at("common").at(5)="0x1";const auto text=profile.dump();bad.files["profile"]=Bytes(text.begin(),text.end());reject(std::move(bad));
+ bool cancelled=false;try{verify(original,[]{throw Cancel();});}catch(const Cancel&){cancelled=true;}require(cancelled,"public verifier ignored cancellation");
+ const auto id=consensus_beacon_header_root(good.header);std::optional<CheckpointArchiveEntry> row=CheckpointArchiveEntry{Bytes(id.begin(),id.end()),good.header.slot,good.wire};archive_entry(row,good);auto archive_reject=[&](std::optional<CheckpointArchiveEntry> entry){bool refused=false;try{archive_entry(entry,good);}catch(const std::exception&){refused=true;}require(refused,"forged archive equality accepted");++refusals;};archive_reject(std::nullopt);auto changed=*row;changed.payload[4]^=1;archive_reject(changed);changed=*row;++changed.slot;archive_reject(changed);changed=*row;changed.root[0]^=1;archive_reject(changed);
+ require(loaded.bundle.wire==original.wire&&loaded.bundle.files==original.files&&loaded.bundle.manifest==original.manifest,"pure checks changed input");loaded.recheck();std::cout<<Json{{"format","nano-public-bootstrap-anchor-verifier-self-test-v1"},{"passed",true},{"genuineAlreadySignedPublicAnchor",true},{"fullSignedCapellaTransitionVerified",true},{"adversarialRefusals",refusals},{"typedCancellationPropagated",true},{"archiveEqualityPureCases",5},{"actualDatabaseRead",false},{"privateKeysOrEnvRead",false},{"newSignaturesCreated",0},{"elapsedMs",elapsed()},{"maxRssKiB",rss()},{"networkUsed",false},{"runtimeStarted",false},{"productionQualified",false}}.dump()<<std::endl;
+}
+}
+int main(int argc,char** argv){try{
+ if(argc==2&&std::string(argv[1])=="--self-test"){stage="public-fixture-self-test";self_test(fs::path(NANO_TEST_SOURCE)/"tests/fixtures/capella-bootstrap-anchor-cb532/manifest.json");return 0;}
+ require((argc==4||argc==6)&&std::string(argv[1])=="--verify","usage: --verify public-manifest absolute-external-manifest-sha256 [archive-request absolute-external-request-sha256]");stage="public-held-inputs";Loaded loaded(fs::path(argv[2]),argv[3]);stage="full-public-signed-anchor";auto verified=verify(loaded.bundle);if(argc==6){stage="optional-local-archive-readonly";archive_readonly(fs::path(argv[4]),argv[5],verified);}stage="public-input-readback";loaded.recheck();verified.report["publicFileBytesAndIdentityUnchanged"]=true;verified.report["elapsedMs"]=elapsed();verified.report["maxRssKiB"]=rss();std::cout<<verified.report.dump()<<std::endl;return 0;
+ }catch(...){std::cout<<Json{{"format","nano-public-bootstrap-anchor-verification-v1"},{"passed",false},{"refusedStage",stage},{"rawErrorDetailsSuppressed",true},{"newSignaturesCreated",0},{"privateKeysOrEnvRead",false},{"runtimeStarted",false},{"productionQualified",false}}.dump()<<std::endl;return 1;}}

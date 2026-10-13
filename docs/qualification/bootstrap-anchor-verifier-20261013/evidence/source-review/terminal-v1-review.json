@@ -1,0 +1,90 @@
+{
+  "format": "nano-public-bootstrap-anchor-independent-static-review-v1",
+  "status": "PURE_PUBLIC_AUTHENTICATION_NO_STATIC_BLOCKER_OPTIONAL_ARCHIVE_INVENTORY_P2_OPEN",
+  "createdAtUtc": "2026-10-13T18:55:23.411885+00:00",
+  "repositoryRevisionRead": "faa810563948c3b57d97a2034ae667c9d533347e",
+  "proposalManifest": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-bootstrap-anchor-verifier-proposal-20261013/manifest.json",
+    "sha256": "5a5ee576e6a07a7e227b610b05907fdcd6abb34dc7837bbfd2e2dfd05b541d25"
+  },
+  "source": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-bootstrap-anchor-verifier-proposal-20261013/source/tests/capella/bootstrap_anchor_verify.cpp",
+    "sha256": "0e067fe9720834aa4b13b63a406aec819dc75c611c4614e2eff3e407694d41b3",
+    "bytes": 22231
+  },
+  "allProposalSourceAndPublicFixtureBindingsMatched": true,
+  "coreSourcesRead": [
+    {
+      "path": "src/consensus_altair_transition.cpp",
+      "sha256": "6670ca3e23b21ecebe4d34760d37c42e8a467c95c81f5123f900fbf1346fca70"
+    },
+    {
+      "path": "src/consensus_capella_fork_state.cpp",
+      "sha256": "bf35b0cfff9a3a0383378abbab15812ea94bf0704e1912e0bdb86e8f7e0133b8"
+    },
+    {
+      "path": "src/consensus_capella_store_snapshot.cpp",
+      "sha256": "a2de75d049eb959930f394ff2906fdb35dd038e7af172f823ab00374f0cf3369"
+    },
+    {
+      "path": "src/consensus_beacon_header.cpp",
+      "sha256": "0b2d0214a092b66983410cdb3f3235738103362a21daba458cab44cc079c76a5"
+    },
+    {
+      "path": "src/storage.cpp",
+      "sha256": "4611df07f863f1b97e48ed305b50981f396f302fb019e945e35e47b8dce53891"
+    },
+    {
+      "path": "src/consensus_capella_profile.cpp",
+      "sha256": "c67c2871ef3a79a4187de96a7138dc83c277c91a902296b13b97f7ad165c97ba"
+    },
+    {
+      "path": "include/nano/consensus_capella_transition.hpp",
+      "sha256": "567f66d72762b625bc982e5d336c0822db95522728b2f55f73d97772dabaf726"
+    }
+  ],
+  "findings": [
+    {
+      "priority": "P2",
+      "path": "tests/capella/bootstrap_anchor_verify.cpp",
+      "line": 98,
+      "scope": "optional local archive read-only inventory only",
+      "problem": "readdir errors are not distinguished from normal end-of-directory, so two matching incomplete scans could claim databaseFileInventoryUnchanged. The name-count bound does not authenticate successful complete enumeration.",
+      "repair": "Reset errno immediately before each readdir; distinguish nullptr+errno0 EOF from error; call checkpoint per bounded entry; preserve4096 count and all read-only/full-byte checks.",
+      "actualIoFailureReproduced": false,
+      "rootAcceptedAndOwnerPreparingSeparateV2": true
+    }
+  ],
+  "positiveStaticChecks": {
+    "externalLiteralManifestShaRequired": true,
+    "onlyFiveKnownCompanionFilesPermitted": true,
+    "nofollowHeldFileDescriptorsAndReadback": true,
+    "fullPreStateRootAndRegistryBytesAuthenticated": true,
+    "genuineProposerDomainAndBlsVerifierUsed": true,
+    "fullCapellaTransitionFromPairedGenesis": true,
+    "fullConsensusIncludingProcessingMetadataCompared": true,
+    "fullExecutionBlockAccountsRootAndReceiptsCompared": true,
+    "archiveRequiresExactRootSlotCompleteSignedWire": true,
+    "readOnlyDatabaseOpenNoCreateIfMissing": true,
+    "primaryCheckpointCheckedBeforeAfter": true,
+    "noWriteImportSignatureClockOrRuntimePathAdded": true
+  },
+  "limitsAndDependencies": {
+    "manifestCallerMustBeSeparatelyTrusted": true,
+    "sourceMustBeStoppedExternally": true,
+    "typedCancellationCaseTestsEntryOnly": true,
+    "archiveInventoryAndRocksdbReadsNotExecuted": true,
+    "pendingValidator64NotQualified": true,
+    "witnessJournalFloorsHistoricalAncestryPendingSemanticsNotQualified": true,
+    "rss128MiBElapsed60sGuardsStaticOnly": true
+  },
+  "compilerInvoked": false,
+  "testsExecuted": 0,
+  "dockerInvoked": false,
+  "sshInvoked": false,
+  "databaseRead": false,
+  "privateInputsRead": false,
+  "runtimeDutiesResumed": false,
+  "commonFinalityAdvanced": false,
+  "productionQualified": false
+}

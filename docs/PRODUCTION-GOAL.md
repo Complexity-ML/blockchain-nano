@@ -1,3 +1,9 @@
+## 13 octobre 2026 — Ancre signée qualifiée, archive PRIMARY absente
+
+Le helper V3 passe ses self-tests réels sur Docker ARM (50 ms, 18 728 KiB) et AMD64 (149 ms, 18 688 KiB) : ancre publique déjà signée, transition complète, 13 refus adverses, cinq contrôles d’archive et annulation typée. Une compilation et un lien par architecture ; aucun cœur recompilé, nouvelle signature ou ancien test rejoué. Refus antérieurs conservés.
+
+Sur la copie VPS arrêtée, l’absence de l’archive signée initiale PRIMARY est mesurée ; l’égalité reste refusée. Sa conservation atomique par CAS avec témoin est non implémentée et non appliquée. Aucun rapport ou engagement privé publié. Journaux, pending, horloge de deux heures expirée, duties et finalité commune restent ouverts. V37/données Mac/NAS sont distincts. Naturel AMD64, image/install, CI facturation, audit externe et production restent ouverts. Tous critères, matrices et corps historiques sont conservés.
+
 ## 13 octobre 2026 — Source Capella qualifiée sur ARM, naturel AMD64 ouvert
 
 Candidat : baseline `8be93c69e144ed6e7f8b8a33ecb308c6fe3d4fdd` + six fichiers exacts coreV2 `da39fde2` / testV4 `27667420` (patch `70b062b5`). La copie détenue du state est authentifiée avant certification ; le fingerprint privé bytes/metadata/header/profil évite une validation complète répétée de la même source. Toute différence conserve la validation complète et ses refus ; signatures, admission et journaux restent contrôlés. Douze catégories synthétiques couvrent oracle, alias HOT/COW, framing/annulation, vraie admission de votes et contre-exemples constructeur BAD→GOOD/GOOD→BAD. Le tiny ne qualifie pas cold→hot.

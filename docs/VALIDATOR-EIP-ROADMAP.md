@@ -1,3 +1,9 @@
+## 13 octobre 2026 — Archive initiale absente, reprise ouverte
+
+Le helper V3 passe sur Docker ARM et AMD64 : ancre déjà signée et transition complète, 13 refus adverses, cinq contrôles d’archive et annulation typée. Il ne signe rien, ne lit aucune clé et ne démarre ni validateur ni réseau. Échec de compilation V2 conservé ; réparation limitée à deux conversions JSON explicites.
+
+L’absence de l’archive signée initiale PRIMARY est mesurée sur la copie VPS arrêtée ; l’égalité reste refusée. La conservation CAS avec témoin n’est ni implémentée ni appliquée. Aucun rapport ou engagement privé publié. Journaux, signatures du témoin, pending et ascendance des tokens restent ouverts. La fenêtre de reprise de deux heures est expirée, sans prolongation ni remise à zéro activée. Duties/finalité commune restent à démontrer. V37/Mac/NAS sont distincts de cb532. Tous critères, statuts EIP, matrices et corps historiques restent conservés ; production ouverte.
+
 ## 13 octobre 2026 — Copie/fingerprint de source qualifiés localement, reprise ouverte
 
 Candidat : baseline `8be93c69e144ed6e7f8b8a33ecb308c6fe3d4fdd` + six fichiers exacts coreV2 `da39fde2` / testV4 `27667420` (patch `70b062b5`). La copie détenue du state est authentifiée avant certification ; le fingerprint privé bytes/metadata/header/profil évite une validation complète répétée de la même source. Toute différence conserve la validation complète et ses refus ; signatures, admission et journaux restent contrôlés. Douze catégories synthétiques couvrent oracle, alias HOT/COW, framing/annulation, vraie admission de votes et contre-exemples constructeur BAD→GOOD/GOOD→BAD. Le tiny ne qualifie pas cold→hot.

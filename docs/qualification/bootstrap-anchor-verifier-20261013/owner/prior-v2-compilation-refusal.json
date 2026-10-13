@@ -1,0 +1,23 @@
+{
+  "format": "nano-public-bootstrap-anchor-verifier-v2-compilation-refusal-v1",
+  "provenance": "ROOT report; no additional compiler execution or raw log retrieval by proposal author",
+  "session": 77211,
+  "terminalChunk": "1995a0",
+  "reportedResult": "ARM V2 compilation failed",
+  "diagnostic": [
+    {
+      "line": 84,
+      "comparison": "hex(string)==Json executionGenesisHash",
+      "repair": "Json.get<std::string>()"
+    },
+    {
+      "line": 111,
+      "comparison": "quantity(string)==Json sequence",
+      "repair": "Json.get<std::string>()"
+    }
+  ],
+  "sourceV2Sha256": "f30e726779204c7cbb7a98d907f2b570eae3e46bfa890263638a6db94b32406c",
+  "actualFailureRetainedByRoot": true,
+  "coreFailureInferred": false,
+  "signatureOrDbAccess": false
+}

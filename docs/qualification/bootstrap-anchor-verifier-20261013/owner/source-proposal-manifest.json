@@ -1,0 +1,163 @@
+{
+  "format": "nano-public-bootstrap-anchor-verifier-source-proposal-v3",
+  "status": "FROZEN_SOURCE_NOT_COMPILED_OR_TESTED",
+  "createdAtUtc": "2026-10-13T19:05:08.031880+00:00",
+  "baselineGitCommit": "faa810563948c3b57d97a2034ae667c9d533347e",
+  "targetSourceCoreManifest": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-target-source-auth-candidate-v2-20261013/manifest.json",
+    "sha256": "da39fde2008dcbe960e67b10e0d538f2456aab9d19c86756d291533f99113b06"
+  },
+  "targetSourceTestManifest": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-target-source-auth-test-proposal-v4-20261013/manifest.json",
+    "sha256": "276674201c356da8d9d15a308c544bc86dcedbec609731d975ee53afb5b45dd7"
+  },
+  "sourceFiles": [
+    {
+      "path": "CMakeLists.txt",
+      "sha256": "b4f1248ef106d0015b0645bbd9b0e2f2a070a2cba7e9440d537e0ce852f4d627",
+      "bytes": 156367,
+      "baselineSha256": "8ac60b3b7290cf0e53bd5b1bfb394ea7efe8c0e84495bd1c43012a4b140321d6"
+    },
+    {
+      "path": "tests/capella/bootstrap_anchor_verify.cpp",
+      "sha256": "079e5c126fe7d2773bf4022f70befdd84b13b68159d8d68fcf165cddf4cf306f",
+      "bytes": 22387,
+      "baselineSha256": null
+    }
+  ],
+  "fixtureFiles": [
+    {
+      "path": "tests/fixtures/capella-bootstrap-anchor-cb532/manifest.json",
+      "sha256": "ec150c28c8c187e6728cea7ef717acc6383e0b75242302b0a481fc2a9c425fc6",
+      "bytes": 23260,
+      "origin": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-fixture-exporter/native-controls/campaign-fixture/isolated-domain.json"
+    },
+    {
+      "path": "tests/fixtures/capella-bootstrap-anchor-cb532/genesis.json",
+      "sha256": "3373c76de09192ad440625613db97c17b50fbfeddb5adb3190c8f0eb83a22005",
+      "bytes": 15996,
+      "origin": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-fixture-exporter/native-controls/campaign-fixture/genesis.json",
+      "publicPresignedFixture": true
+    },
+    {
+      "path": "tests/fixtures/capella-bootstrap-anchor-cb532/genesis-state.ssz",
+      "sha256": "611643b5ebf9e294bd65a4517e2d69609cdf92043d020b761696675a7dcb1879",
+      "bytes": 19749,
+      "origin": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-fixture-exporter/native-controls/campaign-fixture/genesis-state.ssz",
+      "publicPresignedFixture": true
+    },
+    {
+      "path": "tests/fixtures/capella-bootstrap-anchor-cb532/genesis-validators.ssz",
+      "sha256": "325ad8fd0d7e7be50933d73b7f7de911c62f92d77ca38b5de735febf6a935999",
+      "bytes": 7744,
+      "origin": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-fixture-exporter/native-controls/campaign-fixture/genesis-validators.ssz",
+      "publicPresignedFixture": true
+    },
+    {
+      "path": "tests/fixtures/capella-bootstrap-anchor-cb532/initial.json",
+      "sha256": "33aee17d626a3e541c7934c5576c025f8819d442555df6fadc90dde49bd045a7",
+      "bytes": 62713,
+      "origin": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-fixture-exporter/native-controls/campaign-fixture/initial.json",
+      "publicPresignedFixture": true
+    },
+    {
+      "path": "tests/fixtures/capella-bootstrap-anchor-cb532/profile.json",
+      "sha256": "e3440eba0a871a8eedf84a6e2cdccee53cc4389e8ce6b979166621c8e893890d",
+      "bytes": 1331,
+      "origin": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/isolated-fixture-exporter/native-controls/campaign-fixture/profile.json",
+      "publicPresignedFixture": true
+    }
+  ],
+  "registration": {
+    "target": "nano-capella-bootstrap-anchor-verify",
+    "test": "consensus_capella_public_bootstrap_anchor_verifier",
+    "command": [
+      "nano-capella-bootstrap-anchor-verify",
+      "--self-test"
+    ],
+    "timeoutSeconds": 70,
+    "newTargets": 1,
+    "newCTests": 1,
+    "parentCMakeReconstructedExactly": true
+  },
+  "scope": {
+    "signatureGeneration": false,
+    "customCrypto": false,
+    "compilerExecuted": false,
+    "testsExecuted": false,
+    "astTestsExecuted": false,
+    "dbRead": false,
+    "privateInputsRead": false,
+    "dockerExecuted": false,
+    "sshExecuted": false,
+    "repositoryEdited": false,
+    "runtimeStarted": false,
+    "productionQualified": false
+  },
+  "payloads": [
+    {
+      "path": "bootstrap-anchor-code-only.patch",
+      "sha256": "ab82e06c03c3b646737c0a3d85bf148e852e8505938eb4e63aa5da0866a3ead2",
+      "bytes": 23752
+    },
+    {
+      "path": "CMakeLists.target-source-test-v4.txt",
+      "sha256": "8ac60b3b7290cf0e53bd5b1bfb394ea7efe8c0e84495bd1c43012a4b140321d6",
+      "bytes": 155807
+    },
+    {
+      "path": "registration-block.txt",
+      "sha256": "f9049416fbf953b1e0a38bf877eb98dfeabb068879941399146c35c01a7423d5",
+      "bytes": 559
+    },
+    {
+      "path": "README.md",
+      "sha256": "820d9360cff8d45d71e864cac9268bc017f892d0b5063a9091d0136a88f5e667",
+      "bytes": 5277
+    },
+    {
+      "path": "prior-v2-compilation-refusal.json",
+      "bytes": 762,
+      "sha256": "056d76a373054612bc3616ebe48ee6bfca38b594c30ce9e573014f535a62c3a0"
+    }
+  ],
+  "priorFrozenProposal": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-bootstrap-anchor-verifier-proposal-v2-20261013/manifest.json",
+    "sha256": "303218633a44c6f3cd9d116cc07f783e011d6a27f689bb508d3fd4574eaf34b8",
+    "status": "V2 full source/manifests/fixtures preserved unchanged"
+  },
+  "delta": "Only two explicit Json string extractions .get<std::string>() at executionGenesisHash and canonical expected sequence comparisons; no logic, CMake, fixtures, profile, cryptography, resource bound or core change.",
+  "baselineCMakeExactObserved": true,
+  "protectedDeliveredProductionAndTestBindings": [
+    {
+      "path": "include/nano/consensus_capella_fork_store.hpp",
+      "sha256": "a422943490f38c96146846557222369746a307394a4955a5701bb4fc583fd181",
+      "bytes": 11723
+    },
+    {
+      "path": "src/consensus_capella_fork_store.cpp",
+      "sha256": "f1db700a1f7cb282bdc672498b71e71e01ca86de14b438f23d03e80349c9672e",
+      "bytes": 39175
+    },
+    {
+      "path": "src/consensus_capella_fork_state.cpp",
+      "sha256": "bf35b0cfff9a3a0383378abbab15812ea94bf0704e1912e0bdb86e8f7e0133b8",
+      "bytes": 9354
+    },
+    {
+      "path": "src/consensus_capella_target_source_auth.hpp",
+      "sha256": "e9fa05a172145751ca0c7153550af9a0921f64a6cdc3fcb3cbb1c198605abfea",
+      "bytes": 3640
+    },
+    {
+      "path": "tests/test_capella_target_source_authentication.cpp",
+      "sha256": "17e32c0f79c784e16d8561fa7812d1c75eff438f95842d1c3fb0303bd3c77525",
+      "bytes": 30641
+    }
+  ],
+  "actualV2CompilationFailure": {
+    "path": "prior-v2-compilation-refusal.json",
+    "bytes": 762,
+    "sha256": "056d76a373054612bc3616ebe48ee6bfca38b594c30ce9e573014f535a62c3a0"
+  }
+}
