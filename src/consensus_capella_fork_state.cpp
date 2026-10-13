@@ -41,7 +41,8 @@ CapellaSlotPreparation::CapellaSlotPreparation(const CapellaSlotState& input,
  const ConsensusBeaconHeader& parent,const CapellaEpochRules& rules,
  const AltairStateLimits& limits,const std::function<void()>& checkpoint)
  :parent_(parent),rules_(rules),limits_(limits),state_(input){
- capella_fork_block_context(input,parent,rules,limits,checkpoint);
+ // Authenticate the exact owned copy, including its processing metadata.
+ capella_fork_block_context(state_,parent_,rules_,limits_,checkpoint);
 }
 uint64_t CapellaSlotPreparation::slot()const{return number(state_.ssz,40);}
 bool CapellaSlotPreparation::advance(uint64_t target,uint64_t maximum_slots,

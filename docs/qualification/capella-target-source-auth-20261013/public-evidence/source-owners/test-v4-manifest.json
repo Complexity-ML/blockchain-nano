@@ -1,0 +1,145 @@
+{
+  "format": "nano-capella-target-source-auth-test-proposal-v4",
+  "status": "FROZEN_SOURCE_NOT_COMPILED_OR_TESTED",
+  "createdAtUtc": "2026-10-13T18:15:55.891104+00:00",
+  "baselineGitCommit": "8be93c69e144ed6e7f8b8a33ecb308c6fe3d4fdd",
+  "sourceFiles": [
+    {
+      "path": "CMakeLists.txt",
+      "bytes": 155807,
+      "sha256": "8ac60b3b7290cf0e53bd5b1bfb394ea7efe8c0e84495bd1c43012a4b140321d6",
+      "baselineSha256": "8546a435ba838142ab25c01c19d3fdd5e48a1c5c63a2b68200b2ee759ae39294"
+    },
+    {
+      "path": "tests/test_capella_target_source_authentication.cpp",
+      "bytes": 30641,
+      "sha256": "17e32c0f79c784e16d8561fa7812d1c75eff438f95842d1c3fb0303bd3c77525",
+      "baselineSha256": null
+    }
+  ],
+  "coreCandidateManifest": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-target-source-auth-candidate-v2-20261013/manifest.json",
+    "sha256": "da39fde2008dcbe960e67b10e0d538f2456aab9d19c86756d291533f99113b06",
+    "bytes": 4970
+  },
+  "coreCandidateSourceFiles": [
+    {
+      "path": "include/nano/consensus_capella_fork_store.hpp",
+      "sha256": "a422943490f38c96146846557222369746a307394a4955a5701bb4fc583fd181",
+      "bytes": 11723,
+      "baselineSha256": "d999a0e8b98afcbd8e5e88a54470a00e7e46ea5c38c1b57a3a9aa2e65b0d9400"
+    },
+    {
+      "path": "src/consensus_capella_fork_store.cpp",
+      "sha256": "f1db700a1f7cb282bdc672498b71e71e01ca86de14b438f23d03e80349c9672e",
+      "bytes": 39175,
+      "baselineSha256": "f20e24e5d21505c64c380affe1d653573e2a2d22d3e9d566af2e5da01fe2ee1b"
+    },
+    {
+      "path": "src/consensus_capella_fork_state.cpp",
+      "sha256": "bf35b0cfff9a3a0383378abbab15812ea94bf0704e1912e0bdb86e8f7e0133b8",
+      "bytes": 9354,
+      "baselineSha256": "d967d0ac35b0811ec62c88fe2aa6bf961bf49f10743644e2503fa2174061f822"
+    },
+    {
+      "path": "src/consensus_capella_target_source_auth.hpp",
+      "sha256": "e9fa05a172145751ca0c7153550af9a0921f64a6cdc3fcb3cbb1c198605abfea",
+      "bytes": 3640,
+      "baselineSha256": null
+    }
+  ],
+  "protectedUnchangedSourceBindings": [
+    {
+      "path": "tests/test_capella_transition.cpp",
+      "sha256": "35d580c3f8a15337eb56413c9d15e7b6c0644b5572a45eb6a4f9be1ac2f34a5e",
+      "bytes": 537498,
+      "baselineBytesEqual": true
+    },
+    {
+      "path": "tests/test_capella_duty_availability.cpp",
+      "sha256": "44febdb90047ea8a7de5e78002d73ed96b82cc67259dd356e98c7ba096f6647d",
+      "bytes": 32533,
+      "baselineBytesEqual": true
+    },
+    {
+      "path": "include/nano/consensus_capella_fork_state.hpp",
+      "sha256": "205ced9b7a85e562f69a2f9ff680368597bcd8110a5b0fcf42c4ac8c3715dd36",
+      "bytes": 3378,
+      "baselineBytesEqual": true
+    },
+    {
+      "path": "include/nano/consensus_bls.hpp",
+      "sha256": "bf8668a4e5119529ec091e7fe5616d93767da243bf63c9a34b3ae4b384706cbb",
+      "bytes": 1626,
+      "baselineBytesEqual": true
+    }
+  ],
+  "designReferences": [
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-target-authentication-optimization-design-20261013/DESIGN.md",
+      "sha256": "bd55cd5cdb1bd027bf3b69029d43d27da5ea1c225e701bdd10ef1335d558dbee",
+      "bytes": 9897
+    }
+  ],
+  "registration": {
+    "target": "nano-capella-target-source-authentication-tests",
+    "test": "consensus_capella_target_source_authentication",
+    "command": [
+      "nano-capella-target-source-authentication-tests",
+      "--self-test"
+    ],
+    "timeoutSeconds": 70,
+    "label": "qualification_consensus_source_authentication",
+    "newTargets": 1,
+    "newCTests": 1,
+    "oldCMakeBytesReconstructedExactly": true
+  },
+  "scope": {
+    "categories": 12,
+    "realCppApiTestsWritten": true,
+    "compilationExecuted": false,
+    "testsExecuted": false,
+    "astTestsExecuted": false,
+    "repositoryMutated": false,
+    "dockerExecuted": false,
+    "sshExecuted": false,
+    "privateDataRead": false,
+    "coldRecordFixtureCovered": false,
+    "runtimeDutiesResumed": false,
+    "commonFinalityAdvanced": false,
+    "productionQualified": false
+  },
+  "payloads": [
+    {
+      "path": "target-source-authentication-tests.patch",
+      "sha256": "fc6b20f60f39f37742668ab099e81ec6a2787b5886f7383486a02bab12c10d39",
+      "bytes": 32143
+    },
+    {
+      "path": "CMakeLists.baseline8be.txt",
+      "sha256": "8546a435ba838142ab25c01c19d3fdd5e48a1c5c63a2b68200b2ee759ae39294",
+      "bytes": 155051
+    },
+    {
+      "path": "cmake-registration-block.txt",
+      "sha256": "f78520a239aa5e4e6a639f3e4b81063eae1f0dbe50ecf35411967141e1b349c4",
+      "bytes": 755
+    },
+    {
+      "path": "README.md",
+      "sha256": "523982911e1a4ce3b1c44239723f3e4fcac870e62a71069fdf91a6eb6587dc07",
+      "bytes": 4391
+    },
+    {
+      "path": "v3-profile-refusal-cause.json",
+      "sha256": "3cc1bc70833d95e44b2a12283cae84f2297248ae518a92e3372f9a1cd7d2c89f",
+      "bytes": 1201
+    }
+  ],
+  "priorFrozenProposal": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-target-source-auth-test-proposal-v3-20261013/manifest.json",
+    "sha256": "ab076fcb70078ea18d44184cd84f47ec526a9a2ae37260ea2eccd58f32d2aead",
+    "revision": "v1,v2,v3 preserved unchanged; actual v3 refusal retained by ROOT"
+  },
+  "delta": "Pair the valid native-votes variation with32-byte hash; retain unpaired invalid native profile as separate exact type/message comparison against capella_fork_profile oracle. No other test/core/header/CMake changes."
+}

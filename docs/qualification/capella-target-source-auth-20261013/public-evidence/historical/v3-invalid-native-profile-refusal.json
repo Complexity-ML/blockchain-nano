@@ -1,0 +1,24 @@
+{
+  "format": "nano-target-source-auth-v3-native-profile-test-failure-cause-v1",
+  "status": "TEST_ONLY_CORRECTION_PROPOSED_NOT_EXECUTED",
+  "actualFailureReportedByRoot": {
+    "batchSession": 50671,
+    "readbackChunk": "e89eec",
+    "newTestElapsedSeconds": 0.19,
+    "completedCategoriesBeforeFailure": [
+      "target-source-golden-full-oracle",
+      "target-source-hot-prealias-byte-boundaries",
+      "target-source-processing-metadata-presence"
+    ],
+    "error": "invalid Bellatrix Store snapshot at line 13",
+    "rawLogReadByThisAgent": false
+  },
+  "staticCause": {
+    "source": "src/consensus_bellatrix_store_snapshot.cpp",
+    "line": 13,
+    "invariant": "native_deposit_votes requires nonempty deposit_contract_code_hash; any nonempty hash must have exactly32bytes",
+    "v3TestMistake": "native flag toggled true with default empty hash; test expected false although serialization preserves invalid_argument",
+    "productionBugInferred": false
+  },
+  "repair": "Pair the valid native-votes variation with32-byte hash; retain unpaired invalid native profile as separate exact type/message comparison against capella_fork_profile oracle. No other test/core/header/CMake changes."
+}

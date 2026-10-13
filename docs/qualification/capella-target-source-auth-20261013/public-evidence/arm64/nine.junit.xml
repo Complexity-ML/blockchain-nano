@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="9"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="88"
+	timestamp="2026-10-13T18:30:32"
+	>
+	<testcase name="consensus_capella_duty_projection_availability" classname="consensus_capella_duty_projection_availability" time="6.72701" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_duty_availability"/>
+		</properties>
+		<system-out>{"callbackAndResourceErrorsVisible":true,"elapsedMs":96,"maxRssKiB":17412,"networkQualified":false,"optionalLocalSyncDeferred":true,"productionQualified":false,"proposalAttestationContextsRemainReady":true,"result":"PASS","runtimeStarted":false,"scenario":"capella-local-sync-postready63","strictSyncBoundaryStillRejects":true,"syntheticFixture":true,"syntheticFixtureSignaturesCreated":0}
+{"callbackResourceErrorsRemainVisible":true,"checkpointAndJournalUnchanged":true,"elapsedMs":216,"localKeyPendingRegistration":true,"maxRssKiB":22020,"networkQualified":false,"networkStarted":false,"productionQualified":false,"proposalAttestationAssignmentsRemainAvailable":true,"providerCalls":0,"realCoreAndLoopHealthy":true,"result":"PASS","runtimeStarted":false,"scenario":"capella-real-reactor-local-sync-postready63","syncCurrentDeferredBeforeProvider":true,"syncMembersDeferred":true,"syntheticFixture":true,"syntheticFixtureSignaturesCreated":0}
+{"clockMonotoneUnchangedAfterInitialTick":true,"coldDecodedCacheUsageDirectlyObs...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="consensus_bls_positive_verification_cache" classname="consensus_bls_positive_verification_cache" time="0.492981" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_crypto_cache"/>
+		</properties>
+		<system-out>{"malformedAndInfinityRejected":true,"mutatedExactTupleBytes":176,"negativeCertificatesStored":false,"non32GenuineMessagesUncached":true,"productionQualified":false,"result":"PASS","scenario":"bls-positive-cache-byte-boundaries"}
+{"byteBudgetIncludesFixedMetadata":true,"copied176VerifiedAndMemoized":true,"optionalAllocationFailureFallsBackToGenuineCrypto":true,"productionQualified":false,"result":"PASS","scenario":"bls-cache-instance-budget-allocation-snapshot"}
+{"actualGlobalGenuineVerificationCalls":256,"controlledWaitUsesSeparateInstance":true,"globalVerifierInjectionUsed":false,"oldInflightCannotReinsert":true,"productionQualified":false,"result":"PASS","scenario":"bls-cache-concurrent-clear-generation"}
+{"productionQualified":false,"provesNaturalChainDeadline":false,"result":"PASS","samples":[{"cacheEnabled":false,"fixedMetadataBytes":272,"genuineTuples":64,"hits":0,"processCpuUs":309974,"productionQualified":false,"rawCryptoCalls":512,"rawCryptoNanoseconds":328642179,"residentCacheBytes":272,"verificati...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="storage_checkpoint_immutable_blobs" classname="storage_checkpoint_immutable_blobs" time="0.020869" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_local"/>
+		</properties>
+		<system-out>{"binaryFragments":true,"concurrentCasLoserAbsent":true,"digestAndAggregateBounds":true,"duplicateIdempotence":true,"executionCheckpointCoupling":true,"legacyApisPreserved":true,"productionQualified":false,"readonlyCopyUnchanged":true,"runtimeGraphPagingImplemented":false,"scenario":"checkpoint-immutable-blobs","tamperingRejectedWithoutOverwrite":true}
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_target_source_authentication" classname="consensus_capella_target_source_authentication" time="0.18114" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_source_authentication"/>
+		</properties>
+		<system-out>{"productionQualified":false,"result":"PASS","scenario":"target-source-golden-full-oracle"}
+{"productionQualified":false,"result":"PASS","scenario":"target-source-hot-prealias-byte-boundaries"}
+{"productionQualified":false,"result":"PASS","scenario":"target-source-processing-metadata-presence"}
+{"productionQualified":false,"result":"PASS","scenario":"target-source-profile-header-parent-target-guards"}
+{"productionQualified":false,"result":"PASS","scenario":"target-source-independent-record-hot-cow"}
+{"productionQualified":false,"result":"PASS","scenario":"target-source-truncation-maximum-state-fallback"}
+{"productionQualified":false,"result":"PASS","scenario":"target-source-stream-and-fallback-cancellation"}
+{"productionQualified":false,"result":"PASS","scenario":"target-source-construction-owned-copy"}
+{"productionQualified":false,"result":"PASS","scenario":"target-source-retarget-advance-readiness-budgets"}
+{"productionQualified":false,"result":"PASS","scenario":"target-source-explicit-streaming-encoding-ve...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_fragment_checkpoint_migration" classname="consensus_capella_fragment_checkpoint_migration" time="0.30636" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_ethereum"/>
+		</properties>
+		<system-out>{"cancelledMigrationUnchanged":true,"coldStateCacheImplemented":false,"corruptionRejections":3,"graphAndIdentityPreserved":true,"independentPreviousPrimaryRecovered":true,"journalCommitmentUnchanged":true,"legacyMigrated":true,"migrationIdempotent":true,"networkQualified":false,"primaryAndWitnessRestarts":true,"productionQualified":false,"scenario":"capella-fragment-checkpoint-integration","stickyFragmentFormat":true,"validChildDurablyAdmitted":true}
+{"scenario":"bls-verification-cache-process-metrics","calls":23,"hits":14,"rawCryptoCalls":9,"rawCryptoNanoseconds":4576042,"entries":7,"capacityEntries":256,"residentCacheBytes":45328,"maximumBytes":65536,"inFlight":0,"productionQualified":false}
+</system-out>
+	</testcase>
+	<testcase name="storage_capella_blob_gc_next_publication" classname="storage_capella_blob_gc_next_publication" time="0.298486" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_maintenance"/>
+		</properties>
+		<system-out>{"collectorInterface":"cpp-api","deletedPrimaryRecords":1,"deletedWitnessRecords":1,"localSigningProviderCalls":0,"naturallyObservedCampaignLeak":false,"networkQualified":false,"nextChildNormallyAdmitted":true,"nextPublicationColdReopened":true,"originalAndSignerWitnessBytesUnchanged":true,"productionQualified":false,"runtimeDutiesResumed":false,"sameCheckpointColdReopened":true,"scenario":"gc-cold-reopen-and-next-admission","syntheticOrphanStagedViaCas":true}
+{"scenario":"bls-verification-cache-process-metrics","calls":22,"hits":13,"rawCryptoCalls":9,"rawCryptoNanoseconds":4399169,"entries":7,"capacityEntries":256,"residentCacheBytes":45328,"maximumBytes":65536,"inFlight":0,"productionQualified":false}
+</system-out>
+	</testcase>
+	<testcase name="storage_capella_blob_gc_cli_closed_fixture" classname="storage_capella_blob_gc_cli_closed_fixture" time="0.497444" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_maintenance_cli"/>
+		</properties>
+		<system-out>{"actualCliCompleted":true,"cliExitCode":0,"deletedPrimaryRecords":1,"deletedWitnessRecords":1,"naturalPruningReplay":false,"noWork":false,"privateFixtureExported":false,"productionQualified":false,"receiptBytes":"{\n  \"afterFiles\": [\n    {\n      \"allocatedBytes\": 131072,\n      \"apparentBytes\": 111375,\n      \"files\": 11,\n      \"sstBytes\": 19237,\n      \"walBytes\": 0\n    },\n    {\n      \"allocatedBytes\": 131072,\n      \"apparentBytes\": 110360,\n      \"files\": 11,\n      \"sstBytes\": 21764,\n      \"walBytes\": 0\n    }\n  ],\n  \"atomicExclusiveLinkPublication\": true,\n  \"beforeFiles\": [\n    {\n      \"allocatedBytes\": 143360,\n      \"apparentBytes\": 119535,\n      \"files\": 12,\n      \"sstBytes\": 41415,\n      \"walBytes\": 0\n    },\n    {\n      \"allocatedBytes\": 147456,\n      \"apparentBytes\": 122243,\n      \"files\": 12,\n      \"sstBytes\": 44083,\n      \"walBytes\": 0\n    }\n  ],\n  \"format\": \"nano-owned-checkpoint-gc-maintenance-receipt-v1\",\n  \"plan\": {...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="storage_capella_blob_gc_adversarial_boundaries" classname="storage_capella_blob_gc_adversarial_boundaries" time="1.16449" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_maintenance"/>
+		</properties>
+		<system-out>{"logicalChecks":0,"phase":"planned-before-delete","primaryWalFiles":1,"productionQualified":false,"scenario":"gc-crash-child-phase"}
+{"callbacks":57880,"logicalChecks":1,"phase":"wal-change-logical-check","primaryOrphanAbsent":true,"productionQualified":false,"scenario":"gc-crash-child-phase","witnessOrphanPresent":true}
+{"allPreDeletionRefusalsLogicalContentsUnchanged":true,"fixtureOnly":true,"localSigningProviderCalls":0,"networkQualified":false,"passedBoundaries":["primary-missing-live-ref","primary-corrupt-live-ref","witness-missing-live-ref","witness-corrupt-live-ref","pending-sequence-divergence","primary-neither-previous-nor-next","wrong-independent-witness-pin","wrong-independent-pending-next-pin","request-hash-before-parse","signing-store-role-forbidden","future-schema-refused","readers-not-stopped","complete-scan-budget","total-delete-budget","single-batch-budget","large-finite-duration-no-timepoint-overflow","inventory-cancellation","existing-mode-never-creates-missing-db","existing-mode-never-ini...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="storage_capella_blob_gc_natural_pruning" classname="storage_capella_blob_gc_natural_pruning" time="78.8307" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_maintenance"/>
+		</properties>
+		<system-out>{"finalizedEpoch":0,"progressSlot":8,"signedVotes":8}
+{"finalizedEpoch":0,"progressSlot":16,"signedVotes":72}
+{"finalizedEpoch":0,"progressSlot":24,"signedVotes":136}
+{"finalizedEpoch":2,"progressSlot":32,"signedVotes":200}
+{"anchorMovesBeforeGc":2,"collection":{"allProtectedReferencesReopened":true,"copiedDataOnly":true,"format":"nano-owned-checkpoint-blob-gc-result-v1","noWork":false,"nonGcNamespacesUnchanged":true,"originalSourceInventoriesUnchanged":true,"pendingNext":{"digest":"0xfdc2b91ec399b1dc69b275396f73eee20be1afe721da61e1056f34c2840fcc39","sequence":"0x15a"},"physicalPowerLossQualified":false,"physicalSpaceReductionGuaranteed":false,"planId":"e5199c84c4e5bbcff4958a23d4b158bc0ecf982cc2b0c0496b784ab1f8c4bfce","primary":{"digest":"0xfdc2b91ec399b1dc69b275396f73eee20be1afe721da61e1056f34c2840fcc39","sequence":"0x15a"},"primaryAndWitnessAtomicTransaction":false,"productionQualified":false,"runtimeDutiesResumed":false,"stores":[{"deletedLogicalPayloadBytes":1403222,"deletedRecords":23},{"deletedLogicalPa...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+</testsuite>

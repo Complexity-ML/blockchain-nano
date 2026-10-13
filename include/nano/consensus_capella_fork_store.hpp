@@ -60,6 +60,9 @@ class CapellaTargetPreparation {
  CapellaForkBlockRules rules_;
  ConsensusCheckpoint target_;
  CapellaSlotPreparation slots_;
+ // Local SHA256 certificate of the fully authenticated, pre-advance source.
+ // Never imported, persisted, or inferred from a HOT lease pointer identity.
+ ConsensusRoot source_certificate_{};
 public:
  CapellaTargetPreparation(const CapellaForkStore&,const CapellaForkBlockRules&,
   const ConsensusCheckpoint&,const std::function<void()>& checkpoint={});

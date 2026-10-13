@@ -2,6 +2,7 @@
 #include "nano/consensus_capella_store_snapshot.hpp"
 #include "consensus_capella_projection.hpp"
 #include "nano/consensus_capella_deposits.hpp"
+#include "consensus_capella_target_source_auth.hpp"
 #include <exception>
 namespace nano {
 namespace {
@@ -165,19 +166,31 @@ std::optional<CapellaForkStore> prepare_capella_resumed_fork_block(const Capella
 namespace nano {
 CapellaTargetPreparation::CapellaTargetPreparation(const CapellaForkStore& store,
  const CapellaForkBlockRules& rules,const ConsensusCheckpoint& target,const std::function<void()>& check)
- :rules_(rules),target_(target),slots_(store.blocks.at(target.root).lease(check)->state,store.blocks.at(target.root).header(),
- epoch_rules(rules),rules.transition.consensus.state,check){
- validate_rules(rules);const auto count=rules.transition.consensus.epoch.ffg.slots_per_epoch;
- if(!count||target.epoch>store.timed.view.current_epoch||target.epoch>UINT64_MAX/count||slots_.parent().slot>target.epoch*count||consensus_beacon_header_root(slots_.parent())!=target.root)throw std::invalid_argument("Invalid prepared Capella target");
+ :rules_(rules),target_(target),slots_(store.blocks.at(target_.root).lease(check)->state,store.blocks.at(target_.root).header(),
+ epoch_rules(rules_),rules_.transition.consensus.state,check){
+ validate_rules(rules_);const auto count=rules_.transition.consensus.epoch.ffg.slots_per_epoch;
+ if(!count||target_.epoch>store.timed.view.current_epoch||target_.epoch>UINT64_MAX/count||slots_.parent().slot>target_.epoch*count||consensus_beacon_header_root(slots_.parent())!=target_.root)throw std::invalid_argument("Invalid prepared Capella target");
+ // SlotPreparation has fully authenticated its own pre-advance state copy.
+ // Seal only those bytes; the later projected state is never this certificate.
+ source_certificate_=capella_detail::target_source_fingerprint(slots_.state(),slots_.parent(),rules_,check);
 }
 bool CapellaTargetPreparation::matches(const CapellaForkStore& store,const CapellaForkBlockRules& rules,
  const ConsensusCheckpoint& target,const std::function<void()>& check)const{
+ if(check)check();
  if(target!=target_||capella_fork_profile(rules)!=capella_fork_profile(rules_))return false;
  const auto found=store.blocks.find(target.root);if(found==store.blocks.end()||found->second.header()!=slots_.parent())return false;
- // Recheck the source state binding. A reused root/header must not conceal a
- // mutated record or changed processing metadata in local checkpoint validation.
- const auto found_pin=found->second.lease(check);capella_fork_block_context(found_pin->state,found_pin->header,epoch_rules(rules),rules.transition.consensus.state,check);
- return true;
+ const auto found_pin=found->second.lease(check);
+ // A HOT lease can have a pre-existing mutable alias: always read its current
+ // bytes and processing metadata, never certify its pointer/control block.
+ if(found_pin->header!=slots_.parent())return false;
+ if(found_pin->state.ssz.size()<=rules.transition.maximum_state_bytes&&
+    capella_detail::target_source_fingerprint(found_pin->state,found_pin->header,rules,check)==source_certificate_){
+  if(check)check();return true;
+ }
+ // Preserve complete validation/error propagation for changed or over-budget
+ // sources. Even another valid source must rebuild this old preparation.
+ capella_fork_block_context(found_pin->state,found_pin->header,epoch_rules(rules),rules.transition.consensus.state,check);
+ if(check)check();return false;
 }
 bool CapellaTargetPreparation::retarget(const CapellaForkStore& store,const CapellaForkBlockRules& rules,
  const ConsensusCheckpoint& target,const std::function<void()>& check){

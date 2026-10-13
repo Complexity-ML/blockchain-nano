@@ -1,0 +1,24 @@
+--- V1/run-arm-nine-tests.py
++++ V2/run-arm-nine-tests.py
+@@ -65,10 +65,10 @@
+  for row in member['members']:
+   p=canonical(build/row['object']);current=observe(p);require(current['sha256']==row['sha256'] and current['st_size']==row['bytes'],'current object raw member payload');protected[str(p)]=current
+  protected[str(build/'libnano_core.a')]=terminal['archive'];bound={r['target']:r for r in terminal['programs']};require(len(terminal['programs'])==len(bound)==10 and set(bound)==set(plan['expectedPrograms']),'exact ten current programs')
+- objectPaths={c['target']:c['object'] for c in bp['consumers']};objectPaths[bp['newTarget']]='CMakeFiles/'+bp['newTarget']+'.dir/'+bp['newSource']+'.o';programRows=json.loads(raw(base/'receipts/programs-final-readback.json'))
++ objectPaths={c['target']:c['object'] for c in bp['consumers']};objectPaths[bp['newTarget']]='CMakeFiles/'+bp['newTarget']+'.dir/'+bp['newSource']+'.o';programRows=json.loads(raw(base/'receipts/programs-final-readback.json'));buildReadbackCtime=[]
+  for name,row in bound.items():
+   require(row['coreArchiveSha256']==terminal['archive']['sha256'] and row['binaryReused'] is False,'all ten new links into exact archive')
+-  for part,p in [('object',build/objectPaths[name]),('binary',build/name)]:require(programRows[name+'/'+part]==row[part],'final program readback');protected[str(canonical(p))]=row[part]
++  for part,p in [('object',build/objectPaths[name]),('binary',build/name)]:compare(programRows[name+'/'+part],row[part],name+'/'+part,buildReadbackCtime);protected[str(canonical(p))]=row[part]
+  for receipt in ['generated-compiler-metadata-after.json','copied-dependencies-before-first-compile.json','generated-inputs-before-first-compile.json']:
+   for rel,row in json.loads(raw(base/'receipts'/receipt)).items():protected[str(canonical(build/rel))]=row
+  for name in ['compile-commands-original.json','sdk-hashes.sh','members.txt','member-proof.sh']:protected[str(canonical(base/'controls'/name))]=observe(base/'controls'/name)
+@@ -105,7 +105,7 @@
+ /bin/sh /controls/sdk-hashes.sh > /testing/sdk-after.log || exit 92
+ exit "$code"
+ ''').encode());scriptBefore=observe(testing/'run-nine.sh');copyGraphBefore=observe(testing/'ctest/CTestTestfile.cmake')
+-  save(out/'before.json',{'controllerSha256':a.controller_sha,'planSha256':a.plan_sha,'actualBuildTerminalSha256':a.build_terminal_sha,'protected':before,'admissionCtimeDiagnostics':admission,'registrationSourceSha256':graphSha,'oldPassesReused':False,'historicalStatsRequalified':False})
++  save(out/'before.json',{'controllerSha256':a.controller_sha,'planSha256':a.plan_sha,'actualBuildTerminalSha256':a.build_terminal_sha,'protected':before,'admissionCtimeDiagnostics':admission,'buildFinalReadbackCtimeDiagnostics':buildReadbackCtime,'registrationSourceSha256':graphSha,'oldPassesReused':False,'historicalStatsRequalified':False})
+   r=command('image-inspect',[str(docker),'image','inspect','--format','{{json .}}',plan['image']]);require(r.returncode==0,'existing image inspection');image=json.loads(r.stdout);require(image['Id']==plan['image'] and image['Architecture']=='arm64' and image['Os']=='linux','exact image');require(not any(s.split('=',1)[0].startswith(('NANO_','LD_','DYLD_')) for s in image.get('Config',{}).get('Env',[])),'image private/interposition environment')
+   require(absent('before-launch-inspect'),'container name already owned elsewhere')
+   argv=[str(docker),'run','--rm','--pull=never','--platform','linux/arm64','--name',name,'--label','nano.bls.arm.owner='+owner,'--network','none','--read-only','--user','501:20','--cap-drop','ALL','--security-opt','no-new-privileges','--cpus','2','--memory','4g','--pids-limit','256','--tmpfs','/tmp:rw,nosuid,nodev,noexec,size=512m,uid=501,gid=20,mode=700','--mount','type=bind,src='+str(source)+',dst=/work,readonly','--mount','type=bind,src='+str(build)+',dst=/outputs,readonly','--mount','type=bind,src='+str(base/'controls')+',dst=/controls,readonly','--mount','type=bind,src='+str(testing)+',dst=/testing','--env','TMPDIR=/tmp','--env','NANO_BLS_VERIFICATION_CACHE_METRICS=1','--workdir','/testing/ctest','--entrypoint','/bin/sh',plan['image'],'/testing/run-nine.sh']

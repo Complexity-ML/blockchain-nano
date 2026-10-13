@@ -1664,6 +1664,13 @@ set_tests_properties(consensus_capella_incoming_target_alternation PROPERTIES TI
 add_test(NAME consensus_capella_signed_transition COMMAND nano-capella-transition-tests)
 set_tests_properties(consensus_capella_signed_transition PROPERTIES TIMEOUT 120)
 
+add_executable(nano-capella-target-source-authentication-tests tests/test_capella_target_source_authentication.cpp)
+target_link_libraries(nano-capella-target-source-authentication-tests PRIVATE nano_core)
+target_include_directories(nano-capella-target-source-authentication-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ckzg/blst/bindings")
+target_compile_definitions(nano-capella-target-source-authentication-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+add_test(NAME consensus_capella_target_source_authentication COMMAND nano-capella-target-source-authentication-tests --self-test)
+set_tests_properties(consensus_capella_target_source_authentication PROPERTIES TIMEOUT 70 LABELS qualification_consensus_source_authentication)
+
 add_executable(nano-capella-fork-tests tests/test_capella_fork.cpp)
 target_link_libraries(nano-capella-fork-tests PRIVATE nano_core)
 target_compile_definitions(nano-capella-fork-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
