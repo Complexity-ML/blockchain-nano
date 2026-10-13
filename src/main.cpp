@@ -39,10 +39,15 @@ int main(int argc,char** argv){try{
  if(command=="validator"){if(argc<3||argc>4||(argc==4&&std::string(argv[3])!="--once"))throw std::invalid_argument("validator requires config.json [--once]");return run_validator(load(argv[2]),argc==4);}
  if((command!="init"&&command!="status"&&command!="mine"&&command!="validate"&&command!="import"&&command!="serve"&&command!="run")||argc<4)throw std::invalid_argument("invalid arguments; use --help");
  if((command=="run"&&(argc<4||argc>5))||(command=="serve"&&(argc<4||argc>7))||((command=="mine"||command=="validate")&&(argc<6||argc>7))||(command=="import"&&argc!=6)||((command=="init"||command=="status")&&argc!=4))throw std::invalid_argument("invalid arguments; use --help");
- auto genesis=Genesis::from_json(load(argv[2]));Blockchain chain(argv[3],std::move(genesis));
- if(command=="run")return run_node(chain,argv[3],argv[0],argc==5?load(argv[4]):Json::object());
+ // An explicit archive recovery must not create PRIMARY/identity/Genesis
+ // before its signed authority and two retained commitments are checked.
+ const Json startup_config=command=="run"?(argc==5?load(argv[4]):Json::object()):command=="serve"?(argc==7?load(argv[6]):Json::object()):Json::object();
+ const bool existing_archive_recovery=startup_config.is_object()&&startup_config.contains("capella")&&startup_config.at("capella").is_object()&&startup_config.at("capella").contains("bootstrapArchiveRecovery");
+ auto genesis=Genesis::from_json(load(argv[2]));
+ Blockchain chain(argv[3],std::move(genesis),existing_archive_recovery?ChainStore::OpenMode::ReadWriteExisting:ChainStore::OpenMode::ReadWrite);
+ if(command=="run")return run_node(chain,argv[3],argv[0],startup_config);
  if(command=="serve"){
-  auto port=argc>=5?u64(quantity(Json(argv[4]))):8545;if(port>65535)throw std::invalid_argument("invalid port");const std::string bind=argc>=6?argv[5]:"127.0.0.1";const auto config=argc==7?load(argv[6]):Json::object();
+  auto port=argc>=5?u64(quantity(Json(argv[4]))):8545;if(port>65535)throw std::invalid_argument("invalid port");const std::string bind=argc>=6?argv[5]:"127.0.0.1";const auto& config=startup_config;
   std::shared_ptr<CapellaRuntime> capella;std::string token;
   if(config.contains("capella")){
    if(bind!="127.0.0.1"||config.contains("bellatrix")||config.contains("altair")||config.contains("bft")||config.value("dev_mode",false))throw std::invalid_argument("Capella serve requires loopback and exclusive consensus configuration");

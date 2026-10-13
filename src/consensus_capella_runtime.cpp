@@ -1,4 +1,5 @@
 #include "nano/consensus_capella_runtime.hpp"
+#include "nano/consensus_capella_bootstrap_input.hpp"
 #include "nano/local_monotonic_time.hpp"
 #include <fstream>
 #include <iostream>
@@ -33,7 +34,9 @@ std::string read_bounded(const std::filesystem::path& path,size_t maximum,const 
 }
 struct Owner {InboundBudget decoder_budget;std::unique_ptr<ChainStore> witness;std::unique_ptr<CapellaDurableReactor> reactor;std::unique_ptr<CapellaLocalClock> clock;std::unique_ptr<CapellaValidatorLoop> validator;std::unique_ptr<CapellaConsensusService> admission;std::unique_ptr<CapellaInventorySessions> catalogs;};
 }
-CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const std::function<void()>& checkpoint,std::function<uint64_t()> now){
+CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config_input,const std::function<void()>& checkpoint,std::function<uint64_t()> now){
+ // Preserve a single startup configuration across cancellable file reads.
+ const Json config=config_input;
  // Diagnostic stage timing contains no configuration or key material. It is
  // enabled only by the existing private-network trace flag and cannot fail boot.
  const char* startup_trace=std::getenv("NANO_TEST_NETWORK_TRACE");
@@ -49,7 +52,7 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const 
   }catch(...){} // Telemetry never substitutes for validation or controls startup.
  };
  stage("validate-input");
- if(checkpoint)checkpoint();auto base=config;base.erase("validator");base.erase("admission");base.erase("catalogs");base.erase("recoveryWitness");base.erase("recoveryCommitment");base.erase("automaticRecovery");base.erase("network");base.erase("automaticPruning");base.erase("historicalStatePruning");base.erase("fragmentCheckpointMigration");base.erase("coldCheckpoint");shape(base,{"profile","limits","initial","restart","clock"});
+ if(checkpoint)checkpoint();auto base=config;base.erase("validator");base.erase("admission");base.erase("catalogs");base.erase("recoveryWitness");base.erase("recoveryCommitment");base.erase("automaticRecovery");base.erase("bootstrapArchive");base.erase("bootstrapArchiveRecovery");base.erase("network");base.erase("automaticPruning");base.erase("historicalStatePruning");base.erase("fragmentCheckpointMigration");base.erase("coldCheckpoint");shape(base,{"profile","limits","initial","restart","clock"});
  const auto& genesis=chain.genesis();
  if(genesis.consensus!="beacon"||genesis.evm_revision!=EvmRevision::Shanghai)throw std::invalid_argument("Capella runtime requires Beacon Shanghai chain");
  const auto& p=config.at("profile");shape(p,{"file","sha256","maximumBytes"});const auto maximum=number(p.at("maximumBytes"));
@@ -102,8 +105,33 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const 
  if(automatic&&(!witnessed||restart||config.at("initial").is_null()))throw std::invalid_argument("Automatic Capella recovery requires witness and bootstrap snapshot, without restart token");
  if(witnessed){if(restart)throw std::invalid_argument("Witness recovery cannot use a restart token");}
  else if(restart==!config.at("initial").is_null())throw std::invalid_argument("Choose exactly one Capella initial snapshot or restart token");
+ // Bootstrap archives are explicit authorities, never a fallback inferred
+ // from a failed generic recovery. Own and authenticate the complete signed
+ // transition before opening WITNESS or constructing clocks/signers/workers.
+ const bool fresh_archive=config.contains("bootstrapArchive");
+ const bool archive_recovery=config.contains("bootstrapArchiveRecovery");
+ if(fresh_archive&&archive_recovery)throw std::invalid_argument("Choose one Capella bootstrap archive authority");
+ if((fresh_archive||archive_recovery)&&(!witnessed||restart||automatic||recovery_commitment))throw std::invalid_argument("Capella archive authority requires explicit witnessed startup without generic recovery");
+ if((fresh_archive&&config.at("initial").is_null())||(archive_recovery&&!config.at("initial").is_null()))throw std::invalid_argument("Capella archive initial/recovery mode differs");
+ std::optional<CapellaSignedBootstrapArchive> archive_proof;
+ std::optional<ForkCheckpointToken> archive_next_primary,archive_next_witness;
+ if(archive_recovery){
+  const auto& a=config.at("bootstrapArchiveRecovery");shape(a,{"authority","nextPrimary","nextWitness"});
+  const auto& primary=a.at("nextPrimary");const auto& witness=a.at("nextWitness");
+  shape(primary,{"sequence","digest"});shape(witness,{"sequence","digest"});
+  archive_next_primary=ForkCheckpointToken{number(primary.at("sequence")),digest(primary.at("digest"))};
+  archive_next_witness=ForkCheckpointToken{number(witness.at("sequence")),digest(witness.at("digest"))};
+  archive_proof.emplace(load_capella_signed_bootstrap_proof(genesis,rules,limits,a.at("authority"),checkpoint));
+ }else if(fresh_archive){
+  archive_proof.emplace(load_capella_signed_bootstrap_proof(genesis,rules,limits,config.at("bootstrapArchive"),checkpoint));
+ }
  auto owner=std::make_shared<Owner>();std::set<std::filesystem::path> paths;
- if(witnessed){const auto path=config.at("recoveryWitness").get<std::string>();if(path.empty())throw std::invalid_argument("Empty Capella recovery witness path");paths.insert(std::filesystem::weakly_canonical(path));owner->witness=std::make_unique<ChainStore>(path);}
+ if(witnessed){
+  const auto path=config.at("recoveryWitness").get<std::string>();if(path.empty())throw std::invalid_argument("Empty Capella recovery witness path");
+  paths.insert(std::filesystem::weakly_canonical(path));
+  owner->witness=std::make_unique<ChainStore>(path,archive_recovery?ChainStore::OpenMode::ReadWriteExisting:ChainStore::OpenMode::ReadWrite);
+  if(archive_recovery)owner->witness->require_existing_chain_binding(genesis.chain_id,genesis.block.header.hash(),"nano-capella-recovery-v1");
+ }
  bool recover=witnessed&&config.at("initial").is_null();
  if(automatic){
   owner->witness->bind_chain(genesis.chain_id,genesis.block.header.hash(),"nano-capella-recovery-v1");
@@ -117,7 +145,9 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const 
  if(recovery_commitment&&!recover)throw std::invalid_argument("Capella recovery commitment forbids bootstrap");
  stage("reactor-recovery");
  if(recover){
-  owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,*owner->witness,checkpoint,recovery_commitment);
+  if(archive_recovery){
+   owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,*owner->witness,std::move(*archive_proof),*archive_next_primary,*archive_next_witness,checkpoint);
+  }else owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,*owner->witness,checkpoint,recovery_commitment);
  }else if(restart){
   const auto& r=config.at("restart");shape(r,{"sequence","digest"});const ForkCheckpointToken token{number(r.at("sequence")),digest(r.at("digest"))};
   owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,token,checkpoint);
@@ -125,7 +155,9 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const 
   if(chain.store().fork_checkpoint(genesis.chain_id,genesis.block.header.hash(),limits.envelope_bytes))throw std::invalid_argument("Existing Capella checkpoint requires explicit restart token");
   const auto& a=config.at("initial");shape(a,{"file","sha256"});
   auto initial=capella_store_from_snapshot(read_bounded(a.at("file").get<std::string>(),limits.envelope_bytes,checkpoint),digest(a.at("sha256")),rules,limits,checkpoint);
-  owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,std::move(initial),checkpoint,owner->witness.get());
+  if(fresh_archive){
+   owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,std::move(initial),std::move(*archive_proof),*owner->witness,checkpoint);
+  }else owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,std::move(initial),checkpoint,owner->witness.get());
  }
  stage("checkpoint-migration");
  if(config.contains("automaticPruning")&&!config.at("automaticPruning").is_boolean())throw std::invalid_argument("Capella automaticPruning must be boolean");

@@ -1,0 +1,577 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -2065,3 +2065,17 @@
+ endif()
+ add_test(NAME consensus_capella_bootstrap_archive_cas COMMAND nano-capella-bootstrap-archive-cas-tests --self-test)
+ set_tests_properties(consensus_capella_bootstrap_archive_cas PROPERTIES TIMEOUT 70 LABELS qualification_consensus_recovery)
++
++if(TARGET nano-test-sync-fault AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
++ add_test(NAME consensus_capella_bootstrap_archive_pending_recovery COMMAND nano-capella-bootstrap-archive-cas-tests --pending-recovery-tests)
++ set_tests_properties(consensus_capella_bootstrap_archive_pending_recovery PROPERTIES TIMEOUT 70 LABELS qualification_consensus_recovery)
++endif()
++
++
++add_executable(nano-capella-bootstrap-startup-tests tests/test_capella_bootstrap_startup.cpp)
++target_link_libraries(nano-capella-bootstrap-startup-tests PRIVATE nano_core)
++target_compile_definitions(nano-capella-bootstrap-startup-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
++target_compile_definitions(nano-capella-bootstrap-startup-tests PRIVATE NANO_TEST_NANO_BINARY="$<TARGET_FILE:nano>")
++add_dependencies(nano-capella-bootstrap-startup-tests nano)
++add_test(NAME consensus_capella_bootstrap_startup COMMAND nano-capella-bootstrap-startup-tests --self-test)
++set_tests_properties(consensus_capella_bootstrap_startup PROPERTIES TIMEOUT 70 LABELS "qualification_consensus_recovery")
+--- a/include/nano/chain.hpp
++++ b/include/nano/chain.hpp
+@@ -71,6 +71,9 @@
+   const std::optional<ExecutionStateRetentionAnchor>& retention,const std::vector<CheckpointBlob>& blobs);
+ public:
+  Blockchain(const std::filesystem::path& database,Genesis genesis);
++ // Existing owner for stopped-copy maintenance: no schema, identity or Genesis
++ // initialization. ReadOnly/unknown modes are refused before opening the DB.
++ Blockchain(const std::filesystem::path& database,Genesis genesis,ChainStore::OpenMode mode);
+  // RPC must not serve a Beacon database until its checkpoint has been verified.
+  void require_execution_ready() const;
+  uint64_t event_cursor() const;
+--- /dev/null
++++ b/include/nano/consensus_capella_bootstrap_input.hpp
+@@ -0,0 +1,20 @@
++#pragma once
++#include "nano/consensus_capella_bootstrap_archive.hpp"
++#include "nano/consensus_capella_store_snapshot.hpp"
++namespace nano {
++// Load only externally pinned PUBLIC inputs for an ALREADY signed slot0->slot1
++// transition. The descriptor is exactly format/genesisState/signedBlock; each
++// artifact is exactly path/sha256/bytes. SHA256 is lowercase hex without 0x.
++// Paths must be absolute, lexically normal and have no symlink component.
++// Genesis/rules/limits/descriptor are owned before any caller callback. Files
++// stay open read-only; owned bytes are hashed before full transition validation
++// and checked again through the same descriptors before returning the proof.
++// The caller authenticates its Genesis/profile and descriptor externally. This
++// function neither supplies that authority nor publishes/imports any state.
++// Invalid schema/pins/rejected transitions throw invalid_argument; I/O errors,
++// allocation/resource failures and caller cancellation propagate. No signer,
++// journal, DB, clock, mutation, validator-count constant or Boolean trust input.
++CapellaSignedBootstrapArchive load_capella_signed_bootstrap_proof(
++ Genesis,CapellaForkBlockRules,CapellaStoreSnapshotLimits,Json descriptor,
++ const std::function<void()>& checkpoint={});
++}
+--- a/include/nano/storage.hpp
++++ b/include/nano/storage.hpp
+@@ -50,6 +50,8 @@
+  ChainStore(const ChainStore&)=delete;
+  ChainStore& operator=(const ChainStore&)=delete;
+  void bind_chain(const Int& chain_id,const Bytes& genesis_hash,const std::string& consensus,const std::string& staking_contract="");
++ // Authenticate an existing identity on this handle; never initializes it.
++ void require_existing_chain_binding(const Int& chain_id,const Bytes& genesis_hash,const std::string& consensus,const std::string& staking_contract="")const;
+  // Opaque checkpoint transport: caller validates the full consensus candidate
+  // before committing. Synchronous atomic payload/token replacement with CAS.
+  // A failed/uncertain disk write requires reopen and inspection before signing.
+--- a/src/chain.cpp
++++ b/src/chain.cpp
+@@ -84,12 +84,25 @@
+  if(g.evm_revision==EvmRevision::Paris||g.evm_revision==EvmRevision::Shanghai){const std::string domain=g.evm_revision==EvmRevision::Paris?"Nano/EVM/Paris/v1":"Nano/EVM/Shanghai/v1";h.extra_data=keccak(Rlp(std::vector<Rlp>{Rlp(Bytes(domain.begin(),domain.end())),Rlp(h.extra_data)}).encode());}
+  h.encode();return g;
+ }
++namespace {
++ChainStore::OpenMode blockchain_open_mode(ChainStore::OpenMode mode){
++ if(mode!=ChainStore::OpenMode::ReadWrite&&mode!=ChainStore::OpenMode::ReadWriteExisting)
++  throw std::invalid_argument("Blockchain owner requires ReadWrite or ReadWriteExisting");
++ return mode;
++}
++}
+ Blockchain::Blockchain(const std::filesystem::path& database,Genesis genesis)
+- :genesis_(std::move(genesis)),store_(database),engine_(genesis_.chain_id,[this](const Int& number){auto b=store_.block_by_number(number);if(!b)throw std::runtime_error("missing ancestor block");return b->header.hash();},genesis_.evm_revision){
++ :Blockchain(database,std::move(genesis),ChainStore::OpenMode::ReadWrite){}
++Blockchain::Blockchain(const std::filesystem::path& database,Genesis genesis,ChainStore::OpenMode mode)
++ :genesis_(std::move(genesis)),store_(database,blockchain_open_mode(mode)),engine_(genesis_.chain_id,[this](const Int& number){auto b=store_.block_by_number(number);if(!b)throw std::runtime_error("missing ancestor block");return b->header.hash();},genesis_.evm_revision){
+  Bytes epoch(16);if(RAND_bytes(epoch.data(),int(epoch.size()))!=1)throw std::runtime_error("gossip session randomness failed");event_epoch_=hex(epoch);
+- store_.bind_chain(genesis_.chain_id,genesis_.block.header.hash(),genesis_.consensus,genesis_.staking_contract);
++ if(mode==ChainStore::OpenMode::ReadWriteExisting)
++  store_.require_existing_chain_binding(genesis_.chain_id,genesis_.block.header.hash(),genesis_.consensus,genesis_.staking_contract);
++ else store_.bind_chain(genesis_.chain_id,genesis_.block.header.hash(),genesis_.consensus,genesis_.staking_contract);
+  auto latest=store_.latest();
+- if(!latest){pos_=sync_consensus(genesis_.state,genesis_.block.header,pos_);store_.commit(genesis_.block,genesis_.state,{},genesis_.consensus=="pos"?std::optional<Json>(pos_.to_json()):std::nullopt);tip_=genesis_.block;state_=genesis_.state;}
++ if(!latest){
++  if(mode==ChainStore::OpenMode::ReadWriteExisting)throw std::runtime_error("existing Blockchain database has no canonical tip");
++  pos_=sync_consensus(genesis_.state,genesis_.block.header,pos_);store_.commit(genesis_.block,genesis_.state,{},genesis_.consensus=="pos"?std::optional<Json>(pos_.to_json()):std::nullopt);tip_=genesis_.block;state_=genesis_.state;}
+  else{
+   auto first=store_.block_by_number(0);
+   if(!first||first->header.hash()!=genesis_.block.header.hash())throw std::invalid_argument("genesis does not match database");
+--- /dev/null
++++ b/src/consensus_capella_bootstrap_input.cpp
+@@ -0,0 +1,134 @@
++#include "nano/consensus_capella_bootstrap_input.hpp"
++#include <algorithm>
++#include <array>
++#include <cerrno>
++#include <filesystem>
++#include <fcntl.h>
++#include <limits>
++#include <memory>
++#include <stdexcept>
++#include <string>
++#include <system_error>
++#include <sys/stat.h>
++#include <unistd.h>
++#include <utility>
++#include <vector>
++namespace nano {
++namespace {
++namespace fs=std::filesystem;
++void require(bool ok){if(!ok)throw std::invalid_argument("Invalid Capella bootstrap proof input");}
++void io_require(bool ok){if(!ok)throw std::system_error(errno,std::generic_category(),"Capella bootstrap proof read");}
++void check_now(const std::function<void()>& check){if(check)check();}
++struct Fd {
++ int value;
++ explicit Fd(int fd):value(fd){io_require(value>=0);}
++ ~Fd(){if(value>=0)::close(value);}
++ Fd(const Fd&)=delete;Fd& operator=(const Fd&)=delete;
++ Fd(Fd&& other)noexcept:value(other.value){other.value=-1;}
++};
++std::unique_ptr<Fd> own_fd(int value){Fd owned(value);return std::make_unique<Fd>(std::move(owned));}
++bool identity(const struct stat& a,const struct stat& b){
++ return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_uid==b.st_uid&&
++  a.st_gid==b.st_gid&&a.st_mode==b.st_mode&&a.st_nlink==b.st_nlink;
++}
++bool same_file(const struct stat& a,const struct stat& b){
++#ifdef __APPLE__
++ const bool time=a.st_mtimespec.tv_sec==b.st_mtimespec.tv_sec&&a.st_mtimespec.tv_nsec==b.st_mtimespec.tv_nsec&&
++  a.st_ctimespec.tv_sec==b.st_ctimespec.tv_sec&&a.st_ctimespec.tv_nsec==b.st_ctimespec.tv_nsec;
++#else
++ const bool time=a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&
++  a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;
++#endif
++ return identity(a,b)&&a.st_size==b.st_size&&time;
++}
++void shape(const Json& value,std::initializer_list<const char*> keys){
++ require(value.is_object()&&value.size()==keys.size());for(const auto* key:keys)require(value.contains(key));
++}
++uint64_t positive_size(const Json& value){
++ require(value.is_number_integer());
++ if(value.is_number_unsigned()){const auto n=value.get<uint64_t>();require(n>0);return n;}
++ const auto n=value.get<int64_t>();require(n>0);return uint64_t(n);
++}
++struct Artifact {fs::path path;std::string sha;size_t bytes;};
++Artifact artifact(const Json& value,size_t maximum){
++ shape(value,{"path","sha256","bytes"});require(maximum>0&&value.at("path").is_string()&&value.at("sha256").is_string());
++ const auto path=value.at("path").get<std::string>();const auto sha=value.at("sha256").get<std::string>();
++ require(!path.empty()&&path.size()<=4096&&path.find('\0')==std::string::npos);
++ const fs::path p(path);require(p.is_absolute()&&path==p.lexically_normal().string()&&!p.filename().empty()&&path[1]!='/');
++ for(const auto& part:p.relative_path())require(!part.empty()&&part!="."&&part!="..");
++ require(sha.size()==64&&std::all_of(sha.begin(),sha.end(),[](char c){return (c>='0'&&c<='9')||(c>='a'&&c<='f');}));
++ const auto count=positive_size(value.at("bytes"));
++ require(count<=maximum&&count<=uint64_t(std::numeric_limits<size_t>::max())&&count<=uint64_t(std::numeric_limits<off_t>::max()));
++ return {p,sha,size_t(count)};
++}
++struct Directory {
++ std::string name;std::unique_ptr<Fd> fd;struct stat observed{};
++ Directory(std::string n,std::unique_ptr<Fd> owned):name(std::move(n)),fd(std::move(owned)){
++  io_require(::fstat(fd->value,&observed)==0);require(S_ISDIR(observed.st_mode));
++ }
++};
++class PublicFile {
++ std::vector<std::unique_ptr<Directory>> parents_;
++ std::string name_;std::unique_ptr<Fd> fd_;struct stat observed_{};
++ void metadata()const{
++  struct stat now{},entry{};
++  for(size_t i=0;i<parents_.size();++i){
++   io_require(::fstat(parents_[i]->fd->value,&now)==0);require(identity(parents_[i]->observed,now));
++   if(i){io_require(::fstatat(parents_[i-1]->fd->value,parents_[i]->name.c_str(),&entry,AT_SYMLINK_NOFOLLOW)==0);
++    require(identity(parents_[i]->observed,entry)&&S_ISDIR(entry.st_mode));}
++  }
++  io_require(::fstat(fd_->value,&now)==0);
++  io_require(::fstatat(parents_.back()->fd->value,name_.c_str(),&entry,AT_SYMLINK_NOFOLLOW)==0);
++  require(S_ISREG(now.st_mode)&&S_ISREG(entry.st_mode)&&same_file(observed_,now)&&same_file(observed_,entry));
++ }
++ size_t read_at(uint8_t* output,size_t count,size_t offset)const{
++  ssize_t n;do{n=::pread(fd_->value,output,count,off_t(offset));}while(n<0&&errno==EINTR);
++  io_require(n>=0);require(n>0&&size_t(n)<=count);return size_t(n);
++ }
++public:
++ Bytes bytes;
++ PublicFile(const Artifact& a,const std::function<void()>& check):name_(a.path.filename().string()){
++  parents_.push_back(std::make_unique<Directory>("",own_fd(::open("/",O_RDONLY|O_DIRECTORY|O_CLOEXEC))));
++  for(const auto& part:a.path.parent_path().relative_path()){
++   check_now(check);const auto name=part.string();
++   auto opened=own_fd(::openat(parents_.back()->fd->value,name.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));
++   parents_.push_back(std::make_unique<Directory>(name,std::move(opened)));
++  }
++  fd_=own_fd(::openat(parents_.back()->fd->value,name_.c_str(),O_RDONLY|O_NOFOLLOW|O_CLOEXEC|O_NONBLOCK));
++  io_require(::fstat(fd_->value,&observed_)==0);
++  require(S_ISREG(observed_.st_mode)&&observed_.st_size>0&&uint64_t(observed_.st_size)==a.bytes);
++  metadata();bytes.resize(a.bytes);
++  size_t at=0;while(at<bytes.size()){check_now(check);at+=read_at(bytes.data()+at,std::min<size_t>(65536,bytes.size()-at),at);}
++  metadata();check_now(check);require(hex(sha256(bytes)).substr(2)==a.sha);check_now(check);metadata();
++ }
++ void readback(const std::function<void()>& check)const{
++  metadata();std::array<uint8_t,65536> chunk{};size_t at=0;
++  while(at<bytes.size()){
++   check_now(check);const auto n=read_at(chunk.data(),std::min(chunk.size(),bytes.size()-at),at);
++   require(std::equal(chunk.begin(),chunk.begin()+n,bytes.begin()+at));at+=n;
++  }
++  // Exact positive length is bound by unchanged fstat/path size before/after.
++  metadata();
++ }
++ void final_metadata()const{metadata();}
++};
++}
++CapellaSignedBootstrapArchive load_capella_signed_bootstrap_proof(
++ Genesis genesis,CapellaForkBlockRules rules,CapellaStoreSnapshotLimits limits,Json descriptor,
++ const std::function<void()>& checkpoint){
++ // Copy the callback too; moving the caller's callback during a callback cannot
++ // invalidate this load. No callbacks borrow caller Genesis/rules/descriptor.
++ const std::function<void()> check=checkpoint;
++ shape(descriptor,{"format","genesisState","signedBlock"});
++ require(descriptor.at("format").is_string()&&descriptor.at("format").get<std::string>()=="nano-capella-signed-bootstrap-proof-inputs-v1");
++ require(limits.replay_slots>0&&limits.sync_trials>0);
++ const auto state=artifact(descriptor.at("genesisState"),std::min({rules.transition.maximum_state_bytes,limits.state_bytes,limits.total_state_bytes}));
++ const auto block=artifact(descriptor.at("signedBlock"),std::min(rules.transition.consensus.maximum_block_bytes,limits.envelope_bytes));
++ check_now(check);PublicFile pre(state,check),wire(block,check);
++ auto proof=prepare_capella_signed_bootstrap_archive(std::move(genesis),{pre.bytes,std::nullopt},wire.bytes,
++  std::move(rules),limits.replay_slots,limits.sync_trials,check);
++ require(bool(proof));
++ pre.readback(check);wire.readback(check);check_now(check);
++ pre.final_metadata();wire.final_metadata();return std::move(*proof);
++}
++}
+--- a/src/consensus_capella_runtime.cpp
++++ b/src/consensus_capella_runtime.cpp
+@@ -1,4 +1,5 @@
+ #include "nano/consensus_capella_runtime.hpp"
++#include "nano/consensus_capella_bootstrap_input.hpp"
+ #include "nano/local_monotonic_time.hpp"
+ #include <fstream>
+ #include <iostream>
+@@ -33,7 +34,9 @@
+ }
+ struct Owner {InboundBudget decoder_budget;std::unique_ptr<ChainStore> witness;std::unique_ptr<CapellaDurableReactor> reactor;std::unique_ptr<CapellaLocalClock> clock;std::unique_ptr<CapellaValidatorLoop> validator;std::unique_ptr<CapellaConsensusService> admission;std::unique_ptr<CapellaInventorySessions> catalogs;};
+ }
+-CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config,const std::function<void()>& checkpoint,std::function<uint64_t()> now){
++CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config_input,const std::function<void()>& checkpoint,std::function<uint64_t()> now){
++ // Preserve a single startup configuration across cancellable file reads.
++ const Json config=config_input;
+  // Diagnostic stage timing contains no configuration or key material. It is
+  // enabled only by the existing private-network trace flag and cannot fail boot.
+  const char* startup_trace=std::getenv("NANO_TEST_NETWORK_TRACE");
+@@ -49,7 +52,7 @@
+   }catch(...){} // Telemetry never substitutes for validation or controls startup.
+  };
+  stage("validate-input");
+- if(checkpoint)checkpoint();auto base=config;base.erase("validator");base.erase("admission");base.erase("catalogs");base.erase("recoveryWitness");base.erase("recoveryCommitment");base.erase("automaticRecovery");base.erase("network");base.erase("automaticPruning");base.erase("historicalStatePruning");base.erase("fragmentCheckpointMigration");base.erase("coldCheckpoint");shape(base,{"profile","limits","initial","restart","clock"});
++ if(checkpoint)checkpoint();auto base=config;base.erase("validator");base.erase("admission");base.erase("catalogs");base.erase("recoveryWitness");base.erase("recoveryCommitment");base.erase("automaticRecovery");base.erase("bootstrapArchive");base.erase("bootstrapArchiveRecovery");base.erase("network");base.erase("automaticPruning");base.erase("historicalStatePruning");base.erase("fragmentCheckpointMigration");base.erase("coldCheckpoint");shape(base,{"profile","limits","initial","restart","clock"});
+  const auto& genesis=chain.genesis();
+  if(genesis.consensus!="beacon"||genesis.evm_revision!=EvmRevision::Shanghai)throw std::invalid_argument("Capella runtime requires Beacon Shanghai chain");
+  const auto& p=config.at("profile");shape(p,{"file","sha256","maximumBytes"});const auto maximum=number(p.at("maximumBytes"));
+@@ -102,8 +105,33 @@
+  if(automatic&&(!witnessed||restart||config.at("initial").is_null()))throw std::invalid_argument("Automatic Capella recovery requires witness and bootstrap snapshot, without restart token");
+  if(witnessed){if(restart)throw std::invalid_argument("Witness recovery cannot use a restart token");}
+  else if(restart==!config.at("initial").is_null())throw std::invalid_argument("Choose exactly one Capella initial snapshot or restart token");
++ // Bootstrap archives are explicit authorities, never a fallback inferred
++ // from a failed generic recovery. Own and authenticate the complete signed
++ // transition before opening WITNESS or constructing clocks/signers/workers.
++ const bool fresh_archive=config.contains("bootstrapArchive");
++ const bool archive_recovery=config.contains("bootstrapArchiveRecovery");
++ if(fresh_archive&&archive_recovery)throw std::invalid_argument("Choose one Capella bootstrap archive authority");
++ if((fresh_archive||archive_recovery)&&(!witnessed||restart||automatic||recovery_commitment))throw std::invalid_argument("Capella archive authority requires explicit witnessed startup without generic recovery");
++ if((fresh_archive&&config.at("initial").is_null())||(archive_recovery&&!config.at("initial").is_null()))throw std::invalid_argument("Capella archive initial/recovery mode differs");
++ std::optional<CapellaSignedBootstrapArchive> archive_proof;
++ std::optional<ForkCheckpointToken> archive_next_primary,archive_next_witness;
++ if(archive_recovery){
++  const auto& a=config.at("bootstrapArchiveRecovery");shape(a,{"authority","nextPrimary","nextWitness"});
++  const auto& primary=a.at("nextPrimary");const auto& witness=a.at("nextWitness");
++  shape(primary,{"sequence","digest"});shape(witness,{"sequence","digest"});
++  archive_next_primary=ForkCheckpointToken{number(primary.at("sequence")),digest(primary.at("digest"))};
++  archive_next_witness=ForkCheckpointToken{number(witness.at("sequence")),digest(witness.at("digest"))};
++  archive_proof.emplace(load_capella_signed_bootstrap_proof(genesis,rules,limits,a.at("authority"),checkpoint));
++ }else if(fresh_archive){
++  archive_proof.emplace(load_capella_signed_bootstrap_proof(genesis,rules,limits,config.at("bootstrapArchive"),checkpoint));
++ }
+  auto owner=std::make_shared<Owner>();std::set<std::filesystem::path> paths;
+- if(witnessed){const auto path=config.at("recoveryWitness").get<std::string>();if(path.empty())throw std::invalid_argument("Empty Capella recovery witness path");paths.insert(std::filesystem::weakly_canonical(path));owner->witness=std::make_unique<ChainStore>(path);}
++ if(witnessed){
++  const auto path=config.at("recoveryWitness").get<std::string>();if(path.empty())throw std::invalid_argument("Empty Capella recovery witness path");
++  paths.insert(std::filesystem::weakly_canonical(path));
++  owner->witness=std::make_unique<ChainStore>(path,archive_recovery?ChainStore::OpenMode::ReadWriteExisting:ChainStore::OpenMode::ReadWrite);
++  if(archive_recovery)owner->witness->require_existing_chain_binding(genesis.chain_id,genesis.block.header.hash(),"nano-capella-recovery-v1");
++ }
+  bool recover=witnessed&&config.at("initial").is_null();
+  if(automatic){
+   owner->witness->bind_chain(genesis.chain_id,genesis.block.header.hash(),"nano-capella-recovery-v1");
+@@ -117,7 +145,9 @@
+  if(recovery_commitment&&!recover)throw std::invalid_argument("Capella recovery commitment forbids bootstrap");
+  stage("reactor-recovery");
+  if(recover){
+-  owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,*owner->witness,checkpoint,recovery_commitment);
++  if(archive_recovery){
++   owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,*owner->witness,std::move(*archive_proof),*archive_next_primary,*archive_next_witness,checkpoint);
++  }else owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,*owner->witness,checkpoint,recovery_commitment);
+  }else if(restart){
+   const auto& r=config.at("restart");shape(r,{"sequence","digest"});const ForkCheckpointToken token{number(r.at("sequence")),digest(r.at("digest"))};
+   owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,token,checkpoint);
+@@ -125,7 +155,9 @@
+   if(chain.store().fork_checkpoint(genesis.chain_id,genesis.block.header.hash(),limits.envelope_bytes))throw std::invalid_argument("Existing Capella checkpoint requires explicit restart token");
+   const auto& a=config.at("initial");shape(a,{"file","sha256"});
+   auto initial=capella_store_from_snapshot(read_bounded(a.at("file").get<std::string>(),limits.envelope_bytes,checkpoint),digest(a.at("sha256")),rules,limits,checkpoint);
+-  owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,std::move(initial),checkpoint,owner->witness.get());
++  if(fresh_archive){
++   owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,std::move(initial),std::move(*archive_proof),*owner->witness,checkpoint);
++  }else owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,std::move(initial),checkpoint,owner->witness.get());
+  }
+  stage("checkpoint-migration");
+  if(config.contains("automaticPruning")&&!config.at("automaticPruning").is_boolean())throw std::invalid_argument("Capella automaticPruning must be boolean");
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -39,10 +39,15 @@
+  if(command=="validator"){if(argc<3||argc>4||(argc==4&&std::string(argv[3])!="--once"))throw std::invalid_argument("validator requires config.json [--once]");return run_validator(load(argv[2]),argc==4);}
+  if((command!="init"&&command!="status"&&command!="mine"&&command!="validate"&&command!="import"&&command!="serve"&&command!="run")||argc<4)throw std::invalid_argument("invalid arguments; use --help");
+  if((command=="run"&&(argc<4||argc>5))||(command=="serve"&&(argc<4||argc>7))||((command=="mine"||command=="validate")&&(argc<6||argc>7))||(command=="import"&&argc!=6)||((command=="init"||command=="status")&&argc!=4))throw std::invalid_argument("invalid arguments; use --help");
+- auto genesis=Genesis::from_json(load(argv[2]));Blockchain chain(argv[3],std::move(genesis));
+- if(command=="run")return run_node(chain,argv[3],argv[0],argc==5?load(argv[4]):Json::object());
++ // An explicit archive recovery must not create PRIMARY/identity/Genesis
++ // before its signed authority and two retained commitments are checked.
++ const Json startup_config=command=="run"?(argc==5?load(argv[4]):Json::object()):command=="serve"?(argc==7?load(argv[6]):Json::object()):Json::object();
++ const bool existing_archive_recovery=startup_config.is_object()&&startup_config.contains("capella")&&startup_config.at("capella").is_object()&&startup_config.at("capella").contains("bootstrapArchiveRecovery");
++ auto genesis=Genesis::from_json(load(argv[2]));
++ Blockchain chain(argv[3],std::move(genesis),existing_archive_recovery?ChainStore::OpenMode::ReadWriteExisting:ChainStore::OpenMode::ReadWrite);
++ if(command=="run")return run_node(chain,argv[3],argv[0],startup_config);
+  if(command=="serve"){
+-  auto port=argc>=5?u64(quantity(Json(argv[4]))):8545;if(port>65535)throw std::invalid_argument("invalid port");const std::string bind=argc>=6?argv[5]:"127.0.0.1";const auto config=argc==7?load(argv[6]):Json::object();
++  auto port=argc>=5?u64(quantity(Json(argv[4]))):8545;if(port>65535)throw std::invalid_argument("invalid port");const std::string bind=argc>=6?argv[5]:"127.0.0.1";const auto& config=startup_config;
+   std::shared_ptr<CapellaRuntime> capella;std::string token;
+   if(config.contains("capella")){
+    if(bind!="127.0.0.1"||config.contains("bellatrix")||config.contains("altair")||config.contains("bft")||config.value("dev_mode",false))throw std::invalid_argument("Capella serve requires loopback and exclusive consensus configuration");
+--- a/src/storage.cpp
++++ b/src/storage.cpp
+@@ -148,6 +148,13 @@
+  }catch(...){delete db_;db_=nullptr;throw;}
+ }
+ ChainStore::~ChainStore(){delete db_;}
++void ChainStore::require_existing_chain_binding(const Int& chain_id,const Bytes& genesis_hash,const std::string& consensus,const std::string& staking_contract)const{
++ std::lock_guard lock(mutex_);Json identity={{"chainId",quantity(chain_id)},{"genesisHash",hex(genesis_hash)},{"consensus",consensus}};
++ if(!staking_contract.empty())identity["stakingContract"]=address(staking_contract);
++ const auto previous=read("meta/identity");
++ if(!previous)throw std::invalid_argument("existing database has no chain identity");
++ if(*previous!=identity)throw std::invalid_argument("database belongs to another chain");
++}
+ void ChainStore::bind_chain(const Int& chain_id,const Bytes& genesis_hash,const std::string& consensus,const std::string& staking_contract){
+  std::lock_guard lock(mutex_);Json identity={{"chainId",quantity(chain_id)},{"genesisHash",hex(genesis_hash)},{"consensus",consensus}};
+  if(!staking_contract.empty())identity["stakingContract"]=address(staking_contract);
+--- a/tests/test_capella_bootstrap_archive_cas.cpp
++++ b/tests/test_capella_bootstrap_archive_cas.cpp
+@@ -2,6 +2,15 @@
+ #include "nano/beacon_api.hpp"
+ #include "nano/consensus_capella_reactor.hpp"
+ #include "nano/consensus_capella_store_snapshot.hpp"
++#include "nano/consensus_capella_bls_change.hpp"
++#include "nano/consensus_beacon_header.hpp"
++#include "nano/consensus_deposit_history.hpp"
++#include "nano/consensus_bls.hpp"
++#include "ckzg/blst/bindings/blst.h"
++#include <openssl/crypto.h>
++#include <array>
++#include <set>
++#include <vector>
+ #include <rocksdb/db.h>
+ #include <algorithm>
+ #include <cerrno>
+@@ -128,8 +137,76 @@
+  }
+ }
+ #endif
+-}
+-int main(int argc,char** argv){try{auto f=fixture();
++// New selector only: independent synthetic keys/domain, no campaign signer.
++uint64_t pending_signatures=0;
++uint64_t pending_little(std::span<const uint8_t> b,size_t at,size_t width=8){check(width<=8&&at<=b.size()&&width<=b.size()-at,"synthetic field bounds");uint64_t n=0;for(size_t i=0;i<width;++i)n|=uint64_t(b[at+i])<<(8*i);return n;}
++void pending_put(Bytes& b,size_t at,uint64_t n,size_t width=8){check(at<=b.size()&&width<=b.size()-at,"synthetic write bounds");for(size_t i=0;i<width;++i)b[at+i]=uint8_t(n>>(8*i));}
++template<class A>void pending_copy(A& a,const Bytes& b){check(a.size()==b.size(),"synthetic fixed width");std::copy(b.begin(),b.end(),a.begin());}
++ConsensusRoot pending_root(std::span<const uint8_t> b,size_t at=0){check(at<=b.size()&&32<=b.size()-at,"synthetic root bounds");ConsensusRoot r{};std::copy_n(b.begin()+at,32,r.begin());return r;}
++struct PendingTestKey{
++ blst_scalar scalar{};Bytes public_key;
++ explicit PendingTestKey(uint64_t index){check(index<=10063,"synthetic key range");uint64_t words[4]{900001+index,0,0,0};blst_scalar_from_uint64(&scalar,words);OPENSSL_cleanse(words,sizeof(words));blst_p1 p;blst_sk_to_pk_in_g1(&p,&scalar);public_key.resize(48);blst_p1_compress(public_key.data(),&p);}
++ PendingTestKey(const PendingTestKey&)=delete;PendingTestKey& operator=(const PendingTestKey&)=delete;
++ ~PendingTestKey(){OPENSSL_cleanse(&scalar,sizeof(scalar));}
++ Bytes sign(const ConsensusRoot& root)const{checkpoint();check(pending_signatures<3,"three synthetic signatures only");++pending_signatures;static constexpr char dst[]="BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_POP_";blst_p2 h,p;blst_hash_to_g2(&h,root.data(),root.size(),reinterpret_cast<const uint8_t*>(dst),sizeof(dst)-1,nullptr,0);blst_sign_pk_in_g1(&p,&h,&scalar);Bytes s(96);blst_p2_compress(s.data(),&p);OPENSSL_cleanse(&h,sizeof(h));OPENSSL_cleanse(&p,sizeof(p));return s;}
++};
++ConsensusRoot pending_leaf(std::span<const uint8_t> b){check(b.size()<=32,"SSZ leaf bound");ConsensusRoot r{};std::copy(b.begin(),b.end(),r.begin());return r;}
++ConsensusRoot pending_pair(const ConsensusRoot& a,const ConsensusRoot& b){Bytes p(a.begin(),a.end());p.insert(p.end(),b.begin(),b.end());return pending_root(sha256(p));}
++ConsensusRoot pending_registry_root(const Bytes& data,uint64_t limit){
++ check(data.size()==64*121&&limit>=64&&limit<=UINT64_MAX/2&&(limit&(limit-1))==0,"synthetic registry bounds");std::array<ConsensusRoot,64> roots{};
++ for(size_t i=0;i<64;++i){auto v=std::span<const uint8_t>(data).subspan(i*121,121);std::array<ConsensusRoot,8> f{pending_pair(pending_leaf(v.first(32)),pending_leaf(v.subspan(32,16))),pending_leaf(v.subspan(48,32)),pending_leaf(v.subspan(80,8)),pending_leaf(v.subspan(88,1)),pending_leaf(v.subspan(89,8)),pending_leaf(v.subspan(97,8)),pending_leaf(v.subspan(105,8)),pending_leaf(v.subspan(113,8))};for(size_t n=8;n>1;n/=2)for(size_t j=0;j<n/2;++j)f[j]=pending_pair(f[j*2],f[j*2+1]);roots[i]=f[0];}
++ for(size_t n=64;n>1;n/=2)for(size_t j=0;j<n/2;++j)roots[j]=pending_pair(roots[j*2],roots[j*2+1]);ConsensusRoot zero{},r=roots[0];for(unsigned i=0;i<6;++i)zero=pending_pair(zero,zero);for(uint64_t n=64;n<limit;n*=2){r=pending_pair(r,zero);zero=pending_pair(zero,zero);}ConsensusRoot length{};length[0]=64;return pending_pair(r,length);
++}
++CapellaExecutionPayload pending_payload(const Block& b){const auto& h=b.header;CapellaExecutionPayload p;pending_copy(p.parent_hash,h.parent_hash);pending_copy(p.fee_recipient,unhex(h.coinbase));pending_copy(p.state_root,h.state_root);pending_copy(p.receipts_root,h.receipts_root);pending_copy(p.logs_bloom,h.logs_bloom);pending_copy(p.prev_randao,h.mix_hash);pending_copy(p.block_hash,h.hash());check(h.base_fee.has_value(),"synthetic base fee");auto fee=bytes(*h.base_fee,32);std::reverse(fee.begin(),fee.end());pending_copy(p.base_fee_per_gas,fee);p.block_number=u64(h.number);p.gas_limit=u64(h.gas_limit);p.gas_used=u64(h.gas_used);p.timestamp=u64(h.timestamp);p.extra_data=h.extra_data;return p;}
++Bytes pending_body(const CapellaSlotState& state,const CapellaTransitionRules& r,const Bytes& reveal,const CapellaExecutionPayload& p){const auto& l=r.consensus.state;const size_t hist=176+64*l.slots_per_historical_root,sync=(l.sync_committee_size+7)/8+96,fixed=228+sync;auto payload=encode_capella_execution_payload(p,r.execution,r.withdrawals.maximum_per_payload,r.consensus.maximum_block_bytes);Bytes b(fixed,0);check(reveal.size()==96,"synthetic RANDAO width");std::copy(reveal.begin(),reveal.end(),b.begin());std::copy_n(state.ssz.begin()+hist+4,72,b.begin()+96);b[220+(l.sync_committee_size+7)/8]=0xc0;for(size_t at:{size_t(200),size_t(204),size_t(208),size_t(212),size_t(216),220+sync})pending_put(b,at,fixed,4);pending_put(b,224+sync,fixed+payload.size(),4);b.insert(b.end(),payload.begin(),payload.end());return b;}
++struct PendingFixture{Fixture base;Bytes operation;};
++PendingFixture pending_fixture(){
++ const auto root=fs::path(NANO_TEST_SOURCE)/"tests/fixtures/capella-bootstrap-anchor-cb532";const auto text=read(root/"manifest.json");check(hex(sha256(bytes_of(text)))=="0xec150c28c8c187e6728cea7ef717acc6383e0b75242302b0a481fc2a9c425fc6","public input literal pin");const auto manifest=Json::parse(text);auto input=[&](const char* kind,const char* name){const auto& pin=manifest.at("files").at(kind);auto b=read(root/name);check(pin.at("path")==name&&pin.at("bytes").get<size_t>()==b.size()&&pin.at("sha256").get<std::string>()==hex(sha256(bytes_of(b))).substr(2),"public input bytes pin");return b;};
++ const auto profile=input("profile","profile.json");auto rules=load_capella_fork_profile(profile,sha256(bytes_of(profile)),1024*1024);auto pre=CapellaSlotState{bytes_of(input("genesisState","genesis-state.ssz")),std::nullopt};const auto& r=rules.transition;const auto& l=r.consensus.state;
++ const size_t hist=176+64*l.slots_per_historical_root,random=hist+96,previous=random+32*l.epochs_per_historical_vector+8*l.epochs_per_slashings_vector,field=previous+229+96*l.sync_committee_size;const size_t validators=pending_little(pre.ssz,hist+88,4),balances=pending_little(pre.ssz,hist+92,4);check((balances-validators)/121==64,"synthetic registry size");
++ std::set<Bytes> excluded,generated;for(const auto* kind:{"publicKeys","withdrawalPublicKeys"})for(const auto& row:manifest.at(kind))excluded.insert(unhex(row.at("publicKey").get<std::string>()));const auto official_text=read(fs::path(NANO_TEST_SOURCE)/"tests/fixtures/consensus-capella-slots-official/slots_1/pre.ssz");check(hex(sha256(bytes_of(official_text)))=="0xf5a464175565a8ed6a74790a60b84477c16a5b1bf71ece55736f192142cbca3d","literal official/V37 public registry bytes");const auto official=bytes_of(official_text);const size_t legacy_start=pending_little(official,hist+88,4),legacy_end=pending_little(official,hist+92,4);check(legacy_end>=legacy_start&&(legacy_end-legacy_start)/121==64&&legacy_end<=official.size(),"official public registry bounds");for(size_t i=0;i<64;++i)excluded.emplace(official.begin()+legacy_start+121*i,official.begin()+legacy_start+121*i+48);std::map<Bytes,Bytes> remap;
++ for(size_t i=0;i<64;++i){checkpoint();const size_t at=validators+121*i;Bytes old(pre.ssz.begin()+at,pre.ssz.begin()+at+48);PendingTestKey key(i),withdrawal(10000+i);check(!excluded.contains(key.public_key)&&!excluded.contains(withdrawal.public_key)&&generated.insert(key.public_key).second&&generated.insert(withdrawal.public_key).second,"new test keys must be disjoint from public campaign roles");remap.emplace(old,key.public_key);std::copy(key.public_key.begin(),key.public_key.end(),pre.ssz.begin()+at);auto credential=sha256(withdrawal.public_key);credential[0]=0;std::copy(credential.begin(),credential.end(),pre.ssz.begin()+at+48);pending_put(pre.ssz,at+80,32000000000);pre.ssz[at+88]=0;pending_put(pre.ssz,at+89,0);pending_put(pre.ssz,at+97,0);pending_put(pre.ssz,at+105,UINT64_MAX);pending_put(pre.ssz,at+113,UINT64_MAX);pending_put(pre.ssz,balances+8*i,32000000000);}
++ const auto domain=pending_registry_root(Bytes(pre.ssz.begin()+validators,pre.ssz.begin()+balances),l.validator_registry_limit);check(domain!=pending_root(pre.ssz,8)&&hex(Bytes(domain.begin(),domain.end()))!="0x0a08c27fe4ece2483f9e581f78c66379a06f96e9c24cd1390594ff939b26f95b","new domain must not equal cb532/official/V37");std::copy(domain.begin(),domain.end(),pre.ssz.begin()+8);
++ for(size_t start:std::array<size_t,2>{previous+133,previous+133+48*size_t(l.sync_committee_size+1)}){std::vector<Bytes> members;for(size_t i=0;i<l.sync_committee_size;++i){const size_t at=start+48*i;Bytes old(pre.ssz.begin()+at,pre.ssz.begin()+at+48);members.push_back(remap.at(old));std::copy(members.back().begin(),members.back().end(),pre.ssz.begin()+at);}auto aggregate=aggregate_consensus_bls_keys(members);check(bool(aggregate),"synthetic sync aggregate");std::copy(aggregate->begin(),aggregate->end(),pre.ssz.begin()+start+48*l.sync_committee_size);}
++ Genesis g=Genesis::from_json(Json::parse(input("genesis","genesis.json")));g.chain_id=r.chain_id;g.consensus="beacon";g.evm_revision=EvmRevision::Shanghai;auto& genesis=g.block;genesis.header.difficulty=0;genesis.header.timestamp=Int(std::to_string(pending_little(pre.ssz,0)));genesis.header.state_root=g.state.root();genesis.header.transactions_root=transactions_root({});genesis.header.receipts_root=receipts_root({});genesis.header.withdrawals_root=withdrawals_root(Json::array());const std::string tag="Nano/Test/PendingArchiveCAS/v1";genesis.header.extra_data=bytes_of(tag);
++ const ExecutionDepositHistory deposits(genesis.header.hash());const auto dep=deposits.root();std::copy(dep.begin(),dep.end(),pre.ssz.begin()+hist+4);pending_put(pre.ssz,hist+36,0);const auto gh=genesis.header.hash();std::copy(gh.begin(),gh.end(),pre.ssz.begin()+hist+44);pending_put(pre.ssz,hist+80,0);
++ auto execution_header=encode_capella_execution_header(capella_execution_payload_header(pending_payload(genesis),r.execution,r.withdrawals.maximum_per_payload),r.execution.extra_data_bytes,r.maximum_state_bytes);pre.ssz.resize(pending_little(pre.ssz,field,4));pre.ssz.insert(pre.ssz.end(),execution_header.begin(),execution_header.end());pending_put(pre.ssz,field+4,0);pending_put(pre.ssz,field+12,0);pending_put(pre.ssz,field+20,pre.ssz.size(),4);std::fill(pre.ssz.begin()+64,pre.ssz.begin()+176,0);
++ auto zero_body=pending_body(pre,r,Bytes(96),pending_payload(genesis));const auto body_root=capella_beacon_body_root(zero_body,r.consensus.body,l.sync_committee_size,r.execution,r.withdrawals.maximum_per_payload,r.maximum_bls_changes,r.consensus.maximum_block_bytes,checkpoint);std::copy(body_root.begin(),body_root.end(),pre.ssz.begin()+144);const auto pre_root=capella_beacon_state_root(pre.ssz,l,r.execution,r.maximum_state_bytes,checkpoint);Bytes message0(84);std::copy(pre_root.begin(),pre_root.end(),message0.begin()+48);pending_put(message0,80,84,4);message0.insert(message0.end(),zero_body.begin(),zero_body.end());
++ auto genesis_store=initialize_capella_fork_store(pre,message0,genesis,g.state,{}, {},rules,checkpoint);const auto parent=capella_fork_head(genesis_store,rules,checkpoint);const CapellaEpochRules epochs{r.consensus.epoch,r.execution,r.maximum_state_bytes};auto advanced=prepare_capella_slots(pre,epochs,l,1,64,100000,checkpoint);auto identity=prepare_capella_proposer_identity(pre,parent->header,1,epochs,l,r.consensus.attestation.duties,64,100000,checkpoint);check(bool(identity),"synthetic slot1 proposer");PendingTestKey proposer(identity->index);check(proposer.public_key==identity->public_key,"synthetic proposer identity");ConsensusRoot epoch{};auto reveal=proposer.sign(consensus_signing_root(epoch,consensus_domain({2,0,0,0},identity->fork_version,domain)));
++ Block execution;execution.header.parent_hash=genesis.header.hash();execution.header.number=1;execution.header.timestamp=genesis.header.timestamp+Int(std::to_string(r.seconds_per_slot));execution.header.difficulty=0;execution.header.base_fee=next_base_fee(genesis.header);const auto mix=pending_root(advanced.ssz,random);execution.header.mix_hash=Bytes(mix.begin(),mix.end());auto history=[&](const Int& n){check(n==0,"synthetic ancestor only");return genesis.header.hash();};State state=g.state;ExecutionEngine(r.chain_id,history,EvmRevision::Shanghai,r.replay_policy,ConsensusInputPolicy::EthereumValidated).execute_block(state,execution,false);
++ const auto parent_root=consensus_beacon_header_root(parent->header);auto body=pending_body(advanced,r,reveal,pending_payload(execution));auto candidate=prepare_capella_unsigned_block(pre,1,identity->index,parent_root,body,r,genesis.header,g.state,history,64,100000,checkpoint);check(bool(candidate),"genuine synthetic unsigned bootstrap");const auto& message=candidate->message_ssz;ConsensusBeaconHeader header{pending_little(message,0),pending_little(message,8),pending_root(message,16),pending_root(message,48),capella_beacon_body_root(std::span<const uint8_t>(message).subspan(84),r.consensus.body,l.sync_committee_size,r.execution,r.withdrawals.maximum_per_payload,r.maximum_bls_changes,r.consensus.maximum_block_bytes,checkpoint)};
++ auto signature=proposer.sign(consensus_signing_root(consensus_beacon_header_root(header),consensus_domain({0,0,0,0},identity->fork_version,domain)));Bytes wire(100);pending_put(wire,0,100,4);std::copy(signature.begin(),signature.end(),wire.begin()+4);wire.insert(wire.end(),message.begin(),message.end());check(!prepare_capella_received_block(genesis_store,wire,rules,64,100000,checkpoint),"synthetic future slot must be refused before clock tick");const auto admission_store=prepare_capella_store_tick(genesis_store,genesis_store.timed.clock.genesis_time_ms+rules.slot_duration_ms,rules,64,100000,checkpoint);check(prepare_capella_received_block(admission_store,wire,rules,64,100000,checkpoint).has_value(),"genuine synthetic full admission");auto proof=prepare_capella_signed_bootstrap_archive(g,pre,wire,rules,64,100000,checkpoint);check(bool(proof),"genuine synthetic typed bootstrap authority");auto initial=initialize_capella_fork_store(candidate->post.consensus,message,candidate->post.execution.block,candidate->post.execution.state,candidate->post.execution.receipts,{genesis.header},rules,checkpoint);
++ SignedCapellaBlsChange change;change.validator_index=1;PendingTestKey withdrawal(10001);pending_copy(change.from_bls_pubkey,withdrawal.public_key);change.to_execution_address.back()=0x42;pending_copy(change.signature,withdrawal.sign(consensus_signing_root(capella_bls_change_root(change),consensus_domain({10,0,0,0},r.genesis_version,domain))));check(pending_signatures==3,"exact parent synthetic signature count");const auto max=r.maximum_state_bytes;CapellaStoreSnapshotLimits limits{16*1024*1024,4,64,64,max,4*max,64,100000};return {{std::move(g),std::move(rules),limits,std::move(pre),std::move(initial),std::move(wire),std::move(*proof)},encode_capella_bls_change(change)};
++}
++Json pending_bundle(const PendingFixture& f){return {{"format","nano-test-pending-bootstrap-cas-v1"},{"profile",capella_fork_profile(f.base.rules).dump()},{"genesis",f.base.genesis.block.to_json(true)},{"alloc",f.base.genesis.state.to_json()},{"pre",hex(f.base.pre.ssz)},{"initial",capella_store_snapshot(f.base.initial,f.base.rules,f.base.limits,checkpoint)},{"wire",hex(f.base.wire)},{"operation",hex(f.operation)}};}
++PendingFixture pending_load(const fs::path& path,const Json& control){const auto s=read(path/"pending-fixture.json");check(hex(sha256(bytes_of(s)))==control.at("fixtureSha256").get<std::string>(),"owned synthetic bundle seal");const auto j=Json::parse(s);check(j.size()==8&&j.at("format")=="nano-test-pending-bootstrap-cas-v1","owned synthetic bundle schema");const auto profile=j.at("profile").get<std::string>();auto rules=load_capella_fork_profile(profile,sha256(bytes_of(profile)),1024*1024);Genesis g;g.chain_id=rules.transition.chain_id;g.consensus="beacon";g.evm_revision=EvmRevision::Shanghai;g.block=Block::from_json(j.at("genesis"));g.state=State::from_json(j.at("alloc"));CapellaSlotState pre{unhex(j.at("pre").get<std::string>()),std::nullopt};auto wire=unhex(j.at("wire").get<std::string>());auto proof=prepare_capella_signed_bootstrap_archive(g,pre,wire,rules,64,100000,checkpoint);check(bool(proof),"child full public-wire authority");const auto max=rules.transition.maximum_state_bytes;CapellaStoreSnapshotLimits limits{16*1024*1024,4,64,64,max,4*max,64,100000};const auto encoded=j.at("initial").get<std::string>();auto initial=capella_store_from_snapshot(encoded,sha256(bytes_of(encoded)),rules,limits,checkpoint);auto operation=unhex(j.at("operation").get<std::string>());check(pending_signatures==0,"child must never sign");return {{std::move(g),std::move(rules),limits,std::move(pre),std::move(initial),std::move(wire),std::move(*proof)},std::move(operation)};}
++void pending_exact(CapellaDurableReactor& r,const Bytes& wire){const auto queued=r.pending_bls_changes();check(queued.size()==1&&encode_capella_bls_change(queued.front())==wire,"actual durable queued operation exact");}
++void pending_admit_reopen(const PendingFixture& f,const fs::path& root){const auto& b=f.base;{Pair p(b,root,true);auto before=capella_store_snapshot(*p.reactor->current().state,b.rules,b.limits,checkpoint);auto old=p.primary();check(p.reactor->bls_change_ssz(f.operation,checkpoint),"genuine BLS queue admission");pending_exact(*p.reactor,f.operation);check(p.primary().token.sequence==old.token.sequence+1&&p.primary().token.digest!=old.token.digest&&capella_store_snapshot(*p.reactor->current().state,b.rules,b.limits,checkpoint)==before,"queue must be durable without changing consensus state");const auto document=Json::parse(p.primary().snapshot);check(document.at("format")=="nano-capella-durable-v3"&&document.at("blsChanges").size()==1&&document.at("blsChanges")[0][2]==hex(f.operation),"real nonempty durable queue envelope");p.close();}{Pair p(b,root,false);pending_exact(*p.reactor,f.operation);check(!p.owner->store().checkpoint_archive(archive_root(b),b.limits.envelope_bytes),"queue admission must not backfill bootstrap archive");}}
++void pending_hot(const PendingFixture& f){Temp t;const auto& b=f.base;pending_admit_reopen(f,t.path);ForkCheckpointToken next{},next_w{};ForkCheckpointRecord original;Rows before,before_w;{Pair p(b,t.path,false);original=p.primary();before=logical(t.path/"primary");before_w=logical(t.path/"witness");auto stale=p.primary().token;++stale.sequence;no_io(p,[&]{p.reactor->prepare_bootstrap_archive(b.proof,stale,p.witnessed().token,checkpoint);},"nonempty stale primary accepted");auto stale_w=p.witnessed().token;stale_w.digest[0]^=1;no_io(p,[&]{p.reactor->prepare_bootstrap_archive(b.proof,p.primary().token,stale_w,checkpoint);},"nonempty stale witness accepted");auto wrong=f.base.wire;wrong[4]^=1;const auto authority_before=hashes(t.path);check(!prepare_capella_signed_bootstrap_archive(b.genesis,b.pre,wrong,b.rules,64,100000,checkpoint)&&hashes(t.path)==authority_before,"nonempty forged authority accepted or wrote state");auto alternate=b.rules;++alternate.proposer_score_boost;auto foreign=prepare_capella_signed_bootstrap_archive(b.genesis,b.pre,b.wire,alternate,64,100000,checkpoint);check(bool(foreign),"valid alternate profile control");no_io(p,[&]{p.reactor->prepare_bootstrap_archive(*foreign,p.primary().token,p.witnessed().token,checkpoint);},"nonempty mismatched profile authority accepted");auto plan=p.plan();no_io(p,[&]{p.reactor->apply_bootstrap_archive(plan,[]{throw Cancel();});},"nonempty cancelled apply accepted");next=plan.next_primary();next_w=plan.next_witness();auto result=p.reactor->apply_bootstrap_archive(plan,checkpoint);check(result.published&&result.primary==next&&result.witness==next_w&&p.primary().snapshot==original.snapshot&&next.digest==original.token.digest,"nonempty hot snapshot/commitments changed");pending_exact(*p.reactor,f.operation);verify_supplement(b,before,logical(t.path/"primary"),next);auto expected_w=before_w;expected_w["fork-checkpoint/v1/token"]=token_json(next_w).dump();expected_w["fork-checkpoint/v1/payload"]=p.witnessed().snapshot;check(logical(t.path/"witness")==expected_w,"nonempty hot changed unrelated witness rows");p.close();}{Blockchain owner(t.path/"primary",b.genesis);ChainStore w(t.path/"witness");CapellaDurableReactor r(owner,b.rules,b.limits,w,b.proof,next,next_w,checkpoint);pending_exact(r,f.operation);const auto raw=owner.store().fork_checkpoint(b.genesis.chain_id,b.genesis.block.header.hash(),b.limits.envelope_bytes,next);check(raw&&raw->snapshot==original.snapshot,"nonempty typed reopen changed raw envelope");check(r.bls_change_ssz(f.operation,checkpoint)&&r.current().token==next,"nonempty duplicate re-published");auto plan=r.prepare_bootstrap_archive(b.proof,next,next_w,checkpoint);check(!plan.has_work()&&!r.apply_bootstrap_archive(plan,checkpoint).published,"nonempty hot idempotence");}verify_supplement(b,before,logical(t.path/"primary"),next);emit("pending-hot-archive-only-supplement",{{"queueEntries",1},{"genuineOperationAdmittedAndReopened",true},{"rawEnvelopeDigestAndAllOtherLogicalContentPreserved",true},{"typedTwoPinReopen",true},{"duplicateAndSupplementIdempotent",true}});}
++#ifdef NANO_SYNC_FAULT
++int pending_child(const fs::path& path){const auto control=Json::parse(read(path/"control.json",65536));auto f=pending_load(path,control);Pair p(f.base,path,false);pending_exact(*p.reactor,f.operation);const auto before=p.primary();check(hex(sha256(bytes_of(before.snapshot)))==control.at("snapshotSha256").get<std::string>(),"child original raw envelope seal");auto plan=p.plan();check(plan.has_work()&&plan.next_primary()==token_from(control.at("nextPrimary"))&&plan.next_witness()==token_from(control.at("nextWitness")),"child externally retained commitments");fs::path wal;for(const auto& e:fs::directory_iterator(path/"primary"))if(e.path().extension()==".log"&&(wal.empty()||e.path().filename()>wal.filename()))wal=e.path();check(!wal.empty(),"pending child WAL");std::cout<<Json{{"scenario","pending-before-primary-sync"},{"wal",wal.filename().string()},{"bytesBefore",fs::file_size(wal)},{"syntheticSignaturesCreated",pending_signatures}}.dump()<<std::endl;nano_test_arm_sync_stop(wal.c_str());p.reactor->apply_bootstrap_archive(plan,checkpoint);throw std::runtime_error("pending fsync hook did not stop");}
++void pending_interruptions(const PendingFixture& f,const fs::path& executable){const auto& b=f.base;
++ for(const bool cold:{false,true})for(const bool lose:{false,true}){checkpoint();Temp t;pending_admit_reopen(f,t.path);ForkCheckpointRecord original;ForkCheckpointToken next{},next_w{};Rows original_rows,original_w;{Pair p(b,t.path,false);pending_exact(*p.reactor,f.operation);if(cold)check(p.reactor->migrate_reference_checkpoint({2,128*1024},checkpoint),"nonempty cold migration");else check(p.reactor->migrate_fragment_checkpoint(checkpoint),"nonempty fragmented migration");pending_exact(*p.reactor,f.operation);original=p.primary();const auto document=Json::parse(original.snapshot);if(cold)check(document.at("format")=="nano-capella-cold-checkpoint-v1"&&document.at("checkpoint").at("format")=="nano-capella-durable-v3"&&document.at("checkpoint").at("blsChanges").size()==1&&document.at("checkpoint").at("blsChanges")[0][2]==hex(f.operation),"actual nonempty cold format");else check(document.at("format")=="nano-capella-fragments-v1","actual nonempty fragment format");auto plan=p.plan();next=plan.next_primary();next_w=plan.next_witness();original_rows=logical(t.path/"primary");original_w=logical(t.path/"witness");save(t.path/"pending-fixture.json",pending_bundle(f));const auto bundle=read(t.path/"pending-fixture.json");save(t.path/"control.json",Json{{"fixtureSha256",hex(sha256(bytes_of(bundle)))},{"snapshotSha256",hex(sha256(bytes_of(original.snapshot)))},{"nextPrimary",token_json(next)},{"nextWitness",token_json(next_w)}});p.close();}
++  int channel[2];check(::pipe(channel)==0,"pending crash pipe");const auto exe=fs::canonical(executable).string(),path=t.path.string();Child c;c.pid=::fork();check(c.pid>=0,"pending fresh exec fork");if(c.pid==0){::close(channel[0]);if(::dup2(channel[1],STDOUT_FILENO)<0)_exit(125);::close(channel[1]);char* const args[]={const_cast<char*>(exe.c_str()),const_cast<char*>("--pending-crash-writer"),const_cast<char*>(path.c_str()),nullptr};char* const environment[]={const_cast<char*>("PATH=/usr/bin:/bin"),nullptr};::execve(exe.c_str(),args,environment);_exit(126);}::close(channel[1]);std::string output;bool marker=false;const auto end=std::chrono::steady_clock::now()+std::chrono::seconds(15);while(!marker&&std::chrono::steady_clock::now()<end){checkpoint();pollfd row{channel[0],POLLIN,0};const auto n=::poll(&row,1,100);if(n<0&&errno==EINTR)continue;check(n>=0,"pending crash poll");if(n==0)continue;char chunk[4096];const auto bytes=::read(channel[0],chunk,sizeof(chunk));check(bytes>0,"pending child exited before fsync stop");output.append(chunk,size_t(bytes));check(output.size()<16384,"pending child output bound");marker=output.find("nano-test-sync-stopped\n")!=std::string::npos;}::close(channel[0]);check(marker,"pending child fsync deadline");int status=0;check(::waitpid(c.pid,&status,WUNTRACED)==c.pid&&WIFSTOPPED(status)&&WSTOPSIG(status)==SIGSTOP,"pending child actual SIGSTOP");check(::kill(c.pid,SIGKILL)==0,"pending child SIGKILL");while(::waitpid(c.pid,&status,0)<0)check(errno==EINTR,"pending SIGKILL wait");c.pid=-1;check(WIFSIGNALED(status)&&WTERMSIG(status)==SIGKILL,"pending child actual signal");const auto newline=output.find('\n');check(newline!=std::string::npos,"pending WAL public observation");const auto info=Json::parse(output.substr(0,newline));check(info.at("syntheticSignaturesCreated")==0,"child generated a signature");const auto name=info.at("wal").get<std::string>();check(fs::path(name).filename()==name,"owned pending WAL basename");
++  if(lose){const auto before=info.at("bytesBefore").get<uint64_t>();auto wal=t.path/"primary"/name;check(fs::file_size(wal)>before,"nonempty actual volatile append missing");int fd=::open(wal.c_str(),O_WRONLY|O_NOFOLLOW);check(fd>=0,"owned pending volatile WAL open");check(::ftruncate(fd,off_t(before))==0&&::fsync(fd)==0&&::close(fd)==0,"explicit pending volatile suffix loss");}
++  std::string disposition;{ChainStore p(t.path/"primary",ChainStore::OpenMode::ReadOnly),w(t.path/"witness",ChainStore::OpenMode::ReadOnly);auto primary=p.fork_checkpoint(b.genesis.chain_id,b.genesis.block.header.hash(),b.limits.envelope_bytes);auto witness=w.fork_checkpoint(b.genesis.chain_id,b.genesis.block.header.hash(),witness_limit(b),next_w);check(primary&&witness&&primary->snapshot==original.snapshot&&(primary->token==original.token||primary->token==next),"pending crash raw envelope or commitments changed");if(lose)check(primary->token==original.token,"simulated pending loss must retain previous primary");disposition=primary->token==original.token?"previous":"next";}
++  const auto before=logical(t.path/"primary"),w_before=logical(t.path/"witness");auto expected_w=original_w;expected_w["fork-checkpoint/v1/token"]=token_json(next_w).dump();expected_w["fork-checkpoint/v1/payload"]=w_before.at("fork-checkpoint/v1/payload");check(w_before==expected_w,"pending crash changed unrelated witness rows");{Blockchain owner(t.path/"primary",b.genesis);ChainStore w(t.path/"witness");refused([&]{CapellaDurableReactor generic(owner,b.rules,b.limits,w,checkpoint);},"generic nonempty cold/fragment recovery accepted");auto stale=next;++stale.sequence;refused([&]{CapellaDurableReactor wrong(owner,b.rules,b.limits,w,b.proof,stale,next_w,checkpoint);},"wrong pending next primary accepted");auto stale_w=next_w;stale_w.digest[0]^=1;refused([&]{CapellaDurableReactor wrong(owner,b.rules,b.limits,w,b.proof,next,stale_w,checkpoint);},"wrong pending next witness accepted");}check(logical(t.path/"primary")==before&&logical(t.path/"witness")==w_before,"pending refusal repaired or mutated logical stores");
++  {Blockchain owner(t.path/"primary",b.genesis);ChainStore w(t.path/"witness");CapellaDurableReactor r(owner,b.rules,b.limits,w,b.proof,next,next_w,checkpoint);pending_exact(r,f.operation);check(r.current().token==next&&r.signed_block(r.current().state->timed.view.anchor)==b.wire,"pending typed recovery lost archive");auto raw=owner.store().fork_checkpoint(b.genesis.chain_id,b.genesis.block.header.hash(),b.limits.envelope_bytes,next);check(raw&&raw->snapshot==original.snapshot&&next.digest==original.token.digest,"pending typed recovery changed raw envelope");check(r.bls_change_ssz(f.operation,checkpoint)&&r.current().token==next,"pending recovered operation duplicate not idempotent");auto noop=r.prepare_bootstrap_archive(b.proof,next,next_w,checkpoint);check(!noop.has_work()&&!r.apply_bootstrap_archive(noop,checkpoint).published,"pending recovered supplement not idempotent");}verify_supplement(b,original_rows,logical(t.path/"primary"),next);check(logical(t.path/"witness")==w_before,"pending typed recovery rewrote witness intent");
++  {Blockchain owner(t.path/"primary",b.genesis);ChainStore w(t.path/"witness");CapellaDurableReactor r(owner,b.rules,b.limits,w,b.proof,next,next_w,checkpoint);pending_exact(r,f.operation);check(r.current().token==next,"pending second typed reopen unstable");}verify_supplement(b,original_rows,logical(t.path/"primary"),next);check(logical(t.path/"witness")==w_before,"pending second reopen rewrote witness");
++  emit(cold?(lose?"pending-cold-sigkill-simulated-wal-loss":"pending-cold-sigkill-retained-wal"):(lose?"pending-fragmented-sigkill-simulated-wal-loss":"pending-fragmented-sigkill-retained-wal"),{{"queueEntries",1},{"actualDurableFormat",cold?"cold":"fragmented"},{"actualPrimarySyncInterceptionAndSigkill",true},{"observedPrimaryDisposition",disposition},{"volatileWalSuffixLossSimulated",lose},{"physicalPowerLossQualified",false},{"rawEnvelopeDigestAllBlobsAndLogicalContentPreserved",true},{"genericRecoveryRefusedWithoutImplicitRepair",true},{"typedProofAndTwoNextPinsRecover",true},{"witnessNeverRewrittenByRecovery",true},{"operationBytesAndIdempotencePreserved",true},{"childSignaturesCreated",0}});
++ }
++}
++#endif
++
++}
++int main(int argc,char** argv){try{
++#ifdef NANO_SYNC_FAULT
++ if(argc==3&&std::string(argv[1])=="--pending-crash-writer")return pending_child(fs::path(argv[2]));
++ if(argc==2&&std::string(argv[1])=="--pending-recovery-tests"){auto pending=pending_fixture();pending_hot(pending);pending_interruptions(pending,fs::path(argv[0]));checkpoint();check(pending_signatures==3,"parent signature count changed");emit("bootstrap-archive-pending-recovery-tests",{{"newCases",5},{"elapsedMs",elapsed()},{"maxRssKiB",rss()},{"syntheticSignaturesCreated",pending_signatures},{"childSignaturesCreated",0},{"testOnlyKeysAndDomain",true},{"privateKeysOrSigningEnvRead",false},{"nonemptyDurablePendingQueueCovered",true},{"coldAndFragmentedInterruptedRecoveryCovered",true},{"actualSigkillCases",4},{"physicalPowerLossQualified",false},{"networkUsed",false},{"runtimeDutiesResumed",false}});return 0;}
++#else
++ if(argc==2&&std::string(argv[1])=="--pending-recovery-tests")throw std::runtime_error("pending recovery tests require Linux fsync stop hook");
++#endif
++ auto f=fixture();
+ #ifdef NANO_SYNC_FAULT
+  if(argc==3&&std::string(argv[1])=="--crash-writer")return child(f,fs::path(argv[2]));
+ #endif
+--- /dev/null
++++ b/tests/test_capella_bootstrap_startup.cpp
+@@ -0,0 +1,121 @@
++#include "nano/consensus_capella_bootstrap_input.hpp"
++#include "nano/consensus_capella_runtime.hpp"
++#include <rocksdb/db.h>
++#include <chrono>
++#include <cerrno>
++#include <filesystem>
++#include <fstream>
++#include <iostream>
++#include <map>
++#include <memory>
++#include <fcntl.h>
++#include <signal.h>
++#include <sys/resource.h>
++#include <sys/stat.h>
++#include <sys/wait.h>
++#include <unistd.h>
++using namespace nano;
++namespace fs=std::filesystem;
++namespace {
++const auto began=std::chrono::steady_clock::now();
++void require(bool ok,const char* why){if(!ok)throw std::runtime_error(why);}
++void checkpoint(){rusage r{};require(::getrusage(RUSAGE_SELF,&r)==0,"resource observation");
++#ifdef __APPLE__
++ const auto memory=r.ru_maxrss/1024;
++#else
++ const auto memory=r.ru_maxrss;
++#endif
++ require(std::chrono::steady_clock::now()-began<std::chrono::seconds(60)&&memory<=131072,"startup test resource bound");}
++struct Temp{fs::path path;Temp(){auto p=(fs::temp_directory_path()/"nano-bootstrap-startup-XXXXXX").string();require(::mkdtemp(p.data()),"owned test directory");path=fs::canonical(p);}~Temp(){std::error_code e;fs::remove_all(path,e);}};
++std::string read(const fs::path& p){std::ifstream f(p,std::ios::binary);require(bool(f),"public fixture read");std::string s((std::istreambuf_iterator<char>(f)),{});require(s.size()<=32*1024*1024,"fixture bound");return s;}
++Bytes raw(const std::string& s){return {s.begin(),s.end()};}
++void save(const fs::path& p,const Bytes& b){require(!fs::exists(p),"new test artifact");std::ofstream f(p,std::ios::binary);f.write(reinterpret_cast<const char*>(b.data()),std::streamsize(b.size()));f.close();require(bool(f),"test artifact write");}
++Json pin(const ForkCheckpointToken& t){return {{"sequence",quantity(Int(std::to_string(t.sequence)))},{"digest",hex(t.digest)}};}
++template<class F>void refuses(F action,const char* why){bool rejected=false;try{action();}catch(const std::exception&){rejected=true;}require(rejected,why);}
++// Detect both admitted RocksDB APIs without release-number assumptions.
++template<class Database=rocksdb::DB>
++std::unique_ptr<Database> open_read_only(const rocksdb::Options& o,const std::string& path){
++ std::unique_ptr<Database> d;
++ if constexpr(requires { Database::OpenForReadOnly(o,path,&d); })require(Database::OpenForReadOnly(o,path,&d).ok(),"logical RO read");
++ else{Database* x=nullptr;const auto status=Database::OpenForReadOnly(o,path,&x);d.reset(x);require(status.ok(),"logical RO read");}return d;
++}
++template<class Database=rocksdb::DB>
++std::unique_ptr<Database> open_write(const rocksdb::Options& o,const std::string& path){
++ std::unique_ptr<Database> d;
++ if constexpr(requires { Database::Open(o,path,&d); })require(Database::Open(o,path,&d).ok(),"owned adverse open");
++ else{Database* x=nullptr;const auto status=Database::Open(o,path,&x);d.reset(x);require(status.ok(),"owned adverse open");}return d;
++}
++using Rows=std::map<std::string,std::string>;
++Rows rows(const fs::path& p){rocksdb::Options o;o.create_if_missing=false;auto d=open_read_only(o,p.string());std::unique_ptr<rocksdb::Iterator> it(d->NewIterator({}));Rows out;size_t bytes=0;for(it->SeekToFirst();it->Valid();it->Next()){checkpoint();auto k=it->key().ToString(),v=it->value().ToString();bytes+=k.size()+v.size();require(out.size()<1024&&bytes<=32*1024*1024,"logical inventory bound");out.emplace(std::move(k),std::move(v));}require(it->status().ok(),"complete logical read");return out;}
++void erase(const fs::path& p,const std::string& key){rocksdb::Options o;o.create_if_missing=false;auto d=open_write(o,p.string());rocksdb::WriteOptions w;w.sync=true;require(d->Delete(w,key).ok(),"owned adverse delete");}
++struct Fixture{Genesis genesis;CapellaForkBlockRules rules;CapellaStoreSnapshotLimits limits;CapellaForkStore initial;Bytes pre,wire;Json config,initial_descriptor;};
++Fixture fixture(const fs::path& output){
++ const auto dir=fs::path(NANO_TEST_SOURCE)/"tests/fixtures/capella-bootstrap-anchor-cb532";
++ const auto manifest=read(dir/"manifest.json");require(hex(sha256(raw(manifest)))=="0xec150c28c8c187e6728cea7ef717acc6383e0b75242302b0a481fc2a9c425fc6","literal public fixture pin");const auto m=Json::parse(manifest);
++ auto file=[&](const char* kind){const auto& p=m.at("files").at(kind);const auto text=read(dir/p.at("path").get<std::string>());require(p.at("bytes").get<size_t>()==text.size()&&p.at("sha256")==hex(sha256(raw(text))).substr(2),"public fixture file pin");return text;};
++ const auto profile=file("profile"),initial=file("initial");auto rules=load_capella_fork_profile(profile,sha256(raw(profile)),1024*1024);auto g=Genesis::from_json(Json::parse(file("genesis")));const auto state_max=rules.transition.maximum_state_bytes;
++ const CapellaStoreSnapshotLimits limits{16*1024*1024,4,64,64,state_max,4*state_max,64,100000};
++ auto store=capella_store_from_snapshot(initial,sha256(raw(initial)),rules,limits,checkpoint);auto pre=raw(file("genesisState"));auto wire=unhex(m.at("bootstrapSigningHistory").at("block").at("ssz").get<std::string>());
++ require(hex(sha256(wire))=="0x9575c3a186b101bd4a35bf56072bc9eba91d1d912e4ec462714eae0a60b08995","literal public wire pin");save(output/"genesis-state.ssz",pre);save(output/"signed-block.ssz",wire);
++ const auto q=[](size_t n){return quantity(Int(std::to_string(n)));};
++ Json config{{"profile",{{"file",(dir/"profile.json").string()},{"sha256",hex(sha256(raw(profile)))},{"maximumBytes","0x100000"}}},{"limits",{{"envelopeBytes",q(limits.envelope_bytes)},{"blocks",q(limits.blocks)},{"messages",q(limits.messages)},{"equivocations",q(limits.equivocations)},{"stateBytes",q(limits.state_bytes)},{"totalStateBytes",q(limits.total_state_bytes)},{"replaySlots",q(limits.replay_slots)},{"syncTrials",q(limits.sync_trials)}}},{"initial",nullptr},{"restart",nullptr},{"clock",{{"intervalMs","0x1"},{"maximumForwardStepMs",q(rules.slot_duration_ms)}}},{"automaticPruning",false},{"historicalStatePruning",false}};
++ Json initial_descriptor{{"file",(dir/"initial.json").string()},{"sha256",hex(sha256(raw(initial)))}};
++ return {std::move(g),std::move(rules),limits,std::move(store),std::move(pre),std::move(wire),std::move(config),std::move(initial_descriptor)};
++}
++Json descriptor(const fs::path& p,const Fixture& f){return {{"format","nano-capella-signed-bootstrap-proof-inputs-v1"},{"genesisState",{{"path",(p/"genesis-state.ssz").string()},{"sha256",hex(sha256(f.pre)).substr(2)},{"bytes",f.pre.size()}}},{"signedBlock",{{"path",(p/"signed-block.ssz").string()},{"sha256",hex(sha256(f.wire)).substr(2)},{"bytes",f.wire.size()}}}};}
++void emit(const char* name){std::cout<<Json{{"scenario",name},{"result","PASS"},{"runtimeDutiesResumed",false},{"privateInputsRead",false},{"productionQualified",false}}.dump()<<std::endl;}
++void inputs(const Fixture& f,const fs::path& p){
++ auto d=descriptor(p,f);auto proof=load_capella_signed_bootstrap_proof(f.genesis,f.rules,f.limits,d,checkpoint);require(proof.signed_wire()==f.wire&&proof.header().slot==1,"valid general proof loader");
++ for(unsigned i=0;i<7;++i){auto bad=d;if(i==0)bad["extra"]=true;else if(i==1)bad["genesisState"]["bytes"]=0;else if(i==2)bad["signedBlock"]["bytes"]=f.wire.size()+1;else if(i==3)bad["signedBlock"]["sha256"]=std::string(64,'0');else if(i==4)bad["genesisState"]["sha256"]="0x"+hex(sha256(f.pre)).substr(2);else if(i==5)bad["genesisState"]["path"]="relative.ssz";else bad["format"]="trusted-certificate";refuses([&]{load_capella_signed_bootstrap_proof(f.genesis,f.rules,f.limits,bad,checkpoint);},"bad artifact descriptor accepted");}
++ fs::create_symlink(p/"signed-block.ssz",p/"wire-link");auto bad=d;bad["signedBlock"]["path"]=(p/"wire-link").string();refuses([&]{load_capella_signed_bootstrap_proof(f.genesis,f.rules,f.limits,bad,checkpoint);},"symlink leaf accepted");
++ fs::create_directory(p/"real-parent");save(p/"real-parent/wire.ssz",f.wire);fs::create_directory_symlink(p/"real-parent",p/"alias-parent");bad=d;bad["signedBlock"]["path"]=(p/"alias-parent/wire.ssz").string();refuses([&]{load_capella_signed_bootstrap_proof(f.genesis,f.rules,f.limits,bad,checkpoint);},"symlink ancestor accepted");
++ require(::mkfifo((p/"pipe").c_str(),0600)==0,"owned FIFO");bad=d;bad["signedBlock"]["path"]=(p/"pipe").string();refuses([&]{load_capella_signed_bootstrap_proof(f.genesis,f.rules,f.limits,bad,checkpoint);},"FIFO accepted");
++ struct Cancel{};bool cancelled=false;try{load_capella_signed_bootstrap_proof(f.genesis,f.rules,f.limits,d,[]{throw Cancel{};});}catch(const Cancel&){cancelled=true;}require(cancelled,"typed caller cancellation lost");
++ auto external=d;bool changed=false;auto owned=load_capella_signed_bootstrap_proof(f.genesis,f.rules,f.limits,external,[&]{if(!changed){changed=true;external["signedBlock"]["sha256"]=std::string(64,'0');}checkpoint();});require(changed&&owned.signed_wire()==f.wire,"caller descriptor aliases loader authority");emit("pinned-proof-inputs-and-refusals");
++ size_t callbacks=0;load_capella_signed_bootstrap_proof(f.genesis,f.rules,f.limits,d,[&]{++callbacks;checkpoint();});require(callbacks>0,"loader callback control");
++ size_t observed=0;bool injected=false;refuses([&]{load_capella_signed_bootstrap_proof(f.genesis,f.rules,f.limits,d,[&]{if(++observed==callbacks){injected=true;auto corrupt=f.wire;corrupt[4]^=1;std::ofstream file(p/"signed-block.ssz",std::ios::binary);file.write(reinterpret_cast<const char*>(corrupt.data()),std::streamsize(corrupt.size()));file.close();require(bool(file),"owned artifact replacement after validation");}checkpoint();});},"post-validation artifact replacement accepted");require(injected,"post-validation fault boundary not reached");
++ {std::ofstream file(p/"signed-block.ssz",std::ios::binary);file.write(reinterpret_cast<const char*>(f.wire.data()),std::streamsize(f.wire.size()));file.close();require(bool(file),"restore owned public wire fixture");}
++ emit("post-validation-artifact-rebinding-refused");
++}
++void existing(const Fixture& f){
++ Temp t;const auto absent=t.path/"absent/primary";refuses([&]{Blockchain c(absent,f.genesis,ChainStore::OpenMode::ReadWriteExisting);},"strict owner created absent DB");require(!fs::exists(t.path/"absent"),"strict owner created parent");
++ for(const auto& key:{"meta/identity","meta/tip","block/0x0000000000000000","state/0x0000000000000000"}){Temp s;{Blockchain c(s.path/"primary",f.genesis);}erase(s.path/"primary",key);const auto before=rows(s.path/"primary");refuses([&]{Blockchain c(s.path/"primary",f.genesis,ChainStore::OpenMode::ReadWriteExisting);},"strict owner repaired missing binding");require(rows(s.path/"primary")==before,"strict owner initialized logical state on refusal");}
++ {Temp s;{Blockchain c(s.path/"primary",f.genesis);}const auto before=rows(s.path/"primary");{Blockchain c(s.path/"primary",f.genesis,ChainStore::OpenMode::ReadWriteExisting);const auto tip=c.store().latest();require(tip&&tip->header.hash()==f.genesis.block.header.hash(),"strict owner canonical tip");}require(rows(s.path/"primary")==before,"strict valid owner changed logical state");}
++ {Temp s;refuses([&]{Blockchain c(s.path/"primary",f.genesis,ChainStore::OpenMode::ReadOnly);},"readonly Blockchain owner accepted");require(!fs::exists(s.path/"primary"),"invalid owner mode opened DB");}
++ emit("strict-existing-owner-never-initializes");
++}
++struct ClockForbidden{};
++void before_clock(Blockchain& chain,Json cfg){bool reached=false,mutated=false;try{start_capella_runtime(chain,cfg,[&]{if(!mutated){mutated=true;cfg["recoveryWitness"]="/nonexistent/caller-replaced-witness";cfg["unexpectedCallerField"]=true;}checkpoint();},[&]()->uint64_t{reached=true;throw ClockForbidden{};});}catch(const ClockForbidden&){}require(reached&&mutated,"typed startup did not own config before real-clock boundary");}
++void startup(const Fixture& f,const fs::path& input){
++ Temp t;const auto primary=t.path/"primary",witness=t.path/"witness";auto proof=load_capella_signed_bootstrap_proof(f.genesis,f.rules,f.limits,descriptor(input,f),checkpoint);ForkCheckpointToken np{},nw{};
++ {Blockchain c(primary,f.genesis);ChainStore w(witness);CapellaDurableReactor r(c,f.rules,f.limits,f.initial,checkpoint,&w);const auto wp=w.fork_checkpoint(f.genesis.chain_id,f.genesis.block.header.hash(),2048+8*f.limits.envelope_bytes);require(bool(wp),"witness pin");auto plan=r.prepare_bootstrap_archive(proof,r.current().token,wp->token,checkpoint);np=plan.next_primary();nw=plan.next_witness();r.apply_bootstrap_archive(plan,checkpoint);}
++ auto cfg=f.config;cfg["recoveryWitness"]=witness.string();cfg["bootstrapArchiveRecovery"]={{"authority",descriptor(input,f)},{"nextPrimary",pin(np)},{"nextWitness",pin(nw)}};const auto a=rows(primary),b=rows(witness);
++ {Blockchain c(primary,f.genesis,ChainStore::OpenMode::ReadWriteExisting);before_clock(c,cfg);}require(rows(primary)==a&&rows(witness)==b,"typed completed startup changed protocol state before clock");
++ for(unsigned i=0;i<5;++i){auto bad=cfg;if(i==0)bad["automaticRecovery"]=true;else if(i==1)bad["recoveryCommitment"]=pin(np);else if(i==2)bad["bootstrapArchive"]=descriptor(input,f);else if(i==3)bad["bootstrapArchiveRecovery"]["nextWitness"]["digest"]=hex(Bytes(32));else bad["bootstrapArchiveRecovery"]["extra"]=true;bool clock=false;{Blockchain c(primary,f.genesis,ChainStore::OpenMode::ReadWriteExisting);refuses([&]{start_capella_runtime(c,bad,checkpoint,[&]()->uint64_t{clock=true;throw ClockForbidden{};});},"invalid startup mode accepted");}require(!clock&&rows(primary)==a&&rows(witness)==b,"invalid startup reached clock or changed protocol state");}
++ emit("explicit-two-pin-runtime-startup-before-clock");
++ {Temp fresh;auto fresh_cfg=f.config;fresh_cfg["initial"]=f.initial_descriptor;fresh_cfg["recoveryWitness"]=(fresh.path/"witness").string();fresh_cfg["bootstrapArchive"]=descriptor(input,f);
++  {Blockchain c(fresh.path/"primary",f.genesis);before_clock(c,fresh_cfg);}
++  ChainStore p(fresh.path/"primary",ChainStore::OpenMode::ReadOnly);const auto root=consensus_beacon_header_root(proof.header());const auto saved=p.checkpoint_archive(Bytes(root.begin(),root.end()),f.limits.envelope_bytes);require(saved&&saved->slot==1&&saved->payload==f.wire,"fresh runtime failed to publish authenticated archive");
++ }
++ emit("fresh-typed-bootstrap-archives-before-clock");
++}
++void main_existing_guard(){
++ Temp t;const auto config=t.path/"invalid-recovery.json",primary=t.path/"absent-parent/primary";
++ save(config,raw(Json{{"capella",{{"bootstrapArchiveRecovery",Json::object()}}}}.dump()));
++ const auto genesis=(fs::path(NANO_TEST_SOURCE)/"tests/fixtures/capella-bootstrap-anchor-cb532/genesis.json").string();
++ const auto binary=fs::canonical(NANO_TEST_NANO_BINARY).string(),db=primary.string(),cfg=config.string();
++ struct Child{pid_t pid=-1;~Child(){if(pid>0){::kill(pid,SIGKILL);while(::waitpid(pid,nullptr,0)<0&&errno==EINTR){}}}} child;
++ child.pid=::fork();require(child.pid>=0,"owned CLI child");
++ if(child.pid==0){
++  const int output=::open("/dev/null",O_WRONLY);if(output<0||::dup2(output,STDOUT_FILENO)<0||::dup2(output,STDERR_FILENO)<0)_exit(125);::close(output);
++  char* const args[]={const_cast<char*>(binary.c_str()),const_cast<char*>("serve"),const_cast<char*>(genesis.c_str()),const_cast<char*>(db.c_str()),const_cast<char*>("0"),const_cast<char*>("127.0.0.1"),const_cast<char*>(cfg.c_str()),nullptr};
++  // Missing network token also prevents a listener if the main guard regresses.
++  char* const environment[]={const_cast<char*>("PATH=/usr/bin:/bin"),nullptr};::execve(binary.c_str(),args,environment);_exit(126);
++ }
++ int state=0;bool joined=false;const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(5);
++ while(!joined&&std::chrono::steady_clock::now()<deadline){checkpoint();const auto got=::waitpid(child.pid,&state,WNOHANG);if(got<0){require(errno==EINTR,"CLI child wait");continue;}joined=got==child.pid;if(!joined)::usleep(10000);}
++ require(joined,"CLI child timeout");child.pid=-1;require(WIFEXITED(state)&&WEXITSTATUS(state)==1,"CLI refused existing-only startup");
++ require(!fs::exists(t.path/"absent-parent"),"main created PRIMARY before typed recovery validation");emit("main-cli-typed-recovery-refuses-absent-primary");
++}
++}
++int main(int argc,char** argv){try{require(argc==2&&std::string(argv[1])=="--self-test","usage --self-test");Temp input;const auto f=fixture(input.path);inputs(f,input.path);existing(f);startup(f,input.path);main_existing_guard();checkpoint();std::cout<<Json{{"scenario","bootstrap-startup-self-test"},{"result","PASS"},{"newSignaturesCreated",0},{"hostClockRead",false},{"clockRebased",false},{"workersStarted",false},{"networkUsed",false},{"privateInputsRead",false},{"productionQualified",false}}.dump()<<std::endl;return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

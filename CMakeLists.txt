@@ -2065,3 +2065,17 @@ if(TARGET nano-test-sync-fault AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif()
 add_test(NAME consensus_capella_bootstrap_archive_cas COMMAND nano-capella-bootstrap-archive-cas-tests --self-test)
 set_tests_properties(consensus_capella_bootstrap_archive_cas PROPERTIES TIMEOUT 70 LABELS qualification_consensus_recovery)
+
+if(TARGET nano-test-sync-fault AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
+ add_test(NAME consensus_capella_bootstrap_archive_pending_recovery COMMAND nano-capella-bootstrap-archive-cas-tests --pending-recovery-tests)
+ set_tests_properties(consensus_capella_bootstrap_archive_pending_recovery PROPERTIES TIMEOUT 70 LABELS qualification_consensus_recovery)
+endif()
+
+
+add_executable(nano-capella-bootstrap-startup-tests tests/test_capella_bootstrap_startup.cpp)
+target_link_libraries(nano-capella-bootstrap-startup-tests PRIVATE nano_core)
+target_compile_definitions(nano-capella-bootstrap-startup-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+target_compile_definitions(nano-capella-bootstrap-startup-tests PRIVATE NANO_TEST_NANO_BINARY="$<TARGET_FILE:nano>")
+add_dependencies(nano-capella-bootstrap-startup-tests nano)
+add_test(NAME consensus_capella_bootstrap_startup COMMAND nano-capella-bootstrap-startup-tests --self-test)
+set_tests_properties(consensus_capella_bootstrap_startup PROPERTIES TIMEOUT 70 LABELS "qualification_consensus_recovery")

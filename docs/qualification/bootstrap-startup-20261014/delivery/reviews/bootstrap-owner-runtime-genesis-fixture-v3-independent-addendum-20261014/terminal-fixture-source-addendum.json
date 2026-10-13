@@ -1,0 +1,40 @@
+{
+  "format": "nano-bootstrap-owner-runtime-genesis-fixture-v3-static-addendum-v1",
+  "verdict": "NO_MATERIAL_BLOCKER_FOUND_IN_PINNED_GENESIS_INITIALIZATION_ONLY_DELTA",
+  "candidateV2": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-bootstrap-startup-candidate-v2-20261014/manifest.json",
+    "sha256": "99de44966a1bea76d0dadc67d39cd5d6c4c854c3f31d7151397e43a96133c40d",
+    "bytes": 13856
+  },
+  "candidateV3": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-bootstrap-startup-candidate-v3-20261014/manifest.json",
+    "sha256": "a52c1a4e5b3351faa98656f923106252149b8d150f40df6c3bd9518d0677b0ab",
+    "bytes": 15053
+  },
+  "ownerFixtureRepair": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-bootstrap-archive-pending-recovery-test-proposal-v3-20261014/manifest.json",
+    "sha256": "003d399703b06765a662e3b1e83ab2784e4ef7c964e620ba724c19de21bd16c0",
+    "bytes": 2710
+  },
+  "testSource": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-bootstrap-startup-candidate-v3-20261014/source/tests/test_capella_bootstrap_archive_cas.cpp",
+    "sha256": "7df5f848f2f27c3adc0868fcba00623f7d51be01e95f6240f6570702a1119ede",
+    "bytes": 61401
+  },
+  "changedPaths": [
+    "tests/test_capella_bootstrap_archive_cas.cpp"
+  ],
+  "otherTenSourcesAndCmakeByteIdentical": true,
+  "checks": [
+    "Exactly Genesis g default-empty state becomes Genesis::from_json(Json::parse(input(genesis,genesis.json))). No other source line/production/profile/limits/assertions/budget changed.",
+    "Input lambda checks literal manifest SHA plus exact expected filename/size/SHA before returning owned public bytes. Supplier is existing public source fixture, not private/current DB or secret input.",
+    "Existing new synthetic keys/domain/withdrawal credentials/committee aggregates remain disjoint and re-rooted; subsequent stateRoot/hash/eth1 history/execution-header/body roots are recalculated as before. No input copy introduces a typed trust flag or skips full transition/contract code binding.",
+    "Actual failure is ROOT-reported deposit binding mismatch before synthetic signatures; public fixture provides matching native deposit contract state, rather than relaxing production check.",
+    "Child bundle already serializes/parses exact Genesis block and alloc state, preserving full authenticated copied execution state. Correctness still requires actual new one-consumer build and pending test result."
+  ],
+  "historicalResultsScope": "ROOT reports V2 startup six scenarios+summary PASS and pending fixture refused early; none of those observations qualifies V3 pending recovery or actual runtime. Old source/failures retained.",
+  "coreOrRuntimeOrCmakeChanged": false,
+  "compilerTestsDockerSshDbPrivateReadsByReviewer": false,
+  "repositoryOrFrozenProposalsChanged": false,
+  "productionQualified": false
+}

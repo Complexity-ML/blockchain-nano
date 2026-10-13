@@ -84,12 +84,25 @@ Genesis Genesis::from_json(const Json& data){
  if(g.evm_revision==EvmRevision::Paris||g.evm_revision==EvmRevision::Shanghai){const std::string domain=g.evm_revision==EvmRevision::Paris?"Nano/EVM/Paris/v1":"Nano/EVM/Shanghai/v1";h.extra_data=keccak(Rlp(std::vector<Rlp>{Rlp(Bytes(domain.begin(),domain.end())),Rlp(h.extra_data)}).encode());}
  h.encode();return g;
 }
+namespace {
+ChainStore::OpenMode blockchain_open_mode(ChainStore::OpenMode mode){
+ if(mode!=ChainStore::OpenMode::ReadWrite&&mode!=ChainStore::OpenMode::ReadWriteExisting)
+  throw std::invalid_argument("Blockchain owner requires ReadWrite or ReadWriteExisting");
+ return mode;
+}
+}
 Blockchain::Blockchain(const std::filesystem::path& database,Genesis genesis)
- :genesis_(std::move(genesis)),store_(database),engine_(genesis_.chain_id,[this](const Int& number){auto b=store_.block_by_number(number);if(!b)throw std::runtime_error("missing ancestor block");return b->header.hash();},genesis_.evm_revision){
+ :Blockchain(database,std::move(genesis),ChainStore::OpenMode::ReadWrite){}
+Blockchain::Blockchain(const std::filesystem::path& database,Genesis genesis,ChainStore::OpenMode mode)
+ :genesis_(std::move(genesis)),store_(database,blockchain_open_mode(mode)),engine_(genesis_.chain_id,[this](const Int& number){auto b=store_.block_by_number(number);if(!b)throw std::runtime_error("missing ancestor block");return b->header.hash();},genesis_.evm_revision){
  Bytes epoch(16);if(RAND_bytes(epoch.data(),int(epoch.size()))!=1)throw std::runtime_error("gossip session randomness failed");event_epoch_=hex(epoch);
- store_.bind_chain(genesis_.chain_id,genesis_.block.header.hash(),genesis_.consensus,genesis_.staking_contract);
+ if(mode==ChainStore::OpenMode::ReadWriteExisting)
+  store_.require_existing_chain_binding(genesis_.chain_id,genesis_.block.header.hash(),genesis_.consensus,genesis_.staking_contract);
+ else store_.bind_chain(genesis_.chain_id,genesis_.block.header.hash(),genesis_.consensus,genesis_.staking_contract);
  auto latest=store_.latest();
- if(!latest){pos_=sync_consensus(genesis_.state,genesis_.block.header,pos_);store_.commit(genesis_.block,genesis_.state,{},genesis_.consensus=="pos"?std::optional<Json>(pos_.to_json()):std::nullopt);tip_=genesis_.block;state_=genesis_.state;}
+ if(!latest){
+  if(mode==ChainStore::OpenMode::ReadWriteExisting)throw std::runtime_error("existing Blockchain database has no canonical tip");
+  pos_=sync_consensus(genesis_.state,genesis_.block.header,pos_);store_.commit(genesis_.block,genesis_.state,{},genesis_.consensus=="pos"?std::optional<Json>(pos_.to_json()):std::nullopt);tip_=genesis_.block;state_=genesis_.state;}
  else{
   auto first=store_.block_by_number(0);
   if(!first||first->header.hash()!=genesis_.block.header.hash())throw std::invalid_argument("genesis does not match database");

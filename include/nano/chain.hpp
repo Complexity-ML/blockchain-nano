@@ -71,6 +71,9 @@ class Blockchain {
   const std::optional<ExecutionStateRetentionAnchor>& retention,const std::vector<CheckpointBlob>& blobs);
 public:
  Blockchain(const std::filesystem::path& database,Genesis genesis);
+ // Existing owner for stopped-copy maintenance: no schema, identity or Genesis
+ // initialization. ReadOnly/unknown modes are refused before opening the DB.
+ Blockchain(const std::filesystem::path& database,Genesis genesis,ChainStore::OpenMode mode);
  // RPC must not serve a Beacon database until its checkpoint has been verified.
  void require_execution_ready() const;
  uint64_t event_cursor() const;

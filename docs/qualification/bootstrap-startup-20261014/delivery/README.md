@@ -1,0 +1,9 @@
+# Scoped bootstrap-startup qualification, 14 October 2026
+
+Eleven source overlays on main6a4. The production nano and startup binaries were compiled coherently with142 actual core members/source1317 on ARM64 and AMD64. After identifying two independent fixture defects, only the CAS test consumer was recompiled. The final candidate changes no core/CMake/flags compared with the full142 build; the final test source is b3d5 and the source candidate b6b7.
+
+Startup: six cases plus summary pass on each architecture, before the first runtime-clock callback; zero new signatures, no host clock, duties or listener. Pending: five cases plus summary pass on each, including four real SIGKILLs on cold/fragmented recovery with a nonempty signed BLS-operation queue. Three disjoint synthetic signatures in the parent, none in children. Retained WAL recovered the next primary; explicitly simulated volatile suffix loss recovered the previous primary. The immutable raw snapshot, queue, witness and idempotence were checked. This is not physical power-loss qualification.
+
+Historical failures remain here: missing blst include before any codegen; empty synthetic genesis rejected for deposit binding; synthetic slot1 rejected while the test store was at slot0. Corrections keep all production validation. There is no inherited full-suite PASS, no new EIP/fork activation and no production-readiness claim. Activated EVM remains Shanghai.
+
+Actual private copy application, full-node journals/backup, UTC restart allowance, duties/common advancing finality, native portability, CI/billing, independent external audit, other consensus/operations and Base/USDC/Doppler gates remain open. The separate offline CLI and its test harness are reviewed proposals, not compiled or tested by this delivery. No real keys, DBs, capsules or private recovery proofs are included.

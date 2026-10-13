@@ -1,0 +1,60 @@
+{
+  "format": "nano-bootstrap-owner-runtime-source-v2-static-addendum-v1",
+  "verdict": "NO_MATERIAL_BLOCKER_FOUND_IN_INCLUDE_ONLY_V2_AND_REAL_ARM_PLAN_REBIND",
+  "candidateV1": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-bootstrap-startup-candidate-20261013/manifest.json",
+    "sha256": "0b403646ace12edfd9767dbfc388bfe49b0e4a615771433c1bd0090fef5552dd",
+    "bytes": 12633
+  },
+  "candidateV2": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-bootstrap-startup-candidate-v2-20261014/manifest.json",
+    "sha256": "99de44966a1bea76d0dadc67d39cd5d6c4c854c3f31d7151397e43a96133c40d",
+    "bytes": 13856
+  },
+  "actualArmPlanV2": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-owner-runtime-arm64-control-v2-20261014/plan.json",
+    "sha256": "49adc633bad9093810589237756f2c0b9fbf491c6a2ad9d4ce919343b94c2b57",
+    "bytes": 6253695
+  },
+  "previousIndependentControllerReview": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-owner-runtime-controller-independent-review-20261014/terminal-static-controller-review.json",
+    "sha256": "8ad51acb980896948e27841df2ff0be73d16266ef38ace06b5824c3520c44427",
+    "bytes": 7313
+  },
+  "changedOverlay": {
+    "path": "tests/test_capella_bootstrap_archive_cas.cpp",
+    "sourcePath": "source/tests/test_capella_bootstrap_archive_cas.cpp",
+    "sha256": "6f52a0ac4bd50b89540a21c4b7fb49862e67ff55973e702e44cfc1a4ed25fba6",
+    "bytes": 61336,
+    "baselineSha256": "73ba99dca52ee8b3878382b2c70f4a2c1499a72c84138c937316f832e32c0f42",
+    "baselineBytes": 30404,
+    "newFile": false,
+    "provenance": {
+      "owner": "pending-v2-header-path-fix",
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-bootstrap-archive-pending-recovery-test-proposal-v2-20261014/source/tests/test_capella_bootstrap_archive_cas.cpp",
+      "manifestSha256": "8c8ec9aa9ce860cace36c1cf4ed1f7789e25882243f8964307ac9c8bb1d5c689"
+    }
+  },
+  "delta": "Exactly one #include blst.h -> ckzg/blst/bindings/blst.h;19bytes added. Other ten overlays/CMake/compiler flags unchanged. Existing /work/third_party public include root supplies header and relative blst_aux already in actual parent source pins.",
+  "checks": {
+    "candidate11ExactHashSize": true,
+    "oneLineOnlyDelta": true,
+    "other10AndCmakeUnchanged": true,
+    "parent141ObjectMdPathsHashSizeAndDepsIdentical": true,
+    "physical17Ancestral124PolicyUnchanged": true,
+    "parent1314SourceLibs7GeneratedShaBytesUnchanged": true,
+    "newPlanOverlaysBoundToCandidate99de": true,
+    "sameImmutableImageUidCompilerPolicy": true,
+    "outputRun02Absent": true,
+    "qualificationStillPending": true
+  },
+  "scope": [
+    "V1 ARM/AMD dependency-preflight blst.h failures are retained ROOT-reported real failures before any selected CPP/tests; no PASS carried to V2.",
+    "Existing controller cd1b/preparer e02e static verdict applies to unchanged code plus this explicit source/plan delta.",
+    "AMD V2 plan c45b1e1d68c48dc1307989a93609a0abc5576cab75fefc430ef95c387b5bd733 is ROOT-reported remote, not locally reread.",
+    "Runner P2 receipt counting repair is separate; no tests have been run.",
+    "No compiler/Docker/SSH/CMake/test, binary/object/archive/DB/private read, repo/proposal mutation by reviewer.",
+    "Actual current UTC/private recovery/journals/duties/common-finality/production remain open."
+  ],
+  "productionQualified": false
+}

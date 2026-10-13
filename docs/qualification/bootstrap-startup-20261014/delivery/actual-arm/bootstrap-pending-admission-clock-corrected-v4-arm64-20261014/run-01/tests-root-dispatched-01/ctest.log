@@ -1,0 +1,33 @@
+Internal ctest changing into directory: /outputs
+UpdateCTestConfiguration  from :/outputs/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/outputs/DartConfiguration.tcl
+Test project /outputs
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 379
+    Start 379: consensus_capella_bootstrap_archive_pending_recovery
+
+379: Test command: /outputs/nano-capella-bootstrap-archive-cas-tests "--pending-recovery-tests"
+379: Working Directory: /outputs
+379: Test timeout computed to be: 70
+379: {"duplicateAndSupplementIdempotent":true,"genuineOperationAdmittedAndReopened":true,"productionQualified":false,"queueEntries":1,"rawEnvelopeDigestAndAllOtherLogicalContentPreserved":true,"result":"PASS","scenario":"pending-hot-archive-only-supplement","typedTwoPinReopen":true}
+379: {"actualDurableFormat":"fragmented","actualPrimarySyncInterceptionAndSigkill":true,"childSignaturesCreated":0,"genericRecoveryRefusedWithoutImplicitRepair":true,"observedPrimaryDisposition":"next","operationBytesAndIdempotencePreserved":true,"physicalPowerLossQualified":false,"productionQualified":false,"queueEntries":1,"rawEnvelopeDigestAllBlobsAndLogicalContentPreserved":true,"result":"PASS","scenario":"pending-fragmented-sigkill-retained-wal","typedProofAndTwoNextPinsRecover":true,"volatileWalSuffixLossSimulated":false,"witnessNeverRewrittenByRecovery":true}
+379: {"actualDurableFormat":"fragmented","actualPrimarySyncInterceptionAndSigkill":true,"childSignaturesCreated":0,"genericRecoveryRefusedWithoutImplicitRepair":true,"observedPrimaryDisposition":"previous","operationBytesAndIdempotencePreserved":true,"physicalPowerLossQualified":false,"productionQualified":false,"queueEntries":1,"rawEnvelopeDigestAllBlobsAndLogicalContentPreserved":true,"result":"PASS","scenario":"pending-fragmented-sigkill-simulated-wal-loss","typedProofAndTwoNextPinsRecover":true,"volatileWalSuffixLossSimulated":true,"witnessNeverRewrittenByRecovery":true}
+379: {"actualDurableFormat":"cold","actualPrimarySyncInterceptionAndSigkill":true,"childSignaturesCreated":0,"genericRecoveryRefusedWithoutImplicitRepair":true,"observedPrimaryDisposition":"next","operationBytesAndIdempotencePreserved":true,"physicalPowerLossQualified":false,"productionQualified":false,"queueEntries":1,"rawEnvelopeDigestAllBlobsAndLogicalContentPreserved":true,"result":"PASS","scenario":"pending-cold-sigkill-retained-wal","typedProofAndTwoNextPinsRecover":true,"volatileWalSuffixLossSimulated":false,"witnessNeverRewrittenByRecovery":true}
+379: {"actualDurableFormat":"cold","actualPrimarySyncInterceptionAndSigkill":true,"childSignaturesCreated":0,"genericRecoveryRefusedWithoutImplicitRepair":true,"observedPrimaryDisposition":"previous","operationBytesAndIdempotencePreserved":true,"physicalPowerLossQualified":false,"productionQualified":false,"queueEntries":1,"rawEnvelopeDigestAllBlobsAndLogicalContentPreserved":true,"result":"PASS","scenario":"pending-cold-sigkill-simulated-wal-loss","typedProofAndTwoNextPinsRecover":true,"volatileWalSuffixLossSimulated":true,"witnessNeverRewrittenByRecovery":true}
+379: {"actualSigkillCases":4,"childSignaturesCreated":0,"coldAndFragmentedInterruptedRecoveryCovered":true,"elapsedMs":1065,"maxRssKiB":22892,"networkUsed":false,"newCases":5,"nonemptyDurablePendingQueueCovered":true,"physicalPowerLossQualified":false,"privateKeysOrSigningEnvRead":false,"productionQualified":false,"result":"PASS","runtimeDutiesResumed":false,"scenario":"bootstrap-archive-pending-recovery-tests","syntheticSignaturesCreated":3,"testOnlyKeysAndDomain":true}
+1/1 Test #379: consensus_capella_bootstrap_archive_pending_recovery ...   Passed    1.07 sec
+
+The following tests passed:
+	consensus_capella_bootstrap_archive_pending_recovery
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+qualification_consensus_recovery    =   1.07 sec*proc (1 test)
+
+Total Test time (real) =   1.08 sec

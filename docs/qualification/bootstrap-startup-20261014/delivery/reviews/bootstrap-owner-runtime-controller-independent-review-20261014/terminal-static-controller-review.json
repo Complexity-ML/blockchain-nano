@@ -1,0 +1,104 @@
+{
+  "format": "nano-bootstrap-owner-runtime-controller-independent-static-review-v1",
+  "verdict": "NO_MATERIAL_BLOCKER_FOUND_IN_FROZEN_STATIC_AND_LOCAL_PUBLIC_PLAN_SCOPE",
+  "sourceBaseline": "6a4ef3d9be2f5649129415f1bc158e2a211ed4f6",
+  "seals": {
+    "proposalManifest": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-owner-runtime-incremental-build-proposal-20261014/manifest.json",
+      "sha256": "c47fdea83782891824f02959d4f85d902666c9b7e7857862a2c1f5468aaeaae4",
+      "bytes": 2666
+    },
+    "controller": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-owner-runtime-incremental-build-proposal-20261014/build-bootstrap-owner-runtime-root-only.py",
+      "sha256": "cd1b0ce8abd1a69ec6c6dcc0b3c3ac79415ff00a0676187c48309bd5943a9ae2",
+      "bytes": 27014
+    },
+    "preparer": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-owner-runtime-incremental-build-proposal-20261014/prepare-bootstrap-owner-runtime-plan.py",
+      "sha256": "e02e574b926f347260c587467671a91b2ce0de61d9446f972ead6aed4e6d3998",
+      "bytes": 12586
+    },
+    "actualArmPlan": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-owner-runtime-arm64-control-20261014/plan.json",
+      "sha256": "58229fe9a6f9ed653e9901978f52b5e370661a0914d0b532e0e308378adb66ee",
+      "bytes": 6253656
+    }
+  },
+  "actualArmPlanCrossBinding": {
+    "candidateSha256": "0b403646ace12edfd9767dbfc388bfe49b0e4a615771433c1bd0090fef5552dd",
+    "candidateOverlays": 11,
+    "cmakeSha256": "165efcb1657725f563d19a4ed856274026745b374410891043ec797c954d7290",
+    "parentArchiveSha256": "df3390ff98f5c1250bd6867efe8b0f52f14678947c30d4437085cb358d375d42",
+    "parentArchiveBytes": 39842342,
+    "parentTerminalSha256": "2b9b803271e76c8e3fc5fe83fc9d9fc79bcb0789ed40fb2e9391982481c0ccca",
+    "parentCoreMembers": 141,
+    "memberObjectTerminalShaAndLengthMatch": true,
+    "actualPublicMdFilesReadHashSizeDepsSourceAndCompilerBindingsVerified": 143,
+    "coreMdProvenance": {
+      "qualified-inherited-compilation-md": 124,
+      "actual141-parent-compilation": 17
+    },
+    "previousCoreFreshSelection": 42,
+    "newInputCoreFresh": 1,
+    "coreReused": 99,
+    "resultCore": 142,
+    "parentSource": 1314,
+    "resultSource": 1317,
+    "freshExistingConsumers": [
+      "nano",
+      "nano-capella-bootstrap-archive-cas-tests"
+    ],
+    "newConsumer": "nano-capella-bootstrap-startup-tests",
+    "links": 3,
+    "sourceSensitivePathCandidatesFound": 0,
+    "parentOtherProtectedInputs": 14,
+    "publicMetadataSealFilesVerified": 8,
+    "actualBinaryObjectArchiveOrSdkBytesRereadByReviewer": false
+  },
+  "checks": [
+    {
+      "location": "preparer:41-78; controller:54-88,148-153",
+      "result": "Externally pinned same-buffer JSON and script seals; exact baseline/image and11 overlays, existing source baseline SHA, new paths absent, original source1314; fresh output/control disjoint from parent/source/candidate. Source/content/flags beforeafter, no dirty-source or trust-force escape."
+    },
+    {
+      "location": "preparer:53-68,80-86; controller:81-85,125-138",
+      "result": "17 physically current real MD and124 explicit ancestral MD bound to actual object bytes; ancestral project dependencies equal historical source; parent143 -M probes written only /proof and compared to original MD, labelled NOT compilation MD; no missing MD regenerated as proof."
+    },
+    {
+      "location": "controller:72-88,139-148,209,216-222",
+      "result": "Parent archive141 linked to terminal/raw member/object SHA/length; reobserves actual141 members via282 ar-p before copying; all3 old program/object/metadata parents including unused transition protected before probes and rechecked on success/failure. Public source/gen/libs immutable parent mounts."
+    },
+    {
+      "location": "controller:152-192",
+      "result": "Fresh configure requires all old compiler DB rows exact plus2 new rows; old flags unchanged. Dependency selection uses changed source/header intersection; fresh -M closed over current source/generated and SDK before actual compile; actual -MD equals preflight; exactly43 fresh core and99 reused under concrete plan, not claimed executed."
+    },
+    {
+      "location": "controller:162-181,208-214",
+      "result": "Seven copied libs/MCL directobjects byte-bound before links and later readback; generatedKZG exact parent SHA before probes/compile. Full consumed SDK union includes new input/startup and link libs plus tools, snapshot before/after and old SDK matches; immutable image with no SDK overlays/private env."
+    },
+    {
+      "location": "controller:196-207,212-215",
+      "result": "New archive142 freshly assembled from exact object operandset; all142 raw member hashes/lengths compare to current objects, archive pinned before proof and after proof/links. Three compiler consumers and three resulting binaries readback; no old archive graft or old consumer ABI reuse."
+    },
+    {
+      "location": "controller:93-122",
+      "result": "RO source/control and RO parent inputs; existing digest image pullnever/networknone/capdrop/nopriv UID501:20 or1000:1000. CPU2/4GiB/PIDs256; finite total3000, per-role/probe/link timeouts; unique labelled container cleanup verifies ownership, deletes only own container. No image build/download/install, DB/private mount, runtime, tests or retries."
+    }
+  ],
+  "limitsAndScope": [
+    "Static review only: neither script imported/AST-executed nor compiler/Docker/SSH/test run by reviewer. No binary/object/archive bytes were newly observed; public existing receipts, actual143 MD files and plan seals were read.",
+    "AMD plan eefeaf85f2a3257bd757281af3347ba21b1fbb9dabc57f755f1a8345fddb7c44 is ROOT-reported remote preparation, not locally reread by reviewer; shared frozen code covers AMD branch.",
+    "Only new nano/pending/startup links are qualified by future build; unused third parent transition is protected, not relinked/executed.",
+    "SDK-after success and explicit parent-after failure guards are distinct; read-only immutable image prevents worker SDK mutation, but failure does not produce a new successful SDK qualification.",
+    "ARM ctime is retained as a diagnostic; SHA/size/dev/ino/owner/mode/mtime remain mandatory. No claim of continuous external immutability or rollback prevention.",
+    "Current UTC catchup, actual private recovery, journal duties/common-finality, pending tests, maintenance CLI, production and independent external security review remain open."
+  ],
+  "reviewHarnessHistory": {
+    "firstReadOnlyMetadataCheck": "Reviewer incorrectly assumed raw parent-member proof was a dict; actual artifact is a list. Shape assumption fixed in reviewer-only parsing; controller already correctly supports both. No candidate/controller/proof file changed and no execution verdict transferred."
+  },
+  "compilerCmakeDockerSshTestsExecuted": false,
+  "databaseKeysOrPrivateProofsRead": false,
+  "repositoryOrFrozenProposalModified": false,
+  "runtimeStarted": false,
+  "productionQualified": false
+}

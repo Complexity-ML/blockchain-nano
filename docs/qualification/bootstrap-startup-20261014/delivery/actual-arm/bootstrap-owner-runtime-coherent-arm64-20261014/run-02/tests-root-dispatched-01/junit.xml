@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="2"
+	failures="1"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="0"
+	timestamp="2026-10-13T22:49:33"
+	>
+	<testcase name="consensus_capella_bootstrap_archive_pending_recovery" classname="consensus_capella_bootstrap_archive_pending_recovery" time="0.0205312" status="fail">
+		<failure message="Failed"/>
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_recovery"/>
+		</properties>
+		<system-out>deposit history execution binding mismatch
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_bootstrap_startup" classname="consensus_capella_bootstrap_startup" time="0.282421" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_recovery"/>
+		</properties>
+		<system-out>{"privateInputsRead":false,"productionQualified":false,"result":"PASS","runtimeDutiesResumed":false,"scenario":"pinned-proof-inputs-and-refusals"}
+{"privateInputsRead":false,"productionQualified":false,"result":"PASS","runtimeDutiesResumed":false,"scenario":"post-validation-artifact-rebinding-refused"}
+{"privateInputsRead":false,"productionQualified":false,"result":"PASS","runtimeDutiesResumed":false,"scenario":"strict-existing-owner-never-initializes"}
+{"privateInputsRead":false,"productionQualified":false,"result":"PASS","runtimeDutiesResumed":false,"scenario":"explicit-two-pin-runtime-startup-before-clock"}
+{"privateInputsRead":false,"productionQualified":false,"result":"PASS","runtimeDutiesResumed":false,"scenario":"fresh-typed-bootstrap-archives-before-clock"}
+{"privateInputsRead":false,"productionQualified":false,"result":"PASS","runtimeDutiesResumed":false,"scenario":"main-cli-typed-recovery-refuses-absent-primary"}
+{"clockRebased":false,"hostClockRead":false,"networkUsed":false,"newSignaturesCreated":...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+</testsuite>

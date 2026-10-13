@@ -1,0 +1,20 @@
+{
+  "format": "nano-root-observed-bootstrap-startup-build-failure-v1",
+  "baseline": "6a4ef3d9be2f5649129415f1bc158e2a211ed4f6",
+  "controllerSha256": "cd1b0ce8abd1a69ec6c6dcc0b3c3ac79415ff00a0676187c48309bd5943a9ae2",
+  "candidateSha256": "0b403646ace12edfd9767dbfc388bfe49b0e4a615771433c1bd0090fef5552dd",
+  "architectures": [
+    {"arch": "arm64", "execSession": 8801, "planSha256": "58229fe9a6f9ed653e9901978f52b5e370661a0914d0b532e0e308378adb66ee", "exitCode": 1, "output": "bootstrap-owner-runtime-coherent-arm64-20261014/run-01"},
+    {"arch": "amd64", "execSession": 42142, "planSha256": "eefeaf85f2a3257bd757281af3347ba21b1fbb9dabc57f755f1a8345fddb7c44", "exitCode": 1, "output": "/home/ubuntu/nanobees-qualification/bootstrap-owner-runtime-coherent-amd64-20261014/run-01"}
+  ],
+  "actualPhase": "dependency-preflight",
+  "actualDiagnostic": "tests/test_capella_bootstrap_archive_cas.cpp:9:10: fatal error: 'blst.h' file not found",
+  "configured": true,
+  "objectsCompiled": 0,
+  "testsExecuted": 0,
+  "publicParentsUnchangedAfterFailure": true,
+  "proposedCorrection": "Resolve the already-vendored public header through the existing third_party include directory; preserve compiler flags and failed run directories.",
+  "privateInputsRead": false,
+  "runtimeStarted": false,
+  "productionQualified": false
+}

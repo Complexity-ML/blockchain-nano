@@ -1,0 +1,30 @@
+{
+  "format": "nano-public-static-independent-review-v1",
+  "createdAtUtc": "2026-10-13T23:02:33.498493+00:00",
+  "scope": "Static read only of one-consumer build proposal; no import, compiler, Docker, SSH, test or private read",
+  "proposalManifestSha256": "f93c07010b7026d691a6bd01a67787028c3129d6b31eb5b3c8fdd220fb33f053",
+  "controllerSha256": "6ae45e2cfeaa68971f63876098257ec2fabbd002ee2551b8b3141eb8a057b917",
+  "candidateSha256": "a52c1a4e5b3351faa98656f923106252149b8d150f40df6c3bd9518d0677b0ab",
+  "findingCount": 0,
+  "verdict": "NO_MATERIAL_STATIC_BLOCKER_FOUND_IN_REVIEWED_SCOPE",
+  "checks": {
+    "parent142CurrentObjectsRawMembersAndActualTerminalBound": true,
+    "source1317OneGenesisFixtureCppOnly": true,
+    "sourceAndSdkClosureRealMThenActualMdEqualityRequired": true,
+    "oneConsumerCompileAndLinkOnly": true,
+    "coreCompileArchiveConfigureTestsZero": true,
+    "otherNanoStartupByteCopiesPreserveExecutableMode": true,
+    "sourceParentsLibrariesGeneratedSdkBeforeAfterRequired": true,
+    "finiteImagePinnedNoNetworkPullNeverOwnedLabelCleanup": true
+  },
+  "lineReferences": {
+    "parentAndCandidatePins": "build-pending-one-consumer.py:22-59",
+    "copiesOneDependencyProbeCompileLink": "build-pending-one-consumer.py:78-88",
+    "closingPinsAndTruthfulCounts": "build-pending-one-consumer.py:89-100"
+  },
+  "limits": [
+    "Actual parent/artifact/SDK bytes remain ROOT runtime gates; this static review does not execute or freshly observe them",
+    "V1 two-build dependency refusal and ARM pending fixture failure remain historical; no previous PASS is transferred to the repaired pending test",
+    "No private recovery, current UTC recovery, duties, common finality or production qualification"
+  ]
+}

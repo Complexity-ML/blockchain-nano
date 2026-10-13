@@ -1,0 +1,27 @@
+{
+  "format": "nano-public-static-fixture-repair-addendum-v1",
+  "createdAtUtc": "2026-10-13T23:12:47.778357+00:00",
+  "proposalManifestSha256": "64446b1798c1a48ad15f766d5d99dbd1dcc8bde8f89d03447567cadc32e8b2de",
+  "sourceSha256": "b3d5b0c1328ad563852df097e94f82f948eeb3bde022087b6ac101601b6bcb37",
+  "sourceBytes": 61708,
+  "priorSourceSha256": "7df5f848f2f27c3adc0868fcba00623f7d51be01e95f6240f6570702a1119ede",
+  "verdict": "NO_MATERIAL_STATIC_BLOCKER_FOUND_IN_SYNTHETIC_CLOCK_REPAIR",
+  "exactSubtractionReconstructsPriorSource": true,
+  "repair": "Same signed wire first required to refuse on slot0 store; existing pure tick API moves a separate synthetic admission store to slot1, then full signed received-block and typed bootstrap factory assertions remain",
+  "unchanged": [
+    "All production sources/profile/rules/flags/CMake/provider",
+    "Same actual preSSZ/message/execution roots/proposer/domain/RANDAO/wire",
+    "Three synthetic parent signatures and zero child signatures",
+    "Five pending scenarios and queue/cold/fragment/recovery assertions"
+  ],
+  "clockScope": "Synthetic fixed public fixture only; pinned SSZ genesis timestamp and profile slot duration are finite already validated inputs; no host UTC read or real clock rebase",
+  "qualifications": {
+    "compilerExecutedByReviewer": false,
+    "testsExecutedByReviewer": false,
+    "privateRead": false,
+    "repairedFullAdmissionPassed": false,
+    "runtimeRecoveryQualified": false,
+    "productionQualified": false
+  },
+  "history": "Prior failures and controller/runner inputs are preserved; static source correctness is not a new execution PASS"
+}

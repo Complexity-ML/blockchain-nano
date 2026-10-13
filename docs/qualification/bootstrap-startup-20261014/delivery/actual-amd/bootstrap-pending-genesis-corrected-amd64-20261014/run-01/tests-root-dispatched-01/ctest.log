@@ -1,0 +1,48 @@
+Internal ctest changing into directory: /outputs
+UpdateCTestConfiguration  from :/outputs/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/outputs/DartConfiguration.tcl
+Test project /outputs
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 379
+    Start 379: consensus_capella_bootstrap_archive_pending_recovery
+
+379: Test command: /outputs/nano-capella-bootstrap-archive-cas-tests "--pending-recovery-tests"
+379: Working Directory: /outputs
+379: Test timeout computed to be: 70
+379: genuine synthetic full admission
+1/2 Test #379: consensus_capella_bootstrap_archive_pending_recovery ...***Failed    0.13 sec
+genuine synthetic full admission
+
+test 380
+    Start 380: consensus_capella_bootstrap_startup
+
+380: Test command: /outputs/nano-capella-bootstrap-startup-tests "--self-test"
+380: Working Directory: /outputs
+380: Test timeout computed to be: 70
+380: {"privateInputsRead":false,"productionQualified":false,"result":"PASS","runtimeDutiesResumed":false,"scenario":"pinned-proof-inputs-and-refusals"}
+380: {"privateInputsRead":false,"productionQualified":false,"result":"PASS","runtimeDutiesResumed":false,"scenario":"post-validation-artifact-rebinding-refused"}
+380: {"privateInputsRead":false,"productionQualified":false,"result":"PASS","runtimeDutiesResumed":false,"scenario":"strict-existing-owner-never-initializes"}
+380: {"privateInputsRead":false,"productionQualified":false,"result":"PASS","runtimeDutiesResumed":false,"scenario":"explicit-two-pin-runtime-startup-before-clock"}
+380: {"privateInputsRead":false,"productionQualified":false,"result":"PASS","runtimeDutiesResumed":false,"scenario":"fresh-typed-bootstrap-archives-before-clock"}
+380: {"privateInputsRead":false,"productionQualified":false,"result":"PASS","runtimeDutiesResumed":false,"scenario":"main-cli-typed-recovery-refuses-absent-primary"}
+380: {"clockRebased":false,"hostClockRead":false,"networkUsed":false,"newSignaturesCreated":0,"privateInputsRead":false,"productionQualified":false,"result":"PASS","scenario":"bootstrap-startup-self-test","workersStarted":false}
+2/2 Test #380: consensus_capella_bootstrap_startup ....................   Passed    0.97 sec
+
+The following tests passed:
+	consensus_capella_bootstrap_startup
+
+50% tests passed, 1 tests failed out of 2
+
+Label Time Summary:
+qualification_consensus_recovery    =   1.11 sec*proc (2 tests)
+
+Total Test time (real) =   1.12 sec
+
+The following tests FAILED:
+	379 - consensus_capella_bootstrap_archive_pending_recovery (Failed)
+Errors while running CTest

@@ -1,3 +1,9 @@
+## 14 octobre 2026 — Tests de reprise sur deux architectures, profil EVM inchangé
+
+Sur fixtures publiques/synthétiques, le raccordement owner existant, entrées authentifiées et reprise avant horloge passe six scénarios de démarrage sur Docker Linux ARM/AMD64. Pending non vide : cinq cas passent par architecture, quatre SIGKILL, deux pertes WAL explicitement simulées, queue/enveloppe et WITNESS conservés, reprise typée idempotente. Trois signatures synthétiques, enfants zéro. ARM : 1 065 ms/22 892 KiB ; AMD64 : 3 768 ms/24 364 KiB.
+
+Candidat final `b6b7c450` : code de production compilé dans le lot `99de4496`, archive de 142 objets ; seul test pending V4 recompilé/relié. Échecs include/Genesis/horloge de fixture conservés. CLI offline V2/banc relus uniquement, non compilés/testés/appliqués. Copie privée, fenêtre de reprise UTC expirée, journaux, duties/finalité commune, V37/NAS, natif, reprise naturelle AMD64, CI facturation et audit externe restent ouverts. Quatre preuves locales non publiées. Profil Shanghai, EVM/RPC, forks, EIP/CSV et critères inchangés ; production non qualifiée.
+
 ## 13 octobre 2026 — Archive qualifiée sur deux architectures, EVM/EIP inchangés
 
 Le candidat C++ V3/banc V4 passe trois CTests sur chaque architecture : conservation CAS/témoin de l’ancre déjà signée, annulation et reprise cold/memo SIGKILL. ARM : 7,143 s ; AMD64 : 27,169 s. Nouveau banc : ARM 637 ms/25 236 KiB, AMD64 2 237 ms/26 520 KiB. Builds cohérents : 141 objets, trois liens. Snapshot exact, formats cold/fragmented, deux engagements suivants, idempotence et refus adverses ; deux SIGKILL par banc. Perte WAL explicitement simulée, panne physique non qualifiée. Échecs et findings antérieurs conservés.

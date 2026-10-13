@@ -50,6 +50,8 @@ public:
  ChainStore(const ChainStore&)=delete;
  ChainStore& operator=(const ChainStore&)=delete;
  void bind_chain(const Int& chain_id,const Bytes& genesis_hash,const std::string& consensus,const std::string& staking_contract="");
+ // Authenticate an existing identity on this handle; never initializes it.
+ void require_existing_chain_binding(const Int& chain_id,const Bytes& genesis_hash,const std::string& consensus,const std::string& staking_contract="")const;
  // Opaque checkpoint transport: caller validates the full consensus candidate
  // before committing. Synchronous atomic payload/token replacement with CAS.
  // A failed/uncertain disk write requires reopen and inspection before signing.
