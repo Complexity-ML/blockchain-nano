@@ -1,0 +1,53 @@
+--- a/include/nano/consensus_capella_reactor.hpp
++++ b/include/nano/consensus_capella_reactor.hpp
+@@ -175,18 +175,18 @@
+  CapellaDurableReactor(Blockchain&,CapellaForkBlockRules,CapellaStoreSnapshotLimits,ChainStore& witness,const std::function<void()>& checkpoint={},std::optional<ForkCheckpointToken> recovery_commitment=std::nullopt);
+  // Explicit fresh bootstrap: typed FULL-transition authority before witness I/O.
+  CapellaDurableReactor(Blockchain&,CapellaForkBlockRules,CapellaStoreSnapshotLimits,CapellaForkStore,
+-  const CapellaSignedBootstrapArchive&,ChainStore& witness,const std::function<void()>& checkpoint={});
++  CapellaSignedBootstrapArchive,ChainStore& witness,const std::function<void()>& checkpoint={});
+  // Exact precommitted archive-only recovery. Independently retain BOTH predicted
+  // next commitments from the plan before attempting its witness-first write.
+  CapellaDurableReactor(Blockchain&,CapellaForkBlockRules,CapellaStoreSnapshotLimits,ChainStore& witness,
+-  const CapellaSignedBootstrapArchive&,const ForkCheckpointToken& expected_next_primary,
++  CapellaSignedBootstrapArchive,const ForkCheckpointToken& expected_next_primary,
+   const ForkCheckpointToken& expected_witness,const std::function<void()>& checkpoint={});
+  // Offline maintenance: caller stops/excludes every other writer and owns the
+  // full stopped copies. No peer/RPC route, signer or clock change is added.
+  CapellaBootstrapArchivePlan prepare_bootstrap_archive(CapellaSignedBootstrapArchive,
+   const ForkCheckpointToken& expected_primary,const ForkCheckpointToken& expected_witness,
+   const std::function<void()>& checkpoint={})const;
+- CapellaBootstrapArchiveCommitments apply_bootstrap_archive(const CapellaBootstrapArchivePlan&,
++ CapellaBootstrapArchiveCommitments apply_bootstrap_archive(CapellaBootstrapArchivePlan,
+   const std::function<void()>& checkpoint={});
+  ~CapellaDurableReactor();
+  void invalidate();
+--- a/src/consensus_capella_reactor.cpp
++++ b/src/consensus_capella_reactor.cpp
+@@ -340,7 +340,7 @@
+ CapellaDurableReactor::CapellaDurableReactor(Blockchain& owner,CapellaForkBlockRules rules,CapellaStoreSnapshotLimits limits,ChainStore& witness,const std::function<void()>& check,std::optional<ForkCheckpointToken> recovery_commitment)
+  :CapellaDurableReactor(owner,std::move(rules),limits,witness,check,std::move(recovery_commitment),nullptr,std::nullopt,BootstrapArchiveRecoveryTag{}){}
+ CapellaDurableReactor::CapellaDurableReactor(Blockchain& owner,CapellaForkBlockRules rules,CapellaStoreSnapshotLimits limits,ChainStore& witness,
+- const CapellaSignedBootstrapArchive& proof,const ForkCheckpointToken& expected_next,const ForkCheckpointToken& expected_witness,const std::function<void()>& check)
++ CapellaSignedBootstrapArchive proof,const ForkCheckpointToken& expected_next,const ForkCheckpointToken& expected_witness,const std::function<void()>& check)
+  :CapellaDurableReactor(owner,std::move(rules),limits,witness,check,expected_next,&proof,expected_witness,BootstrapArchiveRecoveryTag{}){}
+ CapellaDurableReactor::CapellaDurableReactor(Blockchain& owner,CapellaForkBlockRules rules,CapellaStoreSnapshotLimits limits,ChainStore& witness,const std::function<void()>& check,std::optional<ForkCheckpointToken> recovery_commitment,const CapellaSignedBootstrapArchive* bootstrap,std::optional<ForkCheckpointToken> expected_witness,BootstrapArchiveRecoveryTag):disk_(owner.store_),execution_(&owner),chain_(owner.genesis_.chain_id),genesis_(owner.genesis_.block.header.hash()),rules_(std::move(rules)),limits_(limits),mutex_(disk_.altair_reactor_mutex_),witness_(&witness){
+  std::lock_guard lock(mutex_);validate_execution_binding();archive_require(witness_!=&disk_);
+@@ -396,7 +396,7 @@
+  std::lock_guard chain_lock(owner.mutex_);owner.beacon_finalized_=std::move(finalized);owner.beacon_ready_=true;
+ }
+ CapellaDurableReactor::CapellaDurableReactor(Blockchain& owner,CapellaForkBlockRules rules,CapellaStoreSnapshotLimits limits,CapellaForkStore initial,
+- const CapellaSignedBootstrapArchive& proof,ChainStore& witness,const std::function<void()>& check)
++ CapellaSignedBootstrapArchive proof,ChainStore& witness,const std::function<void()>& check)
+  :disk_(owner.store_),execution_(&owner),chain_(owner.genesis_.chain_id),genesis_(owner.genesis_.block.header.hash()),rules_(std::move(rules)),limits_(limits),mutex_(disk_.altair_reactor_mutex_),witness_(&witness){
+  std::lock_guard lock(mutex_);validate_execution_binding();
+  archive_require(witness_!=&disk_&&proof.chain_==chain_&&proof.genesis_==genesis_&&proof.matches(initial,rules_,check));
+@@ -517,7 +517,7 @@
+  // No allocation or callback between synchronous PRIMARY success and exposure.
+  token_=std::move(committed);std::atomic_store_explicit(&beacon_publication_,publication,std::memory_order_release);
+ }
+-CapellaBootstrapArchiveCommitments CapellaDurableReactor::apply_bootstrap_archive(const CapellaBootstrapArchivePlan& plan,const std::function<void()>& check){
++CapellaBootstrapArchiveCommitments CapellaDurableReactor::apply_bootstrap_archive(CapellaBootstrapArchivePlan plan,const std::function<void()>& check){
+  std::lock_guard lock(mutex_);auto current=prepare_bootstrap_archive_locked(plan.proof_,plan.primary_before_,plan.witness_before_,check);
+  archive_require(current.snapshot_==plan.snapshot_&&current.primary_after_==plan.primary_after_&&current.witness_after_==plan.witness_after_&&current.work_==plan.work_);
+  if(!plan.work_)return {false,*token_,*witness_token_};

@@ -1,0 +1,20 @@
+{
+  "format": "nano-capella-bootstrap-archive-cas-static-security-review-v2-addendum",
+  "priorReportSha256": "cf55f51940fcd8b6898371ab09892595f73bf8332f1c6bd8a10fd229de0a1ef2",
+  "priorNoBlockerVerdictSuperseded": true,
+  "sourceCandidateManifestSha256": "65c9bd2941b480167cba7fed30fc967cfcef84f25a9cf3318849072bc38c8054",
+  "finding": {
+    "priority": "P1",
+    "foundBy": "prepare_review, independently confirmed by evm_activation_review source read",
+    "file": "include/nano/consensus_capella_bootstrap_archive.hpp",
+    "line": 25,
+    "cause": "signed_wire() returns a const reference to private Bytes in a potentially nonconst caller-owned proof. A legal const_cast mutation before by-value API copying changes the wire; matches() authenticates stored header/post/profile but does not recheck wire bytes.",
+    "concreteCounterexample": "Construct a genuine proof p, mutate const_cast<Bytes&>(p.signed_wire())[4], then pass p by value to fresh typed constructor. The copied header/post remain valid while archive entry uses modified signature bytes.",
+    "proposedNarrowRepair": "Return signed_wire Bytes by value; optionally header by value so public proof accessors expose no mutable storage alias. Add meaningful pre-mutation copy test. No signature creation or consensus rule change."
+  },
+  "executionPerformed": false,
+  "testsExecuted": 0,
+  "repositoryMutated": false,
+  "privateInputsRead": false,
+  "productionQualified": false
+}

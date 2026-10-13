@@ -1,0 +1,148 @@
+{
+  "backtraceGraph" : 
+  {
+    "commands" : 
+    [
+      "add_test"
+    ],
+    "files" : 
+    [
+      "/work/CMakeLists.txt"
+    ],
+    "nodes" : 
+    [
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 2049,
+        "parent" : 0
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 2056,
+        "parent" : 2
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 2066,
+        "parent" : 4
+      }
+    ]
+  },
+  "kind" : "ctestInfo",
+  "tests" : 
+  [
+    {
+      "backtrace" : 1,
+      "command" : 
+      [
+        "/usr/bin/cmake",
+        "-E",
+        "env",
+        "NANO_TEST_FRAGMENT_CHECKPOINT=1",
+        "NANO_TEST_COLD_REACTOR=1",
+        "NANO_TEST_RUNTIME_REFERENCE_MEMO=1",
+        "NANO_TEST_COLD_MEMO_SYNC=1",
+        "NANO_TEST_COLD_MEMO_SIGKILL=1",
+        "/outputs/nano-capella-transition-tests",
+        "--prepared-block"
+      ],
+      "name" : "consensus_capella_cold_memo_sigkill_recovery",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_consensus_recovery"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 240.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/outputs"
+        }
+      ]
+    },
+    {
+      "backtrace" : 3,
+      "command" : 
+      [
+        "/usr/bin/cmake",
+        "-E",
+        "env",
+        "NANO_TEST_PUBLICATION_CANCEL_BOUNDARY=1",
+        "NANO_TEST_COLD_REACTOR=1",
+        "NANO_TEST_FRAGMENT_CHECKPOINT=1",
+        "NANO_TEST_DUPLICATE_GUARDS=1",
+        "/outputs/nano-capella-transition-tests",
+        "--prepared-block"
+      ],
+      "name" : "consensus_capella_publication_cancel_boundary",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_consensus_recovery"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 300.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/outputs"
+        }
+      ]
+    },
+    {
+      "backtrace" : 5,
+      "command" : 
+      [
+        "/outputs/nano-capella-bootstrap-archive-cas-tests",
+        "--self-test"
+      ],
+      "name" : "consensus_capella_bootstrap_archive_cas",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "qualification_consensus_recovery"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 70.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/outputs"
+        }
+      ]
+    }
+  ],
+  "version" : 
+  {
+    "major" : 1,
+    "minor" : 0
+  }
+}

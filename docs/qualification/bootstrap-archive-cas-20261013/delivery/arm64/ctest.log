@@ -1,0 +1,65 @@
+Internal ctest changing into directory: /outputs
+UpdateCTestConfiguration  from :/outputs/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/outputs/DartConfiguration.tcl
+Test project /outputs
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 375
+    Start 375: consensus_capella_cold_memo_sigkill_recovery
+
+375: Test command: /usr/bin/cmake "-E" "env" "NANO_TEST_FRAGMENT_CHECKPOINT=1" "NANO_TEST_COLD_REACTOR=1" "NANO_TEST_RUNTIME_REFERENCE_MEMO=1" "NANO_TEST_COLD_MEMO_SYNC=1" "NANO_TEST_COLD_MEMO_SIGKILL=1" "/outputs/nano-capella-transition-tests" "--prepared-block"
+375: Working Directory: /outputs
+375: Test timeout computed to be: 240
+375: {"blockedOperations":3,"exactOracleCheckpoint":true,"faultWitness":false,"lostSuffix":false,"physicalPowerLoss":false,"recoveredNewBeforeRetry":true,"retryIdempotent":true,"scenario":"capella-cold-memo-sync-recovery"}
+375: {"blockedOperations":3,"exactOracleCheckpoint":true,"faultWitness":false,"lostSuffix":true,"physicalPowerLoss":false,"recoveredNewBeforeRetry":true,"retryIdempotent":true,"scenario":"capella-cold-memo-sync-recovery"}
+375: {"blockedOperations":3,"exactOracleCheckpoint":true,"faultWitness":true,"lostSuffix":false,"physicalPowerLoss":false,"recoveredNewBeforeRetry":true,"retryIdempotent":true,"scenario":"capella-cold-memo-sync-recovery"}
+375: {"blockedOperations":3,"exactOracleCheckpoint":true,"faultWitness":true,"lostSuffix":true,"physicalPowerLoss":false,"recoveredNewBeforeRetry":false,"retryIdempotent":true,"scenario":"capella-cold-memo-sync-recovery"}
+375: {"exactOracleCheckpoint":true,"networkQualified":false,"physicalPowerLoss":false,"recoveredNewBeforeRetry":true,"retryIdempotent":true,"scenario":"capella-cold-memo-sigkill-recovery","signal":9,"signedArchivesPreserved":true,"stage":"before-primary-sync"}
+375: {"exactOracleCheckpoint":true,"networkQualified":false,"physicalPowerLoss":false,"recoveredNewBeforeRetry":true,"retryIdempotent":true,"scenario":"capella-cold-memo-sigkill-recovery","signal":9,"signedArchivesPreserved":true,"stage":"before-witness-sync"}
+375: {"exactOracleCheckpoint":true,"networkQualified":false,"physicalPowerLoss":false,"recoveredNewBeforeRetry":true,"retryIdempotent":true,"scenario":"capella-cold-memo-sigkill-recovery","signal":9,"signedArchivesPreserved":true,"stage":"after-durable-commit"}
+375: {"allPublishedRecordsCold":true,"graphCapacityClosed":false,"idempotentMigration":true,"lateSnapshotReadRejected":true,"migrationAtomic":true,"networkQualified":false,"primaryAndWitnessRestarts":true,"productionQualified":false,"runtimeConfigBootQualified":false,"scenario":"capella-cold-reactor-integration","signerCommitmentUnchanged":true,"stickyColdFormat":true,"validChildDurablyAdmitted":true,"witnessPreviousPrimaryRecovered":true}
+1/3 Test #375: consensus_capella_cold_memo_sigkill_recovery ....   Passed    0.94 sec
+test 377
+    Start 377: consensus_capella_publication_cancel_boundary
+
+377: Test command: /usr/bin/cmake "-E" "env" "NANO_TEST_PUBLICATION_CANCEL_BOUNDARY=1" "NANO_TEST_COLD_REACTOR=1" "NANO_TEST_FRAGMENT_CHECKPOINT=1" "NANO_TEST_DUPLICATE_GUARDS=1" "/outputs/nano-capella-transition-tests" "--prepared-block"
+377: Working Directory: /outputs
+377: Test timeout computed to be: 300
+377: {"networkQualified":false,"noCancellationCallbackAfterWitnessWrite":true,"scenario":"capella-publication-cancel-boundary"}
+377: {"executionTip":true,"externalMutationsRejectedAndClosed":3,"networkQualified":false,"primaryCheckpoint":true,"scenario":"capella-cold-duplicate-storage-guards","witnessCheckpoint":true}
+377: {"allPublishedRecordsCold":true,"graphCapacityClosed":false,"idempotentMigration":true,"lateSnapshotReadRejected":true,"migrationAtomic":true,"networkQualified":false,"primaryAndWitnessRestarts":true,"productionQualified":false,"runtimeConfigBootQualified":false,"scenario":"capella-cold-reactor-integration","signerCommitmentUnchanged":true,"stickyColdFormat":true,"validChildDurablyAdmitted":true,"witnessPreviousPrimaryRecovered":true}
+2/3 Test #377: consensus_capella_publication_cancel_boundary ...   Passed    5.01 sec
+test 378
+    Start 378: consensus_capella_bootstrap_archive_cas
+
+378: Test command: /outputs/nano-capella-bootstrap-archive-cas-tests "--self-test"
+378: Working Directory: /outputs
+378: Test timeout computed to be: 70
+378: {"freshSignedArchiveAndHeader":true,"idempotentNoPublication":true,"productionQualified":false,"result":"PASS","scenario":"fresh-initial-and-idempotent"}
+378: {"allOtherLogicalContentPreserved":true,"exactRawSnapshotPreserved":true,"independentWitnessIntentMatched":true,"peerDuplicateNeverBackfills":true,"primarySequenceAdvancedOnce":true,"productionQualified":false,"result":"PASS","scenario":"same-digest-existing-supplement"}
+378: {"alternateProfileCertificateRefused":true,"invalidSignatureProposerForkGenesisAndExecutionRefused":true,"mutableCallerInputsOwned":true,"productionQualified":false,"replacedSourcePlanRefused":true,"result":"PASS","scenario":"authority-cancellation-and-stale-refusals","typedCancellationNoIO":true}
+378: {"ownerNullRefusedBeforeWitnessIntent":true,"processingMetadataExecutionAccountsAndReceiptsExact":true,"productionQualified":false,"result":"PASS","scenario":"initial-proof-state-and-execution-owner"}
+378: {"conflictingBytesRefused":true,"missingAndCorruptIndexRefused":true,"productionQualified":false,"refusalsNoDatabaseWrites":true,"result":"PASS","scenario":"immutable-conflict-and-slot-index"}
+378: {"callerMoveAwayDuringCallbackHarmless":true,"factoryRejectsInvalidPreEntryWire":true,"gettersReturnCopies":true,"productionQualified":false,"result":"PASS","scenario":"owned-public-proof-and-plan-entry"}
+378: {"actualDurableFormat":"fragmented","allOtherPrimaryLogicalContentPreserved":true,"coldThenFragmentRequestIsNoop":false,"exactRawEnvelopeAndDigestPreserved":true,"productionQualified":false,"result":"PASS","scenario":"fragmented-raw-envelope-supplement","typedTwoPinReopenAndIdempotence":true}
+378: {"actualDurableFormat":"cold","allOtherPrimaryLogicalContentPreserved":true,"coldThenFragmentRequestIsNoop":true,"exactRawEnvelopeAndDigestPreserved":true,"productionQualified":false,"result":"PASS","scenario":"cold-raw-envelope-supplement","typedTwoPinReopenAndIdempotence":true}
+378: {"actualPrimarySyncInterceptionAndSigkill":true,"observedPrimaryDisposition":"next","oldGenericRecoveryRefusesNewSupplementIntent":true,"physicalPowerLossQualified":false,"productionQualified":false,"result":"PASS","scenario":"sync-sigkill-retained-wal","typedProofAndTwoNextCommitmentsRecover":true,"volatileWalSuffixLossSimulated":false,"witnessNeverRewrittenByRecovery":true}
+378: {"actualPrimarySyncInterceptionAndSigkill":true,"observedPrimaryDisposition":"previous","oldGenericRecoveryRefusesNewSupplementIntent":true,"physicalPowerLossQualified":false,"productionQualified":false,"result":"PASS","scenario":"sync-sigkill-explicit-volatile-wal-loss","typedProofAndTwoNextCommitmentsRecover":true,"volatileWalSuffixLossSimulated":true,"witnessNeverRewrittenByRecovery":true}
+378: {"elapsedMs":637,"maxRssKiB":25236,"networkUsed":false,"newSignaturesCreated":0,"nonemptyDurablePendingQueueCovered":false,"ownedSyntheticDatabasesOnly":true,"physicalPowerLossQualified":false,"privateKeysOrSigningEnvRead":false,"productionQualified":false,"result":"PASS","runtimeDutiesResumed":false,"scenario":"bootstrap-archive-cas-self-test","syncFaultAndSigkillCases":2}
+3/3 Test #378: consensus_capella_bootstrap_archive_cas .........   Passed    0.64 sec
+
+The following tests passed:
+	consensus_capella_cold_memo_sigkill_recovery
+	consensus_capella_publication_cancel_boundary
+	consensus_capella_bootstrap_archive_cas
+
+100% tests passed, 0 tests failed out of 3
+
+Label Time Summary:
+qualification_consensus_recovery    =   6.59 sec*proc (3 tests)
+
+Total Test time (real) =   6.60 sec

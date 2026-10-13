@@ -1,0 +1,52 @@
+{
+  "format": "nano-bootstrap-archive-cas-build-control-independent-review-v1",
+  "status": "NO_MATERIAL_BLOCKER_FOUND_IN_CURRENT_BUILD_SCOPE",
+  "createdAtUtc": "2026-10-13T20:29:22.906612+00:00",
+  "baselineGitCommit": "4228fcdaec166b32f6ad87bf8dd08c1459384bb0",
+  "sourceBindings": [
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/build-bootstrap-archive-cas-batch.py",
+      "sha256": "76e1274760e872053938856f75ad5ce7ada20c9cd4379b048caee12d5281af6f",
+      "bytes": 19836
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/prepare-bootstrap-archive-cas-build-plan.py",
+      "sha256": "ce72053953c75fc45c05b9173eaa8c52bbcb81e78e12be5556bf313e738a03cd",
+      "bytes": 7288
+    }
+  ],
+  "readOnlyReview": true,
+  "findingsClosed": [
+    {
+      "finding": "Plan preparer hashed owner manifests then parsed a different read",
+      "repairObserved": "Hash and JSON parse use corebytes/testbytes held buffers; expected CLI SHA/length retained in author_seals; bytes rechecked before plan publication."
+    },
+    {
+      "finding": "Fresh existing-consumer linker argv was not compared to parent",
+      "repairObserved": "New nano and transition link.txt bytes must equal pinned actual parent link.txt before linking."
+    }
+  ],
+  "checked": [
+    "Exact Linux ARM64/AMD64 images, public pinned plans and sources; no DB or runtime mounts",
+    "Actual parent140 MD-based project dependency selection including lexical alias containment",
+    "Fresh dependency-only probes; generated/source/SDK union and compiled MD equality",
+    "Conditional object reuse only from pinned parent byte members and unchanged compiler commands",
+    "New141 archive operands and all141 ar-p member SHA equality",
+    "Existing consumer600-second limits, core120/newtest180, batch1800/total3000 finite bounds",
+    "New3 links, source/build/SDK/parent full before-after bindings and Darwin ctime diagnostic policy",
+    "UUID owned container labels, timeout and cleanup checks; no tests in build driver"
+  ],
+  "openOrExcluded": [
+    "Actual build/compile/test execution has not been performed by this reviewer",
+    "Concrete output plan has not been generated or executed in this review",
+    "Future Darwin test target needs Linux-only stop-shim registration or separate Mac implementation; Linux builds unaffected",
+    "Nonempty durable pending queues and interrupted cold/fragment archive-only recovery remain separate qualification requirements",
+    "Runtime repair, duty resumption, advancing common finality, expired clock recovery and production readiness remain open"
+  ],
+  "testsExecuted": 0,
+  "compilerInvoked": false,
+  "dockerOrSshExecuted": false,
+  "repositoryMutated": false,
+  "privateInputsRead": false,
+  "productionQualified": false
+}

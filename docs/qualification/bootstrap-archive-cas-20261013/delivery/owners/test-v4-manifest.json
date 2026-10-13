@@ -1,0 +1,96 @@
+{
+  "format": "nano-capella-bootstrap-archive-cas-test-source-proposal-v4",
+  "status": "FROZEN_NOT_COMPILED_OR_EXECUTED",
+  "createdAtUtc": "2026-10-13T20:34:24.598425+00:00",
+  "baselineGitCommit": "4228fcdaec166b32f6ad87bf8dd08c1459384bb0",
+  "productionCandidateManifest": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-bootstrap-archive-cas-candidate-v3-20261013/manifest.json",
+    "sha256": "2dd40a1f6331e065b3d4df4ecada0b6db4addf69cf3e80b661b64dcb07fd7e01"
+  },
+  "baselineCMakeSha256": "b4f1248ef106d0015b0645bbd9b0e2f2a070a2cba7e9440d537e0ce852f4d627",
+  "ownerFiles": [
+    {
+      "path": "source/tests/test_capella_bootstrap_archive_cas.cpp",
+      "bytes": 30404,
+      "sha256": "73ba99dca52ee8b3878382b2c70f4a2c1499a72c84138c937316f832e32c0f42"
+    },
+    {
+      "path": "registration-block.txt",
+      "bytes": 817,
+      "sha256": "d0da45709ce2a481a466e7da2745f31262450c2ebea898ace14edeaa701cbe71"
+    },
+    {
+      "path": "test-source-only.patch",
+      "bytes": 30633,
+      "sha256": "03bd51646d46037c98b4ba7c838d9f6253fcb39894dd1f69e2921c04b9c1e2f5"
+    },
+    {
+      "path": "README.md",
+      "bytes": 4484,
+      "sha256": "f856512aadd8f654f425d0ab6bc40a12c030713c9e5135c953795a790382607b"
+    },
+    {
+      "path": "prior-v3-compilation-refusal.json",
+      "bytes": 544,
+      "sha256": "5bde02f28d5354c76285a0fb26cbdeb753ba6841633576ef525426e18d0ad1f4"
+    }
+  ],
+  "sourcePath": "tests/test_capella_bootstrap_archive_cas.cpp",
+  "target": "nano-capella-bootstrap-archive-cas-tests",
+  "ctest": {
+    "name": "consensus_capella_bootstrap_archive_cas",
+    "argv": [
+      "nano-capella-bootstrap-archive-cas-tests",
+      "--self-test"
+    ],
+    "timeoutSeconds": 70,
+    "label": "qualification_consensus_recovery"
+  },
+  "runtimeBounds": {
+    "elapsedMs": 60000,
+    "rssKiB": 131072,
+    "childWaitSeconds": 15,
+    "ownedLogicalRows": 1024,
+    "ownedLogicalBytes": 33554432,
+    "ownedPhysicalFiles": 512,
+    "ownedPhysicalBytes": 67108864
+  },
+  "publicFixtureManifestSha256": "ec150c28c8c187e6728cea7ef717acc6383e0b75242302b0a481fc2a9c425fc6",
+  "reuseExistingSyncFaultShim": true,
+  "freshChildExec": true,
+  "actualKilledSyncBoundaryCasesProposed": 2,
+  "oneExplicitVolatileWalLossSimulation": true,
+  "expectedSummaryScenario": "bootstrap-archive-cas-self-test",
+  "nonemptyDurablePendingQueueCovered": false,
+  "privateKeysOrSigningEnvRead": false,
+  "newSignaturesCreated": 0,
+  "compilerInvoked": false,
+  "testsExecuted": 0,
+  "dockerOrSshExecuted": false,
+  "repositoryEdited": false,
+  "productionQualified": false,
+  "cmakeMergeOwner": "ROOT appends block to production candidate core CMake and externally seals merged source; no conflicting full CMake copied here",
+  "priorFrozenTestProposal": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-bootstrap-archive-cas-test-proposal-v3-20261013/manifest.json",
+    "sha256": "13ebd48b717d4b9635b0fa089928c66e9803beb41be3b88abc17a88846acef43",
+    "sourceSha256": "432cb0961bbf5b3fccf34f3e65ddc13b946b3aca0cc1b6a5190f04999da36011",
+    "unchanged": true
+  },
+  "delta": "ONE #include nano/beacon_api.hpp defining BeaconReadResponse before the existing beacon_read().status check. No scenario, CMake registration, source behavior, core candidate or resource-bound change.",
+  "newActualDurableFormatCasesProposed": [
+    "cold-raw-envelope-supplement",
+    "fragmented-raw-envelope-supplement"
+  ],
+  "publicAuthorityOwnershipCasesProposed": [
+    "getters-return-copies",
+    "fresh-ctor-caller-proof-moved-away",
+    "apply-caller-plan-moved-away"
+  ],
+  "syncFaultPlatform": "Linux only; Mac and other platforms run pure/admission/CAS cases without the two SIGKILL/fault cases, those scopes remain open",
+  "actualV3CompilerFailure": {
+    "path": "prior-v3-compilation-refusal.json",
+    "bytes": 544,
+    "sha256": "5bde02f28d5354c76285a0fb26cbdeb753ba6841633576ef525426e18d0ad1f4"
+  },
+  "priorCompilerFailureReportedByRoot": true
+}

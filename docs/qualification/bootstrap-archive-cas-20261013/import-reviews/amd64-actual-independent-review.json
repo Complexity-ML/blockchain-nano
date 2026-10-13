@@ -1,0 +1,121 @@
+{
+  "format": "nano-bootstrap-archive-cas-amd64-public-receipt-independent-review-v1",
+  "verdict": "PASS_PUBLIC_RECEIPT_CROSSBINDING_LIMITED_SCOPE",
+  "manifestSha256": "8dbd2f867fc7d94d6254e44ac246d16d84af95afd2c48dedaaf9648b3a526c79",
+  "publicPayloads": [
+    {
+      "name": "build-terminal.json",
+      "bytes": 56529,
+      "sha256": "2ea5dcce82cf72c5320de433df79d2dd1f95994085156d471928f9b4783dadee"
+    },
+    {
+      "name": "sdk-binding.json",
+      "bytes": 208,
+      "sha256": "deb9171aa32456b89446c09bb0ba1bee7b5f8d6d18383f5cca106a1ee6120e7c"
+    },
+    {
+      "name": "compile-exit.json",
+      "bytes": 80,
+      "sha256": "46f32b7470395c7d87f42e5ba08576becb02afc1ebf149e90478f65a576b9b7d"
+    },
+    {
+      "name": "tests-terminal.json",
+      "bytes": 888,
+      "sha256": "53064f4db5092a179198ee5bd320752420804bb9a8d8a93587c96e9b0c9b6fb9"
+    },
+    {
+      "name": "test-discovery.json",
+      "bytes": 2851,
+      "sha256": "71b3b617c54b7fe15c085bb542de5301ceb556275e410249ed1af433e13e1685"
+    },
+    {
+      "name": "public-summary.json",
+      "bytes": 4553,
+      "sha256": "82fcd295cc1757ebe990e8ffcbcb8e51cf6279f83c009544f3fd91cf1d344b3b"
+    }
+  ],
+  "planSha256": "06a68e00578966a52ec6bdf13aa689077fc74e70cd64f04337bf127f1081e4fb",
+  "sourceVersions": {
+    "coreManifestSha256": "2dd40a1f6331e065b3d4df4ecada0b6db4addf69cf3e80b661b64dcb07fd7e01",
+    "testManifestSha256": "11922707db0fb8548d8c1da7dd43d45d96e73677ddb3f6d33eeb5746efa065ab",
+    "testSourceSha256": "73ba99dca52ee8b3878382b2c70f4a2c1499a72c84138c937316f832e32c0f42",
+    "cmakeOverlaySha256": "9a3420e6469507f5f13b95860eb50aa6e5c5267165cee048fdb6b0e40deef126",
+    "cmakeOverlayBytesComputedFromPinnedPublicInputs": true,
+    "remoteCmakeReadByReviewer": false
+  },
+  "buildTerminalSha256": "2ea5dcce82cf72c5320de433df79d2dd1f95994085156d471928f9b4783dadee",
+  "testsTerminalSha256": "53064f4db5092a179198ee5bd320752420804bb9a8d8a93587c96e9b0c9b6fb9",
+  "coreObjectSet141MatchesPlan": true,
+  "exactCliCommands": {
+    "consensus_capella_bootstrap_archive_cas": [
+      "/outputs/nano-capella-bootstrap-archive-cas-tests",
+      "--self-test"
+    ],
+    "consensus_capella_publication_cancel_boundary": [
+      "/usr/bin/cmake",
+      "-E",
+      "env",
+      "NANO_TEST_PUBLICATION_CANCEL_BOUNDARY=1",
+      "NANO_TEST_COLD_REACTOR=1",
+      "NANO_TEST_FRAGMENT_CHECKPOINT=1",
+      "NANO_TEST_DUPLICATE_GUARDS=1",
+      "/outputs/nano-capella-transition-tests",
+      "--prepared-block"
+    ],
+    "consensus_capella_cold_memo_sigkill_recovery": [
+      "/usr/bin/cmake",
+      "-E",
+      "env",
+      "NANO_TEST_FRAGMENT_CHECKPOINT=1",
+      "NANO_TEST_COLD_REACTOR=1",
+      "NANO_TEST_RUNTIME_REFERENCE_MEMO=1",
+      "NANO_TEST_COLD_MEMO_SYNC=1",
+      "NANO_TEST_COLD_MEMO_SIGKILL=1",
+      "/outputs/nano-capella-transition-tests",
+      "--prepared-block"
+    ]
+  },
+  "testsPassed": 3,
+  "batchElapsedSeconds": 27.169271453050897,
+  "newSelfTestElapsedMs": 2237,
+  "newSelfTestMaxRssKiB": 26520,
+  "publicScenarioRowsExcludingSummary": 10,
+  "realSigkillCases": 2,
+  "retainedWalObservedDisposition": "next",
+  "simulatedVolatileLossObservedDisposition": "previous",
+  "sdkPaths": 2197,
+  "sdkBeforeAfterHashEqual": true,
+  "publicInputHashesAndIdentityUnchanged": true,
+  "scopeLimits": {
+    "rawLogAvailable": false,
+    "rawLogIndependentlyParsed": false,
+    "rawLogReferencedSha256": "25ede10625b7b63ecffb5b4e16187106203e2c613d546ba9977c4f2ead198fb3",
+    "junitAvailable": false,
+    "physicalArchiveMemberBytesReaudited": false,
+    "observedRootReceiptsAndExtractedRowsOnly": true,
+    "nonemptyPendingCovered": false,
+    "coldPendingCovered": false,
+    "physicalPowerLossQualified": false,
+    "nativeCrashQualified": false,
+    "privateCopyReadOrChanged": false,
+    "armLotQualified": false,
+    "runtimeDutiesResumed": false,
+    "commonFinalityQualified": false,
+    "productionQualified": false,
+    "testsReexecuted": false
+  },
+  "readerDiagnostics": [
+    {
+      "toolChunk": "80e3b1",
+      "reason": "read-only dict slice KeyError after JSON reading"
+    },
+    {
+      "toolChunk": "d97934",
+      "reason": "read-only len(archiveMembers integer) TypeError"
+    },
+    {
+      "toolChunk": "565533",
+      "reason": "missing local copy of public remote CMake; repair uses exact public baseline+registration computation"
+    }
+  ]
+}

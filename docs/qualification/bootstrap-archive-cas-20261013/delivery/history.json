@@ -1,0 +1,71 @@
+{
+  "format": "nano-bootstrap-archive-cas-public-history-v1",
+  "baselineGitCommit": "4228fcdaec166b32f6ad87bf8dd08c1459384bb0",
+  "staticFindings": [
+    {
+      "id": "caller-authority-reference-across-callback",
+      "originalVersion": "core V1",
+      "finding": "Public authority passed by reference across cancellation callbacks could be changed by the caller; no implicit assignment claim is made.",
+      "repair": "V2 owns proof/plan and tokens before the first callback.",
+      "preservedManifest": "history/core-v1-manifest.json",
+      "repairPatch": "history/v1-to-v2-owned-entry.patch"
+    },
+    {
+      "id": "mutable-public-proof-wire-getter",
+      "severity": "P1",
+      "originalVersion": "core V2",
+      "finding": "signed_wire() const-reference exposed the actual owned wire on a non-const proof; legal pre-entry mutation could bypass the already authenticated post-state/header binding.",
+      "repair": "V3 public proof and plan getters return values, without internal aliases.",
+      "incorrectInitialNoBlockerReview": "reviews/core-v2-initial-static-review.json",
+      "correctingAddendum": "reviews/core-v2-getter-finding-addendum.json",
+      "repairReview": "reviews/core-v3-static-review.json",
+      "repairPatch": "history/v2-to-v3-value-getters.patch"
+    }
+  ],
+  "actualRefusals": [
+    {
+      "id": "output-parent-missing-before-docker",
+      "toolChunk": "2fda9b",
+      "receipt": "history/parent-output-directory-refusal.json",
+      "dockerOrCompilerInvoked": false,
+      "repair": "Root created the missing 0700 output parent; controller and plan unchanged."
+    },
+    {
+      "id": "arm-run01-test-include-missing",
+      "terminalSha256": "e397c69b5944bf0fd60264bc58478ef59c92d3ba8729ecdf38cec3adecec1828",
+      "receipt": "history/arm-run01-include-refusal.json",
+      "compileLog": "history/arm-run01-compile-selected.log",
+      "cause": "BeaconReadResponse was incomplete at the new test use; test V4 adds only nano/beacon_api.hpp.",
+      "actualCompletedPrefix": "16 existing core units, 1 new proof unit and nano main; failed test and transition not completed. The original counters only update after the complete worker succeeds.",
+      "testsExecuted": 0
+    },
+    {
+      "id": "arm-run02-two-object-parent-directories-missing",
+      "terminalSha256": "bde36d21fd4fb76e15896dd392c0f0db5d523b666b9c4fab642008344e8ef769",
+      "receipt": "history/arm-run02-object-parent-refusal.json",
+      "compileLog": "history/arm-run02-compile-remaining.log",
+      "cause": "Clang could not create the new test object because its /tests output parent was absent.",
+      "repair": "Separate resume-01 created only two missing object parent directories, compiled the two remaining test consumers, assembled 141 members and linked three programs; no completed core or main recompilation."
+    }
+  ],
+  "terminalOutcome": {
+    "arm64Build": "arm64/build-terminal.json",
+    "arm64Tests": "arm64/tests-terminal.json",
+    "amd64Build": "amd64/build-terminal.json",
+    "amd64Tests": "amd64/tests-terminal.json",
+    "scope": "Owned synthetic stores, already signed public bootstrap wire, exact archive CAS and explicit typed two-pin recovery. No V37 restore or duties."
+  },
+  "remainingOpen": [
+    "No private campaign copy was supplemented or restored.",
+    "No runtime duties or common finality resumed.",
+    "No actual nonempty durable pending queue case; interrupted cold/fragment cases remain outside this new harness scope.",
+    "SIGKILL and one explicit volatile WAL loss model are not physical power-loss qualification.",
+    "Darwin native SIGKILL fault-hook qualification remains open.",
+    "Four private VPS egress proofs remain subject to their existing permission boundary.",
+    "Current UTC projection and finite startup allowance remain to be qualified before any duties.",
+    "No EIP matrix status or fork activation promoted; no public deployment, bridge, launch or production qualification."
+  ],
+  "privateInputsIncluded": false,
+  "runtimeDutiesResumed": false,
+  "productionQualified": false
+}

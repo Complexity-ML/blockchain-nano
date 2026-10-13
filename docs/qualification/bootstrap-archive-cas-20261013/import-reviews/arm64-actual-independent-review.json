@@ -1,0 +1,88 @@
+{
+  "format": "nano-bootstrap-archive-cas-arm64-actual-public-evidence-review-v1",
+  "verdict": "PASS_WITHIN_OWNED_PUBLIC_BUILD_AND_TEST_SCOPE",
+  "baselineGitCommit": "4228fcdaec166b32f6ad87bf8dd08c1459384bb0",
+  "coreManifestSha256": "2dd40a1f6331e065b3d4df4ecada0b6db4addf69cf3e80b661b64dcb07fd7e01",
+  "testManifestSha256": "11922707db0fb8548d8c1da7dd43d45d96e73677ddb3f6d33eeb5746efa065ab",
+  "buildTerminal": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-cas-coherent-arm64-20261013/run-02/resume-01/receipts/terminal-build.json",
+    "sha256": "2b9b803271e76c8e3fc5fe83fc9d9fc79bcb0789ed40fb2e9391982481c0ccca"
+  },
+  "testTerminal": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-cas-tests-arm64-20261013/run-01/terminal.json",
+    "sha256": "47b73b23734df867b7259b965d25bf3b43fe3d54224ebf35ba4dc4dd6dcfa927"
+  },
+  "archiveSha256": "df3390ff98f5c1250bd6867efe8b0f52f14678947c30d4437085cb358d375d42",
+  "archiveMembers": 141,
+  "actualRawMemberRowsMatchAll141ObservedObjectHashesAndBytes": true,
+  "sourceRows1314MatchCurrentPlan": true,
+  "testInputRows": 1469,
+  "beforeAfterReceiptSha256": "a4b03f68cb43425eb77f10ddbbb776be660d0ac2c0169db34308346a5d90edf9",
+  "testControllerSha256": "eca769eb2aaa894aa6b5e1a006961323edd590ade022f707dda8b5f98b3a5426",
+  "actualDiscoverySha256": "71b3b617c54b7fe15c085bb542de5301ceb556275e410249ed1af433e13e1685",
+  "actualCTestLogSha256": "55da4c834998734a9bf1a748c401c8b22e633e5d6fb9b2082383e6c9d21a8a0f",
+  "actualCTestResult": {
+    "testsPassed": 3,
+    "skipped": 0,
+    "requestedNames": [
+      "consensus_capella_bootstrap_archive_cas",
+      "consensus_capella_publication_cancel_boundary",
+      "consensus_capella_cold_memo_sigkill_recovery"
+    ],
+    "wrapperElapsedSeconds": 7.14260745793581,
+    "ctestReportedRealSeconds": 6.6,
+    "newCasElapsedMs": 637,
+    "newCasMaxRssKiB": 25236,
+    "newCasCasesPassed": 10,
+    "newCasSyncFaultSigkillCases": 2,
+    "newSignaturesCreated": 0
+  },
+  "semanticsObserved": [
+    "Fresh archive and Beacon finalized header200; idempotent same pin no publication.",
+    "Same-digest sequence advances once with exact raw envelope/all other primary logical content and separate witness intent preserved; retained-root peer duplicate cannot archive unverified wire.",
+    "Signature/proposer/fork/genesis/execution/profile/source/pin/index/cancellation/owner refusals and owned getter/callback counterexamples PASS.",
+    "Separate actual fragmented and cold migrations retain byteexact raw envelope/digest/logical data through typed two-pin reopen/idempotence.",
+    "Actual PRIMARY fsync interception+SIGSTOP/SIGKILL observed in two new cases. Retained WAL disposition next; explicit truncated volatile suffix disposition previous. Both typed-pinned recovery succeed, witness unchanged, generic recovery refused.",
+    "Affected legacy publication-cancellation and cold-memo sync/recovery regressions passed. Legacy3 SIGKILL stages remain distinct from new2 cases."
+  ],
+  "SDKBinding": {
+    "originalBeforeSha256": "1f5c39e3c47259f4f157fd69abad7705c9c5674e9bf3dcc646548dd192121600",
+    "previousRun02BeforeSha256": "1f5c39e3c47259f4f157fd69abad7705c9c5674e9bf3dcc646548dd192121600",
+    "continuationBeforeSha256": "1f5c39e3c47259f4f157fd69abad7705c9c5674e9bf3dcc646548dd192121600",
+    "continuationAfterSha256": "1f5c39e3c47259f4f157fd69abad7705c9c5674e9bf3dcc646548dd192121600",
+    "originalNamesRetained": true,
+    "currentBeforeAfterEqual": true,
+    "paths": 2498
+  },
+  "historicalFailuresPreserved": [
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-cas-coherent-arm64-20261013/run-01/receipts/terminal-build.json",
+      "sha256": "e397c69b5944bf0fd60264bc58478ef59c92d3ba8729ecdf38cec3adecec1828",
+      "cause": "Incomplete BeaconReadResponse definition in test only; already completed17core+main retained."
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-cas-coherent-arm64-20261013/run-02/receipts/terminal-build.json",
+      "sha256": "bde36d21fd4fb76e15896dd392c0f0db5d523b666b9c4fab642008344e8ef769",
+      "cause": "Two object parent directories absent; completed source/core/main and probes retained."
+    }
+  ],
+  "limitations": [
+    "Reviewer read public logs/JSON receipts and did not rerun compiler/tests/ar or independently read raw DBs/archive/object bytes. Physical checks are root-operated guarded execution tied to frozen controller.",
+    "Before/after maps store expected admitted values; the guarded controller performed actual readback comparisons. Equal JSON maps alone are not an independent physical reread.",
+    "Initial outputstat observations of the failed batch were unavailable; completed objects admitted post-failure; no historical stat proof invented.",
+    "ARM ctime-only differences are diagnostic, not a full ctime identity claim.",
+    "No JUnit in this controller: actual verbose CTest log and actual discovery JSON support3passed/no skip.",
+    "Nonempty durable pending queue covered=false; flat crash replay and completed cold/fragment reopen do not qualify pending cold/fragment crash replay.",
+    "Explicit volatile WAL loss is a simulation distinct from actual SIGKILL. Physical powerloss, private archive repair/duties/common finality, expired-clock handling, native scope and production readiness remain open.",
+    "This is internal independent review, not an external security audit."
+  ],
+  "compilerCommandsExecutedByReviewer": 0,
+  "testsExecutedByReviewer": 0,
+  "dockerOrSshExecutedByReviewer": false,
+  "privateInputsRead": false,
+  "repoMutated": false,
+  "runtimeDutiesResumed": false,
+  "physicalPowerLossQualified": false,
+  "networkQualified": false,
+  "productionQualified": false
+}

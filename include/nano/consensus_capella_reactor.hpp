@@ -11,6 +11,9 @@
 namespace nano {
 struct CapellaColdCheckpointOptions {size_t cache_records,cache_bytes;bool operator==(const CapellaColdCheckpointOptions&)const=default;};
 class Blockchain;
+class CapellaSignedBootstrapArchive;
+class CapellaBootstrapArchivePlan;
+struct CapellaBootstrapArchiveCommitments {bool published;ForkCheckpointToken primary,witness;};
 struct BeaconReadResponse;
 class StaleCapellaDuty : public std::invalid_argument {public: using std::invalid_argument::invalid_argument;};
 class ExpiredCapellaDuty : public std::runtime_error {public: using std::runtime_error::runtime_error;};
@@ -126,6 +129,18 @@ class CapellaDurableReactor {
  std::optional<Bytes> sign_proposal_locked(uint64_t,uint64_t,std::span<const uint8_t>,const std::function<uint64_t()>&,const ForkCheckpointToken&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>&);
  std::optional<Bytes> prepare_local_body_from_pool_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,size_t,size_t,const std::function<void()>&);
  void publish(CapellaForkStore,const std::function<void()>&,const std::vector<CheckpointArchiveEntry>& archive={},std::optional<CapellaSignedVotes> votes=std::nullopt,std::optional<CapellaSignedVotes> slashings=std::nullopt,std::optional<CapellaPendingBlsChanges> changes=std::nullopt,std::optional<CapellaPendingExits> exits=std::nullopt);
+ struct BootstrapArchiveRecoveryTag {};
+ CapellaDurableReactor(Blockchain&,CapellaForkBlockRules,CapellaStoreSnapshotLimits,ChainStore&,
+  const std::function<void()>&,std::optional<ForkCheckpointToken>,const CapellaSignedBootstrapArchive*,
+  std::optional<ForkCheckpointToken>,BootstrapArchiveRecoveryTag);
+ bool bootstrap_archive_exists(const CheckpointArchiveEntry&)const;
+ void bootstrap_archive_storage_binding(const ForkCheckpointToken&)const;
+ void bootstrap_archive_batch_budget(std::string_view,const CheckpointArchiveEntry&)const;
+ CapellaBootstrapArchivePlan prepare_bootstrap_archive_locked(CapellaSignedBootstrapArchive,
+  ForkCheckpointToken,ForkCheckpointToken,const std::function<void()>&)const;
+ void publish_bootstrap_archive_locked(const CapellaSignedBootstrapArchive&,std::string_view,
+  const ForkCheckpointToken&,const ForkCheckpointToken&,const ForkCheckpointToken&,
+  const ForkCheckpointToken&,bool,const std::function<void()>&);
  void publish_impl(CapellaForkStore,const std::function<void()>&,const std::vector<CheckpointArchiveEntry>&,
   std::optional<CapellaSignedVotes>,std::optional<CapellaSignedVotes>,std::optional<CapellaPendingBlsChanges>,std::optional<CapellaPendingExits>,bool,std::optional<CapellaColdCheckpointOptions> cold=std::nullopt);
 public:
@@ -158,6 +173,21 @@ public:
  CapellaDurableReactor& operator=(const CapellaDurableReactor&)=delete;
  // The separate witness is an explicitly trusted rollback boundary.
  CapellaDurableReactor(Blockchain&,CapellaForkBlockRules,CapellaStoreSnapshotLimits,ChainStore& witness,const std::function<void()>& checkpoint={},std::optional<ForkCheckpointToken> recovery_commitment=std::nullopt);
+ // Explicit fresh bootstrap: typed FULL-transition authority before witness I/O.
+ CapellaDurableReactor(Blockchain&,CapellaForkBlockRules,CapellaStoreSnapshotLimits,CapellaForkStore,
+  CapellaSignedBootstrapArchive,ChainStore& witness,const std::function<void()>& checkpoint={});
+ // Exact precommitted archive-only recovery. Independently retain BOTH predicted
+ // next commitments from the plan before attempting its witness-first write.
+ CapellaDurableReactor(Blockchain&,CapellaForkBlockRules,CapellaStoreSnapshotLimits,ChainStore& witness,
+  CapellaSignedBootstrapArchive,const ForkCheckpointToken& expected_next_primary,
+  const ForkCheckpointToken& expected_witness,const std::function<void()>& checkpoint={});
+ // Offline maintenance: caller stops/excludes every other writer and owns the
+ // full stopped copies. No peer/RPC route, signer or clock change is added.
+ CapellaBootstrapArchivePlan prepare_bootstrap_archive(CapellaSignedBootstrapArchive,
+  const ForkCheckpointToken& expected_primary,const ForkCheckpointToken& expected_witness,
+  const std::function<void()>& checkpoint={})const;
+ CapellaBootstrapArchiveCommitments apply_bootstrap_archive(CapellaBootstrapArchivePlan,
+  const std::function<void()>& checkpoint={});
  ~CapellaDurableReactor();
  void invalidate();
  std::optional<Bytes> prepare_local_body_from_pool(uint64_t validator_index,uint64_t slot,

@@ -2055,3 +2055,13 @@ set_tests_properties(consensus_capella_published_signed_inventory PROPERTIES TIM
 
 add_test(NAME consensus_capella_publication_cancel_boundary COMMAND ${CMAKE_COMMAND} -E env NANO_TEST_PUBLICATION_CANCEL_BOUNDARY=1 NANO_TEST_COLD_REACTOR=1 NANO_TEST_FRAGMENT_CHECKPOINT=1 NANO_TEST_DUPLICATE_GUARDS=1 $<TARGET_FILE:nano-capella-transition-tests> --prepared-block)
 set_tests_properties(consensus_capella_publication_cancel_boundary PROPERTIES TIMEOUT 300 LABELS qualification_consensus_recovery)
+
+add_executable(nano-capella-bootstrap-archive-cas-tests tests/test_capella_bootstrap_archive_cas.cpp)
+target_link_libraries(nano-capella-bootstrap-archive-cas-tests PRIVATE nano_core)
+target_compile_definitions(nano-capella-bootstrap-archive-cas-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+if(TARGET nano-test-sync-fault AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
+ target_link_libraries(nano-capella-bootstrap-archive-cas-tests PRIVATE nano-test-sync-fault)
+ target_compile_definitions(nano-capella-bootstrap-archive-cas-tests PRIVATE NANO_SYNC_FAULT=1)
+endif()
+add_test(NAME consensus_capella_bootstrap_archive_cas COMMAND nano-capella-bootstrap-archive-cas-tests --self-test)
+set_tests_properties(consensus_capella_bootstrap_archive_cas PROPERTIES TIMEOUT 70 LABELS qualification_consensus_recovery)

@@ -1,0 +1,125 @@
+{
+  "format": "nano-bootstrap-archive-cas-arm64-public-observed-summary-v1",
+  "actualNewScenarioRows": [
+    {
+      "freshSignedArchiveAndHeader": true,
+      "idempotentNoPublication": true,
+      "productionQualified": false,
+      "result": "PASS",
+      "scenario": "fresh-initial-and-idempotent"
+    },
+    {
+      "allOtherLogicalContentPreserved": true,
+      "exactRawSnapshotPreserved": true,
+      "independentWitnessIntentMatched": true,
+      "peerDuplicateNeverBackfills": true,
+      "primarySequenceAdvancedOnce": true,
+      "productionQualified": false,
+      "result": "PASS",
+      "scenario": "same-digest-existing-supplement"
+    },
+    {
+      "alternateProfileCertificateRefused": true,
+      "invalidSignatureProposerForkGenesisAndExecutionRefused": true,
+      "mutableCallerInputsOwned": true,
+      "productionQualified": false,
+      "replacedSourcePlanRefused": true,
+      "result": "PASS",
+      "scenario": "authority-cancellation-and-stale-refusals",
+      "typedCancellationNoIO": true
+    },
+    {
+      "ownerNullRefusedBeforeWitnessIntent": true,
+      "processingMetadataExecutionAccountsAndReceiptsExact": true,
+      "productionQualified": false,
+      "result": "PASS",
+      "scenario": "initial-proof-state-and-execution-owner"
+    },
+    {
+      "conflictingBytesRefused": true,
+      "missingAndCorruptIndexRefused": true,
+      "productionQualified": false,
+      "refusalsNoDatabaseWrites": true,
+      "result": "PASS",
+      "scenario": "immutable-conflict-and-slot-index"
+    },
+    {
+      "callerMoveAwayDuringCallbackHarmless": true,
+      "factoryRejectsInvalidPreEntryWire": true,
+      "gettersReturnCopies": true,
+      "productionQualified": false,
+      "result": "PASS",
+      "scenario": "owned-public-proof-and-plan-entry"
+    },
+    {
+      "actualDurableFormat": "fragmented",
+      "allOtherPrimaryLogicalContentPreserved": true,
+      "coldThenFragmentRequestIsNoop": false,
+      "exactRawEnvelopeAndDigestPreserved": true,
+      "productionQualified": false,
+      "result": "PASS",
+      "scenario": "fragmented-raw-envelope-supplement",
+      "typedTwoPinReopenAndIdempotence": true
+    },
+    {
+      "actualDurableFormat": "cold",
+      "allOtherPrimaryLogicalContentPreserved": true,
+      "coldThenFragmentRequestIsNoop": true,
+      "exactRawEnvelopeAndDigestPreserved": true,
+      "productionQualified": false,
+      "result": "PASS",
+      "scenario": "cold-raw-envelope-supplement",
+      "typedTwoPinReopenAndIdempotence": true
+    },
+    {
+      "actualPrimarySyncInterceptionAndSigkill": true,
+      "observedPrimaryDisposition": "next",
+      "oldGenericRecoveryRefusesNewSupplementIntent": true,
+      "physicalPowerLossQualified": false,
+      "productionQualified": false,
+      "result": "PASS",
+      "scenario": "sync-sigkill-retained-wal",
+      "typedProofAndTwoNextCommitmentsRecover": true,
+      "volatileWalSuffixLossSimulated": false,
+      "witnessNeverRewrittenByRecovery": true
+    },
+    {
+      "actualPrimarySyncInterceptionAndSigkill": true,
+      "observedPrimaryDisposition": "previous",
+      "oldGenericRecoveryRefusesNewSupplementIntent": true,
+      "physicalPowerLossQualified": false,
+      "productionQualified": false,
+      "result": "PASS",
+      "scenario": "sync-sigkill-explicit-volatile-wal-loss",
+      "typedProofAndTwoNextCommitmentsRecover": true,
+      "volatileWalSuffixLossSimulated": true,
+      "witnessNeverRewrittenByRecovery": true
+    },
+    {
+      "elapsedMs": 637,
+      "maxRssKiB": 25236,
+      "networkUsed": false,
+      "newSignaturesCreated": 0,
+      "nonemptyDurablePendingQueueCovered": false,
+      "ownedSyntheticDatabasesOnly": true,
+      "physicalPowerLossQualified": false,
+      "privateKeysOrSigningEnvRead": false,
+      "productionQualified": false,
+      "result": "PASS",
+      "runtimeDutiesResumed": false,
+      "scenario": "bootstrap-archive-cas-self-test",
+      "syncFaultAndSigkillCases": 2
+    }
+  ],
+  "actualCtestResultLines": [
+    "1/3 Test #375: consensus_capella_cold_memo_sigkill_recovery ....   Passed    0.94 sec",
+    "2/3 Test #377: consensus_capella_publication_cancel_boundary ...   Passed    5.01 sec",
+    "3/3 Test #378: consensus_capella_bootstrap_archive_cas .........   Passed    0.64 sec",
+    "100% tests passed, 0 tests failed out of 3"
+  ],
+  "logSha256": "55da4c834998734a9bf1a748c401c8b22e633e5d6fb9b2082383e6c9d21a8a0f",
+  "privateProofsOrKeysIncluded": false,
+  "originalV37Qualified": false,
+  "runtimeDutiesResumed": false,
+  "productionQualified": false
+}

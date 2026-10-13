@@ -1,0 +1,34 @@
+--- a/include/nano/consensus_capella_bootstrap_archive.hpp
++++ b/include/nano/consensus_capella_bootstrap_archive.hpp
+@@ -21,8 +21,8 @@
+ public:
+  CapellaSignedBootstrapArchive(const CapellaSignedBootstrapArchive&)=default;
+  CapellaSignedBootstrapArchive(CapellaSignedBootstrapArchive&&)=default;
+- const ConsensusBeaconHeader& header()const{return header_;}
+- const Bytes& signed_wire()const{return wire_;}
++ ConsensusBeaconHeader header()const{return header_;}
++ Bytes signed_wire()const{return wire_;}
+ };
+ // All input values are copied before callbacks. This authenticates the paired
+ // Genesis execution state and the FULL signed slot0->slot1 transition, with
+@@ -48,7 +48,7 @@
+  CapellaBootstrapArchivePlan(const CapellaBootstrapArchivePlan&)=default;
+  CapellaBootstrapArchivePlan(CapellaBootstrapArchivePlan&&)=default;
+  bool has_work()const{return work_;}
+- const ForkCheckpointToken& next_primary()const{return primary_after_;}
+- const ForkCheckpointToken& next_witness()const{return witness_after_;}
++ ForkCheckpointToken next_primary()const{return primary_after_;}
++ ForkCheckpointToken next_witness()const{return witness_after_;}
+ };
+ }
+--- a/src/consensus_capella_reactor.cpp
++++ b/src/consensus_capella_reactor.cpp
+@@ -365,7 +365,7 @@
+  if(bootstrap){
+   archive_require(bool(primary));bootstrap_archive_storage_binding(primary->token);
+   archive_require(archive_only&&primary&&primary->snapshot==encoded&&bootstrap->matches(restored,rules_,check)&&
+-   archive.size()==1&&archive[0].root==bootstrap->entry().root&&archive[0].slot==1&&archive[0].payload==bootstrap->signed_wire()&&saved->token==*expected_witness);
++   archive.size()==1&&archive[0].root==bootstrap->entry().root&&archive[0].slot==1&&archive[0].payload==bootstrap->wire_&&saved->token==*expected_witness);
+  }
+  if(archive_only&&!bootstrap)throw std::invalid_argument("Capella bootstrap archive recovery requires explicit typed authority");
+  const bool bootstrap_pending=bootstrap&&actual!=next;

@@ -1,0 +1,107 @@
+src/beacon_api.cpp
+/work/src/beacon_api.cpp:12:89: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   12 |  if(path=="/eth/v1/node/version")return {200,{{"data",{{"version","Nano/0.1.0/c++20"}}}}};
+      |                                                                                         ^
+/work/src/beacon_api.cpp:18:118: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   18 |  if(!root&&!fork&&!finality&&!genesis&&!spec)return {404,{{"code",404},{"message","Beacon endpoint not implemented"}}};
+      |                                                                                                                      ^
+/work/src/beacon_api.cpp:26:166: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   26 |  if(genesis)return {200,{{"data",{{"genesis_time",std::to_string(number(b,0))},{"genesis_validators_root",octets(b,8,32)},{"genesis_fork_version",genesis_version}}}}};
+      |                                                                                                                                                                      ^
+/work/src/beacon_api.cpp:63:70: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   63 |   if(checkpoint)checkpoint();return {200,{{"data",std::move(values)}}};
+      |                                                                      ^
+/work/src/beacon_api.cpp:77:160: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   77 |  return {200,{{"execution_optimistic",false},{"finalized",consensus_beacon_header_root(head.header)==store.timed.view.finalized.root},{"data",std::move(data)}}};
+      |                                                                                                                                                                ^
+/work/src/beacon_api.cpp:88:117: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   88 |  auto error=[](unsigned code,const char* message){return BeaconReadResponse{code,{{"code",code},{"message",message}}};};
+      |                                                                                                                     ^
+/work/src/beacon_api.cpp:132:99: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  132 |    {"header",{{"message",std::move(message)},{"signature",octets(*signed_block->second,4,96)}}}}}}};
+      |                                                                                                   ^
+7 warnings generated.
+src/beacon_block_json.cpp
+src/capella_beacon_api.cpp
+/work/src/capella_beacon_api.cpp:15:89: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   15 |  if(path=="/eth/v1/node/version")return {200,{{"data",{{"version","Nano/0.1.0/c++20"}}}}};
+      |                                                                                         ^
+/work/src/capella_beacon_api.cpp:25:118: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   25 |  if(!root&&!fork&&!finality&&!genesis&&!spec)return {404,{{"code",404},{"message","Beacon endpoint not implemented"}}};
+      |                                                                                                                      ^
+/work/src/capella_beacon_api.cpp:36:117: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   36 |    }catch(const std::invalid_argument&){return {400,{{"code",400},{"message","Expected head or 32-byte state root"}}};}
+      |                                                                                                                     ^
+/work/src/capella_beacon_api.cpp:40:81: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   40 |    if(!selected)return {404,{{"code",404},{"message","State root not retained"}}};
+      |                                                                                 ^
+/work/src/capella_beacon_api.cpp:51:166: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   51 |  if(genesis)return {200,{{"data",{{"genesis_time",std::to_string(number(b,0))},{"genesis_validators_root",octets(b,8,32)},{"genesis_fork_version",genesis_version}}}}};
+      |                                                                                                                                                                      ^
+/work/src/capella_beacon_api.cpp:89:70: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+   89 |   if(checkpoint)checkpoint();return {200,{{"data",std::move(values)}}};
+      |                                                                      ^
+/work/src/capella_beacon_api.cpp:110:98: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  110 |  return {200,{{"execution_optimistic",false},{"finalized",is_finalized},{"data",std::move(data)}}};
+      |                                                                                                  ^
+/work/src/capella_beacon_api.cpp:125:117: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  125 |  auto error=[](unsigned code,const char* message){return BeaconReadResponse{code,{{"code",code},{"message",message}}};};
+      |                                                                                                                     ^
+/work/src/capella_beacon_api.cpp:172:91: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  172 |    {"header",{{"message",std::move(message)},{"signature",octets(*signed_block,4,96)}}}}}}};
+      |                                                                                           ^
+9 warnings generated.
+src/capella_beacon_block_json.cpp
+src/consensus_bellatrix_runtime.cpp
+/work/src/consensus_bellatrix_runtime.cpp:132:147: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  132 |    if(!observation||observation->peer_slots.empty())return BeaconReadResponse{503,{{"code",503},{"message","Beacon peer observation unavailable"}}};
+      |                                                                                                                                                   ^
+/work/src/consensus_bellatrix_runtime.cpp:140:235: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  140 |    return BeaconReadResponse{200,{{"data",{{"head_slot",std::to_string(head.header.slot)},{"sync_distance",std::to_string(target-head.header.slot)},{"is_syncing",target>head.header.slot},{"is_optimistic",false},{"el_offline",false}}}}};
+      |                                                                                                                                                                                                                                           ^
+2 warnings generated.
+src/consensus_capella_audit.cpp
+src/consensus_capella_bootstrap_archive.cpp
+src/consensus_capella_clock.cpp
+src/consensus_capella_local_body.cpp
+src/consensus_capella_reactor.cpp
+/work/src/consensus_capella_reactor.cpp:588:132: warning: missing field 'attestations' initializer [-Wmissing-field-initializers]
+  588 | CapellaPublishedStore CapellaDurableReactor::current()const{std::lock_guard lock(mutex_);require_available();return {state_,*token_};}
+      |                                                                                                                                    ^
+1 warning generated.
+src/consensus_capella_runtime.cpp
+/work/src/consensus_capella_runtime.cpp:229:146: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  229 |   if(!observation||observation->peer_slots.empty())return BeaconReadResponse{503,{{"code",503},{"message","Beacon peer observation unavailable"}}};
+      |                                                                                                                                                  ^
+/work/src/consensus_capella_runtime.cpp:238:234: warning: missing field 'ssz' initializer [-Wmissing-field-initializers]
+  238 |   return BeaconReadResponse{200,{{"data",{{"head_slot",std::to_string(head.header.slot)},{"sync_distance",std::to_string(target-head.header.slot)},{"is_syncing",target>head.header.slot},{"is_optimistic",false},{"el_offline",false}}}}};
+      |                                                                                                                                                                                                                                          ^
+2 warnings generated.
+src/consensus_capella_signing.cpp
+src/consensus_capella_sync_signing.cpp
+/work/src/consensus_capella_sync_signing.cpp:13:73: warning: unused variable 'parent' [-Wunused-variable]
+   13 |  const auto parent_pin=state_->blocks.at(head).lease(check);const auto& parent=*parent_pin;
+      |                                                                         ^~~~~~
+1 warning generated.
+src/consensus_capella_validator.cpp
+src/http.cpp
+src/main.cpp
+src/node.cpp
+src/rpc.cpp
+tests/test_capella_bootstrap_archive_cas.cpp
+/work/tests/test_capella_bootstrap_archive_cas.cpp:89:186: error: calling 'beacon_read' with incomplete return type 'BeaconReadResponse'
+   89 |  Temp fresh;Pair a(f,fresh.path,true,true);check(a.reactor->signed_block(a.reactor->current().state->timed.view.anchor)==f.wire,"fresh typed bootstrap archive absent");check(a.reactor->beacon_read("/eth/v1/beacon/headers/finalized").status==200,"fresh archived Beacon header");const auto first=a.primary(),wi=a.witnessed();const auto old=logical(fresh.path/"primary"),old_w=logical(fresh.path/"witness");const auto plan=a.plan();check(!plan.has_work()&&plan.next_primary()==first.token&&plan.next_witness()==wi.token,"existing archive plan not idempotent");const auto applied=a.reactor->apply_bootstrap_archive(plan,checkpoint);check(!applied.published&&applied.primary==first.token&&applied.witness==wi.token&&logical(fresh.path/"primary")==old&&logical(fresh.path/"witness")==old_w,"idempotent archive wrote a new publication");emit("fresh-initial-and-idempotent",{{"freshSignedArchiveAndHeader",true},{"idempotentNoPublication",true}});
+      |                                                                                                                                                                               ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/work/include/nano/consensus_capella_reactor.hpp:239:21: note: 'beacon_read' declared here
+  239 |  BeaconReadResponse beacon_read(std::string_view,const std::function<void()>& checkpoint={})const;
+      |                     ^
+/work/include/nano/consensus_capella_reactor.hpp:17:8: note: forward declaration of 'nano::BeaconReadResponse'
+   17 | struct BeaconReadResponse;
+      |        ^
+/work/tests/test_capella_bootstrap_archive_cas.cpp:89:233: error: member access into incomplete type 'BeaconReadResponse'
+   89 |  Temp fresh;Pair a(f,fresh.path,true,true);check(a.reactor->signed_block(a.reactor->current().state->timed.view.anchor)==f.wire,"fresh typed bootstrap archive absent");check(a.reactor->beacon_read("/eth/v1/beacon/headers/finalized").status==200,"fresh archived Beacon header");const auto first=a.primary(),wi=a.witnessed();const auto old=logical(fresh.path/"primary"),old_w=logical(fresh.path/"witness");const auto plan=a.plan();check(!plan.has_work()&&plan.next_primary()==first.token&&plan.next_witness()==wi.token,"existing archive plan not idempotent");const auto applied=a.reactor->apply_bootstrap_archive(plan,checkpoint);check(!applied.published&&applied.primary==first.token&&applied.witness==wi.token&&logical(fresh.path/"primary")==old&&logical(fresh.path/"witness")==old_w,"idempotent archive wrote a new publication");emit("fresh-initial-and-idempotent",{{"freshSignedArchiveAndHeader",true},{"idempotentNoPublication",true}});
+      |                                                                                                                                                                                                                                         ^
+/work/include/nano/consensus_capella_reactor.hpp:17:8: note: forward declaration of 'nano::BeaconReadResponse'
+   17 | struct BeaconReadResponse;
+      |        ^
+2 errors generated.

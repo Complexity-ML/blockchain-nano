@@ -1,0 +1,185 @@
+{
+  "format": "nano-capella-bootstrap-archive-cas-static-security-review-v2",
+  "baselineGitCommit": "4228fcdaec166b32f6ad87bf8dd08c1459384bb0",
+  "candidateManifestSha256": "65c9bd2941b480167cba7fed30fc967cfcef84f25a9cf3318849072bc38c8054",
+  "sourceFilesObserved": [
+    {
+      "path": "include/nano/consensus_capella_bootstrap_archive.hpp",
+      "sha256": "2667341eae8f4bbad643c7ed30cfdc82c103664eddccac257220e4f95f5100f1",
+      "bytes": 2928,
+      "baselineSha256": null
+    },
+    {
+      "path": "src/consensus_capella_bootstrap_archive.cpp",
+      "sha256": "104f7cd497fe4bbf8e238ddcaf848435985f6474d9d176740dba6522680309de",
+      "bytes": 5731,
+      "baselineSha256": null
+    },
+    {
+      "path": "include/nano/consensus_capella_reactor.hpp",
+      "sha256": "c3a2acdb2df99f8eeec93fc8379f1bd5abc5eb15974d38c055f0ec4d756e791e",
+      "bytes": 25097,
+      "baselineSha256": "b7b6a3f716945ffca5420d8cf60e9fd73df76974d45938eefaa6341ffe6d4cb4"
+    },
+    {
+      "path": "src/consensus_capella_reactor.cpp",
+      "sha256": "a74037d1bbafa68a4e8d0322f9f832a8dd46afea06e6a5a043ea7dc025cf2f0a",
+      "bytes": 112004,
+      "baselineSha256": "4d70ac1ca6c594e25cc177f9410d9a4ccf83138ca92e759b23d1c41a81a39553"
+    }
+  ],
+  "protectedSourcesObserved": [
+    {
+      "path": "src/storage.cpp",
+      "sha256": "4611df07f863f1b97e48ed305b50981f396f302fb019e945e35e47b8dce53891",
+      "bytes": 60764,
+      "baselineGitBytesEqual": true
+    },
+    {
+      "path": "include/nano/storage.hpp",
+      "sha256": "badf32b217e1b4a0d3508874e2d882537a8135c81320f9675f4b2fe1deb2c81c",
+      "bytes": 9644,
+      "baselineGitBytesEqual": true
+    },
+    {
+      "path": "src/chain_beacon.cpp",
+      "sha256": "567551736054eb98ad9ff55ba0f224268606b921c57a8429ad056fee09acadef",
+      "bytes": 5511,
+      "baselineGitBytesEqual": true
+    },
+    {
+      "path": "src/consensus_capella_duty.cpp",
+      "sha256": "a08ed22c61ca6fa389b5d7e4304fee6772a2f9ee04e8e16ee2b1936bf18a0fff",
+      "bytes": 12801,
+      "baselineGitBytesEqual": true
+    },
+    {
+      "path": "src/consensus_capella_signing.cpp",
+      "sha256": "2f3810f4244d8b798dce111edd5ef9c2c13d6ee75d4200ace90f901da885b49b",
+      "bytes": 20999,
+      "baselineGitBytesEqual": true
+    },
+    {
+      "path": "src/consensus_capella_clock.cpp",
+      "sha256": "d1783e690e878612e18d1f943d22466727ebe059ac502b812b18fd045f126d16",
+      "bytes": 4580,
+      "baselineGitBytesEqual": true
+    },
+    {
+      "path": "src/consensus_capella_fork_store.cpp",
+      "sha256": "f1db700a1f7cb282bdc672498b71e71e01ca86de14b438f23d03e80349c9672e",
+      "bytes": 39175,
+      "baselineGitBytesEqual": true
+    },
+    {
+      "path": "src/consensus_capella_validator.cpp",
+      "sha256": "2470ca28dc5f16b89103d10d8467fb3e458566d786853e41a4931e5cafaec5d6",
+      "bytes": 10245,
+      "baselineGitBytesEqual": true
+    },
+    {
+      "path": "CMakeLists.txt",
+      "sha256": "b4f1248ef106d0015b0645bbd9b0e2f2a070a2cba7e9440d537e0ce852f4d627",
+      "bytes": 156367,
+      "baselineGitBytesEqual": true
+    }
+  ],
+  "ordinaryPublishImplByteIdentical": true,
+  "ordinaryPublishImplSha256": "b86f5ec9748d6f963729768a128dd35afa14bc0f456679a6e21c929bdf0b1474",
+  "verdict": "NO_REMAINING_MATERIAL_STATIC_BLOCKER_FOUND_IN_REVIEWED_SCOPE",
+  "reviewScope": "Independent source review only, not an external security audit or execution qualification.",
+  "v1Findings": [
+    {
+      "id": "caller-authority-ownership",
+      "resolvedInV2": true,
+      "evidence": "Public fresh/recovery constructors receive Proof by value; apply receives Plan by value. Delegated recovery proof pointer refers only to the owned public parameter. Both token optionals are copied before callbacks.",
+      "originalExplanationCorrection": "Claim of implicit public copy assignment was inaccurate: user-declared move constructor deletes implicit copy assignment. Concrete mutable underlying getter-reference / object reconstruction exposure motivated ownership repair."
+    }
+  ],
+  "invariantsReviewed": [
+    {
+      "name": "owned-full-transition-proof",
+      "files": [
+        "src/consensus_capella_bootstrap_archive.cpp:38",
+        "src/consensus_capella_bootstrap_archive.cpp:61"
+      ],
+      "result": "Genesis/pre/wire/rules copied before callback; full proposer signature/domain and production signed transition; complete post-state/execution/account/receipt equality; no validator count constant."
+    },
+    {
+      "name": "raw-cas-preservation",
+      "files": [
+        "src/consensus_capella_reactor.cpp:482",
+        "src/consensus_capella_reactor.cpp:500"
+      ],
+      "result": "Dedicated publisher retains exact raw checkpoint string, digest, immutable store, pending operations and caches; uses empty suffix at current head, null retention and no blobs."
+    },
+    {
+      "name": "namespace-and-coupling",
+      "files": [
+        "src/consensus_capella_reactor.cpp:411"
+      ],
+      "result": "Requires owner-bound beacon PRIMARY, exact linked checkpoint digest/tip, no certified tip, separately namespaced recovery WITNESS."
+    },
+    {
+      "name": "two-external-next-pins",
+      "files": [
+        "src/consensus_capella_reactor.cpp:445",
+        "src/consensus_capella_reactor.cpp:342"
+      ],
+      "result": "Plan exposes predicted PRIMARY sequence+1 with unchanged snapshot digest and independent WITNESS intent token. Typed recovery requires both caller pins, exact raw snapshot and only previous/next PRIMARY disposition."
+    },
+    {
+      "name": "strict-archive-index",
+      "files": [
+        "src/consensus_capella_reactor.cpp:422"
+      ],
+      "result": "Existing exact payload requires slot-index present and empty; absent payload requires no slot-index. No repair or replacement of conflicts."
+    },
+    {
+      "name": "witness-first-failure-boundary",
+      "files": [
+        "src/consensus_capella_reactor.cpp:509"
+      ],
+      "result": "Publication allocated and callbacks resolved before witness write; witness then synchronous coupled PRIMARY CAS; uncertain error latches unavailable; no callback between PRIMARY success and atomic publication."
+    },
+    {
+      "name": "typed-recovery-not-generic",
+      "files": [
+        "src/consensus_capella_reactor.cpp:352",
+        "src/consensus_capella_reactor.cpp:374",
+        "src/consensus_capella_reactor.cpp:391"
+      ],
+      "result": "Distinct intent format; generic recovery rejects archive-only same-digest authority; pending typed recovery independently reads/authenticates cold/fragment PRIMARY content and reuses exact held WITNESS; complete typed recovery makes no archive write."
+    },
+    {
+      "name": "peer-admission-preserved",
+      "files": [
+        "src/consensus_capella_reactor.cpp:block_locked"
+      ],
+      "result": "Existing retained-root ACK semantics unchanged. No archive backfill or typed authority from peer ACK; unknown-root strict signature admission unchanged."
+    }
+  ],
+  "qualificationOpen": [
+    "Compilation and actual tests of this candidate",
+    "Nonempty durable pending queue actual preservation test",
+    "Cold/fragmented typed archive-only crash recovery actual qualification",
+    "Actual stopped private campaign repair with separately retained next pins",
+    "Actual restored duties and advancing common finality",
+    "Expired trust clock and complete production goal"
+  ],
+  "limitations": [
+    "Caller must stop/exclude other writers as API states; this code adds no distributed process lease.",
+    "Fresh typed bootstrap starts only empty PRIMARY/WITNESS and genesis execution tip. Missing/pruned retained initial anchor is refused.",
+    "The archive supplement advances publication sequence, not clock, block height or finality.",
+    "The publisher calls existing Blockchain storage wrapper; empty suffix preserves logical canonical chain/cache/events/pool.",
+    "Copied proof has no signer/deserializer/Boolean import. No private values are included."
+  ],
+  "compilerCommandsExecuted": 0,
+  "testsExecuted": 0,
+  "dbOrPrivateInputsRead": false,
+  "repoMutated": false,
+  "runtimeStarted": false,
+  "newSignaturesCreated": 0,
+  "networkQualified": false,
+  "productionQualified": false
+}

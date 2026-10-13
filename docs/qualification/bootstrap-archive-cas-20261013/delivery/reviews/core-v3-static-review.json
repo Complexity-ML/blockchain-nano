@@ -1,0 +1,52 @@
+{
+  "format": "nano-capella-bootstrap-archive-cas-static-security-review-v3",
+  "candidateManifestSha256": "2dd40a1f6331e065b3d4df4ecada0b6db4addf69cf3e80b661b64dcb07fd7e01",
+  "sourceFiles": [
+    {
+      "path": "include/nano/consensus_capella_bootstrap_archive.hpp",
+      "sha256": "0375d7e288c3170b82edd2a624fdc50e2fd4dd1c967af44eb0e9a4f90a9b0fb1",
+      "bytes": 2900,
+      "baselineSha256": null
+    },
+    {
+      "path": "src/consensus_capella_bootstrap_archive.cpp",
+      "sha256": "104f7cd497fe4bbf8e238ddcaf848435985f6474d9d176740dba6522680309de",
+      "bytes": 5731,
+      "baselineSha256": null
+    },
+    {
+      "path": "include/nano/consensus_capella_reactor.hpp",
+      "sha256": "c3a2acdb2df99f8eeec93fc8379f1bd5abc5eb15974d38c055f0ec4d756e791e",
+      "bytes": 25097,
+      "baselineSha256": "b7b6a3f716945ffca5420d8cf60e9fd73df76974d45938eefaa6341ffe6d4cb4"
+    },
+    {
+      "path": "src/consensus_capella_reactor.cpp",
+      "sha256": "1da6716b4ec04f093bf6fb16946d09da0e997271c965730118a5fdd61c254bb2",
+      "bytes": 111996,
+      "baselineSha256": "4d70ac1ca6c594e25cc177f9410d9a4ccf83138ca92e759b23d1c41a81a39553"
+    }
+  ],
+  "priorReview": "../bootstrap-archive-cas-security-review-v2-20261013/terminal-static-security-review.json",
+  "priorReviewSupersededByFindingSha256": "8182bc60ff278381a6a3a65dd57c31c26bea6cf0e783888cec1946eba0ababed",
+  "verdict": "NO_REMAINING_MATERIAL_STATIC_BLOCKER_FOUND_IN_REVIEWED_SCOPE",
+  "publicGetterAliasP1StaticallyResolved": true,
+  "exactDelta": "Proof header/wire and Plan primary/witness getters return values; one private friend comparison directly reads proof wire_. Other two sources byte-identical to V2. Public authority APIs remain by-value before callback.",
+  "fullV2ProtocolReviewStillApplicable": true,
+  "ordinaryPublishStorageAndPeerAdmissionChanges": false,
+  "reviewHistoryErrorPreserved": "The V2 no-blocker verdict missed the public getter alias; author prepare_review discovered it before compilation. This V3 report does not promote that old verdict or claim an executed test.",
+  "openQualification": [
+    "Compilation and real tests including caller-owned pre-mutation and callback alias counterexamples",
+    "Nonempty pending and cold/fragmented recovery execution scope",
+    "Actual stopped private archive CAS with externally retained primary/witness next pins",
+    "No clock reset or expired trust relaxation; duties/common finality/production remain open"
+  ],
+  "compilerCommandsExecuted": 0,
+  "testsExecuted": 0,
+  "dbOrPrivateInputsRead": false,
+  "repoMutated": false,
+  "runtimeStarted": false,
+  "newSignaturesCreated": 0,
+  "networkQualified": false,
+  "productionQualified": false
+}
