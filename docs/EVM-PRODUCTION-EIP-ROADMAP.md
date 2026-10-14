@@ -1,3 +1,9 @@
+## 14 octobre 2026 — Archive initiale appliquée à une nouvelle copie VPS détenue
+
+Le CLI V6 qualifié a planifié puis appliqué l’archive initiale déjà signée sur une nouvelle copie intégrale des owner roots VPS. Deux NEXT indépendants ont été conservés séparément et synchronisés avant publication. Réouverture froide et idempotence typée réussissent ; originaux, références physiques, journaux/témoins, identité du pair et snapshot/horloge/queues/exécution sont conservés. Aucun nouveau signing ou duty. Les racines DB anciennes n’étant pas toutes privées, seules les nouvelles feuilles de références/copies sont passées en 0700, avec transformation explicitement attestée ; aucun chmod des originaux. [Statut observé et limites](qualification/vps-owned-bootstrap-archive-20261014/status.json).
+
+Les rapports, capsules et engagements réels restent sur VPS ; seuls les résultats de contrôle sans hashes/pins privés sont rapportés ici. Ceci ne qualifie ni sauvegarde/restauration complète, ni journaux réauthentifiés après reprise, ni UTC courant, grant expiré, duties/finalité commune, WAL interrompu ou production. V37/NAS et tous autres critères/EIP/CSV restent ouverts et conservés ; profil Shanghai inchangé. Diagnostic UTC V2 : source relue seulement, non compilée/exécutée dans ce lot.
+
 ## 14 octobre 2026 — Timer et CLI par répliques : qualification limitée
 
 Sources finales et CMake fcc réellement configurée sur Docker ARM/AMD64 ; quatre CTests distincts par architecture sur deux lots, huit exécutions totales, zéro nouvelle signature. Gate RO/RW de l’outil fermé uniquement pour lecture sur répliques + vrai LOCK ; writers privilégiés/écriture concurrente non garantis. [Preuves](qualification/startup-replica-composite-20261014/README.md).
