@@ -1,0 +1,79 @@
+{
+  "format": "nano-storage-policy-scoped-public-qualification-root-v1",
+  "sources": {
+    "storage": "09a9413e5226c6727282e252a9f20f344c0d163942f14512d0f66e2f816dda03",
+    "header": "0bcaa3b9ea29a4be2a5bd6b577252ab57b8909f9e62e499f07a2312d1fb14a09",
+    "consumer": "841ecd1ee7aaeab0fe12e30005880d1f621b6eff5878ae1f5835a985486cc1c3"
+  },
+  "actualBuildExitZero": {
+    "arm64Session": 46333,
+    "amd64Session": 42805
+  },
+  "actualBuildPerArchitecture": {
+    "freshStorageCpp": 1,
+    "reusedCore": 141,
+    "freshConsumerCpp": 1,
+    "newArchiveMembers": 142,
+    "archiveConstructionCommands": 2,
+    "freshLinks": 1,
+    "imageBuildOrPull": 0,
+    "cmakeCommands": 0
+  },
+  "results": {
+    "arm64": {
+      "localTypedOutcomeSha256": "4e73dd6f3f43d9068dc2e77aff93764c5ae506ee6c5e0812f18dcdce8ab14101",
+      "semanticGroups": 3,
+      "summaryRows": 1,
+      "consumerRunsThatPassed": 1,
+      "maxObservedRssKiB": 22520,
+      "actualConsumerExit": 0,
+      "elapsedSeconds": 0.7366174589842558,
+      "ownedContainersAbsent": true,
+      "protectedInputsUnchanged": true,
+      "testFilesystem": "owned-ephemeral-tmpfs",
+      "cppRecompiledForRunnerFix": false,
+      "oldTestsReplayed": 0
+    },
+    "amd64": {
+      "localTypedOutcomeSha256": "fb4b0e79df63334ae33c2189589f34d041b8d00603f0baad539958b55d5d2858",
+      "semanticGroups": 3,
+      "summaryRows": 1,
+      "consumerRunsThatPassed": 1,
+      "maxObservedRssKiB": 23424,
+      "actualConsumerExit": 0,
+      "elapsedSeconds": 2.704503995133564,
+      "ownedContainersAbsent": true,
+      "protectedInputsUnchanged": true,
+      "testFilesystem": "public-VPS-host-bind",
+      "cppRecompiledForRunnerFix": false,
+      "oldTestsReplayed": 0
+    }
+  },
+  "qualifiedScope": [
+    "TLS isolation/nested/copy/lifetime",
+    "Two default-CF generic checkpoint stores;97synchronousCASperstore",
+    "Closed handles then RO exact-current-pin/chain-binding readback"
+  ],
+  "notQualified": [
+    "whole process cap bypolicyalone",
+    "full clock catchup or Capella checkpoint/authentication",
+    "private backup or duties/commonfinality",
+    "physical powerloss/whole WAL resilience",
+    "normal runtime resource policy activation",
+    "production"
+  ],
+  "failedAttemptsPreserved": [
+    "runnerV1staticproofrowfinding unexecuted",
+    "ARMrunnerV2DockerPATHnotfound beforeconsumer",
+    "ARMrunnerV3hostbindownership initialrefusal0semanticrows",
+    "memory-retentionhelperV1samePIDexec staticSTOP uncompiled",
+    "buildmetadataexport autoreviewrejected beforeprocess"
+  ],
+  "goalStatus": "ACTIVE",
+  "repositoryMainUntouched": "ac8a63bd095d491283dfc09069b74335a82e0d10",
+  "privateInputsRead": false,
+  "newPrivatePayloadsTransferred": 0,
+  "vpsBuildMetadataExported": false,
+  "vpsMetaPermission": "pending",
+  "productionQualified": false
+}

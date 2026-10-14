@@ -1,3 +1,13 @@
+## 14 octobre 2026 — Qualification ciblée, aucun EIP promu
+
+Les observations publiques des journaux et du registre de validateurs sont désormais qualifiées sur Docker Linux ARM64 et AMD64. Les nouveaux tests vérifient les formats chaud/froid/fragmenté, les engagements courants et minima numériques, les réservations conservatrices, la recherche de clés dans le registre complet, les copies détenues et les refus/annulations. La régression du signer passe aussi avec ses propres clés et bases synthétiques. Ces résultats ne prouvent pas l’ascendance historique, la livraison de signatures, les nonces d’exécution ni la reprise des duties.
+
+La lecture actuelle du checkpoint VPS a réussi séparément sur copies arrêtées, sans publication d’horloge ni signature. La lecture réelle de tous ses journaux reste à qualifier : l’outil est en correction et ses tests d’E/S sont à produire. Journaux Mac/NAS manquants, V37, finalité commune qui avance, autres scénarios de consensus, qualification native, livraison complète/CI, exploitation et revue de sécurité externe restent ouverts. Profil réseau Shanghai et statuts EIP/CSV inchangés ; production non qualifiée. Les quatre preuves privées autorisées ont été transférées ; les nouveaux engagements et données privés restent sur le VPS.
+
+Voir les [preuves publiques et leurs limites](qualification/journal-head-observers-20261014/README.md). Les critères et corps historiques ci-dessous sont conservés intégralement.
+
+---
+
 Mise à jour du 14 octobre 2026 — diagnostic UTC en lecture seule.
 
 Le CPP pur d496 a été compilé et lié une fois sur Docker Linux ARM64 et AMD64, sans recompilation du cœur. Chaque architecture a exécuté huit nouveaux appels : sept refus exacts et une observation UTC projetée, sans succès forcé. Calcul ARM64 : 8 946 ms / 17 860 KiB ; AMD64 : 43 729 ms / 17 408 KiB. Les preuves AMD sont filtrées et attestées par ROOT in situ ; les logs complets restent sur le VPS.

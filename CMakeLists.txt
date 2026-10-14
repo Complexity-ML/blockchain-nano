@@ -2112,3 +2112,16 @@ set_tests_properties(storage_capella_bootstrap_archive_readonly_replica PROPERTI
 
 add_executable(nano-capella-current-utc-projection tools/consensus/project-current-utc.cpp)
 target_link_libraries(nano-capella-current-utc-projection PRIVATE nano_core)
+
+# Pure current signing-journal observation; no DB/key/provider/runtime.
+add_executable(nano-beacon-journal-auth-tests tests/test_beacon_journal_auth.cpp)
+target_link_libraries(nano-beacon-journal-auth-tests PRIVATE nano_core)
+add_test(NAME consensus_beacon_journal_snapshot_authentication COMMAND nano-beacon-journal-auth-tests --self-test "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/capella-bootstrap-anchor-cb532")
+set_tests_properties(consensus_beacon_journal_snapshot_authentication PROPERTIES TIMEOUT 70 LABELS qualification_consensus_signing_observer)
+
+# Pure full-checkpoint HEAD context; no database/signing/runtime.
+add_executable(nano-checkpoint-head-context-tests tests/test_checkpoint_head_context.cpp)
+target_link_libraries(nano-checkpoint-head-context-tests PRIVATE nano_core)
+target_include_directories(nano-checkpoint-head-context-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+add_test(NAME consensus_capella_authenticated_head_context COMMAND nano-checkpoint-head-context-tests --self-test "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/capella-bootstrap-anchor-cb532")
+set_tests_properties(consensus_capella_authenticated_head_context PROPERTIES TIMEOUT 70 LABELS qualification_consensus_checkpoint_observer)

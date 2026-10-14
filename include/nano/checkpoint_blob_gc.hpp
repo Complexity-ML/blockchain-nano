@@ -1,6 +1,7 @@
 #pragma once
 #include "nano/storage.hpp"
 #include "nano/consensus_capella_store_snapshot.hpp"
+#include "nano/consensus_fork_vote.hpp"
 #include <memory>
 #include <map>
 namespace nano {
@@ -23,9 +24,13 @@ class AuthenticatedCheckpointBlobClosure {
   const std::vector<CheckpointArchiveEntry>&,const std::function<void()>&);
  std::map<Bytes,size_t> references_;
  Json identity_,execution_head_;
+ Phase0ForkSlashingContext head_context_{};
  AuthenticatedCheckpointBlobClosure()=default;
 public:
  Json description()const;
+ // Authenticated HEAD block context, not justified/target/UTC duty context.
+ // Owns the full registry and returns a copy; no mutable Store/lease escapes.
+ Phase0ForkSlashingContext head_context()const{return head_context_;}
 };
 // Uses the actual complete durable decoder, with fresh caches and no reactor.
 // It returns only a sealed closure, never a mutable Store or signing authority.

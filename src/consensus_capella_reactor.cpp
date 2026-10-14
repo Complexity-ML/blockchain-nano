@@ -1060,7 +1060,7 @@ AuthenticatedCheckpointBlobClosure authenticate_capella_checkpoint_blob_closure(
   archive_require(store.blocks.at(id).header().slot==entry.slot);
  }
  const auto head=capella_fork_head(store,rules,check);
- const auto context=capella_fork_block_context(head->state,head->header,
+ auto context=capella_fork_block_context(head->state,head->header,
   {rules.transition.consensus.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},
   rules.transition.consensus.state,check);
  const auto network=capella_network_anchor(store);
@@ -1069,6 +1069,6 @@ AuthenticatedCheckpointBlobClosure authenticate_capella_checkpoint_blob_closure(
   {"networkAnchor",hex(Bytes(network.begin(),network.end()))},
   {"genesisValidatorsRoot",hex(Bytes(context.genesis_root.begin(),context.genesis_root.end()))},
   {"genesisTimeMs",quantity(Int(std::to_string(store.timed.clock.genesis_time_ms)))}};
- if(check)check();return closure;
+ if(check)check();closure.head_context_=std::move(context);return closure;
 }
 }

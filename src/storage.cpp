@@ -1,4 +1,5 @@
 #include "nano/storage.hpp"
+#include "nano/storage_memory_policy.hpp"
 #include "nano/block_auth.hpp"
 #include "nano/finality.hpp"
 #include <rocksdb/db.h>
@@ -7,12 +8,16 @@
 #include <rocksdb/write_batch.h>
 #include <rocksdb/table.h>
 #include <rocksdb/version.h>
+#include <rocksdb/cache.h>
+#include <rocksdb/write_buffer_manager.h>
 #if ROCKSDB_MAJOR < 8 || (ROCKSDB_MAJOR == 8 && ROCKSDB_MINOR < 6)
 #error "Nano storage requires RocksDB >= 8.6 (portable SST format 6)"
 #endif
 #include <memory>
 #include <set>
 #include <limits>
+#include <thread>
+#include <exception>
 namespace nano {
 namespace {
 // ReadWriteExisting must never recreate a missing database directory. DB::Open
@@ -93,6 +98,60 @@ void put_proposal(rocksdb::WriteBatch& batch,const std::string& key,const std::s
  batch.Put(key,proposal_chunk_tag+Json{{"bytes",data.size()},{"chunks",count},{"keccak",proposal_digest(data)}}.dump());
 }
 rocksdb::WriteOptions durable_write(){rocksdb::WriteOptions options;options.sync=true;return options;}
+struct MemoryPolicyGroup {
+ const ChainStoreMemoryPolicy policy;
+ const std::shared_ptr<rocksdb::WriteBufferManager> memtables;
+ const std::shared_ptr<rocksdb::Cache> cache;
+ explicit MemoryPolicyGroup(ChainStoreMemoryPolicy p):policy(p),
+  memtables(std::make_shared<rocksdb::WriteBufferManager>(p.shared_memtable_bytes,std::shared_ptr<rocksdb::Cache>{},true)),
+  cache(p.shared_block_cache_bytes?rocksdb::NewLRUCache(p.shared_block_cache_bytes,0,true):nullptr){}
+};
+thread_local std::shared_ptr<MemoryPolicyGroup> current_memory_policy;
+void validate_memory_policy(const ChainStoreMemoryPolicy& p){
+ // Avoid hidden SDK clamping of tiny buffers and arithmetic overflow in SDK
+ // buffer/WAL threshold calculations. These are local option bounds only.
+ if(p.write_buffer_bytes<1024*1024||p.maximum_write_buffers<2||
+    p.maximum_write_buffers>static_cast<uint32_t>(std::numeric_limits<int>::max())||
+    p.write_buffer_bytes>std::numeric_limits<size_t>::max()/4/p.maximum_write_buffers||
+    p.shared_memtable_bytes<p.write_buffer_bytes||
+    p.shared_memtable_bytes>std::numeric_limits<size_t>::max()/8)
+  throw std::invalid_argument("invalid local ChainStore memory policy");
+}
+}
+struct ScopedChainStoreMemoryPolicy::Impl {
+ const std::shared_ptr<MemoryPolicyGroup> previous,current;
+ const std::thread::id thread;
+ explicit Impl(ChainStoreMemoryPolicy p):previous(current_memory_policy),
+  current(std::make_shared<MemoryPolicyGroup>(p)),thread(std::this_thread::get_id()){}
+};
+ScopedChainStoreMemoryPolicy::ScopedChainStoreMemoryPolicy(ChainStoreMemoryPolicy p){
+ validate_memory_policy(p);
+ auto owned=std::make_unique<Impl>(p); // allocation failure leaves prior scope intact
+ current_memory_policy=owned->current;impl_=std::move(owned);
+}
+ScopedChainStoreMemoryPolicy::~ScopedChainStoreMemoryPolicy(){
+ // A different thread or non-stack destruction would leave a dangling active
+ // scope; fail instead of silently applying a policy to unrelated opens.
+ if(impl_->thread!=std::this_thread::get_id()||current_memory_policy!=impl_->current)std::terminate();
+ current_memory_policy=impl_->previous;
+}
+void apply_chain_store_memory_policy(rocksdb::Options& options){
+ const auto group=current_memory_policy;if(!group)return;
+ options.write_buffer_size=group->policy.write_buffer_bytes;
+ options.max_write_buffer_number=static_cast<int>(group->policy.maximum_write_buffers);
+ options.min_write_buffer_number_to_merge=1;
+ options.max_write_buffer_size_to_maintain=0;
+ options.write_buffer_manager=group->memtables;
+ // Every database in the group shares this finite cache, rather than making
+ // one implicit cache per DB. Strict charge admission can refuse an oversized
+ // pinned entry; such RocksDB errors remain fatal to the existing caller.
+ rocksdb::BlockBasedTableOptions tables;tables.format_version=6;
+ tables.no_block_cache=!group->cache;
+ tables.block_cache=group->cache;
+ tables.cache_index_and_filter_blocks=bool(group->cache);
+ tables.pin_l0_filter_and_index_blocks_in_cache=false;
+ tables.pin_top_level_index_and_filter=false;
+ options.table_factory.reset(rocksdb::NewBlockBasedTableFactory(tables));
 }
 std::optional<std::string> ChainStore::get(const std::string& key)const{
  if(fork_checkpoint_write_uncertain_)throw std::runtime_error("checkpoint write uncertain; reopen required");
@@ -133,6 +192,7 @@ ChainStore::ChainStore(const std::filesystem::path& path,OpenMode mode){
  // newer hosts must not silently emit format 7. Existing SSTs are not rewritten.
  rocksdb::BlockBasedTableOptions tables;tables.format_version=6;
  options.table_factory.reset(rocksdb::NewBlockBasedTableFactory(tables));
+ apply_chain_store_memory_policy(options);
  db_=(read_only?open_read_only_database(options,path.string()):open_database(options,path.string())).release();
  try{
   auto schema=get("meta/schema");

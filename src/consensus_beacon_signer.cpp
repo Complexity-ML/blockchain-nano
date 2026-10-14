@@ -1,5 +1,6 @@
 #include "nano/consensus_beacon_signer.hpp"
 #include "nano/consensus_bls.hpp"
+#include "consensus_beacon_journal_codec.hpp"
 #include <type_traits>
 #include <charconv>
 #include <set>
@@ -24,12 +25,10 @@ std::string number(uint64_t n){return quantity(Int(std::to_string(n)));}
 uint64_t parse_number(const Json& value){const auto n=u64(quantity(value));require(value==number(n));return n;}
 }
 std::string BeaconSigningJournal::encode(const std::optional<Proposal>& proposal,const std::optional<Vote>& vote,bool retired)const{
- const bool unknown=(proposal&&!proposal->root)||(vote&&!vote->root);
- auto doc=Json{{"format",unknown?"nano-beacon-signing-v3":retired?"nano-beacon-signing-v2":"nano-beacon-signing-v1"},{"publicKey",hex(public_key_)},{"genesisValidatorsRoot",root_text(validators_genesis_)},{"slotsPerEpoch",number(slots_per_epoch_)},
-  {"proposal",proposal?Json{{"slot",number(proposal->slot)},{"root",proposal->root?Json(root_text(*proposal->root)):Json(nullptr)}}:Json(nullptr)},
-  {"attestation",vote?Json{{"source",number(vote->source)},{"target",number(vote->target)},{"root",vote->root?Json(root_text(*vote->root)):Json(nullptr)}}:Json(nullptr)}};
- if(retired||unknown)doc["retired"]=retired;
- return doc.dump();
+ BeaconJournalReservations r;r.retired=retired;
+ if(proposal)r.proposal=BeaconJournalProposal{proposal->slot,proposal->root};
+ if(vote)r.attestation=BeaconJournalAttestation{vote->source,vote->target,vote->root};
+ return beacon_journal_detail::encode({public_key_,validators_genesis_,slots_per_epoch_},r);
 }
 void BeaconSigningJournal::commit(const std::optional<Proposal>& proposal,const std::optional<Vote>& vote,bool retired){
  if(unavailable_)throw std::runtime_error("Beacon signer unavailable; reopen required");
@@ -85,15 +84,10 @@ BeaconSigningJournal::BeaconSigningJournal(ChainStore& disk,Int chain,Bytes exec
  }
  const auto saved=disk_.fork_checkpoint(chain_,execution_genesis_,journal_bytes,effective);
  if(!saved){require(!effective);commit(std::nullopt,std::nullopt);return;}
- require(effective.has_value());const auto doc=Json::parse(saved->snapshot);
- require(doc.is_object());
- const bool v3=doc.at("format")=="nano-beacon-signing-v3";
- if(v3)require(doc.at("retired").is_boolean());
- retired_=v3?doc.at("retired").get<bool>():doc.at("format")=="nano-beacon-signing-v2";
- require((v3?doc.size()==7:retired_?(doc.size()==7&&doc.at("retired")==true):(doc.size()==6&&doc.at("format")=="nano-beacon-signing-v1"))&&doc.at("publicKey")==hex(public_key_)&&parse_root(doc.at("genesisValidatorsRoot"))==validators_genesis_&&parse_number(doc.at("slotsPerEpoch"))==slots_per_epoch_);
- const auto& p=doc.at("proposal");if(!p.is_null()){require(p.is_object()&&p.size()==2);proposal_=Proposal{parse_number(p.at("slot")),(v3&&p.at("root").is_null())?std::nullopt:std::optional<ConsensusRoot>(parse_root(p.at("root")))};}
- const auto& v=doc.at("attestation");if(!v.is_null()){require(v.is_object()&&v.size()==3);vote_=Vote{parse_number(v.at("source")),parse_number(v.at("target")),(v3&&v.at("root").is_null())?std::nullopt:std::optional<ConsensusRoot>(parse_root(v.at("root")))};require(vote_->source<=vote_->target);}
- require(encode(proposal_,vote_,retired_)==saved->snapshot);token_=saved->token;
+ require(effective.has_value());const auto decoded=beacon_journal_detail::decode(saved->snapshot,{public_key_,validators_genesis_,slots_per_epoch_});
+ if(decoded.proposal)proposal_=Proposal{decoded.proposal->slot,decoded.proposal->root};
+ if(decoded.attestation)vote_=Vote{decoded.attestation->source,decoded.attestation->target,decoded.attestation->root};
+ retired_=decoded.retired;token_=saved->token;
 }
 ForkCheckpointToken BeaconSigningJournal::commitment()const{std::lock_guard lock(mutex_);ready();return *token_;}
 bool BeaconSigningJournal::is_retired()const{std::lock_guard lock(mutex_);ready();return retired_;}
