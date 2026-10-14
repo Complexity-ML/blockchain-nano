@@ -1,7 +1,14 @@
 #pragma once
 #include "nano/consensus_attestation_inclusion.hpp"
 #include "nano/consensus_exit.hpp"
+#include "nano/consensus_beacon_header.hpp"
 namespace nano {
+// Fixed SSZ ProposerSlashing: two SignedBeaconBlockHeader values, 416 bytes.
+// Own inputs before callbacks. Authentication belongs to admission/transition.
+Bytes encode_consensus_proposer_slashing_ssz(SignedConsensusBeaconHeader,
+ SignedConsensusBeaconHeader,const std::function<void()>& checkpoint={});
+std::optional<std::pair<SignedConsensusBeaconHeader,SignedConsensusBeaconHeader>>
+ decode_consensus_proposer_slashing_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
 Bytes encode_consensus_voluntary_exit_ssz(const SignedConsensusVoluntaryExit&,const std::function<void()>& checkpoint={});
 std::optional<SignedConsensusVoluntaryExit> decode_consensus_voluntary_exit_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
 // Canonical pre-Electra attestation / indexed-attestation schemas (Phase0 through

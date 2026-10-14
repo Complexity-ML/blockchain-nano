@@ -22,13 +22,17 @@ struct CapellaPendingBlsChange {ConsensusRoot admission_root;Bytes wire;};
 using CapellaPendingBlsChanges=std::map<uint64_t,CapellaPendingBlsChange>;
 struct CapellaPendingExit {ConsensusRoot admission_root;std::array<uint8_t,48> public_key;Bytes wire;};
 using CapellaPendingExits=std::map<Bytes,CapellaPendingExit>;
+// Admission epoch and root retain the authenticated lifecycle/key context even
+// after an unfinalized inclusion changes the head's slashed flag.
+struct CapellaPendingProposerSlashing {ConsensusRoot admission_root;uint64_t admission_epoch;std::array<uint8_t,48> public_key;Bytes wire;};
+using CapellaPendingProposerSlashings=std::map<Bytes,CapellaPendingProposerSlashing>;
 enum class CapellaBlockAdmission {accepted,rejected,deferred};
 class CapellaInventorySnapshot;
 struct CapellaPublishedStore {
  std::shared_ptr<const CapellaForkStore> state;ForkCheckpointToken token;
  // Root-only durable operation inventories share this exact state/token commit.
  // No payload archive or mutable sync/session state is retained here.
- std::shared_ptr<const CapellaInventorySnapshot> attestations,slashings;
+ std::shared_ptr<const CapellaInventorySnapshot> attestations,slashings,proposer_slashings;
 };
 // Immutable root-only inventory; does not pin EVM state or payload archives.
 class CapellaInventorySnapshot {
@@ -52,7 +56,7 @@ class CapellaDurableReactor {
  std::shared_ptr<const CapellaPublishedStore> beacon_publication_;
  CapellaPublishedStore beacon_snapshot()const;
  std::optional<Bytes> beacon_signed_block(const CapellaPublishedStore&,const ConsensusRoot&,const std::function<void()>&)const;
- CapellaSignedVotes votes_,slashings_;CapellaPendingBlsChanges bls_changes_;CapellaPendingExits exits_;CapellaStoreSnapshotCache cache_;CapellaReferenceSnapshotCache reference_cache_;bool unavailable_=false;bool automatic_pruning_=false;bool historical_state_pruning_=false;
+ CapellaSignedVotes votes_,slashings_;CapellaPendingBlsChanges bls_changes_;CapellaPendingExits exits_;CapellaPendingProposerSlashings proposer_slashings_;CapellaStoreSnapshotCache cache_;CapellaReferenceSnapshotCache reference_cache_;bool unavailable_=false;bool automatic_pruning_=false;bool historical_state_pruning_=false;
  std::exception_ptr failure_;
  // Bounded ephemeral continuations keyed by admitted parent and block slot.
  // Alternating parents or target slots never reset another retained prefix.
@@ -114,7 +118,7 @@ class CapellaDurableReactor {
  void validate_execution_binding()const;
  void fail_closed();
  std::optional<Bytes> prepare_local_body_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,std::span<const SignedTransaction>,size_t,size_t,const std::function<void()>&,std::span<const SignedCapellaBlsChange> = {},size_t maximum_change_trials = 0,std::span<const SignedConsensusVoluntaryExit> = {},size_t maximum_exit_trials = 0);
- CapellaPublishedStore published_store(std::shared_ptr<const CapellaForkStore>,ForkCheckpointToken,const CapellaSignedVotes&,const CapellaSignedVotes&,const std::function<void()>&)const;
+ CapellaPublishedStore published_store(std::shared_ptr<const CapellaForkStore>,ForkCheckpointToken,const CapellaSignedVotes&,const CapellaSignedVotes&,const CapellaPendingProposerSlashings&,const std::function<void()>&)const;
  std::shared_ptr<const CapellaInventorySnapshot> capture_published_inventory(const CapellaPublishedStore&,std::string_view,size_t,const std::function<void()>&)const;
  std::shared_ptr<const CapellaInventorySnapshot> capture_block_inventory(const CapellaPublishedStore&,size_t,const std::function<void()>&)const;
  std::shared_ptr<const CapellaInventorySnapshot> capture_inventory_locked(std::string_view,size_t,const std::function<void()>&)const;
@@ -128,7 +132,7 @@ class CapellaDurableReactor {
  std::optional<Bytes> sign_randao_locked(uint64_t,uint64_t,const std::function<uint64_t()>&,const ForkCheckpointToken&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>&);
  std::optional<Bytes> sign_proposal_locked(uint64_t,uint64_t,std::span<const uint8_t>,const std::function<uint64_t()>&,const ForkCheckpointToken&,BeaconSigningJournal&,const BeaconSigningJournal::Signer&,const std::function<void()>&);
  std::optional<Bytes> prepare_local_body_from_pool_locked(uint64_t,uint64_t,const Bytes&,const std::string&,const ForkCheckpointToken&,size_t,size_t,const std::function<void()>&);
- void publish(CapellaForkStore,const std::function<void()>&,const std::vector<CheckpointArchiveEntry>& archive={},std::optional<CapellaSignedVotes> votes=std::nullopt,std::optional<CapellaSignedVotes> slashings=std::nullopt,std::optional<CapellaPendingBlsChanges> changes=std::nullopt,std::optional<CapellaPendingExits> exits=std::nullopt);
+ void publish(CapellaForkStore,const std::function<void()>&,const std::vector<CheckpointArchiveEntry>& archive={},std::optional<CapellaSignedVotes> votes=std::nullopt,std::optional<CapellaSignedVotes> slashings=std::nullopt,std::optional<CapellaPendingBlsChanges> changes=std::nullopt,std::optional<CapellaPendingExits> exits=std::nullopt,std::optional<CapellaPendingProposerSlashings> proposer_slashings=std::nullopt);
  struct BootstrapArchiveRecoveryTag {};
  CapellaDurableReactor(Blockchain&,CapellaForkBlockRules,CapellaStoreSnapshotLimits,ChainStore&,
   const std::function<void()>&,std::optional<ForkCheckpointToken>,const CapellaSignedBootstrapArchive*,
@@ -142,7 +146,7 @@ class CapellaDurableReactor {
   const ForkCheckpointToken&,const ForkCheckpointToken&,const ForkCheckpointToken&,
   const ForkCheckpointToken&,bool,const std::function<void()>&);
  void publish_impl(CapellaForkStore,const std::function<void()>&,const std::vector<CheckpointArchiveEntry>&,
-  std::optional<CapellaSignedVotes>,std::optional<CapellaSignedVotes>,std::optional<CapellaPendingBlsChanges>,std::optional<CapellaPendingExits>,bool,std::optional<CapellaColdCheckpointOptions> cold=std::nullopt);
+  std::optional<CapellaSignedVotes>,std::optional<CapellaSignedVotes>,std::optional<CapellaPendingBlsChanges>,std::optional<CapellaPendingExits>,bool,std::optional<CapellaColdCheckpointOptions> cold=std::nullopt,std::optional<CapellaPendingProposerSlashings> proposer_slashings=std::nullopt);
 public:
  bool prepare_current_duties(uint64_t,const std::function<void()>& checkpoint={});
  bool voluntary_exit_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
@@ -236,6 +240,9 @@ public:
  std::vector<SignedCapellaBlsChange> pending_bls_changes()const;
  bool vote_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
  bool slashing_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
+ bool proposer_slashing_ssz(std::span<const uint8_t>,const std::function<void()>& checkpoint={});
+ bool proposer_slashing(SignedConsensusBeaconHeader,SignedConsensusBeaconHeader,const std::function<void()>& checkpoint={});
+ CapellaSignedVotes signed_proposer_slashings()const;
  BeaconReadResponse beacon_read(std::string_view,const std::function<void()>& checkpoint={})const;
  // Caller supplies identity and an independent clock, never unsigned vote data.
  // Signature reservations live in a separate durable journal and survive expiry.

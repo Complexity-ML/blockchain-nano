@@ -1,3 +1,15 @@
+## 14 octobre 2026 — Proposer slashing : candidat complet et essais ciblés deux architectures
+
+Le candidat source proposer-slashing passe six groupes cœur + résumé sur Docker Linux ARM64 et AMD64 : admission, queue durable/reopen des trois formats, inclusion/sanction, reorg/réinclusion, retrait finalisé et refus. ARM : 11,609 s / 103680 KiB ; lot AMD cœur/réseau : 47,984 s / 102168 KiB. Plafond 131072 KiB, cache zéro explicite et 295 signatures synthétiques par architecture. Six groupes mock réseau et trois programmes de propriétés passent aussi ; aucune propagation WAN réelle n'est prouvée. Ces résultats portent sur les sources indiquées ; production non qualifiée. Aucun fork Ethereum/EIP promu.
+
+Le build ARM assemble 21 objets cœur frais + 122 repris (archive 143) ; V4 ne reconstruit que son consommateur CPP/lien, sans rejouer le réseau. AMD est rapporté par ROOT filtré, logs/hashes bruts conservés VPS. V1 STOP, V2 compilation refusée et V3 cache strict 4 MiB refusé restent historiques.
+
+Profil 4 MiB, natif, WAN A, duties/finalité commune, pending witness/WAL, réindexation, autres domaines historiques et audit de production restent ouverts. V37, originaux Mac manquants et NAS non autorisé sont inchangés. Production non qualifiée ; Shanghai/EIP/CSV et tous critères antérieurs conservés.
+
+Voir les [résultats et limites](qualification/proposer-slashing-complete-20261014/README.md). Le corps historique ci-dessous reste intégral.
+
+---
+
 ## 14 octobre 2026 — Réservations configurées observées en lecture seule
 
 Wrapper V5/banc H3 passent une invocation publique ARM64 et AMD64 chacun : huit groupes + résumé par architecture ; total 18 lignes JSON, 76 appels (8 acceptés, 68 refusés), 10 événements E/S, zéro CTest.

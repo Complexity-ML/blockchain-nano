@@ -14,7 +14,7 @@ class CapellaConsensusService {
  const nano::Json capacities_;
  AltairReceipts receipts_;
  AltairWorker worker_; // ordered transport-independent bounded queue
- static AltairWireProfile profile(nano::CapellaDurableReactor& reactor,size_t frame,size_t block,size_t vote,size_t slashing){const auto j=reactor.network_identity();return {j.at("chainId").get<std::string>(),j.at("genesisHash").get<std::string>(),j.at("forkDigest").get<std::string>(),frame,block,vote,slashing,j.at("consensusIdentity").get<std::string>(),true,true};}
+ static AltairWireProfile profile(nano::CapellaDurableReactor& reactor,size_t frame,size_t block,size_t vote,size_t slashing){const auto j=reactor.network_identity();return {j.at("chainId").get<std::string>(),j.at("genesisHash").get<std::string>(),j.at("forkDigest").get<std::string>(),frame,block,vote,slashing,j.at("consensusIdentity").get<std::string>(),true,true,true};}
 public:
  using Decision=AltairWork::Decision;
  using Cancellation=AltairWork::Cancellation;
@@ -28,7 +28,7 @@ public:
     const auto outcome=reactor.block_admission(message.ssz,check);
     if(outcome==nano::CapellaBlockAdmission::deferred)return Decision::deferred;
     accepted=outcome==nano::CapellaBlockAdmission::accepted;break;
-   }case AltairWireKind::attestation:accepted=reactor.vote_ssz(message.ssz,check);break;case AltairWireKind::attester_slashing:accepted=reactor.slashing_ssz(message.ssz,check);break;case AltairWireKind::sync_committee_message:accepted=reactor.sync_message_ssz(message.ssz,check);break;case AltairWireKind::bls_to_execution_change:accepted=reactor.bls_change_ssz(message.ssz,check);break;default:return Decision::rejected;}
+   }case AltairWireKind::attestation:accepted=reactor.vote_ssz(message.ssz,check);break;case AltairWireKind::attester_slashing:accepted=reactor.slashing_ssz(message.ssz,check);break;case AltairWireKind::proposer_slashing:accepted=reactor.proposer_slashing_ssz(message.ssz,check);break;case AltairWireKind::sync_committee_message:accepted=reactor.sync_message_ssz(message.ssz,check);break;case AltairWireKind::bls_to_execution_change:accepted=reactor.bls_change_ssz(message.ssz,check);break;default:return Decision::rejected;}
    // Commit is definitive: do not turn success into cancellation afterwards.
    return accepted?Decision::accepted:Decision::rejected;
   }){}

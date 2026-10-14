@@ -2140,3 +2140,9 @@ if(NANO_CONFIGURED_JOURNAL_IO_PUBLIC_TESTS AND CMAKE_SYSTEM_NAME STREQUAL "Linux
  add_test(NAME storage_configured_journal_observer_public_io COMMAND nano-configured-journal-observer-io-tests --self-test)
  set_tests_properties(storage_configured_journal_observer_public_io PROPERTIES TIMEOUT 160)
 endif()
+
+add_executable(nano-capella-proposer-slashing-tests tests/test_capella_proposer_slashing.cpp)
+target_link_libraries(nano-capella-proposer-slashing-tests PRIVATE nano_core)
+target_compile_definitions(nano-capella-proposer-slashing-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+add_test(NAME consensus_capella_proposer_slashing_complete COMMAND nano-capella-proposer-slashing-tests --self-test)
+set_tests_properties(consensus_capella_proposer_slashing_complete PROPERTIES TIMEOUT 190)

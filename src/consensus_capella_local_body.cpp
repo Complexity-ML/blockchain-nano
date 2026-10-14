@@ -194,6 +194,8 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t i
  const uint64_t fixed_budget=184+228+(uint64_t(t.state.sync_committee_size)+7)/8+96+512+44*uint64_t(withdrawals.size());
  if(t.body.attestations&&vote_bytes>(UINT64_MAX-fixed_budget)/t.body.attestations)throw std::length_error("Capella vote reserve overflow");
  uint64_t reserved=fixed_budget+uint64_t(t.body.attestations)*vote_bytes;
+ if(!proposer_slashings_.empty()&&t.body.proposer_slashings&&(UINT64_MAX-reserved)/416<t.body.proposer_slashings)throw std::length_error("Capella proposer slashing reserve overflow");
+ if(!proposer_slashings_.empty())reserved+=uint64_t(t.body.proposer_slashings)*416;
  const uint64_t proof_bytes=468+16*uint64_t(t.body.validators_per_committee);
  if(t.body.attester_slashings&&proof_bytes>(UINT64_MAX-reserved)/t.body.attester_slashings)throw std::length_error("Capella slashing reserve overflow");
  reserved+=uint64_t(t.body.attester_slashings)*proof_bytes;
@@ -213,7 +215,7 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t i
  auto built=Blockchain::execute_candidate(block,parent.execution_state,std::move(pending),engine.with_checkpoint(check),check,false);
  const auto encoded=encode_capella_execution_payload(payload(built.block,withdrawals),e,rules_.transition.withdrawals.maximum_per_payload,t.maximum_block_bytes,check);
  const size_t sync_bytes=(uint64_t(t.state.sync_committee_size)+7)/8+96,fixed=228+sync_bytes;
- std::vector<Bytes> selected_slashings;Bytes selected_exits,selected_changes;
+ std::vector<Bytes> selected_slashings;Bytes selected_proposer_slashings,selected_exits,selected_changes;
  auto assemble=[&](const std::vector<Bytes>& votes){
   Bytes slashings(selected_slashings.size()*4);size_t proof_at=0;
   for(const auto& proof:selected_slashings){offset(slashings,proof_at,slashings.size());proof_at+=4;if(proof.size()>t.maximum_block_bytes-slashings.size())throw std::length_error("Capella slashings budget");slashings.insert(slashings.end(),proof.begin(),proof.end());}
@@ -224,9 +226,11 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t i
   // Empty sync participation is a valid aggregate (and incurs normal penalties).
   body[220+(uint64_t(t.state.sync_committee_size)+7)/8]=0xc0;
   const auto sync=pending_sync_.find(slot);if(sync!=pending_sync_.end()&&sync->second.parent==head)std::copy(sync->second.ssz.begin(),sync->second.ssz.end(),body.begin()+220);
-  offset(body,200,fixed);offset(body,204,fixed);offset(body,208,fixed+slashings.size());
-  offset(body,212,fixed+slashings.size()+attestations.size());offset(body,216,fixed+slashings.size()+attestations.size()+selected_deposits.size());offset(body,220+sync_bytes,fixed+slashings.size()+attestations.size()+selected_deposits.size()+selected_exits.size());
-  offset(body,224+sync_bytes,fixed+slashings.size()+attestations.size()+selected_deposits.size()+selected_exits.size()+encoded.size());
+  const auto proposer_bytes=selected_proposer_slashings.size();
+  offset(body,200,fixed);offset(body,204,fixed+proposer_bytes);offset(body,208,fixed+proposer_bytes+slashings.size());
+  offset(body,212,fixed+proposer_bytes+slashings.size()+attestations.size());offset(body,216,fixed+proposer_bytes+slashings.size()+attestations.size()+selected_deposits.size());offset(body,220+sync_bytes,fixed+proposer_bytes+slashings.size()+attestations.size()+selected_deposits.size()+selected_exits.size());
+  offset(body,224+sync_bytes,fixed+proposer_bytes+slashings.size()+attestations.size()+selected_deposits.size()+selected_exits.size()+encoded.size());
+  if(proposer_bytes>t.maximum_block_bytes-body.size())throw std::length_error("Capella proposer body budget");body.insert(body.end(),selected_proposer_slashings.begin(),selected_proposer_slashings.end());
   if(slashings.size()>t.maximum_block_bytes-body.size())throw std::length_error("Capella body slashing budget");body.insert(body.end(),slashings.begin(),slashings.end());
   if(attestations.size()>t.maximum_block_bytes-body.size())throw std::length_error("Capella body vote budget");body.insert(body.end(),attestations.begin(),attestations.end());
   if(selected_deposits.size()>t.maximum_block_bytes-body.size())throw std::length_error("Capella body deposit budget");body.insert(body.end(),selected_deposits.begin(),selected_deposits.end());
@@ -239,6 +243,14 @@ std::optional<Bytes> CapellaDurableReactor::prepare_local_body_locked(uint64_t i
  if(!valid(body))throw std::runtime_error("Capella proposal needs valid mandatory operations or execution payload");
  size_t tried=0;
  const auto registry=capella_fork_block_context(parent.state,parent.header,epoch,t.state,check).registry;
+ for(const auto& [id,record]:proposer_slashings_){
+  if(check)check();if(selected_proposer_slashings.size()/416>=t.body.proposer_slashings||tried>=maximum_vote_trials)break;
+  const auto proof=decode_consensus_proposer_slashing_ssz(record.wire,check);if(!proof)throw std::logic_error("Invalid archived proposer slashing encoding");
+  const auto member=registry.validators.find(proof->first.message.proposer_index);
+  if(member==registry.validators.end()||member->second.public_key!=record.public_key||member->second.slashed)continue;
+  ++tried;const auto prior=selected_proposer_slashings.size();selected_proposer_slashings.insert(selected_proposer_slashings.end(),record.wire.begin(),record.wire.end());auto candidate=assemble(selected);
+  if(valid(candidate))body=std::move(candidate);else selected_proposer_slashings.resize(prior);
+ }
  for(const auto& [id,wire]:slashings_){
   if(check)check();if(selected_slashings.size()>=t.body.attester_slashings||tried>=maximum_vote_trials)break;
   const auto proof=decode_consensus_attester_slashing_ssz(wire,t.body.validators_per_committee,check);

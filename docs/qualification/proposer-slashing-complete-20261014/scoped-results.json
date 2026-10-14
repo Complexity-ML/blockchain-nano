@@ -1,0 +1,289 @@
+{
+  "format": "nano-capella-proposer-slashing-public-scoped-results-v1",
+  "status": "SCOPED_TEST_PASS_PINNED_SOURCES",
+  "parentRepositoryCommitReportedByRoot": "12e330a6",
+  "repositoryStateVerifiedByAuthor": false,
+  "sources": {
+    "coreCandidate": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/proposer-slashing-complete-source-v4-20261014/manifest.json",
+      "sha256": "0ef087d939a917d718170d527a9dad465e9294186cf4b602b105ff369a41d892",
+      "bytes": 13412
+    },
+    "networkCandidate": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/proposer-slashing-network-source-20261014/manifest.json",
+      "sha256": "f45ddba691289954bfe1e9ad329a01a89c904c006790979601abf48304c4c88f",
+      "bytes": 6440
+    },
+    "productionSourceByteExactAcrossCoreV1ToV4": true
+  },
+  "arm64": {
+    "build": "ASSEMBLED_ACTUAL_PASS",
+    "assembledCoreFresh": 21,
+    "assembledCoreReused": 122,
+    "archiveMembers": 143,
+    "mainCompiledWithNewHeaders": true,
+    "p2pProgramCompiled": true,
+    "v4ConsumerOnly": {
+      "cpp": 1,
+      "links": 1,
+      "coreCpp": 0,
+      "archiveRebuilt": false,
+      "networkRebuilt": false,
+      "networkReplayed": false
+    },
+    "coreTest": {
+      "actualStandaloneInvocationsForV4": 1,
+      "semanticGroups": 6,
+      "jsonRows": 7,
+      "exitCode": 0,
+      "elapsedSeconds": 11.60913125006482,
+      "actualPeakRssKiB": 103680,
+      "maximumRssKiB": 131072,
+      "blockCacheBytes": 0,
+      "fixtureValidators": 64,
+      "newTestOnlySignaturesCreated": 295,
+      "signatureCeiling": 1024
+    },
+    "network": {
+      "programsExecuted": 4,
+      "transportMockGroups": 6,
+      "transportMockSummaryRows": 1,
+      "threeAdditionalPropertyPrograms": true,
+      "elapsedSeconds": 0.14591508288867772,
+      "genuineAdmissionIsCoreServiceGroupOnly": true,
+      "modeledTransportAndOpportunityNotWan": true,
+      "replayedAfterV4ConsumerChange": false
+    },
+    "inputReadbacks": {
+      "assembledOriginalRowsUnchanged": 1850,
+      "additionalExplicitlyTrackedRows": 251,
+      "originalRowsRemoved": 0,
+      "sdkBeforeAfterLogsByteEqual": true,
+      "consumerBeforeAfterMapsByteEqual": true
+    }
+  },
+  "amd64": {
+    "status": "SCOPED_ACTUAL_PASS_ROOT_TYPED_ONLY",
+    "actualTypedOutcome": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/proposer-slashing-amd64-safe-actual-root-20261014.json",
+      "sha256": "7d77e3551d87dbf325c4d14bdf90c8d46359cc2910457368ab2e27488bda99f6",
+      "bytes": 691
+    },
+    "build": {
+      "status": "BUILD_PASS_REPORTED_BY_ROOT",
+      "exitCode": 0,
+      "elapsedSeconds": 249.76462601916865,
+      "freshCore": 21,
+      "reusedCore": 122,
+      "archiveMembers": 143,
+      "cppCommands": 23,
+      "networkTargets": 5,
+      "imagesBuilt": 0,
+      "privateInputsRead": false,
+      "runtimeStarted": false,
+      "provenance": "ROOT actual execution report; raw compiler/SDK/ELF/archive metadata and their hashes were not exported or independently read here."
+    },
+    "coreTest": {
+      "semanticGroups": 6,
+      "summaryExpectedByFrozenHarness": 1,
+      "actualPeakRssKiB": 102168,
+      "maximumRssKiB": 131072,
+      "newTestOnlySignaturesCreated": 295,
+      "signatureCeiling": 1024,
+      "blockCacheBytes": 0,
+      "genuineCoreServiceAdmission": true
+    },
+    "networkTest": {
+      "transportMockGroups": 6,
+      "propertyPrograms": 3,
+      "wanQualified": false
+    },
+    "combinedTargetedTestLot": {
+      "exitCode": 0,
+      "elapsedSeconds": 47.98375244112685,
+      "binariesBoundInSituAndUnchanged": true
+    },
+    "metadataEgress": "Only ROOT typed status/counters/resources were admitted. No AMD raw logs, SDK/object/archive/ELF hashes or private metadata are exported.",
+    "independentRawAudit": false,
+    "qualified": "Only the explicit public synthetic semantic/mock/property scopes; no production qualification."
+  },
+  "history": [
+    {
+      "version": "V1",
+      "scope": "STATIC_STOP, source not compiled by author",
+      "reason": "private test getter, inconsistent forged execution marker, callback promise lifetime",
+      "preserved": true
+    },
+    {
+      "version": "V2",
+      "scope": "actual new consumer compilation failed, prior 21 core plus main objects retained",
+      "reason": "missing declaration headers, nonexisting block API, untyped string/JSON comparison",
+      "preserved": true
+    },
+    {
+      "version": "V3",
+      "scope": "actual ARM first four semantic groups PASS then strict cache refusal",
+      "reason": "4 MiB LRU capacity refusal during finalization; exact cache entry or leak not observed",
+      "preserved": true
+    },
+    {
+      "version": "V4",
+      "scope": "actual ARM six semantic groups plus summary PASS with supported cache-zero fixture profile",
+      "preserved": true
+    }
+  ],
+  "openQualification": [
+    "shared strict 4 MiB cache under long finalization",
+    "native build and scenarios",
+    "real WAN propagation and WAN A missing-evidence gate",
+    "duties and common finality progression across distinct nodes",
+    "interrupted pending witness/WAL and physical power loss",
+    "reindex/invalidation scenarios",
+    "additional historical cross-fork domain scenarios",
+    "external production/security review",
+    "V37 and operational recovery",
+    "missing original Mac journals and NAS access/recovery (no NAS access authorized)",
+    "CI/delivery/install/exploitation criteria retained in old documents"
+  ],
+  "profileAndEipPromotion": false,
+  "runtimeExecution": false,
+  "privateInputsReadByAuthor": false,
+  "realKeysOrPrivateSignatures": false,
+  "repositoryWrites": 0,
+  "productionQualified": false,
+  "publicEvidenceReferences": {
+    "coreV4Manifest": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/proposer-slashing-complete-source-v4-20261014/manifest.json",
+      "sha256": "0ef087d939a917d718170d527a9dad465e9294186cf4b602b105ff369a41d892",
+      "bytes": 13412
+    },
+    "networkManifest": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/proposer-slashing-network-source-20261014/manifest.json",
+      "sha256": "f45ddba691289954bfe1e9ad329a01a89c904c006790979601abf48304c4c88f",
+      "bytes": 6440
+    },
+    "assembledArmBuild": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/proposer-slashing-coherent-arm64-v3-20261014/receipts/terminal-build.json",
+      "sha256": "5d242283c189b80ebbf19950f9e89f9b1227c5eab625a05be57a3a2f03d28907",
+      "bytes": 395
+    },
+    "consumerOnlyArmBuild": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/proposer-slashing-consumer-arm64-v4-20261014/receipts/terminal-build.json",
+      "sha256": "b4bc5e4f4fd0e30bbfdc26dafd64490ac02d524a4a57b2bdb7f6856a64ba1ae8",
+      "bytes": 528
+    },
+    "coreArmTestTerminal": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/proposer-slashing-consumer-arm64-v4-20261014/test-run-01/terminal.json",
+      "sha256": "0b0b5d37934e59ffd78ca074c0d7bc20bb7538b3e9c79986c283b71926937eda",
+      "bytes": 371
+    },
+    "coreArmSevenRows": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/proposer-slashing-consumer-arm64-v4-20261014/test-run-01/stdout.log",
+      "sha256": "bba5ff96c4718fff46154d8231f786f4b38a7ac820e433661591f59114b1cc63",
+      "bytes": 2626
+    },
+    "networkArmTerminal": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/proposer-slashing-coherent-arm64-v3-20261014/network-test-run-01/terminal.json",
+      "sha256": "ac51d66d26b2e58aaff47024d64997f3ab719b6649ee9214fffe2acea411ee43",
+      "bytes": 226
+    },
+    "networkArmLog": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/proposer-slashing-coherent-arm64-v3-20261014/network-test-run-01/stdout.log",
+      "sha256": "27764f7636435e4c43f1764a0cff4ad1630b8cbe51c2fd9aa203dace0261d6d2",
+      "bytes": 1294
+    },
+    "assembledArmInputBefore": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/proposer-slashing-coherent-arm64-v3-20261014/receipts/inputs-before.json",
+      "sha256": "0479b38e0e31b1c4afd062f5b16513f840cb0ab33eebcba0c7e34d20a00aa3bd",
+      "bytes": 792776
+    },
+    "assembledArmInputAfter": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/proposer-slashing-coherent-arm64-v3-20261014/receipts/inputs-after.json",
+      "sha256": "bf87263325be7e20a4fa050cc30ff7ef732d882886a5d8bc5a2c3ea629910c0e",
+      "bytes": 920555
+    },
+    "assembledArmSdkBefore": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/proposer-slashing-coherent-arm64-v3-20261014/receipts/sdk-before.log",
+      "sha256": "269ee2df9486935eb0dda7c3266c5cae9b4966d5adaf1ba6c9702cc97484d3bf",
+      "bytes": 135230
+    },
+    "assembledArmSdkAfter": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/proposer-slashing-coherent-arm64-v3-20261014/receipts/sdk-after.log",
+      "sha256": "269ee2df9486935eb0dda7c3266c5cae9b4966d5adaf1ba6c9702cc97484d3bf",
+      "bytes": 135230
+    },
+    "consumerArmInputBefore": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/proposer-slashing-consumer-arm64-v4-20261014/receipts/inputs-before.json",
+      "sha256": "cac469ebb1a777ab97579b91aaeaf2664b5e2e13a497ab4463936c01417b9432",
+      "bytes": 717362
+    },
+    "consumerArmInputAfter": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/proposer-slashing-consumer-arm64-v4-20261014/receipts/inputs-after.json",
+      "sha256": "cac469ebb1a777ab97579b91aaeaf2664b5e2e13a497ab4463936c01417b9432",
+      "bytes": 717362
+    },
+    "v1StopReview": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/proposer-slashing-core-independent-review-20261014/terminal-static-v1-core-and-consumer-stop-review.json",
+      "sha256": "685f14d647850ff46a6df2d4066c5101f0478ef83b34d3d54d4fd0e951e9a7df",
+      "bytes": 4779
+    },
+    "v2CompileFailure": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/proposer-slashing-coherent-arm64-20261014/build/unit-22.log",
+      "sha256": "da88659797872b5151ebf41b6c2f76b51342d488c62dec43f9b091c3f374bf31",
+      "bytes": 30511
+    },
+    "v3StrictCacheFailedTerminal": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/proposer-slashing-coherent-arm64-v3-20261014/test-run-01/terminal.json",
+      "sha256": "0d24a513a2e915e3371ee4f22c320bf469002d75daa92e916f2423c5c94d306f",
+      "bytes": 201
+    },
+    "v3StrictCacheFourRowsAndFailure": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/proposer-slashing-coherent-arm64-v3-20261014/test-run-01/stdout.log",
+      "sha256": "84fd3e55a6e1ec209125a60602e064678e736bf4b95c7ed6a6310942adf89747",
+      "bytes": 1508
+    },
+    "v4StaticReview": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/proposer-slashing-core-independent-review-20261014/terminal-static-v4-cache-profile-delta-review.json",
+      "sha256": "af919cc14333997b77bc3c7a6f4cfb57511122096b01e194253dcd1ec0cf4f68",
+      "bytes": 2069
+    },
+    "amdSafeActualOutcome": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/proposer-slashing-amd64-safe-actual-root-20261014.json",
+      "sha256": "7d77e3551d87dbf325c4d14bdf90c8d46359cc2910457368ab2e27488bda99f6",
+      "bytes": 691
+    },
+    "immutableArmOnlyDraft": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/proposer-slashing-public-qualification-draft-20261014/manifest.json",
+      "sha256": "4ffa1878ce57c094bb7dce746b6b1267014ca12f2bb81b9e05c458b67573a8d7",
+      "bytes": 4239
+    }
+  },
+  "qualificationBoundary": {
+    "phase0ProposerSlashingSourcePathCompleteCandidate": true,
+    "twoDockerLinuxArchitecturesScopedPublicTestsPass": true,
+    "nativeQualified": false,
+    "ethereumGossipsubOrWanQualified": false,
+    "realDutyOrProductionQualified": false,
+    "historicalDomainMatrixQualified": false,
+    "sharedStrictFourMiBCacheQualified": false,
+    "repositoryImportAtQualification": "PENDING_ROOT_ONLY",
+    "gitDeliveryVerifiedByThisReport": false
+  },
+  "abiAndProgramScope": {
+    "nanoMainAndNanoP2pBuiltAndLinkedWithNewHeaders": true,
+    "newCoreConsumerAndFourNetworkTestProgramsExecutedInDeclaredScopes": true,
+    "nanoP2pOrMainRuntimeStarted": false,
+    "fullCmakeGraphAllToolsInstallOrCompleteImageQualified": false,
+    "changedAbiTypes": [
+      "CapellaDurableReactor",
+      "CapellaPublishedStore"
+    ],
+    "futureToolsRequireActualMdClosureAndAffectedRecompilationBeforeNewCoreLink": true,
+    "oldStandaloneElfsCoherentOnlyWithTheirOwnHistoricalArchiveAndDeclaredScope": true,
+    "oldClockHelperArchiveMembers": 142,
+    "oldElfImplicitRelinkToNew143Permitted": false,
+    "oldW5ObserverQualificationPromotedToNewDurableV5QueueObservation": false,
+    "oldHelperOrPrivateOperationExecutedForDelivery": false,
+    "wholeOperationalCandidateQualified": false
+  }
+}

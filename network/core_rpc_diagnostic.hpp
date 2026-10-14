@@ -28,7 +28,7 @@ inline std::string core_rpc_inventory_kind(const std::string& method,const nlohm
  if(method!="nano_capellaCatalogAcquire"&&method!="nano_capellaCatalogGeneration"&&method!="nano_capellaExport")return {};
  if(!params.is_array()||params.size()<2||!params[1].is_string())return {};
  const auto& kind=params[1].get_ref<const std::string&>();
- for(const char* allowed:{"block","attestation","attester_slashing","voluntary_exit","bls_to_execution_change","sync_committee_message"})if(kind==allowed)return kind;
+ for(const char* allowed:{"block","attestation","attester_slashing","voluntary_exit","bls_to_execution_change","sync_committee_message","proposer_slashing"})if(kind==allowed)return kind;
  return {};
 }
 // Observability only: never emit parameters, payloads, tokens, error data or raw text.
@@ -40,7 +40,7 @@ inline void core_rpc_trace(const CoreRpcTrace& trace,const std::string& method,c
   bool known=false;for(const auto* allowed:safe_methods)if(method==allowed){known=true;break;}
   J record={{"method",known?method:"other"},{"phase",phase},{"httpStatus",status},{"rpcCode",nullptr},{"cause","unknown"}};
   record["inventoryKind"]=nullptr;
-  for(const char* allowed:{"block","attestation","attester_slashing","voluntary_exit","bls_to_execution_change","sync_committee_message"})if(inventory_kind==allowed){record["inventoryKind"]=allowed;break;}
+  for(const char* allowed:{"block","attestation","attester_slashing","voluntary_exit","bls_to_execution_change","sync_committee_message","proposer_slashing"})if(inventory_kind==allowed){record["inventoryKind"]=allowed;break;}
   if(response.is_object()&&response.contains("error")&&response["error"].is_object()){
    const auto& error=response["error"];
    if(error.contains("code")&&error["code"].is_number_integer())record["rpcCode"]=error["code"];

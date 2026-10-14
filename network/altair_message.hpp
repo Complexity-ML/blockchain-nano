@@ -18,8 +18,10 @@ struct AltairWireProfile {
  std::string consensus_identity{};
  bool bls_changes=false;
  bool sync_messages=false;
+ // Capella only; legacy aggregate profiles keep this disabled.
+ bool proposer_slashings=false;
 };
-enum class AltairWireKind {block,attestation,attester_slashing,voluntary_exit,bls_to_execution_change,sync_committee_message};
+enum class AltairWireKind {block,attestation,attester_slashing,voluntary_exit,bls_to_execution_change,sync_committee_message,proposer_slashing};
 struct AltairWireMessage {AltairWireKind kind;std::vector<uint8_t> ssz;};
 class AltairMessageIngress {
  AltairWireProfile profile_;
@@ -55,13 +57,14 @@ public:
   if(j.at("kind")=="block"){kind=AltairWireKind::block;maximum=profile_.block_bytes;}
   else if(j.at("kind")=="attestation"){kind=AltairWireKind::attestation;maximum=profile_.attestation_bytes;}
   else if(j.at("kind")=="attester_slashing"){kind=AltairWireKind::attester_slashing;maximum=profile_.slashing_bytes;}
+  else if(j.at("kind")=="proposer_slashing"&&profile_.proposer_slashings&&!profile_.consensus_identity.empty()){kind=AltairWireKind::proposer_slashing;maximum=profile_.slashing_bytes;}
   else if(j.at("kind")=="voluntary_exit"&&!profile_.consensus_identity.empty()){kind=AltairWireKind::voluntary_exit;maximum=112;}
   else if(j.at("kind")=="bls_to_execution_change"&&profile_.bls_changes&&!profile_.consensus_identity.empty()){kind=AltairWireKind::bls_to_execution_change;maximum=172;}
   else if(j.at("kind")=="sync_committee_message"&&profile_.sync_messages&&!profile_.consensus_identity.empty()){kind=AltairWireKind::sync_committee_message;maximum=144;}
   else return std::nullopt;
   const auto& encoded=j.at("ssz").get_ref<const std::string&>();
   if(encoded.size()<2||!encoded.starts_with("0x")||encoded.size()%2||(encoded.size()-2)/2>maximum)return std::nullopt;
-  if((kind==AltairWireKind::voluntary_exit&&encoded.size()!=226)||(kind==AltairWireKind::bls_to_execution_change&&encoded.size()!=346)||(kind==AltairWireKind::sync_committee_message&&encoded.size()!=290))return std::nullopt;
+  if((kind==AltairWireKind::proposer_slashing&&encoded.size()!=834)||(kind==AltairWireKind::voluntary_exit&&encoded.size()!=226)||(kind==AltairWireKind::bls_to_execution_change&&encoded.size()!=346)||(kind==AltairWireKind::sync_committee_message&&encoded.size()!=290))return std::nullopt;
   // Validate the entire alphabet before allocating binary payload memory.
   if(!std::all_of(encoded.begin()+2,encoded.end(),[](char c){return nibble(c)>=0;}))return std::nullopt;
   AltairWireMessage message{kind,{}};message.ssz.reserve((encoded.size()-2)/2);
@@ -76,6 +79,7 @@ public:
   if(j.at("kind")=="block"){kind=AltairWireKind::block;maximum=profile_.block_bytes;}
   else if(j.at("kind")=="attestation"){kind=AltairWireKind::attestation;maximum=profile_.attestation_bytes;}
   else if(j.at("kind")=="attester_slashing"){kind=AltairWireKind::attester_slashing;maximum=profile_.slashing_bytes;}
+  else if(j.at("kind")=="proposer_slashing"&&profile_.proposer_slashings&&!profile_.consensus_identity.empty()){kind=AltairWireKind::proposer_slashing;maximum=profile_.slashing_bytes;}
   else if(j.at("kind")=="voluntary_exit"&&!profile_.consensus_identity.empty()){kind=AltairWireKind::voluntary_exit;maximum=112;}
   else if(j.at("kind")=="bls_to_execution_change"&&profile_.bls_changes&&!profile_.consensus_identity.empty()){kind=AltairWireKind::bls_to_execution_change;maximum=172;}
   else if(j.at("kind")=="sync_committee_message"&&profile_.sync_messages&&!profile_.consensus_identity.empty()){kind=AltairWireKind::sync_committee_message;maximum=144;}
@@ -84,7 +88,7 @@ public:
   if(!profile_.consensus_identity.empty())envelope["consensusIdentity"]=profile_.consensus_identity;
   const auto overhead=envelope.dump().size();
   if(overhead>profile_.frame_bytes)return std::nullopt;maximum=std::min(maximum,(profile_.frame_bytes-overhead)/2);
-  auto bytes=altair_unbase64(j.at("sszBase64").get_ref<const std::string&>(),maximum);if(!bytes||(kind==AltairWireKind::voluntary_exit&&bytes->size()!=112)||(kind==AltairWireKind::bls_to_execution_change&&bytes->size()!=172)||(kind==AltairWireKind::sync_committee_message&&bytes->size()!=144))return std::nullopt;
+  auto bytes=altair_unbase64(j.at("sszBase64").get_ref<const std::string&>(),maximum);if(!bytes||(kind==AltairWireKind::proposer_slashing&&bytes->size()!=416)||(kind==AltairWireKind::voluntary_exit&&bytes->size()!=112)||(kind==AltairWireKind::bls_to_execution_change&&bytes->size()!=172)||(kind==AltairWireKind::sync_committee_message&&bytes->size()!=144))return std::nullopt;
   return AltairWireMessage{kind,std::move(*bytes)};
  }
  Result receive(const std::string& authenticated_peer,std::string_view frame,const Handler& handler,

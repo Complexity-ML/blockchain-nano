@@ -22,7 +22,7 @@ int main(){try{
  core_rpc_trace(trace,"nano_capellaStatus","http-error",503,nullptr,"RPC simulation queue wait exceeded");check(seen["cause"]=="rpc-queue-expired","queue expiry lost");
  core_rpc_trace(trace,"nano_capellaStatus","http-error",503,nullptr,"PRIVATE_HTTP_PAYLOAD");check(seen["cause"]=="unknown"&&seen.dump().find("PRIVATE_")==std::string::npos,"HTTP body leaked");
  core_rpc_trace(trace,"nano_capellaStatus","rpc-error",200,nullptr,"RPC simulation capacity exceeded");check(seen["cause"]=="unknown","unrelated status forged capacity");
- for(const char* kind:{"block","attestation","attester_slashing","voluntary_exit","bls_to_execution_change","sync_committee_message"}){
+ for(const char* kind:{"block","attestation","attester_slashing","voluntary_exit","bls_to_execution_change","sync_committee_message","proposer_slashing"}){
   const auto label=core_rpc_inventory_kind("nano_capellaCatalogAcquire",J::array({"PRIVATE_TOKEN",kind}));check(label==kind,"safe inventory label lost");
   core_rpc_trace(trace,"nano_capellaCatalogAcquire","rpc-error",200,error,{},label);check(seen["inventoryKind"]==kind&&seen.dump().find("PRIVATE_")==std::string::npos,"inventory diagnostic leaked parameters");
  }

@@ -13,6 +13,26 @@ std::optional<IndexedConsensusAttestation> indexed(View b,uint32_t limit,const s
  for(size_t i=228;i<b.size();i+=8){if(checkpoint)checkpoint();a.indices.push_back(number(b,i));}return a;
 }
 }
+Bytes encode_consensus_proposer_slashing_ssz(SignedConsensusBeaconHeader first,SignedConsensusBeaconHeader second,const std::function<void()>& check){
+ if(first.signature.size()!=96||second.signature.size()!=96)throw std::invalid_argument("Invalid proposer slashing signature width");
+ Bytes out(416);auto encode=[&](const SignedConsensusBeaconHeader& signed_header,size_t at){
+  const auto& h=signed_header.message;
+  for(size_t i=0;i<8;++i){out[at+i]=uint8_t(h.slot>>(8*i));out[at+8+i]=uint8_t(h.proposer_index>>(8*i));}
+  std::copy(h.parent_root.begin(),h.parent_root.end(),out.begin()+at+16);
+  std::copy(h.state_root.begin(),h.state_root.end(),out.begin()+at+48);
+  std::copy(h.body_root.begin(),h.body_root.end(),out.begin()+at+80);
+  std::copy(signed_header.signature.begin(),signed_header.signature.end(),out.begin()+at+112);
+ };
+ if(check)check();encode(first,0);encode(second,208);if(check)check();return out;
+}
+std::optional<std::pair<SignedConsensusBeaconHeader,SignedConsensusBeaconHeader>> decode_consensus_proposer_slashing_ssz(View input,const std::function<void()>& check){
+ if(input.size()!=416)return std::nullopt;
+ const Bytes owned(input.begin(),input.end());const View b=owned;
+ if(check)check();auto header=[&](size_t at){
+  return SignedConsensusBeaconHeader{{number(b,at),number(b,at+8),root(b,at+16),root(b,at+48),root(b,at+80)},Bytes(b.begin()+at+112,b.begin()+at+208)};
+ };
+ auto first=header(0),second=header(208);if(check)check();return std::pair{std::move(first),std::move(second)};
+}
 Bytes encode_consensus_attestation_ssz(const Phase0SignedAttestation& vote,uint32_t limit,const std::function<void()>& checkpoint){
  if(!limit||vote.aggregation_bits.size()>limit||vote.signature.size()!=96)throw std::invalid_argument("invalid attestation encoding bounds");
  if(checkpoint)checkpoint();const auto count=vote.aggregation_bits.size();Bytes out(228+count/8+1,0);
