@@ -1,0 +1,53 @@
+{
+  "format": "nano-bootstrap-maintenance-metadata-contract-v1",
+  "externalManifestFormat": "nano-bootstrap-maintenance-public-build-bindings-v1",
+  "fields": [
+    "format",
+    "terminalSha256",
+    "buildControllerSha256",
+    "parentPlanSha256",
+    "files"
+  ],
+  "fileRowFields": [
+    "path",
+    "sha256",
+    "bytes"
+  ],
+  "fixedPaths": [
+    "receipts/source-before.json",
+    "receipts/sdk-binding.json",
+    "receipts/sdk-before.log",
+    "receipts/sdk-after.log",
+    "receipts/archive-142-actual-byte-proof.json",
+    "receipts/image-inspect.log",
+    "build/compile_commands.json",
+    "build/CTestTestfile.cmake",
+    "build/third_party/secp256k1/CTestTestfile.cmake",
+    "build/third_party/secp256k1/src/CTestTestfile.cmake"
+  ],
+  "targetMetadata": {
+    "targets": [
+      "nano-bootstrap-archive-maintenance",
+      "nano-bootstrap-archive-maintenance-tests",
+      "nano-bootstrap-maintenance-retention-fault"
+    ],
+    "leaves": [
+      "flags.make",
+      "link.txt"
+    ],
+    "pattern": "build/CMakeFiles/<target>.dir/<leaf>"
+  },
+  "actualAndProbeMd": {
+    "objects": "exact three terminal.objects keys",
+    "patterns": [
+      "build/<object>.d",
+      "build/preflight/<object>.d"
+    ]
+  },
+  "filesExactly": 22,
+  "testsRequestedExactly": [
+    "storage_capella_bootstrap_archive_owned_copies"
+  ],
+  "realScenarioRows": 13,
+  "qualifiedByWritingThisContract": false
+}

@@ -1,0 +1,95 @@
+{
+  "format": "nano-bootstrap-maintenance-incremental-build-controller-proposal-v3",
+  "createdAtUtc": "2026-10-13T23:44:06.436780+00:00",
+  "status": "ROOT_REVIEW_AND_DISPATCH_REQUIRED_NOT_EXECUTED",
+  "files": [
+    {
+      "path": "build-maintenance-root-only.py",
+      "sha256": "cb9acac75470ff0ab8627060e8c7de9db7f2312f30d252ed9f01ec82c06731c2",
+      "bytes": 25163
+    },
+    {
+      "path": "README.md",
+      "sha256": "dcba29fa0b58804f8d4b38e1e28da86656bbc970049235fee42ccb9df37763cf",
+      "bytes": 4425
+    },
+    {
+      "path": "copy-buffer-and-ar-accounting-only.patch",
+      "sha256": "7bcf30817b2fea682e0dc07d1e24269590708b7bf2540636fbece8d3d5203659",
+      "bytes": 3995
+    },
+    {
+      "path": "failure-batch-counts-only.patch",
+      "sha256": "cf9527c9661f255862bb63365632060e225dda70c1be35ea247253ed089b0cce",
+      "bytes": 5578
+    }
+  ],
+  "bindings": [
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-owner-runtime-incremental-build-proposal-20261014/build-bootstrap-owner-runtime-root-only.py",
+      "sha256": "cd1b0ce8abd1a69ec6c6dcc0b3c3ac79415ff00a0676187c48309bd5943a9ae2",
+      "bytes": 27014,
+      "publicOnly": true
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-pending-admission-clock-one-consumer-proposal-v4-20261014/build-pending-one-consumer.py",
+      "sha256": "1da7fbfb6e5651ba6b6f8ac61215426ca75abcd0bc2ff26e0d187faf523c69b4",
+      "bytes": 15386,
+      "publicOnly": true
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-owned-copies-cli-proposal-v2-20261014/manifest.json",
+      "sha256": "4611d22aa891e9b6368bc31cd6f7432635fc1dc0cb1ec4cf295a354e3a2c192d",
+      "bytes": 9426,
+      "publicOnly": true
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-test-proposal-v2-20261014/manifest.json",
+      "sha256": "5c83d5e31803ddbdb6ea3026ec99f7ed460cf1c6db6e7f61f6c9bd77e1a6deba",
+      "bytes": 5086,
+      "publicOnly": true
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-owner-runtime-arm64-control-v2-20261014/plan.json",
+      "sha256": "49adc633bad9093810589237756f2c0b9fbf491c6a2ad9d4ce919343b94c2b57",
+      "bytes": 6253695,
+      "publicOnly": true
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-owner-runtime-coherent-arm64-20261014/run-02/receipts/terminal-build.json",
+      "sha256": "b9bd0fd170a6eb058746664f9819519251d32f1b8448102494ef08ce9f569a4f",
+      "bytes": 57391,
+      "publicOnly": true
+    }
+  ],
+  "architectures": [
+    "linux/arm64 Docker Mac",
+    "linux/amd64 Docker VPS"
+  ],
+  "rootSuppliesActualAmdAndPendingReceipts": true,
+  "sourceFilesExpected": 1320,
+  "archiveMembersExpected": 142,
+  "coreObjectsCompiled": 0,
+  "coreObjectsCopied": 0,
+  "archiveConstructionCommands": 0,
+  "newObjects": 3,
+  "newLinks": 3,
+  "testsExecuted": 0,
+  "compilerExecutedByAuthor": false,
+  "dockerExecutedByAuthor": false,
+  "sshExecutedByAuthor": false,
+  "privateInputsRead": false,
+  "runtimeStarted": false,
+  "productionQualified": false,
+  "syntaxCheck": "Python AST parsed only; no imported controller/main/container execution",
+  "priorProposal": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-incremental-build-proposal-v2-20261014/manifest.json",
+    "sha256": "7e8b7f29165c67aadad31a04a37871c548ec85825fbf5d7f9fa534693add1eb7",
+    "preserved": true
+  },
+  "narrowRepairs": [
+    "Compare the actual held copy buffer snapshot to the original protected SHA/material before writing",
+    "Account separately zero archive construction commands and143 ar verification commands"
+  ],
+  "narrowFailureReceiptRepair": "Attempted failing batches report unknown partial count (null),0 only before attempt,3 only after entire successful batch. Logs remain exact; no automatic retry."
+}

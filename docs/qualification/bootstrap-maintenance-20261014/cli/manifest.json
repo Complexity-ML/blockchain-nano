@@ -1,0 +1,194 @@
+{
+  "format": "nano-bootstrap-archive-owned-copies-cli-proposal-v2",
+  "createdAtUtc": "2026-10-13T23:02:32.926225+00:00",
+  "status": "PROPOSED_NOT_COMPILED_OR_EXECUTED",
+  "baselineRepositoryCommitReportedByRoot": "6a4ef3d9be2f5649129415f1bc158e2a211ed4f6",
+  "combinedCandidate": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-bootstrap-startup-candidate-v2-20261014/manifest.json",
+    "sha256": "99de44966a1bea76d0dadc67d39cd5d6c4c854c3f31d7151397e43a96133c40d",
+    "sourceOverlays": 11
+  },
+  "toolTarget": "nano-bootstrap-archive-maintenance",
+  "sourceOverlays": [
+    "tools/storage-maintenance/bootstrap-archive-owned-copies.cpp",
+    "CMakeLists.txt"
+  ],
+  "newCoreUnits": 0,
+  "coreAbiChanges": false,
+  "plannedBuild": "One new tool object/link against the actual coherent existing-only/authority archive; same existing image/dependencies; no core rebuild justified by these overlays. Caller must bind that actual archive and current closure before compiling.",
+  "files": [
+    {
+      "path": "source/tools/storage-maintenance/bootstrap-archive-owned-copies.cpp",
+      "sha256": "1b034acdd8b0cc177af5188eb2724e460012295248b645b48541bc30601d8743",
+      "bytes": 25678
+    },
+    {
+      "path": "source/CMakeLists.txt",
+      "sha256": "4851ccc60ff8cb317dcfb9da302541974c938bd5794f0fdc7aa8dca077284d6d",
+      "bytes": 158582
+    },
+    {
+      "path": "proposal.patch",
+      "sha256": "a44fefb8554387a83e8259e8abe8d457d5bf8defed6b9c2102702ad2d95bd360",
+      "bytes": 27309
+    },
+    {
+      "path": "README.md",
+      "sha256": "d5de2ca7fc0193972d84f2d7eb88eefb37cc5ee60eb5f801f1ec421d0085d9ab",
+      "bytes": 6921
+    },
+    {
+      "path": "SCHEMA.md",
+      "sha256": "9fe906174193bb45622328bcc360b351ca02df8b890c452b86104dcd74da9f3a",
+      "bytes": 4318
+    },
+    {
+      "path": "next-private-mode-only.patch",
+      "sha256": "1bd0d5bfc26c89c7a745486732a8b003c411cb7209e538dc6c39a6643c9bb838",
+      "bytes": 3403
+    }
+  ],
+  "protectedSourceBindings": [
+    {
+      "path": "include/nano/chain.hpp",
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-bootstrap-startup-candidate-v2-20261014/source/include/nano/chain.hpp",
+      "sha256": "44627b89a92b1ee4ef44118152204f38aca8d2417527e1d2dfa536254daab8b0",
+      "bytes": 7673,
+      "changedByThisProposal": false
+    },
+    {
+      "path": "src/chain.cpp",
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-bootstrap-startup-candidate-v2-20261014/source/src/chain.cpp",
+      "sha256": "fdf9e6af2b874e2fa39749be41416d637f03c0bd655a71ab6cc4bccd3dc6718a",
+      "bytes": 43637,
+      "changedByThisProposal": false
+    },
+    {
+      "path": "include/nano/storage.hpp",
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-bootstrap-startup-candidate-v2-20261014/source/include/nano/storage.hpp",
+      "sha256": "234eca5576624953ac262195e75b70686576afb805192edb5d17d4d2dea8731d",
+      "bytes": 9878,
+      "changedByThisProposal": false
+    },
+    {
+      "path": "src/storage.cpp",
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-bootstrap-startup-candidate-v2-20261014/source/src/storage.cpp",
+      "sha256": "ebc67177891ccb38e074302e1527b93d55d817df4efdd06d4801b0a703bb78b1",
+      "bytes": 61373,
+      "changedByThisProposal": false
+    },
+    {
+      "path": "include/nano/consensus_capella_bootstrap_input.hpp",
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-bootstrap-startup-candidate-v2-20261014/source/include/nano/consensus_capella_bootstrap_input.hpp",
+      "sha256": "bacaf8d6118b81c4ee47aeb3c2456efb2278adc8e700d14f4d11a9039fcd341a",
+      "bytes": 1276,
+      "changedByThisProposal": false
+    },
+    {
+      "path": "src/consensus_capella_bootstrap_input.cpp",
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-bootstrap-startup-candidate-v2-20261014/source/src/consensus_capella_bootstrap_input.cpp",
+      "sha256": "97c72c4f2f70cada166b1a62872b21887976993f1b7024194ff5ed78852aecb9",
+      "bytes": 7276,
+      "changedByThisProposal": false
+    },
+    {
+      "path": "src/consensus_capella_runtime.cpp",
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-bootstrap-startup-candidate-v2-20261014/source/src/consensus_capella_runtime.cpp",
+      "sha256": "86ab4d206455b3cd1c11827d317f4ef46e9beb6496f0444eeafdb15ea497978c",
+      "bytes": 27193,
+      "changedByThisProposal": false
+    },
+    {
+      "path": "src/main.cpp",
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/capella-bootstrap-startup-candidate-v2-20261014/source/src/main.cpp",
+      "sha256": "89376b1e757b35e261c73712b30761d1d36dc85cba1e03f70f790f1fd340bd59",
+      "bytes": 7944,
+      "changedByThisProposal": false
+    },
+    {
+      "path": "include/nano/consensus_capella_bootstrap_archive.hpp",
+      "source": "/Users/boris/Dev/blockchain-nano/include/nano/consensus_capella_bootstrap_archive.hpp",
+      "sha256": "0375d7e288c3170b82edd2a624fdc50e2fd4dd1c967af44eb0e9a4f90a9b0fb1",
+      "bytes": 2900,
+      "changedByThisProposal": false
+    },
+    {
+      "path": "src/consensus_capella_bootstrap_archive.cpp",
+      "source": "/Users/boris/Dev/blockchain-nano/src/consensus_capella_bootstrap_archive.cpp",
+      "sha256": "104f7cd497fe4bbf8e238ddcaf848435985f6474d9d176740dba6522680309de",
+      "bytes": 5731,
+      "changedByThisProposal": false
+    },
+    {
+      "path": "include/nano/consensus_capella_reactor.hpp",
+      "source": "/Users/boris/Dev/blockchain-nano/include/nano/consensus_capella_reactor.hpp",
+      "sha256": "c3a2acdb2df99f8eeec93fc8379f1bd5abc5eb15974d38c055f0ec4d756e791e",
+      "bytes": 25097,
+      "changedByThisProposal": false
+    },
+    {
+      "path": "src/consensus_capella_reactor.cpp",
+      "source": "/Users/boris/Dev/blockchain-nano/src/consensus_capella_reactor.cpp",
+      "sha256": "1da6716b4ec04f093bf6fb16946d09da0e997271c965730118a5fdd61c254bb2",
+      "bytes": 111996,
+      "changedByThisProposal": false
+    },
+    {
+      "path": "tools/storage-maintenance/rocksdb-owned-copy.hpp",
+      "source": "/Users/boris/Dev/blockchain-nano/tools/storage-maintenance/rocksdb-owned-copy.hpp",
+      "sha256": "793a4eeec7344436f81806b773cbb43f2136523e73b2de28f9d6bf793e357f31",
+      "bytes": 1942,
+      "changedByThisProposal": false
+    },
+    {
+      "path": "include/nano/checkpoint_blob_gc.hpp",
+      "source": "/Users/boris/Dev/blockchain-nano/include/nano/checkpoint_blob_gc.hpp",
+      "sha256": "36d8393dd53cb9d050072482ac4adf91b97494557c667ae9817b68ad4aab4a26",
+      "bytes": 4042,
+      "changedByThisProposal": false
+    },
+    {
+      "path": "src/checkpoint_blob_gc.cpp",
+      "source": "/Users/boris/Dev/blockchain-nano/src/checkpoint_blob_gc.cpp",
+      "sha256": "637a4ed073a9419f64d8a14b222fba725f469f8bc06a693f81f64dea9a994d5f",
+      "bytes": 30141,
+      "changedByThisProposal": false
+    }
+  ],
+  "testContract": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-test-contract-20261014/manifest.json",
+    "sha256": "b962129bbc4284644fcb21669bb8b741b4abc9dbdcc5afbc64f39f0cbd3c785e",
+    "groups": 7,
+    "designOnlyNotExecuted": true
+  },
+  "scope": {
+    "privateInputsRead": false,
+    "databaseOpened": false,
+    "compilerExecuted": false,
+    "dockerExecuted": false,
+    "sshExecuted": false,
+    "testsExecuted": 0,
+    "signaturesCreated": 0,
+    "repoEdited": false,
+    "runtimeStarted": false,
+    "currentUtcRecoveryQualified": false,
+    "wholeNodeBackupQualified": false,
+    "productionQualified": false
+  },
+  "knownOpenGates": [
+    "Independent CLI review and actual compilation",
+    "Actual wrapper plan/apply/recover/readback qualification on synthetic owned stopped copies",
+    "Durable two-file retention failure injection before any protocol write",
+    "Real fresh-exec crash at observed current WAL boundary and typed recovery",
+    "Separate whole-node/journals/peer/source provenance qualification",
+    "Current UTC projection and finite startup allowance qualification",
+    "Duties and common finality progression; all production criteria"
+  ],
+  "privacy": "No private request, token, DB/capsule/inventory, derived private hash, keys or signing environment is included. Operator receipts produced by the future tool remain private on the operator host.",
+  "priorProposal": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-owned-copies-cli-proposal-20261014/manifest.json",
+    "sha256": "3a5df77dc4f562af58dc179b28716986d2ac07b8b3afa302bf27b1f74bb0f5be",
+    "preserved": true
+  },
+  "narrowRepair": "Exact mode0600 for both externally supplied NEXT receipts before any Pair/recovery/apply. Public Genesis/profile input mode rules unchanged."
+}

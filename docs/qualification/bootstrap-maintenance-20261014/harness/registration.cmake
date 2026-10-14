@@ -1,0 +1,15 @@
+
+# Synthetic stopped-copy wrapper only; no signing/runtime or private inputs.
+add_executable(nano-bootstrap-archive-maintenance-tests tests/test_bootstrap_archive_maintenance.cpp)
+target_link_libraries(nano-bootstrap-archive-maintenance-tests PRIVATE nano_core)
+target_include_directories(nano-bootstrap-archive-maintenance-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/tools/storage-maintenance")
+target_compile_definitions(nano-bootstrap-archive-maintenance-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}" NANO_TEST_TOOL="$<TARGET_FILE:nano-bootstrap-archive-maintenance>")
+add_dependencies(nano-bootstrap-archive-maintenance-tests nano-bootstrap-archive-maintenance)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+ add_library(nano-bootstrap-maintenance-retention-fault SHARED tests/support/bootstrap_maintenance_retention_fault.cpp)
+ target_link_libraries(nano-bootstrap-maintenance-retention-fault PRIVATE ${CMAKE_DL_LIBS})
+ target_compile_definitions(nano-bootstrap-archive-maintenance-tests PRIVATE NANO_TEST_FSYNC_SHIM="$<TARGET_FILE:nano-bootstrap-maintenance-retention-fault>")
+ add_dependencies(nano-bootstrap-archive-maintenance-tests nano-bootstrap-maintenance-retention-fault)
+endif()
+add_test(NAME storage_capella_bootstrap_archive_owned_copies COMMAND nano-bootstrap-archive-maintenance-tests --self-test)
+set_tests_properties(storage_capella_bootstrap_archive_owned_copies PROPERTIES TIMEOUT 130 LABELS qualification_consensus_bootstrap_maintenance)

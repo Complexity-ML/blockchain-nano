@@ -1,0 +1,497 @@
+{
+  "format": "nano-public-qualified-bootstrap-maintenance-delivery-v1",
+  "createdAtUtc": "2026-10-14T00:14:58.320125+00:00",
+  "baselineCommit": "599dd39776ceab5d0bb16043613d69a8d48e5c4b",
+  "sourceFiles": [
+    {
+      "path": "CMakeLists.txt",
+      "sha256": "d0b9232b4de7adb4a080e38737fb1989af4bdd3b1e3b9d885a4af42bacf1f6ac",
+      "bytes": 160051,
+      "packagePath": "harness/source/CMakeLists.txt",
+      "baselineSha256": "165efcb1657725f563d19a4ed856274026745b374410891043ec797c954d7290",
+      "newFile": false
+    },
+    {
+      "path": "tools/storage-maintenance/bootstrap-archive-owned-copies.cpp",
+      "sha256": "1b034acdd8b0cc177af5188eb2724e460012295248b645b48541bc30601d8743",
+      "bytes": 25678,
+      "packagePath": "cli/source/tools/storage-maintenance/bootstrap-archive-owned-copies.cpp",
+      "baselineSha256": null,
+      "newFile": true
+    },
+    {
+      "path": "tests/test_bootstrap_archive_maintenance.cpp",
+      "sha256": "e5f664121c238c1db2e94283fa96d9959ecabcd566028dcdd5deb0df0f9ce1ee",
+      "bytes": 30364,
+      "packagePath": "harness/source/tests/test_bootstrap_archive_maintenance.cpp",
+      "baselineSha256": null,
+      "newFile": true
+    },
+    {
+      "path": "tests/support/bootstrap_maintenance_retention_fault.cpp",
+      "sha256": "f398a0c14f22521b79ecb56775d3acba1d71a301de2d0745ddd94173cef2595c",
+      "bytes": 1370,
+      "packagePath": "harness/source/tests/support/bootstrap_maintenance_retention_fault.cpp",
+      "baselineSha256": null,
+      "newFile": true
+    }
+  ],
+  "actualQualification": {
+    "arm64": {
+      "testsPassed": 1,
+      "semanticRowsWithSummary": 13,
+      "elapsedMs": 2325,
+      "maxRssKiB": 23384,
+      "retentionFsyncFaultCases": 3,
+      "newSignatures": 0,
+      "terminalSha256": "8efb8c1f92af2cdd985ca5682975d01057024089d792d98db3d1cc7ebf1d244b"
+    },
+    "amd64": {
+      "testsPassed": 1,
+      "semanticRowsWithSummary": 13,
+      "elapsedMs": 7076,
+      "maxRssKiB": 25120,
+      "retentionFsyncFaultCases": 3,
+      "newSignatures": 0,
+      "terminalSha256": "70b8e4fe5b0809813a0fcd7e7befbb0d76fb51acc7d344a6b8a807acd1b8dcd5"
+    }
+  },
+  "fourHistoricalDocumentsPreserved": true,
+  "csvUnchanged": true,
+  "privatePayloadsIncluded": false,
+  "productionQualified": false,
+  "files": {
+    "cli/manifest.json": {
+      "sha256": "4611d22aa891e9b6368bc31cd6f7432635fc1dc0cb1ec4cf295a354e3a2c192d",
+      "bytes": 9426,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-owned-copies-cli-proposal-v2-20261014/manifest.json"
+    },
+    "cli/source/tools/storage-maintenance/bootstrap-archive-owned-copies.cpp": {
+      "sha256": "1b034acdd8b0cc177af5188eb2724e460012295248b645b48541bc30601d8743",
+      "bytes": 25678,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-owned-copies-cli-proposal-v2-20261014/source/tools/storage-maintenance/bootstrap-archive-owned-copies.cpp"
+    },
+    "cli/source/CMakeLists.txt": {
+      "sha256": "4851ccc60ff8cb317dcfb9da302541974c938bd5794f0fdc7aa8dca077284d6d",
+      "bytes": 158582,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-owned-copies-cli-proposal-v2-20261014/source/CMakeLists.txt"
+    },
+    "cli/proposal.patch": {
+      "sha256": "a44fefb8554387a83e8259e8abe8d457d5bf8defed6b9c2102702ad2d95bd360",
+      "bytes": 27309,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-owned-copies-cli-proposal-v2-20261014/proposal.patch"
+    },
+    "cli/README.md": {
+      "sha256": "d5de2ca7fc0193972d84f2d7eb88eefb37cc5ee60eb5f801f1ec421d0085d9ab",
+      "bytes": 6921,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-owned-copies-cli-proposal-v2-20261014/README.md"
+    },
+    "cli/SCHEMA.md": {
+      "sha256": "9fe906174193bb45622328bcc360b351ca02df8b890c452b86104dcd74da9f3a",
+      "bytes": 4318,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-owned-copies-cli-proposal-v2-20261014/SCHEMA.md"
+    },
+    "cli/next-private-mode-only.patch": {
+      "sha256": "1bd0d5bfc26c89c7a745486732a8b003c411cb7209e538dc6c39a6643c9bb838",
+      "bytes": 3403,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-owned-copies-cli-proposal-v2-20261014/next-private-mode-only.patch"
+    },
+    "harness/manifest.json": {
+      "sha256": "dae95f972b019595e295e8a14c7afeca8773c84b232234cd8aee7773c76c5da0",
+      "bytes": 2715,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-test-proposal-v3-20261014/manifest.json"
+    },
+    "harness/source/tests/test_bootstrap_archive_maintenance.cpp": {
+      "sha256": "e5f664121c238c1db2e94283fa96d9959ecabcd566028dcdd5deb0df0f9ce1ee",
+      "bytes": 30364,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-test-proposal-v3-20261014/source/tests/test_bootstrap_archive_maintenance.cpp"
+    },
+    "harness/source/tests/support/bootstrap_maintenance_retention_fault.cpp": {
+      "sha256": "f398a0c14f22521b79ecb56775d3acba1d71a301de2d0745ddd94173cef2595c",
+      "bytes": 1370,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-test-proposal-v3-20261014/source/tests/support/bootstrap_maintenance_retention_fault.cpp"
+    },
+    "harness/source/CMakeLists.txt": {
+      "sha256": "d0b9232b4de7adb4a080e38737fb1989af4bdd3b1e3b9d885a4af42bacf1f6ac",
+      "bytes": 160051,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-test-proposal-v3-20261014/source/CMakeLists.txt"
+    },
+    "harness/registration.cmake": {
+      "sha256": "4f65d602a7dd17849cc6437ea1b8b06a637667a5eed98d664cd311b3b015a4fc",
+      "bytes": 1469,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-test-proposal-v3-20261014/registration.cmake"
+    },
+    "harness/harness-v2-to-v3.patch": {
+      "sha256": "b877889cf1014ca513e0c5326f8ddd045b079f7ad0a7bae6f127afd711fe342f",
+      "bytes": 5859,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-test-proposal-v3-20261014/harness-v2-to-v3.patch"
+    },
+    "harness/README.md": {
+      "sha256": "16994c8b71e178968ee333b1eeb6dac7de74067a6b01a27a59e4892d8998b630",
+      "bytes": 1114,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-test-proposal-v3-20261014/README.md"
+    },
+    "controls/bootstrap-archive-maintenance-incremental-build-proposal-20261014/manifest.json": {
+      "sha256": "c670e68ee346dcc54aba379afde06c750667e578d6fca8e618f448c1d75fcc42",
+      "bytes": 3257,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-incremental-build-proposal-20261014/manifest.json"
+    },
+    "controls/bootstrap-archive-maintenance-incremental-build-proposal-20261014/build-maintenance-root-only.py": {
+      "sha256": "2c02b0bf9dde2ba338597a9448dce2b5f43bebe92f79bb3a8d981e5250b4a342",
+      "bytes": 24648,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-incremental-build-proposal-20261014/build-maintenance-root-only.py"
+    },
+    "controls/bootstrap-archive-maintenance-incremental-build-proposal-20261014/README.md": {
+      "sha256": "dcba29fa0b58804f8d4b38e1e28da86656bbc970049235fee42ccb9df37763cf",
+      "bytes": 4425,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-incremental-build-proposal-20261014/README.md"
+    },
+    "controls/bootstrap-archive-maintenance-incremental-build-proposal-v2-20261014/manifest.json": {
+      "sha256": "7e8b7f29165c67aadad31a04a37871c548ec85825fbf5d7f9fa534693add1eb7",
+      "bytes": 3985,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-incremental-build-proposal-v2-20261014/manifest.json"
+    },
+    "controls/bootstrap-archive-maintenance-incremental-build-proposal-v2-20261014/build-maintenance-root-only.py": {
+      "sha256": "0f21e41597827f946ad17f30307bf0437315b76985b6c4c5976ea42411513254",
+      "bytes": 24860,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-incremental-build-proposal-v2-20261014/build-maintenance-root-only.py"
+    },
+    "controls/bootstrap-archive-maintenance-incremental-build-proposal-v2-20261014/README.md": {
+      "sha256": "dcba29fa0b58804f8d4b38e1e28da86656bbc970049235fee42ccb9df37763cf",
+      "bytes": 4425,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-incremental-build-proposal-v2-20261014/README.md"
+    },
+    "controls/bootstrap-archive-maintenance-incremental-build-proposal-v2-20261014/copy-buffer-and-ar-accounting-only.patch": {
+      "sha256": "7bcf30817b2fea682e0dc07d1e24269590708b7bf2540636fbece8d3d5203659",
+      "bytes": 3995,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-incremental-build-proposal-v2-20261014/copy-buffer-and-ar-accounting-only.patch"
+    },
+    "controls/bootstrap-archive-maintenance-incremental-build-proposal-v3-20261014/manifest.json": {
+      "sha256": "588fc598e44f3513b7cd203ba2c486ffc752e0ff34e0e25d0792efcf12414a80",
+      "bytes": 4350,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-incremental-build-proposal-v3-20261014/manifest.json"
+    },
+    "controls/bootstrap-archive-maintenance-incremental-build-proposal-v3-20261014/build-maintenance-root-only.py": {
+      "sha256": "cb9acac75470ff0ab8627060e8c7de9db7f2312f30d252ed9f01ec82c06731c2",
+      "bytes": 25163,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-incremental-build-proposal-v3-20261014/build-maintenance-root-only.py"
+    },
+    "controls/bootstrap-archive-maintenance-incremental-build-proposal-v3-20261014/README.md": {
+      "sha256": "dcba29fa0b58804f8d4b38e1e28da86656bbc970049235fee42ccb9df37763cf",
+      "bytes": 4425,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-incremental-build-proposal-v3-20261014/README.md"
+    },
+    "controls/bootstrap-archive-maintenance-incremental-build-proposal-v3-20261014/copy-buffer-and-ar-accounting-only.patch": {
+      "sha256": "7bcf30817b2fea682e0dc07d1e24269590708b7bf2540636fbece8d3d5203659",
+      "bytes": 3995,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-incremental-build-proposal-v3-20261014/copy-buffer-and-ar-accounting-only.patch"
+    },
+    "controls/bootstrap-archive-maintenance-incremental-build-proposal-v3-20261014/failure-batch-counts-only.patch": {
+      "sha256": "cf9527c9661f255862bb63365632060e225dda70c1be35ea247253ed089b0cce",
+      "bytes": 5578,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-incremental-build-proposal-v3-20261014/failure-batch-counts-only.patch"
+    },
+    "controls/bootstrap-archive-maintenance-one-consumer-build-proposal-20261014/manifest.json": {
+      "sha256": "99ba7ab619c8734056d292a07f13c44549e38428774264ae8eee4846cf2ac928",
+      "bytes": 1390,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-one-consumer-build-proposal-20261014/manifest.json"
+    },
+    "controls/bootstrap-archive-maintenance-one-consumer-build-proposal-20261014/build-maintenance-one-consumer.py": {
+      "sha256": "ce27006e9c62118a4d4b82362a6b9e11a0ec103e4290627446143ea2432b80f5",
+      "bytes": 17223,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-one-consumer-build-proposal-20261014/build-maintenance-one-consumer.py"
+    },
+    "controls/bootstrap-archive-maintenance-one-consumer-build-proposal-20261014/README.md": {
+      "sha256": "281f354b57fe19476810d57d142ceaea5499051aefd7e8344f3257ced6c758fa",
+      "bytes": 1681,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-one-consumer-build-proposal-20261014/README.md"
+    },
+    "controls/bootstrap-archive-maintenance-one-ctest-proposal-20261014/manifest.json": {
+      "sha256": "047c61713d4837ce7b92f3bede253ed77eb789d45f3cf256f0214473ee541ab0",
+      "bytes": 1198,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-one-ctest-proposal-20261014/manifest.json"
+    },
+    "controls/bootstrap-archive-maintenance-one-ctest-proposal-20261014/run-maintenance-one-test.py": {
+      "sha256": "7bf4713beb747400694c37bdee1d57cba2a2beba952c78814bfad6e1b3e5bbae",
+      "bytes": 20587,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-one-ctest-proposal-20261014/run-maintenance-one-test.py"
+    },
+    "controls/bootstrap-archive-maintenance-one-ctest-proposal-20261014/README.md": {
+      "sha256": "4487a6d5552ba18267f61589aa9501e78d2ee87aea81b0f7480e2d93203b845e",
+      "bytes": 2663,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-one-ctest-proposal-20261014/README.md"
+    },
+    "controls/bootstrap-archive-maintenance-one-ctest-proposal-20261014/METADATA-CONTRACT.json": {
+      "sha256": "c5565366996a7160de7653bc30e47af890a13e6b06c1db3ce0f92f8733fc2103",
+      "bytes": 1405,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-one-ctest-proposal-20261014/METADATA-CONTRACT.json"
+    },
+    "controls/bootstrap-archive-maintenance-one-ctest-proposal-v2-20261014/manifest.json": {
+      "sha256": "dd3d01fae31aa1adf7fdf81e8eb337ab41f52fb58729a1b6022d7146237bc87e",
+      "bytes": 1346,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-one-ctest-proposal-v2-20261014/manifest.json"
+    },
+    "controls/bootstrap-archive-maintenance-one-ctest-proposal-v2-20261014/run-maintenance-one-test.py": {
+      "sha256": "ef939fd12cf3ab599e50033bdf8d92174db42569821cff0d5a5a52969f6351a1",
+      "bytes": 21153,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-one-ctest-proposal-v2-20261014/run-maintenance-one-test.py"
+    },
+    "controls/bootstrap-archive-maintenance-one-ctest-proposal-v2-20261014/runner-v1-to-v2.patch": {
+      "sha256": "1498b8af29198b9884fe545adf561b623bb0595acc306ef8bac79afb0bf7d2d8",
+      "bytes": 9374,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-one-ctest-proposal-v2-20261014/runner-v1-to-v2.patch"
+    },
+    "controls/bootstrap-archive-maintenance-one-ctest-proposal-v2-20261014/README.md": {
+      "sha256": "ac6eed4900b72d5a351e6b3045bc77f84c5d1faf5f948fe9b2f810eac5819c0d",
+      "bytes": 1244,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-one-ctest-proposal-v2-20261014/README.md"
+    },
+    "controls/bootstrap-archive-maintenance-one-ctest-proposal-v2-20261014/METADATA-CONTRACT.json": {
+      "sha256": "c5565366996a7160de7653bc30e47af890a13e6b06c1db3ce0f92f8733fc2103",
+      "bytes": 1405,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-one-ctest-proposal-v2-20261014/METADATA-CONTRACT.json"
+    },
+    "reviews/bootstrap-archive-owned-copies-cli-independent-review-20261014/terminal-static-v2-review.json": {
+      "sha256": "3788daa7d6e64c55ccbaa5369f7fb7e52472af3175132277517c7c8613e19cd5",
+      "bytes": 4164,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-owned-copies-cli-independent-review-20261014/terminal-static-v2-review.json"
+    },
+    "reviews/bootstrap-archive-maintenance-harness-independent-review-20261014/terminal-static-v2-harness-review.json": {
+      "sha256": "aba1e6a4618c8b9d39ec33b2b068f28b1cd41201f2bec9a31c1ef07ada5c5a86",
+      "bytes": 4068,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-harness-independent-review-20261014/terminal-static-v2-harness-review.json"
+    },
+    "reviews/bootstrap-archive-maintenance-controller-v3-independent-review-20261014/terminal-static-controller-dispatch-review.json": {
+      "sha256": "c3effa4930497750e9bbb2a28392aae16048a1fc16f9d6d739fc0fb15f890f1c",
+      "bytes": 5566,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-controller-v3-independent-review-20261014/terminal-static-controller-dispatch-review.json"
+    },
+    "reviews/bootstrap-archive-maintenance-one-ctest-independent-review-20261014/terminal-static-runner-review.json": {
+      "sha256": "6c90c8a9852ce0ed314f3e0177f263eb0a9cd5fddc5330f19378f26024cf5d38",
+      "bytes": 3891,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-one-ctest-independent-review-20261014/terminal-static-runner-review.json"
+    },
+    "reviews/bootstrap-archive-maintenance-one-ctest-independent-review-20261014/terminal-static-root-dispatch-addendum.json": {
+      "sha256": "185a34fbfc2827ac2a50526e7b29746f473fed392403fd23917a21f922cc67f5",
+      "bytes": 1832,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-one-ctest-independent-review-20261014/terminal-static-root-dispatch-addendum.json"
+    },
+    "reviews/bootstrap-archive-maintenance-one-ctest-independent-review-20261014/terminal-static-runner-v2-addendum.json": {
+      "sha256": "16bc46a4440a20106090302eca8d13dc1dcaa4cec5b13a74668a303530a1ae16",
+      "bytes": 2403,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-one-ctest-independent-review-20261014/terminal-static-runner-v2-addendum.json"
+    },
+    "reviews/bootstrap-maintenance-current-state-fixture-independent-diagnostic-20261014/terminal-static-diagnostic.json": {
+      "sha256": "8a3775d02d6480539ec77009d96539ffd24735d399c4dec8ce32204ee1e343a6",
+      "bytes": 4440,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-current-state-fixture-independent-diagnostic-20261014/terminal-static-diagnostic.json"
+    },
+    "reviews/bootstrap-maintenance-current-state-fixture-independent-diagnostic-20261014/terminal-static-v3-repair-addendum.json": {
+      "sha256": "894267159b63c443f61f62417494834d6a4b9de78af251517ceefef243a792c1",
+      "bytes": 2376,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-current-state-fixture-independent-diagnostic-20261014/terminal-static-v3-repair-addendum.json"
+    },
+    "reviews/bootstrap-archive-maintenance-one-consumer-independent-review-20261014/terminal-static-controller-review.json": {
+      "sha256": "c8ebf75923fb057a2eeb1c2a6c0ca8545e3c06154d017d1e5ae462f0d88fc178",
+      "bytes": 2716,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-one-consumer-independent-review-20261014/terminal-static-controller-review.json"
+    },
+    "actual-arm/first-build/receipts/terminal-build.json": {
+      "sha256": "5b306b4a567d2cf2b12b25673988b5226c910bfd6b3ec55d3a196fddf75c675a",
+      "bytes": 4328,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-coherent-v3-arm64-20261014/run-01/receipts/terminal-build.json"
+    },
+    "actual-arm/first-build/receipts/archive-142-actual-byte-proof.json": {
+      "sha256": "502722380356ff8807fa7f7ead1cf19f804b538f74736c034ee73922c78dbf07",
+      "bytes": 34223,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-coherent-v3-arm64-20261014/run-01/receipts/archive-142-actual-byte-proof.json"
+    },
+    "actual-arm/first-build/receipts/sdk-binding.json": {
+      "sha256": "8f1790a65cd0624dc61d3a04675b974ad9fcc9fed1a2134092917dbd49339b84",
+      "bytes": 208,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-coherent-v3-arm64-20261014/run-01/receipts/sdk-binding.json"
+    },
+    "actual-arm/first-build/root-build-public-bindings.json": {
+      "sha256": "aea26948768e21ea38a46c033440d16eb629baa0f2edb3f0a43a488988b76b0a",
+      "bytes": 4806,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-coherent-v3-arm64-20261014/run-01/root-build-public-bindings.json"
+    },
+    "actual-arm/final-build/receipts/terminal-build.json": {
+      "sha256": "c834f222294f717b0b4eba35af70254b3a6113b8678b1e13ef629e7a3f606691",
+      "bytes": 4393,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-canonical-state-arm64-20261014/run-01/receipts/terminal-build.json"
+    },
+    "actual-arm/final-build/receipts/archive-142-actual-byte-proof.json": {
+      "sha256": "502722380356ff8807fa7f7ead1cf19f804b538f74736c034ee73922c78dbf07",
+      "bytes": 34223,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-canonical-state-arm64-20261014/run-01/receipts/archive-142-actual-byte-proof.json"
+    },
+    "actual-arm/final-build/receipts/sdk-binding.json": {
+      "sha256": "8f1790a65cd0624dc61d3a04675b974ad9fcc9fed1a2134092917dbd49339b84",
+      "bytes": 208,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-canonical-state-arm64-20261014/run-01/receipts/sdk-binding.json"
+    },
+    "actual-arm/final-build/root-build-public-bindings.json": {
+      "sha256": "d3fba3410d4632e617cd0a406a5c026e24372c55da803baaf64d660f9e357018",
+      "bytes": 4806,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-canonical-state-arm64-20261014/run-01/root-build-public-bindings.json"
+    },
+    "actual-arm/first-test/terminal.json": {
+      "sha256": "4eee6d65a66f59f757b292b98d9e2679d3dc7a3c4a2e6dbb721b585bd6dcc117",
+      "bytes": 1522,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-one-test-arm64-20261014/terminal.json"
+    },
+    "actual-arm/first-test/ctest.log": {
+      "sha256": "da62c6d9081b4098329cfae01985f242c52407e16eea3a5c61a1f68c457dd16a",
+      "bytes": 1128,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-one-test-arm64-20261014/ctest.log"
+    },
+    "actual-arm/first-test/junit.xml": {
+      "sha256": "daf6206b54e2327d8e731e116e680d8613854c114d787c076c22a742875ff018",
+      "bytes": 580,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-one-test-arm64-20261014/junit.xml"
+    },
+    "actual-arm/first-test/scenario-rows.json": {
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "bytes": 3,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-one-test-arm64-20261014/scenario-rows.json"
+    },
+    "actual-arm/final-test/terminal.json": {
+      "sha256": "8efb8c1f92af2cdd985ca5682975d01057024089d792d98db3d1cc7ebf1d244b",
+      "bytes": 1476,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-one-test-v2-arm64-20261014/terminal.json"
+    },
+    "actual-arm/final-test/ctest.log": {
+      "sha256": "e9852ecb3e3a304abe346868084bd73a40a6f5f801d747e1d4c21318fd60521c",
+      "bytes": 5118,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-one-test-v2-arm64-20261014/ctest.log"
+    },
+    "actual-arm/final-test/junit.xml": {
+      "sha256": "0fb87c4f97c3dc1e821a5de07e087751e341ad4ec5fbfcd7e067d7ed19b03ff4",
+      "bytes": 1620,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-one-test-v2-arm64-20261014/junit.xml"
+    },
+    "actual-arm/final-test/scenario-rows.json": {
+      "sha256": "54fc6225da5cc9dc167cf8cca098a366301ea6cc6d8d6154a9b100fa484e3bcb",
+      "bytes": 4880,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-one-test-v2-arm64-20261014/scenario-rows.json"
+    },
+    "actual-amd/first/bootstrap-maintenance-coherent-v3-amd64-20261014/run-01/receipts/terminal-build.json": {
+      "sha256": "b7fff1541d5f6eee81eccf4bebbfae3bb525e4e249c37c0a626499d84a46a4b8",
+      "bytes": 4307,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-first-public-amd-evidence-20261014/bootstrap-maintenance-coherent-v3-amd64-20261014/run-01/receipts/terminal-build.json"
+    },
+    "actual-amd/first/bootstrap-maintenance-coherent-v3-amd64-20261014/run-01/receipts/archive-142-actual-byte-proof.json": {
+      "sha256": "a803da9d821d69215e7a82bcbe2b484a7a31e62b5ca3db94bc34abd0fc86c7a0",
+      "bytes": 34219,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-first-public-amd-evidence-20261014/bootstrap-maintenance-coherent-v3-amd64-20261014/run-01/receipts/archive-142-actual-byte-proof.json"
+    },
+    "actual-amd/first/bootstrap-maintenance-coherent-v3-amd64-20261014/run-01/receipts/sdk-binding.json": {
+      "sha256": "8692032a56b057cb949da63c7962175d147bc0fe0e7a2988d7bd1e7ad347fc9e",
+      "bytes": 208,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-first-public-amd-evidence-20261014/bootstrap-maintenance-coherent-v3-amd64-20261014/run-01/receipts/sdk-binding.json"
+    },
+    "actual-amd/first/bootstrap-maintenance-coherent-v3-amd64-20261014/run-01/root-build-public-bindings.json": {
+      "sha256": "828486b07b8a9d9db3b19a35b2149b17c48b797ae7be6023ea8985ed5ca20c9e",
+      "bytes": 4806,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-first-public-amd-evidence-20261014/bootstrap-maintenance-coherent-v3-amd64-20261014/run-01/root-build-public-bindings.json"
+    },
+    "actual-amd/first/bootstrap-maintenance-one-test-amd64-20261014/terminal.json": {
+      "sha256": "34f776fd8f18a7411b75f8eecb54020879f26f5dac78c677528fb3a729dc2f48",
+      "bytes": 1521,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-first-public-amd-evidence-20261014/bootstrap-maintenance-one-test-amd64-20261014/terminal.json"
+    },
+    "actual-amd/first/bootstrap-maintenance-one-test-amd64-20261014/ctest.log": {
+      "sha256": "ca0a2fb421356b73816358602a021c0a2f0b2106380d93906736c4a252c3ed90",
+      "bytes": 1128,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-first-public-amd-evidence-20261014/bootstrap-maintenance-one-test-amd64-20261014/ctest.log"
+    },
+    "actual-amd/first/bootstrap-maintenance-one-test-amd64-20261014/junit.xml": {
+      "sha256": "fecebc941ffff142daddbf48d6ba2f0209a4afb7bf88b7ae690468f6a8d2d7e4",
+      "bytes": 580,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-first-public-amd-evidence-20261014/bootstrap-maintenance-one-test-amd64-20261014/junit.xml"
+    },
+    "actual-amd/first/bootstrap-maintenance-one-test-amd64-20261014/scenario-rows.json": {
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "bytes": 3,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-first-public-amd-evidence-20261014/bootstrap-maintenance-one-test-amd64-20261014/scenario-rows.json"
+    },
+    "actual-amd/first/public-allowlist-transfer.json": {
+      "sha256": "3efd338304c2b785b08f3a0ae6ff0bdb1391be11310d457af1e00b85b3110822",
+      "bytes": 1866,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-first-public-amd-evidence-20261014/public-allowlist-transfer.json"
+    },
+    "actual-amd/final/bootstrap-maintenance-canonical-state-amd64-20261014/run-01/receipts/terminal-build.json": {
+      "sha256": "0ca57ffd219db7f5276e96ea0825f5edb4cd8ec9444254ff8dccf2eacfa36008",
+      "bytes": 4372,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-final-public-amd-evidence-20261014/bootstrap-maintenance-canonical-state-amd64-20261014/run-01/receipts/terminal-build.json"
+    },
+    "actual-amd/final/bootstrap-maintenance-canonical-state-amd64-20261014/run-01/receipts/archive-142-actual-byte-proof.json": {
+      "sha256": "a803da9d821d69215e7a82bcbe2b484a7a31e62b5ca3db94bc34abd0fc86c7a0",
+      "bytes": 34219,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-final-public-amd-evidence-20261014/bootstrap-maintenance-canonical-state-amd64-20261014/run-01/receipts/archive-142-actual-byte-proof.json"
+    },
+    "actual-amd/final/bootstrap-maintenance-canonical-state-amd64-20261014/run-01/receipts/sdk-binding.json": {
+      "sha256": "8692032a56b057cb949da63c7962175d147bc0fe0e7a2988d7bd1e7ad347fc9e",
+      "bytes": 208,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-final-public-amd-evidence-20261014/bootstrap-maintenance-canonical-state-amd64-20261014/run-01/receipts/sdk-binding.json"
+    },
+    "actual-amd/final/bootstrap-maintenance-canonical-state-amd64-20261014/run-01/root-build-public-bindings.json": {
+      "sha256": "3c8527b2dc303fa58ae9ffed145bab5ad81fb8946fe1d96fdc2048d7bd77498b",
+      "bytes": 4806,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-final-public-amd-evidence-20261014/bootstrap-maintenance-canonical-state-amd64-20261014/run-01/root-build-public-bindings.json"
+    },
+    "actual-amd/final/bootstrap-maintenance-one-test-v2-amd64-20261014/terminal.json": {
+      "sha256": "70b8e4fe5b0809813a0fcd7e7befbb0d76fb51acc7d344a6b8a807acd1b8dcd5",
+      "bytes": 1477,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-final-public-amd-evidence-20261014/bootstrap-maintenance-one-test-v2-amd64-20261014/terminal.json"
+    },
+    "actual-amd/final/bootstrap-maintenance-one-test-v2-amd64-20261014/ctest.log": {
+      "sha256": "ed2b66e5978278434c23f833d46e17f4d9bbdb928a3ca3d2ef1acf8123a58e03",
+      "bytes": 5118,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-final-public-amd-evidence-20261014/bootstrap-maintenance-one-test-v2-amd64-20261014/ctest.log"
+    },
+    "actual-amd/final/bootstrap-maintenance-one-test-v2-amd64-20261014/junit.xml": {
+      "sha256": "37e330b89609597adb64a426ee375bf7471307de26b352aa9dc53bbe751a1088",
+      "bytes": 1619,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-final-public-amd-evidence-20261014/bootstrap-maintenance-one-test-v2-amd64-20261014/junit.xml"
+    },
+    "actual-amd/final/bootstrap-maintenance-one-test-v2-amd64-20261014/scenario-rows.json": {
+      "sha256": "9864f3d99c465fd619d08094c01677620ffed00ce1a23c3832e9c282381373d2",
+      "bytes": 4880,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-final-public-amd-evidence-20261014/bootstrap-maintenance-one-test-v2-amd64-20261014/scenario-rows.json"
+    },
+    "actual-amd/final/public-allowlist-transfer.json": {
+      "sha256": "644305eafc6af8593f535db86f8fd3c825736655a4f21ddefb705c35e5bf8e62",
+      "bytes": 1898,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-final-public-amd-evidence-20261014/public-allowlist-transfer.json"
+    },
+    "history/bootstrap-maintenance-two-builds-root-observed-20261014.json": {
+      "sha256": "6e78df471a5e5a8adf9067a409551a4acf204704943c0ada76a46edced2db089",
+      "bytes": 1521,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-two-builds-root-observed-20261014.json"
+    },
+    "history/bootstrap-maintenance-metadata-contract-refusal-root-20261014.json": {
+      "sha256": "02e49fb04d550d43e8a3cc494c1bf0d363371cbee72a5d9464d673242f08b2f4",
+      "bytes": 618,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-metadata-contract-refusal-root-20261014.json"
+    },
+    "history/bootstrap-startup-git-ci-delivery-599dd397-20261014.json": {
+      "sha256": "d64eb8c6ffd245b1b2e990b8221c6e2f8ab4726ed343315614b64474185f0d82",
+      "bytes": 1742,
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-startup-git-ci-delivery-599dd397-20261014.json"
+    },
+    "document-preservation.json": {
+      "sha256": "1d11b6382763b1cab6bae5285ef24483c83eeead249a6ae034274f451c139e07",
+      "bytes": 6823,
+      "source": "ROOT reviewed prefix plus Git baseline"
+    },
+    "README.md": {
+      "sha256": "8cf42e15470073a3657ffc5f25e18ea396d7cf639de45c59762b233ff9c4f2f6",
+      "bytes": 2196,
+      "source": "ROOT scope from actual receipts"
+    }
+  },
+  "previousPublicDraftManifestSha256": "949c91cd9aa4cac8ff8c1cc7e9b08eb3e76a0bc9797d6cad1e6a51eaf7a540ff",
+  "onlyDraftCorrection": "README exact one apply plus two completed recovery repetitions per format; no C++/results changed"
+}

@@ -1,0 +1,73 @@
+{
+  "format": "nano-bootstrap-maintenance-current-state-fixture-independent-diagnostic-v1",
+  "createdAtUtc": "2026-10-13T23:58:17.763923+00:00",
+  "verdict": "PUBLIC_SOURCE_SUPPORTS_TEST_FIXTURE_EXPECTATION_ERROR_NO_CORE_RELAXATION",
+  "bindings": [
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-one-test-arm64-20261014/terminal.json",
+      "sha256": "4eee6d65a66f59f757b292b98d9e2679d3dc7a3c4a2e6dbb721b585bd6dcc117",
+      "bytes": 1522
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-one-test-arm64-20261014/junit.xml",
+      "sha256": "daf6206b54e2327d8e731e116e680d8613854c114d787c076c22a742875ff018",
+      "bytes": 580
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-one-test-arm64-20261014/ctest.log",
+      "sha256": "da62c6d9081b4098329cfae01985f242c52407e16eea3a5c61a1f68c457dd16a",
+      "bytes": 1128
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-test-proposal-v2-20261014/source/tests/test_bootstrap_archive_maintenance.cpp",
+      "sha256": "f7c74c1b3f324843d12e2db4395e0c55b15dae69f94f60a93d97dcbe07765a63",
+      "bytes": 29250
+    },
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/src/chain.cpp",
+      "sha256": "fdf9e6af2b874e2fa39749be41416d637f03c0bd655a71ab6cc4bccd3dc6718a",
+      "bytes": 43637
+    },
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/src/storage.cpp",
+      "sha256": "ebc67177891ccb38e074302e1527b93d55d817df4efdd06d4801b0a703bb78b1",
+      "bytes": 61373
+    },
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/src/consensus_capella_reactor.cpp",
+      "sha256": "1da6716b4ec04f093bf6fb16946d09da0e997271c965730118a5fdd61c254bb2",
+      "bytes": 111996
+    },
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/tests/fixtures/capella-bootstrap-anchor-cb532/initial.json",
+      "sha256": "33aee17d626a3e541c7934c5576c025f8819d442555df6fadc90dde49bd045a7",
+      "bytes": 62713
+    }
+  ],
+  "observed": [
+    "ARM CTest one selected test actually failed with status fail, time0.212965, log tool did not refuse without complete receipt. Terminal ctestExit8, readback true, all four owned containers absent; testsExecuted null is preserved historical conservative accounting.",
+    "Harness negative fourth primary case deletes state/0x0000000000000000 and expects refusal.",
+    "Public already-signed initial fixture has execution block number0x1 at /blocks/0/5/0/number. Normal Reactor publication imports execution suffix; Existing Blockchain requires state_at(latest.header.number), while genesis authenticity separately requires block_by_number0."
+  ],
+  "causalReason": "Deleting historical state0 does not remove the canonical tip state1. Existing-only opening may validly succeed and plan does not require historical state0. The negative fixture expectation targets the wrong record; this is not evidence that the CLI initialized an absent required binding.",
+  "narrowRepair": [
+    "Derive current state key from the real source meta/tip value and require the key exists before deletion. Retain identity/tip/genesisblock negatives and same four missing-current-binding assertions.",
+    "Add discriminant case deleting existing historical state0 when current tip is nonzero: legitimate plan must complete while protocol rows/source trees remain unchanged and historical record is not reinitialized.",
+    "Recognize genuine JUnit status fail as one executed non-skipped test in future runner; retain old null terminals and do not rewrite failed receipts."
+  ],
+  "scope": [
+    "No current owned or private DB was opened or read. Input is committed public fixture and published source/proposal/logs only.",
+    "AMD failure was reported by ROOT; independent physical AMD receipt readback not performed in this diagnostic.",
+    "No test, compiler, Docker, SSH or controller import occurred. Proposed harness repair is not qualified by this diagnostic."
+  ],
+  "activity": {
+    "tests": 0,
+    "compilers": 0,
+    "docker": 0,
+    "ssh": 0,
+    "ar": 0,
+    "privateReads": 0,
+    "repoWrites": 0,
+    "productionQualified": false
+  }
+}

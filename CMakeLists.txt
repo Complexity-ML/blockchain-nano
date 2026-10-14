@@ -33,6 +33,9 @@ target_compile_options(nano_core PRIVATE -Wall -Wextra -Wpedantic)
 # Offline maintenance only; no RPC/background pruning activation.
 add_executable(nano-storage-maintenance tools/storage-maintenance/compact-owned-copy.cpp)
 target_link_libraries(nano-storage-maintenance PRIVATE nano_core)
+# Explicit stopped-copy bootstrap archive maintenance; never starts runtime.
+add_executable(nano-bootstrap-archive-maintenance tools/storage-maintenance/bootstrap-archive-owned-copies.cpp)
+target_link_libraries(nano-bootstrap-archive-maintenance PRIVATE nano_core)
 
 set(CMAKE_EXPORT_NO_PACKAGE_REGISTRY ON)
 set(NANO_MCL_PORTABLE_DEFAULT OFF)
@@ -309,8 +312,8 @@ set_tests_properties(uncles PROPERTIES TIMEOUT 30)
 
 # Install the native core, offline maintenance tool, and configured transport.
 include(GNUInstallDirs)
-set_target_properties(nano nano-storage-maintenance PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
-install(TARGETS nano nano-storage-maintenance RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+set_target_properties(nano nano-storage-maintenance nano-bootstrap-archive-maintenance PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
+install(TARGETS nano nano-storage-maintenance nano-bootstrap-archive-maintenance RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 if(NANO_NETWORK_EXECUTABLE)
  install(PROGRAMS "${NANO_NETWORK_EXECUTABLE}" DESTINATION ${CMAKE_INSTALL_BINDIR} RENAME nano-p2p)
 endif()
@@ -2079,3 +2082,18 @@ target_compile_definitions(nano-capella-bootstrap-startup-tests PRIVATE NANO_TES
 add_dependencies(nano-capella-bootstrap-startup-tests nano)
 add_test(NAME consensus_capella_bootstrap_startup COMMAND nano-capella-bootstrap-startup-tests --self-test)
 set_tests_properties(consensus_capella_bootstrap_startup PROPERTIES TIMEOUT 70 LABELS "qualification_consensus_recovery")
+
+# Synthetic stopped-copy wrapper only; no signing/runtime or private inputs.
+add_executable(nano-bootstrap-archive-maintenance-tests tests/test_bootstrap_archive_maintenance.cpp)
+target_link_libraries(nano-bootstrap-archive-maintenance-tests PRIVATE nano_core)
+target_include_directories(nano-bootstrap-archive-maintenance-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/tools/storage-maintenance")
+target_compile_definitions(nano-bootstrap-archive-maintenance-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}" NANO_TEST_TOOL="$<TARGET_FILE:nano-bootstrap-archive-maintenance>")
+add_dependencies(nano-bootstrap-archive-maintenance-tests nano-bootstrap-archive-maintenance)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+ add_library(nano-bootstrap-maintenance-retention-fault SHARED tests/support/bootstrap_maintenance_retention_fault.cpp)
+ target_link_libraries(nano-bootstrap-maintenance-retention-fault PRIVATE ${CMAKE_DL_LIBS})
+ target_compile_definitions(nano-bootstrap-archive-maintenance-tests PRIVATE NANO_TEST_FSYNC_SHIM="$<TARGET_FILE:nano-bootstrap-maintenance-retention-fault>")
+ add_dependencies(nano-bootstrap-archive-maintenance-tests nano-bootstrap-maintenance-retention-fault)
+endif()
+add_test(NAME storage_capella_bootstrap_archive_owned_copies COMMAND nano-bootstrap-archive-maintenance-tests --self-test)
+set_tests_properties(storage_capella_bootstrap_archive_owned_copies PROPERTIES TIMEOUT 130 LABELS qualification_consensus_bootstrap_maintenance)

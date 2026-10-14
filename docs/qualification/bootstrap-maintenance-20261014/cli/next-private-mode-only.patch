@@ -1,0 +1,19 @@
+--- v1/tools/storage-maintenance/bootstrap-archive-owned-copies.cpp
++++ v2/tools/storage-maintenance/bootstrap-archive-owned-copies.cpp
+@@ -84,6 +84,7 @@
+   while(at<bytes.size()){check();const auto n=::pread(file.n,bytes.data()+at,std::min<size_t>(65536,bytes.size()-at),off_t(at));if(n<0&&errno==EINTR)continue;io(n>0);at+=size_t(n);}metadata();require(digest(bytes)==expected);check();metadata();
+  }
+  void recheck(const std::function<void()>& check)const{metadata();std::array<uint8_t,65536> b{};size_t at=0;while(at<bytes.size()){check();const auto n=::pread(file.n,b.data(),std::min(b.size(),bytes.size()-at),off_t(at));if(n<0&&errno==EINTR)continue;io(n>0);require(std::equal(b.begin(),b.begin()+n,bytes.begin()+at));at+=size_t(n);}metadata();}
++ void private_receipt()const{require((before.st_mode&0777)==0600);metadata();}
+  Json json()const{return parse(std::string_view(reinterpret_cast<const char*>(bytes.data()),bytes.size()));}
+ };
+ struct Artifact{fs::path p;std::string sha;size_t bytes;};
+@@ -153,7 +154,7 @@
+  std::array<std::string,2> hashes{invariant(copies.p.p,primary_allowed,b,check),invariant(copies.w.p,witness_allowed,b,check)};
+  std::unique_ptr<Input> pfile,wfile;Json rp,rw;ForkCheckpointToken np=copies.p.pin,nw=copies.w.pin;bool work=false;
+  if(op=="plan")copies.initial();else{
+-  stage="retained-two-commitments";pfile=std::make_unique<Input>(path(Json(argv[5])),sha_text(Json(argv[6])),65536,check);wfile=std::make_unique<Input>(path(Json(argv[7])),sha_text(Json(argv[8])),65536,check);copies.outside(pfile->p);copies.outside(wfile->p);require(pfile->p!=wfile->p);rp=pfile->json();rw=wfile->json();retained_shape(rp,"primary",input.sha,copies);retained_shape(rw,"witness",input.sha,copies);auto x=rp,y=rw;x.erase("role");x.erase("next");y.erase("role");y.erase("next");require(x==y);np=token(rp.at("next"));nw=token(rw.at("next"));work=rp.at("hasWork").get<bool>();retained_relation(work,copies.p.pin,copies.w.pin,np,nw);require(rp.at("invariants")==Json::array({hashes[0],hashes[1]}));if(op=="apply"){const auto prepared=copies.inventories();require(rp.at("preparedInventories")==Json::array({prepared[0],prepared[1]}));}else require(work);
++  stage="retained-two-commitments";pfile=std::make_unique<Input>(path(Json(argv[5])),sha_text(Json(argv[6])),65536,check);wfile=std::make_unique<Input>(path(Json(argv[7])),sha_text(Json(argv[8])),65536,check);pfile->private_receipt();wfile->private_receipt();copies.outside(pfile->p);copies.outside(wfile->p);require(pfile->p!=wfile->p);rp=pfile->json();rw=wfile->json();retained_shape(rp,"primary",input.sha,copies);retained_shape(rw,"witness",input.sha,copies);auto x=rp,y=rw;x.erase("role");x.erase("next");y.erase("role");y.erase("next");require(x==y);np=token(rp.at("next"));nw=token(rw.at("next"));work=rp.at("hasWork").get<bool>();retained_relation(work,copies.p.pin,copies.w.pin,np,nw);require(rp.at("invariants")==Json::array({hashes[0],hashes[1]}));if(op=="apply"){const auto prepared=copies.inventories();require(rp.at("preparedInventories")==Json::array({prepared[0],prepared[1]}));}else require(work);
+  }
+  stage="pre-publication-retention";input.recheck(check);gi.recheck(check);pi.recheck(check);si.recheck(check);copies.original_sources();if(pfile){pfile->recheck(check);wfile->recheck(check);out.write("primary-next.json",rp);out.write("witness-next.json",rw);}
+  stage="reconstructed-process-local-plan";

@@ -1,0 +1,117 @@
+{
+  "format": "nano-bootstrap-maintenance-qualified-public-delivery-independent-review-v1",
+  "createdAtUtc": "2026-10-14T00:19:55.329810+00:00",
+  "verdict": "NO_MATERIAL_BLOCKER_FOUND_FOR_SCOPED_PUBLIC_SOURCE_DOC_IMPORT",
+  "reviewerRole": "Independent internal public source/evidence review; not an external security audit",
+  "bindings": {
+    "packageManifestPath": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-qualified-public-delivery-v2-20261014/manifest.json",
+    "packageManifestSha256": "b4367739a678a22adb196e798536aca95dfd124efacad984e38057b43dfceaf2",
+    "baselineCommit": "599dd39776ceab5d0bb16043613d69a8d48e5c4b",
+    "payloadCount": 86,
+    "payloadBytes": 887467,
+    "previousDraftManifestSha256": "949c91cd9aa4cac8ff8c1cc7e9b08eb3e76a0bc9797d6cad1e6a51eaf7a540ff",
+    "sourceFiles": [
+      {
+        "path": "CMakeLists.txt",
+        "sha256": "d0b9232b4de7adb4a080e38737fb1989af4bdd3b1e3b9d885a4af42bacf1f6ac",
+        "bytes": 160051,
+        "packagePath": "harness/source/CMakeLists.txt",
+        "baselineSha256": "165efcb1657725f563d19a4ed856274026745b374410891043ec797c954d7290",
+        "newFile": false
+      },
+      {
+        "path": "tools/storage-maintenance/bootstrap-archive-owned-copies.cpp",
+        "sha256": "1b034acdd8b0cc177af5188eb2724e460012295248b645b48541bc30601d8743",
+        "bytes": 25678,
+        "packagePath": "cli/source/tools/storage-maintenance/bootstrap-archive-owned-copies.cpp",
+        "baselineSha256": null,
+        "newFile": true
+      },
+      {
+        "path": "tests/test_bootstrap_archive_maintenance.cpp",
+        "sha256": "e5f664121c238c1db2e94283fa96d9959ecabcd566028dcdd5deb0df0f9ce1ee",
+        "bytes": 30364,
+        "packagePath": "harness/source/tests/test_bootstrap_archive_maintenance.cpp",
+        "baselineSha256": null,
+        "newFile": true
+      },
+      {
+        "path": "tests/support/bootstrap_maintenance_retention_fault.cpp",
+        "sha256": "f398a0c14f22521b79ecb56775d3acba1d71a301de2d0745ddd94173cef2595c",
+        "bytes": 1370,
+        "packagePath": "harness/source/tests/support/bootstrap_maintenance_retention_fault.cpp",
+        "baselineSha256": null,
+        "newFile": true
+      }
+    ],
+    "documentPreservationSha256": "1d11b6382763b1cab6bae5285ef24483c83eeead249a6ae034274f451c139e07"
+  },
+  "byteAndPublicationChecks": {
+    "exactTree86PayloadsPlusIndex": true,
+    "allPayloadShaSizeRegularNoSymlinkNlink1": true,
+    "84CopiedPublicOriginsByteEqual": true,
+    "remainingTwoGeneratedFiles": [
+      "README.md",
+      "document-preservation.json"
+    ],
+    "sourceBaselineShaAndNewFileAbsenceInGit599Verified": true,
+    "cmakeDiffReviewed": "New production CLI target and install target/property addition; isolated test target plus Linux-only fault shim registration. Existing baseline not assumed to be a prefix. No core/source/rule change.",
+    "fourWholeDocumentSuffixesExactGit599": true,
+    "csv11281Sha371663637bccd58bc817f11b6f51bf264691235a5424e1ff3011f22a9be64283Unchanged": true,
+    "draftToV2OnlyPayloadChange": "README replaces ambiguous two applications/recoveries with exactly one apply followed by two completed recovery repetitions per format.",
+    "twoAmdTransferMapsEightPayloadsEachMatch": true
+  },
+  "actualResults": {
+    "arm64": {
+      "finalTerminalSha256": "8efb8c1f92af2cdd985ca5682975d01057024089d792d98db3d1cc7ebf1d244b",
+      "finalBuildSha256": "c834f222294f717b0b4eba35af70254b3a6113b8678b1e13ef629e7a3f606691",
+      "ctestsPassed": 1,
+      "ctestSeconds": 2.33288,
+      "actualSemanticRows": 13,
+      "cppElapsedMs": 2325,
+      "cppMaxRssKiB": 23384,
+      "archiveSha256": "cf1370dcff8b00f9b361c0d86edaa39c5a55d7e26355e04bb4e6933719175a8d",
+      "sdkPaths": 2502
+    },
+    "amd64": {
+      "finalTerminalSha256": "70b8e4fe5b0809813a0fcd7e7befbb0d76fb51acc7d344a6b8a807acd1b8dcd5",
+      "finalBuildSha256": "0ca57ffd219db7f5276e96ea0825f5edb4cd8ec9444254ff8dccf2eacfa36008",
+      "ctestsPassed": 1,
+      "ctestSeconds": 7.0982,
+      "actualSemanticRows": 13,
+      "cppElapsedMs": 7076,
+      "cppMaxRssKiB": 25120,
+      "archiveSha256": "6209a92cafd545d356c40fe960260bbd89b0f323f105085711eda39de7932f9e",
+      "sdkPaths": 2202
+    },
+    "both": [
+      "Read final true JUnit: exact one status run, zero failure/error/skip, exit0; parsed13 stdout rows equal saved scenario JSON.",
+      "Twelve case rows plus summary, zero new signatures/private data/production; actual CLI and real exclusive-lock readiness, source/protocol preservation, NEXT retention and fsync3 refusals.",
+      "One apply and two completed idempotent recoveries per hot/cold/fragmented format; raw snapshot and unrelated namespaces exact, ordinary recovery refused; interrupted recovery false.",
+      "Current canonical state negative and permissible historical-state absence discriminants all true.",
+      "First build3CPP/3links against inherited142 archive with143verification commands; final1CPP/1link plus2bytecopied objects/programs and0ar/core/CMake.",
+      "First/final CLI+shim SHA identical; archive SHA and copied142-member proof identical; actual SDK before/after binding equal; final input readback and all owned containers observed absent."
+    ]
+  },
+  "historyAndLimits": [
+    "Both first CTests genuinely failed: status fail with failure element, one executed each; old conservative terminal null remains unchanged.",
+    "Source state0/state1 fixture error and metadata missing-optional-CTest refusal preserved, not recast as core failure or PASS.",
+    "CI599 public record says changes/operations0steps billing failure and core/network skipped. No independent live GitHub poll, new CI pass, billing change or expenditure inferred.",
+    "Qualified only incremental Docker Linux ARM/AMD synthetic fixtures. No clean rebuild/native/install/runtime image/private CLI execution claimed.",
+    "Budget steady35e remains separate static proposal, not included in four imported sources and not compiled/activated. Historical EIP matrices/CSV/criteria preserved with no promotion.",
+    "Real interrupted WAL wrapper, power loss, backup/journals/WITNESS/floors private copies, current UTC/catchup, duties and common finality, V37/NAS, EVM beyond activated Shanghai/Base-USDC-Doppler, external audit and production remain open."
+  ],
+  "privacy": "Allowlist contains public source/controllers/reviews, build hashes/metadata and synthetic fixture logs only. No keys/env/DB/WAL/current private reports, four authorized private proof payloads or their derived real recovery values included. No private input was read to make this review.",
+  "reviewMethodLimits": "Public JSON/log/member hashes and origin bytes reviewed without executing ar, programs, compilers, Docker, SSH or controllers. No physical original object/binary bytes independently reread; externally pinned build receipts are the provenance boundary. An initial review check incorrectly assumed CMake was append-only; the full expected target/install/test delta was then read against Git baseline and accepted without source mutation.",
+  "activity": {
+    "compilerCommands": 0,
+    "testCommands": 0,
+    "dockerCommands": 0,
+    "sshCommands": 0,
+    "arCommands": 0,
+    "controllerImports": 0,
+    "privateReads": 0,
+    "repoWrites": 0,
+    "productionQualified": false
+  }
+}

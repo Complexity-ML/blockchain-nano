@@ -1,0 +1,81 @@
+{
+  "format": "nano-bootstrap-maintenance-controller-independent-static-review-v1",
+  "createdAtUtc": "2026-10-13T23:49:26.802755+00:00",
+  "verdict": "NO_REMAINING_MATERIAL_STATIC_BLOCKER_FOUND_ROOT_BUILD_ONLY_GO",
+  "reviewerRole": "Independent internal source review; not an external security audit",
+  "scope": "V1 full public controller and dispatcher review, exact preserved V2 and V3 repairs, final public payload and binding seal readback. No controller import or execution.",
+  "bindings": {
+    "proposalManifestSha256": "588fc598e44f3513b7cd203ba2c486ffc752e0ff34e0e25d0792efcf12414a80",
+    "controllerSha256": "cb9acac75470ff0ab8627060e8c7de9db7f2312f30d252ed9f01ec82c06731c2",
+    "dispatcherPath": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/dispatch-bootstrap-maintenance-v3-root.py",
+    "dispatcherSha256": "e010a77ef47ce09f5ccfcffb10a2fcf696d49cecfc2bfbf78540eaf29def58af",
+    "qualifiedParentControllerSha256": "cd1b0ce8abd1a69ec6c6dcc0b3c3ac79415ff00a0676187c48309bd5943a9ae2",
+    "pendingRepairControllerSha256": "1da7fbfb6e5651ba6b6f8ac61215426ca75abcd0bc2ff26e0d187faf523c69b4",
+    "sourceCandidateSha256": "b6b7c4504ab02bc20c83f90688f9038ff9d118b616ed41f2c7db4eff59e53ff8",
+    "cliProposalManifestSha256": "4611d22aa891e9b6368bc31cd6f7432635fc1dc0cb1ec4cf295a354e3a2c192d",
+    "harnessProposalManifestSha256": "5c83d5e31803ddbdb6ea3026ec99f7ed460cf1c6db6e7f61f6c9bd77e1a6deba",
+    "armParentPlanSha256": "49adc633bad9093810589237756f2c0b9fbf491c6a2ad9d4ce919343b94c2b57",
+    "armParentTerminalSha256": "b9bd0fd170a6eb058746664f9819519251d32f1b8448102494ef08ce9f569a4f",
+    "armPendingTerminalSha256": "2a79791e747fc56de07a9197b5dfbb9568a500451eaedbd08d61b4d16a4d007d",
+    "amdParentPlanSha256": "c45b1e1d68c48dc1307989a93609a0abc5576cab75fefc430ef95c387b5bd733",
+    "amdParentTerminalSha256": "62e337b3b2f7fc2dbb7fb28ce7f0ac3aa3973fb115770cf3875ec24e82411a7a",
+    "amdPendingTerminalSha256": "c83a51951976bcac3cc3bedf5ed07ed50fd367b378f9acd228355834decc03a1"
+  },
+  "finalSealVerification": {
+    "fourProposalPayloadsShaAndSizeMatch": true,
+    "sixLocallyReadablePublicBindingSealsShaAndSizeMatch": true,
+    "dispatcherDeltaOnlyApprovedPinsAndFreshV3Namespaces": true
+  },
+  "closedFindings": [
+    {
+      "finding": "Held source copy buffer was not itself bound to its qualified pin before write",
+      "repair": "V2 compares captured SHA and every architecture material field with the original protected row before write; preserves source reread and exact destination byte equality",
+      "deltaSha256": "7bcf30817b2fea682e0dc07d1e24269590708b7bf2540636fbece8d3d5203659"
+    },
+    {
+      "finding": "Archive command count conflated construction and verification",
+      "repair": "Zero archive construction commands is separated from 143 verification commands: one ar-t and 142 ar-p"
+    },
+    {
+      "finding": "Failed sequential worker could report zero completed work after a partial batch",
+      "repair": "V3 records attempted flags; reports zero only before attempt, null for incomplete attempted batches, and three only after successful entire batch",
+      "deltaSha256": "cf9527c9661f255862bb63365632060e225dda70c1be35ea247253ed089b0cce"
+    }
+  ],
+  "staticChecks": {
+    "sourceFiles": 1320,
+    "archiveMembers": 142,
+    "coreCompiles": 0,
+    "archiveConstructionCommands": 0,
+    "archiveVerificationCommands": 143,
+    "newCppCompiles": 3,
+    "newLinks": 3,
+    "oldTestsRunByController": 0,
+    "targets": [
+      "nano-bootstrap-archive-maintenance",
+      "nano-bootstrap-archive-maintenance-tests",
+      "nano-bootstrap-maintenance-retention-fault"
+    ],
+    "closure": "External parent and pending repair terminal pins; original source/compiler argv/flags/link and 142 object plus raw member byte bindings; actual new M/MD equality; generated/KZG, seven copied libraries, consumed SDK and parent sources/objects/programs/metadata protected before and after probes/links or failure.",
+    "ownership": "Disjoint fresh owned source/build/control/receipt namespace; held copied buffer tied to protected pin; owned UUID cleanup only; four explicit public source/control bundles in dispatcher.",
+    "container": "Pinned existing ARM/AMD images; pull never, network none, read-only source/controls, no caps, expected UID, bounded 2 CPU / 4 GiB and finite phase deadlines. No image build or dependency installation.",
+    "noPrivateInputs": "Public source proposals and qualified public build metadata only; no key, DB, environment secret, real proof capsule or recovery request input."
+  },
+  "limitations": [
+    "This receipt is a static pre-dispatch review and does not independently audit the subsequently reported ARM or AMD build results.",
+    "A successful build does not establish maintenance scenario execution, real interrupted WAL recovery, private owned-copy application, current UTC catchup, duties, advancing common finality or production readiness.",
+    "Source/helper libraries and architecture-specific ctime diagnostic policy are reused only within the explicitly pinned parent lineage; no unavailable historical SDK snapshot is invented.",
+    "V1 and V2 proposal manifests and reported findings remain preserved; no reviewed source or frozen receipt was modified."
+  ],
+  "activity": {
+    "controllerImports": 0,
+    "compilerCommands": 0,
+    "testCommands": 0,
+    "dockerCommands": 0,
+    "sshCommands": 0,
+    "arCommands": 0,
+    "privateReads": 0,
+    "repoWrites": 0,
+    "productionQualified": false
+  }
+}

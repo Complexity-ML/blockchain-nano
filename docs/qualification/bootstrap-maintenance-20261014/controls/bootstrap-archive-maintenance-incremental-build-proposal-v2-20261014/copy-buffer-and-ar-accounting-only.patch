@@ -1,0 +1,20 @@
+--- v1/build-maintenance-root-only.py
++++ v2/build-maintenance-root-only.py
+@@ -76,7 +76,7 @@
+  for d in (source,build,controls,receipts):d.mkdir(mode=0o700)
+  m.save(receipts/'initial-empty-output.json',{'sourceEmpty':not any(source.iterdir()),'buildEmpty':not any(build.iterdir()),'beforeAnyCopy':True});(build/'tmp').mkdir(mode=0o700);sourcebefore={};copies={};workers={};failure=None;start=time.monotonic();env={'PATH':'/usr/bin:/bin','LC_ALL':'C'};objects={};programs={};compiled=0;linked=0
+  def cp(path,dst):
+-  b,s=m.observed(canonical(path),arch,None,True);same(path,protected[str(path)]);dst.parent.mkdir(parents=True,exist_ok=True);fd=os.open(dst,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,stat.S_IMODE(s['st_mode']))
++  b,s=m.observed(canonical(path),arch,None,True);expected=protected[str(path)];need(s['sha256']==expected['sha256'] and all(s[k]==expected[k] for k in m.material(arch)),'exact held copied buffer matches qualified pin');same(path,expected);dst.parent.mkdir(parents=True,exist_ok=True);fd=os.open(dst,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,stat.S_IMODE(s['st_mode']))
+   with os.fdopen(fd,'wb') as out:out.write(b);out.flush();os.fsync(out.fileno())
+   z=m.observed(dst,arch);need(z['sha256']==s['sha256'] and z['st_size']==s['st_size'],'byte-identical new copy');return z
+  def host(label,argv,seconds):
+@@ -143,7 +143,7 @@
+   for n,s in {**copies,**objects,**programs,**newmeta}.items():same(build/n,s)
+   for path,s in workers.items():same(path,s)
+   m.save(receipts/'parents-after.json',protected);m.save(receipts/'ctime-diagnostics.json',diagnostics)
+-  result={'format':'nano-bootstrap-maintenance-three-target-build-terminal-v1','status':'BUILD_PASS_MAINTENANCE_TEST_NOT_EXECUTED','arch':arch,'controllerSha256':a.controller_sha,'guardSha256':GUARD,'repairGuardSha256':a.repair_guard_sha,'parentPlanSha256':a.parent_plan_sha,'parentTerminalSha256':a.parent_terminal_sha,'pendingTerminalSha256':a.pending_terminal_sha,'candidateSha256':CANDIDATE,'cliProposalSha256':CLI,'harnessProposalSha256':HARNESS,'sourceFiles':1320,'coreObjectsCompiled':0,'coreObjectsCopied':0,'parentCoreObjectsReobserved':142,'archiveMembers':142,'archive':archivepin,'archiveByteCopiedFromQualifiedParent':True,'archiveCommandsExecuted':0,'newObjectsCompiled':3,'newLinks':3,'oldCompilerCommandsUnchanged':True,'allActualMdEqualPreflight':True,'objects':objects,'programs':programs,'sourceSdkLibrariesGeneratedAndParentsUnchanged':True,'imageBuiltOrPulled':False,'testsExecuted':0,'privateInputsRead':False,'runtimeStarted':False,'productionQualified':False}
++  result={'format':'nano-bootstrap-maintenance-three-target-build-terminal-v1','status':'BUILD_PASS_MAINTENANCE_TEST_NOT_EXECUTED','arch':arch,'controllerSha256':a.controller_sha,'guardSha256':GUARD,'repairGuardSha256':a.repair_guard_sha,'parentPlanSha256':a.parent_plan_sha,'parentTerminalSha256':a.parent_terminal_sha,'pendingTerminalSha256':a.pending_terminal_sha,'candidateSha256':CANDIDATE,'cliProposalSha256':CLI,'harnessProposalSha256':HARNESS,'sourceFiles':1320,'coreObjectsCompiled':0,'coreObjectsCopied':0,'parentCoreObjectsReobserved':142,'archiveMembers':142,'archive':archivepin,'archiveByteCopiedFromQualifiedParent':True,'archiveConstructionCommandsExecuted':0,'archiveVerificationCommandsExecuted':143,'newObjectsCompiled':3,'newLinks':3,'oldCompilerCommandsUnchanged':True,'allActualMdEqualPreflight':True,'objects':objects,'programs':programs,'sourceSdkLibrariesGeneratedAndParentsUnchanged':True,'imageBuiltOrPulled':False,'testsExecuted':0,'privateInputsRead':False,'runtimeStarted':False,'productionQualified':False}
+  except BaseException as e:
+   failure=type(e).__name__+': '+str(e);result={'format':'nano-bootstrap-maintenance-three-target-build-terminal-v1','status':'BUILD_FAILED_NO_AUTOMATIC_RETRY','arch':arch,'failure':failure,'completedObjects':compiled,'completedLinks':linked,'testsExecuted':0,'privateInputsRead':False,'runtimeStarted':False,'productionQualified':False}
+   try:

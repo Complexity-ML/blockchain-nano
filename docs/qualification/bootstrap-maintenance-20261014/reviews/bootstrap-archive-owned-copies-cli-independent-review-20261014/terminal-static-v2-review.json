@@ -1,0 +1,77 @@
+{
+  "format": "nano-public-static-independent-cli-review-v1",
+  "createdAtUtc": "2026-10-13T23:03:48.289774+00:00",
+  "verdict": "NO_REMAINING_MATERIAL_STATIC_BLOCKER_FOUND_IN_REVIEWED_V2_SCOPE",
+  "proposalManifestSha256": "4611d22aa891e9b6368bc31cd6f7432635fc1dc0cb1ec4cf295a354e3a2c192d",
+  "cppSha256": "1b034acdd8b0cc177af5188eb2724e460012295248b645b48541bc30601d8743",
+  "cmakeSha256": "4851ccc60ff8cb317dcfb9da302541974c938bd5794f0fdc7aa8dca077284d6d",
+  "priorManifestSha256": "3a5df77dc4f562af58dc179b28716986d2ac07b8b3afa302bf27b1f74bb0f5be",
+  "sourceOverlays": 2,
+  "coreModified": false,
+  "frozenPayloadsAnd15ProtectedSourceBindingsHashSizeChecked": true,
+  "reviewMethod": "Source and schema read only; public hash/size and exact two-edit subtraction checked in memory; no controller import or test execution",
+  "checks": [
+    {
+      "guard": "Owned strict duplicate-key bounded request and artifact descriptors",
+      "lines": "34-44,69-90,146-150"
+    },
+    {
+      "guard": "Four canonical owned private roots distinct/non-overlapping, copied inventories initially equal source; nlink1 files and source inventory rechecks",
+      "lines": "58-67,95-110,150-151"
+    },
+    {
+      "guard": "Existing-only PRIMARY and WITNESS plus existing same-handle identity binding; non-recovery branch rejects unapplied witness through CURRENT pins before generic ctor",
+      "lines": "130-138"
+    },
+    {
+      "guard": "Both external NEXT files held and SHA/readback-bound; exact0600, current/request/roles/copy identity/invariants match; NEXT=seq+1 and PRIMARY same digest; apply predictions checked against newly reconstructed full plan",
+      "lines": "87,140-144,155-163"
+    },
+    {
+      "guard": "Both NEXT outputs O_EXCL0600, each file and output directory fsynced before potentially recovering Pair constructor or apply CAS",
+      "lines": "112-117,159-163"
+    },
+    {
+      "guard": "Recover only explicit typed proof plus two NEXT commitments, no generic fallback; completed archive/index/coupled execution and independent cold/fragment references reauthenticated",
+      "lines": "133-137,164-174"
+    },
+    {
+      "guard": "Raw snapshot and all unrelated logical rows hashed, exact three PRIMARY and two WITNESS key exceptions only; original source inventories rechecked; handles closed before completed receipt",
+      "lines": "119-128,153-154,165-179"
+    },
+    {
+      "guard": "No signing/key env/journal/clock/runtime/network/prune/compaction paths; stdout static status only and errors suppressed",
+      "lines": "1-29,179-183"
+    }
+  ],
+  "findingsHistory": [
+    {
+      "id": "PRIVATE_NEXT_MODE",
+      "priority": "P2",
+      "version": "V1",
+      "problem": "External NEXT Input allowed0644/0640 despite exact0600 contract",
+      "originalLines": "83,156",
+      "status": "CLOSED_STATICALLY_IN_V2",
+      "repair": "private_receipt() requires exact0600 and rechecks held metadata before Pair; only one method and two callsites added",
+      "repairDeltaSha256": "1bd0d5bfc26c89c7a745486732a8b003c411cb7209e538dc6c39a6643c9bb838"
+    }
+  ],
+  "limits": [
+    "No CLI compiler or wrapper scenario has run under this review; source proposal is not qualified",
+    "Quiescence booleans and stopped operator receipt are externally pinned authority, not a global process detector; actual held LOCK and source/readback behavior require execution",
+    "Filesystem inventory helper is reused under its existing scope; no new independent physical copy or concurrent mutation audit was executed",
+    "Duration checks bound loops; a blocking fsync/RocksDB/syscall still requires a finite root-owned outer runner",
+    "Future must retain both external NEXT file hashes separately; complete.json is not a substitute for those commitments",
+    "No private request/capsule/database/key/proof was read or published; no runtime, current UTC catchup, duties/common finality or production readiness is qualified"
+  ],
+  "executed": {
+    "compiler": false,
+    "cppTests": false,
+    "docker": false,
+    "ssh": false,
+    "dbOpened": false,
+    "privateInputRead": false,
+    "repoEdited": false,
+    "newSignatures": 0
+  }
+}

@@ -1,3 +1,9 @@
+## 14 octobre 2026 — Maintenance bootstrap qualifiée sur copies synthétiques
+
+Le CLI C++ de maintenance planifie, conserve deux engagements distincts puis applique/reprend une archive initiale signée sur copies arrêtées détenues. Un CTest réel passe par architecture Docker ARM/AMD64 : 13 lignes avec résumé, formats chaud/froid/fragmenté, verrou exclusif, refus de provenance/plans périmés et trois défauts fsync avant publication. ARM : 2 325 ms/23 384 KiB ; AMD64 : 7 076 ms/25 120 KiB. Zéro nouvelle signature. État canonique requis ; absence du seul état historique admissible.
+
+Cœur et CLI inchangés après le premier build ; seul banc corrigé recompilé/relié. Premier échec state0/state1, comptage JUnit conservateur et refus de métadonnées conservés. WAL interrompu de ce CLI, copie/journaux privés, UTC, duties/finalité commune, natif/install/images, V37/NAS, CI facturation et audit externe restent ouverts. Budget steady séparé : proposition relue, non compilée/activée. EVM Shanghai, EIP/CSV et critères inchangés ; production non qualifiée. [Preuves publiques](qualification/bootstrap-maintenance-20261014/README.md).
+
 ## 14 octobre 2026 — Qualification locale bootstrap, aucun EIP promu
 
 Sur fixtures publiques/synthétiques, le raccordement owner existant, entrées authentifiées et reprise avant horloge passe six scénarios de démarrage sur Docker Linux ARM/AMD64. Pending non vide : cinq cas passent par architecture, quatre SIGKILL, deux pertes WAL explicitement simulées, queue/enveloppe et WITNESS conservés, reprise typée idempotente. Trois signatures synthétiques, enfants zéro. ARM : 1 065 ms/22 892 KiB ; AMD64 : 3 768 ms/24 364 KiB.
