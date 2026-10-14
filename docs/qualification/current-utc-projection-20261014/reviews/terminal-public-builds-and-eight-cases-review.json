@@ -1,0 +1,97 @@
+{
+  "format": "nano-current-utc-public-cases-and-builds-scoped-actual-review-v1",
+  "result": "PASS_WITH_DISTINCT_EVIDENCE_LEVELS",
+  "builds": {
+    "arm64": {
+      "terminalSha256": "89fda17b4a3df47d0b2b72f7616cb144d141f8e31937927c3b8cda116eea5d07",
+      "binarySha256": "f808abcf1a81ab0540845057eda6024ed0dfde8e788777f00626d0e57601fed7",
+      "newCpp": 1,
+      "newLink": 1,
+      "coreCmakeArTests": 0,
+      "historicalArchiveMembers": 142,
+      "sourceViewFiles": 1324,
+      "sdkHashBeforeAfterEqual": true,
+      "actualMdEqualsPreflight": true,
+      "executionNotIncludedInBuildReceipt": true
+    },
+    "amd64": {
+      "terminalSha256": "cb96f1dc5e18a84476dae3c16889548706fe023fea2e96efa6101c5462bc2eeb",
+      "binarySha256": "5bc6f87d8d5ff98f3050928602d6393f187580053cb9626879e973546c5fff8f",
+      "newCpp": 1,
+      "newLink": 1,
+      "coreCmakeArTests": 0,
+      "historicalArchiveMembers": 142,
+      "sourceViewFiles": 1324,
+      "sdkHashBeforeAfterEqual": true,
+      "actualMdEqualsPreflight": true,
+      "executionNotIncludedInBuildReceipt": true
+    }
+  },
+  "publicCases": {
+    "perArchitecture": {
+      "arm64": {
+        "evidence": "Actual locally readable public raw case logs/exit rows/individual results/terminal were compared; exact reason/stage/safety/progress/deadline predicates independently checked.",
+        "dispatches": 8,
+        "exitRows": 8,
+        "toolRows": 8,
+        "exactNegativeCasesPassed": 7,
+        "utcObservation": {
+          "result": "PROJECTED_READONLY_ONLY",
+          "elapsedMs": 8946,
+          "maxRssKiB": 17860
+        },
+        "sourceSdkAndPayloadReadbackGuardsPassed": true
+      },
+      "amd64": {
+        "evidence": "ROOT filtered public results plus separately ROOT in-situ-asserted public bindings/progress/deadline predicates. Reviewer did not read raw VPS logs or raw diagnostic output.",
+        "filteredResult": {
+          "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/current-utc-amd64-filtered-public-results-20261014.json",
+          "sha256": "a6ac80e9d301cc1e1e43518b7bb6749cab019f5c17122523401a04a58e17fed9"
+        },
+        "supplement": {
+          "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/current-utc-amd64-filtered-case-attestations-v2-20261014.json",
+          "sha256": "d54e91643b46832021e573df1769051e0ad5af6a2dacf2094b489a0f78a8bc1d"
+        },
+        "dispatches": 8,
+        "exitRows": 8,
+        "toolRows": 8,
+        "exactNegativeCasesPassed": 7,
+        "utcObservation": {
+          "result": "PROJECTED_READONLY_ONLY",
+          "elapsedMs": 43729,
+          "maxRssKiB": 17408
+        },
+        "publicBindingsVerifiedByRootInSitu": {
+          "runnerSha256": "9c309c8dd60813bc567d83bf3ae11a7bdb0e4dd1020cbd061faf0926e93b45a9",
+          "sourceSha256": "d496f9e5ea94579cec22dc4f9cc43288b42d203e5704284a17cf88928784251f",
+          "buildTerminalSha256": "cb96f1dc5e18a84476dae3c16889548706fe023fea2e96efa6101c5462bc2eeb",
+          "binarySha256": "5bc6f87d8d5ff98f3050928602d6393f187580053cb9626879e973546c5fff8f",
+          "generatorSha256": "e097b74eceab82e3e866193b1facb8f7c34e5cb8d916b9db0305ffc1315c67a1"
+        },
+        "progressAndSteadyVerifiedByRootInSitu": true,
+        "rawLogsRemainOnVps": true
+      }
+    },
+    "observationForcedPass": false,
+    "casesAreDistinctFromCTest": true,
+    "countsMeaning": "Seven exact refusal checks plus one actual read-only observation per architecture; not sixteen resumes or a registered regression suite.",
+    "syntheticTokensOnly": true,
+    "currentSnapshotAuthorityQualifiedByCases": false,
+    "resumeAuthorized": false,
+    "newSignatures": 0,
+    "runtimeStarted": false,
+    "productionQualified": false
+  },
+  "historicalControllerV1": "SDK canonical-spelling finding was corrected statically before any V1 execution. V1 remains preserved; actual builds used V2.",
+  "privacy": "Rejected mass capture was not retried. AMD capture contains only the allowed categorical/resource/safety subset and public build refs; no real recovery payload, root/checkpoint/epoch/slot/registry/proposer/UTC, token, request or private hash is included here. No real/private projection is audited by this receipt.",
+  "readbackLimit": "After metadata files re-emit protected baseline rows only after actual comparisons. They are controller attestation of material/SHA equality, not a separate raw collection of every final ctime; ARM ctime diagnostics remain separate.",
+  "scopeLimits": [
+    "Manual one-TU/one-link qualification on two Linux Docker architectures; native, CMake target integration, install/runtime images and CI external gates not closed by these results.",
+    "Pure empty-slot projection does not establish current key/journal eligibility, actual voting quorum, canonical historical admission, durable clock catchup, common finality or production.",
+    "Any future clock-only allowance must be separately externally bound and finite; no 2h/60 policy activation or clock mutation here."
+  ],
+  "reviewerCompilerExecuted": false,
+  "reviewerTestsOrDockerSshExecuted": false,
+  "privateInputsRead": false,
+  "repoMutated": false
+}

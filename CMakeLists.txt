@@ -2109,3 +2109,6 @@ target_link_libraries(nano-bootstrap-readonly-replica-tests PRIVATE nano_core)
 target_include_directories(nano-bootstrap-readonly-replica-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/tools/storage-maintenance")
 add_test(NAME storage_capella_bootstrap_archive_readonly_replica COMMAND nano-bootstrap-readonly-replica-tests --self-test)
 set_tests_properties(storage_capella_bootstrap_archive_readonly_replica PROPERTIES TIMEOUT 70 LABELS qualification_consensus_bootstrap_maintenance)
+
+add_executable(nano-capella-current-utc-projection tools/consensus/project-current-utc.cpp)
+target_link_libraries(nano-capella-current-utc-projection PRIVATE nano_core)

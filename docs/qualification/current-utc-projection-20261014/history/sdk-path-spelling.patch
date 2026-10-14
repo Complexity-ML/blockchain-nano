@@ -1,0 +1,20 @@
+--- v1/build-current-utc-root-only.py
++++ v2/build-current-utc-root-only.py
+@@ -15,7 +15,7 @@
+ def overlap(a,b):return a==b or a in b.parents or b in a.parents
+ def dependencies(b):
+  s=b.decode();need(':' in s,'MD target');rows=sorted(set(shlex.split(s.replace('\\\n',' ').split(':',1)[1])));need(rows,'nonempty MD')
+- for n in rows:need(n.startswith(('/work/','/outputs/','/diagnostic/','/usr/','/lib/')) and posixpath.normpath(n)==n and '\n' not in n and '\0' not in n,'MD namespace')
++ for n in rows:need(n.startswith(('/work/','/outputs/','/diagnostic/','/usr/','/lib/')) and (posixpath.normpath(n).startswith(('/usr/','/lib/')) if n.startswith(('/usr/','/lib/')) else posixpath.normpath(n)==n) and '\n' not in n and '\0' not in n,'MD namespace')
+  return rows
+ def main():
+  if not __debug__:raise RuntimeError('Optimized Python refused')
+@@ -109,7 +109,7 @@
+    elif dep.startswith('/outputs/'):n=m.relative(dep[9:]);need(n in p['generated'],'declared generated header');generated_inputs[n]=protected[str(pb/n)]
+    elif dep.startswith('/diagnostic/'):need(dep=='/diagnostic/project-current-utc.cpp','only new diagnostic input');same(src,protected[str(src)])
+    else:system.add(dep)
+-  for n in system:need(n.startswith(('/usr/','/lib/','/bin/')) and posixpath.normpath(n)==n and '\n' not in n and '\0' not in n,'SDK path namespace')
++  for n in system:need(n.startswith(('/usr/','/lib/','/bin/')) and posixpath.normpath(n).startswith(('/usr/','/lib/','/bin/')) and '\n' not in n and '\0' not in n,'SDK path namespace')
+   sdk_worker=worker('sdk.sh',''.join('/usr/bin/sha256sum -- '+shlex.quote(n)+'\n' for n in sorted(system)));actual=container('sdk-before',['/bin/sh',sdk_worker],120);rows=[s.split('  ',1) for s in actual.decode().splitlines()];observed_sdk={n:h for h,n in rows};need(len(rows)==len(observed_sdk)==len(system) and all(observed_sdk.get(n)==h for n,h in sdk.items()),'actual old SDK pins and fresh union')
+   m.save(receipts/'generated-inputs-before-compilation.json',generated_inputs);m.save(receipts/'dependency-binding.json',{'preflight':m.observed(out/'preflight.d',arch),'dependencies':deps,'sourceSha256':SOURCE,'sourceViewFiles':1324,'newHeaderInputsPresealed':True})
+   for path,z in protected.items():same(path,z)
