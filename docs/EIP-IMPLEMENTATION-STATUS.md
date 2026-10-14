@@ -1,3 +1,13 @@
+## 14 octobre 2026 — Rattrapage clock-only, aucune activation ni statut EIP promu
+
+ROOT rapporte un rattrapage d'horloge terminé sur copies VPS arrêtées : une lecture froide préalable, un seul worker puis un retainer froid indépendant après wait/join, en 66,084 s. Le worker publie 1403 engagements PRIMARY/WITNESS appariés ; pics 22784 / 36068 / 26108 KiB, plafond 131072 KiB inchangé. Originaux, références, journaux, peer/configuration et SDK sont conservés ; aucun signing, clé, runtime ou duty.
+
+Qualification limitée à l'ELF historique/archive 142 sous admission de sources 591f, sur résultat ROOT filtré ; données et métadonnées privées restent VPS. Pas de projection HEAD persistée ni qualification du cœur 143, des queues durable-v5, des duties, de l'histoire/livraison des signatures ou de la finalité commune. V37, originaux Mac manquants/NAS non autorisé, WAN A, natif/CI/audit et autres gates restent ouverts. Production non qualifiée ; Shanghai/EIP/CSV et tous corps historiques inchangés.
+
+Voir le [résultat public et ses limites](qualification/clock-catchup-complete-20261014/README.md).
+
+---
+
 ## 14 octobre 2026 — Essais proposer-slashing deux architectures, aucun EIP promu
 
 Le candidat source proposer-slashing passe six groupes cœur + résumé sur Docker Linux ARM64 et AMD64 : admission, queue durable/reopen des trois formats, inclusion/sanction, reorg/réinclusion, retrait finalisé et refus. ARM : 11,609 s / 103680 KiB ; lot AMD cœur/réseau : 47,984 s / 102168 KiB. Plafond 131072 KiB, cache zéro explicite et 295 signatures synthétiques par architecture. Six groupes mock réseau et trois programmes de propriétés passent aussi ; aucune propagation WAN réelle n'est prouvée. Ces résultats portent sur les sources indiquées ; production non qualifiée. Aucun fork Ethereum/EIP promu.
