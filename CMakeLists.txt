@@ -36,6 +36,9 @@ target_link_libraries(nano-storage-maintenance PRIVATE nano_core)
 # Explicit stopped-copy bootstrap archive maintenance; never starts runtime.
 add_executable(nano-bootstrap-archive-maintenance tools/storage-maintenance/bootstrap-archive-owned-copies.cpp)
 target_link_libraries(nano-bootstrap-archive-maintenance PRIVATE nano_core)
+# Offline duty readiness observation only; no key/provider/runtime start.
+add_executable(nano-capella-duty-readiness tools/storage-maintenance/duty-readiness.cpp)
+target_link_libraries(nano-capella-duty-readiness PRIVATE nano_core)
 
 set(CMAKE_EXPORT_NO_PACKAGE_REGISTRY ON)
 set(NANO_MCL_PORTABLE_DEFAULT OFF)
@@ -312,8 +315,8 @@ set_tests_properties(uncles PROPERTIES TIMEOUT 30)
 
 # Install the native core, offline maintenance tool, and configured transport.
 include(GNUInstallDirs)
-set_target_properties(nano nano-storage-maintenance nano-bootstrap-archive-maintenance PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
-install(TARGETS nano nano-storage-maintenance nano-bootstrap-archive-maintenance RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+set_target_properties(nano nano-storage-maintenance nano-bootstrap-archive-maintenance nano-capella-duty-readiness PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
+install(TARGETS nano nano-storage-maintenance nano-bootstrap-archive-maintenance nano-capella-duty-readiness RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 if(NANO_NETWORK_EXECUTABLE)
  install(PROGRAMS "${NANO_NETWORK_EXECUTABLE}" DESTINATION ${CMAKE_INSTALL_BINDIR} RENAME nano-p2p)
 endif()
@@ -2146,3 +2149,14 @@ target_link_libraries(nano-capella-proposer-slashing-tests PRIVATE nano_core)
 target_compile_definitions(nano-capella-proposer-slashing-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
 add_test(NAME consensus_capella_proposer_slashing_complete COMMAND nano-capella-proposer-slashing-tests --self-test)
 set_tests_properties(consensus_capella_proposer_slashing_complete PROPERTIES TIMEOUT 190)
+
+# Read-only current duty observation on public fixtures, including CLI refusal.
+if(NANO_CONFIGURED_JOURNAL_IO_PUBLIC_TESTS AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
+add_executable(nano-capella-duty-readiness-tests tests/test_capella_duty_readiness.cpp)
+target_link_libraries(nano-capella-duty-readiness-tests PRIVATE nano_core)
+target_include_directories(nano-capella-duty-readiness-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/tools/storage-maintenance")
+target_compile_definitions(nano-capella-duty-readiness-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}" NANO_TEST_TOOL="$<TARGET_FILE:nano-capella-duty-readiness>" NANO_TEST_IO_SHIM="$<TARGET_FILE:nano-journal-observer-io-fault>")
+add_dependencies(nano-capella-duty-readiness-tests nano-capella-duty-readiness nano-journal-observer-io-fault)
+add_test(NAME consensus_capella_readonly_duty_readiness COMMAND nano-capella-duty-readiness-tests --self-test)
+set_tests_properties(consensus_capella_readonly_duty_readiness PROPERTIES TIMEOUT 180 LABELS qualification_consensus_duty_observer)
+endif()

@@ -7,6 +7,11 @@
 namespace nano {
 Genesis Genesis::from_json(const Json& data){
  Genesis g;auto config=data.value("config",Json::object());
+ // Existing documents retain their exact legacy Genesis hash. Canonical
+ // empty-body roots are an explicit new-Genesis codec choice, never migration.
+ const auto genesis_header_version=config.value("genesisHeaderVersion",Json(1));
+ if(!genesis_header_version.is_number_integer()||(genesis_header_version!=1&&genesis_header_version!=2))
+  throw std::invalid_argument("unsupported genesisHeaderVersion; expected integer 1 or 2");
  g.chain_id=quantity(config.value("chainId",Json(1337)));bytes(g.chain_id,32);
  if(config.contains("evmFork")){if(config.at("evmFork")=="Paris")g.evm_revision=EvmRevision::Paris;else if(config.at("evmFork")=="Shanghai")g.evm_revision=EvmRevision::Shanghai;else throw std::invalid_argument("unsupported chain evmFork; expected Paris or Shanghai");}
  g.consensus=config.value("consensus",std::string("pow"));
@@ -48,6 +53,7 @@ Genesis Genesis::from_json(const Json& data){
  }
  g.state=State::from_json(data.value("alloc",Json::object()));
  auto& h=g.block.header;h.state_root=g.state.root();
+ if(genesis_header_version==2){h.transactions_root=transactions_root(g.block.transactions);h.receipts_root=receipts_root({});}
  h.difficulty=quantity(data.value("difficulty",Json(g.consensus=="beacon"?"0x0":"0x1")));
  h.gas_limit=quantity(data.value("gasLimit",Json("0x1c9c380")));
  if(data.contains("baseFeePerGas"))h.base_fee=quantity(data.at("baseFeePerGas"));

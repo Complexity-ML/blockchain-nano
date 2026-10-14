@@ -1,0 +1,121 @@
+{
+  "format": "nano-duty-readiness-genesis-v2-independent-static-review-v1",
+  "verdict": "GO_SOURCE_ONLY_ROOT_INCREMENTAL_BUILD_WITH_EXACT_MD_SDK_ADMISSION",
+  "manifest": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/duty-readiness-complete-source-v2-20261014/manifest.json",
+    "sha256": "07681ab318a45fa714376f93be83466ba81b7123e0408b580a5aa6c93dcd9998",
+    "bytes": 4148
+  },
+  "sourcePatch": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/duty-readiness-complete-source-v2-20261014/source.patch",
+    "sha256": "f910978d2551aa62f674c47e4b310a2374aabd556ece4c783a6a35dde405137d",
+    "bytes": 43016
+  },
+  "changedCore": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/duty-readiness-complete-source-v2-20261014/source/src/chain.cpp",
+    "sha256": "a25cd9fdd100d0e66e220242a1dcb2458c9b74fa8a97a0af1e52143bcad69ed6",
+    "bytes": 44195
+  },
+  "changedConsumer": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/duty-readiness-complete-source-v2-20261014/source/tests/test_capella_duty_readiness.cpp",
+    "sha256": "e82bf421e02d508f72c47a2b4a0a86ba51a0af8b84e3763bdf4191bb0ce3f3cc",
+    "bytes": 67596
+  },
+  "baselineCore": {
+    "path": "/Users/boris/Dev/blockchain-nano/src/chain.cpp",
+    "sha256": "fdf9e6af2b874e2fa39749be41416d637f03c0bd655a71ab6cc4bccd3dc6718a",
+    "bytes": 43637
+  },
+  "priorManifest": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/duty-readiness-complete-source-20261014/manifest.json",
+    "sha256": "0bf1ce41d06ffce49f29d67b10c3d400f572cadc6b0d13cbaff2ed9434fc015d",
+    "bytes": 6547
+  },
+  "priorConsumer": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/duty-readiness-complete-source-20261014/source/tests/test_capella_duty_readiness.cpp",
+    "sha256": "33fdc04d6cb8a547708137cf967f4875b2c56930d1450a48a5e12752c91b6b1e",
+    "bytes": 61162
+  },
+  "byteChecks": {
+    "allFiveSourcePinsAndThreeAncillaryPinsVerified": true,
+    "sourcePatchExactGeneratedTwoPathDelta": true,
+    "threeOtherOverlaysIdenticalToPriorFrozenSource": true,
+    "currentPublicChainBaselineExact": true
+  },
+  "protocolReview": {
+    "absentOrIntegerOne": "No root reassignment; prior parsing, header fields and Genesis identity retained. New invalid version tags fail before remaining construction.",
+    "integerTwo": "Only transactions_root and receipts_root reassigned using transactions_root(g.block.transactions) and receipts_root({}); an explicit new Genesis identity, not migration.",
+    "invalidTypes": "Boolean, string, floating point, null, objects, arrays and integers outside 1/2 rejected by integer predicate and exact enum guard; no JSON-to-integer coercion.",
+    "abi": "No public header, struct layout or function signature changed by the chain.cpp delta.",
+    "declarations": "transactions_root is declared in core.hpp; receipts_root in receipt.hpp included by engine.hpp through chain.hpp."
+  },
+  "consumerReview": {
+    "legacyOracle": "Existing CB532 absent-tag Genesis a0552787 literal plus explicit1 exact header/state comparison; existing manifest literal and Genesis source pin retained.",
+    "newOracle": "Independent empty-MPT 56e81f and legacy empty-list 1dcc literals, native root functions, new hash, JSON roundtrip, unchanged input and a comparison clone proving only two header-root changes.",
+    "fixtureAuthority": "genesisHeaderVersion=2 placed in the synthetic JSON before Genesis::from_json; exact same serialized JSON consumed by the actual CLI. No post-parser root patch used as fixture authority.",
+    "invalidVersionCoverage": [
+      0,
+      3,
+      -1,
+      true,
+      false,
+      "2",
+      "0x2",
+      2.0,
+      null,
+      "object",
+      "array"
+    ],
+    "diagnostics": "Fixed public phases and bounded 512-byte PUBLIC synthetic exception, actual signature/CLI counters; raw child output is not forwarded.",
+    "scope": "Eight existing groups plus summary; eleven planned CLI invocations, two accepts/nine refusals/one request-pread cancellation event. These are expectations, not observed V2 results.",
+    "bounds": {
+      "maximumElapsedMs": 180000,
+      "maximumRssKiB": 131072,
+      "maximumTestOnlySignatures": 1024,
+      "fixtureStrictBlockCacheBytes": 4194304
+    }
+  },
+  "buildAdmissionRequired": {
+    "affectedCoreCpp": 1,
+    "freshConsumerCpp": 1,
+    "freshCliCpp": 0,
+    "links": 2,
+    "wholeArchiveMembers": 143,
+    "reusedCoreMembers": 142,
+    "cliObjectReuseRequiresExactActualMDSourceHeaderSDKArgvClosure": true,
+    "cliElfMustBeRelinkedAgainstNewWholeArchive": true,
+    "noOldSuiteReplayRequiredByThisReview": true
+  },
+  "historicalFailure": {
+    "log": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/duty-readiness-public-test-arm64-20261014/receipts/duty-readiness.log",
+      "sha256": "d78f80d510fa0a668aa85a3267c4bf03d884388347e89d5726caf83c1aa95a76",
+      "bytes": 306
+    },
+    "oldActualExit": 1,
+    "oldSemanticRows": 0,
+    "oldCliInvocations": 0,
+    "actualThrowLineObserved": false,
+    "exceptionRetained": false,
+    "sourceMismatchDoesNotInventActualException": true
+  },
+  "limitations": [
+    "Static review does not execute the new hash/root/test assertions.",
+    "TEST-CONTRACT starts with the preserved V1 CLI/consumer scope; its V2 extension and manifest/README explicitly supersede the current build scope as chain1+consumer1 and two links.",
+    "Historical strict 4MiB long-finalization qualification remains open.",
+    "No private CURRENT, journal, execution nonce, digest ancestry, signature delivery, runtime, duties, finality, native/WAN/install or production qualification is granted."
+  ],
+  "reviewActions": {
+    "proposedCodeImported": false,
+    "proposedCodeExecuted": false,
+    "compilerOrTestsRun": false,
+    "cmakeDockerSshGitRun": false,
+    "privateInputsRead": false,
+    "repositoryMutated": false
+  },
+  "sourceOnly": true,
+  "runtimeDutiesAuthorized": false,
+  "resumeAuthorized": false,
+  "productionQualified": false,
+  "materialBlockers": []
+}

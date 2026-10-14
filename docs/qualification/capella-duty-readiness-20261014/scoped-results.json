@@ -1,0 +1,222 @@
+{
+  "format": "nano-capella-duty-readiness-scoped-public-results-v1",
+  "status": "QUALIFIED_PUBLIC_SYNTHETIC_ONLY_SOURCE_IMPORT_PENDING",
+  "sourceManifest": {
+    "sha256": "07681ab318a45fa714376f93be83466ba81b7123e0408b580a5aa6c93dcd9998",
+    "bytes": 4148
+  },
+  "sourceOverlayCount": 5,
+  "sourceOverlayPins": [
+    {
+      "path": "CMakeLists.txt",
+      "sha256": "e208347acbf79419ac40a73c6f611c0976729a5fa267e6b96979e7b7fd3fd5a8",
+      "bytes": 165655
+    },
+    {
+      "path": "include/nano/maintenance/duty_readiness.hpp",
+      "sha256": "28f3b43e6aa000b33cc41e22967eb0021a49714eacbb43789efb036f087f2cf7",
+      "bytes": 13802
+    },
+    {
+      "path": "tests/test_capella_duty_readiness.cpp",
+      "sha256": "e82bf421e02d508f72c47a2b4a0a86ba51a0af8b84e3763bdf4191bb0ce3f3cc",
+      "bytes": 67596
+    },
+    {
+      "path": "tools/storage-maintenance/duty-readiness.cpp",
+      "sha256": "081164be86a81fce038483247a4fb6a2a8e9a4795a98ec89c409d44290eb1deb",
+      "bytes": 42908
+    },
+    {
+      "path": "src/chain.cpp",
+      "sha256": "a25cd9fdd100d0e66e220242a1dcb2458c9b74fa8a97a0af1e52143bcad69ed6",
+      "bytes": 44195
+    }
+  ],
+  "tool": "nano-capella-duty-readiness",
+  "consumer": "nano-capella-duty-readiness-tests",
+  "consumerSelector": "--self-test",
+  "architectures": {
+    "arm64": {
+      "evidence": "independent public raw semantic log plus ROOT actual terminal",
+      "terminal": {
+        "sha256": "f815e6ce7863d9b224057a848b3eb11c36bfee1a528c0335bb34a08504373f90",
+        "bytes": 1235
+      },
+      "rawLog": {
+        "sha256": "0f9e9e39ed5cf8f244be6f4e2908d866ececc0623224ac53d1e3d6d3bcc5c78e",
+        "bytes": 4501
+      },
+      "semanticAudit": {
+        "sha256": "8959635edcdc38857e1586076e1de0539b7e3cb481983d51850046f3b089cbb5",
+        "bytes": 892
+      },
+      "controllerExitCode": 0,
+      "consumerInvocations": 1,
+      "semanticGroups": 8,
+      "summaryRows": 1,
+      "semanticRows": 9,
+      "actualCliInvocations": 11,
+      "acceptedCliInvocations": 2,
+      "refusedCliInvocations": 9,
+      "actualIoEvents": 1,
+      "consumerElapsedMs": 3595,
+      "consumerPeakRssKiB": 24248,
+      "containerElapsedSeconds": 3.778314375085756,
+      "campaignElapsedSeconds": 10.419289375189692,
+      "newTestOnlySyntheticSignatures": 12,
+      "independentRawResultAudit": true,
+      "sdkBeforeAfterVerified": true,
+      "protectedInputsUnchanged": true,
+      "ownedContainersAbsent": true,
+      "currentBuildRecoveredFromControllerRefusal": false,
+      "historicalParentLateRefusalRetained": true
+    },
+    "amd64": {
+      "evidence": "ROOT filtered in-situ typed result; raw source/SDK/ELF/semantic metadata remain VPS",
+      "rootFilteredOutcome": {
+        "sha256": "3942e7be4e2540bbb8e322487217abb34855f22908e77c7dcadc29dc05e3a15e",
+        "bytes": 1390
+      },
+      "controllerExitCode": 0,
+      "consumerInvocations": 1,
+      "semanticGroups": 8,
+      "summaryRows": 1,
+      "semanticRows": 9,
+      "actualCliInvocations": 11,
+      "acceptedCliInvocations": 2,
+      "refusedCliInvocations": 9,
+      "actualIoEvents": 1,
+      "semanticCountsOrigin": "ROOT reports exact counts and successful frozen V5 parser enforces 8+summary/11=2+9/1; safe record does not separately export summary fields",
+      "consumerElapsedMs": 12807,
+      "consumerPeakRssKiB": 25720,
+      "containerElapsedSeconds": 13.116016016108915,
+      "campaignElapsedSeconds": 30.86518404306844,
+      "newTestOnlySyntheticSignatures": null,
+      "testSignatureUpperBoundEnforced": 1024,
+      "exactSignatureCountNotInSafeRecord": true,
+      "independentRawResultAudit": false,
+      "sdkBeforeAfterVerified": true,
+      "protectedInputsUnchanged": true,
+      "ownedContainersAbsent": true,
+      "currentBuildRecoveredFromControllerRefusal": false,
+      "historicalParentLateRefusalRetained": false,
+      "privateMetadataExported": false
+    }
+  },
+  "totals": {
+    "consumerInvocations": 2,
+    "semanticGroups": 16,
+    "summaryRows": 2,
+    "semanticRows": 18,
+    "actualCliInvocations": 22,
+    "acceptedCliInvocations": 4,
+    "refusedCliInvocations": 18,
+    "actualIoEvents": 2,
+    "ctestInvocations": 0,
+    "retriesOfUnchangedConsumer": 0
+  },
+  "scenarioNames": [
+    "duty-readiness-independent-head-target-block-sync",
+    "duty-readiness-empty-future-sync-and-no-active-set",
+    "duty-readiness-lifecycle-normal-nonassignment-and-conservative-reservations",
+    "duty-readiness-finite-incomplete-cancellation-deadline-rss",
+    "duty-readiness-owned-inputs-head-profile-pin-slot-freshness",
+    "duty-readiness-cli-authenticated-current-witness-canonical-hot-cold",
+    "duty-readiness-cli-current-head-witness-and-external-journal-evidence-refusals",
+    "duty-readiness-cli-path-fencing-and-observed-cooperative-cancellation",
+    "capella-duty-readiness-public-summary"
+  ],
+  "qualifiedInPublicFixtures": {
+    "independentHeadTargetBlockSyncContexts": true,
+    "completedProbeSeparateFromCompleteContextsAndPerKeyEligibility": true,
+    "normalNonassignmentNotGlobalFailure": true,
+    "inactiveSlashedRetiredPendingCategoriesAndConservativeCandidateReservations": true,
+    "ownedStoreRulesKeysAndCallbacksIncludingBorrowedHotAlias": true,
+    "fullPrimaryAndWitnessCurrentClosureAndCanonicalExecutionCoupling": true,
+    "reusedJournalMetadataTwoColdPassesWithIndependentBeforeEvidence": true,
+    "realUtcInCliNoOverride": true,
+    "finiteAggregateGapChunksRetargetsDeadlineAndRss": true,
+    "exactNegativePinsProfileHeadIndexPendingWitnessPaths": true,
+    "actualRequestPreadStopThenSigtermContinueJoin": true,
+    "sourceAndScratchConservation": true
+  },
+  "genesisCodec": {
+    "field": "config.genesisHeaderVersion",
+    "absentOrIntegerOnePreservesLegacyHash": true,
+    "legacyPublicCb532Hash": "0xa055278725b54aed2503a383772972e2920c54aa05713cc1bd3ada016394f790",
+    "integerTwoNewGenesisChangesOnlyTwoRoots": true,
+    "emptyMptRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+    "legacyEmptyListHash": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+    "officialConstantSource": "https://github.com/ethereum/go-ethereum/blob/master/core/types/hashes.go",
+    "nativeFunctionsAndLiteralOracleRoundtripInputConservationAndInvalidVersions": true,
+    "newFixtureJsonVersionTwoPassedToBothFactoryAndCli": true,
+    "existingGenesisDocumentsOrDatabaseIdentityMigrated": false,
+    "publicStructOrHeaderAbiChangedByCodec": false
+  },
+  "buildScope": {
+    "actualArchiveMembers": 143,
+    "changedCoreTranslationUnits": 1,
+    "reusedCoreMembers": 142,
+    "changedTestTranslationUnits": 1,
+    "reusedCliObjectWithExactActualMAndMd": true,
+    "links": 2,
+    "shimRebuilt": false,
+    "coreHeaderAbiChanged": false,
+    "manualDirectCompilerRecipes": true,
+    "newCmakeGraphConfigured": false,
+    "installQualified": false,
+    "wholeRepositoryOrNativeBuildClaim": false
+  },
+  "resourceScope": {
+    "maximumConsumerRssKiB": 131072,
+    "maximumConsumerElapsedMs": 180000,
+    "maximumCampaignSeconds": 400,
+    "maximumTestOnlySignatures": 1024,
+    "fixtureWriteBufferBytes": 4194304,
+    "fixtureWriteBufferCount": 2,
+    "fixtureSharedMemtableBytes": 16777216,
+    "fixtureStrictBlockCacheBytes": 4194304,
+    "historicalStrict4MiBLongFinalizationQualified": false,
+    "fullNodeMemoryCapQualified": false
+  },
+  "history": {
+    "firstArmControllerCompiledAndLinkedButExitedOneAtLateInputMutationRefusal": true,
+    "firstArmLateInputPathUnknown": true,
+    "rootReauditedSelectedHeldInputsSourceAndSdkArtifactsBeforeRecoveredAdmission": true,
+    "recoveryIsNotOriginalControllerExitZero": true,
+    "firstPublicArmConsumerContainerSeconds": 0.22307308297604322,
+    "firstPublicArmRows": 0,
+    "firstPublicArmCliDispatchAttemptsFromDiagnostic": 0,
+    "firstActualExceptionAndThrowLineRetained": false,
+    "genesisRootSourceContradictionNotFabricatedActualException": true,
+    "oldSourcesAndFailureReceiptsRemainPreserved": true,
+    "finiteFloatAndSdkHunterInstallMetadataRefusalsAndWithdrawnV3StaticGoPreserved": true
+  },
+  "notQualified": {
+    "actualPrivateDutyProbe": true,
+    "signerOrProviderOrKeysRuntimeDuties": true,
+    "actualThreeNodeDutiesAndCommonFinality": true,
+    "signatureDeliveryDigestAncestryExecutionNonces": true,
+    "newClockCatchupWithCurrent143": true,
+    "nonemptyDurableV5DutyProbe": true,
+    "actualPowerLossWalRecoveryReindex": true,
+    "nativeInstallWholeNodeOrNetworkPropagationWanA": true,
+    "strict4MiBLongFinalizationOrIndependentExternalSecurityAudit": true,
+    "macOriginalJournalsOrNasRecovery": true,
+    "v37": true,
+    "bridgeBaseDoppler": true,
+    "production": true
+  },
+  "activeEvmRevision": "Shanghai",
+  "newForkActivated": false,
+  "eipStatusesChanged": false,
+  "csvChanged": false,
+  "privateInputsReadByPublicConsumer": false,
+  "privateKeysLoaded": false,
+  "runtimeDutiesAuthorized": false,
+  "resumeAuthorized": false,
+  "productionQualified": false,
+  "publicationIncludesRootPythonCompilerOrRunnerScripts": false,
+  "sourceAuthorExecutedCodeOrModifiedRepository": false
+}
